@@ -1,0 +1,18 @@
+
+->    /                              org.combinators.cls.git.Routes
+
+GET   /ep                      example.expression.covariant.Expression.overview()
+GET   /ep/raw_:number          example.expression.covariant.Expression.raw(number: Long)
+GET   /ep/prepare              example.expression.covariant.Expression.prepare(number: Long)
+GET   /ep/ep.git/*file         example.expression.covariant.Expression.serveFile(file)
+
+GET   /expression                      example.expression.visitor.Expression.overview()
+GET   /expression/raw_:number          example.expression.visitor.Expression.raw(number: Long)
+GET   /expression/prepare              example.expression.visitor.Expression.prepare(number: Long)
+GET   /expression/expression.git/*file         example.expression.visitor.Expression.serveFile(file)
+
+GET   /cpp_ep                              example.expression.cpp.Expression_CPP.overview()
+GET   /cpp_ep/raw_:number                  example.expression.cpp.Expression_CPP.raw(number: Long)
+GET   /cpp_ep/prepare                      example.expression.cpp.Expression_CPP.prepare(number: Long)
+GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP.serveFile(file)
+

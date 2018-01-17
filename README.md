@@ -21,7 +21,7 @@ Once these concepts are identified, the designer chooses a programming language 
 
 ## Application Domain
 
-![UML Domain Model](https://github.com/combinators/ExpressionProblem/blob/master/ExpressionProblemModel.png)
+![UML Domain Model](https://github.com/combinators/expression-problem/blob/master/ExpressionProblemModel.png)
 
 ## Visitor Solutions
 

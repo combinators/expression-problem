@@ -8,7 +8,7 @@ import org.combinators.cls.interpreter.ReflectedRepository
 import org.combinators.cls.git.{EmptyResults, InhabitationController}
 import expression.data.{Add, Eval, Lit}
 import expression.extensions.{Collect, Neg, PrettyP, Sub}
-import expression.operations.SimplifyAdd
+import expression.operations.SimplifyExpr
 import expression.{DomainModel, Exp}
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
@@ -27,7 +27,7 @@ class Expression_CPP @Inject()(webJars: WebJarsUtil, applicationLifecycle: Appli
   // operations to have (including Eval)
   model.ops.add(new Eval)
   model.ops.add(new PrettyP)
-  model.ops.add(new SimplifyAdd)
+  model.ops.add(new SimplifyExpr)
   model.ops.add(new Collect)
 
   lazy val repository = new ExpressionSynthesis(model) with Structure {}

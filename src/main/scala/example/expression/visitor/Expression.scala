@@ -7,8 +7,8 @@ import org.combinators.cls.interpreter.ReflectedRepository
 import org.combinators.cls.git.{EmptyResults, InhabitationController}
 import org.combinators.templating.persistable.JavaPersistable._
 import expression.data.{Add, Eval, Lit}
-import expression.extensions.{Collect, Neg, PrettyP, Sub}
-import expression.operations.SimplifyAdd
+import expression.extensions._
+import expression.operations._
 import expression.{DomainModel, Exp, Operation}
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
@@ -21,14 +21,14 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
   // no need to add 'Exp' to the model, since assumed always to be there
   // operations to have (including Eval).
   val first:DomainModel = new DomainModel(
-    List[Exp](new Lit, new Add, new Sub).asJava,
+    List[Exp](new Lit, new Add, new Sub, new Mult, new Divd).asJava,
     List[Operation](new Eval, new PrettyP).asJava
   )
 
   // Extension to domain model has new data variants and operations
   val other:DomainModel = new DomainModel(
     List[Exp](new Neg).asJava,
-    List[Operation](new Collect, new SimplifyAdd).asJava
+    List[Operation](new Collect, new SimplifyExpr).asJava
   )
 
   // demonstrate how to merge domain models with new capabilities
@@ -63,9 +63,12 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
       .addJob[CompilationUnit](exp(exp.visitor, new Add))
       .addJob[CompilationUnit](exp(exp.visitor, new Sub))
       .addJob[CompilationUnit](exp(exp.visitor, new Neg))
+      .addJob[CompilationUnit](exp(exp.visitor, new Mult))
+      .addJob[CompilationUnit](exp(exp.visitor, new Divd))
       .addJob[CompilationUnit](ops(ops.visitor, new PrettyP))
       .addJob[CompilationUnit](ops(ops.visitor, new Collect))
-      .addJob[CompilationUnit](ops(ops.visitor, new SimplifyAdd))
+      .addJob[CompilationUnit](ops(ops.visitor, new SimplifyExpr))
+      .addJob[CompilationUnit](driver)
 
   lazy val results = EmptyResults().addAll(jobs.run())
 }

@@ -9,6 +9,9 @@ import expression.{Exp, Operation}
   * These codify the semantic types used by the Expression problem.
   */
 trait SemanticTypes extends MethodMapper {
+
+  val driver:Type = 'Driver
+
   // Abstract Visitor class to be generated.
   object generated {
     def apply (uniq:Type) : Constructor = 'Generated(uniq)

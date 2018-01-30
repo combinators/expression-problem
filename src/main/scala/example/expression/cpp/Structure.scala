@@ -8,7 +8,7 @@ import expression._
 import expression.data.{Add, Eval, Lit}
 import expression.extensions.{Collect, Neg, PrettyP, Sub}
 import expression.types.Types
-import expression.operations.SimplifyAdd
+import expression.operations.SimplifyExpr
 
 import scala.collection.JavaConverters._
 
@@ -74,8 +74,8 @@ trait Structure extends Base with CPPSemanticTypes {
                  """.stripMargin
     ))
 
-    addImpl(new SimplifyAdd, new Lit, s"""return e;""")   // nothing to simplify.
-    addImpl(new SimplifyAdd, new Neg,
+    addImpl(new SimplifyExpr, new Lit, s"""return e;""")   // nothing to simplify.
+    addImpl(new SimplifyExpr, new Neg,
       s"""
          |Eval eval;
          |e->Accept(&eval);
@@ -86,7 +86,7 @@ trait Structure extends Base with CPPSemanticTypes {
          |}
          """.stripMargin)
 
-    addImpl(new SimplifyAdd, new Sub,
+    addImpl(new SimplifyExpr, new Sub,
       s"""
          |if (e.getLeft().accept(new Eval()) == e.getRight().accept(new Eval())) {
          |  return new Lit(0);
@@ -95,7 +95,7 @@ trait Structure extends Base with CPPSemanticTypes {
          |}
          |""".stripMargin)
 
-    addImpl(new SimplifyAdd, new Add,
+    addImpl(new SimplifyExpr, new Add,
       s"""
          |int leftVal = e.getLeft().accept(new Eval());
          |int rightVal = e.getRight().accept(new Eval());
@@ -322,7 +322,7 @@ trait Structure extends Base with CPPSemanticTypes {
       ops(ops.visitor, new Eval) =>:
       ops(ops.visitor, new PrettyP) =>:
       ops(ops.visitor, new Collect) =>:
-      ops(ops.visitor, new SimplifyAdd) =>:
+      ops(ops.visitor, new SimplifyExpr) =>:
       driver =>:
       module(module.base)
   }

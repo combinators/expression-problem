@@ -1,11 +1,11 @@
+
 package expression.extensions;
+import expression.Exp;
+import expression.data.BinaryExp;
 
-import expression.Operation;
-import expression.types.Types;
-
-public class Mult extends Operation {
+public class Mult extends BinaryExp {
 
     public Mult() {
-        super("mult", Types.Int);
+        super();
     }
 }

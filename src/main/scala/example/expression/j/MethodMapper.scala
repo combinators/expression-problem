@@ -47,7 +47,7 @@ trait MethodMapper {
          |public $tpe visit($name e) {
          |   ${stmts.mkString("\n")}
          |}
-        """.stripMargin).classBodyDeclarations().map(_.asInstanceOf[MethodDeclaration]).head)
+        """.stripMargin).methodDeclarations().head)
 
     implementations -= op.getClass
     implementations += (op.getClass -> map)

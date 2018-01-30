@@ -28,7 +28,7 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
   // operations to have (including Eval)
   model.ops.add(new Eval)
   model.ops.add(new PrettyP)
-  //model.ops.add(new SimplifyAdd)
+  //model.ops.add(new SimplifyExpr)
   model.ops.add(new Collect)
 
   lazy val repository = new ExpressionSynthesis(model) with Structure {}
@@ -56,7 +56,7 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
     .addJob[CompilationUnit](ep(ep.defaultMethods, new Sub, new Eval))
     .addJob[CompilationUnit](ep(ep.defaultMethods, new Neg, new Eval))
 
-    //.addJob[CompilationUnit](ep(ep.interface, new SimplifyAdd))
+    //.addJob[CompilationUnit](ep(ep.interface, new SimplifyExpr))
     .addJob[CompilationUnit](ep(ep.interface, new Lit, new PrettyP))
     .addJob[CompilationUnit](ep(ep.interface, new Add, new PrettyP))
     .addJob[CompilationUnit](ep(ep.interface, new Sub, new PrettyP))

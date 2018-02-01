@@ -20,20 +20,32 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
   // Configure the desired (sub)types and operations
   // no need to add 'Exp' to the model, since assumed always to be there
   // operations to have (including Eval).
-  val first:DomainModel = new DomainModel(
-    List[Exp](new Lit, new Add, new Sub, new Mult, new Divd).asJava,
-    List[Operation](new Eval, new PrettyP).asJava
+  val base:DomainModel = new DomainModel(
+    List[Exp](new Lit, new Add).asJava,
+    List[Operation](new Eval).asJava
   )
 
-  // Extension to domain model has new data variants and operations
-  val other:DomainModel = new DomainModel(
-    List[Exp](new Neg).asJava,
+  // evolution 1 (from Extensibility for the Masses example)
+  val version_2:DomainModel = new DomainModel(base,
+    List[Exp](new Sub).asJava,
+    List.empty.asJava
+  )
+
+  // evolution 2 (from Extensibility for the Masses example)
+  val version_3:DomainModel = new DomainModel(version_2,
+    List.empty.asJava,
+    List[Operation](new PrettyP).asJava
+  )
+
+  // Evolution 1: Extension to domain model has new data variants and operations
+  val version_final:DomainModel = new DomainModel(version_3,
+    List[Exp](new Neg, new Mult, new Divd).asJava,
     List[Operation](new Collect, new SimplifyExpr).asJava
   )
 
   // demonstrate how to merge domain models with new capabilities
-  // supported by POJO domain model
-  val model = first.merge(other)
+  // VISITOR solution has no choice but to merge all domain models.
+  val model:DomainModel = version_final.flatten
 
   lazy val repository = new ExpressionSynthesis(model) with Structure {}
   import repository._

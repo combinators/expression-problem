@@ -54,15 +54,15 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
   var jobs = Gamma.InhabitationBatchJob[CompilationUnit](ops(ops.base, new Eval))
       .addJob[CompilationUnit](exp(exp.base, new Exp))
       .addJob[CompilationUnit](ops(ops.algebra, new Eval))
-      .addJob[CompilationUnit](ops(ops.algebra, new PrettyP))
+     // .addJob[CompilationUnit](ops(ops.algebra, new PrettyP))
 
     // type interfaces (note: Exp is assumed above)
 
-  // add here as you are ready...
-  // Initial object algebra interface for expressions: integers and addition
+// add here as you are ready...
+// Initial object algebra interface for expressions: integers and addition
 
 
 
-  lazy val results = EmptyResults().addAll(jobs.run())
+lazy val results = EmptyResults().addAll(jobs.run())
 
 }

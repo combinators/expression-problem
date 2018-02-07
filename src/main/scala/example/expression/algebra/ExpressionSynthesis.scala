@@ -29,9 +29,13 @@ class ExpressionSynthesis(override val domain:DomainModel) extends ExpressionDom
     val semanticType:Type = ops(ops.base, new Eval)
   }
   @combinator object BaseExpClass {
+    // have a domain object
+
+
     def apply() : CompilationUnit =
-      Java(s"""
-              interface ExpAlg<E> {
+      Java(s"""package algebra;
+              |
+              |interface ExpAlg<E> {
               |	E lit(int x);
               |	E add(E e1, E e2);
               |}

@@ -133,7 +133,7 @@ class ExpressionSynthesis(override val domain:DomainModel) extends ExpressionDom
       val signatures = mds.mkString("\n")
 
       val s = Java(s"""|package expression;
-                       |public class $name extends Visitor<$tpe> {
+                       |public class $name extends Visitor<$tpe>{
                        |$signatures
                        |}""".stripMargin)
 

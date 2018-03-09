@@ -1,5 +1,6 @@
 package example.expression.algebra
 
+import example.expression.j.MethodMapper
 import expression.{Exp, Operation}
 import org.combinators.cls.types.syntax._
 import org.combinators.cls.types.{Constructor, Type}
@@ -15,7 +16,7 @@ import org.combinators.cls.types.{Constructor, Type}
   * For any of these that are ever going to be translated directly into Java Type Names, you must
   * make them Constructor.
   */
-trait SemanticTypes {
+trait SemanticTypes extends MethodMapper {
 
   val driver:Type = 'Driver
 
@@ -35,7 +36,7 @@ trait SemanticTypes {
 
   object exp {
     def apply (phase:Type, exp:Exp) : Constructor =  'Exp(phase, Constructor(exp.getClass.getSimpleName))
-
+    val algebra: Type= 'algebra
     val base:Type = 'Base           // initial class
   }
 
@@ -45,8 +46,8 @@ trait SemanticTypes {
   object ops {
     def apply (phase:Type, op:Operation) : Constructor = 'Ops(phase, Constructor(op.getClass.getSimpleName))
 
-    val algebra:Type = 'Agl
-    val base:Type = 'Base           // initial class
+    val algebra:Type = 'Alg         // i.e., EvalExpAlg
+    val base:Type = 'Base           // initial interface Eval
   }
 
   /**

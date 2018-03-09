@@ -2,6 +2,7 @@ package expression;
 
 import java.util.*;
 
+
 /**
  * Represents the desired features.
  *
@@ -64,8 +65,13 @@ public class DomainModel {
         // traverse backwards until done, and flatten all data and ops uniquely
         DomainModel next = this;
         while (next != null) {
-            mergedData.addAll(next.data);
-            mergedOps.addAll(next.ops);
+            for (Exp e : next.data) {
+                if (!mergedData.contains(e)) { mergedData.add(e); }
+            }
+
+            for (Operation o: next.ops) {
+                if (!mergedOps.contains(o)) { mergedOps.add(o); }
+            }
 
             next = next.parent;
         }

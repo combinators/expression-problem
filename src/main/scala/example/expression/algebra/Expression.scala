@@ -24,7 +24,7 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
     List[Operation](new Eval).asJava
   )
 
-  val evolution_1:DomainModel = new DomainModel (
+  val evolution_1:DomainModel = new DomainModel ( /// base,
     List[Exp](new Sub).asJava,
     List.empty.asJava
   )
@@ -35,6 +35,8 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
     List[Operation](new PrettyP).asJava
   )
 
+  val model:DomainModel = evolution_2.flatten
+
   //model.data.add(new Neg)
   //model.data.add(new Sub)
 
@@ -43,10 +45,33 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
   //model.ops.add(new SimplifyExpr)
   //model.ops.add(new Collect)
 
-  lazy val repository = new ExpressionSynthesis(base) with Structure {}
+  lazy val repository = new ExpressionSynthesis(model) with Structure {}
   import repository._
 
-  lazy val Gamma = repository.init(ReflectedRepository(repository, classLoader = this.getClass.getClassLoader), base)
+//  lazy val Gamma = repository.init(ReflectedRepository(repository, classLoader = this.getClass.getClassLoader), base)
+
+  lazy val Gamma = {
+    val base = ReflectedRepository(repository, classLoader = this.getClass.getClassLoader)
+
+    // also will add 'withExpressions' as was done in the visitor package
+    val withOps =
+      domain.ops.asScala.foldLeft(base) {
+        case (repo, op) => repo
+            .addCombinator(new OperationBaseClass(op))
+            .addCombinator(new OpImpl(op))
+      }
+
+    // any exp-specific combinators are added here...
+//    val withVariants =
+//      domain.data.asScala.foldLeft(withOps) {
+//        case (repo, exp) => repo.addCombinator (something)
+//      }
+
+    // can't forget to add the base Eval for the entire problem space
+    val addBase = withOps.addCombinator(new BaseInterface(new Eval()))
+
+    addBase
+  }
 
   /** This needs to be defined, and it is set from Gamma. */
   lazy val combinatorComponents = Gamma.combinatorComponents
@@ -54,7 +79,9 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
   var jobs = Gamma.InhabitationBatchJob[CompilationUnit](ops(ops.base, new Eval))
       .addJob[CompilationUnit](exp(exp.base, new Exp))
       .addJob[CompilationUnit](ops(ops.algebra, new Eval))
-     // .addJob[CompilationUnit](ops(ops.algebra, new PrettyP))
+      .addJob[CompilationUnit](ops(ops.algebra, new PrettyP))
+      .addJob[CompilationUnit](exp(exp.algebra, new Sub))
+
 
     // type interfaces (note: Exp is assumed above)
 

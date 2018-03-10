@@ -36,7 +36,12 @@ trait SemanticTypes extends MethodMapper {
 
   object exp {
     def apply (phase:Type, exp:Exp) : Constructor =  'Exp(phase, Constructor(exp.getClass.getSimpleName))
-    val algebra: Type= 'algebra
+    val base:Type = 'Base           // initial class
+  }
+
+  object evolved_exp {
+    def apply (phase:Type, exp:Exp, parent:String) : Constructor =
+      'EvolvedExp(phase, Constructor(exp.getClass.getSimpleName), Constructor(parent))
     val base:Type = 'Base           // initial class
   }
 
@@ -47,6 +52,13 @@ trait SemanticTypes extends MethodMapper {
     def apply (phase:Type, op:Operation) : Constructor = 'Ops(phase, Constructor(op.getClass.getSimpleName))
 
     val algebra:Type = 'Alg         // i.e., EvalExpAlg
+    val base:Type = 'Base           // initial interface Eval
+  }
+
+  object evolved_ops {
+    def apply (phase:Type, op:Operation, exp:Exp, parent:String) : Constructor =
+      'EvolvedOps(phase, Constructor(op.getClass.getSimpleName), Constructor(exp.getClass.getSimpleName), Constructor(parent))
+
     val base:Type = 'Base           // initial interface Eval
   }
 

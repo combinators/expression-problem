@@ -64,7 +64,7 @@ class ExpressionSynthesis(override val domain:DomainModel) extends ExpressionDom
     val semanticType:Type = exp(exp.base, new Exp)
   }
 
-  class BaseClass(expr: Exp) {
+  class BaseClass(expr: Exp, parent:String) {
     def apply(): CompilationUnit = {
 
       // build up a sequence of parameters right from the Expr definition
@@ -81,14 +81,14 @@ class ExpressionSynthesis(override val domain:DomainModel) extends ExpressionDom
 
       val name = expr.getClass.getSimpleName
       val iName= expr.getClass.getSimpleName.capitalize
-      Java(s"""package algebra; interface ${iName}ExpAlg extends ExpAlg<E>
+      Java(s"""package algebra; interface ${iName}ExpAlg extends $parent<E>
            |{
            |        E $name($paramList);
            |}""".stripMargin).compilationUnit()
     }
 
     // semantic type is based on the subclass (i.e., it will be exp('Base, 'Lit) or exp('Base, 'Add)
-    val semanticType:Type = exp(exp.algebra, expr)
+    val semanticType:Type = evolved_exp(exp.base, expr, parent)
   }
 //  / The object algebra
 //  // hint: .addJob[CompilationUnit](alg(alg.base))
@@ -159,6 +159,53 @@ class ExpressionSynthesis(override val domain:DomainModel) extends ExpressionDom
   }
 
     val semanticType:Type =  ops(ops.base, new Eval) =>: ops (ops.algebra, new Eval)
+  }
+
+  // class EvalSubExpAlg extends EvalExpAlg implements SubExpAlg<Eval> {
+  // HACK: Shouldn't be forced to require only just ONE sub expression
+  class OperationExtendedBaseClass(op:Operation, sub:Exp, parent:String) {
+    def apply(unit:CompilationUnit): CompilationUnit= {
+      // this gets "eval" and we want the name of the Interface.
+      //val name = op.name
+      val name = op.name.capitalize
+      val returnType = op.`type`     // allows direct access to java field with reserved token name
+
+      val subName = sub.getClass.getSimpleName.capitalize
+      // build up sequence
+      var params:Seq[String] = Seq.empty
+      sub.ops.asScala.foreach {
+        case att: Attribute =>
+          val tpe = if (att.attType == Types.Exp) {
+            name
+          } else {
+            Type_toString(att.attType)
+          }
+
+          params = params :+ s"final $tpe ${att.attName}"
+        case _ =>
+      }
+
+      // creates method body
+      val paramList = params.mkString(",")
+      val method = s"""
+         |public ${name} ${subName}(${paramList}) {
+         |        return new ${name}() {
+         |            public ${returnType} eval() {
+         |                return this; // HACK must fix
+         |            }
+         |        };
+         |    }
+       """.stripMargin
+
+      Java(s"""package algebra;
+              |
+            |class Eval${subName}ExpAlg extends $parent implements ${subName}ExpAlg<${name}> {
+              |    $method
+              |}
+              |""".stripMargin).compilationUnit()
+    }
+
+    val semanticType:Type =  ops(ops.base, new Eval) =>: evolved_ops (ops.algebra, new Eval, sub, parent)
   }
 
  // interface SubExpAlg<E> extends ExpAlg<E> {

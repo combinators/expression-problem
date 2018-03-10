@@ -70,7 +70,10 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
     // can't forget to add the base Eval for the entire problem space
     val addBase = withOps.addCombinator(new BaseInterface(new Eval()))
 
+    // this should be derived from domain model evolution trace. For now hack in.
     addBase
+      .addCombinator(new BaseClass(new Sub, "ExpAlg"))
+      .addCombinator(new OperationExtendedBaseClass(new Eval, new Sub, "EvalExpAlg"))
   }
 
   /** This needs to be defined, and it is set from Gamma. */
@@ -80,7 +83,8 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
       .addJob[CompilationUnit](exp(exp.base, new Exp))
       .addJob[CompilationUnit](ops(ops.algebra, new Eval))
       .addJob[CompilationUnit](ops(ops.algebra, new PrettyP))
-      .addJob[CompilationUnit](exp(exp.algebra, new Sub))
+      .addJob[CompilationUnit](evolved_exp(exp.base, new Sub, "ExpAlg"))
+      .addJob[CompilationUnit](evolved_ops (ops.algebra, new Eval, new Sub, "EvalExpAlg"))
 
 
     // type interfaces (note: Exp is assumed above)

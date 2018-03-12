@@ -208,6 +208,57 @@ class ExpressionSynthesis(override val domain:DomainModel) extends ExpressionDom
     val semanticType:Type =  ops(ops.base, new Eval) =>: evolved_ops (ops.algebra, new Eval, sub, parent)
   }
 
+  class OperationImpClass(op:Operation,sub:Exp) {
+    def apply(unit:CompilationUnit): CompilationUnit= {
+      // this gets "eval" and we want the name of the Interface.
+      //val name = op.name
+      val name = op.name.capitalize
+      val returnType = op.`type`     // allows direct access to java field with reserved token name
+
+      val subName = sub.getClass.getSimpleName
+
+      val methods = domain.data.asScala
+        .map(sub => {  // sub is either 'lit' or 'add'
+          val subName = sub.getClass.getSimpleName
+          // build up sequence
+          var params:Seq[String] = Seq.empty
+          sub.ops.asScala.foreach {
+            case att: Attribute =>
+              val tpe = if (att.attType == Types.Exp) {
+                name
+              } else {
+                Type_toString(att.attType)
+              }
+
+              params = params :+ s"final $tpe ${att.attName}"
+            case _ =>
+          }
+
+          // creates method body
+          val paramList = params.mkString(",")
+          s"""
+             |public ${name} ${subName}(${paramList}) {
+             |        return new ${name}() {
+             |            public ${returnType} ${name}() {
+             |                return this; // HACK must fix
+             |            }
+             |        };
+             |    }
+       """.stripMargin
+
+        }).mkString("\n")
+
+      Java(s"""package algebra;
+              |
+            |class ${name}ExpAlg implements ${subName}ExpAlg<${name}> {
+              |    $methods
+              |}
+              |""".stripMargin).compilationUnit()
+    }
+
+    val semanticType:Type =  ops(ops.base, new Eval)=>: evolved_ops (ops.algebra, new Eval, sub,"")
+  }
+
  // interface SubExpAlg<E> extends ExpAlg<E> {
   //  E sub(E e1, E e2);
   //}
@@ -248,6 +299,8 @@ class ExpressionSynthesis(override val domain:DomainModel) extends ExpressionDom
 
     val semanticType:Type = ops (ops.algebra,op)
   }
+
+
 }
 
 

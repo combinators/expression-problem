@@ -24,7 +24,7 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
     List[Operation](new Eval).asJava
   )
 
-  val evolution_1:DomainModel = new DomainModel ( /// base,
+  val evolution_1:DomainModel = new DomainModel (base,
     List[Exp](new Sub).asJava,
     List.empty.asJava
   )
@@ -37,54 +37,41 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
 
   val model:DomainModel = evolution_2.flatten
 
-  //model.data.add(new Neg)
-  //model.data.add(new Sub)
-
-  // operations to have (including Eval)
-  //model.ops.add(new PrettyP)
-  //model.ops.add(new SimplifyExpr)
-  //model.ops.add(new Collect)
-
   lazy val repository = new ExpressionSynthesis(model) with Structure {}
   import repository._
 
-//  lazy val Gamma = repository.init(ReflectedRepository(repository, classLoader = this.getClass.getClassLoader), base)
+
 
   lazy val Gamma = {
     val base = ReflectedRepository(repository, classLoader = this.getClass.getClassLoader)
-
     // also will add 'withExpressions' as was done in the visitor package
     val withOps =
       domain.ops.asScala.foldLeft(base) {
         case (repo, op) => repo
-            .addCombinator(new OperationBaseClass(op))
-            .addCombinator(new OpImpl(op))
+          .addCombinator(new OperationBaseClass(op))
+          .addCombinator(new OpImpl(op))
+            .addCombinator(new OperationImpClass(op,new Sub))//hacking
       }
+    val withExpressions =
+      domain.data.asScala.foldLeft(withOps){
+        case (repo, sub) =>repo
+            .addCombinator(new BaseClass(sub,"ExpAlg"))
+            .addCombinator(new OperationExtendedBaseClass(new Eval,sub,"EvalExpAlg"))//hacking
+    }
+    val addBase = withExpressions.addCombinator(new BaseInterface(new Eval()))
 
-    // any exp-specific combinators are added here...
-//    val withVariants =
-//      domain.data.asScala.foldLeft(withOps) {
-//        case (repo, exp) => repo.addCombinator (something)
-//      }
-
-    // can't forget to add the base Eval for the entire problem space
-    val addBase = withOps.addCombinator(new BaseInterface(new Eval()))
-
-    // this should be derived from domain model evolution trace. For now hack in.
     addBase
-      .addCombinator(new BaseClass(new Sub, "ExpAlg"))
-      .addCombinator(new OperationExtendedBaseClass(new Eval, new Sub, "EvalExpAlg"))
   }
-
   /** This needs to be defined, and it is set from Gamma. */
   lazy val combinatorComponents = Gamma.combinatorComponents
-
   var jobs = Gamma.InhabitationBatchJob[CompilationUnit](ops(ops.base, new Eval))
       .addJob[CompilationUnit](exp(exp.base, new Exp))
       .addJob[CompilationUnit](ops(ops.algebra, new Eval))
       .addJob[CompilationUnit](ops(ops.algebra, new PrettyP))
       .addJob[CompilationUnit](evolved_exp(exp.base, new Sub, "ExpAlg"))
       .addJob[CompilationUnit](evolved_ops (ops.algebra, new Eval, new Sub, "EvalExpAlg"))
+      .addJob[CompilationUnit](evolved_ops (ops.algebra, new PrettyP,new Sub,""))
+
 
 
     // type interfaces (note: Exp is assumed above)

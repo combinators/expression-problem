@@ -45,6 +45,7 @@ trait SemanticTypes extends MethodMapper {
     val base:Type = 'Base           // initial class
   }
 
+
   /**
     * Each operation has its own interface, assuming operation names are valid Java SimpleNames.
     */
@@ -59,6 +60,13 @@ trait SemanticTypes extends MethodMapper {
     def apply (phase:Type, op:Operation, exp:Exp, parent:String) : Constructor =
       'EvolvedOps(phase, Constructor(op.getClass.getSimpleName), Constructor(exp.getClass.getSimpleName), Constructor(parent))
 
+    val base:Type = 'Base           // initial interface Eval
+  }
+
+  object evolved2_ops {
+    def apply (phase:Type, op:Operation, exp:Exp) : Constructor =
+      'Evolved2Ops(phase, Constructor(op.getClass.getSimpleName), Constructor(exp.getClass.getSimpleName))
+    val algebra:Type= 'Alg
     val base:Type = 'Base           // initial interface Eval
   }
 

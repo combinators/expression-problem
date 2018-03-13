@@ -22,7 +22,7 @@ public class Exp {
 
     public Exp() {
         // default is to have an eval operation with no arguments and return type int.
-        ops.add(new FunctionMethod("eval", Types.Int));
+        // remove default. User must place in first domain model instance manually
     }
 
     /**

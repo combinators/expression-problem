@@ -44,21 +44,33 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
 
   lazy val Gamma = {
     val base = ReflectedRepository(repository, classLoader = this.getClass.getClassLoader)
+
+    domain.ops.asScala.foreach {
+      op:Operation => {
+        print ("Operation:" + op.toString)
+      }
+    }
+
     // also will add 'withExpressions' as was done in the visitor package
-    val withOps =
+    val with_0_Ops =
       domain.ops.asScala.foldLeft(base) {
         case (repo, op) => repo
           .addCombinator(new OperationBaseClass(op))
           .addCombinator(new OpImpl(op))
-            .addCombinator(new OperationImpClass(op,new Sub))//hacking
       }
+
+    // hack
+    val withOps = with_0_Ops
+      .addCombinator(new OperationImpClass(new PrettyP,"SubExpAlg"))//hacking
+
     val withExpressions =
       domain.data.asScala.foldLeft(withOps){
         case (repo, sub) =>repo
             .addCombinator(new BaseClass(sub,"ExpAlg"))
-            .addCombinator(new OperationExtendedBaseClass(new Eval,sub,"EvalExpAlg"))//hacking
     }
-    val addBase = withExpressions.addCombinator(new BaseInterface(new Eval()))
+    val addBase = withExpressions  // NOT NEEDED ANYMORE .addCombinator(new BaseInterface(new Eval()))
+      .addCombinator(new OperationExtendedBaseClass(new Eval,new Sub,"EvalExpAlg"))//hacking
+
 
     addBase
   }
@@ -66,11 +78,11 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
   lazy val combinatorComponents = Gamma.combinatorComponents
   var jobs = Gamma.InhabitationBatchJob[CompilationUnit](ops(ops.base, new Eval))
       .addJob[CompilationUnit](exp(exp.base, new Exp))
-      .addJob[CompilationUnit](ops(ops.algebra, new Eval))
-      .addJob[CompilationUnit](ops(ops.algebra, new PrettyP))
+      .addJob[CompilationUnit](ops(ops.base, new Eval))
+      .addJob[CompilationUnit](ops(ops.base, new PrettyP))
       .addJob[CompilationUnit](evolved_exp(exp.base, new Sub, "ExpAlg"))
       .addJob[CompilationUnit](evolved_ops (ops.algebra, new Eval, new Sub, "EvalExpAlg"))
-      .addJob[CompilationUnit](evolved_ops (ops.algebra, new PrettyP,new Sub,""))
+      .addJob[CompilationUnit](evolved2_ops (ops.algebra, new PrettyP,"SubExpAlg"))
 
 
 

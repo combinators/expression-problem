@@ -9,6 +9,7 @@ import org.combinators.cls.types._
 import org.combinators.cls.types.syntax._
 import org.combinators.templating.twirl.Java
 import expression.data.Eval
+import expression.extensions.PrettyP
 import expression.types.Types
 
 import scala.collection.JavaConverters._
@@ -16,23 +17,23 @@ import scala.collection.JavaConverters._
 /** Future work to sanitize combinators to be independent of Exp. */
 class ExpressionSynthesis(override val domain:DomainModel) extends ExpressionDomain(domain) with SemanticTypes {
 
-  /** Generate from domain. USER NEEDS TO SPECIFY THESE EITHER AUTOMATICALLY OR MANUALLY */
-  class BaseInterface(op:Eval) {
-    def apply() : CompilationUnit = {
-      val name = op.name
-      val iName = name.capitalize
-
-      Java(s"""
-         |package algebra;
-         |
-         |// The evaluation interface
-         |interface $iName {
-         |	int $name();
-         |}
-         |""".stripMargin).compilationUnit()
-    }
-    val semanticType:Type = ops(ops.base, new Eval)
-  }
+//  /** Generate from domain. USER NEEDS TO SPECIFY THESE EITHER AUTOMATICALLY OR MANUALLY */
+//  class BaseInterface(op:Eval) {
+//    def apply() : CompilationUnit = {
+//      val name = op.name
+//      val iName = name.capitalize
+//
+//      Java(s"""
+//         |package algebra;
+//         |
+//         |// The evaluation interface
+//         |interface ${iName}_BAD {
+//         |	int $name();
+//         |}
+//         |""".stripMargin).compilationUnit()
+//    }
+//    val semanticType:Type = ops(ops.base, new Eval)
+//  }
   @combinator object BaseExpClass {
     // have a domain object
 
@@ -208,14 +209,13 @@ class ExpressionSynthesis(override val domain:DomainModel) extends ExpressionDom
     val semanticType:Type =  ops(ops.base, new Eval) =>: evolved_ops (ops.algebra, new Eval, sub, parent)
   }
 
-  class OperationImpClass(op:Operation,sub:Exp) {
+  // a bit of a hack. Start with getting this working then fix later.
+  class OperationImpClass(op:Operation,parent:String) {
     def apply(unit:CompilationUnit): CompilationUnit= {
       // this gets "eval" and we want the name of the Interface.
       //val name = op.name
       val name = op.name.capitalize
       val returnType = op.`type`     // allows direct access to java field with reserved token name
-
-      val subName = sub.getClass.getSimpleName
 
       val methods = domain.data.asScala
         .map(sub => {  // sub is either 'lit' or 'add'
@@ -250,16 +250,17 @@ class ExpressionSynthesis(override val domain:DomainModel) extends ExpressionDom
 
       Java(s"""package algebra;
               |
-            |class ${name}ExpAlg implements ${subName}ExpAlg<${name}> {
+            |class ${name}ExpAlg implements ${parent}<${name}> {
               |    $methods
               |}
               |""".stripMargin).compilationUnit()
     }
 
-    val semanticType:Type =  ops(ops.base, new Eval)=>: evolved_ops (ops.algebra, new Eval, sub,"")
+    val semanticType:Type =  ops(ops.base, new Eval)=>: evolved2_ops (ops.algebra, new PrettyP, "SubExpAlg")
   }
 
- // interface SubExpAlg<E> extends ExpAlg<E> {
+
+  // interface SubExpAlg<E> extends ExpAlg<E> {
   //  E sub(E e1, E e2);
   //}
 
@@ -283,7 +284,7 @@ class ExpressionSynthesis(override val domain:DomainModel) extends ExpressionDom
 
 
 
-
+  // use this one for the base interface Eval as well as any other operation
   class OpImpl(op:Operation) {
     def apply: CompilationUnit = {
 
@@ -292,12 +293,12 @@ class ExpressionSynthesis(override val domain:DomainModel) extends ExpressionDom
 
       //implementations
       Java(s"""|package algebra;
-               |interface $name {
+               |interface BAD_AGAIN_$name {
                |  $tpe $name();
                |}""".stripMargin).compilationUnit()
     }
 
-    val semanticType:Type = ops (ops.algebra,op)
+    val semanticType:Type = ops (ops.base,op)   // not algebra
   }
 
 

@@ -1,7 +1,8 @@
 package example.expression.algebra
 
 import com.github.javaparser.ast.CompilationUnit
-import com.github.javaparser.ast.body.MethodDeclaration
+import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
+import com.github.javaparser.ast.stmt.BlockStmt
 import example.expression.ExpressionDomain
 import expression._
 import org.combinators.cls.interpreter.combinator
@@ -9,47 +10,61 @@ import org.combinators.cls.types._
 import org.combinators.cls.types.syntax._
 import org.combinators.templating.twirl.Java
 import expression.data.Eval
-import expression.extensions.PrettyP
+import expression.extensions.Sub
 import expression.types.Types
 
 import scala.collection.JavaConverters._
 
+
 /** Future work to sanitize combinators to be independent of Exp. */
 class ExpressionSynthesis(override val domain:DomainModel) extends ExpressionDomain(domain) with SemanticTypes {
 
-//  /** Generate from domain. USER NEEDS TO SPECIFY THESE EITHER AUTOMATICALLY OR MANUALLY */
-//  class BaseInterface(op:Eval) {
-//    def apply() : CompilationUnit = {
-//      val name = op.name
-//      val iName = name.capitalize
-//
-//      Java(s"""
-//         |package algebra;
-//         |
-//         |// The evaluation interface
-//         |interface ${iName}_BAD {
-//         |	int $name();
-//         |}
-//         |""".stripMargin).compilationUnit()
-//    }
-//    val semanticType:Type = ops(ops.base, new Eval)
-//  }
-  @combinator object BaseExpClass {
+  /** Generate from domain. USER NEEDS TO SPECIFY THESE EITHER AUTOMATICALLY OR MANUALLY */
+  //class BaseInterface(op:Eval) {
+  //def apply() : CompilationUnit = {
+  //      val name = op.name
+  //      val iName = name.capitalize
+
+  //      Java(s"""
+  //         |package algebra;
+  //         |
+  //         |
+  //         | interface ${iName} {
+  //         |	int $name();
+  //         |}
+  //         |""".stripMargin).compilationUnit()
+  //    }
+  //    val semanticType:Type = ops(ops.base, new Eval)
+  // }
+
+  class BaseExpClass(dm: DomainModel, vers: Type) {
     // have a domain object
 
 
     def apply(): CompilationUnit = {
 
-      val signatures = domain.data.asScala
-        .map(sub => {
+      val signatures = dm.data.asScala
+        .map(sub => { // sub is either 'lit' or 'add'
+          val subName = sub.getClass.getSimpleName
+          // build up sequence
           var params: Seq[String] = Seq.empty
           sub.ops.asScala.foreach {
             case att: Attribute =>
-              val tpe = Type_toString(att.attType)
+              val tpe = if (att.attType == Types.Exp) {
+                "E" // perhaps a hack?
+              } else {
+                Type_toString(att.attType)
+              }
+
               params = params :+ s"$tpe ${att.attName}"
             case _ =>
           }
-          s""" E ${sub.getClass.getSimpleName}(${params.mkString(",")});"""
+
+          // creates method signature from parameters
+          val paramList = params.mkString(",")
+
+          s"""E ${subName}($paramList);"""
+
         }).mkString("\n")
 
       Java(s"""package algebra;
@@ -62,8 +77,54 @@ class ExpressionSynthesis(override val domain:DomainModel) extends ExpressionDom
 
           stripMargin).compilationUnit()
 }
-    val semanticType:Type = exp(exp.base, new Exp)
+    val semanticType:Type = domain_evolution(domain_evolution.baseClass, vers)
   }
+
+
+  class ExtendedInterface(dm: DomainModel,newName:String, previous:String, vers:Type) {
+    // have a domain object
+
+
+    def apply(): CompilationUnit = {
+
+      val signatures = dm.data.asScala
+        .map(sub => {  // sub is either 'lit' or 'add' (or 'sub')
+          val subName = sub.getClass.getSimpleName // build up sequence
+          var params:Seq[String] = Seq.empty
+          sub.ops.asScala.foreach {
+            case att: Attribute =>
+              val tpe = if (att.attType == Types.Exp) {
+                "E"   // perhaps a hack?
+              } else {
+                Type_toString(att.attType)
+              }
+
+              params = params :+ s"$tpe ${att.attName}"
+            case _ =>
+          }
+
+          // creates method signature from parameters
+          val paramList = params.mkString(",")
+
+          s"""E ${subName}($paramList);"""
+
+        }).mkString("\n")
+
+      Java(s"""package algebra;
+              |
+              |interface ${newName}ExpAlg<E> extends ${previous} {
+              | $signatures
+              |}
+              |
+              |""".stripMargin).compilationUnit()
+    }
+    val
+
+
+    semanticType:Type = domain_evolution(domain_evolution.extendedInterface , vers)
+  }
+
+
 
   class BaseClass(expr: Exp, parent:String) {
     def apply(): CompilationUnit = {
@@ -89,38 +150,48 @@ class ExpressionSynthesis(override val domain:DomainModel) extends ExpressionDom
     }
 
     // semantic type is based on the subclass (i.e., it will be exp('Base, 'Lit) or exp('Base, 'Add)
-    val semanticType:Type = evolved_exp(exp.base, expr, parent)
+    val
+    semanticType:Type = evolved_exp(exp.base, expr, parent)
   }
-//  / The object algebra
-//  // hint: .addJob[CompilationUnit](alg(alg.base))
-//  class EvalExpAlg implements ExpAlg<Eval> {
-//    public Eval lit(final int x) {
-//      return new Eval() {
-//        public int eval() {
+
+  //  / The object algebra
+  //  // hint: .addJob[CompilationUnit](alg(alg.base))
+  //  class EvalExpAlg implements ExpAlg<Eval> {
+  //    public Eval lit(final int x) {
+  //      return new Eval() {
+  //        public int eval() {
 //          return x;
 //        }
-//      };
+  //      };
 //    }
 //
-//    public Eval add(final Eval e1, final Eval e2) {
+  //    public Eval add(final Eval e1, final Eval e2) {
 //      return new Eval() {
-//        public int eval() {
-//          return e1.eval() + e2.eval();
+  //        public int eval() {
+  //          return e1.eval() + e2.eval();
 //        }
 //      };
 //    }
 //  }
 
 
-  class OperationBaseClass(op:Operation) {
-    def apply(unit:CompilationUnit): CompilationUnit= {
+  // purpose of this class is to take an operation and produce
+  // class NAME_ExpAlg implements ExpAlg<NAME> {
+  //     relevant methods
+  // }
+  // i.e., class EvalExpAlg implements ExpAlg<Eval> {
+  //
+  class OperationBaseClass(dm: DomainModel, op:Operation) {
+    def apply(): CompilationUnit= {
       // this gets "eval" and we want the name of the Interface.
       //val name = op.name
-      val name = op.name.capitalize
+      val name = op.getClass.getSimpleName // name.capitalize
       val returnType = op.`type`     // allows direct access to java field with reserved token name
 
-      val methods = domain.data.asScala
+
+      val methods = dm.data.asScala
         .map(sub => {  // sub is either 'lit' or 'add'
+
           val subName = sub.getClass.getSimpleName
           // build up sequence
           var params:Seq[String] = Seq.empty
@@ -148,36 +219,147 @@ class ExpressionSynthesis(override val domain:DomainModel) extends ExpressionDom
              |    }
            """.stripMargin
 
-        }).mkString("\n")
+        }
+        ).mkString("\n")
 
 
       Java(s"""package algebra;
             |
             |class ${name}ExpAlg implements ExpAlg<${name}> {
-            |    $methods
+            |     $methods
             |}
             |""".stripMargin).compilationUnit()
   }
 
-    val semanticType:Type =  ops(ops.base, new Eval) =>: ops (ops.algebra, new Eval)
+    val semanticType:Type =  ops (ops.baseClass,new Eval)
   }
+
+//  def allVariants(dm:DomainModel): Seq[Exp] = {
+//    var exps:Seq[Exp] = Seq.empty
+
+//    var node = dm
+//    while (node != null) {
+  //     node.data.asScala.foreach {
+//        exp:Exp => {
+//          exps = exps :+ exp
+//        }
+ //     }
+
+//      val par = node.getParent
+//      if (!par.isPresent) {
+ //       return exps;
+ //     }
+
+//      node = par.get
+ //   }
+
+//    return exps
+ // }
+// get all operations existing
+  def allOps(dm:DomainModel): Seq[Operation] = {
+    var Oprs:Seq[Operation] = Seq.empty
+
+    var node = dm
+    while (node != null) {
+      node.ops.asScala.foreach {
+        op: Operation  => {
+          Oprs = Oprs :+ op
+        }
+      }
+
+
+      val par = node.getParent
+      if (!par.isPresent) {
+        return Oprs
+      }
+
+      node = par.get
+    }
+
+    return Oprs
+  }
+
+  def mostRecentOp(dm:DomainModel): Operation = {
+
+    if (!dm.getParent.isPresent) {
+      return null
+    }
+
+    var node = dm.getParent.get
+    while (node != null) {
+      if (!node.ops.isEmpty()) {
+        // not empty, this is the most recent operations. HACK MIGHT NOT BE ONLY ONE..
+        return node.ops.get(0)
+      }
+
+      val par = node.getParent
+      if (!par.isPresent()) {
+        return null // HACK NOT SURE WHAT TO RETURN....
+      }
+
+      node = par.get
+    }
+
+    return null   // shouldn't get here...
+  }
+
+
+  def mostRecentData(dm:DomainModel): Exp = {
+
+    if (!dm.getParent.isPresent) {
+      return null
+    }
+
+    var node = dm.getParent.get
+    while (node != null) {
+      // hack
+      if (!node.getParent.isPresent) {
+        return null; // AT BASE. HACK TO GET ExpAlg to be returned.
+      }
+
+      if (!node.data.isEmpty()) {
+        // not empty, this is the most recent operations. HACK MIGHT NOT BE ONLY ONE..
+        return node.data.get(0)
+      }
+
+      val par = node.getParent
+      if (!par.isPresent()) {
+        return null // HACK NOT SURE WHAT TO RETURN....
+      }
+
+      node = par.get
+    }
+
+    return null   // shouldn't get here...
+  }
+
+
 
   // class EvalSubExpAlg extends EvalExpAlg implements SubExpAlg<Eval> {
   // HACK: Shouldn't be forced to require only just ONE sub expression
-  class OperationExtendedBaseClass(op:Operation, sub:Exp, parent:String) {
-    def apply(unit:CompilationUnit): CompilationUnit= {
+  // HACK: NEED TO FIX THIS...
+  class OperationExtendedBaseClass(dm:DomainModel, exp:Exp, op:Operation, vers:Type) {
+    def apply(): CompilationUnit = {
       // this gets "eval" and we want the name of the Interface.
-      //val name = op.name
-      val name = op.name.capitalize
-      val returnType = op.`type`     // allows direct access to java field with reserved token name
+      val name = op.name
+      val expName = exp.getClass.getSimpleName
+      val lowerExpName = expName.toLowerCase
+      val className = op.getClass.getSimpleName
+      val returnType = Type_toString(op.`type`)
 
-      val subName = sub.getClass.getSimpleName.capitalize
-      // build up sequence
-      var params:Seq[String] = Seq.empty
-      sub.ops.asScala.foreach {
+      val function = getImplementation(op)
+
+      // Here assume the MethodDeclaration actually exists.
+      // HACK of sorts: Still uses visitor idea to get visitor method but then we only want code.
+      val value:MethodDeclaration = function.get(exp.getClass).get
+      val signatures = value.getBody.get.toString()
+
+      // build up sequence of parameters for that exp sub-variant
+      var params: Seq[String] = Seq.empty
+      exp.ops.asScala.foreach {
         case att: Attribute =>
           val tpe = if (att.attType == Types.Exp) {
-            name
+            expName
           } else {
             Type_toString(att.attType)
           }
@@ -186,56 +368,218 @@ class ExpressionSynthesis(override val domain:DomainModel) extends ExpressionDom
         case _ =>
       }
 
-      // creates method body
       val paramList = params.mkString(",")
       val method = s"""
-         |public ${name} ${subName}(${paramList}) {
-         |        return new ${name}() {
-         |            public ${returnType} eval() {
-         |                return this; // HACK must fix
-         |            }
-         |        };
-         |    }
+                      |public $className $lowerExpName($paramList) {
+                      |        return new $className() {
+                      |            public $returnType $name() {
+                      |               ${signatures}
+                      |            }
+                      |        };
+                      |    }
        """.stripMargin
 
-      Java(s"""package algebra;
-              |
-            |class Eval${subName}ExpAlg extends $parent implements ${subName}ExpAlg<${name}> {
-              |    $method
-              |}
-              |""".stripMargin).compilationUnit()
+      val lastParent = mostRecentData(dm)
+      var parent = "ExpAlg"
+      if (lastParent != null) {
+        parent = s"${lastParent.getClass.getSimpleName}ExpAlg"
+      }
+
+      val str = s"""package algebra;
+                   |
+              |class ${className}${expName}ExpAlg extends $parent implements ${expName}ExpAlg<$className> {
+                   |    $method
+                   |}
+                   |""".stripMargin
+
+      println("code:" + str)
+      Java(str).compilationUnit()
     }
 
-    val semanticType:Type =  ops(ops.base, new Eval) =>: evolved_ops (ops.algebra, new Eval, sub, parent)
+    val semanticType:Type = domain_evolution(domain_evolution.extendedData, vers) // a bit of a hack. Start with getting this working then fix later.
   }
 
-  // a bit of a hack. Start with getting this working then fix later.
-  class OperationImpClass(op:Operation,parent:String) {
-    def apply(unit:CompilationUnit): CompilationUnit= {
+  // This should be merged with other class. But for now, tries to deal with special
+  // cases (1) New data variant, must find most recent operation
+  class OperationSpecialExtendedBaseClass(dm:DomainModel, exp:Exp, op:Operation, vers:Type) {
+    def apply(): CompilationUnit = {
+      // this gets "eval" and we want the name of the Interface.
+      val name = op.name
+      val expName = exp.getClass.getSimpleName
+      val lowerExpName = expName.toLowerCase
+      val className = op.getClass.getSimpleName
+      val returnType = op.`type`
+
+      // build up sequence of parameters for that exp sub-variant
+      var params: Seq[String] = Seq.empty
+      exp.ops.asScala.foreach {
+        case att: Attribute =>
+          val tpe = if (att.attType == Types.Exp) {
+            expName
+          } else {
+            Type_toString(att.attType)
+          }
+
+          params = params :+ s"final $tpe ${att.attName}"
+        case _ =>
+      }
+
+      val paramList = params.mkString(",")
+      val method = s"""
+                      |public $className $lowerExpName($paramList) {
+                      |        return new $className() {
+                      |            public $returnType $name() {
+                      |                return this;  //hacking
+                      |            }
+                      |        };
+                      |    }
+       """.stripMargin
+
+
+
+      val str = s"""package algebra;
+                   |
+              |class ${className}${expName}ExpAlg extends ${className}ExpAlg implements ${expName}ExpAlg<$className> {
+                   |    $method
+                   |}
+                   |""".stripMargin
+
+      Java(str).compilationUnit()
+    }
+
+    val semanticType:Type = domain_evolution(domain_evolution.extendedData, vers) // a bit of a hack. Start with getting this working then fix later.
+  }
+
+
+  /**
+    * Recursively grabs all exp subvariants from the evolution history.
+    *
+    * @param dm
+    * @return
+    */
+  def allVariants(dm:DomainModel): Seq[Exp] = {
+    var exps:Seq[Exp] = Seq.empty
+
+    var node = dm
+    while (node != null) {
+
+      node.data.asScala.foreach {
+          exp:Exp => {
+            exps = exps :+ exp
+          }
+        }
+
+      val par = node.getParent
+      if (!par.isPresent) {
+        return exps;
+      }
+
+      node = par.get
+    }
+
+    return exps
+  }
+
+
+
+
+  // domainModel represents the 'last one' and we can pull together all prior exp variants
+  class OperationSpecialImpClass(dm:DomainModel,op:Operation,previousExp:String, previous:String, vers: Type) {
+    def apply(): CompilationUnit= {
       // this gets "eval" and we want the name of the Interface.
       //val name = op.name
-      val name = op.name.capitalize
-      val returnType = op.`type`     // allows direct access to java field with reserved token name
+      val name = op.getClass.getSimpleName.capitalize
+      val returnType = Type_toString(op.`type`)  // allows direct access to java field with reserved token name//hacking
 
-      val methods = domain.data.asScala
-        .map(sub => {  // sub is either 'lit' or 'add'
+      val methods:String = dm.data.asScala.map(sub => {
+        // sub is either 'lit' or 'add'
+        val subName = sub.getClass.getSimpleName
+        // build up sequence
+        var params:Seq[String] = Seq.empty
+        sub.
+          ops.
+          asScala.foreach {
+          case att: Attribute =>
+            val tpe = if (att.
+              attType == Types.Exp) {
+              name
+            }
+            else {
+              Type_toString(att.attType)
+            }
+            params = params :+ s"final $tpe ${att.attName}"
+          case _ =>
+        }
+        // creates method body
+        val paramList = params.mkString(",")
+
+        s"""
+           |public ${name} ${subName}(${paramList}) {
+           |        return new ${name}() {
+           |            public ${returnType} ${name}() {
+           |                return this; // HACK must fix
+           |            }
+           |        };
+           |    }
+       """.stripMargin
+
+      }).mkString("\n")
+
+//        val lastParent = mostRecentOp(dm)
+//        var extendsParent = ""
+//        if (lastParent != null) {
+//          extendsParent = s"extends ${lastParent.getClass.getSimpleName}ExpAlg"
+//        }
+
+      val str = s"""package algebra;
+              |
+              |class ${name}${previous}ExpAlg extends ${name}${previousExp} implements ${previous}ExpAlg<${name}> {
+              |    $methods
+              |}
+              |""".stripMargin
+      println ("new code:" + str)
+       Java(str).compilationUnit()
+
+    }
+    val semanticType: Type =  evolved2_ops(evolved_ops.base, op, previousExp, previous)
+    //val semanticType: Type =  domain_evolution(domain_evolution.extendedOp, vers)
+  }
+
+//  evolved_ops {
+//    def apply (phase:Type, op:Operation, exp:Exp, parent:String) : Constructor =
+
+
+
+    // domainModel represents the 'last one' and we can pull together all prior exp variants
+  class OperationImpClass(dm:DomainModel,op:Operation,previous:String, vers: Type) {
+    def apply(): CompilationUnit= {
+      // this gets "eval" and we want the name of the Interface.
+      //val name = op.name
+      val name =op.name.capitalize
+      val returnType = Type_toString(op.`type`)  // allows direct access to java field with reserved token name//hacking
+
+      val methods:String = allVariants(dm).map(sub => {
+          // sub is either 'lit' or 'add'
           val subName = sub.getClass.getSimpleName
-          // build up sequence
-          var params:Seq[String] = Seq.empty
-          sub.ops.asScala.foreach {
+        // build up sequence
+        var params:Seq[String] = Seq.empty
+          sub.
+            ops.
+            asScala.foreach {
             case att: Attribute =>
-              val tpe = if (att.attType == Types.Exp) {
+              val tpe = if (att.
+                attType == Types.Exp) {
                 name
-              } else {
+              }
+              else {
                 Type_toString(att.attType)
               }
-
               params = params :+ s"final $tpe ${att.attName}"
             case _ =>
           }
-
           // creates method body
           val paramList = params.mkString(",")
+
           s"""
              |public ${name} ${subName}(${paramList}) {
              |        return new ${name}() {
@@ -250,58 +594,57 @@ class ExpressionSynthesis(override val domain:DomainModel) extends ExpressionDom
 
       Java(s"""package algebra;
               |
-            |class ${name}ExpAlg implements ${parent}<${name}> {
+              |class ${name}ExpAlg implements ${previous}ExpAlg<${name}> {
               |    $methods
               |}
               |""".stripMargin).compilationUnit()
+
     }
 
-    val semanticType:Type =  ops(ops.base, new Eval)=>: evolved2_ops (ops.algebra, new PrettyP, "SubExpAlg")
+    val semanticType: Type =  domain_evolution(domain_evolution.extendedOp, vers)
   }
 
+    // interface SubExpAlg<E> extends ExpAlg<E> {
+    //  E sub(E e1, E e2);
 
-  // interface SubExpAlg<E> extends ExpAlg<E> {
-  //  E sub(E e1, E e2);
-  //}
+
+    //}
 
   // Updating evaluation:
+
   //class EvalSubExpAlg extends EvalExpAlg implements SubExpAlg<Eval> {
-   //public Eval sub(final Eval e1, final Eval e2) {
-      //return new Eval() {
+  //public Eval sub(final Eval e1, final Eval e2) {
+
+    //return new Eval() {
         //public int eval() {
-          //return e1.eval() - e2.eval();
+    //return e1.eval() - e2.eval();
        // }
      // };
     //}
-  //}
+  //}// use this one for the base interface Eval [as well as any other operation], such
 
+    // as PPrint
+  class BaseInterface(op: Operation) {
+      def apply: CompilationUnit = {
 
+        val name = op.getClass.getSimpleName
+        val iName= op.getClass.getSimpleName.capitalize
+        val tpe = Type_toString(op.`type`)
 
-
-
-
-
-
-
-
-  // use this one for the base interface Eval as well as any other operation
-  class OpImpl(op:Operation) {
-    def apply: CompilationUnit = {
-
-      val name = op.getClass.getSimpleName
-      val tpe = Type_toString(op.`type`)
-
-      //implementations
-      Java(s"""|package algebra;
-               |interface BAD_AGAIN_$name {
+        //implementations
+        Java(s"""|package algebra;
+               |interface $iName{
                |  $tpe $name();
-               |}""".stripMargin).compilationUnit()
+               |}""".stripMargin).
+
+          compilationUnit()
     }
 
-    val semanticType:Type = ops (ops.base,op)   // not algebra
+    val semanticType: Type = ops (ops.baseInterface,op)
   }
-
-
 }
+
+
+
 
 

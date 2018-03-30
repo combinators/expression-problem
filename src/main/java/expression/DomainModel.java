@@ -28,6 +28,15 @@ public class DomainModel {
         this(null, new ArrayList<Exp>(), new ArrayList<Operation>());
     }
 
+    /** Return the parent (if it exists). */
+    public Optional<DomainModel> getParent() {
+        if (parent != null ) {
+            return Optional.of(parent);
+        }
+
+        return Optional.empty();
+    }
+
     /**
      * Construct initial Domain model from list of subtypes and operations.
      *

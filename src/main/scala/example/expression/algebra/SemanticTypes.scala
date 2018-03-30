@@ -35,7 +35,8 @@ trait SemanticTypes extends MethodMapper {
 //  }
 
   object exp {
-    def apply (phase:Type, exp:Exp) : Constructor =  'Exp(phase, Constructor(exp.getClass.getSimpleName))
+    def apply (phase:Type, exp:Exp) : Constructor =
+      'Exp(phase, Constructor(exp.getClass.getSimpleName))
     val base:Type = 'Base           // initial class
   }
 
@@ -45,27 +46,43 @@ trait SemanticTypes extends MethodMapper {
     val base:Type = 'Base           // initial class
   }
 
+  // a bit of a hack...
+  object domain_evolution {
+    def apply (concept:Type, phase:Type) : Constructor = 'DomainModel(concept, phase)
+
+    val baseClass:Type = 'BaseClass
+    val extendedInterface:Type = 'ExtendedInterface
+    val extendedData: Type= 'ExtendedData
+    val extendedOp: Type='ExtendedOp
+
+    val version0:Type = 'Version0    // only tag
+    val version1:Type = 'Version1
+    val version2:Type = 'Version2
+    val version3:Type = 'Version3
+  }
 
   /**
     * Each operation has its own interface, assuming operation names are valid Java SimpleNames.
     */
   object ops {
-    def apply (phase:Type, op:Operation) : Constructor = 'Ops(phase, Constructor(op.getClass.getSimpleName))
+    def apply (phase:Type, op:Operation) : Constructor =
+      'Ops(phase, Constructor(op.getClass.getSimpleName))
 
     val algebra:Type = 'Alg         // i.e., EvalExpAlg
-    val base:Type = 'Base           // initial interface Eval
+    val baseClass:Type = 'BaseC           // initial class class EvalExpAlg
+    val baseInterface:Type = 'BaseI       // initial interface Eval
   }
 
   object evolved_ops {
-    def apply (phase:Type, op:Operation, exp:Exp, parent:String) : Constructor =
-      'EvolvedOps(phase, Constructor(op.getClass.getSimpleName), Constructor(exp.getClass.getSimpleName), Constructor(parent))
+    def apply (phase:Type, op:Operation, parent:String) : Constructor =
+      'EvolvedOps(phase, Constructor(op.getClass.getSimpleName), Constructor(parent))
 
     val base:Type = 'Base           // initial interface Eval
   }
 
   object evolved2_ops {
-    def apply (phase:Type, op:Operation, parent:String) : Constructor =
-      'Evolved2Ops(phase, Constructor(op.getClass.getSimpleName), Constructor(parent))
+    def apply (phase:Type, op:Operation, previousExp:String, parent:String) : Constructor =
+      'Evolved2Ops(phase, Constructor(op.getClass.getSimpleName), Constructor(previousExp), Constructor(parent))
     val base:Type = 'Base           // initial interface Eval
   }
 

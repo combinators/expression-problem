@@ -33,6 +33,7 @@ trait Structure extends Base with SemanticTypes with MethodMapper {
     //  Collect  |  cl,  cn,  ca,  cs   ...
     //  Simplify |  sl,  sn,  sa,  ss   ...
 
+    // for now, this still uses the visitor structure that is shared. Must fix eventually
 
     def registerImpl (op:Operation, map:Map[Exp,String]): Unit = {
       map.keys.foreach {
@@ -44,9 +45,9 @@ trait Structure extends Base with SemanticTypes with MethodMapper {
     registerImpl(new Eval, Map(
 
       new Lit -> "return e.getValue();",
-      new Add -> "return e.getLeft().accept(this) + e.getRight().accept(this);",
+      new Add -> "return e1.eval() + e2.eval();",
       new Sub -> "return e.getLeft().accept(this) - e.getRight().accept(this);",
-      new Mult -> "return e.getLeft().accept(this) * e.getRight().accept(this);",
+      new Mult -> "return e1.eval() * e2.eval();",
       new Divd -> "return e.getLeft().accept(this) / e.getRight().accept(this);",
       new Neg -> "return -e.getExp().accept(this);"
     ))
@@ -55,7 +56,7 @@ trait Structure extends Base with SemanticTypes with MethodMapper {
     new Lit -> """return "" + e.getValue();""",
     new Add -> """return "(" + e.getLeft().accept(this) + "+" + e.getRight().accept(this) + ")";""",
     new Sub -> """return "(" + e.getLeft().accept(this) + "-" + e.getRight().accept(this) + ")";""",
-    new Mult -> """return "(" + e.getLeft().accept(this) + "*" + e.getRight().accept(this) + ")";""",
+    new Mult -> """return e1.print() + " * " + e2.print();""",
     new Divd -> """return "(" + e.getLeft().accept(this) + "/" + e.getRight().accept(this) + ")";""",
     new Neg -> """return "-" + e.getExp().accept(this);"""
   ))

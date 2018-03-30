@@ -4,7 +4,7 @@ import javax.inject.Inject
 
 import com.github.javaparser.ast.CompilationUnit
 import expression.data.{Add, Eval, Lit}
-import expression.extensions.{Collect, Neg, PrettyP, Sub}
+import expression.extensions.{Collect, Neg, PrettyP, Sub, Mult}
 import expression.{DomainModel, Exp, Operation}
 import org.combinators.cls.git.{EmptyResults, InhabitationController}
 import org.combinators.cls.interpreter.ReflectedRepository
@@ -19,12 +19,12 @@ import scala.collection.JavaConverters._    // Needed for asJava
 class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: ApplicationLifecycle) extends InhabitationController(webJars, applicationLifecycle) {
 
   // Configure the desired (sub)types and operations
-  val base:DomainModel = new DomainModel(
+  val evolution_0:DomainModel = new DomainModel(
     List[Exp](new Lit, new Add).asJava,
     List[Operation](new Eval).asJava
   )
 
-  val evolution_1:DomainModel = new DomainModel (base,
+  val evolution_1:DomainModel = new DomainModel (evolution_0,
     List[Exp](new Sub).asJava,
     List.empty.asJava
   )
@@ -34,55 +34,98 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
     List.empty.asJava,
     List[Operation](new PrettyP).asJava
   )
-
-  val model:DomainModel = evolution_2.flatten
-
-  lazy val repository = new ExpressionSynthesis(model) with Structure {}
+  // Adding mult
+  val evolution_3:DomainModel = new DomainModel(evolution_2,
+    List[Exp](new Mult).asJava,
+    List.empty.asJava
+  )
+  // this is a hack, to pass in evol_2 since we won't be using it in futurte.
+  lazy val repository = new ExpressionSynthesis(evolution_3) with Structure {}
   import repository._
 
 
 
   lazy val Gamma = {
-    val base = ReflectedRepository(repository, classLoader = this.getClass.getClassLoader)
-
-    domain.ops.asScala.foreach {
-      op:Operation => {
-        print ("Operation:" + op.toString)
-      }
-    }
+    var base = ReflectedRepository(repository, classLoader = this.getClass.getClassLoader)
+//
+//    domain.ops.asScala.foreach {
+//      op:Operation => {
+//        print ("Operation:" + op.toString)
+//      }
+//    }
 
     // also will add 'withExpressions' as was done in the visitor package
-    val with_0_Ops =
-      domain.ops.asScala.foldLeft(base) {
-        case (repo, op) => repo
-          .addCombinator(new OperationBaseClass(op))
-          .addCombinator(new OpImpl(op))
-      }
+//    base = domain.ops.asScala.foldLeft(base) {
+//        case (repo, op) => repo
+//          .addCombinator(new OpImpl(op))
+//      }
 
     // hack
-    val withOps = with_0_Ops
-      .addCombinator(new OperationImpClass(new PrettyP,"SubExpAlg"))//hacking
+    base = base
+      .addCombinator(new OperationImpClass(evolution_2, new PrettyP,"Sub",domain_evolution.version2))//hacking
 
-    val withExpressions =
-      domain.data.asScala.foldLeft(withOps){
-        case (repo, sub) =>repo
-            .addCombinator(new BaseClass(sub,"ExpAlg"))
+    base = domain.data.asScala.foldLeft(base){
+      case (repo, sub) =>repo
+        .addCombinator(new BaseClass(sub,"ExpAlg"))
     }
-    val addBase = withExpressions  // NOT NEEDED ANYMORE .addCombinator(new BaseInterface(new Eval()))
-      .addCombinator(new OperationExtendedBaseClass(new Eval,new Sub,"EvalExpAlg"))//hacking
+
+    base = base
+      .addCombinator(new BaseExpClass(evolution_0, domain_evolution.version0))
+      .addCombinator(new OperationBaseClass(evolution_0, new Eval()))
+
+    // DEAL with BaseInterface for all operations in all domains
+    evolution_0.ops.asScala.foreach {
+        op:Operation => {
+          base = base.addCombinator(new BaseInterface(op))
+        }
+      }
+    evolution_2.ops.asScala.foreach {
+      op:Operation => {
+        base = base.addCombinator(new BaseInterface(op))
+      }
+    }
+
+    base = base
+      .addCombinator(new ExtendedInterface(evolution_1, "Sub", "ExpAlg<E>", domain_evolution.version1))
+      .addCombinator(new OperationExtendedBaseClass(evolution_1, new Sub, new Eval, domain_evolution.version1))
+      .addCombinator(new ExtendedInterface(evolution_3, "Mult", "ExpAlg<E>", domain_evolution.version3))
+      .addCombinator(new OperationExtendedBaseClass(evolution_3, new Mult, new Eval, domain_evolution.version3))
+      .addCombinator(new OperationSpecialExtendedBaseClass(evolution_3, new Mult, new PrettyP, domain_evolution.version3))
+       //problem here need to fix OperationExtendedBaseClass
+      .addCombinator(new OperationSpecialImpClass(evolution_3, new PrettyP,"ExpAlg", "Mult", domain_evolution.version2))//hacking
+      .addCombinator(new OperationSpecialImpClass(evolution_3, new Eval,"SubExpAlg", "Mult", domain_evolution.version2))//hacking
 
 
-    addBase
+
+    base
   }
   /** This needs to be defined, and it is set from Gamma. */
   lazy val combinatorComponents = Gamma.combinatorComponents
-  var jobs = Gamma.InhabitationBatchJob[CompilationUnit](ops(ops.base, new Eval))
-      .addJob[CompilationUnit](exp(exp.base, new Exp))
-      .addJob[CompilationUnit](ops(ops.base, new Eval))
-      .addJob[CompilationUnit](ops(ops.base, new PrettyP))
-      .addJob[CompilationUnit](evolved_exp(exp.base, new Sub, "ExpAlg"))
-      .addJob[CompilationUnit](evolved_ops (ops.algebra, new Eval, new Sub, "EvalExpAlg"))
-      .addJob[CompilationUnit](evolved2_ops (ops.algebra, new PrettyP,"SubExpAlg"))
+  var jobs = Gamma.InhabitationBatchJob[CompilationUnit](domain_evolution(domain_evolution.baseClass, domain_evolution.version0))
+      .addJob[CompilationUnit](ops (ops.baseInterface, new Eval))
+      .addJob[CompilationUnit](ops (ops.baseInterface, new PrettyP))
+      .addJob[CompilationUnit](ops (ops.baseClass,new Eval))
+      .addJob[CompilationUnit](domain_evolution(domain_evolution.extendedInterface , domain_evolution.version1))
+      .addJob[CompilationUnit](domain_evolution(domain_evolution.extendedData, domain_evolution.version1))
+      .addJob[CompilationUnit](domain_evolution(domain_evolution.extendedOp, domain_evolution.version2))
+    .addJob[CompilationUnit](domain_evolution(domain_evolution.extendedInterface , domain_evolution.version3))
+    //.addJob[CompilationUnit](domain_evolution(domain_evolution.extendedData, domain_evolution.version3))
+    .addJob[CompilationUnit](evolved2_ops(evolved2_ops.base, new PrettyP, "ExpAlg", "Mult"))  // hack.
+    .addJob[CompilationUnit](evolved2_ops(evolved2_ops.base, new Eval, "SubExpAlg", "Mult"))  // hack.
+
+  // domain_evolution(domain_evolution.extendedData, vers)
+
+  //(ops(ops.baseInterface, new Eval))
+//    .addJob[CompilationUnit](ops(ops.baseClass, new Eval))
+//    .addJob[CompilationUnit](domain_evolution(domain_evolution.version0))
+//
+//    .addJob[CompilationUnit](exp(exp.base, new Lit))
+//    .addJob[CompilationUnit](exp(exp.base, new Add))
+//      .addJob[CompilationUnit](ops(ops.base, new Eval))
+//      .addJob[CompilationUnit](ops(ops.base, new PrettyP))
+//      .addJob[CompilationUnit](evolved_exp(exp.base, new Sub, "ExpAlg"))
+//      .addJob[CompilationUnit](evolved_ops (ops.algebra, new Eval, new Sub, "EvalExpAlg"))
+//      .addJob[CompilationUnit](evolved2_ops (ops.algebra, new PrettyP,"SubExpAlg"))
 
 
 

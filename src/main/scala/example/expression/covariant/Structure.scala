@@ -487,7 +487,9 @@ trait Structure extends Base with SemanticTypes with MethodMapper {
   /** Generate from domain. */
   @combinator object BaseExpInterface {
 
+    // no longer does the default Exp have an add Operation
     val exp:Exp = new Exp
+
 
     def apply() : CompilationUnit = {
       val unit:CompilationUnit = Java(s"""
@@ -495,7 +497,11 @@ trait Structure extends Base with SemanticTypes with MethodMapper {
             |interface Exp { }
             |""".stripMargin).compilationUnit()
 
-      exp.ops.asScala.foreach {
+      // overkill but should work
+      // create a sequence with just the Eval operator
+      val evalOnly:Seq[FunctionMethod] = Seq.empty :+ new FunctionMethod("eval", Types.Int)
+
+      evalOnly.foreach {
         case func:FunctionMethod =>
           val tpe = Type_toString(func.returnType)
 

@@ -44,21 +44,21 @@ trait Structure extends Base with SemanticTypes with MethodMapper {
 
     registerImpl(new Eval, Map(
 
-      new Lit -> "return e.getValue();",
-      new Add -> "return e1.eval() + e2.eval();",
-      new Sub -> "return e.getLeft().accept(this) - e.getRight().accept(this);",
-      new Mult -> "return e1.eval() * e2.eval();",
-      new Divd -> "return e.getLeft().accept(this) / e.getRight().accept(this);",
-      new Neg -> "return -e.getExp().accept(this);"
+      new Lit -> "return value;",
+      new Add -> "return left.eval() + right.eval();",
+      new Sub -> "return left.eval() - right.eval();",
+      new Mult -> "return left.eval() * right.eval();",
+      new Divd -> "return left.eval() / right.eval();",
+      new Neg -> "return -value; /*HACK */"
     ))
 
   registerImpl(new PrettyP, Map(
-    new Lit -> """return "" + e.getValue();""",
-    new Add -> """return "(" + e.getLeft().accept(this) + "+" + e.getRight().accept(this) + ")";""",
-    new Sub -> """return "(" + e.getLeft().accept(this) + "-" + e.getRight().accept(this) + ")";""",
-    new Mult -> """return e1.print() + " * " + e2.print();""",
-    new Divd -> """return "(" + e.getLeft().accept(this) + "/" + e.getRight().accept(this) + ")";""",
-    new Neg -> """return "-" + e.getExp().accept(this);"""
+    new Lit -> """return "" + value;""",
+    new Add -> """return "(" + left.prettyp() + "+" + right.prettyp()+ ")";""",
+    new Sub -> """return "(" + left.prettyp() + "-" + right.prettyp() + ")";""",
+    new Mult -> """return left.prettyp() + " * " + right.prettyp();""",
+    new Divd -> """return "(" + left.prettyp() + "/" + right.prettyp() + ")";""",
+    new Neg -> """return "-" + value.prettyp(); /**HACK**/"""
   ))
 
 
@@ -67,28 +67,43 @@ trait Structure extends Base with SemanticTypes with MethodMapper {
   // sample Driver
   @combinator object Driver {
     def apply:CompilationUnit = Java(s"""
-         |package ep;
+         |package algebra;
          |
          |public class Driver {
          |  public static void main(String[] args) {
-         |    System.out.println("======Add======");
-         |    Add add = new AddFinal(new LitFinal(7), new LitFinal(4));
-         |    System.out.println(add.eval());
-         |    System.out.println("======Sub======");
-         |    Sub sub = new SubFinal(new LitFinal(7), new LitFinal(4));
-         |    System.out.println(sub.eval());
-         |    System.out.println("======Print======");
          |
-         |    /* the line below causes compile-time error, if now commented out. */
-         |    //AddPrettyPFinal exp = new AddPrettyPFinal(new LitFinal(7)), new LitFinal(4));
-         |    AddPrettyPFinal prt = new AddPrettyPFinal(new LitPrettyPFinal(7), new LitPrettyPFinal(4));
-         |    System.out.println(prt.print() + " = " + prt.eval());
-         |    System.out.println("======CollectLiterals======");
-         |    AddCollectFinal addc = new AddCollectFinal(new LitCollectFinal(3), new LitCollectFinal(4));
-         |    System.out.println(addc.collectList().toString());
-         |    System.out.println("======Composition: Independent Extensibility======");
-         |    AddPrettyPCollectFinal addpc = new AddPrettyPCollectFinal(new LitPrettyPCollectFinal(3), new LitPrettyPCollectFinal(4));
-         |    System.out.println(addpc.print() + " = " + addpc.eval() + " Literals: " + addpc.collectList().toString());
+         |        // need some structure to represent 3 + 5
+         |        ExpAlg addAlgebra = new EvalExpAlg();
+         |        Eval lit3 = (Eval) addAlgebra.lit(3);
+         |        Eval lit5 = (Eval) addAlgebra.lit(5);
+         |
+         |        System.out.println ("Lit3 = " + lit3.eval());
+         |        Eval add = (Eval) addAlgebra.add(lit3, lit5);
+         |        System.out.println ("Add = " + add.eval());
+         |
+         |        PrettyPExpAlg printAlgebra = new PrettyPExpAlg();
+         |        PrettyP plit3 = (PrettyP) printAlgebra.lit(3);
+         |        PrettyP plit5 = (PrettyP) printAlgebra.lit(5);
+         |        PrettyP padd = (PrettyP) printAlgebra.add(plit3, plit5);
+         |
+         |        System.out.println ("Padd = " + padd.prettyp());
+         |
+         |        EvalSubExpAlg subAlgebra = new EvalSubExpAlg();
+         |        //      Eval slit3 = (Eval) subAlgebra.lit(3);
+         |        //      Eval slit5 = (Eval) subAlgebra.lit(5);
+         |
+         |        Eval sub = (Eval) subAlgebra.sub(lit3, lit5);
+         |        System.out.println ("Sub = " + sub.eval());
+         |
+         |        PrettyPMultExpAlg multAlgebra = new PrettyPMultExpAlg();
+         |        PrettyP mlit6 = (PrettyP) multAlgebra.lit(6);
+         |        PrettyP mlit7 = (PrettyP) multAlgebra.lit(7);
+         |        PrettyP madd = (PrettyP) multAlgebra.add(mlit6, mlit7);
+         |
+         |        /** reuse older concepts. **/
+         |        PrettyP finalOne = (PrettyP) multAlgebra.mult(madd, padd);
+         |        System.out.println ("Final = " + finalOne.prettyp());
+         |
          |  }
          |}""".stripMargin).compilationUnit()
 

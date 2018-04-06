@@ -112,7 +112,7 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
     //.addJob[CompilationUnit](domain_evolution(domain_evolution.extendedData, domain_evolution.version3))
     .addJob[CompilationUnit](evolved2_ops(evolved2_ops.base, new PrettyP, "ExpAlg", "Mult"))  // hack.
     .addJob[CompilationUnit](evolved2_ops(evolved2_ops.base, new Eval, "SubExpAlg", "Mult"))  // hack.
-
+      .addJob[CompilationUnit](driver)
   // domain_evolution(domain_evolution.extendedData, vers)
 
   //(ops(ops.baseInterface, new Eval))

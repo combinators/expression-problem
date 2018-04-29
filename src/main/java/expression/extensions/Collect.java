@@ -8,6 +8,6 @@ import expression.types.Types;
 public class Collect extends Operation {
 
     public Collect() {
-        super("collectList", new GenericType (FrameworkTypes.List, Types.Int));
+        super("collectList", new GenericType (FrameworkTypes.List, Types.Double));
     }
 }

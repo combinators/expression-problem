@@ -1,13 +1,14 @@
 package example.expression.cpp
 
 import java.nio.file.{Path, Paths}
-import javax.inject.Inject
 
+import javax.inject.Inject
 import org.combinators.templating.persistable.Persistable
 import org.combinators.cls.interpreter.ReflectedRepository
 import org.combinators.cls.git.{EmptyResults, InhabitationController}
 import expression.data.{Add, Eval, Lit}
 import expression.extensions.{Collect, Neg, PrettyP, Sub}
+import expression.instances.UnitSuite
 import expression.operations.SimplifyExpr
 import expression.{DomainModel, Exp}
 import org.webjars.play.WebJarsUtil
@@ -30,7 +31,10 @@ class Expression_CPP @Inject()(webJars: WebJarsUtil, applicationLifecycle: Appli
   model.ops.add(new SimplifyExpr)
   model.ops.add(new Collect)
 
-  lazy val repository = new ExpressionSynthesis(model) with Structure {}
+  // decide upon a set of test cases from which we can generate driver code/test cases.
+  val allTests : UnitSuite = new UnitSuite(model)
+
+  lazy val repository = new ExpressionSynthesis(model, allTests) with Structure {}
   import repository._
 
   lazy val Gamma = repository.init(ReflectedRepository(repository, classLoader = this.getClass.getClassLoader), model)

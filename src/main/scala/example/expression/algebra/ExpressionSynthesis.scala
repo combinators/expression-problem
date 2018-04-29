@@ -11,13 +11,14 @@ import org.combinators.cls.types.syntax._
 import org.combinators.templating.twirl.Java
 import expression.data.Eval
 import expression.extensions.Sub
+import expression.instances.UnitSuite
 import expression.types.Types
 
 import scala.collection.JavaConverters._
 
 
 /** Future work to sanitize combinators to be independent of Exp. */
-class ExpressionSynthesis(override val domain:DomainModel) extends ExpressionDomain(domain) with SemanticTypes {
+class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) extends ExpressionDomain(domain, tests) with SemanticTypes {
 
   /** Generate from domain. USER NEEDS TO SPECIFY THESE EITHER AUTOMATICALLY OR MANUALLY */
   //class BaseInterface(op:Eval) {

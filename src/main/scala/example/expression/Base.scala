@@ -2,6 +2,7 @@ package example.expression
 
 import org.combinators.cls.interpreter.ReflectedRepository
 import expression.DomainModel
+import expression.instances.UnitSuite
 
 trait Base {
 
@@ -21,7 +22,7 @@ trait Base {
 
 // This class exists so the 'def init' methods can be included in any trait that wishes
 // to add dynamic traits to the repository. Otherwise nothing is included here (for now)
-class ExpressionDomain(val domain:DomainModel) {
+class ExpressionDomain(val domain:DomainModel, val allTests:UnitSuite) {
   // assumed access to expression
 }
 

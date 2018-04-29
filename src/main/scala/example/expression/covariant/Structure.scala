@@ -9,10 +9,11 @@ import org.combinators.cls.types.syntax._
 import org.combinators.templating.twirl.Java
 import example.expression.j.MethodMapper
 import example.expression.{Base, ExpressionDomain}
-import expression.data.{Add, Eval, Lit}
-import expression.extensions.{Collect, Neg, PrettyP, Sub}
+import expression.data.Eval
+import expression.extensions.{Collect, PrettyP}
 import expression._
 import expression.types.Types
+import shared.compilation.CodeGeneratorRegistry
 
 import scala.collection.JavaConverters._
 
@@ -71,56 +72,34 @@ trait Structure extends Base with SemanticTypes with MethodMapper {
 
 
     // Row entries for a given operation as expressed by the different column types
-    def registerImpl (op:Operation, fm:FunctionMethod, map:Map[Exp,String]): Unit = {
-      map.keys.foreach {
-        key =>
+    def registerImpl (op:Operation, fm:FunctionMethod): Unit = {
+      model.data.asScala
+        .foreach(exp => {
+          val comb:Seq[Statement] = representationCodeGenerators.evalGenerators(exp).get
+
           updated = updated
-            .addCombinator(new AddDefaultImpl(op, fm, key, Java(map(key)).statements()))
-      }
+            .addCombinator(new AddDefaultImpl(op, fm, exp, comb))
+        })
     }
 
-    def registerExtension (op:Operation, map:Map[Exp,String]): Unit = {
-      map.keys.foreach {
-        key =>
-          updated = updated
-            .addCombinator(new AddExpOperation(key, op, Java(map(key)).statements()))
-      }
-    }
+    def registerExtension (op:Operation, codegen:CodeGeneratorRegistry[Seq[Statement]]): Unit = {
+      model.data.asScala
+        .foreach(exp => {
+          val comb:Seq[Statement] = codegen(exp).get
 
+          updated = updated
+            .addCombinator(new AddExpOperation(exp, op, comb))
+        })
+    }
 
     // note default 'Eval' operation is handled specially since it is assumed to always exist in top Exp class
-    registerImpl(new Eval,  new FunctionMethod("eval", Types.Int), Map(
-      new Lit -> "return value();",
-      new Neg -> "return -exp().eval();",
-      new Add -> "return left().eval() + right().eval();",
-      new Sub -> "return left().eval() - right().eval();"
-    ))
+    registerImpl(new Eval, new FunctionMethod("eval", Types.Int))
 
+    // extension
+    registerExtension(new PrettyP, representationCodeGenerators.prettypGenerators)
 
-    registerExtension(new PrettyP, Map(
-      new Lit -> """return "" + value();""",
-      new Add -> """return "(" + left().print() + " + " + right().print() + ")";""",
-      new Sub -> """return "(" + left().print() + " - " + right().print() + ")";""",
-      new Neg -> """return "-" + exp().print();""",
-    ))
+    registerExtension(new Collect, representationCodeGenerators.collectLitGenerators)
 
-    val collectAll:String = """|java.util.List<Integer> list = new java.util.ArrayList<Integer>();
-                               |list.addAll(left().collectList());
-                               |list.addAll(right().collectList());
-                               |return list;
-                               |""".stripMargin
-    registerExtension(new Collect, Map(
-      new Lit -> """|java.util.List<Integer> list = new java.util.ArrayList<Integer>();
-                    |list.add(value());
-                    |return list;
-                    |""".stripMargin,
-      new Add -> collectAll,
-      new Sub -> collectAll,
-      new Neg -> """|java.util.List<Integer> list = new java.util.ArrayList<Integer>();
-                    |list.addAll(exp().collectList());
-                    |return list;
-                    |""".stripMargin
-    ))
     updated
   }
 

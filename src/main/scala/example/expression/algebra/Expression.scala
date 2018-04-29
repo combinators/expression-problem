@@ -1,10 +1,10 @@
 package example.expression.algebra
 
 import javax.inject.Inject
-
 import com.github.javaparser.ast.CompilationUnit
 import expression.data.{Add, Eval, Lit}
-import expression.extensions.{Collect, Neg, PrettyP, Sub, Mult}
+import expression.extensions.{Collect, Mult, Neg, PrettyP, Sub}
+import expression.instances.UnitSuite
 import expression.{DomainModel, Exp, Operation}
 import org.combinators.cls.git.{EmptyResults, InhabitationController}
 import org.combinators.cls.interpreter.ReflectedRepository
@@ -39,8 +39,13 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
     List[Exp](new Mult).asJava,
     List.empty.asJava
   )
+
+
+  // decide upon a set of test cases from which we can generate driver code/test cases.
+  val allTests : UnitSuite = new UnitSuite(evolution_3)
+
   // this is a hack, to pass in evol_2 since we won't be using it in futurte.
-  lazy val repository = new ExpressionSynthesis(evolution_3) with Structure {}
+  lazy val repository = new ExpressionSynthesis(evolution_3, allTests) with Structure {}
   import repository._
 
 
@@ -94,8 +99,6 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
        //problem here need to fix OperationExtendedBaseClass
       .addCombinator(new OperationSpecialImpClass(evolution_3, new PrettyP,"ExpAlg", "Mult", domain_evolution.version2))//hacking
       .addCombinator(new OperationSpecialImpClass(evolution_3, new Eval,"SubExpAlg", "Mult", domain_evolution.version2))//hacking
-
-
 
     base
   }

@@ -1,13 +1,13 @@
 package example.expression.covariant
 
 import javax.inject.Inject
-
 import com.github.javaparser.ast.CompilationUnit
 import org.combinators.cls.interpreter.ReflectedRepository
 import org.combinators.cls.git.{EmptyResults, InhabitationController}
 import org.combinators.templating.persistable.JavaPersistable._
 import expression.data.{Add, Eval, Lit}
 import expression.extensions.{Collect, Neg, PrettyP, Sub}
+import expression.instances.UnitSuite
 import expression.{DomainModel, Exp}
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
@@ -31,7 +31,10 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
   //model.ops.add(new SimplifyExpr)
   model.ops.add(new Collect)
 
-  lazy val repository = new ExpressionSynthesis(model) with Structure {}
+  // decide upon a set of test cases from which we can generate driver code/test cases.
+  val allTests : UnitSuite = new UnitSuite(model)
+
+  lazy val repository = new ExpressionSynthesis(model,allTests) with Structure {}
   import repository._
 
   lazy val Gamma = repository.init(ReflectedRepository(repository, classLoader = this.getClass.getClassLoader), model)

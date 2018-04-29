@@ -5,6 +5,10 @@ import com.github.javaparser.ast.stmt.Statement
 import org.combinators.templating.twirl.Java
 import expression.types.{FrameworkTypes, GenericType, TypeInformation, Types}
 import expression.{Exp, Operation}
+import org.combinators.cls.types.{Constructor, Type}
+
+import org.combinators.cls.types._
+import org.combinators.cls.types.syntax._
 
 /**
   * These codify the semantic types used by the Expression problem.
@@ -24,7 +28,23 @@ trait MethodMapper {
     */
   def getImplementation(op:Operation):Map[Class[_ <: Exp],MethodDeclaration] = implementations(op.getClass)
 
-   /**
+  /**
+    * Given an operation and a map of (Exp x String) call addImpl on each.
+    *
+    * Placed here for easy global access.
+    *
+    * @param op
+    * @param map
+    */
+  def registerImpl (op:Operation, map:Map[Exp,String]): Unit = {
+    map.keys.foreach {
+      key =>
+        addImpl(op, key, Java(map(key)).statements())
+    }
+  }
+
+
+  /**
     * For the given operation, add the sequence of statements to implement for given expression subtype.
     * This dynamically maintains a map which can be inspected for the code synthesis.
     *
@@ -59,11 +79,24 @@ trait MethodMapper {
       case Types.Exp=> "Exp"           // base class of everything
 
       case Types.Void => "void"
+      case Types.Double => "Double"      // allow boxing/unboxing for generics
       case Types.Int => "Integer"      // allow boxing/unboxing for generics
       case Types.String => "String"
       case g:GenericType => Type_toString(g.base) + "<" + Type_toString(g.generic) + ">"
       case FrameworkTypes.List => "java.util.List"
       case _ => "None"
     }
+
+  /**
+    * Used for code synthesis in representation.
+    */
+  object representation {
+    def apply(part: Type): Constructor = 'Representation (part)
+
+    val expr:Type = 'ExprGenerated    // once expressions are generated, this is the semantic type
+
+    val eval:Type = 'EvalGen          // for Expressions
+    val prettyp:Type = 'PrettyPGen    // generate statements within the excecute method of moves
+  }
 
 }

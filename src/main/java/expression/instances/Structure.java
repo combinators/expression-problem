@@ -1,8 +1,13 @@
 package expression.instances;
 
 /**
- * Knows how to construct an expression
+ * Knows how to construct an expression, and for that expression, associate a number of
+ * potential test runs.
+ *
+ *
  */
 public abstract class Structure {
-    abstract Instance build();
+    public abstract Instance build();
+
+
 }

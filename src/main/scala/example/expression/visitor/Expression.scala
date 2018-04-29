@@ -1,13 +1,14 @@
 package example.expression.visitor
 
 import javax.inject.Inject
-
 import com.github.javaparser.ast.CompilationUnit
+import example.expression.visitor.tests.AllTests
 import org.combinators.cls.interpreter.ReflectedRepository
 import org.combinators.cls.git.{EmptyResults, InhabitationController}
 import org.combinators.templating.persistable.JavaPersistable._
 import expression.data.{Add, Eval, Lit}
 import expression.extensions._
+import expression.instances.UnitSuite
 import expression.operations._
 import expression.{DomainModel, Exp, Operation}
 import org.webjars.play.WebJarsUtil
@@ -47,7 +48,10 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
   // VISITOR solution has no choice but to merge all domain models.
   val model:DomainModel = version_final.flatten
 
-  lazy val repository = new ExpressionSynthesis(model) with Structure {}
+  // decide upon a set of test cases from which we can generate driver code/test cases.
+  val allTests : UnitSuite = new AllTests(model)
+
+  lazy val repository = new ExpressionSynthesis(model, allTests) with Structure {}
   import repository._
 
   lazy val Gamma = {

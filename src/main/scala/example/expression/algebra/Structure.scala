@@ -35,12 +35,12 @@ trait Structure extends Base with SemanticTypes with MethodMapper {
 
     // for now, this still uses the visitor structure that is shared. Must fix eventually
 
-    def registerImpl (op:Operation, map:Map[Exp,String]): Unit = {
-      map.keys.foreach {
-        key =>
-          addImpl(op, key, Java(map(key)).statements())
-      }
-    }
+//    def registerImpl (op:Operation, map:Map[Exp,String]): Unit = {
+//      map.keys.foreach {
+//        key =>
+//          addImpl(op, key, Java(map(key)).statements())
+//      }
+//    }
 
     registerImpl(new Eval, Map(
 

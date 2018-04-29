@@ -11,9 +11,9 @@ import expression.Operation;
  * sufficient information that can be used to generate a real JUnit test case
  */
 public class UnitTest {
-    final Operation op;
-    final Instance inst;
-    final Object expected;
+    public final Operation op;
+    public final Instance inst;
+    public final Object expected;
 
     public UnitTest(Instance inst, Operation op, Object expected) {
         this.inst = inst;

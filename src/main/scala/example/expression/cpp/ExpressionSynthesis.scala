@@ -3,14 +3,14 @@ package example.expression.cpp
 
 import org.combinators.cls.interpreter.combinator
 import org.combinators.cls.types._
-
 import example.expression.ExpressionDomain
 import expression._
+import expression.instances.UnitSuite
 
 import scala.collection.JavaConverters._
 
 /** Future work to sanitize combinators to be independent of Exp. */
-class ExpressionSynthesis(override val domain:DomainModel) extends ExpressionDomain(domain) with CPPSemanticTypes {
+class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) extends ExpressionDomain(domain, tests) with CPPSemanticTypes {
 
   /** Construct visitor abstract class. */
   @combinator object Visitor {

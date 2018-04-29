@@ -6,6 +6,6 @@ import expression.types.Types;
 public class Eval extends Operation {
 
     public Eval() {
-        super("eval", Types.Int);
+        super("eval", Types.Double);
     }
 }

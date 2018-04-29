@@ -1,17 +1,46 @@
 package expression.instances;
 
+import expression.DomainModel;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-public class UnitSuite implements Iterable<UnitTest> {
-    ArrayList<UnitTest> tests = new ArrayList<>();
+/**
+ * A Test suite is a collection of UnitTests
+ */
+public class UnitSuite implements Iterable<Expression> {
+    protected final DomainModel model;
 
-    public void add(UnitTest test) {
-        tests.add(test);
+    ArrayList<Expression> expressions  = new ArrayList<>();
+
+    public UnitSuite(DomainModel model) {
+        this.model = model;
+
+        // find all test cases (public methods starting with 'test' and invoke them, one after each other
+        // to retrieve the expressions which are then added to our set of expressions.
+        for (Method method : this.getClass().getMethods()) {
+            if (method.getName().startsWith("test") &&
+                method.getReturnType().equals(Expression.class)) {
+
+                try {
+                    // since static method, object is null. Model is passed as the argument
+                    Expression exp = (Expression) method.invoke(null, model);
+                    expressions.add(exp);
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                } catch (InvocationTargetException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
     }
 
+    /** Return each expression (and associated test cases) for this suite. */
     @Override
-    public Iterator<UnitTest> iterator() {
-       return tests.iterator();
+    public Iterator<Expression> iterator() {
+        return expressions.iterator();
     }
 }

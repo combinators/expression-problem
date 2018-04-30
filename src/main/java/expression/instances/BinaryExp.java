@@ -20,6 +20,11 @@ public class BinaryExp implements Instance {
     }
 
     @Override
+    public String toString() {
+        return "(" + left.toString() + " " + op.getClass().getSimpleName() + " " + right.toString() + ")";
+    }
+
+    @Override
     public Stream<Instance> subInstances() {
         return Stream.concat(
                 Stream.concat(
@@ -31,5 +36,12 @@ public class BinaryExp implements Instance {
     @Override
     public Exp self() {
         return op;
+    }
+
+    /** Standard visitor pattern. Uses post-order visit traversal. */
+    public void accept(Visitor v) {
+        v.visit(left);
+        v.visit(right);
+        v.visit(this);
     }
 }

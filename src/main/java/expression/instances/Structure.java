@@ -8,6 +8,4 @@ package expression.instances;
  */
 public abstract class Structure {
     public abstract Instance build();
-
-
 }

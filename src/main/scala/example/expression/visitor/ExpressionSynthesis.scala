@@ -11,7 +11,8 @@ import example.expression.ExpressionDomain
 import expression._
 import expression.data.Eval
 import expression.extensions._
-import expression.instances.{Lit, UnitSuite}
+import expression.instances.{Instance, Lit, StringVisitor, UnitSuite}
+import expression.operations.SimplifyExpr
 
 import scala.collection.JavaConverters._
 
@@ -201,6 +202,29 @@ class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) 
                     |String result$testNumber = (String) exp$testNumber.accept(new PrettyP());
                     |assertEquals("${tc.expected.toString}", result$testNumber);
                     |}""".stripMargin).methodDeclarations().mkString("\n")
+
+                // unless I export the full domain model visitor pattern into the solution domain,
+                // we must rely on the prettyP operation for our success.
+              case _:SimplifyExpr => {
+
+                val expectedCode: Option[com.github.javaparser.ast.expr.Expression] = representationCodeGenerators.instanceGenerators(tc.expected.asInstanceOf[Instance])
+                if (expectedCode.isDefined) {
+                  val initExpected: String = s"""Exp expectedExp$testNumber = ${expectedCode.get.toString};"""
+
+                  val str: String =
+                    s"""
+                       |public void testSimplify$testNumber() {
+                       |  $init
+                       |  $initExpected
+                       |Exp result$testNumber = (Exp) exp$testNumber.accept(new SimplifyExpr());
+                       |assertEquals(expectedExp$testNumber.accept(new PrettyP()), result$testNumber.accept(new PrettyP()));
+                       |}""".stripMargin
+                Java(str).methodDeclarations().mkString("\n")
+                }
+                else {
+                  Java(s"""public void skip${op.name}$testNumber(){}""").methodDeclarations().mkString("\n")
+                }
+              }
 
               case  c:Collect => {
                 var expected:String = "java.util.List<Double> match = new java.util.ArrayList<Double>();"

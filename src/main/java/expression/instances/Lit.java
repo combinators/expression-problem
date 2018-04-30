@@ -21,6 +21,11 @@ public class Lit implements Instance {
     }
 
     @Override
+    public String toString() {
+        return "" + value;
+    }
+
+    @Override
     public Stream<Instance> subInstances() {
         return Stream.of(this);
     }
@@ -28,5 +33,10 @@ public class Lit implements Instance {
     @Override
     public Exp self() {
         return type;
+    }
+
+    /** Standard visitor pattern. Uses post-order visit traversal. */
+    public void accept(Visitor v) {
+       v.visit(this);
     }
 }

@@ -18,6 +18,11 @@ public class UnaryExp implements Instance {
     }
 
     @Override
+    public String toString() {
+        return "(" + op.getClass().getSimpleName() + " " + exp.toString() + ")";
+    }
+
+    @Override
     public Stream<Instance> subInstances() {
         return Stream.concat(Stream.of(this), exp.subInstances());
     }
@@ -25,5 +30,11 @@ public class UnaryExp implements Instance {
     @Override
     public Exp self() {
         return op;
+    }
+
+    /** Standard visitor pattern. Uses post-order visit traversal. */
+    public void accept(Visitor v) {
+        v.visit(exp);
+        v.visit(this);
     }
 }

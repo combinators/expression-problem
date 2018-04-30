@@ -2,6 +2,7 @@ package example.expression.visitor
 
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
+import com.github.javaparser.ast.stmt.Statement
 import org.combinators.cls.interpreter.combinator
 import org.combinators.cls.types.Type
 import org.combinators.cls.types.syntax._
@@ -10,7 +11,7 @@ import example.expression.ExpressionDomain
 import expression._
 import expression.data.Eval
 import expression.extensions._
-import expression.instances.UnitSuite
+import expression.instances.{Lit, UnitSuite}
 
 import scala.collection.JavaConverters._
 
@@ -34,22 +35,12 @@ class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) 
         Java(s"""return ${comb.toString};""").statements())
     })
 
-//      s"public abstract R visit(${x.getClass.getSimpleName} exp);")
+  domain.data.asScala
+    .foreach(exp => {
+      val comb:Seq[Statement] = representationCodeGenerators.collectGenerators(exp).get
 
-//  map.keys.foreach {
-//    key =>
-//      addImpl(op, key, Java(map(key)).statements())
-//  }
-
-//  registerImpl(new Eval, Map(
-//
-//    new Lit -> "return e.getValue();",
-//    new Add -> "return e.getLeft().accept(this) + e.getRight().accept(this);",
-//    new Sub -> "return e.getLeft().accept(this) - e.getRight().accept(this);",
-//    new Mult -> "return e.getLeft().accept(this) * e.getRight().accept(this);",
-//    new Divd -> "return e.getLeft().accept(this) / e.getRight().accept(this);",
-//    new Neg -> "return -e.getExp().accept(this);"
-//  ))
+      addImpl(new Collect, exp, comb)
+    })
 
   /** Construct visitor abstract class. */
   @combinator object Visitor {
@@ -193,20 +184,38 @@ class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) 
             testNumber = testNumber+1
             val op:Operation = tc.op
             val init:String = s"""Exp exp$testNumber = ${code.get.toString};"""
+
+            // hah! once again, I am stuck using a case statement, which will need to be expanded
+            // into a code generator for maximum power
             val generated:String = op match{
               case _:Eval =>
-                Java(s"""|public void test$testNumber() {
+                Java(s"""|public void testEval$testNumber() {
                     |  $init
                     |  Double result$testNumber = (Double) exp$testNumber.accept(new Eval());
                     |  assertEquals(${tc.expected.toString}, result$testNumber.doubleValue());
                     |}""".stripMargin).methodDeclarations().mkString("\n")
 
               case _:PrettyP =>
-                Java(s"""|public void test$testNumber() {
+                Java(s"""|public void testPrettyP$testNumber() {
                     |  $init
                     |String result$testNumber = (String) exp$testNumber.accept(new PrettyP());
                     |assertEquals("${tc.expected.toString}", result$testNumber);
                     |}""".stripMargin).methodDeclarations().mkString("\n")
+
+              case  c:Collect => {
+                var expected:String = "java.util.List<Double> match = new java.util.ArrayList<Double>();"
+
+                expected += tc.expected.asInstanceOf[java.util.List[Lit]].asScala.map(value => {
+                  "match.add(" + value.value + ");"
+                }).mkString("\n")
+
+                Java(s"""|public void testCollect$testNumber() {
+                         |  $init
+                         |  java.util.List<Double> result$testNumber = (java.util.List<Double>) exp$testNumber.accept(new Collect());
+                         |  $expected
+                         |  assertEquals(match, result$testNumber);
+                         |}""".stripMargin).methodDeclarations().mkString("\n")
+              }
 
               case _ => Java(s"""public void skip${op.name}$testNumber(){}""").methodDeclarations().mkString("\n")
             }
@@ -216,40 +225,11 @@ class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) 
         }).mkString("\n")
       ).mkString("\n")
 
-      println("-=----------------------------")
-      println(allGen)
-      println("-=----------------------------")
-
-
-      Java(s"""
-              |package expression;
-              |
-              |import junit.framework.TestCase;
-              |
-              |public class TestSuite extends TestCase {
-              |
-              |    $allGen
-              |
-              |    public void oldCode() {
-              |        System.out.println("======Add======");
-              |        Add add = new Add(new Lit(7), new Lit(4));
-              |        System.out.println(add.accept(new Eval()));
-              |        System.out.println("======Sub======");
-              |        Sub sub = new Sub(new Lit(7), new Lit(4));
-              |        System.out.println(sub.accept(new Eval()));
-              |        System.out.println("======Mult======");
-              |        Mult mult = new Mult(new Lit(7), new Lit(4));
-              |        System.out.println(mult.accept(new Eval()));
-              |        System.out.println("======Divd======");
-              |        Divd divd = new Divd(new Lit(7), new Lit(4));
-              |        System.out.println(divd.accept(new Eval()));
-              |        System.out.println("======Print======");
-              |        Exp expr = new Mult(new Lit(5), new Add(new Lit(3), new Lit(-3)));
-              |        System.out.println(expr.accept(new PrettyP()));
-              |        Exp simpler = expr.accept(new SimplifyExpr());
-              |        System.out.println(simpler.accept(new PrettyP()));
-              |  }
-              |}""".stripMargin).compilationUnit()
+      Java(s"""|package expression;
+               |import junit.framework.TestCase;
+               |public class TestSuite extends TestCase {
+               |    $allGen
+               |}""".stripMargin).compilationUnit()
     }
 
     val semanticType:Type = driver

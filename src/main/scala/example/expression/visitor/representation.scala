@@ -1,5 +1,6 @@
 package example.expression.visitor
 
+import com.github.javaparser.ast.stmt.Statement
 import example.expression.j.MethodMapper
 import expression.{Exp, Operation}
 import expression.data.{Add, BinaryExp, Lit, UnaryExp}
@@ -137,20 +138,6 @@ object representationCodeGenerators  {
     },
   )
 
-//  /**
-//    * Convert test case into an invocation of the visitor pattern.
-//    * Integer result = (Integer) add.accept(new Eval());
-//    */
-//  val invocationGenerators:CodeGeneratorRegistry[Seq[Statement]] = CodeGeneratorRegistry.merge[Seq[Statement]](
-//    CodeGeneratorRegistry[Seq[Statement], Operation] {
-//      case (_:CodeGeneratorRegistry[Seq[Statement]], op:Operation) => {
-//        val typ:String = Type_toString(op.`type`)
-//
-//        Java(s"""${op.}""").statements()
-//      }
-//    },
-//  )
-
   /**
     * Code generator for reproducing the structure of the visitor pattern invocation for prettyP.
     */
@@ -175,9 +162,37 @@ object representationCodeGenerators  {
               |""".stripMargin).expression[com.github.javaparser.ast.expr.Expression]
       }
     },
-
   )
 
+  /**
+    * Code generator for reproducing the structure of the visitor pattern invocation for collect.
+    */
+  val collectGenerators:CodeGeneratorRegistry[Seq[Statement]] = CodeGeneratorRegistry.merge[Seq[Statement]](
+    CodeGeneratorRegistry[Seq[Statement], Lit] {
+      case (_:CodeGeneratorRegistry[Seq[Statement]], _:Lit) =>
+        Java(s"""|java.util.List<Double> list = new java.util.ArrayList<Double>();
+                 |list.add(e.getValue());
+                 |return list;
+                 |""".stripMargin).statements()
+    },
+
+    CodeGeneratorRegistry[Seq[Statement], BinaryExp] {
+      case (_:CodeGeneratorRegistry[Seq[Statement]], binary:BinaryExp) =>
+        Java(s"""|java.util.List<Double> list = new java.util.ArrayList<Double>();
+                 |list.addAll(e.getLeft().accept(this));
+                 |list.addAll(e.getRight().accept(this));
+                 |return list;
+                 |""".stripMargin).statements()
+    },
+
+    CodeGeneratorRegistry[Seq[Statement], UnaryExp] {
+      case (_:CodeGeneratorRegistry[Seq[Statement]], unary:UnaryExp) => {
+        Java(s"""|java.util.List<Double> list = new java.util.ArrayList<Double>();
+                 |list.addAll(e.getExp().accept(this));
+                 |return list;""".stripMargin).statements()
+      }
+    },
+  )
 
 /**
   * When used, it isn't important what semantic Type is, which is why we omit it.

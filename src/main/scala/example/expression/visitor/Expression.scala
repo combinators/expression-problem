@@ -4,19 +4,19 @@ import javax.inject.Inject
 import com.github.javaparser.ast.CompilationUnit
 import example.expression.visitor.tests.AllTests
 import org.combinators.cls.interpreter.ReflectedRepository
-import org.combinators.cls.git.{EmptyResults, InhabitationController}
-import org.combinators.templating.persistable.JavaPersistable._
 import expression.data.{Add, Eval, Lit}
 import expression.extensions._
 import expression.instances.UnitSuite
 import expression.operations._
 import expression.{DomainModel, Exp, Operation}
+import org.combinators.cls.git.{EmptyInhabitationBatchJobResults, InhabitationController, Results, RoutingEntries}
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
-
+import org.combinators.cls.types.Constructor
 import scala.collection.JavaConverters._
+import org.combinators.templating.persistable.JavaPersistable._
 
-class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: ApplicationLifecycle) extends InhabitationController(webJars, applicationLifecycle) {
+class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: ApplicationLifecycle) extends InhabitationController(webJars, applicationLifecycle) with RoutingEntries {
 
   // Configure the desired (sub)types and operations
   // no need to add 'Exp' to the model, since assumed always to be there
@@ -71,20 +71,9 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
   /** This needs to be defined, and it is set from Gamma. */
   lazy val combinatorComponents = Gamma.combinatorComponents
 
-  // Quickest way to request all targets
-  var jobs = Gamma.InhabitationBatchJob[CompilationUnit](generated(generated.visitor))
-      .addJob[CompilationUnit](exp(exp.base, new Exp))
-      .addJob[CompilationUnit](ops(ops.visitor, new Eval))
-      .addJob[CompilationUnit](exp(exp.visitor, new Lit))
-      .addJob[CompilationUnit](exp(exp.visitor, new Add))
-      .addJob[CompilationUnit](exp(exp.visitor, new Sub))
-      .addJob[CompilationUnit](exp(exp.visitor, new Neg))
-      .addJob[CompilationUnit](exp(exp.visitor, new Mult))
-      .addJob[CompilationUnit](exp(exp.visitor, new Divd))
-      .addJob[CompilationUnit](ops(ops.visitor, new PrettyP))
-      .addJob[CompilationUnit](ops(ops.visitor, new Collect))
-      .addJob[CompilationUnit](ops(ops.visitor, new SimplifyExpr))
-      .addJob[CompilationUnit](driver)
+  val targets:Seq[Constructor] = Synthesizer.visitorTargets(domain)
+  lazy val results:Results =
+    EmptyInhabitationBatchJobResults(Gamma).addJobs[CompilationUnit](targets).compute()
 
-  lazy val results = EmptyResults().addAll(jobs.run())
+  lazy val controllerAddress: String = "expression"
 }

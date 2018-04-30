@@ -1,7 +1,5 @@
 package expression;
 
-import expression.types.Types;
-
 import java.util.*;
 
 /**
@@ -20,10 +18,7 @@ public class Exp {
     /** Represents table of operations. */
     public List<Method> ops = new ArrayList<>();
 
-    public Exp() {
-        // default is to have an eval operation with no arguments and return type int.
-        // remove default. User must place in first domain model instance manually
-    }
+    public Exp() { }
 
     /**
      * Two Exp objects are the same if they derive from same class.
@@ -50,4 +45,8 @@ public class Exp {
         return getClass().hashCode();
     }
 
+    /** Standard visitor pattern. */
+    public void accept(Visitor v) {
+        v.visit(this);
+    }
 }

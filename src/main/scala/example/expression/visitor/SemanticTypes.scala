@@ -10,7 +10,7 @@ import expression.{Exp, Operation}
   */
 trait SemanticTypes extends MethodMapper {
 
-  val driver:Type = 'Driver
+  val driver:Constructor = 'Driver
 
   // Abstract Visitor class to be generated.
   object generated {

@@ -88,4 +88,26 @@ public class DomainModel {
         return new DomainModel(mergedData, mergedOps);
     }
 
+    /**
+     * Accept a visitor for all model elements, recursively.
+
+     * @param v     Visitor for the domain model
+     */
+    public void accept(Visitor v) {
+
+        // To accept a set, we must visit each member of the set and be accepted on each element.
+        for (Exp e : data) {
+            e.accept (v);
+        }
+
+        for (Operation op: ops) {
+            op.accept(v);
+        }
+
+        // Finally recognize that we have visited the set
+        if (parent != null) {
+            v.visit(this);
+        }
+    }
+
 }

@@ -22,7 +22,7 @@ public class SimpleExpression extends Expression {
 
     /** This is invoked from the superclass, not directly here. */
     protected Instance expression() {
-        // ( ( 5 * 7 ) + ( 8 / 9 ) )
+        // ( ( 5 * 7 ) + ( 18 / 9 ) )
         Instance mult = new expression.instances.BinaryExp(new Mult(),
                 new expression.instances.Lit(new Lit(),5),
                 new expression.instances.Lit(new Lit(),7));

@@ -18,7 +18,7 @@ import scala.collection.JavaConverters._
 
 class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: ApplicationLifecycle) extends InhabitationController(webJars, applicationLifecycle) {
 
-  // Configure the desired (sub)types and operations
+   // Configure the desired (sub)types and operations
   val evolution_0:DomainModel = new DomainModel(
     List[Exp](new Lit, new Add).asJava,
     List[Operation](new Eval).asJava

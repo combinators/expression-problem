@@ -47,18 +47,18 @@ class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) 
   @combinator object Visitor {
     def apply(): CompilationUnit = {
       val signatures = domain.data.asScala
-            .map(x => s"public abstract R visit(${x.getClass.getSimpleName} exp);").mkString("\n")
+        .map(x => s"public abstract R visit(${x.getClass.getSimpleName} exp);").mkString("\n")
 
       Java (s"""
-           |package expression;
-           |/*
-           | * A concrete visitor describes a concrete operation on expressions. There is one visit
-           | * method per type in the class hierarchy.
-           | */
-           |public abstract class Visitor<R> {
-           |
+               |package expression;
+               |/*
+               | * A concrete visitor describes a concrete operation on expressions. There is one visit
+               | * method per type in the class hierarchy.
+               | */
+               |public abstract class Visitor<R> {
+               |
            |$signatures
-           |}
+               |}
          """.stripMargin).compilationUnit()
     }
 
@@ -68,13 +68,13 @@ class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) 
   /** Generate from domain. USER NEEDS TO SPECIFY THESE EITHER AUTOMATICALLY OR MANUALLY */
   @combinator object BaseExpClass {
     def apply() : CompilationUnit =
-    Java(s"""
-         |package expression;
-         |
+      Java(s"""
+              |package expression;
+              |
          |public abstract class Exp {
-         |    public abstract <R> R accept(Visitor<R> v);
-         |}
-         |""".stripMargin).compilationUnit()
+              |    public abstract <R> R accept(Visitor<R> v);
+              |}
+              |""".stripMargin).compilationUnit()
 
     val semanticType:Type = exp(exp.base, new Exp)
   }
@@ -172,82 +172,90 @@ class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) 
     val semanticType:Type = ops (ops.visitor,op)
   }
 
-  // sample Driver
+  /**
+    * Construct JUnit test cases for each registered expression.
+    *
+    * Within the test case method, each of the registered operations are evaluated to confirm the expect value
+    * matches the actual value.
+    */
   @combinator object Driver {
     def apply:CompilationUnit = {
 
+      // each test creates a public void testXXX method, inside of which, each sub-part is evaluated.
       var testNumber = 0
-      val allGen:String = allTests.iterator.asScala.map(tst =>
-        tst.iterator().asScala.map(tc => {
+      val allGen:String = allTests.iterator.asScala.map(tst => {
+        // build up expression for which all tests are defined.
+        val code:Option[com.github.javaparser.ast.expr.Expression] = representationCodeGenerators.instanceGenerators(tst.expression)
+        testNumber = testNumber+1
+        val init:String = s"""Exp exp$testNumber = ${code.get.toString};"""
+
+        // each individual test case is evaluated within the context of this expression
+        var resultNumber = 0
+        val blocks:Seq[Statement] = tst.iterator().asScala.flatMap(tc => {
+          resultNumber = resultNumber + 1
           // Convert the INSTANCE into proper instantiation code for the Visitor. A generator does this.
-          val code:Option[com.github.javaparser.ast.expr.Expression] = representationCodeGenerators.instanceGenerators(tc.inst)
-          if (code.isDefined) {
-            testNumber = testNumber+1
-            val op:Operation = tc.op
-            val init:String = s"""Exp exp$testNumber = ${code.get.toString};"""
+          val op:Operation = tc.op
 
-            // hah! once again, I am stuck using a case statement, which will need to be expanded
-            // into a code generator for maximum power
-            val generated:String = op match{
-              case _:Eval =>
-                Java(s"""|public void testEval$testNumber() {
-                    |  $init
-                    |  Double result$testNumber = (Double) exp$testNumber.accept(new Eval());
-                    |  assertEquals(${tc.expected.toString}, result$testNumber.doubleValue());
-                    |}""".stripMargin).methodDeclarations().mkString("\n")
+          // hah! once again, I am stuck using a case statement, which will need to be expanded
+          // into a code generator for maximum power
+          val generated:Seq[Statement] = op match{
+            case _:Eval =>
+              Java(s"""|  Double result$resultNumber = (Double) exp$testNumber.accept(new Eval());
+                       |  assertEquals(${tc.expected.toString}, result$resultNumber.doubleValue());
+                       |""".stripMargin).statements()
 
-              case _:PrettyP =>
-                Java(s"""|public void testPrettyP$testNumber() {
-                    |  $init
-                    |String result$testNumber = (String) exp$testNumber.accept(new PrettyP());
-                    |assertEquals("${tc.expected.toString}", result$testNumber);
-                    |}""".stripMargin).methodDeclarations().mkString("\n")
+            case _:PrettyP =>
+              Java(s"""|  String result$resultNumber = (String) exp$testNumber.accept(new PrettyP());
+                       |  assertEquals("${tc.expected.toString}", result$resultNumber);
+                       |""".stripMargin).statements()
 
-                // unless I export the full domain model visitor pattern into the solution domain,
-                // we must rely on the prettyP operation for our success.
-              case _:SimplifyExpr => {
+            // unless I export the full domain model visitor pattern into the solution domain,
+            // we must rely on the prettyP operation for our success.
+            case _:SimplifyExpr => {
 
-                val expectedCode: Option[com.github.javaparser.ast.expr.Expression] = representationCodeGenerators.instanceGenerators(tc.expected.asInstanceOf[Instance])
-                if (expectedCode.isDefined) {
-                  val initExpected: String = s"""Exp expectedExp$testNumber = ${expectedCode.get.toString};"""
+              val expectedCode: Option[com.github.javaparser.ast.expr.Expression] = representationCodeGenerators.instanceGenerators(tc.expected.asInstanceOf[Instance])
+              if (expectedCode.isDefined) {
+                val initExpected: String = s"""Exp expectedExp$testNumber = ${expectedCode.get.toString};"""
 
-                  val str: String =
-                    s"""
-                       |public void testSimplify$testNumber() {
-                       |  $init
-                       |  $initExpected
-                       |Exp result$testNumber = (Exp) exp$testNumber.accept(new SimplifyExpr());
-                       |assertEquals(expectedExp$testNumber.accept(new PrettyP()), result$testNumber.accept(new PrettyP()));
-                       |}""".stripMargin
-                Java(str).methodDeclarations().mkString("\n")
-                }
-                else {
-                  Java(s"""public void skip${op.name}$testNumber(){}""").methodDeclarations().mkString("\n")
-                }
+                val str: String =
+                  s"""
+                     |  $initExpected
+                     |  Exp result$resultNumber = (Exp) exp$testNumber.accept(new SimplifyExpr());
+                     |  assertEquals(expectedExp$testNumber.accept(new PrettyP()), result$resultNumber.accept(new PrettyP()));
+                     |""".stripMargin
+                Java(str).statements()
               }
-
-              case  c:Collect => {
-                var expected:String = "java.util.List<Double> match = new java.util.ArrayList<Double>();"
-
-                expected += tc.expected.asInstanceOf[java.util.List[Lit]].asScala.map(value => {
-                  "match.add(" + value.value + ");"
-                }).mkString("\n")
-
-                Java(s"""|public void testCollect$testNumber() {
-                         |  $init
-                         |  java.util.List<Double> result$testNumber = (java.util.List<Double>) exp$testNumber.accept(new Collect());
-                         |  $expected
-                         |  assertEquals(match, result$testNumber);
-                         |}""".stripMargin).methodDeclarations().mkString("\n")
+              else {
+                // skip for lack of anything better.
+                Java("// skip${op.name}$testNumber(){}\n").statements()
               }
-
-              case _ => Java(s"""public void skip${op.name}$testNumber(){}""").methodDeclarations().mkString("\n")
             }
 
-            generated
+            case  c:Collect => {
+              var expected:String = "java.util.List<Double> match = new java.util.ArrayList<Double>();"
+
+              expected += tc.expected.asInstanceOf[java.util.List[Lit]].asScala.map(value => {
+                "match.add(" + value.value + ");"
+              }).mkString("\n")
+
+              Java(s"""|  java.util.List<Double> result$resultNumber = (java.util.List<Double>) exp$testNumber.accept(new Collect());
+                       |  $expected
+                       |  assertEquals(match, result$resultNumber);
+                       |""".stripMargin).statements()
+            }
+
+            case _ => Java(s"""// skip${op.name}$testNumber(){}""").statements()
           }
-        }).mkString("\n")
-      ).mkString("\n")
+
+          generated
+        }).toSeq
+
+        val codeBlock:String = s"""|public void testEval$testNumber() {
+                                   |  $init
+                                   |  ${blocks.mkString("\n")}
+                                   |}""".stripMargin
+        Java(codeBlock).methodDeclarations().mkString("\n")
+    }).mkString("\n")
 
       Java(s"""|package expression;
                |import junit.framework.TestCase;

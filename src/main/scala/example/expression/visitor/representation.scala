@@ -3,8 +3,8 @@ package example.expression.visitor
 import com.github.javaparser.ast.stmt.Statement
 import example.expression.j.MethodMapper
 import expression.{Exp, Operation}
-import expression.data.{Add, BinaryExp, Lit, UnaryExp}
-import expression.extensions.{Divd, Mult, Neg, Sub}
+import expression.data._
+import expression.extensions._
 import expression.types.{FrameworkTypes, GenericType, TypeInformation, Types}
 import org.combinators.cls.types.Type
 import org.combinators.templating.twirl.Java
@@ -193,6 +193,7 @@ object representationCodeGenerators  {
       }
     },
   )
+
 
 /**
   * When used, it isn't important what semantic Type is, which is why we omit it.

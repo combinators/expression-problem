@@ -39,14 +39,25 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
   )
 
   // Evolution 1: Extension to domain model has new data variants and operations
-  val version_final:DomainModel = new DomainModel(version_3,
+  val version_4:DomainModel = new DomainModel(version_3,
     List[Exp](new Neg, new Mult, new Divd).asJava,
+    List.empty.asJava
+  )
+
+  val version_5:DomainModel = new DomainModel(version_4,
+    List.empty.asJava,
     List[Operation](new Collect, new SimplifyExpr).asJava
   )
 
+  // One extension is to add Boolean values and IFF operation. you can ADD/OR/XOR/NOR/
+  // IFF(bool, sub-1, sub-2)
+  // Simplify. Exponent (x^k where k is a double).  Sqrt(x^2) = x
+  // What about detecting div-by-zero replace with a new LIT that is an exception
+  //
+
   // demonstrate how to merge domain models with new capabilities
   // VISITOR solution has no choice but to merge all domain models.
-  val model:DomainModel = version_final.flatten
+  val model:DomainModel = version_5.flatten
 
   // decide upon a set of test cases from which we can generate driver code/test cases.
   val allTests : UnitSuite = new AllTests(model)

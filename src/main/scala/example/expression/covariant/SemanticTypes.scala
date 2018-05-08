@@ -57,11 +57,11 @@ trait SemanticTypes {
       'Op(phase, Constructor(crossP))
     }
     def apply (phase:Type, exp:Exp, ops:List[Operation]) : Constructor = {
-      val crossP = exp.getClass.getSimpleName + ops.map(_.getClass.getSimpleName).mkString("")
+      val crossP = exp.getClass.getSimpleName + ops.map(_.getClass.getSimpleName).sortWith(_ < _).mkString("")
       'Op(phase, Constructor(crossP))
     }
     def apply (phase:Type, ops:List[Operation]) : Constructor = {
-      'Op(phase, Constructor(ops.map(_.getClass.getSimpleName).mkString("")))
+      'Op(phase, Constructor(ops.map(_.getClass.getSimpleName).sortWith(_ < _).mkString("")))
     }
 
     val interface:Type       = 'Interface

@@ -11,7 +11,7 @@ import example.expression.ExpressionDomain
 import expression._
 import expression.data.Eval
 import expression.extensions._
-import expression.instances.{Instance, Lit, StringVisitor, UnitSuite}
+import expression.instances.{Instance, Lit, UnitSuite}
 import expression.operations.SimplifyExpr
 
 import scala.collection.JavaConverters._
@@ -177,6 +177,10 @@ class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) 
     *
     * Within the test case method, each of the registered operations are evaluated to confirm the expect value
     * matches the actual value.
+    *
+    * Sure would like to convert this into a generator, since then (in covariant) I would generate the appropriate
+    * instantiation based on the domain model available at the time. Note that this might still be possible,
+    * assuming the representationCodeGenerators has access to the top-level domain model.
     */
   @combinator object Driver {
     def apply:CompilationUnit = {
@@ -192,6 +196,9 @@ class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) 
         // each individual test case is evaluated within the context of this expression
         var resultNumber = 0
         val blocks:Seq[Statement] = tst.iterator().asScala.flatMap(tc => {
+
+          //  val comb:Seq[Statement] = representationCodeGenerators.evalGenerators(tc).get
+
           resultNumber = resultNumber + 1
           // Convert the INSTANCE into proper instantiation code for the Visitor. A generator does this.
           val op:Operation = tc.op
@@ -217,6 +224,7 @@ class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) 
               if (expectedCode.isDefined) {
                 val initExpected: String = s"""Exp expectedExp$testNumber = ${expectedCode.get.toString};"""
 
+                // TODO: Create an equal visitor for use instead of depending on prettyP
                 val str: String =
                   s"""
                      |  $initExpected

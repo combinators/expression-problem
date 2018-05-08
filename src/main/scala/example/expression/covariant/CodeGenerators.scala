@@ -2,10 +2,9 @@ package example.expression.covariant
 
 import com.github.javaparser.ast.stmt.Statement
 import example.expression.j.MethodMapper
-import expression.{Exp, FunctionMethod, Operation}
+import expression.{DomainModel, Exp}
 import expression.data._
 import expression.extensions.{Divd, Mult, Neg, Sub}
-import expression.types.Types
 import org.combinators.cls.types.Type
 import org.combinators.templating.twirl.Java
 import shared.compilation.CodeGeneratorRegistry
@@ -13,8 +12,10 @@ import org.combinators.cls.types.syntax._
 
 /**
   * Common code generators for the covariant solution.
+  *
+  * Customized to know about the mode recent model domain
   */
-object representationCodeGenerators  {
+class CodeGenerators(model:DomainModel)  {
 
   /**
     * Return the operator to use for a given binary exp type in Java.
@@ -65,7 +66,7 @@ object representationCodeGenerators  {
 
     CodeGeneratorRegistry[Seq[Statement], UnaryExp] {
       case (_:CodeGeneratorRegistry[Seq[Statement]], unary:UnaryExp) =>
-        Java(s"""return ${getUnaryOperator(unary).asString} e.getExp().accept(this);""").statements()
+        Java(s"""return ${getUnaryOperator(unary).asString} exp().eval();""").statements()
     },
   )
 
@@ -95,7 +96,7 @@ object representationCodeGenerators  {
   val collectLitGenerators:CodeGeneratorRegistry[Seq[Statement]] = CodeGeneratorRegistry.merge[Seq[Statement]](
     CodeGeneratorRegistry[Seq[Statement], Lit] {
       case (_:CodeGeneratorRegistry[Seq[Statement]], _:Lit) =>
-        Java("""|java.util.List<Integer> list = new java.util.ArrayList<Integer>();
+        Java("""|java.util.List<Double> list = new java.util.ArrayList<Double>();
                 |list.add(value());
                 |return list;
                 |""".stripMargin).statements()
@@ -103,7 +104,7 @@ object representationCodeGenerators  {
 
     CodeGeneratorRegistry[Seq[Statement], BinaryExp] {
       case (_:CodeGeneratorRegistry[Seq[Statement]], _:BinaryExp) =>
-        Java("""|java.util.List<Integer> list = new java.util.ArrayList<Integer>();
+        Java("""|java.util.List<Double> list = new java.util.ArrayList<Double>();
                 |list.addAll(left().collectList());
                 |list.addAll(right().collectList());
                 |return list;
@@ -112,7 +113,37 @@ object representationCodeGenerators  {
 
     CodeGeneratorRegistry[Seq[Statement], UnaryExp] {
       case (_:CodeGeneratorRegistry[Seq[Statement]], _:UnaryExp) =>
-        Java("""|java.util.List<Integer> list = new java.util.ArrayList<Integer>();
+        Java("""|java.util.List<Double> list = new java.util.ArrayList<Double>();
+                |list.addAll(exp().collectList());
+                |return list;
+                |""".stripMargin).statements()
+    },
+  )
+
+  /**
+    * Code generator for reproducing the structure of the visitor pattern invocation for simplify
+    */
+  val collectSimplifyGenerators:CodeGeneratorRegistry[Seq[Statement]] = CodeGeneratorRegistry.merge[Seq[Statement]](
+    CodeGeneratorRegistry[Seq[Statement], Lit] {
+      case (_:CodeGeneratorRegistry[Seq[Statement]], _:Lit) =>
+        Java("""|java.util.List<Double> list = new java.util.ArrayList<Double>();
+                |list.add(value());
+                |return list;
+                |""".stripMargin).statements()
+    },
+
+    CodeGeneratorRegistry[Seq[Statement], BinaryExp] {
+      case (_:CodeGeneratorRegistry[Seq[Statement]], _:BinaryExp) =>
+        Java("""|java.util.List<Double> list = new java.util.ArrayList<Double>();
+                |list.addAll(left().collectList());
+                |list.addAll(right().collectList());
+                |return list;
+                |""".stripMargin).statements()
+    },
+
+    CodeGeneratorRegistry[Seq[Statement], UnaryExp] {
+      case (_:CodeGeneratorRegistry[Seq[Statement]], _:UnaryExp) =>
+        Java("""|java.util.List<Double> list = new java.util.ArrayList<Double>();
                 |list.addAll(exp().collectList());
                 |return list;
                 |""".stripMargin).statements()

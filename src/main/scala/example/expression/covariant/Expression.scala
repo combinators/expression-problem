@@ -2,12 +2,14 @@ package example.expression.covariant
 
 import javax.inject.Inject
 import com.github.javaparser.ast.CompilationUnit
+import example.expression.covariant.tests.AllTests
 import org.combinators.cls.interpreter.ReflectedRepository
 import org.combinators.cls.git.{EmptyResults, InhabitationController}
 import org.combinators.templating.persistable.JavaPersistable._
 import expression.data.{Add, Eval, Lit}
 import expression.extensions._
 import expression.instances.UnitSuite
+import expression.operations.SimplifyExpr
 import expression.{DomainModel, Exp, Operation}
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
@@ -34,35 +36,21 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
     List.empty.asJava,
     List[Operation](new PrettyP).asJava
   )
+
   // Adding mult
   val evolution_3:DomainModel = new DomainModel(evolution_2,
-    List[Exp](new Mult).asJava,
+    List[Exp](new Mult, new Neg, new Divd).asJava,
     List.empty.asJava
   )
 
   val evolution_4:DomainModel = new DomainModel(evolution_3,
     List.empty.asJava,
-    List[Operation](new Collect).asJava
+    List[Operation](new Collect).asJava     // , new SimplifyExpr [TOO HARD FOR NOW]
   )
 
-//
-//  // Configure the desired (sub)types and operations
-//  val model:DomainModel = new DomainModel()
-//
-//  // no need to add 'Exp' to the model, since assumed always to be there
-//  model.data.add(new Lit)
-//  model.data.add(new Add)
-//  model.data.add(new Neg)
-//  model.data.add(new Sub)
-//
-//  // operations to have (including Eval)
-//  model.ops.add(new Eval)
-//  model.ops.add(new PrettyP)
-//  //model.ops.add(new SimplifyExpr)
-//  model.ops.add(new Collect)
 
   // decide upon a set of test cases from which we can generate driver code/test cases.
-  val allTests : UnitSuite = new UnitSuite(evolution_4)
+  val allTests : UnitSuite =  new AllTests(evolution_4)
 
   lazy val repository = new ExpressionSynthesis(evolution_4,allTests) with Structure {}
   import repository._
@@ -76,53 +64,103 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
     // type interfaces (note: Exp is assumed above)
     .addJob[CompilationUnit](ep(ep.interface, new PrettyP))
     .addJob[CompilationUnit](ep(ep.interface, new Collect))
+    //.addJob[CompilationUnit](ep(ep.interface, new SimplifyExpr))
 
     .addJob[CompilationUnit](driver)
     .addJob[CompilationUnit](ep(ep.finalType, new Lit))
     .addJob[CompilationUnit](ep(ep.finalType, new Add))
     .addJob[CompilationUnit](ep(ep.finalType, new Sub))
+    .addJob[CompilationUnit](ep(ep.finalType, new Mult))
+    .addJob[CompilationUnit](ep(ep.finalType, new Divd))
     .addJob[CompilationUnit](ep(ep.finalType, new Neg))
 
     // default
     .addJob[CompilationUnit](ep(ep.defaultMethods, new Lit, new Eval))
     .addJob[CompilationUnit](ep(ep.defaultMethods, new Add, new Eval))
     .addJob[CompilationUnit](ep(ep.defaultMethods, new Sub, new Eval))
+    .addJob[CompilationUnit](ep(ep.defaultMethods, new Mult, new Eval))
+    .addJob[CompilationUnit](ep(ep.defaultMethods, new Divd, new Eval))
     .addJob[CompilationUnit](ep(ep.defaultMethods, new Neg, new Eval))
 
     //.addJob[CompilationUnit](ep(ep.interface, new SimplifyExpr))
     .addJob[CompilationUnit](ep(ep.interface, new Lit, new PrettyP))
     .addJob[CompilationUnit](ep(ep.interface, new Add, new PrettyP))
     .addJob[CompilationUnit](ep(ep.interface, new Sub, new PrettyP))
+    .addJob[CompilationUnit](ep(ep.interface, new Mult, new PrettyP))
+    .addJob[CompilationUnit](ep(ep.interface, new Divd, new PrettyP))
     .addJob[CompilationUnit](ep(ep.interface, new Neg, new PrettyP))
 
     .addJob[CompilationUnit](ep(ep.interface, new Lit, new Collect))
     .addJob[CompilationUnit](ep(ep.interface, new Add, new Collect))
     .addJob[CompilationUnit](ep(ep.interface, new Sub, new Collect))
+    .addJob[CompilationUnit](ep(ep.interface, new Mult, new Collect))
+    .addJob[CompilationUnit](ep(ep.interface, new Divd, new Collect))
     .addJob[CompilationUnit](ep(ep.interface, new Neg, new Collect))
+
+    // potentially a bad tuple size...
+    .addJob[CompilationUnit](ep(ep.interface, List(new PrettyP, new Collect)))
+
+//    .addJob[CompilationUnit](ep(ep.interface, new Lit, new SimplifyExpr))
+//    .addJob[CompilationUnit](ep(ep.interface, new Add, new SimplifyExpr))
+//    .addJob[CompilationUnit](ep(ep.interface, new Sub, new SimplifyExpr))
+//    .addJob[CompilationUnit](ep(ep.interface, new Mult, new SimplifyExpr))
+//    .addJob[CompilationUnit](ep(ep.interface, new Divd, new SimplifyExpr))
+//    .addJob[CompilationUnit](ep(ep.interface, new Neg, new SimplifyExpr))
+//
+//    .addJob[CompilationUnit](ep(ep.interface, new Lit, List(new SimplifyExpr, new Collect)))
+//    .addJob[CompilationUnit](ep(ep.interface, new Add, List(new SimplifyExpr, new Collect)))
+//    .addJob[CompilationUnit](ep(ep.interface, new Sub, List(new SimplifyExpr, new Collect)))
+//    .addJob[CompilationUnit](ep(ep.interface, new Mult, List(new SimplifyExpr, new Collect)))
+//    .addJob[CompilationUnit](ep(ep.interface, new Divd, List(new SimplifyExpr, new Collect)))
+//    .addJob[CompilationUnit](ep(ep.interface, new Neg, List(new SimplifyExpr, new Collect)))
 
     .addJob[CompilationUnit](ep(ep.interface, new Lit, List(new PrettyP, new Collect)))
     .addJob[CompilationUnit](ep(ep.interface, new Add, List(new PrettyP, new Collect)))
     .addJob[CompilationUnit](ep(ep.interface, new Sub, List(new PrettyP, new Collect)))
+    .addJob[CompilationUnit](ep(ep.interface, new Mult, List(new PrettyP, new Collect)))
+    .addJob[CompilationUnit](ep(ep.interface, new Divd, List(new PrettyP, new Collect)))
     .addJob[CompilationUnit](ep(ep.interface, new Neg, List(new PrettyP, new Collect)))
 
-    .addJob[CompilationUnit](ep(ep.interface, List(new PrettyP, new Collect)))
+//    .addJob[CompilationUnit](ep(ep.interface, new Lit, List(new SimplifyExpr, new PrettyP)))
+//    .addJob[CompilationUnit](ep(ep.interface, new Add, List(new SimplifyExpr, new PrettyP)))
+//    .addJob[CompilationUnit](ep(ep.interface, new Sub, List(new SimplifyExpr, new PrettyP)))
+//    .addJob[CompilationUnit](ep(ep.interface, new Mult, List(new SimplifyExpr, new PrettyP)))
+//    .addJob[CompilationUnit](ep(ep.interface, new Divd, List(new SimplifyExpr, new PrettyP)))
+//    .addJob[CompilationUnit](ep(ep.interface, new Neg, List(new SimplifyExpr, new PrettyP)))
+
+
+    //    .addJob[CompilationUnit](ep(ep.interface, new Lit, List(new Collect, new Eval, new PrettyP)))  // PP must come after C
+//    .addJob[CompilationUnit](ep(ep.interface, new Add, List(new Collect, new Eval, new PrettyP)))
+//    .addJob[CompilationUnit](ep(ep.interface, new Sub, List(new Collect, new Eval, new PrettyP)))
+//    .addJob[CompilationUnit](ep(ep.interface, new Neg, List(new Collect, new Eval, new PrettyP)))
+
+    //.addJob[CompilationUnit](ep(ep.interface, List(new Collect, new PrettyP, new SimplifyExpr)))
 
     .addJob[CompilationUnit](ep(ep.finalType, new Lit, List(new PrettyP)))
     .addJob[CompilationUnit](ep(ep.finalType, new Add, List(new PrettyP)))
     .addJob[CompilationUnit](ep(ep.finalType, new Sub, List(new PrettyP)))
+    .addJob[CompilationUnit](ep(ep.finalType, new Mult, List(new PrettyP)))
+    .addJob[CompilationUnit](ep(ep.finalType, new Divd, List(new PrettyP)))
     .addJob[CompilationUnit](ep(ep.finalType, new Neg, List(new PrettyP)))
 
     .addJob[CompilationUnit](ep(ep.finalType, new Lit, List(new Collect)))
     .addJob[CompilationUnit](ep(ep.finalType, new Add, List(new Collect)))
     .addJob[CompilationUnit](ep(ep.finalType, new Sub, List(new Collect)))
+    .addJob[CompilationUnit](ep(ep.finalType, new Mult, List(new Collect)))
+    .addJob[CompilationUnit](ep(ep.finalType, new Divd, List(new Collect)))
     .addJob[CompilationUnit](ep(ep.finalType, new Neg, List(new Collect)))
 
-    .addJob[CompilationUnit](ep(ep.finalType, new Lit, List(new PrettyP, new Collect)))
-    .addJob[CompilationUnit](ep(ep.finalType, new Add, List(new PrettyP, new Collect)))
-    .addJob[CompilationUnit](ep(ep.finalType, new Sub, List(new PrettyP, new Collect)))
-    .addJob[CompilationUnit](ep(ep.finalType, new Neg, List(new PrettyP, new Collect)))
+    .addJob[CompilationUnit](ep(ep.finalType, new Lit, List(new Collect, new PrettyP)))
+    .addJob[CompilationUnit](ep(ep.finalType, new Add, List(new Collect, new PrettyP)))
+    .addJob[CompilationUnit](ep(ep.finalType, new Sub, List(new Collect, new PrettyP)))
+    .addJob[CompilationUnit](ep(ep.finalType, new Mult, List(new Collect, new PrettyP)))
+    .addJob[CompilationUnit](ep(ep.finalType, new Divd, List(new Collect, new PrettyP)))
+    .addJob[CompilationUnit](ep(ep.finalType, new Neg, List(new Collect, new PrettyP)))
 
-
+//    .addJob[CompilationUnit](ep(ep.finalType, new Lit, List(new Collect, new Eval, new PrettyP)))
+//    .addJob[CompilationUnit](ep(ep.finalType, new Add, List(new Collect, new Eval, new PrettyP)))
+//    .addJob[CompilationUnit](ep(ep.finalType, new Sub, List(new Collect, new Eval, new PrettyP)))
+//    .addJob[CompilationUnit](ep(ep.finalType, new Neg, List(new Collect, new Eval, new PrettyP)))
 
   lazy val results = EmptyResults().addAll(jobs.run())
 

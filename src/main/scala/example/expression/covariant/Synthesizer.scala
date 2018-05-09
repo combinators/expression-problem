@@ -58,9 +58,11 @@ object Synthesizer extends SemanticTypes  {
     // every type x op gets a target
     flat.data.asScala.foreach (
       e => {
-        flat.ops.asScala.foreach (
+        // Skip all Eval...
+        flat.ops.asScala.filterNot(p => p.getClass.getSimpleName.equals("Eval")).foreach (
           o => {
             seq = seq :+ ep(ep.finalType, e, List(o))
+            seq = seq :+ ep(ep.interface, e, o)
           }
         )
       }

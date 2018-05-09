@@ -55,7 +55,6 @@ trait Structure extends Base with SemanticTypes with MethodMapper {
       dm.data.asScala.foreach { exp: Exp => {
         val st: Type = ep(ep.interface, exp, sub)
         // ep(ep.interface, exp, ops)
-        println("++++++ add MultiOperation Interface:" + st)
         updated = updated
           .addCombinator(new AddMultiOperation(sub, exp))
       }
@@ -93,18 +92,20 @@ trait Structure extends Base with SemanticTypes with MethodMapper {
 
     subsets.foreach {
       sub: List[Operation] => {
-        println (">>> sub:" + sub.toString)
-        if (sub.length == 1) {
-          updated = updated.addCombinator(new AddOperation(sub.head))
+
+        // sort to be able to ensure className concatenation is proper
+        val sorted = sub.sortWith(_.getClass.getSimpleName < _.getClass.getSimpleName)
+        if (sorted.length == 1) {
+          updated = updated.addCombinator(new AddOperation(sorted.head))
         } else {
           // every subset gets its own interface
-          updated = updated.addCombinator(new AddMultiOperationInterface(sub))
+          updated = updated.addCombinator(new AddMultiOperationInterface(sorted))
 
-          addMulti(model, sub)
+          addMulti(model, sorted)
         }
 
         // do this in all cases...
-        addFinal(model, sub)
+        addFinal(model, sorted)
       }
     }
 

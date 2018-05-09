@@ -4,7 +4,6 @@ import org.combinators.cls.types.{Constructor, Type}
 import org.combinators.cls.types.syntax._
 import expression.{Exp, Operation}
 
-
 /**
   * These codify the semantic types used by the Expression problem.
   *

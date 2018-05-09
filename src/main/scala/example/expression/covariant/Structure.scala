@@ -25,6 +25,14 @@ trait Structure extends Base with SemanticTypes with MethodMapper {
   override def init[G <: ExpressionDomain](gamma: ReflectedRepository[G], model: DomainModel): ReflectedRepository[G] = {
     var updated = super.init(gamma, model)
 
+//    def computeMaximalSubTypes() : String = {
+//      model.flatten.ops.asScala
+//        .filterNot(p => p.getClass().getSimpleName.equals("Eval"))
+//        .map(op => op.getClass.getSimpleName)
+//        .sortWith(_ < _)
+//        .mkString("")
+//    }
+
     // Every extension needs its own FinalClass. Surely there is a scala pattern that can avoid these
     // recursive helper methods...
 //    updated = updateTypes(model, updated)
@@ -151,6 +159,7 @@ trait Structure extends Base with SemanticTypes with MethodMapper {
       }
     }
 
+    // HACK: TODO: Fix and expose to be configurable
     // note default 'Eval' operation is handled specially since it is assumed to always exist in top Exp class
     registerImpl(model, new Eval, new FunctionMethod("eval", Types.Double))
 
@@ -159,78 +168,12 @@ trait Structure extends Base with SemanticTypes with MethodMapper {
 
     registerExtension(model, new Collect, new CodeGenerators(model).collectLitGenerators)
 
-    // simplify.....BEGIN
-    // Note: ACCEPT returns Double, which means we can't use == as comparison against two variables, but
-    // can use with constants (i.e., == 0)
-    // checking if x == -y is good, since it properly unboxes/boxes
-
-//    def registerExtensionHardCoded (op:Operation, map:Map[Exp,Seq[Statement]]): Unit = {
-//      map.keys.foreach {
-//        key =>
-//          updated = updated
-//            .addCombinator(new AddExpOperation(key, op, map(key)))
-//      }
-//    }
-//
-//    // note default 'Eval' operation is handled specially since it is assumed to always exist in top Exp class
-//    registerExtensionHardCoded(new SimplifyExpr,  Map(
-//      new Lit -> Java(s"""return e;""").statements(),   // nothing to simplify.
-//      new Add -> Java(s"""
-//                         |double leftVal = e.getLeft().accept(new Eval());
-//                         |double rightVal = e.getRight().accept(new Eval());
-//                         |if ((leftVal == 0 && rightVal == 0) || (leftVal + rightVal == 0)) {
-//                         |  return new Lit(0.0);
-//                         |} else if (leftVal == 0) {
-//                         |  return e.getRight().accept(this);
-//                         |} else if (rightVal == 0) {
-//                         |  return e.getLeft().accept(this);
-//                         |} else {
-//                         |  return new Add(e.getLeft().accept(this), e.getRight().accept(this));
-//                         |}
-//                         |""".stripMargin).statements(),
-//      new Sub -> Java(s"""
-//                         |if (left().eval() == right().eval()) {
-//                         |  return new Lit(0.0);
-//                         |} else {
-//                         |  return new Sub(e.getLeft().accept(this), e.getRight().accept(this));
-//                         |}
-//                         |""".stripMargin).statements(),
-//      new Neg -> Java(s"""
-//                         |if (this.eval() == 0) {
-//                         |   return new LitFinal(0.0);    // HELP. MUST BE ADJUSTED
-//                         |} else {
-//                         |   return this;
-//                         |}""".stripMargin).statements(),
-//      new Mult -> Java(s"""
-//                          |double leftVal = e.getLeft().accept(new Eval());
-//                          |double rightVal = e.getRight().accept(new Eval());
-//                          |if (leftVal == 0 || rightVal == 0) {
-//                          |  return new Lit(0.0);
-//                          |} else if (leftVal == 1) {
-//                          |  return e.getRight();
-//                          |} else if (rightVal == 1) {
-//                          |  return e.getLeft();
-//                          |} else {
-//                          |  return new Mult(e.getLeft().accept(this), e.getRight().accept(this));
-//                          |}
-//                          |""".stripMargin).statements(),
-//      new Divd -> Java(s"""
-//                          |double leftVal = e.getLeft().accept(new Eval());
-//                          |double rightVal = e.getRight().accept(new Eval());
-//                          |if (leftVal == 0) {
-//                          |  return new Lit(0.0);
-//                          |} else if (rightVal == 1) {
-//                          |  return e.getLeft();
-//                          |} else if (leftVal == rightVal) {
-//                          |  return new Lit(1.0);
-//                          |} else if (leftVal == -rightVal) {
-//                          |  return new Lit(-1.0);
-//                          |} else {
-//                          |  return new Divd(e.getLeft().accept(this), e.getRight().accept(this));
-//                          |}
-//                          |""".stripMargin).statements()
-//    ))
-
+    // Get class that contains just PrettyP and SimplifyExp
+    val subTypes:String = List(new PrettyP().getClass.getSimpleName,
+                               new SimplifyExpr().getClass.getSimpleName)
+        .sortWith(_ < _)
+        .mkString("")
+    registerExtension(model, new SimplifyExpr, new SimplifyCodeGenerators(model, subTypes).simplifyGenerators)
 
     updated
   }

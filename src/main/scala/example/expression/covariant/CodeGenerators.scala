@@ -71,7 +71,7 @@ class CodeGenerators(model:DomainModel)  {
   )
 
   /**
-    * Code generator for reproducing the structure of the visitor pattern invocation for prettyP.
+    * Code generator for reproducing the structure of the covariant invocation for prettyP.
     */
   val prettypGenerators:CodeGeneratorRegistry[Seq[Statement]] = CodeGeneratorRegistry.merge[Seq[Statement]](
     CodeGeneratorRegistry[Seq[Statement], Lit] {
@@ -91,7 +91,7 @@ class CodeGenerators(model:DomainModel)  {
   )
 
   /**
-    * Code generator for reproducing the structure of the visitor pattern invocation for prettyP.
+    * Code generator for reproducing the structure of the covariant pattern invocation for collectLit.
     */
   val collectLitGenerators:CodeGeneratorRegistry[Seq[Statement]] = CodeGeneratorRegistry.merge[Seq[Statement]](
     CodeGeneratorRegistry[Seq[Statement], Lit] {
@@ -120,35 +120,6 @@ class CodeGenerators(model:DomainModel)  {
     },
   )
 
-  /**
-    * Code generator for reproducing the structure of the visitor pattern invocation for simplify
-    */
-  val collectSimplifyGenerators:CodeGeneratorRegistry[Seq[Statement]] = CodeGeneratorRegistry.merge[Seq[Statement]](
-    CodeGeneratorRegistry[Seq[Statement], Lit] {
-      case (_:CodeGeneratorRegistry[Seq[Statement]], _:Lit) =>
-        Java("""|java.util.List<Double> list = new java.util.ArrayList<Double>();
-                |list.add(value());
-                |return list;
-                |""".stripMargin).statements()
-    },
-
-    CodeGeneratorRegistry[Seq[Statement], BinaryExp] {
-      case (_:CodeGeneratorRegistry[Seq[Statement]], _:BinaryExp) =>
-        Java("""|java.util.List<Double> list = new java.util.ArrayList<Double>();
-                |list.addAll(left().collectList());
-                |list.addAll(right().collectList());
-                |return list;
-                |""".stripMargin).statements()
-    },
-
-    CodeGeneratorRegistry[Seq[Statement], UnaryExp] {
-      case (_:CodeGeneratorRegistry[Seq[Statement]], _:UnaryExp) =>
-        Java("""|java.util.List<Double> list = new java.util.ArrayList<Double>();
-                |list.addAll(exp().collectList());
-                |return list;
-                |""".stripMargin).statements()
-    },
-  )
 
 /**
   * When used, it isn't important what semantic Type is, which is why we omit it.

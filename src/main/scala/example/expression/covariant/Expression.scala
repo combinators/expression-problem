@@ -46,9 +46,8 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
 
   val evolution_4:DomainModel = new DomainModel(evolution_3,
     List.empty.asJava,
-    List[Operation](new Collect).asJava     // , new SimplifyExpr [TOO HARD FOR NOW]
+    List[Operation](new Collect, new SimplifyExpr).asJava
   )
-
 
   // decide upon a set of test cases from which we can generate driver code/test cases.
   val allTests : UnitSuite =  new AllTests(evolution_4)

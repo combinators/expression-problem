@@ -4,10 +4,7 @@ import expression.DomainModel;
 import expression.data.Add;
 import expression.data.Eval;
 import expression.data.Lit;
-import expression.extensions.Collect;
-import expression.extensions.Divd;
-import expression.extensions.Mult;
-import expression.extensions.PrettyP;
+import expression.extensions.*;
 import expression.instances.Expression;
 import expression.instances.Instance;
 import expression.instances.UnitSuite;
@@ -103,6 +100,34 @@ public class AllTests extends UnitSuite {
 
         // this validates the simplify capability works.
         exp.add(new SimplifyExpr(), mult);
+
+        return exp;
+    }
+
+    public static Expression testSimplifyMultiply(DomainModel model) {
+        // (5/7) / (7-(2*3) --> just (5/7)
+        Expression exp = new Expression(model) {
+
+            @Override
+            protected Instance expression() {
+                return new expression.instances.BinaryExp(new Divd(),
+                        new expression.instances.BinaryExp(new Mult(),
+                          new expression.instances.Lit(new Lit(), 5.0),
+                          new expression.instances.Lit(new Lit(), 7.0)),
+                        new expression.instances.BinaryExp(new Sub(),
+                          new expression.instances.Lit(new Lit(), 7.0),
+                          new expression.instances.BinaryExp(new Mult(),
+                                new expression.instances.Lit(new Lit(), 2.0),
+                                new expression.instances.Lit(new Lit(), 3.0))));
+            }
+        };
+
+        Instance divd = new expression.instances.BinaryExp(new Mult(),
+                        new expression.instances.Lit(new Lit(),5.0),
+                        new expression.instances.Lit(new Lit(),7.0));
+
+        // this validates the simplify capability works.
+        exp.add(new SimplifyExpr(), divd);
 
         return exp;
     }

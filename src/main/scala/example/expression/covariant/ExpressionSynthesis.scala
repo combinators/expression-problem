@@ -46,7 +46,7 @@ class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) 
         if (subTypes.length == 0) {
           subTypes = "Exp"   // need to have in case all subtypes vanish.
         }
-        val init:String = s"""$subTypes exp$testNumber = ${code.get.toString};"""
+        var init:String = s"""$subTypes exp$testNumber = ${code.get.toString};"""
 
         // each individual test case is evaluated within the context of this expression
         var resultNumber = 0
@@ -69,19 +69,25 @@ class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) 
                        |""".stripMargin).statements()
 
             // unless I export the full domain model visitor pattern into the solution domain,
-            // we must rely on the prettyP operation for our success.
+            // we must rely on the prettyP operation for our success. Make sure that PrettyP is available
+            // TODO: Actually only need to have PrettyP and SimplifyExpr, which means not maximal set
+            // TODO: but minimal set that includes these two...
             case _:SimplifyExpr => {
-
-              val expectedCode: Option[com.github.javaparser.ast.expr.Expression] = new TestCaseCodeGenerators(domain, tst).instanceGenerators(tc.expected.asInstanceOf[Instance])
+              //val subTypes:String = testDomain.computeSubTypesEnsure(List(new PrettyP))
+              val tstDomain = new TestCaseCodeGenerators(domain, tst, List(new PrettyP))
+              val expectedCode: Option[com.github.javaparser.ast.expr.Expression] = tstDomain.instanceGenerators(tc.expected.asInstanceOf[Instance])
+              subTypes = tstDomain.computeSubTypes()
               if (expectedCode.isDefined) {
+
+                val newInitCode = new TestCaseCodeGenerators(domain, tst, List(new PrettyP)).instanceGenerators(tst.expression) // needs PrettyP
+                init = s"""$subTypes exp$testNumber = ${newInitCode.get.toString};"""
+
                 val initExpected: String = s"""$subTypes expectedExp$testNumber = ${expectedCode.get.toString};"""
 
-                val str: String =
-                  s"""
-                     |  $initExpected
-                     |  $subTypes result$resultNumber = ($subTypes) exp$testNumber.accept(new SimplifyExpr());
-                     |  assertEquals(expectedExp$testNumber.accept(new PrettyP()), result$resultNumber.accept(new PrettyP()));
-                     |""".stripMargin
+                val str:String = s"""|  $initExpected
+                                     |  $subTypes result$resultNumber = ($subTypes) exp$testNumber.simplify();
+                                     |  assertEquals(expectedExp$testNumber.print(), result$resultNumber.print());
+                                     |""".stripMargin
                 Java(str).statements()
               }
               else {

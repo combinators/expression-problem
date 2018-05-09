@@ -38,16 +38,46 @@ import scala.collection.JavaConverters._
   }
 
   Have to find the most recent class in the evolution hierarchy.
+
+  Some Operations must be there (PrettyP) especially for Simplify
   */
-class TestCaseCodeGenerators(model:DomainModel, expr:expression.instances.Expression)  {
+class TestCaseCodeGenerators(model:DomainModel, expr:expression.instances.Expression, mustHave:List[Operation] = List.empty) {
 
-  var resultNumber:Integer = 0
+  var resultNumber: Integer = 0
 
-  var subTypes:String = null
+  var subTypes: String = null
+
+//  /**
+//    * Compute the necessary subtypes BUT ENSURE that given operations are also present.
+//    *
+//    * @param mustHave
+//    * @return
+//    */
+//  def computeSubTypesEnsure(mustHave: List[Operation]): String = {
+//    var ops: List[String] = List.empty
+//    for (ut: UnitTest <- expr.asScala) {
+//
+//      // ignore Eval, which is assumed to always be there
+//      if (!ut.op.getClass.getSimpleName.equals("Eval")) {
+//        ops = ops :+ ut.op.getClass.getSimpleName
+//      }
+//    }
+//
+//    mustHave.foreach (op => {
+//      if (!ops.contains(op.getClass.getSimpleName)) {
+//        ops = ops :+ op.getClass.getSimpleName
+//      }
+//    })
+//
+//    ops.sortWith(_ < _).mkString("")
+//  }
+
 
   /**
     * When an expression requires operations o1, o2, then the subtypes must be instantiated from the
     * most specific subclasses available, derived from the operations to be required of the expr
+    *
+    * Process MustHaves
     *
     * @return
     */
@@ -60,6 +90,12 @@ class TestCaseCodeGenerators(model:DomainModel, expr:expression.instances.Expres
         if (!ut.op.getClass.getSimpleName.equals("Eval")) {
           ops = ops :+ ut.op.getClass.getSimpleName
         }
+
+        mustHave.foreach (op => {
+          if (!ops.contains(op.getClass.getSimpleName)) {
+            ops = ops :+ op.getClass.getSimpleName
+          }
+        })
       }
 
       subTypes = ops.sortWith(_ < _).mkString("")

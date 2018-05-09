@@ -13,7 +13,7 @@ import expression.{Exp, Operation}
   */
 trait SemanticTypes {
 
-  val driver:Type = 'Driver
+  val driver:Constructor = 'Driver
 
   // meta-concerns. When you have completed the definition of a constructor
   object generated {

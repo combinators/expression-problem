@@ -32,7 +32,7 @@ public class AllTests extends UnitSuite {
     public static Expression testPair(DomainModel model) {
         SimpleExpression test = new SimpleExpression(model);
 
-        test.add(new Eval(), 37);
+        test.add(new Eval(), 37.0);
         test.add(new PrettyP(), "((5.0*7.0)+(18.0/9.0))");
 
         ArrayList<Instance> collected = new ArrayList<>();

@@ -8,6 +8,7 @@ import org.combinators.cls.types.Type
 import org.combinators.cls.types.syntax._
 import org.combinators.templating.twirl.Java
 import example.expression.ExpressionDomain
+import example.expression.covariant.SimplifyCodeGenerators
 import expression._
 import expression.data.Eval
 import expression.extensions._
@@ -41,6 +42,13 @@ class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) 
       val comb:Seq[Statement] = representationCodeGenerators.collectGenerators(exp).get
 
       addImpl(new Collect, exp, comb)
+    })
+
+  domain.data.asScala
+    .foreach(exp => {
+      val comb:Seq[Statement] = new SimplifyCodeGenerators(domain).simplifyGenerators(exp).get
+
+      addImpl(new SimplifyExpr, exp, comb)
     })
 
   /** Construct visitor abstract class. */

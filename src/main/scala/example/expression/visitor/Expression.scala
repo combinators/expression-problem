@@ -62,7 +62,7 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
   // decide upon a set of test cases from which we can generate driver code/test cases.
   val allTests : UnitSuite = new AllTests(model)
 
-  lazy val repository = new ExpressionSynthesis(model, allTests) with Structure {}
+  lazy val repository = new ExpressionSynthesis(model, allTests)
   import repository._
 
   lazy val Gamma = {

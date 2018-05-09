@@ -52,18 +52,6 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
 
   lazy val Gamma = {
     var base = ReflectedRepository(repository, classLoader = this.getClass.getClassLoader)
-//
-//    domain.ops.asScala.foreach {
-//      op:Operation => {
-//        print ("Operation:" + op.toString)
-//      }
-//    }
-
-    // also will add 'withExpressions' as was done in the visitor package
-//    base = domain.ops.asScala.foldLeft(base) {
-//        case (repo, op) => repo
-//          .addCombinator(new OpImpl(op))
-//      }
 
     // hack
     base = base

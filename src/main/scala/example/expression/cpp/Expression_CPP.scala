@@ -10,7 +10,7 @@ import expression.data.{Add, Eval, Lit}
 import expression.extensions.{Collect, Neg, PrettyP, Sub}
 import expression.instances.UnitSuite
 import expression.operations.SimplifyExpr
-import expression.{DomainModel, Exp}
+import expression.DomainModel
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
 

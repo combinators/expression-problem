@@ -1,4 +1,4 @@
-package example.expression.visitor.tests;
+package expression.tests;
 
 import expression.DomainModel;
 import expression.data.Add;

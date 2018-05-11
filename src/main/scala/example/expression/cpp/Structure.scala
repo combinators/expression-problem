@@ -49,9 +49,9 @@ trait Structure extends Base with CPPSemanticTypes {
     ))
 
     val combined:String = """
-        |std::vector<int> vec;
-        |std::vector<int> left = value_map_[e->getLeft()];
-        |std::vector<int> right = value_map_[e->getRight()];
+        |std::vector<double> vec;
+        |std::vector<double> left = value_map_[e->getLeft()];
+        |std::vector<double> right = value_map_[e->getRight()];
         |
         |vec.insert(vec.end(), left.begin(), left.end());
         |vec.insert(vec.end(), right.begin(), right.end());
@@ -59,56 +59,73 @@ trait Structure extends Base with CPPSemanticTypes {
       """.stripMargin
 
     registerImpl(new Collect, Map(
-      new Lit -> """|std::vector<int> vec;
+      new Lit -> """|std::vector<double> vec;
                   |vec.push_back(*e->getValue());
                   |value_map_[e] = vec;
                   """.stripMargin,
       new Add -> combined,
       new Sub -> combined,
       new Neg -> """
-                   |std::vector<int> vec;
-                   |std::vector<int> exp = value_map_[e->getExp()];
+                   |std::vector<double> vec;
+                   |std::vector<double> exp = value_map_[e->getExp()];
                    |
                    |vec.insert(vec.end(), exp.begin(), exp.end());
                    |value_map_[e] = vec;
                  """.stripMargin
     ))
 
-    addImpl(new SimplifyExpr, new Lit, s"""return e;""")   // nothing to simplify.
+    addImpl(new SimplifyExpr, new Lit, s"""value_map_[e] = (Exp *) e;""")   // nothing to simplify.
     addImpl(new SimplifyExpr, new Neg,
       s"""
          |Eval eval;
          |e->Accept(&eval);
          |if (eval.getValue(*e) == 0) {
-         |  int z = 0;
-         |  Lit zero = Lit(&z);
-         |  value_map_[e] = &zero;
-         |}
-         """.stripMargin)
+         |  double z = 0;
+         |  value_map_[e] = new Lit(&z);
+         |} else {
+         |  e->getExp()->Accept(this);
+         |  value_map_[e] = new Neg(value_map_[e->getExp()]);
+         |}""".stripMargin)
 
     addImpl(new SimplifyExpr, new Sub,
       s"""
-         |if (e.getLeft().accept(new Eval()) == e.getRight().accept(new Eval())) {
-         |  return new Lit(0);
+         |Eval eval;
+         |e->getLeft()->Accept(&eval);
+         |double leftV = eval.getValue(*(e->getLeft()));
+         |e->getRight()->Accept(&eval);
+         |double rightV = eval.getValue(*(e->getRight()));
+         |
+         |if (leftV == rightV) {
+         |  double z = 0;
+         |  value_map_[e] = new Lit(&z);
          |} else {
-         |  return new Sub(e.getLeft().accept(this), e.getRight().accept(this));
-         |}
-         |""".stripMargin)
+         |  e->getLeft()->Accept(this);
+         |  e->getRight()->Accept(this);
+         |  value_map_[e] = new Sub(value_map_[e->getLeft()], value_map_[e->getRight()]);
+         |}""".stripMargin)
 
     addImpl(new SimplifyExpr, new Add,
       s"""
-         |int leftVal = e.getLeft().accept(new Eval());
-         |int rightVal = e.getRight().accept(new Eval());
-         |if ((leftVal == 0 && rightVal == 0) || (leftVal + rightVal == 0)) {
-         |  return new Lit(0);
-         |} else if (leftVal == 0) {
-         |  return e.getRight().accept(this);
-         |} else if (rightVal == 0) {
-         |  return e.getLeft().accept(this);
+         |Eval eval;
+         |e->getLeft()->Accept(&eval);
+         |double leftV = eval.getValue(*(e->getLeft()));
+         |e->getRight()->Accept(&eval);
+         |double rightV = eval.getValue(*(e->getRight()));
+         |
+         |if (leftV + rightV == 0) {
+         |  double z = 0;
+         |  value_map_[e] = new Lit(&z);
+         |} else if (leftV == 0) {
+         |  e->getRight()->Accept(this);
+         |  value_map_[e] = value_map_[e->getRight()];
+         |} else if (rightV == 0) {
+         |  e->getLeft()->Accept(this);
+         |  value_map_[e] = value_map_[e->getLeft()];
          |} else {
-         |  return new Add(e.getLeft().accept(this), e.getRight().accept(this));
-         |}
-         |""".stripMargin)
+         |  e->getLeft()->Accept(this);
+         |  e->getRight()->Accept(this);
+         |  value_map_[e] = new Add(value_map_[e->getLeft()], value_map_[e->getRight()]);
+         |}""".stripMargin)
 
 
     // Add relevant combinators to construct the sub-type classes, based on domain model.
@@ -215,12 +232,19 @@ trait Structure extends Base with CPPSemanticTypes {
 
       // each visitor stores local values for access. Hah! have to leave a space after $tpe
       // just in case it would end in a ">"
-      val base:Seq[String] = Seq(s"std::map<const Exp*, $tpe > value_map_;")
+      // if Exp, then add * otherwise leave alone
+      val star = op.`type` match {
+        case Types.Exp => "*"
+
+        case _ => ""
+      }
+
+      val base:Seq[String] = Seq(s"std::map<const Exp*, $tpe $star > value_map_;")
 
       // need method for accessing these local values
       val accessor:Seq[String] = Seq(
         s"""
-           |$tpe getValue(const Exp& e) {
+           |$tpe ${star}getValue(const Exp& e) {
            |  return value_map_[&e];
            |}
          """.stripMargin)
@@ -236,41 +260,62 @@ trait Structure extends Base with CPPSemanticTypes {
     def apply: MainClass = {
 
     val code =
-     s"""|int val1 = 1;
-         |int val2 = 2;
-         |int val3 = -3;
-         |Lit one   = Lit(&val1);
-         |Lit two   = Lit(&val2);
-         |Lit three = Lit(&val3);
+     s"""|  double val0 = 0;
+         |  double val1 = 1;
+         |  double valn1 = -1;
+         |  double valn2 = -2;
+         |  double val2 = 2;
+         |  double val3 = 3;
+         |  Lit zer   = Lit(&val0); Neg negZero = Neg(&zer);
+         |  Lit one   = Lit(&val1);
+         |  Neg eight = Neg(&one);
+         |  Lit two   = Lit(&val2);
+         |  Lit three = Lit(&val3);
+         |  Lit neg1 = Lit(&valn1);
+         |  Lit neg2 = Lit(&valn2);
          |
-         |Add four = Add(&one, &two);
-         |Neg five  = Neg(&four);
-         |Sub six = Sub(&five, &three);
+         |  Add four = Add(&one, &two);
+         |  Neg five  = Neg(&four);
+         |  Sub six = Sub(&five, &three);
          |
-         |PrettyP pp;
-         |six.Accept(&pp);
-         |std::cout << pp.getValue(six) << std::endl;
+         |  Add inner = Add(&neg1, &neg2);
+         |  Add onlyAdd = Add(&three, &inner);
          |
-         |Eval e;
-         |six.Accept(&e);
-         |std::cout << e.getValue(six) << std::endl;
+         |  Add combined = Add(new Add(new Lit(&valn1), new Lit(&val1)), new Lit(&val2));
          |
-         |six.Accept(&pp);
-         |std::cout << pp.getValue(six) << std::endl;
+         |  PrettyP pp;
+         |  onlyAdd.Accept(&pp);
+         |  std::cout << pp.getValue(onlyAdd) << std::endl;
          |
-         |six.Accept(&e);
-         |std::cout << e.getValue(six) << std::endl;
+         |  Eval e;
+         |  six.Accept(&e);
+         |  std::cout << e.getValue(six) << std::endl;
          |
-         |Collect col;
-         |six.Accept(&col);
-         |std::vector<int> vec = col.getValue(six);
+         |  Collect col;
+         |  six.Accept(&col);
+         |  std::vector<double> vec = col.getValue(six);
          |
-         |for (std::vector<int>::const_iterator i = vec.begin(); i != vec.end(); ++i) {
-         |  std::cout << *i << ' ';
-         |}
-         |std::cout << std::endl;
+         |  for (std::vector<double>::const_iterator i = vec.begin(); i != vec.end(); ++i) {
+         |    std::cout << *i << ' ';
+         |  }
+         |  std::cout << std::endl;
          |
-         |return 0;
+         |  combined.Accept(&e);
+         |  std::cout << "six:" << e.getValue(combined) << std::endl;
+         |
+         |  SimplifyExpr simp;
+         |  combined.Accept(&simp);   // was six
+         |  Exp *finalExpr = simp.getValue(combined);
+         |
+         |  std::cout << "final:" << (int*)finalExpr << std::endl;
+         |
+         |  finalExpr->Accept(&e);
+         |  std::cout << e.getValue(*finalExpr) << std::endl;
+         |
+         |  finalExpr->Accept(&pp);
+         |  std::cout << pp.getValue(*finalExpr) << std::endl;
+         |
+         |  return 0;
          |""".stripMargin
 
       new MainClass("Driver", Seq(code))

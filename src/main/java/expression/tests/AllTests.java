@@ -1,4 +1,4 @@
-package example.expression.covariant.tests;
+package expression.tests;
 
 import expression.DomainModel;
 import expression.data.Add;
@@ -98,7 +98,6 @@ public class AllTests extends UnitSuite {
             }
         };
 
-        // this validates the simplify capability works.
         exp.add(new SimplifyExpr(), mult);
 
         return exp;
@@ -112,19 +111,19 @@ public class AllTests extends UnitSuite {
             protected Instance expression() {
                 return new expression.instances.BinaryExp(new Divd(),
                         new expression.instances.BinaryExp(new Mult(),
-                          new expression.instances.Lit(new Lit(), 5.0),
-                          new expression.instances.Lit(new Lit(), 7.0)),
+                                new expression.instances.Lit(new Lit(), 5.0),
+                                new expression.instances.Lit(new Lit(), 7.0)),
                         new expression.instances.BinaryExp(new Sub(),
-                          new expression.instances.Lit(new Lit(), 7.0),
-                          new expression.instances.BinaryExp(new Mult(),
-                                new expression.instances.Lit(new Lit(), 2.0),
-                                new expression.instances.Lit(new Lit(), 3.0))));
+                                new expression.instances.Lit(new Lit(), 7.0),
+                                new expression.instances.BinaryExp(new Mult(),
+                                        new expression.instances.Lit(new Lit(), 2.0),
+                                        new expression.instances.Lit(new Lit(), 3.0))));
             }
         };
 
         Instance divd = new expression.instances.BinaryExp(new Mult(),
-                        new expression.instances.Lit(new Lit(),5.0),
-                        new expression.instances.Lit(new Lit(),7.0));
+                new expression.instances.Lit(new Lit(),5.0),
+                new expression.instances.Lit(new Lit(),7.0));
 
         // this validates the simplify capability works.
         exp.add(new SimplifyExpr(), divd);

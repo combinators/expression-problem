@@ -2,17 +2,18 @@ package example.expression.visitor
 
 import javax.inject.Inject
 import com.github.javaparser.ast.CompilationUnit
-import example.expression.visitor.tests.AllTests
 import org.combinators.cls.interpreter.ReflectedRepository
 import expression.data.{Add, Eval, Lit}
 import expression.extensions._
 import expression.instances.UnitSuite
 import expression.operations._
+import expression.tests.AllTests
 import expression.{DomainModel, Exp, Operation}
 import org.combinators.cls.git.{EmptyInhabitationBatchJobResults, InhabitationController, Results, RoutingEntries}
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
 import org.combinators.cls.types.Constructor
+
 import scala.collection.JavaConverters._
 import org.combinators.templating.persistable.JavaPersistable._
 

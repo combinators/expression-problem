@@ -55,10 +55,11 @@ trait CPPSemanticTypes extends SemanticTypes {
   /** Convert a type into its Java String equivalent. */
   def Type_toString (ty:TypeInformation): String =
     ty match {
-      case Types.Exp=> "Exp*"           // base class of everything (turn into pointer)
+      case Types.Exp=> "Exp"           // base class of everything (turn into pointer)
 
       case Types.Void => "void"
       case Types.Int => "int"      // allow boxing/unboxing for generics
+      case Types.Double => "double"
       case Types.String => "std::string"
       case g:GenericType => Type_toString(g.base) + "<" + Type_toString(g.generic) + ">"
       case FrameworkTypes.List => "std::vector"

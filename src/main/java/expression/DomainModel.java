@@ -61,6 +61,24 @@ public class DomainModel {
     }
 
     /**
+     * Merge incoming into current one.
+     */
+    public DomainModel merge(DomainModel incoming) {
+        Set<Operation> mergedOps = new HashSet<>(ops);
+        Set<Exp> mergedData = new HashSet<>(data);
+
+        for (Exp e : incoming.data) {
+            if (!mergedData.contains(e)) { mergedData.add(e); }
+        }
+
+        for (Operation o: incoming.ops) {
+            if (!mergedOps.contains(o)) { mergedOps.add(o); }
+        }
+
+        return new DomainModel(mergedData, mergedOps);
+    }
+
+    /**
      * Flatten hierarchy (if exists) to create a new domain model, with merged data and operations.
      *
      * @return      Returns a new DomainModel object merging data and operations.

@@ -16,7 +16,7 @@ import org.combinators.cls.types.syntax._
   * For any of these that are ever going to be translated directly into Java Type Names, you must
   * make them Constructor.
   */
-trait MethodMapper {
+trait MethodMapper extends Operators {
 
   /** Implementations for an operation. Map(op, Map(exp,MethodDecls)). */
   var implementations:Map[Class[_ <: Operation],Map[Class[_ <: Exp],MethodDeclaration]] = Map()
@@ -73,19 +73,19 @@ trait MethodMapper {
     implementations += (op.getClass -> map)
   }
 
-  /** Convert a type into its Java String equivalent. */
-  def Type_toString (ty:TypeInformation): String =
-    ty match {
-      case Types.Exp=> "Exp"           // base class of everything
-
-      case Types.Void => "void"
-      case Types.Double => "Double"      // allow boxing/unboxing for generics
-      case Types.Int => "Integer"      // allow boxing/unboxing for generics
-      case Types.String => "String"
-      case g:GenericType => Type_toString(g.base) + "<" + Type_toString(g.generic) + ">"
-      case FrameworkTypes.List => "java.util.List"
-      case _ => "None"
-    }
+//  /** Convert a type into its Java String equivalent. */
+//  def Type_toString (ty:TypeInformation): String =
+//    ty match {
+//      case Types.Exp=> "Exp"           // base class of everything
+//
+//      case Types.Void => "void"
+//      case Types.Double => "Double"      // allow boxing/unboxing for generics
+//      case Types.Int => "Integer"      // allow boxing/unboxing for generics
+//      case Types.String => "String"
+//      case g:GenericType => Type_toString(g.base) + "<" + Type_toString(g.generic) + ">"
+//      case FrameworkTypes.List => "java.util.List"
+//      case _ => "None"
+//    }
 
   /**
     * Used for code synthesis in representation.

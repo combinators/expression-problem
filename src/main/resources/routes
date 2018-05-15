@@ -20,3 +20,10 @@ GET   /cpp_ep                              example.expression.cpp.Expression_CPP
 GET   /cpp_ep/raw_:number                  example.expression.cpp.Expression_CPP.raw(number: Long)
 GET   /cpp_ep/prepare                      example.expression.cpp.Expression_CPP.prepare(number: Long)
 GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP.serveFile(file)
+
+# All variants have names that end in "Evolution", with sub-branches as described by 'e0', 'e1', 'e2', ...
+->    /                              example.expression.visitor.E0_EvolutionController
+->    /                              example.expression.visitor.E1_EvolutionController
+->    /                              example.expression.visitor.E2_EvolutionController
+->    /                              example.expression.visitor.E3_EvolutionController
+->    /                              example.expression.visitor.E4_EvolutionController

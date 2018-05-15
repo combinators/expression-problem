@@ -18,6 +18,7 @@ public class UnitSuite implements Iterable<Expression> {
     public UnitSuite(DomainModel model) {
         this.model = model;
 
+        System.out.println ("instantiate tests for:" + model.toString());
         // find all test cases (public methods starting with 'test' and invoke them, one after each other
         // to retrieve the expressions which are then added to our set of expressions.
         for (Method method : this.getClass().getMethods()) {

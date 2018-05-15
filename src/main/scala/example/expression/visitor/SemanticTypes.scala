@@ -34,4 +34,11 @@ trait SemanticTypes extends MethodMapper {
     val base:Type = 'Base           // initial class
     val visitor:Type = 'Visitor     // once visitor has been added
   }
+
+  object generator {
+    def apply (uniq:Type) : Constructor = 'Generator(uniq)
+
+    val test:Type = 'Test
+    val instance:Type = 'Instance
+  }
 }

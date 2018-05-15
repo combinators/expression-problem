@@ -50,12 +50,12 @@ public abstract class Expression implements Iterable<UnitTest> {
 
         // if domain model doesn't contain this operation, then we can't assert
         if (!flat.ops.contains(op)) {
-            throw new RuntimeException ("Expression " + expression.toString() +
+            System.err.println("Expression " + expression.toString() +
                     " contains operation " + op.toString() +
                     " that doesn't appear in its associated domain model.");
+        } else {
+            tests.add(new UnitTest(expression, op, expected));
         }
-
-        tests.add(new UnitTest(expression, op, expected));
     }
 
     /**

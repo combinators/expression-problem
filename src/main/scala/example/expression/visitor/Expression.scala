@@ -1,18 +1,19 @@
 package example.expression.visitor
 
-import javax.inject.Inject
-import com.github.javaparser.ast.CompilationUnit
-import org.combinators.cls.interpreter.ReflectedRepository
 import expression.data.{Add, Eval, Lit}
 import expression.extensions._
-import expression.instances.UnitSuite
 import expression.operations._
+import expression.{Exp, Operation}
+import com.github.javaparser.ast.CompilationUnit
+import expression.DomainModel
+import expression.instances.UnitSuite
 import expression.tests.AllTests
-import expression.{DomainModel, Exp, Operation}
+import javax.inject.Inject
 import org.combinators.cls.git.{EmptyInhabitationBatchJobResults, InhabitationController, Results, RoutingEntries}
+import org.combinators.cls.interpreter.ReflectedRepository
+import org.combinators.cls.types.Constructor
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
-import org.combinators.cls.types.Constructor
 
 import scala.collection.JavaConverters._
 import org.combinators.templating.persistable.JavaPersistable._
@@ -63,22 +64,26 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
   // decide upon a set of test cases from which we can generate driver code/test cases.
   val allTests : UnitSuite = new AllTests(model)
 
-  lazy val repository = new ExpressionSynthesis(model, allTests)
+  lazy val repository = new ExpressionSynthesis(model, allTests) with InitializeRepository {}
   import repository._
 
-  lazy val Gamma = {
-    val base = ReflectedRepository(repository, classLoader = this.getClass.getClassLoader)
-    val withExpressions =
-      domain.data.asScala.foldLeft(base) {
-        case (repo, sub) => repo.addCombinator(new BaseClass(sub)).addCombinator(new ImplClass(sub))
-      }
-    val withOps =
-      domain.ops.asScala.foldLeft(withExpressions) {
-        case (repo, op) => repo.addCombinator(new OpImpl(op))
-      }
+  lazy val Gamma = repository.init(ReflectedRepository(repository, classLoader = this.getClass.getClassLoader), model)
+//lazy val Gamma = repository.init(ReflectedRepository(repository, classLoader = this.getClass.getClassLoader), variation)
 
-    withOps
-  }
+
+  //  lazy val Gamma = {
+//    val base = ReflectedRepository(repository, classLoader = this.getClass.getClassLoader)
+//    val withExpressions =
+//      domain.data.asScala.foldLeft(base) {
+//        case (repo, sub) => repo.addCombinator(new BaseClass(sub)).addCombinator(new ImplClass(sub))
+//      }
+//    val withOps =
+//      domain.ops.asScala.foldLeft(withExpressions) {
+//        case (repo, op) => repo.addCombinator(new OpImpl(op))
+//      }
+//
+//    withOps
+//  }
 
   /** This needs to be defined, and it is set from Gamma. */
   lazy val combinatorComponents = Gamma.combinatorComponents

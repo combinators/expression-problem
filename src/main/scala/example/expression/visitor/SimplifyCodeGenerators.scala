@@ -10,40 +10,40 @@ import shared.compilation.CodeGeneratorRegistry
 /**
   * Common code generators for the visitor solution.
   */
-class SimplifyCodeGenerators(model:DomainModel)  {
+class SimplifyCodeGenerators(model:DomainModel) {
 
-  /**
-    * Return the operator to use for a given binary exp type in Java.
-    *
-    * @param exp Exp subclass that corresponds to a binary operator.
-    * @return
-    */
-  def getBinaryOperator( exp:Exp) : com.github.javaparser.ast.expr.BinaryExpr.Operator = {
-    exp match {
-
-      case _:Add => com.github.javaparser.ast.expr.BinaryExpr.Operator.PLUS
-      case _:Sub => com.github.javaparser.ast.expr.BinaryExpr.Operator.MINUS
-      case _:Mult => com.github.javaparser.ast.expr.BinaryExpr.Operator.MULTIPLY
-      case _:Divd => com.github.javaparser.ast.expr.BinaryExpr.Operator.DIVIDE
-
-      case _ => null
-    }
-  }
-
-  /**
-    * Return the operator to use for a given unary exp type in Java.
-    *
-    * @param exp  Exp subclass that corresponds to a unary operator.
-    * @return
-    */
-  def getUnaryOperator( exp:Exp) : com.github.javaparser.ast.expr.UnaryExpr.Operator = {
-    exp match {
-
-      case _:Neg => com.github.javaparser.ast.expr.UnaryExpr.Operator.MINUS
-
-      case _ => null
-    }
-  }
+//  /**
+//    * Return the operator to use for a given binary exp type in Java.
+//    *
+//    * @param exp Exp subclass that corresponds to a binary operator.
+//    * @return
+//    */
+//  def getBinaryOperator( exp:Exp) : com.github.javaparser.ast.expr.BinaryExpr.Operator = {
+//    exp match {
+//
+//      case _:Add => com.github.javaparser.ast.expr.BinaryExpr.Operator.PLUS
+//      case _:Sub => com.github.javaparser.ast.expr.BinaryExpr.Operator.MINUS
+//      case _:Mult => com.github.javaparser.ast.expr.BinaryExpr.Operator.MULTIPLY
+//      case _:Divd => com.github.javaparser.ast.expr.BinaryExpr.Operator.DIVIDE
+//
+//      case _ => null
+//    }
+//  }
+//
+//  /**
+//    * Return the operator to use for a given unary exp type in Java.
+//    *
+//    * @param exp  Exp subclass that corresponds to a unary operator.
+//    * @return
+//    */
+//  def getUnaryOperator( exp:Exp) : com.github.javaparser.ast.expr.UnaryExpr.Operator = {
+//    exp match {
+//
+//      case _:Neg => com.github.javaparser.ast.expr.UnaryExpr.Operator.MINUS
+//
+//      case _ => null
+//    }
+//  }
 
   /**
     * Code generator for reproducing the structure of the covariant pattern invocation for simplify.

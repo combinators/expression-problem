@@ -7,29 +7,64 @@ import org.combinators.templating.persistable.Persistable
 import org.combinators.cls.interpreter.ReflectedRepository
 import org.combinators.cls.git.{EmptyResults, InhabitationController}
 import expression.data.{Add, Eval, Lit}
-import expression.extensions.{Collect, Neg, PrettyP, Sub}
+import expression.extensions._
 import expression.instances.UnitSuite
 import expression.operations.SimplifyExpr
-import expression.DomainModel
+import expression.{DomainModel, Exp, Operation}
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
 
+import scala.collection.JavaConverters._
 class Expression_CPP @Inject()(webJars: WebJarsUtil, applicationLifecycle: ApplicationLifecycle) extends InhabitationController(webJars, applicationLifecycle) {
 
+//  // Configure the desired (sub)types and operations
+//  val model:DomainModel = new DomainModel()
+//
+//  // no need to add 'Exp' to the model, since assumed always to be there
+//  model.data.add(new Lit)
+//  model.data.add(new Add)
+//  model.data.add(new Neg)
+//  model.data.add(new Sub)
+//
+//  // operations to have (including Eval)
+//  model.ops.add(new Eval)
+//  model.ops.add(new PrettyP)
+//  model.ops.add(new SimplifyExpr)
+//  model.ops.add(new Collect)
+
   // Configure the desired (sub)types and operations
-  val model:DomainModel = new DomainModel()
-
   // no need to add 'Exp' to the model, since assumed always to be there
-  model.data.add(new Lit)
-  model.data.add(new Add)
-  model.data.add(new Neg)
-  model.data.add(new Sub)
+  // operations to have (including Eval).
+  val base:DomainModel = new DomainModel(
+    List[Exp](new Lit, new Add).asJava,
+    List[Operation](new Eval).asJava
+  )
 
-  // operations to have (including Eval)
-  model.ops.add(new Eval)
-  model.ops.add(new PrettyP)
-  model.ops.add(new SimplifyExpr)
-  model.ops.add(new Collect)
+  // evolution 1 (from Extensibility for the Masses example)
+  val version_2:DomainModel = new DomainModel(base,
+    List[Exp](new Sub).asJava,
+    List.empty.asJava
+  )
+
+  // evolution 2 (from Extensibility for the Masses example)
+  val version_3:DomainModel = new DomainModel(version_2,
+    List.empty.asJava,
+    List[Operation](new PrettyP).asJava
+  )
+
+  // Evolution 1: Extension to domain model has new data variants and operations
+  val version_4:DomainModel = new DomainModel(version_3,
+    List[Exp](new Neg, new Mult, new Divd).asJava,
+    List.empty.asJava
+  )
+
+  val version_5:DomainModel = new DomainModel(version_4,
+    List.empty.asJava,
+    List[Operation](new Collect, new SimplifyExpr).asJava
+  )
+
+  // VISITOR solution has no choice but to merge all domain models.
+  val model:DomainModel = version_5.flatten
 
   // decide upon a set of test cases from which we can generate driver code/test cases.
   val allTests : UnitSuite = new UnitSuite(model)

@@ -21,6 +21,10 @@ object Synthesizer extends SemanticTypes  {
     seq = seq :+ generated(generated.visitor)
     seq = seq :+ exp(exp.base, new Exp)
 
+    if (model == null || model.data == null) {
+      System.out.println ("NULL MODEL!");
+    }
+
     // every sub-type gets a target
     model.data.asScala.foreach (
       e => seq = seq :+ exp(exp.visitor, e)

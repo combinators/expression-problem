@@ -128,4 +128,18 @@ public class DomainModel {
         }
     }
 
+    // don't add this method; causes scala compilation error "scala modified name for class XXX is empty"
+//    @Override
+//    public String toString() {
+//        StringBuffer sb = new StringBuffer("[data:");
+//        for (Exp e : data) {
+//            sb.append(e.getClass().getSimpleName()).append(",");
+//        }
+//        sb.append(" ops:");
+//        for (Operation op : ops) {
+//            sb.append(op.getClass().getSimpleName()).append(",");
+//        }
+//        sb.append("]");
+//        return sb.toString();
+//    }
 }

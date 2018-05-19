@@ -1,10 +1,12 @@
 package example.expression.visitor
 
 import com.github.javaparser.ast.CompilationUnit
-import expression.DomainModel
-import expression.evolution.Development
-import expression.history.History
+import example.expression.ExpressionDomain
+import expression.data.{Add, Eval, Lit}
+import expression.extensions._
+import expression.{DomainModel, Exp, Operation}
 import expression.instances.UnitSuite
+import expression.operations.SimplifyExpr
 import expression.tests.AllTests
 import javax.inject.Inject
 import org.combinators.cls.git.{EmptyInhabitationBatchJobResults, InhabitationController, Results, RoutingEntries}
@@ -12,89 +14,106 @@ import org.combinators.cls.interpreter.ReflectedRepository
 import org.combinators.cls.types.Constructor
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
-
-import scala.collection.JavaConverters._
 import org.combinators.templating.persistable.JavaPersistable._
 
-abstract class Evolution(web: WebJarsUtil, app: ApplicationLifecycle)
+import scala.collection.JavaConverters._
+
+class E0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends InhabitationController(web, app) with RoutingEntries {
 
-  // identify the desired evolution (e0, e1, e2, ...)
-  val evolution: String
-  val controllerAddress: String
-  val model: DomainModel
+  lazy val controllerAddress = "e0"
 
-  // FreeCellDomain is base class for the solitaire variation. Note that this
-  // class is used (essentially) as a placeholder for the solitaire val,
-  // which can then be referred to anywhere as needed.
-  lazy val allTests : UnitSuite = new AllTests(model)
+  // start off the domain Model. Subsequent subclasses merge their domain models with ours, to satisfy the
+  // demands of the visitor solution to the expression problem.
+  def model():DomainModel = new DomainModel(
+    List[Exp](new Lit, new Add).asJava,
+    List[Operation](new Eval).asJava
+  )
 
-  lazy val repository = new ExpressionSynthesis(model, allTests) with InitializeRepository {}
-  import repository._
+  // all tests are derived from the model.
+  lazy val tests_e0 = e0.TestCases.add(new AllTests())
 
-  lazy val Gamma = repository.init(ReflectedRepository(repository, classLoader = this.getClass.getClassLoader), model)
+  lazy val rep = new ExpressionDomain(model(), tests_e0) with ExpressionSynthesis with e0.Model with InitializeRepository {}
+
+  lazy val Gamma = rep.init(ReflectedRepository(rep, classLoader = this.getClass.getClassLoader), model())
 
   /** This needs to be defined, and it is set from Gamma. */
   lazy val combinatorComponents = Gamma.combinatorComponents
 
-  val targets:Seq[Constructor] = Synthesizer.visitorTargets(domain)
+  /** Has to be lazy so subclasses can compute model. */
+  lazy val targets:Seq[Constructor] = Synthesizer.visitorTargets(model())
   lazy val results:Results =
     EmptyInhabitationBatchJobResults(Gamma).addJobs[CompilationUnit](targets).compute()
 
+  // all accomplished within the 'visitor' family
   override val routingPrefix: Option[String] = Some("visitor")
 }
 
-class E4_EvolutionController @Inject()(webJars: WebJarsUtil, applicationLifecycle: ApplicationLifecycle)
-  extends Evolution(webJars, applicationLifecycle) {
 
-  lazy val evolution = "e4"
-  lazy val controllerAddress = "e4"
 
-  lazy val model:DomainModel = Development.base.iterator(evolution).asScala.foldLeft(new DomainModel()) {
-    case (m, sub) => m.merge(sub)
-  }
+class E1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+  extends E0_Variation (web: WebJarsUtil, app: ApplicationLifecycle) {
+
+  override lazy val controllerAddress = "e1"
+
+  lazy val tests_e1:UnitSuite = e1.TestCases.add(tests_e0)
+
+  override def model():DomainModel = super.model().merge(new DomainModel(
+    List[Exp](new Sub).asJava,
+    List.empty.asJava
+  ))
+
+  override lazy val rep = new ExpressionDomain(model(), tests_e1) with ExpressionSynthesis with e1.Model with e0.Model with InitializeRepository {}
 }
 
-class E3_EvolutionController @Inject()(webJars: WebJarsUtil, applicationLifecycle: ApplicationLifecycle)
-  extends Evolution(webJars, applicationLifecycle) {
 
-  lazy val evolution = "e3"
-  lazy val controllerAddress = "e3"
 
-  lazy val model:DomainModel = Development.base.iterator(evolution).asScala.foldLeft(new DomainModel()) {
-    case (m, sub) => m.merge(sub)
-  }
+class E2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+  extends E1_Variation (web: WebJarsUtil, app: ApplicationLifecycle) {
+
+  override lazy val controllerAddress = "e2"
+
+  lazy val tests_e2:UnitSuite = e2.TestCases.add(tests_e1)
+
+  override def model():DomainModel = super.model().merge(new DomainModel(
+    List.empty.asJava,
+    List[Operation](new PrettyP).asJava,
+  ))
+
+  override lazy val rep = new ExpressionDomain(model(), tests_e2) with ExpressionSynthesis with e2.Model with e1.Model with e0.Model with InitializeRepository {}
 }
 
-class E2_EvolutionController @Inject()(webJars: WebJarsUtil, applicationLifecycle: ApplicationLifecycle)
-  extends Evolution(webJars, applicationLifecycle) {
 
-  lazy val evolution = "e2"
-  lazy val controllerAddress = "e2"
 
-  lazy val model:DomainModel = Development.base.iterator(evolution).asScala.foldLeft(new DomainModel()) {
-    case (m, sub) => m.merge(sub)
-  }
+class E3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+  extends E2_Variation (web: WebJarsUtil, app: ApplicationLifecycle) {
+
+  override lazy val controllerAddress = "e3"
+
+  val tests_e3:UnitSuite = e3.TestCases.add(tests_e2)
+
+  override def model():DomainModel = super.model().merge(new DomainModel(
+    List[Exp](new Neg, new Mult, new Divd).asJava,
+    List.empty.asJava
+  ))
+
+  override lazy val rep = new ExpressionDomain(model(), tests_e3) with ExpressionSynthesis with e3.Model with e2.Model with e1.Model with e0.Model with InitializeRepository {}
 }
 
-class E1_EvolutionController @Inject()(webJars: WebJarsUtil, applicationLifecycle: ApplicationLifecycle)
-  extends Evolution(webJars, applicationLifecycle) {
 
-  lazy val evolution = "e1"
-  lazy val controllerAddress = "e1"
 
-  lazy val model:DomainModel = Development.base.iterator(evolution).asScala.foldLeft(new DomainModel()) {
-    case (m, sub) => m.merge(sub)
-  }
-}
 
-class E0_EvolutionController @Inject()(webJars: WebJarsUtil, applicationLifecycle: ApplicationLifecycle)
-  extends Evolution(webJars, applicationLifecycle) {
+class E4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+  extends E3_Variation (web: WebJarsUtil, app: ApplicationLifecycle) {
 
-  lazy val evolution = "e0"
-  lazy val controllerAddress = "e0"
+  override lazy val controllerAddress = "e4"
 
-  lazy val model:DomainModel = Development.base.iterator(evolution).asScala.foldLeft(new DomainModel()) {
-    case (m, sub) => m.merge(sub)
-  }
+  val tests_e4:UnitSuite = e4.TestCases.add(tests_e3)
+
+  override def model():DomainModel = super.model().merge(new DomainModel(
+    List.empty.asJava,
+    List[Operation](new Collect, new SimplifyExpr).asJava
+  ))
+
+  override lazy val rep = new ExpressionDomain(model(), tests_e4) with ExpressionSynthesis with e4.Model with e3.Model with e2.Model with e1.Model with e0.Model with InitializeRepository {}
 }

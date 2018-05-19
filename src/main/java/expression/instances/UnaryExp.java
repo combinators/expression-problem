@@ -9,10 +9,10 @@ import java.util.stream.Stream;
  */
 public class UnaryExp implements Instance {
     /** The actual operator. */
-    public final expression.data.BinaryExp op;
+    public final Exp op;
     public final Instance exp;
 
-    public UnaryExp(expression.data.BinaryExp op, Instance exp) {
+    public UnaryExp(Exp op, Instance exp) {
         this.op = op;
         this.exp = exp;
     }

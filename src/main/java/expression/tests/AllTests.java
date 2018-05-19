@@ -22,12 +22,22 @@ import java.util.ArrayList;
  */
 public class AllTests extends UnitSuite {
 
-    public AllTests(DomainModel model) {
-        super(model);
-    }
+    /** This is invoked from the superclass, not directly here. */
+    protected static Expression test = new Expression(
+            new expression.instances.BinaryExp(new Add(),
+                    new expression.instances.BinaryExp(new Mult(),
+                            new expression.instances.Lit(new Lit(),5),
+                            new expression.instances.Lit(new Lit(),7)),
+                    new expression.instances.BinaryExp(new Divd(),
+                       new expression.instances.Lit(new Lit(),18),
+                      new expression.instances.Lit(new Lit(),9)
+               )
+           )
+        );
 
-    public static Expression testPair(DomainModel model) {
-        SimpleExpression test = new SimpleExpression(model);
+    public AllTests() {}
+
+    public static Expression testPair() {
 
         test.add(new Eval(), 37.0);
         test.add(new PrettyP(), "((5.0*7.0)+(18.0/9.0))");
@@ -44,30 +54,23 @@ public class AllTests extends UnitSuite {
         return test;
     }
 
-    public static Expression testJustEval(DomainModel model) {
-        SimpleExpression test = new SimpleExpression(model);
+    public static Expression testJustEval() {
 
         test.add(new Eval(), 37.0);
         return test;
     }
 
-    public static Expression testJustPrettyP(DomainModel model) {
-        SimpleExpression test = new SimpleExpression(model);
+    public static Expression testJustPrettyP() {
 
         test.add(new PrettyP(), "((5.0*7.0)+(18.0/9.0))");
         return test;
     }
 
     public static Expression testSimple(DomainModel model) {
-        Expression exp = new Expression(model) {
-
-            @Override
-            protected Instance expression() {
-                return new expression.instances.BinaryExp(new Add(),
+        Expression exp = new Expression(
+                 new expression.instances.BinaryExp(new Add(),
                         new expression.instances.Lit(new Lit(),1.0),
-                        new expression.instances.Lit(new Lit(),2.0));
-            }
-        };
+                        new expression.instances.Lit(new Lit(),2.0)));
 
         exp.add(new Eval(), 3.0);
         exp.add(new PrettyP(), "(1.0+2.0)");
@@ -88,15 +91,9 @@ public class AllTests extends UnitSuite {
                 new expression.instances.Lit(new Lit(),5.0),
                 new expression.instances.Lit(new Lit(),7.0));
 
-        Expression exp = new Expression(model) {
-
-            @Override
-            protected Instance expression() {
-                return new expression.instances.BinaryExp(new Divd(),
+        Expression exp = new Expression(new expression.instances.BinaryExp(new Divd(),
                         mult,
-                        new expression.instances.Lit(new Lit(),1.0));
-            }
-        };
+                        new expression.instances.Lit(new Lit(),1.0)));
 
         exp.add(new SimplifyExpr(), mult);
 

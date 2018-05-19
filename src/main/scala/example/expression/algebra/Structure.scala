@@ -42,7 +42,7 @@ trait Structure extends Base with SemanticTypes with MethodMapper {
 //      }
 //    }
 
-    registerImpl(new Eval, Map(
+  registry.registerImpl(new Eval, Map(
 
       new Lit -> "return value;",
       new Add -> "return left.eval() + right.eval();",
@@ -52,7 +52,7 @@ trait Structure extends Base with SemanticTypes with MethodMapper {
       new Neg -> "return -value; /*HACK */"
     ))
 
-  registerImpl(new PrettyP, Map(
+  registry.registerImpl(new PrettyP, Map(
     new Lit -> """return "" + value;""",
     new Add -> """return "(" + left.prettyp() + "+" + right.prettyp()+ ")";""",
     new Sub -> """return "(" + left.prettyp() + "-" + right.prettyp() + ")";""",

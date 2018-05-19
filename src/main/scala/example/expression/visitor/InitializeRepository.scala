@@ -2,6 +2,7 @@ package example.expression.visitor
 
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
+import example.expression.j.MethodMapper
 import example.expression.{Base, ExpressionDomain}
 import expression.{Attribute, DomainModel, Exp, Operation}
 import org.combinators.cls.interpreter.ReflectedRepository
@@ -11,14 +12,16 @@ import org.combinators.cls.types.syntax._
 
 import scala.collection.JavaConverters._
 
-trait InitializeRepository extends Base with SemanticTypes {
+trait InitializeRepository
+  extends Base
+  with SemanticTypes
+  with MethodMapper {
 
   // dynamic combinators added as needed
   override def init[G <: ExpressionDomain](gamma : ReflectedRepository[G], domain:DomainModel) :  ReflectedRepository[G] = {
     var updated = gamma
 
     // update combinators as needed.
-
     updated = domain.data.asScala.foldLeft(updated) {
       case (repo, sub) => repo.addCombinator(new BaseClass(sub)).addCombinator(new ImplClass(sub))
     }
@@ -105,8 +108,7 @@ trait InitializeRepository extends Base with SemanticTypes {
       val name = op.getClass.getSimpleName
       val tpe = Type_toString(op.`type`)
 
-      //implementations
-      val methods = getImplementation(op)
+      val methods:Map[Class[_ <: Exp],MethodDeclaration] = Registry.getImplementation(op)
 
       val mds:Iterable[MethodDeclaration] = methods.values
       val signatures = mds.mkString("\n")
@@ -121,5 +123,4 @@ trait InitializeRepository extends Base with SemanticTypes {
 
     val semanticType:Type = ops (ops.visitor,op)
   }
-
 }

@@ -67,7 +67,7 @@ class Expression_CPP @Inject()(webJars: WebJarsUtil, applicationLifecycle: Appli
   val model:DomainModel = version_5.flatten
 
   // decide upon a set of test cases from which we can generate driver code/test cases.
-  val allTests : UnitSuite = new UnitSuite(model)
+  val allTests : UnitSuite = new UnitSuite()
 
   lazy val repository = new ExpressionSynthesis(model, allTests) with Structure {}
   import repository._

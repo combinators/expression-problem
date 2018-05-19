@@ -13,9 +13,7 @@ import java.util.Iterator;
  * The expression can use all constructs (types and operations) from that domain model,
  * or any of its predecessors.
  */
-public abstract class Expression implements Iterable<UnitTest> {
-    /** Domain model for the given expression. */
-    final DomainModel model;
+public class Expression implements Iterable<UnitTest> {
 
     /** The expression itself. */
     public final Instance expression;
@@ -25,56 +23,41 @@ public abstract class Expression implements Iterable<UnitTest> {
 
     /**
      * Construct an expression for a given domain model.
-     * @param model
      */
-    public Expression (DomainModel model) {
-        this.model = model;
-        expression = expression();
-        validate();
+    public Expression (Instance expression) {
+        this.expression = expression;
     }
 
     public Iterator<UnitTest> iterator() {
         return tests.iterator();
     }
 
-    /** Method responsible for constructing the actual expression. */
-    protected abstract Instance expression();
-
     /**
      * For this expression, ensure that the operation produces the given value.
      *
      * Must be validated by the domain model to ensure that the operation even exists.
      */
-    public void add(Operation op, Object expected) {
-        DomainModel flat = model.flatten();
-
-        // if domain model doesn't contain this operation, then we can't assert
-        if (!flat.ops.contains(op)) {
-            System.err.println("Expression " + expression.toString() +
-                    " contains operation " + op.toString() +
-                    " that doesn't appear in its associated domain model.");
-        } else {
-            tests.add(new UnitTest(expression, op, expected));
-        }
+    public boolean add(Operation op, Object expected) {
+        tests.add(new UnitTest(expression, op, expected));
+        return true;
     }
 
     /**
      * Ensures that the given domain model has the necessary types and operators to support
      * the given expression.
      */
-    void validate() {
-        DomainModel flat = model.flatten();
+    public void validate(DomainModel model) {
 
         // get all instances from the expression, and make sure domain model contains them
         expression.subInstances().forEach(inst -> {
-                    Exp exp = inst.self();
-                    // make sure the inst is either a type or an operation
-                    if (!flat.data.contains(exp)) {
-                        throw new RuntimeException ("Expression " + expression.toString() +
-                                " contains type " + inst.toString() +
-                                " that doesn't appear in its associated domain model.");
-                    }
-                }
+            Exp exp = inst.self();
+            // make sure the inst is either a type or an operation
+            if (!model.data.contains(exp)) {
+                System.err.println("Expression " + expression.toString() +
+                        " contains type " + inst.toString() +
+                        " that doesn't appear in its associated domain model.");
+            }
+        }
         );
     }
 }

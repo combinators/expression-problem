@@ -8,7 +8,7 @@ import expression.{Exp, Operation}
 /**
   * These codify the semantic types used by the Expression problem.
   */
-trait SemanticTypes extends MethodMapper {
+trait SemanticTypes {
 
   val driver:Constructor = 'Driver
 

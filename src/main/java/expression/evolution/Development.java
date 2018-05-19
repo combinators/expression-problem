@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collections;
 
-public class Development {
+class Development {
 
     // base.e1.e2.e3.e4.e5 is the evolution
     static final String baseDomain = "e0";

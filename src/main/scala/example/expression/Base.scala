@@ -24,5 +24,7 @@ trait Base {
 // to add dynamic traits to the repository. Otherwise nothing is included here (for now)
 class ExpressionDomain(val domain:DomainModel, val allTests:UnitSuite) {
   // assumed access to expression
+  println ("Domain Size:" + domain.data.size() + "," + domain.ops.size())
+
 }
 

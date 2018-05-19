@@ -50,7 +50,7 @@ class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: Applicati
   )
 
   // decide upon a set of test cases from which we can generate driver code/test cases.
-  val allTests : UnitSuite =  new AllTests(evolution_4)
+  val allTests : UnitSuite =  new AllTests()
 
   lazy val repository = new ExpressionSynthesis(evolution_4,allTests) with Structure {}
   import repository._

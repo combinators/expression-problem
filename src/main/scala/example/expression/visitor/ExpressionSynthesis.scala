@@ -2,11 +2,10 @@ package example.expression.visitor
 
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.stmt.Statement
-import org.combinators.cls.interpreter.{ReflectedRepository, combinator}
+import org.combinators.cls.interpreter.combinator
 import org.combinators.cls.types.Type
 import org.combinators.cls.types.syntax._
 import org.combinators.templating.twirl.Java
-import example.expression.ExpressionDomain
 import expression._
 import expression.data.Eval
 import expression.extensions._
@@ -17,43 +16,20 @@ import shared.compilation.CodeGeneratorRegistry
 import scala.collection.JavaConverters._
 
 /** Future work: reduce the need to have full set of traits here, with the internals accessing the code generators. Separate concerns */
-class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) extends ExpressionDomain(domain, tests)
-  with SemanticTypes
-  with InstanceCodeGenerators
-  with PrettyPCodeGenerators
-  with EvalCodeGenerators
-  with CollectCodeGenerators {
+abstract trait ExpressionSynthesis extends InstanceCodeGenerators with SemanticTypes {
 
-  // These take care of registering the necessary code generators, one for each operator.
-  domain.data.asScala
-    .foreach(exp => {
-      val comb:com.github.javaparser.ast.expr.Expression = evalGenerators(exp).get
+  // to be provided
+  val domain: DomainModel
+  val allTests:UnitSuite
 
-      addImpl(new Eval, exp,
-        Java(s"""return ${comb.toString};""").statements())
-    })
+  /**
+    * Combinator to identify the constraint generator to use when generating instances
+    */
+  @combinator object InstanceGenerator {
+    def apply: CodeGeneratorRegistry[com.github.javaparser.ast.expr.Expression] = defaultInstance.instanceGenerators
 
-  domain.data.asScala
-    .foreach(exp => {
-      val comb:com.github.javaparser.ast.expr.Expression = prettypGenerators(exp).get
-
-      addImpl(new PrettyP, exp,
-        Java(s"""return ${comb.toString};""").statements())
-    })
-
-  domain.data.asScala
-    .foreach(exp => {
-      val comb:Seq[Statement] = collectGenerators(exp).get
-
-      addImpl(new Collect, exp, comb)
-    })
-
-  domain.data.asScala
-    .foreach(exp => {
-      val comb:Seq[Statement] = new SimplifyCodeGenerators(domain).simplifyGenerators(exp).get
-
-      addImpl(new SimplifyExpr, exp, comb)
-    })
+    val semanticType: Type = generator(generator.instance)
+  }
 
   /** Construct visitor abstract class. */
   @combinator object Visitor {
@@ -90,31 +66,7 @@ class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) 
     val semanticType:Type = exp(exp.base, new Exp)
   }
 
-
-//  /**
-//    * Klondike needs ability to have constraint for move.
-//    */
-//  object enhancedInstanceGenerator {
-//    val generators:CodeGeneratorRegistry[com.github.javaparser.ast.expr.Expression] =
-//      defaultInstance.instanceGenerators.addGenerator (
-//        (registry:CodeGeneratorRegistry[com.github.javaparser.ast.expr.Expression], ra:RedealsAllowed) =>
-//          Java(s"""ConstraintHelper.redealsAllowed()""")
-//            .expression[com.github.javaparser.ast.expr.Expression]()
-//      )
-//  }
-
-  /**
-    * Combinator to identify the constraint generator to use when generating instances
-    */
-  @combinator object InstanceGenerator {
-    def apply: CodeGeneratorRegistry[com.github.javaparser.ast.expr.Expression] = defaultInstance.instanceGenerators
-
-    val semanticType: Type = generator(generator.instance)
-  }
-
-
-
-  /**
+   /**
     * Construct JUnit test cases for each registered expression.
     *
     * Within the test case method, each of the registered operations are evaluated to confirm the expect value

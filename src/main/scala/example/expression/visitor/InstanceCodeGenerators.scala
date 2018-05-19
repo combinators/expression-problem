@@ -5,9 +5,9 @@ import org.combinators.templating.twirl.Java
 import shared.compilation.CodeGeneratorRegistry
 
 /**
-  * PrettyP implementation using standard data type
+  * Used solely to instantiate expression instances that are restricted to {Lit, BinaryExp, UnaryExp}.
   *
-  * Not yet extensible to new data types that fall outside of the Lit/BinaryExp/UnaryExp hierarchy.
+  * Not extensible to new data types that fall outside of the Lit/BinaryExp/UnaryExp hierarchy.
   */
 trait InstanceCodeGenerators extends Operators with SemanticTypes {
 

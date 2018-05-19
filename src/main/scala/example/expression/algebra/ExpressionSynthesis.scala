@@ -197,7 +197,7 @@ class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) 
           val subName = sub.getClass.getSimpleName.toLowerCase   // to get proper etiquette for method names
           // build up sequence
 
-          val function = getImplementation(op)
+          val function = registry.getImplementation(op)
           val value:MethodDeclaration = function.get(sub.getClass).get
           val signatures = value.getBody.get.toString()
           var params:Seq[String] = Seq.empty
@@ -353,7 +353,7 @@ class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) 
       val className = op.getClass.getSimpleName
       val returnType = Type_toString(op.`type`)
 
-      val function = getImplementation(op)
+      val function = registry.getImplementation(op)
       val value:MethodDeclaration = function.get(exp.getClass).get
       val signatures = value.getBody.get.toString()
 
@@ -410,7 +410,7 @@ class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) 
       val lowerExpName = expName.toLowerCase   // doesn't look right...
       val className = op.getClass.getSimpleName
       val returnType = Type_toString(op.`type`)
-      val function = getImplementation(op)
+      val function = registry.getImplementation(op)
 
       // Here assume the MethodDeclaration actually exists.
       // HACK of sorts: Still uses visitor idea to get visitor method but then we only want code.
@@ -502,7 +502,7 @@ class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) 
       val methods:String = dm.data.asScala.map(sub => {
         // sub is either 'lit' or 'add'
         val subName = sub.getClass.getSimpleName
-        val function = getImplementation(op)
+        val function = registry.getImplementation(op)
 
         // Here assume the MethodDeclaration actually exists.
         // HACK of sorts: Still uses visitor idea to get visitor method but then we only want code.
@@ -568,7 +568,7 @@ class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) 
       val name = op.getClass.getSimpleName
       val lowername = name.toLowerCase
       val returnType = Type_toString(op.`type`)  // allows direct access to java field with reserved token name//hacking
-      val function = getImplementation(op)
+      val function = registry.getImplementation(op)
 
       val methods:String = allVariants(dm).map(sub => {
           // sub is either 'lit' or 'add'

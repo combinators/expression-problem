@@ -5,12 +5,18 @@ import org.combinators.cls.interpreter.combinator
 import org.combinators.cls.types._
 import example.expression.ExpressionDomain
 import expression._
+import expression.history.History
 import expression.instances.UnitSuite
 
 import scala.collection.JavaConverters._
 
 /** Future work to sanitize combinators to be independent of Exp. */
-class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) extends ExpressionDomain(domain, tests) with CPPSemanticTypes {
+trait ExpressionSynthesis extends CPPSemanticTypes {
+
+  // to be provided
+  val history: History
+  val domain: DomainModel = history.flatten
+  val allTests:UnitSuite
 
   /** Construct visitor abstract class. */
   @combinator object Visitor {

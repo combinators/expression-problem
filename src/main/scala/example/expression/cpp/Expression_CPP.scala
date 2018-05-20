@@ -2,12 +2,14 @@ package example.expression.cpp
 
 import java.nio.file.{Path, Paths}
 
+import example.expression.ExpressionDomain
 import javax.inject.Inject
 import org.combinators.templating.persistable.Persistable
 import org.combinators.cls.interpreter.ReflectedRepository
 import org.combinators.cls.git.{EmptyResults, InhabitationController}
 import expression.data.{Add, Eval, Lit}
 import expression.extensions._
+import expression.history.History
 import expression.instances.UnitSuite
 import expression.operations.SimplifyExpr
 import expression.{DomainModel, Exp, Operation}
@@ -35,44 +37,49 @@ class Expression_CPP @Inject()(webJars: WebJarsUtil, applicationLifecycle: Appli
   // Configure the desired (sub)types and operations
   // no need to add 'Exp' to the model, since assumed always to be there
   // operations to have (including Eval).
-  val base:DomainModel = new DomainModel(
+  val history:History = new History
+  history.extend("e0", new DomainModel(
     List[Exp](new Lit, new Add).asJava,
     List[Operation](new Eval).asJava
-  )
+  ))
 
   // evolution 1 (from Extensibility for the Masses example)
-  val version_2:DomainModel = new DomainModel(base,
+  history.extend("e1",  new DomainModel(
     List[Exp](new Sub).asJava,
     List.empty.asJava
-  )
+  ))
 
   // evolution 2 (from Extensibility for the Masses example)
-  val version_3:DomainModel = new DomainModel(version_2,
+  history.extend("e2",  new DomainModel(
     List.empty.asJava,
     List[Operation](new PrettyP).asJava
-  )
+  ))
 
   // Evolution 1: Extension to domain model has new data variants and operations
-  val version_4:DomainModel = new DomainModel(version_3,
+  history.extend("e3",  new DomainModel(
     List[Exp](new Neg, new Mult, new Divd).asJava,
     List.empty.asJava
-  )
+  ))
 
-  val version_5:DomainModel = new DomainModel(version_4,
+  history.extend("e4",  new DomainModel(
     List.empty.asJava,
     List[Operation](new Collect, new SimplifyExpr).asJava
-  )
+  ))
 
   // VISITOR solution has no choice but to merge all domain models.
-  val model:DomainModel = version_5.flatten
+  val model:DomainModel = history.flatten
 
   // decide upon a set of test cases from which we can generate driver code/test cases.
   val allTests : UnitSuite = new UnitSuite()
 
-  lazy val repository = new ExpressionSynthesis(model, allTests) with Structure {}
+//  lazy val rep = new ExpressionDomain(history, tests_e0) with ExpressionSynthesis with e0.Model with InitializeRepository {}
+//  lazy val Gamma = rep.init(ReflectedRepository(rep, classLoader = this.getClass.getClassLoader), rep.domain)
+
+
+  lazy val repository = new ExpressionDomain(history, allTests) with ExpressionSynthesis with Structure {}
   import repository._
 
-  lazy val Gamma = repository.init(ReflectedRepository(repository, classLoader = this.getClass.getClassLoader), model)
+  lazy val Gamma = repository.init(ReflectedRepository(repository, classLoader = this.getClass.getClassLoader), history)
 
   /** This needs to be defined, and it is set from Gamma. */
   lazy val combinatorComponents = Gamma.combinatorComponents

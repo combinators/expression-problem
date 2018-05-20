@@ -6,10 +6,10 @@ GET   /algebra/raw_:number          example.expression.algebra.Expression.raw(nu
 GET   /algebra/prepare              example.expression.algebra.Expression.prepare(number: Long)
 GET   /algebra/algebra.git/*file         example.expression.algebra.Expression.serveFile(file)
 
-GET   /ep                      example.expression.covariant.Expression.overview()
-GET   /ep/raw_:number          example.expression.covariant.Expression.raw(number: Long)
-GET   /ep/prepare              example.expression.covariant.Expression.prepare(number: Long)
-GET   /ep/ep.git/*file         example.expression.covariant.Expression.serveFile(file)
+#GET   /ep                      example.expression.covariant.Expression.overview()
+#GET   /ep/raw_:number          example.expression.covariant.Expression.raw(number: Long)
+#GET   /ep/prepare              example.expression.covariant.Expression.prepare(number: Long)
+#GET   /ep/ep.git/*file         example.expression.covariant.Expression.serveFile(file)
 
 #GET   /expression                      example.expression.visitor.Expression.overview()
 #GET   /expression/raw_:number          example.expression.visitor.Expression.raw(number: Long)
@@ -27,3 +27,10 @@ GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP
 ->    /                              example.expression.visitor.E2_Variation
 ->    /                              example.expression.visitor.E3_Variation
 ->    /                              example.expression.visitor.E4_Variation
+
+# Covariant variations
+->    /                              example.expression.covariant.E0_Variation
+->    /                              example.expression.covariant.E1_Variation
+->    /                              example.expression.covariant.E2_Variation
+->    /                              example.expression.covariant.E3_Variation
+->    /                              example.expression.covariant.E4_Variation

@@ -6,6 +6,7 @@ import example.expression.{Base, ExpressionDomain}
 import expression._
 import expression.data.{Add, Eval, Lit}
 import expression.extensions._
+import expression.history.History
 import expression.types.Types
 import org.combinators.cls.interpreter.{ReflectedRepository, combinator}
 import org.combinators.cls.types.Type
@@ -18,8 +19,8 @@ import scala.collection.JavaConverters._
 trait Structure extends Base with SemanticTypes with MethodMapper {
 
   /** Add dynamic combinators as needed. */
-  override def init[G <: ExpressionDomain](gamma: ReflectedRepository[G], model: DomainModel): ReflectedRepository[G] = {
-    var updated = super.init(gamma, model)
+  override def init[G <: ExpressionDomain](gamma: ReflectedRepository[G], history:History): ReflectedRepository[G] = {
+    var updated = super.init(gamma, history)
 
     updated
   }

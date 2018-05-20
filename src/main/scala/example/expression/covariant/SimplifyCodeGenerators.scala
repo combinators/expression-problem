@@ -4,6 +4,7 @@ import com.github.javaparser.ast.stmt.Statement
 import example.expression.j.MethodMapper
 import expression.data._
 import expression.extensions.{Divd, Mult, Neg, Sub}
+import expression.history.History
 import expression.{DomainModel, Exp}
 import org.combinators.cls.types.Type
 import org.combinators.cls.types.syntax._
@@ -18,7 +19,7 @@ import shared.compilation.CodeGeneratorRegistry
   * depending upon the context of the expression, one needs different subclasses. Use
   * the subtypes as the context.
   */
-class SimplifyCodeGenerators(model:DomainModel, subtypes:String)  {
+class SimplifyCodeGenerators(subtypes:String)  {
 
   /**
     * Return the operator to use for a given binary exp type in Java.

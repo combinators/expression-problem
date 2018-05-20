@@ -7,6 +7,7 @@ import example.expression.{Base, ExpressionDomain}
 import expression._
 import expression.data.{Add, Eval, Lit}
 import expression.extensions.{Collect, Neg, PrettyP, Sub}
+import expression.history.History
 import expression.types.Types
 import expression.operations.SimplifyExpr
 
@@ -20,8 +21,8 @@ import scala.collection.JavaConverters._
 trait Structure extends Base with CPPSemanticTypes {
 
   /** Add dynamic combinators as needed. */
-  override def init[G <: ExpressionDomain](gamma: ReflectedRepository[G], model: DomainModel): ReflectedRepository[G] = {
-    var updated = super.init(gamma, model)
+  override def init[G <: ExpressionDomain](gamma: ReflectedRepository[G], history: History): ReflectedRepository[G] = {
+    var updated = super.init(gamma, history)
 
     def registerImpl (op:Operation, map:Map[Exp,String]): Unit = {
       map.keys.foreach {
@@ -129,24 +130,28 @@ trait Structure extends Base with CPPSemanticTypes {
 
 
     // Add relevant combinators to construct the sub-type classes, based on domain model.
-      model.data.asScala.foreach {
-        sub:Exp => {
+    history.asScala.foreach (domain =>
+        domain.data.asScala.foreach {
+          sub:Exp => {
+            updated = updated
+              .addCombinator (new BaseClass(sub))
+              .addCombinator (new ImplClass(sub))
+          }
+        }
+    )
+
+    history.asScala.foreach (domain =>
+        domain.ops.asScala.foreach {
+        op:Operation => {
           updated = updated
-            .addCombinator (new BaseClass(sub))
-            .addCombinator (new ImplClass(sub))
+            .addCombinator (new OpImpl(op))
         }
       }
-
-    model.ops.asScala.foreach {
-      op:Operation => {
-        updated = updated
-          .addCombinator (new OpImpl(op))
-      }
-    }
+    )
 
     // create packaging
     updated = updated
-      .addCombinator(new BaseModule(model))
+      .addCombinator(new BaseModule(history))
 
     updated
   }
@@ -335,7 +340,7 @@ trait Structure extends Base with CPPSemanticTypes {
   //  Collect
   //  Driver
 
-  class BaseModule(model:DomainModel) {
+  class BaseModule(history:History) {
     def apply(exp:CPPFile, visitor:CPPFile,
               lit:CPPFile, add:CPPFile, sub:CPPFile, neg:CPPFile,
               eval:CPPFile, pp:CPPFile, collect:CPPFile, simp:CPPFile,
@@ -352,7 +357,7 @@ trait Structure extends Base with CPPSemanticTypes {
          """.stripMargin.split("\n")
 
       // class predefs
-      val defs:Seq[String] = model.data.asScala.map(sub => s"class ${sub.getClass.getSimpleName};")
+      val defs:Seq[String] = history.flatten.data.asScala.map(sub => s"class ${sub.getClass.getSimpleName};")
       val data:Seq[String] = Seq(lit, add, sub, neg).map(sub => sub.toString)
       val ops:Seq[String] = Seq(eval, pp, collect).map(op => op.toString)
       val simps:Seq[String] = Seq(simp).map(sub => sub.toString)  // depends on Eval

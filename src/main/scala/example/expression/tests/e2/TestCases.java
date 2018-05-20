@@ -1,4 +1,4 @@
-package example.expression.visitor.e2;
+package example.expression.tests.e2;
 
 import expression.data.Add;
 import expression.data.Eval;

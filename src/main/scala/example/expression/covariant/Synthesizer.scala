@@ -1,6 +1,7 @@
 package example.expression.covariant
 
 import expression.data.{Add, Eval, Lit}
+import expression.history.History
 import expression.{DomainModel, Exp, Operation}
 import org.combinators.cls.types.Constructor
 
@@ -12,14 +13,15 @@ import scala.collection.JavaConverters._
 object Synthesizer extends SemanticTypes  {
 
   /**
-    * Compute all targets to be synthesized for visitor.
+    * Compute all targets to be synthesized for covariant solution.
     *
-    * @param model     Domain Model which contains the information about the problem
+    * @param hist     Domain Model Evolution history
+    * @param tag      Which domain model to synthesize
     */
-  def covariantTargets(model:DomainModel): Seq[Constructor] = {
+  def covariantTargets(hist:History, tag:String): Seq[Constructor] = {
     var seq:Seq[Constructor] = Seq.empty
 
-    val flat:DomainModel = model.flatten()
+    val flat:DomainModel = hist.flatten(tag)
 
     seq = seq :+ ep(ep.interface, new Exp)      // baseline
 

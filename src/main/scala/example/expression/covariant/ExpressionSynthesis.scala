@@ -2,10 +2,10 @@ package example.expression.covariant
 
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.stmt.Statement
-import example.expression.ExpressionDomain
 import expression._
 import expression.data.Eval
 import expression.extensions.{Collect, PrettyP}
+import expression.history.History
 import expression.instances.{Instance, Lit, UnitSuite}
 import expression.operations.SimplifyExpr
 import org.combinators.cls.interpreter.combinator
@@ -15,8 +15,12 @@ import org.combinators.templating.twirl.Java
 import scala.collection.JavaConverters._
 
 /** Future work to sanitize combinators to be independent of Exp. */
-class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) extends ExpressionDomain(domain, tests) with SemanticTypes {
+trait ExpressionSynthesis extends SemanticTypes {
 
+  // to be provided
+  val history: History
+ // val domain: DomainModel = history.flatten
+  val allTests:UnitSuite
 
   /**
     * Construct JUnit test cases for each registered expression.
@@ -39,7 +43,7 @@ class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) 
         // Note that we might need model in addition to test case itself to properly construct this
         // either:   Add add = new AddFinal(new LitFinal(7), new LitFinal(4));
         //           AddPrettyPCollectFinal addpc = new AddPrettyPCollectFinal(new LitPrettyPCollectFinal(3), new LitPrettyPCollectFinal(4));
-        val testDomain = new TestCaseCodeGenerators(domain, tst)
+        val testDomain = new TestCaseCodeGenerators(history, tst)
         val code:Option[com.github.javaparser.ast.expr.Expression] = testDomain.instanceGenerators(tst.expression)
         testNumber = testNumber+1
         var subTypes:String = testDomain.computeSubTypes()
@@ -74,12 +78,12 @@ class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) 
             // TODO: but minimal set that includes these two...
             case _:SimplifyExpr => {
               //val subTypes:String = testDomain.computeSubTypesEnsure(List(new PrettyP))
-              val tstDomain = new TestCaseCodeGenerators(domain, tst, List(new PrettyP))
+              val tstDomain = new TestCaseCodeGenerators(history, tst, List(new PrettyP))
               val expectedCode: Option[com.github.javaparser.ast.expr.Expression] = tstDomain.instanceGenerators(tc.expected.asInstanceOf[Instance])
               subTypes = tstDomain.computeSubTypes()
               if (expectedCode.isDefined) {
 
-                val newInitCode = new TestCaseCodeGenerators(domain, tst, List(new PrettyP)).instanceGenerators(tst.expression) // needs PrettyP
+                val newInitCode = new TestCaseCodeGenerators(history, tst, List(new PrettyP)).instanceGenerators(tst.expression) // needs PrettyP
                 init = s"""$subTypes exp$testNumber = ${newInitCode.get.toString};"""
 
                 val initExpected: String = s"""$subTypes expectedExp$testNumber = ${expectedCode.get.toString};"""

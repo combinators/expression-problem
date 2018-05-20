@@ -1,124 +1,124 @@
 package expression.history;
 
-import java.util.HashMap;
+import expression.DomainModel;
+
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Optional;
+import java.util.Stack;
 
 /**
  * This class models a specific, linear evolution for the domain
  *
- * Goal is to be able to document the evolution path chosen.
+ * Goal is to be able to document the evolution that occurs as a linear expansion.
+ * The topmost node reflects the most recent evolution, and a stack or prior evolutions are behind it.
  */
-public class History<Domain> {
-    /** Well-known tag for base. */
-    public static final String BASE = "_BASE_";
+public class History implements Iterable<DomainModel> {
 
-    /** Find any tag within hierarchy. */
-    HashMap<String, Node> map = new HashMap<>();
-
-    /** Root tag. */
-    String rootTag;
+    /** Past nodes are stacked. */
+    ArrayList<Node> chain = new ArrayList<>();
 
     /** Inner class to store structure of history. */
     class Node {
         final String tag;
-        final Domain info;
-        Node parent;
+        final DomainModel domain;
 
-        HashMap<String, Node> children = new HashMap<>();
-
-        Node(Domain d, String tag) {
+        Node(DomainModel d, String tag) {
             this.tag = tag;
-            this.info = d;
-            parent = null;
-        }
-
-        /** Extend node with unique tag; return false if already exists. */
-        boolean extend(Node n) {
-            if (children.containsKey(n.tag)) { return false; }
-            children.put(n.tag, n);
-            n.parent = this;
-            return true;
-        }
-
-        Optional<Node> parent() {
-            if (parent == null) { return Optional.empty(); }
-            return Optional.of(parent);
+            this.domain = d;
         }
     }
 
     /** The starting point for all evolutionary history using default base tag. */
-    public History(Domain base) {
-        this (base, BASE);
+    public History() { }
+
+    public int size() { return chain.size(); }
+
+    public Iterator<DomainModel> iterator() {
+        if (chain.isEmpty()) { return new ArrayList<DomainModel>().iterator(); }
+
+        return iterator(chain.get(0).tag);
     }
 
-    /** The starting point for all evolutionary history using given tag. */
-    public History (Domain base, String baseTag) {
-        rootTag = baseTag;
-        map.put(baseTag, new Node (base, baseTag));
-    }
-
-    /**
-     * Given a desired tag in our history, produce full reverse history to base.
+    /** Given a desired tag in our history, produce full reverse history to base.
      *
      * @param tag
      * @return
      */
-    public HistoryIterator iterator(String tag) {
-        return new HistoryIterator(map.get(tag));
+    public Iterator<DomainModel> iterator(String tag) {
+        ArrayList<DomainModel> result = new ArrayList<>();
+
+        boolean extract = false;
+        for (Node n : chain) {
+            if (n.tag.equals(tag)) {
+                extract = true;
+            }
+
+            if (extract) {
+                result.add(n.domain);
+            }
+        }
+
+        return result.iterator();
     }
 
     /**
      * Extend the given evolution history with a new Domain, as labeled by tag.
      *
-     * Return false if pastTag doesn't exist.
+     * Note that nodes are stored in reverse order; thus most recent node is first.
      *
-     * @param pastTag
-     * @param extend
      * @param tag
+     * @param extend
      */
-    public boolean extend (String pastTag, Domain extend, String tag) {
-        Node parent = map.get(pastTag);
-        if (parent == null) { return false; }
-
+    public void extend (String tag, DomainModel extend) {
         Node n = new Node(extend, tag);
-        if (parent.extend(n)) {
-            map.put(tag, n);
-            return true;
-        }
-
-        // can't extend, since tag already exists...
-        return false;
+        chain.add(0, n);
     }
 
-    /** Generate reverse history for a Node. */
-    class HistoryIterator implements Iterator<Domain> {
-
-        Node node;
-
-        HistoryIterator(Node n) {
-            node = n;
+    /** Just get specific domain model. */
+    public DomainModel get(String tag) {
+        for (Node n : chain) {
+            if (n.tag.equals(tag)) {
+                return n.domain;
+            }
         }
 
-        @Override
-        public boolean hasNext() {
-            return node != null;
-        }
-
-        @Override
-        public Domain next() {
-            Domain d = node.info;
-            node = node.parent;
-            return d;
-        }
+        return null;
     }
 
-    /** Retrieve specified DomainModel by history tag. */
-    public Domain retrieve(String tag) {
-        Node found = map.get(tag);
+    /** Collapse everything into one from tag to beyond. */
+    public DomainModel flatten(String tag) {
+        DomainModel merged = null;
+        boolean extract = false;
 
-        if (found == null) { return null; }
+        for (Node n : chain) {
 
-        return found.info;
+            if (n.tag.equals(tag)) {
+                extract = true;
+            }
+
+            if (extract) {
+                if (merged == null) {
+                    merged = n.domain;
+                } else {
+                    merged = merged.merge(n.domain);
+                }
+            }
+        }
+
+        return merged;
+    }
+
+    /** Collapse everything into one. */
+    public DomainModel flatten() {
+        DomainModel merged = null;
+        for (Node n : chain) {
+            if (merged == null) {
+                merged = n.domain;
+            } else {
+                merged = merged.merge(n.domain);
+            }
+        }
+
+        return merged;
     }
 }

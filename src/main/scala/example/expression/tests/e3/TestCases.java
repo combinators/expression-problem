@@ -1,12 +1,12 @@
-package example.expression.visitor.e3;
+package example.expression.tests.e3;
 
 import expression.data.Add;
 import expression.data.Eval;
 import expression.data.Lit;
 import expression.extensions.Divd;
 import expression.extensions.Mult;
-import expression.extensions.PrettyP;
 import expression.extensions.Neg;
+import expression.extensions.PrettyP;
 import expression.instances.Expression;
 import expression.instances.UnitSuite;
 

@@ -4,7 +4,8 @@ import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
 import example.expression.j.MethodMapper
 import example.expression.{Base, ExpressionDomain}
-import expression.{Attribute, DomainModel, Exp, Operation}
+import expression.history.History
+import expression.{Attribute, Exp, Operation}
 import org.combinators.cls.interpreter.ReflectedRepository
 import org.combinators.cls.types.Type
 import org.combinators.templating.twirl.Java
@@ -18,17 +19,21 @@ trait InitializeRepository
   with MethodMapper {
 
   // dynamic combinators added as needed
-  override def init[G <: ExpressionDomain](gamma : ReflectedRepository[G], domain:DomainModel) :  ReflectedRepository[G] = {
+  override def init[G <: ExpressionDomain](gamma : ReflectedRepository[G], hist:History) :  ReflectedRepository[G] = {
     var updated = gamma
 
     // update combinators as needed.
-    updated = domain.data.asScala.foldLeft(updated) {
-      case (repo, sub) => repo.addCombinator(new BaseClass(sub)).addCombinator(new ImplClass(sub))
-    }
+    hist.asScala.foreach (domain =>
+      updated = domain.data.asScala.foldLeft(updated) {
+        case (repo, sub) => repo.addCombinator(new BaseClass(sub)).addCombinator(new ImplClass(sub))
+      }
+    )
 
-    updated = domain.ops.asScala.foldLeft(updated) {
+    hist.asScala.foreach (domain =>
+      updated = domain.ops.asScala.foldLeft(updated) {
         case (repo, op) => repo.addCombinator(new OpImpl(op))
       }
+    )
 
     updated
   }

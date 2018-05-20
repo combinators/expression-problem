@@ -9,6 +9,7 @@ import org.combinators.templating.twirl.Java
 import expression._
 import expression.data.Eval
 import expression.extensions._
+import expression.history.History
 import expression.instances.{Instance, Lit, UnitSuite}
 import expression.operations.SimplifyExpr
 import shared.compilation.CodeGeneratorRegistry
@@ -16,10 +17,11 @@ import shared.compilation.CodeGeneratorRegistry
 import scala.collection.JavaConverters._
 
 /** Future work: reduce the need to have full set of traits here, with the internals accessing the code generators. Separate concerns */
-abstract trait ExpressionSynthesis extends InstanceCodeGenerators with SemanticTypes {
+trait ExpressionSynthesis extends InstanceCodeGenerators with SemanticTypes {
 
   // to be provided
-  val domain: DomainModel
+  val history: History
+  val domain: DomainModel = history.flatten
   val allTests:UnitSuite
 
   /**

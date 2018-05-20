@@ -1,6 +1,5 @@
-package example.expression.visitor.e4;
+package example.expression.tests.e4;
 
-import expression.DomainModel;
 import expression.data.Add;
 import expression.data.Eval;
 import expression.data.Lit;

@@ -2,8 +2,9 @@ package example.expression.covariant
 
 import com.github.javaparser.ast.stmt.Statement
 import expression.data._
-import expression.{DomainModel, Operation}
+import expression.Operation
 import expression.extensions.{Collect, PrettyP, SimplifyBase}
+import expression.history.History
 import expression.instances.UnitTest
 import org.combinators.templating.twirl.Java
 import shared.compilation.CodeGeneratorRegistry
@@ -41,7 +42,7 @@ import scala.collection.JavaConverters._
 
   Some Operations must be there (PrettyP) especially for Simplify
   */
-class TestCaseCodeGenerators(model:DomainModel, expr:expression.instances.Expression, mustHave:List[Operation] = List.empty) {
+class TestCaseCodeGenerators(history:History, expr:expression.instances.Expression, mustHave:List[Operation] = List.empty) {
 
   var resultNumber: Integer = 0
 

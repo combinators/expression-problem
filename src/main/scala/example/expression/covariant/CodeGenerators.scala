@@ -2,7 +2,7 @@ package example.expression.covariant
 
 import com.github.javaparser.ast.stmt.Statement
 import example.expression.j.MethodMapper
-import expression.{DomainModel, Exp}
+import expression.Exp
 import expression.data._
 import expression.extensions.{Divd, Mult, Neg, Sub}
 import org.combinators.cls.types.Type
@@ -15,7 +15,7 @@ import org.combinators.cls.types.syntax._
   *
   * Customized to know about the mode recent model domain
   */
-class CodeGenerators(model:DomainModel)  {
+class CodeGenerators  {
 
   /**
     * Return the operator to use for a given binary exp type in Java.

@@ -1,24 +1,19 @@
 package example.expression.algebra
 
 import com.github.javaparser.ast.CompilationUnit
-import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
-import com.github.javaparser.ast.stmt.BlockStmt
-import example.expression.ExpressionDomain
+import com.github.javaparser.ast.body.MethodDeclaration
 import expression._
-import org.combinators.cls.interpreter.combinator
 import org.combinators.cls.types._
-import org.combinators.cls.types.syntax._
 import org.combinators.templating.twirl.Java
 import expression.data.Eval
-import expression.extensions.Sub
-import expression.instances.UnitSuite
+import expression.history.History
 import expression.types.Types
 
 import scala.collection.JavaConverters._
 
 
 /** Future work to sanitize combinators to be independent of Exp. */
-class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) extends ExpressionDomain(domain, tests) with SemanticTypes {
+trait ExpressionSynthesis extends SemanticTypes {
 
   /** Generate from domain. USER NEEDS TO SPECIFY THESE EITHER AUTOMATICALLY OR MANUALLY */
   //class BaseInterface(op:Eval) {
@@ -261,89 +256,68 @@ class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) 
 //    return exps
  // }
 // get all operations existing
-  def allOps(dm:DomainModel): Seq[Operation] = {
-    var Oprs:Seq[Operation] = Seq.empty
+//  def allOps(dm:DomainModel): Seq[Operation] = {
+//    var Oprs:Seq[Operation] = Seq.empty
+//
+//    var node = dm
+//    while (node != null) {
+//      node.ops.asScala.foreach {
+//        op: Operation  => {
+//          Oprs = Oprs :+ op
+//        }
+//      }
+//
+//
+//      val par = node.getParent
+//      if (!par.isPresent) {
+//        return Oprs
+//      }
+//
+//      node = par.get
+//    }
+//
+//    return Oprs
+//  }
 
-    var node = dm
-    while (node != null) {
-      node.ops.asScala.foreach {
-        op: Operation  => {
-          Oprs = Oprs :+ op
-        }
+//  def mostRecentOp(dm:DomainModel): Operation = {
+//
+//    if (!dm.getParent.isPresent) {
+//      return null
+//    }
+//
+//    var node = dm.getParent.get
+//    while (node != null) {
+//      if (!node.ops.isEmpty()) {
+//        // not empty, this is the most recent operations. HACK MIGHT NOT BE ONLY ONE..
+//        return node.ops.get(0)
+//      }
+//
+//      val par = node.getParent
+//      if (!par.isPresent()) {
+//        return null // HACK NOT SURE WHAT TO RETURN....
+//      }
+//
+//      node = par.get
+//    }
+//
+//    return null   // shouldn't get here...
+//  }
+
+  def mostRecentData(hist:History): Exp = {
+
+    hist.asScala.foreach (domain =>
+      if (!domain.data.isEmpty) {
+        return domain.data.get(0)
       }
-
-
-      val par = node.getParent
-      if (!par.isPresent) {
-        return Oprs
-      }
-
-      node = par.get
-    }
-
-    return Oprs
-  }
-
-  def mostRecentOp(dm:DomainModel): Operation = {
-
-    if (!dm.getParent.isPresent) {
-      return null
-    }
-
-    var node = dm.getParent.get
-    while (node != null) {
-      if (!node.ops.isEmpty()) {
-        // not empty, this is the most recent operations. HACK MIGHT NOT BE ONLY ONE..
-        return node.ops.get(0)
-      }
-
-      val par = node.getParent
-      if (!par.isPresent()) {
-        return null // HACK NOT SURE WHAT TO RETURN....
-      }
-
-      node = par.get
-    }
+    )
 
     return null   // shouldn't get here...
   }
-
-
-  def mostRecentData(dm:DomainModel): Exp = {
-
-    if (!dm.getParent.isPresent) {
-      return null
-    }
-
-    var node = dm.getParent.get
-    while (node != null) {
-      // hack
-      if (!node.getParent.isPresent) {
-        return null; // AT BASE. HACK TO GET ExpAlg to be returned.
-      }
-
-      if (!node.data.isEmpty()) {
-        // not empty, this is the most recent operations. HACK MIGHT NOT BE ONLY ONE..
-        return node.data.get(0)
-      }
-
-      val par = node.getParent
-      if (!par.isPresent()) {
-        return null // HACK NOT SURE WHAT TO RETURN....
-      }
-
-      node = par.get
-    }
-
-    return null   // shouldn't get here...
-  }
-
-
 
   // class EvalSubExpAlg extends EvalExpAlg implements SubExpAlg<Eval> {
   // HACK: Shouldn't be forced to require only just ONE sub expression
   // HACK: NEED TO FIX THIS...
-  class OperationExtendedBaseClass(dm:DomainModel, exp:Exp, op:Operation, vers:Type) {
+  class OperationExtendedBaseClass(hist:History, tag:String, exp:Exp, op:Operation, vers:Type) {
     def apply(): CompilationUnit = {
       // this gets "eval" and we want the name of the Interface.
       val name = op.name
@@ -382,7 +356,7 @@ class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) 
                       |    }
        """.stripMargin
 
-      val lastParent = mostRecentData(dm)
+      val lastParent = mostRecentData(hist)
       var parent = "EvalExpAlg"   // hack??
       if (lastParent != null) {
         parent = s"${lastParent.getClass.getSimpleName}ExpAlg"
@@ -461,34 +435,20 @@ class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) 
   /**
     * Recursively grabs all exp subvariants from the evolution history.
     *
-    * @param dm
+    * @param hist   DomainModel history
     * @return
     */
-  def allVariants(dm:DomainModel): Seq[Exp] = {
+  def allVariants(hist:History): Seq[Exp] = {
     var exps:Seq[Exp] = Seq.empty
 
-    var node = dm
-    while (node != null) {
-
-      node.data.asScala.foreach {
-          exp:Exp => {
-            exps = exps :+ exp
-          }
-        }
-
-      val par = node.getParent
-      if (!par.isPresent) {
-        return exps;
-      }
-
-      node = par.get
-    }
+    hist.asScala.foreach (domain =>
+      domain.data.asScala.foreach (exp =>
+        exps = exps :+ exp
+      )
+    )
 
     return exps
   }
-
-
-
 
   // domainModel represents the 'last one' and we can pull together all prior exp variants
   class OperationSpecialImpClass(dm:DomainModel,op:Operation,previousExp:String, previous:String, vers: Type) {
@@ -559,7 +519,7 @@ class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) 
 
 
     // domainModel represents the 'last one' and we can pull together all prior exp variants
-  class OperationImpClass(dm:DomainModel,op:Operation,previous:String, vers: Type) {
+  class OperationImpClass(hist:History, tag:String, op:Operation,previous:String, vers: Type) {
     def apply(): CompilationUnit= {
       // this gets "eval" and we want the name of the Interface.
       //val name = op.name
@@ -570,9 +530,9 @@ class ExpressionSynthesis(override val domain:DomainModel, val tests:UnitSuite) 
       val returnType = Type_toString(op.`type`)  // allows direct access to java field with reserved token name//hacking
       val function = registry.getImplementation(op)
 
-      val methods:String = allVariants(dm).map(sub => {
+      val methods:String = allVariants(hist).map(sub => {
           // sub is either 'lit' or 'add'
-          val subName = sub.getClass.getSimpleName.toLowerCase   // java etiquette
+        val subName = sub.getClass.getSimpleName.toLowerCase   // java etiquette
 
         val value:MethodDeclaration = function.get(sub.getClass).get
         val signatures = value.getBody.get.toString()

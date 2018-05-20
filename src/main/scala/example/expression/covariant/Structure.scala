@@ -12,6 +12,7 @@ import example.expression.{Base, ExpressionDomain}
 import expression.data.{Add, Eval, Lit}
 import expression.extensions._
 import expression._
+import expression.history.History
 import expression.operations.SimplifyExpr
 import expression.types.Types
 import shared.compilation.CodeGeneratorRegistry
@@ -22,70 +23,23 @@ import scala.collection.JavaConverters._
 trait Structure extends Base with SemanticTypes with MethodMapper {
 
   /** Add dynamic combinators as needed. */
-  override def init[G <: ExpressionDomain](gamma: ReflectedRepository[G], model: DomainModel): ReflectedRepository[G] = {
-    var updated = super.init(gamma, model)
+  override def init[G <: ExpressionDomain](gamma: ReflectedRepository[G], history: History): ReflectedRepository[G] = {
+    var updated = super.init(gamma, history)
 
-//    def computeMaximalSubTypes() : String = {
-//      model.flatten.ops.asScala
-//        .filterNot(p => p.getClass().getSimpleName.equals("Eval"))
-//        .map(op => op.getClass.getSimpleName)
-//        .sortWith(_ < _)
-//        .mkString("")
-//    }
-
-    // Every extension needs its own FinalClass. Surely there is a scala pattern that can avoid these
-    // recursive helper methods...
-//    updated = updateTypes(model, updated)
-    updateTypes(model)
-
-//    // if there is a parent, apply update types method, and either get it and apply or just return rep
-//    def updateTypes(dm: DomainModel, rep:ReflectedRepository[G]): ReflectedRepository[G] = {
-//      dm.data.asScala.foldLeft(dm.getParent.map(updateTypes(_,rep)).orElse(rep)) ((rep,exp) =>
-//        rep.addCombinator(new FinalClass(exp))
-//          .addCombinator(new SubInterface(exp))
-//      )
-//
-  def updateTypes(dm: DomainModel): Unit = {
-      dm.data.asScala.foreach {
+    // Every extension needs its own FinalClass and interface
+    history.asScala.foreach (domain =>
+      domain.data.asScala.foreach {
         sub: Exp => {
           updated = updated
             .addCombinator(new FinalClass(sub))
             .addCombinator(new SubInterface(sub))
         }
       }
-
-      if (dm.getParent.isPresent) {
-        updateTypes(dm.getParent.get)
-      }
-    }
-
-    def addMulti(dm: DomainModel, sub: List[Operation]): Unit = {
-      dm.data.asScala.foreach { exp: Exp => {
-        val st: Type = ep(ep.interface, exp, sub)
-        // ep(ep.interface, exp, ops)
-        updated = updated
-          .addCombinator(new AddMultiOperation(sub, exp))
-      }
-      }
-      if (dm.getParent.isPresent) {
-        addMulti(dm.getParent.get, sub)
-      }
-    }
-
-    def addFinal(dm: DomainModel, sub: List[Operation]): Unit = {
-      dm.data.asScala.foreach { exp: Exp => {
-        updated = updated
-          .addCombinator(new FinalMultiClass(sub, exp))
-      }
-      }
-      if (dm.getParent.isPresent) {
-        addFinal(dm.getParent.get, sub)
-      }
-    }
+    )
 
     // all non-empty subsets of operations need their own class and operations
     //val subsets:List[List[Operation]] = model.ops.asScala.toSet[Operation].subsets.map(_.toList).toList.filter(_.nonEmpty)
-    val subsets:List[List[Operation]] = model.flatten.ops.asScala.toSet[Operation].subsets.map(_.toList).toList.filter(_.nonEmpty)
+    val subsets:List[List[Operation]] = history.flatten.ops.asScala.toSet[Operation].subsets.map(_.toList).toList.filter(_.nonEmpty)
 //
 //    def updateSubsets(dm: DomainModel): List[List[Operation]] = {
 //      val subs: List[List[Operation]] = dm.ops.asScala.toSet[Operation].subsets.map(_.toList).toList.filter(_.nonEmpty)
@@ -109,11 +63,24 @@ trait Structure extends Base with SemanticTypes with MethodMapper {
           // every subset gets its own interface
           updated = updated.addCombinator(new AddMultiOperationInterface(sorted))
 
-          addMulti(model, sorted)
+          history.asScala.foreach (domain =>
+            domain.data.asScala.foreach { exp: Exp => {
+              val st: Type = ep(ep.interface, exp, sorted)
+              // ep(ep.interface, exp, ops)
+              updated = updated
+                .addCombinator(new AddMultiOperation(sub, exp))
+            }
+            })
         }
 
         // do this in all cases...
-        addFinal(model, sorted)
+        history.asScala.foreach (domain =>
+          domain.data.asScala.foreach { exp: Exp => {
+            updated = updated
+              .addCombinator(new FinalMultiClass(sorted, exp))
+          }
+          }
+        )
       }
     }
 
@@ -131,49 +98,45 @@ trait Structure extends Base with SemanticTypes with MethodMapper {
 
 
     // Row entries for a given operation as expressed by the different column types
-    def registerImpl(dm:DomainModel, op: Operation, fm: FunctionMethod): Unit = {
-      dm.data.asScala
+    def registerImpl(op: Operation, fm: FunctionMethod): Unit = {
+      history.asScala.foreach(domain =>
+      domain.data.asScala
         .foreach(exp => {
-          val comb: Seq[Statement] = new CodeGenerators(model).evalGenerators(exp).get
+          val comb: Seq[Statement] = new CodeGenerators().evalGenerators(exp).get
 
           updated = updated
             .addCombinator(new AddDefaultImpl(op, fm, exp, comb))
         })
-
-      if (dm.getParent.isPresent) {
-        registerImpl(dm.getParent.get, op, fm)
-      }
+      )
     }
 
-    def registerExtension(dm:DomainModel, op: Operation, codegen: CodeGeneratorRegistry[Seq[Statement]]): Unit = {
-      dm.data.asScala
-        .foreach(exp => {
-          val comb: Seq[Statement] = codegen(exp).get
+    def registerExtension(op: Operation, codegen: CodeGeneratorRegistry[Seq[Statement]]): Unit = {
+      history.asScala.foreach (domain =>
+        domain.data.asScala
+          .foreach(exp => {
+            val comb: Seq[Statement] = codegen(exp).get
 
-          updated = updated
-            .addCombinator(new AddExpOperation(exp, op, comb))
-        })
-
-      if (dm.getParent.isPresent) {
-        registerExtension (dm.getParent.get, op, codegen)
-      }
+            updated = updated
+              .addCombinator(new AddExpOperation(exp, op, comb))
+          })
+        )
     }
 
     // HACK: TODO: Fix and expose to be configurable
     // note default 'Eval' operation is handled specially since it is assumed to always exist in top Exp class
-    registerImpl(model, new Eval, new FunctionMethod("eval", Types.Double))
+    registerImpl(new Eval, new FunctionMethod("eval", Types.Double))
 
     // extension
-    registerExtension(model, new PrettyP, new CodeGenerators(model).prettypGenerators)
+    registerExtension(new PrettyP, new CodeGenerators().prettypGenerators)
 
-    registerExtension(model, new Collect, new CodeGenerators(model).collectLitGenerators)
+    registerExtension(new Collect, new CodeGenerators().collectLitGenerators)
 
     // Get class that contains just PrettyP and SimplifyExp
     val subTypes:String = List(new PrettyP().getClass.getSimpleName,
                                new SimplifyExpr().getClass.getSimpleName)
         .sortWith(_ < _)
         .mkString("")
-    registerExtension(model, new SimplifyExpr, new SimplifyCodeGenerators(model, subTypes).simplifyGenerators)
+    registerExtension(new SimplifyExpr, new SimplifyCodeGenerators(subTypes).simplifyGenerators)
 
     updated
   }

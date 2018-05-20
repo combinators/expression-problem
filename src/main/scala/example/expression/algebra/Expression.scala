@@ -2,9 +2,12 @@ package example.expression.algebra
 
 import javax.inject.Inject
 import com.github.javaparser.ast.CompilationUnit
+import example.expression.ExpressionDomain
 import expression.data.{Add, Eval, Lit}
-import expression.extensions.{Collect, Mult, Neg, PrettyP, Sub}
+import expression.extensions._
+import expression.history.History
 import expression.instances.UnitSuite
+import expression.operations.SimplifyExpr
 import expression.{DomainModel, Exp, Operation}
 import org.combinators.cls.git.{EmptyResults, InhabitationController}
 import org.combinators.cls.interpreter.ReflectedRepository
@@ -18,75 +21,82 @@ import scala.collection.JavaConverters._    // Needed for asJava
 
 class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: ApplicationLifecycle) extends InhabitationController(webJars, applicationLifecycle) {
 
-  // Configure the desired (sub)types and operations
-  val evolution_0:DomainModel = new DomainModel(
+  val history:History = new History
+  history.extend("e0", new DomainModel(
     List[Exp](new Lit, new Add).asJava,
     List[Operation](new Eval).asJava
-  )
+  ))
 
-  val evolution_1:DomainModel = new DomainModel (evolution_0,
+  // evolution 1 (from Extensibility for the Masses example)
+  history.extend("e1",  new DomainModel(
     List[Exp](new Sub).asJava,
     List.empty.asJava
-  )
+  ))
 
   // evolution 2 (from Extensibility for the Masses example)
-  val evolution_2:DomainModel = new DomainModel(evolution_1,
+  history.extend("e2",  new DomainModel(
     List.empty.asJava,
     List[Operation](new PrettyP).asJava
-  )
-  // Adding mult
-  val evolution_3:DomainModel = new DomainModel(evolution_2,
-    List[Exp](new Mult).asJava,
-    List.empty.asJava
-  )
+  ))
 
+  // Evolution 1: Extension to domain model has new data variants and operations
+  history.extend("e3",  new DomainModel(
+    List[Exp](new Neg, new Mult, new Divd).asJava,
+    List.empty.asJava
+  ))
+
+//  history.extend("e4",  new DomainModel(
+//    List.empty.asJava,
+//    List[Operation](new Collect, new SimplifyExpr).asJava
+//  ))
+
+  // VISITOR solution has no choice but to merge all domain models.
+  val model:DomainModel = history.flatten
 
   // decide upon a set of test cases from which we can generate driver code/test cases.
   val allTests : UnitSuite = new UnitSuite()
 
   // this is a hack, to pass in evol_2 since we won't be using it in futurte.
-  lazy val repository = new ExpressionSynthesis(evolution_3, allTests) with Structure {}
+  lazy val repository = new ExpressionDomain(history, allTests) with ExpressionSynthesis with Structure {}
   import repository._
-
-
 
   lazy val Gamma = {
     var base = ReflectedRepository(repository, classLoader = this.getClass.getClassLoader)
 
     // hack
     base = base
-      .addCombinator(new OperationImpClass(evolution_2, new PrettyP,"Sub",domain_evolution.version2))//hacking
+      .addCombinator(new OperationImpClass(history, "e2", new PrettyP,"Sub",domain_evolution.version2))//hacking
 
-    base = domain.data.asScala.foldLeft(base){
+    base = model.data.asScala.foldLeft(base){
       case (repo, sub) =>repo
         .addCombinator(new BaseClass(sub,"ExpAlg"))
     }
 
     base = base
-      .addCombinator(new BaseExpClass(evolution_0, domain_evolution.version0))
-      .addCombinator(new OperationBaseClass(evolution_0, new Eval()))
+      .addCombinator(new BaseExpClass(history.get("e0"), domain_evolution.version0))
+      .addCombinator(new OperationBaseClass(history.get("e0"), new Eval()))
 
     // DEAL with BaseInterface for all operations in all domains
-    evolution_0.ops.asScala.foreach {
+    history.get("e0").ops.asScala.foreach {
         op:Operation => {
           base = base.addCombinator(new BaseInterface(op))
         }
       }
-    evolution_2.ops.asScala.foreach {
+    history.get("e2").ops.asScala.foreach {
       op:Operation => {
         base = base.addCombinator(new BaseInterface(op))
       }
     }
 
     base = base
-      .addCombinator(new ExtendedInterface(evolution_1, "Sub", "ExpAlg<E>", domain_evolution.version1))
-      .addCombinator(new OperationExtendedBaseClass(evolution_1, new Sub, new Eval, domain_evolution.version1))
-      .addCombinator(new ExtendedInterface(evolution_3, "Mult", "ExpAlg<E>", domain_evolution.version3))
-      .addCombinator(new OperationExtendedBaseClass(evolution_3, new Mult, new Eval, domain_evolution.version3))
-      .addCombinator(new OperationSpecialExtendedBaseClass(evolution_3, new Mult, new PrettyP, domain_evolution.version3))
+      .addCombinator(new ExtendedInterface(history.get("e1"), "Sub", "ExpAlg<E>", domain_evolution.version1))
+      .addCombinator(new OperationExtendedBaseClass(history, "e1", new Sub, new Eval, domain_evolution.version1))
+      .addCombinator(new ExtendedInterface(history.get("e3"), "Mult", "ExpAlg<E>", domain_evolution.version3))
+      .addCombinator(new OperationExtendedBaseClass(history, "e3", new Mult, new Eval, domain_evolution.version3))
+      .addCombinator(new OperationSpecialExtendedBaseClass(history.get("e3"), new Mult, new PrettyP, domain_evolution.version3))
        //problem here need to fix OperationExtendedBaseClass
-      .addCombinator(new OperationSpecialImpClass(evolution_3, new PrettyP,"ExpAlg", "Mult", domain_evolution.version2))//hacking
-      .addCombinator(new OperationSpecialImpClass(evolution_3, new Eval,"SubExpAlg", "Mult", domain_evolution.version2))//hacking
+      .addCombinator(new OperationSpecialImpClass(history.get("e3"), new PrettyP,"ExpAlg", "Mult", domain_evolution.version2))//hacking
+      .addCombinator(new OperationSpecialImpClass(history.get("e3"), new Eval,"SubExpAlg", "Mult", domain_evolution.version2))//hacking
 
     base
   }

@@ -44,6 +44,8 @@ object Registry extends Operators {
     * For the given operation, add the sequence of statements to implement for given expression subtype.
     * This dynamically maintains a map which can be inspected for the code synthesis.
     *
+    * Assumes visitor pattern!
+    *
     * @param op      Operation under consideration
     * @param exp     Expression context
     * @param stmts   Sequence of statements that represents implementation of operation in given context.
@@ -56,8 +58,6 @@ object Registry extends Operators {
     } else {
       Map()
     }
-
-    print ("::::: addImpl:" + map.size + " [" + op.getClass.getSimpleName + ":" + exp.getClass.getSimpleName)
 
     val tpe:String = Type_toString(op.`type`)
     map += (exp.getClass -> Java(

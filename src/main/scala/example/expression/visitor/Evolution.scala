@@ -1,5 +1,9 @@
 package example.expression.visitor
 
+import java.io.InputStream
+import java.net.URL
+import java.nio.file.{Path, Paths}
+
 import com.github.javaparser.ast.CompilationUnit
 import example.expression.ExpressionDomain
 import expression.history.History
@@ -7,12 +11,84 @@ import expression.instances.UnitSuite
 import expression.tests.AllTests
 import javax.inject.Inject
 import org.combinators.cls.git.{EmptyInhabitationBatchJobResults, InhabitationController, Results, RoutingEntries}
-import org.combinators.cls.interpreter.ReflectedRepository
-import org.combinators.cls.types.Constructor
+import org.combinators.cls.interpreter.{ReflectedRepository, combinator}
+import org.combinators.cls.types.{Constructor, Type}
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
 import org.combinators.templating.persistable.JavaPersistable._
 import example.expression._
+import example.expression.cpp.CPPFile
+import expression.Operation
+import expression.data.Eval
+import org.combinators.cls.types.Type
+import org.combinators.cls.types.syntax._
+import org.combinators.templating.persistable.Persistable
+
+abstract class Foundation (web: WebJarsUtil, app: ApplicationLifecycle)
+  extends InhabitationController(web, app) with RoutingEntries {
+
+  // to inherit from class overwrite comp
+  val comps:Seq[CompilationUnit]
+
+  class solutionRepository {
+    @combinator object Solution {
+      def apply():Unit = { }
+
+      val semanticType:Type = 'Solution
+    }
+  }
+
+  lazy val Gamma = ReflectedRepository(new solutionRepository, classLoader = this.getClass.getClassLoader)
+
+  /** This needs to be defined, and it is set from Gamma. */
+  lazy val combinatorComponents = Gamma.combinatorComponents
+
+  /**
+    * Tell the framework to store stuff of type PythonWithPath at the location specified in Path.
+    * The Path is relative to the Git repository.
+    */
+  implicit def PersistDummy: Persistable.Aux[Unit] = new Persistable {
+    override def path(elem: Unit): Path = Paths.get("solutions.txt")
+    override def rawText(elem: Unit): Array[Byte] = elem.toString.getBytes
+    override type T = Unit
+  }
+
+  /** Has to be lazy so subclasses can compute model. */
+  lazy val results:Results = comps.foldLeft(EmptyInhabitationBatchJobResults(Gamma)
+    .addJob[Unit]()
+    .compute())((result, comp) => result.addExternalArtifact[CompilationUnit](comp))
+
+//  // force the request and this should then allow for direct GIT
+//  def prepareGit() {
+//    val url: URL = new URL("http://localhost:9000/" + routingPrefix.get + "/" + controllerAddress + "/prepare?number=0")
+//    println(url)
+//    val s: InputStream = url.openStream()
+//    s.close()
+//  }
+
+}
+
+class Last @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+  extends Foundation(web, app) {
+  lazy val history_e0:History = evolution.E0.extend(new History)
+  //
+  //  history.extend("e0", new DomainModel(
+  //    List[Exp](new Lit, new Add).asJava,
+  //    List[Operation](new Eval).asJava))
+
+  // all tests are derived from the model.
+  lazy val tests_e0 = tests.e0.TestCases.add(new AllTests())
+  lazy val rep = new ExpressionDomain(history_e0, tests_e0) with ExpressionSynthesis with e0.Model with InitializeRepository {}
+
+  val comps:Seq[CompilationUnit] =  Seq(rep.Visitor.apply(), new rep.OpImpl(new Eval).apply)
+
+  lazy val controllerAddress = "e0"
+  override val routingPrefix: Option[String] = Some("dummy")
+
+  // forces the generation of the first (only) instance
+  //prepare(0)
+
+}
 
 class E0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends InhabitationController(web, app) with RoutingEntries {
@@ -36,11 +112,20 @@ class E0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
   /** This needs to be defined, and it is set from Gamma. */
   lazy val combinatorComponents = Gamma.combinatorComponents
-
-  /** Has to be lazy so subclasses can compute model. */
+//
+//
+//  lazy val someComp:Seq[CompilationUnit] = Seq(rep.Visitor.apply(), new rep.OpImpl(new Eval).apply)
+//
+//  /** Has to be lazy so subclasses can compute model. */
   lazy val targets:Seq[Constructor] = Synthesizer.visitorTargets(rep.domain)
+//  lazy val results:Results = someComp.foldLeft(EmptyInhabitationBatchJobResults(Gamma)
+//      .addJobs[CompilationUnit](targets)
+//      .compute())((result, comp) => result.addExternalArtifact[CompilationUnit](comp))
   lazy val results:Results =
-    EmptyInhabitationBatchJobResults(Gamma).addJobs[CompilationUnit](targets).compute()
+    EmptyInhabitationBatchJobResults(Gamma).addJobs[CompilationUnit](targets)
+      .compute()
+      //.addExternalArtifact[CompilationUnit](new rep.OpImpl(new Eval).apply)     THIS IS HOW WE
+      // .addExternalArtifact[CompilationUnit](rep.Visitor.apply())    THIS IS HOW WE add targets
 
   // all accomplished within the 'visitor' family
   override val routingPrefix: Option[String] = Some("visitor")

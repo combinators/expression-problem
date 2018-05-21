@@ -3,10 +3,28 @@ package example.expression.visitor
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.stmt.Statement
 import example.expression.j.Operators
+import expression.data.{Add, Eval, Lit}
 import expression.{Exp, Operation}
 import org.combinators.templating.twirl.Java
+import shared.compilation.CodeGeneratorRegistry
 
+/**
+  * Map from Operation --> (Map from SubType -> MethodDeclaration)
+  *
+  * Consider code generation registry (Operation, SubType)-> Seq[Statement])
+  */
 object Registry extends Operators {
+
+//  Cartesian closed categories [] when you have multiple arguments, turn them into fixed argument tuples
+
+  val instanceGenerators: CodeGeneratorRegistry[Seq[Statement]] = CodeGeneratorRegistry.merge[Seq[Statement]] (
+    CodeGeneratorRegistry[Seq[Statement], (Eval,Lit)] {
+      case (_: CodeGeneratorRegistry[Seq[Statement]], (ev:Eval, lit:Lit)) =>
+        Java(s"""new Lit(Double.valueOf($lit))""").statements()
+    },
+  )
+//val instanceGenerators: CodeGeneratorRegistry[com.github.javaparser.ast.expr.Expression] = CodeGeneratorRegistry.merge[com.github.javaparser.ast.expr.Expression](
+
   /** Implementations for an operation. Map(op, Map(exp,MethodDecls)). */
   var implementations:Map[Class[_ <: Operation],Map[Class[_ <: Exp],MethodDeclaration]] = Map()
 

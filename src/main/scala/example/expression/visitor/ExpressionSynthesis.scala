@@ -47,7 +47,7 @@ trait ExpressionSynthesis extends InstanceCodeGenerators with SemanticTypes {
                | */
                |public abstract class Visitor<R> {
                |
-           |$signatures
+               |$signatures
                |}
          """.stripMargin).compilationUnit()
     }

@@ -9,7 +9,6 @@ import org.combinators.cls.types.syntax._
 import org.combinators.templating.twirl.Java
 import example.expression.j.MethodMapper
 import example.expression.{Base, ExpressionDomain}
-import expression.data.{Add, Eval, Lit}
 import expression.extensions._
 import expression._
 import expression.history.History
@@ -40,17 +39,6 @@ trait Structure extends Base with SemanticTypes with MethodMapper {
     // all non-empty subsets of operations need their own class and operations
     //val subsets:List[List[Operation]] = model.ops.asScala.toSet[Operation].subsets.map(_.toList).toList.filter(_.nonEmpty)
     val subsets:List[List[Operation]] = history.flatten.ops.asScala.toSet[Operation].subsets.map(_.toList).toList.filter(_.nonEmpty)
-//
-//    def updateSubsets(dm: DomainModel): List[List[Operation]] = {
-//      val subs: List[List[Operation]] = dm.ops.asScala.toSet[Operation].subsets.map(_.toList).toList.filter(_.nonEmpty)
-//
-//      if (dm.getParent.isPresent) {
-//        subs ++ updateSubsets(dm.getParent.get)
-//      } else {
-//        subs
-//      }
-//    }
-//    val subsets: List[List[Operation]] = updateSubsets(model)
 
     subsets.foreach {
       sub: List[Operation] => {
@@ -68,7 +56,7 @@ trait Structure extends Base with SemanticTypes with MethodMapper {
               val st: Type = ep(ep.interface, exp, sorted)
               // ep(ep.interface, exp, ops)
               updated = updated
-                .addCombinator(new AddMultiOperation(sub, exp))
+                .addCombinator(new AddMultiOperation(sorted, exp))
             }
             })
         }
@@ -97,46 +85,46 @@ trait Structure extends Base with SemanticTypes with MethodMapper {
     // parameters, and sometimes with a single parameter.
 
 
-    // Row entries for a given operation as expressed by the different column types
-    def registerImpl(op: Operation, fm: FunctionMethod): Unit = {
-      history.asScala.foreach(domain =>
-      domain.data.asScala
-        .foreach(exp => {
-          val comb: Seq[Statement] = new CodeGenerators().evalGenerators(exp).get
+//    // Row entries for a given operation as expressed by the different column types
+//    def registerImpl(op: Operation, fm: FunctionMethod): Unit = {
+//      history.asScala.foreach(domain =>
+//      domain.data.asScala
+//        .foreach(exp => {
+//          val comb: Seq[Statement] = new CodeGenerators().evalGenerators(exp).get
+//
+//          updated = updated
+//            .addCombinator(new AddDefaultImpl(op, fm, exp, comb))
+//        })
+//      )
+//    }
 
-          updated = updated
-            .addCombinator(new AddDefaultImpl(op, fm, exp, comb))
-        })
-      )
-    }
-
-    def registerExtension(op: Operation, codegen: CodeGeneratorRegistry[Seq[Statement]]): Unit = {
-      history.asScala.foreach (domain =>
-        domain.data.asScala
-          .foreach(exp => {
-            val comb: Seq[Statement] = codegen(exp).get
-
-            updated = updated
-              .addCombinator(new AddExpOperation(exp, op, comb))
-          })
-        )
-    }
+//    def registerExtension(op: Operation, codegen: CodeGeneratorRegistry[Seq[Statement]]): Unit = {
+//      history.asScala.foreach (domain =>
+//        domain.data.asScala
+//          .foreach(exp => {
+//            val comb: Seq[Statement] = codegen(exp).get
+//
+//            updated = updated
+//              .addCombinator(new AddExpOperation(exp, op, comb))
+//          })
+//        )
+//    }
 
     // HACK: TODO: Fix and expose to be configurable
     // note default 'Eval' operation is handled specially since it is assumed to always exist in top Exp class
-    registerImpl(new Eval, new FunctionMethod("eval", Types.Double))
+   // registerImpl(new Eval, new FunctionMethod("eval", Types.Double))
 
-    // extension
-    registerExtension(new PrettyP, new CodeGenerators().prettypGenerators)
-
-    registerExtension(new Collect, new CodeGenerators().collectLitGenerators)
-
-    // Get class that contains just PrettyP and SimplifyExp
-    val subTypes:String = List(new PrettyP().getClass.getSimpleName,
-                               new SimplifyExpr().getClass.getSimpleName)
-        .sortWith(_ < _)
-        .mkString("")
-    registerExtension(new SimplifyExpr, new SimplifyCodeGenerators(subTypes).simplifyGenerators)
+//    // extension
+//    registerExtension(new PrettyP, new CodeGenerators().prettypGenerators)
+//
+//    registerExtension(new Collect, new CodeGenerators().collectLitGenerators)
+//
+//    // Get class that contains just PrettyP and SimplifyExp
+//    val subTypes:String = List(new PrettyP().getClass.getSimpleName,
+//                               new SimplifyExpr().getClass.getSimpleName)
+//        .sortWith(_ < _)
+//        .mkString("")
+//    registerExtension(new SimplifyExpr, new SimplifyCodeGenerators(subTypes).simplifyGenerators)
 
     updated
   }
@@ -335,98 +323,98 @@ trait Structure extends Base with SemanticTypes with MethodMapper {
     val semanticType: Type = ep(ep.finalType, sub, ops)
   }
 
-  /**
-    * Given an interface for a type, adds a default implementation of given operation
-    *
-    * @param op    Desired Operation
-    * @param fm    Domain Model Function Method that models this operation
-    * @param sub   The subType associated with....
-    * @param stmts ...the statements containing an implementation of Operation for SubType.
-    */
-  class AddDefaultImpl(op: Operation, fm: FunctionMethod, sub: Exp, stmts: Seq[Statement]) {
-    def apply(unit: CompilationUnit): CompilationUnit = {
+//  /**
+//    * Given an interface for a type, adds a default implementation of given operation
+//    *
+//    * @param op    Desired Operation
+//    * @param fm    Domain Model Function Method that models this operation
+//    * @param sub   The subType associated with....
+//    * @param stmts ...the statements containing an implementation of Operation for SubType.
+//    */
+//  class AddDefaultImpl(op: Operation, fm: FunctionMethod, sub: Exp, stmts: Seq[Statement]) {
+//    def apply(unit: CompilationUnit): CompilationUnit = {
+//
+//      val tpe = Type_toString(fm.returnType)
+//      val name = fm.name
+//
+//      // methods are marked as default later
+//      val methods = Java(s"$tpe $name() { ${stmts.mkString} }").methodDeclarations()
+//
+//      // these are default methods
+//      methods.foreach { m =>
+//        m.setDefault(true)
+//        unit.getTypes.get(0).getMembers.add(m)
+//      }
+//      unit
+//    }
+//
+//    val semanticType: Type = ep(ep.interface, sub) =>: ep(ep.defaultMethods, sub, op)
+//  }
 
-      val tpe = Type_toString(fm.returnType)
-      val name = fm.name
 
-      // methods are marked as default later
-      val methods = Java(s"$tpe $name() { ${stmts.mkString} }").methodDeclarations()
-
-      // these are default methods
-      methods.foreach { m =>
-        m.setDefault(true)
-        unit.getTypes.get(0).getMembers.add(m)
-      }
-      unit
-    }
-
-    val semanticType: Type = ep(ep.interface, sub) =>: ep(ep.defaultMethods, sub, op)
-  }
-
-
-  /**
-    * Given an extension to Exp and a given operation (and its stmts implementation) produce an
-    * interface with default method. Overide methods that are of class Exp. Thus: AddExpOperation (Add, PrettyP, ...)
-    *
-    * interface AddPrettyP extends Add, PrettyP {
-    * PrettyP left();
-    * PrettyP right();
-    * default String print() {
-    * return "(" + left().print() + " + " + right().print() + ")";
-    * }
-    * }
-    *
-    * @param exp   SubType (i.e., Add) for which an operation is to be defined.
-    * @param op    Operation to be defined.
-    * @param stmts Default set of statements for implementation
-    */
-  class AddExpOperation(exp: Exp, op: Operation, stmts: Seq[Statement]) {
-    def apply(): CompilationUnit = {
-      val opName = op.getClass.getSimpleName
-      val expName = exp.getClass.getSimpleName
-
-      val unit: CompilationUnit = Java(
-        s"""
-           |package ep;
-           |interface $expName$opName extends $expName, $opName { }
-           |""".stripMargin).compilationUnit()
-
-      val tpe = Type_toString(op.`type`)
-
-      // methods are marked as default later
-      val methods: Seq[MethodDeclaration] = Java(
-        s"""
-           |$tpe ${op.name}() {
-           |   ${stmts.mkString("\n")}
-           |}
-         """.stripMargin).methodDeclarations()
-
-      // reclassify an field of type Exp with the more precise $expName
-      // PrettyP left();
-      // PrettyP right();
-      exp.ops.asScala.foreach {
-        case att: Attribute =>
-          // only redefine if originally the Exp field.
-          if (att.attType == Types.Exp) {
-            val fields: Seq[MethodDeclaration] = Java(s"""$opName ${att.attName}();""").methodDeclarations()
-
-            fields.foreach { x => unit.getTypes.get(0).getMembers.add(x) }
-          }
-
-        case _: FunctionMethod =>
-      }
-
-      // these are default methods
-      methods.foreach { m =>
-        m.setDefault(true)
-        unit.getTypes.get(0).getMembers.add(m)
-      }
-
-      unit
-    }
-
-    val semanticType: Type = ep(ep.interface, exp, op)
-  }
+//  /**
+//    * Given an extension to Exp and a given operation (and its stmts implementation) produce an
+//    * interface with default method. Overide methods that are of class Exp. Thus: AddExpOperation (Add, PrettyP, ...)
+//    *
+//    * interface AddPrettyP extends Add, PrettyP {
+//    * PrettyP left();
+//    * PrettyP right();
+//    * default String print() {
+//    * return "(" + left().print() + " + " + right().print() + ")";
+//    * }
+//    * }
+//    *
+//    * @param exp   SubType (i.e., Add) for which an operation is to be defined.
+//    * @param op    Operation to be defined.
+//    * @param stmts Default set of statements for implementation
+//    */
+//  class AddExpOperation(exp: Exp, op: Operation, stmts: Seq[Statement]) {
+//    def apply(): CompilationUnit = {
+//      val opName = op.getClass.getSimpleName
+//      val expName = exp.getClass.getSimpleName
+//
+//      val unit: CompilationUnit = Java(
+//        s"""
+//           |package ep;
+//           |interface $expName$opName extends $expName, $opName { }
+//           |""".stripMargin).compilationUnit()
+//
+//      val tpe = Type_toString(op.`type`)
+//
+//      // methods are marked as default later
+//      val methods: Seq[MethodDeclaration] = Java(
+//        s"""
+//           |$tpe ${op.name}() {
+//           |   ${stmts.mkString("\n")}
+//           |}
+//         """.stripMargin).methodDeclarations()
+//
+//      // reclassify an field of type Exp with the more precise $expName
+//      // PrettyP left();
+//      // PrettyP right();
+//      exp.ops.asScala.foreach {
+//        case att: Attribute =>
+//          // only redefine if originally the Exp field.
+//          if (att.attType == Types.Exp) {
+//            val fields: Seq[MethodDeclaration] = Java(s"""$opName ${att.attName}();""").methodDeclarations()
+//
+//            fields.foreach { x => unit.getTypes.get(0).getMembers.add(x) }
+//          }
+//
+//        case _: FunctionMethod =>
+//      }
+//
+//      // these are default methods
+//      methods.foreach { m =>
+//        m.setDefault(true)
+//        unit.getTypes.get(0).getMembers.add(m)
+//      }
+//
+//      unit
+//    }
+//
+//    val semanticType: Type = ep(ep.interface, exp, op)
+//  }
 
   //  interface ExpPC extends ExpP, ExpC{}
   //  interface LitPC extends ExpPC, LitP, LitC{}
@@ -541,43 +529,5 @@ trait Structure extends Base with SemanticTypes with MethodMapper {
 
     val semanticType: Type = ep(ep.interface, exp)
   }
-  //
-  //  // sample Driver
-  //  @combinator object Driver {
-  //    def apply:CompilationUnit = Java(s"""
-  //         |package ep;
-  //         |
-  //         |public class Driver {
-  //         |  public static void main(String[] args) {
-  //         |    System.out.println("======Add======");
-  //         |    Add add = new AddFinal(new LitFinal(7), new LitFinal(4));
-  //         |    System.out.println(add.eval());
-  //         |    System.out.println("======Sub======");
-  //         |    Sub sub = new SubFinal(new LitFinal(7), new LitFinal(4));
-  //         |    System.out.println(sub.eval());
-  //         |    System.out.println("======Print======");
-  //         |
-  //         |    /* the line below causes compile-time error, if now commented out. */
-  //         |    //AddPrettyPFinal exp = new AddPrettyPFinal(new LitFinal(7)), new LitFinal(4));
-  //         |    AddPrettyPFinal prt = new AddPrettyPFinal(new LitPrettyPFinal(7), new LitPrettyPFinal(4));
-  //         |    System.out.println(prt.print() + " = " + prt.eval());
-
-  // Once you know the types and the operations. then use one final factory for constructors.
-  // suppose you wanted parser. you can get this to work ( at some cost to yourself) and it breaks down as
-  // soon as you start applying new operations since the instantiation code contains older objects that
-  // can't use those new operations
-
-  //         |    System.out.println("======CollectLiterals======");
-  //         |    AddCollectFinal addc = new AddCollectFinal(new LitCollectFinal(3), new LitCollectFinal(4));
-  //         |    System.out.println(addc.collectList().toString());
-
-  //         |    System.out.println("======Composition: Independent Extensibility======");
-  //         |    AddPrettyPCollectFinal addpc = new AddPrettyPCollectFinal(new LitPrettyPCollectFinal(3), new LitPrettyPCollectFinal(4));
-  //         |    System.out.println(addpc.print() + " = " + addpc.eval() + " Literals: " + addpc.collectList().toString());
-  //         |  }
-  //         |}""".stripMargin).compilationUnit()
-  //
-  //    val semanticType:Type = driver
-  //  }
 
 }

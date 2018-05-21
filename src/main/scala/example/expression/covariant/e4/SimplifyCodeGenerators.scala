@@ -1,13 +1,8 @@
-package example.expression.covariant
+package example.expression.covariant.e4
 
 import com.github.javaparser.ast.stmt.Statement
-import example.expression.j.MethodMapper
 import expression.data._
 import expression.extensions.{Divd, Mult, Neg, Sub}
-import expression.history.History
-import expression.{DomainModel, Exp}
-import org.combinators.cls.types.Type
-import org.combinators.cls.types.syntax._
 import org.combinators.templating.twirl.Java
 import shared.compilation.CodeGeneratorRegistry
 
@@ -22,45 +17,12 @@ import shared.compilation.CodeGeneratorRegistry
 class SimplifyCodeGenerators(subtypes:String)  {
 
   /**
-    * Return the operator to use for a given binary exp type in Java.
-    *
-    * @param exp Exp subclass that corresponds to a binary operator.
-    * @return
-    */
-  def getBinaryOperator( exp:Exp) : com.github.javaparser.ast.expr.BinaryExpr.Operator = {
-    exp match {
-
-      case _:Add => com.github.javaparser.ast.expr.BinaryExpr.Operator.PLUS
-      case _:Sub => com.github.javaparser.ast.expr.BinaryExpr.Operator.MINUS
-      case _:Mult => com.github.javaparser.ast.expr.BinaryExpr.Operator.MULTIPLY
-      case _:Divd => com.github.javaparser.ast.expr.BinaryExpr.Operator.DIVIDE
-
-      case _ => null
-    }
-  }
-
-  /**
-    * Return the operator to use for a given unary exp type in Java.
-    *
-    * @param exp  Exp subclass that corresponds to a unary operator.
-    * @return
-    */
-  def getUnaryOperator( exp:Exp) : com.github.javaparser.ast.expr.UnaryExpr.Operator = {
-    exp match {
-
-      case _:Neg => com.github.javaparser.ast.expr.UnaryExpr.Operator.MINUS
-
-      case _ => null
-    }
-  }
-
-  /**
     * Code generator for reproducing the structure of the covariant pattern invocation for simplify.
     *
     * What is TRULY challenging is construction Lit replacements, with the desired subtype, which
     * is only known by the invoking code.
     */
-  val simplifyGenerators:CodeGeneratorRegistry[Seq[Statement]] = CodeGeneratorRegistry.merge[Seq[Statement]](
+  var simplifyGenerators:CodeGeneratorRegistry[Seq[Statement]] = CodeGeneratorRegistry.merge[Seq[Statement]](
     CodeGeneratorRegistry[Seq[Statement], Lit] {
       case (_:CodeGeneratorRegistry[Seq[Statement]], _:Lit) =>
         Java(s"""return this;""").statements() // nothing to simplify
@@ -78,7 +40,7 @@ class SimplifyCodeGenerators(subtypes:String)  {
                |} else if (rightVal == 0) {
                |  return left();
                |} else {
-               |  return new Add${subtypes}Final((${subtypes})left().simplify(), (${subtypes})right().simplify());
+               |  return new Add${subtypes}Final(($subtypes)left().simplify(), ($subtypes)right().simplify());
                |}
                |""".stripMargin).statements()
     },
@@ -91,7 +53,7 @@ class SimplifyCodeGenerators(subtypes:String)  {
                 |if (leftVal == rightVal) {
                 |  return new Lit${subtypes}Final(0.0);
                 |} else {
-                |  return new Sub${subtypes}Final((${subtypes})left().simplify(), (${subtypes})right().simplify());
+                |  return new Sub${subtypes}Final(($subtypes)left().simplify(), ($subtypes)right().simplify());
                 |}
                 |""".stripMargin).statements()
     },
@@ -102,7 +64,7 @@ class SimplifyCodeGenerators(subtypes:String)  {
                 |if (eval() == 0) {
                 |  return new Lit${subtypes}Final(0.0);
                 |} else {
-                |  return new Neg${subtypes}Final((${subtypes})exp().simplify());
+                |  return new Neg${subtypes}Final(($subtypes)exp().simplify());
                 |}""".stripMargin).statements()
     },
 
@@ -118,7 +80,7 @@ class SimplifyCodeGenerators(subtypes:String)  {
               |} else if (rightVal == 1.0) {
               |  return left();
               |} else {
-              |  return new Mult${subtypes}Final((${subtypes})left().simplify(), (${subtypes})right().simplify());
+              |  return new Mult${subtypes}Final(($subtypes)left().simplify(), ($subtypes)right().simplify());
               |}
               |""".stripMargin
       println(str)
@@ -139,7 +101,7 @@ class SimplifyCodeGenerators(subtypes:String)  {
                 |} else if (leftVal == -rightVal) {
                 |    return new Lit${subtypes}Final(-1.0);
                 |} else {
-                |  return new Divd${subtypes}Final((${subtypes})left().simplify(), (${subtypes})right().simplify());
+                |  return new Divd${subtypes}Final(($subtypes)left().simplify(), ($subtypes)right().simplify());
                 |}
                 |""".stripMargin).statements()
     }

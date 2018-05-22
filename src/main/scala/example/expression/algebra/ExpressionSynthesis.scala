@@ -1,37 +1,22 @@
 package example.expression.algebra
 
 import com.github.javaparser.ast.CompilationUnit
-import com.github.javaparser.ast.body.MethodDeclaration
+import com.github.javaparser.ast.stmt.Statement
 import expression._
 import org.combinators.cls.types._
 import org.combinators.templating.twirl.Java
 import expression.data.Eval
 import expression.history.History
 import expression.types.Types
+import shared.compilation.CodeGeneratorRegistry
 
 import scala.collection.JavaConverters._
 
 
 /** Future work to sanitize combinators to be independent of Exp. */
-trait ExpressionSynthesis extends SemanticTypes {
+trait ExpressionSynthesis extends SemanticTypes with Registry {
 
-  /** Generate from domain. USER NEEDS TO SPECIFY THESE EITHER AUTOMATICALLY OR MANUALLY */
-  //class BaseInterface(op:Eval) {
-  //def apply() : CompilationUnit = {
-  //      val name = op.name
-  //      val iName = name.capitalize
-
-  //      Java(s"""
-  //         |package algebra;
-  //         |
-  //         |
-  //         | interface ${iName} {
-  //         |	int $name();
-  //         |}
-  //         |""".stripMargin).compilationUnit()
-  //    }
-  //    val semanticType:Type = ops(ops.base, new Eval)
-  // }
+  var codeGenerator:CodeGeneratorRegistry[Seq[Statement]]
 
   class BaseExpClass(dm: DomainModel, vers: Type) {
     // have a domain object
@@ -150,25 +135,6 @@ trait ExpressionSynthesis extends SemanticTypes {
     semanticType:Type = evolved_exp(exp.base, expr, parent)
   }
 
-  //  / The object algebra
-  //  // hint: .addJob[CompilationUnit](alg(alg.base))
-  //  class EvalExpAlg implements ExpAlg<Eval> {
-  //    public Eval lit(final int x) {
-  //      return new Eval() {
-  //        public int eval() {
-//          return x;
-//        }
-  //      };
-//    }
-//
-  //    public Eval add(final Eval e1, final Eval e2) {
-//      return new Eval() {
-  //        public int eval() {
-  //          return e1.eval() + e2.eval();
-//        }
-//      };
-//    }
-//  }
 
 
   // purpose of this class is to take an operation and produce
@@ -192,9 +158,12 @@ trait ExpressionSynthesis extends SemanticTypes {
           val subName = sub.getClass.getSimpleName.toLowerCase   // to get proper etiquette for method names
           // build up sequence
 
-          val function = registry.getImplementation(op)
-          val value:MethodDeclaration = function.get(sub.getClass).get
-          val signatures = value.getBody.get.toString()
+          //val function = registry.getImplementation(op)
+         // val value:MethodDeclaration = function.get(sub.getClass).get
+          //val signatures = value.getBody.get.toString()
+         val code:Seq[Statement] = codeGenerator((op, sub.getClass)).get
+          val signatures = code.mkString("\n")
+
           var params:Seq[String] = Seq.empty
           sub.ops.asScala.foreach {
             case att: Attribute =>
@@ -234,74 +203,6 @@ trait ExpressionSynthesis extends SemanticTypes {
     val semanticType:Type =  ops (ops.baseClass,new Eval)
   }
 
-//  def allVariants(dm:DomainModel): Seq[Exp] = {
-//    var exps:Seq[Exp] = Seq.empty
-
-//    var node = dm
-//    while (node != null) {
-  //     node.data.asScala.foreach {
-//        exp:Exp => {
-//          exps = exps :+ exp
-//        }
- //     }
-
-//      val par = node.getParent
-//      if (!par.isPresent) {
- //       return exps;
- //     }
-
-//      node = par.get
- //   }
-
-//    return exps
- // }
-// get all operations existing
-//  def allOps(dm:DomainModel): Seq[Operation] = {
-//    var Oprs:Seq[Operation] = Seq.empty
-//
-//    var node = dm
-//    while (node != null) {
-//      node.ops.asScala.foreach {
-//        op: Operation  => {
-//          Oprs = Oprs :+ op
-//        }
-//      }
-//
-//
-//      val par = node.getParent
-//      if (!par.isPresent) {
-//        return Oprs
-//      }
-//
-//      node = par.get
-//    }
-//
-//    return Oprs
-//  }
-
-//  def mostRecentOp(dm:DomainModel): Operation = {
-//
-//    if (!dm.getParent.isPresent) {
-//      return null
-//    }
-//
-//    var node = dm.getParent.get
-//    while (node != null) {
-//      if (!node.ops.isEmpty()) {
-//        // not empty, this is the most recent operations. HACK MIGHT NOT BE ONLY ONE..
-//        return node.ops.get(0)
-//      }
-//
-//      val par = node.getParent
-//      if (!par.isPresent()) {
-//        return null // HACK NOT SURE WHAT TO RETURN....
-//      }
-//
-//      node = par.get
-//    }
-//
-//    return null   // shouldn't get here...
-//  }
 
   def mostRecentData(hist:History): Exp = {
 
@@ -327,9 +228,12 @@ trait ExpressionSynthesis extends SemanticTypes {
       val className = op.getClass.getSimpleName
       val returnType = Type_toString(op.`type`)
 
-      val function = registry.getImplementation(op)
-      val value:MethodDeclaration = function.get(exp.getClass).get
-      val signatures = value.getBody.get.toString()
+      // grab method declaration from (op x exp)
+      //val function = registry.getImplementation(op)
+      //val value:MethodDeclaration = function.get(exp.getClass).get
+      //val signatures = value.getBody.get.toString()
+      val code:Seq[Statement] = codeGenerator((op, exp.getClass)).get
+      val signatures = code.mkString("\n")
 
       // build up sequence of parameters for that exp sub-variant
       var params: Seq[String] = Seq.empty
@@ -350,7 +254,7 @@ trait ExpressionSynthesis extends SemanticTypes {
                       |public $className $lowerExpName($paramList) {
                       |        return new $className() {
                       |            public $returnType $lowername() {
-                      |               ${signatures}
+                      |               $signatures
                       |            }
                       |        };
                       |    }
@@ -364,7 +268,7 @@ trait ExpressionSynthesis extends SemanticTypes {
 
      Java(s"""package algebra;
                    |
-              |class ${className}${expName}ExpAlg extends $parent implements ${expName}ExpAlg<$className> {
+              |class $className${expName}ExpAlg extends $parent implements ${expName}ExpAlg<$className> {
                    |    $method
                    |}
                    |""".stripMargin).compilationUnit()
@@ -384,13 +288,15 @@ trait ExpressionSynthesis extends SemanticTypes {
       val lowerExpName = expName.toLowerCase   // doesn't look right...
       val className = op.getClass.getSimpleName
       val returnType = Type_toString(op.`type`)
-      val function = registry.getImplementation(op)
+
 
       // Here assume the MethodDeclaration actually exists.
       // HACK of sorts: Still uses visitor idea to get visitor method but then we only want code.
-      val value:MethodDeclaration = function.get(exp.getClass).get
-      val signatures = value.getBody.get.toString()
-
+//      val function = registry.getImplementation(op)
+//      val value:MethodDeclaration = function.get(exp.getClass).get
+      //val signatures = value.getBody.get.toString()
+      val code:Seq[Statement] = codeGenerator((op, exp)).get
+      val signatures = code.mkString("\n")
       // build up sequence of parameters for that exp sub-variant
       var params: Seq[String] = Seq.empty
       exp.ops.asScala.foreach {
@@ -462,12 +368,14 @@ trait ExpressionSynthesis extends SemanticTypes {
       val methods:String = dm.data.asScala.map(sub => {
         // sub is either 'lit' or 'add'
         val subName = sub.getClass.getSimpleName
-        val function = registry.getImplementation(op)
+       // val function = registry.getImplementation(op)
 
         // Here assume the MethodDeclaration actually exists.
         // HACK of sorts: Still uses visitor idea to get visitor method but then we only want code.
-        val value:MethodDeclaration = function.get(sub.getClass).get
-        val signatures = value.getBody.get.toString()
+        //val value:MethodDeclaration = function.get(sub.getClass).get
+       // val signatures = value.getBody.get.toString()
+        val code:Seq[Statement] = codeGenerator((op, sub.getClass)).get
+        val signatures = code.mkString("\n")
 
         // build up sequence  
         var params:Seq[String] = Seq.empty
@@ -528,14 +436,16 @@ trait ExpressionSynthesis extends SemanticTypes {
       val name = op.getClass.getSimpleName
       val lowername = name.toLowerCase
       val returnType = Type_toString(op.`type`)  // allows direct access to java field with reserved token name//hacking
-      val function = registry.getImplementation(op)
+      //val function = registry.getImplementation(op)
 
       val methods:String = allVariants(hist).map(sub => {
           // sub is either 'lit' or 'add'
         val subName = sub.getClass.getSimpleName.toLowerCase   // java etiquette
 
-        val value:MethodDeclaration = function.get(sub.getClass).get
-        val signatures = value.getBody.get.toString()
+        //val value:MethodDeclaration = function.get(sub.getClass).get
+        //val signatures = value.getBody.get.toString()
+        val code:Seq[Statement] = codeGenerator((op, sub.getClass)).get
+        val signatures = code.mkString("\n")
 
         var params:Seq[String] = Seq.empty
           sub.

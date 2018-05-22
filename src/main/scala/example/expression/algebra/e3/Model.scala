@@ -1,9 +1,9 @@
-package example.expression.visitor.e3
+package example.expression.algebra.e3
 
 import com.github.javaparser.ast.stmt.Statement
-import expression.{Exp, Operation}
 import expression.data.Eval
 import expression.extensions._
+import expression.{Exp, Operation}
 import org.combinators.templating.twirl.Java
 import shared.compilation.CodeGeneratorRegistry
 
@@ -16,29 +16,29 @@ trait Model {
 
   codeGenerator = codeGenerator.merge(CodeGeneratorRegistry[Seq[Statement], (Operation,Exp)] {
     case (_:CodeGeneratorRegistry[Seq[Statement]], (_:Eval, _:Neg)) =>
-      Java(s"""return - e.getExp().accept(this);""").statements()
+      Java(s"""return - value;""").statements()
   })
   codeGenerator = codeGenerator.merge(CodeGeneratorRegistry[Seq[Statement], (Operation,Exp)] {
     case (_:CodeGeneratorRegistry[Seq[Statement]], (_:Eval, _:Mult)) =>
-      Java(s"""return e.getLeft().accept(this) * e.getRight().accept(this);""").statements()
+      Java(s"""return left.eval() * right.eval();""").statements()
   })
   codeGenerator = codeGenerator.merge(CodeGeneratorRegistry[Seq[Statement], (Operation,Exp)] {
     case (_:CodeGeneratorRegistry[Seq[Statement]], (_:Eval, _:Divd)) =>
-      Java(s"""return e.getLeft().accept(this) / e.getRight().accept(this);""").statements()
+      Java(s"""return left.eval() / right.eval();""").statements()
   })
 
 
   codeGenerator = codeGenerator.merge(CodeGeneratorRegistry[Seq[Statement], (Operation,Exp)] {
     case (_:CodeGeneratorRegistry[Seq[Statement]], (_:PrettyP, _:Neg)) =>
-      Java(s"""return "-" + e.getExp().accept(this);""").statements()
+      Java(s"""return "-" + value.print();""").statements()
   })
   codeGenerator = codeGenerator.merge(CodeGeneratorRegistry[Seq[Statement], (Operation,Exp)] {
     case (_:CodeGeneratorRegistry[Seq[Statement]], (_:PrettyP, _:Mult)) =>
-      Java(s"""return "(" + e.getLeft().accept(this) + "*" + e.getRight().accept(this) + ")"; """).statements()
+      Java(s"""return "(" + left.print() + "*" + right.print() + ")"; """).statements()
   })
   codeGenerator = codeGenerator.merge(CodeGeneratorRegistry[Seq[Statement], (Operation,Exp)] {
     case (_:CodeGeneratorRegistry[Seq[Statement]], (_:PrettyP, _:Divd)) =>
-      Java(s"""return "(" + e.getLeft().accept(this) + "/" +  e.getRight().accept(this) + ")"; """).statements()
+      Java(s"""return "(" + left.print() + "/" + right.print() + ")"; """).statements()
   })
 
 }

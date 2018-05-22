@@ -1,73 +1,143 @@
 package example.expression.algebra
 
+import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.stmt.Statement
 import example.expression.j.Operators
-import expression.{Exp, Operation}
+import expression.data.Eval
+import expression.history.History
+import expression.types.Types
+import expression.{Attribute, Exp, FunctionMethod, Operation}
+import org.combinators.cls.types.Type
+import org.combinators.cls.types.syntax._
 import org.combinators.templating.twirl.Java
+import shared.compilation.CodeGeneratorRegistry
 
-object registry extends Operators {
-  /** Implementations for an operation. Map(op, Map(exp,MethodDecls)). */
-  var implementations:Map[Class[_ <: Operation],Map[Class[_ <: Exp],MethodDeclaration]] = Map()
+import scala.collection.JavaConverters._
 
-  /**
-    * Return desired map of expressions by operation.
-    *
-    * @param op    Operation under consideration
-    */
-  def getImplementation(op:Operation):Map[Class[_ <: Exp],MethodDeclaration] = implementations(op.getClass)
+trait Registry extends Operators with SemanticTypes {
 
-  /**
-    * Return whether operation exists.
-    *
-    * @param op    Operation under consideration
-    */
-  def hasImplementation(op:Operation):Boolean = implementations.contains(op.getClass)
+  // will be made present in e0, so we can assume this is there
+  var codeGenerator:CodeGeneratorRegistry[Seq[Statement]]
 
-  /**
-    * Given an operation and a map of (Exp x String) call addImpl on each.
-    *
-    * Placed here for easy global access.
-    *
-    * @param op
-    * @param map
-    */
-  def registerImpl (op:Operation, map:Map[Exp,String]): Unit = {
-    map.keys.foreach {
-      key =>
-        addImpl(op, key, Java(map(key)).statements())
-    }
+    /** Add dynamic combinators as needed. */
+  def registerImpl(history: History, op: Operation, fm: FunctionMethod): Seq[AddDefaultImpl] = {
+    var combs:Seq[AddDefaultImpl] = Seq.empty
+    history.asScala.foreach(domain =>
+      domain.data.asScala
+        .foreach(exp => {
+          val comb: Seq[Statement] = codeGenerator(new Eval, exp).get
+          combs = combs :+ new AddDefaultImpl(op, fm, exp, comb)
+        })
+    )
+
+    combs
   }
 
+  /** Add dynamic combinators as needed. */
+  def registerExtension(history: History, op: Operation, codegen: CodeGeneratorRegistry[Seq[Statement]]): Seq[AddExpOperation] = {
+    var combs:Seq[AddExpOperation] = Seq.empty
+    history.asScala.foreach (domain =>
+      domain.data.asScala
+        .foreach(exp => {
+          val comb: Seq[Statement] = codegen(exp).get
+          combs = combs :+ new AddExpOperation(exp, op, comb)
+        })
+    )
+
+    combs
+  }
 
   /**
-    * For the given operation, add the sequence of statements to implement for given expression subtype.
-    * This dynamically maintains a map which can be inspected for the code synthesis.
+    * Given an interface for a type, adds a default implementation of given operation
     *
-    * @param op      Operation under consideration
-    * @param exp     Expression context
-    * @param stmts   Sequence of statements that represents implementation of operation in given context.
+    * @param op    Desired Operation
+    * @param fm    Domain Model Function Method that models this operation
+    * @param sub   The subType associated with....
+    * @param stmts ...the statements containing an implementation of Operation for SubType.
     */
-  def addImpl(op:Operation, exp:Exp, stmts:Seq[Statement]): Unit = {
-    val name = exp.getClass.getSimpleName
+  class AddDefaultImpl(op: Operation, fm: FunctionMethod, sub: Exp, stmts: Seq[Statement]) {
+    def apply(unit: CompilationUnit): CompilationUnit = {
 
-    print ("::::: addImpl:" + implementations.size)
-    var map:Map[Class[_ <: Exp],MethodDeclaration] = if (implementations.contains(op.getClass)) {
-      implementations(op.getClass) - exp.getClass
-    } else {
-      Map()
+      val tpe = Type_toString(fm.returnType)
+      val name = fm.name
+
+      // methods are marked as default later
+      val methods = Java(s"$tpe $name() { ${stmts.mkString} }").methodDeclarations()
+
+      // these are default methods
+      methods.foreach { m =>
+        m.setDefault(true)
+        unit.getTypes.get(0).getMembers.add(m)
+      }
+      unit
     }
 
-    val tpe:String = Type_toString(op.`type`)
-    map += (exp.getClass -> Java(
-      s"""
-         |public $tpe visit($name e) {
-         |   ${stmts.mkString("\n")}
-         |}
-        """.stripMargin).methodDeclarations().head)
+    val semanticType: Type = ep(ep.interface, sub) =>: ep(ep.defaultMethods, sub, op)
+  }
 
-    implementations -= op.getClass
-    implementations += (op.getClass -> map)
+  /**
+    * Given an extension to Exp and a given operation (and its stmts implementation) produce an
+    * interface with default method. Overide methods that are of class Exp. Thus: AddExpOperation (Add, PrettyP, ...)
+    *
+    * interface AddPrettyP extends Add, PrettyP {
+    * PrettyP left();
+    * PrettyP right();
+    * default String print() {
+    * return "(" + left().print() + " + " + right().print() + ")";
+    * }
+    * }
+    *
+    * @param exp   SubType (i.e., Add) for which an operation is to be defined.
+    * @param op    Operation to be defined.
+    * @param stmts Default set of statements for implementation
+    */
+  class AddExpOperation(exp: Exp, op: Operation, stmts: Seq[Statement]) {
+    def apply(): CompilationUnit = {
+      val opName = op.getClass.getSimpleName
+      val expName = exp.getClass.getSimpleName
+
+      val unit: CompilationUnit = Java(
+        s"""
+           |package ep;
+           |interface $expName$opName extends $expName, $opName { }
+           |""".stripMargin).compilationUnit()
+
+      val tpe = Type_toString(op.`type`)
+
+      // methods are marked as default later
+      val methods: Seq[MethodDeclaration] = Java(
+        s"""
+           |$tpe ${op.name}() {
+           |   ${stmts.mkString("\n")}
+           |}
+         """.stripMargin).methodDeclarations()
+
+      // reclassify an field of type Exp with the more precise $expName
+      // PrettyP left();
+      // PrettyP right();
+      exp.ops.asScala.foreach {
+        case att: Attribute =>
+          // only redefine if originally the Exp field.
+          if (att.attType == Types.Exp) {
+            val fields: Seq[MethodDeclaration] = Java(s"""$opName ${att.attName}();""").methodDeclarations()
+
+            fields.foreach { x => unit.getTypes.get(0).getMembers.add(x) }
+          }
+
+        case _: FunctionMethod =>
+      }
+
+      // these are default methods
+      methods.foreach { m =>
+        m.setDefault(true)
+        unit.getTypes.get(0).getMembers.add(m)
+      }
+
+      unit
+    }
+
+    val semanticType: Type = ep(ep.interface, exp, op)
   }
 
 }

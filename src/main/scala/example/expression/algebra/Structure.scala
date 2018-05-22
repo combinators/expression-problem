@@ -43,25 +43,25 @@ trait Structure extends Base with SemanticTypes with MethodMapper {
 //      }
 //    }
 
-  registry.registerImpl(new Eval, Map(
-
-      new Lit -> "return value;",
-      new Add -> "return left.eval() + right.eval();",
-      new Sub -> "return left.eval() - right.eval();",
-      new Mult -> "return left.eval() * right.eval();",
-      new Divd -> "return left.eval() / right.eval();",
-      new Neg -> "return -value; /*HACK */"
-    ))
-
-  registry.registerImpl(new PrettyP, Map(
-    new Lit -> """return "" + value;""",
-    new Add -> """return "(" + left.prettyp() + "+" + right.prettyp()+ ")";""",
-    new Sub -> """return "(" + left.prettyp() + "-" + right.prettyp() + ")";""",
-    new Mult -> """return left.prettyp() + " * " + right.prettyp();""",
-    new Divd -> """return "(" + left.prettyp() + "/" + right.prettyp() + ")";""",
-    new Neg -> """return "-" + value.prettyp(); /**HACK**/"""
-  ))
-
+//  registry.registerImpl(new Eval, Map(
+//
+//      new Lit -> "return value;",
+//      new Add -> "return left.eval() + right.eval();",
+//      new Sub -> "return left.eval() - right.eval();",
+//      new Mult -> "return left.eval() * right.eval();",
+//      new Divd -> "return left.eval() / right.eval();",
+//      new Neg -> "return -value; /*HACK */"
+//    ))
+//
+//  registry.registerImpl(new PrettyP, Map(
+//    new Lit -> """return "" + value;""",
+//    new Add -> """return "(" + left.prettyp() + "+" + right.prettyp()+ ")";""",
+//    new Sub -> """return "(" + left.prettyp() + "-" + right.prettyp() + ")";""",
+//    new Mult -> """return left.prettyp() + " * " + right.prettyp();""",
+//    new Divd -> """return "(" + left.prettyp() + "/" + right.prettyp() + ")";""",
+//    new Neg -> """return "-" + value.prettyp(); /**HACK**/"""
+//  ))
+//
 
 
 

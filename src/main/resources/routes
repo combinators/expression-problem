@@ -1,10 +1,10 @@
 
 ->    /                              org.combinators.cls.git.Routes
 
-GET   /algebra                      example.expression.algebra.Expression.overview()
-GET   /algebra/raw_:number          example.expression.algebra.Expression.raw(number: Long)
-GET   /algebra/prepare              example.expression.algebra.Expression.prepare(number: Long)
-GET   /algebra/algebra.git/*file         example.expression.algebra.Expression.serveFile(file)
+#GET   /algebra                      example.expression.algebra.Expression.overview()
+#GET   /algebra/raw_:number          example.expression.algebra.Expression.raw(number: Long)
+#GET   /algebra/prepare              example.expression.algebra.Expression.prepare(number: Long)
+#GET   /algebra/algebra.git/*file         example.expression.algebra.Expression.serveFile(file)
 
 #GET   /ep                      example.expression.covariant.Expression.overview()
 #GET   /ep/raw_:number          example.expression.covariant.Expression.raw(number: Long)
@@ -34,3 +34,8 @@ GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP
 ->    /                              example.expression.covariant.E2_Variation
 ->    /                              example.expression.covariant.E3_Variation
 ->    /                              example.expression.covariant.E4_Variation
+# Algebra variations
+->    /                              example.expression.algebra.E0_Variation
+->    /                              example.expression.algebra.E1_Variation
+->    /                              example.expression.algebra.E2_Variation
+->    /                              example.expression.algebra.E3_Variation

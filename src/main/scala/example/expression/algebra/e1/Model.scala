@@ -1,4 +1,4 @@
-package example.expression.visitor.e1
+package example.expression.algebra.e1
 
 import com.github.javaparser.ast.stmt.Statement
 import expression.{Exp, Operation}
@@ -13,7 +13,7 @@ trait Model {
 
   codeGenerator = codeGenerator.merge(CodeGeneratorRegistry[Seq[Statement], (Operation,Exp)] {
     case (_:CodeGeneratorRegistry[Seq[Statement]], (_:Eval, _:Sub)) =>
-      Java(s"return e.getLeft().accept(this) - e.getRight().accept(this);").statements()
+      Java(s"return left.eval() - right.eval();").statements()
   })
 
 }

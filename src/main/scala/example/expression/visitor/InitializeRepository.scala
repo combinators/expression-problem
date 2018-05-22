@@ -2,14 +2,17 @@ package example.expression.visitor
 
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
+import com.github.javaparser.ast.stmt.Statement
 import example.expression.j.MethodMapper
 import example.expression.{Base, ExpressionDomain}
+import expression.data.{Eval, Lit}
 import expression.history.History
 import expression.{Attribute, Exp, Operation}
 import org.combinators.cls.interpreter.ReflectedRepository
 import org.combinators.cls.types.Type
 import org.combinators.templating.twirl.Java
 import org.combinators.cls.types.syntax._
+import shared.compilation.CodeGeneratorRegistry
 
 import scala.collection.JavaConverters._
 
@@ -17,6 +20,9 @@ trait InitializeRepository
   extends Base
   with SemanticTypes
   with MethodMapper {
+
+  // will be provided
+  var codeGenerator: CodeGeneratorRegistry[Seq[Statement]]
 
   // dynamic combinators added as needed
   override def init[G <: ExpressionDomain](gamma : ReflectedRepository[G], hist:History) :  ReflectedRepository[G] = {
@@ -29,9 +35,15 @@ trait InitializeRepository
       }
     )
 
+    // need all subtypes from history for the visitor interface
+    val allSubTypes:Seq[Exp] = hist.flatten.data.asScala.foldLeft(Seq.empty[Exp]) {
+      case (combined, sub) => combined :+ sub
+    }
+
+
     hist.asScala.foreach (domain =>
       updated = domain.ops.asScala.foldLeft(updated) {
-        case (repo, op) => repo.addCombinator(new OpImpl(op))
+        case (repo, op) => repo.addCombinator(new OpImpl(allSubTypes, op))
       }
     )
 
@@ -107,16 +119,24 @@ trait InitializeRepository
   }
 
   /** Brings in classes for each operation. These can only be completed with the implementations. */
-  class OpImpl(op:Operation) {
+  class OpImpl(subTypes: Seq[Exp], op:Operation) {
     def apply: CompilationUnit = {
 
       val name = op.getClass.getSimpleName
       val tpe = Type_toString(op.`type`)
 
-      val methods:Map[Class[_ <: Exp],MethodDeclaration] = Registry.getImplementation(op)
+//      val methods:Map[Class[_ <: Exp],MethodDeclaration] = Registry.getImplementation(op)
+//      val mds:Iterable[MethodDeclaration] = methods.values
+//      val signatures = mds.mkString("\n")
 
-      val mds:Iterable[MethodDeclaration] = methods.values
-      val signatures = mds.mkString("\n")
+      val signatures = subTypes.map (exp => {
+          val seqStmt:Seq[Statement] = codeGenerator(op.getClass,exp).get    // DETECT ERROR by trying to extract
+          val stmts:String = seqStmt.mkString("\n")
+          val tpe:String = Type_toString(op.`type`)
+
+          s"public $tpe visit(${exp.getClass.getSimpleName} e) { $stmts }"
+         }
+      ).mkString("\n")
 
       val s = Java(s"""|package expression;
                        |public class $name extends Visitor<$tpe>{

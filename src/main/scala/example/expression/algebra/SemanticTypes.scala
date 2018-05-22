@@ -27,12 +27,6 @@ trait SemanticTypes extends MethodMapper {
     val complete: Type = 'Complete
     val initialized: Type = 'Initialized
   }
-//
-//  object alg {
-//    def apply (phase:Type) : Constructor = 'Alg(phase)
-//
-//    val base:Type = 'Base
-//  }
 
   object exp {
     def apply (phase:Type, exp:Exp) : Constructor =

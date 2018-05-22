@@ -12,17 +12,19 @@ import org.combinators.cls.interpreter.ReflectedRepository
 import org.combinators.cls.types.Type
 import org.combinators.templating.twirl.Java
 import org.combinators.cls.types.syntax._
-import shared.compilation.CodeGeneratorRegistry
+import shared.compilation.{CodeGeneratorRegistry, HasCodeGenerator}
 
 import scala.collection.JavaConverters._
 
 trait InitializeRepository
   extends Base
+  with HasCodeGenerator
   with SemanticTypes
   with MethodMapper {
 
   // will be provided
-  var codeGenerator: CodeGeneratorRegistry[Seq[Statement]]
+  def codeGenerator: CodeGeneratorRegistry[CodeGeneratorRegistry[Seq[Statement]]] =
+    CodeGeneratorRegistry[CodeGeneratorRegistry[Seq[Statement]]]
 
   // dynamic combinators added as needed
   override def init[G <: ExpressionDomain](gamma : ReflectedRepository[G], hist:History) :  ReflectedRepository[G] = {
@@ -130,7 +132,7 @@ trait InitializeRepository
 //      val signatures = mds.mkString("\n")
 
       val signatures = subTypes.map (exp => {
-          val seqStmt:Seq[Statement] = codeGenerator(op.getClass,exp).get    // DETECT ERROR by trying to extract
+          val seqStmt:Seq[Statement] = codeGenerator(op).get(exp).get    // DETECT ERROR by trying to extract
           val stmts:String = seqStmt.mkString("\n")
           val tpe:String = Type_toString(op.`type`)
 

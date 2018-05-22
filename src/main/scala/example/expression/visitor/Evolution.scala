@@ -62,7 +62,7 @@ class Last @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
   // all tests are derived from the model.
   lazy val tests_e0 = tests.e0.TestCases.add(new AllTests())
-  lazy val rep = new ExpressionDomain(history_e0, tests_e0) with ExpressionSynthesis with e0.Model with InitializeRepository {}
+  lazy val rep = new ExpressionDomain(history_e0, tests_e0) with ExpressionSynthesis with InitializeRepository with e0.Model {}
 
   val comps:Seq[CompilationUnit] =  Seq(rep.Visitor.apply(), new rep.OpImpl(List(new Add, new Lit), new Eval).apply)
 
@@ -86,7 +86,7 @@ class E0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   // all tests are derived from the model.
   lazy val tests_e0 = tests.e0.TestCases.add(new AllTests())
 
-  lazy val rep = new ExpressionDomain(history_e0, tests_e0) with ExpressionSynthesis with e0.Model with InitializeRepository {}
+  lazy val rep = new ExpressionDomain(history_e0, tests_e0) with ExpressionSynthesis with InitializeRepository with e0.Model {}
 
   lazy val Gamma = rep.init(ReflectedRepository(rep, classLoader = this.getClass.getClassLoader), history_e0)
 
@@ -116,7 +116,7 @@ class E1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   lazy val history_e1:History = evolution.E1.extend(history_e0)
 
 
-  override lazy val rep = new ExpressionDomain(history_e1, tests_e1) with ExpressionSynthesis with e1.Model with e0.Model with InitializeRepository {}
+  override lazy val rep = new ExpressionDomain(history_e1, tests_e1) with ExpressionSynthesis with InitializeRepository with e0.Model with e1.Model  {}
   override lazy val Gamma = rep.init(ReflectedRepository(rep, classLoader = this.getClass.getClassLoader), history_e1)
 }
 
@@ -131,7 +131,7 @@ class E2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   lazy val history_e2:History = evolution.E2.extend(history_e1)
 
 
-  override lazy val rep = new ExpressionDomain(history_e2, tests_e2) with ExpressionSynthesis with e2.Model with e1.Model with e0.Model with InitializeRepository {}
+  override lazy val rep = new ExpressionDomain(history_e2, tests_e2) with ExpressionSynthesis with InitializeRepository with e0.Model with e1.Model with e2.Model   {}
   override lazy val Gamma = rep.init(ReflectedRepository(rep, classLoader = this.getClass.getClassLoader), history_e2)
 }
 
@@ -145,7 +145,7 @@ class E3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   lazy val history_e3:History = evolution.E3.extend(history_e2)
 
 
-  override lazy val rep = new ExpressionDomain(history_e3, tests_e3) with ExpressionSynthesis with e3.Model with e2.Model with e1.Model with e0.Model with InitializeRepository {}
+  override lazy val rep = new ExpressionDomain(history_e3, tests_e3) with ExpressionSynthesis with InitializeRepository with e0.Model with e1.Model with e2.Model with e3.Model {}
   override lazy val Gamma = rep.init(ReflectedRepository(rep, classLoader = this.getClass.getClassLoader), history_e3)
 }
 
@@ -158,7 +158,6 @@ class E4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   lazy val history_e4:History = evolution.E4.extend(history_e3)
 
 
-  override lazy val rep = new ExpressionDomain(history_e4, tests_e4) with ExpressionSynthesis with e4.Model with e3.Model with e2.Model with e1.Model with e0.Model with InitializeRepository {}
+  override lazy val rep = new ExpressionDomain(history_e4, tests_e4) with ExpressionSynthesis with InitializeRepository with e0.Model with e1.Model with e2.Model with e3.Model with e4.Model {}
   override lazy val Gamma = rep.init(ReflectedRepository(rep, classLoader = this.getClass.getClassLoader), history_e4)
-
 }

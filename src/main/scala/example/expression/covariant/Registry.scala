@@ -3,7 +3,6 @@ package example.expression.covariant
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.stmt.Statement
-import com.sun.javafx.css.Combinator
 import example.expression.j.Operators
 import expression.{Attribute, Exp, FunctionMethod, Operation}
 import expression.history.History

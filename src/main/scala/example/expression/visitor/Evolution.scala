@@ -16,62 +16,25 @@ import play.api.inject.ApplicationLifecycle
 import org.combinators.templating.persistable.JavaPersistable._
 import example.expression._
 import expression.data.{Add, Eval, Lit}
-import expression.extensions.Sub
-import org.combinators.cls.types.Type
-import org.combinators.cls.types.syntax._
 import org.combinators.templating.persistable.Persistable
+import play.api.mvc._
+import shared.compilation.CodeGenerationController
 
-abstract class Foundation (web: WebJarsUtil, app: ApplicationLifecycle)
-  extends InhabitationController(web, app) with RoutingEntries {
 
-  // to inherit from class overwrite comp
-  val comps:Seq[CompilationUnit]
 
-  class solutionRepository {
-    @combinator object Solution {
-      def apply():Unit = { }
-
-      val semanticType:Type = 'Solution
-    }
-  }
-
-  lazy val Gamma = ReflectedRepository(new solutionRepository, classLoader = this.getClass.getClassLoader)
-
-  /** This needs to be defined, and it is set from Gamma. */
-  lazy val combinatorComponents = Gamma.combinatorComponents
-
-  /**
-    * Tell the framework to store stuff of type PythonWithPath at the location specified in Path.
-    * The Path is relative to the Git repository.
-    */
-  implicit def PersistDummy: Persistable.Aux[Unit] = new Persistable {
-    override def path(elem: Unit): Path = Paths.get("solutions.txt")
-    override def rawText(elem: Unit): Array[Byte] = elem.toString.getBytes
-    override type T = Unit
-  }
-
-  /** Has to be lazy so subclasses can compute model. */
-  lazy val results:Results = comps.foldLeft(EmptyInhabitationBatchJobResults(Gamma)
-    .addJob[Unit]()
-    .compute())((result, comp) => result.addExternalArtifact[CompilationUnit](comp))
-}
 
 class Last @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-  extends Foundation(web, app) {
+  extends CodeGenerationController[CompilationUnit](web, app) {
   lazy val history_e0:History = evolution.E0.extend(new History)
 
   // all tests are derived from the model.
   lazy val tests_e0 = tests.e0.TestCases.add(new AllTests())
   lazy val rep = new ExpressionDomain(history_e0, tests_e0) with ExpressionSynthesis with InitializeRepository with e0.Model {}
 
-  val comps:Seq[CompilationUnit] =  Seq(rep.Visitor.apply(), new rep.OpImpl(List(new Add, new Lit), new Eval).apply)
+  val generatedCode:Seq[CompilationUnit] =  Seq(rep.Visitor.apply(), new rep.OpImpl(List(new Add, new Lit), new Eval).apply)
 
   lazy val controllerAddress = "e0"
   override val routingPrefix: Option[String] = Some("dummy")
-
-  // forces the generation of the first (only) instance
-  //prepare(0)
-
 }
 
 class E0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)

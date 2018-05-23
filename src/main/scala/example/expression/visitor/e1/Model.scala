@@ -4,9 +4,9 @@ import com.github.javaparser.ast.stmt.Statement
 import expression.data.Eval
 import expression.extensions.Sub
 import org.combinators.templating.twirl.Java
-import shared.compilation.{CodeGeneratorRegistry, HasCodeGenerator}
+import shared.compilation.{CodeGeneratorRegistry, HasCodeGenerator, HasTestCaseGenerator}
 
-trait Model extends HasCodeGenerator {
+trait Model extends HasCodeGenerator  {
 
    abstract override def codeGenerator:CodeGeneratorRegistry[CodeGeneratorRegistry[Seq[Statement]]] = {
      val oldGenerator = super.codeGenerator

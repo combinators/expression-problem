@@ -2,24 +2,19 @@ package example.expression.covariant
 
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
-import com.github.javaparser.ast.stmt.Statement
 import org.combinators.cls.interpreter.{ReflectedRepository, combinator}
 import org.combinators.cls.types.Type
-import org.combinators.cls.types.syntax._
 import org.combinators.templating.twirl.Java
-import example.expression.j.MethodMapper
+import example.expression.j.Operators
 import example.expression.{Base, ExpressionDomain}
-import expression.extensions._
 import expression._
 import expression.history.History
-import expression.operations.SimplifyExpr
 import expression.types.Types
-import shared.compilation.CodeGeneratorRegistry
 
 import scala.collection.JavaConverters._
 
 /** Use Modularity2016 Java solution. Built from same domain model. */
-trait Structure extends Base with SemanticTypes with MethodMapper {
+trait Structure extends Base with SemanticTypes with Operators {
 
   /** Add dynamic combinators as needed. */
   override def init[G <: ExpressionDomain](gamma: ReflectedRepository[G], history: History): ReflectedRepository[G] = {

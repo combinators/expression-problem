@@ -1,6 +1,6 @@
 package example.expression.visitor
 
-import example.expression.j.{MethodMapper, Operators}
+import example.expression.j.Operators
 import org.combinators.templating.twirl.Java
 import shared.compilation.CodeGeneratorRegistry
 
@@ -9,7 +9,7 @@ import shared.compilation.CodeGeneratorRegistry
   *
   * Not extensible to new data types that fall outside of the Lit/BinaryExp/UnaryExp hierarchy.
   */
-trait InstanceCodeGenerators extends Operators with MethodMapper {
+trait InstanceCodeGenerators extends Operators {
 
   /**
     * Code generator for building up the structure of the expression using classes

@@ -18,7 +18,8 @@ import scala.collection.JavaConverters._
 trait ExpressionSynthesis extends SemanticTypes {
 
   // to be provided
-  val history: History
+ // val history: History
+  def history:History
  // val domain: DomainModel = history.flatten
   val allTests:UnitSuite
 

@@ -1,6 +1,6 @@
 package example.expression.algebra
 
-import example.expression.j.MethodMapper
+import example.expression.j.Operators
 import expression.{Exp, Operation}
 import org.combinators.cls.types.syntax._
 import org.combinators.cls.types.{Constructor, Type}
@@ -16,7 +16,7 @@ import org.combinators.cls.types.{Constructor, Type}
   * For any of these that are ever going to be translated directly into Java Type Names, you must
   * make them Constructor.
   */
-trait SemanticTypes extends MethodMapper {
+trait SemanticTypes extends Operators {
 
   val driver:Type = 'Driver
 

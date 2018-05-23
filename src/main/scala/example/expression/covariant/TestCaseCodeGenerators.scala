@@ -171,7 +171,6 @@ class TestCaseCodeGenerators(history:History, expr:expression.instances.Expressi
     val testCaseGenerator:CodeGeneratorRegistry[Seq[Statement]] = CodeGeneratorRegistry.merge[Seq[Statement]](
       CodeGeneratorRegistry[Seq[Statement], Eval] {
         case (_:CodeGeneratorRegistry[Seq[Statement]], _:Eval) => {
-          val blocks:Seq[UnitTest] = expr.iterator().asScala.toSeq
           val expected:String = "null"
 
           // grab all UnitTests to get the operations tha are needed

@@ -1,13 +1,19 @@
 package example.expression.visitor.e4
 
+import com.github.javaparser.ast.expr.SimpleName
 import com.github.javaparser.ast.stmt.Statement
+import example.expression.visitor.InstanceCodeGenerators
+import expression.Operation
 import expression.data.{Add, Lit}
 import expression.extensions._
+import expression.instances.UnitTest
 import expression.operations.SimplifyExpr
 import org.combinators.templating.twirl.Java
-import shared.compilation.{CodeGeneratorRegistry, HasCodeGenerator}
+import shared.compilation.{CodeGeneratorRegistry, HasCodeGenerator, HasTestCaseGenerator}
 
-trait Model extends HasCodeGenerator {
+import scala.collection.JavaConverters._
+
+trait Model extends InstanceCodeGenerators with HasCodeGenerator with HasTestCaseGenerator {
 
   abstract override def codeGenerator:CodeGeneratorRegistry[CodeGeneratorRegistry[Seq[Statement]]] = {
     val oldGenerator = super.codeGenerator
@@ -128,5 +134,57 @@ trait Model extends HasCodeGenerator {
 
       oldGenerator
     )
+  }
+
+
+  /**
+    * Create test case code for eval where the expression "identifier"  has already been constructed
+    * and the test case is UnitTest, which has its own expectations.
+    *
+    * Forms chain of responsibility
+    */
+  abstract override def testCaseGenerator(op:Operation, identifier:SimpleName, tc: UnitTest) : Seq[Statement] = {
+
+    if (op.equals(new Collect)) {
+      val num: Int = nextTestNumber()
+      Java(s"""|  String result$num = (String) ${identifier.toString}.accept(new PrettyP());
+               |  assertEquals("${tc.expected.toString}", result$num);
+               |""".stripMargin).statements()
+
+      var expected:String = "java.util.List<Double> match = new java.util.ArrayList<Double>();"
+
+      expected += tc.expected.asInstanceOf[java.util.List[expression.instances.Lit]].asScala.map(value => {
+        "match.add(" + value.value + ");"
+      }).mkString("\n")
+
+      Java(s"""|  java.util.List<Double> result$num = (java.util.List<Double>) ${identifier.toString}.accept(new Collect());
+               |  $expected
+               |  assertEquals(match, result$num);
+               |""".stripMargin).statements()
+    } else if (op.equals(new SimplifyExpr)) {
+      val num: Int = nextTestNumber()
+
+      val expectedCode: Option[com.github.javaparser.ast.expr.Expression] =
+        defaultInstance.instanceGenerators(tc.expected.asInstanceOf[expression.instances.Instance])
+
+      if (expectedCode.isDefined) {
+        val initExpected: String = s"""Exp expectedExp${identifier.toString} = ${expectedCode.get.toString};"""
+
+        // TODO: Create an equal visitor for use instead of depending on prettyP
+        val str: String =
+          s"""
+             |  $initExpected
+             |  Exp result$num = (Exp) ${identifier.toString}.accept(new SimplifyExpr());
+             |  assertEquals(expectedExp${identifier.toString}.accept(new PrettyP()), result$num.accept(new PrettyP()));
+             |""".stripMargin
+        Java(str).statements()
+      }
+      else {
+        // skip for lack of anything better.
+        Java("// skip${op.name}$testNumber(){}\n").statements()
+      }
+    } else {
+      super.testCaseGenerator(op, identifier, tc)
+    }
   }
 }

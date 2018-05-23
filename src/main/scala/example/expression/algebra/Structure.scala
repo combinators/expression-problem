@@ -1,7 +1,7 @@
 package example.expression.algebra
 
 import com.github.javaparser.ast.CompilationUnit
-import example.expression.j.MethodMapper
+import example.expression.j.Operators
 import example.expression.{Base, ExpressionDomain}
 import expression._
 import expression.data.{Add, Eval, Lit}
@@ -16,7 +16,7 @@ import org.combinators.templating.twirl.Java
 import scala.collection.JavaConverters._
 
 /** Use Modularity2016 Java solution. Built from same domain model. */
-trait Structure extends Base with SemanticTypes with MethodMapper {
+trait Structure extends Base with SemanticTypes with Operators {
 
   /** Add dynamic combinators as needed. */
   override def init[G <: ExpressionDomain](gamma: ReflectedRepository[G], history:History): ReflectedRepository[G] = {

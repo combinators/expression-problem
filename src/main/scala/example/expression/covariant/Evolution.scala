@@ -3,7 +3,9 @@ package example.expression.covariant
 import com.github.javaparser.ast.CompilationUnit
 import example.expression.ExpressionDomain
 import example.expression._
+import expression.{DomainModel, Exp}
 import expression.history.History
+import expression.instances.UnitSuite
 import expression.tests.AllTests
 import javax.inject.Inject
 import org.combinators.cls.git.{EmptyInhabitationBatchJobResults, InhabitationController, Results, RoutingEntries}
@@ -12,6 +14,52 @@ import org.combinators.cls.types.Constructor
 import org.combinators.templating.persistable.JavaPersistable._
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
+import shared.compilation.{CodeGenerationController, HasCodeGenerator}
+
+import scala.collection.JavaConverters._
+
+abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+  extends CodeGenerationController[CompilationUnit](web, app)
+    with ExpressionSynthesis with InstanceCodeGenerators with HasCodeGenerator {
+
+  def history:History = new History
+  def testCases:UnitSuite = new AllTests
+
+  // for visitor, this brings all data/ops together into one place.
+  lazy val domain:DomainModel = history.flatten
+
+  // all targets are derived from the model
+  def targets(hist:History, testCases:UnitSuite):Seq[CompilationUnit] = {
+
+    // need all subtypes from history for the visitor interface
+    val allSubTypes: Seq[Exp] = domain.data.asScala.foldLeft(Seq.empty[Exp]) {
+      case (combined, sub) => combined :+ sub
+    }
+
+    // combine specific targets
+    var tgts:Seq[CompilationUnit] = Seq.empty
+//    hist.asScala.foreach(domain =>
+//      domain.data.asScala.foreach(exp =>
+//        tgts = tgts :+ ImplClass(exp, BaseClass(exp))
+//      ))
+//
+//    hist.asScala.foreach(domain =>
+//      domain.ops.asScala.foreach(op =>
+//        tgts = tgts :+ OpImpl(allSubTypes, op, codeGenerator)
+//      ))
+//
+//    tgts = tgts :+ Visitor(domain)
+//    tgts = tgts :+ BaseExpClass
+//    tgts = tgts :+ Driver(defaultInstance.instanceGenerators, testCases)
+
+    tgts
+  }
+
+  override lazy val generatedCode = targets(history, testCases)
+
+  // all accomplished within the 'visitor' family
+  override val routingPrefix: Option[String] = Some("visitor")
+}
 
 class E0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends InhabitationController(web, app) with RoutingEntries {

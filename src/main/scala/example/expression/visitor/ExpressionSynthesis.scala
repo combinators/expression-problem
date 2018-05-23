@@ -2,20 +2,20 @@ package example.expression.visitor
 
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
+import com.github.javaparser.ast.expr.SimpleName
 import com.github.javaparser.ast.stmt.Statement
-import example.expression.j.MethodMapper
+import example.expression.j.Operators
 import org.combinators.templating.twirl.Java
 import expression._
-import expression.data.Eval
-import expression.extensions._
-import expression.instances.{Instance, Lit, UnitSuite}
-import expression.operations.SimplifyExpr
+import expression.instances.{UnitSuite, UnitTest}
 import shared.compilation.CodeGeneratorRegistry
 
 import scala.collection.JavaConverters._
 
 /** Future work: reduce the need to have full set of traits here, with the internals accessing the code generators. Separate concerns */
-trait ExpressionSynthesis extends InstanceCodeGenerators with MethodMapper {
+trait ExpressionSynthesis extends Operators {
+
+  def testCaseGenerator(op:Operation, identifier:SimpleName, tc: UnitTest) : Seq[Statement]
 
   /** Construct visitor abstract class. */
   def Visitor(domain:DomainModel) :CompilationUnit = {
@@ -113,14 +113,10 @@ trait ExpressionSynthesis extends InstanceCodeGenerators with MethodMapper {
     val signatures = if (cg.isEmpty) {
       s"""public $tpe visit(${op.getClass.getSimpleName} e) { // $name operator not defined!"); \n}"""
     } else {
-      //      val methods:Map[Class[_ <: Exp],MethodDeclaration] = Registry.getImplementation(op)
-      //      val mds:Iterable[MethodDeclaration] = methods.values
-      //      val signatures = mds.mkString("\n")
 
       subTypes.map(exp => {
         val seqStmt: Option[Seq[Statement]] = cg.get(exp)
         if (seqStmt.isDefined) {
-          // codeGenerator(op).get(exp).get    // DETECT ERROR by trying to extract
           val stmts: String = seqStmt.get.mkString("\n")
           val tpe: String = Type_toString(op.`type`)
 
@@ -149,7 +145,8 @@ trait ExpressionSynthesis extends InstanceCodeGenerators with MethodMapper {
     * instantiation based on the domain model available at the time. Note that this might still be possible,
     * assuming the representationCodeGenerators has access to the top-level domain model.
     */
-  def Driver (generator:CodeGeneratorRegistry[com.github.javaparser.ast.expr.Expression], allTests:UnitSuite) :CompilationUnit = {
+  def Driver (generator:CodeGeneratorRegistry[com.github.javaparser.ast.expr.Expression],
+              allTests:UnitSuite) :CompilationUnit = {
 
     // each test creates a public void testXXX method, inside of which, each sub-part is evaluated.
     var testNumber = 0
@@ -157,76 +154,17 @@ trait ExpressionSynthesis extends InstanceCodeGenerators with MethodMapper {
       // build up expression for which all tests are defined.
       val code:Option[com.github.javaparser.ast.expr.Expression] = generator(tst.expression)
       testNumber = testNumber+1
+
       val init:String = s"""Exp exp$testNumber = ${code.get.toString};"""
+      val ident:SimpleName = Java(s"exp$testNumber").simpleName()
 
       // each individual test case is evaluated within the context of this expression
-      var resultNumber = 0
-      val blocks:Seq[Statement] = tst.iterator().asScala.flatMap(tc => {
-
-        //  val comb:Seq[Statement] = representationCodeGenerators.evalGenerators(tc).get
-
-        resultNumber = resultNumber + 1
-        // Convert the INSTANCE into proper instantiation code for the Visitor. A generator does this.
-        val op:Operation = tc.op
-
-        // hah! once again, I am stuck using a case statement, which will need to be expanded
-        // into a code generator for maximum power
-        val generated:Seq[Statement] = op match{
-          case _:Eval =>
-            Java(s"""|  Double result$resultNumber = (Double) exp$testNumber.accept(new Eval());
-                     |  assertEquals(${tc.expected.toString}, result$resultNumber.doubleValue());
-                     |""".stripMargin).statements()
-
-          case _:PrettyP =>
-            Java(s"""|  String result$resultNumber = (String) exp$testNumber.accept(new PrettyP());
-                     |  assertEquals("${tc.expected.toString}", result$resultNumber);
-                     |""".stripMargin).statements()
-
-          // unless I export the full domain model visitor pattern into the solution domain,
-          // we must rely on the prettyP operation for our success.
-          case _:SimplifyExpr => {
-
-            val expectedCode: Option[com.github.javaparser.ast.expr.Expression] = generator(tc.expected.asInstanceOf[Instance])
-            if (expectedCode.isDefined) {
-              val initExpected: String = s"""Exp expectedExp$testNumber = ${expectedCode.get.toString};"""
-
-              // TODO: Create an equal visitor for use instead of depending on prettyP
-              val str: String =
-                s"""
-                   |  $initExpected
-                   |  Exp result$resultNumber = (Exp) exp$testNumber.accept(new SimplifyExpr());
-                   |  assertEquals(expectedExp$testNumber.accept(new PrettyP()), result$resultNumber.accept(new PrettyP()));
-                   |""".stripMargin
-              Java(str).statements()
-            }
-            else {
-              // skip for lack of anything better.
-              Java("// skip${op.name}$testNumber(){}\n").statements()
-            }
-          }
-
-          case  c:Collect => {
-            var expected:String = "java.util.List<Double> match = new java.util.ArrayList<Double>();"
-
-            expected += tc.expected.asInstanceOf[java.util.List[Lit]].asScala.map(value => {
-              "match.add(" + value.value + ");"
-            }).mkString("\n")
-
-            Java(s"""|  java.util.List<Double> result$resultNumber = (java.util.List<Double>) exp$testNumber.accept(new Collect());
-                     |  $expected
-                     |  assertEquals(match, result$resultNumber);
-                     |""".stripMargin).statements()
-          }
-
-          case _ => Java(s"""// skip${op.name}$testNumber(){}""").statements()
-        }
-
-        generated
-      }).toSeq
+      //var resultNumber = 0
+      val blocks:String = tst.iterator().asScala.flatMap(tc => testCaseGenerator(tc.op, ident, tc)).mkString("\n")
 
       val codeBlock:String = s"""|public void testEval$testNumber() {
                                  |  $init
-                                 |  ${blocks.mkString("\n")}
+                                 |  $blocks
                                  |}""".stripMargin
       Java(codeBlock).methodDeclarations().mkString("\n")
     }).mkString("\n")

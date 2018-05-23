@@ -1,12 +1,10 @@
 package example.expression.visitor.e4
 
 import com.github.javaparser.ast.stmt.Statement
-import expression.{Exp, Operation}
 import expression.data.{Add, Lit}
 import expression.extensions._
 import expression.operations.SimplifyExpr
 import org.combinators.templating.twirl.Java
-import shared.compilation
 import shared.compilation.{CodeGeneratorRegistry, HasCodeGenerator}
 
 trait Model extends HasCodeGenerator {
@@ -22,14 +20,16 @@ trait Model extends HasCodeGenerator {
             |return list;
             |""".stripMargin).statements()
 
+    // it is critical that the new changes are merged before old ones
     CodeGeneratorRegistry.merge(
-      oldGenerator,
+
       CodeGeneratorRegistry[CodeGeneratorRegistry[Seq[Statement]], Collect] {
-        case (operationReg, col) =>
+
+        case (_, col:Collect) =>
           CodeGeneratorRegistry.merge(
             oldGenerator(col).getOrElse(CodeGeneratorRegistry[Seq[Statement]]),
             CodeGeneratorRegistry[Seq[Statement], Lit] {
-              case (colGen, lit) =>
+              case (_, dataty:Lit) =>
                 Java(
                   s"""|java.util.List<Double> list = new java.util.ArrayList<Double>();
                       |list.add(e.getValue());
@@ -48,8 +48,9 @@ trait Model extends HasCodeGenerator {
             }
           )
       },
+
       CodeGeneratorRegistry[CodeGeneratorRegistry[Seq[Statement]], SimplifyExpr] {
-        case (operationReg, simpl) =>
+        case (_, simpl:SimplifyExpr) =>
           CodeGeneratorRegistry.merge(
             oldGenerator(simpl).getOrElse(CodeGeneratorRegistry[Seq[Statement]]),
             CodeGeneratorRegistry[Seq[Statement], Lit] { case _ =>
@@ -123,7 +124,9 @@ trait Model extends HasCodeGenerator {
                    |""".stripMargin).statements()
             }
           )
-      }
+      },
+
+      oldGenerator
     )
   }
 }

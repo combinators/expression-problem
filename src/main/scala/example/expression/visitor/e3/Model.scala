@@ -13,44 +13,51 @@ import shared.compilation.{CodeGeneratorRegistry, HasCodeGenerator}
 trait Model extends HasCodeGenerator {
   abstract override def codeGenerator:CodeGeneratorRegistry[CodeGeneratorRegistry[Seq[Statement]]] = {
     val oldGenerator = super.codeGenerator
+
+    // it is critical that the new changes are merged before old ones
     CodeGeneratorRegistry.merge(
-      oldGenerator,
+
       CodeGeneratorRegistry[CodeGeneratorRegistry[Seq[Statement]], Eval] {
-        case (operationReg, eval) =>
+        case (_, eval:Eval) =>
+
           CodeGeneratorRegistry.merge(
             oldGenerator(eval).getOrElse(CodeGeneratorRegistry[Seq[Statement]]),
+
             CodeGeneratorRegistry[Seq[Statement], Neg] {
-              case (evalReg, neg) =>
+              case (_, dataty:Neg) =>
                 Java(s"""return -1 * e.getExp().accept(this);""").statements()
             },
             CodeGeneratorRegistry[Seq[Statement], Mult] {
-              case (evalReg, mult) =>
+              case (_, dataty:Mult) =>
                 Java(s"""return e.getLeft().accept(this) * e.getRight().accept(this);""").statements()
             },
             CodeGeneratorRegistry[Seq[Statement], Divd] {
-              case (evalReg, div) =>
+              case (_, dataty:Divd) =>
                 Java(s"""return e.getLeft().accept(this) / e.getRight().accept(this);""").statements()
             }
           )
         },
+
       CodeGeneratorRegistry[CodeGeneratorRegistry[Seq[Statement]], PrettyP] {
-        case (operationReg, pp) =>
+        case (_, pp:PrettyP) =>
           CodeGeneratorRegistry.merge(
             oldGenerator(pp).getOrElse(CodeGeneratorRegistry[Seq[Statement]]),
             CodeGeneratorRegistry[Seq[Statement], Neg] {
-              case (ppReg, neg) =>
+              case (_, dataty:Neg) =>
                 Java(s"""return "-" + e.getExp().accept(this);""").statements()
             },
             CodeGeneratorRegistry[Seq[Statement], Mult] {
-              case (ppReg, mult) =>
+              case (_, dataty:Mult) =>
                 Java(s"""return "(" + e.getLeft().accept(this) + "*" + e.getRight().accept(this) + ")"; """).statements()
             },
             CodeGeneratorRegistry[Seq[Statement], Divd] {
-              case (ppReg, div) =>
+              case (_, dataty:Divd) =>
                 Java(s"""return "(" + e.getLeft().accept(this) + "/" +  e.getRight().accept(this) + ")"; """).statements()
             }
           )
-      }
+      },
+
+      oldGenerator
     )
   }
 }

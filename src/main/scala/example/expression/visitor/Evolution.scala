@@ -19,7 +19,7 @@ import scala.collection.JavaConverters._
 
 abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends CodeGenerationController[CompilationUnit](web, app)
-  with InitializeRepository with ExpressionSynthesis with InstanceCodeGenerators with HasCodeGenerator {
+  with ExpressionSynthesis with InstanceCodeGenerators with HasCodeGenerator {
 
   def history:History = new History
   def testCases:UnitSuite = new AllTests

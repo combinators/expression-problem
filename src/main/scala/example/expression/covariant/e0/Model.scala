@@ -1,43 +1,64 @@
 package example.expression.covariant.e0
 
+import com.github.javaparser.ast.expr.SimpleName
 import com.github.javaparser.ast.stmt.Statement
-import example.expression.covariant.{Registry, SemanticTypes}
-import example.expression.j.Operators
-import example.expression.{Base, ExpressionDomain}
-import expression.FunctionMethod
+import expression.Operation
 import expression.data._
-import expression.history.History
-import expression.types.Types
-import org.combinators.cls.interpreter.ReflectedRepository
+import expression.instances.UnitTest
 import org.combinators.templating.twirl.Java
-import shared.compilation.CodeGeneratorRegistry
+import shared.compilation.{CodeGeneratorRegistry, HasCodeGenerator, HasTestCaseGenerator}
 
-trait Model extends Base with Registry with Operators with SemanticTypes {
+trait Model extends HasCodeGenerator with HasTestCaseGenerator {
 
-    /** Add dynamic combinators as needed. */
-    override def init[G <: ExpressionDomain](gamma: ReflectedRepository[G], history: History): ReflectedRepository[G] = {
-      var updated = super.init(gamma, history)
+//    /** Add dynamic combinators as needed. */
+//    override def init[G <: ExpressionDomain](gamma: ReflectedRepository[G], history: History): ReflectedRepository[G] = {
+//      var updated = super.init(gamma, history)
+//
+//      registerImpl(history, new Eval, new FunctionMethod("eval", Types.Double)).foreach(comb =>
+//        updated = updated.addCombinator(comb)
+//      )
+//
+//      updated
+//    }
 
-      registerImpl(history, new Eval, new FunctionMethod("eval", Types.Double)).foreach(comb =>
-        updated = updated.addCombinator(comb)
-      )
+  // starting point. Eval is first one
+  def codeGenerator: CodeGeneratorRegistry[CodeGeneratorRegistry[Seq[Statement]]] = {
 
-      updated
+    // First one is defined here
+    CodeGeneratorRegistry[CodeGeneratorRegistry[Seq[Statement]], Eval] {
+
+      case (_, eval: Eval) =>
+        CodeGeneratorRegistry.merge(
+
+          CodeGeneratorRegistry[Seq[Statement], Lit] {
+            case (_, dataty: Lit) =>
+              Java(s"""return value();""").statements()
+          },
+
+          CodeGeneratorRegistry[Seq[Statement], Add] {
+            case (_, dataty: Add) =>
+              Java(s"""return left().eval() + right().eval();""").statements()
+          }
+        )
     }
+  }
+
 
   /**
-    * Code generator for reproducing the structure of the covariant invocation for eval.
+    * Create test case code for eval where the expression "identifier"  has already been constructed
+    * and the test case is UnitTest, which has its own expectations.
+    *
+    * Forms chain of responsibility
     */
-  var evalGenerators:CodeGeneratorRegistry[Seq[Statement]] = CodeGeneratorRegistry.merge[Seq[Statement]](
-    CodeGeneratorRegistry[Seq[Statement], Lit] {
-      case (_:CodeGeneratorRegistry[Seq[Statement]], _:Lit) =>
-        Java(s"""return value();""").statements()
-    },
+  abstract override def testCaseGenerator(op:Operation, identifier:SimpleName, tc: UnitTest) : Seq[Statement] = {
 
-    CodeGeneratorRegistry[Seq[Statement], Add] {
-      case (_:CodeGeneratorRegistry[Seq[Statement]], _:Add) =>
-        Java(s"""return left().eval() + right().eval();""").statements()
-    },
-  )
+    // only handle Eval
+    if (op.equals(new Eval)) {
+      Java(s"""|  assertEquals(${tc.expected.toString}, ${identifier.toString}.eval());
+               |""".stripMargin).statements()
+    } else {
+      super.testCaseGenerator(op, identifier, tc)
+    }
+  }
 
 }

@@ -4,7 +4,6 @@ import expression.types.{FrameworkTypes, GenericType, TypeInformation, Types}
 import expression.{Exp, Operation}
 import org.combinators.cls.types._
 import org.combinators.cls.types.syntax._
-import example.expression.covariant.SemanticTypes
 
 /**
   * These codify the semantic types used by the Expression problem.

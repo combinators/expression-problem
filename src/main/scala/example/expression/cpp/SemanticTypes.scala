@@ -1,8 +1,8 @@
-package example.expression.covariant
+package example.expression.cpp
 
-import org.combinators.cls.types.{Constructor, Type}
-import org.combinators.cls.types.syntax._
 import expression.{Exp, Operation}
+import org.combinators.cls.types.syntax._
+import org.combinators.cls.types.{Constructor, Type}
 
 /**
   * These codify the semantic types used by the Expression problem.

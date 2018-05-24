@@ -1,62 +1,60 @@
 package example.expression.covariant.e3
 
 import com.github.javaparser.ast.stmt.Statement
-import example.expression.covariant.{Registry, SemanticTypes}
-import example.expression.j.Operators
-import example.expression.{Base, ExpressionDomain}
+import expression.data.Eval
 import expression.extensions._
-import expression.history.History
-import org.combinators.cls.interpreter.ReflectedRepository
 import org.combinators.templating.twirl.Java
-import shared.compilation.CodeGeneratorRegistry
+import shared.compilation.{CodeGeneratorRegistry, HasCodeGenerator}
 
-trait Model extends Base with Registry with Operators with SemanticTypes {
+trait Model extends HasCodeGenerator {
+  abstract override def codeGenerator:CodeGeneratorRegistry[CodeGeneratorRegistry[Seq[Statement]]] = {
+    val oldGenerator = super.codeGenerator
 
-  // will be made present in e0, so we can assume this is there
-  var evalGenerators:CodeGeneratorRegistry[Seq[Statement]]
-  var prettyPGenerators:CodeGeneratorRegistry[Seq[Statement]]
+    // it is critical that the new changes are merged before old ones
+    CodeGeneratorRegistry.merge(
 
+      CodeGeneratorRegistry[CodeGeneratorRegistry[Seq[Statement]], Eval] {
+        case (_, eval:Eval) =>
 
-  /** Add dynamic combinators as needed. */
-    override def init[G <: ExpressionDomain](gamma: ReflectedRepository[G], history: History): ReflectedRepository[G] = {
-      var updated = super.init(gamma, history)
+          CodeGeneratorRegistry.merge(
+            oldGenerator(eval).getOrElse(CodeGeneratorRegistry[Seq[Statement]]),
 
-      updated
-    }
+            CodeGeneratorRegistry[Seq[Statement], Neg] {
+              case (_, dataty:Neg) =>
+                Java(s"""return -exp().eval();""").statements()
+            },
+            CodeGeneratorRegistry[Seq[Statement], Mult] {
+              case (_, dataty:Mult) =>
+                Java(s"""return left().eval() * right().eval();""").statements()
+            },
+            CodeGeneratorRegistry[Seq[Statement], Divd] {
+              case (_, dataty:Divd) =>
+                Java(s"""return left().eval() / right().eval();""").statements()
+            }
+          )
+      },
 
-  /**
-    * Code generator for Mult, Divd, Neg with eval
-    */
-  evalGenerators = evalGenerators.merge(CodeGeneratorRegistry[Seq[Statement], Mult] {
-    case (_:CodeGeneratorRegistry[Seq[Statement]], _:Mult) =>
-      Java(s"""return left().eval() * right().eval();""").statements()
-  })
+      CodeGeneratorRegistry[CodeGeneratorRegistry[Seq[Statement]], PrettyP] {
+        case (_, pp:PrettyP) =>
+          CodeGeneratorRegistry.merge(
+            oldGenerator(pp).getOrElse(CodeGeneratorRegistry[Seq[Statement]]),
+            CodeGeneratorRegistry[Seq[Statement], Neg] {
+              case (_, dataty:Neg) =>
+                Java(s"""return "-" + exp().print();""").statements()
+            },
+            CodeGeneratorRegistry[Seq[Statement], Mult] {
+              case (_, dataty:Mult) =>
+                Java(s"""return "(" + left().print() + "*" + right().print() + ")";""").statements()
+            },
+            CodeGeneratorRegistry[Seq[Statement], Divd] {
+              case (_, dataty:Divd) =>
+                Java(s"""return "(" + left().print() + "/" + right().print() + ")";""").statements()
+            }
+          )
+      },
 
-  evalGenerators = evalGenerators.merge(CodeGeneratorRegistry[Seq[Statement], Divd] {
-    case (_:CodeGeneratorRegistry[Seq[Statement]], _:Divd) =>
-      Java(s"""return left().eval() / right().eval();""").statements()
-  })
+      oldGenerator
+    )
+  }
 
-  evalGenerators = evalGenerators.merge(CodeGeneratorRegistry[Seq[Statement], Neg] {
-    case (_:CodeGeneratorRegistry[Seq[Statement]], _:Neg) =>
-      Java(s"""return -exp().eval();""").statements()
-  })
-
-  /**
-    * Code for prettyP extensions
-    */
-  prettyPGenerators = prettyPGenerators.merge(CodeGeneratorRegistry[Seq[Statement], Mult] {
-    case (_:CodeGeneratorRegistry[Seq[Statement]], _:Mult) =>
-      Java(s"""return "(" + left().print() + "*" + right().print() + ")";""").statements()
-  })
-
-  prettyPGenerators = prettyPGenerators.merge(CodeGeneratorRegistry[Seq[Statement], Divd] {
-    case (_:CodeGeneratorRegistry[Seq[Statement]], _:Divd) =>
-      Java(s"""return "(" + left().print() + "/" + right().print() + ")";""").statements()
-  })
-
-  prettyPGenerators = prettyPGenerators.merge(CodeGeneratorRegistry[Seq[Statement], Neg] {
-    case (_:CodeGeneratorRegistry[Seq[Statement]], _:Neg) =>
-      Java(s"""return "-" + exp().print();""").statements()
-  })
 }

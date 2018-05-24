@@ -5,58 +5,20 @@ import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.stmt.Statement
 import example.expression.j.Operators
 import expression.{Attribute, Exp, FunctionMethod, Operation}
-import expression.history.History
 import expression.types.Types
-import org.combinators.cls.types.Type
 import org.combinators.templating.twirl.Java
-import shared.compilation.CodeGeneratorRegistry
-import org.combinators.cls.types.syntax._
 
 import scala.collection.JavaConverters._
 
-trait Registry extends Operators with SemanticTypes {
-
-  // will be made present in e0, so we can assume this is there
-  var evalGenerators:CodeGeneratorRegistry[Seq[Statement]]
-
-    /** Add dynamic combinators as needed. */
-  def registerImpl(history: History, op: Operation, fm: FunctionMethod): Seq[AddDefaultImpl] = {
-    var combs:Seq[AddDefaultImpl] = Seq.empty
-    history.asScala.foreach(domain =>
-      domain.data.asScala
-        .foreach(exp => {
-          val comb: Seq[Statement] = evalGenerators(exp).get
-          combs = combs :+ new AddDefaultImpl(op, fm, exp, comb)
-        })
-    )
-
-    combs
-  }
-
-  /** Add dynamic combinators as needed. */
-  def registerExtension(history: History, op: Operation, codegen: CodeGeneratorRegistry[Seq[Statement]]): Seq[AddExpOperation] = {
-    var combs:Seq[AddExpOperation] = Seq.empty
-    history.asScala.foreach (domain =>
-      domain.data.asScala
-        .foreach(exp => {
-          val comb: Seq[Statement] = codegen(exp).get
-          combs = combs :+ new AddExpOperation(exp, op, comb)
-        })
-    )
-
-    combs
-  }
-
+trait Registry extends Operators {
   /**
     * Given an interface for a type, adds a default implementation of given operation
     *
-    * @param op    Desired Operation
     * @param fm    Domain Model Function Method that models this operation
     * @param sub   The subType associated with....
     * @param stmts ...the statements containing an implementation of Operation for SubType.
     */
-  class AddDefaultImpl(op: Operation, fm: FunctionMethod, sub: Exp, stmts: Seq[Statement]) {
-    def apply(unit: CompilationUnit): CompilationUnit = {
+  def AddDefaultImpl(fm: FunctionMethod, sub: Exp, stmts: Seq[Statement], unit:CompilationUnit): CompilationUnit = {
 
       val tpe = Type_toString(fm.returnType)
       val name = fm.name
@@ -71,9 +33,6 @@ trait Registry extends Operators with SemanticTypes {
       }
       unit
     }
-
-    val semanticType: Type = ep(ep.interface, sub) =>: ep(ep.defaultMethods, sub, op)
-  }
 
   /**
     * Given an extension to Exp and a given operation (and its stmts implementation) produce an
@@ -91,8 +50,7 @@ trait Registry extends Operators with SemanticTypes {
     * @param op    Operation to be defined.
     * @param stmts Default set of statements for implementation
     */
-  class AddExpOperation(exp: Exp, op: Operation, stmts: Seq[Statement]) {
-    def apply(): CompilationUnit = {
+  def AddExpOperation(exp: Exp, op: Operation, stmts: Seq[Statement]): CompilationUnit = {
       val opName = op.getClass.getSimpleName
       val expName = exp.getClass.getSimpleName
 
@@ -135,8 +93,4 @@ trait Registry extends Operators with SemanticTypes {
 
       unit
     }
-
-    val semanticType: Type = ep(ep.interface, exp, op)
-  }
-
 }

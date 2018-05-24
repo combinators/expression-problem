@@ -21,6 +21,37 @@ trait HasTestCaseGenerator {
     _testNumber
   }
 
+//  /**
+//    * When an expression requires operations o1, o2, then the subtypes must be instantiated from the
+//    * most specific subclasses available, derived from the operations to be required of the expr
+//    *
+//    * Process MustHaves
+//    *
+//    * @return
+//    */
+//  def computeSubTypes() : String = {
+//    if (subTypes.equals("")) {
+//      var ops: List[String] = List.empty
+//      for (ut: UnitTest <- expr.asScala) {
+//
+//        // ignore Eval, which is assumed to always be there
+//        if (!ut.op.getClass.getSimpleName.equals("Eval") && !ops.contains(ut.op.getClass.getSimpleName)) {
+//          ops = ops :+ ut.op.getClass.getSimpleName
+//        }
+//
+//        mustHave.foreach (op => {
+//          if (!ops.contains(op.getClass.getSimpleName)) {
+//            ops = ops :+ op.getClass.getSimpleName
+//          }
+//        })
+//      }
+//
+//      subTypes = ops.sortWith(_ < _).mkString("")
+//    }
+//
+//    subTypes
+//  }
+
   /**
     * Given a desired operation to test, a Java identifier of the instantiated expression, and the
     * desired UnitTest, produce code that ensures the actual value equals the expected value of the test case

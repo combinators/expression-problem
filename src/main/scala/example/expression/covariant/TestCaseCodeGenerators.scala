@@ -1,15 +1,14 @@
 package example.expression.covariant
 
-import com.github.javaparser.ast.stmt.Statement
-import expression.data._
 import expression.Operation
-import expression.extensions.{Collect, PrettyP, SimplifyBase}
+import expression.extensions.PrettyP
 import expression.history.History
 import expression.instances.UnitTest
 import org.combinators.templating.twirl.Java
 import shared.compilation.CodeGeneratorRegistry
 
 import scala.collection.JavaConverters._
+
 /**
   * Common code generators for the covariant solution.
   *
@@ -46,33 +45,7 @@ class TestCaseCodeGenerators(history:History, expr:expression.instances.Expressi
 
   var resultNumber: Integer = 0
 
-  var subTypes: String = null
-
-//  /**
-//    * Compute the necessary subtypes BUT ENSURE that given operations are also present.
-//    *
-//    * @param mustHave
-//    * @return
-//    */
-//  def computeSubTypesEnsure(mustHave: List[Operation]): String = {
-//    var ops: List[String] = List.empty
-//    for (ut: UnitTest <- expr.asScala) {
-//
-//      // ignore Eval, which is assumed to always be there
-//      if (!ut.op.getClass.getSimpleName.equals("Eval")) {
-//        ops = ops :+ ut.op.getClass.getSimpleName
-//      }
-//    }
-//
-//    mustHave.foreach (op => {
-//      if (!ops.contains(op.getClass.getSimpleName)) {
-//        ops = ops :+ op.getClass.getSimpleName
-//      }
-//    })
-//
-//    ops.sortWith(_ < _).mkString("")
-//  }
-
+  var subTypes: String = ""
 
   /**
     * When an expression requires operations o1, o2, then the subtypes must be instantiated from the
@@ -83,12 +56,12 @@ class TestCaseCodeGenerators(history:History, expr:expression.instances.Expressi
     * @return
     */
   def computeSubTypes() : String = {
-    if (subTypes == null) {
+    if (subTypes.equals("")) {
       var ops: List[String] = List.empty
       for (ut: UnitTest <- expr.asScala) {
 
         // ignore Eval, which is assumed to always be there
-        if (!ut.op.getClass.getSimpleName.equals("Eval")) {
+        if (!ut.op.getClass.getSimpleName.equals("Eval") && !ops.contains(ut.op.getClass.getSimpleName)) {
           ops = ops :+ ut.op.getClass.getSimpleName
         }
 
@@ -159,53 +132,4 @@ class TestCaseCodeGenerators(history:History, expr:expression.instances.Expressi
       }
     },
   )
-
-  /**
-    * Code generator for generating test cases from Operations.
-    *
-    * Note this needs to be made extensible (ala solitaire extensions of base constraints)
-    *
-    * Not easy to get this working since we need to pattern match on the Eval, but we need to also pass
-    * in parameters. Must think some more...
-    */
-    val testCaseGenerator:CodeGeneratorRegistry[Seq[Statement]] = CodeGeneratorRegistry.merge[Seq[Statement]](
-      CodeGeneratorRegistry[Seq[Statement], Eval] {
-        case (_:CodeGeneratorRegistry[Seq[Statement]], _:Eval) => {
-          val expected:String = "null"
-
-          // grab all UnitTests to get the operations tha are needed
-          resultNumber = resultNumber + 1
-
-          Java(s"""|  Double result$resultNumber = (Double) 7.4);
-                   |  assertEquals(${expected.toString}, result$resultNumber.doubleValue());
-                   |""".stripMargin).statements()
-        }
-      },
-
-      CodeGeneratorRegistry[Seq[Statement], PrettyP] {
-        case (_:CodeGeneratorRegistry[Seq[Statement]], _:PrettyP) =>
-          Java(s"""|java.util.List<Double> list = new java.util.ArrayList<Double>();
-                   |list.addAll(e.getLeft().accept(this));
-                   |list.addAll(e.getRight().accept(this));
-                   |return list;
-                   |""".stripMargin).statements()
-      },
-
-      CodeGeneratorRegistry[Seq[Statement], SimplifyBase] {
-        case (_:CodeGeneratorRegistry[Seq[Statement]], _:SimplifyBase) => {
-          Java(s"""|java.util.List<Double> list = new java.util.ArrayList<Double>();
-                   |list.addAll(e.getExp().accept(this));
-                   |return list;""".stripMargin).statements()
-        }
-      },
-
-      CodeGeneratorRegistry[Seq[Statement], Collect] {
-        case (_:CodeGeneratorRegistry[Seq[Statement]], _:Collect) => {
-          Java(s"""|java.util.List<Double> list = new java.util.ArrayList<Double>();
-                   |list.addAll(e.getExp().accept(this));
-                   |return list;""".stripMargin).statements()
-        }
-      },
-    )
-
 }

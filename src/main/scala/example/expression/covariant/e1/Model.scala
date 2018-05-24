@@ -1,34 +1,31 @@
 package example.expression.covariant.e1
 
 import com.github.javaparser.ast.stmt.Statement
-import example.expression.covariant.{Registry, SemanticTypes}
-import example.expression.j.Operators
-import example.expression.{Base, ExpressionDomain}
-import expression.FunctionMethod
-import expression.data.{Add, Eval, Lit}
+import expression.data.Eval
 import expression.extensions.Sub
-import expression.history.History
-import expression.types.Types
-import org.combinators.cls.interpreter.ReflectedRepository
 import org.combinators.templating.twirl.Java
-import shared.compilation.CodeGeneratorRegistry
+import shared.compilation.{CodeGeneratorRegistry, HasCodeGenerator}
 
-trait Model extends Base with Registry with Operators with SemanticTypes {
+trait Model extends HasCodeGenerator  {
 
-  var evalGenerators:CodeGeneratorRegistry[Seq[Statement]]
+  abstract override def codeGenerator:CodeGeneratorRegistry[CodeGeneratorRegistry[Seq[Statement]]] = {
+    val oldGenerator = super.codeGenerator
 
-  /** Add dynamic combinators as needed. */
-    override def init[G <: ExpressionDomain](gamma: ReflectedRepository[G], history: History): ReflectedRepository[G] = {
-      var updated = super.init(gamma, history)
+    // it is critical that the new changes are merged before old ones
+    CodeGeneratorRegistry.merge(
+      CodeGeneratorRegistry[CodeGeneratorRegistry[Seq[Statement]], Eval] {
+        case (_, eval:Eval) =>
 
-      updated
-    }
+          val oldGen:CodeGeneratorRegistry[Seq[Statement]] = oldGenerator(eval).getOrElse(CodeGeneratorRegistry[Seq[Statement]])
 
-  /**
-    * Code generator for SUB with eval
-    */
-  evalGenerators = evalGenerators.merge(CodeGeneratorRegistry[Seq[Statement], Sub] {
-    case (_:CodeGeneratorRegistry[Seq[Statement]], _:Sub) =>
-      Java(s"""return left().eval() - right().eval();""").statements()
-  })
+          oldGen.merge(CodeGeneratorRegistry[Seq[Statement], Sub] {
+            case (_:CodeGeneratorRegistry[Seq[Statement]], _:Sub) =>
+              Java(s"return left().eval() - right().eval();").statements()
+          }
+          )
+      },
+
+      oldGenerator
+    )
+  }
 }

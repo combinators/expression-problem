@@ -8,10 +8,7 @@ import shared.compilation.CodeGeneratorRegistry
   * Within Co-variant solution, the classes of the instances changes, depending upon the required operations.
   * Since these instances are constructed solely within test cases, then
   */
-trait InstanceCodeGenerators extends Operators {
-
-  // must choose the most specific sub-types available, depending upon the operations
-  def computeSubTypes():String
+class InstanceCodeGenerators(subTypes:String) extends Operators {
 
   /**
     * Code generator for building up the structure of the expression using classes
@@ -34,7 +31,7 @@ trait InstanceCodeGenerators extends Operators {
     CodeGeneratorRegistry[com.github.javaparser.ast.expr.Expression, expression.instances.Lit] {
       case (_:CodeGeneratorRegistry[com.github.javaparser.ast.expr.Expression], lit:expression.instances.Lit) => {
         // must choose the most specific sub-types available, depending upon the operations
-        val subTypes:String = computeSubTypes()
+        //val subTypes:String = computeSubTypes()
         Java(s"""new Lit${subTypes}Final(${lit.value})""").expression[com.github.javaparser.ast.expr.Expression]
       }
     },
@@ -44,7 +41,7 @@ trait InstanceCodeGenerators extends Operators {
         val Type:String = binary.self.getClass.getSimpleName
         val left:Option[com.github.javaparser.ast.expr.Expression] = registry(binary.left)
         val right:Option[com.github.javaparser.ast.expr.Expression] = registry(binary.right)
-        val subTypes:String = computeSubTypes()
+        //val subTypes:String = computeSubTypes()
         if (left.isDefined && right.isDefined) {
           Java(s"""new ${Type}${subTypes}Final(${left.get}, ${right.get})""").expression[com.github.javaparser.ast.expr.Expression]
         } else {
@@ -57,7 +54,7 @@ trait InstanceCodeGenerators extends Operators {
       case (registry:CodeGeneratorRegistry[com.github.javaparser.ast.expr.Expression], unary:expression.instances.UnaryExp) => {
         val Type:String = unary.self.getClass.getSimpleName
         val inner:Option[com.github.javaparser.ast.expr.Expression] = registry(unary.exp)
-        val subTypes:String = computeSubTypes()
+        //val subTypes:String = computeSubTypes()
         if (inner.isDefined) {
           Java(s"""new ${Type}${subTypes}Final(${inner.get})""").expression[com.github.javaparser.ast.expr.Expression]
         } else {

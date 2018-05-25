@@ -12,6 +12,7 @@ import expression.instances.UnitSuite
 import expression.DomainModel
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
+import CPPFileUtils._
 
 abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends CodeGenerationController[CPPFile](web, app)
@@ -50,17 +51,6 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
     Seq.empty
   }
-
-  /**
-    * Tell the framework to store stuff of type PythonWithPath at the location specified in Path.
-    * The Path is relative to the Git repository.
-    */
-  implicit def PersistCPPFile: Persistable.Aux[CPPFile] = new Persistable {
-    override def path(elem: CPPFile): Path = Paths.get(elem.fileName + ".cpp")
-    override def rawText(elem: CPPFile): Array[Byte] = elem.toString.getBytes
-    override type T = CPPFile
-  }
-
   override lazy val generatedCode = targets(history, testCases)
 
   // all accomplished within the 'visitor' family
@@ -77,15 +67,6 @@ class E0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   override def history:History = evolution.E0.extend(super.history)
   override def testCases:UnitSuite = tests.e0.TestCases.add(super.testCases)
 
-  /**
-    * Tell the framework to store stuff of type PythonWithPath at the location specified in Path.
-    * The Path is relative to the Git repository.
-    */
-  override implicit def PersistCPPFile: Persistable.Aux[CPPFile] = new Persistable {
-    override def path(elem: CPPFile): Path = Paths.get(elem.fileName + ".cpp")
-    override def rawText(elem: CPPFile): Array[Byte] = elem.toString.getBytes
-    override type T = CPPFile
-  }
 }
 
 class E1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)

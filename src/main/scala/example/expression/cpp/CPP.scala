@@ -1,5 +1,9 @@
 package example.expression.cpp
 
+import java.nio.file.{Path, Paths}
+
+import org.combinators.templating.persistable.Persistable
+
 /**
   * Useful constructs for synthesis. Perhaps a poor-man's AST.
   *  class $signature {
@@ -22,6 +26,19 @@ abstract class CPPFile extends CPPBase {
 
   /** return name of file. */
   def fileName : String
+}
+
+/** Tools for CPPFiles */
+object CPPFileUtils {
+  /**
+    * Tell the framework to store stuff of type PythonWithPath at the location specified in Path.
+    * The Path is relative to the Git repository.
+    */
+  implicit def PersistCPPFile: Persistable.Aux[CPPFile] = new Persistable {
+    override def path(elem: CPPFile): Path = Paths.get(elem.fileName + ".cpp")
+    override def rawText(elem: CPPFile): Array[Byte] = elem.toString.getBytes
+    override type T = CPPFile
+  }
 }
 
 /**

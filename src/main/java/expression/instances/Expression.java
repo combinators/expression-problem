@@ -12,8 +12,21 @@ import java.util.Iterator;
  *
  * The expression can use all constructs (types and operations) from that domain model,
  * or any of its predecessors.
+ *
+ * Exposes all dependent operations and types
  */
 public class Expression implements Iterable<UnitTest> {
+
+    class Collector extends Visitor {
+        ArrayList<Exp> types = new ArrayList<>();
+
+        public void visit(Instance inst) {
+            Exp e = inst.self();
+            if (!types.contains(e)) {
+                types.add(e);
+            }
+        }
+    }
 
     /** The expression itself. */
     public final Instance expression;
@@ -30,6 +43,27 @@ public class Expression implements Iterable<UnitTest> {
 
     public Iterator<UnitTest> iterator() {
         return tests.iterator();
+    }
+
+    /** Returns all Exp types in all tests. */
+    public Iterator<Exp> dependentTypes() {
+        Collector c = new Collector();
+        for (UnitTest ut : tests) {
+            ut.inst.accept(c);
+        }
+        return c.types.iterator();
+    }
+
+    /** Return all operations testes across all tests. */
+    public Iterator<Operation> operations() {
+        ArrayList<Operation> ops = new ArrayList<Operation>();
+        for (UnitTest ut : tests) {
+            if (!ops.contains(ut.op)) {
+                ops.add(ut.op);
+            }
+        }
+
+        return ops.iterator();
     }
 
     /**

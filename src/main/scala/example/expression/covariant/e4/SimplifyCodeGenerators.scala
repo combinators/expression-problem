@@ -70,7 +70,7 @@ class SimplifyCodeGenerators(subtypes:String)  {
 
     CodeGeneratorRegistry[Seq[Statement], Mult] {
       case (_:CodeGeneratorRegistry[Seq[Statement]], _:Mult) =>
-        val str:String = s"""
+        Java(s"""
               |double leftVal = left().eval();
               |double rightVal = right().eval();
               |if (leftVal == 0 || rightVal == 0) {
@@ -81,10 +81,7 @@ class SimplifyCodeGenerators(subtypes:String)  {
               |  return left();
               |} else {
               |  return new Mult${subtypes}Final(($subtypes)left().simplify(), ($subtypes)right().simplify());
-              |}
-              |""".stripMargin
-      println(str)
-      Java(str).statements()
+              |}""".stripMargin).statements()
     },
 
     CodeGeneratorRegistry[Seq[Statement], Divd] {

@@ -9,11 +9,11 @@ import expression.extensions._
 import expression.instances.UnitTest
 import expression.operations.SimplifyExpr
 import org.combinators.templating.twirl.Java
-import shared.compilation.{CodeGeneratorRegistry, HasCodeGenerator, HasTestCaseGenerator}
+import shared.compilation.{CodeGeneratorRegistry, HasCodeGenerator, HasTestCaseGenerator, OperationDependency}
 
 import scala.collection.JavaConverters._
 
-trait Model extends HasCodeGenerator with HasTestCaseGenerator {
+trait Model extends HasCodeGenerator with HasTestCaseGenerator with OperationDependency {
 
   // Get class that contains just PrettyP and SimplifyExp
   val subTypes:String = List(new PrettyP().getClass.getSimpleName,
@@ -22,6 +22,15 @@ trait Model extends HasCodeGenerator with HasTestCaseGenerator {
     .mkString("")
 
   val simplifyGenerators = new SimplifyCodeGenerators(subTypes).simplifyGenerators
+
+  /** Simplify depends upon having PrettyP. */
+  abstract override def dependency(op:Operation): List[Operation] = {
+    if (op.equals(new SimplifyExpr)) {
+       super.dependency(op) :+ new PrettyP
+    } else {
+      super.dependency(op)
+    }
+  }
 
   abstract override def codeGenerator:CodeGeneratorRegistry[CodeGeneratorRegistry[Seq[Statement]]] = {
     val oldGenerator = super.codeGenerator

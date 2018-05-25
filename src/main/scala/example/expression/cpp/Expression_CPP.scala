@@ -67,19 +67,19 @@ class Expression_CPP @Inject()(webJars: WebJarsUtil, applicationLifecycle: Appli
   ))
 
   // VISITOR solution has no choice but to merge all domain models.
-  val model:DomainModel = history.flatten
+  def domain:DomainModel = history.flatten
 
   // decide upon a set of test cases from which we can generate driver code/test cases.
-  val allTests : UnitSuite = new UnitSuite()
+  val testCases : UnitSuite = new UnitSuite()
 
 //  lazy val rep = new ExpressionDomain(history, tests_e0) with ExpressionSynthesis with e0.Model with InitializeRepository {}
 //  lazy val Gamma = rep.init(ReflectedRepository(rep, classLoader = this.getClass.getClassLoader), rep.domain)
 
 
-  lazy val repository = new ExpressionDomain(history, allTests) with ExpressionSynthesis with Structure {}
+  lazy val repository = new ExpressionDomain(history, testCases) with ExpressionSynthesis with Structure {}
   import repository._
 
-  lazy val Gamma = repository.init(ReflectedRepository(repository, classLoader = this.getClass.getClassLoader), history)
+   lazy val Gamma = repository.init(ReflectedRepository(repository, classLoader = this.getClass.getClassLoader), history)
 
   /** This needs to be defined, and it is set from Gamma. */
   lazy val combinatorComponents = Gamma.combinatorComponents
@@ -97,7 +97,7 @@ class Expression_CPP @Inject()(webJars: WebJarsUtil, applicationLifecycle: Appli
   // produce concatenation of files in specific order for compilation purpose.
   // may prove challenging to have independent extensions...
   var jobs = Gamma.InhabitationBatchJob[CPPFile](module(module.base))
-
+//
   lazy val results = EmptyResults().addAll(jobs.run())
 
 }

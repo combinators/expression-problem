@@ -1,6 +1,8 @@
 package expression.operations;
 
-import expression.extensions.SimplifyBase;
+
+import expression.Operation;
+import expression.types.Types;
 
 /**
  * Operation that simplifies expression based on known patterns from the underlying
@@ -13,8 +15,8 @@ import expression.extensions.SimplifyBase;
  * Note that symbolic simplification could be more complicated, such as, (a-b)*(a+b) <--> (a^2 - b^2)
  * but that would be more for symbolic execution.
  */
-public class SimplifyExpr extends SimplifyBase {
+public class SimplifyExpr extends Operation {
     public SimplifyExpr() {
-        super();
+        super("simplify", Types.Exp);
     }
 }

@@ -63,7 +63,6 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
       sub: List[Operation] => {
         val sorted = sub.sortWith(_.getClass.getSimpleName < _.getClass.getSimpleName)
 
-        println(">>> sub:" + sorted.toString)
         if (sorted.length == 1) {
         tgts = tgts :+ AddOperation(sorted.head)    // ep(ep.interface, sub.head)
 

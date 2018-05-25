@@ -14,9 +14,9 @@ import scala.collection.JavaConverters._
 trait ExpressionSynthesis extends CPPSemanticTypes {
 
   // to be provided
-  val history: History
-  val domain: DomainModel = history.flatten
-  val allTests:UnitSuite
+  def history: History
+  def domain: DomainModel = history.flatten
+ // val allTests:UnitSuite
 
   /** Construct visitor abstract class. */
   @combinator object Visitor {

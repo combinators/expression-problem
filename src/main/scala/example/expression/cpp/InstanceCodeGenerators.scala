@@ -9,7 +9,7 @@ import shared.compilation.CodeGeneratorRegistry
   *
   * Not extensible to new data types that fall outside of the Lit/BinaryExp/UnaryExp hierarchy.
   */
-trait InstanceCodeGenerators extends Operators with InstanceContext {
+trait InstanceCodeGenerators extends InstanceContext {
 
   /**
     * Code generator for building up the structure of the expression using classes

@@ -1,26 +1,27 @@
 package example.expression.cpp.e1
 
-import com.github.javaparser.ast.stmt.Statement
+import example.expression.cpp.{CPPMethod, HasCPPCodeGenerator}
 import expression.data.Eval
 import expression.extensions.Sub
-import org.combinators.templating.twirl.Java
-import shared.compilation.{CodeGeneratorRegistry, HasCodeGenerator}
+import shared.compilation.CodeGeneratorRegistry
 
-trait Model extends HasCodeGenerator  {
+trait Model extends HasCPPCodeGenerator  {
 
-   abstract override def codeGenerator:CodeGeneratorRegistry[CodeGeneratorRegistry[Seq[Statement]]] = {
+   abstract override def codeGenerator:CodeGeneratorRegistry[CodeGeneratorRegistry[CPPMethod]] = {
      val oldGenerator = super.codeGenerator
 
      // it is critical that the new changes are merged before old ones
      CodeGeneratorRegistry.merge(
-       CodeGeneratorRegistry[CodeGeneratorRegistry[Seq[Statement]], Eval] {
+       CodeGeneratorRegistry[CodeGeneratorRegistry[CPPMethod], Eval] {
          case (_, eval:Eval) =>
 
-           val oldGen:CodeGeneratorRegistry[Seq[Statement]] = oldGenerator(eval).getOrElse(CodeGeneratorRegistry[Seq[Statement]])
+           val oldGen:CodeGeneratorRegistry[CPPMethod] = oldGenerator(eval).getOrElse(CodeGeneratorRegistry[CPPMethod])
 
-           oldGen.merge(CodeGeneratorRegistry[Seq[Statement], Sub] {
-             case (_:CodeGeneratorRegistry[Seq[Statement]], _:Sub) =>
-               Java(s"return e.getLeft().accept(this) - e.getRight().accept(this);").statements()
+           oldGen.merge(CodeGeneratorRegistry[CPPMethod, Sub] {
+             case (_:CodeGeneratorRegistry[CPPMethod], exp:Sub) =>
+               val name = exp.getClass.getSimpleName
+               new CPPMethod("void", s"Visit$name", s"(const $name* e)",
+                 "value_map_[e] = value_map_[e->getLeft()] - value_map_[e->getRight()];")
            }
            )
        },

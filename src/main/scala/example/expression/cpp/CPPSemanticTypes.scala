@@ -13,6 +13,11 @@ import org.combinators.cls.types.syntax._
   */
 trait CPPSemanticTypes extends SemanticTypes {
 
+  // standard headers
+  def standardHeader():Seq[String] = {
+    s"""#include "visitor.h" """.stripMargin.split("\n")
+  }
+
   /** Implementations for an operation. Map(op, Map(exp,String)). */
   var implementations:Map[Class[_ <: Operation],Map[Class[_ <: Exp],String]] = Map()
 

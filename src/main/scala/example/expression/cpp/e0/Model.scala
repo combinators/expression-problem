@@ -1,58 +1,48 @@
 package example.expression.cpp.e0
 
-import com.github.javaparser.ast.expr.SimpleName
-import com.github.javaparser.ast.stmt.Statement
+import example.expression.cpp.{CPPMethod, HasCPPCodeGenerator, HasCPPTestCaseGenerator}
 import expression.Operation
 import expression.data.{Add, Eval, Lit}
 import expression.instances.UnitTest
 import org.combinators.templating.twirl.Java
-import shared.compilation.{CodeGeneratorRegistry, HasCodeGenerator, HasTestCaseGenerator}
+import shared.compilation.CodeGeneratorRegistry
+
+//map += (exp.getClass ->
+//s"""
+//         |void Visit${exp.getClass.getSimpleName}(const $name* e) {
+//         |   $stmts
+//         |}
+//        """.stripMargin)
 
 /**
   * Each trait is stand alone, and woven into the final repository.
   */
-trait Model extends HasCodeGenerator with HasTestCaseGenerator {
+trait Model extends HasCPPCodeGenerator {
 
   // starting point. Eval is first one
-  def codeGenerator: CodeGeneratorRegistry[CodeGeneratorRegistry[Seq[Statement]]] = {
+  def codeGenerator: CodeGeneratorRegistry[CodeGeneratorRegistry[CPPMethod]] = {
 
     // First one is defined here
-    CodeGeneratorRegistry[CodeGeneratorRegistry[Seq[Statement]], Eval] {
+    CodeGeneratorRegistry[CodeGeneratorRegistry[CPPMethod], Eval] {
 
       case (_, eval: Eval) =>
         CodeGeneratorRegistry.merge(
 
-          CodeGeneratorRegistry[Seq[Statement], Lit] {
-            case (_, dataty: Lit) =>
-              Java(s"""return e.getValue();""").statements()
+          CodeGeneratorRegistry[CPPMethod, Lit] {
+            case (_, exp: Lit) =>
+              val name = exp.getClass.getSimpleName
+              new CPPMethod("void", s"Visit$name", s"(const $name* e)",
+                "value_map_[e] = *e->getValue();")
           },
 
-          CodeGeneratorRegistry[Seq[Statement], Add] {
-            case (_, dataty: Add) =>
-              Java(s"""return e.getLeft().accept(this) + e.getRight().accept(this);""").statements()
+          CodeGeneratorRegistry[CPPMethod, Add] {
+            case (_, exp:Add) =>
+            val name = exp.getClass.getSimpleName
+            new CPPMethod("void", s"Visit$name", s"(const $name* e)",
+              "value_map_[e] = value_map_[e->getLeft()] + value_map_[e->getRight()];")
           }
         )
     }
   }
 
-  /**
-    * Create test case code for eval where the expression "identifier"  has already been constructed
-    * and the test case is UnitTest, which has its own expectations.
-    *
-    * Forms chain of responsibility
-    */
-  abstract override def testCaseGenerator(op:Operation, identifier:SimpleName, tc: UnitTest) : Seq[Statement] = {
-
-    // only handle Eval
-    if (op.equals(new Eval)) {
-      val num: Int = nextTestNumber()
-
-      Java(
-        s"""|  Double result$num = (Double) ${identifier.toString}.accept(new Eval());
-            |  assertEquals(${tc.expected.toString}, result$num.doubleValue());
-            |""".stripMargin).statements()
-    } else {
-      super.testCaseGenerator(op, identifier, tc)
-    }
-  }
 }

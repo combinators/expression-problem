@@ -1,64 +1,80 @@
 package example.expression.cpp
 
-import java.nio.file.{Path, Paths}
 
 import example.expression._
 import expression.tests.AllTests
-import shared.compilation.{CodeGenerationController, HasCodeGenerator}
+import shared.compilation.CodeGenerationController
 import javax.inject.Inject
-import org.combinators.templating.persistable.Persistable
 import expression.history.History
 import expression.instances.UnitSuite
-import expression.DomainModel
+import expression.{Exp, Operation}
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
 import CPPFileUtils._
 
+import scala.collection.JavaConverters._
 abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends CodeGenerationController[CPPFile](web, app)
-  with ExpressionSynthesis with InstanceCodeGenerators with HasCodeGenerator {
-
+    with ExpressionSynthesis with Structure with InstanceCodeGenerators with HasCPPCodeGenerator {
 
   def history:History = new History
   def testCases:UnitSuite = new AllTests
 
-  // for visitor, this brings all data/ops together into one place.
-  override def domain:DomainModel = history.flatten
+
 
   // all targets are derived from the model
   def targets(hist:History, testCases:UnitSuite):Seq[CPPFile] = {
-//
-//    // need all subtypes from history for the visitor interface
-//    val allSubTypes: Seq[Exp] = domain.data.asScala.foldLeft(Seq.empty[Exp]) {
-//      case (combined, sub) => combined :+ sub
-//    }
-//
-//    // combine specific targets
-//    var tgts:Seq[CompilationUnit] = Seq.empty
-//    hist.asScala.foreach(domain =>
-//      domain.data.asScala.foreach(exp =>
-//        tgts = tgts :+ ImplClass(exp, BaseClass(exp))
-//      ))
-//
-//    hist.asScala.foreach(domain =>
-//      domain.ops.asScala.foreach(op =>
-//        tgts = tgts :+ OpImpl(allSubTypes, op, codeGenerator)
-//      ))
-//
-//    tgts = tgts :+ Visitor(domain)
-//    tgts = tgts :+ BaseExpClass
-//    tgts = tgts :+ Driver(defaultInstance.instanceGenerators, testCases)
+    var tgts:Seq[CPPFile] = Seq.empty
 
-    Seq.empty
+    tgts = tgts :+ StandardHeaderFile
+    tgts = tgts :+ Visitor
+    tgts = tgts :+ BaseExpClass
+
+    hist.asScala.foreach (domain =>
+      domain.ops.asScala.foreach {
+        op:Operation => {
+          tgts = tgts :+ OpDecl(op)
+          //tgts = tgts :+ OpImpl(op)
+        }
+      }
+    )
+    //
+    // need all subtypes from history for the visitor interface
+    var allSubTypes:Seq[Exp] = Seq.empty
+
+    hist.iterator.asScala.foreach(domain =>
+      domain.data.asScala.foreach {
+        exp:Exp => {
+          allSubTypes = allSubTypes :+ exp
+        }
+      })
+
+    // combine specific targets
+    hist.asScala.foreach(domain =>
+      domain.data.asScala.foreach(exp => {
+        //tgts = tgts :+ BaseClass(exp)
+        tgts = tgts :+ ExpClassDecl(exp)
+        tgts = tgts :+ ExpImplClass(exp)
+      }
+      ))
+
+//      hist.asScala.foreach(domain =>
+//        domain.ops.asScala.foreach(op =>
+//          tgts = tgts :+ OpImpl(allSubTypes, op, codeGenerator)
+//        ))
+
+      tgts = tgts :+ Driver
+
+    tgts
   }
   override lazy val generatedCode = targets(history, testCases)
 
   // all accomplished within the 'visitor' family
-  override val routingPrefix: Option[String] = Some("visitor")
+  override val routingPrefix: Option[String] = Some("cpp")
 }
 
 class E0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-  extends Foundation(web, app) with e0.Model {
+  extends Foundation(web, app) with e0.Model with cpputest.e0.Test {
 
   lazy val controllerAddress = "e0"
 
@@ -77,16 +93,16 @@ class E1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   override def history:History = evolution.E1.extend(super.history)
   override def testCases:UnitSuite = tests.e1.TestCases.add(super.testCases)
 }
-//
-//class E2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-//  extends E1_Variation(web, app) with e2.Model {
-//
-//  override lazy val controllerAddress = "e2"
-//
-//  override def history:History = evolution.E2.extend(super.history)
-//  override def testCases:UnitSuite = tests.e2.TestCases.add(super.testCases)
-//}
-//
+
+class E2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+  extends E1_Variation(web, app) with e2.Model with cpputest.e2.Test {
+
+  override lazy val controllerAddress = "e2"
+
+  override def history:History = evolution.E2.extend(super.history)
+  override def testCases:UnitSuite = tests.e2.TestCases.add(super.testCases)
+}
+
 //class E3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 //  extends E2_Variation(web, app) with e3.Model {
 //

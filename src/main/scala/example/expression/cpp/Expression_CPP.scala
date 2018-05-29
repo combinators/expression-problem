@@ -2,7 +2,7 @@ package example.expression.cpp
 
 import java.nio.file.{Path, Paths}
 
-import example.expression.ExpressionDomain
+import example.expression.{Base, ExpressionDomain}
 import javax.inject.Inject
 import org.combinators.templating.persistable.Persistable
 import org.combinators.cls.interpreter.ReflectedRepository
@@ -15,6 +15,7 @@ import expression.operations.SimplifyExpr
 import expression.{DomainModel, Exp, Operation}
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
+import shared.compilation.CodeGeneratorRegistry
 
 import scala.collection.JavaConverters._
 class Expression_CPP @Inject()(webJars: WebJarsUtil, applicationLifecycle: ApplicationLifecycle) extends InhabitationController(webJars, applicationLifecycle) {
@@ -75,11 +76,15 @@ class Expression_CPP @Inject()(webJars: WebJarsUtil, applicationLifecycle: Appli
 //  lazy val rep = new ExpressionDomain(history, tests_e0) with ExpressionSynthesis with e0.Model with InitializeRepository {}
 //  lazy val Gamma = rep.init(ReflectedRepository(rep, classLoader = this.getClass.getClassLoader), rep.domain)
 
-
-  lazy val repository = new ExpressionDomain(history, testCases) with ExpressionSynthesis with Structure {}
+ // HACK: Will eliminate
+  lazy val repository = new ExpressionDomain(history, testCases) with ExpressionSynthesis with Structure {
+    def codeGenerator: CodeGeneratorRegistry[CodeGeneratorRegistry[CPPMethod]] = {
+      null
+    }
+  }
   import repository._
 
-   lazy val Gamma = repository.init(ReflectedRepository(repository, classLoader = this.getClass.getClassLoader), history)
+   lazy val Gamma = repository.init(ReflectedRepository(repository), history)
 
   /** This needs to be defined, and it is set from Gamma. */
   lazy val combinatorComponents = Gamma.combinatorComponents

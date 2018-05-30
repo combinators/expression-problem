@@ -1,7 +1,5 @@
 package example.expression.cpp
 
-import example.expression.j.Operators
-import org.combinators.templating.twirl.Java
 import shared.compilation.CodeGeneratorRegistry
 
 /**

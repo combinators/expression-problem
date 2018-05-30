@@ -124,9 +124,9 @@ final class CPPHeaderCode (val _name:String, val _body:Seq[String]) extends CPPF
 }
 
 // Code that contains an implementation
-final class CPPCode (val _name:String, val _body:Seq[CPPMethod]) extends CPPFile {
+final class CPPCode (val _name:String, val _body:Seq[CPPElement]) extends CPPFile {
   val name:String = _name
-  val body:Seq[CPPMethod] = _body
+  val body:Seq[CPPElement] = _body
 
   override def isHeader():Boolean = false
   override def fileName:String = name
@@ -139,7 +139,7 @@ final class CPPCode (val _name:String, val _body:Seq[CPPMethod]) extends CPPFile
   }
 
   override def toString:String = {
-    val code:Seq[String] = body.map(method => method.toString).toSeq
+    val code:Seq[String] = body.map(elt => elt.toString).toSeq
 
     s"""|$standardHeader
         |${code.mkString("\n")}
@@ -186,6 +186,8 @@ final class CPPClass (val _name:String, _signature:String, val _publicArea:Seq[C
        """.stripMargin
   }
 }
+
+
 
 /**
   * Useful constructs for synthesis. Perhaps a poor-man's AST.

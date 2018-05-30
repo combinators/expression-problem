@@ -22,6 +22,11 @@ GET   /cpp_ep/prepare                      example.expression.cpp.Expression_CPP
 GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP.serveFile(file)
 
 # All variants have names that end in "Evolution", with sub-branches as described by 'e0', 'e1', 'e2', ...
+#Straight variatino
+->    /                              example.expression.Pure.E0_Variation
+->    /                              example.expression.Pure.E1_Variation
+->    /                              example.expression.Pure.E2_Variation
+->    /                              example.expression.Pure.E3_Variation
 # CPP variations
 ->    /                              example.expression.cpp.E0_Variation
 ->    /                              example.expression.cpp.E1_Variation

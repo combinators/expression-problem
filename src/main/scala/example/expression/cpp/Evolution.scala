@@ -1,6 +1,5 @@
 package example.expression.cpp
 
-
 import example.expression._
 import expression.tests.AllTests
 import shared.compilation.CodeGenerationController
@@ -13,14 +12,13 @@ import play.api.inject.ApplicationLifecycle
 import CPPFileUtils._
 
 import scala.collection.JavaConverters._
+
 abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends CodeGenerationController[CPPFile](web, app)
     with ExpressionSynthesis with Structure with InstanceCodeGenerators with HasCPPCodeGenerator {
 
   def history:History = new History
   def testCases:UnitSuite = new AllTests
-
-
 
   // all targets are derived from the model
   def targets(hist:History, testCases:UnitSuite):Seq[CPPFile] = {
@@ -64,7 +62,7 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 //        ))
 
       tgts = tgts :+ Driver
-
+      tgts = tgts :+ TestSuite(defaultInstance.instanceGenerators, testCases)
     tgts
   }
   override lazy val generatedCode = targets(history, testCases)

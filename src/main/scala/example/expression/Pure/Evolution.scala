@@ -15,16 +15,17 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   val model:gen.pure.Model
 
   override lazy val generatedCode:Seq[CompilationUnit] =
-    model.types.map(tpe => gen.generateExp(model, tpe)) :+ gen.generateBase(model) :+ gen.generateSuite()
+    model.types.map(tpe =>  gen.generateExp(model, tpe)) :+      // one class for each sub-type
+      gen.generateBase(model) :+                                 // base class straight
+      gen.generateSuite()                                        // generate test cases as well
 
-  // all accomplished within the 'visitor' family
+  // request by "git clone -b variation_0 http://localhost:9000/straight/eN/eN.git" where N is a version #
   override val routingPrefix: Option[String] = Some("straight")
+  override lazy val controllerAddress:String = model.name
 }
 
 class E0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
-
-  lazy val controllerAddress = "e0"
 
   override val gen = new AbstractGenerator with E0_Generator {
     override val pure = new Pure{ }
@@ -35,8 +36,6 @@ class E0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 class E1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
-  lazy val controllerAddress = "e1"
-
   override val gen = new AbstractGenerator with E0_Generator with E1_Generator {
     override val pure = new Pure{ }
   }
@@ -46,8 +45,6 @@ class E1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 class E2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
-  lazy val controllerAddress = "e2"
-
   override val gen = new AbstractGenerator with E0_Generator with E1_Generator with E2_Generator {
     override val pure = new Pure{ }
   }
@@ -56,8 +53,6 @@ class E2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
 class E3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
-
-  lazy val controllerAddress = "e3"
 
   override val gen = new AbstractGenerator with E0_Generator with E1_Generator with E2_Generator with E3_Generator {
     override val pure = new Pure{ }

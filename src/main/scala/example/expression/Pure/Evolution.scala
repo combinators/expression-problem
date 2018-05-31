@@ -16,7 +16,7 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
   override lazy val generatedCode:Seq[CompilationUnit] =
     model.types.map(tpe =>  gen.generateExp(model, tpe)) :+      // one class for each sub-type
-      gen.generateBase(model) :+                                 // base class straight
+      gen.generateBase(model) :+                                 // base class $BASE
       gen.generateSuite()                                        // generate test cases as well
 
   // request by "git clone -b variation_0 http://localhost:9000/straight/eN/eN.git" where N is a version #
@@ -24,6 +24,7 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   override lazy val controllerAddress:String = model.name
 }
 
+// also: don't forget that entries need to be in place in routes file
 class E0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
@@ -58,4 +59,13 @@ class E3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
     override val pure = new Pure{ }
   }
   override val model = gen.pure.e3
+}
+
+class E4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+  extends Foundation(web, app) {
+
+  override val gen = new AbstractGenerator with E0_Generator with E1_Generator with E2_Generator with E3_Generator with E4_Generator {
+    override val pure = new Pure{ }
+  }
+  override val model = gen.pure.e4
 }

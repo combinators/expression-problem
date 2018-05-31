@@ -1,5 +1,6 @@
 package example.expression.Pure
 
+
 trait Pure {
 
   object types {
@@ -18,8 +19,10 @@ trait Pure {
     abstract class BinaryExp extends Exp(Attribute("left", types.Exp), Attribute("right", types.Exp))
   }
 
+
   // Each model consists of a collection of Exp sub-types and operations
   case class Model(name:String, types:Seq[expressions.Exp], ops:Seq[Operation])
+  val BASE:String = "Exp"
 
   // e0:model evolution.
   case object Double extends types.Types
@@ -45,5 +48,28 @@ trait Pure {
   case object Neg extends expressions.UnaryExp
   case object Divd extends expressions.BinaryExp
   val e3:Model = e2.copy(name="e3", types=e2.types ++ Seq(Neg, Mult, Divd))
+
+  // e4:model evolution
+  val SIMPLIFY:String = "simplify"
+  case object Simpify extends Operation(SIMPLIFY, Some(types.Exp))
+  val COLLECT:String = "collect"
+  case class List(generic:types.Types) extends types.Types
+  case object Collect extends Operation(COLLECT, Some(List(Double)))
+  val e4:Model = e3.copy(name="e4", ops=e3.ops ++ Seq(Simpify, Collect))
+
+ // use following to generate instances to work with
+
+ object instances {
+    abstract class ExpInst(val e:expressions.Exp, val i:Option[Any])
+    abstract class UnaryExpInst(override val e:expressions.Exp, val exp:ExpInst) extends ExpInst(e, None)
+   abstract class BinaryExpInst(override val e:expressions.Exp, val left:ExpInst, val right:ExpInst) extends ExpInst(e, None)
+  }
+
+  // construct some sample expressions for testing...
+  class LitInst(d:Double) extends instances.ExpInst(Lit, Some(d))
+  class BinaryInst(b:expressions.BinaryExp, e1:instances.ExpInst, e2:instances.ExpInst)
+    extends instances.BinaryExpInst(b, e1, e2)
+  class UnaryInst(b:expressions.UnaryExp, e1:instances.ExpInst)
+    extends instances.UnaryExpInst(b, e1)
 
 }

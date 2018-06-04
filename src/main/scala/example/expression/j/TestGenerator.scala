@@ -25,6 +25,7 @@ trait TestGenerator {
         Java(s"new $name(${convert(ui.exp)})").expression()
       case bi:instances.BinaryExpInst =>
         Java(s"new $name(${convert(bi.left)}, ${convert(bi.right)})").expression()
+
       case _ =>  Java(s""" "unknown $name" """).expression()
     }
   }

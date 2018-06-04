@@ -5,18 +5,30 @@ import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
 import example.expression.domain.Domain
+import example.expression.j.AbstractGenerator
 import org.combinators.templating.twirl.Java
 
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait StraightGenerator {
+trait StraightGenerator extends AbstractGenerator {
   val domain:Domain
   import domain._
 
-  /** Request given operation on the Java identifier. */
-  def oper(expVar:String, op:Operation): Expression = {
-    Java(s"$expVar.${op.name}()").expression()
+  /** For straight design solution, directly access attributes by name. */
+  override def subExpressions(exp:expressions.Exp) : Seq[Expression] = {
+    exp.attributes.map(a => Java(s"${a.name}").expression[Expression]())
+
+//    exp match {
+//      case Lit => Seq(Java("value").expression())
+//      case e: expressions.UnaryExp => Seq(Java("value").expression())
+//      case b: expressions.BinaryExp => Seq(Java("left").expression(), Java("right").expression())
+//    }
+  }
+
+  /** Directly access local method, one per operation. */
+  override def recurseOn(expr:Expression, op:Operation) : Expression = {
+    Java(s"""$expr.${op.name}()""").expression()
   }
 
   /** Return designated Java type associated with type, or void if all else fails. */

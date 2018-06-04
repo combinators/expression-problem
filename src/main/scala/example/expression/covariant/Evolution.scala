@@ -2,7 +2,6 @@ package example.expression.covariant
 
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.stmt.Statement
-import example.expression.ExpressionDomain
 import example.expression._
 import expression.data.Eval
 import expression.{DomainModel, Exp, FunctionMethod, Operation}
@@ -10,9 +9,7 @@ import expression.history.History
 import expression.instances.UnitSuite
 import expression.tests.AllTests
 import javax.inject.Inject
-import org.combinators.cls.git.{EmptyInhabitationBatchJobResults, InhabitationController, Results, RoutingEntries}
-import org.combinators.cls.interpreter.ReflectedRepository
-import org.combinators.cls.types.Constructor
+import org.combinators.cls.git.RoutingEntries
 import org.combinators.templating.persistable.JavaPersistable._
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle

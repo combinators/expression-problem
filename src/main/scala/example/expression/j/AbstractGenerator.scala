@@ -13,8 +13,11 @@ trait AbstractGenerator {
   val domain:Domain
   import domain._
 
-  /** Request given operation on the Java identifier. */
-  def oper(expVar:String, op:Operation): Expression
+  /** Determines the Java expression for all children of a Exp subtype. */
+  def subExpressions(exp:expressions.Exp)  : Seq[Expression]
+
+  /** Responsible for dispatching sub-expressions. */
+  def recurseOn(expr:Expression, op:Operation) : Expression
 
   /** Return designated Java type associated with type, or void if all else fails. */
   def typeGenerator(tpe:types.Types) : com.github.javaparser.ast.`type`.Type
@@ -22,6 +25,7 @@ trait AbstractGenerator {
   /** Operations are implemented as methods in the Base and sub-type classes. */
   def methodGenerator(exp:expressions.Exp)(op:Operation): MethodDeclaration
 
+  /** Generates the sequence of statements for any implementation of an expression sub-type. */
   def methodBodyGenerator(exp:expressions.Exp)(op:Operation): Seq[Statement]
 
   /** Generate the full class for the given expression sub-type. */

@@ -42,8 +42,7 @@ trait Domain {
   // e0:model evolution.
   // -------------------
   case object Double extends types.Types
-  val VALUE:String = "value"
-  case object Lit extends expressions.Exp("Lit", Attribute(VALUE, Double))
+  case object Lit extends expressions.Exp("Lit", Attribute("value", Double))
   case object Add extends expressions.BinaryExp("Add")
 
   case object Eval extends Operation("eval", Some(Double))

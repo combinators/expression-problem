@@ -1,10 +1,9 @@
 package example.expression.cpp.cpputest.e0
 
-import example.expression.cpp.{CPPMethod, HasCPPCodeGenerator, HasCPPTestCaseGenerator}
+import example.expression.cpp.HasCPPTestCaseGenerator
 import expression.Operation
-import expression.data.{Add, Eval, Lit}
+import expression.data.Eval
 import expression.instances.UnitTest
-import shared.compilation.CodeGeneratorRegistry
 
 /**
   * Each trait is stand alone, and woven into the final repository.
@@ -23,8 +22,9 @@ trait Test extends  HasCPPTestCaseGenerator {
     if (op.equals(new Eval)) {
       val num: Int = nextTestNumber()
 
-      s"""|  Double result$num = (Double) ${identifier.toString}.accept(new Eval());
-          |  assertEquals(${tc.expected.toString}, result$num.doubleValue());
+      s"""|  Eval e4;
+          |  ${identifier.toString}.Accept(&e4);
+          |  DOUBLES_EQUAL(${tc.expected.toString}, e4.getValue(${identifier.toString}), 0.0);
           """.stripMargin.split("\n")
     } else {
       super.testCaseGenerator(op, identifier, tc)

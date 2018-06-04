@@ -115,33 +115,7 @@ trait Model extends HasCodeGenerator with HasTestCaseGenerator with OperationDep
                                                                      |return list;
                                                                      |""".stripMargin).statements() })
 
-  // HACK: MOVE TO RIGHT PLACE
-  /**
-    * When an expression requires operations o1, o2, then the subtypes must be instantiated from the
-    * most specific subclasses available, derived from the operations to be required of the expr
-    *
-    * Process MustHaves
-    *
-    * @return
-    */
-//  def computeSubTypes(tc:UnitTest) : String = {
-//    var ops: List[String] = List.empty
-//    for (ut: UnitTest <- expr.asScala) {
-//
-//      // ignore Eval, which is assumed to always be there
-//      if (!ut.op.getClass.getSimpleName.equals("Eval")) {
-//        ops = ops :+ ut.op.getClass.getSimpleName
-//      }
-//
-////      mustHave.foreach (op => {
-////        if (!ops.contains(op.getClass.getSimpleName)) {
-////          ops = ops :+ op.getClass.getSimpleName
-////        }
-////      })
-//    }
-//
-//    ops.sortWith(_ < _).mkString("")
-//  }
+
 
   /**
     * Create test case code for eval where the expression "identifier"  has already been constructed

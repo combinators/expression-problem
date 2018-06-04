@@ -1,22 +1,29 @@
-package example.expression.Pure
+package example.expression.scalaVisitor.e0
 
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.stmt.Statement
+import example.expression.j.TestGenerator
+import example.expression.scalaVisitor.VisitorGenerator
 import org.combinators.templating.twirl.Java
 
 
-trait E0_Generator extends AbstractGenerator {
-  import pure._
+trait E0_Generator extends VisitorGenerator with TestGenerator {
+  import domain._
 
   abstract override def testGenerator(): Seq[MethodDeclaration] = {
+
+    // (5/7) / (7-(2*3) --> just (5/7)
+    val a1 = new BinaryInst(Add, new LitInst(1.0), new LitInst(2.0))
+    val lit1 = new LitInst(3.0)
+
     super.testGenerator() ++ Java(
       s"""
          |public void test() {
-         |   $BASE exp1 = new Add(new Lit(1.0), new Lit(2.0));
-         |   assertEquals(3.0, exp1.$EVAL());
+         |   Exp exp1 = ${convert(a1)};
+         |   assertEquals(3.0, ${oper("exp1", Eval)});
          |
-         |   Lit lit1 = new Lit(3.0);
-         |   assertEquals(3.0, lit1.$EVAL());
+         |   Exp lit1 = ${convert(lit1)};
+         |   assertEquals(3.0, ${oper("lit1", Eval)});
          |}""".stripMargin).methodDeclarations()
   }
 
@@ -32,8 +39,8 @@ trait E0_Generator extends AbstractGenerator {
     op match {
       case Eval => {
         exp match {
-          case Lit => Java(s"return $VALUE;").statements
-          case Add => Java(s"return left.$EVAL() + right.$EVAL();").statements()
+          case Lit => Java(s"return e.getValue();").statements
+          case Add => Java(s"return ${oper("e.getLeft()", Eval)} + ${oper("e.getRight()", Eval)} ;").statements()
           case _ => super.methodBodyGenerator(exp)(op)
         }
       }

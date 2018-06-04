@@ -66,7 +66,16 @@ trait InstanceContext {
 
     val value: Double = _value
 
-    override def toStatement: String = s"$tpe  ${tpe.toLowerCase}$id = $tpe(&$value$id);"
+    override def toStatement: String = {
+      val dbl = s"double val$id = $value;"
+      val total =
+        s"""
+           |$dbl
+           |$tpe  ${tpe.toLowerCase}$id = $tpe(&val$id);
+         """.stripMargin
+
+      total
+    }
   }
 
   /**
@@ -86,7 +95,17 @@ trait InstanceContext {
     add(_left)
     add(_right)
 
-    override def toStatement: String = s"$tpe  ${tpe.toLowerCase}$id = $tpe(${left.varReference}, ${right.varReference});"
+    override def toStatement: String = {
+      val leftDef = left.toStatement
+      val rightDef = right.toStatement
+      val total = s"""
+         |$leftDef
+         |$rightDef
+         |$tpe  ${tpe.toLowerCase}$id = $tpe(${left.varReference}, ${right.varReference});
+       """.stripMargin
+
+      total
+    }
   }
 
 

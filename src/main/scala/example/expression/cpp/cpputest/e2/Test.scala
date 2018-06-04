@@ -1,11 +1,9 @@
 package example.expression.cpp.cpputest.e2
 
-import example.expression.cpp.{CPPMethod, HasCPPCodeGenerator, HasCPPTestCaseGenerator}
+import example.expression.cpp.HasCPPTestCaseGenerator
 import expression.Operation
-import expression.data._
-import expression.extensions.{PrettyP, Sub}
+import expression.extensions.PrettyP
 import expression.instances.UnitTest
-import shared.compilation.CodeGeneratorRegistry
 
 /**
  * Designed knowing this comes after E1, and thus must account for Lit, Add (E0) and Sub (E1)
@@ -22,9 +20,11 @@ trait Test extends HasCPPTestCaseGenerator {
 
     if (op.equals(new PrettyP)) {
       val num: Int = nextTestNumber()
-      s"""|  String result$num = (String) ${identifier.toString}.accept(new PrettyP());
-          |  assertEquals("${tc.expected.toString}", result$num);
-          |""".stripMargin.split("\n")
+
+      s"""|  PrettyP pp;
+          |  ${identifier.toString}.Accept(&pp);
+          |  STRCMP_EQUAL("${tc.expected.toString}", pp.getValue(${identifier.toString}).c_str());"""
+          .stripMargin.split("\n")
     } else {
       super.testCaseGenerator(op, identifier, tc)
     }

@@ -1,11 +1,12 @@
-package example.expression.Pure
+package example.expression.Straight
 
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.stmt.Statement
+import example.expression.j.TestGenerator
 import org.combinators.templating.twirl.Java
 
-trait E4_Generator extends AbstractGenerator {
-  import pure._
+trait E4_Generator extends StraightGenerator with TestGenerator {
+  import domain._
 
   abstract override def typeGenerator(tpe:types.Types) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
@@ -17,80 +18,80 @@ trait E4_Generator extends AbstractGenerator {
   abstract override def methodBodyGenerator(exp:expressions.Exp)(op:Operation): Seq[Statement] = {
     // generate the actual body
     op match {
-      case Simpify => {
+      case Simplify =>
         exp match {
           case Lit => Java (s"return this;").statements()
-          case Add => Java(s"""|double leftVal = left.$EVAL();
-                               |double rightVal = right.$EVAL();
+          case Add => Java(s"""|double leftVal = ${oper("left", Eval)};
+                               |double rightVal = ${oper("right", Eval)};
                                |if ((leftVal == 0 && rightVal == 0) || (leftVal + rightVal == 0)) {
                                |  return new Lit(0.0);
                                |} else if (leftVal == 0) {
-                               |  return right.$SIMPLIFY();
+                               |  return ${oper("right", Simplify)};
                                |} else if (rightVal == 0) {
-                               |  return left.$SIMPLIFY();
+                               |  return ${oper("left", Simplify)};
                                |} else {
-                               |  return new Add(left.$SIMPLIFY(), right.$SIMPLIFY());
+                               |  return new Add(${oper("left", Simplify)}, ${oper("right", Simplify)});
                                |}""".stripMargin).statements()
           case Sub => Java(s"""
-                              |if (left.$EVAL() == right.$EVAL()) {
+                              |if (${oper("left", Eval)} == ${oper("right", Eval)}) {
                               |  return new Lit(0.0);
                               |} else {
-                              |  return new Sub(left.$SIMPLIFY(), right.$SIMPLIFY());
+                              |  return new Sub(${oper("left", Simplify)}, ${oper("right", Simplify)});
                               |}
                               |""".stripMargin).statements()
           case Mult => Java(s"""
-                               |double leftVal = left.$EVAL();
-                               |double rightVal = right.$EVAL();
+                               |double leftVal = ${oper("left", Eval)};
+                               |double rightVal = ${oper("right", Eval)};
                                |if (leftVal == 0 || rightVal == 0) {
                                |  return new Lit(0.0);
                                |} else if (leftVal == 1) {
-                               |  return right.$SIMPLIFY();
+                               |  return ${oper("right", Simplify)};
                                |} else if (rightVal == 1) {
-                               |  return left.$SIMPLIFY();
+                               |  return ${oper("left", Simplify)};
                                |} else {
-                               |  return new Mult(left.$SIMPLIFY(), right.$SIMPLIFY());
+                               |  return new Mult(${oper("left", Simplify)}, ${oper("right", Simplify)});
                                |}
                                |""".stripMargin).statements()
           case Divd => Java(s"""
-                               |double leftVal = left.$EVAL();
-                               |double rightVal = right.$EVAL();
+                               |double leftVal = ${oper("left", Eval)};
+                               |double rightVal = ${oper("right", Eval)};
                                |if (leftVal == 0) {
                                |  return new Lit(0.0);
                                |} else if (rightVal == 1) {
-                               |  return left.$SIMPLIFY();
+                               |  return ${oper("left", Simplify)};
                                |} else if (leftVal == rightVal) {
                                |  return new Lit(1.0);
                                |} else if (leftVal == -rightVal) {
                                |  return new Lit(-1.0);
                                |} else {
-                               |  return new Divd(left.$SIMPLIFY(), right.$SIMPLIFY());
+                               |  return new Divd(${oper("left", Simplify)}, ${oper("right", Simplify)});
                                |}
                                |""".stripMargin).statements()
           case Neg => Java(s"""
-                              |if (exp.$EVAL() == 0) {
+                              |if (${oper("exp", Eval)} == 0) {
                               |  return new Lit(0.0);
                               |} else {
                               |  return this;
                               |}""".stripMargin).statements()
           case _ => super.methodBodyGenerator(exp)(op)
         }
-      }
 
-      case Collect => {
+
+      case Collect =>
         val collectStatements: Seq[Statement] =
           Java(
-            s"""|java.util.List<Double> list = left.$COLLECT();
-                |list.addAll(right.$COLLECT());
+            s"""|java.util.List<Double> list = ${oper("left", Collect)};
+                |list.addAll(${oper("right", Collect)});
                 |return list;
                 |""".stripMargin).statements()
 
         exp match {
           case Add | Sub | Mult | Divd => collectStatements
           case Lit => Java(s"return java.util.Collections.singletonList($VALUE);").statements()
-          case Neg => Java(s"return exp.$COLLECT();").statements()
+          case Neg => Java(s"return ${oper("exp", Collect)};").statements()
           case _ => super.methodBodyGenerator(exp)(op)
         }
-      }
+
       case _ => super.methodBodyGenerator(exp)(op)
     }
   }
@@ -106,17 +107,17 @@ trait E4_Generator extends AbstractGenerator {
     super.testGenerator() ++ Java(
       s"""
          |public void test() {
-         |   $BASE  exp1 = new Neg(new Lit(1.0));
-         |   assertEquals("-1.0", exp1.$PRINT());
-         |   assertEquals(-1.0, exp1.$EVAL());
+         |   Exp exp1 = new Neg(new Lit(1.0));
+         |   assertEquals("-1.0", ${oper("exp1", PrettyP)});
+         |   assertEquals(-1.0, ${oper("exp1", Eval)});
          |
-         |   $BASE  exp2 = new Mult(new Divd(new Lit(5.0), new Lit(2.0)), new Lit(4.0));
-         |   assertEquals("((5.0/2.0)*4.0)", exp2.$PRINT());
+         |   Exp  exp2 = new Mult(new Divd(new Lit(5.0), new Lit(2.0)), new Lit(4.0));
+         |   assertEquals("((5.0/2.0)*4.0)", ${oper("exp2", PrettyP)});
          |
-         |   $BASE  exp3 = ${convert(d2)};
-         |   $BASE  exp4 = exp3.$SIMPLIFY();
-         |   $BASE  exp5 = ${convert(d1)};
-         |   assertEquals (exp5.$PRINT(), exp4.$PRINT());
+         |   Exp  exp3 = ${convert(d2)};
+         |   Exp  exp4 = ${oper("exp3", Simplify)};
+         |   Exp  exp5 = ${convert(d1)};
+         |   assertEquals (${oper("exp5", PrettyP)}, ${oper("exp4", PrettyP)});
          |}""".stripMargin).methodDeclarations()
   }
 }

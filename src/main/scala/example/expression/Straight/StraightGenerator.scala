@@ -1,26 +1,33 @@
-package example.expression.Pure
+package example.expression.Straight
 
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
+import example.expression.domain.Domain
 import org.combinators.templating.twirl.Java
 
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait AbstractGenerator {
-  val pure:Pure
-  import pure._
+trait StraightGenerator {
+  val domain:Domain
+  import domain._
+
+  /** Request given operation on the Java identifier. */
+  def oper(expVar:String, op:Operation): Expression = {
+    Java(s"$expVar.${op.name}()").expression()
+  }
 
   /** Return designated Java type associated with type, or void if all else fails. */
   def typeGenerator(tpe:types.Types) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
-      case types.Exp => Java(s"$BASE").tpe()
+      case types.Exp => Java("Exp").tpe()
       case _ => Java ("void").tpe()  // reasonable stop
     }
   }
 
+  /** Operations are implemented as methods in the Base and sub-type classes. */
   def methodGenerator(exp:expressions.Exp)(op:Operation): MethodDeclaration = {
     val retType = op.returnType match {
       case Some(tpe) => typeGenerator(tpe)
@@ -32,41 +39,11 @@ trait AbstractGenerator {
              |}""".stripMargin).methodDeclarations().head
   }
 
-  def methodBodyGenerator(exp:expressions.Exp)(op:Operation): Seq[Statement] = ???
-
-  /** Return sample JUnit test cases. */
-  def testGenerator(): Seq[MethodDeclaration] = Seq.empty
-
-  /** Convert a test instance into a Java Expression for instantiating that instance. */
-  def convert(inst:instances.ExpInst) : Expression = {
-    var name:String = inst.e.getClass.getSimpleName
-    name = name.substring(0, name.length-1)
-
-    inst match {
-      case lit:LitInst => Java(s"new $name(${lit.i.get.toString})").expression()
-      case ui:instances.UnaryExpInst =>
-        Java(s"new $name(${convert(ui.exp)})").expression()
-      case bi:instances.BinaryExpInst =>
-        Java(s"new $name(${convert(bi.left)}, ${convert(bi.right)})").expression()
-      case _ =>  Java(s""" "unknown $name" """).expression()
-    }
+  def methodBodyGenerator(exp:expressions.Exp)(op:Operation): Seq[Statement] = {
+    throw new scala.NotImplementedError(s"""Operation "${op.name}" does not handle case for sub-type "${exp.getClass.getSimpleName}" """)
   }
 
-  def generateSuite(): CompilationUnit = {
-    val methods:Seq[MethodDeclaration] = testGenerator()
-
-    var num:Int = 0
-    val unitTests:Seq[MethodDeclaration] = methods.filter(md => md.getBody.isPresent).map(md => {
-      num = num + 1
-      Java (s"""public void test$num()  ${md.getBody.get.toString} """).methodDeclarations().head
-    })
-
-    Java(s"""|import junit.framework.TestCase;
-             |public class TestSuite extends TestCase {
-             |    ${unitTests.mkString("\n")}
-             |}""".stripMargin).compilationUnit()
-  }
-
+  /** Generate the full class for the given expression sub-type. */
   def generateExp(domain:Model, e:expressions.Exp) : CompilationUnit = {
     val name = e.toString
 
@@ -92,7 +69,7 @@ trait AbstractGenerator {
                                |}""".stripMargin).constructors().head
 
     Java(s"""
-            |public class $name extends $BASE {
+            |public class $name extends Exp {
             |
             |  ${constructor.toString}
             |
@@ -102,6 +79,7 @@ trait AbstractGenerator {
             |}""".stripMargin).compilationUnit()
   }
 
+  /** Generate the base class. */
   def generateBase(domain:Model): CompilationUnit = {
 
     // Allow for operations to be void; if not an issue in future, then filter out here...
@@ -117,7 +95,7 @@ trait AbstractGenerator {
     })
 
     // same every time
-    Java(s"""|public abstract class $BASE {
+    Java(s"""|public abstract class Exp {
              |  ${signatures.mkString("\n")}
              |}""".stripMargin).compilationUnit()
   }

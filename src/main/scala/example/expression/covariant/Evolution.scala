@@ -47,7 +47,7 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
     val op = new Eval
     val fm = new FunctionMethod(op.name, op.`type`)
     flat.data.asScala.foreach(exp => {
-      val comb: Seq[Statement] = codeGenerator(new Eval).get(exp).get//evalGenerators(exp).get
+      val comb: Seq[Statement] = codeGenerator(new Eval).get(exp).get
       val unit:CompilationUnit = SubInterface(exp)
 
       tgts = tgts :+ AddDefaultImpl(fm, exp, comb, unit)

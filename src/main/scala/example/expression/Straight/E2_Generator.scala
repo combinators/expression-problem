@@ -1,11 +1,12 @@
-package example.expression.Pure
+package example.expression.Straight
 
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.stmt.Statement
+import example.expression.j.TestGenerator
 import org.combinators.templating.twirl.Java
 
-trait E2_Generator extends AbstractGenerator {
-  import pure._
+trait E2_Generator extends StraightGenerator with TestGenerator {
+  import domain._
 
   abstract override def typeGenerator(tpe:types.Types) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
@@ -20,8 +21,8 @@ trait E2_Generator extends AbstractGenerator {
       case PrettyP => {
         exp match {
           case Lit => Java(s"""return "" + $VALUE + ""; """).statements()
-          case Add => Java(s"""return "(" + left.$PRINT() + "+" + right.$PRINT() + ")";""").statements()
-          case Sub => Java(s"""return "(" + left.$PRINT() + "-" + right.$PRINT() + ")";""").statements()
+          case Add => Java(s"""return "(" + ${oper("left", PrettyP)} + "+" + ${oper("right", PrettyP)}+ ")";""").statements()
+          case Sub => Java(s"""return "(" + ${oper("left", PrettyP)} + "-" + ${oper("right", PrettyP)} + ")";""").statements()
           case _ => super.methodBodyGenerator(exp)(op)
         }
       }
@@ -34,11 +35,11 @@ trait E2_Generator extends AbstractGenerator {
     super.testGenerator() ++ Java(
       s"""
          |public void test() {
-         |   $BASE  exp1 = new Sub(new Lit(1.0), new Lit(2.0));
-         |   assertEquals("(1.0-2.0)", exp1.$PRINT());
+         |   Exp  exp1 = new Sub(new Lit(1.0), new Lit(2.0));
+         |   assertEquals("(1.0-2.0)", ${oper("exp1", PrettyP)});
          |
-         |   $BASE  exp2 = new Add(new Sub(new Lit(1.0), new Lit(2.0)), new Add(new Lit(5.0), new Lit(6.0)));
-         |   assertEquals("((1.0-2.0)+(5.0+6.0))", exp2.$PRINT());
+         |   Exp  exp2 = new Add(new Sub(new Lit(1.0), new Lit(2.0)), new Add(new Lit(5.0), new Lit(6.0)));
+         |   assertEquals("((1.0-2.0)+(5.0+6.0))", ${oper("exp2", PrettyP)});
          |}""".stripMargin).methodDeclarations()
   }
 }

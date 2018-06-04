@@ -168,8 +168,9 @@ trait ExpressionSynthesis extends InstanceContext with CPPSemanticTypes with Has
       val code:Option[Context] = generator(tst.expression)
       testNumber = testNumber+1
 
-      val init:String = s"""Exp exp$testNumber = ${code.get.toStatement};"""
-      val ident:String = s"exp$testNumber"
+      val init:String = code.get.toStatement
+      //val ident:String = s"exp$testNumber"
+      val ident = code.get.name + code.get.id
 
       // each individual test case is evaluated within the context of this expression
       //var resultNumber = 0
@@ -204,15 +205,23 @@ trait ExpressionSynthesis extends InstanceContext with CPPSemanticTypes with Has
          |
        """.stripMargin)
 
+    val ops_includes = history.flatten.ops.asScala.map(op => s"""#include "${op.getClass.getSimpleName}.h" """).mkString("\n")
+
+    //  TODO: Fix the hack below which requires ops to be inserted.
     val cc:CPPCode = new CPPCode("TestCase", methods)
-      .addHeader("""
+      .addHeader(s"""
                    |#include "CppUTest/TestHarness.h"
                    |#include "CppUTest/SimpleString.h"
                    |#include "CppUTest/PlatformSpecificFunctions.h"
                    |#include "CppUTest/TestMemoryAllocator.h"
                    |#include "CppUTest/MemoryLeakDetector.h"
                    |#include "CppUTest/CommandLineTestRunner.h"
+                   |
+                   |#include "Exp.h"
+                   |#include "ExpVisitor.h"
+                   |$ops_includes
                  """.stripMargin.split("\n"))
+
     cc
   }
 

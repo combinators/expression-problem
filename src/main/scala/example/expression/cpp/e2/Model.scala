@@ -29,7 +29,10 @@ trait Model extends HasCPPCodeGenerator with HasCPPTestCaseGenerator {
                 val name = exp.getClass.getSimpleName
                 new CPPMethod("void", s"Visit$name", s"(const $name* e)",
                   s"""|std::ostringstream ss;
+                      |double val = *e->getValue();
+                      |int ival = (int) val;
                       |ss << *e->getValue();
+                      |if (val == ival) { ss << ".0"; }  // add trailing .0 for int-value doubles
                       |value_map_[e] = ss.str();""".stripMargin.split("\n")
                 )
             },

@@ -20,7 +20,7 @@ trait e1 extends AbstractGenerator with TestGenerator {
     op match {
       case Eval =>
         exp match {
-          case Sub => Java(s"return ${recurseOn(subs(0), Eval)} - ${recurseOn(subs(1), Eval)} ;").statements()
+          case Sub => Java(s"return ${recurseOn(subs("left"), Eval)} - ${recurseOn(subs("right"), Eval)} ;").statements()
           case _ => super.methodBodyGenerator(exp)(op)
         }
 

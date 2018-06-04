@@ -14,7 +14,7 @@ trait AbstractGenerator {
   import domain._
 
   /** Determines the Java expression for all children of a Exp subtype. */
-  def subExpressions(exp:expressions.Exp)  : Seq[Expression]
+  def subExpressions(exp:expressions.Exp) : Map[String, Expression]
 
   /** Responsible for dispatching sub-expressions. */
   def recurseOn(expr:Expression, op:Operation) : Expression

@@ -8,7 +8,7 @@ import org.combinators.templating.twirl.Java
 import shared.compilation.{CodeGeneratorRegistry, HasCodeGenerator}
 
 /**
-  * E3 development history
+  * J3 development history
   */
 trait Model extends HasCodeGenerator {
   abstract override def codeGenerator:CodeGeneratorRegistry[CodeGeneratorRegistry[Seq[Statement]]] = {

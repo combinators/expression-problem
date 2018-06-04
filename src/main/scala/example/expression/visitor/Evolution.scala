@@ -64,7 +64,7 @@ class E0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
   // start off the domain Model. Subsequent subclasses merge their domain models with ours, to satisfy the
   // demands of the visitor solution to the expression problem.
-  override def history:History = evolution.E0.extend(super.history)
+  override def history:History = evolution.J0.extend(super.history)
   override def testCases:UnitSuite = tests.e0.TestCases.add(super.testCases)
 
 }
@@ -74,7 +74,7 @@ class E1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
   override lazy val controllerAddress = "e1"
 
-  override def history:History = evolution.E1.extend(super.history)
+  override def history:History = evolution.J1.extend(super.history)
   override def testCases:UnitSuite = tests.e1.TestCases.add(super.testCases)
 }
 
@@ -83,7 +83,7 @@ class E2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
   override lazy val controllerAddress = "e2"
 
-  override def history:History = evolution.E2.extend(super.history)
+  override def history:History = evolution.J2.extend(super.history)
   override def testCases:UnitSuite = tests.e2.TestCases.add(super.testCases)
 }
 
@@ -92,7 +92,7 @@ class E3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
   override lazy val controllerAddress = "e3"
 
-  override def history:History = evolution.E3.extend(super.history)
+  override def history:History = evolution.J3.extend(super.history)
   override def testCases:UnitSuite = tests.e3.TestCases.add(super.testCases)
 }
 
@@ -101,6 +101,6 @@ class E4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
   override lazy val controllerAddress = "e4"
 
-  override def history:History = evolution.E4.extend(super.history)
+  override def history:History = evolution.J4.extend(super.history)
   override def testCases:UnitSuite = tests.e4.TestCases.add(super.testCases)
 }

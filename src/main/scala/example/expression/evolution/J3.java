@@ -1,17 +1,20 @@
 package example.expression.evolution;
 
 import expression.DomainModel;
-import expression.extensions.Sub;
+import expression.extensions.Divd;
+import expression.extensions.Mult;
+import expression.extensions.Neg;
 import expression.history.History;
 
+import java.util.Arrays;
 import java.util.Collections;
 
-public class E1 {
+public class J3 {
 
     public static History extend(History h) {
 
-        h.extend("e1",  new DomainModel(
-            Collections.singleton(new Sub()),
+        h.extend("e3",  new DomainModel(
+            Arrays.asList(new Neg(), new Mult(), new Divd()),
             Collections.emptyList()
         ));
 

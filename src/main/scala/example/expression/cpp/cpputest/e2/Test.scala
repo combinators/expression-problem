@@ -6,7 +6,7 @@ import expression.extensions.PrettyP
 import expression.instances.UnitTest
 
 /**
- * Designed knowing this comes after E1, and thus must account for Lit, Add (E0) and Sub (E1)
+ * Designed knowing this comes after J1, and thus must account for Lit, Add (J0) and Sub (J1)
  */
 trait Test extends HasCPPTestCaseGenerator {
 

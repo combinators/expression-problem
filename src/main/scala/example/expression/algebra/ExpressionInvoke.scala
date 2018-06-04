@@ -19,7 +19,7 @@ import play.api.inject.ApplicationLifecycle
 
 import scala.collection.JavaConverters._    // Needed for asJava
 
-class Expression @Inject()(webJars: WebJarsUtil, applicationLifecycle: ApplicationLifecycle) extends InhabitationController(webJars, applicationLifecycle) {
+class ExpressionInvoke @Inject()(webJars: WebJarsUtil, applicationLifecycle: ApplicationLifecycle) extends InhabitationController(webJars, applicationLifecycle) {
 
   val history:History = new History
   history.extend("e0", new DomainModel(

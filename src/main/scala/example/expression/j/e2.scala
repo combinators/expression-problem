@@ -27,14 +27,13 @@ trait e2 extends AbstractGenerator with TestGenerator {
 
     // generate the actual body
     op match {
-      case PrettyP => {
+      case PrettyP =>
         exp match {
-          case Lit => Java(s"""return "" + ${subs(0)} + ""; """).statements()
-          case Add => Java(s"""return "(" + ${recurseOn(subs(0), PrettyP)} + "+" + ${recurseOn(subs(1), PrettyP)}+ ")";""").statements()
-          case Sub => Java(s"""return "(" + ${recurseOn(subs(0), PrettyP)} + "-" + ${recurseOn(subs(1), PrettyP)} + ")";""").statements()
+          case Lit => Java(s"""return "" + ${subs(attributes.value)} + ""; """).statements()
+          case Add => Java(s"""return "(" + ${recurseOn(subs(attributes.left), PrettyP)} + "+" + ${recurseOn(subs(attributes.right), PrettyP)}+ ")";""").statements()
+          case Sub => Java(s"""return "(" + ${recurseOn(subs(attributes.left), PrettyP)} + "-" + ${recurseOn(subs(attributes.right), PrettyP)} + ")";""").statements()
           case _ => super.methodBodyGenerator(exp)(op)
         }
-      }
 
       case _ => super.methodBodyGenerator(exp)(op)
     }

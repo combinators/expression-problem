@@ -16,14 +16,9 @@ trait StraightGenerator extends AbstractGenerator {
   import domain._
 
   /** For straight design solution, directly access attributes by name. */
-  override def subExpressions(exp:expressions.Exp) : Seq[Expression] = {
-    exp.attributes.map(a => Java(s"${a.name}").expression[Expression]())
-
-//    exp match {
-//      case Lit => Seq(Java("value").expression())
-//      case e: expressions.UnaryExp => Seq(Java("value").expression())
-//      case b: expressions.BinaryExp => Seq(Java("left").expression(), Java("right").expression())
-//    }
+  override def subExpressions(exp:expressions.Exp) : Map[String,Expression] = {
+//    exp.attributes.map(att => Java(s"${att.name}").expression[Expression]())
+    exp.attributes.map(att => att.name -> Java(s"${att.name}").expression[Expression]()).toMap
   }
 
   /** Directly access local method, one per operation. */
@@ -31,11 +26,10 @@ trait StraightGenerator extends AbstractGenerator {
     Java(s"""$expr.${op.name}()""").expression()
   }
 
-  /** Return designated Java type associated with type, or void if all else fails. */
+  /** Return designated Java type associated with type. */
   def typeGenerator(tpe:types.Types) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
       case types.Exp => Java("Exp").tpe()
-      case _ => Java ("void").tpe()  // reasonable stop
     }
   }
 
@@ -51,30 +45,20 @@ trait StraightGenerator extends AbstractGenerator {
              |}""".stripMargin).methodDeclarations().head
   }
 
+  /** Throws run-time exception to catch when an operation/exp pair is missing. */
   def methodBodyGenerator(exp:expressions.Exp)(op:Operation): Seq[Statement] = {
     throw new scala.NotImplementedError(s"""Operation "${op.name}" does not handle case for sub-type "${exp.getClass.getSimpleName}" """)
   }
 
   /** Generate the full class for the given expression sub-type. */
-  def generateExp(domain:Model, e:expressions.Exp) : CompilationUnit = {
-    val name = e.toString
+  def generateExp(domain:Model, exp:expressions.Exp) : CompilationUnit = {
+    val name = exp.toString
 
-    val methods:Seq[MethodDeclaration] = domain.ops.map(methodGenerator(e))
-    val atts:Seq[FieldDeclaration] = e.attributes.flatMap(att => Java(s"private ${typeGenerator(att.tpe)} ${att.name};").fieldDeclarations())
+    val methods:Seq[MethodDeclaration] = domain.ops.map(methodGenerator(exp))
+    val atts:Seq[FieldDeclaration] = exp.attributes.flatMap(att => Java(s"private ${typeGenerator(att.tpe)} ${att.name};").fieldDeclarations())
 
-    // Builds up the attribute fields and set/get methods. Also prepares for one-line constructor.
-    var params:Seq[String] = Seq.empty
-    var cons:Seq[String] = Seq.empty
-
-    val fields:Seq[FieldDeclaration] = e.attributes.map(att => {
-      val capAtt = att.name.capitalize
-      val tpe = typeGenerator(att.tpe)
-
-      params = params :+ s"$tpe ${att.name}"
-      cons   = cons   :+ s"  this.${att.name} = ${att.name};"
-
-      Java(s"private $tpe ${att.name};").fieldDeclarations().head
-    })
+    val params:Seq[String] = exp.attributes.map(att => s"${typeGenerator(att.tpe)} ${att.name}")
+    val cons:Seq[Statement] = exp.attributes.flatMap(att => Java(s"  this.${att.name} = ${att.name};").statements())
 
     val constructor = Java(s"""|public $name (${params.mkString(",")}) {
                                |   ${cons.mkString("\n")}
@@ -95,15 +79,13 @@ trait StraightGenerator extends AbstractGenerator {
   def generateBase(domain:Model): CompilationUnit = {
 
     // Allow for operations to be void; if not an issue in future, then filter out here...
-    val signatures:Seq[MethodDeclaration] = domain.ops.map(op => {
-
-      val ret = if (op.returnType.isDefined) {
-        typeGenerator(op.returnType.get)
-      } else {
-        "void"
+    val signatures:Seq[MethodDeclaration] = domain.ops.flatMap(op => {
+      val retType = op.returnType match {
+        case Some(tpe) => typeGenerator(tpe)
+        case _ => Java("void").tpe
       }
 
-      Java(s"public abstract $ret ${op.name}();").methodDeclarations().head
+      Java(s"public abstract $retType ${op.name}();").methodDeclarations()
     })
 
     // same every time

@@ -8,7 +8,7 @@ import expression.instances.UnitTest
 import shared.compilation.CodeGeneratorRegistry
 
 /**
- * Designed knowing this comes after E1, and thus must account for Lit, Add (E0) and Sub (E1)
+ * Designed knowing this comes after J1, and thus must account for Lit, Add (J0) and Sub (J1)
  */
 trait Model extends HasCPPCodeGenerator with HasCPPTestCaseGenerator {
 

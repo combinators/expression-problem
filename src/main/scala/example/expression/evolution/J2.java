@@ -6,7 +6,7 @@ import expression.history.History;
 
 import java.util.Collections;
 
-public class E2 {
+public class J2 {
 
     public static History extend(History h) {
 

@@ -28,58 +28,58 @@ trait e4 extends AbstractGenerator with TestGenerator {
     op match {
       case Simplify =>
         exp match {
-          case Lit => Java (s"return new Lit(${subs(0)});").statements()
-          case Add => Java(s"""|double leftVal = ${recurseOn(subs(0), Eval)};
-                               |double rightVal = ${recurseOn(subs(1), Eval)};
+          case Lit => Java (s"return new Lit(${subs(attributes.value)});").statements()
+          case Add => Java(s"""|double leftVal = ${recurseOn(subs(attributes.left), Eval)};
+                               |double rightVal = ${recurseOn(subs(attributes.right), Eval)};
                                |if ((leftVal == 0 && rightVal == 0) || (leftVal + rightVal == 0)) {
                                |  return new Lit(0.0);
                                |} else if (leftVal == 0) {
-                               |  return ${recurseOn(subs(1), Simplify)};
+                               |  return ${recurseOn(subs(attributes.right), Simplify)};
                                |} else if (rightVal == 0) {
-                               |  return ${recurseOn(subs(0), Simplify)};
+                               |  return ${recurseOn(subs(attributes.left), Simplify)};
                                |} else {
-                               |  return new Add(${recurseOn(subs(0), Simplify)}, ${recurseOn(subs(1), Simplify)});
+                               |  return new Add(${recurseOn(subs(attributes.left), Simplify)}, ${recurseOn(subs(attributes.right), Simplify)});
                                |}""".stripMargin).statements()
           case Sub => Java(s"""
-                              |if (${recurseOn(subs(0), Eval)} == ${recurseOn(subs(1), Eval)}) {
+                              |if (${recurseOn(subs(attributes.left), Eval)} == ${recurseOn(subs(attributes.right), Eval)}) {
                               |  return new Lit(0.0);
                               |} else {
-                              |  return new Sub(${recurseOn(subs(0), Simplify)}, ${recurseOn(subs(1), Simplify)});
+                              |  return new Sub(${recurseOn(subs(attributes.left), Simplify)}, ${recurseOn(subs(attributes.right), Simplify)});
                               |}
                               |""".stripMargin).statements()
           case Mult => Java(s"""
-                               |double leftVal = ${recurseOn(subs(0), Eval)};
-                               |double rightVal = ${recurseOn(subs(1), Eval)};
+                               |double leftVal = ${recurseOn(subs(attributes.left), Eval)};
+                               |double rightVal = ${recurseOn(subs(attributes.right), Eval)};
                                |if (leftVal == 0 || rightVal == 0) {
                                |  return new Lit(0.0);
                                |} else if (leftVal == 1) {
-                               |  return ${recurseOn(subs(1), Simplify)};
+                               |  return ${recurseOn(subs(attributes.right), Simplify)};
                                |} else if (rightVal == 1) {
-                               |  return ${recurseOn(subs(0), Simplify)};
+                               |  return ${recurseOn(subs(attributes.left), Simplify)};
                                |} else {
-                               |  return new Mult(${recurseOn(subs(0), Simplify)}, ${recurseOn(subs(1), Simplify)});
+                               |  return new Mult(${recurseOn(subs(attributes.left), Simplify)}, ${recurseOn(subs(attributes.right), Simplify)});
                                |}
                                |""".stripMargin).statements()
           case Divd => Java(s"""
-                               |double leftVal = ${recurseOn(subs(0), Eval)};
-                               |double rightVal = ${recurseOn(subs(1), Eval)};
+                               |double leftVal = ${recurseOn(subs(attributes.left), Eval)};
+                               |double rightVal = ${recurseOn(subs(attributes.right), Eval)};
                                |if (leftVal == 0) {
                                |  return new Lit(0.0);
                                |} else if (rightVal == 1) {
-                               |  return ${recurseOn(subs(0), Simplify)};
+                               |  return ${recurseOn(subs(attributes.left), Simplify)};
                                |} else if (leftVal == rightVal) {
                                |  return new Lit(1.0);
                                |} else if (leftVal == -rightVal) {
                                |  return new Lit(-1.0);
                                |} else {
-                               |  return new Divd(${recurseOn(subs(0), Simplify)}, ${recurseOn(subs(1), Simplify)});
+                               |  return new Divd(${recurseOn(subs(attributes.left), Simplify)}, ${recurseOn(subs(attributes.right), Simplify)});
                                |}
                                |""".stripMargin).statements()
           case Neg => Java(s"""
-                              |if (${recurseOn(subs(0), Eval)} == 0) {
+                              |if (${recurseOn(subs(attributes.exp), Eval)} == 0) {
                               |  return new Lit(0.0);
                               |} else {
-                              |  return new Neg(${recurseOn(subs(0), Simplify)});
+                              |  return new Neg(${recurseOn(subs(attributes.exp), Simplify)});
                               |}""".stripMargin).statements()
           case _ => super.methodBodyGenerator(exp)(op)
         }
@@ -87,13 +87,13 @@ trait e4 extends AbstractGenerator with TestGenerator {
       case Collect =>
         exp match {
           case Add | Sub | Mult | Divd => Java(
-            s"""|java.util.List<Double> list = ${recurseOn(subs(0), Collect)};
-                |list.addAll(${recurseOn(subs(1), Collect)});
+            s"""|java.util.List<Double> list = ${recurseOn(subs(attributes.left), Collect)};
+                |list.addAll(${recurseOn(subs(attributes.right), Collect)});
                 |return list;
                 |""".stripMargin).statements()
 
-          case Lit => Java(s"return java.util.Collections.singletonList(${subs(0)});").statements()
-          case Neg => Java(s"return ${recurseOn(subs(0), Collect)};").statements()
+          case Lit => Java(s"return java.util.Collections.singletonList(${subs("value")});").statements()
+          case Neg => Java(s"return ${recurseOn(subs(attributes.exp), Collect)};").statements()
           case _ => super.methodBodyGenerator(exp)(op)
         }
 

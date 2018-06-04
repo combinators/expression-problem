@@ -16,14 +16,14 @@ trait e0 extends AbstractGenerator with TestGenerator {
   import domain._
 
   abstract override def methodBodyGenerator(exp:expressions.Exp)(op:Operation): Seq[Statement] = {
-    val subs:Seq[Expression] = subExpressions(exp)
+    val subs:Map[String,Expression] = subExpressions(exp)
 
     // generate the actual body
     op match {
       case Eval => {
         exp match {
-          case Lit => Java(s"return ${subs(0)};").statements
-          case Add => Java(s"""return ${recurseOn(subs(0),op)} + ${recurseOn(subs(1),op)};""").statements()
+          case Lit => Java(s"return ${subs(attributes.value)};").statements
+          case Add => Java(s"return ${recurseOn(subs(attributes.left),op)} + ${recurseOn(subs(attributes.right),op)};").statements()
           case _ => super.methodBodyGenerator(exp)(op)
         }
       }

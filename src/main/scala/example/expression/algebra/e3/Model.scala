@@ -8,7 +8,7 @@ import org.combinators.templating.twirl.Java
 import shared.compilation.CodeGeneratorRegistry
 
 /**
-  * E3 development history
+  * J3 development history
   */
 trait Model {
 

@@ -1,4 +1,4 @@
-package example.expression.scalaVisitor
+package example.expression.algebra
 
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
@@ -11,14 +11,14 @@ import org.combinators.templating.twirl.Java
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait VisitorGenerator extends AbstractGenerator {
+trait AlgebraGenerator extends AbstractGenerator {
   val domain:Domain
   import domain._
 
   /** For straight design solution, directly access attributes by name. */
   override def subExpressions(exp:expressions.Exp) : Map[String,Expression] = {
     exp.attributes.map(att => att.name -> Java(s"e.get${att.name.capitalize}()").expression[Expression]()).toMap
-//    exp.attributes.map(a => Java(s"e.get${a.name.capitalize}()").expression[Expression]())
+//    exp.attributes.map(att => Java(s"e.get${att.name.capitalize}()").expression[Expression]())
   }
 
   /** Directly access local method, one per operation. */
@@ -30,6 +30,7 @@ trait VisitorGenerator extends AbstractGenerator {
   def typeGenerator(tpe:types.Types) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
       case types.Exp => Java("Exp").tpe()
+      case _ => Java ("void").tpe()  // reasonable stop
     }
   }
 
@@ -56,6 +57,14 @@ trait VisitorGenerator extends AbstractGenerator {
              |    public abstract <R> R accept(Visitor<R> v);
              |}
              |""".stripMargin).compilationUnit()
+  }
+
+  /** Each sub-type has an accept method as required by visitor pattern */
+  def visitorMethodGenerator(): MethodDeclaration = {
+    Java (s"""
+             |public <R> R accept(Visitor<R> v) {
+             |   return v.visit(this);
+             |}""".stripMargin).methodDeclarations().head
   }
 
   /** Operations are implemented as methods in the Base and sub-type classes. */
@@ -94,10 +103,7 @@ trait VisitorGenerator extends AbstractGenerator {
     val name = e.toString
 
     // val methods:Seq[MethodDeclaration] = domain.ops.map(methodGenerator(e))
-    val visitor:MethodDeclaration = Java (s"""
-                                             |public <R> R accept(Visitor<R> v) {
-                                             |   return v.visit(this);
-                                             |}""".stripMargin).methodDeclarations().head
+    val visitor:MethodDeclaration = visitorMethodGenerator()
     val atts:Seq[FieldDeclaration] = e.attributes.flatMap(att => Java(s"private ${typeGenerator(att.tpe)} ${att.name};").fieldDeclarations())
 
     // Builds up the attribute fields and set/get methods. Also prepares for one-line constructor.
@@ -137,6 +143,7 @@ trait VisitorGenerator extends AbstractGenerator {
              |  ${visitor.toString()}
              |}""".stripMargin).compilationUnit()
   }
+
 }
 
 

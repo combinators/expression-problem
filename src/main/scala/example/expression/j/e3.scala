@@ -22,18 +22,18 @@ trait e3 extends AbstractGenerator with TestGenerator {
     op match {
       case PrettyP => {
         exp match {
-          case Neg => Java(s"""return "-" + ${recurseOn(subs(0), PrettyP)}; """).statements()
-          case Mult => Java(s"""return "(" + ${recurseOn(subs(0), PrettyP)} + "*" + ${recurseOn(subs(1), PrettyP)}  + ")";""").statements()
-          case Divd => Java(s"""return "(" + ${recurseOn(subs(0), PrettyP)}  + "/" + ${recurseOn(subs(1), PrettyP)}  + ")";""").statements()
+          case Neg => Java(s"""return "-" + ${recurseOn(subs("exp"), PrettyP)}; """).statements()
+          case Mult => Java(s"""return "(" + ${recurseOn(subs("left"), PrettyP)} + "*" + ${recurseOn(subs("right"), PrettyP)}  + ")";""").statements()
+          case Divd => Java(s"""return "(" + ${recurseOn(subs("left"), PrettyP)}  + "/" + ${recurseOn(subs("right"), PrettyP)}  + ")";""").statements()
           case _ => super.methodBodyGenerator(exp)(op)
         }
       }
 
       case Eval => {
         exp match {
-          case Neg => Java(s"""return - ${recurseOn(subs(0), Eval)}; """).statements()
-          case Mult => Java(s"""return ${recurseOn(subs(0), Eval)} * ${recurseOn(subs(1), Eval)};""").statements()
-          case Divd => Java(s"""return ${recurseOn(subs(0), Eval)} / ${recurseOn(subs(1), Eval)};""").statements()
+          case Neg => Java(s"""return - ${recurseOn(subs("exp"), Eval)}; """).statements()
+          case Mult => Java(s"""return ${recurseOn(subs("left"), Eval)} * ${recurseOn(subs("right"), Eval)};""").statements()
+          case Divd => Java(s"""return ${recurseOn(subs("left"), Eval)} / ${recurseOn(subs("right"), Eval)};""").statements()
           case _ => super.methodBodyGenerator(exp)(op)
         }
       }

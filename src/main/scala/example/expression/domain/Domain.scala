@@ -18,8 +18,8 @@ trait Domain {
   /** Each sub-type reflects either a unary Expression or a binary Expression  This is extensible. */
   object expressions {
     abstract class Exp(val name:String, val attributes:Attribute*)
-    abstract class UnaryExp(override val name:String) extends Exp(name, Attribute("exp", types.Exp))
-    abstract class BinaryExp(override val name:String) extends Exp(name, Attribute("left", types.Exp), Attribute("right", types.Exp))
+    abstract class UnaryExp(override val name:String) extends Exp(name, Attribute(attributes.exp, types.Exp))
+    abstract class BinaryExp(override val name:String) extends Exp(name, Attribute(attributes.left, types.Exp), Attribute(attributes.right, types.Exp))
   }
 
   /** For testing, one can construct instances over which test cases can be constructed. */
@@ -38,11 +38,18 @@ trait Domain {
   /** Each model consists of a collection of Exp sub-types and operations. */
   case class Model(name:String, types:Seq[expressions.Exp], ops:Seq[Operation])
 
+  // standard attributes
+  object attributes {
+    val value:String = "value"
+    val exp:String = "exp"
+    val left:String = "left"
+    val right:String = "right"
+  }
 
   // e0:model evolution.
   // -------------------
   case object Double extends types.Types
-  case object Lit extends expressions.Exp("Lit", Attribute("value", Double))
+  case object Lit extends expressions.Exp("Lit", Attribute(attributes.value, Double))
   case object Add extends expressions.BinaryExp("Add")
 
   case object Eval extends Operation("eval", Some(Double))

@@ -87,12 +87,17 @@ trait e4 extends AbstractGenerator with TestGenerator {
       case Collect =>
         exp match {
           case Add | Sub | Mult | Divd => Java(
-            s"""|java.util.List<Double> list = ${recurseOn(subs(attributes.left), Collect)};
+            s"""|${typeGenerator(List(Double))} list = ${recurseOn(subs(attributes.left), Collect)};
                 |list.addAll(${recurseOn(subs(attributes.right), Collect)});
                 |return list;
                 |""".stripMargin).statements()
 
-          case Lit => Java(s"return java.util.Collections.singletonList(${subs("value")});").statements()
+          case Lit => Java(
+              s"""|${typeGenerator(List(Double))} list = new java.util.ArrayList<Double>();
+                  |list.add(${subs(attributes.value)});
+                  |return list;
+                  |""".stripMargin).statements()
+
           case Neg => Java(s"return ${recurseOn(subs(attributes.exp), Collect)};").statements()
           case _ => super.methodBodyGenerator(exp)(op)
         }
@@ -123,6 +128,16 @@ trait e4 extends AbstractGenerator with TestGenerator {
          |   Exp  exp4 = ${recurseOn(Java("exp3").expression(), Simplify)};
          |   Exp  exp5 = ${convert(d1)};
          |   assertEquals (${recurseOn(Java("exp5").expression(), PrettyP)}, ${recurseOn(Java("exp4").expression(), PrettyP)});
+         |
+         |   // Handle collect checks
+         |   ${typeGenerator(List(Double))} list1 = ${recurseOn(Java("exp3").expression(), Collect)};
+         |   ${typeGenerator(List(Double))} result = new java.util.ArrayList<Double>();
+         |   result.add(5.0);
+         |   result.add(7.0);
+         |   result.add(7.0);
+         |   result.add(2.0);
+         |   result.add(3.0);
+         |   assertEquals (list1, result);
          |}""".stripMargin).methodDeclarations()
   }
 }

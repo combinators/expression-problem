@@ -13,7 +13,7 @@ trait AbstractGenerator {
   val domain:Domain
   import domain._
 
-  /** Determines the Java expression for all children of a Exp subtype. */
+  /** Determines the Java expression for all children of a Exp subtype based on its attributes. */
   def subExpressions(exp:expressions.Exp) : Map[String, Expression]
 
   /** Responsible for dispatching sub-expressions. */
@@ -23,16 +23,16 @@ trait AbstractGenerator {
   def typeGenerator(tpe:types.Types) : com.github.javaparser.ast.`type`.Type
 
   /** Operations are implemented as methods in the Base and sub-type classes. */
-  def methodGenerator(exp:expressions.Exp)(op:Operation): MethodDeclaration
+  def methodGenerator(exp:expressions.Exp)(op:Operation) : MethodDeclaration
 
   /** Generates the sequence of statements for any implementation of an expression sub-type. */
-  def methodBodyGenerator(exp:expressions.Exp)(op:Operation): Seq[Statement]
+  def methodBodyGenerator(exp:expressions.Exp)(op:Operation) : Seq[Statement]
 
   /** Generate the full class for the given expression sub-type. */
   def generateExp(domain:Model, e:expressions.Exp) : CompilationUnit
 
   /** Generate the base class. */
-  def generateBase(domain:Model): CompilationUnit
+  def generateBase(domain:Model) : CompilationUnit
 }
 
 

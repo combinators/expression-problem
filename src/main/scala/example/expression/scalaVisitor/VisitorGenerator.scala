@@ -18,7 +18,6 @@ trait VisitorGenerator extends AbstractGenerator {
   /** For straight design solution, directly access attributes by name. */
   override def subExpressions(exp:expressions.Exp) : Map[String,Expression] = {
     exp.attributes.map(att => att.name -> Java(s"e.get${att.name.capitalize}()").expression[Expression]()).toMap
-//    exp.attributes.map(a => Java(s"e.get${a.name.capitalize}()").expression[Expression]())
   }
 
   /** Directly access local method, one per operation. */
@@ -27,14 +26,14 @@ trait VisitorGenerator extends AbstractGenerator {
   }
 
   /** Return designated Java type associated with type, or void if all else fails. */
-  def typeGenerator(tpe:types.Types) : com.github.javaparser.ast.`type`.Type = {
+  override def typeGenerator(tpe:types.Types) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
       case types.Exp => Java("Exp").tpe()
     }
   }
 
   /** Return Visitor class, which contains a visit method for each available sub-type. */
-  def generateBase(model:Model): CompilationUnit = {
+  override def generateBase(model:Model): CompilationUnit = {
     val signatures = model.types
       .map(exp => s"public abstract R visit(${exp.name} exp);").mkString("\n")
 
@@ -52,14 +51,14 @@ trait VisitorGenerator extends AbstractGenerator {
   def generateBaseClass():CompilationUnit = {
     Java(s"""|package expression;
              |
-               |public abstract class Exp {
+             |public abstract class Exp {
              |    public abstract <R> R accept(Visitor<R> v);
              |}
              |""".stripMargin).compilationUnit()
   }
 
   /** Operations are implemented as methods in the Base and sub-type classes. */
-  def methodGenerator(exp:expressions.Exp)(op:Operation): MethodDeclaration = {
+  override def methodGenerator(exp:expressions.Exp)(op:Operation): MethodDeclaration = {
     val retType = op.returnType match {
       case Some(tpe) => typeGenerator(tpe)
       case _ => Java("void").tpe
@@ -70,56 +69,31 @@ trait VisitorGenerator extends AbstractGenerator {
              |}""".stripMargin).methodDeclarations().head
   }
 
-  /** Brings in classes for each operation. These can only be completed with the implementations. */
-  def operationGenerator(model:Model, op:Operation): CompilationUnit = {
-
-    val signatures = model.types.map(exp => methodGenerator(exp)(op)).mkString("\n")
-
-    val tpe = typeGenerator(op.returnType.get)
-    val s = Java(s"""|package expression;
-                     |public class ${op.name.capitalize} extends Visitor<$tpe>{
-                     |  $signatures
-                     |}""".stripMargin)
-
-    s.compilationUnit()
-  }
-
-  def methodBodyGenerator(exp:expressions.Exp)(op:Operation): Seq[Statement] = {
+  /** Provides Exception for unsupported operation, expression pair. */
+  override def methodBodyGenerator(exp:expressions.Exp)(op:Operation): Seq[Statement] = {
     throw new scala.NotImplementedError(s"""Operation "${op.name}" does not handle case for sub-type "${exp.name}" """)
   }
 
-
   /** Generate the full class for the given expression sub-type. */
-  def generateExp(domain:Model, e:expressions.Exp) : CompilationUnit = {
-    val name = e.toString
+  override def generateExp(domain:Model, exp:expressions.Exp) : CompilationUnit = {
+    val name = exp.toString
 
-    // val methods:Seq[MethodDeclaration] = domain.ops.map(methodGenerator(e))
-    val visitor:MethodDeclaration = Java (s"""
-                                             |public <R> R accept(Visitor<R> v) {
-                                             |   return v.visit(this);
-                                             |}""".stripMargin).methodDeclarations().head
-    val atts:Seq[FieldDeclaration] = e.attributes.flatMap(att => Java(s"private ${typeGenerator(att.tpe)} ${att.name};").fieldDeclarations())
+    val visitor:MethodDeclaration = Java (s"""|public <R> R accept(Visitor<R> v) {
+                                              |   return v.visit(this);
+                                              |}""".stripMargin).methodDeclarations().head
+    val atts:Seq[FieldDeclaration] = exp.attributes.flatMap(att => Java(s"private ${typeGenerator(att.tpe)} ${att.name};").fieldDeclarations())
 
     // Builds up the attribute fields and set/get methods. Also prepares for one-line constructor.
-    var params:Seq[String] = Seq.empty
-    var cons:Seq[String] = Seq.empty
-    var methods:Seq[MethodDeclaration] = Seq.empty
-
-    val fields:Seq[FieldDeclaration] = e.attributes.map(att => {
+    //var params:Seq[String] = Seq.empty
+    // var cons:Seq[String] = Seq.empty
+    val methods:Seq[MethodDeclaration] = exp.attributes.flatMap(att => {
       val capAtt = att.name.capitalize
       val tpe = typeGenerator(att.tpe)
-
-      params = params :+ s"$tpe ${att.name}"
-      cons   = cons   :+ s"  this.${att.name} = ${att.name};"
-
-      // make the set/get methods
-      methods = methods ++ Java(s"""
-                                   |public $tpe get$capAtt() { return ${att.name};}
-                                   |public void set$capAtt($tpe val) { this.${att.name} = val; }
-                                """.stripMargin).methodDeclarations()
-
-      Java(s"private $tpe ${att.name};").fieldDeclarations().head
+      Java(s"public $tpe get$capAtt() { return ${att.name};}").methodDeclarations()
     })
+
+    val params:Seq[String] = exp.attributes.map(att => s"${typeGenerator(att.tpe)} ${att.name}")
+    val cons:Seq[Statement] = exp.attributes.flatMap(att => Java(s"  this.${att.name} = ${att.name};").statements())
 
     val constructor = Java(s"""|public $name (${params.mkString(",")}) {
                                |   ${cons.mkString("\n")}
@@ -137,6 +111,21 @@ trait VisitorGenerator extends AbstractGenerator {
              |  ${visitor.toString()}
              |}""".stripMargin).compilationUnit()
   }
+
+  /** Brings in classes for each operation. These can only be completed with the implementations. */
+  def operationGenerator(model:Model, op:Operation): CompilationUnit = {
+
+    val signatures = model.types.map(exp => methodGenerator(exp)(op)).mkString("\n")
+
+    val tpe = typeGenerator(op.returnType.get)
+    val s = Java(s"""|package expression;
+                     |public class ${op.name.capitalize} extends Visitor<$tpe>{
+                     |  $signatures
+                     |}""".stripMargin)
+
+    s.compilationUnit()
+  }
+
 }
 
 

@@ -5,13 +5,13 @@ import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
 import example.expression.domain.Domain
-import example.expression.j.AbstractGenerator
+import example.expression.j.{AbstractGenerator, DataTypeSubclassGenerator}
 import org.combinators.templating.twirl.Java
 
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait VisitorGenerator extends AbstractGenerator {
+trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator {
   val domain:Domain
   import domain._
 

@@ -36,7 +36,97 @@ trait Domain {
     extends instances.UnaryExpInst(b, e1)
 
   /** Each model consists of a collection of Exp sub-types and operations. */
-  case class Model(name:String, types:Seq[expressions.Exp], ops:Seq[Operation])
+  case class Model(name:String, types:Seq[expressions.Exp], ops:Seq[Operation], last:Model) {
+    /* Return history of model as a sequence. */
+    def toSeq : Seq[Model] = {
+      if (isEmpty) {
+        Seq(this)
+      } else {
+        Seq(this) ++ last.toSeq
+      }
+    }
+
+    /** Return models in evolution order from base (skipping the empty model that is always last). */
+    def inOrder:Seq[Model] = toSeq.reverse.tail
+
+    def canEqual(a: Any) : Boolean = a.isInstanceOf[Model]
+
+    override def equals(that: Any) : Boolean =
+      that match {
+        case that: Model => that.canEqual(this) && this.hashCode == that.hashCode
+        case _ => false
+      }
+
+    /** Keep it simple. Hashcode derived solely from name. */
+    override def hashCode : Int = {
+      name.hashCode
+    }
+
+    /** Return flattened model, with same original name. */
+    def flat(): Model = {
+      toSeq.foldLeft(emptyModel()) {
+        case (combined, m) => Model(name, combined.types ++ m.types, combined.ops ++ m.ops, emptyModel())
+      }
+    }
+
+    /** Determine if operation is supported by this model or any of its antecedents. */
+    def supports (op:Operation) : Boolean = {
+      if (isEmpty || !ops.contains(op)) {
+        false
+      } else {
+        last.supports(op)
+      }
+    }
+
+    /** Work backwards to find the most recent Model with an operation. Will return emptyModel if no ops. */
+    def lastModelWithOperation() : Model = {
+      if (isEmpty) {
+        this
+      } else {
+        if (ops.nonEmpty) {
+          this
+        } else {
+          last.lastModelWithOperation()
+        }
+      }
+    }
+
+    /** Work backwards to find the most recent Model with a dataType. Will return emptyModel if no ops. */
+    def lastModelWithDataTypes() : Model = {
+      if (isEmpty) {
+        this
+      } else {
+        if (types.nonEmpty) {
+          this
+        } else {
+          last.lastModelWithDataTypes()
+        }
+      }
+    }
+
+    /** Return the bottommost model in the sequence. */
+    def base(): Model = {
+      if (last.isEmpty) {
+        this
+      } else {
+        last.base()
+      }
+    }
+
+    /** A model is empty when it has no dataTypes or operations. */
+    def isEmpty: Boolean = types.isEmpty && ops.isEmpty
+  }
+
+  def emptyModel():Model = {
+    Model("", Seq.empty, Seq.empty, null)
+  }
+
+  /** Return just difference between adjacent models. */
+  def delta(older:Model, next:Model) : Model = {
+    Model("diff-" + next.name + "-" + older.name,
+      next.types.filterNot(exp => older.types.contains(exp)),
+      next.ops.filterNot(op => older.ops.contains(op)), emptyModel())
+  }
 
   // standard attributes
   object attributes {
@@ -53,31 +143,31 @@ trait Domain {
   case object Add extends expressions.BinaryExp("Add")
 
   case object Eval extends Operation("eval", Some(Double))
-  val e0:Model = Model("e0", Seq(Lit, Add), Seq(Eval))
   class LitInst(d:Double) extends instances.ExpInst(Lit, Some(d))
+  val e0:Model = Model("e0", Seq(Lit, Add), Seq(Eval), emptyModel())
 
   // e1:model evolution
   // -------------------
   case object Sub extends expressions.BinaryExp("Sub")
-  val e1:Model = e0.copy(name="e1", types=e0.types :+ Sub)
+  val e1:Model = Model (name="e1", Seq(Sub), Seq.empty, e0)
 
   // e2:model evolution
   // -------------------
   case object String extends types.Types
   case object PrettyP extends Operation("print", Some(String))
-  val e2:Model = e1.copy(name="e2", ops=e1.ops :+ PrettyP)
+  val e2:Model = Model (name="e2", Seq.empty, Seq(PrettyP), e1)
 
   // e3:model evolution
   // -------------------
   case object Mult extends expressions.BinaryExp("Mult")
   case object Neg extends expressions.UnaryExp("Neg")
   case object Divd extends expressions.BinaryExp("Divd")
-  val e3:Model = e2.copy(name="e3", types=e2.types ++ Seq(Neg, Mult, Divd))
+  val e3:Model = Model(name="e3", Seq(Neg, Mult, Divd), Seq.empty, e2)
 
   // e4:model evolution
   // -------------------
   case object Simplify extends Operation("simplify", Some(types.Exp))
   case class List(generic:types.Types) extends types.Types
   case object Collect extends Operation("collect", Some(List(Double)))
-  val e4:Model = e3.copy(name="e4", ops=e3.ops ++ Seq(Simplify, Collect))
+  val e4:Model = Model(name="e4",Seq.empty, Seq(Simplify, Collect), e3)
 }

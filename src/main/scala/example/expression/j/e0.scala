@@ -32,20 +32,16 @@ trait e0 extends AbstractGenerator with TestGenerator {
     }
   }
 
-  abstract override def testGenerator(): Seq[MethodDeclaration] = {
+  abstract override def testGenerator(model:Model): Seq[MethodDeclaration] = {
 
-    // (5/7) / (7-(2*3) --> just (5/7)
     val a1 = new BinaryInst(Add, new LitInst(1.0), new LitInst(2.0))
-    val lit1 = new LitInst(3.0)
+    val lit1 = new LitInst(5.0)
 
-    super.testGenerator() ++ Java(
+    super.testGenerator(model.last) ++ Java(
       s"""
          |public void test() {
-         |   Exp exp1 = ${convert(a1)};
-         |   assertEquals(3.0, ${recurseOn(Java("exp1").expression(), Eval)});
-         |
-         |   Exp exp2 = ${convert(lit1)};
-         |   assertEquals(3.0, ${recurseOn(Java("exp2").expression(), Eval)});
+         |   assertEquals(3.0, ${recurseOn(convert(a1, model), Eval)});
+         |   assertEquals(5.0, ${recurseOn(convert(lit1, model), Eval)});
          |}""".stripMargin).methodDeclarations()
   }
 

@@ -52,7 +52,8 @@ GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP
 ->    /                              example.expression.covariant.E3_Variation
 ->    /                              example.expression.covariant.E4_Variation
 # Algebra variations
-->    /                              example.expression.algebra.E0_Variation
-->    /                              example.expression.algebra.E1_Variation
-->    /                              example.expression.algebra.E2_Variation
-->    /                              example.expression.algebra.E3_Variation
+->    /                              example.expression.algebra.xE0_Variation
+->    /                              example.expression.algebra.xE1_Variation
+->    /                              example.expression.algebra.xE2_Variation
+->    /                              example.expression.algebra.xE3_Variation
+->    /                              example.expression.algebra.xE4_Variation

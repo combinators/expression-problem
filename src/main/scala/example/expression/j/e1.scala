@@ -28,12 +28,13 @@ trait e1 extends AbstractGenerator with TestGenerator {
     }
   }
 
-  abstract override def testGenerator(): Seq[MethodDeclaration] = {
-    super.testGenerator() ++ Java(
+  abstract override def testGenerator(model:Model): Seq[MethodDeclaration] = {
+    val s1 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
+
+    super.testGenerator(model.last) ++ Java(
       s"""
          |public void test() {
-         |   Exp  exp1 = new Sub(new Lit(1.0), new Lit(2.0));
-         |   assertEquals(-1.0, ${recurseOn(Java("exp1").expression(), Eval)});
+         |   assertEquals(-1.0, ${recurseOn(convert(s1, model), Eval)});
          |}""".stripMargin).methodDeclarations()
   }
 }

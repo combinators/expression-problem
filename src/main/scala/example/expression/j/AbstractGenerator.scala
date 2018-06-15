@@ -1,6 +1,5 @@
 package example.expression.j
 
-import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body. MethodDeclaration
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
@@ -28,11 +27,9 @@ trait AbstractGenerator {
   /** Generates the sequence of statements for any implementation of an expression sub-type. */
   def methodBodyGenerator(exp:expressions.Exp)(op:Operation) : Seq[Statement]
 
-  /** Generate the full class for the given expression sub-type. */
-  def generateExp(domain:Model, e:expressions.Exp) : CompilationUnit
+  /** Determine which models are compatible for current generator. By default, all are. */
+  def compatible(m:Model):Model = m
 
-  /** Generate the base class. */
-  def generateBase(domain:Model) : CompilationUnit
 }
 
 

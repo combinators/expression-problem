@@ -15,10 +15,11 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   val gen:StraightGenerator with TestGenerator
   val model:gen.domain.Model
 
+  lazy val flat:gen.domain.Model = model.flat()
   override lazy val generatedCode:Seq[CompilationUnit] =
-    model.types.map(tpe =>  gen.generateExp(model, tpe)) :+      // one class for each sub-type
-      gen.generateBase(model) :+                                 // base class $BASE
-      gen.generateSuite(None)                                    // generate test cases as well
+    flat.types.map (tpe => gen.generateExp(flat, tpe)) :+     // one class for each sub-type
+      gen.generateBase(flat) :+                               // base class $BASE
+      gen.generateSuite(None, model)                          // generate test cases as well
 
   // request by "git clone -b variation_0 http://localhost:9000/straight/eN/eN.git" where N is a version #
   override val routingPrefix: Option[String] = Some("straight")

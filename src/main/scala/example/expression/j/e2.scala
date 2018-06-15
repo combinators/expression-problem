@@ -39,15 +39,16 @@ trait e2 extends AbstractGenerator with TestGenerator {
     }
   }
 
-  abstract override def testGenerator(): Seq[MethodDeclaration] = {
-    super.testGenerator() ++ Java(
+  abstract override def testGenerator(model:Model): Seq[MethodDeclaration] = {
+    val s1 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
+    val s2 = new BinaryInst(Add, new BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0)),
+                                 new BinaryInst(Add, new LitInst(5.0), new LitInst(6.0)))
+
+      super.testGenerator(model.last) ++ Java(
       s"""
          |public void test() {
-         |   Exp  exp1 = new Sub(new Lit(1.0), new Lit(2.0));
-         |   assertEquals("(1.0-2.0)", ${recurseOn(Java("exp1").expression(), PrettyP)});
-         |
-         |   Exp  exp2 = new Add(new Sub(new Lit(1.0), new Lit(2.0)), new Add(new Lit(5.0), new Lit(6.0)));
-         |   assertEquals("((1.0-2.0)+(5.0+6.0))", ${recurseOn(Java("exp2").expression(), PrettyP)});
+         |   assertEquals("(1.0-2.0)", ${recurseOn(convert(s1, model), PrettyP)});
+         |   assertEquals("((1.0-2.0)+(5.0+6.0))", ${recurseOn(convert(s2, model), PrettyP)});
          |}""".stripMargin).methodDeclarations()
   }
 }

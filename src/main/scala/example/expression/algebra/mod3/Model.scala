@@ -1,4 +1,4 @@
-package example.expression.algebra.e3
+package example.expression.algebra.mod3
 
 import com.github.javaparser.ast.stmt.Statement
 import expression.data.Eval

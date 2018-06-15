@@ -106,38 +106,40 @@ trait e4 extends AbstractGenerator with TestGenerator {
     }
   }
 
-  abstract override def testGenerator(): Seq[MethodDeclaration] = {
+  abstract override def testGenerator(model:Model): Seq[MethodDeclaration] = {
 
     // (5/7) / (7-(2*3) --> just (5/7)
+    val mult2 = new BinaryInst(Mult, new BinaryInst (Divd, new LitInst(5.0), new LitInst(2.0)), new LitInst(4.0))
     val d1 = new BinaryInst(Divd, new LitInst(5.0), new LitInst(7.0))
     val m1 = new BinaryInst(Mult, new LitInst(2.0), new LitInst(3.0))
     val s1 = new BinaryInst(Sub, new LitInst(7.0), m1)
     val d2 = new BinaryInst(Divd, d1, s1)
 
-    super.testGenerator() ++ Java(
-      s"""
-         |public void test() {
-         |   Exp exp1 = new Neg(new Lit(1.0));
-         |   assertEquals("-1.0", ${recurseOn(Java("exp1").expression(), PrettyP)});
-         |   assertEquals(-1.0, ${recurseOn(Java("exp1").expression(), Eval)});
-         |
-         |   Exp  exp2 = new Mult(new Divd(new Lit(5.0), new Lit(2.0)), new Lit(4.0));
-         |   assertEquals("((5.0/2.0)*4.0)", ${recurseOn(Java("exp2").expression(), PrettyP)});
-         |
-         |   Exp  exp3 = ${convert(d2)};
-         |   Exp  exp4 = ${recurseOn(Java("exp3").expression(), Simplify)};
-         |   Exp  exp5 = ${convert(d1)};
-         |   assertEquals (${recurseOn(Java("exp5").expression(), PrettyP)}, ${recurseOn(Java("exp4").expression(), PrettyP)});
-         |
-         |   // Handle collect checks
-         |   ${typeGenerator(List(Double))} list1 = ${recurseOn(Java("exp3").expression(), Collect)};
-         |   ${typeGenerator(List(Double))} result = new java.util.ArrayList<Double>();
-         |   result.add(5.0);
-         |   result.add(7.0);
-         |   result.add(7.0);
-         |   result.add(2.0);
-         |   result.add(3.0);
-         |   assertEquals (list1, result);
-         |}""".stripMargin).methodDeclarations()
+    // could split up collect as well
+    super.testGenerator(model.last) ++ {
+      val simplifyTests = if (model.supports(Simplify)) {
+        s"""
+           |assertEquals("((5.0/2.0)*4.0)", ${recurseOn(convert(mult2, model), PrettyP)});
+           |assertEquals (${recurseOn(convert(d1, model), PrettyP)}, ${recurseOn(recurseOn(convert(d2, model), Simplify), PrettyP)});
+           |
+         """.stripMargin
+      } else { "" }
+      Java(
+        s"""
+           |public void test() {
+           |
+           |   $simplifyTests
+
+           |   // Handle collect checks
+           |   ${typeGenerator(List(Double))} list1 = ${recurseOn(convert(d2, model), Collect)};
+           |   ${typeGenerator(List(Double))} result = new java.util.ArrayList<Double>();
+           |   result.add(5.0);
+           |   result.add(7.0);
+           |   result.add(7.0);
+           |   result.add(2.0);
+           |   result.add(3.0);
+           |   assertEquals (list1, result);
+           |}""".stripMargin).methodDeclarations()
+    }
   }
 }

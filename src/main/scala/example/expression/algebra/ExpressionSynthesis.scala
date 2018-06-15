@@ -18,6 +18,7 @@ trait ExpressionSynthesis extends SemanticTypes with Registry {
 
   var codeGenerator:CodeGeneratorRegistry[Seq[Statement]]
 
+  // CONVERTED
   class BaseExpClass(dm: DomainModel, vers: Type) {
     // have a domain object
 

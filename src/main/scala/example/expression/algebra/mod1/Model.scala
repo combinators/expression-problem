@@ -1,4 +1,4 @@
-package example.expression.algebra.e1
+package example.expression.algebra.mod1
 
 import com.github.javaparser.ast.stmt.Statement
 import expression.{Exp, Operation}

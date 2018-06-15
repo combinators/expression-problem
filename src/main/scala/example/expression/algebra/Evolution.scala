@@ -21,7 +21,7 @@ class E0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   lazy val tests_e0 = tests.e0.TestCases.add(new AllTests())
   lazy val history_e0 = evolution.J0.extend(new History)
 
-  lazy val rep_e0 = new ExpressionDomain(history_e0, tests_e0) with ExpressionSynthesis with Structure with Registry with e0.Model
+  lazy val rep_e0 = new ExpressionDomain(history_e0, tests_e0) with ExpressionSynthesis with Structure with Registry with mod0.Model
   lazy val Gamma_e0 = rep_e0.init(ReflectedRepository(rep_e0, classLoader = this.getClass.getClassLoader), history_e0)
 
   /** This needs to be defined, and it is set from Gamma. */
@@ -44,7 +44,7 @@ class E1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   lazy val history_e1 = evolution.J1.extend(history_e0)
 
   //override lazy val targets:Seq[Constructor] = Synthesizer.covariantTargets(history_e1, controllerAddress)
-  lazy val rep_e1 = new ExpressionDomain(history_e1, tests_e1) with ExpressionSynthesis with Structure with Registry with e0.Model with e1.Model
+  lazy val rep_e1 = new ExpressionDomain(history_e1, tests_e1) with ExpressionSynthesis with Structure with Registry with mod0.Model with mod1.Model
   lazy val Gamma_e1 = rep_e1.init(ReflectedRepository(rep_e1, classLoader = this.getClass.getClassLoader), history_e1)
 
   /** This needs to be defined, and it is set from Gamma. */
@@ -61,7 +61,7 @@ class E2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   lazy val tests_e2 = tests.e2.TestCases.add(tests_e1)
   lazy val history_e2 = evolution.J2.extend(history_e1)
 
-  lazy val rep_e2 = new ExpressionDomain(history_e2, tests_e2) with ExpressionSynthesis with Structure with Registry with e0.Model with e1.Model with e2.Model
+  lazy val rep_e2 = new ExpressionDomain(history_e2, tests_e2) with ExpressionSynthesis with Structure with Registry with mod0.Model with mod1.Model with mod2.Model
   lazy val Gamma_e2 = rep_e2.init(ReflectedRepository(rep_e2, classLoader = this.getClass.getClassLoader), history_e2)
   override lazy val combinatorComponents = Gamma_e2.combinatorComponents
   override lazy val results:Results =
@@ -76,7 +76,7 @@ class E3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   lazy val tests_e3 = tests.e3.TestCases.add(tests_e2)
   lazy val history_e3 = evolution.J3.extend(history_e2)
 
-  lazy val rep_e3 = new ExpressionDomain(history_e3, tests_e3) with ExpressionSynthesis with Structure with Registry with e0.Model with e1.Model with e2.Model with e3.Model
+  lazy val rep_e3 = new ExpressionDomain(history_e3, tests_e3) with ExpressionSynthesis with Structure with Registry with mod0.Model with mod1.Model with mod2.Model with mod3.Model
   lazy val Gamma_e3 = rep_e3.init(ReflectedRepository(rep_e3, classLoader = this.getClass.getClassLoader), history_e3)
   override lazy val combinatorComponents = Gamma_e3.combinatorComponents
   override lazy val results:Results =

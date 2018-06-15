@@ -57,7 +57,7 @@ class ExpressionInvoke @Inject()(webJars: WebJarsUtil, applicationLifecycle: App
   val allTests : UnitSuite = new UnitSuite()
 
   // this is a hack, to pass in evol_2 since we won't be using it in futurte.
-  lazy val repository = new ExpressionDomain(history, allTests) with ExpressionSynthesis with Structure with Registry with e0.Model {}
+  lazy val repository = new ExpressionDomain(history, allTests) with ExpressionSynthesis with Structure with Registry with mod0.Model {}
   import repository._
 
   lazy val Gamma = {

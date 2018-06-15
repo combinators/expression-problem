@@ -5,19 +5,19 @@ import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
 import example.expression.domain.Domain
-import example.expression.j.AbstractGenerator
+import example.expression.j.{AbstractGenerator, DataTypeSubclassGenerator}
 import org.combinators.templating.twirl.Java
 
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait StraightGenerator extends AbstractGenerator {
+trait StraightGenerator extends AbstractGenerator with DataTypeSubclassGenerator {
   val domain:Domain
   import domain._
 
   /** For straight design solution, directly access attributes by name. */
   override def subExpressions(exp:expressions.Exp) : Map[String,Expression] = {
-//    exp.attributes.map(att => Java(s"${att.name}").expression[Expression]())
+    //    exp.attributes.map(att => Java(s"${att.name}").expression[Expression]())
     exp.attributes.map(att => att.name -> Java(s"${att.name}").expression[Expression]()).toMap
   }
 
@@ -75,24 +75,24 @@ trait StraightGenerator extends AbstractGenerator {
             |}""".stripMargin).compilationUnit()
   }
 
-  /** Generate the base class. */
-  def generateBase(domain:Model): CompilationUnit = {
+  /** Generate the base class, with all operations from flattened history. */
+  def generateBase(model:Model): CompilationUnit = {
+    val signatures: Seq[MethodDeclaration] = model.ops.flatMap(op => {
+      // Allow for operations to be void; if not an issue in future, then filter out here...
+        val retType = op.returnType match {
+          case Some(tpe) => typeGenerator(tpe)
+          case _ => Java("void").tpe
+        }
 
-    // Allow for operations to be void; if not an issue in future, then filter out here...
-    val signatures:Seq[MethodDeclaration] = domain.ops.flatMap(op => {
-      val retType = op.returnType match {
-        case Some(tpe) => typeGenerator(tpe)
-        case _ => Java("void").tpe
-      }
-
-      Java(s"public abstract $retType ${op.name}();").methodDeclarations()
-    })
+        Java(s"public abstract $retType ${op.name}();").methodDeclarations()
+      })
 
     // same every time
     Java(s"""|public abstract class Exp {
              |  ${signatures.mkString("\n")}
              |}""".stripMargin).compilationUnit()
   }
+
 }
 
 

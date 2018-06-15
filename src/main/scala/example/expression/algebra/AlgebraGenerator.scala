@@ -1,7 +1,8 @@
 package example.expression.algebra
 
 import com.github.javaparser.ast.CompilationUnit
-import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
+import com.github.javaparser.ast.`type`.Type
+import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
 import example.expression.domain.Domain
@@ -15,60 +16,44 @@ trait AlgebraGenerator extends AbstractGenerator {
   val domain:Domain
   import domain._
 
+  /**
+    * Must eliminate any operation that returns E as value, since Algebra doesn't instantiate the intermediate structures
+    */
+  override def compatible(model:Model):Model = {
+    if (model.isEmpty) { return model }
+
+    // rebuild by filtering out all operations that return Exp.
+    Model (model.name, model.types, model.ops.filterNot(op => op.returnType.isDefined && op.returnType.get.equals(types.Exp)), compatible(model.last))
+  }
+
   /** For straight design solution, directly access attributes by name. */
   override def subExpressions(exp:expressions.Exp) : Map[String,Expression] = {
-    exp.attributes.map(att => att.name -> Java(s"e.get${att.name.capitalize}()").expression[Expression]()).toMap
-//    exp.attributes.map(att => Java(s"e.get${att.name.capitalize}()").expression[Expression]())
+    exp.attributes.map(att => att.name -> Java(s"${att.name}").expression[Expression]()).toMap
   }
 
   /** Directly access local method, one per operation. */
   override def recurseOn(expr:Expression, op:Operation) : Expression = {
-    Java(s"""$expr.accept(new ${op.name.capitalize}())""").expression()
+    Java(s"""$expr.${op.name}()""").expression()
   }
 
   /** Return designated Java type associated with type, or void if all else fails. */
-  def typeGenerator(tpe:types.Types) : com.github.javaparser.ast.`type`.Type = {
+  override def typeGenerator(tpe:types.Types) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
-      case types.Exp => Java("Exp").tpe()
+      case types.Exp => Java("E").tpe()
       case _ => Java ("void").tpe()  // reasonable stop
     }
   }
 
-  /** Return Visitor class, which contains a visit method for each available sub-type. */
-  def generateBase(model:Model): CompilationUnit = {
-    val signatures = model.types
-      .map(exp => s"public abstract R visit(${exp.name} exp);").mkString("\n")
-
-    Java (s"""|package expression;
-              |/*
-              | * A concrete visitor describes a concrete operation on expressions. There is one visit
-              | * method per type in the class hierarchy.
-              | */
-              |public abstract class Visitor<R> {
-              |
-                |$signatures
-              |}""".stripMargin).compilationUnit()
-  }
-
-  def generateBaseClass():CompilationUnit = {
-    Java(s"""|package expression;
-             |
-               |public abstract class Exp {
-             |    public abstract <R> R accept(Visitor<R> v);
-             |}
-             |""".stripMargin).compilationUnit()
-  }
-
-  /** Each sub-type has an accept method as required by visitor pattern */
-  def visitorMethodGenerator(): MethodDeclaration = {
-    Java (s"""
-             |public <R> R accept(Visitor<R> v) {
-             |   return v.visit(this);
-             |}""".stripMargin).methodDeclarations().head
+  /** Return designated Exp type with replacement. */
+  def recursiveTypeGenerator(tpe:types.Types, replacement:Type) : com.github.javaparser.ast.`type`.Type = {
+    tpe match {
+      case types.Exp => replacement
+      case _ => typeGenerator(tpe)
+    }
   }
 
   /** Operations are implemented as methods in the Base and sub-type classes. */
-  def methodGenerator(exp:expressions.Exp)(op:Operation): MethodDeclaration = {
+  override def methodGenerator(exp:expressions.Exp)(op:Operation): MethodDeclaration = {
     val retType = op.returnType match {
       case Some(tpe) => typeGenerator(tpe)
       case _ => Java("void").tpe
@@ -79,76 +64,184 @@ trait AlgebraGenerator extends AbstractGenerator {
              |}""".stripMargin).methodDeclarations().head
   }
 
-  /** Brings in classes for each operation. These can only be completed with the implementations. */
+  /**
+    * Every operation gets a class whose implementation contains method implementations for
+    * all known operations. This class extends the most recently defined class for the
+    * same operation (should one exist).
+    */
   def operationGenerator(model:Model, op:Operation): CompilationUnit = {
 
-    val signatures = model.types.map(exp => methodGenerator(exp)(op)).mkString("\n")
+    // this gets "eval" and we want the name of the Interface.
+    //val name = op.name
+    val name = op.name
+    val returnType = typeGenerator(op.returnType.get)
+    val opType = Java(op.name.capitalize).tpe()
+    var targetModel:Model = null
+    var fullName:String = null
 
-    val tpe = typeGenerator(op.returnType.get)
-    val s = Java(s"""|package expression;
-                     |public class ${op.name.capitalize} extends Visitor<$tpe>{
-                     |  $signatures
-                     |}""".stripMargin)
+    val previous:String = if (model.ops.contains(op) || model.lastModelWithOperation().isEmpty) {
+      targetModel = model.flat()
+      if (model.types.isEmpty) {
+        fullName = model.lastModelWithDataTypes().types.sortWith(_.name < _.name).map(exp => exp.name.capitalize).mkString("")
+      } else {
+        fullName = model.types.sortWith(_.name < _.name).map(exp => exp.name.capitalize).mkString("")
+      }
 
-    s.compilationUnit()
+      ""
+    } else {
+      if (model.types.isEmpty) {
+        targetModel = model.lastModelWithDataTypes()
+      } else {
+        targetModel = model
+      }
+      fullName = targetModel.types.sortWith(_.name < _.name).map(exp => exp.name.capitalize).mkString("")
+
+      // this is different! It may be that there are NO types for the lastOperationDefined, in which case we must go
+      // back further to find one where there were types defined, and then work with that one
+      val bestModel:Model = if (model.lastModelWithOperation().types.nonEmpty) {
+        model.lastModelWithOperation()
+      } else {
+        model.lastModelWithOperation().lastModelWithDataTypes()
+      }
+
+      s"extends ${name.capitalize}" +
+        bestModel.types.sortWith(_.name < _.name)
+          .map(op => op.name.capitalize).mkString("") + "ExpAlg"
+    }
+
+    val methods = targetModel.types.map(exp => {  // sub is either 'lit' or 'add'
+
+      val subName = exp.name.toLowerCase   // to get proper etiquette for method names
+      val code:Seq[Statement] = methodBodyGenerator(exp)(op)
+      val signatures = code.mkString("\n")
+
+      val params:Seq[String] = exp.attributes.map(att => s"final ${recursiveTypeGenerator(att.tpe, opType)} ${att.name}")
+      // creates method body
+      val paramList = params.mkString(",")
+      s"""
+         |public ${name.capitalize} $subName($paramList) {
+         |        return new ${name.capitalize}() {
+         |            public $returnType $name() {
+         |                $signatures
+         |            }
+         |        };
+         |    }
+           """.stripMargin
+    }
+    ).mkString("\n")
+
+    val str:String = s"""package algebra;
+                        |
+                        |public class ${name.capitalize}${fullName}ExpAlg $previous implements ${fullName}ExpAlg<${name.capitalize}> {
+                        |     $methods
+                        |}
+                        |""".stripMargin
+    Java(str).compilationUnit()
   }
 
   def methodBodyGenerator(exp:expressions.Exp)(op:Operation): Seq[Statement] = {
     throw new scala.NotImplementedError(s"""Operation "${op.name}" does not handle case for sub-type "${exp.name}" """)
   }
 
+  /** Generate interface for an operation. */
+  def baseInterface(op:Operation) : CompilationUnit = {
+    var signatures:Seq[String] = Seq.empty
 
-  /** Generate the full class for the given expression sub-type. */
-  def generateExp(domain:Model, e:expressions.Exp) : CompilationUnit = {
-    val name = e.toString
+    val name = op.name.toLowerCase
+    val tpe = typeGenerator(op.returnType.get)
 
-    // val methods:Seq[MethodDeclaration] = domain.ops.map(methodGenerator(e))
-    val visitor:MethodDeclaration = visitorMethodGenerator()
-    val atts:Seq[FieldDeclaration] = e.attributes.flatMap(att => Java(s"private ${typeGenerator(att.tpe)} ${att.name};").fieldDeclarations())
+    signatures = signatures :+ s"  $tpe $name();"
 
-    // Builds up the attribute fields and set/get methods. Also prepares for one-line constructor.
-    var params:Seq[String] = Seq.empty
-    var cons:Seq[String] = Seq.empty
-    var methods:Seq[MethodDeclaration] = Seq.empty
-
-    val fields:Seq[FieldDeclaration] = e.attributes.map(att => {
-      val capAtt = att.name.capitalize
-      val tpe = typeGenerator(att.tpe)
-
-      params = params :+ s"$tpe ${att.name}"
-      cons   = cons   :+ s"  this.${att.name} = ${att.name};"
-
-      // make the set/get methods
-      methods = methods ++ Java(s"""
-                                   |public $tpe get$capAtt() { return ${att.name};}
-                                   |public void set$capAtt($tpe val) { this.${att.name} = val; }
-                                """.stripMargin).methodDeclarations()
-
-      Java(s"private $tpe ${att.name};").fieldDeclarations().head
-    })
-
-    val constructor = Java(s"""|public $name (${params.mkString(",")}) {
-                               |   ${cons.mkString("\n")}
-                               |}""".stripMargin).constructors().head
-
-    // visitor methods for accepting operations
-    // make accept method call and add to class
-    Java(s"""|package expression;
-             |public class $name extends Exp {
-             |
-             |  ${constructor.toString}
-             |
-             |  ${atts.mkString("\n")}
-             |  ${methods.mkString("\n")}
-             |  ${visitor.toString()}
-             |}""".stripMargin).compilationUnit()
+    //implementations
+    val str = s"""|package algebra;
+                  |interface ${op.name.capitalize} {
+                  |  ${signatures.mkString("\n")}
+                  |}""".stripMargin
+    Java(str).compilationUnit()
   }
 
+  /**
+    * As ExpAlg is refined, must add new datatypes and be sure to extend most recently defined
+    * Interface for the algebra.
+    *
+    * Produces ever-expanding ladder of interface definitions for the *ExpAlg
+    *
+    * Only call when model.types is non-empty
+    */
+  def extendedInterface(model:Model) : CompilationUnit = {
+
+    // must be based on the new dataTypes being defined in model (if none, then why here? return)
+    val types:Seq[String] = model.types.sortWith(_.name < _.name).map(exp => exp.name)
+    val newName = types.mkString("")
+
+    val signatures = model.types
+      .map(exp => { // sub is either 'lit' or 'add' (or 'sub')
+        val subName = exp.name.toLowerCase
+
+        val params: Seq[String] = exp.attributes
+          .map(att => s"final ${recursiveTypeGenerator(att.tpe, typeGenerator(att.tpe))} ${att.name}")
+
+        // creates method signature from parameters
+        val paramList = params.mkString(",")
+
+        s"""E $subName($paramList);"""
+
+      }).mkString("\n")
+
+    // when extending the first one, stop at just ExpAlg
+    val previous: String = if (model.last.lastModelWithDataTypes().isEmpty) {
+      ""
+    } else {
+      "extends " + model.last.lastModelWithDataTypes().types
+        .sortWith(_.name < _.name).map(exp => exp.name.capitalize).mkString("")
+        .concat("ExpAlg<E>")
+    }
+
+    Java(s"""package algebra;
+                             |
+                             |interface ${newName}ExpAlg<E> $previous {
+                             | $signatures
+                             |}
+                             |""".stripMargin).compilationUnit()
+  }
+
+
+  /** Starting from oldest (base) model, work forward in history. */
+  def processModel(models:Seq[Model]): Seq[CompilationUnit] = {
+
+    // each one is handled individually, then by going backwards, we can find out where the base is
+    // ans work outwards from there. Note we should likely foldLeft to create a sequence, which is the
+    // reverse of the history.
+    var comps: Seq[CompilationUnit] = Seq.empty
+    var operations:Seq[Operation] = Seq.empty
+
+    models.foreach(model => {
+
+      // one of these two conditions MUST be true. Either define new interface for each operation
+      // or extend existing *ExpAlg interface
+      if (model.ops.nonEmpty) {
+        model.ops.foreach(op => {
+          comps = comps :+ baseInterface (op)
+          comps = comps :+ operationGenerator(model, op)
+        })
+      }
+
+      if (model.types.nonEmpty) {
+        comps = comps :+ extendedInterface(model)
+      }
+
+      // maintain increasing collection of operations. As new operations are defined, one must
+      // create methods for each existing datatype from the past
+      operations = operations ++ model.ops
+
+      // If no new operation defined, but new data types, must deal with extensions.
+      if (model.types.nonEmpty && model.ops.isEmpty) {
+        operations.foreach(op => {
+          comps = comps :+ operationGenerator(model, op)
+        })
+      }
+    })
+
+    comps
+  }
 }
-
-
-
-
-
-
-

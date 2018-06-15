@@ -15,12 +15,13 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   val gen:VisitorGenerator with TestGenerator
   val model:gen.domain.Model
 
+  lazy val flat:gen.domain.Model = model.flat()
   override lazy val generatedCode:Seq[CompilationUnit] =
-    model.types.map(tpe =>  gen.generateExp(model, tpe)) ++      // one class for each sub-type
-    model.ops.map(op => gen.operationGenerator(model, op)) :+    // one class for each op
+    flat.types.map(tpe =>  gen.generateExp(flat, tpe)) ++      // one class for each sub-type
+    flat.ops.map(op => gen.operationGenerator(flat, op)) :+    // one class for each op
       gen.generateBaseClass() :+                                 // abstract base class
-      gen.generateBase(model) :+                                 // visitor gets its own class (overriding concept)
-      gen.generateSuite(Some("expression"))                      // generate test cases as well
+      gen.generateBase(flat) :+                                  // visitor gets its own class (overriding concept)
+      gen.generateSuite(Some("expression"), model)               // generate test cases as well
 
   // request by "git clone -b variation_0 http://localhost:9000/straight/eN/eN.git" where N is a version #
   override val routingPrefix: Option[String] = Some("scalaVisitor")

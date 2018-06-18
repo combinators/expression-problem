@@ -1,28 +1,29 @@
-package example.expression.Straight
+package example.expression.trivially
 
 import com.github.javaparser.ast.CompilationUnit
 import example.expression.domain.Domain
 import example.expression.j._
 import javax.inject.Inject
+import org.combinators.templating.persistable.JavaPersistable._
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
 import shared.compilation.CodeGenerationController
-import org.combinators.templating.persistable.JavaPersistable._
 
 abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends CodeGenerationController[CompilationUnit](web, app)
 {
-  val gen:StraightGenerator with TestGenerator
+  val gen:TriviallyGenerator with TestGenerator
   val model:gen.domain.Model
 
   lazy val flat:gen.domain.Model = model.flat()
   override lazy val generatedCode:Seq[CompilationUnit] =
-    flat.types.map (tpe => gen.generateExp(flat, tpe)) :+     // one class for each sub-type
-      gen.generateBase(flat) :+                               // base class $BASE
-      gen.generateSuite(None, model)                          // generate test cases as well
+    flat.types.map(tpe => gen.generateExp(model, tpe)) ++     // one class for each sub-type
+      gen.generateInterfaces(model) :+                        // interfaces for all subtypes
+      gen.generateBase(model) :+                               // base  interface
+      gen.generateSuite(Some("expression"), model)                          // generate test cases as well
 
   // request by "git clone -b variation_0 http://localhost:9000/straight/eN/eN.git" where N is a version #
-  override val routingPrefix: Option[String] = Some("straight")
+  override val routingPrefix: Option[String] = Some("trivially")
   override lazy val controllerAddress:String = model.name
 }
 
@@ -31,7 +32,7 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 class E0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
-  override val gen = new StraightGenerator with TestGenerator with e0 {
+  override val gen = new TriviallyGenerator with TestGenerator with e0 {
     override val domain = new Domain{ }
   }
   override val model = gen.domain.e0
@@ -40,7 +41,7 @@ class E0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 class E1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
-  override val gen = new StraightGenerator with TestGenerator with e0 with e1 {
+  override val gen = new TriviallyGenerator with TestGenerator with e0 with e1 {
     override val domain = new Domain{ }
   }
   override val model = gen.domain.e1
@@ -49,7 +50,7 @@ class E1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 class E2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
-  override val gen = new StraightGenerator with TestGenerator with e0 with e1 with e2 {
+  override val gen = new TriviallyGenerator with TestGenerator with e0 with e1 with e2 {
     override val domain = new Domain{ }
   }
   override val model = gen.domain.e2
@@ -58,7 +59,7 @@ class E2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 class E3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
-  override val gen = new StraightGenerator with TestGenerator with e0 with e1 with e2 with e3 {
+  override val gen = new TriviallyGenerator with TestGenerator with e0 with e1 with e2 with e3 {
     override val domain = new Domain{ }
   }
   override val model = gen.domain.e3
@@ -67,7 +68,7 @@ class E3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 class E4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
-  override val gen = new StraightGenerator with TestGenerator with e0 with e1 with e2 with e3 with e4 {
+  override val gen = new TriviallyGenerator with TestGenerator with e0 with e1 with e2 with e3 with e4 {
     override val domain = new Domain{ }
   }
   override val model = gen.domain.e4
@@ -76,7 +77,7 @@ class E4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 /*class E5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
-  override val gen = new StraightGenerator with TestGenerator with e0 with e1 with e2 with e3 with e4 with e5 {
+  override val gen = new TriviallyGenerator with TestGenerator with e0 with e1 with e2 with e3 with e4 with e5 {
     override val domain = new Domain{ }
   }
   override val model = gen.domain.e5

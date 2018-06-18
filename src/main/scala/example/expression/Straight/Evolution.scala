@@ -73,11 +73,11 @@ class E4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   override val model = gen.domain.e4
 }
 
-/*class E5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+class E5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new StraightGenerator with TestGenerator with e0 with e1 with e2 with e3 with e4 with e5 {
     override val domain = new Domain{ }
   }
   override val model = gen.domain.e5
-}*/
+}

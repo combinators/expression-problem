@@ -23,7 +23,7 @@ GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP
 ->    /                              example.expression.Straight.E2_Variation
 ->    /                              example.expression.Straight.E3_Variation
 ->    /                              example.expression.Straight.E4_Variation
-#->    /                              example.expression.Straight.E5_Variation
+->    /                              example.expression.Straight.E5_Variation
 #Trivially variations
 ->    /                              example.expression.trivially.E0_Variation
 ->    /                              example.expression.trivially.E1_Variation

@@ -23,6 +23,7 @@ GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP
 ->    /                              example.expression.Straight.E2_Variation
 ->    /                              example.expression.Straight.E3_Variation
 ->    /                              example.expression.Straight.E4_Variation
+->    /                              example.expression.Straight.E5_Variation
 # Scala visitor variations
 ->    /                              example.expression.scalaVisitor.E0_Variation
 ->    /                              example.expression.scalaVisitor.E1_Variation

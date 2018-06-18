@@ -116,7 +116,7 @@ trait Domain {
     Model("", Seq.empty, Seq.empty, null)
   }
 
-  // standard attributes for domain so far
+  // standard attributes for domain. As new ones are defined, place here
   object attributes {
     val value:String = "value"
     val exp:String = "exp"
@@ -158,4 +158,10 @@ trait Domain {
   case class List(generic:types.Types) extends types.Types
   case object Collect extends Operation("collect", Some(List(Double)))
   val e4:Model = Model(name="e4",Seq.empty, Seq(Simplify, Collect), e3)
+
+  // e5:model evolution
+  case object Boolean extends types.Types
+  case object Equal extends Operation("equals", Some(Boolean), ("other", types.Exp))
+  val e5:Model = Model(name="e5", Seq.empty, Seq(Equal), e4)
+
 }

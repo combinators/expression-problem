@@ -1,7 +1,6 @@
 package example.expression
 
 import org.combinators.cls.interpreter.ReflectedRepository
-import expression.DomainModel
 import expression.history.History
 import expression.instances.UnitSuite
 
@@ -16,8 +15,6 @@ trait Base {
     * @return
     */
   def init[G <: ExpressionDomain](gamma : ReflectedRepository[G], history:History) : ReflectedRepository[G] = gamma
-
-  // Find way to maintain clean separation between Language (i.e., Java) and constraints (i.e., NextRank).
 
 }
 

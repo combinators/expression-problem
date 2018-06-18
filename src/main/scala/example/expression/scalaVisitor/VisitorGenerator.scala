@@ -25,6 +25,12 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
     Java(s"""$expr.accept(new ${op.name.capitalize}())""").expression()
   }
 
+  /** Directly access local method, one per operation, with a parameter. */
+  override def recurseOnWithParams(expr:Expression, op:Operation, params:Expression*) : Expression = {
+    val args:String = params.mkString(",")
+    Java(s"""$expr.accept(new ${op.name.capitalize}($args))""").expression()
+  }
+
   /** Return designated Java type associated with type, or void if all else fails. */
   override def typeGenerator(tpe:types.Types) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
@@ -124,10 +130,3 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
   }
 
 }
-
-
-
-
-
-
-

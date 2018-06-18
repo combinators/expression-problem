@@ -17,13 +17,18 @@ trait StraightGenerator extends AbstractGenerator with DataTypeSubclassGenerator
 
   /** For straight design solution, directly access attributes by name. */
   override def subExpressions(exp:expressions.Exp) : Map[String,Expression] = {
-    //    exp.attributes.map(att => Java(s"${att.name}").expression[Expression]())
     exp.attributes.map(att => att.name -> Java(s"${att.name}").expression[Expression]()).toMap
   }
 
   /** Directly access local method, one per operation. */
   override def recurseOn(expr:Expression, op:Operation) : Expression = {
     Java(s"""$expr.${op.name}()""").expression()
+  }
+
+  /** Directly access local method, one per operation, with a parameter. */
+  override def recurseOnWithParams(expr:Expression, op:Operation, params:Expression*) : Expression = {
+    val args:String = params.mkString(",")
+    Java(s"""$expr.${op.name}($args)""").expression()
   }
 
   /** Return designated Java type associated with type. */
@@ -40,7 +45,15 @@ trait StraightGenerator extends AbstractGenerator with DataTypeSubclassGenerator
       case _ => Java("void").tpe
     }
 
-    Java(s"""|public $retType ${op.name}() {
+    val params:String = op.parameters.map(tuple => {
+      val name:String = tuple._1
+      val tpe:types.Types = tuple._2
+
+      typeGenerator(tpe).toString + " " + name
+    }).mkString(",")
+
+
+    Java(s"""|public $retType ${op.name}($params) {
              |  ${methodBodyGenerator(exp)(op).mkString("\n")}
              |}""".stripMargin).methodDeclarations().head
   }
@@ -84,7 +97,14 @@ trait StraightGenerator extends AbstractGenerator with DataTypeSubclassGenerator
           case _ => Java("void").tpe
         }
 
-        Java(s"public abstract $retType ${op.name}();").methodDeclarations()
+        val params:String = op.parameters.map(tuple => {
+          val name:String = tuple._1
+          val tpe:types.Types = tuple._2
+
+          typeGenerator(tpe).toString + " " + name
+        }).mkString(",")
+
+      Java(s"public abstract $retType ${op.name}($params);").methodDeclarations()
       })
 
     // same every time
@@ -94,10 +114,3 @@ trait StraightGenerator extends AbstractGenerator with DataTypeSubclassGenerator
   }
 
 }
-
-
-
-
-
-
-

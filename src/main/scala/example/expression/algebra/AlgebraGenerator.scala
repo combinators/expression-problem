@@ -36,6 +36,12 @@ trait AlgebraGenerator extends AbstractGenerator {
     Java(s"""$expr.${op.name}()""").expression()
   }
 
+  /** Directly access local method, one per operation, with a parameter. */
+  override def recurseOnWithParams(expr:Expression, op:Operation, params:Expression*) : Expression = {
+    val args:String = params.mkString(",")
+    Java(s"""$expr.${op.name}($args)""").expression()
+  }
+
   /** Return designated Java type associated with type, or void if all else fails. */
   override def typeGenerator(tpe:types.Types) : com.github.javaparser.ast.`type`.Type = {
     tpe match {

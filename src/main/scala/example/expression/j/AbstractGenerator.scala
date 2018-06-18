@@ -23,6 +23,9 @@ trait AbstractGenerator {
   /** Responsible for dispatching sub-expressions. */
   def recurseOn(expr:Expression, op:Operation) : Expression
 
+  /** Responsible for dispatching sub-expressions with parameter. */
+  def recurseOnWithParams(expr:Expression, op:Operation, params:Expression*) : Expression
+
   /**
     * Expression-tree data has attributes with domain-specific types. This method returns
     * the designated Java type associated with the abstract type.

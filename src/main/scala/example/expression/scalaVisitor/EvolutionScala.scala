@@ -2,7 +2,7 @@ package example.expression.scalaVisitor
 
 import com.github.javaparser.ast.CompilationUnit
 import example.expression.domain.Domain
-import example.expression.j.{TestGenerator, e0, e1, e2, e3, e4}
+import example.expression.j._
 import javax.inject.Inject
 import org.combinators.templating.persistable.JavaPersistable._
 import org.webjars.play.WebJarsUtil

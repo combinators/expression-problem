@@ -170,7 +170,6 @@ trait AlgebraTestGenerator extends TestGenerator {
          |
          |    ${methods.mkString("\n")}
          }""".stripMargin
-    println (">>>>" + str)
     Java(str).compilationUnit()
   }
 }

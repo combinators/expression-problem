@@ -15,18 +15,26 @@ trait e0 extends AbstractGenerator with TestGenerator {
   val domain:Domain
   import domain._
 
+  /** E0 Introduces the concept a Double type, used for the 'Eval' operation. */
+  abstract override def typeGenerator(tpe:types.Types) : com.github.javaparser.ast.`type`.Type = {
+    tpe match {
+      case Double => Java("Double").tpe()
+      case _ => super.typeGenerator(tpe)
+    }
+  }
+
+  /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
   abstract override def methodBodyGenerator(exp:expressions.Exp)(op:Operation): Seq[Statement] = {
     val subs:Map[String,Expression] = subExpressions(exp)
 
     // generate the actual body
     op match {
-      case Eval => {
+      case Eval =>
         exp match {
           case Lit => Java(s"return ${subs(attributes.value)};").statements
           case Add => Java(s"return ${recurseOn(subs(attributes.left),op)} + ${recurseOn(subs(attributes.right),op)};").statements()
           case _ => super.methodBodyGenerator(exp)(op)
         }
-      }
 
       case _ => super.methodBodyGenerator(exp)(op)
     }
@@ -45,10 +53,4 @@ trait e0 extends AbstractGenerator with TestGenerator {
          |}""".stripMargin).methodDeclarations()
   }
 
-  abstract override def typeGenerator(tpe:types.Types) : com.github.javaparser.ast.`type`.Type = {
-    tpe match {
-      case Double => Java("Double").tpe()
-      case _ => super.typeGenerator(tpe)
-    }
-  }
 }

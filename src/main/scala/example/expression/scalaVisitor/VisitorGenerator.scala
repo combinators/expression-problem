@@ -48,6 +48,7 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
               |}""".stripMargin).compilationUnit()
   }
 
+  /** For visitor, the base class defines the accept method used by all subclasses. */
   def generateBaseClass():CompilationUnit = {
     Java(s"""|package expression;
              |
@@ -84,8 +85,6 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
     val atts:Seq[FieldDeclaration] = exp.attributes.flatMap(att => Java(s"private ${typeGenerator(att.tpe)} ${att.name};").fieldDeclarations())
 
     // Builds up the attribute fields and set/get methods. Also prepares for one-line constructor.
-    //var params:Seq[String] = Seq.empty
-    // var cons:Seq[String] = Seq.empty
     val methods:Seq[MethodDeclaration] = exp.attributes.flatMap(att => {
       val capAtt = att.name.capitalize
       val tpe = typeGenerator(att.tpe)
@@ -99,8 +98,6 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
                                |   ${cons.mkString("\n")}
                                |}""".stripMargin).constructors().head
 
-    // visitor methods for accepting operations
-    // make accept method call and add to class
     Java(s"""|package expression;
              |public class $name extends Exp {
              |

@@ -41,7 +41,7 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
 // also: don't forget that entries need to be in place in routes file. These specifications can
 // be viewed as the 'architecture' of the EP solution.
-class xE0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+class E0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new AlgebraGenerator with AlgebraTestGenerator with e0 {
@@ -50,7 +50,7 @@ class xE0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   override val model = gen.domain.e0
 }
 
-class xE1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+class E1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new AlgebraGenerator with AlgebraTestGenerator with e0 with e1 {
@@ -60,7 +60,7 @@ class xE1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   override val model = gen.domain.e1
 }
 
-class xE2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+class E2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with e2 {
@@ -69,7 +69,7 @@ class xE2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   override val model = gen.domain.e2
 }
 
-class xE3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+class E3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with e2 with e3 {
@@ -78,7 +78,7 @@ class xE3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   override val model = gen.domain.e3
 }
 
-class xE4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+class E4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with e2 with e3 with e4 {

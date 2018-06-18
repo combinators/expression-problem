@@ -14,7 +14,6 @@ trait e4 extends AbstractGenerator with TestGenerator {
   val domain:Domain
   import domain._
 
-
   abstract override def typeGenerator(tpe:types.Types) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
       case el:List => Java(s"java.util.List<${typeGenerator(el.generic)}>").tpe()
@@ -26,6 +25,7 @@ trait e4 extends AbstractGenerator with TestGenerator {
     val subs = subExpressions(exp)
     // generate the actual body
     op match {
+        // Simplify only works for solutions that instantiate expression instances
       case Simplify =>
         exp match {
           case Lit => Java (s"return new Lit(${subs(attributes.value)});").statements()
@@ -115,7 +115,7 @@ trait e4 extends AbstractGenerator with TestGenerator {
     val s1 = new BinaryInst(Sub, new LitInst(7.0), m1)
     val d2 = new BinaryInst(Divd, d1, s1)
 
-    // could split up collect as well
+    // could split up collect as well.
     super.testGenerator(model.last) ++ {
       val simplifyTests = if (model.supports(Simplify)) {
         s"""
@@ -129,7 +129,6 @@ trait e4 extends AbstractGenerator with TestGenerator {
            |public void test() {
            |
            |   $simplifyTests
-
            |   // Handle collect checks
            |   ${typeGenerator(List(Double))} list1 = ${recurseOn(convert(d2, model), Collect)};
            |   ${typeGenerator(List(Double))} result = new java.util.ArrayList<Double>();

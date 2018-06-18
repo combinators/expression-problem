@@ -72,13 +72,13 @@ trait AlgebraGenerator extends AbstractGenerator {
   def operationGenerator(model:Model, op:Operation): CompilationUnit = {
 
     // this gets "eval" and we want the name of the Interface.
-    //val name = op.name
     val name = op.name
     val returnType = typeGenerator(op.returnType.get)
     val opType = Java(op.name.capitalize).tpe()
     var targetModel:Model = null
     var fullName:String = null
 
+    /** Computes previous ExpAlgebra class directly from the model. There are four distinct subcases. */
     val previous:String = if (model.ops.contains(op) || model.lastModelWithOperation().isEmpty) {
       targetModel = model.flat()
       if (model.types.isEmpty) {
@@ -109,7 +109,7 @@ trait AlgebraGenerator extends AbstractGenerator {
           .map(op => op.name.capitalize).mkString("") + "ExpAlg"
     }
 
-    val methods = targetModel.types.map(exp => {  // sub is either 'lit' or 'add'
+    val methods = targetModel.types.map(exp => {  // exp is either 'lit' or 'add'
 
       val subName = exp.name.toLowerCase   // to get proper etiquette for method names
       val code:Seq[Statement] = methodBodyGenerator(exp)(op)
@@ -174,8 +174,7 @@ trait AlgebraGenerator extends AbstractGenerator {
     val types:Seq[String] = model.types.sortWith(_.name < _.name).map(exp => exp.name)
     val newName = types.mkString("")
 
-    val signatures = model.types
-      .map(exp => { // sub is either 'lit' or 'add' (or 'sub')
+    val signatures = model.types.map(exp => {
         val subName = exp.name.toLowerCase
 
         val params: Seq[String] = exp.attributes

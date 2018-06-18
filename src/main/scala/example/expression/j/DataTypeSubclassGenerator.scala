@@ -11,7 +11,6 @@ trait DataTypeSubclassGenerator {
   val domain:Domain
   import domain._
 
-
   // Serendipitous that both Straight and Visitor have a need for these two.
   // note that Visitor adds 'operationGenerator' as a CompilationUnit. Perhaps we can
   // take advantage of extracting even these two outside...

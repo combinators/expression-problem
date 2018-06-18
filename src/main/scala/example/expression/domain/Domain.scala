@@ -37,6 +37,7 @@ trait Domain {
 
   /** Each model consists of a collection of Exp sub-types and operations. */
   case class Model(name:String, types:Seq[expressions.Exp], ops:Seq[Operation], last:Model) {
+
     /* Return history of model as a sequence. */
     def toSeq : Seq[Model] = {
       if (isEmpty) {
@@ -51,6 +52,7 @@ trait Domain {
 
     def canEqual(a: Any) : Boolean = a.isInstanceOf[Model]
 
+    /** Suitable equals check for Model. */
     override def equals(that: Any) : Boolean =
       that match {
         case that: Model => that.canEqual(this) && this.hashCode == that.hashCode
@@ -80,27 +82,19 @@ trait Domain {
 
     /** Work backwards to find the most recent Model with an operation. Will return emptyModel if no ops. */
     def lastModelWithOperation() : Model = {
-      if (isEmpty) {
+      if (isEmpty || ops.nonEmpty) {
         this
       } else {
-        if (ops.nonEmpty) {
-          this
-        } else {
-          last.lastModelWithOperation()
-        }
+        last.lastModelWithOperation()
       }
     }
 
     /** Work backwards to find the most recent Model with a dataType. Will return emptyModel if no ops. */
     def lastModelWithDataTypes() : Model = {
-      if (isEmpty) {
+      if (isEmpty || types.nonEmpty) {
         this
       } else {
-        if (types.nonEmpty) {
-          this
-        } else {
-          last.lastModelWithDataTypes()
-        }
+        last.lastModelWithDataTypes()
       }
     }
 
@@ -117,18 +111,12 @@ trait Domain {
     def isEmpty: Boolean = types.isEmpty && ops.isEmpty
   }
 
+  /** Useful to be able to construct an empty model. */
   def emptyModel():Model = {
     Model("", Seq.empty, Seq.empty, null)
   }
 
-  /** Return just difference between adjacent models. */
-  def delta(older:Model, next:Model) : Model = {
-    Model("diff-" + next.name + "-" + older.name,
-      next.types.filterNot(exp => older.types.contains(exp)),
-      next.ops.filterNot(op => older.ops.contains(op)), emptyModel())
-  }
-
-  // standard attributes
+  // standard attributes for domain so far
   object attributes {
     val value:String = "value"
     val exp:String = "exp"

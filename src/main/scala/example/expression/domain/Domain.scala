@@ -164,4 +164,7 @@ trait Domain {
   case object Equal extends Operation("equals", Some(Boolean), ("other", types.Exp))
   val e5:Model = Model(name="e5", Seq.empty, Seq(Equal), e4)
 
+  // e5 straight from e3
+  val e5_from_e3:Model = Model(name="e5", Seq.empty, Seq(Equal), e3)
+
 }

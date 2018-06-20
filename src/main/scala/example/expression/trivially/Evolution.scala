@@ -15,12 +15,14 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   val gen:TriviallyGenerator with TestGenerator
   val model:gen.domain.Model
 
-  lazy val flat:gen.domain.Model = model.flat()
+  // flatten hierarchy and remove producer operations (i.e., those that are not compatible with this approach)
+  lazy val reduced:gen.domain.Model = gen.compatible(model)
+  lazy val flat:gen.domain.Model = gen.compatible(reduced.flat())
   override lazy val generatedCode:Seq[CompilationUnit] =
-    flat.types.map(tpe => gen.generateExp(model, tpe)) ++     // one class for each sub-type
-      gen.generateInterfaces(model) :+                        // interfaces for all subtypes
-      gen.generateBase(model) :+                               // base  interface
-      gen.generateSuite(Some("expression"), model)                          // generate test cases as well
+    flat.types.map(tpe => gen.generateExp(reduced, tpe)) ++     // one class for each sub-type
+      gen.generateInterfaces(reduced) :+                        // interfaces for all subtypes
+      gen.generateBase(reduced) :+                               // base  interface
+      gen.generateSuite(Some("expression"), reduced)                          // generate test cases as well
 
   // request by "git clone -b variation_0 http://localhost:9000/straight/eN/eN.git" where N is a version #
   override val routingPrefix: Option[String] = Some("trivially")
@@ -74,11 +76,11 @@ class E4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   override val model = gen.domain.e4
 }
 
-/*class E5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+class E5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new TriviallyGenerator with TestGenerator with e0 with e1 with e2 with e3 with e4 with e5 {
     override val domain = new Domain{ }
   }
   override val model = gen.domain.e5
-}*/
+}

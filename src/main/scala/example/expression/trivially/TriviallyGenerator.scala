@@ -12,6 +12,16 @@ import org.combinators.templating.twirl.Java
 trait TriviallyGenerator extends example.expression.Straight.StraightGenerator {
   import domain._
 
+  /**
+    * Must eliminate any operation that returns E as value, since can't handle Producer methods
+    */
+  override def compatible(model:Model):Model = {
+    if (model.isEmpty) { return model }
+
+    // rebuild by filtering out all operations that return Exp.
+    Model (model.name, model.types, model.ops.filterNot(op => op.returnType.isDefined && op.returnType.get.equals(types.Exp)), compatible(model.last))
+  }
+
   override def subExpressions(exp: domain.expressions.Exp): Map[String, Expression] = {
     exp.attributes.map(att => att.name -> Java(s"get${att.name.capitalize}()").expression[Expression]()).toMap
   }

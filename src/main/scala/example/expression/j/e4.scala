@@ -14,6 +14,18 @@ trait e4 extends AbstractGenerator with TestGenerator {
   val domain:Domain
   import domain._
 
+  /**
+    * Some simplifications may want to provide an alternative.
+    *
+    * Almost got simplify to work with Interpreter solution. Only hold-up is that the instantiated
+    * objects (i.e, "new Lit(0.0)") become more complex (i.e., a static factory method "lit(0.0)")
+    *
+    * I've crafted by hand, but don't want to break code tonight :)
+    */
+  def inst(exp:expressions.Exp)(op:Operation): String = {
+    "new " + exp.name.capitalize
+  }
+
   abstract override def typeGenerator(tpe:types.Types) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
       case el:List => Java(s"java.util.List<${typeGenerator(el.generic)}>").tpe()
@@ -28,58 +40,58 @@ trait e4 extends AbstractGenerator with TestGenerator {
         // Simplify only works for solutions that instantiate expression instances
       case Simplify =>
         exp match {
-          case Lit => Java (s"return new Lit(${subs(attributes.value)});").statements()
+          case Lit => Java(s"return ${inst(Lit)(op)}(${subs(attributes.value)});").statements()
           case Add => Java(s"""|double leftVal = ${recurseOn(subs(attributes.left), Eval)};
                                |double rightVal = ${recurseOn(subs(attributes.right), Eval)};
                                |if ((leftVal == 0 && rightVal == 0) || (leftVal + rightVal == 0)) {
-                               |  return new Lit(0.0);
+                               |  return ${inst(Lit)(op)}(0.0);
                                |} else if (leftVal == 0) {
                                |  return ${recurseOn(subs(attributes.right), Simplify)};
                                |} else if (rightVal == 0) {
                                |  return ${recurseOn(subs(attributes.left), Simplify)};
                                |} else {
-                               |  return new Add(${recurseOn(subs(attributes.left), Simplify)}, ${recurseOn(subs(attributes.right), Simplify)});
+                               |  return ${inst(Add)(op)}(${recurseOn(subs(attributes.left), Simplify)}, ${recurseOn(subs(attributes.right), Simplify)});
                                |}""".stripMargin).statements()
           case Sub => Java(s"""
                               |if (${recurseOn(subs(attributes.left), Eval)} == ${recurseOn(subs(attributes.right), Eval)}) {
-                              |  return new Lit(0.0);
+                              |  return ${inst(Lit)(op)}(0.0);
                               |} else {
-                              |  return new Sub(${recurseOn(subs(attributes.left), Simplify)}, ${recurseOn(subs(attributes.right), Simplify)});
+                              |  return ${inst(Sub)(op)}(${recurseOn(subs(attributes.left), Simplify)}, ${recurseOn(subs(attributes.right), Simplify)});
                               |}
                               |""".stripMargin).statements()
           case Mult => Java(s"""
                                |double leftVal = ${recurseOn(subs(attributes.left), Eval)};
                                |double rightVal = ${recurseOn(subs(attributes.right), Eval)};
                                |if (leftVal == 0 || rightVal == 0) {
-                               |  return new Lit(0.0);
+                               |  return ${inst(Lit)(op)}(0.0);
                                |} else if (leftVal == 1) {
                                |  return ${recurseOn(subs(attributes.right), Simplify)};
                                |} else if (rightVal == 1) {
                                |  return ${recurseOn(subs(attributes.left), Simplify)};
                                |} else {
-                               |  return new Mult(${recurseOn(subs(attributes.left), Simplify)}, ${recurseOn(subs(attributes.right), Simplify)});
+                               |  return ${inst(Mult)(op)}(${recurseOn(subs(attributes.left), Simplify)}, ${recurseOn(subs(attributes.right), Simplify)});
                                |}
                                |""".stripMargin).statements()
           case Divd => Java(s"""
                                |double leftVal = ${recurseOn(subs(attributes.left), Eval)};
                                |double rightVal = ${recurseOn(subs(attributes.right), Eval)};
                                |if (leftVal == 0) {
-                               |  return new Lit(0.0);
+                               |  return ${inst(Lit)(op)}(0.0);
                                |} else if (rightVal == 1) {
                                |  return ${recurseOn(subs(attributes.left), Simplify)};
                                |} else if (leftVal == rightVal) {
-                               |  return new Lit(1.0);
+                               |  return ${inst(Lit)(op)}(1.0);
                                |} else if (leftVal == -rightVal) {
-                               |  return new Lit(-1.0);
+                               |  return ${inst(Lit)(op)}(-1.0);
                                |} else {
-                               |  return new Divd(${recurseOn(subs(attributes.left), Simplify)}, ${recurseOn(subs(attributes.right), Simplify)});
+                               |  return ${inst(Divd)(op)}(${recurseOn(subs(attributes.left), Simplify)}, ${recurseOn(subs(attributes.right), Simplify)});
                                |}
                                |""".stripMargin).statements()
           case Neg => Java(s"""
                               |if (${recurseOn(subs(attributes.exp), Eval)} == 0) {
-                              |  return new Lit(0.0);
+                              |  return ${inst(Lit)(op)}(0.0);
                               |} else {
-                              |  return new Neg(${recurseOn(subs(attributes.exp), Simplify)});
+                              |  return ${inst(Neg)(op)}(${recurseOn(subs(attributes.exp), Simplify)});
                               |}""".stripMargin).statements()
           case _ => super.methodBodyGenerator(exp)(op)
         }

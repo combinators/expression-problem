@@ -98,6 +98,24 @@ trait Domain {
       }
     }
 
+    /** Find past dataTypes. */
+    def pastDataTypes(): Seq[expressions.Exp] = {
+      if (isEmpty) {
+        Seq.empty
+      } else {
+        types ++ last.pastDataTypes()
+      }
+    }
+
+      /** Find past operations. */
+    def pastOperations(): Seq[Operation] = {
+      if (isEmpty) {
+        Seq.empty
+      } else {
+        ops ++ last.pastOperations()
+      }
+    }
+
     /** Return the bottommost model in the sequence. */
     def base(): Model = {
       if (last.isEmpty) {

@@ -31,6 +31,13 @@ GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP
 ->    /                              example.expression.trivially.E3_Variation
 ->    /                              example.expression.trivially.E4_Variation
 ->    /                              example.expression.trivially.E5_Variation
+#Interpreter variations
+->    /                              example.expression.interpreter.E0_Variation
+->    /                              example.expression.interpreter.E1_Variation
+->    /                              example.expression.interpreter.E2_Variation
+->    /                              example.expression.interpreter.E3_Variation
+->    /                              example.expression.interpreter.E4_Variation
+->    /                              example.expression.interpreter.E5_Variation
 # Scala visitor variations
 ->    /                              example.expression.scalaVisitor.E0_Variation
 ->    /                              example.expression.scalaVisitor.E1_Variation

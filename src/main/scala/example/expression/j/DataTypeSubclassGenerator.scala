@@ -22,6 +22,7 @@ trait DataTypeSubclassGenerator {
 
   /** Generate the base class. */
   def generateBase(domain:Model) : CompilationUnit
+
 }
 
 

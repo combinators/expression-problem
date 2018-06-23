@@ -12,20 +12,40 @@ import org.combinators.templating.twirl.Java
 trait TriviallyGenerator extends example.expression.Straight.StraightGenerator {
   import domain._
 
-  /**
-    * Must eliminate any operation that returns E as value, since can't handle Producer methods
-    */
-  override def compatible(model:Model):Model = {
-    if (model.isEmpty) { return model }
+//  /**
+//    * Must eliminate any operation that returns E as value, since can't handle Producer methods
+//    */
+//  override def compatible(model:Model):Model = {
+//    if (model.isEmpty) { return model }
+//
+//    // rebuild by filtering out all operations that return Exp.
+//    Model (model.name, model.types, model.ops.filterNot(op => op.returnType.isDefined && op.returnType.get.equals(types.Exp)), compatible(model.last))
+//  }
 
-    // rebuild by filtering out all operations that return Exp.
-    Model (model.name, model.types, model.ops.filterNot(op => op.returnType.isDefined && op.returnType.get.equals(types.Exp)), compatible(model.last))
+  /**
+    * For producer operations, there is a need to instantiate objects, and one would use this
+    * method (with specific parameters) to carry this out.
+    *
+    * For recursive types, use "FinalI" as the cast internally, otherwise use native type
+    */
+  override def inst(exp:expressions.Exp)(op:Operation)(params:Expression*): Expression = {
+    // seq1 zip seq2
+    val merged:Seq[Expression] = exp.attributes.map(att => att.tpe).zip(params).map(typeExp => {
+      val x:types.Types = typeExp._1
+      val inner:Expression = typeExp._2
+      x match {
+        case types.Exp => Java(s"""(FinalI)($inner)""").expression[Expression]()
+        case _ => inner
+      }
+    })
+    Java("new " + exp.name + "(" + merged.map(expr => expr.toString()).mkString(",") + ")").expression()
   }
 
   override def subExpressions(exp: domain.expressions.Exp): Map[String, Expression] = {
     exp.attributes.map(att => att.name -> Java(s"get${att.name.capitalize}()").expression[Expression]()).toMap
   }
 
+  // note: this is very much like recursiveTypeGenerator in other generators. come up with standard name
   def attrTypeGenerator(currentClass: SimpleName, tpe: types.Types): Type = {
     tpe match {
       case types.Exp => Java(s"$currentClass").tpe()
@@ -77,6 +97,7 @@ trait TriviallyGenerator extends example.expression.Straight.StraightGenerator {
     method.setDefault(true)
     method.setType(
       op.returnType match {
+        case Some(types.Exp) => attrTypeGenerator(Java("Exp" + op.name.capitalize).simpleName(), types.Exp)  // producers... HEINEMAN
         case Some(tpe) => attrTypeGenerator(interfaceName(exp, op), tpe)
         case _ => Java("void").tpe
       })
@@ -97,7 +118,7 @@ trait TriviallyGenerator extends example.expression.Straight.StraightGenerator {
             |
             |  ${atts.mkString("\n")}
             |
-            |  ${method}
+            |  $method
             |}""".stripMargin).compilationUnit()
   }
 

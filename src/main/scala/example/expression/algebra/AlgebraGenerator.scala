@@ -16,6 +16,8 @@ trait AlgebraGenerator extends AbstractGenerator {
   val domain:Domain
   import domain._
 
+  // still doesn't work...
+
   /**
     * Must eliminate any operation that returns E as value, since Algebra doesn't instantiate the intermediate structures
     */
@@ -24,6 +26,17 @@ trait AlgebraGenerator extends AbstractGenerator {
 
     // rebuild by filtering out all operations that return Exp.
     Model (model.name, model.types, model.ops.filterNot(op => op.returnType.isDefined && op.returnType.get.equals(types.Exp)), compatible(model.last))
+  }
+
+  /**
+    * For producer operations, there is a need to instantiate objects, and one would use this
+    * method (with specific parameters) to carry this out.
+    *
+    * For interpreter, we use a factory method that has been placed in the class, and that allows
+    * the very specialized types to be used.
+    */
+  override def inst(exp:expressions.Exp)(op:Operation)(params:Expression*): Expression = {
+    Java(exp.name + "(" + params.map(expr => expr.toString()).mkString(",") + ")").expression()
   }
 
   /** For straight design solution, directly access attributes by name. */

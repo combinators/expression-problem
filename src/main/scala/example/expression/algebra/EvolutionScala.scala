@@ -76,11 +76,11 @@ class E4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
 // Still not ready to have Equals.
 
-//class E5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-//  extends Foundation(web, app) {
-//
-//  override val gen = new AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 {
-//    override val domain = new Domain{ }
-//  }
-//  override val model = gen.domain.e5
-//}
+class E5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+  extends Foundation(web, app) {
+
+  override val gen = new AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 {
+    override val domain = new Domain{ }
+  }
+  override val model = gen.domain.e5
+}

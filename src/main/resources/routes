@@ -66,3 +66,4 @@ GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP
 ->    /                              example.expression.algebra.E2_Variation
 ->    /                              example.expression.algebra.E3_Variation
 ->    /                              example.expression.algebra.E4_Variation
+->    /                              example.expression.algebra.E5_Variation

@@ -1,9 +1,10 @@
 package example.expression.j
 
-import com.github.javaparser.ast.body. MethodDeclaration
+import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
 import example.expression.domain.Domain
+import org.combinators.templating.twirl.Java
 
 /**
   * Each evolution has opportunity to enhance the code generators.
@@ -25,6 +26,19 @@ trait AbstractGenerator {
 
   /** Responsible for dispatching sub-expressions with parameter. */
   def recurseOnWithParams(expr:Expression, op:Operation, params:Expression*) : Expression
+
+  /**
+    * For producer operations, there is a need to instantiate objects, and one would use this
+    * method (with specific parameters) to carry this out.
+    *
+    * Almost got simplify to work with Interpreter solution. Only hold-up is that the instantiated
+    * objects (i.e, "new Lit(0.0)") become more complex (i.e., a static factory method "lit(0.0)")
+    *
+    * I've crafted by hand, but don't want to break code tonight :)
+    */
+  def inst(exp:expressions.Exp)(op:Operation)(params:Expression*): Expression = {
+    Java("new " + exp.name.capitalize + "(" + params.map(expr => expr.toString()).mkString(",") + ")").expression()
+  }
 
   /**
     * Expression-tree data has attributes with domain-specific types. This method returns

@@ -9,15 +9,26 @@ import org.combinators.templating.twirl.Java
 
 trait InterpreterGenerator extends example.expression.Straight.StraightGenerator {
   import domain._
+//
+//  /**
+//    * Must eliminate any operation that returns E as value, since can't handle Producer methods
+//    */
+//  override def compatible(model:Model):Model = {
+//    if (model.isEmpty) { return model }
+//
+//    // rebuild by filtering out all operations that return Exp.
+//    Model (model.name, model.types, model.ops.filterNot(op => op.returnType.isDefined && op.returnType.get.equals(types.Exp)), compatible(model.last))
+//  }
 
   /**
-    * Must eliminate any operation that returns E as value, since can't handle Producer methods
+    * For producer operations, there is a need to instantiate objects, and one would use this
+    * method (with specific parameters) to carry this out.
+    *
+    * For interpreter, we use a factory method that has been placed in the class, and that allows
+    * the very specialized types to be used.
     */
-  override def compatible(model:Model):Model = {
-    if (model.isEmpty) { return model }
-
-    // rebuild by filtering out all operations that return Exp.
-    Model (model.name, model.types, model.ops.filterNot(op => op.returnType.isDefined && op.returnType.get.equals(types.Exp)), compatible(model.last))
+  override def inst(exp:expressions.Exp)(op:Operation)(params:Expression*): Expression = {
+    Java(exp.name + "(" + params.map(expr => expr.toString()).mkString(",") + ")").expression()
   }
 
   override def subExpressions(exp: domain.expressions.Exp): Map[String, Expression] = {
@@ -206,9 +217,13 @@ trait InterpreterGenerator extends example.expression.Straight.StraightGenerator
   def generateForOp(model:Model, ops:Seq[Operation], pastTypes:Seq[expressions.Exp], isBase:Boolean) : Seq[CompilationUnit] = {
     val combinedOps:String = ops.sortWith(_.name < _.name).map(op => op.name.capitalize).mkString("")
 
+
       pastTypes.map(exp => {
         val name = Java(s"${exp.name}").simpleName()
         val baseInterface:Type = Java(baseInterfaceName(model.lastModelWithOperation())).tpe()
+
+
+
 
         val atts:Seq[FieldDeclaration] = if (isBase) {
           exp.attributes.flatMap(att => Java(s"${recursiveTypeGenerator(att.tpe, baseInterface)} ${att.name};").fieldDeclarations())
@@ -219,6 +234,12 @@ trait InterpreterGenerator extends example.expression.Straight.StraightGenerator
         val params:Seq[String] = exp.attributes.map(att => s"${recursiveTypeGenerator(att.tpe, baseInterface)} ${att.name}")
         val paramNames:Seq[String] = exp.attributes.map(att => s"${att.name}")
 
+        val factoryMethods:Seq[MethodDeclaration] = pastTypes.flatMap(e => {
+          val params:Seq[String] = e.attributes.map(att => s"${recursiveTypeGenerator(att.tpe, baseInterface)} ${att.name}")
+          val paramNames:Seq[String] = e.attributes.map(att => s"${att.name}")
+
+          Java(s"""${combinedOps}Exp ${e.name.capitalize}(${params.mkString(",")}) { return new $combinedOps${e.name.capitalize}(${paramNames.mkString(",")}); }""").methodDeclarations()
+        })
 
         val getters: Seq[MethodDeclaration] =
           exp.attributes.flatMap(att => {
@@ -278,7 +299,7 @@ trait InterpreterGenerator extends example.expression.Straight.StraightGenerator
         Java(s"""
                 |package interpreter;
                 |public class $combinedOps$name $extension implements ${baseInterface.toString} {
-                |
+                |  ${factoryMethods.mkString("\n")}
                 |  ${constructor.toString}
                 |
                 |  ${getters.mkString("\n")}

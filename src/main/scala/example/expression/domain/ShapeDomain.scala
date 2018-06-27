@@ -1,0 +1,43 @@
+package example.expression.domain
+
+trait ShapeDomain extends BaseDomain with ModelDomain {
+
+  // standard attributes for domain. As new ones are defined, place here
+  object attributes {
+    val side:String   = "side"
+    val point:String  = "point"
+    val trans:String = "trans"
+    val radius:String = "radius"
+    val shape:String  = "shape"
+  }
+
+  // s0:model evolution.
+  // -------------------
+  case object Point extends types.Types
+  case object Double extends types.Types
+  case object Boolean extends types.Types
+
+  case object Square extends expressions.Exp("Square", Seq(Attribute(attributes.side, Double)))
+  case object Circle extends expressions.Exp("Circle", Seq(Attribute(attributes.radius, Double)))
+  case object Translate extends expressions.Exp("Translate",
+    Seq(Attribute(attributes.trans, Point), Attribute(attributes.shape, Exp)))
+  case object ContainsPt extends Operation("containsPt", Some(Boolean), ("point", Point))
+  val s0 = Model("s0", Seq(Square,Circle,Translate), Seq(ContainsPt), emptyModel())
+
+  class SquareInst(d:Double) extends ExpInst(Square, Some(d))
+  class CircleInst(d:Double) extends ExpInst(Circle, Some(d))
+  class TranslateInst(pt:(Double,Double), s:ExpInst) extends ExpInst(Translate, Some((pt,s)))
+
+  // abstract class BinaryExpInst(override val e:expressions.Exp, val left:ExpInst, val right:ExpInst) extends ExpInst(e, None)
+
+  // e1:model evolution (add operation)
+  // ----------------------------------
+  case object Shrink extends Operation("shrink", Some(Exp), ("shape", Exp))
+  val s1 = Model("s1", Seq.empty, Seq(Shrink), s0)
+
+  // e2:model evolution (add datatype)
+  // ---------------------------------
+  case object Composite extends expressions.Exp("Composite",
+    Seq(Attribute(base.left, Exp), Attribute(base.right, Exp)))
+  val s2 = Model ("s2", Seq(Composite), Seq.empty, s1)
+}

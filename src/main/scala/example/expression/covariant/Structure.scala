@@ -39,7 +39,7 @@ trait Structure extends Operators {
 
     val unit = Java(
       s"""
-         |package ep;
+         |package covariant;
          |public interface $name extends Exp {}
             """.stripMargin).compilationUnit()
 
@@ -73,7 +73,7 @@ trait Structure extends Operators {
       val name = sub.getClass.getSimpleName
 
       val unit = Java(s"""
-                     |package ep;
+                     |package covariant;
                      |public class ${name}Final implements $name {}
                       """.stripMargin).compilationUnit()
 
@@ -139,7 +139,7 @@ trait Structure extends Operators {
       val name = sub.getClass.getSimpleName
       val combined = ops.map(_.getClass.getSimpleName).mkString("")
 
-      val unit = Java(s"""|package ep;
+      val unit = Java(s"""|package covariant;
                           |public class $name${combined}Final implements $name$combined {}
                           """.stripMargin).compilationUnit()
 
@@ -200,7 +200,7 @@ trait Structure extends Operators {
       val commas: String = ops.map(name + _.getClass.getSimpleName).mkString(",")
 
       val unit: CompilationUnit = Java(
-        s"""|package ep;
+        s"""|package covariant;
             |interface $name$combined extends $combined,$commas { }
             |""".stripMargin).compilationUnit()
 
@@ -226,7 +226,7 @@ trait Structure extends Operators {
 
       val unit: CompilationUnit = Java(
         s"""
-           |package ep;
+           |package covariant;
            |interface $name extends Exp { }
            |""".stripMargin).compilationUnit()
 
@@ -247,7 +247,7 @@ trait Structure extends Operators {
 
       val unit: CompilationUnit = Java(
         s"""
-           |package ep;
+           |package covariant;
            |interface $combined extends $names { }
            |""".stripMargin).compilationUnit()
 
@@ -258,7 +258,7 @@ trait Structure extends Operators {
   def BaseExpInterface: CompilationUnit = {
 
     val unit: CompilationUnit = Java(s"""
-             |package ep;
+             |package covariant;
              |interface Exp { }
              |""".stripMargin).compilationUnit()
 

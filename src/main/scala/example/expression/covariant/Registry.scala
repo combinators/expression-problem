@@ -56,7 +56,7 @@ trait Registry extends Operators {
 
       val unit: CompilationUnit = Java(
         s"""
-           |package ep;
+           |package covariant;
            |interface $expName$opName extends $expName, $opName { }
            |""".stripMargin).compilationUnit()
 

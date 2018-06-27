@@ -9,8 +9,8 @@ import example.expression.domain.Domain
 import example.expression.j.{AbstractGenerator, DataTypeSubclassGenerator}
 import org.combinators.templating.twirl.Java
 
-trait TriviallyGenerator extends example.expression.Straight.StraightGenerator {
-  import domain._
+trait TriviallyGenerator extends example.expression.oo.StraightGenerator {
+ // import domain._
 
 //  /**
 //    * Must eliminate any operation that returns E as value, since can't handle Producer methods
@@ -28,13 +28,13 @@ trait TriviallyGenerator extends example.expression.Straight.StraightGenerator {
     *
     * For recursive types, use "FinalI" as the cast internally, otherwise use native type
     */
-  override def inst(exp:expressions.Exp)(op:Operation)(params:Expression*): Expression = {
+  override def inst(exp:domain.expressions.Exp)(op:domain.Operation)(params:Expression*): Expression = {
     // seq1 zip seq2
     val merged:Seq[Expression] = exp.attributes.map(att => att.tpe).zip(params).map(typeExp => {
-      val x:types.Types = typeExp._1
+      val x:domain.types.Types = typeExp._1
       val inner:Expression = typeExp._2
       x match {
-        case types.Exp => Java(s"""(FinalI)($inner)""").expression[Expression]()
+        case domain.Exp => Java(s"""(FinalI)($inner)""").expression[Expression]()
         case _ => inner
       }
     })
@@ -46,18 +46,18 @@ trait TriviallyGenerator extends example.expression.Straight.StraightGenerator {
   }
 
   // note: this is very much like recursiveTypeGenerator in other generators. come up with standard name
-  def attrTypeGenerator(currentClass: SimpleName, tpe: types.Types): Type = {
+  def attrTypeGenerator(currentClass: SimpleName, tpe: domain.types.Types): Type = {
     tpe match {
-      case types.Exp => Java(s"$currentClass").tpe()
+      case domain.Exp => Java(s"$currentClass").tpe()
       case _ => typeGenerator(tpe)
     }
   }
 
-  def baseInterfaceName(op: Operation): SimpleName = {
+  def baseInterfaceName(op: domain.Operation): SimpleName = {
     Java(s"Exp${op.name.capitalize}").simpleName()
   }
 
-  override def generateExp(domain:Model, exp:expressions.Exp) : CompilationUnit = {
+  override def generateExp(model:domain.Model, exp:domain.expressions.Exp) : CompilationUnit = {
     val name = Java(s"${exp.name}").simpleName()
 
     val atts:Seq[FieldDeclaration] = exp.attributes.flatMap(att =>
@@ -75,10 +75,10 @@ trait TriviallyGenerator extends example.expression.Straight.StraightGenerator {
                                |   ${cons.mkString("\n")}
                                |}""".stripMargin).constructors().head
 
-    val interfaces = finalInterfaceName +: domain.lastModelWithOperation().ops.map(op => interfaceName(exp, op))
+    val interfaces = finalInterfaceName +: model.lastModelWithOperation().ops.map(op => interfaceName(exp, op))
 
     Java(s"""
-            |package expression;
+            |package trivially;
             |public class $name implements ${interfaces.mkString(",")} {
             |
             |  ${constructor.toString}
@@ -88,7 +88,7 @@ trait TriviallyGenerator extends example.expression.Straight.StraightGenerator {
             |}""".stripMargin).compilationUnit()
    }
 
-  def interfaceName(exp: domain.expressions.Exp, op: Operation): SimpleName = {
+  def interfaceName(exp: domain.expressions.Exp, op: domain.Operation): SimpleName = {
     Java(s"${exp.name}${op.name.capitalize}").simpleName()
   }
 
@@ -97,7 +97,7 @@ trait TriviallyGenerator extends example.expression.Straight.StraightGenerator {
     method.setDefault(true)
     method.setType(
       op.returnType match {
-        case Some(types.Exp) => attrTypeGenerator(Java("Exp" + op.name.capitalize).simpleName(), types.Exp)  // producers... HEINEMAN
+        case Some(domain.Exp) => attrTypeGenerator(Java("Exp" + op.name.capitalize).simpleName(), domain.Exp)  // producers... HEINEMAN
         case Some(tpe) => attrTypeGenerator(interfaceName(exp, op), tpe)
         case _ => Java("void").tpe
       })
@@ -106,14 +106,14 @@ trait TriviallyGenerator extends example.expression.Straight.StraightGenerator {
   }
 
 
-  def generateInterface(exp: domain.expressions.Exp, parents: Seq[SimpleName], op:Operation): CompilationUnit = {
+  def generateInterface(exp: domain.expressions.Exp, parents: Seq[SimpleName], op:domain.Operation): CompilationUnit = {
     val name = interfaceName(exp, op)
     val method: MethodDeclaration = methodGenerator(exp)(op)
     val atts:Seq[MethodDeclaration] =
       exp.attributes.flatMap(att => Java(s"${attrTypeGenerator(baseInterfaceName(op), att.tpe)} get${att.name.capitalize}();").methodDeclarations())
 
     Java(s"""
-            |package expression;
+            |package trivially;
             |public interface $name extends ${parents.mkString(", ")} {
             |
             |  ${atts.mkString("\n")}
@@ -124,13 +124,13 @@ trait TriviallyGenerator extends example.expression.Straight.StraightGenerator {
 
   def finalInterfaceName: SimpleName = Java("FinalI").simpleName()
 
-  def generateInterfaces(model: Model): Seq[CompilationUnit] = {
+  def generateInterfaces(model: domain.Model): Seq[CompilationUnit] = {
     val flat = model.flat()
 
-    def generate(model: Model): Seq[CompilationUnit] = {
+    def generate(model: domain.Model): Seq[CompilationUnit] = {
       val lastWithOps = model.last.lastModelWithOperation()
       val parents: Seq[SimpleName] =
-        if (lastWithOps.isEmpty) Seq(Java(s"${typeGenerator(types.Exp)}").simpleName())
+        if (lastWithOps.isEmpty) Seq(Java(s"${typeGenerator(domain.Exp)}").simpleName())
         else lastWithOps.ops.map(op => baseInterfaceName(op))
 
       def parentsFor(exp: domain.expressions.Exp): Seq[SimpleName] =
@@ -146,18 +146,18 @@ trait TriviallyGenerator extends example.expression.Straight.StraightGenerator {
     }
     val lastWithOps = model.lastModelWithOperation()
     val finalParents: Seq[SimpleName] =
-      if (lastWithOps.isEmpty) Seq(Java(s"${typeGenerator(types.Exp)}").simpleName())
+      if (lastWithOps.isEmpty) Seq(Java(s"${typeGenerator(domain.Exp)}").simpleName())
       else lastWithOps.ops.map(op => baseInterfaceName(op))
     val finalInterface =
       Java(
         s"""
-           |package expression;
+           |package trivially;
            |public interface ${finalInterfaceName} extends ${finalParents.mkString(",")} {}
          """.stripMargin).compilationUnit()
     finalInterface +: generate(model)
   }
 
-  def generateBaseInterface(op: Operation, parents: Seq[SimpleName]): CompilationUnit = {
+  def generateBaseInterface(op: domain.Operation, parents: Seq[SimpleName]): CompilationUnit = {
 
     val retType = op.returnType match {
       case Some(tpe) => attrTypeGenerator(baseInterfaceName(op), tpe)
@@ -166,7 +166,7 @@ trait TriviallyGenerator extends example.expression.Straight.StraightGenerator {
 
     val params:String = op.parameters.map(tuple => {
       val name:String = tuple._1
-      val tpe:types.Types = tuple._2
+      val tpe:domain.types.Types = tuple._2
 
       typeGenerator(tpe).toString + " " + name
     }).mkString(",")
@@ -176,7 +176,7 @@ trait TriviallyGenerator extends example.expression.Straight.StraightGenerator {
       Java(s"""public $retType ${op.name}($params);""").methodDeclarations().head
 
     Java(
-      s"""package expression;
+      s"""package trivially;
          |
          |public interface ${baseInterfaceName(op)} extends ${parents.mkString(", ")} {
          |    ${methodSignature}
@@ -185,11 +185,11 @@ trait TriviallyGenerator extends example.expression.Straight.StraightGenerator {
   }
 
 
-  override def generateBase(domain: Model): CompilationUnit = {
+  override def generateBase(model: domain.Model): CompilationUnit = {
     Java(
-      s"""package expression;
+      s"""package trivially;
          |
-         |public interface ${typeGenerator(types.Exp)} {
+         |public interface ${typeGenerator(domain.Exp)} {
          |}
        """.stripMargin).compilationUnit()
   }

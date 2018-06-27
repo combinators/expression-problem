@@ -13,20 +13,20 @@ import org.combinators.templating.twirl.Java
   */
 trait AlgebraTestGenerator extends TestGenerator {
   val domain: Domain
-  import domain._
+ //import domain._
 
   // exists from AbstractGenerator
-  def typeGenerator(tpe:types.Types) : com.github.javaparser.ast.`type`.Type
+  def typeGenerator(tpe:domain.types.Types) : com.github.javaparser.ast.`type`.Type
 
   /** Convert a test instance into a Java Expression for instantiating that instance. */
-  override def convert(inst: instances.ExpInst, model: Model): Expression = {
+  override def convert(inst: domain.ExpInst, model: domain.Model): Expression = {
     val name = inst.e.name
     val opname = name.toLowerCase()
     inst match {
-      case lit: LitInst => Java(s"algebra.lit(${lit.i.get.toString})").expression()
-      case ui: instances.UnaryExpInst =>
+      case lit: domain.LitInst => Java(s"algebra.lit(${lit.i.get.toString})").expression()
+      case ui: domain.UnaryExpInst =>
         Java(s"algebra.$opname(${convert(ui.exp, model)})").expression()
-      case bi: instances.BinaryExpInst =>
+      case bi: domain.BinaryExpInst =>
         Java(s"algebra.$opname(${convert(bi.left, model)}, ${convert(bi.right, model)})").expression()
 
       case _ => Java(s""" "unknown $name" """).expression()
@@ -39,7 +39,7 @@ trait AlgebraTestGenerator extends TestGenerator {
     * The classification is a sorted concatenation of the most recent model (including self) that
     * defines new data types.
     */
-  def classify(m:Model) : String = {
+  def classify(m:domain.Model) : String = {
     if (m.isEmpty) {
       return ""
     }
@@ -51,7 +51,7 @@ trait AlgebraTestGenerator extends TestGenerator {
   }
 
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
-  override def generateSuite(pack: Option[String], m: Model): CompilationUnit = {
+  override def generateSuite(pack: Option[String], m: domain.Model): CompilationUnit = {
     val methods: Seq[MethodDeclaration] = testGenerator(m)
 
     val packageDeclaration: String = if (pack.isDefined) {
@@ -68,9 +68,9 @@ trait AlgebraTestGenerator extends TestGenerator {
 
     // must get all operations defined for this model and earlier. For each one, define algebra with
     // current extension
-    val operations: Seq[Operation] = m.flat().ops
-    var algebraDeclarations: Map[Operation, FieldDeclaration] = Map()
-    var algParams:Map[Operation,String] = Map()
+    val operations: Seq[domain.Operation] = m.flat().ops
+    var algebraDeclarations: Map[domain.Operation, FieldDeclaration] = Map()
+    var algParams:Map[domain.Operation,String] = Map()
 
     operations.sortWith(_.name < _.name).foreach(op => {
       val finalAlgebra:String = classify(m) + "ExpAlg"
@@ -93,13 +93,13 @@ trait AlgebraTestGenerator extends TestGenerator {
   }
 
   /** Produce inner methods. */
-  def innerMethod(tpe:expressions.Exp, operations:Seq[Operation]) : Seq[MethodDeclaration] = {
+  def innerMethod(tpe:domain.expressions.Exp, operations:Seq[domain.Operation]) : Seq[MethodDeclaration] = {
     var params:Seq[String] = Seq.empty
     var args:Seq[String] = Seq.empty
 
     tpe.attributes.foreach(att => {
       args = args :+ att.name
-      if (att.tpe == types.Exp) {
+      if (att.tpe == domain.Exp) {
         params = params :+ s"Combined ${att.name}" }
       else {
         params = params :+ typeGenerator(att.tpe) + s" ${att.name}"
@@ -123,12 +123,12 @@ trait AlgebraTestGenerator extends TestGenerator {
   }
 
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
-  def combinedAlgebra(pack:Option[String], m:Model): CompilationUnit = {
-    val operations:Seq[Operation] = m.flat().ops
+  def combinedAlgebra(pack:Option[String], m:domain.Model): CompilationUnit = {
+    val operations:Seq[domain.Operation] = m.flat().ops
 
-    var algebraDeclarations:Map[Operation,FieldDeclaration] = Map()
-    var paramDeclarations:Map[Operation,Statement] = Map()
-    var argDeclarations:Map[Operation,String] = Map()
+    var algebraDeclarations:Map[domain.Operation,FieldDeclaration] = Map()
+    var paramDeclarations:Map[domain.Operation,Statement] = Map()
+    var argDeclarations:Map[domain.Operation,String] = Map()
     var finalAlgebra:String = ""
 
     operations.foreach(op => {

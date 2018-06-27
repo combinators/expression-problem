@@ -22,7 +22,7 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
     flat.types.map(tpe => gen.generateExp(reduced, tpe)) ++     // one class for each sub-type
       gen.generateInterfaces(reduced) :+                        // interfaces for all subtypes
       gen.generateBase(reduced) :+                               // base  interface
-      gen.generateSuite(Some("expression"), reduced)                          // generate test cases as well
+      gen.generateSuite(Some("trivially"), reduced)                          // generate test cases as well
 
   // request by "git clone -b variation_0 http://localhost:9000/straight/eN/eN.git" where N is a version #
   override val routingPrefix: Option[String] = Some("trivially")

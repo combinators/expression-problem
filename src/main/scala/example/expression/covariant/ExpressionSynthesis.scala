@@ -66,7 +66,7 @@ trait ExpressionSynthesis extends Operators with OperationDependency {
         Java(codeBlock).methodDeclarations().mkString("\n")
       }).mkString("\n")
 
-      Java(s"""|package ep;
+      Java(s"""|package covariant;
                |import junit.framework.TestCase;
                |public class TestSuite extends TestCase {
                |    $allGen

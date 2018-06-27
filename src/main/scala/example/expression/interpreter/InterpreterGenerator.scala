@@ -7,8 +7,8 @@ import com.github.javaparser.ast.stmt.Statement
 import com.github.javaparser.ast.CompilationUnit
 import org.combinators.templating.twirl.Java
 
-trait InterpreterGenerator extends example.expression.Straight.StraightGenerator {
-  import domain._
+trait InterpreterGenerator extends example.expression.oo.StraightGenerator {
+ // import domain._
 //
 //  /**
 //    * Must eliminate any operation that returns E as value, since can't handle Producer methods
@@ -27,7 +27,7 @@ trait InterpreterGenerator extends example.expression.Straight.StraightGenerator
     * For interpreter, we use a factory method that has been placed in the class, and that allows
     * the very specialized types to be used.
     */
-  override def inst(exp:expressions.Exp)(op:Operation)(params:Expression*): Expression = {
+  override def inst(exp:domain.expressions.Exp)(op:domain.Operation)(params:Expression*): Expression = {
     Java(exp.name + "(" + params.map(expr => expr.toString()).mkString(",") + ")").expression()
   }
 
@@ -36,19 +36,19 @@ trait InterpreterGenerator extends example.expression.Straight.StraightGenerator
   }
 
   /** Return designated Exp type with replacement. */
-  def recursiveTypeGenerator(tpe:types.Types, replacement:Type) : com.github.javaparser.ast.`type`.Type = {
+  def recursiveTypeGenerator(tpe:domain.types.Types, replacement:Type) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
-      case types.Exp => replacement
+      case domain.Exp => replacement
       case _ => typeGenerator(tpe)
     }
   }
 
-  def modelInterfaceName(model:Model): String = {
+  def modelInterfaceName(model:domain.Model): String = {
     model.ops.sortWith(_.name < _.name).map(op => op.name.capitalize).mkString("") + "Exp"
   }
 
   /** Find Model with operations and return that one. */
-  def baseInterfaceName(m:Model): SimpleName = {
+  def baseInterfaceName(m:domain.Model): SimpleName = {
       Java(m.lastModelWithOperation().ops.sortWith(_.name < _.name).map(op => op.name.capitalize).mkString("") + "Exp").simpleName()
   }
 
@@ -66,9 +66,9 @@ trait InterpreterGenerator extends example.expression.Straight.StraightGenerator
     * @param exp
     * @return
     */
-  override def generateExp(domain:Model, exp:expressions.Exp) : CompilationUnit = {
+  override def generateExp(model:domain.Model, exp:domain.expressions.Exp) : CompilationUnit = {
     val name = Java(s"${exp.name}").simpleName()
-    val baseInterface:Type = Java(baseInterfaceName(domain.lastModelWithOperation())).tpe()
+    val baseInterface:Type = Java(baseInterfaceName(model.lastModelWithOperation())).tpe()
 
     val atts:Seq[FieldDeclaration] = exp.attributes.flatMap(att => Java(s"private ${recursiveTypeGenerator(att.tpe, baseInterface)} ${att.name};").fieldDeclarations())
 
@@ -85,7 +85,7 @@ trait InterpreterGenerator extends example.expression.Straight.StraightGenerator
                                |}""".stripMargin).constructors().head
 
     // provide method declarations for all past operations (including self). But if we extend, can't we stop at last op?
-    val allOps:Seq[Operation] = domain.pastOperations()
+    val allOps:Seq[domain.Operation] = model.pastOperations()
     val operations:Seq[MethodDeclaration] = allOps.map(op =>
         methodGenerator(exp)(op))
 
@@ -101,7 +101,7 @@ trait InterpreterGenerator extends example.expression.Straight.StraightGenerator
             |}""".stripMargin).compilationUnit()
    }
 
-  def interfaceName(exp: domain.expressions.Exp, op: Operation): SimpleName = {
+  def interfaceName(exp: domain.expressions.Exp, op: domain.Operation): SimpleName = {
     Java(s"${exp.name}${op.name.capitalize}").simpleName()
   }
 
@@ -118,7 +118,7 @@ trait InterpreterGenerator extends example.expression.Straight.StraightGenerator
 //    method
 //  }
 
-  def generateInterface(exp: domain.expressions.Exp, parents: Seq[SimpleName], op:Operation): CompilationUnit = {
+  def generateInterface(exp: domain.expressions.Exp, parents: Seq[SimpleName], op:domain.Operation): CompilationUnit = {
     val name = interfaceName(exp, op)
     val method: MethodDeclaration = methodGenerator(exp)(op)
     val atts:Seq[MethodDeclaration] =
@@ -145,7 +145,7 @@ trait InterpreterGenerator extends example.expression.Straight.StraightGenerator
     * @param model
     * @return
     */
-  override def generateBase(model: Model): CompilationUnit = {
+  override def generateBase(model: domain.Model): CompilationUnit = {
     // concatenate all names
     val fullType:Type = Java(modelInterfaceName(model)).tpe()
     val methods:Seq[String] = model.ops.map(op => {
@@ -173,7 +173,7 @@ trait InterpreterGenerator extends example.expression.Straight.StraightGenerator
     Java(str).compilationUnit()
   }
 
-  def lastTypesSinceAnOperation(model:Model): Seq[expressions.Exp] = {
+  def lastTypesSinceAnOperation(model:domain.Model): Seq[domain.expressions.Exp] = {
     if (model.isEmpty || model.ops.nonEmpty) {
       Seq.empty
     } else {
@@ -188,7 +188,7 @@ trait InterpreterGenerator extends example.expression.Straight.StraightGenerator
     * @param model
     * @return
     */
-  def generateIntermediateTypes(model:Model): Seq[CompilationUnit] = {
+  def generateIntermediateTypes(model:domain.Model): Seq[CompilationUnit] = {
     if (model.isEmpty) { return Seq.empty }
     if (model.ops.nonEmpty) { return generateIntermediateTypes(model.last) }   // continue onwards.
 
@@ -200,8 +200,8 @@ trait InterpreterGenerator extends example.expression.Straight.StraightGenerator
   }
 
   // if multiple operations in the same model, then must chain together.
-  def generateBaseExtensions(model:Model) : Seq[CompilationUnit] = {
-    val pastTypes:Seq[expressions.Exp] = model.pastDataTypes()
+  def generateBaseExtensions(model:domain.Model) : Seq[CompilationUnit] = {
+    val pastTypes:Seq[domain.expressions.Exp] = model.pastDataTypes()
 
     val isBase:Boolean = model.base().equals(model)
 
@@ -214,7 +214,7 @@ trait InterpreterGenerator extends example.expression.Straight.StraightGenerator
     generateForOp(model, model.ops, pastTypes, isBase)
   }
 
-  def generateForOp(model:Model, ops:Seq[Operation], pastTypes:Seq[expressions.Exp], isBase:Boolean) : Seq[CompilationUnit] = {
+  def generateForOp(model:domain.Model, ops:Seq[domain.Operation], pastTypes:Seq[domain.expressions.Exp], isBase:Boolean) : Seq[CompilationUnit] = {
     val combinedOps:String = ops.sortWith(_.name < _.name).map(op => op.name.capitalize).mkString("")
 
 
@@ -245,7 +245,7 @@ trait InterpreterGenerator extends example.expression.Straight.StraightGenerator
           exp.attributes.flatMap(att => {
             // anything that is an EXPR can be replaced
             val cast = att.tpe match {
-              case types.Exp => if (!isBase) { s"(${baseInterface.toString})" } else { "" }
+              case domain.Exp => if (!isBase) { s"(${baseInterface.toString})" } else { "" }
               case _ => ""
             }
 
@@ -267,7 +267,7 @@ trait InterpreterGenerator extends example.expression.Straight.StraightGenerator
         }
 
         // provide method declarations for all past operations (including self) that are not already in our 'ops' set.
-        val allOps:Seq[Operation] = model.pastOperations().filterNot(op => ops.contains(op))
+        val allOps:Seq[domain.Operation] = model.pastOperations().filterNot(op => ops.contains(op))
 
         // be sure to recursively change Exp to be fullType
         val fullType:Type = Java(modelInterfaceName(model)).tpe()
@@ -277,7 +277,7 @@ trait InterpreterGenerator extends example.expression.Straight.StraightGenerator
 
           // be sure to recursively change any Exp into fullType, for producer capability
           val returnType:Type = md.getType
-          if (returnType.equals(typeGenerator(types.Exp))) {
+          if (returnType.equals(typeGenerator(domain.Exp))) {
             md.setType(fullType)
           }
 

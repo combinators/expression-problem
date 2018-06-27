@@ -30,8 +30,8 @@ trait e2 extends AbstractGenerator with TestGenerator {
       case PrettyP =>
         exp match {
           case Lit => Java(s"""return "" + ${subs(attributes.value)} + ""; """).statements()
-          case Add => Java(s"""return "(" + ${recurseOn(subs(attributes.left), PrettyP)} + "+" + ${recurseOn(subs(attributes.right), PrettyP)}+ ")";""").statements()
-          case Sub => Java(s"""return "(" + ${recurseOn(subs(attributes.left), PrettyP)} + "-" + ${recurseOn(subs(attributes.right), PrettyP)} + ")";""").statements()
+          case Add => Java(s"""return "(" + ${recurseOn(subs(base.left), PrettyP)} + "+" + ${recurseOn(subs(base.right), PrettyP)}+ ")";""").statements()
+          case Sub => Java(s"""return "(" + ${recurseOn(subs(base.left), PrettyP)} + "-" + ${recurseOn(subs(base.right), PrettyP)} + ")";""").statements()
           case _ => super.methodBodyGenerator(exp)(op)
         }
 

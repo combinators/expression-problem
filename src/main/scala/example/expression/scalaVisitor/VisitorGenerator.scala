@@ -4,7 +4,7 @@ import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
-import example.expression.domain.Domain
+import example.expression.domain.{BaseDomain, ModelDomain}
 import example.expression.j.{AbstractGenerator, DataTypeSubclassGenerator}
 import org.combinators.templating.twirl.Java
 
@@ -12,34 +12,33 @@ import org.combinators.templating.twirl.Java
   * Each evolution has opportunity to enhance the code generators.
   */
 trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator {
-  val domain:Domain
-  import domain._
+  val domain:BaseDomain with ModelDomain
 
   /** For straight design solution, directly access attributes by name. */
-  override def subExpressions(exp:expressions.Exp) : Map[String,Expression] = {
+  override def subExpressions(exp:domain.expressions.Exp) : Map[String,Expression] = {
     exp.attributes.map(att => att.name -> Java(s"e.get${att.name.capitalize}()").expression[Expression]()).toMap
   }
 
   /** Directly access local method, one per operation. */
-  override def recurseOn(expr:Expression, op:Operation) : Expression = {
+  override def recurseOn(expr:Expression, op:domain.Operation) : Expression = {
     Java(s"""$expr.accept(new ${op.name.capitalize}())""").expression()
   }
 
   /** Directly access local method, one per operation, with a parameter. */
-  override def recurseOnWithParams(expr:Expression, op:Operation, params:Expression*) : Expression = {
+  override def recurseOnWithParams(expr:Expression, op:domain.Operation, params:Expression*) : Expression = {
     val args:String = params.mkString(",")
     Java(s"""$expr.accept(new ${op.name.capitalize}($args))""").expression()
   }
 
   /** Return designated Java type associated with type, or void if all else fails. */
-  override def typeGenerator(tpe:types.Types) : com.github.javaparser.ast.`type`.Type = {
+  override def typeGenerator(tpe:domain.types.Types) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
-      case types.Exp => Java("Exp").tpe()
+      case domain.Exp => Java("Exp").tpe()
     }
   }
 
   /** Return Visitor class, which contains a visit method for each available sub-type. */
-  override def generateBase(model:Model): CompilationUnit = {
+  override def generateBase(model:domain.Model): CompilationUnit = {
     val signatures = model.types
       .map(exp => s"public abstract R visit(${exp.name} exp);").mkString("\n")
 
@@ -65,7 +64,7 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
   }
 
   /** Operations are implemented as methods in the Base and sub-type classes. */
-  override def methodGenerator(exp:expressions.Exp)(op:Operation): MethodDeclaration = {
+  override def methodGenerator(exp:domain.expressions.Exp)(op:domain.Operation): MethodDeclaration = {
     val retType = op.returnType match {
       case Some(tpe) => typeGenerator(tpe)
       case _ => Java("void").tpe
@@ -77,12 +76,12 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
   }
 
   /** Provides Exception for unsupported operation, expression pair. */
-  override def methodBodyGenerator(exp:expressions.Exp)(op:Operation): Seq[Statement] = {
+  override def methodBodyGenerator(exp:domain.expressions.Exp)(op:domain.Operation): Seq[Statement] = {
     throw new scala.NotImplementedError(s"""Operation "${op.name}" does not handle case for sub-type "${exp.name}" """)
   }
 
   /** Generate the full class for the given expression sub-type. */
-  override def generateExp(domain:Model, exp:expressions.Exp) : CompilationUnit = {
+  override def generateExp(model:domain.Model, exp:domain.expressions.Exp) : CompilationUnit = {
     val name = exp.toString
 
     val visitor:MethodDeclaration = Java (s"""|public <R> R accept(Visitor<R> v) {
@@ -116,7 +115,7 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
   }
 
   /** Brings in classes for each operation. These can only be completed with the implementations. */
-  def operationGenerator(model:Model, op:Operation): CompilationUnit = {
+  def operationGenerator(model:domain.Model, op:domain.Operation): CompilationUnit = {
 
     val signatures = model.types.map(exp => methodGenerator(exp)(op)).mkString("\n")
 

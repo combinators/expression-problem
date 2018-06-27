@@ -13,27 +13,25 @@ import org.combinators.templating.twirl.Java
 trait e3 extends AbstractGenerator with TestGenerator {
   val domain:Domain
 
-  import domain._
-
-  abstract override def methodBodyGenerator(exp:expressions.Exp)(op:Operation): Seq[Statement] = {
+  abstract override def methodBodyGenerator(exp:domain.expressions.Exp)(op:domain.Operation): Seq[Statement] = {
     val subs = subExpressions(exp)
     
     // generate the actual body
     op match {
-      case PrettyP => {
+      case domain.PrettyP => {
         exp match {
-          case Neg => Java(s"""return "-" + ${recurseOn(subs("exp"), PrettyP)}; """).statements()
-          case Mult => Java(s"""return "(" + ${recurseOn(subs("left"), PrettyP)} + "*" + ${recurseOn(subs("right"), PrettyP)}  + ")";""").statements()
-          case Divd => Java(s"""return "(" + ${recurseOn(subs("left"), PrettyP)}  + "/" + ${recurseOn(subs("right"), PrettyP)}  + ")";""").statements()
+          case domain.Neg => Java(s"""return "-" + ${recurseOn(subs("exp"), domain.PrettyP)}; """).statements()
+          case domain.Mult => Java(s"""return "(" + ${recurseOn(subs("left"), domain.PrettyP)} + "*" + ${recurseOn(subs("right"), domain.PrettyP)}  + ")";""").statements()
+          case domain.Divd => Java(s"""return "(" + ${recurseOn(subs("left"), domain.PrettyP)}  + "/" + ${recurseOn(subs("right"), domain.PrettyP)}  + ")";""").statements()
           case _ => super.methodBodyGenerator(exp)(op)
         }
       }
 
-      case Eval => {
+      case domain.Eval => {
         exp match {
-          case Neg => Java(s"""return - ${recurseOn(subs("exp"), Eval)}; """).statements()
-          case Mult => Java(s"""return ${recurseOn(subs("left"), Eval)} * ${recurseOn(subs("right"), Eval)};""").statements()
-          case Divd => Java(s"""return ${recurseOn(subs("left"), Eval)} / ${recurseOn(subs("right"), Eval)};""").statements()
+          case domain.Neg => Java(s"""return - ${recurseOn(subs("exp"), domain.Eval)}; """).statements()
+          case domain.Mult => Java(s"""return ${recurseOn(subs("left"), domain.Eval)} * ${recurseOn(subs("right"), domain.Eval)};""").statements()
+          case domain.Divd => Java(s"""return ${recurseOn(subs("left"), domain.Eval)} / ${recurseOn(subs("right"), domain.Eval)};""").statements()
           case _ => super.methodBodyGenerator(exp)(op)
         }
       }
@@ -41,26 +39,26 @@ trait e3 extends AbstractGenerator with TestGenerator {
     }
   }
 
-  abstract override def testGenerator(model:Model): Seq[MethodDeclaration] = {
+  abstract override def testGenerator(model:domain.Model): Seq[MethodDeclaration] = {
 
-    val n1 = new UnaryInst(Neg, new LitInst(1.0))
+    val n1 = new domain.UnaryInst(domain.Neg, new domain.LitInst(1.0))
 
     // (5/7) / (7-(2*3) --> just (5/7)
-    val d1 = new UnaryInst(Neg, new LitInst(5.0))
-    val m1 = new BinaryInst(Mult, new LitInst(2.0), new LitInst(3.0))
-    val s1 = new UnaryInst(Neg, m1)
+    val d1 = new domain.UnaryInst(domain.Neg, new domain.LitInst(5.0))
+    val m1 = new domain.BinaryInst(domain.Mult, new domain.LitInst(2.0), new domain.LitInst(3.0))
+    val s1 = new domain.UnaryInst(domain.Neg, m1)
 
-    val m2 = new BinaryInst(Mult, new BinaryInst (Divd, new LitInst(5.0),  new LitInst(2.0)), new LitInst(4.0))
+    val m2 = new domain.BinaryInst(domain.Mult, new domain.BinaryInst (domain.Divd, new domain.LitInst(5.0),  new domain.LitInst(2.0)), new domain.LitInst(4.0))
 
     super.testGenerator(model.last) ++ Java(
       s"""
          |public void test() {
-         |   assertEquals("-1.0", ${recurseOn(convert(n1, model), PrettyP)});
-         |   assertEquals(-1.0, ${recurseOn(convert(n1, model), Eval)});
-         |   assertEquals("((5.0/2.0)*4.0)", ${recurseOn(convert(m2, model), PrettyP)});
+         |   assertEquals("-1.0", ${recurseOn(convert(n1, model), domain.PrettyP)});
+         |   assertEquals(-1.0, ${recurseOn(convert(n1, model), domain.Eval)});
+         |   assertEquals("((5.0/2.0)*4.0)", ${recurseOn(convert(m2, model), domain.PrettyP)});
          |
-         |   assertEquals ("-5.0", ${recurseOn(convert(d1, model), PrettyP)});
-         |   assertEquals ("-(2.0*3.0)", ${recurseOn(convert(s1, model), PrettyP)});
+         |   assertEquals ("-5.0", ${recurseOn(convert(d1, model), domain.PrettyP)});
+         |   assertEquals ("-(2.0*3.0)", ${recurseOn(convert(s1, model), domain.PrettyP)});
          |}""".stripMargin).methodDeclarations()
   }
 }

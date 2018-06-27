@@ -3,35 +3,34 @@ package example.expression.j
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.Expression
-import example.expression.domain.Domain
+import example.expression.domain.{BaseDomain, ModelDomain}
 import org.combinators.templating.twirl.Java
 
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait TestGenerator {
-  val domain:Domain
-  import domain._
+trait TestGenerator  {
+  val domain:BaseDomain with ModelDomain
 
   /** Return sample JUnit test cases. */
-  def testGenerator(model:Model): Seq[MethodDeclaration] = Seq.empty
+  def testGenerator(model:domain.Model): Seq[MethodDeclaration] = Seq.empty
 
   /** Convert a test instance into a Java Expression for instantiating that instance. */
-  def convert(inst:instances.ExpInst, model:Model) : Expression = {
+  def convert(inst:domain.ExpInst, model:domain.Model) : Expression = {
     val name = inst.e.name
     inst match {
-      case lit:LitInst => Java(s"new $name(${lit.i.get.toString})").expression()
-      case ui:instances.UnaryExpInst =>
+      case ui:domain.UnaryExpInst =>
         Java(s"new $name(${convert(ui.exp, model)})").expression()
-      case bi:instances.BinaryExpInst =>
+      case bi:domain.BinaryExpInst =>
         Java(s"new $name(${convert(bi.left, model)}, ${convert(bi.right, model)})").expression()
+      case exp:domain.ExpInst => Java(s"new $name(${exp.i.get.toString})").expression()
 
       case _ =>  Java(s""" "unknown $name" """).expression()
     }
   }
 
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
-  def generateSuite(pack:Option[String], model:Model): CompilationUnit = {
+  def generateSuite(pack:Option[String], model:domain.Model): CompilationUnit = {
     val methods:Seq[MethodDeclaration] = testGenerator(model)
 
     val packageDeclaration:String = if (pack.isDefined) {
@@ -50,7 +49,6 @@ trait TestGenerator {
              |    ${unitTests.mkString("\n")}
              |}""".stripMargin).compilationUnit()
   }
-
 }
 
 

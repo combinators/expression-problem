@@ -18,12 +18,12 @@ GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP
 
 # All variants have names that end in "Evolution", with sub-branches as described by 'e0', 'e1', 'e2', ...
 #Straight variations
-->    /                              example.expression.Straight.E0_Variation
-->    /                              example.expression.Straight.E1_Variation
-->    /                              example.expression.Straight.E2_Variation
-->    /                              example.expression.Straight.E3_Variation
-->    /                              example.expression.Straight.E4_Variation
-->    /                              example.expression.Straight.E5_Variation
+->    /                              example.expression.oo.E0_Variation
+->    /                              example.expression.oo.E1_Variation
+->    /                              example.expression.oo.E2_Variation
+->    /                              example.expression.oo.E3_Variation
+->    /                              example.expression.oo.E4_Variation
+->    /                              example.expression.oo.E5_Variation
 #Trivially variations
 ->    /                              example.expression.trivially.E0_Variation
 ->    /                              example.expression.trivially.E1_Variation
@@ -67,3 +67,8 @@ GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP
 ->    /                              example.expression.algebra.E3_Variation
 ->    /                              example.expression.algebra.E4_Variation
 ->    /                              example.expression.algebra.E5_Variation
+#
+#
+# Shape Evolution
+->    /                              example.expression.oo.S0_Variation
+->    /                              example.expression.scalaVisitor.S0_Variation

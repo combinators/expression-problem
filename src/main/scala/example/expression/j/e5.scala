@@ -42,16 +42,16 @@ trait e5 extends AbstractGenerator with TestGenerator {
 
           // left.equals(((Add)other).left) && right.equals(((Add)other).right);
           case ui:expressions.UnaryExp => {
-            val inner:Expression = Java(s"((${exp.name.capitalize})$name).${subs(attributes.exp)}").expression()
+            val inner:Expression = Java(s"((${exp.name.capitalize})$name).${subs(base.exp)}").expression()
 
-            Java(s"""return $name.getClass().equals(getClass()) && ${recurseOnWithParams(subs(attributes.exp), Equal, inner)};""").statements()
+            Java(s"""return $name.getClass().equals(getClass()) && ${recurseOnWithParams(subs(base.exp), Equal, inner)};""").statements()
           }
 
           case bi:expressions.BinaryExp => {
-            val leftExpr:Expression = Java(s"((${exp.name.capitalize})$name).${subs(attributes.left)}").expression()
-            val rightExpr:Expression = Java(s"((${exp.name.capitalize})$name).${subs(attributes.right)}").expression()
+            val leftExpr:Expression = Java(s"((${exp.name.capitalize})$name).${subs(base.left)}").expression()
+            val rightExpr:Expression = Java(s"((${exp.name.capitalize})$name).${subs(base.right)}").expression()
 
-            Java(s"""return $name.getClass().equals(getClass()) && ${recurseOnWithParams(subs(attributes.left), Equal, leftExpr)} && ${recurseOnWithParams(subs(attributes.right), Equal, rightExpr)};""").statements()
+            Java(s"""return $name.getClass().equals(getClass()) && ${recurseOnWithParams(subs(base.left), Equal, leftExpr)} && ${recurseOnWithParams(subs(base.right), Equal, rightExpr)};""").statements()
           }
 
           case _ => super.methodBodyGenerator(exp)(op)

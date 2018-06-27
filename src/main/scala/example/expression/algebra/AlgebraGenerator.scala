@@ -6,6 +6,7 @@ import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
 import example.expression.domain.Domain
+import example.expression.domain.ModelDomain
 import example.expression.j.AbstractGenerator
 import org.combinators.templating.twirl.Java
 
@@ -14,18 +15,20 @@ import org.combinators.templating.twirl.Java
   */
 trait AlgebraGenerator extends AbstractGenerator {
   val domain:Domain
-  import domain._
+ // import domain._
 
   // still doesn't work...
 
   /**
     * Must eliminate any operation that returns E as value, since Algebra doesn't instantiate the intermediate structures
     */
-  override def compatible(model:Model):Model = {
+  override def compatible(model:domain.Model):domain.Model = {
     if (model.isEmpty) { return model }
 
     // rebuild by filtering out all operations that return Exp.
-    Model (model.name, model.types, model.ops.filterNot(op => op.returnType.isDefined && op.returnType.get.equals(types.Exp)), compatible(model.last))
+    domain.Model(model.name, model.types,
+      model.ops.filterNot(op => op.returnType.isDefined && op.returnType.get.equals(domain.Exp)),
+      compatible(model.last))
   }
 
   /**
@@ -35,44 +38,44 @@ trait AlgebraGenerator extends AbstractGenerator {
     * For interpreter, we use a factory method that has been placed in the class, and that allows
     * the very specialized types to be used.
     */
-  override def inst(exp:expressions.Exp)(op:Operation)(params:Expression*): Expression = {
+  override def inst(exp:domain.expressions.Exp)(op:domain.Operation)(params:Expression*): Expression = {
     Java(exp.name + "(" + params.map(expr => expr.toString()).mkString(",") + ")").expression()
   }
 
   /** For straight design solution, directly access attributes by name. */
-  override def subExpressions(exp:expressions.Exp) : Map[String,Expression] = {
+  override def subExpressions(exp:domain.expressions.Exp) : Map[String,Expression] = {
     exp.attributes.map(att => att.name -> Java(s"${att.name}").expression[Expression]()).toMap
   }
 
   /** Directly access local method, one per operation. */
-  override def recurseOn(expr:Expression, op:Operation) : Expression = {
+  override def recurseOn(expr:Expression, op:domain.Operation) : Expression = {
     Java(s"""$expr.${op.name}()""").expression()
   }
 
   /** Directly access local method, one per operation, with a parameter. */
-  override def recurseOnWithParams(expr:Expression, op:Operation, params:Expression*) : Expression = {
+  override def recurseOnWithParams(expr:Expression, op:domain.Operation, params:Expression*) : Expression = {
     val args:String = params.mkString(",")
     Java(s"""$expr.${op.name}($args)""").expression()
   }
 
   /** Return designated Java type associated with type, or void if all else fails. */
-  override def typeGenerator(tpe:types.Types) : com.github.javaparser.ast.`type`.Type = {
+  override def typeGenerator(tpe:domain.types.Types) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
-      case types.Exp => Java("E").tpe()
+      case domain.Exp => Java("E").tpe()
       case _ => Java ("void").tpe()  // reasonable stop
     }
   }
 
   /** Return designated Exp type with replacement. */
-  def recursiveTypeGenerator(tpe:types.Types, replacement:Type) : com.github.javaparser.ast.`type`.Type = {
+  def recursiveTypeGenerator(tpe:domain.types.Types, replacement:Type) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
-      case types.Exp => replacement
+      case domain.Exp => replacement
       case _ => typeGenerator(tpe)
     }
   }
 
   /** Operations are implemented as methods in the Base and sub-type classes. */
-  override def methodGenerator(exp:expressions.Exp)(op:Operation): MethodDeclaration = {
+  override def methodGenerator(exp:domain.expressions.Exp)(op:domain.Operation): MethodDeclaration = {
     val retType = op.returnType match {
       case Some(tpe) => typeGenerator(tpe)
       case _ => Java("void").tpe
@@ -88,13 +91,13 @@ trait AlgebraGenerator extends AbstractGenerator {
     * all known operations. This class extends the most recently defined class for the
     * same operation (should one exist).
     */
-  def operationGenerator(model:Model, op:Operation): CompilationUnit = {
+  def operationGenerator(model:domain.Model, op:domain.Operation): CompilationUnit = {
 
     // this gets "eval" and we want the name of the Interface.
     val name = op.name
     val returnType = typeGenerator(op.returnType.get)
     val opType = Java(op.name.capitalize).tpe()
-    var targetModel:Model = null
+    var targetModel:domain.Model = null
     var fullName:String = null
 
     /** Computes previous ExpAlgebra class directly from the model. There are four distinct subcases. */
@@ -117,7 +120,7 @@ trait AlgebraGenerator extends AbstractGenerator {
 
       // this is different! It may be that there are NO types for the lastOperationDefined, in which case we must go
       // back further to find one where there were types defined, and then work with that one
-      val bestModel:Model = if (model.lastModelWithOperation().types.nonEmpty) {
+      val bestModel:domain.Model = if (model.lastModelWithOperation().types.nonEmpty) {
         model.lastModelWithOperation()
       } else {
         model.lastModelWithOperation().lastModelWithDataTypes()
@@ -158,12 +161,12 @@ trait AlgebraGenerator extends AbstractGenerator {
     Java(str).compilationUnit()
   }
 
-  def methodBodyGenerator(exp:expressions.Exp)(op:Operation): Seq[Statement] = {
+  def methodBodyGenerator(exp:domain.expressions.Exp)(op:domain.Operation): Seq[Statement] = {
     throw new scala.NotImplementedError(s"""Operation "${op.name}" does not handle case for sub-type "${exp.name}" """)
   }
 
   /** Generate interface for an operation. */
-  def baseInterface(op:Operation) : CompilationUnit = {
+  def baseInterface(op:domain.Operation) : CompilationUnit = {
     var signatures:Seq[String] = Seq.empty
 
     val name = op.name.toLowerCase
@@ -187,7 +190,7 @@ trait AlgebraGenerator extends AbstractGenerator {
     *
     * Only call when model.types is non-empty
     */
-  def extendedInterface(model:Model) : CompilationUnit = {
+  def extendedInterface(model:domain.Model) : CompilationUnit = {
 
     // must be based on the new dataTypes being defined in model (if none, then why here? return)
     val types:Seq[String] = model.types.sortWith(_.name < _.name).map(exp => exp.name)
@@ -225,13 +228,13 @@ trait AlgebraGenerator extends AbstractGenerator {
 
 
   /** Starting from oldest (base) model, work forward in history. */
-  def processModel(models:Seq[Model]): Seq[CompilationUnit] = {
+  def processModel(models:Seq[domain.Model]): Seq[CompilationUnit] = {
 
     // each one is handled individually, then by going backwards, we can find out where the base is
     // ans work outwards from there. Note we should likely foldLeft to create a sequence, which is the
     // reverse of the history.
     var comps: Seq[CompilationUnit] = Seq.empty
-    var operations:Seq[Operation] = Seq.empty
+    var operations:Seq[domain.Operation] = Seq.empty
 
     models.foreach(model => {
 

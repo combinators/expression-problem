@@ -1,5 +1,8 @@
 package example.expression.domain
 
+/**
+  * Definition of the Model case class used to represent the Model for any EP solution.
+  */
 trait ModelDomain extends BaseDomain {
 
   /** Each model consists of a collection of Exp sub-types and operations. */

@@ -1,5 +1,26 @@
 package example.expression.domain
 
+/*
+
+digraph D {
+    rankdir=BT;
+    node [fontname="Arial"];
+
+    e0 [shape=record    label="e0|{Add|Lit}|{Eval}"];
+    e1 [shape=record    label="e1|{Sub}|{}"];
+    e2 [shape=record    label="e2|{}|{PrettyP}"];
+    e3 [shape=record    label="e3|{Divd|Mult|Neg}|{}"];
+    e4 [shape=record    label="e4|{}|{Collect|Simplify}"];
+    e5 [shape=record    label="e5|{}|{Equal}"];
+
+    e5 -> e4
+    e4 -> e3
+    e3 -> e2
+    e2 -> e1
+    e1 -> e0
+}
+
+ */
 trait Domain extends BaseDomain with ModelDomain {
 
   // standard attributes for domain. As new ones are defined, place here

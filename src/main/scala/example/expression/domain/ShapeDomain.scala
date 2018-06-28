@@ -1,5 +1,13 @@
 package example.expression.domain
 
+/**
+  * Shape domain as suitable for
+  *
+  * Synthesizing Object-Oriented and Functional Design to Promote Re-Use
+  * Shriram Krishnamurthi, Matthias Felleisen, Daniel Friedman
+  *
+  * https://www.cs.rice.edu/~cork/teachjava/2003/readings/visitor1.pdf
+  */
 trait ShapeDomain extends BaseDomain with ModelDomain {
 
   // standard attributes for domain. As new ones are defined, place here
@@ -9,6 +17,7 @@ trait ShapeDomain extends BaseDomain with ModelDomain {
     val trans:String = "trans"
     val radius:String = "radius"
     val shape:String  = "shape"
+    val pct:String = "pct"
   }
 
   // s0:model evolution.
@@ -21,7 +30,7 @@ trait ShapeDomain extends BaseDomain with ModelDomain {
   case object Circle extends expressions.Exp("Circle", Seq(Attribute(attributes.radius, Double)))
   case object Translate extends expressions.Exp("Translate",
     Seq(Attribute(attributes.trans, Point), Attribute(attributes.shape, Exp)))
-  case object ContainsPt extends Operation("containsPt", Some(Boolean), ("point", Point))
+  case object ContainsPt extends Operation("containsPt", Some(Boolean), (attributes.point, Point))
   val s0 = Model("s0", Seq(Square,Circle,Translate), Seq(ContainsPt), emptyModel())
 
   class SquareInst(d:Double) extends ExpInst(Square, Some(d))
@@ -32,7 +41,7 @@ trait ShapeDomain extends BaseDomain with ModelDomain {
 
   // e1:model evolution (add operation)
   // ----------------------------------
-  case object Shrink extends Operation("shrink", Some(Exp), ("shape", Exp))
+  case object Shrink extends Operation("shrink", Some(Exp), (attributes.pct, Double))
   val s1 = Model("s1", Seq.empty, Seq(Shrink), s0)
 
   // e2:model evolution (add datatype)

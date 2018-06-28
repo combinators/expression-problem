@@ -38,3 +38,21 @@ class S0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   }
   override val model = gen.domain.s0
 }
+
+class S1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+  extends ShapeFoundation(web, app) {
+
+  override val gen = new VisitorGenerator with TestGenerator with s0 with s1 {
+    override val domain = new ShapeDomain{ }
+  }
+  override val model = gen.domain.s1
+}
+
+//class S2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+//  extends ShapeFoundation(web, app) {
+//
+//  override val gen = new VisitorGenerator with TestGenerator with s0 with s1 with s2 {
+//    override val domain = new ShapeDomain{ }
+//  }
+//  override val model = gen.domain.s1
+//}

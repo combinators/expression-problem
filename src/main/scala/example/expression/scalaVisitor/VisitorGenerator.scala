@@ -19,13 +19,13 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
     exp.attributes.map(att => att.name -> Java(s"e.get${att.name.capitalize}()").expression[Expression]()).toMap
   }
 
-  /** Directly access local method, one per operation. */
-  override def recurseOn(expr:Expression, op:domain.Operation) : Expression = {
-    Java(s"""$expr.accept(new ${op.name.capitalize}())""").expression()
-  }
+//  /** Directly access local method, one per operation. */
+//  override def recurseOn(expr:Expression, op:domain.Operation) : Expression = {
+//    Java(s"""$expr.accept(new ${op.name.capitalize}())""").expression()
+//  }
 
   /** Directly access local method, one per operation, with a parameter. */
-  override def recurseOnWithParams(expr:Expression, op:domain.Operation, params:Expression*) : Expression = {
+  override def recurseOn(expr:Expression, op:domain.Operation, params:Expression*) : Expression = {
     val args:String = params.mkString(",")
     Java(s"""$expr.accept(new ${op.name.capitalize}($args))""").expression()
   }

@@ -19,13 +19,13 @@ trait StraightGenerator extends AbstractGenerator with DataTypeSubclassGenerator
     exp.attributes.map(att => att.name -> Java(s"${att.name}").expression[Expression]()).toMap
   }
 
-  /** Directly access local method, one per operation. */
-  override def recurseOn(expr:Expression, op:domain.Operation) : Expression = {
-    Java(s"""$expr.${op.name}()""").expression()
-  }
+//  /** Directly access local method, one per operation. */
+//  override def recurseOn(expr:Expression, op:domain.Operation) : Expression = {
+//    Java(s"""$expr.${op.name}()""").expression()
+//  }
 
   /** Directly access local method, one per operation, with a parameter. */
-  override def recurseOnWithParams(expr:Expression, op:domain.Operation, params:Expression*) : Expression = {
+  override def recurseOn(expr:Expression, op:domain.Operation, params:Expression*) : Expression = {
     val args:String = params.mkString(",")
     Java(s"""$expr.${op.name}($args)""").expression()
   }

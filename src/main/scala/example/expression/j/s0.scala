@@ -91,12 +91,12 @@ trait s0 extends AbstractGenerator with TestGenerator {
     super.testGenerator(model.last) ++ Java(
       s"""
          |public void test() {
-         |   assertTrue(${recurseOnWithParams(convert(s1, model), domain.ContainsPt, p1)});
-         |   assertFalse(${recurseOnWithParams(convert(c1, model), domain.ContainsPt, p2)});
+         |   assertTrue(${recurseOn(convert(s1, model), domain.ContainsPt, p1)});
+         |   assertFalse(${recurseOn(convert(c1, model), domain.ContainsPt, p2)});
          |
-         |   assertFalse(${recurseOnWithParams(convert(t1, model), domain.ContainsPt, p1)});
-         |   assertFalse(${recurseOnWithParams(convert(t2, model), domain.ContainsPt, p1)});
-         |   assertTrue(${recurseOnWithParams(convert(t2, model), domain.ContainsPt, p2)});
+         |   assertFalse(${recurseOn(convert(t1, model), domain.ContainsPt, p1)});
+         |   assertFalse(${recurseOn(convert(t2, model), domain.ContainsPt, p1)});
+         |   assertTrue(${recurseOn(convert(t2, model), domain.ContainsPt, p2)});
          |
          |}""".stripMargin).methodDeclarations()
   }

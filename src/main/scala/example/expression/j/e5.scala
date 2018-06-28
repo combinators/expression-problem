@@ -37,21 +37,21 @@ trait e5 extends AbstractGenerator with TestGenerator {
           case Lit => {
             val value:Expression = Java(s"((${exp.name.capitalize})$name).${subs(attributes.value)}").expression()
 
-            Java(s"""return ${recurseOnWithParams(subs(attributes.value), Equal, value)};""").statements()
+            Java(s"""return ${recurseOn(subs(attributes.value), Equal, value)};""").statements()
           }
 
           // left.equals(((Add)other).left) && right.equals(((Add)other).right);
           case ui:expressions.UnaryExp => {
             val inner:Expression = Java(s"((${exp.name.capitalize})$name).${subs(base.exp)}").expression()
 
-            Java(s"""return $name.getClass().equals(getClass()) && ${recurseOnWithParams(subs(base.exp), Equal, inner)};""").statements()
+            Java(s"""return $name.getClass().equals(getClass()) && ${recurseOn(subs(base.exp), Equal, inner)};""").statements()
           }
 
           case bi:expressions.BinaryExp => {
             val leftExpr:Expression = Java(s"((${exp.name.capitalize})$name).${subs(base.left)}").expression()
             val rightExpr:Expression = Java(s"((${exp.name.capitalize})$name).${subs(base.right)}").expression()
 
-            Java(s"""return $name.getClass().equals(getClass()) && ${recurseOnWithParams(subs(base.left), Equal, leftExpr)} && ${recurseOnWithParams(subs(base.right), Equal, rightExpr)};""").statements()
+            Java(s"""return $name.getClass().equals(getClass()) && ${recurseOn(subs(base.left), Equal, leftExpr)} && ${recurseOn(subs(base.right), Equal, rightExpr)};""").statements()
           }
 
           case _ => super.methodBodyGenerator(exp)(op)
@@ -70,8 +70,8 @@ trait e5 extends AbstractGenerator with TestGenerator {
       super.testGenerator(model.last) ++ Java(
       s"""
          |public void test() {
-         |   assertFalse(${recurseOnWithParams(convert(s1, model), Equal, convert(s2, model))});
-         |   assertTrue(${recurseOnWithParams(convert(s1, model), Equal, convert(s3, model))});
+         |   assertFalse(${recurseOn(convert(s1, model), Equal, convert(s2, model))});
+         |   assertTrue(${recurseOn(convert(s1, model), Equal, convert(s3, model))});
          |}""".stripMargin).methodDeclarations()
   }
 }

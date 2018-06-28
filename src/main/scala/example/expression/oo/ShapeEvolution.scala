@@ -1,7 +1,7 @@
 package example.expression.oo
 
 import com.github.javaparser.ast.CompilationUnit
-import example.expression.domain.{ModelDomain, ShapeDomain}
+import example.expression.domain.ShapeDomain
 import example.expression.j._
 import javax.inject.Inject
 import org.combinators.templating.persistable.JavaPersistable._
@@ -39,11 +39,11 @@ class S0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   override val model = gen.domain.s0
 }
 
-//class S1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-//  extends Foundation(web, app) {
-//
-//  override val gen = new StraightGenerator with TestGenerator with s0 with s1 {
-//    override val domain = new Domain{ }
-//  }
-//  override val model = gen.domain.e1
-//}
+class S1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+  extends ShapeFoundation(web, app) {
+
+  override val gen = new StraightGenerator with TestGenerator with s0 with s1 {
+    override val domain = new ShapeDomain{ }
+  }
+  override val model = gen.domain.s1
+}

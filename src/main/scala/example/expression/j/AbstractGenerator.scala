@@ -21,10 +21,10 @@ trait AbstractGenerator  {
   def subExpressions(exp:domain.expressions.Exp) : Map[String, Expression]
 
   /** Responsible for dispatching sub-expressions. */
-  def recurseOn(expr:Expression, op:domain.Operation) : Expression
+  //def recurseOn(expr:Expression, op:domain.Operation) : Expression
 
-  /** Responsible for dispatching sub-expressions with parameter. */
-  def recurseOnWithParams(expr:Expression, op:domain.Operation, params:Expression*) : Expression
+  /** Responsible for dispatching sub-expressions with possible parameter(s). */
+  def recurseOn(expr:Expression, op:domain.Operation, params:Expression*) : Expression
 
   /**
     * For producer operations, there is a need to instantiate objects, and one would use this

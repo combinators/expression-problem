@@ -6,7 +6,6 @@ import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
 import example.expression.domain.Domain
-import example.expression.domain.ModelDomain
 import example.expression.j.AbstractGenerator
 import org.combinators.templating.twirl.Java
 
@@ -47,13 +46,13 @@ trait AlgebraGenerator extends AbstractGenerator {
     exp.attributes.map(att => att.name -> Java(s"${att.name}").expression[Expression]()).toMap
   }
 
-  /** Directly access local method, one per operation. */
-  override def recurseOn(expr:Expression, op:domain.Operation) : Expression = {
-    Java(s"""$expr.${op.name}()""").expression()
-  }
+//  /** Directly access local method, one per operation. */
+//  override def recurseOn(expr:Expression, op:domain.Operation) : Expression = {
+//    Java(s"""$expr.${op.name}()""").expression()
+//  }
 
   /** Directly access local method, one per operation, with a parameter. */
-  override def recurseOnWithParams(expr:Expression, op:domain.Operation, params:Expression*) : Expression = {
+  override def recurseOn(expr:Expression, op:domain.Operation, params:Expression*) : Expression = {
     val args:String = params.mkString(",")
     Java(s"""$expr.${op.name}($args)""").expression()
   }

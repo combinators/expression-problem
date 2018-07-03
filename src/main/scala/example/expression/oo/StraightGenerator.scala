@@ -5,13 +5,13 @@ import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
 import example.expression.domain.{BaseDomain, ModelDomain}
-import example.expression.j.{AbstractGenerator, DataTypeSubclassGenerator}
+import example.expression.j.{AbstractGenerator, DataTypeSubclassGenerator, OperationAsMethodGenerator}
 import org.combinators.templating.twirl.Java
 
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait StraightGenerator extends AbstractGenerator with DataTypeSubclassGenerator {
+trait StraightGenerator extends AbstractGenerator with DataTypeSubclassGenerator with OperationAsMethodGenerator {
   val domain:BaseDomain with ModelDomain
 
   /** For straight design solution, directly access attributes by name. */
@@ -19,7 +19,11 @@ trait StraightGenerator extends AbstractGenerator with DataTypeSubclassGenerator
     exp.attributes.map(att => att.name -> Java(s"${att.name}").expression[Expression]()).toMap
   }
 
-//  /** Directly access local method, one per operation. */
+  override def getJavaClass() : Expression = {
+    Java(s"getClass()").expression[Expression]()
+  }
+
+  //  /** Directly access local method, one per operation. */
 //  override def recurseOn(expr:Expression, op:domain.Operation) : Expression = {
 //    Java(s"""$expr.${op.name}()""").expression()
 //  }
@@ -31,9 +35,11 @@ trait StraightGenerator extends AbstractGenerator with DataTypeSubclassGenerator
   }
 
   /** Return designated Java type associated with type. */
-  def typeGenerator(tpe:domain.types.Types) : com.github.javaparser.ast.`type`.Type = {
+  override def typeGenerator(tpe:domain.types.Types) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
       case domain.Exp => Java("Exp").tpe()
+
+      case _ => super.typeGenerator(tpe)
     }
   }
 
@@ -51,16 +57,15 @@ trait StraightGenerator extends AbstractGenerator with DataTypeSubclassGenerator
       typeGenerator(tpe).toString + " " + name
     }).mkString(",")
 
-
     Java(s"""|public $retType ${op.name}($params) {
              |  ${methodBodyGenerator(exp)(op).mkString("\n")}
              |}""".stripMargin).methodDeclarations().head
   }
 
   /** Throws run-time exception to catch when an operation/exp pair is missing. */
-  def methodBodyGenerator(exp:domain.expressions.Exp)(op:domain.Operation): Seq[Statement] = {
-    throw new scala.NotImplementedError(s"""Operation "${op.name}" does not handle case for sub-type "${exp.getClass.getSimpleName}" """)
-  }
+//  override def methodBodyGenerator(exp:domain.expressions.Exp)(op:domain.Operation): Seq[Statement] = {
+//    throw new scala.NotImplementedError(s"""Operation "${op.name}" does not handle case for sub-type "${exp.getClass.getSimpleName}" """)
+//  }
 
   /** Generate the full class for the given expression sub-type. */
   def generateExp(model:domain.Model, exp:domain.expressions.Exp) : CompilationUnit = {
@@ -112,5 +117,4 @@ trait StraightGenerator extends AbstractGenerator with DataTypeSubclassGenerator
              |  ${signatures.mkString("\n")}
              |}""".stripMargin).compilationUnit()
   }
-
 }

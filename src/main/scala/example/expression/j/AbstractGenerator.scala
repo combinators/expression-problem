@@ -1,6 +1,5 @@
 package example.expression.j
 
-import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
 import example.expression.domain.{BaseDomain, ModelDomain}
@@ -19,6 +18,9 @@ trait AbstractGenerator  {
     * expressions.UnaryExp only has an 'exp'
     */
   def subExpressions(exp:domain.expressions.Exp) : Map[String, Expression]
+
+  /** Provide ability to retrieve class associated with expression. */
+  def getJavaClass() : Expression
 
   /** Responsible for dispatching sub-expressions. */
   //def recurseOn(expr:Expression, op:domain.Operation) : Expression
@@ -43,16 +45,17 @@ trait AbstractGenerator  {
     * Expression-tree data has attributes with domain-specific types. This method returns
     * the designated Java type associated with the abstract type.
     */
-  def typeGenerator(tpe:domain.types.Types) : com.github.javaparser.ast.`type`.Type
-
-  /** Operations are implemented as methods in the Base and sub-type classes. */
-  def methodGenerator(exp:domain.expressions.Exp)(op:domain.Operation) : MethodDeclaration
+  def typeGenerator(tpe:domain.types.Types) : com.github.javaparser.ast.`type`.Type = {
+    throw new scala.NotImplementedError(s"""Unknown Type "$tpe" """)
+  }
 
   /**
     * Universal situation across all possible solutions is the sequence of statements that result
-    * for a given Operation and datatype.
+    * for a given Operation and data-type.
     */
-  def methodBodyGenerator(exp:domain.expressions.Exp)(op:domain.Operation) : Seq[Statement]
+  def methodBodyGenerator(exp:domain.expressions.Exp)(op:domain.Operation) : Seq[Statement] = {
+    throw new scala.NotImplementedError(s"""Operation "${op.name}" does not handle case for sub-type "${exp.name}" """)
+  }
 
   /**
     * Determine a potentially reduced model-chain that is compatible with a given generator.

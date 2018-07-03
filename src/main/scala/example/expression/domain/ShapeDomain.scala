@@ -39,12 +39,12 @@ trait ShapeDomain extends BaseDomain with ModelDomain {
 
   // abstract class BinaryExpInst(override val e:expressions.Exp, val left:ExpInst, val right:ExpInst) extends ExpInst(e, None)
 
-  // e1:model evolution (add operation)
+  // s1:model evolution (add operation)
   // ----------------------------------
   case object Shrink extends Operation("shrink", Some(Exp), (attributes.pct, Double))
   val s1 = Model("s1", Seq.empty, Seq(Shrink), s0)
 
-  // e2:model evolution (add datatype)
+  // s2:model evolution (add datatype)
   // ---------------------------------
   case object Composite extends expressions.Exp("Composite",
     Seq(Attribute(base.left, Exp), Attribute(base.right, Exp)))

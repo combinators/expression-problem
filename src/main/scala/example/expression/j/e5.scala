@@ -10,6 +10,8 @@ import org.combinators.templating.twirl.Java
   * Truly independent of the specific design solution.
   *
   * Determine if structure of two Exps are equal to each other. Checking in.
+  *
+  * First operation that has parameter which has Exp-recursive structure
   */
 trait e5 extends AbstractGenerator with TestGenerator {
   val domain:Domain
@@ -32,26 +34,35 @@ trait e5 extends AbstractGenerator with TestGenerator {
         val atts:Map[String,Expression] = subExpressions(exp)
         val name:String = op.parameters.head._1
         val other:types.Types = op.parameters.head._2
+        val oname = Java(name).expression[Expression]()
 
+        // for now: HACK. subExpressions returns e.getExp() for example, but we just want this to be getExp
+        // still don't know true impact on rest of the system, so fix later.
+
+        // have to manually insert e.getClass() -- troubling
         exp match {
           case Lit => {
-            val value:Expression = Java(s"((${exp.name.capitalize})$name).${subs(attributes.value)}").expression()
-
-            Java(s"""return ${recurseOn(subs(attributes.value), Equal, value)};""").statements()
+            val call:String = atts(domain.attributes.value).toString//.substring(2)
+            val value:Expression = Java(s"((${exp.name.capitalize})$name).$call").expression()
+// e.getValue() == ((Lit) other).getValue();
+            Java(s"""return ${getJavaClass()}.equals(${recurseOn(oname, GetJavaClass)}) && $call.equals($value);""").statements()
           }
 
           // left.equals(((Add)other).left) && right.equals(((Add)other).right);
           case ui:expressions.UnaryExp => {
-            val inner:Expression = Java(s"((${exp.name.capitalize})$name).${subs(base.exp)}").expression()
+            val call:String = atts(domain.base.exp).toString//.substring(2)
+            val inner:Expression = Java(s"((${exp.name.capitalize})$name).$call").expression()
 
-            Java(s"""return $name.getClass().equals(getClass()) && ${recurseOn(subs(base.exp), Equal, inner)};""").statements()
+            Java(s"""return ${getJavaClass()}.equals(${recurseOn(oname, GetJavaClass)}) && ${recurseOn(subs(base.exp), Equal, inner)};""").statements()
           }
 
           case bi:expressions.BinaryExp => {
-            val leftExpr:Expression = Java(s"((${exp.name.capitalize})$name).${subs(base.left)}").expression()
-            val rightExpr:Expression = Java(s"((${exp.name.capitalize})$name).${subs(base.right)}").expression()
+            val leftCall:String = atts(domain.base.left).toString//.substring(2)
+            val rightCall:String = atts(domain.base.right).toString//.substring(2)
+            val leftExpr:Expression = Java(s"((${exp.name.capitalize})$name).$leftCall").expression()
+            val rightExpr:Expression = Java(s"((${exp.name.capitalize})$name).$rightCall").expression()
 
-            Java(s"""return $name.getClass().equals(getClass()) && ${recurseOn(subs(base.left), Equal, leftExpr)} && ${recurseOn(subs(base.right), Equal, rightExpr)};""").statements()
+            Java(s"""return ${getJavaClass()}.equals(${recurseOn(oname, GetJavaClass)}) && ${recurseOn(subs(base.left), Equal, leftExpr)} && ${recurseOn(subs(base.right), Equal, rightExpr)};""").statements()
           }
 
           case _ => super.methodBodyGenerator(exp)(op)

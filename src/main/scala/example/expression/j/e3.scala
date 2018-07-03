@@ -20,18 +20,18 @@ trait e3 extends AbstractGenerator with TestGenerator {
     op match {
       case domain.PrettyP => {
         exp match {
-          case domain.Neg => Java(s"""return "-" + ${recurseOn(subs("exp"), domain.PrettyP)}; """).statements()
-          case domain.Mult => Java(s"""return "(" + ${recurseOn(subs("left"), domain.PrettyP)} + "*" + ${recurseOn(subs("right"), domain.PrettyP)}  + ")";""").statements()
-          case domain.Divd => Java(s"""return "(" + ${recurseOn(subs("left"), domain.PrettyP)}  + "/" + ${recurseOn(subs("right"), domain.PrettyP)}  + ")";""").statements()
+          case domain.Neg => Java(s"""return "-" + ${recurseOn(subs(domain.base.exp), domain.PrettyP)}; """).statements()
+          case domain.Mult => Java(s"""return "(" + ${recurseOn(subs(domain.base.left), domain.PrettyP)} + "*" + ${recurseOn(subs(domain.base.right), domain.PrettyP)}  + ")";""").statements()
+          case domain.Divd => Java(s"""return "(" + ${recurseOn(subs(domain.base.left), domain.PrettyP)}  + "/" + ${recurseOn(subs(domain.base.right), domain.PrettyP)}  + ")";""").statements()
           case _ => super.methodBodyGenerator(exp)(op)
         }
       }
 
       case domain.Eval => {
         exp match {
-          case domain.Neg => Java(s"""return - ${recurseOn(subs("exp"), domain.Eval)}; """).statements()
-          case domain.Mult => Java(s"""return ${recurseOn(subs("left"), domain.Eval)} * ${recurseOn(subs("right"), domain.Eval)};""").statements()
-          case domain.Divd => Java(s"""return ${recurseOn(subs("left"), domain.Eval)} / ${recurseOn(subs("right"), domain.Eval)};""").statements()
+          case domain.Neg => Java(s"""return - ${recurseOn(subs(domain.base.exp), domain.Eval)}; """).statements()
+          case domain.Mult => Java(s"""return ${recurseOn(subs(domain.base.left), domain.Eval)} * ${recurseOn(subs(domain.base.right), domain.Eval)};""").statements()
+          case domain.Divd => Java(s"""return ${recurseOn(subs(domain.base.left), domain.Eval)} / ${recurseOn(subs(domain.base.right), domain.Eval)};""").statements()
           case _ => super.methodBodyGenerator(exp)(op)
         }
       }

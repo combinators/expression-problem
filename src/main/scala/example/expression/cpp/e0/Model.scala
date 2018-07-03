@@ -1,18 +1,8 @@
 package example.expression.cpp.e0
 
-import example.expression.cpp.{CPPMethod, HasCPPCodeGenerator, HasCPPTestCaseGenerator}
-import expression.Operation
+import example.expression.cpp.{CPPMethod, HasCPPCodeGenerator}
 import expression.data.{Add, Eval, Lit}
-import expression.instances.UnitTest
-import org.combinators.templating.twirl.Java
 import shared.compilation.CodeGeneratorRegistry
-
-//map += (exp.getClass ->
-//s"""
-//         |void Visit${exp.getClass.getSimpleName}(const $name* e) {
-//         |   $stmts
-//         |}
-//        """.stripMargin)
 
 /**
   * Each trait is stand alone, and woven into the final repository.
@@ -44,5 +34,4 @@ trait Model extends HasCPPCodeGenerator {
         )
     }
   }
-
 }

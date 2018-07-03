@@ -32,11 +32,10 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
       domain.ops.asScala.foreach {
         op:Operation => {
           tgts = tgts :+ OpDecl(op)
-          //tgts = tgts :+ OpImpl(op)
         }
       }
     )
-    //
+
     // need all subtypes from history for the visitor interface
     var allSubTypes:Seq[Exp] = Seq.empty
 
@@ -55,11 +54,6 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
         tgts = tgts :+ ExpImplClass(exp)
       }
       ))
-
-//      hist.asScala.foreach(domain =>
-//        domain.ops.asScala.foreach(op =>
-//          tgts = tgts :+ OpImpl(allSubTypes, op, codeGenerator)
-//        ))
 
       tgts = tgts :+ Driver
       tgts = tgts :+ TestSuite(defaultInstance.instanceGenerators, testCases)
@@ -101,14 +95,15 @@ class E2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   override def testCases:UnitSuite = tests.e2.TestCases.add(super.testCases)
 }
 
-//class E3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-//  extends E2_Variation(web, app) with e3.Model {
-//
-//  override lazy val controllerAddress = "e3"
-//
-//  override def history:History = evolution.J3.extend(super.history)
-//  override def testCases:UnitSuite = tests.e3.TestCases.add(super.testCases)
-//}
+class E3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+  extends E2_Variation(web, app) with e3.Model {
+
+  override lazy val controllerAddress = "e3"
+
+  override def history:History = evolution.J3.extend(super.history)
+  override def testCases:UnitSuite = tests.e3.TestCases.add(super.testCases)
+}
+
 //
 //class E4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 //  extends E3_Variation(web, app) with e4.Model {

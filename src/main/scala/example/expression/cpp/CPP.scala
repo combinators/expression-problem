@@ -16,11 +16,7 @@ import org.combinators.templating.persistable.Persistable
   * Note: name is likely part of $signature, but it is being pulled out so we can name the file after it.
   */
 class CPPBase {
-  def indent (lines:Seq[CPPElement]):String = {
-    lines.map(line => s"  $line").mkString("\n")
-  }
-
-  def indentString (lines:Seq[String]):String = {
+  def indent (lines:Seq[Any]):String = {
     lines.map(line => s"  $line").mkString("\n")
   }
 }
@@ -36,7 +32,7 @@ class CPPElement (val stmt:String = "") extends CPPBase {
 abstract class CPPFile extends CPPBase {
   var standardHeader:String = ""
 
-  def isHeader():Boolean = false
+  def isHeader:Boolean = false
 
   // allow one to extend include definitions
   def addHeader(s:Seq[String]): CPPBase = {
@@ -87,9 +83,8 @@ final class MainFile (val _name:String, val _body:Seq[String]) extends CPPFile {
 
   override def toString: String = s"""|$standardHeader
                                       |int main() {
-                                      |${indentString(body)}
+                                      |${indent(body)}
                                       |}""".stripMargin
-
 
   // allow one to extend include definitions
   override def addHeader(s:Seq[String]): MainFile = {
@@ -104,7 +99,7 @@ final class CPPHeaderCode (val _name:String, val _body:Seq[String]) extends CPPF
   val name:String = _name
   val body:Seq[String] = _body
 
-  override def isHeader():Boolean = true
+  override def isHeader:Boolean = true
   override def fileName:String = name
 
 
@@ -128,9 +123,8 @@ final class CPPCode (val _name:String, val _body:Seq[CPPElement]) extends CPPFil
   val name:String = _name
   val body:Seq[CPPElement] = _body
 
-  override def isHeader():Boolean = false
+  //override def isHeader:Boolean = false
   override def fileName:String = name
-
 
   // allow one to extend include definitions
   override def addHeader(s:Seq[String]): CPPCode = {
@@ -211,7 +205,7 @@ class CPPMethod (val _retType:String, val _name:String, val _params:String, val 
 
   override def toString: String = {
     val signature = s"$retType $name$params"
-    indentString(Seq(s"$signature {") ++ body ++ Seq("}"))
+    indent(Seq(s"$signature {") ++ body ++ Seq("}"))
   }
 }
 
@@ -223,5 +217,5 @@ class CPPField (val _signature:String) extends CPPElement {
 
   val signature:String = _signature
 
-  override def toString: String = indentString(Seq(signature))
+  override def toString: String = indent(Seq(signature))
 }

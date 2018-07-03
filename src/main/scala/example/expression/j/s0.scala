@@ -47,13 +47,13 @@ trait s0 extends AbstractGenerator with TestGenerator {
 
             // return ${recurseOnWithParams(convert(s1, domain.emptyModel()), domain.ContainsPt, Java("t").expression[Expression]())});
 
+            //return ${subs(domain.attributes.shape)}.${op.name}(t);
           case domain.Translate => {
             Java(
               s"""
                  |// first adjust
                  |java.awt.geom.Point2D.Double t = new java.awt.geom.Point2D.Double(point.x - ${subs(domain.attributes.trans)}.x, point.y - ${subs(domain.attributes.trans)}.y);
-                 |
-                 |return ${subs(domain.attributes.shape)}.${op.name}(t);
+                 |return ${recurseOn(subs(domain.attributes.shape), domain.ContainsPt, Java("t").expression[Expression]())};
                  |
                """.stripMargin).statements()
           }

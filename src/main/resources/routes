@@ -44,10 +44,12 @@ GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP
 ->    /                              example.expression.scalaVisitor.E2_Variation
 ->    /                              example.expression.scalaVisitor.E3_Variation
 ->    /                              example.expression.scalaVisitor.E4_Variation
+->    /                              example.expression.scalaVisitor.E5_Variation
 # CPP variations
 ->    /                              example.expression.cpp.E0_Variation
 ->    /                              example.expression.cpp.E1_Variation
 ->    /                              example.expression.cpp.E2_Variation
+->    /                              example.expression.cpp.E3_Variation
 # Visitor variations
 ->    /                              example.expression.visitor.E0_Variation
 ->    /                              example.expression.visitor.E1_Variation

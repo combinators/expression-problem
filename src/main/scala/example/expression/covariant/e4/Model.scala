@@ -131,15 +131,15 @@ trait Model extends HasCodeGenerator with HasTestCaseGenerator with OperationDep
                |  assertEquals("${tc.expected.toString}", result$num);
                |""".stripMargin).statements()
 
-      var expected:String = "java.util.List<Double> match = new java.util.ArrayList<Double>();"
+      var expected:String = s"java.util.List<Double> match$num = new java.util.ArrayList<Double>();"
 
       expected += tc.expected.asInstanceOf[java.util.List[expression.instances.Lit]].asScala.map(value => {
-        "match.add(" + value.value + ");"
+        s"match$num.add(" + value.value + ");"
       }).mkString("\n")
 
       Java(s"""|  java.util.List<Double> result$num = (java.util.List<Double>) ${identifier.toString}.collectList();
                |  $expected
-               |  assertEquals(match, result$num);
+               |  assertEquals(match$num, result$num);
                |""".stripMargin).statements()
     } else if (op.equals(new SimplifyExpr)) {
       val num: Int = nextTestNumber()

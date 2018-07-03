@@ -63,8 +63,14 @@ trait Domain extends BaseDomain with ModelDomain {
   case object Collect extends Operation("collect", Some(List(Double)))
   val e4 = Model(name="e4",Seq.empty, Seq(Simplify, Collect), e3)
 
+  // ex: graft in a useful operation for future operations to use
+  case object JavaClass extends types.Types
+  case object GetJavaClass extends Operation ("getJavaClass", Some(JavaClass))
+  case object GetChild extends Operation ("getJavaClass", Some(JavaClass))
+  val e4i = Model(name="ex", Seq.empty, Seq(GetJavaClass), e4)
+
   // e5:model evolution
   case object Boolean extends types.Types
   case object Equal extends Operation("equals", Some(Boolean), ("other", Exp))
-  val e5 = Model(name="e5", Seq.empty, Seq(Equal), e4)
+  val e5 = Model(name="e5", Seq.empty, Seq(Equal), e4i)
 }

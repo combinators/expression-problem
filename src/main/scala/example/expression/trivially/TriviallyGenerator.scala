@@ -10,7 +10,6 @@ import example.expression.j.{AbstractGenerator, DataTypeSubclassGenerator}
 import org.combinators.templating.twirl.Java
 
 trait TriviallyGenerator extends example.expression.oo.StraightGenerator {
- // import domain._
 
 //  /**
 //    * Must eliminate any operation that returns E as value, since can't handle Producer methods
@@ -152,7 +151,7 @@ trait TriviallyGenerator extends example.expression.oo.StraightGenerator {
       Java(
         s"""
            |package trivially;
-           |public interface ${finalInterfaceName} extends ${finalParents.mkString(",")} {}
+           |public interface $finalInterfaceName extends ${finalParents.mkString(",")} {}
          """.stripMargin).compilationUnit()
     finalInterface +: generate(model)
   }
@@ -179,7 +178,7 @@ trait TriviallyGenerator extends example.expression.oo.StraightGenerator {
       s"""package trivially;
          |
          |public interface ${baseInterfaceName(op)} extends ${parents.mkString(", ")} {
-         |    ${methodSignature}
+         |    $methodSignature
          |}
        """.stripMargin).compilationUnit()
   }

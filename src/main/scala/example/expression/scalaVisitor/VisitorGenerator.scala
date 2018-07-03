@@ -5,18 +5,22 @@ import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
 import example.expression.domain.{BaseDomain, ModelDomain}
-import example.expression.j.{AbstractGenerator, DataTypeSubclassGenerator}
+import example.expression.j.{AbstractGenerator, DataTypeSubclassGenerator, OperationAsMethodGenerator}
 import org.combinators.templating.twirl.Java
 
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator {
+trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator with OperationAsMethodGenerator {
   val domain:BaseDomain with ModelDomain
 
-  /** For straight design solution, directly access attributes by name. */
+  /** For visitor design solution, access through default 'e' parameter */
   override def subExpressions(exp:domain.expressions.Exp) : Map[String,Expression] = {
     exp.attributes.map(att => att.name -> Java(s"e.get${att.name.capitalize}()").expression[Expression]()).toMap
+  }
+
+  override def getJavaClass() : Expression = {
+    Java(s"e.getClass()").expression[Expression]()
   }
 
 //  /** Directly access local method, one per operation. */
@@ -75,10 +79,10 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
              |}""".stripMargin).methodDeclarations().head
   }
 
-  /** Provides Exception for unsupported operation, expression pair. */
-  override def methodBodyGenerator(exp:domain.expressions.Exp)(op:domain.Operation): Seq[Statement] = {
-    throw new scala.NotImplementedError(s"""Operation "${op.name}" does not handle case for sub-type "${exp.name}" """)
-  }
+//  /** Provides Exception for unsupported operation, expression pair. */
+//  override def methodBodyGenerator(exp:domain.expressions.Exp)(op:domain.Operation): Seq[Statement] = {
+//    throw new scala.NotImplementedError(s"""Operation "${op.name}" does not handle case for sub-type "${exp.name}" """)
+//  }
 
   /** Generate the full class for the given expression sub-type. */
   override def generateExp(model:domain.Model, exp:domain.expressions.Exp) : CompilationUnit = {
@@ -119,9 +123,29 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
 
     val signatures = model.types.map(exp => methodGenerator(exp)(op)).mkString("\n")
 
+    // if operation has parameters then must add to visitor as well
+    val atts:Seq[FieldDeclaration] = op.parameters.flatMap(p => Java(s"${typeGenerator(p._2)} ${p._1};").fieldDeclarations())
+    val params:Seq[String] = op.parameters.map(p => s"${typeGenerator(p._2)} ${p._1}")
+    val cons:Seq[Statement] = op.parameters.flatMap(p => Java(s"  this.${p._1} = ${p._1};").statements())
+
+    // only add constructor if visitor has a parameter
+    val constructor = if (op.parameters.isEmpty) {
+      ""
+    } else {
+      Java(
+        s"""|public ${op.name.capitalize} (${params.mkString(",")}) {
+            |   ${cons.mkString("\n")}
+
+            |}""".
+          stripMargin).constructors().head
+    }
+
     val tpe = typeGenerator(op.returnType.get)
     val s = Java(s"""|package expression;
                      |public class ${op.name.capitalize} extends Visitor<$tpe>{
+                     |  ${constructor.toString}
+                     |
+                     |  ${atts.mkString("\n")}
                      |  $signatures
                      |}""".stripMargin)
 

@@ -14,9 +14,6 @@ import org.combinators.templating.twirl.Java
   */
 trait AlgebraGenerator extends AbstractGenerator {
   val domain:Domain
- // import domain._
-
-  // still doesn't work...
 
   /**
     * Must eliminate any operation that returns E as value, since Algebra doesn't instantiate the intermediate structures
@@ -28,6 +25,10 @@ trait AlgebraGenerator extends AbstractGenerator {
     domain.Model(model.name, model.types,
       model.ops.filterNot(op => op.returnType.isDefined && op.returnType.get.equals(domain.Exp)),
       compatible(model.last))
+  }
+
+  override def getJavaClass() : Expression = {
+    Java(s"getClass()").expression[Expression]()
   }
 
   /**
@@ -74,16 +75,18 @@ trait AlgebraGenerator extends AbstractGenerator {
   }
 
   /** Operations are implemented as methods in the Base and sub-type classes. */
-  override def methodGenerator(exp:domain.expressions.Exp)(op:domain.Operation): MethodDeclaration = {
-    val retType = op.returnType match {
-      case Some(tpe) => typeGenerator(tpe)
-      case _ => Java("void").tpe
-    }
+//  def methodGenerator(exp:domain.expressions.Exp)(op:domain.Operation): MethodDeclaration = {
+//    throw new scala.NotImplementedError(s"""Algebra doesn't need method Generator.""")
+//  }
+//    //    val retType = op.returnType match {
+////      case Some(tpe) => typeGenerator(tpe)
+////      case _ => Java("void").tpe
+////    }
+////
+////    Java(s"""|public $retType visit(${exp.name} e) {
+////             |  ${methodBodyGenerator(exp)(op).mkString("\n")}
+////             |}""".stripMargin).methodDeclarations().head
 
-    Java(s"""|public $retType visit(${exp.name} e) {
-             |  ${methodBodyGenerator(exp)(op).mkString("\n")}
-             |}""".stripMargin).methodDeclarations().head
-  }
 
   /**
     * Every operation gets a class whose implementation contains method implementations for
@@ -160,9 +163,9 @@ trait AlgebraGenerator extends AbstractGenerator {
     Java(str).compilationUnit()
   }
 
-  def methodBodyGenerator(exp:domain.expressions.Exp)(op:domain.Operation): Seq[Statement] = {
-    throw new scala.NotImplementedError(s"""Operation "${op.name}" does not handle case for sub-type "${exp.name}" """)
-  }
+//  def methodBodyGenerator(exp:domain.expressions.Exp)(op:domain.Operation): Seq[Statement] = {
+//    throw new scala.NotImplementedError(s"""Operation "${op.name}" does not handle case for sub-type "${exp.name}" """)
+//  }
 
   /** Generate interface for an operation. */
   def baseInterface(op:domain.Operation) : CompilationUnit = {

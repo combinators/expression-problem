@@ -235,20 +235,17 @@ public class TestSynthesis {
                     // create Hashtable<String,Family> if not already there...
                     if (!successful.containsKey(family)) {
                         successful.put(family, new Hashtable<>());
-                        System.out.println ("** CREATE FAMILY " + family + "**");
                     }
                     Hashtable<String,Family> fam = successful.get(family);
 
                     // for the given family, see if prefix exists. Add if not already there...
                     if (!fam.containsKey(prefix)) {
                         fam.put(prefix, new Family(prefix));
-                        System.out.println ("** CREATE prefix " + prefix + "**");
                     }
 
                     // add successful variation to this prefix for given family.
                     Family pf = fam.get(prefix);
                     pf.add(id);
-                    System.out.println ("** Add id " + family + ":" + prefix + " **");
 
                 } else {
                     System.err.println ("RETRIEVED " + family + variation + " but failed to compile.");
@@ -277,8 +274,6 @@ public class TestSynthesis {
 //            git diff remotes/b/variation_0 variation_0  --diff-filter=A --name-only
 //            git diff remotes/b/variation_0 variation_0  --diff-filter=M --name-only
 //            git diff remotes/b/variation_0 variation_0  --diff-filter=D --name-only
-
-
 
             System.out.println();
         }

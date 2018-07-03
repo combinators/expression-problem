@@ -1,26 +1,8 @@
 package example.expression.domain
 
-/*
-
-digraph D {
-    rankdir=BT;
-    node [fontname="Arial"];
-
-    e0 [shape=record    label="e0|{Add|Lit}|{Eval}"];
-    e1 [shape=record    label="e1|{Sub}|{}"];
-    e2 [shape=record    label="e2|{}|{PrettyP}"];
-    e3 [shape=record    label="e3|{Divd|Mult|Neg}|{}"];
-    e4 [shape=record    label="e4|{}|{Collect|Simplify}"];
-    e5 [shape=record    label="e5|{}|{Equal}"];
-
-    e5 -> e4
-    e4 -> e3
-    e3 -> e2
-    e2 -> e1
-    e1 -> e0
-}
-
- */
+/**
+  * Mathematical Expressions domain as an instance of EP.
+  */
 trait Domain extends BaseDomain with ModelDomain {
 
   // standard attributes for domain. As new ones are defined, place here
@@ -30,13 +12,13 @@ trait Domain extends BaseDomain with ModelDomain {
 
   // e0:model evolution.
   // -------------------
-  case object Double extends types.Types
+  case object Double extends Types
   case object Lit extends expressions.Exp("Lit", Seq(Attribute(attributes.value, Double)))
   case object Add extends expressions.BinaryExp("Add")
 
   case object Eval extends Operation("eval", Some(Double))
   class LitInst(d:Double) extends ExpInst(Lit, Some(d))
-  val e0 = Model("e0", Seq(Lit, Add), Seq(Eval), emptyModel())
+  val e0 = Model("e0", Seq(Lit, Add), Seq(Eval))
 
   // e1:model evolution
   // -------------------
@@ -45,7 +27,7 @@ trait Domain extends BaseDomain with ModelDomain {
 
   // e2:model evolution
   // -------------------
-  case object String extends types.Types
+  case object String extends Types
   case object PrettyP extends Operation("print", Some(String))
   val e2 = Model(name="e2", Seq.empty, Seq(PrettyP), e1)
 
@@ -59,18 +41,18 @@ trait Domain extends BaseDomain with ModelDomain {
   // e4:model evolution
   // -------------------
   case object Simplify extends Operation("simplify", Some(Exp))
-  case class List(generic:types.Types) extends types.Types
+  case class List(generic:Types) extends Types
   case object Collect extends Operation("collect", Some(List(Double)))
   val e4 = Model(name="e4",Seq.empty, Seq(Simplify, Collect), e3)
 
   // ex: graft in a useful operation for future operations to use
-  case object JavaClass extends types.Types
+  case object JavaClass extends Types
   case object GetJavaClass extends Operation ("getJavaClass", Some(JavaClass))
   case object GetChild extends Operation ("getJavaClass", Some(JavaClass))
   val e4i = Model(name="ex", Seq.empty, Seq(GetJavaClass), e4)
 
   // e5:model evolution
-  case object Boolean extends types.Types
+  case object Boolean extends Types
   case object Equal extends Operation("equals", Some(Boolean), ("other", Exp))
   val e5 = Model(name="e5", Seq.empty, Seq(Equal), e4i)
 }

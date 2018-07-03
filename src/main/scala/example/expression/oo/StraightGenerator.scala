@@ -19,14 +19,10 @@ trait StraightGenerator extends AbstractGenerator with DataTypeSubclassGenerator
     exp.attributes.map(att => att.name -> Java(s"${att.name}").expression[Expression]()).toMap
   }
 
+  /** Retrieve Java Class associated with given context. Needed for operations with Exp as parameter. */
   override def getJavaClass() : Expression = {
     Java(s"getClass()").expression[Expression]()
   }
-
-  //  /** Directly access local method, one per operation. */
-//  override def recurseOn(expr:Expression, op:domain.Operation) : Expression = {
-//    Java(s"""$expr.${op.name}()""").expression()
-//  }
 
   /** Directly access local method, one per operation, with a parameter. */
   override def recurseOn(expr:Expression, op:domain.Operation, params:Expression*) : Expression = {
@@ -35,12 +31,21 @@ trait StraightGenerator extends AbstractGenerator with DataTypeSubclassGenerator
   }
 
   /** Return designated Java type associated with type. */
-  override def typeGenerator(tpe:domain.types.Types) : com.github.javaparser.ast.`type`.Type = {
+  override def typeGenerator(tpe:domain.Types) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
       case domain.Exp => Java("Exp").tpe()
-
       case _ => super.typeGenerator(tpe)
     }
+  }
+
+  /** Compute parameter "Type name" comma-separated list from operation. */
+  def parameters(op:domain.Operation) : String = {
+    op.parameters.map(tuple => {
+      val name:String = tuple._1
+      val tpe:domain.Types = tuple._2
+
+      typeGenerator(tpe).toString + " " + name
+    }).mkString(",")
   }
 
   /** Operations are implemented as methods in the Base and sub-type classes. */
@@ -50,22 +55,11 @@ trait StraightGenerator extends AbstractGenerator with DataTypeSubclassGenerator
       case _ => Java("void").tpe
     }
 
-    val params:String = op.parameters.map(tuple => {
-      val name:String = tuple._1
-      val tpe:domain.types.Types = tuple._2
-
-      typeGenerator(tpe).toString + " " + name
-    }).mkString(",")
-
+    val params = parameters(op)
     Java(s"""|public $retType ${op.name}($params) {
              |  ${methodBodyGenerator(exp)(op).mkString("\n")}
              |}""".stripMargin).methodDeclarations().head
   }
-
-  /** Throws run-time exception to catch when an operation/exp pair is missing. */
-//  override def methodBodyGenerator(exp:domain.expressions.Exp)(op:domain.Operation): Seq[Statement] = {
-//    throw new scala.NotImplementedError(s"""Operation "${op.name}" does not handle case for sub-type "${exp.getClass.getSimpleName}" """)
-//  }
 
   /** Generate the full class for the given expression sub-type. */
   def generateExp(model:domain.Model, exp:domain.expressions.Exp) : CompilationUnit = {
@@ -83,11 +77,8 @@ trait StraightGenerator extends AbstractGenerator with DataTypeSubclassGenerator
 
     Java(s"""|package oo;
              |public class $name extends Exp {
-             |
              |  ${constructor.toString}
-             |
              |  ${atts.mkString("\n")}
-             |
              |  ${methods.mkString("\n")}
              |}""".stripMargin).compilationUnit()
   }
@@ -95,23 +86,16 @@ trait StraightGenerator extends AbstractGenerator with DataTypeSubclassGenerator
   /** Generate the base class, with all operations from flattened history. */
   def generateBase(model:domain.Model): CompilationUnit = {
     val signatures: Seq[MethodDeclaration] = model.ops.flatMap(op => {
-      // Allow for operations to be void; if not an issue in future, then filter out here...
+
         val retType = op.returnType match {
           case Some(tpe) => typeGenerator(tpe)
           case _ => Java("void").tpe
         }
 
-        val params:String = op.parameters.map(tuple => {
-          val name:String = tuple._1
-          val tpe:domain.types.Types = tuple._2
-
-          typeGenerator(tpe).toString + " " + name
-        }).mkString(",")
-
+      val params = parameters(op)
       Java(s"public abstract $retType ${op.name}($params);").methodDeclarations()
-      })
+    })
 
-    // same every time
     Java(s"""|package oo;
              |public abstract class Exp {
              |  ${signatures.mkString("\n")}

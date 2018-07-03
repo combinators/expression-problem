@@ -6,7 +6,7 @@ package example.expression.domain
 trait ModelDomain extends BaseDomain {
 
   /** Each model consists of a collection of Exp sub-types and operations. */
-  case class Model(name:String, types:Seq[expressions.Exp], ops:Seq[Operation], last:Model) {
+  case class Model(name:String, types:Seq[expressions.Exp], ops:Seq[Operation], last:Model = emptyModel()) {
 
     /* Return history of model as a sequence. */
     def toSeq : Seq[Model] = {
@@ -20,6 +20,7 @@ trait ModelDomain extends BaseDomain {
     /** Return models in evolution order from base (skipping the empty model that is always last). */
     def inOrder:Seq[Model] = toSeq.reverse.tail
 
+    /** Guard check for equals method. */
     def canEqual(a: Any) : Boolean = a.isInstanceOf[Model]
 
     /** Suitable equals check for Model. */

@@ -18,7 +18,7 @@ trait e5 extends AbstractGenerator with TestGenerator {
 
   import domain._
 
-  abstract override def typeGenerator(tpe:types.Types) : com.github.javaparser.ast.`type`.Type = {
+  abstract override def typeGenerator(tpe:Types) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
       case Boolean => Java("Boolean").tpe()
       case _ => super.typeGenerator(tpe)
@@ -33,7 +33,7 @@ trait e5 extends AbstractGenerator with TestGenerator {
       case Equal =>
         val atts:Map[String,Expression] = subExpressions(exp)
         val name:String = op.parameters.head._1
-        val other:types.Types = op.parameters.head._2
+        val other:Types = op.parameters.head._2
         val oname = Java(name).expression[Expression]()
 
         // for now: HACK. subExpressions returns e.getExp() for example, but we just want this to be getExp

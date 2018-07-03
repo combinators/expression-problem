@@ -14,30 +14,28 @@ trait ShapeDomain extends BaseDomain with ModelDomain {
   object attributes {
     val side:String   = "side"
     val point:String  = "point"
-    val trans:String = "trans"
+    val trans:String  = "trans"
     val radius:String = "radius"
     val shape:String  = "shape"
-    val pct:String = "pct"
+    val pct:String    = "pct"
   }
 
   // s0:model evolution.
   // -------------------
-  case object Point extends types.Types
-  case object Double extends types.Types
-  case object Boolean extends types.Types
+  case object Point extends Types
+  case object Double extends Types
+  case object Boolean extends Types
 
   case object Square extends expressions.Exp("Square", Seq(Attribute(attributes.side, Double)))
   case object Circle extends expressions.Exp("Circle", Seq(Attribute(attributes.radius, Double)))
   case object Translate extends expressions.Exp("Translate",
     Seq(Attribute(attributes.trans, Point), Attribute(attributes.shape, Exp)))
   case object ContainsPt extends Operation("containsPt", Some(Boolean), (attributes.point, Point))
-  val s0 = Model("s0", Seq(Square,Circle,Translate), Seq(ContainsPt), emptyModel())
+  val s0 = Model("s0", Seq(Square,Circle,Translate), Seq(ContainsPt))
 
   class SquareInst(d:Double) extends ExpInst(Square, Some(d))
   class CircleInst(d:Double) extends ExpInst(Circle, Some(d))
   class TranslateInst(pt:(Double,Double), s:ExpInst) extends ExpInst(Translate, Some((pt,s)))
-
-  // abstract class BinaryExpInst(override val e:expressions.Exp, val left:ExpInst, val right:ExpInst) extends ExpInst(e, None)
 
   // s1:model evolution (add operation)
   // ----------------------------------

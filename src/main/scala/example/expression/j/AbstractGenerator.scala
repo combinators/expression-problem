@@ -19,11 +19,8 @@ trait AbstractGenerator  {
     */
   def subExpressions(exp:domain.expressions.Exp) : Map[String, Expression]
 
-  /** Provide ability to retrieve class associated with expression. */
+  /** Retrieve Java Class associated with given context. Needed for operations with Exp as parameter. */
   def getJavaClass() : Expression
-
-  /** Responsible for dispatching sub-expressions. */
-  //def recurseOn(expr:Expression, op:domain.Operation) : Expression
 
   /** Responsible for dispatching sub-expressions with possible parameter(s). */
   def recurseOn(expr:Expression, op:domain.Operation, params:Expression*) : Expression
@@ -45,7 +42,7 @@ trait AbstractGenerator  {
     * Expression-tree data has attributes with domain-specific types. This method returns
     * the designated Java type associated with the abstract type.
     */
-  def typeGenerator(tpe:domain.types.Types) : com.github.javaparser.ast.`type`.Type = {
+  def typeGenerator(tpe:domain.Types) : com.github.javaparser.ast.`type`.Type = {
     throw new scala.NotImplementedError(s"""Unknown Type "$tpe" """)
   }
 

@@ -36,7 +36,7 @@ trait InterpreterGenerator extends example.expression.oo.StraightGenerator {
   }
 
   /** Return designated Exp type with replacement. */
-  def recursiveTypeGenerator(tpe:domain.types.Types, replacement:Type) : com.github.javaparser.ast.`type`.Type = {
+  def recursiveTypeGenerator(tpe:domain.Types, replacement:Type) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
       case domain.Exp => replacement
       case _ => typeGenerator(tpe)

@@ -15,7 +15,7 @@ trait s0 extends AbstractGenerator with TestGenerator {
   val domain:ShapeDomain
 
   /** E0 Introduces the concept a Double type, used for the 'Eval' operation. */
-  abstract override def typeGenerator(tpe:domain.types.Types) : com.github.javaparser.ast.`type`.Type = {
+  abstract override def typeGenerator(tpe:domain.Types) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
       case domain.Double => Java("Double").tpe()
       case domain.Point => Java("java.awt.geom.Point2D.Double").tpe()

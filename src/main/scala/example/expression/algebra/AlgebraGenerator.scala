@@ -59,7 +59,7 @@ trait AlgebraGenerator extends AbstractGenerator {
   }
 
   /** Return designated Java type associated with type, or void if all else fails. */
-  override def typeGenerator(tpe:domain.types.Types) : com.github.javaparser.ast.`type`.Type = {
+  override def typeGenerator(tpe:domain.Types) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
       case domain.Exp => Java("E").tpe()
       case _ => Java ("void").tpe()  // reasonable stop
@@ -67,26 +67,12 @@ trait AlgebraGenerator extends AbstractGenerator {
   }
 
   /** Return designated Exp type with replacement. */
-  def recursiveTypeGenerator(tpe:domain.types.Types, replacement:Type) : com.github.javaparser.ast.`type`.Type = {
+  def recursiveTypeGenerator(tpe:domain.Types, replacement:Type) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
       case domain.Exp => replacement
       case _ => typeGenerator(tpe)
     }
   }
-
-  /** Operations are implemented as methods in the Base and sub-type classes. */
-//  def methodGenerator(exp:domain.expressions.Exp)(op:domain.Operation): MethodDeclaration = {
-//    throw new scala.NotImplementedError(s"""Algebra doesn't need method Generator.""")
-//  }
-//    //    val retType = op.returnType match {
-////      case Some(tpe) => typeGenerator(tpe)
-////      case _ => Java("void").tpe
-////    }
-////
-////    Java(s"""|public $retType visit(${exp.name} e) {
-////             |  ${methodBodyGenerator(exp)(op).mkString("\n")}
-////             |}""".stripMargin).methodDeclarations().head
-
 
   /**
     * Every operation gets a class whose implementation contains method implementations for

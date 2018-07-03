@@ -15,7 +15,7 @@ trait e2 extends AbstractGenerator with TestGenerator {
 
   import domain._
 
-  abstract override def typeGenerator(tpe:types.Types) : com.github.javaparser.ast.`type`.Type = {
+  abstract override def typeGenerator(tpe:Types) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
       case String => Java("String").tpe()
       case _ => super.typeGenerator(tpe)

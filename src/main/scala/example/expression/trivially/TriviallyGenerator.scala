@@ -28,11 +28,11 @@ trait TriviallyGenerator extends example.expression.oo.StraightGenerator {
     * For recursive types, use "FinalI" as the cast internally, otherwise use native type
     */
   override def inst(exp:domain.expressions.Exp)(op:domain.Operation)(params:Expression*): Expression = {
-    // seq1 zip seq2
+
     val merged:Seq[Expression] = exp.attributes.map(att => att.tpe).zip(params).map(typeExp => {
-      val x:domain.types.Types = typeExp._1
+      val tpe:domain.Types = typeExp._1
       val inner:Expression = typeExp._2
-      x match {
+      tpe match {
         case domain.Exp => Java(s"""(FinalI)($inner)""").expression[Expression]()
         case _ => inner
       }
@@ -45,7 +45,7 @@ trait TriviallyGenerator extends example.expression.oo.StraightGenerator {
   }
 
   // note: this is very much like recursiveTypeGenerator in other generators. come up with standard name
-  def attrTypeGenerator(currentClass: SimpleName, tpe: domain.types.Types): Type = {
+  def attrTypeGenerator(currentClass: SimpleName, tpe: domain.Types): Type = {
     tpe match {
       case domain.Exp => Java(s"$currentClass").tpe()
       case _ => typeGenerator(tpe)
@@ -165,7 +165,7 @@ trait TriviallyGenerator extends example.expression.oo.StraightGenerator {
 
     val params:String = op.parameters.map(tuple => {
       val name:String = tuple._1
-      val tpe:domain.types.Types = tuple._2
+      val tpe:domain.Types = tuple._2
 
       typeGenerator(tpe).toString + " " + name
     }).mkString(",")

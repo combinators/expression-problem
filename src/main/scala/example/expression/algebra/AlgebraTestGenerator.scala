@@ -13,10 +13,9 @@ import org.combinators.templating.twirl.Java
   */
 trait AlgebraTestGenerator extends TestGenerator {
   val domain: Domain
- //import domain._
 
   // exists from AbstractGenerator
-  def typeGenerator(tpe:domain.types.Types) : com.github.javaparser.ast.`type`.Type
+  def typeGenerator(tpe:domain.Types) : com.github.javaparser.ast.`type`.Type
 
   /** Convert a test instance into a Java Expression for instantiating that instance. */
   override def convert(inst: domain.ExpInst, model: domain.Model): Expression = {

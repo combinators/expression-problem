@@ -15,7 +15,7 @@ trait ex extends AbstractGenerator with TestGenerator {
   val domain:Domain
   import domain._
 
-  abstract override def typeGenerator(tpe:types.Types) : com.github.javaparser.ast.`type`.Type = {
+  abstract override def typeGenerator(tpe:Types) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
       case JavaClass => Java(s"java.lang.Class<?>").tpe()
       case _ => super.typeGenerator(tpe)

@@ -6,23 +6,27 @@ import example.expression.j.TestGenerator
 import org.combinators.templating.twirl.Java
 
 /**
-  * Each evolution has opportunity to enhance the code generators.
+  * Interpreter needs to know the last model with operations for the given vertex in the extension graph.
   */
-trait InterpreterTestGenerator extends TestGenerator {
+trait InterpreterTestGenerator  extends TestGenerator {
   val domain:Domain
 
+  /** Interpreter needs a function to get the active model. */
+  def getModel:domain.Model
+
   /** Convert a test instance into a Java Expression for instantiating that instance. */
-  override def convert(inst:domain.ExpInst, model:domain.Model) : Expression = {
+  override def convert(inst:domain.ExpInst) : Expression = {
     val name = inst.e.name
 
+    val model = getModel
     val classify:SimpleName = Java(model.lastModelWithOperation().ops.sortWith(_.name < _.name).map(op => op.name.capitalize).mkString("")).simpleName()
 
     inst match {
       case lit:domain.LitInst => Java(s"new $classify$name(${lit.i.get.toString})").expression()
-      case ui:domain.UnaryExpInst =>
-        Java(s"new $classify$name(${convert(ui.exp, model)})").expression()
-      case bi:domain.BinaryExpInst =>
-        Java(s"new $classify$name(${convert(bi.left, model)}, ${convert(bi.right, model)})").expression()
+      case ui:domain.UnaryInst =>
+        Java(s"new $classify$name(${convert(ui.exp)})").expression()
+      case bi:domain.BinaryInst =>
+        Java(s"new $classify$name(${convert(bi.left)}, ${convert(bi.right)})").expression()
 
       case _ =>  Java(s""" "unknown $name" """).expression()
     }

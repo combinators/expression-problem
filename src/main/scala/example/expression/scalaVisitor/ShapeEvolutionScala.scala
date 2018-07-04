@@ -19,9 +19,9 @@ abstract class ShapeFoundation @Inject()(web: WebJarsUtil, app: ApplicationLifec
   override lazy val generatedCode:Seq[CompilationUnit] =
     flat.types.map(tpe =>  gen.generateExp(flat, tpe)) ++      // one class for each sub-type
     flat.ops.map(op => gen.operationGenerator(flat, op)) :+    // one class for each op
-      gen.generateBaseClass() :+                                 // abstract base class
-      gen.generateBase(flat) :+                                  // visitor gets its own class (overriding concept)
-      gen.generateSuite(Some("expression"), model)               // generate test cases as well
+      gen.generateBaseClass() :+                               // abstract base class
+      gen.generateBase(flat) :+                                // visitor gets its own class (overriding concept)
+      gen.generateSuite(Some("expression"))                    // generate test cases as well
 
   // request by "git clone -b variation_0 http://localhost:9000/straight/eN/eN.git" where N is a version #
   override val routingPrefix: Option[String] = Some("scalaVisitor")

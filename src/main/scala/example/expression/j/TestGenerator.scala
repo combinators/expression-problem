@@ -13,16 +13,16 @@ trait TestGenerator  {
   val domain:BaseDomain with ModelDomain
 
   /** Return sample JUnit test cases. */
-  def testGenerator(model:domain.Model): Seq[MethodDeclaration] = Seq.empty
+  def testGenerator: Seq[MethodDeclaration] = Seq.empty
 
   /** Convert a test instance into a Java Expression for instantiating that instance. */
-  def convert(inst:domain.ExpInst, model:domain.Model) : Expression = {
+  def convert(inst:domain.ExpInst) : Expression = {
     val name = inst.e.name
     inst match {
-      case ui:domain.UnaryExpInst =>
-        Java(s"new $name(${convert(ui.exp, model)})").expression()
-      case bi:domain.BinaryExpInst =>
-        Java(s"new $name(${convert(bi.left, model)}, ${convert(bi.right, model)})").expression()
+      case ui:domain.UnaryInst =>
+        Java(s"new $name(${convert(ui.exp)})").expression()
+      case bi:domain.BinaryInst =>
+        Java(s"new $name(${convert(bi.left)}, ${convert(bi.right)})").expression()
       case exp:domain.ExpInst => Java(s"new $name(${exp.i.get.toString})").expression()
 
       case _ =>  Java(s""" "unknown $name" """).expression()
@@ -30,8 +30,8 @@ trait TestGenerator  {
   }
 
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
-  def generateSuite(pack:Option[String], model:domain.Model): CompilationUnit = {
-    val methods:Seq[MethodDeclaration] = testGenerator(model)
+  def generateSuite(pack:Option[String]): CompilationUnit = {
+    val methods:Seq[MethodDeclaration] = testGenerator
 
     val packageDeclaration:String = if (pack.isDefined) {
       s"package ${pack.get};"

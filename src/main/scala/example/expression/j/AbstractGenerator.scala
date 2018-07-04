@@ -17,10 +17,10 @@ trait AbstractGenerator  {
     * For example, an expressions.BinaryExp has 'left' and 'right' attributes, whereas an
     * expressions.UnaryExp only has an 'exp'
     */
-  def subExpressions(exp:domain.expressions.Exp) : Map[String, Expression]
+  def subExpressions(exp:domain.subtypes.Exp) : Map[String, Expression]
 
   /** Retrieve Java Class associated with given context. Needed for operations with Exp as parameter. */
-  def getJavaClass() : Expression
+  def getJavaClass : Expression
 
   /** Responsible for dispatching sub-expressions with possible parameter(s). */
   def recurseOn(expr:Expression, op:domain.Operation, params:Expression*) : Expression
@@ -34,7 +34,7 @@ trait AbstractGenerator  {
     *
     * I've crafted by hand, but don't want to break code tonight :)
     */
-  def inst(exp:domain.expressions.Exp)(op:domain.Operation)(params:Expression*): Expression = {
+  def inst(exp:domain.subtypes.Exp)(op:domain.Operation)(params:Expression*): Expression = {
     Java("new " + exp.name.capitalize + "(" + params.map(expr => expr.toString()).mkString(",") + ")").expression()
   }
 
@@ -50,7 +50,7 @@ trait AbstractGenerator  {
     * Universal situation across all possible solutions is the sequence of statements that result
     * for a given Operation and data-type.
     */
-  def methodBodyGenerator(exp:domain.expressions.Exp)(op:domain.Operation) : Seq[Statement] = {
+  def logic(exp:domain.subtypes.Exp)(op:domain.Operation) : Seq[Statement] = {
     throw new scala.NotImplementedError(s"""Operation "${op.name}" does not handle case for sub-type "${exp.name}" """)
   }
 

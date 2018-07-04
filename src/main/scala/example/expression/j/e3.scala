@@ -13,7 +13,7 @@ import org.combinators.templating.twirl.Java
 trait e3 extends AbstractGenerator with TestGenerator {
   val domain:Domain
 
-  abstract override def methodBodyGenerator(exp:domain.expressions.Exp)(op:domain.Operation): Seq[Statement] = {
+  abstract override def logic(exp:domain.subtypes.Exp)(op:domain.Operation): Seq[Statement] = {
     val subs = subExpressions(exp)
     
     // generate the actual body
@@ -23,7 +23,7 @@ trait e3 extends AbstractGenerator with TestGenerator {
           case domain.Neg => Java(s"""return "-" + ${recurseOn(subs(domain.base.exp), domain.PrettyP)}; """).statements()
           case domain.Mult => Java(s"""return "(" + ${recurseOn(subs(domain.base.left), domain.PrettyP)} + "*" + ${recurseOn(subs(domain.base.right), domain.PrettyP)}  + ")";""").statements()
           case domain.Divd => Java(s"""return "(" + ${recurseOn(subs(domain.base.left), domain.PrettyP)}  + "/" + ${recurseOn(subs(domain.base.right), domain.PrettyP)}  + ")";""").statements()
-          case _ => super.methodBodyGenerator(exp)(op)
+          case _ => super.logic(exp)(op)
         }
       }
 
@@ -32,14 +32,14 @@ trait e3 extends AbstractGenerator with TestGenerator {
           case domain.Neg => Java(s"""return - ${recurseOn(subs(domain.base.exp), domain.Eval)}; """).statements()
           case domain.Mult => Java(s"""return ${recurseOn(subs(domain.base.left), domain.Eval)} * ${recurseOn(subs(domain.base.right), domain.Eval)};""").statements()
           case domain.Divd => Java(s"""return ${recurseOn(subs(domain.base.left), domain.Eval)} / ${recurseOn(subs(domain.base.right), domain.Eval)};""").statements()
-          case _ => super.methodBodyGenerator(exp)(op)
+          case _ => super.logic(exp)(op)
         }
       }
-      case _ => super.methodBodyGenerator(exp)(op)
+      case _ => super.logic(exp)(op)
     }
   }
 
-  abstract override def testGenerator(model:domain.Model): Seq[MethodDeclaration] = {
+  abstract override def testGenerator: Seq[MethodDeclaration] = {
 
     val n1 = new domain.UnaryInst(domain.Neg, new domain.LitInst(1.0))
 
@@ -50,15 +50,15 @@ trait e3 extends AbstractGenerator with TestGenerator {
 
     val m2 = new domain.BinaryInst(domain.Mult, new domain.BinaryInst (domain.Divd, new domain.LitInst(5.0),  new domain.LitInst(2.0)), new domain.LitInst(4.0))
 
-    super.testGenerator(model.last) ++ Java(
+    super.testGenerator ++ Java(
       s"""
          |public void test() {
-         |   assertEquals("-1.0", ${recurseOn(convert(n1, model), domain.PrettyP)});
-         |   assertEquals(-1.0, ${recurseOn(convert(n1, model), domain.Eval)});
-         |   assertEquals("((5.0/2.0)*4.0)", ${recurseOn(convert(m2, model), domain.PrettyP)});
+         |   assertEquals("-1.0", ${recurseOn(convert(n1), domain.PrettyP)});
+         |   assertEquals(-1.0, ${recurseOn(convert(n1), domain.Eval)});
+         |   assertEquals("((5.0/2.0)*4.0)", ${recurseOn(convert(m2), domain.PrettyP)});
          |
-         |   assertEquals ("-5.0", ${recurseOn(convert(d1, model), domain.PrettyP)});
-         |   assertEquals ("-(2.0*3.0)", ${recurseOn(convert(s1, model), domain.PrettyP)});
+         |   assertEquals ("-5.0", ${recurseOn(convert(d1), domain.PrettyP)});
+         |   assertEquals ("-(2.0*3.0)", ${recurseOn(convert(s1), domain.PrettyP)});
          |}""".stripMargin).methodDeclarations()
   }
 }

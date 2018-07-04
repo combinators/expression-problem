@@ -18,7 +18,7 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   lazy val reduced:gen.domain.Model = gen.compatible(model)
   override lazy val generatedCode:Seq[CompilationUnit] =
     gen.processModel(reduced.inOrder) :+
-    gen.generateSuite(Some("algebra"), reduced) :+                     // generate test cases as well
+    gen.generateSuite(Some("algebra")) :+                    // generate test cases as well
     gen.combinedAlgebra(Some("algebra"), reduced)
 
   // request by "git clone -b variation_0 http://localhost:9000/straight/eN/eN.git" where N is a version #
@@ -33,8 +33,12 @@ class E0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
   override val gen = new AlgebraGenerator with AlgebraTestGenerator with e0 {
     override val domain = new Domain{ }
+
+    def getModel: domain.Model = {
+      domain.e0
+    }
   }
-  override val model = gen.domain.e0
+  override val model = gen.getModel
 }
 
 class E1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
@@ -42,9 +46,13 @@ class E1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
   override val gen = new AlgebraGenerator with AlgebraTestGenerator with e0 with e1 {
     override val domain = new Domain{ }
+
+    def getModel: domain.Model = {
+      domain.e1
+    }
   }
 
-  override val model = gen.domain.e1
+  override val model = gen.getModel
 }
 
 class E2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
@@ -52,8 +60,12 @@ class E2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
   override val gen = new AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with e2 {
     override val domain = new Domain{ }
+
+    def getModel: domain.Model = {
+      domain.e2
+    }
   }
-  override val model = gen.domain.e2
+  override val model = gen.getModel
 }
 
 class E3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
@@ -61,8 +73,12 @@ class E3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
   override val gen = new AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with e2 with e3 {
     override val domain = new Domain{ }
+
+    def getModel: domain.Model = {
+      domain.e3
+    }
   }
-  override val model = gen.domain.e3
+  override val model = gen.getModel
 }
 
 class E4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
@@ -70,8 +86,12 @@ class E4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
   override val gen = new AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with e2 with e3 with e4 {
     override val domain = new Domain{ }
+
+    def getModel: domain.Model = {
+      domain.e4
+    }
   }
-  override val model = gen.domain.e4
+  override val model = gen.getModel
 }
 
 // Still not ready to have Equals.
@@ -81,6 +101,10 @@ class E5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
   override val gen = new AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with ex {
     override val domain = new Domain{ }
+
+    def getModel: domain.Model = {
+      domain.e5
+    }
   }
-  override val model = gen.domain.e5
+  override val model = gen.getModel
 }

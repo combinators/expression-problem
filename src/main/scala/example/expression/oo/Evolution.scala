@@ -1,7 +1,7 @@
 package example.expression.oo
 
 import com.github.javaparser.ast.CompilationUnit
-import example.expression.domain.Domain
+import example.expression.domain.{Domain, IndependentDomain, MergedDomain}
 import example.expression.j._
 import javax.inject.Inject
 import org.webjars.play.WebJarsUtil
@@ -19,7 +19,7 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   override lazy val generatedCode:Seq[CompilationUnit] =
     flat.types.map (tpe => gen.generateExp(flat, tpe)) :+     // one class for each sub-type
       gen.generateBase(flat) :+                               // base class $BASE
-      gen.generateSuite(Some("oo"), model)                    // generate test cases as well
+      gen.generateSuite(Some("oo"))                           // generate test cases as well
 
   // request by "git clone -b variation_0 http://localhost:9000/straight/eN/eN.git" where N is a version #
   override val routingPrefix: Option[String] = Some("oo")
@@ -67,18 +67,51 @@ class E3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 class E4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
-  override val gen = new StraightGenerator with TestGenerator with e0 with e1 with e2 with e3 with e4 {
+  override val gen = new StraightGenerator with TestGeneratorWithModel with e0 with e1 with e2 with e3 with e4 {
     override val domain = new Domain{ }
+
+    def getModel:domain.Model = {
+      domain.e4
+    }
   }
-  override val model = gen.domain.e4
+  override val model = gen.getModel
 }
 
 class E5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
-  override val gen = new StraightGenerator with TestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with ex {
+  override val gen = new StraightGenerator with TestGeneratorWithModel with e0 with e1 with e2 with e3 with e4 with e5 with ex {
     override val domain = new Domain{ }
+
+    def getModel:domain.Model = {
+      domain.e5
+    }
   }
-  override val model = gen.domain.e5
+  override val model = gen.getModel
 }
 
+// independent branch example
+class I2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+  extends Foundation(web, app) {
+
+  override val gen = new StraightGenerator with TestGeneratorWithModel with e0 with e1 with i1 with i2 {
+    override val domain = new IndependentDomain { }
+
+    def getModel:domain.Model = {
+      domain.i2
+    }
+  }
+
+  override val model = gen.getModel
+}
+
+class M1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+  extends Foundation(web, app) {
+
+  // Merge e3 with i2: without adding extra code to synthesize concepts, this will fail
+  override val gen = new StraightGenerator with TestGenerator with e0 with e1 with e2 with e3 with i1 with i2 with m1 {
+    override val domain = new MergedDomain { }
+  }
+
+  override val model = gen.domain.m1
+}

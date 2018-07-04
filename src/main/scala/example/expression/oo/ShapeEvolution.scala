@@ -21,7 +21,7 @@ abstract class ShapeFoundation @Inject()(web: WebJarsUtil, app: ApplicationLifec
   override lazy val generatedCode:Seq[CompilationUnit] =
     flat.types.map (tpe => gen.generateExp(flat, tpe)) :+     // one class for each sub-type
       gen.generateBase(flat) :+                               // base class $BASE
-      gen.generateSuite(Some("oo"), model)                    // generate test cases as well
+      gen.generateSuite(Some("oo"))                           // generate test cases as well
 
   // request by "git clone -b variation_0 http://localhost:9000/straight/eN/eN.git" where N is a version #
   override val routingPrefix: Option[String] = Some("oo")

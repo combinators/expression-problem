@@ -38,12 +38,12 @@ trait AlgebraGenerator extends AbstractGenerator {
     * For interpreter, we use a factory method that has been placed in the class, and that allows
     * the very specialized types to be used.
     */
-  override def inst(exp:domain.expressions.Exp)(op:domain.Operation)(params:Expression*): Expression = {
+  override def inst(exp:domain.subtypes.Exp)(op:domain.Operation)(params:Expression*): Expression = {
     Java(exp.name + "(" + params.map(expr => expr.toString()).mkString(",") + ")").expression()
   }
 
   /** For straight design solution, directly access attributes by name. */
-  override def subExpressions(exp:domain.expressions.Exp) : Map[String,Expression] = {
+  override def subExpressions(exp:domain.subtypes.Exp) : Map[String,Expression] = {
     exp.attributes.map(att => att.name -> Java(s"${att.name}").expression[Expression]()).toMap
   }
 
@@ -122,7 +122,7 @@ trait AlgebraGenerator extends AbstractGenerator {
     val methods = targetModel.types.map(exp => {  // exp is either 'lit' or 'add'
 
       val subName = exp.name.toLowerCase   // to get proper etiquette for method names
-      val code:Seq[Statement] = methodBodyGenerator(exp)(op)
+      val code:Seq[Statement] = logic(exp)(op)
       val signatures = code.mkString("\n")
 
       val params:Seq[String] = exp.attributes.map(att => s"final ${recursiveTypeGenerator(att.tpe, opType)} ${att.name}")

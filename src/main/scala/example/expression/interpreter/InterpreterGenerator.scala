@@ -27,11 +27,11 @@ trait InterpreterGenerator extends example.expression.oo.StraightGenerator {
     * For interpreter, we use a factory method that has been placed in the class, and that allows
     * the very specialized types to be used.
     */
-  override def inst(exp:domain.expressions.Exp)(op:domain.Operation)(params:Expression*): Expression = {
+  override def inst(exp:domain.subtypes.Exp)(op:domain.Operation)(params:Expression*): Expression = {
     Java(exp.name + "(" + params.map(expr => expr.toString()).mkString(",") + ")").expression()
   }
 
-  override def subExpressions(exp: domain.expressions.Exp): Map[String, Expression] = {
+  override def subExpressions(exp: domain.subtypes.Exp): Map[String, Expression] = {
     exp.attributes.map(att => att.name -> Java(s"get${att.name.capitalize}()").expression[Expression]()).toMap
   }
 
@@ -66,7 +66,7 @@ trait InterpreterGenerator extends example.expression.oo.StraightGenerator {
     * @param exp
     * @return
     */
-  override def generateExp(model:domain.Model, exp:domain.expressions.Exp) : CompilationUnit = {
+  override def generateExp(model:domain.Model, exp:domain.subtypes.Exp) : CompilationUnit = {
     val name = Java(s"${exp.name}").simpleName()
     val baseInterface:Type = Java(baseInterfaceName(model.lastModelWithOperation())).tpe()
 
@@ -101,7 +101,7 @@ trait InterpreterGenerator extends example.expression.oo.StraightGenerator {
             |}""".stripMargin).compilationUnit()
    }
 
-  def interfaceName(exp: domain.expressions.Exp, op: domain.Operation): SimpleName = {
+  def interfaceName(exp: domain.subtypes.Exp, op: domain.Operation): SimpleName = {
     Java(s"${exp.name}${op.name.capitalize}").simpleName()
   }
 
@@ -118,7 +118,7 @@ trait InterpreterGenerator extends example.expression.oo.StraightGenerator {
 //    method
 //  }
 
-  def generateInterface(exp: domain.expressions.Exp, parents: Seq[SimpleName], op:domain.Operation): CompilationUnit = {
+  def generateInterface(exp: domain.subtypes.Exp, parents: Seq[SimpleName], op:domain.Operation): CompilationUnit = {
     val name = interfaceName(exp, op)
     val method: MethodDeclaration = methodGenerator(exp)(op)
     val atts:Seq[MethodDeclaration] =
@@ -173,7 +173,7 @@ trait InterpreterGenerator extends example.expression.oo.StraightGenerator {
     Java(str).compilationUnit()
   }
 
-  def lastTypesSinceAnOperation(model:domain.Model): Seq[domain.expressions.Exp] = {
+  def lastTypesSinceAnOperation(model:domain.Model): Seq[domain.subtypes.Exp] = {
     if (model.isEmpty || model.ops.nonEmpty) {
       Seq.empty
     } else {
@@ -201,7 +201,7 @@ trait InterpreterGenerator extends example.expression.oo.StraightGenerator {
 
   // if multiple operations in the same model, then must chain together.
   def generateBaseExtensions(model:domain.Model) : Seq[CompilationUnit] = {
-    val pastTypes:Seq[domain.expressions.Exp] = model.pastDataTypes()
+    val pastTypes:Seq[domain.subtypes.Exp] = model.pastDataTypes()
 
     val isBase:Boolean = model.base().equals(model)
 
@@ -214,7 +214,7 @@ trait InterpreterGenerator extends example.expression.oo.StraightGenerator {
     generateForOp(model, model.ops, pastTypes, isBase)
   }
 
-  def generateForOp(model:domain.Model, ops:Seq[domain.Operation], pastTypes:Seq[domain.expressions.Exp], isBase:Boolean) : Seq[CompilationUnit] = {
+  def generateForOp(model:domain.Model, ops:Seq[domain.Operation], pastTypes:Seq[domain.subtypes.Exp], isBase:Boolean) : Seq[CompilationUnit] = {
     val combinedOps:String = ops.sortWith(_.name < _.name).map(op => op.name.capitalize).mkString("")
 
 

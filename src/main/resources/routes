@@ -24,6 +24,8 @@ GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP
 ->    /                              example.expression.oo.E3_Variation
 ->    /                              example.expression.oo.E4_Variation
 ->    /                              example.expression.oo.E5_Variation
+->    /                              example.expression.oo.I2_Variation
+->    /                              example.expression.oo.M1_Variation
 #Trivially variations
 ->    /                              example.expression.trivially.E0_Variation
 ->    /                              example.expression.trivially.E1_Variation
@@ -31,6 +33,7 @@ GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP
 ->    /                              example.expression.trivially.E3_Variation
 ->    /                              example.expression.trivially.E4_Variation
 ->    /                              example.expression.trivially.E5_Variation
+->    /                              example.expression.trivially.M1_Variation
 #Interpreter variations
 ->    /                              example.expression.interpreter.E0_Variation
 ->    /                              example.expression.interpreter.E1_Variation

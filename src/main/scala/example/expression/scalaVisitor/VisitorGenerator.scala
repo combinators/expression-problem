@@ -15,7 +15,7 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
   val domain:BaseDomain with ModelDomain
 
   /** For visitor design solution, access through default 'e' parameter */
-  override def subExpressions(exp:domain.expressions.Exp) : Map[String,Expression] = {
+  override def subExpressions(exp:domain.subtypes.Exp) : Map[String,Expression] = {
     exp.attributes.map(att => att.name -> Java(s"e.get${att.name.capitalize}()").expression[Expression]()).toMap
   }
 
@@ -63,14 +63,14 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
   }
 
   /** Operations are implemented as methods in the Base and sub-type classes. */
-  override def methodGenerator(exp:domain.expressions.Exp)(op:domain.Operation): MethodDeclaration = {
+  override def methodGenerator(exp:domain.subtypes.Exp)(op:domain.Operation): MethodDeclaration = {
     val retType = op.returnType match {
       case Some(tpe) => typeGenerator(tpe)
       case _ => Java("void").tpe
     }
 
     Java(s"""|public $retType visit(${exp.name} e) {
-             |  ${methodBodyGenerator(exp)(op).mkString("\n")}
+             |  ${logic(exp)(op).mkString("\n")}
              |}""".stripMargin).methodDeclarations().head
   }
 
@@ -80,7 +80,7 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
 //  }
 
   /** Generate the full class for the given expression sub-type. */
-  override def generateExp(model:domain.Model, exp:domain.expressions.Exp) : CompilationUnit = {
+  override def generateExp(model:domain.Model, exp:domain.subtypes.Exp) : CompilationUnit = {
     val name = exp.toString
 
     val visitor:MethodDeclaration = Java (s"""|public <R> R accept(Visitor<R> v) {

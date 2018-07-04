@@ -27,10 +27,9 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   override lazy val generatedCode:Seq[CompilationUnit] =
       // one interface for every model that contains an operation
       reduced.inOrder.filter(model => model.ops.nonEmpty).map(model => gen.generateBase(model)) ++      // Each operation gets interface
-   //   reduced.inOrder.flatMap(model => model.types.map(exp => gen.generateExp(model, exp)))     ++
       reduced.inOrder.filter(model => model.ops.nonEmpty).flatMap(model => gen.generateBaseExtensions(model)) ++   // Each operation must provide class implementations for all past dataTypes
       gen.generateIntermediateTypes(model) :+                    // New types added in between operations need to be manifest
-      gen.generateSuite(Some("interpreter"), reduced)                          // generate test cases as well
+      gen.generateSuite(Some("interpreter"))                     // generate test cases as well
 
   // request by "git clone -b variation_0 http://localhost:9000/straight/eN/eN.git" where N is a version #
   override val routingPrefix: Option[String] = Some("interpreter")
@@ -44,8 +43,13 @@ class E0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
   override val gen = new InterpreterGenerator with InterpreterTestGenerator with e0 {
     override val domain = new Domain{ }
+
+    // Interpreter Test Generator needs access to the model
+    def getModel:domain.Model = {
+      domain.e0
+    }
   }
-  override val model = gen.domain.e0
+  override val model = gen.getModel
 }
 
 class E1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
@@ -53,8 +57,13 @@ class E1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
   override val gen = new InterpreterGenerator with InterpreterTestGenerator with e0 with e1 {
     override val domain = new Domain{ }
+
+    // Interpreter Test Generator needs access to the model
+    def getModel:domain.Model = {
+      domain.e1
+    }
   }
-  override val model = gen.domain.e1
+  override val model = gen.getModel
 }
 
 class E2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
@@ -62,8 +71,13 @@ class E2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
   override val gen = new InterpreterGenerator with InterpreterTestGenerator with e0 with e1 with e2 {
     override val domain = new Domain{ }
+
+    // Interpreter Test Generator needs access to the model
+    def getModel:domain.Model = {
+      domain.e2
+    }
   }
-  override val model = gen.domain.e2
+  override val model = gen.getModel
 }
 
 class E3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
@@ -71,8 +85,13 @@ class E3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
   override val gen = new InterpreterGenerator with InterpreterTestGenerator with e0 with e1 with e2 with e3 {
     override val domain = new Domain{ }
+
+    // Interpreter Test Generator needs access to the model
+    def getModel:domain.Model = {
+      domain.e3
+    }
   }
-  override val model = gen.domain.e3
+  override val model = gen.getModel
 }
 
 class E4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
@@ -80,8 +99,13 @@ class E4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
   override val gen = new InterpreterGenerator with InterpreterTestGenerator with e0 with e1 with e2 with e3 with e4 {
     override val domain = new Domain{ }
+
+    // Interpreter Test Generator needs access to the model
+    def getModel:domain.Model = {
+      domain.e4
+    }
   }
-  override val model = gen.domain.e4
+  override val model = gen.getModel
 }
 
 class E5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
@@ -89,6 +113,11 @@ class E5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
   override val gen = new InterpreterGenerator with InterpreterTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 {
     override val domain = new Domain{ }
+
+    // Interpreter Test Generator needs access to the model
+    def getModel:domain.Model = {
+      domain.e5
+    }
   }
-  override val model = gen.domain.e5
+  override val model = gen.getModel
 }

@@ -25,7 +25,7 @@ trait s0 extends AbstractGenerator with TestGenerator {
   }
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
-  abstract override def methodBodyGenerator(exp:domain.expressions.Exp)(op:domain.Operation): Seq[Statement] = {
+  abstract override def logic(exp:domain.subtypes.Exp)(op:domain.Operation): Seq[Statement] = {
     val subs:Map[String,Expression] = subExpressions(exp)
 
     // generate the actual body
@@ -59,26 +59,26 @@ trait s0 extends AbstractGenerator with TestGenerator {
           }
         }
 
-      case _ => super.methodBodyGenerator(exp)(op)
+      case _ => super.logic(exp)(op)
     }
   }
 
   /** Convert a test instance into a Java Expression for instantiating that instance. */
-  override def convert(inst:domain.ExpInst, model:domain.Model) : Expression = {
+  override def convert(inst:domain.ExpInst) : Expression = {
     val name = inst.e.name
     inst match {
       case ti:domain.TranslateInst => {
         val tuple = ti.i.get.asInstanceOf[((Double,Double),domain.ExpInst)]
         val pt = s"new java.awt.geom.Point2D.Double(${tuple._1._1}, ${tuple._1._2})"
 
-        Java(s"new $name($pt, ${convert(tuple._2, model)})").expression()
+        Java(s"new $name($pt, ${convert(tuple._2)})").expression()
       }
 
-      case _ => super.convert(inst, model)
+      case _ => super.convert(inst)
     }
   }
 
-  abstract override def testGenerator(model:domain.Model): Seq[MethodDeclaration] = {
+  abstract override def testGenerator: Seq[MethodDeclaration] = {
 
     val s1 = new domain.SquareInst(5.0)
     val c1 = new domain.CircleInst(5.0)  // instances.ExpInst
@@ -88,15 +88,15 @@ trait s0 extends AbstractGenerator with TestGenerator {
     val t1 = new domain.TranslateInst((5.0, 7.0), s1)
     val t2 = new domain.TranslateInst((2.0, -9.0), t1)
 
-    super.testGenerator(model.last) ++ Java(
+    super.testGenerator ++ Java(
       s"""
          |public void test() {
-         |   assertTrue(${recurseOn(convert(s1, model), domain.ContainsPt, p1)});
-         |   assertFalse(${recurseOn(convert(c1, model), domain.ContainsPt, p2)});
+         |   assertTrue(${recurseOn(convert(s1), domain.ContainsPt, p1)});
+         |   assertFalse(${recurseOn(convert(c1), domain.ContainsPt, p2)});
          |
-         |   assertFalse(${recurseOn(convert(t1, model), domain.ContainsPt, p1)});
-         |   assertFalse(${recurseOn(convert(t2, model), domain.ContainsPt, p1)});
-         |   assertTrue(${recurseOn(convert(t2, model), domain.ContainsPt, p2)});
+         |   assertFalse(${recurseOn(convert(t1), domain.ContainsPt, p1)});
+         |   assertFalse(${recurseOn(convert(t2), domain.ContainsPt, p1)});
+         |   assertTrue(${recurseOn(convert(t2), domain.ContainsPt, p2)});
          |
          |}""".stripMargin).methodDeclarations()
   }

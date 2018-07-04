@@ -24,7 +24,7 @@ trait e0 extends AbstractGenerator with TestGenerator {
   }
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
-  abstract override def methodBodyGenerator(exp:domain.expressions.Exp)(op:domain.Operation): Seq[Statement] = {
+  abstract override def logic(exp:domain.subtypes.Exp)(op:domain.Operation): Seq[Statement] = {
     val subs:Map[String,Expression] = subExpressions(exp)
 
     // generate the actual body
@@ -33,23 +33,23 @@ trait e0 extends AbstractGenerator with TestGenerator {
         exp match {
           case domain.Lit => Java(s"return ${subs(domain.attributes.value)};").statements
           case domain.Add => Java(s"return ${recurseOn(subs(domain.base.left),op)} + ${recurseOn(subs(domain.base.right),op)};").statements()
-          case _ => super.methodBodyGenerator(exp)(op)
+          case _ => super.logic(exp)(op)
         }
 
-      case _ => super.methodBodyGenerator(exp)(op)
+      case _ => super.logic(exp)(op)
     }
   }
 
-  abstract override def testGenerator(model:domain.Model): Seq[MethodDeclaration] = {
+  abstract override def testGenerator: Seq[MethodDeclaration] = {
 
     val a1 = new domain.BinaryInst(domain.Add, new domain.LitInst(1.0), new domain.LitInst(2.0))
     val lit1 = new domain.LitInst(5.0)
 
-    super.testGenerator(model.last) ++ Java(
+    super.testGenerator ++ Java(
       s"""
          |public void test() {
-         |   assertEquals(3.0, ${recurseOn(convert(a1, model), domain.Eval)});
-         |   assertEquals(5.0, ${recurseOn(convert(lit1, model), domain.Eval)});
+         |   assertEquals(3.0, ${recurseOn(convert(a1), domain.Eval)});
+         |   assertEquals(5.0, ${recurseOn(convert(lit1), domain.Eval)});
          |}""".stripMargin).methodDeclarations()
   }
 

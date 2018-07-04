@@ -26,9 +26,9 @@ trait ShapeDomain extends BaseDomain with ModelDomain {
   case object Double extends Types
   case object Boolean extends Types
 
-  case object Square extends expressions.Exp("Square", Seq(Attribute(attributes.side, Double)))
-  case object Circle extends expressions.Exp("Circle", Seq(Attribute(attributes.radius, Double)))
-  case object Translate extends expressions.Exp("Translate",
+  case object Square extends subtypes.Exp("Square", Seq(Attribute(attributes.side, Double)))
+  case object Circle extends subtypes.Exp("Circle", Seq(Attribute(attributes.radius, Double)))
+  case object Translate extends subtypes.Exp("Translate",
     Seq(Attribute(attributes.trans, Point), Attribute(attributes.shape, Exp)))
   case object ContainsPt extends Operation("containsPt", Some(Boolean), (attributes.point, Point))
   val s0 = Model("s0", Seq(Square,Circle,Translate), Seq(ContainsPt))
@@ -44,7 +44,7 @@ trait ShapeDomain extends BaseDomain with ModelDomain {
 
   // s2:model evolution (add datatype)
   // ---------------------------------
-  case object Composite extends expressions.Exp("Composite",
+  case object Composite extends subtypes.Exp("Composite",
     Seq(Attribute(base.left, Exp), Attribute(base.right, Exp)))
   val s2 = Model ("s2", Seq(Composite), Seq.empty, s1)
 }

@@ -25,7 +25,7 @@ trait e5 extends AbstractGenerator with TestGenerator {
     }
   }
 
-  abstract override def methodBodyGenerator(exp:expressions.Exp)(op:Operation): Seq[Statement] = {
+  abstract override def logic(exp:subtypes.Exp)(op:Operation): Seq[Statement] = {
     val subs = subExpressions(exp)
 
     // generate the actual body
@@ -45,44 +45,44 @@ trait e5 extends AbstractGenerator with TestGenerator {
             val call:String = atts(domain.attributes.value).toString//.substring(2)
             val value:Expression = Java(s"((${exp.name.capitalize})$name).$call").expression()
 // e.getValue() == ((Lit) other).getValue();
-            Java(s"""return ${getJavaClass()}.equals(${recurseOn(oname, GetJavaClass)}) && $call.equals($value);""").statements()
+            Java(s"""return $getJavaClass.equals(${recurseOn(oname, GetJavaClass)}) && $call.equals($value);""").statements()
           }
 
           // left.equals(((Add)other).left) && right.equals(((Add)other).right);
-          case ui:expressions.UnaryExp => {
+          case ui:subtypes.UnaryExp => {
             val call:String = atts(domain.base.exp).toString//.substring(2)
             val inner:Expression = Java(s"((${exp.name.capitalize})$name).$call").expression()
 
-            Java(s"""return ${getJavaClass()}.equals(${recurseOn(oname, GetJavaClass)}) && ${recurseOn(subs(base.exp), Equal, inner)};""").statements()
+            Java(s"""return $getJavaClass.equals(${recurseOn(oname, GetJavaClass)}) && ${recurseOn(subs(base.exp), Equal, inner)};""").statements()
           }
 
-          case bi:expressions.BinaryExp => {
+          case bi:subtypes.BinaryExp => {
             val leftCall:String = atts(domain.base.left).toString//.substring(2)
             val rightCall:String = atts(domain.base.right).toString//.substring(2)
             val leftExpr:Expression = Java(s"((${exp.name.capitalize})$name).$leftCall").expression()
             val rightExpr:Expression = Java(s"((${exp.name.capitalize})$name).$rightCall").expression()
 
-            Java(s"""return ${getJavaClass()}.equals(${recurseOn(oname, GetJavaClass)}) && ${recurseOn(subs(base.left), Equal, leftExpr)} && ${recurseOn(subs(base.right), Equal, rightExpr)};""").statements()
+            Java(s"""return $getJavaClass.equals(${recurseOn(oname, GetJavaClass)}) && ${recurseOn(subs(base.left), Equal, leftExpr)} && ${recurseOn(subs(base.right), Equal, rightExpr)};""").statements()
           }
 
-          case _ => super.methodBodyGenerator(exp)(op)
+          case _ => super.logic(exp)(op)
         }
 
-      case _ => super.methodBodyGenerator(exp)(op)
+      case _ => super.logic(exp)(op)
     }
   }
 
-  abstract override def testGenerator(model:Model): Seq[MethodDeclaration] = {
+  abstract override def testGenerator: Seq[MethodDeclaration] = {
     val s1 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
     val s2 = new BinaryInst(Add, new BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0)),
                                  new BinaryInst(Add, new LitInst(5.0), new LitInst(6.0)))
     val s3 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
 
-      super.testGenerator(model.last) ++ Java(
+      super.testGenerator ++ Java(
       s"""
          |public void test() {
-         |   assertFalse(${recurseOn(convert(s1, model), Equal, convert(s2, model))});
-         |   assertTrue(${recurseOn(convert(s1, model), Equal, convert(s3, model))});
+         |   assertFalse(${recurseOn(convert(s1), Equal, convert(s2))});
+         |   assertTrue(${recurseOn(convert(s1), Equal, convert(s3))});
          |}""".stripMargin).methodDeclarations()
   }
 }

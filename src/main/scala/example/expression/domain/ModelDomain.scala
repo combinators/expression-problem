@@ -6,7 +6,7 @@ package example.expression.domain
 trait ModelDomain extends BaseDomain {
 
   /** Each model consists of a collection of Exp sub-types and operations. */
-  case class Model(name:String, types:Seq[expressions.Exp], ops:Seq[Operation], last:Model = emptyModel()) {
+  case class Model(name:String, types:Seq[subtypes.Exp], ops:Seq[Operation], last:Model = emptyModel()) {
 
     /* Return history of model as a sequence. */
     def toSeq : Seq[Model] = {
@@ -70,7 +70,7 @@ trait ModelDomain extends BaseDomain {
     }
 
     /** Find past dataTypes. */
-    def pastDataTypes(): Seq[expressions.Exp] = {
+    def pastDataTypes(): Seq[subtypes.Exp] = {
       if (isEmpty) {
         Seq.empty
       } else {
@@ -98,6 +98,48 @@ trait ModelDomain extends BaseDomain {
 
     /** A model is empty when it has no dataTypes or operations. */
     def isEmpty: Boolean = types.isEmpty && ops.isEmpty
+
+    /** Construct new linear extension graph consistent with these two models. */
+    def merge(name:String, other:Model) : Model = {
+      var n_me = inOrder
+      var n_o  = other.inOrder
+      var head:Model = emptyModel()
+
+      /** If nothing in common, return empty model. */
+      if (!n_me.head.equals(n_o.head)) {
+        return head
+      }
+
+      // find last one that is common
+      while (n_o.nonEmpty && n_me.nonEmpty) {
+        // still the same
+        if (n_o.head.equals(n_me.head)) {
+          head = n_o.head
+        } else {
+          // merge both and record new head
+          head = Model(n_o.head.name + ":" + n_me.head.name,
+            n_o.head.types ++ n_me.head.types,
+            n_o.head.ops ++ n_me.head.ops, head)
+        }
+
+        n_o = n_o.tail
+        n_me = n_me.tail
+      }
+
+      // if we get here, and either one is non empty, just keep extending
+      while (n_me.nonEmpty) {
+        head = Model(n_me.head.name, n_me.head.types, n_me.head.ops, head)
+        n_me = n_me.tail
+      }
+
+      while (n_o.nonEmpty) {
+        head = Model(n_o.head.name, n_o.head.types, n_o.head.ops, head)
+        n_o = n_o.tail
+      }
+
+      // Make sure we return topmost Model with proper name
+      Model(name, head.types, head.ops, head.last)
+    }
   }
 
   /** Useful to be able to construct an empty model. */

@@ -15,7 +15,7 @@ trait StraightGenerator extends AbstractGenerator with DataTypeSubclassGenerator
   val domain:BaseDomain with ModelDomain
 
   /** For straight design solution, directly access attributes by name. */
-  override def subExpressions(exp:domain.expressions.Exp) : Map[String,Expression] = {
+  override def subExpressions(exp:domain.subtypes.Exp) : Map[String,Expression] = {
     exp.attributes.map(att => att.name -> Java(s"${att.name}").expression[Expression]()).toMap
   }
 
@@ -49,7 +49,7 @@ trait StraightGenerator extends AbstractGenerator with DataTypeSubclassGenerator
   }
 
   /** Operations are implemented as methods in the Base and sub-type classes. */
-  def methodGenerator(exp:domain.expressions.Exp)(op:domain.Operation): MethodDeclaration = {
+  def methodGenerator(exp:domain.subtypes.Exp)(op:domain.Operation): MethodDeclaration = {
     val retType = op.returnType match {
       case Some(tpe) => typeGenerator(tpe)
       case _ => Java("void").tpe
@@ -57,12 +57,12 @@ trait StraightGenerator extends AbstractGenerator with DataTypeSubclassGenerator
 
     val params = parameters(op)
     Java(s"""|public $retType ${op.name}($params) {
-             |  ${methodBodyGenerator(exp)(op).mkString("\n")}
+             |  ${logic(exp)(op).mkString("\n")}
              |}""".stripMargin).methodDeclarations().head
   }
 
   /** Generate the full class for the given expression sub-type. */
-  def generateExp(model:domain.Model, exp:domain.expressions.Exp) : CompilationUnit = {
+  def generateExp(model:domain.Model, exp:domain.subtypes.Exp) : CompilationUnit = {
     val name = exp.toString
 
     val methods:Seq[MethodDeclaration] = model.ops.map(methodGenerator(exp))

@@ -4,7 +4,7 @@ import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
-import example.expression.domain.Domain
+import example.expression.domain.{BaseDomain, MathDomain, ModelDomain}
 import example.expression.j.{TestGenerator, TestGeneratorWithModel}
 import org.combinators.templating.twirl.Java
 
@@ -12,21 +12,22 @@ import org.combinators.templating.twirl.Java
   * Each evolution has opportunity to enhance the code generators.
   */
 trait AlgebraTestGenerator extends TestGeneratorWithModel {
-  val domain: Domain
+  val domain: BaseDomain with ModelDomain
 
   // exists from AbstractGenerator
-  def typeGenerator(tpe:domain.Types) : com.github.javaparser.ast.`type`.Type
+  def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type
 
   /** Convert a test instance into a Java Expression for instantiating that instance. */
-  override def convert(inst: domain.ExpInst): Expression = {
+  override def convert(inst: domain.AtomicInst): Expression = {
     val name = inst.e.name
     val opname = name.toLowerCase()
     inst match {
-      case lit: domain.LitInst => Java(s"algebra.lit(${lit.i.get.toString})").expression()
+      //case lit: domain.LitInst => Java(s"algebra.lit(${lit.i.get.toString})").expression()
       case ui: domain.UnaryInst =>
-        Java(s"algebra.$opname(${convert(ui.exp)})").expression()
+        Java(s"algebra.$opname(${convert(ui.inner)})").expression()
       case bi: domain.BinaryInst =>
         Java(s"algebra.$opname(${convert(bi.left)}, ${convert(bi.right)})").expression()
+      case exp:domain.AtomicInst => Java(s"algebra.lit(${exp.i.get.toString})").expression()
 
       case _ => Java(s""" "unknown $name" """).expression()
     }
@@ -92,21 +93,21 @@ trait AlgebraTestGenerator extends TestGeneratorWithModel {
   }
 
   /** Produce inner methods. */
-  def innerMethod(tpe:domain.subtypes.Exp, operations:Seq[domain.Operation]) : Seq[MethodDeclaration] = {
+  def innerMethod(tpe:domain.Atomic, operations:Seq[domain.Operation]) : Seq[MethodDeclaration] = {
     var params:Seq[String] = Seq.empty
     var args:Seq[String] = Seq.empty
 
     tpe.attributes.foreach(att => {
       args = args :+ att.name
-      if (att.tpe == domain.Exp) {
+      if (att.tpe == domain.baseTypeRep) {
         params = params :+ s"Combined ${att.name}" }
       else {
-        params = params :+ typeGenerator(att.tpe) + s" ${att.name}"
+        params = params :+ typeConverter(att.tpe) + s" ${att.name}"
       }
     })
 
     val opsname:Seq[MethodDeclaration] = operations.flatMap(op => {
-      val returnType = typeGenerator(op.returnType.get)
+      val returnType = typeConverter(op.returnType.get)
       Java(
         s"public $returnType ${op.name}() { return algebra${op.name.capitalize}.${tpe.name.toLowerCase}(${args.mkString(",")}).${op.name}(); } ").methodDeclarations()
     })

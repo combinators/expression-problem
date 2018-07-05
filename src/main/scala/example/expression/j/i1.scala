@@ -2,16 +2,16 @@ package example.expression.j
 
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.stmt.Statement
-import example.expression.domain.IndependentDomain
+import example.expression.domain.IndependentMathDomain
 import org.combinators.templating.twirl.Java
 
 /**
   * Independent branch to just contain 'Neg'
   */
 trait i1 extends AbstractGenerator with TestGenerator {
-  val domain:IndependentDomain
+  val domain:IndependentMathDomain
 
-  abstract override def logic(exp:domain.subtypes.Exp)(op:domain.Operation): Seq[Statement] = {
+  abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {
     val subs = subExpressions(exp)
     
     // generate the actual body
@@ -19,7 +19,7 @@ trait i1 extends AbstractGenerator with TestGenerator {
 
       case domain.Eval => {
         exp match {
-          case domain.Inv => Java(s"""return 1 / ${recurseOn(subs(domain.base.exp), domain.Eval)}; """).statements()
+          case domain.Inv => Java(s"""return 1 / ${recurseOn(subs(domain.base.inner), domain.Eval)}; """).statements()
           case _ => super.logic(exp)(op)
         }
       }

@@ -6,7 +6,7 @@ package example.expression.domain
 trait ModelDomain extends BaseDomain {
 
   /** Each model consists of a collection of Exp sub-types and operations. */
-  case class Model(name:String, types:Seq[subtypes.Exp], ops:Seq[Operation], last:Model = emptyModel()) {
+  case class Model(name:String, types:Seq[Atomic], ops:Seq[Operation], last:Model = emptyModel()) {
 
     /* Return history of model as a sequence. */
     def toSeq : Seq[Model] = {
@@ -18,7 +18,7 @@ trait ModelDomain extends BaseDomain {
     }
 
     /** Return models in evolution order from base (skipping the empty model that is always last). */
-    def inOrder:Seq[Model] = toSeq.reverse.tail
+    def inChronologicalOrder:Seq[Model] = toSeq.reverse.tail
 
     /** Guard check for equals method. */
     def canEqual(a: Any) : Boolean = a.isInstanceOf[Model]
@@ -70,7 +70,7 @@ trait ModelDomain extends BaseDomain {
     }
 
     /** Find past dataTypes. */
-    def pastDataTypes(): Seq[subtypes.Exp] = {
+    def pastDataTypes(): Seq[Atomic] = {
       if (isEmpty) {
         Seq.empty
       } else {
@@ -101,8 +101,8 @@ trait ModelDomain extends BaseDomain {
 
     /** Construct new linear extension graph consistent with these two models. */
     def merge(name:String, other:Model) : Model = {
-      var n_me = inOrder
-      var n_o  = other.inOrder
+      var n_me = inChronologicalOrder
+      var n_o  = other.inChronologicalOrder
       var head:Model = emptyModel()
 
       /** If nothing in common, return empty model. */

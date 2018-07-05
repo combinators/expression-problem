@@ -1,7 +1,7 @@
 package example.expression.scalaVisitor
 
 import com.github.javaparser.ast.CompilationUnit
-import example.expression.domain.Domain
+import example.expression.domain.MathDomain
 import example.expression.j._
 import javax.inject.Inject
 import org.combinators.templating.persistable.JavaPersistable._
@@ -34,7 +34,7 @@ class E0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new VisitorGenerator with TestGenerator with e0 {
-    override val domain = new Domain{ }
+    override val domain = new MathDomain{ }
   }
   override val model = gen.domain.e0
 }
@@ -43,7 +43,7 @@ class E1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new VisitorGenerator with TestGenerator with e0 with e1 {
-    override val domain = new Domain{ }
+    override val domain = new MathDomain{ }
   }
   override val model = gen.domain.e1
 }
@@ -52,7 +52,7 @@ class E2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new VisitorGenerator with TestGenerator with e0 with e1 with e2 {
-    override val domain = new Domain{ }
+    override val domain = new MathDomain{ }
   }
   override val model = gen.domain.e2
 }
@@ -61,7 +61,7 @@ class E3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new VisitorGenerator with TestGenerator with e0 with e1 with e2 with e3 {
-    override val domain = new Domain{ }
+    override val domain = new MathDomain{ }
   }
   override val model = gen.domain.e3
 }
@@ -70,7 +70,7 @@ class E4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new VisitorGenerator with TestGeneratorWithModel with e0 with e1 with e2 with e3 with e4 {
-    override val domain = new Domain{ }
+    override val domain = new MathDomain{ }
 
     // Interpreter Test Generator needs access to the model
     def getModel:domain.Model = {
@@ -84,7 +84,7 @@ class E5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new VisitorGenerator with TestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with ex {
-    override val domain = new Domain{ }
+    override val domain = new MathDomain{ }
 
     // Interpreter Test Generator needs access to the model
     def getModel:domain.Model = {

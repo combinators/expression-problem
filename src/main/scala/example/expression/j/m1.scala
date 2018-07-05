@@ -2,7 +2,7 @@ package example.expression.j
 
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.stmt.Statement
-import example.expression.domain.{Domain, MergedDomain}
+import example.expression.domain.{MathDomain, MergedMathDomain}
 import org.combinators.templating.twirl.Java
 
 /**
@@ -11,16 +11,16 @@ import org.combinators.templating.twirl.Java
   * Still Java-based, naturally and JUnit
   */
 trait m1 extends AbstractGenerator with TestGenerator {
-  val domain:MergedDomain
+  val domain:MergedMathDomain
 
-  abstract override def logic(exp:domain.subtypes.Exp)(op:domain.Operation): Seq[Statement] = {
+  abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {
     val subs = subExpressions(exp)
 
     // generate the actual body
     op match {
       case domain.PrettyP =>
         exp match {
-          case domain.Inv => Java(s"""return "(1.0/" + ${recurseOn(subs(domain.base.exp), domain.PrettyP)} + ")"; """).statements()
+          case domain.Inv => Java(s"""return "(1.0/" + ${recurseOn(subs(domain.base.inner), domain.PrettyP)} + ")"; """).statements()
           case _ => super.logic(exp)(op)
         }
 

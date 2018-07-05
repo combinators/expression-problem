@@ -6,7 +6,7 @@ import example.expression.domain.{BaseDomain, ModelDomain}
 import org.combinators.templating.twirl.Java
 
 /**
-  * Each evolution has opportunity to enhance the code generators.
+  * Any Java-based EP approach can extend this Generator
   */
 trait AbstractGenerator  {
   val domain:BaseDomain with ModelDomain
@@ -17,7 +17,7 @@ trait AbstractGenerator  {
     * For example, an expressions.BinaryExp has 'left' and 'right' attributes, whereas an
     * expressions.UnaryExp only has an 'exp'
     */
-  def subExpressions(exp:domain.subtypes.Exp) : Map[String, Expression]
+  def subExpressions(exp:domain.Atomic) : Map[String, Expression]
 
   /** Retrieve Java Class associated with given context. Needed for operations with Exp as parameter. */
   def getJavaClass : Expression
@@ -34,7 +34,7 @@ trait AbstractGenerator  {
     *
     * I've crafted by hand, but don't want to break code tonight :)
     */
-  def inst(exp:domain.subtypes.Exp)(op:domain.Operation)(params:Expression*): Expression = {
+  def inst(exp:domain.Atomic)(op:domain.Operation)(params:Expression*): Expression = {
     Java("new " + exp.name.capitalize + "(" + params.map(expr => expr.toString()).mkString(",") + ")").expression()
   }
 
@@ -42,7 +42,7 @@ trait AbstractGenerator  {
     * Expression-tree data has attributes with domain-specific types. This method returns
     * the designated Java type associated with the abstract type.
     */
-  def typeGenerator(tpe:domain.Types) : com.github.javaparser.ast.`type`.Type = {
+  def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {
     throw new scala.NotImplementedError(s"""Unknown Type "$tpe" """)
   }
 
@@ -50,7 +50,7 @@ trait AbstractGenerator  {
     * Universal situation across all possible solutions is the sequence of statements that result
     * for a given Operation and data-type.
     */
-  def logic(exp:domain.subtypes.Exp)(op:domain.Operation) : Seq[Statement] = {
+  def logic(exp:domain.Atomic)(op:domain.Operation) : Seq[Statement] = {
     throw new scala.NotImplementedError(s"""Operation "${op.name}" does not handle case for sub-type "${exp.name}" """)
   }
 
@@ -61,10 +61,3 @@ trait AbstractGenerator  {
     */
   def compatible(model:domain.Model):domain.Model = model
 }
-
-
-
-
-
-
-

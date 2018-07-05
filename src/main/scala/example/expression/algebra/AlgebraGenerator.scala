@@ -2,10 +2,9 @@ package example.expression.algebra
 
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.`type`.Type
-import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
-import example.expression.domain.Domain
+import example.expression.domain.{BaseDomain, ModelDomain}
 import example.expression.j.AbstractGenerator
 import org.combinators.templating.twirl.Java
 
@@ -13,7 +12,7 @@ import org.combinators.templating.twirl.Java
   * Each evolution has opportunity to enhance the code generators.
   */
 trait AlgebraGenerator extends AbstractGenerator {
-  val domain:Domain
+  val domain:BaseDomain with ModelDomain
 
   /**
     * Must eliminate any operation that returns E as value, since Algebra doesn't instantiate the intermediate structures
@@ -23,11 +22,11 @@ trait AlgebraGenerator extends AbstractGenerator {
 
     // rebuild by filtering out all operations that return Exp.
     domain.Model(model.name, model.types,
-      model.ops.filterNot(op => op.returnType.isDefined && op.returnType.get.equals(domain.Exp)),
+      model.ops.filterNot(op => op.returnType.isDefined && op.returnType.get.equals(domain.baseTypeRep)),
       compatible(model.last))
   }
 
-  override def getJavaClass() : Expression = {
+  override def getJavaClass : Expression = {
     Java(s"getClass()").expression[Expression]()
   }
 
@@ -38,19 +37,14 @@ trait AlgebraGenerator extends AbstractGenerator {
     * For interpreter, we use a factory method that has been placed in the class, and that allows
     * the very specialized types to be used.
     */
-  override def inst(exp:domain.subtypes.Exp)(op:domain.Operation)(params:Expression*): Expression = {
+  override def inst(exp:domain.Atomic)(op:domain.Operation)(params:Expression*): Expression = {
     Java(exp.name + "(" + params.map(expr => expr.toString()).mkString(",") + ")").expression()
   }
 
   /** For straight design solution, directly access attributes by name. */
-  override def subExpressions(exp:domain.subtypes.Exp) : Map[String,Expression] = {
+  override def subExpressions(exp:domain.Atomic) : Map[String,Expression] = {
     exp.attributes.map(att => att.name -> Java(s"${att.name}").expression[Expression]()).toMap
   }
-
-//  /** Directly access local method, one per operation. */
-//  override def recurseOn(expr:Expression, op:domain.Operation) : Expression = {
-//    Java(s"""$expr.${op.name}()""").expression()
-//  }
 
   /** Directly access local method, one per operation, with a parameter. */
   override def recurseOn(expr:Expression, op:domain.Operation, params:Expression*) : Expression = {
@@ -59,18 +53,18 @@ trait AlgebraGenerator extends AbstractGenerator {
   }
 
   /** Return designated Java type associated with type, or void if all else fails. */
-  override def typeGenerator(tpe:domain.Types) : com.github.javaparser.ast.`type`.Type = {
+  override def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
-      case domain.Exp => Java("E").tpe()
+      case domain.baseTypeRep => Java("E").tpe()
       case _ => Java ("void").tpe()  // reasonable stop
     }
   }
 
   /** Return designated Exp type with replacement. */
-  def recursiveTypeGenerator(tpe:domain.Types, replacement:Type) : com.github.javaparser.ast.`type`.Type = {
+  def recursiveTypeGenerator(tpe:domain.TypeRep, replacement:Type) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
-      case domain.Exp => replacement
-      case _ => typeGenerator(tpe)
+      case domain.baseTypeRep => replacement
+      case _ => typeConverter(tpe)
     }
   }
 
@@ -83,7 +77,7 @@ trait AlgebraGenerator extends AbstractGenerator {
 
     // this gets "eval" and we want the name of the Interface.
     val name = op.name
-    val returnType = typeGenerator(op.returnType.get)
+    val returnType = typeConverter(op.returnType.get)
     val opType = Java(op.name.capitalize).tpe()
     var targetModel:domain.Model = null
     var fullName:String = null
@@ -128,6 +122,7 @@ trait AlgebraGenerator extends AbstractGenerator {
       val params:Seq[String] = exp.attributes.map(att => s"final ${recursiveTypeGenerator(att.tpe, opType)} ${att.name}")
       // creates method body
       val paramList = params.mkString(",")
+
       s"""
          |public ${name.capitalize} $subName($paramList) {
          |        return new ${name.capitalize}() {
@@ -137,28 +132,22 @@ trait AlgebraGenerator extends AbstractGenerator {
          |        };
          |    }
            """.stripMargin
-    }
-    ).mkString("\n")
+    }).mkString("\n")
 
-    val str:String = s"""package algebra;
-                        |
-                        |public class ${name.capitalize}${fullName}ExpAlg $previous implements ${fullName}ExpAlg<${name.capitalize}> {
-                        |     $methods
-                        |}
-                        |""".stripMargin
+    val str:String = s"""|package algebra;
+                         |public class ${name.capitalize}${fullName}ExpAlg $previous implements ${fullName}ExpAlg<${name.capitalize}> {
+                         |     $methods
+                         |}
+                         |""".stripMargin
     Java(str).compilationUnit()
   }
-
-//  def methodBodyGenerator(exp:domain.expressions.Exp)(op:domain.Operation): Seq[Statement] = {
-//    throw new scala.NotImplementedError(s"""Operation "${op.name}" does not handle case for sub-type "${exp.name}" """)
-//  }
 
   /** Generate interface for an operation. */
   def baseInterface(op:domain.Operation) : CompilationUnit = {
     var signatures:Seq[String] = Seq.empty
 
     val name = op.name.toLowerCase
-    val tpe = typeGenerator(op.returnType.get)
+    val tpe = typeConverter(op.returnType.get)
 
     signatures = signatures :+ s"  $tpe $name();"
 
@@ -188,7 +177,7 @@ trait AlgebraGenerator extends AbstractGenerator {
         val subName = exp.name.toLowerCase
 
         val params: Seq[String] = exp.attributes
-          .map(att => s"final ${recursiveTypeGenerator(att.tpe, typeGenerator(att.tpe))} ${att.name}")
+          .map(att => s"final ${recursiveTypeGenerator(att.tpe, typeConverter(att.tpe))} ${att.name}")
 
         // creates method signature from parameters
         val paramList = params.mkString(",")
@@ -206,12 +195,11 @@ trait AlgebraGenerator extends AbstractGenerator {
         .concat("ExpAlg<E>")
     }
 
-    Java(s"""package algebra;
-                             |
-                             |interface ${newName}ExpAlg<E> $previous {
-                             | $signatures
-                             |}
-                             |""".stripMargin).compilationUnit()
+    Java(s"""|package algebra;
+             |interface ${newName}ExpAlg<E> $previous {
+             | $signatures
+             |}
+             |""".stripMargin).compilationUnit()
   }
 
 
@@ -240,7 +228,7 @@ trait AlgebraGenerator extends AbstractGenerator {
       }
 
       // maintain increasing collection of operations. As new operations are defined, one must
-      // create methods for each existing datatype from the past
+      // create methods for each existing data type from the past
       operations = operations ++ model.ops
 
       // If no new operation defined, but new data types, must deal with extensions.

@@ -1,7 +1,7 @@
 package example.expression.trivially
 
 import com.github.javaparser.ast.CompilationUnit
-import example.expression.domain.{Domain, MergedDomain}
+import example.expression.domain.{MathDomain, MergedMathDomain}
 import example.expression.j._
 import javax.inject.Inject
 import org.combinators.templating.persistable.JavaPersistable._
@@ -35,7 +35,7 @@ class E0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new TriviallyGenerator with TestGenerator with e0 {
-    override val domain = new Domain{ }
+    override val domain = new MathDomain{ }
   }
   override val model = gen.domain.e0
 }
@@ -44,7 +44,7 @@ class E1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new TriviallyGenerator with TestGenerator with e0 with e1 {
-    override val domain = new Domain{ }
+    override val domain = new MathDomain{ }
   }
   override val model = gen.domain.e1
 }
@@ -53,7 +53,7 @@ class E2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new TriviallyGenerator with TestGenerator with e0 with e1 with e2 {
-    override val domain = new Domain{ }
+    override val domain = new MathDomain{ }
   }
   override val model = gen.domain.e2
 }
@@ -62,7 +62,7 @@ class E3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new TriviallyGenerator with TestGenerator with e0 with e1 with e2 with e3 {
-    override val domain = new Domain{ }
+    override val domain = new MathDomain{ }
   }
   override val model = gen.domain.e3
 }
@@ -71,7 +71,7 @@ class E4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new TriviallyGenerator with TestGeneratorWithModel with e0 with e1 with e2 with e3 with e4 {
-    override val domain = new Domain{ }
+    override val domain = new MathDomain{ }
 
     // Interpreter Test Generator needs access to the model
     def getModel:domain.Model = {
@@ -85,7 +85,7 @@ class E5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new TriviallyGenerator with TestGeneratorWithModel with e0 with e1 with e2 with e3 with e4 with e5 {
-    override val domain = new Domain{ }
+    override val domain = new MathDomain{ }
 
     // Interpreter Test Generator needs access to the model
     def getModel:domain.Model = {
@@ -100,7 +100,7 @@ class M1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
   // Merge e3 with i2: without adding extra code to synthesize concepts, this will fail
   override val gen = new TriviallyGenerator with TestGenerator with e0 with e1 with e2 with e3 with i1 with i2 with m1 {
-    override val domain = new MergedDomain { }
+    override val domain = new MergedMathDomain { }
   }
 
   override val model = gen.domain.m1

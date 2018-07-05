@@ -5,7 +5,7 @@ package example.expression.domain
   *
   * Must have a common ancestor (other than emptyModel()), otherwise merge is not well-defined
   */
-trait MergedDomain extends Domain with IndependentDomain {
+trait MergedMathDomain extends MathDomain with IndependentMathDomain {
 
   val m1:Model = e3.merge("m1", i2)
 }

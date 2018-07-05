@@ -1,7 +1,7 @@
 package example.expression.algebra
 
 import com.github.javaparser.ast.CompilationUnit
-import example.expression.domain.Domain
+import example.expression.domain.MathDomain
 import example.expression.j._
 import javax.inject.Inject
 import org.combinators.templating.persistable.JavaPersistable._
@@ -17,7 +17,7 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
   lazy val reduced:gen.domain.Model = gen.compatible(model)
   override lazy val generatedCode:Seq[CompilationUnit] =
-    gen.processModel(reduced.inOrder) :+
+    gen.processModel(reduced.inChronologicalOrder) :+
     gen.generateSuite(Some("algebra")) :+                    // generate test cases as well
     gen.combinedAlgebra(Some("algebra"), reduced)
 
@@ -32,7 +32,7 @@ class E0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new AlgebraGenerator with AlgebraTestGenerator with e0 {
-    override val domain = new Domain{ }
+    override val domain = new MathDomain{ }
 
     def getModel: domain.Model = {
       domain.e0
@@ -45,7 +45,7 @@ class E1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new AlgebraGenerator with AlgebraTestGenerator with e0 with e1 {
-    override val domain = new Domain{ }
+    override val domain = new MathDomain{ }
 
     def getModel: domain.Model = {
       domain.e1
@@ -59,7 +59,7 @@ class E2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with e2 {
-    override val domain = new Domain{ }
+    override val domain = new MathDomain{ }
 
     def getModel: domain.Model = {
       domain.e2
@@ -72,7 +72,7 @@ class E3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with e2 with e3 {
-    override val domain = new Domain{ }
+    override val domain = new MathDomain{ }
 
     def getModel: domain.Model = {
       domain.e3
@@ -85,7 +85,7 @@ class E4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with e2 with e3 with e4 {
-    override val domain = new Domain{ }
+    override val domain = new MathDomain{ }
 
     def getModel: domain.Model = {
       domain.e4
@@ -100,7 +100,7 @@ class E5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with ex {
-    override val domain = new Domain{ }
+    override val domain = new MathDomain{ }
 
     def getModel: domain.Model = {
       domain.e5

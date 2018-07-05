@@ -3,7 +3,7 @@ package example.expression.j
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
-import example.expression.domain.IndependentDomain
+import example.expression.domain.IndependentMathDomain
 import org.combinators.templating.twirl.Java
 
 /**
@@ -12,17 +12,17 @@ import org.combinators.templating.twirl.Java
   * By definition, an empty tree has height -1. A tree with a single root node has height 0.
   */
 trait i2 extends AbstractGenerator with TestGenerator {
-  val domain:IndependentDomain
+  val domain:IndependentMathDomain
 
 
-  abstract override def typeGenerator(tpe:domain.Types) : com.github.javaparser.ast.`type`.Type = {
+  abstract override def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
       case domain.Integer => Java(s"Integer").tpe()
-      case _ => super.typeGenerator(tpe)
+      case _ => super.typeConverter(tpe)
     }
   }
 
-   abstract override def logic(exp:domain.subtypes.Exp)(op:domain.Operation): Seq[Statement] = {
+   abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {
     val subs = subExpressions(exp)
 
     // generate the actual body
@@ -32,15 +32,15 @@ trait i2 extends AbstractGenerator with TestGenerator {
 
         val heightPlusOne:Expression = Java(s"${domain.independent.height} + 1").expression[Expression]()
         exp match {
-          case _:domain.subtypes.BinaryExp => Java(
+          case _:domain.Binary => Java(
             s"""|return Math.max(${recurseOn(subs(domain.base.left), domain.Height, heightPlusOne)},
                 |                ${recurseOn(subs(domain.base.right), domain.Height, heightPlusOne)});
                 |""".stripMargin).statements()
 
-          case _:domain.subtypes.UnaryExp =>
-            Java(s"return ${recurseOn(subs(domain.base.exp), domain.Height, heightPlusOne)};").statements()
+          case _:domain.Unary =>
+            Java(s"return ${recurseOn(subs(domain.base.inner), domain.Height, heightPlusOne)};").statements()
 
-          case _:domain.subtypes.Exp => Java(s"return ${domain.independent.height};").statements()
+          case _:domain.Atomic => Java(s"return ${domain.independent.height};").statements()
 
           case _ => super.logic(exp)(op)
         }

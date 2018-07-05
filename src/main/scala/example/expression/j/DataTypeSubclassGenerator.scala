@@ -17,7 +17,7 @@ trait DataTypeSubclassGenerator {
   // on each of the successive models. That is, process(e0,e1) or process(e0,e1,e2,e3)
 
   /** Generate the full class for the given expression sub-type. */
-  def generateExp(model:domain.Model, e:domain.subtypes.Exp) : CompilationUnit
+  def generateExp(model:domain.Model, e:domain.Atomic) : CompilationUnit
 
   /** Generate the base class. */
   def generateBase(model:domain.Model) : CompilationUnit

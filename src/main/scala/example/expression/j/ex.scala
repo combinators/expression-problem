@@ -3,7 +3,7 @@ package example.expression.j
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
-import example.expression.domain.Domain
+import example.expression.domain.MathDomain
 import org.combinators.templating.twirl.Java
 
 /**
@@ -12,17 +12,17 @@ import org.combinators.templating.twirl.Java
   * Still Java-based, naturally and JUnit
   */
 trait ex extends AbstractGenerator with TestGenerator {
-  val domain:Domain
+  val domain:MathDomain
   import domain._
 
-  abstract override def typeGenerator(tpe:Types) : com.github.javaparser.ast.`type`.Type = {
+  abstract override def typeConverter(tpe:TypeRep) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
       case JavaClass => Java(s"java.lang.Class<?>").tpe()
-      case _ => super.typeGenerator(tpe)
+      case _ => super.typeConverter(tpe)
     }
   }
 
-  abstract override def logic(exp:subtypes.Exp)(op:Operation): Seq[Statement] = {
+  abstract override def logic(exp:Atomic)(op:Operation): Seq[Statement] = {
     val subs = subExpressions(exp)
 
     // generate the actual body

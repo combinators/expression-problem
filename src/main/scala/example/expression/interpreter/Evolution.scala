@@ -1,7 +1,7 @@
 package example.expression.interpreter
 
 import com.github.javaparser.ast.CompilationUnit
-import example.expression.domain.Domain
+import example.expression.domain.MathDomain
 import example.expression.j._
 import javax.inject.Inject
 import org.combinators.templating.persistable.JavaPersistable._
@@ -26,8 +26,8 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   //lazy val flat:gen.domain.Model = gen.compatible(reduced.flat())
   override lazy val generatedCode:Seq[CompilationUnit] =
       // one interface for every model that contains an operation
-      reduced.inOrder.filter(model => model.ops.nonEmpty).map(model => gen.generateBase(model)) ++      // Each operation gets interface
-      reduced.inOrder.filter(model => model.ops.nonEmpty).flatMap(model => gen.generateBaseExtensions(model)) ++   // Each operation must provide class implementations for all past dataTypes
+      reduced.toSeq.filter(model => model.ops.nonEmpty).map(model => gen.generateBase(model)) ++      // Each operation gets interface
+      reduced.toSeq.filter(model => model.ops.nonEmpty).flatMap(model => gen.generateBaseExtensions(model)) ++   // Each operation must provide class implementations for all past dataTypes
       gen.generateIntermediateTypes(model) :+                    // New types added in between operations need to be manifest
       gen.generateSuite(Some("interpreter"))                     // generate test cases as well
 
@@ -42,7 +42,7 @@ class E0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new InterpreterGenerator with InterpreterTestGenerator with e0 {
-    override val domain = new Domain{ }
+    override val domain = new MathDomain{ }
 
     // Interpreter Test Generator needs access to the model
     def getModel:domain.Model = {
@@ -56,7 +56,7 @@ class E1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new InterpreterGenerator with InterpreterTestGenerator with e0 with e1 {
-    override val domain = new Domain{ }
+    override val domain = new MathDomain{ }
 
     // Interpreter Test Generator needs access to the model
     def getModel:domain.Model = {
@@ -70,7 +70,7 @@ class E2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new InterpreterGenerator with InterpreterTestGenerator with e0 with e1 with e2 {
-    override val domain = new Domain{ }
+    override val domain = new MathDomain{ }
 
     // Interpreter Test Generator needs access to the model
     def getModel:domain.Model = {
@@ -84,7 +84,7 @@ class E3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new InterpreterGenerator with InterpreterTestGenerator with e0 with e1 with e2 with e3 {
-    override val domain = new Domain{ }
+    override val domain = new MathDomain{ }
 
     // Interpreter Test Generator needs access to the model
     def getModel:domain.Model = {
@@ -98,7 +98,7 @@ class E4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new InterpreterGenerator with InterpreterTestGenerator with e0 with e1 with e2 with e3 with e4 {
-    override val domain = new Domain{ }
+    override val domain = new MathDomain{ }
 
     // Interpreter Test Generator needs access to the model
     def getModel:domain.Model = {
@@ -112,7 +112,7 @@ class E5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new InterpreterGenerator with InterpreterTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 {
-    override val domain = new Domain{ }
+    override val domain = new MathDomain{ }
 
     // Interpreter Test Generator needs access to the model
     def getModel:domain.Model = {

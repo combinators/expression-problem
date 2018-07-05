@@ -5,7 +5,7 @@ import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.expr.{Expression, NameExpr, SimpleName}
 import com.github.javaparser.ast.stmt.Statement
-import example.expression.domain.Domain
+import example.expression.domain.MathDomain
 import example.expression.j.{AbstractGenerator, DataTypeSubclassGenerator}
 import org.combinators.templating.twirl.Java
 
@@ -27,28 +27,28 @@ trait TriviallyGenerator extends example.expression.oo.StraightGenerator {
     *
     * For recursive types, use "FinalI" as the cast internally, otherwise use native type
     */
-  override def inst(exp:domain.subtypes.Exp)(op:domain.Operation)(params:Expression*): Expression = {
+  override def inst(exp:domain.Atomic)(op:domain.Operation)(params:Expression*): Expression = {
 
     val merged:Seq[Expression] = exp.attributes.map(att => att.tpe).zip(params).map(typeExp => {
-      val tpe:domain.Types = typeExp._1
+      val tpe:domain.TypeRep = typeExp._1
       val inner:Expression = typeExp._2
       tpe match {
-        case domain.Exp => Java(s"""(FinalI)($inner)""").expression[Expression]()
+        case domain.baseTypeRep => Java(s"""(FinalI)($inner)""").expression[Expression]()
         case _ => inner
       }
     })
     Java("new " + exp.name + "(" + merged.map(expr => expr.toString()).mkString(",") + ")").expression()
   }
 
-  override def subExpressions(exp: domain.subtypes.Exp): Map[String, Expression] = {
+  override def subExpressions(exp: domain.Atomic): Map[String, Expression] = {
     exp.attributes.map(att => att.name -> Java(s"get${att.name.capitalize}()").expression[Expression]()).toMap
   }
 
   // note: this is very much like recursiveTypeGenerator in other generators. come up with standard name
-  def attrTypeGenerator(currentClass: SimpleName, tpe: domain.Types): Type = {
+  def attrTypeGenerator(currentClass: SimpleName, tpe: domain.TypeRep): Type = {
     tpe match {
-      case domain.Exp => Java(s"$currentClass").tpe()
-      case _ => typeGenerator(tpe)
+      case domain.baseTypeRep => Java(s"$currentClass").tpe()
+      case _ => typeConverter(tpe)
     }
   }
 
@@ -56,7 +56,7 @@ trait TriviallyGenerator extends example.expression.oo.StraightGenerator {
     Java(s"Exp${op.name.capitalize}").simpleName()
   }
 
-  override def generateExp(model:domain.Model, exp:domain.subtypes.Exp) : CompilationUnit = {
+  override def generateExp(model:domain.Model, exp:domain.Atomic) : CompilationUnit = {
     val name = Java(s"${exp.name}").simpleName()
 
     val atts:Seq[FieldDeclaration] = exp.attributes.flatMap(att =>
@@ -87,16 +87,16 @@ trait TriviallyGenerator extends example.expression.oo.StraightGenerator {
             |}""".stripMargin).compilationUnit()
    }
 
-  def interfaceName(exp: domain.subtypes.Exp, op: domain.Operation): SimpleName = {
+  def interfaceName(exp: domain.Atomic, op: domain.Operation): SimpleName = {
     Java(s"${exp.name}${op.name.capitalize}").simpleName()
   }
 
-  override def methodGenerator(exp: domain.subtypes.Exp)(op: domain.Operation): MethodDeclaration = {
+  override def methodGenerator(exp: domain.Atomic)(op: domain.Operation): MethodDeclaration = {
     val method = super.methodGenerator(exp)(op)
     method.setDefault(true)
     method.setType(
       op.returnType match {
-        case Some(domain.Exp) => attrTypeGenerator(Java("Exp" + op.name.capitalize).simpleName(), domain.Exp)  // producers... HEINEMAN
+        case Some(domain.baseTypeRep) => attrTypeGenerator(Java("Exp" + op.name.capitalize).simpleName(), domain.baseTypeRep)  // producers... HEINEMAN
         case Some(tpe) => attrTypeGenerator(interfaceName(exp, op), tpe)
         case _ => Java("void").tpe
       })
@@ -105,7 +105,7 @@ trait TriviallyGenerator extends example.expression.oo.StraightGenerator {
   }
 
 
-  def generateInterface(exp: domain.subtypes.Exp, parents: Seq[SimpleName], op:domain.Operation): CompilationUnit = {
+  def generateInterface(exp: domain.Atomic, parents: Seq[SimpleName], op:domain.Operation): CompilationUnit = {
     val name = interfaceName(exp, op)
     val method: MethodDeclaration = methodGenerator(exp)(op)
     val atts:Seq[MethodDeclaration] =
@@ -129,10 +129,10 @@ trait TriviallyGenerator extends example.expression.oo.StraightGenerator {
     def generate(model: domain.Model): Seq[CompilationUnit] = {
       val lastWithOps = model.last.lastModelWithOperation()
       val parents: Seq[SimpleName] =
-        if (lastWithOps.isEmpty) Seq(Java(s"${typeGenerator(domain.Exp)}").simpleName())
+        if (lastWithOps.isEmpty) Seq(Java(s"${typeConverter(domain.baseTypeRep)}").simpleName())
         else lastWithOps.ops.map(op => baseInterfaceName(op))
 
-      def parentsFor(exp: domain.subtypes.Exp): Seq[SimpleName] =
+      def parentsFor(exp: domain.Atomic): Seq[SimpleName] =
         if (lastWithOps.isEmpty) Seq.empty
         else lastWithOps.ops.map(op => interfaceName(exp, op))
 
@@ -145,7 +145,7 @@ trait TriviallyGenerator extends example.expression.oo.StraightGenerator {
     }
     val lastWithOps = model.lastModelWithOperation()
     val finalParents: Seq[SimpleName] =
-      if (lastWithOps.isEmpty) Seq(Java(s"${typeGenerator(domain.Exp)}").simpleName())
+      if (lastWithOps.isEmpty) Seq(Java(s"${typeConverter(domain.baseTypeRep)}").simpleName())
       else lastWithOps.ops.map(op => baseInterfaceName(op))
     val finalInterface =
       Java(
@@ -165,9 +165,9 @@ trait TriviallyGenerator extends example.expression.oo.StraightGenerator {
 
     val params:String = op.parameters.map(tuple => {
       val name:String = tuple._1
-      val tpe:domain.Types = tuple._2
+      val tpe:domain.TypeRep = tuple._2
 
-      typeGenerator(tpe).toString + " " + name
+      typeConverter(tpe).toString + " " + name
     }).mkString(",")
 
 
@@ -188,7 +188,7 @@ trait TriviallyGenerator extends example.expression.oo.StraightGenerator {
     Java(
       s"""package trivially;
          |
-         |public interface ${typeGenerator(domain.Exp)} {
+         |public interface ${typeConverter(domain.baseTypeRep)} {
          |}
        """.stripMargin).compilationUnit()
   }

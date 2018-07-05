@@ -3,7 +3,7 @@ package example.expression.j
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
-import example.expression.domain.Domain
+import example.expression.domain.MathDomain
 import org.combinators.templating.twirl.Java
 
 /**
@@ -12,18 +12,18 @@ import org.combinators.templating.twirl.Java
   * Still Java-based, naturally and JUnit
   */
 trait e4 extends AbstractGenerator with TestGeneratorWithModel {
-  val domain:Domain
+  val domain:MathDomain
 
   def getModel:domain.Model
 
-  abstract override def typeGenerator(tpe:domain.Types) : com.github.javaparser.ast.`type`.Type = {
+  abstract override def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
-      case el:domain.List => Java(s"java.util.List<${typeGenerator(el.generic)}>").tpe()
-      case _ => super.typeGenerator(tpe)
+      case el:domain.List => Java(s"java.util.List<${typeConverter(el.generic)}>").tpe()
+      case _ => super.typeConverter(tpe)
     }
   }
 
-  abstract override def logic(exp:domain.subtypes.Exp)(op:domain.Operation): Seq[Statement] = {
+  abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {
     val subs = subExpressions(exp)
     val zero = Java("0.0").expression[Expression]()
     val one = Java("1.0").expression[Expression]()
@@ -83,30 +83,30 @@ trait e4 extends AbstractGenerator with TestGeneratorWithModel {
                                |}
                                |""".stripMargin).statements()
           case domain.Neg => Java(s"""
-                              |if (${recurseOn(subs(domain.base.exp), domain.Eval)} == 0) {
+                              |if (${recurseOn(subs(domain.base.inner), domain.Eval)} == 0) {
                               |  return ${inst(domain.Lit)(op)(zero)};
                               |} else {
-                              |  return ${inst(domain.Neg)(op)(recurseOn(subs(domain.base.exp), domain.Simplify))};
+                              |  return ${inst(domain.Neg)(op)(recurseOn(subs(domain.base.inner), domain.Simplify))};
                               |}""".stripMargin).statements()
           case _ => super.logic(exp)(op)
         }
 
       case domain.Collect =>
         exp match {
-          case _:domain.subtypes.BinaryExp => Java(
-            s"""|${typeGenerator(domain.List(domain.Double))} list = ${recurseOn(subs(domain.base.left), domain.Collect)};
+          case _:domain.Binary => Java(
+            s"""|${typeConverter(domain.List(domain.Double))} list = ${recurseOn(subs(domain.base.left), domain.Collect)};
                 |list.addAll(${recurseOn(subs(domain.base.right), domain.Collect)});
                 |return list;
                 |""".stripMargin).statements()
 
-          case _:domain.subtypes.UnaryExp  => Java(
-            s"""|${typeGenerator(domain.List(domain.Double))} list = new java.util.ArrayList<Double>();
-                |list.addAll(${recurseOn(subs(domain.base.exp), domain.Collect)});
+          case _:domain.Unary  => Java(
+            s"""|${typeConverter(domain.List(domain.Double))} list = new java.util.ArrayList<Double>();
+                |list.addAll(${recurseOn(subs(domain.base.inner), domain.Collect)});
                 |return list;
                 |""".stripMargin).statements()
 
-          case _:domain.subtypes.Exp => Java(
-            s"""|${typeGenerator(domain.List(domain.Double))} list = new java.util.ArrayList<Double>();
+          case _:domain.Atomic => Java(
+            s"""|${typeConverter(domain.List(domain.Double))} list = new java.util.ArrayList<Double>();
                 |list.add(${subs(domain.attributes.value)});
                 |return list;
                 |""".stripMargin).statements()
@@ -143,8 +143,8 @@ trait e4 extends AbstractGenerator with TestGeneratorWithModel {
            |
            |   $simplifyTests
            |   // Handle collect checks
-           |   ${typeGenerator(domain.List(domain.Double))} list1 = ${recurseOn(convert(d2), domain.Collect)};
-           |   ${typeGenerator(domain.List(domain.Double))} result = new java.util.ArrayList<Double>();
+           |   ${typeConverter(domain.List(domain.Double))} list1 = ${recurseOn(convert(d2), domain.Collect)};
+           |   ${typeConverter(domain.List(domain.Double))} result = new java.util.ArrayList<Double>();
            |   result.add(5.0);
            |   result.add(7.0);
            |   result.add(7.0);

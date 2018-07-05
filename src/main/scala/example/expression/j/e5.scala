@@ -3,7 +3,7 @@ package example.expression.j
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
-import example.expression.domain.Domain
+import example.expression.domain.MathDomain
 import org.combinators.templating.twirl.Java
 
 /**
@@ -14,18 +14,18 @@ import org.combinators.templating.twirl.Java
   * First operation that has parameter which has Exp-recursive structure
   */
 trait e5 extends AbstractGenerator with TestGenerator {
-  val domain:Domain
+  val domain:MathDomain
 
   import domain._
 
-  abstract override def typeGenerator(tpe:Types) : com.github.javaparser.ast.`type`.Type = {
+  abstract override def typeConverter(tpe:TypeRep) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
       case Boolean => Java("Boolean").tpe()
-      case _ => super.typeGenerator(tpe)
+      case _ => super.typeConverter(tpe)
     }
   }
 
-  abstract override def logic(exp:subtypes.Exp)(op:Operation): Seq[Statement] = {
+  abstract override def logic(exp:Atomic)(op:Operation): Seq[Statement] = {
     val subs = subExpressions(exp)
 
     // generate the actual body
@@ -33,7 +33,7 @@ trait e5 extends AbstractGenerator with TestGenerator {
       case Equal =>
         val atts:Map[String,Expression] = subExpressions(exp)
         val name:String = op.parameters.head._1
-        val other:Types = op.parameters.head._2
+        val other:TypeRep = op.parameters.head._2
         val oname = Java(name).expression[Expression]()
 
         // for now: HACK. subExpressions returns e.getExp() for example, but we just want this to be getExp
@@ -49,14 +49,14 @@ trait e5 extends AbstractGenerator with TestGenerator {
           }
 
           // left.equals(((Add)other).left) && right.equals(((Add)other).right);
-          case ui:subtypes.UnaryExp => {
-            val call:String = atts(domain.base.exp).toString//.substring(2)
+          case ui:Unary => {
+            val call:String = atts(domain.base.inner).toString//.substring(2)
             val inner:Expression = Java(s"((${exp.name.capitalize})$name).$call").expression()
 
-            Java(s"""return $getJavaClass.equals(${recurseOn(oname, GetJavaClass)}) && ${recurseOn(subs(base.exp), Equal, inner)};""").statements()
+            Java(s"""return $getJavaClass.equals(${recurseOn(oname, GetJavaClass)}) && ${recurseOn(subs(base.inner), Equal, inner)};""").statements()
           }
 
-          case bi:subtypes.BinaryExp => {
+          case bi:Binary => {
             val leftCall:String = atts(domain.base.left).toString//.substring(2)
             val rightCall:String = atts(domain.base.right).toString//.substring(2)
             val leftExpr:Expression = Java(s"((${exp.name.capitalize})$name).$leftCall").expression()

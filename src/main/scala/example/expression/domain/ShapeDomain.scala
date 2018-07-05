@@ -10,6 +10,12 @@ package example.expression.domain
   */
 trait ShapeDomain extends BaseDomain with ModelDomain {
 
+  case object Shape extends TypeRep {
+    override def name: String = "Shape"
+  }
+  type BaseTypeRep = Shape.type
+  val baseTypeRep = Shape
+
   // standard attributes for domain. As new ones are defined, place here
   object attributes {
     val side:String   = "side"
@@ -22,29 +28,29 @@ trait ShapeDomain extends BaseDomain with ModelDomain {
 
   // s0:model evolution.
   // -------------------
-  case object Point extends Types
-  case object Double extends Types
-  case object Boolean extends Types
+  case object Point extends TypeRep
+  case object Double extends TypeRep
+  case object Boolean extends TypeRep
 
-  case object Square extends subtypes.Exp("Square", Seq(Attribute(attributes.side, Double)))
-  case object Circle extends subtypes.Exp("Circle", Seq(Attribute(attributes.radius, Double)))
-  case object Translate extends subtypes.Exp("Translate",
-    Seq(Attribute(attributes.trans, Point), Attribute(attributes.shape, Exp)))
+  case object Square extends Atomic("Square", Seq(Attribute(attributes.side, Double)))
+  case object Circle extends Atomic("Circle", Seq(Attribute(attributes.radius, Double)))
+  case object Translate extends Atomic("Translate",
+    Seq(Attribute(attributes.trans, Point), Attribute(attributes.shape, Shape)))
   case object ContainsPt extends Operation("containsPt", Some(Boolean), (attributes.point, Point))
   val s0 = Model("s0", Seq(Square,Circle,Translate), Seq(ContainsPt))
 
-  class SquareInst(d:Double) extends ExpInst(Square, Some(d))
-  class CircleInst(d:Double) extends ExpInst(Circle, Some(d))
-  class TranslateInst(pt:(Double,Double), s:ExpInst) extends ExpInst(Translate, Some((pt,s)))
+  class SquareInst(d:Double) extends AtomicInst(Square, Some(d))
+  class CircleInst(d:Double) extends AtomicInst(Circle, Some(d))
+  class TranslateInst(pt:(Double,Double), s:AtomicInst) extends AtomicInst(Translate, Some((pt,s)))
 
   // s1:model evolution (add operation)
   // ----------------------------------
-  case object Shrink extends Operation("shrink", Some(Exp), (attributes.pct, Double))
+  case object Shrink extends Operation("shrink", Some(Shape), (attributes.pct, Double))
   val s1 = Model("s1", Seq.empty, Seq(Shrink), s0)
 
   // s2:model evolution (add datatype)
   // ---------------------------------
-  case object Composite extends subtypes.Exp("Composite",
-    Seq(Attribute(base.left, Exp), Attribute(base.right, Exp)))
+  case object Composite extends Atomic("Composite",
+    Seq(Attribute(base.left, Shape), Attribute(base.right, Shape)))
   val s2 = Model ("s2", Seq(Composite), Seq.empty, s1)
 }

@@ -2,7 +2,7 @@ package example.expression.j
 
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.stmt.Statement
-import example.expression.domain.Domain
+import example.expression.domain.MathDomain
 import org.combinators.templating.twirl.Java
 
 /**
@@ -11,16 +11,16 @@ import org.combinators.templating.twirl.Java
   * Still Java-based, naturally and JUnit
   */
 trait e3 extends AbstractGenerator with TestGenerator {
-  val domain:Domain
+  val domain:MathDomain
 
-  abstract override def logic(exp:domain.subtypes.Exp)(op:domain.Operation): Seq[Statement] = {
+  abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {
     val subs = subExpressions(exp)
     
     // generate the actual body
     op match {
       case domain.PrettyP => {
         exp match {
-          case domain.Neg => Java(s"""return "-" + ${recurseOn(subs(domain.base.exp), domain.PrettyP)}; """).statements()
+          case domain.Neg => Java(s"""return "-" + ${recurseOn(subs(domain.base.inner), domain.PrettyP)}; """).statements()
           case domain.Mult => Java(s"""return "(" + ${recurseOn(subs(domain.base.left), domain.PrettyP)} + "*" + ${recurseOn(subs(domain.base.right), domain.PrettyP)}  + ")";""").statements()
           case domain.Divd => Java(s"""return "(" + ${recurseOn(subs(domain.base.left), domain.PrettyP)}  + "/" + ${recurseOn(subs(domain.base.right), domain.PrettyP)}  + ")";""").statements()
           case _ => super.logic(exp)(op)
@@ -29,7 +29,7 @@ trait e3 extends AbstractGenerator with TestGenerator {
 
       case domain.Eval => {
         exp match {
-          case domain.Neg => Java(s"""return - ${recurseOn(subs(domain.base.exp), domain.Eval)}; """).statements()
+          case domain.Neg => Java(s"""return - ${recurseOn(subs(domain.base.inner), domain.Eval)}; """).statements()
           case domain.Mult => Java(s"""return ${recurseOn(subs(domain.base.left), domain.Eval)} * ${recurseOn(subs(domain.base.right), domain.Eval)};""").statements()
           case domain.Divd => Java(s"""return ${recurseOn(subs(domain.base.left), domain.Eval)} / ${recurseOn(subs(domain.base.right), domain.Eval)};""").statements()
           case _ => super.logic(exp)(op)

@@ -15,17 +15,17 @@ trait s0 extends AbstractGenerator with TestGenerator {
   val domain:ShapeDomain
 
   /** E0 Introduces the concept a Double type, used for the 'Eval' operation. */
-  abstract override def typeGenerator(tpe:domain.Types) : com.github.javaparser.ast.`type`.Type = {
+  abstract override def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
       case domain.Double => Java("Double").tpe()
       case domain.Point => Java("java.awt.geom.Point2D.Double").tpe()
       case domain.Boolean => Java("Boolean").tpe()
-      case _ => super.typeGenerator(tpe)
+      case _ => super.typeConverter(tpe)
     }
   }
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
-  abstract override def logic(exp:domain.subtypes.Exp)(op:domain.Operation): Seq[Statement] = {
+  abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {
     val subs:Map[String,Expression] = subExpressions(exp)
 
     // generate the actual body
@@ -64,11 +64,11 @@ trait s0 extends AbstractGenerator with TestGenerator {
   }
 
   /** Convert a test instance into a Java Expression for instantiating that instance. */
-  override def convert(inst:domain.ExpInst) : Expression = {
+  override def convert(inst:domain.AtomicInst) : Expression = {
     val name = inst.e.name
     inst match {
       case ti:domain.TranslateInst => {
-        val tuple = ti.i.get.asInstanceOf[((Double,Double),domain.ExpInst)]
+        val tuple = ti.i.get.asInstanceOf[((Double,Double),domain.AtomicInst)]
         val pt = s"new java.awt.geom.Point2D.Double(${tuple._1._1}, ${tuple._1._2})"
 
         Java(s"new $name($pt, ${convert(tuple._2)})").expression()

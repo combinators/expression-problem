@@ -16,14 +16,14 @@ trait TestGenerator  {
   def testGenerator: Seq[MethodDeclaration] = Seq.empty
 
   /** Convert a test instance into a Java Expression for instantiating that instance. */
-  def convert(inst:domain.ExpInst) : Expression = {
+  def convert(inst:domain.AtomicInst) : Expression = {
     val name = inst.e.name
     inst match {
       case ui:domain.UnaryInst =>
-        Java(s"new $name(${convert(ui.exp)})").expression()
+        Java(s"new $name(${convert(ui.inner)})").expression()
       case bi:domain.BinaryInst =>
         Java(s"new $name(${convert(bi.left)}, ${convert(bi.right)})").expression()
-      case exp:domain.ExpInst => Java(s"new $name(${exp.i.get.toString})").expression()
+      case exp:domain.AtomicInst => Java(s"new $name(${exp.i.get.toString})").expression()
 
       case _ =>  Java(s""" "unknown $name" """).expression()
     }

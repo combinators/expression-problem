@@ -15,7 +15,7 @@ trait s1 extends AbstractGenerator with TestGenerator {
   val domain:ShapeDomain
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
-  abstract override def logic(exp:domain.subtypes.Exp)(op:domain.Operation): Seq[Statement] = {
+  abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {
     val subs:Map[String,Expression] = subExpressions(exp)
 
     // generate the actual body
@@ -55,11 +55,11 @@ trait s1 extends AbstractGenerator with TestGenerator {
   }
 
   /** Convert a test instance into a Java Expression for instantiating that instance. */
-  override def convert(inst:domain.ExpInst) : Expression = {
+  override def convert(inst:domain.AtomicInst) : Expression = {
     val name = inst.e.name
     inst match {
       case ti:domain.TranslateInst => {
-        val tuple = ti.i.get.asInstanceOf[((Double,Double),domain.ExpInst)]
+        val tuple = ti.i.get.asInstanceOf[((Double,Double),domain.AtomicInst)]
         val pt = s"new java.awt.geom.Point2D.Double(${tuple._1._1}, ${tuple._1._2})"
 
         Java(s"new $name($pt, ${convert(tuple._2)})").expression()

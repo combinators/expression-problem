@@ -1,7 +1,7 @@
 package example.expression.oo
 
 import com.github.javaparser.ast.CompilationUnit
-import example.expression.domain.{Domain, IndependentDomain, MergedDomain}
+import example.expression.domain.{MathDomain, IndependentMathDomain, MergedMathDomain}
 import example.expression.j._
 import javax.inject.Inject
 import org.webjars.play.WebJarsUtil
@@ -17,9 +17,9 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
   lazy val flat:gen.domain.Model = model.flat()
   override lazy val generatedCode:Seq[CompilationUnit] =
-    flat.types.map (tpe => gen.generateExp(flat, tpe)) :+     // one class for each sub-type
-      gen.generateBase(flat) :+                               // base class $BASE
-      gen.generateSuite(Some("oo"))                           // generate test cases as well
+  flat.types.map (tpe => gen.generateExp(flat, tpe)) :+     // one class for each sub-type
+    gen.generateBase(flat) :+                               // base class $BASE
+    gen.generateSuite(Some("oo"))                           // generate test cases as well
 
   // request by "git clone -b variation_0 http://localhost:9000/straight/eN/eN.git" where N is a version #
   override val routingPrefix: Option[String] = Some("oo")
@@ -32,7 +32,7 @@ class E0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new StraightGenerator with TestGenerator with e0 {
-    override val domain = new Domain{ }
+    override val domain = new MathDomain{ }
   }
   override val model = gen.domain.e0
 }
@@ -41,7 +41,7 @@ class E1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new StraightGenerator with TestGenerator with e0 with e1 {
-    override val domain = new Domain{ }
+    override val domain = new MathDomain{ }
   }
   override val model = gen.domain.e1
 }
@@ -50,7 +50,7 @@ class E2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new StraightGenerator with TestGenerator with e0 with e1 with e2 {
-    override val domain = new Domain{ }
+    override val domain = new MathDomain{ }
   }
   override val model = gen.domain.e2
 }
@@ -59,7 +59,7 @@ class E3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new StraightGenerator with TestGenerator with e0 with e1 with e2 with e3 {
-    override val domain = new Domain{ }
+    override val domain = new MathDomain{ }
   }
   override val model = gen.domain.e3
 }
@@ -68,7 +68,7 @@ class E4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new StraightGenerator with TestGeneratorWithModel with e0 with e1 with e2 with e3 with e4 {
-    override val domain = new Domain{ }
+    override val domain = new MathDomain{ }
 
     def getModel:domain.Model = {
       domain.e4
@@ -81,7 +81,7 @@ class E5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new StraightGenerator with TestGeneratorWithModel with e0 with e1 with e2 with e3 with e4 with e5 with ex {
-    override val domain = new Domain{ }
+    override val domain = new MathDomain{ }
 
     def getModel:domain.Model = {
       domain.e5
@@ -95,7 +95,7 @@ class I2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   override val gen = new StraightGenerator with TestGeneratorWithModel with e0 with e1 with i1 with i2 {
-    override val domain = new IndependentDomain { }
+    override val domain = new IndependentMathDomain { }
 
     def getModel:domain.Model = {
       domain.i2
@@ -110,7 +110,7 @@ class M1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
   // Merge e3 with i2: without adding extra code to synthesize concepts, this will fail
   override val gen = new StraightGenerator with TestGenerator with e0 with e1 with e2 with e3 with i1 with i2 with m1 {
-    override val domain = new MergedDomain { }
+    override val domain = new MergedMathDomain { }
   }
 
   override val model = gen.domain.m1

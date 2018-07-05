@@ -2,7 +2,7 @@ package example.expression.j
 
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.stmt.Statement
-import example.expression.domain.Domain
+import example.expression.domain.MathDomain
 import org.combinators.templating.twirl.Java
 
 /**
@@ -11,10 +11,10 @@ import org.combinators.templating.twirl.Java
   * Still Java-based, naturally and JUnit
   */
 trait e1 extends AbstractGenerator with TestGenerator {
-  val domain:Domain
+  val domain:MathDomain
   import domain._
 
-  abstract override def logic(exp:subtypes.Exp)(op:Operation): Seq[Statement] = {
+  abstract override def logic(exp:Atomic)(op:Operation): Seq[Statement] = {
     val subs = subExpressions(exp)
     // generate the actual body
     op match {

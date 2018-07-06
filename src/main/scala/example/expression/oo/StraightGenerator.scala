@@ -1,18 +1,36 @@
 package example.expression.oo
 
 import com.github.javaparser.ast.CompilationUnit
+import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.expr.Expression
-import com.github.javaparser.ast.stmt.Statement
 import example.expression.domain.{BaseDomain, ModelDomain}
-import example.expression.j.{AbstractGenerator, DataTypeSubclassGenerator, OperationAsMethodGenerator}
+import example.expression.j._
 import org.combinators.templating.twirl.Java
 
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait StraightGenerator extends AbstractGenerator with DataTypeSubclassGenerator with OperationAsMethodGenerator {
+trait StraightGenerator extends AbstractGenerator with JavaGenerator with DataTypeSubclassGenerator with OperationAsMethodGenerator with BinaryMethod {
   val domain:BaseDomain with ModelDomain
+
+  /**
+    * Process the model as necessary. One could either (a) remove data types or operations that are non-sensical
+    * for the given approach; or (b) flatten the hierarchy.
+    */
+  override def compatible(model:domain.Model):domain.Model = model.flat()
+
+  /**
+    * Generating a straight OO solution requires:
+    *
+    * 1. A Class for every
+    * @param model
+    * @return
+    */
+  def generatedCode(model:domain.Model):Seq[CompilationUnit] = {
+    model.types.map(tpe => generateExp(model, tpe)) :+ // one class for each sub-type
+      generateBase(model) // base class $BASE
+  }
 
   /** For straight design solution, directly access attributes by name. */
   override def subExpressions(exp:domain.Atomic) : Map[String,Expression] = {
@@ -20,7 +38,7 @@ trait StraightGenerator extends AbstractGenerator with DataTypeSubclassGenerator
   }
 
   /** Retrieve Java Class associated with given context. Needed for operations with Exp as parameter. */
-  override def getJavaClass() : Expression = {
+  override def getJavaClass : Expression = {
     Java(s"getClass()").expression[Expression]()
   }
 
@@ -30,26 +48,19 @@ trait StraightGenerator extends AbstractGenerator with DataTypeSubclassGenerator
     Java(s"""$expr.${op.name}($args)""").expression()
   }
 
-  /** Return designated Java type associated with type. */
-  override def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {
+
+  /** Return designated Java type associated with type, or void if all else fails. */
+  override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
-      case domain.baseTypeRep => Java("Exp").tpe()
-      case _ => super.typeConverter(tpe)
+      case domain.baseTypeRep => covariantReplacement.getOrElse(Java("Exp").tpe())
+      //case _ => Java ("void").tpe()  // reasonable stop
+      case _ => super.typeConverter(tpe, covariantReplacement)
     }
   }
 
-  /** Compute parameter "Type name" comma-separated list from operation. */
-  def parameters(op:domain.Operation) : String = {
-    op.parameters.map(tuple => {
-      val name:String = tuple._1
-      val tpe:domain.TypeRep = tuple._2
-
-      typeConverter(tpe).toString + " " + name
-    }).mkString(",")
-  }
 
   /** Operations are implemented as methods in the Base and sub-type classes. */
-  def methodGenerator(exp:domain.Atomic)(op:domain.Operation): MethodDeclaration = {
+  override def methodGenerator(exp:domain.Atomic)(op:domain.Operation): MethodDeclaration = {
     val retType = op.returnType match {
       case Some(tpe) => typeConverter(tpe)
       case _ => Java("void").tpe
@@ -66,19 +77,12 @@ trait StraightGenerator extends AbstractGenerator with DataTypeSubclassGenerator
     val name = exp.toString
 
     val methods:Seq[MethodDeclaration] = model.ops.map(methodGenerator(exp))
-    val atts:Seq[FieldDeclaration] = exp.attributes.flatMap(att => Java(s"private ${typeConverter(att.tpe)} ${att.name};").fieldDeclarations())
-
-    val params:Seq[String] = exp.attributes.map(att => s"${typeConverter(att.tpe)} ${att.name}")
-    val cons:Seq[Statement] = exp.attributes.flatMap(att => Java(s"  this.${att.name} = ${att.name};").statements())
-
-    val constructor = Java(s"""|public $name (${params.mkString(",")}) {
-                               |   ${cons.mkString("\n")}
-                               |}""".stripMargin).constructors().head
+    //val atts:Seq[FieldDeclaration] = exp.attributes.flatMap(att => Java(s"private ${typeConverter(att.tpe)} ${att.name};").fieldDeclarations())
 
     Java(s"""|package oo;
              |public class $name extends Exp {
-             |  ${constructor.toString}
-             |  ${atts.mkString("\n")}
+             |  ${constructor(exp)}
+             |  ${fields(exp).mkString("\n")}
              |  ${methods.mkString("\n")}
              |}""".stripMargin).compilationUnit()
   }

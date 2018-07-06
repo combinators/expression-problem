@@ -1,9 +1,9 @@
 package example.expression.j
 
+import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
 import example.expression.domain.{BaseDomain, ModelDomain}
-import org.combinators.templating.twirl.Java
 
 /**
   * Any Java-based EP approach can extend this Generator
@@ -19,30 +19,14 @@ trait AbstractGenerator  {
     */
   def subExpressions(exp:domain.Atomic) : Map[String, Expression]
 
-  /** Retrieve Java Class associated with given context. Needed for operations with Exp as parameter. */
-  def getJavaClass : Expression
-
   /** Responsible for dispatching sub-expressions with possible parameter(s). */
   def recurseOn(expr:Expression, op:domain.Operation, params:Expression*) : Expression
 
   /**
-    * For producer operations, there is a need to instantiate objects, and one would use this
-    * method (with specific parameters) to carry this out.
-    *
-    * Almost got simplify to work with Interpreter solution. Only hold-up is that the instantiated
-    * objects (i.e, "new Lit(0.0)") become more complex (i.e., a static factory method "lit(0.0)")
-    *
-    * I've crafted by hand, but don't want to break code tonight :)
-    */
-  def inst(exp:domain.Atomic)(op:domain.Operation)(params:Expression*): Expression = {
-    Java("new " + exp.name.capitalize + "(" + params.map(expr => expr.toString()).mkString(",") + ")").expression()
-  }
-
-  /**
     * Expression-tree data has attributes with domain-specific types. This method returns
-    * the designated Java type associated with the abstract type.
+    * the designated Java type associated with the abstract type, with option of a covariant replacement
     */
-  def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {
+  def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : Type = {
     throw new scala.NotImplementedError(s"""Unknown Type "$tpe" """)
   }
 
@@ -58,6 +42,9 @@ trait AbstractGenerator  {
     * Determine a potentially reduced model-chain that is compatible with a given generator.
     *
     * With no constraints, this is the identify function.
+    *
+    * Process the model as necessary. One could either (a) remove data types or operations that are non-sensical
+    * for the given approach; or (b) flatten the hierarchy; (c) or use the default identify function.
     */
   def compatible(model:domain.Model):domain.Model = model
 }

@@ -14,7 +14,7 @@ trait ShapeDomain extends BaseDomain with ModelDomain {
     override def name: String = "Shape"
   }
   type BaseTypeRep = Shape.type
-  val baseTypeRep = Shape
+  val baseTypeRep:BaseTypeRep = Shape
 
   // standard attributes for domain. As new ones are defined, place here
   object attributes {
@@ -36,7 +36,7 @@ trait ShapeDomain extends BaseDomain with ModelDomain {
   case object Circle extends Atomic("Circle", Seq(Attribute(attributes.radius, Double)))
   case object Translate extends Atomic("Translate",
     Seq(Attribute(attributes.trans, Point), Attribute(attributes.shape, Shape)))
-  case object ContainsPt extends Operation("containsPt", Some(Boolean), (attributes.point, Point))
+  case object ContainsPt extends Operation("containsPt", Some(Boolean), Seq((attributes.point, Point)))
   val s0 = Model("s0", Seq(Square,Circle,Translate), Seq(ContainsPt))
 
   class SquareInst(d:Double) extends AtomicInst(Square, Some(d))
@@ -45,11 +45,11 @@ trait ShapeDomain extends BaseDomain with ModelDomain {
 
   // s1:model evolution (add operation)
   // ----------------------------------
-  case object Shrink extends Operation("shrink", Some(Shape), (attributes.pct, Double))
+  case object Shrink extends Operation("shrink", Some(Shape), Seq((attributes.pct, Double)))
   val s1 = Model("s1", Seq.empty, Seq(Shrink), s0)
 
-  // s2:model evolution (add datatype)
-  // ---------------------------------
+  // s2:model evolution (add datatype) -- NOT YET IMPLEMENTED
+  // ---------------------------------------------------------
   case object Composite extends Atomic("Composite",
     Seq(Attribute(base.left, Shape), Attribute(base.right, Shape)))
   val s2 = Model ("s2", Seq(Composite), Seq.empty, s1)

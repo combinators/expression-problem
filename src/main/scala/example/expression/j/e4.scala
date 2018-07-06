@@ -1,5 +1,6 @@
 package example.expression.j
 
+import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
@@ -11,15 +12,15 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-trait e4 extends AbstractGenerator with TestGeneratorWithModel {
+trait e4 extends AbstractGenerator with TestGeneratorWithModel with Producer {
   val domain:MathDomain
 
   def getModel:domain.Model
 
-  abstract override def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {
+  abstract override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
       case el:domain.List => Java(s"java.util.List<${typeConverter(el.generic)}>").tpe()
-      case _ => super.typeConverter(tpe)
+      case _ => super.typeConverter(tpe, covariantReplacement)
     }
   }
 

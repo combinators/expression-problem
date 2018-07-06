@@ -1,10 +1,10 @@
 package example.expression.j
 
+import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
 import example.expression.domain.MathDomain
-import expression.data.Eval
 import org.combinators.templating.twirl.Java
 
 /**
@@ -16,10 +16,10 @@ trait e0 extends AbstractGenerator with TestGenerator {
   val domain:MathDomain
 
   /** E0 Introduces the concept a Double type, used for the 'Eval' operation. */
-  abstract override def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {
+  abstract override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
       case domain.Double => Java("Double").tpe()
-      case _ => super.typeConverter(tpe)
+      case _ => super.typeConverter(tpe, covariantReplacement)
     }
   }
 

@@ -7,5 +7,5 @@ package example.expression.domain
   */
 trait MergedMathDomain extends MathDomain with IndependentMathDomain {
 
-  val m1:Model = e3.merge("m1", i2)
+  val c1:Model = m3.merge("c1", i2)
 }

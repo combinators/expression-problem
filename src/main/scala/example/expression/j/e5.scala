@@ -1,5 +1,6 @@
 package example.expression.j
 
+import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
@@ -13,15 +14,15 @@ import org.combinators.templating.twirl.Java
   *
   * First operation that has parameter which has Exp-recursive structure
   */
-trait e5 extends AbstractGenerator with TestGenerator {
+trait e5 extends AbstractGenerator with TestGenerator with BinaryMethod {
   val domain:MathDomain
 
   import domain._
 
-  abstract override def typeConverter(tpe:TypeRep) : com.github.javaparser.ast.`type`.Type = {
+  abstract override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None): com.github.javaparser.ast.`type`.Type = {
     tpe match {
       case Boolean => Java("Boolean").tpe()
-      case _ => super.typeConverter(tpe)
+      case _ => super.typeConverter(tpe, covariantReplacement)
     }
   }
 

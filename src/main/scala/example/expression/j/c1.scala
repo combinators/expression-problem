@@ -10,7 +10,7 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-trait m1 extends AbstractGenerator with TestGenerator {
+trait c1 extends AbstractGenerator with TestGenerator {
   val domain:MergedMathDomain
 
   abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {

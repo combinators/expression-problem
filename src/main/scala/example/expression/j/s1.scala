@@ -11,7 +11,7 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-trait s1 extends AbstractGenerator with TestGenerator {
+trait s1 extends AbstractGenerator with TestGenerator with Producer {
   val domain:ShapeDomain
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */

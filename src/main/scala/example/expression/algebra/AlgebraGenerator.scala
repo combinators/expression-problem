@@ -5,13 +5,13 @@ import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
 import example.expression.domain.{BaseDomain, ModelDomain}
-import example.expression.j.AbstractGenerator
+import example.expression.j.{AbstractGenerator, BinaryMethod, Producer}
 import org.combinators.templating.twirl.Java
 
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait AlgebraGenerator extends AbstractGenerator {
+trait AlgebraGenerator extends AbstractGenerator with Producer with BinaryMethod {
   val domain:BaseDomain with ModelDomain
 
   /**
@@ -22,7 +22,7 @@ trait AlgebraGenerator extends AbstractGenerator {
 
     // rebuild by filtering out all operations that return Exp.
     domain.Model(model.name, model.types,
-      model.ops.filterNot(op => op.returnType.isDefined && op.returnType.get.equals(domain.baseTypeRep)),
+      model.ops.filterNot(op => op.isInstanceOf[domain.ProducerOperation]),
       compatible(model.last))
   }
 
@@ -34,8 +34,7 @@ trait AlgebraGenerator extends AbstractGenerator {
     * For producer operations, there is a need to instantiate objects, and one would use this
     * method (with specific parameters) to carry this out.
     *
-    * For interpreter, we use a factory method that has been placed in the class, and that allows
-    * the very specialized types to be used.
+    * Note: This capability is preliminary and not yet ready for primetime.
     */
   override def inst(exp:domain.Atomic)(op:domain.Operation)(params:Expression*): Expression = {
     Java(exp.name + "(" + params.map(expr => expr.toString()).mkString(",") + ")").expression()
@@ -53,18 +52,10 @@ trait AlgebraGenerator extends AbstractGenerator {
   }
 
   /** Return designated Java type associated with type, or void if all else fails. */
-  override def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {
-    tpe match {
-      case domain.baseTypeRep => Java("E").tpe()
+  override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : com.github.javaparser.ast.`type`.Type = {
+   tpe match {
+      case domain.baseTypeRep => covariantReplacement.getOrElse(Java("E").tpe())
       case _ => Java ("void").tpe()  // reasonable stop
-    }
-  }
-
-  /** Return designated Exp type with replacement. */
-  def recursiveTypeGenerator(tpe:domain.TypeRep, replacement:Type) : com.github.javaparser.ast.`type`.Type = {
-    tpe match {
-      case domain.baseTypeRep => replacement
-      case _ => typeConverter(tpe)
     }
   }
 
@@ -119,7 +110,7 @@ trait AlgebraGenerator extends AbstractGenerator {
       val code:Seq[Statement] = logic(exp)(op)
       val signatures = code.mkString("\n")
 
-      val params:Seq[String] = exp.attributes.map(att => s"final ${recursiveTypeGenerator(att.tpe, opType)} ${att.name}")
+      val params:Seq[String] = exp.attributes.map(att => s"final ${typeConverter(att.tpe, Some(opType))} ${att.name}")
       // creates method body
       val paramList = params.mkString(",")
 
@@ -177,7 +168,7 @@ trait AlgebraGenerator extends AbstractGenerator {
         val subName = exp.name.toLowerCase
 
         val params: Seq[String] = exp.attributes
-          .map(att => s"final ${recursiveTypeGenerator(att.tpe, typeConverter(att.tpe))} ${att.name}")
+          .map(att => s"final ${typeConverter(att.tpe)} ${att.name}")
 
         // creates method signature from parameters
         val paramList = params.mkString(",")

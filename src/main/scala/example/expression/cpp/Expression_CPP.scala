@@ -39,30 +39,30 @@ class Expression_CPP @Inject()(webJars: WebJarsUtil, applicationLifecycle: Appli
   // no need to add 'Exp' to the model, since assumed always to be there
   // operations to have (including Eval).
   val history:History = new History
-  history.extend("e0", new DomainModel(
+  history.extend("m0", new DomainModel(
     List[Exp](new Lit, new Add).asJava,
     List[Operation](new Eval).asJava
   ))
 
   // evolution 1 (from Extensibility for the Masses example)
-  history.extend("e1",  new DomainModel(
+  history.extend("m1",  new DomainModel(
     List[Exp](new Sub).asJava,
     List.empty.asJava
   ))
 
   // evolution 2 (from Extensibility for the Masses example)
-  history.extend("e2",  new DomainModel(
+  history.extend("m2",  new DomainModel(
     List.empty.asJava,
     List[Operation](new PrettyP).asJava
   ))
 
   // Evolution 1: Extension to domain model has new data variants and operations
-  history.extend("e3",  new DomainModel(
+  history.extend("m3",  new DomainModel(
     List[Exp](new Neg, new Mult, new Divd).asJava,
     List.empty.asJava
   ))
 
-  history.extend("e4",  new DomainModel(
+  history.extend("m4",  new DomainModel(
     List.empty.asJava,
     List[Operation](new Collect, new SimplifyExpr).asJava
   ))

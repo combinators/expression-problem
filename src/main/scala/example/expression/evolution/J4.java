@@ -12,7 +12,7 @@ public class J4 {
 
     public static History extend(History h) {
 
-        h.extend("e4",  new DomainModel(
+        h.extend("m4",  new DomainModel(
             Collections.emptyList(),
             Arrays.asList(new Collect(), new SimplifyExpr())
 

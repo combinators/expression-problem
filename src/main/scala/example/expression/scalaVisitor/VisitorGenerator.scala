@@ -1,25 +1,47 @@
 package example.expression.scalaVisitor
 
 import com.github.javaparser.ast.CompilationUnit
+import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
 import example.expression.domain.{BaseDomain, ModelDomain}
-import example.expression.j.{AbstractGenerator, DataTypeSubclassGenerator, OperationAsMethodGenerator}
+import example.expression.j._
 import org.combinators.templating.twirl.Java
 
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator with OperationAsMethodGenerator {
+trait VisitorGenerator extends AbstractGenerator with JavaGenerator with DataTypeSubclassGenerator with OperationAsMethodGenerator with BinaryMethod {
   val domain:BaseDomain with ModelDomain
+
+  /**
+    * For visitor, must flatten entire hierarchy
+    */
+  override def compatible(model:domain.Model):domain.Model = model.flat()
+
+  /**
+    * Generating a visitor solution requires:
+    *
+    * 1. A Class for every data type
+    * 2. A Class for every operation
+    * 3. Abstract Base class and visitor class
+    * @param model
+    * @return
+    */
+  def generatedCode(model:domain.Model):Seq[CompilationUnit] = {
+    model.types.map(tpe => generateExp(model, tpe)) ++         // one class for each sub-type
+      model.ops.map(op => operationGenerator(model, op)) :+    // one class for each op
+      generateBaseClass() :+                                   // abstract base class
+      generateBase(model)                                      // visitor gets its own class (overriding concept)
+  }
 
   /** For visitor design solution, access through default 'e' parameter */
   override def subExpressions(exp:domain.Atomic) : Map[String,Expression] = {
     exp.attributes.map(att => att.name -> Java(s"e.get${att.name.capitalize}()").expression[Expression]()).toMap
   }
 
-  override def getJavaClass() : Expression = {
+  override def getJavaClass : Expression = {
     Java(s"e.getClass()").expression[Expression]()
   }
 
@@ -29,8 +51,9 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
     Java(s"""$expr.accept(new ${op.name.capitalize}($args))""").expression()
   }
 
+
   /** Return designated Java type associated with type, or void if all else fails. */
-  override def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {
+  override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
       case domain.baseTypeRep => Java("Exp").tpe()
     }
@@ -82,29 +105,14 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
     val visitor:MethodDeclaration = Java (s"""|public <R> R accept(Visitor<R> v) {
                                               |   return v.visit(this);
                                               |}""".stripMargin).methodDeclarations().head
-    val atts:Seq[FieldDeclaration] = exp.attributes.flatMap(att => Java(s"private ${typeConverter(att.tpe)} ${att.name};").fieldDeclarations())
-
-    // Builds up the attribute fields and set/get methods. Also prepares for one-line constructor.
-    val methods:Seq[MethodDeclaration] = exp.attributes.flatMap(att => {
-      val capAtt = att.name.capitalize
-      val tpe = typeConverter(att.tpe)
-      Java(s"public $tpe get$capAtt() { return ${att.name};}").methodDeclarations()
-    })
-
-    val params:Seq[String] = exp.attributes.map(att => s"${typeConverter(att.tpe)} ${att.name}")
-    val cons:Seq[Statement] = exp.attributes.flatMap(att => Java(s"  this.${att.name} = ${att.name};").statements())
-
-    val constructor = Java(s"""|public $name (${params.mkString(",")}) {
-                               |   ${cons.mkString("\n")}
-                               |}""".stripMargin).constructors().head
 
     Java(s"""|package expression;
              |public class $name extends Exp {
              |
-             |  ${constructor.toString}
+             |  ${constructor(exp)}
              |
-             |  ${atts.mkString("\n")}
-             |  ${methods.mkString("\n")}
+             |  ${fields(exp).mkString("\n")}
+             |  ${getters(exp).mkString("\n")}
              |  ${visitor.toString()}
              |}""".stripMargin).compilationUnit()
   }

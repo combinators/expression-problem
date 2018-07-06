@@ -5,9 +5,15 @@ import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.expr.{Expression, SimpleName}
 import com.github.javaparser.ast.stmt.Statement
 import com.github.javaparser.ast.CompilationUnit
+import example.expression.j._
 import org.combinators.templating.twirl.Java
 
-trait InterpreterGenerator extends example.expression.oo.StraightGenerator {
+trait InterpreterGenerator extends  AbstractGenerator with JavaGenerator with DataTypeSubclassGenerator with OperationAsMethodGenerator with BinaryMethod with Producer {
+
+  /**
+    * Supports all operations
+    */
+   override def compatible(model:domain.Model):domain.Model = model
 
   /**
     * For producer operations, there is a need to instantiate objects, and one would use this
@@ -20,16 +26,35 @@ trait InterpreterGenerator extends example.expression.oo.StraightGenerator {
     Java(exp.name + "(" + params.map(expr => expr.toString()).mkString(",") + ")").expression()
   }
 
+  override def getJavaClass : Expression = {
+    Java(s"getClass()").expression[Expression]()
+  }
+
   override def subExpressions(exp: domain.Atomic): Map[String, Expression] = {
     exp.attributes.map(att => att.name -> Java(s"get${att.name.capitalize}()").expression[Expression]()).toMap
   }
+//
+//  /** Return designated Exp type with replacement. */
+//  def recursiveTypeGenerator(tpe:domain.TypeRep, replacement:Type) : com.github.javaparser.ast.`type`.Type = {
+//    tpe match {
+//      case domain.baseTypeRep => replacement
+//      case _ => typeConverter(tpe)
+//    }
+//  }
 
-  /** Return designated Exp type with replacement. */
-  def recursiveTypeGenerator(tpe:domain.TypeRep, replacement:Type) : com.github.javaparser.ast.`type`.Type = {
+
+  /** Return designated Java type associated with type, or void if all else fails. */
+  override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
-      case domain.baseTypeRep => replacement
-      case _ => typeConverter(tpe)
+      case domain.baseTypeRep => covariantReplacement.getOrElse(Java("Exp").tpe())
+      case _ => super.typeConverter(tpe, covariantReplacement)
     }
+  }
+
+  /** Directly access local method, one per operation, with a parameter. */
+  override def recurseOn(expr:Expression, op:domain.Operation, params:Expression*) : Expression = {
+    val args:String = params.mkString(",")
+    Java(s"""$expr.${op.name}($args)""").expression()
   }
 
   def modelInterfaceName(model:domain.Model): String = {
@@ -41,6 +66,18 @@ trait InterpreterGenerator extends example.expression.oo.StraightGenerator {
       Java(m.lastModelWithOperation().ops.sortWith(_.name < _.name).map(op => op.name.capitalize).mkString("") + "Exp").simpleName()
   }
 
+  /** Operations are implemented as methods in the Base and sub-type classes. */
+  override def methodGenerator(exp:domain.Atomic)(op:domain.Operation): MethodDeclaration = {
+    val retType = op.returnType match {
+      case Some(tpe) => typeConverter(tpe)
+      case _ => Java("void").tpe
+    }
+
+    val params = parameters(op)
+    Java(s"""|public $retType ${op.name}($params) {
+             |  ${logic(exp)(op).mkString("\n")}
+             |}""".stripMargin).methodDeclarations().head
+  }
 
   /**
     * Must extend base EvalExp
@@ -53,14 +90,14 @@ trait InterpreterGenerator extends example.expression.oo.StraightGenerator {
     */
   override def generateExp(model:domain.Model, exp:domain.Atomic) : CompilationUnit = {
     val name = Java(s"${exp.name}").simpleName()
-    val baseInterface:Type = Java(baseInterfaceName(model.lastModelWithOperation())).tpe()
+    val baseInterface:Option[Type] = Some(Java(baseInterfaceName(model.lastModelWithOperation())).tpe())
 
-    val atts:Seq[FieldDeclaration] = exp.attributes.flatMap(att => Java(s"private ${recursiveTypeGenerator(att.tpe, baseInterface)} ${att.name};").fieldDeclarations())
+    val atts:Seq[FieldDeclaration] = exp.attributes.flatMap(att => Java(s"private ${typeConverter(att.tpe, baseInterface)} ${att.name};").fieldDeclarations())
 
-    val params:Seq[String] = exp.attributes.map(att => s"${recursiveTypeGenerator(att.tpe, baseInterface)} ${att.name}")
+    val params:Seq[String] = exp.attributes.map(att => s"${typeConverter(att.tpe, baseInterface)} ${att.name}")
 
     val getters: Seq[MethodDeclaration] =
-      exp.attributes.flatMap(att => Java(s"""|public ${recursiveTypeGenerator(att.tpe, baseInterface)} get${att.name.capitalize}() {
+      exp.attributes.flatMap(att => Java(s"""|public ${typeConverter(att.tpe, baseInterface)} get${att.name.capitalize}() {
                                              |    return this.${att.name};
                                              |}""".stripMargin).methodDeclarations())
     val cons:Seq[Statement] = exp.attributes.flatMap(att => Java(s"  this.${att.name} = ${att.name};").statements())
@@ -127,7 +164,7 @@ trait InterpreterGenerator extends example.expression.oo.StraightGenerator {
         s"${typeConverter(tpe)} $name"
       } )
 
-      s"""public ${recursiveTypeGenerator(op.returnType.get, fullType)}  ${op.name}(${params.mkString(",")});"""
+      s"""public ${typeConverter(op.returnType.get, Some(fullType))}  ${op.name}(${params.mkString(",")});"""
     })
 
     // see if we are first.
@@ -189,16 +226,16 @@ trait InterpreterGenerator extends example.expression.oo.StraightGenerator {
         val baseInterface:Type = Java(baseInterfaceName(model.lastModelWithOperation())).tpe()
 
         val atts:Seq[FieldDeclaration] = if (isBase) {
-          exp.attributes.flatMap(att => Java(s"${recursiveTypeGenerator(att.tpe, baseInterface)} ${att.name};").fieldDeclarations())
+          exp.attributes.flatMap(att => Java(s"${typeConverter(att.tpe, Some(baseInterface))} ${att.name};").fieldDeclarations())
         } else {
           Seq.empty
         }
 
-        val params:Seq[String] = exp.attributes.map(att => s"${recursiveTypeGenerator(att.tpe, baseInterface)} ${att.name}")
+        val params:Seq[String] = exp.attributes.map(att => s"${typeConverter(att.tpe, Some(baseInterface))} ${att.name}")
         val paramNames:Seq[String] = exp.attributes.map(att => s"${att.name}")
 
         val factoryMethods:Seq[MethodDeclaration] = pastTypes.flatMap(e => {
-          val params:Seq[String] = e.attributes.map(att => s"${recursiveTypeGenerator(att.tpe, baseInterface)} ${att.name}")
+          val params:Seq[String] = e.attributes.map(att => s"${typeConverter(att.tpe, Some(baseInterface))} ${att.name}")
           val paramNames:Seq[String] = e.attributes.map(att => s"${att.name}")
 
           Java(s"""${combinedOps}Exp ${e.name.capitalize}(${params.mkString(",")}) { return new $combinedOps${e.name.capitalize}(${paramNames.mkString(",")}); }""").methodDeclarations()
@@ -212,7 +249,7 @@ trait InterpreterGenerator extends example.expression.oo.StraightGenerator {
               case _ => ""
             }
 
-            Java(s"""|public ${recursiveTypeGenerator(att.tpe, baseInterface)} get${att.name.capitalize}() {
+            Java(s"""|public ${typeConverter(att.tpe, Some(baseInterface))} get${att.name.capitalize}() {
                      |    return $cast this.${att.name};
                      |}""".stripMargin).methodDeclarations()
           })

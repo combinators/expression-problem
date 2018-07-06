@@ -10,7 +10,7 @@ public class J2 {
 
     public static History extend(History h) {
 
-        h.extend("e2",  new DomainModel(
+        h.extend("m2",  new DomainModel(
             Collections.emptyList(),
             Collections.singleton(new PrettyP())
         ));

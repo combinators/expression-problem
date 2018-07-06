@@ -13,7 +13,7 @@ public class J3 {
 
     public static History extend(History h) {
 
-        h.extend("e3",  new DomainModel(
+        h.extend("m3",  new DomainModel(
             Arrays.asList(new Neg(), new Mult(), new Divd()),
             Collections.emptyList()
         ));

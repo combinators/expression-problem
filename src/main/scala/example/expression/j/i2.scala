@@ -1,5 +1,6 @@
 package example.expression.j
 
+import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
@@ -15,10 +16,10 @@ trait i2 extends AbstractGenerator with TestGenerator {
   val domain:IndependentMathDomain
 
 
-  abstract override def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {
+  abstract override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
       case domain.Integer => Java(s"Integer").tpe()
-      case _ => super.typeConverter(tpe)
+      case _ => super.typeConverter(tpe, covariantReplacement)
     }
   }
 

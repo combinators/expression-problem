@@ -118,47 +118,47 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   override val routingPrefix: Option[String] = Some("covariant")
 }
 
-class E0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+class M0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) with RoutingEntries with e0.Model {
 
-  lazy val controllerAddress = "e0"
+  lazy val controllerAddress = "m0"
 
   // all tests are derived from the model.
   override def history:History = evolution.J0.extend(super.history)
   override def testCases:UnitSuite = tests.e0.TestCases.add(super.testCases)
 }
 
-class E1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-  extends E0_Variation (web: WebJarsUtil, app: ApplicationLifecycle) with e1.Model {
+class M1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+  extends M0_Variation (web: WebJarsUtil, app: ApplicationLifecycle) with e1.Model {
 
-  override lazy val controllerAddress = "e1"
+  override lazy val controllerAddress = "m1"
 
   override def history:History = evolution.J1.extend(super.history)
   override def testCases:UnitSuite = tests.e1.TestCases.add(super.testCases)
 }
 
-class E2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-  extends E1_Variation (web: WebJarsUtil, app: ApplicationLifecycle) with e2.Model {
+class M2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+  extends M1_Variation (web: WebJarsUtil, app: ApplicationLifecycle) with e2.Model {
 
-  override lazy val controllerAddress = "e2"
+  override lazy val controllerAddress = "m2"
 
   override def history:History = evolution.J2.extend(super.history)
   override def testCases:UnitSuite = tests.e2.TestCases.add(super.testCases)
 }
 
-class E3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-  extends E2_Variation (web: WebJarsUtil, app: ApplicationLifecycle) with e3.Model {
+class M3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+  extends M2_Variation (web: WebJarsUtil, app: ApplicationLifecycle) with e3.Model {
 
-  override lazy val controllerAddress = "e3"
+  override lazy val controllerAddress = "m3"
 
   override def history:History = evolution.J3.extend(super.history)
   override def testCases:UnitSuite = tests.e3.TestCases.add(super.testCases)
 }
 
-class E4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-  extends E3_Variation (web: WebJarsUtil, app: ApplicationLifecycle) with e4.Model {
+class M4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+  extends M3_Variation (web: WebJarsUtil, app: ApplicationLifecycle) with e4.Model {
 
-  override lazy val controllerAddress = "e4"
+  override lazy val controllerAddress = "m4"
 
   override def history:History = evolution.J4.extend(super.history)
   override def testCases:UnitSuite = tests.e4.TestCases.add(super.testCases)

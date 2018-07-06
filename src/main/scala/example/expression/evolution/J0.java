@@ -12,7 +12,7 @@ import java.util.Collections;
 public class J0 {
 
     public static History extend(History h) {
-        h.extend("e0", new DomainModel(
+        h.extend("m0", new DomainModel(
             Arrays.asList(new Lit(), new Add()),
             Collections.singleton(new Eval())
         ));

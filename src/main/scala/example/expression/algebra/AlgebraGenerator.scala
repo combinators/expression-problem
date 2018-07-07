@@ -17,13 +17,24 @@ trait AlgebraGenerator extends AbstractGenerator with Producer with BinaryMethod
   /**
     * Must eliminate any operation that returns E as value, since Algebra doesn't instantiate the intermediate structures
     */
-  override def compatible(model:domain.Model):domain.Model = {
+  override def apply(model:domain.Model):domain.Model = {
     if (model.isEmpty) { return model }
 
     // rebuild by filtering out all operations that return Exp.
     domain.Model(model.name, model.types,
       model.ops.filterNot(op => op.isInstanceOf[domain.ProducerOperation]),
-      compatible(model.last))
+      apply(model.last))
+  }
+
+  /**
+    * Generating an algebra solution requires processing the models in chronological ordering to be able
+    * to prepare the proper interfaces
+    *
+    * @param model
+    * @return
+    */
+  override def generatedCode(model:domain.Model):Seq[CompilationUnit] = {
+    processModel(model.inChronologicalOrder)
   }
 
   override def getJavaClass : Expression = {

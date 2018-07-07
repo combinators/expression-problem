@@ -15,15 +15,15 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   val gen:AlgebraGenerator with AlgebraTestGenerator
   val model:gen.domain.Model                                  // maintain backwards history from current position
 
-  lazy val reduced:gen.domain.Model = gen.compatible(model)
+  lazy val processed:gen.domain.Model = gen.apply(model)   // process model as necessary
   override lazy val generatedCode:Seq[CompilationUnit] =
-    gen.processModel(reduced.inChronologicalOrder) :+
-    gen.generateSuite(Some("algebra")) :+                    // generate test cases as well
-    gen.combinedAlgebra(Some("algebra"), reduced)
+    gen.generatedCode(processed) :+
+    gen.generateSuite(Some("algebra")) :+
+      gen.combinedAlgebra(Some("algebra"), processed)
 
   // request by "git clone -b variation_0 http://localhost:9000/straight/eN/eN.git" where N is a version #
   override val routingPrefix: Option[String] = Some("algebra")
-  override lazy val controllerAddress:String = reduced.name
+  override lazy val controllerAddress:String = model.name
 }
 
 // also: don't forget that entries need to be in place in routes file. These specifications can

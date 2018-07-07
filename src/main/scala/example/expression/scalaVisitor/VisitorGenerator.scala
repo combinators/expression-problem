@@ -18,7 +18,7 @@ trait VisitorGenerator extends AbstractGenerator with JavaGenerator with DataTyp
   /**
     * For visitor, must flatten entire hierarchy
     */
-  override def compatible(model:domain.Model):domain.Model = model.flat()
+  override def apply(model:domain.Model):domain.Model = model.flat()
 
   /**
     * Generating a visitor solution requires:
@@ -29,7 +29,7 @@ trait VisitorGenerator extends AbstractGenerator with JavaGenerator with DataTyp
     * @param model
     * @return
     */
-  def generatedCode(model:domain.Model):Seq[CompilationUnit] = {
+  override def generatedCode(model:domain.Model):Seq[CompilationUnit] = {
     model.types.map(tpe => generateExp(model, tpe)) ++         // one class for each sub-type
       model.ops.map(op => operationGenerator(model, op)) :+    // one class for each op
       generateBaseClass() :+                                   // abstract base class

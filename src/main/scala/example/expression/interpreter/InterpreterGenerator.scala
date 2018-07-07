@@ -13,7 +13,23 @@ trait InterpreterGenerator extends  AbstractGenerator with JavaGenerator with Da
   /**
     * Supports all operations
     */
-   override def compatible(model:domain.Model):domain.Model = model
+   override def apply(model:domain.Model):domain.Model = model
+
+  /**
+    * Generating an interpreter solution requires:
+    *
+    * 1. A Class for every data type
+    * 2. A Class for every operation
+    * 3. Abstract Base class and visitor class
+    * @param model
+    * @return
+    */
+  override def generatedCode(model:domain.Model):Seq[CompilationUnit] = {
+    // one interface for every model that contains an operation
+    model.inChronologicalOrder.filter(m => m.ops.nonEmpty).map(m => generateBase(m)) ++      // Each operation gets interface
+    model.inChronologicalOrder.filter(m => m.ops.nonEmpty).flatMap(m => generateBaseExtensions(m)) ++   // Each operation must provide class implementations for all past dataTypes
+    generateIntermediateTypes(model)
+  }
 
   /**
     * For producer operations, there is a need to instantiate objects, and one would use this

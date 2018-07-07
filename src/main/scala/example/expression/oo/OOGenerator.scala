@@ -11,14 +11,14 @@ import org.combinators.templating.twirl.Java
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait StraightGenerator extends AbstractGenerator with JavaGenerator with DataTypeSubclassGenerator with OperationAsMethodGenerator with BinaryMethod {
+trait OOGenerator extends AbstractGenerator with JavaGenerator with DataTypeSubclassGenerator with OperationAsMethodGenerator with BinaryMethod {
   val domain:BaseDomain with ModelDomain
 
   /**
     * Process the model as necessary. One could either (a) remove data types or operations that are non-sensical
     * for the given approach; or (b) flatten the hierarchy.
     */
-  override def compatible(model:domain.Model):domain.Model = model.flat()
+  override def apply(model:domain.Model):domain.Model = model.flat()
 
   /**
     * Generating a straight OO solution requires:
@@ -28,8 +28,8 @@ trait StraightGenerator extends AbstractGenerator with JavaGenerator with DataTy
     * @return
     */
   def generatedCode(model:domain.Model):Seq[CompilationUnit] = {
-    model.types.map(tpe => generateExp(model, tpe)) :+ // one class for each sub-type
-      generateBase(model) // base class $BASE
+    model.types.map(tpe => generateExp(model, tpe)) :+     // one class for each sub-type
+      generateBase(model)                                  // base class $BASE
   }
 
   /** For straight design solution, directly access attributes by name. */
@@ -48,16 +48,13 @@ trait StraightGenerator extends AbstractGenerator with JavaGenerator with DataTy
     Java(s"""$expr.${op.name}($args)""").expression()
   }
 
-
   /** Return designated Java type associated with type, or void if all else fails. */
   override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
       case domain.baseTypeRep => covariantReplacement.getOrElse(Java("Exp").tpe())
-      //case _ => Java ("void").tpe()  // reasonable stop
       case _ => super.typeConverter(tpe, covariantReplacement)
     }
   }
-
 
   /** Operations are implemented as methods in the Base and sub-type classes. */
   override def methodGenerator(exp:domain.Atomic)(op:domain.Operation): MethodDeclaration = {
@@ -77,7 +74,6 @@ trait StraightGenerator extends AbstractGenerator with JavaGenerator with DataTy
     val name = exp.toString
 
     val methods:Seq[MethodDeclaration] = model.ops.map(methodGenerator(exp))
-    //val atts:Seq[FieldDeclaration] = exp.attributes.flatMap(att => Java(s"private ${typeConverter(att.tpe)} ${att.name};").fieldDeclarations())
 
     Java(s"""|package oo;
              |public class $name extends Exp {

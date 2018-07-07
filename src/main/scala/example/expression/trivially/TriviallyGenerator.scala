@@ -8,18 +8,18 @@ import com.github.javaparser.ast.stmt.Statement
 import example.expression.j.Producer
 import org.combinators.templating.twirl.Java
 
-trait TriviallyGenerator extends example.expression.oo.StraightGenerator with Producer {
+trait TriviallyGenerator extends example.expression.oo.OOGenerator with Producer {
 
   /**
     * Must eliminate any operation that returns E as value, since Algebra doesn't instantiate the intermediate structures
     */
-  override def compatible(model:domain.Model):domain.Model = {
+  override def apply(model:domain.Model):domain.Model = {
     if (model.isEmpty) { return model }
 
     // rebuild by filtering out all ProducerOperations
     domain.Model(model.name, model.types,
       model.ops.filterNot(op => op.isInstanceOf[domain.ProducerOperation]),
-      compatible(model.last))
+      apply(model.last))
   }
 
   /**

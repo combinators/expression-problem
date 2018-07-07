@@ -15,7 +15,7 @@ abstract class ShapeFoundation @Inject()(web: WebJarsUtil, app: ApplicationLifec
   val gen:VisitorGenerator with TestGenerator
   val model:gen.domain.Model
 
-  lazy val processed:gen.domain.Model = gen.compatible(model)   // process model as necessary
+  lazy val processed:gen.domain.Model = gen.apply(model)   // process model as necessary
   override lazy val generatedCode:Seq[CompilationUnit] =
     gen.generatedCode(processed) :+
     gen.generateSuite(Some("expression"))

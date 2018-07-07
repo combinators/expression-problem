@@ -1,5 +1,6 @@
 package example.expression.j
 
+import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
@@ -10,6 +11,17 @@ import example.expression.domain.{BaseDomain, ModelDomain}
   */
 trait AbstractGenerator  {
   val domain:BaseDomain with ModelDomain
+
+  /**
+    * Process model, as required by EP approach.
+    *
+    * Process the model as necessary. One could either (a) remove data types or operations that are nonsensical
+    * for the given approach; or (b) flatten the hierarchy; (c) or use the default identify function.
+    */
+  def apply(model:domain.Model):domain.Model = model
+
+  /** For the processed model, return generated code artifacts for solution. */
+  def generatedCode(model:domain.Model):Seq[CompilationUnit]
 
   /**
     * Determines the Java expression for all children of a Exp subtype based on its attributes.
@@ -38,13 +50,5 @@ trait AbstractGenerator  {
     throw new scala.NotImplementedError(s"""Operation "${op.name}" does not handle case for sub-type "${exp.name}" """)
   }
 
-  /**
-    * Determine a potentially reduced model-chain that is compatible with a given generator.
-    *
-    * With no constraints, this is the identify function.
-    *
-    * Process the model as necessary. One could either (a) remove data types or operations that are non-sensical
-    * for the given approach; or (b) flatten the hierarchy; (c) or use the default identify function.
-    */
-  def compatible(model:domain.Model):domain.Model = model
+
 }

@@ -12,10 +12,10 @@ import org.combinators.templating.persistable.JavaPersistable._
 abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends CodeGenerationController[CompilationUnit](web, app)
 {
-  val gen:StraightGenerator with TestGenerator
+  val gen:OOGenerator with TestGenerator
   val model:gen.domain.Model
 
-  lazy val processed:gen.domain.Model = gen.compatible(model)   // process model as necessary
+  lazy val processed:gen.domain.Model = gen.apply(model)   // process model as necessary
   override lazy val generatedCode:Seq[CompilationUnit] =
     gen.generatedCode(processed) :+
     gen.generateSuite(Some("oo"))
@@ -30,7 +30,7 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 class M0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
-  override val gen = new StraightGenerator with TestGenerator with e0 {
+  override val gen = new OOGenerator with TestGenerator with e0 {
     override val domain = new MathDomain{ }
   }
   override val model = gen.domain.m0
@@ -39,7 +39,7 @@ class M0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 class M1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
-  override val gen = new StraightGenerator with TestGenerator with e0 with e1 {
+  override val gen = new OOGenerator with TestGenerator with e0 with e1 {
     override val domain = new MathDomain{ }
   }
   override val model = gen.domain.m1
@@ -48,7 +48,7 @@ class M1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 class M2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
-  override val gen = new StraightGenerator with TestGenerator with e0 with e1 with e2 {
+  override val gen = new OOGenerator with TestGenerator with e0 with e1 with e2 {
     override val domain = new MathDomain{ }
   }
   override val model = gen.domain.m2
@@ -57,7 +57,7 @@ class M2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 class M3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
-  override val gen = new StraightGenerator with TestGenerator with e0 with e1 with e2 with e3 {
+  override val gen = new OOGenerator with TestGenerator with e0 with e1 with e2 with e3 {
     override val domain = new MathDomain{ }
   }
   override val model = gen.domain.m3
@@ -66,7 +66,7 @@ class M3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 class M4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
-  override val gen = new StraightGenerator with TestGeneratorWithModel with e0 with e1 with e2 with e3 with e4 {
+  override val gen = new OOGenerator with TestGeneratorWithModel with e0 with e1 with e2 with e3 with e4 {
     override val domain = new MathDomain{ }
 
     def getModel:domain.Model = {
@@ -79,7 +79,7 @@ class M4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 class M5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
-  override val gen = new StraightGenerator with TestGeneratorWithModel with e0 with e1 with e2 with e3 with e4 with e5 with ex {
+  override val gen = new OOGenerator with TestGeneratorWithModel with e0 with e1 with e2 with e3 with e4 with e5 with ex {
     override val domain = new MathDomain{ }
 
     def getModel:domain.Model = {
@@ -93,7 +93,7 @@ class M5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 class I2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
-  override val gen = new StraightGenerator with TestGeneratorWithModel with e0 with e1 with i1 with i2 {
+  override val gen = new OOGenerator with TestGeneratorWithModel with e0 with e1 with i1 with i2 {
     override val domain = new IndependentMathDomain { }
 
     def getModel:domain.Model = {
@@ -108,7 +108,7 @@ class C1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
 
   // Merge e3 with i2: without adding extra code to synthesize concepts, this will fail
-  override val gen = new StraightGenerator with TestGenerator with e0 with e1 with e2 with e3 with i1 with i2 with c1 {
+  override val gen = new OOGenerator with TestGenerator with e0 with e1 with e2 with e3 with i1 with i2 with c1 {
     override val domain = new MergedMathDomain { }
   }
 

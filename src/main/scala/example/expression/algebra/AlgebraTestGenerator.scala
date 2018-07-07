@@ -171,11 +171,3 @@ trait AlgebraTestGenerator extends TestGeneratorWithModel with AbstractGenerator
     Java(str).compilationUnit()
   }
 }
-
-
-
-
-
-
-
-

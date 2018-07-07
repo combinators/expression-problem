@@ -37,19 +37,13 @@ trait e5 extends AbstractGenerator with TestGenerator with BinaryMethod {
         val other:TypeRep = op.parameters.head._2
         val oname = Java(name).expression[Expression]()
 
-        // for now: HACK. subExpressions returns e.getExp() for example, but we just want this to be getExp
-        // still don't know true impact on rest of the system, so fix later.
-
-        // have to manually insert e.getClass() -- troubling
         exp match {
           case Lit => {
-            val call:String = atts(domain.attributes.value).toString//.substring(2)
+            val call:String = atts(domain.attributes.value).toString
             val value:Expression = Java(s"((${exp.name.capitalize})$name).$call").expression()
-// e.getValue() == ((Lit) other).getValue();
             Java(s"""return $getJavaClass.equals(${recurseOn(oname, GetJavaClass)}) && $call.equals($value);""").statements()
           }
 
-          // left.equals(((Add)other).left) && right.equals(((Add)other).right);
           case ui:Unary => {
             val call:String = atts(domain.base.inner).toString//.substring(2)
             val inner:Expression = Java(s"((${exp.name.capitalize})$name).$call").expression()

@@ -16,10 +16,3 @@ trait OperationAsMethodGenerator {
   def methodGenerator(exp:domain.Atomic)(op:domain.Operation) : MethodDeclaration
 
 }
-
-
-
-
-
-
-

@@ -85,6 +85,4 @@ trait s1 extends AbstractGenerator with TestGenerator with Producer {
          |
          |}""".stripMargin).methodDeclarations()
   }
-
 }
-

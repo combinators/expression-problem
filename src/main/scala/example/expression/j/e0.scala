@@ -52,5 +52,4 @@ trait e0 extends AbstractGenerator with TestGenerator {
          |   assertEquals(5.0, ${recurseOn(convert(lit1), domain.Eval)});
          |}""".stripMargin).methodDeclarations()
   }
-
 }

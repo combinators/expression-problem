@@ -148,5 +148,4 @@ trait VisitorGenerator extends AbstractGenerator with JavaGenerator with DataTyp
 
     s.compilationUnit()
   }
-
 }

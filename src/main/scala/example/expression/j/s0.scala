@@ -101,6 +101,4 @@ trait s0 extends AbstractGenerator with TestGenerator {
          |
          |}""".stripMargin).methodDeclarations()
   }
-
 }
-

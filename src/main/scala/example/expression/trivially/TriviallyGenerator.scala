@@ -60,15 +60,6 @@ trait TriviallyGenerator extends example.expression.oo.StraightGenerator with Pr
     exp.attributes.map(att => att.name -> Java(s"get${att.name.capitalize}()").expression[Expression]()).toMap
   }
 
-//  // note: this is very much like recursiveTypeGenerator in other generators. come up with standard name
-//  // FIXME: Work in covariant Replaceement
-//  def attrTypeGenerator(currentClass: SimpleName, tpe: domain.TypeRep): Type = {
-//    tpe match {
-//      case domain.baseTypeRep => Java(s"$currentClass").tpe()
-//      case _ => typeConverter(tpe)
-//    }
-//  }
-
   def baseInterfaceName(op: domain.Operation): Type = {
     Java(s"Exp${op.name.capitalize}").tpe()
   }
@@ -80,7 +71,6 @@ trait TriviallyGenerator extends example.expression.oo.StraightGenerator with Pr
 
     val atts:Seq[FieldDeclaration] = exp.attributes.flatMap(att =>
       Java(s"private ${typeConverter(att.tpe, Some(finalInterfaceName))} ${att.name};").fieldDeclarations())
-      //Java(s"private ${attrTypeGenerator(finalInterfaceName, att.tpe)} ${att.name};").fieldDeclarations())
 
     val params:Seq[String] = exp.attributes.map(att =>
       s"${typeConverter(att.tpe, Some(finalInterfaceName))} ${att.name}")
@@ -120,12 +110,7 @@ trait TriviallyGenerator extends example.expression.oo.StraightGenerator with Pr
         case Some(tpe) => typeConverter(tpe, Some(interfaceName(exp, op)))
         case _ => Java("void").tpe
       })
-//    method.setType(
-//      op.returnType match {
-//        case Some(domain.baseTypeRep) => attrTypeGenerator(Java("Exp" + op.name.capitalize).simpleName(), domain.baseTypeRep)  // producers... HEINEMAN
-//        case Some(tpe) => attrTypeGenerator(interfaceName(exp, op), tpe)
-//        case _ => Java("void").tpe
-//      })
+
     method.setModifier(Modifier.PUBLIC, false)
     method
   }

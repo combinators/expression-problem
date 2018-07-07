@@ -17,6 +17,4 @@ trait Operators {
       case FrameworkTypes.List => "java.util.List"
       case _ => "None"
     }
-
-
 }

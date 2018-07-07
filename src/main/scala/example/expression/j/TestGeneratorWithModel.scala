@@ -10,10 +10,3 @@ trait TestGeneratorWithModel extends TestGenerator  {
 
   def getModel:domain.Model
 }
-
-
-
-
-
-
-

@@ -50,10 +50,3 @@ trait TestGenerator  {
              |}""".stripMargin).compilationUnit()
   }
 }
-
-
-
-
-
-
-

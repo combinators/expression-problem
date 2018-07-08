@@ -23,19 +23,8 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
   lazy val processed:gen.domain.Model = gen.apply(model)   // process model as necessary
   override lazy val generatedCode:Seq[CompilationUnit] =
-    gen.generatedCode(processed) :+
+      gen.generatedCode(processed) :+
       gen.generateSuite(Some("interpreter"))
-
-  // flatten hierarchy and remove producer operations (i.e., those that are not compatible with this approach)
-//  lazy val reduced:gen.domain.Model = gen.apply(model)
-
-//  //lazy val flat:gen.domain.Model = gen.compatible(reduced.flat())
-//  override lazy val generatedCode:Seq[CompilationUnit] =
-//      // one interface for every model that contains an operation
-//      reduced.inChronologicalOrder.filter(model => model.ops.nonEmpty).map(model => gen.generateBase(model)) ++      // Each operation gets interface
-//      reduced.inChronologicalOrder.filter(model => model.ops.nonEmpty).flatMap(model => gen.generateBaseExtensions(model)) ++   // Each operation must provide class implementations for all past dataTypes
-//      gen.generateIntermediateTypes(model) :+                    // New types added in between operations need to be manifest
-//      gen.generateSuite(Some("interpreter"))                     // generate test cases as well
 
   // request by "git clone -b variation_0 http://localhost:9000/straight/eN/eN.git" where N is a version #
   override val routingPrefix: Option[String] = Some("interpreter")

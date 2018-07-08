@@ -14,25 +14,25 @@ import org.combinators.templating.twirl.Java
 trait e2 extends AbstractGenerator with TestGenerator {
   val domain:MathDomain
 
-  import domain._
+//  import domain._
 
   abstract override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
-      case String => Java("String").tpe()
+      case domain.String => Java("String").tpe()
       case _ => super.typeConverter(tpe, covariantReplacement)
     }
   }
 
-  abstract override def logic(exp:Atomic)(op:Operation): Seq[Statement] = {
+  abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {
     val subs = subExpressions(exp)
 
     // generate the actual body
     op match {
-      case PrettyP =>
+      case domain.PrettyP =>
         exp match {
-          case Lit => Java(s"""return "" + ${subs(attributes.value)} + ""; """).statements()
-          case Add => Java(s"""return "(" + ${recurseOn(subs(base.left), PrettyP)} + "+" + ${recurseOn(subs(base.right), PrettyP)}+ ")";""").statements()
-          case Sub => Java(s"""return "(" + ${recurseOn(subs(base.left), PrettyP)} + "-" + ${recurseOn(subs(base.right), PrettyP)} + ")";""").statements()
+          case domain.Lit => Java(s"""return "" + ${subs(domain.attributes.value)} + ""; """).statements()
+          case domain.Add => Java(s"""return "(" + ${recurseOn(subs(domain.base.left), domain.PrettyP)} + "+" + ${recurseOn(subs(domain.base.right), domain.PrettyP)}+ ")";""").statements()
+          case domain.Sub => Java(s"""return "(" + ${recurseOn(subs(domain.base.left), domain.PrettyP)} + "-" + ${recurseOn(subs(domain.base.right), domain.PrettyP)} + ")";""").statements()
           case _ => super.logic(exp)(op)
         }
 
@@ -41,15 +41,15 @@ trait e2 extends AbstractGenerator with TestGenerator {
   }
 
   abstract override def testGenerator: Seq[MethodDeclaration] = {
-    val s1 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
-    val s2 = new BinaryInst(Add, new BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0)),
-                                 new BinaryInst(Add, new LitInst(5.0), new LitInst(6.0)))
+    val s1 = new domain.BinaryInst(domain.Sub, new domain.LitInst(1.0), new domain.LitInst(2.0))
+    val s2 = new domain.BinaryInst(domain.Add, new domain.BinaryInst(domain.Sub, new domain.LitInst(1.0), new domain.LitInst(2.0)),
+                                 new domain.BinaryInst(domain.Add, new domain.LitInst(5.0), new domain.LitInst(6.0)))
 
       super.testGenerator ++ Java(
       s"""
          |public void test() {
-         |   assertEquals("(1.0-2.0)", ${recurseOn(convert(s1), PrettyP)});
-         |   assertEquals("((1.0-2.0)+(5.0+6.0))", ${recurseOn(convert(s2), PrettyP)});
+         |   assertEquals("(1.0-2.0)", ${recurseOn(convert(s1), domain.PrettyP)});
+         |   assertEquals("((1.0-2.0)+(5.0+6.0))", ${recurseOn(convert(s2), domain.PrettyP)});
          |}""".stripMargin).methodDeclarations()
   }
 }

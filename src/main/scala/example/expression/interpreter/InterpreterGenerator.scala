@@ -49,15 +49,6 @@ trait InterpreterGenerator extends  AbstractGenerator with JavaGenerator with Da
   override def subExpressions(exp: domain.Atomic): Map[String, Expression] = {
     exp.attributes.map(att => att.name -> Java(s"get${att.name.capitalize}()").expression[Expression]()).toMap
   }
-//
-//  /** Return designated Exp type with replacement. */
-//  def recursiveTypeGenerator(tpe:domain.TypeRep, replacement:Type) : com.github.javaparser.ast.`type`.Type = {
-//    tpe match {
-//      case domain.baseTypeRep => replacement
-//      case _ => typeConverter(tpe)
-//    }
-//  }
-
 
   /** Return designated Java type associated with type, or void if all else fails. */
   override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : com.github.javaparser.ast.`type`.Type = {
@@ -108,19 +99,19 @@ trait InterpreterGenerator extends  AbstractGenerator with JavaGenerator with Da
     val name = Java(s"${exp.name}").simpleName()
     val baseInterface:Option[Type] = Some(Java(baseInterfaceName(model.lastModelWithOperation())).tpe())
 
-    val atts:Seq[FieldDeclaration] = exp.attributes.flatMap(att => Java(s"private ${typeConverter(att.tpe, baseInterface)} ${att.name};").fieldDeclarations())
+//    val atts:Seq[FieldDeclaration] = exp.attributes.flatMap(att => Java(s"private ${typeConverter(att.tpe, baseInterface)} ${att.name};").fieldDeclarations())
 
-    val params:Seq[String] = exp.attributes.map(att => s"${typeConverter(att.tpe, baseInterface)} ${att.name}")
+//    val params:Seq[String] = exp.attributes.map(att => s"${typeConverter(att.tpe, baseInterface)} ${att.name}")
 
-    val getters: Seq[MethodDeclaration] =
-      exp.attributes.flatMap(att => Java(s"""|public ${typeConverter(att.tpe, baseInterface)} get${att.name.capitalize}() {
-                                             |    return this.${att.name};
-                                             |}""".stripMargin).methodDeclarations())
-    val cons:Seq[Statement] = exp.attributes.flatMap(att => Java(s"  this.${att.name} = ${att.name};").statements())
+//    val getters: Seq[MethodDeclaration] =
+//      exp.attributes.flatMap(att => Java(s"""|public ${typeConverter(att.tpe, baseInterface)} get${att.name.capitalize}() {
+//                                             |    return this.${att.name};
+//                                             |}""".stripMargin).methodDeclarations())
+//    val cons:Seq[Statement] = exp.attributes.flatMap(att => Java(s"  this.${att.name} = ${att.name};").statements())
 
-    val constructor = Java(s"""|public $name (${params.mkString(",")}) {
-                               |   ${cons.mkString("\n")}
-                               |}""".stripMargin).constructors().head
+//    val constructor = Java(s"""|public $name (${params.mkString(",")}) {
+//                               |   ${cons.mkString("\n")}
+//                               |}""".stripMargin).constructors().head
 
     // provide method declarations for all past operations (including self). But if we extend, can't we stop at last op?
     val allOps:Seq[domain.Operation] = model.pastOperations()
@@ -131,10 +122,10 @@ trait InterpreterGenerator extends  AbstractGenerator with JavaGenerator with Da
             |package interpreter;
             |public class $name implements ${baseInterface.toString} {
             |
-            |  ${constructor.toString}
+            |  ${constructor(exp).toString}
             |
-            |  ${getters.mkString("\n")}
-            |  ${atts.mkString("\n")}
+            |  ${getters(exp, baseInterface).mkString("\n")}
+            |  ${fields(exp, baseInterface).mkString("\n")}
             |  ${operations.mkString("\n")}
             |}""".stripMargin).compilationUnit()
    }

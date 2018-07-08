@@ -11,17 +11,30 @@ import org.combinators.templating.twirl.Java
 trait JavaGenerator extends AbstractGenerator {
 
   /** Generate constructor for given atomic concept, using suggested name */
-  def constructor(exp:domain.Atomic, suggestedName:String = "") : ConstructorDeclaration = {
-    val name = if (suggestedName.equals("")) { exp.name } else { suggestedName }
+  def constructor(exp:domain.Atomic, suggestedName:Option[String] = None, covariantOverride:Option[Type] = None) : ConstructorDeclaration = {
+    val name = if (suggestedName.isEmpty) { exp.name } else { suggestedName.get }
 
-    val atts:Seq[FieldDeclaration] = exp.attributes.flatMap(att => Java(s"private ${typeConverter(att.tpe)} ${att.name};").fieldDeclarations())
+    val atts:Seq[FieldDeclaration] = exp.attributes.flatMap(att => Java(s"private ${typeConverter(att.tpe, covariantOverride)} ${att.name};").fieldDeclarations())
 
-    val params:Seq[String] = exp.attributes.map(att => s"${typeConverter(att.tpe)} ${att.name}")
+    val params:Seq[String] = exp.attributes.map(att => s"${typeConverter(att.tpe, covariantOverride)} ${att.name}")
     val cons:Seq[Statement] = exp.attributes.flatMap(att => Java(s"  this.${att.name} = ${att.name};").statements())
 
     Java(s"""|public $name (${params.mkString(",")}) {
              |   ${cons.mkString("\n")}
              |}""".stripMargin).constructors().head
+  }
+
+  /** Generate constructor for given operation, using suggested name */
+  def constructorFromOp(op:domain.Operation, suggestedName:Option[String] = None) : ConstructorDeclaration = {
+    val name = if (suggestedName.isEmpty) { op.name.capitalize } else { suggestedName.get }
+
+    val params:Seq[String] = op.parameters.map(p => s"${typeConverter(p._2)} ${p._1}")
+    val cons:Seq[Statement] = op.parameters.flatMap(p => Java(s"  this.${p._1} = ${p._1};").statements())
+
+    Java(
+      s"""|public $name (${params.mkString(",")}) {
+          |   ${cons.mkString("\n")}
+          |}""".stripMargin).constructors().head
   }
 
   /** Compute parameter "Type name" comma-separated list from operation. */
@@ -54,4 +67,5 @@ trait JavaGenerator extends AbstractGenerator {
   def fields(exp:domain.Atomic, covariantOverride:Option[Type] = None) : Seq[FieldDeclaration] = {
     exp.attributes.flatMap(att => Java(s"private ${typeConverter(att.tpe, covariantOverride)} ${att.name};").fieldDeclarations())
   }
+
 }

@@ -29,8 +29,6 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator with Producer
     * @return
     */
   override def generatedCode(model:domain.Model):Seq[CompilationUnit] = {
-    // flatten hierarchy and remove producer operations (i.e., those that are not compatible with this approach)
-
     val flat = model.flat()
     flat.types.map(tpe => generateExp(model, tpe)) ++     // one class for each sub-type
       generateInterfaces(model) :+                        // interfaces for all subtypes
@@ -67,33 +65,16 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator with Producer
   override def generateExp(model:domain.Model, exp:domain.Atomic) : CompilationUnit = {
     val name = Java(s"${exp.name}").simpleName()
 
-    val fi = finalInterfaceName
-
-    val atts:Seq[FieldDeclaration] = exp.attributes.flatMap(att =>
-      Java(s"private ${typeConverter(att.tpe, Some(finalInterfaceName))} ${att.name};").fieldDeclarations())
-
-    val params:Seq[String] = exp.attributes.map(att =>
-      s"${typeConverter(att.tpe, Some(finalInterfaceName))} ${att.name}")
-    val getters: Seq[MethodDeclaration] =
-      exp.attributes.flatMap(att => Java(s"""|public ${typeConverter(att.tpe, Some(finalInterfaceName))} get${att.name.capitalize}() {
-                                             |    return this.${att.name};
-                                             |}""".stripMargin).methodDeclarations())
-    val cons:Seq[Statement] = exp.attributes.flatMap(att => Java(s"  this.${att.name} = ${att.name};").statements())
-
-    val constructor = Java(s"""|public $name (${params.mkString(",")}) {
-                               |   ${cons.mkString("\n")}
-                               |}""".stripMargin).constructors().head
-
     val interfaces = finalInterfaceName +: model.lastModelWithOperation().ops.map(op => interfaceName(exp, op))
 
     Java(s"""
             |package trivially;
             |public class $name implements ${interfaces.mkString(",")} {
             |
-            |  ${constructor.toString}
+            |  ${constructor(exp, covariantOverride = Some(finalInterfaceName)).toString}
             |
-            |  ${getters.mkString("\n")}
-            |  ${atts.mkString("\n")}
+            |  ${getters(exp, Some(finalInterfaceName)).mkString("\n")}
+            |  ${fields(exp,  Some(finalInterfaceName)).mkString("\n")}
             |}""".stripMargin).compilationUnit()
    }
 
@@ -115,7 +96,6 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator with Producer
     method
   }
 
-
   def generateInterface(exp: domain.Atomic, parents: Seq[Type], op:domain.Operation): CompilationUnit = {
     val name = interfaceName(exp, op)
     val method: MethodDeclaration = methodGenerator(exp)(op)
@@ -127,7 +107,6 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator with Producer
             |public interface $name extends ${parents.mkString(", ")} {
             |
             |  ${atts.mkString("\n")}
-            |
             |  $method
             |}""".stripMargin).compilationUnit()
   }

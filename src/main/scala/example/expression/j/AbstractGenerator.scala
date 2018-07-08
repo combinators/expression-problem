@@ -49,6 +49,4 @@ trait AbstractGenerator  {
   def logic(exp:domain.Atomic)(op:domain.Operation) : Seq[Statement] = {
     throw new scala.NotImplementedError(s"""Operation "${op.name}" does not handle case for sub-type "${exp.name}" """)
   }
-
-
 }

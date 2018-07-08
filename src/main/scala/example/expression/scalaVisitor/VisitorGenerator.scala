@@ -70,8 +70,7 @@ trait VisitorGenerator extends AbstractGenerator with JavaGenerator with DataTyp
               | * method per type in the class hierarchy.
               | */
               |public abstract class Visitor<R> {
-              |
-                |$signatures
+              |  $signatures
               |}""".stripMargin).compilationUnit()
   }
 
@@ -119,28 +118,22 @@ trait VisitorGenerator extends AbstractGenerator with JavaGenerator with DataTyp
 
   /** Brings in classes for each operation. These can only be completed with the implementations. */
   def operationGenerator(model:domain.Model, op:domain.Operation): CompilationUnit = {
-
     val signatures = model.types.map(exp => methodGenerator(exp)(op)).mkString("\n")
 
     // if operation has parameters then must add to visitor as well
     val atts:Seq[FieldDeclaration] = op.parameters.flatMap(p => Java(s"${typeConverter(p._2)} ${p._1};").fieldDeclarations())
-    val params:Seq[String] = op.parameters.map(p => s"${typeConverter(p._2)} ${p._1}")
-    val cons:Seq[Statement] = op.parameters.flatMap(p => Java(s"  this.${p._1} = ${p._1};").statements())
 
     // only add constructor if visitor has a parameter
-    val constructor = if (op.parameters.isEmpty) {
+    val ctor = if (op.parameters.isEmpty) {
       ""
     } else {
-      Java(
-        s"""|public ${op.name.capitalize} (${params.mkString(",")}) {
-            |   ${cons.mkString("\n")}
-            |}""".stripMargin).constructors().head
+      constructorFromOp(op)
     }
 
     val tpe = typeConverter(op.returnType.get)
     val s = Java(s"""|package expression;
                      |public class ${op.name.capitalize} extends Visitor<$tpe>{
-                     |  ${constructor.toString}
+                     |  ${ctor.toString}
                      |
                      |  ${atts.mkString("\n")}
                      |  $signatures

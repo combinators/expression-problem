@@ -12,13 +12,15 @@ import example.expression.domain.{BaseDomain, ModelDomain}
 trait AbstractGenerator  {
   val domain:BaseDomain with ModelDomain
 
+  def getModel:domain.Model
+
   /**
     * Process model, as required by EP approach.
     *
     * Process the model as necessary. One could either (a) remove data types or operations that are nonsensical
     * for the given approach; or (b) flatten the hierarchy; (c) or use the default identify function.
     */
-  def apply(model:domain.Model):domain.Model = model
+  def getProcessedModel:domain.Model = getModel
 
   /** For the processed model, return generated code artifacts for solution. */
   def generatedCode(model:domain.Model):Seq[CompilationUnit]

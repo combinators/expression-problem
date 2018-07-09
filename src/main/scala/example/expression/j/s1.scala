@@ -11,8 +11,13 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-trait s1 extends AbstractGenerator with TestGenerator with Producer {
+trait s1 extends AbstractGenerator with TestGenerator with Producer { self:s0 =>
   val domain:ShapeDomain
+
+  case object Shrink extends domain.Operation("shrink", Some(domain.Shape), Seq((domain.attributes.pct, Double)))
+  val s1 = domain.Model("s1", Seq.empty, Seq(Shrink), s0)
+
+  override def getModel = s1
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
   abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {
@@ -20,20 +25,20 @@ trait s1 extends AbstractGenerator with TestGenerator with Producer {
 
     // generate the actual body
     op match {
-      case domain.Shrink =>
+      case Shrink =>
         exp match {
-          case domain.Circle =>
+          case Circle =>
             Java(
               s"""
                  |double shrunkRadius = ${subs(domain.attributes.radius)}*pct;
-                 return ${inst(domain.Circle)(op)(Java("shrunkRadius").expression[Expression]())};
+                 return ${inst(Circle)(op)(Java("shrunkRadius").expression[Expression]())};
                """.stripMargin).statements()
 
-          case domain.Square => {
+          case Square => {
             val str =
               s"""
                  |double shrunkSide = ${subs(domain.attributes.side)}*pct;
-                 |return ${inst(domain.Square)(op)(Java("shrunkSide").expression[Expression]())};
+                 |return ${inst(Square)(op)(Java("shrunkSide").expression[Expression]())};
                """.stripMargin
             println(str)
             Java(str).statements()
@@ -41,10 +46,10 @@ trait s1 extends AbstractGenerator with TestGenerator with Producer {
 
           // return ${recurseOnWithParams(convert(s1, domain.emptyModel()), domain.ContainsPt, Java("t").expression[Expression]())});
 
-          case domain.Translate => {
+          case Translate => {
             Java(
               s"""
-                 |return ${inst(domain.Translate)(op)(subs(domain.attributes.trans),recurseOn(subs(domain.attributes.shape), op, Java("pct").expression[Expression]()))};
+                 |return ${inst(Translate)(op)(subs(domain.attributes.trans),recurseOn(subs(domain.attributes.shape), op, Java("pct").expression[Expression]()))};
                  |
                """.stripMargin).statements()
           }
@@ -58,7 +63,7 @@ trait s1 extends AbstractGenerator with TestGenerator with Producer {
   override def convert(inst:domain.AtomicInst) : Expression = {
     val name = inst.e.name
     inst match {
-      case ti:domain.TranslateInst => {
+      case ti:TranslateInst => {
         val tuple = ti.i.get.asInstanceOf[((Double,Double),domain.AtomicInst)]
         val pt = s"new java.awt.geom.Point2D.Double(${tuple._1._1}, ${tuple._1._2})"
 
@@ -71,14 +76,14 @@ trait s1 extends AbstractGenerator with TestGenerator with Producer {
 
   abstract override def testGenerator: Seq[MethodDeclaration] = {
 
-    val s1 = new domain.SquareInst(8.0)
+    val s1 = new SquareInst(8.0)
     val d1 = Java("0.5").expression[Expression]()
 
     super.testGenerator ++ Java(
       s"""
          |public void test() {
          |   // without access to the attributes, we can't write meaningful attribute test cases.
-         |   assertNotNull( ${recurseOn(convert(s1), domain.Shrink, d1)});
+         |   assertNotNull( ${recurseOn(convert(s1), Shrink, d1)});
          |
          |   // Handle collect checks
          |

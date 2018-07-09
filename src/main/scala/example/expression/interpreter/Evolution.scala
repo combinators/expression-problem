@@ -1,7 +1,7 @@
 package example.expression.interpreter
 
 import com.github.javaparser.ast.CompilationUnit
-import example.expression.domain.MathDomain
+import example.expression.domain.{MathDomain, WithDomain, companionMathDomain}
 import example.expression.j._
 import javax.inject.Inject
 import org.combinators.templating.persistable.JavaPersistable._
@@ -18,101 +18,45 @@ import shared.compilation.CodeGenerationController
 abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends CodeGenerationController[CompilationUnit](web, app)
 {
-  val gen:InterpreterGenerator with InterpreterTestGenerator
-  val model:gen.domain.Model
+  val gen:WithDomain[MathDomain] with InterpreterGenerator with InterpreterTestGenerator
 
-  lazy val processed:gen.domain.Model = gen.apply(model)   // process model as necessary
+  lazy val processed:gen.domain.Model = gen.getProcessedModel   // process model as necessary
   override lazy val generatedCode:Seq[CompilationUnit] =
       gen.generatedCode(processed) :+
       gen.generateSuite(Some("interpreter"))
 
-  // request by "git clone -b variation_0 http://localhost:9000/straight/eN/eN.git" where N is a version #
   override val routingPrefix: Option[String] = Some("interpreter")
-  override lazy val controllerAddress:String = model.name
+  override lazy val controllerAddress:String = gen.getModel.name
 }
 
 // also: don't forget that entries need to be in place in routes file. These specifications can
 // be viewed as the 'architecture' of the EP solution.
 class M0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
-
-  override val gen = new InterpreterGenerator with InterpreterTestGenerator with e0 {
-    override val domain = new MathDomain{ }
-
-    // Interpreter Test Generator needs access to the model
-    def getModel:domain.Model = {
-      domain.m0
-    }
-  }
-  override val model = gen.getModel
+  override val gen = new WithDomain(companionMathDomain) with InterpreterGenerator with InterpreterTestGenerator with e0
 }
 
 class M1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
-
-  override val gen = new InterpreterGenerator with InterpreterTestGenerator with e0 with e1 {
-    override val domain = new MathDomain{ }
-
-    // Interpreter Test Generator needs access to the model
-    def getModel:domain.Model = {
-      domain.m1
-    }
-  }
-  override val model = gen.getModel
+  override val gen = new WithDomain(companionMathDomain) with InterpreterGenerator with InterpreterTestGenerator with e0 with e1
 }
 
 class M2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
-
-  override val gen = new InterpreterGenerator with InterpreterTestGenerator with e0 with e1 with e2 {
-    override val domain = new MathDomain{ }
-
-    // Interpreter Test Generator needs access to the model
-    def getModel:domain.Model = {
-      domain.m2
-    }
-  }
-  override val model = gen.getModel
+  override val gen = new WithDomain(companionMathDomain) with InterpreterGenerator with InterpreterTestGenerator with e0 with e1 with e2
 }
 
 class M3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
-
-  override val gen = new InterpreterGenerator with InterpreterTestGenerator with e0 with e1 with e2 with e3 {
-    override val domain = new MathDomain{ }
-
-    // Interpreter Test Generator needs access to the model
-    def getModel:domain.Model = {
-      domain.m3
-    }
-  }
-  override val model = gen.getModel
+  override val gen = new WithDomain(companionMathDomain) with InterpreterGenerator with InterpreterTestGenerator with e0 with e1 with e2 with e3
 }
 
 class M4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
-
-  override val gen = new InterpreterGenerator with InterpreterTestGenerator with e0 with e1 with e2 with e3 with e4 {
-    override val domain = new MathDomain{ }
-
-    // Interpreter Test Generator needs access to the model
-    def getModel:domain.Model = {
-      domain.m4
-    }
-  }
-  override val model = gen.getModel
+  override val gen = new WithDomain(companionMathDomain) with InterpreterGenerator with InterpreterTestGenerator with e0 with e1 with e2 with e3 with e4
 }
 
 class M5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
-
-  override val gen = new InterpreterGenerator with InterpreterTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 {
-    override val domain = new MathDomain{ }
-
-    // Interpreter Test Generator needs access to the model
-    def getModel:domain.Model = {
-      domain.m5
-    }
-  }
-  override val model = gen.getModel
+  override val gen = new WithDomain(companionMathDomain) with InterpreterGenerator with InterpreterTestGenerator with e0 with e1 with e2 with e3 with e4 with ex with e5
 }

@@ -2,24 +2,25 @@ package example.expression.trivially
 
 import com.github.javaparser.ast.{CompilationUnit, Modifier}
 import com.github.javaparser.ast.`type`.Type
-import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
+import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.Expression
-import com.github.javaparser.ast.stmt.Statement
 import example.expression.j.Producer
 import org.combinators.templating.twirl.Java
 
 trait TriviallyGenerator extends example.expression.oo.OOGenerator with Producer {
 
+  override def getProcessedModel = process(getModel)
+
   /**
     * Must eliminate any operation that returns E as value, since Algebra doesn't instantiate the intermediate structures
     */
-  override def apply(model:domain.Model):domain.Model = {
+   def process(model:domain.Model):domain.Model = {
     if (model.isEmpty) { return model }
 
     // rebuild by filtering out all ProducerOperations
     domain.Model(model.name, model.types,
       model.ops.filterNot(op => op.isInstanceOf[domain.ProducerOperation]),
-      apply(model.last))
+      process(model.last))
   }
 
   /**

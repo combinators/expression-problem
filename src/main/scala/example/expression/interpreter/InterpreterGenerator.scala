@@ -13,7 +13,7 @@ trait InterpreterGenerator extends  AbstractGenerator with JavaGenerator with Da
   /**
     * Supports all operations
     */
-   override def apply(model:domain.Model):domain.Model = model
+   override def getProcessedModel:domain.Model = getModel
 
   /**
     * Generating an interpreter solution requires:

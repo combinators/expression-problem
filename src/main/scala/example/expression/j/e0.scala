@@ -4,7 +4,7 @@ import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
-import example.expression.domain.MathDomain
+import example.expression.domain.M0
 import org.combinators.templating.twirl.Java
 
 /**
@@ -12,13 +12,12 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-trait e0 extends AbstractGenerator with TestGenerator {
-  val domain:MathDomain
+trait e0 extends AbstractGenerator with TestGenerator with M0 {
 
   /** E0 Introduces the concept a Double type, used for the 'Eval' operation. */
   abstract override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
-      case domain.Double => Java("Double").tpe()
+      case Double => Java("Double").tpe()
       case _ => super.typeConverter(tpe, covariantReplacement)
     }
   }
@@ -29,10 +28,10 @@ trait e0 extends AbstractGenerator with TestGenerator {
 
     // generate the actual body
     op match {
-      case domain.Eval =>
+      case Eval =>
         exp match {
-          case domain.Lit => Java(s"return ${subs(domain.attributes.value)};").statements
-          case domain.Add => Java(s"return ${recurseOn(subs(domain.base.left),op)} + ${recurseOn(subs(domain.base.right),op)};").statements()
+          case Lit => Java(s"return ${subs(domain.attributes.value)};").statements
+          case Add => Java(s"return ${recurseOn(subs(domain.base.left),op)} + ${recurseOn(subs(domain.base.right),op)};").statements()
           case _ => super.logic(exp)(op)
         }
 
@@ -42,14 +41,14 @@ trait e0 extends AbstractGenerator with TestGenerator {
 
   abstract override def testGenerator: Seq[MethodDeclaration] = {
 
-    val a1 = new domain.BinaryInst(domain.Add, new domain.LitInst(1.0), new domain.LitInst(2.0))
-    val lit1 = new domain.LitInst(5.0)
+    val a1 = new domain.BinaryInst(Add, new LitInst(1.0), new LitInst(2.0))
+    val lit1 = new LitInst(5.0)
 
     super.testGenerator ++ Java(
       s"""
          |public void test() {
-         |   assertEquals(3.0, ${recurseOn(convert(a1), domain.Eval)});
-         |   assertEquals(5.0, ${recurseOn(convert(lit1), domain.Eval)});
+         |   assertEquals(3.0, ${recurseOn(convert(a1), Eval)});
+         |   assertEquals(5.0, ${recurseOn(convert(lit1), Eval)});
          |}""".stripMargin).methodDeclarations()
   }
 }

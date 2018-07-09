@@ -4,7 +4,7 @@ import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
-import example.expression.domain.MathDomain
+import example.expression.domain.{Evolution, M4i, M5, MathDomain}
 import org.combinators.templating.twirl.Java
 
 /**
@@ -14,10 +14,9 @@ import org.combinators.templating.twirl.Java
   *
   * First operation that has parameter which has Exp-recursive structure
   */
-trait e5 extends AbstractGenerator with TestGenerator with BinaryMethod {
+trait e5 extends Evolution with AbstractGenerator with TestGenerator with BinaryMethod with M4i with M5 {
+  self: e0 with e1 with e2 with e3 with e4 with ex =>
   val domain:MathDomain
-
-  import domain._
 
   abstract override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None): com.github.javaparser.ast.`type`.Type = {
     tpe match {
@@ -26,7 +25,7 @@ trait e5 extends AbstractGenerator with TestGenerator with BinaryMethod {
     }
   }
 
-  abstract override def logic(exp:Atomic)(op:Operation): Seq[Statement] = {
+  abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {
     val subs = subExpressions(exp)
 
     // generate the actual body
@@ -34,7 +33,7 @@ trait e5 extends AbstractGenerator with TestGenerator with BinaryMethod {
       case Equal =>
         val atts:Map[String,Expression] = subExpressions(exp)
         val name:String = op.parameters.head._1
-        val other:TypeRep = op.parameters.head._2
+        val other:domain.TypeRep = op.parameters.head._2
         val oname = Java(name).expression[Expression]()
 
         exp match {
@@ -44,20 +43,20 @@ trait e5 extends AbstractGenerator with TestGenerator with BinaryMethod {
             Java(s"""return $getJavaClass.equals(${recurseOn(oname, GetJavaClass)}) && $call.equals($value);""").statements()
           }
 
-          case ui:Unary => {
+          case ui:domain.Unary => {
             val call:String = atts(domain.base.inner).toString//.substring(2)
             val inner:Expression = Java(s"((${exp.name.capitalize})$name).$call").expression()
 
-            Java(s"""return $getJavaClass.equals(${recurseOn(oname, GetJavaClass)}) && ${recurseOn(subs(base.inner), Equal, inner)};""").statements()
+            Java(s"""return $getJavaClass.equals(${recurseOn(oname, GetJavaClass)}) && ${recurseOn(subs(domain.base.inner), Equal, inner)};""").statements()
           }
 
-          case bi:Binary => {
+          case bi:domain.Binary => {
             val leftCall:String = atts(domain.base.left).toString//.substring(2)
             val rightCall:String = atts(domain.base.right).toString//.substring(2)
             val leftExpr:Expression = Java(s"((${exp.name.capitalize})$name).$leftCall").expression()
             val rightExpr:Expression = Java(s"((${exp.name.capitalize})$name).$rightCall").expression()
 
-            Java(s"""return $getJavaClass.equals(${recurseOn(oname, GetJavaClass)}) && ${recurseOn(subs(base.left), Equal, leftExpr)} && ${recurseOn(subs(base.right), Equal, rightExpr)};""").statements()
+            Java(s"""return $getJavaClass.equals(${recurseOn(oname, GetJavaClass)}) && ${recurseOn(subs(domain.base.left), Equal, leftExpr)} && ${recurseOn(subs(domain.base.right), Equal, rightExpr)};""").statements()
           }
 
           case _ => super.logic(exp)(op)
@@ -68,10 +67,10 @@ trait e5 extends AbstractGenerator with TestGenerator with BinaryMethod {
   }
 
   abstract override def testGenerator: Seq[MethodDeclaration] = {
-    val s1 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
-    val s2 = new BinaryInst(Add, new BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0)),
-                                 new BinaryInst(Add, new LitInst(5.0), new LitInst(6.0)))
-    val s3 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
+    val s1 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
+    val s2 = new domain.BinaryInst(Add, new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0)),
+                                 new domain.BinaryInst(Add, new LitInst(5.0), new LitInst(6.0)))
+    val s3 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
 
       super.testGenerator ++ Java(
       s"""

@@ -17,13 +17,18 @@ trait AlgebraGenerator extends AbstractGenerator with Producer with BinaryMethod
   /**
     * Must eliminate any operation that returns E as value, since Algebra doesn't instantiate the intermediate structures
     */
-  override def apply(model:domain.Model):domain.Model = {
+  override def getProcessedModel:domain.Model = process(getModel)
+
+  /**
+    * Must eliminate any operation that returns E as value, since Algebra doesn't instantiate the intermediate structures
+    */
+  def process(model:domain.Model):domain.Model = {
     if (model.isEmpty) { return model }
 
     // rebuild by filtering out all operations that return Exp.
     domain.Model(model.name, model.types,
       model.ops.filterNot(op => op.isInstanceOf[domain.ProducerOperation]),
-      apply(model.last))
+      process(model.last))
   }
 
   /**

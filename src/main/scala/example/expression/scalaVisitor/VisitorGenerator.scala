@@ -4,7 +4,6 @@ import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.expr.Expression
-import com.github.javaparser.ast.stmt.Statement
 import example.expression.domain.{BaseDomain, ModelDomain}
 import example.expression.j._
 import org.combinators.templating.twirl.Java
@@ -18,7 +17,7 @@ trait VisitorGenerator extends AbstractGenerator with JavaGenerator with DataTyp
   /**
     * For visitor, must flatten entire hierarchy
     */
-  override def apply(model:domain.Model):domain.Model = model.flat()
+  override def getProcessedModel:domain.Model = getModel.flat()
 
   /**
     * Generating a visitor solution requires:

@@ -12,13 +12,16 @@ import org.combinators.templating.twirl.Java
   * Each evolution has opportunity to enhance the code generators.
   */
 trait OOGenerator extends AbstractGenerator with JavaGenerator with DataTypeSubclassGenerator with OperationAsMethodGenerator with BinaryMethod {
+
   val domain:BaseDomain with ModelDomain
+
+  def getModel:domain.Model
 
   /**
     * Process the model as necessary. One could either (a) remove data types or operations that are non-sensical
     * for the given approach; or (b) flatten the hierarchy.
     */
-  override def apply(model:domain.Model):domain.Model = model.flat()
+  override def getProcessedModel:domain.Model = getModel.flat()
 
   /**
     * Generating a straight OO solution requires:

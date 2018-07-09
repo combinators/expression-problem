@@ -1,5 +1,7 @@
 package example.expression.domain
 
+
+
 /** Foundational trait for all EP domains. */
 trait BaseDomain {
 

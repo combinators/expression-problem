@@ -6,14 +6,16 @@ import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
 import example.expression.domain.{BaseDomain, ModelDomain}
-import example.expression.j.{AbstractGenerator, TestGeneratorWithModel}
+import example.expression.j.{AbstractGenerator, TestGenerator}
 import org.combinators.templating.twirl.Java
 
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait AlgebraTestGenerator extends TestGeneratorWithModel with AbstractGenerator {
+trait AlgebraTestGenerator extends TestGenerator with AbstractGenerator {
   val domain: BaseDomain with ModelDomain
+
+  def getModel:domain.Model
 
   /** Convert a test instance into a Java Expression for instantiating that instance. */
   override def convert(inst: domain.AtomicInst): Expression = {

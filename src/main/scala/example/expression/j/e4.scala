@@ -4,7 +4,7 @@ import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
-import example.expression.domain.MathDomain
+import example.expression.domain._
 import org.combinators.templating.twirl.Java
 
 /**
@@ -12,14 +12,13 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-trait e4 extends AbstractGenerator with TestGeneratorWithModel with Producer {
+trait e4 extends Evolution with AbstractGenerator with TestGeneratorWithModel with Producer with M0 with M1 with M2 with M3 with M4 {
+  self:e0 with e1 with e2 with e3 =>
   val domain:MathDomain
-
-  def getModel:domain.Model
 
   abstract override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
-      case el:domain.List => Java(s"java.util.List<${typeConverter(el.generic)}>").tpe()
+      case el:List => Java(s"java.util.List<${typeConverter(el.generic)}>").tpe()
       case _ => super.typeConverter(tpe, covariantReplacement)
     }
   }
@@ -33,81 +32,81 @@ trait e4 extends AbstractGenerator with TestGeneratorWithModel with Producer {
     // generate the actual body
     op match {
         // Simplify only works for solutions that instantiate expression instances
-      case domain.Simplify =>
+      case Simplify =>
 
         exp match {
-          case domain.Lit => Java(s"return ${inst(domain.Lit)(op)(subs(domain.attributes.value))};").statements()
-          case domain.Add => Java(s"""|double leftVal = ${recurseOn(subs(domain.base.left), domain.Eval)};
-                               |double rightVal = ${recurseOn(subs(domain.base.right), domain.Eval)};
+          case Lit => Java(s"return ${inst(Lit)(op)(subs(domain.attributes.value))};").statements()
+          case Add => Java(s"""|double leftVal = ${recurseOn(subs(domain.base.left), Eval)};
+                               |double rightVal = ${recurseOn(subs(domain.base.right), Eval)};
                                |if ((leftVal == 0 && rightVal == 0) || (leftVal + rightVal == 0)) {
-                               |  return ${inst(domain.Lit)(op)(zero)};
+                               |  return ${inst(Lit)(op)(zero)};
                                |} else if (leftVal == 0) {
-                               |  return ${recurseOn(subs(domain.base.right), domain.Simplify)};
+                               |  return ${recurseOn(subs(domain.base.right), Simplify)};
                                |} else if (rightVal == 0) {
-                               |  return ${recurseOn(subs(domain.base.left), domain.Simplify)};
+                               |  return ${recurseOn(subs(domain.base.left), Simplify)};
                                |} else {
-                               |  return ${inst(domain.Add)(op)(recurseOn(subs(domain.base.left), domain.Simplify),recurseOn(subs(domain.base.right), domain.Simplify))};
+                               |  return ${inst(Add)(op)(recurseOn(subs(domain.base.left), Simplify),recurseOn(subs(domain.base.right), Simplify))};
                                |}""".stripMargin).statements()
-          case domain.Sub => Java(s"""
-                              |if (${recurseOn(subs(domain.base.left), domain.Eval)} == ${recurseOn(subs(domain.base.right), domain.Eval)}) {
-                              |  return ${inst(domain.Lit)(op)(zero)};
+          case Sub => Java(s"""
+                              |if (${recurseOn(subs(domain.base.left), Eval)} == ${recurseOn(subs(domain.base.right), Eval)}) {
+                              |  return ${inst(Lit)(op)(zero)};
                               |} else {
-                                return ${inst(domain.Sub)(op)(recurseOn(subs(domain.base.left), domain.Simplify),recurseOn(subs(domain.base.right), domain.Simplify))};
+                                return ${inst(Sub)(op)(recurseOn(subs(domain.base.left), Simplify),recurseOn(subs(domain.base.right), Simplify))};
                               |}
                               |""".stripMargin).statements()
-          case domain.Mult => Java(s"""
-                               |double leftVal = ${recurseOn(subs(domain.base.left), domain.Eval)};
-                               |double rightVal = ${recurseOn(subs(domain.base.right), domain.Eval)};
+          case Mult => Java(s"""
+                               |double leftVal = ${recurseOn(subs(domain.base.left), Eval)};
+                               |double rightVal = ${recurseOn(subs(domain.base.right), Eval)};
                                |if (leftVal == 0 || rightVal == 0) {
-                               |  return ${inst(domain.Lit)(op)(zero)};
+                               |  return ${inst(Lit)(op)(zero)};
                                |} else if (leftVal == 1) {
-                               |  return ${recurseOn(subs(domain.base.right), domain.Simplify)};
+                               |  return ${recurseOn(subs(domain.base.right), Simplify)};
                                |} else if (rightVal == 1) {
-                               |  return ${recurseOn(subs(domain.base.left), domain.Simplify)};
+                               |  return ${recurseOn(subs(domain.base.left), Simplify)};
                                |} else {
-                                 return ${inst(domain.Mult)(op)(recurseOn(subs(domain.base.left), domain.Simplify),recurseOn(subs(domain.base.right), domain.Simplify))};
+                                 return ${inst(Mult)(op)(recurseOn(subs(domain.base.left), Simplify),recurseOn(subs(domain.base.right), Simplify))};
                                |}
                                |""".stripMargin).statements()
-          case domain.Divd => Java(s"""
-                               |double leftVal = ${recurseOn(subs(domain.base.left), domain.Eval)};
-                               |double rightVal = ${recurseOn(subs(domain.base.right), domain.Eval)};
+          case Divd => Java(s"""
+                               |double leftVal = ${recurseOn(subs(domain.base.left), Eval)};
+                               |double rightVal = ${recurseOn(subs(domain.base.right), Eval)};
                                |if (leftVal == 0) {
-                               |  return ${inst(domain.Lit)(op)(zero)};
+                               |  return ${inst(Lit)(op)(zero)};
                                |} else if (rightVal == 1) {
-                               |  return ${recurseOn(subs(domain.base.left), domain.Simplify)};
+                               |  return ${recurseOn(subs(domain.base.left), Simplify)};
                                |} else if (leftVal == rightVal) {
-                               |  return ${inst(domain.Lit)(op)(one)};
+                               |  return ${inst(Lit)(op)(one)};
                                |} else if (leftVal == -rightVal) {
-                               |  return ${inst(domain.Lit)(op)(negOne)};
+                               |  return ${inst(Lit)(op)(negOne)};
                                |} else {
-                                 return ${inst(domain.Divd)(op)(recurseOn(subs(domain.base.left), domain.Simplify),recurseOn(subs(domain.base.right), domain.Simplify))};
+                                 return ${inst(Divd)(op)(recurseOn(subs(domain.base.left), Simplify),recurseOn(subs(domain.base.right), Simplify))};
                                |}
                                |""".stripMargin).statements()
-          case domain.Neg => Java(s"""
-                              |if (${recurseOn(subs(domain.base.inner), domain.Eval)} == 0) {
-                              |  return ${inst(domain.Lit)(op)(zero)};
+          case Neg => Java(s"""
+                              |if (${recurseOn(subs(domain.base.inner), Eval)} == 0) {
+                              |  return ${inst(Lit)(op)(zero)};
                               |} else {
-                              |  return ${inst(domain.Neg)(op)(recurseOn(subs(domain.base.inner), domain.Simplify))};
+                              |  return ${inst(Neg)(op)(recurseOn(subs(domain.base.inner), Simplify))};
                               |}""".stripMargin).statements()
           case _ => super.logic(exp)(op)
         }
 
-      case domain.Collect =>
+      case Collect =>
         exp match {
           case _:domain.Binary => Java(
-            s"""|${typeConverter(domain.List(domain.Double))} list = ${recurseOn(subs(domain.base.left), domain.Collect)};
-                |list.addAll(${recurseOn(subs(domain.base.right), domain.Collect)});
+            s"""|${typeConverter(List(Double))} list = ${recurseOn(subs(domain.base.left), Collect)};
+                |list.addAll(${recurseOn(subs(domain.base.right), Collect)});
                 |return list;
                 |""".stripMargin).statements()
 
           case _:domain.Unary  => Java(
-            s"""|${typeConverter(domain.List(domain.Double))} list = new java.util.ArrayList<Double>();
-                |list.addAll(${recurseOn(subs(domain.base.inner), domain.Collect)});
+            s"""|${typeConverter(List(Double))} list = new java.util.ArrayList<Double>();
+                |list.addAll(${recurseOn(subs(domain.base.inner), Collect)});
                 |return list;
                 |""".stripMargin).statements()
 
           case _:domain.Atomic => Java(
-            s"""|${typeConverter(domain.List(domain.Double))} list = new java.util.ArrayList<Double>();
+            s"""|${typeConverter(List(Double))} list = new java.util.ArrayList<Double>();
                 |list.add(${subs(domain.attributes.value)});
                 |return list;
                 |""".stripMargin).statements()
@@ -122,18 +121,18 @@ trait e4 extends AbstractGenerator with TestGeneratorWithModel with Producer {
   abstract override def testGenerator: Seq[MethodDeclaration] = {
 
     // (5/7) / (7-(2*3) --> just (5/7)
-    val mult2 = new domain.BinaryInst(domain.Mult, new domain.BinaryInst (domain.Divd, new domain.LitInst(5.0), new domain.LitInst(2.0)), new domain.LitInst(4.0))
-    val d1 = new domain.BinaryInst(domain.Divd, new domain.LitInst(5.0), new domain.LitInst(7.0))
-    val m1 = new domain.BinaryInst(domain.Mult, new domain.LitInst(2.0), new domain.LitInst(3.0))
-    val s1 = new domain.BinaryInst(domain.Sub, new domain.LitInst(7.0), m1)
-    val d2 = new domain.BinaryInst(domain.Divd, d1, s1)
+    val mult2 = new domain.BinaryInst(Mult, new domain.BinaryInst (Divd, new LitInst(5.0), new LitInst(2.0)), new LitInst(4.0))
+    val d1 = new domain.BinaryInst(Divd, new LitInst(5.0), new LitInst(7.0))
+    val m1 = new domain.BinaryInst(Mult, new LitInst(2.0), new LitInst(3.0))
+    val s1 = new domain.BinaryInst(Sub, new LitInst(7.0), m1)
+    val d2 = new domain.BinaryInst(Divd, d1, s1)
 
     // could split up collect as well.
     super.testGenerator ++ {
-      val simplifyTests:String  = if (getModel.supports(domain.Simplify)) {
+      val simplifyTests:String  = if (getModel.supports(Simplify)) {
         s"""
-           |assertEquals("((5.0/2.0)*4.0)", ${recurseOn(convert(mult2), domain.PrettyP)});
-           |assertEquals (${recurseOn(convert(d1), domain.PrettyP)}, ${recurseOn(recurseOn(convert(d2), domain.Simplify), domain.PrettyP)});
+           |assertEquals("((5.0/2.0)*4.0)", ${recurseOn(convert(mult2), PrettyP)});
+           |assertEquals (${recurseOn(convert(d1), PrettyP)}, ${recurseOn(recurseOn(convert(d2), Simplify), PrettyP)});
            |
          """.stripMargin
       } else { "" }
@@ -144,8 +143,8 @@ trait e4 extends AbstractGenerator with TestGeneratorWithModel with Producer {
            |
            |   $simplifyTests
            |   // Handle collect checks
-           |   ${typeConverter(domain.List(domain.Double))} list1 = ${recurseOn(convert(d2), domain.Collect)};
-           |   ${typeConverter(domain.List(domain.Double))} result = new java.util.ArrayList<Double>();
+           |   ${typeConverter(List(Double))} list1 = ${recurseOn(convert(d2), Collect)};
+           |   ${typeConverter(List(Double))} result = new java.util.ArrayList<Double>();
            |   result.add(5.0);
            |   result.add(7.0);
            |   result.add(7.0);

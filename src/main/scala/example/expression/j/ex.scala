@@ -3,7 +3,7 @@ package example.expression.j
 import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.stmt.Statement
-import example.expression.domain.MathDomain
+import example.expression.domain.{Evolution, MathDomain, M4i}
 import org.combinators.templating.twirl.Java
 
 /**
@@ -11,9 +11,9 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-trait ex extends AbstractGenerator with TestGenerator with BinaryMethod {
+trait ex extends Evolution with AbstractGenerator with TestGenerator with BinaryMethod with M4i {
+  self: e0 with e1 with e2 with e3 with e4 =>
   val domain:MathDomain
-  import domain._
 
   abstract override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
@@ -22,7 +22,7 @@ trait ex extends AbstractGenerator with TestGenerator with BinaryMethod {
     }
   }
 
-  abstract override def logic(exp:Atomic)(op:Operation): Seq[Statement] = {
+  abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {
     val subs = subExpressions(exp)
 
     // generate the actual body
@@ -35,8 +35,8 @@ trait ex extends AbstractGenerator with TestGenerator with BinaryMethod {
   }
 
   abstract override def testGenerator: Seq[MethodDeclaration] = {
-    val s1 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
-    val s2 = new BinaryInst(Sub, new LitInst(9.0), new LitInst(112.0))
+    val s1 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
+    val s2 = new domain.BinaryInst(Sub, new LitInst(9.0), new LitInst(112.0))
 
     super.testGenerator ++ Java(
       s"""

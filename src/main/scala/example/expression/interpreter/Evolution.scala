@@ -1,4 +1,4 @@
-package example.expression.interpreter
+package example.expression.interpreter /*DD:LD:AD*/
 
 import com.github.javaparser.ast.CompilationUnit
 import example.expression.domain.{MathDomain, WithDomain, companionMathDomain}
@@ -14,10 +14,8 @@ import shared.compilation.CodeGenerationController
 // TCS (82) 2003
 // http://www.cs.pomona.edu/~kim/ftp/WOOD.pdf
 
-
 abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-  extends CodeGenerationController[CompilationUnit](web, app)
-{
+  extends CodeGenerationController[CompilationUnit](web, app) {
   val gen:WithDomain[MathDomain] with InterpreterGenerator with InterpreterTestGenerator
 
   lazy val processed:gen.domain.Model = gen.getProcessedModel   // process model as necessary

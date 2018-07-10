@@ -1,4 +1,4 @@
-package example.expression.interpreter
+package example.expression.interpreter  /*DI:LD:AD*/
 
 import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
@@ -10,9 +10,7 @@ import org.combinators.templating.twirl.Java
 
 trait InterpreterGenerator extends  AbstractGenerator with JavaGenerator with DataTypeSubclassGenerator with OperationAsMethodGenerator with BinaryMethod with Producer {
 
-  /**
-    * Supports all operations
-    */
+  /** Supports all operations */
    override def getProcessedModel:domain.Model = getModel
 
   /**
@@ -59,7 +57,7 @@ trait InterpreterGenerator extends  AbstractGenerator with JavaGenerator with Da
   }
 
   /** Directly access local method, one per operation, with a parameter. */
-  override def recurseOn(expr:Expression, op:domain.Operation, params:Expression*) : Expression = {
+  override def dispatch(expr:Expression, op:domain.Operation, params:Expression*) : Expression = {
     val args:String = params.mkString(",")
     Java(s"""$expr.${op.name}($args)""").expression()
   }
@@ -98,20 +96,6 @@ trait InterpreterGenerator extends  AbstractGenerator with JavaGenerator with Da
   override def generateExp(model:domain.Model, exp:domain.Atomic) : CompilationUnit = {
     val name = Java(s"${exp.name}").simpleName()
     val baseInterface:Option[Type] = Some(Java(baseInterfaceName(model.lastModelWithOperation())).tpe())
-
-//    val atts:Seq[FieldDeclaration] = exp.attributes.flatMap(att => Java(s"private ${typeConverter(att.tpe, baseInterface)} ${att.name};").fieldDeclarations())
-
-//    val params:Seq[String] = exp.attributes.map(att => s"${typeConverter(att.tpe, baseInterface)} ${att.name}")
-
-//    val getters: Seq[MethodDeclaration] =
-//      exp.attributes.flatMap(att => Java(s"""|public ${typeConverter(att.tpe, baseInterface)} get${att.name.capitalize}() {
-//                                             |    return this.${att.name};
-//                                             |}""".stripMargin).methodDeclarations())
-//    val cons:Seq[Statement] = exp.attributes.flatMap(att => Java(s"  this.${att.name} = ${att.name};").statements())
-
-//    val constructor = Java(s"""|public $name (${params.mkString(",")}) {
-//                               |   ${cons.mkString("\n")}
-//                               |}""".stripMargin).constructors().head
 
     // provide method declarations for all past operations (including self). But if we extend, can't we stop at last op?
     val allOps:Seq[domain.Operation] = model.pastOperations()
@@ -314,8 +298,4 @@ trait InterpreterGenerator extends  AbstractGenerator with JavaGenerator with Da
                 |}""".stripMargin).compilationUnit()
       })
   }
-
-
 }
-
-

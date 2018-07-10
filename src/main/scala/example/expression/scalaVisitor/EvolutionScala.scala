@@ -1,4 +1,4 @@
-package example.expression.scalaVisitor
+package example.expression.scalaVisitor  /*DD:LD:AD*/
 
 import com.github.javaparser.ast.CompilationUnit
 import example.expression.domain.{MathDomain, WithDomain, companionMathDomain}
@@ -10,8 +10,7 @@ import play.api.inject.ApplicationLifecycle
 import shared.compilation.CodeGenerationController
 
 abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-  extends CodeGenerationController[CompilationUnit](web, app)
-{
+  extends CodeGenerationController[CompilationUnit](web, app) {
   val gen:WithDomain[MathDomain] with VisitorGenerator with TestGenerator
 
   lazy val processed:gen.domain.Model = gen.getProcessedModel   // process model as necessary
@@ -45,7 +44,7 @@ class M3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
 class M4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
-  override val gen = new WithDomain(companionMathDomain) with VisitorGenerator with TestGeneratorWithModel with e0 with e1 with e2 with e3 with e4
+  override val gen = new WithDomain(companionMathDomain) with VisitorGenerator with TestGenerator with e0 with e1 with e2 with e3 with e4
 }
 
 class M5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)

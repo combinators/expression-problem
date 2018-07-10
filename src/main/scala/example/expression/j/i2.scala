@@ -1,4 +1,4 @@
-package example.expression.j
+package example.expression.j  /*DD:LD:AI*/
 
 import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.MethodDeclaration
@@ -34,12 +34,12 @@ trait i2 extends  Evolution with AbstractGenerator with TestGenerator with I2 {
         val heightPlusOne:Expression = Java(s"${independent.height} + 1").expression[Expression]()
         exp match {
           case _:domain.Binary => Java(
-            s"""|return Math.max(${recurseOn(subs(domain.base.left), Height, heightPlusOne)},
-                |                ${recurseOn(subs(domain.base.right), Height, heightPlusOne)});
+            s"""|return Math.max(${dispatch(subs(domain.base.left), Height, heightPlusOne)},
+                |                ${dispatch(subs(domain.base.right), Height, heightPlusOne)});
                 |""".stripMargin).statements()
 
           case _:domain.Unary =>
-            Java(s"return ${recurseOn(subs(domain.base.inner), Height, heightPlusOne)};").statements()
+            Java(s"return ${dispatch(subs(domain.base.inner), Height, heightPlusOne)};").statements()
 
           case _:domain.Atomic => Java(s"return ${independent.height};").statements()
 
@@ -62,8 +62,8 @@ trait i2 extends  Evolution with AbstractGenerator with TestGenerator with I2 {
     super.testGenerator ++ Java(
       s"""
          |public void test() {
-         |   assertEquals(new Integer(1), ${recurseOn(convert(i1), Height, zero)});
-         |   assertEquals(new Integer(3), ${recurseOn(convert(a3), Height, zero)});
+         |   assertEquals(new Integer(1), ${dispatch(convert(i1), Height, zero)});
+         |   assertEquals(new Integer(3), ${dispatch(convert(a3), Height, zero)});
          |
          |}""".stripMargin).methodDeclarations()
   }

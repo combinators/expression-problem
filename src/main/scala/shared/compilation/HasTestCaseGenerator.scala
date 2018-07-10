@@ -35,5 +35,4 @@ trait HasTestCaseGenerator {
     // skip for lack of anything better.
     Java(s"// skip${op.name} ${identifier.toString}").statements()
   }
-
 }

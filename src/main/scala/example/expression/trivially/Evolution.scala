@@ -1,4 +1,4 @@
-package example.expression.trivially
+package example.expression.trivially  /*DD:LD:AD*/
 
 import com.github.javaparser.ast.CompilationUnit
 import example.expression.domain.{MathDomain, WithDomain, companionMathDomain}
@@ -45,12 +45,12 @@ class M3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
 class M4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
-  override val gen = new WithDomain(companionMathDomain) with TriviallyGenerator with TestGeneratorWithModel with e0 with e1 with e2 with e3 with e4
+  override val gen = new WithDomain(companionMathDomain) with TriviallyGenerator with TestGenerator with e0 with e1 with e2 with e3 with e4
 }
 
 class M5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
-  override val gen = new WithDomain(companionMathDomain) with TriviallyGenerator with TestGeneratorWithModel with e0 with e1 with e2 with e3 with e4 with ex with e5
+  override val gen = new WithDomain(companionMathDomain) with TriviallyGenerator with TestGenerator with e0 with e1 with e2 with e3 with e4 with ex with e5
 }
 
 class C1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)

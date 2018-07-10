@@ -1,4 +1,4 @@
-package example.expression.j
+package example.expression.j  /*DD:LD:AI*/
 
 import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.MethodDeclaration
@@ -15,15 +15,23 @@ import org.combinators.templating.twirl.Java
 trait s0 extends Evolution with AbstractGenerator with TestGenerator {
   val domain:ShapeDomain
 
+  // standard attributes for domain. As new ones are defined, place in respective traits
+  val side:String   = "side"
+  val radius:String = "radius"
+  val trans:String  = "trans"
+  val shape:String  = "shape"
+  val point:String  = "point"
+  val pct:String    = "pct"
+
   case object Point extends domain.TypeRep
   case object Double extends domain.TypeRep
   case object Boolean extends domain.TypeRep
 
-  case object Square extends domain.Atomic("Square", Seq(domain.Attribute(domain.attributes.side, Double)))
-  case object Circle extends domain.Atomic("Circle", Seq(domain.Attribute(domain.attributes.radius, Double)))
+  case object Square extends domain.Atomic("Square", Seq(domain.Attribute(side, Double)))
+  case object Circle extends domain.Atomic("Circle", Seq(domain.Attribute(radius, Double)))
   case object Translate extends domain.Atomic("Translate",
-    Seq(domain.Attribute(domain.attributes.trans, Point), domain.Attribute(domain.attributes.shape, domain.Shape)))
-  case object ContainsPt extends domain.Operation("containsPt", Some(Boolean), Seq((domain.attributes.point, Point)))
+    Seq(domain.Attribute(trans, Point), domain.Attribute(shape, domain.Shape)))
+  case object ContainsPt extends domain.Operation("containsPt", Some(Boolean), Seq((point, Point)))
   val s0 = domain.Model("s0", Seq(Square,Circle,Translate), Seq(ContainsPt))
 
   class SquareInst(d:Double) extends domain.AtomicInst(Square, Some(d))
@@ -53,13 +61,13 @@ trait s0 extends Evolution with AbstractGenerator with TestGenerator {
           case Circle =>
             Java(
               s"""
-                 |return Math.sqrt(point.x*point.x + point.y*point.y) <= ${subs(domain.attributes.radius)};
+                 |return Math.sqrt(point.x*point.x + point.y*point.y) <= ${subs(radius)};
                """.stripMargin).statements()
 
           case Square =>
             Java(
               s"""
-                 |return (Math.abs(point.x) <= ${subs(domain.attributes.side)}/2 && Math.abs(point.y) <= ${subs(domain.attributes.side)}/2);
+                 |return (Math.abs(point.x) <= ${subs(side)}/2 && Math.abs(point.y) <= ${subs(side)}/2);
                """.stripMargin).statements()
 
 
@@ -70,8 +78,8 @@ trait s0 extends Evolution with AbstractGenerator with TestGenerator {
             Java(
               s"""
                  |// first adjust
-                 |java.awt.geom.Point2D.Double t = new java.awt.geom.Point2D.Double(point.x - ${subs(domain.attributes.trans)}.x, point.y - ${subs(domain.attributes.trans)}.y);
-                 |return ${recurseOn(subs(domain.attributes.shape), ContainsPt, Java("t").expression[Expression]())};
+                 |java.awt.geom.Point2D.Double t = new java.awt.geom.Point2D.Double(point.x - ${subs(trans)}.x, point.y - ${subs(trans)}.y);
+                 |return ${dispatch(subs(shape), ContainsPt, Java("t").expression[Expression]())};
                  |
                """.stripMargin).statements()
           }
@@ -109,12 +117,12 @@ trait s0 extends Evolution with AbstractGenerator with TestGenerator {
     super.testGenerator ++ Java(
       s"""
          |public void test() {
-         |   assertTrue(${recurseOn(convert(s1), ContainsPt, p1)});
-         |   assertFalse(${recurseOn(convert(c1), ContainsPt, p2)});
+         |   assertTrue(${dispatch(convert(s1), ContainsPt, p1)});
+         |   assertFalse(${dispatch(convert(c1), ContainsPt, p2)});
          |
-         |   assertFalse(${recurseOn(convert(t1), ContainsPt, p1)});
-         |   assertFalse(${recurseOn(convert(t2), ContainsPt, p1)});
-         |   assertTrue(${recurseOn(convert(t2), ContainsPt, p2)});
+         |   assertFalse(${dispatch(convert(t1), ContainsPt, p1)});
+         |   assertFalse(${dispatch(convert(t2), ContainsPt, p1)});
+         |   assertTrue(${dispatch(convert(t2), ContainsPt, p2)});
          |
          |}""".stripMargin).methodDeclarations()
   }

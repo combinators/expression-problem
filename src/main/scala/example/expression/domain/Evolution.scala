@@ -1,13 +1,11 @@
-package example.expression.domain
+package example.expression.domain  /*DI:LI:AI*/
 
-// + means something special in SCala
-class WithDomain[+E <: BaseDomain](val domain:E) {
-}
+class WithDomain[+E <: BaseDomain](val domain:E) { }   // a covariant class in Scala
 
+/**
+  * Every individual evolution extends this Trait to have access to the domain.Model.
+  */
 trait Evolution {
-
-  /** Every evolution has associated domain. */
-  val domain: ModelDomain
-
+  val domain: ModelDomain                 // Every evolution has associated domain.
   def getModel: domain.Model
 }

@@ -1,10 +1,10 @@
-package example.expression.j
+package example.expression.j  /*DD:LD:AI*/
 
 import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
-import example.expression.domain.{Evolution, M4i, M5, MathDomain}
+import example.expression.domain._
 import org.combinators.templating.twirl.Java
 
 /**
@@ -14,7 +14,7 @@ import org.combinators.templating.twirl.Java
   *
   * First operation that has parameter which has Exp-recursive structure
   */
-trait e5 extends Evolution with AbstractGenerator with TestGenerator with BinaryMethod with M4i with M5 {
+trait e5 extends Evolution with AbstractGenerator with TestGenerator with BinaryMethod with M0 with M4i with M5 {
   self: e0 with e1 with e2 with e3 with e4 with ex =>
   val domain:MathDomain
 
@@ -38,16 +38,16 @@ trait e5 extends Evolution with AbstractGenerator with TestGenerator with Binary
 
         exp match {
           case Lit => {
-            val call:String = atts(domain.attributes.value).toString
+            val call:String = atts(litValue).toString
             val value:Expression = Java(s"((${exp.name.capitalize})$name).$call").expression()
-            Java(s"""return $getJavaClass.equals(${recurseOn(oname, GetJavaClass)}) && $call.equals($value);""").statements()
+            Java(s"""return $getJavaClass.equals(${dispatch(oname, GetJavaClass)}) && $call.equals($value);""").statements()
           }
 
           case ui:domain.Unary => {
             val call:String = atts(domain.base.inner).toString//.substring(2)
             val inner:Expression = Java(s"((${exp.name.capitalize})$name).$call").expression()
 
-            Java(s"""return $getJavaClass.equals(${recurseOn(oname, GetJavaClass)}) && ${recurseOn(subs(domain.base.inner), Equal, inner)};""").statements()
+            Java(s"""return $getJavaClass.equals(${dispatch(oname, GetJavaClass)}) && ${dispatch(subs(domain.base.inner), Equal, inner)};""").statements()
           }
 
           case bi:domain.Binary => {
@@ -56,7 +56,7 @@ trait e5 extends Evolution with AbstractGenerator with TestGenerator with Binary
             val leftExpr:Expression = Java(s"((${exp.name.capitalize})$name).$leftCall").expression()
             val rightExpr:Expression = Java(s"((${exp.name.capitalize})$name).$rightCall").expression()
 
-            Java(s"""return $getJavaClass.equals(${recurseOn(oname, GetJavaClass)}) && ${recurseOn(subs(domain.base.left), Equal, leftExpr)} && ${recurseOn(subs(domain.base.right), Equal, rightExpr)};""").statements()
+            Java(s"""return $getJavaClass.equals(${dispatch(oname, GetJavaClass)}) && ${dispatch(subs(domain.base.left), Equal, leftExpr)} && ${dispatch(subs(domain.base.right), Equal, rightExpr)};""").statements()
           }
 
           case _ => super.logic(exp)(op)
@@ -75,8 +75,8 @@ trait e5 extends Evolution with AbstractGenerator with TestGenerator with Binary
       super.testGenerator ++ Java(
       s"""
          |public void test() {
-         |   assertFalse(${recurseOn(convert(s1), Equal, convert(s2))});
-         |   assertTrue(${recurseOn(convert(s1), Equal, convert(s3))});
+         |   assertFalse(${dispatch(convert(s1), Equal, convert(s2))});
+         |   assertTrue(${dispatch(convert(s1), Equal, convert(s3))});
          |}""".stripMargin).methodDeclarations()
   }
 }

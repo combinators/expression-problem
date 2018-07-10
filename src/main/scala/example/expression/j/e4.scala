@@ -1,4 +1,4 @@
-package example.expression.j
+package example.expression.j  /*DD:LD:AI*/
 
 import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.MethodDeclaration
@@ -12,7 +12,7 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-trait e4 extends Evolution with AbstractGenerator with TestGeneratorWithModel with Producer with M0 with M1 with M2 with M3 with M4 {
+trait e4 extends Evolution with AbstractGenerator with TestGenerator with Producer with M0 with M1 with M2 with M3 with M4 {
   self:e0 with e1 with e2 with e3 =>
   val domain:MathDomain
 
@@ -35,58 +35,58 @@ trait e4 extends Evolution with AbstractGenerator with TestGeneratorWithModel wi
       case Simplify =>
 
         exp match {
-          case Lit => Java(s"return ${inst(Lit)(op)(subs(domain.attributes.value))};").statements()
-          case Add => Java(s"""|double leftVal = ${recurseOn(subs(domain.base.left), Eval)};
-                               |double rightVal = ${recurseOn(subs(domain.base.right), Eval)};
+          case Lit => Java(s"return ${inst(Lit)(op)(subs(litValue))};").statements()
+          case Add => Java(s"""|double leftVal = ${dispatch(subs(domain.base.left), Eval)};
+                               |double rightVal = ${dispatch(subs(domain.base.right), Eval)};
                                |if ((leftVal == 0 && rightVal == 0) || (leftVal + rightVal == 0)) {
                                |  return ${inst(Lit)(op)(zero)};
                                |} else if (leftVal == 0) {
-                               |  return ${recurseOn(subs(domain.base.right), Simplify)};
+                               |  return ${dispatch(subs(domain.base.right), Simplify)};
                                |} else if (rightVal == 0) {
-                               |  return ${recurseOn(subs(domain.base.left), Simplify)};
+                               |  return ${dispatch(subs(domain.base.left), Simplify)};
                                |} else {
-                               |  return ${inst(Add)(op)(recurseOn(subs(domain.base.left), Simplify),recurseOn(subs(domain.base.right), Simplify))};
+                               |  return ${inst(Add)(op)(dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))};
                                |}""".stripMargin).statements()
           case Sub => Java(s"""
-                              |if (${recurseOn(subs(domain.base.left), Eval)} == ${recurseOn(subs(domain.base.right), Eval)}) {
+                              |if (${dispatch(subs(domain.base.left), Eval)} == ${dispatch(subs(domain.base.right), Eval)}) {
                               |  return ${inst(Lit)(op)(zero)};
                               |} else {
-                                return ${inst(Sub)(op)(recurseOn(subs(domain.base.left), Simplify),recurseOn(subs(domain.base.right), Simplify))};
+                                return ${inst(Sub)(op)(dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))};
                               |}
                               |""".stripMargin).statements()
           case Mult => Java(s"""
-                               |double leftVal = ${recurseOn(subs(domain.base.left), Eval)};
-                               |double rightVal = ${recurseOn(subs(domain.base.right), Eval)};
+                               |double leftVal = ${dispatch(subs(domain.base.left), Eval)};
+                               |double rightVal = ${dispatch(subs(domain.base.right), Eval)};
                                |if (leftVal == 0 || rightVal == 0) {
                                |  return ${inst(Lit)(op)(zero)};
                                |} else if (leftVal == 1) {
-                               |  return ${recurseOn(subs(domain.base.right), Simplify)};
+                               |  return ${dispatch(subs(domain.base.right), Simplify)};
                                |} else if (rightVal == 1) {
-                               |  return ${recurseOn(subs(domain.base.left), Simplify)};
+                               |  return ${dispatch(subs(domain.base.left), Simplify)};
                                |} else {
-                                 return ${inst(Mult)(op)(recurseOn(subs(domain.base.left), Simplify),recurseOn(subs(domain.base.right), Simplify))};
+                                 return ${inst(Mult)(op)(dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))};
                                |}
                                |""".stripMargin).statements()
           case Divd => Java(s"""
-                               |double leftVal = ${recurseOn(subs(domain.base.left), Eval)};
-                               |double rightVal = ${recurseOn(subs(domain.base.right), Eval)};
+                               |double leftVal = ${dispatch(subs(domain.base.left), Eval)};
+                               |double rightVal = ${dispatch(subs(domain.base.right), Eval)};
                                |if (leftVal == 0) {
                                |  return ${inst(Lit)(op)(zero)};
                                |} else if (rightVal == 1) {
-                               |  return ${recurseOn(subs(domain.base.left), Simplify)};
+                               |  return ${dispatch(subs(domain.base.left), Simplify)};
                                |} else if (leftVal == rightVal) {
                                |  return ${inst(Lit)(op)(one)};
                                |} else if (leftVal == -rightVal) {
                                |  return ${inst(Lit)(op)(negOne)};
                                |} else {
-                                 return ${inst(Divd)(op)(recurseOn(subs(domain.base.left), Simplify),recurseOn(subs(domain.base.right), Simplify))};
+                                 return ${inst(Divd)(op)(dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))};
                                |}
                                |""".stripMargin).statements()
           case Neg => Java(s"""
-                              |if (${recurseOn(subs(domain.base.inner), Eval)} == 0) {
+                              |if (${dispatch(subs(domain.base.inner), Eval)} == 0) {
                               |  return ${inst(Lit)(op)(zero)};
                               |} else {
-                              |  return ${inst(Neg)(op)(recurseOn(subs(domain.base.inner), Simplify))};
+                              |  return ${inst(Neg)(op)(dispatch(subs(domain.base.inner), Simplify))};
                               |}""".stripMargin).statements()
           case _ => super.logic(exp)(op)
         }
@@ -94,20 +94,20 @@ trait e4 extends Evolution with AbstractGenerator with TestGeneratorWithModel wi
       case Collect =>
         exp match {
           case _:domain.Binary => Java(
-            s"""|${typeConverter(List(Double))} list = ${recurseOn(subs(domain.base.left), Collect)};
-                |list.addAll(${recurseOn(subs(domain.base.right), Collect)});
+            s"""|${typeConverter(List(Double))} list = ${dispatch(subs(domain.base.left), Collect)};
+                |list.addAll(${dispatch(subs(domain.base.right), Collect)});
                 |return list;
                 |""".stripMargin).statements()
 
           case _:domain.Unary  => Java(
             s"""|${typeConverter(List(Double))} list = new java.util.ArrayList<Double>();
-                |list.addAll(${recurseOn(subs(domain.base.inner), Collect)});
+                |list.addAll(${dispatch(subs(domain.base.inner), Collect)});
                 |return list;
                 |""".stripMargin).statements()
 
           case _:domain.Atomic => Java(
             s"""|${typeConverter(List(Double))} list = new java.util.ArrayList<Double>();
-                |list.add(${subs(domain.attributes.value)});
+                |list.add(${subs(litValue)});
                 |return list;
                 |""".stripMargin).statements()
 
@@ -131,8 +131,8 @@ trait e4 extends Evolution with AbstractGenerator with TestGeneratorWithModel wi
     super.testGenerator ++ {
       val simplifyTests:String  = if (getModel.supports(Simplify)) {
         s"""
-           |assertEquals("((5.0/2.0)*4.0)", ${recurseOn(convert(mult2), PrettyP)});
-           |assertEquals (${recurseOn(convert(d1), PrettyP)}, ${recurseOn(recurseOn(convert(d2), Simplify), PrettyP)});
+           |assertEquals("((5.0/2.0)*4.0)", ${dispatch(convert(mult2), PrettyP)});
+           |assertEquals (${dispatch(convert(d1), PrettyP)}, ${dispatch(dispatch(convert(d2), Simplify), PrettyP)});
            |
          """.stripMargin
       } else { "" }
@@ -143,7 +143,7 @@ trait e4 extends Evolution with AbstractGenerator with TestGeneratorWithModel wi
            |
            |   $simplifyTests
            |   // Handle collect checks
-           |   ${typeConverter(List(Double))} list1 = ${recurseOn(convert(d2), Collect)};
+           |   ${typeConverter(List(Double))} list1 = ${dispatch(convert(d2), Collect)};
            |   ${typeConverter(List(Double))} result = new java.util.ArrayList<Double>();
            |   result.add(5.0);
            |   result.add(7.0);

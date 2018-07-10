@@ -1,4 +1,4 @@
-package example.expression.j
+package example.expression.j  /*DD:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.stmt.Statement
@@ -21,7 +21,7 @@ trait c1 extends Evolution with AbstractGenerator with TestGenerator with M2 wit
     op match {
       case PrettyP =>
         exp match {
-          case Inv => Java(s"""return "(1.0/" + ${recurseOn(subs(domain.base.inner), PrettyP)} + ")"; """).statements()
+          case Inv => Java(s"""return "(1.0/" + ${dispatch(subs(domain.base.inner), PrettyP)} + ")"; """).statements()
           case _ => super.logic(exp)(op)
         }
 
@@ -38,8 +38,8 @@ trait c1 extends Evolution with AbstractGenerator with TestGenerator with M2 wit
       super.testGenerator ++ Java(
       s"""
          |public void test() {
-         |   assertEquals("(1.0/(1.0-2.0))", ${recurseOn(convert(s2), PrettyP)});
-         |   assertEquals(${recurseOn(convert(d1), PrettyP)}, ${recurseOn(convert(s2), PrettyP)});
+         |   assertEquals("(1.0/(1.0-2.0))", ${dispatch(convert(s2), PrettyP)});
+         |   assertEquals(${dispatch(convert(d1), PrettyP)}, ${dispatch(convert(s2), PrettyP)});
          |}""".stripMargin).methodDeclarations()
   }
 }

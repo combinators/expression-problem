@@ -1,4 +1,4 @@
-package example.expression.j
+package example.expression.j  /*DI:LD:AI*/
 
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.`type`.Type
@@ -12,6 +12,7 @@ import example.expression.domain.{BaseDomain, ModelDomain}
 trait AbstractGenerator  {
   val domain:BaseDomain with ModelDomain
 
+  /** Retrieve model under consideration. */
   def getModel:domain.Model
 
   /**
@@ -34,7 +35,7 @@ trait AbstractGenerator  {
   def subExpressions(exp:domain.Atomic) : Map[String, Expression]
 
   /** Responsible for dispatching sub-expressions with possible parameter(s). */
-  def recurseOn(expr:Expression, op:domain.Operation, params:Expression*) : Expression
+  def dispatch(expr:Expression, op:domain.Operation, params:Expression*) : Expression
 
   /**
     * Expression-tree data has attributes with domain-specific types. This method returns

@@ -1,4 +1,4 @@
-package example.expression.domain
+package example.expression.domain  /*DI:LI:AI*/
 
 /**
   * Definition of the Model case class used to represent the Model for any EP solution.

@@ -1,4 +1,4 @@
-package example.expression.j
+package example.expression.j  /*DD:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.stmt.Statement
@@ -20,7 +20,7 @@ trait e1 extends Evolution with AbstractGenerator with TestGenerator with M1 {
     op match {
       case Eval =>
         exp match {
-          case Sub => Java(s"return ${recurseOn(subs(domain.base.left), Eval)} - ${recurseOn(subs(domain.base.right), Eval)} ;").statements()
+          case Sub => Java(s"return ${dispatch(subs(domain.base.left), Eval)} - ${dispatch(subs(domain.base.right), Eval)} ;").statements()
           case _ => super.logic(exp)(op)
         }
 
@@ -34,7 +34,7 @@ trait e1 extends Evolution with AbstractGenerator with TestGenerator with M1 {
     super.testGenerator ++ Java(
       s"""
          |public void test() {
-         |   assertEquals(-1.0, ${recurseOn(convert(s1), Eval)});
+         |   assertEquals(-1.0, ${dispatch(convert(s1), Eval)});
          |}""".stripMargin).methodDeclarations()
   }
 }

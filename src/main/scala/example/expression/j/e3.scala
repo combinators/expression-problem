@@ -1,4 +1,4 @@
-package example.expression.j
+package example.expression.j  /*DD:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.stmt.Statement
@@ -10,7 +10,7 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-trait e3 extends Evolution with AbstractGenerator with TestGenerator with M1 with M2 with M3 {
+trait e3 extends Evolution with AbstractGenerator with TestGenerator with M0 with M1 with M2 with M3 {
   self:e0 with e1 with e2 =>
   val domain:MathDomain
 
@@ -21,18 +21,18 @@ trait e3 extends Evolution with AbstractGenerator with TestGenerator with M1 wit
     op match {
       case PrettyP => {
         exp match {
-          case Neg => Java(s"""return "-" + ${recurseOn(subs(domain.base.inner), PrettyP)}; """).statements()
-          case Mult => Java(s"""return "(" + ${recurseOn(subs(domain.base.left), PrettyP)} + "*" + ${recurseOn(subs(domain.base.right), PrettyP)}  + ")";""").statements()
-          case Divd => Java(s"""return "(" + ${recurseOn(subs(domain.base.left), PrettyP)}  + "/" + ${recurseOn(subs(domain.base.right), PrettyP)}  + ")";""").statements()
+          case Neg => Java(s"""return "-" + ${dispatch(subs(domain.base.inner), PrettyP)}; """).statements()
+          case Mult => Java(s"""return "(" + ${dispatch(subs(domain.base.left), PrettyP)} + "*" + ${dispatch(subs(domain.base.right), PrettyP)}  + ")";""").statements()
+          case Divd => Java(s"""return "(" + ${dispatch(subs(domain.base.left), PrettyP)}  + "/" + ${dispatch(subs(domain.base.right), PrettyP)}  + ")";""").statements()
           case _ => super.logic(exp)(op)
         }
       }
 
       case Eval => {
         exp match {
-          case Neg => Java(s"""return - ${recurseOn(subs(domain.base.inner), Eval)}; """).statements()
-          case Mult => Java(s"""return ${recurseOn(subs(domain.base.left), Eval)} * ${recurseOn(subs(domain.base.right), Eval)};""").statements()
-          case Divd => Java(s"""return ${recurseOn(subs(domain.base.left), Eval)} / ${recurseOn(subs(domain.base.right), Eval)};""").statements()
+          case Neg => Java(s"""return - ${dispatch(subs(domain.base.inner), Eval)}; """).statements()
+          case Mult => Java(s"""return ${dispatch(subs(domain.base.left), Eval)} * ${dispatch(subs(domain.base.right), Eval)};""").statements()
+          case Divd => Java(s"""return ${dispatch(subs(domain.base.left), Eval)} / ${dispatch(subs(domain.base.right), Eval)};""").statements()
           case _ => super.logic(exp)(op)
         }
       }
@@ -54,12 +54,12 @@ trait e3 extends Evolution with AbstractGenerator with TestGenerator with M1 wit
     super.testGenerator ++ Java(
       s"""
          |public void test() {
-         |   assertEquals("-1.0", ${recurseOn(convert(n1), PrettyP)});
-         |   assertEquals(-1.0, ${recurseOn(convert(n1), Eval)});
-         |   assertEquals("((5.0/2.0)*4.0)", ${recurseOn(convert(m2), PrettyP)});
+         |   assertEquals("-1.0", ${dispatch(convert(n1), PrettyP)});
+         |   assertEquals(-1.0, ${dispatch(convert(n1), Eval)});
+         |   assertEquals("((5.0/2.0)*4.0)", ${dispatch(convert(m2), PrettyP)});
          |
-         |   assertEquals ("-5.0", ${recurseOn(convert(d1), PrettyP)});
-         |   assertEquals ("-(2.0*3.0)", ${recurseOn(convert(s1), PrettyP)});
+         |   assertEquals ("-5.0", ${dispatch(convert(d1), PrettyP)});
+         |   assertEquals ("-(2.0*3.0)", ${dispatch(convert(s1), PrettyP)});
          |}""".stripMargin).methodDeclarations()
   }
 }

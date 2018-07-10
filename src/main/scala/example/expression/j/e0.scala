@@ -1,4 +1,4 @@
-package example.expression.j
+package example.expression.j   /*DD:LD:AI*/
 
 import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.MethodDeclaration
@@ -30,8 +30,8 @@ trait e0 extends AbstractGenerator with TestGenerator with M0 {
     op match {
       case Eval =>
         exp match {
-          case Lit => Java(s"return ${subs(domain.attributes.value)};").statements
-          case Add => Java(s"return ${recurseOn(subs(domain.base.left),op)} + ${recurseOn(subs(domain.base.right),op)};").statements()
+          case Lit => Java(s"return ${subs(litValue)};").statements
+          case Add => Java(s"return ${dispatch(subs(domain.base.left),op)} + ${dispatch(subs(domain.base.right),op)};").statements()
           case _ => super.logic(exp)(op)
         }
 
@@ -47,8 +47,8 @@ trait e0 extends AbstractGenerator with TestGenerator with M0 {
     super.testGenerator ++ Java(
       s"""
          |public void test() {
-         |   assertEquals(3.0, ${recurseOn(convert(a1), Eval)});
-         |   assertEquals(5.0, ${recurseOn(convert(lit1), Eval)});
+         |   assertEquals(3.0, ${dispatch(convert(a1), Eval)});
+         |   assertEquals(5.0, ${dispatch(convert(lit1), Eval)});
          |}""".stripMargin).methodDeclarations()
   }
 }

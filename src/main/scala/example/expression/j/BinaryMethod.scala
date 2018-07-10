@@ -1,4 +1,4 @@
-package example.expression.j
+package example.expression.j  /*DI:LD:AI*/
 
 import com.github.javaparser.ast.expr.Expression
 import example.expression.domain.{BaseDomain, ModelDomain}
@@ -12,5 +12,4 @@ trait BinaryMethod  {
 
   /** Retrieve Java Class associated with given context. Needed for BinaryMethods operations with BaseTypeRep as parameter. */
   def getJavaClass : Expression
-
 }

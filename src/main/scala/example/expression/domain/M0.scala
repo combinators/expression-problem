@@ -1,12 +1,14 @@
-package example.expression.domain
+package example.expression.domain  /*DD:LI:AI*/
 
 trait M0 extends Evolution {
   val domain:MathDomain
 
+  val litValue:String = "value"
+
   // m0:model evolution.
   // -------------------
   case object Double extends domain.TypeRep
-  case object Lit extends domain.Atomic("Lit", Seq(domain.Attribute(domain.attributes.value, Double)))
+  case object Lit extends domain.Atomic("Lit", Seq(domain.Attribute(litValue, Double)))
   case object Add extends domain.Binary("Add")
 
   case object Eval extends domain.Operation("eval", Some(Double))

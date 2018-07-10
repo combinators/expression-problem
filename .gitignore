@@ -262,5 +262,7 @@ Session.vim
 # auto-generated tag files
 tags
 
+# Keep the junit.jar in the demo/ep/junit.jar area
+!/demo/ep/junit.jar
 
 # End of https://www.gitignore.io/api/vim,sbt,java,scala,emacs,eclipse,intellij+all,playframework

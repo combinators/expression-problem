@@ -1,4 +1,4 @@
-package example.expression.j
+package example.expression.j  /*DI:LD:AI*/
 
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.MethodDeclaration

@@ -1,4 +1,4 @@
-package shared.compilation
+package shared.compilation  /*DI:LI:AI*/
 
 import org.combinators.cls.git.{EmptyInhabitationBatchJobResults, InhabitationController, Results, RoutingEntries}
 import org.combinators.cls.interpreter.ReflectedRepository
@@ -32,4 +32,3 @@ abstract class CodeGenerationController[ResultType] (web: WebJarsUtil, app: Appl
     )
   }
 }
-

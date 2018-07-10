@@ -1,4 +1,4 @@
-package example.expression.algebra
+package example.expression.algebra /*DI:LD:AD*/
 
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.`type`.Type
@@ -62,7 +62,7 @@ trait AlgebraGenerator extends AbstractGenerator with Producer with BinaryMethod
   }
 
   /** Directly access local method, one per operation, with a parameter. */
-  override def recurseOn(expr:Expression, op:domain.Operation, params:Expression*) : Expression = {
+  override def dispatch(expr:Expression, op:domain.Operation, params:Expression*) : Expression = {
     val args:String = params.mkString(",")
     Java(s"""$expr.${op.name}($args)""").expression()
   }

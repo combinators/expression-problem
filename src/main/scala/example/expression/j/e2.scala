@@ -1,4 +1,4 @@
-package example.expression.j
+package example.expression.j  /*DD:LD:AI*/
 
 import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.MethodDeclaration
@@ -29,9 +29,9 @@ trait e2 extends Evolution with AbstractGenerator with TestGenerator with M2 {
     op match {
       case PrettyP =>
         exp match {
-          case Lit => Java(s"""return "" + ${subs(domain.attributes.value)} + ""; """).statements()
-          case Add => Java(s"""return "(" + ${recurseOn(subs(domain.base.left), PrettyP)} + "+" + ${recurseOn(subs(domain.base.right), PrettyP)}+ ")";""").statements()
-          case Sub => Java(s"""return "(" + ${recurseOn(subs(domain.base.left), PrettyP)} + "-" + ${recurseOn(subs(domain.base.right), PrettyP)} + ")";""").statements()
+          case Lit => Java(s"""return "" + ${subs(litValue)} + ""; """).statements()
+          case Add => Java(s"""return "(" + ${dispatch(subs(domain.base.left), PrettyP)} + "+" + ${dispatch(subs(domain.base.right), PrettyP)}+ ")";""").statements()
+          case Sub => Java(s"""return "(" + ${dispatch(subs(domain.base.left), PrettyP)} + "-" + ${dispatch(subs(domain.base.right), PrettyP)} + ")";""").statements()
           case _ => super.logic(exp)(op)
         }
 
@@ -47,8 +47,8 @@ trait e2 extends Evolution with AbstractGenerator with TestGenerator with M2 {
       super.testGenerator ++ Java(
       s"""
          |public void test() {
-         |   assertEquals("(1.0-2.0)", ${recurseOn(convert(s1), PrettyP)});
-         |   assertEquals("((1.0-2.0)+(5.0+6.0))", ${recurseOn(convert(s2), PrettyP)});
+         |   assertEquals("(1.0-2.0)", ${dispatch(convert(s1), PrettyP)});
+         |   assertEquals("((1.0-2.0)+(5.0+6.0))", ${dispatch(convert(s2), PrettyP)});
          |}""".stripMargin).methodDeclarations()
   }
 }

@@ -1,6 +1,4 @@
-package example.expression.domain
-
-
+package example.expression.domain  /*DI:LI:AI*/
 
 /** Foundational trait for all EP domains. */
 trait BaseDomain {

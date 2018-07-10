@@ -1,4 +1,4 @@
-package example.expression.scalaVisitor
+package example.expression.scalaVisitor  /*DI:LD:AD*/
 
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.`type`.Type
@@ -45,7 +45,7 @@ trait VisitorGenerator extends AbstractGenerator with JavaGenerator with DataTyp
   }
 
   /** Directly access local method, one per operation, with a parameter. */
-  override def recurseOn(expr:Expression, op:domain.Operation, params:Expression*) : Expression = {
+  override def dispatch(expr:Expression, op:domain.Operation, params:Expression*) : Expression = {
     val args:String = params.mkString(",")
     Java(s"""$expr.accept(new ${op.name.capitalize}($args))""").expression()
   }

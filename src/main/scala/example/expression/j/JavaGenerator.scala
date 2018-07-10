@@ -1,4 +1,4 @@
-package example.expression.j
+package example.expression.j  /*DI:LD:AI*/
 
 import com.github.javaparser.ast.body.{ConstructorDeclaration, FieldDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.stmt.Statement
@@ -67,5 +67,4 @@ trait JavaGenerator extends AbstractGenerator {
   def fields(exp:domain.Atomic, covariantOverride:Option[Type] = None) : Seq[FieldDeclaration] = {
     exp.attributes.flatMap(att => Java(s"private ${typeConverter(att.tpe, covariantOverride)} ${att.name};").fieldDeclarations())
   }
-
 }

@@ -1,4 +1,4 @@
-package example.expression.interpreter
+package example.expression.interpreter  /*DI:LD:AD*/
 
 import com.github.javaparser.ast.expr.{Expression, SimpleName}
 import example.expression.domain.M0
@@ -33,10 +33,3 @@ trait InterpreterTestGenerator extends TestGenerator with M0 {
     }
   }
 }
-
-
-
-
-
-
-

@@ -1,4 +1,4 @@
-package example.expression.j
+package example.expression.j  /*DD:LD:AI*/
 
 import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.MethodDeclaration
@@ -41,7 +41,7 @@ trait ex extends Evolution with AbstractGenerator with TestGenerator with Binary
     super.testGenerator ++ Java(
       s"""
          |public void test() {
-         |   assertEquals(${recurseOn(convert(s2), GetJavaClass)}, ${recurseOn(convert(s1), GetJavaClass)});
+         |   assertEquals(${dispatch(convert(s2), GetJavaClass)}, ${dispatch(convert(s1), GetJavaClass)});
          |}""".stripMargin).methodDeclarations()
   }
 }

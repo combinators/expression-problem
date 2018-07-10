@@ -1,4 +1,4 @@
-package example.expression.algebra
+package example.expression.algebra /*DI:LD:AD*/
 
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.`type`.Type

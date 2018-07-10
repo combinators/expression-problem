@@ -1,4 +1,4 @@
-package example.expression.j
+package example.expression.j  /*DD:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.Expression
@@ -14,7 +14,7 @@ import org.combinators.templating.twirl.Java
 trait s1 extends AbstractGenerator with TestGenerator with Producer { self:s0 =>
   val domain:ShapeDomain
 
-  case object Shrink extends domain.Operation("shrink", Some(domain.Shape), Seq((domain.attributes.pct, Double)))
+  case object Shrink extends domain.Operation("shrink", Some(domain.Shape), Seq((pct, Double)))
   val s1 = domain.Model("s1", Seq.empty, Seq(Shrink), s0)
 
   override def getModel = s1
@@ -30,26 +30,24 @@ trait s1 extends AbstractGenerator with TestGenerator with Producer { self:s0 =>
           case Circle =>
             Java(
               s"""
-                 |double shrunkRadius = ${subs(domain.attributes.radius)}*pct;
+                 |double shrunkRadius = ${subs(radius)}*pct;
                  return ${inst(Circle)(op)(Java("shrunkRadius").expression[Expression]())};
                """.stripMargin).statements()
 
           case Square => {
             val str =
               s"""
-                 |double shrunkSide = ${subs(domain.attributes.side)}*pct;
+                 |double shrunkSide = ${subs(side)}*pct;
                  |return ${inst(Square)(op)(Java("shrunkSide").expression[Expression]())};
                """.stripMargin
             println(str)
             Java(str).statements()
           }
 
-          // return ${recurseOnWithParams(convert(s1, domain.emptyModel()), domain.ContainsPt, Java("t").expression[Expression]())});
-
           case Translate => {
             Java(
               s"""
-                 |return ${inst(Translate)(op)(subs(domain.attributes.trans),recurseOn(subs(domain.attributes.shape), op, Java("pct").expression[Expression]()))};
+                 |return ${inst(Translate)(op)(subs(trans),dispatch(subs(shape), op, Java("pct").expression[Expression]()))};
                  |
                """.stripMargin).statements()
           }
@@ -83,7 +81,7 @@ trait s1 extends AbstractGenerator with TestGenerator with Producer { self:s0 =>
       s"""
          |public void test() {
          |   // without access to the attributes, we can't write meaningful attribute test cases.
-         |   assertNotNull( ${recurseOn(convert(s1), Shrink, d1)});
+         |   assertNotNull( ${dispatch(convert(s1), Shrink, d1)});
          |
          |   // Handle collect checks
          |

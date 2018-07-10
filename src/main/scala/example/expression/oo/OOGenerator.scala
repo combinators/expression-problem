@@ -1,4 +1,4 @@
-package example.expression.oo
+package example.expression.oo  /*DI:LD:AD*/
 
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.`type`.Type
@@ -46,7 +46,7 @@ trait OOGenerator extends AbstractGenerator with JavaGenerator with DataTypeSubc
   }
 
   /** Directly access local method, one per operation, with a parameter. */
-  override def recurseOn(expr:Expression, op:domain.Operation, params:Expression*) : Expression = {
+  override def dispatch(expr:Expression, op:domain.Operation, params:Expression*) : Expression = {
     val args:String = params.mkString(",")
     Java(s"""$expr.${op.name}($args)""").expression()
   }

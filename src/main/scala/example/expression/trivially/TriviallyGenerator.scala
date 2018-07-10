@@ -1,4 +1,4 @@
-package example.expression.trivially
+package example.expression.trivially  /*DI:LD:AD*/
 
 import com.github.javaparser.ast.{CompilationUnit, Modifier}
 import com.github.javaparser.ast.`type`.Type

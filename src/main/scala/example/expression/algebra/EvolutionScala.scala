@@ -1,4 +1,11 @@
-package example.expression.algebra
+package example.expression.algebra  /*DD:LD:AD*/
+
+/**
+  * Extensibility for the Masses
+  * Bruno C. d. S. Oliveira & William R. Cook
+  * ECOOP 2012
+  * https://dl.acm.org/citation.cfm?id=2367167
+  */
 
 import com.github.javaparser.ast.CompilationUnit
 import example.expression.domain.{MathDomain, WithDomain, companionMathDomain}
@@ -10,15 +17,14 @@ import play.api.inject.ApplicationLifecycle
 import shared.compilation.CodeGenerationController
 
 abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-  extends CodeGenerationController[CompilationUnit](web, app)
-{
+  extends CodeGenerationController[CompilationUnit](web, app) {
   val gen:WithDomain[MathDomain] with AlgebraGenerator with AlgebraTestGenerator
 
   lazy val processed:gen.domain.Model = gen.getProcessedModel   // process model as necessary
   override lazy val generatedCode:Seq[CompilationUnit] =
     gen.generatedCode(processed) :+
     gen.generateSuite(Some("algebra")) :+
-      gen.combinedAlgebra(Some("algebra"), processed)
+      gen.combinedAlgebra(Some("algebra"), processed)           // requires a combined algebra for testing
 
   override val routingPrefix: Option[String] = Some("algebra")
   override lazy val controllerAddress:String = gen.getModel.name

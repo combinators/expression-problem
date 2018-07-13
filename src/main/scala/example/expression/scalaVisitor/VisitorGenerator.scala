@@ -11,13 +11,13 @@ import org.combinators.templating.twirl.Java
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait VisitorGenerator extends AbstractGenerator with JavaGenerator with DataTypeSubclassGenerator with OperationAsMethodGenerator with BinaryMethod {
+trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator with OperationAsMethodGenerator with BinaryMethod {
   val domain:BaseDomain with ModelDomain
 
   /**
     * For visitor, must flatten entire hierarchy
     */
-  override def getProcessedModel:domain.Model = getModel.flat()
+  //override def getProcessedModel:domain.Model = getModel.flat()
 
   /**
     * Generating a visitor solution requires:
@@ -25,14 +25,14 @@ trait VisitorGenerator extends AbstractGenerator with JavaGenerator with DataTyp
     * 1. A Class for every data type
     * 2. A Class for every operation
     * 3. Abstract Base class and visitor class
-    * @param model
     * @return
     */
-  override def generatedCode(model:domain.Model):Seq[CompilationUnit] = {
-    model.types.map(tpe => generateExp(model, tpe)) ++         // one class for each sub-type
-      model.ops.map(op => operationGenerator(model, op)) :+    // one class for each op
+  override def generatedCode():Seq[CompilationUnit] = {
+    val flat = getModel.flat()
+    flat.types.map(tpe => generateExp(flat, tpe)) ++         // one class for each sub-type
+      flat.ops.map(op => operationGenerator(flat, op)) :+    // one class for each op
       generateBaseClass() :+                                   // abstract base class
-      generateBase(model)                                      // visitor gets its own class (overriding concept)
+      generateBase(flat)                                      // visitor gets its own class (overriding concept)
   }
 
   /** For visitor design solution, access through default 'e' parameter */

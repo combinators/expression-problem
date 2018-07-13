@@ -13,4 +13,4 @@ trait MathDomain extends BaseDomain with ModelDomain {
 }
 
 /** Companion object to represent domain. */
-object companionMathDomain extends MathDomain
+object MathDomain extends MathDomain

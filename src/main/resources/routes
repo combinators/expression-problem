@@ -72,6 +72,8 @@ GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP
 ->    /                              example.expression.algebra.M3_Variation
 ->    /                              example.expression.algebra.M4_Variation
 ->    /                              example.expression.algebra.M5_Variation
+->    /                              example.expression.algebra.I2_Variation
+->    /                              example.expression.algebra.C1_Variation
 #
 #
 # Shape Evolution

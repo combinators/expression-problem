@@ -18,4 +18,4 @@ trait ShapeDomain extends BaseDomain with ModelDomain {
 }
 
 /** Companion object to represent domain. */
-object companionShapeDomain extends ShapeDomain
+object ShapeDomain extends ShapeDomain

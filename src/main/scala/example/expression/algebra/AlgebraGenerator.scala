@@ -17,11 +17,6 @@ trait AlgebraGenerator extends AbstractGenerator with Producer with BinaryMethod
   /**
     * Must eliminate any operation that returns E as value, since Algebra doesn't instantiate the intermediate structures
     */
-  override def getProcessedModel:domain.Model = process(getModel)
-
-  /**
-    * Must eliminate any operation that returns E as value, since Algebra doesn't instantiate the intermediate structures
-    */
   def process(model:domain.Model):domain.Model = {
     if (model.isEmpty) { return model }
 
@@ -35,10 +30,10 @@ trait AlgebraGenerator extends AbstractGenerator with Producer with BinaryMethod
     * Generating an algebra solution requires processing the models in chronological ordering to be able
     * to prepare the proper interfaces
     *
-    * @param model
     * @return
     */
-  override def generatedCode(model:domain.Model):Seq[CompilationUnit] = {
+  override def generatedCode():Seq[CompilationUnit] = {
+    val model = process(getModel)
     processModel(model.inChronologicalOrder)
   }
 
@@ -120,6 +115,7 @@ trait AlgebraGenerator extends AbstractGenerator with Producer with BinaryMethod
           .map(op => op.name.capitalize).mkString("") + "ExpAlg"
     }
 
+    val op_params = parameters(op)
     val methods = targetModel.types.map(exp => {  // exp is either 'lit' or 'add'
 
       val subName = exp.name.toLowerCase   // to get proper etiquette for method names
@@ -133,7 +129,7 @@ trait AlgebraGenerator extends AbstractGenerator with Producer with BinaryMethod
       s"""
          |public ${name.capitalize} $subName($paramList) {
          |        return new ${name.capitalize}() {
-         |            public $returnType $name() {
+         |            public $returnType $name($op_params) {
          |                $signatures
          |            }
          |        };
@@ -156,7 +152,8 @@ trait AlgebraGenerator extends AbstractGenerator with Producer with BinaryMethod
     val name = op.name.toLowerCase
     val tpe = typeConverter(op.returnType.get)
 
-    signatures = signatures :+ s"  $tpe $name();"
+    val params = parameters(op)
+    signatures = signatures :+ s"  $tpe $name($params);"
 
     //implementations
     val str = s"""|package algebra;

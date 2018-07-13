@@ -107,9 +107,11 @@ trait AlgebraTestGenerator extends TestGenerator with AbstractGenerator {
     })
 
     val opsname:Seq[MethodDeclaration] = operations.flatMap(op => {
+      val op_args = arguments(op)
+      val op_params = parameters(op)
       val returnType = typeConverter(op.returnType.get)
       Java(
-        s"public $returnType ${op.name}() { return algebra${op.name.capitalize}.${tpe.name.toLowerCase}(${args.mkString(",")}).${op.name}(); } ").methodDeclarations()
+        s"public $returnType ${op.name}($op_params) { return algebra${op.name.capitalize}.${tpe.name.toLowerCase}(${args.mkString(",")}).${op.name}($op_args); } ").methodDeclarations()
     })
 
     val str = s"""

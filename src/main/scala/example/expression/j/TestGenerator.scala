@@ -11,19 +11,20 @@ import org.combinators.templating.twirl.Java
   */
 trait TestGenerator  {
   val domain:BaseDomain with ModelDomain
+  import domain._
 
   /** Return sample JUnit test cases. */
   def testGenerator: Seq[MethodDeclaration] = Seq.empty
 
   /** Convert a test instance into a Java Expression for instantiating that instance. */
-  def convert(inst:domain.AtomicInst) : Expression = {
+  def convert(inst:AtomicInst) : Expression = {
     val name = inst.e.name
     inst match {
-      case ui:domain.UnaryInst =>
+      case ui:UnaryInst =>
         Java(s"new $name(${convert(ui.inner)})").expression()
-      case bi:domain.BinaryInst =>
+      case bi:BinaryInst =>
         Java(s"new $name(${convert(bi.left)}, ${convert(bi.right)})").expression()
-      case exp:domain.AtomicInst => Java(s"new $name(${exp.i.get.toString})").expression()
+      case exp:AtomicInst => Java(s"new $name(${exp.i.get.toString})").expression()
 
       case _ =>  Java(s""" "unknown $name" """).expression()
     }
@@ -38,9 +39,9 @@ trait TestGenerator  {
     } else { "" }
 
     var num:Int = 0
-    val unitTests:Seq[MethodDeclaration] = methods.filter(md => md.getBody.isPresent).map(md => {
+    val unitTests:Seq[MethodDeclaration] = methods.filter(md => md.getBody.isPresent).flatMap(md => {
       num = num + 1
-      Java (s"""public void test$num()  ${md.getBody.get.toString} """).methodDeclarations().head
+      Java (s"""public void test$num()  ${md.getBody.get} """).methodDeclarations()
     })
 
     Java(s"""|$packageDeclaration

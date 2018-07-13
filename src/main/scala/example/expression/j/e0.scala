@@ -13,9 +13,10 @@ import org.combinators.templating.twirl.Java
   * Still Java-based, naturally and JUnit
   */
 trait e0 extends AbstractGenerator with TestGenerator with M0 {
+  import domain._
 
   /** E0 Introduces the concept a Double type, used for the 'Eval' operation. */
-  abstract override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : com.github.javaparser.ast.`type`.Type = {
+  abstract override def typeConverter(tpe:TypeRep, covariantReplacement:Option[Type] = None) : Type = {
     tpe match {
       case Double => Java("Double").tpe()
       case _ => super.typeConverter(tpe, covariantReplacement)
@@ -23,7 +24,7 @@ trait e0 extends AbstractGenerator with TestGenerator with M0 {
   }
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
-  abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {
+  abstract override def logic(exp:Atomic)(op:Operation): Seq[Statement] = {
     val subs:Map[String,Expression] = subExpressions(exp)
 
     // generate the actual body
@@ -31,7 +32,7 @@ trait e0 extends AbstractGenerator with TestGenerator with M0 {
       case Eval =>
         exp match {
           case Lit => Java(s"return ${subs(litValue)};").statements
-          case Add => Java(s"return ${dispatch(subs(domain.base.left),op)} + ${dispatch(subs(domain.base.right),op)};").statements()
+          case Add => Java(s"return ${dispatch(subs(base.left),op)} + ${dispatch(subs(base.right),op)};").statements
           case _ => super.logic(exp)(op)
         }
 
@@ -40,8 +41,7 @@ trait e0 extends AbstractGenerator with TestGenerator with M0 {
   }
 
   abstract override def testGenerator: Seq[MethodDeclaration] = {
-
-    val a1 = new domain.BinaryInst(Add, new LitInst(1.0), new LitInst(2.0))
+    val a1 = new BinaryInst(Add, new LitInst(1.0), new LitInst(2.0))
     val lit1 = new LitInst(5.0)
 
     super.testGenerator ++ Java(

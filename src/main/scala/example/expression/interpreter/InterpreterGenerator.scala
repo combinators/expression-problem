@@ -8,10 +8,7 @@ import com.github.javaparser.ast.CompilationUnit
 import example.expression.j._
 import org.combinators.templating.twirl.Java
 
-trait InterpreterGenerator extends  AbstractGenerator with JavaGenerator with DataTypeSubclassGenerator with OperationAsMethodGenerator with BinaryMethod with Producer {
-
-  /** Supports all operations */
-   override def getProcessedModel:domain.Model = getModel
+trait InterpreterGenerator extends  AbstractGenerator with DataTypeSubclassGenerator with OperationAsMethodGenerator with BinaryMethod with Producer {
 
   /**
     * Generating an interpreter solution requires:
@@ -19,10 +16,10 @@ trait InterpreterGenerator extends  AbstractGenerator with JavaGenerator with Da
     * 1. A Class for every data type
     * 2. A Class for every operation
     * 3. Abstract Base class and visitor class
-    * @param model
     * @return
     */
-  override def generatedCode(model:domain.Model):Seq[CompilationUnit] = {
+  override def generatedCode():Seq[CompilationUnit] = {
+    val model = getModel
     // one interface for every model that contains an operation
     model.inChronologicalOrder.filter(m => m.ops.nonEmpty).map(m => generateBase(m)) ++      // Each operation gets interface
     model.inChronologicalOrder.filter(m => m.ops.nonEmpty).flatMap(m => generateBaseExtensions(m)) ++   // Each operation must provide class implementations for all past dataTypes

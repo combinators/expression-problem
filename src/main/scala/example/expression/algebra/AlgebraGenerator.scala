@@ -5,13 +5,13 @@ import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.stmt.Statement
 import example.expression.domain.{BaseDomain, ModelDomain}
-import example.expression.j.{AbstractGenerator, BinaryMethod, Producer}
+import example.expression.j.{AbstractGenerator, BinaryMethod}
 import org.combinators.templating.twirl.Java
 
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait AlgebraGenerator extends AbstractGenerator with Producer with BinaryMethod {
+trait AlgebraGenerator extends AbstractGenerator with BinaryMethod {
   val domain:BaseDomain with ModelDomain
 
   /**
@@ -45,11 +45,11 @@ trait AlgebraGenerator extends AbstractGenerator with Producer with BinaryMethod
     * For producer operations, there is a need to instantiate objects, and one would use this
     * method (with specific parameters) to carry this out.
     *
-    * Note: This capability is preliminary and not yet ready for primetime.
+    * Note: This capability is preliminary and not yet ready for use.
     */
-  override def inst(exp:domain.Atomic)(op:domain.Operation)(params:Expression*): Expression = {
-    Java(exp.name + "(" + params.map(expr => expr.toString()).mkString(",") + ")").expression()
-  }
+//  def inst(exp:domain.Atomic)(op:domain.Operation)(params:Expression*): Expression = {
+//    Java(exp.name + "(" + params.map(expr => expr.toString()).mkString(",") + ")").expression()
+//  }
 
   /** For straight design solution, directly access attributes by name. */
   override def subExpressions(exp:domain.Atomic) : Map[String,Expression] = {
@@ -86,7 +86,7 @@ trait AlgebraGenerator extends AbstractGenerator with Producer with BinaryMethod
 
     /** Computes previous ExpAlgebra class directly from the model. There are four distinct subcases. */
     val previous:String = if (model.ops.contains(op) || model.lastModelWithOperation().isEmpty) {
-      targetModel = model.flat()
+      targetModel = model.flatten()
       if (model.types.isEmpty) {
         fullName = model.lastModelWithDataTypes().types.sortWith(_.name < _.name).map(exp => exp.name.capitalize).mkString("")
       } else {
@@ -104,10 +104,14 @@ trait AlgebraGenerator extends AbstractGenerator with Producer with BinaryMethod
 
       // this is different! It may be that there are NO types for the lastOperationDefined, in which case we must go
       // back further to find one where there were types defined, and then work with that one
-      val bestModel:domain.Model = if (model.lastModelWithOperation().types.nonEmpty) {
-        model.lastModelWithOperation()
+      val bestModel: domain.Model = if (targetModel.equals(model)) {
+        targetModel.last.lastModelWithDataTypes
       } else {
-        model.lastModelWithOperation().lastModelWithDataTypes()
+        if (model.lastModelWithOperation().types.nonEmpty) {
+          model.lastModelWithOperation()
+        } else {
+          model.lastModelWithOperation().lastModelWithDataTypes()
+        }
       }
 
       s"extends ${name.capitalize}" +
@@ -211,8 +215,7 @@ trait AlgebraGenerator extends AbstractGenerator with Producer with BinaryMethod
   def processModel(models:Seq[domain.Model]): Seq[CompilationUnit] = {
 
     // each one is handled individually, then by going backwards, we can find out where the base is
-    // ans work outwards from there. Note we should likely foldLeft to create a sequence, which is the
-    // reverse of the history.
+    // ans work outwards from there.
     var comps: Seq[CompilationUnit] = Seq.empty
     var operations:Seq[domain.Operation] = Seq.empty
 

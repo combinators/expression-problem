@@ -36,7 +36,7 @@ trait ModelDomain extends BaseDomain {
     }
 
     /** Return flattened model, with same original name. */
-    def flat(): Model = {
+    def flatten(): Model = {
       toSeq.foldLeft(Model("", Seq.empty, Seq.empty, null)) {
         case (combined, m) => Model(name, combined.types ++ m.types, combined.ops ++ m.ops, Model("", Seq.empty, Seq.empty, null))
       }

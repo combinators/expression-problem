@@ -10,28 +10,16 @@ import org.combinators.templating.twirl.Java
 trait TriviallyGenerator extends example.expression.oo.OOGenerator with Producer {
 
   /**
-    * Must eliminate any operation that returns E as value, since Algebra doesn't instantiate the intermediate structures
-    */
-   def process(model:domain.Model):domain.Model = {
-    if (model.isEmpty) { return model }
-
-    // rebuild by filtering out all ProducerOperations
-    domain.Model(model.name, model.types,
-      model.ops.filterNot(op => op.isInstanceOf[domain.ProducerOperation]),
-      process(model.last))
-  }
-
-  /**
     * Generating "Expression problem, trivially" we need a class for each sub-type in model, then
     * an interface for all subtypes.
     * @return
     */
   override def generatedCode():Seq[CompilationUnit] = {
-    val model = process(getModel)
-    val flat = getModel.flat()
+    val model = getModel
+    val flat = getModel.flatten()
     flat.types.map(tpe => generateExp(model, tpe)) ++     // one class for each sub-type
       generateInterfaces(model) :+                        // interfaces for all subtypes
-      generateBase(model)                                 // base  interface
+      generateBase(model)                                 // base interface
   }
 
   /**
@@ -113,7 +101,7 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator with Producer
   def finalInterfaceName: Type = Java("FinalI").tpe()
 
   def generateInterfaces(model: domain.Model): Seq[CompilationUnit] = {
-    val flat = model.flat()
+    val flat = model.flatten()
 
     def generate(model: domain.Model): Seq[CompilationUnit] = {
       val lastWithOps = model.last.lastModelWithOperation()

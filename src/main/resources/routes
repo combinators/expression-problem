@@ -48,6 +48,7 @@ GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP
 ->    /                              example.expression.scalaVisitor.M3_Variation
 ->    /                              example.expression.scalaVisitor.M4_Variation
 ->    /                              example.expression.scalaVisitor.M5_Variation
+->    /                              example.expression.scalaVisitor.C1_Variation
 # CPP variation
 ->    /                              example.expression.cpp.M0_Variation
 ->    /                              example.expression.cpp.M1_Variation

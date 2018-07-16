@@ -11,7 +11,7 @@ import org.combinators.templating.twirl.Java
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait OOGenerator extends AbstractGenerator with DataTypeSubclassGenerator with OperationAsMethodGenerator with BinaryMethod {
+trait OOGenerator extends AbstractGenerator with DataTypeSubclassGenerator with OperationAsMethodGenerator with Producer with BinaryMethod {
 
   val domain:BaseDomain with ModelDomain
   import domain._
@@ -24,19 +24,19 @@ trait OOGenerator extends AbstractGenerator with DataTypeSubclassGenerator with 
     * 2. A Base class to be superclass of them all
     */
   def generatedCode():Seq[CompilationUnit] = {
-    val flat = getModel.flat()
+    val flat = getModel.flatten()
     flat.types.map(tpe => generateExp(flat, tpe)) :+      // one class for each sub-type
       generateBase(flat)                                  // base class $BASE
   }
 
   /** For straight design solution, directly access attributes by name. */
   override def subExpressions(exp:Atomic) : Map[String,Expression] = {
-    exp.attributes.map(att => att.name -> Java(s"${att.name}").expression[Expression]()).toMap
+    exp.attributes.map(att => att.name -> Java(s"${att.name}").expression[Expression]).toMap
   }
 
   /** Retrieve Java Class associated with given context. Needed for operations with Exp as parameter. */
   override def getJavaClass : Expression = {
-    Java(s"getClass()").expression[Expression]()
+    Java(s"getClass()").expression[Expression]
   }
 
   /** Directly access local method, one per operation, with a parameter. */
@@ -46,7 +46,7 @@ trait OOGenerator extends AbstractGenerator with DataTypeSubclassGenerator with 
   }
 
   /** Return designated Java type associated with type, or void if all else fails. */
-  override def typeConverter(tpe:TypeRep, covariantReplacement:Option[Type] = None) : com.github.javaparser.ast.`type`.Type = {
+  override def typeConverter(tpe:TypeRep, covariantReplacement:Option[Type] = None) : Type = {
     tpe match {
       case domain.baseTypeRep => covariantReplacement.getOrElse(Java("Exp").tpe())
       case _ => super.typeConverter(tpe, covariantReplacement)
@@ -66,7 +66,7 @@ trait OOGenerator extends AbstractGenerator with DataTypeSubclassGenerator with 
     val params = parameters(op)
     Java(s"""|public ${returnType(op)} ${op.name}($params) {
              |  ${logic(exp)(op).mkString("\n")}
-             |}""".stripMargin).methodDeclarations().head
+             |}""".stripMargin).methodDeclarations.head
   }
 
   /** Generate the full class for the given expression sub-type. */
@@ -77,19 +77,19 @@ trait OOGenerator extends AbstractGenerator with DataTypeSubclassGenerator with 
              |  ${constructor(exp)}
              |  ${fields(exp).mkString("\n")}
              |  ${methods.mkString("\n")}
-             |}""".stripMargin).compilationUnit()
+             |}""".stripMargin).compilationUnit
   }
 
   /** Generate the base class, with all operations from flattened history. */
   def generateBase(model:Model): CompilationUnit = {
     val signatures = model.ops.flatMap(op => {
        Java(s"public abstract ${returnType(op)} " +
-        s"${op.name}(${parameters(op)});").methodDeclarations()
+        s"${op.name}(${parameters(op)});").methodDeclarations
     })
 
     Java(s"""|package oo;
              |public abstract class Exp {
              |  ${signatures.mkString("\n")}
-             |}""".stripMargin).compilationUnit()
+             |}""".stripMargin).compilationUnit
   }
 }

@@ -49,6 +49,6 @@ trait e2 extends Evolution with AbstractGenerator with TestGenerator with M2 {
          |public void test() {
          |   assertEquals("(1.0-2.0)", ${dispatch(convert(s1), PrettyP)});
          |   assertEquals("((1.0-2.0)+(5.0+6.0))", ${dispatch(convert(s2), PrettyP)});
-         |}""".stripMargin).methodDeclarations()
+         |}""".stripMargin).methodDeclarations
   }
 }

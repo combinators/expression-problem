@@ -151,7 +151,7 @@ trait e4 extends Evolution with AbstractGenerator with TestGenerator with Produc
            |   result.add(2.0);
            |   result.add(3.0);
            |   assertEquals (list1, result);
-           |}""".stripMargin).methodDeclarations()
+           |}""".stripMargin).methodDeclarations
     }
   }
 }

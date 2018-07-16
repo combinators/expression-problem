@@ -22,7 +22,7 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
   override lazy val generatedCode:Seq[CompilationUnit] =
     gen.generatedCode() :+
-    gen.generateSuite(Some("algebra")) :+
+    gen.generateSuite(Some("algebra"), Some(gen.process(gen.getModel))) :+
     gen.combinedAlgebra(Some("algebra"), gen.process(gen.getModel))       // requires a combined algebra for testing
 
   override val routingPrefix: Option[String] = Some("algebra")

@@ -77,6 +77,6 @@ trait e5 extends Evolution with AbstractGenerator with TestGenerator with Binary
          |public void test() {
          |   assertFalse(${dispatch(convert(s1), Equal, convert(s2))});
          |   assertTrue(${dispatch(convert(s1), Equal, convert(s3))});
-         |}""".stripMargin).methodDeclarations()
+         |}""".stripMargin).methodDeclarations
   }
 }

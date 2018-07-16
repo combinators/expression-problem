@@ -18,7 +18,7 @@ trait InterpreterGenerator extends  AbstractGenerator with DataTypeSubclassGener
     * 3. Abstract Base class and visitor class
     * @return
     */
-  override def generatedCode():Seq[CompilationUnit] = {
+  def generatedCode():Seq[CompilationUnit] = {
     val model = getModel
     // one interface for every model that contains an operation
     model.inChronologicalOrder.filter(m => m.ops.nonEmpty).map(m => generateBase(m)) ++      // Each operation gets interface

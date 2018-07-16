@@ -35,6 +35,6 @@ trait e1 extends Evolution with AbstractGenerator with TestGenerator with M1 {
       s"""
          |public void test() {
          |   assertEquals(-1.0, ${dispatch(convert(s1), Eval)});
-         |}""".stripMargin).methodDeclarations()
+         |}""".stripMargin).methodDeclarations
   }
 }

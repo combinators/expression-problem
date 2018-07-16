@@ -14,20 +14,19 @@ import org.combinators.templating.twirl.Java
   */
 trait AlgebraTestGenerator extends TestGenerator with AbstractGenerator {
   val domain: BaseDomain with ModelDomain
-
-  def getModel:domain.Model
+  import domain._
 
   /** Convert a test instance into a Java Expression for instantiating that instance. */
-  override def convert(inst: domain.AtomicInst): Expression = {
+  override def convert(inst: AtomicInst): Expression = {
     val name = inst.e.name
     val opname = name.toLowerCase()
     inst match {
       //case lit: domain.LitInst => Java(s"algebra.lit(${lit.i.get.toString})").expression()
-      case ui: domain.UnaryInst =>
+      case ui: UnaryInst =>
         Java(s"algebra.$opname(${convert(ui.inner)})").expression()
-      case bi: domain.BinaryInst =>
+      case bi: BinaryInst =>
         Java(s"algebra.$opname(${convert(bi.left)}, ${convert(bi.right)})").expression()
-      case exp:domain.AtomicInst => Java(s"algebra.lit(${exp.i.get.toString})").expression()
+      case exp:AtomicInst => Java(s"algebra.lit(${exp.i.get.toString})").expression()
 
       case _ => Java(s""" "unknown $name" """).expression()
     }
@@ -39,7 +38,7 @@ trait AlgebraTestGenerator extends TestGenerator with AbstractGenerator {
     * The classification is a sorted concatenation of the most recent model (including self) that
     * defines new data types.
     */
-  def classify(m:domain.Model) : String = {
+  def classify(m:Model) : String = {
     if (m.isEmpty) {
       return ""
     }
@@ -51,11 +50,11 @@ trait AlgebraTestGenerator extends TestGenerator with AbstractGenerator {
   }
 
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
-  override def generateSuite(pack: Option[String]): CompilationUnit = {
+  override def generateSuite(pkg: Option[String], m:Option[Model] = None): CompilationUnit = {
     val methods: Seq[MethodDeclaration] = testGenerator
 
-    val packageDeclaration: String = if (pack.isDefined) {
-      s"package ${pack.get};"
+    val packageDeclaration: String = if (pkg.isDefined) {
+      s"package ${pkg.get};"
     } else {
       ""
     }
@@ -68,12 +67,13 @@ trait AlgebraTestGenerator extends TestGenerator with AbstractGenerator {
 
     // must get all operations defined for this model and earlier. For each one, define algebra with
     // current extension
-    val operations: Seq[domain.Operation] = getModel.flat().ops
-    var algebraDeclarations: Map[domain.Operation, FieldDeclaration] = Map()
-    var algParams:Map[domain.Operation,String] = Map()
+    val model = m.getOrElse(emptyModel())
+    val operations: Seq[Operation] = model.flatten().ops
+    var algebraDeclarations: Map[Operation, FieldDeclaration] = Map()
+    var algParams:Map[Operation,String] = Map()
 
     operations.sortWith(_.name < _.name).foreach(op => {
-      val finalAlgebra:String = classify(getModel) + "ExpAlg"
+      val finalAlgebra:String = classify(model) + "ExpAlg"
 
       val str = s"""${op.name.capitalize}$finalAlgebra algebra${op.name.capitalize} = new ${op.name.capitalize}$finalAlgebra();"""
       algebraDeclarations = algebraDeclarations updated(op, Java(str).fieldDeclarations().head)
@@ -93,7 +93,7 @@ trait AlgebraTestGenerator extends TestGenerator with AbstractGenerator {
   }
 
   /** Produce inner methods. */
-  def innerMethod(tpe:domain.Atomic, operations:Seq[domain.Operation]) : Seq[MethodDeclaration] = {
+  def innerMethod(tpe:Atomic, operations:Seq[Operation]) : Seq[MethodDeclaration] = {
     var params:Seq[String] = Seq.empty
     var args:Seq[String] = Seq.empty
 
@@ -125,12 +125,12 @@ trait AlgebraTestGenerator extends TestGenerator with AbstractGenerator {
   }
 
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
-  def combinedAlgebra(pack:Option[String], m:domain.Model): CompilationUnit = {
-    val operations:Seq[domain.Operation] = m.flat().ops
+  def combinedAlgebra(pack:Option[String], m:Model): CompilationUnit = {
+    val operations:Seq[Operation] = m.flatten().ops
 
-    var algebraDeclarations:Map[domain.Operation,FieldDeclaration] = Map()
-    var paramDeclarations:Map[domain.Operation,Statement] = Map()
-    var argDeclarations:Map[domain.Operation,String] = Map()
+    var algebraDeclarations:Map[Operation,FieldDeclaration] = Map()
+    var paramDeclarations:Map[Operation,Statement] = Map()
+    var argDeclarations:Map[Operation,String] = Map()
     var finalAlgebra:String = ""
 
     operations.foreach(op => {
@@ -142,14 +142,14 @@ trait AlgebraTestGenerator extends TestGenerator with AbstractGenerator {
 
       finalAlgebra = classify(m) + "ExpAlg"
 
-      algebraDeclarations = algebraDeclarations updated (op, Java(s"""${op.name.capitalize}$finalAlgebra algebra${op.name.capitalize};""").fieldDeclarations().head)
-      paramDeclarations = paramDeclarations updated (op, Java(s"this.algebra${op.name.capitalize} = algebra${op.name.capitalize};").statement())
+      algebraDeclarations = algebraDeclarations updated (op, Java(s"""${op.name.capitalize}$finalAlgebra algebra${op.name.capitalize};""").fieldDeclarations.head)
+      paramDeclarations = paramDeclarations updated (op, Java(s"this.algebra${op.name.capitalize} = algebra${op.name.capitalize};").statement)
       argDeclarations = argDeclarations updated (op, s"${op.name.capitalize}$finalAlgebra algebra${op.name.capitalize}")
     })
 
     // must order the arguments for consistent usage.
     val argDeclarationsOrdered:String = argDeclarations.values.toSeq.sortWith(_ < _).mkString(",")
-    val methods:Seq[MethodDeclaration] = m.flat().types.flatMap(exp => innerMethod(exp, operations))
+    val methods:Seq[MethodDeclaration] = m.flatten().types.flatMap(exp => innerMethod(exp, operations))
 
     // operations has all operations
     val str:String =

@@ -17,14 +17,13 @@ trait c1 extends Evolution with AbstractGenerator with TestGenerator with M2 wit
   abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {
     val subs = subExpressions(exp)
 
-    // generate the actual body
     op match {
-      case PrettyP =>
-        exp match {
-          case Inv => Java(s"""return "(1.0/" + ${dispatch(subs(domain.base.inner), PrettyP)} + ")"; """).statements()
-          case _ => super.logic(exp)(op)
-        }
-
+      case PrettyP => exp match {
+        case Inv =>
+          val inv = dispatch(subs(domain.base.inner), PrettyP)
+          Java(s"""return "(1.0/" + $inv + ")";""").statements
+        case _ => super.logic(exp)(op)
+      }
       case _ => super.logic(exp)(op)
     }
   }

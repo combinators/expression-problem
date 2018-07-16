@@ -60,7 +60,7 @@ trait e3 extends Evolution with AbstractGenerator with TestGenerator with M0 wit
          |
          |   assertEquals ("-5.0", ${dispatch(convert(d1), PrettyP)});
          |   assertEquals ("-(2.0*3.0)", ${dispatch(convert(s1), PrettyP)});
-         |}""".stripMargin).methodDeclarations()
+         |}""".stripMargin).methodDeclarations
   }
 }
 

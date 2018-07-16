@@ -23,31 +23,31 @@ trait TestGenerator  {
       case ui:UnaryInst =>
         Java(s"new $name(${convert(ui.inner)})").expression()
       case bi:BinaryInst =>
-        Java(s"new $name(${convert(bi.left)}, ${convert(bi.right)})").expression()
-      case exp:AtomicInst => Java(s"new $name(${exp.i.get.toString})").expression()
+        val left = convert(bi.left)
+        val right = convert(bi.right)
+        Java(s"new $name($left, $right)").expression()
+      case exp:AtomicInst => Java(s"new $name(${exp.i.get})").expression()
 
       case _ =>  Java(s""" "unknown $name" """).expression()
     }
   }
 
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
-  def generateSuite(pack:Option[String]): CompilationUnit = {
-    val methods:Seq[MethodDeclaration] = testGenerator
-
-    val packageDeclaration:String = if (pack.isDefined) {
-      s"package ${pack.get};"
+  def generateSuite(pkg:Option[String], model:Option[Model] = None): CompilationUnit = {
+    val packageDeclaration:String = if (pkg.isDefined) {
+      s"package ${pkg.get};"
     } else { "" }
 
     var num:Int = 0
-    val unitTests:Seq[MethodDeclaration] = methods.filter(md => md.getBody.isPresent).flatMap(md => {
+    val unitTests = testGenerator.filter(md => md.getBody.isPresent).flatMap(md => {
       num = num + 1
-      Java (s"""public void test$num()  ${md.getBody.get} """).methodDeclarations()
+      Java (s"public void test$num() ${md.getBody.get}").methodDeclarations
     })
 
     Java(s"""|$packageDeclaration
              |import junit.framework.TestCase;
              |public class TestSuite extends TestCase {
              |    ${unitTests.mkString("\n")}
-             |}""".stripMargin).compilationUnit()
+             |}""".stripMargin).compilationUnit
   }
 }

@@ -25,6 +25,7 @@ lazy val commonSettings = Seq(
     "org.combinators" %% "cls-scala-presentation-play-git" % "1.0.0-RC1+8-63d5cf0b",
     "org.scalactic" %% "scalactic" % "3.0.1" % "test",
     "org.scalatest" %% "scalatest" % "3.0.1" % "test",
+    "com.chuusai" %% "shapeless" % "2.3.2",
     guice,
     "junit" % "junit" % "4.12"
   )

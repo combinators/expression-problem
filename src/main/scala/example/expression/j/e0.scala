@@ -25,14 +25,14 @@ trait e0 extends AbstractGenerator with TestGenerator with M0 {
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
   abstract override def logic(exp:Atomic)(op:Operation): Seq[Statement] = {
-    val subs:Map[String,Expression] = subExpressions(exp)
+    val atts:Map[String,Expression] = subExpressions(exp)
 
     // generate the actual body
     op match {
       case Eval =>
         exp match {
-          case Lit => Java(s"return ${subs(litValue)};").statements
-          case Add => Java(s"return ${dispatch(subs(base.left),op)} + ${dispatch(subs(base.right),op)};").statements
+          case Lit => Java(s"return ${atts(litValue)};").statements
+          case Add => Java(s"return ${dispatch(atts(base.left),op)} + ${dispatch(atts(base.right),op)};").statements
           case _ => super.logic(exp)(op)
         }
 
@@ -49,6 +49,6 @@ trait e0 extends AbstractGenerator with TestGenerator with M0 {
          |public void test() {
          |   assertEquals(3.0, ${dispatch(convert(a1), Eval)});
          |   assertEquals(5.0, ${dispatch(convert(lit1), Eval)});
-         |}""".stripMargin).methodDeclarations()
+         |}""".stripMargin).methodDeclarations
   }
 }

@@ -36,10 +36,13 @@ public abstract class Operation {
 
     /**
      * Ensures hashing works.
-     *
-     * @return
      */
     public int hashCode() {
         return getClass().hashCode();
+    }
+
+    /** Standard visitor pattern. */
+    public void accept(Visitor v) {
+        v.visit(this);
     }
 }

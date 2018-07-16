@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="sbt: org.combinators:cls-scala-presentation-play-git_2.12:1.0.0-RC1+8-63d5cf0b:jar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/org.combinators/cls-scala-presentation-play-git_2.12/jars/cls-scala-presentation-play-git_2.12-1.0.0-RC1+8-63d5cf0b.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/org.combinators/cls-scala-presentation-play-git_2.12/srcs/cls-scala-presentation-play-git_2.12-1.0.0-RC1+8-63d5cf0b-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

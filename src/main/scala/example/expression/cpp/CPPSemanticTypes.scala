@@ -4,7 +4,6 @@ import expression.types.{FrameworkTypes, GenericType, TypeInformation, Types}
 import expression.{Exp, Operation}
 import org.combinators.cls.types._
 import org.combinators.cls.types.syntax._
-import example.expression.covariant.SemanticTypes
 
 /**
   * These codify the semantic types used by the Expression problem.
@@ -13,6 +12,11 @@ import example.expression.covariant.SemanticTypes
   * make them Constructor.
   */
 trait CPPSemanticTypes extends SemanticTypes {
+
+  // standard headers
+  def standardHeader():Seq[String] = {
+    s"""#include "visitor.h" """.stripMargin.split("\n")
+  }
 
   /** Implementations for an operation. Map(op, Map(exp,String)). */
   var implementations:Map[Class[_ <: Operation],Map[Class[_ <: Exp],String]] = Map()
@@ -55,10 +59,11 @@ trait CPPSemanticTypes extends SemanticTypes {
   /** Convert a type into its Java String equivalent. */
   def Type_toString (ty:TypeInformation): String =
     ty match {
-      case Types.Exp=> "Exp*"           // base class of everything (turn into pointer)
+      case Types.Exp=> "Exp"           // base class of everything (turn into pointer)
 
       case Types.Void => "void"
       case Types.Int => "int"      // allow boxing/unboxing for generics
+      case Types.Double => "double"
       case Types.String => "std::string"
       case g:GenericType => Type_toString(g.base) + "<" + Type_toString(g.generic) + ">"
       case FrameworkTypes.List => "std::vector"

@@ -9,7 +9,7 @@ public class Lit extends Exp {
         super();
 
         // these methods become available. Find implementation in synthesized code
-        ops.add(new Attribute("value", Types.Int));
+        ops.add(new Attribute("value", Types.Double));
     }
 
 }

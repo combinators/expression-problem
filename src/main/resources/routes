@@ -1,22 +1,84 @@
 
 ->    /                              org.combinators.cls.git.Routes
 
-GET   /algebra                      example.expression.algebra.Expression.overview()
-GET   /algebra/raw_:number          example.expression.algebra.Expression.raw(number: Long)
-GET   /algebra/prepare              example.expression.algebra.Expression.prepare(number: Long)
-GET   /algebra/algebra.git/*file         example.expression.algebra.Expression.serveFile(file)
+#GET   /ep                      example.expression.covariant.Expression.overview()
+#GET   /ep/raw_:number          example.expression.covariant.Expression.raw(number: Long)
+#GET   /ep/prepare              example.expression.covariant.Expression.prepare(number: Long)
+#GET   /ep/ep.git/*file         example.expression.covariant.Expression.serveFile(file)
 
-GET   /ep                      example.expression.covariant.Expression.overview()
-GET   /ep/raw_:number          example.expression.covariant.Expression.raw(number: Long)
-GET   /ep/prepare              example.expression.covariant.Expression.prepare(number: Long)
-GET   /ep/ep.git/*file         example.expression.covariant.Expression.serveFile(file)
-
-GET   /expression                      example.expression.visitor.Expression.overview()
-GET   /expression/raw_:number          example.expression.visitor.Expression.raw(number: Long)
-GET   /expression/prepare              example.expression.visitor.Expression.prepare(number: Long)
-GET   /expression/expression.git/*file         example.expression.visitor.Expression.serveFile(file)
+#GET   /expression                      example.expression.visitor.Expression.overview()
+#GET   /expression/raw_:number          example.expression.visitor.Expression.raw(number: Long)
+#GET   /expression/prepare              example.expression.visitor.Expression.prepare(number: Long)
+#GET   /expression/expression.git/*file         example.expression.visitor.Expression.serveFile(file)
 
 GET   /cpp_ep                              example.expression.cpp.Expression_CPP.overview()
 GET   /cpp_ep/raw_:number                  example.expression.cpp.Expression_CPP.raw(number: Long)
 GET   /cpp_ep/prepare                      example.expression.cpp.Expression_CPP.prepare(number: Long)
 GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP.serveFile(file)
+
+# All variants have names that end in "Evolution", with sub-branches as described by 'e0', 'e1', 'e2', ...
+#OO variations
+->    /                              example.expression.oo.M0_Variation
+->    /                              example.expression.oo.M1_Variation
+->    /                              example.expression.oo.M2_Variation
+->    /                              example.expression.oo.M3_Variation
+->    /                              example.expression.oo.M4_Variation
+->    /                              example.expression.oo.M5_Variation
+->    /                              example.expression.oo.I2_Variation
+->    /                              example.expression.oo.C1_Variation
+#Trivially variations
+->    /                              example.expression.trivially.M0_Variation
+->    /                              example.expression.trivially.M1_Variation
+->    /                              example.expression.trivially.M2_Variation
+->    /                              example.expression.trivially.M3_Variation
+->    /                              example.expression.trivially.M4_Variation
+->    /                              example.expression.trivially.M5_Variation
+->    /                              example.expression.trivially.C1_Variation
+#Interpreter variations
+->    /                              example.expression.interpreter.M0_Variation
+->    /                              example.expression.interpreter.M1_Variation
+->    /                              example.expression.interpreter.M2_Variation
+->    /                              example.expression.interpreter.M3_Variation
+->    /                              example.expression.interpreter.M4_Variation
+->    /                              example.expression.interpreter.M5_Variation
+# Scala visitor variations
+->    /                              example.expression.scalaVisitor.M0_Variation
+->    /                              example.expression.scalaVisitor.M1_Variation
+->    /                              example.expression.scalaVisitor.M2_Variation
+->    /                              example.expression.scalaVisitor.M3_Variation
+->    /                              example.expression.scalaVisitor.M4_Variation
+->    /                              example.expression.scalaVisitor.M5_Variation
+->    /                              example.expression.scalaVisitor.C1_Variation
+# CPP variation
+->    /                              example.expression.cpp.M0_Variation
+->    /                              example.expression.cpp.M1_Variation
+->    /                              example.expression.cpp.M2_Variation
+->    /                              example.expression.cpp.M3_Variation
+# Visitor variations
+->    /                              example.expression.visitor.M0_Variation
+->    /                              example.expression.visitor.M1_Variation
+->    /                              example.expression.visitor.M2_Variation
+->    /                              example.expression.visitor.M3_Variation
+->    /                              example.expression.visitor.M4_Variation
+# Covariant variations
+->    /                              example.expression.covariant.M0_Variation
+->    /                              example.expression.covariant.M1_Variation
+->    /                              example.expression.covariant.M2_Variation
+->    /                              example.expression.covariant.M3_Variation
+->    /                              example.expression.covariant.M4_Variation
+# Algebra variations
+->    /                              example.expression.algebra.M0_Variation
+->    /                              example.expression.algebra.M1_Variation
+->    /                              example.expression.algebra.M2_Variation
+->    /                              example.expression.algebra.M3_Variation
+->    /                              example.expression.algebra.M4_Variation
+->    /                              example.expression.algebra.M5_Variation
+->    /                              example.expression.algebra.I2_Variation
+->    /                              example.expression.algebra.C1_Variation
+#
+#
+# Shape Evolution
+->    /                              example.expression.oo.S0_Variation
+->    /                              example.expression.oo.S1_Variation
+->    /                              example.expression.scalaVisitor.S0_Variation
+->    /                              example.expression.scalaVisitor.S1_Variation

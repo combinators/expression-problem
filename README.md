@@ -120,11 +120,51 @@ trait M2 extends Evolution { self: M0 with M1 =>
   case object PrettyP extends Operation("print",Some(String)) 
   val m2 = Model("m2", Seq.empty, Seq(PrettyP), last=m1)
   override def getModel = m2
-}                                            
+}          
+
+trait M3 extends Evolution { self: M0 with M1 with M2 =>
+  val domain:MathDomain
+
+  case object Mult extends domain.Binary("Mult")
+  case object Neg extends domain.Unary("Neg")
+  case object Divd extends domain.Binary("Divd")
+
+  val m3 = domain.Model("m3", Seq(Neg, Mult, Divd), Seq.empty, last = m2)
+  override def getModel = m3
+}
+
+trait M4 extends Evolution {
+  self: M0 with M1 with M2 with M3 =>
+  val domain:MathDomain
+
+  case object Simplify extends domain.ProducerOperation("simplify")
+  case class List(generic:domain.TypeRep) extends domain.TypeRep
+  case object Collect extends domain.Operation("collect", Some(List(Double)))
+
+  val m4 = domain.Model("m4",Seq.empty, Seq(Simplify, Collect), last = m3)
+  override def getModel = m4
+}
 
 ```
 
-## Visitor Solutions
+In this application domain, an initial model (M0) is extended four times, adding new data
+types and operations. We have encoded a number of approaches to the Expression Problem that 
+generates solutions in Java. To request the code generation, the following are the completed 
+implementations
+
+## OO Solution
+
+A straight object-oriented approach requires operations to be added to each data type
+class. As new subtypes are created, each can be placed in its own class and there is 
+no trouble with existing code; however, defining new operations means that all existing
+subtypes need to have new methods added to their class. As such, this is not a solution
+to the EP problem:
+
+`git clone localhost:9000/oo/m4/m4.git`
+
+![Retrieve ZIP file](https://github.com/combinators/ExpressionProblem/blob/master/oo.zip) with generated source files
+
+## Visitor Solution
 
 The Visitor Design Pattern is not an acceptable solution to the Expression Problem 
 because defining new data variants (i.e., `Neg` which negates an expression) 
@@ -132,7 +172,7 @@ requires modifications to all existing `Visitor` classes. However, using our
 approach, we can simply resynthesize all classes with every change to the 
 Application Domain. 
 
-**inhabit:** `localhost:9000/expression`
+`git clone localhost:9000/scalaVisitor/m4/m4.git`
 
 ## Covariant Java Solution
 

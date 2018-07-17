@@ -3,19 +3,71 @@ Synthesize a number of approaches (in multiple languages) that address the _Expr
 
 As coined by Philip Walder, the Expression Problem is a new name for an old problem. The goal is to define a datatype by cases, where one can add new cases to the datatype and new functions over the datatype, without recompiling existing code, and while retaining static type safety.
  
-There are various "solutions" to the Expression Problem. Each solutation varies in the amount of code a user must write to implement them, and the language features they require.
+There are various "solutions" to the Expression Problem. Each solution varies in the amount of code a user must write to implement them, and the language features they require.
 
-In this CLS project, we explore a number of such solutions. Our concern is not with the individual solutions to the Expression Problem (of which there are many), but rather the engineering of these. 
-We provide an alternative, namely, to regenerate all code after modifying the domain.
+In this project, we explore a number of such solutions. Our concern is not with the individual solutions to the Expression Problem (of which there are many), but rather the engineering of these. We provide an alternative, namely, to regenerate all code after modifying the domain.
 
-Let's start with a language for a simple form of arithmetic expressions. 
-We first model the domain using lightweight Plain Old Java Objects (POJOs) based 
-on the class diagram shown below. The sub-trees rooted by `Exp` and 
-`Operation` form the core of the application domain model. The classes implementing
-`TypeInformation` and extending `Method` model the domain without actually
-containing the business logic (i.e., they provide a meta-model for the domain).
-Each `Exp` subclass models its structure (e.g., `Integer value` or `Exp left`)
-while the `Operation` subclasses model the actions (e.g., `Integer eval()`). 
+Let's start with a language for a simple form of arithmetic expressions. We first model the domain using Scala:
+
+```
+trait BaseDomain {
+  abstract class TypeRep { 
+    def name: String = getClass.getName
+  }
+  type BaseTypeRep <: TypeRep
+  val baseTypeRep:BaseTypeRep  
+
+  object base {
+    val inner:String = "inner"
+    val left:String  = "left"
+    val right:String = "right"
+    val that:String  = "that"
+  }
+
+  abstract class Element
+  case class Attribute(name:String, tpe:TypeRep)
+    extends Element
+  abstract class Operation(val name:String,
+    val returnType:Option[TypeRep],
+    val parameters:Seq[(String, TypeRep)] = Seq.empty)
+    extends Element
+
+  abstract class Atomic(val name: String,   
+    val attributes: Seq[Attribute])
+  abstract class Unary(override val name:String)
+    extends Atomic(name,
+      Seq(Attribute(base.inner, baseTypeRep)))
+  abstract class Binary(override val name:String)
+    extends Atomic(name,
+      Seq(Attribute(base.left, baseTypeRep),
+          Attribute(base.right, baseTypeRep)))    
+
+ class ProducerOperation(override val name:String,  
+    override val parameters:Seq[(String, TypeRep)])
+    extends Operation(name,Some(baseTypeRep),parameters)  
+  class BinaryMethod(override val name:String,  
+    override val returnType:Option[TypeRep])
+    extends Operation(name, returnType,
+    Seq((base.that, baseTypeRep)))            
+
+
+  class AtomicInst(val e:Atomic, val i:Option[Any]) 
+  class UnaryInst(override val e:Atomic,
+    val inner:AtomicInst) extends AtomicInst(e, None)
+  class BinaryInst(override val e:Atomic,
+    val left:AtomicInst, val right:AtomicInst)
+    extends AtomicInst(e, None) |\label{line:inst-end}|
+}
+
+trait ModelDomain extends BaseDomain {
+  case class Model(name:String,          
+    types:Seq[Atomic], ops:Seq[Operation],
+    last:Model = emptyModel()) {
+        ...    // implementation omitted
+    }                                    
+}
+
+```
 
 Once these concepts are identified, the designer chooses a programming language and implements a desired solution.
 

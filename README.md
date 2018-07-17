@@ -1,5 +1,5 @@
 # ExpressionProblem
-Synthesize a number of approaches (in multiple languages) that address the _Expression Problem_.
+The goal of this project is to generate a number of approaches (in multiple languages) that address the _Expression Problem_.
 
 As coined by Philip Walder, the Expression Problem is a new name for an old problem. The goal is to define a datatype by cases, where one can add new cases to the datatype and new functions over the datatype, without recompiling existing code, and while retaining static type safety.
  

@@ -183,7 +183,10 @@ by *Yanling Wang* and *Bruno C. d. S. Oliveira*
 describes an approach using _covariant type refinement_ of return types and fields. Unlike existing solutions in
 Java-like languages, this solution does not use any kind of generics.
 
-**inhabit:** `localhost:9000/ep`
+`git clone localhost:9000/trivially/m4/m4.git`
+
+![Retrieve ZIP file](https://github.com/combinators/expression-problem/raw/master/trivially.zip) with generated source files
+
 
 ## C++ Solution
 
@@ -191,9 +194,17 @@ C++ solutions exist as well.
 In a blog [Expression Problem and its solutions](https://eli.thegreenplace.net/2016/the-expression-problem-and-its-solutions "Expression Problem and its solutions")
 Eli Bendersky outlines an approach for using the visitor design pattern as implemented in C++.
 
-**inhabit:** `localhost:9000/cpp_ep`
+`git clone localhost:9000/cpp/m3/m3.git`
 
+ This solution only generates for the first three evolutions. It compiles as follows:
  
+`g++ *.cpp -Icpputest/include -Lcpputest/cpputest_build/lib -lCppUTest -lCppUTestExt`
+
+The [CPPUnit test project](https://github.com/cpputest/cpputest) contains the necessary includes and libraries to 
+cleanly compile this code and confirm all test cases.
+ 
+ ![Retrieve ZIP file](https://github.com/combinators/expression-problem/raw/master/cpp.zip) with generated source files
+
  
 
 

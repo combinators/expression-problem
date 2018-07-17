@@ -162,7 +162,7 @@ to the EP problem:
 
 `git clone localhost:9000/oo/m4/m4.git`
 
-![Retrieve ZIP file](https://github.com/combinators/ExpressionProblem/blob/master/oo.zip) with generated source files
+![Retrieve ZIP file](https://github.com/combinators/expression-problem/blob/master/oo.zip) with generated source files
 
 ## Visitor Solution
 

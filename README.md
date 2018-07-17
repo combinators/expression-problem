@@ -187,6 +187,14 @@ Java-like languages, this solution does not use any kind of generics.
 
 ![Retrieve ZIP file](https://github.com/combinators/expression-problem/raw/master/trivially.zip) with generated source files
 
+## Interpreter Design Pattern
+
+The *TCS 2003 paper* [Solving Expression problem using Interpreter Pattern](http://www.cs.pomona.edu/~kim/ftp/WOOD.pdf) by 
+*Bruce Kim* describes an approach to solving the EP problem using the Interpreter Design Pattern.
+
+`git clone localhost:9000/interpreter/m4/m4.git`
+
+![Retrieve ZIP file](https://github.com/combinators/expression-problem/raw/master/interpreter.zip) with generated source files
 
 ## C++ Solution
 

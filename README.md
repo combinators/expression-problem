@@ -7,7 +7,7 @@ There are various "solutions" to the Expression Problem. Each solution varies in
 
 In this project, we explore a number of such solutions. Our concern is not with the individual solutions to the Expression Problem (of which there are many), but rather the engineering of these. We provide an alternative, namely, to regenerate all code after modifying the domain.
 
-Let's start with a language for a simple form of arithmetic expressions. We first model the domain using Scala:
+Let's start with a language for a simple form of arithmetic expressions. We first model the domain using Scala in [BaseDomain](src/main/scala/example/expression/domain/BaseDomain.scala):
 
 ```
 trait BaseDomain {

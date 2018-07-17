@@ -162,7 +162,7 @@ to the EP problem:
 
 `git clone localhost:9000/oo/m4/m4.git`
 
-![Retrieve ZIP file](https://github.com/combinators/expression-problem/blob/master/oo.zip) with generated source files
+![Retrieve ZIP file](https://github.com/combinators/expression-problem/raw/master/oo.zip) with generated source files
 
 ## Visitor Solution
 
@@ -173,6 +173,8 @@ approach, we can simply resynthesize all classes with every change to the
 Application Domain. 
 
 `git clone localhost:9000/scalaVisitor/m4/m4.git`
+
+![Retrieve ZIP file](https://github.com/combinators/expression-problem/raw/master/scalaVisitor.zip) with generated source files
 
 ## Covariant Java Solution
 

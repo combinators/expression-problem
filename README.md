@@ -69,11 +69,60 @@ trait ModelDomain extends BaseDomain {
 
 ```
 
-Once these concepts are identified, the designer chooses a programming language and implements a desired solution.
+For more details on [ModelDomain](src/main/scala/example/expression/domain/ModelDomain.scala) check out ths Scala file. Once these concepts are identified, the designer chooses a programming language and implements a desired solution.
 
 ## Application Domain
 
-![UML Domain Model](https://github.com/combinators/expression-problem/blob/master/ExpressionProblemModel.png)
+The desired application domain (in this case mathematical expressions) extends these traits to provide a specific domain within which to work. The entire evolution history is modeled, from an initial state M0 through successive evolutions. The following [MathDomain](src/main/scala/example/expression/domain/MathDomain.scala) describes the common domain used in the literature when describing the Expression Problem.
+
+```
+trait MathDomain extends BaseDomain with ModelDomain {  
+  case object Exp extends TypeRep {
+    override def name:String = "Exp"
+  }
+  type BaseTypeRep = Exp.type
+  val baseTypeRep:BaseTypeRep = Exp
+}                                                      
+object MathDomain extends MathDomain
+
+trait Evolution {                                
+  val domain: ModelDomain
+  def getModel: domain.Model
+}                                                
+
+trait M0 extends Evolution {                      
+  val domain:MathDomain
+  import domain._
+  val litValue:String = "value"
+
+  case object Double extends TypeRep
+  case object Lit extends Atomic("Lit",   
+    Seq(Attribute(litValue, Double)))     
+  case object Add extends Binary("Add")  
+
+  case object Eval extends Operation("eval", Some(Double)) 
+  class LitInst(d:Double) extends AtomicInst(Lit, Some(d))
+  val m0 = Model("m0", Seq(Lit, Add), Seq(Eval))
+  override def getModel = m0
+}                                                 
+
+trait M1 extends Evolution { self: M0 =>         
+  val domain:MathDomain
+  case object Sub extends Binary("Sub")
+  val m1 = Model("m1", Seq(Sub), Seq.empty, last=m0)  
+  override def getModel = m1
+}                                                 
+
+trait M2 extends Evolution { self: M0 with M1 =>  
+  val domain:MathDomain
+  import domain._
+  case object String extends TypeRep
+  case object PrettyP extends Operation("print",Some(String)) 
+  val m2 = Model("m2", Seq.empty, Seq(PrettyP), last=m1)
+  override def getModel = m2
+}                                            
+
+```
 
 ## Visitor Solutions
 

@@ -196,6 +196,16 @@ The *TCS 2003 paper* [Solving Expression problem using Interpreter Pattern](http
 
 ![Retrieve ZIP file](https://github.com/combinators/expression-problem/raw/master/interpreter.zip) with generated source files
 
+## Object Algebras
+
+The *ECOOP 2012 paper* [Extensibility for the Masses](https://dl.acm.org/citation.cfm?id=236716) by 
+*Bruno C. d. S. Oliveira & William R. Cook* describes an approach to solving the EP problem using
+Object Algebras.
+
+`git clone localhost:9000/algebra/m4/m4.git`
+
+![Retrieve ZIP file](https://github.com/combinators/expression-problem/raw/master/algebra.zip) with generated source files
+
 ## C++ Solution
 
 C++ solutions exist as well. 

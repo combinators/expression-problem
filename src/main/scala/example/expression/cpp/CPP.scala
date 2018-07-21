@@ -28,6 +28,14 @@ class CPPElement (val stmt:String = "") extends CPPBase {
   override def toString:String = stmt
 }
 
+/**
+  * A valid identifier of a type.
+  */
+class CPPType (val stmt:String = "") extends CPPBase {
+  override def toString:String = stmt
+}
+
+
 /** Any CPP artifact that should be placed in a file. */
 abstract class CPPFile extends CPPBase {
   var standardHeader:String = ""

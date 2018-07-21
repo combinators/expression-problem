@@ -50,7 +50,7 @@ trait AlgebraTestGenerator extends TestGenerator with AbstractGenerator {
   }
 
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
-  override def generateSuite(pkg: Option[String], m:Option[Model] = None): CompilationUnit = {
+  override def generateSuite(pkg: Option[String], m:Option[Model] = None): Seq[CompilationUnit] = {
     val methods: Seq[MethodDeclaration] = testGenerator
 
     val packageDeclaration: String = if (pkg.isDefined) {
@@ -60,36 +60,38 @@ trait AlgebraTestGenerator extends TestGenerator with AbstractGenerator {
     }
 
     var num: Int = 0
-    val unitTests: Seq[MethodDeclaration] = methods.filter(md => md.getBody.isPresent).map(md => {
+    val unitTests: Seq[CompilationUnit] = methods.filter(md => md.getBody.isPresent).map(md => {
       num = num + 1
-      Java(s"public void test$num() ${md.getBody.get.toString}").methodDeclarations().head
+      //Java(s"public void test$num() ${md.getBody.get.toString}").methodDeclarations().head
+
+      // must get all operations defined for this model and earlier. For each one, define algebra with
+      // current extension
+      val model = m.getOrElse(emptyModel())
+      val operations: Seq[Operation] = model.flatten().ops
+      var algebraDeclarations: Map[Operation, FieldDeclaration] = Map()
+      var algParams:Map[Operation,String] = Map()
+
+      operations.sortWith(_.name < _.name).foreach(op => {
+        val finalAlgebra:String = classify(model) + "ExpAlg"
+
+        val str = s"""${op.name.capitalize}$finalAlgebra algebra${op.name.capitalize} = new ${op.name.capitalize}$finalAlgebra();"""
+        algebraDeclarations = algebraDeclarations updated(op, Java(str).fieldDeclarations().head)
+        algParams = algParams updated(op, s"algebra${op.name.capitalize}")
+      })
+
+      val str:String = s"""|$packageDeclaration
+                           |import junit.framework.TestCase;
+                           |
+                           |public class TestSuite$num extends TestCase {
+                           |    ${algebraDeclarations.values.mkString("\n")}
+                           |  CombinedExpAlg algebra = new CombinedExpAlg(${algParams.values.mkString(",")});
+                           |
+                           |    $md
+                           |}""".stripMargin
+      Java(str).compilationUnit()
     })
 
-    // must get all operations defined for this model and earlier. For each one, define algebra with
-    // current extension
-    val model = m.getOrElse(emptyModel())
-    val operations: Seq[Operation] = model.flatten().ops
-    var algebraDeclarations: Map[Operation, FieldDeclaration] = Map()
-    var algParams:Map[Operation,String] = Map()
-
-    operations.sortWith(_.name < _.name).foreach(op => {
-      val finalAlgebra:String = classify(model) + "ExpAlg"
-
-      val str = s"""${op.name.capitalize}$finalAlgebra algebra${op.name.capitalize} = new ${op.name.capitalize}$finalAlgebra();"""
-      algebraDeclarations = algebraDeclarations updated(op, Java(str).fieldDeclarations().head)
-      algParams = algParams updated(op, s"algebra${op.name.capitalize}")
-    })
-
-    val str:String = s"""|$packageDeclaration
-                         |import junit.framework.TestCase;
-                         |
-                         |public class TestSuite extends TestCase {
-                         |    ${algebraDeclarations.values.mkString("\n")}
-                         |  CombinedExpAlg algebra = new CombinedExpAlg(${algParams.values.mkString(",")});
-                         |
-                         |    ${unitTests.mkString("\n")}
-                         |}""".stripMargin
-    Java(str).compilationUnit()
+    unitTests
   }
 
   /** Produce inner methods. */

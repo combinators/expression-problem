@@ -22,7 +22,7 @@ abstract class ShapeFoundation @Inject()(web: WebJarsUtil, app: ApplicationLifec
   //lazy val flat:gen.domain.Model = gen.getModel.flat()
   //lazy val processed:gen.domain.Model = gen.getProcessedModel   // process model as necessary
   override lazy val generatedCode:Seq[CompilationUnit] =
-    gen.generatedCode() :+
+    gen.generatedCode() ++
       gen.generateSuite(Some("oo"))                             // generate test cases as well
 
   override val routingPrefix: Option[String] = Some("oo")

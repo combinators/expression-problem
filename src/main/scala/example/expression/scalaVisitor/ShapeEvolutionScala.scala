@@ -15,7 +15,7 @@ abstract class ShapeFoundation @Inject()(web: WebJarsUtil, app: ApplicationLifec
 
   //lazy val processed:gen.domain.Model = gen.getProcessedModel   // process model as necessary
   override lazy val generatedCode:Seq[CompilationUnit] =
-    gen.generatedCode() :+
+    gen.generatedCode() ++
     gen.generateSuite(Some("expression"))
 
   override val routingPrefix: Option[String] = Some("scalaVisitor")

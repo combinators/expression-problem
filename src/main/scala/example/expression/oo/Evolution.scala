@@ -15,7 +15,7 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   val gen:WithDomain[MathDomain] with OOGenerator with TestGenerator
 
 override lazy val generatedCode:Seq[CompilationUnit] =
-    gen.generatedCode() :+
+    gen.generatedCode() ++
     gen.generateSuite(Some("oo"))
 
   override val routingPrefix: Option[String] = Some("oo")

@@ -1,8 +1,7 @@
-package example.expression.j  /*DI:LD:AI*/
+package example.expression.cpp
 
-import com.github.javaparser.ast.CompilationUnit
-import com.github.javaparser.ast.body.MethodDeclaration
-import com.github.javaparser.ast.expr.Expression
+/*DI:LD:AI*/
+
 import example.expression.domain.{BaseDomain, ModelDomain}
 import org.combinators.templating.twirl.Java
 
@@ -15,10 +14,10 @@ trait TestGenerator {
   import domain._
 
   /** Return sample JUnit test cases. */
-  def testGenerator: Seq[MethodDeclaration] = Seq.empty
+  def testGenerator: Seq[CPPElement] = Seq.empty
 
   /** Convert a test instance into a Java Expression for instantiating that instance. */
-  def convert(inst: AtomicInst): Expression = {
+  def convert(inst: AtomicInst): CPPElement = {
     val name = inst.e.name
     inst match {
       case ui: UnaryInst =>
@@ -34,7 +33,7 @@ trait TestGenerator {
   }
 
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
-  def generateSuite(pkg: Option[String], model: Option[Model] = None): Seq[CompilationUnit] = {
+  def generateSuite(pkg: Option[String], model: Option[Model] = None): Seq[CPPFile] = {
     val packageDeclaration: String = if (pkg.isDefined) {
       s"package ${pkg.get};"
     } else {
@@ -42,15 +41,9 @@ trait TestGenerator {
     }
 
     var num: Int = 0
-    val files: Seq[CompilationUnit] = testGenerator.filter(md => md.getBody.isPresent).map(md => {
+    val files: Seq[CPPFile] = testGenerator.map(md => {
       num = num + 1
-
-      Java(s"""|$packageDeclaration
-               |import junit.framework.TestCase;
-               |public class TestSuite$num extends TestCase {
-               |    $md
-               |}""".stripMargin).compilationUnit
-
+      new CPPClass(s"TestSuite$num", "", Seq(md), Seq.empty)
     })
 
     //Java (s"public void test$num() ${md.getBody.get}").methodDeclarations

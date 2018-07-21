@@ -104,7 +104,7 @@ class M3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   override def testCases:UnitSuite = tests.e3.TestCases.add(super.testCases)
 }
 
-//
+
 //class M4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 //  extends M3_Variation(web, app) with e4.Model {
 //

@@ -21,7 +21,7 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   val gen:WithDomain[MathDomain] with AlgebraGenerator with AlgebraTestGenerator
 
   override lazy val generatedCode:Seq[CompilationUnit] =
-    gen.generatedCode() :+
+    gen.generatedCode() ++
     gen.generateSuite(Some("algebra"), Some(gen.process(gen.getModel))) :+
     gen.combinedAlgebra(Some("algebra"), gen.process(gen.getModel))       // requires a combined algebra for testing
 

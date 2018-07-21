@@ -14,7 +14,7 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   val gen:WithDomain[MathDomain] with VisitorGenerator with TestGenerator
 
   override lazy val generatedCode:Seq[CompilationUnit] =
-    gen.generatedCode() :+
+    gen.generatedCode() ++
     gen.generateSuite(Some("expression"))
 
   override val routingPrefix: Option[String] = Some("scalaVisitor")

@@ -19,7 +19,7 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   val gen:WithDomain[MathDomain] with InterpreterGenerator with InterpreterTestGenerator
 
   override lazy val generatedCode:Seq[CompilationUnit] =
-      gen.generatedCode() :+
+      gen.generatedCode() ++
       gen.generateSuite(Some("interpreter"))
 
   override val routingPrefix: Option[String] = Some("interpreter")

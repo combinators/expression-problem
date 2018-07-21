@@ -230,12 +230,9 @@ trait AlgebraGenerator extends AbstractGenerator with BinaryMethod {
         })
       }
 
-      if (model.types.nonEmpty) {
-        comps = comps :+ extendedInterface(model)
-      }
-
       // If new data types defined, must deal with extensions.
       if (model.types.nonEmpty) {
+        comps = comps :+ extendedInterface(model)
         operations.foreach(op => {
           comps = comps :+ operationGenerator(model, op)
         })

@@ -16,6 +16,9 @@ trait AbstractGenerator  {
   /** For the processed model, return generated code artifacts for solution. */
   def generatedCode():Seq[HaskellWithPath]
 
+  /** If any new imports are needed for an operation, just extend here. */
+  def addedImports(op:domain.Operation):Seq[Haskell] = Seq.empty
+
   /**
     * Determines the Haskell expression for all children of a Exp subtype based on its attributes.
     *

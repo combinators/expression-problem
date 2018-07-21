@@ -13,6 +13,14 @@ trait ALaCarteGenerator extends AbstractGenerator {
 
   lazy val flat:domain.Model = getModel.flatten()
 
+  /** Return designated HaskellType. Note GeneralExpr is most abstract.  */
+  override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[HaskellType] = None) : HaskellType = {
+    tpe match {
+      case domain.baseTypeRep => covariantReplacement.getOrElse(new HaskellType("GeneralExpr"))
+      case _ => super.typeConverter(tpe, covariantReplacement)
+    }
+  }
+
   /** For the processed model, return generated code artifacts for solution. */
   def generatedCode():Seq[HaskellWithPath] = {
 
@@ -90,28 +98,28 @@ trait ALaCarteGenerator extends AbstractGenerator {
     val imports = m.types.map(tpe => Haskell(s"import ${tpe.name}")).mkString("\n")
     val instances:Seq[Haskell] = m.types.map(exp => {
       val code = logic(exp)(op).mkString("\n")
-      Haskell(s"""
-               |instance $name ${exp.toString} where
-               |  ${op.name}Functor (${exp.toString} ${standardArgs(exp)}) = $code""".stripMargin)
-
+      Haskell(s""" |instance $name ${exp.toString} where
+                   |  ${op.name}Functor (${exp.toString} ${standardArgs(exp)}) = $code""".stripMargin)
     })
 
-    val code = Haskell(s"""
-                          |module $name where
-                          |import Base
-                          |$imports
-                          |class Functor f => $name f where
-                          |  ${op.name}Functor :: f ${typeConverter(op.returnType.get)} -> ${typeConverter(op.returnType.get)}
-                          |
-                          |${instances.mkString("\n")}
-                          |
-                          |instance ($name f, $name g) => $name (ET f g) where
-                          |  ${op.name}Functor  (El x) = ${op.name}Functor  x
-                          |  ${op.name}Functor  (Er y) = ${op.name}Functor  y
-                          |
-                          |${op.name} :: $name f => Expr f -> ${typeConverter(op.returnType.get)}
-                          |${op.name} expr = foldExpr ${op.name}Functor expr
-                          |""".stripMargin)
+    val opRetType = typeConverter(op.returnType.get)
+    val code = Haskell(s"""|module $name where
+                           |import Base
+                           |import GeneralExpr    -- only needed for Producer operations
+                           |${addedImports(op).mkString("\n")}
+                           |$imports
+                           |
+                           |class Functor f => $name f where
+                           |  ${op.name}Functor :: f $opRetType -> $opRetType
+                           |${instances.mkString("\n")}
+                           |
+                           |instance ($name f, $name g) => $name (ET f g) where
+                           |  ${op.name}Functor  (El x) = ${op.name}Functor  x
+                           |  ${op.name}Functor  (Er y) = ${op.name}Functor  y
+                           |
+                           |${op.name} :: $name f => Expr f -> ${typeConverter(op.returnType.get)}
+                           |${op.name} expr = foldExpr ${op.name}Functor expr
+                           |""".stripMargin)
     HaskellWithPath(code, Paths.get(s"$name.hs"))
   }
 
@@ -160,14 +168,6 @@ trait ALaCarteGenerator extends AbstractGenerator {
   def dispatch(expr:Haskell, op:domain.Operation, params:Haskell*) : Haskell = {
     val args:String = params.mkString(" ")
     Haskell(s"""$expr.${op.name} $args""")
-  }
-
-  /**
-    * Expression-tree data has attributes with domain-specific types. This method returns
-    * the designated Haskell type associated with the abstract type, with option of a covariant replacement
-    */
-  override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[HaskellType] = None) : HaskellType = {
-    throw new scala.NotImplementedError(s"""Unknown Type "$tpe" """)
   }
 
 }

@@ -62,7 +62,7 @@ trait e3 extends Evolution with AbstractGenerator with TestGenerator with M0 wit
          |test_e3_3 = TestCase (assertEqual "MultCheck-Eval" 6.0 (Eval.eval m1_))
          |test_e3_4 = TestCase (assertEqual "MultCheck-Print" "(2.0*3.0)" (Print.print m1_))
          |test_e3_5 = TestCase (assertEqual "MultCheck-Eval" 10.0 (Eval.eval m2_))
-         |test_e3_6 = TestCase (assertEqual "MultCheck-Print" "((5.0/2.0)*(4.0))" (Print.print m2_))
+         |test_e3_6 = TestCase (assertEqual "MultCheck-Print" "((5.0/2.0)*4.0)" (Print.print m2_))
          |
          |test_e3 = TestList [ TestLabel "1" test_e3_1, TestLabel "2" test_e3_2, TestLabel "3" test_e3_3, TestLabel "4" test_e3_4, TestLabel "5" test_e3_5, TestLabel "6" test_e3_6 ]
          |

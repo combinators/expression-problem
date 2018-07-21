@@ -22,6 +22,7 @@ GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP
 ->    /                              example.expression.haskell.M1_Variation
 ->    /                              example.expression.haskell.M2_Variation
 ->    /                              example.expression.haskell.M3_Variation
+->    /                              example.expression.haskell.M4_Variation
 #CPP variation
 ->    /                              example.expression.cpp.CPP_M0_Variation
 #OO variations

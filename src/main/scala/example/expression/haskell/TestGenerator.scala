@@ -29,15 +29,7 @@ trait TestGenerator {
       "Er(" + treeRoute(a, flattened.tail) + " "
     }
   }
-//
-//  /** normalize the atomic Instance by its position within flattened data types. */
-//  def treeRouteRight(a:AtomicInst, flattened:Seq[Atomic]) : String = {
-//    if (a.e == flattened.head) {
-//      s"${a.e.name.capitalize} "
-//    } else {
-//      "Er(" + treeRouteRight(a, flattened.tail) + " "
-//    }
-//  }
+
 
   // ugly! works, though...
   def closeTreeRoute(a:AtomicInst, flattened:Seq[Atomic]) : String = {
@@ -50,13 +42,6 @@ trait TestGenerator {
     }
   }
 
-  def closeTreeRouteRight(a:AtomicInst, flattened:Seq[Atomic]) : String = {
-    if (a.e == flattened.head) {
-      ""
-    } else {
-      ")" + closeTreeRouteRight(a, flattened.tail)
-    }
-  }
 
   /**
     * Expand instance into its post-order traversal of interior definitions.
@@ -115,7 +100,7 @@ trait TestGenerator {
   def generateSuite(model: Option[Model] = None): Seq[HaskellWithPath] = {
     val opsImports = flat.ops.map(op => s"import ${op.name.capitalize}").mkString("\n")
     val typesImports = flat.types.map(exp => s"import ${exp.name.capitalize}").mkString("\n")
-    var num: Int = 0
+    var num: Int = -1
     val files: Seq[HaskellWithPath] = testGenerator.map(md => {
       num = num + 1
       HaskellWithPath(Haskell(s"""|module Main where

@@ -8,7 +8,7 @@ trait M2 extends Evolution {
   // m2:model evolution.
   // -------------------
   case object String extends TypeRep
-  case object PrettyP extends Operation("print", Some(String))
+  case object PrettyP extends Operation("prettyp", Some(String))  // PROBLEMS WITH "print"
 
   val m2 = Model("m2", Seq.empty, Seq(PrettyP), last = m1)
   override def getModel = m2

@@ -1,4 +1,4 @@
-package example.expression.haskell
+package example.expression.haskell      /*DI:LD:AI*/
 
 import org.apache.commons.text.StringEscapeUtils
 import play.twirl.api.{BufferedContent, Format, Formats}

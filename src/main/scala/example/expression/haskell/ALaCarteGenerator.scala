@@ -1,12 +1,10 @@
-package example.expression.haskell
+package example.expression.haskell       /*DI:LD:AD*/
 
 import java.nio.file.Paths
 
 import example.expression.domain.{BaseDomain, ModelDomain}
 
 trait ALaCarteGenerator extends AbstractGenerator {
-  val domain: BaseDomain with ModelDomain
-
   import domain._
 
   def getModel: domain.Model
@@ -87,11 +85,11 @@ trait ALaCarteGenerator extends AbstractGenerator {
     }
   }
 
-  /** Construct args list "a1 a2 a3 ..." */
-  def standardArgs(exp:Atomic) : String = {
-    val vals:Range = 1 to exp.attributes.size
-    vals.map(v => s"a$v").mkString (" ")
-  }
+//  /** Construct args list "a1 a2 a3 ..." */
+//  def standardArgs(exp:Atomic) : String = {
+//    val vals:Range = 1 to exp.attributes.size
+//    vals.map(v => s"a$v").mkString (" ")
+//  }
 
   def generateOp(m:Model, op:Operation) : HaskellWithPath = {
     val name = op.name.capitalize
@@ -99,7 +97,7 @@ trait ALaCarteGenerator extends AbstractGenerator {
     val instances:Seq[Haskell] = m.types.map(exp => {
       val code = logic(exp)(op).mkString("\n")
       Haskell(s""" |instance $name ${exp.toString} where
-                   |  ${op.name}Functor (${exp.toString} ${standardArgs(exp)}) = $code""".stripMargin)
+                   |  ${op.name}Functor (${exp.toString} ${standardArgs(exp).getCode}) = $code""".stripMargin)
     })
 
     val opRetType = typeConverter(op.returnType.get)
@@ -165,9 +163,8 @@ trait ALaCarteGenerator extends AbstractGenerator {
   }
 
   /** Responsible for dispatching sub-expressions with possible parameter(s). */
-  def dispatch(expr:Haskell, op:domain.Operation, params:Haskell*) : Haskell = {
+ override def dispatch(op:domain.Operation, primary:Haskell, params:Haskell*) : Haskell = {
     val args:String = params.mkString(" ")
-    Haskell(s"""$expr.${op.name} $args""")
+    Haskell(s"""$primary""")
   }
-
 }

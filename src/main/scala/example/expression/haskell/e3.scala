@@ -1,9 +1,6 @@
-package example.expression.haskell
-
-/*DD:LD:AI*/
+package example.expression.haskell      /*DD:LD:AI*/
 
 import example.expression.domain._
-import org.combinators.templating.twirl.Java
 
 /**
   * Truly independent of the specific design solution.
@@ -13,26 +10,27 @@ import org.combinators.templating.twirl.Java
 trait e3 extends Evolution with AbstractGenerator with TestGenerator with M0 with M1 with M2 with M3 {
   self:e0 with e1 with e2 =>
   val domain:MathDomain
+  import domain._
 
    abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Haskell] = {
-    val subs = subExpressions(exp)
+    val atts = subExpressions(exp)
     
     // generate the actual body
     op match {
       case PrettyP => {
         exp match {
-          case Neg => Seq(Haskell(s""" "-" ++ a1 """))
-          case Mult => Seq(Haskell(s""" "(" ++ a1 ++ "*" ++ a2 ++ ")" """))
-          case Divd => Seq(Haskell(s""" "(" ++ a1 ++ "/" ++ a2 ++ ")" """))
+          case Neg => Seq(Haskell(s""" "-" ++ ${dispatch(op, atts(base.inner))} """))
+          case Mult => Seq(Haskell(s""" "(" ++ ${dispatch(op, atts(base.left))} ++ "*" ++ ${dispatch(op, atts(base.right))} ++ ")" """))
+          case Divd => Seq(Haskell(s""" "(" ++ ${dispatch(op, atts(base.left))} ++ "/" ++ ${dispatch(op, atts(base.right))} ++ ")" """))
           case _ => super.logic(exp)(op)
         }
       }
 
       case Eval => {
         exp match {
-          case Neg => Seq(new Haskell(s"(- a1)"))
-          case Mult => Seq(new Haskell(s"a1 * a2"))
-          case Divd => Seq(new Haskell(s"a1 / a2"))
+          case Neg => Seq(new Haskell(s"(- ${dispatch(op, atts(base.inner))})"))
+          case Mult => Seq(new Haskell(s"""${dispatch(op, atts(base.left))} * ${dispatch(op, atts(base.right))}"""))
+          case Divd => Seq(new Haskell(s"""${dispatch(op, atts(base.left))} / ${dispatch(op, atts(base.right))}"""))
           case _ => super.logic(exp)(op)
         }
       }
@@ -48,21 +46,21 @@ trait e3 extends Evolution with AbstractGenerator with TestGenerator with M0 wit
     val s1 = new domain.UnaryInst(Neg, m1)
     val m2 = new domain.BinaryInst(Mult, new domain.BinaryInst (Divd, new LitInst(5.0),  new LitInst(2.0)), new LitInst(4.0))
 
-    val exp_n1:String = expand("n1_", n1).map(line => s"$line :: GeneralExpr").mkString("\n")
-    val exp_m1:String = expand("m1_", m1).map(line => s"$line :: GeneralExpr").mkString("\n")
-    val exp_m2:String = expand("m2_", m2).map(line => s"$line :: GeneralExpr").mkString("\n")
+    val exp_n1:String = postConvert(convert("n1_", n1)).mkString("\n")
+    val exp_m1:String = postConvert(convert("m1_", m1)).mkString("\n")
+    val exp_m2:String = postConvert(convert("m2_", m2)).mkString("\n")
 
     super.testGenerator :+ new Haskell(
       s"""
          |$exp_n1
          |$exp_m1
          |$exp_m2
-         |test_e3_1 = TestCase (assertEqual "NegCheck-Eval" (0-5.0) (Eval.eval n1_))
-         |test_e3_2 = TestCase (assertEqual "NegCheck-Print" "-5.0" (Print.print n1_))
-         |test_e3_3 = TestCase (assertEqual "MultCheck-Eval" 6.0 (Eval.eval m1_))
-         |test_e3_4 = TestCase (assertEqual "MultCheck-Print" "(2.0*3.0)" (Print.print m1_))
-         |test_e3_5 = TestCase (assertEqual "MultCheck-Eval" 10.0 (Eval.eval m2_))
-         |test_e3_6 = TestCase (assertEqual "MultCheck-Print" "((5.0/2.0)*4.0)" (Print.print m2_))
+         |test_e3_1 = TestCase (assertEqual "NegCheck-Eval" (0-5.0) (${Eval.name} n1_))
+         |test_e3_2 = TestCase (assertEqual "NegCheck-Print" "-5.0" (${PrettyP.name} n1_))
+         |test_e3_3 = TestCase (assertEqual "MultCheck-Eval" 6.0 (${Eval.name} m1_))
+         |test_e3_4 = TestCase (assertEqual "MultCheck-Print" "(2.0*3.0)" (${PrettyP.name} m1_))
+         |test_e3_5 = TestCase (assertEqual "MultCheck-Eval" 10.0 (${Eval.name} m2_))
+         |test_e3_6 = TestCase (assertEqual "MultCheck-Print" "((5.0/2.0)*4.0)" (${PrettyP.name} m2_))
          |
          |test_e3 = TestList [ TestLabel "1" test_e3_1, TestLabel "2" test_e3_2, TestLabel "3" test_e3_3, TestLabel "4" test_e3_4, TestLabel "5" test_e3_5, TestLabel "6" test_e3_6 ]
          |

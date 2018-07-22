@@ -1,6 +1,4 @@
-package example.expression.haskell
-
-/*DI:LD:AI*/
+package example.expression.haskell     /*DI:LD:AI*/
 
 import example.expression.domain.{BaseDomain, ModelDomain}
 
@@ -28,7 +26,12 @@ trait AbstractGenerator  {
   def subExpressions(exp:domain.Atomic) : Map[String, Haskell]
 
   /** Responsible for dispatching sub-expressions with possible parameter(s). */
-  def dispatch(expr:Haskell, op:domain.Operation, params:Haskell*) : Haskell
+  def dispatch(op:domain.Operation, primary:Haskell, params:Haskell*) : Haskell
+
+  /** Concatenate attributes by name in order */
+  def standardArgs(exp:domain.Atomic) : Haskell = {
+    Haskell(exp.attributes.map(att => att.name).mkString(" "))
+  }
 
   /**
     * Expression-tree data has attributes with domain-specific types. This method returns

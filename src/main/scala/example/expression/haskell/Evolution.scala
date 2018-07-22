@@ -1,6 +1,4 @@
-package example.expression.haskell
-
-/*DD:LD:AD*/
+package example.expression.haskell     /*DD:LD:AD*/
 
 import example.expression.domain.{MathDomain, WithDomain}
 import javax.inject.Inject
@@ -13,7 +11,7 @@ import example.expression.haskell.HaskellWithPathPersistable._
 abstract class FoundationHaskell @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends CodeGenerationController[HaskellWithPath](web, app)
 {
-  val gen:WithDomain[MathDomain] with ALaCarteGenerator with TestGenerator
+  val gen:WithDomain[MathDomain] with ALaCarteGenerator with ALaCarteTestGenerator
 
 override lazy val generatedCode:Seq[HaskellWithPath] =
     gen.generatedCode() ++
@@ -25,25 +23,25 @@ override lazy val generatedCode:Seq[HaskellWithPath] =
 
 class M0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends FoundationHaskell(web, app) {
-  override val gen = new WithDomain(MathDomain) with ALaCarteGenerator with TestGenerator with e0
+  override val gen = new WithDomain(MathDomain) with ALaCarteGenerator with ALaCarteTestGenerator with e0
 }
 
 class M1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends FoundationHaskell(web, app) {
-  override val gen = new WithDomain(MathDomain) with ALaCarteGenerator with TestGenerator with e0 with e1
+  override val gen = new WithDomain(MathDomain) with ALaCarteGenerator with ALaCarteTestGenerator with e0 with e1
 }
 
 class M2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends FoundationHaskell(web, app) {
-  override val gen = new WithDomain(MathDomain) with ALaCarteGenerator with TestGenerator with e0 with e1 with e2
+  override val gen = new WithDomain(MathDomain) with ALaCarteGenerator with ALaCarteTestGenerator with e0 with e1 with e2
 }
 
 class M3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends FoundationHaskell(web, app) {
-  override val gen = new WithDomain(MathDomain) with ALaCarteGenerator with TestGenerator with e0 with e1 with e2 with e3
+  override val gen = new WithDomain(MathDomain) with ALaCarteGenerator with ALaCarteTestGenerator with e0 with e1 with e2 with e3
 }
 
 class M4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends FoundationHaskell(web, app) {
-  override val gen = new WithDomain(MathDomain) with ALaCarteGenerator with TestGenerator with e0 with e1 with e2 with e3 with e4
+  override val gen = new WithDomain(MathDomain) with ALaCarteGenerator with ALaCarteProducer with ALaCarteTestGenerator with e0 with e1 with e2 with e3 with e4
 }

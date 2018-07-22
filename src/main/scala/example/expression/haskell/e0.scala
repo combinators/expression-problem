@@ -1,6 +1,4 @@
-package example.expression.haskell
-
-/*DD:LD:AI*/
+package example.expression.haskell    /*DD:LD:AI*/
 
 import example.expression.domain.M0
 
@@ -28,8 +26,8 @@ trait e0 extends AbstractGenerator with TestGenerator with M0 {
     op match {
       case Eval =>
         exp match {
-          case Lit => Seq(new Haskell(s"a1"))  // first argument
-          case Add => Seq(new Haskell(s"a1 + a2"))
+          case Lit => Seq(new Haskell(s"""${atts(litValue)}"""))
+          case Add => Seq(new Haskell(s"""${dispatch(op, atts(base.left))} + ${dispatch(op, atts(base.right))}"""))
           case _ => super.logic(exp)(op)
         }
 
@@ -41,8 +39,10 @@ trait e0 extends AbstractGenerator with TestGenerator with M0 {
     val a1 = new BinaryInst(Add, new LitInst(1.0), new LitInst(2.0))
     val lit1 = new LitInst(5.0)
 
-    val exp_a1:String = expand("a1_", a1).map(line => s"$line :: GeneralExpr").mkString("\n")
-    val exp_lit1 = expand("lit1_", lit1).map(line => s"$line :: GeneralExpr").mkString("\n")
+    // recursively converts (and expands) definition to be supported by functional languages
+    // which offer challenges to "one-line expressions".
+    val exp_a1:String = postConvert(convert("a1_", a1)).mkString("\n")
+    val exp_lit1 = postConvert(convert("lit1_", lit1)).mkString("\n")
 
     super.testGenerator :+ new Haskell(
       s"""

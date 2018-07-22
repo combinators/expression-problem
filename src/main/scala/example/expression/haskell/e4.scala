@@ -1,6 +1,4 @@
-package example.expression.haskell
-
-/*DD:LD:AI*/
+package example.expression.haskell       /*DD:LD:AI*/
 
 import example.expression.domain._
 
@@ -12,6 +10,7 @@ import example.expression.domain._
 trait e4 extends Evolution with AbstractGenerator with TestGenerator with Producer with M0 with M1 with M2 with M3 with M4 {
   self:e0 with e1 with e2 with e3 =>
   val domain:MathDomain
+  import domain._
 
   /** If any new imports are needed for an operation, just extend here. */
   override def addedImports(op:domain.Operation):Seq[Haskell] = {
@@ -29,76 +28,76 @@ trait e4 extends Evolution with AbstractGenerator with TestGenerator with Produc
   }
 
   abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Haskell] = {
-    val subs = subExpressions(exp)
-    val zero = "0.0"
-    val one = "1.0"
-    val negOne = "(0 -1.0)"    // Haskell has problems with unary neg
+    val atts = subExpressions(exp)
+    val zero = Haskell("0.0")
+    val one = Haskell("1.0")
+    val negOne = Haskell("(0 -1.0)")    // Haskell has problems with unary neg
 
     // generate the actual body
     op match {
       case Collect =>
 
         exp match {
-          case Lit => Seq(Haskell("[a1]"))
-          case Neg => Seq(Haskell("a1"))
+          case Lit => Seq(Haskell(s"[${dispatch(op, atts(litValue))}]"))
+          case Neg => Seq(Haskell(s"${dispatch(op, atts(base.inner))}"))
 
-          case Add | Sub | Mult | Divd => Seq(Haskell("a1 ++ a2"))
+          case Add | Sub | Mult | Divd => Seq(Haskell(s"${dispatch(op, atts(base.left))} ++ ${dispatch(op, atts(base.right))}"))
 
         }
           // Simplify only works for solutions that instantiate expression instances
       case Simplify  =>
 
         exp match {
-          case Lit => Seq(inst(Lit)(op)(standardArgs(Lit)))
+          case Lit => Seq(inst(Lit)(op)(atts(litValue)))   // standardArgs(Lit)
           case Neg => Seq(Haskell(s"""|
-                              |    let left = eval a1
-                              |    in if (left == 0)
+                              |    let leftVal = eval ${dispatch(op, atts(base.inner))}
+                              |    in if leftVal == 0
                               |       then ${inst(Lit)(op)(zero)}
                               |       else ${inst(Neg)(op)(standardArgs(Neg))}
                               |""".stripMargin))
 
           case Add => Seq(Haskell(s"""|
-                               |    let left = eval a1
-                               |        right = eval a2
-                               |    in if ((left == 0 && right == 0.0) || (left + right == 0.0))
+                               |    let leftVal = eval ${dispatch(op, atts(base.left))}
+                               |        rightVal = eval ${dispatch(op, atts(base.right))}
+                               |    in if (leftVal == 0 && rightVal == 0.0) || (leftVal + rightVal == 0.0)
                                |        then ${inst(Lit)(op)(zero)}
-                               |        else if (left == 0)
-                               |             then a2
-                               |             else if (right == 0)
-                               |                  then a1
+                               |        else if leftVal == 0
+                               |             then ${dispatch(op, atts(base.right))}
+                               |             else if rightVal == 0
+                               |                  then ${dispatch(op, atts(base.left))}
                                |                  else ${inst(Add)(op)(standardArgs(Add))}
                                |""".stripMargin))
 
           case Sub => Seq(Haskell(s"""|
-                              |    let left = eval a1
-                              |        right = eval a2
-                              |    in if (left == right)
+                              |    let leftVal = eval ${dispatch(op, atts(base.left))}
+                              |        rightVal = eval ${dispatch(op, atts(base.right))}
+                              |    in if leftVal == rightVal
                               |        then ${inst(Lit)(op)(zero)}
                               |        else ${inst(Sub)(op)(standardArgs(Add))}
                               |""".stripMargin))
 
           case Mult => Seq(Haskell(s"""|
-                                |    let left = eval a1
-                                |        right = eval a2
-                                |    in if (left == 0 || right == 0.0)
+                                |    let leftVal = eval ${dispatch(op, atts(base.left))}
+                                |        rightVal= eval ${dispatch(op, atts(base.right))}
+                                |    in if leftVal == 0 || rightVal == 0.0
                                 |        then ${inst(Lit)(op)(zero)}
-                                |        else if (left == 1)
-                                |             then a2
-                                |             else if (right == 1)
-                                |                  then a1
+                                |        else if leftVal == 1
+                                |             then ${dispatch(op, atts(base.right))}
+                                |             else if rightVal == 1
+                                |                  then ${dispatch(op, atts(base.left))}
                                 |                  else ${inst(Mult)(op)(standardArgs(Add))}
                                 |""".stripMargin))
 
           case Divd => Seq(Haskell(s"""|
-                                |    let left = eval a1
-                                |        right = eval a2
-                                |    in if (left == 0)
+                                |    let leftVal = eval ${dispatch(op, atts(base.left))}
+                                |        rightVal = eval ${dispatch(op, atts(base.right))}
+                                |    in if leftVal == 0
                                 |        then ${inst(Lit)(op)(zero)}
-                                |        else if (right == 1)
-                                |             then a1
-                                |             else if (left == right)
+                                |        else if rightVal == 1
+                                |             then ${dispatch(op, atts(base.left))}
+                                |             else if leftVal == rightVal
                                 |                  then ${inst(Lit)(op)(one)}
-                                |                  else if (left == (0 - right))
+                                |                  else if leftVal == (0 - rightVal)
                                 |                       then ${inst(Lit)(op)(negOne)}
                                 |                       else ${inst(Mult)(op)(standardArgs(Add))}
                                 |""".stripMargin))
@@ -121,10 +120,10 @@ trait e4 extends Evolution with AbstractGenerator with TestGenerator with Produc
     val s1 = new domain.BinaryInst(Sub, new LitInst(7.0), m1)
     val d2 = new domain.BinaryInst(Divd, d1, s1)
 
-    val exp_n1:String = expand("n1_", n1).map(line => s"$line :: GeneralExpr").mkString("\n")
-    val exp_m2:String = expand("m2_", m2).map(line => s"$line :: GeneralExpr").mkString("\n")
-    val exp_d1:String = expand("d1_", d2).map(line => s"$line :: GeneralExpr").mkString("\n")
-    val exp_d2:String = expand("d2_", d2).map(line => s"$line :: GeneralExpr").mkString("\n")
+    val exp_n1:String = postConvert(convert("n1_", n1)).mkString("\n")
+    val exp_m2:String = postConvert(convert("m2_", m2)).mkString("\n")
+    val exp_d1:String = postConvert(convert("d1_", d2)).mkString("\n")
+    val exp_d2:String = postConvert(convert("d2_", d2)).mkString("\n")
 
     super.testGenerator :+ new Haskell(
       s"""

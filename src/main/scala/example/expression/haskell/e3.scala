@@ -46,9 +46,9 @@ trait e3 extends Evolution with AbstractGenerator with TestGenerator with M0 wit
     val s1 = new domain.UnaryInst(Neg, m1)
     val m2 = new domain.BinaryInst(Mult, new domain.BinaryInst (Divd, new LitInst(5.0),  new LitInst(2.0)), new LitInst(4.0))
 
-    val exp_n1:String = postConvert(convert("n1_", n1)).mkString("\n")
-    val exp_m1:String = postConvert(convert("m1_", m1)).mkString("\n")
-    val exp_m2:String = postConvert(convert("m2_", m2)).mkString("\n")
+    val exp_n1:String = convert("n1_", n1).mkString("\n")
+    val exp_m1:String = convert("m1_", m1).mkString("\n")
+    val exp_m2:String = convert("m2_", m2).mkString("\n")
 
     super.testGenerator :+ new Haskell(
       s"""

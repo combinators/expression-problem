@@ -13,6 +13,6 @@ trait StraightProducer extends Producer  {
     * method (with specific parameters) to carry this out.
     */
   override def inst(exp:domain.Atomic)(op:domain.Operation)(params:Haskell*): Haskell = {
-    Haskell("FILL IN PLEASE")
+    Haskell(exp.name.capitalize + " " + params.map(h => h.getCode).mkString(" "))
   }
 }

@@ -33,11 +33,6 @@ trait StraightTestGenerator extends TestGenerator {
     }
   }
 
-  /** Complete conversion with post-follow-up to the Haskell code from convert. */
-  override def postConvert(exprs:Seq[Haskell]) : Seq[Haskell] = {
-   exprs
-  }
-
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
   override def generateSuite(model: Option[Model] = None): Seq[HaskellWithPath] = {
     val opsImports = flat.ops.map(op => s"import ${op.name.capitalize}").mkString("\n")

@@ -38,7 +38,7 @@ trait e4 extends Evolution with AbstractGenerator with TestGenerator with Produc
       case Collect =>
 
         exp match {
-          case Lit => Seq(Haskell(s"[${dispatch(op, atts(litValue))}]"))
+          case Lit => Seq(Haskell(s"[${atts(litValue)}]"))
           case Neg => Seq(Haskell(s"${dispatch(op, atts(base.inner))}"))
 
           case Add | Sub | Mult | Divd => Seq(Haskell(s"${dispatch(op, atts(base.left))} ++ ${dispatch(op, atts(base.right))}"))
@@ -120,10 +120,10 @@ trait e4 extends Evolution with AbstractGenerator with TestGenerator with Produc
     val s1 = new domain.BinaryInst(Sub, new LitInst(7.0), m1)
     val d2 = new domain.BinaryInst(Divd, d1, s1)
 
-    val exp_n1:String = postConvert(convert("n1_", n1)).mkString("\n")
-    val exp_m2:String = postConvert(convert("m2_", m2)).mkString("\n")
-    val exp_d1:String = postConvert(convert("d1_", d2)).mkString("\n")
-    val exp_d2:String = postConvert(convert("d2_", d2)).mkString("\n")
+    val exp_n1:String = convert("n1_", n1).mkString("\n")
+    val exp_m2:String = convert("m2_", m2).mkString("\n")
+    val exp_d1:String = convert("d1_", d2).mkString("\n")
+    val exp_d2:String = convert("d2_", d2).mkString("\n")
 
     super.testGenerator :+ new Haskell(
       s"""
@@ -131,10 +131,10 @@ trait e4 extends Evolution with AbstractGenerator with TestGenerator with Produc
          |$exp_m2
          |$exp_d2
          |$exp_d1
-         |test_e4_1 = TestCase (assertEqual "NegCheck-Eval" (0-5.0) (Eval.eval n1_))
-         |test_e4_2 = TestCase (assertEqual "Simplify-Print" (Print.print d1_) (Print.print d2_))
+         |test_e4_1 = TestCase (assertEqual "NegCheck-Eval" (0-5.0) (${Eval.name} n1_))
+         |test_e4_2 = TestCase (assertEqual "Simplify-Print" (${PrettyP.name}  d1_) (${PrettyP.name}  d2_))
          |-- collect test case
-         |test_e4_3 = TestCase (assertEqual "Collect-D1" [5,7,7,2,3] (Collect.collect d2_))
+         |test_e4_3 = TestCase (assertEqual "Collect-D1" [5,7,7,2,3] (${Collect.name} d2_))
          |
          |test_e4 = TestList [ TestLabel "1" test_e4_1, TestLabel "2" test_e4_2, TestLabel "3" test_e4_3 ]
          |

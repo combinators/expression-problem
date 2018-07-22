@@ -21,6 +21,4 @@ trait TestGenerator {
   /** Convert the given atomic instance, and use base as the variable name for all interior expansions. */
   def convert(base:String, inst:AtomicInst) : Seq[Haskell]
 
-  /** Complete conversion with post-follow-up to the Haskell code from convert. */
-  def postConvert(exprs:Seq[Haskell]) : Seq[Haskell]
 }

@@ -30,7 +30,7 @@ trait e1 extends Evolution with AbstractGenerator with TestGenerator with M1 {
   abstract override def testGenerator: Seq[Haskell] = {
     val s1 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
 
-    val exp_s1:String =  postConvert(convert("s1_", s1)).mkString("\n")
+    val exp_s1:String =  convert("s1_", s1).mkString("\n")
 
 
     super.testGenerator :+ new Haskell(

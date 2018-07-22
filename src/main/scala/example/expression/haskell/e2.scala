@@ -41,8 +41,8 @@ trait e2 extends Evolution with AbstractGenerator with TestGenerator with M0 wit
     val a1 = new BinaryInst(Add, new LitInst(1.0), new LitInst(2.0))
     val lit1 = new LitInst(5.0)
 
-    val exp_s1:String =  postConvert(convert("s1_", s1)).mkString("\n")
-    val exp_a1:String =  postConvert(convert("a1_", a1)).mkString("\n")
+    val exp_s1:String =  convert("s1_", s1).mkString("\n")
+    val exp_a1:String =  convert("a1_", a1).mkString("\n")
     val exp_lit1 = convert("lit1_", new LitInst(5.0)).map(line => s"$line :: GeneralExpr").mkString("\n")
 
     super.testGenerator :+ new Haskell(

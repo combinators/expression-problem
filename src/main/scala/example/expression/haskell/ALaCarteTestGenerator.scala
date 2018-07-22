@@ -47,17 +47,21 @@ trait ALaCarteTestGenerator extends TestGenerator {
     * a1R = In(El(Constant 8.0)) :: GeneralExpr
     * a1L = In(Er(Er(BinaryMul a1LL a1LR))) :: GeneralExpr
     * a1 = In(Er(El(BinaryPlus a1L a1R))) :: GeneralExpr
-
     */
   override def convert(base:String, inst:AtomicInst) : Seq[Haskell] = {
+    convert0(base,inst).map(line => Haskell(s"$line :: GeneralExpr"))
+  }
+
+  /** Recursive helper method. Creates the prefix In(Er(El(... Followed by dataType name */
+  def convert0(base:String, inst:AtomicInst) : Seq[Haskell] = {
     val name = inst.e.name
     inst match {
       case ui: UnaryInst =>
-        convert(base + "L", ui.inner) :+
+        convert0(base + "L", ui.inner) :+
           Haskell(s"$base = In(" + treeRoute(inst, flat.types) + s"${base}L" + closeTreeRoute(inst, flat.types) + ")")
 
       case bi: BinaryInst =>
-        convert(base + "L", bi.left) ++ convert(base + "R", bi.right) :+
+        convert0(base + "L", bi.left) ++ convert0(base + "R", bi.right) :+
           Haskell(s"$base = In(" + treeRoute(inst, flat.types) + s"${base}L ${base}R " + closeTreeRoute(inst, flat.types) + ")")
 
       case exp: AtomicInst =>
@@ -67,17 +71,13 @@ trait ALaCarteTestGenerator extends TestGenerator {
     }
   }
 
-  /** Complete process of interior elements. */
-  override def postConvert(exprs:Seq[Haskell]) : Seq[Haskell] = {
-    exprs.map(line => Haskell(s"$line :: GeneralExpr"))
-  }
-
   /** Create multiple Haskell files for test cases. */
   override def generateSuite(model: Option[Model] = None): Seq[HaskellWithPath] = {
     val opsImports = flat.ops.map(op => s"import ${op.name.capitalize}").mkString("\n")
     val typesImports = flat.types.map(exp => s"import ${exp.name.capitalize}").mkString("\n")
     var num: Int = -1
-    val files: Seq[HaskellWithPath] = testGenerator.map(md => {
+
+    testGenerator.map(md => {
       num = num + 1
       HaskellWithPath(Haskell(s"""|module Main where
                                   |import Test.HUnit
@@ -87,9 +87,6 @@ trait ALaCarteTestGenerator extends TestGenerator {
                                   |$opsImports
                                   |$typesImports
                                   |$md""".stripMargin), Paths.get(s"Main$num.hs"))
-
     })
-
-    files
   }
 }

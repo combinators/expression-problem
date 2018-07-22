@@ -26,12 +26,6 @@ trait StraightGenerator extends AbstractGenerator {
       generateDataTypes(flat)
   }
 
-  /** Construct args list "a1 a2 a3 ..." */
-//  def standardArgs(exp:Atomic) : String = {
-//    val vals:Range = 1 to exp.attributes.size
-//    vals.map(v => s"a$v").mkString (" ")
-//  }
-
   def generateOp(m:Model, op:Operation) : HaskellWithPath = {
     val name = op.name
     val opRetType = typeConverter(op.returnType.get)
@@ -43,6 +37,7 @@ trait StraightGenerator extends AbstractGenerator {
 
     val code = Haskell(s"""|module ${name.capitalize} where
                            |import DataTypes
+                           |${addedImports(op).mkString("\n")}
                            |$definition
                            |${instances.mkString("\n")}""".stripMargin)
     HaskellWithPath(code, Paths.get(s"${name.capitalize}.hs"))
@@ -69,7 +64,7 @@ trait StraightGenerator extends AbstractGenerator {
     override def dispatch(op:domain.Operation, primary:Haskell, params:Haskell*) : Haskell = {
       val args:String = params.mkString(" ")
 
-      Haskell(s"""${op.name} ${primary.toString} $args""")
+      Haskell(s"""(${op.name} ${primary.toString} $args)""")
     }
 
   /**

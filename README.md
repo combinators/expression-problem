@@ -1,7 +1,7 @@
 # ExpressionProblem
 The goal of this project is to generate a number of approaches (in multiple languages) that address the _Expression Problem_.
 
-As coined by Philip Walder, the Expression Problem is a new name for an old problem. The goal is to define a datatype by cases, where one can add new cases to the datatype and new functions over the datatype, without recompiling existing code, and while retaining static type safety.
+As coined by Philip Wadler [1], the Expression Problem is a new name for an old problem. The goal is to define a datatype by cases, where one can add new cases to the datatype and new functions over the datatype, without recompiling existing code, and while retaining static type safety.
  
 There are various "solutions" to the Expression Problem. Each solution varies in the amount of code a user must write to implement them, and the language features they require.
 
@@ -25,38 +25,19 @@ trait BaseDomain {
   }
 
   abstract class Element
-  case class Attribute(name:String, tpe:TypeRep)
-    extends Element
-  abstract class Operation(val name:String,
-    val returnType:Option[TypeRep],
-    val parameters:Seq[(String, TypeRep)] = Seq.empty)
-    extends Element
+  case class Attribute(name:String, tpe:TypeRep) extends Element
+  abstract class Operation(val name:String, val returnType:Option[TypeRep], val parameters:Seq[(String, TypeRep)] = Seq.empty) extends Element
 
-  abstract class Atomic(val name: String,   
-    val attributes: Seq[Attribute])
-  abstract class Unary(override val name:String)
-    extends Atomic(name,
-      Seq(Attribute(base.inner, baseTypeRep)))
-  abstract class Binary(override val name:String)
-    extends Atomic(name,
-      Seq(Attribute(base.left, baseTypeRep),
-          Attribute(base.right, baseTypeRep)))    
+  abstract class Atomic(val name: String, val attributes: Seq[Attribute])
+  abstract class Unary(override val name:String) extends Atomic(name, Seq(Attribute(base.inner, baseTypeRep)))
+  abstract class Binary(override val name:String) extends Atomic(name, Seq(Attribute(base.left, baseTypeRep), Attribute(base.right, baseTypeRep)))
 
- class ProducerOperation(override val name:String,  
-    override val parameters:Seq[(String, TypeRep)])
-    extends Operation(name,Some(baseTypeRep),parameters)  
-  class BinaryMethod(override val name:String,  
-    override val returnType:Option[TypeRep])
-    extends Operation(name, returnType,
-    Seq((base.that, baseTypeRep)))            
-
+  class ProducerOperation(override val name:String, override val parameters:Seq[(String, TypeRep)]) extends Operation(name,Some(baseTypeRep),parameters)
+  class BinaryMethod(override val name:String, override val returnType:Option[TypeRep]) extends Operation(name, returnType, Seq((base.that, baseTypeRep)))
 
   class AtomicInst(val e:Atomic, val i:Option[Any]) 
-  class UnaryInst(override val e:Atomic,
-    val inner:AtomicInst) extends AtomicInst(e, None)
-  class BinaryInst(override val e:Atomic,
-    val left:AtomicInst, val right:AtomicInst)
-    extends AtomicInst(e, None) |\label{line:inst-end}|
+  class UnaryInst(override val e:Atomic, val inner:AtomicInst) extends AtomicInst(e, None)
+  class BinaryInst(override val e:Atomic, val left:AtomicInst, val right:AtomicInst) extends AtomicInst(e, None)
 }
 
 trait ModelDomain extends BaseDomain {
@@ -69,7 +50,7 @@ trait ModelDomain extends BaseDomain {
 
 ```
 
-For more details on [ModelDomain](src/main/scala/example/expression/domain/ModelDomain.scala) check out ths Scala file. Once these concepts are identified, the designer chooses a programming language and implements a desired solution.
+For more details on [ModelDomain](src/main/scala/example/expression/domain/ModelDomain.scala) check out this Scala file. Once these concepts are identified, the designer chooses a programming language and implements a desired solution.
 
 ## Application Domain
 
@@ -96,8 +77,7 @@ trait M0 extends Evolution {
   val litValue:String = "value"
 
   case object Double extends TypeRep
-  case object Lit extends Atomic("Lit",   
-    Seq(Attribute(litValue, Double)))     
+  case object Lit extends Atomic("Lit", Seq(Attribute(litValue, Double)))
   case object Add extends Binary("Add")  
 
   case object Eval extends Operation("eval", Some(Double)) 
@@ -179,7 +159,7 @@ Application Domain.
 ## Covariant Java Solution
 
 The *Modularity 2016* paper [The Expression Problem, Trivially!](http://i.cs.hku.hk/~bruno/papers/Modularity2016.pdf "Expression Problem, Trivially!")
-by *Yanling Wang* and *Bruno C. d. S. Oliveira*
+by *Yanling Wang* and *Bruno C. d. S. Oliveira* [2]
 describes an approach using _covariant type refinement_ of return types and fields. Unlike existing solutions in
 Java-like languages, this solution does not use any kind of generics.
 
@@ -190,7 +170,7 @@ Java-like languages, this solution does not use any kind of generics.
 ## Interpreter Design Pattern
 
 The *TCS 2003 paper* [Solving Expression problem using Interpreter Pattern](http://www.cs.pomona.edu/~kim/ftp/WOOD.pdf) by 
-*Bruce Kim* describes an approach to solving the EP problem using the Interpreter Design Pattern.
+*Bruce Kim* [3] describes an approach to solving the EP problem using the Interpreter Design Pattern.
 
 `git clone localhost:9000/interpreter/m4/m4.git`
 
@@ -227,3 +207,9 @@ cleanly compile this code and confirm all test cases.
 
 
 
+# References
+
+1. Wadler, Philip, [Email to to Java Genericity Mailing List](http://homepages.inf.ed.ac.uk/wadler/papers/expression/expression.txt)
+2. Wang, Yanling and Bruno C. d. S. Oliveira, [The Expression Problem, Trivially!](https://dl.acm.org/citation.cfm?id=2889448), MODULARITY 2016, pp. 37-41.
+3. Kim, Bruce, [Some Challenging Typing Issues in Object-Oriented Languages: Extended Abstract](http://doi.org/10.1016/S1571-0661(04)80799-0), TCS 82(8) 2003.
+4. d. S. Oliveira, Bruno C. and William R. Cook [Extensibility for the Masses](https://dl.acm.org/citation.cfm?id=236716), ECOOP 2012

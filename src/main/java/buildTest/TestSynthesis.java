@@ -145,28 +145,54 @@ public class TestSynthesis {
 
             if (proc.exitValue() == 0) {
 
-                // execute JUnit 3 test cases
-                args = new String[]{"java", "-cp",
-                        junitJarFile + File.pathSeparator + ".",
-                        "junit.textui.TestRunner",
-                        pkgName + ".TestSuite"
-                };
-                proc = Runtime.getRuntime().exec(args, new String[0], dir);
-                File outputFile = new File(new File(destination, family), model + ".coverage.html");
-                System.out.println(outputFile.getAbsoluteFile());
-                PrintStream ps = new PrintStream(outputFile);
-                err = new BufferedReader(new InputStreamReader(proc.getErrorStream())).lines();
-                out = new BufferedReader(new InputStreamReader(proc.getInputStream())).lines();
-                proc.waitFor();
-                int retVal = proc.exitValue();
+                // execute JUnit 3 test cases for all .TestSuiteN where N is an integer from 1..
+                int retVal = -1;
+                int testNum = 0;
+                while (true) {
+                    String testSuite = pkgName + ".TestSuite";
+                    File testFile = null;
 
-                ps.println("<h1>Errors (if any):</h1><font color='##0000'>");
-                ps.flush();
-                out.forEach(line -> ps.println(line));
-                ps.println("</font><h1>Output</h1>");
-                err.forEach(line -> ps.println(line));
-                ps.flush();
-                ps.close();
+                    if (testNum == 0) {
+                        // old-style has just TestSuite; see if this exists (but only for first one...)
+                        testFile =  new File(new File(dir, pkgName), "TestSuite.java");
+                        if (!testFile.exists()) {
+                            testFile = null;
+                        } else {
+                            testNum++; // be sure that *second time through* we stop...
+                        }
+                    }
+
+                    if (testFile == null) {
+                        testNum++;
+                        testFile = new File(new File(dir, pkgName), "TestSuite" + testNum + ".java");
+                        testSuite = testSuite + testNum;
+                    }
+                    if (!testFile.exists()) { break; }
+
+                    args = new String[]{"java", "-cp",
+                            junitJarFile + File.pathSeparator + ".",
+                            "junit.textui.TestRunner",
+                            testSuite
+                    };
+                    proc = Runtime.getRuntime().exec(args, new String[0], dir);
+                    File outputFile = new File(new File(destination, family), model + ".coverage.html");
+
+                    // append all output here...
+                    PrintStream ps = new PrintStream(new FileOutputStream(outputFile, true));
+                    err = new BufferedReader(new InputStreamReader(proc.getErrorStream())).lines();
+                    out = new BufferedReader(new InputStreamReader(proc.getInputStream())).lines();
+                    proc.waitFor();
+                    retVal = proc.exitValue();
+
+                    ps.println("<h1>Test Suite:" + pkgName + ".TestSuite" + testNum + "</h1>");
+                    ps.println("<h1>Errors (if any):</h1><font color='##0000'>");
+                    ps.flush();
+                    out.forEach(line -> ps.println(line));
+                    ps.println("</font><h1>Output</h1>");
+                    err.forEach(line -> ps.println(line));
+                    ps.flush();
+                    ps.close();
+                }
                 return retVal == 0;
             } else {
                 return false;
@@ -225,7 +251,13 @@ public class TestSynthesis {
             // keep track of all successful variations, as well as highest id for each one.
             int underscore = fields[1].indexOf('_');
             if (underscore == -1) { underscore = 2; }
-            int id = Integer.valueOf(fields[1].substring(1,underscore));  // only grab digits UP TO _
+            int id;
+            try {
+                id = Integer.valueOf(fields[1].substring(1, underscore));  // only grab digits UP TO _
+            } catch (NumberFormatException nfe) {
+                System.err.println (" ** Skipping " + var);
+                continue;
+            }
             String prefix = fields[1].toLowerCase().substring(0,1);
 
             String variation = prefix + id;

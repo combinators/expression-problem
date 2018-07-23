@@ -11,19 +11,11 @@ import org.combinators.templating.twirl.Java
 /**
   * Any Java-based EP approach can extend this Generator
   */
-trait AbstractGenerator  {
+trait AbstractGenerator extends DependentDispatch {
   val domain:BaseDomain with ModelDomain
 
   /** Retrieve model under consideration. */
   def getModel:domain.Model
-
-  /**
-    * Process model, as required by EP approach.
-    *
-    * Process the model as necessary. One could either (a) remove data types or operations that are nonsensical
-    * for the given approach; or (b) flatten the hierarchy; (c) or use the default identify function.
-    */
-  //def getProcessedModel:domain.Model = getModel
 
   /** For the processed model, return generated code artifacts for solution. */
   def generatedCode():Seq[CompilationUnit]

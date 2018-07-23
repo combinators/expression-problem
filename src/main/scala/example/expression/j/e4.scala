@@ -36,8 +36,8 @@ trait e4 extends Evolution with AbstractGenerator with TestGenerator with Produc
 
         exp match {
           case Lit => Java(s"return ${inst(Lit)(op)(subs(litValue))};").statements()
-          case Add => Java(s"""|double leftVal = ${dispatch(subs(domain.base.left), Eval)};
-                               |double rightVal = ${dispatch(subs(domain.base.right), Eval)};
+          case Add => Java(s"""|double leftVal = ${dependentDispatch(subs(domain.base.left), Eval)};
+                               |double rightVal = ${dependentDispatch(subs(domain.base.right), Eval)};
                                |if ((leftVal == 0 && rightVal == 0) || (leftVal + rightVal == 0)) {
                                |  return ${inst(Lit)(op)(zero)};
                                |} else if (leftVal == 0) {
@@ -48,15 +48,15 @@ trait e4 extends Evolution with AbstractGenerator with TestGenerator with Produc
                                |  return ${inst(Add)(op)(dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))};
                                |}""".stripMargin).statements()
           case Sub => Java(s"""
-                              |if (${dispatch(subs(domain.base.left), Eval)} == ${dispatch(subs(domain.base.right), Eval)}) {
+                              |if (${dependentDispatch(subs(domain.base.left), Eval)} == ${dependentDispatch(subs(domain.base.right), Eval)}) {
                               |  return ${inst(Lit)(op)(zero)};
                               |} else {
                                 return ${inst(Sub)(op)(dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))};
                               |}
                               |""".stripMargin).statements()
           case Mult => Java(s"""
-                               |double leftVal = ${dispatch(subs(domain.base.left), Eval)};
-                               |double rightVal = ${dispatch(subs(domain.base.right), Eval)};
+                               |double leftVal = ${dependentDispatch(subs(domain.base.left), Eval)};
+                               |double rightVal = ${dependentDispatch(subs(domain.base.right), Eval)};
                                |if (leftVal == 0 || rightVal == 0) {
                                |  return ${inst(Lit)(op)(zero)};
                                |} else if (leftVal == 1) {
@@ -68,8 +68,8 @@ trait e4 extends Evolution with AbstractGenerator with TestGenerator with Produc
                                |}
                                |""".stripMargin).statements()
           case Divd => Java(s"""
-                               |double leftVal = ${dispatch(subs(domain.base.left), Eval)};
-                               |double rightVal = ${dispatch(subs(domain.base.right), Eval)};
+                               |double leftVal = ${dependentDispatch(subs(domain.base.left), Eval)};
+                               |double rightVal = ${dependentDispatch(subs(domain.base.right), Eval)};
                                |if (leftVal == 0) {
                                |  return ${inst(Lit)(op)(zero)};
                                |} else if (rightVal == 1) {
@@ -82,8 +82,10 @@ trait e4 extends Evolution with AbstractGenerator with TestGenerator with Produc
                                  return ${inst(Divd)(op)(dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))};
                                |}
                                |""".stripMargin).statements()
+            // TODO: Would love to have ability to simplify neg(neg(x)) to just be x. This requires a form
+            // of inspection that might not be generalizable...
           case Neg => Java(s"""
-                              |if (${dispatch(subs(domain.base.inner), Eval)} == 0) {
+                              |if (${dependentDispatch(subs(domain.base.inner), Eval)} == 0) {
                               |  return ${inst(Lit)(op)(zero)};
                               |} else {
                               |  return ${inst(Neg)(op)(dispatch(subs(domain.base.inner), Simplify))};

@@ -25,7 +25,10 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
   def generatedCode():Seq[CompilationUnit] = {
     val flat = getModel.flatten()
     flat.types.map(tpe => generateExp(flat, tpe)) ++         // one class for each sub-type
-      flat.ops.map(op => operationGenerator(flat, op)) :+    // one class for each op
+      getModel.inChronologicalOrder                          // visitors are constructed in order
+          .filter(m => m.ops.nonEmpty)
+          .flatMap(m =>
+              m.ops.map(op => operationGenerator(flat, op))) :+    // one class for each op
       generateBaseClass() :+                                   // abstract base class
       generateBase(flat)                                      // visitor gets its own class (overriding concept)
   }
@@ -73,7 +76,7 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
   def generateBaseClass():CompilationUnit = {
     Java(s"""|package expression;
              |
-             |public abstract class Exp {
+             |public abstract class ${domain.baseTypeRep.name.capitalize} {
              |    public abstract <R> R accept(Visitor<R> v);
              |}
              |""".stripMargin).compilationUnit()

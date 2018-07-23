@@ -1,6 +1,6 @@
-package example.expression.domain  /*DD:LI:AI*/
+package example.expression.domain     /*DD:LI:AI*/
 
-trait M4 extends Evolution {
+trait M4 extends Evolution with OperationDependency {
   self: M0 with M1 with M2 with M3 =>
   val domain:MathDomain
 
@@ -12,4 +12,15 @@ trait M4 extends Evolution {
 
   val m4 = domain.Model("m4",Seq.empty, Seq(Simplify, Collect), last = m3)
   override def getModel = m4
+
+  /**
+    * PrettyP depends on Eval (during simplification process) and PrettyP (during testing).
+    */
+  override def dependency(op: domain.Operation): scala.List[domain.Operation] = {
+    if (op.equals(Simplify)) {
+      super.dependency(op) ++ scala.List[domain.Operation](PrettyP,Eval)
+    } else {
+      super.dependency(op)
+    }
+  }
 }

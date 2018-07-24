@@ -15,21 +15,19 @@ trait StraightTestGenerator extends TestGenerator {
   val flat:domain.Model
 
   /** Convert the given atomic instance, and use base as the variable name for all interior expansions. */
-  override def convert(base:String, inst:AtomicInst) : Seq[Haskell] = {
+  override def convert(inst:AtomicInst) : Haskell = {
     val name = inst.e.name
     inst match {
       case ui: UnaryInst =>
-        convert(base + "L", ui.inner) :+
-          Haskell(s"$base = ${ui.e.name.capitalize} ${base}L  ")
+        Haskell(s"${ui.e.name.capitalize} (${convert(ui.inner)}) ")
 
       case bi: BinaryInst =>
-        convert(base + "L", bi.left) ++ convert(base + "R", bi.right) :+
-          Haskell(s"$base = ${bi.e.name.capitalize} ${base}L ${base}R ")
+        Haskell(s"${bi.e.name.capitalize} (${convert(bi.left)}) (${convert(bi.right)}) ")
 
       case exp: AtomicInst =>
-        Seq(Haskell(s"$base = ${exp.e.name.capitalize} ${exp.i.get}"))
+        Haskell(s"${exp.e.name.capitalize} ${exp.i.get}")
 
-      case _ => Seq(Haskell(s""" -- unknown $name" """))
+      case _ => Haskell(s""" -- unknown $name" """)
     }
   }
 

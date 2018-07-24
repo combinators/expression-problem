@@ -179,7 +179,7 @@ The *TCS 2003 paper* [Solving Expression problem using Interpreter Pattern](http
 ## Object Algebras
 
 The *ECOOP 2012 paper* [Extensibility for the Masses](https://dl.acm.org/citation.cfm?id=236716) by 
-*Bruno C. d. S. Oliveira & William R. Cook* describes an approach to solving the EP problem using
+*Bruno C. d. S. Oliveira & William R. Cook* [4] describes an approach to solving the EP problem using
 Object Algebras.
 
 `git clone localhost:9000/algebra/m4/m4.git`

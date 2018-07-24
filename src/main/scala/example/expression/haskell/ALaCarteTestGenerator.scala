@@ -36,38 +36,31 @@ trait ALaCarteTestGenerator extends TestGenerator {
     }
   }
 
-
   /**
     * Expand instance into its post-order traversal of interior definitions.
     *
-    * a1 = (7*2)+8
+    * a1 = (7*2)
     *
-    * a1LL = In(El(Constant 7.0)) :: GeneralExpr
-    * a1LR = In(El(Constant 2.0)) :: GeneralExpr
-    * a1R = In(El(Constant 8.0)) :: GeneralExpr
-    * a1L = In(Er(Er(BinaryMul a1LL a1LR))) :: GeneralExpr
-    * a1 = In(Er(El(BinaryPlus a1L a1R))) :: GeneralExpr
+    * a1 = In(Er(Er(BinaryMul In(El(Constant 7.0))  In(El(Constant 2.0)))))
     */
-  override def convert(base:String, inst:AtomicInst) : Seq[Haskell] = {
-    convert0(base,inst).map(line => Haskell(s"$line :: GeneralExpr"))
+  override def convert(inst:AtomicInst) : Haskell = {
+    Haskell(convert0(inst).getCode + ":: GeneralExpr")
   }
 
-  /** Recursive helper method. Creates the prefix In(Er(El(... Followed by dataType name */
-  def convert0(base:String, inst:AtomicInst) : Seq[Haskell] = {
+  /** Recursive helper method. Creates the prefix In(Er(El(... Followed by dataType name. */
+  def convert0(inst:AtomicInst) : Haskell = {
     val name = inst.e.name
     inst match {
       case ui: UnaryInst =>
-        convert0(base + "L", ui.inner) :+
-          Haskell(s"$base = In(" + treeRoute(inst, flat.types) + s"${base}L" + closeTreeRoute(inst, flat.types) + ")")
+        Haskell(s"In(" + treeRoute(inst, flat.types) + s" (${convert0(ui.inner)} " + closeTreeRoute(inst, flat.types) + ")")
 
       case bi: BinaryInst =>
-        convert0(base + "L", bi.left) ++ convert0(base + "R", bi.right) :+
-          Haskell(s"$base = In(" + treeRoute(inst, flat.types) + s"${base}L ${base}R " + closeTreeRoute(inst, flat.types) + ")")
+          Haskell(s"In(" + treeRoute(inst, flat.types) + s" (${convert0(bi.left)}) (${convert0(bi.right)}) " + closeTreeRoute(inst, flat.types) + ")")
 
       case exp: AtomicInst =>
-        Seq(Haskell(s"$base = In(" + treeRoute(inst, flat.types) + exp.i.get + closeTreeRoute(inst, flat.types) + ")"))
+        Haskell(s"In(" + treeRoute(inst, flat.types) + exp.i.get + closeTreeRoute(inst, flat.types) + ")")
 
-      case _ => Seq(Haskell(s""" -- unknown $name" """))
+      case _ => Haskell(s""" -- unknown $name" """)
     }
   }
 

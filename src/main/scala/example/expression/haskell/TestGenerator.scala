@@ -18,7 +18,7 @@ trait TestGenerator {
   /** Create multiple Haskell files for test cases. */
   def generateSuite(model: Option[Model] = None): Seq[HaskellWithPath]
 
-  /** Convert the given atomic instance, and use base as the variable name for all interior expansions. */
-  def convert(base:String, inst:AtomicInst) : Seq[Haskell]
+  /** Convert the given atomic instance. */
+  def convert(inst:AtomicInst) : Haskell
 
 }

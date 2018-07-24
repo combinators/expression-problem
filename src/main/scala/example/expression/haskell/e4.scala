@@ -50,15 +50,15 @@ trait e4 extends Evolution with AbstractGenerator with TestGenerator with Produc
         exp match {
           case Lit => Seq(inst(Lit)(op)(atts(litValue)))   // standardArgs(Lit)
           case Neg => Seq(Haskell(s"""|
-                              |    let leftVal = eval ${dispatch(op, atts(base.inner))}
+                              |    let leftVal = ${Eval.name} ${dispatch(op, atts(base.inner))}
                               |    in if leftVal == 0
                               |       then ${inst(Lit)(op)(zero)}
                               |       else ${inst(Neg)(op)(standardArgs(Neg))}
                               |""".stripMargin))
 
           case Add => Seq(Haskell(s"""|
-                               |    let leftVal = eval ${dispatch(op, atts(base.left))}
-                               |        rightVal = eval ${dispatch(op, atts(base.right))}
+                               |    let leftVal = ${Eval.name} ${dispatch(op, atts(base.left))}
+                               |        rightVal = ${Eval.name} ${dispatch(op, atts(base.right))}
                                |    in if (leftVal == 0 && rightVal == 0.0) || (leftVal + rightVal == 0.0)
                                |        then ${inst(Lit)(op)(zero)}
                                |        else if leftVal == 0
@@ -120,21 +120,16 @@ trait e4 extends Evolution with AbstractGenerator with TestGenerator with Produc
     val s1 = new domain.BinaryInst(Sub, new LitInst(7.0), m1)
     val d2 = new domain.BinaryInst(Divd, d1, s1)
 
-    val exp_n1:String = convert("n1_", n1).mkString("\n")
-    val exp_m2:String = convert("m2_", m2).mkString("\n")
-    val exp_d1:String = convert("d1_", d2).mkString("\n")
-    val exp_d2:String = convert("d2_", d2).mkString("\n")
-
     super.testGenerator :+ new Haskell(
       s"""
-         |$exp_n1
-         |$exp_m2
-         |$exp_d2
-         |$exp_d1
-         |test_e4_1 = TestCase (assertEqual "NegCheck-Eval" (0-5.0) (${Eval.name} n1_))
-         |test_e4_2 = TestCase (assertEqual "Simplify-Print" (${PrettyP.name}  d1_) (${PrettyP.name}  d2_))
+         |n1 = ${convert(n1)}
+         |m2 = ${convert(m2)}
+         |d2 = ${convert(d2)}
+         |d1 = ${convert(d1)}
+         |test_e4_1 = TestCase (assertEqual "NegCheck-Eval" (0-5.0) (${Eval.name} n1))
+         |test_e4_2 = TestCase (assertEqual "Simplify-Print" (${PrettyP.name}  d1) (${PrettyP.name}  d2))
          |-- collect test case
-         |test_e4_3 = TestCase (assertEqual "Collect-D1" [5,7,7,2,3] (${Collect.name} d2_))
+         |test_e4_3 = TestCase (assertEqual "Collect-D1" [5,7,7,2,3] (${Collect.name} d2))
          |
          |test_e4 = TestList [ TestLabel "1" test_e4_1, TestLabel "2" test_e4_2, TestLabel "3" test_e4_3 ]
          |

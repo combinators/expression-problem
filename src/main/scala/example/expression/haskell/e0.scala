@@ -39,17 +39,12 @@ trait e0 extends AbstractGenerator with TestGenerator with M0 {
     val a1 = new BinaryInst(Add, new LitInst(1.0), new LitInst(2.0))
     val lit1 = new LitInst(5.0)
 
-    // recursively converts (and expands) definition to be supported by functional languages
-    // which offer challenges to "one-line expressions".
-    val exp_a1:String = convert("a1_", a1).mkString("\n")
-    val exp_lit1 = convert("lit1_", lit1).mkString("\n")
-
     super.testGenerator :+ new Haskell(
       s"""
-         |$exp_a1
-         |$exp_lit1
-         |test_e0_1 = TestCase (assertEqual "PlusCheck" 3.0 (${Eval.name} a1_))
-         |test_e0_2 = TestCase (assertEqual "LitCheck" 5.0 (${Eval.name} lit1_))
+         |a1 =${convert(a1)}
+         |lit1 = ${convert(lit1)}
+         |test_e0_1 = TestCase (assertEqual "PlusCheck" 3.0 (${Eval.name} a1))
+         |test_e0_2 = TestCase (assertEqual "LitCheck" 5.0 (${Eval.name} lit1))
          |test_e0 = TestList [ TestLabel "1" test_e0_1, TestLabel "2" test_e0_2 ]
          |
          |main :: IO Counts

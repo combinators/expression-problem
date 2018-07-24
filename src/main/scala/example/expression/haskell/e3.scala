@@ -46,21 +46,17 @@ trait e3 extends Evolution with AbstractGenerator with TestGenerator with M0 wit
     val s1 = new domain.UnaryInst(Neg, m1)
     val m2 = new domain.BinaryInst(Mult, new domain.BinaryInst (Divd, new LitInst(5.0),  new LitInst(2.0)), new LitInst(4.0))
 
-    val exp_n1:String = convert("n1_", n1).mkString("\n")
-    val exp_m1:String = convert("m1_", m1).mkString("\n")
-    val exp_m2:String = convert("m2_", m2).mkString("\n")
-
     super.testGenerator :+ new Haskell(
       s"""
-         |$exp_n1
-         |$exp_m1
-         |$exp_m2
-         |test_e3_1 = TestCase (assertEqual "NegCheck-Eval" (0-5.0) (${Eval.name} n1_))
-         |test_e3_2 = TestCase (assertEqual "NegCheck-Print" "-5.0" (${PrettyP.name} n1_))
-         |test_e3_3 = TestCase (assertEqual "MultCheck-Eval" 6.0 (${Eval.name} m1_))
-         |test_e3_4 = TestCase (assertEqual "MultCheck-Print" "(2.0*3.0)" (${PrettyP.name} m1_))
-         |test_e3_5 = TestCase (assertEqual "MultCheck-Eval" 10.0 (${Eval.name} m2_))
-         |test_e3_6 = TestCase (assertEqual "MultCheck-Print" "((5.0/2.0)*4.0)" (${PrettyP.name} m2_))
+         |n1 = ${convert(n1)}
+         |m1 = ${convert(m1)}
+         |m2 = ${convert(m2)}
+         |test_e3_1 = TestCase (assertEqual "NegCheck-Eval" (0-5.0) (${Eval.name} n1))
+         |test_e3_2 = TestCase (assertEqual "NegCheck-Print" "-5.0" (${PrettyP.name} n1))
+         |test_e3_3 = TestCase (assertEqual "MultCheck-Eval" 6.0 (${Eval.name} m1))
+         |test_e3_4 = TestCase (assertEqual "MultCheck-Print" "(2.0*3.0)" (${PrettyP.name} m1))
+         |test_e3_5 = TestCase (assertEqual "MultCheck-Eval" 10.0 (${Eval.name} m2))
+         |test_e3_6 = TestCase (assertEqual "MultCheck-Print" "((5.0/2.0)*4.0)" (${PrettyP.name} m2))
          |
          |test_e3 = TestList [ TestLabel "1" test_e3_1, TestLabel "2" test_e3_2, TestLabel "3" test_e3_3, TestLabel "4" test_e3_4, TestLabel "5" test_e3_5, TestLabel "6" test_e3_6 ]
          |

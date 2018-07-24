@@ -15,7 +15,7 @@ trait StraightGenerator extends AbstractGenerator {
   /** Return designated HaskellType. */
   override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[HaskellType] = None) : HaskellType = {
     tpe match {
-      case domain.baseTypeRep => covariantReplacement.getOrElse(new HaskellType("Expr"))
+      case domain.baseTypeRep => covariantReplacement.getOrElse(new HaskellType(domain.baseTypeRep.name))
       case _ => super.typeConverter(tpe, covariantReplacement)
     }
   }
@@ -29,7 +29,7 @@ trait StraightGenerator extends AbstractGenerator {
   def generateOp(m:Model, op:Operation) : HaskellWithPath = {
     val name = op.name
     val opRetType = typeConverter(op.returnType.get)
-    val definition = Haskell(s"$name :: Expr -> $opRetType")
+    val definition = Haskell(s"$name :: ${domain.baseTypeRep.name} -> $opRetType")
 
     val instances = m.types.map(exp => {
       s"""$name (${exp.name.capitalize} ${standardArgs(exp).getCode}) = ${logic(exp)(op).mkString("\n")}"""
@@ -50,11 +50,12 @@ trait StraightGenerator extends AbstractGenerator {
       val list:String = params.map(f => f.toString).mkString(" ")
       Haskell(s"${exp.name.capitalize} $list")
     }).mkString("  | ")
+
     val code = Haskell(
       s"""|module DataTypes where
           |
           |-- All types are classified as data
-          |data Expr = $allTypes
+          |data ${domain.baseTypeRep.name} = $allTypes
           |""".stripMargin)
 
     HaskellWithPath(code, Paths.get("DataTypes.hs"))

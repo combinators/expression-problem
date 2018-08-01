@@ -27,7 +27,7 @@ trait e0 extends AbstractGenerator with TestGenerator with M0 {
       case Eval =>
         exp match {
           case Lit => Seq(new Haskell(s"""${atts(litValue)}"""))
-          case Add => Seq(new Haskell(s"""${dispatch(op, atts(base.left))} + ${dispatch(op, atts(base.right))}"""))
+          case Add => Seq(new Haskell(s"""${dispatch(atts(base.left), op)} + ${dispatch(atts(base.right), op)}"""))
           case _ => super.logic(exp)(op)
         }
 

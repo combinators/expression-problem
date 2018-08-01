@@ -1,9 +1,6 @@
 package example.expression.scalaVisitor  /*DI:LD:AD*/
 
-import com.github.javaparser.ast.CompilationUnit
-import com.github.javaparser.ast.`type`.Type
-import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
-import com.github.javaparser.ast.expr.Expression
+import com.github.javaparser.ast.body.{BodyDeclaration, FieldDeclaration, MethodDeclaration}
 import example.expression.domain.{BaseDomain, ModelDomain}
 import example.expression.j._
 import org.combinators.templating.twirl.Java
@@ -11,7 +8,7 @@ import org.combinators.templating.twirl.Java
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator with OperationAsMethodGenerator with Producer with BinaryMethod {
+trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator with VisitorJavaBinaryMethod with OperationAsMethodGenerator with Producer with JavaBinaryMethod {
   val domain:BaseDomain with ModelDomain
 
   /**
@@ -29,7 +26,7 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
           .filter(m => m.ops.nonEmpty)
           .flatMap(m =>
               m.ops.map(op => operationGenerator(flat, op))) :+    // one class for each op
-      generateBaseClass() :+                                   // abstract base class
+      generateBaseClass(flat) :+                              // abstract base class
       generateBase(flat)                                      // visitor gets its own class (overriding concept)
   }
 
@@ -38,17 +35,11 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
     exp.attributes.map(att => att.name -> Java(s"e.get${att.name.capitalize}()").expression[Expression]()).toMap
   }
 
-  // Still not properly supporting Binary methods
-  override def getJavaClass : Expression = {
-    Java(s"e.getClass()").expression[Expression]()
-  }
-
   /** Directly access local method, one per operation, with a parameter. */
   override def dispatch(expr:Expression, op:domain.Operation, params:Expression*) : Expression = {
     val args:String = params.mkString(",")
     Java(s"""$expr.accept(new ${op.name.capitalize}($args))""").expression()
   }
-
 
   /** Return designated Java type associated with type, or void if all else fails. */
   override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : com.github.javaparser.ast.`type`.Type = {
@@ -62,7 +53,8 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
     val signatures = model.types
       .map(exp => s"public abstract R visit(${exp.name} exp);").mkString("\n")
 
-    Java (s"""|package expression;
+    Java (s"""
+              |package expression;
               |/*
               | * A concrete visitor describes a concrete operation on expressions. There is one visit
               | * method per type in the class hierarchy.
@@ -73,25 +65,61 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
   }
 
   /** For visitor, the base class defines the accept method used by all subclasses. */
-  def generateBaseClass():CompilationUnit = {
+  def generateBaseClass(model:domain.Model):CompilationUnit = {
+
+    // If BinaryMethodTreeBase is defined, then need Astree declarations...
+    val decls = if (model.ops.exists {
+      case bm: domain.BinaryMethodTreeBase => true
+      case _ => false
+    }) {
+      declarations
+    } else {
+      Seq.empty
+    }
+
+    val binaryTreeInterface = if (model.ops.exists {
+      case bm: domain.BinaryMethodTreeBase => true
+      case _ => false
+    }) {
+      Java(s"""public abstract Tree ${domain.AsTree.name.toLowerCase}();""").classBodyDeclarations
+    } else {
+      Seq.empty
+    }
+
     Java(s"""|package expression;
              |
              |public abstract class ${domain.baseTypeRep.name.capitalize} {
+             |    ${decls.mkString("\n")}
+             |    ${binaryTreeInterface.mkString("\n")}
              |    public abstract <R> R accept(Visitor<R> v);
              |}
              |""".stripMargin).compilationUnit()
   }
 
-  /** Operations are implemented as methods in the Base and sub-type classes. */
+  /**
+    * Operations are implemented as methods in the Base and sub-type classes.
+    *
+    * Note that BinaryMethodBase is handled separately
+    * As is BinaryMethods
+    */
   override def methodGenerator(exp:domain.Atomic)(op:domain.Operation): MethodDeclaration = {
     val retType = op.returnType match {
       case Some(tpe) => typeConverter(tpe)
       case _ => Java("void").tpe
     }
 
-    Java(s"""|public $retType visit(${exp.name} e) {
-             |  ${logic(exp)(op).mkString("\n")}
-             |}""".stripMargin).methodDeclarations().head
+    op match {
+      case bmb:domain.BinaryMethodTreeBase =>  Java(s"""|public ${domain.baseTypeRep.name}.Tree visit(${exp.name} e) {
+                                                        |  return e.${domain.AsTree.name.toLowerCase}();
+                                                        |}""".stripMargin).methodDeclarations().head
+//      case bm:domain.BinaryMethod => Java(s"""|public $retType visit(${exp.name} e) {
+//                                              |  ${logic(exp)(op).mkString("\n")}
+//                                              |}""".stripMargin).methodDeclarations().head
+      case _ => Java(s"""|public $retType visit(${exp.name} e) {
+                         |  ${logic(exp)(op).mkString("\n")}
+                         |}""".stripMargin).methodDeclarations().head
+    }
+
   }
 
 
@@ -103,18 +131,42 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
                                               |   return v.visit(this);
                                               |}""".stripMargin).methodDeclarations().head
 
+
+    val helpers:Seq[BodyDeclaration[_]] = if (model.ops.exists {
+      case bm: domain.BinaryMethod => true
+      case _ => false
+    }) {
+      visitorLogicAsTree(exp)
+    } else {
+      Seq.empty
+    }
+
+
+    val definedSubtypes:Seq[BodyDeclaration[_]] = if (model.ops.exists {
+      case bm: domain.BinaryMethod => true
+      case _ => false
+    }) {
+      definedDataSubTypes("", Seq(exp))
+    } else {
+      Seq.empty
+    }
+
     Java(s"""|package expression;
              |public class $name extends Exp {
-             |
+             |  ${definedSubtypes.mkString("\n")}
              |  ${constructor(exp)}
-             |
+             |  ${helpers.mkString("\n")}
              |  ${fields(exp).mkString("\n")}
              |  ${getters(exp).mkString("\n")}
              |  ${visitor.toString()}
              |}""".stripMargin).compilationUnit()
   }
 
-  /** Brings in classes for each operation. These can only be completed with the implementations. */
+  /**
+    * Brings in classes for each operation. These can only be completed with the implementations.
+    *
+    * Must handle BinaryMethod (Equals) and BinaryMethodBase (Astree) specially.
+    */
   def operationGenerator(model:domain.Model, op:domain.Operation): CompilationUnit = {
     val signatures = model.types.map(exp => methodGenerator(exp)(op)).mkString("\n")
 
@@ -128,7 +180,11 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
       constructorFromOp(op)
     }
 
-    val tpe = typeConverter(op.returnType.get)
+    val tpe = op match {
+      case bmb:domain.BinaryMethodTreeBase => Java(s"${domain.baseTypeRep.name}.Tree").tpe()
+      case _ => typeConverter(op.returnType.get)
+    }
+
     val s = Java(s"""|package expression;
                      |public class ${op.name.capitalize} extends Visitor<$tpe>{
                      |  ${ctor.toString}

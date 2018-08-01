@@ -1,66 +1,38 @@
 package example.expression.j  /*DD:LD:AI*/
 
-import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.MethodDeclaration
-import com.github.javaparser.ast.expr.Expression
-import com.github.javaparser.ast.stmt.Statement
-import example.expression.domain._
+import example.expression.domain.{Evolution, M5, MathDomain}
 import org.combinators.templating.twirl.Java
 
 /**
-  * Truly independent of the specific design solution.
+  * BinaryMethod capability
   *
-  * Determine if structure of two Exps are equal to each other. Checking in.
-  *
-  * First operation that has parameter which has Exp-recursive structure
+  * Still Java-based, naturally and JUnit
   */
-trait e5 extends Evolution with AbstractGenerator with TestGenerator with BinaryMethod with M0 with M4i with M5 {
-  self: e0 with e1 with e2 with e3 with e4 with ex =>
+trait e5 extends Evolution with AbstractGenerator with TestGenerator with M5 {
+  self: e0 with e1 with e2 with e3 with e4 =>
   val domain:MathDomain
 
-  abstract override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None): com.github.javaparser.ast.`type`.Type = {
+  abstract override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
-      case Boolean => Java("Boolean").tpe()
+      case domain.Tree => Java(s"Tree").tpe()      // internal interface
       case _ => super.typeConverter(tpe, covariantReplacement)
     }
   }
 
   abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {
-    val subs = subExpressions(exp)
-
     // generate the actual body
     op match {
-      case Equal =>
-        val atts:Map[String,Expression] = subExpressions(exp)
-        val name:String = op.parameters.head._1
-        val other:domain.TypeRep = op.parameters.head._2
-        val oname = Java(name).expression[Expression]()
+      // Simplify only works for solutions that instantiate expression instances. As a binary
+      case domain.AsTree => {
+        val atts = subExpressions(exp)
+        val params = atts.map(att => att._1 + ".astree()").mkString(",")
 
         exp match {
-          case Lit => {
-            val call:String = atts(litValue).toString
-            val value:Expression = Java(s"((${exp.name.capitalize})$name).$call").expression()
-            Java(s"""return $getJavaClass.equals(${dispatch(oname, GetJavaClass)}) && $call.equals($value);""").statements()
-          }
-
-          case ui:domain.Unary => {
-            val call:String = atts(domain.base.inner).toString//.substring(2)
-            val inner:Expression = Java(s"((${exp.name.capitalize})$name).$call").expression()
-
-            Java(s"""return $getJavaClass.equals(${dispatch(oname, GetJavaClass)}) && ${dispatch(subs(domain.base.inner), Equal, inner)};""").statements()
-          }
-
-          case bi:domain.Binary => {
-            val leftCall:String = atts(domain.base.left).toString//.substring(2)
-            val rightCall:String = atts(domain.base.right).toString//.substring(2)
-            val leftExpr:Expression = Java(s"((${exp.name.capitalize})$name).$leftCall").expression()
-            val rightExpr:Expression = Java(s"((${exp.name.capitalize})$name).$rightCall").expression()
-
-            Java(s"""return $getJavaClass.equals(${dispatch(oname, GetJavaClass)}) && ${dispatch(subs(domain.base.left), Equal, leftExpr)} && ${dispatch(subs(domain.base.right), Equal, rightExpr)};""").statements()
-          }
-
-          case _ => super.logic(exp)(op)
+          case Lit => Java(s"""return new Node(java.util.Arrays.asList(new Leaf($litValue)), DefinedSubtypes.${exp.name.capitalize}); """).statements
+          case Add|Sub|Mult|Divd|Neg => Java(s""" return new Node(java.util.Arrays.asList($params), DefinedSubtypes.${exp.name.capitalize}); """).statements
         }
+      }
 
       case _ => super.logic(exp)(op)
     }
@@ -68,15 +40,14 @@ trait e5 extends Evolution with AbstractGenerator with TestGenerator with Binary
 
   abstract override def testGenerator: Seq[MethodDeclaration] = {
     val s1 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
-    val s2 = new domain.BinaryInst(Add, new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0)),
-                                 new domain.BinaryInst(Add, new LitInst(5.0), new LitInst(6.0)))
+    val s2 = new domain.BinaryInst(Sub, new LitInst(9.0), new LitInst(112.0))
     val s3 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
 
-      super.testGenerator ++ Java(
+    super.testGenerator ++ Java(
       s"""
          |public void test() {
-         |   assertFalse(${dispatch(convert(s1), Equal, convert(s2))});
-         |   assertTrue(${dispatch(convert(s1), Equal, convert(s3))});
-         |}""".stripMargin).methodDeclarations
+         |   assertFalse(${dispatch(convert(s1), domain.AsTree)}.same(${dispatch(convert(s2), domain.AsTree)}));
+         |   assertTrue (${dispatch(convert(s1), domain.AsTree)}.same(${dispatch(convert(s3), domain.AsTree)}));
+         |}""".stripMargin).methodDeclarations()
   }
 }

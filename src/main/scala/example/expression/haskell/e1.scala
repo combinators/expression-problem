@@ -19,7 +19,7 @@ trait e1 extends Evolution with AbstractGenerator with TestGenerator with M1 {
       case Eval =>
         exp match {
 
-          case Sub => Seq(new Haskell(s"""${dispatch(op, atts(base.left))} - ${dispatch(op, atts(base.right))}"""))
+          case Sub => Seq(new Haskell(s"""${dispatch(atts(base.left), op)} - ${dispatch(atts(base.right), op)}"""))
           case _ => super.logic(exp)(op)
         }
 

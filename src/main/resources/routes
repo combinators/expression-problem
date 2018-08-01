@@ -29,6 +29,7 @@ GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP
 ->    /                              example.expression.haskell.S2_Variation
 ->    /                              example.expression.haskell.S3_Variation
 ->    /                              example.expression.haskell.S4_Variation
+->    /                              example.expression.haskell.S5_Variation
 #CPP variation
 ->    /                              example.expression.cpp.CPP_M0_Variation
 #OO variations
@@ -38,6 +39,7 @@ GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP
 ->    /                              example.expression.oo.M3_Variation
 ->    /                              example.expression.oo.M4_Variation
 ->    /                              example.expression.oo.M5_Variation
+->    /                              example.expression.oo.M6_Variation
 ->    /                              example.expression.oo.I2_Variation
 ->    /                              example.expression.oo.C1_Variation
 #Trivially variations
@@ -47,6 +49,7 @@ GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP
 ->    /                              example.expression.trivially.M3_Variation
 ->    /                              example.expression.trivially.M4_Variation
 ->    /                              example.expression.trivially.M5_Variation
+->    /                              example.expression.trivially.M6_Variation
 ->    /                              example.expression.trivially.C1_Variation
 #Interpreter variations
 ->    /                              example.expression.interpreter.M0_Variation
@@ -54,7 +57,13 @@ GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP
 ->    /                              example.expression.interpreter.M2_Variation
 ->    /                              example.expression.interpreter.M3_Variation
 ->    /                              example.expression.interpreter.M4_Variation
-->    /                              example.expression.interpreter.M5_Variation
+# Extensible visitor
+->    /                              example.expression.extensibleVisitor.M0_Variation
+->    /                              example.expression.extensibleVisitor.M1_Variation
+->    /                              example.expression.extensibleVisitor.M2_Variation
+->    /                              example.expression.extensibleVisitor.M3_Variation
+->    /                              example.expression.extensibleVisitor.M4_Variation
+->    /                              example.expression.extensibleVisitor.M5_Variation
 # Scala visitor variations
 ->    /                              example.expression.scalaVisitor.M0_Variation
 ->    /                              example.expression.scalaVisitor.M1_Variation
@@ -62,6 +71,7 @@ GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP
 ->    /                              example.expression.scalaVisitor.M3_Variation
 ->    /                              example.expression.scalaVisitor.M4_Variation
 ->    /                              example.expression.scalaVisitor.M5_Variation
+->    /                              example.expression.scalaVisitor.M6_Variation
 ->    /                              example.expression.scalaVisitor.C1_Variation
 # CPP variation
 ->    /                              example.expression.cpp.M0_Variation
@@ -87,6 +97,7 @@ GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP
 ->    /                              example.expression.algebra.M3_Variation
 ->    /                              example.expression.algebra.M4_Variation
 ->    /                              example.expression.algebra.M5_Variation
+->    /                              example.expression.algebra.M6_Variation
 ->    /                              example.expression.algebra.I2_Variation
 ->    /                              example.expression.algebra.C1_Variation
 #

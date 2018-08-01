@@ -1,11 +1,8 @@
 package example.expression.extensibleVisitor    /*DI:LD:AD*/
 
-import com.github.javaparser.ast.CompilationUnit
-import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.TypeDeclaration
-import com.github.javaparser.ast.expr.Expression
 import example.expression.domain.{BaseDomain, ModelDomain}
-import example.expression.scalaVisitor.VisitorGenerator
+import example.expression.scalaVisitor.{VisitorGenerator, VisitorJavaBinaryMethod}
 import org.combinators.templating.twirl.Java
 
 /**
@@ -13,7 +10,7 @@ import org.combinators.templating.twirl.Java
   * Shriram Krishnamurthi, Matthias Felleisen, Daniel Friedman
   * https://dl.acm.org/citation.cfm?id=679709
   */
-trait ExtensibleVisitorGenerator extends VisitorGenerator  {
+trait ExtensibleVisitorGenerator extends VisitorGenerator with VisitorJavaBinaryMethod {
   val domain:BaseDomain with ModelDomain
 
   /**
@@ -28,7 +25,7 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator  {
     val flat = getModel.flatten()
     flat.types.map(tpe => generateExp(flat, tpe)) ++         // one class for each sub-type
       flat.ops.map(op => operationGenerator(flat, op)) :+    // one class for each op
-      generateBaseClass() :+                                 // abstract base class
+      generateBaseClass(flat) :+                             // abstract base class
       generateBase(flat)                                     // visitor gets its own class (overriding concept)
   }
 
@@ -37,15 +34,20 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator  {
     exp.attributes.map(att => att.name -> Java(s"e.get${att.name.capitalize}()").expression[Expression]()).toMap
   }
 
-  // Still not properly supporting Binary methods
-  override def getJavaClass : Expression = {
-    Java(s"e.getClass()").expression[Expression]()
+  /** Add virtual type generator. */
+  def addVirtualConstructor(mainType:TypeDeclaration[_], op:domain.Operation) : Unit = {
+    val virtualConstructor = Java(
+             s"""|${op.name.capitalize} make${op.name.capitalize} (${parameters(op)}) {
+                 |  return new ${op.name.capitalize} (${arguments(op)});
+                 |}""".stripMargin).methodDeclarations().head
+
+    mainType.addMember(virtualConstructor)
   }
 
   /** Directly access local method, one per operation, with a parameter. */
   override def dispatch(expr:Expression, op:domain.Operation, params:Expression*) : Expression = {
     val args:String = params.mkString(",")
-    Java(s"""$expr.accept(new ${op.name.capitalize}($args))""").expression()
+    Java(s"""$expr.accept(make${op.name.capitalize}($args))""").expression()
   }
 
 
@@ -76,13 +78,7 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator  {
     val regularVisitor:CompilationUnit = super.operationGenerator(model, op)
 
     val mainType:TypeDeclaration[_] = regularVisitor.getType(0)
-    val virtualConstructor = Java(
-      s"""|${op.name.capitalize} make${op.name.capitalize} (${parameters(op)}) {
-          |  return new ${op.name.capitalize} (${arguments(op)})
-          |}""".stripMargin).methodDeclarations().head
-
-    mainType.addMember(virtualConstructor)
-
+    addVirtualConstructor(mainType, op)
     regularVisitor
   }
 }

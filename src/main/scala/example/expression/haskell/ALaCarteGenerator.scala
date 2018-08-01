@@ -163,7 +163,7 @@ trait ALaCarteGenerator extends AbstractGenerator {
   }
 
   /** Responsible for dispatching sub-expressions with possible parameter(s). */
- override def dispatch(op:domain.Operation, primary:Haskell, params:Haskell*) : Haskell = {
+ override def dispatch(primary:Haskell, op:domain.Operation, params:Haskell*) : Haskell = {
     val args:String = params.mkString(" ")
     Haskell(s"""$primary""")
   }

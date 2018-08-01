@@ -1,14 +1,11 @@
 package example.expression.interpreter  /*DI:LD:AD*/
 
-import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
-import com.github.javaparser.ast.expr.{Expression, SimpleName}
-import com.github.javaparser.ast.stmt.Statement
-import com.github.javaparser.ast.CompilationUnit
+import com.github.javaparser.ast.expr.SimpleName
 import example.expression.j._
 import org.combinators.templating.twirl.Java
 
-trait InterpreterGenerator extends  AbstractGenerator with DataTypeSubclassGenerator with OperationAsMethodGenerator with BinaryMethod with Producer {
+trait InterpreterGenerator extends  AbstractGenerator with DataTypeSubclassGenerator with StandardJavaBinaryMethod with OperationAsMethodGenerator with JavaBinaryMethod with Producer {
 
   /**
     * Generating an interpreter solution requires:
@@ -35,10 +32,6 @@ trait InterpreterGenerator extends  AbstractGenerator with DataTypeSubclassGener
     */
   override def inst(exp:domain.Atomic)(op:domain.Operation)(params:Expression*): Expression = {
     Java(exp.name + "(" + params.map(expr => expr.toString()).mkString(",") + ")").expression()
-  }
-
-  override def getJavaClass : Expression = {
-    Java(s"getClass()").expression[Expression]()
   }
 
   override def subExpressions(exp: domain.Atomic): Map[String, Expression] = {

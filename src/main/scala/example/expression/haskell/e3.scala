@@ -19,18 +19,18 @@ trait e3 extends Evolution with AbstractGenerator with TestGenerator with M0 wit
     op match {
       case PrettyP => {
         exp match {
-          case Neg => Seq(Haskell(s""" "-" ++ ${dispatch(op, atts(base.inner))} """))
-          case Mult => Seq(Haskell(s""" "(" ++ ${dispatch(op, atts(base.left))} ++ "*" ++ ${dispatch(op, atts(base.right))} ++ ")" """))
-          case Divd => Seq(Haskell(s""" "(" ++ ${dispatch(op, atts(base.left))} ++ "/" ++ ${dispatch(op, atts(base.right))} ++ ")" """))
+          case Neg => Seq(Haskell(s""" "-" ++ ${dispatch(atts(base.inner), op)} """))
+          case Mult => Seq(Haskell(s""" "(" ++ ${dispatch(atts(base.left), op)} ++ "*" ++ ${dispatch(atts(base.right), op)} ++ ")" """))
+          case Divd => Seq(Haskell(s""" "(" ++ ${dispatch(atts(base.left), op)} ++ "/" ++ ${dispatch(atts(base.right), op)} ++ ")" """))
           case _ => super.logic(exp)(op)
         }
       }
 
       case Eval => {
         exp match {
-          case Neg => Seq(new Haskell(s"(- ${dispatch(op, atts(base.inner))})"))
-          case Mult => Seq(new Haskell(s"""${dispatch(op, atts(base.left))} * ${dispatch(op, atts(base.right))}"""))
-          case Divd => Seq(new Haskell(s"""${dispatch(op, atts(base.left))} / ${dispatch(op, atts(base.right))}"""))
+          case Neg => Seq(new Haskell(s"(- ${dispatch(atts(base.inner), op)})"))
+          case Mult => Seq(new Haskell(s"""${dispatch(atts(base.left), op)} * ${dispatch(atts(base.right), op)}"""))
+          case Divd => Seq(new Haskell(s"""${dispatch(atts(base.left), op)} / ${dispatch(atts(base.right), op)}"""))
           case _ => super.logic(exp)(op)
         }
       }

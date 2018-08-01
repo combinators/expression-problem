@@ -1,7 +1,6 @@
 package example.expression.j  /*DD:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
-import com.github.javaparser.ast.stmt.Statement
 import example.expression.domain.{Evolution, I1, M0, MathDomain}
 import org.combinators.templating.twirl.Java
 

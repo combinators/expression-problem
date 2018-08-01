@@ -1,18 +1,14 @@
 package example.expression.algebra /*DI:LD:AD*/
 
-import com.github.javaparser.ast.CompilationUnit
-import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
-import com.github.javaparser.ast.expr.Expression
-import com.github.javaparser.ast.stmt.Statement
 import example.expression.domain.{BaseDomain, ModelDomain}
-import example.expression.j.{AbstractGenerator, TestGenerator}
+import example.expression.j.{AbstractGenerator, JavaBinaryMethod, TestGenerator}
 import org.combinators.templating.twirl.Java
 
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait AlgebraTestGenerator extends TestGenerator with AbstractGenerator {
+trait AlgebraTestGenerator extends TestGenerator with AbstractGenerator with JavaBinaryMethod {
   val domain: BaseDomain with ModelDomain
   import domain._
 
@@ -71,6 +67,7 @@ trait AlgebraTestGenerator extends TestGenerator with AbstractGenerator {
       var algebraDeclarations: Map[Operation, FieldDeclaration] = Map()
       var algParams:Map[Operation,String] = Map()
 
+      // likely sorting is not useful here...
       operations.sortWith(_.name < _.name).foreach(op => {
         val finalAlgebra:String = classify(model) + "ExpAlg"
 
@@ -79,12 +76,15 @@ trait AlgebraTestGenerator extends TestGenerator with AbstractGenerator {
         algParams = algParams updated(op, s"algebra${op.name.capitalize}")
       })
 
+      // sort by class name
+      val sortedParams:String = algParams.values.toSeq.sortWith(_ < _).mkString(",")
+
       val str:String = s"""|$packageDeclaration
                            |import junit.framework.TestCase;
                            |
                            |public class TestSuite$num extends TestCase {
                            |    ${algebraDeclarations.values.mkString("\n")}
-                           |  CombinedExpAlg algebra = new CombinedExpAlg(${algParams.values.mkString(",")});
+                           |  CombinedExpAlg algebra = new CombinedExpAlg($sortedParams);
                            |
                            |    $md
                            |}""".stripMargin
@@ -110,7 +110,15 @@ trait AlgebraTestGenerator extends TestGenerator with AbstractGenerator {
 
     val opsname:Seq[MethodDeclaration] = operations.flatMap(op => {
       val op_args = arguments(op)
-      val op_params = parameters(op)
+      //val op_params = parameters(op)
+
+      // Handle binary methods...
+      val op_params = op match {
+        case bm:domain.BinaryMethod => binaryMethodParameters(op, typeConverter)
+        case _ => parameters(op)
+      }
+
+
       val returnType = typeConverter(op.returnType.get)
       Java(
         s"public $returnType ${op.name}($op_params) { return algebra${op.name.capitalize}.${tpe.name.toLowerCase}(${args.mkString(",")}).${op.name}($op_args); } ").methodDeclarations()

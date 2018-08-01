@@ -1,9 +1,6 @@
 package example.expression.oo  /*DI:LD:AD*/
 
-import com.github.javaparser.ast.CompilationUnit
-import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.MethodDeclaration
-import com.github.javaparser.ast.expr.Expression
 import example.expression.domain.{BaseDomain, ModelDomain}
 import example.expression.j._
 import org.combinators.templating.twirl.Java
@@ -11,7 +8,7 @@ import org.combinators.templating.twirl.Java
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait OOGenerator extends AbstractGenerator with DataTypeSubclassGenerator with OperationAsMethodGenerator with Producer with BinaryMethod {
+trait OOGenerator extends AbstractGenerator with DataTypeSubclassGenerator with StandardJavaBinaryMethod with OperationAsMethodGenerator with Producer with JavaBinaryMethod {
 
   val domain:BaseDomain with ModelDomain
   import domain._
@@ -34,11 +31,6 @@ trait OOGenerator extends AbstractGenerator with DataTypeSubclassGenerator with 
     exp.attributes.map(att => att.name -> Java(s"${att.name}").expression[Expression]).toMap
   }
 
-  /** Retrieve Java Class associated with given context. Needed for operations with Exp as parameter. */
-  override def getJavaClass : Expression = {
-    Java(s"getClass()").expression[Expression]
-  }
-
   /** Directly access local method, one per operation, with a parameter. */
   override def dispatch(expr:Expression, op:Operation, params:Expression*) : Expression = {
     val args:String = params.mkString(",")
@@ -48,7 +40,7 @@ trait OOGenerator extends AbstractGenerator with DataTypeSubclassGenerator with 
   /** Return designated Java type associated with type, or void if all else fails. */
   override def typeConverter(tpe:TypeRep, covariantReplacement:Option[Type] = None) : Type = {
     tpe match {
-      case domain.baseTypeRep => covariantReplacement.getOrElse(Java("Exp").tpe())
+      case domain.baseTypeRep => covariantReplacement.getOrElse(Java(s"${domain.baseTypeRep.name}").tpe())
       case _ => super.typeConverter(tpe, covariantReplacement)
     }
   }
@@ -72,8 +64,19 @@ trait OOGenerator extends AbstractGenerator with DataTypeSubclassGenerator with 
   /** Generate the full class for the given expression sub-type. */
   def generateExp(model:Model, exp:Atomic) : CompilationUnit = {
     val methods = model.ops.map(methodGenerator(exp))
+
+    val extras = if (model.ops.exists {
+      case bm: domain.BinaryMethodTreeBase => true
+      case _ => false
+    }) {
+      definedDataSubTypes(domain.baseTypeRep.name, Seq(exp))
+    } else {
+      Seq.empty
+    }
+
     Java(s"""|package oo;
-             |public class ${exp.toString} extends Exp {
+             |public class ${exp.toString} extends ${domain.baseTypeRep.name} {
+             |  ${extras.mkString("\n")}
              |  ${constructor(exp)}
              |  ${fields(exp).mkString("\n")}
              |  ${methods.mkString("\n")}
@@ -87,9 +90,20 @@ trait OOGenerator extends AbstractGenerator with DataTypeSubclassGenerator with 
         s"${op.name}(${parameters(op)});").methodDeclarations
     })
 
+    // If BinaryMethodTreeBase is defined, then need Astree declarations...
+    val decls = if (model.ops.exists {
+      case bm: domain.BinaryMethodTreeBase => true
+      case _ => false
+    }) {
+      declarations
+    } else {
+      Seq.empty
+    }
+
     Java(s"""|package oo;
-             |public abstract class Exp {
+             |public abstract class ${domain.baseTypeRep.name} {
              |  ${signatures.mkString("\n")}
+             |  ${decls.mkString("\n")}
              |}""".stripMargin).compilationUnit
   }
 }

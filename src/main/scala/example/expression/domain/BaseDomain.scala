@@ -48,6 +48,11 @@ trait BaseDomain {
   class ProducerOperation(override val name:String, override val parameters:Seq[(String, TypeRep)] = Seq.empty) extends Operation(name, Some(baseTypeRep), parameters)
   class BinaryMethod(override val name:String, override val returnType:Option[TypeRep]) extends Operation(name, returnType, Seq((base.that, baseTypeRep)))
 
+  /** Special operation that declares underlying support for BinaryMethods. */
+  case object Tree extends TypeRep
+  class BinaryMethodTreeBase(override val name:String, override val returnType:Option[TypeRep]) extends Operation(name, Some(baseTypeRep))
+  case object AsTree extends BinaryMethodTreeBase ("astree", Some(Tree))
+
   /** Pre-defined unary/binary subtypes that reflects either a unary or binary structure. This is extensible. */
   abstract class Atomic(n1: String, val attributes: Seq[Attribute]) {
     val name:String = sanitize(n1)

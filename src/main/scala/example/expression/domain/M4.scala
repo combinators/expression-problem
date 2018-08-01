@@ -14,7 +14,7 @@ trait M4 extends Evolution with OperationDependency {
   override def getModel = m4
 
   /**
-    * PrettyP depends on Eval (during simplification process) and PrettyP (during testing).
+    * Simplify depends on Eval (during simplification process) and PrettyP (during testing).
     */
   override def dependency(op: domain.Operation): scala.List[domain.Operation] = {
     if (op.equals(Simplify)) {

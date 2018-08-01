@@ -1,9 +1,6 @@
 package example.expression.j   /*DD:LD:AI*/
 
-import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.MethodDeclaration
-import com.github.javaparser.ast.expr.Expression
-import com.github.javaparser.ast.stmt.Statement
 import example.expression.domain.M0
 import org.combinators.templating.twirl.Java
 

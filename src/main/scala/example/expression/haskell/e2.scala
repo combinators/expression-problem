@@ -27,8 +27,8 @@ trait e2 extends Evolution with AbstractGenerator with TestGenerator with M0 wit
       case PrettyP =>
         exp match {
           case Lit => Seq(Haskell(s""" show ${atts(litValue)}"""))
-          case Add => Seq(Haskell(s""" "(" ++ ${dispatch(op, atts(base.left))} ++ "+" ++ ${dispatch(op, atts(base.right))} ++ ")" """))
-          case Sub => Seq(Haskell(s""" "(" ++ ${dispatch(op, atts(base.left))} ++ "-" ++ ${dispatch(op, atts(base.right))} ++ ")" """))
+          case Add => Seq(Haskell(s""" "(" ++ ${dispatch(atts(base.left), op)} ++ "+" ++ ${dispatch(atts(base.right), op)} ++ ")" """))
+          case Sub => Seq(Haskell(s""" "(" ++ ${dispatch(atts(base.left), op)} ++ "-" ++ ${dispatch(atts(base.right), op)} ++ ")" """))
           case _ => super.logic(exp)(op)
         }
 

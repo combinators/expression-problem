@@ -49,7 +49,12 @@ class M4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
 class M5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends Foundation(web, app) {
-  override val gen = new WithDomain(MathDomain) with TriviallyGenerator with TestGenerator with e0 with e1 with e2 with e3 with e4 with ex with e5
+  override val gen = new WithDomain(MathDomain) with TriviallyGenerator with TestGenerator with e0 with e1 with e2 with e3 with e4 with e5
+}
+
+class M6_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+  extends Foundation(web, app) {
+  override val gen = new WithDomain(MathDomain) with TriviallyGenerator with TestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6
 }
 
 class C1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)

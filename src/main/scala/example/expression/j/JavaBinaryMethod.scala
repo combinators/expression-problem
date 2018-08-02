@@ -129,6 +129,8 @@ trait JavaBinaryMethod extends BinaryMethod {
   /** Interesting shift needed for visitor. */
   def visitorLogicAsTree(exp:domain.Atomic) : Seq[MethodDeclaration] = {
     val atomicArgs = exp.attributes.map(att => att.name).mkString(",")
+
+    // changes whether attributes can be access *directly* or whether they are accessed via getXXX*() method.
     val recursiveArgs = exp.attributes.map(att => att.name + s".${AsTree.name.toLowerCase}()").mkString(",")
 
     val body:Seq[Statement] = exp match {

@@ -26,12 +26,18 @@ trait e5 extends Evolution with AbstractGenerator with TestGenerator with M5 {
       // Simplify only works for solutions that instantiate expression instances. As a binary
       case domain.AsTree => {
         val atts = subExpressions(exp)
-        val params = atts.map(att => att._1 + ".astree()").mkString(",")
 
-        exp match {
-          case Lit => Java(s"""return new Node(java.util.Arrays.asList(new Leaf($litValue)), DefinedSubtypes.${exp.name.capitalize}); """).statements
-          case Add|Sub|Mult|Divd|Neg => Java(s""" return new Node(java.util.Arrays.asList($params), DefinedSubtypes.${exp.name.capitalize}); """).statements
-        }
+        // different strategies have different means of accessing attributes, either directly or via
+        // getXXX methods. This logic method must defer that knowledge to later.
+        exp match {   // was $litValue
+          case Lit =>
+            val attParams = atts.map(att => att._2.toString).mkString(",")
+            Java(s"""return new Node(java.util.Arrays.asList(new Leaf($attParams)), DefinedSubtypes.${exp.name.capitalize}); """).statements
+
+          case Add|Sub|Mult|Divd|Neg =>
+            val params = atts.map(att => att._2.toString + ".astree()").mkString(",")
+            Java(s""" return new Node(java.util.Arrays.asList($params), DefinedSubtypes.${exp.name.capitalize}); """).statements
+          }
       }
 
       case _ => super.logic(exp)(op)

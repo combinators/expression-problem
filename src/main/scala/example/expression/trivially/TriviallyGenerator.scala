@@ -2,8 +2,9 @@ package example.expression.trivially  /*DI:LD:AD*/
 
 import com.github.javaparser.ast.{CompilationUnit, Modifier}
 import com.github.javaparser.ast.`type`.Type
-import com.github.javaparser.ast.body.MethodDeclaration
+import com.github.javaparser.ast.body.{BodyDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.expr.Expression
+import example.expression.generator.BinaryMethodBase
 import example.expression.j.Producer
 import org.combinators.templating.twirl.Java
 
@@ -46,7 +47,7 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator with Producer
   }
 
   def baseInterfaceName(op: domain.Operation): Type = {
-    Java(s"Exp${op.name.capitalize}").tpe()
+    Java(s"${domain.baseTypeRep.name}${op.name.capitalize}").tpe()
   }
 
   override def generateExp(model:domain.Model, exp:domain.Atomic) : CompilationUnit = {
@@ -74,7 +75,7 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator with Producer
     method.setDefault(true)
     method.setType(
       op.returnType match {
-        case Some(domain.baseTypeRep) => typeConverter(domain.baseTypeRep, Some(Java("Exp" + op.name.capitalize).tpe()))
+        case Some(domain.baseTypeRep) => typeConverter(domain.baseTypeRep, Some(Java(domain.baseTypeRep.name + op.name.capitalize).tpe()))
         case Some(tpe) => typeConverter(tpe, Some(interfaceName(exp, op)))
         case _ => Java("void").tpe
       })
@@ -89,10 +90,16 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator with Producer
     val atts:Seq[MethodDeclaration] =
       exp.attributes.flatMap(att => Java(s"${typeConverter(att.tpe, Some(baseInterfaceName(op)))} get${att.name.capitalize}();").methodDeclarations())
 
+
+    val subtypeDefinitions:Seq[BodyDeclaration[_]] = op match {
+      case bmt: domain.BinaryMethodTreeBase => definedDataSubTypes("", Seq(exp))
+      case _ => Seq.empty
+    }
+
     Java(s"""
             |package trivially;
             |public interface $name extends ${parents.mkString(", ")} {
-            |
+            |  ${subtypeDefinitions.mkString("\n")}
             |  ${atts.mkString("\n")}
             |  $method
             |}""".stripMargin).compilationUnit()
@@ -147,14 +154,23 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator with Producer
       typeConverter(tpe).toString + " " + name
     }).mkString(",")
 
+    // include helper methods for AsTree.
+    val extras:Seq[BodyDeclaration[_]] = op match {
+      case bmt: domain.BinaryMethodTreeBase => declarations
+      case bm: BinaryMethodBase => Seq.empty
+      case _ => Seq.empty
+    }
+
 
     val methodSignature: MethodDeclaration =
       Java(s"""public $retType ${op.name}($params);""").methodDeclarations().head
 
-    Java(
-      s"""package trivially;
+    Java(s"""
+         |package trivially;
          |
          |public interface ${baseInterfaceName(op)} extends ${parents.mkString(", ")} {
+         |
+         |    ${extras.mkString("\n")}
          |    $methodSignature
          |}
        """.stripMargin).compilationUnit()
@@ -162,10 +178,21 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator with Producer
 
 
   override def generateBase(model: domain.Model): CompilationUnit = {
+
+    val binaryMethodHelper: Seq[BodyDeclaration[_]] = if (model.flatten().ops.exists {
+      case bm: domain.BinaryMethodTreeBase => true
+      case _ => false
+    }) {
+      Java(s"""public trivially.${domain.baseTypeRep.name}${domain.AsTree.name.capitalize}.Tree ${domain.AsTree.name.toLowerCase}();""").classBodyDeclarations
+    } else {
+      Seq.empty
+    }
+
     Java(
       s"""package trivially;
          |
          |public interface ${typeConverter(domain.baseTypeRep)} {
+         |    ${binaryMethodHelper.mkString("\n")}
          |}
        """.stripMargin).compilationUnit()
   }

@@ -1,6 +1,6 @@
 package example.expression.haskell     /*DD:LD:AI*/
 
-import example.expression.domain.{Evolution, M5, MathDomain}
+import example.expression.domain.{Evolution, M5, MathDomain, ModelDomain}
 /**
   * BinaryMethod capability
   *
@@ -8,26 +8,31 @@ import example.expression.domain.{Evolution, M5, MathDomain}
   */
 trait e5 extends Evolution with AbstractGenerator with TestGenerator with HaskellBinaryMethod with M5 {
   self: e0 with e1 with e2 with e3 with e4 =>
-  val domain:MathDomain
+  val domain:MathDomain with ModelDomain
+  import domain._
 
-  abstract override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[HaskellType] = None) : HaskellType = {
+  abstract override def typeConverter(tpe:TypeRep, covariantReplacement:Option[HaskellType] = None) : HaskellType = {
     tpe match {
-      case domain.Tree => new HaskellType(s"Tree")  // internal interface
+      case Tree => new HaskellType(s"Tree")  // internal interface
       case _ => super.typeConverter(tpe, covariantReplacement)
     }
   }
 
-  abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Haskell] = {
+  abstract override def logic(exp:Atomic)(op:domain.Operation): Seq[Haskell] = {
     // generate the actual body
     op match {
       // Simplify only works for solutions that instantiate expression instances
-      case domain.AsTree => {
+      case AsTree => {
         val atts = subExpressions(exp)
-        val params = atts.map(att => att._1 + ".asTree()").mkString(",")
+        val params = standardArgs(exp)
+        val invokes = exp.attributes.map(att => s"(${AsTree.name.toLowerCase} ${att.name})").mkString(" ")
 
         exp match {
-          case Lit => Seq(Haskell(s"""return new Node(Arrays.asList(new Leaf($litValue)), DefinedSubtypes.${exp.name.capitalize}); """))
-          case Add|Sub|Mult|Divd|Neg => Seq(Haskell(s""" return new Node(Arrays.asList($params), DefinedSubtypes.${exp.name.capitalize}); """))
+          case Lit => Seq(Haskell(s" Leaf ${exp.name}Type $litValue"))
+          case Neg => Seq(Haskell(s" Node ${exp.name}Type (${exp.name} ${base.inner}) (${AsTree.name.toLowerCase} ${base.inner}) Nil"))
+          case Add|Sub|Mult|Divd => {
+            Seq(Haskell(s""" Node ${exp.name}Type (${exp.name} $params) $invokes """))
+          }
         }
       }
 

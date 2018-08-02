@@ -6,7 +6,7 @@ import example.expression.domain.{BaseDomain, ModelDomain}
 
 // https://eli.thegreenplace.net/2016/the-expression-problem-and-its-solutions/
 
-trait StraightGenerator extends AbstractGenerator with StandardHaskellBinaryMethod {
+trait StraightGenerator extends AbstractGenerator with StandardHaskellBinaryMethod with HaskellBinaryMethod {
   val domain:BaseDomain with ModelDomain
   import domain._
 
@@ -56,8 +56,15 @@ trait StraightGenerator extends AbstractGenerator with StandardHaskellBinaryMeth
       s"""$name (${exp.name.capitalize} ${standardArgs(exp).getCode}) $opsParam = ${logic(exp)(op).mkString("\n")}"""
     })
 
+    // astree method declaration
+    val subtypes:Seq[Haskell] = op match {
+      case bmt:BinaryMethodTreeBase => definedDataSubTypes("", m.types)
+      case _ => Seq.empty
+    }
+
     val code = Haskell(s"""|module ${name.capitalize} where
                            |import DataTypes
+                           |${subtypes.mkString("\n")}
                            |${addedImports(op).mkString("\n")}
                            |$definition
                            |${instances.mkString("\n")}""".stripMargin)

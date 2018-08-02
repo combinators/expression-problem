@@ -45,3 +45,13 @@ class M4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends FoundationHaskell(web, app) {
   override val gen = new WithDomain(MathDomain) with ALaCarteGenerator with ALaCarteProducer with ALaCarteTestGenerator with e0 with e1 with e2 with e3 with e4
 }
+
+class M5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+  extends FoundationHaskell(web, app) {
+  override val gen = new WithDomain(MathDomain) with ALaCarteGenerator with ALaCarteProducer with ALaCarteTestGenerator with e0 with e1 with e2 with e3 with e4 with e5
+}
+
+class M6_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+  extends FoundationHaskell(web, app) {
+  override val gen = new WithDomain(MathDomain) with ALaCarteGenerator with ALaCarteProducer with ALaCarteTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6
+}

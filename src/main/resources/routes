@@ -23,6 +23,8 @@ GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP
 ->    /                              example.expression.haskell.M2_Variation
 ->    /                              example.expression.haskell.M3_Variation
 ->    /                              example.expression.haskell.M4_Variation
+->    /                              example.expression.haskell.M5_Variation
+->    /                              example.expression.haskell.M6_Variation
 #Haskell Straight
 ->    /                              example.expression.haskell.S0_Variation
 ->    /                              example.expression.haskell.S1_Variation
@@ -30,6 +32,7 @@ GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP
 ->    /                              example.expression.haskell.S3_Variation
 ->    /                              example.expression.haskell.S4_Variation
 ->    /                              example.expression.haskell.S5_Variation
+->    /                              example.expression.haskell.S6_Variation
 #CPP variation
 ->    /                              example.expression.cpp.CPP_M0_Variation
 #OO variations

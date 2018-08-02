@@ -1,6 +1,6 @@
 package example.expression.interpreter  /*DI:LD:AD*/
 
-import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
+import com.github.javaparser.ast.body.{BodyDeclaration, FieldDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.expr.SimpleName
 import example.expression.j._
 import org.combinators.templating.twirl.Java
@@ -18,8 +18,11 @@ trait InterpreterGenerator extends  AbstractGenerator with DataTypeSubclassGener
   def generatedCode():Seq[CompilationUnit] = {
     val model = getModel
     // one interface for every model that contains an operation
-    model.inChronologicalOrder.filter(m => m.ops.nonEmpty).map(m => generateBase(m)) ++      // Each operation gets interface
-    model.inChronologicalOrder.filter(m => m.ops.nonEmpty).flatMap(m => generateBaseExtensions(m)) ++   // Each operation must provide class implementations for all past dataTypes
+    // Each operation gets interface
+    model.inChronologicalOrder.filter(m => m.ops.nonEmpty).map(m => generateBase(m)) ++
+    //
+    // Each operation must provide class implementations for all past dataTypes since last operation
+    model.inChronologicalOrder.filter(m => m.ops.nonEmpty).flatMap(m => generateBaseExtensions(m)) ++
     generateIntermediateTypes(model)
   }
 
@@ -132,18 +135,30 @@ trait InterpreterGenerator extends  AbstractGenerator with DataTypeSubclassGener
     *
     * Shall only be called on a model with operations.
     *
+    * Added special logic for BinaryMethod
+    *
     * @param model
     * @return
     */
   override def generateBase(model: domain.Model): CompilationUnit = {
     // concatenate all names
     val fullType:Type = Java(modelInterfaceName(model)).tpe()
-    val methods:Seq[String] = model.ops.map(op => {
+    val signatures:Seq[String] = model.ops.map(op => {
+
+
       val params: Seq[String] = op.parameters.map(tuple => {
         val name = tuple._1
         val tpe = tuple._2
-        s"${typeConverter(tpe)} $name"
-      } )
+
+        op match {
+          case bm:domain.BinaryMethod => if (tpe.equals(domain.baseTypeRep)) {
+            s"$fullType $name"
+          } else {
+            s"${typeConverter(tpe)} $name"
+          }
+          case _ => s"${typeConverter(tpe)} $name"
+        }
+      })
 
       s"""public ${typeConverter(op.returnType.get, Some(fullType))}  ${op.name}(${params.mkString(",")});"""
     })
@@ -155,12 +170,21 @@ trait InterpreterGenerator extends  AbstractGenerator with DataTypeSubclassGener
     val extension:String = if (lastWithOps.isEmpty) ""
       else "extends " + modelInterfaceName(lastWithOps)
 
-    val str = s"""|package interpreter;
+    // include helper methods for AsTree.
+    val decls: Seq[BodyDeclaration[_]] = if (model.flatten().ops.exists {
+      case bm: domain.BinaryMethodTreeBase => true
+      case _ => false
+    }) {
+      declarations
+    } else {
+      Seq.empty
+    }
+
+    Java(s"""|package interpreter;
                   |public interface ${fullType.toString} $extension {
-                  |  ${methods.mkString("\n")}
-                  |}""".stripMargin
-    println(str)
-    Java(str).compilationUnit()
+                  |  ${decls.mkString("\n")}
+                  |  ${signatures.mkString("\n")}
+                  |}""".stripMargin).compilationUnit
   }
 
   def lastTypesSinceAnOperation(model:domain.Model): Seq[domain.Atomic] = {
@@ -198,9 +222,19 @@ trait InterpreterGenerator extends  AbstractGenerator with DataTypeSubclassGener
     generateForOp(model, model.ops, pastTypes, isBase)
   }
 
+  /**
+    * For each operation must generate a sequence of classes, one per subtype.
+    *
+    * Note that BinaryMethods must have their Exp parameters converted to be ${op.name}Exp.
+    *
+    * @param model
+    * @param ops
+    * @param pastTypes
+    * @param isBase
+    * @return
+    */
   def generateForOp(model:domain.Model, ops:Seq[domain.Operation], pastTypes:Seq[domain.Atomic], isBase:Boolean) : Seq[CompilationUnit] = {
     val combinedOps:String = ops.sortWith(_.name < _.name).map(op => op.name.capitalize).mkString("")
-
 
       pastTypes.map(exp => {
         val name = Java(s"${exp.name}").simpleName()
@@ -253,16 +287,33 @@ trait InterpreterGenerator extends  AbstractGenerator with DataTypeSubclassGener
         // be sure to recursively change Exp to be fullType
         val fullType:Type = Java(modelInterfaceName(model)).tpe()
 
-        val operations:Seq[MethodDeclaration] = (allOps ++ ops).map(op => {
-          val md:MethodDeclaration = methodGenerator(exp)(op)
+        // i.e., without this, you get (M4) PrettyPAdd and PrettyPSub both having eval method
+        val operations:Seq[MethodDeclaration] = (allOps ++ ops).flatMap(op => {
 
-          // be sure to recursively change any Exp into fullType, for producer capability
-          val returnType:Type = md.getType
-          if (returnType.equals(typeConverter(domain.baseTypeRep))) {
-            md.setType(fullType)
+          // can remove operations that already existed model.last.lastModelWithOperation().ops
+          // if exp existed PRIOR to model.last.lastModelWithOperation().ops than can omit
+          // must ensure op is not past of *this* model's newly added ops since those MUST appear.
+          if (!ops.contains(op) && model.lastModelWithOperation().flatten().types.contains(exp)) {
+            println(s"Skipping ${exp.name} for ${op.name}")
+            Seq.empty
+          } else {
+            val md: MethodDeclaration = methodGenerator(exp)(op)
+
+            // be sure to recursively change any Exp into fullType, for producer capability
+            val returnType: Type = md.getType
+            if (returnType.equals(typeConverter(domain.baseTypeRep))) {
+              md.setType(fullType)
+            }
+
+            // same thing for parameters
+            md.getParameters.forEach(p => {
+              if (p.getType.equals(typeConverter(domain.baseTypeRep))) {
+                p.setType(fullType)
+              }
+            })
+
+            Seq(md)
           }
-
-          md
         })
 
         // For this operation (i.e., "Print") and for this Exp (i.e., "Add") go back and find most recent class to extend (i.e., "EvalAdd")
@@ -276,9 +327,20 @@ trait InterpreterGenerator extends  AbstractGenerator with DataTypeSubclassGener
             s"extends $past$name" // go backwards?
           }
 
+        // include defined subtypes
+        val definedSubTypes: Seq[BodyDeclaration[_]] = if (model.flatten().ops.exists {
+          case bm: domain.BinaryMethodTreeBase => true
+          case _ => false
+        }) {
+          definedDataSubTypes(s"${domain.AsTree.name.capitalize}${domain.baseTypeRep.name}", Seq(exp))
+        } else {
+          Seq.empty
+        }
+
         Java(s"""
                 |package interpreter;
                 |public class $combinedOps$name $extension implements ${baseInterface.toString} {
+                |  ${definedSubTypes.mkString("\n")}
                 |  ${factoryMethods.mkString("\n")}
                 |  ${constructor.toString}
                 |

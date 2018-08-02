@@ -155,7 +155,7 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator with Producer
     }).mkString(",")
 
     // include helper methods for AsTree.
-    val extras:Seq[BodyDeclaration[_]] = op match {
+    val decls:Seq[BodyDeclaration[_]] = op match {
       case bmt: domain.BinaryMethodTreeBase => declarations
       case bm: BinaryMethodBase => Seq.empty
       case _ => Seq.empty
@@ -169,8 +169,7 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator with Producer
          |package trivially;
          |
          |public interface ${baseInterfaceName(op)} extends ${parents.mkString(", ")} {
-         |
-         |    ${extras.mkString("\n")}
+         |    ${decls.mkString("\n")}
          |    $methodSignature
          |}
        """.stripMargin).compilationUnit()

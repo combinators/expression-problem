@@ -69,6 +69,7 @@ GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP
 ->    /                              example.expression.extensibleVisitor.M3_Variation
 ->    /                              example.expression.extensibleVisitor.M4_Variation
 ->    /                              example.expression.extensibleVisitor.M5_Variation
+->    /                              example.expression.extensibleVisitor.M6_Variation
 # Scala visitor variations
 ->    /                              example.expression.scalaVisitor.M0_Variation
 ->    /                              example.expression.scalaVisitor.M1_Variation

@@ -27,8 +27,10 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with VisitorJavaBinary
     * @return
     */
   override def generatedCode():Seq[CompilationUnit] = {
+    val flat:domain.Model = getModel.flatten
+
     getModel.inChronologicalOrder.flatMap(m =>
-      m.types.map(tpe => generateExp(m, tpe)) ++                  // one for each type
+      m.types.map(tpe => generateExp(m, tpe)) ++               // one for each type; use 'flat' to ensure we detect binary methods
         m.ops.map(op => operationGenerator(m, op))             // and new operations
     ) ++
       // cannot have extension for the FIRST model entry, so skil it
@@ -182,7 +184,11 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with VisitorJavaBinary
 
     // convert 'extends visitor' into 'implements visitor'
     // rename class to have types at end (except for first)
-    val opType:Type = typeConverter(op.returnType.get)
+    val opType = op match {
+      case bmb:domain.BinaryMethodTreeBase => Java(s"${domain.baseTypeRep.name}.Tree").tpe()
+      case _ => typeConverter(op.returnType.get)
+    }
+
     val full:String = modelTypes(model)
 
     val fullVisitor:String = if (model.types.nonEmpty) {

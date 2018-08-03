@@ -67,8 +67,11 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
   /** For visitor, the base class defines the accept method used by all subclasses. */
   def generateBaseClass(model:domain.Model):CompilationUnit = {
 
+    // Ignore passed in model in favor of just grabbing it on demand...
+    val allOps = getModel.flatten().ops
+
     // If BinaryMethodTreeBase is defined, then need Astree declarations...
-    val decls = if (model.ops.exists {
+    val decls = if (allOps.exists {
       case bm: domain.BinaryMethodTreeBase => true
       case _ => false
     }) {
@@ -77,7 +80,7 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
       Seq.empty
     }
 
-    val binaryTreeInterface = if (model.ops.exists {
+    val binaryTreeInterface = if (allOps.exists {
       case bm: domain.BinaryMethodTreeBase => true
       case _ => false
     }) {
@@ -131,9 +134,10 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
                                               |   return v.visit(this);
                                               |}""".stripMargin).methodDeclarations().head
 
-
-    val helpers:Seq[BodyDeclaration[_]] = if (model.ops.exists {
-      case bm: domain.BinaryMethod => true
+    // Ignore passed in model in favor of just grabbing it on demand...
+    val allOps = getModel.flatten().ops
+    val helpers:Seq[BodyDeclaration[_]] = if (allOps.exists {
+      case bm: domain.BinaryMethodTreeBase => true   // was BInaryMethod
       case _ => false
     }) {
       visitorLogicAsTree(exp)
@@ -141,9 +145,8 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
       Seq.empty
     }
 
-
-    val definedSubtypes:Seq[BodyDeclaration[_]] = if (model.ops.exists {
-      case bm: domain.BinaryMethod => true
+    val definedSubtypes:Seq[BodyDeclaration[_]] = if (allOps.exists {
+      case bm: domain.BinaryMethodTreeBase => true
       case _ => false
     }) {
       definedDataSubTypes("", Seq(exp))

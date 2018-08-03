@@ -1,5 +1,6 @@
 package example.expression.j
 
+import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.{BodyDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.stmt.Statement
@@ -14,6 +15,28 @@ trait JavaBinaryMethod extends BinaryMethod {
   import domain._
 
   type Declaration = BodyDeclaration[_]
+//
+//  def addHelpers(comp:CompilationUnit): CompilationUnit = {
+//    // hack. Could be added compositionally around genExp
+//    val helpers:Seq[BodyDeclaration[_]] = if (model.ops.exists {
+//      case bm: domain.BinaryMethod => true
+//      case _ => false
+//    }) {
+//      visitorLogicAsTree(exp)
+//    } else {
+//      Seq.empty
+//    }
+//
+//
+//    val definedSubtypes:Seq[BodyDeclaration[_]] = if (model.ops.exists {
+//      case bm: domain.BinaryMethod => true
+//      case _ => false
+//    }) {
+//      definedDataSubTypes("", Seq(exp))
+//    } else {
+//      Seq.empty
+//    }
+//  }
 
   /**
     * Declares the helper classes needed.

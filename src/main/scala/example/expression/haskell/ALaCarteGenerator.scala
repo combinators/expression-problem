@@ -86,12 +86,6 @@ trait ALaCarteGenerator extends AbstractGenerator with StandardHaskellBinaryMeth
     }
   }
 
-//  /** Construct args list "a1 a2 a3 ..." */
-//  def standardArgs(exp:Atomic) : String = {
-//    val vals:Range = 1 to exp.attributes.size
-//    vals.map(v => s"a$v").mkString (" ")
-//  }
-
   def generateOp(m:Model, op:Operation) : HaskellWithPath = {
     val name = op.name.capitalize
     val imports = m.types.map(tpe => Haskell(s"import ${tpe.name}")).mkString("\n")

@@ -1,4 +1,4 @@
-package example.expression.j
+package example.expression.j   /*DI:LD:AI*/
 
 import example.expression.domain.{BaseDomain, ModelDomain}
 import example.expression.generator.BinaryMethod

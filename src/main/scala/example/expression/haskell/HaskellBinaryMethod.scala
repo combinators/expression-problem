@@ -1,4 +1,4 @@
-package example.expression.haskell
+package example.expression.haskell     /*DI:LD:AI*/
 
 import example.expression.generator.BinaryMethod
 

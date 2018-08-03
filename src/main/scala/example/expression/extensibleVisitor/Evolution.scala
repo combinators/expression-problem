@@ -50,7 +50,7 @@ class M4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
 class M5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends ExtensibleFoundation(web, app) {
-  override val gen = new WithDomain(MathDomain) with ExtensibleVisitorGenerator with ExtensibleVisitorTestGenerator with e0 with e1 with e2 with e3 with e4 with e6 with e5
+  override val gen = new WithDomain(MathDomain) with ExtensibleVisitorGenerator with ExtensibleVisitorTestGenerator with e0 with e1 with e2 with e3 with e4 with e5
 }
 
 class C1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)

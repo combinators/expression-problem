@@ -4,7 +4,8 @@ package example.expression.domain  /*DI:LI:AI*/
 class WithDomain[+E <: BaseDomain](val domain:E) { }   // a covariant class in Scala
 
 /** Every individual evolution extends this Trait to have access to the domain.Model. */
-trait Evolution {
+trait Evolution extends OperationDependency {
+
   val domain: ModelDomain                 // Every evolution has associated domain.
   def getModel: domain.Model
 }

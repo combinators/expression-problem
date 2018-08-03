@@ -25,15 +25,35 @@ trait ExtensibleVisitorTestGenerator extends TestGenerator with AbstractGenerato
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
   override def generateSuite(pkg: Option[String], m:Option[Model] = None): Seq[CompilationUnit] = {
     super.generateSuite(pkg, m).map(unit => {
-      val lastModel = getModel.lastModelWithDataTypes()
-      getModel.flatten().ops.foreach(op => {
-        val className = if (lastModel.ops.contains(op)) {
-          op.name.capitalize
+
+      // get all operations (via flatten). Then find the most recent model that has types
+      // defined. All operations that come *AFTER* have no trailing suffix. All operations
+      // that were defined BEFORE must use those types as the suffix
+      val lastTypes = getModel.lastModelWithDataTypes()
+      val full = lastTypes.types.sortWith(_.name < _.name).mkString("")
+
+      // in reverse chrono order
+      var reached:Boolean = false
+      getModel.toSeq.foreach (m => {
+        if (m == lastTypes) {
+          reached = true
+          m.ops.foreach(op => {
+            addVirtualConstructor(unit.getType(0), op, op.name.capitalize)  // these are not qualified
+          })
         } else {
-          op.name.capitalize + lastModel.types.sortWith(_.name < _.name).mkString("")
+          if (reached) {
+            // now all of these use the lastTypes signature $full
+            m.ops.foreach(op => {
+              addVirtualConstructor(unit.getType(0), op, op.name.capitalize + full)
+            })
+          } else {
+            m.ops.foreach(op => {
+              addVirtualConstructor(unit.getType(0), op, op.name.capitalize) // newer and are allowed in as straight
+            })
+          }
         }
-        addVirtualConstructor(unit.getType(0), op, className)
       })
+
       unit
     })
   }

@@ -42,6 +42,24 @@ trait ModelDomain extends BaseDomain {
       }
     }
 
+    /** Find Model entry in the past that defines type. */
+    def findType(tpe:Atomic) : Model = {
+      if (isEmpty || types.contains(tpe)) {
+        this
+      } else {
+        last.findType(tpe)
+      }
+    }
+
+    /** Find Model entry in the past that defines operations. */
+    def findOperation(op:Operation) : Model = {
+      if (isEmpty || ops.contains(op)) {
+        this
+      } else {
+        last.findOperation(op)
+      }
+    }
+
     /** Determine if operation is supported by this model or any of its antecedents. */
     def supports (op:Operation) : Boolean = {
       if (isEmpty || !ops.contains(op)) {

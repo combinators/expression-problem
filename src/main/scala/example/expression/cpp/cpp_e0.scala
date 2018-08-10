@@ -1,6 +1,4 @@
-package example.expression.cpp
-
-/*DD:LD:AI*/
+package example.expression.cpp     /*DD:LD:AI*/
 
 import example.expression.domain.M0
 
@@ -15,7 +13,7 @@ trait cpp_e0 extends AbstractGenerator with TestGenerator with M0 {
   /** E0 Introduces the concept a Double type, used for the 'Eval' operation. */
   abstract override def typeConverter(tpe:TypeRep, covariantReplacement:Option[CPPType] = None) : CPPType = {
     tpe match {
-      case Double => new CPPType("Double")
+      case Double => new CPPType("double")
       case _ => super.typeConverter(tpe, covariantReplacement)
     }
   }
@@ -27,9 +25,9 @@ trait cpp_e0 extends AbstractGenerator with TestGenerator with M0 {
     // generate the actual body
     op match {
       case Eval =>
-        exp match {
-          case Lit => Seq(new CPPElement(s"return ${atts(litValue)};"))
-          case Add => Seq(new CPPElement(s"return ${dispatch(atts(base.left),op)} + ${dispatch(atts(base.right),op)};"))
+        exp match {  // TODO: FIX HACK OF HARD-CODED ATTS VALUES
+          case Lit => Seq(new CPPElement(s"value_map_[e] = *e->getValue();"))
+          case Add => Seq(new CPPElement(s"value_map_[e] = value_map_[e->getLeft()] + value_map_[e->getRight()];"))
           case _ => super.logic(exp)(op)
         }
 
@@ -37,12 +35,33 @@ trait cpp_e0 extends AbstractGenerator with TestGenerator with M0 {
     }
   }
 
-  abstract override def testGenerator: Seq[CPPElement] = {
-    val a1 = new BinaryInst(Add, new LitInst(1.0), new LitInst(2.0))
-    val lit1 = new LitInst(5.0)
+  abstract override def testGenerator: Seq[StandAlone] = {
+    val lit1 = new LitInst(1.0)
+    val lit2 = new LitInst(2.0)
+    val a1   = new BinaryInst(Add, lit1, lit2)
 
-    super.testGenerator ++ Seq(
-      new CPPElement("assertEquals(3.0, ${dispatch(convert(a1), Eval)});"),
-      new CPPElement("assertEquals(5.0, ${dispatch(convert(lit1), Eval)});"))
+
+    super.testGenerator :+ new StandAlone("test_e0",
+      s"""
+         |TEST_GROUP(FirstTestGroup)
+         |{
+         |};
+         |
+         |TEST(FirstTestGroup, a1)
+         | {
+         |   ${convert(lit1)}
+         |   ${convert(lit2)}
+         |   ${convert(a1)}
+         |
+         |   Eval  e;
+         |   ${vars(a1)}.Accept(&e);
+         |   DOUBLES_EQUAL(3.0, e.getValue(${vars(a1)}), 0.0);
+         | }
+         |
+           |int main(int ac, char** av)
+         |{
+         |  return CommandLineTestRunner::RunAllTests(ac, av);
+         |}""".stripMargin.split("\n")
+    )
   }
 }

@@ -43,7 +43,7 @@ abstract class CPPFile extends CPPBase {
   def isHeader:Boolean = false
 
   // allow one to extend include definitions
-  def addHeader(s:Seq[String]): CPPBase = {
+  def addHeader(s:Seq[String]): CPPFile = {
     standardHeader = standardHeader + "\n" + s.mkString("\n")
     this
   }
@@ -79,7 +79,10 @@ final class StandAlone(val _name:String, val _body:Seq[String]) extends CPPFile 
   val body:Seq[String] = _body
   val name:String = _name
 
-  override def toString:String = body.mkString("\n")
+  override def toString: String = s"""|$standardHeader
+                                      |${indent(body)}
+                                      |""".stripMargin
+
 
   override def fileName:String = name
 }
@@ -109,7 +112,6 @@ final class CPPHeaderCode (val _name:String, val _body:Seq[String]) extends CPPF
 
   override def isHeader:Boolean = true
   override def fileName:String = name
-
 
   // allow one to extend include definitions
   override def addHeader(s:Seq[String]): CPPHeaderCode = {

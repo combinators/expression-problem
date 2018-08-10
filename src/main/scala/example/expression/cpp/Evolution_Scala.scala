@@ -1,6 +1,4 @@
-package example.expression.cpp
-
-/*DD:LD:AD*/
+package example.expression.cpp    /*DD:LD:AD*/
 
 import example.expression.domain.{MathDomain, WithDomain}
 import CPPFileUtils._
@@ -15,8 +13,8 @@ abstract class FoundationCPP @Inject()(web: WebJarsUtil, app: ApplicationLifecyc
   val gen:WithDomain[MathDomain] with CPPGenerator with TestGenerator
 
 override lazy val generatedCode:Seq[CPPFile] =
-    gen.generatedCode()
-//    gen.generateSuite(Some("oo"))
+    gen.generatedCode() ++
+    gen.generateSuite(Some("cpp"))
 
   override val routingPrefix: Option[String] = Some("cpp")
   override lazy val controllerAddress:String = gen.getModel.name

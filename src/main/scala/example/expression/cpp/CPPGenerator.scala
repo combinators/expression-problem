@@ -1,8 +1,8 @@
 package example.expression.cpp
 
 import example.expression.domain.{BaseDomain, ModelDomain}
-import expression.Attribute
 
+// visitor based solution
 trait CPPGenerator extends AbstractGenerator with DataTypeSubclassGenerator {
 
   val domain: BaseDomain with ModelDomain
@@ -18,7 +18,16 @@ trait CPPGenerator extends AbstractGenerator with DataTypeSubclassGenerator {
     */
   def generatedCode(): Seq[CPPFile] = {
     val flat = getModel.flatten()
-    flat.types.map(tpe => generateExp(flat, tpe)) :+ // one class for each sub-type
+    val clazzes:Seq[CPPFile] = getModel.inChronologicalOrder                          // visitors are constructed in order
+      .filter(m => m.ops.nonEmpty)
+      .flatMap(m =>
+        m.ops.map(op => operationGenerator(flat, op)))     // one class for each op
+
+    flat.types.map(tpe => generateExp(flat, tpe)) ++
+    flat.types.map(tpe => generateExpImpl(flat, tpe)) ++
+      clazzes :+
+      generateBaseClass(flat) :+
+      defaultHeaderFile() :+
       generateBase(flat) // base class $BASE
   }
 
@@ -49,10 +58,25 @@ trait CPPGenerator extends AbstractGenerator with DataTypeSubclassGenerator {
     }
   }
 
-  /** Operations are implemented as methods in the Base and sub-type classes. */
+  /** Operations are implement ala visitor. */
   def methodGenerator(exp:Atomic)(op:Operation): CPPMethod = {
     val params = parameters(op)
-    new CPPMethod(returnType(op).toString, op.name, params, logic(exp)(op).mkString("\n"))
+    new CPPMethod("void", s"Visit${exp.name}", s"(const ${exp.name}* e)", logic(exp)(op).mkString("\n"))
+  }
+
+  /** Default header file needed for most classes. */
+  def defaultHeaderFile() : CPPHeaderCode = {
+    new CPPHeaderCode("visitor",
+      s"""
+         |#ifndef _VISITOR_H_
+         |#define _VISITOR_H_
+         |#include <iostream>
+         |#include <map>
+         |#include <memory>
+         |#include <sstream>
+         |#include <string>
+         |#endif /* _VISITOR_H_ */
+       """.stripMargin.split("\n"))
   }
 
   // standard headers
@@ -60,10 +84,49 @@ trait CPPGenerator extends AbstractGenerator with DataTypeSubclassGenerator {
     s"""#include "visitor.h" """.stripMargin.split("\n")
   }
 
+  /**
+    * Brings in classes for each operation. These can only be completed with the implementations.
+    *
+    * Must handle BinaryMethod (Equals) and BinaryMethodBase (Astree) specially.
+    */
+  def operationGenerator(model:domain.Model, op:domain.Operation): CPPFile = {
+    val signatures:Seq[CPPMethod] = model.types.map(exp => methodGenerator(exp)(op))
+
+    // access value via lookup into value_map_
+    // val _retType:String, val _name:String, val _params:String, val _body:Seq[String]
+    val lookup = Seq(new CPPMethod("double", "getValue", "(const Exp& e)", Seq("return value_map_[&e];")))
+
+    new CPPClass (op.name.capitalize, op.name.capitalize, lookup ++ signatures,
+      Seq(new CPPElement(s"""std::map<const Exp*, double  > value_map_;""")))
+      .setSuperclass("ExpVisitor")
+      .addHeader(Seq("""#include "ExpVisitor.h" """, """#include "visitor.h" """))
+  }
 
   /** Generate the full class for the given expression sub-type. */
+  def generateExpImpl(model:Model, sub:Atomic) : CPPFile = {
+    val signatures = sub.attributes
+      .filter(att => att.tpe == domain.baseTypeRep)
+      .map(att => new CPPElement(s"${att.name}_->Accept(visitor);")).mkString("\n")
+
+    val contents =
+      s"""
+         |
+         |#include "visitor.h"
+         |#include "Exp.h"
+         |#include "ExpVisitor.h"
+         |#include "${sub.name.capitalize}.h"
+         |void ${sub.name.capitalize}::Accept(ExpVisitor* visitor) const {
+         |  $signatures
+         |  visitor->Visit${sub.name.capitalize}(this);
+         |}
+       """.stripMargin.split("\n")
+
+    new StandAlone(sub.name.capitalize, contents)
+  }
+
+  /** Generate the full class for the given expression sub-type (except for impl). */
   def generateExp(model:Model, sub:Atomic) : CPPFile = {
-    val name = sub.getClass.getSimpleName
+    val name = sub.name
 
     // Builds up the attribute fields and set/get methods. Also prepares for one-line constructor.
     var params:Seq[String] = Seq.empty
@@ -87,7 +150,7 @@ trait CPPGenerator extends AbstractGenerator with DataTypeSubclassGenerator {
     })
 
     // make constructor
-    addedMethods = addedMethods :+ new CPPElement (s"${sub.getClass.getSimpleName} (${params.mkString(",")}) : ${cons.mkString(",")} {}")
+    addedMethods = addedMethods :+ new CPPElement (s"${sub.name} (${params.mkString(",")}) : ${cons.mkString(",")} {}")
 
     // Method declaration (not implementation)
     val visitor = new CPPElement("void Accept(ExpVisitor* visitor) const;")
@@ -102,16 +165,20 @@ trait CPPGenerator extends AbstractGenerator with DataTypeSubclassGenerator {
 
   /** Generate the base class, with all operations from flattened history. */
   def generateBase(model:Model): CPPFile = {
-    new CPPClass("Something", "SomethingElse", Seq.empty, Seq.empty)
-//    val signatures = model.ops.flatMap(op => {
-//      Java(s"public abstract ${returnType(op)} " +
-//        s"${op.name}(${parameters(op)});").methodDeclarations
-//    })
-//
-//    Java(s"""|package oo;
-//             |public abstract class Exp {
-//             |  ${signatures.mkString("\n")}
-//             |}""".stripMargin).compilationUnit
+    new CPPClass("Exp", "Exp", Seq(new CPPElement(s"""virtual void Accept(ExpVisitor* visitor) const = 0;""")), Seq.empty)
+      .addHeader(Seq(s"""#include "visitor.h" """, s"""class ExpVisitor;"""))
+  }
+
+  /** For visitor, the base class defines the accept method used by all subclasses. */
+  def generateBaseClass(model:domain.Model):CPPFile = {
+
+    // Ignore passed in model in favor of just grabbing it on demand...
+    val allOps = getModel.flatten().types.map(exp =>
+        new CPPElement(s"""virtual void Visit$exp(const $exp* e) = 0;"""))
+    val allHeaders = getModel.flatten().types.map(exp => s"""#include "$exp.h" """)
+
+    new CPPClass("ExpVisitor", "ExpVisitor", allOps, Seq.empty)
+      .addHeader(Seq(s"""#include "visitor.h" """) ++ allHeaders)
   }
 
   // helper methods for C++

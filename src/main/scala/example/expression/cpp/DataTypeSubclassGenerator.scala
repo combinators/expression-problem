@@ -1,6 +1,4 @@
-package example.expression.cpp
-
-/*DI:LD:AI*/
+package example.expression.cpp    /*DI:LD:AI*/
 
 import example.expression.domain.ModelDomain
 

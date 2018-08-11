@@ -38,6 +38,7 @@ GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP
 ->    /                              example.expression.cpp.CPP_M1_Variation
 ->    /                              example.expression.cpp.CPP_M2_Variation
 ->    /                              example.expression.cpp.CPP_M3_Variation
+->    /                              example.expression.cpp.CPP_M4_Variation
 #OO variations
 ->    /                              example.expression.oo.M0_Variation
 ->    /                              example.expression.oo.M1_Variation

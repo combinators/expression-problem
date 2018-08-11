@@ -12,4 +12,8 @@ trait AbstractGenerator extends LanguageIndependentGenerator {
   type Expression = CPPElement
   type Statement = CPPElement
 
+  /**
+    * Operations can declare dependencies, which leads to #include extras
+    */
+   def dependency(op: domain.Operation): scala.List[domain.Operation] = List.empty
 }

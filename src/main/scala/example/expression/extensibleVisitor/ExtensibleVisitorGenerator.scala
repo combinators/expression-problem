@@ -1,7 +1,7 @@
 package example.expression.extensibleVisitor    /*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.{BodyDeclaration, MethodDeclaration, TypeDeclaration}
-import example.expression.domain.{BaseDomain, ModelDomain}
+import example.expression.domain.{BaseDomain, ModelDomain, OperationDependency}
 import example.expression.scalaVisitor.{VisitorGenerator, VisitorJavaBinaryMethod}
 import org.combinators.templating.twirl.Java
 
@@ -12,11 +12,11 @@ import scala.collection.JavaConverters._
   * Shriram Krishnamurthi, Matthias Felleisen, Daniel Friedman
   * https://dl.acm.org/citation.cfm?id=679709
   */
-trait ExtensibleVisitorGenerator extends VisitorGenerator with VisitorJavaBinaryMethod {
+trait ExtensibleVisitorGenerator extends VisitorGenerator with VisitorJavaBinaryMethod with OperationDependency {
   val domain:BaseDomain with ModelDomain
 
   // required for dependent operations (see M4 for an example)
-  def dependency(op: domain.Operation): scala.List[domain.Operation]
+ // def dependency(op: domain.Operation): scala.List[domain.Operation]
 
   /**
     * Generating a visitor solution requires:

@@ -82,16 +82,19 @@ trait cpp_e3 extends Evolution with AbstractGenerator with TestGenerator with M0
          |   ${convert(d2)}
          |   ${convert(m2)}
          |   ${convert(d1)}
+
          |   ${PrettyP.name.capitalize} pp;
-         |
          |   ${Eval.name.capitalize} e;
+         |
          |   ${vars(n2)}.Accept(&e);
          |   DOUBLES_EQUAL(-6.0, e.getValue(${vars(n2)}), 0.0);
          |
          |   ${vars(n1)}.Accept(&pp);
          |   STRCMP_EQUAL("-1.0", pp.getValue(${vars(n1)}).c_str());
+         |
          |   ${vars(n1)}.Accept(&e);
          |   DOUBLES_EQUAL(-1.0, e.getValue(${vars(n1)}), 0.0);
+         |
          |   ${vars(m2)}.Accept(&pp);
          |   STRCMP_EQUAL("((5.0/2.0)*4.0)", pp.getValue(${vars(m2)}).c_str());
          |

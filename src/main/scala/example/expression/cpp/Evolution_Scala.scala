@@ -39,3 +39,8 @@ class CPP_M3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends FoundationCPP(web, app) {
   override val gen = new WithDomain(MathDomain) with CPPGenerator with TestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3
 }
+
+class CPP_M4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+  extends FoundationCPP(web, app) {
+  override val gen = new WithDomain(MathDomain) with CPPGenerator with TestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3 with cpp_e4
+}

@@ -75,6 +75,7 @@ trait CPPGenerator extends AbstractGenerator with DataTypeSubclassGenerator {
          |#include <memory>
          |#include <sstream>
          |#include <string>
+         |#include <vector>
          |#endif /* _VISITOR_H_ */
        """.stripMargin.split("\n"))
   }
@@ -92,14 +93,21 @@ trait CPPGenerator extends AbstractGenerator with DataTypeSubclassGenerator {
   def operationGenerator(model:domain.Model, op:domain.Operation): CPPFile = {
     val signatures:Seq[CPPMethod] = model.types.map(exp => methodGenerator(exp)(op))
     val tpe:CPPType = typeConverter(op.returnType.get)
+    val realType:String = op match {
+      case po:ProducerOperation => "Exp *"
+      case _ => tpe.stmt
+    }
     // access value via lookup into value_map_
     // val _retType:String, val _name:String, val _params:String, val _body:Seq[String]
-    val lookup = Seq(new CPPMethod(tpe.stmt, "getValue", "(const Exp& e)", Seq("return value_map_[&e];")))
+    val lookup = Seq(new CPPMethod(realType, "getValue", "(const Exp& e)", Seq("return value_map_[&e];")))
+
+    val extras = dependency(op).map(o => s"""#include "${o.name.capitalize}.h" """)
 
     new CPPClass (op.name.capitalize, op.name.capitalize, lookup ++ signatures,
-      Seq(new CPPElement(s"""std::map<const Exp*, $tpe  > value_map_;""")))
+      Seq(new CPPElement(s"""std::map<const Exp*, $realType  > value_map_;""")))
       .setSuperclass("ExpVisitor")
       .addHeader(Seq("""#include "ExpVisitor.h" """, """#include "visitor.h" """))
+      .addHeader(extras)
   }
 
   /** Generate the full class for the given expression sub-type. */

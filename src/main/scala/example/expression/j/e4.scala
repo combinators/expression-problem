@@ -9,9 +9,19 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-trait e4 extends Evolution with AbstractGenerator with TestGenerator with Producer with M0 with M1 with M2 with M3 with M4 {
+trait e4 extends Evolution with AbstractGenerator with TestGenerator with OperationDependency with Producer with M0 with M1 with M2 with M3 with M4 {
   self:e0 with e1 with e2 with e3 =>
   val domain:MathDomain
+
+  /**
+    * Operations can declare dependencies, which leads to #include extras
+    */
+  override def dependency(op: domain.Operation): scala.List[domain.Operation] = {
+    op match {
+      case Simplify => scala.List[domain.Operation](PrettyP, Eval)
+      case _ => super.dependency(op)
+    }
+  }
 
   abstract override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : com.github.javaparser.ast.`type`.Type = {
     tpe match {

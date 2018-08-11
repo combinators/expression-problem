@@ -34,7 +34,7 @@ trait TestGenerator {
     id = id + 1
     inst match {
       case ui: UnaryInst =>
-        new CPPElement(s"$name ${vars(inst)} = $name(&${vars(ui.inner)}")
+        new CPPElement(s"$name ${vars(inst)} = $name(&${vars(ui.inner)});")
 
         // Add  add3 = Add(&lit1, &lit2);
       case bi: BinaryInst =>

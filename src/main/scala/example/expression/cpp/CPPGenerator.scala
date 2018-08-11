@@ -39,7 +39,7 @@ trait CPPGenerator extends AbstractGenerator with DataTypeSubclassGenerator {
   /** Directly access local method, one per operation, with a parameter. */
   override def dispatch(expr:CPPElement, op:Operation, params:CPPElement*) : CPPElement = {
     val args:String = params.mkString(",")
-    new CPPElement(s"""$expr.${op.name}($args)""")
+    new CPPElement(s"""e->get${expr.toString.capitalize}($args)""")
   }
 
   /** Return designated Java type associated with type, or void if all else fails. */
@@ -91,13 +91,13 @@ trait CPPGenerator extends AbstractGenerator with DataTypeSubclassGenerator {
     */
   def operationGenerator(model:domain.Model, op:domain.Operation): CPPFile = {
     val signatures:Seq[CPPMethod] = model.types.map(exp => methodGenerator(exp)(op))
-
+    val tpe:CPPType = typeConverter(op.returnType.get)
     // access value via lookup into value_map_
     // val _retType:String, val _name:String, val _params:String, val _body:Seq[String]
-    val lookup = Seq(new CPPMethod("double", "getValue", "(const Exp& e)", Seq("return value_map_[&e];")))
+    val lookup = Seq(new CPPMethod(tpe.stmt, "getValue", "(const Exp& e)", Seq("return value_map_[&e];")))
 
     new CPPClass (op.name.capitalize, op.name.capitalize, lookup ++ signatures,
-      Seq(new CPPElement(s"""std::map<const Exp*, double  > value_map_;""")))
+      Seq(new CPPElement(s"""std::map<const Exp*, $tpe  > value_map_;""")))
       .setSuperclass("ExpVisitor")
       .addHeader(Seq("""#include "ExpVisitor.h" """, """#include "visitor.h" """))
   }

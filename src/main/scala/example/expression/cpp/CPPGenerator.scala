@@ -3,7 +3,7 @@ package example.expression.cpp
 import example.expression.domain.{BaseDomain, ModelDomain}
 
 // visitor based solution
-trait CPPGenerator extends AbstractGenerator with DataTypeSubclassGenerator {
+trait CPPGenerator extends AbstractGenerator with DataTypeSubclassGenerator with CPPBinaryMethod with StandardCPPBinaryMethod {
 
   val domain: BaseDomain with ModelDomain
 
@@ -116,9 +116,38 @@ trait CPPGenerator extends AbstractGenerator with DataTypeSubclassGenerator {
       .filter(att => att.tpe == domain.baseTypeRep)
       .map(att => new CPPElement(s"${att.name}_->Accept(visitor);")).mkString("\n")
 
+    val binaryMethods:Seq[CPPElement] = if (getModel.flatten().ops.exists {
+      case bm: domain.BinaryMethodTreeBase => true
+      case _ => false
+    }) {
+      // sub
+      val method:String = sub match {
+        case _:Unary | _:Binary => {
+          val atts = sub.attributes
+            .filter(att => att.tpe == domain.baseTypeRep)
+            .map(att => s"${att.name}_->astree()").mkString(",")
+
+         s"""
+           |Tree *${sub.name.capitalize}::astree() const {
+           |    std::vector<Tree *> vec_${sub.name} = { $atts };
+           |    return new Node(vec_${sub.name.capitalize}, DefinedSubtypes::${sub.name.capitalize}Subtype);
+           |}""".stripMargin
+        }
+        case lit:Atomic => {
+         s"""
+           |Tree *${sub.name.capitalize}::astree() const {
+           |    return new Leaf(getValue());    // hard-coded and could be replaced.
+           |}""".stripMargin
+        }
+      }
+
+      Seq(new CPPElement(method))
+    } else {
+      Seq.empty
+    }
+
     val contents =
-      s"""
-         |
+      s"""|
          |#include "visitor.h"
          |#include "Exp.h"
          |#include "ExpVisitor.h"
@@ -127,6 +156,7 @@ trait CPPGenerator extends AbstractGenerator with DataTypeSubclassGenerator {
          |  $signatures
          |  visitor->Visit${sub.name.capitalize}(this);
          |}
+         |${binaryMethods.mkString("\n")}
        """.stripMargin.split("\n")
 
     new StandAlone(sub.name.capitalize, contents)
@@ -163,7 +193,17 @@ trait CPPGenerator extends AbstractGenerator with DataTypeSubclassGenerator {
     // Method declaration (not implementation)
     val visitor = new CPPElement("void Accept(ExpVisitor* visitor) const;")
 
+    // add Binary methods if needed
+    val astreeMethod:Seq[CPPElement] = if (getModel.flatten().ops.exists {
+      case bm: domain.BinaryMethodTreeBase => true
+      case _ => false
+    }) {
+      Seq(new CPPElement (s"""Tree *${domain.AsTree.name.toLowerCase}() const; """))
+    } else {
+      Seq.empty
+    }
     addedMethods = addedMethods :+ visitor
+    addedMethods = addedMethods ++ astreeMethod
 
     new CPPClass(name, name, addedMethods, addedFields)
       .setSuperclass("Exp")
@@ -173,8 +213,29 @@ trait CPPGenerator extends AbstractGenerator with DataTypeSubclassGenerator {
 
   /** Generate the base class, with all operations from flattened history. */
   def generateBase(model:Model): CPPFile = {
-    new CPPClass("Exp", "Exp", Seq(new CPPElement(s"""virtual void Accept(ExpVisitor* visitor) const = 0;""")), Seq.empty)
-      .addHeader(Seq(s"""#include "visitor.h" """, s"""class ExpVisitor;"""))
+
+    // binary methods?
+    val astreeMethod:Seq[CPPElement] = if (getModel.flatten().ops.exists {
+      case bm: domain.BinaryMethodTreeBase => true
+      case _ => false
+    }) {
+      Seq(new CPPElement ("""virtual Tree *astree() const = 0;"""))
+    } else {
+      Seq.empty
+    }
+
+    val astreeHeaders:Seq[String] = if (getModel.flatten().ops.exists {
+      case bm: domain.BinaryMethodTreeBase => true
+      case _ => false
+    }) {
+      Seq(""" #include "Tree.h" """)
+    } else {
+      Seq.empty
+    }
+
+    new CPPClass("Exp", "Exp",
+      Seq(new CPPElement(s"""virtual void Accept(ExpVisitor* visitor) const = 0;""")) ++ astreeMethod, Seq.empty)
+      .addHeader(Seq(s"""#include "visitor.h" """, s"""class ExpVisitor;""") ++ astreeHeaders)
   }
 
   /** For visitor, the base class defines the accept method used by all subclasses. */
@@ -185,8 +246,35 @@ trait CPPGenerator extends AbstractGenerator with DataTypeSubclassGenerator {
         new CPPElement(s"""virtual void Visit$exp(const $exp* e) = 0;"""))
     val allHeaders = getModel.flatten().types.map(exp => s"""#include "$exp.h" """)
 
+    val moreImports = if (getModel.flatten().ops.exists {
+      case bm: domain.BinaryMethodTreeBase => true
+      case _ => false
+    }) {
+      Seq(
+        s"""
+           |#include "Tree.h" // Binary Methods needs these include files
+           |#include "Node.h"
+           |#include "Leaf.h"
+           |#include "DefinedSubtypes.h" """.stripMargin)
+    } else {
+      Seq.empty
+    }
+
     new CPPClass("ExpVisitor", "ExpVisitor", allOps, Seq.empty)
-      .addHeader(Seq(s"""#include "visitor.h" """) ++ allHeaders)
+      .addHeader(Seq(s"""#include "visitor.h" """) ++ allHeaders ++ moreImports)
+  }
+
+  def generateBinaryMethodHelpers():Seq[CPPFile] = {
+
+    // If BinaryMethodTreeBase, need the declarations here.
+    if (getModel.flatten().ops.exists {
+      case bm: domain.BinaryMethodTreeBase => true
+      case _ => false
+    }) {
+      declarations
+    } else {
+      Seq.empty
+    }
   }
 
   // helper methods for C++

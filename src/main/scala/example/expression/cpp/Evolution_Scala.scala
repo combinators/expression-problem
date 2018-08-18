@@ -14,6 +14,7 @@ abstract class FoundationCPP @Inject()(web: WebJarsUtil, app: ApplicationLifecyc
 
 override lazy val generatedCode:Seq[CPPFile] =
     gen.generatedCode() ++
+    gen.generateBinaryMethodHelpers() ++
     gen.generateSuite(Some("cpp"))
 
   override val routingPrefix: Option[String] = Some("cpp")
@@ -43,4 +44,9 @@ class CPP_M3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 class CPP_M4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends FoundationCPP(web, app) {
   override val gen = new WithDomain(MathDomain) with CPPGenerator with TestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3 with cpp_e4
+}
+
+class CPP_M5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+  extends FoundationCPP(web, app) {
+  override val gen = new WithDomain(MathDomain) with CPPGenerator with TestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3 with cpp_e4 with cpp_e5
 }

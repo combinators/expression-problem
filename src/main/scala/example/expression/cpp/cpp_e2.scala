@@ -68,7 +68,7 @@ trait cpp_e2 extends Evolution with AbstractGenerator with TestGenerator with M0
          |   ${convert(s1)}
          |   ${PrettyP.name.capitalize} pp;
          |   ${vars(s1)}.Accept(&pp);
-         |   STRCMP_EQUAL("(1.0-2.0))", pp.getValue(${vars(s1)}).c_str());
+         |   STRCMP_EQUAL("(1.0-2.0)", pp.getValue(${vars(s1)}).c_str());
          |}
          |
          |int main(int ac, char** av)

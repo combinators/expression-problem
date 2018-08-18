@@ -37,7 +37,13 @@ trait ExpressionSynthesis extends InstanceContext with CPPSemanticTypes with Has
       .addHeader(body)
   }
 
-  /** Construct visitor abstract class. */
+  /**
+    * Construct visitor abstract class.
+    *
+    * In this visitor example, there is no return value. Instead, there is an internal map constructed
+    * in the visitor object, and one calls getValue(&e) on the top level expression to retrieve the
+    * actual value.
+    */
   def Visitor: CPPClass = {
     var signatures:Seq[CPPElement] = Seq.empty
     var extraImports:Seq[String] = Seq.empty

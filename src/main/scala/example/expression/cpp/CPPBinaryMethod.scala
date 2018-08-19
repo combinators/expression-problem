@@ -5,7 +5,6 @@ import example.expression.generator.BinaryMethod
 
 trait CPPBinaryMethod extends BinaryMethod {
   val domain:BaseDomain with ModelDomain
-  import domain._
 
   def getModel: domain.Model
 
@@ -20,7 +19,8 @@ trait CPPBinaryMethod extends BinaryMethod {
          |virtual bool isLeaf() const = 0;
          |virtual bool isNode() const = 0;
          |
-         |bool same (const Tree *o) const ;
+         |bool same (const Tree *o) const;
+         |void output () const;
          |""".stripMargin.split("\n").map(s => new CPPElement(s))
 
     val nodeDecls:Seq[CPPElement] =
@@ -65,6 +65,28 @@ trait CPPBinaryMethod extends BinaryMethod {
             |#include "Node.h"
             |#include "Leaf.h"
             |#include <typeinfo>
+            |#include <iostream>
+            |
+            |void Tree::output () const {
+            |if (isLeaf()) {
+            |  Leaf *leaf_this = (Leaf*)this;
+            |  std::cout <<"L:[" << *((double *)leaf_this->value) << "]";;
+            | } else {
+            |  Node *us = (Node*) this;
+            |  std::cout <<"N:[";
+            |
+            |  auto it_us = us->subtrees.begin();
+            |
+            |  Tree *obj1;
+            |  while (it_us != us->subtrees.end()) {
+            |    obj1 = *it_us;
+            |    obj1->output();
+            |    ++it_us;
+            |  }
+            |  std::cout <<"]";
+            | }
+            |}
+            |
             |
           |bool Tree::same (const Tree *o) const {
           |  if (typeid(this) != typeid(o)) { return false; }

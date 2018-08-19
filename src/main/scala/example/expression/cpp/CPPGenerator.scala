@@ -103,8 +103,24 @@ trait CPPGenerator extends AbstractGenerator with DataTypeSubclassGenerator with
 
     val extras = dependency(op).map(o => s"""#include "${o.name.capitalize}.h" """)
 
-    new CPPClass (op.name.capitalize, op.name.capitalize, lookup ++ signatures,
-      Seq(new CPPElement(s"""std::map<const Exp*, $realType  > value_map_;""")))
+    // binary methods?
+    val binaryConstructor:Seq[CPPElement] = op match {
+      case bm:domain.BinaryMethod =>
+        Seq(new CPPElement (s"""
+                               |${op.name.capitalize} (const Exp *t) {
+                               |    that = t;
+                               |}""".stripMargin))
+      case _ => Seq.empty
+    }
+
+    // binary fields?
+    val binaryField:Seq[CPPElement] = op match {
+      case bm:domain.BinaryMethod => Seq(new CPPElement (s""" const Exp *that; """))
+      case _ => Seq.empty
+    }
+
+    new CPPClass (op.name.capitalize, op.name.capitalize, lookup ++ binaryConstructor ++ signatures,
+      Seq(new CPPElement(s"""std::map<const Exp*, $realType  > value_map_;""")) ++ binaryField)
       .setSuperclass("ExpVisitor")
       .addHeader(Seq("""#include "ExpVisitor.h" """, """#include "visitor.h" """))
       .addHeader(extras)

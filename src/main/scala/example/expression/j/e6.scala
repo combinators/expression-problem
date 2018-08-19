@@ -31,7 +31,7 @@ trait e6 extends Evolution with AbstractGenerator with TestGenerator with Binary
         val op = domain.AsTree.name
 
         // TODO: remove javaClass and replace with 'asTree' operation
-        Java(s"""return ${binaryContext}$op().same(that.$op());""").statements
+        Java(s"""return $binaryContext$op().same(that.$op());""").statements
 
       case _ => super.logic(exp)(op)
     }

@@ -1,4 +1,4 @@
-package example.expression.cpp
+package example.expression.cpp     /*DI:LD:AD*/
 
 import example.expression.domain.{BaseDomain, ModelDomain}
 import example.expression.generator.BinaryMethod

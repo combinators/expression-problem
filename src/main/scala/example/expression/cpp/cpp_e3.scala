@@ -1,6 +1,4 @@
-package example.expression.cpp
-
-/*DD:LD:AI*/
+package example.expression.cpp    /*DD:LD:AI*/
 
 import example.expression.domain.{Evolution, M0, M1, M2, M3}
 

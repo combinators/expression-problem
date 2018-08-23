@@ -52,7 +52,7 @@ trait ALaCarteTestGenerator extends TestGenerator {
     val name = inst.e.name
     inst match {
       case ui: UnaryInst =>
-        Haskell(s"In(" + treeRoute(inst, flat.types) + s" (${convert0(ui.inner)} " + closeTreeRoute(inst, flat.types) + ")")
+        Haskell(s"In(" + treeRoute(inst, flat.types) + s" (${convert0(ui.inner)}) " + closeTreeRoute(inst, flat.types) + ")")
 
       case bi: BinaryInst =>
           Haskell(s"In(" + treeRoute(inst, flat.types) + s" (${convert0(bi.left)}) (${convert0(bi.right)}) " + closeTreeRoute(inst, flat.types) + ")")

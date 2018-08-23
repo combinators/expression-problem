@@ -1,4 +1,4 @@
-package example.expression.scalaVisitor
+package example.expression.scalaVisitor    /*DI:LD:AD*/
 
 import example.expression.domain.{BaseDomain, ModelDomain}
 import example.expression.generator.BinaryMethod

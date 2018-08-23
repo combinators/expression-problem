@@ -115,9 +115,6 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
       case bmb:domain.BinaryMethodTreeBase =>  Java(s"""|public ${domain.baseTypeRep.name}.Tree visit(${exp.name} e) {
                                                         |  return e.${domain.AsTree.name.toLowerCase}();
                                                         |}""".stripMargin).methodDeclarations().head
-//      case bm:domain.BinaryMethod => Java(s"""|public $retType visit(${exp.name} e) {
-//                                              |  ${logic(exp)(op).mkString("\n")}
-//                                              |}""".stripMargin).methodDeclarations().head
       case _ => Java(s"""|public $retType visit(${exp.name} e) {
                          |  ${logic(exp)(op).mkString("\n")}
                          |}""".stripMargin).methodDeclarations().head

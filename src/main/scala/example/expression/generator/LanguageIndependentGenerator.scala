@@ -1,4 +1,4 @@
-package example.expression.generator       /*DI:LI:AI*/
+package example.expression.generator     /*DI:LI:AI*/
 
 import example.expression.domain.{BaseDomain, ModelDomain}
 

@@ -1,11 +1,9 @@
 package example.expression.extensibleVisitor    /*DI:LD:AD*/
 
-import com.github.javaparser.ast.body.{BodyDeclaration, MethodDeclaration, TypeDeclaration}
+import com.github.javaparser.ast.body.{MethodDeclaration, TypeDeclaration}
 import example.expression.domain.{BaseDomain, ModelDomain, OperationDependency}
 import example.expression.scalaVisitor.{VisitorGenerator, VisitorJavaBinaryMethod}
 import org.combinators.templating.twirl.Java
-
-import scala.collection.JavaConverters._
 
 /**
   * Synthesizing OO and Functional Design to promote Reuse
@@ -14,9 +12,6 @@ import scala.collection.JavaConverters._
   */
 trait ExtensibleVisitorGenerator extends VisitorGenerator with VisitorJavaBinaryMethod with OperationDependency {
   val domain:BaseDomain with ModelDomain
-
-  // required for dependent operations (see M4 for an example)
- // def dependency(op: domain.Operation): scala.List[domain.Operation]
 
   /**
     * Generating a visitor solution requires:
@@ -27,13 +22,13 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with VisitorJavaBinary
     * @return
     */
   override def generatedCode():Seq[CompilationUnit] = {
-    val flat:domain.Model = getModel.flatten
+    val flat:domain.Model = getModel.flatten()
 
     getModel.inChronologicalOrder.flatMap(m =>
       m.types.map(tpe => generateExp(m, tpe)) ++               // one for each type; use 'flat' to ensure we detect binary methods
         m.ops.map(op => operationGenerator(m, op))             // and new operations
     ) ++
-      // cannot have extension for the FIRST model entry, so skil it
+      // cannot have extension for the FIRST model entry, so skip it
       getModel.inChronologicalOrder
           .filter(m => m.types.nonEmpty)
           .flatMap(m => m.last.pastOperations()
@@ -42,11 +37,6 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with VisitorJavaBinary
            .filter(m => m.types.nonEmpty)
            .map(m=> generateBase(m))  :+      // visitor gets its own class (overriding concept)
       generateBaseClass(getModel)                                  // abstract base class
-  }
-
-  /** For visitor design solution, access through default 'e' parameter */
-  override def subExpressions(exp:domain.Atomic) : Map[String,Expression] = {
-    exp.attributes.map(att => att.name -> Java(s"e.get${att.name.capitalize}()").expression[Expression]()).toMap
   }
 
   /** Add virtual type generator. Context is either "" for top level operation, or the most recent one. */
@@ -65,14 +55,6 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with VisitorJavaBinary
     Java(s"""$expr.accept(make${op.name.capitalize}($args))""").expression()
   }
 
-
-  /** Return designated Java type associated with type, or void if all else fails. */
-  override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : com.github.javaparser.ast.`type`.Type = {
-    tpe match {
-      case domain.baseTypeRep => Java("Exp").tpe()
-    }
-  }
-
   /** Use run-time validation to confirm, but only needed after first base level... */
   override def generateExp(model:domain.Model, exp:domain.Atomic) : CompilationUnit = {
     val unit = super.generateExp(model, exp)
@@ -80,7 +62,6 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with VisitorJavaBinary
     // replace old accept method with new one
     val klass = unit.getType(0)
     val acceptMethod:MethodDeclaration = klass.getMethodsByName("accept").get(0)
-    val name = klass.getName.toString
 
     // only for models after the first one...
     if (model.last.equals(domain.emptyModel())) { return unit }
@@ -110,36 +91,23 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with VisitorJavaBinary
 
   /** Return Visitor class, which contains a visit method for each available sub-type in past. */
   override def generateBase(model:domain.Model): CompilationUnit = {
-    val signatures = model.types
-      .map(exp => s"public R visit(${exp.name} exp);").mkString("\n")
-
+    val methods:Seq[MethodDeclaration] = model.types.flatMap(exp => Java(s"public R visit(${exp.name} exp);").methodDeclarations())
     val full:String = modelTypes(model)
 
-    val parent = if (model.last.equals(domain.emptyModel())) {
-      ""
+    val parent:Option[String] = if (model.last.equals(domain.emptyModel())) {
+      None
     } else {
-
-      //val prior:String = modelTypes(model.last) // might not be good enough.
       val prior:String = modelTypes(model.last.lastModelWithDataTypes()) // might not be good enough.
-
-      s"extends Visitor$prior<R>"
+      Some(s"Visitor$prior<R>")
     }
-    Java (s"""|package expression;
-              |/*
-              | * A concrete visitor describes a concrete operation on expressions. There is one visit
-              | * method per type in the class hierarchy.
-              | */
-              |public interface Visitor$full<R> $parent {
-              |  $signatures
-              |}""".stripMargin).compilationUnit()
+
+    val unit = addMethods(makeInterface("expression", s"Visitor$full<R>", Seq.empty, parent), methods)
+    addTypeComment(unit, s"""
+                           |A concrete visitor describes a concrete operation on expressions. There is one visit
+                           |method per type in the class hierarchy.
+                          """.stripMargin)
   }
 
-  def copyDeclarations (oldType:TypeDeclaration[_], newType:TypeDeclaration[_]) : Unit = {
-    val elements = oldType.getMembers.iterator().asScala
-    while (elements.hasNext) {
-      newType.addMember(elements.next)
-    }
-  }
 
   /** Extensions based on past operation */
   def operationExtension(op:domain.Operation, model:domain.Model): CompilationUnit = {
@@ -152,19 +120,13 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with VisitorJavaBinary
 
     // must take care to ensure we don't mistakenly go back *before* where the operation was defined. This
     // is determined by looking for operations in past.
-
-
     val last = if (lastWithType == model.base || lastOperation.isEmpty) {
       ""
     } else {
       modelTypes(lastWithType)
     }
-    val replacement:CompilationUnit = Java(s"""
-            |package expression;
-            |
-            |public class ${op.name.capitalize}$full extends ${op.name.capitalize}$last implements Visitor$full<$opType> {
-            |
-            |}""".stripMargin).compilationUnit
+
+    val replacement = makeClass("expression", s"${op.name.capitalize}$full", Seq(s"Visitor$full<$opType>"), Some(s"${op.name.capitalize}$last"))
 
     // copy everything over from the originally generated class
     val newType = replacement.getType(0)
@@ -178,9 +140,6 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with VisitorJavaBinary
   override def operationGenerator(model:domain.Model, op:domain.Operation): CompilationUnit = {
     val regularVisitor:CompilationUnit = super.operationGenerator(model, op)
     val mainType:TypeDeclaration[_] = regularVisitor.getType(0)
-
-    // must also ADD to this operation logic methods for all types defined PRIOR to this operation
-    val signatures = model.last.pastDataTypes().map(exp => methodGenerator(exp)(op)).mkString("\n")
 
     // convert 'extends visitor' into 'implements visitor'
     // rename class to have types at end (except for first)
@@ -197,11 +156,9 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with VisitorJavaBinary
       modelTypes(model.lastModelWithDataTypes())
     }
 
-    val replacement:CompilationUnit = Java(s"""
-            |package expression;
-            |public class ${op.name.capitalize}$full implements Visitor$fullVisitor<$opType> {
-            |   $signatures
-            |}""".stripMargin).compilationUnit
+    val replacement:CompilationUnit =
+       addMethods(makeClass("expression", s"${op.name.capitalize}$full", Seq(s"Visitor$fullVisitor<$opType>")),
+         model.last.pastDataTypes().map(exp => methodGenerator(exp)(op)))
 
     val newType = replacement.getType(0)
     copyDeclarations(mainType, newType)

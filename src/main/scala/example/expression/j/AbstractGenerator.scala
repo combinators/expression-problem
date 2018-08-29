@@ -1,9 +1,12 @@
 package example.expression.j  /*DI:LD:AI*/
 
-import com.github.javaparser.ast.body.{ConstructorDeclaration, FieldDeclaration, MethodDeclaration}
+import com.github.javaparser.JavaParser
+import com.github.javaparser.ast.body.{ConstructorDeclaration, FieldDeclaration, MethodDeclaration, TypeDeclaration}
 import example.expression.domain.{BaseDomain, ModelDomain}
 import example.expression.generator.LanguageIndependentGenerator
 import org.combinators.templating.twirl.Java
+
+import scala.collection.JavaConverters._
 
 /**
   * Any Java-based EP approach can extend this Generator
@@ -83,5 +86,106 @@ trait AbstractGenerator extends LanguageIndependentGenerator with DependentDispa
     */
   def fields(exp:domain.Atomic, covariantOverride:Option[Type] = None) : Seq[FieldDeclaration] = {
     exp.attributes.flatMap(att => Java(s"private ${typeConverter(att.tpe, covariantOverride)} ${att.name};").fieldDeclarations())
+  }
+
+  /**
+    * Return a new class with designated superclass and potential implements clauses
+    * @param pkgName      Name of package into which class belongs (if "" then default package)
+    * @param className    Desired class name
+    * @param implements   sequence of strings representing interfaces
+    * @param superclass   potential superclass
+    * @return
+    */
+  def makeClass(pkgName:String, className:String, implements:Seq[String] = Seq.empty, superclass:Option[String] = None) : CompilationUnit = {
+    val packageClause = if (pkgName == "") {
+      ""
+    } else {
+      s"package $pkgName;"
+    }
+
+    val implementsClause:String = if (implements.isEmpty) {
+      ""
+    } else {
+      "implements " + implements.mkString(",")
+    }
+
+    val extendsClause:String = if (superclass.isEmpty) {
+      ""
+    } else {
+      "extends " + superclass.get
+    }
+    Java(s"""|$packageClause
+             |public class $className $extendsClause $implementsClause {
+             |
+             |}""".stripMargin).compilationUnit
+  }
+
+  /**
+    * Return a new class with designated superclass and potential implements clauses
+    * @param pkgName      Name of package into which class belongs (if "" then default package)
+    * @param className    Desired class name
+    * @param implements   sequence of strings representing interfaces
+    * @param parentInterface   potential superclass
+    * @return
+    */
+  def makeInterface(pkgName:String, className:String, implements:Seq[String] = Seq.empty, parentInterface:Option[String] = None) : CompilationUnit = {
+    val packageClause = if (pkgName == "") {
+      ""
+    } else {
+      s"package $pkgName;"
+    }
+
+    val implementsClause:String = if (implements.isEmpty) {
+      ""
+    } else {
+      "implements " + implements.mkString(",")
+    }
+
+    val extendsClause:String = if (parentInterface.isEmpty) {
+      ""
+    } else {
+      "extends " + parentInterface.get
+    }
+    Java(s"""|$packageClause
+             |public interface $className $extendsClause $implementsClause {
+             |
+             |}""".stripMargin).compilationUnit
+  }
+
+  /**
+    * Add methods to the class.
+    *
+    * No check is made to determine whether duplicate methods would exist.
+    *
+    * @param unit       Class to be modified
+    * @param methods    Methods to be added.
+    * @return
+    */
+  def addMethods(unit:CompilationUnit, methods:Seq[MethodDeclaration]) : CompilationUnit = {
+    val clazz = unit.getType(0)
+    methods.foreach(m => clazz.addMember(m))
+
+    unit
+  }
+
+  /**
+    * Add Javadoc-style comment to primary type of CompilationUnit
+    *
+    * @param unit       CompilationUnit to be modified
+    * @param doc        Comment to be applied as javadoc to the given type
+    * @param typeIndex  Which type (defaults to 0) to have javadoc modified.
+    * @return
+    */
+  def addTypeComment(unit:CompilationUnit, doc:String, typeIndex:Int = 0) : CompilationUnit = {
+    unit.getType(typeIndex).setComment(JavaParser.parseJavadoc(doc).toComment(""))
+    unit
+  }
+
+
+  def copyDeclarations (oldType:TypeDeclaration[_], newType:TypeDeclaration[_]) : Unit = {
+    val elements = oldType.getMembers.iterator().asScala
+    while (elements.hasNext) {
+      newType.addMember(elements.next)
+    }
   }
 }

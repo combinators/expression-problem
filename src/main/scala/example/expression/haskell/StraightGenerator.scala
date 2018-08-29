@@ -56,21 +56,15 @@ trait StraightGenerator extends AbstractGenerator with StandardHaskellBinaryMeth
       s"""$name (${exp.name.capitalize} ${standardArgs(exp).getCode}) $opsParam = ${logic(exp)(op).mkString("\n")}"""
     })
 
-    // astree method declaration
-    val subtypes:Seq[Haskell] = op match {
-      case bmt:BinaryMethodTreeBase => definedDataSubTypes("", m.types)
-      case _ => Seq.empty
-    }
 
     val code = Haskell(s"""|module ${name.capitalize} where
                            |import DataTypes
-                           |${subtypes.mkString("\n")}
+                           |
                            |${addedImports(op).mkString("\n")}
                            |$definition
                            |${instances.mkString("\n")}""".stripMargin)
     HaskellWithPath(code, Paths.get(s"${name.capitalize}.hs"))
   }
-
 
   def generateDataTypes(m:Model): HaskellWithPath = {
     val allTypes = m.types.map(exp => {
@@ -79,8 +73,20 @@ trait StraightGenerator extends AbstractGenerator with StandardHaskellBinaryMeth
       Haskell(s"${exp.name.capitalize} $list")
     }).mkString("  | ")
 
+    val binaryTreeInterface =  if (m.flatten().ops.exists {
+      case bm: domain.BinaryMethodTreeBase => true
+      case _ => false
+    }) {
+      // astree method declaration
+      definedDataSubTypes("", m.types) ++ declarations
+    } else {
+      Seq.empty
+    }
+
     val code = Haskell(
       s"""|module DataTypes where
+          |
+          |${binaryTreeInterface.mkString("\n")}
           |
           |-- All types are classified as data
           |data ${domain.baseTypeRep.name} = $allTypes

@@ -40,6 +40,21 @@ trait LanguageIndependentGenerator {
   def dispatch(expr:Expression, op:domain.Operation, params:Expression*) : Expression
 
   /**
+    * Modify compilation unit as needed for extra language-specific mechanisms for allowing generated
+    * language to be compiled/interpreted.
+    *
+    * TBA: Better to have dispatch return Expression *and* obligations for context such as #include or imports
+    * TODO: Kick down the road
+    *
+    * a) hard-code fully-qualified class names
+    * b) collect together all compilation units
+    * c)
+    */
+  def addDispatchContext(op:domain.Operation, unit:CompilationUnit) : CompilationUnit = {
+    unit
+  }
+
+  /**
     * Expression-tree data has attributes with domain-specific types. This method returns
     * the designated Java type associated with the abstract type, with option of a covariant replacement
     */

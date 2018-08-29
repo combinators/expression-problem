@@ -174,33 +174,4 @@ trait CPPBinaryMethod extends BinaryMethod {
                |}""".stripMargin))
   }
 
-  /** Interesting shift needed for visitor. */
-  // TODO: IS THIS EVEN USED?
-//  def visitorLogicAsTree(exp:domain.Atomic) : Seq[CPPElement] = {
-//    val atomicArgs = exp.attributes.map(att => att.name).mkString(",")
-//
-//    // changes whether attributes can be access *directly* or whether they are accessed via getXXX*() method.
-//    val recursiveArgs = exp.attributes.map(att => "get" + att.name.capitalize + s"()->${AsTree.name.toLowerCase}()").mkString(",")
-//
-//    val body:Seq[CPPElement] = exp match {
-//      case b:Binary => {
-//
-//        Seq(new CPPElement(s""" value_map_[e] =  new Node(java.util.Arrays.asList($recursiveArgs), DefinedSubtypes::${exp.name.capitalize}Subtype); """))
-//      }
-//      case u:Unary => {
-//
-//          val vec1 = s"std::vector<Tree *> vec_lit{$recursiveArgs};"
-//          Seq(new CPPElement(s""" value_map_[e] =  new Node(java.util.Arrays.asList($recursiveArgs), DefinedSubtypes::${exp.name.capitalize}Subtype); """))
-//      }
-//      case a:Atomic => {
-//        Seq(new CPPElement(s""" value_map_[e] = new Leaf($atomicArgs);"""))
-//      }
-//    }
-//
-//    Seq(new CPPElement(
-//      s"""
-//         |public Tree ${domain.AsTree.name.toLowerCase}() {
-//         |  ${body.mkString("\n")}
-//         |}""".stripMargin))
-//  }
 }

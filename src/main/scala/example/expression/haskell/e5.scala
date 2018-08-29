@@ -1,6 +1,7 @@
 package example.expression.haskell     /*DD:LD:AI*/
 
 import example.expression.domain.{Evolution, M5, MathDomain, ModelDomain}
+
 /**
   * BinaryMethod capability
   *
@@ -24,16 +25,15 @@ trait e5 extends Evolution with AbstractGenerator with TestGenerator with Haskel
       // Simplify only works for solutions that instantiate expression instances
       case AsTree => {
         val atts = subExpressions(exp)
-        val params = standardArgs(exp)
-        val invokes = exp.attributes.map(att => s"(${AsTree.name.toLowerCase} ${att.name})").mkString(" ")
 
-        exp match {
-          case Lit => Seq(Haskell(s" Leaf ${exp.name}Type $litValue"))
-          case Neg => Seq(Haskell(s" Node ${exp.name}Type (${exp.name} ${base.inner}) (${AsTree.name.toLowerCase} ${base.inner}) Nil"))
-          case Add|Sub|Mult|Divd => {
-            Seq(Haskell(s""" Node ${exp.name}Type (${exp.name} $params) $invokes """))
-          }
+        val declType = exp.name
+
+        val children:Haskell = exp match {
+          case Lit => Haskell(s"Leaf $litValue")
+          case _ => Haskell(exp.attributes.map(att => s"(${AsTree.name.toLowerCase} ${att.name})".mkString(",")))
         }
+
+        Seq(Haskell(s" Node ${declType}Type [ $children ]"))
       }
 
       case _ => super.logic(exp)(op)
@@ -42,12 +42,28 @@ trait e5 extends Evolution with AbstractGenerator with TestGenerator with Haskel
 
   abstract override def testGenerator: Seq[Haskell] = {
     val s1 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
-    val s2 = new domain.BinaryInst(Sub, new LitInst(9.0), new LitInst(112.0))
+    val s2 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
+    val s3 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(999.0))
 
     super.testGenerator :+ new Haskell(
       s"""
-         |public void test() {
-         |   assertEquals(${dispatch(convert(s2), domain.AsTree)}, ${dispatch(convert(s1), domain.AsTree)});
-         |}""".stripMargin)
+         |s1 = ${convert(s1)}
+         |s2 = ${convert(s2)}
+         |s3 = ${convert(s3)}
+         |test_e5_1 = TestCase (assertEqual "AsTree-s1" (${AsTree.name} s1) (${AsTree.name} s2))
+         |test_e5_2 = TestCase (assertNotEqual "AsTree-s1" (${AsTree.name} s1) (${AsTree.name} s3))
+         |
+         |test_e5 = TestList [ TestLabel "1" test_e5_1, TestLabel "2" test_e5_2 ]
+         |
+         |main :: IO Counts
+         |main  = runTestTT test_e5
+         |""".stripMargin)
   }
+
+//    super.testGenerator :+ new Haskell(
+//      s"""
+//         |public void test() {
+//         |   assertEquals(${dispatch(convert(s2), domain.AsTree)}, ${dispatch(convert(s1), domain.AsTree)});
+//         |}""".stripMargin)
+//  }
 }

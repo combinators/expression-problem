@@ -111,6 +111,7 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
       case _ => Java("void").tpe
     }
 
+    // TODO: Looks like a hack
     op match {
       case bmb:domain.BinaryMethodTreeBase =>  Java(s"""|public ${domain.baseTypeRep.name}.Tree visit(${exp.name} e) {
                                                         |  return e.${domain.AsTree.name.toLowerCase}();

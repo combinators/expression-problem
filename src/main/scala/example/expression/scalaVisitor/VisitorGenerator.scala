@@ -21,7 +21,18 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
     */
   def generatedCode():Seq[CompilationUnit] = {
     val flat = getModel.flatten()
-    flat.types.map(tpe => generateExp(flat, tpe)) ++         // one class for each sub-type
+
+    //  binary methods for helper
+    val decls:Seq[CompilationUnit] = if (flat.ops.exists {
+      case bm: domain.BinaryMethodTreeBase => true
+      case _ => false
+    }) {
+      helperClasses()
+    } else {
+      Seq.empty
+    }
+
+    decls ++ flat.types.map(tpe => generateExp(flat, tpe)) ++         // one class for each sub-type
       getModel.inChronologicalOrder                          // visitors are constructed in order
           .filter(m => m.ops.nonEmpty)
           .flatMap(m =>
@@ -70,21 +81,21 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
     // Ignore passed in model in favor of just grabbing it on demand...
     val allOps = getModel.flatten().ops
 
-    // If BinaryMethodTreeBase is defined, then need Astree declarations...
-    val decls = if (allOps.exists {
-      case bm: domain.BinaryMethodTreeBase => true
-      case _ => false
-    }) {
-      declarations
-    } else {
-      Seq.empty
-    }
+//    // If BinaryMethodTreeBase is defined, then need Astree declarations...
+//    val decls = if (allOps.exists {
+//      case bm: domain.BinaryMethodTreeBase => true
+//      case _ => false
+//    }) {
+//      declarations
+//    } else {
+//      Seq.empty
+//    }
 
     val binaryTreeInterface = if (allOps.exists {
       case bm: domain.BinaryMethodTreeBase => true
       case _ => false
     }) {
-      Java(s"""public abstract Tree ${domain.AsTree.name.toLowerCase}();""").classBodyDeclarations
+      Java(s"""public abstract tree.Tree ${domain.AsTree.name.toLowerCase}();""").classBodyDeclarations
     } else {
       Seq.empty
     }
@@ -92,7 +103,6 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
     Java(s"""|package expression;
              |
              |public abstract class ${domain.baseTypeRep.name.capitalize} {
-             |    ${decls.mkString("\n")}
              |    ${binaryTreeInterface.mkString("\n")}
              |    public abstract <R> R accept(Visitor<R> v);
              |}
@@ -111,15 +121,19 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
       case _ => Java("void").tpe
     }
 
-    // TODO: Looks like a hack
-    op match {
-      case bmb:domain.BinaryMethodTreeBase =>  Java(s"""|public ${domain.baseTypeRep.name}.Tree visit(${exp.name} e) {
-                                                        |  return e.${domain.AsTree.name.toLowerCase}();
-                                                        |}""".stripMargin).methodDeclarations().head
-      case _ => Java(s"""|public $retType visit(${exp.name} e) {
-                         |  ${logic(exp)(op).mkString("\n")}
-                         |}""".stripMargin).methodDeclarations().head
-    }
+    Java(s"""|public $retType visit(${exp.name} e) {
+             |  ${logic(exp)(op).mkString("\n")}
+             |}""".stripMargin).methodDeclarations().head
+//
+//    // TODO: Looks like a hack
+//    op match {
+////      case bmb:domain.BinaryMethodTreeBase =>  Java(s"""|public tree.Tree visit(${exp.name} e) {
+////                                                        |  return e.${domain.AsTree.name.toLowerCase}();
+////                                                        |}""".stripMargin).methodDeclarations().head
+//      case _ => Java(s"""|public $retType visit(${exp.name} e) {
+//                         |  ${logic(exp)(op).mkString("\n")}
+//                         |}""".stripMargin).methodDeclarations().head
+//    }
 
   }
 
@@ -135,7 +149,7 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
     // Ignore passed in model in favor of just grabbing it on demand...
     val allOps = getModel.flatten().ops
     val helpers:Seq[BodyDeclaration[_]] = if (allOps.exists {
-      case bm: domain.BinaryMethodTreeBase => true   // was BInaryMethod
+      case bm: domain.BinaryMethodTreeBase => true   // was BinaryMethod
       case _ => false
     }) {
       visitorLogicAsTree(exp)
@@ -143,18 +157,18 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
       Seq.empty
     }
 
-    val definedSubtypes:Seq[BodyDeclaration[_]] = if (allOps.exists {
-      case bm: domain.BinaryMethodTreeBase => true
-      case _ => false
-    }) {
-      definedDataSubTypes("", Seq(exp))
-    } else {
-      Seq.empty
-    }
+//    val definedSubtypes:Seq[BodyDeclaration[_]] = if (allOps.exists {
+//      case bm: domain.BinaryMethodTreeBase => true
+//      case _ => false
+//    }) {
+//      definedDataSubTypes("", Seq(exp))
+//    } else {
+//      Seq.empty
+//    }
 
     Java(s"""|package expression;
              |public class $name extends Exp {
-             |  ${definedSubtypes.mkString("\n")}
+             |
              |  ${constructor(exp)}
              |  ${helpers.mkString("\n")}
              |  ${fields(exp).mkString("\n")}
@@ -182,7 +196,7 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
     }
 
     val tpe = op match {
-      case bmb:domain.BinaryMethodTreeBase => Java(s"${domain.baseTypeRep.name}.Tree").tpe()
+      case bmb:domain.BinaryMethodTreeBase => Java(s"tree.Tree").tpe()
       case _ => typeConverter(op.returnType.get)
     }
 

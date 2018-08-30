@@ -15,7 +15,7 @@ trait e5 extends Evolution with AbstractGenerator with TestGenerator with M5 {
 
   abstract override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
-      case domain.Tree => Java(s"Tree").tpe()      // internal interface
+      case domain.Tree => Java(s"tree.Tree").tpe()      // package class goes here.
       case _ => super.typeConverter(tpe, covariantReplacement)
     }
   }
@@ -27,16 +27,18 @@ trait e5 extends Evolution with AbstractGenerator with TestGenerator with M5 {
       case domain.AsTree => {
         val atts = subExpressions(exp)
 
+        // TODO: replace hard-coded DefinedSubTypes with dependent operation getSubTypeIdentifier and dispatch accordingtly.
+
         // different strategies have different means of accessing attributes, either directly or via
         // getXXX methods. This logic method must defer that knowledge to later.
         exp match {   // was $litValue
           case Lit =>
             val attParams = atts.map(att => att._2.toString).mkString(",")
-            Java(s"""return new Node(java.util.Arrays.asList(new Leaf($attParams)), DefinedSubtypes.${exp.name.capitalize}); """).statements
+            Java(s"""return new tree.Node(java.util.Arrays.asList(new tree.Leaf($attParams)), ${exp.hashCode()}); """).statements
 
           case Add|Sub|Mult|Divd|Neg =>
             val params = atts.map(att => att._2.toString + ".astree()").mkString(",")
-            Java(s""" return new Node(java.util.Arrays.asList($params), DefinedSubtypes.${exp.name.capitalize}); """).statements
+            Java(s""" return new tree.Node(java.util.Arrays.asList($params), ${exp.hashCode()}); """).statements
           }
       }
 

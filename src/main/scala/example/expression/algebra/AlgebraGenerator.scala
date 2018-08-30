@@ -31,7 +31,18 @@ trait AlgebraGenerator extends AbstractGenerator with JavaBinaryMethod with Stan
     */
   override def generatedCode():Seq[CompilationUnit] = {
     val model = process(getModel)
-    processModel(model.inChronologicalOrder)
+
+    //  binary methods for helper
+    val decls:Seq[CompilationUnit] = if (getModel.flatten().ops.exists {
+      case bm: domain.BinaryMethodTreeBase => true
+      case _ => false
+    }) {
+      helperClasses()
+    } else {
+      Seq.empty
+    }
+
+    decls ++ processModel(model.inChronologicalOrder)
   }
 
   /**
@@ -146,13 +157,13 @@ trait AlgebraGenerator extends AbstractGenerator with JavaBinaryMethod with Stan
            """.stripMargin
     }).mkString("\n")
 
-    // used to bring in the Subtype definitions to be useful for Astree
-    val extra:Seq[BodyDeclaration[_]] = op match {
-      case bm:domain.BinaryMethodTreeBase =>
-        definedDataSubTypes(name.capitalize, targetModel.types)
-
-      case _ => Seq.empty
-    }
+//    // used to bring in the Subtype definitions to be useful for Astree
+//    val extra:Seq[BodyDeclaration[_]] = op match {
+//      case bm:domain.BinaryMethodTreeBase =>
+//        definedDataSubTypes(name.capitalize, targetModel.types)
+//
+//      case _ => Seq.empty
+//    }
 
     val delegate:Seq[BodyDeclaration[_]] = op match {
       case bm:domain.BinaryMethod =>
@@ -163,7 +174,7 @@ trait AlgebraGenerator extends AbstractGenerator with JavaBinaryMethod with Stan
     val str:String = s"""|package algebra;
                          |public class ${name.capitalize}$fullName${domain.baseTypeRep.name}Alg $previous implements $fullName${domain.baseTypeRep.name}Alg<${name.capitalize}> {
                          |     ${delegate.mkString("\n")}
-                         |     ${extra.mkString("\n")}
+                         |
                          |     $methods
                          |}""".stripMargin
     Java(str).compilationUnit()
@@ -183,26 +194,26 @@ trait AlgebraGenerator extends AbstractGenerator with JavaBinaryMethod with Stan
 
     signatures = signatures :+ s"  $tpe $name($params);"
 
-    // If BinaryMethodTreeBase, need the declarations here.
-    val extra:Seq[BodyDeclaration[_]] = op match {
-      case bm:domain.BinaryMethodTreeBase => {
-        declarations
-      }
-
-      case _ => Seq.empty
-    }
+//    // If BinaryMethodTreeBase, need the declarations here.
+//    val extra:Seq[BodyDeclaration[_]] = op match {
+//      case bm:domain.BinaryMethodTreeBase => {
+//        declarations
+//      }
+//
+//      case _ => Seq.empty
+//    }
 
     val parent:String = op match {
       case b:domain.BinaryMethod => s"extends ${domain.AsTree.name.capitalize}"
       case _ => ""
     }
 
-    //implementations
+    //implementations (had ${extra.mkString("\n")})
     val str = s"""|package algebra;
                   |interface ${op.name.capitalize} $parent {
                   |  ${signatures.mkString("\n")}
                   |
-                  |  ${extra.mkString("\n")}
+                  |
                   |}""".stripMargin
     Java(str).compilationUnit()
   }

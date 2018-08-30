@@ -17,9 +17,20 @@ trait InterpreterGenerator extends  AbstractGenerator with DataTypeSubclassGener
     */
   def generatedCode():Seq[CompilationUnit] = {
     val model = getModel
+
+    //  binary methods for helper
+    val decls:Seq[CompilationUnit] = if (model.flatten().ops.exists {
+      case bm: domain.BinaryMethodTreeBase => true
+      case _ => false
+    }) {
+      helperClasses()
+    } else {
+      Seq.empty
+    }
+
     // one interface for every model that contains an operation
     // Each operation gets interface
-    model.inChronologicalOrder.filter(m => m.ops.nonEmpty).map(m => generateBase(m)) ++
+    decls ++ model.inChronologicalOrder.filter(m => m.ops.nonEmpty).map(m => generateBase(m)) ++
     //
     // Each operation must provide class implementations for all past dataTypes since last operation
     model.inChronologicalOrder.filter(m => m.ops.nonEmpty).flatMap(m => generateBaseExtensions(m)) ++
@@ -327,20 +338,20 @@ trait InterpreterGenerator extends  AbstractGenerator with DataTypeSubclassGener
             s"extends $past$name" // go backwards?
           }
 
-        // include defined subtypes
-        val definedSubTypes: Seq[BodyDeclaration[_]] = if (model.flatten().ops.exists {
-          case bm: domain.BinaryMethodTreeBase => true
-          case _ => false
-        }) {
-          definedDataSubTypes(s"${domain.AsTree.name.capitalize}${domain.baseTypeRep.name}", Seq(exp))
-        } else {
-          Seq.empty
-        }
+//        // include defined subtypes
+//        val definedSubTypes: Seq[BodyDeclaration[_]] = if (model.flatten().ops.exists {
+//          case bm: domain.BinaryMethodTreeBase => true
+//          case _ => false
+//        }) {
+//          definedDataSubTypes(s"${domain.AsTree.name.capitalize}${domain.baseTypeRep.name}", Seq(exp))
+//        } else {
+//          Seq.empty
+//        }
 
         Java(s"""
                 |package interpreter;
                 |public class $combinedOps$name $extension implements ${baseInterface.toString} {
-                |  ${definedSubTypes.mkString("\n")}
+                |
                 |  ${factoryMethods.mkString("\n")}
                 |  ${constructor.toString}
                 |

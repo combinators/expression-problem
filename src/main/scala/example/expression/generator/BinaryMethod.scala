@@ -10,6 +10,17 @@ import example.expression.domain.{BaseDomain, ModelDomain}
 trait BinaryMethod  {
   val domain:BaseDomain with ModelDomain
 
+  /** abstract. */
+  type expt
+
+  /**
+    * Provide default implementation that works for most cases.
+    *
+    * If you want to have "expression." before, then override and update as well.  and could use 'Expression' instead of
+    * 'String' for further type safety.
+    */
+  def inBinaryContext(e:expt) : expt = e
+
   /**
     * In certain binary methods, an operation needs a context within which to run, something
     * that is "expression." or "".

@@ -1,5 +1,6 @@
 package example.expression.j      /*DI:LD:AI*/
 
+import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.{BodyDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.stmt.Statement
@@ -77,6 +78,14 @@ trait JavaBinaryMethod extends BinaryMethod {
           """.stripMargin).compilationUnit().getType(0).getMembers.iterator.asScala.toSeq
   }
 
+  def helperClasses():Seq[CompilationUnit] = {
+    Seq(
+      example.expression.java.Tree.render(Java("tree").name()).compilationUnit(),
+      example.expression.java.Node.render(Java("tree").name()).compilationUnit(),
+      example.expression.java.Leaf.render(Java("tree").name()).compilationUnit()
+    )
+  }
+
   /**
     * Compute parameter "Type name" comma-separated list from operation. Be sure to convert BaseType into op.name!
     *
@@ -99,29 +108,31 @@ trait JavaBinaryMethod extends BinaryMethod {
     }).mkString(",")
   }
 
-  /**
-    * Add defined data types for given exp subtype
-    * @param context
-    * @param exps
-    */
-  def definedDataSubTypes(context:String, exps:Seq[domain.Atomic]) :Seq[BodyDeclaration[_]] = {
-    val realContext = if (context.equals("")) {
-      ""
-    } else {
-      context + "."
-    }
-   Java (s"""
-             |enum DefinedSubtypes implements ${realContext}Subtypes {
-             |		${exps.map(exp => exp.name).mkString(",")}
-             |}
-           """.stripMargin).classBodyDeclarations()
-    }
+//  /**
+//    * Add defined data types for given exp subtype
+//    * @param context
+//    * @param exps
+//    */
+//  def definedDataSubTypes(context:String, exps:Seq[domain.Atomic]) :Seq[BodyDeclaration[_]] = {
+//    val realContext = if (context.equals("")) {
+//      ""
+//    } else {
+//      context + "."
+//    }
+//
+//    // had been ${realContext}Subtypes
+//   Java (s"""
+//             |enum DefinedSubtypes implements tree.Subtypes {
+//             |		${exps.map(exp => exp.name).mkString(",")}
+//             |}
+//           """.stripMargin).classBodyDeclarations()
+//    }
 
   def logicAsTree(exp:domain.Atomic) : Seq[MethodDeclaration] = {
     val args = exp.attributes.map(att => att.name).mkString(",")
           Java(
             s"""
-               |public Tree ${domain.AsTree.name.toLowerCase}() {
+               |public tree.Tree ${domain.AsTree.name.toLowerCase}() {
                |  return asTree.${exp.name.toLowerCase}($args).${domain.AsTree.name.toLowerCase}();
                |}""".stripMargin).methodDeclarations()
   }
@@ -135,19 +146,19 @@ trait JavaBinaryMethod extends BinaryMethod {
 
     val body:Seq[Statement] = exp match {
       case b:Binary => {
-        Java(s""" return new Node(java.util.Arrays.asList($recursiveArgs), DefinedSubtypes.${exp.name.capitalize}); """).statements
+        Java(s""" return new tree.Node(java.util.Arrays.asList($recursiveArgs), ${exp.hashCode()}); """).statements
       }
       case u:Unary => {
-        Java(s""" return new Node(java.util.Arrays.asList($recursiveArgs), DefinedSubtypes.${exp.name.capitalize}); """).statements
+        Java(s""" return new tree.Node(java.util.Arrays.asList($recursiveArgs), ${exp.hashCode()}); """).statements
       }
       case a:Atomic => {
-        Java(s""" return new Leaf($atomicArgs);""").statements
+        Java(s""" return new tree.Leaf($atomicArgs);""").statements
       }
     }
 
     Java(
       s"""
-         |public Tree ${domain.AsTree.name.toLowerCase}() {
+         |public tree.Tree ${domain.AsTree.name.toLowerCase}() {
          |  ${body.mkString("\n")}
          |}""".stripMargin).methodDeclarations()
   }

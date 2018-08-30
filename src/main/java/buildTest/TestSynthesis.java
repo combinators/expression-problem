@@ -106,30 +106,43 @@ public class TestSynthesis {
         dir = new File (dir, "main");
         dir = new File (dir, "java");
 
-        // find directory name
+        // find directory name(s)
         File children[] = dir.listFiles();
-        String pkgName = "";
+        ArrayList<String> compileCommand = new ArrayList<>();
+        compileCommand.add("javac");
+        compileCommand.add("-cp");
+        compileCommand.add(junitJarFile + File.pathSeparator + ".");
+        String fs = File.separator;
+
+        String pkgName = family;
+
+        // The test cases are in the package that contains "TestSuite1.java"; be sure to look for it.
         if (children == null || children.length == 0) {
-            pkgName = ".";
+            compileCommand.add("." + fs + "*.java"); // not sure what to do
         } else {
-            File onlyChild = null;
             for (File child : children) {
                 if (!child.getName().startsWith(".")) {
-                    onlyChild = child;
+                    File testSuite = new File (child, "TestSuite1.java");
+                    if (testSuite.exists()) {
+                        pkgName = child.getName();
+                    }
+//                    onlyChild = child;
+                    compileCommand.add(child.getName() + fs + "*.java");
                 }
             }
-            pkgName = onlyChild.getName();
+//            pkgNames = onlyChild.getName();
         }
 
         // javac -cp standAlone.jar:./bigforty/src/main/java klondike/src/main/java/org/combinators/solitaire/bigforty/BigForty.java
         //
         //run-bigforty: bigforty
         //        java -cp standAlone.jar:./bigforty/src/main/java org/combinators/solitaire/bigforty/BigForty
-        String fs = File.separator;
-        String[] args = new String[] { "javac",  "-cp",
-                junitJarFile + File.pathSeparator + ".",
-                //"-Xlint:unchecked",
-                pkgName + fs + "*.java"};
+
+//        String[] args = new String[] { "javac",  "-cp",
+//                junitJarFile + File.pathSeparator + ".",
+//                //"-Xlint:unchecked",
+//                pkgName + fs + "*.java"};
+        String[] args = compileCommand.toArray(new String[0]);
 
         try {
             Process proc = Runtime.getRuntime().exec(args, new String[0], dir);

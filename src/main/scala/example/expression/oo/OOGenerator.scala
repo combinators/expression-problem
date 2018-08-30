@@ -22,8 +22,20 @@ trait OOGenerator extends AbstractGenerator with DataTypeSubclassGenerator with 
     */
   def generatedCode():Seq[CompilationUnit] = {
     val flat = getModel.flatten()
-    flat.types.map(tpe => generateExp(flat, tpe)) :+      // one class for each sub-type
-      generateBase(flat)                                  // base class $BASE
+
+    //  binary methods for helper
+    val decls:Seq[CompilationUnit] = if (flat.ops.exists {
+      case bm: domain.BinaryMethodTreeBase => true
+      case _ => false
+    }) {
+      helperClasses()
+    } else {
+      Seq.empty
+    }
+
+    decls ++ flat.types.map(tpe => generateExp(flat, tpe)) :+      // one class for each sub-type
+      generateBase(flat)                                           // base class $BASE
+
   }
 
   /** For straight design solution, directly access attributes by name. */
@@ -65,18 +77,18 @@ trait OOGenerator extends AbstractGenerator with DataTypeSubclassGenerator with 
   def generateExp(model:Model, exp:Atomic) : CompilationUnit = {
     val methods = model.ops.map(methodGenerator(exp))
 
-    val extras = if (model.ops.exists {
-      case bm: domain.BinaryMethodTreeBase => true
-      case _ => false
-    }) {
-      definedDataSubTypes(domain.baseTypeRep.name, Seq(exp))
-    } else {
-      Seq.empty
-    }
+//    val extras = if (model.ops.exists {
+//      case bm: domain.BinaryMethodTreeBase => true
+//      case _ => false
+//    }) {
+//      definedDataSubTypes(domain.baseTypeRep.name, Seq(exp))
+//    } else {
+//      Seq.empty
+//    }
 
     Java(s"""|package oo;
              |public class ${exp.toString} extends ${domain.baseTypeRep.name} {
-             |  ${extras.mkString("\n")}
+             |
              |  ${constructor(exp)}
              |  ${fields(exp).mkString("\n")}
              |  ${methods.mkString("\n")}
@@ -91,19 +103,18 @@ trait OOGenerator extends AbstractGenerator with DataTypeSubclassGenerator with 
     })
 
     // If BinaryMethodTreeBase is defined, then need Astree declarations...
-    val decls = if (model.ops.exists {
-      case bm: domain.BinaryMethodTreeBase => true
-      case _ => false
-    }) {
-      declarations
-    } else {
-      Seq.empty
-    }
-
+//    val decls = if (model.ops.exists {
+//      case bm: domain.BinaryMethodTreeBase => true
+//      case _ => false
+//    }) {
+//      declarations
+//    } else {
+//      Seq.empty
+//    }
+//${decls.mkString("\n")}
     Java(s"""|package oo;
              |public abstract class ${domain.baseTypeRep.name} {
              |  ${signatures.mkString("\n")}
-             |  ${decls.mkString("\n")}
              |}""".stripMargin).compilationUnit
   }
 }

@@ -1,6 +1,6 @@
 package example.expression.algebra    /*DI:LD:AD*/
 
-import com.github.javaparser.ast.body.BodyDeclaration
+import com.github.javaparser.ast.body.{BodyDeclaration, MethodDeclaration}
 import example.expression.domain.{BaseDomain, ModelDomain}
 import example.expression.j.{AbstractGenerator, JavaBinaryMethod, StandardJavaBinaryMethod}
 import org.combinators.templating.twirl.Java
@@ -144,13 +144,13 @@ trait AlgebraGenerator extends AbstractGenerator with JavaBinaryMethod with Stan
       case _ => parameters(op)
     }
 
-    val methods = targetModel.types.map(exp => {  // exp is either 'lit' or 'add'
+    val methods = targetModel.types.flatMap(exp => {  // exp is either 'lit' or 'add'
 
       val subName = exp.name.toLowerCase   // to get proper etiquette for method names
       val code:Seq[Statement] = logic(exp)(op)
       val signatures = code.mkString("\n")
 
-      val params:Seq[String] = exp.attributes.map(att => s"final ${typeConverter(att.tpe, Some(opType))} ${att.name}")
+      val params = exp.attributes.map(att => s"final ${typeConverter(att.tpe, Some(opType))} ${att.name}")
       // creates method body
       val paramList = params.mkString(",")
 
@@ -160,7 +160,7 @@ trait AlgebraGenerator extends AbstractGenerator with JavaBinaryMethod with Stan
         case _ => Seq.empty
       }
 
-      s"""
+      Java(s"""
          |public ${name.capitalize} $subName($paramList) {
          |        return new ${name.capitalize}() {
          |            ${helpers.mkString("\n")}
@@ -169,16 +169,8 @@ trait AlgebraGenerator extends AbstractGenerator with JavaBinaryMethod with Stan
          |            }
          |        };
          |    }
-           """.stripMargin
-    }).mkString("\n")
-
-//    // used to bring in the Subtype definitions to be useful for Astree
-//    val extra:Seq[BodyDeclaration[_]] = op match {
-//      case bm:domain.BinaryMethodTreeBase =>
-//        definedDataSubTypes(name.capitalize, targetModel.types)
-//
-//      case _ => Seq.empty
-//    }
+           """.stripMargin).methodDeclarations
+    })
 
     val delegate:Seq[BodyDeclaration[_]] = op match {
       case bm:domain.BinaryMethod =>
@@ -190,7 +182,7 @@ trait AlgebraGenerator extends AbstractGenerator with JavaBinaryMethod with Stan
                          |public class ${name.capitalize}$fullName${domain.baseTypeRep.name}Alg $previous implements $fullName${domain.baseTypeRep.name}Alg<${name.capitalize}> {
                          |     ${delegate.mkString("\n")}
                          |
-                         |     $methods
+                         |     ${methods.mkString("\n")}
                          |}""".stripMargin
     Java(str).compilationUnit()
   }

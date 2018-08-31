@@ -181,21 +181,20 @@ trait InterpreterGenerator extends  AbstractGenerator with DataTypeSubclassGener
     val extension:String = if (lastWithOps.isEmpty) ""
       else "extends " + modelInterfaceName(lastWithOps)
 
-    // include helper methods for AsTree.
-    val decls: Seq[BodyDeclaration[_]] = if (model.flatten().ops.exists {
-      case bm: domain.BinaryMethodTreeBase => true
-      case _ => false
-    }) {
-      declarations
-    } else {
-      Seq.empty
-    }
+//    // include helper methods for AsTree.
+//    val decls: Seq[BodyDeclaration[_]] = if (model.flatten().ops.exists {
+//      case bm: domain.BinaryMethodTreeBase => true
+//      case _ => false
+//    }) {
+//      declarations
+//    } else {
+//      Seq.empty
+//    }
 
     Java(s"""|package interpreter;
-                  |public interface ${fullType.toString} $extension {
-                  |  ${decls.mkString("\n")}
-                  |  ${signatures.mkString("\n")}
-                  |}""".stripMargin).compilationUnit
+             |public interface ${fullType.toString} $extension {
+             |  ${signatures.mkString("\n")}
+             |}""".stripMargin).compilationUnit
   }
 
   def lastTypesSinceAnOperation(model:domain.Model): Seq[domain.Atomic] = {

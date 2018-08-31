@@ -11,11 +11,6 @@
 #GET   /expression/prepare              example.expression.visitor.Expression.prepare(number: Long)
 #GET   /expression/expression.git/*file         example.expression.visitor.Expression.serveFile(file)
 
-GET   /cpp_ep                              example.expression.cpp.Expression_CPP.overview()
-GET   /cpp_ep/raw_:number                  example.expression.cpp.Expression_CPP.raw(number: Long)
-GET   /cpp_ep/prepare                      example.expression.cpp.Expression_CPP.prepare(number: Long)
-GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP.serveFile(file)
-
 # All variants have names that end in "Evolution", with sub-branches as described by 'e0', 'e1', 'e2', ...
 #Haskell Variation
 ->    /                              example.expression.haskell.M0_Variation
@@ -85,23 +80,6 @@ GET   /cpp_ep/cpp_ep.git/*file             example.expression.cpp.Expression_CPP
 ->    /                              example.expression.scalaVisitor.M5_Variation
 ->    /                              example.expression.scalaVisitor.M6_Variation
 ->    /                              example.expression.scalaVisitor.C1_Variation
-# CPP variation
-->    /                              example.expression.cpp.M0_Variation
-->    /                              example.expression.cpp.M1_Variation
-->    /                              example.expression.cpp.M2_Variation
-->    /                              example.expression.cpp.M3_Variation
-# Visitor variations
-->    /                              example.expression.visitor.M0_Variation
-->    /                              example.expression.visitor.M1_Variation
-->    /                              example.expression.visitor.M2_Variation
-->    /                              example.expression.visitor.M3_Variation
-->    /                              example.expression.visitor.M4_Variation
-# Covariant variations
-->    /                              example.expression.covariant.M0_Variation
-->    /                              example.expression.covariant.M1_Variation
-->    /                              example.expression.covariant.M2_Variation
-->    /                              example.expression.covariant.M3_Variation
-->    /                              example.expression.covariant.M4_Variation
 # Algebra variations
 ->    /                              example.expression.algebra.M0_Variation
 ->    /                              example.expression.algebra.M1_Variation

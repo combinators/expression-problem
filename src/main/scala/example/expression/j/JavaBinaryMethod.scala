@@ -20,64 +20,13 @@ trait JavaBinaryMethod extends BinaryMethod {
     * Declares the helper classes needed.
     * @return
     */
-  def declarations: Seq[Declaration] = {
-    Java(
-      s"""|class Wrapper {
-          |	interface Subtypes {
-          |		// empty by default. Extended
-          |	};
-          |
-          |	public interface Tree {
-          |		default java.util.Optional<Leaf> asLeaf() { return java.util.Optional.empty(); }
-          |		default java.util.Optional<Node> asNode() {	return java.util.Optional.empty(); }
-          |
-          |		default boolean same (Tree o) {
-          |			java.util.Optional<Boolean> leafCheck = this.asLeaf().flatMap(leaf -> o.asLeaf().map(leaf2 -> Boolean.valueOf(leaf.value.equals(leaf2.value))));
-          |			java.util.Optional<Boolean> nodeCheck = this.asNode().flatMap(node -> o.asNode()
-          |					.map(node2 -> {
-          |						if (!node2.label.equals(node.label)) { return false; }    // must be same label
-          |						if (node2.subtrees.size() != node.subtrees.size()) { return false; }  // short-circuit if not same length
-          |
-          |						java.util.Iterator<Tree> it1 = node.subtrees.iterator();   // all children must match.
-          |						java.util.Iterator<Tree> it2 = node2.subtrees.iterator();
-          |
-          |						while (it1.hasNext() && it2.hasNext()) {
-          |							if (!it1.next().same(it2.next())) { return false; }
-          |						}
-          |
-          |						return true;
-          |					}));
-          |
-          |			// only two possibilities, else false
-          |			return (leafCheck.orElse(nodeCheck.orElse(false)));
-          |		}
-          | }
-          |
-          | class Node implements Tree {
-          |		public final Subtypes label;
-          |		java.util.List<Tree> subtrees = new java.util.ArrayList<Tree>();
-          |
-          |		public Node(java.util.List<Tree> children, Subtypes label) {
-          |			this.label = label;
-          |			subtrees.addAll(children);
-          |		}
-          |
-          |		public java.util.Optional<Node> asNode() { return java.util.Optional.of(this); }
-          | }
-          |
-          | class Leaf implements Tree {
-          |		public final Object value;
-          |
-          |		public Leaf(Object e) {
-          |			value = e;
-          |		}
-          |
-          |		public java.util.Optional<Leaf> asLeaf() { return java.util.Optional.of(this); }
-          | }
-          |}
-          """.stripMargin).compilationUnit().getType(0).getMembers.iterator.asScala.toSeq
-  }
+  @Deprecated
+  def declarations: Seq[Declaration] = Seq.empty
 
+  /**
+    * Binary methods creates helper classes in package 'tree'. This replaces declarations
+    * @return
+    */
   def helperClasses():Seq[CompilationUnit] = {
     Seq(
       example.expression.java.Tree.render(Java("tree").name()).compilationUnit(),
@@ -95,8 +44,8 @@ trait JavaBinaryMethod extends BinaryMethod {
     */
   def binaryMethodParameters(op:domain.Operation, typeConverter:(domain.TypeRep,Option[Type]) => Type) : String = {
     op.parameters.map(tuple => {
-      val name:String = tuple._1
-      val tpe:domain.TypeRep = tuple._2
+      val name: String = tuple._1
+      val tpe: domain.TypeRep = tuple._2
 
       // use operation name for binary method
       val realType = tpe match {
@@ -107,26 +56,6 @@ trait JavaBinaryMethod extends BinaryMethod {
       realType.toString + " " + name
     }).mkString(",")
   }
-
-//  /**
-//    * Add defined data types for given exp subtype
-//    * @param context
-//    * @param exps
-//    */
-//  def definedDataSubTypes(context:String, exps:Seq[domain.Atomic]) :Seq[BodyDeclaration[_]] = {
-//    val realContext = if (context.equals("")) {
-//      ""
-//    } else {
-//      context + "."
-//    }
-//
-//    // had been ${realContext}Subtypes
-//   Java (s"""
-//             |enum DefinedSubtypes implements tree.Subtypes {
-//             |		${exps.map(exp => exp.name).mkString(",")}
-//             |}
-//           """.stripMargin).classBodyDeclarations()
-//    }
 
   def logicAsTree(exp:domain.Atomic) : Seq[MethodDeclaration] = {
     val args = exp.attributes.map(att => att.name).mkString(",")

@@ -49,6 +49,22 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with VisitorJavaBinary
       generateBaseClass(getModel)                                  // abstract base class
   }
 
+  /**
+    * Responsible for delegating to a new operation on the current context.
+    */
+  override def delegate(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
+    val m:domain.Model = getModel.findType(exp)
+    val opargs = params.mkString(",")
+
+    val full = if (m.last.equals(domain.emptyModel())) {
+      ""
+    } else {
+      m.types.sortWith(_.name < _.name).mkString("")
+    }
+
+    Java(s"e.accept(new ${op.name.capitalize}$full($opargs))").expression[Expression]()
+  }
+
   /** Add virtual type generator. Context is either "" for top level operation, or the most recent one. */
   def addVirtualConstructorSubtype(mainType:TypeDeclaration[_], op:domain.Operation, context:String) : Unit = {
     val virtualConstructor = Java(

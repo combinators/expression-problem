@@ -35,9 +35,16 @@ trait LanguageIndependentGenerator {
     * Responsible for dispatching sub-expressions with possible parameter(s).
     *
     * In an object-oriented-style of programming, there must be an 'expression' on which to base the dispatch.
-    * Functional-oriented languages could ignore first
+    * Functional-oriented languages could ignore first field.
+    *
+    * Intent of this function is to model the execute of operation on children of a datatype
     */
   def dispatch(expr:Expression, op:domain.Operation, params:Expression*) : Expression
+
+  /**
+    * Responsible for delegating to a new operation on the current context.
+    */
+  def delegate(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression
 
   /**
     * Modify compilation unit as needed for extra language-specific mechanisms for allowing generated

@@ -305,7 +305,6 @@ trait InterpreterGenerator extends  AbstractGenerator with DataTypeSubclassGener
           // if exp existed PRIOR to model.last.lastModelWithOperation().ops than can omit
           // must ensure op is not past of *this* model's newly added ops since those MUST appear.
           if (!ops.contains(op) && model.lastModelWithOperation().flatten().types.contains(exp)) {
-            println(s"Skipping ${exp.name} for ${op.name}")
             Seq.empty
           } else {
             val md: MethodDeclaration = methodGenerator(exp)(op)
@@ -337,16 +336,6 @@ trait InterpreterGenerator extends  AbstractGenerator with DataTypeSubclassGener
             val past: String = model.last.lastModelWithOperation().ops.sortWith(_.name < _.name).map(op => op.name.capitalize).mkString("")
             s"extends $past$name" // go backwards?
           }
-
-//        // include defined subtypes
-//        val definedSubTypes: Seq[BodyDeclaration[_]] = if (model.flatten().ops.exists {
-//          case bm: domain.BinaryMethodTreeBase => true
-//          case _ => false
-//        }) {
-//          definedDataSubTypes(s"${domain.AsTree.name.capitalize}${domain.baseTypeRep.name}", Seq(exp))
-//        } else {
-//          Seq.empty
-//        }
 
         Java(s"""
                 |package interpreter;

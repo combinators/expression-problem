@@ -101,12 +101,6 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator with Producer
     val atts:Seq[MethodDeclaration] =
       exp.attributes.flatMap(att => Java(s"${typeConverter(att.tpe, Some(baseInterfaceName(op)))} get${att.name.capitalize}();").methodDeclarations())
 
-//
-//    val subtypeDefinitions:Seq[BodyDeclaration[_]] = op match {
-//      case bmt: domain.BinaryMethodTreeBase => definedDataSubTypes("", Seq(exp))
-//      case _ => Seq.empty
-//    }
-
     Java(s"""
             |package trivially;
             |public interface $name extends ${parents.mkString(", ")} {
@@ -164,14 +158,6 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator with Producer
 
       typeConverter(tpe).toString + " " + name
     }).mkString(",")
-
-//    // include helper methods for AsTree.
-//    val decls:Seq[BodyDeclaration[_]] = op match {
-//      case bmt: domain.BinaryMethodTreeBase => declarations
-//      case bm: BinaryMethodBase => Seq.empty
-//      case _ => Seq.empty
-//    }
-
 
     val methodSignature: MethodDeclaration =
       Java(s"""public $retType ${op.name}($params);""").methodDeclarations().head

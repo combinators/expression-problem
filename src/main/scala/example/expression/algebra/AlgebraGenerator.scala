@@ -24,6 +24,20 @@ trait AlgebraGenerator extends AbstractGenerator with JavaBinaryMethod with Stan
   }
 
   /**
+    * Responsible for delegating to a new operation on the current context.
+    */
+  def delegate(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
+    val m:domain.Model = getModel.findType(exp)
+    val fullName = m.types.sortWith(_.name < _.name).map(exp => exp.name.capitalize).mkString("")
+
+    // args can all be NULL since we are not concerned with children
+    val args = exp.attributes.map(att => "null").mkString(",")
+    val opargs = params.mkString(",")
+
+    Java(s"new ${op.name.capitalize}${fullName}ExpAlg().${exp.name.toLowerCase}($args).${op.name.toLowerCase}($opargs)").expression[Expression]()
+  }
+
+  /**
     * Generating an algebra solution requires processing the models in chronological ordering to be able
     * to prepare the proper interfaces
     *
@@ -44,6 +58,7 @@ trait AlgebraGenerator extends AbstractGenerator with JavaBinaryMethod with Stan
 
     decls ++ processModel(model.inChronologicalOrder)
   }
+
 
   /**
     * For producer operations, there is a need to instantiate objects, and one would use this
@@ -194,26 +209,15 @@ trait AlgebraGenerator extends AbstractGenerator with JavaBinaryMethod with Stan
 
     signatures = signatures :+ s"  $tpe $name($params);"
 
-//    // If BinaryMethodTreeBase, need the declarations here.
-//    val extra:Seq[BodyDeclaration[_]] = op match {
-//      case bm:domain.BinaryMethodTreeBase => {
-//        declarations
-//      }
-//
-//      case _ => Seq.empty
-//    }
-
     val parent:String = op match {
       case b:domain.BinaryMethod => s"extends ${domain.AsTree.name.capitalize}"
       case _ => ""
     }
 
-    //implementations (had ${extra.mkString("\n")})
+    // implementations
     val str = s"""|package algebra;
                   |interface ${op.name.capitalize} $parent {
                   |  ${signatures.mkString("\n")}
-                  |
-                  |
                   |}""".stripMargin
     Java(str).compilationUnit()
   }

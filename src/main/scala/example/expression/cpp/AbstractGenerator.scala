@@ -16,4 +16,12 @@ trait AbstractGenerator extends LanguageIndependentGenerator {
     * Operations can declare dependencies, which leads to #include extras
     */
    def dependency(op: domain.Operation): scala.List[domain.Operation] = List.empty
+
+  /**
+    * Responsible for delegating to a new operation on the current context.
+    */
+  def delegate(exp:domain.Atomic, op:domain.Operation, params:CPPElement*) : CPPElement = {
+    new CPPElement("CppReplaceMe")
+  }
+
 }

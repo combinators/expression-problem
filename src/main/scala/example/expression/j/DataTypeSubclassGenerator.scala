@@ -1,7 +1,9 @@
 package example.expression.j  /*DI:LD:AI*/
 
 import com.github.javaparser.ast.CompilationUnit
+import com.github.javaparser.ast.expr.Expression
 import example.expression.domain.ModelDomain
+import org.combinators.templating.twirl.Java
 
 /**
   * Some solutions have classes that are represented by a base class and then one class for
@@ -15,4 +17,13 @@ trait DataTypeSubclassGenerator {
 
   /** Generate the base class. */
   def generateBase(model:domain.Model) : CompilationUnit
+
+  /**
+    * Responsible for delegating to a new operation on the current context.
+    */
+  def delegate(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
+    val opargs = params.mkString(",")
+    Java(s"this.${op.name.toLowerCase}($opargs)").expression[Expression]()
+  }
+
 }

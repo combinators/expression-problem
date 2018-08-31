@@ -15,6 +15,9 @@ trait M0 extends Evolution {
   case object Eval extends Operation("eval", Some(Double))
   class LitInst(d:Double) extends AtomicInst(Lit, Some(d))
 
-  val m0 = Model("m0", Seq(Lit, Add), Seq(Eval))
+  case object Int extends TypeRep
+  case object Identifier extends Operation("id", Some(Int))
+
+  val m0 = Model("m0", Seq(Lit, Add), Seq(Eval, Identifier))
   override def getModel = m0
 }

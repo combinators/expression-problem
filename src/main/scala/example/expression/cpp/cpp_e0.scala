@@ -14,6 +14,7 @@ trait cpp_e0 extends AbstractGenerator with TestGenerator with M0 {
   abstract override def typeConverter(tpe:TypeRep, covariantReplacement:Option[CPPType] = None) : CPPType = {
     tpe match {
       case Double => new CPPType("double")
+      case Int => new CPPType("int")
       case _ => super.typeConverter(tpe, covariantReplacement)
     }
   }
@@ -30,6 +31,9 @@ trait cpp_e0 extends AbstractGenerator with TestGenerator with M0 {
           case Add => Seq(new CPPElement(s"value_map_[e] = value_map_[${dispatch(atts(base.left),op)}] + value_map_[${dispatch(atts(base.right),op)}];"))
           case _ => super.logic(exp)(op)
         }
+
+      // all future EXP sub-types can simply return hashcode.
+      case Identifier => Seq(new CPPElement(s"""value_map_[e] = ${exp.hashCode()};"""))
 
       case _ => super.logic(exp)(op)
     }

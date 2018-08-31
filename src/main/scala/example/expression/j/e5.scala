@@ -1,7 +1,7 @@
 package example.expression.j  /*DD:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
-import example.expression.domain.{Evolution, M5, MathDomain}
+import example.expression.domain.{Evolution, M0, M5, MathDomain, OperationDependency}
 import org.combinators.templating.twirl.Java
 
 /**
@@ -9,9 +9,19 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-trait e5 extends Evolution with AbstractGenerator with TestGenerator with M5 {
+trait e5 extends Evolution with AbstractGenerator with TestGenerator with OperationDependency with M0 with  M5 {
   self: e0 with e1 with e2 with e3 with e4 =>
   val domain:MathDomain
+
+  /**
+    * Operations can declare dependencies, which leads to #include extras
+    */
+  override def dependency(op: domain.Operation): scala.List[domain.Operation] = {
+    op match {
+      case domain.AsTree => scala.List[domain.Operation](Identifier)
+      case _ => super.dependency(op)
+    }
+  }
 
   abstract override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
@@ -31,14 +41,16 @@ trait e5 extends Evolution with AbstractGenerator with TestGenerator with M5 {
 
         // different strategies have different means of accessing attributes, either directly or via
         // getXXX methods. This logic method must defer that knowledge to later.
-        exp match {   // was $litValue
-          case Lit =>
+        // "this" is only valid expression when datatype as class
+        exp match {   // was $litValue     ;
+          case Lit =>   // ${exp.hashCode()}
+
             val attParams = atts.map(att => att._2.toString).mkString(",")
-            Java(s"""return new tree.Node(java.util.Arrays.asList(new tree.Leaf($attParams)), ${exp.hashCode()}); """).statements
+            Java(s"""return new tree.Node(java.util.Arrays.asList(new tree.Leaf($attParams)), ${delegate(exp, Identifier)}); """).statements
 
           case Add|Sub|Mult|Divd|Neg =>
             val params = atts.map(att => att._2.toString + ".astree()").mkString(",")
-            Java(s""" return new tree.Node(java.util.Arrays.asList($params), ${exp.hashCode()}); """).statements
+            Java(s""" return new tree.Node(java.util.Arrays.asList($params), ${delegate(exp, Identifier)} ); """).statements
           }
       }
 

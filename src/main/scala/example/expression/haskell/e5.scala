@@ -30,7 +30,7 @@ trait e5 extends Evolution with AbstractGenerator with TestGenerator with Haskel
 
         val children:Haskell = exp match {
           case Lit => Haskell(s"Leaf $litValue")
-          case _ => Haskell(exp.attributes.map(att => s"(${AsTree.name.toLowerCase} ${att.name})".mkString(",")))
+          case _ => Haskell(exp.attributes.map(att => s"(${AsTree.name.toLowerCase} ${att.name})").mkString(","))
         }
 
         Seq(Haskell(s" Node ${declType}Type [ $children ]"))

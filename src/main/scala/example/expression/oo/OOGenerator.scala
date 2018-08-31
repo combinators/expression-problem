@@ -77,15 +77,6 @@ trait OOGenerator extends AbstractGenerator with DataTypeSubclassGenerator with 
   def generateExp(model:Model, exp:Atomic) : CompilationUnit = {
     val methods = model.ops.map(methodGenerator(exp))
 
-//    val extras = if (model.ops.exists {
-//      case bm: domain.BinaryMethodTreeBase => true
-//      case _ => false
-//    }) {
-//      definedDataSubTypes(domain.baseTypeRep.name, Seq(exp))
-//    } else {
-//      Seq.empty
-//    }
-
     Java(s"""|package oo;
              |public class ${exp.toString} extends ${domain.baseTypeRep.name} {
              |
@@ -102,16 +93,6 @@ trait OOGenerator extends AbstractGenerator with DataTypeSubclassGenerator with 
         s"${op.name}(${parameters(op)});").methodDeclarations
     })
 
-    // If BinaryMethodTreeBase is defined, then need Astree declarations...
-//    val decls = if (model.ops.exists {
-//      case bm: domain.BinaryMethodTreeBase => true
-//      case _ => false
-//    }) {
-//      declarations
-//    } else {
-//      Seq.empty
-//    }
-//${decls.mkString("\n")}
     Java(s"""|package oo;
              |public abstract class ${domain.baseTypeRep.name} {
              |  ${signatures.mkString("\n")}

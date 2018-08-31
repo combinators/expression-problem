@@ -16,6 +16,7 @@ trait e0 extends AbstractGenerator with TestGenerator with M0 {
   abstract override def typeConverter(tpe:TypeRep, covariantReplacement:Option[Type] = None) : Type = {
     tpe match {
       case Double => Java("Double").tpe()
+      case Int => Java("Integer").tpe();
       case _ => super.typeConverter(tpe, covariantReplacement)
     }
   }
@@ -32,6 +33,9 @@ trait e0 extends AbstractGenerator with TestGenerator with M0 {
           case Add => Java(s"return ${dispatch(atts(base.left),op)} + ${dispatch(atts(base.right),op)};").statements
           case _ => super.logic(exp)(op)
         }
+
+        // all future EXP sub-types can simply return hashcode.
+      case Identifier => Java(s"""return ${exp.hashCode()};""").statements()
 
       case _ => super.logic(exp)(op)
     }

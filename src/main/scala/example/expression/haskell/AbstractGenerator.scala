@@ -20,4 +20,11 @@ trait AbstractGenerator extends LanguageIndependentGenerator {
   /** If any new imports are needed for an operation, just extend here. */
   def addedImports(op:domain.Operation):Seq[Haskell] = Seq.empty
 
+  /**
+    * Responsible for delegating to a new operation on the current context.
+    */
+  def delegate(exp:domain.Atomic, op:domain.Operation, params:Haskell*) : Haskell = {
+    new Haskell("haskellReplaceMe")
+  }
+
 }

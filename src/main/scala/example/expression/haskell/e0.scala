@@ -14,6 +14,7 @@ trait e0 extends AbstractGenerator with TestGenerator with M0 {
   abstract override def typeConverter(tpe:TypeRep, covariantReplacement:Option[HaskellType] = None) : HaskellType = {
     tpe match {
       case Double => new HaskellType("Double")
+      case Int => new HaskellType("Int")
       case _ => super.typeConverter(tpe, covariantReplacement)
     }
   }
@@ -31,6 +32,8 @@ trait e0 extends AbstractGenerator with TestGenerator with M0 {
           case _ => super.logic(exp)(op)
         }
 
+      // all future EXP sub-types can simply return hashcode.
+      case Identifier => Seq(new Haskell(s"${exp.hashCode()}"))
       case _ => super.logic(exp)(op)
     }
   }

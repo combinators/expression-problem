@@ -5,17 +5,10 @@ import example.expression.domain.{BaseDomain, ModelDomain}
 trait LanguageIndependentGenerator {
   val domain:BaseDomain with ModelDomain
 
-  /** Base concept for the representation of program unit on disk. */
-  type CompilationUnit
-
-  /** Base concept for a single expression in language. */
-  type Expression
-
-  /**  Base concept for a meaningful type in the language. */
-  type Type
-
-  /**  Base concept for a meaningful line-of-code in the language. */
-  type Statement
+  type CompilationUnit     /** Base concept for the representation of program unit on disk. */
+  type Expression          /** Base concept for a single expression in language. */
+  type Type                /** Base concept for a meaningful type in the language. */
+  type Statement           /** Base concept for a meaningful line-of-code in the language. */
 
   /** Retrieve model under consideration. */
   def getModel:domain.Model
@@ -55,7 +48,7 @@ trait LanguageIndependentGenerator {
     *
     * a) hard-code fully-qualified class names
     * b) collect together all compilation units
-    * c)
+    * c) other options...
     */
   def addDispatchContext(op:domain.Operation, unit:CompilationUnit) : CompilationUnit = {
     unit

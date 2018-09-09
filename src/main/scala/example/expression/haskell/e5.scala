@@ -19,6 +19,14 @@ trait e5 extends Evolution with AbstractGenerator with TestGenerator with Haskel
     }
   }
 
+  /** Provide reasonable default values for newly defined types. */
+  abstract override def standardDefault(tpe:TypeRep) : Haskell = {
+    tpe match {
+      case Tree => new Haskell("Leaf 0")    // TODO: might not correct
+      case _ => super.standardDefault(tpe)
+    }
+  }
+
   abstract override def logic(exp:Atomic)(op:domain.Operation): Seq[Haskell] = {
     // generate the actual body
     op match {
@@ -50,8 +58,9 @@ trait e5 extends Evolution with AbstractGenerator with TestGenerator with Haskel
          |s1 = ${convert(s1)}
          |s2 = ${convert(s2)}
          |s3 = ${convert(s3)}
-         |test_e5_1 = TestCase (assertEqual "AsTree-s1" (${AsTree.name} s1) (${AsTree.name} s2))
-         |test_e5_2 = TestCase (assertNotEqual "AsTree-s1" (${AsTree.name} s1) (${AsTree.name} s3))
+         |
+         |test_e5_1 = TestCase (assertEqual "AsTree-s1" (${AsTree.name}  s1) (${AsTree.name}  s2))
+         |test_e5_2 = TestCase (assertBool "AsTree-s1" ((${AsTree.name}  s1) /= (${AsTree.name}  s3)))
          |
          |test_e5 = TestList [ TestLabel "1" test_e5_1, TestLabel "2" test_e5_2 ]
          |

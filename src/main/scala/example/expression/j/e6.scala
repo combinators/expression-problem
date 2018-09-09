@@ -28,10 +28,14 @@ trait e6 extends Evolution with AbstractGenerator with TestGenerator with Binary
     // generate the actual body; since this is a binary method
     op match {
       case Equal =>
-        val op = domain.AsTree.name
+        val opn = domain.AsTree.name
 
-        // TODO: remove javaClass and replace with 'asTree' operation
-        Java(s"""return $binaryContext$op().same(that.$op());""").statements
+
+        // TODO: very close to replace with. Problems in ExtensibleVisitor (missing methods) as well
+        // TODO: as Algebra (since naming conventions don't always work).
+        // val that:Expression = Java("that").expression[Expression]()
+        // Java(s"return ${delegate(exp,domain.AsTree)}.same(${dispatch(that, domain.AsTree)});").statements
+       Java(s"""return $binaryContext$opn().same(that.$opn());""").statements
 
       case _ => super.logic(exp)(op)
     }

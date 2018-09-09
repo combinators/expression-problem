@@ -1,9 +1,12 @@
-package example.expression.cpp
+package example.expression.cpp.visitor
 
+/*DI:LD:AD*/
+
+import example.expression.cpp._
 import example.expression.domain.{BaseDomain, ModelDomain}
 
 // visitor based solution
-trait CPPGenerator extends AbstractGenerator with DataTypeSubclassGenerator with CPPBinaryMethod with StandardCPPBinaryMethod {
+trait CPPVisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator with CPPBinaryMethod with StandardCPPBinaryMethod {
 
   val domain: BaseDomain with ModelDomain
 
@@ -12,16 +15,18 @@ trait CPPGenerator extends AbstractGenerator with DataTypeSubclassGenerator with
   def getModel: domain.Model
 
   /**
-    * Generating a straight OO solution requires:
-    * 1. A Class for every exp data type
-    * 2. A Base class to be superclass of them all
+    * Generating a visitor OO solution requires:
+    * 1. A Class for every exp data type (with Header file)
+    * 2. A Base class to be superclass of them all (Exp.h)
+    * 3. A visitor base class (ExpVisitor.h)
+    * 4. A visitor subclass for every operation
     */
   def generatedCode(): Seq[CPPFile] = {
     val flat = getModel.flatten()
-    val clazzes:Seq[CPPFile] = getModel.inChronologicalOrder                          // visitors are constructed in order
+    val clazzes:Seq[CPPFile] = getModel.inChronologicalOrder   // visitors are constructed in order
       .filter(m => m.ops.nonEmpty)
       .flatMap(m =>
-        m.ops.map(op => operationGenerator(flat, op)))     // one class for each op
+        m.ops.map(op => operationGenerator(flat, op)))         // one class for each op
 
     flat.types.map(tpe => generateExp(flat, tpe)) ++
     flat.types.map(tpe => generateExpImpl(flat, tpe)) ++

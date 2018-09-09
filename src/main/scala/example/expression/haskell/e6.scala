@@ -20,6 +20,26 @@ trait e6 extends Evolution with AbstractGenerator with TestGenerator with M0 wit
     }
   }
 
+  /** Provide reasonable default values for newly defined types. */
+  abstract override def standardDefault(tpe:TypeRep) : Haskell = {
+    tpe match {
+      case Boolean => new Haskell("False")
+      case _ => super.standardDefault(tpe)
+    }
+  }
+
+  /**
+    * We need to take action with equals operations and provide default fall-through case
+    * @param op
+    * @return
+    */
+  abstract override def requireDefault(op:domain.Operation) : Option[(Int,Haskell)] = {
+    op match {
+      case Equal => Some((2,standardDefault(op.returnType.get)))
+      case _ => super.requireDefault(op)
+    }
+  }
+
   abstract override def logic(exp:Atomic)(op:Operation): Seq[Haskell] = {
     val atts = subExpressions(exp)
 
@@ -62,8 +82,8 @@ trait e6 extends Evolution with AbstractGenerator with TestGenerator with M0 wit
          |s1 = ${convert(s1)}
          |s2 = ${convert(s2)}
          |s3 = ${convert(s3)}
-         |test_e2_1 = TestCase (assertBool "EqualCheck" (${Equal.name} s1 s2))
-         |test_e2_2 = TestCase (assertBool "EqualCheck" (not (${Equal.name} s1 s3)))
+         |test_e2_1 = TestCase (assertBool "EqualCheck" (${Equal.name} s1 s3))
+         |test_e2_2 = TestCase (assertBool "EqualCheck" (not (${Equal.name} s1 s2)))
          |
          |test_e2 = TestList [ TestLabel "1" test_e2_1, TestLabel "2" test_e2_2 ]
          |

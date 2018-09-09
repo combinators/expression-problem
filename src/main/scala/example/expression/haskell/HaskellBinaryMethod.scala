@@ -13,7 +13,7 @@ trait HaskellBinaryMethod extends BinaryMethod {
     Seq(Haskell(
       s"""
          |-- tree definition
-         |data Tree = Node DeclaredTypes [ Tree ] | Leaf Double
+         |data Tree = Node DeclaredTypes [ Tree ] | Leaf Double deriving (Eq, Show)
          |""".stripMargin))
   }
 
@@ -24,6 +24,6 @@ trait HaskellBinaryMethod extends BinaryMethod {
     */
   def definedDataSubTypes(context:String, exps:Seq[domain.Atomic]) :Seq[Declaration] = {
     val types = exps.map(exp => exp.name.capitalize + "Type").mkString("|")
-    Seq(Haskell(s"data DeclaredTypes = $types deriving Eq"))
+    Seq(Haskell(s"data DeclaredTypes = $types deriving (Eq, Show)"))
   }
 }

@@ -8,23 +8,16 @@ import example.expression.domain.{BaseDomain, ModelDomain}
 import example.expression.generator.BinaryMethod
 import org.combinators.templating.twirl.Java
 
-import scala.collection.JavaConverters._
-
 trait JavaBinaryMethod extends BinaryMethod {
   val domain:BaseDomain with ModelDomain
   import domain._
 
-  type Declaration = BodyDeclaration[_]
 
   /**
-    * Declares the helper classes needed.
-    * @return
-    */
-  @Deprecated
-  def declarations: Seq[Declaration] = Seq.empty
-
-  /**
-    * Binary methods creates helper classes in package 'tree'. This replaces declarations
+    * Binary methods creates helper classes in package 'tree'. Completes description
+    * of tree-based structure to represent the expression, using unique values for each
+    * expression sub-type.
+    *
     * @return
     */
   def helperClasses():Seq[CompilationUnit] = {

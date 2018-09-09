@@ -19,6 +19,15 @@ trait e0 extends AbstractGenerator with TestGenerator with M0 {
     }
   }
 
+  /** Provide reasonable default values for newly defined types. */
+  abstract override def standardDefault(tpe:TypeRep) : Haskell = {
+    tpe match {
+      case Int => new Haskell("0")
+      case Double => new Haskell("0.0")
+      case _ => super.standardDefault(tpe)
+    }
+  }
+
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
   abstract override def logic(exp:Atomic)(op:Operation): Seq[Haskell] = {
     val atts:Map[String,Haskell] = subExpressions(exp)

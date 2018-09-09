@@ -19,6 +19,14 @@ trait e2 extends Evolution with AbstractGenerator with TestGenerator with M0 wit
     }
   }
 
+  /** Provide reasonable default values for newly defined types. */
+  abstract override def standardDefault(tpe:TypeRep) : Haskell = {
+    tpe match {
+      case String => new Haskell("\"\"")
+      case _ => super.standardDefault(tpe)
+    }
+  }
+
   abstract override def logic(exp:Atomic)(op:Operation): Seq[Haskell] = {
     val atts = subExpressions(exp)
 

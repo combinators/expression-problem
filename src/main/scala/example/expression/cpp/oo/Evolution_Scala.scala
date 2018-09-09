@@ -1,7 +1,8 @@
-package example.expression.cpp    /*DD:LD:AD*/
+package example.expression.cpp.oo     /*DD:LD:AD*/
 
+import example.expression.cpp.CPPFileUtils._
+import example.expression.cpp._
 import example.expression.domain.{MathDomain, WithDomain}
-import CPPFileUtils._
 import javax.inject.Inject
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle

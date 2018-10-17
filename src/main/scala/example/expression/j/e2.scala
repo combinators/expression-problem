@@ -9,7 +9,7 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-trait e2 extends Evolution with AbstractGenerator with TestGenerator with M2 {
+trait e2 extends Evolution with JavaGenerator with TestGenerator with M2 {
   self:e0 with e1 =>
   val domain:MathDomain
 

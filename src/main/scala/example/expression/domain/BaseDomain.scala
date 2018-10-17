@@ -6,17 +6,9 @@ trait BaseDomain {
   /** Always allow, unless overridden to deny because of reserved word. */
   var reserved = Array("print")
 
-  def sanitize(s:String):String = {
-    // we have been taking short cut by just using op.name or exp.name, and those names might be
-    // reserved by the target language. We need to have a consistent strategy for cleaning up
-    // these reserved words.... THIS IS NOT IT...
-//    if (reserved.contains(s)) {
-//      s + "_"
-//    } else {
-//      s
-//    }
-    s
-  }
+  // We need to have a consistent strategy for cleaning up
+  // these reserved words. Changes based on language
+  def sanitize(s:String):String = s
 
   /** There is a base type and subsequent sub-types will extend Types. */
   abstract class TypeRep {

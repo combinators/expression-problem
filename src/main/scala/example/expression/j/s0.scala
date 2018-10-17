@@ -1,9 +1,6 @@
 package example.expression.j  /*DD:LD:AI*/
 
-import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.MethodDeclaration
-import com.github.javaparser.ast.expr.Expression
-import com.github.javaparser.ast.stmt.Statement
 import example.expression.domain.{Evolution, ShapeDomain}
 import org.combinators.templating.twirl.Java
 
@@ -12,7 +9,7 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-trait s0 extends Evolution with AbstractGenerator with TestGenerator {
+trait s0 extends Evolution with JavaGenerator with TestGenerator {
   val domain:ShapeDomain
 
   // standard attributes for domain. As new ones are defined, place in respective traits
@@ -59,21 +56,11 @@ trait s0 extends Evolution with AbstractGenerator with TestGenerator {
       case ContainsPt =>
         exp match {
           case Circle =>
-            Java(
-              s"""
-                 |return Math.sqrt(point.x*point.x + point.y*point.y) <= ${subs(radius)};
-               """.stripMargin).statements()
+            Java(s"return Math.sqrt(point.x*point.x + point.y*point.y) <= ${subs(radius)};").statements
 
           case Square =>
-            Java(
-              s"""
-                 |return (Math.abs(point.x) <= ${subs(side)}/2 && Math.abs(point.y) <= ${subs(side)}/2);
-               """.stripMargin).statements()
+            Java(s"return (Math.abs(point.x) <= ${subs(side)}/2 && Math.abs(point.y) <= ${subs(side)}/2);").statements
 
-
-            // return ${recurseOnWithParams(convert(s1, domain.emptyModel()), domain.ContainsPt, Java("t").expression[Expression]())});
-
-            //return ${subs(domain.attributes.shape)}.${op.name}(t);
           case Translate => {
             Java(
               s"""

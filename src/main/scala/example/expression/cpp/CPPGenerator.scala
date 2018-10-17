@@ -5,7 +5,7 @@ import example.expression.generator.LanguageIndependentGenerator
 /**
   * Any Haskell EP approach can extend this Generator
   */
-trait AbstractGenerator extends LanguageIndependentGenerator {
+trait CPPGenerator extends LanguageIndependentGenerator {
 
   type CompilationUnit = CPPFile
   type Type = CPPType

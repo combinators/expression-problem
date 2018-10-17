@@ -16,7 +16,6 @@ trait DependentDispatch {
 
  /**
    * Responsible for dispatching sub-expressions with possible parameter(s).
-   *
    */
   def dependentDispatch(expr:Expression, op:domain.Operation, params:Expression*) : Expression = {
     dispatch(expr, op, params: _*)

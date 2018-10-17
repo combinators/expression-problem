@@ -7,7 +7,7 @@ import example.expression.domain.M0
   *
   * Still C++-based, naturally and CPPUnit
   */
-trait cpp_e0 extends AbstractGenerator with TestGenerator with M0 {
+trait cpp_e0 extends CPPGenerator with TestGenerator with M0 {
   import domain._
 
   /** E0 Introduces the concept a Double type, used for the 'Eval' operation. */

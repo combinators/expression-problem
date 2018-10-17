@@ -8,7 +8,7 @@ import org.combinators.templating.twirl.Java
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator with VisitorJavaBinaryMethod with OperationAsMethodGenerator with Producer with JavaBinaryMethod {
+trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with VisitorJavaBinaryMethod with OperationAsMethodGenerator with Producer with JavaBinaryMethod {
   val domain:BaseDomain with ModelDomain
 
   /**
@@ -57,7 +57,7 @@ trait VisitorGenerator extends AbstractGenerator with DataTypeSubclassGenerator 
   /** Directly access local method, one per operation, with a parameter. */
   override def dispatch(expr:Expression, op:domain.Operation, params:Expression*) : Expression = {
     val args:String = params.mkString(",")
-    Java(s"""$expr.accept(new ${op.name.capitalize}($args))""").expression()
+    Java(s"$expr.accept(new ${op.name.capitalize}($args))").expression()
   }
 
   /** Return designated Java type associated with type, or void if all else fails. */

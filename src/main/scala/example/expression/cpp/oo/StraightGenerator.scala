@@ -1,12 +1,10 @@
-package example.expression.cpp.oo
-
-/*DI:LD:AD*/
+package example.expression.cpp.oo    /*DI:LD:AD*/
 
 import example.expression.cpp._
 import example.expression.domain.{BaseDomain, ModelDomain}
 
 // visitor based solution
-trait CPPGenerator extends AbstractGenerator with DataTypeSubclassGenerator with CPPBinaryMethod with StandardCPPBinaryMethod {
+trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with CPPBinaryMethod with StandardCPPBinaryMethod {
 
   val domain: BaseDomain with ModelDomain
 

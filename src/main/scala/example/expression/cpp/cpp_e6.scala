@@ -7,7 +7,7 @@ import example.expression.domain._
   *
   * Still C++-based, naturally and CPPUnit
   */
-trait cpp_e6 extends Evolution with AbstractGenerator with VisitorCPPBinaryMethod with TestGenerator with M0 with M1 with M2 with M3 with M4 with M5 with M6 {
+trait cpp_e6 extends Evolution with CPPGenerator with VisitorCPPBinaryMethod with TestGenerator with M0 with M1 with M2 with M3 with M4 with M5 with M6 {
   self:cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3 with cpp_e4 with cpp_e5 =>
 
   import domain._
@@ -17,7 +17,7 @@ trait cpp_e6 extends Evolution with AbstractGenerator with VisitorCPPBinaryMetho
     */
   override def dependency(op: domain.Operation): scala.List[domain.Operation] = {
     op match {
-      case Equal => scala.List[domain.Operation](AsTree)
+      case Equals => scala.List[domain.Operation](AsTree)
       case _ => super.dependency(op)
     }
   }
@@ -33,7 +33,7 @@ trait cpp_e6 extends Evolution with AbstractGenerator with VisitorCPPBinaryMetho
 
     // generate the actual body; since this is a binary method
     op match {
-      case Equal =>
+      case Equals =>
         val op = domain.AsTree.name
         Seq(new CPPElement(
           s"""
@@ -86,8 +86,8 @@ trait cpp_e6 extends Evolution with AbstractGenerator with VisitorCPPBinaryMetho
          |   ${convert(a2)}
          |   ${convert(s3)}
          |
-         |   ${Equal.name.capitalize} eq_a(&${vars(a2)});
-         |   ${Equal.name.capitalize} eq_b(&${vars(s3)});
+         |   ${Equals.name.capitalize} eq_a(&${vars(a2)});
+         |   ${Equals.name.capitalize} eq_b(&${vars(s3)});
          |   ${vars(s1)}.Accept(&eq_a);
          |   ${vars(s1)}.Accept(&eq_b);
          |

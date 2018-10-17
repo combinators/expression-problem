@@ -7,7 +7,7 @@ import example.expression.domain.{Evolution, M5, MathDomain, ModelDomain}
   *
   * Still Java-based, naturally and JUnit
   */
-trait e5 extends Evolution with AbstractGenerator with TestGenerator with HaskellBinaryMethod with M5 {
+trait e5 extends Evolution with HaskellGenerator with TestGenerator with HaskellBinaryMethod with M5 {
   self: e0 with e1 with e2 with e3 with e4 =>
   val domain:MathDomain with ModelDomain
   import domain._

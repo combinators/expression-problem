@@ -9,7 +9,7 @@ import org.combinators.templating.twirl.Java
   *
   * By definition, an empty tree has height -1. A tree with a single root node has height 0.
   */
-trait i2 extends  Evolution with AbstractGenerator with TestGenerator with I2 {
+trait i2 extends  Evolution with JavaGenerator with TestGenerator with I2 {
   self: e0 with e1 with i1 =>
   val domain:MathDomain
 

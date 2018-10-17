@@ -2,13 +2,13 @@ package example.expression.extensibleVisitor    /*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.TypeDeclaration
 import example.expression.domain.{BaseDomain, ModelDomain}
-import example.expression.j.{AbstractGenerator, TestGenerator}
+import example.expression.j.{JavaGenerator, TestGenerator}
 import org.combinators.templating.twirl.Java
 
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait ExtensibleVisitorTestGenerator extends TestGenerator with AbstractGenerator {
+trait ExtensibleVisitorTestGenerator extends TestGenerator with JavaGenerator {
   val domain: BaseDomain with ModelDomain
   import domain._
 

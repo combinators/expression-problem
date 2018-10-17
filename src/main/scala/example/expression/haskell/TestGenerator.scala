@@ -2,8 +2,6 @@ package example.expression.haskell    /*DI:LD:AI*/
 
 import example.expression.domain.{BaseDomain, ModelDomain}
 
-
-
 /**
   * Each evolution has opportunity to enhance the code generators.
   */

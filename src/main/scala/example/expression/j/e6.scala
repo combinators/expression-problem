@@ -10,9 +10,9 @@ import org.combinators.templating.twirl.Java
   *
   * Determine if structure of two Exps are equal to each other. Checking in.
   *
-  * First operation that has parameter which has Exp-recursive structure
+  * First operation that has parameter which has eExp-recursive structure
   */
-trait e6 extends Evolution with AbstractGenerator with TestGenerator with BinaryMethod with M0 with M5 with M6 {
+trait e6 extends Evolution with JavaGenerator with TestGenerator with BinaryMethod with M0 with M5 with M6 {
   self: e0 with e1 with e2 with e3 with e4 with e5 =>
   val domain:MathDomain with ModelDomain
 
@@ -27,7 +27,7 @@ trait e6 extends Evolution with AbstractGenerator with TestGenerator with Binary
 
     // generate the actual body; since this is a binary method
     op match {
-      case Equal =>
+      case Equals =>
         val opn = domain.AsTree.name
 
 
@@ -50,8 +50,8 @@ trait e6 extends Evolution with AbstractGenerator with TestGenerator with Binary
       super.testGenerator ++ Java(
       s"""
          |public void test() {
-         |   assertFalse(${dispatch(convert(s1), Equal, convert(s2))});
-         |   assertTrue(${dispatch(convert(s1), Equal, convert(s3))});
+         |   assertFalse(${dispatch(convert(s1), Equals, convert(s2))});
+         |   assertTrue(${dispatch(convert(s1), Equals, convert(s3))});
          |}""".stripMargin).methodDeclarations
   }
 }

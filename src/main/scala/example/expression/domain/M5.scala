@@ -6,7 +6,7 @@ trait M5 extends Evolution {
 
   // m5:model evolution.
   // -------------------
-  // m5: graft in a useful operation for future operations to use
+  // Represent structure as a tree 
 
   val m5 = domain.Model("m5", Seq.empty, Seq(domain.AsTree), last = m4)
   override def getModel = m5

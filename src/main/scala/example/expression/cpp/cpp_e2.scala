@@ -7,7 +7,7 @@ import example.expression.domain.{Evolution, M0, M1, M2, MathDomain}
   *
   * Still C++-based, naturally and CPPUnit
   */
-trait cpp_e2 extends Evolution with AbstractGenerator with TestGenerator with M0 with M1 with M2 {
+trait cpp_e2 extends Evolution with CPPGenerator with TestGenerator with M0 with M1 with M2 {
   self:cpp_e0 with cpp_e1 =>
 
   import domain._

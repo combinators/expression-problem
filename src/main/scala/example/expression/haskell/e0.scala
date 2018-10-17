@@ -7,7 +7,7 @@ import example.expression.domain.M0
   *
   * Still Java-based, naturally and JUnit
   */
-trait e0 extends AbstractGenerator with TestGenerator with M0 {
+trait e0 extends HaskellGenerator with TestGenerator with M0 {
   import domain._
 
   /** E0 Introduces the concept a Double type, used for the 'Eval' operation. */

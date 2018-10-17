@@ -4,7 +4,7 @@ import java.nio.file.Paths
 
 import example.expression.domain.{BaseDomain, ModelDomain}
 
-trait ALaCarteGenerator extends AbstractGenerator with StandardHaskellBinaryMethod {
+trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMethod {
   val domain:BaseDomain with ModelDomain
   import domain._
 

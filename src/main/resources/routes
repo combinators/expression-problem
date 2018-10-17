@@ -28,6 +28,9 @@
 ->    /                              example.expression.haskell.S4_Variation
 ->    /                              example.expression.haskell.S5_Variation
 ->    /                              example.expression.haskell.S6_Variation
+#GJ Wadler language (1998)
+->    /                              example.expression.gj.M0_Variation
+->    /                              example.expression.gj.M1_Variation
 #CPP variation
 ->    /                              example.expression.cpp.oo.CPP_M0_Variation
 ->    /                              example.expression.cpp.oo.CPP_M1_Variation

@@ -6,21 +6,13 @@ import example.expression.domain.{BaseDomain, ModelDomain}
 
 // https://eli.thegreenplace.net/2016/the-expression-problem-and-its-solutions/
 
-trait StraightGenerator extends AbstractGenerator with StandardHaskellBinaryMethod with HaskellBinaryMethod {
+trait StraightGenerator extends HaskellGenerator with StandardHaskellBinaryMethod with HaskellBinaryMethod {
   val domain:BaseDomain with ModelDomain
   import domain._
 
   def getModel: domain.Model
 
   lazy val flat:domain.Model = getModel.flatten()
-
-  /** Return designated HaskellType. */
-  override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[HaskellType] = None) : HaskellType = {
-    tpe match {
-      case domain.baseTypeRep => covariantReplacement.getOrElse(new HaskellType(domain.baseTypeRep.name))
-      case _ => super.typeConverter(tpe, covariantReplacement)
-    }
-  }
 
   /** For the processed model, return generated code artifacts for solution. */
   def generatedCode():Seq[HaskellWithPath] = {

@@ -20,7 +20,6 @@ trait ALaCarteProducer extends Producer {
     * a1R = In(El(Constant 8.0)) :: GeneralExpr
     * a1L = In(Er(Er(BinaryMul a1LL a1LR))) :: GeneralExpr
     * a1 = In(Er(El(BinaryPlus a1L a1R))) :: GeneralExpr
-
     */
   def treeRoute(a:domain.Atomic, flattened:Seq[domain.Atomic]) : String = {
     if (flattened.size == 1) {

@@ -5,7 +5,7 @@ import com.github.javaparser.ast.expr.SimpleName
 import example.expression.j._
 import org.combinators.templating.twirl.Java
 
-trait InterpreterGenerator extends  AbstractGenerator with DataTypeSubclassGenerator with StandardJavaBinaryMethod with OperationAsMethodGenerator with JavaBinaryMethod with Producer {
+trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator with StandardJavaBinaryMethod with OperationAsMethodGenerator with JavaBinaryMethod with Producer {
 
   /**
     * Generating an interpreter solution requires:

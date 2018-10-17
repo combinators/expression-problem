@@ -7,7 +7,7 @@ import org.combinators.templating.twirl.Java
 /**
   * Independent branch to just contain 'Neg'
   */
-trait i1 extends Evolution with AbstractGenerator with TestGenerator with M0 with I1 {
+trait i1 extends Evolution with JavaGenerator with TestGenerator with M0 with I1 {
   self: e0 with e1 =>
   val domain:MathDomain
 

@@ -41,11 +41,6 @@ object Haskell {
   def apply(text: String): Haskell = {
     new Haskell(text)
   }
-
-  /** Creates a Haskell fragment with initial content from the given `text` separated by `separator`. */
-  def apply(text: Seq[String], separator: String = ";"): Haskell = {
-    apply(text.mkString(separator))
-  }
 }
 
 object HaskellFormat extends Format[Haskell] {

@@ -8,7 +8,7 @@ import org.combinators.templating.twirl.Java
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait OOGenerator extends AbstractGenerator with DataTypeSubclassGenerator with StandardJavaBinaryMethod with OperationAsMethodGenerator with Producer with JavaBinaryMethod {
+trait OOGenerator extends JavaGenerator with DataTypeSubclassGenerator with StandardJavaBinaryMethod with OperationAsMethodGenerator with Producer with JavaBinaryMethod {
 
   val domain:BaseDomain with ModelDomain
   import domain._
@@ -46,15 +46,7 @@ trait OOGenerator extends AbstractGenerator with DataTypeSubclassGenerator with 
   /** Directly access local method, one per operation, with a parameter. */
   override def dispatch(expr:Expression, op:Operation, params:Expression*) : Expression = {
     val args:String = params.mkString(",")
-    Java(s"""$expr.${op.name}($args)""").expression()
-  }
-
-  /** Return designated Java type associated with type, or void if all else fails. */
-  override def typeConverter(tpe:TypeRep, covariantReplacement:Option[Type] = None) : Type = {
-    tpe match {
-      case domain.baseTypeRep => covariantReplacement.getOrElse(Java(s"${domain.baseTypeRep.name}").tpe())
-      case _ => super.typeConverter(tpe, covariantReplacement)
-    }
+    Java(s"$expr.${op.name}($args)").expression()
   }
 
   /** Computer return type for given operation (or void). */

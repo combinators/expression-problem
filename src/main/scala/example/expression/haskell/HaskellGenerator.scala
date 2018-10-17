@@ -7,12 +7,20 @@ import example.expression.generator.LanguageIndependentGenerator
   *
   * Perhaps consider an Expression Problem application domain based on Monoids
   */
-trait AbstractGenerator extends LanguageIndependentGenerator {
+trait HaskellGenerator extends LanguageIndependentGenerator {
 
   type CompilationUnit = HaskellWithPath
   type Type = HaskellType
   type Expression = Haskell
   type Statement = Haskell
+
+  /** Return designated HaskellType. */
+  override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[HaskellType] = None) : HaskellType = {
+    tpe match {
+      case domain.baseTypeRep => covariantReplacement.getOrElse(new HaskellType(domain.baseTypeRep.name))
+      case _ => super.typeConverter(tpe, covariantReplacement)
+    }
+  }
 
   /** Concatenate attributes by name in order */
   def standardArgs(exp:domain.Atomic, suffix:String = "") : Haskell = {

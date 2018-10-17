@@ -1,4 +1,4 @@
-package example.expression.domain
+package example.expression.domain  /*DI:LI:AI*/
 
 
 /**

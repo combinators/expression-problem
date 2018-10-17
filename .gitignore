@@ -264,5 +264,6 @@ tags
 
 # Keep the junit.jar in the demo/ep/junit.jar area
 !/demo/ep/junit.jar
+!/october_16_2018_snapshot.zip
 
 # End of https://www.gitignore.io/api/vim,sbt,java,scala,emacs,eclipse,intellij+all,playframework

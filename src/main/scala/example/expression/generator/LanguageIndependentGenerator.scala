@@ -57,8 +57,9 @@ trait LanguageIndependentGenerator {
   /**
     * Expression-tree data has attributes with domain-specific types. This method returns
     * the designated Java type associated with the abstract type, with option of a covariant replacement
+    * , covariantReplacement:Option[Type] = None
     */
-  def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : Type = {
+  def typeConverter(tpe:domain.TypeRep) : Type = {
     throw new scala.NotImplementedError(s"""Unknown Type "$tpe" """)
   }
 

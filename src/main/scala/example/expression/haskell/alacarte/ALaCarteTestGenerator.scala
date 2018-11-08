@@ -1,13 +1,16 @@
-package example.expression.haskell    /*DI:LD:AD*/
+package example.expression.haskell.alacarte
+
+/*DI:LD:AD*/
 
 import java.nio.file.Paths
 
 import example.expression.domain.{BaseDomain, ModelDomain}
+import example.expression.haskell.{HUnitTestGenerator, Haskell, HaskellWithPath}
 
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait ALaCarteTestGenerator extends TestGenerator {
+trait ALaCarteTestGenerator extends HUnitTestGenerator {
   val domain: BaseDomain with ModelDomain
 
   import domain._

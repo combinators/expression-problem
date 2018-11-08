@@ -12,10 +12,10 @@ trait cpp_e2 extends Evolution with CPPGenerator with TestGenerator with M0 with
 
   import domain._
 
-  abstract override def typeConverter(tpe:TypeRep, covariantReplacement:Option[CPPType] = None) :CPPType = {
+  abstract override def typeConverter(tpe:TypeRep) :CPPType = {
     tpe match {
       case String => new CPPType("std::string")
-      case _ => super.typeConverter(tpe, covariantReplacement)
+      case _ => super.typeConverter(tpe)
     }
   }
 

@@ -9,15 +9,15 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-trait e0 extends JavaGenerator with TestGenerator with M0 {
+trait e0 extends JavaGenerator with JUnitTestGenerator with M0 {
   import domain._
 
   /** E0 Introduces the concept a Double type, used for the 'Eval' operation. */
-  abstract override def typeConverter(tr:TypeRep, covariantReplacement:Option[Type] = None) : Type = {
+  abstract override def typeConverter(tr:TypeRep) : Type = {
     tr match {
       case Double => Java("Double").tpe
       case Int => Java("Integer").tpe
-      case _ => super.typeConverter(tr, covariantReplacement)
+      case _ => super.typeConverter(tr)
     }
   }
 
@@ -43,13 +43,33 @@ trait e0 extends JavaGenerator with TestGenerator with M0 {
 
   abstract override def testGenerator: Seq[MethodDeclaration] = {
     val a1 = new BinaryInst(Add, new LitInst(1.0), new LitInst(2.0))
-    val lit1 = new LitInst(5.0)
+    val numTrials = 10
 
-    super.testGenerator ++ Java(
+    var trees = new BinaryInst(Add, a1, a1)
+    var instantiations:String = s"${exprDefine(a1)} tree0  = ${convert(a1)};\n"
+    var array:String = s"${exprDefine(a1)} trees[] = { tree0, "
+    for (i <- 1 to numTrials) {
+      instantiations = instantiations + s"${exprDefine(a1)} tree$i = ${convertRecursive(Add, s"tree${i-1}", s"tree${i-1}")};"
+      trees = new BinaryInst(Add, trees, trees)
+      array = array + s"tree$i,"
+    }
+    array = array + "};"
+
+    super.testGenerator :+ testMethod(M0_tests) :+ Java(
       s"""
          |public void test() {
-         |   assertEquals(3.0, ${dispatch(convert(a1), Eval)});
-         |   assertEquals(5.0, ${dispatch(convert(lit1), Eval)});
-         |}""".stripMargin).methodDeclarations
+         |   $instantiations
+         |   $array
+         |   for (int i = trees.length-1; i >= 0; i--) {
+         |     long best = Long.MAX_VALUE;
+         |      for (int t = 0; t < 8; t++) {
+         |        long now = System.nanoTime();
+         |     		  ${dispatch(Java("trees[i]").expression[Expression](), Eval)};   // time this
+         |         long duration = System.nanoTime() - now;
+         |         if (duration < best) { best = duration; }
+         |      }
+         |      System.out.println(i + "," + best);
+         |   }
+         |}""".stripMargin).methodDeclarations.head
   }
 }

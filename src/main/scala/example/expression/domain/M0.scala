@@ -1,6 +1,7 @@
 package example.expression.domain  /*DD:LI:AI*/
 
 trait M0 extends Evolution {
+
   val domain:MathDomain
   import domain._
 
@@ -19,5 +20,11 @@ trait M0 extends Evolution {
   case object Identifier extends Operation("id", Some(Int))
 
   val m0 = Model("m0", Seq(Lit, Add), Seq(Eval, Identifier))
-  override def getModel = m0
+  override def getModel:Model = m0
+
+  // Testing
+  def M0_tests:Seq[TestCase] = Seq(
+    EqualsTestCase(new BinaryInst(Add, new LitInst(1.0), new LitInst(2.0)), (Double, 3.0), Eval),
+    EqualsTestCase(new LitInst(5.0), (Double, 5.0), Eval)
+  )
 }

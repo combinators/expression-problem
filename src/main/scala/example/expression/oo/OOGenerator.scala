@@ -71,7 +71,6 @@ trait OOGenerator extends JavaGenerator with DataTypeSubclassGenerator with Stan
 
     Java(s"""|package oo;
              |public class ${exp.toString} extends ${domain.baseTypeRep.name} {
-             |
              |  ${constructor(exp)}
              |  ${fields(exp).mkString("\n")}
              |  ${methods.mkString("\n")}

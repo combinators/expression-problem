@@ -1,8 +1,11 @@
-package example.expression.haskell    /*DI:LD:AD*/
+package example.expression.haskell.straight
+
+/*DI:LD:AD*/
 
 import java.nio.file.Paths
 
 import example.expression.domain.{BaseDomain, ModelDomain}
+import example.expression.haskell._
 
 // https://eli.thegreenplace.net/2016/the-expression-problem-and-its-solutions/
 
@@ -33,7 +36,6 @@ trait StraightGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
     }).mkString("")
 
     val definition = Haskell(s"$name :: ${domain.baseTypeRep.name} $extraOp -> $opRetType")
-
 
     val instances  = {
       val definedInstances = m.types.map(exp => {
@@ -66,40 +68,14 @@ trait StraightGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
     HaskellWithPath(code, Paths.get(s"${name.capitalize}.hs"))
   }
 
-  def generateDataTypes(m:Model): HaskellWithPath = {
-    val allTypes = m.types.map(exp => {
-      val params:Seq[HaskellType] = exp.attributes.map(att => typeConverter(att.tpe))
-      val list:String = params.map(f => f.toString).mkString(" ")
-      Haskell(s"${exp.name.capitalize} $list")
-    }).mkString("  | ")
-
-    val binaryTreeInterface =  if (m.flatten().ops.exists {
-      case bm: domain.BinaryMethodTreeBase => true
-      case _ => false
-    }) {
-      // astree method declaration
-      definedDataSubTypes("", m.types) ++ declarations
-    } else {
-      Seq.empty
-    }
-
-    val code = Haskell(
-      s"""|module DataTypes where
-          |
-          |${binaryTreeInterface.mkString("\n")}
-          |
-          |-- All types are classified as data
-          |data ${domain.baseTypeRep.name} = $allTypes
-          |""".stripMargin)
-
-    HaskellWithPath(code, Paths.get("DataTypes.hs"))
-  }
-
-    /** Responsible for dispatching sub-expressions with possible parameter(s). */
+    /**
+      * Responsible for dispatching sub-expressions with possible parameter(s).
+      * Seems safest to include/embed parens here
+      */
     override def dispatch(primary:Haskell, op:domain.Operation, params:Haskell*) : Haskell = {
       val args:String = params.mkString(" ")
 
-      Haskell(s"""(${op.name} ${primary.toString} $args)""")
+      Haskell(s"""(${op.name} (${primary.toString}) $args)""")
     }
 
   /**

@@ -26,4 +26,5 @@ trait HaskellBinaryMethod extends BinaryMethod {
     val types = exps.map(exp => exp.name.capitalize + "Type").mkString("|")
     Seq(Haskell(s"data DeclaredTypes = $types deriving (Eq, Show)"))
   }
+
 }

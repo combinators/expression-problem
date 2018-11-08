@@ -1,6 +1,9 @@
-package example.expression.haskell    /*DI:LD:AD*/
+package example.expression.haskell.alacarte
+
+/*DI:LD:AD*/
 
 import example.expression.domain.{BaseDomain, ModelDomain}
+import example.expression.haskell.{Haskell, Producer}
 
 /**
   * Any Java-based approach capable of supporting Producer must provide this capability.

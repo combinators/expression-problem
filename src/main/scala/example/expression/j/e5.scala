@@ -9,9 +9,41 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-trait e5 extends Evolution with JavaGenerator with TestGenerator with OperationDependency with M0 with  M5 {
+trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with OperationDependency with M0 with  M5 {
   self: e0 with e1 with e2 with e3 with e4 =>
   val domain:MathDomain
+  import domain._
+
+
+//  /**
+//    * List can be accommodated (in Java) by populating ArrayList with values drawn from test case.
+//    */
+//  override def preAssert(test:domain.EqualsTestCase, id:String): Seq[Statement] = {
+//    val tpe = test.op.returnType.get
+//    tpe match {
+//      case tree:Tree =>
+//        val seq:Seq[Any] = test.expect._2.asInstanceOf[Seq[Any]]
+//        val jtype = Java(typeConverter(list)).tpe
+//        val inner:Type = jtype.asClassOrInterfaceType().getTypeArguments.get.get(0)
+//
+//        Java(s"$jtype list$id = ${dispatch(convert(test.inst), test.op)};").statements ++
+//          Java(s"$jtype result$id = new java.util.ArrayList<$inner>();").statements ++
+//          seq.map(elt => Java(s"result$id.add($elt);").statement) ++ Java(s"assertEquals (list$id, result$id);").statements
+//
+//      case _ => super.preAssert(test, id)
+//    }
+//  }
+//
+//  /** For developing test cases with lists, must convert expected value into a list using preAssert, and then just return result$id. */
+//  override def expected(test:domain.EqualsTestCase, id:String): Expression = {
+//    val tpe = test.op.returnType.get
+//    tpe match {
+//      case list:List =>
+//        Java(s"result$id").expression[Expression]
+//
+//      case _ => super.expected(test, id)
+//    }
+//  }
 
   /**
     * Operations can declare dependencies, which leads to #include extras
@@ -23,10 +55,10 @@ trait e5 extends Evolution with JavaGenerator with TestGenerator with OperationD
     }
   }
 
-  abstract override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : com.github.javaparser.ast.`type`.Type = {
+  abstract override def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
       case domain.Tree => Java(s"tree.Tree").tpe()      // package class goes here.
-      case _ => super.typeConverter(tpe, covariantReplacement)
+      case _ => super.typeConverter(tpe)
     }
   }
 

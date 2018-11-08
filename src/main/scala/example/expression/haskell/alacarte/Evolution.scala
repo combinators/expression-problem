@@ -1,12 +1,14 @@
-package example.expression.haskell     /*DD:LD:AD*/
+package example.expression.haskell.alacarte
+
+/*DD:LD:AD*/
 
 import example.expression.domain.{MathDomain, WithDomain}
+import example.expression.haskell.HaskellWithPathPersistable._
+import example.expression.haskell._
 import javax.inject.Inject
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
 import shared.compilation.CodeGenerationController
-
-import example.expression.haskell.HaskellWithPathPersistable._
 
 abstract class FoundationHaskell @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends CodeGenerationController[HaskellWithPath](web, app)

@@ -1,8 +1,9 @@
 package example.expression.interpreter  /*DI:LD:AD*/
 
+import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.expr.{Expression, SimpleName}
-import example.expression.domain.M0
-import example.expression.j.TestGenerator
+import example.expression.domain.{M0, ModelDomain}
+import example.expression.j.JUnitTestGenerator
 import org.combinators.templating.twirl.Java
 
 /**
@@ -10,7 +11,7 @@ import org.combinators.templating.twirl.Java
   *
   * Note that we need LitInst for our test generation, so we just grab from M0
   */
-trait InterpreterTestGenerator extends TestGenerator with M0 {
+trait InterpreterTestGenerator extends JUnitTestGenerator with M0 {
 
   /** Interpreter needs a function to get the active model. */
   def getModel:domain.Model
@@ -32,4 +33,25 @@ trait InterpreterTestGenerator extends TestGenerator with M0 {
       case _ =>  Java(s""" "unknown $name" """).expression()
     }
   }
+
+  /** Used when one already has code fragments bound to variables, which are to be used for left and right. */
+  override def convertRecursive(inst: domain.Binary, left:String, right:String): Expression = {
+    val model = getModel
+    val name = inst.name
+    val classify:SimpleName = Java(model.lastModelWithOperation().ops.sortWith(_.name < _.name).map(op => op.name.capitalize).mkString("")).simpleName()
+
+    Java(s"new $classify$name($left, $right)").expression()
+  }
+
+  // EvalIdAdd tree0 = new EvalIdAdd(new EvalIdLit(1.0), new EvalIdLit(2.0));
+  /** Type to use when referring to specific instance. */
+  override def exprDefine(exp:domain.AtomicInst) : Type = {
+    val name = exp.e.name
+
+    val model = getModel
+    val classify:SimpleName = Java(model.lastModelWithOperation().ops.sortWith(_.name < _.name).map(op => op.name.capitalize).mkString("")).simpleName()
+
+    Java(s"$classify$name").tpe()
+  }
+
 }

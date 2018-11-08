@@ -12,22 +12,27 @@
 #GET   /expression/expression.git/*file         example.expression.visitor.Expression.serveFile(file)
 
 # All variants have names that end in "Evolution", with sub-branches as described by 'e0', 'e1', 'e2', ...
+#Haskell Grow With Trees Variation
+->    /                              example.expression.haskell.grow.M0_Variation
+->    /                              example.expression.haskell.grow.M1_Variation
+->    /                              example.expression.haskell.grow.M2_Variation
+->    /                              example.expression.haskell.grow.M3_Variation
 #Haskell Variation
-->    /                              example.expression.haskell.M0_Variation
-->    /                              example.expression.haskell.M1_Variation
-->    /                              example.expression.haskell.M2_Variation
-->    /                              example.expression.haskell.M3_Variation
-->    /                              example.expression.haskell.M4_Variation
-->    /                              example.expression.haskell.M5_Variation
-->    /                              example.expression.haskell.M6_Variation
+->    /                              example.expression.haskell.alacarte.M0_Variation
+->    /                              example.expression.haskell.alacarte.M1_Variation
+->    /                              example.expression.haskell.alacarte.M2_Variation
+->    /                              example.expression.haskell.alacarte.M3_Variation
+->    /                              example.expression.haskell.alacarte.M4_Variation
+->    /                              example.expression.haskell.alacarte.M5_Variation
+->    /                              example.expression.haskell.alacarte.M6_Variation
 #Haskell Straight
-->    /                              example.expression.haskell.S0_Variation
-->    /                              example.expression.haskell.S1_Variation
-->    /                              example.expression.haskell.S2_Variation
-->    /                              example.expression.haskell.S3_Variation
-->    /                              example.expression.haskell.S4_Variation
-->    /                              example.expression.haskell.S5_Variation
-->    /                              example.expression.haskell.S6_Variation
+->    /                              example.expression.haskell.straight.S0_Variation
+->    /                              example.expression.haskell.straight.S1_Variation
+->    /                              example.expression.haskell.straight.S2_Variation
+->    /                              example.expression.haskell.straight.S3_Variation
+->    /                              example.expression.haskell.straight.S4_Variation
+->    /                              example.expression.haskell.straight.S5_Variation
+->    /                              example.expression.haskell.straight.S6_Variation
 #GJ Wadler language (1998)
 ->    /                              example.expression.gj.M0_Variation
 ->    /                              example.expression.gj.M1_Variation

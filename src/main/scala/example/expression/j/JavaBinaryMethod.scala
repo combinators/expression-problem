@@ -35,7 +35,7 @@ trait JavaBinaryMethod extends BinaryMethod {
     * @param typeConverter    existing typeconverter which we need for other types besides baseTypeRep
     * @return                 return new parameter type with op interface used in place of baseTypeRep
     */
-  def binaryMethodParameters(op:domain.Operation, typeConverter:(domain.TypeRep,Option[Type]) => Type) : String = {
+  def binaryMethodParameters(op:domain.Operation, typeConverter:(domain.TypeRep) => Type) : String = {
     op.parameters.map(tuple => {
       val name: String = tuple._1
       val tpe: domain.TypeRep = tuple._2
@@ -43,7 +43,7 @@ trait JavaBinaryMethod extends BinaryMethod {
       // use operation name for binary method
       val realType = tpe match {
         case domain.baseTypeRep => op.name.capitalize
-        case _ => typeConverter(tpe, Option.empty)
+        case _ => typeConverter(tpe)
       }
 
       realType.toString + " " + name

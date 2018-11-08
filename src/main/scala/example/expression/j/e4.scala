@@ -9,9 +9,65 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-trait e4 extends Evolution with JavaGenerator with TestGenerator with OperationDependency with Producer with M0 with M1 with M2 with M3 with M4 {
+trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with OperationDependency with Producer with M0 with M1 with M2 with M3 with M4 {
   self:e0 with e1 with e2 with e3 =>
   val domain:MathDomain
+
+  /**
+    * List can be accommodated (in Java) by populating ArrayList with values drawn from test case.
+    */
+   override def expected(test:domain.TestCase, id:String) : (Expression => Seq[Statement]) => Seq[Statement] = continue => {
+    test.op.returnType.get match {
+      case list:List =>
+        val seq: Seq[Any] = test.expect._2.asInstanceOf[Seq[Any]]
+        val jtype = Java(typeConverter(list)).tpe
+        val inner: Type = jtype.asClassOrInterfaceType().getTypeArguments.get.get(0)
+
+        val map = seq.map(elt => s"result$id.add($elt);")
+        Java(s"""
+             |$jtype result$id = new java.util.ArrayList<$inner>();
+             |${map.mkString("\n")}
+             |${continue(Java(s"result$id").expression[Expression])}
+             """.stripMargin).statements
+
+      case _ => expected(test,id)(continue)
+    }
+  }
+
+//
+//  /** Handle List values by pre-calculating values. */
+//  override def junitMethod(tests:Seq[domain.TestCase]) : MethodDeclaration = {
+//
+//    // TODO: FIX with Jan
+//    val stmts = tests.zipWithIndex.map(pair => {
+//
+//      val test = pair._1
+//      val idx = pair._2
+//
+//      val id:String = s"v$idx"
+//
+//      val tpe = test.op.returnType.get
+//
+//      tpe match {
+//            case list: List =>
+//              val seq: Seq[Any] = test.expect._2.asInstanceOf[Seq[Any]]
+//              val jtype = Java(typeConverter(list)).tpe
+//              val inner: Type = jtype.asClassOrInterfaceType().getTypeArguments.get.get(0)
+//
+//              val all:Seq[String] = Seq(s"$jtype list$id = ${dispatch(convert(test.inst), test.op)};",
+//                  s"$jtype result$id = new java.util.ArrayList<$inner>();") ++
+//                seq.map(elt => s"result$id.add($elt);") :+ s"assertEquals (list$id, result$id);"
+//              all.mkString("\n")
+//
+//              // pass along as is
+//            case _ => super.junitMethod(tests).getBody.get.toString
+//          }
+//    })
+//
+//    Java(s"""|public void test() {
+//             |   ${stmts.mkString("\n")}
+//             |}""".stripMargin).methodDeclarations.head
+//  }
 
   /**
     * Operations can declare dependencies, which leads to #include extras
@@ -23,10 +79,10 @@ trait e4 extends Evolution with JavaGenerator with TestGenerator with OperationD
     }
   }
 
-  abstract override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : com.github.javaparser.ast.`type`.Type = {
+  abstract override def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
       case el:List => Java(s"java.util.List<${typeConverter(el.generic)}>").tpe()
-      case _ => super.typeConverter(tpe, covariantReplacement)
+      case _ => super.typeConverter(tpe)
     }
   }
 
@@ -127,40 +183,19 @@ trait e4 extends Evolution with JavaGenerator with TestGenerator with OperationD
     }
   }
 
+  // TODO: HACK. Fix this implementation
   abstract override def testGenerator: Seq[MethodDeclaration] = {
 
-    // (5/7) / (7-(2*3) --> just (5/7)
-    val mult2 = new domain.BinaryInst(Mult, new domain.BinaryInst (Divd, new LitInst(5.0), new LitInst(2.0)), new LitInst(4.0))
-    val d1 = new domain.BinaryInst(Divd, new LitInst(5.0), new LitInst(7.0))
-    val m1 = new domain.BinaryInst(Mult, new LitInst(2.0), new LitInst(3.0))
-    val s1 = new domain.BinaryInst(Sub, new LitInst(7.0), m1)
-    val d2 = new domain.BinaryInst(Divd, d1, s1)
-
-    // could split up collect as well.
-    super.testGenerator ++ {
-      val simplifyTests:String  = if (getModel.supports(Simplify)) {
-        s"""
-           |assertEquals("((5.0/2.0)*4.0)", ${dispatch(convert(mult2), PrettyP)});
-           |assertEquals (${dispatch(convert(d1), PrettyP)}, ${dispatch(dispatch(convert(d2), Simplify), PrettyP)});
-           |
-         """.stripMargin
-      } else { "" }
-
+    if (getModel.supports(Simplify)) {
+      val d1 = new domain.BinaryInst(Mult, new LitInst(2.0), new LitInst(3.0))
       Java(
-        s"""
-           |public void test() {
-           |
-           |   $simplifyTests
-           |   // Handle collect checks
-           |   ${typeConverter(List(Double))} list1 = ${dispatch(convert(d2), Collect)};
-           |   ${typeConverter(List(Double))} result = new java.util.ArrayList<Double>();
-           |   result.add(5.0);
-           |   result.add(7.0);
-           |   result.add(7.0);
-           |   result.add(2.0);
-           |   result.add(3.0);
-           |   assertEquals (list1, result);
-           |}""".stripMargin).methodDeclarations
+        s"""public void testSimplify() {
+           |  assertEquals("((5.0/2.0)*4.0)", ${dispatch(convert(m4_m1), PrettyP)});
+           |  assertEquals (${dispatch(convert(d1), PrettyP)}, ${dispatch(dispatch(convert(m4_d2), Simplify), PrettyP)});
+           |}
+         """.stripMargin).methodDeclarations() ++ super.testGenerator :+ testMethod(M4_tests)
+    } else {
+      super.testGenerator :+ testMethod(M4_tests)
     }
   }
 }

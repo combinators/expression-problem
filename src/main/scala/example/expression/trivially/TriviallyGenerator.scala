@@ -4,8 +4,10 @@ import com.github.javaparser.ast.{CompilationUnit, Modifier}
 import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.{BodyDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.expr.Expression
+import com.github.javaparser.ast.visitor.VoidVisitorAdapter
 import example.expression.generator.BinaryMethodBase
 import example.expression.j.Producer
+import expression.ReplaceType
 import org.combinators.templating.twirl.Java
 
 trait TriviallyGenerator extends example.expression.oo.OOGenerator with Producer {
@@ -61,20 +63,27 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator with Producer
     Java(s"${domain.baseTypeRep.name}${op.name.capitalize}").tpe()
   }
 
+  // Needs covariant overriding!
   override def generateExp(model:domain.Model, exp:domain.Atomic) : CompilationUnit = {
     val name = Java(s"${exp.name}").simpleName()
 
     val interfaces = finalInterfaceName +: model.lastModelWithOperation().ops.map(op => interfaceName(exp, op))
+    val newType:com.github.javaparser.ast.`type`.Type = Java(finalInterfaceName).tpe()
 
-    Java(s"""
+    val compUnit = Java(s"""
             |package trivially;
             |public class $name implements ${interfaces.mkString(",")} {
             |
-            |  ${constructor(exp, covariantOverride = Some(finalInterfaceName)).toString}
+            |  ${constructor(exp).toString}
             |
-            |  ${getters(exp, Some(finalInterfaceName)).mkString("\n")}
-            |  ${fields(exp,  Some(finalInterfaceName)).mkString("\n")}
+            |  ${getters(exp).mkString("\n")}
+            |  ${fields(exp).mkString("\n")}
             |}""".stripMargin).compilationUnit()
+
+    // replace all covariant types!
+    ReplaceType.replace(compUnit, Java(s"${domain.baseTypeRep.name}").tpe, finalInterfaceName)
+
+    compUnit
    }
 
   def interfaceName(exp: domain.Atomic, op: domain.Operation): Type = {
@@ -86,12 +95,18 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator with Producer
     method.setDefault(true)
     method.setType(
       op.returnType match {
-        case Some(domain.baseTypeRep) => typeConverter(domain.baseTypeRep, Some(Java(domain.baseTypeRep.name + op.name.capitalize).tpe()))
-        case Some(tpe) => typeConverter(tpe, Some(interfaceName(exp, op)))
+        case Some(domain.baseTypeRep) => typeConverter(domain.baseTypeRep)
+        case Some(tpe) => typeConverter(tpe) // , Some(interfaceName(exp, op)))
         case _ => Java("void").tpe
       })
 
     method.setModifier(Modifier.PUBLIC, false)
+
+
+    // replace all types!
+    ReplaceType.replace(method, Java(s"${domain.baseTypeRep.name}").tpe,
+      Java(domain.baseTypeRep.name + op.name.capitalize).tpe())
+
     method
   }
 
@@ -99,15 +114,20 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator with Producer
     val name = interfaceName(exp, op)
     val method: MethodDeclaration = methodGenerator(exp)(op)
     val atts:Seq[MethodDeclaration] =
-      exp.attributes.flatMap(att => Java(s"${typeConverter(att.tpe, Some(baseInterfaceName(op)))} get${att.name.capitalize}();").methodDeclarations())
+      exp.attributes.flatMap(att => Java(s"${typeConverter(att.tpe)} get${att.name.capitalize}();").methodDeclarations())
 
-    Java(s"""
+    val unit = Java(s"""
             |package trivially;
             |public interface $name extends ${parents.mkString(", ")} {
             |
             |  ${atts.mkString("\n")}
             |  $method
             |}""".stripMargin).compilationUnit()
+
+
+    ReplaceType.replace(unit, Java(s"${domain.baseTypeRep.name}").tpe, baseInterfaceName(op))
+
+    unit
   }
 
   def finalInterfaceName: Type = Java("FinalI").tpe()
@@ -148,7 +168,7 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator with Producer
   def generateBaseInterface(op: domain.Operation, parents: Seq[Type]): CompilationUnit = {
 
     val retType = op.returnType match {
-      case Some(tpe) => typeConverter(tpe, Some(baseInterfaceName(op)))
+      case Some(tpe) => typeConverter(tpe)
       case _ => Java("void").tpe
     }
 
@@ -162,7 +182,7 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator with Producer
     val methodSignature: MethodDeclaration =
       Java(s"""public $retType ${op.name}($params);""").methodDeclarations().head
 
-    Java(s"""
+    val compUnit = Java(s"""
          |package trivially;
          |
          |public interface ${baseInterfaceName(op)} extends ${parents.mkString(", ")} {
@@ -170,8 +190,12 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator with Producer
          |    $methodSignature
          |}
        """.stripMargin).compilationUnit()
-  }
 
+    // replace all types!
+    ReplaceType.replace(compUnit, Java(s"${domain.baseTypeRep.name}").tpe, baseInterfaceName(op))
+
+    compUnit
+  }
 
   override def generateBase(model: domain.Model): CompilationUnit = {
 

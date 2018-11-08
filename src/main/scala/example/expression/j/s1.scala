@@ -11,7 +11,7 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-trait s1 extends JavaGenerator with TestGenerator with Producer { self:s0 =>
+trait s1 extends JavaGenerator with JUnitTestGenerator with Producer { self:s0 =>
   val domain:ShapeDomain
 
   case object Shrink extends domain.Operation("shrink", Some(domain.Shape), Seq((pct, Double)))

@@ -7,15 +7,34 @@ import example.expression.domain.M0
   *
   * Still Java-based, naturally and JUnit
   */
-trait e0 extends HaskellGenerator with TestGenerator with M0 {
+trait e0 extends HaskellGenerator with HUnitTestGenerator with M0 {
   import domain._
 
+  /**
+    * negative numbers in haskell can't be simple -1.0 but must be (0 -1.0) for some reason?
+    */
+  override def expected(test:domain.TestCase, id:String) : (Expression => Seq[Statement]) => Seq[Statement] = continue => {
+    test.expect._1 match {
+      case Double => {
+        val dbl:Double = test.expect._2.asInstanceOf[Double]
+        val expect = if (dbl < 0) {
+          s"(0 - ${math.abs(dbl)})"
+        } else {
+          dbl.toString
+        }
+        continue (new Haskell(expect))
+      }
+
+      case _ => super.expected(test, id) (continue)
+    }
+  }
+
   /** E0 Introduces the concept a Double type, used for the 'Eval' operation. */
-  abstract override def typeConverter(tpe:TypeRep, covariantReplacement:Option[HaskellType] = None) : HaskellType = {
+  abstract override def typeConverter(tpe:TypeRep) : HaskellType = {
     tpe match {
       case Double => new HaskellType("Double")
       case Int => new HaskellType("Int")
-      case _ => super.typeConverter(tpe, covariantReplacement)
+      case _ => super.typeConverter(tpe)
     }
   }
 
@@ -51,16 +70,6 @@ trait e0 extends HaskellGenerator with TestGenerator with M0 {
     val a1 = new BinaryInst(Add, new LitInst(1.0), new LitInst(2.0))
     val lit1 = new LitInst(5.0)
 
-    super.testGenerator :+ new Haskell(
-      s"""
-         |a1 =${convert(a1)}
-         |lit1 = ${convert(lit1)}
-         |test_e0_1 = TestCase (assertEqual "PlusCheck" 3.0 (${Eval.name} a1))
-         |test_e0_2 = TestCase (assertEqual "LitCheck" 5.0 (${Eval.name} lit1))
-         |test_e0 = TestList [ TestLabel "1" test_e0_1, TestLabel "2" test_e0_2 ]
-         |
-         |main :: IO Counts
-         |main  = runTestTT test_e0
-         |""".stripMargin)
+    super.testGenerator :+ hunitMethod(m0, M0_tests)
   }
 }

@@ -2,13 +2,13 @@ package example.expression.algebra /*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
 import example.expression.domain.{BaseDomain, ModelDomain}
-import example.expression.j.{JavaGenerator, JavaBinaryMethod, TestGenerator}
+import example.expression.j.{JavaBinaryMethod, JavaGenerator, JUnitTestGenerator}
 import org.combinators.templating.twirl.Java
 
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait AlgebraTestGenerator extends TestGenerator with JavaGenerator with JavaBinaryMethod {
+trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with JavaBinaryMethod {
   val domain: BaseDomain with ModelDomain
   import domain._
 
@@ -26,6 +26,16 @@ trait AlgebraTestGenerator extends TestGenerator with JavaGenerator with JavaBin
 
       case _ => Java(s""" "unknown $name" """).expression()
     }
+  }
+
+  /** Type to use when referring to specific instance. */
+  override def exprDefine(exp:AtomicInst) : Type = {
+    Java(s"Combined${domain.baseTypeRep.name}Alg.Combined").tpe()
+  }
+
+  /** Used when one already has code fragments bound to variables, which are to be used for left and right. */
+  override def convertRecursive(inst: Binary, left:String, right:String): Expression = {
+    Java(s"algebra.${inst.name.toLowerCase} ($left, $right)").expression()
   }
 
   /**
@@ -69,7 +79,7 @@ trait AlgebraTestGenerator extends TestGenerator with JavaGenerator with JavaBin
 
       // likely sorting is not useful here...
       operations.sortWith(_.name < _.name).foreach(op => {
-        val finalAlgebra:String = classify(model) + "ExpAlg"
+        val finalAlgebra:String = classify(model) + s"${domain.baseTypeRep.name}Alg"
 
         val str = s"""${op.name.capitalize}$finalAlgebra algebra${op.name.capitalize} = new ${op.name.capitalize}$finalAlgebra();"""
         algebraDeclarations = algebraDeclarations updated(op, Java(str).fieldDeclarations().head)
@@ -83,10 +93,10 @@ trait AlgebraTestGenerator extends TestGenerator with JavaGenerator with JavaBin
                            |import junit.framework.TestCase;
                            |
                            |public class TestSuite$num extends TestCase {
-                           |    ${algebraDeclarations.values.mkString("\n")}
-                           |  CombinedExpAlg algebra = new CombinedExpAlg($sortedParams);
+                           |  ${algebraDeclarations.values.mkString("\n")}
+                           |  Combined${domain.baseTypeRep.name}Alg algebra = new Combined${domain.baseTypeRep.name}Alg($sortedParams);
                            |
-                           |    $md
+                           |  $md
                            |}""".stripMargin
       Java(str).compilationUnit()
     })
@@ -146,11 +156,11 @@ trait AlgebraTestGenerator extends TestGenerator with JavaGenerator with JavaBin
     operations.foreach(op => {
       if (m.types.nonEmpty) {
         val combined = m.types.sortWith(_.name < _.name).map(op => op.name.capitalize).mkString("")
-          .concat("ExpAlg")
+          .concat(s"${domain.baseTypeRep.name}Alg")
         finalAlgebra = combined
       }
 
-      finalAlgebra = classify(m) + "ExpAlg"
+      finalAlgebra = classify(m) + s"${domain.baseTypeRep.name}Alg"
 
       algebraDeclarations = algebraDeclarations updated (op, Java(s"""${op.name.capitalize}$finalAlgebra algebra${op.name.capitalize};""").fieldDeclarations.head)
       paramDeclarations = paramDeclarations updated (op, Java(s"this.algebra${op.name.capitalize} = algebra${op.name.capitalize};").statement)
@@ -162,25 +172,23 @@ trait AlgebraTestGenerator extends TestGenerator with JavaGenerator with JavaBin
     val methods:Seq[MethodDeclaration] = m.flatten().types.flatMap(exp => innerMethod(exp, operations))
 
     // operations has all operations
-    val str:String =
-      s"""
+    val str:String = s"""
          |package algebra;
          |
          |// generated from all algebras
-         |public class CombinedExpAlg implements $finalAlgebra<CombinedExpAlg.Combined> {
+         |public class Combined${domain.baseTypeRep.name}Alg implements $finalAlgebra<Combined${domain.baseTypeRep.name}Alg.Combined> {
          |
          |	// combine together
          |	interface Combined extends ${operations.map(op => op.name.capitalize).mkString(",")} { }
          |
          |	// individual algebras, followed by combined one
-         |
          |	${algebraDeclarations.values.mkString("\n")}
          |
-         |	CombinedExpAlg ($argDeclarationsOrdered) {
+         |	Combined${domain.baseTypeRep.name}Alg ($argDeclarationsOrdered) {
          |		${paramDeclarations.values.mkString("\n")}
          |	}
          |
-         |    ${methods.mkString("\n")}
+         |  ${methods.mkString("\n")}
          }""".stripMargin
     Java(str).compilationUnit()
   }

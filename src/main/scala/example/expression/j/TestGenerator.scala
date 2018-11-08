@@ -1,21 +1,20 @@
-package example.expression.j  /*DI:LD:AI*/
+package example.expression.j
 
-import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.MethodDeclaration
-import com.github.javaparser.ast.expr.Expression
 import example.expression.domain.{BaseDomain, ModelDomain}
 import org.combinators.templating.twirl.Java
 
-/**
-  * Each evolution has opportunity to enhance the code generators.
-  */
-trait TestGenerator {
+trait TestGenerator extends JavaGenerator {
   val domain: BaseDomain with ModelDomain
-
   import domain._
 
-  /** Return sample JUnit test cases. */
-  def testGenerator: Seq[MethodDeclaration] = Seq.empty
+  /** Return properly formatted expected value as a string. */
+  def expected(test:TestCase, id:String) : (Expression => Seq[Statement]) => Seq[Statement] = continue => {
+    continue(Java(test.expect._2.toString).expression[Expression])
+  }
+
+  /** Actual value in a test case. */
+  def actual(test:domain.TestCase):Expression = dispatch(convert(test.inst), test.op)
 
   /** Convert a test instance into a Java Expression for instantiating that instance. */
   def convert(inst: AtomicInst): Expression = {
@@ -33,27 +32,26 @@ trait TestGenerator {
     }
   }
 
-  /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
-  def generateSuite(pkg: Option[String], model: Option[Model] = None): Seq[CompilationUnit] = {
-    val packageDeclaration: String = if (pkg.isDefined) {
-      s"package ${pkg.get};"
-    } else {
-      ""
-    }
+  /** Return sample test cases as methods. */
+  def testGenerator: Seq[MethodDeclaration] = Seq.empty
 
-    var num: Int = 0
-    val files: Seq[CompilationUnit] = testGenerator.filter(md => md.getBody.isPresent).map(md => {
-      num = num + 1
+  /** Return MethodDeclaration associated with given test cases. */
+  def testMethod(tests:Seq[TestCase]) : MethodDeclaration = {
 
-      Java(s"""|$packageDeclaration
-               |import junit.framework.TestCase;
-               |public class TestSuite$num extends TestCase {
-               |    $md
-               |}""".stripMargin).compilationUnit
+    val stmts:Seq[Statement] = tests.zipWithIndex.flatMap(pair => {
+      val test = pair._1
+      val idx = pair._2
 
+      val id:String = s"v$idx"
+
+      // The expected method takes in a function that will be called by the expected method. Now, the expected
+      // method will pass in the expression (which is expected) into this function, and it is the job of that
+      // function to return the variable.
+      expected(test, id)(expectedExpr => Java(s"assertEquals($expectedExpr, ${actual(test)});").statements)
     })
 
-    //Java (s"public void test$num() ${md.getBody.get}").methodDeclarations
-    files
+    Java(s"""|public void test() {
+             |   ${stmts.mkString("\n")}
+             |}""".stripMargin).methodDeclarations.head
   }
 }

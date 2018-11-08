@@ -63,4 +63,10 @@ trait BaseDomain {
   class AtomicInst(val e:Atomic, val i:Option[Any])
   class UnaryInst(override val e:Atomic, val inner:AtomicInst) extends AtomicInst(e, None)
   class BinaryInst(override val e:Atomic, val left:AtomicInst, val right:AtomicInst) extends AtomicInst(e, None)
+
+  // A Test case is determined by the expected result of an operation on a given instance.
+  abstract class TestCase(val inst:AtomicInst, val expect:(TypeRep,Any), val op:Operation)
+  case class EqualsTestCase(override val inst:AtomicInst, override val expect:(TypeRep,Any), override val op:Operation) extends TestCase (inst, expect, op)
+  case class FalseTestCase(override val inst:AtomicInst, override val expect:(TypeRep,Any), override val op:Operation) extends TestCase (inst, expect, op)
+  case class TrueTestCase(override val inst:AtomicInst, override val expect:(TypeRep,Any), override val op:Operation) extends TestCase (inst, expect, op)
 }

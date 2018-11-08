@@ -20,26 +20,25 @@ trait JavaGenerator extends LanguageIndependentGenerator with DependentDispatch 
   type Statement = com.github.javaparser.ast.stmt.Statement
 
   /** Return designated Java type associated with type, or void if all else fails. */
-  override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : Type = {
+  override def typeConverter(tpe:domain.TypeRep) : Type = {
     tpe match {
-      case domain.baseTypeRep => covariantReplacement.getOrElse(Java(s"${domain.baseTypeRep.name}").tpe())
-      case _ => super.typeConverter(tpe, covariantReplacement)
+      case domain.baseTypeRep => Java(s"${domain.baseTypeRep.name}").tpe()
+      case _ => super.typeConverter(tpe)
     }
   }
 
   // Useful helper methods for any generator needing to craft common Java constructs
 
   /** Generate constructor for given atomic concept, using suggested name */
-  def constructor(exp:domain.Atomic, suggestedName:Option[String] = None, covariantOverride:Option[Type] = None) : ConstructorDeclaration = {
+  def constructor(exp:domain.Atomic, suggestedName:Option[String] = None) : ConstructorDeclaration = {
     val name = if (suggestedName.isEmpty) { exp.name } else { suggestedName.get }
 
-    val params:Seq[String] = exp.attributes.map(att => s"${typeConverter(att.tpe, covariantOverride)} ${att.name}")
+    val params:Seq[String] = exp.attributes.map(att => s"${typeConverter(att.tpe)} ${att.name}")
     val cons:Seq[Statement] = exp.attributes.flatMap(att => Java(s"  this.${att.name} = ${att.name};").statements())
 
     val str =  s"""|public $name (${params.mkString(",")}) {
                    |   ${cons.mkString("\n")}
                    |}""".stripMargin
-    println ("cons:" + str)
     Java(str).constructors().head
   }
 
@@ -79,9 +78,9 @@ trait JavaGenerator extends LanguageIndependentGenerator with DependentDispatch 
     * Produce all getter methods for the given exp, with suitable possibility of using covariant replacement
     * on domain.BaseTypeRep
     */
-  def getters(exp:domain.Atomic, covariantOverride:Option[Type] = None) : Seq[MethodDeclaration] =
+  def getters(exp:domain.Atomic) : Seq[MethodDeclaration] =
 
-    exp.attributes.flatMap(att => Java(s"""|public ${typeConverter(att.tpe, covariantOverride)} get${att.name.capitalize}() {
+    exp.attributes.flatMap(att => Java(s"""|public ${typeConverter(att.tpe)} get${att.name.capitalize}() {
                                            |    return this.${att.name};
                                            |}""".stripMargin).methodDeclarations)
 
@@ -89,11 +88,10 @@ trait JavaGenerator extends LanguageIndependentGenerator with DependentDispatch 
     * Given an exp, produce a sequence of field declarations, for each of the attributes.
     *
     * @param exp
-    * @param covariantOverride    Optional cass to use as covariant overriding class for BaseTypeExp
     * @return
     */
-  def fields(exp:domain.Atomic, covariantOverride:Option[Type] = None) : Seq[FieldDeclaration] = {
-    exp.attributes.flatMap(att => Java(s"private ${typeConverter(att.tpe, covariantOverride)} ${att.name};").fieldDeclarations())
+  def fields(exp:domain.Atomic) : Seq[FieldDeclaration] = {
+    exp.attributes.flatMap(att => Java(s"private ${typeConverter(att.tpe)} ${att.name};").fieldDeclarations())
   }
 
   /**

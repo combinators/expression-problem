@@ -12,10 +12,10 @@ trait cpp_e5 extends Evolution with CPPGenerator with TestGenerator with M0 with
 
   import domain._
 
-  abstract override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[CPPType] = None) : CPPType = {
+  abstract override def typeConverter(tpe:domain.TypeRep) : CPPType = {
     tpe match {
       case domain.Tree => new CPPType(s"Tree *")      // internal interface (make pointer)
-      case _ => super.typeConverter(tpe, covariantReplacement)
+      case _ => super.typeConverter(tpe)
     }
   }
 

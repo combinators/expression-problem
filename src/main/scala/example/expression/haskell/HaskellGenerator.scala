@@ -1,5 +1,7 @@
 package example.expression.haskell     /*DI:LD:AI*/
 
+import java.nio.file.Paths
+
 import example.expression.generator.LanguageIndependentGenerator
 
 /**
@@ -7,7 +9,7 @@ import example.expression.generator.LanguageIndependentGenerator
   *
   * Perhaps consider an Expression Problem application domain based on Monoids
   */
-trait HaskellGenerator extends LanguageIndependentGenerator {
+trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskellBinaryMethod with HaskellBinaryMethod {
 
   type CompilationUnit = HaskellWithPath
   type Type = HaskellType
@@ -15,10 +17,10 @@ trait HaskellGenerator extends LanguageIndependentGenerator {
   type Statement = Haskell
 
   /** Return designated HaskellType. */
-  override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[HaskellType] = None) : HaskellType = {
+  override def typeConverter(tpe:domain.TypeRep) : HaskellType = {
     tpe match {
-      case domain.baseTypeRep => covariantReplacement.getOrElse(new HaskellType(domain.baseTypeRep.name))
-      case _ => super.typeConverter(tpe, covariantReplacement)
+      case domain.baseTypeRep => new HaskellType(domain.baseTypeRep.name)
+      case _ => super.typeConverter(tpe)
     }
   }
 
@@ -55,6 +57,36 @@ trait HaskellGenerator extends LanguageIndependentGenerator {
   def defaultCase(functionName:Haskell, numParams:Int, defaultExpression:Haskell) : Haskell = {
     val bars = (1 to numParams).map(d => "_").mkString(" ")
     new Haskell(s"$functionName $bars = $defaultExpression")
+  }
+
+
+  def generateDataTypes(m:domain.Model): HaskellWithPath = {
+    val allTypes = m.types.map(exp => {
+      val params:Seq[HaskellType] = exp.attributes.map(att => typeConverter(att.tpe))
+      val list:String = params.map(f => f.toString).mkString(" ")
+      Haskell(s"${exp.name.capitalize} $list")
+    }).mkString("  | ")
+
+    val binaryTreeInterface =  if (m.flatten().ops.exists {
+      case bm: domain.BinaryMethodTreeBase => true
+      case _ => false
+    }) {
+      // astree method declaration
+      definedDataSubTypes("", m.types) ++ declarations
+    } else {
+      Seq.empty
+    }
+
+    val code = Haskell(
+      s"""|module DataTypes where
+          |
+          |${binaryTreeInterface.mkString("\n")}
+          |
+          |-- All types are classified as data
+          |data ${domain.baseTypeRep.name} = $allTypes
+          |""".stripMargin)
+
+    HaskellWithPath(code, Paths.get("DataTypes.hs"))
   }
 
 }

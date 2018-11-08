@@ -17,7 +17,7 @@ import shared.compilation.CodeGenerationController
   */
 abstract class ShapeFoundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends CodeGenerationController[CompilationUnit](web, app) {
-  val gen:WithDomain[ShapeDomain] with OOGenerator with TestGenerator
+  val gen:WithDomain[ShapeDomain] with OOGenerator with JUnitTestGenerator
 
   //lazy val flat:gen.domain.Model = gen.getModel.flat()
   //lazy val processed:gen.domain.Model = gen.getProcessedModel   // process model as necessary
@@ -31,10 +31,10 @@ abstract class ShapeFoundation @Inject()(web: WebJarsUtil, app: ApplicationLifec
 
 class S0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends ShapeFoundation(web, app) {
-  override val gen = new WithDomain(ShapeDomain) with OOGenerator with TestGenerator with s0
+  override val gen = new WithDomain(ShapeDomain) with OOGenerator with JUnitTestGenerator with s0
 }
 
 class S1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends ShapeFoundation(web, app) {
-  override val gen = new WithDomain(ShapeDomain) with OOGenerator with TestGenerator with s0 with s1
+  override val gen = new WithDomain(ShapeDomain) with OOGenerator with JUnitTestGenerator with s0 with s1
 }

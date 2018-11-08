@@ -1,8 +1,9 @@
 package example.expression.interpreter  /*DI:LD:AD*/
 
-import com.github.javaparser.ast.body.{BodyDeclaration, FieldDeclaration, MethodDeclaration}
+import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.expr.SimpleName
 import example.expression.j._
+import expression.ReplaceType
 import org.combinators.templating.twirl.Java
 
 trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator with StandardJavaBinaryMethod with OperationAsMethodGenerator with JavaBinaryMethod with Producer {
@@ -53,10 +54,10 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
   }
 
   /** Return designated Java type associated with type, or void if all else fails. */
-  override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : com.github.javaparser.ast.`type`.Type = {
+  override def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
-      case domain.baseTypeRep => covariantReplacement.getOrElse(Java("Exp").tpe())
-      case _ => super.typeConverter(tpe, covariantReplacement)
+      case domain.baseTypeRep => Java(s"${domain.baseTypeRep.name}").tpe()
+      case _ => super.typeConverter(tpe)
     }
   }
 
@@ -106,16 +107,21 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
     val operations:Seq[MethodDeclaration] = allOps.map(op =>
         methodGenerator(exp)(op))
 
-    Java(s"""
+    val unit = Java(s"""
             |package interpreter;
             |public class $name implements ${baseInterface.toString} {
             |
             |  ${constructor(exp).toString}
             |
-            |  ${getters(exp, baseInterface).mkString("\n")}
-            |  ${fields(exp, baseInterface).mkString("\n")}
+            |  ${getters(exp).mkString("\n")}
+            |  ${fields(exp).mkString("\n")}
             |  ${operations.mkString("\n")}
             |}""".stripMargin).compilationUnit()
+
+    // replace all covariant types!
+    ReplaceType.replace(unit, Java(s"${domain.baseTypeRep.name}").tpe, baseInterface.get)
+
+    unit
    }
 
   def interfaceName(exp: domain.Atomic, op: domain.Operation): SimpleName = {
@@ -156,7 +162,6 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
     val fullType:Type = Java(modelInterfaceName(model)).tpe()
     val signatures:Seq[String] = model.ops.map(op => {
 
-
       val params: Seq[String] = op.parameters.map(tuple => {
         val name = tuple._1
         val tpe = tuple._2
@@ -171,7 +176,11 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
         }
       })
 
-      s"""public ${typeConverter(op.returnType.get, Some(fullType))}  ${op.name}(${params.mkString(",")});"""
+      op.returnType.get match {
+        case domain.baseTypeRep => s"""public $fullType ${op.name}(${params.mkString(",")});"""
+        case _ => s"""public ${typeConverter(op.returnType.get)}  ${op.name}(${params.mkString(",")});"""
+      }
+
     })
 
     // see if we are first.
@@ -241,16 +250,16 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
         val baseInterface:Type = Java(baseInterfaceName(model.lastModelWithOperation())).tpe()
 
         val atts:Seq[FieldDeclaration] = if (isBase) {
-          exp.attributes.flatMap(att => Java(s"${typeConverter(att.tpe, Some(baseInterface))} ${att.name};").fieldDeclarations())
+          exp.attributes.flatMap(att => Java(s"${typeConverter(att.tpe)} ${att.name};").fieldDeclarations())
         } else {
           Seq.empty
         }
 
-        val params:Seq[String] = exp.attributes.map(att => s"${typeConverter(att.tpe, Some(baseInterface))} ${att.name}")
+        val params:Seq[String] = exp.attributes.map(att => s"${typeConverter(att.tpe)} ${att.name}")
         val paramNames:Seq[String] = exp.attributes.map(att => s"${att.name}")
 
         val factoryMethods:Seq[MethodDeclaration] = pastTypes.flatMap(e => {
-          val params:Seq[String] = e.attributes.map(att => s"${typeConverter(att.tpe, Some(baseInterface))} ${att.name}")
+          val params:Seq[String] = e.attributes.map(att => s"${typeConverter(att.tpe)} ${att.name}")
           val paramNames:Seq[String] = e.attributes.map(att => s"${att.name}")
 
           Java(s"""${combinedOps}Exp ${e.name.capitalize}(${params.mkString(",")}) { return new $combinedOps${e.name.capitalize}(${paramNames.mkString(",")}); }""").methodDeclarations()
@@ -264,7 +273,7 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
               case _ => ""
             }
 
-            Java(s"""|public ${typeConverter(att.tpe, Some(baseInterface))} get${att.name.capitalize}() {
+            Java(s"""|public ${typeConverter(att.tpe)} get${att.name.capitalize}() {
                      |    return $cast this.${att.name};
                      |}""".stripMargin).methodDeclarations()
           })
@@ -326,7 +335,7 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
             s"extends $past$name" // go backwards?
           }
 
-        Java(s"""
+        val unit = Java(s"""
                 |package interpreter;
                 |public class $combinedOps$name $extension implements ${baseInterface.toString} {
                 |
@@ -337,6 +346,11 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
                 |  ${atts.mkString("\n")}
                 |  ${operations.mkString("\n")}
                 |}""".stripMargin).compilationUnit()
+
+        // replace all covariant types!
+        ReplaceType.replace(unit, Java(s"${domain.baseTypeRep.name}").tpe, baseInterface)
+
+        unit
       })
   }
 }

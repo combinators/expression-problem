@@ -7,15 +7,15 @@ import example.expression.domain.{Evolution, M5, MathDomain, ModelDomain}
   *
   * Still Java-based, naturally and JUnit
   */
-trait e5 extends Evolution with HaskellGenerator with TestGenerator with HaskellBinaryMethod with M5 {
+trait e5 extends Evolution with HaskellGenerator with HUnitTestGenerator with HaskellBinaryMethod with M5 {
   self: e0 with e1 with e2 with e3 with e4 =>
   val domain:MathDomain with ModelDomain
   import domain._
 
-  abstract override def typeConverter(tpe:TypeRep, covariantReplacement:Option[HaskellType] = None) : HaskellType = {
+  abstract override def typeConverter(tpe:TypeRep) : HaskellType = {
     tpe match {
       case Tree => new HaskellType(s"Tree")  // internal interface
-      case _ => super.typeConverter(tpe, covariantReplacement)
+      case _ => super.typeConverter(tpe)
     }
   }
 
@@ -38,7 +38,8 @@ trait e5 extends Evolution with HaskellGenerator with TestGenerator with Haskell
 
         val children:Haskell = exp match {
           case Lit => Haskell(s"Leaf $litValue")
-          case _ => Haskell(exp.attributes.map(att => s"(${AsTree.name.toLowerCase} ${att.name})").mkString(","))
+               // (${AsTree.name.toLowerCase} ${att.name})
+          case _ => Haskell(exp.attributes.map(att => dispatch(Haskell(att.name), op)).mkString(","))
         }
 
         Seq(Haskell(s" Node ${declType}Type [ $children ]"))

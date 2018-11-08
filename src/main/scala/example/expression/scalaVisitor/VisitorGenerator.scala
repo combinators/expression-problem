@@ -61,9 +61,9 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
   }
 
   /** Return designated Java type associated with type, or void if all else fails. */
-  override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : com.github.javaparser.ast.`type`.Type = {
+  override def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
-      case domain.baseTypeRep => Java("Exp").tpe()
+      case domain.baseTypeRep => Java(s"${domain.baseTypeRep.name}").tpe()
     }
   }
 
@@ -145,7 +145,7 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
     }
 
     Java(s"""|package expression;
-             |public class $name extends Exp {
+             |public class $name extends ${domain.baseTypeRep.name} {
              |
              |  ${constructor(exp)}
              |  ${helpers.mkString("\n")}

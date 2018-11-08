@@ -2,7 +2,7 @@ package example.expression.algebra    /*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.{BodyDeclaration, MethodDeclaration}
 import example.expression.domain.{BaseDomain, ModelDomain}
-import example.expression.j.{JavaGenerator, JavaBinaryMethod, StandardJavaBinaryMethod}
+import example.expression.j.{JavaBinaryMethod, JavaGenerator, StandardJavaBinaryMethod}
 import org.combinators.templating.twirl.Java
 
 /**
@@ -10,6 +10,8 @@ import org.combinators.templating.twirl.Java
   */
 trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod with StandardJavaBinaryMethod {
   val domain:BaseDomain with ModelDomain
+
+  def useLambdaWherePossible: Boolean = true
 
   /**
     * Must eliminate any operation that returns E as value, since Algebra doesn't instantiate the intermediate structures
@@ -34,7 +36,7 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod with Standard
     val args = exp.attributes.map(att => "null").mkString(",")
     val opargs = params.mkString(",")
 
-    Java(s"new ${op.name.capitalize}${fullName}ExpAlg().${exp.name.toLowerCase}($args).${op.name.toLowerCase}($opargs)").expression[Expression]()
+    Java(s"new ${op.name.capitalize}${fullName}${domain.baseTypeRep.name}Alg().${exp.name.toLowerCase}($args).${op.name.toLowerCase}($opargs)").expression[Expression]()
   }
 
   /**
@@ -82,9 +84,9 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod with Standard
   }
 
   /** Return designated Java type associated with type, or void if all else fails. */
-  override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : com.github.javaparser.ast.`type`.Type = {
+  override def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {
    tpe match {
-      case domain.baseTypeRep => covariantReplacement.getOrElse(Java("E").tpe())
+      case domain.baseTypeRep => Java("E").tpe()
       case _ => Java ("void").tpe()  // reasonable stop
     }
   }
@@ -150,7 +152,13 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod with Standard
       val code:Seq[Statement] = logic(exp)(op)
       val signatures = code.mkString("\n")
 
-      val params = exp.attributes.map(att => s"final ${typeConverter(att.tpe, Some(opType))} ${att.name}")
+      // handle covariant typing locally
+      val params = exp.attributes.map(att =>
+        att.tpe match {
+          case domain.baseTypeRep => s"final $opType ${att.name}"
+          case _ =>   s"final ${typeConverter(att.tpe)} ${att.name}"
+        })
+
       // creates method body
       val paramList = params.mkString(",")
 
@@ -160,16 +168,25 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod with Standard
         case _ => Seq.empty
       }
 
-      Java(s"""
-         |public ${name.capitalize} $subName($paramList) {
-         |        return new ${name.capitalize}() {
-         |            ${helpers.mkString("\n")}
-         |            public $returnType $name($op_params) {
-         |                $signatures
-         |            }
-         |        };
-         |    }
-           """.stripMargin).methodDeclarations
+      val str = if (helpers.isEmpty && useLambdaWherePossible) {
+        Java(s"""
+                |public ${name.capitalize} $subName($paramList) {
+                |   return ($op_params) -> {$signatures };
+                |}""".stripMargin)
+      } else {
+        Java(s"""
+                |public ${name.capitalize} $subName($paramList) {
+                |  return new ${name.capitalize}() {
+                |    ${helpers.mkString("\n")}
+                |    public $returnType $name($op_params) {
+                |        $signatures
+                |    }
+                |  };
+                |}""".stripMargin)
+      }
+
+      println ("JAVA:"+ str)
+      str.methodDeclarations
     })
 
     val delegate:Seq[BodyDeclaration[_]] = op match {

@@ -9,14 +9,22 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-trait e2 extends Evolution with JavaGenerator with TestGenerator with M2 {
+trait e2 extends Evolution with JavaGenerator with JUnitTestGenerator with M2 {
   self:e0 with e1 =>
   val domain:MathDomain
 
-  abstract override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : com.github.javaparser.ast.`type`.Type = {
+  abstract override def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
       case String => Java("String").tpe()
-      case _ => super.typeConverter(tpe, covariantReplacement)
+      case _ => super.typeConverter(tpe)
+    }
+  }
+
+  /** For developing test cases with strings, must convert expected value into a Java string expression. */
+  abstract override def expected(test:domain.TestCase, id:String) : (Expression => Seq[Statement]) => Seq[Statement] = continue => {
+      test.expect._1 match {
+      case String => continue (Java("\"" + test.expect._2.toString + "\"").expression[Expression])
+      case _ => super.expected(test, id) (continue)
     }
   }
 
@@ -38,15 +46,6 @@ trait e2 extends Evolution with JavaGenerator with TestGenerator with M2 {
   }
 
   abstract override def testGenerator: Seq[MethodDeclaration] = {
-    val s1 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
-    val s2 = new domain.BinaryInst(Add, new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0)),
-                                 new domain.BinaryInst(Add, new LitInst(5.0), new LitInst(6.0)))
-
-      super.testGenerator ++ Java(
-      s"""
-         |public void test() {
-         |   assertEquals("(1.0-2.0)", ${dispatch(convert(s1), PrettyP)});
-         |   assertEquals("((1.0-2.0)+(5.0+6.0))", ${dispatch(convert(s2), PrettyP)});
-         |}""".stripMargin).methodDeclarations
+    super.testGenerator :+ testMethod(M2_tests)
   }
 }

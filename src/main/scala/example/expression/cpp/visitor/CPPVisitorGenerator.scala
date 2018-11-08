@@ -46,10 +46,10 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
   }
 
   /** Return designated Java type associated with type, or void if all else fails. */
-  override def typeConverter(tpe:TypeRep, covariantReplacement:Option[CPPType] = None) : CPPType = {
+  override def typeConverter(tpe:TypeRep) : CPPType = {
     tpe match {
-      case domain.baseTypeRep => covariantReplacement.getOrElse(new CPPType("Exp"))
-      case _ => super.typeConverter(tpe, covariantReplacement)
+      case domain.baseTypeRep => new CPPType("Exp")
+      case _ => super.typeConverter(tpe)
     }
   }
 

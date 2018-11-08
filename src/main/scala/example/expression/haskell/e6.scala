@@ -7,16 +7,16 @@ import example.expression.domain._
   *
   * Still Java-based, naturally and JUnit
   */
-trait e6 extends Evolution with HaskellGenerator with TestGenerator with M0 with M1 with M2 with M3 with M4 with M5 with M6 {
+trait e6 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0 with M1 with M2 with M3 with M4 with M5 with M6 {
   self:e0 with e1 with e2 with e3 with e4 with e5 =>
   val domain:MathDomain
   import domain._
 
-  abstract override def typeConverter(tpe:TypeRep, covariantReplacement:Option[HaskellType] = None) : HaskellType = {
+  abstract override def typeConverter(tpe:TypeRep) : HaskellType = {
 
     tpe match {
       case Boolean => new HaskellType("Bool")
-      case _ => super.typeConverter(tpe, covariantReplacement)
+      case _ => super.typeConverter(tpe)
     }
   }
 

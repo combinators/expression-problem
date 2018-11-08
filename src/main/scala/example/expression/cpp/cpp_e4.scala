@@ -22,12 +22,12 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with M0 with
     }
   }
 
-  abstract override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[CPPType] = None) : CPPType = {
+  abstract override def typeConverter(tpe:domain.TypeRep) : CPPType = {
     tpe match {
       case el:List =>
         val tpe = typeConverter(el.generic)
         new CPPType(s"std::vector<$tpe>")
-      case _ => super.typeConverter(tpe, covariantReplacement)
+      case _ => super.typeConverter(tpe)
     }
   }
 

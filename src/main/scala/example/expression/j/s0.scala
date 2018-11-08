@@ -9,7 +9,7 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-trait s0 extends Evolution with JavaGenerator with TestGenerator {
+trait s0 extends Evolution with JavaGenerator with JUnitTestGenerator {
   val domain:ShapeDomain
 
   // standard attributes for domain. As new ones are defined, place in respective traits
@@ -38,12 +38,12 @@ trait s0 extends Evolution with JavaGenerator with TestGenerator {
   override def getModel = s0
 
   /** E0 Introduces the concept a Double type, used for the 'Eval' operation. */
-  abstract override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : com.github.javaparser.ast.`type`.Type = {
+  abstract override def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
       case Double => Java("Double").tpe()
       case Point => Java("java.awt.geom.Point2D.Double").tpe()
       case Boolean => Java("Boolean").tpe()
-      case _ => super.typeConverter(tpe, covariantReplacement)
+      case _ => super.typeConverter(tpe)
     }
   }
 

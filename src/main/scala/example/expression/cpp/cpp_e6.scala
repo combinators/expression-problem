@@ -22,10 +22,10 @@ trait cpp_e6 extends Evolution with CPPGenerator with VisitorCPPBinaryMethod wit
     }
   }
 
-  abstract override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[CPPType] = None): CPPType = {
+  abstract override def typeConverter(tpe:domain.TypeRep): CPPType = {
     tpe match {
       case Boolean => new CPPType("bool")
-      case _ => super.typeConverter(tpe, covariantReplacement)
+      case _ => super.typeConverter(tpe)
     }
   }
 

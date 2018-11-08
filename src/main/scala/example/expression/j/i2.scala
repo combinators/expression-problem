@@ -9,14 +9,14 @@ import org.combinators.templating.twirl.Java
   *
   * By definition, an empty tree has height -1. A tree with a single root node has height 0.
   */
-trait i2 extends  Evolution with JavaGenerator with TestGenerator with I2 {
+trait i2 extends  Evolution with JavaGenerator with JUnitTestGenerator with I2 {
   self: e0 with e1 with i1 =>
   val domain:MathDomain
 
-  abstract override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[Type] = None) : com.github.javaparser.ast.`type`.Type = {
+  abstract override def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
       case Integer => Java(s"Integer").tpe()
-      case _ => super.typeConverter(tpe, covariantReplacement)
+      case _ => super.typeConverter(tpe)
     }
   }
 

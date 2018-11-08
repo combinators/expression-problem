@@ -1,10 +1,13 @@
-package example.expression.haskell       /*DI:LD:AD*/
+package example.expression.haskell.alacarte
+
+/*DI:LD:AD*/
 
 import java.nio.file.Paths
 
 import example.expression.domain.{BaseDomain, ModelDomain}
+import example.expression.haskell._
 
-trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMethod {
+trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMethod with HaskellBinaryMethod {
   val domain:BaseDomain with ModelDomain
   import domain._
 
@@ -13,10 +16,10 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
   lazy val flat:domain.Model = getModel.flatten()
 
   /** Return designated HaskellType. Note GeneralExpr is most abstract.  */
-  override def typeConverter(tpe:domain.TypeRep, covariantReplacement:Option[HaskellType] = None) : HaskellType = {
+  override def typeConverter(tpe:domain.TypeRep) : HaskellType = {
     tpe match {
-      case domain.baseTypeRep => covariantReplacement.getOrElse(new HaskellType("GeneralExpr"))
-      case _ => super.typeConverter(tpe, covariantReplacement)
+      case domain.baseTypeRep => new HaskellType("GeneralExpr")
+      case _ => super.typeConverter(tpe)
     }
   }
 
@@ -26,7 +29,8 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
     flat.types.map(tpe => generateExp(flat, tpe)) ++
       flat.ops.map(op => generateOp(flat, op)) :+
       generateBase(flat) :+
-      generateTypeUnifier(flat)
+      generateTypeUnifier(flat) :+
+      generateDataTypes(flat)
   }
 
   def genTypes(exp:Atomic) : Seq[Haskell] = {
@@ -87,12 +91,20 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
   }
 
   def generateOp(m:Model, op:Operation) : HaskellWithPath = {
+    op match {
+      case opb:domain.BinaryMethod => generateBinaryOp(m, op)
+      case _ => generateStandardOp(m, op)
+    }
+  }
+
+  def generateStandardOp(m:Model, op:Operation) : HaskellWithPath = {
+
     val name = op.name.capitalize
     val imports = m.types.map(tpe => Haskell(s"import ${tpe.name}")).mkString("\n")
     val instances:Seq[Haskell] = m.types.map(exp => {
       val code = logic(exp)(op).mkString("\n")
       Haskell(s""" |instance $name ${exp.toString} where
-                   |  ${op.name}Functor (${exp.toString} ${standardArgs(exp).getCode}) = $code""".stripMargin)
+                   |  ${op.name}OneLevel (${exp.toString} ${standardArgs(exp).getCode}) = $code""".stripMargin)
     })
 
     val opRetType = typeConverter(op.returnType.get)
@@ -103,15 +115,15 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
                            |$imports
                            |
                            |class Functor f => $name f where
-                           |  ${op.name}Functor :: f $opRetType -> $opRetType
+                           |  ${op.name}OneLevel :: f $opRetType -> $opRetType
                            |${instances.mkString("\n")}
                            |
                            |instance ($name f, $name g) => $name (ET f g) where
-                           |  ${op.name}Functor  (El x) = ${op.name}Functor  x
-                           |  ${op.name}Functor  (Er y) = ${op.name}Functor  y
+                           |  ${op.name}OneLevel  (El x) = ${op.name}OneLevel  x
+                           |  ${op.name}OneLevel  (Er y) = ${op.name}OneLevel  y
                            |
                            |${op.name} :: $name f => Expr f -> ${typeConverter(op.returnType.get)}
-                           |${op.name} expr = foldExpr ${op.name}Functor expr
+                           |${op.name} expr = foldExpr ${op.name}OneLevel expr
                            |""".stripMargin)
     HaskellWithPath(code, Paths.get(s"$name.hs"))
   }
@@ -159,6 +171,11 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
 
   /** Responsible for dispatching sub-expressions with possible parameter(s). */
  override def dispatch(primary:Haskell, op:domain.Operation, params:Haskell*) : Haskell = {
+//    op match {
+//      case domain. => {
+//
+//      }
+//    }
     val args:String = params.mkString(" ")
     Haskell(s"""$primary""")
   }

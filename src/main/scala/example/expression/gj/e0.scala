@@ -12,11 +12,11 @@ trait e0 extends GJGenerator with TestGenerator with M0 {
   import domain._
 
   /** E0 Introduces the concept a Double type, used for the 'Eval' operation. */
-  abstract override def typeConverter(tpe:TypeRep, covariantReplacement:Option[Type] = None) : Type = {
+  abstract override def typeConverter(tpe:TypeRep) : Type = {
     tpe match {
       case Double => new GJType("Double")
       case Int => new GJType("Integer")
-      case _ => super.typeConverter(tpe, covariantReplacement)
+      case _ => super.typeConverter(tpe)
     }
   }
 

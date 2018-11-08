@@ -17,10 +17,10 @@ trait GJGenerator extends LanguageIndependentGenerator {
   // Useful helper methods for any generator needing to craft common Java constructs
 
   /** Generate constructor for given atomic concept, using suggested name */
-  def constructor(exp:domain.Atomic, suggestedName:Option[String] = None, covariantOverride:Option[Type] = None) : GJ = {
+  def constructor(exp:domain.Atomic, suggestedName:Option[String] = None) : GJ = {
     val name = if (suggestedName.isEmpty) { exp.name } else { suggestedName.get }
 
-    val params:Seq[String] = exp.attributes.map(att => s"${typeConverter(att.tpe, covariantOverride)} ${att.name}")
+    val params:Seq[String] = exp.attributes.map(att => s"${typeConverter(att.tpe)} ${att.name}")
     val cons:Seq[GJ] = exp.attributes.map(att => GJ(s"  ${att.name}_ = ${att.name};"))
 
     GJ(s"""|public $name (${params.mkString(",")}) {
@@ -56,9 +56,9 @@ trait GJGenerator extends LanguageIndependentGenerator {
     * Produce all getter methods for the given exp, with suitable possibiity of using covariant replacement
     * on domain.BaseTypeRep
     */
-  def getters(exp:domain.Atomic, covariantOverride:Option[Type] = None) : Seq[GJ] =
+  def getters(exp:domain.Atomic) : Seq[GJ] =
 
-    exp.attributes.map(att => GJ(s"""|public ${typeConverter(att.tpe, covariantOverride)} get${att.name.capitalize}() {
+    exp.attributes.map(att => GJ(s"""|public ${typeConverter(att.tpe)} get${att.name.capitalize}() {
                                            |    return this.${att.name};
                                            |}""".stripMargin))
 
@@ -67,11 +67,10 @@ trait GJGenerator extends LanguageIndependentGenerator {
     * Note all fields to a class have _ as a suffix.
     *
     * @param exp
-    * @param covariantOverride    Optional cass to use as covariant overriding class for BaseTypeExp
     * @return
     */
-  def fields(exp:domain.Atomic, covariantOverride:Option[Type] = None) : Seq[GJ] = {
-    exp.attributes.map(att => GJ(s"protected final ${typeConverter(att.tpe, covariantOverride)} ${att.name}_;"))
+  def fields(exp:domain.Atomic) : Seq[GJ] = {
+    exp.attributes.map(att => GJ(s"protected final ${typeConverter(att.tpe)} ${att.name}_;"))
   }
 
   /**

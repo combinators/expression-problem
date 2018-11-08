@@ -45,10 +45,10 @@ trait WadlerGenerator extends GJGenerator  {
 
 
   /** Return designated GJ type associated with type, or void if all else fails. */
-  override def typeConverter(tpe:TypeRep, covariantReplacement:Option[Type] = None) : Type = {
+  override def typeConverter(tpe:TypeRep) : Type = {
     tpe match {
-      case domain.baseTypeRep => covariantReplacement.getOrElse(new GJType(s"This.${domain.baseTypeRep.name}"))
-      case _ => super.typeConverter(tpe, covariantReplacement)
+      case domain.baseTypeRep => new GJType(s"This.${domain.baseTypeRep.name}")
+      case _ => super.typeConverter(tpe)
     }
   }
 

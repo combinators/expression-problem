@@ -11,11 +11,11 @@ trait cpp_e0 extends CPPGenerator with TestGenerator with M0 {
   import domain._
 
   /** E0 Introduces the concept a Double type, used for the 'Eval' operation. */
-  abstract override def typeConverter(tpe:TypeRep, covariantReplacement:Option[CPPType] = None) : CPPType = {
+  abstract override def typeConverter(tpe:TypeRep) : CPPType = {
     tpe match {
       case Double => new CPPType("double")
       case Int => new CPPType("int")
-      case _ => super.typeConverter(tpe, covariantReplacement)
+      case _ => super.typeConverter(tpe)
     }
   }
 

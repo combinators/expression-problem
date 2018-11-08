@@ -1,6 +1,9 @@
-package example.expression.haskell    /*DI:LD:AI*/
+package example.expression.haskell.straight
+
+/*DI:LD:AI*/
 
 import example.expression.domain.{BaseDomain, ModelDomain}
+import example.expression.haskell.{Haskell, Producer}
 
 /**
   * Any Haskell-based approach capable of supporting Producer must provide this capability.

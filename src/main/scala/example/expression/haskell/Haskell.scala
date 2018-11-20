@@ -43,6 +43,16 @@ object Haskell {
   }
 }
 
+/**
+  * Given an arbitrary number of parameters, turn this into ( a b c )
+  */
+object HaskellSignature {
+  /** Creates a Haskell fragment with initial content specified. */
+  def apply(text: String*): Haskell = {
+    new Haskell("(" + text.toSeq.mkString(" ") + ")")
+  }
+}
+
 object HaskellFormat extends Format[Haskell] {
   /**
     * Integrates `text` without performing any escaping process.

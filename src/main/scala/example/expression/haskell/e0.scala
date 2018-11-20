@@ -41,7 +41,7 @@ trait e0 extends HaskellGenerator with HUnitTestGenerator with M0 {
   /** Provide reasonable default values for newly defined types. */
   abstract override def standardDefault(tpe:TypeRep) : Haskell = {
     tpe match {
-      case Int => new Haskell("0")
+      case Int =>  Haskell("0")
       case Double => new Haskell("0.0")
       case _ => super.standardDefault(tpe)
     }

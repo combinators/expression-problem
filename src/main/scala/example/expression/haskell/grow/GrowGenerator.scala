@@ -31,16 +31,19 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
 
   /** Combined string from the types. */
   def extDeclaration(m:Model):String = {
-    onlyTypes(m) + "Ext"
+    "Ext_" + m.name.capitalize
+    //onlyTypes(m) + "Ext"
   }
 
   /** Exp defined solely by types. */
   def expDeclaration(m:Model):String = {
-    if (m.last.isEmpty) {
-      domain.baseTypeRep.name
-    } else {
-      onlyTypes(m) + domain.baseTypeRep.name
-    }
+
+    domain.baseTypeRep.name + "_" + m.name.capitalize
+//    if (m.last.isEmpty) {
+//      domain.baseTypeRep.name
+//    } else {
+//      onlyTypes(m) + domain.baseTypeRep.name
+//    }
   }
 
   /**
@@ -64,7 +67,10 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
         case u: Unary => s"$name${expDeclaration(m)} helpWith "
         case _ => s"$name${expDeclaration(m)} _ "
       }
-      val rest = s"(${exp.name.capitalize} ${standardArgs(exp).getCode}) = " + logic(exp)(op).mkString("\n")
+      val rest0 = s"(${exp.name.capitalize} ${standardArgs(exp).getCode}) = " + logic(exp)(op).mkString("\n")
+
+      //  be sure to append "_Mi" to the end of every Exp
+      val rest = rest0.replace(" helpWith ", s"_$mcaps helpWith ")
 
       val modifiedRest = if (!m.last.isEmpty) {
         // must embed 'help' properly, if needed
@@ -100,8 +106,15 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
       header
     }
 
+    // only the evolution that defines this opration needs this declaration
+    val baseDeclaration = if (m.ops.contains(op)) {
+      s"$name${domain.baseTypeRep.name} = $name${expDeclaration(m)}   -- define for future extensions"
+    }  else {
+      ""
+    }
+
     new Haskell(s"""
-         #-- | Evaluates  expression.
+         #-- | Evaluates expression.
          #$name${expDeclaration(m)}
          #  :: $signature
          #  -- ^ Function to help with extensions
@@ -110,7 +123,7 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
          #  -> $returnType
          #$inner
          #$name${expDeclaration(m)} helpWith (${extDeclaration(m)} inner) = helpWith inner
-         #
+         #$baseDeclaration
          #-- | Helps with extensions $mcaps
          #helpWith${op.name.capitalize}$mcaps :: $previous -> ${typeConverter(op.returnType.get)}
          #helpWith${op.name.capitalize}$mcaps = absurd
@@ -122,11 +135,9 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
          #""".stripMargin('#'))
   }
 
-
-
   def generateData(m:Model):Haskell = {
     val mcaps = m.name.capitalize    // haskell needs data to be capitalized!
-    val Exp = domain.baseTypeRep.name
+    val Exp = expDeclaration(m.base())    //   domain.baseTypeRep.name + "_" + m.name.capitalize
 
     val inner:String= m.types.map(t =>
       t match {
@@ -142,19 +153,26 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     var now = m
     while (!now.last.isEmpty) {
         val past = now.last
-        pastExtensions = s"type instance ${extTypeDeclaration(past)} $mcaps = ${onlyTypes(m)}Exp $mcaps\n" + pastExtensions
+        pastExtensions = s"type instance ${extTypeDeclaration(past)} $mcaps = ${expDeclaration(now)} $mcaps\n" + pastExtensions
         now = now.last
     }
 
     // must find PAST operations and incorporate them here
     val pastOps = m.last.pastOperations().map(op => generateOp(m, op)).mkString("\n")
 
+    val dataTypeDefinition = if (m.types.isEmpty) {
+      s"newtype ${expDeclaration(m)} f = ${extDeclaration(m)} (${extTypeDeclaration(m)} f)"
+    } else {
+      s"""
+         #data ${expDeclaration(m)} f = $inner
+         #  | ${extDeclaration(m)} (${extTypeDeclaration(m)} f)    -- Datatype extensions""".stripMargin('#')
+    }
+
     new Haskell(s"""
-            #-- | Datatype for arithmetic.
+            #-- | Datatype
             #-- | Parameter f is to be filled with the marker type of the
             #-- | current evolution.
-            #data ${expDeclaration(m)} f = $inner
-            #     | ${extDeclaration(m)} (${extTypeDeclaration(m)} f)    -- Datatype extensions
+            #$dataTypeDefinition
             #
             #-- | Family of Exp data-type extensions:
             #-- | Given a marker type of a evolution, compute the type extension

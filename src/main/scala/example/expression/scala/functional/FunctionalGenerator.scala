@@ -91,16 +91,6 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
     }
   }
 
-  /** Concatenate attributes by name in order */
-  def standardArgs(exp:domain.Atomic) : String = {
-    exp.attributes.map(att => att.name + ":" + typeConverter(att.tpe)).mkString(",")
-  }
-
-  /** Concatenate attributes by name in order with comma. */
-  def standardParams(exp:domain.Atomic, suffix:String = "") : String = {
-    exp.attributes.map(att => att.name + suffix).mkString(",")
-  }
-
   /**
     * Operations are implemented as methods in the Base and sub-type classes.
     * Encapsulate with braces in case multiple statements

@@ -12,6 +12,14 @@
 #GET   /expression/expression.git/*file         example.expression.visitor.Expression.serveFile(file)
 
 # All variants have names that end in "Evolution", with sub-branches as described by 'e0', 'e1', 'e2', ...
+#scala-oo
+->    /                              example.expression.scala.oo.M0_Variation
+->    /                              example.expression.scala.oo.M1_Variation
+->    /                              example.expression.scala.oo.M2_Variation
+->    /                              example.expression.scala.oo.M3_Variation
+->    /                              example.expression.scala.oo.M4_Variation
+->    /                              example.expression.scala.oo.M5_Variation
+->    /                              example.expression.scala.oo.M6_Variation
 #scala
 ->    /                              example.expression.scala.straight.M0_Variation
 ->    /                              example.expression.scala.straight.M1_Variation

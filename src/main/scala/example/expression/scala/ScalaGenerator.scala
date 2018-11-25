@@ -31,4 +31,18 @@ trait ScalaGenerator extends LanguageIndependentGenerator with DependentDispatch
     val term = Term.Name(op.name.toLowerCase)   // should be able to be ..$params
     Scala(s"this.${op.name.toLowerCase}(new ${exp.name.capitalize}($opargs))").expression()
   }
+
+  /// Scala support
+
+
+  /** Concatenate attributes by name in order */
+  def standardArgs(exp:domain.Atomic) : String = {
+    exp.attributes.map(att => att.name + ":" + typeConverter(att.tpe)).mkString(",")
+  }
+
+  /** Concatenate attributes by name in order with comma. */
+  def standardParams(exp:domain.Atomic, suffix:String = "") : String = {
+    exp.attributes.map(att => att.name + suffix).mkString(",")
+  }
+
 }

@@ -19,18 +19,18 @@ trait e3 extends Evolution with ScalaGenerator with TestGenerator with M0 with M
     op match {
       case PrettyP => {
         exp match {
-          case Neg => Scala(s"""return "-" + ${dispatch(subs(domain.base.inner), PrettyP)} """).statements()
-          case Mult => Scala(s"""return "(" + ${dispatch(subs(domain.base.left), PrettyP)} + "*" + ${dispatch(subs(domain.base.right), PrettyP)}  + ")" """).statements()
-          case Divd => Scala(s"""return "(" + ${dispatch(subs(domain.base.left), PrettyP)}  + "/" + ${dispatch(subs(domain.base.right), PrettyP)}  + ")" """).statements()
+          case Neg => Scala(s""" "-" + ${dispatch(subs(domain.base.inner), PrettyP)} """).statements()
+          case Mult => Scala(s""" "(" + ${dispatch(subs(domain.base.left), PrettyP)} + "*" + ${dispatch(subs(domain.base.right), PrettyP)}  + ")" """).statements()
+          case Divd => Scala(s""" "(" + ${dispatch(subs(domain.base.left), PrettyP)}  + "/" + ${dispatch(subs(domain.base.right), PrettyP)}  + ")" """).statements()
           case _ => super.logic(exp)(op)
         }
       }
 
       case Eval => {
         exp match {
-          case Neg => Scala(s"""return - ${dispatch(subs(domain.base.inner), Eval)} """).statements()
-          case Mult => Scala(s"""return ${dispatch(subs(domain.base.left), Eval)} * ${dispatch(subs(domain.base.right), Eval)}""").statements()
-          case Divd => Scala(s"""return ${dispatch(subs(domain.base.left), Eval)} / ${dispatch(subs(domain.base.right), Eval)}""").statements()
+          case Neg => Scala(s""" - ${dispatch(subs(domain.base.inner), Eval)} """).statements()
+          case Mult => Scala(s""" ${dispatch(subs(domain.base.left), Eval)} * ${dispatch(subs(domain.base.right), Eval)}""").statements()
+          case Divd => Scala(s""" ${dispatch(subs(domain.base.left), Eval)} / ${dispatch(subs(domain.base.right), Eval)}""").statements()
           case _ => super.logic(exp)(op)
         }
       }

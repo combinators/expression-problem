@@ -26,7 +26,6 @@ trait e4 extends Evolution with ScalaGenerator with TestGenerator with Operation
     }
   }
 
-
   /**
     * Operations can declare dependencies, which leads to #include extras
     */

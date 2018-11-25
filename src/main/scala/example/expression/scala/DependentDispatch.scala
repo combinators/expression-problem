@@ -18,6 +18,6 @@ trait DependentDispatch {
    * Responsible for dispatching sub-expressions with possible parameter(s).
    */
   def dependentDispatch(expr:Term, op:domain.Operation, params:Term*) : Term = {
-    dispatch(expr, op, params: _*)
+    Scala(dispatch(expr, op, params: _*).toString).term()
   }
 }

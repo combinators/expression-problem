@@ -20,6 +20,14 @@
 ->    /                              example.expression.scala.straight.M4_Variation
 ->    /                              example.expression.scala.straight.M5_Variation
 ->    /                              example.expression.scala.straight.M6_Variation
+#scala-ff
+->    /                              example.expression.scala.functional.M0_Variation
+->    /                              example.expression.scala.functional.M1_Variation
+->    /                              example.expression.scala.functional.M2_Variation
+->    /                              example.expression.scala.functional.M3_Variation
+->    /                              example.expression.scala.functional.M4_Variation
+->    /                              example.expression.scala.functional.M5_Variation
+->    /                              example.expression.scala.functional.M6_Variation
 #Haskell Grow With Trees Variation
 ->    /                              example.expression.haskell.grow.M0_Variation
 ->    /                              example.expression.haskell.grow.M1_Variation

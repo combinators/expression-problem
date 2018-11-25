@@ -28,13 +28,20 @@ trait e6 extends Evolution with ScalaGenerator with TestGenerator with BinaryMet
     op match {
       case Equals =>
         val opn = domain.AsTree.name
-
+        val atts= exp.attributes.map(att => Scala(att.name).expression())
 
         // TODO: very close to replace with. Problems in ExtensibleVisitor (missing methods) as well
         // TODO: as Algebra (since naming conventions don't always work).
         // val that:Expression = Java("that").expression[Expression]()
         // Java(s"return ${delegate(exp,domain.AsTree)}.same(${dispatch(that, domain.AsTree)});").statements
-       Scala(s"""$binaryContext$opn().same(that.$opn())""").statements()
+        val that = Scala(s"that").expression()
+        Scala(s"""${delegate(exp,domain.AsTree,atts:_*)}.same(${dispatch(that, domain.AsTree)})""").statements()
+
+        // works for scala_oo
+        //Scala(s"""$binaryContext$opn().same(that.$opn())""").statements()
+
+        // OO: astree().same(that.astree())
+        // FUNC: new Astree().apply(new Neg(inner)).same(new Astree().apply(that))
 
       case _ => super.logic(exp)(op)
     }
@@ -49,8 +56,8 @@ trait e6 extends Evolution with ScalaGenerator with TestGenerator with BinaryMet
       super.testGenerator ++ Scala(
       s"""
          |def test() :Unit = {
-         |   assert(false == ${dispatch(convert(s1), Equals, convert(s2))});
-         |   assert(true == ${dispatch(convert(s1), Equals, convert(s3))});
+         |   assert (false == ${dispatch(convert(s1), Equals, convert(s2))})
+         |   assert( true == ${dispatch(convert(s1), Equals, convert(s3))})
          |}""".stripMargin).statements()
   }
 }

@@ -5,7 +5,7 @@ import java.nio.file.Paths
 import example.expression.domain.{BaseDomain, ModelDomain}
 import example.expression.scala._
 
-import scala.meta.{Source, Stat}
+import scala.meta.{Source, Stat, Term}
 
 /**
   * Each evolution has opportunity to enhance the code generators.
@@ -48,6 +48,15 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod with StandardSca
   override def dispatch(expr:Expression, op:Operation, params:Expression*) : Expression = {
     val args:String = params.mkString(",")
     Scala(s"$expr.${op.name}($args)").expression()
+  }
+
+  /**
+    * Responsible for delegating to a new operation on the current context.
+    */
+  override def delegate(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
+    val opargs = params.mkString(",")
+    val term = Term.Name(op.name.toLowerCase)   // should be able to be ..$params
+    Scala(s"this.${op.name.toLowerCase}()").expression()
   }
 
   /** Computer return type for given operation (or void). */

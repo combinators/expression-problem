@@ -29,6 +29,6 @@ trait ScalaGenerator extends LanguageIndependentGenerator with DependentDispatch
   def delegate(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
     val opargs = params.mkString(",")
     val term = Term.Name(op.name.toLowerCase)   // should be able to be ..$params
-    Scala(s"this.${op.name.toLowerCase}($opargs)").expression()
+    Scala(s"this.${op.name.toLowerCase}(new ${exp.name.capitalize}($opargs))").expression()
   }
 }

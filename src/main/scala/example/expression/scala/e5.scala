@@ -46,14 +46,20 @@ trait e5 extends Evolution with ScalaGenerator with TestGenerator with Operation
           case Lit =>   // ${exp.hashCode()}
 
             val attParams = atts.map(att => att._2.toString).mkString(",")
-            Scala(s"""new tree.Node(Seq(new tree.Leaf($attParams)), ${delegate(exp, Identifier)}) """).statements()
+            Scala(s"""new tree.Node(Seq(new tree.Leaf($attParams)), ${delegate(exp, Identifier, atts(litValue))}) """).statements()
+
+          case Neg =>
+            val params = atts.map(att => att._2.toString + ".astree()").mkString(",")
+            val seq = atts.map(att => dispatch(att._2, domain.AsTree)).mkString(",")
+            Scala(s"""new tree.Node(Seq($seq), ${delegate(exp, Identifier, atts(domain.base.inner))} ) """).statements()
 
           case Add|Sub|Mult|Divd|Neg =>
             val params = atts.map(att => att._2.toString + ".astree()").mkString(",")
-            Scala(s"""new tree.Node(Seq($params), ${delegate(exp, Identifier)} ) """).statements()
+            val seq = atts.map(att => dispatch(att._2, domain.AsTree)).mkString(",")
+            Scala(s"""new tree.Node(Seq($seq), ${delegate(exp, Identifier, atts(domain.base.left), atts(domain.base.right))} ) """).statements()
           }
       }
-
+// new tree.Node(Seq(new Astree().apply(inner)), new Id().apply(inner) )
       case _ => super.logic(exp)(op)
     }
   }

@@ -65,7 +65,6 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod with Standa
              |def ${op.name}($params) : ${returnType(op)} = {
                          |  ${logic(exp)(op).mkString("\n")}
                          |}""".stripMargin
-    println ("mg:" + str)
     Scala(str).statement()
   }
 
@@ -90,7 +89,6 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod with Standa
            |    ${methods.mkString("\n")}
            |  }
          """.stripMargin
-      println ("str:" + str)
       Scala(str).declaration()
     })
 
@@ -159,7 +157,6 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod with Standa
                      |  ${atts.mkString("\n")}
                      |  ${initialOpsLogic.mkString("\n")}
                      |}""".stripMargin
-        println ("STR:" + str)
         Scala(str).declaration()
         })
 

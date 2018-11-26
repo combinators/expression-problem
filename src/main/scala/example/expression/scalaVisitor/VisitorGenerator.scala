@@ -83,7 +83,10 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
               |}""".stripMargin).compilationUnit()
   }
 
-  /** For visitor, the base class defines the accept method used by all subclasses. */
+  /**
+    * For visitor, the base class defines the accept method used by all subclasses.
+    * When BinaryMethods are present, also includes method to convert to Tree object
+    */
   def generateBaseClass(model:domain.Model):CompilationUnit = {
 
     // Ignore passed in model in favor of just grabbing it on demand...
@@ -124,7 +127,6 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
              |}""".stripMargin).methodDeclarations().head
   }
 
-
   /** Generate the full class for the given expression sub-type. */
   override def generateExp(model:domain.Model, exp:domain.Atomic) : CompilationUnit = {
     val name = exp.toString
@@ -161,7 +163,7 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
     * Must handle BinaryMethod (Equals) and BinaryMethodBase (Astree) specially.
     */
   def operationGenerator(model:domain.Model, op:domain.Operation): CompilationUnit = {
-    val signatures = model.types.map(exp => methodGenerator(exp)(op)).mkString("\n")
+    val signatures = model.types.map(exp => methodGenerator(exp)(op))
 
     // if operation has parameters then must add to visitor as well
     val atts:Seq[FieldDeclaration] = op.parameters.flatMap(p => Java(s"${typeConverter(p._2)} ${p._1};").fieldDeclarations())
@@ -184,7 +186,7 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
                      |  ${ctor.toString}
                      |
                      |  ${atts.mkString("\n")}
-                     |  $signatures
+                     |  ${signatures.mkString("\n")}
                      |}""".stripMargin)
 
     s.compilationUnit()

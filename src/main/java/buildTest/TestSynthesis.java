@@ -11,20 +11,10 @@ import java.util.stream.Stream;
  */
 public class TestSynthesis {
 
-    public static final String resources = "src" + File.separator + "main" + File.separator + "resources" + File.separator + "routes";
+    static final String resources = "src" + File.separator + "main" + File.separator + "resources" + File.separator + "routes";
 
     /** All synthesized files are stored in demo folder. */
-    public static final String destination = "demo" + File.separator + "ep";
-
-    /** Timing helpers. */
-    static long start_timeStamp;
-    static void startTime() {
-        start_timeStamp = System.currentTimeMillis();
-    }
-    static float endTime() {
-        float seconds = (1.0f*(System.currentTimeMillis() - start_timeStamp) / 1000);
-        return seconds;
-    }
+    static final String destination = "demo" + File.separator + "ep";
 
     /**
      * Use git clone to retrieve the source files and move to destination/family/model
@@ -69,10 +59,7 @@ public class TestSynthesis {
      *
      * A    file.java   [added]
      *
-     * @param family
-     * @param newer
-     * @param older
-     * @return
+     * TODO: Complete
      */
     static Iterator<String> compare(String family, String newer, String older) {
         File dirNew = new File(new File(destination, family), newer);
@@ -215,7 +202,6 @@ public class TestSynthesis {
             return false;
         }
     }
-
 
     /**
      * Launch everything!

@@ -1,4 +1,4 @@
-package example.expression.scala.functional
+package example.expression.scala.functional   /*DI:LD:AD*/
 
 import example.expression.scala.{Scala, TestGenerator}
 
@@ -9,6 +9,4 @@ trait FunctionalTestGenerator extends TestGenerator {
     // had first s"new ${test.op.name.capitalize}()." +
     Scala (dispatch(convert(test.inst), test.op).toString).expression()
   }
-
-
 }

@@ -1,4 +1,4 @@
-package example.expression.scala
+package example.expression.scala    /*DI:LD:AI*/
 
 import example.expression.domain.{BaseDomain, ModelDomain}
 

@@ -24,13 +24,15 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
         val inner: Type = jtype.asClassOrInterfaceType().getTypeArguments.get.get(0)
 
         val map = seq.map(elt => s"result$id.add($elt);")
-        Java(s"""
-             |$jtype result$id = new java.util.ArrayList<$inner>();
-             |${map.mkString("\n")}
-             |${continue(Java(s"result$id").expression[Expression])}
-             """.stripMargin).statements
+        val str = s"""
+                     |$jtype result$id = new java.util.ArrayList<$inner>();
+                     |${map.mkString("\n")}
+                     |${continue(Java(s"result$id").expression[Expression]).mkString("\n")}
+             """.stripMargin
+        println("OUT:" + str)
+        Java(str).statements
 
-      case _ => expected(test,id)(continue)
+      case _ => super.expected(test,id)(continue)
     }
   }
 

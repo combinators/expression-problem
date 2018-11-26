@@ -1,4 +1,4 @@
-package example.expression.scala.functional
+package example.expression.scala.functional   /*DI:LD:AD*/
 
 import java.nio.file.Paths
 

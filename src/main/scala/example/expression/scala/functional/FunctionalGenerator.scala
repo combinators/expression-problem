@@ -63,8 +63,8 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
       } else {
         "(" + params.mkString(",") + ")"
       }
-    }
-    Scala(s"new ${op.name.capitalize}($opParams).apply($expr)$args").expression()
+    }  // new ${op.name.capitalize}($opParams).
+    Scala(s"apply($expr)$args").expression()
   }
 
   /**
@@ -80,8 +80,26 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
     * Responsible for dispatching sub-expressions with possible parameter(s).
     */
   override def dependentDispatch(expr:Term, op:domain.Operation, params:Term*) : Term = {
-    Scala(dispatch(expr, op, params: _*).toString).term()
-  }
+    var opParams = ""
+    val args:String = if (params.isEmpty) {
+      ""
+    } else {
+      // hack for now: first k params are for operation (if it has any arguments)
+      // then remaining are for parameters
+      if (op.parameters.nonEmpty) {
+        opParams = params.take(op.parameters.length).mkString(",")
+        val rest = params.takeRight(params.length - op.parameters.length)
+        if (rest.isEmpty) {
+          ""
+        } else {
+          "(" + rest.mkString(",") + ")"
+        }
+      } else {
+        "(" + params.mkString(",") + ")"
+      }
+    }
+    Scala(s"new ${op.name.capitalize}($opParams).apply($expr)$args").expression()
+  } // Scala(s"apply($expr)$args").expression()
 
   /** Computer return type for given operation (or void). */
   def returnType(op:Operation): Type = {
@@ -145,7 +163,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
           s"""
              |  var result: ${typeConverter(op.returnType.get)} = _
              |  def apply(t: ${domain.baseTypeRep.name}): ${typeConverter(op.returnType.get)} = {
-             |    t.accept(this.asInstanceOf[visitor])
+             |    t.accept(this)
              |    result
              |  }
          """.stripMargin
@@ -180,7 +198,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
       // Data types that had existed earlier
       val baseMembers = typesToGenerate.map(exp => methodGenerator(exp)(op))
       Scala(s"""
-               |class ${op.name.capitalize}$binary extends $extendsClause Visitor {
+               |class ${op.name.capitalize}$binary extends $extendsClause Visitor { self: visitor =>
                |  $result
                |  ${baseMembers.mkString("\n")}
                |}""".stripMargin).declaration()
@@ -191,7 +209,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
         |package scala_func
         |trait $mcaps extends $prior {
         |  type visitor <: Visitor
-        |  trait Visitor extends super.Visitor {
+        |  trait Visitor extends super.Visitor { self: visitor =>
         |    ${visitors.mkString("\n")}
         |  }
         |  ${classes.mkString("\n")}
@@ -210,10 +228,10 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
     val ops = m.ops.map(op => {
       val baseMembers = m.types.map(exp => methodGenerator(exp)(op))
       Scala(s"""
-           |class ${op.name.capitalize} extends Visitor {
+           |class ${op.name.capitalize} extends Visitor { self: visitor =>
            |  var result: ${typeConverter(op.returnType.get)} = _
            |  def apply(t: ${domain.baseTypeRep.name}): ${typeConverter(op.returnType.get)} = {
-           |    t.accept(this.asInstanceOf[visitor])
+           |    t.accept(this)
            |    result
            |  }
            |  ${baseMembers.mkString("\n")}

@@ -40,6 +40,14 @@ trait ScalaGenerator extends LanguageIndependentGenerator with DependentDispatch
     exp.attributes.map(att => att.name + ":" + typeConverter(att.tpe)).mkString(",")
   }
 
+  /**
+    * Concatenate attributes by name in order, each with a trailing "_" as suffix. These are
+    * useful for the parameter to a constructor
+    */
+  def constructorArgs(exp:domain.Atomic) : String = {
+    exp.attributes.map(att => "val " + att.name + "_ :" + typeConverter(att.tpe)).mkString(",")
+  }
+
   /** Concatenate attributes by name in order with comma. */
   def standardParams(exp:domain.Atomic, suffix:String = "") : String = {
     exp.attributes.map(att => att.name + suffix).mkString(",")

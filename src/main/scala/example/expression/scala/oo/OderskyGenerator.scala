@@ -24,7 +24,7 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod with Standa
     */
   def generatedCode():Seq[ScalaWithPath] = {
     getModel.inChronologicalOrder.tail.map(m => generateExp(m)) :+      // one trait for each extensions
-      generateBase(getModel.base())                                // base class $BASE
+      generateBase(getModel.base())                                // base class
 
   }
 
@@ -71,11 +71,7 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod with Standa
   /** Generate the full class for the given expression sub-type. */
   def generateExp(model:Model) : CompilationUnit = {
     val mcaps = model.name.capitalize
-    val prior = if (model.last.equals(model.base())) {
-      "Base"
-    } else {
-      model.last.name.capitalize
-    }
+    val prior = model.last.name.capitalize
 
     val classes:Seq[scala.meta.Stat] = model.types.map(exp => {
       val methods = model.pastOperations().map(methodGenerator(exp))
@@ -137,23 +133,21 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod with Standa
   }
 
   /** Generate the base class, with all operations from flattened history. */
-  def generateBase(base:Model): CompilationUnit = {
+  def generateBase(baseModel:Model): CompilationUnit = {
 
-    val initialOpsDef = base.ops.map(op =>
+    val initialOpsDef = baseModel.ops.map(op =>
       s"def ${op.name.toLowerCase()}() : ${typeConverter(op.returnType.get)}")
 
     // hack: initial op has no parameters...
-    val initialTypes = base.types.map(exp => {
-      val initialOpsLogic = base.ops.map(op => {
+    val initialTypes = baseModel.types.map(exp => {
+      val initialOpsLogic = baseModel.ops.map(op => {
         s"def ${op.name.toLowerCase()}() = " + logic(exp)(op).mkString("\n")
       })
 
       // yes, scala requires a space between _ and :
-      val stdArgs = exp.attributes.map(att => "val " + att.name + "_ :" + typeConverter(att.tpe)).mkString(",")
-
       val atts = exp.attributes.map(att => s"val ${att.name.toLowerCase()} = ${att.name.toLowerCase()}_")
         val str = s"""
-                     |class ${exp.name.capitalize}($stdArgs) extends ${domain.baseTypeRep.name} {
+                     |class ${exp.name.capitalize}(${constructorArgs(exp)}) extends ${domain.baseTypeRep.name} {
                      |  ${atts.mkString("\n")}
                      |  ${initialOpsLogic.mkString("\n")}
                      |}""".stripMargin
@@ -161,7 +155,7 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod with Standa
         })
 
       val str:String = s"""
-                          |trait Base {
+                          |trait ${baseModel.name.capitalize} {
                           |   type ${domain.baseTypeRep.name.toLowerCase()} <: ${domain.baseTypeRep.name.capitalize}
                           |   trait ${domain.baseTypeRep.name.capitalize} {
                           |     ${initialOpsDef.mkString("\n")}
@@ -171,7 +165,8 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod with Standa
                           |}""".stripMargin
 
 
+    println ("check:" + str)
     ScalaWithPath(
-      Scala(str).source(), Paths.get(s"Base.scala"))
+      Scala(str).source(), Paths.get(s"${baseModel.name.capitalize}.scala"))
   }
 }

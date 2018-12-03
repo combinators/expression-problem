@@ -19,17 +19,6 @@ trait FunSpecOOTestGenerator extends FunSpecTestGenerator {
       ""
     }
 
-    // need to bring in last trait
-    val withClause = if (model.isEmpty) {
-      ""
-    } else {
-      println ("SAME:" + model.get.name + "," + model.get.base().name)
-      if (model.get.equals(model.get.base())) {
-        ""
-      } else {
-        s" with ${model.get.name.capitalize}"
-      }
-    }
     val allTests = testGenerator
 
     var num: Int = 0
@@ -40,7 +29,7 @@ trait FunSpecOOTestGenerator extends FunSpecTestGenerator {
                              |$packageDeclaration
                              |import org.scalatest.FunSpec
                              |
-                             |class TestSuite$num extends FunSpec with Base $withClause {
+                             |class TestSuite$num extends FunSpec with ${model.get.name.capitalize} {
                              |  describe("test cases") {
                              |    it ("run test") {
                              |      test()

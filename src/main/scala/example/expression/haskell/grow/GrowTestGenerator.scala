@@ -8,32 +8,54 @@ import example.expression.haskell.{HUnitTestGenerator, Haskell, HaskellWithPath}
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait GrowTestGenerator extends HUnitTestGenerator {
+trait GrowTestGenerator extends HUnitTestGenerator with GrowGenerator {
   val domain: BaseDomain with ModelDomain
   import domain._
 
   val flat:domain.Model
 
-  /** Convert the given atomic instance, and use base as the variable name for all interior expansions. */
+  /** Find the model which contains a given atomic inst. */
+  def findModel (exp:AtomicInst) : Model = {
+    getModel.toSeq.filter(m => m.types.contains(exp.e)).head
+  }
+
+  /**
+    * Convert the given atomic instance, and use base as the variable name for all interior expansions.
+    *
+    * Need to find EVOLUTION in which an operation was defined (other than M0) so you can call the
+    * appropriate M*Ext to lift up for types
+    */
   override def convert(inst:AtomicInst) : Haskell = {
     val name = inst.e.name
+    val model = findModel(inst)
+
+    // For the base (and one above it), there is no need to wrap, otherwise must wrap
+    val wrap = if (model.base() == model) {
+      (s:String) => s
+    } else {
+      (s:String) => {
+        model.last.inChronologicalOrder.reverse.tail.foldLeft(s"${extDeclaration(model.last)} ($s)")((former,tail) =>
+          s"(${extDeclaration(tail)} ($former))")
+      }
+    }
+
     inst match {
       case ui: UnaryInst =>
-        Haskell(s"${ui.e.name.capitalize} (${convert(ui.inner)}) ")
+        Haskell(wrap(s"${ui.e.name.capitalize} (${convert(ui.inner)}) "))
 
       case bi: BinaryInst =>
-        Haskell(s"${bi.e.name.capitalize} (${convert(bi.left)}) (${convert(bi.right)}) ")
+        Haskell(wrap(s"${bi.e.name.capitalize} (${convert(bi.left)}) (${convert(bi.right)}) "))
 
       case exp: AtomicInst =>
-        Haskell(s"${exp.e.name.capitalize} ${exp.i.get}")
+        Haskell(wrap(s"${exp.e.name.capitalize} ${exp.i.get}"))
 
       case _ => Haskell(s""" -- unknown $name" """)
     }
   }
 
   /** RMore complicated invocation. */
-  override def hunitMethod(model:Model, tests:Seq[TestCase]) : Haskell = {
-
+  override def hunitMethod(tests:Seq[TestCase]) : Haskell = {
+    val model = getModel
     val stmts: Seq[Haskell] = tests.zipWithIndex.flatMap(pair => {
       val test = pair._1
       val idx = pair._2

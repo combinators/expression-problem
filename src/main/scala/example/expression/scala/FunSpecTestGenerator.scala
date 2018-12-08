@@ -40,7 +40,7 @@ trait FunSpecTestGenerator extends TestGenerator with ScalaGenerator {
     val files: Seq[ScalaWithPath] = allTests.map(md => {
       num = num + 1
 
-      ScalaWithPath(Scala(s"""
+      ScalaTestWithPath(Scala(s"""
                |$packageDeclaration
                |import org.scalatest.FunSpec
                |

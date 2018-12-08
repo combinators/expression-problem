@@ -23,7 +23,18 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod with Standa
     * 2. A Base class to be superclass of them all
     */
   def generatedCode():Seq[ScalaWithPath] = {
-    getModel.inChronologicalOrder.tail.map(m => generateExp(m)) :+      // one trait for each extensions
+
+    //  binary methods for helper
+    val decls:Seq[ScalaWithPath] = if (getModel.flatten().ops.exists {
+      case bm: domain.BinaryMethodTreeBase => true
+      case _ => false
+    }) {
+      helperClasses()
+    } else {
+      Seq.empty
+    }
+
+    decls ++ getModel.inChronologicalOrder.tail.map(m => generateExp(m)) :+      // one trait for each extensions
       generateBase(getModel.base())                                // base class
 
   }
@@ -124,8 +135,8 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod with Standa
       })
     }
 
-    ScalaWithPath(
-      Scala(s"""|package scala_oo
+    ScalaMainWithPath(
+      Scala(s"""|package odersky
              |trait $mcaps extends $prior {
              |  ${classes.mkString("\n")}
              |  ${preamble.mkString("\n")}
@@ -154,7 +165,7 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod with Standa
         Scala(str).declaration()
         })
 
-      val str:String = s"""
+      val str:String = s"""package odersky
                           |trait ${baseModel.name.capitalize} {
                           |   type ${domain.baseTypeRep.name.toLowerCase()} <: ${domain.baseTypeRep.name.capitalize}
                           |   trait ${domain.baseTypeRep.name.capitalize} {
@@ -164,9 +175,8 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod with Standa
                           |   ${initialTypes.mkString("\n")}
                           |}""".stripMargin
 
-
     println ("check:" + str)
-    ScalaWithPath(
+    ScalaMainWithPath(
       Scala(str).source(), Paths.get(s"${baseModel.name.capitalize}.scala"))
   }
 }

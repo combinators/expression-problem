@@ -218,7 +218,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
         |}""".stripMargin
 
     println(str)
-    ScalaWithPath(
+    ScalaMainWithPath(
       Scala(str).source(), Paths.get(s"$mcaps.scala"))
   }
 
@@ -268,7 +268,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
                   |}""".stripMargin
 
     println ("S:" + str)
-    ScalaWithPath(
+    ScalaMainWithPath(
       Scala(str).source(), Paths.get(s"$mcaps.scala"))
   }
 }

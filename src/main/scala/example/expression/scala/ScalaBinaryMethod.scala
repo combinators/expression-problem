@@ -1,6 +1,7 @@
 package example.expression.scala    /*DI:LD:AI*/
 
-import java.nio.file.Path
+import java.io.File
+import java.nio.file.{Path, Paths}
 
 import example.expression.domain.{BaseDomain, ModelDomain}
 import example.expression.generator.BinaryMethod
@@ -11,15 +12,41 @@ trait ScalaBinaryMethod extends BinaryMethod {
   val domain:BaseDomain with ModelDomain
   import domain._
 
+  /** Specially required files are placed in this area. */
+  val scalaResources:String = Seq("src", "main", "resources", "scala-code").mkString(File.separator)
+
+
   /** Taken from scala meta web page. */
-  def loadToSource(entry:String) : ScalaWithPath = {
-    val path:Path = java.nio.file.Paths.get("src", "main", "scala", "tree", entry)
+  def loadSource(entry:String*) : ScalaMainWithPath = {
+    val path:Path = java.nio.file.Paths.get(scalaResources, entry: _*)
     val bytes = java.nio.file.Files.readAllBytes(path)
     val text = new String(bytes, "UTF-8")
     val input = Input.VirtualFile(path.toString, text)
 
-    ScalaWithPath(input.parse[Source].get, java.nio.file.Paths.get("tree", entry))
+    ScalaMainWithPath(input.parse[Source].get, Paths.get(entry.head, entry.tail : _*))
   }
+
+  /**
+    *
+    * Helpful snippet to get all regular files below a given directory, using
+    * the specified header as the relative path to those files
+    */
+  def getRecursiveListOfFiles(dir: File, header:String*): Seq[ScalaMainWithPath] = {
+    val these:Seq[File] = dir.listFiles
+    val sources:Seq[ScalaMainWithPath] = these.filterNot(f => f.isDirectory).map(f => loadSource(header :+ f.getName : _*))
+
+    sources ++ these.filter(_.isDirectory).flatMap(f => getRecursiveListOfFiles(f, header :+ f.getName : _*))
+  }
+//
+//  /** Taken from scala meta web page. */
+//  def loadToSource(entry:String) : ScalaWithPath = {
+//    val path:Path = java.nio.file.Paths.get("src", "main", "scala", "tree", entry)
+//    val bytes = java.nio.file.Files.readAllBytes(path)
+//    val text = new String(bytes, "UTF-8")
+//    val input = Input.VirtualFile(path.toString, text)
+//
+//    ScalaMainWithPath(input.parse[Source].get, java.nio.file.Paths.get("tree", entry))
+//  }
 
   /**
     * Binary methods creates helper classes in package 'tree'. Completes description
@@ -29,11 +56,12 @@ trait ScalaBinaryMethod extends BinaryMethod {
     * @return
     */
   def helperClasses():Seq[ScalaWithPath] = {
-    Seq(
-      loadToSource("Leaf.scala"),
-      loadToSource("Node.scala"),
-      loadToSource("Tree.scala")
-    )
+    getRecursiveListOfFiles(Paths.get(scalaResources).toFile)
+//    Seq(
+//      loadToSource("Leaf.scala"),
+//      loadToSource("Node.scala"),
+//      loadToSource("Tree.scala")
+//    )
   }
 
   /**

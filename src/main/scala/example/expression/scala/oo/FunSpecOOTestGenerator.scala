@@ -3,7 +3,7 @@ package example.expression.scala.oo   /*DI:LD:AD*/
 import java.nio.file.Paths
 
 import example.expression.domain.{BaseDomain, ModelDomain}
-import example.expression.scala.{FunSpecTestGenerator, Scala, ScalaWithPath}
+import example.expression.scala.{FunSpecTestGenerator, Scala, ScalaTestWithPath, ScalaWithPath}
 
 trait FunSpecOOTestGenerator extends FunSpecTestGenerator {
   val domain: BaseDomain with ModelDomain
@@ -25,7 +25,7 @@ trait FunSpecOOTestGenerator extends FunSpecTestGenerator {
     val files: Seq[ScalaWithPath] = allTests.map(md => {
       num = num + 1
 
-      ScalaWithPath(Scala(s"""
+      ScalaTestWithPath(Scala(s"""
                              |$packageDeclaration
                              |import org.scalatest.FunSpec
                              |

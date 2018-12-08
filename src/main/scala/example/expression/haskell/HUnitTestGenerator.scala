@@ -31,7 +31,7 @@ trait HUnitTestGenerator extends HaskellGenerator {
   def actual(test:TestCase):Haskell = dispatch(convert(test.inst), test.op)
 
   /** Return JUnit test case associated with these given test cases. */
-  def hunitMethod(model:Model, tests:Seq[TestCase]) : Haskell = {
+  def hunitMethod(tests:Seq[TestCase]) : Haskell = {
     val stmts:Seq[Haskell] = tests.zipWithIndex.flatMap(pair => {
       val test = pair._1
       val idx = pair._2

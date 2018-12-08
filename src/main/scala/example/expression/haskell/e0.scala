@@ -67,9 +67,7 @@ trait e0 extends HaskellGenerator with HUnitTestGenerator with M0 {
   }
 
   abstract override def testGenerator: Seq[Haskell] = {
-    val a1 = new BinaryInst(Add, new LitInst(1.0), new LitInst(2.0))
-    val lit1 = new LitInst(5.0)
 
-    super.testGenerator :+ hunitMethod(m0, M0_tests)
+    super.testGenerator :+ hunitMethod(M0_tests)
   }
 }

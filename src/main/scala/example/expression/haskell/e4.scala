@@ -123,34 +123,7 @@ trait e4 extends Evolution with HaskellGenerator with HUnitTestGenerator with Pr
   }
 
   abstract override def testGenerator: Seq[Haskell] = {
-
-    super.testGenerator :+ hunitMethod(m4, M4_tests)
-
-//    // (5/7) / (7-(2*3) --> just (5/7)
-//    val n1 = new domain.UnaryInst(Neg, new LitInst(5.0))
-//    val m1 = new domain.BinaryInst(Mult, new LitInst(2.0), new LitInst(3.0))
-//    val m2 = new domain.BinaryInst(Mult, new domain.BinaryInst (Divd, new LitInst(5.0),  new LitInst(2.0)), new LitInst(4.0))
-//
-//    val d1 = new domain.BinaryInst(Divd, new LitInst(5.0), new LitInst(7.0))
-//    val s1 = new domain.BinaryInst(Sub, new LitInst(7.0), m1)
-//    val d2 = new domain.BinaryInst(Divd, d1, s1)
-//
-//    super.testGenerator :+ new Haskell(
-//      s"""
-//         |n1 = ${convert(n1)}
-//         |m2 = ${convert(m2)}
-//         |d2 = ${convert(d2)}
-//         |d1 = ${convert(d1)}
-//         |test_e4_1 = TestCase (assertEqual "NegCheck-Eval" (0-5.0) (${Eval.name} n1))
-//         |test_e4_2 = TestCase (assertEqual "Simplify-Print" (${PrettyP.name}  d1) (${PrettyP.name}  d2))
-//         |-- collect test case
-//         |test_e4_3 = TestCase (assertEqual "Collect-D1" [5,7,7,2,3] (${Collect.name} d2))
-//         |
-//         |test_e4 = TestList [ TestLabel "1" test_e4_1, TestLabel "2" test_e4_2, TestLabel "3" test_e4_3 ]
-//         |
-//         |main :: IO Counts
-//         |main  = runTestTT test_e4
-//         |""".stripMargin)
+    super.testGenerator :+ hunitMethod(M4_tests)
   }
 
 }

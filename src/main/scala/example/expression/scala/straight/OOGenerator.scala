@@ -97,7 +97,7 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod with StandardSca
          """.stripMargin
       println ("str:" + str)
 
-      ScalaWithPath(
+      ScalaMainWithPath(
         Scala(str).source(), Paths.get(s"${exp.toString}.scala"))
   }
 
@@ -115,7 +115,7 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod with StandardSca
                   |   ${ops.mkString("\n")}
                   |}""".stripMargin
 
-    ScalaWithPath(
+    ScalaMainWithPath(
       Scala(str).source(), Paths.get(s"${domain.baseTypeRep.name.capitalize}.scala"))
   }
 }

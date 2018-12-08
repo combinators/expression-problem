@@ -1,6 +1,8 @@
 package example.expression.haskell     /*DI:LD:AI*/
 
-import java.nio.file.Paths
+import java.io.File
+import java.nio.file.{Files, Path, Paths}
+import java.util.Scanner
 
 import example.expression.generator.LanguageIndependentGenerator
 
@@ -10,6 +12,9 @@ import example.expression.generator.LanguageIndependentGenerator
   * Perhaps consider an Expression Problem application domain based on Monoids
   */
 trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskellBinaryMethod with HaskellBinaryMethod {
+
+  /** Specially required files are placed in this area. */
+  val haskellResources:String = Seq("src", "main", "resources", "haskell-code").mkString(File.separator)
 
   type CompilationUnit = HaskellWithPath
   type Type = HaskellType
@@ -59,7 +64,6 @@ trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskell
     new Haskell(s"$functionName $bars = $defaultExpression")
   }
 
-
   def generateDataTypes(m:domain.Model): HaskellWithPath = {
     val allTypes = m.types.map(exp => {
       val params:Seq[HaskellType] = exp.attributes.map(att => typeConverter(att.tpe))
@@ -87,6 +91,32 @@ trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskell
           |""".stripMargin)
 
     HaskellWithPath(code, Paths.get("DataTypes.hs"))
+  }
+
+  /** Taken from scala meta web page. */
+  def loadSource(entry:String*) : HaskellWithPath = {
+    val path:Path = java.nio.file.Paths.get(haskellResources, entry: _*)
+    val contents = java.nio.file.Files.readAllBytes(path).map(_.toChar).mkString
+
+    HaskellWithPath(Haskell(contents), Paths.get(entry.head, entry.tail : _*))
+  }
+
+  /**
+    * Helpful snippet to get all regular files below a given directory, using
+    * the specified header as the relative path to those files
+    */
+  def getRecursiveListOfFiles(dir: File, header:String*): Seq[HaskellWithPath] = {
+    val these:Seq[File] = dir.listFiles
+    val sources:Seq[HaskellWithPath] = these.filterNot(f => f.isDirectory).map(f => loadSource(header :+ f.getName : _*))
+
+    sources ++ these.filter(_.isDirectory).flatMap(f => getRecursiveListOfFiles(f, header :+ f.getName : _*))
+  }
+
+  /**
+    * Helper artifacts to be loaded for Haskell.
+    */
+  def helperClasses():Seq[HaskellWithPath] = {
+    getRecursiveListOfFiles(Paths.get(haskellResources).toFile)
   }
 
 }

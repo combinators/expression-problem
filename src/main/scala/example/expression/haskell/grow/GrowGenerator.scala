@@ -15,9 +15,16 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
 
   /** For the processed model, return generated code artifacts for solution. */
   def generatedCode():Seq[HaskellWithPath] = {
-
     helperClasses() ++
       getModel.inChronologicalOrder.map(m => generateEvolution(m))
+  }
+
+  /** Return designated HaskellType. */
+  override def typeConverter(tpe:domain.TypeRep) : HaskellType = {
+    tpe match {
+      case domain.baseTypeRep => new HaskellType(s"${expDeclaration(getModel.base())} f")
+      case _ => super.typeConverter(tpe)
+    }
   }
 
   /** Combined string from the types. */
@@ -37,6 +44,43 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
   /** Exp defined solely by types. */
   def expDeclaration(m:Model):String = {
     domain.baseTypeRep.name + "_" + m.name.capitalize
+  }
+
+  def typeSignature(m:Model, op:Operation):String = {
+    val mcaps = m.name.capitalize    // haskell needs data to be capitalized!
+    val baseDomain = domain.baseTypeRep.name
+
+    s"${op.name}$baseDomain$mcaps :: ${expDeclaration(m.base())} $mcaps -> ${typeConverter(op.returnType.get)}"
+  }
+
+  def operationForFixedLevel(m:Model, op:Operation) : String = {
+    val mcaps = m.name.capitalize    // haskell needs data to be capitalized!
+    val baseDomain = domain.baseTypeRep.name
+
+    val invoke = m.inChronologicalOrder.reverse.tail.foldLeft(s"(${op.name}${expDeclaration(m)} helpWith${op.name.capitalize}$mcaps)")((former,tail) =>
+        s"(${op.name}${expDeclaration(tail)} $former)")
+
+      s"""
+         #${typeSignature(m,op)}
+         #${op.name}$baseDomain$mcaps e = $invoke e
+         #""".stripMargin('#')
+  }
+
+  /**
+    * Generates wrapper of instantiations using telescoping constructors
+    *
+    * @param model
+    * @return
+    */
+  def genWrap(model: Model) : String => String = {
+    if (model.base() == model) {
+      (s:String) => s
+    } else {
+      (s:String) => {
+        model.last.inChronologicalOrder.reverse.tail.foldLeft(s"${extDeclaration(model.last)} ($s)")((former,tail) =>
+          s"(${extDeclaration(tail)} ($former))")
+      }
+    }
   }
 
   /**
@@ -109,19 +153,7 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     }
 
     // if we define new operations, we must expand as provided
-    val invocation = { // if (m.ops.nonEmpty) {
-      // FIX HERE
-      val invoke = m.inChronologicalOrder.reverse.tail.foldLeft(s"(${op.name}${expDeclaration(m)} helpWith${op.name.capitalize}$mcaps)")((former,tail) =>
-        s"(${op.name}${expDeclaration(tail)} $former)")
-
-      s"""#${op.name}$baseDomain$mcaps :: ${expDeclaration(m.base())} $mcaps -> ${typeConverter(op.returnType.get)}
-         #${op.name}$baseDomain$mcaps e = $invoke e
-         #""".stripMargin('#')
-    } //else {
-//      s"""#${op.name}$baseDomain$mcaps :: ${expDeclaration(m)} $mcaps -> ${typeConverter(op.returnType.get)}
-//          #${op.name}$baseDomain$mcaps e = ${op.name}${expDeclaration(m)} helpWith${op.name.capitalize}$mcaps e
-//          #""".stripMargin('#')
-//    }
+    val operationSpec = operationForFixedLevel(m, op)
 
     new Haskell(s"""
          #-- | Evaluates expression.
@@ -137,7 +169,7 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
          #
          #-- | Evaluates an $mcaps expression
          #-- | Calls ${op.name}$baseDomain with the $mcaps helper
-         #$invocation
+         #$operationSpec
          #
          #-- | Helps with extensions $mcaps
          #helpWith${op.name.capitalize}$mcaps :: Void -> ${typeConverter(op.returnType.get)}

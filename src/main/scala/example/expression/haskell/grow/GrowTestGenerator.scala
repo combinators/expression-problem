@@ -14,11 +14,6 @@ trait GrowTestGenerator extends HUnitTestGenerator with GrowGenerator {
 
   val flat:domain.Model
 
-  /** Find the model which contains a given atomic inst. */
-  def findModel (exp:AtomicInst) : Model = {
-    getModel.toSeq.filter(m => m.types.contains(exp.e)).head
-  }
-
   /**
     * Convert the given atomic instance, and use base as the variable name for all interior expansions.
     *
@@ -27,17 +22,9 @@ trait GrowTestGenerator extends HUnitTestGenerator with GrowGenerator {
     */
   override def convert(inst:AtomicInst) : Haskell = {
     val name = inst.e.name
-    val model = findModel(inst)
 
     // For the base (and one above it), there is no need to wrap, otherwise must wrap
-    val wrap = if (model.base() == model) {
-      (s:String) => s
-    } else {
-      (s:String) => {
-        model.last.inChronologicalOrder.reverse.tail.foldLeft(s"${extDeclaration(model.last)} ($s)")((former,tail) =>
-          s"(${extDeclaration(tail)} ($former))")
-      }
-    }
+    val wrap = genWrap(findModel(inst.e))
 
     inst match {
       case ui: UnaryInst =>

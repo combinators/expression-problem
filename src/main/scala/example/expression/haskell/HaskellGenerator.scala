@@ -21,6 +21,13 @@ trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskell
   type Expression = Haskell
   type Statement = Haskell
 
+
+  /** Find the model which contains a given atomic inst. */
+  def findModel (exp:domain.Atomic) : domain.Model = {
+    getModel.toSeq.filter(m => m.types.contains(exp)).head
+  }
+
+
   /** Return designated HaskellType. */
   override def typeConverter(tpe:domain.TypeRep) : HaskellType = {
     tpe match {
@@ -32,6 +39,11 @@ trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskell
   /** Concatenate attributes by name in order */
   def standardArgs(exp:domain.Atomic, suffix:String = "") : Haskell = {
     Haskell(exp.attributes.map(att => att.name + suffix).mkString(" "))
+  }
+
+  /** Create sequence of attributes, suitable for varargs declarations. */
+  def standardVarArgs(exp:domain.Atomic, suffix:String = "") : Seq[Haskell] = {
+    exp.attributes.map(att => Haskell(att.name + suffix))
   }
 
   /** If any new imports are needed for an operation, just extend here. */

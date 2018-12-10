@@ -66,7 +66,7 @@ trait e4 extends Evolution with HaskellGenerator with HUnitTestGenerator with Pr
                               |    let leftVal = ${Eval.name} ${dispatch(atts(base.inner), op)}
                               |    in if leftVal == 0
                               |       then ${inst(Lit)(op)(zero)}
-                              |       else ${inst(Neg)(op)(standardArgs(Neg))}
+                              |       else ${inst(Neg)(op)(standardVarArgs(Neg) : _*)}
                               |""".stripMargin))
 
           case Add => Seq(Haskell(s"""|
@@ -78,7 +78,7 @@ trait e4 extends Evolution with HaskellGenerator with HUnitTestGenerator with Pr
                                |             then ${dispatch(atts(base.right), op)}
                                |             else if rightVal == 0
                                |                  then ${dispatch(atts(base.left), op)}
-                               |                  else ${inst(Add)(op)(standardArgs(Add))}
+                               |                  else ${inst(Add)(op)(standardVarArgs(Add) : _*)}
                                |""".stripMargin))
 
           case Sub => Seq(Haskell(s"""|
@@ -86,7 +86,7 @@ trait e4 extends Evolution with HaskellGenerator with HUnitTestGenerator with Pr
                               |        rightVal = eval ${dispatch(atts(base.right), op)}
                               |    in if leftVal == rightVal
                               |        then ${inst(Lit)(op)(zero)}
-                              |        else ${inst(Sub)(op)(standardArgs(Add))}
+                              |        else ${inst(Sub)(op)(standardVarArgs(Add) : _*)}
                               |""".stripMargin))
 
           case Mult => Seq(Haskell(s"""|
@@ -98,7 +98,7 @@ trait e4 extends Evolution with HaskellGenerator with HUnitTestGenerator with Pr
                                 |             then ${dispatch(atts(base.right), op)}
                                 |             else if rightVal == 1
                                 |                  then ${dispatch(atts(base.left), op)}
-                                |                  else ${inst(Mult)(op)(standardArgs(Add))}
+                                |                  else ${inst(Mult)(op)(standardVarArgs(Add) : _*)}
                                 |""".stripMargin))
 
           case Divd => Seq(Haskell(s"""|
@@ -112,7 +112,7 @@ trait e4 extends Evolution with HaskellGenerator with HUnitTestGenerator with Pr
                                 |                  then ${inst(Lit)(op)(one)}
                                 |                  else if leftVal == (0 - rightVal)
                                 |                       then ${inst(Lit)(op)(negOne)}
-                                |                       else ${inst(Mult)(op)(standardArgs(Add))}
+                                |                       else ${inst(Mult)(op)(standardVarArgs(Add) : _*)}
                                 |""".stripMargin))
 
           case _ => super.logic(exp)(op)

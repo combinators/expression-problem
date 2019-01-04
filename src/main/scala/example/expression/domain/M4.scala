@@ -20,18 +20,18 @@ trait M4 extends Evolution  {
   val m4_m2 = new BinaryInst(Mult, new LitInst(2.0), new LitInst(3.0))
   val m4_d2 = new BinaryInst(Divd, new BinaryInst(Divd, new LitInst(5.0), new LitInst(7.0)), new BinaryInst(Sub, new LitInst(7.0), m4_m2))
 
-//  public void testSimplify() {
-//    assertEquals("((5.0/2.0)*4.0)", ${dispatch(convert(m4_m1), PrettyP)});
-//    assertEquals (${dispatch(convert(d1), PrettyP)}, ${dispatch(dispatch(convert(m4_d2), Simplify), PrettyP)});
-//  }
-
-  val inner:domain.TypeRep = domain.BaseApply[domain.TypeRep](m4_d2, Simplify)
-  // HACK: TODO: FIX ME
-  val outer = domain.RecursiveApply[TypeRep](inner, PrettyP)
-
+  /**
+    * Test cases for Simplify are oddly complicated. The Simplify operation returns a new Exp object, but
+    * making test cases depends upon having the ability to PrettyP the result. We therefore want to check
+    * equality of (d1 x prettyP) vs. ((d2 x Simplify) x prettyp)
+    *
+    * Result should support a composite operation
+    */
   def M4_tests:Seq[TestCase] = Seq(
     EqualsTestCase(m4_d2, Collect, (List(Double), Seq(5.0, 7.0, 7.0, 2.0, 3.0))),
     EqualsTestCase(m3_m1, PrettyP, (String, "-1.0")),
+
+    EqualsCompositeTestCase(m4_d2, Seq(Simplify, PrettyP), (String, "(5.0/7.0)")),
 
     EqualsTestCase(m4_m1, PrettyP, (String, "((5.0/2.0)*4.0)")),
     EqualsTestCase(m4_m1, Eval, (Double, 10.0))

@@ -76,18 +76,23 @@ trait BaseDomain {
     *
     * The expected result, therefore, is allowed to be an in-line expression
     */
-  abstract class TestCase(val expect:(TypeRep,Any))
+  abstract class TestCase
 
 //  /** Default wrapper converts the second argument by using toString. Override as necessary. */
 //  def wrap(primIn:Any) : Expression =  expression(primIn.toString)
+  abstract class TestCaseExpectedValue(val expect:(TypeRep, Any)) extends TestCase
 
-  case class EqualsTestCase(inst:AtomicInst, op:Operation, primExpect:(TypeRep,Any), params:(TypeRep,Any)*)
-    extends TestCase (primExpect)
-  case class NotEqualsTestCase(inst:AtomicInst, op:Operation, primExpect:(TypeRep,Any), params:(TypeRep,Any)*)
-    extends TestCase (primExpect)
+  case class EqualsTestCase(inst:AtomicInst, op:Operation, override val expect:(TypeRep,Any), params:(TypeRep,Any)*)
+    extends TestCaseExpectedValue(expect)
+  case class NotEqualsTestCase(inst:AtomicInst, op:Operation, override val expect:(TypeRep,Any), params:(TypeRep,Any)*)
+    extends TestCaseExpectedValue(expect)
+  case class EqualsCompositeTestCase(inst:AtomicInst, ops:Seq[Operation], override val expect:(TypeRep,Any), params:(TypeRep,Any)*)
+    extends TestCaseExpectedValue(expect)
 
-  case class EqualsComplexTestCase[T](inst:AtomicInst, d:Dispatch[T], primExpect:(TypeRep,Any), params:(TypeRep,Any)*)
-    extends TestCase (primExpect)
+  // Honestly, this shouldn't be a string, but instead, should be an Expression, but that has more far-reaching
+  // implications
+  case class TrueTestCase(result:String) extends TestCase
+  case class FalseTestCase(result:String) extends TestCase
 
   // when asked, will return an instance of type T
   abstract class Dispatch[T](val op:Operation) extends TypeRep {
@@ -95,7 +100,7 @@ trait BaseDomain {
   }
 
   // in is typed as Any since it really will be code expressions (in some language)
-  case class RecursiveApply[T](d:Dispatch[T], override val op:Operation) extends Dispatch[T](op)
-  case class BaseApply[T](in:AtomicInst, override val op:Operation) extends Dispatch[T](op)
+  abstract case class RecursiveApply[T](d:Dispatch[T], override val op:Operation) extends Dispatch[T](op)
+  abstract case class BaseApply[T](in:AtomicInst, override val op:Operation) extends Dispatch[T](op)
 
 }

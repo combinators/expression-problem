@@ -1,9 +1,7 @@
-package example.expression.j  /*DD:LD:AI*/
+package example.expression.j    /*DD:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
-import com.github.javaparser.ast.expr.Expression
-import com.github.javaparser.ast.stmt.Statement
-import example.expression.domain.ShapeDomain
+import example.expression.domain.{S1, ShapeDomain}
 import org.combinators.templating.twirl.Java
 
 /**
@@ -11,17 +9,12 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-trait s1 extends JavaGenerator with JUnitTestGenerator with Producer { self:s0 =>
+trait s1 extends JavaGenerator with JUnitTestGenerator with Producer with S1 { self:s0 =>
   val domain:ShapeDomain
-
-  case object Shrink extends domain.Operation("shrink", Some(domain.Shape), Seq((pct, Double)))
-  val s1 = domain.Model("s1", Seq.empty, Seq(Shrink), s0)
-
-  override def getModel = s1
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
   abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {
-    val subs:Map[String,Expression] = subExpressions(exp).asInstanceOf[Map[String,Expression]]
+    val subs:Map[String,Expression] = subExpressions(exp)
 
     // generate the actual body
     op match {
@@ -85,7 +78,6 @@ trait s1 extends JavaGenerator with JUnitTestGenerator with Producer { self:s0 =
          |   assertNotNull( ${dispatch(convert(s1), Shrink, d1)});
          |
          |   // Handle collect checks
-         |
          |
          |}""".stripMargin).methodDeclarations()
   }

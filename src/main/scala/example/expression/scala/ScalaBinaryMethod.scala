@@ -33,9 +33,13 @@ trait ScalaBinaryMethod extends BinaryMethod {
     */
   def getRecursiveListOfFiles(dir: File, header:String*): Seq[ScalaMainWithPath] = {
     val these:Seq[File] = dir.listFiles
-    val sources:Seq[ScalaMainWithPath] = these.filterNot(f => f.isDirectory).map(f => loadSource(header :+ f.getName : _*))
+    if (these == null || these.isEmpty) {
+      Seq.empty
+    } else {
+      val sources: Seq[ScalaMainWithPath] = these.filterNot(f => f.isDirectory).map(f => loadSource(header :+ f.getName: _*))
 
-    sources ++ these.filter(_.isDirectory).flatMap(f => getRecursiveListOfFiles(f, header :+ f.getName : _*))
+      sources ++ these.filter(_.isDirectory).flatMap(f => getRecursiveListOfFiles(f, header :+ f.getName: _*))
+    }
   }
 //
 //  /** Taken from scala meta web page. */

@@ -1,8 +1,7 @@
-package example.expression.interpreter  /*DI:LD:AD*/
+package example.expression.interpreter   /*DI:LD:AD*/
 
-import com.github.javaparser.ast.`type`.Type
-import com.github.javaparser.ast.expr.{Expression, SimpleName}
-import example.expression.domain.{M0, ModelDomain}
+import com.github.javaparser.ast.expr.SimpleName
+import example.expression.domain.M0
 import example.expression.j.JUnitTestGenerator
 import org.combinators.templating.twirl.Java
 
@@ -43,7 +42,6 @@ trait InterpreterTestGenerator extends JUnitTestGenerator with M0 {
     Java(s"new $classify$name($left, $right)").expression()
   }
 
-  // EvalIdAdd tree0 = new EvalIdAdd(new EvalIdLit(1.0), new EvalIdLit(2.0));
   /** Type to use when referring to specific instance. */
   override def exprDefine(exp:domain.AtomicInst) : Type = {
     val name = exp.e.name

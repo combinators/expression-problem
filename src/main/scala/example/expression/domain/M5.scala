@@ -14,14 +14,16 @@ trait M5 extends Evolution {
 
   // Tests
   val m5_s1 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(976.0))
-  val m5_s2 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(976.0))
-  val m5_s3 = new BinaryInst(Add, new LitInst(1.0), new LitInst(976.0))
+  val m5_s2 = new BinaryInst(Add, new LitInst(1.0), new LitInst(976.0))
+  val m5_s3 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(976.0))
 
-  // generate an expression representing a Tree.
-  def M5_tests:Seq[TestCase] = Seq(
-    EqualsTestCase(m5_s1, AsTree, (Tree, m5_s2)),
-    NotEqualsTestCase(m5_s3, AsTree, (Tree, m5_s2)),
-  )
+  // language-specific test cases take advantage of these instances.
+
+//  // generate an expression representing a Tree.
+//  def M5_tests:Seq[TestCase] = Seq(
+//    EqualsTestCase(m5_s1, AsTree, (Tree, m5_s2)),
+//    NotEqualsTestCase(m5_s3, AsTree, (Tree, m5_s2)),
+//  )
 //    s"""
 //       |public void test() {
 //       |   assertFalse(${dispatch(convert(s1), domain.AsTree)}.same(${dispatch(convert(s2), domain.AsTree)}));

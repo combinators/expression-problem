@@ -34,7 +34,7 @@ trait StraightTestGenerator extends HUnitTestGenerator {
     }
   }
 
-  /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
+  /** Combine all test cases together into a single Haskell file. */
   override def generateSuite(model: Option[Model] = None): Seq[HaskellWithPath] = {
     val opsImports = flat.ops.map(op => s"import ${op.name.capitalize}").mkString("\n")
     var num: Int = -1

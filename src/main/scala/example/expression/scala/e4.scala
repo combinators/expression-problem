@@ -16,8 +16,8 @@ trait e4 extends Evolution with ScalaGenerator with TestGenerator with Operation
   /**
     * List can be accommodated (in Java) by populating ArrayList with values drawn from test case.
     */
-   override def expected(test:domain.TestCase, id:String) : (Expression => Stat) => Stat = continue => {
-    test.op.returnType.get match {
+   override def expected(test:domain.TestCaseExpectedValue, id:String) : (Expression => Stat) => Stat = continue => {
+    test.expect._1 match {  // was op.returnType.get
       case list:List =>
         val seq: Seq[Any] = test.expect._2.asInstanceOf[Seq[Any]]
 

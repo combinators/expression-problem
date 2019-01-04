@@ -18,8 +18,8 @@ trait M6 extends Evolution {
 
   override def getModel = m6
 
-  val m6_s1 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
-  val m6_s2 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
+  val m6_s1 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(73.0))
+  val m6_s2 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(73.0))
 
   def M6_tests:Seq[TestCase] = Seq(
     EqualsTestCase(m6_s2, Equals, (Boolean, true), (Exp, m6_s1)),  // parameter to operation

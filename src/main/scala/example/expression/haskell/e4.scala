@@ -15,8 +15,8 @@ trait e4 extends Evolution with HaskellGenerator with HUnitTestGenerator with Pr
   /**
     * List can be accommodated (in Haskell) as a [a,b,c,d,e]
     */
-  override def expected(test:domain.TestCase, id:String) : (Expression => Seq[Statement]) => Seq[Statement] = continue => {
-    test.op.returnType.get match {
+  override def expected(test:domain.TestCaseExpectedValue, id:String) : (Expression => Seq[Statement]) => Seq[Statement] = continue => {
+    test.expect._1 match {   // was op.returnType.get
       case list:List =>
         val seq: Seq[Any] = test.expect._2.asInstanceOf[Seq[Any]]
         continue(new Haskell("[" + seq.mkString(",") + "]"))

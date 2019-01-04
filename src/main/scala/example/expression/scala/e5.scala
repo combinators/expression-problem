@@ -37,7 +37,7 @@ trait e5 extends Evolution with ScalaGenerator with TestGenerator with Operation
       case domain.AsTree => {
         val atts = subExpressions(exp)
 
-        // TODO: replace hard-coded DefinedSubTypes with dependent operation getSubTypeIdentifier and dispatch accordingtly.
+        // TODO: replace hard-coded DefinedSubTypes with dependent operation getSubTypeIdentifier and dispatch accordingly.
 
         // different strategies have different means of accessing attributes, either directly or via
         // getXXX methods. This logic method must defer that knowledge to later.
@@ -59,22 +59,16 @@ trait e5 extends Evolution with ScalaGenerator with TestGenerator with Operation
             Scala(s"""new tree.Node(Seq($seq), ${delegate(exp, Identifier, atts(domain.base.left), atts(domain.base.right))} ) """).statements()
           }
       }
-// new tree.Node(Seq(new Astree().apply(inner)), new Id().apply(inner) )
       case _ => super.logic(exp)(op)
     }
   }
 
   abstract override def testGenerator: Seq[Stat] = {
-    super.testGenerator :+ testMethod(M5_tests)
-//    val s1 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
-//    val s2 = new domain.BinaryInst(Sub, new LitInst(9.0), new LitInst(112.0))
-//    val s3 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
-//
-//    super.testGenerator ++ Scala(
-//      s"""
-    //         |def test() : Unit =  {
-    //         |   assert (false == ${dispatch(convert(s1), domain.AsTree)}.same(${dispatch(convert(s2), domain.AsTree)}));
-    //         |   assert (true == ${dispatch(convert(s1), domain.AsTree)}.same(${dispatch(convert(s3), domain.AsTree)}));
-    //         |}""".stripMargin).statements()
+    super.testGenerator ++ Scala(
+      s"""
+             |def test() : Unit =  {
+             |   assert (false == ${dispatch(convert(m5_s1), domain.AsTree)}.same(${dispatch(convert(m5_s2), domain.AsTree)}));
+             |   assert (true == ${dispatch(convert(m5_s1), domain.AsTree)}.same(${dispatch(convert(m5_s3), domain.AsTree)}));
+             |}""".stripMargin).statements()
   }
 }

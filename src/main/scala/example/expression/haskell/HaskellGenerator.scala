@@ -21,12 +21,10 @@ trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskell
   type Expression = Haskell
   type Statement = Haskell
 
-
   /** Find the model which contains a given atomic inst. */
   def findModel (exp:domain.Atomic) : domain.Model = {
     getModel.toSeq.filter(m => m.types.contains(exp)).head
   }
-
 
   /** Return designated HaskellType. */
   override def typeConverter(tpe:domain.TypeRep) : HaskellType = {
@@ -119,9 +117,13 @@ trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskell
     */
   def getRecursiveListOfFiles(dir: File, header:String*): Seq[HaskellWithPath] = {
     val these:Seq[File] = dir.listFiles
-    val sources:Seq[HaskellWithPath] = these.filterNot(f => f.isDirectory).map(f => loadSource(header :+ f.getName : _*))
+    if (these == null || these.isEmpty) {
+      Seq.empty
+    } else {
+      val sources: Seq[HaskellWithPath] = these.filterNot(f => f.isDirectory).map(f => loadSource(header :+ f.getName: _*))
 
-    sources ++ these.filter(_.isDirectory).flatMap(f => getRecursiveListOfFiles(f, header :+ f.getName : _*))
+      sources ++ these.filter(_.isDirectory).flatMap(f => getRecursiveListOfFiles(f, header :+ f.getName: _*))
+    }
   }
 
   /**

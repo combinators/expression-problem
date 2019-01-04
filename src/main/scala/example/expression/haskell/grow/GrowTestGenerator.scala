@@ -49,12 +49,20 @@ trait GrowTestGenerator extends HUnitTestGenerator with GrowGenerator {
 
       val id: String = s"v$idx"
 
-      // test_e3_1 = TestCase (assertEqual "NegCheck-Eval" (0-5.0) (${Eval.name} n1))
-      // (evalExpM0 (Add (Lit 1.0) (Lit 2.0))  ))
-      val disp = s"(${test.op.name}${domain.baseTypeRep.name}${model.name.capitalize} (${convert(test.inst)}))"
-      //val disp = dispatch(convert(test.inst), test.op)
+      test match {
+        case eq: EqualsTestCase =>
+          // test_e3_1 = TestCase (assertEqual "NegCheck-Eval" (0-5.0) (${Eval.name} n1))
+          // (evalExpM0 (Add (Lit 1.0) (Lit 2.0))  ))
+          val disp = s"(${eq.op.name}${domain.baseTypeRep.name}${model.name.capitalize} (${convert(eq.inst)}))"
+          //val disp = dispatch(convert(test.inst), test.op)
 
-      expected(test, id)(expectedExpr => Seq(new Haskell(s"""test_$id = TestCase (assertEqual "${test.getClass.getSimpleName}" $expectedExpr $disp)""")))
+          expected(eq, id)(expectedExpr => Seq(new Haskell(s"""test_$id = TestCase (assertEqual "${test.getClass.getSimpleName}" $expectedExpr $disp)""")))
+
+        case seq:EqualsCompositeTestCase =>
+          val x :Expression = actual(seq.ops.head, seq.inst)   // HACK: Only works for two-deep
+          val y :Expression = dispatch(x, seq.ops.tail.head)
+          expected(seq, id)(expectedExpr => Seq(new Haskell(s"""test_$id = TestCase (assertEqual "${test.getClass.getSimpleName}" ($expectedExpr) $y)""")))
+      }
     })
 
     val structure = tests.zipWithIndex.map(pair => {

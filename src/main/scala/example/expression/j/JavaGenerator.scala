@@ -2,6 +2,7 @@ package example.expression.j  /*DI:LD:AI*/
 
 import com.github.javaparser.JavaParser
 import com.github.javaparser.ast.body.{ConstructorDeclaration, FieldDeclaration, MethodDeclaration, TypeDeclaration}
+import com.github.javaparser.ast.stmt.BlockStmt
 import example.expression.domain.{BaseDomain, ModelDomain}
 import example.expression.generator.LanguageIndependentGenerator
 import org.combinators.templating.twirl.Java
@@ -196,5 +197,24 @@ trait JavaGenerator extends LanguageIndependentGenerator with DependentDispatch 
     while (elements.hasNext) {
       newType.addMember(elements.next)
     }
+  }
+
+  /**
+    * Add statements to the end of the given method.
+    *
+    * @param method
+    * @param stmts
+    * @return
+    */
+  def addStatements(method:MethodDeclaration, stmts:Seq[Statement]) : MethodDeclaration = {
+    if (!method.getBody.isPresent) {
+      val bb:BlockStmt = new BlockStmt()
+      method.setBody(bb)
+    }
+    var block = method.getBody.get
+
+    stmts.foreach(s => block = block.addStatement(s))
+    method.setBody(block)
+    method
   }
 }

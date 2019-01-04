@@ -15,7 +15,7 @@ trait e2 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
   /**
     * List can be accommodated (in Haskell) as a [a,b,c,d,e]
     */
-  override def expected(test:domain.TestCase, id:String) : (Expression => Seq[Statement]) => Seq[Statement] = continue => {
+  override def expected(test:domain.TestCaseExpectedValue, id:String) : (Expression => Seq[Statement]) => Seq[Statement] = continue => {
     test.expect._1 match {
       case String => continue (new Haskell("\"" + test.expect._2.toString + "\""))
       case _ => super.expected(test, id) (continue)

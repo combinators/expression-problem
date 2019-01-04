@@ -4,6 +4,7 @@ import example.expression.domain.{BaseDomain, ModelDomain}
 
 /**
   * Each evolution has opportunity to enhance the code generators.
+  *
   */
 trait HUnitTestGenerator extends HaskellGenerator {
   val domain: BaseDomain with ModelDomain
@@ -23,12 +24,19 @@ trait HUnitTestGenerator extends HaskellGenerator {
     * Return properly formatted expected value as a string.
     * TODO: Future plan to return a proper class which can be refined with strategy rather than pure continuation
     */
-  def expected(test:TestCase, id:String) : (Haskell => Seq[Haskell]) => Seq[Haskell] = continue => {
+  def expected(test:TestCaseExpectedValue, id:String) : (Haskell => Seq[Haskell]) => Seq[Haskell] = continue => {
     continue(new Haskell(test.expect._2.toString))
   }
 
-  /** Actual value in a test case. */
-  def actual(test:TestCase):Haskell = dispatch(convert(test.inst), test.op)
+  /**
+    * Actual value in a test case.
+    *
+    * Each basic test case has an instance over which an operation is to be performed. This method
+    * returns the inline expression resulting from dispatching operation, op, over the given instance, inst.
+    *
+    * For more complicated structures, as with lists for example, this method will need to be overridden.
+    */
+  def actual(op:Operation, inst:AtomicInst):Haskell = dispatch(convert(inst), op)
 
   /** Return JUnit test case associated with these given test cases. */
   def hunitMethod(tests:Seq[TestCase]) : Haskell = {
@@ -38,9 +46,19 @@ trait HUnitTestGenerator extends HaskellGenerator {
 
       val id:String = s"v$idx"
 
-      // test_e3_1 = TestCase (assertEqual "NegCheck-Eval" (0-5.0) (${Eval.name} n1))
-      val disp = dispatch(convert(test.inst), test.op)
-      expected(test, id)(expectedExpr => Seq(new Haskell(s"""test_$id = TestCase (assertEqual "${test.getClass.getSimpleName}" ($expectedExpr) $disp)""")))
+      test match {
+        case eq: EqualsTestCase =>
+
+          // test_e3_1 = TestCase (assertEqual "NegCheck-Eval" (0-5.0) (${Eval.name} n1))
+          val disp = dispatch(convert(eq.inst), eq.op)
+          expected(eq, id)(expectedExpr => Seq(new Haskell(s"""test_$id = TestCase (assertEqual "${test.getClass.getSimpleName}" ($expectedExpr) $disp)""")))
+
+        case seq:EqualsCompositeTestCase => {
+          val x :Expression = actual(seq.ops.head, seq.inst)   // HACK: Only works for two-deep
+          val y :Expression = dispatch(x, seq.ops.tail.head)
+          expected(seq, id)(expectedExpr => Seq(new Haskell(s"""test_$id = TestCase (assertEqual "${test.getClass.getSimpleName}" ($expectedExpr) $y)""")))
+        }
+      }
     })
 
     val structure = tests.zipWithIndex.map(pair => {

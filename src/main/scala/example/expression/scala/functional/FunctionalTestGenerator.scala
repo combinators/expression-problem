@@ -7,8 +7,8 @@ import scala.meta.Term
 trait FunctionalTestGenerator extends TestGenerator {
 
   /** Actual value in a test case. */
-  override def actual(test:domain.TestCase, terms:Term*):Expression = {
+  override def actual(op:domain.Operation, inst:domain.AtomicInst, terms:Term*):Expression = {
     // had first s"new ${test.op.name.capitalize}()." +
-    Scala (s"${test.op.name.toLowerCase()}(${convert(test.inst)})").term()
+    Scala (s"${op.name.toLowerCase()}(${convert(inst)})").term()
   }
 }

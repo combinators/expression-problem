@@ -62,6 +62,11 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
     }
   }
 
+  /** helper method for testing when goal is to check equality between tree objects . */
+  def treesAreSame(treeExp1:Expression, treeExp2:Expression) : Expression = {
+    Java(s"${treeExp1.toString}.same(${treeExp2.toString})").expression[Expression]()
+  }
+
   abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {
     // generate the actual body
     op match {
@@ -91,15 +96,11 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
   }
 
   abstract override def testGenerator: Seq[MethodDeclaration] = {
-    val s1 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
-    val s2 = new domain.BinaryInst(Sub, new LitInst(9.0), new LitInst(112.0))
-    val s3 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
-
     super.testGenerator ++ Java(
       s"""
          |public void test() {
-         |   assertFalse(${dispatch(convert(s1), domain.AsTree)}.same(${dispatch(convert(s2), domain.AsTree)}));
-         |   assertTrue (${dispatch(convert(s1), domain.AsTree)}.same(${dispatch(convert(s3), domain.AsTree)}));
+         |   assertFalse(${dispatch(convert(m5_s1), domain.AsTree)}.same(${dispatch(convert(m5_s2), domain.AsTree)}));
+         |   assertTrue (${dispatch(convert(m5_s1), domain.AsTree)}.same(${dispatch(convert(m5_s3), domain.AsTree)}));
          |}""".stripMargin).methodDeclarations()
   }
 }

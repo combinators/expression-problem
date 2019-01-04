@@ -20,14 +20,14 @@ trait TestGenerator extends ScalaGenerator {
     * Return properly formatted expected value as a string.
     *
     * The goal of this method is to return a code fragment that effectively contains the
-    * expected valute of an operation on a specific instance. Note this is not as simple
+    * expected value of an operation on a specific instance. Note this is not as simple
     * as being a string value (from a toString invocation). For example, with the AsTree
     * operation, we want to ensure that the result of calling AsTree (a tree.Tree) is the
     * same as the expected value, which is a code fragment that effectively calls asTree
     * on another instance.
     *
     */
-  def expected(test:TestCase, id:String) : (Term => Stat) => Stat = continue => {
+  def expected(test:TestCaseExpectedValue, id:String) : (Term => Stat) => Stat = continue => {
     val expectedType:Type = typeConverter(test.expect._1)
     val baseType:Type = Scala("AtomicInst").tpe()
     val baseName:Type = Scala(domain.baseTypeRep.name).tpe()
@@ -48,7 +48,7 @@ trait TestGenerator extends ScalaGenerator {
   }
 
   /** Actual value in a test case. */
-  def actual(test:domain.TestCase, terms:Term*):Expression = dispatch(convert(test.inst), test.op, terms : _*)
+  def actual(op:Operation, inst:AtomicInst, terms:Term*):Expression = dispatch(convert(inst), op, terms : _*)
 
   /** Convert a test instance into a Java Expression for instantiating that instance. */
   def convert(inst: AtomicInst): Expression = {
@@ -82,25 +82,38 @@ trait TestGenerator extends ScalaGenerator {
       // method will pass in the expression (which is expected) into this function, and it is the job of that
       // function to return the variable.
       test match {
-        case et:EqualsTestCase => {
-          val params = et.params.map(pair => expand(pair._1, pair._2))
+        case eq:EqualsTestCase => {
+          val params = eq.params.map(pair => expand(pair._1, pair._2))
+          //test.expect
+          //val str = s"assert (${expected(eq, id)} == ${actual(eq.op, eq.inst, params: _*)})"
+          //println ("expect:" + str)
+          //Scala(str).statement()
+          expected(eq, id)(expectedExpr => Scala(s"assert ($expectedExpr == ${actual(eq.op, eq.inst, params: _*)})").statement())
+        }
+
+        case comp:EqualsCompositeTestCase => {
+          val params = comp.params.map(pair => expand(pair._1, pair._2))
+
+          val x :Expression = actual(comp.ops.head, comp.inst, params: _*)   // HACK: Only works for two-deep
+          val y :Expression = dispatch(x, comp.ops.tail.head)
 
           //test.expect
-          val str = s"assert (${test.expect} == ${actual(test, params: _*)})"
-          println ("expect:" + str)
-          Scala(str).statement()
-          //expected(test, id)(expectedExpr => Scala(s"assert ($expectedExpr == ${actual(test, params: _*)})").statement())
+          //val str = s"assert (${expected(comp, id)} == $y)"
+          //println ("expect:" + str)
+          //Scala(str).statement()
+          expected(comp, id)(expectedExpr => Scala(s"assert ($expectedExpr == $y)").statement())
         }
 
         case ne:NotEqualsTestCase =>
           val params = ne.params.map(pair => expand(pair._1, pair._2))
-          val str = s"assert (${test.expect} != ${actual(test, params: _*)})"
-          println ("expect:" + str)
-          Scala(str).statement()
+          //val str = s"assert (${expected(ne, id)} != ${actual(ne.op, ne.inst, params: _*)})"
+          //println ("expect:" + str)
+          //Scala(str).statement()
           //expected(test, id)(expectedExpr => Scala(s"assert ($expectedExpr != ${actual(test)})").statement())
        // case _:TrueTestCase =>
        //   expected(test, id)(expectedExpr => Scala(s"assert (true == ${dispatch()}").statement())
           //assert (false == ${dispatch(convert(s1), domain.AsTree)}.same(${dispatch(convert(s2), domain.AsTree)}));
+          expected(ne, id)(expectedExpr => Scala(s"assert ($expectedExpr != ${actual(ne.op, ne.inst, params: _*)})").statement())
       }
     })
 

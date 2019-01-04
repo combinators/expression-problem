@@ -35,8 +35,9 @@ trait e6 extends Evolution with ScalaGenerator with TestGenerator with BinaryMet
         // val that:Expression = Java("that").expression[Expression]()
         // Java(s"return ${delegate(exp,domain.AsTree)}.same(${dispatch(that, domain.AsTree)});").statements
         val that = Scala(s"that").expression()
-        Scala(s"""${delegate(exp,domain.AsTree,atts:_*)}.same(${dispatch(that, domain.AsTree)})""").statements()
+        Scala(s"(${delegate(exp,domain.AsTree,atts:_*)} == ${dependentDispatch(that, domain.AsTree)})").statements()
 
+        // was dispatch(that, domain.AsTree)
         // works for scala_oo
         //Scala(s"""$binaryContext$opn().same(that.$opn())""").statements()
 
@@ -48,16 +49,18 @@ trait e6 extends Evolution with ScalaGenerator with TestGenerator with BinaryMet
   }
 
   abstract override def testGenerator: Seq[Stat] = {
-    val s1 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
-    val s2 = new domain.BinaryInst(Add, new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0)),
-                                 new domain.BinaryInst(Add, new LitInst(5.0), new LitInst(6.0)))
-    val s3 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
-
-      super.testGenerator ++ Scala(
-      s"""
-         |def test() :Unit = {
-         |   assert (false == ${dispatch(convert(s1), Equals, convert(s2))})
-         |   assert( true == ${dispatch(convert(s1), Equals, convert(s3))})
-         |}""".stripMargin).statements()
+    val m = testMethod(M6_tests)
+    super.testGenerator :+ m
+//    val s1 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
+//    val s2 = new domain.BinaryInst(Add, new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0)),
+//                                 new domain.BinaryInst(Add, new LitInst(5.0), new LitInst(6.0)))
+//    val s3 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
+//
+//      super.testGenerator ++ Scala(
+//      s"""
+//         |def test() :Unit = {
+//         |   assert (false == ${dispatch(convert(s1), Equals, convert(s2))})
+//         |   assert( true == ${dispatch(convert(s1), Equals, convert(s3))})
+//         |}""".stripMargin).statements()
   }
 }

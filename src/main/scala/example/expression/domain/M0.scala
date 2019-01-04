@@ -24,7 +24,7 @@ trait M0 extends Evolution {
 
   // Testing
   def M0_tests:Seq[TestCase] = Seq(
-    EqualsTestCase(new BinaryInst(Add, new LitInst(1.0), new LitInst(2.0)), (Double, 3.0), Eval),
-    EqualsTestCase(new LitInst(5.0), (Double, 5.0), Eval)
+    EqualsTestCase(new BinaryInst(Add, new LitInst(1.0), new LitInst(2.0)), Eval, (Double, 3.0)),
+    EqualsTestCase(new LitInst(5.0), Eval, (Double, 5.0))
   )
 }

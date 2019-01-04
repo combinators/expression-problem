@@ -19,6 +19,9 @@ trait JavaGenerator extends LanguageIndependentGenerator with DependentDispatch 
   type Expression = com.github.javaparser.ast.expr.Expression
   type Statement = com.github.javaparser.ast.stmt.Statement
 
+  /** Default helper to convert string into Expression. Not yet integrated. */
+  def expression(s:String) : Expression = Java(s).expression[com.github.javaparser.ast.expr.Expression]()
+
   /** Return designated Java type associated with type, or void if all else fails. */
   override def typeConverter(tpe:domain.TypeRep) : Type = {
     tpe match {

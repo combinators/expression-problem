@@ -13,19 +13,14 @@ trait M5 extends Evolution {
   override def getModel = m5
 
   // Tests
-  val m5_s1 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
-  val s2 = new BinaryInst(Sub, new LitInst(9.0), new LitInst(112.0))
-  val m5_s2 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
+  val m5_s1 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(976.0))
+  val m5_s2 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(976.0))
+  val m5_s3 = new BinaryInst(Add, new LitInst(1.0), new LitInst(976.0))
 
-  // two trees can be compared for being 'same'
-  case class SameTestCase(override val inst:AtomicInst, override val expect:(TypeRep,Any), override val op:Operation) extends TestCase (inst, expect, op)
-
+  // generate an expression representing a Tree.
   def M5_tests:Seq[TestCase] = Seq(
-    EqualsTestCase(m5_s1, (Tree, m5_s2), AsTree),
-    EqualsTestCase(m3_m1, (String, "-1.0"), PrettyP),
-
-    EqualsTestCase(m4_m1, (String, "((5.0/2.0)*4.0)"), PrettyP),
-    EqualsTestCase(m4_m1, (Double, 10.0), Eval)
+    EqualsTestCase(m5_s1, AsTree, (Tree, m5_s2)),
+    NotEqualsTestCase(m5_s3, AsTree, (Tree, m5_s2)),
   )
 //    s"""
 //       |public void test() {

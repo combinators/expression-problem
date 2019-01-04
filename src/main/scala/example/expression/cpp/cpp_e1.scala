@@ -14,7 +14,7 @@ trait cpp_e1 extends Evolution with CPPGenerator with TestGenerator with M1 {
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
   abstract override def logic(exp:Atomic)(op:Operation): Seq[CPPElement] = {
-    val atts:Map[String,CPPElement] = subExpressions(exp)
+    val atts = subExpressions(exp)
 
     // generate the actual body
     op match {

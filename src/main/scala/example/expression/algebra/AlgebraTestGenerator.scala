@@ -2,13 +2,14 @@ package example.expression.algebra /*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
 import example.expression.domain.{BaseDomain, ModelDomain}
-import example.expression.j.{JavaBinaryMethod, JavaGenerator, JUnitTestGenerator}
+import example.expression.generator.LanguageIndependentTestGenerator
+import example.expression.j.{JUnitTestGenerator, JavaBinaryMethod, JavaGenerator}
 import org.combinators.templating.twirl.Java
 
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with JavaBinaryMethod {
+trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with LanguageIndependentTestGenerator with JavaBinaryMethod {
   val domain: BaseDomain with ModelDomain
   import domain._
 

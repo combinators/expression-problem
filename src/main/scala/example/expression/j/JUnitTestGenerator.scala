@@ -1,6 +1,5 @@
 package example.expression.j  /*DI:LD:AI*/
 
-import com.github.javaparser.ast.body.MethodDeclaration
 import example.expression.domain.{BaseDomain, ModelDomain}
 import org.combinators.templating.twirl.Java
 
@@ -32,7 +31,7 @@ trait JUnitTestGenerator extends TestGenerator with JavaGenerator {
       ""
     }
 
-    val allTests = testGenerator
+    val allTests = testGenerator ++ performanceMethod()
 
     var num: Int = 0
     val files: Seq[CompilationUnit] = allTests.filter(md => md.getBody.isPresent).map(md => {
@@ -43,7 +42,6 @@ trait JUnitTestGenerator extends TestGenerator with JavaGenerator {
                |public class TestSuite$num extends TestCase {
                |    $md
                |}""".stripMargin).compilationUnit
-
     })
 
     files

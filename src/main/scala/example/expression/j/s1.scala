@@ -21,7 +21,7 @@ trait s1 extends JavaGenerator with JUnitTestGenerator with Producer { self:s0 =
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
   abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {
-    val subs:Map[String,Expression] = subExpressions(exp)
+    val subs:Map[String,Expression] = subExpressions(exp).asInstanceOf[Map[String,Expression]]
 
     // generate the actual body
     op match {
@@ -45,9 +45,10 @@ trait s1 extends JavaGenerator with JUnitTestGenerator with Producer { self:s0 =
           }
 
           case Translate => {
+            val disp = dispatch(subs(shape), op, expression("pct"))
             Java(
               s"""
-                 |return ${inst(Translate)(op)(subs(trans),dispatch(subs(shape), op, Java("pct").expression[Expression]()))};
+                 |return ${inst(Translate)(op)(subs(trans),disp)};
                  |
                """.stripMargin).statements()
           }

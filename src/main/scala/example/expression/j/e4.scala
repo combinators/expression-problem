@@ -15,9 +15,12 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
 
   /**
     * List can be accommodated (in Java) by populating ArrayList with values drawn from test case.
+    *
+    * Calls 'continue' with an expression (the result of the prior new statements) and just concatenates all statements
     */
    override def expected(test:domain.TestCase, id:String) : (Expression => Seq[Statement]) => Seq[Statement] = continue => {
-    test.op.returnType.get match {
+    //test.op.returnType.get match {
+     test.expect._1 match {   // HACK: NOT sure if this works.
       case list:List =>
         val seq: Seq[Any] = test.expect._2.asInstanceOf[Seq[Any]]
         val jtype = Java(typeConverter(list)).tpe
@@ -89,7 +92,7 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
   }
 
   abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {
-    val subs = subExpressions(exp)
+    val subs:Map[String,Expression] = subExpressions(exp).asInstanceOf[Map[String,Expression]]
     val zero = Java("0.0").expression[Expression]()
     val one = Java("1.0").expression[Expression]()
     val negOne = Java("-1.0").expression[Expression]()
@@ -187,6 +190,7 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
 
   // TODO: HACK. Fix this implementation
   abstract override def testGenerator: Seq[MethodDeclaration] = {
+
 
     if (getModel.supports(Simplify)) {
       val d1 = new domain.BinaryInst(Mult, new LitInst(2.0), new LitInst(3.0))

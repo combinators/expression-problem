@@ -8,14 +8,16 @@ import scala.meta.Term
   *
   * Note: Should have used localized types as defined within ScalaGenerator...
   */
-trait Producer  {
+trait Producer extends ScalaGenerator {
   val domain:BaseDomain with ModelDomain
+  import domain._
 
   /**
     * For producer operations, there is a need to instantiate objects, and one would use this
     * method (with specific parameters) to carry this out.
     */
-  def inst(exp:domain.Atomic)(op:domain.Operation)(params:Term*): Term = {
+  def inst(exp:Atomic)(op:Operation)(params:Term*): Term = {
     Scala("new " + exp.name.capitalize + "(" + params.map(expr => expr.toString()).mkString(",") + ")").expression()
   }
+
 }

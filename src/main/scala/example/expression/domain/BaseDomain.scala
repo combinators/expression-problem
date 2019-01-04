@@ -3,11 +3,14 @@ package example.expression.domain  /*DI:LI:AI*/
 /** Foundational trait for all EP domains. */
 trait BaseDomain {
 
-  /** Always allow, unless overridden to deny because of reserved word. */
+  //x type Expression                           /** Base concept for a single expression in language. */
+  //x def expression(s:String) : Expression     /** Method to produce expression from arbitrary string. */
+
+  /** Always allow, unless overridden to deny because of reserved word. Not yet Working*/
   var reserved = Array("print")
 
   // We need to have a consistent strategy for cleaning up
-  // these reserved words. Changes based on language
+  // these reserved words. Changes based on language. Not Yet Working
   def sanitize(s:String):String = s
 
   /** There is a base type and subsequent sub-types will extend Types. */
@@ -18,12 +21,14 @@ trait BaseDomain {
   val baseTypeRep:BaseTypeRep
 
   // standard attributes for domain. As new ones are defined, create own object to store them
+  // Admittedly not the best place
   object base {
     val inner:String = "inner"
     val left:String = "left"
     val right:String = "right"
     val that:String = "that"
   }
+
 
   /** Java classes will have attributes and methods reflecting the desired operations. */
   abstract class Element
@@ -64,9 +69,33 @@ trait BaseDomain {
   class UnaryInst(override val e:Atomic, val inner:AtomicInst) extends AtomicInst(e, None)
   class BinaryInst(override val e:Atomic, val left:AtomicInst, val right:AtomicInst) extends AtomicInst(e, None)
 
-  // A Test case is determined by the expected result of an operation on a given instance.
-  abstract class TestCase(val inst:AtomicInst, val expect:(TypeRep,Any), val op:Operation)
-  case class EqualsTestCase(override val inst:AtomicInst, override val expect:(TypeRep,Any), override val op:Operation) extends TestCase (inst, expect, op)
-  case class FalseTestCase(override val inst:AtomicInst, override val expect:(TypeRep,Any), override val op:Operation) extends TestCase (inst, expect, op)
-  case class TrueTestCase(override val inst:AtomicInst, override val expect:(TypeRep,Any), override val op:Operation) extends TestCase (inst, expect, op)
+  /**
+    * A Test case is determined by the expected result of an operation on a given instance.
+    * For simple types, such as doubles and strings, we can rely on the default toString method to work properly,
+    * but for more complicated tests (such as AsTree and Equals) we need a more powerful mechanism.
+    *
+    * The expected result, therefore, is allowed to be an in-line expression
+    */
+  abstract class TestCase(val expect:(TypeRep,Any))
+
+//  /** Default wrapper converts the second argument by using toString. Override as necessary. */
+//  def wrap(primIn:Any) : Expression =  expression(primIn.toString)
+
+  case class EqualsTestCase(inst:AtomicInst, op:Operation, primExpect:(TypeRep,Any), params:(TypeRep,Any)*)
+    extends TestCase (primExpect)
+  case class NotEqualsTestCase(inst:AtomicInst, op:Operation, primExpect:(TypeRep,Any), params:(TypeRep,Any)*)
+    extends TestCase (primExpect)
+
+  case class EqualsComplexTestCase[T](inst:AtomicInst, d:Dispatch[T], primExpect:(TypeRep,Any), params:(TypeRep,Any)*)
+    extends TestCase (primExpect)
+
+  // when asked, will return an instance of type T
+  abstract class Dispatch[T](val op:Operation) extends TypeRep {
+    def apply() : T
+  }
+
+  // in is typed as Any since it really will be code expressions (in some language)
+  case class RecursiveApply[T](d:Dispatch[T], override val op:Operation) extends Dispatch[T](op)
+  case class BaseApply[T](in:AtomicInst, override val op:Operation) extends Dispatch[T](op)
+
 }

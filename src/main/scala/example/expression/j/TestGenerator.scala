@@ -2,11 +2,14 @@ package example.expression.j   /*DI:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
 import example.expression.domain.{BaseDomain, ModelDomain}
+import example.expression.generator.LanguageIndependentTestGenerator
 import org.combinators.templating.twirl.Java
 
-trait TestGenerator extends JavaGenerator {
+trait TestGenerator extends JavaGenerator with LanguageIndependentTestGenerator {
   val domain: BaseDomain with ModelDomain
   import domain._
+
+  type UnitTest = MethodDeclaration     /** Base concept for the representation of a single test case. */
 
   /** Return properly formatted expected value as a string. */
   def expected(test:TestCase, id:String) : (Expression => Seq[Statement]) => Seq[Statement] = continue => {
@@ -54,4 +57,5 @@ trait TestGenerator extends JavaGenerator {
              |   ${stmts.mkString("\n")}
              |}""".stripMargin).methodDeclarations.head
   }
+
 }

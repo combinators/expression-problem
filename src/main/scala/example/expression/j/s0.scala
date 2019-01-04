@@ -49,7 +49,7 @@ trait s0 extends Evolution with JavaGenerator with JUnitTestGenerator {
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
   abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {
-    val subs:Map[String,Expression] = subExpressions(exp)
+    val subs:Map[String,Expression] = subExpressions(exp).asInstanceOf[Map[String,Expression]]
 
     // generate the actual body
     op match {

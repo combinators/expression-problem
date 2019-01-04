@@ -22,13 +22,13 @@ trait M3 extends Evolution {
   val m3_m2 = new domain.BinaryInst(Mult, new domain.BinaryInst (Divd, new LitInst(5.0),  new LitInst(2.0)), new LitInst(4.0))
 
   def M3_tests:Seq[TestCase] = Seq(
-    EqualsTestCase(m3_m1, (Double, -1.0), Eval),
-    EqualsTestCase(m3_m1, (String, "-1.0"), PrettyP),
+    EqualsTestCase(m3_m1, Eval, (Double, -1.0)),
+    EqualsTestCase(m3_m1, PrettyP, (String, "-1.0")),
 
-    EqualsTestCase(m3_m2, (String, "((5.0/2.0)*4.0)"), PrettyP),
-    EqualsTestCase(m3_m2, (Double, 10.0), Eval),
+    EqualsTestCase(m3_m2, PrettyP, (String, "((5.0/2.0)*4.0)")),
+    EqualsTestCase(m3_m2, Eval, (Double, 10.0)),
 
-    EqualsTestCase(m3_d1, (Double, -5.0), Eval),
-    EqualsTestCase(m3_s1, (String, "-(2.0*3.0)"), PrettyP)
+    EqualsTestCase(m3_d1, Eval, (Double, -5.0)),
+    EqualsTestCase(m3_s1, PrettyP, (String, "-(2.0*3.0)"))
   )
 }

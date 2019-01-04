@@ -21,6 +21,16 @@ trait FunSpecFunctionalTestGenerator extends FunSpecTestGenerator {
     val withClause = model.get.inChronologicalOrder.map(m => s"with ${m.name.capitalize}").mkString(" ")
     val allTests = testGenerator
 
+    val helpers:Seq[String] = model.get.flatten().ops.map(op => {
+      if (op.parameters.isEmpty) {
+        s"  override def ${op.name.toLowerCase}:visitor with ${op.name.capitalize} = new Visitor with ${op.name.capitalize}"
+      } else {
+        val paramsDef = op.parameters.map(pair => s"_${pair._1}: ${typeConverter(pair._2)}").mkString(",")
+        val paramsSet = op.parameters.map(pair => s"val ${pair._1} = _${pair._1}").mkString("\n")
+        s"  override def ${op.name.toLowerCase}($paramsDef):visitor with ${op.name.capitalize} = new Visitor with ${op.name.capitalize} { $paramsSet }"
+      }
+    })
+
     var num: Int = 0
     val files: Seq[ScalaWithPath] = allTests.map(md => {
       num = num + 1
@@ -30,6 +40,10 @@ trait FunSpecFunctionalTestGenerator extends FunSpecTestGenerator {
                              |import org.scalatest.FunSpec
                              |
                              |class TestSuite$num extends FunSpec $withClause {
+                             |
+                             |  type visitor = Visitor
+                             |  ${helpers.mkString("\n")}
+                             |
                              |  describe("test cases") {
                              |    it ("run test") {
                              |      test()

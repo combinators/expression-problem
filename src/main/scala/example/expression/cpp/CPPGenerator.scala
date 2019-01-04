@@ -12,6 +12,9 @@ trait CPPGenerator extends LanguageIndependentGenerator {
   type Expression = CPPElement
   type Statement = CPPElement
 
+  /** Default helper to convert string into Expression. */
+  def expression(s:String) : Expression = new CPPElement(s)
+
   /**
     * Operations can declare dependencies, which leads to #include extras
     */

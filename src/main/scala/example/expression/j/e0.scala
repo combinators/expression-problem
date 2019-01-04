@@ -41,7 +41,11 @@ trait e0 extends JavaGenerator with JUnitTestGenerator with M0 {
     }
   }
 
-  abstract override def testGenerator: Seq[MethodDeclaration] = {
+  /**
+    * Construct large trees and determine cost of evaluating over them.
+    * @return
+    */
+  abstract override def performanceMethod(): Seq[UnitTest] = {
     val a1 = new BinaryInst(Add, new LitInst(1.0), new LitInst(2.0))
     val numTrials = 10
 
@@ -55,9 +59,9 @@ trait e0 extends JavaGenerator with JUnitTestGenerator with M0 {
     }
     array = array + "};"
 
-    super.testGenerator :+ testMethod(M0_tests) :+ Java(
+    val evalPerfTest = Java(
       s"""
-         |public void test() {
+         |public void testPerformance() {
          |   $instantiations
          |   $array
          |   for (int i = trees.length-1; i >= 0; i--) {
@@ -71,5 +75,11 @@ trait e0 extends JavaGenerator with JUnitTestGenerator with M0 {
          |      System.out.println(i + "," + best);
          |   }
          |}""".stripMargin).methodDeclarations.head
+
+    super.performanceMethod() :+ evalPerfTest
+  }
+
+  abstract override def testGenerator: Seq[MethodDeclaration] = {
+    super.testGenerator :+ testMethod(M0_tests)
   }
 }

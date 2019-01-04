@@ -20,11 +20,20 @@ trait M4 extends Evolution  {
   val m4_m2 = new BinaryInst(Mult, new LitInst(2.0), new LitInst(3.0))
   val m4_d2 = new BinaryInst(Divd, new BinaryInst(Divd, new LitInst(5.0), new LitInst(7.0)), new BinaryInst(Sub, new LitInst(7.0), m4_m2))
 
-  def M4_tests:Seq[TestCase] = Seq(
-    EqualsTestCase(m4_d2, (List(Double), Seq(5.0, 7.0, 7.0, 2.0, 3.0)), Collect),
-    EqualsTestCase(m3_m1, (String, "-1.0"), PrettyP),
+//  public void testSimplify() {
+//    assertEquals("((5.0/2.0)*4.0)", ${dispatch(convert(m4_m1), PrettyP)});
+//    assertEquals (${dispatch(convert(d1), PrettyP)}, ${dispatch(dispatch(convert(m4_d2), Simplify), PrettyP)});
+//  }
 
-    EqualsTestCase(m4_m1, (String, "((5.0/2.0)*4.0)"), PrettyP),
-    EqualsTestCase(m4_m1, (Double, 10.0), Eval)
+  val inner:domain.TypeRep = domain.BaseApply[domain.TypeRep](m4_d2, Simplify)
+  // HACK: TODO: FIX ME
+  val outer = domain.RecursiveApply[TypeRep](inner, PrettyP)
+
+  def M4_tests:Seq[TestCase] = Seq(
+    EqualsTestCase(m4_d2, Collect, (List(Double), Seq(5.0, 7.0, 7.0, 2.0, 3.0))),
+    EqualsTestCase(m3_m1, PrettyP, (String, "-1.0")),
+
+    EqualsTestCase(m4_m1, PrettyP, (String, "((5.0/2.0)*4.0)")),
+    EqualsTestCase(m4_m1, Eval, (Double, 10.0))
   )
 }

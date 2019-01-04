@@ -46,25 +46,31 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
 
   /** Directly access local method, one per operation, with a parameter. */
   override def dispatch(expr:Expression, op:Operation, params:Expression*) : Expression = {
-    var opParams = ""
-    val args:String = if (params.isEmpty) {
-      ""
-    } else {
-      // hack for now: first k params are for operation (if it has any arguments)
-      // then remaining are for parameters
-      if (op.parameters.nonEmpty) {
-        opParams = params.take(op.parameters.length).mkString(",")
-        val rest = params.takeRight(params.length - op.parameters.length)
-        if (rest.isEmpty) {
+    op match {
+      case _: BinaryMethod =>
+        Scala(s"${op.name.toLowerCase()}($expr)").term()
+      case _ =>
+
+        var opParams = ""
+        val args: String = if (params.isEmpty) {
           ""
         } else {
-          "(" + rest.mkString(",") + ")"
-        }
-      } else {
-        "(" + params.mkString(",") + ")"
-      }
-    }  // new ${op.name.capitalize}($opParams).
-    Scala(s"apply($expr)$args").expression()
+          // hack for now: first k params are for operation (if it has any arguments)
+          // then remaining are for parameters
+          if (op.parameters.nonEmpty) {
+            opParams = params.take(op.parameters.length).mkString(",")
+            val rest = params.takeRight(params.length - op.parameters.length)
+            if (rest.isEmpty) {
+              ""
+            } else {
+              "(" + rest.mkString(",") + ")"
+            }
+          } else {
+            "(" + params.mkString(",") + ")"
+          }
+        } // new ${op.name.capitalize}($opParams).
+        Scala(s"apply($expr)$args").expression()
+    }
   }
 
   /**
@@ -73,32 +79,36 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
   override def delegate(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
     val opargs = params.mkString(",")
     val term = Term.Name(op.name.toLowerCase)   // should be able to be ..$params
-    Scala(s"new ${op.name.capitalize}().apply(new ${exp.name.capitalize}($opargs))").expression()
+    Scala(s"${op.name.toLowerCase}(new ${exp.name.capitalize}($opargs))").expression()
   }
 
   /**
     * Responsible for dispatching sub-expressions with possible parameter(s).
     */
   override def dependentDispatch(expr:Term, op:domain.Operation, params:Term*) : Term = {
-    var opParams = ""
-    val args:String = if (params.isEmpty) {
-      ""
+    val opParams = if (params.nonEmpty) {
+      "," + params.mkString(",")
     } else {
-      // hack for now: first k params are for operation (if it has any arguments)
-      // then remaining are for parameters
-      if (op.parameters.nonEmpty) {
-        opParams = params.take(op.parameters.length).mkString(",")
-        val rest = params.takeRight(params.length - op.parameters.length)
-        if (rest.isEmpty) {
-          ""
-        } else {
-          "(" + rest.mkString(",") + ")"
-        }
-      } else {
-        "(" + params.mkString(",") + ")"
-      }
+      ""
     }
-    Scala(s"new ${op.name.capitalize}($opParams).apply($expr)$args").expression()
+//    val args:String = if (params.isEmpty) {
+//      ""
+//    } else {
+//      // hack for now: first k params are for operation (if it has any arguments)
+//      // then remaining are for parameters
+//      if (op.parameters.nonEmpty) {
+//        opParams = params.take(op.parameters.length).mkString(",")
+//        val rest = params.takeRight(params.length - op.parameters.length)
+//        if (rest.isEmpty) {
+//          ""
+//        } else {
+//          "(" + rest.mkString(",") + ")"
+//        }
+//      } else {
+//        "(" + params.mkString(",") + ")"
+//      }
+//    }
+    Scala(s"${op.name.toLowerCase}($expr)").expression()
   } // Scala(s"apply($expr)$args").expression()
 
   /** Computer return type for given operation (or void). */
@@ -187,10 +197,10 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
         typesToGenerate = m.types
       }
 
-      // binary methods pass in parameters
+      // binary methods have fields instead of parameters
       val binary:String = op match  {
         case _:domain.BinaryMethod => {
-          s"(val ${base.that}:${domain.baseTypeRep.name})"
+          s"val ${base.that}:${domain.baseTypeRep.name}"
         }
 
         case _ => ""
@@ -198,10 +208,20 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
       // Data types that had existed earlier
       val baseMembers = typesToGenerate.map(exp => methodGenerator(exp)(op))
       Scala(s"""
-               |class ${op.name.capitalize}$binary extends $extendsClause Visitor { self: visitor =>
+               |trait ${op.name.capitalize} extends $extendsClause Visitor { self: visitor =>
+               |  $binary
                |  $result
                |  ${baseMembers.mkString("\n")}
                |}""".stripMargin).declaration()
+    })
+
+    val factories = m.ops.map(op => {
+      val params = if (op.parameters.nonEmpty) {
+        "(" + op.parameters.map(pair => s"${pair._1}:${typeConverter(pair._2)}").mkString(",") + ")"
+      } else {
+        ""
+      }
+      Scala(s"def ${op.name.toLowerCase}$params : visitor with ${op.name.capitalize}")
     })
 
     val str =
@@ -212,7 +232,11 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
         |  trait Visitor extends super.Visitor { self: visitor =>
         |    ${visitors.mkString("\n")}
         |  }
+        |
         |  ${classes.mkString("\n")}
+        |
+        |  /* Factories for any new visitors. */
+        |  ${factories.mkString("\n")}
         |
         |  ${ops.mkString("\n")}
         |}""".stripMargin
@@ -228,7 +252,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
     val ops = m.ops.map(op => {
       val baseMembers = m.types.map(exp => methodGenerator(exp)(op))
       Scala(s"""
-           |class ${op.name.capitalize} extends Visitor { self: visitor =>
+           |trait ${op.name.capitalize} extends Visitor { self: visitor =>
            |  var result: ${typeConverter(op.returnType.get)} = _
            |  def apply(t: ${domain.baseTypeRep.name}): ${typeConverter(op.returnType.get)} = {
            |    t.accept(this)
@@ -249,6 +273,10 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
       Scala(s"def visit${exp.name.capitalize}(${standardArgs(exp)}) : Unit").statement()
     })
 
+    val factories = m.ops.map(op =>
+      Scala(s"def ${op.name.toLowerCase} : visitor with ${op.name.capitalize}")
+    )
+
     val mcaps = m.name.capitalize
     val str:String = s"""
                   |package scala_func
@@ -262,6 +290,9 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
                   |  trait Visitor {
                   |     ${visitors.mkString("\n")}
                   |  }
+                  |
+                  |  /* Factories for any new visitors. */
+                  |  ${factories.mkString("\n")}
                   |
                   |  // base operations
                   |  ${ops.mkString("\n")}

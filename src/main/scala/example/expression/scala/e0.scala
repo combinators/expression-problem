@@ -42,8 +42,6 @@ trait e0 extends ScalaGenerator with TestGenerator with M0 {
   }
 
   abstract override def testGenerator: Seq[Stat] = {
-    val a1 = new BinaryInst(Add, new LitInst(1.0), new LitInst(2.0))
-
     super.testGenerator :+ testMethod(M0_tests)
   }
 }

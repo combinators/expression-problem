@@ -95,12 +95,46 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
     }
   }
 
+  abstract override def testMethod(tests:Seq[domain.TestCase]) : MethodDeclaration = {
+
+    // EXTRACT all SameTestCase ones and handle here
+    var pass:Seq[domain.TestCase] = Seq.empty
+    val local:Seq[domain.TestCase] = tests.filter(p => p match {
+      case _:SameTestCase => true
+      case _ => false
+    })
+
+    val stmts:Seq[Statement] = tests.zipWithIndex.flatMap(pair => {
+      val test = pair._1
+      val idx = pair._2
+
+      val id:String = s"c$idx"
+
+      test match {
+        case ctc: SameTestCase =>
+          // assertFalse(${dispatch(convert(m5_s1), domain.AsTree)}.same(${dispatch(convert(m5_s2), domain.AsTree)}));
+
+          val tree1 = dispatch(convert(ctc.inst1), AsTree)
+          val tree2 = dispatch(convert(ctc.inst2), AsTree)
+
+          val same = Java(s"$tree1.same($tree2)").expression[Expression]()
+
+          if (ctc.result) {
+            Java(s"assertTrue($same);").statements
+          } else {
+            Java(s"assertFalse($same);").statements
+          }
+        case _ =>
+          pass = pass :+ test
+          Seq.empty
+      }
+    })
+
+    // add these all in to what super produces
+    addStatements(super.testMethod(pass), stmts)
+  }
+
   abstract override def testGenerator: Seq[MethodDeclaration] = {
-    super.testGenerator ++ Java(
-      s"""
-         |public void test() {
-         |   assertFalse(${dispatch(convert(m5_s1), domain.AsTree)}.same(${dispatch(convert(m5_s2), domain.AsTree)}));
-         |   assertTrue (${dispatch(convert(m5_s1), domain.AsTree)}.same(${dispatch(convert(m5_s3), domain.AsTree)}));
-         |}""".stripMargin).methodDeclarations()
+    super.testGenerator :+ testMethod(M5_tests)
   }
 }

@@ -188,18 +188,9 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
     }
   }
 
-  // TODO: HACK. Fix this implementation
   abstract override def testGenerator: Seq[MethodDeclaration] = {
-
-
-    if (getModel.supports(Simplify)) {
-      val d1 = new domain.BinaryInst(Mult, new LitInst(2.0), new LitInst(3.0))
-      Java(
-        s"""public void testSimplify() {
-           |  assertEquals("((5.0/2.0)*4.0)", ${dispatch(convert(m4_m1), PrettyP)});
-           |  assertEquals (${dispatch(convert(d1), PrettyP)}, ${dispatch(dispatch(convert(m4_d2), Simplify), PrettyP)});
-           |}
-         """.stripMargin).methodDeclarations() ++ super.testGenerator :+ testMethod(M4_tests)
+     if (getModel.supports(Simplify)) {
+       super.testGenerator :+ testMethod(M4_tests) :+ testMethod(M4_simplify_tests)
     } else {
       super.testGenerator :+ testMethod(M4_tests)
     }

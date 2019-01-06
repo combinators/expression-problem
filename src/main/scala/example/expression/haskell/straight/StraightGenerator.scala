@@ -19,7 +19,7 @@ trait StraightGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
 
   /** For the processed model, return generated code artifacts for solution. */
   def generatedCode():Seq[HaskellWithPath] = {
-      flat.ops.map(op => generateOp(flat, op)) :+
+    helperClasses() ++ flat.ops.map(op => generateOp(flat, op)) :+
       generateDataTypes(flat)
   }
 

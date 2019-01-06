@@ -26,7 +26,7 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
   /** For the processed model, return generated code artifacts for solution. */
   def generatedCode():Seq[HaskellWithPath] = {
 
-    flat.types.map(tpe => generateExp(flat, tpe)) ++
+    helperClasses() ++ flat.types.map(tpe => generateExp(flat, tpe)) ++
       flat.ops.map(op => generateOp(flat, op)) :+
       generateBase(flat) :+
       generateTypeUnifier(flat) :+

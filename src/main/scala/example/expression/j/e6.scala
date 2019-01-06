@@ -41,17 +41,40 @@ trait e6 extends Evolution with JavaGenerator with JUnitTestGenerator with Binar
     }
   }
 
-  abstract override def testGenerator: Seq[MethodDeclaration] = {
-    val s1 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
-    val s2 = new domain.BinaryInst(Add, new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0)),
-                                 new domain.BinaryInst(Add, new LitInst(5.0), new LitInst(6.0)))
-    val s3 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
+  abstract override def testMethod(tests:Seq[domain.TestCase]) : MethodDeclaration = {
 
-      super.testGenerator ++ Java(
-      s"""
-         |public void test() {
-         |   assertFalse(${dispatch(convert(s1), Equals, convert(s2))});
-         |   assertTrue(${dispatch(convert(s1), Equals, convert(s3))});
-         |}""".stripMargin).methodDeclarations
+    // EXTRACT all EqualsBinaryMethodTestCase ones and handle here
+    var pass:Seq[domain.TestCase] = Seq.empty
+    val local:Seq[domain.TestCase] = tests.filter(p => p match {
+      case _:EqualsBinaryMethodTestCase => true
+      case _ => false
+    })
+
+    val stmts:Seq[Statement] = tests.zipWithIndex.flatMap(pair => {
+      val test = pair._1
+      val idx = pair._2
+
+      val id:String = s"c$idx"
+
+      test match {
+        case eb: EqualsBinaryMethodTestCase =>
+
+          if (eb.result) {
+            Java(s"assertTrue(${dispatch(convert(eb.inst1), Equals, convert(eb.inst2))});").statements
+          } else {
+            Java(s"assertFalse(${dispatch(convert(eb.inst1), Equals, convert(eb.inst2))});").statements
+          }
+        case _ =>
+          pass = pass :+ test
+          Seq.empty
+      }
+    })
+
+    // add these all in to what super produces
+    addStatements(super.testMethod(pass), stmts)
+  }
+
+  abstract override def testGenerator: Seq[MethodDeclaration] = {
+    super.testGenerator :+ testMethod(M6_tests)
   }
 }

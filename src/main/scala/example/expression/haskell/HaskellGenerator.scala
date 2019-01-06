@@ -11,7 +11,7 @@ import example.expression.generator.LanguageIndependentGenerator
   *
   * Perhaps consider an Expression Problem application domain based on Monoids
   */
-trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskellBinaryMethod with HaskellBinaryMethod {
+trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskellBinaryMethod with HaskellBinaryMethod with DependentDispatch {
 
   /** Specially required files are placed in this area. */
   val haskellResources:String = Seq("src", "main", "resources", "haskell-code").mkString(File.separator)

@@ -1,6 +1,4 @@
-package example.expression.domain
-
-/*DD:LI:AI*/
+package example.expression.domain    /*DD:LI:AI*/
 
 trait S0 extends Evolution {
 
@@ -38,7 +36,7 @@ trait S0 extends Evolution {
   override def getModel:Model = s0
 
   val sq1 = new SquareInst(5.0)
-  val c1 = new CircleInst(5.0)  // instances.ExpInst
+  val c1 = new CircleInst(5.0)
   val p1:(Double,Double) = (2.0, 2.0)
   val p2:(Double,Double) = (8.0, 0.0)
 
@@ -47,6 +45,8 @@ trait S0 extends Evolution {
 
   /**
     * Special test case for contains queries.
+    *
+    * Validates calling containsPt returns true or false
     */
   case class ContainsTestCase(inst:domain.AtomicInst, pt:(Double,Double), result:Boolean)
     extends domain.TestCase

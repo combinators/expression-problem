@@ -1,4 +1,4 @@
-package example.expression.domain   /*DD:LI:AI*/
+package example.expression.domain    /*DD:LI:AI*/
 
 trait S1 extends Evolution {
   self: S0 =>

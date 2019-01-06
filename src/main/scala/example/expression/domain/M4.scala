@@ -31,9 +31,11 @@ trait M4 extends Evolution  {
     EqualsTestCase(m4_d2, Collect, (List(Double), Seq(5.0, 7.0, 7.0, 2.0, 3.0))),
     EqualsTestCase(m3_m1, PrettyP, (String, "-1.0")),
 
-    EqualsCompositeTestCase(m4_d2, Seq(Simplify, PrettyP), (String, "(5.0/7.0)")),
-
     EqualsTestCase(m4_m1, PrettyP, (String, "((5.0/2.0)*4.0)")),
     EqualsTestCase(m4_m1, Eval, (Double, 10.0))
+  )
+
+  def M4_simplify_tests:Seq[TestCase] = Seq(
+    EqualsCompositeTestCase(m4_d2, Seq(Simplify, PrettyP), (String, "(5.0/7.0)")),
   )
 }

@@ -38,6 +38,8 @@ trait TestGenerator extends JavaGenerator with LanguageIndependentTestGenerator 
     * returns the inline expression resulting from dispatching operation, op, over the given instance, inst.
     *
     * For more complicated structures, as with lists for example, this method will need to be overridden.
+    *
+    * Not sure, yet, how to properly pass in variable parameters.
     */
   def actual(op:Operation, inst:AtomicInst, params:Expression*):Expression = dispatch(convert(inst), op, params: _*)
 

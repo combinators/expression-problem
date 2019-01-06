@@ -70,10 +70,4 @@ trait e5 extends Evolution with HaskellGenerator with HUnitTestGenerator with Ha
          |""".stripMargin)
   }
 
-//    super.testGenerator :+ new Haskell(
-//      s"""
-//         |public void test() {
-//         |   assertEquals(${dispatch(convert(s2), domain.AsTree)}, ${dispatch(convert(s1), domain.AsTree)});
-//         |}""".stripMargin)
-//  }
 }

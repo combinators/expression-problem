@@ -27,7 +27,6 @@ trait TestGenerator extends JavaGenerator with LanguageIndependentTestGenerator 
     * you will have to override this method accordingly.
     */
   def expected(test:TestCaseExpectedValue, id:String) : (Expression => Seq[Statement]) => Seq[Statement] = continue => {
-    println ("intg:" + test.expect._2.toString + "," + test.expect._1.toString)
     continue(Java(test.expect._2.toString).expression[Expression])
   }
 

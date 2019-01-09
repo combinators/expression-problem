@@ -10,8 +10,6 @@ import org.combinators.templating.twirl.Java
 
 trait JavaBinaryMethod extends BinaryMethod {
   val domain:BaseDomain with ModelDomain
-  import domain._
-
 
   /**
     * Binary methods creates helper classes in package 'tree'. Completes description
@@ -50,6 +48,12 @@ trait JavaBinaryMethod extends BinaryMethod {
     }).mkString(",")
   }
 
+  /**
+    * Return a tree.Tree object representing the given sub-type expression.
+    *
+    * @param exp
+    * @return
+    */
   def logicAsTree(exp:domain.Atomic) : Seq[MethodDeclaration] = {
     val args = exp.attributes.map(att => att.name).mkString(",")
           Java(
@@ -59,29 +63,4 @@ trait JavaBinaryMethod extends BinaryMethod {
                |}""".stripMargin).methodDeclarations()
   }
 
-  /** Interesting shift needed for visitor. */
-  def visitorLogicAsTree(exp:domain.Atomic) : Seq[MethodDeclaration] = {
-    val atomicArgs = exp.attributes.map(att => att.name).mkString(",")
-
-    // changes whether attributes can be access *directly* or whether they are accessed via getXXX*() method.
-    val recursiveArgs = exp.attributes.map(att => att.name + s".${AsTree.name.toLowerCase}()").mkString(",")
-
-    val body:Seq[Statement] = exp match {
-      case b:Binary => {
-        Java(s""" return new tree.Node(java.util.Arrays.asList($recursiveArgs), ${exp.hashCode()}); """).statements
-      }
-      case u:Unary => {
-        Java(s""" return new tree.Node(java.util.Arrays.asList($recursiveArgs), ${exp.hashCode()}); """).statements
-      }
-      case a:Atomic => {
-        Java(s""" return new tree.Leaf($atomicArgs);""").statements
-      }
-    }
-
-    Java(
-      s"""
-         |public tree.Tree ${domain.AsTree.name.toLowerCase}() {
-         |  ${body.mkString("\n")}
-         |}""".stripMargin).methodDeclarations()
-  }
 }

@@ -63,7 +63,7 @@ trait e4 extends Evolution with HaskellGenerator with HUnitTestGenerator with Pr
         exp match {
           case Lit => Seq(inst(Lit)(op)(atts(litValue)))   // standardArgs(Lit)
           case Neg => Seq(Haskell(s"""|
-                              |    let leftVal = ${dependentDispatch(atts(base.inner), Eval)}
+                              |    let leftVal = ${dispatch(atts(base.inner), Eval)}
                               |    in if leftVal == 0
                               |       then ${inst(Lit)(op)(zero)}
                               |       else ${inst(Neg)(op)(standardVarArgs(Neg) : _*)}

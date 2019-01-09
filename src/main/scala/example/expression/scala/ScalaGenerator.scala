@@ -24,9 +24,9 @@ trait ScalaGenerator extends LanguageIndependentGenerator with DependentDispatch
   }
 
   /**
-    * Responsible for delegating to a new operation on the current context.
+    * Responsible for identifying the individual sub-type
     */
-  def delegate(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
+  override def identify(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
     val opargs = params.mkString(",")
     val term = Term.Name(op.name.toLowerCase)   // should be able to be ..$params
     Scala(s"this.${op.name.toLowerCase}(new ${exp.name.capitalize}($opargs))").expression()
@@ -51,6 +51,21 @@ trait ScalaGenerator extends LanguageIndependentGenerator with DependentDispatch
   /** Concatenate attributes by name in order with comma. */
   def standardParams(exp:domain.Atomic, suffix:String = "") : String = {
     exp.attributes.map(att => att.name + suffix).mkString(",")
+  }
+
+  // TODO: CLEANUP
+  /**
+    * Given (essentially) a method declaration, add statements to occur before existing statements.
+    *
+    * NOTE: This is a HACK and needs to be fixed
+    * @param declaration
+    * @param stmts
+    * @return
+    */
+  def addStatements(declaration:Stat, stmts:Seq[Statement]) : Stat = {
+    val old:Seq[String] = declaration.toString.split("\n")
+    val str = s"def test() : Unit = {\n" + stmts.mkString("\n") + old.tail.tail.mkString("\n")
+    Scala(str).declaration()
   }
 
 }

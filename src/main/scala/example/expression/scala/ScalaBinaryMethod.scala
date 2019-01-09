@@ -41,16 +41,6 @@ trait ScalaBinaryMethod extends BinaryMethod {
       sources ++ these.filter(_.isDirectory).flatMap(f => getRecursiveListOfFiles(f, header :+ f.getName: _*))
     }
   }
-//
-//  /** Taken from scala meta web page. */
-//  def loadToSource(entry:String) : ScalaWithPath = {
-//    val path:Path = java.nio.file.Paths.get("src", "main", "scala", "tree", entry)
-//    val bytes = java.nio.file.Files.readAllBytes(path)
-//    val text = new String(bytes, "UTF-8")
-//    val input = Input.VirtualFile(path.toString, text)
-//
-//    ScalaMainWithPath(input.parse[Source].get, java.nio.file.Paths.get("tree", entry))
-//  }
 
   /**
     * Binary methods creates helper classes in package 'tree'. Completes description
@@ -61,11 +51,6 @@ trait ScalaBinaryMethod extends BinaryMethod {
     */
   def helperClasses():Seq[ScalaWithPath] = {
     getRecursiveListOfFiles(Paths.get(scalaResources).toFile)
-//    Seq(
-//      loadToSource("Leaf.scala"),
-//      loadToSource("Node.scala"),
-//      loadToSource("Tree.scala")
-//    )
   }
 
   /**

@@ -81,13 +81,12 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
         // "this" is only valid expression when datatype as class
         exp match {   // was $litValue     ;
           case Lit =>   // ${exp.hashCode()}
-
             val attParams = atts.map(att => att._2.toString).mkString(",")
-            Java(s"""return new tree.Node(java.util.Arrays.asList(new tree.Leaf($attParams)), ${delegate(exp, Identifier)}); """).statements
+            Java(s"""return new tree.Node(java.util.Arrays.asList(new tree.Leaf($attParams)), ${identify(exp, Identifier)}); """).statements
 
           case Add|Sub|Mult|Divd|Neg =>
             val params = atts.map(att => att._2.toString + ".astree()").mkString(",")
-            Java(s""" return new tree.Node(java.util.Arrays.asList($params), ${delegate(exp, Identifier)} ); """).statements
+            Java(s""" return new tree.Node(java.util.Arrays.asList($params), ${identify(exp, Identifier)} ); """).statements
           }
       }
 
@@ -98,24 +97,15 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
   abstract override def testMethod(tests:Seq[domain.TestCase]) : MethodDeclaration = {
 
     // EXTRACT all SameTestCase ones and handle here
-    var pass:Seq[domain.TestCase] = Seq.empty
-    val local:Seq[domain.TestCase] = tests.filter(p => p match {
-      case _:SameTestCase => true
-      case _ => false
-    })
+    var skip:Seq[domain.TestCase] = Seq.empty
 
     val stmts:Seq[Statement] = tests.zipWithIndex.flatMap(pair => {
       val test = pair._1
-      val idx = pair._2
-
-      val id:String = s"c$idx"
 
       test match {
         case ctc: SameTestCase =>
-          // assertFalse(${dispatch(convert(m5_s1), domain.AsTree)}.same(${dispatch(convert(m5_s2), domain.AsTree)}));
-
-          val tree1 = dispatch(convert(ctc.inst1), AsTree)
-          val tree2 = dispatch(convert(ctc.inst2), AsTree)
+          val tree1 = dependentDispatch(convert(ctc.inst1), AsTree)  // was just dispatch
+          val tree2 = dependentDispatch(convert(ctc.inst2), AsTree)
 
           val same = Java(s"$tree1.same($tree2)").expression[Expression]()
 
@@ -125,13 +115,13 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
             Java(s"assertFalse($same);").statements
           }
         case _ =>
-          pass = pass :+ test
+          skip = skip :+ test
           Seq.empty
       }
     })
 
     // add these all in to what super produces
-    addStatements(super.testMethod(pass), stmts)
+    addStatements(super.testMethod(skip), stmts)
   }
 
   abstract override def testGenerator: Seq[MethodDeclaration] = {

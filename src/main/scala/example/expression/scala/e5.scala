@@ -46,29 +46,62 @@ trait e5 extends Evolution with ScalaGenerator with TestGenerator with Operation
           case Lit =>   // ${exp.hashCode()}
 
             val attParams = atts.map(att => att._2.toString).mkString(",")
-            Scala(s"""new tree.Node(Seq(new tree.Leaf($attParams)), ${delegate(exp, Identifier, atts(litValue))}) """).statements()
+            Scala(s"""new tree.Node(Seq(new tree.Leaf($attParams)), ${identify(exp, Identifier, atts(litValue))}) """).statements()
 
           case Neg =>
             val params = atts.map(att => att._2.toString + ".astree()").mkString(",")
             val seq = atts.map(att => dispatch(att._2, domain.AsTree)).mkString(",")
-            Scala(s"""new tree.Node(Seq($seq), ${delegate(exp, Identifier, atts(domain.base.inner))} ) """).statements()
+            Scala(s"""new tree.Node(Seq($seq), ${identify(exp, Identifier, atts(domain.base.inner))} ) """).statements()
 
           case Add|Sub|Mult|Divd|Neg =>
             val params = atts.map(att => att._2.toString + ".astree()").mkString(",")
             val seq = atts.map(att => dispatch(att._2, domain.AsTree)).mkString(",")
-            Scala(s"""new tree.Node(Seq($seq), ${delegate(exp, Identifier, atts(domain.base.left), atts(domain.base.right))} ) """).statements()
+            Scala(s"""new tree.Node(Seq($seq), ${identify(exp, Identifier, atts(domain.base.left), atts(domain.base.right))} ) """).statements()
           }
       }
       case _ => super.logic(exp)(op)
     }
   }
 
+  abstract override def testMethod(tests:Seq[domain.TestCase]) : Stat = {
+    // EXTRACT all SameTestCase ones and handle here
+    var skip: Seq[domain.TestCase] = Seq.empty
+
+    val stmts: Seq[Statement] = tests.zipWithIndex.flatMap(pair => {
+      val test = pair._1
+      val idx = pair._2
+
+      val id: String = s"c$idx"
+
+      test match {
+        case ctc: SameTestCase =>
+          // assertFalse(${dispatch(convert(m5_s1), domain.AsTree)}.same(${dispatch(convert(m5_s2), domain.AsTree)}));
+          // we can't just call dispatch because for some (scala_func) there no context in which dispatch can work.
+          // in other words, dispatch is local to the dataTypes. SO this can break if dispatch isn't properly global
+          val tree1 = dependentDispatch(convert(ctc.inst1), domain.AsTree)
+          val tree2 = dependentDispatch(convert(ctc.inst2), domain.AsTree)
+
+          // TODO: Dispatch inappropriate here since test case has different context
+
+          val same = Scala(s"$tree1.same($tree2)").expression()
+
+          if (ctc.result) {
+            Scala(s"assert(true == $same)").statements()
+          } else {
+            Scala(s"assert(false == $same)").statements()
+          }
+        case _ =>
+          skip = skip :+ test
+          Seq.empty
+      }
+    })
+
+    // add these all in to what super produces, which is:
+    addStatements(super.testMethod(skip), stmts)
+
+  }
+
   abstract override def testGenerator: Seq[Stat] = {
-    super.testGenerator ++ Scala(
-      s"""
-             |def test() : Unit =  {
-             |   assert (false == ${dispatch(convert(m5_s1), domain.AsTree)}.same(${dispatch(convert(m5_s2), domain.AsTree)}));
-             |   assert (true == ${dispatch(convert(m5_s1), domain.AsTree)}.same(${dispatch(convert(m5_s3), domain.AsTree)}));
-             |}""".stripMargin).statements()
+    super.testGenerator :+ testMethod(M5_tests)
   }
 }

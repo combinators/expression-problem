@@ -58,7 +58,7 @@ trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with La
 
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
   override def generateSuite(pkg: Option[String], m:Option[Model] = None): Seq[CompilationUnit] = {
-    val methods: Seq[MethodDeclaration] = testGenerator
+    val methods: Seq[MethodDeclaration] = testGenerator ++ performanceMethod()
 
     val packageDeclaration: String = if (pkg.isDefined) {
       s"package ${pkg.get};"

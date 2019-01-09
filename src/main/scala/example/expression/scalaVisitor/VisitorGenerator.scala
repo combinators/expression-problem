@@ -1,6 +1,7 @@
 package example.expression.scalaVisitor  /*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.{BodyDeclaration, FieldDeclaration, MethodDeclaration}
+import com.github.javaparser.ast.stmt.Statement
 import example.expression.domain.{BaseDomain, ModelDomain}
 import example.expression.j._
 import org.combinators.templating.twirl.Java
@@ -43,10 +44,18 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
 
   /**
     * Responsible for delegating to a new operation on the current context.
+    *
+    * This context is invariably defined by the existing method context which has a
+    * parameter 'e' to satisfy the visit(Type e) method
     */
-  override def delegate(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
+  override def delegateFixMe(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
     val opargs = params.mkString(",")
     Java(s"e.accept(new ${op.name.capitalize}($opargs))").expression[Expression]()
+  }
+
+  /** For Visitor Generator, same behavior as delegate. */
+  override def identify(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
+    delegateFixMe(exp, op, params : _*)
   }
 
   /** For visitor design solution, access through default 'e' parameter */
@@ -127,6 +136,31 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
              |}""".stripMargin).methodDeclarations().head
   }
 
+  override def logicAsTree(exp:domain.Atomic) : Seq[MethodDeclaration] = {
+    val atomicArgs = exp.attributes.map(att => att.name).mkString(",")
+
+    // changes whether attributes can be access *directly* or whether they are accessed via getXXX*() method.
+    val recursiveArgs = exp.attributes.map(att => att.name + s".${domain.AsTree.name.toLowerCase}()").mkString(",")
+
+    val body:Seq[Statement] = exp match {
+      case b:domain.Binary => {
+        Java(s""" return new tree.Node(java.util.Arrays.asList($recursiveArgs), ${exp.hashCode()}); """).statements
+      }
+      case u:domain.Unary => {
+        Java(s""" return new tree.Node(java.util.Arrays.asList($recursiveArgs), ${exp.hashCode()}); """).statements
+      }
+      case a:domain.Atomic => {
+        Java(s""" return new tree.Leaf($atomicArgs);""").statements
+      }
+    }
+
+    Java(
+      s"""
+         |public tree.Tree ${domain.AsTree.name.toLowerCase}() {
+         |  ${body.mkString("\n")}
+         |}""".stripMargin).methodDeclarations()
+  }
+
   /** Generate the full class for the given expression sub-type. */
   override def generateExp(model:domain.Model, exp:domain.Atomic) : CompilationUnit = {
     val name = exp.toString
@@ -141,7 +175,7 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
       case bm: domain.BinaryMethodTreeBase => true   // was BinaryMethod
       case _ => false
     }) {
-      visitorLogicAsTree(exp)
+      logicAsTree(exp)
     } else {
       Seq.empty
     }

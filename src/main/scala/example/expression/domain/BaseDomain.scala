@@ -85,8 +85,12 @@ trait BaseDomain {
     extends TestCaseExpectedValue(expect)
   case class NotEqualsTestCase(inst:AtomicInst, op:Operation, override val expect:(TypeRep,Any), params:(TypeRep,Any)*)
     extends TestCaseExpectedValue(expect)
+
   case class EqualsCompositeTestCase(inst:AtomicInst, ops:Seq[Operation], override val expect:(TypeRep,Any), params:(TypeRep,Any)*)
     extends TestCaseExpectedValue(expect)
+
+  // consider adding a binary predicate (just its name, such as Equals)
+  // in code generating would compile binary predicate to a function (ExP,Exp) => Exp
 
 //  // when asked, will return an instance of type T
 //  abstract class Dispatch[T](val op:Operation) extends TypeRep {

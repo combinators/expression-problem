@@ -410,6 +410,10 @@ object RunAll extends App {
 
   case class Result(name:String, scores:Map[String,Score])
 
+  //
+  println("Calibrating") // Burn first one
+  OOEvaluateTest.evaluate()
+
   println ("OO")
   val oo      = Result("oo", OOEvaluateTest.evaluate())
   println ("Visitor")
@@ -423,11 +427,11 @@ object RunAll extends App {
   println ("Algebra")
   val algebra = Result("algebra", AlgebraEvaluateTest.evaluate())
 
-
   val vnames = Seq(OOEvaluateTest.name, AlgebraEvaluateTest.name, VisitorEvaluateTest.name, TriviallyEvaluateTest.name, ExtensibleVisitorEvaluateTest.name, InterpreterEvaluateTest.name)
   val results:Seq[Result] = Seq(oo, algebra, visitor, trivially, extensible, interpreter)
 
   results.foreach(r => print (r.name + ","))
+  println()
   val variations = Seq("e0", "e1", "e2", "e3", "e4", "e5", "e6")
   variations.foreach(mi => {
     print(mi + ",")

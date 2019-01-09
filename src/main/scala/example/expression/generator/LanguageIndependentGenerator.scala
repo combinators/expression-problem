@@ -30,14 +30,29 @@ trait LanguageIndependentGenerator {
     * In an object-oriented-style of programming, there must be an 'expression' on which to base the dispatch.
     * Functional-oriented languages could ignore first field.
     *
-    * Intent of this function is to model the execute of operation on children of a datatype
+    * Intent of this function is to model the execute of operation on children of a datatype.
     */
   def dispatch(expr:Expression, op:domain.Operation, params:Expression*) : Expression
 
   /**
-    * Responsible for delegating to a new operation on the current context.
+    * Responsible for identifying the expression representing the given data subtype.
+    *
+    * In an object-oriented-style of programming, this could be an instantiated object representing
+    * the sub-type. For a functional-oriented languages this could be the function name.
     */
-  def delegate(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression
+  def identify(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression
+
+  /**
+    * Responsible for delegating to a new operation on the current data-type context, which
+    * is passed in as first parameter.
+    *
+    * In some cases, possible to ignore the current context, but that is decision to be made
+    * by the implementation
+    *
+    * Should have expr:Expression as context as minimum, rather than just top-level entry
+    * Used to have exp:domain.Atomic as 1st parameter.
+    */
+  def delegateFixMe(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression
 
   /**
     * Modify compilation unit as needed for extra language-specific mechanisms for allowing generated

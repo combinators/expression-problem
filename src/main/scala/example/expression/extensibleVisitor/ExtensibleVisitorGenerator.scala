@@ -52,7 +52,7 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with VisitorJavaBinary
   /**
     * Responsible for delegating to a new operation on the current context.
     */
-  override def delegate(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
+  override def delegateFixMe(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
     val m:domain.Model = getModel.findType(exp)
     val opargs = params.mkString(",")
 
@@ -63,6 +63,11 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with VisitorJavaBinary
     }
 
     Java(s"e.accept(new ${op.name.capitalize}$full($opargs))").expression[Expression]()
+  }
+
+  /** For Visitor Generator, same behavior as delegate. */
+  override def identify(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
+    delegateFixMe(exp, op, params : _*)
   }
 
   /** Add virtual type generator. Context is either "" for top level operation, or the most recent one. */

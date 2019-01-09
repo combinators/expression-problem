@@ -51,12 +51,20 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod with StandardSca
   }
 
   /**
-    * Responsible for delegating to a new operation on the current context.
+    * Responsible for delegating to a new operation on the current data-type, identified by exp.
+    *
+    * In this straight-oo solution, 'this' is always the context and the 'exp' parameter
+    * can be ignored.
     */
-  override def delegate(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
+  override def delegateFixMe(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
     val opargs = params.mkString(",")
     val term = Term.Name(op.name.toLowerCase)   // should be able to be ..$params
     Scala(s"this.${op.name.toLowerCase}()").expression()
+  }
+
+  /** For Scala generator, same behavior as delegate. */
+  override def identify(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
+    delegateFixMe(exp, op, params : _*)
   }
 
   /** Computer return type for given operation (or void). */
@@ -75,9 +83,7 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod with StandardSca
              |def ${op.name}($params) : ${returnType(op)} = {
                          |  ${logic(exp)(op).mkString("\n")}
                          |}""".stripMargin
-    println ("mg:" + str)
     Scala(str).statement()
-
   }
 
   /** Generate the full class for the given expression sub-type. */
@@ -95,7 +101,6 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod with StandardSca
            |    ${methods.mkString("\n")}
            |  }
          """.stripMargin
-      println ("str:" + str)
 
       ScalaMainWithPath(
         Scala(str).source(), Paths.get(s"${exp.toString}.scala"))

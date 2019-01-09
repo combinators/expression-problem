@@ -27,7 +27,6 @@ trait ScalaWithPathPersistableInstances {
 
       val fullPath = "src" +: elem.destination +: "scala" +: elem.persistTo.toString +: Seq.empty
       Paths.get(fullPath.head, fullPath.tail : _*)
-      //elem.persistTo
     }
   }
 }

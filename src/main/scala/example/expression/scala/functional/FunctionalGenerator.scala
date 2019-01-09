@@ -76,10 +76,15 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
   /**
     * Responsible for delegating to a new operation on the current context.
     */
-  override def delegate(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
+  override def delegateFixMe(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
     val opargs = params.mkString(",")
     val term = Term.Name(op.name.toLowerCase)   // should be able to be ..$params
     Scala(s"${op.name.toLowerCase}(new ${exp.name.capitalize}($opargs))").expression()
+  }
+
+  /** For Functional Generator, same behavior as delegate. */
+  override def identify(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
+    delegateFixMe(exp, op, params : _*)
   }
 
   /**
@@ -87,7 +92,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
     */
   override def dependentDispatch(expr:Term, op:domain.Operation, params:Term*) : Term = {
     val opParams = if (params.nonEmpty) {
-      "," + params.mkString(",")
+      "(" + params.mkString(",") + ")"
     } else {
       ""
     }
@@ -108,7 +113,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
 //        "(" + params.mkString(",") + ")"
 //      }
 //    }
-    Scala(s"${op.name.toLowerCase}($expr)").expression()
+    Scala(s"${op.name.toLowerCase}($expr)$opParams").expression()
   } // Scala(s"apply($expr)$args").expression()
 
   /** Computer return type for given operation (or void). */
@@ -130,7 +135,6 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
            |    ${logic(exp)(op).mkString("\n")}
            |  }
            |}""".stripMargin
-    println("mg:" + str)
     Scala(str).statement()
   }
 
@@ -241,7 +245,6 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
         |  ${ops.mkString("\n")}
         |}""".stripMargin
 
-    println(str)
     ScalaMainWithPath(
       Scala(str).source(), Paths.get(s"$mcaps.scala"))
   }
@@ -298,7 +301,6 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
                   |  ${ops.mkString("\n")}
                   |}""".stripMargin
 
-    println ("S:" + str)
     ScalaMainWithPath(
       Scala(str).source(), Paths.get(s"$mcaps.scala"))
   }

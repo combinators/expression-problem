@@ -26,9 +26,10 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod with Standard
   }
 
   /**
-    * Responsible for delegating to a new operation on the current context.
+    * Responsible for delegating to a new operation on the current data-type context identified
+    * by exp.
     */
-  def delegate(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
+  override def delegateFixMe(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
     val m:domain.Model = getModel.findType(exp)
     val fullName = m.types.sortWith(_.name < _.name).map(exp => exp.name.capitalize).mkString("")
 
@@ -36,7 +37,12 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod with Standard
     val args = exp.attributes.map(att => "null").mkString(",")
     val opargs = params.mkString(",")
 
-    Java(s"new ${op.name.capitalize}${fullName}${domain.baseTypeRep.name}Alg().${exp.name.toLowerCase}($args).${op.name.toLowerCase}($opargs)").expression[Expression]()
+    Java(s"new ${op.name.capitalize}$fullName${domain.baseTypeRep.name}Alg().${exp.name.toLowerCase}($args).${op.name.toLowerCase}($opargs)").expression[Expression]()
+  }
+
+  /** For Algebra Generator, same behavior as delegate. */
+  override def identify(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
+    delegateFixMe(exp, op, params : _*)
   }
 
   /**
@@ -185,7 +191,6 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod with Standard
                 |}""".stripMargin)
       }
 
-      println ("JAVA:"+ str)
       str.methodDeclarations
     })
 

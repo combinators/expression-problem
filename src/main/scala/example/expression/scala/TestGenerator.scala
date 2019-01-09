@@ -31,7 +31,7 @@ trait TestGenerator extends ScalaGenerator {
     val expectedType:Type = typeConverter(test.expect._1)
     val baseType:Type = Scala("AtomicInst").tpe()
     val baseName:Type = Scala(domain.baseTypeRep.name).tpe()
-    println ("ExpectedType:" + expectedType.toString)
+
     if (expectedType.toString().equals(baseName.toString())) {   // Type doesn't seem to support .equals check
       val converted:Expression = convert(test.expect._2.asInstanceOf[AtomicInst])
       continue(converted)
@@ -42,7 +42,6 @@ trait TestGenerator extends ScalaGenerator {
         case _ => Scala(test.expect._2.toString).term()
       }
 
-      println ("CNV:" + converted)
       continue(converted)
     }
   }
@@ -84,10 +83,6 @@ trait TestGenerator extends ScalaGenerator {
       test match {
         case eq:EqualsTestCase => {
           val params = eq.params.map(pair => expand(pair._1, pair._2))
-          //test.expect
-          //val str = s"assert (${expected(eq, id)} == ${actual(eq.op, eq.inst, params: _*)})"
-          //println ("expect:" + str)
-          //Scala(str).statement()
           expected(eq, id)(expectedExpr => Scala(s"assert ($expectedExpr == ${actual(eq.op, eq.inst, params: _*)})").statement())
         }
 
@@ -97,22 +92,11 @@ trait TestGenerator extends ScalaGenerator {
           val x :Expression = actual(comp.ops.head, comp.inst, params: _*)   // HACK: Only works for two-deep
           val y :Expression = dispatch(x, comp.ops.tail.head)
 
-          //test.expect
-          //val str = s"assert (${expected(comp, id)} == $y)"
-          //println ("expect:" + str)
-          //Scala(str).statement()
           expected(comp, id)(expectedExpr => Scala(s"assert ($expectedExpr == $y)").statement())
         }
 
         case ne:NotEqualsTestCase =>
           val params = ne.params.map(pair => expand(pair._1, pair._2))
-          //val str = s"assert (${expected(ne, id)} != ${actual(ne.op, ne.inst, params: _*)})"
-          //println ("expect:" + str)
-          //Scala(str).statement()
-          //expected(test, id)(expectedExpr => Scala(s"assert ($expectedExpr != ${actual(test)})").statement())
-       // case _:TrueTestCase =>
-       //   expected(test, id)(expectedExpr => Scala(s"assert (true == ${dispatch()}").statement())
-          //assert (false == ${dispatch(convert(s1), domain.AsTree)}.same(${dispatch(convert(s2), domain.AsTree)}));
           expected(ne, id)(expectedExpr => Scala(s"assert ($expectedExpr != ${actual(ne.op, ne.inst, params: _*)})").statement())
       }
     })

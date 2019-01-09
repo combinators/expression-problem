@@ -32,7 +32,6 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
                      |${map.mkString("\n")}
                      |${continue(Java(s"result$id").expression[Expression]).mkString("\n")}
              """.stripMargin
-        println("OUT:" + str)
         Java(str).statements
 
       case _ => super.expected(test,id)(continue)

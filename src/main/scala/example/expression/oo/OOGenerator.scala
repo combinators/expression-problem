@@ -28,10 +28,8 @@ trait OOGenerator extends JavaGenerator with DataTypeSubclassGenerator with Stan
       case bm: domain.BinaryMethodTreeBase => true
       case _ => false
     }) {
-      println ("added helpers")
       helperClasses()
     } else {
-      println ("No helpers")
       Seq.empty
     }
 

@@ -20,11 +20,17 @@ trait CPPGenerator extends LanguageIndependentGenerator {
     */
    def dependency(op: domain.Operation): scala.List[domain.Operation] = List.empty
 
+  // TODO: FIX ME
   /**
     * Responsible for delegating to a new operation on the current context.
     */
-  def delegate(exp:domain.Atomic, op:domain.Operation, params:CPPElement*) : CPPElement = {
+  def delegateFixMe(exp:domain.Atomic, op:domain.Operation, params:CPPElement*) : CPPElement = {
     new CPPElement("CppReplaceMe")
+  }
+
+  /** For Functional Generator, same behavior as delegate. */
+  def identify(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
+    delegateFixMe(exp, op, params : _*)
   }
 
 }

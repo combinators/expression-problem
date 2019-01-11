@@ -22,6 +22,30 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with M0 with
     }
   }
 
+  /**
+    * List can be accommodated (in C++) by populating vectors with values drawn from test case.
+    *
+    * Calls 'continue' with an expression (the result of the prior new statements) and just concatenates all statements
+    */
+  override def expected(test:domain.TestCaseExpectedValue, id:String) : (Expression => Seq[Statement]) => Seq[Statement] = continue => {
+    test.expect._1 match {
+      case list:List =>
+        val seq: Seq[Any] = test.expect._2.asInstanceOf[Seq[Any]]
+        val ctype:CPPType = typeConverter(list)
+        val inner:CPPType = typeConverter(list.generic)
+
+        val map = seq.map(elt => s"result$id.push_back($elt);")
+        val str = s"""
+                     |std::vector < $inner > $ctype result$id;
+                     |${map.mkString("\n")}
+                     |${continue(new CPPElement(s"result$id")).mkString("\n")}
+             """.stripMargin
+        str.split("\n").map(line => new CPPElement(line))
+
+      case _ => super.expected(test,id)(continue)
+    }
+  }
+
   abstract override def typeConverter(tpe:domain.TypeRep) : CPPType = {
     tpe match {
       case el:List =>
@@ -42,7 +66,7 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with M0 with
           case Lit => Seq(new CPPElement(
             s"""
             |std::vector < double > vec;
-            |vec.push_back(*e->getValue());
+            |            |vec.push_back(*e->getValue());
             |value_map_[e] = vec;
             |""".stripMargin))
 
@@ -137,6 +161,8 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with M0 with
     val lit2 = new LitInst(2.0)
     val s1   = new domain.BinaryInst(Sub, lit1, lit2)
 
+    val tests = testMethod(M4_tests)
+
     super.testGenerator :+ new StandAlone("test_e4",
       s"""
          |TEST_GROUP(FirstTestGroup)
@@ -151,6 +177,8 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with M0 with
          |   ${PrettyP.name.capitalize} pp;
          |   ${vars(s1)}.Accept(&pp);
          |   STRCMP_EQUAL("(1.0-2.0)", pp.getValue(${vars(s1)}).c_str());
+         |
+         |   ${tests.mkString("\n")}
          |}
          |
          |int main(int ac, char** av)

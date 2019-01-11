@@ -27,23 +27,20 @@ trait cpp_e0 extends CPPGenerator with TestGenerator with M0 {
     op match {
       case Eval =>
         exp match {
-          case Lit => Seq(new CPPElement(s"value_map_[e] = *${dispatch(atts(litValue),op)};"))
-          case Add => Seq(new CPPElement(s"value_map_[e] = value_map_[${dispatch(atts(base.left),op)}] + value_map_[${dispatch(atts(base.right),op)}];"))
+          case Lit => Seq(new CPPElement(s"return ${dispatch(atts(litValue),op)};"))
+          case Add => Seq(new CPPElement(s"return ${dispatch(atts(base.left),op)} + ${dispatch(atts(base.right),op)};"))
           case _ => super.logic(exp)(op)
         }
 
       // all future EXP sub-types can simply return hashcode.
-      case Identifier => Seq(new CPPElement(s"""value_map_[e] = ${exp.hashCode()};"""))
+      case Identifier => Seq(new CPPElement(s"""${exp.hashCode()};"""))
 
       case _ => super.logic(exp)(op)
     }
   }
 
   abstract override def testGenerator: Seq[StandAlone] = {
-    val lit1 = new LitInst(1.0)
-    val lit2 = new LitInst(2.0)
-    val a1   = new BinaryInst(Add, lit1, lit2)
-
+    val tests = testMethod(M0_tests)
 
     super.testGenerator :+ new StandAlone("test_e0",
       s"""
@@ -53,13 +50,7 @@ trait cpp_e0 extends CPPGenerator with TestGenerator with M0 {
          |
          |TEST(FirstTestGroup, a1)
          |{
-         |   ${convert(lit1)}
-         |   ${convert(lit2)}
-         |   ${convert(a1)}
-         |
-         |   ${Eval.name.capitalize} e;
-         |   ${vars(a1)}.Accept(&e);
-         |   DOUBLES_EQUAL(3.0, e.getValue(${vars(a1)}), 0.0);
+         |   ${tests.mkString("\n")}
          |}
          |
          |int main(int ac, char** av)

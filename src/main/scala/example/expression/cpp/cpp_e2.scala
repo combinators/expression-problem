@@ -12,6 +12,15 @@ trait cpp_e2 extends Evolution with CPPGenerator with TestGenerator with M0 with
 
   import domain._
 
+
+  /** For developing test cases with strings, must convert expected value into a C++ string expression. */
+  abstract override def expected(test:domain.TestCaseExpectedValue, id:String) : (Expression => Seq[Statement]) => Seq[Statement] = continue => {
+    test.expect._1 match {
+      case String => continue (new CPPElement("\"" + test.expect._2.toString + "\""))
+      case _ => super.expected(test, id) (continue)
+    }
+  }
+
   abstract override def typeConverter(tpe:TypeRep) :CPPType = {
     tpe match {
       case String => new CPPType("std::string")
@@ -51,9 +60,7 @@ trait cpp_e2 extends Evolution with CPPGenerator with TestGenerator with M0 with
   }
 
   abstract override def testGenerator: Seq[StandAlone] = {
-    val lit1 = new LitInst(1.0)
-    val lit2 = new LitInst(2.0)
-    val s1   = new domain.BinaryInst(Sub, lit1, lit2)
+    val tests = testMethod(M2_tests)
 
     super.testGenerator :+ new StandAlone("test_e2",
       s"""
@@ -63,12 +70,7 @@ trait cpp_e2 extends Evolution with CPPGenerator with TestGenerator with M0 with
          |
          |TEST(FirstTestGroup, a1)
          |{
-         |   ${convert(lit1)}
-         |   ${convert(lit2)}
-         |   ${convert(s1)}
-         |   ${PrettyP.name.capitalize} pp;
-         |   ${vars(s1)}.Accept(&pp);
-         |   STRCMP_EQUAL("(1.0-2.0)", pp.getValue(${vars(s1)}).c_str());
+         |   ${tests.mkString("\n")}
          |}
          |
          |int main(int ac, char** av)

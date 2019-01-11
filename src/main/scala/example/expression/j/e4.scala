@@ -38,41 +38,6 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
     }
   }
 
-//
-//  /** Handle List values by pre-calculating values. */
-//  override def junitMethod(tests:Seq[domain.TestCase]) : MethodDeclaration = {
-//
-//    // TODO: FIX with Jan
-//    val stmts = tests.zipWithIndex.map(pair => {
-//
-//      val test = pair._1
-//      val idx = pair._2
-//
-//      val id:String = s"v$idx"
-//
-//      val tpe = test.op.returnType.get
-//
-//      tpe match {
-//            case list: List =>
-//              val seq: Seq[Any] = test.expect._2.asInstanceOf[Seq[Any]]
-//              val jtype = Java(typeConverter(list)).tpe
-//              val inner: Type = jtype.asClassOrInterfaceType().getTypeArguments.get.get(0)
-//
-//              val all:Seq[String] = Seq(s"$jtype list$id = ${dispatch(convert(test.inst), test.op)};",
-//                  s"$jtype result$id = new java.util.ArrayList<$inner>();") ++
-//                seq.map(elt => s"result$id.add($elt);") :+ s"assertEquals (list$id, result$id);"
-//              all.mkString("\n")
-//
-//              // pass along as is
-//            case _ => super.junitMethod(tests).getBody.get.toString
-//          }
-//    })
-//
-//    Java(s"""|public void test() {
-//             |   ${stmts.mkString("\n")}
-//             |}""".stripMargin).methodDeclarations.head
-//  }
-
   /**
     * Operations can declare dependencies, which leads to #include extras
     */

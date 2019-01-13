@@ -81,9 +81,27 @@ trait LanguageIndependentGenerator {
   /**
     * Universal situation across all possible solutions is the sequence of statements that result
     * for a given Operation and data-type.
+    *
+    * Must be Seq since some operations require more substantial implementation.
+    *
+    * Must be Statements (rather than just an Expression) because in most operations, a value of
+    * some sort is returned, thus instead of just "expr" it becomes "return expr;"
     */
   def logic(exp:domain.Atomic)(op:domain.Operation) : Seq[Statement] = {
     throw new scala.NotImplementedError(s"""Operation "${op.name}" does not handle case for sub-type "${exp.name}" """)
   }
 
+  /**
+    * Logic produces the sequence of statements that encodes the logic of an operation on a data
+    * type. As part of those statements, there is often a computed value that represents the result
+    * of the operation. In some languages, this result needs to be returned (i.e., Java or C++); in
+    * some EP approaches, this result is simply stored. In other languages (i.e., Scala or functional)
+    * there is no specific return statement.
+    *
+    * In any event, each approach determines how to process the result. It could be handled in
+    * language-specific manner and then overridden as needed by the EP approach.
+    * @param expr
+    * @return
+    */
+  def result (expr:Expression) : Seq[Statement]
 }

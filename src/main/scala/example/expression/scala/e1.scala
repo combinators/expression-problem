@@ -20,7 +20,7 @@ trait e1 extends Evolution with ScalaGenerator with TestGenerator with M1 {
     op match {
       case Eval =>
         exp match {
-          case Sub => Scala(s"${dispatch(subs(domain.base.left), Eval)} - ${dispatch(subs(domain.base.right), Eval)}").statements()
+          case Sub => result(Scala(s"${dispatch(subs(domain.base.left), Eval)} - ${dispatch(subs(domain.base.right), Eval)}").expression)
           case _ => super.logic(exp)(op)
         }
 

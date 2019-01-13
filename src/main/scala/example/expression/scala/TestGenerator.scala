@@ -12,7 +12,7 @@ trait TestGenerator extends ScalaGenerator {
   def expand(tpe:TypeRep, value:Any) : Term = {
     tpe match {
       case domain.baseTypeRep => convert(value.asInstanceOf[AtomicInst])
-      case _ => Scala(value.toString).term()
+      case _ => Scala(value.toString).term
     }
   }
 
@@ -29,8 +29,8 @@ trait TestGenerator extends ScalaGenerator {
     */
   def expected(test:TestCaseExpectedValue, id:String) : (Term => Stat) => Stat = continue => {
     val expectedType:Type = typeConverter(test.expect._1)
-    val baseType:Type = Scala("AtomicInst").tpe()
-    val baseName:Type = Scala(domain.baseTypeRep.name).tpe()
+    val baseType:Type = Scala("AtomicInst").tpe
+    val baseName:Type = Scala(domain.baseTypeRep.name).tpe
 
     if (expectedType.toString().equals(baseName.toString())) {   // Type doesn't seem to support .equals check
       val converted:Expression = convert(test.expect._2.asInstanceOf[AtomicInst])
@@ -39,7 +39,7 @@ trait TestGenerator extends ScalaGenerator {
 
       val converted:Expression = test.expect._2 match {
         case ai:AtomicInst => convert(ai)
-        case _ => Scala(test.expect._2.toString).term()
+        case _ => Scala(test.expect._2.toString).term
       }
 
       continue(converted)
@@ -54,14 +54,14 @@ trait TestGenerator extends ScalaGenerator {
     val name = inst.e.name
     inst match {
       case ui: UnaryInst =>
-        Scala(s"new $name(${convert(ui.inner)})").expression()
+        Scala(s"new $name(${convert(ui.inner)})").expression
       case bi: BinaryInst =>
         val left = convert(bi.left)
         val right = convert(bi.right)
-        Scala(s"new $name($left, $right)").expression()
-      case exp: AtomicInst => Scala(s"new $name(${exp.i.get})").expression()
+        Scala(s"new $name($left, $right)").expression
+      case exp: AtomicInst => Scala(s"new $name(${exp.i.get})").expression
 
-      case _ => Scala(s""" "unknown $name" """).expression()
+      case _ => Scala(s""" "unknown $name" """).expression
     }
   }
 
@@ -83,7 +83,7 @@ trait TestGenerator extends ScalaGenerator {
       test match {
         case eq:EqualsTestCase => {
           val params = eq.params.map(pair => expand(pair._1, pair._2))
-          expected(eq, id)(expectedExpr => Scala(s"assert ($expectedExpr == ${actual(eq.op, eq.inst, params: _*)})").statement())
+          expected(eq, id)(expectedExpr => Scala(s"assert ($expectedExpr == ${actual(eq.op, eq.inst, params: _*)})").statement)
         }
 
         case comp:EqualsCompositeTestCase => {
@@ -92,12 +92,12 @@ trait TestGenerator extends ScalaGenerator {
           val x :Expression = actual(comp.ops.head, comp.inst, params: _*)   // HACK: Only works for two-deep
           val y :Expression = dispatch(x, comp.ops.tail.head)
 
-          expected(comp, id)(expectedExpr => Scala(s"assert ($expectedExpr == $y)").statement())
+          expected(comp, id)(expectedExpr => Scala(s"assert ($expectedExpr == $y)").statement)
         }
 
         case ne:NotEqualsTestCase =>
           val params = ne.params.map(pair => expand(pair._1, pair._2))
-          expected(ne, id)(expectedExpr => Scala(s"assert ($expectedExpr != ${actual(ne.op, ne.inst, params: _*)})").statement())
+          expected(ne, id)(expectedExpr => Scala(s"assert ($expectedExpr != ${actual(ne.op, ne.inst, params: _*)})").statement)
       }
     })
 

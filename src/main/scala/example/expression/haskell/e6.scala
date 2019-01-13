@@ -47,21 +47,19 @@ trait e6 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
     op match {
       case Equals =>
         exp match {
-          case Lit  => {
+          case Lit  =>
             val value2 =  Haskell(atts(litValue).getCode + "2")
-            Seq(Haskell(s""" ${atts(litValue)} == $value2"""))
-          }
+            result(Haskell(s" ${atts(litValue)} == $value2 "))
 
-          case Neg  => {
+          case Neg  =>
             val inner2 = Haskell(atts(base.inner).getCode + "2")
-            Seq(Haskell(s""" ${dispatch(atts(base.inner), op, inner2)}  """))
-          }
+            result(Haskell(s" ${dispatch(atts(base.inner), op, inner2)} "))
 
-          case Add|Sub|Mult|Divd => {
+          case Add|Sub|Mult|Divd =>
             val left2 = Haskell(atts(base.left).getCode + "2")
             val right2 = Haskell(atts(base.right).getCode + "2")
-            Seq(Haskell(s""" ${dispatch(atts(base.left), op, left2)} && ${dispatch(atts(base.right), op, right2)} """))
-          }
+            result(Haskell(s" ${dispatch(atts(base.left), op, left2)} && ${dispatch(atts(base.right), op, right2)} "))
+
 
           case _ => super.logic(exp)(op)
         }

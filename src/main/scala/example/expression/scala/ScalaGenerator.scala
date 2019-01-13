@@ -24,12 +24,19 @@ trait ScalaGenerator extends LanguageIndependentGenerator with DependentDispatch
   }
 
   /**
+    * Default behavior in Scala is to return an expression value as is
+    */
+  def result (expr:Expression) : Seq[Statement] = {
+    Seq(expr)
+  }
+
+  /**
     * Responsible for identifying the individual sub-type
     */
   override def identify(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
     val opargs = params.mkString(",")
     val term = Term.Name(op.name.toLowerCase)   // should be able to be ..$params
-    Scala(s"this.${op.name.toLowerCase}(new ${exp.name.capitalize}($opargs))").expression()
+    Scala(s"this.${op.name.toLowerCase}(new ${exp.name.capitalize}($opargs))").expression
   }
 
   /// Scala support

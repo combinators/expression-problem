@@ -15,8 +15,8 @@ trait e0 extends ScalaGenerator with TestGenerator with M0 {
   /** E0 Introduces the concept a Double type, used for the 'Eval' operation. */
   abstract override def typeConverter(tr:TypeRep) : Type = {
     tr match {
-      case Double => Scala("Double").tpe()
-      case Int => Scala("Int").tpe()
+      case Double => Scala("Double").tpe
+      case Int => Scala("Int").tpe
       case _ => super.typeConverter(tr)
     }
   }
@@ -29,13 +29,13 @@ trait e0 extends ScalaGenerator with TestGenerator with M0 {
     op match {
       case Eval =>
         exp match {
-          case Lit => Scala(s"${atts(litValue)}").statements()
-          case Add => Scala(s"${dispatch(atts(base.left),op)} + ${dispatch(atts(base.right),op)}").statements()
+          case Lit => result(Scala(s"${atts(litValue)}").expression)
+          case Add => result(Scala(s"${dispatch(atts(base.left),op)} + ${dispatch(atts(base.right),op)}").expression)
           case _ => super.logic(exp)(op)
         }
 
         // all future EXP sub-types can simply return hashcode.
-      case Identifier => Scala(s"${exp.hashCode()}").statements()
+      case Identifier => result(Scala(s"${exp.hashCode()}").expression)
 
       case _ => super.logic(exp)(op)
     }

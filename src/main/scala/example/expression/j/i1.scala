@@ -18,7 +18,7 @@ trait i1 extends Evolution with JavaGenerator with JUnitTestGenerator with M0 wi
     op match {
       case Eval => {
         exp match {
-          case Inv => Java(s"""return 1 / ${dispatch(subs(domain.base.inner), Eval)}; """).statements()
+          case Inv => result(Java(s" 1 / ${dispatch(subs(domain.base.inner), Eval)} ").expression[Expression]())
           case _ => super.logic(exp)(op)
         }
       }

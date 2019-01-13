@@ -28,13 +28,13 @@ trait e0 extends GJGenerator with TestGenerator with M0 {
     op match {
       case Eval =>
         exp match {
-          case Lit => Seq(GJ(s"return ${atts(litValue)};"))
-          case Add => Seq(GJ(s"return new Double(${dispatch(atts(base.left),op)}.doubleValue() + ${dispatch(atts(base.right),op)}.doubleValue());"))
+          case Lit => result(GJ(atts(litValue).toString))
+          case Add => result(GJ(s"new Double(${dispatch(atts(base.left),op)}.doubleValue() + ${dispatch(atts(base.right),op)}.doubleValue())"))
           case _ => super.logic(exp)(op)
         }
 
         // all future EXP sub-types can simply return hashcode.
-      case Identifier => Seq(GJ(s"""return ${exp.hashCode()};"""))
+      case Identifier => result(GJ(exp.hashCode().toString))
 
       case _ => super.logic(exp)(op)
     }

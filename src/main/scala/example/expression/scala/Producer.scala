@@ -17,7 +17,7 @@ trait Producer extends ScalaGenerator {
     * method (with specific parameters) to carry this out.
     */
   def inst(exp:Atomic)(op:Operation)(params:Term*): Term = {
-    Scala("new " + exp.name.capitalize + "(" + params.map(expr => expr.toString()).mkString(",") + ")").expression()
+    Scala("new " + exp.name.capitalize + "(" + params.map(expr => expr.toString()).mkString(",") + ")").expression
   }
 
 }

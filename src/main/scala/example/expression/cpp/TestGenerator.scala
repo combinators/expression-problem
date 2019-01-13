@@ -56,40 +56,10 @@ trait TestGenerator extends CPPGenerator {
     *
     * Not sure, yet, how to properly pass in variable parameters.
     */
-  def actual(op:Operation, inst:AtomicInst, params:CPPElement*):CPPElement = {
-    //${dispatch(atts(litValue),op)};"))
-    val preceding = rec_convert(inst)
-    val varName:String = variables(inst)
-    dispatch(new CPPElement(varName), op, params: _*)
-  }
+  def actual(op:Operation, inst:AtomicInst, params:CPPElement*):CPPElement
 
   /** Convert a test instance into a C++ Expression for instantiating that instance. */
-  def rec_convert(inst: AtomicInst): CPPElement = {
-    val name = inst.e.name
-    id = id + 1
-    inst match {
-      case ui: UnaryInst =>
-        val inner = rec_convert(ui.inner).toString
-        new CPPElement(s"$inner\n$name ${vars(inst)} = $name(&${vars(ui.inner)});")
-
-      // Add  add3 = Add(&lit1, &lit2);
-      case bi: BinaryInst =>
-        val left = rec_convert(bi.left).toString
-        val right = rec_convert(bi.right).toString
-        new CPPElement(s"$left\n$right\n$name ${vars(inst)} = $name(&${vars(bi.left)}, &${vars(bi.right)});")
-
-      //  double val1 = 1.0;
-      //  Lit  lit1 = Lit(&val1);
-      case exp: AtomicInst =>
-        new CPPElement(
-          s"""
-             |double val${vars(inst)} = ${exp.i.get};
-             |$name ${vars(inst)} = $name(&val${vars(inst)});
-         """.stripMargin)
-
-      case _ => new CPPElement(s""" "unknown $name" """)
-    }
-  }
+  def rec_convert(inst: AtomicInst): CPPElement
 
   /** Convert a test instance into a C++ Expression for instantiating that instance. */
   def convert(inst: AtomicInst): CPPElement = {
@@ -127,6 +97,8 @@ trait TestGenerator extends CPPGenerator {
       test match {
         case eq: EqualsTestCase =>
           val OP:String = eq.op.name.capitalize
+          val instDeclaration = rec_convert(eq.inst)
+          val varName:Expression = new CPPElement(variables(eq.inst))
 
           // The expected method takes in a function that will be called by the expected method. Now, the expected
           // method will pass in the expression (which is expected) into this function, and it is the job of that
@@ -134,11 +106,11 @@ trait TestGenerator extends CPPGenerator {
           expected(eq, id)(expectedExpr =>
             Seq(
               new CPPElement("{"),
-              rec_convert(eq.inst),
-              new CPPElement(s"$OP *e = new $OP();"),
-              new CPPElement(s"${vars(eq.inst)}.Accept(e);"), // FOR NOW only works with visitor...
-              new CPPElement(s"CHECK_COMPARE($expectedExpr, ==, e->getValue(${vars(eq.inst)}));"),
-              new CPPElement("delete e;"),
+             // instDeclaration,
+             // new CPPElement(s"${result(dispatch(varName, eq.op))}"),
+             // new CPPElement(s"${vars(eq.inst)}.Accept(e);"), // FOR NOW only works with visitor...
+              //new CPPElement(s"CHECK_COMPARE($expectedExpr, ==, ${actual(eq.op, eq.inst)});"),
+              new CPPElement(s"CHECK_TRUE($expectedExpr == ${actual(eq.op, eq.inst)});"),
               new CPPElement("}"))
           )
 
@@ -151,11 +123,7 @@ trait TestGenerator extends CPPGenerator {
           expected(ne, id)(expectedExpr =>
             Seq(
               new CPPElement("{"),
-              rec_convert(ne.inst),
-              new CPPElement(s"$OP *e = new $OP();"),
-              new CPPElement(s"${vars(ne.inst)}.Accept(e);"),
-              new CPPElement(s"CHECK_COMPARE($expectedExpr, !=, e->getValue(${vars(ne.inst)}));"),
-              new CPPElement("delete e;"),
+              new CPPElement(s"CHECK_TRUE($expectedExpr != ${actual(ne.op, ne.inst)});"),
               new CPPElement("}"))
           )
 
@@ -187,8 +155,6 @@ trait TestGenerator extends CPPGenerator {
       """#include "CppUTest/MemoryLeakDetector.h" """,
       """#include "CppUTest/CommandLineTestRunner.h" """,
 
-      """#include "Exp.h" """,
-      """#include "ExpVisitor.h" """
       ) ++ allOps)
     })
     files

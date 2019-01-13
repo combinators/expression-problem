@@ -51,10 +51,10 @@ trait e4 extends Evolution with HaskellGenerator with HUnitTestGenerator with Pr
       case Collect =>
 
         exp match {
-          case Lit => Seq(Haskell(s"[${atts(litValue)}]"))
-          case Neg => Seq(Haskell(s"${dispatch(atts(base.inner), op)}"))
+          case Lit => result(Haskell(s"[${atts(litValue)}]"))
+          case Neg => result(Haskell(s"${dispatch(atts(base.inner), op)}"))
 
-          case Add | Sub | Mult | Divd => Seq(Haskell(s"${dispatch(atts(base.left), op)} ++ ${dispatch(atts(base.right), op)}"))
+          case Add | Sub | Mult | Divd => result(Haskell(s"${dispatch(atts(base.left), op)} ++ ${dispatch(atts(base.right), op)}"))
 
         }
           // Simplify only works for solutions that instantiate expression instances
@@ -65,54 +65,54 @@ trait e4 extends Evolution with HaskellGenerator with HUnitTestGenerator with Pr
           case Neg => Seq(Haskell(s"""|
                               |    let leftVal = ${dispatch(atts(base.inner), Eval)}
                               |    in if leftVal == 0
-                              |       then ${inst(Lit)(op)(zero)}
-                              |       else ${inst(Neg)(op)(standardVarArgs(Neg) : _*)}
+                              |       then ${result(inst(Lit)(op)(zero)).mkString("\n")}
+                              |       else ${result(inst(Neg)(op)(standardVarArgs(Neg) : _*)).mkString("\n")}
                               |""".stripMargin))
 
           case Add => Seq(Haskell(s"""|
                                |    let leftVal = ${Eval.name} ${dispatch(atts(base.left), op)}
                                |        rightVal = ${Eval.name} ${dispatch(atts(base.right), op)}
                                |    in if (leftVal == 0 && rightVal == 0.0) || (leftVal + rightVal == 0.0)
-                               |        then ${inst(Lit)(op)(zero)}
+                               |        then ${result(inst(Lit)(op)(zero)).mkString("\n")}
                                |        else if leftVal == 0
-                               |             then ${dispatch(atts(base.right), op)}
+                               |             then ${result(dispatch(atts(base.right), op)).mkString("\n")}
                                |             else if rightVal == 0
-                               |                  then ${dispatch(atts(base.left), op)}
-                               |                  else ${inst(Add)(op)(standardVarArgs(Add) : _*)}
+                               |                  then ${result(dispatch(atts(base.left), op)).mkString("\n")}
+                               |                  else ${result(inst(Add)(op)(standardVarArgs(Add) : _*)).mkString("\n")}
                                |""".stripMargin))
 
           case Sub => Seq(Haskell(s"""|
                               |    let leftVal = eval ${dispatch(atts(base.left), op)}
                               |        rightVal = eval ${dispatch(atts(base.right), op)}
                               |    in if leftVal == rightVal
-                              |        then ${inst(Lit)(op)(zero)}
-                              |        else ${inst(Sub)(op)(standardVarArgs(Add) : _*)}
+                              |        then ${result(inst(Lit)(op)(zero)).mkString("\n")}
+                              |        else ${result(inst(Sub)(op)(standardVarArgs(Add) : _*)).mkString("\n")}
                               |""".stripMargin))
 
           case Mult => Seq(Haskell(s"""|
                                 |    let leftVal = eval ${dispatch(atts(base.left), op)}
                                 |        rightVal= eval ${dispatch(atts(base.right), op)}
                                 |    in if leftVal == 0 || rightVal == 0.0
-                                |        then ${inst(Lit)(op)(zero)}
+                                |        then ${result(inst(Lit)(op)(zero)).mkString("\n")}
                                 |        else if leftVal == 1
-                                |             then ${dispatch(atts(base.right), op)}
+                                |             then ${result(dispatch(atts(base.right), op)).mkString("\n")}
                                 |             else if rightVal == 1
-                                |                  then ${dispatch(atts(base.left), op)}
-                                |                  else ${inst(Mult)(op)(standardVarArgs(Add) : _*)}
+                                |                  then ${result(dispatch(atts(base.left), op)).mkString("\n")}
+                                |                  else ${result(inst(Mult)(op)(standardVarArgs(Add) : _*)).mkString("\n")}
                                 |""".stripMargin))
 
           case Divd => Seq(Haskell(s"""|
                                 |    let leftVal = eval ${dispatch(atts(base.left), op)}
                                 |        rightVal = eval ${dispatch(atts(base.right), op)}
                                 |    in if leftVal == 0
-                                |        then ${inst(Lit)(op)(zero)}
+                                |        then ${result(inst(Lit)(op)(zero)).mkString("\n")}
                                 |        else if rightVal == 1
-                                |             then ${dispatch(atts(base.left), op)}
+                                |             then ${result(dispatch(atts(base.left), op)).mkString("\n")}
                                 |             else if leftVal == rightVal
-                                |                  then ${inst(Lit)(op)(one)}
+                                |                  then ${result(inst(Lit)(op)(one)).mkString("\n")}
                                 |                  else if leftVal == (0 - rightVal)
-                                |                       then ${inst(Lit)(op)(negOne)}
-                                |                       else ${inst(Mult)(op)(standardVarArgs(Add) : _*)}
+                                |                       then ${result(inst(Lit)(op)(negOne)).mkString("\n")}
+                                |                       else ${result(inst(Mult)(op)(standardVarArgs(Add) : _*)).mkString("\n")}
                                 |""".stripMargin))
 
           case _ => super.logic(exp)(op)

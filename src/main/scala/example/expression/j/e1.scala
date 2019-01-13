@@ -19,7 +19,7 @@ trait e1 extends Evolution with JavaGenerator with JUnitTestGenerator with M1 {
     op match {
       case Eval =>
         exp match {
-          case Sub => Java(s"return ${dispatch(subs(domain.base.left), Eval)} - ${dispatch(subs(domain.base.right), Eval)};").statements()
+          case Sub => result(Java(s"${dispatch(subs(domain.base.left), Eval)} - ${dispatch(subs(domain.base.right), Eval)}").expression[Expression]())
           case _ => super.logic(exp)(op)
         }
 

@@ -7,7 +7,7 @@ import example.expression.domain.{Evolution, M0, M1, M2, M3, M4}
   *
   * Still C++-based, naturally and CPPUnit
   */
-trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with M0 with M1 with M2 with M3 with M4 {
+trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with DependentDispatch with Producer with M0 with M1 with M2 with M3 with M4 {
   self:cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3 =>
 
   import domain._
@@ -32,11 +32,11 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with M0 with
       case list:List =>
         val seq: Seq[Any] = test.expect._2.asInstanceOf[Seq[Any]]
         val ctype:CPPType = typeConverter(list)
-        val inner:CPPType = typeConverter(list.generic)
+        //val inner:CPPType = typeConverter(list.generic)
 
         val map = seq.map(elt => s"result$id.push_back($elt);")
         val str = s"""
-                     |std::vector < $inner > $ctype result$id;
+                     |$ctype result$id;
                      |${map.mkString("\n")}
                      |${continue(new CPPElement(s"result$id")).mkString("\n")}
              """.stripMargin
@@ -62,31 +62,34 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with M0 with
     // generate the actual body
     op match {
       case Collect =>
+        val tpe = op.returnType.get match {
+          case list:List => typeConverter(list.generic)
+        }
         exp match {
           case Lit => Seq(new CPPElement(
             s"""
-            |std::vector < double > vec;
-            |            |vec.push_back(*e->getValue());
-            |value_map_[e] = vec;
+            |std::vector < $tpe > vec;
+            |vec.push_back(${valueOf(atts(litValue))});
+            |${result(new CPPElement("vec")).mkString("\n")};
             |""".stripMargin))
 
           case Neg => Seq(new CPPElement(
             s"""
-               |std::vector<double> vec;
-               |std::vector<double> expv = value_map_[e->getInner()];   // HACK: FIX hard-coded attribute
+               |std::vector<$tpe> vec;
+               |std::vector<$tpe> expv = ${dispatch(atts(base.inner),op)};  // HACK: FIX hard-coded attribute
                |vec.insert(vec.end(), expv.begin(), expv.end());
-               |value_map_[e] = vec;
+               |${result(new CPPElement("vec")).mkString("\n")};
              """.stripMargin
           ))
           case Add|Sub|Mult|Divd =>
             val combined:String =
               s"""std::vector<double> vec;
-                 |std::vector<double> leftv = value_map_[${dispatch(atts(base.left),op)}];
-                 |std::vector<double> rightv = value_map_[${dispatch(atts(base.right),op)}];
+                 |std::vector<double> leftv = ${dispatch(atts(base.left),op)};
+                 |std::vector<double> rightv = ${dispatch(atts(base.right),op)};
                  |
                  |vec.insert(vec.end(), leftv.begin(), leftv.end());
                  |vec.insert(vec.end(), rightv.begin(), rightv.end());
-                 |value_map_[e] = vec;
+                 |${result(new CPPElement("vec")).mkString("\n")};
             """.stripMargin
             Seq(new CPPElement(combined))
 
@@ -94,60 +97,46 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with M0 with
         }
 
       case Simplify =>
-
+        val zero = new CPPElement("0.0")
+        val one = new CPPElement("1.0")
+        val negOne = new CPPElement("-1.0")
         exp match {
-          case Lit => Seq(new CPPElement(s"""value_map_[e] = (Exp *) e;"""))
+            // STIL has work to do...
+          case Lit => Seq(new CPPElement(s"""${result(new CPPElement("(Exp *) e")).mkString("\n")} """))
 
           case Add => Seq(new CPPElement(s"""
-                                            |Eval eval;
-                                            |e->getLeft()->Accept(&eval);
-                                            |double leftV = eval.getValue(*(e->getLeft()));
-                                            |e->getRight()->Accept(&eval);
-                                            |double rightV = eval.getValue(*(e->getRight()));
-                                            |
+                                            |double leftV = ${dependentDispatch(atts(domain.base.left), Eval)};
+                                            |double rightV = ${dependentDispatch(atts(domain.base.right), Eval)};
                                             |if (leftV + rightV == 0) {
-                                            |  double z = 0;
-                                            |  value_map_[e] = new Lit(&z);
+                                            |  ${result(inst(Lit)(op)(zero)).mkString("\n")}
                                             |} else if (leftV == 0) {
-                                            |  e->getRight()->Accept(this);
-                                            |  value_map_[e] = value_map_[e->getRight()];
+                                            |  ${result(dispatch(atts(domain.base.right), Simplify)).mkString("\n")}
                                             |} else if (rightV == 0) {
-                                            |  e->getLeft()->Accept(this);
-                                            |  value_map_[e] = value_map_[e->getLeft()];
+                                            |  ${result(dispatch(atts(domain.base.left), Simplify)).mkString("\n")}
                                             |} else {
-                                            |  e->getLeft()->Accept(this);
-                                            |  e->getRight()->Accept(this);
-                                            |  value_map_[e] = new Add(value_map_[e->getLeft()], value_map_[e->getRight()]);
+                                            |  ${result(inst(Add)(op)(dispatch(atts(domain.base.left), Simplify),dispatch(atts(domain.base.right), Simplify))).mkString("\n")}
                                             |}""".stripMargin))
           case Sub => Seq(new CPPElement(s"""
-                                            |Eval eval;
-                                            |e->getLeft()->Accept(&eval);
-                                            |double leftV = eval.getValue(*(e->getLeft()));
-                                            |e->getRight()->Accept(&eval);
-                                            |double rightV = eval.getValue(*(e->getRight()));
-                                            |
+                                            |double leftV = ${dependentDispatch(atts(domain.base.left), Eval)};
+                                            |double rightV = ${dependentDispatch(atts(domain.base.right), Eval)};
                                             |if (leftV == rightV) {
-                                            |  double z = 0;
-                                            |  value_map_[e] = new Lit(&z);
+                                            |  ${result(inst(Lit)(op)(zero)).mkString("\n")}
                                             |} else {
-                                            |  e->getLeft()->Accept(this);
-                                            |  e->getRight()->Accept(this);
-                                            |  value_map_[e] = new Sub(value_map_[e->getLeft()], value_map_[e->getRight()]);
+                                            |  ${result(inst(Add)(op)(dispatch(atts(domain.base.left), Simplify),dispatch(atts(domain.base.right), Simplify))).mkString("\n")}
                                             |}""".stripMargin))
-          case Mult => Seq(new CPPElement(s"""value_map_[e] = (Exp *) e; // NOT YET IMPLEMENTED MULT """))
-          case Divd => Seq(new CPPElement(s"""value_map_[e] = (Exp *) e; // NOT YET IMPLEMENTED DIVD """))
+
+            // NOT YET IMPLEMENTED
+          case Mult => Seq(new CPPElement(s"""${result(inst(Mult)(op)(dispatch(atts(domain.base.left), Simplify),dispatch(atts(domain.base.right), Simplify))).mkString("\n")}; """))
+          case Divd => Seq(new CPPElement(s"""${result(inst(Divd)(op)(dispatch(atts(domain.base.left), Simplify),dispatch(atts(domain.base.right), Simplify))).mkString("\n")}; """))
+
 
           // TODO: Would love to have ability to simplify neg(neg(x)) to just be x. This requires a form
           // of inspection that might not be generalizable...
           case Neg => Seq(new CPPElement(s"""
-                                            |Eval eval;
-                                            |e->Accept(&eval);
-                                            |if (eval.getValue(*e) == 0) {
-                                            |  double z = 0;
-                                            |  value_map_[e] = new Lit(&z);
+                                            |if (${dependentDispatch(atts(domain.base.inner), Eval)} == 0) {
+                                            |   ${result(inst(Lit)(op)(zero)).mkString("\n")}
                                             |} else {
-                                            |  e->getInner()->Accept(this);
-                                            |  value_map_[e] = new Neg(value_map_[e->getInner()]);
+                                            |   ${result(inst(Neg)(op)(dispatch(atts(domain.base.inner), Simplify))).mkString("\n")}
                                             |}""".stripMargin))
           case _ => super.logic(exp)(op)
         }
@@ -157,10 +146,6 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with M0 with
   }
 
   abstract override def testGenerator: Seq[StandAlone] = {
-    val lit1 = new LitInst(1.0)
-    val lit2 = new LitInst(2.0)
-    val s1   = new domain.BinaryInst(Sub, lit1, lit2)
-
     val tests = testMethod(M4_tests)
 
     super.testGenerator :+ new StandAlone("test_e4",
@@ -171,18 +156,12 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with M0 with
          |
          |TEST(FirstTestGroup, a1)
          |{
-         |   ${convert(lit1)}
-         |   ${convert(lit2)}
-         |   ${convert(s1)}
-         |   ${PrettyP.name.capitalize} pp;
-         |   ${vars(s1)}.Accept(&pp);
-         |   STRCMP_EQUAL("(1.0-2.0)", pp.getValue(${vars(s1)}).c_str());
-         |
          |   ${tests.mkString("\n")}
          |}
          |
          |int main(int ac, char** av)
          |{
+         |  MemoryLeakWarningPlugin::turnOffNewDeleteOverloads();
          |  return CommandLineTestRunner::RunAllTests(ac, av);
          |}""".stripMargin.split("\n")
     )

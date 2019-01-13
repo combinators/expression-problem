@@ -26,23 +26,23 @@ class Scala private(elements: immutable.Seq[Scala], text: String) extends Buffer
   /** Parses this element as declaration */
   def declaration(): Stat = fullText.parse[Stat].get
 
-  def term() : Term = fullText.parse[Term].get
+  def term : Term = fullText.parse[Term].get
 
   /** We need a seq[stat] because other languages create sequences. */
-  def statements() : Seq[Stat] =  dialects.Sbt1(fullText).parse[Source].get.stats
+  def statements : Seq[Stat] =  dialects.Sbt1(fullText).parse[Source].get.stats
 
-  def statement() : Stat = fullText.parse[Stat].get
+  def statement : Stat = fullText.parse[Stat].get
 
-  def expression() : Term = fullText.parse[Term].get
+  def expression : Term = fullText.parse[Term].get
 
   /** Parses this element as a (potentially qualified) name. */
   //def name(): Name = fullText.parse[Name].get
 
   /** Parses this element as an interface body declaration (e.g. a method signature). */
-  def definition(): Stat = fullText.parse[Stat].get
+  def definition: Stat = fullText.parse[Stat].get
 
   /** Parses this element as a type (e.g. the in  X foo = (X)bar). */
-  def tpe(): Type = fullText.parse[Type].get
+  def tpe: Type = fullText.parse[Type].get
 }
 
 /** Helper for Scala utility methods. */

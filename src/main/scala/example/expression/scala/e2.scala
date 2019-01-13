@@ -22,7 +22,7 @@ trait e2 extends Evolution with ScalaGenerator with TestGenerator with M2 {
   /** For developing test cases with strings, must convert expected value into a Java string expression. */
   abstract override def expected(test:domain.TestCaseExpectedValue, id:String) : (Expression => Stat) => Stat = continue => {
       test.expect._1 match {
-      case String => continue (Scala("\"" + test.expect._2.toString + "\"").expression())
+      case String => continue (Scala("\"" + test.expect._2.toString + "\"").expression)
       case _ => super.expected(test, id) (continue)
     }
   }
@@ -34,9 +34,9 @@ trait e2 extends Evolution with ScalaGenerator with TestGenerator with M2 {
     op match {
       case PrettyP =>
         exp match {
-          case Lit => Scala(s""" "" + ${subs(litValue)} + ""; """).statements()
-          case Add => Scala(s""" "(" + ${dispatch(subs(domain.base.left), PrettyP)} + "+" + ${dispatch(subs(domain.base.right), PrettyP)}+ ")" """).statements()
-          case Sub => Scala(s""" "(" + ${dispatch(subs(domain.base.left), PrettyP)} + "-" + ${dispatch(subs(domain.base.right), PrettyP)} + ")" """).statements()
+          case Lit => result(Scala(s""" "" + ${subs(litValue)} + "" """).expression)
+          case Add => result(Scala(s""" "(" + ${dispatch(subs(domain.base.left), PrettyP)} + "+" + ${dispatch(subs(domain.base.right), PrettyP)}+ ")" """).expression)
+          case Sub => result(Scala(s""" "(" + ${dispatch(subs(domain.base.left), PrettyP)} + "-" + ${dispatch(subs(domain.base.right), PrettyP)} + ")" """).expression)
           case _ => super.logic(exp)(op)
         }
 

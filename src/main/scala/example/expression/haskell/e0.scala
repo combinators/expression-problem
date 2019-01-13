@@ -55,13 +55,13 @@ trait e0 extends HaskellGenerator with HUnitTestGenerator with M0 {
     op match {
       case Eval =>
         exp match {
-          case Lit => Seq(new Haskell(s"""${atts(litValue)}"""))
-          case Add => Seq(new Haskell(s"""${dispatch(atts(base.left), op)} + ${dispatch(atts(base.right), op)}"""))
+          case Lit => result(new Haskell(s"""${atts(litValue)}"""))
+          case Add => result(new Haskell(s"""${dispatch(atts(base.left), op)} + ${dispatch(atts(base.right), op)}"""))
           case _ => super.logic(exp)(op)
         }
 
       // all future EXP sub-types can simply return hashcode.
-      case Identifier => Seq(new Haskell(s"${exp.hashCode()}"))
+      case Identifier => result(new Haskell(s"${exp.hashCode()}"))
       case _ => super.logic(exp)(op)
     }
   }

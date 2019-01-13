@@ -31,6 +31,13 @@ trait JavaGenerator extends LanguageIndependentGenerator with DependentDispatch 
     }
   }
 
+  /**
+    * Default behavior in Java is to return an expression value.
+    */
+  def result (expr:Expression) : Seq[Statement] = {
+    Java(s"return $expr;").statements()
+  }
+
   // Useful helper methods for any generator needing to craft common Java constructs
 
   /** Generate constructor for given atomic concept, using suggested name */

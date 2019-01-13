@@ -19,7 +19,7 @@ trait e1 extends Evolution with HaskellGenerator with HUnitTestGenerator with M1
       case Eval =>
         exp match {
 
-          case Sub => Seq(new Haskell(s"""${dispatch(atts(base.left), op)} - ${dispatch(atts(base.right), op)}"""))
+          case Sub => result(new Haskell(s"""${dispatch(atts(base.left), op)} - ${dispatch(atts(base.right), op)}"""))
           case _ => super.logic(exp)(op)
         }
 

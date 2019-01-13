@@ -35,9 +35,9 @@ trait e2 extends Evolution with JavaGenerator with JUnitTestGenerator with M2 {
     op match {
       case PrettyP =>
         exp match {
-          case Lit => Java(s"""return "" + ${subs(litValue)} + ""; """).statements()
-          case Add => Java(s"""return "(" + ${dispatch(subs(domain.base.left), PrettyP)} + "+" + ${dispatch(subs(domain.base.right), PrettyP)}+ ")";""").statements()
-          case Sub => Java(s"""return "(" + ${dispatch(subs(domain.base.left), PrettyP)} + "-" + ${dispatch(subs(domain.base.right), PrettyP)} + ")";""").statements()
+          case Lit => result(Java(s""" "" + ${subs(litValue)} + "" """).expression[Expression]())
+          case Add => result(Java(s""" "(" + ${dispatch(subs(domain.base.left), PrettyP)} + "+" + ${dispatch(subs(domain.base.right), PrettyP)}+ ")" """).expression[Expression]())
+          case Sub => result(Java(s""" "(" + ${dispatch(subs(domain.base.left), PrettyP)} + "-" + ${dispatch(subs(domain.base.right), PrettyP)} + ")" """).expression[Expression]())
           case _ => super.logic(exp)(op)
         }
 

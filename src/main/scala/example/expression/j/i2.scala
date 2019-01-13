@@ -30,15 +30,11 @@ trait i2 extends  Evolution with JavaGenerator with JUnitTestGenerator with I2 {
 
         val heightPlusOne:Expression = Java(s"${independent.height} + 1").expression[Expression]()
         exp match {
-          case _:domain.Binary => Java(
-            s"""|return Math.max(${dispatch(subs(domain.base.left), Height, heightPlusOne)},
-                |                ${dispatch(subs(domain.base.right), Height, heightPlusOne)});
-                |""".stripMargin).statements()
+          case _:domain.Binary => result(Java(s"Math.max(${dispatch(subs(domain.base.left), Height, heightPlusOne)},${dispatch(subs(domain.base.right), Height, heightPlusOne)}) ").expression[Expression]())
 
-          case _:domain.Unary =>
-            Java(s"return ${dispatch(subs(domain.base.inner), Height, heightPlusOne)};").statements()
+          case _:domain.Unary => result(Java(s"${dispatch(subs(domain.base.inner), Height, heightPlusOne)};").expression[Expression]())
 
-          case _:domain.Atomic => Java(s"return ${independent.height};").statements()
+          case _:domain.Atomic => result(Java(s" ${independent.height};").expression[Expression]())
 
           case _ => super.logic(exp)(op)
         }

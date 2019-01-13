@@ -14,37 +14,6 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
   val domain:MathDomain
   import domain._
 
-
-//  /**
-//    * List can be accommodated (in Java) by populating ArrayList with values drawn from test case.
-//    */
-//  override def preAssert(test:domain.EqualsTestCase, id:String): Seq[Statement] = {
-//    val tpe = test.op.returnType.get
-//    tpe match {
-//      case tree:Tree =>
-//        val seq:Seq[Any] = test.expect._2.asInstanceOf[Seq[Any]]
-//        val jtype = Java(typeConverter(list)).tpe
-//        val inner:Type = jtype.asClassOrInterfaceType().getTypeArguments.get.get(0)
-//
-//        Java(s"$jtype list$id = ${dispatch(convert(test.inst), test.op)};").statements ++
-//          Java(s"$jtype result$id = new java.util.ArrayList<$inner>();").statements ++
-//          seq.map(elt => Java(s"result$id.add($elt);").statement) ++ Java(s"assertEquals (list$id, result$id);").statements
-//
-//      case _ => super.preAssert(test, id)
-//    }
-//  }
-//
-//  /** For developing test cases with lists, must convert expected value into a list using preAssert, and then just return result$id. */
-//  override def expected(test:domain.EqualsTestCase, id:String): Expression = {
-//    val tpe = test.op.returnType.get
-//    tpe match {
-//      case list:List =>
-//        Java(s"result$id").expression[Expression]
-//
-//      case _ => super.expected(test, id)
-//    }
-//  }
-
   /**
     * Operations can declare dependencies, which leads to #include extras
     */
@@ -74,7 +43,7 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
       case domain.AsTree => {
         val atts = subExpressions(exp)
 
-        // TODO: replace hard-coded DefinedSubTypes with dependent operation getSubTypeIdentifier and dispatch accordingtly.
+        // TODO: replace hard-coded DefinedSubTypes with dependent operation getSubTypeIdentifier and dispatch accordingly.
 
         // different strategies have different means of accessing attributes, either directly or via
         // getXXX methods. This logic method must defer that knowledge to later.
@@ -82,11 +51,11 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
         exp match {   // was $litValue     ;
           case Lit =>   // ${exp.hashCode()}
             val attParams = atts.map(att => att._2.toString).mkString(",")
-            Java(s"""return new tree.Node(java.util.Arrays.asList(new tree.Leaf($attParams)), ${identify(exp, Identifier)}); """).statements
+            result(Java(s" new tree.Node(java.util.Arrays.asList(new tree.Leaf($attParams)), ${identify(exp, Identifier)}) ").expression[Expression]())
 
           case Add|Sub|Mult|Divd|Neg =>
             val params = atts.map(att => att._2.toString + ".astree()").mkString(",")
-            Java(s""" return new tree.Node(java.util.Arrays.asList($params), ${identify(exp, Identifier)} ); """).statements
+            result(Java(s" new tree.Node(java.util.Arrays.asList($params), ${identify(exp, Identifier)} ) ").expression[Expression]())
           }
       }
 

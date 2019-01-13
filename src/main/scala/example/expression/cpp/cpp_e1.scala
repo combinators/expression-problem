@@ -20,7 +20,7 @@ trait cpp_e1 extends Evolution with CPPGenerator with TestGenerator with M1 {
     op match {
       case Eval =>
         exp match {
-          case Sub => Seq(new CPPElement(s"value_map_[e] = value_map_[${dispatch(atts(base.left),op)}] - value_map_[${dispatch(atts(base.right),op)}];"))
+          case Sub => result(new CPPElement(s"${dispatch(atts(base.left), op)} - ${dispatch(atts(base.right), op)}"))
           case _ => super.logic(exp)(op)
         }
 
@@ -48,6 +48,7 @@ trait cpp_e1 extends Evolution with CPPGenerator with TestGenerator with M1 {
          |
          |int main(int ac, char** av)
          |{
+         |  MemoryLeakWarningPlugin::turnOffNewDeleteOverloads();
          |  return CommandLineTestRunner::RunAllTests(ac, av);
          |}""".stripMargin.split("\n")
     )

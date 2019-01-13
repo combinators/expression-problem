@@ -28,14 +28,14 @@ trait e6 extends Evolution with ScalaGenerator with TestGenerator with BinaryMet
     op match {
       case Equals =>
         val opn = domain.AsTree.name
-        val atts= exp.attributes.map(att => Scala(att.name).expression())
+        val atts= exp.attributes.map(att => Scala(att.name).expression)
 
         // TODO: very close to replace with. Problems in ExtensibleVisitor (missing methods) as well
         // TODO: as Algebra (since naming conventions don't always work).
         // val that:Expression = Java("that").expression[Expression]()
         // Java(s"return ${delegate(exp,domain.AsTree)}.same(${dispatch(that, domain.AsTree)});").statements
-        val that = Scala(s"that").expression()
-        Scala(s"(${delegateFixMe(exp,domain.AsTree,atts:_*)} == ${dependentDispatch(that, domain.AsTree)})").statements()
+        val that = Scala(s"that").expression
+        result(Scala(s"(${delegateFixMe(exp,domain.AsTree,atts:_*)} == ${dependentDispatch(that, domain.AsTree)})").expression)
 
         // was dispatch(that, domain.AsTree)
         // works for scala_oo
@@ -61,9 +61,9 @@ trait e6 extends Evolution with ScalaGenerator with TestGenerator with BinaryMet
           val code = dependentDispatch(convert(eb.inst1), Equals, convert(eb.inst2))
 
           if (eb.result) {
-            Scala(s"assert (true == $code)").statements()
+            Scala(s"assert (true == $code)").statements
           } else {
-            Scala(s"assert (false == $code)").statements()
+            Scala(s"assert (false == $code)").statements
           }
         case _ =>
           skip = skip :+ test
@@ -77,16 +77,5 @@ trait e6 extends Evolution with ScalaGenerator with TestGenerator with BinaryMet
 
   abstract override def testGenerator: Seq[Stat] = {
     super.testGenerator :+ testMethod(M6_tests)
-//    val s1 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
-//    val s2 = new domain.BinaryInst(Add, new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0)),
-//                                 new domain.BinaryInst(Add, new LitInst(5.0), new LitInst(6.0)))
-//    val s3 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
-//
-//      super.testGenerator ++ Scala(
-//      s"""
-//         |def test() :Unit = {
-//         |   assert (false == ${dispatch(convert(s1), Equals, convert(s2))})
-//         |   assert( true == ${dispatch(convert(s1), Equals, convert(s3))})
-//         |}""".stripMargin).statements()
   }
 }

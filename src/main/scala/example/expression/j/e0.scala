@@ -29,13 +29,13 @@ trait e0 extends JavaGenerator with JUnitTestGenerator with M0 {
     op match {
       case Eval =>
         exp match {
-          case Lit => Java(s"return ${atts(litValue)};").statements
-          case Add => Java(s"return ${dispatch(atts(base.left),op)} + ${dispatch(atts(base.right),op)};").statements
+          case Lit => result(Java(atts(litValue)).expression[Expression]())
+          case Add => result(Java(s"${dispatch(atts(base.left),op)} + ${dispatch(atts(base.right),op)}").expression[Expression]())
           case _ => super.logic(exp)(op)
         }
 
         // all future EXP sub-types can simply return hashcode.
-      case Identifier => Java(s"return ${exp.hashCode()};").statements
+      case Identifier => result(Java(exp.hashCode.toString).expression[Expression]())
 
       case _ => super.logic(exp)(op)
     }

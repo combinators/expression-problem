@@ -14,6 +14,13 @@ trait GJGenerator extends LanguageIndependentGenerator {
   type Expression = GJ
   type Statement = GJ
 
+  /**
+    * Default behavior in GJ is to return an expression value.
+    */
+  def result (expr:Expression) : Seq[Statement] = {
+    Seq(GJ(s"return $expr;"))
+  }
+
   // Useful helper methods for any generator needing to craft common Java constructs
 
   /** Generate constructor for given atomic concept, using suggested name */

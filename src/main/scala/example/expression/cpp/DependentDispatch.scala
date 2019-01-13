@@ -1,7 +1,6 @@
-package example.expression.scala   /*DI:LD:AI*/
+package example.expression.cpp
 
 import example.expression.domain.{BaseDomain, ModelDomain}
-import scala.meta._
 
 /**
   * When an operation must dispatch a sub-expression to a dependent operator (i.e., when Simplify
@@ -12,12 +11,12 @@ import scala.meta._
 trait DependentDispatch {
   val domain:BaseDomain with ModelDomain
 
-  def dispatch(expr:Term, op:domain.Operation, params:Term*) : Term
+  def dispatch(expr:CPPElement, op:domain.Operation, params:CPPElement*) : CPPElement
 
- /**
-   * Responsible for dispatching sub-expressions with possible parameter(s).
-   */
-  def dependentDispatch(expr:Term, op:domain.Operation, params:Term*) : Term = {
-    Scala(dispatch(expr, op, params: _*).toString).term
+  /**
+    * Responsible for dispatching sub-expressions with possible parameter(s).
+    */
+  def dependentDispatch(expr:CPPElement, op:domain.Operation, params:CPPElement*) : CPPElement = {
+    dispatch(expr, op, params: _*)
   }
 }

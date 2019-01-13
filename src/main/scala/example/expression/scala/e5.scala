@@ -46,17 +46,17 @@ trait e5 extends Evolution with ScalaGenerator with TestGenerator with Operation
           case Lit =>   // ${exp.hashCode()}
 
             val attParams = atts.map(att => att._2.toString).mkString(",")
-            Scala(s"""new tree.Node(Seq(new tree.Leaf($attParams)), ${identify(exp, Identifier, atts(litValue))}) """).statements()
+            result(Scala(s"""new tree.Node(Seq(new tree.Leaf($attParams)), ${identify(exp, Identifier, atts(litValue))}) """).expression)
 
           case Neg =>
             val params = atts.map(att => att._2.toString + ".astree()").mkString(",")
             val seq = atts.map(att => dispatch(att._2, domain.AsTree)).mkString(",")
-            Scala(s"""new tree.Node(Seq($seq), ${identify(exp, Identifier, atts(domain.base.inner))} ) """).statements()
+            result(Scala(s"""new tree.Node(Seq($seq), ${identify(exp, Identifier, atts(domain.base.inner))} ) """).expression)
 
           case Add|Sub|Mult|Divd|Neg =>
             val params = atts.map(att => att._2.toString + ".astree()").mkString(",")
             val seq = atts.map(att => dispatch(att._2, domain.AsTree)).mkString(",")
-            Scala(s"""new tree.Node(Seq($seq), ${identify(exp, Identifier, atts(domain.base.left), atts(domain.base.right))} ) """).statements()
+            result(Scala(s"""new tree.Node(Seq($seq), ${identify(exp, Identifier, atts(domain.base.left), atts(domain.base.right))} ) """).expression)
           }
       }
       case _ => super.logic(exp)(op)
@@ -83,12 +83,12 @@ trait e5 extends Evolution with ScalaGenerator with TestGenerator with Operation
 
           // TODO: Dispatch inappropriate here since test case has different context
 
-          val same = Scala(s"$tree1.same($tree2)").expression()
+          val same = Scala(s"$tree1.same($tree2)").expression
 
           if (ctc.result) {
-            Scala(s"assert(true == $same)").statements()
+            Scala(s"assert(true == $same)").statements
           } else {
-            Scala(s"assert(false == $same)").statements()
+            Scala(s"assert(false == $same)").statements
           }
         case _ =>
           skip = skip :+ test
@@ -98,7 +98,6 @@ trait e5 extends Evolution with ScalaGenerator with TestGenerator with Operation
 
     // add these all in to what super produces, which is:
     addStatements(super.testMethod(skip), stmts)
-
   }
 
   abstract override def testGenerator: Seq[Stat] = {

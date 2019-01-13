@@ -41,14 +41,14 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
 
   /** For straight design solution, directly access attributes by name. */
   override def subExpressions(exp:Atomic) : Map[String,Expression] = {
-    exp.attributes.map(att => att.name -> Scala(s"${att.name}").expression()).toMap
+    exp.attributes.map(att => att.name -> Scala(s"${att.name}").expression).toMap
   }
 
   /** Directly access local method, one per operation, with a parameter. */
   override def dispatch(expr:Expression, op:Operation, params:Expression*) : Expression = {
     op match {
       case _: BinaryMethod =>
-        Scala(s"${op.name.toLowerCase()}($expr)").term()
+        Scala(s"${op.name.toLowerCase()}($expr)").term
       case _ =>
 
         var opParams = ""
@@ -69,7 +69,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
             "(" + params.mkString(",") + ")"
           }
         } // new ${op.name.capitalize}($opParams).
-        Scala(s"apply($expr)$args").expression()
+        Scala(s"apply($expr)$args").expression
     }
   }
 
@@ -79,7 +79,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
   override def delegateFixMe(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
     val opargs = params.mkString(",")
     val term = Term.Name(op.name.toLowerCase)   // should be able to be ..$params
-    Scala(s"${op.name.toLowerCase}(new ${exp.name.capitalize}($opargs))").expression()
+    Scala(s"${op.name.toLowerCase}(new ${exp.name.capitalize}($opargs))").expression
   }
 
   /** For Functional Generator, same behavior as delegate. */
@@ -113,14 +113,14 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
 //        "(" + params.mkString(",") + ")"
 //      }
 //    }
-    Scala(s"${op.name.toLowerCase}($expr)$opParams").expression()
+    Scala(s"${op.name.toLowerCase}($expr)$opParams").expression
   } // Scala(s"apply($expr)$args").expression()
 
   /** Computer return type for given operation (or void). */
   def returnType(op:Operation): Type = {
     op.returnType match {
       case Some(tpe) => typeConverter(tpe)
-      case _ => Scala("Unit").tpe()
+      case _ => Scala("Unit").tpe
     }
   }
 
@@ -135,7 +135,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
            |    ${logic(exp)(op).mkString("\n")}
            |  }
            |}""".stripMargin
-    Scala(str).statement()
+    Scala(str).statement
   }
 
   /**
@@ -154,7 +154,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
 
     // visitor for each extension must extend prior one
     val visitors = m.types.map(exp => {
-      Scala(s"def visit${exp.name.capitalize}(${standardArgs(exp)}) : Unit").statement()
+      Scala(s"def visit${exp.name.capitalize}(${standardArgs(exp)}) : Unit").statement
     })
 
     // All newly defined types get their own class with visit method
@@ -273,7 +273,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
     })
 
     val visitors = m.types.map(exp => {
-      Scala(s"def visit${exp.name.capitalize}(${standardArgs(exp)}) : Unit").statement()
+      Scala(s"def visit${exp.name.capitalize}(${standardArgs(exp)}) : Unit").statement
     })
 
     val factories = m.ops.map(op =>

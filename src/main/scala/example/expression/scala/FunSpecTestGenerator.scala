@@ -17,13 +17,13 @@ trait FunSpecTestGenerator extends TestGenerator with ScalaGenerator {
 
   /** Type to use when referring to specific instance. */
   def exprDefine(exp:AtomicInst) : Type = {
-    Scala(exp.e.name).tpe()
+    Scala(exp.e.name).tpe
   }
 
   /** Used when one already has code fragments bound to variables, which are to be used for left and right. */
   def convertRecursive(inst: Binary, left:String, right:String): Expression = {
     val name = inst.name
-    Scala(s"new $name($left, $right)").term()
+    Scala(s"new $name($left, $right)").term
   }
 
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */

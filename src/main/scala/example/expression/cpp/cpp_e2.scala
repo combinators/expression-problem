@@ -39,18 +39,16 @@ trait cpp_e2 extends Evolution with CPPGenerator with TestGenerator with M0 with
           case Lit => Seq(new CPPElement(
             s"""
                |std::ostringstream ss;
-               |double val = *e->getValue();
+               |double val = ${valueOf(atts(litValue))};
                |int ival = (int) val;
-               |ss << *e->getValue();
+               |ss << ${valueOf(atts(litValue))};
                |if (val == ival) { ss << ".0"; }  // add trailing .0 for int-value doubles
-               |value_map_[e] = ss.str();
-               |
+               |${result(new CPPElement("ss.str()")).mkString("\n")}
              """.stripMargin))
-          case Add => Seq(new CPPElement(
-            s""" value_map_[e] = "(" + value_map_[${dispatch(atts(base.left),op)}] + "+" + value_map_[${dispatch(atts(base.right),op)}] + ")"; """))
 
-          case Sub => Seq(new CPPElement(
-            s""" value_map_[e] = "(" + value_map_[${dispatch(atts(base.left),op)}] + "-" + value_map_[${dispatch(atts(base.right),op)}] + ")"; """))
+          case Add => result(new CPPElement(s""" "(" + ${dispatch(atts(base.left), op)} + "+" + ${dispatch(atts(base.right), op)} + ")" """))
+
+          case Sub => result(new CPPElement(s""" "(" + ${dispatch(atts(base.left), op)} + "-" + ${dispatch(atts(base.right), op)} + ")" """))
 
           case _ => super.logic(exp)(op)
         }
@@ -75,6 +73,7 @@ trait cpp_e2 extends Evolution with CPPGenerator with TestGenerator with M0 with
          |
          |int main(int ac, char** av)
          |{
+         |  MemoryLeakWarningPlugin::turnOffNewDeleteOverloads();
          |  return CommandLineTestRunner::RunAllTests(ac, av);
          |}""".stripMargin.split("\n")
     )

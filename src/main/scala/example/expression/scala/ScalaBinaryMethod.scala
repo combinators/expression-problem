@@ -81,7 +81,7 @@ trait ScalaBinaryMethod extends BinaryMethod {
             s"""
                |def ${domain.AsTree.name.toLowerCase}() : tree.Tree =  {
                |  return asTree.${exp.name.toLowerCase}($args).${domain.AsTree.name.toLowerCase}();
-               |}""".stripMargin).statements()
+               |}""".stripMargin).statements
   }
 
   /** Interesting shift needed for visitor. */
@@ -93,13 +93,13 @@ trait ScalaBinaryMethod extends BinaryMethod {
 
     val body:Seq[Stat] = exp match {
       case b:Binary => {
-        Scala(s""" new tree.Node(Seq($recursiveArgs), ${exp.hashCode()}) """).statements()
+        Scala(s""" new tree.Node(Seq($recursiveArgs), ${exp.hashCode()}) """).statements
       }
       case u:Unary => {
-        Scala(s""" new tree.Node(Seq($recursiveArgs), ${exp.hashCode()}) """).statements()
+        Scala(s""" new tree.Node(Seq($recursiveArgs), ${exp.hashCode()}) """).statements
       }
       case a:Atomic => {
-        Scala(s""" new tree.Leaf($atomicArgs);""").statements()
+        Scala(s""" new tree.Leaf($atomicArgs);""").statements
       }
     }
 
@@ -107,6 +107,6 @@ trait ScalaBinaryMethod extends BinaryMethod {
       s"""
          |def ${domain.AsTree.name.toLowerCase}() : tree.Tree  = {
          |  ${body.mkString("\n")}
-         |}""".stripMargin).statements()
+         |}""".stripMargin).statements
   }
 }

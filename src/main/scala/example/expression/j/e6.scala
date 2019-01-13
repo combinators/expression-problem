@@ -35,7 +35,7 @@ trait e6 extends Evolution with JavaGenerator with JUnitTestGenerator with Binar
         // TODO: as Algebra (since naming conventions don't always work).
         // val that:Expression = Java("that").expression[Expression]()
         // Java(s"return ${delegate(exp,domain.AsTree)}.same(${dispatch(that, domain.AsTree)});").statements
-       Java(s"""return $binaryContext$opn().same(that.$opn());""").statements
+       result(Java(s" $binaryContext$opn().same(that.$opn())").expression[Expression]())
 
       case _ => super.logic(exp)(op)
     }

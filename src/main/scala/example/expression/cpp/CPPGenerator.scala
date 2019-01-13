@@ -16,6 +16,21 @@ trait CPPGenerator extends LanguageIndependentGenerator {
   def expression(s:String) : Expression = new CPPElement(s)
 
   /**
+    * Default behavior in C++ is to return an expression value.
+    */
+  def result (expr:Expression) : Seq[Statement] = {
+    Seq(new CPPElement(s"return $expr;"))
+  }
+
+  /**
+    * Return just the expression.
+    */
+  def valueOf(expr:Expression, params:CPPElement*): CPPElement = {
+    expr
+    //new CPPElement(s"$expr")
+  }
+
+  /**
     * Operations can declare dependencies, which leads to #include extras
     */
    def dependency(op: domain.Operation): scala.List[domain.Operation] = List.empty

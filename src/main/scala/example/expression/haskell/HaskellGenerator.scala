@@ -34,6 +34,13 @@ trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskell
     }
   }
 
+  /**
+    * Default behavior in Haskell is the expression itself
+    */
+  def result (expr:Expression) : Seq[Statement] = {
+    Seq(expr)
+  }
+
   /** Concatenate attributes by name in order */
   def standardArgs(exp:domain.Atomic, suffix:String = "") : Haskell = {
     Haskell(exp.attributes.map(att => att.name + suffix).mkString(" "))

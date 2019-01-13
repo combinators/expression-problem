@@ -20,18 +20,18 @@ trait e3 extends Evolution with JavaGenerator with JUnitTestGenerator with M0 wi
     op match {
       case PrettyP => {
         exp match {
-          case Neg => Java(s"""return "-" + ${dispatch(subs(domain.base.inner), PrettyP)}; """).statements()
-          case Mult => Java(s"""return "(" + ${dispatch(subs(domain.base.left), PrettyP)} + "*" + ${dispatch(subs(domain.base.right), PrettyP)}  + ")";""").statements()
-          case Divd => Java(s"""return "(" + ${dispatch(subs(domain.base.left), PrettyP)}  + "/" + ${dispatch(subs(domain.base.right), PrettyP)}  + ")";""").statements()
+          case Neg => result(Java(s""" "-" + ${dispatch(subs(domain.base.inner), PrettyP)} """).expression[Expression]())
+          case Mult => result(Java(s""" "(" + ${dispatch(subs(domain.base.left), PrettyP)} + "*" + ${dispatch(subs(domain.base.right), PrettyP)}  + ")" """).expression[Expression]())
+          case Divd => result(Java(s""" "(" + ${dispatch(subs(domain.base.left), PrettyP)}  + "/" + ${dispatch(subs(domain.base.right), PrettyP)}  + ")" """).expression[Expression]())
           case _ => super.logic(exp)(op)
         }
       }
 
       case Eval => {
         exp match {
-          case Neg => Java(s"""return - ${dispatch(subs(domain.base.inner), Eval)}; """).statements()
-          case Mult => Java(s"""return ${dispatch(subs(domain.base.left), Eval)} * ${dispatch(subs(domain.base.right), Eval)};""").statements()
-          case Divd => Java(s"""return ${dispatch(subs(domain.base.left), Eval)} / ${dispatch(subs(domain.base.right), Eval)};""").statements()
+          case Neg => result(Java(s" - ${dispatch(subs(domain.base.inner), Eval)} ").expression[Expression]())
+          case Mult => result(Java(s" ${dispatch(subs(domain.base.left), Eval)} * ${dispatch(subs(domain.base.right), Eval)} ").expression[Expression]())
+          case Divd => result(Java(s" ${dispatch(subs(domain.base.left), Eval)} / ${dispatch(subs(domain.base.right), Eval)} ").expression[Expression]())
           case _ => super.logic(exp)(op)
         }
       }

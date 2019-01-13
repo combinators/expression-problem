@@ -21,7 +21,7 @@ trait e4 extends Evolution with ScalaGenerator with TestGenerator with Operation
       case list:List =>
         val seq: Seq[Any] = test.expect._2.asInstanceOf[Seq[Any]]
 
-        continue(Scala("Seq(" + seq.mkString(",") + ")").expression())
+        continue(Scala("Seq(" + seq.mkString(",") + ")").expression)
 
       case _ => super.expected(test,id)(continue)
     }
@@ -39,16 +39,16 @@ trait e4 extends Evolution with ScalaGenerator with TestGenerator with Operation
 
   abstract override def typeConverter(tpe:domain.TypeRep) : Type = {
     tpe match {
-      case el:List => Scala(s"Seq[${typeConverter(el.generic)}]").tpe()
+      case el:List => Scala(s"Seq[${typeConverter(el.generic)}]").tpe
       case _ => super.typeConverter(tpe)
     }
   }
 
   abstract override def logic(exp:Atomic)(op:Operation): Seq[Statement] = {
     val subs:Map[String, Term] = subExpressions(exp).asInstanceOf[Map[String,Term]]
-    val zero = Scala("0.0").expression()
-    val one = Scala("1.0").expression()
-    val negOne = Scala("-1.0").expression()
+    val zero = Scala("0.0").expression
+    val one = Scala("1.0").expression
+    val negOne = Scala("-1.0").expression
 
     // generate the actual body
     op match {
@@ -56,74 +56,74 @@ trait e4 extends Evolution with ScalaGenerator with TestGenerator with Operation
       case Simplify =>
 
         exp match {
-          case Lit => Scala(s" ${inst(Lit)(op)(subs(litValue))}").statements()
+          case Lit => Scala(s" ${inst(Lit)(op)(subs(litValue))}").statements
           case Add => Scala(s"""
                                |val leftVal = ${dependentDispatch(subs(domain.base.left), Eval)}
                                |val rightVal = ${dependentDispatch(subs(domain.base.right), Eval)}
                                |if ((leftVal == 0 && rightVal == 0) || (leftVal + rightVal == 0)) {
-                               |  ${inst(Lit)(op)(zero)}
+                               |  ${result(inst(Lit)(op)(zero)).mkString("\n")}
                                |} else if (leftVal == 0) {
-                               |  ${dispatch(subs(domain.base.right), Simplify)}
+                               |  ${result(dispatch(subs(domain.base.right), Simplify)).mkString("\n")}
                                |} else if (rightVal == 0) {
-                               |  ${dispatch(subs(domain.base.left), Simplify)}
+                               |  ${result(dispatch(subs(domain.base.left), Simplify)).mkString("\n")}
                                |} else {
-                               |  ${inst(Add)(op)(dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))}
-                               |}""".stripMargin).statements()
+                               |  ${result(inst(Add)(op)(dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
+                               |}""".stripMargin).statements
           case Sub => Scala(s"""
                               |if (${dependentDispatch(subs(domain.base.left), Eval)} == ${dependentDispatch(subs(domain.base.right), Eval)}) {
-                              |  ${inst(Lit)(op)(zero)}
+                              |  ${result(inst(Lit)(op)(zero)).mkString("\n")}
                               |} else {
-                              |  ${inst(Sub)(op)(dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))}
+                              |  ${result(inst(Sub)(op)(dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
                               |}
-                              |""".stripMargin).statements()
+                              |""".stripMargin).statements
           case Mult => Scala(s"""
                                |val leftVal = ${dependentDispatch(subs(domain.base.left), Eval)}
                                |val rightVal = ${dependentDispatch(subs(domain.base.right), Eval)}
                                |if (leftVal == 0 || rightVal == 0) {
-                               |  ${inst(Lit)(op)(zero)}
+                               |  ${result(inst(Lit)(op)(zero)).mkString("\n")}
                                |} else if (leftVal == 1) {
-                               |  ${dispatch(subs(domain.base.right), Simplify)}
+                               |  ${result(dispatch(subs(domain.base.right), Simplify)).mkString("\n")}
                                |} else if (rightVal == 1) {
-                               |  ${dispatch(subs(domain.base.left), Simplify)}
+                               |  ${result(dispatch(subs(domain.base.left), Simplify)).mkString("\n")}
                                |} else {
-                               |   ${inst(Mult)(op)(dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))}
+                               |   ${result(inst(Mult)(op)(dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
                                |}
-                               |""".stripMargin).statements()
+                               |""".stripMargin).statements
           case Divd => Scala(s"""
                                |val leftVal = ${dependentDispatch(subs(domain.base.left), Eval)}
                                |val rightVal = ${dependentDispatch(subs(domain.base.right), Eval)}
                                |if (leftVal == 0) {
-                               |   ${inst(Lit)(op)(zero)}
+                               |   ${result(inst(Lit)(op)(zero)).mkString("\n")}
                                |} else if (rightVal == 1) {
-                               |   ${dispatch(subs(domain.base.left), Simplify)}
+                               |   ${result(dispatch(subs(domain.base.left), Simplify)).mkString("\n")}
                                |} else if (leftVal == rightVal) {
-                               |   ${inst(Lit)(op)(one)}
+                               |   ${result(inst(Lit)(op)(one)).mkString("\n")}
                                |} else if (leftVal == -rightVal) {
-                               |   ${inst(Lit)(op)(negOne)}
+                               |   ${result(inst(Lit)(op)(negOne)).mkString("\n")}
                                |} else {
-                               |   ${inst(Divd)(op)(dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))}
+                               |   ${result(inst(Divd)(op)(dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
                                |}
-                               |""".stripMargin).statements()
+                               |""".stripMargin).statements
             // TODO: Would love to have ability to simplify neg(neg(x)) to just be x. This requires a form
             // of inspection that might not be generalizable...
           case Neg => Scala(s"""
                               |if (${dependentDispatch(subs(domain.base.inner), Eval)} == 0) {
-                              |   ${inst(Lit)(op)(zero)}
+                              |   ${result(inst(Lit)(op)(zero)).mkString("\n")}
                               |} else {
-                              |   ${inst(Neg)(op)(dispatch(subs(domain.base.inner), Simplify))}
-                              |}""".stripMargin).statements()
+                              |   ${result(inst(Neg)(op)(dispatch(subs(domain.base.inner), Simplify))).mkString("\n")}
+                              |}""".stripMargin).statements
           case _ => super.logic(exp)(op)
         }
 
       case Collect =>
         exp match {
 
-          case _:domain.Binary => Scala(s"${dispatch(subs(domain.base.left), Collect)} ++ ${dispatch(subs(domain.base.right), Collect)}").statements()
-          case _:domain.Unary  => Scala(s"${dispatch(subs(domain.base.inner), Collect)}").statements()
+          case _:domain.Binary => result(Scala(s"${dispatch(subs(domain.base.left), Collect)} ++ ${dispatch(subs(domain.base.right), Collect)}").expression)
+          case _:domain.Unary  => result(Scala(s"${dispatch(subs(domain.base.inner), Collect)}").expression)
           case at:domain.Atomic => {
             at match {
-              case Lit => Scala(s"Seq(${subs(litValue).toString})").statements()
-              case _  => Scala(s"${dispatch(subs(litValue), Collect)}").statements()
+              case Lit => result(Scala(s"Seq(${subs(litValue).toString})").expression)
+              case _  => result(Scala(s"${dispatch(subs(litValue), Collect)}").expression)
             }
           }
 
@@ -137,12 +137,5 @@ trait e4 extends Evolution with ScalaGenerator with TestGenerator with Operation
   // TODO: HACK. Fix this implementation
   abstract override def testGenerator: Seq[Stat] = {
     super.testGenerator :+ testMethod(M4_tests)
-//    val d1 = new domain.BinaryInst(Divd, new LitInst(5.0), new LitInst(7.0))
-//      Scala(
-//        s"""def test() : Unit = {
-//           |  assert ("((5.0/2.0)*4.0)" == ${dispatch(convert(m4_m1), PrettyP)});
-//           |  assert (${dispatch(convert(d1), PrettyP)} == ${dispatch(dispatch(convert(m4_d2), Simplify), PrettyP)});
-//           |}
-//         """.stripMargin).statements() ++ super.testGenerator :+ testMethod(M4_tests)
   }
 }

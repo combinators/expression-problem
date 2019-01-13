@@ -33,20 +33,20 @@ trait s0 extends Evolution with JavaGenerator with JUnitTestGenerator with S0 {
       case ContainsPt =>
         exp match {
           case Circle =>
-            Java(s"return Math.sqrt(point.x*point.x + point.y*point.y) <= ${subs(radius)};").statements
+            result(Java(s" Math.sqrt(point.x*point.x + point.y*point.y) <= ${subs(radius)}").expression[Expression]())
 
           case Square =>
-            Java(s"return (Math.abs(point.x) <= ${subs(side)}/2 && Math.abs(point.y) <= ${subs(side)}/2);").statements
+            result(Java(s" (Math.abs(point.x) <= ${subs(side)}/2 && Math.abs(point.y) <= ${subs(side)}/2)").expression[Expression]())
 
-          case Translate => {
+          case Translate =>
             Java(
               s"""
                  |// first adjust
                  |java.awt.geom.Point2D.Double t = new java.awt.geom.Point2D.Double(point.x - ${subs(trans)}.x, point.y - ${subs(trans)}.y);
-                 |return ${dispatch(subs(shape), ContainsPt, Java("t").expression[Expression]())};
+                 | ${result(dispatch(subs(shape), ContainsPt, Java("t").expression[Expression]()))}
                  |
                """.stripMargin).statements()
-          }
+
         }
 
       case _ => super.logic(exp)(op)

@@ -41,13 +41,13 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod with StandardSca
 
   /** For straight design solution, directly access attributes by name. */
   override def subExpressions(exp:Atomic) : Map[String,Expression] = {
-    exp.attributes.map(att => att.name -> Scala(s"${att.name}").expression()).toMap
+    exp.attributes.map(att => att.name -> Scala(s"${att.name}").expression).toMap
   }
 
   /** Directly access local method, one per operation, with a parameter. */
   override def dispatch(expr:Expression, op:Operation, params:Expression*) : Expression = {
     val args:String = params.mkString(",")
-    Scala(s"$expr.${op.name}($args)").expression()
+    Scala(s"$expr.${op.name}($args)").expression
   }
 
   /**
@@ -59,7 +59,7 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod with StandardSca
   override def delegateFixMe(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
     val opargs = params.mkString(",")
     val term = Term.Name(op.name.toLowerCase)   // should be able to be ..$params
-    Scala(s"this.${op.name.toLowerCase}()").expression()
+    Scala(s"this.${op.name.toLowerCase}()").expression
   }
 
   /** For Scala generator, same behavior as delegate. */
@@ -71,7 +71,7 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod with StandardSca
   def returnType(op:Operation): Type = {
     op.returnType match {
       case Some(tpe) => typeConverter(tpe)
-      case _ => Scala("Unit").tpe()
+      case _ => Scala("Unit").tpe
     }
   }
 
@@ -83,7 +83,7 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod with StandardSca
              |def ${op.name}($params) : ${returnType(op)} = {
                          |  ${logic(exp)(op).mkString("\n")}
                          |}""".stripMargin
-    Scala(str).statement()
+    Scala(str).statement
   }
 
   /** Generate the full class for the given expression sub-type. */

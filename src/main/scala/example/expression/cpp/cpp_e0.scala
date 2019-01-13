@@ -27,13 +27,14 @@ trait cpp_e0 extends CPPGenerator with TestGenerator with M0 {
     op match {
       case Eval =>
         exp match {
-          case Lit => Seq(new CPPElement(s"return ${dispatch(atts(litValue),op)};"))
-          case Add => Seq(new CPPElement(s"return ${dispatch(atts(base.left),op)} + ${dispatch(atts(base.right),op)};"))
+          case Lit => result(valueOf(atts(litValue)))
+          case Add => result(new CPPElement(s"${dispatch(atts(base.left), op)} + ${dispatch(atts(base.right), op)}"))
+
           case _ => super.logic(exp)(op)
         }
 
       // all future EXP sub-types can simply return hashcode.
-      case Identifier => Seq(new CPPElement(s"""${exp.hashCode()};"""))
+      case Identifier => result(new CPPElement(exp.hashCode().toString))
 
       case _ => super.logic(exp)(op)
     }
@@ -55,6 +56,7 @@ trait cpp_e0 extends CPPGenerator with TestGenerator with M0 {
          |
          |int main(int ac, char** av)
          |{
+         |  MemoryLeakWarningPlugin::turnOffNewDeleteOverloads();
          |  return CommandLineTestRunner::RunAllTests(ac, av);
          |}""".stripMargin.split("\n")
     )

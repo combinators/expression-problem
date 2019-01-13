@@ -44,9 +44,9 @@ trait e2 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
     op match {
       case PrettyP =>
         exp match {
-          case Lit => Seq(Haskell(s"""(show ${atts(litValue)})"""))
-          case Add => Seq(Haskell(s""""(" ++ ${dispatch(atts(base.left), op)} ++ "+" ++ ${dispatch(atts(base.right), op)} ++ ")""""))
-          case Sub => Seq(Haskell(s""""(" ++ ${dispatch(atts(base.left), op)} ++ "-" ++ ${dispatch(atts(base.right), op)} ++ ")""""))
+          case Lit => result(Haskell(s"(show ${atts(litValue)})"))
+          case Add => result(Haskell(s""""(" ++ ${dispatch(atts(base.left), op)} ++ "+" ++ ${dispatch(atts(base.right), op)} ++ ")""""))
+          case Sub => result(Haskell(s""""(" ++ ${dispatch(atts(base.left), op)} ++ "-" ++ ${dispatch(atts(base.right), op)} ++ ")""""))
           case _ => super.logic(exp)(op)
         }
 

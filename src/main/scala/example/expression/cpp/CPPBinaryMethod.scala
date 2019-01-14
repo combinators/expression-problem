@@ -42,10 +42,10 @@ trait CPPBinaryMethod extends BinaryMethod {
 
     val leafDecls:Seq[CPPElement] =
       s"""
-         |const void *value;
-         |  Leaf(const void *e) {
-         |    value = e;
-         |  }
+         |Leaf(double v) {
+         |    value = v;
+         |}
+         |double getValue() const { return value; }
          |bool isNode() const { return false; }
          |bool isLeaf() const { return true; }
          |""".stripMargin.split("\n").map(s => new CPPElement(s))
@@ -57,7 +57,7 @@ trait CPPBinaryMethod extends BinaryMethod {
       new CPPClass("Node", "Node", nodeDecls, Seq.empty)
           .setSuperclass("Tree")
           .addHeader(headers),
-      new CPPClass("Leaf", "Leaf", leafDecls, Seq.empty)
+      new CPPClass("Leaf", "Leaf", leafDecls, Seq(new CPPElement("double value;")))
           .setSuperclass("Tree")
           .addHeader(headers),
       new StandAlone("Tree",
@@ -70,7 +70,7 @@ trait CPPBinaryMethod extends BinaryMethod {
             |void Tree::output () const {
             |if (isLeaf()) {
             |  Leaf *leaf_this = (Leaf*)this;
-            |  std::cout <<"L:[" << *((double *)leaf_this->value) << "]";;
+            |  std::cout <<"L:[" << leaf_this->getValue() << "]";;
             | } else {
             |  Node *us = (Node*) this;
             |  std::cout <<"N:[";
@@ -95,7 +95,7 @@ trait CPPBinaryMethod extends BinaryMethod {
           |  if (leafCheck) {
           |    Leaf *leaf_this = (Leaf*)this;
           |    Leaf *leaf_o = (Leaf*)(o);
-          |    return leaf_this->value == leaf_o->value;
+          |    return leaf_this->getValue() == leaf_o->getValue();
           |  }
           |  bool nodeCheck = isNode() && o->isNode();
           |  if (!nodeCheck) { return false; }

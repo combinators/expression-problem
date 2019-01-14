@@ -102,7 +102,10 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with Depende
         val negOne = new CPPElement("-1.0")
         exp match {
             // STIL has work to do...
-          case Lit => Seq(new CPPElement(s"""${result(new CPPElement("(Exp *) e")).mkString("\n")} """))
+          case Lit => {
+            val value = new CPPElement(s"${valueOf(atts(litValue))}")
+            Seq(new CPPElement(s"""${result(inst(Lit)(op)(value)).mkString("\n")} """))
+          }
 
           case Add => Seq(new CPPElement(s"""
                                             |double leftV = ${dependentDispatch(atts(domain.base.left), Eval)};
@@ -122,13 +125,35 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with Depende
                                             |if (leftV == rightV) {
                                             |  ${result(inst(Lit)(op)(zero)).mkString("\n")}
                                             |} else {
-                                            |  ${result(inst(Add)(op)(dispatch(atts(domain.base.left), Simplify),dispatch(atts(domain.base.right), Simplify))).mkString("\n")}
+                                            |  ${result(inst(Sub)(op)(dispatch(atts(domain.base.left), Simplify),dispatch(atts(domain.base.right), Simplify))).mkString("\n")}
                                             |}""".stripMargin))
 
-            // NOT YET IMPLEMENTED
-          case Mult => Seq(new CPPElement(s"""${result(inst(Mult)(op)(dispatch(atts(domain.base.left), Simplify),dispatch(atts(domain.base.right), Simplify))).mkString("\n")}; """))
-          case Divd => Seq(new CPPElement(s"""${result(inst(Divd)(op)(dispatch(atts(domain.base.left), Simplify),dispatch(atts(domain.base.right), Simplify))).mkString("\n")}; """))
-
+          case Mult => Seq(new CPPElement(s"""
+                                            |double leftV = ${dependentDispatch(atts(domain.base.left), Eval)};
+                                            |double rightV = ${dependentDispatch(atts(domain.base.right), Eval)};
+                                            |if (leftV == 0 || rightV == 0) {
+                                            |  ${result(inst(Lit)(op)(zero)).mkString("\n")}
+                                            |} else if (leftV == 1) {
+                                            |  ${result(dispatch(atts(domain.base.right), Simplify)).mkString("\n")}
+                                            |} else if (rightV == 1) {
+                                            |  ${result(dispatch(atts(domain.base.left), Simplify)).mkString("\n")}
+                                            |} else {
+                                            |  ${result(inst(Mult)(op)(dispatch(atts(domain.base.left), Simplify),dispatch(atts(domain.base.right), Simplify))).mkString("\n")}
+                                            |}""".stripMargin))
+          case Divd => Seq(new CPPElement(s"""
+                                            |double leftV = ${dependentDispatch(atts(domain.base.left), Eval)};
+                                            |double rightV = ${dependentDispatch(atts(domain.base.right), Eval)};
+                                            |if (leftV == 0) {
+                                            |  ${result(inst(Lit)(op)(zero)).mkString("\n")}
+                                            |} else if (rightV == 1) {
+                                            |  ${result(dispatch(atts(domain.base.left), Simplify)).mkString("\n")}
+                                            |} else if (leftV == rightV) {
+                                            |   ${result(inst(Lit)(op)(one)).mkString("\n")}
+                                            |} else if (leftV == -rightV) {
+                                            |   ${result(inst(Lit)(op)(negOne)).mkString("\n")}
+                                            |} else {
+                                            |  ${result(inst(Divd)(op)(dispatch(atts(domain.base.left), Simplify),dispatch(atts(domain.base.right), Simplify))).mkString("\n")}
+                                            |}""".stripMargin))
 
           // TODO: Would love to have ability to simplify neg(neg(x)) to just be x. This requires a form
           // of inspection that might not be generalizable...

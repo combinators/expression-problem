@@ -29,14 +29,16 @@ trait cpp_e5 extends Evolution with CPPGenerator with TestGenerator with M0 with
         val atts = subExpressions(exp)
 
         exp match {   // was $litValue
-          case Lit =>
-            val attParams = atts.map(att => "e->get" + att._2.toString.capitalize + "()").mkString(",")
-            Seq(new CPPElement(s"""value_map_[e] =  new Leaf((void*) $attParams); """))
+          case Lit => // ${valueOf(atts(litValue))}
+            //val attParams = atts.map(att => "e.get" + att._2.toString.capitalize + "()").mkString(",")
+            val attParams = atts.map(att => valueOf(atts(att._2.toString))).mkString(",")
+            result(new CPPElement(s""" new Leaf( $attParams) """))
 
           case Add|Sub|Mult|Divd|Neg =>
-            val attParams = atts.map(att => "e->get" + att._2.toString.capitalize + "()->astree()").mkString(",")
-            val vec1 = new CPPElement(s"std::vector<Tree *> vec_${exp.name}{$attParams};")
-            Seq(vec1, new CPPElement(s""" value_map_[e] = new Node(vec_${exp.name}, DefinedSubtypes::${exp.name.capitalize}Subtype); """))
+            //val attParams = atts.map(att => "e.get" + att._2.toString.capitalize + "()->astree()").mkString(",")
+            val attParams = atts.map(att => new CPPElement(s"${valueOf(atts(att._2.toString))}->astree()")).mkString(",")
+            val vec1 = new CPPElement(s"std::vector<Tree *> vec_${exp.name} = { $attParams };")
+            Seq(vec1) ++ result(new CPPElement(s""" new Node(vec_${exp.name}, DefinedSubtypes::${exp.name.capitalize}Subtype) """))
         }
       }
 
@@ -44,7 +46,39 @@ trait cpp_e5 extends Evolution with CPPGenerator with TestGenerator with M0 with
     }
   }
 
+  abstract override def testMethod(tests:Seq[domain.TestCase]) : Seq[CPPElement] = {
+
+    // EXTRACT all SameTestCase ones and handle here
+    var skip:Seq[domain.TestCase] = Seq.empty
+
+    val stmts= tests.zipWithIndex.flatMap(pair => {
+      val test = pair._1
+
+      test match {
+        case ctc: SameTestCase =>
+          //val tree1 = dependentDispatch(convert(ctc.inst1), AsTree)  // was just dispatch
+          //val tree2 = dependentDispatch(convert(ctc.inst2), AsTree)
+          val tree1 = actual(AsTree, ctc.inst1)
+          val tree2 = actual(AsTree, ctc.inst2)
+          val same = new CPPElement(s"$tree1.same($tree2)")
+
+          if (ctc.result) {
+            Seq(new CPPElement(s"CHECK_TRUE(${actual(AsTree, ctc.inst1)}->same(${actual(AsTree, ctc.inst2)}));"))
+          } else {
+            Seq(new CPPElement(s"CHECK_TRUE(!${actual(AsTree, ctc.inst1)}->same(${actual(AsTree, ctc.inst2)}));"))
+          }
+        case _ =>
+          skip = skip :+ test
+          Seq.empty
+      }
+    })
+
+    // add these all in to what super produces
+    super.testMethod(skip) ++ stmts
+  }
+
   abstract override def testGenerator: Seq[StandAlone] = {
+    val tests = testMethod(M5_tests)
     val lit1 = new LitInst(1.0)
     val lit2 = new LitInst(2.0)
     val s1   = new domain.BinaryInst(Sub, lit1, lit2)
@@ -62,22 +96,7 @@ trait cpp_e5 extends Evolution with CPPGenerator with TestGenerator with M0 with
          |
          |TEST(FirstTestGroup, a1)
          |{
-         |   ${convert(lit1)}
-         |   ${convert(lit2)}
-         |   ${convert(lit3)}
-         |   ${convert(lit4)}
-         |   ${convert(s1)}
-         |   ${convert(s2)}
-         |   ${convert(s3)}
-         |
-         |   ${AsTree.name.capitalize} at1;
-         |   ${AsTree.name.capitalize} at2;
-         |   ${AsTree.name.capitalize} at3;
-         |   ${vars(s1)}.Accept(&at1);
-         |   ${vars(s2)}.Accept(&at2);
-         |   ${vars(s3)}.Accept(&at3);
-         |   CHECK_TRUE (!at1.getValue(${vars(s1)})->same(at2.getValue(${vars(s2)})));
-         |   CHECK_TRUE (at1.getValue(${vars(s1)})->same(at3.getValue(${vars(s3)})));
+         |   ${tests.mkString("\n")}
          |}
          |
          |int main(int ac, char** av)

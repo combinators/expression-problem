@@ -28,7 +28,7 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
         m.ops.map(op => operationGenerator(flat, op)))         // one class for each op
 
     flat.types.map(tpe => generateExp(flat, tpe)) ++
-    //flat.types.map(tpe => generateExpImpl(flat, tpe)) ++
+    flat.types.map(tpe => generateExpImpl(flat, tpe)) ++
       clazzes :+
       generateBaseClass() :+
       defaultHeaderFile() :+
@@ -178,7 +178,7 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
       cons = cons :+ s"${att.name}(${att.name}_)"
 
       // make the set/get methods
-      addedMethods = addedMethods :+ new CPPElement(s"$tpe get$capAtt() { return ${att.name}; }")
+      addedMethods = addedMethods :+ new CPPElement(s"$tpe get$capAtt() const { return ${att.name}; }")
     })
 
     // make constructor
@@ -203,6 +203,51 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
       .setSuperclass("Exp")
       .addHeader(standardHeader())
       .addHeader(Seq("""#include "Exp.h" """, """#include "IVisitor.h" """))
+  }
+
+  /** Generate the full class for the given expression sub-type BUT ONLY for binary methods. */
+  def generateExpImpl(model:Model, sub:Atomic) : CPPFile = {
+    val binaryMethods:Seq[CPPElement] = if (getModel.flatten().ops.exists {
+      case bm: domain.BinaryMethodTreeBase => true
+      case _ => false
+    }) {
+      // sub
+      val method:String = sub match {
+        case _:Unary | _:Binary =>
+          val atts = sub.attributes
+            .filter(att => att.tpe == domain.baseTypeRep)
+            .map(att => s"${att.name}->astree()").mkString(",")
+
+          s"""
+             |Tree *${sub.name.capitalize}::astree() const {
+             |    std::vector<Tree *> vec_${sub.name} = { $atts };
+             |    return new Node(vec_${sub.name.capitalize}, DefinedSubtypes::${sub.name.capitalize}Subtype);
+             |}""".stripMargin
+
+        case lit:Atomic =>
+          s"""
+             |Tree *${sub.name.capitalize}::astree() const {
+             |    return new Leaf(getValue());    // hard-coded and could be replaced.
+             |}""".stripMargin
+
+      }
+
+      Seq(new CPPElement(method))
+    } else {
+      Seq.empty
+    }
+
+    val contents =
+      s"""|
+         |#include "visitor.h"
+          |#include "Exp.h"
+          |#include "IVisitor.h"
+          |#include "${sub.name.capitalize}.h"
+          |
+          |${binaryMethods.mkString("\n")}
+       """.stripMargin.split("\n")
+
+    new StandAlone(sub.name.capitalize, contents)
   }
 
   /** Generate the base class, with all operations from flattened history. */

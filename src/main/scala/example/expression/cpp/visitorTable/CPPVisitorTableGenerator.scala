@@ -161,7 +161,7 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
   def generateExpImpl(model:Model, sub:Atomic) : CPPFile = {
     val signatures = sub.attributes
       .filter(att => att.tpe == domain.baseTypeRep)
-      .map(att => new CPPElement(s"${att.name}_->Accept(visitor);")).mkString("\n")
+      .map(att => new CPPElement(s"${att.name}->Accept(visitor);")).mkString("\n")
 
     val binaryMethods:Seq[CPPElement] = if (getModel.flatten().ops.exists {
       case bm: domain.BinaryMethodTreeBase => true
@@ -172,7 +172,7 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
         case _:Unary | _:Binary => {
           val atts = sub.attributes
             .filter(att => att.tpe == domain.baseTypeRep)
-            .map(att => s"${att.name}_->astree()").mkString(",")
+            .map(att => s"${att.name}->astree()").mkString(",")
 
           s"""
              |Tree *${sub.name.capitalize}::astree() const {
@@ -233,14 +233,14 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
         }
       }
 
-      addedFields = addedFields :+ new CPPElement(s"const $tpe$ptr ${att.name}_;")
+      addedFields = addedFields :+ new CPPElement(s"const $tpe$ptr ${att.name};")
 
       // prepare for constructor
-      params = params :+ s"const $tpe$ptr ${att.name}"
-      cons = cons :+ s"${att.name}_(${att.name})"
+      params = params :+ s"const $tpe$ptr ${att.name}_"
+      cons = cons :+ s"${att.name}(${att.name}_)"
 
       // make the set/get methods
-      addedMethods = addedMethods :+ new CPPElement(s"const $tpe$ptr get$capAtt() const { return ${att.name}_; }")
+      addedMethods = addedMethods :+ new CPPElement(s"const $tpe$ptr get$capAtt() const { return ${att.name}; }")
     })
 
     // make constructor

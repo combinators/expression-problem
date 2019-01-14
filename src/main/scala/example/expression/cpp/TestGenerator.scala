@@ -96,9 +96,9 @@ trait TestGenerator extends CPPGenerator {
 
       test match {
         case eq: EqualsTestCase =>
-          val OP:String = eq.op.name.capitalize
-          val instDeclaration = rec_convert(eq.inst)
-          val varName:Expression = new CPPElement(variables(eq.inst))
+          //val OP:String = eq.op.name.capitalize
+          //val instDeclaration = rec_convert(eq.inst)
+          //val varName:Expression = new CPPElement(variables(eq.inst))
 
           // The expected method takes in a function that will be called by the expected method. Now, the expected
           // method will pass in the expression (which is expected) into this function, and it is the job of that
@@ -115,7 +115,7 @@ trait TestGenerator extends CPPGenerator {
           )
 
         case ne: NotEqualsTestCase =>
-          val OP:String = ne.op.name.capitalize
+          //val OP:String = ne.op.name.capitalize
 
           // The expected method takes in a function that will be called by the expected method. Now, the expected
           // method will pass in the expression (which is expected) into this function, and it is the job of that

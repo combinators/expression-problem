@@ -28,29 +28,9 @@ trait cpp_e1 extends Evolution with CPPGenerator with TestGenerator with M1 {
     }
   }
 
-  abstract override def testGenerator: Seq[StandAlone] = {
-    val lit1 = new LitInst(1.0)
-    val lit2 = new LitInst(2.0)
-    val s1   = new BinaryInst(Sub, lit1, lit2)
+  abstract override def testGenerator: Seq[CPPElement] = {
+    val tests = new CPPElement(testMethod(M1_tests).mkString("\n"))
 
-    val tests = testMethod(M1_tests)
-
-    super.testGenerator :+ new StandAlone("test_e1",
-      s"""
-         |TEST_GROUP(FirstTestGroup)
-         |{
-         |};
-         |
-         |TEST(FirstTestGroup, a1)
-         |{
-         |   ${tests.mkString("\n")}
-         |}
-         |
-         |int main(int ac, char** av)
-         |{
-         |  MemoryLeakWarningPlugin::turnOffNewDeleteOverloads();
-         |  return CommandLineTestRunner::RunAllTests(ac, av);
-         |}""".stripMargin.split("\n")
-    )
+    super.testGenerator :+ tests
   }
 }

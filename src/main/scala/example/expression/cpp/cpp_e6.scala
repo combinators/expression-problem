@@ -76,36 +76,9 @@ trait cpp_e6 extends Evolution with CPPGenerator with CPPBinaryMethod with TestG
     super.testMethod(skip) ++ stmts
   }
 
+  abstract override def testGenerator: Seq[CPPElement] = {
+    val tests = new CPPElement(testMethod(M6_tests).mkString("\n"))
 
-  abstract override def testGenerator: Seq[StandAlone] = {
-    val tests = testMethod(M6_tests)
-//    val lit1 = new LitInst(1.0)
-//    val lit2 = new LitInst(2.0)
-//
-//    val s1 = new BinaryInst(Sub, lit1, lit2)
-//    val lit5 = new LitInst(5.0)
-//    val lit6 = new LitInst(6.0)
-//    val sbi1 = new domain.BinaryInst(Sub, lit1, lit2)
-//    val abi2 = new BinaryInst(Add, lit5, lit6)
-//    val a2 = new BinaryInst(Add, sbi1, abi2)
-//    val s3 = new BinaryInst(Sub, lit1, lit2)
-
-    super.testGenerator :+ new StandAlone("test_e6",
-      s"""
-         |TEST_GROUP(FirstTestGroup)
-         |{
-         |};
-         |
-         |TEST(FirstTestGroup, a1)
-         |{
-         |  ${tests.mkString("\n")}
-         |}
-         |
-         |int main(int ac, char** av)
-         |{
-         |  MemoryLeakWarningPlugin::turnOffNewDeleteOverloads();
-         |  return CommandLineTestRunner::RunAllTests(ac, av);
-         |}""".stripMargin.split("\n")
-    )
+    super.testGenerator :+ tests
   }
 }

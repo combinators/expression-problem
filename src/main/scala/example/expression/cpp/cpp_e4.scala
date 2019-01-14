@@ -170,25 +170,9 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with Depende
     }
   }
 
-  abstract override def testGenerator: Seq[StandAlone] = {
-    val tests = testMethod(M4_tests)
+  abstract override def testGenerator: Seq[CPPElement] = {
+    val tests = new CPPElement(testMethod(M4_tests).mkString("\n"))
 
-    super.testGenerator :+ new StandAlone("test_e4",
-      s"""
-         |TEST_GROUP(FirstTestGroup)
-         |{
-         |};
-         |
-         |TEST(FirstTestGroup, a1)
-         |{
-         |   ${tests.mkString("\n")}
-         |}
-         |
-         |int main(int ac, char** av)
-         |{
-         |  MemoryLeakWarningPlugin::turnOffNewDeleteOverloads();
-         |  return CommandLineTestRunner::RunAllTests(ac, av);
-         |}""".stripMargin.split("\n")
-    )
+    super.testGenerator :+ tests
   }
 }

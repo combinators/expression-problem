@@ -52,32 +52,5 @@ trait CPPOOTestGenerator extends CPPGenerator with TestGenerator {
     }
   }
 
-  /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
-  override def generateSuite(pkg: Option[String], model: Option[Model] = None): Seq[CPPFile] = {
 
-    val allOps = getModel.flatten().ops.map(op => s"""#include "${op.name.capitalize}.h" """)
-    var num: Int = 0
-    val files: Seq[CPPFile] = testGenerator.map(sa => {
-      num = num + 1
-
-      // standard imports
-      sa.addHeader(Seq(
-        """#include "CppUTest/TestHarness.h" """,
-        """#include "CppUTest/SimpleString.h" """,
-        """#include "CppUTest/PlatformSpecificFunctions.h" """,
-        """#include "CppUTest/TestMemoryAllocator.h" """,
-        """#include "CppUTest/MemoryLeakDetector.h" """,
-        """#include "CppUTest/CommandLineTestRunner.h" """,
-
-        """#include "Exp.h" """,
-        """#include "IVisitor.h" """
-
-//          std::shared_ptr<Add> add(std::shared_ptr<Expr> left, std::shared_ptr<Expr> right) { return std::make_shared<Add>(left, right); }
-//          std::shared_ptr<Lit> lit(double value) { return std::make_shared<Lit>(value); }
-
-
-      ) ++ allOps)
-    })
-    files
-  }
 }

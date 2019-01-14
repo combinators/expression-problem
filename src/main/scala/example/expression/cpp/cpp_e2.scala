@@ -57,25 +57,9 @@ trait cpp_e2 extends Evolution with CPPGenerator with TestGenerator with M0 with
     }
   }
 
-  abstract override def testGenerator: Seq[StandAlone] = {
-    val tests = testMethod(M2_tests)
+  abstract override def testGenerator: Seq[CPPElement] = {
+    val tests = new CPPElement(testMethod(M2_tests).mkString("\n"))
 
-    super.testGenerator :+ new StandAlone("test_e2",
-      s"""
-         |TEST_GROUP(FirstTestGroup)
-         |{
-         |};
-         |
-         |TEST(FirstTestGroup, a1)
-         |{
-         |   ${tests.mkString("\n")}
-         |}
-         |
-         |int main(int ac, char** av)
-         |{
-         |  MemoryLeakWarningPlugin::turnOffNewDeleteOverloads();
-         |  return CommandLineTestRunner::RunAllTests(ac, av);
-         |}""".stripMargin.split("\n")
-    )
+    super.testGenerator :+ tests
   }
 }

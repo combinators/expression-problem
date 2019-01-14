@@ -134,7 +134,6 @@ trait e4 extends Evolution with ScalaGenerator with TestGenerator with Operation
     }
   }
 
-  // TODO: HACK. Fix this implementation
   abstract override def testGenerator: Seq[Stat] = {
     super.testGenerator :+ testMethod(M4_tests)
   }

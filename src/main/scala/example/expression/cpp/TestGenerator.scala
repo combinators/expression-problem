@@ -13,7 +13,7 @@ trait TestGenerator extends CPPGenerator {
   def getModel:domain.Model
 
   /** Return sample C++ test cases. */
-  def testGenerator: Seq[StandAlone] = Seq.empty
+  def testGenerator: Seq[CPPElement] = Seq.empty
 
   var id = 0
   var variables = collection.mutable.Map[AtomicInst, String]()
@@ -143,20 +143,43 @@ trait TestGenerator extends CPPGenerator {
 
     val allOps = getModel.flatten().ops.map(op => s"""#include "${op.name.capitalize}.h" """)
     var num: Int = 0
-    val files: Seq[CPPFile] = testGenerator.map(sa => {
+    val allTests:Seq[CPPElement] = testGenerator.map(tests => {
       num = num + 1
 
-      // standard imports
-      sa.addHeader(Seq(
+      new CPPElement(
+       s"""
+          |TEST_GROUP(TestGroup$num)
+          |{
+          |};
+          |
+          |TEST(TestGroup$num, a$num)
+          |{
+          |   $tests
+          |}
+          |
+        """.stripMargin
+      )
+    })
+
+    val sa = new StandAlone("test_e0",
+      s"""
+         |${allTests.mkString("\n")}
+         |
+         |int main(int ac, char** av)
+         |{
+         |  MemoryLeakWarningPlugin::turnOffNewDeleteOverloads();
+         |  return CommandLineTestRunner::RunAllTests(ac, av);
+         |}""".stripMargin.split("\n")
+    )
+
+    sa.addHeader(Seq(
       """#include "CppUTest/TestHarness.h" """,
       """#include "CppUTest/SimpleString.h" """,
       """#include "CppUTest/PlatformSpecificFunctions.h" """,
       """#include "CppUTest/TestMemoryAllocator.h" """,
       """#include "CppUTest/MemoryLeakDetector.h" """,
-      """#include "CppUTest/CommandLineTestRunner.h" """,
+      """#include "CppUTest/CommandLineTestRunner.h" """) ++ allOps)
 
-      ) ++ allOps)
-    })
-    files
+    Seq(sa)
   }
 }

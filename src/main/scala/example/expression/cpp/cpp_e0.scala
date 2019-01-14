@@ -40,25 +40,9 @@ trait cpp_e0 extends CPPGenerator with TestGenerator with M0 {
     }
   }
 
-  abstract override def testGenerator: Seq[StandAlone] = {
-    val tests = testMethod(M0_tests)
+  abstract override def testGenerator: Seq[CPPElement] = {
+    val tests = new CPPElement(testMethod(M0_tests).mkString("\n"))
 
-    super.testGenerator :+ new StandAlone("test_e0",
-      s"""
-         |TEST_GROUP(FirstTestGroup)
-         |{
-         |};
-         |
-         |TEST(FirstTestGroup, a1)
-         |{
-         |   ${tests.mkString("\n")}
-         |}
-         |
-         |int main(int ac, char** av)
-         |{
-         |  MemoryLeakWarningPlugin::turnOffNewDeleteOverloads();
-         |  return CommandLineTestRunner::RunAllTests(ac, av);
-         |}""".stripMargin.split("\n")
-    )
+    super.testGenerator :+ tests
   }
 }

@@ -19,4 +19,11 @@ trait DependentDispatch {
   def dependentDispatch(expr:CPPElement, op:domain.Operation, params:CPPElement*) : CPPElement = {
     dispatch(expr, op, params: _*)
   }
+
+  /**
+    * Used for binary methods.
+    */
+  def binaryDispatch(expr:CPPElement, op:domain.Operation, params:CPPElement*) : CPPElement = {
+    dispatch(expr, op, params: _*)
+  }
 }

@@ -9,6 +9,7 @@ trait CPPBinaryMethod extends BinaryMethod {
   def getModel: domain.Model
 
   type Declaration = CPPFile
+  type expt = CPPElement
 
   /**
     * Declares the helper classes needed, in C++

@@ -57,6 +57,19 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
   }
 
   /**
+    * Responsible for dispatching sub-expressions with possible parameter(s).
+    */
+  override def binaryDispatch(expr:CPPElement, op:domain.Operation, params:CPPElement*) : CPPElement = {
+    val args = if (params.nonEmpty) {
+      "," + params.mkString(",")
+    } else {
+      ""
+    }
+
+    new CPPElement(s"(new ${op.name.capitalize}($expr$args))->getValue()")
+  }
+
+  /**
     * For Visitor table, must dereference
     */
   override def valueOf(expr:Expression, params:CPPElement*): CPPElement = {
@@ -135,16 +148,17 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
     // binary methods?
     val binaryConstructor:Seq[CPPElement] = op match {
       case bm:domain.BinaryMethod =>
-        Seq(new CPPElement (s"""|${op.name.capitalize} (Exp *e, const Exp *t) {
+        Seq(new CPPElement (s"""|${op.name.capitalize} (Exp *e, Exp *t) {
                                 |    that = t;
                                 |    top = e;
+                                |    e->Accept(this);
                                 |}""".stripMargin))
       case _ => Seq.empty
     }
 
     // binary fields?
     val binaryField:Seq[CPPElement] = op match {
-      case bm:domain.BinaryMethod => Seq(new CPPElement (s" const Exp *that; "))
+      case bm:domain.BinaryMethod => Seq(new CPPElement (s" Exp *that; "))
       case _ => Seq.empty
     }
 

@@ -35,6 +35,11 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
       generateBase(flat) // base class $BASE
   }
 
+  /** Must convert &e into pointer. */
+  override def inBinaryContext(e:expt) : expt = {
+    new CPPElement(s"&${e.toString}")
+  }
+
   /** For straight design solution, directly access attributes by name. */
   override def subExpressions(exp:Atomic) : Map[String,CPPElement] = {
     exp.attributes.map(att => att.name -> new CPPElement(s"${att.name}")).toMap
@@ -42,7 +47,21 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
 
   /** Directly access local method, one per operation, with a parameter representing visitor name. */
   override def dispatch(expr:CPPElement, op:Operation, params:CPPElement*) : CPPElement = {
-    new CPPElement(s"(new ${op.name.capitalize}(e.get${expr.toString.capitalize}()))->getValue()")
+    val args:String = params.mkString(",")
+    new CPPElement(s"(new ${op.name.capitalize}(e.get${expr.toString.capitalize}($args)))->getValue()")
+  }
+
+  /**
+    * Responsible for dispatching sub-expressions with possible parameter(s).
+    */
+  override def binaryDispatch(expr:CPPElement, op:domain.Operation, params:CPPElement*) : CPPElement = {
+    val args = if (params.nonEmpty) {
+      "," + params.mkString(",")
+    } else {
+      ""
+    }
+
+    new CPPElement(s"(new ${op.name.capitalize}($expr$args))->getValue()")
   }
 
   /**
@@ -133,8 +152,9 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
     val binaryConstructor:Seq[CPPElement] = op match {
       case bm:domain.BinaryMethod =>
         Seq(new CPPElement (s"""
-                               |${op.name.capitalize} (const Exp *e, const Exp *t) {
+                               |${op.name.capitalize} (Exp *e, Exp *t) {
                                |    that = t;
+                               |    e->Accept(this);
                                |}""".stripMargin))
       case _ => Seq.empty
     }
@@ -145,7 +165,7 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
 
     // binary fields?
     val binaryField:Seq[CPPElement] = op match {
-      case bm:domain.BinaryMethod => Seq(new CPPElement (s""" const Exp *that; """))
+      case bm:domain.BinaryMethod => Seq(new CPPElement (s""" Exp *that; """))
       case _ => Seq.empty
     }
 

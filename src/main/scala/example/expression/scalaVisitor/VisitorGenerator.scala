@@ -9,7 +9,7 @@ import org.combinators.templating.twirl.Java
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with VisitorJavaBinaryMethod with OperationAsMethodGenerator with Producer with JavaBinaryMethod {
+trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with VisitorJavaBinaryMethod with OperationAsMethodGenerator with JavaBinaryMethod {
   val domain:BaseDomain with ModelDomain
 
   /**
@@ -125,14 +125,14 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
     * Note that BinaryMethodBase is handled separately
     * As is BinaryMethods
     */
-  override def methodGenerator(exp:domain.Atomic)(op:domain.Operation): MethodDeclaration = {
+  override def methodGenerator(exp:domain.Atomic, op:domain.Operation): MethodDeclaration = {
     val retType = op.returnType match {
       case Some(tpe) => typeConverter(tpe)
       case _ => Java("void").tpe
     }
 
     Java(s"""|public $retType visit(${exp.name} e) {
-             |  ${logic(exp)(op).mkString("\n")}
+             |  ${logic(exp, op).mkString("\n")}
              |}""".stripMargin).methodDeclarations().head
   }
 
@@ -197,7 +197,7 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
     * Must handle BinaryMethod (Equals) and BinaryMethodBase (Astree) specially.
     */
   def operationGenerator(model:domain.Model, op:domain.Operation): CompilationUnit = {
-    val signatures = model.types.map(exp => methodGenerator(exp)(op))
+    val signatures = model.types.map(exp => methodGenerator(exp, op))
 
     // if operation has parameters then must add to visitor as well
     val atts:Seq[FieldDeclaration] = op.parameters.flatMap(p => Java(s"${typeConverter(p._2)} ${p._1};").fieldDeclarations())

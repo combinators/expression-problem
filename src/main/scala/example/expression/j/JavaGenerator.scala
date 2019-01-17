@@ -4,7 +4,7 @@ import com.github.javaparser.JavaParser
 import com.github.javaparser.ast.body.{ConstructorDeclaration, FieldDeclaration, MethodDeclaration, TypeDeclaration}
 import com.github.javaparser.ast.stmt.BlockStmt
 import example.expression.domain.{BaseDomain, ModelDomain}
-import example.expression.generator.LanguageIndependentGenerator
+import example.expression.generator.{LanguageIndependentGenerator, Producer}
 import org.combinators.templating.twirl.Java
 
 import scala.collection.JavaConverters._
@@ -12,13 +12,14 @@ import scala.collection.JavaConverters._
 /**
   * Any Java-based EP approach can extend this Generator
   */
-trait JavaGenerator extends LanguageIndependentGenerator with DependentDispatch {
+trait JavaGenerator extends LanguageIndependentGenerator with DependentDispatch with Producer {
   val domain:BaseDomain with ModelDomain
 
   type CompilationUnit = com.github.javaparser.ast.CompilationUnit
   type Type = com.github.javaparser.ast.`type`.Type
   type Expression = com.github.javaparser.ast.expr.Expression
   type Statement = com.github.javaparser.ast.stmt.Statement
+  type InstanceExpression = com.github.javaparser.ast.expr.Expression
 
   /** Default helper to convert string into Expression. Not yet integrated. */
   def expression(s:String) : Expression = Java(s).expression[com.github.javaparser.ast.expr.Expression]()
@@ -36,6 +37,14 @@ trait JavaGenerator extends LanguageIndependentGenerator with DependentDispatch 
     */
   def result (expr:Expression) : Seq[Statement] = {
     Java(s"return $expr;").statements()
+  }
+
+  /**
+    * For producer operations, there is a need to instantiate objects, and one would use this
+    * method (with specific parameters) to carry this out.
+    */
+  def inst(exp:domain.Atomic, params:InstanceExpression*): InstanceExpression = {
+    Java("new " + exp.name.capitalize + "(" + params.map(expr => expr.toString).mkString(",") + ")").expression()
   }
 
   // Useful helper methods for any generator needing to craft common Java constructs

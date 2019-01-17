@@ -1,14 +1,12 @@
-package example.expression.haskell.alacarte
-
-/*DI:LD:AD*/
+package example.expression.haskell.alacarte    /*DI:LD:AD*/
 
 import example.expression.domain.{BaseDomain, ModelDomain}
-import example.expression.haskell.{Haskell, Producer}
+import example.expression.haskell.{Haskell, HaskellGenerator}
 
 /**
   * Any Java-based approach capable of supporting Producer must provide this capability.
   */
-trait ALaCarteProducer extends Producer {
+trait ALaCarteProducer extends HaskellGenerator {
   val domain:BaseDomain with ModelDomain
 
   val flat:domain.Model
@@ -52,7 +50,7 @@ trait ALaCarteProducer extends Producer {
     * or
     * In(Er(El(Op 2.0 7.0)))
     */
-  override def inst(exp:domain.Atomic)(op:domain.Operation)(params:Haskell*): Haskell = {
+  override def inst(exp:domain.Atomic, params:Haskell*): Haskell = {
     Haskell("In(" + treeRoute(exp, flat.types) + " " + params.map(h => h.getCode).mkString(" ") + closeTreeRoute(exp, flat.types) +")")
   }
 }

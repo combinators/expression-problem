@@ -1,21 +1,19 @@
-package example.expression.haskell.straight
-
-/*DI:LD:AI*/
+package example.expression.haskell    /*DI:LD:AI*/
 
 import example.expression.domain.{BaseDomain, ModelDomain}
-import example.expression.haskell.{Haskell, HaskellProducer}
+import example.expression.generator.Producer
 
 /**
   * Any Haskell-based approach capable of supporting Producer must provide this capability.
   */
-trait StraightProducer extends HaskellProducer  {
+trait HaskellProducer extends Producer {
 //  val domain:BaseDomain with ModelDomain
+//
+//  type InstanceExpression = Haskell
 //
 //  /**
 //    * For producer operations, there is a need to instantiate objects, and one would use this
 //    * method (with specific parameters) to carry this out.
 //    */
-//  override def inst(exp:domain.Atomic, params:Haskell*): Haskell = {
-//    Haskell(exp.name.capitalize + " " + params.map(h => h.getCode).mkString(" "))
-//  }
+//  def inst(exp:domain.Atomic, params:InstanceExpression*): InstanceExpression
 }

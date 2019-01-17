@@ -8,7 +8,7 @@ import org.combinators.templating.twirl.Java
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait OOGenerator extends JavaGenerator with DataTypeSubclassGenerator with StandardJavaBinaryMethod with OperationAsMethodGenerator with Producer with JavaBinaryMethod {
+trait OOGenerator extends JavaGenerator with DataTypeSubclassGenerator with StandardJavaBinaryMethod with OperationAsMethodGenerator with JavaBinaryMethod {
 
   val domain:BaseDomain with ModelDomain
   import domain._
@@ -58,16 +58,16 @@ trait OOGenerator extends JavaGenerator with DataTypeSubclassGenerator with Stan
   }
 
   /** Operations are implemented as methods in the Base and sub-type classes. */
-  def methodGenerator(exp:Atomic)(op:Operation): MethodDeclaration = {
+  def methodGenerator(exp:Atomic, op:Operation): MethodDeclaration = {
     val params = parameters(op)
     Java(s"""|public ${returnType(op)} ${op.name}($params) {
-             |  ${logic(exp)(op).mkString("\n")}
+             |  ${logic(exp, op).mkString("\n")}
              |}""".stripMargin).methodDeclarations.head
   }
 
   /** Generate the full class for the given expression sub-type. */
   def generateExp(model:Model, exp:Atomic) : CompilationUnit = {
-    val methods = model.ops.map(methodGenerator(exp))
+    val methods = model.ops.map(op => methodGenerator(exp, op))
 
     Java(s"""|package oo;
              |public class ${exp.toString} extends ${domain.baseTypeRep.name} {

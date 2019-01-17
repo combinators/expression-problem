@@ -65,10 +65,10 @@ trait WadlerGenerator extends GJGenerator  {
   }
 
   /** Operations are implemented as methods in the Base and sub-type classes. */
-  def methodGenerator(exp:Atomic)(op:Operation): GJ = {
+  def methodGenerator(exp:Atomic, op:Operation): GJ = {
     val params = parametersExp(exp)
     GJ(s"""|public ${returnType(op)} for${exp.name.capitalize}($params) {
-           |  ${logic(exp)(op).mkString("\n")}
+           |  ${logic(exp, op).mkString("\n")}
            |}""".stripMargin)
   }
 
@@ -88,7 +88,7 @@ trait WadlerGenerator extends GJGenerator  {
 
   /** Generate the full class for the given operation. */
   def generateOp(model:Model, op:Operation) : GJ = {
-    val methods = model.types.map(exp => methodGenerator(exp)(op))
+    val methods = model.types.map(exp => methodGenerator(exp, op))
 
     GJ(s"""|class ${op.name.capitalize} implements Visitor<${returnType(op)}> {
            |  ${methods.mkString("\n")}

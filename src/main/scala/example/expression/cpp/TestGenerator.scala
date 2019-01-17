@@ -141,7 +141,7 @@ trait TestGenerator extends CPPGenerator {
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
   def generateSuite(pkg: Option[String], model: Option[Model] = None): Seq[CPPFile] = {
 
-    val allOps = getModel.flatten().ops.map(op => s"""#include "${op.name.capitalize}.h" """)
+   // val allOps = getModel.flatten().ops.map(op => s"""#include "${op.name.capitalize}.h" """)
     var num: Int = 0
     val allTests:Seq[CPPElement] = testGenerator.map(tests => {
       num = num + 1
@@ -178,7 +178,7 @@ trait TestGenerator extends CPPGenerator {
       """#include "CppUTest/PlatformSpecificFunctions.h" """,
       """#include "CppUTest/TestMemoryAllocator.h" """,
       """#include "CppUTest/MemoryLeakDetector.h" """,
-      """#include "CppUTest/CommandLineTestRunner.h" """) ++ allOps)
+      """#include "CppUTest/CommandLineTestRunner.h" """))
 
     Seq(sa)
   }

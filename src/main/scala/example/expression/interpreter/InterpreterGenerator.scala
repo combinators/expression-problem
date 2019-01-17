@@ -6,7 +6,7 @@ import example.expression.j._
 import expression.ReplaceType
 import org.combinators.templating.twirl.Java
 
-trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator with StandardJavaBinaryMethod with OperationAsMethodGenerator with JavaBinaryMethod with Producer {
+trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator with StandardJavaBinaryMethod with OperationAsMethodGenerator with JavaBinaryMethod {
 
   /**
     * Generating an interpreter solution requires:
@@ -45,7 +45,7 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
     * For interpreter, we use a factory method that has been placed in the class, and that allows
     * the very specialized types to be used.
     */
-  override def inst(exp:domain.Atomic)(op:domain.Operation)(params:Expression*): Expression = {
+  override def inst(exp:domain.Atomic, params:Expression*): Expression = {
     Java(exp.name + "(" + params.map(expr => expr.toString()).mkString(",") + ")").expression()
   }
 
@@ -77,7 +77,7 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
   }
 
   /** Operations are implemented as methods in the Base and sub-type classes. */
-  override def methodGenerator(exp:domain.Atomic)(op:domain.Operation): MethodDeclaration = {
+  override def methodGenerator(exp:domain.Atomic, op:domain.Operation): MethodDeclaration = {
     val retType = op.returnType match {
       case Some(tpe) => typeConverter(tpe)
       case _ => Java("void").tpe
@@ -85,7 +85,7 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
 
     val params = parameters(op)
     Java(s"""|public $retType ${op.name}($params) {
-             |  ${logic(exp)(op).mkString("\n")}
+             |  ${logic(exp, op).mkString("\n")}
              |}""".stripMargin).methodDeclarations().head
   }
 
@@ -104,8 +104,7 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
 
     // provide method declarations for all past operations (including self). But if we extend, can't we stop at last op?
     val allOps:Seq[domain.Operation] = model.pastOperations()
-    val operations:Seq[MethodDeclaration] = allOps.map(op =>
-        methodGenerator(exp)(op))
+    val operations:Seq[MethodDeclaration] = allOps.map(op => methodGenerator(exp,op))
 
     val unit = Java(s"""
             |package interpreter;
@@ -130,7 +129,7 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
 
   def generateInterface(exp: domain.Atomic, parents: Seq[SimpleName], op:domain.Operation): CompilationUnit = {
     val name = interfaceName(exp, op)
-    val method: MethodDeclaration = methodGenerator(exp)(op)
+    val method: MethodDeclaration = methodGenerator(exp, op)
     val atts:Seq[MethodDeclaration] =
       exp.attributes.flatMap(att => Java(s"${typeConverter(att.tpe)} get${att.name.capitalize}();").methodDeclarations())
 
@@ -234,7 +233,7 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
   /**
     * For each operation must generate a sequence of classes, one per subtype.
     *
-    * Note that BinaryMethods must have their Exp parameters converted to be ${op.name}Exp.
+    * Note that BinaryMethods must have their Exp parameters converted to be \${op.name}Exp.
     *
     * @param model
     * @param ops
@@ -305,7 +304,7 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
           if (!ops.contains(op) && model.lastModelWithOperation().flatten().types.contains(exp)) {
             Seq.empty
           } else {
-            val md: MethodDeclaration = methodGenerator(exp)(op)
+            val md: MethodDeclaration = methodGenerator(exp, op)
 
             // be sure to recursively change any Exp into fullType, for producer capability
             val returnType: Type = md.getType

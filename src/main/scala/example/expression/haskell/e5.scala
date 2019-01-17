@@ -27,7 +27,7 @@ trait e5 extends Evolution with HaskellGenerator with HUnitTestGenerator with Ha
     }
   }
 
-  abstract override def logic(exp:Atomic)(op:domain.Operation): Seq[Haskell] = {
+  abstract override def logic(exp:Atomic, op:domain.Operation): Seq[Haskell] = {
     // generate the actual body
     op match {
       // Simplify only works for solutions that instantiate expression instances
@@ -44,7 +44,7 @@ trait e5 extends Evolution with HaskellGenerator with HUnitTestGenerator with Ha
         result(Haskell(s" Node ${declType}Type [ $children ]"))
       }
 
-      case _ => super.logic(exp)(op)
+      case _ => super.logic(exp, op)
     }
   }
 

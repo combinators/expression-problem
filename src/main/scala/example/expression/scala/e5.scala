@@ -30,7 +30,7 @@ trait e5 extends Evolution with ScalaGenerator with TestGenerator with Operation
     }
   }
 
-  abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {
+  abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
     // generate the actual body
     op match {
       // Simplify only works for solutions that instantiate expression instances. As a binary
@@ -59,7 +59,7 @@ trait e5 extends Evolution with ScalaGenerator with TestGenerator with Operation
             result(Scala(s"""new tree.Node(Seq($seq), ${identify(exp, Identifier, atts(domain.base.left), atts(domain.base.right))} ) """).expression)
           }
       }
-      case _ => super.logic(exp)(op)
+      case _ => super.logic(exp, op)
     }
   }
 

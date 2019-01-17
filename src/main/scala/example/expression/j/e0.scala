@@ -22,7 +22,7 @@ trait e0 extends JavaGenerator with JUnitTestGenerator with M0 {
   }
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
-  abstract override def logic(exp:Atomic)(op:Operation): Seq[Statement] = {
+  abstract override def logic(exp:Atomic, op:Operation): Seq[Statement] = {
     val atts = subExpressions(exp)
 
     // generate the actual body
@@ -31,13 +31,13 @@ trait e0 extends JavaGenerator with JUnitTestGenerator with M0 {
         exp match {
           case Lit => result(Java(atts(litValue)).expression[Expression]())
           case Add => result(Java(s"${dispatch(atts(base.left),op)} + ${dispatch(atts(base.right),op)}").expression[Expression]())
-          case _ => super.logic(exp)(op)
+          case _ => super.logic(exp, op)
         }
 
         // all future EXP sub-types can simply return hashcode.
       case Identifier => result(Java(exp.hashCode.toString).expression[Expression]())
 
-      case _ => super.logic(exp)(op)
+      case _ => super.logic(exp, op)
     }
   }
 

@@ -11,7 +11,7 @@ trait i1 extends Evolution with JavaGenerator with JUnitTestGenerator with M0 wi
   self: e0 with e1 =>
   val domain:MathDomain
 
-  abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {
+  abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
     val subs = subExpressions(exp)
     
     // generate the actual body
@@ -19,10 +19,10 @@ trait i1 extends Evolution with JavaGenerator with JUnitTestGenerator with M0 wi
       case Eval => {
         exp match {
           case Inv => result(Java(s" 1 / ${dispatch(subs(domain.base.inner), Eval)} ").expression[Expression]())
-          case _ => super.logic(exp)(op)
+          case _ => super.logic(exp, op)
         }
       }
-      case _ => super.logic(exp)(op)
+      case _ => super.logic(exp, op)
     }
   }
 

@@ -20,7 +20,7 @@ trait cpp_e5 extends Evolution with CPPGenerator with TestGenerator with M0 with
   }
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
-  abstract override def logic(exp:Atomic)(op:Operation): Seq[CPPElement] = {
+  abstract override def logic(exp:Atomic, op:Operation): Seq[CPPElement] = {
     val atts:Map[String,CPPElement] = subExpressions(exp)
 
     // generate the actual body
@@ -42,7 +42,7 @@ trait cpp_e5 extends Evolution with CPPGenerator with TestGenerator with M0 with
         }
       }
 
-      case _ => super.logic(exp)(op)
+      case _ => super.logic(exp, op)
     }
   }
 

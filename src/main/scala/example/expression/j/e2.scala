@@ -28,7 +28,7 @@ trait e2 extends Evolution with JavaGenerator with JUnitTestGenerator with M2 {
     }
   }
 
-  abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {
+  abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
     val subs = subExpressions(exp)
 
     // generate the actual body
@@ -38,10 +38,10 @@ trait e2 extends Evolution with JavaGenerator with JUnitTestGenerator with M2 {
           case Lit => result(Java(s""" "" + ${subs(litValue)} + "" """).expression[Expression]())
           case Add => result(Java(s""" "(" + ${dispatch(subs(domain.base.left), PrettyP)} + "+" + ${dispatch(subs(domain.base.right), PrettyP)}+ ")" """).expression[Expression]())
           case Sub => result(Java(s""" "(" + ${dispatch(subs(domain.base.left), PrettyP)} + "-" + ${dispatch(subs(domain.base.right), PrettyP)} + ")" """).expression[Expression]())
-          case _ => super.logic(exp)(op)
+          case _ => super.logic(exp, op)
         }
 
-      case _ => super.logic(exp)(op)
+      case _ => super.logic(exp, op)
     }
   }
 

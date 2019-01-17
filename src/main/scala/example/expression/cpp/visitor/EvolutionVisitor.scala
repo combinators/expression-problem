@@ -11,7 +11,7 @@ import shared.compilation.CodeGenerationController
 /**
   * Build with:
   *
-  * g++ $1 [A-SU-Z]*.cpp Tree.cpp -I ../cpputest/include -L ../cpputest/cpputest_build/lib -lCppUTest -lCppUTestExt -std=c++11
+  * g++ *.cpp -I ../cpputest/include -L ../cpputest/cpputest_build/lib -lCppUTest -lCppUTestExt -std=c++11
   *
   * Each test_ex.cpp file has its own main
   * @param web

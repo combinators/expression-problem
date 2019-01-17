@@ -13,6 +13,6 @@ trait OperationAsMethodGenerator {
   /**
     * Operations for a given Exp DataType are implemented as a method. */
   /** Should pass in context, which is either 'e' or ''.'' */
-  def methodGenerator(exp:domain.Atomic)(op:domain.Operation) : MethodDeclaration
+  def methodGenerator(exp:domain.Atomic, op:domain.Operation) : MethodDeclaration
 
 }

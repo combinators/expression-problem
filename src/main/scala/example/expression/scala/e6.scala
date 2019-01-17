@@ -22,7 +22,7 @@ trait e6 extends Evolution with ScalaGenerator with TestGenerator with BinaryMet
     }
   }
 
-  abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {
+  abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
 
     // generate the actual body; since this is a binary method
     op match {
@@ -44,7 +44,7 @@ trait e6 extends Evolution with ScalaGenerator with TestGenerator with BinaryMet
         // OO: astree().same(that.astree())
         // FUNC: new Astree().apply(new Neg(inner)).same(new Astree().apply(that))
 
-      case _ => super.logic(exp)(op)
+      case _ => super.logic(exp, op)
     }
   }
 

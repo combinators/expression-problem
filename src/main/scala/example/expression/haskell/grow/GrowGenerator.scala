@@ -27,6 +27,50 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     }
   }
 
+  /**
+    * For producer operations, there is a need to instantiate objects, and one would use this
+    * method (with specific parameters) to carry this out.
+    */
+  override def inst(exp:domain.Atomic, params:Haskell*): Haskell = {
+
+    val wrap = genWrap(findModel(exp))
+    exp match {
+      case ui: Unary =>
+        Haskell(wrap(s"${ui.name.capitalize} (${params(0)}) "))
+
+      case bi: Binary =>
+        Haskell(wrap(s"${bi.name.capitalize} (${params(0)}) (${params(1)}) "))
+
+      case exp: Atomic =>
+        Haskell(wrap(s"${exp.name.capitalize} ${params(0)} "))
+
+      case _ => Haskell(s" -- unknown ${exp.name} ")
+    }
+  }
+
+  /**
+    * Extended to handle producer operations specially.
+    *
+    * @param m
+    * @param op
+    * @return
+    */
+  def typeSignature(m:Model, op:Operation) : String = {
+    op match {
+      case _:ProducerOperation =>
+        val mcaps = m.name.capitalize    // haskell needs data to be capitalized!
+      val baseDomain = domain.baseTypeRep.name
+
+        s"${op.name}$baseDomain$mcaps :: ${expDeclaration(m.base())} $mcaps -> ${expDeclaration(m.base())} $mcaps"
+
+      case _ =>
+        val mcaps = m.name.capitalize    // haskell needs data to be capitalized!
+        val baseDomain = domain.baseTypeRep.name
+
+        s"${op.name}$baseDomain$mcaps :: ${expDeclaration(m.base())} $mcaps -> ${typeConverter(op.returnType.get)}"
+    }
+  }
+
   /** Combined string from the types. */
   def extTypeDeclaration(m:Model):String = {
     extDeclaration(m) + "Type"
@@ -46,12 +90,12 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     domain.baseTypeRep.name + "_" + m.name.capitalize
   }
 
-  def typeSignature(m:Model, op:Operation):String = {
-    val mcaps = m.name.capitalize    // haskell needs data to be capitalized!
-    val baseDomain = domain.baseTypeRep.name
-
-    s"${op.name}$baseDomain$mcaps :: ${expDeclaration(m.base())} $mcaps -> ${typeConverter(op.returnType.get)}"
-  }
+//  def typeSignature(m:Model, op:Operation):String = {
+//    val mcaps = m.name.capitalize    // haskell needs data to be capitalized!
+//    val baseDomain = domain.baseTypeRep.name
+//
+//    s"${op.name}$baseDomain$mcaps :: ${expDeclaration(m.base())} $mcaps -> ${typeConverter(op.returnType.get)}"
+//  }
 
   def operationForFixedLevel(m:Model, op:Operation) : String = {
     val mcaps = m.name.capitalize    // haskell needs data to be capitalized!
@@ -108,7 +152,7 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
 
       val modifiedRest = { // if (!m.last.isEmpty)
         // must embed 'help' properly, if needed
-        val code = logic(exp)(op).mkString("\n")
+        val code = logic(exp, op).mkString("\n")
         if (code.contains(" helpWith ")) {
           val prior = m.last.name.capitalize
 
@@ -128,7 +172,7 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
                #  ${code.replace(s"$name${domain.baseTypeRep.name} helpWith ", "help ")}""".stripMargin('#')
           }
         } else {
-          s"(${exp.name.capitalize} ${standardArgs(exp).getCode}) = " + logic(exp)(op).mkString("\n")
+          s"(${exp.name.capitalize} ${standardArgs(exp).getCode}) = " + logic(exp, op).mkString("\n")
         }
       }
       head + modifiedRest

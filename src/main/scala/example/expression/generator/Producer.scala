@@ -1,16 +1,18 @@
-package example.expression.haskell    /*DI:LD:AI*/
+package example.expression.generator     /*DI:LI:AI*/
 
 import example.expression.domain.{BaseDomain, ModelDomain}
 
 /**
-  * Any Haskell-based approach capable of supporting Producer must provide this capability.
+  * Any generator that works with Producer methods must incorporate this trait.
   */
-trait Producer  {
+trait Producer {
   val domain:BaseDomain with ModelDomain
+
+  type InstanceExpression
 
   /**
     * For producer operations, there is a need to instantiate objects, and one would use this
     * method (with specific parameters) to carry this out.
     */
-  def inst(exp:domain.Atomic)(op:domain.Operation)(params:Haskell*): Haskell
+  def inst(exp:domain.Atomic, params:InstanceExpression*): InstanceExpression
 }

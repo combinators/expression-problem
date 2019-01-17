@@ -1,19 +1,21 @@
 package example.expression.scala   /*DI:LD:AI*/
 
 import example.expression.domain.{BaseDomain, ModelDomain}
-import example.expression.generator.LanguageIndependentGenerator
+import example.expression.generator.{LanguageIndependentGenerator, Producer}
+
 import scala.meta._
 
 /**
   * Any Scala-based EP approach can extend this Generator
   */
-trait ScalaGenerator extends LanguageIndependentGenerator with DependentDispatch {
+trait ScalaGenerator extends LanguageIndependentGenerator with DependentDispatch with Producer {
   val domain:BaseDomain with ModelDomain
 
   type CompilationUnit = ScalaWithPath
   type Type = scala.meta.Type
   type Expression = scala.meta.Term
   type Statement = scala.meta.Stat
+  type InstanceExpression = scala.meta.Term
 
   /** Return designated Java type associated with type, or void if all else fails. */
   override def typeConverter(tpe:domain.TypeRep) : Type = {
@@ -37,6 +39,14 @@ trait ScalaGenerator extends LanguageIndependentGenerator with DependentDispatch
     val opargs = params.mkString(",")
     val term = Term.Name(op.name.toLowerCase)   // should be able to be ..$params
     Scala(s"this.${op.name.toLowerCase}(new ${exp.name.capitalize}($opargs))").expression
+  }
+
+  /**
+    * For producer operations, there is a need to instantiate objects, and one would use this
+    * method (with specific parameters) to carry this out.
+    */
+  def inst(exp:domain.Atomic, params:InstanceExpression*): InstanceExpression = {
+    Scala("new " + exp.name.capitalize + "(" + params.map(expr => expr.toString).mkString(",") + ")").expression
   }
 
   /// Scala support

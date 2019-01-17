@@ -1,6 +1,6 @@
 package example.expression.cpp.visitorTable    /*DI:LD:AD*/
 
-import example.expression.cpp.{CPPElement, CPPGenerator, TestGenerator}
+import example.expression.cpp.{CPPElement, CPPFile, CPPGenerator, TestGenerator}
 import example.expression.domain.{BaseDomain, ModelDomain}
 
 trait CPPTableTestGenerator extends CPPGenerator with TestGenerator {
@@ -21,7 +21,6 @@ trait CPPTableTestGenerator extends CPPGenerator with TestGenerator {
   def actual(op:Operation, inst:AtomicInst, params:CPPElement*):CPPElement = {
     new CPPElement(s"(new ${op.name.capitalize}(${rec_convert(inst)}))->getValue()")
   }
-
 
   /** Convert a test instance into a C++ Expression for instantiating that instance. */
   def rec_convert(inst: AtomicInst): CPPElement = {
@@ -71,5 +70,15 @@ trait CPPTableTestGenerator extends CPPGenerator with TestGenerator {
 
       case _ => new CPPElement(s""" "unknown $name" """)
     }
+  }
+
+  /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
+  override def generateSuite(pkg: Option[String], model: Option[Model] = None): Seq[CPPFile] = {
+
+    val allOps = getModel.flatten().ops.map(op => s"""#include "${op.name.capitalize}.h" """)
+
+    // add header files
+    super.generateSuite(pkg, model).map(file =>
+      file.addHeader(allOps))
   }
 }

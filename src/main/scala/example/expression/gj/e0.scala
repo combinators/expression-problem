@@ -21,7 +21,7 @@ trait e0 extends GJGenerator with TestGenerator with M0 {
   }
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
-  abstract override def logic(exp:Atomic)(op:Operation): Seq[GJ] = {
+  abstract override def logic(exp:Atomic, op:Operation): Seq[GJ] = {
     val atts:Map[String,Expression] = subExpressions(exp)
 
     // generate the actual body
@@ -30,13 +30,13 @@ trait e0 extends GJGenerator with TestGenerator with M0 {
         exp match {
           case Lit => result(GJ(atts(litValue).toString))
           case Add => result(GJ(s"new Double(${dispatch(atts(base.left),op)}.doubleValue() + ${dispatch(atts(base.right),op)}.doubleValue())"))
-          case _ => super.logic(exp)(op)
+          case _ => super.logic(exp, op)
         }
 
         // all future EXP sub-types can simply return hashcode.
       case Identifier => result(GJ(exp.hashCode().toString))
 
-      case _ => super.logic(exp)(op)
+      case _ => super.logic(exp, op)
     }
   }
 

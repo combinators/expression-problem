@@ -159,9 +159,13 @@ trait CPPBinaryMethod extends BinaryMethod {
 
     val subtypes:Seq[String] =
       s"""
+         |#ifndef _DEFINEDSUBTYPES_
+         |#define _DEFINEDSUBTYPES_
          |enum DefinedSubtypes {
          |  ${exps.map(exp => exp.name + "Subtype=" + exp.name.hashCode).mkString(",")}
-         |};""".stripMargin.split("\n")
+         |};
+         |#endif    /* _DEFINEDSUBTYPES_ */
+         |""".stripMargin.split("\n")
 
     Seq(new CPPHeaderCode("DefinedSubtypes", subtypes))
   }
@@ -170,7 +174,7 @@ trait CPPBinaryMethod extends BinaryMethod {
     val args = exp.attributes.map(att => att.name).mkString(",")
           Seq(new CPPElement(
             s"""
-               |public Tree ${domain.AsTree.name.toLowerCase}() {
+               |Tree *${domain.AsTree.name.toLowerCase}() {
                |  return asTree.${exp.name.toLowerCase}($args).${domain.AsTree.name.toLowerCase}();
                |}""".stripMargin))
   }

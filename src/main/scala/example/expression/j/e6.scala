@@ -23,13 +23,15 @@ trait e6 extends Evolution with JavaGenerator with JUnitTestGenerator with Binar
     }
   }
 
-  abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {
+  abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
 
     // generate the actual body; since this is a binary method
     op match {
       case Equals =>
         val opn = domain.AsTree.name
 
+        // GOAL: requesting AsTree on self produces same tree as invoking
+        // AsTree on that.
 
         // TODO: very close to replace with. Problems in ExtensibleVisitor (missing methods) as well
         // TODO: as Algebra (since naming conventions don't always work).
@@ -37,7 +39,7 @@ trait e6 extends Evolution with JavaGenerator with JUnitTestGenerator with Binar
         // Java(s"return ${delegate(exp,domain.AsTree)}.same(${dispatch(that, domain.AsTree)});").statements
        result(Java(s" $binaryContext$opn().same(that.$opn())").expression[Expression]())
 
-      case _ => super.logic(exp)(op)
+      case _ => super.logic(exp, op)
     }
   }
 

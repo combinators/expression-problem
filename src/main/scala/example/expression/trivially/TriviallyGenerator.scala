@@ -6,11 +6,11 @@ import com.github.javaparser.ast.body.{BodyDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter
 import example.expression.generator.BinaryMethodBase
-import example.expression.j.Producer
+import example.expression.j.JavaProducer
 import expression.ReplaceType
 import org.combinators.templating.twirl.Java
 
-trait TriviallyGenerator extends example.expression.oo.OOGenerator with Producer {
+trait TriviallyGenerator extends example.expression.oo.OOGenerator {
 
   /**
     * Generating "Expression problem, trivially" we need a class for each sub-type in model, then
@@ -42,7 +42,7 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator with Producer
     *
     * For recursive types, use "FinalI" as the cast internally, otherwise use native type
     */
-  override def inst(exp:domain.Atomic)(op:domain.Operation)(params:Expression*): Expression = {
+  override def inst(exp:domain.Atomic, params:Expression*): Expression = {
 
     val merged:Seq[Expression] = exp.attributes.map(att => att.tpe).zip(params).map(typeExp => {
       val tpe:domain.TypeRep = typeExp._1
@@ -90,8 +90,8 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator with Producer
     Java(s"${exp.name}${op.name.capitalize}").tpe()
   }
 
-  override def methodGenerator(exp: domain.Atomic)(op: domain.Operation): MethodDeclaration = {
-    val method = super.methodGenerator(exp)(op)
+  override def methodGenerator(exp: domain.Atomic, op: domain.Operation): MethodDeclaration = {
+    val method = super.methodGenerator(exp, op)
     method.setDefault(true)
     method.setType(
       op.returnType match {
@@ -112,7 +112,7 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator with Producer
 
   def generateInterface(exp: domain.Atomic, parents: Seq[Type], op:domain.Operation): CompilationUnit = {
     val name = interfaceName(exp, op)
-    val method: MethodDeclaration = methodGenerator(exp)(op)
+    val method: MethodDeclaration = methodGenerator(exp, op)
     val atts:Seq[MethodDeclaration] =
       exp.attributes.flatMap(att => Java(s"${typeConverter(att.tpe)} get${att.name.capitalize}();").methodDeclarations())
 

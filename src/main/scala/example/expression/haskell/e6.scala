@@ -40,7 +40,7 @@ trait e6 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
     }
   }
 
-  abstract override def logic(exp:Atomic)(op:Operation): Seq[Haskell] = {
+  abstract override def logic(exp:Atomic, op:Operation): Seq[Haskell] = {
     val atts = subExpressions(exp)
 
     // generate the actual body
@@ -61,10 +61,10 @@ trait e6 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
             result(Haskell(s" ${dispatch(atts(base.left), op, left2)} && ${dispatch(atts(base.right), op, right2)} "))
 
 
-          case _ => super.logic(exp)(op)
+          case _ => super.logic(exp, op)
         }
 
-      case _ => super.logic(exp)(op)
+      case _ => super.logic(exp, op)
     }
   }
 

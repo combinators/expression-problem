@@ -8,7 +8,6 @@ import example.expression.domain.{BaseDomain, ModelDomain}
 trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator with CPPBinaryMethod with StandardCPPBinaryMethod {
 
   val domain: BaseDomain with ModelDomain
-
   import domain._
 
   def getModel: domain.Model
@@ -101,9 +100,9 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
     * All results are immediately stored within a value_map_[] structure, indexed by
     * the expression e.
     */
-  def methodGenerator(exp:Atomic)(op:Operation): CPPMethod = {
+  def methodGenerator(exp:Atomic, op:Operation): CPPMethod = {
     val params = parameters(op)
-    val stmts = Seq(s"${logic(exp)(op).mkString("\n")}")
+    val stmts = Seq(s"${logic(exp, op).mkString("\n")}")
     new CPPMethod("void", s"Visit", s"(${exp.name}& e)", stmts)
   }
 
@@ -134,7 +133,7 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
     * Must handle BinaryMethod (Equals) and BinaryMethodBase (Astree) specially.
     */
   def operationGenerator(model:domain.Model, op:domain.Operation): CPPFile = {
-    val signatures:Seq[CPPMethod] = model.types.map(exp => methodGenerator(exp)(op))
+    val signatures:Seq[CPPMethod] = model.types.map(exp => methodGenerator(exp, op))
     val tpe:CPPType = typeConverter(op.returnType.get)
     val realType:String = op match {
       case po:ProducerOperation => "Exp *"

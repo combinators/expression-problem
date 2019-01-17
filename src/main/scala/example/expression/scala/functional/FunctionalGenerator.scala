@@ -128,11 +128,11 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
     * Operations are implemented as methods in the Base and sub-type classes.
     * Encapsulate with braces in case multiple statements
     */
-  def methodGenerator(exp:Atomic)(op:Operation): Stat = {
+  def methodGenerator(exp:Atomic, op:Operation): Stat = {
     val str = s"""
            |def visit${exp.name.capitalize}(${standardArgs(exp)}) : Unit = {
            |  result = {
-           |    ${logic(exp)(op).mkString("\n")}
+           |    ${logic(exp, op).mkString("\n")}
            |  }
            |}""".stripMargin
     Scala(str).statement
@@ -210,7 +210,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
         case _ => ""
       }
       // Data types that had existed earlier
-      val baseMembers = typesToGenerate.map(exp => methodGenerator(exp)(op))
+      val baseMembers = typesToGenerate.map(exp => methodGenerator(exp, op))
       Scala(s"""
                |trait ${op.name.capitalize} extends $extendsClause Visitor { self: visitor =>
                |  $binary
@@ -253,7 +253,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
   def generateBase(m:Model): CompilationUnit = {
 
     val ops = m.ops.map(op => {
-      val baseMembers = m.types.map(exp => methodGenerator(exp)(op))
+      val baseMembers = m.types.map(exp => methodGenerator(exp, op))
       Scala(s"""
            |trait ${op.name.capitalize} extends Visitor { self: visitor =>
            |  var result: ${typeConverter(op.returnType.get)} = _

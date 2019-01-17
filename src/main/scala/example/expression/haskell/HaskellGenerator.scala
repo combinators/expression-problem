@@ -1,17 +1,16 @@
 package example.expression.haskell     /*DI:LD:AI*/
 
 import java.io.File
-import java.nio.file.{Files, Path, Paths}
-import java.util.Scanner
+import java.nio.file.{Path, Paths}
 
-import example.expression.generator.LanguageIndependentGenerator
+import example.expression.generator.{LanguageIndependentGenerator, Producer}
 
 /**
   * Any Haskell EP approach can extend this Generator
   *
   * Perhaps consider an Expression Problem application domain based on Monoids
   */
-trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskellBinaryMethod with HaskellBinaryMethod with DependentDispatch {
+trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskellBinaryMethod with HaskellBinaryMethod with DependentDispatch with Producer {
 
   /** Specially required files are placed in this area. */
   val haskellResources:String = Seq("src", "main", "resources", "haskell-code").mkString(File.separator)
@@ -20,6 +19,7 @@ trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskell
   type Type = HaskellType
   type Expression = Haskell
   type Statement = Haskell
+  type InstanceExpression = Haskell
 
   /** Find the model which contains a given atomic inst. */
   def findModel (exp:domain.Atomic) : domain.Model = {
@@ -40,6 +40,11 @@ trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskell
   def result (expr:Expression) : Seq[Statement] = {
     Seq(expr)
   }
+
+  /**
+    * Haskell solutions require delegation to their respective traits
+    */
+  def inst(exp:domain.Atomic, params:InstanceExpression*): InstanceExpression
 
   /** Concatenate attributes by name in order */
   def standardArgs(exp:domain.Atomic, suffix:String = "") : Haskell = {

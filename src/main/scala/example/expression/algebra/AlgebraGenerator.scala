@@ -74,7 +74,7 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod with Standard
     *
     * Note: This capability is preliminary and not yet ready for use.
     */
-//  def inst(exp:domain.Atomic)(op:domain.Operation)(params:Expression*): Expression = {
+//  def inst(exp:domain.Atomic)(params:Expression*): Expression = {
 //    Java(exp.name + "(" + params.map(expr => expr.toString()).mkString(",") + ")").expression()
 //  }
 
@@ -155,7 +155,7 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod with Standard
     val methods = targetModel.types.flatMap(exp => {  // exp is either 'lit' or 'add'
 
       val subName = exp.name.toLowerCase   // to get proper etiquette for method names
-      val code:Seq[Statement] = logic(exp)(op)
+      val code:Seq[Statement] = logic(exp, op)
       val signatures = code.mkString("\n")
 
       // handle covariant typing locally

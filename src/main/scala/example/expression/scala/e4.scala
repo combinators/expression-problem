@@ -8,7 +8,7 @@ import scala.meta._
   *
   * Still Java-based, naturally and JUnit
   */
-trait e4 extends Evolution with ScalaGenerator with TestGenerator with OperationDependency with Producer with M0 with M1 with M2 with M3 with M4 {
+trait e4 extends Evolution with ScalaGenerator with TestGenerator with OperationDependency with M0 with M1 with M2 with M3 with M4 {
   self:e0 with e1 with e2 with e3 =>
   val domain:MathDomain
   import domain._
@@ -44,7 +44,7 @@ trait e4 extends Evolution with ScalaGenerator with TestGenerator with Operation
     }
   }
 
-  abstract override def logic(exp:Atomic)(op:Operation): Seq[Statement] = {
+  abstract override def logic(exp:Atomic, op:Operation): Seq[Statement] = {
     val subs:Map[String, Term] = subExpressions(exp).asInstanceOf[Map[String,Term]]
     val zero = Scala("0.0").expression
     val one = Scala("1.0").expression
@@ -56,63 +56,63 @@ trait e4 extends Evolution with ScalaGenerator with TestGenerator with Operation
       case Simplify =>
 
         exp match {
-          case Lit => Scala(s" ${inst(Lit)(op)(subs(litValue))}").statements
+          case Lit => Scala(s" ${inst(Lit, subs(litValue))}").statements
           case Add => Scala(s"""
                                |val leftVal = ${dependentDispatch(subs(domain.base.left), Eval)}
                                |val rightVal = ${dependentDispatch(subs(domain.base.right), Eval)}
                                |if ((leftVal == 0 && rightVal == 0) || (leftVal + rightVal == 0)) {
-                               |  ${result(inst(Lit)(op)(zero)).mkString("\n")}
+                               |  ${result(inst(Lit, zero)).mkString("\n")}
                                |} else if (leftVal == 0) {
                                |  ${result(dispatch(subs(domain.base.right), Simplify)).mkString("\n")}
                                |} else if (rightVal == 0) {
                                |  ${result(dispatch(subs(domain.base.left), Simplify)).mkString("\n")}
                                |} else {
-                               |  ${result(inst(Add)(op)(dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
+                               |  ${result(inst(Add, dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
                                |}""".stripMargin).statements
           case Sub => Scala(s"""
                               |if (${dependentDispatch(subs(domain.base.left), Eval)} == ${dependentDispatch(subs(domain.base.right), Eval)}) {
-                              |  ${result(inst(Lit)(op)(zero)).mkString("\n")}
+                              |  ${result(inst(Lit, zero)).mkString("\n")}
                               |} else {
-                              |  ${result(inst(Sub)(op)(dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
+                              |  ${result(inst(Sub, dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
                               |}
                               |""".stripMargin).statements
           case Mult => Scala(s"""
                                |val leftVal = ${dependentDispatch(subs(domain.base.left), Eval)}
                                |val rightVal = ${dependentDispatch(subs(domain.base.right), Eval)}
                                |if (leftVal == 0 || rightVal == 0) {
-                               |  ${result(inst(Lit)(op)(zero)).mkString("\n")}
+                               |  ${result(inst(Lit, zero)).mkString("\n")}
                                |} else if (leftVal == 1) {
                                |  ${result(dispatch(subs(domain.base.right), Simplify)).mkString("\n")}
                                |} else if (rightVal == 1) {
                                |  ${result(dispatch(subs(domain.base.left), Simplify)).mkString("\n")}
                                |} else {
-                               |   ${result(inst(Mult)(op)(dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
+                               |   ${result(inst(Mult, dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
                                |}
                                |""".stripMargin).statements
           case Divd => Scala(s"""
                                |val leftVal = ${dependentDispatch(subs(domain.base.left), Eval)}
                                |val rightVal = ${dependentDispatch(subs(domain.base.right), Eval)}
                                |if (leftVal == 0) {
-                               |   ${result(inst(Lit)(op)(zero)).mkString("\n")}
+                               |   ${result(inst(Lit, zero)).mkString("\n")}
                                |} else if (rightVal == 1) {
                                |   ${result(dispatch(subs(domain.base.left), Simplify)).mkString("\n")}
                                |} else if (leftVal == rightVal) {
-                               |   ${result(inst(Lit)(op)(one)).mkString("\n")}
+                               |   ${result(inst(Lit, one)).mkString("\n")}
                                |} else if (leftVal == -rightVal) {
-                               |   ${result(inst(Lit)(op)(negOne)).mkString("\n")}
+                               |   ${result(inst(Lit, negOne)).mkString("\n")}
                                |} else {
-                               |   ${result(inst(Divd)(op)(dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
+                               |   ${result(inst(Divd, dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
                                |}
                                |""".stripMargin).statements
             // TODO: Would love to have ability to simplify neg(neg(x)) to just be x. This requires a form
             // of inspection that might not be generalizable...
           case Neg => Scala(s"""
                               |if (${dependentDispatch(subs(domain.base.inner), Eval)} == 0) {
-                              |   ${result(inst(Lit)(op)(zero)).mkString("\n")}
+                              |   ${result(inst(Lit, zero)).mkString("\n")}
                               |} else {
-                              |   ${result(inst(Neg)(op)(dispatch(subs(domain.base.inner), Simplify))).mkString("\n")}
+                              |   ${result(inst(Neg, dispatch(subs(domain.base.inner), Simplify))).mkString("\n")}
                               |}""".stripMargin).statements
-          case _ => super.logic(exp)(op)
+          case _ => super.logic(exp, op)
         }
 
       case Collect =>
@@ -127,10 +127,10 @@ trait e4 extends Evolution with ScalaGenerator with TestGenerator with Operation
             }
           }
 
-          case _ => super.logic(exp)(op)
+          case _ => super.logic(exp, op)
         }
 
-      case _ => super.logic(exp)(op)
+      case _ => super.logic(exp, op)
     }
   }
 

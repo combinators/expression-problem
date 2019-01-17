@@ -76,12 +76,12 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod with StandardSca
   }
 
   /** Operations are implemented as methods in the Base and sub-type classes. */
-  def methodGenerator(exp:Atomic)(op:Operation): Stat = {
+  def methodGenerator(exp:Atomic, op:Operation): Stat = {
     val params = op.parameters.map(pair => pair._1 + ":" + typeConverter(pair._2)).mkString(",")
 
     val str:String = s"""|
              |def ${op.name}($params) : ${returnType(op)} = {
-                         |  ${logic(exp)(op).mkString("\n")}
+                         |  ${logic(exp, op).mkString("\n")}
                          |}""".stripMargin
     Scala(str).statement
   }
@@ -89,7 +89,7 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod with StandardSca
   /** Generate the full class for the given expression sub-type. */
   def generateExp(exp:Atomic, ops:Seq[Operation]) : ScalaWithPath = {
 
-      val methods = ops.map(methodGenerator(exp))
+      val methods = ops.map(op => methodGenerator(exp, op))
       val params = exp.attributes.map(att => s"${att.name}_ : ${typeConverter(att.tpe)}").mkString(",")
       val locals = exp.attributes.map(att => s"val ${att.name} = ${att.name}_")
 

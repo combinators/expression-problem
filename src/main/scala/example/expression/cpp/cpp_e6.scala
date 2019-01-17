@@ -29,22 +29,24 @@ trait cpp_e6 extends Evolution with CPPGenerator with CPPBinaryMethod with TestG
     }
   }
 
-  abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[CPPElement] = {
+  abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[CPPElement] = {
 
     // generate the actual body; since this is a binary method
     op match {
       case Equals =>
         val opn = domain.AsTree.name
         val expr_e = new CPPElement("e")
-        // result(Java(s" $binaryContext$opn().same(that.$opn())").expression[Expression]())
-        Seq(new CPPElement(
-          s"""
-             |Tree *tree1 = (new ${opn.capitalize}(${inBinaryContext(expr_e)}))->getValue();
-             |Tree *tree2 = (new ${opn.capitalize}(that))->getValue();
-             |${result(new CPPElement("tree1->same(tree2)")).mkString("\n")}
-           """.stripMargin))
 
-      case _ => super.logic(exp)(op)
+        // how it looks in java version
+        //result(Java(s" $binaryContext$opn().same(that.$opn())").expression[Expression]())
+
+        // oo ONLY
+        result(new CPPElement("astree()->same(that->astree())"))
+
+        // visitorTable and cppVisitor
+        //result(new CPPElement(s"(new ${opn.capitalize}(${inBinaryContext(expr_e)}))->getValue()->same((new ${opn.capitalize}(that))->getValue())"))
+
+      case _ => super.logic(exp, op)
     }
   }
 
@@ -60,7 +62,10 @@ trait cpp_e6 extends Evolution with CPPGenerator with CPPBinaryMethod with TestG
         case eb: EqualsBinaryMethodTestCase =>
           //val code = dependentDispatch(convert(eb.inst1), Equals, convert(eb.inst2))
           val code = binaryDispatch(rec_convert(eb.inst1), Equals, rec_convert(eb.inst2))
-          //val tree1 = actual(AsTree, ctc.inst1)
+
+          // CHECK_TRUE(sub(lit(1.0), lit(73.0))->equals(sub(lit(1.0), lit(73.0))));^M
+          // for oo only
+
           if (eb.result) {
             Seq(new CPPElement(s"CHECK_TRUE($code);"))
           } else {

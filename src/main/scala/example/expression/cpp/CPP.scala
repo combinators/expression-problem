@@ -5,15 +5,7 @@ import java.nio.file.{Path, Paths}
 import org.combinators.templating.persistable.Persistable
 
 /**
-  * Useful constructs for synthesis. Perhaps a poor-man's AST.
-  *  class $signature {
-  *  public:
-  *    $publicArea
-  *  private:
-  *    $privateArea
-  * };
-  *
-  * Note: name is likely part of $signature, but it is being pulled out so we can name the file after it.
+  * Base class of all C++ artifacts
   */
 class CPPBase {
   def indent (lines:Seq[Any]):String = {
@@ -34,7 +26,6 @@ class CPPElement (val stmt:String = "") extends CPPBase {
 class CPPType (val stmt:String = "") extends CPPBase {
   override def toString:String = stmt
 }
-
 
 /** Any CPP artifact that should be placed in a file. */
 abstract class CPPFile extends CPPBase {
@@ -151,6 +142,15 @@ final class CPPCode (val _name:String, val _body:Seq[CPPElement]) extends CPPFil
   }
 }
 
+/**
+  * Represents a C++ class, which has a public and private area, in addition to include files.
+  *  class signature {
+  *  public:
+  *    publicArea
+  *  private:
+  *    privateArea
+  * };
+  */
 final class CPPClass (val _name:String, _signature:String, val _publicArea:Seq[CPPElement], _privateArea:Seq[CPPElement]) extends CPPFile {
 
   val name:String = _name
@@ -191,13 +191,30 @@ final class CPPClass (val _name:String, _signature:String, val _publicArea:Seq[C
   }
 }
 
+/**
+  * Represents the declaration of a C++ method, suitable to be included within a header .h file.
+  */
+class CPPMethodDeclaration (val _retType:String, val _name:String, val _params:String) extends CPPElement {
 
+  val retType:String = _retType
+  val name:String = _name
+  val params:String = _params
+  var const:String = ""
+
+  def setConstant(): CPPMethodDeclaration = {
+    const = " const"
+    this
+  }
+
+  override def toString: String = {
+    val signature = s"$retType $name$params$const"
+    indent(Seq(s"$signature;"))
+  }
+}
 
 /**
-  * Useful constructs for synthesis. Perhaps a poor-man's AST.
-  *  $signature {
-  *     $body
-  *  }
+  * Represents the implementation of a C++ method, suitable to be included within a header .h file.
+  *
   */
 class CPPMethod (val _retType:String, val _name:String, val _params:String, val _body:Seq[String]) extends CPPElement {
 
@@ -212,16 +229,21 @@ class CPPMethod (val _retType:String, val _name:String, val _params:String, val 
   val name:String = _name
   val params:String = _params
   val body:Seq[String] = _body
+  var const:String = ""
+
+  def setConstant(): CPPMethod = {
+    const = " const"
+    this
+  }
 
   override def toString: String = {
-    val signature = s"$retType $name$params"
+    val signature = s"$retType $name$params$const"
     indent(Seq(s"$signature {") ++ body ++ Seq("}"))
   }
 }
 
 /**
-  * Useful constructs for synthesis. Perhaps a poor-man's AST.
-  *  $signature
+  * Represents a field for a C++ class
   */
 class CPPField (val _signature:String) extends CPPElement {
 

@@ -189,7 +189,7 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with VisitorJavaBinary
 
     val replacement:CompilationUnit =
        addMethods(makeClass("expression", s"${op.name.capitalize}$full", Seq(s"Visitor$fullVisitor<$opType>")),
-         model.last.pastDataTypes().map(exp => methodGenerator(exp)(op)))
+         model.last.pastDataTypes().map(exp => methodGenerator(exp, op)))
 
     val newType = replacement.getType(0)
     copyDeclarations(mainType, newType)

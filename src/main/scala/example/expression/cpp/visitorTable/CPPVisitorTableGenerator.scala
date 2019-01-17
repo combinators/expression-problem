@@ -94,9 +94,9 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
   }
 
   /** Operations are implement ala visitor. */
-  def methodGenerator(exp:Atomic)(op:Operation): CPPMethod = {
+  def methodGenerator(exp:Atomic, op:Operation): CPPMethod = {
     val params = parameters(op)
-    new CPPMethod("void", s"Visit", s"(const ${exp.name}* e)", logic(exp)(op).mkString("\n"))
+    new CPPMethod("void", s"Visit", s"(const ${exp.name}* e)", logic(exp, op).mkString("\n"))
   }
 
   /** Default header file needed for most classes. */
@@ -126,7 +126,7 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
     * Must handle BinaryMethod (Equals) and BinaryMethodBase (Astree) specially.
     */
   def operationGenerator(model:domain.Model, op:domain.Operation): CPPFile = {
-    val signatures:Seq[CPPMethod] = model.types.map(exp => methodGenerator(exp)(op))
+    val signatures:Seq[CPPMethod] = model.types.map(exp => methodGenerator(exp, op))
     val tpe:CPPType = typeConverter(op.returnType.get)
     val realType:String = op match {
       case po:ProducerOperation => "Exp *"

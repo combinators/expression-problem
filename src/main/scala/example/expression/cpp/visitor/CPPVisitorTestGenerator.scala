@@ -65,44 +65,9 @@ trait CPPVisitorTestGenerator extends CPPGenerator with TestGenerator {
     })
 
     val allOps = getModel.flatten().ops.map(op => s"""#include "${op.name.capitalize}.h" """)
-    var num: Int = 0
-    val allTests:Seq[CPPElement] = testGenerator.map(tests => {
-      num = num + 1
 
-      new CPPElement(
-        s"""
-           |TEST_GROUP(TestGroup$num)
-           |{
-           |};
-           |
-          |TEST(TestGroup$num, a$num)
-           |{
-           |   $tests
-           |}
-           |
-        """.stripMargin
-      )
-    })
-
-    val sa = new StandAlone("test_e0",
-      s"""
-         |${allTests.mkString("\n")}
-         |
-         |int main(int ac, char** av)
-         |{
-         |  MemoryLeakWarningPlugin::turnOffNewDeleteOverloads();
-         |  return CommandLineTestRunner::RunAllTests(ac, av);
-         |}""".stripMargin.split("\n")
-    )
-
-    sa.addHeader(Seq(
-      """#include "CppUTest/TestHarness.h" """,
-      """#include "CppUTest/SimpleString.h" """,
-      """#include "CppUTest/PlatformSpecificFunctions.h" """,
-      """#include "CppUTest/TestMemoryAllocator.h" """,
-      """#include "CppUTest/MemoryLeakDetector.h" """,
-      """#include "CppUTest/CommandLineTestRunner.h" """) ++ allOps ++ builders)
-
-    Seq(sa)
+    // add header files
+    super.generateSuite(pkg, model).map(file =>
+      file.addHeader(allOps).addHeader(builders))
   }
 }

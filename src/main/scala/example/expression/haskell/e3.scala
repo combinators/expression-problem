@@ -12,7 +12,7 @@ trait e3 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
   val domain:MathDomain
   import domain._
 
-   abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Haskell] = {
+   abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Haskell] = {
     val atts = subExpressions(exp)
     
     // generate the actual body
@@ -22,7 +22,7 @@ trait e3 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
           case Neg => result(Haskell(s""" "-" ++ ${dispatch(atts(base.inner), op)} """))
           case Mult => result(Haskell(s""" "(" ++ ${dispatch(atts(base.left), op)} ++ "*" ++ ${dispatch(atts(base.right), op)} ++ ")" """))
           case Divd => result(Haskell(s""" "(" ++ ${dispatch(atts(base.left), op)} ++ "/" ++ ${dispatch(atts(base.right), op)} ++ ")" """))
-          case _ => super.logic(exp)(op)
+          case _ => super.logic(exp, op)
         }
       }
 
@@ -31,10 +31,10 @@ trait e3 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
           case Neg => result(new Haskell(s"(- ${dispatch(atts(base.inner), op)})"))
           case Mult => result(new Haskell(s"${dispatch(atts(base.left), op)} * ${dispatch(atts(base.right), op)}"))
           case Divd => result(new Haskell(s"${dispatch(atts(base.left), op)} / ${dispatch(atts(base.right), op)}"))
-          case _ => super.logic(exp)(op)
+          case _ => super.logic(exp, op)
         }
       }
-      case _ => super.logic(exp)(op)
+      case _ => super.logic(exp, op)
     }
   }
 

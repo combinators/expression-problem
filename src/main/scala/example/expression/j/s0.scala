@@ -25,7 +25,7 @@ trait s0 extends Evolution with JavaGenerator with JUnitTestGenerator with S0 {
   }
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
-  abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {
+  abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
     val subs:Map[String,Expression] = subExpressions(exp).asInstanceOf[Map[String,Expression]]
 
     // generate the actual body
@@ -43,13 +43,11 @@ trait s0 extends Evolution with JavaGenerator with JUnitTestGenerator with S0 {
               s"""
                  |// first adjust
                  |java.awt.geom.Point2D.Double t = new java.awt.geom.Point2D.Double(point.x - ${subs(trans)}.x, point.y - ${subs(trans)}.y);
-                 | ${result(dispatch(subs(shape), ContainsPt, Java("t").expression[Expression]()))}
-                 |
-               """.stripMargin).statements()
+                 |${result(dispatch(subs(shape), ContainsPt, Java("t").expression[Expression]()))}""".stripMargin).statements()
 
         }
 
-      case _ => super.logic(exp)(op)
+      case _ => super.logic(exp, op)
     }
   }
 

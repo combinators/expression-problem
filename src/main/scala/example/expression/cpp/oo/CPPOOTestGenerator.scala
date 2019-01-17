@@ -20,37 +20,57 @@ trait CPPOOTestGenerator extends CPPGenerator with TestGenerator {
     */
   def actual(op:Operation, inst:AtomicInst, params:CPPElement*):CPPElement = {
     val preceding = rec_convert(inst)
-    val varName:String = variables(inst)
-    dispatch(new CPPElement(varName), op, params: _*)
+    //dispatch(preceding, op, params: _*)
+    new CPPElement(preceding.toString + "->" + op.name.toLowerCase() + "()")
   }
 
   /** Convert a test instance into a C++ Expression for instantiating that instance. */
   def rec_convert(inst: AtomicInst): CPPElement = {
     val name = inst.e.name
+    vars(inst)   // cause the creation of a mapping to this instance
     id = id + 1
     inst match {
       case ui: UnaryInst =>
         val inner = rec_convert(ui.inner).toString
-        new CPPElement(s"$inner\n$name ${vars(inst)} = $name(&${vars(ui.inner)});")
+        new CPPElement(s"${ui.e.name.toLowerCase()}($inner)")
 
-      // Add  add3 = Add(&lit1, &lit2);
       case bi: BinaryInst =>
         val left = rec_convert(bi.left).toString
         val right = rec_convert(bi.right).toString
-        new CPPElement(s"$left\n$right\n$name ${vars(inst)} = $name(&${vars(bi.left)}, &${vars(bi.right)});")
+        new CPPElement(s"${bi.e.name.toLowerCase()}($left, $right)")
 
       //  double val1 = 1.0;
       //  Lit  lit1 = Lit(&val1);
-      case exp: AtomicInst =>
-        new CPPElement(
-          s"""
-             |double val${vars(inst)} = ${exp.i.get};
-             |$name ${vars(inst)} = $name(&val${vars(inst)});
-         """.stripMargin)
-
+      case exp: AtomicInst => new CPPElement(s"${exp.e.name.toLowerCase()}(${exp.i.get})")
       case _ => new CPPElement(s""" "unknown $name" """)
     }
   }
 
+  /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
+  override def generateSuite(pkg: Option[String], model: Option[Model] = None): Seq[CPPFile] = {
+
+    val builders:Seq[String] = getModel.flatten().types.map(exp => {
+      val list = exp.attributes
+        .map(att => {
+
+          val tpe = att.tpe match {
+            case  domain.baseTypeRep => typeConverter(att.tpe)
+            case _ => typeConverter(att.tpe)
+          }
+
+          new CPPElement(s"$tpe ${att.name}")
+        }).mkString(",")
+      val params = exp.attributes
+        .map(att => new CPPElement(att.name)).mkString(",")
+
+      s"${exp.name.capitalize} *${exp.name.toLowerCase()}($list) { return new ${exp.name.capitalize}($params); }"
+    })
+
+    val allTypes = getModel.flatten().types.map(exp => s"""#include "${exp.name.capitalize}.h" """)
+
+    // add header files
+    super.generateSuite(pkg, model).map(file =>
+      file.addHeader(allTypes).addHeader(builders))
+  }
 
 }

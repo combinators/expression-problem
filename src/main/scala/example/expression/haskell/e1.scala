@@ -12,7 +12,7 @@ trait e1 extends Evolution with HaskellGenerator with HUnitTestGenerator with M1
   val domain:MathDomain
   import domain._
 
-  abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Haskell] = {
+  abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Haskell] = {
     val atts = subExpressions(exp)
     // generate the actual body
     op match {
@@ -20,10 +20,10 @@ trait e1 extends Evolution with HaskellGenerator with HUnitTestGenerator with M1
         exp match {
 
           case Sub => result(new Haskell(s"""${dispatch(atts(base.left), op)} - ${dispatch(atts(base.right), op)}"""))
-          case _ => super.logic(exp)(op)
+          case _ => super.logic(exp, op)
         }
 
-      case _ => super.logic(exp)(op)
+      case _ => super.logic(exp, op)
     }
   }
 

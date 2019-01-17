@@ -9,11 +9,11 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-trait s1 extends JavaGenerator with JUnitTestGenerator with Producer with S1 { self:s0 =>
+trait s1 extends JavaGenerator with JUnitTestGenerator with S1 { self:s0 =>
   val domain:ShapeDomain
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
-  abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {
+  abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
     val subs:Map[String,Expression] = subExpressions(exp)
 
     // generate the actual body
@@ -24,14 +24,14 @@ trait s1 extends JavaGenerator with JUnitTestGenerator with Producer with S1 { s
             Java(
               s"""
                  |double shrunkRadius = ${subs(radius)}*pct;
-                 return ${inst(Circle)(op)(Java("shrunkRadius").expression[Expression]())};
+                 return ${inst(Circle, Java("shrunkRadius").expression[Expression]())};
                """.stripMargin).statements()
 
           case Square => {
             val str =
               s"""
                  |double shrunkSide = ${subs(side)}*pct;
-                 |return ${inst(Square)(op)(Java("shrunkSide").expression[Expression]())};
+                 |return ${inst(Square, Java("shrunkSide").expression[Expression]())};
                """.stripMargin
             println(str)
             Java(str).statements()
@@ -41,13 +41,13 @@ trait s1 extends JavaGenerator with JUnitTestGenerator with Producer with S1 { s
             val disp = dispatch(subs(shape), op, expression("pct"))
             Java(
               s"""
-                 |return ${inst(Translate)(op)(subs(trans),disp)};
+                 |return ${inst(Translate, subs(trans),disp)};
                  |
                """.stripMargin).statements()
           }
         }
 
-      case _ => super.logic(exp)(op)
+      case _ => super.logic(exp, op)
     }
   }
 

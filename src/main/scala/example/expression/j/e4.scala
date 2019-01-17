@@ -9,7 +9,7 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with OperationDependency with Producer with M0 with M1 with M2 with M3 with M4 {
+trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with OperationDependency with M0 with M1 with M2 with M3 with M4 {
   self:e0 with e1 with e2 with e3 =>
   val domain:MathDomain
 
@@ -55,7 +55,7 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
     }
   }
 
-  abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {
+  abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
     val subs:Map[String,Expression] = subExpressions(exp).asInstanceOf[Map[String,Expression]]
     val zero = Java("0.0").expression[Expression]()
     val one = Java("1.0").expression[Expression]()
@@ -67,51 +67,51 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
       case Simplify =>
 
         exp match {
-          case Lit => result(Java(s" ${inst(Lit)(op)(subs(litValue))}").expression[Expression]())
+          case Lit => result(Java(s" ${inst(Lit, subs(litValue))}").expression[Expression]())
           case Add => Java(s"""|double leftVal = ${dependentDispatch(subs(domain.base.left), Eval)};
                                |double rightVal = ${dependentDispatch(subs(domain.base.right), Eval)};
                                |if ((leftVal == 0 && rightVal == 0) || (leftVal + rightVal == 0)) {
-                               |   ${result(inst(Lit)(op)(zero)).mkString("\n")}
+                               |   ${result(inst(Lit, zero)).mkString("\n")}
                                |} else if (leftVal == 0) {
                                |   ${result(dispatch(subs(domain.base.right), Simplify)).mkString("\n")}
                                |} else if (rightVal == 0) {
                                |   ${result(dispatch(subs(domain.base.left), Simplify)).mkString("\n")}
                                |} else {
-                               |   ${result(inst(Add)(op)(dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
+                               |   ${result(inst(Add, dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
                                |}""".stripMargin).statements()
           case Sub => Java(s"""
                               |if (${dependentDispatch(subs(domain.base.left), Eval)} == ${dependentDispatch(subs(domain.base.right), Eval)}) {
-                              |   ${result(inst(Lit)(op)(zero)).mkString("\n")}
+                              |   ${result(inst(Lit, zero)).mkString("\n")}
                               |} else {
-                              |   ${result(inst(Sub)(op)(dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
+                              |   ${result(inst(Sub, dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
                               |}
                               |""".stripMargin).statements()
           case Mult => Java(s"""
                                |double leftVal = ${dependentDispatch(subs(domain.base.left), Eval)};
                                |double rightVal = ${dependentDispatch(subs(domain.base.right), Eval)};
                                |if (leftVal == 0 || rightVal == 0) {
-                               |   ${result(inst(Lit)(op)(zero)).mkString("\n")}
+                               |   ${result(inst(Lit, zero)).mkString("\n")}
                                |} else if (leftVal == 1) {
                                |   ${result(dispatch(subs(domain.base.right), Simplify)).mkString("\n")}
                                |} else if (rightVal == 1) {
                                |   ${result(dispatch(subs(domain.base.left), Simplify)).mkString("\n")}
                                |} else {
-                               |   ${result(inst(Mult)(op)(dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
+                               |   ${result(inst(Mult, dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
                                |}
                                |""".stripMargin).statements()
           case Divd => Java(s"""
                                |double leftVal = ${dependentDispatch(subs(domain.base.left), Eval)};
                                |double rightVal = ${dependentDispatch(subs(domain.base.right), Eval)};
                                |if (leftVal == 0) {
-                               |   ${result(inst(Lit)(op)(zero)).mkString("\n")}
+                               |   ${result(inst(Lit, zero)).mkString("\n")}
                                |} else if (rightVal == 1) {
                                |   ${result(dispatch(subs(domain.base.left), Simplify)).mkString("\n")}
                                |} else if (leftVal == rightVal) {
-                               |   ${result(inst(Lit)(op)(one)).mkString("\n")}
+                               |   ${result(inst(Lit, one)).mkString("\n")}
                                |} else if (leftVal == -rightVal) {
-                               |   ${result(inst(Lit)(op)(negOne)).mkString("\n")}
+                               |   ${result(inst(Lit, negOne)).mkString("\n")}
                                |} else {
-                               |   ${result(inst(Divd)(op)(dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
+                               |   ${result(inst(Divd, dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
                                |}
                                |""".stripMargin).statements()
             // TODO: Would love to have ability to simplify neg(neg(x)) to just be x. This requires a form
@@ -119,11 +119,11 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
           case Neg =>
             Java(s"""
                     |if (${dependentDispatch(subs(domain.base.inner), Eval)} == 0) {
-                    |   ${result(inst(Lit)(op)(zero)).mkString("\n")}
+                    |   ${result(inst(Lit, zero)).mkString("\n")}
                     |} else {
-                    |   ${result(inst(Neg)(op)(dispatch(subs(domain.base.inner), Simplify))).mkString("\n")}
+                    |   ${result(inst(Neg, dispatch(subs(domain.base.inner), Simplify))).mkString("\n")}
                     |}""".stripMargin).statements()
-          case _ => super.logic(exp)(op)
+          case _ => super.logic(exp, op)
         }
 
       case Collect =>
@@ -147,10 +147,10 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
                 |$returnList
                 |""".stripMargin).statements()
 
-          case _ => super.logic(exp)(op)
+          case _ => super.logic(exp, op)
         }
 
-      case _ => super.logic(exp)(op)
+      case _ => super.logic(exp, op)
     }
   }
 

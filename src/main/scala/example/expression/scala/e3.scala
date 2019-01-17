@@ -12,7 +12,7 @@ trait e3 extends Evolution with ScalaGenerator with TestGenerator with M0 with M
   self:e0 with e1 with e2 =>
   val domain:MathDomain
 
-   abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {
+   abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
     val subs = subExpressions(exp)
     
     // generate the actual body
@@ -22,7 +22,7 @@ trait e3 extends Evolution with ScalaGenerator with TestGenerator with M0 with M
           case Neg => result(Scala(s""" "-" + ${dispatch(subs(domain.base.inner), PrettyP)} """).expression)
           case Mult => result(Scala(s""" "(" + ${dispatch(subs(domain.base.left), PrettyP)} + "*" + ${dispatch(subs(domain.base.right), PrettyP)}  + ")" """).expression)
           case Divd => result(Scala(s""" "(" + ${dispatch(subs(domain.base.left), PrettyP)}  + "/" + ${dispatch(subs(domain.base.right), PrettyP)}  + ")" """).expression)
-          case _ => super.logic(exp)(op)
+          case _ => super.logic(exp, op)
         }
       }
 
@@ -31,10 +31,10 @@ trait e3 extends Evolution with ScalaGenerator with TestGenerator with M0 with M
           case Neg => result(Scala(s""" - ${dispatch(subs(domain.base.inner), Eval)} """).expression)
           case Mult => result(Scala(s""" ${dispatch(subs(domain.base.left), Eval)} * ${dispatch(subs(domain.base.right), Eval)}""").expression)
           case Divd => result(Scala(s""" ${dispatch(subs(domain.base.left), Eval)} / ${dispatch(subs(domain.base.right), Eval)}""").expression)
-          case _ => super.logic(exp)(op)
+          case _ => super.logic(exp, op)
         }
       }
-      case _ => super.logic(exp)(op)
+      case _ => super.logic(exp, op)
     }
   }
 

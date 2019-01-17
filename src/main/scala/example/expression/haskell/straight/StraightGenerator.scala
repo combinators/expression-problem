@@ -49,7 +49,7 @@ trait StraightGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
           }
         }).mkString("")
 
-        s"""$name (${exp.name.capitalize} ${standardArgs(exp).getCode}) $opsParam = ${logic(exp)(op).mkString("\n")}"""
+        s"""$name (${exp.name.capitalize} ${standardArgs(exp).getCode}) $opsParam = ${logic(exp, op).mkString("\n")}"""
      })
 
       // handle default case as needed
@@ -86,5 +86,13 @@ trait StraightGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
     */
   def subExpressions(exp:domain.Atomic) : Map[String, Haskell] = {
     exp.attributes.map(att => att.name -> Haskell(s"${att.name}")).toMap
+  }
+
+  /**
+    * For producer operations, there is a need to instantiate objects, and one would use this
+    * method (with specific parameters) to carry this out.
+    */
+  override def inst(exp:domain.Atomic, params:Haskell*): Haskell = {
+    Haskell(exp.name.capitalize + " " + params.map(h => h.getCode).mkString(" "))
   }
 }

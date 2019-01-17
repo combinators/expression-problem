@@ -73,13 +73,13 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod with Standa
   }
 
   /** Operations are implemented as methods in the Base and sub-type classes. */
-  def methodGenerator(exp:Atomic)(op:Operation): Stat = {
+  def methodGenerator(exp:Atomic, op:Operation): Stat = {
     val params = op.parameters.map(pair => {
       s"${pair._1} : ${typeConverter(pair._2)}"
     }).mkString(",")
     val str:String = s"""|
              |def ${op.name}($params) : ${returnType(op)} = {
-                         |  ${logic(exp)(op).mkString("\n")}
+                         |  ${logic(exp, op).mkString("\n")}
                          |}""".stripMargin
     Scala(str).statement
   }
@@ -90,7 +90,7 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod with Standa
     val prior = model.last.name.capitalize
 
     val classes:Seq[scala.meta.Stat] = model.types.map(exp => {
-      val methods = model.pastOperations().map(methodGenerator(exp))
+      val methods = model.pastOperations().map(op => methodGenerator(exp, op))
       val params = exp.attributes.map(att => s"${att.name}_ : ${typeConverter(att.tpe)}").mkString(",")
       val locals = exp.attributes.map(att => s"val ${att.name} = ${att.name}_")
 
@@ -124,7 +124,7 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod with Standa
 
       Scala(narrow).statements ++
       model.pastDataTypes().map(exp => {
-        val methods = model.ops.map(methodGenerator(exp))
+        val methods = model.ops.map(op => methodGenerator(exp, op))
         val params = exp.attributes.map(att => s"${att.name}_ : ${typeConverter(att.tpe)}").mkString(",")
         val args = exp.attributes.map(att => att.name + "_").mkString(",")
         val locals = exp.attributes.map(att => s"override val ${att.name} = ${att.name}_")
@@ -157,7 +157,7 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod with Standa
     // hack: initial op has no parameters...
     val initialTypes = baseModel.types.map(exp => {
       val initialOpsLogic = baseModel.ops.map(op => {
-        s"def ${op.name.toLowerCase()}() = " + logic(exp)(op).mkString("\n")
+        s"def ${op.name.toLowerCase()}() = " + logic(exp, op).mkString("\n")
       })
 
       // yes, scala requires a space between _ and :

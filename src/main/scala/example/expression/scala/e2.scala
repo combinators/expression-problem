@@ -27,7 +27,7 @@ trait e2 extends Evolution with ScalaGenerator with TestGenerator with M2 {
     }
   }
 
-  abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {
+  abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
     val subs = subExpressions(exp)
 
     // generate the actual body
@@ -37,10 +37,10 @@ trait e2 extends Evolution with ScalaGenerator with TestGenerator with M2 {
           case Lit => result(Scala(s""" "" + ${subs(litValue)} + "" """).expression)
           case Add => result(Scala(s""" "(" + ${dispatch(subs(domain.base.left), PrettyP)} + "+" + ${dispatch(subs(domain.base.right), PrettyP)}+ ")" """).expression)
           case Sub => result(Scala(s""" "(" + ${dispatch(subs(domain.base.left), PrettyP)} + "-" + ${dispatch(subs(domain.base.right), PrettyP)} + ")" """).expression)
-          case _ => super.logic(exp)(op)
+          case _ => super.logic(exp, op)
         }
 
-      case _ => super.logic(exp)(op)
+      case _ => super.logic(exp, op)
     }
   }
 

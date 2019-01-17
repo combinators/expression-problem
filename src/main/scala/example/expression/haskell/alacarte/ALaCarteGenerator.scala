@@ -1,13 +1,11 @@
-package example.expression.haskell.alacarte
-
-/*DI:LD:AD*/
+package example.expression.haskell.alacarte    /*DI:LD:AD*/
 
 import java.nio.file.Paths
 
 import example.expression.domain.{BaseDomain, ModelDomain}
 import example.expression.haskell._
 
-trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMethod with HaskellBinaryMethod {
+trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMethod with HaskellBinaryMethod with ALaCarteProducer {
   val domain:BaseDomain with ModelDomain
   import domain._
 
@@ -102,7 +100,7 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
     val name = op.name.capitalize
     val imports = m.types.map(tpe => Haskell(s"import ${tpe.name}")).mkString("\n")
     val instances:Seq[Haskell] = m.types.map(exp => {
-      val code = logic(exp)(op).mkString("\n")
+      val code = logic(exp, op).mkString("\n")
       Haskell(s""" |instance $name ${exp.toString} where
                    |  ${op.name}OneLevel (${exp.toString} ${standardArgs(exp).getCode}) = $code""".stripMargin)
     })

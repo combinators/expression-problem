@@ -36,7 +36,7 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
     Java(s"${treeExp1.toString}.same(${treeExp2.toString})").expression[Expression]()
   }
 
-  abstract override def logic(exp:domain.Atomic)(op:domain.Operation): Seq[Statement] = {
+  abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
     // generate the actual body
     op match {
       // Simplify only works for solutions that instantiate expression instances. As a binary
@@ -59,7 +59,7 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
           }
       }
 
-      case _ => super.logic(exp)(op)
+      case _ => super.logic(exp, op)
     }
   }
 

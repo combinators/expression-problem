@@ -62,8 +62,10 @@ trait ModelDomain extends BaseDomain {
 
     /** Determine if operation is supported by this model or any of its antecedents. */
     def supports (op:Operation) : Boolean = {
-      if (isEmpty || !ops.contains(op)) {
+      if (isEmpty) {
         false
+      } else if (ops.contains(op)) {
+        true
       } else {
         last.supports(op)
       }

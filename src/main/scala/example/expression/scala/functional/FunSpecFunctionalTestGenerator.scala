@@ -19,7 +19,7 @@ trait FunSpecFunctionalTestGenerator extends FunSpecTestGenerator {
       ""
     }
     val withClause = model.get.inChronologicalOrder.map(m => s"with ${m.name.capitalize}").mkString(" ")
-    val allTests = testGenerator
+    val allTests = testGenerator ++ performanceMethod
 
     val helpers:Seq[String] = model.get.flatten().ops.map(op => {
       if (op.parameters.isEmpty) {

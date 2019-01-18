@@ -25,22 +25,19 @@ trait cpp_e5 extends Evolution with CPPGenerator with TestGenerator with M0 with
 
     // generate the actual body
     op match {
-      case domain.AsTree => {
+      case domain.AsTree =>
         val atts = subExpressions(exp)
 
-        exp match {   // was $litValue
-          case Lit => // ${valueOf(atts(litValue))}
-            //val attParams = atts.map(att => "e.get" + att._2.toString.capitalize + "()").mkString(",")
+        exp match {
+          case Lit =>
             val attParams = atts.map(att => valueOf(atts(att._2.toString))).mkString(",")
             result(new CPPElement(s""" new Leaf( $attParams) """))
 
           case Add|Sub|Mult|Divd|Neg =>
-            //val attParams = atts.map(att => "e.get" + att._2.toString.capitalize + "()->astree()").mkString(",")
             val attParams = atts.map(att => new CPPElement(s"${valueOf(atts(att._2.toString))}->astree()")).mkString(",")
             val vec1 = new CPPElement(s"std::vector<Tree *> vec_${exp.name} = { $attParams };")
-            Seq(vec1) ++ result(new CPPElement(s""" new Node(vec_${exp.name}, DefinedSubtypes::${exp.name.capitalize}Subtype) """))
+            Seq(vec1) ++ result(new CPPElement(s""" new Node(vec_${exp.name}, ${identify(exp, Identifier)}) """))
         }
-      }
 
       case _ => super.logic(exp, op)
     }
@@ -56,8 +53,6 @@ trait cpp_e5 extends Evolution with CPPGenerator with TestGenerator with M0 with
 
       test match {
         case ctc: SameTestCase =>
-          //val tree1 = dependentDispatch(convert(ctc.inst1), AsTree)  // was just dispatch
-          //val tree2 = dependentDispatch(convert(ctc.inst2), AsTree)
           val tree1 = actual(AsTree, ctc.inst1)
           val tree2 = actual(AsTree, ctc.inst2)
 

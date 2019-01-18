@@ -28,8 +28,25 @@ trait M6 extends Evolution {
 
   val m6_s1 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(73.0))
   val m6_s2 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(73.0))
+  val m6_s3 = new BinaryInst(Add, new LitInst(5.0), new LitInst(3.0))
+
+  val m6_m1 = new domain.BinaryInst(Mult, new domain.BinaryInst (Divd, new LitInst(5.0),  new LitInst(2.0)), new LitInst(4.0))
+  val m6_m2 = new domain.BinaryInst(Mult, new domain.BinaryInst (Divd, new LitInst(5.0),  new LitInst(2.0)), new LitInst(3.0))
+  val m6_m3 = new domain.UnaryInst(Neg, m6_m1)
+
+  val m6_d3 = new BinaryInst(Divd, new LitInst(6.0), new LitInst(2.0))
+  val m6_d4 = new BinaryInst(Divd, new LitInst(8.0), new LitInst(2.0))
 
   def M6_tests:Seq[TestCase] = Seq(
     EqualsBinaryMethodTestCase(m6_s2, m6_s1, result=true),  // parameter to operation
+    EqualsBinaryMethodTestCase(m6_m1, m6_m2, result=false),  // parameter to operation
+    EqualsBinaryMethodTestCase(m6_m1, m6_m1, result=true),  // parameter to operation
+
+    EqualsBinaryMethodTestCase(m6_m3, m6_m3, result=true),  // parameter to operation
+    EqualsBinaryMethodTestCase(m6_m1, m6_m3, result=false),  // parameter to operation
+    EqualsBinaryMethodTestCase(m6_d3, m6_d4, result=false),  // parameter to operation
+    EqualsBinaryMethodTestCase(m6_d3, m6_d3, result=true),  // parameter to operation
+    EqualsBinaryMethodTestCase(m6_s3, m6_s3, result=true),  // parameter to operation
+    EqualsBinaryMethodTestCase(m6_s3, m6_m2, result=false),  // parameter to operation
   )
 }

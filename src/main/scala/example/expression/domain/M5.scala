@@ -17,6 +17,14 @@ trait M5 extends Evolution {
   val m5_s2 = new BinaryInst(Add, new LitInst(1.0), new LitInst(976.0))
   val m5_s3 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(976.0))
 
+  val m5_all = new BinaryInst(Sub,
+    new UnaryInst(Neg, new LitInst(2.0)),
+    new BinaryInst(Mult,
+      new BinaryInst(Sub, new LitInst(1.0), new LitInst(976.0)),
+      new BinaryInst(Add,
+        new BinaryInst(Mult, new LitInst(1.0), new LitInst(976.0)),
+        new BinaryInst(Divd,  new LitInst(1.0), new LitInst(3.0)))))
+
   /**
     * Special test case for same queries.
     *
@@ -27,6 +35,7 @@ trait M5 extends Evolution {
 
   def M5_tests:Seq[TestCase] = Seq(
     SameTestCase(m5_s1, m5_s2, result=false),
-    SameTestCase(m5_s1, m5_s3, result=true)
+    SameTestCase(m5_s1, m5_s3, result=true),
+    SameTestCase(m5_all, m5_all, result=true)
   )
 }

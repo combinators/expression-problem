@@ -9,7 +9,7 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with OperationDependency with M0 with  M5 {
+trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with OperationDependency with M0 with M5 {
   self: e0 with e1 with e2 with e3 with e4 =>
   val domain:MathDomain
   import domain._
@@ -43,11 +43,6 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
       case domain.AsTree => {
         val atts = subExpressions(exp)
 
-        // TODO: replace hard-coded DefinedSubTypes with dependent operation getSubTypeIdentifier and dispatch accordingly.
-
-        // different strategies have different means of accessing attributes, either directly or via
-        // getXXX methods. This logic method must defer that knowledge to later.
-        // "this" is only valid expression when datatype as class
         exp match {   // was $litValue     ;
           case Lit =>   // ${exp.hashCode()}
             val attParams = atts.map(att => att._2.toString).mkString(",")

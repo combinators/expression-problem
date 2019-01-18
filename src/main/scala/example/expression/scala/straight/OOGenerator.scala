@@ -56,7 +56,7 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod with StandardSca
     * In this straight-oo solution, 'this' is always the context and the 'exp' parameter
     * can be ignored.
     */
-  override def delegateFixMe(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
+  override def delegateFixMe(expDelete:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
     val opargs = params.mkString(",")
     val term = Term.Name(op.name.toLowerCase)   // should be able to be ..$params
     Scala(s"this.${op.name.toLowerCase}()").expression

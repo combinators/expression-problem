@@ -43,9 +43,8 @@ trait CPPGenerator extends LanguageIndependentGenerator with DependentDispatch {
     new CPPElement("CppReplaceMe")
   }
 
-  /** For Functional Generator, same behavior as delegate. */
+  /** For C++, resort to generated enums */
   def identify(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
-    delegateFixMe(exp, op, params : _*)
+    new CPPElement(s"DefinedSubtypes::${exp.name.capitalize}Subtype")
   }
-
 }

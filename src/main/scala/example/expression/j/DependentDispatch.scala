@@ -28,6 +28,4 @@ trait DependentDispatch {
   def dependentDispatch(expr:Expression, op:domain.Operation, params:Expression*) : Expression = {
     dispatch(expr, op, params: _*)
   }
-
-
 }

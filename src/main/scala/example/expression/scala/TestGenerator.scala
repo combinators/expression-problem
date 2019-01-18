@@ -8,7 +8,18 @@ trait TestGenerator extends ScalaGenerator {
   val domain: BaseDomain with ModelDomain
   import domain._
 
-  /** Takes extra parameters and expands them. */
+  /** Type to use when referring to specific instance. */
+  def exprDefine(exp:AtomicInst) : Type = {
+    scala.meta.Type.Name(exp.e.name)
+  }
+
+  /** Used when one already has code fragments bound to variables, which are to be used for left and right. */
+  def convertRecursive(inst: Binary, left:String, right:String): Expression = {
+    val name = inst.name
+    Scala(s"new $name($left, $right)").expression
+  }
+
+   /** Takes extra parameters and expands them. */
   def expand(tpe:TypeRep, value:Any) : Term = {
     tpe match {
       case domain.baseTypeRep => convert(value.asInstanceOf[AtomicInst])
@@ -67,6 +78,9 @@ trait TestGenerator extends ScalaGenerator {
 
   /** Return sample test cases as methods. */
   def testGenerator: Seq[Stat] = Seq.empty
+
+  /** Performance tests. */
+  def performanceMethod: Seq[Stat] = Seq.empty
 
   /** Return MethodDeclaration associated with given test cases. */
   def testMethod(tests:Seq[TestCase]) : Stat = {

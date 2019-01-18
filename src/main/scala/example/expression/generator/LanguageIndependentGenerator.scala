@@ -98,8 +98,7 @@ trait LanguageIndependentGenerator {
     *
     * In any event, each approach determines how to process the result. It could be handled in
     * language-specific manner and then overridden as needed by the EP approach.
-    * @param expr
-    * @return
+    * @param expr   Expression that represents the result of a log(exp, op).
     */
   def result (expr:Expression) : Seq[Statement]
 
@@ -129,7 +128,6 @@ trait LanguageIndependentGenerator {
     * by the implementation
     *
     * Should have expr:Expression as context as minimum, rather than just top-level entry
-    * Used to have exp:domain.Atomic as 1st parameter.
     */
   def delegateFixMe(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression
 

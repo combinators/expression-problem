@@ -70,7 +70,11 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with VisitorJavaBinary
     delegateFixMe(exp, op, params : _*)
   }
 
-  /** Add virtual type generator. Context is either "" for top level operation, or the most recent one. */
+  /**
+    * Add virtual type generator. Context is either "" for top level operation, or the most recent one.
+    *
+    * Defect found: Must be sure to instantiate the most recent context, hence the suffix context.
+    */
   def addVirtualConstructorSubtype(mainType:TypeDeclaration[_], op:domain.Operation, context:String) : Unit = {
     val virtualConstructor = Java(
       s"""|${op.name.capitalize} make${op.name.capitalize} (${parameters(op)}) {
@@ -194,9 +198,20 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with VisitorJavaBinary
     val newType = replacement.getType(0)
     copyDeclarations(mainType, newType)
 
-    // dependent operations here
+    // dependent operations here; must be sure that the context for dependent operations
+    // is based on the actual operation itself (and not just full).
     addVirtualConstructorSubtype(newType, op, full)
-    dependency(op).foreach(op => addVirtualConstructorSubtype(newType, op, full))
+    dependency(op).foreach(op => {
+      val opFull = if (model.ops.contains(op) || model.types.nonEmpty) {
+        modelTypes(model)
+      } else {
+        // must go back until we get a type
+        modelTypes(model.lastModelWithDataTypes())
+      }
+      //val definingModel = model.findOperation(op)   // ALWAYS START MAXIMUM
+      //val opFull = modelTypes(model)
+      addVirtualConstructorSubtype(newType, op, opFull)
+    })
 
     replacement
   }

@@ -10,6 +10,7 @@ trait FunSpecOOTestGenerator extends FunSpecTestGenerator {
   import domain._
 
 
+
   // should be able to use scala meta transformations, since only adding with clauses
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
   override def generateSuite(pkg: Option[String], model: Option[Model] = None): Seq[ScalaWithPath] = {
@@ -19,7 +20,7 @@ trait FunSpecOOTestGenerator extends FunSpecTestGenerator {
       ""
     }
 
-    val allTests = testGenerator
+    val allTests = testGenerator ++ performanceMethod
 
     var num: Int = 0
     val files: Seq[ScalaWithPath] = allTests.map(md => {

@@ -53,7 +53,7 @@ trait e6 extends Evolution with ScalaGenerator with TestGenerator with BinaryMet
     // EXTRACT all EqualsBinaryMethodTestCase ones and handle here
     var skip:Seq[domain.TestCase] = Seq.empty
 
-    val stmts:Seq[Statement] = tests.zipWithIndex.flatMap(pair => {
+    val stmts:Seq[Stat] = tests.zipWithIndex.map(pair => {
       val test = pair._1
 
       test match {
@@ -61,13 +61,21 @@ trait e6 extends Evolution with ScalaGenerator with TestGenerator with BinaryMet
           val code = dependentDispatch(convert(eb.inst1), Equals, convert(eb.inst2))
 
           if (eb.result) {
-            Scala(s"assert (true == $code)").statements
+            Scala(s"""
+                 |def test() : Unit = {
+                 |  assert (true == $code)
+                 |}""".stripMargin).declaration()
           } else {
-            Scala(s"assert (false == $code)").statements
+            Scala(s"""
+                     |def test() : Unit = {
+                     |  assert (false == $code)
+                     |}""".stripMargin).declaration()
           }
         case _ =>
           skip = skip :+ test
-          Seq.empty
+          Scala(s"""
+                   |def test() : Unit = {
+                   |}""".stripMargin).declaration()
       }
     })
 

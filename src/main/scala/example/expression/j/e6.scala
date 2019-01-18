@@ -39,6 +39,10 @@ trait e6 extends Evolution with JavaGenerator with JUnitTestGenerator with Binar
         // Java(s"return ${delegate(exp,domain.AsTree)}.same(${dispatch(that, domain.AsTree)});").statements
        result(Java(s" $binaryContext$opn().same(that.$opn())").expression[Expression]())
 
+//        val that = Scala(s"that").expression
+//        result(Scala(s"(${delegateFixMe(exp,domain.AsTree,atts:_*)} == ${dependentDispatch(that, domain.AsTree)})").expression)
+
+
       case _ => super.logic(exp, op)
     }
   }

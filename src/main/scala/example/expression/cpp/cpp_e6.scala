@@ -40,6 +40,10 @@ trait cpp_e6 extends Evolution with CPPGenerator with CPPBinaryMethod with TestG
         // how it looks in java version
         //result(Java(s" $binaryContext$opn().same(that.$opn())").expression[Expression]())
 
+        // how it looks in scala version
+        //result(Scala(s"(${delegateFixMe(exp,domain.AsTree,atts:_*)} == ${dependentDispatch(that, domain.AsTree)})").expression)
+
+
         // oo ONLY
         result(new CPPElement("astree()->same(that->astree())"))
 

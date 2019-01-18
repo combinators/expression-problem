@@ -73,6 +73,5 @@ object HaskellFormat extends Format[Haskell] {
 
   /** Creates a Haskell fragment that holds other fragments. */
   def fill(elements: immutable.Seq[Haskell]): Haskell = new Haskell(elements)
-
 }
 

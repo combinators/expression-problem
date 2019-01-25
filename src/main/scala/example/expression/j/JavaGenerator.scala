@@ -12,7 +12,7 @@ import scala.collection.JavaConverters._
 /**
   * Any Java-based EP approach can extend this Generator
   */
-trait JavaGenerator extends LanguageIndependentGenerator with DependentDispatch with Producer {
+trait JavaGenerator extends LanguageIndependentGenerator  with Producer {
   val domain:BaseDomain with ModelDomain
 
   type CompilationUnit = com.github.javaparser.ast.CompilationUnit
@@ -20,6 +20,10 @@ trait JavaGenerator extends LanguageIndependentGenerator with DependentDispatch 
   type Expression = com.github.javaparser.ast.expr.Expression
   type Statement = com.github.javaparser.ast.stmt.Statement
   type InstanceExpression = com.github.javaparser.ast.expr.Expression
+
+
+  override def delegateFixMe(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression =  { Java("4 DELETE").expression() }
+  override def identify(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = { Java("4 DELETE").expression() }
 
   /** Default helper to convert string into Expression. Not yet integrated. */
   def expression(s:String) : Expression = Java(s).expression[com.github.javaparser.ast.expr.Expression]()
@@ -38,6 +42,41 @@ trait JavaGenerator extends LanguageIndependentGenerator with DependentDispatch 
   def result (expr:Expression) : Seq[Statement] = {
     Java(s"return $expr;").statements()
   }
+
+  /** Standard implementation relies on dependent dispatch. TODO: FIX */
+  override def contextDispatch(source:Context, delta:Delta) : Expression = {
+    if (delta.expr.isEmpty) {
+      throw new scala.NotImplementedError(s""" Self case must be handled by subclass generator. """)
+    } else {
+      if (delta.op.isDefined) {
+        dispatch(delta.expr.get, delta.op.get, delta.params: _*)
+      } else {
+        dispatch(delta.expr.get, source.op.get, delta.params: _*)
+      }
+    }
+  }
+
+//  /** Standard implementation relies on dependent dispatch. TODO: FIX */
+//  def contextDispatchREMOVE(source:Context, delta:Delta) : Expression = {
+//    val exp:domain.Atomic = source.exp.get
+//    val op:domain.Operation = source.op.get
+//
+//    if (delta.expr.isEmpty) {
+//      val opargs = delta.params.mkString(",")
+//      Java(s"this.${delta.op.get.name.toLowerCase()}($opargs)").expression[Expression]()
+//    } else {
+//      val expr:Expression = delta.expr.get
+//      if (delta.op.isDefined) {
+//        val deltaop = delta.op.get
+//        val args: String = delta.params.mkString(",")
+//        // TODO: Can we ever have args for the first operation?
+//        Java(s"""$expr.${op.name}().${deltaop.name}($args)""").expression()
+//      } else {
+//        dispatch(delta.expr.get, source.op.get, delta.params: _*)
+//      }
+//    }
+//    //Java(s"${dependentDispatch(delta.expr.get, delta.op.get)}").expression[Expression]()
+//  }
 
   /**
     * For producer operations, there is a need to instantiate objects, and one would use this

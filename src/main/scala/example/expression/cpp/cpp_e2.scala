@@ -12,7 +12,6 @@ trait cpp_e2 extends Evolution with CPPGenerator with TestGenerator with M0 with
 
   import domain._
 
-
   /** For developing test cases with strings, must convert expected value into a C++ string expression. */
   abstract override def expected(test:domain.TestCaseExpectedValue, id:String) : (Expression => Seq[Statement]) => Seq[Statement] = continue => {
     test.expect._1 match {

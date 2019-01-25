@@ -23,26 +23,18 @@ trait e6 extends Evolution with ScalaGenerator with TestGenerator with BinaryMet
   }
 
   abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
-
+    val source = Source(exp, op)
     // generate the actual body; since this is a binary method
     op match {
       case Equals =>
         val opn = domain.AsTree.name
         val atts= exp.attributes.map(att => Scala(att.name).expression)
 
-        // TODO: very close to replace with. Problems in ExtensibleVisitor (missing methods) as well
-        // TODO: as Algebra (since naming conventions don't always work).
-        // val that:Expression = Java("that").expression[Expression]()
-        // Java(s"return ${delegate(exp,domain.AsTree)}.same(${dispatch(that, domain.AsTree)});").statements
-        val that = Scala(s"that").expression
-        result(Scala(s"(${delegateFixMe(exp,domain.AsTree,atts:_*)} == ${dependentDispatch(that, domain.AsTree)})").expression)
-
-        // was dispatch(that, domain.AsTree)
-        // works for scala_oo
-        //Scala(s"""$binaryContext$opn().same(that.$opn())""").statements()
-
-        // OO: astree().same(that.astree())
-        // FUNC: new Astree().apply(new Neg(inner)).same(new Astree().apply(that))
+        val leftDelta = deltaOp(source, domain.AsTree)
+        val rightDelta = deltaExprOp(source, Scala("that").expression, domain.AsTree)
+        val lhs:Expression = contextDispatch(source, leftDelta)
+        val rhs:Expression = contextDispatch(source, rightDelta)
+        result(Scala(s"$lhs.same($rhs)").expression)
 
       case _ => super.logic(exp, op)
     }
@@ -58,26 +50,17 @@ trait e6 extends Evolution with ScalaGenerator with TestGenerator with BinaryMet
 
       test match {
         case eb: EqualsBinaryMethodTestCase =>
-          val code = dependentDispatch(convert(eb.inst1), Equals, convert(eb.inst2))
-
+          val code = dispatch(convert(eb.inst1), Equals, convert(eb.inst2))
           if (eb.result) {
-            Scala(s"""
-                 |def test() : Unit = {
-                 |  assert (true == $code)
-                 |}""".stripMargin).declaration()
+            Scala(s"assert (true == $code)").statement
           } else {
-            Scala(s"""
-                     |def test() : Unit = {
-                     |  assert (false == $code)
-                     |}""".stripMargin).declaration()
+            Scala(s"assert (false == $code)").statement
           }
         case _ =>
           skip = skip :+ test
-          Scala(s"""
-                   |def test() : Unit = {
-                   |}""".stripMargin).declaration()
+          Scala(s"{}").statement
       }
-    })
+    }).filterNot(p => p.toString().equals("{}"))
 
     // add these all in to what super produces
     addStatements(super.testMethod(skip), stmts)

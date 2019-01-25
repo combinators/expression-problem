@@ -58,6 +58,7 @@ trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with La
 
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
   override def generateSuite(pkg: Option[String], m:Option[Model] = None): Seq[CompilationUnit] = {
+    val model = m.getOrElse(emptyModel())
     val methods: Seq[MethodDeclaration] = testGenerator ++ performanceMethod()
 
     val packageDeclaration: String = if (pkg.isDefined) {
@@ -73,13 +74,15 @@ trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with La
 
       // must get all operations defined for this model and earlier. For each one, define algebra with
       // current extension
-      val model = m.getOrElse(emptyModel())
+
       val operations: Seq[Operation] = model.flatten().ops
       var algebraDeclarations: Map[Operation, FieldDeclaration] = Map()
       var algParams:Map[Operation,String] = Map()
 
-      // likely sorting is not useful here...
-      operations.sortWith(_.name < _.name).foreach(op => {
+      // Be sure to eliminate all Producer operations
+      operations
+            .filterNot(op => op.isInstanceOf[domain.ProducerOperation])
+            .sortWith(_.name < _.name).foreach(op => {
         val finalAlgebra:String = classify(model) + s"${domain.baseTypeRep.name}Alg"
 
         val str = s"""${op.name.capitalize}$finalAlgebra algebra${op.name.capitalize} = new ${op.name.capitalize}$finalAlgebra();"""
@@ -130,14 +133,40 @@ trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with La
       }
 
 
-      val returnType = typeConverter(op.returnType.get)
+      //val returnType = typeConverter(op.returnType.get)
+      val returnType = op.returnType.get match {
+        case domain.baseTypeRep => s"Combined"   // using algebra's internal interface for producer methods
+        case _ => typeConverter(op.returnType.get)
+      }
       Java(
         s"public $returnType ${op.name}($op_params) { return algebra${op.name.capitalize}.${tpe.name.toLowerCase}(${args.mkString(",")}).${op.name}($op_args); } ").methodDeclarations()
     })
 
+    val producer = if (operations.exists {
+      case bm: domain.ProducerOperation => true
+      case _ => false
+    }) {
+      // only call convert on recursive structures
+      val args = tpe.attributes.map(att => {
+        att.tpe match {
+          case domain.baseTypeRep => s"${att.name.toLowerCase}.convert()"
+          case _ => s"${att.name.toLowerCase}"
+        }
+      }).mkString(",")
+
+      s"""
+         |public algebra.oo.Exp convert() {
+         |  return new algebra.oo.${tpe.name.capitalize}($args);
+         |}
+       """.stripMargin
+    } else {
+      ""
+    }
+
     val str = s"""
                  |public Combined ${tpe.name.toLowerCase()}(${params.mkString(",")}) {
                  |		return new Combined() {
+                 |      $producer
                  |			${opsname.mkString("\n")}
                  |		};
                  |	}
@@ -149,12 +178,19 @@ trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with La
   def combinedAlgebra(pack:Option[String], m:Model): CompilationUnit = {
     val operations:Seq[Operation] = m.flatten().ops
 
-    var algebraDeclarations:Map[Operation,FieldDeclaration] = Map()
-    var paramDeclarations:Map[Operation,Statement] = Map()
-    var argDeclarations:Map[Operation,String] = Map()
+    var algebraNormalDeclarations:Map[Operation,FieldDeclaration] = Map()
+    var paramNormalDeclarations:Map[Operation,Statement] = Map()
+    var argNormalDeclarations:Map[Operation,String] = Map()
+
+    var algebraProducerDeclarations:Map[Operation,FieldDeclaration] = Map()
+    var paramProducerDeclarations:Map[Operation,Statement] = Map()
+    var argProducerDeclarations:Map[Operation,String] = Map()
+
     var finalAlgebra:String = ""
 
-    operations.foreach(op => {
+    // must remove producer operations
+    operations
+        .foreach(op => {
       if (m.types.nonEmpty) {
         val combined = m.types.sortWith(_.name < _.name).map(op => op.name.capitalize).mkString("")
           .concat(s"${domain.baseTypeRep.name}Alg")
@@ -163,14 +199,34 @@ trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with La
 
       finalAlgebra = classify(m) + s"${domain.baseTypeRep.name}Alg"
 
-      algebraDeclarations = algebraDeclarations updated (op, Java(s"""${op.name.capitalize}$finalAlgebra algebra${op.name.capitalize};""").fieldDeclarations.head)
-      paramDeclarations = paramDeclarations updated (op, Java(s"this.algebra${op.name.capitalize} = algebra${op.name.capitalize};").statement)
-      argDeclarations = argDeclarations updated (op, s"${op.name.capitalize}$finalAlgebra algebra${op.name.capitalize}")
+      op match {
+        case p:ProducerOperation => {
+          algebraProducerDeclarations = algebraProducerDeclarations updated (op, Java(s"""${op.name.capitalize}$finalAlgebra algebra${op.name.capitalize};""").fieldDeclarations.head)
+          paramProducerDeclarations = paramProducerDeclarations updated (op, Java(s"this.algebra${op.name.capitalize} = new ${op.name.capitalize}$finalAlgebra(this);").statement)
+          argProducerDeclarations = argProducerDeclarations updated (op, s"${op.name.capitalize}$finalAlgebra algebra${op.name.capitalize}")
+        }
+        case _ => {
+          algebraNormalDeclarations = algebraNormalDeclarations updated (op, Java(s"""${op.name.capitalize}$finalAlgebra algebra${op.name.capitalize};""").fieldDeclarations.head)
+          paramNormalDeclarations = paramNormalDeclarations updated (op, Java(s"this.algebra${op.name.capitalize} = algebra${op.name.capitalize};").statement)
+          argNormalDeclarations = argNormalDeclarations updated (op, s"${op.name.capitalize}$finalAlgebra algebra${op.name.capitalize}")
+        }
+      }
     })
 
     // must order the arguments for consistent usage.
-    val argDeclarationsOrdered:String = argDeclarations.values.toSeq.sortWith(_ < _).mkString(",")
+    val argNormalDeclarationsOrdered:String = argNormalDeclarations.values.toSeq.sortWith(_ < _).mkString(",")
+    val argProducerDeclarationsOrdered:String = argProducerDeclarations.values.toSeq.sortWith(_ < _).mkString(",")
     val methods:Seq[MethodDeclaration] = m.flatten().types.flatMap(exp => innerMethod(exp, operations))
+
+    // if any operations are producers, then need conversion
+    val producerOps = if (operations.exists {
+      case bm: domain.ProducerOperation => true
+      case _ => false
+    }) {
+        s"algebra.oo.Exp convert();     // Convert from Algebra into OO straw-man implementation"
+    } else {
+      ""
+    }
 
     // operations has all operations
     val str:String = s"""
@@ -180,17 +236,24 @@ trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with La
          |public class Combined${domain.baseTypeRep.name}Alg implements $finalAlgebra<Combined${domain.baseTypeRep.name}Alg.Combined> {
          |
          |	// combine together
-         |	interface Combined extends ${operations.map(op => op.name.capitalize).mkString(",")} { }
+         |	public interface Combined extends ${operations.map(op => op.name.capitalize).mkString(",")} {
+         |    $producerOps
+         |  }
          |
          |	// individual algebras, followed by combined one
-         |	${algebraDeclarations.values.mkString("\n")}
+         |	${algebraNormalDeclarations.values.mkString("\n")}
          |
-         |	Combined${domain.baseTypeRep.name}Alg ($argDeclarationsOrdered) {
-         |		${paramDeclarations.values.mkString("\n")}
+         |  // producer method algebras are instantiated here, since that is all that is needed.
+         |  ${algebraProducerDeclarations.values.mkString("\n")}
+         |
+         |	Combined${domain.baseTypeRep.name}Alg ($argNormalDeclarationsOrdered) {
+         |		${paramNormalDeclarations.values.mkString("\n")}
+		     |    ${paramProducerDeclarations.values.mkString("\n")}
          |	}
          |
          |  ${methods.mkString("\n")}
          }""".stripMargin
+    println ("PRO STR:" + str)
     Java(str).compilationUnit()
   }
 }

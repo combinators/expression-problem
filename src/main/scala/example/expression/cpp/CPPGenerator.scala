@@ -22,6 +22,11 @@ trait CPPGenerator extends LanguageIndependentGenerator with DependentDispatch {
     Seq(new CPPElement(s"return $expr;"))
   }
 
+  // TODO: FIX
+  override def contextDispatch(source:Context, delta:Delta) : Expression = {
+    new CPPElement(s""""replaceMe"""")
+  }
+
   /**
     * Return just the expression.
     */

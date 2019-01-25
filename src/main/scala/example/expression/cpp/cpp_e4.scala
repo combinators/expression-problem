@@ -70,28 +70,22 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with Depende
             s"""
             |std::vector < $tpe > vec;
             |vec.push_back(${valueOf(atts(litValue))});
-            |${result(new CPPElement("vec")).mkString("\n")};
-            |""".stripMargin))
+            |${result(new CPPElement("vec")).mkString("\n")};""".stripMargin))
 
           case Neg => Seq(new CPPElement(
             s"""
                |std::vector<$tpe> vec;
-               |std::vector<$tpe> expv = ${dispatch(atts(base.inner),op)};  // HACK: FIX hard-coded attribute
+               |std::vector<$tpe> expv = ${dispatch(atts(base.inner),op)};
                |vec.insert(vec.end(), expv.begin(), expv.end());
-               |${result(new CPPElement("vec")).mkString("\n")};
-             """.stripMargin
-          ))
-          case Add|Sub|Mult|Divd =>
-            val combined:String =
-              s"""std::vector<double> vec;
-                 |std::vector<double> leftv = ${dispatch(atts(base.left),op)};
-                 |std::vector<double> rightv = ${dispatch(atts(base.right),op)};
+               |${result(new CPPElement("vec")).mkString("\n")};""".stripMargin))
+          case Add|Sub|Mult|Divd => Seq(new CPPElement(
+              s"""std::vector< $tpe > vec;
+                 |std::vector< $tpe > leftv = ${dispatch(atts(base.left),op)};
+                 |std::vector< $tpe > rightv = ${dispatch(atts(base.right),op)};
                  |
                  |vec.insert(vec.end(), leftv.begin(), leftv.end());
                  |vec.insert(vec.end(), rightv.begin(), rightv.end());
-                 |${result(new CPPElement("vec")).mkString("\n")};
-            """.stripMargin
-            Seq(new CPPElement(combined))
+                 |${result(new CPPElement("vec")).mkString("\n")};""".stripMargin))
 
           case _ => super.logic(exp, op)
         }
@@ -101,7 +95,7 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with Depende
         val one = new CPPElement("1.0")
         val negOne = new CPPElement("-1.0")
         exp match {
-            // STIL has work to do...
+            // STILL has work to do...
           case Lit => {
             val value = new CPPElement(s"${valueOf(atts(litValue))}")
             Seq(new CPPElement(s"""${result(inst(Lit, value)).mkString("\n")} """))

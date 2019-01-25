@@ -44,10 +44,26 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod with Standa
     exp.attributes.map(att => att.name -> Scala(s"${att.name}").expression).toMap
   }
 
+  /** For visitor design solution, access through default 'e' parameter */
+  override def subExpression(exp:domain.Atomic, name:String) : Expression = {
+    exp.attributes.filter(att => att.name.equals(name)).map(att => Scala(s"${att.name}").expression).head
+  }
+
   /** Directly access local method, one per operation, with a parameter. */
   override def dispatch(expr:Expression, op:Operation, params:Expression*) : Expression = {
     val args:String = params.mkString(",")
     Scala(s"$expr.${op.name}($args)").expression
+  }
+
+  /** Handle self-case here. */
+  override def contextDispatch(source:Context, delta:Delta) : Expression = {
+    if (delta.expr.isEmpty) {
+      val op = delta.op.get.name.toLowerCase
+      val args:String = delta.params.mkString(",")
+      Scala(s"this.$op($args)").expression
+    } else {
+      super.contextDispatch(source, delta)
+    }
   }
 
   /**

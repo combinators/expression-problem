@@ -12,9 +12,19 @@ import org.combinators.templating.twirl.Java
   *
   * First operation that has parameter which has eExp-recursive structure
   */
-trait e6 extends Evolution with JavaGenerator with JUnitTestGenerator with BinaryMethod with M0 with M5 with M6 {
+trait e6 extends Evolution with JavaGenerator with JUnitTestGenerator with BinaryMethod with OperationDependency with M0 with M5 with M6 {
   self: e0 with e1 with e2 with e3 with e4 with e5 =>
   val domain:MathDomain with ModelDomain
+
+  /**
+    * Operations can declare dependencies, which leads to #include extras
+    */
+  override def dependency(op: domain.Operation): scala.List[domain.Operation] = {
+    op match {
+      case Equals => scala.List[domain.Operation](domain.AsTree)
+      case _ => super.dependency(op)
+    }
+  }
 
   abstract override def typeConverter(tpe:domain.TypeRep): com.github.javaparser.ast.`type`.Type = {
     tpe match {
@@ -24,7 +34,7 @@ trait e6 extends Evolution with JavaGenerator with JUnitTestGenerator with Binar
   }
 
   abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
-
+    val source = Source(exp, op)
     // generate the actual body; since this is a binary method
     op match {
       case Equals =>
@@ -32,16 +42,21 @@ trait e6 extends Evolution with JavaGenerator with JUnitTestGenerator with Binar
 
         // GOAL: requesting AsTree on self produces same tree as invoking
         // AsTree on that.
+        val leftDelta = deltaOp(source, domain.AsTree)
+        val rightDelta = deltaExprOp(source, Java("that").expression[Expression], domain.AsTree)
+        val lhs:Expression = contextDispatch(source, leftDelta)
+        val rhs:Expression = contextDispatch(source, rightDelta)
+        result(Java(s"$lhs.same($rhs)").expression[Expression]())
 
         // TODO: very close to replace with. Problems in ExtensibleVisitor (missing methods) as well
         // TODO: as Algebra (since naming conventions don't always work).
         // val that:Expression = Java("that").expression[Expression]()
         // Java(s"return ${delegate(exp,domain.AsTree)}.same(${dispatch(that, domain.AsTree)});").statements
-       result(Java(s" $binaryContext$opn().same(that.$opn())").expression[Expression]())
+
+       /////result(Java(s" $binaryContext$opn().same(that.$opn())").expression[Expression]())
 
 //        val that = Scala(s"that").expression
 //        result(Scala(s"(${delegateFixMe(exp,domain.AsTree,atts:_*)} == ${dependentDispatch(that, domain.AsTree)})").expression)
-
 
       case _ => super.logic(exp, op)
     }

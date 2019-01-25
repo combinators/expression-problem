@@ -52,8 +52,8 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with VisitorJavaBinary
   /**
     * Responsible for delegating to a new operation on the current context.
     */
-  override def delegateFixMe(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
-    val m:domain.Model = getModel.findType(exp)
+  def recreate(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
+    val m:domain.Model = getModel // getModel.findType(exp)
     val opargs = params.mkString(",")
 
     val full = if (m.last.equals(domain.emptyModel())) {
@@ -62,12 +62,17 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with VisitorJavaBinary
       m.types.sortWith(_.name < _.name).mkString("")
     }
 
-    Java(s"e.accept(new ${op.name.capitalize}$full($opargs))").expression[Expression]()
+    //Java(s"e.accept(new ${op.name.capitalize}$full($opargs))").expression[Expression]()
+    Java(s"e.accept(make${op.name.capitalize}($opargs))").expression[Expression]()
   }
 
-  /** For Visitor Generator, same behavior as delegate. */
-  override def identify(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
-    delegateFixMe(exp, op, params : _*)
+  /** Handle self-case here. */
+  override def contextDispatch(source:Context, delta:Delta) : Expression = {
+    if (delta.expr.isEmpty) {
+      recreate(source.exp.get, delta.op.get)
+    } else {
+      super.contextDispatch(source, delta)
+    }
   }
 
   /**
@@ -89,6 +94,8 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with VisitorJavaBinary
     val args:String = params.mkString(",")
     Java(s"""$expr.accept(make${op.name.capitalize}($args))""").expression()
   }
+
+
 
   /** Use run-time validation to confirm, but only needed after first base level... */
   override def generateExp(model:domain.Model, exp:domain.Atomic) : CompilationUnit = {
@@ -116,6 +123,7 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with VisitorJavaBinary
     unit
   }
 
+  /** Contactenate all types in this model to form proper suffix for operation classes. */
   def modelTypes(model:domain.Model) : String = {
     if (model.last.equals(domain.emptyModel())) {
       ""
@@ -201,15 +209,28 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with VisitorJavaBinary
     // dependent operations here; must be sure that the context for dependent operations
     // is based on the actual operation itself (and not just full).
     addVirtualConstructorSubtype(newType, op, full)
+
     dependency(op).foreach(op => {
-      val opFull = if (model.ops.contains(op) || model.types.nonEmpty) {
-        modelTypes(model)
-      } else {
-        // must go back until we get a type
-        modelTypes(model.lastModelWithDataTypes())
+      // we have to be more careful and grab the most recently generated
+      // subclass for the given operation, but then check to see if any
+      // later ones have added subtypes (and if so, then use them).
+      var models = model.inChronologicalOrder
+      var selected:Option[domain.Model] = None
+      while (models.nonEmpty) {
+        val m = models.head
+        if (m.ops.contains(op)) {
+          // we have found the one containing the operation; if
+          // any future model declares types, then they must be used.
+          selected = Some(m)
+        } else if (selected.isDefined) {
+          if (m.types.nonEmpty) {
+            selected = Some(m)
+          }
+        }
+        models = models.tail
       }
-      //val definingModel = model.findOperation(op)   // ALWAYS START MAXIMUM
-      //val opFull = modelTypes(model)
+
+      val opFull = modelTypes(selected.get)
       addVirtualConstructorSubtype(newType, op, opFull)
     })
 

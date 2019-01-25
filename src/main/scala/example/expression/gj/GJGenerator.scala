@@ -21,6 +21,11 @@ trait GJGenerator extends LanguageIndependentGenerator {
     Seq(GJ(s"return $expr;"))
   }
 
+  // TODO: FIX
+  override def contextDispatch(source:Context, delta:Delta) : Expression = {
+    new GJ(s""""replaceMe"""")
+  }
+
   // Useful helper methods for any generator needing to craft common Java constructs
 
   /** Generate constructor for given atomic concept, using suggested name */

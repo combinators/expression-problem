@@ -18,16 +18,4 @@ trait DataTypeSubclassGenerator {
   /** Generate the base class. */
   def generateBase(model:domain.Model) : CompilationUnit
 
-  /**
-    * Responsible for delegating to a new operation on the current data-type.
-    */
-  def delegateFixMe(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
-    val opargs = params.mkString(",")
-    Java(s"this.${op.name.toLowerCase}($opargs)").expression[Expression]()
-  }
-
-  /** For Java, same behavior as delegate. */
-  def identify(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
-    delegateFixMe(exp, op, params : _*)
-  }
 }

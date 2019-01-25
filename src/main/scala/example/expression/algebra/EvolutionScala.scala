@@ -20,10 +20,11 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends CodeGenerationController[CompilationUnit](web, app) {
   val gen:WithDomain[MathDomain] with AlgebraGenerator with AlgebraTestGenerator
 
+  //lazy val process = gen.process(gen.getModel)
   override lazy val generatedCode:Seq[CompilationUnit] =
     gen.generatedCode() ++
-    gen.generateSuite(Some("algebra"), Some(gen.process(gen.getModel))) :+
-    gen.combinedAlgebra(Some("algebra"), gen.process(gen.getModel))       // requires a combined algebra for testing
+    gen.generateSuite(Some("algebra"), Some(gen.getModel)) :+
+    gen.combinedAlgebra(Some("algebra"), gen.getModel)       // requires a combined algebra for testing
 
   override val routingPrefix: Option[String] = Some("algebra")
   override lazy val controllerAddress:String = gen.getModel.name

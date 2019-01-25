@@ -32,6 +32,19 @@ trait ScalaGenerator extends LanguageIndependentGenerator with DependentDispatch
     Seq(expr)
   }
 
+  /** Standard implementation relies on dependent dispatch. TODO: FIX */
+  override def contextDispatch(source:Context, delta:Delta) : Expression = {
+    if (delta.expr.isEmpty) {
+      throw new scala.NotImplementedError(s""" Self case must be handled by subclass generator. """)
+    } else {
+      if (delta.op.isDefined) {
+        dispatch(delta.expr.get, delta.op.get, delta.params: _*)
+      } else {
+        dispatch(delta.expr.get, source.op.get, delta.params: _*)
+      }
+    }
+  }
+
   /**
     * Responsible for identifying the individual sub-type
     */
@@ -55,6 +68,11 @@ trait ScalaGenerator extends LanguageIndependentGenerator with DependentDispatch
   /** Concatenate attributes by name in order */
   def standardArgs(exp:domain.Atomic) : String = {
     exp.attributes.map(att => att.name + ":" + typeConverter(att.tpe)).mkString(",")
+  }
+
+  /** Concatenate attributes by name in order */
+  def standardValArgs(exp:domain.Atomic) : String = {
+    exp.attributes.map(att => "val " + att.name + ":" + typeConverter(att.tpe)).mkString(",")
   }
 
   /**

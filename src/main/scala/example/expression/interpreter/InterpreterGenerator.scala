@@ -53,11 +53,26 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
     exp.attributes.map(att => att.name -> Java(s"get${att.name.capitalize}()").expression[Expression]()).toMap
   }
 
+  /** For visitor design solution, access through default 'e' parameter */
+  override def subExpression(exp:domain.Atomic, name:String) : Expression = {
+    exp.attributes.filter(att => att.name.equals(name)).map(att => Java(s"get${att.name.capitalize}()").expression[Expression]()).head
+  }
+
   /** Return designated Java type associated with type, or void if all else fails. */
   override def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
       case domain.baseTypeRep => Java(s"${domain.baseTypeRep.name}").tpe()
       case _ => super.typeConverter(tpe)
+    }
+  }
+
+  /** Handle self-case here. */
+  override def contextDispatch(source:Context, delta:Delta) : Expression = {
+    if (delta.expr.isEmpty) {
+      val op = delta.op.get.name.toLowerCase
+      Java(s"this.$op()").expression[Expression]()
+    } else {
+      super.contextDispatch(source, delta)
     }
   }
 

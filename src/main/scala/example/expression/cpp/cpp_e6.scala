@@ -45,10 +45,10 @@ trait cpp_e6 extends Evolution with CPPGenerator with CPPBinaryMethod with TestG
 
 
         // oo ONLY
-        result(new CPPElement("astree()->same(that->astree())"))
+        //result(new CPPElement("astree()->same(that->astree())"))
 
         // visitorTable and cppVisitor
-        //result(new CPPElement(s"(new ${opn.capitalize}(${inBinaryContext(expr_e)}))->getValue()->same((new ${opn.capitalize}(that))->getValue())"))
+        result(new CPPElement(s"(new ${opn.capitalize}(${inBinaryContext(expr_e)}))->getValue()->same((new ${opn.capitalize}(that))->getValue())"))
 
       case _ => super.logic(exp, op)
     }

@@ -59,6 +59,21 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator {
     exp.attributes.map(att => att.name -> Java(s"get${att.name.capitalize}()").expression[Expression]()).toMap
   }
 
+  /** For visitor design solution, access through default 'e' parameter */
+  override def subExpression(exp:domain.Atomic, name:String) : Expression = {
+    exp.attributes.filter(att => att.name.equals(name)).map(att => Java(s"get${att.name.capitalize}()").expression[Expression]()).head
+  }
+
+  /** Handle self-case here. */
+  override def contextDispatch(source:Context, delta:Delta) : Expression = {
+    if (delta.expr.isEmpty) {
+      val op = delta.op.get.name.toLowerCase
+      Java(s"this.$op()").expression[Expression]()
+    } else {
+      super.contextDispatch(source, delta)
+    }
+  }
+
   def baseInterfaceName(op: domain.Operation): Type = {
     Java(s"${domain.baseTypeRep.name}${op.name.capitalize}").tpe()
   }

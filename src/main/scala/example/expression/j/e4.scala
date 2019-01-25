@@ -56,69 +56,79 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
   }
 
   abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
-    val subs:Map[String,Expression] = subExpressions(exp).asInstanceOf[Map[String,Expression]]
+    val subs:Map[String,Expression] = subExpressions(exp)
     val zero = Java("0.0").expression[Expression]()
     val one = Java("1.0").expression[Expression]()
     val negOne = Java("-1.0").expression[Expression]()
 
     // generate the actual body
+    val source = Source(exp,op)
     op match {
         // Simplify only works for solutions that instantiate expression instances
       case Simplify =>
 
         exp match {
           case Lit => result(Java(s" ${inst(Lit, subs(litValue))}").expression[Expression]())
-          case Add => Java(s"""|double leftVal = ${dependentDispatch(subs(domain.base.left), Eval)};
-                               |double rightVal = ${dependentDispatch(subs(domain.base.right), Eval)};
-                               |if ((leftVal == 0 && rightVal == 0) || (leftVal + rightVal == 0)) {
-                               |   ${result(inst(Lit, zero)).mkString("\n")}
-                               |} else if (leftVal == 0) {
-                               |   ${result(dispatch(subs(domain.base.right), Simplify)).mkString("\n")}
-                               |} else if (rightVal == 0) {
-                               |   ${result(dispatch(subs(domain.base.left), Simplify)).mkString("\n")}
-                               |} else {
-                               |   ${result(inst(Add, dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
-                               |}""".stripMargin).statements()
-          case Sub => Java(s"""
-                              |if (${dependentDispatch(subs(domain.base.left), Eval)} == ${dependentDispatch(subs(domain.base.right), Eval)}) {
-                              |   ${result(inst(Lit, zero)).mkString("\n")}
-                              |} else {
-                              |   ${result(inst(Sub, dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
-                              |}
-                              |""".stripMargin).statements()
-          case Mult => Java(s"""
-                               |double leftVal = ${dependentDispatch(subs(domain.base.left), Eval)};
-                               |double rightVal = ${dependentDispatch(subs(domain.base.right), Eval)};
-                               |if (leftVal == 0 || rightVal == 0) {
-                               |   ${result(inst(Lit, zero)).mkString("\n")}
-                               |} else if (leftVal == 1) {
-                               |   ${result(dispatch(subs(domain.base.right), Simplify)).mkString("\n")}
-                               |} else if (rightVal == 1) {
-                               |   ${result(dispatch(subs(domain.base.left), Simplify)).mkString("\n")}
-                               |} else {
-                               |   ${result(inst(Mult, dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
-                               |}
-                               |""".stripMargin).statements()
-          case Divd => Java(s"""
-                               |double leftVal = ${dependentDispatch(subs(domain.base.left), Eval)};
-                               |double rightVal = ${dependentDispatch(subs(domain.base.right), Eval)};
-                               |if (leftVal == 0) {
-                               |   ${result(inst(Lit, zero)).mkString("\n")}
-                               |} else if (rightVal == 1) {
-                               |   ${result(dispatch(subs(domain.base.left), Simplify)).mkString("\n")}
-                               |} else if (leftVal == rightVal) {
-                               |   ${result(inst(Lit, one)).mkString("\n")}
-                               |} else if (leftVal == -rightVal) {
-                               |   ${result(inst(Lit, negOne)).mkString("\n")}
-                               |} else {
-                               |   ${result(inst(Divd, dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
-                               |}
-                               |""".stripMargin).statements()
+          case Add =>
+            val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
+            val deltaRight = deltaChildOp(source, domain.base.right, Eval)
+            Java(s"""|double leftVal = ${contextDispatch(source, deltaLeft)};
+                     |double rightVal = ${contextDispatch(source, deltaRight)};
+                     |if ((leftVal == 0 && rightVal == 0) || (leftVal + rightVal == 0)) {
+                     |   ${result(inst(Lit, zero)).mkString("\n")}
+                     |} else if (leftVal == 0) {
+                     |   ${result(dispatch(subs(domain.base.right), Simplify)).mkString("\n")}
+                     |} else if (rightVal == 0) {
+                     |   ${result(dispatch(subs(domain.base.left), Simplify)).mkString("\n")}
+                     |} else {
+                     |   ${result(inst(Add, dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
+                     |}""".stripMargin).statements()
+          case Sub =>
+            val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
+            val deltaRight = deltaChildOp(source, domain.base.right, Eval)
+            Java(s"""|if (${contextDispatch(source, deltaLeft)} == ${contextDispatch(source, deltaRight)}) {
+                     |   ${result(inst(Lit, zero)).mkString("\n")}
+                     |} else {
+                     |   ${result(inst(Sub, dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
+                     |}""".stripMargin).statements()
+          case Mult =>
+            val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
+            val deltaRight = deltaChildOp(source, domain.base.right, Eval)
+            Java(s"""|double leftVal = ${contextDispatch(source, deltaLeft)};
+                     |double rightVal = ${contextDispatch(source, deltaRight)};
+                     |if (leftVal == 0 || rightVal == 0) {
+                     |   ${result(inst(Lit, zero)).mkString("\n")}
+                     |} else if (leftVal == 1) {
+                     |   ${result(dispatch(subs(domain.base.right), Simplify)).mkString("\n")}
+                     |} else if (rightVal == 1) {
+                     |   ${result(dispatch(subs(domain.base.left), Simplify)).mkString("\n")}
+                     |} else {
+                     |   ${result(inst(Mult, dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
+                     |}
+                     |""".stripMargin).statements()
+          case Divd =>
+            val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
+            val deltaRight = deltaChildOp(source, domain.base.right, Eval)
+            Java(s"""|double leftVal = ${contextDispatch(source, deltaLeft)};
+                     |double rightVal = ${contextDispatch(source, deltaRight)};
+                     |if (leftVal == 0) {
+                     |   ${result(inst(Lit, zero)).mkString("\n")}
+                     |} else if (rightVal == 1) {
+                     |   ${result(dispatch(subs(domain.base.left), Simplify)).mkString("\n")}
+                     |} else if (leftVal == rightVal) {
+                     |   ${result(inst(Lit, one)).mkString("\n")}
+                     |} else if (leftVal == -rightVal) {
+                     |   ${result(inst(Lit, negOne)).mkString("\n")}
+                     |} else {
+                     |   ${result(inst(Divd, dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
+                     |}
+                     |""".stripMargin).statements()
             // TODO: Would love to have ability to simplify neg(neg(x)) to just be x. This requires a form
             // of inspection that might not be generalizable...
           case Neg =>
+            val deltaInner = deltaChildOp(source, domain.base.inner, Eval)
             Java(s"""
-                    |if (${dependentDispatch(subs(domain.base.inner), Eval)} == 0) {
+                    |if (${contextDispatch(source, deltaInner)} == 0) {
                     |   ${result(inst(Lit, zero)).mkString("\n")}
                     |} else {
                     |   ${result(inst(Neg, dispatch(subs(domain.base.inner), Simplify))).mkString("\n")}

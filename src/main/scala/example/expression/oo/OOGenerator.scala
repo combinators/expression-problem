@@ -43,6 +43,21 @@ trait OOGenerator extends JavaGenerator with DataTypeSubclassGenerator with Stan
     exp.attributes.map(att => att.name -> Java(s"${att.name}").expression[Expression]).toMap
   }
 
+  /** For straight design solution, directly access attributes by name. */
+  override def subExpression(exp:domain.Atomic, name:String) : Expression = {
+    exp.attributes.filter(att => att.name.equals(name)).map(att => Java(s"${att.name}").expression[Expression]()).head
+  }
+
+  /** Handle self-case here. */
+  override def contextDispatch(source:Context, delta:Delta) : Expression = {
+    if (delta.expr.isEmpty) {
+      val op = delta.op.get.name.toLowerCase
+      Java(s"this.$op()").expression[Expression]()
+    } else {
+      super.contextDispatch(source, delta)
+    }
+  }
+
   /** Directly access local method, one per operation, with a parameter. */
   override def dispatch(expr:Expression, op:Operation, params:Expression*) : Expression = {
     val args:String = params.mkString(",")

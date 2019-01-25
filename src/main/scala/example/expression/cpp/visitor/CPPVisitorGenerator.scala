@@ -50,6 +50,13 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
     new CPPElement(s"(new ${op.name.capitalize}(e.get${expr.toString.capitalize}($args)))->getValue()")
   }
 
+  /** remove the "e." from dependent dispatch. BREAKS SIMPLIFY WHICH ALSO USES FORM OF DEPENDENT DISPATCH*/
+  // TODO: Need a strategy for dependentDispatch that works!!!
+//  override def dependentDispatch(expr:CPPElement, op:Operation, params:CPPElement*) : CPPElement = {
+//    val args:String = params.mkString(",")
+//    new CPPElement(s"(new ${op.name.capitalize}($expr))->getValue()")
+//  }
+
   /**
     * Responsible for dispatching sub-expressions with possible parameter(s).
     */

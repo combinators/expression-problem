@@ -38,6 +38,7 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
 
   abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
     // generate the actual body
+    val source = Source(exp,op)
     op match {
       // Simplify only works for solutions that instantiate expression instances. As a binary
       case domain.AsTree => {
@@ -46,11 +47,15 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
         exp match {   // was $litValue     ;
           case Lit =>   // ${exp.hashCode()}
             val attParams = atts.map(att => att._2.toString).mkString(",")
-            result(Java(s" new tree.Node(java.util.Arrays.asList(new tree.Leaf($attParams)), ${identify(exp, Identifier)}) ").expression[Expression]())
+            val deltaSelf = deltaOp(source, Identifier)
+            val rhs = contextDispatch(source, deltaSelf)
+            result(Java(s" new tree.Node(java.util.Arrays.asList(new tree.Leaf($attParams)), $rhs) ").expression[Expression]())
 
           case Add|Sub|Mult|Divd|Neg =>
-            val params = atts.map(att => att._2.toString + ".astree()").mkString(",")
-            result(Java(s" new tree.Node(java.util.Arrays.asList($params), ${identify(exp, Identifier)} ) ").expression[Expression]())
+            val attParams = atts.map(att => att._2.toString + ".astree()").mkString(",")
+            val deltaSelf = deltaOp(source, Identifier)
+            val rhs = contextDispatch(source, deltaSelf)
+            result(Java(s" new tree.Node(java.util.Arrays.asList($attParams), $rhs) ").expression[Expression]())
           }
       }
 
@@ -59,7 +64,7 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
   }
 
   abstract override def testMethod(tests:Seq[domain.TestCase]) : MethodDeclaration = {
-
+    val source = TestSource()
     // EXTRACT all SameTestCase ones and handle here
     var skip:Seq[domain.TestCase] = Seq.empty
 
@@ -68,8 +73,10 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
 
       test match {
         case ctc: SameTestCase =>
-          val tree1 = dependentDispatch(convert(ctc.inst1), AsTree)  // was just dispatch
-          val tree2 = dependentDispatch(convert(ctc.inst2), AsTree)
+          //val tree1 = dependentDispatch(convert(ctc.inst1), AsTree)  // was just dispatch
+          val tree1 = contextDispatch(source, deltaExprOp(source, convert(ctc.inst1), AsTree))
+          val tree2 = contextDispatch(source, deltaExprOp(source, convert(ctc.inst2), AsTree))
+          //val tree2 = dependentDispatch(convert(ctc.inst2), AsTree)
 
           val same = Java(s"$tree1.same($tree2)").expression[Expression]()
 

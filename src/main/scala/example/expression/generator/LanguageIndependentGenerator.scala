@@ -24,7 +24,7 @@ import example.expression.domain.{BaseDomain, ModelDomain}
   * suitable simplification, then it just produces code that instantiates a new Mult data type
   * by dispatching Simplify to its LEFT and RIGHT children.
   *
-  * {{{\$inst(Mult, dispatch(atts(domain.base.left), Simplify),dispatch(atts(domain.base.right), Simplify))).mkString("\n")
+  * {{{\$inst(Mult, dispatch(atts(base.left), Simplify),dispatch(atts(base.right), Simplify)))
 }}}
   *
   * The API is defined in [[example.expression.generator.Producer]].
@@ -56,6 +56,28 @@ trait LanguageIndependentGenerator {
   /** Base concept for a meaningful line-of-code in the language. */
   type Statement
 
+  /** For context dispatch. */
+  abstract class Context(val exp:Option[Atomic], val op:Option[Operation], val params:Expression*)
+  case class Source(e:Atomic, o:Operation, p:Expression*) extends Context(Some(e), Some(o), p : _*)
+  case class TestSource() extends Context(None, None)
+
+  case class Delta(expr:Option[Expression], override val op:Option[Operation], override val params:Expression*) extends Context(None, op, params : _*)
+
+  /** Helper method for constructor Delta when changing both the expression AND operation. */
+  def deltaChildOp(source:Source, attName:String, op:Operation, params:Expression*) : Delta = {
+    Delta(Some(subExpression(source.e, attName)), Some(op), params : _*)
+  }
+
+  /** Helper method for constructor Delta when requesting operation on a different expression. */
+  def deltaExprOp(source:Context, expr:Expression, op:Operation, params:Expression*) : Delta = {
+    Delta(Some(expr), Some(op), params : _*)
+  }
+
+  /** Helper method for constructor Delta when requesting operation on self. */
+  def deltaOp(source:Source, op:Operation, params:Expression*) : Delta = {
+    Delta(None, Some(op), params : _*)
+  }
+
   /** Retrieve model under consideration. */
   def getModel:Model
 
@@ -73,6 +95,20 @@ trait LanguageIndependentGenerator {
     * @return      Map with entries for each attribute, and the resulting code expressions
     */
   def subExpressions(exp:Atomic) : Map[String, Expression]
+
+  /**
+    * Determines the code expression for a single child of a Exp subtype based on its attributes.
+    *
+    * By throwing a runtime exception, we terminate any code generation that uses an invalid
+    * attribute name.
+    *
+    * @param exp   data subtype being considered
+    * @param name  name of desired attribute
+    * @return      Map with entries for each attribute, and the resulting code expressions
+    */
+  def subExpression(exp:Atomic, name:String) : Expression = {
+    throw new scala.NotImplementedError(s"""Unknown Attribute "$name" for "${exp.name}. """)
+  }
 
   /**
     * For all possible EP solutions, this method generates the sequence of statements that result
@@ -111,6 +147,35 @@ trait LanguageIndependentGenerator {
     * Intent of this function is to model the execute of operation on children of a datatype.
     */
   def dispatch(expr:Expression, op:domain.Operation, params:Expression*) : Expression
+
+  /**
+    * When defining the logic(exp,op) that represents the code statements for applying a given operation
+    * on a specific data-type, it can be defined using sub-expressions that represent the dispatch
+    * of that operation (or a new operation) on a different context (or the same context).
+    *
+    * Regular dispatch occurs, for example, in logic(Mult,Eval), as in:
+    *    dispatch(subs(left), Eval) * dispatch(subs(right), Eval)
+    *
+    * In producer operations such as logic(Mult,Simplify), which tries to simplify the
+    * Multiplication operation, there is a need to evaluate the sub-expressions, which means
+    * one needs to dispatch Eval to a child sub-expression
+    *
+    * In binary operations such as logic(Mult,Equals), which tries to determine if two
+    * expressions are equal to each other, there is a need to evaluate subexpressions
+    * on a different object (i.e., "that").
+    *
+    * Another option is to delegate a new operation to the current context (rather than just
+    * to one of the sub-expressions).
+    *
+    * All of these options are handled here.
+    *
+    * All logic is defined within a specific (exp,op) source context, and the dispatch can
+    * Dispatch context represents "Subject Verb Objects+".
+    *
+    * 1. Exists within source context
+    * 2.
+    */
+  def contextDispatch(source:Context, delta:Delta) : Expression
 
   /**
     * Responsible for identifying the expression representing the given data subtype.

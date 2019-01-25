@@ -42,25 +42,24 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
       generateBase(flat)                                      // visitor gets its own class (overriding concept)
   }
 
-  /**
-    * Responsible for delegating to a new operation on the current context.
-    *
-    * This context is invariably defined by the existing method context which has a
-    * parameter 'e' to satisfy the visit(Type e) method
-    */
-  override def delegateFixMe(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
-    val opargs = params.mkString(",")
-    Java(s"e.accept(new ${op.name.capitalize}($opargs))").expression[Expression]()
-  }
-
-  /** For Visitor Generator, same behavior as delegate. */
-  override def identify(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
-    delegateFixMe(exp, op, params : _*)
+  /** Handle self-case here. */
+  override def contextDispatch(source:Context, delta:Delta) : Expression = {
+    if (delta.expr.isEmpty) {
+      val opargs = delta.params.mkString(",")
+      Java(s"e.accept(new ${delta.op.get.name.capitalize}($opargs))").expression[Expression]()
+    } else {
+      super.contextDispatch(source, delta)
+    }
   }
 
   /** For visitor design solution, access through default 'e' parameter */
   override def subExpressions(exp:domain.Atomic) : Map[String,Expression] = {
     exp.attributes.map(att => att.name -> Java(s"e.get${att.name.capitalize}()").expression[Expression]()).toMap
+  }
+
+  /** For visitor design solution, access through default 'e' parameter */
+  override def subExpression(exp:domain.Atomic, name:String) : Expression = {
+    exp.attributes.filter(att => att.name.equals(name)).map(att => Java(s"e.get${att.name.capitalize}()").expression[Expression]()).head
   }
 
   /** Directly access local method, one per operation, with a parameter. */

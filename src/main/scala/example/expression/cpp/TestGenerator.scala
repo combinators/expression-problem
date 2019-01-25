@@ -15,8 +15,23 @@ trait TestGenerator extends CPPGenerator {
   /** Return sample C++ test cases. */
   def testGenerator: Seq[CPPElement] = Seq.empty
 
+  /** Performance tests. */
+  def performanceMethod: Seq[CPPElement] = Seq.empty
+
   var id = 0
   var variables = collection.mutable.Map[AtomicInst, String]()
+
+  /** Type to use when referring to specific instance. */
+  def exprDefine(exp:AtomicInst) : Type = {
+    new CPPType(exp.e.name)
+  }
+
+  /** Used when one already has code fragments bound to variables, which are to be used for left and right. */
+  def convertRecursive(inst: Binary, left:String, right:String): Expression = {
+    val name = inst.name
+    new CPPElement(s"new $name($left, $right)")
+  }
+
 
   /** Register an instance and get its variable identifier. */
   def vars(inst:AtomicInst) : String = {
@@ -143,7 +158,9 @@ trait TestGenerator extends CPPGenerator {
 
    // val allOps = getModel.flatten().ops.map(op => s"""#include "${op.name.capitalize}.h" """)
     var num: Int = 0
-    val allTests:Seq[CPPElement] = testGenerator.map(tests => {
+
+    val tests = testGenerator ++ performanceMethod
+    val allTests:Seq[CPPElement] = tests.map(tests => {
       num = num + 1
 
       new CPPElement(
@@ -161,8 +178,32 @@ trait TestGenerator extends CPPGenerator {
       )
     })
 
+    // include performance timing code
     val sa = new StandAlone("test_e0",
       s"""
+         |#include <sys/time.h>
+         |long diffTimer (struct timeval *before, struct timeval *after) {
+         |  long ds = after->tv_sec - before->tv_sec;
+         |  long uds = after->tv_usec - before->tv_usec;
+         |
+         |  /* if secs are same, then return simple delta */
+         |  if (ds == 0) {
+         |    return uds;
+         |  }
+         |
+         |  /* ok, so we are turned over. Something like: */
+         |  /* before: 1179256745 744597                  */
+         |  /* after:  1179256746 73514                   */
+         |
+         |  /* if we have 'turned over' then account properly */
+         |  if (uds < 0) {
+         |    ds = ds - 1;
+         |    uds += 1000000;
+         |  }
+         |
+         |  return 1000000*ds + uds;
+         |}
+         |
          |${allTests.mkString("\n")}
          |
          |int main(int ac, char** av)

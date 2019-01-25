@@ -41,6 +41,11 @@ trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskell
     Seq(expr)
   }
 
+  // TODO: FIX
+  override def contextDispatch(source:Context, delta:Delta) : Expression = {
+    new Haskell(s""""replaceMe"""")
+  }
+
   /**
     * Haskell solutions require delegation to their respective traits
     */

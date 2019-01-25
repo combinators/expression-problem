@@ -41,14 +41,26 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
 
   /** For straight design solution, directly access attributes by name. */
   override def subExpressions(exp:Atomic) : Map[String,Expression] = {
-    exp.attributes.map(att => att.name -> Scala(s"${att.name}").expression).toMap
+    exp.attributes.map(att => att.name -> Scala(s"${exp.name.toLowerCase}.${att.name}").expression).toMap
+  }
+
+  /** For visitor design solution, access through default 'e' parameter */
+  override def subExpression(exp:domain.Atomic, name:String) : Expression = {
+    exp.attributes.filter(att => att.name.equals(name)).map(att => Scala(s"${exp.name.toLowerCase}.${att.name}").expression).head
   }
 
   /** Directly access local method, one per operation, with a parameter. */
   override def dispatch(expr:Expression, op:Operation, params:Expression*) : Expression = {
     op match {
       case _: BinaryMethod =>
-        Scala(s"${op.name.toLowerCase()}($expr)").term
+        //params.map(p => p.toString).mkString(",")
+        val opargs = if (params.nonEmpty) {
+          "(" + params.mkString(",") + ")"
+        } else {
+          ""
+        }
+
+        Scala(s"${op.name.toLowerCase()}($expr)$opargs").term
       case _ =>
 
         var opParams = ""
@@ -87,6 +99,31 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
     delegateFixMe(exp, op, params : _*)
   }
 
+  /** Handle self-case here. */
+  override def contextDispatch(source:Context, delta:Delta) : Expression = {
+
+    if (delta.expr.isEmpty) {
+      //val op = delta.op.get.name.capitalize
+      val op = delta.op.get.name.toLowerCase
+      val exp = source.exp.get
+      val opargs:String = exp.attributes.map(att => att.name).mkString(",")
+      //Scala(s"new $op().apply(new ${exp.name.capitalize}($opargs))").expression
+      Scala(s"$op(${exp.name.toLowerCase})").expression
+    } else {
+      if (delta.op.isDefined) {
+        val opParams = if (delta.params.nonEmpty) {
+          "(" + delta.params.mkString(",") + ")"
+        } else {
+          ""
+        }
+        // $opParams what to do?
+        Scala(s"${delta.op.get.name.toLowerCase}(${delta.expr.get})").expression
+      } else {
+        super.contextDispatch(source, delta)
+      }
+    }
+  }
+
   /**
     * Responsible for dispatching sub-expressions with possible parameter(s).
     */
@@ -96,23 +133,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
     } else {
       ""
     }
-//    val args:String = if (params.isEmpty) {
-//      ""
-//    } else {
-//      // hack for now: first k params are for operation (if it has any arguments)
-//      // then remaining are for parameters
-//      if (op.parameters.nonEmpty) {
-//        opParams = params.take(op.parameters.length).mkString(",")
-//        val rest = params.takeRight(params.length - op.parameters.length)
-//        if (rest.isEmpty) {
-//          ""
-//        } else {
-//          "(" + rest.mkString(",") + ")"
-//        }
-//      } else {
-//        "(" + params.mkString(",") + ")"
-//      }
-//    }
+
     Scala(s"${op.name.toLowerCase}($expr)$opParams").expression
   } // Scala(s"apply($expr)$args").expression()
 
@@ -129,13 +150,12 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
     * Encapsulate with braces in case multiple statements
     */
   def methodGenerator(exp:Atomic, op:Operation): Stat = {
-    val str = s"""
-           |def visit${exp.name.capitalize}(${standardArgs(exp)}) : Unit = {
+    Scala(s"""
+           |def visit(${exp.name.toLowerCase}:${exp.name.capitalize}) : Unit = {
            |  result = {
            |    ${logic(exp, op).mkString("\n")}
            |  }
-           |}""".stripMargin
-    Scala(str).statement
+           |}""".stripMargin).statement
   }
 
   /**
@@ -154,14 +174,14 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
 
     // visitor for each extension must extend prior one
     val visitors = m.types.map(exp => {
-      Scala(s"def visit${exp.name.capitalize}(${standardArgs(exp)}) : Unit").statement
+      Scala(s"def visit(${exp.name.toLowerCase}:${exp.name.capitalize}) : Unit").statement
     })
 
     // All newly defined types get their own class with visit method
     val classes = m.types.map(exp => {
       Scala(s"""
-               |class ${exp.name.capitalize}(${standardArgs(exp)}) extends ${domain.baseTypeRep.name} {
-               |  def accept(v: visitor): Unit = v.visit${exp.name.capitalize}(${standardParams(exp)})
+               |class ${exp.name.capitalize}(${standardValArgs(exp)}) extends ${domain.baseTypeRep.name} {
+               |  def accept(v: visitor): Unit = v.visit(this)
                |}""".stripMargin).declaration()
     })
 
@@ -267,13 +287,13 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
 
     val classes = m.types.map(exp => {
       Scala(s"""
-         |class ${exp.name.capitalize}(${standardArgs(exp)}) extends ${domain.baseTypeRep.name} {
-         |  def accept(v: visitor): Unit = v.visit${exp.name.capitalize}(${standardParams(exp)})
+         |class ${exp.name.capitalize}(${standardValArgs(exp)}) extends ${domain.baseTypeRep.name} {
+         |  def accept(v: visitor): Unit = v.visit(this)
          |}""".stripMargin).declaration()
     })
 
     val visitors = m.types.map(exp => {
-      Scala(s"def visit${exp.name.capitalize}(${standardArgs(exp)}) : Unit").statement
+      Scala(s"def visit(${exp.name.toLowerCase}:${exp.name.capitalize}) : Unit").statement
     })
 
     val factories = m.ops.map(op =>

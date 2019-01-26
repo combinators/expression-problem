@@ -73,10 +73,8 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
 
       test match {
         case ctc: SameTestCase =>
-          //val tree1 = dependentDispatch(convert(ctc.inst1), AsTree)  // was just dispatch
           val tree1 = contextDispatch(source, deltaExprOp(source, convert(ctc.inst1), AsTree))
           val tree2 = contextDispatch(source, deltaExprOp(source, convert(ctc.inst2), AsTree))
-          //val tree2 = dependentDispatch(convert(ctc.inst2), AsTree)
 
           val same = Java(s"$tree1.same($tree2)").expression[Expression]()
 

@@ -59,7 +59,10 @@ trait e0 extends ScalaGenerator with TestGenerator with M0 {
     }
     seq = seq + ")"
 
-    val toTime:String = dependentDispatch(Scala("trees(i)").term, Eval).toString
+    val source = TestSource()
+    val delta = deltaExprOp(source, new Scala("trees(i)").expression, Eval)
+    //val toTime = dispatch(new CPPElement("trees[i]"), Eval)
+    val toTime = contextDispatch(source, delta)
     val evalPerfTest:Stat = Scala(
       s"""
          |def test() : Unit = {

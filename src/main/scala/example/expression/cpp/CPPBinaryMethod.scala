@@ -1,9 +1,8 @@
 package example.expression.cpp   /*DI:LD:AI*/
 
 import example.expression.domain.{BaseDomain, ModelDomain}
-import example.expression.generator.BinaryMethod
 
-trait CPPBinaryMethod extends BinaryMethod {
+trait CPPBinaryMethod {
   val domain:BaseDomain with ModelDomain
 
   def getModel: domain.Model
@@ -130,20 +129,20 @@ trait CPPBinaryMethod extends BinaryMethod {
     * @param typeConverter    existing typeconverter which we need for other types besides baseTypeRep
     * @return                 return new parameter type with op interface used in place of baseTypeRep
     */
-  def binaryMethodParameters(op:domain.Operation, typeConverter:(domain.TypeRep,Option[CPPType]) => CPPType) : String = {
-    op.parameters.map(tuple => {
-      val name:String = tuple._1
-      val tpe:domain.TypeRep = tuple._2
-
-      // use operation name for binary method
-      val realType = tpe match {
-        case domain.baseTypeRep => op.name.capitalize
-        case _ => typeConverter(tpe, Option.empty)
-      }
-
-      realType.toString + " " + name
-    }).mkString(",")
-  }
+//  def binaryMethodParameters(op:domain.Operation, typeConverter:(domain.TypeRep,Option[CPPType]) => CPPType) : String = {
+//    op.parameters.map(tuple => {
+//      val name:String = tuple._1
+//      val tpe:domain.TypeRep = tuple._2
+//
+//      // use operation name for binary method
+//      val realType = tpe match {
+//        case domain.baseTypeRep => op.name.capitalize
+//        case _ => typeConverter(tpe, Option.empty)
+//      }
+//
+//      realType.toString + " " + name
+//    }).mkString(",")
+//  }
 
   /**
     * Add defined data types for given exp subtype

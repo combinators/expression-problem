@@ -1,12 +1,7 @@
 package example.expression.trivially  /*DI:LD:AD*/
 
-import com.github.javaparser.ast.{CompilationUnit, Modifier}
-import com.github.javaparser.ast.`type`.Type
+import com.github.javaparser.ast.Modifier
 import com.github.javaparser.ast.body.{BodyDeclaration, MethodDeclaration}
-import com.github.javaparser.ast.expr.Expression
-import com.github.javaparser.ast.visitor.VoidVisitorAdapter
-import example.expression.generator.BinaryMethodBase
-import example.expression.j.JavaProducer
 import expression.ReplaceType
 import org.combinators.templating.twirl.Java
 

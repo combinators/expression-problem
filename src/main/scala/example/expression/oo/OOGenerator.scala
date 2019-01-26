@@ -8,7 +8,7 @@ import org.combinators.templating.twirl.Java
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait OOGenerator extends JavaGenerator with DataTypeSubclassGenerator with StandardJavaBinaryMethod with OperationAsMethodGenerator with JavaBinaryMethod {
+trait OOGenerator extends JavaGenerator with DataTypeSubclassGenerator with OperationAsMethodGenerator with JavaBinaryMethod {
 
   val domain:BaseDomain with ModelDomain
   import domain._

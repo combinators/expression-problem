@@ -19,10 +19,20 @@ trait cpp_e5 extends Evolution with CPPGenerator with TestGenerator with M0 with
     }
   }
 
+  /**
+    * Operations can declare dependencies, which leads to #include extras
+    */
+  override def dependency(op: domain.Operation): scala.List[domain.Operation] = {
+    op match {
+      case AsTree => scala.List[domain.Operation](Identifier)
+      case _ => super.dependency(op)
+    }
+  }
+
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
   abstract override def logic(exp:Atomic, op:Operation): Seq[CPPElement] = {
     val atts:Map[String,CPPElement] = subExpressions(exp)
-
+    val source = Source(exp,op)
     // generate the actual body
     op match {
       case domain.AsTree =>
@@ -36,7 +46,10 @@ trait cpp_e5 extends Evolution with CPPGenerator with TestGenerator with M0 with
           case Add|Sub|Mult|Divd|Neg =>
             val attParams = atts.map(att => new CPPElement(s"${valueOf(atts(att._2.toString))}->astree()")).mkString(",")
             val vec1 = new CPPElement(s"std::vector<Tree *> vec_${exp.name} = { $attParams };")
-            Seq(vec1) ++ result(new CPPElement(s""" new Node(vec_${exp.name}, ${identify(exp, Identifier)}) """))
+
+            val deltaSelf = deltaOp(source, Identifier)
+            val rhs = contextDispatch(source, deltaSelf)
+            Seq(vec1) ++ result(new CPPElement(s" new Node(vec_${exp.name}, $rhs) "))
         }
 
       case _ => super.logic(exp, op)

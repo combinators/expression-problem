@@ -59,6 +59,10 @@ trait e0 extends JavaGenerator with JUnitTestGenerator with M0 {
     }
     array = array + "};"
 
+    val source = TestSource()
+    val delta = deltaExprOp(source, new Java("trees[i]").expression[Expression](), Eval)
+    val toTime = contextDispatch(source, delta)
+    // ${dispatch(Java("trees[i]").expression[Expression](), Eval)};   // time this
     val evalPerfTest = Java(
       s"""
          |public void testPerformance() {
@@ -68,7 +72,7 @@ trait e0 extends JavaGenerator with JUnitTestGenerator with M0 {
          |     long best = Long.MAX_VALUE;
          |      for (int t = 0; t < 8; t++) {
          |        long now = System.nanoTime();
-         |     		  ${dispatch(Java("trees[i]").expression[Expression](), Eval)};   // time this
+         |     		  $toTime;
          |         long duration = System.nanoTime() - now;
          |         if (duration < best) { best = duration; }
          |      }

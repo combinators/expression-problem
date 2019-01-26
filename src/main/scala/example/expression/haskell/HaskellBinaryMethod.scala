@@ -1,8 +1,10 @@
-package example.expression.haskell     /*DI:LD:AI*/
+package example.expression.haskell   /*DI:LD:AI*/
 
-import example.expression.generator.BinaryMethod
+import example.expression.domain.{BaseDomain, ModelDomain}
 
-trait HaskellBinaryMethod extends BinaryMethod {
+trait HaskellBinaryMethod {
+  val domain: BaseDomain with ModelDomain
+
   type Declaration = Haskell
 
   /**

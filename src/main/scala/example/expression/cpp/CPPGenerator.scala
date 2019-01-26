@@ -3,9 +3,14 @@ package example.expression.cpp        /*DI:LD:AI*/
 import example.expression.generator.LanguageIndependentGenerator
 
 /**
-  * Any Haskell EP approach can extend this Generator
+  * Any C++ EP approach can extend this Generator
+  *
+
+#!/bin/bash -x
+g++ *.cpp  -I ../cpputest/include -L ../cpputest/cpputest_build/lib -lCppUTest -lCppUTestExt -std=c++11
+
   */
-trait CPPGenerator extends LanguageIndependentGenerator with DependentDispatch {
+trait CPPGenerator extends LanguageIndependentGenerator {
 
   type CompilationUnit = CPPFile
   type Type = CPPType
@@ -22,9 +27,17 @@ trait CPPGenerator extends LanguageIndependentGenerator with DependentDispatch {
     Seq(new CPPElement(s"return $expr;"))
   }
 
-  // TODO: FIX
+  /** Standard implementation relies on dependent dispatch. TODO: FIX */
   override def contextDispatch(source:Context, delta:Delta) : Expression = {
-    new CPPElement(s""""replaceMe"""")
+    if (delta.expr.isEmpty) {
+      throw new scala.NotImplementedError(s""" Self case must be handled by subclass generator. """)
+    } else {
+      if (delta.op.isDefined) {
+        dispatch(delta.expr.get, delta.op.get, delta.params: _*)
+      } else {
+        dispatch(delta.expr.get, source.op.get, delta.params: _*)
+      }
+    }
   }
 
   /**
@@ -39,17 +52,4 @@ trait CPPGenerator extends LanguageIndependentGenerator with DependentDispatch {
     * Operations can declare dependencies, which leads to #include extras
     */
    def dependency(op: domain.Operation): scala.List[domain.Operation] = List.empty
-
-  // TODO: FIX ME
-  /**
-    * Responsible for delegating to a new operation on the current context.
-    */
-  def delegateFixMe(exp:domain.Atomic, op:domain.Operation, params:CPPElement*) : CPPElement = {
-    new CPPElement("CppReplaceMe")
-  }
-
-  /** For C++, resort to generated enums */
-  def identify(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
-    new CPPElement(s"DefinedSubtypes::${exp.name.capitalize}Subtype")
-  }
 }

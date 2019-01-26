@@ -30,25 +30,15 @@ trait cpp_e6 extends Evolution with CPPGenerator with CPPBinaryMethod with TestG
   }
 
   abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[CPPElement] = {
-
+    val source = Source(exp, op)
     // generate the actual body; since this is a binary method
     op match {
       case Equals =>
-        val opn = domain.AsTree.name
-        val expr_e = new CPPElement("e")
-
-        // how it looks in java version
-        //result(Java(s" $binaryContext$opn().same(that.$opn())").expression[Expression]())
-
-        // how it looks in scala version
-        //result(Scala(s"(${delegateFixMe(exp,domain.AsTree,atts:_*)} == ${dependentDispatch(that, domain.AsTree)})").expression)
-
-
-        // oo ONLY
-        //result(new CPPElement("astree()->same(that->astree())"))
-
-        // visitorTable and cppVisitor
-        result(new CPPElement(s"(new ${opn.capitalize}(${inBinaryContext(expr_e)}))->getValue()->same((new ${opn.capitalize}(that))->getValue())"))
+        val leftDelta = deltaOp(source, domain.AsTree)
+        val rightDelta = deltaIndependentExprOp(source, new CPPElement("that"), domain.AsTree)
+        val lhs:Expression = contextDispatch(source, leftDelta)
+        val rhs:Expression = contextDispatch(source, rightDelta)
+        result(new CPPElement(s"$lhs->same($rhs)"))
 
       case _ => super.logic(exp, op)
     }
@@ -64,11 +54,8 @@ trait cpp_e6 extends Evolution with CPPGenerator with CPPBinaryMethod with TestG
 
       test match {
         case eb: EqualsBinaryMethodTestCase =>
-          //val code = dependentDispatch(convert(eb.inst1), Equals, convert(eb.inst2))
-          val code = binaryDispatch(rec_convert(eb.inst1), Equals, rec_convert(eb.inst2))
-
-          // CHECK_TRUE(sub(lit(1.0), lit(73.0))->equals(sub(lit(1.0), lit(73.0))));^M
-          // for oo only
+          val source = TestSource()
+          val code = contextDispatch(source, deltaIndependentExprOp(source, rec_convert(eb.inst1), Equals, rec_convert(eb.inst2)))
 
           if (eb.result) {
             Seq(new CPPElement(s"CHECK_TRUE($code);"))

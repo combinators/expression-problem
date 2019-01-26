@@ -8,7 +8,7 @@ import scala.meta._
 /**
   * Any Scala-based EP approach can extend this Generator
   */
-trait ScalaGenerator extends LanguageIndependentGenerator with DependentDispatch with Producer {
+trait ScalaGenerator extends LanguageIndependentGenerator with Producer {
   val domain:BaseDomain with ModelDomain
 
   type CompilationUnit = ScalaWithPath
@@ -32,7 +32,6 @@ trait ScalaGenerator extends LanguageIndependentGenerator with DependentDispatch
     Seq(expr)
   }
 
-  /** Standard implementation relies on dependent dispatch. TODO: FIX */
   override def contextDispatch(source:Context, delta:Delta) : Expression = {
     if (delta.expr.isEmpty) {
       throw new scala.NotImplementedError(s""" Self case must be handled by subclass generator. """)
@@ -46,15 +45,6 @@ trait ScalaGenerator extends LanguageIndependentGenerator with DependentDispatch
   }
 
   /**
-    * Responsible for identifying the individual sub-type
-    */
-  override def identify(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
-    val opargs = params.mkString(",")
-    val term = Term.Name(op.name.toLowerCase)   // should be able to be ..$params
-    Scala(s"this.${op.name.toLowerCase}(new ${exp.name.capitalize}($opargs))").expression
-  }
-
-  /**
     * For producer operations, there is a need to instantiate objects, and one would use this
     * method (with specific parameters) to carry this out.
     */
@@ -63,7 +53,6 @@ trait ScalaGenerator extends LanguageIndependentGenerator with DependentDispatch
   }
 
   /// Scala support
-
 
   /** Concatenate attributes by name in order */
   def standardArgs(exp:domain.Atomic) : String = {

@@ -10,7 +10,7 @@ import example.expression.generator.{LanguageIndependentGenerator, Producer}
   *
   * Perhaps consider an Expression Problem application domain based on Monoids
   */
-trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskellBinaryMethod with HaskellBinaryMethod with DependentDispatch with Producer {
+trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskellBinaryMethod with HaskellBinaryMethod with Producer {
 
   /** Specially required files are placed in this area. */
   val haskellResources:String = Seq("src", "main", "resources", "haskell-code").mkString(File.separator)
@@ -63,19 +63,6 @@ trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskell
 
   /** If any new imports are needed for an operation, just extend here. */
   def addedImports(op:domain.Operation):Seq[Haskell] = Seq.empty
-
-  // TODO: FIX ME
-  /**
-    * Responsible for delegating to a new operation on the current context.
-    */
-  override def delegateFixMe(exp:domain.Atomic, op:domain.Operation, params:Haskell*) : Haskell = {
-    new Haskell("haskellReplaceMe")
-  }
-
-  /** For Haskell Generator, same behavior as delegate. */
-  override def identify(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
-    delegateFixMe(exp, op, params : _*)
-  }
 
   /**
     * By default, each operation is fully specified and doesn't need any default, however for binary

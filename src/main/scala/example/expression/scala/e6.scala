@@ -1,7 +1,6 @@
 package example.expression.scala    /*DD:LD:AI*/
 
 import example.expression.domain._
-import example.expression.generator.BinaryMethod
 import scala.meta._
 
 /**
@@ -11,7 +10,7 @@ import scala.meta._
   *
   * First operation that has parameter which has eExp-recursive structure
   */
-trait e6 extends Evolution with ScalaGenerator with TestGenerator with BinaryMethod with M0 with M5 with M6 {
+trait e6 extends Evolution with ScalaGenerator with TestGenerator with M0 with M5 with M6 {
   self: e0 with e1 with e2 with e3 with e4 with e5 =>
   val domain:MathDomain with ModelDomain
 

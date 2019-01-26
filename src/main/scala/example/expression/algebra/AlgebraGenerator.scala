@@ -2,13 +2,13 @@ package example.expression.algebra    /*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.{BodyDeclaration, MethodDeclaration}
 import example.expression.domain.{BaseDomain, ModelDomain}
-import example.expression.j.{JavaBinaryMethod, JavaGenerator, StandardJavaBinaryMethod}
+import example.expression.j.{JavaBinaryMethod, JavaGenerator}
 import org.combinators.templating.twirl.Java
 
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod with StandardJavaBinaryMethod {
+trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
   val domain:BaseDomain with ModelDomain
 
   def useLambdaWherePossible: Boolean = true
@@ -39,7 +39,6 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod with Standard
         dispatch(delta.expr.get, source.op.get, delta.params: _*)
       }
     }
-    //Java(s"${dependentDispatch(delta.expr.get, delta.op.get)}").expression[Expression]()
   }
 
   /**

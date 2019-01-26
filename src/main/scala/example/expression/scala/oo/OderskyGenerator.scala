@@ -10,7 +10,7 @@ import scala.meta.{Stat, Term}
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod with StandardScalaBinaryMethod {
+trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod {
 
   val domain:BaseDomain with ModelDomain
   import domain._
@@ -64,20 +64,6 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod with Standa
     } else {
       super.contextDispatch(source, delta)
     }
-  }
-
-  /**
-    * Responsible for delegating to a new operation on the current context.
-    */
-  override def delegateFixMe(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
-    val opargs = params.mkString(",")
-    val term = Term.Name(op.name.toLowerCase)   // should be able to be ..$params
-    Scala(s"new ${exp.name.capitalize}($opargs).${op.name.toLowerCase()}()").expression
-  }
-
-  /** For Odersky, same behavior as delegate. */
-  override def identify(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
-    delegateFixMe(exp, op, params : _*)
   }
 
   /** Computer return type for given operation (or void). */

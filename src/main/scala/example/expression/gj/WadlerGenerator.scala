@@ -35,19 +35,6 @@ trait WadlerGenerator extends GJGenerator  {
     GJ(s"""$expr.visit(new ${op.name.capitalize}())""")
   }
 
-  /**
-    * Responsible for delegating to a new operation on the current context. Might not be valid for gj
-    */
-  def delegateFixMe(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
-    val opargs = params.mkString(",")
-    GJ(s"this.${op.name.toLowerCase}($opargs)")
-  }
-
-  /** For Wadler, same behavior as delegate. */
-  override def identify(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
-    delegateFixMe(exp, op, params : _*)
-  }
-
   /** Return designated GJ type associated with type, or void if all else fails. */
   override def typeConverter(tpe:TypeRep) : Type = {
     tpe match {

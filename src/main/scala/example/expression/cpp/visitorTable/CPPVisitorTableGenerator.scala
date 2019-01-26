@@ -4,7 +4,7 @@ import example.expression.cpp._
 import example.expression.domain.{BaseDomain, ModelDomain}
 
 // visitor based solution that uses a hashtable to store partial results of recursive calls.
-trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerator with DependentDispatch with CPPBinaryMethod with StandardCPPBinaryMethod {
+trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerator with CPPBinaryMethod {
 
   val domain: BaseDomain with ModelDomain
   import domain._
@@ -45,28 +45,46 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
     exp.attributes.map(att => att.name -> new CPPElement(s"${att.name}")).toMap
   }
 
+  /** For straight design solution, directly access attributes by name. */
+  override def subExpression(exp:Atomic, name:String) : CPPElement = {
+    exp.attributes.filter(att => att.name.equals(name)).map(att => new CPPElement(s"${att.name}")).head
+  }
+
   /** Directly access local method, one per operation, with a parameter. For VisitorTable, must grab from valueMap. */
   override def dispatch(expr:CPPElement, op:Operation, params:CPPElement*) : CPPElement = {
     val args:String = params.mkString(",")
     new CPPElement(s"value_map_[e->get${expr.toString.capitalize}($args)]")
   }
 
-  // dependent dispatch (new CPPElement(s"(new ${op.name.capitalize}(${rec_convert(inst)}))->getValue()"))
-  override def dependentDispatch(expr:CPPElement, op:domain.Operation, params:CPPElement*) : CPPElement = {
-    new CPPElement(s"(new ${op.name.capitalize}(e->get${expr.toString.capitalize}()))->getValue()")
-  }
+  /** Standard implementation relies on dependent dispatch. TODO: FIX */
+  override def contextDispatch(source:Context, delta:Delta) : Expression = {
+    if (delta.isIndependent) {
+      // a test case. Must then use delta.expr "as is"
+      val opargs = if (delta.params.size > 0) {
+        "," + delta.params.mkString (",")
+      } else {
+        ""
+      }
 
-  /**
-    * Responsible for dispatching sub-expressions with possible parameter(s).
-    */
-  override def binaryDispatch(expr:CPPElement, op:domain.Operation, params:CPPElement*) : CPPElement = {
-    val args = if (params.nonEmpty) {
-      "," + params.mkString(",")
+      new CPPElement(s"((new ${delta.op.get.name.capitalize}(${delta.expr.get}$opargs))->getValue())")
+      //new CPPElement(s"${delta.expr.get}->${delta.op.get.name.toLowerCase}()")
+    } else if (delta.expr.isEmpty) {
+      val op = delta.op.get.name.capitalize
+      val args = delta.params.mkString (",")
+      new CPPElement(s"(new $op(e))->getValue()")
+      // new CPPElement(s"$op($args)")
+    } else if (delta.op.isDefined) {
+      val opParams = if (delta.params.nonEmpty) {
+        "(" + delta.params.mkString(",") + ")"
+      } else {
+        ""
+      }
+      // $opParams what to do?
+      val op = delta.op.get.name.capitalize
+      new CPPElement(s"(new $op(value_map_[e->get${delta.expr.get.toString.capitalize}($opParams)]))->getValue()")
     } else {
-      ""
+      super.contextDispatch(source, delta)
     }
-
-    new CPPElement(s"(new ${op.name.capitalize}($expr$args))->getValue()")
   }
 
   /**

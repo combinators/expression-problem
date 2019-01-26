@@ -5,7 +5,7 @@ import example.expression.domain.{BaseDomain, ModelDomain}
 
 // visitor based solution
 // https://www.codeproject.com/Tips/1018315/%2FTips%2F1018315%2FVisitor-with-the-Return-Value
-trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator with CPPBinaryMethod with StandardCPPBinaryMethod {
+trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator with CPPBinaryMethod  {
 
   val domain: BaseDomain with ModelDomain
   import domain._
@@ -34,14 +34,14 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
       generateBase(flat) // base class $BASE
   }
 
-  /** Must convert &e into pointer. */
-  override def inBinaryContext(e:expt) : expt = {
-    new CPPElement(s"&${e.toString}")
-  }
-
   /** For straight design solution, directly access attributes by name. */
   override def subExpressions(exp:Atomic) : Map[String,CPPElement] = {
     exp.attributes.map(att => att.name -> new CPPElement(s"${att.name}")).toMap
+  }
+
+  /** For straight design solution, directly access attributes by name. */
+  override def subExpression(exp:Atomic, name:String) : CPPElement = {
+    exp.attributes.filter(att => att.name.equals(name)).map(att => new CPPElement(s"${att.name}")).head
   }
 
   /** Directly access local method, one per operation, with a parameter representing visitor name. */
@@ -50,24 +50,26 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
     new CPPElement(s"(new ${op.name.capitalize}(e.get${expr.toString.capitalize}($args)))->getValue()")
   }
 
-  /** remove the "e." from dependent dispatch. BREAKS SIMPLIFY WHICH ALSO USES FORM OF DEPENDENT DISPATCH*/
-  // TODO: Need a strategy for dependentDispatch that works!!!
-//  override def dependentDispatch(expr:CPPElement, op:Operation, params:CPPElement*) : CPPElement = {
-//    val args:String = params.mkString(",")
-//    new CPPElement(s"(new ${op.name.capitalize}($expr))->getValue()")
-//  }
+  /** Standard implementation relies on dependent dispatch. TODO: FIX */
+  override def contextDispatch(source:Context, delta:Delta) : Expression = {
+    if (delta.isIndependent) {
+      // a test case. Must then use delta.expr "as is"
+      val opargs = if (delta.params.size > 0) {
+        "," + delta.params.mkString (",")
+      } else {
+        ""
+      }
 
-  /**
-    * Responsible for dispatching sub-expressions with possible parameter(s).
-    */
-  override def binaryDispatch(expr:CPPElement, op:domain.Operation, params:CPPElement*) : CPPElement = {
-    val args = if (params.nonEmpty) {
-      "," + params.mkString(",")
+      new CPPElement(s"((new ${delta.op.get.name.capitalize}(${delta.expr.get}$opargs))->getValue())")
+      //new CPPElement(s"${delta.expr.get}->${delta.op.get.name.toLowerCase}()")
+    } else if (delta.expr.isEmpty) {
+      val op = delta.op.get.name.capitalize
+      val args = delta.params.mkString (",")
+      new CPPElement(s"(new $op(&e))->getValue()")
+     // new CPPElement(s"$op($args)")
     } else {
-      ""
+      super.contextDispatch(source, delta)
     }
-
-    new CPPElement(s"(new ${op.name.capitalize}($expr$args))->getValue()")
   }
 
   /**

@@ -2,7 +2,6 @@ package example.expression.j  /*DD:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
 import example.expression.domain._
-import example.expression.generator.BinaryMethod
 import org.combinators.templating.twirl.Java
 
 /**
@@ -12,7 +11,7 @@ import org.combinators.templating.twirl.Java
   *
   * First operation that has parameter which has eExp-recursive structure
   */
-trait e6 extends Evolution with JavaGenerator with JUnitTestGenerator with BinaryMethod with OperationDependency with M0 with M5 with M6 {
+trait e6 extends Evolution with JavaGenerator with JUnitTestGenerator with OperationDependency with M0 with M5 with M6 {
   self: e0 with e1 with e2 with e3 with e4 with e5 =>
   val domain:MathDomain with ModelDomain
 
@@ -47,16 +46,6 @@ trait e6 extends Evolution with JavaGenerator with JUnitTestGenerator with Binar
         val lhs:Expression = contextDispatch(source, leftDelta)
         val rhs:Expression = contextDispatch(source, rightDelta)
         result(Java(s"$lhs.same($rhs)").expression[Expression]())
-
-        // TODO: very close to replace with. Problems in ExtensibleVisitor (missing methods) as well
-        // TODO: as Algebra (since naming conventions don't always work).
-        // val that:Expression = Java("that").expression[Expression]()
-        // Java(s"return ${delegate(exp,domain.AsTree)}.same(${dispatch(that, domain.AsTree)});").statements
-
-       /////result(Java(s" $binaryContext$opn().same(that.$opn())").expression[Expression]())
-
-//        val that = Scala(s"that").expression
-//        result(Scala(s"(${delegateFixMe(exp,domain.AsTree,atts:_*)} == ${dependentDispatch(that, domain.AsTree)})").expression)
 
       case _ => super.logic(exp, op)
     }

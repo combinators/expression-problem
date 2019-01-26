@@ -10,7 +10,7 @@ import scala.meta.{Source, Stat, Term}
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod with StandardScalaBinaryMethod {
+trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod {
 
   val domain:BaseDomain with ModelDomain
   import domain._
@@ -64,23 +64,6 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod with StandardSca
   override def dispatch(expr:Expression, op:Operation, params:Expression*) : Expression = {
     val args:String = params.mkString(",")
     Scala(s"$expr.${op.name}($args)").expression
-  }
-
-  /**
-    * Responsible for delegating to a new operation on the current data-type, identified by exp.
-    *
-    * In this straight-oo solution, 'this' is always the context and the 'exp' parameter
-    * can be ignored.
-    */
-  override def delegateFixMe(expDelete:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
-    val opargs = params.mkString(",")
-    val term = Term.Name(op.name.toLowerCase)   // should be able to be ..$params
-    Scala(s"this.${op.name.toLowerCase}()").expression
-  }
-
-  /** For Scala generator, same behavior as delegate. */
-  override def identify(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
-    delegateFixMe(exp, op, params : _*)
   }
 
   /** Computer return type for given operation (or void). */

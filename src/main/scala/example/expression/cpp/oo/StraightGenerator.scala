@@ -3,9 +3,8 @@ package example.expression.cpp.oo    /*DI:LD:AD*/
 import example.expression.cpp._
 import example.expression.domain.{BaseDomain, ModelDomain}
 
-// https://eli.thegreenplace.net/2016/the-expression-problem-and-its-solutions/
 // straight C++ solution
-trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with CPPBinaryMethod with StandardCPPBinaryMethod {
+trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with CPPBinaryMethod {
 
   val domain: BaseDomain with ModelDomain
   import domain._
@@ -22,13 +21,32 @@ trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with
 
     flat.types.map(tpe => generateExp(flat, tpe)) ++
     flat.types.map(tpe => generateExpImpl(flat, tpe)) :+
-    //  defaultHeaderFile() :+
-      generateBase(flat) // base class $BASE
+      generateBase(flat)
   }
 
   /** For straight design solution, directly access attributes by name. */
   override def subExpressions(exp:Atomic) : Map[String,CPPElement] = {
     exp.attributes.map(att => att.name -> new CPPElement(s"${att.name}")).toMap
+  }
+
+  /** For straight design solution, directly access attributes by name. */
+  override def subExpression(exp:Atomic, name:String) : CPPElement = {
+    exp.attributes.filter(att => att.name.equals(name)).map(att => new CPPElement(s"${att.name}")).head
+  }
+
+  /** Standard implementation relies on dependent dispatch. TODO: FIX */
+  override def contextDispatch(source:Context, delta:Delta) : Expression = {
+    if (delta.isIndependent) {
+      // a test case. Must then use delta.expr "as is"
+      val opargs = delta.params.mkString (",")
+      new CPPElement(s"${delta.expr.get}->${delta.op.get.name.toLowerCase}($opargs)")
+    } else if (delta.expr.isEmpty) {
+      val op = delta.op.get.name.toLowerCase
+      val args = delta.params.mkString (",")
+      new CPPElement(s"$op($args)")
+    } else {
+     super.contextDispatch(source, delta)
+    }
   }
 
   /** Directly access local method, one per operation, with a parameter. */
@@ -37,18 +55,18 @@ trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with
     new CPPElement(s"get${expr.toString.capitalize}($args)->${op.name.toLowerCase}()")
   }
 
-  /**
-    * Responsible for dispatching sub-expressions with possible parameter(s).
-    */
-  override def binaryDispatch(expr:CPPElement, op:domain.Operation, params:CPPElement*) : CPPElement = {
-    val args = if (params.nonEmpty) {
-      params.mkString(",")
-    } else {
-      ""
-    }
-
-    new CPPElement(s"$expr->${op.name.toLowerCase()}($args)")
-  }
+//  /**
+//    * Responsible for dispatching sub-expressions with possible parameter(s).
+//    */
+//  override def binaryDispatch(expr:CPPElement, op:domain.Operation, params:CPPElement*) : CPPElement = {
+//    val args = if (params.nonEmpty) {
+//      params.mkString(",")
+//    } else {
+//      ""
+//    }
+//
+//    new CPPElement(s"$expr->${op.name.toLowerCase()}($args)")
+//  }
 
   /** Return designated Java type associated with type, or void if all else fails. */
   override def typeConverter(tpe:TypeRep) : CPPType = {

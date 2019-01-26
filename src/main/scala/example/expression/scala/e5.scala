@@ -70,8 +70,6 @@ trait e5 extends Evolution with ScalaGenerator with TestGenerator with Operation
 
       test match {
         case ctc: SameTestCase =>
-          //val tree1 = dependentDispatch(convert(ctc.inst1), domain.AsTree)
-          //val tree2 = dependentDispatch(convert(ctc.inst2), domain.AsTree)
           val tree1 = contextDispatch(source, deltaExprOp(source, convert(ctc.inst1), domain.AsTree))
           val tree2 = contextDispatch(source, deltaExprOp(source, convert(ctc.inst2), domain.AsTree))
 

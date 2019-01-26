@@ -7,7 +7,7 @@ import example.expression.domain.{Evolution, M0, M1, M2, M3, M4}
   *
   * Still C++-based, naturally and CPPUnit
   */
-trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with DependentDispatch with CPPProducer with M0 with M1 with M2 with M3 with M4 {
+trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with CPPProducer with M0 with M1 with M2 with M3 with M4 {
   self:cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3 =>
 
   import domain._
@@ -60,6 +60,7 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with Depende
     val atts:Map[String,CPPElement] = subExpressions(exp)
 
     // generate the actual body
+    val source = Source(exp,op)
     op match {
       case Collect =>
         val tpe = op.returnType.get match {
@@ -96,67 +97,81 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with Depende
         val negOne = new CPPElement("-1.0")
         exp match {
             // STILL has work to do...
-          case Lit => {
+          case Lit =>
             val value = new CPPElement(s"${valueOf(atts(litValue))}")
             Seq(new CPPElement(s"""${result(inst(Lit, value)).mkString("\n")} """))
-          }
 
-          case Add => Seq(new CPPElement(s"""
-                                            |double leftV = ${dependentDispatch(atts(domain.base.left), Eval)};
-                                            |double rightV = ${dependentDispatch(atts(domain.base.right), Eval)};
-                                            |if (leftV + rightV == 0) {
-                                            |  ${result(inst(Lit, zero)).mkString("\n")}
-                                            |} else if (leftV == 0) {
-                                            |  ${result(dispatch(atts(domain.base.right), Simplify)).mkString("\n")}
-                                            |} else if (rightV == 0) {
-                                            |  ${result(dispatch(atts(domain.base.left), Simplify)).mkString("\n")}
-                                            |} else {
-                                            |  ${result(inst(Add, dispatch(atts(domain.base.left), Simplify),dispatch(atts(domain.base.right), Simplify))).mkString("\n")}
-                                            |}""".stripMargin))
-          case Sub => Seq(new CPPElement(s"""
-                                            |double leftV = ${dependentDispatch(atts(domain.base.left), Eval)};
-                                            |double rightV = ${dependentDispatch(atts(domain.base.right), Eval)};
-                                            |if (leftV == rightV) {
-                                            |  ${result(inst(Lit, zero)).mkString("\n")}
-                                            |} else {
-                                            |  ${result(inst(Sub, dispatch(atts(domain.base.left), Simplify),dispatch(atts(domain.base.right), Simplify))).mkString("\n")}
-                                            |}""".stripMargin))
 
-          case Mult => Seq(new CPPElement(s"""
-                                            |double leftV = ${dependentDispatch(atts(domain.base.left), Eval)};
-                                            |double rightV = ${dependentDispatch(atts(domain.base.right), Eval)};
-                                            |if (leftV == 0 || rightV == 0) {
-                                            |  ${result(inst(Lit, zero)).mkString("\n")}
-                                            |} else if (leftV == 1) {
-                                            |  ${result(dispatch(atts(domain.base.right), Simplify)).mkString("\n")}
-                                            |} else if (rightV == 1) {
-                                            |  ${result(dispatch(atts(domain.base.left), Simplify)).mkString("\n")}
-                                            |} else {
-                                            |  ${result(inst(Mult, dispatch(atts(domain.base.left), Simplify),dispatch(atts(domain.base.right), Simplify))).mkString("\n")}
-                                            |}""".stripMargin))
-          case Divd => Seq(new CPPElement(s"""
-                                            |double leftV = ${dependentDispatch(atts(domain.base.left), Eval)};
-                                            |double rightV = ${dependentDispatch(atts(domain.base.right), Eval)};
-                                            |if (leftV == 0) {
-                                            |  ${result(inst(Lit, zero)).mkString("\n")}
-                                            |} else if (rightV == 1) {
-                                            |  ${result(dispatch(atts(domain.base.left), Simplify)).mkString("\n")}
-                                            |} else if (leftV == rightV) {
-                                            |   ${result(inst(Lit, one)).mkString("\n")}
-                                            |} else if (leftV == -rightV) {
-                                            |   ${result(inst(Lit, negOne)).mkString("\n")}
-                                            |} else {
-                                            |  ${result(inst(Divd, dispatch(atts(domain.base.left), Simplify),dispatch(atts(domain.base.right), Simplify))).mkString("\n")}
-                                            |}""".stripMargin))
+          case Add =>
+            val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
+            val deltaRight = deltaChildOp(source, domain.base.right, Eval)
+            Seq(new CPPElement(s"""
+                      |double leftV = ${contextDispatch(source, deltaLeft)};
+                      |double rightV = ${contextDispatch(source, deltaRight)};
+                      |if (leftV + rightV == 0) {
+                      |  ${result(inst(Lit, zero)).mkString("\n")}
+                      |} else if (leftV == 0) {
+                      |  ${result(dispatch(atts(domain.base.right), Simplify)).mkString("\n")}
+                      |} else if (rightV == 0) {
+                      |  ${result(dispatch(atts(domain.base.left), Simplify)).mkString("\n")}
+                      |} else {
+                      |  ${result(inst(Add, dispatch(atts(domain.base.left), Simplify),dispatch(atts(domain.base.right), Simplify))).mkString("\n")}
+                      |}""".stripMargin))
+          case Sub =>
+            val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
+            val deltaRight = deltaChildOp(source, domain.base.right, Eval)
+            Seq(new CPPElement(s"""
+                      |double leftV = ${contextDispatch(source, deltaLeft)};
+                      |double rightV = ${contextDispatch(source, deltaRight)};
+                      |if (leftV == rightV) {
+                      |  ${result(inst(Lit, zero)).mkString("\n")}
+                      |} else {
+                      |  ${result(inst(Sub, dispatch(atts(domain.base.left), Simplify),dispatch(atts(domain.base.right), Simplify))).mkString("\n")}
+                      |}""".stripMargin))
+
+          case Mult =>
+            val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
+            val deltaRight = deltaChildOp(source, domain.base.right, Eval)
+            Seq(new CPPElement(s"""
+                      |double leftV = ${contextDispatch(source, deltaLeft)};
+                      |double rightV = ${contextDispatch(source, deltaRight)};
+                      |if (leftV == 0 || rightV == 0) {
+                      |  ${result(inst(Lit, zero)).mkString("\n")}
+                      |} else if (leftV == 1) {
+                      |  ${result(dispatch(atts(domain.base.right), Simplify)).mkString("\n")}
+                      |} else if (rightV == 1) {
+                      |  ${result(dispatch(atts(domain.base.left), Simplify)).mkString("\n")}
+                      |} else {
+                      |  ${result(inst(Mult, dispatch(atts(domain.base.left), Simplify),dispatch(atts(domain.base.right), Simplify))).mkString("\n")}
+                      |}""".stripMargin))
+          case Divd =>
+            val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
+            val deltaRight = deltaChildOp(source, domain.base.right, Eval)
+            Seq(new CPPElement(s"""
+                      |double leftV = ${contextDispatch(source, deltaLeft)};
+                      |double rightV = ${contextDispatch(source, deltaRight)};
+                      |if (leftV == 0) {
+                      |  ${result(inst(Lit, zero)).mkString("\n")}
+                      |} else if (rightV == 1) {
+                      |  ${result(dispatch(atts(domain.base.left), Simplify)).mkString("\n")}
+                      |} else if (leftV == rightV) {
+                      |   ${result(inst(Lit, one)).mkString("\n")}
+                      |} else if (leftV == -rightV) {
+                      |   ${result(inst(Lit, negOne)).mkString("\n")}
+                      |} else {
+                      |  ${result(inst(Divd, dispatch(atts(domain.base.left), Simplify),dispatch(atts(domain.base.right), Simplify))).mkString("\n")}
+                      |}""".stripMargin))
 
           // TODO: Would love to have ability to simplify neg(neg(x)) to just be x. This requires a form
           // of inspection that might not be generalizable...
-          case Neg => Seq(new CPPElement(s"""
-                                            |if (${dependentDispatch(atts(domain.base.inner), Eval)} == 0) {
-                                            |   ${result(inst(Lit, zero)).mkString("\n")}
-                                            |} else {
-                                            |   ${result(inst(Neg, dispatch(atts(domain.base.inner), Simplify))).mkString("\n")}
-                                            |}""".stripMargin))
+          case Neg =>
+            val deltaInner = deltaChildOp(source, domain.base.inner, Eval)
+            Seq(new CPPElement(s"""
+                      |if (${contextDispatch(source, deltaInner)} == 0) {
+                      |   ${result(inst(Lit, zero)).mkString("\n")}
+                      |} else {
+                      |   ${result(inst(Neg, dispatch(atts(domain.base.inner), Simplify))).mkString("\n")}
+                      |}""".stripMargin))
           case _ => super.logic(exp, op)
         }
 

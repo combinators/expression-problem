@@ -61,21 +61,36 @@ trait LanguageIndependentGenerator {
   case class Source(e:Atomic, o:Operation, p:Expression*) extends Context(Some(e), Some(o), p : _*)
   case class TestSource() extends Context(None, None)
 
-  case class Delta(expr:Option[Expression], override val op:Option[Operation], override val params:Expression*) extends Context(None, op, params : _*)
+  class Delta(val expr:Option[Expression], override val op:Option[Operation], override val params:Expression*) extends Context(None, op, params : _*) {
+    def isIndependent: Boolean = false
+  }
+
+  class DeltaIndependent(override val expr:Option[Expression], override val op:Option[Operation], override val params:Expression*) extends Delta(expr, op, params : _*) {
+    override def isIndependent: Boolean = true
+  }
 
   /** Helper method for constructor Delta when changing both the expression AND operation. */
   def deltaChildOp(source:Source, attName:String, op:Operation, params:Expression*) : Delta = {
-    Delta(Some(subExpression(source.e, attName)), Some(op), params : _*)
+    new Delta(Some(subExpression(source.e, attName)), Some(op), params : _*)
   }
 
   /** Helper method for constructor Delta when requesting operation on a different expression. */
   def deltaExprOp(source:Context, expr:Expression, op:Operation, params:Expression*) : Delta = {
-    Delta(Some(expr), Some(op), params : _*)
+    new Delta(Some(expr), Some(op), params : _*)
+  }
+
+  /**
+    * Helper method for constructor Delta when requesting operation on a different expression which
+    * is truly independent from any context. For now, only used by C++ to avoid issues with getters
+    * and setters. Ultimately could be made into a new top-level API like independentDispatch
+    */
+  def deltaIndependentExprOp(source:Context, expr:Expression, op:Operation, params:Expression*) : Delta = {
+    new DeltaIndependent(Some(expr), Some(op), params : _*)
   }
 
   /** Helper method for constructor Delta when requesting operation on self. */
   def deltaOp(source:Source, op:Operation, params:Expression*) : Delta = {
-    Delta(None, Some(op), params : _*)
+    new Delta(None, Some(op), params : _*)
   }
 
   /** Retrieve model under consideration. */
@@ -176,25 +191,6 @@ trait LanguageIndependentGenerator {
     * 2.
     */
   def contextDispatch(source:Context, delta:Delta) : Expression
-
-  /**
-    * Responsible for identifying the expression representing the given data subtype.
-    *
-    * In an object-oriented-style of programming, this could be an instantiated object representing
-    * the sub-type. For a functional-oriented languages this could be the function name.
-    */
-  def identify(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression
-
-  /**
-    * Responsible for delegating to a new operation on the current data-type context, which
-    * is passed in as first parameter.
-    *
-    * In some cases, possible to ignore the current context, but that is decision to be made
-    * by the implementation
-    *
-    * Should have expr:Expression as context as minimum, rather than just top-level entry
-    */
-  def delegateFixMe(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression
 
   /**
     * Expression-tree data has attributes with domain-specific types. This method returns

@@ -10,7 +10,7 @@ import scala.meta.{Stat, Term}
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with StandardScalaBinaryMethod {
+trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod {
 
   val domain:BaseDomain with ModelDomain
   import domain._
@@ -85,20 +85,6 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
     }
   }
 
-  /**
-    * Responsible for delegating to a new operation on the current context.
-    */
-  override def delegateFixMe(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
-    val opargs = params.mkString(",")
-    val term = Term.Name(op.name.toLowerCase)   // should be able to be ..$params
-    Scala(s"${op.name.toLowerCase}(new ${exp.name.capitalize}($opargs))").expression
-  }
-
-  /** For Functional Generator, same behavior as delegate. */
-  override def identify(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
-    delegateFixMe(exp, op, params : _*)
-  }
-
   /** Handle self-case here. */
   override def contextDispatch(source:Context, delta:Delta) : Expression = {
 
@@ -123,19 +109,6 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod with Sta
       }
     }
   }
-
-  /**
-    * Responsible for dispatching sub-expressions with possible parameter(s).
-    */
-  override def dependentDispatch(expr:Term, op:domain.Operation, params:Term*) : Term = {
-    val opParams = if (params.nonEmpty) {
-      "(" + params.mkString(",") + ")"
-    } else {
-      ""
-    }
-
-    Scala(s"${op.name.toLowerCase}($expr)$opParams").expression
-  } // Scala(s"apply($expr)$args").expression()
 
   /** Computer return type for given operation (or void). */
   def returnType(op:Operation): Type = {

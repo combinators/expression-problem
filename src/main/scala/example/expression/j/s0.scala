@@ -13,7 +13,6 @@ import org.combinators.templating.twirl.Java
 trait s0 extends Evolution with JavaGenerator with JUnitTestGenerator with S0 {
   val domain:ShapeDomain
 
-
   /** E0 Introduces the concept a Double type, used for the 'Eval' operation. */
   abstract override def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {
     tpe match {

@@ -9,7 +9,7 @@ import org.combinators.templating.twirl.Java
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with VisitorJavaBinaryMethod with OperationAsMethodGenerator with JavaBinaryMethod {
+trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with OperationAsMethodGenerator with JavaBinaryMethod {
   val domain:BaseDomain with ModelDomain
 
   /**

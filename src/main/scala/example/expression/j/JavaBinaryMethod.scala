@@ -2,13 +2,11 @@ package example.expression.j      /*DI:LD:AI*/
 
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.`type`.Type
-import com.github.javaparser.ast.body.{BodyDeclaration, MethodDeclaration}
-import com.github.javaparser.ast.stmt.Statement
+import com.github.javaparser.ast.body.MethodDeclaration
 import example.expression.domain.{BaseDomain, ModelDomain}
-import example.expression.generator.BinaryMethod
 import org.combinators.templating.twirl.Java
 
-trait JavaBinaryMethod extends BinaryMethod {
+trait JavaBinaryMethod {
   val domain:BaseDomain with ModelDomain
 
   /**

@@ -2,19 +2,15 @@ package example.expression.scala    /*DI:LD:AI*/
 
 import java.io.File
 import java.nio.file.{Path, Paths}
-
 import example.expression.domain.{BaseDomain, ModelDomain}
-import example.expression.generator.BinaryMethod
-
 import scala.meta._
 
-trait ScalaBinaryMethod extends BinaryMethod {
+trait ScalaBinaryMethod {
   val domain:BaseDomain with ModelDomain
   import domain._
 
   /** Specially required files are placed in this area. */
   val scalaResources:String = Seq("src", "main", "resources", "scala-code").mkString(File.separator)
-
 
   /** Taken from scala meta web page. */
   def loadSource(entry:String*) : ScalaMainWithPath = {

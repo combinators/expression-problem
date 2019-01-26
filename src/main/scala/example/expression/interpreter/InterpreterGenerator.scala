@@ -6,7 +6,7 @@ import example.expression.j._
 import expression.ReplaceType
 import org.combinators.templating.twirl.Java
 
-trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator with StandardJavaBinaryMethod with OperationAsMethodGenerator with JavaBinaryMethod {
+trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator  with OperationAsMethodGenerator with JavaBinaryMethod {
 
   /**
     * Generating an interpreter solution requires:

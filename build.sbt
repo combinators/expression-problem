@@ -12,6 +12,14 @@ lazy val commonSettings = Seq(
     Resolver.typesafeRepo("releases")
   ),
 
+  scalacOptions in doc ++= Seq(
+    "-unchecked",
+    "-deprecation",
+    "-feature",
+    "-groups",
+    "-language:implicitConversions"
+  ),
+
   scalacOptions ++= Seq(
     "-unchecked",
     "-deprecation",

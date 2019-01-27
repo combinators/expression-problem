@@ -29,7 +29,7 @@ trait e6 extends Evolution with ScalaGenerator with TestGenerator with M0 with M
         val opn = domain.AsTree.name
         val atts= exp.attributes.map(att => Scala(att.name).expression)
 
-        val leftDelta = deltaOp(source, domain.AsTree)
+        val leftDelta = deltaSelfOp(source, domain.AsTree)
         val rightDelta = deltaExprOp(source, Scala("that").expression, domain.AsTree)
         val lhs:Expression = contextDispatch(source, leftDelta)
         val rhs:Expression = contextDispatch(source, rightDelta)

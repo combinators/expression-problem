@@ -3,9 +3,6 @@ package example.expression.domain  /*DI:LI:AI*/
 /** Foundational trait for all EP domains. */
 trait BaseDomain {
 
-  //x type Expression                           /** Base concept for a single expression in language. */
-  //x def expression(s:String) : Expression     /** Method to produce expression from arbitrary string. */
-
   /** Always allow, unless overridden to deny because of reserved word. Not yet Working*/
   var reserved = Array("print")
 
@@ -88,17 +85,4 @@ trait BaseDomain {
 
   case class EqualsCompositeTestCase(inst:AtomicInst, ops:Seq[Operation], override val expect:(TypeRep,Any), params:(TypeRep,Any)*)
     extends TestCaseExpectedValue(expect)
-
-  // consider adding a binary predicate (just its name, such as Equals)
-  // in code generating would compile binary predicate to a function (ExP,Exp) => Exp
-
-//  // when asked, will return an instance of type T
-//  abstract class Dispatch[T](val op:Operation) extends TypeRep {
-//    def apply() : T
-//  }
-//
-//  // in is typed as Any since it really will be code expressions (in some language)
-//  abstract case class RecursiveApply[T](d:Dispatch[T], override val op:Operation) extends Dispatch[T](op)
-//  abstract case class BaseApply[T](in:AtomicInst, override val op:Operation) extends Dispatch[T](op)
-
 }

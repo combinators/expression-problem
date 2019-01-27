@@ -47,7 +47,7 @@ trait cpp_e5 extends Evolution with CPPGenerator with TestGenerator with M0 with
             val attParams = atts.map(att => new CPPElement(s"${valueOf(atts(att._2.toString))}->astree()")).mkString(",")
             val vec1 = new CPPElement(s"std::vector<Tree *> vec_${exp.name} = { $attParams };")
 
-            val deltaSelf = deltaOp(source, Identifier)
+            val deltaSelf = deltaSelfOp(source, Identifier)
             val rhs = contextDispatch(source, deltaSelf)
             Seq(vec1) ++ result(new CPPElement(s" new Node(vec_${exp.name}, $rhs) "))
         }

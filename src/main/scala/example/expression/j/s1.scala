@@ -38,7 +38,7 @@ trait s1 extends JavaGenerator with JUnitTestGenerator with S1 { self:s0 =>
           }
 
           case Translate => {
-            val disp = dispatch(subs(shape), op, expression("pct"))
+            val disp = dispatch(subs(shape), op, Java("pct").expression[Expression]())
             Java(
               s"""
                  |return ${inst(Translate, subs(trans),disp)};

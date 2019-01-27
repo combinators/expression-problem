@@ -41,7 +41,7 @@ trait e6 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
 
         // GOAL: requesting AsTree on self produces same tree as invoking
         // AsTree on that.
-        val leftDelta = deltaOp(source, domain.AsTree)
+        val leftDelta = deltaSelfOp(source, domain.AsTree)
         val rightDelta = deltaExprOp(source, Java("that").expression[Expression], domain.AsTree)
         val lhs:Expression = contextDispatch(source, leftDelta)
         val rhs:Expression = contextDispatch(source, rightDelta)

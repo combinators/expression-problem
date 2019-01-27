@@ -47,13 +47,13 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
         exp match {   // was $litValue     ;
           case Lit =>   // ${exp.hashCode()}
             val attParams = atts.map(att => att._2.toString).mkString(",")
-            val deltaSelf = deltaOp(source, Identifier)
+            val deltaSelf = deltaSelfOp(source, Identifier)
             val rhs = contextDispatch(source, deltaSelf)
             result(Java(s" new tree.Node(java.util.Arrays.asList(new tree.Leaf($attParams)), $rhs) ").expression[Expression]())
 
           case Add|Sub|Mult|Divd|Neg =>
             val attParams = atts.map(att => att._2.toString + ".astree()").mkString(",")
-            val deltaSelf = deltaOp(source, Identifier)
+            val deltaSelf = deltaSelfOp(source, Identifier)
             val rhs = contextDispatch(source, deltaSelf)
             result(Java(s" new tree.Node(java.util.Arrays.asList($attParams), $rhs) ").expression[Expression]())
           }

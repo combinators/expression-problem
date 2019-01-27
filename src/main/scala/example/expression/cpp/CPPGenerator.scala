@@ -17,9 +17,6 @@ trait CPPGenerator extends LanguageIndependentGenerator {
   type Expression = CPPElement
   type Statement = CPPElement
 
-  /** Default helper to convert string into Expression. */
-  def expression(s:String) : Expression = new CPPElement(s)
-
   /**
     * Default behavior in C++ is to return an expression value.
     */

@@ -34,7 +34,7 @@ trait cpp_e6 extends Evolution with CPPGenerator with CPPBinaryMethod with TestG
     // generate the actual body; since this is a binary method
     op match {
       case Equals =>
-        val leftDelta = deltaOp(source, domain.AsTree)
+        val leftDelta = deltaSelfOp(source, domain.AsTree)
         val rightDelta = deltaIndependentExprOp(source, new CPPElement("that"), domain.AsTree)
         val lhs:Expression = contextDispatch(source, leftDelta)
         val rhs:Expression = contextDispatch(source, rightDelta)

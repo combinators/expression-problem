@@ -129,12 +129,19 @@ trait LanguageIndependentGenerator {
 
   /**
     * Return an expression that refers to the given sub-structure of a data-type by a
-    * specific attribute
+    * specific attribute.
+    *
+    * Each EP approach must provide a suitable implementation, which is aggregated by
+    * the helper methods [[subExpression]] and [[subExpressions]].
+    *
+    * By throwing a runtime exception, this method terminates any code generation that uses an invalid
+    * attribute name by mistake.
     *
     * @param exp   desired data-type
     * @param att   desired Attribute
     * @group api
     */
+  @throws[scala.NotImplementedError]("If given attribute doesn't exist in data-type.")
   def expression (exp:Atomic, att:Attribute) : Expression = {
     throw new scala.NotImplementedError(s"""Unknown Attribute "${att.name}" for "${exp.name}. """)
   }
@@ -146,17 +153,25 @@ trait LanguageIndependentGenerator {
     * expressions.UnaryExp only has an 'exp'. These attributes form the keys into this Map,
     * and the values (Expression objects) represent code fragments for accessing these values.
     *
+    * Each EP approach must provide a suitable [[expression]] method that is aggregated by this
+    * method
+    *
     * @param exp   data subtype being considered
     * @return      Map with entries for each attribute, and the resulting code expressions
     * @group api
     */
-  def subExpressions(exp:Atomic) : Map[String, Expression]
+  def subExpressions(exp:Atomic) : Map[String, Expression] = {
+    exp.attributes.map(att => att.name -> expression(exp, att)).toMap
+  }
 
   /**
     * Determines the code expression for a single child of a Exp subtype based on its attributes.
     *
     * By throwing a runtime exception, this method terminates any code generation that uses an invalid
     * attribute name by mistake.
+    *
+    * Each EP approach must provide a suitable [[expression]] method that is accessed by this
+    * method.
     *
     * @param exp   data subtype being considered
     * @param name  name of desired attribute
@@ -165,7 +180,7 @@ trait LanguageIndependentGenerator {
     */
   @throws[scala.NotImplementedError]("If no attribute with 'name' exists.")
   def subExpression(exp:Atomic, name:String) : Expression = {
-    throw new scala.NotImplementedError(s"""Unknown Attribute "$name" for "${exp.name}. """)
+    exp.attributes.filter(att => att.name.equals(name)).map(att => expression(exp, att)).head
   }
 
   /**

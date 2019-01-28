@@ -78,14 +78,9 @@ trait StraightGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
       Haskell(s"""(${op.name} (${primary.toString}) $args)""")
     }
 
-  /**
-    * Determines the Haskell expression for all children of a Exp subtype based on its attributes.
-    *
-    * For example, an expressions.BinaryExp has 'left' and 'right' attributes, whereas an
-    * expressions.UnaryExp only has an 'exp'
-    */
-  def subExpressions(exp:domain.Atomic) : Map[String, Haskell] = {
-    exp.attributes.map(att => att.name -> Haskell(s"${att.name}")).toMap
+  /** For straight design solution, directly access attributes by name. */
+  override def expression (exp:Atomic, att:Attribute) : Expression = {
+    Haskell(s"${att.name}")
   }
 
   /**

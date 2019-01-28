@@ -65,7 +65,7 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
 
       case _ =>
         val mcaps = m.name.capitalize    // haskell needs data to be capitalized!
-        val baseDomain = domain.baseTypeRep.name
+      val baseDomain = domain.baseTypeRep.name
 
         s"${op.name}$baseDomain$mcaps :: ${expDeclaration(m.base())} $mcaps -> ${typeConverter(op.returnType.get)}"
     }
@@ -90,24 +90,24 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     domain.baseTypeRep.name + "_" + m.name.capitalize
   }
 
-//  def typeSignature(m:Model, op:Operation):String = {
-//    val mcaps = m.name.capitalize    // haskell needs data to be capitalized!
-//    val baseDomain = domain.baseTypeRep.name
-//
-//    s"${op.name}$baseDomain$mcaps :: ${expDeclaration(m.base())} $mcaps -> ${typeConverter(op.returnType.get)}"
-//  }
+  //  def typeSignature(m:Model, op:Operation):String = {
+  //    val mcaps = m.name.capitalize    // haskell needs data to be capitalized!
+  //    val baseDomain = domain.baseTypeRep.name
+  //
+  //    s"${op.name}$baseDomain$mcaps :: ${expDeclaration(m.base())} $mcaps -> ${typeConverter(op.returnType.get)}"
+  //  }
 
   def operationForFixedLevel(m:Model, op:Operation) : String = {
     val mcaps = m.name.capitalize    // haskell needs data to be capitalized!
     val baseDomain = domain.baseTypeRep.name
 
     val invoke = m.inChronologicalOrder.reverse.tail.foldLeft(s"(${op.name}${expDeclaration(m)} helpWith${op.name.capitalize}$mcaps)")((former,tail) =>
-        s"(${op.name}${expDeclaration(tail)} $former)")
+      s"(${op.name}${expDeclaration(tail)} $former)")
 
-      s"""
-         #${typeSignature(m,op)}
-         #${op.name}$baseDomain$mcaps e = $invoke e
-         #""".stripMargin('#')
+    s"""
+       #${typeSignature(m,op)}
+       #${op.name}$baseDomain$mcaps e = $invoke e
+       #""".stripMargin('#')
   }
 
   /**
@@ -190,7 +190,7 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
       // Must remove the lastmost "empty" one, as well as the one before it, since we don't need ~ arguments
       // for the first definition in M0
       val prior = m.toSeq.filterNot(m => m.isEmpty || m.last.isEmpty).map(m =>
-         s"${expDeclaration(m)} f ~ ${extTypeDeclaration(m.last)} f")
+        s"${expDeclaration(m)} f ~ ${extTypeDeclaration(m.last)} f")
       "(" + prior.mkString(",") + s") => $header"
     } else {
       header
@@ -200,25 +200,25 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     val operationSpec = operationForFixedLevel(m, op)
 
     new Haskell(s"""
-         #-- | Evaluates expression.
-         #$name${expDeclaration(m)}
-         #  :: $signature
-         #  -- ^ Function to help with extensions
-         #  -> ${expDeclaration(m)} f
-         #  -- ^ The expression to evaluate
-         #  -> $returnType
-         #
+                   #-- | Evaluates expression.
+                   #$name${expDeclaration(m)}
+                   #  :: $signature
+                   #  -- ^ Function to help with extensions
+                   #  -> ${expDeclaration(m)} f
+                   #  -- ^ The expression to evaluate
+                   #  -> $returnType
+                   #
          #$inner
-         #$name${expDeclaration(m)} helpWith (${extDeclaration(m)} inner) = helpWith inner
-         #
+                   #$name${expDeclaration(m)} helpWith (${extDeclaration(m)} inner) = helpWith inner
+                   #
          #-- | Evaluates an $mcaps expression
-         #-- | Calls ${op.name}$baseDomain with the $mcaps helper
-         #$operationSpec
-         #
+                   #-- | Calls ${op.name}$baseDomain with the $mcaps helper
+                   #$operationSpec
+                   #
          #-- | Helps with extensions $mcaps
-         #helpWith${op.name.capitalize}$mcaps :: Void -> ${typeConverter(op.returnType.get)}
-         #helpWith${op.name.capitalize}$mcaps = absurd
-         #
+                   #helpWith${op.name.capitalize}$mcaps :: Void -> ${typeConverter(op.returnType.get)}
+                   #helpWith${op.name.capitalize}$mcaps = absurd
+                   #
          #""".stripMargin('#'))
   }   // Void had been $previous
 
@@ -244,9 +244,9 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     var pastExtensions:String = ""
     var now = m
     while (!now.last.isEmpty) {
-        val past = now.last
-        pastExtensions = s"type instance ${extTypeDeclaration(past)} $mcaps = ${expDeclaration(now)} $mcaps\n" + pastExtensions
-        now = now.last
+      val past = now.last
+      pastExtensions = s"type instance ${extTypeDeclaration(past)} $mcaps = ${expDeclaration(now)} $mcaps\n" + pastExtensions
+      now = now.last
     }
 
     // must find PAST operations and incorporate them here
@@ -261,30 +261,30 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     }
 
     new Haskell(s"""
-            #-- | Datatype
-            #-- | Parameter f is to be filled with the marker type of the
-            #-- | current evolution.
-            #$dataTypeDefinition
-            #
+                   #-- | Datatype
+                   #-- | Parameter f is to be filled with the marker type of the
+                   #-- | current evolution.
+                   #$dataTypeDefinition
+                   #
             #-- | Family of Exp data-type extensions:
-            #-- | Given a marker type of a evolution, compute the type extension
-            #-- | of Exp used for this evolution.
-            #type family ${extTypeDeclaration(m)} f
-            #
+                   #-- | Given a marker type of a evolution, compute the type extension
+                   #-- | of Exp used for this evolution.
+                   #type family ${extTypeDeclaration(m)} f
+                   #
             #$priorOps
-            #$ops
-            #
+                   #$ops
+                   #
             #-- Evolution $mcaps
-            #-- | Marker type to select evolution $mcaps
-            #data $mcaps
-            #
+                   #-- | Marker type to select evolution $mcaps
+                   #data $mcaps
+                   #
             #-- | Selecting $mcaps means: no extensions to type ${expDeclaration(m)}; take care of previous ones
-            #$pastExtensions
-            #type instance ${extTypeDeclaration(m)} $mcaps = Void
-            #
+                   #$pastExtensions
+                   #type instance ${extTypeDeclaration(m)} $mcaps = Void
+                   #
             #
             #$pastOps
-            #""".stripMargin('#'))   // HACK: Issue with "|"
+                   #""".stripMargin('#'))   // HACK: Issue with "|"
   }
 
   /**
@@ -300,7 +300,7 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     var past = m.last
     while (!past.isEmpty) {
       pastImports = s"import ${past.name.capitalize}\n" + pastImports
-        past = past.last
+      past = past.last
     }
 
     // HACK: Awkward to use stripmargin, since generateData might start with "|" char in Haskell!!
@@ -315,26 +315,21 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     HaskellWithPath(code, Paths.get(s"${m.name.capitalize}.hs"))
   }
 
-    /**
-      * Responsible for dispatching sub-expressions with possible parameter(s).
-      * Seems safest to include/embed parens here.
-      *
-      * middle operator is 'helpWith' or 'help' for extensions, and this needs to be 'fixed' by
-      * the one calling logic. This is not an ideal solution but it works
-      */
-    override def dispatch(primary:Haskell, op:domain.Operation, params:Haskell*) : Haskell = {
-      val args:String = params.mkString("")
-
-      Haskell(s"""(${op.name}${domain.baseTypeRep.name} helpWith ${primary.toString} $args)""")
-    }
-
   /**
-    * Determines the Haskell expression for all children of a Exp subtype based on its attributes.
+    * Responsible for dispatching sub-expressions with possible parameter(s).
+    * Seems safest to include/embed parens here.
     *
-    * For example, an expressions.BinaryExp has 'left' and 'right' attributes, whereas an
-    * expressions.UnaryExp only has an 'exp'
+    * middle operator is 'helpWith' or 'help' for extensions, and this needs to be 'fixed' by
+    * the one calling logic. This is not an ideal solution but it works
     */
-  def subExpressions(exp:domain.Atomic) : Map[String, Haskell] = {
-    exp.attributes.map(att => att.name -> Haskell(s"${att.name}")).toMap
+  override def dispatch(primary:Haskell, op:domain.Operation, params:Haskell*) : Haskell = {
+    val args:String = params.mkString("")
+
+    Haskell(s"""(${op.name}${domain.baseTypeRep.name} helpWith ${primary.toString} $args)""")
+  }
+
+  /** For straight design solution, directly access attributes by name. */
+  override def expression (exp:Atomic, att:Attribute) : Expression = {
+    Haskell(s"${att.name}")
   }
 }

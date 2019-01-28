@@ -15,7 +15,7 @@ abstract class FoundationOO @Inject()(web: WebJarsUtil, app: ApplicationLifecycl
 
     override lazy val generatedCode:Seq[ScalaWithPath] =
       gen.generatedCode() ++
-      gen.generateSuite(Some("odersky"), Some(gen.getModel))
+      gen.generateSuite(routingPrefix, Some(gen.getModel))
 
     override val routingPrefix: Option[String] = Some("odersky")
     override lazy val controllerAddress:String = gen.getModel.name

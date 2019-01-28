@@ -60,5 +60,4 @@ trait JavaBinaryMethod {
                |  return asTree.${exp.name.toLowerCase}($args).${domain.AsTree.name.toLowerCase}();
                |}""".stripMargin).methodDeclarations()
   }
-
 }

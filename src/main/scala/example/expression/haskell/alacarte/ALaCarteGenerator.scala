@@ -163,9 +163,13 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
     * For example, an expressions.BinaryExp has 'left' and 'right' attributes, whereas an
     * expressions.UnaryExp only has an 'exp'
     */
-  override def subExpressions(exp:domain.Atomic) : Map[String, Haskell] = {
-    exp.attributes.map(att => att.name -> Haskell(s"${att.name}")).toMap
+  override def expression (exp:domain.Atomic, att:domain.Attribute) : Expression = {
+    Haskell(s"${att.name}")
   }
+
+//  override def subExpressions(exp:domain.Atomic) : Map[String, Haskell] = {
+//    exp.attributes.map(att => att.name -> Haskell(s"${att.name}")).toMap
+//  }
 
   /** Responsible for dispatching sub-expressions with possible parameter(s). */
  override def dispatch(primary:Haskell, op:domain.Operation, params:Haskell*) : Haskell = {

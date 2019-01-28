@@ -49,14 +49,18 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
     Java(exp.name + "(" + params.map(expr => expr.toString()).mkString(",") + ")").expression()
   }
 
-  override def subExpressions(exp: domain.Atomic): Map[String, Expression] = {
-    exp.attributes.map(att => att.name -> Java(s"get${att.name.capitalize}()").expression[Expression]()).toMap
+  override def expression (exp:domain.Atomic, att:domain.Attribute) : Expression = {
+    Java(s"get${att.name.capitalize}()").expression[Expression]()
   }
 
-  /** For visitor design solution, access through default 'e' parameter */
-  override def subExpression(exp:domain.Atomic, name:String) : Expression = {
-    exp.attributes.filter(att => att.name.equals(name)).map(att => Java(s"get${att.name.capitalize}()").expression[Expression]()).head
-  }
+//  override def subExpressions(exp: domain.Atomic): Map[String, Expression] = {
+//    exp.attributes.map(att => att.name -> Java(s"get${att.name.capitalize}()").expression[Expression]()).toMap
+//  }
+//
+//  /** For visitor design solution, access through default 'e' parameter */
+//  override def subExpression(exp:domain.Atomic, name:String) : Expression = {
+//    exp.attributes.filter(att => att.name.equals(name)).map(att => Java(s"get${att.name.capitalize}()").expression[Expression]()).head
+//  }
 
   /** Return designated Java type associated with type, or void if all else fails. */
   override def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {

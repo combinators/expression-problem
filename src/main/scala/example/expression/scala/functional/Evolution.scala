@@ -15,7 +15,7 @@ abstract class FoundationGrows @Inject()(web: WebJarsUtil, app: ApplicationLifec
 
     override lazy val generatedCode:Seq[ScalaWithPath] =
       gen.generatedCode() ++
-      gen.generateSuite(Some("scala_func"), Some(gen.getModel))
+      gen.generateSuite(routingPrefix, Some(gen.getModel))
 
     override val routingPrefix: Option[String] = Some("scala_func")
     override lazy val controllerAddress:String = gen.getModel.name

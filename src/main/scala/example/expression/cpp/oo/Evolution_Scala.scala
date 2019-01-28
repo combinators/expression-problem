@@ -16,7 +16,7 @@ abstract class FoundationCPP @Inject()(web: WebJarsUtil, app: ApplicationLifecyc
 override lazy val generatedCode:Seq[CPPFile] =
     gen.generatedCode() ++
     gen.generateBinaryMethodHelpers() ++
-    gen.generateSuite(Some("cpp_oo"))
+    gen.generateSuite(routingPrefix)
 
   override val routingPrefix: Option[String] = Some("cpp_oo")
   override lazy val controllerAddress:String = gen.getModel.name

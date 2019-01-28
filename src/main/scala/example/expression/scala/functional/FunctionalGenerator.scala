@@ -39,15 +39,21 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod {
       generateBase(getModel.base())                                            // base class $BASE
   }
 
-  /** For straight design solution, directly access attributes by name. */
-  override def subExpressions(exp:Atomic) : Map[String,Expression] = {
-    exp.attributes.map(att => att.name -> Scala(s"${exp.name.toLowerCase}.${att.name}").expression).toMap
+  /** Access attribute via exp object. */
+  override def expression (exp:Atomic, att:Attribute) : Expression = {
+    Scala(s"${exp.name.toLowerCase}.${att.name}").expression
   }
 
-  /** For visitor design solution, access through default 'e' parameter */
-  override def subExpression(exp:domain.Atomic, name:String) : Expression = {
-    exp.attributes.filter(att => att.name.equals(name)).map(att => Scala(s"${exp.name.toLowerCase}.${att.name}").expression).head
-  }
+//
+//  /** For straight design solution, directly access attributes by name. */
+//  override def subExpressions(exp:Atomic) : Map[String,Expression] = {
+//    exp.attributes.map(att => att.name -> Scala(s"${exp.name.toLowerCase}.${att.name}").expression).toMap
+//  }
+//
+//  /** For visitor design solution, access through default 'e' parameter */
+//  override def subExpression(exp:domain.Atomic, name:String) : Expression = {
+//    exp.attributes.filter(att => att.name.equals(name)).map(att => Scala(s"${exp.name.toLowerCase}.${att.name}").expression).head
+//  }
 
   /** Directly access local method, one per operation, with a parameter. */
   override def dispatch(expr:Expression, op:Operation, params:Expression*) : Expression = {

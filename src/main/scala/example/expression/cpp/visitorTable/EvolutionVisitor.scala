@@ -16,7 +16,7 @@ abstract class FoundationVisitorCPP @Inject()(web: WebJarsUtil, app: Application
 override lazy val generatedCode:Seq[CPPFile] =
     gen.generatedCode() ++
     gen.generateBinaryMethodHelpers() ++
-    gen.generateSuite(Some("visitorTable"))
+    gen.generateSuite(routingPrefix)
 
   override val routingPrefix: Option[String] = Some("visitorTable")
   override lazy val controllerAddress:String = gen.getModel.name

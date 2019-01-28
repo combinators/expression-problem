@@ -51,8 +51,8 @@ trait BaseDomain {
   // TODO: in all cases (i.e., think graph structure) but also one can optimize the need for it away if you have Eq (for Haskell) or .equals for Java
 
   /** Return unique subtype instance given subtype. A bit like getClass. Take an instance of basetype and return subtype identifier. */
-  case class Identifier(override val name:String) extends TypeRep
-  class SubTypeIdentifier(override val name:String, override val returnType:Option[Identifier]) extends Operation(name, Some(baseTypeRep))
+//  case class Identifier(override val name:String) extends TypeRep
+//  class SubTypeIdentifier(override val name:String, override val returnType:Option[Identifier]) extends Operation(name, Some(baseTypeRep))
 
   /** Pre-defined unary/binary subtypes that reflects either a unary or binary structure. This is extensible. */
   abstract class Atomic(n1: String, val attributes: Seq[Attribute]) {

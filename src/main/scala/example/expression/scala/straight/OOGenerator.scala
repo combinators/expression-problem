@@ -40,14 +40,19 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod {
   }
 
   /** For straight design solution, directly access attributes by name. */
-  override def subExpressions(exp:Atomic) : Map[String,Expression] = {
-    exp.attributes.map(att => att.name -> Scala(s"${att.name}").expression).toMap
+  override def expression (exp:Atomic, att:Attribute) : Expression = {
+    Scala(s"${att.name}").expression
   }
 
-  /** For visitor design solution, access through default 'e' parameter */
-  override def subExpression(exp:domain.Atomic, name:String) : Expression = {
-    exp.attributes.filter(att => att.name.equals(name)).map(att => Scala(s"${att.name}").expression).head
-  }
+//  /** For straight design solution, directly access attributes by name. */
+//  override def subExpressions(exp:Atomic) : Map[String,Expression] = {
+//    exp.attributes.map(att => att.name -> Scala(s"${att.name}").expression).toMap
+//  }
+//
+//  /** For visitor design solution, access through default 'e' parameter */
+//  override def subExpression(exp:domain.Atomic, name:String) : Expression = {
+//    exp.attributes.filter(att => att.name.equals(name)).map(att => Scala(s"${att.name}").expression).head
+//  }
 
   /** Handle self-case here. */
   override def contextDispatch(source:Context, delta:Delta) : Expression = {

@@ -13,9 +13,10 @@ abstract class ExtensibleFoundation @Inject()(web: WebJarsUtil, app: Application
   extends CodeGenerationController[CompilationUnit](web, app) {
   val gen:WithDomain[MathDomain] with ExtensibleVisitorGenerator with ExtensibleVisitorTestGenerator
 
+  // since this "extends" the visitor pattern, we must stay within that package "visitor"
   override lazy val generatedCode:Seq[CompilationUnit] =
     gen.generatedCode() ++
-    gen.generateSuite(Some("expression"))
+    gen.generateSuite(Some("visitor"))
 
   override val routingPrefix: Option[String] = Some("extensibleVisitor")
   override lazy val controllerAddress:String = gen.getModel.name

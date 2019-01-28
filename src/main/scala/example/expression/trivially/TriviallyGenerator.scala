@@ -50,14 +50,21 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator {
     Java("new " + exp.name + "(" + merged.map(expr => expr.toString()).mkString(",") + ")").expression()
   }
 
-  override def subExpressions(exp: domain.Atomic): Map[String, Expression] = {
-    exp.attributes.map(att => att.name -> Java(s"get${att.name.capitalize}()").expression[Expression]()).toMap
+  /**
+    * Retrieve expression by getXXX accessor method.
+    */
+  override def expression (exp:domain.Atomic, att:domain.Attribute) : Expression = {
+    Java(s"get${att.name.capitalize}()").expression[Expression]()
   }
 
-  /** For visitor design solution, access through default 'e' parameter */
-  override def subExpression(exp:domain.Atomic, name:String) : Expression = {
-    exp.attributes.filter(att => att.name.equals(name)).map(att => Java(s"get${att.name.capitalize}()").expression[Expression]()).head
-  }
+//  override def subExpressions(exp: domain.Atomic): Map[String, Expression] = {
+//    exp.attributes.map(att => att.name -> Java(s"get${att.name.capitalize}()").expression[Expression]()).toMap
+//  }
+//
+//  /** For visitor design solution, access through default 'e' parameter */
+//  override def subExpression(exp:domain.Atomic, name:String) : Expression = {
+//    exp.attributes.filter(att => att.name.equals(name)).map(att => Java(s"get${att.name.capitalize}()").expression[Expression]()).head
+//  }
 
   /** Handle self-case here. */
   override def contextDispatch(source:Context, delta:Delta) : Expression = {

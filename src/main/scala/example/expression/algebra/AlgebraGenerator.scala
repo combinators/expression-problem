@@ -104,14 +104,19 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
   }
 
   /** For straight design solution, directly access attributes by name. */
-  override def subExpressions(exp:domain.Atomic) : Map[String,Expression] = {
-    exp.attributes.map(att => att.name -> Java(s"${att.name}").expression[Expression]()).toMap
+  override def expression (exp:domain.Atomic, att:domain.Attribute) : Expression = {
+    Java(s"${att.name}").expression[Expression]()
   }
 
-  /** For straight design solution, directly access attributes by name. */
-  override def subExpression(exp:domain.Atomic, name:String) : Expression = {
-    exp.attributes.filter(att => att.name.equals(name)).map(att => Java(s"${att.name}").expression[Expression]()).head
-  }
+//  /** For straight design solution, directly access attributes by name. */
+//  override def subExpressions(exp:domain.Atomic) : Map[String,Expression] = {
+//    exp.attributes.map(att => att.name -> Java(s"${att.name}").expression[Expression]()).toMap
+//  }
+//
+//  /** For straight design solution, directly access attributes by name. */
+//  override def subExpression(exp:domain.Atomic, name:String) : Expression = {
+//    exp.attributes.filter(att => att.name.equals(name)).map(att => Java(s"${att.name}").expression[Expression]()).head
+//  }
 
   /** Directly access local method, one per operation, with a parameter. */
   override def dispatch(expr:Expression, op:domain.Operation, params:Expression*) : Expression = {

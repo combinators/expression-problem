@@ -7,10 +7,40 @@ import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
 import play.api.mvc.{Action, AnyContent}
 
+/**
+  * This class is the foundation of any EP code generation strategy.
+  *
+  * For each EP strategy, develop a subclass. [[example.expression.oo.Foundation]], for example,
+  * is defined as follows:
+  *
+  * {{{
+  *   abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+  *       extends CodeGenerationController[CompilationUnit](web, app) {
+  *
+  *     val gen:WithDomain[MathDomain] with OOGenerator with JUnitTestGenerator
+  *
+  *     override lazy val generatedCode:Seq[CompilationUnit] =
+  *            gen.generatedCode() ++
+  *            gen.generateSuite(routingPrefix)
+  *
+  *     override val routingPrefix: Option[String] = Some("oo")
+  *     override lazy val controllerAddress:String = gen.getModel.name
+  *   }
+  * }}}
+  *
+  * The routingPrefix is used to uniquely determine this EP approach, and this can also be used
+  * within generateSuite as the top-level Java package.
+  *
+  * The controllerAddress is the evolution name, such as "m2" or "m4", based upon the desired
+  * evolution.
+  *
+  * @tparam ResultType         Persistable unit containing code fragments in target programming language
+  */
 abstract class CodeGenerationController[ResultType] (web: WebJarsUtil, app: ApplicationLifecycle)
   (implicit resultPersistence: Persistable.Aux[ResultType])
   extends InhabitationController(web, app) with RoutingEntries {
 
+  /** All generated code is found in this sequence. */
   val generatedCode: Seq[ResultType]
 
   /** Uses an empty repository dummy */

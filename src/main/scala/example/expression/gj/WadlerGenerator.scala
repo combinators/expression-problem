@@ -25,9 +25,14 @@ trait WadlerGenerator extends GJGenerator  {
   }
 
   /** For straight design solution, directly access attributes by name. */
-  override def subExpressions(exp:Atomic) : Map[String,Expression] = {
-    exp.attributes.map(att => att.name -> GJ(s"${att.name}")).toMap
+  override def expression (exp:Atomic, att:Attribute) : Expression = {
+    GJ(s"${att.name}")
   }
+
+//  /** For straight design solution, directly access attributes by name. */
+//  override def subExpressions(exp:Atomic) : Map[String,Expression] = {
+//    exp.attributes.map(att => att.name -> GJ(s"${att.name}")).toMap
+//  }
 
   /** Directly access local method, one per operation, with a parameter. */
   override def dispatch(expr:Expression, op:Operation, params:Expression*) : Expression = {

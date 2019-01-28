@@ -37,7 +37,7 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
       getModel.inChronologicalOrder                          // visitors are constructed in order
           .filter(m => m.ops.nonEmpty)
           .flatMap(m =>
-              m.ops.map(op => operationGenerator(flat, op))) :+    // one class for each op
+              m.ops.map(op => generateOperation(flat, op))) :+    // one class for each op
       generateBaseClass(flat) :+                              // abstract base class
       generateBase(flat)                                      // visitor gets its own class (overriding concept)
   }
@@ -45,21 +45,19 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
   /** Handle self-case here. */
   override def contextDispatch(source:Context, delta:Delta) : Expression = {
     if (delta.expr.isEmpty) {
-      val opargs = delta.params.mkString(",")
-      Java(s"e.accept(new ${delta.op.get.name.capitalize}($opargs))").expression[Expression]()
+      dispatch(Java("e").expression(), delta.op.get, delta.params : _ *)
     } else {
       super.contextDispatch(source, delta)
     }
   }
 
-  /** For visitor design solution, access through default 'e' parameter */
-  override def subExpressions(exp:domain.Atomic) : Map[String,Expression] = {
-    exp.attributes.map(att => att.name -> Java(s"e.get${att.name.capitalize}()").expression[Expression]()).toMap
-  }
-
-  /** For visitor design solution, access through default 'e' parameter */
-  override def subExpression(exp:domain.Atomic, name:String) : Expression = {
-    exp.attributes.filter(att => att.name.equals(name)).map(att => Java(s"e.get${att.name.capitalize}()").expression[Expression]()).head
+  /**
+    * Visitor access attribute by means of (generic) parameter e.getXXX() method.
+    *
+    * Note: Depends on having an external context which defines the variable e.
+    */
+  override def expression (exp:domain.Atomic, att:domain.Attribute) : Expression = {
+    Java(s"e.get${att.name.capitalize}()").expression[Expression]()
   }
 
   /** Directly access local method, one per operation, with a parameter. */
@@ -68,20 +66,23 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
     Java(s"$expr.accept(new ${op.name.capitalize}($args))").expression()
   }
 
-  /** Return designated Java type associated with type, or void if all else fails. */
-  override def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {
+  /**
+    * Return designated Java type associated with type.
+    *
+    */
+  override def typeConverter(tpe:domain.TypeRep) : Type = {
     tpe match {
       case domain.baseTypeRep => Java(s"${domain.baseTypeRep.name}").tpe()
+      case _ => super.typeConverter(tpe)
     }
   }
 
   /** Return Visitor class, which contains a visit method for each available sub-type. */
-  override def generateBase(model:domain.Model): CompilationUnit = {
-    val signatures = model.types
+  override def generateBase(flat:domain.Model): CompilationUnit = {
+    val signatures = flat.types
       .map(exp => s"public abstract R visit(${exp.name} exp);").mkString("\n")
 
-    Java (s"""
-              |package expression;
+    Java (s"""|package visitor;
               |/*
               | * A concrete visitor describes a concrete operation on expressions. There is one visit
               | * method per type in the class hierarchy.
@@ -95,12 +96,8 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
     * For visitor, the base class defines the accept method used by all subclasses.
     * When BinaryMethods are present, also includes method to convert to Tree object
     */
-  def generateBaseClass(model:domain.Model):CompilationUnit = {
-
-    // Ignore passed in model in favor of just grabbing it on demand...
-    val allOps = getModel.flatten().ops
-
-    val binaryTreeInterface = if (allOps.exists {
+  def generateBaseClass(flat:domain.Model):CompilationUnit = {
+    val binaryTreeInterface = if (flat.ops.exists {
       case bm: domain.BinaryMethodTreeBase => true
       case _ => false
     }) {
@@ -109,7 +106,7 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
       Seq.empty
     }
 
-    Java(s"""|package expression;
+    Java(s"""|package visitor;
              |
              |public abstract class ${domain.baseTypeRep.name.capitalize} {
              |    ${binaryTreeInterface.mkString("\n")}
@@ -160,17 +157,17 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
          |}""".stripMargin).methodDeclarations()
   }
 
-  /** Generate the full class for the given expression sub-type. */
-  override def generateExp(model:domain.Model, exp:domain.Atomic) : CompilationUnit = {
+  /** Generate the full class for the given expression sub-type from flattened model. */
+  override def generateExp(flat:domain.Model, exp:domain.Atomic) : CompilationUnit = {
     val name = exp.toString
 
-    val visitor:MethodDeclaration = Java (s"""|public <R> R accept(Visitor<R> v) {
-                                              |   return v.visit(this);
-                                              |}""".stripMargin).methodDeclarations().head
+    val visitor = Java (s"""|public <R> R accept(Visitor<R> v) {
+                            |   return v.visit(this);
+                            |}""".stripMargin).methodDeclarations()
 
-    // Ignore passed in model in favor of just grabbing it on demand...
-    val allOps = getModel.flatten().ops
-    val helpers:Seq[BodyDeclaration[_]] = if (allOps.exists {
+    // Regardless of model passed in, we need to flatten everything to get any
+    // BinaryMethodTreeBase ops. This is only necessary because of extensibleVisitor...
+    val helpers:Seq[BodyDeclaration[_]] = if (flat.ops.exists {
       case bm: domain.BinaryMethodTreeBase => true   // was BinaryMethod
       case _ => false
     }) {
@@ -179,15 +176,15 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
       Seq.empty
     }
 
-    Java(s"""|package expression;
+    Java(s"""|package visitor;
              |public class $name extends ${domain.baseTypeRep.name} {
              |
              |  ${constructor(exp)}
              |  ${helpers.mkString("\n")}
              |  ${fields(exp).mkString("\n")}
              |  ${getters(exp).mkString("\n")}
-             |  ${visitor.toString()}
-             |}""".stripMargin).compilationUnit()
+             |  ${visitor.mkString("\n")}
+             |}""".stripMargin).compilationUnit
   }
 
   /**
@@ -195,13 +192,16 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
     *
     * Must handle BinaryMethod (Equals) and BinaryMethodBase (Astree) specially.
     */
-  def operationGenerator(model:domain.Model, op:domain.Operation): CompilationUnit = {
-    val signatures = model.types.map(exp => methodGenerator(exp, op))
+  def generateOperation(flat:domain.Model, op:domain.Operation): CompilationUnit = {
+    val signatures = flat.types.map(exp => methodGenerator(exp, op))
 
     // if operation has parameters then must add to visitor as well
-    val atts:Seq[FieldDeclaration] = op.parameters.flatMap(p => Java(s"${typeConverter(p._2)} ${p._1};").fieldDeclarations())
+    val atts = op.parameters.flatMap {
+      case (name,atype) => Java(s"${typeConverter(atype)} $name;").fieldDeclarations()
+    }
 
-    // only add constructor if visitor has a parameter
+    // We only need to have constructors if we have arguments. On a side note,
+    // this is also an important consideration for extensibleVisitor
     val ctor = if (op.parameters.isEmpty) {
       ""
     } else {
@@ -214,14 +214,12 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
       case _ => typeConverter(op.returnType.get)
     }
 
-    val s = Java(s"""|package expression;
+   Java(s"""|package visitor;
                      |public class ${op.name.capitalize} extends Visitor<$tpe>{
-                     |  ${ctor.toString}
+                     |  $ctor
                      |
                      |  ${atts.mkString("\n")}
                      |  ${signatures.mkString("\n")}
-                     |}""".stripMargin)
-
-    s.compilationUnit()
+                     |}""".stripMargin).compilationUnit
   }
 }

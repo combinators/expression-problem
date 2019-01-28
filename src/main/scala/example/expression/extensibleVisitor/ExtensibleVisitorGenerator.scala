@@ -22,10 +22,8 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
     * @return
     */
   override def generatedCode():Seq[CompilationUnit] = {
-    val flat:domain.Model = getModel.flatten()
-
     //  binary methods for helper
-    val decls:Seq[CompilationUnit] = if (flat.ops.exists {
+    val decls:Seq[CompilationUnit] = if (getModel.flatten().ops.exists {
       case bm: domain.BinaryMethodTreeBase => true
       case _ => false
     }) {
@@ -34,9 +32,10 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
       Seq.empty
     }
 
+    val flat = getModel.flatten()
     decls ++ getModel.inChronologicalOrder.flatMap(m =>
-      m.types.map(tpe => generateExp(m, tpe)) ++               // one for each type; use 'flat' to ensure we detect binary methods
-        m.ops.map(op => operationGenerator(m, op))             // and new operations
+      m.types.map(tpe => generateExp(flat, tpe)) ++              // one for each type; use 'flat' to ensure we detect binary methods
+        m.ops.map(op => generateOperation(m, op))             // and new operations
     ) ++
       // cannot have extension for the FIRST model entry, so skip it
       getModel.inChronologicalOrder
@@ -45,8 +44,8 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
         .map(op => operationExtension(op, m))) ++  // don't forget past operations
       getModel.inChronologicalOrder
            .filter(m => m.types.nonEmpty)
-           .map(m=> generateBase(m))  :+      // visitor gets its own class (overriding concept)
-      generateBaseClass(getModel)                                  // abstract base class
+           .map(m => generateBase(m))  :+           // visitor gets its own class (overriding concept)
+      generateBaseClass(flat)                 // abstract base class
   }
 
   /**
@@ -62,7 +61,6 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
       m.types.sortWith(_.name < _.name).mkString("")
     }
 
-    //Java(s"e.accept(new ${op.name.capitalize}$full($opargs))").expression[Expression]()
     Java(s"e.accept(make${op.name.capitalize}($opargs))").expression[Expression]()
   }
 
@@ -144,7 +142,7 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
       Some(s"Visitor$prior<R>")
     }
 
-    val unit = addMethods(makeInterface("expression", s"Visitor$full<R>", Seq.empty, parent), methods)
+    val unit = addMethods(makeInterface("visitor", s"Visitor$full<R>", Seq.empty, parent), methods)
     addTypeComment(unit, s"""
                            |A concrete visitor describes a concrete operation on expressions. There is one visit
                            |method per type in the class hierarchy.
@@ -154,7 +152,7 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
 
   /** Extensions based on past operation */
   def operationExtension(op:domain.Operation, model:domain.Model): CompilationUnit = {
-    val regularVisitor:CompilationUnit = super.operationGenerator(model, op)
+    val regularVisitor:CompilationUnit = super.generateOperation(model, op)
 
     val opType:Type = typeConverter(op.returnType.get)
     val full:String = modelTypes(model)
@@ -169,7 +167,7 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
       modelTypes(lastWithType)
     }
 
-    val replacement = makeClass("expression", s"${op.name.capitalize}$full", Seq(s"Visitor$full<$opType>"), Some(s"${op.name.capitalize}$last"))
+    val replacement = makeClass("visitor", s"${op.name.capitalize}$full", Seq(s"Visitor$full<$opType>"), Some(s"${op.name.capitalize}$last"))
 
     // copy everything over from the originally generated class
     val newType = replacement.getType(0)
@@ -180,8 +178,8 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
   }
 
   /** Brings in classes for each operation. These can only be completed with the implementations. */
-  override def operationGenerator(model:domain.Model, op:domain.Operation): CompilationUnit = {
-    val regularVisitor:CompilationUnit = super.operationGenerator(model, op)
+  override def generateOperation(model:domain.Model, op:domain.Operation): CompilationUnit = {
+    val regularVisitor:CompilationUnit = super.generateOperation(model, op)
     val mainType:TypeDeclaration[_] = regularVisitor.getType(0)
 
     // convert 'extends visitor' into 'implements visitor'
@@ -200,7 +198,7 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
     }
 
     val replacement:CompilationUnit =
-       addMethods(makeClass("expression", s"${op.name.capitalize}$full", Seq(s"Visitor$fullVisitor<$opType>")),
+       addMethods(makeClass("visitor", s"${op.name.capitalize}$full", Seq(s"Visitor$fullVisitor<$opType>")),
          model.last.pastDataTypes().map(exp => methodGenerator(exp, op)))
 
     val newType = replacement.getType(0)

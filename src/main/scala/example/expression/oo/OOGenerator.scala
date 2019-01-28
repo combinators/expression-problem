@@ -43,16 +43,6 @@ trait OOGenerator extends JavaGenerator with DataTypeSubclassGenerator with Oper
     Java(s"${att.name}").expression[Expression]
   }
 
-  override def subExpressions(exp:Atomic) : Map[String,Expression] = {
-    //exp.attributes.map(att => att.name -> Java(s"${att.name}").expression[Expression]).toMap
-    exp.attributes.map(att => att.name -> expression(exp, att)).toMap
-  }
-
-  /** For straight design solution, directly access attributes by name. */
-  override def subExpression(exp:domain.Atomic, name:String) : Expression = {
-    exp.attributes.filter(att => att.name.equals(name)).map(att => expression(exp, att)).head
-  }
-
   /** Handle self-case here. */
   override def contextDispatch(source:Context, delta:Delta) : Expression = {
     if (delta.expr.isEmpty) {

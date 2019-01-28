@@ -41,14 +41,19 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
   }
 
   /** For straight design solution, directly access attributes by name. */
-  override def subExpressions(exp:Atomic) : Map[String,CPPElement] = {
-    exp.attributes.map(att => att.name -> new CPPElement(s"${att.name}")).toMap
+  override def expression (exp:Atomic, att:Attribute) : Expression = {
+    new CPPElement(s"${att.name}")
   }
 
-  /** For straight design solution, directly access attributes by name. */
-  override def subExpression(exp:Atomic, name:String) : CPPElement = {
-    exp.attributes.filter(att => att.name.equals(name)).map(att => new CPPElement(s"${att.name}")).head
-  }
+//  /** For straight design solution, directly access attributes by name. */
+//  override def subExpressions(exp:Atomic) : Map[String,CPPElement] = {
+//    exp.attributes.map(att => att.name -> new CPPElement(s"${att.name}")).toMap
+//  }
+//
+//  /** For straight design solution, directly access attributes by name. */
+//  override def subExpression(exp:Atomic, name:String) : CPPElement = {
+//    exp.attributes.filter(att => att.name.equals(name)).map(att => new CPPElement(s"${att.name}")).head
+//  }
 
   /** Directly access local method, one per operation, with a parameter. For VisitorTable, must grab from valueMap. */
   override def dispatch(expr:CPPElement, op:Operation, params:CPPElement*) : CPPElement = {

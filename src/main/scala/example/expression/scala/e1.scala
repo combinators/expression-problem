@@ -28,7 +28,7 @@ trait e1 extends Evolution with ScalaGenerator with TestGenerator with M1 {
     }
   }
 
-  abstract override def testGenerator: Seq[Stat] = {
-    super.testGenerator :+ testMethod(M1_tests)
+  abstract override def testGenerator: Seq[Seq[Stat]] = {
+    super.testGenerator ++ testMethod(M1_tests)
   }
 }

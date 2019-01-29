@@ -31,29 +31,25 @@ trait FunSpecFunctionalTestGenerator extends FunSpecTestGenerator {
       }
     })
 
-    var num: Int = 0
-    val files: Seq[ScalaWithPath] = allTests.map(md => {
-      num = num + 1
-
+    val files:Seq[ScalaWithPath] = allTests.zipWithIndex.map{ case (md, num) =>
       ScalaTestWithPath(Scala(s"""
-                             |$packageDeclaration
-                             |import org.scalatest.FunSpec
-                             |
-                             |class TestSuite$num extends FunSpec $withClause {
-                             |
-                             |  type visitor = Visitor
-                             |  ${helpers.mkString("\n")}
-                             |
-                             |  describe("test cases") {
-                             |    it ("run test") {
-                             |      test()
-                             |    }
-                             |
-                             |    $md
-                             |  }
-                             |}""".stripMargin).source(), Paths.get(s"TestSuite$num.scala"))
-
-    })
+           |$packageDeclaration
+           |import org.scalatest.FunSpec
+           |
+           |class TestSuite$num extends FunSpec $withClause {
+           |
+           |  type visitor = Visitor
+           |  ${helpers.mkString("\n")}
+           |
+           |  describe("test cases") {
+           |    it ("run test") {
+           |      test()
+           |    }
+           |
+           |    ${md.mkString("\n")}
+           |  }
+           |}""".stripMargin).source(), Paths.get(s"TestSuite$num.scala"))
+    }
 
     files
   }

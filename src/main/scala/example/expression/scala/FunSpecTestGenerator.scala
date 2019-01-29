@@ -24,11 +24,7 @@ trait FunSpecTestGenerator extends TestGenerator with ScalaGenerator {
     }
 
     val allTests = testGenerator ++ performanceMethod
-
-    var num: Int = 0
-    val files: Seq[ScalaWithPath] = allTests.map(md => {
-      num = num + 1
-
+    val files: Seq[ScalaWithPath] = allTests.zipWithIndex.map{ case (t, num) =>
       ScalaTestWithPath(Scala(s"""
                |$packageDeclaration
                |import org.scalatest.FunSpec
@@ -39,11 +35,12 @@ trait FunSpecTestGenerator extends TestGenerator with ScalaGenerator {
                |      test()
                |    }
                |
-               |    $md
+               |    def test() : Unit = {
+               |       ${t.mkString("\n")}
+               |    }
                |  }
                |}""".stripMargin).source(), Paths.get(s"TestSuite$num.scala"))
-
-    })
+    }
 
     files
   }

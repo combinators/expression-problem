@@ -40,9 +40,7 @@ trait cpp_e3 extends Evolution with CPPGenerator with TestGenerator with M0 with
     }
   }
 
-  abstract override def testGenerator: Seq[CPPElement] = {
-    val tests = new CPPElement(testMethod(M3_tests).mkString("\n"))
-
-    super.testGenerator :+ tests
+  abstract override def testGenerator: Seq[Seq[CPPElement]] = {
+    super.testGenerator ++ testMethod(M3_tests)
   }
 }

@@ -38,9 +38,8 @@ trait TestGenerator extends ScalaGenerator {
     * on another instance.
     *
     */
-  def expected(test:TestCaseExpectedValue, id:String) : (Term => Stat) => Stat = continue => {
+  def expected(test:TestCaseExpectedValue, id:String) : (Term => Seq[Stat]) => Seq[Stat] = continue => {
     val expectedType:Type = typeConverter(test.expect._1)
-    val baseType:Type = Scala("AtomicInst").tpe
     val baseName:Type = Scala(domain.baseTypeRep.name).tpe
 
     if (expectedType.toString().equals(baseName.toString())) {   // Type doesn't seem to support .equals check
@@ -77,47 +76,41 @@ trait TestGenerator extends ScalaGenerator {
   }
 
   /** Return sample test cases as methods. */
-  def testGenerator: Seq[Stat] = Seq.empty
+  def testGenerator: Seq[Seq[Stat]] = Seq.empty
 
   /** Performance tests. */
-  def performanceMethod: Seq[Stat] = Seq.empty
+  def performanceMethod: Seq[Seq[Stat]] = Seq.empty
 
-  /** Return MethodDeclaration associated with given test cases. */
-  def testMethod(tests:Seq[TestCase]) : Stat = {
+  /**
+    * Traits can override this method to add their test cases to the mix.
+    */
+  def testMethod(tests:Seq[TestCase]) : Seq[Seq[Stat]] = {
+    tests.zipWithIndex.map{ case (test, idx) => scalaTestMethod(test, idx) }
+  }
 
-    val stmts:Seq[scala.meta.Stat] = tests.zipWithIndex.map(pair => {
-      val test = pair._1
-      val idx = pair._2
-
+  /** Return Sequence of statements associated with given test cases. */
+  def scalaTestMethod(test:TestCase, idx:Int) : Seq[Stat] = {
       val id:String = s"v$idx"
 
       // The expected method takes in a function that will be called by the expected method. Now, the expected
       // method will pass in the expression (which is expected) into this function, and it is the job of that
       // function to return the variable.
       test match {
-        case eq:EqualsTestCase => {
+        case eq:EqualsTestCase =>
           val params = eq.params.map(pair => expand(pair._1, pair._2))
-          expected(eq, id)(expectedExpr => Scala(s"assert ($expectedExpr == ${actual(eq.op, eq.inst, params: _*)})").statement)
-        }
+          expected(eq, id)(expectedExpr => Seq(Scala(s"assert ($expectedExpr == ${actual(eq.op, eq.inst, params: _*)})").statement))
 
-        case comp:EqualsCompositeTestCase => {
+        case comp:EqualsCompositeTestCase =>
           val params = comp.params.map(pair => expand(pair._1, pair._2))
 
           val x :Expression = actual(comp.ops.head, comp.inst, params: _*)   // HACK: Only works for two-deep
           val y :Expression = dispatch(x, comp.ops.tail.head)
 
-          expected(comp, id)(expectedExpr => Scala(s"assert ($expectedExpr == $y)").statement)
-        }
+          expected(comp, id)(expectedExpr => Seq(Scala(s"assert ($expectedExpr == $y)").statement))
 
         case ne:NotEqualsTestCase =>
           val params = ne.params.map(pair => expand(pair._1, pair._2))
-          expected(ne, id)(expectedExpr => Scala(s"assert ($expectedExpr != ${actual(ne.op, ne.inst, params: _*)})").statement)
+          expected(ne, id)(expectedExpr => Seq(Scala(s"assert ($expectedExpr != ${actual(ne.op, ne.inst, params: _*)})").statement))
       }
-    })
-
-    Scala(s"""
-            |def test() : Unit = {
-            |   ${stmts.mkString("\n")}
-            |}""".stripMargin).declaration()
-  }
+    }
 }

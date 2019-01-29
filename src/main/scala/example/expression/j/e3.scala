@@ -40,7 +40,7 @@ trait e3 extends Evolution with JavaGenerator with JUnitTestGenerator with M0 wi
   }
 
   abstract override def testGenerator: Seq[MethodDeclaration] = {
-    super.testGenerator :+ testMethod(M3_tests)
+    super.testGenerator ++ testMethod(M3_tests)
   }
 }
 

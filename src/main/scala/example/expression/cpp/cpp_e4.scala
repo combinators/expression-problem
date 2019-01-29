@@ -179,9 +179,7 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with CPPProd
     }
   }
 
-  abstract override def testGenerator: Seq[CPPElement] = {
-    val tests = new CPPElement(testMethod(M4_tests).mkString("\n"))
-
-    super.testGenerator :+ tests
+  abstract override def testGenerator: Seq[Seq[CPPElement]] = {
+    super.testGenerator ++ testMethod(M4_tests)
   }
 }

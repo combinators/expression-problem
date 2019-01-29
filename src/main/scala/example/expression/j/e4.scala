@@ -166,9 +166,9 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
 
   abstract override def testGenerator: Seq[MethodDeclaration] = {
      if (getModel.supports(Simplify)) {
-       super.testGenerator :+ testMethod(M4_tests) :+ testMethod(M4_simplify_tests)
+       super.testGenerator ++ testMethod(M4_tests) ++ testMethod(M4_simplify_tests)
     } else {
-      super.testGenerator :+ testMethod(M4_tests)
+      super.testGenerator ++ testMethod(M4_tests)
     }
   }
 }

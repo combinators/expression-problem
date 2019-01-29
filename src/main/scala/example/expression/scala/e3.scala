@@ -38,8 +38,8 @@ trait e3 extends Evolution with ScalaGenerator with TestGenerator with M0 with M
     }
   }
 
-  abstract override def testGenerator: Seq[Stat] = {
-    super.testGenerator :+ testMethod(M3_tests)
+  abstract override def testGenerator: Seq[Seq[Stat]] = {
+    super.testGenerator ++ testMethod(M3_tests)
   }
 }
 

@@ -10,7 +10,7 @@ trait BaseDomain {
   // these reserved words. Changes based on language. Not Yet Working
   def sanitize(s:String):String = {
     if (reserved.contains(s)) {
-      s + "_"
+      s + "z"
     } else {
       s
     }

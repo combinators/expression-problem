@@ -28,6 +28,6 @@ trait e1 extends Evolution with JavaGenerator with JUnitTestGenerator with M1 {
   }
 
   abstract override def testGenerator: Seq[MethodDeclaration] = {
-    super.testGenerator :+ testMethod(M1_tests)
+    super.testGenerator ++ testMethod(M1_tests)
   }
 }

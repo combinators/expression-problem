@@ -83,6 +83,6 @@ trait e0 extends JavaGenerator with JUnitTestGenerator with M0 {
   }
 
   abstract override def testGenerator: Seq[MethodDeclaration] = {
-    super.testGenerator :+ testMethod(M0_tests)
+    super.testGenerator ++ testMethod(M0_tests)
   }
 }

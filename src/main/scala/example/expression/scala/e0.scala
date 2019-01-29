@@ -45,7 +45,7 @@ trait e0 extends ScalaGenerator with TestGenerator with M0 {
     * Construct large trees and determine cost of evaluating over them.
     * @return
     */
-  abstract override def performanceMethod: Seq[Stat] = {
+  abstract override def performanceMethod: Seq[Seq[Stat]] = {
     val a1 = new BinaryInst(Add, new LitInst(1.0), new LitInst(2.0))
     val numTrials = 10
 
@@ -81,10 +81,10 @@ trait e0 extends ScalaGenerator with TestGenerator with M0 {
          |  }
          |}""".stripMargin).declaration()
 
-    super.performanceMethod :+ evalPerfTest
+    super.performanceMethod :+ Seq(evalPerfTest)
   }
 
-  abstract override def testGenerator: Seq[Stat] = {
-    super.testGenerator :+ testMethod(M0_tests)
+  abstract override def testGenerator: Seq[Seq[Stat]] = {
+    super.testGenerator ++ testMethod(M0_tests)
   }
 }

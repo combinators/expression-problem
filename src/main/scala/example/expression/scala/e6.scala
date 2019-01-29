@@ -39,33 +39,20 @@ trait e6 extends Evolution with ScalaGenerator with TestGenerator with M0 with M
     }
   }
 
-  abstract override def testMethod(tests:Seq[domain.TestCase]) : Stat = {
-
-    // EXTRACT all EqualsBinaryMethodTestCase ones and handle here
-    var skip:Seq[domain.TestCase] = Seq.empty
-
-    val stmts:Seq[Stat] = tests.zipWithIndex.map(pair => {
-      val test = pair._1
-
-      test match {
-        case eb: EqualsBinaryMethodTestCase =>
-          val code = dispatch(convert(eb.inst1), Equals, convert(eb.inst2))
-          if (eb.result) {
-            Scala(s"assert (true == $code)").statement
-          } else {
-            Scala(s"assert (false == $code)").statement
-          }
-        case _ =>
-          skip = skip :+ test
-          Scala(s"{}").statement
-      }
-    }).filterNot(p => p.toString().equals("{}"))
-
-    // add these all in to what super produces
-    addStatements(super.testMethod(skip), stmts)
+  override def scalaTestMethod(test:domain.TestCase, idx:Int) : Seq[Stat] = { // EXTRACT all SameTestCase ones and handle here
+     test match {
+      case eb: EqualsBinaryMethodTestCase =>
+        val code = dispatch(convert(eb.inst1), Equals, convert(eb.inst2))
+        if (eb.result) {
+          Seq(Scala(s"assert (true == $code)").statement)
+        } else {
+          Seq(Scala(s"assert (false == $code)").statement)
+        }
+      case _ => super.scalaTestMethod(test, idx)
+    }
   }
 
-  abstract override def testGenerator: Seq[Stat] = {
-    super.testGenerator :+ testMethod(M6_tests)
+  abstract override def testGenerator: Seq[Seq[Stat]] = {
+    super.testGenerator ++ testMethod(M6_tests)
   }
 }

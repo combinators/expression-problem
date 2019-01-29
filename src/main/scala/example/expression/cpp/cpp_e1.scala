@@ -28,9 +28,7 @@ trait cpp_e1 extends Evolution with CPPGenerator with TestGenerator with M1 {
     }
   }
 
-  abstract override def testGenerator: Seq[CPPElement] = {
-    val tests = new CPPElement(testMethod(M1_tests).mkString("\n"))
-
-    super.testGenerator :+ tests
+  abstract override def testGenerator: Seq[Seq[CPPElement]] = {
+    super.testGenerator ++ testMethod(M1_tests)
   }
 }

@@ -8,9 +8,10 @@ import org.combinators.templating.twirl.Java
 
 trait TestGenerator extends JavaGenerator with LanguageIndependentTestGenerator {
   val domain: BaseDomain with ModelDomain
+
   import domain._
 
-  type UnitTest = MethodDeclaration     /** Base concept for the representation of a single test case. */
+  type UnitTest = MethodDeclaration /** Base concept for the representation of a single test case. */
 
   /**
     * Return properly formatted expected value as a code fragment.
@@ -26,7 +27,7 @@ trait TestGenerator extends JavaGenerator with LanguageIndependentTestGenerator 
     * However, if you are dealing with more complicated code fragments (i.e., when the value is a list) then
     * you will have to override this method accordingly.
     */
-  def expected(test:TestCaseExpectedValue, id:String) : (Expression => Seq[Statement]) => Seq[Statement] = continue => {
+  def expected(test: TestCaseExpectedValue, id: String): (Expression => Seq[Statement]) => Seq[Statement] = continue => {
     continue(Java(test.expect._2.toString).expression[Expression])
   }
 
@@ -40,7 +41,7 @@ trait TestGenerator extends JavaGenerator with LanguageIndependentTestGenerator 
     *
     * Not sure, yet, how to properly pass in variable parameters.
     */
-  def actual(op:Operation, inst:AtomicInst, params:Expression*):Expression = dispatch(convert(inst), op, params: _*)
+  def actual(op: Operation, inst: AtomicInst, params: Expression*): Expression = dispatch(convert(inst), op, params: _*)
 
   /** Convert a test instance into a Java Expression for instantiating that instance. */
   def convert(inst: AtomicInst): Expression = {
@@ -62,39 +63,40 @@ trait TestGenerator extends JavaGenerator with LanguageIndependentTestGenerator 
   def testGenerator: Seq[MethodDeclaration] = Seq.empty
 
   /** Return MethodDeclaration associated with given test cases. */
-  def testMethod(tests:Seq[TestCase]) : MethodDeclaration = {
+  def junitTestMethod(test: TestCase, idx: Int): Seq[Statement] = {
+    val id: String = s"v$idx"
 
-    val stmts:Seq[Statement] = tests.zipWithIndex.flatMap(pair => {
-      val test = pair._1
-      val idx = pair._2
+    test match {
+      case eq: EqualsTestCase =>
+        // The expected method takes in a function that will be called by the expected method. Now, the expected
+        // method will pass in the expression (which is expected) into this function, and it is the job of that
+        // function to return the variable.
+        expected(eq, id)(expectedExpr => Java(s"assertEquals($expectedExpr, ${actual(eq.op, eq.inst)});").statements)
 
-      val id:String = s"v$idx"
+      case ne: NotEqualsTestCase =>
+        // The expected method takes in a function that will be called by the expected method. Now, the expected
+        // method will pass in the expression (which is expected) into this function, and it is the job of that
+        // function to return the variable.
+        expected(ne, id)(expectedExpr => Java(s"assertNotEquals($expectedExpr, ${actual(ne.op, ne.inst)});").statements)
 
-      test match {
-        case eq:EqualsTestCase =>
-          // The expected method takes in a function that will be called by the expected method. Now, the expected
-          // method will pass in the expression (which is expected) into this function, and it is the job of that
-          // function to return the variable.
-          expected(eq, id)(expectedExpr => Java(s"assertEquals($expectedExpr, ${actual(eq.op, eq.inst)});").statements)
-
-        case ne:NotEqualsTestCase =>
-          // The expected method takes in a function that will be called by the expected method. Now, the expected
-          // method will pass in the expression (which is expected) into this function, and it is the job of that
-          // function to return the variable.
-          expected(ne, id)(expectedExpr => Java(s"assertNotEquals($expectedExpr, ${actual(ne.op, ne.inst)});").statements)
-
-        case seq:EqualsCompositeTestCase => {
-          val x :Expression = actual(seq.ops.head, seq.inst)   // HACK: Only works for two-deep
-          val y :Expression = dispatch(x, seq.ops.tail.head)
-          expected(seq, id)(expectedExpr => Java(s"assertEquals($expectedExpr, $y);").statements)
-        }
-
+      case seq: EqualsCompositeTestCase => {
+        val x: Expression = actual(seq.ops.head, seq.inst) // HACK: Only works for two-deep
+        val y: Expression = dispatch(x, seq.ops.tail.head)
+        expected(seq, id)(expectedExpr => Java(s"assertEquals($expectedExpr, $y);").statements)
       }
-    })
-
-    Java(s"""|public void test() {
-             |   ${stmts.mkString("\n")}
-             |}""".stripMargin).methodDeclarations.head
+    }
   }
 
+  /** Return MethodDeclaration associated with given test cases. */
+  def testMethod(tests: Seq[TestCase]): Seq[MethodDeclaration] = {
+    tests.zipWithIndex.map { case (test, idx) =>
+      val stmts = junitTestMethod(test, idx)
+
+      Java(
+        s"""|public void test() {
+            |   ${stmts.mkString("\n")}
+            |}""".stripMargin).methodDeclarations
+        .head
+    }
+  }
 }

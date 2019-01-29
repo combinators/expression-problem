@@ -22,7 +22,7 @@ trait LanguageIndependentTestGenerator {
     * @param tests   sequence of candidate test cases
     * @return Code fragments (based on language and approach) representing unit test cases.
     */
-  def testMethod(tests:Seq[domain.TestCase]) : UnitTest
+  def testMethod(tests:Seq[domain.TestCase]) : Seq[UnitTest]
 
   /**
     * Represents unit test cases that execute to generate performance report.

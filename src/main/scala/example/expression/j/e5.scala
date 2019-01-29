@@ -63,18 +63,13 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
     }
   }
 
-  abstract override def testMethod(tests:Seq[domain.TestCase]) : MethodDeclaration = {
-    val source = NoSource()
-    // EXTRACT all SameTestCase ones and handle here
-    var skip:Seq[domain.TestCase] = Seq.empty
-
-    val stmts:Seq[Statement] = tests.zipWithIndex.flatMap(pair => {
-      val test = pair._1
-
+  override def junitTestMethod(test:TestCase, idx:Int) : Seq[Statement] = {
       test match {
         case ctc: SameTestCase =>
-          val tree1 = contextDispatch(source, deltaExprOp(source, convert(ctc.inst1), AsTree))
-          val tree2 = contextDispatch(source, deltaExprOp(source, convert(ctc.inst2), AsTree))
+          val noSource = NoSource()
+
+          val tree1 = contextDispatch(noSource, deltaExprOp(noSource, convert(ctc.inst1), AsTree))
+          val tree2 = contextDispatch(noSource, deltaExprOp(noSource, convert(ctc.inst2), AsTree))
 
           val same = Java(s"$tree1.same($tree2)").expression[Expression]()
 
@@ -83,17 +78,12 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
           } else {
             Java(s"assertFalse($same);").statements
           }
-        case _ =>
-          skip = skip :+ test
-          Seq.empty
-      }
-    })
 
-    // add these all in to what super produces
-    addStatements(super.testMethod(skip), stmts)
-  }
+        case _ => super.junitTestMethod(test, idx)
+      }
+    }
 
   abstract override def testGenerator: Seq[MethodDeclaration] = {
-    super.testGenerator :+ testMethod(M5_tests)
+    super.testGenerator ++ testMethod(M5_tests)
   }
 }

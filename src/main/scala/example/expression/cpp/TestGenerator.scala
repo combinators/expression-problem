@@ -7,31 +7,37 @@ import example.expression.domain.{BaseDomain, ModelDomain}
   */
 trait TestGenerator extends CPPGenerator {
   val domain: BaseDomain with ModelDomain
-
   import domain._
 
   def getModel:domain.Model
 
-  /** Return sample C++ test cases. */
-  def testGenerator: Seq[CPPElement] = Seq.empty
+  /**
+    * Return sample C++ test cases.
+    *
+    * A Seq of Seq because each individual test case can be considered to be a (potential) sequence of statements.
+    */
+  def testGenerator: Seq[Seq[CPPElement]] = Seq.empty
 
-  /** Performance tests. */
-  def performanceMethod: Seq[CPPElement] = Seq.empty
+  /**
+    * Performance tests.
+    *
+    * A Seq of Seq because each individual performance unit can be considered to be a (potential) sequence of statements.
+    */
+  def performanceMethod: Seq[Seq[CPPElement]] = Seq.empty
 
+  /** Counter to use for creating artificial variables during testing. */
   var id = 0
-  var variables = collection.mutable.Map[AtomicInst, String]()
 
-  /** Type to use when referring to specific instance. */
-  def exprDefine(exp:AtomicInst) : Type = {
-    new CPPType(exp.e.name)
-  }
+  /**
+    * Test cases may need to introduce arbitrary variables, which are maintained by this collection
+    */
+  var variables = collection.mutable.Map[AtomicInst, String]()
 
   /** Used when one already has code fragments bound to variables, which are to be used for left and right. */
   def convertRecursive(inst: Binary, left:String, right:String): Expression = {
     val name = inst.name
     new CPPElement(s"new $name($left, $right)")
   }
-
 
   /** Register an instance and get its variable identifier. */
   def vars(inst:AtomicInst) : String = {
@@ -84,12 +90,9 @@ trait TestGenerator extends CPPGenerator {
       case ui: UnaryInst =>
         new CPPElement(s"$name ${vars(inst)} = $name(&${vars(ui.inner)});")
 
-        // Add  add3 = Add(&lit1, &lit2);
       case bi: BinaryInst =>
         new CPPElement(s"$name ${vars(inst)} = $name(&${vars(bi.left)}, &${vars(bi.right)});")
 
-      //  double val1 = 1.0;
-      //  Lit  lit1 = Lit(&val1);
       case exp: AtomicInst =>
         new CPPElement(
         s"""
@@ -101,72 +104,62 @@ trait TestGenerator extends CPPGenerator {
     }
   }
 
-  def testMethod(tests:Seq[TestCase]) : Seq[Statement] = {
+  /**
+    * Prepare default test cases for [[EqualsTestCase]], [[NotEqualsTestCase]], [[EqualsCompositeTestCase]].
+    *
+    * Override as necessary to add different test case types.
+    */
+  def cppUnitTestMethod(test:TestCase, idx:Int) : Seq[Statement] = {
+    val id: String = s"v$idx"
 
-    val stmts: Seq[Statement] = tests.zipWithIndex.flatMap(pair => {
-      val test = pair._1
-      val idx = pair._2
+    test match {
+      case eq: EqualsTestCase =>
+        // The expected method takes in a function that will be called by the expected method. Now, the expected
+        // method will pass in the expression (which is expected) into this function, and it is the job of that
+        // function to return the variable.
+        expected(eq, id)(expectedExpr =>
+          Seq(new CPPElement(s"CHECK_TRUE($expectedExpr == ${actual(eq.op, eq.inst)});")))
 
-      val id: String = s"v$idx"
+      case ne: NotEqualsTestCase =>
+        // The expected method takes in a function that will be called by the expected method. Now, the expected
+        // method will pass in the expression (which is expected) into this function, and it is the job of that
+        // function to return the variable.
+        expected(ne, id)(expectedExpr =>
+          Seq(new CPPElement(s"CHECK_TRUE($expectedExpr != ${actual(ne.op, ne.inst)});")))
 
-      test match {
-        case eq: EqualsTestCase =>
-          // The expected method takes in a function that will be called by the expected method. Now, the expected
-          // method will pass in the expression (which is expected) into this function, and it is the job of that
-          // function to return the variable.
-          expected(eq, id)(expectedExpr =>
-            Seq(
-              new CPPElement("{"),
-              new CPPElement(s"CHECK_TRUE($expectedExpr == ${actual(eq.op, eq.inst)});"),
-              new CPPElement("}"))
-          )
+      case seq: EqualsCompositeTestCase =>
+        val x: Expression = actual(seq.ops.head, seq.inst) // HACK: Only works for two-deep
+        val y: Expression = dispatch(x, seq.ops.tail.head)
+        expected(seq, id)(expectedExpr => Seq(new CPPElement(s"CHECK_COMPARE($expectedExpr, ==, $y);")))
 
-        case ne: NotEqualsTestCase =>
-          // The expected method takes in a function that will be called by the expected method. Now, the expected
-          // method will pass in the expression (which is expected) into this function, and it is the job of that
-          // function to return the variable.
-          expected(ne, id)(expectedExpr =>
-            Seq(
-              new CPPElement("{"),
-              new CPPElement(s"CHECK_TRUE($expectedExpr != ${actual(ne.op, ne.inst)});"),
-              new CPPElement("}"))
-          )
+      case _ => Seq.empty
+    }
+  }
 
-        case seq: EqualsCompositeTestCase => {
-          val x: Expression = actual(seq.ops.head, seq.inst) // HACK: Only works for two-deep
-          val y: Expression = dispatch(x, seq.ops.tail.head)
-          expected(seq, id)(expectedExpr => Seq(new CPPElement(s"CHECK_COMPARE($expectedExpr, ==, $y);")))
-        }
-      }
-    })
-
-    stmts
+  /**
+    * Traits can override this method to add their test cases to the mix.
+    */
+  def testMethod(tests:Seq[TestCase]) : Seq[Seq[Statement]] = {
+    tests.zipWithIndex.map{ case (test, idx) => cppUnitTestMethod(test, idx) }
   }
 
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
   def generateSuite(pkg: Option[String], model: Option[Model] = None): Seq[CPPFile] = {
-
-   // val allOps = getModel.flatten().ops.map(op => s"""#include "${op.name.capitalize}.h" """)
-    var num: Int = 0
-
     val tests = testGenerator ++ performanceMethod
-    val allTests:Seq[CPPElement] = tests.map(tests => {
-      num = num + 1
+    val allTests = tests.zipWithIndex.map{ case (t, num) =>
 
       new CPPElement(
-       s"""
-          |TEST_GROUP(TestGroup$num)
-          |{
-          |};
-          |
-          |TEST(TestGroup$num, a$num)
-          |{
-          |   $tests
-          |}
-          |
-        """.stripMargin
+            s"""
+               |TEST_GROUP(TestGroup$num)
+               |{
+               |};
+               |
+              |TEST(TestGroup$num, a$num)
+               |{
+               |   ${t.mkString("\n")}
+               |}""".stripMargin
       )
-    })
+    }
 
     // include performance timing code
     val sa = new StandAlone("test_e0",

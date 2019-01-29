@@ -44,7 +44,7 @@ trait cpp_e0 extends CPPGenerator with TestGenerator with M0 {
     * Construct large trees and determine cost of evaluating over them.
     * @return
     */
-  abstract override def performanceMethod: Seq[CPPElement] = {
+  abstract override def performanceMethod: Seq[Seq[CPPElement]] = {
     val a1 = new BinaryInst(Add, new LitInst(1.0), new LitInst(2.0))
     val numTrials = 10
 
@@ -58,9 +58,9 @@ trait cpp_e0 extends CPPGenerator with TestGenerator with M0 {
     }
     array = array + "};"
 
-    val source = NoSource()
-    val delta = deltaExprOp(source, new CPPElement("trees[i]"), Eval)   // was independentExpr
-    val toTime = contextDispatch(source, delta)
+    val noSource = NoSource()
+    val delta = deltaExprOp(noSource, new CPPElement("trees[i]"), Eval)   // was independentExpr
+    val toTime = contextDispatch(noSource, delta)
     val evalPerfTest:CPPElement = new CPPElement(
       s"""
          |$instantiations
@@ -83,12 +83,10 @@ trait cpp_e0 extends CPPGenerator with TestGenerator with M0 {
          |  std::cout << i << "," << best << std::endl;
          |}""".stripMargin)
 
-    super.performanceMethod :+ evalPerfTest
+    super.performanceMethod :+ Seq(evalPerfTest)
   }
 
-  abstract override def testGenerator: Seq[CPPElement] = {
-    val tests = new CPPElement(testMethod(M0_tests).mkString("\n"))
-
-    super.testGenerator :+ tests
+  abstract override def testGenerator: Seq[Seq[CPPElement]] = {
+    super.testGenerator ++ testMethod(M0_tests)
   }
 }

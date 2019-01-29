@@ -56,14 +56,8 @@ trait cpp_e5 extends Evolution with CPPGenerator with TestGenerator with M0 with
     }
   }
 
-  abstract override def testMethod(tests:Seq[domain.TestCase]) : Seq[CPPElement] = {
-
-    // EXTRACT all SameTestCase ones and handle here
-    var skip:Seq[domain.TestCase] = Seq.empty
-
-    val stmts= tests.zipWithIndex.flatMap(pair => {
-      val test = pair._1
-
+  //  abstract override def testMethod(tests:Seq[domain.TestCase]) : Seq[CPPElement] = {
+  override def cppUnitTestMethod(test:TestCase, idx:Int) : Seq[Statement] = {
       test match {
         case ctc: SameTestCase =>
           val tree1 = actual(AsTree, ctc.inst1)
@@ -74,19 +68,13 @@ trait cpp_e5 extends Evolution with CPPGenerator with TestGenerator with M0 with
           } else {
             Seq(new CPPElement(s"CHECK_TRUE(!$tree1->same($tree2));"))
           }
+
         case _ =>
-          skip = skip :+ test
-          Seq.empty
+          super.cppUnitTestMethod(test, idx)
       }
-    })
+    }
 
-    // add these all in to what super produces
-    super.testMethod(skip) ++ stmts
-  }
-
-  abstract override def testGenerator: Seq[CPPElement] = {
-    val tests = new CPPElement(testMethod(M5_tests).mkString("\n"))
-
-    super.testGenerator :+ tests
+  abstract override def testGenerator: Seq[Seq[CPPElement]] = {
+    super.testGenerator ++ testMethod(M5_tests)
   }
 }

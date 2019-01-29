@@ -46,7 +46,6 @@ trait e5 extends Evolution with ScalaGenerator with TestGenerator with Operation
             result(Scala(s"""new tree.Node(Seq(new tree.Leaf($attParams)), $rhs) """).expression)
 
           case Add|Sub|Mult|Divd|Neg =>
-            //val seq = atts.map(att => att._2.toString + ".astree()").mkString(",")
             val seq = atts.map(att => dispatch(att._2, domain.AsTree)).mkString(",")
             val deltaSelf = deltaSelfOp(source, Identifier)
             val rhs = contextDispatch(source, deltaSelf)
@@ -57,40 +56,25 @@ trait e5 extends Evolution with ScalaGenerator with TestGenerator with Operation
     }
   }
 
-  abstract override def testMethod(tests:Seq[domain.TestCase]) : Stat = {
-    // EXTRACT all SameTestCase ones and handle here
-    val source = NoSource()
-    var skip: Seq[domain.TestCase] = Seq.empty
+  override def scalaTestMethod(test:domain.TestCase, idx:Int) : Seq[Stat] = { // EXTRACT all SameTestCase ones and handle here
+    test match {
+      case ctc: SameTestCase =>
+        val source = NoSource()
+        val tree1 = contextDispatch(source, deltaExprOp(source, convert(ctc.inst1), domain.AsTree))
+        val tree2 = contextDispatch(source, deltaExprOp(source, convert(ctc.inst2), domain.AsTree))
 
-    val stmts: Seq[Statement] = tests.zipWithIndex.flatMap(pair => {
-      val test = pair._1
-      val idx = pair._2
+        val same = Scala(s"$tree1.same($tree2)").expression
 
-      val id: String = s"c$idx"
-
-      test match {
-        case ctc: SameTestCase =>
-          val tree1 = contextDispatch(source, deltaExprOp(source, convert(ctc.inst1), domain.AsTree))
-          val tree2 = contextDispatch(source, deltaExprOp(source, convert(ctc.inst2), domain.AsTree))
-
-          val same = Scala(s"$tree1.same($tree2)").expression
-
-          if (ctc.result) {
-            Scala(s"assert(true == $same)").statements
-          } else {
-            Scala(s"assert(false == $same)").statements
-          }
-        case _ =>
-          skip = skip :+ test
-          Seq.empty
-      }
-    })
-
-    // add these all in to what super produces, which is:
-    addStatements(super.testMethod(skip), stmts)
+        if (ctc.result) {
+          Scala(s"assert(true == $same)").statements
+        } else {
+          Scala(s"assert(false == $same)").statements
+        }
+      case _ => super.scalaTestMethod(test, idx)
+    }
   }
 
-  abstract override def testGenerator: Seq[Stat] = {
-    super.testGenerator :+ testMethod(M5_tests)
+  abstract override def testGenerator: Seq[Seq[Stat]] = {
+    super.testGenerator ++ testMethod(M5_tests)
   }
 }

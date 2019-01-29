@@ -65,22 +65,7 @@ trait s0 extends Evolution with JavaGenerator with JUnitTestGenerator with S0 {
     }
   }
 
-
-  abstract override def testMethod(tests:Seq[domain.TestCase]) : MethodDeclaration = {
-
-    // EXTRACT all ContainsTestCase ones and handle here
-    var pass:Seq[domain.TestCase] = Seq.empty
-    val local:Seq[domain.TestCase] = tests.filter(p => p match {
-      case _:ContainsTestCase => true
-      case _ => false
-    })
-
-    val stmts:Seq[Statement] = tests.zipWithIndex.flatMap(pair => {
-      val test = pair._1
-      val idx = pair._2
-
-      val id:String = s"c$idx"
-
+  override def junitTestMethod(test:domain.TestCase, idx:Int) : Seq[Statement] = {
       test match {
         case ctc: ContainsTestCase =>
           val x = Java(ctc.pt._1.toString)
@@ -92,17 +77,11 @@ trait s0 extends Evolution with JavaGenerator with JUnitTestGenerator with S0 {
           } else {
             Java(s"assertFalse(${actual(ContainsPt, ctc.inst, pt)});").statements
           }
-        case _ =>
-          pass = pass :+ test
-          Seq.empty
-      }
-    })
-
-    // add these all in to what super produces
-    addStatements(super.testMethod(pass), stmts)
+        case _ => super.junitTestMethod(test, idx)
+    }
   }
 
   abstract override def testGenerator: Seq[MethodDeclaration] = {
-    super.testGenerator :+ testMethod(S0_tests)
+    super.testGenerator ++ testMethod(S0_tests)
   }
 }

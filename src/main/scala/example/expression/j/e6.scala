@@ -51,33 +51,19 @@ trait e6 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
     }
   }
 
-  abstract override def testMethod(tests:Seq[domain.TestCase]) : MethodDeclaration = {
-
-    // EXTRACT all EqualsBinaryMethodTestCase ones and handle here
-    var skip:Seq[domain.TestCase] = Seq.empty
-
-    val stmts:Seq[Statement] = tests.zipWithIndex.flatMap(pair => {
-      val test = pair._1
-
+  override def junitTestMethod(test:domain.TestCase, idx:Int) : Seq[Statement] = {
       test match {
         case eb: EqualsBinaryMethodTestCase =>
-
           if (eb.result) {
             Java(s"assertTrue (${dispatch(convert(eb.inst1), Equals, convert(eb.inst2))});").statements
           } else {
             Java(s"assertFalse(${dispatch(convert(eb.inst1), Equals, convert(eb.inst2))});").statements
           }
-        case _ =>
-          skip = skip :+ test
-          Seq.empty
-      }
-    })
-
-    // add these all in to what super produces
-    addStatements(super.testMethod(skip), stmts)
+        case _ => super.junitTestMethod(test, idx)
+    }
   }
 
   abstract override def testGenerator: Seq[MethodDeclaration] = {
-    super.testGenerator :+ testMethod(M6_tests)
+    super.testGenerator ++ testMethod(M6_tests)
   }
 }

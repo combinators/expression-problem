@@ -1,4 +1,4 @@
-package example.expression.scalaVisitor  /*DD:LD:AD*/
+package example.expression.visitor   /*DD:LD:AD*/
 
 import com.github.javaparser.ast.CompilationUnit
 import example.expression.domain.{MathDomain, WithDomain}

@@ -39,16 +39,6 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
     new CPPElement(s"${att.name}")
   }
 
-//  /** For straight design solution, directly access attributes by name. */
-//  override def subExpressions(exp:Atomic) : Map[String,CPPElement] = {
-//    exp.attributes.map(att => att.name -> new CPPElement(s"${att.name}")).toMap
-//  }
-//
-//  /** For straight design solution, directly access attributes by name. */
-//  override def subExpression(exp:Atomic, name:String) : CPPElement = {
-//    exp.attributes.filter(att => att.name.equals(name)).map(att => new CPPElement(s"${att.name}")).head
-//  }
-
   /** Directly access local method, one per operation, with a parameter representing visitor name. */
   override def dispatch(expr:CPPElement, op:Operation, params:CPPElement*) : CPPElement = {
     val args:String = params.mkString(",")
@@ -57,9 +47,9 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
 
   /** Standard implementation relies on dependent dispatch. TODO: FIX */
   override def contextDispatch(source:Context, delta:Delta) : Expression = {
-    if (delta.isIndependent) {
+    if (source.op.isEmpty) {  // delta.isIndependent
       // a test case. Must then use delta.expr "as is"
-      val opargs = if (delta.params.size > 0) {
+      val opargs = if (delta.params.nonEmpty) {
         "," + delta.params.mkString (",")
       } else {
         ""
@@ -71,7 +61,6 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
       val op = delta.op.get.name.capitalize
       val args = delta.params.mkString (",")
       new CPPElement(s"(new $op(&e))->getValue()")
-     // new CPPElement(s"$op($args)")
     } else {
       super.contextDispatch(source, delta)
     }

@@ -4,15 +4,35 @@ package example.expression.domain  /*DI:LI:AI*/
 trait BaseDomain {
 
   /** Always allow, unless overridden to deny because of reserved word. Not yet Working*/
-  var reserved = Array("print")
+  var reserved = Array("print", "id")
 
   // We need to have a consistent strategy for cleaning up
   // these reserved words. Changes based on language. Not Yet Working
-  def sanitize(s:String):String = s
+  def sanitize(s:String):String = {
+    if (reserved.contains(s)) {
+      s + "_"
+    } else {
+      s
+    }
+  }
 
   /** There is a base type and subsequent sub-types will extend Types. */
   abstract class TypeRep {
     def name: String = getClass.getName
+
+    /**
+      * Request the type as an instance, such as "exp" for the Exp domain.
+      *
+      * This is useful, for example, for the etiquette of lower case for method names.
+      */
+    def instance : String = name.toLowerCase
+
+    /**
+      * Request the operation as a concept, such as "Exp" for the Exp domain.
+      *
+      * This is useful, for example, for the etiquette of capitalizing class and interface names.
+      */
+    def concept : String = name.capitalize
   }
   type BaseTypeRep <: TypeRep
   val baseTypeRep:BaseTypeRep
@@ -26,16 +46,43 @@ trait BaseDomain {
     val that:String = "that"
   }
 
-
   /** Java classes will have attributes and methods reflecting the desired operations. */
   abstract class Element
   case class Attribute(n1:String, tpe:TypeRep) extends Element {
     val name:String = sanitize(n1)
+
+    /**
+      * Request the operation as an instance, such as "eval" for the Eval operation.
+      *
+      * This is useful, for example, for the etiquette of lower case for method names.
+      */
+    def instance : String = name.toLowerCase
+
+    /**
+      * Request the operation as a concept, such as "Eval" for the Eval operation.
+      *
+      * This is useful, for example, for the etiquette of capitalizing class and interface names.
+      */
+    def concept : String = name.capitalize
   }
 
   /** Each operation is named and has parameters and an optional return type. */
   abstract class Operation(n1:String, val returnType:Option[TypeRep], val parameters:Seq[(String, TypeRep)] = Seq.empty) extends Element {
     val name:String = sanitize(n1)
+
+    /**
+      * Request the operation as an instance, such as "eval" for the Eval operation.
+      *
+      * This is useful, for example, for the etiquette of lower case for method names.
+      */
+    def instance : String = name.toLowerCase
+
+    /**
+      * Request the operation as a concept, such as "Eval" for the Eval operation.
+      *
+      * This is useful, for example, for the etiquette of capitalizing class and interface names.
+      */
+    def concept : String = name.capitalize
   }
 
   /** Producer and Binary Methods are tagged. */
@@ -57,6 +104,20 @@ trait BaseDomain {
   /** Pre-defined unary/binary subtypes that reflects either a unary or binary structure. This is extensible. */
   abstract class Atomic(n1: String, val attributes: Seq[Attribute]) {
     val name:String = sanitize(n1)
+
+    /**
+      * Request the data-type as an instance, such as "add" for the Add data type.
+      *
+      * This is useful, for example, for the etiquette of lower case for methods and attribute names.
+      */
+    def instance : String = name.toLowerCase
+
+    /**
+      * Request the data-type name as a concept, such as "Add" for Add data type.
+      *
+      * This is useful, for example, for the etiquette of capitalizing class names.
+      */
+    def concept : String = name.capitalize
   }
   abstract class Unary(override val name:String) extends Atomic(name, Seq(Attribute(base.inner, baseTypeRep)))
   abstract class Binary(override val name:String) extends Atomic(name, Seq(Attribute(base.left, baseTypeRep), Attribute(base.right, baseTypeRep)))

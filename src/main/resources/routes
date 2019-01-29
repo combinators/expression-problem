@@ -121,14 +121,14 @@
 ->    /                              example.expression.extensibleVisitor.M5_Variation
 ->    /                              example.expression.extensibleVisitor.M6_Variation
 # Scala visitor variations
-->    /                              example.expression.scalaVisitor.M0_Variation
-->    /                              example.expression.scalaVisitor.M1_Variation
-->    /                              example.expression.scalaVisitor.M2_Variation
-->    /                              example.expression.scalaVisitor.M3_Variation
-->    /                              example.expression.scalaVisitor.M4_Variation
-->    /                              example.expression.scalaVisitor.M5_Variation
-->    /                              example.expression.scalaVisitor.M6_Variation
-->    /                              example.expression.scalaVisitor.C1_Variation
+->    /                              example.expression.visitor.M0_Variation
+->    /                              example.expression.visitor.M1_Variation
+->    /                              example.expression.visitor.M2_Variation
+->    /                              example.expression.visitor.M3_Variation
+->    /                              example.expression.visitor.M4_Variation
+->    /                              example.expression.visitor.M5_Variation
+->    /                              example.expression.visitor.M6_Variation
+->    /                              example.expression.visitor.C1_Variation
 # Algebra variations
 ->    /                              example.expression.algebra.M0_Variation
 ->    /                              example.expression.algebra.M1_Variation
@@ -144,5 +144,5 @@
 # Shape Evolution
 ->    /                              example.expression.oo.S0_Variation
 ->    /                              example.expression.oo.S1_Variation
-->    /                              example.expression.scalaVisitor.S0_Variation
-->    /                              example.expression.scalaVisitor.S1_Variation
+->    /                              example.expression.visitor.S0_Variation
+->    /                              example.expression.visitor.S1_Variation

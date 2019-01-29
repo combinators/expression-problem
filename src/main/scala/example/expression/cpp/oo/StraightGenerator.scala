@@ -29,19 +29,9 @@ trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with
     new CPPElement(s"${att.name}")
   }
 
-//  /** For straight design solution, directly access attributes by name. */
-//  override def subExpressions(exp:Atomic) : Map[String,CPPElement] = {
-//    exp.attributes.map(att => att.name -> new CPPElement(s"${att.name}")).toMap
-//  }
-//
-//  /** For straight design solution, directly access attributes by name. */
-//  override def subExpression(exp:Atomic, name:String) : CPPElement = {
-//    exp.attributes.filter(att => att.name.equals(name)).map(att => new CPPElement(s"${att.name}")).head
-//  }
-
   /** Standard implementation relies on dependent dispatch. TODO: FIX */
   override def contextDispatch(source:Context, delta:Delta) : Expression = {
-    if (delta.isIndependent) {
+    if (source.op.isEmpty) {  // was isIndependent
       // a test case. Must then use delta.expr "as is"
       val opargs = delta.params.mkString (",")
       new CPPElement(s"${delta.expr.get}->${delta.op.get.name.toLowerCase}($opargs)")

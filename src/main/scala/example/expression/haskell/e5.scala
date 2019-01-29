@@ -1,13 +1,13 @@
 package example.expression.haskell     /*DD:LD:AI*/
 
-import example.expression.domain.{Evolution, M5, MathDomain, ModelDomain}
+import example.expression.domain._
 
 /**
   * BinaryMethod capability
   *
   * Still Java-based, naturally and JUnit
   */
-trait e5 extends Evolution with HaskellGenerator with HUnitTestGenerator with HaskellBinaryMethod with M5 {
+trait e5 extends Evolution with HaskellGenerator with HUnitTestGenerator with HaskellBinaryMethod with M0 with M5 {
   self: e0 with e1 with e2 with e3 with e4 =>
   val domain:MathDomain with ModelDomain
   import domain._
@@ -16,6 +16,14 @@ trait e5 extends Evolution with HaskellGenerator with HUnitTestGenerator with Ha
     tpe match {
       case Tree => new HaskellType(s"Tree")  // internal interface
       case _ => super.typeConverter(tpe)
+    }
+  }
+
+  /** If any new imports are needed for an operation, just extend here. */
+  override def addedImports(op:domain.Operation):Seq[Haskell] = {
+    op match {
+      case AsTree => Seq(Haskell("import DataTypes"))
+      case _ => super.addedImports(op)
     }
   }
 
@@ -28,6 +36,7 @@ trait e5 extends Evolution with HaskellGenerator with HUnitTestGenerator with Ha
   }
 
   abstract override def logic(exp:Atomic, op:domain.Operation): Seq[Haskell] = {
+    val source = Source (exp, op)
     // generate the actual body
     op match {
       // Simplify only works for solutions that instantiate expression instances
@@ -36,37 +45,66 @@ trait e5 extends Evolution with HaskellGenerator with HUnitTestGenerator with Ha
 
         val declType = exp.name
 
-        val children:Haskell = exp match {
-          case Lit => Haskell(s"Leaf $litValue")
-          case _ => Haskell(exp.attributes.map(att => dispatch(Haskell(att.name), op)).mkString(","))
+        val children = exp match {
+          case Lit => Seq(Haskell(s"Leaf $litValue"))
+          case _ =>
+            atts.map(att => {
+              contextDispatch(source, deltaChildOp(source, att._1, AsTree))
+            })
         }
-
-        result(Haskell(s" Node ${declType}Type [ $children ]"))
+        result(Haskell(s" Node ${declType}Type [ ${children.mkString(",")} ]"))
       }
 
       case _ => super.logic(exp, op)
     }
   }
 
-  abstract override def testGenerator: Seq[Haskell] = {
-    val s1 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
-    val s2 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
-    val s3 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(999.0))
+  /**
+    * Override testMethod to cover [[SameTestCase]] situations.
+    *
+    * @param test    test case to inspect
+    * @param id      current number
+    * @return
+    */
+  override def hunitTestMethod(test:TestCase, id:Int) : Seq[Haskell] = {
 
-    super.testGenerator :+ new Haskell(
-      s"""
-         |s1 = ${convert(s1)}
-         |s2 = ${convert(s2)}
-         |s3 = ${convert(s3)}
-         |
-         |test_e5_1 = TestCase (assertEqual "AsTree-s1" (${AsTree.name}  s1) (${AsTree.name}  s2))
-         |test_e5_2 = TestCase (assertBool "AsTree-s1" ((${AsTree.name}  s1) /= (${AsTree.name}  s3)))
-         |
-         |test_e5 = TestList [ TestLabel "1" test_e5_1, TestLabel "2" test_e5_2 ]
-         |
-         |main :: IO Counts
-         |main  = runTestTT test_e5
-         |""".stripMargin)
+    test match {
+      case ctc: SameTestCase =>
+        val source = NoSource()
+        val tree1 = contextDispatch(source, deltaExprOp(source, convert(ctc.inst1), AsTree))
+        val tree2 = contextDispatch(source, deltaExprOp(source, convert(ctc.inst2), AsTree))
+
+//        val same = Haskell(s"$tree1.same($tree2)")
+
+        if (ctc.result) {
+          Seq(new Haskell(s"""test_$id = TestCase (assertBool "${test.getClass.getSimpleName}" ($tree1) == ($tree2))"""))
+        } else {
+          Seq(new Haskell(s"""test_$id = TestCase (assertBool "${test.getClass.getSimpleName}" ($tree1) /= ($tree2))"""))
+        }
+      case _ => hunitTestMethod(test, id)
+    }
+  }
+
+  abstract override def testGenerator: Seq[Haskell] = {
+    super.testGenerator :+ hunitMethod(M5_tests)
+    //    val s1 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
+    //    val s2 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
+    //    val s3 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(999.0))
+
+    //    super.testGenerator :+ new Haskell(
+    //      s"""
+    //         |s1 = ${convert(s1)}
+    //         |s2 = ${convert(s2)}
+    //         |s3 = ${convert(s3)}
+    //         |
+    //         |test_e5_1 = TestCase (assertEqual "AsTree-s1" (${AsTree.name}  s1) (${AsTree.name}  s2))
+    //         |test_e5_2 = TestCase (assertBool "AsTree-s1" ((${AsTree.name}  s1) /= (${AsTree.name}  s3)))
+    //         |
+    //         |test_e5 = TestList [ TestLabel "1" test_e5_1, TestLabel "2" test_e5_2 ]
+    //         |
+    //         |main :: IO Counts
+    //         |main  = runTestTT test_e5
+    //         |""".stripMargin)
   }
 
 }

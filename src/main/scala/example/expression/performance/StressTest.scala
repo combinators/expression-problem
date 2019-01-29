@@ -9,8 +9,8 @@ import com.github.javaparser.ast.CompilationUnit
 import example.expression.algebra.AlgebraGenerator
 import example.expression.extensibleVisitor.ExtensibleVisitorGenerator
 import example.expression.interpreter.InterpreterGenerator
-import example.expression.scalaVisitor.VisitorGenerator
 import example.expression.trivially.TriviallyGenerator
+import example.expression.visitor.VisitorGenerator
 
 case class Score (n:Int,  min:Long,  average:Long,  max:Long)
 

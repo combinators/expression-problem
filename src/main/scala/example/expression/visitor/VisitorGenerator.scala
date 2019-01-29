@@ -1,9 +1,8 @@
-package example.expression.scalaVisitor  /*DI:LD:AD*/
+package example.expression.visitor   /*DI:LD:AD*/
 
-import com.github.javaparser.ast.body.{BodyDeclaration, FieldDeclaration, MethodDeclaration}
-import com.github.javaparser.ast.stmt.Statement
+import com.github.javaparser.ast.body.{BodyDeclaration, MethodDeclaration}
 import example.expression.domain.{BaseDomain, ModelDomain}
-import example.expression.j._
+import example.expression.j.{DataTypeSubclassGenerator, JavaBinaryMethod, JavaGenerator, OperationAsMethodGenerator}
 import org.combinators.templating.twirl.Java
 
 /**
@@ -57,13 +56,13 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
     * Note: Depends on having an external context which defines the variable e.
     */
   override def expression (exp:domain.Atomic, att:domain.Attribute) : Expression = {
-    Java(s"e.get${att.name.capitalize}()").expression[Expression]()
+    Java(s"e.get${att.concept}()").expression[Expression]()
   }
 
   /** Directly access local method, one per operation, with a parameter. */
   override def dispatch(expr:Expression, op:domain.Operation, params:Expression*) : Expression = {
     val args:String = params.mkString(",")
-    Java(s"$expr.accept(new ${op.name.capitalize}($args))").expression()
+    Java(s"$expr.accept(new ${op.concept}($args))").expression()
   }
 
   /**
@@ -101,14 +100,14 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
       case bm: domain.BinaryMethodTreeBase => true
       case _ => false
     }) {
-      Java(s"""public abstract tree.Tree ${domain.AsTree.name.toLowerCase}();""").classBodyDeclarations
+      Java(s"""public abstract tree.Tree ${domain.AsTree.instance}();""").classBodyDeclarations
     } else {
       Seq.empty
     }
 
     Java(s"""|package visitor;
              |
-             |public abstract class ${domain.baseTypeRep.name.capitalize} {
+             |public abstract class ${domain.baseTypeRep.concept} {
              |    ${binaryTreeInterface.mkString("\n")}
              |    public abstract <R> R accept(Visitor<R> v);
              |}
@@ -136,7 +135,7 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
     val atomicArgs = exp.attributes.map(att => att.name).mkString(",")
 
     // changes whether attributes can be access *directly* or whether they are accessed via getXXX*() method.
-    val recursiveArgs = exp.attributes.map(att => att.name + s".${domain.AsTree.name.toLowerCase}()").mkString(",")
+    val recursiveArgs = exp.attributes.map(att => att.name + s".${domain.AsTree.instance}()").mkString(",")
 
     val body:Seq[Statement] = exp match {
       case b:domain.Binary => {
@@ -152,7 +151,7 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
 
     Java(
       s"""
-         |public tree.Tree ${domain.AsTree.name.toLowerCase}() {
+         |public tree.Tree ${domain.AsTree.instance}() {
          |  ${body.mkString("\n")}
          |}""".stripMargin).methodDeclarations()
   }
@@ -215,11 +214,11 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
     }
 
    Java(s"""|package visitor;
-                     |public class ${op.name.capitalize} extends Visitor<$tpe>{
-                     |  $ctor
-                     |
-                     |  ${atts.mkString("\n")}
-                     |  ${signatures.mkString("\n")}
-                     |}""".stripMargin).compilationUnit
+            |public class ${op.concept} extends Visitor<$tpe>{
+            |  $ctor
+            |
+            |  ${atts.mkString("\n")}
+            |  ${signatures.mkString("\n")}
+            |}""".stripMargin).compilationUnit
   }
 }

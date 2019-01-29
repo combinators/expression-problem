@@ -111,27 +111,17 @@ trait TestGenerator extends CPPGenerator {
 
       test match {
         case eq: EqualsTestCase =>
-          //val OP:String = eq.op.name.capitalize
-          //val instDeclaration = rec_convert(eq.inst)
-          //val varName:Expression = new CPPElement(variables(eq.inst))
-
           // The expected method takes in a function that will be called by the expected method. Now, the expected
           // method will pass in the expression (which is expected) into this function, and it is the job of that
           // function to return the variable.
           expected(eq, id)(expectedExpr =>
             Seq(
               new CPPElement("{"),
-             // instDeclaration,
-             // new CPPElement(s"${result(dispatch(varName, eq.op))}"),
-             // new CPPElement(s"${vars(eq.inst)}.Accept(e);"), // FOR NOW only works with visitor...
-              //new CPPElement(s"CHECK_COMPARE($expectedExpr, ==, ${actual(eq.op, eq.inst)});"),
               new CPPElement(s"CHECK_TRUE($expectedExpr == ${actual(eq.op, eq.inst)});"),
               new CPPElement("}"))
           )
 
         case ne: NotEqualsTestCase =>
-          //val OP:String = ne.op.name.capitalize
-
           // The expected method takes in a function that will be called by the expected method. Now, the expected
           // method will pass in the expression (which is expected) into this function, and it is the job of that
           // function to return the variable.

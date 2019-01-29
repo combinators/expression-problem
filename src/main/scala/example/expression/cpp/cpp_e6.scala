@@ -34,10 +34,11 @@ trait cpp_e6 extends Evolution with CPPGenerator with CPPBinaryMethod with TestG
     // generate the actual body; since this is a binary method
     op match {
       case Equals =>
+        val thatSource = NoSource()
         val leftDelta = deltaSelfOp(source, domain.AsTree)
-        val rightDelta = deltaIndependentExprOp(source, new CPPElement("that"), domain.AsTree)
+        val rightDelta = deltaExprOp(thatSource, new CPPElement("that"), domain.AsTree)   // was Independent
         val lhs:Expression = contextDispatch(source, leftDelta)
-        val rhs:Expression = contextDispatch(source, rightDelta)
+        val rhs:Expression = contextDispatch(thatSource, rightDelta)
         result(new CPPElement(s"$lhs->same($rhs)"))
 
       case _ => super.logic(exp, op)
@@ -54,9 +55,9 @@ trait cpp_e6 extends Evolution with CPPGenerator with CPPBinaryMethod with TestG
 
       test match {
         case eb: EqualsBinaryMethodTestCase =>
-          val source = TestSource()
-          val code = contextDispatch(source, deltaIndependentExprOp(source, rec_convert(eb.inst1), Equals, rec_convert(eb.inst2)))
-
+          val source = NoSource()
+          val code = contextDispatch(source, deltaExprOp(source, rec_convert(eb.inst1), Equals, rec_convert(eb.inst2)))
+// was independentExpr
           if (eb.result) {
             Seq(new CPPElement(s"CHECK_TRUE($code);"))
           } else {

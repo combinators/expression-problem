@@ -278,10 +278,10 @@ trait LanguageIndependentGenerator {
   abstract class Context(val exp:Option[Atomic], val op:Option[Operation], val params:Expression*)
 
   /**
-    * When code is being generated independently within a test case, use the @link{TestSource} source context.
+    * When code is being generated independently within a test case, use the @link{NoSource} source context.
     * @group context
     */
-  case class TestSource() extends Context(None, None)
+  case class NoSource() extends Context(None, None)
 
   /**
     * Point in expression problem solution where logic is to be inserted for a given data-type, e,
@@ -303,26 +303,7 @@ trait LanguageIndependentGenerator {
     * @param params   (optional) parameters to the operation
     * @group context
     */
-  class Delta(val expr:Option[Expression], override val op:Option[Operation], override val params:Expression*) extends Context(None, op, params : _*) {
-
-    /** Specifies whether this delta exists independently of a prior context. */
-    def isIndependent: Boolean = false
-  }
-
-  /**
-    * When the new context is truly independent from the source context, [[DeltaIndependent]] lets
-    * you record the context of the new expression and operation.
-    *
-    * @param expr     code fragment representing expression derived from current context.
-    * @param op       (optional) operation
-    * @param params   (optional) parameters to the operation
-    * @group context
-    */
-  class DeltaIndependent(override val expr:Option[Expression], override val op:Option[Operation], override val params:Expression*) extends Delta(expr, op, params : _*) {
-
-    /** [[DeltaIndependent]] exists independently of a prior context. */
-    override def isIndependent: Boolean = true
-  }
+  class Delta(val expr:Option[Expression], override val op:Option[Operation], override val params:Expression*) extends Context(None, op, params : _*)
 
   /**
     * Helper method for creating a [[Delta]] context that represents a new operation (with
@@ -335,17 +316,30 @@ trait LanguageIndependentGenerator {
     * @param source    Source context
     * @param attName   child element, identified by attribute name
     * @param op        operation to perform on the child element
-    * @param params    potential paremeters for operation.
+    * @param params    potential parameters for operation.
     * @group deltaHelpers
     */
   def deltaChildOp(source:Source, attName:String, op:Operation, params:Expression*) : Delta = {
-    new Delta(Some(subExpression(source.e, attName)), Some(op), params : _*)
+    deltaExprOp(source, subExpression(source.e, attName), op, params : _ *)
+//    new Delta(Some(subExpression(source.e, attName)), Some(op), params : _*)
+  }
+
+  //  invoke as deltaChildOpAlt(subExpression(source.e, attName), op, params)
+  def deltaChildOpAlt(srcExp:Expression, op:Operation, params:Expression*) : Delta = {
+    deltaExprOp(NoSource(), srcExp, op, params : _ *)
+  }
+
+  //  val deltaLeft = deltaChildOp(exp, base.left, Eval)
+  def deltaChildOpAlt2(exp:Atomic, att:Attribute, op:Operation, params:Expression*) : Delta = {
+    deltaExprOp(NoSource(), subExpression(exp, att.name), op, params : _ *)
   }
 
   /**
     * Helper method for creating a [[Delta]] context that represents a new operation (with
     * potential parameters) being applied to a new expression context, passed in as 'expr'
     * parameter.
+    *
+    * If source operation is undefined, then this method returns a new independent
     *
     * @param source    Source context
     * @param expr      code fragment that will provide part of the new context
@@ -354,22 +348,7 @@ trait LanguageIndependentGenerator {
     * @group deltaHelpers
     */
   def deltaExprOp(source:Context, expr:Expression, op:Operation, params:Expression*) : Delta = {
-    new Delta(Some(expr), Some(op), params : _*)
-  }
-
-  /**
-    * Helper method for constructor Delta when requesting operation on a different expression which
-    * is truly independent from any context. For now, only used by C++ to avoid issues with getters
-    * and setters. Ultimately could be made into a new top-level API like independentDispatch
-    *
-    * @param source    Source Context
-    * @param expr      new expression representing the new context
-    * @param op        new operation as part of new context
-    * @param params    potential parameters for new operation
-    * @group deltaHelpers
-    */
-  def deltaIndependentExprOp(source:Context, expr:Expression, op:Operation, params:Expression*) : Delta = {
-    new DeltaIndependent(Some(expr), Some(op), params : _*)
+    new Delta(Some(expr), Some(op), params: _*)
   }
 
   /**
@@ -378,6 +357,7 @@ trait LanguageIndependentGenerator {
     * Since the context of source remains the same, the [[Delta]] returned only
     * records the new operation,op, with its parameters.
     *
+    * NOTE: POTENTIAL INFINITE LOOP IF CALL deltaSelfOp on self with same operation
     * @param source    source Context
     * @param op        desired operation
     * @param params    potential parameters of this operation.

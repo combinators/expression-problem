@@ -59,7 +59,7 @@ trait e5 extends Evolution with ScalaGenerator with TestGenerator with Operation
 
   abstract override def testMethod(tests:Seq[domain.TestCase]) : Stat = {
     // EXTRACT all SameTestCase ones and handle here
-    val source = TestSource()
+    val source = NoSource()
     var skip: Seq[domain.TestCase] = Seq.empty
 
     val stmts: Seq[Statement] = tests.zipWithIndex.flatMap(pair => {

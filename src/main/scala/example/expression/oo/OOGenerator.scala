@@ -46,8 +46,8 @@ trait OOGenerator extends JavaGenerator with DataTypeSubclassGenerator with Oper
   /** Handle self-case here. */
   override def contextDispatch(source:Context, delta:Delta) : Expression = {
     if (delta.expr.isEmpty) {
-      val op = delta.op.get.name.toLowerCase
-      Java(s"this.$op()").expression[Expression]()
+      val op = delta.op.get.instance
+      Java(s"this.$op()").expression()
     } else {
       super.contextDispatch(source, delta)
     }
@@ -56,7 +56,7 @@ trait OOGenerator extends JavaGenerator with DataTypeSubclassGenerator with Oper
   /** Directly access local method, one per operation, with a parameter. */
   override def dispatch(expr:Expression, op:Operation, params:Expression*) : Expression = {
     val args:String = params.mkString(",")
-    Java(s"$expr.${op.name}($args)").expression()
+    Java(s"$expr.${op.instance}($args)").expression()
   }
 
   /** Computer return type for given operation (or void). */
@@ -70,7 +70,7 @@ trait OOGenerator extends JavaGenerator with DataTypeSubclassGenerator with Oper
   /** Operations are implemented as methods in the Base and sub-type classes. */
   def methodGenerator(exp:Atomic, op:Operation): MethodDeclaration = {
     val params = parameters(op)
-    Java(s"""|public ${returnType(op)} ${op.name}($params) {
+    Java(s"""|public ${returnType(op)} ${op.instance}($params) {
              |  ${logic(exp, op).mkString("\n")}
              |}""".stripMargin).methodDeclarations.head
   }
@@ -91,7 +91,7 @@ trait OOGenerator extends JavaGenerator with DataTypeSubclassGenerator with Oper
   def generateBase(model:Model): CompilationUnit = {
     val signatures = model.ops.flatMap(op => {
        Java(s"public abstract ${returnType(op)} " +
-        s"${op.name}(${parameters(op)});").methodDeclarations
+        s"${op.instance}(${parameters(op)});").methodDeclarations
     })
 
     Java(s"""|package oo;

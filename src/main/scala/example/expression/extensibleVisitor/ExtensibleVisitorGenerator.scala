@@ -2,7 +2,7 @@ package example.expression.extensibleVisitor    /*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.{MethodDeclaration, TypeDeclaration}
 import example.expression.domain.{BaseDomain, ModelDomain, OperationDependency}
-import example.expression.scalaVisitor.VisitorGenerator
+import example.expression.visitor.VisitorGenerator
 import org.combinators.templating.twirl.Java
 
 /**
@@ -34,8 +34,8 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
 
     val flat = getModel.flatten()
     decls ++ getModel.inChronologicalOrder.flatMap(m =>
-      m.types.map(tpe => generateExp(flat, tpe)) ++              // one for each type; use 'flat' to ensure we detect binary methods
-        m.ops.map(op => generateOperation(m, op))             // and new operations
+      m.types.map(tpe => generateExtensibleExp(flat, m, tpe)) ++       // one for each type; important to pass in both 'flat' and 'm'
+        m.ops.map(op => generateOperation(m, op))                      // and new operations
     ) ++
       // cannot have extension for the FIRST model entry, so skip it
       getModel.inChronologicalOrder
@@ -48,26 +48,11 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
       generateBaseClass(flat)                 // abstract base class
   }
 
-  /**
-    * Responsible for delegating to a new operation on the current context.
-    */
-  def recreate(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
-    val m:domain.Model = getModel // getModel.findType(exp)
-    val opargs = params.mkString(",")
-
-    val full = if (m.last.equals(domain.emptyModel())) {
-      ""
-    } else {
-      m.types.sortWith(_.name < _.name).mkString("")
-    }
-
-    Java(s"e.accept(make${op.name.capitalize}($opargs))").expression[Expression]()
-  }
 
   /** Handle self-case here. */
   override def contextDispatch(source:Context, delta:Delta) : Expression = {
     if (delta.expr.isEmpty) {
-      recreate(source.exp.get, delta.op.get)
+      dispatch(Java("e").expression(), delta.op.get, delta.params : _ *)
     } else {
       super.contextDispatch(source, delta)
     }
@@ -80,8 +65,8 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
     */
   def addVirtualConstructorSubtype(mainType:TypeDeclaration[_], op:domain.Operation, context:String) : Unit = {
     val virtualConstructor = Java(
-      s"""|${op.name.capitalize} make${op.name.capitalize} (${parameters(op)}) {
-          |  return new ${op.name.capitalize}$context (${arguments(op)});
+      s"""|${op.concept} make${op.concept} (${parameters(op)}) {
+          |  return new ${op.concept}$context (${arguments(op)});
           |}""".stripMargin).methodDeclarations().head
 
     mainType.addMember(virtualConstructor)
@@ -90,14 +75,17 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
   /** Directly access local method, one per operation, with a parameter. */
   override def dispatch(expr:Expression, op:domain.Operation, params:Expression*) : Expression = {
     val args:String = params.mkString(",")
-    Java(s"""$expr.accept(make${op.name.capitalize}($args))""").expression()
+    Java(s"""$expr.accept(make${op.concept}($args))""").expression()
   }
 
-
-
-  /** Use run-time validation to confirm, but only needed after first base level... */
-  override def generateExp(model:domain.Model, exp:domain.Atomic) : CompilationUnit = {
-    val unit = super.generateExp(model, exp)
+  /**
+    * Use run-time validation to confirm, but only needed after first base level...
+    *
+    * Even though super-class method uses flatten, we cannot do so, because of the
+    * requirement that "we only add visitor checks for models after first one."
+    */
+   def generateExtensibleExp(flat: domain.Model, model:domain.Model, exp:domain.Atomic) : CompilationUnit = {
+    val unit = generateExp(flat, exp)
 
     // replace old accept method with new one
     val klass = unit.getType(0)
@@ -167,7 +155,7 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
       modelTypes(lastWithType)
     }
 
-    val replacement = makeClass("visitor", s"${op.name.capitalize}$full", Seq(s"Visitor$full<$opType>"), Some(s"${op.name.capitalize}$last"))
+    val replacement = makeClass("visitor", s"${op.concept}$full", Seq(s"Visitor$full<$opType>"), Some(s"${op.concept}$last"))
 
     // copy everything over from the originally generated class
     val newType = replacement.getType(0)
@@ -198,7 +186,7 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
     }
 
     val replacement:CompilationUnit =
-       addMethods(makeClass("visitor", s"${op.name.capitalize}$full", Seq(s"Visitor$fullVisitor<$opType>")),
+       addMethods(makeClass("visitor", s"${op.concept}$full", Seq(s"Visitor$fullVisitor<$opType>")),
          model.last.pastDataTypes().map(exp => methodGenerator(exp, op)))
 
     val newType = replacement.getType(0)

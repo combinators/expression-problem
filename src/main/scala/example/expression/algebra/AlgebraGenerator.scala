@@ -17,26 +17,20 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
   override def contextDispatch(source:Context, delta:Delta) : Expression = {
     if (source.op.isDefined && delta.expr.isEmpty && source.op.get.isInstanceOf[domain.BinaryMethod]) {
       // used for BinaryMethods which have already created a method to match deltaop
-      val deltaop = delta.op.get
       val args: String = delta.params.mkString(",")
-      Java(s"""${deltaop.name}($args)""").expression()
-    } else  if (delta.expr.isEmpty) {
+      Java(s"""${delta.op.get.instance}($args)""").expression()
+    } else if (delta.expr.isEmpty) {
       val exp:domain.Atomic = source.exp.get
       recreate(exp, delta.op.get)
     } else {
       val expr:Expression = delta.expr.get
-      if (delta.op.isDefined) {
-        val deltaop = delta.op.get
-        val args: String = delta.params.mkString(",")
+      val deltaop = delta.op.get
 
-        if (source.op.isDefined && source.op.get.isInstanceOf[domain.ProducerOperation]) {
-          val op:domain.Operation = source.op.get
-          Java(s"""$expr.${op.name}().${deltaop.name}($args)""").expression() // TODO: Can we ever have args for the first operation?
-        } else {
-          Java(s"""$expr.${deltaop.name}($args)""").expression()
-        }
+      if (source.op.isDefined && source.op.get.isInstanceOf[domain.ProducerOperation]) {
+        val op:domain.Operation = source.op.get
+        dispatch(Java(s"$expr.${op.instance}()").expression(), deltaop, delta.params : _ *)
       } else {
-        dispatch(delta.expr.get, source.op.get, delta.params: _*)
+        dispatch(expr, deltaop, delta.params : _*)
       }
     }
   }
@@ -50,14 +44,14 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
     * is needed.
     */
   def recreate(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
-    val m:domain.Model = getModel.lastModelWithDataTypes()  // getModel.findType(exp)
-    val fullName = m.types.sortWith(_.name < _.name).map(exp => exp.name.capitalize).mkString("")
+    val m:domain.Model = getModel.lastModelWithDataTypes()
+    val fullName = m.types.sortWith(_.name < _.name).map(exp => exp.concept).mkString("")
 
     // args can all be NULL since we are not concerned with children
-    val args = exp.attributes.map(att =>"null").mkString(",")   // was "null"
+    val args = exp.attributes.map(_ => "null").mkString(",")
     val opargs = params.mkString(",")
 
-    Java(s"new ${op.name.capitalize}$fullName${domain.baseTypeRep.name}Alg().${exp.name.toLowerCase}($args).${op.name.toLowerCase}($opargs)").expression[Expression]()
+    Java(s"new ${op.concept}$fullName${domain.baseTypeRep.concept}Alg().${exp.instance}($args).${op.instance}($opargs)").expression()
   }
 
   /**
@@ -92,7 +86,6 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
     decls ++ prods ++ processModel(getModel.inChronologicalOrder)
   }
 
-
   /**
     * For producer operations, there is a need to instantiate objects, and one would use this
     * method (with specific parameters) to carry this out.
@@ -100,28 +93,18 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
     * Note: This capability is preliminary and not yet ready for use.
     */
   override def inst(exp:domain.Atomic, params:Expression*): Expression = {
-    Java("algebra." + exp.name.toLowerCase() + "(" + params.map(expr => expr.toString()).mkString(",") + ")").expression()
+    Java("algebra." + exp.instance + "(" + params.map(expr => expr.toString()).mkString(",") + ")").expression()
   }
 
   /** For straight design solution, directly access attributes by name. */
   override def expression (exp:domain.Atomic, att:domain.Attribute) : Expression = {
-    Java(s"${att.name}").expression[Expression]()
+    Java(s"${att.instance}").expression[Expression]()
   }
-
-//  /** For straight design solution, directly access attributes by name. */
-//  override def subExpressions(exp:domain.Atomic) : Map[String,Expression] = {
-//    exp.attributes.map(att => att.name -> Java(s"${att.name}").expression[Expression]()).toMap
-//  }
-//
-//  /** For straight design solution, directly access attributes by name. */
-//  override def subExpression(exp:domain.Atomic, name:String) : Expression = {
-//    exp.attributes.filter(att => att.name.equals(name)).map(att => Java(s"${att.name}").expression[Expression]()).head
-//  }
 
   /** Directly access local method, one per operation, with a parameter. */
   override def dispatch(expr:Expression, op:domain.Operation, params:Expression*) : Expression = {
     val args:String = params.mkString(",")
-    Java(s"""$expr.${op.name}($args)""").expression()
+    Java(s"""$expr.${op.instance}($args)""").expression()
   }
 
   /** Return designated Java type associated with type, or void if all else fails. */
@@ -134,7 +117,7 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
 
   /** Generated Combined API. */
   def algebraAPI : Type = {
-    Java(s"algebra.Combined${domain.baseTypeRep.name}Alg.Combined").tpe()
+    Java(s"algebra.Combined${domain.baseTypeRep.concept}Alg.Combined").tpe()
   }
 
   /**
@@ -145,9 +128,8 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
   def operationGenerator(model:domain.Model, op:domain.Operation): CompilationUnit = {
 
     // this gets "eval" and we want the name of the Interface.
-    val name = op.name
     val returnType = typeConverter(op.returnType.get)
-    val opType = Java(op.name.capitalize).tpe()
+    val opType = Java(op.concept).tpe()
     var targetModel:domain.Model = null
     var fullName:String = null
 
@@ -155,9 +137,9 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
     val previous:String = if (model.ops.contains(op) || model.lastModelWithOperation().isEmpty) {
       targetModel = model.flatten()
       if (model.types.isEmpty) {
-        fullName = model.lastModelWithDataTypes().types.sortWith(_.name < _.name).map(exp => exp.name.capitalize).mkString("")
+        fullName = model.lastModelWithDataTypes().types.sortWith(_.name < _.name).map(exp => exp.concept).mkString("")
       } else {
-        fullName = model.types.sortWith(_.name < _.name).map(exp => exp.name.capitalize).mkString("")
+        fullName = model.types.sortWith(_.name < _.name).map(exp => exp.concept).mkString("")
       }
 
       ""
@@ -167,7 +149,7 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
       } else {
         targetModel = model
       }
-      fullName = targetModel.types.sortWith(_.name < _.name).map(exp => exp.name.capitalize).mkString("")
+      fullName = targetModel.types.sortWith(_.name < _.name).map(exp => exp.concept).mkString("")
 
       // this is different! It may be that there are NO types for the lastOperationDefined, in which case we must go
       // back further to find one where there were types defined, and then work with that one
@@ -181,9 +163,9 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
         }
       }
 
-      s"extends ${name.capitalize}" +
+      s"extends $opType" +
         bestModel.types.sortWith(_.name < _.name)
-          .map(op => op.name.capitalize).mkString("") + s"${domain.baseTypeRep.name}Alg"
+          .map(op => op.concept).mkString("") + s"${domain.baseTypeRep.concept}Alg"
     }
 
    // Handle binary methods...
@@ -192,17 +174,17 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
       case _ => parameters(op)
     }
 
-    val methods = targetModel.types.flatMap(exp => {  // exp is either 'lit' or 'add'
+    val methods = targetModel.types.flatMap(exp => {
 
-      val subName = exp.name.toLowerCase   // to get proper etiquette for method names
+      val subName = exp.instance   // to get proper etiquette for method names
       val code:Seq[Statement] = logic(exp, op)
       val signatures = code.mkString("\n")
 
       // handle covariant typing locally
       val params = exp.attributes.map(att =>
         att.tpe match {
-          case domain.baseTypeRep => s"final $opType ${att.name}"
-          case _ =>   s"final ${typeConverter(att.tpe)} ${att.name}"
+          case domain.baseTypeRep => s"final $opType ${att.instance}"
+          case _ =>   s"final ${typeConverter(att.tpe)} ${att.instance}"
         })
 
       // creates method body
@@ -216,15 +198,15 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
 
       val str = if (helpers.isEmpty && useLambdaWherePossible) {
         Java(s"""
-                |public ${name.capitalize} $subName($paramList) {
+                |public $opType $subName($paramList) {
                 |   return ($op_params) -> {$signatures };
                 |}""".stripMargin)
       } else {
         Java(s"""
-                |public ${name.capitalize} $subName($paramList) {
-                |  return new ${name.capitalize}() {
+                |public $opType $subName($paramList) {
+                |  return new $opType() {
                 |    ${helpers.mkString("\n")}
-                |    public $returnType $name($op_params) {
+                |    public $returnType ${op.instance}($op_params) {   // was NAME
                 |        $signatures
                 |    }
                 |  };
@@ -236,7 +218,7 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
 
     val delegate:Seq[BodyDeclaration[_]] = op match {
       case bm:domain.BinaryMethod =>
-        Java(s"""${domain.AsTree.name.capitalize}$fullName${domain.baseTypeRep.name}Alg asTree = new ${domain.AsTree.name.capitalize}$fullName${domain.baseTypeRep.name}Alg();""").classBodyDeclarations()
+        Java(s"""${domain.AsTree.concept}$fullName${domain.baseTypeRep.concept}Alg asTree = new ${domain.AsTree.concept}$fullName${domain.baseTypeRep.concept}Alg();""").classBodyDeclarations()
       case _ => Seq.empty
     }
 
@@ -245,8 +227,8 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
       case po: domain.ProducerOperation => Java(
         s"""
           |// Binary operations are passed in necessary algebra to work with
-          |Combined${domain.baseTypeRep.name}Alg algebra;
-          |public ${name.capitalize}$fullName${domain.baseTypeRep.name}Alg(Combined${domain.baseTypeRep.name}Alg alg) {
+          |Combined${domain.baseTypeRep.concept}Alg algebra;
+          |public $opType$fullName${domain.baseTypeRep.concept}Alg(Combined${domain.baseTypeRep.concept}Alg alg) {
           |		this.algebra = alg;
           |}
         """.stripMargin).classBodyDeclarations()
@@ -254,7 +236,7 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
     }
 
     val str:String = s"""|package algebra;
-                         |public class ${name.capitalize}$fullName${domain.baseTypeRep.name}Alg $previous implements $fullName${domain.baseTypeRep.name}Alg<${name.capitalize}> {
+                         |public class $opType$fullName${domain.baseTypeRep.concept}Alg $previous implements $fullName${domain.baseTypeRep.concept}Alg<$opType> {
                          |
                          |     ${producerConstructor.mkString("\n")}
                          |     ${delegate.mkString("\n")}
@@ -270,7 +252,7 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
     * Handle Producer methods specially
     */
   def baseInterface(op:domain.Operation) : CompilationUnit = {
-    val name = op.name.toLowerCase
+    val name = op.instance
     val tpe = typeConverter(op.returnType.get)
 
     val params = op match {
@@ -284,13 +266,13 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
     }
 
     val parent:String = op match {
-      case b:domain.BinaryMethod => s"extends ${domain.AsTree.name.capitalize}"
+      case b:domain.BinaryMethod => s"extends ${domain.AsTree.concept}"
       case _ => ""
     }
 
     // implementations
     val str = s"""|package algebra;
-                  |interface ${op.name.capitalize} $parent {
+                  |interface ${op.concept} $parent {
                   |  $signature
                   |}""".stripMargin
     Java(str).compilationUnit()
@@ -307,14 +289,14 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
   def extendedInterface(model:domain.Model) : CompilationUnit = {
 
     // must be based on the new dataTypes being defined in model (if none, then why here? return)
-    val types:Seq[String] = model.types.sortWith(_.name < _.name).map(exp => exp.name)
+    val types:Seq[String] = model.types.sortWith(_.name < _.name).map(exp => exp.concept)
     val newName = types.mkString("")
 
     val signatures = model.types.map(exp => {
-        val subName = exp.name.toLowerCase
+        val subName = exp.instance
 
         val params: Seq[String] = exp.attributes
-          .map(att => s"final ${typeConverter(att.tpe)} ${att.name}")
+          .map(att => s"final ${typeConverter(att.tpe)} ${att.instance}")
 
         // creates method signature from parameters
         val paramList = params.mkString(",")
@@ -328,12 +310,12 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
       ""
     } else {
       "extends " + model.last.lastModelWithDataTypes().types
-        .sortWith(_.name < _.name).map(exp => exp.name.capitalize).mkString("")
-        .concat(s"${domain.baseTypeRep.name}Alg<E>")
+        .sortWith(_.name < _.name).map(exp => exp.concept).mkString("")
+        .concat(s"${domain.baseTypeRep.concept}Alg<E>")
     }
 
     Java(s"""|package algebra;
-             |interface $newName${domain.baseTypeRep.name}Alg<E> $previous {
+             |interface $newName${domain.baseTypeRep.concept}Alg<E> $previous {
              | $signatures
              |}
              |""".stripMargin).compilationUnit()
@@ -386,27 +368,27 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
     val dataTypes = getModel.flatten().types.map(exp => {
       val fields = exp.attributes.flatMap(att => {
         val tpe = att.tpe match {
-          case domain.baseTypeRep => Java(domain.baseTypeRep.name).tpe()
+          case domain.baseTypeRep => Java(domain.baseTypeRep.concept).tpe()
           case _ => typeConverter(att.tpe)
         }
-        Java(s"private $tpe ${att.name};").fieldDeclarations()
+        Java(s"private $tpe ${att.instance};").fieldDeclarations()
       })
 
       val params:Seq[String] = exp.attributes.map(att => {
         val tpe = att.tpe match {
-          case domain.baseTypeRep => Java(domain.baseTypeRep.name).tpe()
+          case domain.baseTypeRep => Java(domain.baseTypeRep.concept).tpe()
           case _ => typeConverter(att.tpe)
         }
 
-        s"$tpe ${att.name}"
+        s"$tpe ${att.instance}"
       })
-      val cons:Seq[Statement] = exp.attributes.flatMap(att => Java(s"  this.${att.name} = ${att.name};").statements())
+      val cons:Seq[Statement] = exp.attributes.flatMap(att => Java(s"  this.${att.instance} = ${att.instance};").statements())
 
-      val constructor =  s"""|public ${exp.name.capitalize} (${params.mkString(",")}) {
+      val constructor =  s"""|public ${exp.concept} (${params.mkString(",")}) {
                              |   ${cons.mkString("\n")}
                              |}""".stripMargin
       val unit = Java(s"""|package algebra.oo;
-                          |public class ${exp.toString} extends ${domain.baseTypeRep.name} {
+                          |public class ${exp.toString} extends ${domain.baseTypeRep.concept} {
                           |  $constructor
                           |  ${fields.mkString("\n")}
                           |}""".stripMargin).compilationUnit
@@ -414,12 +396,12 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
       // only call convert on recursive structures
       val args = exp.attributes.map(att => {
         att.tpe match {
-          case domain.baseTypeRep => s"${att.name.toLowerCase}.convert(algebra)"
-          case _ => s"${att.name.toLowerCase}"
+          case domain.baseTypeRep => s"${att.instance}.convert(algebra)"
+          case _ => s"${att.instance}"
         }
       }).mkString(",")
-      val convertMethod = Java(s"""|public $algebraAPI convert (algebra.Combined${domain.baseTypeRep.name}Alg algebra) {
-                                   |  return algebra.${exp.name.toLowerCase}($args);
+      val convertMethod = Java(s"""|public $algebraAPI convert (algebra.Combined${domain.baseTypeRep.concept}Alg algebra) {
+                                   |  return algebra.${exp.instance}($args);
                                    |}""".stripMargin).methodDeclarations()
 
       addMethods(unit, convertMethod)
@@ -429,7 +411,7 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
     val iface = Java(s"""|package algebra.oo;
                          |public abstract class Exp {
                          |    // Converts from OO solution back to Algebra
-                         |    public abstract $algebraAPI convert (algebra.Combined${domain.baseTypeRep.name}Alg algebra);
+                         |    public abstract $algebraAPI convert (algebra.Combined${domain.baseTypeRep.concept}Alg algebra);
                          |}""".stripMargin).compilationUnit()
 
     dataTypes :+ iface

@@ -38,28 +38,32 @@ trait HUnitTestGenerator extends HaskellGenerator {
     */
   def actual(op:Operation, inst:AtomicInst):Haskell = dispatch(convert(inst), op)
 
+  /**
+    * Override as necessary
+    */
+  def hunitTestMethod(test:TestCase, idx:Int) : Seq[Haskell] = {
+    val id:String = s"v$idx"
+
+    test match {
+      case eq: EqualsTestCase =>
+
+        val source = NoSource()
+        val delta = deltaExprOp(source, convert(eq.inst), eq.op)
+        val disp = contextDispatch(source, delta)
+        expected(eq, id)(expectedExpr => Seq(new Haskell(s"""test_$id = TestCase (assertEqual "${test.getClass.getSimpleName}" ($expectedExpr) $disp)""")))
+
+      case seq:EqualsCompositeTestCase =>
+        val x :Expression = actual(seq.ops.head, seq.inst)   // HACK: Only works for two-deep
+        val y :Expression = dispatch(x, seq.ops.tail.head)
+        expected(seq, id)(expectedExpr => Seq(new Haskell(s"""test_$id = TestCase (assertEqual "${test.getClass.getSimpleName}" ($expectedExpr) $y)""")))
+
+      case _ => Seq.empty
+    }
+  }
+
   /** Return JUnit test case associated with these given test cases. */
   def hunitMethod(tests:Seq[TestCase]) : Haskell = {
-    val stmts:Seq[Haskell] = tests.zipWithIndex.flatMap(pair => {
-      val test = pair._1
-      val idx = pair._2
-
-      val id:String = s"v$idx"
-
-      test match {
-        case eq: EqualsTestCase =>
-
-          // test_e3_1 = TestCase (assertEqual "NegCheck-Eval" (0-5.0) (${Eval.name} n1))
-          val disp = dispatch(convert(eq.inst), eq.op)
-          expected(eq, id)(expectedExpr => Seq(new Haskell(s"""test_$id = TestCase (assertEqual "${test.getClass.getSimpleName}" ($expectedExpr) $disp)""")))
-
-        case seq:EqualsCompositeTestCase => {
-          val x :Expression = actual(seq.ops.head, seq.inst)   // HACK: Only works for two-deep
-          val y :Expression = dispatch(x, seq.ops.tail.head)
-          expected(seq, id)(expectedExpr => Seq(new Haskell(s"""test_$id = TestCase (assertEqual "${test.getClass.getSimpleName}" ($expectedExpr) $y)""")))
-        }
-      }
-    })
+    val stmts:Seq[Haskell] = tests.zipWithIndex.flatMap(pair => hunitTestMethod(pair._1, pair._2))
 
     val structure = tests.zipWithIndex.map(pair => {
       val idx = pair._2

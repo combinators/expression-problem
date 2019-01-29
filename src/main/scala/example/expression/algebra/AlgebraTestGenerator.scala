@@ -215,7 +215,6 @@ trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with La
 
     // must order the arguments for consistent usage.
     val argNormalDeclarationsOrdered:String = argNormalDeclarations.values.toSeq.sortWith(_ < _).mkString(",")
-    val argProducerDeclarationsOrdered:String = argProducerDeclarations.values.toSeq.sortWith(_ < _).mkString(",")
     val methods:Seq[MethodDeclaration] = m.flatten().types.flatMap(exp => innerMethod(exp, operations))
 
     // if any operations are producers, then need conversion
@@ -253,7 +252,6 @@ trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with La
          |
          |  ${methods.mkString("\n")}
          }""".stripMargin
-    println ("PRO STR:" + str)
     Java(str).compilationUnit()
   }
 }

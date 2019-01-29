@@ -58,9 +58,8 @@ trait cpp_e0 extends CPPGenerator with TestGenerator with M0 {
     }
     array = array + "};"
 
-    val source = TestSource()
-    val delta = deltaIndependentExprOp(source, new CPPElement("trees[i]"), Eval)
-    //val toTime = dispatch(new CPPElement("trees[i]"), Eval)
+    val source = NoSource()
+    val delta = deltaExprOp(source, new CPPElement("trees[i]"), Eval)   // was independentExpr
     val toTime = contextDispatch(source, delta)
     val evalPerfTest:CPPElement = new CPPElement(
       s"""

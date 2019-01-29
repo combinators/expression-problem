@@ -59,10 +59,9 @@ trait e0 extends JavaGenerator with JUnitTestGenerator with M0 {
     }
     array = array + "};"
 
-    val source = TestSource()
+    val source = NoSource()
     val delta = deltaExprOp(source, new Java("trees[i]").expression[Expression](), Eval)
     val toTime = contextDispatch(source, delta)
-    // ${dispatch(Java("trees[i]").expression[Expression](), Eval)};   // time this
     val evalPerfTest = Java(
       s"""
          |public void testPerformance() {

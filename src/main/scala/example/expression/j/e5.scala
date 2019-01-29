@@ -64,7 +64,7 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
   }
 
   abstract override def testMethod(tests:Seq[domain.TestCase]) : MethodDeclaration = {
-    val source = TestSource()
+    val source = NoSource()
     // EXTRACT all SameTestCase ones and handle here
     var skip:Seq[domain.TestCase] = Seq.empty
 

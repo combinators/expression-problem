@@ -21,6 +21,23 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
     }
   }
 
+  override def contextDispatch(source:Context, delta:Delta) : Expression = {
+    if (source.op.isEmpty) {
+      new Haskell(s"(${delta.op.get.name.toLowerCase()} (${delta.expr.get}))")
+    } else if (delta.op.isDefined && !source.op.get.equals(delta.op.get)) {
+      if (delta.expr.isEmpty) {
+        // this is to SELF so, just invoke
+        Haskell(s"REP_LACE")
+      } else {
+        Haskell(s"(${delta.op.get.name.toLowerCase()} (${delta.expr.get}))")
+      }
+    } else {
+      super.contextDispatch(source, delta)
+    }
+  }
+
+
+
   /** For the processed model, return generated code artifacts for solution. */
   def generatedCode():Seq[HaskellWithPath] = {
 
@@ -167,18 +184,10 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
     Haskell(s"${att.name}")
   }
 
-//  override def subExpressions(exp:domain.Atomic) : Map[String, Haskell] = {
-//    exp.attributes.map(att => att.name -> Haskell(s"${att.name}")).toMap
-//  }
-
   /** Responsible for dispatching sub-expressions with possible parameter(s). */
  override def dispatch(primary:Haskell, op:domain.Operation, params:Haskell*) : Haskell = {
-//    op match {
-//      case domain. => {
-//
-//      }
-//    }
-    val args:String = params.mkString(" ")
-    Haskell(s"""$primary""")
+//    val args:String = params.mkString(" ") // when are arguments used...
+//    Haskell(s"""(${op.name.toLowerCase()} ($primary))""")
+   Haskell(s"""$primary""")
   }
 }

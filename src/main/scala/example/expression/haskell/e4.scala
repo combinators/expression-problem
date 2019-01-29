@@ -41,6 +41,7 @@ trait e4 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
   }
 
   abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Haskell] = {
+    val source = Source (exp, op)
     val atts = subExpressions(exp)
     val zero = Haskell("0.0")
     val one = Haskell("1.0")
@@ -62,58 +63,71 @@ trait e4 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
 
         exp match {
           case Lit => Seq(inst(Lit, atts(litValue)))   // standardArgs(Lit)
-          case Neg => Seq(Haskell(s"""|
-                              |    let leftVal = ${dispatch(atts(base.inner), Eval)}
-                              |    in if leftVal == 0
-                              |       then ${result(inst(Lit, zero)).mkString("\n")}
-                              |       else ${result(inst(Neg, standardVarArgs(Neg) : _*)).mkString("\n")}
-                              |""".stripMargin))
+          case Neg =>
+            val deltaInner = deltaChildOp(source, domain.base.inner, Eval)
+            Seq(Haskell(s"""|
+                 |    let leftVal = ${contextDispatch(source, deltaInner)}
+                 |    in if leftVal == 0
+                 |       then ${result(inst(Lit, zero)).mkString("\n")}
+                 |       else ${result(inst(Neg, standardVarArgs(Neg) : _*)).mkString("\n")}
+                 |""".stripMargin))
 
-          case Add => Seq(Haskell(s"""|
-                               |    let leftVal = ${Eval.name} ${dispatch(atts(base.left), op)}
-                               |        rightVal = ${Eval.name} ${dispatch(atts(base.right), op)}
-                               |    in if (leftVal == 0 && rightVal == 0.0) || (leftVal + rightVal == 0.0)
-                               |        then ${result(inst(Lit, zero)).mkString("\n")}
-                               |        else if leftVal == 0
-                               |             then ${result(dispatch(atts(base.right), op)).mkString("\n")}
-                               |             else if rightVal == 0
-                               |                  then ${result(dispatch(atts(base.left), op)).mkString("\n")}
-                               |                  else ${result(inst(Add, standardVarArgs(Add) : _*)).mkString("\n")}
-                               |""".stripMargin))
+          case Add =>
+            val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
+            val deltaRight = deltaChildOp(source, domain.base.right, Eval)
+            Seq(Haskell(s"""|
+                 |    let leftVal = ${contextDispatch(source, deltaLeft)}
+                 |        rightVal = ${contextDispatch(source, deltaRight)}
+                 |    in if (leftVal == 0 && rightVal == 0.0) || (leftVal + rightVal == 0.0)
+                 |        then ${result(inst(Lit, zero)).mkString("\n")}
+                 |        else if leftVal == 0
+                 |             then ${result(dispatch(atts(base.right), op)).mkString("\n")}
+                 |             else if rightVal == 0
+                 |                  then ${result(dispatch(atts(base.left), op)).mkString("\n")}
+                 |                  else ${result(inst(Add, standardVarArgs(Add) : _*)).mkString("\n")}
+                 |""".stripMargin))
 
-          case Sub => Seq(Haskell(s"""|
-                              |    let leftVal = eval ${dispatch(atts(base.left), op)}
-                              |        rightVal = eval ${dispatch(atts(base.right), op)}
-                              |    in if leftVal == rightVal
-                              |        then ${result(inst(Lit, zero)).mkString("\n")}
-                              |        else ${result(inst(Sub, standardVarArgs(Add) : _*)).mkString("\n")}
-                              |""".stripMargin))
+          case Sub =>
+            val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
+            val deltaRight = deltaChildOp(source, domain.base.right, Eval)
+            Seq(Haskell(s"""|
+                 |    let leftVal = ${contextDispatch(source, deltaLeft)}
+                 |        rightVal = ${contextDispatch(source, deltaRight)}
+                 |    in if leftVal == rightVal
+                 |        then ${result(inst(Lit, zero)).mkString("\n")}
+                 |        else ${result(inst(Sub, standardVarArgs(Add) : _*)).mkString("\n")}
+                 |""".stripMargin))
 
-          case Mult => Seq(Haskell(s"""|
-                                |    let leftVal = eval ${dispatch(atts(base.left), op)}
-                                |        rightVal= eval ${dispatch(atts(base.right), op)}
-                                |    in if leftVal == 0 || rightVal == 0.0
-                                |        then ${result(inst(Lit, zero)).mkString("\n")}
-                                |        else if leftVal == 1
-                                |             then ${result(dispatch(atts(base.right), op)).mkString("\n")}
-                                |             else if rightVal == 1
-                                |                  then ${result(dispatch(atts(base.left), op)).mkString("\n")}
-                                |                  else ${result(inst(Mult, standardVarArgs(Add) : _*)).mkString("\n")}
-                                |""".stripMargin))
+          case Mult => val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
+            val deltaRight = deltaChildOp(source, domain.base.right, Eval)
+            Seq(Haskell(s"""|
+                 |    let leftVal = ${contextDispatch(source, deltaLeft)}
+                 |        rightVal = ${contextDispatch(source, deltaRight)}
+                 |    in if leftVal == 0 || rightVal == 0.0
+                 |        then ${result(inst(Lit, zero)).mkString("\n")}
+                 |        else if leftVal == 1
+                 |             then ${result(dispatch(atts(base.right), op)).mkString("\n")}
+                 |             else if rightVal == 1
+                 |                  then ${result(dispatch(atts(base.left), op)).mkString("\n")}
+                 |                  else ${result(inst(Mult, standardVarArgs(Add) : _*)).mkString("\n")}
+                 |""".stripMargin))
 
-          case Divd => Seq(Haskell(s"""|
-                                |    let leftVal = eval ${dispatch(atts(base.left), op)}
-                                |        rightVal = eval ${dispatch(atts(base.right), op)}
-                                |    in if leftVal == 0
-                                |        then ${result(inst(Lit, zero)).mkString("\n")}
-                                |        else if rightVal == 1
-                                |             then ${result(dispatch(atts(base.left), op)).mkString("\n")}
-                                |             else if leftVal == rightVal
-                                |                  then ${result(inst(Lit, one)).mkString("\n")}
-                                |                  else if leftVal == (0 - rightVal)
-                                |                       then ${result(inst(Lit, negOne)).mkString("\n")}
-                                |                       else ${result(inst(Mult, standardVarArgs(Add) : _*)).mkString("\n")}
-                                |""".stripMargin))
+          case Divd =>
+            val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
+            val deltaRight = deltaChildOp(source, domain.base.right, Eval)
+            Seq(Haskell(s"""|
+                 |    let leftVal = ${contextDispatch(source, deltaLeft)}
+                 |        rightVal = ${contextDispatch(source, deltaRight)}
+                 |    in if leftVal == 0
+                 |        then ${result(inst(Lit, zero)).mkString("\n")}
+                 |        else if rightVal == 1
+                 |             then ${result(dispatch(atts(base.left), op)).mkString("\n")}
+                 |             else if leftVal == rightVal
+                 |                  then ${result(inst(Lit, one)).mkString("\n")}
+                 |                  else if leftVal == (0 - rightVal)
+                 |                       then ${result(inst(Lit, negOne)).mkString("\n")}
+                 |                       else ${result(inst(Mult, standardVarArgs(Add) : _*)).mkString("\n")}
+                 |""".stripMargin))
 
           case _ => super.logic(exp, op)
         }

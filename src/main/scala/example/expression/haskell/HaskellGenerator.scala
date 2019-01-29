@@ -41,9 +41,17 @@ trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskell
     Seq(expr)
   }
 
-  // TODO: FIX
+  // Hopefully a useful generic Haskell top
   override def contextDispatch(source:Context, delta:Delta) : Expression = {
-    new Haskell(s""""replaceMe"""")
+    if (delta.expr.isEmpty) {
+      throw new scala.NotImplementedError(s""" Self case must be handled by subclass generator. """)
+    } else {
+      if (delta.op.isDefined) {
+        dispatch(delta.expr.get, delta.op.get, delta.params: _*)
+      } else {
+        dispatch(delta.expr.get, source.op.get, delta.params: _*)
+      }
+    }
   }
 
   /**
@@ -88,7 +96,7 @@ trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskell
     val allTypes = m.types.map(exp => {
       val params:Seq[HaskellType] = exp.attributes.map(att => typeConverter(att.tpe))
       val list:String = params.map(f => f.toString).mkString(" ")
-      Haskell(s"${exp.name.capitalize} $list")
+      Haskell(s"${exp.name.capitalize}T $list") // not sure how much this is needed
     }).mkString("  | ")
 
     val binaryTreeInterface =  if (m.flatten().ops.exists {
@@ -103,7 +111,7 @@ trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskell
 
     val code = Haskell(
       s"""|module DataTypes where
-          |
+          |import GeneralExpr
           |${binaryTreeInterface.mkString("\n")}
           |
           |-- All types are classified as data

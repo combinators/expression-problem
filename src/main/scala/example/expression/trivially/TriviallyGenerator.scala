@@ -39,50 +39,42 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator {
     */
   override def inst(exp:domain.Atomic, params:Expression*): Expression = {
 
-    val merged:Seq[Expression] = exp.attributes.map(att => att.tpe).zip(params).map(typeExp => {
+    val merged = exp.attributes.map(att => att.tpe).zip(params).map(typeExp => {
       val tpe:domain.TypeRep = typeExp._1
       val inner:Expression = typeExp._2
       tpe match {
-        case domain.baseTypeRep => Java(s"""(FinalI)($inner)""").expression[Expression]()
+        case domain.baseTypeRep => Java(s"""(FinalI)($inner)""").expression()
         case _ => inner
       }
     })
-    Java("new " + exp.name + "(" + merged.map(expr => expr.toString()).mkString(",") + ")").expression()
+    Java("new " + exp.concept + "(" + merged.map(expr => expr.toString()).mkString(",") + ")").expression()
   }
 
   /**
     * Retrieve expression by getXXX accessor method.
     */
   override def expression (exp:domain.Atomic, att:domain.Attribute) : Expression = {
-    Java(s"get${att.name.capitalize}()").expression[Expression]()
+    Java(s"get${att.concept}()").expression()
   }
-
-//  override def subExpressions(exp: domain.Atomic): Map[String, Expression] = {
-//    exp.attributes.map(att => att.name -> Java(s"get${att.name.capitalize}()").expression[Expression]()).toMap
-//  }
-//
-//  /** For visitor design solution, access through default 'e' parameter */
-//  override def subExpression(exp:domain.Atomic, name:String) : Expression = {
-//    exp.attributes.filter(att => att.name.equals(name)).map(att => Java(s"get${att.name.capitalize}()").expression[Expression]()).head
-//  }
 
   /** Handle self-case here. */
   override def contextDispatch(source:Context, delta:Delta) : Expression = {
     if (delta.expr.isEmpty) {
-      val op = delta.op.get.name.toLowerCase
-      Java(s"this.$op()").expression[Expression]()
+      val op = delta.op.get.instance
+      val args:String = delta.params.mkString(",")
+      Java(s"this.$op($args)").expression()
     } else {
       super.contextDispatch(source, delta)
     }
   }
 
   def baseInterfaceName(op: domain.Operation): Type = {
-    Java(s"${domain.baseTypeRep.name}${op.name.capitalize}").tpe()
+    Java(s"${domain.baseTypeRep.concept}${op.concept}").tpe()
   }
 
   // Needs covariant overriding!
   override def generateExp(model:domain.Model, exp:domain.Atomic) : CompilationUnit = {
-    val name = Java(s"${exp.name}").simpleName()
+    val name = Java(s"${exp.concept}").simpleName()
 
     val interfaces = finalInterfaceName +: model.lastModelWithOperation().ops.map(op => interfaceName(exp, op))
     val newType:com.github.javaparser.ast.`type`.Type = Java(finalInterfaceName).tpe()
@@ -98,13 +90,13 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator {
             |}""".stripMargin).compilationUnit()
 
     // replace all covariant types!
-    ReplaceType.replace(compUnit, Java(s"${domain.baseTypeRep.name}").tpe, finalInterfaceName)
+    ReplaceType.replace(compUnit, Java(s"${domain.baseTypeRep.concept}").tpe, finalInterfaceName)
 
     compUnit
    }
 
   def interfaceName(exp: domain.Atomic, op: domain.Operation): Type = {
-    Java(s"${exp.name}${op.name.capitalize}").tpe()
+    Java(s"${exp.concept}${op.concept}").tpe()
   }
 
   override def methodGenerator(exp: domain.Atomic, op: domain.Operation): MethodDeclaration = {
@@ -121,8 +113,8 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator {
 
 
     // replace all types!
-    ReplaceType.replace(method, Java(s"${domain.baseTypeRep.name}").tpe,
-      Java(domain.baseTypeRep.name + op.name.capitalize).tpe())
+    ReplaceType.replace(method, Java(s"${domain.baseTypeRep.concept}").tpe,
+      Java(domain.baseTypeRep.concept + op.concept).tpe())
 
     method
   }
@@ -131,7 +123,7 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator {
     val name = interfaceName(exp, op)
     val method: MethodDeclaration = methodGenerator(exp, op)
     val atts:Seq[MethodDeclaration] =
-      exp.attributes.flatMap(att => Java(s"${typeConverter(att.tpe)} get${att.name.capitalize}();").methodDeclarations())
+      exp.attributes.flatMap(att => Java(s"${typeConverter(att.tpe)} get${att.concept}();").methodDeclarations())
 
     val unit = Java(s"""
             |package trivially;
@@ -142,7 +134,7 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator {
             |}""".stripMargin).compilationUnit()
 
 
-    ReplaceType.replace(unit, Java(s"${domain.baseTypeRep.name}").tpe, baseInterfaceName(op))
+    ReplaceType.replace(unit, Java(s"${domain.baseTypeRep.concept}").tpe, baseInterfaceName(op))
 
     unit
   }
@@ -197,7 +189,7 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator {
     }).mkString(",")
 
     val methodSignature: MethodDeclaration =
-      Java(s"""public $retType ${op.name}($params);""").methodDeclarations().head
+      Java(s"""public $retType ${op.instance}($params);""").methodDeclarations().head
 
     val compUnit = Java(s"""
          |package trivially;
@@ -209,7 +201,7 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator {
        """.stripMargin).compilationUnit()
 
     // replace all types!
-    ReplaceType.replace(compUnit, Java(s"${domain.baseTypeRep.name}").tpe, baseInterfaceName(op))
+    ReplaceType.replace(compUnit, Java(s"${domain.baseTypeRep.concept}").tpe, baseInterfaceName(op))
 
     compUnit
   }
@@ -220,7 +212,7 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator {
       case bm: domain.BinaryMethodTreeBase => true
       case _ => false
     }) {
-      Java(s"""public tree.Tree ${domain.AsTree.name.toLowerCase}();""").classBodyDeclarations
+      Java(s"""public tree.Tree ${domain.AsTree.instance}();""").classBodyDeclarations
     } else {
       Seq.empty
     }

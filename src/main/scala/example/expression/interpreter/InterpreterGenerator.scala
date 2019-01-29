@@ -46,26 +46,17 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
     * the very specialized types to be used.
     */
   override def inst(exp:domain.Atomic, params:Expression*): Expression = {
-    Java(exp.name + "(" + params.map(expr => expr.toString()).mkString(",") + ")").expression()
+    Java(exp.concept + "(" + params.map(expr => expr.toString()).mkString(",") + ")").expression()
   }
 
   override def expression (exp:domain.Atomic, att:domain.Attribute) : Expression = {
-    Java(s"get${att.name.capitalize}()").expression[Expression]()
+    Java(s"get${att.concept}()").expression()
   }
-
-//  override def subExpressions(exp: domain.Atomic): Map[String, Expression] = {
-//    exp.attributes.map(att => att.name -> Java(s"get${att.name.capitalize}()").expression[Expression]()).toMap
-//  }
-//
-//  /** For visitor design solution, access through default 'e' parameter */
-//  override def subExpression(exp:domain.Atomic, name:String) : Expression = {
-//    exp.attributes.filter(att => att.name.equals(name)).map(att => Java(s"get${att.name.capitalize}()").expression[Expression]()).head
-//  }
 
   /** Return designated Java type associated with type, or void if all else fails. */
   override def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
-      case domain.baseTypeRep => Java(s"${domain.baseTypeRep.name}").tpe()
+      case domain.baseTypeRep => Java(s"${domain.baseTypeRep.concept}").tpe()
       case _ => super.typeConverter(tpe)
     }
   }
@@ -73,8 +64,9 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
   /** Handle self-case here. */
   override def contextDispatch(source:Context, delta:Delta) : Expression = {
     if (delta.expr.isEmpty) {
-      val op = delta.op.get.name.toLowerCase
-      Java(s"this.$op()").expression[Expression]()
+      val op = delta.op.get.instance
+      val args = delta.params.mkString(",")
+      Java(s"this.$op($args)").expression()
     } else {
       super.contextDispatch(source, delta)
     }
@@ -83,16 +75,16 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
   /** Directly access local method, one per operation, with a parameter. */
   override def dispatch(expr:Expression, op:domain.Operation, params:Expression*) : Expression = {
     val args:String = params.mkString(",")
-    Java(s"""$expr.${op.name}($args)""").expression()
+    Java(s"""$expr.${op.instance}($args)""").expression()
   }
 
   def modelInterfaceName(model:domain.Model): String = {
-    model.ops.sortWith(_.name < _.name).map(op => op.name.capitalize).mkString("") + "Exp"
+    model.ops.sortWith(_.name < _.name).map(op => op.concept).mkString("") + "Exp"
   }
 
   /** Find Model with operations and return that one. */
   def baseInterfaceName(m:domain.Model): SimpleName = {
-      Java(m.lastModelWithOperation().ops.sortWith(_.name < _.name).map(op => op.name.capitalize).mkString("") + "Exp").simpleName()
+      Java(m.lastModelWithOperation().ops.sortWith(_.name < _.name).map(op => op.concept).mkString("") + "Exp").simpleName()
   }
 
   /** Operations are implemented as methods in the Base and sub-type classes. */
@@ -103,7 +95,7 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
     }
 
     val params = parameters(op)
-    Java(s"""|public $retType ${op.name}($params) {
+    Java(s"""|public $retType ${op.instance}($params) {
              |  ${logic(exp, op).mkString("\n")}
              |}""".stripMargin).methodDeclarations().head
   }
@@ -118,7 +110,7 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
     * @return
     */
   override def generateExp(model:domain.Model, exp:domain.Atomic) : CompilationUnit = {
-    val name = Java(s"${exp.name}").simpleName()
+    val name = Java(s"${exp.concept}").simpleName()
     val baseInterface:Option[Type] = Some(Java(baseInterfaceName(model.lastModelWithOperation())).tpe())
 
     // provide method declarations for all past operations (including self). But if we extend, can't we stop at last op?
@@ -137,20 +129,20 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
             |}""".stripMargin).compilationUnit()
 
     // replace all covariant types!
-    ReplaceType.replace(unit, Java(s"${domain.baseTypeRep.name}").tpe, baseInterface.get)
+    ReplaceType.replace(unit, Java(s"${domain.baseTypeRep.concept}").tpe, baseInterface.get)
 
     unit
    }
 
   def interfaceName(exp: domain.Atomic, op: domain.Operation): SimpleName = {
-    Java(s"${exp.name}${op.name.capitalize}").simpleName()
+    Java(s"${exp.concept}${op.concept}").simpleName()
   }
 
   def generateInterface(exp: domain.Atomic, parents: Seq[SimpleName], op:domain.Operation): CompilationUnit = {
     val name = interfaceName(exp, op)
     val method: MethodDeclaration = methodGenerator(exp, op)
     val atts:Seq[MethodDeclaration] =
-      exp.attributes.flatMap(att => Java(s"${typeConverter(att.tpe)} get${att.name.capitalize}();").methodDeclarations())
+      exp.attributes.flatMap(att => Java(s"${typeConverter(att.tpe)} get${att.concept}();").methodDeclarations())
 
     Java(s"""
             |package interpreter;
@@ -195,10 +187,9 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
       })
 
       op.returnType.get match {
-        case domain.baseTypeRep => s"""public $fullType ${op.name}(${params.mkString(",")});"""
-        case _ => s"""public ${typeConverter(op.returnType.get)}  ${op.name}(${params.mkString(",")});"""
+        case domain.baseTypeRep => s"""public $fullType ${op.instance}(${params.mkString(",")});"""
+        case _ => s"""public ${typeConverter(op.returnType.get)}  ${op.instance}(${params.mkString(",")});"""
       }
-
     })
 
     // see if we are first.
@@ -236,7 +227,6 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
     // compute new types since last operation
 
     val last = model.lastModelWithOperation()   // HACK. true is not best ansewr
-    //last.ops.flatMap(op => generateForOp(model, op, lastTypesSinceAnOperation(model), isBase=true)) ++ generateIntermediateTypes(model.last)
     generateForOp(model, last.ops, lastTypesSinceAnOperation(model), isBase=true) ++ generateIntermediateTypes(model.last)
   }
 
@@ -253,50 +243,44 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
     * For each operation must generate a sequence of classes, one per subtype.
     *
     * Note that BinaryMethods must have their Exp parameters converted to be \${op.name}Exp.
-    *
-    * @param model
-    * @param ops
-    * @param pastTypes
-    * @param isBase
-    * @return
-    */
+     */
   def generateForOp(model:domain.Model, ops:Seq[domain.Operation], pastTypes:Seq[domain.Atomic], isBase:Boolean) : Seq[CompilationUnit] = {
-    val combinedOps:String = ops.sortWith(_.name < _.name).map(op => op.name.capitalize).mkString("")
+    val combinedOps:String = ops.sortWith(_.name < _.name).map(op => op.concept).mkString("")
 
       pastTypes.map(exp => {
-        val name = Java(s"${exp.name}").simpleName()
+        val name = Java(s"${exp.concept}").simpleName()
         val baseInterface:Type = Java(baseInterfaceName(model.lastModelWithOperation())).tpe()
 
         val atts:Seq[FieldDeclaration] = if (isBase) {
-          exp.attributes.flatMap(att => Java(s"${typeConverter(att.tpe)} ${att.name};").fieldDeclarations())
+          exp.attributes.flatMap(att => Java(s"${typeConverter(att.tpe)} ${att.instance};").fieldDeclarations())
         } else {
           Seq.empty
         }
 
-        val params:Seq[String] = exp.attributes.map(att => s"${typeConverter(att.tpe)} ${att.name}")
-        val paramNames:Seq[String] = exp.attributes.map(att => s"${att.name}")
+        val params:Seq[String] = exp.attributes.map(att => s"${typeConverter(att.tpe)} ${att.instance}")
+        val paramNames:Seq[String] = exp.attributes.map(att => s"${att.instance}")
 
         val factoryMethods:Seq[MethodDeclaration] = pastTypes.flatMap(e => {
-          val params:Seq[String] = e.attributes.map(att => s"${typeConverter(att.tpe)} ${att.name}")
-          val paramNames:Seq[String] = e.attributes.map(att => s"${att.name}")
+          val params:Seq[String] = e.attributes.map(att => s"${typeConverter(att.tpe)} ${att.instance}")
+          val paramNames:Seq[String] = e.attributes.map(att => s"${att.instance}")
 
-          Java(s"""${combinedOps}Exp ${e.name.capitalize}(${params.mkString(",")}) { return new $combinedOps${e.name.capitalize}(${paramNames.mkString(",")}); }""").methodDeclarations()
+          Java(s"""${combinedOps}Exp ${e.concept}(${params.mkString(",")}) { return new $combinedOps${e.concept}(${paramNames.mkString(",")}); }""").methodDeclarations()
         })
 
         val getters: Seq[MethodDeclaration] =
           exp.attributes.flatMap(att => {
             // anything that is an EXPR can be replaced
             val cast = att.tpe match {
-              case domain.baseTypeRep => if (!isBase) { s"(${baseInterface.toString})" } else { "" }
+              case domain.baseTypeRep => if (!isBase) { s"($baseInterface)" } else { "" }
               case _ => ""
             }
 
-            Java(s"""|public ${typeConverter(att.tpe)} get${att.name.capitalize}() {
-                     |    return $cast this.${att.name};
+            Java(s"""|public ${typeConverter(att.tpe)} get${att.concept}() {
+                     |    return $cast this.${att.instance};
                      |}""".stripMargin).methodDeclarations()
           })
 
-        val cons:Seq[Statement] = exp.attributes.flatMap(att => Java(s"  this.${att.name} = ${att.name};").statements())
+        val cons:Seq[Statement] = exp.attributes.flatMap(att => Java(s"  this.${att.instance} = ${att.instance};").statements())
 
         val constructor = if (isBase) {
           Java(s"""|public $combinedOps$name (${params.mkString(",")}) {
@@ -349,7 +333,7 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
           if (isBase) {
             ""
           } else {
-            val past: String = model.last.lastModelWithOperation().ops.sortWith(_.name < _.name).map(op => op.name.capitalize).mkString("")
+            val past: String = model.last.lastModelWithOperation().ops.sortWith(_.name < _.name).map(op => op.concept).mkString("")
             s"extends $past$name" // go backwards?
           }
 
@@ -366,7 +350,7 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
                 |}""".stripMargin).compilationUnit()
 
         // replace all covariant types!
-        ReplaceType.replace(unit, Java(s"${domain.baseTypeRep.name}").tpe, baseInterface)
+        ReplaceType.replace(unit, Java(s"${domain.baseTypeRep.concept}").tpe, baseInterface)
 
         unit
       })

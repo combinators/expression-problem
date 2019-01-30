@@ -19,7 +19,6 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
     * Calls 'continue' with an expression (the result of the prior new statements) and just concatenates all statements
     */
    override def expected(test:domain.TestCaseExpectedValue, id:String) : (Expression => Seq[Statement]) => Seq[Statement] = continue => {
-    //test.op.returnType.get match {
      test.expect._1 match {   // HACK: NOT sure if this works.
       case list:List =>
         val seq: Seq[Any] = test.expect._2.asInstanceOf[Seq[Any]]

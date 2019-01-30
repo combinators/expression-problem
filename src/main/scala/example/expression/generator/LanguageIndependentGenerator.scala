@@ -263,7 +263,17 @@ trait LanguageIndependentGenerator {
     * 2.
     * @group api
     */
-  def contextDispatch(source:Context, delta:Delta) : Expression
+  def contextDispatch(source:Context, delta:Delta) : Expression = {
+    if (delta.expr.isEmpty) {
+      throw new scala.NotImplementedError(s""" Self case must be handled by subclass generator. """)
+    } else {
+      if (delta.op.isDefined) {
+        dispatch(delta.expr.get, delta.op.get, delta.params: _*)
+      } else {
+        dispatch(delta.expr.get, source.op.get, delta.params: _*)
+      }
+    }
+  }
 
   /**
     * A Context represents the point in the expression problem where the logic for a given
@@ -323,16 +333,16 @@ trait LanguageIndependentGenerator {
     deltaExprOp(source, expression(source.e, att), op, params : _ *)
     //    new Delta(Some(subExpression(source.e, attName)), Some(op), params : _*)
   }
-//
-//  //  invoke as deltaChildOpAlt(subExpression(source.e, attName), op, params)
-//  def deltaChildOpAlt(srcExp:Expression, op:Operation, params:Expression*) : Delta = {
-//    deltaExprOp(NoSource(), srcExp, op, params : _ *)
-//  }
-//
-//  //  val deltaLeft = deltaChildOp(exp, base.left, Eval)
-//  def deltaChildOpAlt2(exp:Atomic, att:Attribute, op:Operation, params:Expression*) : Delta = {
-//    deltaExprOp(NoSource(), subExpression(exp, att.name), op, params : _ *)
-//  }
+  //
+  //  //  invoke as deltaChildOpAlt(subExpression(source.e, attName), op, params)
+  //  def deltaChildOpAlt(srcExp:Expression, op:Operation, params:Expression*) : Delta = {
+  //    deltaExprOp(NoSource(), srcExp, op, params : _ *)
+  //  }
+  //
+  //  //  val deltaLeft = deltaChildOp(exp, base.left, Eval)
+  //  def deltaChildOpAlt2(exp:Atomic, att:Attribute, op:Operation, params:Expression*) : Delta = {
+  //    deltaExprOp(NoSource(), subExpression(exp, att.name), op, params : _ *)
+  //  }
 
   /**
     * Helper method for creating a [[Delta]] context that represents a new operation (with

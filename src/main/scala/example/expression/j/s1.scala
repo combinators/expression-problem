@@ -18,31 +18,19 @@ trait s1 extends JavaGenerator with JUnitTestGenerator with S1 { self:s0 =>
       case Shrink =>
         exp match {
           case Circle =>
-            Java(
-              s"""
+            Java(s"""
                  |double shrunkRadius = ${expression(exp, radius)}*pct;
-                 return ${inst(Circle, Java("shrunkRadius").expression[Expression]())};
-               """.stripMargin).statements()
+                 |return ${inst(Circle, Java("shrunkRadius").expression())};""".stripMargin).statements()
 
-          case Square => {
-            val str =
-              s"""
+          case Square =>
+            Java(s"""
                  |double shrunkSide = ${expression(exp, side)}*pct;
-                 |return ${inst(Square, Java("shrunkSide").expression[Expression]())};
-               """.stripMargin
-            println(str)
-            Java(str).statements()
-          }
+                 |return ${inst(Square, Java("shrunkSide").expression())};""".stripMargin).statements()
 
-          case Translate => {
-            val disp = dispatch(expression(exp, shape), op, Java("pct").expression[Expression]())
-            Java(
-              s"""
-                 |return ${inst(Translate, expression(exp, trans),disp)};
-                 |
-               """.stripMargin).statements()
+          case Translate =>
+            val disp = dispatch(expression(exp, shape), op, Java("pct").expression())
+            Java(s"return ${inst(Translate, expression(exp, trans), disp)};").statements()
           }
-        }
 
       case _ => super.logic(exp, op)
     }

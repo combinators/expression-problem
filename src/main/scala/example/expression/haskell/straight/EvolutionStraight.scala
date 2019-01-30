@@ -43,15 +43,15 @@ class S3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
 class S4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends FoundationHaskellStraight(web, app) {
-  override val gen = new WithDomain(MathDomain) with StraightGenerator with StraightProducer with StraightTestGenerator with e0 with e1 with e2 with e3 with e4
+  override val gen = new WithDomain(MathDomain) with StraightGenerator with StraightTestGenerator with e0 with e1 with e2 with e3 with e4
 }
 
 class S5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends FoundationHaskellStraight(web, app) {
-  override val gen = new WithDomain(MathDomain) with StraightGenerator with StraightProducer with StraightTestGenerator with e0 with e1 with e2 with e3 with e4 with e5
+  override val gen = new WithDomain(MathDomain) with StraightGenerator with StraightTestGenerator with e0 with e1 with e2 with e3 with e4 with e5
 }
 
 class S6_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends FoundationHaskellStraight(web, app) {
-  override val gen = new WithDomain(MathDomain) with StraightGenerator with StraightProducer with StraightTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6
+  override val gen = new WithDomain(MathDomain) with StraightGenerator with StraightTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6
 }

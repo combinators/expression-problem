@@ -16,7 +16,7 @@ trait s0 extends Evolution with JavaGenerator with JUnitTestGenerator with S0 {
   /** E0 Introduces the concept a Double type, used for the 'Eval' operation. */
   abstract override def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
-      case Double => Java("Double").tpe()
+      case Double  => Java("Double").tpe()
       case Point2D => Java("java.awt.geom.Point2D.Double").tpe()
       case Boolean => Java("Boolean").tpe()
       case _ => super.typeConverter(tpe)
@@ -36,12 +36,11 @@ trait s0 extends Evolution with JavaGenerator with JUnitTestGenerator with S0 {
             result(Java(s" (Math.abs(point.x) <= ${expression(exp, side)}/2 && Math.abs(point.y) <= ${expression(exp, side)}/2)").expression[Expression]())
 
           case Translate =>
-            Java(
-              s"""
-                 |// first adjust
-                 |java.awt.geom.Point2D.Double t = new java.awt.geom.Point2D.Double(point.x - ${expression(exp, trans)}.x, point.y - ${expression(exp, trans)}.y);
-                 |${result(dispatch(expression(exp, shape), ContainsPt, Java("t").expression[Expression]()))}""".stripMargin).statements()
-
+            val str = s"""
+                   |// first adjust
+                   |java.awt.geom.Point2D.Double t = new java.awt.geom.Point2D.Double(point.x - ${expression(exp, trans)}.x, point.y - ${expression(exp, trans)}.y);""".stripMargin
+            val res = result(dispatch(expression(exp, shape), ContainsPt, Java("t").expression()))
+            Java(str).statements() ++ res
         }
 
       case _ => super.logic(exp, op)

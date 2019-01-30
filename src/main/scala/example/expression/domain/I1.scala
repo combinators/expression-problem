@@ -1,7 +1,7 @@
 package example.expression.domain  /*DD:LI:AI*/
 
 trait I1 extends Evolution {
-  self: M1 =>
+  self: M0 with M1 =>
   val domain: MathDomain
 
   // i1:model evolution.

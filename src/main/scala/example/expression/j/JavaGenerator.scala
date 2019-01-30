@@ -36,18 +36,6 @@ trait JavaGenerator extends LanguageIndependentGenerator  with Producer {
     Java(s"return $expr;").statements()
   }
 
-  override def contextDispatch(source:Context, delta:Delta) : Expression = {
-    if (delta.expr.isEmpty) {
-      throw new scala.NotImplementedError(s""" Self case must be handled by subclass generator. """)
-    } else {
-      if (delta.op.isDefined) {
-        dispatch(delta.expr.get, delta.op.get, delta.params: _*)
-      } else {
-        dispatch(delta.expr.get, source.op.get, delta.params: _*)
-      }
-    }
-  }
-
   /**
     * For producer operations, there is a need to instantiate objects, and one would use this
     * method (with specific parameters) to carry this out.

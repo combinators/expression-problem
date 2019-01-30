@@ -24,19 +24,6 @@ trait CPPGenerator extends LanguageIndependentGenerator {
     Seq(new CPPElement(s"return $expr;"))
   }
 
-  /** Standard implementation relies on dependent dispatch. TODO: FIX */
-  override def contextDispatch(source:Context, delta:Delta) : Expression = {
-    if (delta.expr.isEmpty) {
-      throw new scala.NotImplementedError(s""" Self case must be handled by subclass generator. """)
-    } else {
-      if (delta.op.isDefined) {
-        dispatch(delta.expr.get, delta.op.get, delta.params: _*)
-      } else {
-        dispatch(delta.expr.get, source.op.get, delta.params: _*)
-      }
-    }
-  }
-
   /**
     * Return just the expression.
     */

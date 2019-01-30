@@ -1,6 +1,4 @@
-package example.expression.haskell.alacarte
-
-/*DD:LD:AD*/
+package example.expression.haskell.alacarte   /*DD:LD:AD*/
 
 import example.expression.domain.{MathDomain, WithDomain}
 import example.expression.haskell.HaskellWithPathPersistable._

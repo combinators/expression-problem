@@ -1,4 +1,4 @@
-package example.expression.cpp
+package example.expression.cpp   /*DI:LD:AI*/
 
 import example.expression.domain.{BaseDomain, ModelDomain}
 import example.expression.generator.Producer

@@ -1,6 +1,4 @@
-package example.expression.haskell.alacarte
-
-/*DI:LD:AD*/
+package example.expression.haskell.alacarte  /*DI:LD:AD*/
 
 import java.nio.file.Paths
 

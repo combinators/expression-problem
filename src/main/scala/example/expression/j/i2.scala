@@ -24,11 +24,11 @@ trait i2 extends  Evolution with JavaGenerator with JUnitTestGenerator with I2 {
     // generate the actual body
     op match {
       case Height =>
-        val heightPlusOne:Expression = Java(s"${independent.height} + 1").expression[Expression]()
+        val heightPlusOne:Expression = Java(s"${independent.height} + 1").expression()
         exp match {
-          case _:domain.Binary => result(Java(s"Math.max(${dispatch(expression(exp, domain.base.left), Height, heightPlusOne)},${dispatch(expression(exp, domain.base.right), Height, heightPlusOne)}) ").expression[Expression]())
-          case _:domain.Unary => result(Java(s"${dispatch(expression(exp, domain.base.inner), Height, heightPlusOne)}").expression[Expression]())
-          case _:domain.Atomic => result(Java(s" ${independent.height};").expression[Expression]())
+          case _:domain.Binary => result(Java(s"Math.max(${dispatch(expression(exp, domain.base.left), Height, heightPlusOne)},${dispatch(expression(exp, domain.base.right), Height, heightPlusOne)}) ").expression())
+          case _:domain.Unary => result(Java(s"${dispatch(expression(exp, domain.base.inner), Height, heightPlusOne)}").expression())
+          case _:domain.Atomic => result(Java(s" ${independent.height}").expression())
 
           case _ => super.logic(exp, op)
         }

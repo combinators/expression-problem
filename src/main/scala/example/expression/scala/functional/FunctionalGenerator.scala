@@ -220,7 +220,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod {
 
     val factories = m.ops.map(op => {
       val params = if (op.parameters.nonEmpty) {
-        "(" + op.parameters.map(pair => s"${pair._1}:${typeConverter(pair._2)}").mkString(",") + ")"
+        "(" + op.parameters.map(param => s"${param.name}:${typeConverter(param.tpe)}").mkString(",") + ")"
       } else {
         ""
       }

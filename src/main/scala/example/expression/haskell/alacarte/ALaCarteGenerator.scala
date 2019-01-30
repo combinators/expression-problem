@@ -58,26 +58,22 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
   }
 
   def genInstances(exp:Atomic) : Seq[Haskell] = {
-    var num:Int = 0
-    exp.attributes.map(att => {
-      num = num + 1
+    exp.attributes.zipWithIndex.map{ case (att, num) => {
       att.tpe match {
         case domain.baseTypeRep => Haskell("e" + num)
         case _ => Haskell(att.tpe.toString.toLowerCase + num)
       }
-    })
+    }}
   }
 
   // returns argument if non-recursive, otherwise applies function 'f'
   def genArguments(exp:Atomic, funcName:String) : Seq[Haskell] = {
-    var num:Int = 0
-    exp.attributes.map(att => {
-      num = num + 1
+    exp.attributes.zipWithIndex.map{ case (att, num) => {
       att.tpe match {
         case domain.baseTypeRep => Haskell(s"($funcName e$num)")
         case _ => Haskell(att.tpe.toString.toLowerCase + num)
       }
-    })
+    }}
   }
 
   def generateExp(m:Model, exp:Atomic) : HaskellWithPath = {

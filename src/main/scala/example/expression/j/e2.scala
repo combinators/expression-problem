@@ -1,7 +1,7 @@
 package example.expression.j  /*DD:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
-import example.expression.domain.{Evolution, M2, MathDomain}
+import example.expression.domain.{Evolution, M0, M2, MathDomain}
 import org.combinators.templating.twirl.Java
 
 /**
@@ -9,7 +9,7 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-trait e2 extends Evolution with JavaGenerator with JUnitTestGenerator with M2 {
+trait e2 extends Evolution with JavaGenerator with JUnitTestGenerator with M0 with M2 {
   self:e0 with e1 =>
   val domain:MathDomain
 
@@ -29,15 +29,12 @@ trait e2 extends Evolution with JavaGenerator with JUnitTestGenerator with M2 {
   }
 
   abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
-    val subs = subExpressions(exp)
-
-    // generate the actual body
     op match {
       case PrettyP =>
         exp match {
-          case Lit => result(Java(s""" "" + ${subs(litValue)} + "" """).expression[Expression]())
-          case Add => result(Java(s""" "(" + ${dispatch(subs(domain.base.left), PrettyP)} + "+" + ${dispatch(subs(domain.base.right), PrettyP)}+ ")" """).expression[Expression]())
-          case Sub => result(Java(s""" "(" + ${dispatch(subs(domain.base.left), PrettyP)} + "-" + ${dispatch(subs(domain.base.right), PrettyP)} + ")" """).expression[Expression]())
+          case Lit => result(Java(s""" "" + ${expression(exp,litValue)} + "" """).expression[Expression]())
+          case Add => result(Java(s""" "(" + ${dispatch(expression(exp, domain.base.left), PrettyP)} + "+" + ${dispatch(expression(exp, domain.base.right), PrettyP)}+ ")" """).expression[Expression]())
+          case Sub => result(Java(s""" "(" + ${dispatch(expression(exp, domain.base.left), PrettyP)} + "-" + ${dispatch(expression(exp, domain.base.right), PrettyP)} + ")" """).expression[Expression]())
           case _ => super.logic(exp, op)
         }
 

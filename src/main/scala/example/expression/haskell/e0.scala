@@ -49,14 +49,12 @@ trait e0 extends HaskellGenerator with HUnitTestGenerator with M0 {
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
   abstract override def logic(exp:Atomic, op:Operation): Seq[Haskell] = {
-    val atts:Map[String,Haskell] = subExpressions(exp)
-
     // generate the actual body
     op match {
       case Eval =>
         exp match {
-          case Lit => result(new Haskell(s"""${atts(litValue)}"""))
-          case Add => result(new Haskell(s"""${dispatch(atts(base.left), op)} + ${dispatch(atts(base.right), op)}"""))
+          case Lit => result(new Haskell(s"""${expression(exp,litValue)}"""))
+          case Add => result(new Haskell(s"""${dispatch(expression(exp,base.left), op)} + ${dispatch(expression(exp,base.right), op)}"""))
           case _ => super.logic(exp, op)
         }
 

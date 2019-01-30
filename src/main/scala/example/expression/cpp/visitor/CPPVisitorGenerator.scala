@@ -341,24 +341,4 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
     }
   }
 
-  // helper methods for C++
-
-  /** Compute parameter "name" comma-separated list from operation. */
-  def arguments(op:domain.Operation) : String = {
-    op.parameters.map(tuple => {
-      val name:String = tuple._1
-
-      name
-    }).mkString(",")
-  }
-
-  /** Compute parameter "Type name" comma-separated list from operation. */
-  def parameters(op:domain.Operation) : String = {
-    op.parameters.map(tuple => {
-      val name:String = tuple._1
-      val tpe:domain.TypeRep = tuple._2
-
-      typeConverter(tpe).toString + " " + name
-    }).mkString(",")
-  }
 }

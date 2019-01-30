@@ -57,8 +57,6 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with CPPProd
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
   abstract override def logic(exp:Atomic, op:Operation): Seq[CPPElement] = {
-    val atts:Map[String,CPPElement] = subExpressions(exp)
-
     // generate the actual body
     val source = Source(exp,op)
     op match {
@@ -70,19 +68,19 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with CPPProd
           case Lit => Seq(new CPPElement(
             s"""
             |std::vector < $tpe > vec;
-            |vec.push_back(${valueOf(atts(litValue))});
+            |vec.push_back(${valueOf(expression(exp, litValue))});
             |${result(new CPPElement("vec")).mkString("\n")};""".stripMargin))
 
           case Neg => Seq(new CPPElement(
             s"""
                |std::vector<$tpe> vec;
-               |std::vector<$tpe> expv = ${dispatch(atts(base.inner),op)};
+               |std::vector<$tpe> expv = ${dispatch(expression(exp,base.inner),op)};
                |vec.insert(vec.end(), expv.begin(), expv.end());
                |${result(new CPPElement("vec")).mkString("\n")};""".stripMargin))
           case Add|Sub|Mult|Divd => Seq(new CPPElement(
               s"""std::vector< $tpe > vec;
-                 |std::vector< $tpe > leftv = ${dispatch(atts(base.left),op)};
-                 |std::vector< $tpe > rightv = ${dispatch(atts(base.right),op)};
+                 |std::vector< $tpe > leftv = ${dispatch(expression(exp, base.left),op)};
+                 |std::vector< $tpe > rightv = ${dispatch(expression(exp, base.right),op)};
                  |
                  |vec.insert(vec.end(), leftv.begin(), leftv.end());
                  |vec.insert(vec.end(), rightv.begin(), rightv.end());
@@ -98,7 +96,7 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with CPPProd
         exp match {
             // STILL has work to do...
           case Lit =>
-            val value = new CPPElement(s"${valueOf(atts(litValue))}")
+            val value = new CPPElement(s"${valueOf(expression(exp, litValue))}")
             Seq(new CPPElement(s"""${result(inst(Lit, value)).mkString("\n")} """))
 
 
@@ -111,11 +109,11 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with CPPProd
                       |if (leftV + rightV == 0) {
                       |  ${result(inst(Lit, zero)).mkString("\n")}
                       |} else if (leftV == 0) {
-                      |  ${result(dispatch(atts(domain.base.right), Simplify)).mkString("\n")}
+                      |  ${result(dispatch(expression(exp, domain.base.right), Simplify)).mkString("\n")}
                       |} else if (rightV == 0) {
-                      |  ${result(dispatch(atts(domain.base.left), Simplify)).mkString("\n")}
+                      |  ${result(dispatch(expression(exp, domain.base.left), Simplify)).mkString("\n")}
                       |} else {
-                      |  ${result(inst(Add, dispatch(atts(domain.base.left), Simplify),dispatch(atts(domain.base.right), Simplify))).mkString("\n")}
+                      |  ${result(inst(Add, dispatch(expression(exp, domain.base.left), Simplify),dispatch(expression(exp, domain.base.right), Simplify))).mkString("\n")}
                       |}""".stripMargin))
           case Sub =>
             val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
@@ -126,7 +124,7 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with CPPProd
                       |if (leftV == rightV) {
                       |  ${result(inst(Lit, zero)).mkString("\n")}
                       |} else {
-                      |  ${result(inst(Sub, dispatch(atts(domain.base.left), Simplify),dispatch(atts(domain.base.right), Simplify))).mkString("\n")}
+                      |  ${result(inst(Sub, dispatch(expression(exp, domain.base.left), Simplify),dispatch(expression(exp, domain.base.right), Simplify))).mkString("\n")}
                       |}""".stripMargin))
 
           case Mult =>
@@ -138,11 +136,11 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with CPPProd
                       |if (leftV == 0 || rightV == 0) {
                       |  ${result(inst(Lit, zero)).mkString("\n")}
                       |} else if (leftV == 1) {
-                      |  ${result(dispatch(atts(domain.base.right), Simplify)).mkString("\n")}
+                      |  ${result(dispatch(expression(exp, domain.base.right), Simplify)).mkString("\n")}
                       |} else if (rightV == 1) {
-                      |  ${result(dispatch(atts(domain.base.left), Simplify)).mkString("\n")}
+                      |  ${result(dispatch(expression(exp, domain.base.left), Simplify)).mkString("\n")}
                       |} else {
-                      |  ${result(inst(Mult, dispatch(atts(domain.base.left), Simplify),dispatch(atts(domain.base.right), Simplify))).mkString("\n")}
+                      |  ${result(inst(Mult, dispatch(expression(exp, domain.base.left), Simplify), dispatch(expression(exp, domain.base.right), Simplify))).mkString("\n")}
                       |}""".stripMargin))
           case Divd =>
             val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
@@ -153,13 +151,13 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with CPPProd
                       |if (leftV == 0) {
                       |  ${result(inst(Lit, zero)).mkString("\n")}
                       |} else if (rightV == 1) {
-                      |  ${result(dispatch(atts(domain.base.left), Simplify)).mkString("\n")}
+                      |  ${result(dispatch(expression(exp, domain.base.left), Simplify)).mkString("\n")}
                       |} else if (leftV == rightV) {
                       |   ${result(inst(Lit, one)).mkString("\n")}
                       |} else if (leftV == -rightV) {
                       |   ${result(inst(Lit, negOne)).mkString("\n")}
                       |} else {
-                      |  ${result(inst(Divd, dispatch(atts(domain.base.left), Simplify),dispatch(atts(domain.base.right), Simplify))).mkString("\n")}
+                      |  ${result(inst(Divd, dispatch(expression(exp, domain.base.left), Simplify), dispatch(expression(exp, domain.base.right), Simplify))).mkString("\n")}
                       |}""".stripMargin))
 
           // TODO: Would love to have ability to simplify neg(neg(x)) to just be x. This requires a form
@@ -170,7 +168,7 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with CPPProd
                       |if (${contextDispatch(source, deltaInner)} == 0) {
                       |   ${result(inst(Lit, zero)).mkString("\n")}
                       |} else {
-                      |   ${result(inst(Neg, dispatch(atts(domain.base.inner), Simplify))).mkString("\n")}
+                      |   ${result(inst(Neg, dispatch(expression(exp,domain.base.inner), Simplify))).mkString("\n")}
                       |}""".stripMargin))
           case _ => super.logic(exp, op)
         }

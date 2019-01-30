@@ -1,4 +1,4 @@
-package example.expression.algebra  /*DD:LD:AD*/
+package example.expression.algebra     /*DD:LD:AD*/
 
 /**
   * Extensibility for the Masses

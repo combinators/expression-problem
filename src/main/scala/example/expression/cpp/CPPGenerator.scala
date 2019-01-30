@@ -49,4 +49,15 @@ trait CPPGenerator extends LanguageIndependentGenerator {
     * Operations can declare dependencies, which leads to #include extras
     */
    def dependency(op: domain.Operation): scala.List[domain.Operation] = List.empty
+
+
+  /** Compute parameter "name" comma-separated list from operation. */
+  def arguments(op:domain.Operation) : String = {
+    op.parameters.map(param => param.name).mkString(",")
+  }
+
+  /** Compute parameter "Type name" comma-separated list from operation. */
+  def parameters(op:domain.Operation) : String = {
+    op.parameters.map(param => typeConverter(param.tpe).toString + " " + param.name).mkString(",")
+  }
 }

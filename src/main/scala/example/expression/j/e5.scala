@@ -41,11 +41,11 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
     val source = Source(exp,op)
     op match {
       // Simplify only works for solutions that instantiate expression instances. As a binary
-      case domain.AsTree => {
+      case domain.AsTree =>
         val atts = subExpressions(exp)
 
-        exp match {   // was $litValue     ;
-          case Lit =>   // ${exp.hashCode()}
+        exp match {
+          case Lit =>
             val attParams = atts.map(att => att._2.toString).mkString(",")
             val deltaSelf = deltaSelfOp(source, Identifier)
             val rhs = contextDispatch(source, deltaSelf)
@@ -57,7 +57,6 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
             val rhs = contextDispatch(source, deltaSelf)
             result(Java(s" new tree.Node(java.util.Arrays.asList($attParams), $rhs) ").expression[Expression]())
           }
-      }
 
       case _ => super.logic(exp, op)
     }

@@ -5,12 +5,12 @@ trait M0 extends Evolution {
   val domain:MathDomain
   import domain._
 
-  val litValue:String = "value"
+  val litValue = Attribute ("value", Double)
 
   // m0:model evolution.
   // -------------------
   case object Double extends TypeRep
-  case object Lit extends Atomic("Lit", Seq(Attribute(litValue, Double)))
+  case object Lit extends Atomic("Lit", Seq(litValue))
   case object Add extends Binary("Add")
 
   case object Eval extends Operation("eval", Some(Double))

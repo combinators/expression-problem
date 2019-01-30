@@ -31,7 +31,6 @@ trait e5 extends Evolution with ScalaGenerator with TestGenerator with Operation
   }
 
   abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
-    // generate the actual body
     val source = Source(exp,op)
     op match {
       // Simplify only works for solutions that instantiate expression instances. As a binary

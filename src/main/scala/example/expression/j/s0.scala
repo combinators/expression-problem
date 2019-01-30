@@ -25,24 +25,22 @@ trait s0 extends Evolution with JavaGenerator with JUnitTestGenerator with S0 {
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
   abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
-    val subs:Map[String,Expression] = subExpressions(exp).asInstanceOf[Map[String,Expression]]
-
     // generate the actual body
     op match {
       case ContainsPt =>
         exp match {
           case Circle =>
-            result(Java(s" Math.sqrt(point.x*point.x + point.y*point.y) <= ${subs(radius)}").expression[Expression]())
+            result(Java(s" Math.sqrt(point.x*point.x + point.y*point.y) <= ${expression(exp, radius)}").expression[Expression]())
 
           case Square =>
-            result(Java(s" (Math.abs(point.x) <= ${subs(side)}/2 && Math.abs(point.y) <= ${subs(side)}/2)").expression[Expression]())
+            result(Java(s" (Math.abs(point.x) <= ${expression(exp, side)}/2 && Math.abs(point.y) <= ${expression(exp, side)}/2)").expression[Expression]())
 
           case Translate =>
             Java(
               s"""
                  |// first adjust
-                 |java.awt.geom.Point2D.Double t = new java.awt.geom.Point2D.Double(point.x - ${subs(trans)}.x, point.y - ${subs(trans)}.y);
-                 |${result(dispatch(subs(shape), ContainsPt, Java("t").expression[Expression]()))}""".stripMargin).statements()
+                 |java.awt.geom.Point2D.Double t = new java.awt.geom.Point2D.Double(point.x - ${expression(exp, trans)}.x, point.y - ${expression(exp, trans)}.y);
+                 |${result(dispatch(expression(exp, shape), ContainsPt, Java("t").expression[Expression]()))}""".stripMargin).statements()
 
         }
 

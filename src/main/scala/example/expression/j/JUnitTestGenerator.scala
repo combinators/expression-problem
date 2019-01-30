@@ -33,14 +33,11 @@ trait JUnitTestGenerator extends TestGenerator with JavaGenerator {
 
     val allTests = testGenerator ++ performanceMethod()
 
-    var num: Int = 0
-    val files: Seq[CompilationUnit] = allTests.filter(md => md.getBody.isPresent).map(md => {
-      num = num + 1
-
+    val files = allTests.filter(md => md.getBody.isPresent).zipWithIndex.map(pair => {
       Java(s"""|$packageDeclaration
                |import junit.framework.TestCase;
-               |public class TestSuite$num extends TestCase {
-               |    $md
+               |public class TestSuite${pair._2} extends TestCase {
+               |    ${pair._1}
                |}""".stripMargin).compilationUnit
     })
 

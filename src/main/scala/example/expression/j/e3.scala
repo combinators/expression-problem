@@ -14,24 +14,21 @@ trait e3 extends Evolution with JavaGenerator with JUnitTestGenerator with M0 wi
   val domain:MathDomain
 
    abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
-    val subs = subExpressions(exp)
-    
-    // generate the actual body
     op match {
       case PrettyP => {
         exp match {
-          case Neg => result(Java(s""" "-" + ${dispatch(subs(domain.base.inner), PrettyP)} """).expression[Expression]())
-          case Mult => result(Java(s""" "(" + ${dispatch(subs(domain.base.left), PrettyP)} + "*" + ${dispatch(subs(domain.base.right), PrettyP)}  + ")" """).expression[Expression]())
-          case Divd => result(Java(s""" "(" + ${dispatch(subs(domain.base.left), PrettyP)}  + "/" + ${dispatch(subs(domain.base.right), PrettyP)}  + ")" """).expression[Expression]())
+          case Neg => result(Java(s""" "-" + ${dispatch(expression(exp,domain.base.inner), PrettyP)} """).expression[Expression]())
+          case Mult => result(Java(s""" "(" + ${dispatch(expression(exp, domain.base.left), PrettyP)} + "*" + ${dispatch(expression(exp, domain.base.right), PrettyP)}  + ")" """).expression[Expression]())
+          case Divd => result(Java(s""" "(" + ${dispatch(expression(exp, domain.base.left), PrettyP)}  + "/" + ${dispatch(expression(exp, domain.base.right), PrettyP)}  + ")" """).expression[Expression]())
           case _ => super.logic(exp, op)
         }
       }
 
       case Eval => {
         exp match {
-          case Neg => result(Java(s" - ${dispatch(subs(domain.base.inner), Eval)} ").expression[Expression]())
-          case Mult => result(Java(s" ${dispatch(subs(domain.base.left), Eval)} * ${dispatch(subs(domain.base.right), Eval)} ").expression[Expression]())
-          case Divd => result(Java(s" ${dispatch(subs(domain.base.left), Eval)} / ${dispatch(subs(domain.base.right), Eval)} ").expression[Expression]())
+          case Neg => result(Java(s" - ${dispatch(expression(exp,domain.base.inner), Eval)} ").expression[Expression]())
+          case Mult => result(Java(s" ${dispatch(expression(exp, domain.base.left), Eval)} * ${dispatch(expression(exp, domain.base.right), Eval)} ").expression[Expression]())
+          case Divd => result(Java(s" ${dispatch(expression(exp, domain.base.left), Eval)} / ${dispatch(expression(exp, domain.base.right), Eval)} ").expression[Expression]())
           case _ => super.logic(exp, op)
         }
       }

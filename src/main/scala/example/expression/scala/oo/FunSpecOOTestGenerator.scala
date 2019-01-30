@@ -9,10 +9,12 @@ trait FunSpecOOTestGenerator extends FunSpecTestGenerator {
   val domain: BaseDomain with ModelDomain
   import domain._
 
-
-
-  // should be able to use scala meta transformations, since only adding with clauses
-  /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
+  /**
+    * Combine all test cases together into a single JUnit 3.0 TestSuite class.
+    *
+    * Annoying to override entire method JUST to add the "with ..." clause. Perhaps this
+    * could be revised later.
+    */
   override def generateSuite(pkg: Option[String], model: Option[Model] = None): Seq[ScalaWithPath] = {
     val packageDeclaration: String = if (pkg.isDefined) {
       s"package ${pkg.get}"
@@ -21,28 +23,21 @@ trait FunSpecOOTestGenerator extends FunSpecTestGenerator {
     }
 
     val allTests = testGenerator ++ performanceMethod
-
-    var num: Int = 0
-    val files: Seq[ScalaWithPath] = allTests.map(md => {
-      num = num + 1
-
-      ScalaTestWithPath(Scala(s"""
+    val files: Seq[ScalaWithPath] = allTests.zipWithIndex.map{ case (t, num) =>
+     ScalaTestWithPath(Scala(s"""
                              |$packageDeclaration
                              |import org.scalatest.FunSpec
                              |
                              |class TestSuite$num extends FunSpec with ${model.get.name.capitalize} {
                              |  describe("test cases") {
                              |    it ("run test") {
-                             |      test()
+                             |      ${t.mkString("\n")}
                              |    }
-                             |
-                             |    $md
                              |  }
                              |}""".stripMargin).source(), Paths.get(s"TestSuite$num.scala"))
 
-    })
+    }
 
     files
   }
-  
 }

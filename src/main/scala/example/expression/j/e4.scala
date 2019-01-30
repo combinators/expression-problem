@@ -56,7 +56,6 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
   }
 
   abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
-    val subs:Map[String,Expression] = subExpressions(exp)
     val zero = Java("0.0").expression[Expression]()
     val one = Java("1.0").expression[Expression]()
     val negOne = Java("-1.0").expression[Expression]()
@@ -68,7 +67,7 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
       case Simplify =>
 
         exp match {
-          case Lit => result(Java(s" ${inst(Lit, subs(litValue))}").expression[Expression]())
+          case Lit => result(Java(s" ${inst(Lit, expression(exp, litValue))}").expression[Expression]())
           case Add =>
             val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
             val deltaRight = deltaChildOp(source, domain.base.right, Eval)
@@ -77,11 +76,11 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
                      |if ((leftVal == 0 && rightVal == 0) || (leftVal + rightVal == 0)) {
                      |   ${result(inst(Lit, zero)).mkString("\n")}
                      |} else if (leftVal == 0) {
-                     |   ${result(dispatch(subs(domain.base.right), Simplify)).mkString("\n")}
+                     |   ${result(dispatch(expression(exp, domain.base.right), Simplify)).mkString("\n")}
                      |} else if (rightVal == 0) {
-                     |   ${result(dispatch(subs(domain.base.left), Simplify)).mkString("\n")}
+                     |   ${result(dispatch(expression(exp, domain.base.left), Simplify)).mkString("\n")}
                      |} else {
-                     |   ${result(inst(Add, dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
+                     |   ${result(inst(Add, dispatch(expression(exp, domain.base.left), Simplify),dispatch(expression(exp, domain.base.right), Simplify))).mkString("\n")}
                      |}""".stripMargin).statements()
           case Sub =>
             val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
@@ -89,7 +88,7 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
             Java(s"""|if (${contextDispatch(source, deltaLeft)} == ${contextDispatch(source, deltaRight)}) {
                      |   ${result(inst(Lit, zero)).mkString("\n")}
                      |} else {
-                     |   ${result(inst(Sub, dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
+                     |   ${result(inst(Sub, dispatch(expression(exp, domain.base.left), Simplify),dispatch(expression(exp, domain.base.right), Simplify))).mkString("\n")}
                      |}""".stripMargin).statements()
           case Mult =>
             val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
@@ -99,11 +98,11 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
                      |if (leftVal == 0 || rightVal == 0) {
                      |   ${result(inst(Lit, zero)).mkString("\n")}
                      |} else if (leftVal == 1) {
-                     |   ${result(dispatch(subs(domain.base.right), Simplify)).mkString("\n")}
+                     |   ${result(dispatch(expression(exp, domain.base.right), Simplify)).mkString("\n")}
                      |} else if (rightVal == 1) {
-                     |   ${result(dispatch(subs(domain.base.left), Simplify)).mkString("\n")}
+                     |   ${result(dispatch(expression(exp, domain.base.left), Simplify)).mkString("\n")}
                      |} else {
-                     |   ${result(inst(Mult, dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
+                     |   ${result(inst(Mult, dispatch(expression(exp, domain.base.left), Simplify),dispatch(expression(exp, domain.base.right), Simplify))).mkString("\n")}
                      |}
                      |""".stripMargin).statements()
           case Divd =>
@@ -114,13 +113,13 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
                      |if (leftVal == 0) {
                      |   ${result(inst(Lit, zero)).mkString("\n")}
                      |} else if (rightVal == 1) {
-                     |   ${result(dispatch(subs(domain.base.left), Simplify)).mkString("\n")}
+                     |   ${result(dispatch(expression(exp, domain.base.left), Simplify)).mkString("\n")}
                      |} else if (leftVal == rightVal) {
                      |   ${result(inst(Lit, one)).mkString("\n")}
                      |} else if (leftVal == -rightVal) {
                      |   ${result(inst(Lit, negOne)).mkString("\n")}
                      |} else {
-                     |   ${result(inst(Divd, dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
+                     |   ${result(inst(Divd, dispatch(expression(exp, domain.base.left), Simplify),dispatch(expression(exp, domain.base.right), Simplify))).mkString("\n")}
                      |}
                      |""".stripMargin).statements()
             // TODO: Would love to have ability to simplify neg(neg(x)) to just be x. This requires a form
@@ -131,7 +130,7 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
                     |if (${contextDispatch(source, deltaInner)} == 0) {
                     |   ${result(inst(Lit, zero)).mkString("\n")}
                     |} else {
-                    |   ${result(inst(Neg, dispatch(subs(domain.base.inner), Simplify))).mkString("\n")}
+                    |   ${result(inst(Neg, dispatch(expression(exp, domain.base.inner), Simplify))).mkString("\n")}
                     |}""".stripMargin).statements()
           case _ => super.logic(exp, op)
         }
@@ -140,20 +139,20 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
         val returnList = result(Java("list").expression[Expression]()).mkString("\n")
         exp match {
           case _:domain.Binary => Java(
-            s"""|${typeConverter(List(Double))} list = ${dispatch(subs(domain.base.left), Collect)};
-                |list.addAll(${dispatch(subs(domain.base.right), Collect)});
+            s"""|${typeConverter(List(Double))} list = ${dispatch(expression(exp, domain.base.left), Collect)};
+                |list.addAll(${dispatch(expression(exp, domain.base.right), Collect)});
                 |$returnList
                 |""".stripMargin).statements()
 
           case _:domain.Unary  => Java(
             s"""|${typeConverter(List(Double))} list = new java.util.ArrayList<Double>();
-                |list.addAll(${dispatch(subs(domain.base.inner), Collect)});
+                |list.addAll(${dispatch(expression(exp, domain.base.inner), Collect)});
                 |$returnList
                 |""".stripMargin).statements()
 
           case _:domain.Atomic => Java(
             s"""|${typeConverter(List(Double))} list = new java.util.ArrayList<Double>();
-                |list.add(${subs(litValue)});
+                |list.add(${expression(exp, litValue)});
                 |$returnList
                 |""".stripMargin).statements()
 

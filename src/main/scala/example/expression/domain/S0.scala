@@ -6,26 +6,25 @@ trait S0 extends Evolution {
   import domain._
 
   // standard attributes for domain. As new ones are defined, place in respective traits
-  val side:String   = "side"
-  val radius:String = "radius"
-  val x:String = "x"
-  val y:String = "y"
-  val trans:String  = "trans"
-  val shape:String  = "shape"
-  val point:String  = "point"
-  val pct:String    = "pct"
+  val side = Attribute("side", Double)
+  val radius = Attribute("radius", Double)
+  val x = Attribute("x", Double)
+  val y = Attribute("y", Double)
+  val trans = Attribute("trans", Point2D)
+  val shape = Attribute("shape", domain.Shape)
+  val point = Parameter("point", Point2D)
+  val pct = Parameter("pct", Double)
 
   case object Double extends domain.TypeRep
   case object Boolean extends domain.TypeRep
   case object Point2D extends domain.TypeRep
 
-  case object Square extends domain.Atomic("Square", Seq(domain.Attribute(side, Double)))
-  case object Circle extends domain.Atomic("Circle", Seq(domain.Attribute(radius, Double)))
-  case object Point extends domain.Atomic("Point", Seq(domain.Attribute(x, Double), domain.Attribute(y, Double)))
+  case object Square extends domain.Atomic("Square", Seq(side))
+  case object Circle extends domain.Atomic("Circle", Seq(radius))
+  case object Point extends domain.Atomic("Point", Seq(x, y))
 
-  case object Translate extends domain.Atomic("Translate",
-    Seq(domain.Attribute(trans, Point2D), domain.Attribute(shape, domain.Shape)))
-  case object ContainsPt extends domain.Operation("containsPt", Some(Boolean), Seq((point, Point2D)))
+  case object Translate extends domain.Atomic("Translate", Seq(trans, shape))
+  case object ContainsPt extends domain.Operation("containsPt", Some(Boolean), Seq(point))
 
   class SquareInst(d:Double) extends domain.AtomicInst(Square, Some(d))
   class CircleInst(d:Double) extends domain.AtomicInst(Circle, Some(d))

@@ -1,6 +1,6 @@
 package example.expression.cpp    /*DD:LD:AI*/
 
-import example.expression.domain.{Evolution, M0, M1, M2, MathDomain}
+import example.expression.domain.{Evolution, M0, M1, M2}
 
 /**
   * Truly independent of the specific design solution.
@@ -29,8 +29,6 @@ trait cpp_e2 extends Evolution with CPPGenerator with TestGenerator with M0 with
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
   abstract override def logic(exp:Atomic, op:Operation): Seq[CPPElement] = {
-    val atts:Map[String,CPPElement] = subExpressions(exp)
-
     // generate the actual body
     op match {
       case PrettyP =>
@@ -38,16 +36,16 @@ trait cpp_e2 extends Evolution with CPPGenerator with TestGenerator with M0 with
           case Lit => Seq(new CPPElement(
             s"""
                |std::ostringstream ss;
-               |double val = ${valueOf(atts(litValue))};
+               |double val = ${valueOf(expression(exp, litValue))};
                |int ival = (int) val;
-               |ss << ${valueOf(atts(litValue))};
+               |ss << ${valueOf(expression(exp, litValue))};
                |if (val == ival) { ss << ".0"; }  // add trailing .0 for int-value doubles
                |${result(new CPPElement("ss.str()")).mkString("\n")}
              """.stripMargin))
 
-          case Add => result(new CPPElement(s""" "(" + ${dispatch(atts(base.left), op)} + "+" + ${dispatch(atts(base.right), op)} + ")" """))
+          case Add => result(new CPPElement(s""" "(" + ${dispatch(expression(exp, base.left), op)} + "+" + ${dispatch(expression(exp, base.right), op)} + ")" """))
 
-          case Sub => result(new CPPElement(s""" "(" + ${dispatch(atts(base.left), op)} + "-" + ${dispatch(atts(base.right), op)} + ")" """))
+          case Sub => result(new CPPElement(s""" "(" + ${dispatch(expression(exp, base.left), op)} + "-" + ${dispatch(expression(exp, base.right), op)} + ")" """))
 
           case _ => super.logic(exp, op)
         }

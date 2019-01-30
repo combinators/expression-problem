@@ -64,11 +64,7 @@ trait HUnitTestGenerator extends HaskellGenerator {
   /** Return JUnit test case associated with these given test cases. */
   def hunitMethod(tests:Seq[TestCase]) : Haskell = {
     val stmts:Seq[Haskell] = tests.zipWithIndex.flatMap(pair => hunitTestMethod(pair._1, pair._2))
-
-    val structure = tests.zipWithIndex.map(pair => {
-      val idx = pair._2
-      new Haskell(s"""TestLabel "$idx" test_v$idx""")
-    }).mkString(",")
+    val structure = tests.zipWithIndex.map(pair => new Haskell(s"""TestLabel "${pair._2}" test_v${pair._2}""")).mkString(",")
 
     new Haskell(s"""|${stmts.mkString("\n")}
                     |test_all = TestList [ $structure ]

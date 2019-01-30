@@ -21,19 +21,13 @@ trait i2 extends  Evolution with JavaGenerator with JUnitTestGenerator with I2 {
   }
 
    abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
-    val subs = subExpressions(exp)
-
     // generate the actual body
     op match {
-
       case Height =>
-
         val heightPlusOne:Expression = Java(s"${independent.height} + 1").expression[Expression]()
         exp match {
-          case _:domain.Binary => result(Java(s"Math.max(${dispatch(subs(domain.base.left), Height, heightPlusOne)},${dispatch(subs(domain.base.right), Height, heightPlusOne)}) ").expression[Expression]())
-
-          case _:domain.Unary => result(Java(s"${dispatch(subs(domain.base.inner), Height, heightPlusOne)}").expression[Expression]())
-
+          case _:domain.Binary => result(Java(s"Math.max(${dispatch(expression(exp, domain.base.left), Height, heightPlusOne)},${dispatch(expression(exp, domain.base.right), Height, heightPlusOne)}) ").expression[Expression]())
+          case _:domain.Unary => result(Java(s"${dispatch(expression(exp, domain.base.inner), Height, heightPlusOne)}").expression[Expression]())
           case _:domain.Atomic => result(Java(s" ${independent.height};").expression[Expression]())
 
           case _ => super.logic(exp, op)
@@ -44,7 +38,6 @@ trait i2 extends  Evolution with JavaGenerator with JUnitTestGenerator with I2 {
   }
 
   abstract override def testGenerator: Seq[MethodDeclaration] = {
-
     val i1 = new domain.UnaryInst(Inv, new LitInst(2.0))
     val a1 = new domain.BinaryInst(Add, new LitInst(5.0), new LitInst(7.0))
     val a2 = new domain.BinaryInst(Add, new LitInst(2.0), new LitInst(3.0))

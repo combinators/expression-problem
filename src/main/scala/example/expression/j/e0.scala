@@ -23,14 +23,12 @@ trait e0 extends JavaGenerator with JUnitTestGenerator with M0 {
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
   abstract override def logic(exp:Atomic, op:Operation): Seq[Statement] = {
-    val atts = subExpressions(exp)
-
     // generate the actual body
     op match {
       case Eval =>
         exp match {
-          case Lit => result(Java(atts(litValue)).expression[Expression]())
-          case Add => result(Java(s"${dispatch(atts(base.left),op)} + ${dispatch(atts(base.right),op)}").expression[Expression]())
+          case Lit => result(Java(expression(exp, litValue)).expression[Expression]())
+          case Add => result(Java(s"${dispatch(expression(exp, base.left),op)} + ${dispatch(expression(exp, base.right),op)}").expression[Expression]())
           case _ => super.logic(exp, op)
         }
 

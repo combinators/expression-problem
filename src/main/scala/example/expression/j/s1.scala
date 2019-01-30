@@ -14,23 +14,20 @@ trait s1 extends JavaGenerator with JUnitTestGenerator with S1 { self:s0 =>
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
   abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
-    val subs:Map[String,Expression] = subExpressions(exp)
-
-    // generate the actual body
     op match {
       case Shrink =>
         exp match {
           case Circle =>
             Java(
               s"""
-                 |double shrunkRadius = ${subs(radius)}*pct;
+                 |double shrunkRadius = ${expression(exp, radius)}*pct;
                  return ${inst(Circle, Java("shrunkRadius").expression[Expression]())};
                """.stripMargin).statements()
 
           case Square => {
             val str =
               s"""
-                 |double shrunkSide = ${subs(side)}*pct;
+                 |double shrunkSide = ${expression(exp, side)}*pct;
                  |return ${inst(Square, Java("shrunkSide").expression[Expression]())};
                """.stripMargin
             println(str)
@@ -38,10 +35,10 @@ trait s1 extends JavaGenerator with JUnitTestGenerator with S1 { self:s0 =>
           }
 
           case Translate => {
-            val disp = dispatch(subs(shape), op, Java("pct").expression[Expression]())
+            val disp = dispatch(expression(exp, shape), op, Java("pct").expression[Expression]())
             Java(
               s"""
-                 |return ${inst(Translate, subs(trans),disp)};
+                 |return ${inst(Translate, expression(exp, trans),disp)};
                  |
                """.stripMargin).statements()
           }

@@ -42,21 +42,12 @@ trait GJGenerator extends LanguageIndependentGenerator {
 
   /** Compute parameter "name" comma-separated list from operation. */
   def arguments(op:domain.Operation) : String = {
-    op.parameters.map(tuple => {
-      val name:String = tuple._1
-
-       name
-    }).mkString(",")
+    op.parameters.map(param => param.name).mkString(",")
   }
 
   /** Compute parameter "Type name" comma-separated list from operation. */
   def parameters(op:domain.Operation) : String = {
-    op.parameters.map(tuple => {
-      val name:String = tuple._1
-      val tpe:domain.TypeRep = tuple._2
-
-      typeConverter(tpe).toString + " " + name
-    }).mkString(",")
+    op.parameters.map(param => typeConverter(param.tpe).toString + " " + param.name).mkString(",")
   }
 
   /** Compute parameter "Type name" comma-separated list from operation. */

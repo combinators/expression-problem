@@ -13,15 +13,13 @@ trait cpp_e3 extends Evolution with CPPGenerator with TestGenerator with M0 with
   import domain._
 
   abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[CPPElement] = {
-    val atts = subExpressions(exp)
-
     // generate the actual body
     op match {
       case PrettyP => {
         exp match {
-          case Mult => result(new CPPElement(s""" "(" + ${dispatch(atts(base.left), op)} + "*" + ${dispatch(atts(base.right), op)} + ")" """))
-          case Divd => result(new CPPElement(s""" "(" + ${dispatch(atts(base.left), op)} + "/" + ${dispatch(atts(base.right), op)} + ")" """))
-          case Neg => result(new CPPElement(s""" "-" + ${dispatch(atts(base.inner), op)} """))
+          case Mult => result(new CPPElement(s""" "(" + ${dispatch(expression(exp, base.left), op)} + "*" + ${dispatch(expression(exp, base.right), op)} + ")" """))
+          case Divd => result(new CPPElement(s""" "(" + ${dispatch(expression(exp, base.left), op)} + "/" + ${dispatch(expression(exp, base.right), op)} + ")" """))
+          case Neg => result(new CPPElement(s""" "-" + ${dispatch(expression(exp,base.inner), op)} """))
 
           case _ => super.logic(exp, op)
         }
@@ -29,9 +27,9 @@ trait cpp_e3 extends Evolution with CPPGenerator with TestGenerator with M0 with
 
       case Eval =>
         exp match {
-          case Mult => result(new CPPElement(s"${dispatch(atts(base.left), op)} * ${dispatch(atts(base.right), op)}"))
-          case Divd => result(new CPPElement(s"${dispatch(atts(base.left), op)} / ${dispatch(atts(base.right), op)}"))
-          case Neg => result(new CPPElement(s"- ${dispatch(atts(base.inner), op)} "))
+          case Mult => result(new CPPElement(s"${dispatch(expression(exp, base.left), op)} * ${dispatch(expression(exp, base.right), op)}"))
+          case Divd => result(new CPPElement(s"${dispatch(expression(exp, base.left), op)} / ${dispatch(expression(exp, base.right), op)}"))
+          case Neg => result(new CPPElement(s"- ${dispatch(expression(exp,base.inner), op)} "))
 
           case _ => super.logic(exp, op)
         }

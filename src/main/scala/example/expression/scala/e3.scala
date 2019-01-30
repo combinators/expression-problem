@@ -13,24 +13,21 @@ trait e3 extends Evolution with ScalaGenerator with TestGenerator with M0 with M
   val domain:MathDomain
 
    abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
-    val subs = subExpressions(exp)
-    
-    // generate the actual body
     op match {
       case PrettyP => {
         exp match {
-          case Neg => result(Scala(s""" "-" + ${dispatch(subs(domain.base.inner), PrettyP)} """).expression)
-          case Mult => result(Scala(s""" "(" + ${dispatch(subs(domain.base.left), PrettyP)} + "*" + ${dispatch(subs(domain.base.right), PrettyP)}  + ")" """).expression)
-          case Divd => result(Scala(s""" "(" + ${dispatch(subs(domain.base.left), PrettyP)}  + "/" + ${dispatch(subs(domain.base.right), PrettyP)}  + ")" """).expression)
+          case Neg => result(Scala(s""" "-" + ${dispatch(expression(exp, domain.base.inner), PrettyP)} """).expression)
+          case Mult => result(Scala(s""" "(" + ${dispatch(expression(exp, domain.base.left), PrettyP)} + "*" + ${dispatch(expression(exp, domain.base.right), PrettyP)}  + ")" """).expression)
+          case Divd => result(Scala(s""" "(" + ${dispatch(expression(exp, domain.base.left), PrettyP)}  + "/" + ${dispatch(expression(exp, domain.base.right), PrettyP)}  + ")" """).expression)
           case _ => super.logic(exp, op)
         }
       }
 
       case Eval => {
         exp match {
-          case Neg => result(Scala(s""" - ${dispatch(subs(domain.base.inner), Eval)} """).expression)
-          case Mult => result(Scala(s""" ${dispatch(subs(domain.base.left), Eval)} * ${dispatch(subs(domain.base.right), Eval)}""").expression)
-          case Divd => result(Scala(s""" ${dispatch(subs(domain.base.left), Eval)} / ${dispatch(subs(domain.base.right), Eval)}""").expression)
+          case Neg => result(Scala(s""" - ${dispatch(expression(exp, domain.base.inner), Eval)} """).expression)
+          case Mult => result(Scala(s""" ${dispatch(expression(exp, domain.base.left), Eval)} * ${dispatch(expression(exp, domain.base.right), Eval)}""").expression)
+          case Divd => result(Scala(s""" ${dispatch(expression(exp, domain.base.left), Eval)} / ${dispatch(expression(exp, domain.base.right), Eval)}""").expression)
           case _ => super.logic(exp, op)
         }
       }

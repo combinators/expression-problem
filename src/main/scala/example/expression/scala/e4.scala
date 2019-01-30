@@ -47,7 +47,6 @@ trait e4 extends Evolution with ScalaGenerator with TestGenerator with Operation
   abstract override def logic(exp:Atomic, op:Operation): Seq[Statement] = {
     val source = Source(exp,op)
 
-    val subs:Map[String, Term] = subExpressions(exp)
     val zero = Scala("0.0").expression
     val one = Scala("1.0").expression
     val negOne = Scala("-1.0").expression
@@ -58,7 +57,7 @@ trait e4 extends Evolution with ScalaGenerator with TestGenerator with Operation
       case Simplify =>
 
         exp match {
-          case Lit => Scala(s" ${inst(Lit, subs(litValue))}").statements
+          case Lit => Scala(s" ${inst(Lit, expression(exp,litValue))}").statements
           case Add =>
             val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
             val deltaRight = deltaChildOp(source, domain.base.right, Eval)
@@ -68,11 +67,11 @@ trait e4 extends Evolution with ScalaGenerator with TestGenerator with Operation
                    |if ((leftVal == 0 && rightVal == 0) || (leftVal + rightVal == 0)) {
                    |  ${result(inst(Lit, zero)).mkString("\n")}
                    |} else if (leftVal == 0) {
-                   |  ${result(dispatch(subs(domain.base.right), Simplify)).mkString("\n")}
+                   |  ${result(dispatch(expression(exp, domain.base.right), Simplify)).mkString("\n")}
                    |} else if (rightVal == 0) {
-                   |  ${result(dispatch(subs(domain.base.left), Simplify)).mkString("\n")}
+                   |  ${result(dispatch(expression(exp, domain.base.left), Simplify)).mkString("\n")}
                    |} else {
-                   |  ${result(inst(Add, dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
+                   |  ${result(inst(Add, dispatch(expression(exp, domain.base.left), Simplify), dispatch(expression(exp, domain.base.right), Simplify))).mkString("\n")}
                    |}""".stripMargin).statements
           case Sub =>
             val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
@@ -81,7 +80,7 @@ trait e4 extends Evolution with ScalaGenerator with TestGenerator with Operation
                     |if (${contextDispatch(source, deltaLeft)} == ${contextDispatch(source, deltaRight)}) {
                     |  ${result(inst(Lit, zero)).mkString("\n")}
                     |} else {
-                    |  ${result(inst(Sub, dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
+                    |  ${result(inst(Sub, dispatch(expression(exp, domain.base.left), Simplify), dispatch(expression(exp, domain.base.right), Simplify))).mkString("\n")}
                     |}
                     |""".stripMargin).statements
           case Mult =>
@@ -93,11 +92,11 @@ trait e4 extends Evolution with ScalaGenerator with TestGenerator with Operation
                      |if (leftVal == 0 || rightVal == 0) {
                      |  ${result(inst(Lit, zero)).mkString("\n")}
                      |} else if (leftVal == 1) {
-                     |  ${result(dispatch(subs(domain.base.right), Simplify)).mkString("\n")}
+                     |  ${result(dispatch(expression(exp, domain.base.right), Simplify)).mkString("\n")}
                      |} else if (rightVal == 1) {
-                     |  ${result(dispatch(subs(domain.base.left), Simplify)).mkString("\n")}
+                     |  ${result(dispatch(expression(exp, domain.base.left), Simplify)).mkString("\n")}
                      |} else {
-                     |   ${result(inst(Mult, dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
+                     |   ${result(inst(Mult, dispatch(expression(exp, domain.base.left), Simplify), dispatch(expression(exp, domain.base.right), Simplify))).mkString("\n")}
                      |}
                      |""".stripMargin).statements
           case Divd =>
@@ -109,13 +108,13 @@ trait e4 extends Evolution with ScalaGenerator with TestGenerator with Operation
                      |if (leftVal == 0) {
                      |   ${result(inst(Lit, zero)).mkString("\n")}
                      |} else if (rightVal == 1) {
-                     |   ${result(dispatch(subs(domain.base.left), Simplify)).mkString("\n")}
+                     |   ${result(dispatch(expression(exp, domain.base.left), Simplify)).mkString("\n")}
                      |} else if (leftVal == rightVal) {
                      |   ${result(inst(Lit, one)).mkString("\n")}
                      |} else if (leftVal == -rightVal) {
                      |   ${result(inst(Lit, negOne)).mkString("\n")}
                      |} else {
-                     |   ${result(inst(Divd, dispatch(subs(domain.base.left), Simplify),dispatch(subs(domain.base.right), Simplify))).mkString("\n")}
+                     |   ${result(inst(Divd, dispatch(expression(exp, domain.base.left), Simplify), dispatch(expression(exp, domain.base.right), Simplify))).mkString("\n")}
                      |}
                      |""".stripMargin).statements
             // TODO: Would love to have ability to simplify neg(neg(x)) to just be x. This requires a form
@@ -126,7 +125,7 @@ trait e4 extends Evolution with ScalaGenerator with TestGenerator with Operation
                     |if (${contextDispatch(source, deltaInner)} == 0) {
                     |   ${result(inst(Lit, zero)).mkString("\n")}
                     |} else {
-                    |   ${result(inst(Neg, dispatch(subs(domain.base.inner), Simplify))).mkString("\n")}
+                    |   ${result(inst(Neg, dispatch(expression(exp, domain.base.inner), Simplify))).mkString("\n")}
                     |}""".stripMargin).statements
           case _ => super.logic(exp, op)
         }
@@ -134,12 +133,12 @@ trait e4 extends Evolution with ScalaGenerator with TestGenerator with Operation
       case Collect =>
         exp match {
 
-          case _:domain.Binary => result(Scala(s"${dispatch(subs(domain.base.left), Collect)} ++ ${dispatch(subs(domain.base.right), Collect)}").expression)
-          case _:domain.Unary  => result(Scala(s"${dispatch(subs(domain.base.inner), Collect)}").expression)
+          case _:domain.Binary => result(Scala(s"${dispatch(expression(exp, domain.base.left), Collect)} ++ ${dispatch(expression(exp, domain.base.right), Collect)}").expression)
+          case _:domain.Unary  => result(Scala(s"${dispatch(expression(exp, domain.base.inner), Collect)}").expression)
           case at:domain.Atomic => {
             at match {
-              case Lit => result(Scala(s"Seq(${subs(litValue).toString})").expression)
-              case _  => result(Scala(s"${dispatch(subs(litValue), Collect)}").expression)
+              case Lit => result(Scala(s"Seq(${expression(exp, litValue).toString})").expression)
+              //case _  => result(Scala(s"${dispatch(subs(litValue), Collect)}").expression)
             }
           }
 

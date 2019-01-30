@@ -195,9 +195,7 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
     val signatures = flat.types.map(exp => methodGenerator(exp, op))
 
     // if operation has parameters then must add to visitor as well
-    val atts = op.parameters.flatMap {
-      case (name,atype) => Java(s"${typeConverter(atype)} $name;").fieldDeclarations()
-    }
+    val atts = op.parameters.flatMap (param => Java(s"${typeConverter(param.tpe)} ${param.name};").fieldDeclarations())
 
     // We only need to have constructors if we have arguments. On a side note,
     // this is also an important consideration for extensibleVisitor

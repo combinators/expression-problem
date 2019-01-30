@@ -37,19 +37,20 @@ trait BaseDomain {
   type BaseTypeRep <: TypeRep
   val baseTypeRep:BaseTypeRep
 
+  // TODO: Fix these
   // standard attributes for domain. As new ones are defined, create own object to store them
   // Admittedly not the best place
   object base {
-    val inner:String = "inner"
-    val left:String = "left"
-    val right:String = "right"
-    val that:String = "that"
+    val inner = Attribute("inner", baseTypeRep)   // String = "inner"
+    val left = Attribute("left", baseTypeRep)     // "left"
+    val right = Attribute("right", baseTypeRep)   // right"
+    val that = Parameter("that", baseTypeRep)
   }
 
   /** Java classes will have attributes and methods reflecting the desired operations. */
   abstract class Element
-  case class Attribute(n1:String, tpe:TypeRep) extends Element {
-    val name:String = sanitize(n1)
+  case class Attribute(n:String, tpe:TypeRep) extends Element {
+    val name:String = sanitize(n)
 
     /**
       * Request the operation as an instance, such as "eval" for the Eval operation.
@@ -66,8 +67,18 @@ trait BaseDomain {
     def concept : String = name.capitalize
   }
 
+  /**
+    * An operation can have a number of parameters, each of which has a name and a type
+    * @param n       name of parameter
+    * @param tpe     its type
+    */
+  case class Parameter(n:String, tpe:TypeRep) extends Element {
+    val name: String = sanitize(n)
+  }
+
+  // TODO: change parameters to be Seq(Attribute) for easier coding
   /** Each operation is named and has parameters and an optional return type. */
-  abstract class Operation(n1:String, val returnType:Option[TypeRep], val parameters:Seq[(String, TypeRep)] = Seq.empty) extends Element {
+  abstract class Operation(n1:String, val returnType:Option[TypeRep], val parameters:Seq[Parameter] = Seq.empty) extends Element {
     val name:String = sanitize(n1)
 
     /**
@@ -86,8 +97,8 @@ trait BaseDomain {
   }
 
   /** Producer and Binary Methods are tagged. */
-  class ProducerOperation(override val name:String, override val parameters:Seq[(String, TypeRep)] = Seq.empty) extends Operation(name, Some(baseTypeRep), parameters)
-  class BinaryMethod(override val name:String, override val returnType:Option[TypeRep]) extends Operation(name, returnType, Seq((base.that, baseTypeRep)))
+  class ProducerOperation(override val name:String, override val parameters:Seq[Parameter] = Seq.empty) extends Operation(name, Some(baseTypeRep), parameters)
+  class BinaryMethod(override val name:String, override val returnType:Option[TypeRep]) extends Operation(name, returnType, Seq(base.that))
 
   /** Special operation that declares underlying support for BinaryMethods. */
   case object Tree extends TypeRep
@@ -96,10 +107,6 @@ trait BaseDomain {
 
   // TODO: Maybe ultimately replace need for BinaryMethodTreeBase since AsTree becomes dependent operation. Also AsTree is not entirely approach
   // TODO: in all cases (i.e., think graph structure) but also one can optimize the need for it away if you have Eq (for Haskell) or .equals for Java
-
-  /** Return unique subtype instance given subtype. A bit like getClass. Take an instance of basetype and return subtype identifier. */
-//  case class Identifier(override val name:String) extends TypeRep
-//  class SubTypeIdentifier(override val name:String, override val returnType:Option[Identifier]) extends Operation(name, Some(baseTypeRep))
 
   /** Pre-defined unary/binary subtypes that reflects either a unary or binary structure. This is extensible. */
   abstract class Atomic(n1: String, val attributes: Seq[Attribute]) {
@@ -119,8 +126,8 @@ trait BaseDomain {
       */
     def concept : String = name.capitalize
   }
-  abstract class Unary(override val name:String) extends Atomic(name, Seq(Attribute(base.inner, baseTypeRep)))
-  abstract class Binary(override val name:String) extends Atomic(name, Seq(Attribute(base.left, baseTypeRep), Attribute(base.right, baseTypeRep)))
+  abstract class Unary(override val name:String) extends Atomic(name, Seq(base.inner))
+  abstract class Binary(override val name:String) extends Atomic(name, Seq(base.left, base.right))
 
   /** For testing, one can construct instances over which test cases can be constructed. */
   class AtomicInst(val e:Atomic, val i:Option[Any])

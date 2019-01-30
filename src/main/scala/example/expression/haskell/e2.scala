@@ -4,8 +4,6 @@ import example.expression.domain._
 
 /**
   * Truly independent of the specific design solution.
-  *
-  * Still Java-based, naturally and JUnit
   */
 trait e2 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0 with M1 with M2 {
   self:e0 with e1 =>
@@ -38,15 +36,13 @@ trait e2 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
   }
 
   abstract override def logic(exp:Atomic, op:Operation): Seq[Haskell] = {
-    val atts = subExpressions(exp)
-
     // generate the actual body
     op match {
       case PrettyP =>
         exp match {
-          case Lit => result(Haskell(s"(show ${atts(litValue)})"))
-          case Add => result(Haskell(s""""(" ++ ${dispatch(atts(base.left), op)} ++ "+" ++ ${dispatch(atts(base.right), op)} ++ ")""""))
-          case Sub => result(Haskell(s""""(" ++ ${dispatch(atts(base.left), op)} ++ "-" ++ ${dispatch(atts(base.right), op)} ++ ")""""))
+          case Lit => result(Haskell(s"(show ${expression(exp,litValue)})"))
+          case Add => result(Haskell(s""""(" ++ ${dispatch(expression(exp,base.left), op)} ++ "+" ++ ${dispatch(expression(exp,base.right), op)} ++ ")""""))
+          case Sub => result(Haskell(s""""(" ++ ${dispatch(expression(exp,base.left), op)} ++ "-" ++ ${dispatch(expression(exp,base.right), op)} ++ ")""""))
           case _ => super.logic(exp, op)
         }
 

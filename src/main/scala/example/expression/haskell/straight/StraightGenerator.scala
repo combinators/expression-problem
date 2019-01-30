@@ -24,8 +24,8 @@ trait StraightGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
   def generateOp(m:Model, op:Operation) : HaskellWithPath = {
     val name = op.name
     val opRetType = typeConverter(op.returnType.get)
-    val extraOp = op.parameters.map(tuple => {    // what happens when two params?
-      val tpe = tuple._2
+    val extraOp = op.parameters.map(param => {    // what happens when two params?
+      val tpe = param.tpe
       if (tpe.equals(domain.baseTypeRep)) {
         s""" -> ${domain.baseTypeRep.name} """
       } else {
@@ -37,13 +37,11 @@ trait StraightGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
 
     val instances  = {
       val definedInstances = m.types.map(exp => {
-        val opsParam = op.parameters.map(tuple => {    // what happens when two params?
-          val name = tuple._1
-          val tpe = tuple._2
-          if (tpe.equals(domain.baseTypeRep)) {
+        val opsParam = op.parameters.map(param => {    // what happens when two params?
+          if (param.tpe.equals(domain.baseTypeRep)) {
             s"""(${exp.name.capitalize} ${standardArgs(exp, "2").getCode})"""
           } else {
-            name  // not sure what else to do
+            param.name  // not sure what else to do
           }
         }).mkString("")
 

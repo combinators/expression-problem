@@ -4,8 +4,6 @@ import example.expression.domain._
 
 /**
   * BinaryMethod capability
-  *
-  * Still Java-based, naturally and JUnit
   */
 trait e5 extends Evolution with HaskellGenerator with HUnitTestGenerator with HaskellBinaryMethod with M0 with M5 {
   self: e0 with e1 with e2 with e3 with e4 =>
@@ -41,16 +39,17 @@ trait e5 extends Evolution with HaskellGenerator with HUnitTestGenerator with Ha
     op match {
       // Simplify only works for solutions that instantiate expression instances
       case AsTree => {
-        val atts = subExpressions(exp)
+        //val atts = subExpressions(exp)
 
         val declType = exp.name
 
         val children = exp match {
           case Lit => Seq(Haskell(s"Leaf $litValue"))
           case _ =>
-            atts.map(att => {
-              contextDispatch(source, deltaChildOp(source, att._1, AsTree))
-            })
+            exp.attributes.map(att => { contextDispatch(source, deltaChildOp(source, att, AsTree))})
+//            atts.map(att => {
+//              contextDispatch(source, deltaChildOp(source, att._1, AsTree))
+//            })
         }
         result(Haskell(s" Node ${declType}Type [ ${children.mkString(",")} ]"))
       }

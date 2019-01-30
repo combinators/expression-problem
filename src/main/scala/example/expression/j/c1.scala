@@ -15,12 +15,10 @@ trait c1 extends Evolution with JavaGenerator with JUnitTestGenerator with M2 wi
   val domain:MathDomain
 
   abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
-    val subs = subExpressions(exp)
-
     op match {
       case PrettyP => exp match {
         case Inv =>
-          val inv = dispatch(subs(domain.base.inner), PrettyP)
+          val inv = dispatch(expression(exp, domain.base.inner), PrettyP)
           Java(s"""return "(1.0/" + $inv + ")";""").statements
         case _ => super.logic(exp, op)
       }

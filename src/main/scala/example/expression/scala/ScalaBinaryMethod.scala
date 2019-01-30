@@ -57,17 +57,14 @@ trait ScalaBinaryMethod {
     * @return                 return new parameter type with op interface used in place of baseTypeRep
     */
   def binaryMethodParameters(op:domain.Operation, typeConverter:(domain.TypeRep) => Type) : String = {
-    op.parameters.map(tuple => {
-      val name: String = tuple._1
-      val tpe: domain.TypeRep = tuple._2
-
+    op.parameters.map(param => {
       // use operation name for binary method
-      val realType = tpe match {
+      val realType = param.tpe match {
         case domain.baseTypeRep => op.name.capitalize
-        case _ => typeConverter(tpe)
+        case _ => typeConverter(param.tpe)
       }
 
-      realType.toString + " " + name
+      realType.toString + " " + param.name
     }).mkString(",")
   }
 

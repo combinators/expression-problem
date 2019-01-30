@@ -15,12 +15,11 @@ trait e1 extends Evolution with ScalaGenerator with TestGenerator with M1 {
   val domain:MathDomain
 
   abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
-    val subs = subExpressions(exp)
     // generate the actual body
     op match {
       case Eval =>
         exp match {
-          case Sub => result(Scala(s"${dispatch(subs(domain.base.left), Eval)} - ${dispatch(subs(domain.base.right), Eval)}").expression)
+          case Sub => result(Scala(s"${dispatch(expression(exp, domain.base.left), Eval)} - ${dispatch(expression(exp, domain.base.right), Eval)}").expression)
           case _ => super.logic(exp, op)
         }
 

@@ -4,8 +4,6 @@ import example.expression.domain._
 
 /**
   * Truly independent of the specific design solution.
-  *
-  * Still Java-based, naturally and JUnit
   */
 trait e6 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0 with M1 with M2 with M3 with M4 with M5 with M6 {
   self:e0 with e1 with e2 with e3 with e4 with e5 =>
@@ -41,24 +39,22 @@ trait e6 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
   }
 
   abstract override def logic(exp:Atomic, op:Operation): Seq[Haskell] = {
-    val atts = subExpressions(exp)
-
     // generate the actual body
     op match {
       case Equals =>
         exp match {
           case Lit  =>
-            val value2 =  Haskell(atts(litValue).getCode + "2")
-            result(Haskell(s" ${atts(litValue)} == $value2 "))
+            val value2 =  Haskell(expression(exp, litValue).getCode + "2")
+            result(Haskell(s" ${expression(exp, litValue)} == $value2 "))
 
           case Neg  =>
-            val inner2 = Haskell(atts(base.inner).getCode + "2")
-            result(Haskell(s" ${dispatch(atts(base.inner), op, inner2)} "))
+            val inner2 = Haskell(expression(exp,base.inner).getCode + "2")
+            result(Haskell(s" ${dispatch(expression(exp,base.inner), op, inner2)} "))
 
           case Add|Sub|Mult|Divd =>
-            val left2 = Haskell(atts(base.left).getCode + "2")
-            val right2 = Haskell(atts(base.right).getCode + "2")
-            result(Haskell(s" ${dispatch(atts(base.left), op, left2)} && ${dispatch(atts(base.right), op, right2)} "))
+            val left2 = Haskell(expression(exp, base.left).getCode + "2")
+            val right2 = Haskell(expression(exp, base.right).getCode + "2")
+            result(Haskell(s" ${dispatch(expression(exp, base.left), op, left2)} && ${dispatch(expression(exp, base.right), op, right2)} "))
 
 
           case _ => super.logic(exp, op)

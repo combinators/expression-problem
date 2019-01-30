@@ -82,9 +82,7 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod {
 
   /** Operations are implemented as methods in the Base and sub-type classes. */
   def methodGenerator(exp:Atomic, op:Operation): Stat = {
-    val params = op.parameters.map(pair => {
-      s"${pair._1} : ${typeConverter(pair._2)}"
-    }).mkString(",")
+    val params = op.parameters.map(param => s"${param.name} : ${typeConverter(param.tpe)}").mkString(",")
     val str:String = s"""|
              |def ${op.name}($params) : ${returnType(op)} = {
                          |  ${logic(exp, op).mkString("\n")}
@@ -116,9 +114,7 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod {
       Seq.empty
     } else {
       val newOps = model.ops.map(op => {
-        val pars = op.parameters.map(pair => {
-          s"${pair._1} : ${typeConverter(pair._2)}"
-        }).mkString(",")
+        val pars = op.parameters.map(param => s"${param.name} : ${typeConverter(param.tpe)}").mkString(",")
         s"def ${op.name}($pars) : ${typeConverter(op.returnType.get)}"
       })
 
@@ -188,7 +184,6 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod {
                           |   ${initialTypes.mkString("\n")}
                           |}""".stripMargin
 
-    println ("check:" + str)
     ScalaMainWithPath(
       Scala(str).source(), Paths.get(s"${baseModel.name.capitalize}.scala"))
   }

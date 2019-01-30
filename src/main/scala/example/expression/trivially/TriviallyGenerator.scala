@@ -181,12 +181,7 @@ trait TriviallyGenerator extends example.expression.oo.OOGenerator {
       case _ => Java("void").tpe
     }
 
-    val params:String = op.parameters.map(tuple => {
-      val name:String = tuple._1
-      val tpe:domain.TypeRep = tuple._2
-
-      typeConverter(tpe).toString + " " + name
-    }).mkString(",")
+    val params:String = op.parameters.map(param => typeConverter(param.tpe).toString + " " + param.name).mkString(",")
 
     val methodSignature: MethodDeclaration =
       Java(s"""public $retType ${op.instance}($params);""").methodDeclarations().head

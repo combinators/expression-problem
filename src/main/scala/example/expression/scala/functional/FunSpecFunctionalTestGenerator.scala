@@ -25,8 +25,8 @@ trait FunSpecFunctionalTestGenerator extends FunSpecTestGenerator {
       if (op.parameters.isEmpty) {
         s"  override def ${op.name.toLowerCase}:visitor with ${op.name.capitalize} = new Visitor with ${op.name.capitalize}"
       } else {
-        val paramsDef = op.parameters.map(pair => s"_${pair._1}: ${typeConverter(pair._2)}").mkString(",")
-        val paramsSet = op.parameters.map(pair => s"val ${pair._1} = _${pair._1}").mkString("\n")
+        val paramsDef = op.parameters.map(param => s"_${param.name}: ${typeConverter(param.tpe)}").mkString(",")
+        val paramsSet = op.parameters.map(param => s"val ${param.name} = _${param.name}").mkString("\n")
         s"  override def ${op.name.toLowerCase}($paramsDef):visitor with ${op.name.capitalize} = new Visitor with ${op.name.capitalize} { $paramsSet }"
       }
     })

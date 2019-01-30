@@ -1,4 +1,4 @@
-package example.expression.algebra /*DI:LD:AD*/
+package example.expression.algebra    /*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
 import example.expression.domain.{BaseDomain, ModelDomain}
@@ -67,11 +67,7 @@ trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with La
       ""
     }
 
-    var num: Int = 0
-    val unitTests: Seq[CompilationUnit] = methods.filter(md => md.getBody.isPresent).map(md => {
-      num = num + 1
-      //Java(s"public void test$num() ${md.getBody.get.toString}").methodDeclarations().head
-
+    val unitTests = methods.filter(md => md.getBody.isPresent).zipWithIndex.map(pair => {
       // must get all operations defined for this model and earlier. For each one, define algebra with
       // current extension
 
@@ -96,11 +92,11 @@ trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with La
       val str:String = s"""|$packageDeclaration
                            |import junit.framework.TestCase;
                            |
-                           |public class TestSuite$num extends TestCase {
+                           |public class TestSuite${pair._2} extends TestCase {
                            |  ${algebraDeclarations.values.mkString("\n")}
                            |  Combined${domain.baseTypeRep.name}Alg algebra = new Combined${domain.baseTypeRep.name}Alg($sortedParams);
                            |
-                           |  $md
+                           |  ${pair._1}
                            |}""".stripMargin
       Java(str).compilationUnit()
     })

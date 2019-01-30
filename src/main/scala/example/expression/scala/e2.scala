@@ -1,6 +1,7 @@
 package example.expression.scala    /*DD:LD:AI*/
 
-import example.expression.domain.{Evolution, M2, MathDomain}
+import example.expression.domain.{Evolution, M0, M2, MathDomain}
+
 import scala.meta._
 
 /**
@@ -8,7 +9,7 @@ import scala.meta._
   *
   * Still Java-based, naturally and JUnit
   */
-trait e2 extends Evolution with ScalaGenerator with TestGenerator with M2 {
+trait e2 extends Evolution with ScalaGenerator with TestGenerator with M0 with M2 {
   self:e0 with e1 =>
   val domain:MathDomain
 
@@ -28,15 +29,13 @@ trait e2 extends Evolution with ScalaGenerator with TestGenerator with M2 {
   }
 
   abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
-    val subs = subExpressions(exp)
-
     // generate the actual body
     op match {
       case PrettyP =>
         exp match {
-          case Lit => result(Scala(s""" "" + ${subs(litValue)} + "" """).expression)
-          case Add => result(Scala(s""" "(" + ${dispatch(subs(domain.base.left), PrettyP)} + "+" + ${dispatch(subs(domain.base.right), PrettyP)}+ ")" """).expression)
-          case Sub => result(Scala(s""" "(" + ${dispatch(subs(domain.base.left), PrettyP)} + "-" + ${dispatch(subs(domain.base.right), PrettyP)} + ")" """).expression)
+          case Lit => result(Scala(s""" "" + ${expression(exp,litValue)} + "" """).expression)
+          case Add => result(Scala(s""" "(" + ${dispatch(expression(exp,domain.base.left), PrettyP)} + "+" + ${dispatch(expression(exp,domain.base.right), PrettyP)}+ ")" """).expression)
+          case Sub => result(Scala(s""" "(" + ${dispatch(expression(exp,domain.base.left), PrettyP)} + "-" + ${dispatch(expression(exp,domain.base.right), PrettyP)} + ")" """).expression)
           case _ => super.logic(exp, op)
         }
 

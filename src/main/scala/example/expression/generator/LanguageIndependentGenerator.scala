@@ -314,25 +314,25 @@ trait LanguageIndependentGenerator {
     * the expression to use within the returned [[Delta]]
     *
     * @param source    Source context
-    * @param attName   child element, identified by attribute name
+    * @param att       child element, identified by actual attribute
     * @param op        operation to perform on the child element
     * @param params    potential parameters for operation.
     * @group deltaHelpers
     */
-  def deltaChildOp(source:Source, attName:String, op:Operation, params:Expression*) : Delta = {
-    deltaExprOp(source, subExpression(source.e, attName), op, params : _ *)
-//    new Delta(Some(subExpression(source.e, attName)), Some(op), params : _*)
+  def deltaChildOp(source:Source, att:Attribute, op:Operation, params:Expression*) : Delta = {
+    deltaExprOp(source, expression(source.e, att), op, params : _ *)
+    //    new Delta(Some(subExpression(source.e, attName)), Some(op), params : _*)
   }
-
-  //  invoke as deltaChildOpAlt(subExpression(source.e, attName), op, params)
-  def deltaChildOpAlt(srcExp:Expression, op:Operation, params:Expression*) : Delta = {
-    deltaExprOp(NoSource(), srcExp, op, params : _ *)
-  }
-
-  //  val deltaLeft = deltaChildOp(exp, base.left, Eval)
-  def deltaChildOpAlt2(exp:Atomic, att:Attribute, op:Operation, params:Expression*) : Delta = {
-    deltaExprOp(NoSource(), subExpression(exp, att.name), op, params : _ *)
-  }
+//
+//  //  invoke as deltaChildOpAlt(subExpression(source.e, attName), op, params)
+//  def deltaChildOpAlt(srcExp:Expression, op:Operation, params:Expression*) : Delta = {
+//    deltaExprOp(NoSource(), srcExp, op, params : _ *)
+//  }
+//
+//  //  val deltaLeft = deltaChildOp(exp, base.left, Eval)
+//  def deltaChildOpAlt2(exp:Atomic, att:Attribute, op:Operation, params:Expression*) : Delta = {
+//    deltaExprOp(NoSource(), subExpression(exp, att.name), op, params : _ *)
+//  }
 
   /**
     * Helper method for creating a [[Delta]] context that represents a new operation (with

@@ -172,9 +172,9 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
     val fullType:Type = Java(modelInterfaceName(model)).tpe()
     val signatures:Seq[String] = model.ops.map(op => {
 
-      val params: Seq[String] = op.parameters.map(tuple => {
-        val name = tuple._1
-        val tpe = tuple._2
+      val params: Seq[String] = op.parameters.map(param => {
+        val name = param.name
+        val tpe = param.tpe
 
         op match {
           case bm:domain.BinaryMethod => if (tpe.equals(domain.baseTypeRep)) {

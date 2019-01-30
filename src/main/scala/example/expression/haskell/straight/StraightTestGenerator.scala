@@ -1,6 +1,4 @@
-package example.expression.haskell.straight
-
-/*DI:LD:AD*/
+package example.expression.haskell.straight   /*DI:LD:AD*/
 
 import java.nio.file.Paths
 
@@ -37,18 +35,28 @@ trait StraightTestGenerator extends HUnitTestGenerator {
   /** Combine all test cases together into a single Haskell file. */
   override def generateSuite(model: Option[Model] = None): Seq[HaskellWithPath] = {
     val opsImports = flat.ops.map(op => s"import ${op.name.capitalize}").mkString("\n")
-    var num: Int = -1
-    val files: Seq[HaskellWithPath] = testGenerator.map(md => {
-      num = num + 1
+
+    testGenerator.zipWithIndex.map{ case (md, num) => {
       HaskellWithPath(Haskell(s"""|module Main where
                                   |import Test.HUnit
                                   |import DataTypes
                                   |
                                   |$opsImports
                                   |$md""".stripMargin), Paths.get(s"Main$num.hs"))
+    }}
 
-    })
-
-    files
+//    var num: Int = -1
+//    val files: Seq[HaskellWithPath] = testGenerator.map(md => {
+//      num = num + 1
+//      HaskellWithPath(Haskell(s"""|module Main where
+//                                  |import Test.HUnit
+//                                  |import DataTypes
+//                                  |
+//                                  |$opsImports
+//                                  |$md""".stripMargin), Paths.get(s"Main$num.hs"))
+//
+//    })
+//
+//    files
   }
 }

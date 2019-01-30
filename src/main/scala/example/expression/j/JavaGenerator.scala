@@ -75,8 +75,8 @@ trait JavaGenerator extends LanguageIndependentGenerator  with Producer {
   def constructorFromOp(op:domain.Operation, suggestedName:Option[String] = None) : ConstructorDeclaration = {
     val name = if (suggestedName.isEmpty) { op.name.capitalize } else { suggestedName.get }
 
-    val params:Seq[String] = op.parameters.map(p => s"${typeConverter(p._2)} ${p._1}")
-    val cons:Seq[Statement] = op.parameters.flatMap(p => Java(s"  this.${p._1} = ${p._1};").statements())
+    val params:Seq[String] = op.parameters.map(param => s"${typeConverter(param.tpe)} ${param.name}")
+    val cons:Seq[Statement] = op.parameters.flatMap(param => Java(s"  this.${param.name} = ${param.name};").statements())
 
     Java(
       s"""|public $name (${params.mkString(",")}) {
@@ -86,21 +86,12 @@ trait JavaGenerator extends LanguageIndependentGenerator  with Producer {
 
   /** Compute parameter "name" comma-separated list from operation. */
   def arguments(op:domain.Operation) : String = {
-    op.parameters.map(tuple => {
-      val name:String = tuple._1
-
-       name
-    }).mkString(",")
+    op.parameters.map(param => param.name).mkString(",")
   }
 
   /** Compute parameter "Type name" comma-separated list from operation. */
   def parameters(op:domain.Operation) : String = {
-    op.parameters.map(tuple => {
-      val name:String = tuple._1
-      val tpe:domain.TypeRep = tuple._2
-
-      typeConverter(tpe).toString + " " + name
-    }).mkString(",")
+    op.parameters.map(param => typeConverter(param.tpe).toString + " " + param.name).mkString(",")
   }
 
   /**

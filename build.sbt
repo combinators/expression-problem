@@ -16,7 +16,7 @@ lazy val commonSettings = Seq(
     "-unchecked",
     "-deprecation",
     "-feature",
-    /** For proper documentation, must include     "-groups",  **/
+    // "-groups",
     "-language:implicitConversions"
   ),
 

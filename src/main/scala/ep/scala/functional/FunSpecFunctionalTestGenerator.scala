@@ -23,15 +23,15 @@ trait FunSpecFunctionalTestGenerator extends FunSpecTestGenerator {
 
     val helpers:Seq[String] = model.get.flatten().ops.map(op => {
       if (op.parameters.isEmpty) {
-        s"  override def ${op.name.toLowerCase}:visitor with ${op.name.capitalize} = new Visitor with ${op.name.capitalize}"
+        s"  override def ${op.instance}:visitor with ${op.concept} = new Visitor with ${op.concept}"
       } else {
         val paramsDef = op.parameters.map(param => s"_${param.name}: ${typeConverter(param.tpe)}").mkString(",")
         val paramsSet = op.parameters.map(param => s"val ${param.name} = _${param.name}").mkString("\n")
-        s"  override def ${op.name.toLowerCase}($paramsDef):visitor with ${op.name.capitalize} = new Visitor with ${op.name.capitalize} { $paramsSet }"
+        s"  override def ${op.instance}($paramsDef):visitor with ${op.concept} = new Visitor with ${op.concept} { $paramsSet }"
       }
     })
 
-    val files:Seq[ScalaWithPath] = allTests.zipWithIndex.map{ case (md, num) =>
+    val files:Seq[ScalaWithPath] = allTests.zipWithIndex.map{ case (t, num) =>
       ScalaTestWithPath(Scala(s"""
            |$packageDeclaration
            |import org.scalatest.FunSpec
@@ -43,10 +43,8 @@ trait FunSpecFunctionalTestGenerator extends FunSpecTestGenerator {
            |
            |  describe("test cases") {
            |    it ("run test") {
-           |      test()
+           |      ${t.mkString("\n")}
            |    }
-           |
-           |    ${md.mkString("\n")}
            |  }
            |}""".stripMargin).source(), Paths.get(s"TestSuite$num.scala"))
     }

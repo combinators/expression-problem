@@ -60,7 +60,7 @@ trait ScalaBinaryMethod {
     op.parameters.map(param => {
       // use operation name for binary method
       val realType = param.tpe match {
-        case domain.baseTypeRep => op.name.capitalize
+        case domain.baseTypeRep => op.concept
         case _ => typeConverter(param.tpe)
       }
 
@@ -69,20 +69,20 @@ trait ScalaBinaryMethod {
   }
 
   def logicAsTree(exp:domain.Atomic) : Seq[Stat] = {
-    val args = exp.attributes.map(att => att.name).mkString(",")
+    val args = exp.attributes.map(att => att.instance).mkString(",")
           Scala(
             s"""
-               |def ${domain.AsTree.name.toLowerCase}() : tree.Tree =  {
-               |  return asTree.${exp.name.toLowerCase}($args).${domain.AsTree.name.toLowerCase}();
+               |def ${domain.AsTree.instance}() : tree.Tree =  {
+               |  return asTree.${exp.instance}($args).${domain.AsTree.instance}();
                |}""".stripMargin).statements
   }
 
   /** Interesting shift needed for visitor. */
   def visitorLogicAsTree(exp:domain.Atomic) : Seq[Stat] = {
-    val atomicArgs = exp.attributes.map(att => att.name).mkString(",")
+    val atomicArgs = exp.attributes.map(att => att.instance).mkString(",")
 
     // changes whether attributes can be access *directly* or whether they are accessed via getXXX*() method.
-    val recursiveArgs = exp.attributes.map(att => att.name + s".${AsTree.name.toLowerCase}()").mkString(",")
+    val recursiveArgs = exp.attributes.map(att => att.instance + s".${AsTree.instance}()").mkString(",")
 
     val body:Seq[Stat] = exp match {
       case b:Binary => {
@@ -98,7 +98,7 @@ trait ScalaBinaryMethod {
 
     Scala(
       s"""
-         |def ${domain.AsTree.name.toLowerCase}() : tree.Tree  = {
+         |def ${domain.AsTree.instance}() : tree.Tree  = {
          |  ${body.mkString("\n")}
          |}""".stripMargin).statements
   }

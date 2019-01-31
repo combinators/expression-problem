@@ -19,7 +19,7 @@ trait TestGenerator {
     */
   def testDispatch(expr:GJ, op:domain.Operation, params:GJ*) : GJ = {
     val args:String = params.mkString(",")
-    GJ(s"""$expr.visit(l.new ${op.name.capitalize}())""")
+    GJ(s"""$expr.visit(l.new ${op.concept}())""")
   }
 
   /** Convert a test instance into a GJ Expression for instantiating that instance. */

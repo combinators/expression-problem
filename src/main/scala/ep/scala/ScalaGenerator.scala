@@ -37,19 +37,19 @@ trait ScalaGenerator extends LanguageIndependentGenerator with Producer {
     * method (with specific parameters) to carry this out.
     */
   def inst(exp:domain.Atomic, params:InstanceExpression*): InstanceExpression = {
-    Scala("new " + exp.name.capitalize + "(" + params.map(expr => expr.toString).mkString(",") + ")").expression
+    Scala("new " + exp.concept + "(" + params.map(expr => expr.toString).mkString(",") + ")").expression
   }
 
   /// Scala support
 
   /** Concatenate attributes by name in order */
   def standardArgs(exp:domain.Atomic) : String = {
-    exp.attributes.map(att => att.name + ":" + typeConverter(att.tpe)).mkString(",")
+    exp.attributes.map(att => att.instance + ":" + typeConverter(att.tpe)).mkString(",")
   }
 
   /** Concatenate attributes by name in order */
   def standardValArgs(exp:domain.Atomic) : String = {
-    exp.attributes.map(att => "val " + att.name + ":" + typeConverter(att.tpe)).mkString(",")
+    exp.attributes.map(att => "val " + att.instance + ":" + typeConverter(att.tpe)).mkString(",")
   }
 
   /**
@@ -57,11 +57,11 @@ trait ScalaGenerator extends LanguageIndependentGenerator with Producer {
     * useful for the parameter to a constructor
     */
   def constructorArgs(exp:domain.Atomic) : String = {
-    exp.attributes.map(att => "val " + att.name + "_ :" + typeConverter(att.tpe)).mkString(",")
+    exp.attributes.map(att => "val " + att.instance + "_ :" + typeConverter(att.tpe)).mkString(",")
   }
 
   /** Concatenate attributes by name in order with comma. */
   def standardParams(exp:domain.Atomic, suffix:String = "") : String = {
-    exp.attributes.map(att => att.name + suffix).mkString(",")
+    exp.attributes.map(att => att.instance + suffix).mkString(",")
   }
 }

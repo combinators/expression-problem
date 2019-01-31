@@ -36,13 +36,14 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
 
   /** For straight design solution, directly access attributes by name. */
   override def expression (exp:Atomic, att:Attribute) : Expression = {
-    new CPPElement(s"${att.name}")
+    new CPPElement(s"${att.instance}")
   }
 
+  // TODO: do something about capitalization
   /** Directly access local method, one per operation, with a parameter representing visitor name. */
   override def dispatch(expr:CPPElement, op:Operation, params:CPPElement*) : CPPElement = {
     val args:String = params.mkString(",")
-    new CPPElement(s"(new ${op.name.capitalize}(e.get${expr.toString.capitalize}($args)))->getValue()")
+    new CPPElement(s"(new ${op.concept}(e.get${expr.toString.capitalize}($args)))->getValue()")
   }
 
   override def contextDispatch(source:Context, delta:Delta) : Expression = {
@@ -54,9 +55,9 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
         ""
       }
 
-      new CPPElement(s"((new ${delta.op.get.name.capitalize}(${delta.expr.get}$opargs))->getValue())")
+      new CPPElement(s"((new ${delta.op.get.concept}(${delta.expr.get}$opargs))->getValue())")
     } else if (delta.expr.isEmpty) {
-      val op = delta.op.get.name.capitalize
+      val op = delta.op.get.concept
       val args = delta.params.mkString (",")
       new CPPElement(s"(new $op(&e))->getValue()")
     } else {
@@ -141,18 +142,18 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
       case _ => tpe.stmt
     }
 
-    val allForwards = getModel.flatten().types.map(exp => s""" #include "${exp.name.capitalize}.h" """)
-    val extras = dependency(op).map(o => s"""#include "${o.name.capitalize}.h" """) ++ allForwards
+    val allForwards = getModel.flatten().types.map(exp => s""" #include "${exp.concept}.h" """)
+    val extras = dependency(op).map(o => s"""#include "${o.concept}.h" """) ++ allForwards
 
     // no-arg constructor
     val constructor:Seq[CPPElement] =
-      Seq(new CPPElement (s"${op.name.capitalize} (Exp *e) { e->Accept(this); }".stripMargin))
+      Seq(new CPPElement (s"${op.concept} (Exp *e) { e->Accept(this); }".stripMargin))
 
     // binary methods?
     val binaryConstructor:Seq[CPPElement] = op match {
       case bm:domain.BinaryMethod =>
         Seq(new CPPElement (s"""
-                               |${op.name.capitalize} (Exp *e, Exp *t) {
+                               |${op.concept} (Exp *e, Exp *t) {
                                |    that = t;
                                |    e->Accept(this);
                                |}""".stripMargin))
@@ -169,7 +170,7 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
       case _ => Seq.empty
     }
 
-    new CPPClass (op.name.capitalize, op.name.capitalize, constructor ++ binaryConstructor ++ signatures ++ accessor,
+    new CPPClass (op.concept, op.concept, constructor ++ binaryConstructor ++ signatures ++ accessor,
       binaryField ++ field)
       .setSuperclass("IVisitor")
       .addHeader(extras)
@@ -188,17 +189,16 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
     var addedMethods:Seq[CPPElement] = Seq.empty
 
     sub.attributes.foreach(att => {
-      val capAtt = att.name.capitalize
       val tpe = typeConverter(att.tpe)
 
-      addedFields = addedFields :+ new CPPElement(s"$tpe ${att.name};")
+      addedFields = addedFields :+ new CPPElement(s"$tpe ${att.instance};")
 
       // prepare for constructor
-      params = params :+ s"$tpe ${att.name}_"
-      cons = cons :+ s"${att.name}(${att.name}_)"
+      params = params :+ s"$tpe ${att.instance}_"
+      cons = cons :+ s"${att.instance}(${att.instance}_)"
 
       // make the set/get methods
-      addedMethods = addedMethods :+ new CPPElement(s"$tpe get$capAtt() const { return ${att.name}; }")
+      addedMethods = addedMethods :+ new CPPElement(s"$tpe get${att.concept}() const { return ${att.instance}; }")
     })
 
     // make constructor
@@ -212,7 +212,7 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
       case bm: domain.BinaryMethodTreeBase => true
       case _ => false
     }) {
-      Seq(new CPPElement (s"""Tree *${domain.AsTree.name.toLowerCase}() const; """))
+      Seq(new CPPElement (s"""Tree *${domain.AsTree.instance}() const; """))
     } else {
       Seq.empty
     }
@@ -236,17 +236,17 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
         case _:Unary | _:Binary =>
           val atts = sub.attributes
             .filter(att => att.tpe == domain.baseTypeRep)
-            .map(att => s"${att.name}->astree()").mkString(",")
+            .map(att => s"${att.instance}->astree()").mkString(",")
 
           s"""
-             |Tree *${sub.name.capitalize}::astree() const {
-             |    std::vector<Tree *> vec_${sub.name} = { $atts };
-             |    return new Node(vec_${sub.name.capitalize}, DefinedSubtypes::${sub.name.capitalize}Subtype);
+             |Tree *${sub.concept}::astree() const {
+             |    std::vector<Tree *> vec_${sub.concept} = { $atts };
+             |    return new Node(vec_${sub.concept}, DefinedSubtypes::${sub.concept}Subtype);
              |}""".stripMargin
 
         case lit:Atomic =>
           s"""
-             |Tree *${sub.name.capitalize}::astree() const {
+             |Tree *${sub.concept}::astree() const {
              |    return new Leaf(getValue());    // hard-coded and could be replaced.
              |}""".stripMargin
 
@@ -262,12 +262,12 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
          |#include "visitor.h"
           |#include "Exp.h"
           |#include "IVisitor.h"
-          |#include "${sub.name.capitalize}.h"
+          |#include "${sub.concept}.h"
           |
           |${binaryMethods.mkString("\n")}
        """.stripMargin.split("\n")
 
-    new StandAlone(sub.name.capitalize, contents)
+    new StandAlone(sub.concept, contents)
   }
 
   /** Generate the base class, with all operations from flattened history. */
@@ -305,7 +305,7 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
         new CPPElement(s"virtual void Visit($exp& e) = 0;"))
 
     // forward refers
-    val allForwards = getModel.flatten().types.map(exp => s"class ${exp.name.capitalize};")
+    val allForwards = getModel.flatten().types.map(exp => s"class ${exp.concept};")
 
     val moreImports = if (getModel.flatten().ops.exists {
       case bm: domain.BinaryMethodTreeBase => true

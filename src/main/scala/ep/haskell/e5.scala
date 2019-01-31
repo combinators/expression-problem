@@ -28,7 +28,7 @@ trait e5 extends Evolution with HaskellGenerator with HUnitTestGenerator with Ha
   /** Provide reasonable default values for newly defined types. */
   abstract override def standardDefault(tpe:TypeRep) : Haskell = {
     tpe match {
-      case Tree => new Haskell("Leaf 0")    // TODO: might not correct
+      case Tree => new Haskell("Leaf 0")    // TODO: might not be correct
       case _ => super.standardDefault(tpe)
     }
   }

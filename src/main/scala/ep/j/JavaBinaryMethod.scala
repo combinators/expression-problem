@@ -35,7 +35,7 @@ trait JavaBinaryMethod {
     op.parameters.map(param => {
       // use operation name for binary method
       val realType = param.tpe match {
-        case domain.baseTypeRep => op.name.capitalize
+        case domain.baseTypeRep => op.concept
         case _ => typeConverter(param.tpe)
       }
 
@@ -50,11 +50,11 @@ trait JavaBinaryMethod {
     * @return
     */
   def logicAsTree(exp:domain.Atomic) : Seq[MethodDeclaration] = {
-    val args = exp.attributes.map(att => att.name).mkString(",")
+    val args = exp.attributes.map(att => att.instance).mkString(",")
           Java(
             s"""
-               |public tree.Tree ${domain.AsTree.name.toLowerCase}() {
-               |  return asTree.${exp.name.toLowerCase}($args).${domain.AsTree.name.toLowerCase}();
+               |public tree.Tree ${domain.AsTree.instance}() {
+               |  return asTree.${exp.instance}($args).${domain.AsTree.instance}();
                |}""".stripMargin).methodDeclarations()
   }
 }

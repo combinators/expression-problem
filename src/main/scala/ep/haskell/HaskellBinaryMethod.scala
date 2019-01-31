@@ -25,7 +25,7 @@ trait HaskellBinaryMethod {
     * @param exps
     */
   def definedDataSubTypes(context:String, exps:Seq[domain.Atomic]) :Seq[Declaration] = {
-    val types = exps.map(exp => exp.name.capitalize + "Type").mkString("|")
+    val types = exps.map(exp => exp.concept + "Type").mkString("|")
     Seq(Haskell(s"data DeclaredTypes = $types deriving (Eq, Show)"))
   }
 

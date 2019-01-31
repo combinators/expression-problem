@@ -28,13 +28,13 @@ trait GrowTestGenerator extends HUnitTestGenerator with GrowGenerator {
 
     inst match {
       case ui: UnaryInst =>
-        Haskell(wrap(s"${ui.e.name.capitalize} (${convert(ui.inner)}) "))
+        Haskell(wrap(s"${ui.e.concept} (${convert(ui.inner)}) "))
 
       case bi: BinaryInst =>
-        Haskell(wrap(s"${bi.e.name.capitalize} (${convert(bi.left)}) (${convert(bi.right)}) "))
+        Haskell(wrap(s"${bi.e.concept} (${convert(bi.left)}) (${convert(bi.right)}) "))
 
       case exp: AtomicInst =>
-        Haskell(wrap(s"${exp.e.name.capitalize} ${exp.i.get}"))
+        Haskell(wrap(s"${exp.e.concept} ${exp.i.get}"))
 
       case _ => Haskell(s""" -- unknown $name" """)
     }

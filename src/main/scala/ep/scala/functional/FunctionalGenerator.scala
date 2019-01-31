@@ -41,7 +41,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod {
 
   /** Access attribute via exp object. */
   override def expression (exp:Atomic, att:Attribute) : Expression = {
-    Scala(s"${exp.name.toLowerCase}.${att.name}").expression
+    Scala(s"${exp.instance}.${att.instance}").expression
   }
 
   /** Directly access local method, one per operation, with a parameter. */
@@ -55,7 +55,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod {
           ""
         }
 
-        Scala(s"${op.name.toLowerCase()}($expr)$opargs").term
+        Scala(s"${op.instance}($expr)$opargs").term
       case _ =>
 
         var opParams = ""
@@ -75,7 +75,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod {
           } else {
             "(" + params.mkString(",") + ")"
           }
-        } // new ${op.name.capitalize}($opParams).
+        }
         Scala(s"apply($expr)$args").expression
     }
   }
@@ -84,12 +84,10 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod {
   override def contextDispatch(source:Context, delta:Delta) : Expression = {
 
     if (delta.expr.isEmpty) {
-      //val op = delta.op.get.name.capitalize
-      val op = delta.op.get.name.toLowerCase
+      val op = delta.op.get.instance
       val exp = source.exp.get
-      val opargs:String = exp.attributes.map(att => att.name).mkString(",")
-      //Scala(s"new $op().apply(new ${exp.name.capitalize}($opargs))").expression
-      Scala(s"$op(${exp.name.toLowerCase})").expression
+      val opargs:String = exp.attributes.map(att => att.instance).mkString(",")
+      Scala(s"$op(${exp.instance})").expression
     } else {
       if (delta.op.isDefined) {
         val opParams = if (delta.params.nonEmpty) {
@@ -98,7 +96,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod {
           ""
         }
         // $opParams what to do?
-        Scala(s"${delta.op.get.name.toLowerCase}(${delta.expr.get})").expression
+        Scala(s"${delta.op.get.instance}(${delta.expr.get})").expression
       } else {
         super.contextDispatch(source, delta)
       }
@@ -119,7 +117,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod {
     */
   def methodGenerator(exp:Atomic, op:Operation): Stat = {
     Scala(s"""
-           |def visit(${exp.name.toLowerCase}:${exp.name.capitalize}) : Unit = {
+           |def visit(${exp.instance}:${exp.concept}) : Unit = {
            |  result = {
            |    ${logic(exp, op).mkString("\n")}
            |  }
@@ -142,13 +140,13 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod {
 
     // visitor for each extension must extend prior one
     val visitors = m.types.map(exp => {
-      Scala(s"def visit(${exp.name.toLowerCase}:${exp.name.capitalize}) : Unit").statement
+      Scala(s"def visit(${exp.instance}:${exp.concept}) : Unit").statement
     })
 
     // All newly defined types get their own class with visit method
     val classes = m.types.map(exp => {
       Scala(s"""
-               |class ${exp.name.capitalize}(${standardValArgs(exp)}) extends ${domain.baseTypeRep.name} {
+               |class ${exp.concept}(${standardValArgs(exp)}) extends ${domain.baseTypeRep.name} {
                |  def accept(v: visitor): Unit = v.visit(this)
                |}""".stripMargin).declaration()
     })
@@ -185,7 +183,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod {
         typesToGenerate = m.pastDataTypes()
       } else {
         // refining earlier operation. Only need to add new types
-        extendsClause = s"super.${op.name.capitalize} with"
+        extendsClause = s"super.${op.concept} with"
         typesToGenerate = m.types
       }
 
@@ -200,7 +198,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod {
       // Data types that had existed earlier
       val baseMembers = typesToGenerate.map(exp => methodGenerator(exp, op))
       Scala(s"""
-               |trait ${op.name.capitalize} extends $extendsClause Visitor { self: visitor =>
+               |trait ${op.concept} extends $extendsClause Visitor { self: visitor =>
                |  $binary
                |  $result
                |  ${baseMembers.mkString("\n")}
@@ -213,7 +211,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod {
       } else {
         ""
       }
-      Scala(s"def ${op.name.toLowerCase}$params : visitor with ${op.name.capitalize}")
+      Scala(s"def ${op.instance}$params : visitor with ${op.concept}")
     })
 
     val str =
@@ -243,7 +241,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod {
     val ops = m.ops.map(op => {
       val baseMembers = m.types.map(exp => methodGenerator(exp, op))
       Scala(s"""
-           |trait ${op.name.capitalize} extends Visitor { self: visitor =>
+           |trait ${op.concept} extends Visitor { self: visitor =>
            |  var result: ${typeConverter(op.returnType.get)} = _
            |  def apply(t: ${domain.baseTypeRep.name}): ${typeConverter(op.returnType.get)} = {
            |    t.accept(this)
@@ -255,17 +253,17 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod {
 
     val classes = m.types.map(exp => {
       Scala(s"""
-         |class ${exp.name.capitalize}(${standardValArgs(exp)}) extends ${domain.baseTypeRep.name} {
+         |class ${exp.concept}(${standardValArgs(exp)}) extends ${domain.baseTypeRep.name} {
          |  def accept(v: visitor): Unit = v.visit(this)
          |}""".stripMargin).declaration()
     })
 
     val visitors = m.types.map(exp => {
-      Scala(s"def visit(${exp.name.toLowerCase}:${exp.name.capitalize}) : Unit").statement
+      Scala(s"def visit(${exp.instance}:${exp.concept}) : Unit").statement
     })
 
     val factories = m.ops.map(op =>
-      Scala(s"def ${op.name.toLowerCase} : visitor with ${op.name.capitalize}")
+      Scala(s"def ${op.instance} : visitor with ${op.concept}")
     )
 
     val mcaps = m.name.capitalize

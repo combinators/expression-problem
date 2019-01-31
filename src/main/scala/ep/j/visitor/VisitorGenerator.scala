@@ -132,10 +132,10 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
   }
 
   override def logicAsTree(exp:domain.Atomic) : Seq[MethodDeclaration] = {
-    val atomicArgs = exp.attributes.map(att => att.name).mkString(",")
+    val atomicArgs = exp.attributes.map(att => att.instance).mkString(",")
 
     // changes whether attributes can be access *directly* or whether they are accessed via getXXX*() method.
-    val recursiveArgs = exp.attributes.map(att => att.name + s".${domain.AsTree.instance}()").mkString(",")
+    val recursiveArgs = exp.attributes.map(att => att.instance + s".${domain.AsTree.instance}()").mkString(",")
 
     val body:Seq[Statement] = exp match {
       case b:domain.Binary => {

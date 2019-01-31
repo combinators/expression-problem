@@ -19,7 +19,7 @@ trait CPPTableTestGenerator extends CPPGenerator with TestGenerator {
     * Not sure, yet, how to properly pass in variable parameters.
     */
   def actual(op:Operation, inst:AtomicInst, params:CPPElement*):CPPElement = {
-    new CPPElement(s"(new ${op.name.capitalize}(${rec_convert(inst)}))->getValue()")
+    new CPPElement(s"(new ${op.concept}(${rec_convert(inst)}))->getValue()")
   }
 
   /** Convert a test instance into a C++ Expression for instantiating that instance. */
@@ -30,16 +30,16 @@ trait CPPTableTestGenerator extends CPPGenerator with TestGenerator {
     inst match {
       case ui: UnaryInst =>
         val inner = rec_convert(ui.inner).toString
-        new CPPElement(s"new ${ui.e.name.capitalize}($inner)")
+        new CPPElement(s"new ${ui.e.concept}($inner)")
 
       case bi: BinaryInst =>
         val left = rec_convert(bi.left).toString
         val right = rec_convert(bi.right).toString
-        new CPPElement(s"new ${bi.e.name.capitalize}($left, $right)")
+        new CPPElement(s"new ${bi.e.concept}($left, $right)")
 
       //  double val1 = 1.0;
       //  Lit  lit1 = Lit(&val1);
-      case exp: AtomicInst => new CPPElement(s"new ${exp.e.name.capitalize}(${exp.i.get})")
+      case exp: AtomicInst => new CPPElement(s"new ${exp.e.concept}(${exp.i.get})")
       case _ => new CPPElement(s""" "unknown $name" """)
     }
   }
@@ -75,7 +75,7 @@ trait CPPTableTestGenerator extends CPPGenerator with TestGenerator {
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
   override def generateSuite(pkg: Option[String], model: Option[Model] = None): Seq[CPPFile] = {
 
-    val allOps = getModel.flatten().ops.map(op => s"""#include "${op.name.capitalize}.h" """)
+    val allOps = getModel.flatten().ops.map(op => s"""#include "${op.concept}.h" """)
 
     // add header files
     super.generateSuite(pkg, model).map(file =>

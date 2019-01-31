@@ -20,13 +20,13 @@ trait StraightTestGenerator extends HUnitTestGenerator {
     val name = inst.e.name
     inst match {
       case ui: UnaryInst =>
-        Haskell(s"${ui.e.name.capitalize} (${convert(ui.inner)}) ")
+        Haskell(s"${ui.e.concept} (${convert(ui.inner)}) ")
 
       case bi: BinaryInst =>
-        Haskell(s"${bi.e.name.capitalize} (${convert(bi.left)}) (${convert(bi.right)}) ")
+        Haskell(s"${bi.e.concept} (${convert(bi.left)}) (${convert(bi.right)}) ")
 
       case exp: AtomicInst =>
-        Haskell(s"${exp.e.name.capitalize} ${exp.i.get}")
+        Haskell(s"${exp.e.concept} ${exp.i.get}")
 
       case _ => Haskell(s""" -- unknown $name" """)
     }
@@ -34,7 +34,7 @@ trait StraightTestGenerator extends HUnitTestGenerator {
 
   /** Combine all test cases together into a single Haskell file. */
   override def generateSuite(model: Option[Model] = None): Seq[HaskellWithPath] = {
-    val opsImports = flat.ops.map(op => s"import ${op.name.capitalize}").mkString("\n")
+    val opsImports = flat.ops.map(op => s"import ${op.concept}").mkString("\n")
 
     testGenerator.zipWithIndex.map{ case (md, num) => {
       HaskellWithPath(Haskell(s"""|module Main where

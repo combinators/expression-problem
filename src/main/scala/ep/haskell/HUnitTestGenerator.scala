@@ -22,7 +22,6 @@ trait HUnitTestGenerator extends HaskellGenerator {
 
   /**
     * Return properly formatted expected value as a string.
-    * TODO: Future plan to return a proper class which can be refined with strategy rather than pure continuation
     */
   def expected(test:TestCaseExpectedValue, id:Int) : (Haskell => Seq[Haskell]) => Seq[Haskell] = continue => {
     continue(new Haskell(test.expect._2.toString))

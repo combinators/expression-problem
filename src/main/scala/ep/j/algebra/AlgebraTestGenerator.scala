@@ -15,8 +15,7 @@ trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with La
 
   /** Convert a test instance into a Java Expression for instantiating that instance. */
   override def convert(inst: AtomicInst): Expression = {
-    val name = inst.e.name
-    val opname = name.toLowerCase()
+    val opname = inst.e.instance
     inst match {
       //case lit: domain.LitInst => Java(s"algebra.lit(${lit.i.get.toString})").expression()
       case ui: UnaryInst =>
@@ -25,7 +24,7 @@ trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with La
         Java(s"algebra.$opname(${convert(bi.left)}, ${convert(bi.right)})").expression()
       case exp:AtomicInst => Java(s"algebra.lit(${exp.i.get.toString})").expression()
 
-      case _ => Java(s""" "unknown $name" """).expression()
+      case _ => Java(s""" "unknown ${inst.e.concept}" """).expression()
     }
   }
 
@@ -36,7 +35,7 @@ trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with La
 
   /** Used when one already has code fragments bound to variables, which are to be used for left and right. */
   override def convertRecursive(inst: Binary, left:String, right:String): Expression = {
-    Java(s"algebra.${inst.name.toLowerCase} ($left, $right)").expression()
+    Java(s"algebra.${inst.instance} ($left, $right)").expression()
   }
 
   /**
@@ -53,7 +52,7 @@ trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with La
       return classify(m.last)
     }
 
-    m.types.sortWith(_.name < _.name).map(op => op.name.capitalize).mkString("")
+    m.types.sortWith(_.name < _.name).map(op => op.concept).mkString("")
   }
 
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
@@ -81,9 +80,9 @@ trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with La
             .sortWith(_.name < _.name).foreach(op => {
         val finalAlgebra:String = classify(model) + s"${domain.baseTypeRep.name}Alg"
 
-        val str = s"""${op.name.capitalize}$finalAlgebra algebra${op.name.capitalize} = new ${op.name.capitalize}$finalAlgebra();"""
+        val str = s"""${op.concept}$finalAlgebra algebra${op.concept} = new ${op.concept}$finalAlgebra();"""
         algebraDeclarations = algebraDeclarations updated(op, Java(str).fieldDeclarations().head)
-        algParams = algParams updated(op, s"algebra${op.name.capitalize}")
+        algParams = algParams updated(op, s"algebra${op.concept}")
       })
 
       // sort by class name
@@ -110,11 +109,11 @@ trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with La
     var args:Seq[String] = Seq.empty
 
     tpe.attributes.foreach(att => {
-      args = args :+ att.name
+      args = args :+ att.instance
       if (att.tpe == domain.baseTypeRep) {
-        params = params :+ s"Combined ${att.name}" }
+        params = params :+ s"Combined ${att.instance}" }
       else {
-        params = params :+ typeConverter(att.tpe) + s" ${att.name}"
+        params = params :+ typeConverter(att.tpe) + s" ${att.instance}"
       }
     })
 
@@ -135,7 +134,7 @@ trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with La
         case _ => typeConverter(op.returnType.get)
       }
       Java(
-        s"public $returnType ${op.name}($op_params) { return algebra${op.name.capitalize}.${tpe.name.toLowerCase}(${args.mkString(",")}).${op.name}($op_args); } ").methodDeclarations()
+        s"public $returnType ${op.instance}($op_params) { return algebra${op.concept}.${tpe.instance}(${args.mkString(",")}).${op.instance}($op_args); } ").methodDeclarations()
     })
 
     val producer = if (operations.exists {
@@ -145,14 +144,14 @@ trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with La
       // only call convert on recursive structures
       val args = tpe.attributes.map(att => {
         att.tpe match {
-          case domain.baseTypeRep => s"${att.name.toLowerCase}.convert()"
-          case _ => s"${att.name.toLowerCase}"
+          case domain.baseTypeRep => s"${att.instance}.convert()"
+          case _ => s"${att.instance}"
         }
       }).mkString(",")
 
       s"""
          |public algebra.oo.Exp convert() {
-         |  return new algebra.oo.${tpe.name.capitalize}($args);
+         |  return new algebra.oo.${tpe.concept}($args);
          |}
        """.stripMargin
     } else {
@@ -160,7 +159,7 @@ trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with La
     }
 
     val str = s"""
-                 |public Combined ${tpe.name.toLowerCase()}(${params.mkString(",")}) {
+                 |public Combined ${tpe.instance}(${params.mkString(",")}) {
                  |		return new Combined() {
                  |      $producer
                  |			${opsname.mkString("\n")}
@@ -188,7 +187,7 @@ trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with La
     operations
         .foreach(op => {
       if (m.types.nonEmpty) {
-        val combined = m.types.sortWith(_.name < _.name).map(op => op.name.capitalize).mkString("")
+        val combined = m.types.sortWith(_.name < _.name).map(op => op.concept).mkString("")
           .concat(s"${domain.baseTypeRep.name}Alg")
         finalAlgebra = combined
       }
@@ -197,14 +196,14 @@ trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with La
 
       op match {
         case p:ProducerOperation => {
-          algebraProducerDeclarations = algebraProducerDeclarations updated (op, Java(s"""${op.name.capitalize}$finalAlgebra algebra${op.name.capitalize};""").fieldDeclarations.head)
-          paramProducerDeclarations = paramProducerDeclarations updated (op, Java(s"this.algebra${op.name.capitalize} = new ${op.name.capitalize}$finalAlgebra(this);").statement)
-          argProducerDeclarations = argProducerDeclarations updated (op, s"${op.name.capitalize}$finalAlgebra algebra${op.name.capitalize}")
+          algebraProducerDeclarations = algebraProducerDeclarations updated (op, Java(s"""${op.concept}$finalAlgebra algebra${op.concept};""").fieldDeclarations.head)
+          paramProducerDeclarations = paramProducerDeclarations updated (op, Java(s"this.algebra${op.concept} = new ${op.concept}$finalAlgebra(this);").statement)
+          argProducerDeclarations = argProducerDeclarations updated (op, s"${op.concept}$finalAlgebra algebra${op.concept}")
         }
         case _ => {
-          algebraNormalDeclarations = algebraNormalDeclarations updated (op, Java(s"""${op.name.capitalize}$finalAlgebra algebra${op.name.capitalize};""").fieldDeclarations.head)
-          paramNormalDeclarations = paramNormalDeclarations updated (op, Java(s"this.algebra${op.name.capitalize} = algebra${op.name.capitalize};").statement)
-          argNormalDeclarations = argNormalDeclarations updated (op, s"${op.name.capitalize}$finalAlgebra algebra${op.name.capitalize}")
+          algebraNormalDeclarations = algebraNormalDeclarations updated (op, Java(s"""${op.concept}$finalAlgebra algebra${op.concept};""").fieldDeclarations.head)
+          paramNormalDeclarations = paramNormalDeclarations updated (op, Java(s"this.algebra${op.concept} = algebra${op.concept};").statement)
+          argNormalDeclarations = argNormalDeclarations updated (op, s"${op.concept}$finalAlgebra algebra${op.concept}")
         }
       }
     })
@@ -231,7 +230,7 @@ trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with La
          |public class Combined${domain.baseTypeRep.name}Alg implements $finalAlgebra<Combined${domain.baseTypeRep.name}Alg.Combined> {
          |
          |	// combine together
-         |	public interface Combined extends ${operations.map(op => op.name.capitalize).mkString(",")} {
+         |	public interface Combined extends ${operations.map(op => op.concept).mkString(",")} {
          |    $producerOps
          |  }
          |

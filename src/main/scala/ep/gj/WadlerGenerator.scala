@@ -32,7 +32,7 @@ trait WadlerGenerator extends GJGenerator  {
   /** Directly access local method, one per operation, with a parameter. */
   override def dispatch(expr:Expression, op:Operation, params:Expression*) : Expression = {
     val args:String = params.mkString(",")
-    GJ(s"""$expr.visit(new ${op.name.capitalize}())""")
+    GJ(s"$expr.visit(new ${op.concept}())")
   }
 
   /** Return designated GJ type associated with type, or void if all else fails. */
@@ -54,19 +54,19 @@ trait WadlerGenerator extends GJGenerator  {
   /** Operations are implemented as methods in the Base and sub-type classes. */
   def methodGenerator(exp:Atomic, op:Operation): GJ = {
     val params = parametersExp(exp)
-    GJ(s"""|public ${returnType(op)} for${exp.name.capitalize}($params) {
+    GJ(s"""|public ${returnType(op)} for${exp.concept}($params) {
            |  ${logic(exp, op).mkString("\n")}
            |}""".stripMargin)
   }
 
   /** Generate the full class for the given expression sub-type. */
   def generateExp(model:Model, exp:Atomic) : GJ = {
-    val args = exp.attributes.map(att => att.name).mkString(",")
+    val args = exp.attributes.map(att => att.instance).mkString(",")
     val visitMethod = GJ(s"""|public <R> R visit(This.Visitor<R> v) {
-                             |      return v.for${exp.name.capitalize}($args);
+                             |      return v.for${exp.concept}($args);
                              |}""".stripMargin)
 
-    GJ(s"""|class ${exp.name.capitalize} implements ${domain.baseTypeRep.name} {
+    GJ(s"""|class ${exp.concept} implements ${domain.baseTypeRep.name} {
            |  ${fields(exp).mkString("\n")}
            |  $visitMethod
            |  ${constructor(exp)}
@@ -77,7 +77,7 @@ trait WadlerGenerator extends GJGenerator  {
   def generateOp(model:Model, op:Operation) : GJ = {
     val methods = model.types.map(exp => methodGenerator(exp, op))
 
-    GJ(s"""|class ${op.name.capitalize} implements Visitor<${returnType(op)}> {
+    GJ(s"""|class ${op.concept} implements Visitor<${returnType(op)}> {
            |  ${methods.mkString("\n")}
            |}""".stripMargin)
   }
@@ -87,8 +87,8 @@ trait WadlerGenerator extends GJGenerator  {
 
     // base will be assumed to have at least one datatype exp and one e
     val baseMethods = model.types.map(exp => {
-      val params:String =  exp.attributes.map(att => GJ(s"${typeConverter(att.tpe)} ${att.name}")).mkString(",")
-      GJ(s"public R for${exp.name.capitalize}($params);")
+      val params:String =  exp.attributes.map(att => GJ(s"${typeConverter(att.tpe)} ${att.instance}")).mkString(",")
+      GJ(s"public R for${exp.concept}($params);")
     })
 
     val typeClasses = model.types.map(exp => generateExp(model, exp))
@@ -118,8 +118,8 @@ trait WadlerGenerator extends GJGenerator  {
   def generateBase(base:Model): Seq[GJWithPath] = {
     // base will be assumed to have at least one datatype exp and one e
     val baseMethods = base.types.map(exp => {
-      val params:String =  exp.attributes.map(att => GJ(s"${typeConverter(att.tpe)} ${att.name}")).mkString(",")
-      GJ(s"public R for${exp.name.capitalize}($params);")
+      val params:String =  exp.attributes.map(att => GJ(s"${typeConverter(att.tpe)} ${att.instance}")).mkString(",")
+      GJ(s"public R for${exp.concept}($params);")
     })
 
     val typeClasses = base.types.map(exp => generateExp(base, exp))

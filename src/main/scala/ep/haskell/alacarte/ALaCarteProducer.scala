@@ -24,9 +24,9 @@ trait ALaCarteProducer extends HaskellGenerator {
     */
   def treeRoute(a:domain.Atomic, flattened:Seq[domain.Atomic]) : String = {
     if (flattened.size == 1) {
-      s"${a.name.capitalize}"
+      s"${a.concept}"
     } else if (a == flattened.head) {
-      s"El(${a.name.capitalize} "
+      s"El(${a.concept} "
     } else {
       "Er(" + treeRoute(a, flattened.tail) + " "
     }

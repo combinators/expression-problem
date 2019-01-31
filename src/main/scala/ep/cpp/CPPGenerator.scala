@@ -29,7 +29,6 @@ trait CPPGenerator extends LanguageIndependentGenerator {
     */
   def valueOf(expr:Expression, params:CPPElement*): CPPElement = {
     expr
-    //new CPPElement(s"$expr")
   }
 
   /**

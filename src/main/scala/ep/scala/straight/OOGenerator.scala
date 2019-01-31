@@ -41,13 +41,13 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod {
 
   /** For straight design solution, directly access attributes by name. */
   override def expression (exp:Atomic, att:Attribute) : Expression = {
-    Scala(s"${att.name}").expression
+    Scala(s"${att.instance}").expression
   }
 
   /** Handle self-case here. */
   override def contextDispatch(source:Context, delta:Delta) : Expression = {
     if (delta.expr.isEmpty) {
-      val op = delta.op.get.name.toLowerCase
+      val op = delta.op.get.instance
       val args:String = delta.params.mkString(",")
       Scala(s"this.$op($args)").expression
     } else {
@@ -84,8 +84,8 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod {
   def generateExp(exp:Atomic, ops:Seq[Operation]) : ScalaWithPath = {
 
       val methods = ops.map(op => methodGenerator(exp, op))
-      val params = exp.attributes.map(att => s"${att.name}_ : ${typeConverter(att.tpe)}").mkString(",")
-      val locals = exp.attributes.map(att => s"val ${att.name} = ${att.name}_")
+      val params = exp.attributes.map(att => s"${att.instance}_ : ${typeConverter(att.tpe)}").mkString(",")
+      val locals = exp.attributes.map(att => s"val ${att.instance} = ${att.instance}_")
 
       val str =
         s"""
@@ -110,11 +110,11 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod {
 
     val str:String = s"""
                   |package scala_oo
-                  |trait ${domain.baseTypeRep.name.capitalize} {
+                  |trait ${domain.baseTypeRep.concept} {
                   |   ${ops.mkString("\n")}
                   |}""".stripMargin
 
     ScalaMainWithPath(
-      Scala(str).source(), Paths.get(s"${domain.baseTypeRep.name.capitalize}.scala"))
+      Scala(str).source(), Paths.get(s"${domain.baseTypeRep.concept}.scala"))
   }
 }

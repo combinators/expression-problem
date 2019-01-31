@@ -123,28 +123,6 @@ trait CPPBinaryMethod {
   }
 
   /**
-    * Compute parameter "Type name" comma-separated list from operation. Be sure to convert BaseType into op.name!
-    *
-    * @param op               operation under consideration
-    * @param typeConverter    existing typeconverter which we need for other types besides baseTypeRep
-    * @return                 return new parameter type with op interface used in place of baseTypeRep
-    */
-//  def binaryMethodParameters(op:domain.Operation, typeConverter:(domain.TypeRep,Option[CPPType]) => CPPType) : String = {
-//    op.parameters.map(tuple => {
-//      val name:String = tuple._1
-//      val tpe:domain.TypeRep = tuple._2
-//
-//      // use operation name for binary method
-//      val realType = tpe match {
-//        case domain.baseTypeRep => op.name.capitalize
-//        case _ => typeConverter(tpe, Option.empty)
-//      }
-//
-//      realType.toString + " " + name
-//    }).mkString(",")
-//  }
-
-  /**
     * Add defined data types for given exp subtype
     * @param context
     * @param exps
@@ -170,11 +148,11 @@ trait CPPBinaryMethod {
   }
 
   def logicAsTree(exp:domain.Atomic) : Seq[CPPElement] = {
-    val args = exp.attributes.map(att => att.name).mkString(",")
+    val args = exp.attributes.map(att => att.instance).mkString(",")
           Seq(new CPPElement(
             s"""
-               |Tree *${domain.AsTree.name.toLowerCase}() {
-               |  return asTree.${exp.name.toLowerCase}($args).${domain.AsTree.name.toLowerCase}();
+               |Tree *${domain.AsTree.instance}() {
+               |  return asTree.${exp.instance}($args).${domain.AsTree.instance}();
                |}""".stripMargin))
   }
 

@@ -18,9 +18,9 @@ trait ALaCarteTestGenerator extends HUnitTestGenerator {
   /** normalize the atomic Instance by its position within flattened data types. */
   def treeRoute(a:AtomicInst, flattened:Seq[Atomic]) : String = {
     if (flattened.size == 1) {
-      s"${a.e.name.capitalize}"
+      s"${a.e.concept}"
     } else if (a.e == flattened.head) {
-      s"El(${a.e.name.capitalize} "
+      s"El(${a.e.concept} "
     } else {
       "Er(" + treeRoute(a, flattened.tail) + " "
     }
@@ -97,8 +97,8 @@ trait ALaCarteTestGenerator extends HUnitTestGenerator {
 
   /** Create multiple Haskell files for test cases. */
   override def generateSuite(model: Option[Model] = None): Seq[HaskellWithPath] = {
-    val opsImports = flat.ops.map(op => s"import ${op.name.capitalize}").mkString("\n")
-    val typesImports = flat.types.map(exp => s"import ${exp.name.capitalize}").mkString("\n")
+    val opsImports = flat.ops.map(op => s"import ${op.concept}").mkString("\n")
+    val typesImports = flat.types.map(exp => s"import ${exp.concept}").mkString("\n")
     var num: Int = -1
 
     testGenerator.map(md => {

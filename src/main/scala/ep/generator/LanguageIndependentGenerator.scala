@@ -177,7 +177,7 @@ trait LanguageIndependentGenerator {
     */
   @throws[scala.NotImplementedError]("If given attribute doesn't exist in data-type.")
   def expression (exp:Atomic, att:Attribute) : Expression = {
-    throw new scala.NotImplementedError(s"""Unknown Attribute "${att.name}" for "${exp.name}. """)
+    throw new scala.NotImplementedError(s"""Unknown Attribute "${att.instance}" for "${exp.concept}. """)
   }
 
   /**
@@ -195,7 +195,7 @@ trait LanguageIndependentGenerator {
     * @group api
     */
   def subExpressions(exp:Atomic) : Map[String, Expression] = {
-    exp.attributes.map(att => att.name -> expression(exp, att)).toMap
+    exp.attributes.map(att => att.instance -> expression(exp, att)).toMap
   }
 
   /**

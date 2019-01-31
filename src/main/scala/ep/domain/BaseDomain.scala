@@ -75,7 +75,6 @@ trait BaseDomain {
     val name: String = sanitize(n)
   }
 
-  // TODO: change parameters to be Seq(Attribute) for easier coding
   /** Each operation is named and has parameters and an optional return type. */
   abstract class Operation(n1:String, val returnType:Option[TypeRep], val parameters:Seq[Parameter] = Seq.empty) extends Element {
     val name:String = sanitize(n1)

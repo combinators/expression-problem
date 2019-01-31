@@ -224,12 +224,12 @@ public class TestSynthesis {
         while (sc.hasNextLine()) {
             String s = sc.nextLine();
 
-            Pattern regex = Pattern.compile("->\\s+/\\s+example\\.expression\\.(\\w+)\\.(\\w+)");
+            Pattern regex = Pattern.compile("->\\s+/\\s+ep\\.(\\w+)\\.(\\w+)\\.(\\w+)");
             Matcher match = regex.matcher(s);
 
             if (match.find()) {
-                String family = match.group(1);
-                String evolutionID = match.group(2);
+                String family = match.group(2);
+                String evolutionID = match.group(3);
                 variations.add(family + "/" + evolutionID);
             }
         }

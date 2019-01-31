@@ -40,7 +40,7 @@ trait OOGenerator extends JavaGenerator with DataTypeSubclassGenerator with Oper
 
   /** For straight design solution, directly access attributes by name. */
   override def expression (exp:Atomic, att:Attribute) : Expression = {
-    Java(s"${att.name}").expression[Expression]
+    Java(s"${att.instance}").expression[Expression]
   }
 
   /** Handle self-case here. */

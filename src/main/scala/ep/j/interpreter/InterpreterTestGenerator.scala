@@ -20,7 +20,7 @@ trait InterpreterTestGenerator extends JUnitTestGenerator with M0 {
     val name = inst.e.name
 
     val model = getModel
-    val classify:SimpleName = Java(model.lastModelWithOperation().ops.sortWith(_.name < _.name).map(op => op.name.capitalize).mkString("")).simpleName()
+    val classify:SimpleName = Java(model.lastModelWithOperation().ops.sortWith(_.name < _.name).map(op => op.concept).mkString("")).simpleName()
 
     inst match {
       case lit:LitInst => Java(s"new $classify$name(${lit.i.get.toString})").expression()
@@ -37,7 +37,7 @@ trait InterpreterTestGenerator extends JUnitTestGenerator with M0 {
   override def convertRecursive(inst: domain.Binary, left:String, right:String): Expression = {
     val model = getModel
     val name = inst.name
-    val classify:SimpleName = Java(model.lastModelWithOperation().ops.sortWith(_.name < _.name).map(op => op.name.capitalize).mkString("")).simpleName()
+    val classify:SimpleName = Java(model.lastModelWithOperation().ops.sortWith(_.name < _.name).map(op => op.concept).mkString("")).simpleName()
 
     Java(s"new $classify$name($left, $right)").expression()
   }
@@ -47,7 +47,7 @@ trait InterpreterTestGenerator extends JUnitTestGenerator with M0 {
     val name = exp.e.name
 
     val model = getModel
-    val classify:SimpleName = Java(model.lastModelWithOperation().ops.sortWith(_.name < _.name).map(op => op.name.capitalize).mkString("")).simpleName()
+    val classify:SimpleName = Java(model.lastModelWithOperation().ops.sortWith(_.name < _.name).map(op => op.concept).mkString("")).simpleName()
 
     Java(s"$classify$name").tpe()
   }

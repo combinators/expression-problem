@@ -31,8 +31,6 @@ trait JavaGenerator extends LanguageIndependentGenerator  with Producer {
 
   /**
     * Default behavior in Java is to return an expression value.
-    *
-    * TODO: Consider changing to return a String by invoking mkString on statements.
     */
   def result (expr:Expression) : Seq[Statement] = {
     Java(s"return $expr;").statements()
@@ -43,7 +41,7 @@ trait JavaGenerator extends LanguageIndependentGenerator  with Producer {
     * method (with specific parameters) to carry this out.
     */
   def inst(exp:domain.Atomic, params:InstanceExpression*): InstanceExpression = {
-    Java("new " + exp.name.capitalize + "(" + params.map(expr => expr.toString).mkString(",") + ")").expression()
+    Java("new " + exp.concept + "(" + params.map(expr => expr.toString).mkString(",") + ")").expression()
   }
 
   // Useful helper methods for any generator needing to craft common Java constructs
@@ -52,8 +50,8 @@ trait JavaGenerator extends LanguageIndependentGenerator  with Producer {
   def constructor(exp:domain.Atomic, suggestedName:Option[String] = None) : ConstructorDeclaration = {
     val name = if (suggestedName.isEmpty) { exp.name } else { suggestedName.get }
 
-    val params:Seq[String] = exp.attributes.map(att => s"${typeConverter(att.tpe)} ${att.name}")
-    val cons:Seq[Statement] = exp.attributes.flatMap(att => Java(s"  this.${att.name} = ${att.name};").statements())
+    val params:Seq[String] = exp.attributes.map(att => s"${typeConverter(att.tpe)} ${att.instance}")
+    val cons:Seq[Statement] = exp.attributes.flatMap(att => Java(s"  this.${att.instance} = ${att.instance};").statements())
 
     val str =  s"""|public $name (${params.mkString(",")}) {
                    |   ${cons.mkString("\n")}
@@ -63,7 +61,7 @@ trait JavaGenerator extends LanguageIndependentGenerator  with Producer {
 
   /** Generate constructor for given operation, using suggested name */
   def constructorFromOp(op:domain.Operation, suggestedName:Option[String] = None) : ConstructorDeclaration = {
-    val name = if (suggestedName.isEmpty) { op.name.capitalize } else { suggestedName.get }
+    val name = if (suggestedName.isEmpty) { op.concept } else { suggestedName.get }
 
     val params:Seq[String] = op.parameters.map(param => s"${typeConverter(param.tpe)} ${param.name}")
     val cons:Seq[Statement] = op.parameters.flatMap(param => Java(s"  this.${param.name} = ${param.name};").statements())
@@ -90,8 +88,8 @@ trait JavaGenerator extends LanguageIndependentGenerator  with Producer {
     */
   def getters(exp:domain.Atomic) : Seq[MethodDeclaration] =
 
-    exp.attributes.flatMap(att => Java(s"""|public ${typeConverter(att.tpe)} get${att.name.capitalize}() {
-                                           |    return this.${att.name};
+    exp.attributes.flatMap(att => Java(s"""|public ${typeConverter(att.tpe)} get${att.concept}() {
+                                           |    return this.${att.instance};
                                            |}""".stripMargin).methodDeclarations)
 
   /**
@@ -101,7 +99,7 @@ trait JavaGenerator extends LanguageIndependentGenerator  with Producer {
     * @return
     */
   def fields(exp:domain.Atomic) : Seq[FieldDeclaration] = {
-    exp.attributes.flatMap(att => Java(s"private ${typeConverter(att.tpe)} ${att.name};").fieldDeclarations())
+    exp.attributes.flatMap(att => Java(s"private ${typeConverter(att.tpe)} ${att.instance};").fieldDeclarations())
   }
 
   /**

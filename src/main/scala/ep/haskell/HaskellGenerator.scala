@@ -50,12 +50,12 @@ trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskell
 
   /** Concatenate attributes by name in order */
   def standardArgs(exp:domain.Atomic, suffix:String = "") : Haskell = {
-    Haskell(exp.attributes.map(att => att.name + suffix).mkString(" "))
+    Haskell(exp.attributes.map(att => att.instance + suffix).mkString(" "))
   }
 
   /** Create sequence of attributes, suitable for varargs declarations. */
   def standardVarArgs(exp:domain.Atomic, suffix:String = "") : Seq[Haskell] = {
-    exp.attributes.map(att => Haskell(att.name + suffix))
+    exp.attributes.map(att => Haskell(att.instance + suffix))
   }
 
   /** If any new imports are needed for an operation, just extend here. */
@@ -81,12 +81,11 @@ trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskell
     new Haskell(s"$functionName $bars = $defaultExpression")
   }
 
-  // TODO: issues with other haskell implementations. must move to subclasses
   def generateDataTypes(m:domain.Model): HaskellWithPath = {
     val allTypes = m.types.map(exp => {
       val params:Seq[HaskellType] = exp.attributes.map(att => typeConverter(att.tpe))
       val list:String = params.map(f => f.toString).mkString(" ")
-      Haskell(s"${exp.name.capitalize} $list") // not sure how much this is needed
+      Haskell(s"${exp.concept} $list") // not sure how much this is needed
     }).mkString("  | ")
 
     val binaryTreeInterface =  if (m.flatten().ops.exists {

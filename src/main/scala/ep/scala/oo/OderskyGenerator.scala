@@ -41,7 +41,7 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod {
 
   /** For straight design solution, directly access attributes by name. */
   override def expression (exp:Atomic, att:Attribute) : Expression = {
-    Scala(s"${att.name}").expression
+    Scala(s"${att.instance}").expression
   }
 
   /** Directly access local method, one per operation, with a parameter. */
@@ -53,7 +53,7 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod {
   /** Handle self-case here. */
   override def contextDispatch(source:Context, delta:Delta) : Expression = {
     if (delta.expr.isEmpty) {
-      val op = delta.op.get.name.toLowerCase
+      val op = delta.op.get.instance
       val args:String = delta.params.mkString(",")
       Scala(s"this.$op($args)").expression
     } else {
@@ -86,12 +86,12 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod {
 
     val classes:Seq[scala.meta.Stat] = model.types.map(exp => {
       val methods = model.pastOperations().map(op => methodGenerator(exp, op))
-      val params = exp.attributes.map(att => s"${att.name}_ : ${typeConverter(att.tpe)}").mkString(",")
-      val locals = exp.attributes.map(att => s"val ${att.name} = ${att.name}_")
+      val params = exp.attributes.map(att => s"${att.instance}_ : ${typeConverter(att.tpe)}").mkString(",")
+      val locals = exp.attributes.map(att => s"val ${att.instance} = ${att.instance}_")
 
       val str =
         s"""
-           |class ${exp.toString}($params) extends ${domain.baseTypeRep.name} {
+           |class ${exp.concept}($params) extends ${domain.baseTypeRep.concept} {
            |    ${locals.mkString("\n")}
            |    ${methods.mkString("\n")}
            |  }
@@ -109,8 +109,8 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod {
 
       val narrow =
         s"""
-           |type ${domain.baseTypeRep.name.toLowerCase()} <: ${domain.baseTypeRep.name.capitalize}
-           |trait ${domain.baseTypeRep.name.capitalize} extends super.${domain.baseTypeRep.name.capitalize} {
+           |type ${domain.baseTypeRep.instance} <: ${domain.baseTypeRep.concept}
+           |trait ${domain.baseTypeRep.concept} extends super.${domain.baseTypeRep.concept} {
            |  ${newOps.mkString("\n")}
            |}
          """.stripMargin
@@ -118,13 +118,13 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod {
       Scala(narrow).statements ++
       model.pastDataTypes().map(exp => {
         val methods = model.ops.map(op => methodGenerator(exp, op))
-        val params = exp.attributes.map(att => s"${att.name}_ : ${typeConverter(att.tpe)}").mkString(",")
-        val args = exp.attributes.map(att => att.name + "_").mkString(",")
-        val locals = exp.attributes.map(att => s"override val ${att.name} = ${att.name}_")
+        val params = exp.attributes.map(att => s"${att.instance}_ : ${typeConverter(att.tpe)}").mkString(",")
+        val args = exp.attributes.map(att => att.instance + "_").mkString(",")
+        val locals = exp.attributes.map(att => s"override val ${att.instance} = ${att.instance}_")
 
         val str =
           s"""
-             |class ${exp.toString}($params) extends super.${exp.toString}($args) with ${domain.baseTypeRep.name} {
+             |class ${exp.concept}($params) extends super.${exp.concept}($args) with ${domain.baseTypeRep.concept} {
              |    ${locals.mkString("\n")}
              |    ${methods.mkString("\n")}
              |  }
@@ -145,18 +145,18 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod {
   def generateBase(baseModel:Model): CompilationUnit = {
 
     val initialOpsDef = baseModel.ops.map(op =>
-      s"def ${op.name.toLowerCase()}() : ${typeConverter(op.returnType.get)}")
+      s"def ${op.instance}() : ${typeConverter(op.returnType.get)}")
 
     // hack: initial op has no parameters...
     val initialTypes = baseModel.types.map(exp => {
       val initialOpsLogic = baseModel.ops.map(op => {
-        s"def ${op.name.toLowerCase()}() = " + logic(exp, op).mkString("\n")
+        s"def ${op.instance}() = " + logic(exp, op).mkString("\n")
       })
 
       // yes, scala requires a space between _ and :
-      val atts = exp.attributes.map(att => s"val ${att.name.toLowerCase()} = ${att.name.toLowerCase()}_")
+      val atts = exp.attributes.map(att => s"val ${att.instance} = ${att.instance}_")
         val str = s"""
-                     |class ${exp.name.capitalize}(${constructorArgs(exp)}) extends ${domain.baseTypeRep.name} {
+                     |class ${exp.concept}(${constructorArgs(exp)}) extends ${domain.baseTypeRep.concept} {
                      |  ${atts.mkString("\n")}
                      |  ${initialOpsLogic.mkString("\n")}
                      |}""".stripMargin
@@ -165,8 +165,8 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod {
 
       val str:String = s"""package odersky
                           |trait ${baseModel.name.capitalize} {
-                          |   type ${domain.baseTypeRep.name.toLowerCase()} <: ${domain.baseTypeRep.name.capitalize}
-                          |   trait ${domain.baseTypeRep.name.capitalize} {
+                          |   type ${domain.baseTypeRep.instance} <: ${domain.baseTypeRep.concept}
+                          |   trait ${domain.baseTypeRep.concept} {
                           |     ${initialOpsDef.mkString("\n")}
                           |   }
                           |

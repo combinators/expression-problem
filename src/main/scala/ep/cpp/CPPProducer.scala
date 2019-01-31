@@ -16,6 +16,6 @@ trait CPPProducer extends Producer {
     * method (with specific parameters) to carry this out.
     */
   def inst(exp:domain.Atomic, params:InstanceExpression*): InstanceExpression = {
-    new CPPElement("new " + exp.name.capitalize + "(" + params.map(expr => expr.toString()).mkString(",") + ")")
+    new CPPElement("new " + exp.concept + "(" + params.map(expr => expr.toString()).mkString(",") + ")")
   }
 }

@@ -20,28 +20,25 @@ trait CPPVisitorTestGenerator extends CPPGenerator with TestGenerator {
     */
   def actual(op:Operation, inst:AtomicInst, params:CPPElement*):CPPElement = {
     val expression = rec_convert(inst)
-    new CPPElement(s"(new ${op.name.capitalize}($expression))->getValue()")
+    new CPPElement(s"(new ${op.concept}($expression))->getValue()")
   }
 
   /** Convert a test instance into a C++ Expression for instantiating that instance. */
   def rec_convert(inst: AtomicInst): CPPElement = {
-    val name = inst.e.name
     vars(inst)   // cause the creation of a mapping to this instance
     id = id + 1
     inst match {
       case ui: UnaryInst =>
         val inner = rec_convert(ui.inner).toString
-        new CPPElement(s"${ui.e.name.toLowerCase()}($inner)")
+        new CPPElement(s"${ui.e.instance}($inner)")
 
       case bi: BinaryInst =>
         val left = rec_convert(bi.left).toString
         val right = rec_convert(bi.right).toString
-        new CPPElement(s"${bi.e.name.toLowerCase()}($left, $right)")
+        new CPPElement(s"${bi.e.instance}($left, $right)")
 
-      //  double val1 = 1.0;
-      //  Lit  lit1 = Lit(&val1);
-      case exp: AtomicInst => new CPPElement(s"${exp.e.name.toLowerCase()}(${exp.i.get})")
-      case _ => new CPPElement(s""" "unknown $name" """)
+      case exp: AtomicInst => new CPPElement(s"${exp.e.instance}(${exp.i.get})")
+      case _ => new CPPElement(s""" "unknown ${inst.e.concept}" """)
     }
   }
 
@@ -56,15 +53,15 @@ trait CPPVisitorTestGenerator extends CPPGenerator with TestGenerator {
             case  domain.baseTypeRep => typeConverter(att.tpe)
             case _ => typeConverter(att.tpe)
           }
-          new CPPElement(s"$tpe ${att.name}")
+          new CPPElement(s"$tpe ${att.instance}")
         }).mkString(",")
       val params = exp.attributes
-        .map(att => new CPPElement(att.name)).mkString(",")
+        .map(att => new CPPElement(att.instance)).mkString(",")
 
-      s"${exp.name.capitalize} *${exp.name.toLowerCase()}($list) { return new ${exp.name.capitalize}($params); }"
+      s"${exp.concept} *${exp.instance}($list) { return new ${exp.concept}($params); }"
     })
 
-    val allOps = getModel.flatten().ops.map(op => s"""#include "${op.name.capitalize}.h" """)
+    val allOps = getModel.flatten().ops.map(op => s"""#include "${op.concept}.h" """)
 
     // add header files
     super.generateSuite(pkg, model).map(file =>

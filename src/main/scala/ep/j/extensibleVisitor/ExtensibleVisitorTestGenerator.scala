@@ -15,7 +15,7 @@ trait ExtensibleVisitorTestGenerator extends JUnitTestGenerator with JavaGenerat
   /** Add virtual type generator. */
   def addVirtualConstructor(mainType:TypeDeclaration[_], op:domain.Operation, className:String) : Unit = {
     val virtualConstructor = Java(
-      s"""|${op.name.capitalize} make${op.name.capitalize} (${parameters(op)}) {
+      s"""|${op.concept} make${op.concept} (${parameters(op)}) {
           |  return new $className (${arguments(op)});
           |}""".stripMargin).methodDeclarations().head
 
@@ -38,17 +38,17 @@ trait ExtensibleVisitorTestGenerator extends JUnitTestGenerator with JavaGenerat
         if (m == lastTypes) {
           reached = true
           m.ops.foreach(op => {
-            addVirtualConstructor(unit.getType(0), op, op.name.capitalize)  // these are not qualified
+            addVirtualConstructor(unit.getType(0), op, op.concept)  // these are not qualified
           })
         } else {
           if (reached) {
             // now all of these use the lastTypes signature $full
             m.ops.foreach(op => {
-              addVirtualConstructor(unit.getType(0), op, op.name.capitalize + full)
+              addVirtualConstructor(unit.getType(0), op, op.concept + full)
             })
           } else {
             m.ops.foreach(op => {
-              addVirtualConstructor(unit.getType(0), op, op.name.capitalize) // newer and are allowed in as straight
+              addVirtualConstructor(unit.getType(0), op, op.concept) // newer and are allowed in as straight
             })
           }
         }

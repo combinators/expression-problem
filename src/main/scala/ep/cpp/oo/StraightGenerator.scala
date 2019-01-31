@@ -26,16 +26,16 @@ trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with
 
   /** For straight design solution, directly access attributes by name. */
   override def expression (exp:Atomic, att:Attribute) : Expression = {
-    new CPPElement(s"${att.name}")
+    new CPPElement(s"${att.instance}")
   }
 
   override def contextDispatch(source:Context, delta:Delta) : Expression = {
     if (source.op.isEmpty) {
       // Must then use delta.expr "as is"
       val opargs = delta.params.mkString (",")
-      new CPPElement(s"${delta.expr.get}->${delta.op.get.name.toLowerCase}($opargs)")
+      new CPPElement(s"${delta.expr.get}->${delta.op.get.instance}($opargs)")
     } else if (delta.expr.isEmpty) {
-      val op = delta.op.get.name.toLowerCase
+      val op = delta.op.get.instance
       val args = delta.params.mkString (",")
       new CPPElement(s"$op($args)")
     } else {
@@ -46,21 +46,8 @@ trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with
   /** Directly access local method, one per operation, with a parameter. */
   override def dispatch(expr:CPPElement, op:Operation, params:CPPElement*) : CPPElement = {
     val args:String = params.mkString(",")
-    new CPPElement(s"get${expr.toString.capitalize}($args)->${op.name.toLowerCase}()")
+    new CPPElement(s"get${expr.toString.capitalize}($args)->${op.instance}()")
   }
-
-//  /**
-//    * Responsible for dispatching sub-expressions with possible parameter(s).
-//    */
-//  override def binaryDispatch(expr:CPPElement, op:domain.Operation, params:CPPElement*) : CPPElement = {
-//    val args = if (params.nonEmpty) {
-//      params.mkString(",")
-//    } else {
-//      ""
-//    }
-//
-//    new CPPElement(s"$expr->${op.name.toLowerCase()}($args)")
-//  }
 
   /** Return designated Java type associated with type, or void if all else fails. */
   override def typeConverter(tpe:TypeRep) : CPPType = {
@@ -82,7 +69,7 @@ trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with
   def methodGenerator(exp:Atomic, op:Operation): CPPMethod = {
     val params = parameters(op)
     val ret = typeConverter(op.returnType.get)
-    new CPPMethod(ret.toString, s"${op.name.toLowerCase}", s"($params)", logic(exp, op).mkString("\n"))
+    new CPPMethod(ret.toString, s"${op.instance}", s"($params)", logic(exp, op).mkString("\n"))
         .setConstant()
   }
 //
@@ -111,22 +98,22 @@ trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with
     val signatures:Seq[CPPMethod] = model.ops.map(op => {
       val params = parameters(op)
       val ret = typeConverter(op.returnType.get)
-      new CPPMethod(ret.toString, s"${sub.name.capitalize}::${op.name.toLowerCase}", s"($params)", logic(sub, op).mkString("\n"))
+      new CPPMethod(ret.toString, s"${sub.concept}::${op.instance}", s"($params)", logic(sub, op).mkString("\n"))
         .setConstant()
     })
 
     // all other types all need to be included to be safe
-    val typeHeaders = model.flatten().types.map(tpe => s"""#include "${tpe.name.capitalize}.h" """)
+    val typeHeaders = model.flatten().types.map(tpe => s"""#include "${tpe.concept}.h" """)
 
     val contents =
       s"""|
          |#include "Exp.h"
-         |#include "${sub.name.capitalize}.h"
+         |#include "${sub.concept}.h"
          |${typeHeaders.mkString("\n")}
          |  ${signatures.mkString("\n")}
        """.stripMargin.split("\n")
 
-    new StandAlone(sub.name.capitalize, contents)
+    new StandAlone(sub.concept, contents)
   }
 
   /** Generate the full class for the given expression sub-type (except for impl). */
@@ -141,17 +128,17 @@ trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with
     var addedMethods:Seq[CPPElement] = Seq.empty
 
     sub.attributes.foreach(att => {
-      val capAtt = att.name.capitalize
+      val capAtt = att.concept
       val tpe = typeConverter(att.tpe)
 
-      addedFields = addedFields :+ new CPPElement(s"$tpe ${att.name};")
+      addedFields = addedFields :+ new CPPElement(s"$tpe ${att.instance};")
 
       // prepare for constructor
-      params = params :+ s"$tpe ${att.name}_"
-      cons = cons :+ s"${att.name}(${att.name}_)"
+      params = params :+ s"$tpe ${att.instance}_"
+      cons = cons :+ s"${att.instance}(${att.instance}_)"
 
       // make the set/get methods
-      addedMethods = addedMethods :+ new CPPElement(s"$tpe get$capAtt() const { return ${att.name}; }")
+      addedMethods = addedMethods :+ new CPPElement(s"$tpe get$capAtt() const { return ${att.instance}; }")
     })
 
     // make constructor
@@ -169,12 +156,12 @@ trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with
     }
 
     // all other types all need to be included to be safe
-    val typeHeaders = model.flatten().types.map(tpe => s"""#include "${tpe.name.capitalize}.h" """)
+    val typeHeaders = model.flatten().types.map(tpe => s"""#include "${tpe.concept}.h" """)
 
     val opMethods = model.ops.map(op => {
       val params = parameters(op)
       val ret = typeConverter(op.returnType.get)
-      new CPPMethodDeclaration(ret.toString, s"${op.name.toLowerCase}", s"($params)")
+      new CPPMethodDeclaration(ret.toString, s"${op.instance}", s"($params)")
         .setConstant()
     })
     addedMethods = addedMethods ++ opMethods
@@ -204,7 +191,7 @@ trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with
       }
 
       val params = parameters(op)
-      new CPPElement(s"""virtual $realType ${op.name.toLowerCase}($params) const = 0;""")
+      new CPPElement(s"""virtual $realType ${op.instance}($params) const = 0;""")
     })
 
     // add Binary #include file if needed

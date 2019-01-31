@@ -23,13 +23,13 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
 
   override def contextDispatch(source:Context, delta:Delta) : Expression = {
     if (source.op.isEmpty) {
-      new Haskell(s"(${delta.op.get.name.toLowerCase()} (${delta.expr.get}))")
+      new Haskell(s"(${delta.op.get.instance} (${delta.expr.get}))")
     } else if (delta.op.isDefined && !source.op.get.equals(delta.op.get)) {
       if (delta.expr.isEmpty) {
         // this is to SELF so, just invoke
         Haskell(s"REP_LACE")
       } else {
-        Haskell(s"(${delta.op.get.name.toLowerCase()} (${delta.expr.get}))")
+        Haskell(s"(${delta.op.get.instance} (${delta.expr.get}))")
       }
     } else {
       super.contextDispatch(source, delta)
@@ -61,7 +61,9 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
     exp.attributes.zipWithIndex.map{ case (att, num) => {
       att.tpe match {
         case domain.baseTypeRep => Haskell("e" + num)
-        case _ => Haskell(att.tpe.toString.toLowerCase + num)
+        case _ =>
+          // Still not sure why can't use att.tpe.instance + num
+          Haskell(att.tpe.toString.toLowerCase + num)
       }
     }}
   }
@@ -71,13 +73,15 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
     exp.attributes.zipWithIndex.map{ case (att, num) => {
       att.tpe match {
         case domain.baseTypeRep => Haskell(s"($funcName e$num)")
-        case _ => Haskell(att.tpe.toString.toLowerCase + num)
+        case _ =>
+          // Still not sure why can't use att.tpe.instance + num
+          Haskell(att.tpe.toString.toLowerCase + num)
       }
     }}
   }
 
   def generateExp(m:Model, exp:Atomic) : HaskellWithPath = {
-    val name = exp.name.capitalize
+    val name = exp.concept
     val types:Seq[Haskell] = genTypes(exp)
     val instances:Seq[Haskell] = genInstances(exp)
     val args:Seq[Haskell] = genArguments(exp, "f")
@@ -109,13 +113,12 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
   }
 
   def generateStandardOp(m:Model, op:Operation) : HaskellWithPath = {
-
-    val name = op.name.capitalize
-    val imports = m.types.map(tpe => Haskell(s"import ${tpe.name}")).mkString("\n")
+    val name = op.concept
+    val imports = m.types.map(tpe => Haskell(s"import ${tpe.concept}")).mkString("\n")
     val instances:Seq[Haskell] = m.types.map(exp => {
       val code = logic(exp, op).mkString("\n")
       Haskell(s""" |instance $name ${exp.toString} where
-                   |  ${op.name}OneLevel (${exp.toString} ${standardArgs(exp).getCode}) = $code""".stripMargin)
+                   |  ${op.instance}OneLevel (${exp.toString} ${standardArgs(exp).getCode}) = $code""".stripMargin)
     })
 
     val opRetType = typeConverter(op.returnType.get)
@@ -177,13 +180,11 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
     * expressions.UnaryExp only has an 'exp'
     */
   override def expression (exp:domain.Atomic, att:domain.Attribute) : Expression = {
-    Haskell(s"${att.name}")
+    Haskell(s"${att.instance}")
   }
 
   /** Responsible for dispatching sub-expressions with possible parameter(s). */
  override def dispatch(primary:Haskell, op:domain.Operation, params:Haskell*) : Haskell = {
-//    val args:String = params.mkString(" ") // when are arguments used...
-//    Haskell(s"""(${op.name.toLowerCase()} ($primary))""")
    Haskell(s"""$primary""")
   }
 }

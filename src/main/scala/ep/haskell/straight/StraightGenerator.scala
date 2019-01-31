@@ -22,7 +22,6 @@ trait StraightGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
   }
 
   def generateOp(m:Model, op:Operation) : HaskellWithPath = {
-    val name = op.name
     val opRetType = typeConverter(op.returnType.get)
     val extraOp = op.parameters.map(param => {    // what happens when two params?
       val tpe = param.tpe
@@ -33,35 +32,35 @@ trait StraightGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
       }
     }).mkString("")
 
-    val definition = Haskell(s"$name :: ${domain.baseTypeRep.name} $extraOp -> $opRetType")
+    val definition = Haskell(s"${op.instance} :: ${domain.baseTypeRep.name} $extraOp -> $opRetType")
 
     val instances  = {
       val definedInstances = m.types.map(exp => {
         val opsParam = op.parameters.map(param => {    // what happens when two params?
           if (param.tpe.equals(domain.baseTypeRep)) {
-            s"""(${exp.name.capitalize} ${standardArgs(exp, "2").getCode})"""
+            s"""(${exp.concept} ${standardArgs(exp, "2").getCode})"""
           } else {
             param.name  // not sure what else to do
           }
         }).mkString("")
 
-        s"""$name (${exp.name.capitalize} ${standardArgs(exp).getCode}) $opsParam = ${logic(exp, op).mkString("\n")}"""
+        s"""${op.instance} (${exp.concept} ${standardArgs(exp).getCode}) $opsParam = ${logic(exp, op).mkString("\n")}"""
      })
 
       // handle default case as needed
       requireDefault(op) match {
         case None => definedInstances
-        case Some((numParams,defaultVal)) => definedInstances :+ defaultCase(new Haskell(op.name.toLowerCase()), numParams, defaultVal)
+        case Some((numParams,defaultVal)) => definedInstances :+ defaultCase(new Haskell(op.instance), numParams, defaultVal)
       }
     }
 
-    val code = Haskell(s"""|module ${name.capitalize} where
+    val code = Haskell(s"""|module ${op.concept} where
                            |import DataTypes
                            |
                            |${addedImports(op).mkString("\n")}
                            |$definition
                            |${instances.mkString("\n")}""".stripMargin)
-    HaskellWithPath(code, Paths.get(s"${name.capitalize}.hs"))
+    HaskellWithPath(code, Paths.get(s"${op.concept}.hs"))
   }
 
     /**
@@ -76,7 +75,7 @@ trait StraightGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
 
   /** For straight design solution, directly access attributes by name. */
   override def expression (exp:Atomic, att:Attribute) : Expression = {
-    Haskell(s"${att.name}")
+    Haskell(s"${att.instance}")
   }
 
   /**
@@ -84,6 +83,6 @@ trait StraightGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
     * method (with specific parameters) to carry this out.
     */
   override def inst(exp:domain.Atomic, params:Haskell*): Haskell = {
-    Haskell(exp.name.capitalize + " " + params.map(h => h.getCode).mkString(" "))
+    Haskell(exp.concept + " " + params.map(h => h.getCode).mkString(" "))
   }
 }

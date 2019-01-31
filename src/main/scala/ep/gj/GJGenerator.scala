@@ -32,8 +32,8 @@ trait GJGenerator extends LanguageIndependentGenerator {
   def constructor(exp:domain.Atomic, suggestedName:Option[String] = None) : GJ = {
     val name = if (suggestedName.isEmpty) { exp.name } else { suggestedName.get }
 
-    val params:Seq[String] = exp.attributes.map(att => s"${typeConverter(att.tpe)} ${att.name}")
-    val cons:Seq[GJ] = exp.attributes.map(att => GJ(s"  ${att.name}_ = ${att.name};"))
+    val params:Seq[String] = exp.attributes.map(att => s"${typeConverter(att.tpe)} ${att.instance}")
+    val cons:Seq[GJ] = exp.attributes.map(att => GJ(s"  ${att.instance}_ = ${att.instance};"))
 
     GJ(s"""|public $name (${params.mkString(",")}) {
              |   ${cons.mkString("\n")}
@@ -52,7 +52,7 @@ trait GJGenerator extends LanguageIndependentGenerator {
 
   /** Compute parameter "Type name" comma-separated list from operation. */
   def parametersExp(exp:domain.Atomic) : String = {
-    exp.attributes.map(att => typeConverter(att.tpe).toString + " " + att.name).mkString(",")
+    exp.attributes.map(att => typeConverter(att.tpe).toString + " " + att.instance).mkString(",")
   }
 
   /**
@@ -61,8 +61,8 @@ trait GJGenerator extends LanguageIndependentGenerator {
     */
   def getters(exp:domain.Atomic) : Seq[GJ] =
 
-    exp.attributes.map(att => GJ(s"""|public ${typeConverter(att.tpe)} get${att.name.capitalize}() {
-                                           |    return this.${att.name};
+    exp.attributes.map(att => GJ(s"""|public ${typeConverter(att.tpe)} get${att.concept}() {
+                                           |    return this.${att.instance};
                                            |}""".stripMargin))
 
   /**

@@ -36,15 +36,15 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     val wrap = genWrap(findModel(exp))
     exp match {
       case ui: Unary =>
-        Haskell(wrap(s"${ui.name.capitalize} (${params(0)}) "))
+        Haskell(wrap(s"${ui.concept} (${params(0)}) "))
 
       case bi: Binary =>
-        Haskell(wrap(s"${bi.name.capitalize} (${params(0)}) (${params(1)}) "))
+        Haskell(wrap(s"${bi.concept} (${params(0)}) (${params(1)}) "))
 
       case exp: Atomic =>
-        Haskell(wrap(s"${exp.name.capitalize} ${params(0)} "))
+        Haskell(wrap(s"${exp.concept} ${params(0)} "))
 
-      case _ => Haskell(s" -- unknown ${exp.name} ")
+      case _ => Haskell(s" -- unknown ${exp.concept} ")
     }
   }
 
@@ -77,7 +77,7 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
   }
 
   def onlyTypes(m:Model):String = {
-    m.types.map(t => t.name.capitalize).mkString("")
+    m.types.map(t => t.concept).mkString("")
   }
 
   /** Combined string from the types. */
@@ -101,7 +101,7 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     val mcaps = m.name.capitalize    // haskell needs data to be capitalized!
     val baseDomain = domain.baseTypeRep.name
 
-    val invoke = m.inChronologicalOrder.reverse.tail.foldLeft(s"(${op.name}${expDeclaration(m)} helpWith${op.name.capitalize}$mcaps)")((former,tail) =>
+    val invoke = m.inChronologicalOrder.reverse.tail.foldLeft(s"(${op.name}${expDeclaration(m)} helpWith${op.concept}$mcaps)")((former,tail) =>
       s"(${op.name}${expDeclaration(tail)} $former)")
 
     s"""
@@ -160,19 +160,19 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
 
 
           if (!m.last.isEmpty) {
-            val invoke = m.inChronologicalOrder.reverse.tail.foldLeft(s"(${op.name}${expDeclaration(m)} helpWith)")((former,tail) =>
-              s"(${op.name}${expDeclaration(tail)} $former)")
+            val invoke = m.inChronologicalOrder.reverse.tail.foldLeft(s"(${op.instance}${expDeclaration(m)} helpWith)")((former,tail) =>
+              s"(${op.instance}${expDeclaration(tail)} $former)")
 
-            s"""(${exp.name.capitalize} ${standardArgs(exp).getCode}) =
+            s"""(${exp.concept} ${standardArgs(exp).getCode}) =
                #  let help = $invoke in
                #  ${code.replace(s"$name${domain.baseTypeRep.name} helpWith ", "help ")}""".stripMargin('#')
           } else {
-            s"""(${exp.name.capitalize} ${standardArgs(exp).getCode}) =
+            s"""(${exp.concept} ${standardArgs(exp).getCode}) =
                #  let help = $name${expDeclaration(m)} helpWith in
                #  ${code.replace(s"$name${domain.baseTypeRep.name} helpWith ", "help ")}""".stripMargin('#')
           }
         } else {
-          s"(${exp.name.capitalize} ${standardArgs(exp).getCode}) = " + logic(exp, op).mkString("\n")
+          s"(${exp.concept} ${standardArgs(exp).getCode}) = " + logic(exp, op).mkString("\n")
         }
       }
       head + modifiedRest
@@ -212,12 +212,12 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
                    #$name${expDeclaration(m)} helpWith (${extDeclaration(m)} inner) = helpWith inner
                    #
          #-- | Evaluates an $mcaps expression
-                   #-- | Calls ${op.name}$baseDomain with the $mcaps helper
+                   #-- | Calls ${op.instance}$baseDomain with the $mcaps helper
                    #$operationSpec
                    #
          #-- | Helps with extensions $mcaps
-                   #helpWith${op.name.capitalize}$mcaps :: Void -> ${typeConverter(op.returnType.get)}
-                   #helpWith${op.name.capitalize}$mcaps = absurd
+                   #helpWith${op.concept}$mcaps :: Void -> ${typeConverter(op.returnType.get)}
+                   #helpWith${op.concept}$mcaps = absurd
                    #
          #""".stripMargin('#'))
   }   // Void had been $previous
@@ -228,15 +228,15 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
 
     val inner:String= m.types.map(t =>
       t match {
-        case b:Binary => s"""${t.name.capitalize} ($Exp f) ($Exp f)     -- Binary instance """
-        case c:Unary =>  s"""${t.name.capitalize} ($Exp f)              -- Unary instance """
-        case a:Atomic => s"""${t.name.capitalize} ${typeConverter(t.attributes.head.tpe)}    -- Atomic instance """
+        case b:Binary => s"""${t.concept} ($Exp f) ($Exp f)     -- Binary instance """
+        case c:Unary =>  s"""${t.concept} ($Exp f)              -- Unary instance """
+        case a:Atomic => s"""${t.concept} ${typeConverter(t.attributes.head.tpe)}    -- Atomic instance """
       }
     ).mkString("\n     | ")
 
     val priorOps:String = if (m.ops.nonEmpty) {
       m.inChronologicalOrder.reverse.tail.reverse.flatMap(priorM => {
-        m.ops.map(op => s"-- ${priorM.name.capitalize} part for ${op.name}\n" + generateOp(priorM, op) + s"-- DONE ${priorM.name.capitalize} part\n")}).mkString("\n")
+        m.ops.map(op => s"-- ${priorM.name.capitalize} part for ${op.instance}\n" + generateOp(priorM, op) + s"-- DONE ${priorM.name.capitalize} part\n")}).mkString("\n")
     } else { "" }
 
     val ops:String = m.ops.map(op => generateOp(m, op)).mkString("\n")
@@ -330,6 +330,6 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
 
   /** For straight design solution, directly access attributes by name. */
   override def expression (exp:Atomic, att:Attribute) : Expression = {
-    Haskell(s"${att.name}")
+    Haskell(s"${att.instance}")
   }
 }

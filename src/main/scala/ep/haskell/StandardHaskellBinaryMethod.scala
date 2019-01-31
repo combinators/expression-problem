@@ -22,12 +22,11 @@ trait StandardHaskellBinaryMethod extends OperationDependency {
     * @return
     */
   def generateBinaryOp(m: domain.Model, op: domain.Operation): HaskellWithPath = {
-    val name = op.name.capitalize
-    val imports = m.types.map(tpe => Haskell(s"import ${tpe.name}")).mkString("\n")
+    val imports = m.types.map(tpe => Haskell(s"import ${tpe.concept}")).mkString("\n")
 
-    val dependentOps = dependency(op).map(op => new Haskell(s"import ${op.concept}")).toSeq
+    val dependentOps = dependency(op).map(op => new Haskell(s"import ${op.concept}"))
     val extraImports = addedImports(op) ++ dependentOps
-    val code = Haskell(s"""|module $name where
+    val code = Haskell(s"""|module ${op.concept} where
                            |import Base
                            |
                            |${extraImports.mkString("\n")}
@@ -35,6 +34,6 @@ trait StandardHaskellBinaryMethod extends OperationDependency {
                            |equals :: Astree f => Expr f -> Expr f -> Bool
                            |equals expr1 expr2 = (astree expr1) == (astree expr2)
                            |""".stripMargin)
-    HaskellWithPath(code, Paths.get(s"$name.hs"))
+    HaskellWithPath(code, Paths.get(s"${op.concept}.hs"))
   }
 }

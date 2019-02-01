@@ -66,6 +66,7 @@ trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskell
     * methods, such as equals, there quite often needs to be a fall-through default case.
     */
   def requireDefault(op:domain.Operation) : Option[(Int,Haskell)] = None
+
   /**
     * Standard default value that throws exception in Haskell.
     */

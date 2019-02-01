@@ -70,7 +70,7 @@ trait StraightGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
     override def dispatch(primary:Haskell, op:domain.Operation, params:Haskell*) : Haskell = {
       val args:String = params.mkString(" ")
 
-      Haskell(s"""(${op.name} (${primary.toString}) $args)""")
+      Haskell(s"""(${op.instance} (${primary.toString}) $args)""")
     }
 
   /** For straight design solution, directly access attributes by name. */

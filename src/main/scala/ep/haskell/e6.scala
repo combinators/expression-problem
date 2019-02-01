@@ -73,25 +73,45 @@ trait e6 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
     }
   }
 
+  override def hunitTestMethod(test:domain.TestCase, idx:Int) : Seq[Statement] = {
+    test match {
+      case eb: EqualsBinaryMethodTestCase =>
+        val source = NoSource()
+        val full = contextDispatch(source, deltaExprOp(source, convert(eb.inst1), Equals, convert(eb.inst2)))
+
+        if (eb.result) {
+          Seq(Haskell(s"""test_v$idx = TestCase (assertBool "EqualsCheck" ($full))"""))
+        } else {
+          Seq(Haskell(s"""test_v$idx = TestCase (assertBool "NotEqualsCheck" (not ($full)))"""))
+        }
+//        if (eb.result) {
+//          Seq(Haskell(s"""test_v$idx = TestCase (assertBool "EqualsCheck" (${dispatch(convert(eb.inst1), Equals, convert(eb.inst2))}))"""))
+//        } else {
+//          Seq(Haskell(s"""test_v$idx = TestCase (assertBool "NotEqualsCheck" (not (${dispatch(convert(eb.inst1), Equals, convert(eb.inst2))})))"""))
+//        }
+      case _ => super.hunitTestMethod(test, idx)
+    }
+  }
+
   abstract override def testGenerator: Seq[Haskell] = {
-
-    val s1 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
-    val s2 = new BinaryInst(Add, new BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0)),
-      new BinaryInst(Add, new LitInst(5.0), new LitInst(6.0)))
-    val s3 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
-
-    super.testGenerator :+ new Haskell(
-      s"""
-         |s1 = ${convert(s1)}
-         |s2 = ${convert(s2)}
-         |s3 = ${convert(s3)}
-         |test_e2_1 = TestCase (assertBool "EqualCheck" (${Equals.name} s1 s3))
-         |test_e2_2 = TestCase (assertBool "EqualCheck" (not (${Equals.name} s1 s2)))
-         |
-         |test_e2 = TestList [ TestLabel "1" test_e2_1, TestLabel "2" test_e2_2 ]
-         |
-         |main :: IO Counts
-         |main  = runTestTT test_e2
-         |""".stripMargin)
+    super.testGenerator :+ hunitMethod(M6_tests)
+//    val s1 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
+//    val s2 = new BinaryInst(Add, new BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0)),
+//      new BinaryInst(Add, new LitInst(5.0), new LitInst(6.0)))
+//    val s3 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
+//
+//    super.testGenerator :+ new Haskell(
+//      s"""
+//         |s1 = ${convert(s1)}
+//         |s2 = ${convert(s2)}
+//         |s3 = ${convert(s3)}
+//         |test_e2_1 = TestCase (assertBool "EqualCheck" (${Equals.name} s1 s3))
+//         |test_e2_2 = TestCase (assertBool "EqualCheck" (not (${Equals.name} s1 s2)))
+//         |
+//         |test_e2 = TestList [ TestLabel "1" test_e2_1, TestLabel "2" test_e2_2 ]
+//         |
+//         |main :: IO Counts
+//         |main  = runTestTT test_e2
+//         |""".stripMargin)
   }
 }

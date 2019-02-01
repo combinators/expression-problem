@@ -68,8 +68,6 @@ trait e5 extends Evolution with HaskellGenerator with HUnitTestGenerator with Ha
         val tree1 = contextDispatch(source, deltaExprOp(source, convert(ctc.inst1), AsTree))
         val tree2 = contextDispatch(source, deltaExprOp(source, convert(ctc.inst2), AsTree))
 
-//        val same = Haskell(s"$tree1.same($tree2)")
-
         if (ctc.result) {
           Seq(new Haskell(s"""test_v$id = TestCase (assertBool "${test.getClass.getSimpleName}" ($tree1 == $tree2))"""))
         } else {
@@ -81,24 +79,6 @@ trait e5 extends Evolution with HaskellGenerator with HUnitTestGenerator with Ha
 
   abstract override def testGenerator: Seq[Haskell] = {
     super.testGenerator :+ hunitMethod(M5_tests)
-    //    val s1 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
-    //    val s2 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
-    //    val s3 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(999.0))
-
-    //    super.testGenerator :+ new Haskell(
-    //      s"""
-    //         |s1 = ${convert(s1)}
-    //         |s2 = ${convert(s2)}
-    //         |s3 = ${convert(s3)}
-    //         |
-    //         |test_e5_1 = TestCase (assertEqual "AsTree-s1" (${AsTree.name}  s1) (${AsTree.name}  s2))
-    //         |test_e5_2 = TestCase (assertBool "AsTree-s1" ((${AsTree.name}  s1) /= (${AsTree.name}  s3)))
-    //         |
-    //         |test_e5 = TestList [ TestLabel "1" test_e5_1, TestLabel "2" test_e5_2 ]
-    //         |
-    //         |main :: IO Counts
-    //         |main  = runTestTT test_e5
-    //         |""".stripMargin)
   }
 
 }

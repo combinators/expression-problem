@@ -49,10 +49,7 @@ trait GrowTestGenerator extends HUnitTestGenerator with GrowGenerator {
 
       test match {
         case eq: EqualsTestCase =>
-          // test_e3_1 = TestCase (assertEqual "NegCheck-Eval" (0-5.0) (${Eval.name} n1))
-          // (evalExpM0 (Add (Lit 1.0) (Lit 2.0))  ))
-          val disp = s"(${eq.op.name}${domain.baseTypeRep.name}${model.name.capitalize} (${convert(eq.inst)}))"
-          //val disp = dispatch(convert(test.inst), test.op)
+          val disp = s"(${eq.op.instance}${domain.baseTypeRep.name}${model.name.capitalize} (${convert(eq.inst)}))"
 
           expected(eq, idx)(expectedExpr => Seq(new Haskell(s"""test_v$idx = TestCase (assertEqual "${test.getClass.getSimpleName}" $expectedExpr $disp)""")))
 

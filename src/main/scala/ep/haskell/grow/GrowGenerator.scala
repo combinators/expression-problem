@@ -61,13 +61,13 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
         val mcaps = m.name.capitalize    // haskell needs data to be capitalized!
       val baseDomain = domain.baseTypeRep.name
 
-        s"${op.name}$baseDomain$mcaps :: ${expDeclaration(m.base())} $mcaps -> ${expDeclaration(m.base())} $mcaps"
+        s"${op.instance}$baseDomain$mcaps :: ${expDeclaration(m.base())} $mcaps -> ${expDeclaration(m.base())} $mcaps"
 
       case _ =>
         val mcaps = m.name.capitalize    // haskell needs data to be capitalized!
       val baseDomain = domain.baseTypeRep.name
 
-        s"${op.name}$baseDomain$mcaps :: ${expDeclaration(m.base())} $mcaps -> ${typeConverter(op.returnType.get)}"
+        s"${op.instance}$baseDomain$mcaps :: ${expDeclaration(m.base())} $mcaps -> ${typeConverter(op.returnType.get)}"
     }
   }
 
@@ -90,23 +90,16 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     domain.baseTypeRep.name + "_" + m.name.capitalize
   }
 
-  //  def typeSignature(m:Model, op:Operation):String = {
-  //    val mcaps = m.name.capitalize    // haskell needs data to be capitalized!
-  //    val baseDomain = domain.baseTypeRep.name
-  //
-  //    s"${op.name}$baseDomain$mcaps :: ${expDeclaration(m.base())} $mcaps -> ${typeConverter(op.returnType.get)}"
-  //  }
-
   def operationForFixedLevel(m:Model, op:Operation) : String = {
     val mcaps = m.name.capitalize    // haskell needs data to be capitalized!
     val baseDomain = domain.baseTypeRep.name
 
-    val invoke = m.inChronologicalOrder.reverse.tail.foldLeft(s"(${op.name}${expDeclaration(m)} helpWith${op.concept}$mcaps)")((former,tail) =>
-      s"(${op.name}${expDeclaration(tail)} $former)")
+    val invoke = m.inChronologicalOrder.reverse.tail.foldLeft(s"(${op.instance}${expDeclaration(m)} helpWith${op.concept}$mcaps)")((former,tail) =>
+      s"(${op.instance}${expDeclaration(tail)} $former)")
 
     s"""
        #${typeSignature(m,op)}
-       #${op.name}$baseDomain$mcaps e = $invoke e
+       #${op.instance}$baseDomain$mcaps e = $invoke e
        #""".stripMargin('#')
   }
 
@@ -325,7 +318,7 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
   override def dispatch(primary:Haskell, op:domain.Operation, params:Haskell*) : Haskell = {
     val args:String = params.mkString("")
 
-    Haskell(s"""(${op.name}${domain.baseTypeRep.name} helpWith ${primary.toString} $args)""")
+    Haskell(s"""(${op.instance}${domain.baseTypeRep.name} helpWith ${primary.toString} $args)""")
   }
 
   /** For straight design solution, directly access attributes by name. */

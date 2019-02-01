@@ -215,7 +215,7 @@ trait LanguageIndependentGenerator {
     */
   @throws[scala.NotImplementedError]("If no (data-type, operation) combination defined.")
   def logic(exp:Atomic, op:Operation) : Seq[Statement] = {
-    throw new scala.NotImplementedError(s"""Operation "${op.name}" does not handle case for sub-type "${exp.name}" """)
+    throw new scala.NotImplementedError(s"""Operation "${op.concept}" does not handle case for sub-type "${exp.concept}" """)
   }
 
   /**

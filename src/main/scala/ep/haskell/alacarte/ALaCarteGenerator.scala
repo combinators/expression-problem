@@ -23,7 +23,12 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
 
   override def contextDispatch(source:Context, delta:Delta) : Expression = {
     if (source.op.isEmpty) {
-      new Haskell(s"(${delta.op.get.instance} (${delta.expr.get}))")
+      val params = if (delta.params.nonEmpty) {
+        "(" + delta.params.mkString(" ") + ")"
+      } else {
+        ""
+      }
+      new Haskell(s"(${delta.op.get.instance} (${delta.expr.get}) $params)")
     } else if (delta.op.isDefined && !source.op.get.equals(delta.op.get)) {
       if (delta.expr.isEmpty) {
         // this is to SELF so, just invoke
@@ -35,8 +40,6 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
       super.contextDispatch(source, delta)
     }
   }
-
-
 
   /** For the processed model, return generated code artifacts for solution. */
   def generatedCode():Seq[HaskellWithPath] = {
@@ -129,15 +132,15 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
                            |$imports
                            |
                            |class Functor f => $name f where
-                           |  ${op.name}OneLevel :: f $opRetType -> $opRetType
+                           |  ${op.instance}OneLevel :: f $opRetType -> $opRetType
                            |${instances.mkString("\n")}
                            |
                            |instance ($name f, $name g) => $name (ET f g) where
-                           |  ${op.name}OneLevel  (El x) = ${op.name}OneLevel  x
-                           |  ${op.name}OneLevel  (Er y) = ${op.name}OneLevel  y
+                           |  ${op.instance}OneLevel  (El x) = ${op.instance}OneLevel  x
+                           |  ${op.instance}OneLevel  (Er y) = ${op.instance}OneLevel  y
                            |
-                           |${op.name} :: $name f => Expr f -> ${typeConverter(op.returnType.get)}
-                           |${op.name} expr = foldExpr ${op.name}OneLevel expr
+                           |${op.instance} :: $name f => Expr f -> ${typeConverter(op.returnType.get)}
+                           |${op.instance} expr = foldExpr ${op.instance}OneLevel expr
                            |""".stripMargin)
     HaskellWithPath(code, Paths.get(s"$name.hs"))
   }

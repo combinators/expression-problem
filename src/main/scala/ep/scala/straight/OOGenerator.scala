@@ -58,7 +58,7 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod {
   /** Directly access local method, one per operation, with a parameter. */
   override def dispatch(expr:Expression, op:Operation, params:Expression*) : Expression = {
     val args:String = params.mkString(",")
-    Scala(s"$expr.${op.name}($args)").expression
+    Scala(s"$expr.${op.instance}($args)").expression
   }
 
   /** Computer return type for given operation (or void). */
@@ -74,7 +74,7 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod {
     val params = op.parameters.map(param => param.name + ":" + typeConverter(param.tpe)).mkString(",")
 
     val str:String = s"""|
-             |def ${op.name}($params) : ${returnType(op)} = {
+             |def ${op.instance}($params) : ${returnType(op)} = {
                          |  ${logic(exp, op).mkString("\n")}
                          |}""".stripMargin
     Scala(str).statement
@@ -105,7 +105,7 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod {
 
     val ops = flat.ops.map(op => {
       val pars = op.parameters.map(param => { s"${param.name} : ${typeConverter(param.tpe)}" }).mkString(",")
-      s"def ${op.name}($pars) : ${typeConverter(op.returnType.get)}"
+      s"def ${op.instance}($pars) : ${typeConverter(op.returnType.get)}"
     })
 
     val str:String = s"""

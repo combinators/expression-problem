@@ -44,7 +44,7 @@ trait e0 extends JavaGenerator with JUnitTestGenerator with M0 {
     */
   abstract override def performanceMethod(): Seq[UnitTest] = {
     val a1 = new BinaryInst(Add, new LitInst(1.0), new LitInst(2.0))
-    val numTrials = 10
+    val numTrials = 11
 
     var trees = new BinaryInst(Add, a1, a1)
     var instantiations:String = s"${exprDefine(a1)} tree0  = ${convert(a1)};\n"

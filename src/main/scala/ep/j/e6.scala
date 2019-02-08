@@ -38,11 +38,11 @@ trait e6 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
       case Equals =>
 
         // GOAL: requesting AsTree on self produces same tree as invoking AsTree on that.
-        val leftDelta = deltaSelfOp(source, domain.AsTree)
+        val deltaLeft = deltaSelfOp(source, domain.AsTree)
         val that = Java(domain.base.that.name).expression[Expression]()
-        val rightDelta = deltaExprOp(source, that, domain.AsTree)
-        val lhs:Expression = contextDispatch(source, leftDelta)
-        val rhs:Expression = contextDispatch(source, rightDelta)
+        val deltaRight = deltaExprOp(source, that, domain.AsTree)
+        val lhs = contextDispatch(source, deltaLeft)
+        val rhs = contextDispatch(source, deltaRight)
         result(Java(s"$lhs.same($rhs)").expression())
 
       case _ => super.logic(exp, op)

@@ -8,6 +8,7 @@ trait BaseDomain {
 
   // We need to have a consistent strategy for cleaning up
   // these reserved words. Changes based on language. Not Yet Working
+  // TODO: nameMangle and this needs to move to language-specific areas.
   def sanitize(s:String):String = {
     if (reserved.contains(s)) {
       s + "z"
@@ -107,6 +108,7 @@ trait BaseDomain {
   // TODO: in all cases (i.e., think graph structure) but also one can optimize the need for it away if you have Eq (for Haskell) or .equals for Java
 
   /** Pre-defined unary/binary subtypes that reflects either a unary or binary structure. This is extensible. */
+  // TODO: Rename as DataType
   abstract class Atomic(n1: String, val attributes: Seq[Attribute]) {
     val name:String = sanitize(n1)
 

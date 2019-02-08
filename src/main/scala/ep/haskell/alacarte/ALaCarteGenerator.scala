@@ -125,10 +125,12 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
     })
 
     val opRetType = typeConverter(op.returnType.get)
+    val dependencies = dependency(op).map(op => s"import ${op.concept}").mkString("\n")
     val code = Haskell(s"""|module $name where
                            |import Base
                            |import GeneralExpr    -- only needed for Producer operations
                            |${addedImports(op).mkString("\n")}
+                           |$dependencies
                            |$imports
                            |
                            |class Functor f => $name f where

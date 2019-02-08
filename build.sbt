@@ -12,13 +12,21 @@ lazy val commonSettings = Seq(
     Resolver.typesafeRepo("releases")
   ),
 
-  scalacOptions ++= Seq(
+  scalacOptions in (Compile) ++= Seq(
     "-unchecked",
     "-deprecation",
     "-feature",
-    // "-groups",
     "-language:implicitConversions"
   ),
+
+  scalacOptions in (Compile,doc) ++= Seq(
+    "-unchecked",
+    "-deprecation",
+    "-feature",
+    "-groups",
+    "-language:implicitConversions"
+  ),
+
 
   libraryDependencies ++= Seq(
     "org.combinators" %% "cls-scala" % "2.0.0-RC1",

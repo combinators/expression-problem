@@ -5,6 +5,81 @@ import java.nio.file.Paths
 import ep.domain.{BaseDomain, ModelDomain}
 import ep.haskell._
 
+/**
+  * Based on Grow Haskell paper.
+  *
+  *
+  * Most complicated part of this code is working with expanded functions:
+  *
+  * helpEval is to be used for the dependent operation, Eval, within Simplify
+  * help is to be used for just "lifting" a child to be the simplification:
+
+{{{let
+    leftVal = ${contextDispatch(source, deltaLeft)}
+    rightVal = ${contextDispatch(source, deltaRight)}
+  in if leftVal == 0 || rightVal == 0.0
+    then ${result(inst(Lit, zero)).mkString("\n")}
+    else if leftVal == 1
+      then ${result(dispatch(expression(exp,base.right), op)).mkString("\n")}
+      else if rightVal == 1
+        then ${result(dispatch(expression(exp,base.left), op)).mkString("\n")}
+        else ${result(inst(Mult, standardVarArgs(Add) : _*)).mkString("\n")}
+}}}
+
+  * contextDispatch results in "help${delta.op.get.concept} ${delta.expr.get}"
+  *
+  * dispatch results in "(${op.instance}${domain.baseTypeRep.name} helpWith ${primary.toString} $args)"
+  *
+  * so look for strings "helpEval" and "helpWith". For example, logic is expanded as follows:
+
+
+{{{
+  let
+    leftVal = helpEval left
+    rightVal = helpEval right
+  in if leftVal == 0 || rightVal == 0.0
+    then Lit 0.0
+    else if leftVal == 1
+      then (simplifyExp helpWith right ) --  CHANGE to just help right
+      else if rightVal == 1
+        then (simplifyExp helpWith left )
+        else (Ext_M0 ((Ext_M1 (Ext_M2 (Mult (left) (right) )))))
+}}}
+
+  * And this must then be expanded into following by surrounding with a larger 'let' that
+  * defines 'helpEval' and provides a meaningful substitute (and telescoping) implementation
+  * of 'help' that recognizes the need to (recursively) apply both simplify and eval because
+  * of the inherent dependency between Simplify and Eval.
+  *
+  * Also one must replace "${op.instance}Exp helpWith " with "help "
+  *
+  * Since Simplify depends upon Eval, the initial signature needs two params (helpWithEval
+  * and helpWith), both of which are used within the inner definition for 'help'
+
+{{{
+simplifyExp_M3 helpWithEval helpWith (Mult left right) =
+  let
+    help = (simplifyExp_M0 (evalExp_M1 (evalExp_M2 (evalExp_M3 helpWithEval)))
+                             (simplifyExp_M1 (evalExp_M2 (evalExp_M3 helpWithEval))
+                                             (simplifyExp_M2 (evalExp_M3 helpWithEval)
+                                                             (simplifyExp_M3 helpWithEval helpWith))))
+    helpEval = evalExp_M0 (evalExp_M1 (evalExp_M2 (evalExp_M3 helpWithEval)))
+  in let
+       leftVal = helpEval left   -- contextDispatch(source, deltaChildOp(source, domain.base.left, Eval))
+       rightVal = helpEval right
+     in if leftVal == 0 || rightVal == 0.0
+         then Lit 0.0
+         else if leftVal == 1
+              then (help right )   -- result(dispatch(expression(exp,base.right), op)).mkString("\n")
+              else if rightVal == 1
+                   then (help left )
+                   else (Ext_M0 ((Ext_M1 (Ext_M2 (Mult (left) (right) )))))
+}}}
+
+  The proper repackaging is done in "generateOp" where the invocation to logic (from above) is
+  manipulated via string-rewriting, based on the current "model" level.
+
+  */
 trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod with HaskellBinaryMethod {
   val domain:BaseDomain with ModelDomain
   import domain._
@@ -90,17 +165,63 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     domain.baseTypeRep.name + "_" + m.name.capitalize
   }
 
-  def operationForFixedLevel(m:Model, op:Operation) : String = {
-    val mcaps = m.name.capitalize    // haskell needs data to be capitalized!
+  /**
+    * If there are dependent operations, the resulting invocations become all the more complicated...
+    *
+    * @param m
+    * @param op
+    * @param depends
+    * @return
+    */
+  def operationForFixedLevel(m:Model, op:Operation, depends:Seq[Operation]) : String = {
+    println ("op:" + op.concept + ", depends:" + depends.map(d => d.concept).mkString(","))
+
+    val mcaps = m.name.capitalize // haskell needs data to be capitalized!
     val baseDomain = domain.baseTypeRep.name
 
-    val invoke = m.inChronologicalOrder.reverse.tail.foldLeft(s"(${op.instance}${expDeclaration(m)} helpWith${op.concept}$mcaps)")((former,tail) =>
-      s"(${op.instance}${expDeclaration(tail)} $former)")
+    // BAD
+    // (simplifyExp_M0 (simplifyExp_M1 (simplifyExp_M2 (simplifyExp_M3 (simplifyExp_M4 helpWithSimplifyM4))))) e
 
-    s"""
-       #${typeSignature(m,op)}
-       #${op.instance}$baseDomain$mcaps e = $invoke e
-       #""".stripMargin('#')
+    // GOOD
+    //    (simplifyExp_M0 (evalExp_M1 (evalExp_M2 (evalExp_M3 (evalExp_M4 helpWithEvalM4))))
+    //    (simplifyExp_M1 (evalExp_M2 (evalExp_M3 (evalExp_M4 helpWithEvalM4)))
+    //    (simplifyExp_M2 (evalExp_M3 (evalExp_M4 helpWithEvalM4))
+    //    (simplifyExp_M3 (evalExp_M4 helpWithEvalM4)
+    //    (simplifyExp_M4 helpWithEvalM4 helpWithSimplifyM4))))) e
+    val allModels = m.inChronologicalOrder
+
+    if (depends.isEmpty || depends.size > 1) {
+      val invoke = allModels.reverse.tail.foldLeft(s"(${op.instance}${expDeclaration(m)} helpWith${op.concept}$mcaps)")((former, next) => {
+        s"(${op.instance}${expDeclaration(next)} $former)"
+      })
+
+      s"""
+         #${typeSignature(m, op)}
+         #${op.instance}$baseDomain$mcaps e = $invoke e
+         #""".stripMargin('#')
+    } else {
+      val dop = depends.head
+
+      val invoke = allModels.indices.map(outer => {
+        val lastOne = if (outer == allModels.size-1) { s"helpWith${op.concept}$mcaps" } else {""}
+        s"(${op.instance}${expDeclaration(allModels(outer))} " + // inner goes from outer+1 .. Mn
+          (allModels.size - 1 until outer by -1).foldLeft(s" helpWith${dop.concept}$mcaps")((state, inner) => s"(${dop.instance}${expDeclaration(allModels(inner))} $state)").mkString("") +
+          s" $lastOne"  // ONLY LAST one has "helpWith${op.concept}$mcaps"
+      }).mkString("") + allModels.indices.map(_ => ")").mkString("")
+
+//      val invoke = allModels.reverse.tail.foldLeft(s"(${op.instance}${expDeclaration(m)} helpWith${dop.concept}$mcaps helpWith${op.concept}$mcaps)")((outerFormer, outerNext) => {
+//
+//      val mcaps = m.name.capitalize
+//      val inner = outerNext.inChronologicalOrder.reverse.tail.foldLeft(s"(${dop.instance}Exp_$mcaps helpWith${dop.concept}$mcaps)")((former, next) => {
+//          s"(${dop.instance}Exp_${next.name.capitalize} $former)"})
+//        s"(${op.instance}${expDeclaration(outerNext)} $inner $outerFormer)"
+//      })
+
+      s"""
+         #${typeSignature(m, op)}
+         #${op.instance}$baseDomain$mcaps e = $invoke e
+         #""".stripMargin('#')
+    }
   }
 
   /**
@@ -121,7 +242,7 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
   }
 
   /**
-    * Handles refinement of SubExp f ~ ExpExtType for all predecssor types
+    * Handles refinement of SubExp f ~ ExpExtType for all predecessor types
     *
     * @param m
     * @param op
@@ -131,41 +252,105 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     val mcaps = m.name.capitalize    // haskell needs data to be capitalized!
 
     val baseDomain = domain.baseTypeRep.name
-    val name = op.name
+    //val name = op.name
 
     val returnType = typeConverter(op.returnType.get)
     val extType = extTypeDeclaration(m)
 
+    // If an operation has a single dependency, then add it in
+    val extraParam = if (dependency(op).size == 1) {
+      "_"
+    } else {
+      ""
+    }
+
+    // keep track of (singular) dependent operation; fall-back to self-op if no dependencies.
+    val dop = if (dependency(op).size == 1) {
+      dependency(op).head
+    } else {
+      op
+    }
+
+    // If an operation has a single dependency, then add it in
+    val extraWith = if (dependency(op).size == 1) {
+      s"helpWith${dop.concept}"
+    } else {
+      ""
+    }
+
+    val allModels = m.inChronologicalOrder
     val inner:String= m.types.map(exp => {
       val head = exp match {
-        case b: Binary => s"$name${expDeclaration(m)} helpWith "
-        case u: Unary => s"$name${expDeclaration(m)} helpWith "
-        case _ => s"$name${expDeclaration(m)} _ "
+        case b: Binary => s"${op.instance}${expDeclaration(m)} $extraWith helpWith "
+        case u: Unary => s"${op.instance}${expDeclaration(m)} $extraWith helpWith "
+        case _ => s"${op.instance}${expDeclaration(m)} _ $extraParam "
       }
 
-      val modifiedRest = { // if (!m.last.isEmpty)
-        // must embed 'help' properly, if needed
+      val modifiedRest = {
+        // must embed 'help' properly, if needed.
+        // TODO: Perhaps handle in contextDispatch in the first place? or dispatch? Can't
+        // do so, since we need to know the MODEL m for which operation is first defined.
+        // or perhaps we could
         val code = logic(exp, op).mkString("\n")
-        if (code.contains(" helpWith ")) {
-          val prior = m.last.name.capitalize
+        if (code.contains(" help")) { // THis sure looks like a hack. How to figure out from code?
 
-          // old:   let help = $name${expDeclaration(m.last)} ($name${expDeclaration(m)} helpWith) in
+          // outer goes from M0 .. M1 .. Mn
+          val help = if (dependency(op).isEmpty) {
+            ""
+          } else {
 
+            "help = " + allModels.indices.map(outer => {
+              val lastOne = if (outer == allModels.size-1) { "helpWith" } else {""}
+              s"(${op.instance}${expDeclaration(allModels(outer))} " + // inner goes from outer+1 .. Mn
+                (allModels.size - 1 until outer by -1).foldLeft(s" helpWith${dop.concept}")((state, inner) => s"(${dop.instance}${expDeclaration(allModels(inner))} $state)").mkString("") +
+                   s" $lastOne"  // ONLY LAST one has "helpWith"
+            }).mkString("") + allModels.indices.map(_ => ")").mkString("")
+          }
 
           if (!m.last.isEmpty) {
-            val invoke = m.inChronologicalOrder.reverse.tail.foldLeft(s"(${op.instance}${expDeclaration(m)} helpWith)")((former,tail) =>
-              s"(${op.instance}${expDeclaration(tail)} $former)")
+            // convert "(simplifyExp helpWith right )" into "(help right )"
+            val helpDOP = if (help.isEmpty) {
+              val invokeSimple = allModels.reverse.foldLeft(s" helpWith")((outerState,outerNext) =>
+                s"(${dop.instance}${expDeclaration(outerNext)} $outerState)")
+              s"help = $invokeSimple"
+            } else {
+              val invoke = allModels.reverse.foldLeft(s" helpWith${dop.concept}")((outerState,outerNext) =>
+                s"(${dop.instance}${expDeclaration(outerNext)} $outerState)")
+              s"""
+                 #    $help
+                 #    help${dop.concept} = $invoke
+               """.stripMargin('#')
+            }
 
             s"""(${exp.concept} ${standardArgs(exp).getCode}) =
-               #  let help = $invoke in
-               #  ${code.replace(s"$name${domain.baseTypeRep.name} helpWith ", "help ")}""".stripMargin('#')
+               #  let
+               #    $helpDOP
+               #  in
+               #  ${code.replace(s"${op.instance}${domain.baseTypeRep.name} helpWith ", "help ")}""".stripMargin('#')
           } else {
+            val name = if (dependency(op).size == 1) {
+              dependency(op).head.instance
+            } else {
+              op.instance
+            }
+
+            val helpDOP = if (help.isEmpty) {
+              s"help = ${op.instance}${expDeclaration(m)} helpWith"
+            } else {
+              s"""
+                 #    $help
+                 #    help${dop.concept} = $name${expDeclaration(m)} helpWith${dop.concept}
+               """.stripMargin('#')
+            }
+
             s"""(${exp.concept} ${standardArgs(exp).getCode}) =
-               #  let help = $name${expDeclaration(m)} helpWith in
-               #  ${code.replace(s"$name${domain.baseTypeRep.name} helpWith ", "help ")}""".stripMargin('#')
+               #  let
+               #    $helpDOP
+               #  in
+               #  ${code.replace(s"${op.instance}${domain.baseTypeRep.name} helpWith ", "help ")}""".stripMargin('#')
           }
         } else {
-          s"(${exp.concept} ${standardArgs(exp).getCode}) = " + logic(exp, op).mkString("\n")
+          s"(${exp.concept} ${standardArgs(exp).getCode}) = " + code
         }
       }
       head + modifiedRest
@@ -179,51 +364,60 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
 
     // capture inner extension relationships
     val header = s"($extType f -> $returnType)"
-    val signature = if (!m.last.isEmpty) {
+    val precursor = if (!m.last.isEmpty) {
       // Must remove the lastmost "empty" one, as well as the one before it, since we don't need ~ arguments
       // for the first definition in M0
       val prior = m.toSeq.filterNot(m => m.isEmpty || m.last.isEmpty).map(m =>
         s"${expDeclaration(m)} f ~ ${extTypeDeclaration(m.last)} f")
-      "(" + prior.mkString(",") + s") => $header"
+      "(" + prior.mkString(",") + s") => "
     } else {
-      header
+      ""
     }
 
-    // if we define new operations, we must expand as provided
-    val operationSpec = operationForFixedLevel(m, op)
+    val extraSignature = if (dependency(op).size == 1) {
+      val ret = typeConverter(dop.returnType.get).tpe
+      s"""#(Ext_${mcaps}Type f -> $ret)
+          #  -- ^ Function to help with evaluating subexpression extensions
+          #  -> """.stripMargin('#')
+    } else {
+      ""
+    }
+
+    // if we define new operations, we must expand as provided. Operations with dependent operations
+    // have to be handled specially...
+    val operationSpec = operationForFixedLevel(m, op, dependency(op))
 
     new Haskell(s"""
                    #-- | Evaluates expression.
-                   #$name${expDeclaration(m)}
-                   #  :: $signature
+                   #${op.instance}${expDeclaration(m)}
+                   #  :: $precursor$extraSignature$header
                    #  -- ^ Function to help with extensions
                    #  -> ${expDeclaration(m)} f
                    #  -- ^ The expression to evaluate
                    #  -> $returnType
                    #
-         #$inner
-                   #$name${expDeclaration(m)} helpWith (${extDeclaration(m)} inner) = helpWith inner
+                   #$inner
+                   #${op.instance}${expDeclaration(m)} $extraParam helpWith (${extDeclaration(m)} inner) = helpWith inner
                    #
-         #-- | Evaluates an $mcaps expression
+                   #-- | Evaluates an $mcaps expression
                    #-- | Calls ${op.instance}$baseDomain with the $mcaps helper
                    #$operationSpec
                    #
-         #-- | Helps with extensions $mcaps
+                   #-- | Helps with extensions $mcaps
                    #helpWith${op.concept}$mcaps :: Void -> ${typeConverter(op.returnType.get)}
                    #helpWith${op.concept}$mcaps = absurd
                    #
-         #""".stripMargin('#'))
+                   #""".stripMargin('#'))
   }   // Void had been $previous
 
   def generateData(m:Model):Haskell = {
     val mcaps = m.name.capitalize    // haskell needs data to be capitalized!
     val Exp = expDeclaration(m.base())    //   domain.baseTypeRep.name + "_" + m.name.capitalize
 
-    val inner:String= m.types.map(t =>
-      t match {
-        case b:Binary => s"""${t.concept} ($Exp f) ($Exp f)     -- Binary instance """
-        case c:Unary =>  s"""${t.concept} ($Exp f)              -- Unary instance """
-        case a:Atomic => s"""${t.concept} ${typeConverter(t.attributes.head.tpe)}    -- Atomic instance """
+    val inner:String= m.types.map( {
+        case b:Binary => s"""${b.concept} ($Exp f) ($Exp f)     -- Binary instance """
+        case c:Unary =>  s"""${c.concept} ($Exp f)              -- Unary instance """
+        case a:Atomic => s"""${a.concept} ${typeConverter(a.attributes.head.tpe)}    -- Atomic instance """
       }
     ).mkString("\n     | ")
 
@@ -259,24 +453,23 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
                    #-- | current evolution.
                    #$dataTypeDefinition
                    #
-            #-- | Family of Exp data-type extensions:
+                   #-- | Family of Exp data-type extensions:
                    #-- | Given a marker type of a evolution, compute the type extension
                    #-- | of Exp used for this evolution.
                    #type family ${extTypeDeclaration(m)} f
                    #
-            #$priorOps
+                   #$priorOps
                    #$ops
                    #
-            #-- Evolution $mcaps
+                   #-- Evolution $mcaps
                    #-- | Marker type to select evolution $mcaps
                    #data $mcaps
                    #
-            #-- | Selecting $mcaps means: no extensions to type ${expDeclaration(m)}; take care of previous ones
+                   #-- | Selecting $mcaps means: no extensions to type ${expDeclaration(m)}; take care of previous ones
                    #$pastExtensions
                    #type instance ${extTypeDeclaration(m)} $mcaps = Void
                    #
-            #
-            #$pastOps
+                   #$pastOps
                    #""".stripMargin('#'))   // HACK: Issue with "|"
   }
 
@@ -324,5 +517,24 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
   /** For straight design solution, directly access attributes by name. */
   override def expression (exp:Atomic, att:Attribute) : Expression = {
     Haskell(s"${att.instance}")
+  }
+
+  /**
+    * When a method is delegated to a different context, relies no helper helper methods
+    * that are constructed for this purpose.
+    *
+    * @param source     The source context where dispatch occurs
+    * @param delta      The delta context that describes desired expression and operation
+    *
+    * @return
+    */
+  override def contextDispatch(source:Context, delta:Delta) : Expression = {
+    if (delta.op.isDefined) {
+      // if an operation has a dependency, that is expressed with a helper function
+      Haskell(s"""help${delta.op.get.concept} ${delta.expr.get}""")
+      //dispatch(delta.expr.get, delta.op.get, delta.params: _*)
+    } else {
+      super.contextDispatch(source, delta)
+    }
   }
 }

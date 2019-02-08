@@ -5,7 +5,7 @@ import java.nio.file.Paths
 import ep.domain.{BaseDomain, ModelDomain}
 import ep.scala._
 
-import scala.meta.{Stat, Term}
+import scala.meta.Stat
 
 /**
   * Each evolution has opportunity to enhance the code generators.

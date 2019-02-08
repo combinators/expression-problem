@@ -58,7 +58,16 @@ trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskell
     exp.attributes.map(att => Haskell(att.instance + suffix))
   }
 
-  /** If any new imports are needed for an operation, just extend here. */
+  /**
+    * If any new imports are needed for an operation, just extend here.
+    *
+    * This is a distinctly different interface than the ability to declare when an operation
+    * has a dependent operation upon which it depends; in that case, override the
+    * dependency(op:Operation) method.
+    *
+    * @param op
+    * @return
+    */
   def addedImports(op:domain.Operation):Seq[Haskell] = Seq.empty
 
   /**

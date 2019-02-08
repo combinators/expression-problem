@@ -1,15 +1,6 @@
 
-->    /                              org.combinators.cls.git.Routes
+#####->    /                              org.combinators.cls.git.Routes
 
-#GET   /ep                      example.expression.covariant.Expression.overview()
-#GET   /ep/raw_:number          example.expression.covariant.Expression.raw(number: Long)
-#GET   /ep/prepare              example.expression.covariant.Expression.prepare(number: Long)
-#GET   /ep/ep.git/*file         example.expression.covariant.Expression.serveFile(file)
-
-#GET   /expression                      ep.j.visitor.Expression.overview()
-#GET   /expression/raw_:number          ep.j.visitor.Expression.raw(number: Long)
-#GET   /expression/prepare              ep.j.visitor.Expression.prepare(number: Long)
-#GET   /expression/expression.git/*file         ep.j.visitor.Expression.serveFile(file)
 
 # All variants have names that end in "Evolution", with sub-branches as described by 'e0', 'e1', 'e2', ...
 #scala-oo

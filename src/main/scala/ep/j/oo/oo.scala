@@ -14,7 +14,7 @@ package ep.j
   *
   * Here is the fully generated solution for M0:
   *
-  * There would be a base interface, Exp, that defines the collection of available operations:
+  * There exists an abstract base class, Exp, that defines the collection of available operations:
   *
 {{{
 package oo;
@@ -24,8 +24,8 @@ public abstract class Exp {
 }
 }}}
 
-  * Each operation would exist as a Java class that extends the Exp base class:
-  *
+  * Each data-type would exist as a Java class that extends the Exp base class:
+
 {{{
     package oo;
     public class Lit extends Exp {
@@ -37,9 +37,8 @@ public abstract class Exp {
     }
 }}}
 
-  * The Add operation would have the following implementation:
-  *
-  *
+  * The Add data-type has the following implementation:
+
 {{{
 package oo;
 public class Add extends Exp {
@@ -56,7 +55,6 @@ public class Add extends Exp {
 }
 }}}
 
-  *
   * This implementation is not strictly a solution to EP because one has to change existing
   * classes whenever the system must evolve to add a new operation.
   *
@@ -70,8 +68,7 @@ public void test() {
    assertEquals(5.0, new Lit(5.0).eval());
 }
 }}}
-  *
-  *
+
   * == Evolutions ==
   * There are six fundamental evolutions completed: [[ep.j.oo.M0_Variation]], [[ep.j.oo.M1_Variation]],
   * [[ep.j.oo.M2_Variation]], [[ep.j.oo.M3_Variation]], [[ep.j.oo.M4_Variation]], [[ep.j.oo.M5_Variation]],
@@ -83,9 +80,6 @@ public void test() {
   * There is one composite branch [[ep.j.oo.C1_Variation]] that connects together the evolutions
   * up to [[ep.domain.M3]] and the evolutions up to [[ep.domain.I2]], thus demonstrating the
   * ability to join together previously independent paths.
-  *
-  *
-  *
   */
 package object oo {
 

@@ -9,21 +9,23 @@ import ep.domain.{BaseDomain, ModelDomain}
   * At the heart of EP is code that needs to be written that describes how an operation
   * executes on a given data-type. If all data-types were atomic, then this would not be
   * an interesting problem! Instead, data-types are recursive and have structure, thus it
-  * is necessary that the logic be constructed using a clear API.
+  * is necessary that the logic be constructed using a clear API. In addition, logic of
+  * an operation can be decomposed into different operations on the data-type under consideration.
   *
   * === Common Dispatch Scenarios ===
   *
   *  1. The most common situation is when the logic for an operation on a data-type is composed from
-  *     logic applied to the data-types' sub-expressions. For example, when an ADD data type
-  *     has a LEFT and a RIGHT expression, then the logic for Evaluate (in Java) would be:
+  *     logic applied to the data-types' sub-expressions. For example, when an Add data-type
+  *     has a Left and a Right expression, then the logic for Evaluate (in Java) would be:
   *
-  * {{{\${dispatch(atts(left),op)} + \${dispatch(atts(right),op)}}}
+  *         {{{dispatch(atts(left),op) + dispatch(atts(right),op)}}}
   *
-  * since the full expression is the addition of a LEFT expression and a RIGHT expression.
+  *     since the full expression is the addition of a Left expression and a Right expression.
   *
   *  2. Sometimes a new operation must be dispatched to a sub-expression. For example, the
-  *     Simplify operation can simplify (9 - 9) with just the expression 0, by evaluating the
-  *     value of the left and right children to see if they are the same.
+  *     Simplify operation can simplify the mathematical expression (9 - 9) with just the
+  *     expression 0, by evaluating the value of the left and right children to see if
+  *     they are the same.
   *
   *  {{{
        val deltaLeft = deltaChildOp(source, left, Eval)
@@ -36,7 +38,7 @@ import ep.domain.{BaseDomain, ModelDomain}
                 |}""".stripMargin).statements()
   *  }}}
   *
-  *  Calling '''contextDispatch''' using [deltaChildOp enables one to invoke a different operation (in
+  *  Calling '''contextDispatch''' using deltaChildOp enables one to invoke a different operation (in
   *  this case, Eval is different from the original operation, Simplify) on a child context,
   *  which could be either of the left or right attributes.
   *
@@ -47,31 +49,31 @@ import ep.domain.{BaseDomain, ModelDomain}
   *     are the same.
 
         {{{
-          val leftDelta = deltaSelfOp(source, AsTree)
-          val that = Java(domain.base.that.name).expression()
-          val rightDelta = deltaExprOp(source, that, AsTree)
-          val lhs:Expression = contextDispatch(source, leftDelta)
-          val rhs:Expression = contextDispatch(source, rightDelta)
-          result(Java(s"\$lhs.same(\$rhs)").expression[Expression]())
+          val deltaLeft = deltaSelfOp(source, domain.AsTree)
+          val that = Java(domain.base.that.name).expression[Expression]()
+          val deltaRight = deltaExprOp(source, that, domain.AsTree)
+          val lhs = contextDispatch(source, deltaLeft)
+          val rhs = contextDispatch(source, deltaRight)
+          result(Java(s"$lhs.same($rhs)").expression())
        }}}
   *
-  * Calling '''contextDispatch''' using deltaSelfOp enables one to invoke a different operation (
-  * in this case, AsTree is different from Equals) on its self context.
+  * Calling '''contextDispatch''' using deltaSelfOp enables one to invoke a different operation
+  * (in this case, AsTree is different from Equals) on its self context.
   *
   *  4. Finally, a different operation may need to be performed on a different context.  The
   *     code snippet above shows this example. Calling '''contextDispatch''' using deltaExprOp
   *     enables one to invoke a different operation (in this case, AsTree is different
-  *     from Equals) on a different context, in this case, the expression "that" which represents
-  *     the argument to the equals operation.
+  *     from Equals) on a different context; in this case, the expression "that" which represents
+  *     the argument to the Equals operation.
   *
   * === Producer Methods ===
   *
   * For producer methods, there is a need to instantiate data-types based on the specific
   * domain. For example, in C++, when the Simplify operation tries to simplify a multiplication
-  * data-type but fails, it just produces code that instantiates a new Mult data type
+  * data-type but fails, it just produces code that instantiates a new Mult data-type
   * by dispatching Simplify to its LEFT and RIGHT children.
   *
-  * {{{\$inst(Mult, dispatch(atts(left), Simplify), dispatch(atts(right), Simplify)))}}}
+  * {{{inst(Mult, dispatch(atts(left), Simplify), dispatch(atts(right), Simplify)))}}}
   *
   * @groupname api Core API
   * @groupname deltaHelpers DeltaHelpers
@@ -80,7 +82,9 @@ import ep.domain.{BaseDomain, ModelDomain}
   * @groupname dependency External Dependencies
 
   * @groupdesc dependency Depends upon BaseDomain (for the core logic) and the desired
-  *            ModelDomain (for the specific application domain logic).
+  *            ModelDomain (for the specific application domain logic). [[BaseDomain]]
+  *            provides the fundamental building blocks used to model domains
+  *            in [[ModelDomain]]
   *
   * @groupdesc api Fundamental abstractions needed for any language-based solution to EP
   * @groupprio api 0
@@ -114,7 +118,7 @@ trait LanguageIndependentGenerator {
   type CompilationUnit
 
   /**
-    * Base concept for a single expression in language.
+    * Base concept for a single expression in the language.
     * @group types
     */
   type Expression
@@ -147,11 +151,11 @@ trait LanguageIndependentGenerator {
     * Expression-tree data has attributes with domain-specific types. This method returns
     * the designated language-specific type associated with the abstract type.
     *
-    * By throwing a runtime exception, we terminate any code generation which fails to account
-    * for a given type in the model.
+    * By throwing a runtime exception, this method terminates any code generation which fails
+    * to account for a given type in the model.
     *
-    * Note that the top-most type is domain.baseTypeRep. If no converter is defined for the
-    * given type, then this method will ultimately throw a scala.NotImplementedError exception.
+    * Note that the top-most type is ''domain.baseTypeRep''. If no converter is defined for the
+    * given type, then this method will ultimately throw a ''scala.NotImplementedError'' exception.
     *
     * @param tpe    type from model to be converted into language-specific type.
     * @group api
@@ -168,8 +172,8 @@ trait LanguageIndependentGenerator {
     * Each EP approach must provide a suitable implementation, which is aggregated by
     * the helper method [[subExpressions]].
     *
-    * By throwing a runtime exception, this method terminates any code generation that uses an invalid
-    * attribute name by mistake.
+    * By throwing a runtime exception, this method terminates any code generation that
+    * refers to an invalid attribute by mistake.
     *
     * @param exp   desired data-type
     * @param att   desired Attribute
@@ -200,14 +204,14 @@ trait LanguageIndependentGenerator {
 
   /**
     * For all possible EP solutions, this method generates the sequence of statements that result
-    * for a given Operation and data-type.
+    * for a given operation and data-type.
     *
-    * Must be Seq since some operations require more substantial implementation depending upon the
-    * programming language.
+    * Must be return a sequence of statements since some operations require a more substantial
+    * implementation depending upon the programming language.
     *
     * Must be Statements (rather than just an Expression) because in most operations, a value of
     * some sort is returned, thus instead of just "expr" it becomes "return expr;" To activate the
-    * "return expr;" statement,
+    * "return expr;" statement, use the [[result]] method.
     *
     * @param exp    data-type for the context
     * @param op     operation for the context
@@ -219,11 +223,11 @@ trait LanguageIndependentGenerator {
   }
 
   /**
-    * Logic produces the sequence of statements that encodes the logic of an operation on a data
-    * type. As part of those statements, there is often a computed value that represents the result
+    * Logic produces the sequence of statements that encodes the logic of an operation on a data-type.
+    * As part of those statements, there is often a computed value that represents the result
     * of the operation. In some languages, this result needs to be returned (i.e., Java or C++); in
-    * some EP approaches, this result is simply stored. In other languages (i.e., Scala or functional)
-    * there is no specific return statement.
+    * some EP approaches, this result is simply stored (i.e., see C++ implementation of visitorTable).
+    * In other languages (i.e., Scala or functional) there is no specific return statement.
     *
     * In any event, each approach determines how to process the result. It could be handled in
     * language-specific manner and then overridden as needed by the EP approach.
@@ -249,26 +253,26 @@ trait LanguageIndependentGenerator {
   def dispatch(expr:Expression, op:domain.Operation, params:Expression*) : Expression
 
   /**
-    * When defining the logic(exp,op) that represents the code statements for applying a given operation
-    * on a specific data-type, it can be defined using sub-expressions that represent the dispatch
+    * The '''logic(exp,op)''' that represents the code statements for applying a given operation
+    * on a specific data-type can be defined using sub-expressions that represent the dispatch
     * of that operation (or a new operation) on a different context (or the same context).
     *
     * The three cases that are covered include:
     *
-    *   1. [[deltaChildOp]] : a new operation must be dispatched to a sub-expression.
+    *   1. [[deltaChildOp]] : a new operation must be dispatched to a child sub-expression.
     *   1. [[deltaSelfOp]]  : a new operation must be dispatched to self.
-    *   1. [[deltaExprOp]]  : a new operation must be dispatched to a new context expression
+    *   1. [[deltaExprOp]]  : a new (or same) operation must be dispatched to a new context expression
     *
     * All of these options are handled by this interface. Some of the more complicated
     * EP approaches require complicated implementations of this method.
     *
-    * The default implementation throws an exception if delta.expr is empty (since it has
+    * The default implementation throws an exception if ''delta.expr'' is empty (since it has
     * no way to know what the current context is). Individual EP generators must handle this
-    * case on their own). When there is a delta.expr to use, then this default implementation
+    * case on their own). When there is a ''delta.expr'' to use, then this default implementation
     * covers the following two cases:
     *
-    *   1. if delta.op is defined, this becomes a dispatch(delta.expr, delta.op)
-    *   1. if delta.op is not defined, then this becomes a dispatch(delta.expr, source.op)
+    *   1. if ''delta.op'' is defined, this becomes a '''dispatch(delta.expr, delta.op)'''
+    *   1. if ''delta.op'' is not defined, then this becomes a '''dispatch(delta.expr, source.op)'''
     *
     * @param source     The source context where dispatch occurs
     * @param delta      The delta context that describes desired expression and operation
@@ -288,9 +292,9 @@ trait LanguageIndependentGenerator {
   }
 
   /**
-    * A Context represents the point in the expression problem where the logic for a given
-    * data-type and operation is to be found. It can be considered as "Subject Verb Object*"
-    * with a number of objects as parameters.
+    * A Context represents the situation in EP where the logic for a given data-type and
+    * operation is generated. It can be considered as "Subject Verb Object*" with a number
+    * of objects as potential parameters.
     *
     * @param exp      (optional) data-type of the context.
     * @param op       (optional) operation.
@@ -301,7 +305,8 @@ trait LanguageIndependentGenerator {
 
   /**
     * When code is being generated independently (either within a test case or perhaps even
-    * within the logic for a specific data-type,operation pair) use the [[NoSource]] source context.
+    * within the logic for a specific data-type,operation pair) use the [[NoSource]] source
+    * context to specify a break from the existing context.
     *
     * @group context
     */
@@ -368,7 +373,7 @@ trait LanguageIndependentGenerator {
     * Helper method for constructor Delta when requesting operation on self.
     *
     * Since the context of source remains the same, the [[Delta]] returned only
-    * records the new operation,op, with its parameters.
+    * records the new operation,op, with its potential parameters.
     *
     * NOTE: POTENTIAL INFINITE LOOP IF CALL deltaSelfOp on self with same operation
     *

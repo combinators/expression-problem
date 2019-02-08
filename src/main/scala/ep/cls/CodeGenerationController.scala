@@ -40,17 +40,17 @@ abstract class CodeGenerationController[ResultType] (web: WebJarsUtil, app: Appl
   (implicit resultPersistence: Persistable.Aux[ResultType])
   extends InhabitationController(web, app) with RoutingEntries {
 
-  /** All generated code is found in this sequence. */
-  val generatedCode: Seq[ResultType]
-
   /** Uses an empty repository dummy */
   lazy val Gamma = ReflectedRepository((), classLoader = this.getClass.getClassLoader)
 
   /** This needs to be defined, and it is set from Gamma. */
   lazy val combinatorComponents = Gamma.combinatorComponents
 
+  val generatedCode:Seq[ResultType]
+  lazy val results:Results = defaultResults(generatedCode)
+
   /** Has to be lazy so subclasses can compute model. */
-  lazy val results:Results = generatedCode.foldLeft(EmptyInhabitationBatchJobResults(Gamma).compute()){
+  def defaultResults(genCode:Seq[ResultType]) : Results =  genCode.foldLeft(EmptyInhabitationBatchJobResults(Gamma).compute()) {
     (result, code) => result.addExternalArtifact[ResultType](code)
   }
 

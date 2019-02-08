@@ -137,7 +137,6 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
                           """.stripMargin)
   }
 
-
   /** Extensions based on past operation */
   def operationExtension(op:domain.Operation, model:domain.Model): CompilationUnit = {
     val regularVisitor:CompilationUnit = super.generateOperation(model, op)

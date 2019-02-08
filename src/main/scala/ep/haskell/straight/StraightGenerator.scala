@@ -54,10 +54,12 @@ trait StraightGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
       }
     }
 
+    val dependencies = dependency(op).map(op => s"import ${op.concept}").mkString("\n")
     val code = Haskell(s"""|module ${op.concept} where
                            |import DataTypes
                            |
                            |${addedImports(op).mkString("\n")}
+                           |$dependencies
                            |$definition
                            |${instances.mkString("\n")}""".stripMargin)
     HaskellWithPath(code, Paths.get(s"${op.concept}.hs"))

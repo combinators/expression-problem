@@ -35,11 +35,11 @@ trait cpp_e6 extends Evolution with CPPGenerator with CPPBinaryMethod with TestG
     op match {
       case Equals =>
         val thatSource = NoSource()
-        val leftDelta = deltaSelfOp(source, domain.AsTree)
+        val deltaLeft = deltaSelfOp(source, domain.AsTree)
         val that = new CPPElement(domain.base.that.name)
-        val rightDelta = deltaExprOp(thatSource, that, domain.AsTree) // was Independent
-        val lhs: Expression = contextDispatch(source, leftDelta)
-        val rhs: Expression = contextDispatch(thatSource, rightDelta)
+        val deltaRight = deltaExprOp(thatSource, that, domain.AsTree)
+        val lhs = contextDispatch(source, deltaLeft)
+        val rhs = contextDispatch(thatSource, deltaRight)
         result(new CPPElement(s"$lhs->same($rhs)"))
 
       case _ => super.logic(exp, op)

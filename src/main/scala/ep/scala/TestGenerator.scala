@@ -103,10 +103,14 @@ trait TestGenerator extends ScalaGenerator {
         case comp:EqualsCompositeTestCase =>
           val params = comp.params.map(pair => expand(pair._1, pair._2))
 
-          val x :Expression = actual(comp.ops.head, comp.inst, params: _*)   // HACK: Only works for two-deep
-          val y :Expression = dispatch(x, comp.ops.tail.head)
+          // TODO: replicate in other languages
+//          val x2 :Expression = actual(comp.ops.head, comp.inst, params: _*)
+//          val y2 :Expression = dispatch(x2, comp.ops.tail.head)
 
-          expected(comp, id)(expectedExpr => Seq(Scala(s"assert ($expectedExpr == $y)").statement))
+          val start:Expression = actual(comp.ops.head, comp.inst, params: _*)
+          val result:Expression = comp.ops.tail.foldLeft(start){case (state, next) => dispatch(state, next)}
+
+          expected(comp, id)(expectedExpr => Seq(Scala(s"assert ($expectedExpr == $result)").statement))
 
         case ne:NotEqualsTestCase =>
           val params = ne.params.map(pair => expand(pair._1, pair._2))

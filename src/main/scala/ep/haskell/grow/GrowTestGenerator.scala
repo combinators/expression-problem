@@ -40,38 +40,6 @@ trait GrowTestGenerator extends HUnitTestGenerator with GrowGenerator {
     }
   }
 
-  /** RMore complicated invocation. */
-  override def hunitMethod(tests:Seq[TestCase]) : Haskell = {
-    val model = getModel
-    val stmts: Seq[Haskell] = tests.zipWithIndex.flatMap(pair => {
-      val test = pair._1
-      val idx = pair._2
-
-      test match {
-        case eq: EqualsTestCase =>
-          val disp = s"(${eq.op.instance}${domain.baseTypeRep.name}${model.name.capitalize} (${convert(eq.inst)}))"
-
-          expected(eq, idx)(expectedExpr => Seq(new Haskell(s"""test_v$idx = TestCase (assertEqual "${test.getClass.getSimpleName}" $expectedExpr $disp)""")))
-
-        case seq:EqualsCompositeTestCase =>
-          val x :Expression = actual(seq.ops.head, seq.inst)   // HACK: Only works for two-deep
-          val y :Expression = dispatch(x, seq.ops.tail.head)
-          expected(seq, idx)(expectedExpr => Seq(new Haskell(s"""test_v$idx = TestCase (assertEqual "${test.getClass.getSimpleName}" ($expectedExpr) $y)""")))
-      }
-    })
-
-    val structure = tests.zipWithIndex.map(pair => {
-      val idx = pair._2
-      new Haskell(s"""TestLabel "$idx" test_v$idx""")
-    }).mkString(",")
-
-    new Haskell(s"""|${stmts.mkString("\n")}
-                    |test_all = TestList [ $structure ]
-                    |
-                    |main :: IO Counts
-                    |main  = runTestTT test_all""".stripMargin)
-  }
-
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
   override def generateSuite(model: Option[Model] = None): Seq[HaskellWithPath] = {
     val opsImports = model.get.toSeq.filterNot(m => m.isEmpty).map(m => s"import ${m.name.capitalize}").reverse.mkString("\n")

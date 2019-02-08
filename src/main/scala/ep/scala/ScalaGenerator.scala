@@ -1,9 +1,10 @@
 package ep.scala   /*DI:LD:AI*/
 
-import ep.domain.{BaseDomain, ModelDomain}
-import ep.generator.{LanguageIndependentGenerator, Producer}
+import java.io.File
+import java.nio.file.{Path, Paths}
 
-import scala.meta._
+import ep.domain.{BaseDomain, ModelDomain}
+import ep.generator.{FileWithPath, LanguageIndependentGenerator, Producer}
 
 /**
   * Any Scala-based EP approach can extend this Generator
@@ -38,6 +39,43 @@ trait ScalaGenerator extends LanguageIndependentGenerator with Producer {
     */
   def inst(exp:domain.Atomic, params:InstanceExpression*): InstanceExpression = {
     Scala("new " + exp.concept + "(" + params.map(expr => expr.toString).mkString(",") + ")").expression
+  }
+
+  /**
+    * Specially required files are placed in this area.
+    *
+    * Currently "build.sh"
+    */
+  val scalaResources:String = Seq("src", "main", "resources", "scala-resources").mkString(File.separator)
+
+  /** Retrieve the contents of these files. */
+  def loadSource(entry:String*) : FileWithPath = {
+    val path:Path = java.nio.file.Paths.get(scalaResources, entry: _*)
+    val contents = java.nio.file.Files.readAllBytes(path).map(_.toChar).mkString
+
+    FileWithPath(contents, Paths.get(entry.head, entry.tail : _*))
+  }
+
+  /**
+    * Helpful snippet to get all regular files below a given directory, using
+    * the specified header as the relative path to those files.
+    */
+  def getRecursiveListOfFiles(dir: File, header:String*): Seq[FileWithPath] = {
+    val these:Seq[File] = dir.listFiles
+    if (these == null || these.isEmpty) {
+      Seq.empty
+    } else {
+      val sources: Seq[FileWithPath] = these.filterNot(f => f.isDirectory).map(f => loadSource(header :+ f.getName: _*))
+
+      sources ++ these.filter(_.isDirectory).flatMap(f => getRecursiveListOfFiles(f, header :+ f.getName: _*))
+    }
+  }
+
+  /**
+    * Retrieve Scala build.sbt file.
+    */
+  def getsbt():Seq[FileWithPath] = {
+    getRecursiveListOfFiles(Paths.get(scalaResources).toFile)
   }
 
   /// Scala support

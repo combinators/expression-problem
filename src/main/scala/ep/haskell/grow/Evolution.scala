@@ -45,3 +45,9 @@ class M4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends FoundationGrows(web, app) {
   override val gen = new WithDomain(MathDomain) with GrowGenerator with GrowTestGenerator with e0 with e1 with e2 with e3 with e4
 }
+
+class M5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+  extends FoundationGrows(web, app) {
+  override val gen = new WithDomain(MathDomain) with GrowGenerator with GrowTestGenerator with e0 with e1 with e2 with e3 with e4 with e5
+}
+

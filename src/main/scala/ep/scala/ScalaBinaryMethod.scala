@@ -10,11 +10,11 @@ trait ScalaBinaryMethod {
   import domain._
 
   /** Specially required files are placed in this area. */
-  val scalaResources:String = Seq("src", "main", "resources", "scala-code").mkString(File.separator)
+  val scalaCode:String = Seq("src", "main", "resources", "scala-code").mkString(File.separator)
 
   /** Taken from scala meta web page. */
-  def loadSource(entry:String*) : ScalaMainWithPath = {
-    val path:Path = java.nio.file.Paths.get(scalaResources, entry: _*)
+  def loadCode(entry:String*) : ScalaMainWithPath = {
+    val path:Path = java.nio.file.Paths.get(scalaCode, entry: _*)
     val bytes = java.nio.file.Files.readAllBytes(path)
     val text = new String(bytes, "UTF-8")
     val input = Input.VirtualFile(path.toString, text)
@@ -27,14 +27,14 @@ trait ScalaBinaryMethod {
     * Helpful snippet to get all regular files below a given directory, using
     * the specified header as the relative path to those files
     */
-  def getRecursiveListOfFiles(dir: File, header:String*): Seq[ScalaMainWithPath] = {
+  def getRecursiveListOfCode(dir: File, header:String*): Seq[ScalaMainWithPath] = {
     val these:Seq[File] = dir.listFiles
     if (these == null || these.isEmpty) {
       Seq.empty
     } else {
-      val sources: Seq[ScalaMainWithPath] = these.filterNot(f => f.isDirectory).map(f => loadSource(header :+ f.getName: _*))
+      val sources: Seq[ScalaMainWithPath] = these.filterNot(f => f.isDirectory).map(f => loadCode(header :+ f.getName: _*))
 
-      sources ++ these.filter(_.isDirectory).flatMap(f => getRecursiveListOfFiles(f, header :+ f.getName: _*))
+      sources ++ these.filter(_.isDirectory).flatMap(f => getRecursiveListOfCode(f, header :+ f.getName: _*))
     }
   }
 
@@ -46,7 +46,7 @@ trait ScalaBinaryMethod {
     * @return
     */
   def helperClasses():Seq[ScalaWithPath] = {
-    getRecursiveListOfFiles(Paths.get(scalaResources).toFile)
+    getRecursiveListOfCode(Paths.get(scalaCode).toFile)
   }
 
   /**

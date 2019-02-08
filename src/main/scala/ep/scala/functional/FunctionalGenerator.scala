@@ -190,19 +190,21 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod {
       // binary methods have fields instead of parameters
       val binary:String = op match  {
         case _:domain.BinaryMethod => {
-          s"val ${base.that}:${domain.baseTypeRep.name}"
+          s"val ${base.that.name}:${domain.baseTypeRep.name}"
         }
 
         case _ => ""
       }
       // Data types that had existed earlier
       val baseMembers = typesToGenerate.map(exp => methodGenerator(exp, op))
-      Scala(s"""
-               |trait ${op.concept} extends $extendsClause Visitor { self: visitor =>
-               |  $binary
-               |  $result
-               |  ${baseMembers.mkString("\n")}
-               |}""".stripMargin).declaration()
+      val str = s"""
+                   |trait ${op.concept} extends $extendsClause Visitor { self: visitor =>
+                   |  $binary
+                   |  $result
+                   |  ${baseMembers.mkString("\n")}
+                   |}""".stripMargin
+      println ("STR:" + str)
+      Scala(str).declaration()
     })
 
     val factories = m.ops.map(op => {

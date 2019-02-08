@@ -4,9 +4,13 @@ import ep.cls.CodeGenerationController
 import ep.cpp.CPPFileUtils._
 import ep.cpp._
 import ep.domain.{MathDomain, WithDomain}
+import ep.generator.FileWithPath
 import javax.inject.Inject
+import org.combinators.cls.git.Results
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
+
+import ep.generator.FileWithPathPersistable._
 
 abstract class FoundationVisitorCPP @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends CodeGenerationController[CPPFile](web, app)
@@ -17,6 +21,12 @@ override lazy val generatedCode:Seq[CPPFile] =
     gen.generatedCode() ++
     gen.generateBinaryMethodHelpers() ++
     gen.generateSuite(routingPrefix)
+
+  /**
+    * Add all helper classes to be external artifacts.
+    * Has to be lazy so subclasses can compute model.
+    */
+  override lazy val results:Results = gen.helperClasses().foldLeft(defaultResults(generatedCode))((former, next) => former.addExternalArtifact[FileWithPath](next))
 
   override val routingPrefix: Option[String] = Some("visitorTable")
   override lazy val controllerAddress:String = gen.getModel.name

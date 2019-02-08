@@ -33,6 +33,7 @@ trait e4 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
     }
   }
 
+  // TODO: Shouldn't this be detected by dependency?
   /** If any new imports are needed for an operation, just extend here. */
   override def addedImports(op:domain.Operation):Seq[Haskell] = {
     op match {

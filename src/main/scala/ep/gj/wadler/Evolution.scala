@@ -1,11 +1,12 @@
-package ep.gj    /*DD:LD:AD*/
+package ep.gj.wadler    /*DD:LD:AD*/
 
 import ep.cls.CodeGenerationController
 import ep.domain.{MathDomain, WithDomain}
+import ep.gj.GJWithPathPersistable._
+import ep.gj._
 import javax.inject.Inject
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
-import ep.gj.GJWithPathPersistable._
 
 abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends CodeGenerationController[GJWithPath](web, app)

@@ -18,6 +18,12 @@ public class Create {
             new Evolution ("M6", "M5"),
     };
 
+    /** Known Java Variations to generate. */
+    static final Evolution[] gjEvolutions  = {
+            new Evolution ("M0"),
+            new Evolution ("M1", "M0"),
+    };
+
     static Instance getJavaName = new Instance() {
         public String instance(String name) {
             if (name.charAt(0) == 'M') {
@@ -52,6 +58,10 @@ public class Create {
 
     static Instance getGJName = new Instance() {
         public String instance(String name) {
+            if (name.charAt(0) == 'M') {
+                return "e" + name.charAt(1);
+            }
+
             return name.toLowerCase();
         }
     };
@@ -82,20 +92,20 @@ public class Create {
     static final Language lang_java = new Language("j")
             .addEvolutions(standardEvolutions)
             .addEvolutions(independentEvolutions)
-            .addEvolutions(shapeEvolutions)
+            //.addEvolutions(shapeEvolutions)
             .addMapping(getJavaName)
             .addEvolutions(mergedEvolutions)
             .add("oo", "WithDomain(MathDomain) with OOGenerator with JUnitTestGenerator")
             .add("algebra", "WithDomain(MathDomain) with AlgebraGenerator with AlgebraTestGenerator")
             .add("extensibleVisitor", "WithDomain(MathDomain) with ExtensibleVisitorGenerator with ExtensibleVisitorTestGenerator")
-            .add("trivially", "new WithDomain(MathDomain) with TriviallyGenerator with JUnitTestGenerator")
-            .add("visitor", "new WithDomain(MathDomain) with VisitorGenerator with JUnitTestGenerator");
+            .add("trivially", "WithDomain(MathDomain) with TriviallyGenerator with JUnitTestGenerator")
+            .add("visitor", "WithDomain(MathDomain) with VisitorGenerator with JUnitTestGenerator");
     static final Language lang_haskell = new Language("haskell")
             .addMapping(getHaskellName)
             .addEvolutions(standardEvolutions)
             .add("alacarte", "WithDomain[MathDomain] with ALaCarteGenerator with ALaCarteTestGenerator")
-            .add("grow", "new WithDomain(MathDomain) with GrowGenerator with GrowTestGenerator")
-            .add("sraight", "new WithDomain(MathDomain) with StraightGenerator with StraightTestGenerator");
+            .add("grow", "WithDomain(MathDomain) with GrowGenerator with GrowTestGenerator")
+            .add("straight", "WithDomain(MathDomain) with StraightGenerator with StraightTestGenerator");
     static final Language lang_cpp = new Language("cpp")
             .addMapping(getCPPName)
             .addEvolutions(standardEvolutions)
@@ -104,8 +114,8 @@ public class Create {
             .add("visitorTable", "WithDomain(MathDomain) with CPPVisitorTableGenerator with CPPTableTestGenerator");
     static final Language lang_gj = new Language("gj")
             .addMapping(getGJName)
-            .addEvolutions(standardEvolutions)
-            .add("gj", "WithDomain(MathDomain) with WadlerGenerator with TestGenerator");  // not really anything good
+            .addEvolutions(gjEvolutions)
+            .add("wadler", "WithDomain(MathDomain) with WadlerGenerator with TestGenerator");  // not really anything good
 
     /** Could have used reflection, but this is simpler. */
     static final Language[] allLanguages = { lang_java, lang_haskell, lang_cpp, lang_gj };
@@ -129,35 +139,62 @@ public class Create {
     }
 
     public static void main(String[] args) {
-        String imports = "";
-//                package build.j.oo
-//
-//        /* Generated:  */
-//import ep.domain._
-//import ep.j._
-//import ep.j.oo._
-//import javax.inject.Inject
-//import org.webjars.play.WebJarsUtil
-//import play.api.inject.ApplicationLifecycle
-
         File output = new File(destination);
+        if (!output.exists()) {
+            output.mkdir();
+        }
 
         // for each language
         for (Language lang : allLanguages) {
             File langDir = new File (output, lang.name);
+            if (!langDir.exists()) {
+                langDir.mkdir();
+            }
 
             // for each family
             for (String variation: lang) {
-                String packageName = "ep." + lang.name + "." + variation;
+                String packageName = "build." + lang.name + "." + variation;
                 String packageStruct = lang.constructors.get(variation);
                 File varDir = new File (langDir, variation);
+                if (!varDir.exists()) {
+                    varDir.mkdir();
+                }
+                File build = new File (varDir, "build.scala");
+                System.out.println ("  " + build.getAbsoluteFile());
 
-                for (Evolution ev : lang.evolutions) {
-                    System.out.println(lang.name + "\t" + variation + "\t" + ev.name);
-                    String clazzDefinition = create(lang, ev, packageStruct);
+                try {
+                    PrintWriter pw_output = new PrintWriter(build);
 
-                    File build = new File (varDir, "build.scala");
+                    pw_output.println("package " + packageName);
+                    pw_output.println("/* Generated: " + new Date() + " */");
+                    pw_output.println("import ep.domain._");
+                    pw_output.println("import ep." + lang.name + "._");
+                    pw_output.println("import ep." + lang.name + "." + variation + "._");
+                    pw_output.println("import javax.inject.Inject");
+                    pw_output.println("import org.webjars.play.WebJarsUtil");
+                    pw_output.println("import play.api.inject.ApplicationLifecycle");
 
+                    String traits = "";
+                    for (Evolution ev : lang.evolutions) {
+                        System.out.println(lang.name + "\t" + variation + "\t" + ev.name);
+                        String clazzDefinition = create(lang, ev, packageStruct);
+
+                        pw_output.println("/* ");
+                        pw_output.println(" * " + variation + " solution in " + lang.name + " for " + ev.name);
+                        pw_output.println(" * ");
+                        pw_output.println(" * @group evolutions ");
+                        pw_output.println(" */");
+                        pw_output.println("class " + ev.name + "_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle) extends Foundation(web, app) {");
+
+                        traits = traits + " with " + lang.mapping.instance(ev.name);
+                        String packageInst = packageStruct.replace("[", "(").replace("]", ")");
+                        pw_output.println("  override val gen = new " + packageInst + traits);
+                        pw_output.println("}\n\n");
+                    }
+
+                    pw_output.close();
+                } catch (IOException ioe) {
+                    ioe.printStackTrace();
                 }
             }
         }

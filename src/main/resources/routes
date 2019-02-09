@@ -51,8 +51,8 @@
 ->    /                              ep.haskell.straight.S5_Variation
 ->    /                              ep.haskell.straight.S6_Variation
 #GJ Wadler language (1998)
-->    /                              ep.gj.M0_Variation
-->    /                              ep.gj.M1_Variation
+->    /                              ep.gj.wadler.M0_Variation
+->    /                              ep.gj.wadler.M1_Variation
 #CPP variation
 ->    /                              ep.cpp.oo.CPP_M0_Variation
 ->    /                              ep.cpp.oo.CPP_M1_Variation

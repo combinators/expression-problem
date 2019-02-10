@@ -1,0 +1,140 @@
+
+#####->    /                              org.combinators.cls.git.Routes
+
+
+# All variants have names that end in "Evolution", with sub-branches as described by 'e0', 'e1', 'e2', ...
+#scala-oo
+->    /                              ep.scala.oo.M0_Variation
+->    /                              ep.scala.oo.M1_Variation
+->    /                              ep.scala.oo.M2_Variation
+->    /                              ep.scala.oo.M3_Variation
+->    /                              ep.scala.oo.M4_Variation
+->    /                              ep.scala.oo.M5_Variation
+->    /                              ep.scala.oo.M6_Variation
+#scala
+->    /                              ep.scala.straight.M0_Variation
+->    /                              ep.scala.straight.M1_Variation
+->    /                              ep.scala.straight.M2_Variation
+->    /                              ep.scala.straight.M3_Variation
+->    /                              ep.scala.straight.M4_Variation
+->    /                              ep.scala.straight.M5_Variation
+->    /                              ep.scala.straight.M6_Variation
+#scala-ff
+->    /                              ep.scala.functional.M0_Variation
+->    /                              ep.scala.functional.M1_Variation
+->    /                              ep.scala.functional.M2_Variation
+->    /                              ep.scala.functional.M3_Variation
+->    /                              ep.scala.functional.M4_Variation
+->    /                              ep.scala.functional.M5_Variation
+->    /                              ep.scala.functional.M6_Variation
+#Haskell Grow With Trees Variation
+->    /                              ep.haskell.grow.M0_Variation
+->    /                              ep.haskell.grow.M1_Variation
+->    /                              ep.haskell.grow.M2_Variation
+->    /                              ep.haskell.grow.M3_Variation
+->    /                              ep.haskell.grow.M4_Variation
+->    /                              ep.haskell.grow.M5_Variation
+#Haskell Variation
+->    /                              ep.haskell.alacarte.M0_Variation
+->    /                              ep.haskell.alacarte.M1_Variation
+->    /                              ep.haskell.alacarte.M2_Variation
+->    /                              ep.haskell.alacarte.M3_Variation
+->    /                              ep.haskell.alacarte.M4_Variation
+->    /                              ep.haskell.alacarte.M5_Variation
+->    /                              ep.haskell.alacarte.M6_Variation
+#Haskell Straight
+->    /                              ep.haskell.straight.S0_Variation
+->    /                              ep.haskell.straight.S1_Variation
+->    /                              ep.haskell.straight.S2_Variation
+->    /                              ep.haskell.straight.S3_Variation
+->    /                              ep.haskell.straight.S4_Variation
+->    /                              ep.haskell.straight.S5_Variation
+->    /                              ep.haskell.straight.S6_Variation
+#GJ Wadler language (1998)
+->    /                              ep.gj.wadler.M0_Variation
+->    /                              ep.gj.wadler.M1_Variation
+#CPP variation
+->    /                              ep.cpp.oo.CPP_M0_Variation
+->    /                              ep.cpp.oo.CPP_M1_Variation
+->    /                              ep.cpp.oo.CPP_M2_Variation
+->    /                              ep.cpp.oo.CPP_M3_Variation
+->    /                              ep.cpp.oo.CPP_M4_Variation
+->    /                              ep.cpp.oo.CPP_M5_Variation
+->    /                              ep.cpp.oo.CPP_M6_Variation
+#CPP Variation visitor
+->    /                              ep.cpp.visitor.CPP_M0_Variation
+->    /                              ep.cpp.visitor.CPP_M1_Variation
+->    /                              ep.cpp.visitor.CPP_M2_Variation
+->    /                              ep.cpp.visitor.CPP_M3_Variation
+->    /                              ep.cpp.visitor.CPP_M4_Variation
+->    /                              ep.cpp.visitor.CPP_M5_Variation
+->    /                              ep.cpp.visitor.CPP_M6_Variation
+#CPP Variation visitor Table
+->    /                              ep.cpp.visitorTable.CPP_M0_Variation
+->    /                              ep.cpp.visitorTable.CPP_M1_Variation
+->    /                              ep.cpp.visitorTable.CPP_M2_Variation
+->    /                              ep.cpp.visitorTable.CPP_M3_Variation
+->    /                              ep.cpp.visitorTable.CPP_M4_Variation
+->    /                              ep.cpp.visitorTable.CPP_M5_Variation
+->    /                              ep.cpp.visitorTable.CPP_M6_Variation
+#OO variations
+->    /                              ep.j.oo.M0_Variation
+->    /                              ep.j.oo.M1_Variation
+->    /                              ep.j.oo.M2_Variation
+->    /                              ep.j.oo.M3_Variation
+->    /                              ep.j.oo.M4_Variation
+->    /                              ep.j.oo.M5_Variation
+->    /                              ep.j.oo.M6_Variation
+->    /                              ep.j.oo.I2_Variation
+->    /                              ep.j.oo.C1_Variation
+#Trivially variations
+->    /                              ep.j.trivially.M0_Variation
+->    /                              ep.j.trivially.M1_Variation
+->    /                              ep.j.trivially.M2_Variation
+->    /                              ep.j.trivially.M3_Variation
+->    /                              ep.j.trivially.M4_Variation
+->    /                              ep.j.trivially.M5_Variation
+->    /                              ep.j.trivially.M6_Variation
+->    /                              ep.j.trivially.C1_Variation
+#Interpreter variations
+->    /                              ep.j.interpreter.M0_Variation
+->    /                              ep.j.interpreter.M1_Variation
+->    /                              ep.j.interpreter.M2_Variation
+->    /                              ep.j.interpreter.M3_Variation
+->    /                              ep.j.interpreter.M4_Variation
+->    /                              ep.j.interpreter.M5_Variation
+->    /                              ep.j.interpreter.M6_Variation
+# Extensible visitor
+->    /                              ep.j.extensibleVisitor.M0_Variation
+->    /                              ep.j.extensibleVisitor.M1_Variation
+->    /                              ep.j.extensibleVisitor.M2_Variation
+->    /                              ep.j.extensibleVisitor.M3_Variation
+->    /                              ep.j.extensibleVisitor.M4_Variation
+->    /                              ep.j.extensibleVisitor.M5_Variation
+->    /                              ep.j.extensibleVisitor.M6_Variation
+# Scala visitor variations
+->    /                              ep.j.visitor.M0_Variation
+->    /                              ep.j.visitor.M1_Variation
+->    /                              ep.j.visitor.M2_Variation
+->    /                              ep.j.visitor.M3_Variation
+->    /                              ep.j.visitor.M4_Variation
+->    /                              ep.j.visitor.M5_Variation
+->    /                              ep.j.visitor.M6_Variation
+->    /                              ep.j.visitor.C1_Variation
+# Algebra variations
+->    /                              ep.j.algebra.M0_Variation
+->    /                              ep.j.algebra.M1_Variation
+->    /                              ep.j.algebra.M2_Variation
+->    /                              ep.j.algebra.M3_Variation
+->    /                              ep.j.algebra.M4_Variation
+->    /                              ep.j.algebra.M5_Variation
+->    /                              ep.j.algebra.M6_Variation
+->    /                              ep.j.algebra.I2_Variation
+->    /                              ep.j.algebra.C1_Variation
+#
+#
+# Shape Evolution
+->    /                              ep.j.oo.S0_Variation
+->    /                              ep.j.oo.S1_Variation
+->    /                              ep.j.visitor.S0_Variation
+->    /                              ep.j.visitor.S1_Variation

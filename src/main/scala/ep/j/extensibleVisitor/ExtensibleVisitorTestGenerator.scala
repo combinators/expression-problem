@@ -14,8 +14,9 @@ trait ExtensibleVisitorTestGenerator extends JUnitTestGenerator with JavaGenerat
 
   /** Add virtual type generator. */
   def addVirtualConstructor(mainType:TypeDeclaration[_], op:domain.Operation, className:String) : Unit = {
+    // was ${op.concept} as return type
     val virtualConstructor = Java(
-      s"""|${op.concept} make${op.concept} (${parameters(op)}) {
+      s"""|$className make${op.concept} (${parameters(op)}) {
           |  return new $className (${arguments(op)});
           |}""".stripMargin).methodDeclarations().head
 

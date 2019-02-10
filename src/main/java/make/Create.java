@@ -7,6 +7,13 @@ import java.util.*;
  *
  */
 public class Create {
+
+    /** Where routes file is to be placed for play. */
+    static final String routes = "src" + File.separator + "main" + File.separator + "resources" + File.separator + "routes";
+
+    /** All synthesized scala build files are stored in this package. */
+    static final String destination = "src" + File.separator + "main" + File.separator + "scala" + File.separator + "build";
+
     /** Known Java Variations to generate. */
     static final Evolution[] standardEvolutions  = {
             new Evolution ("M0"),
@@ -72,20 +79,15 @@ public class Create {
             new Evolution("I2", "I1"),
     };
 
+    // HACK. TODO: Has to be M3 first otherwise ordering in generated code doesn't match.
     static final Evolution[] mergedEvolutions  = {
-            new MergedEvolution("C1", "I2", "M3")
+            new MergedEvolution("C1", "M3", "I2")
     };
 
     static final Evolution[] shapeEvolutions  = {
             new Evolution("S0"),
             new Evolution("S1", "S0")
     };
-
-    /** Where routes file is to be placed for play. */
-    static final String resources = "src" + File.separator + "main" + File.separator + "resources" + File.separator + "routes";
-
-    /** All synthesized scala build files are stored in this package. */
-    static final String destination = "src" + File.separator + "main" + File.separator + "scala" + File.separator + "build";
 
     // each language has a number of possible variations. Names of languages are used to
     // construct package names, i.e., "ep.j" and "ep.haskell"
@@ -122,23 +124,39 @@ public class Create {
 
     static String create(Language lang, Evolution ev, String packageStruct) {
         String name = ev.name;
-        String scalaClass = "class " + name + "_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle) extends Foundation(web, app)";
+        String scalaClass = "class " + name + "_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle) extends Foundation(web, app) {";
         String evolutions = "";
 
-        // lower-case names for all evolutions
+        // lower-case names for all evolutions. Must make sure no duplicates
+        // LAST ONE selected is the name of the evolution to be selected.
         Iterator<String> past = ev.evolutions();
+
         while (past.hasNext()) {
             String ps = past.next();
-            evolutions = evolutions + " with " + lang.mapping.instance(ps);
+            String trait  = lang.mapping.instance(ps);
+            if (evolutions.equals("")) {
+                evolutions = trait;
+            } else {
+                evolutions = trait + " with " + evolutions;
+            }
         }
 
-        String override = "override val gen = new " + packageStruct + evolutions;
+        String override = "override val gen = new " + packageStruct.replace("[", "(").replace("]", ")") + " with " + evolutions;
 
-        String clazz = scalaClass + "\n" + override + "\n}\n}";
-        return clazz;
+        return scalaClass + "\n" + override + "\n}";
     }
 
-    public static void main(String[] args) {
+    /**
+     * Each Routes entry is of the following form:
+     *
+     * ->    /                              ep.scala.oo.M0_Variation
+     *
+     * @param args
+     */
+    public static void main(String[] args) throws Exception {
+        File rf = new File (routes);
+        PrintWriter routesFile = new PrintWriter(rf);
+
         File output = new File(destination);
         if (!output.exists()) {
             output.mkdir();
@@ -160,7 +178,7 @@ public class Create {
                     varDir.mkdir();
                 }
                 File build = new File (varDir, "build.scala");
-                System.out.println ("  " + build.getAbsoluteFile());
+                System.out.println ("  " + lang.name + "\t" + variation );
 
                 try {
                     PrintWriter pw_output = new PrintWriter(build);
@@ -174,9 +192,10 @@ public class Create {
                     pw_output.println("import org.webjars.play.WebJarsUtil");
                     pw_output.println("import play.api.inject.ApplicationLifecycle");
 
-                    String traits = "";
+                    //String traits = "";
+                    routesFile.print ("# " + variation + "(" + lang.name + ") evolutions: ");
                     for (Evolution ev : lang.evolutions) {
-                        System.out.println(lang.name + "\t" + variation + "\t" + ev.name);
+                        System.out.print (ev.name + ", ");
                         String clazzDefinition = create(lang, ev, packageStruct);
 
                         pw_output.println("/* ");
@@ -184,20 +203,26 @@ public class Create {
                         pw_output.println(" * ");
                         pw_output.println(" * @group evolutions ");
                         pw_output.println(" */");
-                        pw_output.println("class " + ev.name + "_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle) extends Foundation(web, app) {");
+                        //pw_output.println("class " + ev.name + "_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle) extends Foundation(web, app) {");
 
-                        traits = traits + " with " + lang.mapping.instance(ev.name);
-                        String packageInst = packageStruct.replace("[", "(").replace("]", ")");
-                        pw_output.println("  override val gen = new " + packageInst + traits);
-                        pw_output.println("}\n\n");
+                        //traits = traits + " with " + lang.mapping.instance(ev.name);
+                        //String packageInst = packageStruct.replace("[", "(").replace("]", ")");
+                        //pw_output.println("  override val gen = new " + packageInst + traits);
+                        //pw_output.println("}\n\n");
+                        pw_output.println(clazzDefinition);
+                        // output routes information
+                        routesFile.println ("->\t/\t\t " + packageName + "." + ev.name + "_Variation");
                     }
-
+                    System.out.println();
                     pw_output.close();
                 } catch (IOException ioe) {
                     ioe.printStackTrace();
                 }
             }
         }
+
+        routesFile.close();
+        System.out.println ("Generated Routes file: " + rf.getAbsoluteFile());
     }
 
 }

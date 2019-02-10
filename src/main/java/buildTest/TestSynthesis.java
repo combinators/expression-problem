@@ -224,8 +224,8 @@ public class TestSynthesis {
         while (sc.hasNextLine()) {
             String s = sc.nextLine();
 
-            // only do JAVA solutions
-            Pattern regex = Pattern.compile("->\\s+/\\s+ep\\.j\\.(\\w+)\\.(\\w+)");
+            // only do JAVA solutions in the 'build' package
+            Pattern regex = Pattern.compile("->\\s+/\\s+build\\.j\\.(\\w+)\\.(\\w+)");
             Matcher match = regex.matcher(s);
 
             if (match.find()) {

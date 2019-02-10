@@ -22,8 +22,8 @@ trait M2 extends Evolution {
   def M2_tests: Seq[TestCase] = Seq(
     EqualsTestCase(m2_s1, PrettyP, (String, "(1.0-2.0)")),
 
-    EqualsTestCase(new domain.BinaryInst(Add, m2_s1,
-      new domain.BinaryInst(Add, new LitInst(5.0), new LitInst(6.0))), PrettyP,
+    EqualsTestCase(new domain.BinaryInst(Add, m2_s1, new domain.BinaryInst(Add, new LitInst(5.0), new LitInst(6.0))),
+      PrettyP,
       (String, "((1.0-2.0)+(5.0+6.0))"))
   )
 }

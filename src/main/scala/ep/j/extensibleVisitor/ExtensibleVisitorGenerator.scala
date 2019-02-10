@@ -9,6 +9,9 @@ import org.combinators.templating.twirl.Java
   * Synthesizing OO and Functional Design to promote Reuse
   * Shriram Krishnamurthi, Matthias Felleisen, Daniel Friedman
   * https://dl.acm.org/citation.cfm?id=679709
+  *
+  * TODO: Doesn't yet work for c1 merged, since it reuses code from visitor (constructors)
+  * that need to be modified instead
   */
 trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependency {
   val domain:BaseDomain with ModelDomain
@@ -65,7 +68,7 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
     */
   def addVirtualConstructorSubtype(mainType:TypeDeclaration[_], op:domain.Operation, context:String) : Unit = {
     val virtualConstructor = Java(
-      s"""|${op.concept} make${op.concept} (${parameters(op)}) {
+      s"""|${op.concept}$context make${op.concept} (${parameters(op)}) {
           |  return new ${op.concept}$context (${arguments(op)});
           |}""".stripMargin).methodDeclarations().head
 

@@ -22,10 +22,18 @@ public class MergedEvolution extends Evolution {
     public Iterator<String> evolutions() {
         ArrayList<String> all = new ArrayList<>();
 
+        // don't forget to add self AS FIRST one
+        all.add(name);
+
+        // place in order. If we revisit one already existing, then delete OLD one
         for (String p : priors) {
             Iterator<String> it = selfAndPast(p);
             while (it.hasNext()) {
-                all.add(it.next());
+                String ev = it.next();
+                if (all.contains(ev)) {
+                    all.remove(ev);
+                }
+                all.add(ev);
             }
         }
 

@@ -27,16 +27,20 @@ trait c1 extends Evolution with JavaGenerator with JUnitTestGenerator with M2 wi
   }
 
   abstract override def testGenerator: Seq[MethodDeclaration] = {
-    val s1 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
-    val d1 = new domain.BinaryInst(Divd, new LitInst(1.0),
-      new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0)))
-    val s2 = new domain.UnaryInst(Inv ,s1)
-
-      super.testGenerator ++ Java(
-      s"""
-         |public void test() {
-         |   assertEquals("(1.0/(1.0-2.0))", ${dispatch(convert(s2), PrettyP)});
-         |   assertEquals(${dispatch(convert(d1), PrettyP)}, ${dispatch(convert(s2), PrettyP)});
-         |}""".stripMargin).methodDeclarations()
+    super.testGenerator ++ testMethod(MC1_tests)
   }
+
+//  abstract override def testGenerator: Seq[MethodDeclaration] = {
+//    val s1 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
+//    val d1 = new domain.BinaryInst(Divd, new LitInst(1.0),
+//      new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0)))
+//    val s2 = new domain.UnaryInst(Inv ,s1)
+//
+//      super.testGenerator ++ Java(
+//      s"""
+//         |public void test() {
+//         |   assertEquals("(1.0/(1.0-2.0))", ${dispatch(convert(s2), PrettyP)});
+//         |   assertEquals(${dispatch(convert(d1), PrettyP)}, ${dispatch(convert(s2), PrettyP)});
+//         |}""".stripMargin).methodDeclarations()
+//  }
 }

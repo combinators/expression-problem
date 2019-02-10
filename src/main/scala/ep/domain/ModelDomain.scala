@@ -13,7 +13,11 @@ trait ModelDomain extends BaseDomain {
       if (isEmpty) {
         Seq(this)
       } else {
-        Seq(this) ++ last.toSeq
+        if (last != null) {
+          Seq(this) ++ last.toSeq
+        } else {
+          Seq(this)
+        }
       }
     }
 

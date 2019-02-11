@@ -6,6 +6,20 @@ import ep.j._
 import expression.ReplaceType
 import org.combinators.templating.twirl.Java
 
+/**
+  * C1 doesn't yet compile properly. Missing some key classes
+  *
+  * EvalIdzExp (IFace) -- PrettypExp (IFace)  -- HeightExp (IFace)
+  + EvalIdzAdd          + [PrettypDivd] MISSING
+    + PrettypAdd        + PrettypMult
+  + EvalIdzLit          + PrettypNeg
+    + PrettypLit
+  + EvalIdzSub
+    + PrettypSub
+
+  + EvalIdzInv [Missing]  + PrettypInv
+
+  */
 trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator  with OperationAsMethodGenerator with JavaBinaryMethod {
 
   /**
@@ -20,10 +34,7 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
     val model = getModel
 
     //  binary methods for helper
-    val decls:Seq[CompilationUnit] = if (model.flatten().ops.exists {
-      case bm: domain.BinaryMethodTreeBase => true
-      case _ => false
-    }) {
+    val decls:Seq[CompilationUnit] = if (model.flatten().hasBinaryMethod()) {
       helperClasses()
     } else {
       Seq.empty

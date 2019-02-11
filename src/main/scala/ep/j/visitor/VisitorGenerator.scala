@@ -23,10 +23,7 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
     val flat = getModel.flatten()
 
     //  binary methods for helper
-    val decls:Seq[CompilationUnit] = if (flat.ops.exists {
-      case bm: domain.BinaryMethodTreeBase => true
-      case _ => false
-    }) {
+    val decls:Seq[CompilationUnit] = if (flat.hasBinaryMethod()) {
       helperClasses()
     } else {
       Seq.empty
@@ -96,10 +93,7 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
     * When BinaryMethods are present, also includes method to convert to Tree object
     */
   def generateBaseClass(flat:domain.Model):CompilationUnit = {
-    val binaryTreeInterface = if (flat.ops.exists {
-      case bm: domain.BinaryMethodTreeBase => true
-      case _ => false
-    }) {
+    val binaryTreeInterface = if (flat.hasBinaryMethod()) {
       Java(s"""public abstract tree.Tree ${domain.AsTree.instance}();""").classBodyDeclarations
     } else {
       Seq.empty
@@ -166,10 +160,7 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
 
     // Regardless of model passed in, we need to flatten everything to get any
     // BinaryMethodTreeBase ops. This is only necessary because of extensibleVisitor...
-    val helpers:Seq[BodyDeclaration[_]] = if (flat.ops.exists {
-      case bm: domain.BinaryMethodTreeBase => true   // was BinaryMethod
-      case _ => false
-    }) {
+    val helpers:Seq[BodyDeclaration[_]] = if (flat.hasBinaryMethod()) {
       logicAsTree(exp)
     } else {
       Seq.empty
@@ -187,6 +178,18 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
   }
 
   /**
+    * Pulled out since useful in both visitor AND extensible visitor, where it is overridedn
+    * to take advantage of knowledge of the model within which op is defined.
+    */
+  def generateConstructor (op:domain.Operation, m:domain.Model): String = {
+    if (op.parameters.isEmpty) {
+      ""
+    } else {
+      constructorFromOp(op).toString
+    }
+  }
+
+  /**
     * Brings in classes for each operation. These can only be completed with the implementations.
     *
     * Must handle BinaryMethod (Equals) and BinaryMethodBase (Astree) specially.
@@ -199,24 +202,16 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
 
     // We only need to have constructors if we have arguments. On a side note,
     // this is also an important consideration for extensibleVisitor
-    val ctor = if (op.parameters.isEmpty) {
-      ""
-    } else {
-      constructorFromOp(op)
-    }
+    val ctor = generateConstructor(op, flat)
 
     // special case to be handled for BinaryMethods
-    val tpe = op match {
-      case bmb:domain.BinaryMethodTreeBase => Java(s"tree.Tree").tpe()
-      case _ => typeConverter(op.returnType.get)
-    }
-
-   Java(s"""|package visitor;
-            |public class ${op.concept} extends Visitor<$tpe>{
-            |  $ctor
-            |
-            |  ${atts.mkString("\n")}
-            |  ${signatures.mkString("\n")}
-            |}""".stripMargin).compilationUnit
+    val tpe = typeConverter(op.returnType.get)
+    Java(s"""|package visitor;
+             |public class ${op.concept} extends Visitor<$tpe>{
+             |  $ctor
+             |
+             |  ${atts.mkString("\n")}
+             |  ${signatures.mkString("\n")}
+             |}""".stripMargin).compilationUnit
   }
 }

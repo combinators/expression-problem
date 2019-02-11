@@ -164,6 +164,22 @@ trait ModelDomain extends BaseDomain {
       // Make sure we return topmost Model with proper name
       Model(name, head.types, head.ops, head.last)
     }
+
+    /**
+      * Determine if model contains any Binary Methods.
+      *
+      * Typical usage is to call getModel.flatten before calling this method.
+      */
+    def hasBinaryMethod():Boolean = {
+      if (ops.exists {
+        case _ : BinaryMethodTreeBase => true
+        case _ => false
+      }) {
+        true
+      } else {
+        false
+      }
+    }
   }
 
   /** Useful to be able to construct an empty model. */

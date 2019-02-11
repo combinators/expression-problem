@@ -187,10 +187,7 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
       .filter(att => att.tpe == domain.baseTypeRep)
       .map(att => new CPPElement(s"${att.instance}->Accept(visitor);")).mkString("\n")
 
-    val binaryMethods:Seq[CPPElement] = if (getModel.flatten().ops.exists {
-      case bm: domain.BinaryMethodTreeBase => true
-      case _ => false
-    }) {
+    val binaryMethods:Seq[CPPElement] = if (getModel.flatten().hasBinaryMethod()) {
       // sub
       val method:String = sub match {
         case _:Unary | _:Binary => {
@@ -274,10 +271,7 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
     val visitor = new CPPElement("void Accept(ExpVisitor* visitor) const;")
 
     // add Binary methods if needed
-    val astreeMethod:Seq[CPPElement] = if (getModel.flatten().ops.exists {
-      case bm: domain.BinaryMethodTreeBase => true
-      case _ => false
-    }) {
+    val astreeMethod:Seq[CPPElement] = if (getModel.flatten().hasBinaryMethod()) {
       Seq(new CPPElement (s"""Tree *${domain.AsTree.instance}() const; """))
     } else {
       Seq.empty
@@ -295,19 +289,13 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
   def generateBase(model:Model): CPPFile = {
 
     // binary methods?
-    val astreeMethod:Seq[CPPElement] = if (getModel.flatten().ops.exists {
-      case bm: domain.BinaryMethodTreeBase => true
-      case _ => false
-    }) {
+    val astreeMethod:Seq[CPPElement] = if (getModel.flatten().hasBinaryMethod()) {
       Seq(new CPPElement ("""virtual Tree *astree() const = 0;"""))
     } else {
       Seq.empty
     }
 
-    val astreeHeaders:Seq[String] = if (getModel.flatten().ops.exists {
-      case bm: domain.BinaryMethodTreeBase => true
-      case _ => false
-    }) {
+    val astreeHeaders:Seq[String] = if (getModel.flatten().hasBinaryMethod()) {
       Seq(""" #include "Tree.h" """)
     } else {
       Seq.empty
@@ -326,10 +314,7 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
       new CPPElement(s"""virtual void Visit(const $exp* e) = 0;"""))
     val allHeaders = getModel.flatten().types.map(exp => s"""#include "$exp.h" """)
 
-    val moreImports = if (getModel.flatten().ops.exists {
-      case bm: domain.BinaryMethodTreeBase => true
-      case _ => false
-    }) {
+    val moreImports = if (getModel.flatten().hasBinaryMethod()) {
       Seq(
         s"""
            |#include "Tree.h" // Binary Methods needs these include files
@@ -347,10 +332,7 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
   def generateBinaryMethodHelpers():Seq[CPPFile] = {
 
     // If BinaryMethodTreeBase, need the declarations here.
-    if (getModel.flatten().ops.exists {
-      case bm: domain.BinaryMethodTreeBase => true
-      case _ => false
-    }) {
+    if (getModel.flatten().hasBinaryMethod()) {
       declarations
     } else {
       Seq.empty

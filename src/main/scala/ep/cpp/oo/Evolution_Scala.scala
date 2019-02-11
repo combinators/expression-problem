@@ -32,37 +32,37 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   override lazy val controllerAddress:String = gen.getModel.name
 }
 
-class CPP_M0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-  extends Foundation(web, app) {
-  override val gen = new WithDomain(MathDomain) with StraightGenerator with CPPOOTestGenerator with cpp_e0
-}
-
-class CPP_M1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-  extends Foundation(web, app) {
-  override val gen = new WithDomain(MathDomain) with StraightGenerator with CPPOOTestGenerator with cpp_e0 with cpp_e1
-}
-
-class CPP_M2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-  extends Foundation(web, app) {
-  override val gen = new WithDomain(MathDomain) with StraightGenerator with CPPOOTestGenerator with cpp_e0 with cpp_e1 with cpp_e2
-}
-
-class CPP_M3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-  extends Foundation(web, app) {
-  override val gen = new WithDomain(MathDomain) with StraightGenerator with CPPOOTestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3
-}
-
-class CPP_M4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-  extends Foundation(web, app) {
-  override val gen = new WithDomain(MathDomain) with StraightGenerator with CPPOOTestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3 with cpp_e4
-}
-
-class CPP_M5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-  extends Foundation(web, app) {
-  override val gen = new WithDomain(MathDomain) with StraightGenerator with CPPOOTestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3 with cpp_e4 with cpp_e5
-}
-
-class CPP_M6_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-  extends Foundation(web, app) {
-  override val gen = new WithDomain(MathDomain) with StraightGenerator with CPPOOTestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3 with cpp_e4 with cpp_e5 with cpp_e6
-}
+//class CPP_M0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+//  extends Foundation(web, app) {
+//  override val gen = new WithDomain(MathDomain) with StraightGenerator with CPPOOTestGenerator with cpp_e0
+//}
+//
+//class CPP_M1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+//  extends Foundation(web, app) {
+//  override val gen = new WithDomain(MathDomain) with StraightGenerator with CPPOOTestGenerator with cpp_e0 with cpp_e1
+//}
+//
+//class CPP_M2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+//  extends Foundation(web, app) {
+//  override val gen = new WithDomain(MathDomain) with StraightGenerator with CPPOOTestGenerator with cpp_e0 with cpp_e1 with cpp_e2
+//}
+//
+//class CPP_M3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+//  extends Foundation(web, app) {
+//  override val gen = new WithDomain(MathDomain) with StraightGenerator with CPPOOTestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3
+//}
+//
+//class CPP_M4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+//  extends Foundation(web, app) {
+//  override val gen = new WithDomain(MathDomain) with StraightGenerator with CPPOOTestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3 with cpp_e4
+//}
+//
+//class CPP_M5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+//  extends Foundation(web, app) {
+//  override val gen = new WithDomain(MathDomain) with StraightGenerator with CPPOOTestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3 with cpp_e4 with cpp_e5
+//}
+//
+//class CPP_M6_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+//  extends Foundation(web, app) {
+//  override val gen = new WithDomain(MathDomain) with StraightGenerator with CPPOOTestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3 with cpp_e4 with cpp_e5 with cpp_e6
+//}

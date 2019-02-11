@@ -66,10 +66,11 @@ trait JavaGenerator extends LanguageIndependentGenerator  with Producer {
     val params:Seq[String] = op.parameters.map(param => s"${typeConverter(param.tpe)} ${param.name}")
     val cons:Seq[Statement] = op.parameters.flatMap(param => Java(s"  this.${param.name} = ${param.name};").statements())
 
-    Java(
-      s"""|public $name (${params.mkString(",")}) {
-          |   ${cons.mkString("\n")}
-          |}""".stripMargin).constructors().head
+    val str = s"""|public $name (${params.mkString(",")}) {
+                  |   ${cons.mkString("\n")}
+                  |}""".stripMargin
+    println ("STR2:" + str)
+    Java(str).constructors().head
   }
 
   /** Compute parameter "name" comma-separated list from operation. */

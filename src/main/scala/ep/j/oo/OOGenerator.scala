@@ -24,10 +24,7 @@ trait OOGenerator extends JavaGenerator with DataTypeSubclassGenerator with Oper
     val flat = getModel.flatten()
 
     //  binary methods for helper
-    val decls:Seq[CompilationUnit] = if (flat.ops.exists {
-      case bm: domain.BinaryMethodTreeBase => true
-      case _ => false
-    }) {
+    val decls:Seq[CompilationUnit] = if (flat.hasBinaryMethod()) {
       helperClasses()
     } else {
       Seq.empty

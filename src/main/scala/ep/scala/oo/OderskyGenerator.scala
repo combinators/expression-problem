@@ -25,10 +25,7 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod {
   def generatedCode():Seq[ScalaWithPath] = {
 
     //  binary methods for helper
-    val decls:Seq[ScalaWithPath] = if (getModel.flatten().ops.exists {
-      case bm: domain.BinaryMethodTreeBase => true
-      case _ => false
-    }) {
+    val decls:Seq[ScalaWithPath] = if (getModel.flatten().hasBinaryMethod()) {
       helperClasses()
     } else {
       Seq.empty

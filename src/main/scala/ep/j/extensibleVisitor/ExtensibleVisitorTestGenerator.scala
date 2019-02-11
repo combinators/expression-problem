@@ -8,13 +8,12 @@ import org.combinators.templating.twirl.Java
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait ExtensibleVisitorTestGenerator extends JUnitTestGenerator with JavaGenerator {
+trait ExtensibleVisitorTestGenerator extends JUnitTestGenerator with ExtensibleVisitorGenerator {
   val domain: BaseDomain with ModelDomain
   import domain._
 
   /** Add virtual type generator. */
   def addVirtualConstructor(mainType:TypeDeclaration[_], op:domain.Operation, className:String) : Unit = {
-    // was ${op.concept} as return type
     val virtualConstructor = Java(
       s"""|$className make${op.concept} (${parameters(op)}) {
           |  return new $className (${arguments(op)});
@@ -39,7 +38,7 @@ trait ExtensibleVisitorTestGenerator extends JUnitTestGenerator with JavaGenerat
         if (m == lastTypes) {
           reached = true
           m.ops.foreach(op => {
-            addVirtualConstructor(unit.getType(0), op, op.concept)  // these are not qualified
+            addVirtualConstructor(unit.getType(0), op, op.concept + full)  // ???? these are not qualified
           })
         } else {
           if (reached) {

@@ -25,17 +25,15 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
     * @return
     */
   override def generatedCode():Seq[CompilationUnit] = {
+    val flat = getModel.flatten()
+
     //  binary methods for helper
-    val decls:Seq[CompilationUnit] = if (getModel.flatten().ops.exists {
-      case bm: domain.BinaryMethodTreeBase => true
-      case _ => false
-    }) {
+    val decls:Seq[CompilationUnit] = if (flat.hasBinaryMethod()) {
       helperClasses()
     } else {
       Seq.empty
     }
 
-    val flat = getModel.flatten()
     decls ++ getModel.inChronologicalOrder.flatMap(m =>
       m.types.map(tpe => generateExtensibleExp(flat, m, tpe)) ++       // one for each type; important to pass in both 'flat' and 'm'
         m.ops.map(op => generateOperation(m, op))                      // and new operations
@@ -112,7 +110,7 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
     unit
   }
 
-  /** Contactenate all types in this model to form proper suffix for operation classes. */
+  /** Concatenate all types in this model to form proper suffix for operation classes. */
   def modelTypes(model:domain.Model) : String = {
     if (model.last.equals(domain.emptyModel())) {
       ""
@@ -138,6 +136,20 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
                            |A concrete visitor describes a concrete operation on expressions. There is one visit
                            |method per type in the class hierarchy.
                           """.stripMargin)
+  }
+
+  /**
+    * Pulled out since useful in both visitor AND extensible visitor, where it is overridedn
+    * to take advantage of knowledge of the model within which op is defined.
+    */
+  override def generateConstructor (op:domain.Operation, model:domain.Model): String = {
+    val full:String = modelTypes(model)
+    if (op.parameters.isEmpty) {
+      ""
+    } else {
+      val option = if (full.isEmpty) { None} else { Some(op.concept + full) }
+      constructorFromOp(op, option).toString
+    }
   }
 
   /** Extensions based on past operation */
@@ -174,11 +186,7 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
 
     // convert 'extends visitor' into 'implements visitor'
     // rename class to have types at end (except for first)
-    val opType = op match {
-      case bmb:domain.BinaryMethodTreeBase => Java(s"tree.Tree").tpe()
-      case _ => typeConverter(op.returnType.get)
-    }
-
+    val opType = typeConverter(op.returnType.get)
     val full:String = modelTypes(model)
 
     val fullVisitor:String = if (model.types.nonEmpty) {

@@ -97,9 +97,10 @@ public class Create {
             //.addEvolutions(shapeEvolutions)
             .addMapping(getJavaName)
             .addEvolutions(mergedEvolutions)
-            .add("oo", "WithDomain(MathDomain) with OOGenerator with JUnitTestGenerator")
             .add("algebra", "WithDomain(MathDomain) with AlgebraGenerator with AlgebraTestGenerator")
             .add("extensibleVisitor", "WithDomain(MathDomain) with ExtensibleVisitorGenerator with ExtensibleVisitorTestGenerator")
+            .add("interpreter", "WithDomain(MathDomain) with InterpreterGenerator with InterpreterTestGenerator")
+            .add("oo", "WithDomain(MathDomain) with OOGenerator with JUnitTestGenerator")
             .add("trivially", "WithDomain(MathDomain) with TriviallyGenerator with JUnitTestGenerator")
             .add("visitor", "WithDomain(MathDomain) with VisitorGenerator with JUnitTestGenerator");
     static final Language lang_haskell = new Language("haskell")

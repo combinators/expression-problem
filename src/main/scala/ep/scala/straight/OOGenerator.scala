@@ -26,10 +26,7 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod {
     val flat = getModel.flatten()
 
     //  binary methods for helper
-    val decls:Seq[ScalaWithPath] = if (flat.ops.exists {
-      case bm: domain.BinaryMethodTreeBase => true
-      case _ => false
-    }) {
+    val decls:Seq[ScalaWithPath] = if (flat.hasBinaryMethod()) {
       helperClasses()
     } else {
       Seq.empty
@@ -74,7 +71,7 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod {
     val params = op.parameters.map(param => param.name + ":" + typeConverter(param.tpe)).mkString(",")
 
     val str:String = s"""|
-             |def ${op.instance}($params) : ${returnType(op)} = {
+                         |def ${op.instance}($params) : ${returnType(op)} = {
                          |  ${logic(exp, op).mkString("\n")}
                          |}""".stripMargin
     Scala(str).statement

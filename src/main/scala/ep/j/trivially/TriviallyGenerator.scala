@@ -17,10 +17,7 @@ trait TriviallyGenerator extends ep.j.oo.OOGenerator {
     val flat = getModel.flatten()
 
     //  binary methods for helper
-    val decls:Seq[CompilationUnit] = if (flat.ops.exists {
-      case bm: domain.BinaryMethodTreeBase => true
-      case _ => false
-    }) {
+    val decls:Seq[CompilationUnit] = if (flat.hasBinaryMethod()) {
       helperClasses()
     } else {
       Seq.empty
@@ -201,10 +198,7 @@ trait TriviallyGenerator extends ep.j.oo.OOGenerator {
 
   override def generateBase(model: domain.Model): CompilationUnit = {
 
-    val binaryMethodHelper: Seq[BodyDeclaration[_]] = if (model.flatten().ops.exists {
-      case bm: domain.BinaryMethodTreeBase => true
-      case _ => false
-    }) {
+    val binaryMethodHelper: Seq[BodyDeclaration[_]] = if (model.flatten().hasBinaryMethod()) {
       Java(s"""public tree.Tree ${domain.AsTree.instance}();""").classBodyDeclarations
     } else {
       Seq.empty

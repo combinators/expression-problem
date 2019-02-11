@@ -21,12 +21,12 @@ override lazy val generatedCode:Seq[GJWithPath] =
   override lazy val controllerAddress:String = gen.getModel.name
 }
 
-class M0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-  extends Foundation(web, app) {
-  override val gen = new WithDomain(MathDomain) with WadlerGenerator with TestGenerator with e0
-}
-
-class M1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-  extends Foundation(web, app) {
-  override val gen = new WithDomain(MathDomain) with WadlerGenerator with TestGenerator with e0 with e1
-}
+//class M0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+//  extends Foundation(web, app) {
+//  override val gen = new WithDomain(MathDomain) with WadlerGenerator with TestGenerator with e0
+//}
+//
+//class M1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+//  extends Foundation(web, app) {
+//  override val gen = new WithDomain(MathDomain) with WadlerGenerator with TestGenerator with e0 with e1
+//}

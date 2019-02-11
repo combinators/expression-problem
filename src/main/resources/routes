@@ -1,13 +1,3 @@
-# oo(j) evolutions: ->	/		 build.j.oo.M0_Variation
-->	/		 build.j.oo.M1_Variation
-->	/		 build.j.oo.M2_Variation
-->	/		 build.j.oo.M3_Variation
-->	/		 build.j.oo.M4_Variation
-->	/		 build.j.oo.M5_Variation
-->	/		 build.j.oo.M6_Variation
-->	/		 build.j.oo.I1_Variation
-->	/		 build.j.oo.I2_Variation
-->	/		 build.j.oo.C1_Variation
 # algebra(j) evolutions: ->	/		 build.j.algebra.M0_Variation
 ->	/		 build.j.algebra.M1_Variation
 ->	/		 build.j.algebra.M2_Variation
@@ -28,6 +18,26 @@
 ->	/		 build.j.extensibleVisitor.I1_Variation
 ->	/		 build.j.extensibleVisitor.I2_Variation
 ->	/		 build.j.extensibleVisitor.C1_Variation
+# interpreter(j) evolutions: ->	/		 build.j.interpreter.M0_Variation
+->	/		 build.j.interpreter.M1_Variation
+->	/		 build.j.interpreter.M2_Variation
+->	/		 build.j.interpreter.M3_Variation
+->	/		 build.j.interpreter.M4_Variation
+->	/		 build.j.interpreter.M5_Variation
+->	/		 build.j.interpreter.M6_Variation
+->	/		 build.j.interpreter.I1_Variation
+->	/		 build.j.interpreter.I2_Variation
+->	/		 build.j.interpreter.C1_Variation
+# oo(j) evolutions: ->	/		 build.j.oo.M0_Variation
+->	/		 build.j.oo.M1_Variation
+->	/		 build.j.oo.M2_Variation
+->	/		 build.j.oo.M3_Variation
+->	/		 build.j.oo.M4_Variation
+->	/		 build.j.oo.M5_Variation
+->	/		 build.j.oo.M6_Variation
+->	/		 build.j.oo.I1_Variation
+->	/		 build.j.oo.I2_Variation
+->	/		 build.j.oo.C1_Variation
 # trivially(j) evolutions: ->	/		 build.j.trivially.M0_Variation
 ->	/		 build.j.trivially.M1_Variation
 ->	/		 build.j.trivially.M2_Variation

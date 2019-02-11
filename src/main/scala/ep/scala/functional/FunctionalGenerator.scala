@@ -26,10 +26,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod {
     val flat = getModel.flatten()
 
     //  binary methods for helper
-    val decls:Seq[ScalaWithPath] = if (flat.ops.exists {
-      case bm: domain.BinaryMethodTreeBase => true
-      case _ => false
-    }) {
+    val decls:Seq[ScalaWithPath] = if (flat.hasBinaryMethod()) {
       helperClasses()
     } else {
       Seq.empty

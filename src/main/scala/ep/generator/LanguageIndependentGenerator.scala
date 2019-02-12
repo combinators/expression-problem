@@ -166,6 +166,34 @@ trait LanguageIndependentGenerator {
   }
 
   /**
+    *
+    * @param scalaValue
+    * @return
+    */
+  def instConverter(scalaValue:ExistsInstance) : Expression = {
+    throw new scala.NotImplementedError(s""" REPLACE_ME """)
+  }
+
+  /**
+    * Given a data type (and potential arguments) returns an expression type that instantiates the data type.
+    */
+  def inst(exp:domain.DataType, params:Expression*): Expression
+
+  /** Convert a test instance into a Java Expression for instantiating that instance. */
+  def convert(ai: domain.Inst): Expression = {
+    ai match {
+      case ui: domain.UnaryInst =>
+        inst(ui.e, convert(ui.inner))
+      case bi: domain.BinaryInst =>
+        inst(bi.e, convert(bi.left), convert(bi.right))
+      case ai:domain.AtomicInst =>
+        inst(ai.e, instConverter(ai.ei))
+
+      case _ => throw new scala.NotImplementedError(s""" REPLACE """)
+    }
+  }
+
+  /**
     * Return an expression that refers to the given sub-structure of a data-type by a
     * specific attribute.
     *
@@ -180,7 +208,7 @@ trait LanguageIndependentGenerator {
     * @group api
     */
   @throws[scala.NotImplementedError]("If given attribute doesn't exist in data-type.")
-  def expression (exp:Atomic, att:Attribute) : Expression = {
+  def expression (exp:DataType, att:Attribute) : Expression = {
     throw new scala.NotImplementedError(s"""Unknown Attribute "${att.instance}" for "${exp.concept}. """)
   }
 
@@ -218,7 +246,7 @@ trait LanguageIndependentGenerator {
     * @group api
     */
   @throws[scala.NotImplementedError]("If no (data-type, operation) combination defined.")
-  def logic(exp:Atomic, op:Operation) : Seq[Statement] = {
+  def logic(exp:DataType, op:Operation) : Seq[Statement] = {
     throw new scala.NotImplementedError(s"""Operation "${op.concept}" does not handle case for sub-type "${exp.concept}" """)
   }
 

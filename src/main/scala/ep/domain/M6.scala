@@ -23,7 +23,7 @@ trait M6 extends Evolution {
     *
     * Validates that calling AsTree on inst1 yields the tree called from AsTree on inst2
     */
-  case class EqualsBinaryMethodTestCase(inst1:domain.AtomicInst, inst2:domain.AtomicInst, result:Boolean)
+  case class EqualsBinaryMethodTestCase(inst1:domain.Inst, inst2:domain.Inst, result:Boolean)
     extends domain.TestCase
 
   val m6_s1 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(73.0))

@@ -13,8 +13,8 @@ trait JUnitTestGenerator extends TestGenerator with JavaGenerator {
   import domain._
 
   /** Type to use when referring to specific instance. */
-  def exprDefine(exp:AtomicInst) : Type = {
-    Java(exp.e.name).tpe()
+  def exprDefine(exp:Inst) : Type = {
+    Java(exp.name).tpe()
   }
 
   /** Used when one already has code fragments bound to variables, which are to be used for left and right. */

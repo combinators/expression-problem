@@ -29,6 +29,32 @@ trait JavaGenerator extends LanguageIndependentGenerator  with Producer {
     }
   }
 
+  /** Convert a test instance into a Java Expression for instantiating that instance. */
+  override def convert(ai: domain.Inst): Expression = {
+    ai match {
+      case ui: domain.UnaryInst =>
+        inst(ui.e, convert(ui.inner))
+      case bi: domain.BinaryInst =>
+        inst(bi.e, convert(bi.left), convert(bi.right))
+      case ai:domain.AtomicInst =>
+        inst(ai.e, instConverter(ai.ei))
+
+      case _ => Java(s""" "unknown ${ai.toString}" """).expression()
+    }
+  }
+
+  /**
+    * Return expression associated with instance.
+    *
+    * Handles the top-level
+    */
+  override def instConverter(ei:domain.ExistsInstance) : Expression = {
+    ei.inst match {
+      case di:domain.Inst => convert (di)
+      case _ => super.instConverter(ei)
+    }
+  }
+
   /**
     * Default behavior in Java is to return an expression value.
     */
@@ -40,14 +66,14 @@ trait JavaGenerator extends LanguageIndependentGenerator  with Producer {
     * For producer operations, there is a need to instantiate objects, and one would use this
     * method (with specific parameters) to carry this out.
     */
-  def inst(exp:domain.Atomic, params:InstanceExpression*): InstanceExpression = {
-    Java("new " + exp.concept + "(" + params.map(expr => expr.toString).mkString(",") + ")").expression()
+  def inst(exp:domain.DataType, params:Expression*): Expression = {
+    Java("new " + exp.concept + "(" + params.map(expr => expr.toString).mkString(",") + ")").expression[InstanceExpression]()
   }
 
   // Useful helper methods for any generator needing to craft common Java constructs
 
   /** Generate constructor for given atomic concept, using suggested name */
-  def constructor(exp:domain.Atomic, suggestedName:Option[String] = None) : ConstructorDeclaration = {
+  def constructor(exp:domain.DataType, suggestedName:Option[String] = None) : ConstructorDeclaration = {
     val name = if (suggestedName.isEmpty) { exp.name } else { suggestedName.get }
 
     val params:Seq[String] = exp.attributes.map(att => s"${typeConverter(att.tpe)} ${att.instance}")
@@ -87,7 +113,7 @@ trait JavaGenerator extends LanguageIndependentGenerator  with Producer {
     * Produce all getter methods for the given exp, with suitable possibility of using covariant replacement
     * on domain.BaseTypeRep
     */
-  def getters(exp:domain.Atomic) : Seq[MethodDeclaration] =
+  def getters(exp:domain.DataType) : Seq[MethodDeclaration] =
 
     exp.attributes.flatMap(att => Java(s"""|public ${typeConverter(att.tpe)} get${att.concept}() {
                                            |    return this.${att.instance};
@@ -99,7 +125,7 @@ trait JavaGenerator extends LanguageIndependentGenerator  with Producer {
     * @param exp
     * @return
     */
-  def fields(exp:domain.Atomic) : Seq[FieldDeclaration] = {
+  def fields(exp:domain.DataType) : Seq[FieldDeclaration] = {
     exp.attributes.flatMap(att => Java(s"private ${typeConverter(att.tpe)} ${att.instance};").fieldDeclarations())
   }
 

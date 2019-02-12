@@ -60,12 +60,12 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
     Java(exp.concept + "(" + params.map(expr => expr.toString()).mkString(",") + ")").expression()
   }
 
-  override def expression (exp:domain.Atomic, att:domain.Attribute) : Expression = {
+  override def expression (exp:domain.DataType, att:domain.Attribute) : Expression = {
     Java(s"get${att.concept}()").expression()
   }
 
   /** Return designated Java type associated with type, or void if all else fails. */
-  override def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {
+  override def typeConverter(tpe:domain.TypeRep) : Type = {
     tpe match {
       case domain.baseTypeRep => Java(s"${domain.baseTypeRep.concept}").tpe()
       case _ => super.typeConverter(tpe)
@@ -99,7 +99,7 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
   }
 
   /** Operations are implemented as methods in the Base and sub-type classes. */
-  override def methodGenerator(exp:domain.Atomic, op:domain.Operation): MethodDeclaration = {
+  override def methodGenerator(exp:domain.DataType, op:domain.Operation): MethodDeclaration = {
     val retType = op.returnType match {
       case Some(tpe) => typeConverter(tpe)
       case _ => Java("void").tpe
@@ -120,7 +120,7 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
     * @param exp
     * @return
     */
-  override def generateExp(model:domain.Model, exp:domain.Atomic) : CompilationUnit = {
+  override def generateExp(model:domain.Model, exp:domain.DataType) : CompilationUnit = {
     val name = Java(s"${exp.concept}").simpleName()
     val baseInterface:Option[Type] = Some(Java(baseInterfaceName(model.lastModelWithOperation())).tpe())
 
@@ -145,11 +145,11 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
     unit
    }
 
-  def interfaceName(exp: domain.Atomic, op: domain.Operation): SimpleName = {
+  def interfaceName(exp: domain.DataType, op: domain.Operation): SimpleName = {
     Java(s"${exp.concept}${op.concept}").simpleName()
   }
 
-  def generateInterface(exp: domain.Atomic, parents: Seq[SimpleName], op:domain.Operation): CompilationUnit = {
+  def generateInterface(exp: domain.DataType, parents: Seq[SimpleName], op:domain.Operation): CompilationUnit = {
     val name = interfaceName(exp, op)
     val method: MethodDeclaration = methodGenerator(exp, op)
     val atts:Seq[MethodDeclaration] =
@@ -216,7 +216,7 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
              |}""".stripMargin).compilationUnit
   }
 
-  def lastTypesSinceAnOperation(model:domain.Model): Seq[domain.Atomic] = {
+  def lastTypesSinceAnOperation(model:domain.Model): Seq[domain.DataType] = {
     if (model.isEmpty || model.ops.nonEmpty) {
       Seq.empty
     } else {
@@ -243,7 +243,7 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
 
   // if multiple operations in the same model, then must chain together.
   def generateBaseExtensions(model:domain.Model) : Seq[CompilationUnit] = {
-    val pastTypes:Seq[domain.Atomic] = model.pastDataTypes()
+    val pastTypes:Seq[domain.DataType] = model.pastDataTypes()
 
     val isBase:Boolean = model.base().equals(model)
 
@@ -255,7 +255,7 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
     *
     * Note that BinaryMethods must have their Exp parameters converted to be \${op.name}Exp.
      */
-  def generateForOp(model:domain.Model, ops:Seq[domain.Operation], pastTypes:Seq[domain.Atomic], isBase:Boolean) : Seq[CompilationUnit] = {
+  def generateForOp(model:domain.Model, ops:Seq[domain.Operation], pastTypes:Seq[domain.DataType], isBase:Boolean) : Seq[CompilationUnit] = {
     val combinedOps:String = ops.sortWith(_.name < _.name).map(op => op.concept).mkString("")
 
       pastTypes.map(exp => {

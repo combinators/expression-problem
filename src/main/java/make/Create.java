@@ -4,7 +4,8 @@ import java.io.*;
 import java.util.*;
 
 /**
- *
+ * Create the routes file to be used by Play engine and individual Scala classes that represent the specific
+ * evolutions for different languages and approaches.
  */
 public class Create {
 

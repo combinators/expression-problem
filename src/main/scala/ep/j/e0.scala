@@ -21,8 +21,21 @@ trait e0 extends JavaGenerator with JUnitTestGenerator with M0 {
     }
   }
 
+  /**
+    * Return expression associated with instance.
+    *
+    * Handles the top-level
+    */
+  override def instConverter(ei:domain.ExistsInstance) : Expression = {
+     ei.inst match {
+      case d:scala.Double => Java(s"$d").expression()
+      case i:scala.Int => Java(s"$i").expression()
+      case _ => super.instConverter(ei)
+    }
+  }
+
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
-  abstract override def logic(exp:Atomic, op:Operation): Seq[Statement] = {
+  abstract override def logic(exp:DataType, op:Operation): Seq[Statement] = {
     op match {
       case Eval =>
         exp match {

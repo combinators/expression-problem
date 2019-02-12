@@ -8,7 +8,9 @@ trait M2 extends Evolution {
 
   // m2:model evolution.
   // -------------------
-  case object String extends TypeRep
+  case object String extends TypeRep {
+    override type scalaInstanceType = java.lang.String
+  }
 
   case object PrettyP extends Operation("prettyp", Some(String)) // PROBLEMS WITH "print"
 
@@ -20,10 +22,9 @@ trait M2 extends Evolution {
   val m2_s1 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
 
   def M2_tests: Seq[TestCase] = Seq(
-    EqualsTestCase(m2_s1, PrettyP, (String, "(1.0-2.0)")),
+    EqualsTestCase(m2_s1, PrettyP, ExistsInstance(String)("(1.0-2.0)")),
 
     EqualsTestCase(new domain.BinaryInst(Add, m2_s1, new domain.BinaryInst(Add, new LitInst(5.0), new LitInst(6.0))),
-      PrettyP,
-      (String, "((1.0-2.0)+(5.0+6.0))"))
+      PrettyP, ExistsInstance(String)("((1.0-2.0)+(5.0+6.0))"))
   )
 }

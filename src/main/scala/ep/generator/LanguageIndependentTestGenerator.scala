@@ -11,10 +11,23 @@ import ep.domain.BaseDomain
   * test cases can enhance the generated code, but this is handled in the ex traits, not the Mx traits.
   *
   */
-trait LanguageIndependentTestGenerator {
+trait LanguageIndependentTestGenerator extends LanguageIndependentGenerator {
   val domain:BaseDomain
 
   type UnitTest      /** Base concept for the representation of a single test case. */
+  type Expression
+
+  /**
+    * Actual value in a test case.
+    *
+    * Each basic test case has an instance over which an operation is to be performed. This method
+    * returns the inline expression resulting from dispatching operation, op, over the given instance, inst.
+    *
+    * For more complicated structures, as with lists for example, this method will need to be overridden.
+    *
+    * Not sure, yet, how to properly pass in variable parameters.
+    */
+  def actual(op: domain.Operation, inst: domain.Inst, params: Expression*): Expression = dispatch(convert(inst), op, params: _*)
 
   /**
     * Represents a specific unit test which could fail.

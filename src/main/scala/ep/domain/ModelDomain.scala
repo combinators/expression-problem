@@ -6,7 +6,7 @@ package ep.domain  /*DI:LI:AI*/
 trait ModelDomain extends BaseDomain {
 
   /** Each model consists of a collection of Exp sub-types and operations. */
-  case class Model(name:String, types:Seq[Atomic], ops:Seq[Operation], last:Model = emptyModel()) {
+  case class Model(name:String, types:Seq[DataType], ops:Seq[Operation], last:Model = emptyModel()) {
 
     /* Return history of model as a sequence. */
     def toSeq : Seq[Model] = {
@@ -47,7 +47,7 @@ trait ModelDomain extends BaseDomain {
     }
 
     /** Find Model entry in the past that defines type. */
-    def findType(tpe:Atomic) : Model = {
+    def findType(tpe:DataType) : Model = {
       if (isEmpty || types.contains(tpe)) {
         this
       } else {
@@ -94,7 +94,7 @@ trait ModelDomain extends BaseDomain {
     }
 
     /** Find past dataTypes. */
-    def pastDataTypes(): Seq[Atomic] = {
+    def pastDataTypes(): Seq[DataType] = {
       if (isEmpty) {
         Seq.empty
       } else {

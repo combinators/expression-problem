@@ -30,7 +30,7 @@ trait M5 extends Evolution {
     *
     * Validates that calling AsTree on inst1 yields the tree called from AsTree on inst2
     */
-  case class SameTestCase(inst1:domain.AtomicInst, inst2:domain.AtomicInst, result:Boolean)
+  case class SameTestCase(inst1:domain.Inst, inst2:domain.Inst, result:Boolean)
     extends domain.TestCase
 
   def M5_tests:Seq[TestCase] = Seq(

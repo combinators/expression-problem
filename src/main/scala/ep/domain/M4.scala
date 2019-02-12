@@ -8,7 +8,9 @@ trait M4 extends Evolution  {
   // m4:model evolution.
   // -------------------
   case object Simplify extends ProducerOperation("simplify")
-  case class List(generic:TypeRep) extends TypeRep
+  case class List(generic:TypeRep) extends TypeRep {
+    override type scalaInstanceType = scala.Seq[java.lang.Double]  // TODO: Fix this hack
+  }
   case object Collect extends Operation("collect", Some(List(Double)))
 
   val m4 = domain.Model("m4", Seq.empty, Seq(Simplify, Collect), last = m3)
@@ -40,28 +42,28 @@ trait M4 extends Evolution  {
     * Result should support a composite operation
     */
   def M4_tests:Seq[TestCase] = Seq(
-    EqualsTestCase(m4_d2, Collect, (List(Double), Seq(5.0, 7.0, 7.0, 2.0, 3.0))),
-    EqualsTestCase(m4_s_00, Collect, (List(Double), Seq(0.0, 0.0))),
-    EqualsTestCase(m4_s_0, Collect, (List(Double), Seq(0.0))),
-    EqualsTestCase(m4_s_12, Collect, (List(Double), Seq(1.0, 12.0))),
-    EqualsTestCase(m4_s_13, Collect, (List(Double), Seq(13.0, 1.0))),
-    EqualsTestCase(m3_m1, PrettyP, (String, "-1.0")),
+    EqualsTestCase(m4_d2, Collect, ExistsInstance(List(Double))(Seq(5.0, 7.0, 7.0, 2.0, 3.0))),
+    EqualsTestCase(m4_s_00, Collect, ExistsInstance(List(Double))(Seq(0.0, 0.0))),
+    EqualsTestCase(m4_s_0, Collect, ExistsInstance(List(Double))(Seq(0.0))),
+    EqualsTestCase(m4_s_12, Collect, ExistsInstance(List(Double))(Seq(1.0, 12.0))),
+    EqualsTestCase(m4_s_13, Collect, ExistsInstance(List(Double))(Seq(13.0, 1.0))),
+    EqualsTestCase(m3_m1, PrettyP, ExistsInstance(String)("-1.0")),
 
-    EqualsTestCase(m4_m1, PrettyP, (String, "((5.0/2.0)*4.0)")),
-    EqualsTestCase(m4_m1, Eval, (Double, 10.0))
+    EqualsTestCase(m4_m1, PrettyP, ExistsInstance(String)("((5.0/2.0)*4.0)")),
+    EqualsTestCase(m4_m1, Eval, ExistsInstance(Double)(10.0))
   )
 
   def M4_simplify_tests:Seq[TestCase] = Seq(
-    EqualsCompositeTestCase(m4_d2, Seq(Simplify, PrettyP), (String, "(5.0/7.0)")),
-    EqualsCompositeTestCase(m4_s_0, Seq(Simplify, Eval), (Double, 0.0)),
-    EqualsCompositeTestCase(m4_s_5, Seq(Simplify, Eval), (Double, 5.0)),
-    EqualsCompositeTestCase(m4_s_7, Seq(Simplify, Eval), (Double, 7.0)),
-    EqualsCompositeTestCase(m4_s_13 , Seq(Simplify, Eval), (Double, 13.0)),
-    EqualsCompositeTestCase(m4_s_12 , Seq(Simplify, Eval), (Double, 12.0)),
-    EqualsCompositeTestCase(m4_s_m0 , Seq(Simplify, Eval), (Double, 0.0)),
+    EqualsCompositeTestCase(m4_d2, Seq(Simplify, PrettyP), ExistsInstance(String)("(5.0/7.0)")),
+    EqualsCompositeTestCase(m4_s_0, Seq(Simplify, Eval), ExistsInstance(Double)(0.0)),
+    EqualsCompositeTestCase(m4_s_5, Seq(Simplify, Eval), ExistsInstance(Double)(5.0)),
+    EqualsCompositeTestCase(m4_s_7, Seq(Simplify, Eval), ExistsInstance(Double)(7.0)),
+    EqualsCompositeTestCase(m4_s_13 , Seq(Simplify, Eval), ExistsInstance(Double)(13.0)),
+    EqualsCompositeTestCase(m4_s_12 , Seq(Simplify, Eval), ExistsInstance(Double)(12.0)),
+    EqualsCompositeTestCase(m4_s_m0 , Seq(Simplify, Eval), ExistsInstance(Double)(0.0)),
 
-    EqualsCompositeTestCase(m4_s_n1 , Seq(Simplify, Eval), (Double, -1.0)),
-    EqualsCompositeTestCase(m4_s_1 , Seq(Simplify, Eval), (Double, 1.0)),
-    EqualsCompositeTestCase(m4_s_d0 , Seq(Simplify, Eval), (Double, 0.0)),
+    EqualsCompositeTestCase(m4_s_n1 , Seq(Simplify, Eval), ExistsInstance(Double)(-1.0)),
+    EqualsCompositeTestCase(m4_s_1 , Seq(Simplify, Eval), ExistsInstance(Double)(1.0)),
+    EqualsCompositeTestCase(m4_s_d0 , Seq(Simplify, Eval), ExistsInstance(Double)(0.0)),
   )
 }

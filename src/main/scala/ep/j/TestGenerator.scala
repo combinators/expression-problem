@@ -8,7 +8,6 @@ import org.combinators.templating.twirl.Java
 
 trait TestGenerator extends JavaGenerator with LanguageIndependentTestGenerator {
   val domain: BaseDomain with ModelDomain
-
   import domain._
 
   type UnitTest = MethodDeclaration /** Base concept for the representation of a single test case. */
@@ -28,36 +27,9 @@ trait TestGenerator extends JavaGenerator with LanguageIndependentTestGenerator 
     * you will have to override this method accordingly.
     */
   def expected(test: TestCaseExpectedValue, id: String): (Expression => Seq[Statement]) => Seq[Statement] = continue => {
-    continue(Java(test.expect._2.toString).expression[Expression])
+    continue(Java(test.expect.inst.toString).expression[Expression])
   }
 
-  /**
-    * Actual value in a test case.
-    *
-    * Each basic test case has an instance over which an operation is to be performed. This method
-    * returns the inline expression resulting from dispatching operation, op, over the given instance, inst.
-    *
-    * For more complicated structures, as with lists for example, this method will need to be overridden.
-    *
-    * Not sure, yet, how to properly pass in variable parameters.
-    */
-  def actual(op: Operation, inst: AtomicInst, params: Expression*): Expression = dispatch(convert(inst), op, params: _*)
-
-  /** Convert a test instance into a Java Expression for instantiating that instance. */
-  def convert(inst: AtomicInst): Expression = {
-    val name = inst.e.name
-    inst match {
-      case ui: UnaryInst =>
-        Java(s"new $name(${convert(ui.inner)})").expression()
-      case bi: BinaryInst =>
-        val left = convert(bi.left)
-        val right = convert(bi.right)
-        Java(s"new $name($left, $right)").expression()
-      case exp: AtomicInst => Java(s"new $name(${exp.i.get})").expression()
-
-      case _ => Java(s""" "unknown $name" """).expression()
-    }
-  }
 
   /** Return sample test cases as methods. */
   def testGenerator: Seq[MethodDeclaration] = Seq.empty

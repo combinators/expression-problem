@@ -18,7 +18,9 @@ trait BaseDomain {
   }
 
   /** There is a base type and subsequent sub-types will extend Types. */
-  abstract class TypeRep {
+  trait TypeRep {
+    type scalaInstanceType
+
     def name: String = getClass.getName
 
     /**
@@ -35,7 +37,22 @@ trait BaseDomain {
       */
     def concept : String = name.capitalize
   }
-  type BaseTypeRep <: TypeRep
+
+  /**
+    * A companion object for the TypeRep which declares a type for TypeRep which have a generic
+    * parameter for its scala instance type.
+    */
+  object TypeRep {
+    type Aux[T] = TypeRep {
+      type scalaInstanceType = T
+    }
+  }
+
+  /**
+    * This type definition is a powerful and elegant way to simply state that the associated instance
+    * of this top-level BaseTypeRep is exactly an instance type, [[Inst]]
+    */
+  type BaseTypeRep = TypeRep.Aux[Inst]
   val baseTypeRep:BaseTypeRep
 
   // standard attributes for domain. As new ones are defined, create own object to store them
@@ -109,8 +126,8 @@ trait BaseDomain {
 
   /** Pre-defined unary/binary subtypes that reflects either a unary or binary structure. This is extensible. */
   // TODO: Rename as DataType
-  abstract class Atomic(n1: String, val attributes: Seq[Attribute]) {
-    val name:String = sanitize(n1)
+  abstract class DataType(raw:String, val attributes: Seq[Attribute]) {
+    val name:String = sanitize(raw)
 
     /**
       * Request the data-type as an instance, such as "add" for the Add data type.
@@ -126,13 +143,29 @@ trait BaseDomain {
       */
     def concept : String = name.capitalize
   }
-  abstract class Unary(override val name:String) extends Atomic(name, Seq(base.inner))
-  abstract class Binary(override val name:String) extends Atomic(name, Seq(base.left, base.right))
 
-  /** For testing, one can construct instances over which test cases can be constructed. */
-  class AtomicInst(val e:Atomic, val i:Option[Any])
-  class UnaryInst(override val e:Atomic, val inner:AtomicInst) extends AtomicInst(e, None)
-  class BinaryInst(override val e:Atomic, val left:AtomicInst, val right:AtomicInst) extends AtomicInst(e, None)
+  abstract class Atomic(n1: String, override val attributes: Seq[Attribute]) extends DataType (n1, attributes)
+  abstract class Unary(override val name:String) extends DataType(name, Seq(base.inner))
+  abstract class Binary(override val name:String) extends DataType(name, Seq(base.left, base.right))
+
+  /** One can construct instances over which test cases can be constructed and actual code executed. */
+  abstract class Inst {
+    def name:String
+  }
+
+  // https://partialflow.wordpress.com/2017/07/26/dependent-types-type-level-programming/
+  /** Scala Dependent Pair Type is a dependent sum, Sigma, where there exists a type and an instance for that type. */
+  case class ExistsInstance(tpe : TypeRep)(val inst: tpe.scalaInstanceType)
+
+  class AtomicInst(val e:Atomic, val ei:ExistsInstance) extends Inst {
+    def name:String = e.name
+  }
+  class UnaryInst(val e:Unary, val inner:Inst) extends Inst {
+    def name:String = e.name
+  }
+  class BinaryInst(val e:Binary, val left:Inst, val right:Inst) extends Inst {
+    def name:String = e.name
+  }
 
   /**
     * A Test case is determined by the expected result of an operation on a given instance.
@@ -144,13 +177,13 @@ trait BaseDomain {
   abstract class TestCase
 
   // When a test case has a definitive expected value, extend this class
-  abstract class TestCaseExpectedValue(val expect:(TypeRep, Any)) extends TestCase
+  abstract class TestCaseExpectedValue(val expect:ExistsInstance) extends TestCase
 
-  case class EqualsTestCase(inst:AtomicInst, op:Operation, override val expect:(TypeRep,Any), params:(TypeRep,Any)*)
+  case class EqualsTestCase(inst:Inst, op:Operation, override val expect:ExistsInstance, params:ExistsInstance*)
     extends TestCaseExpectedValue(expect)
-  case class NotEqualsTestCase(inst:AtomicInst, op:Operation, override val expect:(TypeRep,Any), params:(TypeRep,Any)*)
+  case class NotEqualsTestCase(inst:Inst, op:Operation, override val expect:ExistsInstance, params:ExistsInstance*)
     extends TestCaseExpectedValue(expect)
 
-  case class EqualsCompositeTestCase(inst:AtomicInst, ops:Seq[Operation], override val expect:(TypeRep,Any), params:(TypeRep,Any)*)
+  case class EqualsCompositeTestCase(inst:Inst, ops:Seq[Operation], override val expect:ExistsInstance, params:ExistsInstance*)
     extends TestCaseExpectedValue(expect)
 }

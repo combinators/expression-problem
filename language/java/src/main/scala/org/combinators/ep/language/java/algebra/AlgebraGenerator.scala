@@ -93,7 +93,7 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
     */
   override def inst(exp:domain.DataType, params:Expression*): CodeBlockWithResultingExpressions = {
     CodeBlockWithResultingExpressions(
-      Java(s"alegba.${exp.instance}${params.mkString("(", ", ", ")")}").expression()
+      Java(s"alegbra.${exp.instance}${params.mkString("(", ", ", ")")}").expression()
     )
   }
 

@@ -1,0 +1,104 @@
+# algebra(j) evolutions: ->	/		 build.j.algebra.M0_Variation
+->	/		 build.j.algebra.M1_Variation
+->	/		 build.j.algebra.M2_Variation
+->	/		 build.j.algebra.M3_Variation
+->	/		 build.j.algebra.M4_Variation
+->	/		 build.j.algebra.M5_Variation
+->	/		 build.j.algebra.M6_Variation
+->	/		 build.j.algebra.I1_Variation
+->	/		 build.j.algebra.I2_Variation
+->	/		 build.j.algebra.C1_Variation
+# extensibleVisitor(j) evolutions: ->	/		 build.j.extensibleVisitor.M0_Variation
+->	/		 build.j.extensibleVisitor.M1_Variation
+->	/		 build.j.extensibleVisitor.M2_Variation
+->	/		 build.j.extensibleVisitor.M3_Variation
+->	/		 build.j.extensibleVisitor.M4_Variation
+->	/		 build.j.extensibleVisitor.M5_Variation
+->	/		 build.j.extensibleVisitor.M6_Variation
+->	/		 build.j.extensibleVisitor.I1_Variation
+->	/		 build.j.extensibleVisitor.I2_Variation
+->	/		 build.j.extensibleVisitor.C1_Variation
+# interpreter(j) evolutions: ->	/		 build.j.interpreter.M0_Variation
+->	/		 build.j.interpreter.M1_Variation
+->	/		 build.j.interpreter.M2_Variation
+->	/		 build.j.interpreter.M3_Variation
+->	/		 build.j.interpreter.M4_Variation
+->	/		 build.j.interpreter.M5_Variation
+->	/		 build.j.interpreter.M6_Variation
+->	/		 build.j.interpreter.I1_Variation
+->	/		 build.j.interpreter.I2_Variation
+->	/		 build.j.interpreter.C1_Variation
+# oo(j) evolutions: ->	/		 build.j.oo.M0_Variation
+->	/		 build.j.oo.M1_Variation
+->	/		 build.j.oo.M2_Variation
+->	/		 build.j.oo.M3_Variation
+->	/		 build.j.oo.M4_Variation
+->	/		 build.j.oo.M5_Variation
+->	/		 build.j.oo.M6_Variation
+->	/		 build.j.oo.I1_Variation
+->	/		 build.j.oo.I2_Variation
+->	/		 build.j.oo.C1_Variation
+# trivially(j) evolutions: ->	/		 build.j.trivially.M0_Variation
+->	/		 build.j.trivially.M1_Variation
+->	/		 build.j.trivially.M2_Variation
+->	/		 build.j.trivially.M3_Variation
+->	/		 build.j.trivially.M4_Variation
+->	/		 build.j.trivially.M5_Variation
+->	/		 build.j.trivially.M6_Variation
+->	/		 build.j.trivially.I1_Variation
+->	/		 build.j.trivially.I2_Variation
+->	/		 build.j.trivially.C1_Variation
+# visitor(j) evolutions: ->	/		 build.j.visitor.M0_Variation
+->	/		 build.j.visitor.M1_Variation
+->	/		 build.j.visitor.M2_Variation
+->	/		 build.j.visitor.M3_Variation
+->	/		 build.j.visitor.M4_Variation
+->	/		 build.j.visitor.M5_Variation
+->	/		 build.j.visitor.M6_Variation
+->	/		 build.j.visitor.I1_Variation
+->	/		 build.j.visitor.I2_Variation
+->	/		 build.j.visitor.C1_Variation
+# alacarte(haskell) evolutions: ->	/		 build.haskell.alacarte.M0_Variation
+->	/		 build.haskell.alacarte.M1_Variation
+->	/		 build.haskell.alacarte.M2_Variation
+->	/		 build.haskell.alacarte.M3_Variation
+->	/		 build.haskell.alacarte.M4_Variation
+->	/		 build.haskell.alacarte.M5_Variation
+->	/		 build.haskell.alacarte.M6_Variation
+# grow(haskell) evolutions: ->	/		 build.haskell.grow.M0_Variation
+->	/		 build.haskell.grow.M1_Variation
+->	/		 build.haskell.grow.M2_Variation
+->	/		 build.haskell.grow.M3_Variation
+->	/		 build.haskell.grow.M4_Variation
+->	/		 build.haskell.grow.M5_Variation
+->	/		 build.haskell.grow.M6_Variation
+# straight(haskell) evolutions: ->	/		 build.haskell.straight.M0_Variation
+->	/		 build.haskell.straight.M1_Variation
+->	/		 build.haskell.straight.M2_Variation
+->	/		 build.haskell.straight.M3_Variation
+->	/		 build.haskell.straight.M4_Variation
+->	/		 build.haskell.straight.M5_Variation
+->	/		 build.haskell.straight.M6_Variation
+# oo(cpp) evolutions: ->	/		 build.cpp.oo.M0_Variation
+->	/		 build.cpp.oo.M1_Variation
+->	/		 build.cpp.oo.M2_Variation
+->	/		 build.cpp.oo.M3_Variation
+->	/		 build.cpp.oo.M4_Variation
+->	/		 build.cpp.oo.M5_Variation
+->	/		 build.cpp.oo.M6_Variation
+# visitor(cpp) evolutions: ->	/		 build.cpp.visitor.M0_Variation
+->	/		 build.cpp.visitor.M1_Variation
+->	/		 build.cpp.visitor.M2_Variation
+->	/		 build.cpp.visitor.M3_Variation
+->	/		 build.cpp.visitor.M4_Variation
+->	/		 build.cpp.visitor.M5_Variation
+->	/		 build.cpp.visitor.M6_Variation
+# visitorTable(cpp) evolutions: ->	/		 build.cpp.visitorTable.M0_Variation
+->	/		 build.cpp.visitorTable.M1_Variation
+->	/		 build.cpp.visitorTable.M2_Variation
+->	/		 build.cpp.visitorTable.M3_Variation
+->	/		 build.cpp.visitorTable.M4_Variation
+->	/		 build.cpp.visitorTable.M5_Variation
+->	/		 build.cpp.visitorTable.M6_Variation
+# wadler(gj) evolutions: ->	/		 build.gj.wadler.M0_Variation
+->	/		 build.gj.wadler.M1_Variation

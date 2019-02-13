@@ -1,7 +1,8 @@
-package ep.j.extensibleVisitor      /*DD:LD:AD*/
+package org.combinators.ep.language.java.extensibleVisitor
+
+/*DD:LD:AD*/
 
 import com.github.javaparser.ast.CompilationUnit
-import ep.j._
 import javax.inject.Inject
 import org.combinators.ep.deployment.CodeGenerationController
 import org.combinators.ep.domain.WithDomain

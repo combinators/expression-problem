@@ -1,7 +1,8 @@
-package ep.j  /*DD:LD:AI*/
+package org.combinators.ep.language.java
+
+/*DD:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
-import ep.domain.MathDomain
 import org.combinators.ep.domain.Evolution
 import org.combinators.ep.domain.math.{I2, MathDomain}
 import org.combinators.templating.twirl.Java
@@ -22,7 +23,7 @@ trait i2 extends  Evolution with JavaGenerator with JUnitTestGenerator with I2 {
     }
   }
 
-   abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
+   abstract override def logic(exp:domain.DataType, op:domain.Operation): Seq[Statement] = {
     // generate the actual body
     op match {
       case Height =>
@@ -47,12 +48,23 @@ trait i2 extends  Evolution with JavaGenerator with JUnitTestGenerator with I2 {
     val a3 = new domain.BinaryInst(Add, a1, i2)
     val zero = Java("0").expression[Expression]()
 
+    val testBlock =
+      actual(Height, i1, zero).appendDependent { case Seq(i1Inst) =>
+          actual(Height, a3, zero).appendDependent { case Seq(a3Inst) =>
+              CodeBlockWithResultingExpressions(
+                Java(
+                  s"""
+                     |assertEquals(new Integer(1), $i1Inst);
+                     |assertEquals(new Integer(1), $a3Inst);
+                   """.stripMargin).statements():_*
+              )()
+          }
+      }.block
+
     super.testGenerator ++ Java(
       s"""
          |public void test() {
-         |   assertEquals(new Integer(1), ${dispatch(convert(i1), Height, zero)});
-         |   assertEquals(new Integer(3), ${dispatch(convert(a3), Height, zero)});
-         |
+         |   ${testBlock.mkString("\n")}
          |}""".stripMargin).methodDeclarations()
   }
 }

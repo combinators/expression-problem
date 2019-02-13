@@ -88,7 +88,7 @@ import org.combinators.ep.domain.{BaseDomain, ModelDomain}
   * @groupprio api 0
   * @groupdesc types Each language must define relevant abstractions that map to these types.
   *            It is acceptable if the same structure is used for multiple types (as an example,
-  *            review [[ep.cpp.CPPElement]])
+  *            review [[org.combinators.ep.language.cpp.CPPElement]])
   * @groupprio types 10
   * @groupdesc context Each language and approach needs different solutions to assemble the logic
   *           for a given (data-type and operation). The top-level concepts are shown here.
@@ -130,6 +130,48 @@ trait LanguageIndependentGenerator {
     */
   type Statement
 
+  /** Base concept to represent a block of code with result values. */
+  trait CodeBlockWithResultingExpressions {
+    def block: Seq[Statement]
+    def resultingExpressions: Seq[Expression]
+
+    /** Appends a code block that depends on the results of this code block */
+    def appendDependent(other: Seq[Expression] => CodeBlockWithResultingExpressions): CodeBlockWithResultingExpressions = {
+      val nextBlock = other(resultingExpressions)
+      val allStatements = block ++ nextBlock.block
+      new CodeBlockWithResultingExpressions {
+        def block: Seq[Statement] =  allStatements
+        def resultingExpressions: Seq[Expression] = nextBlock.resultingExpressions
+      }
+    }
+
+    /** Appends an independent code block and concatenate its results */
+    def appendIndependent(other: CodeBlockWithResultingExpressions): CodeBlockWithResultingExpressions = {
+      val allStatements = block ++ other.block
+      val allResults = resultingExpressions ++ other.resultingExpressions
+      new CodeBlockWithResultingExpressions {
+        def block: Seq[Statement] =  allStatements
+        def resultingExpressions: Seq[Expression] = allResults
+      }
+    }
+  }
+
+  /** Helpers to construct code blocks with result expressions */
+  object CodeBlockWithResultingExpressions {
+    val empty: CodeBlockWithResultingExpressions = apply()
+    def apply(resultExps: Expression*): CodeBlockWithResultingExpressions =
+      new CodeBlockWithResultingExpressions {
+        def block: Seq[Statement] = Seq.empty
+        def resultingExpressions: Seq[Expression] = resultExps
+      }
+
+    def apply(stmts: Statement*)(resultExps: Expression*): CodeBlockWithResultingExpressions =
+      new CodeBlockWithResultingExpressions {
+        def block: Seq[Statement] = stmts
+        def resultingExpressions: Seq[Expression] = resultExps
+      }
+  }
+
   /**
     * Retrieve model under consideration.
     * @group dependency
@@ -160,31 +202,33 @@ trait LanguageIndependentGenerator {
     throw new scala.NotImplementedError(s"""Unknown Type "$tpe" """)
   }
 
-  /**
-    *
-    * @param scalaValue
-    * @return
-    */
-  def instConverter(scalaValue:ExistsInstance) : Expression = {
-    throw new scala.NotImplementedError(s""" REPLACE_ME """)
-  }
+
 
   /**
     * Given a data type (and potential arguments) returns an expression type that instantiates the data type.
     */
-  def inst(exp:domain.DataType, params:Expression*): Expression
+  def inst(exp:domain.DataType, params:Expression*): CodeBlockWithResultingExpressions
 
-  /** Convert a test instance into a Java Expression for instantiating that instance. */
-  def convert(ai: domain.Inst): Expression = {
-    ai match {
+  /** Convert a scala expression into the target language. */
+  def toTargetLanguage(scalaValue:ExistsInstance) : CodeBlockWithResultingExpressions = {
+    scalaValue.inst match {
+      case domInst: domain.Inst => toTargetLanguage(domInst)
+      case _ => throw new scala.NotImplementedError(s"No rule to convert ${scalaValue} to the target language")
+    }
+  }
+
+  /** Convert a domain specific data type instance into the target language. */
+  def toTargetLanguage(instance: domain.Inst): CodeBlockWithResultingExpressions = {
+    instance match {
       case ui: domain.UnaryInst =>
-        inst(ui.e, convert(ui.inner))
+        toTargetLanguage(ui.inner).appendDependent(innerResults => inst(ui.e, innerResults:_*))
       case bi: domain.BinaryInst =>
-        inst(bi.e, convert(bi.left), convert(bi.right))
+        toTargetLanguage(bi.left)
+            .appendIndependent(toTargetLanguage(bi.right))
+            .appendDependent(innerResults => inst(bi.e, innerResults: _*))
       case ai:domain.AtomicInst =>
-        inst(ai.e, instConverter(ai.ei))
-
-      case _ => throw new scala.NotImplementedError(s""" REPLACE """)
+        toTargetLanguage(ai.ei).appendDependent(innerResults => inst(ai.e, innerResults:_*))
+      case _ => throw new scala.NotImplementedError(s"No rule to convert ${instance} to the target language")
     }
   }
 
@@ -221,7 +265,7 @@ trait LanguageIndependentGenerator {
     * @return      Map with entries for each attribute, and the resulting code expressions
     * @group api
     */
-  def subExpressions(exp:Atomic) : Map[String, Expression] = {
+  def subExpressions(exp:DataType) : Map[String, Expression] = {
     exp.attributes.map(att => att.instance -> expression(exp, att)).toMap
   }
 
@@ -324,7 +368,7 @@ trait LanguageIndependentGenerator {
     * @param params   (optional variable length) parameters to the operation as code expressions.
     * @group context
     */
-  abstract class Context(val exp:Option[Atomic], val op:Option[Operation], val params:Expression*)
+  abstract class Context(val exp:Option[DataType], val op:Option[Operation], val params:Expression*)
 
   /**
     * When code is being generated independently (either within a test case or perhaps even
@@ -333,7 +377,7 @@ trait LanguageIndependentGenerator {
     *
     * @group context
     */
-  case class NoSource() extends Context(None, None)
+  case object NoSource extends Context(None, None)
 
   /**
     * Point in expression problem solution where logic is to be inserted for a given data-type, e,
@@ -344,7 +388,7 @@ trait LanguageIndependentGenerator {
     * @param p    optional variable length parameters for this operation as code expressions.
     * @group context
     */
-  case class Source(e:Atomic, o:Operation, p:Expression*) extends Context(Some(e), Some(o), p : _*)
+  case class Source(e:DataType, o:Operation, p:Expression*) extends Context(Some(e), Some(o), p : _*)
 
   /**
     * The logic for a given source context will typically need to weave together code fragments

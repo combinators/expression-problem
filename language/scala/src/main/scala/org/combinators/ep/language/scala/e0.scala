@@ -48,7 +48,7 @@ trait e0 extends ScalaGenerator with TestGenerator with M0 {
     val numTrials = 10
 
     var trees = new BinaryInst(Add, a1, a1)
-    var instantiations:String = s"val tree0  = ${convert(a1)}\n"
+    var instantiations:String = s"val tree0  = ${toTargetLanguage(a1)}\n"
     var seq:String = s"val trees = Seq(tree0 "
     for (i <- 1 to numTrials) {
       instantiations = instantiations + s"val tree$i = ${convertRecursive(Add, s"tree${i-1}", s"tree${i-1}")}\n"

@@ -1,7 +1,8 @@
-package ep.j  /*DD:LD:AI*/
+package org.combinators.ep.language.java
+
+/*DD:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
-import ep.domain._
 import org.combinators.ep.domain.math.{M0, M5, M6, MathDomain}
 import org.combinators.ep.domain.{Evolution, ModelDomain, OperationDependency}
 import org.combinators.templating.twirl.Java
@@ -34,7 +35,7 @@ trait e6 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
     }
   }
 
-  abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
+  abstract override def logic(exp:domain.DataType, op:domain.Operation): Seq[Statement] = {
     val source = Source(exp, op)
     op match {
       case Equals =>
@@ -54,11 +55,19 @@ trait e6 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
   override def junitTestMethod(test:domain.TestCase, idx:Int) : Seq[Statement] = {
       test match {
         case eb: EqualsBinaryMethodTestCase =>
-          if (eb.result) {
-            Java(s"assertTrue (${dispatch(convert(eb.inst1), Equals, convert(eb.inst2))});").statements
-          } else {
-            Java(s"assertFalse(${dispatch(convert(eb.inst1), Equals, convert(eb.inst2))});").statements
-          }
+          val leftBlock = toTargetLanguage(eb.inst1)
+          val rightBlock = toTargetLanguage(eb.inst2)
+          leftBlock.appendDependent { case Seq(leftExp) =>
+            rightBlock.appendDependent { case Seq(rightExp) =>
+                CodeBlockWithResultingExpressions(
+                  if (eb.result) {
+                    Java(s"assertTrue (${dispatch(leftExp, Equals, rightExp)});").statement
+                  } else {
+                    Java(s"assertFalse(${dispatch(leftExp, Equals, rightExp)});").statement
+                  }
+                )()
+            }
+          }.block
         case _ => super.junitTestMethod(test, idx)
     }
   }
@@ -72,7 +81,7 @@ trait e6 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
     val numTrials = 11
 
     var trees = new domain.BinaryInst(Add, a1, a1)
-    var instantiations:String = s"${exprDefine(a1)} tree0  = ${convert(a1)};\n"
+    var instantiations:String = s"${exprDefine(a1)} tree0  = ${toTargetLanguage(a1)};\n"
     var array:String = s"${exprDefine(a1)} trees[] = { tree0, "
     for (i <- 1 to numTrials) {
       instantiations = instantiations + s"${exprDefine(a1)} tree$i = ${convertRecursive(Add, s"tree${i-1}", s"tree${i-1}")};"
@@ -81,7 +90,7 @@ trait e6 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
     }
     array = array + "};"
 
-    val source = NoSource()
+    val source = NoSource
     val treei = new Java("trees[i]").expression[Expression]()
     val delta = deltaExprOp(source, treei, Equals, treei)
     val toTime = contextDispatch(source, delta)

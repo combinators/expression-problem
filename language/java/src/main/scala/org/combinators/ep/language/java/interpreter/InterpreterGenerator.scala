@@ -1,10 +1,12 @@
-package ep.j.interpreter  /*DI:LD:AD*/
+package org.combinators.ep.language.java.interpreter
+
+/*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.expr.SimpleName
-import ep.j._
-import expression.ReplaceType
+import org.combinators.ep.language.java.{DataTypeSubclassGenerator, JavaBinaryMethod, JavaGenerator, OperationAsMethodGenerator}
 import org.combinators.templating.twirl.Java
+import org.combinators.ep.language.java.ReplaceCovariantType._
 
 /**
   * C1 doesn't yet compile properly. Missing some key classes
@@ -56,8 +58,10 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
     * For interpreter, we use a factory method that has been placed in the class, and that allows
     * the very specialized types to be used.
     */
-  override def inst(exp:domain.Atomic, params:Expression*): Expression = {
-    Java(exp.concept + "(" + params.map(expr => expr.toString()).mkString(",") + ")").expression()
+  override def inst(exp:domain.DataType, params:Expression*): CodeBlockWithResultingExpressions = {
+    CodeBlockWithResultingExpressions(
+      Java(s"${exp.concept}${params.mkString("(", ", ", ")")}").expression()
+    )
   }
 
   override def expression (exp:domain.DataType, att:domain.Attribute) : Expression = {
@@ -111,6 +115,8 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
              |}""".stripMargin).methodDeclarations().head
   }
 
+
+
   /**
     * Must extend base EvalExp
     * Must have constructor and access
@@ -140,7 +146,7 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
             |}""".stripMargin).compilationUnit()
 
     // replace all covariant types!
-    ReplaceType.replace(unit, Java(s"${domain.baseTypeRep.concept}").tpe, baseInterface.get)
+    unit.replaceInCovariantPosition(Java(s"${domain.baseTypeRep.concept}").tpe, baseInterface.get)
 
     unit
    }
@@ -361,7 +367,7 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
                 |}""".stripMargin).compilationUnit()
 
         // replace all covariant types!
-        ReplaceType.replace(unit, Java(s"${domain.baseTypeRep.concept}").tpe, baseInterface)
+        unit.replaceInCovariantPosition(Java(s"${domain.baseTypeRep.concept}").tpe, baseInterface)
 
         unit
       })

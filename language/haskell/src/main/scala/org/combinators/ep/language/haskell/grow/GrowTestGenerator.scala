@@ -29,10 +29,10 @@ trait GrowTestGenerator extends HUnitTestGenerator with GrowGenerator {
 
     inst match {
       case ui: UnaryInst =>
-        Haskell(wrap(s"${ui.e.concept} (${convert(ui.inner)}) "))
+        Haskell(wrap(s"${ui.e.concept} (${toTargetLanguage(ui.inner)}) "))
 
       case bi: BinaryInst =>
-        Haskell(wrap(s"${bi.e.concept} (${convert(bi.left)}) (${convert(bi.right)}) "))
+        Haskell(wrap(s"${bi.e.concept} (${toTargetLanguage(bi.left)}) (${toTargetLanguage(bi.right)}) "))
 
       case exp: AtomicInst =>
         Haskell(wrap(s"${exp.e.concept} ${exp.i.get}"))

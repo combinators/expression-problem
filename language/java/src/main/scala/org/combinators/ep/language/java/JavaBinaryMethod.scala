@@ -1,9 +1,11 @@
-package ep.j      /*DI:LD:AI*/
+package org.combinators.ep.language.java
 
-import com.github.javaparser.ast.CompilationUnit
+/*DI:LD:AI*/
+
+import com.github.javaparser.JavaParser
+import com.github.javaparser.ast.{CompilationUnit, PackageDeclaration}
 import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.MethodDeclaration
-import ep.domain.ModelDomain
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 import org.combinators.templating.twirl.Java
 
@@ -17,12 +19,15 @@ trait JavaBinaryMethod {
     *
     * @return
     */
-  def helperClasses():Seq[CompilationUnit] = {
-    Seq(
-      example.expression.java.Tree.render(Java("tree").name()).compilationUnit(),
-      example.expression.java.Node.render(Java("tree").name()).compilationUnit(),
-      example.expression.java.Leaf.render(Java("tree").name()).compilationUnit()
-    )
+  def helperClasses(): Seq[CompilationUnit] = {
+    val classes =
+      Seq(
+        JavaParser.parse(getClass.getResourceAsStream("/java-code/Tree.java")),
+        JavaParser.parse(getClass.getResourceAsStream("/java-code/Node.java")),
+        JavaParser.parse(getClass.getResourceAsStream("/java-code/Leaf.java"))
+      )
+    classes.foreach(compilationUnit => compilationUnit.setPackageDeclaration("tree"))
+    classes
   }
 
   /**
@@ -50,7 +55,7 @@ trait JavaBinaryMethod {
     * @param exp
     * @return
     */
-  def logicAsTree(exp:domain.Atomic) : Seq[MethodDeclaration] = {
+  def logicAsTree(exp:domain.DataType) : Seq[MethodDeclaration] = {
     val args = exp.attributes.map(att => att.instance).mkString(",")
           Java(
             s"""

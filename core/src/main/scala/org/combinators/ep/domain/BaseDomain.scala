@@ -43,9 +43,7 @@ trait BaseDomain {
     * parameter for its scala instance type.
     */
   object TypeRep {
-    type Aux[T] = TypeRep {
-      type scalaInstanceType = T
-    }
+    type Aux[T] = TypeRep { type scalaInstanceType = T }
   }
 
   /**
@@ -165,6 +163,7 @@ trait BaseDomain {
 
   /** Companion object to create Dependent Pairs. */
   object ExistsInstance {
+    type Aux[T] = ExistsInstance { val tpe: TypeRep { type scalaInstanceType = T } }
     def apply(tpe: TypeRep)(inst: tpe.scalaInstanceType): ExistsInstance = {
       val tpeArg: tpe.type = tpe
       val instArg: tpeArg.scalaInstanceType = inst
@@ -203,6 +202,6 @@ trait BaseDomain {
   case class NotEqualsTestCase(inst:Inst, op:Operation, override val expect:ExistsInstance, params:ExistsInstance*)
     extends TestCaseExpectedValue(expect)
 
-  case class EqualsCompositeTestCase(inst:Inst, ops:Seq[Operation], override val expect:ExistsInstance, params:ExistsInstance*)
+  case class EqualsCompositeTestCase(inst:Inst, ops:Seq[(Operation, Seq[ExistsInstance])], override val expect:ExistsInstance)
     extends TestCaseExpectedValue(expect)
 }

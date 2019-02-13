@@ -1,7 +1,8 @@
-package ep.j  /*DD:LD:AI*/
+package org.combinators.ep.language.java
+
+/*DD:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
-import ep.domain.{M5, MathDomain, OperationDependency}
 import org.combinators.ep.domain.math.{M0, M5, MathDomain}
 import org.combinators.ep.domain.{Evolution, OperationDependency}
 import org.combinators.templating.twirl.Java
@@ -38,7 +39,7 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
     Java(s"${treeExp1.toString}.same(${treeExp2.toString})").expression[Expression]()
   }
 
-  abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
+  abstract override def logic(exp:domain.DataType, op:domain.Operation): Seq[Statement] = {
     // generate the actual body
     val source = Source(exp,op)
     op match {
@@ -67,19 +68,18 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
   override def junitTestMethod(test:TestCase, idx:Int) : Seq[Statement] = {
       test match {
         case ctc: SameTestCase =>
-          val noSource = NoSource()
-
-          val tree1 = contextDispatch(noSource, deltaExprOp(noSource, convert(ctc.inst1), AsTree))
-          val tree2 = contextDispatch(noSource, deltaExprOp(noSource, convert(ctc.inst2), AsTree))
-
-          val same = Java(s"$tree1.same($tree2)").expression[Expression]()
-
-          if (ctc.result) {
-            Java(s"assertTrue($same);").statements
-          } else {
-            Java(s"assertFalse($same);").statements
-          }
-
+            actual(AsTree, ctc.inst1).appendDependent { case Seq(treeLeft) =>
+              actual(AsTree, ctc.inst1).appendDependent { case Seq(treeRight) =>
+                val same = Java(s"$treeLeft.same($treeRight)").expression[Expression]()
+                CodeBlockWithResultingExpressions(
+                  if (ctc.result) {
+                    Java(s"assertTrue($same);").statement()
+                  } else {
+                    Java(s"assertFalse($same").statement()
+                  }
+                )()
+              }
+            }.block
         case _ => super.junitTestMethod(test, idx)
       }
     }

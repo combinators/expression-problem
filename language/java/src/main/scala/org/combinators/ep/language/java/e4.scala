@@ -1,9 +1,12 @@
-package ep.j  /*DD:LD:AI*/
+package org.combinators.ep.language.java
+
+/*DD:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
-import ep.domain._
+import com.github.javaparser.ast.expr.NameExpr
 import org.combinators.ep.domain.math._
 import org.combinators.ep.domain.{Evolution, OperationDependency}
+import org.combinators.ep.generator.LanguageIndependentGenerator
 import org.combinators.templating.twirl.Java
 
 /**
@@ -15,27 +18,40 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
   self:e0 with e1 with e2 with e3 =>
   val domain:MathDomain
 
-  /**
-    * List can be accommodated (in Java) by populating ArrayList with values drawn from test case.
-    *
-    * Calls 'continue' with an expression (the result of the prior new statements) and just concatenates all statements
-    */
-   override def expected(test:domain.TestCaseExpectedValue, id:String) : (Expression => Seq[Statement]) => Seq[Statement] = continue => {
-     test.expect._1 match {
-      case list:List =>
-        val seq: Seq[Any] = test.expect._2.asInstanceOf[Seq[Any]]
-        val jtype = Java(typeConverter(list)).tpe
-        val inner: Type = jtype.asClassOrInterfaceType().getTypeArguments.get.get(0)
+  /** Provides fresh names for temporary list objects. */
+  object ListNameGenerator {
+    private var nextNumber: Int = 0
+    def nextFreshListName(): NameExpr = {
+      val nextName = Java(s"tmpList$nextNumber").nameExpression()
+      nextNumber += 1
+      nextName
+    }
+  }
 
-        val map = seq.map(elt => s"result$id.add($elt);")
-        val str = s"""
-                     |$jtype result$id = new java.util.ArrayList<$inner>();
-                     |${map.mkString("\n")}
-                     |${continue(Java(s"result$id").expression[Expression]).mkString("\n")}
-             """.stripMargin
-        Java(str).statements
+  /** E4 Introduces Lists of values. */
+  abstract override def toTargetLanguage(ei:domain.ExistsInstance) : CodeBlockWithResultingExpressions = {
+    ei.tpe match {
+      case tpe: List[_] =>
+        ei.inst match {
+          case s:Seq[tpe.generic.scalaInstanceType] =>
+            val listName = ListNameGenerator.nextFreshListName()
+            val initBlock =
+              CodeBlockWithResultingExpressions(
+                Java(s"${typeConverter(tpe.generic)} $listName = new java.util.ArrayList<>();").statement()
+              )(listName)
+            s.foldLeft(initBlock) {
+              case (block, nextElem) =>
+                block.appendDependent { case Seq(constructedList) =>
+                  toTargetLanguage(domain.ExistsInstance(tpe.generic)(nextElem)).appendDependent { case Seq(nextElemExpr) =>
+                    CodeBlockWithResultingExpressions(
+                      Java(s"$constructedList.add($nextElemExpr);").statement()
+                    )(constructedList)
+                  }
+                }
+            }
 
-      case _ => super.expected(test,id)(continue)
+        }
+      case _ => super.toTargetLanguage(ei)
     }
   }
 
@@ -51,18 +67,31 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
 
   abstract override def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {
     tpe match {
-      case el:List => Java(s"java.util.List<${typeConverter(el.generic)}>").tpe()
+      case el:List[_] => Java(s"java.util.List<${typeConverter(el.generic)}>").tpe()
       case _ => super.typeConverter(tpe)
     }
   }
 
-  abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
+  abstract override def logic(exp:domain.DataType, op:domain.Operation): Seq[Statement] = {
     val zero = Java("0.0").expression[Expression]()
     val one = Java("1.0").expression[Expression]()
     val negOne = Java("-1.0").expression[Expression]()
+    val zeroResultBlock =
+      inst(Lit, zero).appendDependent { case Seq(zeroLit) =>
+        CodeBlockWithResultingExpressions(result(zeroLit): _*)()
+      }
+    val oneResultBlock =
+      inst(Lit, one).appendDependent { case Seq(zeroLit) =>
+        CodeBlockWithResultingExpressions(result(zeroLit): _*)()
+      }
+    val negOneResultBlock =
+      inst(Lit, negOne).appendDependent { case Seq(zeroLit) =>
+        CodeBlockWithResultingExpressions(result(zeroLit): _*)()
+      }
 
     // generate the actual body
     val source = Source(exp,op)
+
     op match {
         // Simplify only works for solutions that instantiate expression instances
       case Simplify =>
@@ -72,91 +101,124 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
           case Add =>
             val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
             val deltaRight = deltaChildOp(source, domain.base.right, Eval)
+
+            val dispatchBothResultBlock =
+              inst(Add,
+                dispatch(expression(exp, domain.base.left), Simplify),
+                dispatch(expression(exp, domain.base.right), Simplify)
+              ).appendDependent{ case Seq(addResult) =>
+                CodeBlockWithResultingExpressions(result(addResult): _*)()
+              }
             Java(s"""|double leftVal = ${contextDispatch(source, deltaLeft)};
                      |double rightVal = ${contextDispatch(source, deltaRight)};
                      |if ((leftVal == 0 && rightVal == 0) || (leftVal + rightVal == 0)) {
-                     |   ${result(inst(Lit, zero)).mkString("\n")}
+                     |   ${zeroResultBlock.block.mkString("\n")}
                      |} else if (leftVal == 0) {
                      |   ${result(dispatch(expression(exp, domain.base.right), Simplify)).mkString("\n")}
                      |} else if (rightVal == 0) {
                      |   ${result(dispatch(expression(exp, domain.base.left), Simplify)).mkString("\n")}
                      |} else {
-                     |   ${result(inst(Add, dispatch(expression(exp, domain.base.left), Simplify),dispatch(expression(exp, domain.base.right), Simplify))).mkString("\n")}
+                     |   ${dispatchBothResultBlock.block.mkString("\n")}
                      |}""".stripMargin).statements()
           case Sub =>
             val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
             val deltaRight = deltaChildOp(source, domain.base.right, Eval)
+            val dispatchBothResultBlock =
+              inst(Sub,
+                dispatch(expression(exp, domain.base.left), Simplify),
+                dispatch(expression(exp, domain.base.right), Simplify)
+              ).appendDependent{ case Seq(addResult) =>
+                CodeBlockWithResultingExpressions(result(addResult): _*)()
+              }
             Java(s"""|if (${contextDispatch(source, deltaLeft)} == ${contextDispatch(source, deltaRight)}) {
-                     |   ${result(inst(Lit, zero)).mkString("\n")}
+                     |   ${zeroResultBlock.block.mkString("\n")}
                      |} else {
-                     |   ${result(inst(Sub, dispatch(expression(exp, domain.base.left), Simplify),dispatch(expression(exp, domain.base.right), Simplify))).mkString("\n")}
+                     |   ${dispatchBothResultBlock.block.mkString("\n")}
                      |}""".stripMargin).statements()
           case Mult =>
             val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
             val deltaRight = deltaChildOp(source, domain.base.right, Eval)
+            val dispatchBothResultBlock =
+              inst(Mult,
+                dispatch(expression(exp, domain.base.left), Simplify),
+                dispatch(expression(exp, domain.base.right), Simplify)
+              ).appendDependent{ case Seq(addResult) =>
+                CodeBlockWithResultingExpressions(result(addResult): _*)()
+              }
             Java(s"""|double leftVal = ${contextDispatch(source, deltaLeft)};
                      |double rightVal = ${contextDispatch(source, deltaRight)};
                      |if (leftVal == 0 || rightVal == 0) {
-                     |   ${result(inst(Lit, zero)).mkString("\n")}
+                     |   ${zeroResultBlock.block.mkString("\n")}
                      |} else if (leftVal == 1) {
                      |   ${result(dispatch(expression(exp, domain.base.right), Simplify)).mkString("\n")}
                      |} else if (rightVal == 1) {
                      |   ${result(dispatch(expression(exp, domain.base.left), Simplify)).mkString("\n")}
                      |} else {
-                     |   ${result(inst(Mult, dispatch(expression(exp, domain.base.left), Simplify),dispatch(expression(exp, domain.base.right), Simplify))).mkString("\n")}
+                     |   ${dispatchBothResultBlock.block.mkString("\n")}
                      |}
                      |""".stripMargin).statements()
           case Divd =>
             val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
             val deltaRight = deltaChildOp(source, domain.base.right, Eval)
+            val dispatchBothResultBlock =
+              inst(Divd,
+                dispatch(expression(exp, domain.base.left), Simplify),
+                dispatch(expression(exp, domain.base.right), Simplify)
+              ).appendDependent{ case Seq(addResult) =>
+                CodeBlockWithResultingExpressions(result(addResult): _*)()
+              }
             Java(s"""|double leftVal = ${contextDispatch(source, deltaLeft)};
                      |double rightVal = ${contextDispatch(source, deltaRight)};
                      |if (leftVal == 0) {
-                     |   ${result(inst(Lit, zero)).mkString("\n")}
+                     |   ${zeroResultBlock.block.mkString("\n")}
                      |} else if (rightVal == 1) {
                      |   ${result(dispatch(expression(exp, domain.base.left), Simplify)).mkString("\n")}
                      |} else if (leftVal == rightVal) {
-                     |   ${result(inst(Lit, one)).mkString("\n")}
+                     |   ${oneResultBlock.block.mkString("\n")}
                      |} else if (leftVal == -rightVal) {
-                     |   ${result(inst(Lit, negOne)).mkString("\n")}
+                     |   ${negOneResultBlock.block.mkString("\n")}
                      |} else {
-                     |   ${result(inst(Divd, dispatch(expression(exp, domain.base.left), Simplify),dispatch(expression(exp, domain.base.right), Simplify))).mkString("\n")}
+                     |   ${dispatchBothResultBlock.block.mkString("\n")}
                      |}
                      |""".stripMargin).statements()
             // TODO: Would love to have ability to simplify neg(neg(x)) to just be x. This requires a form
             // of inspection that might not be generalizable...
           case Neg =>
             val deltaInner = deltaChildOp(source, domain.base.inner, Eval)
+            val dispatchBothResultBlock =
+              inst(Neg, dispatch(expression(exp, domain.base.inner), Simplify))
+                .appendDependent{ case Seq(addResult) =>
+                  CodeBlockWithResultingExpressions(result(addResult): _*)()
+               }
             Java(s"""
                     |if (${contextDispatch(source, deltaInner)} == 0) {
-                    |   ${result(inst(Lit, zero)).mkString("\n")}
+                    |   ${zeroResultBlock.block.mkString("\n")}
                     |} else {
-                    |   ${result(inst(Neg, dispatch(expression(exp, domain.base.inner), Simplify))).mkString("\n")}
+                    |   ${dispatchBothResultBlock.block.mkString("\n")}
                     |}""".stripMargin).statements()
           case _ => super.logic(exp, op)
         }
 
       case Collect =>
+        val emptyList = domain.ExistsInstance(List(Double))(Seq.empty)
+        def returnListBlock(collectedLists: Expression*): Seq[Statement] =
+          toTargetLanguage(emptyList).appendDependent { case Seq(resultList) =>
+            CodeBlockWithResultingExpressions(
+              collectedLists.map(col => Java(s"$resultList.addAll($col)").statement()) ++ result(resultList):_*
+            )()
+          }.block
+
         val returnList = result(Java("list").expression[Expression]()).mkString("\n")
         exp match {
-          case _:domain.Binary => Java(
-            s"""|${typeConverter(List(Double))} list = ${dispatch(expression(exp, domain.base.left), Collect)};
-                |list.addAll(${dispatch(expression(exp, domain.base.right), Collect)});
-                |$returnList
-                |""".stripMargin).statements()
-
-          case _:domain.Unary  => Java(
-            s"""|${typeConverter(List(Double))} list = new java.util.ArrayList<Double>();
-                |list.addAll(${dispatch(expression(exp, domain.base.inner), Collect)});
-                |$returnList
-                |""".stripMargin).statements()
-
-          case _:domain.Atomic => Java(
-            s"""|${typeConverter(List(Double))} list = new java.util.ArrayList<Double>();
-                |list.add(${expression(exp, litValue)});
-                |$returnList
-                |""".stripMargin).statements()
-
+          case _:domain.Binary =>
+            returnListBlock(
+              dispatch(expression(exp, domain.base.left), Collect),
+              dispatch(expression(exp, domain.base.right), Collect)
+            )
+          case _:domain.Unary  =>
+            returnListBlock(dispatch(expression(exp, domain.base.inner), Collect))
+          case _:domain.Atomic =>
+            returnListBlock(expression(exp, litValue))
           case _ => super.logic(exp, op)
         }
 

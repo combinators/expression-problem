@@ -16,4 +16,6 @@ trait I1 extends Evolution {
   val i1 = domain.Model("i1", Seq(Inv), Seq.empty, last = m1)
 
   override def getModel = i1
+
+  // TODO: Model test cases for I1
 }

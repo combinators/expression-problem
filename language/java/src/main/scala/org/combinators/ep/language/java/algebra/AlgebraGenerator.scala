@@ -1,9 +1,10 @@
-package ep.j.algebra    /*DI:LD:AD*/
+package org.combinators.ep.language.java.algebra
 
-import com.github.javaparser.ast.body.{BodyDeclaration, MethodDeclaration}
-import ep.domain.ModelDomain
-import ep.j.{JavaBinaryMethod, JavaGenerator}
+/*DI:LD:AD*/
+
+import com.github.javaparser.ast.body.BodyDeclaration
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.language.java.{JavaBinaryMethod, JavaGenerator}
 import org.combinators.templating.twirl.Java
 
 /**
@@ -21,7 +22,7 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
       val args: String = delta.params.mkString(",")
       Java(s"""${delta.op.get.instance}($args)""").expression()
     } else if (delta.expr.isEmpty) {
-      val exp:domain.Atomic = source.exp.get
+      val exp:domain.DataType = source.exp.get
       recreate(exp, delta.op.get)
     } else {
       val expr:Expression = delta.expr.get
@@ -44,7 +45,7 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
     * 'recreates' the current state, using 'null' as the children, since only the top-level
     * is needed.
     */
-  def recreate(exp:domain.Atomic, op:domain.Operation, params:Expression*) : Expression = {
+  def recreate(exp:domain.DataType, op:domain.Operation, params:Expression*) : Expression = {
     val m:domain.Model = getModel.lastModelWithDataTypes()
     val fullName = m.types.sortWith(_.name < _.name).map(exp => exp.concept).mkString("")
 
@@ -90,12 +91,14 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
     *
     * Note: This capability is preliminary and not yet ready for use.
     */
-  override def inst(exp:domain.Atomic, params:Expression*): Expression = {
-    Java("algebra." + exp.instance + "(" + params.map(expr => expr.toString()).mkString(",") + ")").expression()
+  override def inst(exp:domain.DataType, params:Expression*): CodeBlockWithResultingExpressions = {
+    CodeBlockWithResultingExpressions(
+      Java(s"alegba.${exp.instance}${params.mkString("(", ", ", ")")}").expression()
+    )
   }
 
   /** For straight design solution, directly access attributes by name. */
-  override def expression (exp:domain.Atomic, att:domain.Attribute) : Expression = {
+  override def expression (exp:domain.DataType, att:domain.Attribute) : Expression = {
     Java(s"${att.instance}").expression[Expression]()
   }
 

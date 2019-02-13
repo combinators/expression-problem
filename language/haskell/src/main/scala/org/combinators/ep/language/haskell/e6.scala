@@ -79,7 +79,7 @@ trait e6 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
     test match {
       case eb: EqualsBinaryMethodTestCase =>
         val source = NoSource()
-        val full = contextDispatch(source, deltaExprOp(source, convert(eb.inst1), Equals, convert(eb.inst2)))
+        val full = contextDispatch(source, deltaExprOp(source, toTargetLanguage(eb.inst1), Equals, toTargetLanguage(eb.inst2)))
 
         if (eb.result) {
           Seq(Haskell(s"""test_v$idx = TestCase (assertBool "EqualsCheck" ($full))"""))

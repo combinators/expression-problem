@@ -1,10 +1,13 @@
-package build.j.visitor
+package org.combinators.ep.language.java.deployment.visitor
+
 /* Generated: Sun Feb 10 22:29:19 EST 2019 */
-import ep.domain._
-import ep.j._
-import ep.j.visitor._
+import org.combinators.ep.domain.math._
+import org.combinators.ep.language.java._
+import org.combinators.ep.language.java.visitor._
 import javax.inject.Inject
 import org.combinators.ep.domain.WithDomain
+import org.combinators.ep.language.java._
+import org.combinators.ep.language.java.visitor.{Foundation, VisitorGenerator}
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
 /* 

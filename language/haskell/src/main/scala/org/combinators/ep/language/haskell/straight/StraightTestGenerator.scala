@@ -21,10 +21,10 @@ trait StraightTestGenerator extends HUnitTestGenerator {
     val name = inst.e.name
     inst match {
       case ui: UnaryInst =>
-        Haskell(s"${ui.e.concept} (${convert(ui.inner)}) ")
+        Haskell(s"${ui.e.concept} (${toTargetLanguage(ui.inner)}) ")
 
       case bi: BinaryInst =>
-        Haskell(s"${bi.e.concept} (${convert(bi.left)}) (${convert(bi.right)}) ")
+        Haskell(s"${bi.e.concept} (${toTargetLanguage(bi.left)}) (${toTargetLanguage(bi.right)}) ")
 
       case exp: AtomicInst =>
         Haskell(s"${exp.e.concept} ${exp.i.get}")

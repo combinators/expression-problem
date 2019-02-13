@@ -1,9 +1,10 @@
-package ep.j.extensibleVisitor    /*DI:LD:AD*/
+package org.combinators.ep.language.java.extensibleVisitor
+
+/*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.{MethodDeclaration, TypeDeclaration}
-import ep.domain.{ModelDomain, OperationDependency}
-import ep.j.visitor.VisitorGenerator
 import org.combinators.ep.domain.{BaseDomain, ModelDomain, OperationDependency}
+import org.combinators.ep.language.java.visitor.VisitorGenerator
 import org.combinators.templating.twirl.Java
 
 /**
@@ -86,7 +87,7 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
     * Even though super-class method uses flatten, we cannot do so, because of the
     * requirement that "we only add visitor checks for models after first one."
     */
-   def generateExtensibleExp(flat: domain.Model, model:domain.Model, exp:domain.Atomic) : CompilationUnit = {
+   def generateExtensibleExp(flat: domain.Model, model:domain.Model, exp:domain.DataType) : CompilationUnit = {
     val unit = generateExp(flat, exp)
 
     // replace old accept method with new one

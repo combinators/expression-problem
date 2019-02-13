@@ -23,11 +23,12 @@ trait LanguageIndependentTestGenerator extends LanguageIndependentGenerator {
     * Each basic test case has an instance over which an operation is to be performed. This method
     * returns the inline expression resulting from dispatching operation, op, over the given instance, inst.
     *
-    * For more complicated structures, as with lists for example, this method will need to be overridden.
-    *
-    * Not sure, yet, how to properly pass in variable parameters.
     */
-  def actual(op: domain.Operation, inst: domain.Inst, params: Expression*): Expression = dispatch(convert(inst), op, params: _*)
+  def actual(op: domain.Operation, inst: domain.Inst, params: Expression*): CodeBlockWithResultingExpressions = {
+    toTargetLanguage(inst).appendDependent(instExp =>
+      CodeBlockWithResultingExpressions(contextDispatch(NoSource, deltaExprOp(NoSource, instExp.head, op, params: _*)))
+    )
+  }
 
   /**
     * Represents a specific unit test which could fail.

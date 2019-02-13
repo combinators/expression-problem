@@ -1,4 +1,4 @@
-package ep.j
+package org.combinators.ep.language.java
 
 import org.combinators.ep.domain.math.{I2, M3}
 

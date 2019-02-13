@@ -1,9 +1,10 @@
-package ep.j.oo  /*DI:LD:AD*/
+package org.combinators.ep.language.java.oo
+
+/*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
-import ep.domain.ModelDomain
-import ep.j._
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.language.java.{DataTypeSubclassGenerator, JavaBinaryMethod, JavaGenerator, OperationAsMethodGenerator}
 import org.combinators.templating.twirl.Java
 
 /**
@@ -37,7 +38,7 @@ trait OOGenerator extends JavaGenerator with DataTypeSubclassGenerator with Oper
   }
 
   /** For straight design solution, directly access attributes by name. */
-  override def expression (exp:Atomic, att:Attribute) : Expression = {
+  override def expression (exp:DataType, att:Attribute) : Expression = {
     Java(s"${att.instance}").expression[Expression]
   }
 
@@ -66,7 +67,7 @@ trait OOGenerator extends JavaGenerator with DataTypeSubclassGenerator with Oper
   }
 
   /** Operations are implemented as methods in the Base and sub-type classes. */
-  def methodGenerator(exp:Atomic, op:Operation): MethodDeclaration = {
+  def methodGenerator(exp:DataType, op:Operation): MethodDeclaration = {
     val params = parameters(op)
     Java(s"""|public ${returnType(op)} ${op.instance}($params) {
              |  ${logic(exp, op).mkString("\n")}
@@ -74,7 +75,7 @@ trait OOGenerator extends JavaGenerator with DataTypeSubclassGenerator with Oper
   }
 
   /** Generate the full class for the given expression sub-type. */
-  def generateExp(model:Model, exp:Atomic) : CompilationUnit = {
+  def generateExp(model:Model, exp:DataType) : CompilationUnit = {
     val methods = model.ops.map(op => methodGenerator(exp, op))
 
     Java(s"""|package oo;

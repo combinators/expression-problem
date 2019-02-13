@@ -1,10 +1,11 @@
-package ep.j.algebra    /*DI:LD:AD*/
+package org.combinators.ep.language.java.algebra
+
+/*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
-import ep.domain.ModelDomain
-import ep.j.{JUnitTestGenerator, JavaBinaryMethod, JavaGenerator}
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 import org.combinators.ep.generator.LanguageIndependentTestGenerator
+import org.combinators.ep.language.java.{JUnitTestGenerator, JavaBinaryMethod, JavaGenerator}
 import org.combinators.templating.twirl.Java
 
 /**
@@ -14,23 +15,8 @@ trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with La
   val domain: BaseDomain with ModelDomain
   import domain._
 
-  /** Convert a test instance into a Java Expression for instantiating that instance. */
-  override def convert(inst: AtomicInst): Expression = {
-    val opname = inst.e.instance
-    inst match {
-      //case lit: domain.LitInst => Java(s"algebra.lit(${lit.i.get.toString})").expression()
-      case ui: UnaryInst =>
-        Java(s"algebra.$opname(${convert(ui.inner)})").expression()
-      case bi: BinaryInst =>
-        Java(s"algebra.$opname(${convert(bi.left)}, ${convert(bi.right)})").expression()
-      case exp:AtomicInst => Java(s"algebra.lit(${exp.i.get.toString})").expression()
-
-      case _ => Java(s""" "unknown ${inst.e.concept}" """).expression()
-    }
-  }
-
   /** Type to use when referring to specific instance. */
-  override def exprDefine(exp:AtomicInst) : Type = {
+  override def exprDefine(exp:Inst) : Type = {
     Java(s"Combined${domain.baseTypeRep.name}Alg.Combined").tpe()
   }
 
@@ -105,7 +91,7 @@ trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with La
   }
 
   /** Produce inner methods. */
-  def innerMethod(tpe:Atomic, operations:Seq[Operation]) : Seq[MethodDeclaration] = {
+  def innerMethod(tpe:DataType, operations:Seq[Operation]) : Seq[MethodDeclaration] = {
     var params:Seq[String] = Seq.empty
     var args:Seq[String] = Seq.empty
 

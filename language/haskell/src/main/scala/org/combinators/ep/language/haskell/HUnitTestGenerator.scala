@@ -46,7 +46,7 @@ trait HUnitTestGenerator extends HaskellGenerator {
       case eq: EqualsTestCase =>
 
         val source = NoSource()
-        val delta = deltaExprOp(source, convert(eq.inst), eq.op)
+        val delta = deltaExprOp(source, toTargetLanguage(eq.inst), eq.op)
         val disp = contextDispatch(source, delta)
         expected(eq, idx)(expectedExpr => Seq(new Haskell(s"""test_v$idx = TestCase (assertEqual "${test.getClass.getSimpleName}" ($expectedExpr) $disp)""")))
 

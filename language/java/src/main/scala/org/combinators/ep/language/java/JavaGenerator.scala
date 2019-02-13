@@ -1,10 +1,10 @@
-package ep.j  /*DI:LD:AI*/
+package org.combinators.ep.language.java
+
+/*DI:LD:AI*/
 
 import com.github.javaparser.JavaParser
 import com.github.javaparser.ast.body.{ConstructorDeclaration, FieldDeclaration, MethodDeclaration, TypeDeclaration}
 import com.github.javaparser.ast.stmt.BlockStmt
-import ep.domain.ModelDomain
-import ep.generator.Producer
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 import org.combinators.ep.generator.{LanguageIndependentGenerator, Producer}
 import org.combinators.templating.twirl.Java
@@ -31,32 +31,6 @@ trait JavaGenerator extends LanguageIndependentGenerator  with Producer {
     }
   }
 
-  /** Convert a test instance into a Java Expression for instantiating that instance. */
-  override def convert(ai: domain.Inst): Expression = {
-    ai match {
-      case ui: domain.UnaryInst =>
-        inst(ui.e, convert(ui.inner))
-      case bi: domain.BinaryInst =>
-        inst(bi.e, convert(bi.left), convert(bi.right))
-      case ai:domain.AtomicInst =>
-        inst(ai.e, instConverter(ai.ei))
-
-      case _ => Java(s""" "unknown ${ai.toString}" """).expression()
-    }
-  }
-
-  /**
-    * Return expression associated with instance.
-    *
-    * Handles the top-level
-    */
-  override def instConverter(ei:domain.ExistsInstance) : Expression = {
-    ei.inst match {
-      case di:domain.Inst => convert (di)
-      case _ => super.instConverter(ei)
-    }
-  }
-
   /**
     * Default behavior in Java is to return an expression value.
     */
@@ -68,8 +42,10 @@ trait JavaGenerator extends LanguageIndependentGenerator  with Producer {
     * For producer operations, there is a need to instantiate objects, and one would use this
     * method (with specific parameters) to carry this out.
     */
-  def inst(exp:domain.DataType, params:Expression*): Expression = {
-    Java("new " + exp.concept + "(" + params.map(expr => expr.toString).mkString(",") + ")").expression[InstanceExpression]()
+  def inst(exp:domain.DataType, params:Expression*): CodeBlockWithResultingExpressions = {
+    CodeBlockWithResultingExpressions(
+      Java(s"new ${exp.concept}${params.mkString("(", ", ", ")")}").expression()
+    )
   }
 
   // Useful helper methods for any generator needing to craft common Java constructs

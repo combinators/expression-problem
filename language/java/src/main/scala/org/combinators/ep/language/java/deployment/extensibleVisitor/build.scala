@@ -1,10 +1,13 @@
-package build.j.extensibleVisitor
+package org.combinators.ep.language.java.deployment.extensibleVisitor
+
 /* Generated: Sun Feb 10 22:29:19 EST 2019 */
-import ep.domain._
-import ep.j._
-import ep.j.extensibleVisitor._
+import org.combinators.ep.domain.math._
+import org.combinators.ep.language.java._
+import org.combinators.ep.language.java.extensibleVisitor._
 import javax.inject.Inject
 import org.combinators.ep.domain.WithDomain
+import org.combinators.ep.language.java._
+import org.combinators.ep.language.java.extensibleVisitor.{ExtensibleVisitorGenerator, ExtensibleVisitorTestGenerator, Foundation}
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
 /* 

@@ -1,4 +1,4 @@
-package ep.j
+package org.combinators.ep.language.java
 
 import org.combinators.ep.domain.math.{I2, M0, M1, M3}
 
@@ -168,8 +168,8 @@ import org.combinators.ep.domain.math.{I2, M0, M1, M3}
  * == Evolutions ==
   *
   * There are six fundamental evolutions completed: [[ep.j.oo.M0_Variation]], [[ep.j.oo.M1_Variation]],
-  * [[ep.j.oo.M2_Variation]], [[ep.j.oo.M3_Variation]], [[ep.j.oo.M4_Variation]], [[ep.j.oo.M5_Variation]],
-  * [[ep.j.oo.M6_Variation]]
+  * [[org.combinators.ep.language.java.oo.M2_Variation]], [[org.combinators.ep.language.java.oo.M3_Variation]], [[org.combinators.ep.language.java.oo.M4_Variation]], [[org.combinators.ep.language.java.oo.M5_Variation]],
+  * [[org.combinators.ep.language.java.oo.M6_Variation]]
   *
   * There is one composite branch [[ep.j.oo.C1_Variation]] that connects together the evolutions
   * up to [[M3]] and the evolutions up to [[I2]], thus demonstrating the

@@ -1,9 +1,10 @@
-package ep.j.visitor   /*DI:LD:AD*/
+package org.combinators.ep.language.java.visitor
+
+/*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.{BodyDeclaration, MethodDeclaration}
-import ep.domain.ModelDomain
-import ep.j.{DataTypeSubclassGenerator, JavaBinaryMethod, JavaGenerator, OperationAsMethodGenerator}
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.language.java.{DataTypeSubclassGenerator, JavaBinaryMethod, JavaGenerator, OperationAsMethodGenerator}
 import org.combinators.templating.twirl.Java
 
 /**
@@ -53,7 +54,7 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
     *
     * Note: Depends on having an external context which defines the variable e.
     */
-  override def expression (exp:domain.Atomic, att:domain.Attribute) : Expression = {
+  override def expression (exp:domain.DataType, att:domain.Attribute) : Expression = {
     Java(s"e.get${att.concept}()").expression[Expression]()
   }
 
@@ -115,7 +116,7 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
     * Note that BinaryMethodBase is handled separately
     * As is BinaryMethods
     */
-  override def methodGenerator(exp:domain.Atomic, op:domain.Operation): MethodDeclaration = {
+  override def methodGenerator(exp:domain.DataType, op:domain.Operation): MethodDeclaration = {
     val retType = op.returnType match {
       case Some(tpe) => typeConverter(tpe)
       case _ => Java("void").tpe
@@ -126,7 +127,7 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
              |}""".stripMargin).methodDeclarations().head
   }
 
-  override def logicAsTree(exp:domain.Atomic) : Seq[MethodDeclaration] = {
+  override def logicAsTree(exp:domain.DataType) : Seq[MethodDeclaration] = {
     val atomicArgs = exp.attributes.map(att => att.instance).mkString(",")
 
     // changes whether attributes can be access *directly* or whether they are accessed via getXXX*() method.
@@ -152,7 +153,7 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
   }
 
   /** Generate the full class for the given expression sub-type from flattened model. */
-  override def generateExp(flat:domain.Model, exp:domain.Atomic) : CompilationUnit = {
+  def generateExp(flat:domain.Model, exp:domain.DataType) : CompilationUnit = {
     val name = exp.toString
 
     val visitor = Java (s"""|public <R> R accept(Visitor<R> v) {

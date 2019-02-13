@@ -1,7 +1,10 @@
-package ep.j   /*DD:LD:AI*/
+package org.combinators.ep.language.java
+
+/*DD:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
 import org.combinators.ep.domain.math.M0
+import org.combinators.ep.generator.LanguageIndependentGenerator
 import org.combinators.templating.twirl.Java
 
 /**
@@ -12,7 +15,7 @@ import org.combinators.templating.twirl.Java
 trait e0 extends JavaGenerator with JUnitTestGenerator with M0 {
   import domain._
 
-  /** E0 Introduces the concept a Double type, used for the 'Eval' operation. */
+  /** E0 Introduces the concept a Double and Int type, used for the 'Eval' operation. */
   abstract override def typeConverter(tr:TypeRep) : Type = {
     tr match {
       case Double => Java("Double").tpe
@@ -21,16 +24,12 @@ trait e0 extends JavaGenerator with JUnitTestGenerator with M0 {
     }
   }
 
-  /**
-    * Return expression associated with instance.
-    *
-    * Handles the top-level
-    */
-  override def instConverter(ei:domain.ExistsInstance) : Expression = {
+  /** E0 Introduces Double and Int values. */
+  abstract override def toTargetLanguage(ei:domain.ExistsInstance) : CodeBlockWithResultingExpressions = {
      ei.inst match {
-      case d:scala.Double => Java(s"$d").expression()
-      case i:scala.Int => Java(s"$i").expression()
-      case _ => super.instConverter(ei)
+      case d:scala.Double => CodeBlockWithResultingExpressions(Java(s"$d").expression())
+      case i:scala.Int => CodeBlockWithResultingExpressions(Java(s"$i").expression())
+      case _ => super.toTargetLanguage(ei)
     }
   }
 
@@ -60,7 +59,7 @@ trait e0 extends JavaGenerator with JUnitTestGenerator with M0 {
     val numTrials = 11
 
     var trees = new BinaryInst(Add, a1, a1)
-    var instantiations:String = s"${exprDefine(a1)} tree0  = ${convert(a1)};\n"
+    var instantiations:String = s"${exprDefine(a1)} tree0  = ${toTargetLanguage(a1)};\n"
     var array:String = s"${exprDefine(a1)} trees[] = { tree0, "
     for (i <- 1 to numTrials) {
       instantiations = instantiations + s"${exprDefine(a1)} tree$i = ${convertRecursive(Add, s"tree${i-1}", s"tree${i-1}")};"
@@ -69,7 +68,7 @@ trait e0 extends JavaGenerator with JUnitTestGenerator with M0 {
     }
     array = array + "};"
 
-    val source = NoSource()
+    val source = NoSource
     val delta = deltaExprOp(source, new Java("trees[i]").expression[Expression](), Eval)
     val toTime = contextDispatch(source, delta)
     val evalPerfTest = Java(

@@ -1,11 +1,13 @@
-package ep.j.oo  /*DD:LD:AD*/
+package org.combinators.ep.language.java.oo
+
+/*DD:LD:AD*/
 
 import com.github.javaparser.ast.CompilationUnit
-import ep.j._
 import javax.inject.Inject
 import org.combinators.ep.deployment.CodeGenerationController
 import org.combinators.ep.domain.WithDomain
 import org.combinators.ep.domain.math.MathDomain
+import org.combinators.ep.language.java.JUnitTestGenerator
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
 import org.combinators.templating.persistable.JavaPersistable._

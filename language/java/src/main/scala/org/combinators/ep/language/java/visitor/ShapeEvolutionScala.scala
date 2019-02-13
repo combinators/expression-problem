@@ -1,11 +1,13 @@
-package ep.j.visitor   /*DD:LD:AD*/
+package org.combinators.ep.language.java.visitor
+
+/*DD:LD:AD*/
 
 import com.github.javaparser.ast.CompilationUnit
-import ep.j._
 import javax.inject.Inject
 import org.combinators.ep.deployment.CodeGenerationController
 import org.combinators.ep.domain.WithDomain
 import org.combinators.ep.domain.shape.ShapeDomain
+import org.combinators.ep.language.java.{JUnitTestGenerator, s0, s1}
 import org.combinators.templating.persistable.JavaPersistable._
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle

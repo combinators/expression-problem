@@ -65,10 +65,10 @@ trait TestGenerator extends ScalaGenerator {
     val name = inst.e.name
     inst match {
       case ui: UnaryInst =>
-        Scala(s"new $name(${convert(ui.inner)})").expression
+        Scala(s"new $name(${toTargetLanguage(ui.inner)})").expression
       case bi: BinaryInst =>
-        val left = convert(bi.left)
-        val right = convert(bi.right)
+        val left = toTargetLanguage(bi.left)
+        val right = toTargetLanguage(bi.right)
         Scala(s"new $name($left, $right)").expression
       case exp: AtomicInst => Scala(s"new $name(${exp.i.get})").expression
 

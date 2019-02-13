@@ -34,10 +34,10 @@ trait S0 extends Evolution {
 
   case object ContainsPt extends domain.Operation("containsPt", Some(Boolean), Seq(point))
 
-  class SquareInst(d:scala.Double) extends domain.AtomicInst(Square, ExistsInstance(Double)(d))
-  class CircleInst(d:scala.Double) extends domain.AtomicInst(Circle, ExistsInstance(Double)(d))
-  class PointInst(x:scala.Double, y:scala.Double) extends domain.AtomicInst(Point, ExistsInstance(Point2D)((x,y)))
-  class TranslateInst(val pt:(scala.Double,scala.Double), val s:Inst) extends domain.Inst {
+  case class SquareInst(d:scala.Double) extends domain.AtomicInst(Square, ExistsInstance(Double)(d))
+  case class CircleInst(d:scala.Double) extends domain.AtomicInst(Circle, ExistsInstance(Double)(d))
+  case class PointInst(x:scala.Double, y:scala.Double) extends domain.AtomicInst(Point, ExistsInstance(Point2D)((x,y)))
+  case class TranslateInst(pt:(scala.Double,scala.Double), s:Inst) extends domain.Inst {
     val e: DataType = Translate
     val ei: ExistsInstance = ExistsInstance(Point2D)(pt)
     override def name: String = e.name
@@ -60,7 +60,9 @@ trait S0 extends Evolution {
     * Validates calling containsPt returns true or false
     */
   case class ContainsTestCase(inst:domain.Inst, pt:(Double,Double), result:Boolean)
-    extends domain.TestCase
+    extends domain.TestCase {
+    val pti: ExistsInstance = ExistsInstance(Point2D)(pt)
+  }
 
   def S0_tests:Seq[TestCase] = Seq(
     ContainsTestCase(sq1, p1, result = true),

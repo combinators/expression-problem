@@ -1,6 +1,7 @@
-package ep.j  /*DI:LD:AI*/
+package org.combinators.ep.language.java
 
-import ep.domain.ModelDomain
+/*DI:LD:AI*/
+
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 import org.combinators.templating.twirl.Java
 

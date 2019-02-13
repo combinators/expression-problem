@@ -61,8 +61,8 @@ trait e5 extends Evolution with ScalaGenerator with TestGenerator with Operation
     test match {
       case ctc: SameTestCase =>
         val source = NoSource()
-        val tree1 = contextDispatch(source, deltaExprOp(source, convert(ctc.inst1), domain.AsTree))
-        val tree2 = contextDispatch(source, deltaExprOp(source, convert(ctc.inst2), domain.AsTree))
+        val tree1 = contextDispatch(source, deltaExprOp(source, toTargetLanguage(ctc.inst1), domain.AsTree))
+        val tree2 = contextDispatch(source, deltaExprOp(source, toTargetLanguage(ctc.inst2), domain.AsTree))
 
         val same = Scala(s"$tree1.same($tree2)").expression
 

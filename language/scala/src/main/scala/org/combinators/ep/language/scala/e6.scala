@@ -45,7 +45,7 @@ trait e6 extends Evolution with ScalaGenerator with TestGenerator with M0 with M
   override def scalaTestMethod(test:domain.TestCase, idx:Int) : Seq[Stat] = { // EXTRACT all SameTestCase ones and handle here
      test match {
       case eb: EqualsBinaryMethodTestCase =>
-        val code = dispatch(convert(eb.inst1), Equals, convert(eb.inst2))
+        val code = dispatch(toTargetLanguage(eb.inst1), Equals, toTargetLanguage(eb.inst2))
         if (eb.result) {
           Seq(Scala(s"assert (true == $code)").statement)
         } else {

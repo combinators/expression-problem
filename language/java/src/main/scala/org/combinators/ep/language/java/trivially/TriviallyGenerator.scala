@@ -1,11 +1,14 @@
-package ep.j.trivially  /*DI:LD:AD*/
+package org.combinators.ep.language.java.trivially
+
+/*DI:LD:AD*/
 
 import com.github.javaparser.ast.Modifier
 import com.github.javaparser.ast.body.{BodyDeclaration, MethodDeclaration}
-import expression.ReplaceType
+import org.combinators.ep.language.java.oo.OOGenerator
 import org.combinators.templating.twirl.Java
+import org.combinators.ep.language.java.ReplaceCovariantType._
 
-trait TriviallyGenerator extends ep.j.oo.OOGenerator {
+trait TriviallyGenerator extends OOGenerator {
 
   /**
     * Generating "Expression problem, trivially" we need a class for each sub-type in model, then
@@ -34,23 +37,22 @@ trait TriviallyGenerator extends ep.j.oo.OOGenerator {
     *
     * For recursive types, use "FinalI" as the cast internally, otherwise use native type
     */
-  override def inst(exp:domain.Atomic, params:Expression*): Expression = {
+  override def inst(exp:domain.DataType, params:Expression*): CodeBlockWithResultingExpressions = {
 
-    val merged = exp.attributes.map(att => att.tpe).zip(params).map(typeExp => {
-      val tpe:domain.TypeRep = typeExp._1
-      val inner:Expression = typeExp._2
-      tpe match {
-        case domain.baseTypeRep => Java(s"""(FinalI)($inner)""").expression()
-        case _ => inner
-      }
-    })
-    Java("new " + exp.concept + "(" + merged.map(expr => expr.toString()).mkString(",") + ")").expression()
+    val merged = exp.attributes.map(att => att.tpe).zip(params).map {
+      case (paramTy, paramExp) =>
+        paramTy match {
+          case domain.baseTypeRep => Java(s"""(FinalI)($paramExp)""").expression()
+          case _ => paramExp
+        }
+    }
+    Java(s"new ${exp.concept}${merged.mkString("(", ", ", ")")}").expression()
   }
 
   /**
     * Retrieve expression by getXXX accessor method.
     */
-  override def expression (exp:domain.Atomic, att:domain.Attribute) : Expression = {
+  override def expression (exp:domain.DataType, att:domain.Attribute) : Expression = {
     Java(s"get${att.concept}()").expression()
   }
 
@@ -70,7 +72,7 @@ trait TriviallyGenerator extends ep.j.oo.OOGenerator {
   }
 
   // Needs covariant overriding!
-  override def generateExp(model:domain.Model, exp:domain.Atomic) : CompilationUnit = {
+  override def generateExp(model:domain.Model, exp:domain.DataType) : CompilationUnit = {
     val name = Java(s"${exp.concept}").simpleName()
 
     val interfaces = finalInterfaceName +: model.lastModelWithOperation().ops.map(op => interfaceName(exp, op))
@@ -87,16 +89,16 @@ trait TriviallyGenerator extends ep.j.oo.OOGenerator {
             |}""".stripMargin).compilationUnit()
 
     // replace all covariant types!
-    ReplaceType.replace(compUnit, Java(s"${domain.baseTypeRep.concept}").tpe, finalInterfaceName)
+    compUnit.replaceInCovariantPosition(Java(s"${domain.baseTypeRep.concept}").tpe, finalInterfaceName)
 
     compUnit
    }
 
-  def interfaceName(exp: domain.Atomic, op: domain.Operation): Type = {
+  def interfaceName(exp: domain.DataType, op: domain.Operation): Type = {
     Java(s"${exp.concept}${op.concept}").tpe()
   }
 
-  override def methodGenerator(exp: domain.Atomic, op: domain.Operation): MethodDeclaration = {
+  override def methodGenerator(exp: domain.DataType, op: domain.Operation): MethodDeclaration = {
     val method = super.methodGenerator(exp, op)
     method.setDefault(true)
     method.setType(
@@ -109,13 +111,13 @@ trait TriviallyGenerator extends ep.j.oo.OOGenerator {
     method.setModifier(Modifier.PUBLIC, false)
 
     // replace all types!
-    ReplaceType.replace(method, Java(s"${domain.baseTypeRep.concept}").tpe,
+    method.replaceInCovariantPosition(Java(s"${domain.baseTypeRep.concept}").tpe,
       Java(domain.baseTypeRep.concept + op.concept).tpe())
 
     method
   }
 
-  def generateInterface(exp: domain.Atomic, parents: Seq[Type], op:domain.Operation): CompilationUnit = {
+  def generateInterface(exp: domain.DataType, parents: Seq[Type], op:domain.Operation): CompilationUnit = {
     val name = interfaceName(exp, op)
     val method: MethodDeclaration = methodGenerator(exp, op)
     val atts:Seq[MethodDeclaration] =
@@ -129,7 +131,7 @@ trait TriviallyGenerator extends ep.j.oo.OOGenerator {
             |  $method
             |}""".stripMargin).compilationUnit()
 
-    ReplaceType.replace(unit, Java(s"${domain.baseTypeRep.concept}").tpe, baseInterfaceName(op))
+    unit.replaceInCovariantPosition(Java(s"${domain.baseTypeRep.concept}").tpe, baseInterfaceName(op))
 
     unit
   }
@@ -145,7 +147,7 @@ trait TriviallyGenerator extends ep.j.oo.OOGenerator {
         if (lastWithOps.isEmpty) Seq(Java(s"${typeConverter(domain.baseTypeRep)}").tpe())
         else lastWithOps.ops.map(op => baseInterfaceName(op))
 
-      def parentsFor(exp: domain.Atomic): Seq[Type] =
+      def parentsFor(exp: domain.DataType): Seq[Type] =
         if (lastWithOps.isEmpty) Seq.empty
         else lastWithOps.ops.map(op => interfaceName(exp, op))
 
@@ -191,7 +193,7 @@ trait TriviallyGenerator extends ep.j.oo.OOGenerator {
        """.stripMargin).compilationUnit()
 
     // replace all types!
-    ReplaceType.replace(compUnit, Java(s"${domain.baseTypeRep.concept}").tpe, baseInterfaceName(op))
+    compUnit.replaceInCovariantPosition(Java(s"${domain.baseTypeRep.concept}").tpe, baseInterfaceName(op))
 
     compUnit
   }

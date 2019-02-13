@@ -47,7 +47,7 @@ trait e0 extends GJGenerator with TestGenerator with M0 {
 
     super.testGenerator ++ Seq(GJ(
       s"""|   Lang$modName l = new Lang$modName();
-          |   assertEquals(3.0, ${testDispatch(convert(a1), Eval)});
+          |   assertEquals(3.0, ${testDispatch(toTargetLanguage(a1), Eval)});
           |   assertEquals(5.0, ${testDispatch(convert(lit1), Eval)});
           |""".stripMargin))
   }

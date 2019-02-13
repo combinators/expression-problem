@@ -1,8 +1,8 @@
-package ep.j  /*DD:LD:AI*/
+package org.combinators.ep.language.java
+
+/*DD:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
-import com.github.javaparser.ast.stmt.BlockStmt
-import ep.domain.ShapeDomain
 import org.combinators.ep.domain.Evolution
 import org.combinators.ep.domain.shape.{S0, ShapeDomain}
 import org.combinators.templating.twirl.Java
@@ -25,8 +25,34 @@ trait s0 extends Evolution with JavaGenerator with JUnitTestGenerator with S0 {
     }
   }
 
+  /** E0 Introduces Double and Int values. */
+  abstract override def toTargetLanguage(ei:domain.ExistsInstance) : CodeBlockWithResultingExpressions = {
+    ei.inst match {
+      case d:scala.Double => CodeBlockWithResultingExpressions(Java(s"$d").expression())
+      case b:scala.Boolean => CodeBlockWithResultingExpressions(Java(s"$b").expression())
+      case (x: Double, y: Double) =>
+        CodeBlockWithResultingExpressions(
+          Java(s"new java.awt.geom.Point2D.Double($x, $y)").expression()
+        )
+      case _ => super.toTargetLanguage(ei)
+    }
+  }
+
+  /** Convert a test instance into a Java Expression for instantiating that instance. */
+  abstract override def toTargetLanguage(instance:domain.Inst) : CodeBlockWithResultingExpressions = {
+    instance match {
+      case ti:TranslateInst =>
+        toTargetLanguage(ti.s).appendDependent { case Seq(innerExp) =>
+          toTargetLanguage(ti.ei).appendDependent { case Seq(offsetExp) =>
+            inst(ti.e, offsetExp, innerExp)
+          }
+        }
+      case _ => super.toTargetLanguage(instance)
+    }
+  }
+
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
-  abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
+  abstract override def logic(exp:domain.DataType, op:domain.Operation): Seq[Statement] = {
     op match {
       case ContainsPt =>
         exp match {
@@ -48,33 +74,25 @@ trait s0 extends Evolution with JavaGenerator with JUnitTestGenerator with S0 {
     }
   }
 
-  /** Convert a test instance into a Java Expression for instantiating that instance. */
-  override def convert(inst:domain.AtomicInst) : Expression = {
-    val name = inst.e.name
-    inst match {
-      case ti:TranslateInst => {
-        val tuple = ti.i.get.asInstanceOf[((Double,Double),domain.AtomicInst)]
-        val pt = s"new java.awt.geom.Point2D.Double(${tuple._1._1}, ${tuple._1._2})"
 
-        Java(s"new $name($pt, ${convert(tuple._2)})").expression()
-      }
-
-      case _ => super.convert(inst)
-    }
-  }
 
   override def junitTestMethod(test:domain.TestCase, idx:Int) : Seq[Statement] = {
       test match {
         case ctc: ContainsTestCase =>
-          val x = Java(ctc.pt._1.toString)
-          val y = Java(ctc.pt._2.toString)
-          val pt = Java(s"new java.awt.geom.Point2D.Double ($x,$y)").expression[Expression]()
-
-          if (ctc.result) {
-            Java(s"assertTrue(${actual(ContainsPt, ctc.inst, pt)});").statements
-          } else {
-            Java(s"assertFalse(${actual(ContainsPt, ctc.inst, pt)});").statements
+          val pointBlock = toTargetLanguage(ctc.pti)
+          val actualBlock = pointBlock.appendDependent { case Seq(pt) =>
+            actual(ContainsPt, ctc.inst, pt)
           }
+
+          actualBlock.appendDependent { case Seq(actual) =>
+            CodeBlockWithResultingExpressions(
+              if (ctc.result) {
+                Java(s"assertTrue($actual);").statement()
+              } else {
+                Java(s"assertFalse($actual);").statement()
+              }
+            )()
+          }.block
         case _ => super.junitTestMethod(test, idx)
     }
   }

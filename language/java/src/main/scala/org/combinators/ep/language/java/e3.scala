@@ -1,7 +1,8 @@
-package ep.j  /*DD:LD:AI*/
+package org.combinators.ep.language.java
+
+/*DD:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
-import ep.domain._
 import org.combinators.ep.domain.Evolution
 import org.combinators.ep.domain.math._
 import org.combinators.templating.twirl.Java
@@ -15,7 +16,7 @@ trait e3 extends Evolution with JavaGenerator with JUnitTestGenerator with M0 wi
   self:e0 with e1 with e2 =>
   val domain:MathDomain
 
-   abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
+   abstract override def logic(exp:domain.DataType, op:domain.Operation): Seq[Statement] = {
     op match {
       case PrettyP => {
         exp match {

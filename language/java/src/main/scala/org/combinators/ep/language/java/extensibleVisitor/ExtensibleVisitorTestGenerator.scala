@@ -1,9 +1,10 @@
-package ep.j.extensibleVisitor    /*DI:LD:AD*/
+package org.combinators.ep.language.java.extensibleVisitor
+
+/*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.TypeDeclaration
-import ep.domain.ModelDomain
-import ep.j.{JUnitTestGenerator, JavaGenerator}
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.language.java.JUnitTestGenerator
 import org.combinators.templating.twirl.Java
 
 /**

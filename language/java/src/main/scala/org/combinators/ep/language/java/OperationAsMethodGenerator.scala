@@ -1,4 +1,6 @@
-package ep.j  /*DI:LD:AI*/
+package org.combinators.ep.language.java
+
+/*DI:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
 import org.combinators.ep.domain.ModelDomain
@@ -12,6 +14,6 @@ trait OperationAsMethodGenerator {
 
   /**
     * Operations for a given Exp DataType are implemented as a method. */
-  def methodGenerator(exp:domain.Atomic, op:domain.Operation) : MethodDeclaration
+  def methodGenerator(exp:domain.DataType, op:domain.Operation) : MethodDeclaration
 
 }

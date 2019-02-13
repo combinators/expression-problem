@@ -73,6 +73,7 @@ def standardLanguageProject(languageName: String): Project =
     .disablePlugins(PlayLayoutPlugin)
     .settings(
       moduleName := s"expression-problem-language-$languageName",
+      libraryDependencies += guice
     )
     .dependsOn(core, domainMath, domainShape)
 

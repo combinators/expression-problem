@@ -55,7 +55,7 @@ trait e0 extends JavaGenerator with JUnitTestGenerator with M0 {
     * @return
     */
   abstract override def performanceMethod(): Seq[UnitTest] = {
-    val a1 = new BinaryInst(Add, new LitInst(1.0), new LitInst(2.0))
+    /*val a1 = new BinaryInst(Add, new LitInst(1.0), new LitInst(2.0))
     val numTrials = 11
 
     var trees = new BinaryInst(Add, a1, a1)
@@ -89,6 +89,9 @@ trait e0 extends JavaGenerator with JUnitTestGenerator with M0 {
          |}""".stripMargin).methodDeclarations.head
 
     super.performanceMethod() :+ evalPerfTest
+    */
+
+    Seq.empty
   }
 
   abstract override def testGenerator: Seq[MethodDeclaration] = {

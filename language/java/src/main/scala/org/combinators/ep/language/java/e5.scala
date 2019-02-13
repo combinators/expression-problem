@@ -69,13 +69,13 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
       test match {
         case ctc: SameTestCase =>
             actual(AsTree, ctc.inst1).appendDependent { case Seq(treeLeft) =>
-              actual(AsTree, ctc.inst1).appendDependent { case Seq(treeRight) =>
+              actual(AsTree, ctc.inst2).appendDependent { case Seq(treeRight) =>
                 val same = Java(s"$treeLeft.same($treeRight)").expression[Expression]()
                 CodeBlockWithResultingExpressions(
                   if (ctc.result) {
                     Java(s"assertTrue($same);").statement()
                   } else {
-                    Java(s"assertFalse($same").statement()
+                    Java(s"assertFalse($same);").statement()
                   }
                 )()
               }

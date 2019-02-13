@@ -1,7 +1,3 @@
-@(rootPackage:Name)
-
-package @{Java(rootPackage)};
-
 public interface Tree {
     default java.util.Optional<Leaf> asLeaf() { return java.util.Optional.empty(); }
     default java.util.Optional<Node> asNode() {	return java.util.Optional.empty(); }

@@ -1,7 +1,3 @@
-@(rootPackage:Name)
-
-package @{Java(rootPackage)};
-
 public class Node implements Tree {
     public final int label;
     java.util.List<Tree> subtrees = new java.util.ArrayList<Tree>();

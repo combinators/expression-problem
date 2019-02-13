@@ -30,11 +30,11 @@ trait TestGenerator extends JavaGenerator with LanguageIndependentTestGenerator 
              actual(eq.op, eq.inst, params: _*)
            )
 
-         expectedBlock.appendDependent(expectedValue =>
-           actualBlock.appendDependent(actualValue =>
+         expectedBlock.appendDependent { case Seq(expectedValue) =>
+           actualBlock.appendDependent { case Seq(actualValue) =>
              CodeBlockWithResultingExpressions(Java(s"assertEquals($expectedValue, $actualValue);").statement())()
-           )
-         ).block
+           }
+         }.block
 
        case ne: NotEqualsTestCase =>
          val unExpectedBlock = toTargetLanguage(ne.expect)
@@ -47,11 +47,11 @@ trait TestGenerator extends JavaGenerator with LanguageIndependentTestGenerator 
              actual(ne.op, ne.inst, params: _*)
            )
 
-         unExpectedBlock.appendDependent(unExpectedValue =>
-           actualBlock.appendDependent(actualValue =>
+         unExpectedBlock.appendDependent { case Seq(unExpectedValue) =>
+           actualBlock.appendDependent { case Seq(actualValue) =>
              CodeBlockWithResultingExpressions(Java(s"assertNotEquals($unExpectedValue, $actualValue);").statement())()
-           )
-         ).block
+           }
+         }.block
        case seq: EqualsCompositeTestCase =>
          val expectedBlock = toTargetLanguage(seq.expect)
          val actualStartBlock = {
@@ -77,11 +77,11 @@ trait TestGenerator extends JavaGenerator with LanguageIndependentTestGenerator 
            }
          }
 
-         expectedBlock.appendDependent(expectedValue =>
-           actualBlock.appendDependent(actualValue =>
+         expectedBlock.appendDependent { case Seq(expectedValue) =>
+           actualBlock.appendDependent { case Seq(actualValue) =>
              CodeBlockWithResultingExpressions(Java(s"assertEquals($expectedValue, $actualValue);").statement())()
-           )
-         ).block
+           }
+         }.block
      }
   }
 

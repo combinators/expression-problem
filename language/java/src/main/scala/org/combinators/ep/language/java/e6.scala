@@ -77,7 +77,7 @@ trait e6 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
     * @return
     */
   abstract override def performanceMethod(): Seq[UnitTest] = {
-    val a1 = new domain.BinaryInst(Add, new LitInst(1.0), new LitInst(2.0))
+    /*val a1 = new domain.BinaryInst(Add, new LitInst(1.0), new LitInst(2.0))
     val numTrials = 11
 
     var trees = new domain.BinaryInst(Add, a1, a1)
@@ -104,7 +104,7 @@ trait e6 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
          |     long best = Long.MAX_VALUE;
          |      for (int t = 0; t < 8; t++) {
          |        long now = System.nanoTime();
-         |     		  $toTime;
+         |     		 $toTime;
          |         long duration = System.nanoTime() - now;
          |         if (duration < best) { best = duration; }
          |      }
@@ -113,6 +113,9 @@ trait e6 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
          |}""".stripMargin).methodDeclarations.head
 
     super.performanceMethod() :+ evalPerfTest
+    */
+
+    Seq.empty
   }
 
   abstract override def testGenerator: Seq[MethodDeclaration] = {

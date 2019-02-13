@@ -1,7 +1,3 @@
-@(rootPackage:Name)
-
-package @{Java(rootPackage)};
-
 public class Leaf implements Tree {
     public final Object value;
 

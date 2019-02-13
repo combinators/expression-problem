@@ -37,7 +37,7 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
             val listName = ListNameGenerator.nextFreshListName()
             val initBlock =
               CodeBlockWithResultingExpressions(
-                Java(s"${typeConverter(tpe.generic)} $listName = new java.util.ArrayList<>();").statement()
+                Java(s"${typeConverter(tpe)} $listName = new java.util.ArrayList<>();").statement()
               )(listName)
             s.foldLeft(initBlock) {
               case (block, nextElem) =>
@@ -97,7 +97,10 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
       case Simplify =>
 
         exp match {
-          case Lit => result(Java(s" ${inst(Lit, expression(exp, litValue))}").expression[Expression]())
+          case Lit =>
+            inst(Lit, expression(exp, litValue)).appendDependent{ case Seq(litExp) =>
+              CodeBlockWithResultingExpressions(result(litExp):_*)()
+            }.block
           case Add =>
             val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
             val deltaRight = deltaChildOp(source, domain.base.right, Eval)
@@ -204,7 +207,7 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
         def returnListBlock(collectedLists: Expression*): Seq[Statement] =
           toTargetLanguage(emptyList).appendDependent { case Seq(resultList) =>
             CodeBlockWithResultingExpressions(
-              collectedLists.map(col => Java(s"$resultList.addAll($col)").statement()) ++ result(resultList):_*
+              collectedLists.map(col => Java(s"$resultList.addAll($col);").statement()) ++ result(resultList):_*
             )()
           }.block
 
@@ -218,7 +221,11 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
           case _:domain.Unary  =>
             returnListBlock(dispatch(expression(exp, domain.base.inner), Collect))
           case _:domain.Atomic =>
-            returnListBlock(expression(exp, litValue))
+            toTargetLanguage(emptyList).appendDependent { case Seq(resultList) =>
+              CodeBlockWithResultingExpressions(
+                Java(s"$resultList.add(${expression(exp, litValue)});").statement() +: result(resultList):_*
+              )()
+            }.block
           case _ => super.logic(exp, op)
         }
 

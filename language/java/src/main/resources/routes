@@ -19,15 +19,12 @@
 ->	/		 org.combinators.ep.language.java.deployment.extensibleVisitor.I2_Variation
 ->	/		 org.combinators.ep.language.java.deployment.extensibleVisitor.C1_Variation
 # interpreter(j) evolutions: ->	/		 org.combinators.ep.language.java.deployment.interpreter.M0_Variation
-#->	/		 org.combinators.ep.language.java.deployment.interpreter.M1_Variation
-#->	/		 org.combinators.ep.language.java.deployment.interpreter.M2_Variation
-#->	/		 org.combinators.ep.language.java.deployment.interpreter.M3_Variation
-#->	/		 org.combinators.ep.language.java.deployment.interpreter.M4_Variation
-#->	/		 org.combinators.ep.language.java.deployment.interpreter.M5_Variation
-#->	/		 org.combinators.ep.language.java.deployment.interpreter.M6_Variation
-#->	/		 org.combinators.ep.language.java.deployment.interpreter.I1_Variation
-#->	/		 org.combinators.ep.language.java.deployment.interpreter.I2_Variation
-#->	/		 org.combinators.ep.language.java.deployment.interpreter.C1_Variation
+->	/		 org.combinators.ep.language.java.deployment.interpreter.M1_Variation
+->	/		 org.combinators.ep.language.java.deployment.interpreter.M2_Variation
+->	/		 org.combinators.ep.language.java.deployment.interpreter.M3_Variation
+->	/		 org.combinators.ep.language.java.deployment.interpreter.M4_Variation
+->	/		 org.combinators.ep.language.java.deployment.interpreter.M5_Variation
+->	/		 org.combinators.ep.language.java.deployment.interpreter.M6_Variation
 # oo(j) evolutions: ->	/		 org.combinators.ep.language.java.deployment.oo.M0_Variation
 ->	/		 org.combinators.ep.language.java.deployment.oo.M1_Variation
 ->	/		 org.combinators.ep.language.java.deployment.oo.M2_Variation

@@ -1,6 +1,4 @@
-package org.combinators.ep.generator
-
-/*DI:LI:AI*/
+package org.combinators.ep.generator  /*DI:LI:AI*/
 
 import java.nio.file.Path
 

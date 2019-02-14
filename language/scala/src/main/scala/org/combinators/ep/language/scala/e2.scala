@@ -29,6 +29,14 @@ trait e2 extends Evolution with ScalaGenerator with TestGenerator with M0 with M
     }
   }
 
+  /** E1 Introduces String values. */
+  abstract override def toTargetLanguage(ei:domain.ExistsInstance) : CodeBlockWithResultingExpressions = {
+    ei.inst match {
+      case s:String => CodeBlockWithResultingExpressions(Scala(s""""$s"""").expression)
+      case _ => super.toTargetLanguage(ei)
+    }
+  }
+
   abstract override def logic(exp:domain.DataType, op:domain.Operation): Seq[Statement] = {
     // generate the actual body
     op match {

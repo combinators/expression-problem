@@ -23,7 +23,7 @@ trait e6 extends Evolution with ScalaGenerator with TestGenerator with M0 with M
     }
   }
 
-  abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
+  abstract override def logic(exp:domain.DataType, op:domain.Operation): Seq[Statement] = {
     val source = Source(exp, op)
     // generate the actual body; since this is a binary method
     op match {
@@ -41,15 +41,35 @@ trait e6 extends Evolution with ScalaGenerator with TestGenerator with M0 with M
     }
   }
 
-  override def scalaTestMethod(test:domain.TestCase, idx:Int) : Seq[Stat] = { // EXTRACT all SameTestCase ones and handle here
-     test match {
+//  override def scalaTestMethod2(test:domain.TestCase, idx:Int) : Seq[Stat] = { // EXTRACT all SameTestCase ones and handle here
+//     test match {
+//      case eb: EqualsBinaryMethodTestCase =>
+//        val code = dispatch(toTargetLanguage(eb.inst1), Equals, toTargetLanguage(eb.inst2))
+//        if (eb.result) {
+//          Seq(Scala(s"assert (true == $code)").statement)
+//        } else {
+//          Seq(Scala(s"assert (false == $code)").statement)
+//        }
+//      case _ => super.scalaTestMethod(test, idx)
+//    }
+//  }
+
+  override def scalaTestMethod(test:domain.TestCase, idx:Int) : Seq[Statement] = {
+    test match {
       case eb: EqualsBinaryMethodTestCase =>
-        val code = dispatch(toTargetLanguage(eb.inst1), Equals, toTargetLanguage(eb.inst2))
-        if (eb.result) {
-          Seq(Scala(s"assert (true == $code)").statement)
-        } else {
-          Seq(Scala(s"assert (false == $code)").statement)
-        }
+        val leftBlock = toTargetLanguage(eb.inst1)
+        val rightBlock = toTargetLanguage(eb.inst2)
+        leftBlock.appendDependent { case Seq(leftExp) =>
+          rightBlock.appendDependent { case Seq(rightExp) =>
+            CodeBlockWithResultingExpressions(
+              if (eb.result) {
+                Scala(s"assert (true == ${dispatch(leftExp, Equals, rightExp)});").statement
+              } else {
+                Scala(s"assert (false == ${dispatch(leftExp, Equals, rightExp)});").statement
+              }
+            )()
+          }
+        }.block
       case _ => super.scalaTestMethod(test, idx)
     }
   }

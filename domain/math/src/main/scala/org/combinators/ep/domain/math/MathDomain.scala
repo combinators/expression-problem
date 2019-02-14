@@ -1,8 +1,6 @@
-package org.combinators.ep.domain.math
+package org.combinators.ep.domain.math        /*DD:LI:AI*/
 
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
-
-/*DD:LI:AI*/
 
 /**
   * Mathematical Expressions domain as an instance of EP.

@@ -1,21 +1,25 @@
 package org.combinators.ep.language.scala     /*DI:LD:AI*/
 
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.generator.LanguageIndependentTestGenerator
 
 import scala.meta.{Stat, Term}
 
-trait TestGenerator extends ScalaGenerator {
+trait TestGenerator extends ScalaGenerator with LanguageIndependentTestGenerator {
   val domain: BaseDomain with ModelDomain
   import domain._
 
+  type UnitTest = Seq[Stat]
+
   /** Type to use when referring to specific instance. */
-  def exprDefine(exp:AtomicInst) : Type = {
-    scala.meta.Type.Name(exp.e.name)
+  def exprDefine(exp:Inst) : Type = {
+    scala.meta.Type.Name(exp.name)
   }
 
   /** Used when one already has code fragments bound to variables, which are to be used for left and right. */
   def convertRecursive(inst: Binary, left:String, right:String): Expression = {
     val name = inst.name
+
     Scala(s"new $name($left, $right)").expression
   }
 
@@ -57,7 +61,7 @@ trait TestGenerator extends ScalaGenerator {
   }
 
   /** Actual value in a test case. */
-  def actual(op:Operation, inst:Inst, terms:Term*):Expression = dispatch(convert(inst), op, terms : _*)
+  //def actual(op:Operation, inst:Inst, terms:Term*):Expression = dispatch(convert(inst), op, terms : _*)
 
   /** Convert a test instance into a Java Expression for instantiating that instance. */
   def convert(inst: Inst): Expression = {
@@ -77,9 +81,9 @@ trait TestGenerator extends ScalaGenerator {
 
   /** Return sample test cases as methods. */
   def testGenerator: Seq[Seq[Stat]] = Seq.empty
-
-  /** Performance tests. */
-  def performanceMethod: Seq[Seq[Stat]] = Seq.empty
+//
+//  /** Performance tests. */
+//  def performanceMethod: Seq[Seq[Stat]] = Seq.empty
 
   /**
     * Traits can override this method to add their test cases to the mix.
@@ -89,32 +93,103 @@ trait TestGenerator extends ScalaGenerator {
   }
 
   /** Return Sequence of statements associated with given test cases. */
-  def scalaTestMethod(test:TestCase, idx:Int) : Seq[Stat] = {
-      val id:String = s"v$idx"
+//  def scalaTestMethod(test:TestCase, idx:Int) : Seq[Stat] = {
+//      val id:String = s"v$idx"
+//
+//      // The expected method takes in a function that will be called by the expected method. Now, the expected
+//      // method will pass in the expression (which is expected) into this function, and it is the job of that
+//      // function to return the variable.
+//      test match {
+//        case eq:EqualsTestCase =>
+//          val params = eq.params.map(pair => expand(pair.tpe, pair.inst))
+//          expected(eq, id)(expectedExpr => Seq(Scala(s"assert ($expectedExpr == ${actual(eq.op, eq.inst, params: _*)})").statement))
+//
+//        case comp:EqualsCompositeTestCase =>
+//          val params = comp.params.map(pair => expand(pair._1, pair._2))
+//
+//          // TODO: replicate in other languages
+////          val x2 :Expression = actual(comp.ops.head, comp.inst, params: _*)
+////          val y2 :Expression = dispatch(x2, comp.ops.tail.head)
+//
+//          val start:Expression = actual(comp.ops.head, comp.inst, params: _*)
+//          val result:Expression = comp.ops.tail.foldLeft(start){case (state, next) => dispatch(state, next)}
+//
+//          expected(comp, id)(expectedExpr => Seq(Scala(s"assert ($expectedExpr == $result)").statement))
+//
+//        case ne:NotEqualsTestCase =>
+//          val params = ne.params.map(pair => expand(pair._1, pair._2))
+//          expected(ne, id)(expectedExpr => Seq(Scala(s"assert ($expectedExpr != ${actual(ne.op, ne.inst, params: _*)})").statement))
+//      }
+//    }
 
-      // The expected method takes in a function that will be called by the expected method. Now, the expected
-      // method will pass in the expression (which is expected) into this function, and it is the job of that
-      // function to return the variable.
-      test match {
-        case eq:EqualsTestCase =>
-          val params = eq.params.map(pair => expand(pair.tpe, pair.inst))
-          expected(eq, id)(expectedExpr => Seq(Scala(s"assert ($expectedExpr == ${actual(eq.op, eq.inst, params: _*)})").statement))
+  /** Return MethodDeclaration associated with given test cases. */
+  def scalaTestMethod(test: TestCase, idx: Int): Seq[Statement] = {
+    test match {
+      case eq: EqualsTestCase =>
+        val expectedBlock = toTargetLanguage(eq.expect)
+        val parameterBlock =
+          eq.params.foldLeft(CodeBlockWithResultingExpressions.empty) {
+            case (b, p) => b.appendIndependent(toTargetLanguage(p))
+          }
 
-        case comp:EqualsCompositeTestCase =>
-          val params = comp.params.map(pair => expand(pair._1, pair._2))
+        val actualBlock = parameterBlock.appendDependent(params =>
+          actual(eq.op, eq.inst, params: _*)
+        )
 
-          // TODO: replicate in other languages
-//          val x2 :Expression = actual(comp.ops.head, comp.inst, params: _*)
-//          val y2 :Expression = dispatch(x2, comp.ops.tail.head)
+        expectedBlock.appendDependent { case Seq(expectedValue) =>
+          actualBlock.appendDependent { case Seq(actualValue) =>
+            CodeBlockWithResultingExpressions(Scala(s"assert ($expectedValue == $actualValue)").statement)()
+          }
+        }.block
 
-          val start:Expression = actual(comp.ops.head, comp.inst, params: _*)
-          val result:Expression = comp.ops.tail.foldLeft(start){case (state, next) => dispatch(state, next)}
+      case ne: NotEqualsTestCase =>
+        val unExpectedBlock = toTargetLanguage(ne.expect)
+        val parameterBlock =
+          ne.params.foldLeft(CodeBlockWithResultingExpressions.empty) {
+            case (b, p) => b.appendIndependent(toTargetLanguage(p))
+          }
+        val actualBlock =
+          parameterBlock.appendDependent(params =>
+            actual(ne.op, ne.inst, params: _*)
+          )
 
-          expected(comp, id)(expectedExpr => Seq(Scala(s"assert ($expectedExpr == $result)").statement))
+        unExpectedBlock.appendDependent { case Seq(unExpectedValue) =>
+          actualBlock.appendDependent { case Seq(actualValue) =>
+            CodeBlockWithResultingExpressions(Scala(s"assert ($unExpectedValue != $actualValue)").statement)()
+          }
+        }.block
 
-        case ne:NotEqualsTestCase =>
-          val params = ne.params.map(pair => expand(pair._1, pair._2))
-          expected(ne, id)(expectedExpr => Seq(Scala(s"assert ($expectedExpr != ${actual(ne.op, ne.inst, params: _*)})").statement))
-      }
+      case seq: EqualsCompositeTestCase =>
+        val expectedBlock = toTargetLanguage(seq.expect)
+        val actualStartBlock = {
+          val parameterBlock =
+            seq.ops.head._2.foldLeft(CodeBlockWithResultingExpressions.empty) {
+              case (b, p) => b.appendIndependent(toTargetLanguage(p))
+            }
+          parameterBlock.appendDependent(params =>
+            actual(seq.ops.head._1, seq.inst, params: _*)
+          )
+        }
+        val actualBlock = seq.ops.tail.foldLeft(actualStartBlock) { case (currentBlock, (nextOp, nextParams)) =>
+          currentBlock.appendDependent { case Seq(currentResult) =>
+            val parameterBlock =
+              nextParams.foldLeft(CodeBlockWithResultingExpressions.empty) {
+                case (b, p) => b.appendIndependent(toTargetLanguage(p))
+              }
+            parameterBlock.appendDependent(params =>
+              CodeBlockWithResultingExpressions(
+                contextDispatch(NoSource, deltaExprOp(NoSource, currentResult, nextOp, params: _*))
+              )
+            )
+          }
+        }
+
+        expectedBlock.appendDependent { case Seq(expectedValue) =>
+          actualBlock.appendDependent { case Seq(actualValue) =>
+            CodeBlockWithResultingExpressions(Scala(s"assert ($expectedValue == $actualValue)").statement)()
+          }
+        }.block
     }
+  }
+
 }

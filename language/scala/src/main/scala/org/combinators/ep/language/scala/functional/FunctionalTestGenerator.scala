@@ -7,7 +7,13 @@ import scala.meta.Term
 trait FunctionalTestGenerator extends TestGenerator {
 
   /** Actual value in a test case. */
-  override def actual(op:domain.Operation, inst:domain.AtomicInst, terms:Term*):Expression = {
-    Scala (s"${op.instance}(${convert(inst)})").term
+//  override def actual(op:domain.Operation, inst:domain.Inst, terms:Term*):Expression = {
+//    Scala (s"${op.instance}(${convert(inst)})").term
+//  }
+
+  override def actual(op: domain.Operation, inst: domain.Inst, params: Expression*): CodeBlockWithResultingExpressions = {
+    toTargetLanguage(inst).appendDependent(instExp =>
+      CodeBlockWithResultingExpressions(Scala (s"${op.instance}(${convert(inst)})").term)
+    )
   }
 }

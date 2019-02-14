@@ -46,6 +46,45 @@ trait e4 extends Evolution with ScalaGenerator with TestGenerator with Operation
     }
   }
 
+  /** Provides fresh names for temporary list objects. */
+  object ListNameGenerator {
+    private var nextNumber: Int = 0
+    def nextFreshListName(): Expression = {
+      val nextName = Scala(s"tmpList$nextNumber").expression
+      nextNumber += 1
+      nextName
+    }
+  }
+
+  /** E4 Introduces Lists of values. OVERKILL FOR SCALA I EXPECT. TODO: FIX*/
+  abstract override def toTargetLanguage(ei:domain.ExistsInstance) : CodeBlockWithResultingExpressions = {
+    ei.tpe match {
+      case tpe: List[_] =>
+        ei.inst match {
+          case s:Seq[tpe.generic.scalaInstanceType] =>
+            val listName = ListNameGenerator.nextFreshListName()
+            val initBlock =
+              CodeBlockWithResultingExpressions(
+                Scala(s"var $listName = Seq[Double].empty").statement
+              )(listName)
+
+            s.foldLeft(initBlock) {
+              case (block, nextElem) =>
+                block.appendDependent { case Seq(constructedList) =>
+                  toTargetLanguage(domain.ExistsInstance(tpe.generic)(nextElem)).appendDependent { case Seq(nextElemExpr) =>
+                    CodeBlockWithResultingExpressions(
+                      Scala(s"$constructedList = $constructedList :+ $nextElemExpr").statement
+                    )(constructedList)
+                  }
+                }
+            }
+
+        }
+      case _ => super.toTargetLanguage(ei)
+    }
+  }
+
+
   abstract override def logic(exp:DataType, op:Operation): Seq[Statement] = {
     val source = Source(exp,op)
 
@@ -53,82 +92,131 @@ trait e4 extends Evolution with ScalaGenerator with TestGenerator with Operation
     val one = Scala("1.0").expression
     val negOne = Scala("-1.0").expression
 
+    val zeroResultBlock =
+      inst(Lit, zero).appendDependent { case Seq(zeroLit) =>
+        CodeBlockWithResultingExpressions(result(zeroLit): _*)()
+      }
+    val oneResultBlock =
+      inst(Lit, one).appendDependent { case Seq(zeroLit) =>
+        CodeBlockWithResultingExpressions(result(zeroLit): _*)()
+      }
+    val negOneResultBlock =
+      inst(Lit, negOne).appendDependent { case Seq(zeroLit) =>
+        CodeBlockWithResultingExpressions(result(zeroLit): _*)()
+      }
     // generate the actual body
     op match {
         // Simplify only works for solutions that instantiate expression instances
       case Simplify =>
 
         exp match {
-          case Lit => Scala(s" ${inst(Lit, expression(exp,litValue))}").statements
+          case Lit =>
+            inst(Lit, expression(exp, litValue)).appendDependent{ case Seq(litExp) =>
+              CodeBlockWithResultingExpressions(result(litExp):_*)()
+            }.block
+
           case Add =>
             val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
             val deltaRight = deltaChildOp(source, domain.base.right, Eval)
-            Scala(s"""
-                   |val leftVal = ${contextDispatch(source, deltaLeft)}
-                   |val rightVal = ${contextDispatch(source, deltaRight)}
-                   |if ((leftVal == 0 && rightVal == 0) || (leftVal + rightVal == 0)) {
-                   |  ${result(inst(Lit, zero)).mkString("\n")}
-                   |} else if (leftVal == 0) {
-                   |  ${result(dispatch(expression(exp, domain.base.right), Simplify)).mkString("\n")}
-                   |} else if (rightVal == 0) {
-                   |  ${result(dispatch(expression(exp, domain.base.left), Simplify)).mkString("\n")}
-                   |} else {
-                   |  ${result(inst(Add, dispatch(expression(exp, domain.base.left), Simplify), dispatch(expression(exp, domain.base.right), Simplify))).mkString("\n")}
-                   |}""".stripMargin).statements
+
+            val dispatchBothResultBlock =
+              inst(Add,
+                dispatch(expression(exp, domain.base.left), Simplify),
+                dispatch(expression(exp, domain.base.right), Simplify)
+              ).appendDependent{ case Seq(addResult) =>
+                CodeBlockWithResultingExpressions(result(addResult): _*)()
+              }
+            Scala(s"""|val leftVal = ${contextDispatch(source, deltaLeft)};
+                      |val rightVal = ${contextDispatch(source, deltaRight)};
+                      |if ((leftVal == 0 && rightVal == 0) || (leftVal + rightVal == 0)) {
+                      |   ${zeroResultBlock.block.mkString("\n")}
+                      |} else if (leftVal == 0) {
+                      |   ${result(dispatch(expression(exp, domain.base.right), Simplify)).mkString("\n")}
+                      |} else if (rightVal == 0) {
+                      |   ${result(dispatch(expression(exp, domain.base.left), Simplify)).mkString("\n")}
+                      |} else {
+                      |   ${dispatchBothResultBlock.block.mkString("\n")}
+                      |}""".stripMargin).statements
+
           case Sub =>
             val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
             val deltaRight = deltaChildOp(source, domain.base.right, Eval)
-            Scala(s"""
-                    |if (${contextDispatch(source, deltaLeft)} == ${contextDispatch(source, deltaRight)}) {
-                    |  ${result(inst(Lit, zero)).mkString("\n")}
-                    |} else {
-                    |  ${result(inst(Sub, dispatch(expression(exp, domain.base.left), Simplify), dispatch(expression(exp, domain.base.right), Simplify))).mkString("\n")}
-                    |}
-                    |""".stripMargin).statements
+            val dispatchBothResultBlock =
+              inst(Sub,
+                dispatch(expression(exp, domain.base.left), Simplify),
+                dispatch(expression(exp, domain.base.right), Simplify)
+              ).appendDependent{ case Seq(addResult) =>
+                CodeBlockWithResultingExpressions(result(addResult): _*)()
+              }
+            Scala(s"""|if (${contextDispatch(source, deltaLeft)} == ${contextDispatch(source, deltaRight)}) {
+                     |   ${zeroResultBlock.block.mkString("\n")}
+                     |} else {
+                     |   ${dispatchBothResultBlock.block.mkString("\n")}
+                     |}""".stripMargin).statements
+
           case Mult =>
             val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
             val deltaRight = deltaChildOp(source, domain.base.right, Eval)
-            Scala(s"""
-                     |val leftVal = ${contextDispatch(source, deltaLeft)}
-                     |val rightVal = ${contextDispatch(source, deltaRight)}
-                     |if (leftVal == 0 || rightVal == 0) {
-                     |  ${result(inst(Lit, zero)).mkString("\n")}
-                     |} else if (leftVal == 1) {
-                     |  ${result(dispatch(expression(exp, domain.base.right), Simplify)).mkString("\n")}
-                     |} else if (rightVal == 1) {
-                     |  ${result(dispatch(expression(exp, domain.base.left), Simplify)).mkString("\n")}
-                     |} else {
-                     |   ${result(inst(Mult, dispatch(expression(exp, domain.base.left), Simplify), dispatch(expression(exp, domain.base.right), Simplify))).mkString("\n")}
-                     |}
-                     |""".stripMargin).statements
+            val dispatchBothResultBlock =
+              inst(Mult,
+                dispatch(expression(exp, domain.base.left), Simplify),
+                dispatch(expression(exp, domain.base.right), Simplify)
+              ).appendDependent{ case Seq(addResult) =>
+                CodeBlockWithResultingExpressions(result(addResult): _*)()
+              }
+            Scala(s"""|val leftVal = ${contextDispatch(source, deltaLeft)};
+                      |val rightVal = ${contextDispatch(source, deltaRight)};
+                      |if (leftVal == 0 || rightVal == 0) {
+                      |   ${zeroResultBlock.block.mkString("\n")}
+                      |} else if (leftVal == 1) {
+                      |   ${result(dispatch(expression(exp, domain.base.right), Simplify)).mkString("\n")}
+                      |} else if (rightVal == 1) {
+                      |   ${result(dispatch(expression(exp, domain.base.left), Simplify)).mkString("\n")}
+                      |} else {
+                      |   ${dispatchBothResultBlock.block.mkString("\n")}
+                      |}
+                      |""".stripMargin).statements
+
           case Divd =>
             val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
             val deltaRight = deltaChildOp(source, domain.base.right, Eval)
-            Scala(s"""
-                     |val leftVal = ${contextDispatch(source, deltaLeft)}
-                     |val rightVal = ${contextDispatch(source, deltaRight)}
-                     |if (leftVal == 0) {
-                     |   ${result(inst(Lit, zero)).mkString("\n")}
-                     |} else if (rightVal == 1) {
-                     |   ${result(dispatch(expression(exp, domain.base.left), Simplify)).mkString("\n")}
-                     |} else if (leftVal == rightVal) {
-                     |   ${result(inst(Lit, one)).mkString("\n")}
-                     |} else if (leftVal == -rightVal) {
-                     |   ${result(inst(Lit, negOne)).mkString("\n")}
-                     |} else {
-                     |   ${result(inst(Divd, dispatch(expression(exp, domain.base.left), Simplify), dispatch(expression(exp, domain.base.right), Simplify))).mkString("\n")}
-                     |}
-                     |""".stripMargin).statements
+            val dispatchBothResultBlock =
+              inst(Divd,
+                dispatch(expression(exp, domain.base.left), Simplify),
+                dispatch(expression(exp, domain.base.right), Simplify)
+              ).appendDependent{ case Seq(addResult) =>
+                CodeBlockWithResultingExpressions(result(addResult): _*)()
+              }
+            Scala(s"""|val leftVal = ${contextDispatch(source, deltaLeft)};
+                      |val rightVal = ${contextDispatch(source, deltaRight)};
+                      |if (leftVal == 0) {
+                      |   ${zeroResultBlock.block.mkString("\n")}
+                      |} else if (rightVal == 1) {
+                      |   ${result(dispatch(expression(exp, domain.base.left), Simplify)).mkString("\n")}
+                      |} else if (leftVal == rightVal) {
+                      |   ${oneResultBlock.block.mkString("\n")}
+                      |} else if (leftVal == -rightVal) {
+                      |   ${negOneResultBlock.block.mkString("\n")}
+                      |} else {
+                      |   ${dispatchBothResultBlock.block.mkString("\n")}
+                      |}
+                      |""".stripMargin).statements
             // TODO: Would love to have ability to simplify neg(neg(x)) to just be x. This requires a form
             // of inspection that might not be generalizable...
           case Neg =>
             val deltaInner = deltaChildOp(source, domain.base.inner, Eval)
+            val dispatchBothResultBlock =
+              inst(Neg, dispatch(expression(exp, domain.base.inner), Simplify))
+                .appendDependent{ case Seq(addResult) =>
+                  CodeBlockWithResultingExpressions(result(addResult): _*)()
+                }
             Scala(s"""
                     |if (${contextDispatch(source, deltaInner)} == 0) {
-                    |   ${result(inst(Lit, zero)).mkString("\n")}
+                    |   ${zeroResultBlock.block.mkString("\n")}
                     |} else {
-                    |   ${result(inst(Neg, dispatch(expression(exp, domain.base.inner), Simplify))).mkString("\n")}
+                    |   ${dispatchBothResultBlock.block.mkString("\n")}
                     |}""".stripMargin).statements
+
           case _ => super.logic(exp, op)
         }
 

@@ -10,6 +10,7 @@ import org.combinators.ep.domain.WithDomain
 import org.combinators.ep.domain.math.MathDomain
 import org.combinators.ep.generator.FileWithPath
 import org.combinators.ep.language.scala.ScalaWithPath
+import org.combinators.ep.generator.FileWithPathPersistable._
 
 abstract class FoundationOO @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends CodeGenerationController[ScalaWithPath](web, app)

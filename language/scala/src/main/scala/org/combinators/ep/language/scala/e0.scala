@@ -21,6 +21,15 @@ trait e0 extends ScalaGenerator with TestGenerator with M0 {
     }
   }
 
+  /** E0 Introduces Double and Int values. */
+  abstract override def toTargetLanguage(ei:domain.ExistsInstance) : CodeBlockWithResultingExpressions = {
+    ei.inst match {
+      case d:scala.Double => CodeBlockWithResultingExpressions(Scala(s"$d").expression)
+      case i:scala.Int => CodeBlockWithResultingExpressions(Scala(s"$i").expression)
+      case _ => super.toTargetLanguage(ei)
+    }
+  }
+
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
   abstract override def logic(exp:DataType, op:Operation): Seq[Statement] = {
     // generate the actual body
@@ -44,7 +53,7 @@ trait e0 extends ScalaGenerator with TestGenerator with M0 {
     * @return
     */
   abstract override def performanceMethod: Seq[Seq[Stat]] = {
-    val a1 = new BinaryInst(Add, new LitInst(1.0), new LitInst(2.0))
+    /*val a1 = new BinaryInst(Add, new LitInst(1.0), new LitInst(2.0))
     val numTrials = 10
 
     var trees = new BinaryInst(Add, a1, a1)
@@ -57,12 +66,11 @@ trait e0 extends ScalaGenerator with TestGenerator with M0 {
     }
     seq = seq + ")"
 
-    val source = NoSource()
+    val source = NoSource
     val delta = deltaExprOp(source, new Scala("trees(i)").expression, Eval)
     val toTime = contextDispatch(source, delta)
-    val evalPerfTest:Stat = Scala(
+    val evalPerfTest:Seq[Stat] = Scala(
       s"""
-         |def test() : Unit = {
          |  $instantiations
          |  $seq
          |  for (i <- trees.length - 1 to 0 by -1) {
@@ -77,9 +85,13 @@ trait e0 extends ScalaGenerator with TestGenerator with M0 {
          |    }
          |    println(i + "," + best)
          |  }
-         |}""".stripMargin).declaration()
+         |""".stripMargin).statements
 
-    super.performanceMethod :+ Seq(evalPerfTest)
+    val other = super.performanceMethod()
+    other  :+ evalPerfTest
+    */
+
+    super.performanceMethod()
   }
 
   abstract override def testGenerator: Seq[Seq[Stat]] = {

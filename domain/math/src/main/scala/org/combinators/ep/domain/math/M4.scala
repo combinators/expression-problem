@@ -1,8 +1,8 @@
-package org.combinators.ep.domain.math
+package org.combinators.ep.domain.math      /*DD:LI:AI*/
 
 import org.combinators.ep.domain.Evolution
 
-trait M4 extends Evolution  {
+trait M4 extends Evolution {
   self: M0 with M1 with M2 with M3 =>
   val domain:MathDomain
   import domain._

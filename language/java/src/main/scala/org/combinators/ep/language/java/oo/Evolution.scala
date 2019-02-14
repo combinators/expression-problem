@@ -1,6 +1,4 @@
-package org.combinators.ep.language.java.oo
-
-/*DD:LD:AD*/
+package org.combinators.ep.language.java.oo   /*DD:LD:AD*/
 
 import com.github.javaparser.ast.CompilationUnit
 import javax.inject.Inject

@@ -37,8 +37,10 @@ trait ScalaGenerator extends LanguageIndependentGenerator with Producer {
     * For producer operations, there is a need to instantiate objects, and one would use this
     * method (with specific parameters) to carry this out.
     */
-  def inst(exp:domain.Atomic, params:InstanceExpression*): InstanceExpression = {
-    Scala("new " + exp.concept + "(" + params.map(expr => expr.toString).mkString(",") + ")").expression
+  override def inst(exp:domain.DataType, params:Expression*): CodeBlockWithResultingExpressions = {
+    CodeBlockWithResultingExpressions(
+      Scala("new " + exp.concept + "(" + params.map(expr => expr.toString).mkString(",") + ")").expression
+    )
   }
 
   /**
@@ -46,7 +48,7 @@ trait ScalaGenerator extends LanguageIndependentGenerator with Producer {
     *
     * Currently "build.sh"
     */
-  val scalaResources:String = Seq("src", "main", "resources", "scala-resources").mkString(File.separator)
+  val scalaResources:String = Seq("language", "scala", "src", "main", "resources", "scala-resources").mkString(File.separator)
 
   /** Retrieve the contents of these files. */
   def loadSource(entry:String*) : FileWithPath = {

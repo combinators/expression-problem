@@ -9,6 +9,7 @@ import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.deployment.CodeGenerationController
 import org.combinators.ep.domain.WithDomain
 import org.combinators.ep.domain.math.MathDomain
+import org.combinators.ep.generator.FileWithPath
 import org.combinators.ep.language.scala._
 
 abstract class FoundationGrows @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)

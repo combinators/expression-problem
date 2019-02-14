@@ -44,7 +44,7 @@ trait FunSpecFunctionalTestGenerator extends FunSpecTestGenerator {
            |
            |  describe("test cases") {
            |    it ("run test") {
-           |      ${t.mkString("\n")}
+           |      $t
            |    }
            |  }
            |}""".stripMargin).source(), Paths.get(s"TestSuite$num.scala"))

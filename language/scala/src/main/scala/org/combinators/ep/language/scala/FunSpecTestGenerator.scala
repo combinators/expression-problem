@@ -30,7 +30,7 @@ trait FunSpecTestGenerator extends TestGenerator with ScalaGenerator {
                |class TestSuite$num extends FunSpec  {
                |  describe("test cases") {
                |    it ("run test") {
-               |      ${t.mkString("\n")}
+               |      $t
                |    }
                |  }
                |}""".stripMargin).source(), Paths.get(s"TestSuite$num.scala"))

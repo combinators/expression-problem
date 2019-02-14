@@ -56,20 +56,40 @@ trait e5 extends Evolution with ScalaGenerator with TestGenerator with Operation
     }
   }
 
-  override def scalaTestMethod(test:domain.TestCase, idx:Int) : Seq[Stat] = { // EXTRACT all SameTestCase ones and handle here
+//  override def scalaTestMethod2(test:domain.TestCase, idx:Int) : Seq[Stat] = { // EXTRACT all SameTestCase ones and handle here
+//    test match {
+//      case ctc: SameTestCase =>
+//        val source = NoSource()
+//        val tree1 = contextDispatch(source, deltaExprOp(source, toTargetLanguage(ctc.inst1), domain.AsTree))
+//        val tree2 = contextDispatch(source, deltaExprOp(source, toTargetLanguage(ctc.inst2), domain.AsTree))
+//
+//        val same = Scala(s"$tree1.same($tree2)").expression
+//
+//        if (ctc.result) {
+//          Scala(s"assert(true == $same)").statements
+//        } else {
+//          Scala(s"assert(false == $same)").statements
+//        }
+//      case _ => super.scalaTestMethod(test, idx)
+//    }
+//  }
+
+  override def scalaTestMethod(test:domain.TestCase, idx:Int) : Seq[Statement] = {
     test match {
       case ctc: SameTestCase =>
-        val source = NoSource()
-        val tree1 = contextDispatch(source, deltaExprOp(source, toTargetLanguage(ctc.inst1), domain.AsTree))
-        val tree2 = contextDispatch(source, deltaExprOp(source, toTargetLanguage(ctc.inst2), domain.AsTree))
 
-        val same = Scala(s"$tree1.same($tree2)").expression
-
-        if (ctc.result) {
-          Scala(s"assert(true == $same)").statements
-        } else {
-          Scala(s"assert(false == $same)").statements
-        }
+        actual(domain.AsTree, ctc.inst1).appendDependent { case Seq(treeLeft) =>
+          actual(domain.AsTree, ctc.inst2).appendDependent { case Seq(treeRight) =>
+            val same = Scala(s"$treeLeft.same($treeRight)").expression
+            CodeBlockWithResultingExpressions(
+              if (ctc.result) {
+                Scala(s"assert(true == $same)").statement
+              } else {
+                Scala(s"assert(false == $same)").statement
+              }
+            )()
+          }
+        }.block
       case _ => super.scalaTestMethod(test, idx)
     }
   }

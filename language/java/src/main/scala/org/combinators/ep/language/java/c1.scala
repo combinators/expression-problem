@@ -34,9 +34,9 @@ trait c1 extends Evolution with JavaGenerator with JUnitTestGenerator with M2 wi
   }
 
 //  abstract override def testGenerator: Seq[MethodDeclaration] = {
-//    val s1 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
-//    val d1 = new domain.BinaryInst(Divd, new LitInst(1.0),
-//      new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0)))
+//    val s1 = new domain.BinaryInst(Sub, LitInst(1.0), LitInst(2.0))
+//    val d1 = new domain.BinaryInst(Divd, LitInst(1.0),
+//      new domain.BinaryInst(Sub, LitInst(1.0), LitInst(2.0)))
 //    val s2 = new domain.UnaryInst(Inv ,s1)
 //
 //      super.testGenerator ++ Java(

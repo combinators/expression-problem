@@ -15,17 +15,17 @@ trait M5 extends Evolution {
   override def getModel = m5
 
   // Tests
-  val m5_s1 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(976.0))
-  val m5_s2 = new BinaryInst(Add, new LitInst(1.0), new LitInst(976.0))
-  val m5_s3 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(976.0))
+  val m5_s1 = new BinaryInst(Sub, LitInst(1.0), LitInst(976.0))
+  val m5_s2 = new BinaryInst(Add, LitInst(1.0), LitInst(976.0))
+  val m5_s3 = new BinaryInst(Sub, LitInst(1.0), LitInst(976.0))
 
   val m5_all = new BinaryInst(Sub,
-    new UnaryInst(Neg, new LitInst(2.0)),
+    new UnaryInst(Neg, LitInst(2.0)),
     new BinaryInst(Mult,
-      new BinaryInst(Sub, new LitInst(1.0), new LitInst(976.0)),
+      new BinaryInst(Sub, LitInst(1.0), LitInst(976.0)),
       new BinaryInst(Add,
-        new BinaryInst(Mult, new LitInst(1.0), new LitInst(976.0)),
-        new BinaryInst(Divd,  new LitInst(1.0), new LitInst(3.0)))))
+        new BinaryInst(Mult, LitInst(1.0), LitInst(976.0)),
+        new BinaryInst(Divd,  LitInst(1.0), LitInst(3.0)))))
 
   /**
     * Special test case for same queries.

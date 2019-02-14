@@ -17,11 +17,11 @@ trait M3 extends Evolution {
   override def getModel = m3
 
   // Tests
-  val m3_d1 = new domain.UnaryInst(Neg, new LitInst(5.0))
-  val m3_s1 = new domain.UnaryInst(Neg, new domain.BinaryInst(Mult, new LitInst(2.0), new LitInst(3.0)))
+  val m3_d1 = new domain.UnaryInst(Neg, LitInst(5.0))
+  val m3_s1 = new domain.UnaryInst(Neg, new domain.BinaryInst(Mult, LitInst(2.0), LitInst(3.0)))
 
-  val m3_m1 = new domain.UnaryInst(Neg, new LitInst(1.0))
-  val m3_m2 = new domain.BinaryInst(Mult, new domain.BinaryInst (Divd, new LitInst(5.0),  new LitInst(2.0)), new LitInst(4.0))
+  val m3_m1 = new domain.UnaryInst(Neg, LitInst(1.0))
+  val m3_m2 = new domain.BinaryInst(Mult, new domain.BinaryInst (Divd, LitInst(5.0),  LitInst(2.0)), LitInst(4.0))
 
   def M3_tests:Seq[TestCase] = Seq(
     EqualsTestCase(m3_m1, Eval, ExistsInstance(Double)(-1.0)),

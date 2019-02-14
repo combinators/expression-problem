@@ -19,7 +19,7 @@ trait M0 extends Evolution {
   case object Add extends Binary("Add")
 
   case object Eval extends Operation("eval", Some(Double))
-  class LitInst(d:scala.Double) extends AtomicInst(Lit, ExistsInstance(Double)(d))
+  case class LitInst(d:scala.Double) extends AtomicInst(Lit, ExistsInstance(Double)(d))
 
   case object Int extends TypeRep  {
     override type scalaInstanceType = scala.Int
@@ -31,7 +31,16 @@ trait M0 extends Evolution {
 
   // Testing
   def M0_tests:Seq[TestCase] = Seq(
-    EqualsTestCase(new BinaryInst(Add, new LitInst(1.0), new LitInst(2.0)), Eval, ExistsInstance(Double)(3.0)),
-    EqualsTestCase(new LitInst(5.0), Eval, ExistsInstance(Double)(5.0))
+    EqualsTestCase(new BinaryInst(Add, LitInst(1.0), LitInst(2.0)), Eval, ExistsInstance(Double)(3.0)),
+    EqualsTestCase(LitInst(5.0), Eval, ExistsInstance(Double)(5.0)),
+    PerformanceTestCase(
+      11,
+      8,
+      Eval,
+      new BinaryInst(Add, LitInst(1.0), LitInst(2.0)),
+      Seq.empty,
+      params => params,
+      inst => new BinaryInst(Add, inst, inst)
+    )
   )
 }

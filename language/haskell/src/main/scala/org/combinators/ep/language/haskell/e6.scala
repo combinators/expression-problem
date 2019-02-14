@@ -96,10 +96,10 @@ trait e6 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
 
   abstract override def testGenerator: Seq[Haskell] = {
     super.testGenerator :+ hunitMethod(M6_tests)
-//    val s1 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
-//    val s2 = new BinaryInst(Add, new BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0)),
-//      new BinaryInst(Add, new LitInst(5.0), new LitInst(6.0)))
-//    val s3 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
+//    val s1 = new BinaryInst(Sub, LitInst(1.0), LitInst(2.0))
+//    val s2 = new BinaryInst(Add, new BinaryInst(Sub, LitInst(1.0), LitInst(2.0)),
+//      new BinaryInst(Add, LitInst(5.0), LitInst(6.0)))
+//    val s3 = new BinaryInst(Sub, LitInst(1.0), LitInst(2.0))
 //
 //    super.testGenerator :+ new Haskell(
 //      s"""

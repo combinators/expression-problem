@@ -43,7 +43,7 @@ trait cpp_e0 extends CPPGenerator with TestGenerator with M0 {
     * @return
     */
   abstract override def performanceMethod: Seq[Seq[CPPElement]] = {
-    val a1 = new BinaryInst(Add, new LitInst(1.0), new LitInst(2.0))
+    val a1 = new BinaryInst(Add, LitInst(1.0), LitInst(2.0))
     val numTrials = 10
 
     var trees = new BinaryInst(Add, a1, a1)

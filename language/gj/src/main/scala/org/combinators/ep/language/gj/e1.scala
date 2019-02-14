@@ -23,7 +23,7 @@ trait e1 extends Evolution with GJGenerator with TestGenerator with M1 {
   }
 
   abstract override def testGenerator: Seq[GJ] = {
-    val s1 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
+    val s1 = new domain.BinaryInst(Sub, LitInst(1.0), LitInst(2.0))
     val modName = getModel.name
 
     super.testGenerator ++ Seq(GJ(

@@ -29,7 +29,7 @@ trait i1 extends Evolution with JavaGenerator with JUnitTestGenerator with M0 wi
 
   abstract override def testGenerator: Seq[MethodDeclaration] = {
 
-    val i1 = new domain.UnaryInst(Inv, new LitInst(2.0))
+    val i1 = new domain.UnaryInst(Inv, LitInst(2.0))
     val i1Block = actual(Eval, i1).appendDependent { case Seq(i1Inst) =>
         CodeBlockWithResultingExpressions(
           Java(s"assertEquals(0.5, ${i1Inst});").statement()

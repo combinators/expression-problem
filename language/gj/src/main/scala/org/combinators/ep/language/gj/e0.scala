@@ -39,8 +39,8 @@ trait e0 extends GJGenerator with TestGenerator with M0 {
   }
 
   abstract override def testGenerator: Seq[GJ] = {
-    val a1 = new BinaryInst(Add, new LitInst(1.0), new LitInst(2.0))
-    val lit1 = new LitInst(5.0)
+    val a1 = new BinaryInst(Add, LitInst(1.0), LitInst(2.0))
+    val lit1 = LitInst(5.0)
     val modName = getModel.name
 
     super.testGenerator ++ Seq(GJ(

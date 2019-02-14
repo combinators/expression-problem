@@ -11,9 +11,9 @@ trait MC1 extends Evolution {
   // -------------------
   override def getModel = m3.merge("c1", i2)
 
-  val mc1_s1 = new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0))
-  val mc1_d1 = new domain.BinaryInst(Divd, new LitInst(1.0),
-    new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0)))
+  val mc1_s1 = new domain.BinaryInst(Sub, LitInst(1.0), LitInst(2.0))
+  val mc1_d1 = new domain.BinaryInst(Divd, LitInst(1.0),
+    new domain.BinaryInst(Sub, LitInst(1.0), LitInst(2.0)))
   val mc1_s2 = new domain.UnaryInst(Inv, mc1_s1)
 
   // testing

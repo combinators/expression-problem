@@ -26,7 +26,7 @@ trait JUnitTestGenerator extends TestGenerator with JavaGenerator {
       ""
     }
 
-    val allTests = testGenerator ++ performanceMethod()
+    val allTests = testGenerator
 
     val files = allTests.filter(md => md.getBody.isPresent).zipWithIndex.map(pair => {
       Java(s"""|$packageDeclaration

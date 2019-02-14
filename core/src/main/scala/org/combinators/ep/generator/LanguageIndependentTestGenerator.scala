@@ -37,15 +37,4 @@ trait LanguageIndependentTestGenerator extends LanguageIndependentGenerator {
     * @return        Code fragments (based on language and approach) representing unit test cases.
     */
   def testMethod(tests:Seq[domain.TestCase]) : Seq[UnitTest]
-
-  /**
-    * Represents unit test cases that execute to generate performance report.
-    *
-    * These tests are distinctly different from unit tests, since they are designed to time
-    * the result of either the code generation or the performance of the executable code that
-    * results.
-    *
-    * These are optional; override this method to provide your own stress-tests performance code.
-    */
-  def performanceMethod(): Seq[UnitTest] = Seq.empty
 }

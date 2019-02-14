@@ -20,21 +20,21 @@ trait M4 extends Evolution {
 
   // Tests
   // (5/7) / (7-(2*3) --> just (5/7)
-  val m4_m1 = new BinaryInst(Mult, new BinaryInst (Divd, new LitInst(5.0), new LitInst(2.0)), new LitInst(4.0))
-  val m4_m2 = new BinaryInst(Mult, new LitInst(2.0), new LitInst(3.0))
-  val m4_d2 = new BinaryInst(Divd, new BinaryInst(Divd, new LitInst(5.0), new LitInst(7.0)), new BinaryInst(Sub, new LitInst(7.0), m4_m2))
+  val m4_m1 = new BinaryInst(Mult, new BinaryInst (Divd, LitInst(5.0), LitInst(2.0)), LitInst(4.0))
+  val m4_m2 = new BinaryInst(Mult, LitInst(2.0), LitInst(3.0))
+  val m4_d2 = new BinaryInst(Divd, new BinaryInst(Divd, LitInst(5.0), LitInst(7.0)), new BinaryInst(Sub, LitInst(7.0), m4_m2))
 
-  val m4_s_0 = new UnaryInst(Neg, new LitInst(0.0))
-  val m4_s_5 = new BinaryInst(Add, new LitInst(5.0), new LitInst(0.0))
-  val m4_s_00 = new BinaryInst(Add, new LitInst(0.0), new LitInst(0.0))
-  val m4_s_7 = new BinaryInst(Add, new LitInst(0.0), new LitInst(7.0))
-  val m4_s_13 = new BinaryInst(Mult, new LitInst(13.0), new LitInst(1.0))
-  val m4_s_12 = new BinaryInst(Mult, new LitInst(1.0), new LitInst(12.0))
-  val m4_s_m0 = new BinaryInst(Sub, new LitInst(7.0), new LitInst(7.0))
+  val m4_s_0 = new UnaryInst(Neg, LitInst(0.0))
+  val m4_s_5 = new BinaryInst(Add, LitInst(5.0), LitInst(0.0))
+  val m4_s_00 = new BinaryInst(Add, LitInst(0.0), LitInst(0.0))
+  val m4_s_7 = new BinaryInst(Add, LitInst(0.0), LitInst(7.0))
+  val m4_s_13 = new BinaryInst(Mult, LitInst(13.0), LitInst(1.0))
+  val m4_s_12 = new BinaryInst(Mult, LitInst(1.0), LitInst(12.0))
+  val m4_s_m0 = new BinaryInst(Sub, LitInst(7.0), LitInst(7.0))
 
-  val m4_s_n1 = new BinaryInst(Divd, new LitInst(5.0), new LitInst(-5.0))
-  val m4_s_1 = new BinaryInst(Divd, new LitInst(-5.0), new LitInst(-5.0))
-  val m4_s_d0 = new BinaryInst(Divd, new LitInst(0.0), new LitInst(-5.0))
+  val m4_s_n1 = new BinaryInst(Divd, LitInst(5.0), LitInst(-5.0))
+  val m4_s_1 = new BinaryInst(Divd, LitInst(-5.0), LitInst(-5.0))
+  val m4_s_d0 = new BinaryInst(Divd, LitInst(0.0), LitInst(-5.0))
 
   /**
     * Test cases for Simplify are oddly complicated. The Simplify operation returns a new Exp object, but

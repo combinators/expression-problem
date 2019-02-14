@@ -41,9 +41,9 @@ trait i2 extends  Evolution with JavaGenerator with JUnitTestGenerator with I2 {
   }
 
   abstract override def testGenerator: Seq[MethodDeclaration] = {
-    val i1 = new domain.UnaryInst(Inv, new LitInst(2.0))
-    val a1 = new domain.BinaryInst(Add, new LitInst(5.0), new LitInst(7.0))
-    val a2 = new domain.BinaryInst(Add, new LitInst(2.0), new LitInst(3.0))
+    val i1 = new domain.UnaryInst(Inv, LitInst(2.0))
+    val a1 = new domain.BinaryInst(Add, LitInst(5.0), LitInst(7.0))
+    val a2 = new domain.BinaryInst(Add, LitInst(2.0), LitInst(3.0))
     val i2 = new domain.UnaryInst(Inv, a2)
     val a3 = new domain.BinaryInst(Add, a1, i2)
     val zero = Java("0").expression[Expression]()

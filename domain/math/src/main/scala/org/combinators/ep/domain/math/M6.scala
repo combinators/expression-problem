@@ -28,16 +28,16 @@ trait M6 extends Evolution {
   case class EqualsBinaryMethodTestCase(inst1:domain.Inst, inst2:domain.Inst, result:Boolean)
     extends domain.TestCase
 
-  val m6_s1 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(73.0))
-  val m6_s2 = new BinaryInst(Sub, new LitInst(1.0), new LitInst(73.0))
-  val m6_s3 = new BinaryInst(Add, new LitInst(5.0), new LitInst(3.0))
+  val m6_s1 = new BinaryInst(Sub, LitInst(1.0), LitInst(73.0))
+  val m6_s2 = new BinaryInst(Sub, LitInst(1.0), LitInst(73.0))
+  val m6_s3 = new BinaryInst(Add, LitInst(5.0), LitInst(3.0))
 
-  val m6_m1 = new domain.BinaryInst(Mult, new domain.BinaryInst (Divd, new LitInst(5.0),  new LitInst(2.0)), new LitInst(4.0))
-  val m6_m2 = new domain.BinaryInst(Mult, new domain.BinaryInst (Divd, new LitInst(5.0),  new LitInst(2.0)), new LitInst(3.0))
+  val m6_m1 = new domain.BinaryInst(Mult, new domain.BinaryInst (Divd, LitInst(5.0),  LitInst(2.0)), LitInst(4.0))
+  val m6_m2 = new domain.BinaryInst(Mult, new domain.BinaryInst (Divd, LitInst(5.0),  LitInst(2.0)), LitInst(3.0))
   val m6_m3 = new domain.UnaryInst(Neg, m6_m1)
 
-  val m6_d3 = new BinaryInst(Divd, new LitInst(6.0), new LitInst(2.0))
-  val m6_d4 = new BinaryInst(Divd, new LitInst(8.0), new LitInst(2.0))
+  val m6_d3 = new BinaryInst(Divd, LitInst(6.0), LitInst(2.0))
+  val m6_d4 = new BinaryInst(Divd, LitInst(8.0), LitInst(2.0))
 
   def M6_tests:Seq[TestCase] = Seq(
     EqualsBinaryMethodTestCase(m6_s2, m6_s1, result=true),  // parameter to operation
@@ -50,5 +50,19 @@ trait M6 extends Evolution {
     EqualsBinaryMethodTestCase(m6_d3, m6_d3, result=true),  // parameter to operation
     EqualsBinaryMethodTestCase(m6_s3, m6_s3, result=true),  // parameter to operation
     EqualsBinaryMethodTestCase(m6_s3, m6_m2, result=false),  // parameter to operation
+    PerformanceTestCase(
+      11,
+      8,
+      Equals,
+      new BinaryInst(Add, LitInst(1.0), LitInst(2.0)),
+      Seq(ExistsInstance(baseTypeRep)(new BinaryInst(Add, LitInst(1.0), LitInst(2.0)))),
+      params => params.map(param =>
+        param.inst match {
+          case i: Inst =>
+            ExistsInstance(baseTypeRep)(new BinaryInst(Add, i, i))
+          case _ => param
+        }),
+      inst => new BinaryInst(Add, inst, inst)
+    )
   )
 }

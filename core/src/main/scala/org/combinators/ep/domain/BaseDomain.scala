@@ -204,4 +204,14 @@ trait BaseDomain {
 
   case class EqualsCompositeTestCase(inst:Inst, ops:Seq[(Operation, Seq[ExistsInstance])], override val expect:ExistsInstance)
     extends TestCaseExpectedValue(expect)
+
+  case class PerformanceTestCase(
+    iterations: Int,
+    bestOf: Int,
+    op: Operation,
+    initialInst: Inst,
+    initialParams: Seq[ExistsInstance],
+    stepParams: Seq[ExistsInstance] => Seq[ExistsInstance],
+    stepInstance: Inst => Inst
+  ) extends TestCase
 }

@@ -18,6 +18,6 @@ trait M1 extends Evolution {
 
   // testing
   def M1_tests: Seq[TestCase] = Seq(
-    EqualsTestCase(new domain.BinaryInst(Sub, new LitInst(1.0), new LitInst(2.0)), Eval, ExistsInstance(Double)(-1.0))
+    EqualsTestCase(new domain.BinaryInst(Sub, LitInst(1.0), LitInst(2.0)), Eval, ExistsInstance(Double)(-1.0))
   )
 }

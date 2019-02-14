@@ -1,6 +1,5 @@
-package ep.scala  /*DD:LD:AI*/
+package org.combinators.ep.language.scala   /*DD:LD:AI*/
 
-import ep.domain._
 import org.combinators.ep.domain.Evolution
 import org.combinators.ep.domain.math._
 
@@ -15,7 +14,7 @@ trait e3 extends Evolution with ScalaGenerator with TestGenerator with M0 with M
   self:e0 with e1 with e2 =>
   val domain:MathDomain
 
-   abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
+   abstract override def logic(exp:domain.DataType, op:domain.Operation): Seq[Statement] = {
     op match {
       case PrettyP => {
         exp match {

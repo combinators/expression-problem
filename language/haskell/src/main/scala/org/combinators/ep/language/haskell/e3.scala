@@ -1,6 +1,5 @@
-package ep.haskell      /*DD:LD:AI*/
+package org.combinators.ep.language.haskell      /*DD:LD:AI*/
 
-import ep.domain._
 import org.combinators.ep.domain.Evolution
 import org.combinators.ep.domain.math._
 
@@ -12,7 +11,7 @@ trait e3 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
   val domain:MathDomain
   import domain._
 
-   abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Haskell] = {
+   abstract override def logic(exp:domain.DataType, op:domain.Operation): Seq[Haskell] = {
     // generate the actual body
     op match {
       case PrettyP => {

@@ -1,8 +1,7 @@
-package ep.gj     /*DI:LD:AD*/
+package org.combinators.ep.language.gj      /*DI:LD:AD*/
 
 import java.nio.file.Paths
 
-import ep.domain.ModelDomain
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 
 /**
@@ -26,7 +25,7 @@ trait WadlerGenerator extends GJGenerator  {
   }
 
   /** For straight design solution, directly access attributes by name. */
-  override def expression (exp:Atomic, att:Attribute) : Expression = {
+  override def expression (exp:DataType, att:Attribute) : Expression = {
     GJ(s"${att.name}")
   }
 
@@ -53,7 +52,7 @@ trait WadlerGenerator extends GJGenerator  {
   }
 
   /** Operations are implemented as methods in the Base and sub-type classes. */
-  def methodGenerator(exp:Atomic, op:Operation): GJ = {
+  def methodGenerator(exp:DataType, op:Operation): GJ = {
     val params = parametersExp(exp)
     GJ(s"""|public ${returnType(op)} for${exp.concept}($params) {
            |  ${logic(exp, op).mkString("\n")}
@@ -61,7 +60,7 @@ trait WadlerGenerator extends GJGenerator  {
   }
 
   /** Generate the full class for the given expression sub-type. */
-  def generateExp(model:Model, exp:Atomic) : GJ = {
+  def generateExp(model:Model, exp:DataType) : GJ = {
     val args = exp.attributes.map(att => att.instance).mkString(",")
     val visitMethod = GJ(s"""|public <R> R visit(This.Visitor<R> v) {
                              |      return v.for${exp.concept}($args);

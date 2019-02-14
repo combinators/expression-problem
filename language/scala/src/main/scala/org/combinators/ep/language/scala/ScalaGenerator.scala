@@ -1,12 +1,10 @@
-package ep.scala   /*DI:LD:AI*/
+package org.combinators.ep.language.scala    /*DI:LD:AI*/
 
 import java.io.File
 import java.nio.file.{Path, Paths}
 
-import ep.domain.ModelDomain
-import ep.generator.{FileWithPath, Producer}
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
-import org.combinators.ep.generator.{LanguageIndependentGenerator, Producer}
+import org.combinators.ep.generator.{FileWithPath, LanguageIndependentGenerator, Producer}
 
 /**
   * Any Scala-based EP approach can extend this Generator
@@ -83,12 +81,12 @@ trait ScalaGenerator extends LanguageIndependentGenerator with Producer {
   /// Scala support
 
   /** Concatenate attributes by name in order */
-  def standardArgs(exp:domain.Atomic) : String = {
+  def standardArgs(exp:domain.DataType) : String = {
     exp.attributes.map(att => att.instance + ":" + typeConverter(att.tpe)).mkString(",")
   }
 
   /** Concatenate attributes by name in order */
-  def standardValArgs(exp:domain.Atomic) : String = {
+  def standardValArgs(exp:domain.DataType) : String = {
     exp.attributes.map(att => "val " + att.instance + ":" + typeConverter(att.tpe)).mkString(",")
   }
 
@@ -96,12 +94,12 @@ trait ScalaGenerator extends LanguageIndependentGenerator with Producer {
     * Concatenate attributes by name in order, each with a trailing "_" as suffix. These are
     * useful for the parameter to a constructor
     */
-  def constructorArgs(exp:domain.Atomic) : String = {
+  def constructorArgs(exp:domain.DataType) : String = {
     exp.attributes.map(att => "val " + att.instance + "_ :" + typeConverter(att.tpe)).mkString(",")
   }
 
   /** Concatenate attributes by name in order with comma. */
-  def standardParams(exp:domain.Atomic, suffix:String = "") : String = {
+  def standardParams(exp:domain.DataType, suffix:String = "") : String = {
     exp.attributes.map(att => att.instance + suffix).mkString(",")
   }
 }

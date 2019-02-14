@@ -1,11 +1,11 @@
-package ep.gj.wadler    /*DD:LD:AD*/
+package org.combinators.ep.language.gj.wadler    /*DD:LD:AD*/
 
-import ep.gj.GJWithPathPersistable._
-import ep.gj._
+import org.combinators.ep.language.gj.GJWithPathPersistable._
 import javax.inject.Inject
 import org.combinators.ep.deployment.CodeGenerationController
 import org.combinators.ep.domain.WithDomain
 import org.combinators.ep.domain.math.MathDomain
+import org.combinators.ep.language.gj._
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
 

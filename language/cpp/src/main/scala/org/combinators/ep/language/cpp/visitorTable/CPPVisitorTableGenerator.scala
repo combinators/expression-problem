@@ -1,8 +1,7 @@
-package ep.cpp.visitorTable   /*DI:LD:AD*/
+package org.combinators.ep.language.cpp.visitorTable   /*DI:LD:AD*/
 
-import ep.cpp._
-import ep.domain.ModelDomain
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.language.cpp._
 
 // visitor based solution that uses a hashtable to store partial results of recursive calls.
 trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerator with CPPBinaryMethod {
@@ -42,7 +41,7 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
   }
 
   /** For straight design solution, directly access attributes by name. */
-  override def expression (exp:Atomic, att:Attribute) : Expression = {
+  override def expression (exp:DataType, att:Attribute) : Expression = {
     new CPPElement(s"${att.instance}")
   }
 
@@ -105,7 +104,7 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
   }
 
   /** Operations are implement ala visitor. */
-  def methodGenerator(exp:Atomic, op:Operation): CPPMethod = {
+  def methodGenerator(exp:DataType, op:Operation): CPPMethod = {
     val params = parameters(op)
     new CPPMethod("void", s"Visit", s"(const ${exp.name}* e)", logic(exp, op).mkString("\n"))
   }
@@ -183,7 +182,7 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
   }
 
   /** Generate the full class for the given expression sub-type. */
-  def generateExpImpl(model:Model, sub:Atomic) : CPPFile = {
+  def generateExpImpl(model:Model, sub:DataType) : CPPFile = {
     val signatures = sub.attributes
       .filter(att => att.tpe == domain.baseTypeRep)
       .map(att => new CPPElement(s"${att.instance}->Accept(visitor);")).mkString("\n")

@@ -1,9 +1,8 @@
-package ep.haskell     /*DI:LD:AI*/
+package org.combinators.ep.language.haskell     /*DI:LD:AI*/
 
 import java.io.File
 import java.nio.file.{Path, Paths}
 
-import ep.generator.Producer
 import org.combinators.ep.domain.OperationDependency
 import org.combinators.ep.generator.{LanguageIndependentGenerator, Producer}
 
@@ -24,7 +23,7 @@ trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskell
   type InstanceExpression = Haskell
 
   /** Find the model which contains a given atomic inst. */
-  def findModel (exp:domain.Atomic) : domain.Model = {
+  def findModel (exp:domain.DataType) : domain.Model = {
     getModel.toSeq.filter(m => m.types.contains(exp)).head
   }
 
@@ -47,15 +46,15 @@ trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskell
   /**
     * Haskell solutions require delegation to their respective traits
     */
-  def inst(exp:domain.Atomic, params:InstanceExpression*): InstanceExpression
+  def inst(exp:domain.DataType, params:InstanceExpression*): InstanceExpression
 
   /** Concatenate attributes by name in order */
-  def standardArgs(exp:domain.Atomic, suffix:String = "") : Haskell = {
+  def standardArgs(exp:domain.DataType, suffix:String = "") : Haskell = {
     Haskell(exp.attributes.map(att => att.instance + suffix).mkString(" "))
   }
 
   /** Create sequence of attributes, suitable for varargs declarations. */
-  def standardVarArgs(exp:domain.Atomic, suffix:String = "") : Seq[Haskell] = {
+  def standardVarArgs(exp:domain.DataType, suffix:String = "") : Seq[Haskell] = {
     exp.attributes.map(att => Haskell(att.instance + suffix))
   }
 

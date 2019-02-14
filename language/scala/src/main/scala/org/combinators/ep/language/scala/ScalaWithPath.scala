@@ -1,4 +1,4 @@
-package ep.scala   /*DI:LD:AI*/
+package org.combinators.ep.language.scala    /*DI:LD:AI*/
 
 import java.nio.file.Path
 import org.combinators.templating.persistable.Persistable

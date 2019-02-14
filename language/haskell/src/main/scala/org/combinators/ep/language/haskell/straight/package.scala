@@ -1,4 +1,4 @@
-package ep.haskell
+package org.combinators.ep.language.haskell
 
 /**
   * This package contains the strawman Haskell implementation.

@@ -1,6 +1,5 @@
-package ep.cpp     /*DI:LD:AI*/
+package org.combinators.ep.language.cpp     /*DI:LD:AI*/
 
-import ep.domain.{BaseDomain, ModelDomain}
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 
 /**
@@ -30,7 +29,7 @@ trait TestGenerator extends CPPGenerator {
   /**
     * Test cases may need to introduce arbitrary variables, which are maintained by this collection
     */
-  var variables = collection.mutable.Map[AtomicInst, String]()
+  var variables = collection.mutable.Map[Inst, String]()
 
   /** Used when one already has code fragments bound to variables, which are to be used for left and right. */
   def convertRecursive(inst: Binary, left:String, right:String): Expression = {
@@ -39,9 +38,9 @@ trait TestGenerator extends CPPGenerator {
   }
 
   /** Register an instance and get its variable identifier. */
-  def vars(inst:AtomicInst) : String = {
+  def vars(inst:Inst) : String = {
     if (!variables.contains(inst)) {
-      variables = variables + (inst -> s"${inst.e.name}$id")
+      variables = variables + (inst -> s"${inst.name}$id")
       id = id + 1
     }
 
@@ -63,7 +62,7 @@ trait TestGenerator extends CPPGenerator {
     * you will have to override this method accordingly.
     */
   def expected(test:TestCaseExpectedValue, id:String) : (CPPElement => Seq[CPPElement]) => Seq[CPPElement] = continue => {
-    continue(new CPPElement(test.expect._2.toString))
+    continue(new CPPElement(test.expect.inst.toString))
   }
 
   /**
@@ -76,14 +75,14 @@ trait TestGenerator extends CPPGenerator {
     *
     * Not sure, yet, how to properly pass in variable parameters.
     */
-  def actual(op:Operation, inst:AtomicInst, params:CPPElement*):CPPElement
+  def actual(op:Operation, inst:Inst, params:CPPElement*):CPPElement
 
   /** Convert a test instance into a C++ Expression for instantiating that instance. */
-  def rec_convert(inst: AtomicInst): CPPElement
+  def rec_convert(inst: Inst): CPPElement
 
   /** Convert a test instance into a C++ Expression for instantiating that instance. */
-  def convert(inst: AtomicInst): CPPElement = {
-    val name = inst.e.name
+  def convert(inst: Inst): CPPElement = {
+    val name = inst.name
     id = id + 1
     inst match {
       case ui: UnaryInst =>
@@ -95,7 +94,7 @@ trait TestGenerator extends CPPGenerator {
       case exp: AtomicInst =>
         new CPPElement(
         s"""
-           |double val${vars(inst)} = ${exp.i.get};
+           |double val${vars(inst)} = ${exp.ei.inst};
            |$name ${vars(inst)} = $name(&val${vars(inst)});
          """.stripMargin)
 

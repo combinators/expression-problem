@@ -1,4 +1,4 @@
-package ep.haskell      /*DI:LD:AI*/
+package org.combinators.ep.language.haskell      /*DI:LD:AI*/
 
 import org.apache.commons.text.StringEscapeUtils
 import play.twirl.api.{BufferedContent, Format, Formats}

@@ -1,8 +1,7 @@
-package ep.cpp.oo     /*DI:LD:AD*/
+package org.combinators.ep.language.cpp.oo     /*DI:LD:AD*/
 
-import ep.cpp.{CPPElement, CPPFile, CPPGenerator, TestGenerator}
-import ep.domain.ModelDomain
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.language.cpp._
 
 trait CPPOOTestGenerator extends CPPGenerator with TestGenerator {
 
@@ -19,14 +18,14 @@ trait CPPOOTestGenerator extends CPPGenerator with TestGenerator {
     *
     * Not sure, yet, how to properly pass in variable parameters.
     */
-  def actual(op:Operation, inst:AtomicInst, params:CPPElement*):CPPElement = {
+  def actual(op:Operation, inst:Inst, params:CPPElement*):CPPElement = {
     val preceding = rec_convert(inst)
     new CPPElement(preceding.toString + "->" + op.instance + "()")
   }
 
   /** Convert a test instance into a C++ Expression for instantiating that instance. */
-  def rec_convert(inst: AtomicInst): CPPElement = {
-    val name = inst.e.name
+  def rec_convert(inst: Inst): CPPElement = {
+    val name = inst.name
     vars(inst)   // cause the creation of a mapping to this instance
     id = id + 1
     inst match {
@@ -41,7 +40,7 @@ trait CPPOOTestGenerator extends CPPGenerator with TestGenerator {
 
       //  double val1 = 1.0;
       //  Lit  lit1 = Lit(&val1);
-      case exp: AtomicInst => new CPPElement(s"${exp.e.instance}(${exp.i.get})")
+      case exp: AtomicInst => new CPPElement(s"${exp.e.instance}(${exp.ei.inst})")
       case _ => new CPPElement(s""" "unknown $name" """)
     }
   }

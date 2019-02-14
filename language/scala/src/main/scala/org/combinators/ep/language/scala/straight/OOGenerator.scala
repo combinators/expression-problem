@@ -1,12 +1,10 @@
-package ep.scala.straight   /*DI:LD:AD*/
+package org.combinators.ep.language.scala.straight   /*DI:LD:AD*/
 
 import java.nio.file.Paths
 
-import ep.domain.ModelDomain
-import ep.scala._
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
-
-import scala.meta.{Source, Stat, Term}
+import org.combinators.ep.language.scala._
+import scala.meta.Stat
 
 /**
   * Each evolution has opportunity to enhance the code generators.
@@ -38,7 +36,7 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod {
   }
 
   /** For straight design solution, directly access attributes by name. */
-  override def expression (exp:Atomic, att:Attribute) : Expression = {
+  override def expression (exp:DataType, att:Attribute) : Expression = {
     Scala(s"${att.instance}").expression
   }
 
@@ -68,7 +66,7 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod {
   }
 
   /** Operations are implemented as methods in the Base and sub-type classes. */
-  def methodGenerator(exp:Atomic, op:Operation): Stat = {
+  def methodGenerator(exp:DataType, op:Operation): Stat = {
     val params = op.parameters.map(param => param.name + ":" + typeConverter(param.tpe)).mkString(",")
 
     val str:String = s"""|
@@ -79,7 +77,7 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod {
   }
 
   /** Generate the full class for the given expression sub-type. */
-  def generateExp(exp:Atomic, ops:Seq[Operation]) : ScalaWithPath = {
+  def generateExp(exp:DataType, ops:Seq[Operation]) : ScalaWithPath = {
 
       val methods = ops.map(op => methodGenerator(exp, op))
       val params = exp.attributes.map(att => s"${att.instance}_ : ${typeConverter(att.tpe)}").mkString(",")

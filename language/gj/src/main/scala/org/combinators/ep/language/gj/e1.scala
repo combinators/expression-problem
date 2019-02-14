@@ -1,6 +1,5 @@
-package ep.gj    /*DD:LD:AI*/
+package org.combinators.ep.language.gj     /*DD:LD:AI*/
 
-import ep.domain.MathDomain
 import org.combinators.ep.domain.Evolution
 import org.combinators.ep.domain.math.{M1, MathDomain}
 
@@ -11,7 +10,7 @@ trait e1 extends Evolution with GJGenerator with TestGenerator with M1 {
   self:e0 =>
   val domain:MathDomain
 
-  abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[GJ] = {
+  abstract override def logic(exp:domain.DataType, op:domain.Operation): Seq[GJ] = {
     op match {
       case Eval =>
         exp match {

@@ -16,6 +16,12 @@ trait TestGenerator extends JavaGenerator with LanguageIndependentTestGenerator 
   /** Return sample test cases as methods. */
   def testGenerator: Seq[MethodDeclaration] = Seq.empty
 
+  /** Used when one already has code fragments bound to variables, which are to be used for left and right. */
+  def convertRecursive(inst: Binary, left:String, right:String): Expression = {
+    val name = inst.name
+    Java(s"new $name($left, $right)").expression[Expression]()
+  }
+
   /** Return MethodDeclaration associated with given test cases. */
   def junitTestMethod(test: TestCase, idx: Int): Seq[Statement] = {
      test match {
@@ -25,10 +31,10 @@ trait TestGenerator extends JavaGenerator with LanguageIndependentTestGenerator 
            eq.params.foldLeft(CodeBlockWithResultingExpressions.empty) {
              case (b, p) => b.appendIndependent(toTargetLanguage(p))
            }
-         val actualBlock =
-           parameterBlock.appendDependent(params =>
+
+         val actualBlock = parameterBlock.appendDependent(params =>
              actual(eq.op, eq.inst, params: _*)
-           )
+         )
 
          expectedBlock.appendDependent { case Seq(expectedValue) =>
            actualBlock.appendDependent { case Seq(actualValue) =>
@@ -52,6 +58,7 @@ trait TestGenerator extends JavaGenerator with LanguageIndependentTestGenerator 
              CodeBlockWithResultingExpressions(Java(s"assertNotEquals($unExpectedValue, $actualValue);").statement())()
            }
          }.block
+
        case seq: EqualsCompositeTestCase =>
          val expectedBlock = toTargetLanguage(seq.expect)
          val actualStartBlock = {

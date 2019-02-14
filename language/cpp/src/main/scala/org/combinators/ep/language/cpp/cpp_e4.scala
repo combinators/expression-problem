@@ -1,6 +1,5 @@
-package ep.cpp    /*DD:LD:AI*/
+package org.combinators.ep.language.cpp    /*DD:LD:AI*/
 
-import ep.domain.{M1, M2, M3, M4}
 import org.combinators.ep.domain.Evolution
 import org.combinators.ep.domain.math._
 
@@ -30,9 +29,9 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with CPPProd
     * Calls 'continue' with an expression (the result of the prior new statements) and just concatenates all statements
     */
   override def expected(test:domain.TestCaseExpectedValue, id:String) : (Expression => Seq[Statement]) => Seq[Statement] = continue => {
-    test.expect._1 match {
-      case list:List =>
-        val seq: Seq[Any] = test.expect._2.asInstanceOf[Seq[Any]]
+    test.expect.tpe match {
+      case list:List[_] =>
+        val seq: Seq[Any] = test.expect.inst.asInstanceOf[Seq[Any]]
         val ctype:CPPType = typeConverter(list)
         //val inner:CPPType = typeConverter(list.generic)
 
@@ -50,7 +49,7 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with CPPProd
 
   abstract override def typeConverter(tpe:domain.TypeRep) : CPPType = {
     tpe match {
-      case el:List =>
+      case el:List[_] =>
         val tpe = typeConverter(el.generic)
         new CPPType(s"std::vector<$tpe>")
       case _ => super.typeConverter(tpe)
@@ -58,13 +57,13 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with CPPProd
   }
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
-  abstract override def logic(exp:Atomic, op:Operation): Seq[CPPElement] = {
+  abstract override def logic(exp:DataType, op:Operation): Seq[CPPElement] = {
     // generate the actual body
     val source = Source(exp,op)
     op match {
       case Collect =>
         val tpe = op.returnType.get match {
-          case list:List => typeConverter(list.generic)
+          case list:List[_] => typeConverter(list.generic)
         }
         exp match {
           case Lit => Seq(new CPPElement(

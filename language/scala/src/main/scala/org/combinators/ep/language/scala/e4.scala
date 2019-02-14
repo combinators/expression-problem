@@ -1,6 +1,5 @@
-package ep.scala   /*DD:LD:AI*/
+package org.combinators.ep.language.scala    /*DD:LD:AI*/
 
-import ep.domain._
 import org.combinators.ep.domain.math._
 import org.combinators.ep.domain.{Evolution, OperationDependency}
 
@@ -20,9 +19,9 @@ trait e4 extends Evolution with ScalaGenerator with TestGenerator with Operation
     * List can be accommodated (in Java) by populating ArrayList with values drawn from test case.
     */
    override def expected(test:domain.TestCaseExpectedValue, id:String) : (Expression => Seq[Stat]) => Seq[Stat] = continue => {
-    test.expect._1 match {  // was op.returnType.get
-      case list:List =>
-        val seq: Seq[Any] = test.expect._2.asInstanceOf[Seq[Any]]
+    test.expect.tpe match {  // was op.returnType.get
+      case list:List[test.expect.tpe.scalaInstanceType] =>
+        val seq: Seq[Any] = test.expect.inst.asInstanceOf[Seq[Any]]
 
         continue(Scala("Seq(" + seq.mkString(",") + ")").expression)
 
@@ -42,12 +41,12 @@ trait e4 extends Evolution with ScalaGenerator with TestGenerator with Operation
 
   abstract override def typeConverter(tpe:domain.TypeRep) : Type = {
     tpe match {
-      case el:List => Scala(s"Seq[${typeConverter(el.generic)}]").tpe
+      case el:List[tpe.scalaInstanceType] => Scala(s"Seq[${typeConverter(el.generic)}]").tpe
       case _ => super.typeConverter(tpe)
     }
   }
 
-  abstract override def logic(exp:Atomic, op:Operation): Seq[Statement] = {
+  abstract override def logic(exp:DataType, op:Operation): Seq[Statement] = {
     val source = Source(exp,op)
 
     val zero = Scala("0.0").expression

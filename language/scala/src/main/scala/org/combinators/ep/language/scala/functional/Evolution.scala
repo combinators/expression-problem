@@ -1,13 +1,13 @@
-package ep.scala.functional  /*DD:LD:AD*/
+package org.combinators.ep.language.scala.functional  /*DD:LD:AD*/
 
-import ep.generator.FileWithPath
-import ep.scala.ScalaWithPathPersistable._
-import ep.scala._
+import org.combinators.ep.generator.FileWithPath
+import org.combinators.ep.language.scala.ScalaWithPathPersistable._
+import org.combinators.ep.language.scala._
 import javax.inject.Inject
 import org.combinators.cls.git.Results
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
-import ep.generator.FileWithPathPersistable._
+import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.deployment.CodeGenerationController
 import org.combinators.ep.domain.WithDomain
 import org.combinators.ep.domain.math.MathDomain

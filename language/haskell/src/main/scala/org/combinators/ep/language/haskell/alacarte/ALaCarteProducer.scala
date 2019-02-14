@@ -1,7 +1,6 @@
-package ep.haskell.alacarte    /*DI:LD:AD*/
+package org.combinators.ep.language.haskell.alacarte    /*DI:LD:AD*/
 
-import ep.domain.ModelDomain
-import ep.haskell.{Haskell, HaskellGenerator}
+import org.combinators.ep.language.haskell.{Haskell, HaskellGenerator}
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 
 /**
@@ -23,7 +22,7 @@ trait ALaCarteProducer extends HaskellGenerator {
     * a1L = In(Er(Er(BinaryMul a1LL a1LR))) :: GeneralExpr
     * a1 = In(Er(El(BinaryPlus a1L a1R))) :: GeneralExpr
     */
-  def treeRoute(a:domain.Atomic, flattened:Seq[domain.Atomic]) : String = {
+  def treeRoute(a:domain.DataType, flattened:Seq[domain.DataType]) : String = {
     if (flattened.size == 1) {
       s"${a.concept}"
     } else if (a == flattened.head) {
@@ -34,7 +33,7 @@ trait ALaCarteProducer extends HaskellGenerator {
   }
 
   // ugly! works, though... COPIED from TestGenerator. Find better solution
-  def closeTreeRoute(a:domain.Atomic, flattened:Seq[domain.Atomic]) : String = {
+  def closeTreeRoute(a:domain.DataType, flattened:Seq[domain.DataType]) : String = {
     if (flattened.size == 1) {
       ""
     } else if (a == flattened.head) {
@@ -51,7 +50,7 @@ trait ALaCarteProducer extends HaskellGenerator {
     * or
     * In(Er(El(Op 2.0 7.0)))
     */
-  override def inst(exp:domain.Atomic, params:Haskell*): Haskell = {
+  override def inst(exp:domain.DataType, params:Haskell*): Haskell = {
     Haskell("In(" + treeRoute(exp, flat.types) + " " + params.map(h => h.getCode).mkString(" ") + closeTreeRoute(exp, flat.types) +")")
   }
 }

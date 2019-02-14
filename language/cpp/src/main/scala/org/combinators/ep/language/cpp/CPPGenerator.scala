@@ -1,10 +1,9 @@
-package ep.cpp        /*DI:LD:AI*/
+package org.combinators.ep.language.cpp        /*DI:LD:AI*/
 
 import java.io.File
 import java.nio.file.{Path, Paths}
 
-import ep.generator.FileWithPath
-import org.combinators.ep.generator.LanguageIndependentGenerator
+import org.combinators.ep.generator.{FileWithPath, LanguageIndependentGenerator}
 
 /**
   * Any C++ EP approach can extend this Generator

@@ -1,6 +1,5 @@
-package ep.scala    /*DI:LD:AI*/
+package org.combinators.ep.language.scala     /*DI:LD:AI*/
 
-import ep.domain.ModelDomain
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 
 import scala.meta.{Stat, Term}
@@ -40,17 +39,17 @@ trait TestGenerator extends ScalaGenerator {
     *
     */
   def expected(test:TestCaseExpectedValue, id:String) : (Term => Seq[Stat]) => Seq[Stat] = continue => {
-    val expectedType:Type = typeConverter(test.expect._1)
+    val expectedType:Type = typeConverter(test.expect.tpe)
     val baseName:Type = Scala(domain.baseTypeRep.name).tpe
 
     if (expectedType.toString().equals(baseName.toString())) {   // Type doesn't seem to support .equals check
-      val converted:Expression = convert(test.expect._2.asInstanceOf[AtomicInst])
+      val converted:Expression = convert(test.expect.inst.asInstanceOf[AtomicInst])
       continue(converted)
     } else {
 
-      val converted:Expression = test.expect._2 match {
+      val converted:Expression = test.expect.inst match {
         case ai:AtomicInst => convert(ai)
-        case _ => Scala(test.expect._2.toString).term
+        case _ => Scala(test.expect.inst.toString).term
       }
 
       continue(converted)
@@ -58,11 +57,11 @@ trait TestGenerator extends ScalaGenerator {
   }
 
   /** Actual value in a test case. */
-  def actual(op:Operation, inst:AtomicInst, terms:Term*):Expression = dispatch(convert(inst), op, terms : _*)
+  def actual(op:Operation, inst:Inst, terms:Term*):Expression = dispatch(convert(inst), op, terms : _*)
 
   /** Convert a test instance into a Java Expression for instantiating that instance. */
-  def convert(inst: AtomicInst): Expression = {
-    val name = inst.e.name
+  def convert(inst: Inst): Expression = {
+    val name = inst.name
     inst match {
       case ui: UnaryInst =>
         Scala(s"new $name(${toTargetLanguage(ui.inner)})").expression
@@ -70,7 +69,7 @@ trait TestGenerator extends ScalaGenerator {
         val left = toTargetLanguage(bi.left)
         val right = toTargetLanguage(bi.right)
         Scala(s"new $name($left, $right)").expression
-      case exp: AtomicInst => Scala(s"new $name(${exp.i.get})").expression
+      case exp: AtomicInst => Scala(s"new $name(${exp.ei.inst})").expression
 
       case _ => Scala(s""" "unknown $name" """).expression
     }
@@ -98,7 +97,7 @@ trait TestGenerator extends ScalaGenerator {
       // function to return the variable.
       test match {
         case eq:EqualsTestCase =>
-          val params = eq.params.map(pair => expand(pair._1, pair._2))
+          val params = eq.params.map(pair => expand(pair.tpe, pair.inst))
           expected(eq, id)(expectedExpr => Seq(Scala(s"assert ($expectedExpr == ${actual(eq.op, eq.inst, params: _*)})").statement))
 
         case comp:EqualsCompositeTestCase =>

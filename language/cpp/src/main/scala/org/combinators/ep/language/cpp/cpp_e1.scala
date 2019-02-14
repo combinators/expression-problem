@@ -1,4 +1,4 @@
-package ep.cpp      /*DD:LD:AI*/
+package org.combinators.ep.language.cpp      /*DD:LD:AI*/
 
 import org.combinators.ep.domain.Evolution
 import org.combinators.ep.domain.math.M1
@@ -14,7 +14,7 @@ trait cpp_e1 extends Evolution with CPPGenerator with TestGenerator with M1 {
   import domain._
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
-  abstract override def logic(exp:Atomic, op:Operation): Seq[CPPElement] = {
+  abstract override def logic(exp:DataType, op:Operation): Seq[CPPElement] = {
     // generate the actual body
     op match {
       case Eval =>

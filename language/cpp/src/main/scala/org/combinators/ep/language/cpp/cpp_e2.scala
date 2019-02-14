@@ -1,6 +1,5 @@
-package ep.cpp    /*DD:LD:AI*/
+package org.combinators.ep.language.cpp   /*DD:LD:AI*/
 
-import ep.domain.{M1, M2}
 import org.combinators.ep.domain.Evolution
 import org.combinators.ep.domain.math.{M0, M1, M2}
 
@@ -16,8 +15,8 @@ trait cpp_e2 extends Evolution with CPPGenerator with TestGenerator with M0 with
 
   /** For developing test cases with strings, must convert expected value into a C++ string expression. */
   abstract override def expected(test:domain.TestCaseExpectedValue, id:String) : (Expression => Seq[Statement]) => Seq[Statement] = continue => {
-    test.expect._1 match {
-      case String => continue (new CPPElement("\"" + test.expect._2.toString + "\""))
+    test.expect.tpe match {
+      case String => continue (new CPPElement("\"" + test.expect.inst.toString + "\""))
       case _ => super.expected(test, id) (continue)
     }
   }
@@ -30,7 +29,7 @@ trait cpp_e2 extends Evolution with CPPGenerator with TestGenerator with M0 with
   }
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
-  abstract override def logic(exp:Atomic, op:Operation): Seq[CPPElement] = {
+  abstract override def logic(exp:DataType, op:Operation): Seq[CPPElement] = {
     // generate the actual body
     op match {
       case PrettyP =>

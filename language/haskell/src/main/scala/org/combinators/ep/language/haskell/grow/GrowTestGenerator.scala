@@ -1,9 +1,8 @@
-package ep.haskell.grow    /*DI:LD:AD*/
+package org.combinators.ep.language.haskell.grow    /*DI:LD:AD*/
 
 import java.nio.file.Paths
 
-import ep.domain.ModelDomain
-import ep.haskell.{HUnitTestGenerator, Haskell, HaskellWithPath}
+import org.combinators.ep.language.haskell.{HUnitTestGenerator, Haskell, HaskellWithPath}
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 
 /**
@@ -21,21 +20,23 @@ trait GrowTestGenerator extends HUnitTestGenerator with GrowGenerator {
     * Need to find EVOLUTION in which an operation was defined (other than M0) so you can call the
     * appropriate M*Ext to lift up for types
     */
-  override def convert(inst:AtomicInst) : Haskell = {
-    val name = inst.e.name
+  override def convert(inst:Inst) : Haskell = {
+    val name = inst.name
 
     // For the base (and one above it), there is no need to wrap, otherwise must wrap
-    val wrap = genWrap(findModel(inst.e))
 
     inst match {
       case ui: UnaryInst =>
+        val wrap = genWrap(findModel(ui.e))
         Haskell(wrap(s"${ui.e.concept} (${toTargetLanguage(ui.inner)}) "))
 
       case bi: BinaryInst =>
+        val wrap = genWrap(findModel(bi.e))
         Haskell(wrap(s"${bi.e.concept} (${toTargetLanguage(bi.left)}) (${toTargetLanguage(bi.right)}) "))
 
       case exp: AtomicInst =>
-        Haskell(wrap(s"${exp.e.concept} ${exp.i.get}"))
+        val wrap = genWrap(findModel(exp.e))
+        Haskell(wrap(s"${exp.e.concept} ${exp.ei.inst}"))
 
       case _ => Haskell(s""" -- unknown $name" """)
     }

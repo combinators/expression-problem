@@ -1,6 +1,5 @@
-package ep.cpp     /*DD:LD:AI*/
+package org.combinators.ep.language.cpp     /*DD:LD:AI*/
 
-import ep.domain._
 import org.combinators.ep.domain.Evolution
 import org.combinators.ep.domain.math._
 
@@ -31,7 +30,7 @@ trait cpp_e6 extends Evolution with CPPGenerator with CPPBinaryMethod with TestG
     }
   }
 
-  abstract override def logic(exp: domain.Atomic, op: domain.Operation): Seq[CPPElement] = {
+  abstract override def logic(exp: domain.DataType, op: domain.Operation): Seq[CPPElement] = {
     val source = Source(exp, op)
     // generate the actual body; since this is a binary method
     op match {

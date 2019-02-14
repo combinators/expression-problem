@@ -1,10 +1,9 @@
-package ep.haskell.straight  /*DI:LD:AD*/
+package org.combinators.ep.language.haskell.straight  /*DI:LD:AD*/
 
 import java.nio.file.Paths
 
-import ep.domain.ModelDomain
-import ep.haskell._
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.language.haskell._
 
 // https://eli.thegreenplace.net/2016/the-expression-problem-and-its-solutions/
 
@@ -77,7 +76,7 @@ trait StraightGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
     }
 
   /** For straight design solution, directly access attributes by name. */
-  override def expression (exp:Atomic, att:Attribute) : Expression = {
+  override def expression (exp:DataType, att:Attribute) : Expression = {
     Haskell(s"${att.instance}")
   }
 
@@ -85,7 +84,7 @@ trait StraightGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
     * For producer operations, there is a need to instantiate objects, and one would use this
     * method (with specific parameters) to carry this out.
     */
-  override def inst(exp:domain.Atomic, params:Haskell*): Haskell = {
+  override def inst(exp:domain.DataType, params:Haskell*): Haskell = {
     Haskell(exp.concept + " " + params.map(h => h.getCode).mkString(" "))
   }
 }

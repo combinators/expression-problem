@@ -1,6 +1,5 @@
-package ep.haskell     /*DD:LD:AI*/
+package org.combinators.ep.language.haskell      /*DD:LD:AI*/
 
-import ep.domain._
 import org.combinators.ep.domain.math.{M0, M5, MathDomain}
 import org.combinators.ep.domain.{Evolution, ModelDomain}
 
@@ -35,7 +34,7 @@ trait e5 extends Evolution with HaskellGenerator with HUnitTestGenerator with Ha
     }
   }
 
-  abstract override def logic(exp:Atomic, op:domain.Operation): Seq[Haskell] = {
+  abstract override def logic(exp:DataType, op:domain.Operation): Seq[Haskell] = {
     val source = Source (exp, op)
     // generate the actual body
     op match {

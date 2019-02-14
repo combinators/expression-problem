@@ -1,9 +1,8 @@
-package ep.scala    /*DI:LD:AI*/
+package org.combinators.ep.language.scala     /*DI:LD:AI*/
 
 import java.io.File
 import java.nio.file.{Path, Paths}
 
-import ep.domain.ModelDomain
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 
 import scala.meta._
@@ -81,7 +80,7 @@ trait ScalaBinaryMethod {
   }
 
   /** Interesting shift needed for visitor. */
-  def visitorLogicAsTree(exp:domain.Atomic) : Seq[Stat] = {
+  def visitorLogicAsTree(exp:domain.DataType) : Seq[Stat] = {
     val atomicArgs = exp.attributes.map(att => att.instance).mkString(",")
 
     // changes whether attributes can be access *directly* or whether they are accessed via getXXX*() method.

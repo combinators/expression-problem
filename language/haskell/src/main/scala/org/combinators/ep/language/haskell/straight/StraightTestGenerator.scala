@@ -1,9 +1,8 @@
-package ep.haskell.straight   /*DI:LD:AD*/
+package org.combinators.ep.language.haskell.straight   /*DI:LD:AD*/
 
 import java.nio.file.Paths
 
-import ep.domain.ModelDomain
-import ep.haskell.{HUnitTestGenerator, Haskell, HaskellWithPath}
+import org.combinators.ep.language.haskell.{HUnitTestGenerator, Haskell, HaskellWithPath}
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 
 /**
@@ -11,14 +10,13 @@ import org.combinators.ep.domain.{BaseDomain, ModelDomain}
   */
 trait StraightTestGenerator extends HUnitTestGenerator {
   val domain: BaseDomain with ModelDomain
-
   import domain._
 
   val flat:domain.Model
 
   /** Convert the given atomic instance, and use base as the variable name for all interior expansions. */
-  override def convert(inst:AtomicInst) : Haskell = {
-    val name = inst.e.name
+  override def convert(inst:Inst) : Haskell = {
+    val name = inst.name
     inst match {
       case ui: UnaryInst =>
         Haskell(s"${ui.e.concept} (${toTargetLanguage(ui.inner)}) ")
@@ -27,7 +25,7 @@ trait StraightTestGenerator extends HUnitTestGenerator {
         Haskell(s"${bi.e.concept} (${toTargetLanguage(bi.left)}) (${toTargetLanguage(bi.right)}) ")
 
       case exp: AtomicInst =>
-        Haskell(s"${exp.e.concept} ${exp.i.get}")
+        Haskell(s"${exp.e.concept} ${exp.ei.inst}")
 
       case _ => Haskell(s""" -- unknown $name" """)
     }

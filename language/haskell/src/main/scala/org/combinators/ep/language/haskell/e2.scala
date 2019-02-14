@@ -1,6 +1,5 @@
-package ep.haskell       /*DD:LD:AI*/
+package org.combinators.ep.language.haskell        /*DD:LD:AI*/
 
-import ep.domain._
 import org.combinators.ep.domain.Evolution
 import org.combinators.ep.domain.math.{M0, M1, M2, MathDomain}
 
@@ -16,8 +15,8 @@ trait e2 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
     * List can be accommodated (in Haskell) as a [a,b,c,d,e]
     */
   override def expected(test:domain.TestCaseExpectedValue, id:Int) : (Expression => Seq[Statement]) => Seq[Statement] = continue => {
-    test.expect._1 match {
-      case String => continue (new Haskell("\"" + test.expect._2.toString + "\""))
+    test.expect.tpe match {
+      case String => continue (new Haskell("\"" + test.expect.inst.toString + "\""))
       case _ => super.expected(test, id) (continue)
     }
   }
@@ -37,7 +36,7 @@ trait e2 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
     }
   }
 
-  abstract override def logic(exp:Atomic, op:Operation): Seq[Haskell] = {
+  abstract override def logic(exp:DataType, op:Operation): Seq[Haskell] = {
     // generate the actual body
     op match {
       case PrettyP =>

@@ -1,10 +1,10 @@
-package build.haskell.straight
+package org.combinators.ep.language.haskell.deployment.straight
 /* Generated: Sun Feb 10 22:29:20 EST 2019 */
-import ep.domain._
-import ep.haskell._
-import ep.haskell.straight._
 import javax.inject.Inject
 import org.combinators.ep.domain.WithDomain
+import org.combinators.ep.domain.math.MathDomain
+import org.combinators.ep.language.haskell._
+import org.combinators.ep.language.haskell.straight._
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
 /* 

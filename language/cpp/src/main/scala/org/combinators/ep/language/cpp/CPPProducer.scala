@@ -1,6 +1,5 @@
-package ep.cpp   /*DI:LD:AI*/
+package org.combinators.ep.language.cpp   /*DI:LD:AI*/
 
-import ep.domain.ModelDomain
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 import org.combinators.ep.generator.Producer
 

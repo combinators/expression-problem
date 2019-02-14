@@ -1,8 +1,7 @@
-package ep.haskell     /*DI:LD:AI*/
+package org.combinators.ep.language.haskell      /*DI:LD:AI*/
 
 import java.nio.file.Paths
 
-import ep.domain.{ModelDomain, OperationDependency}
 import org.combinators.ep.domain.{BaseDomain, ModelDomain, OperationDependency}
 
 /**

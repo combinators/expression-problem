@@ -1,6 +1,5 @@
-package ep.scala    /*DD:LD:AI*/
+package org.combinators.ep.language.scala    /*DD:LD:AI*/
 
-import ep.domain.{M2, MathDomain}
 import org.combinators.ep.domain.Evolution
 import org.combinators.ep.domain.math.{M0, M2, MathDomain}
 
@@ -24,13 +23,13 @@ trait e2 extends Evolution with ScalaGenerator with TestGenerator with M0 with M
 
   /** For developing test cases with strings, must convert expected value into a Java string expression. */
   abstract override def expected(test:domain.TestCaseExpectedValue, id:String) : (Expression => Seq[Stat]) => Seq[Stat] = continue => {
-      test.expect._1 match {
-      case String => continue (Scala("\"" + test.expect._2.toString + "\"").expression)
+      test.expect.tpe match {
+      case String => continue (Scala("\"" + test.expect.inst.toString + "\"").expression)
       case _ => super.expected(test, id) (continue)
     }
   }
 
-  abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
+  abstract override def logic(exp:domain.DataType, op:domain.Operation): Seq[Statement] = {
     // generate the actual body
     op match {
       case PrettyP =>

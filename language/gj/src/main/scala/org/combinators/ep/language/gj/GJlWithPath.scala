@@ -1,4 +1,4 @@
-package ep.gj    /*DI:LD:AI*/
+package org.combinators.ep.language.gj     /*DI:LD:AI*/
 
 import java.nio.file.Path
 

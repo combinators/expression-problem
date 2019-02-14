@@ -1,8 +1,7 @@
-package ep.cpp.visitorTable    /*DI:LD:AD*/
+package org.combinators.ep.language.cpp.visitorTable    /*DI:LD:AD*/
 
-import ep.cpp.{CPPElement, CPPFile, CPPGenerator, TestGenerator}
-import ep.domain.ModelDomain
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.language.cpp._
 
 trait CPPTableTestGenerator extends CPPGenerator with TestGenerator {
 
@@ -24,8 +23,8 @@ trait CPPTableTestGenerator extends CPPGenerator with TestGenerator {
   }
 
   /** Convert a test instance into a C++ Expression for instantiating that instance. */
-  def rec_convert(inst: AtomicInst): CPPElement = {
-    val name = inst.e.name
+  def rec_convert(inst: Inst): CPPElement = {
+    val name = inst.name
     vars(inst)   // cause the creation of a mapping to this instance
     id = id + 1
     inst match {
@@ -40,14 +39,14 @@ trait CPPTableTestGenerator extends CPPGenerator with TestGenerator {
 
       //  double val1 = 1.0;
       //  Lit  lit1 = Lit(&val1);
-      case exp: AtomicInst => new CPPElement(s"new ${exp.e.concept}(${exp.i.get})")
+      case exp: AtomicInst => new CPPElement(s"new ${exp.e.concept}(${exp.ei.inst})")
       case _ => new CPPElement(s""" "unknown $name" """)
     }
   }
 
   /** Convert a test instance into a C++ Expression for instantiating that instance. */
-  def rec_convertOLD(inst: AtomicInst): CPPElement = {
-    val name = inst.e.name
+  def rec_convertOLD(inst: Inst): CPPElement = {
+    val name = inst.name
     id = id + 1
     inst match {
       case ui: UnaryInst =>
@@ -65,7 +64,7 @@ trait CPPTableTestGenerator extends CPPGenerator with TestGenerator {
       case exp: AtomicInst =>
         new CPPElement(
           s"""
-             |double val${vars(inst)} = ${exp.i.get};
+             |double val${vars(inst)} = ${exp.ei.inst};
              |$name ${vars(inst)} = $name(&val${vars(inst)});
          """.stripMargin)
 

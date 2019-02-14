@@ -1,6 +1,5 @@
-package ep.cpp    /*DD:LD:AI*/
+package org.combinators.ep.language.cpp    /*DD:LD:AI*/
 
-import ep.domain._
 import org.combinators.ep.domain.Evolution
 import org.combinators.ep.domain.math._
 
@@ -32,7 +31,7 @@ trait cpp_e5 extends Evolution with CPPGenerator with TestGenerator with M0 with
   }
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
-  abstract override def logic(exp:Atomic, op:Operation): Seq[CPPElement] = {
+  abstract override def logic(exp:DataType, op:Operation): Seq[CPPElement] = {
     val source = Source(exp,op)
 
     op match {

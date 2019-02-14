@@ -1,9 +1,8 @@
-package ep.scala.oo   /*DI:LD:AD*/
+package org.combinators.ep.language.scala.oo   /*DI:LD:AD*/
 
 import java.nio.file.Paths
 
-import ep.domain.ModelDomain
-import ep.scala.{FunSpecTestGenerator, Scala, ScalaTestWithPath, ScalaWithPath}
+import org.combinators.ep.language.scala.{FunSpecTestGenerator, Scala, ScalaTestWithPath, ScalaWithPath}
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 
 trait FunSpecOOTestGenerator extends FunSpecTestGenerator {

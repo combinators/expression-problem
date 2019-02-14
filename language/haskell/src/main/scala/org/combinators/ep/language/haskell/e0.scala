@@ -1,8 +1,8 @@
-package ep.haskell
+package org.combinators.ep.language.haskell  /*DD:LD:AI*/
 
 import org.combinators.ep.domain.math.M0
 
-/*DD:LD:AI*/
+
 
 /**
   * Truly independent of the specific design solution.
@@ -16,9 +16,9 @@ trait e0 extends HaskellGenerator with HUnitTestGenerator with M0 {
     * negative numbers in haskell can't be simple -1.0 but must be (0 -1.0) for some reason?
     */
   override def expected(test:domain.TestCaseExpectedValue, id:Int) : (Expression => Seq[Statement]) => Seq[Statement] = continue => {
-    test.expect._1 match {
+    test.expect.tpe match {
       case Double => {
-        val dbl:Double = test.expect._2.asInstanceOf[Double]
+        val dbl:Double = test.expect.inst.asInstanceOf[Double]
 
         // Can't seem to use unary negation operation in Haskell ?!
         val expect = if (dbl < 0) {
@@ -52,7 +52,7 @@ trait e0 extends HaskellGenerator with HUnitTestGenerator with M0 {
   }
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
-  abstract override def logic(exp:Atomic, op:Operation): Seq[Haskell] = {
+  abstract override def logic(exp:DataType, op:Operation): Seq[Haskell] = {
     // generate the actual body
     op match {
       case Eval =>

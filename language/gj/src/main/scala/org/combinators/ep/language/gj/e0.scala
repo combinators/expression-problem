@@ -1,8 +1,6 @@
-package ep.gj
+package org.combinators.ep.language.gj   /*DD:LD:AI*/
 
 import org.combinators.ep.domain.math.M0
-
-/*DD:LD:AI*/
 
 /**
   * Truly independent of the specific design solution.
@@ -23,7 +21,7 @@ trait e0 extends GJGenerator with TestGenerator with M0 {
   }
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
-  abstract override def logic(exp:Atomic, op:Operation): Seq[GJ] = {
+  abstract override def logic(exp:DataType, op:Operation): Seq[GJ] = {
     // generate the actual body
     op match {
       case Eval =>

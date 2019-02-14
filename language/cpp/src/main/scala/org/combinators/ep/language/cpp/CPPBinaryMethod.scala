@@ -1,6 +1,5 @@
-package ep.cpp   /*DI:LD:AI*/
+package org.combinators.ep.language.cpp   /*DI:LD:AI*/
 
-import ep.domain.ModelDomain
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 
 trait CPPBinaryMethod {
@@ -128,7 +127,7 @@ trait CPPBinaryMethod {
     * @param context
     * @param exps
     */
-  def definedDataSubTypes(context:String, exps:Seq[domain.Atomic]) :Seq[CPPFile] = {
+  def definedDataSubTypes(context:String, exps:Seq[domain.DataType]) :Seq[CPPFile] = {
     val realContext = if (context.equals("")) {
       ""
     } else {
@@ -148,7 +147,7 @@ trait CPPBinaryMethod {
     Seq(new CPPHeaderCode("DefinedSubtypes", subtypes))
   }
 
-  def logicAsTree(exp:domain.Atomic) : Seq[CPPElement] = {
+  def logicAsTree(exp:domain.DataType) : Seq[CPPElement] = {
     val args = exp.attributes.map(att => att.instance).mkString(",")
           Seq(new CPPElement(
             s"""

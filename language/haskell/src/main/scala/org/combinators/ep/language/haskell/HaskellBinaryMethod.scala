@@ -1,6 +1,5 @@
-package ep.haskell   /*DI:LD:AI*/
+package org.combinators.ep.language.haskell    /*DI:LD:AI*/
 
-import ep.domain.ModelDomain
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 
 trait HaskellBinaryMethod {
@@ -25,7 +24,7 @@ trait HaskellBinaryMethod {
     * @param context
     * @param exps
     */
-  def definedDataSubTypes(context:String, exps:Seq[domain.Atomic]) :Seq[Declaration] = {
+  def definedDataSubTypes(context:String, exps:Seq[domain.DataType]) :Seq[Declaration] = {
     val types = exps.map(exp => exp.concept + "Type").mkString("|")
     Seq(Haskell(s"data DeclaredTypes = $types deriving (Eq, Show)"))
   }

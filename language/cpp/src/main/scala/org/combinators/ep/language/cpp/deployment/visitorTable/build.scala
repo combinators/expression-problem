@@ -1,10 +1,10 @@
-package build.cpp.visitorTable
+package org.combinators.ep.language.cpp.deployment.visitorTable
 /* Generated: Sun Feb 10 22:29:20 EST 2019 */
-import ep.domain._
-import ep.cpp._
-import ep.cpp.visitorTable._
 import javax.inject.Inject
 import org.combinators.ep.domain.WithDomain
+import org.combinators.ep.domain.math.MathDomain
+import org.combinators.ep.language.cpp._
+import org.combinators.ep.language.cpp.visitorTable._
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
 /* 

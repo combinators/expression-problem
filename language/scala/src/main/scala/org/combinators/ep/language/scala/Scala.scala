@@ -1,4 +1,4 @@
-package ep.scala   /*DI:LD:AI*/
+package org.combinators.ep.language.scala    /*DI:LD:AI*/
 
 import scala.meta._
 import org.apache.commons.text.StringEscapeUtils

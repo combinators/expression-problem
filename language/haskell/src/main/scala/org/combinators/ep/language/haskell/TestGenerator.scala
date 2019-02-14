@@ -1,6 +1,5 @@
-package ep.haskell    /*DI:LD:AI*/
+package org.combinators.ep.language.haskell     /*DI:LD:AI*/
 
-import ep.domain.ModelDomain
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 
 trait TestGenerator {

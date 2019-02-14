@@ -1,6 +1,6 @@
-package ep.scala
+package org.combinators.ep.language.scala
 
-import org.combinators.ep.domain.math.{M5, M6, _}
+import org.combinators.ep.domain.math._
 
 /**
   * This package contains the strawman functional solution to the Expression Problem in Haskell.

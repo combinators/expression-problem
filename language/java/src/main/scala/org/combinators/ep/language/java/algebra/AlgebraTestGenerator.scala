@@ -20,6 +20,11 @@ trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with La
     Java(s"Combined${domain.baseTypeRep.name}Alg.Combined").tpe()
   }
 
+  /** Used when one already has code fragments bound to variables, which are to be used for left and right. */
+  override def convertRecursive(inst: Binary, left:String, right:String): Expression = {
+    Java(s"algebra.${inst.instance} ($left, $right)").expression()
+  }
+
   /**
     * Classify model based on current or most recently defined types.
     *

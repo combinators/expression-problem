@@ -1,11 +1,11 @@
-package ep.haskell.straight   /*DD:LD:AD*/
+package org.combinators.ep.language.haskell.straight   /*DD:LD:AD*/
 
-import ep.haskell.HaskellWithPathPersistable._
-import ep.haskell._
+import org.combinators.ep.language.haskell.HaskellWithPathPersistable._
 import javax.inject.Inject
 import org.combinators.ep.deployment.CodeGenerationController
 import org.combinators.ep.domain.WithDomain
 import org.combinators.ep.domain.math.MathDomain
+import org.combinators.ep.language.haskell.HaskellWithPath
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
 

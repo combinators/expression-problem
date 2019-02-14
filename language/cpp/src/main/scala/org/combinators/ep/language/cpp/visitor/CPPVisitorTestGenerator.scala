@@ -1,8 +1,7 @@
-package ep.cpp.visitor    /*DI:LD:AD*/
+package org.combinators.ep.language.cpp.visitor    /*DI:LD:AD*/
 
-import ep.cpp._
-import ep.domain.ModelDomain
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.language.cpp._
 
 trait CPPVisitorTestGenerator extends CPPGenerator with TestGenerator {
 
@@ -25,7 +24,7 @@ trait CPPVisitorTestGenerator extends CPPGenerator with TestGenerator {
   }
 
   /** Convert a test instance into a C++ Expression for instantiating that instance. */
-  def rec_convert(inst: AtomicInst): CPPElement = {
+  def rec_convert(inst: Inst): CPPElement = {
     vars(inst)   // cause the creation of a mapping to this instance
     id = id + 1
     inst match {
@@ -38,8 +37,8 @@ trait CPPVisitorTestGenerator extends CPPGenerator with TestGenerator {
         val right = rec_convert(bi.right).toString
         new CPPElement(s"${bi.e.instance}($left, $right)")
 
-      case exp: AtomicInst => new CPPElement(s"${exp.e.instance}(${exp.i.get})")
-      case _ => new CPPElement(s""" "unknown ${inst.e.concept}" """)
+      case exp: AtomicInst => new CPPElement(s"${exp.e.instance}(${exp.ei.inst})")
+      case _ => new CPPElement(s""" "unknown ${inst.name}" """)
     }
   }
 

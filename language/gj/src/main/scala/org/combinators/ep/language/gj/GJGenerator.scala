@@ -1,6 +1,5 @@
-package ep.gj    /*DI:LD:AI*/
+package org.combinators.ep.language.gj    /*DI:LD:AI*/
 
-import ep.domain.ModelDomain
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 import org.combinators.ep.generator.LanguageIndependentGenerator
 
@@ -30,7 +29,7 @@ trait GJGenerator extends LanguageIndependentGenerator {
   // Useful helper methods for any generator needing to craft common Java constructs
 
   /** Generate constructor for given atomic concept, using suggested name */
-  def constructor(exp:domain.Atomic, suggestedName:Option[String] = None) : GJ = {
+  def constructor(exp:domain.DataType, suggestedName:Option[String] = None) : GJ = {
     val name = if (suggestedName.isEmpty) { exp.name } else { suggestedName.get }
 
     val params:Seq[String] = exp.attributes.map(att => s"${typeConverter(att.tpe)} ${att.instance}")
@@ -52,7 +51,7 @@ trait GJGenerator extends LanguageIndependentGenerator {
   }
 
   /** Compute parameter "Type name" comma-separated list from operation. */
-  def parametersExp(exp:domain.Atomic) : String = {
+  def parametersExp(exp:domain.DataType) : String = {
     exp.attributes.map(att => typeConverter(att.tpe).toString + " " + att.instance).mkString(",")
   }
 
@@ -60,8 +59,7 @@ trait GJGenerator extends LanguageIndependentGenerator {
     * Produce all getter methods for the given exp, with suitable possibiity of using covariant replacement
     * on domain.BaseTypeRep
     */
-  def getters(exp:domain.Atomic) : Seq[GJ] =
-
+  def getters(exp:domain.DataType) : Seq[GJ] =
     exp.attributes.map(att => GJ(s"""|public ${typeConverter(att.tpe)} get${att.concept}() {
                                            |    return this.${att.instance};
                                            |}""".stripMargin))
@@ -73,7 +71,7 @@ trait GJGenerator extends LanguageIndependentGenerator {
     * @param exp
     * @return
     */
-  def fields(exp:domain.Atomic) : Seq[GJ] = {
+  def fields(exp:domain.DataType) : Seq[GJ] = {
     exp.attributes.map(att => GJ(s"protected final ${typeConverter(att.tpe)} ${att.name}_;"))
   }
 

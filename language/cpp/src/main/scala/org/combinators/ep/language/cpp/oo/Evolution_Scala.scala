@@ -1,16 +1,14 @@
-package ep.cpp.oo     /*DD:LD:AD*/
+package org.combinators.ep.language.cpp.oo     /*DD:LD:AD*/
 
-import ep.cpp.CPPFileUtils._
-import ep.cpp._
-import ep.generator.FileWithPath
 import javax.inject.Inject
 import org.combinators.cls.git.Results
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
-import ep.generator.FileWithPathPersistable._
+import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.deployment.CodeGenerationController
 import org.combinators.ep.domain.WithDomain
 import org.combinators.ep.domain.math.MathDomain
+import org.combinators.ep.language.cpp._
 
 abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends CodeGenerationController[CPPFile](web, app)

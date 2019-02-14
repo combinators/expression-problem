@@ -1,6 +1,5 @@
-package ep.haskell       /*DD:LD:AI*/
+package org.combinators.ep.language.haskell        /*DD:LD:AI*/
 
-import ep.domain._
 import org.combinators.ep.domain.Evolution
 import org.combinators.ep.domain.math._
 
@@ -16,9 +15,9 @@ trait e4 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
     * List can be accommodated (in Haskell) as a [a,b,c,d,e]
     */
   override def expected(test:domain.TestCaseExpectedValue, id:Int) : (Expression => Seq[Statement]) => Seq[Statement] = continue => {
-    test.expect._1 match {   // was op.returnType.get
-      case list:List =>
-        val seq: Seq[Any] = test.expect._2.asInstanceOf[Seq[Any]]
+    test.expect.tpe match {   // was op.returnType.get
+      case list:List[_] =>
+        val seq: Seq[Any] = test.expect.inst.asInstanceOf[Seq[Any]]
         continue(new Haskell("[" + seq.mkString(",") + "]"))
 
       case _ => super.expected(test,id)(continue)
@@ -46,12 +45,12 @@ trait e4 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
 
   abstract override def typeConverter(tpe:domain.TypeRep) : HaskellType = {
     tpe match {
-      case el:List => new HaskellType(s"[${typeConverter(el.generic)}]")
+      case el:List[_] => new HaskellType(s"[${typeConverter(el.generic)}]")
       case _ => super.typeConverter(tpe)
     }
   }
 
-  abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Haskell] = {
+  abstract override def logic(exp:domain.DataType, op:domain.Operation): Seq[Haskell] = {
     val source = Source (exp, op)
     val zero = Haskell("0.0")
     val one = Haskell("1.0")

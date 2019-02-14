@@ -1,6 +1,5 @@
-package ep.haskell    /*DI:LD:AI*/
+package org.combinators.ep.language.haskell    /*DI:LD:AI*/
 
-import ep.domain.ModelDomain
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 
 /**
@@ -19,13 +18,13 @@ trait HUnitTestGenerator extends HaskellGenerator {
   def generateSuite(model: Option[Model] = None): Seq[HaskellWithPath]
 
   /** Convert the given atomic instance. */
-  def convert(inst:AtomicInst) : Haskell
+  def convert(inst:Inst) : Haskell
 
   /**
     * Return properly formatted expected value as a string.
     */
   def expected(test:TestCaseExpectedValue, id:Int) : (Haskell => Seq[Haskell]) => Seq[Haskell] = continue => {
-    continue(new Haskell(test.expect._2.toString))
+    continue(new Haskell(test.expect.inst.toString))
   }
 
   /**
@@ -36,7 +35,7 @@ trait HUnitTestGenerator extends HaskellGenerator {
     *
     * For more complicated structures, as with lists for example, this method will need to be overridden.
     */
-  def actual(op:Operation, inst:AtomicInst):Haskell = dispatch(convert(inst), op)
+  def actual(op:Operation, inst:Inst):Haskell = dispatch(convert(inst), op)
 
   /**
     * Override as necessary

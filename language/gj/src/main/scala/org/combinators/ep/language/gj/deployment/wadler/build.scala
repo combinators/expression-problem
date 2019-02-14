@@ -1,10 +1,11 @@
-package build.gj.wadler
+package org.combinators.ep.language.gj.deployment.wadler
+
 /* Generated: Sun Feb 10 22:29:20 EST 2019 */
-import ep.domain._
-import ep.gj._
-import ep.gj.wadler._
 import javax.inject.Inject
 import org.combinators.ep.domain.WithDomain
+import org.combinators.ep.domain.math.MathDomain
+import org.combinators.ep.language.gj._
+import org.combinators.ep.language.gj.wadler.Foundation
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
 /* 

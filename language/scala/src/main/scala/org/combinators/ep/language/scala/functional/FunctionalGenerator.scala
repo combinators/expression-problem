@@ -1,9 +1,8 @@
-package ep.scala.functional   /*DI:LD:AD*/
+package org.combinators.ep.language.scala.functional   /*DI:LD:AD*/
 
 import java.nio.file.Paths
 
-import ep.domain.ModelDomain
-import ep.scala._
+import org.combinators.ep.language.scala._
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 
 import scala.meta.Stat
@@ -38,7 +37,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod {
   }
 
   /** Access attribute via exp object. */
-  override def expression (exp:Atomic, att:Attribute) : Expression = {
+  override def expression (exp:DataType, att:Attribute) : Expression = {
     Scala(s"${exp.instance}.${att.instance}").expression
   }
 
@@ -113,7 +112,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod {
     * Operations are implemented as methods in the Base and sub-type classes.
     * Encapsulate with braces in case multiple statements
     */
-  def methodGenerator(exp:Atomic, op:Operation): Stat = {
+  def methodGenerator(exp:DataType, op:Operation): Stat = {
     Scala(s"""
            |def visit(${exp.instance}:${exp.concept}) : Unit = {
            |  result = {
@@ -174,7 +173,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod {
       // Each refined operation gets a refined class. Newly defined operations get their
       // own new top-class
       var extendsClause:String = ""
-      var typesToGenerate:Seq[Atomic] = Seq.empty
+      var typesToGenerate:Seq[DataType] = Seq.empty
       if (m.ops.contains(op)) {
         // newly defined. All past dataTypes plus current ones
         extendsClause = ""

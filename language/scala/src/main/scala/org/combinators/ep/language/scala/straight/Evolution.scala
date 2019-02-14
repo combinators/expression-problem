@@ -1,16 +1,15 @@
-package ep.scala.straight  /*DD:LD:AD*/
+package org.combinators.ep.language.scala.straight  /*DD:LD:AD*/
 
-import ep.generator.FileWithPath
 import javax.inject.Inject
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
-import ep.scala._
-import ep.scala.ScalaWithPathPersistable._
+import org.combinators.ep.language.scala.ScalaWithPathPersistable._
 import org.combinators.cls.git.Results
-import ep.generator.FileWithPathPersistable._
+import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.deployment.CodeGenerationController
 import org.combinators.ep.domain.WithDomain
 import org.combinators.ep.domain.math.MathDomain
+import org.combinators.ep.language.scala._
 
 abstract class FoundationGrows @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends CodeGenerationController[ScalaWithPath](web, app)

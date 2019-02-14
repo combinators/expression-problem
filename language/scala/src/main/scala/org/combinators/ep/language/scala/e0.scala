@@ -1,4 +1,4 @@
-package ep.scala   /*DD:LD:AI*/
+package org.combinators.ep.language.scala   /*DD:LD:AI*/
 
 import org.combinators.ep.domain.math.M0
 
@@ -22,7 +22,7 @@ trait e0 extends ScalaGenerator with TestGenerator with M0 {
   }
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
-  abstract override def logic(exp:Atomic, op:Operation): Seq[Statement] = {
+  abstract override def logic(exp:DataType, op:Operation): Seq[Statement] = {
     // generate the actual body
     op match {
       case Eval =>

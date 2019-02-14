@@ -1,6 +1,5 @@
-package ep.scala    /*DD:LD:AI*/
+package org.combinators.ep.language.scala     /*DD:LD:AI*/
 
-import ep.domain._
 import org.combinators.ep.domain.math.{M0, M5, M6, MathDomain}
 import org.combinators.ep.domain.{Evolution, ModelDomain}
 

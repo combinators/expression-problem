@@ -1,11 +1,8 @@
-package ep.scala    /*DI:LD:AI*/
+package org.combinators.ep.language.scala     /*DI:LD:AI*/
 
 import java.nio.file.Paths
 
-import ep.domain.ModelDomain
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
-
-import scala.meta._
 
 /**
   * Each evolution has opportunity to enhance the code generators.

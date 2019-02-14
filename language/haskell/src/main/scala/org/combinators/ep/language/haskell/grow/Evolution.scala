@@ -1,7 +1,7 @@
-package ep.haskell.grow    /*DD:LD:AD*/
+package org.combinators.ep.language.haskell.grow    /*DD:LD:AD*/
 
-import ep.haskell.HaskellWithPathPersistable._
-import ep.haskell._
+import org.combinators.ep.language.haskell.HaskellWithPathPersistable._
+import org.combinators.ep.language.haskell._
 import javax.inject.Inject
 import org.combinators.ep.deployment.CodeGenerationController
 import org.combinators.ep.domain.WithDomain

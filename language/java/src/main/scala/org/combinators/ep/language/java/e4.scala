@@ -39,6 +39,7 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
               CodeBlockWithResultingExpressions(
                 Java(s"${typeConverter(tpe)} $listName = new java.util.ArrayList<>();").statement()
               )(listName)
+
             s.foldLeft(initBlock) {
               case (block, nextElem) =>
                 block.appendDependent { case Seq(constructedList) =>

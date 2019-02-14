@@ -88,7 +88,7 @@ import org.combinators.ep.domain.{BaseDomain, ModelDomain}
   * @groupprio api 0
   * @groupdesc types Each language must define relevant abstractions that map to these types.
   *            It is acceptable if the same structure is used for multiple types (as an example,
-  *            review [[org.combinators.ep.language.cpp.CPPElement]])
+  *            review CPPElement)
   * @groupprio types 10
   * @groupdesc context Each language and approach needs different solutions to assemble the logic
   *           for a given (data-type and operation). The top-level concepts are shown here.
@@ -202,8 +202,6 @@ trait LanguageIndependentGenerator {
     throw new scala.NotImplementedError(s"""Unknown Type "$tpe" """)
   }
 
-
-
   /**
     * Given a data type (and potential arguments) returns an expression type that instantiates the data type.
     */
@@ -213,7 +211,7 @@ trait LanguageIndependentGenerator {
   def toTargetLanguage(scalaValue:ExistsInstance) : CodeBlockWithResultingExpressions = {
     scalaValue.inst match {
       case domInst: domain.Inst => toTargetLanguage(domInst)
-      case _ => throw new scala.NotImplementedError(s"No rule to convert ${scalaValue} to the target language")
+      case _ => throw new scala.NotImplementedError(s"No rule to convert $scalaValue to the target language")
     }
   }
 
@@ -228,7 +226,7 @@ trait LanguageIndependentGenerator {
             .appendDependent(innerResults => inst(bi.e, innerResults: _*))
       case ai:domain.AtomicInst =>
         toTargetLanguage(ai.ei).appendDependent(innerResults => inst(ai.e, innerResults:_*))
-      case _ => throw new scala.NotImplementedError(s"No rule to convert ${instance} to the target language")
+      case _ => throw new scala.NotImplementedError(s"No rule to convert $instance to the target language")
     }
   }
 

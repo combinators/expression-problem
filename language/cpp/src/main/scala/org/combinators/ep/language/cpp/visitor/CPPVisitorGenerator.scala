@@ -1,8 +1,7 @@
-package ep.cpp.visitor   /*DI:LD:AD*/
+package org.combinators.ep.language.cpp.visitor   /*DI:LD:AD*/
 
-import ep.cpp._
-import ep.domain.ModelDomain
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.language.cpp._
 
 // visitor based solution
 // https://www.codeproject.com/Tips/1018315/%2FTips%2F1018315%2FVisitor-with-the-Return-Value
@@ -36,7 +35,7 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
   }
 
   /** For straight design solution, directly access attributes by name. */
-  override def expression (exp:Atomic, att:Attribute) : Expression = {
+  override def expression (exp:DataType, att:Attribute) : Expression = {
     new CPPElement(s"${att.instance}")
   }
 
@@ -103,7 +102,7 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
     * All results are immediately stored within a value_map_[] structure, indexed by
     * the expression e.
     */
-  def methodGenerator(exp:Atomic, op:Operation): CPPMethod = {
+  def methodGenerator(exp:DataType, op:Operation): CPPMethod = {
     val params = parameters(op)
     val stmts = Seq(s"${logic(exp, op).mkString("\n")}")
     new CPPMethod("void", s"Visit", s"(${exp.name}& e)", stmts)
@@ -224,7 +223,7 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
   }
 
   /** Generate the full class for the given expression sub-type BUT ONLY for binary methods. */
-  def generateExpImpl(model:Model, sub:Atomic) : CPPFile = {
+  def generateExpImpl(model:Model, sub:DataType) : CPPFile = {
     val binaryMethods:Seq[CPPElement] = if (getModel.flatten().hasBinaryMethod()) {
       // sub
       val method:String = sub match {

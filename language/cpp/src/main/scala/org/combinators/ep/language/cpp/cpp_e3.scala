@@ -1,6 +1,5 @@
-package ep.cpp    /*DD:LD:AI*/
+package org.combinators.ep.language.cpp    /*DD:LD:AI*/
 
-import ep.domain.{M1, M2, M3}
 import org.combinators.ep.domain.Evolution
 import org.combinators.ep.domain.math.{M0, M1, M2, M3}
 
@@ -14,7 +13,7 @@ trait cpp_e3 extends Evolution with CPPGenerator with TestGenerator with M0 with
 
   import domain._
 
-  abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[CPPElement] = {
+  abstract override def logic(exp:domain.DataType, op:domain.Operation): Seq[CPPElement] = {
     // generate the actual body
     op match {
       case PrettyP => {

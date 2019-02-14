@@ -1,9 +1,8 @@
-package ep.haskell.alacarte    /*DI:LD:AD*/
+package org.combinators.ep.language.haskell.alacarte    /*DI:LD:AD*/
 
 import java.nio.file.Paths
 
-import ep.domain.ModelDomain
-import ep.haskell._
+import org.combinators.ep.language.haskell._
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 
 trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMethod with HaskellBinaryMethod with ALaCarteProducer {
@@ -52,7 +51,7 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
       generateDataTypes(flat)
   }
 
-  def genTypes(exp:Atomic) : Seq[Haskell] = {
+  def genTypes(exp:DataType) : Seq[Haskell] = {
     exp.attributes.map(att => {
       att.tpe match {
         case domain.baseTypeRep => Haskell("e")
@@ -61,7 +60,7 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
     })
   }
 
-  def genInstances(exp:Atomic) : Seq[Haskell] = {
+  def genInstances(exp:DataType) : Seq[Haskell] = {
     exp.attributes.zipWithIndex.map{ case (att, num) => {
       att.tpe match {
         case domain.baseTypeRep => Haskell("e" + num)
@@ -73,7 +72,7 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
   }
 
   // returns argument if non-recursive, otherwise applies function 'f'
-  def genArguments(exp:Atomic, funcName:String) : Seq[Haskell] = {
+  def genArguments(exp:DataType, funcName:String) : Seq[Haskell] = {
     exp.attributes.zipWithIndex.map{ case (att, num) => {
       att.tpe match {
         case domain.baseTypeRep => Haskell(s"($funcName e$num)")
@@ -84,7 +83,7 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
     }}
   }
 
-  def generateExp(m:Model, exp:Atomic) : HaskellWithPath = {
+  def generateExp(m:Model, exp:DataType) : HaskellWithPath = {
     val name = exp.concept
     val types:Seq[Haskell] = genTypes(exp)
     val instances:Seq[Haskell] = genInstances(exp)
@@ -101,7 +100,7 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
     HaskellWithPath(code, Paths.get(s"$name.hs"))
   }
 
-  def exprHelper(s:Seq[domain.Atomic]) : String = {
+  def exprHelper(s:Seq[domain.DataType]) : String = {
     if (s.size == 1) {
       s.head.toString
     } else {
@@ -185,7 +184,7 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
     * For example, an expressions.BinaryExp has 'left' and 'right' attributes, whereas an
     * expressions.UnaryExp only has an 'exp'
     */
-  override def expression (exp:domain.Atomic, att:domain.Attribute) : Expression = {
+  override def expression (exp:domain.DataType, att:domain.Attribute) : Expression = {
     Haskell(s"${att.instance}")
   }
 

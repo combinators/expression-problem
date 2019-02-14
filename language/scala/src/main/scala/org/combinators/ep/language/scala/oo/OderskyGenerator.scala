@@ -1,12 +1,11 @@
-package ep.scala.oo    /*DI:LD:AD*/
+package org.combinators.ep.language.scala.oo   /*DI:LD:AD*/
 
 import java.nio.file.Paths
 
-import ep.domain.ModelDomain
-import ep.scala._
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.language.scala._
 
-import scala.meta.{Stat, Term}
+import scala.meta.Stat
 
 /**
   * Each evolution has opportunity to enhance the code generators.
@@ -38,7 +37,7 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod {
   }
 
   /** For straight design solution, directly access attributes by name. */
-  override def expression (exp:Atomic, att:Attribute) : Expression = {
+  override def expression (exp:DataType, att:Attribute) : Expression = {
     Scala(s"${att.instance}").expression
   }
 
@@ -68,7 +67,7 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod {
   }
 
   /** Operations are implemented as methods in the Base and sub-type classes. */
-  def methodGenerator(exp:Atomic, op:Operation): Stat = {
+  def methodGenerator(exp:DataType, op:Operation): Stat = {
     val params = op.parameters.map(param => s"${param.name} : ${typeConverter(param.tpe)}").mkString(",")
     val str:String = s"""|
              |def ${op.name}($params) : ${returnType(op)} = {

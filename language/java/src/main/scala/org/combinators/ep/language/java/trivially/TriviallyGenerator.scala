@@ -1,6 +1,4 @@
-package org.combinators.ep.language.java.trivially
-
-/*DI:LD:AD*/
+package org.combinators.ep.language.java.trivially   /*DI:LD:AD*/
 
 import com.github.javaparser.ast.Modifier
 import com.github.javaparser.ast.body.{BodyDeclaration, MethodDeclaration}

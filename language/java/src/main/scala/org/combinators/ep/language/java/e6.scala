@@ -77,11 +77,12 @@ trait e6 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
     * @return
     */
   abstract override def performanceMethod(): Seq[UnitTest] = {
-    /*val a1 = new domain.BinaryInst(Add, new LitInst(1.0), new LitInst(2.0))
+    val a1 = new domain.BinaryInst(Add, new LitInst(1.0), new LitInst(2.0))
     val numTrials = 11
 
     var trees = new domain.BinaryInst(Add, a1, a1)
-    var instantiations:String = s"${exprDefine(a1)} tree0  = ${toTargetLanguage(a1)};\n"
+    val a1Block = toTargetLanguage(a1)
+    var instantiations:String = s"${exprDefine(a1)} tree0  = ${a1Block.resultingExpressions.head};\n"
     var array:String = s"${exprDefine(a1)} trees[] = { tree0, "
     for (i <- 1 to numTrials) {
       instantiations = instantiations + s"${exprDefine(a1)} tree$i = ${convertRecursive(Add, s"tree${i-1}", s"tree${i-1}")};"
@@ -94,28 +95,26 @@ trait e6 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
     val treei = new Java("trees[i]").expression[Expression]()
     val delta = deltaExprOp(source, treei, Equals, treei)
     val toTime = contextDispatch(source, delta)
-    val evalPerfTest = Java(
-      s"""
-         |public void testPerformance() {
-         |   System.out.println ("Equals Performance");
-         |   $instantiations
-         |   $array
-         |   for (int i = trees.length-1; i >= 0; i--) {
-         |     long best = Long.MAX_VALUE;
-         |      for (int t = 0; t < 8; t++) {
-         |        long now = System.nanoTime();
-         |     		 $toTime;
-         |         long duration = System.nanoTime() - now;
-         |         if (duration < best) { best = duration; }
-         |      }
-         |      System.out.println(i + "," + best);
-         |   }
-         |}""".stripMargin).methodDeclarations.head
+    val str = s"""
+                 |public void testPerformance() {
+                 |   System.out.println ("Equals Performance");
+                 |   $instantiations
+                 |   $array
+                 |   for (int i = trees.length-1; i >= 0; i--) {
+                 |     long best = Long.MAX_VALUE;
+                 |      for (int t = 0; t < 8; t++) {
+                 |        long now = System.nanoTime();
+                 |     		 $toTime;
+                 |         long duration = System.nanoTime() - now;
+                 |         if (duration < best) { best = duration; }
+                 |      }
+                 |      System.out.println(i + "," + best);
+                 |   }
+                 |}""".stripMargin
+    println ("PERF:" + str)
+    val evalPerfTest = Java(str).methodDeclarations.head
 
     super.performanceMethod() :+ evalPerfTest
-    */
-
-    Seq.empty
   }
 
   abstract override def testGenerator: Seq[MethodDeclaration] = {

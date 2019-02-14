@@ -1,6 +1,6 @@
-package ep.scala.functional   /*DI:LD:AD*/
+package org.combinators.ep.language.scala.functional   /*DI:LD:AD*/
 
-import ep.scala.{Scala, TestGenerator}
+import org.combinators.ep.language.scala._
 
 import scala.meta.Term
 

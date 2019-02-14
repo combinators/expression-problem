@@ -1,9 +1,8 @@
-package ep.haskell.alacarte  /*DI:LD:AD*/
+package org.combinators.ep.language.haskell.alacarte  /*DI:LD:AD*/
 
 import java.nio.file.Paths
 
-import ep.domain.ModelDomain
-import ep.haskell.{HUnitTestGenerator, Haskell, HaskellType, HaskellWithPath}
+import org.combinators.ep.language.haskell.{HUnitTestGenerator, Haskell, HaskellType, HaskellWithPath}
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 
 /**
@@ -45,22 +44,22 @@ trait ALaCarteTestGenerator extends HUnitTestGenerator {
     *
     * a1 = In(Er(Er(BinaryMul In(El(Constant 7.0))  In(El(Constant 2.0)))))
     */
-  override def convert(inst:AtomicInst) : Haskell = {
+  override def convert(inst:Inst) : Haskell = {
     Haskell(convert0(inst).getCode + ":: GeneralExpr")
   }
 
   /** Recursive helper method. Creates the prefix In(Er(El(... Followed by dataType name. */
-  def convert0(inst:AtomicInst) : Haskell = {
-    val name = inst.e.name
+  def convert0(inst:Inst) : Haskell = {
+    val name = inst.name
     inst match {
       case ui: UnaryInst =>
-        Haskell(s"In(" + treeRoute(inst, flat.types) + s" (${convert0(ui.inner)}) " + closeTreeRoute(inst, flat.types) + ")")
+        Haskell(s"In(" + treeRoute(ui, flat.types) + s" (${convert0(ui.inner)}) " + closeTreeRoute(inst, flat.types) + ")")
 
       case bi: BinaryInst =>
-          Haskell(s"In(" + treeRoute(inst, flat.types) + s" (${convert0(bi.left)}) (${convert0(bi.right)}) " + closeTreeRoute(inst, flat.types) + ")")
+          Haskell(s"In(" + treeRoute(bi, flat.types) + s" (${convert0(bi.left)}) (${convert0(bi.right)}) " + closeTreeRoute(inst, flat.types) + ")")
 
       case exp: AtomicInst =>
-        Haskell(s"In(" + treeRoute(inst, flat.types) + exp.i.get + closeTreeRoute(inst, flat.types) + ")")
+        Haskell(s"In(" + treeRoute(exp, flat.types) + exp.ei.inst + closeTreeRoute(inst, flat.types) + ")")
 
       case _ => Haskell(s""" -- unknown $name" """)
     }

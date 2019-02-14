@@ -1,10 +1,10 @@
-package ep.haskell.grow     /*DI:LD:AD*/
+package org.combinators.ep.language.haskell.grow     /*DI:LD:AD*/
 
 import java.nio.file.Paths
 
-import ep.domain.ModelDomain
-import ep.haskell._
+import org.combinators.ep.language.haskell._
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.language.haskell.HaskellGenerator
 
 /**
   * Based on Grow Haskell paper.
@@ -107,7 +107,7 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     * For producer operations, there is a need to instantiate objects, and one would use this
     * method (with specific parameters) to carry this out.
     */
-  override def inst(exp:domain.Atomic, params:Haskell*): Haskell = {
+  override def inst(exp:domain.DataType, params:Haskell*): Haskell = {
 
     val wrap = genWrap(findModel(exp))
     exp match {
@@ -516,7 +516,7 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
   }
 
   /** For straight design solution, directly access attributes by name. */
-  override def expression (exp:Atomic, att:Attribute) : Expression = {
+  override def expression (exp:DataType, att:Attribute) : Expression = {
     Haskell(s"${att.instance}")
   }
 

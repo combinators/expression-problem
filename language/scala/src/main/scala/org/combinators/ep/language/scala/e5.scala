@@ -1,6 +1,5 @@
-package ep.scala   /*DD:LD:AI*/
+package org.combinators.ep.language.scala    /*DD:LD:AI*/
 
-import ep.domain._
 import org.combinators.ep.domain.math.{M0, M5, MathDomain}
 import org.combinators.ep.domain.{Evolution, OperationDependency}
 
@@ -32,7 +31,7 @@ trait e5 extends Evolution with ScalaGenerator with TestGenerator with Operation
     }
   }
 
-  abstract override def logic(exp:domain.Atomic, op:domain.Operation): Seq[Statement] = {
+  abstract override def logic(exp:domain.DataType, op:domain.Operation): Seq[Statement] = {
     val source = Source(exp,op)
     op match {
       // Simplify only works for solutions that instantiate expression instances. As a binary

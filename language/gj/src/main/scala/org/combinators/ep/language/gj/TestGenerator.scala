@@ -1,8 +1,7 @@
-package ep.gj     /*DI:LD:AI*/
+package org.combinators.ep.language.gj      /*DI:LD:AI*/
 
 import java.nio.file.Paths
 
-import ep.domain.ModelDomain
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 
 /**
@@ -24,8 +23,8 @@ trait TestGenerator {
   }
 
   /** Convert a test instance into a GJ Expression for instantiating that instance. */
-  def convert(inst: AtomicInst): GJ = {
-    val name = inst.e.name
+  def convert(inst: Inst): GJ = {
+    val name = inst.name
     inst match {
       case ui: UnaryInst =>
         GJ(s"l.new $name(${convert(ui.inner)})")
@@ -33,7 +32,7 @@ trait TestGenerator {
         val left = convert(bi.left)
         val right = convert(bi.right)
         GJ(s"l.new $name($left, $right)")
-      case exp: AtomicInst => GJ(s"l.new $name(${exp.i.get})")
+      case exp: AtomicInst => GJ(s"l.new $name(${exp.ei.inst})")
 
       case _ => GJ(s""" "unknown $name" """)
     }

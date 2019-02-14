@@ -1,6 +1,4 @@
-package org.combinators.ep.language.java
-
-/*DD:LD:AI*/
+package org.combinators.ep.language.java    /*DD:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
 import org.combinators.ep.domain.math.M0
@@ -55,11 +53,12 @@ trait e0 extends JavaGenerator with JUnitTestGenerator with M0 {
     * @return
     */
   abstract override def performanceMethod(): Seq[UnitTest] = {
-    /*val a1 = new BinaryInst(Add, new LitInst(1.0), new LitInst(2.0))
+    val a1 = new BinaryInst(Add, new LitInst(1.0), new LitInst(2.0))
     val numTrials = 11
 
     var trees = new BinaryInst(Add, a1, a1)
-    var instantiations:String = s"${exprDefine(a1)} tree0  = ${toTargetLanguage(a1)};\n"
+    val a1Block = toTargetLanguage(a1)
+    var instantiations:String = s"${exprDefine(a1)} tree0  = ${a1Block.resultingExpressions.head};\n"
     var array:String = s"${exprDefine(a1)} trees[] = { tree0, "
     for (i <- 1 to numTrials) {
       instantiations = instantiations + s"${exprDefine(a1)} tree$i = ${convertRecursive(Add, s"tree${i-1}", s"tree${i-1}")};"
@@ -89,9 +88,6 @@ trait e0 extends JavaGenerator with JUnitTestGenerator with M0 {
          |}""".stripMargin).methodDeclarations.head
 
     super.performanceMethod() :+ evalPerfTest
-    */
-
-    Seq.empty
   }
 
   abstract override def testGenerator: Seq[MethodDeclaration] = {

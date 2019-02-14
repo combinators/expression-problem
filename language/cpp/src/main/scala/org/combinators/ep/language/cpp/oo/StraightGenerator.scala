@@ -1,8 +1,7 @@
-package ep.cpp.oo    /*DI:LD:AD*/
+package org.combinators.ep.language.cpp.oo    /*DI:LD:AD*/
 
-import ep.cpp._
-import ep.domain.ModelDomain
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.language.cpp._
 
 // straight C++ solution
 trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with CPPBinaryMethod {
@@ -26,7 +25,7 @@ trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with
   }
 
   /** For straight design solution, directly access attributes by name. */
-  override def expression (exp:Atomic, att:Attribute) : Expression = {
+  override def expression (exp:DataType, att:Attribute) : Expression = {
     new CPPElement(s"${att.instance}")
   }
 
@@ -94,7 +93,7 @@ trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with
   def standardHeader():Seq[String] = Seq.empty
 
   /** Generate the full class for the given expression sub-type. */
-  def generateExpImpl(model:Model, sub:Atomic) : CPPFile = {
+  def generateExpImpl(model:Model, sub:DataType) : CPPFile = {
 
     val signatures:Seq[CPPMethod] = model.ops.map(op => {
       val params = parameters(op)
@@ -118,7 +117,7 @@ trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with
   }
 
   /** Generate the full class for the given expression sub-type (except for impl). */
-  def generateExp(model:Model, sub:Atomic) : CPPFile = {
+  def generateExp(model:Model, sub:DataType) : CPPFile = {
     val name = sub.name
 
     // Builds up the attribute fields and set/get methods. Also prepares for one-line constructor.

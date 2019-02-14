@@ -2,8 +2,6 @@ package org.combinators.ep.language.java.deployment.extensibleVisitor
 
 /* Generated: Sun Feb 10 22:29:19 EST 2019 */
 import org.combinators.ep.domain.math._
-import org.combinators.ep.language.java._
-import org.combinators.ep.language.java.extensibleVisitor._
 import javax.inject.Inject
 import org.combinators.ep.domain.WithDomain
 import org.combinators.ep.language.java._

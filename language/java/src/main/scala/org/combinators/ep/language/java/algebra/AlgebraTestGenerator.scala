@@ -15,9 +15,9 @@ trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with La
   val domain: BaseDomain with ModelDomain
   import domain._
 
-  /** Type to use when referring to specific instance. */
-  override def exprDefine(exp:Inst) : Type = {
-    Java(s"Combined${domain.baseTypeRep.name}Alg.Combined").tpe()
+  abstract override def testTypeConverter(typeRep: TypeRep) : Type = {
+    if (typeRep == baseTypeRep) { Java(s"Combined${domain.baseTypeRep.name}Alg.Combined").tpe() }
+    else super.testTypeConverter(typeRep)
   }
 
   /**

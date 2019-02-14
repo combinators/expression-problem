@@ -14,10 +14,8 @@ trait JUnitTestGenerator extends TestGenerator with JavaGenerator {
   val domain: BaseDomain with ModelDomain
   import domain._
 
-  /** Type to use when referring to specific instance. */
-  def exprDefine(exp:Inst) : Type = {
-    Java(exp.name).tpe()
-  }
+
+
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
   def generateSuite(pkg: Option[String], model: Option[Model] = None): Seq[CompilationUnit] = {
     val packageDeclaration: String = if (pkg.isDefined) {

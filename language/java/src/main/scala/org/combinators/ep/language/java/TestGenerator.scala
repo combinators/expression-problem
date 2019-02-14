@@ -43,6 +43,9 @@ trait TestGenerator extends JavaGenerator with LanguageIndependentTestGenerator 
     val name = "cached"
   }
 
+  /** Converts types in test code. */
+  def testTypeConverter(ty: TypeRep) : Type = typeConverter(ty)
+
   abstract override def typeConverter(tpe: TypeRep): Type = {
     tpe match {
       case CachedTyRep(ty) => typeConverter(ty)
@@ -135,7 +138,7 @@ trait TestGenerator extends JavaGenerator with LanguageIndependentTestGenerator 
                case (b, (p, cacheLine)) =>
                  val pBlock = toTargetLanguage(p).appendDependent { case Seq(pExp) =>
                    CodeBlockWithResultingExpressions(
-                     Java(s"${typeConverter(p.tpe)} $cacheLine = $pExp;").statement()
+                     Java(s"${testTypeConverter(p.tpe)} $cacheLine = $pExp;").statement()
                    )(cacheLine)
                  }
                  b.appendIndependent(pBlock)
@@ -144,7 +147,7 @@ trait TestGenerator extends JavaGenerator with LanguageIndependentTestGenerator 
              val initialInstBlock =
                toTargetLanguage(perf.initialInst).appendDependent { case Seq(instExp) =>
                  CodeBlockWithResultingExpressions(
-                   Java(s"${typeConverter(baseTypeRep)} $initialInstanceCache = $instExp;").statement()
+                   Java(s"${testTypeConverter(baseTypeRep)} $initialInstanceCache = $instExp;").statement()
                  )(initialInstanceCache)
                }
              initialInstBlock.appendDependent { case Seq(instExp) =>
@@ -170,7 +173,7 @@ trait TestGenerator extends JavaGenerator with LanguageIndependentTestGenerator 
                    case (b, (p, cacheLine)) =>
                      val pBlock = toTargetLanguage(p).appendDependent { case Seq(pExp) =>
                        CodeBlockWithResultingExpressions(
-                         Java(s"${typeConverter(p.tpe)} $cacheLine = $pExp;").statement()
+                         Java(s"${testTypeConverter(p.tpe)} $cacheLine = $pExp;").statement()
                        )(cacheLine)
                      }
                      b.appendIndependent(pBlock)
@@ -180,7 +183,7 @@ trait TestGenerator extends JavaGenerator with LanguageIndependentTestGenerator 
                    val nextInstBlock =
                      toTargetLanguage(nextInst).appendDependent { case Seq(instExp) =>
                        CodeBlockWithResultingExpressions(
-                         Java(s"${typeConverter(baseTypeRep)} $nextInstCache = $instExp;").statement()
+                         Java(s"${testTypeConverter(baseTypeRep)} $nextInstCache = $instExp;").statement()
                        )(nextInstCache)
                      }
                    nextInstBlock.appendDependent { case Seq(instExp) =>

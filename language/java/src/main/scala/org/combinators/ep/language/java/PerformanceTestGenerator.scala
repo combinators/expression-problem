@@ -2,12 +2,13 @@ package org.combinators.ep.language.java    /*DI:LD:AI*/
 
 import com.github.javaparser.ast.expr.NameExpr
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.generator.LanguageIndependentTestGenerator
 import org.combinators.templating.twirl.Java
 
 /**
   * Isolate Performance tests
   */
-trait PerformanceTestGenerator extends TestGenerator {
+trait PerformanceTestGenerator extends JavaGenerator with LanguageIndependentTestGenerator with TestGenerator {
   val domain: BaseDomain with ModelDomain
   import domain._
 
@@ -15,6 +16,7 @@ trait PerformanceTestGenerator extends TestGenerator {
     private var nextNowVar = 0
     private var nextBestVar = 0
     private var nextCacheVar = 0
+
     def nextNow(): NameExpr = {
       val result = Java(s"now$nextNowVar").nameExpression()
       nextNowVar += 1
@@ -55,7 +57,7 @@ trait PerformanceTestGenerator extends TestGenerator {
 
 
   /** Return MethodDeclaration associated with given test cases. */
-  override def junitTestMethod(test: TestCase, idx: Int): Seq[Statement] = {
+  abstract override def junitTestMethod(test: TestCase, idx: Int): Seq[Statement] = {
      test match {
 
        case perf: PerformanceTestCase =>

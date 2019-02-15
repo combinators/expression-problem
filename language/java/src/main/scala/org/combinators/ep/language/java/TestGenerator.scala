@@ -89,21 +89,13 @@ trait TestGenerator extends JavaGenerator with LanguageIndependentTestGenerator 
 
   /** Return MethodDeclaration associated with given test cases. */
   def testMethod(tests: Seq[TestCase]): Seq[MethodDeclaration] = {
-//    val (performanceTests, validityTests) =
-//      tests.partition {
-//        case _: PerformanceTestCase => true
-//        case _ => false
-//      }
-
-      val stmts = tests.zipWithIndex.flatMap { case (test, idx) => junitTestMethod(test, idx) }
-      if (stmts.isEmpty) Seq.empty
-      else {
-        Java(
-          s"""|public void test() {
-              |   ${stmts.mkString("\n")}
-              |}""".stripMargin).methodDeclarations
-      }
-
-    //methodFor("test", performanceTests) ++ methodFor("test", validityTests)
+    val stmts = tests.zipWithIndex.flatMap { case (test, idx) => junitTestMethod(test, idx) }
+    if (stmts.isEmpty) Seq.empty
+    else {
+      Java(
+        s"""|public void test() {
+            |   ${stmts.mkString("\n")}
+            |}""".stripMargin).methodDeclarations
+    }
   }
 }

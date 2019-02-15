@@ -10,7 +10,7 @@ import org.combinators.templating.twirl.Java
   *
   * This code conforms to JUnit Test cases
   */
-trait JUnitTestGenerator extends TestGenerator with JavaGenerator {
+trait JUnitTestGenerator extends TestGenerator with PerformanceTestGenerator with JavaGenerator {
   val domain: BaseDomain with ModelDomain
   import domain._
 

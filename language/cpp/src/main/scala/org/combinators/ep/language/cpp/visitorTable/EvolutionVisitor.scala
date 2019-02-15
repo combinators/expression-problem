@@ -8,6 +8,9 @@ import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.deployment.CodeGenerationController
 import org.combinators.ep.domain.WithDomain
 import org.combinators.ep.domain.math.MathDomain
+import org.combinators.ep.generator.FileWithPath
+import org.combinators.ep.language.cpp.{CPPFile, TestGenerator}
+import org.combinators.ep.language.cpp.CPPFileUtils.PersistCPPFile
 
 abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends CodeGenerationController[CPPFile](web, app)

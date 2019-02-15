@@ -6,8 +6,10 @@ import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
 import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.deployment.CodeGenerationController
+import org.combinators.ep.language.cpp.CPPFileUtils.PersistCPPFile
 import org.combinators.ep.domain.WithDomain
 import org.combinators.ep.domain.math.MathDomain
+import org.combinators.ep.generator.FileWithPath
 import org.combinators.ep.language.cpp._
 
 abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)

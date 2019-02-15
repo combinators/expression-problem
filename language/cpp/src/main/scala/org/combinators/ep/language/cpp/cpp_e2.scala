@@ -14,9 +14,9 @@ trait cpp_e2 extends Evolution with CPPGenerator with TestGenerator with M0 with
   import domain._
 
   /** For developing test cases with strings, must convert expected value into a C++ string expression. */
-  abstract override def expected(test:domain.TestCaseExpectedValue, id:String) : (Expression => Seq[Statement]) => Seq[Statement] = continue => {
+  abstract override def expected(test:domain.TestCaseExpectedValue, id:String) : (CPPElement => Seq[CPPElement]) => Seq[CPPElement] = continue => {
     test.expect.tpe match {
-      case String => continue (new CPPElement("\"" + test.expect.inst.toString + "\""))
+      case String => continue (new CPPExpression("\"" + test.expect.inst.toString + "\""))
       case _ => super.expected(test, id) (continue)
     }
   }
@@ -29,24 +29,24 @@ trait cpp_e2 extends Evolution with CPPGenerator with TestGenerator with M0 with
   }
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
-  abstract override def logic(exp:DataType, op:Operation): Seq[CPPElement] = {
+  abstract override def logic(exp:DataType, op:Operation): Seq[CPPStatement] = {
     // generate the actual body
     op match {
       case PrettyP =>
         exp match {
-          case Lit => Seq(new CPPElement(
+          case Lit => Seq(new CPPStatement(
             s"""
                |std::ostringstream ss;
                |double val = ${valueOf(expression(exp, litValue))};
                |int ival = (int) val;
                |ss << ${valueOf(expression(exp, litValue))};
                |if (val == ival) { ss << ".0"; }  // add trailing .0 for int-value doubles
-               |${result(new CPPElement("ss.str()")).mkString("\n")}
+               |${result(new CPPExpression("ss.str()")).mkString("\n")}
              """.stripMargin))
 
-          case Add => result(new CPPElement(s""" "(" + ${dispatch(expression(exp, base.left), op)} + "+" + ${dispatch(expression(exp, base.right), op)} + ")" """))
+          case Add => result(new CPPExpression(s""" "(" + ${dispatch(expression(exp, base.left), op)} + "+" + ${dispatch(expression(exp, base.right), op)} + ")" """))
 
-          case Sub => result(new CPPElement(s""" "(" + ${dispatch(expression(exp, base.left), op)} + "-" + ${dispatch(expression(exp, base.right), op)} + ")" """))
+          case Sub => result(new CPPExpression(s""" "(" + ${dispatch(expression(exp, base.left), op)} + "-" + ${dispatch(expression(exp, base.right), op)} + ")" """))
 
           case _ => super.logic(exp, op)
         }

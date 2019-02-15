@@ -14,12 +14,12 @@ trait cpp_e1 extends Evolution with CPPGenerator with TestGenerator with M1 {
   import domain._
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
-  abstract override def logic(exp:DataType, op:Operation): Seq[CPPElement] = {
+  abstract override def logic(exp:DataType, op:Operation): Seq[CPPStatement] = {
     // generate the actual body
     op match {
       case Eval =>
         exp match {
-          case Sub => result(new CPPElement(s"${dispatch(expression(exp, base.left), op)} - ${dispatch(expression(exp, base.right), op)}"))
+          case Sub => result(new CPPExpression(s"${dispatch(expression(exp, base.left), op)} - ${dispatch(expression(exp, base.right), op)}"))
           case _ => super.logic(exp, op)
         }
 

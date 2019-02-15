@@ -11,8 +11,6 @@ import java.util.stream.Stream;
  */
 public class TestSynthesis {
 
-
-
     static final String resources = "language" + File.separator + "java" + File.separator + "src" + File.separator + "main" + File.separator + "resources" + File.separator + "routes";
 
     /** All synthesized files are stored in demo folder. */
@@ -85,11 +83,13 @@ public class TestSynthesis {
 
         File dir = new File (destination, family);
         if (!dir.exists()) {
+            System.err.println ("USER.DIR:" + System.getProperty("user.dir"));
             System.err.println ("  unable to locate destination family directory:" + dir);
             return false;
         }
         dir = new File (dir, model);
         if (!dir.exists()) {
+            System.err.println ("USER.DIR:" + System.getProperty("user.dir"));
             System.err.println ("  unable to locate destination model directory:" + dir);
             return false;
         }

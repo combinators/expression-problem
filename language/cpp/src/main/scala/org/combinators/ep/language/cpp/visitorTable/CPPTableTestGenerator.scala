@@ -19,28 +19,28 @@ trait CPPTableTestGenerator extends CPPGenerator with TestGenerator {
     * Not sure, yet, how to properly pass in variable parameters.
     */
   def actual(op:Operation, inst:AtomicInst, params:CPPElement*):CPPElement = {
-    new CPPElement(s"(new ${op.concept}(${rec_convert(inst)}))->getValue()")
+    new CPPExpression(s"(new ${op.concept}(${rec_convert(inst)}))->getValue()")
   }
 
   /** Convert a test instance into a C++ Expression for instantiating that instance. */
-  def rec_convert(inst: Inst): CPPElement = {
+  def rec_convert(inst: Inst): CPPExpression = {
     val name = inst.name
     vars(inst)   // cause the creation of a mapping to this instance
     id = id + 1
     inst match {
       case ui: UnaryInst =>
         val inner = rec_convert(ui.inner).toString
-        new CPPElement(s"new ${ui.e.concept}($inner)")
+        new CPPExpression(s"new ${ui.e.concept}($inner)")
 
       case bi: BinaryInst =>
         val left = rec_convert(bi.left).toString
         val right = rec_convert(bi.right).toString
-        new CPPElement(s"new ${bi.e.concept}($left, $right)")
+        new CPPExpression(s"new ${bi.e.concept}($left, $right)")
 
       //  double val1 = 1.0;
       //  Lit  lit1 = Lit(&val1);
-      case exp: AtomicInst => new CPPElement(s"new ${exp.e.concept}(${exp.ei.inst})")
-      case _ => new CPPElement(s""" "unknown $name" """)
+      case exp: AtomicInst => new CPPExpression(s"new ${exp.e.concept}(${exp.ei.inst})")
+      case _ => new CPPExpression(s""" "unknown $name" """)
     }
   }
 
@@ -51,24 +51,24 @@ trait CPPTableTestGenerator extends CPPGenerator with TestGenerator {
     inst match {
       case ui: UnaryInst =>
         val inner = rec_convert(ui.inner).toString
-        new CPPElement(s"$inner\n$name ${vars(inst)} = $name(&${vars(ui.inner)});")
+        new CPPStatement(s"$inner\n$name ${vars(inst)} = $name(&${vars(ui.inner)});")
 
       // Add  add3 = Add(&lit1, &lit2);
       case bi: BinaryInst =>
         val left = rec_convert(bi.left).toString
         val right = rec_convert(bi.right).toString
-        new CPPElement(s"$left\n$right\n$name ${vars(inst)} = $name(&${vars(bi.left)}, &${vars(bi.right)});")
+        new CPPStatement(s"$left\n$right\n$name ${vars(inst)} = $name(&${vars(bi.left)}, &${vars(bi.right)});")
 
       //  double val1 = 1.0;
       //  Lit  lit1 = Lit(&val1);
       case exp: AtomicInst =>
-        new CPPElement(
+        new CPPStatement(
           s"""
              |double val${vars(inst)} = ${exp.ei.inst};
              |$name ${vars(inst)} = $name(&val${vars(inst)});
          """.stripMargin)
 
-      case _ => new CPPElement(s""" "unknown $name" """)
+      case _ => new CPPStatement(s""" "unknown $name" """)
     }
   }
 

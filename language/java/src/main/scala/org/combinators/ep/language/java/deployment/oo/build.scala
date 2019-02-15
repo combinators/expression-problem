@@ -1,5 +1,4 @@
 package org.combinators.ep.language.java.deployment.oo
-
 /* Generated: Sun Feb 10 22:29:19 EST 2019 */
 import org.combinators.ep.domain.math._
 import org.combinators.ep.language.java._

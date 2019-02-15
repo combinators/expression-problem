@@ -20,7 +20,6 @@ trait FunSpecFunctionalTestGenerator extends FunSpecTestGenerator {
       ""
     }
     val withClause = model.get.inChronologicalOrder.map(m => s"with ${m.name.capitalize}").mkString(" ")
-    val allTests = testGenerator ++ performanceMethod
 
     val helpers:Seq[String] = model.get.flatten().ops.map(op => {
       if (op.parameters.isEmpty) {
@@ -32,7 +31,7 @@ trait FunSpecFunctionalTestGenerator extends FunSpecTestGenerator {
       }
     })
 
-    val files:Seq[ScalaWithPath] = allTests.zipWithIndex.map{ case (t, num) =>
+    val files:Seq[ScalaWithPath] = testGenerator.zipWithIndex.map{ case (t, num) =>
       ScalaTestWithPath(Scala(s"""
            |$packageDeclaration
            |import org.scalatest.FunSpec

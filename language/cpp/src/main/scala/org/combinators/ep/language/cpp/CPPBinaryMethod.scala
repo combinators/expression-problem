@@ -21,7 +21,7 @@ trait CPPBinaryMethod {
          |
          |bool same (const Tree *o) const;
          |void output () const;
-         |""".stripMargin.split("\n").map(s => new CPPElement(s))
+         |""".stripMargin.split("\n").map(s => new CPPStatement(s))
 
     val nodeDecls:Seq[CPPElement] =
       s"""
@@ -32,7 +32,7 @@ trait CPPBinaryMethod {
          |  }
          |  const int label;
          |  std::vector<Tree*> subtrees;
-         |""".stripMargin.split("\n").map(s => new CPPElement(s))
+         |""".stripMargin.split("\n").map(s => new CPPStatement(s))
 
     val headers =
       s"""
@@ -48,7 +48,7 @@ trait CPPBinaryMethod {
          |double getValue() const { return value; }
          |bool isNode() const { return false; }
          |bool isLeaf() const { return true; }
-         |""".stripMargin.split("\n").map(s => new CPPElement(s))
+         |""".stripMargin.split("\n").map(s => new CPPStatement(s))
 
     // need data type definition...
     definedDataSubTypes("", getModel.flatten().types) ++
@@ -57,7 +57,7 @@ trait CPPBinaryMethod {
       new CPPClass("Node", "Node", nodeDecls, Seq.empty)
           .setSuperclass("Tree")
           .addHeader(headers),
-      new CPPClass("Leaf", "Leaf", leafDecls, Seq(new CPPElement("double value;")))
+      new CPPClass("Leaf", "Leaf", leafDecls, Seq(new CPPStatement("double value;")))
           .setSuperclass("Tree")
           .addHeader(headers),
       new StandAlone("Tree",
@@ -149,11 +149,11 @@ trait CPPBinaryMethod {
 
   def logicAsTree(exp:domain.DataType) : Seq[CPPElement] = {
     val args = exp.attributes.map(att => att.instance).mkString(",")
-          Seq(new CPPElement(
-            s"""
-               |Tree *${domain.AsTree.instance}() {
-               |  return asTree.${exp.instance}($args).${domain.AsTree.instance}();
-               |}""".stripMargin))
+          Seq(new CPPMethod("Tree *", domain.AsTree.instance, "()", Seq(s"return asTree.${exp.instance}($args).${domain.AsTree.instance}();")))
+//            s"""
+//               |Tree *${domain.AsTree.instance}() {
+//               |  return asTree.${exp.instance}($args).${domain.AsTree.instance}();
+//               |}""".stripMargin))
   }
 
 }

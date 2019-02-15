@@ -26,27 +26,27 @@ trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with
 
   /** For straight design solution, directly access attributes by name. */
   override def expression (exp:DataType, att:Attribute) : Expression = {
-    new CPPElement(s"${att.instance}")
+    new CPPExpression(s"${att.instance}")
   }
 
   override def contextDispatch(source:Context, delta:Delta) : Expression = {
     if (source.op.isEmpty) {
       // Must then use delta.expr "as is"
       val opargs = delta.params.mkString (",")
-      new CPPElement(s"${delta.expr.get}->${delta.op.get.instance}($opargs)")
+      new CPPExpression(s"${delta.expr.get}->${delta.op.get.instance}($opargs)")
     } else if (delta.expr.isEmpty) {
       val op = delta.op.get.instance
       val args = delta.params.mkString (",")
-      new CPPElement(s"$op($args)")
+      new CPPExpression(s"$op($args)")
     } else {
      super.contextDispatch(source, delta)
     }
   }
 
   /** Directly access local method, one per operation, with a parameter. */
-  override def dispatch(expr:CPPElement, op:Operation, params:CPPElement*) : CPPElement = {
+  override def dispatch(expr:CPPExpression, op:Operation, params:CPPExpression*) : CPPExpression = {
     val args:String = params.mkString(",")
-    new CPPElement(s"get${expr.toString.capitalize}($args)->${op.instance}()")
+    new CPPExpression(s"get${expr.toString.capitalize}($args)->${op.instance}()")
   }
 
   /** Return designated Java type associated with type, or void if all else fails. */
@@ -131,19 +131,20 @@ trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with
       val capAtt = att.concept
       val tpe = typeConverter(att.tpe)
 
-      addedFields = addedFields :+ new CPPElement(s"$tpe ${att.instance};")
+      addedFields = addedFields :+ new CPPStatement(s"$tpe ${att.instance};")
 
       // prepare for constructor
       params = params :+ s"$tpe ${att.instance}_"
       cons = cons :+ s"${att.instance}(${att.instance}_)"
 
       // make the set/get methods
-      addedMethods = addedMethods :+ new CPPElement(s"$tpe get$capAtt() const { return ${att.instance}; }")
+      addedMethods = addedMethods :+ new CPPStatement(s"$tpe get$capAtt() const { return ${att.instance}; }")
     })
 
     // make constructor
     addedMethods = addedMethods :+
-      new CPPElement (s"${sub.name} (${params.mkString(",")}) : ${cons.mkString(",")} {}")
+      new CPPConstructor(sub.name, s"(${params.mkString(",")}) : ${cons.mkString(",")}", Seq(new CPPStatement("")))
+      //new CPPElement (s"${sub.name} (${params.mkString(",")}) : ${cons.mkString(",")} {}")
 
     // add Binary methods if needed
     val treeHeader = if (getModel.flatten().hasBinaryMethod()) {
@@ -183,7 +184,8 @@ trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with
       }
 
       val params = parameters(op)
-      new CPPElement(s"""virtual $realType ${op.instance}($params) const = 0;""")
+      new CPPMethodDeclaration(s"virtual $realType", op.instance, s"($params)").setConstant().setVirtual()
+      //new CPPElement(s"""virtual $realType ${op.instance}($params) const = 0;""")
     })
 
     // add Binary #include file if needed

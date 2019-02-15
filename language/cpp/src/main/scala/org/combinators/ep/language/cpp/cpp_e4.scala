@@ -28,7 +28,7 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with CPPProd
     *
     * Calls 'continue' with an expression (the result of the prior new statements) and just concatenates all statements
     */
-  override def expected(test:domain.TestCaseExpectedValue, id:String) : (Expression => Seq[Statement]) => Seq[Statement] = continue => {
+  override def expected(test:domain.TestCaseExpectedValue, id:String) : (CPPElement => Seq[CPPElement]) => Seq[CPPElement] = continue => {
     test.expect.tpe match {
       case list:List[_] =>
         val seq: Seq[Any] = test.expect.inst.asInstanceOf[Seq[Any]]
@@ -39,9 +39,9 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with CPPProd
         val str = s"""
                      |$ctype result$id;
                      |${map.mkString("\n")}
-                     |${continue(new CPPElement(s"result$id")).mkString("\n")}
+                     |${continue(new CPPExpression(s"result$id")).mkString("\n")}
              """.stripMargin
-        str.split("\n").map(line => new CPPElement(line))
+        str.split("\n").map(line => new CPPExpression(line))
 
       case _ => super.expected(test,id)(continue)
     }
@@ -57,7 +57,7 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with CPPProd
   }
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
-  abstract override def logic(exp:DataType, op:Operation): Seq[CPPElement] = {
+  abstract override def logic(exp:DataType, op:Operation): Seq[CPPStatement] = {
     // generate the actual body
     val source = Source(exp,op)
     op match {
@@ -66,111 +66,232 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with CPPProd
           case list:List[_] => typeConverter(list.generic)
         }
         exp match {
-          case Lit => Seq(new CPPElement(
+          case Lit => Seq(new CPPStatement(
             s"""
             |std::vector < $tpe > vec;
             |vec.push_back(${valueOf(expression(exp, litValue))});
-            |${result(new CPPElement("vec")).mkString("\n")};""".stripMargin))
+            |${result(new CPPExpression("vec")).mkString("\n")};""".stripMargin))
 
-          case Neg => Seq(new CPPElement(
+          case Neg => Seq(new CPPStatement(
             s"""
                |std::vector<$tpe> vec;
                |std::vector<$tpe> expv = ${dispatch(expression(exp,base.inner),op)};
                |vec.insert(vec.end(), expv.begin(), expv.end());
-               |${result(new CPPElement("vec")).mkString("\n")};""".stripMargin))
-          case Add|Sub|Mult|Divd => Seq(new CPPElement(
+               |${result(new CPPExpression("vec")).mkString("\n")};""".stripMargin))
+          case Add|Sub|Mult|Divd => Seq(new CPPStatement(
               s"""std::vector< $tpe > vec;
                  |std::vector< $tpe > leftv = ${dispatch(expression(exp, base.left),op)};
                  |std::vector< $tpe > rightv = ${dispatch(expression(exp, base.right),op)};
                  |
                  |vec.insert(vec.end(), leftv.begin(), leftv.end());
                  |vec.insert(vec.end(), rightv.begin(), rightv.end());
-                 |${result(new CPPElement("vec")).mkString("\n")};""".stripMargin))
+                 |${result(new CPPExpression("vec")).mkString("\n")};""".stripMargin))
 
           case _ => super.logic(exp, op)
         }
 
       case Simplify =>
-        val zero = new CPPElement("0.0")
-        val one = new CPPElement("1.0")
-        val negOne = new CPPElement("-1.0")
+        val zero = new CPPExpression("0.0")
+        val one = new CPPExpression("1.0")
+        val negOne = new CPPExpression("-1.0")
+        val zeroResultBlock =
+          inst(Lit, zero).appendDependent { case Seq(zeroLit) =>
+            CodeBlockWithResultingExpressions(result(zeroLit): _*)()
+          }
+        val oneResultBlock =
+          inst(Lit, one).appendDependent { case Seq(zeroLit) =>
+            CodeBlockWithResultingExpressions(result(zeroLit): _*)()
+          }
+        val negOneResultBlock =
+          inst(Lit, negOne).appendDependent { case Seq(zeroLit) =>
+            CodeBlockWithResultingExpressions(result(zeroLit): _*)()
+          }
         exp match {
             // STILL has work to do...
-          case Lit =>
-            val value = new CPPElement(s"${valueOf(expression(exp, litValue))}")
-            Seq(new CPPElement(s"""${result(inst(Lit, value)).mkString("\n")} """))
+//          case Lit =>
+//            val value = new CPPElement(s"${valueOf(expression(exp, litValue))}")
+//            Seq(new CPPElement(s"""${result(inst(Lit, value)).mkString("\n")} """))
 
+          case Lit =>
+              inst(Lit, expression(exp, litValue)).appendDependent{ case Seq(litExp) => {
+              CodeBlockWithResultingExpressions(result(litExp): _*)()
+            }}.block
 
           case Add =>
             val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
             val deltaRight = deltaChildOp(source, domain.base.right, Eval)
-            Seq(new CPPElement(s"""
-                      |double leftV = ${contextDispatch(source, deltaLeft)};
-                      |double rightV = ${contextDispatch(source, deltaRight)};
-                      |if (leftV + rightV == 0) {
-                      |  ${result(inst(Lit, zero)).mkString("\n")}
-                      |} else if (leftV == 0) {
-                      |  ${result(dispatch(expression(exp, domain.base.right), Simplify)).mkString("\n")}
-                      |} else if (rightV == 0) {
-                      |  ${result(dispatch(expression(exp, domain.base.left), Simplify)).mkString("\n")}
-                      |} else {
-                      |  ${result(inst(Add, dispatch(expression(exp, domain.base.left), Simplify),dispatch(expression(exp, domain.base.right), Simplify))).mkString("\n")}
-                      |}""".stripMargin))
+
+            val dispatchBothResultBlock =
+              inst(Add,
+                dispatch(expression(exp, domain.base.left), Simplify),
+                dispatch(expression(exp, domain.base.right), Simplify)
+              ).appendDependent{ case Seq(addResult) =>
+                CodeBlockWithResultingExpressions(result(addResult): _*)()
+              }
+            Seq(new CPPStatement(s"""|double leftVal = ${contextDispatch(source, deltaLeft)};
+                     |double rightVal = ${contextDispatch(source, deltaRight)};
+                     |if ((leftVal == 0 && rightVal == 0) || (leftVal + rightVal == 0)) {
+                     |   ${zeroResultBlock.block.mkString("\n")}
+                     |} else if (leftVal == 0) {
+                     |   ${result(dispatch(expression(exp, domain.base.right), Simplify)).mkString("\n")}
+                     |} else if (rightVal == 0) {
+                     |   ${result(dispatch(expression(exp, domain.base.left), Simplify)).mkString("\n")}
+                     |} else {
+                     |   ${dispatchBothResultBlock.block.mkString("\n")}
+                     |}""".stripMargin))
+
+//          case Add =>
+//            val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
+//            val deltaRight = deltaChildOp(source, domain.base.right, Eval)
+//            Seq(new CPPElement(s"""
+//                      |double leftV = ${contextDispatch(source, deltaLeft)};
+//                      |double rightV = ${contextDispatch(source, deltaRight)};
+//                      |if (leftV + rightV == 0) {
+//                      |  ${result(inst(Lit, zero)).mkString("\n")}
+//                      |} else if (leftV == 0) {
+//                      |  ${result(dispatch(expression(exp, domain.base.right), Simplify)).mkString("\n")}
+//                      |} else if (rightV == 0) {
+//                      |  ${result(dispatch(expression(exp, domain.base.left), Simplify)).mkString("\n")}
+//                      |} else {
+//                      |  ${result(inst(Add, dispatch(expression(exp, domain.base.left), Simplify),dispatch(expression(exp, domain.base.right), Simplify))).mkString("\n")}
+//                      |}""".stripMargin))
+
           case Sub =>
             val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
             val deltaRight = deltaChildOp(source, domain.base.right, Eval)
-            Seq(new CPPElement(s"""
-                      |double leftV = ${contextDispatch(source, deltaLeft)};
-                      |double rightV = ${contextDispatch(source, deltaRight)};
-                      |if (leftV == rightV) {
-                      |  ${result(inst(Lit, zero)).mkString("\n")}
-                      |} else {
-                      |  ${result(inst(Sub, dispatch(expression(exp, domain.base.left), Simplify),dispatch(expression(exp, domain.base.right), Simplify))).mkString("\n")}
-                      |}""".stripMargin))
+            val dispatchBothResultBlock =
+              inst(Sub,
+                dispatch(expression(exp, domain.base.left), Simplify),
+                dispatch(expression(exp, domain.base.right), Simplify)
+              ).appendDependent{ case Seq(addResult) =>
+                CodeBlockWithResultingExpressions(result(addResult): _*)()
+              }
+            Seq(new CPPStatement(s"""|if (${contextDispatch(source, deltaLeft)} == ${contextDispatch(source, deltaRight)}) {
+                     |   ${zeroResultBlock.block.mkString("\n")}
+                     |} else {
+                     |   ${dispatchBothResultBlock.block.mkString("\n")}
+                     |}""".stripMargin))
+
+//          case Sub =>
+//            val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
+//            val deltaRight = deltaChildOp(source, domain.base.right, Eval)
+//            Seq(new CPPElement(s"""
+//                      |double leftV = ${contextDispatch(source, deltaLeft)};
+//                      |double rightV = ${contextDispatch(source, deltaRight)};
+//                      |if (leftV == rightV) {
+//                      |  ${result(inst(Lit, zero)).mkString("\n")}
+//                      |} else {
+//                      |  ${result(inst(Sub, dispatch(expression(exp, domain.base.left), Simplify),dispatch(expression(exp, domain.base.right), Simplify))).mkString("\n")}
+//                      |}""".stripMargin))
 
           case Mult =>
             val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
             val deltaRight = deltaChildOp(source, domain.base.right, Eval)
-            Seq(new CPPElement(s"""
-                      |double leftV = ${contextDispatch(source, deltaLeft)};
-                      |double rightV = ${contextDispatch(source, deltaRight)};
-                      |if (leftV == 0 || rightV == 0) {
-                      |  ${result(inst(Lit, zero)).mkString("\n")}
-                      |} else if (leftV == 1) {
-                      |  ${result(dispatch(expression(exp, domain.base.right), Simplify)).mkString("\n")}
-                      |} else if (rightV == 1) {
-                      |  ${result(dispatch(expression(exp, domain.base.left), Simplify)).mkString("\n")}
-                      |} else {
-                      |  ${result(inst(Mult, dispatch(expression(exp, domain.base.left), Simplify), dispatch(expression(exp, domain.base.right), Simplify))).mkString("\n")}
-                      |}""".stripMargin))
+            val dispatchBothResultBlock =
+              inst(Mult,
+                dispatch(expression(exp, domain.base.left), Simplify),
+                dispatch(expression(exp, domain.base.right), Simplify)
+              ).appendDependent{ case Seq(addResult) =>
+                CodeBlockWithResultingExpressions(result(addResult): _*)()
+              }
+            Seq(new CPPStatement(s"""|double leftVal = ${contextDispatch(source, deltaLeft)};
+                     |double rightVal = ${contextDispatch(source, deltaRight)};
+                     |if (leftVal == 0 || rightVal == 0) {
+                     |   ${zeroResultBlock.block.mkString("\n")}
+                     |} else if (leftVal == 1) {
+                     |   ${result(dispatch(expression(exp, domain.base.right), Simplify)).mkString("\n")}
+                     |} else if (rightVal == 1) {
+                     |   ${result(dispatch(expression(exp, domain.base.left), Simplify)).mkString("\n")}
+                     |} else {
+                     |   ${dispatchBothResultBlock.block.mkString("\n")}
+                     |}
+                     |""".stripMargin))
+
+//          case Mult =>
+//            val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
+//            val deltaRight = deltaChildOp(source, domain.base.right, Eval)
+//            Seq(new CPPElement(s"""
+//                      |double leftV = ${contextDispatch(source, deltaLeft)};
+//                      |double rightV = ${contextDispatch(source, deltaRight)};
+//                      |if (leftV == 0 || rightV == 0) {
+//                      |  ${result(inst(Lit, zero)).mkString("\n")}
+//                      |} else if (leftV == 1) {
+//                      |  ${result(dispatch(expression(exp, domain.base.right), Simplify)).mkString("\n")}
+//                      |} else if (rightV == 1) {
+//                      |  ${result(dispatch(expression(exp, domain.base.left), Simplify)).mkString("\n")}
+//                      |} else {
+//                      |  ${result(inst(Mult, dispatch(expression(exp, domain.base.left), Simplify), dispatch(expression(exp, domain.base.right), Simplify))).mkString("\n")}
+//                      |}""".stripMargin))
+
           case Divd =>
             val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
             val deltaRight = deltaChildOp(source, domain.base.right, Eval)
-            Seq(new CPPElement(s"""
-                      |double leftV = ${contextDispatch(source, deltaLeft)};
-                      |double rightV = ${contextDispatch(source, deltaRight)};
-                      |if (leftV == 0) {
-                      |  ${result(inst(Lit, zero)).mkString("\n")}
-                      |} else if (rightV == 1) {
-                      |  ${result(dispatch(expression(exp, domain.base.left), Simplify)).mkString("\n")}
-                      |} else if (leftV == rightV) {
-                      |   ${result(inst(Lit, one)).mkString("\n")}
-                      |} else if (leftV == -rightV) {
-                      |   ${result(inst(Lit, negOne)).mkString("\n")}
-                      |} else {
-                      |  ${result(inst(Divd, dispatch(expression(exp, domain.base.left), Simplify), dispatch(expression(exp, domain.base.right), Simplify))).mkString("\n")}
-                      |}""".stripMargin))
+            val dispatchBothResultBlock =
+              inst(Divd,
+                dispatch(expression(exp, domain.base.left), Simplify),
+                dispatch(expression(exp, domain.base.right), Simplify)
+              ).appendDependent{ case Seq(addResult) =>
+                CodeBlockWithResultingExpressions(result(addResult): _*)()
+              }
+            Seq(new CPPStatement(s"""|double leftVal = ${contextDispatch(source, deltaLeft)};
+                     |double rightVal = ${contextDispatch(source, deltaRight)};
+                     |if (leftVal == 0) {
+                     |   ${zeroResultBlock.block.mkString("\n")}
+                     |} else if (rightVal == 1) {
+                     |   ${result(dispatch(expression(exp, domain.base.left), Simplify)).mkString("\n")}
+                     |} else if (leftVal == rightVal) {
+                     |   ${oneResultBlock.block.mkString("\n")}
+                     |} else if (leftVal == -rightVal) {
+                     |   ${negOneResultBlock.block.mkString("\n")}
+                     |} else {
+                     |   ${dispatchBothResultBlock.block.mkString("\n")}
+                     |}
+                     |""".stripMargin))
+
+//          case Divd =>
+//            val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
+//            val deltaRight = deltaChildOp(source, domain.base.right, Eval)
+//            Seq(new CPPElement(s"""
+//                      |double leftV = ${contextDispatch(source, deltaLeft)};
+//                      |double rightV = ${contextDispatch(source, deltaRight)};
+//                      |if (leftV == 0) {
+//                      |  ${result(inst(Lit, zero)).mkString("\n")}
+//                      |} else if (rightV == 1) {
+//                      |  ${result(dispatch(expression(exp, domain.base.left), Simplify)).mkString("\n")}
+//                      |} else if (leftV == rightV) {
+//                      |   ${result(inst(Lit, one)).mkString("\n")}
+//                      |} else if (leftV == -rightV) {
+//                      |   ${result(inst(Lit, negOne)).mkString("\n")}
+//                      |} else {
+//                      |  ${result(inst(Divd, dispatch(expression(exp, domain.base.left), Simplify), dispatch(expression(exp, domain.base.right), Simplify))).mkString("\n")}
+//                      |}""".stripMargin))
+
+          case Neg =>
+            val deltaInner = deltaChildOp(source, domain.base.inner, Eval)
+            val dispatchBothResultBlock =
+              inst(Neg, dispatch(expression(exp, domain.base.inner), Simplify))
+                .appendDependent{ case Seq(addResult) =>
+                  CodeBlockWithResultingExpressions(result(addResult): _*)()
+                }
+            Seq(new CPPStatement(s"""
+                    |if (${contextDispatch(source, deltaInner)} == 0) {
+                    |   ${zeroResultBlock.block.mkString("\n")}
+                    |} else {
+                    |   ${dispatchBothResultBlock.block.mkString("\n")}
+                    |}""".stripMargin))
 
           // TODO: Would love to have ability to simplify neg(neg(x)) to just be x. This requires a form
           // of inspection that might not be generalizable...
-          case Neg =>
-            val deltaInner = deltaChildOp(source, domain.base.inner, Eval)
-            Seq(new CPPElement(s"""
-                      |if (${contextDispatch(source, deltaInner)} == 0) {
-                      |   ${result(inst(Lit, zero)).mkString("\n")}
-                      |} else {
-                      |   ${result(inst(Neg, dispatch(expression(exp,domain.base.inner), Simplify))).mkString("\n")}
-                      |}""".stripMargin))
+//          case Neg =>
+//            val deltaInner = deltaChildOp(source, domain.base.inner, Eval)
+//            Seq(new CPPElement(s"""
+//                      |if (${contextDispatch(source, deltaInner)} == 0) {
+//                      |   ${result(inst(Lit, zero)).mkString("\n")}
+//                      |} else {
+//                      |   ${result(inst(Neg, dispatch(expression(exp,domain.base.inner), Simplify))).mkString("\n")}
+//                      |}""".stripMargin))
+
+
           case _ => super.logic(exp, op)
         }
 

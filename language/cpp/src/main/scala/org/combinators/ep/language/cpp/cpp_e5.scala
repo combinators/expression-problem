@@ -31,7 +31,7 @@ trait cpp_e5 extends Evolution with CPPGenerator with TestGenerator with M0 with
   }
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
-  abstract override def logic(exp:DataType, op:Operation): Seq[CPPElement] = {
+  abstract override def logic(exp:DataType, op:Operation): Seq[CPPStatement] = {
     val source = Source(exp,op)
 
     op match {
@@ -41,15 +41,15 @@ trait cpp_e5 extends Evolution with CPPGenerator with TestGenerator with M0 with
         exp match {
           case Lit =>
             val attParams = atts.map(att => valueOf(atts(att._2.toString))).mkString(",")
-            result(new CPPElement(s""" new Leaf( $attParams) """))
+            result(new CPPExpression(s""" new Leaf( $attParams) """))
 
           case Add|Sub|Mult|Divd|Neg =>
-            val attParams = atts.map(att => new CPPElement(s"${valueOf(atts(att._2.toString))}->astree()")).mkString(",")
-            val vec1 = new CPPElement(s"std::vector<Tree *> vec_${exp.name} = { $attParams };")
+            val attParams = atts.map(att => new CPPExpression(s"${valueOf(atts(att._2.toString))}->astree()")).mkString(",")
+            val vec1 = new CPPStatement(s"std::vector<Tree *> vec_${exp.name} = { $attParams };")
 
             val deltaSelf = deltaSelfOp(source, Identifier)
             val rhs = contextDispatch(source, deltaSelf)
-            Seq(vec1) ++ result(new CPPElement(s" new Node(vec_${exp.name}, $rhs) "))
+            Seq(vec1) ++ result(new CPPExpression(s" new Node(vec_${exp.name}, $rhs) "))
         }
 
       case _ => super.logic(exp, op)
@@ -64,9 +64,9 @@ trait cpp_e5 extends Evolution with CPPGenerator with TestGenerator with M0 with
           val tree2 = actual(AsTree, ctc.inst2)
 
           if (ctc.result) {
-            Seq(new CPPElement(s"CHECK_TRUE($tree1->same($tree2));"))
+            Seq(new CPPStatement(s"CHECK_TRUE($tree1->same($tree2));"))
           } else {
-            Seq(new CPPElement(s"CHECK_TRUE(!$tree1->same($tree2));"))
+            Seq(new CPPStatement(s"CHECK_TRUE(!$tree1->same($tree2));"))
           }
 
         case _ =>

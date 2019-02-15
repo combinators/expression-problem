@@ -30,18 +30,18 @@ trait cpp_e6 extends Evolution with CPPGenerator with CPPBinaryMethod with TestG
     }
   }
 
-  abstract override def logic(exp: domain.DataType, op: domain.Operation): Seq[CPPElement] = {
+  abstract override def logic(exp: domain.DataType, op: domain.Operation): Seq[CPPStatement] = {
     val source = Source(exp, op)
     // generate the actual body; since this is a binary method
     op match {
       case Equals =>
-        val thatSource = NoSource()
+        val thatSource = NoSource
         val deltaLeft = deltaSelfOp(source, domain.AsTree)
-        val that = new CPPElement(domain.base.that.name)
+        val that = new CPPExpression(domain.base.that.name)
         val deltaRight = deltaExprOp(thatSource, that, domain.AsTree)
         val lhs = contextDispatch(source, deltaLeft)
         val rhs = contextDispatch(thatSource, deltaRight)
-        result(new CPPElement(s"$lhs->same($rhs)"))
+        result(new CPPExpression(s"$lhs->same($rhs)"))
 
       case _ => super.logic(exp, op)
     }
@@ -53,12 +53,12 @@ trait cpp_e6 extends Evolution with CPPGenerator with CPPBinaryMethod with TestG
   override def cppUnitTestMethod(test: TestCase, idx: Int): Seq[Statement] = {
     test match {
       case eb: EqualsBinaryMethodTestCase =>
-        val source = NoSource()
+        val source = NoSource
         val code = contextDispatch(source, deltaExprOp(source, rec_convert(eb.inst1), Equals, rec_convert(eb.inst2)))
         if (eb.result) {
-          Seq(new CPPElement(s"CHECK_TRUE($code);"))
+          Seq(new CPPStatement(s"CHECK_TRUE($code);"))
         } else {
-          Seq(new CPPElement(s"CHECK_TRUE(!($code));"))
+          Seq(new CPPStatement(s"CHECK_TRUE(!($code));"))
         }
       case _ =>
         super.cppUnitTestMethod(test, idx)

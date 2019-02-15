@@ -3,7 +3,7 @@ package org.combinators.ep.language.cpp.visitor    /*DI:LD:AD*/
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 import org.combinators.ep.language.cpp._
 
-trait CPPVisitorTestGenerator extends CPPGenerator with TestGenerator {
+trait CPPVisitorTestGenerator extends CPPGenerator with CPPUnitTestGenerator {
 
   val domain: BaseDomain with ModelDomain
   import domain._

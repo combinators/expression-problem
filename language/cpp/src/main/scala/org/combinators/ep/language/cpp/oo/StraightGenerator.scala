@@ -33,7 +33,7 @@ trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with
     if (source.op.isEmpty) {
       // Must then use delta.expr "as is"
       val opargs = delta.params.mkString (",")
-      new CPPExpression(s"${delta.expr.get}->${delta.op.get.instance}($opargs)")
+      new CPPExpression(s"(${delta.expr.get})->${delta.op.get.instance}($opargs)")
     } else if (delta.expr.isEmpty) {
       val op = delta.op.get.instance
       val args = delta.params.mkString (",")

@@ -211,7 +211,7 @@ trait LanguageIndependentGenerator {
   def toTargetLanguage(scalaValue:ExistsInstance) : CodeBlockWithResultingExpressions = {
     scalaValue.inst match {
       case domInst: domain.Inst => toTargetLanguage(domInst)
-      case _ => throw new scala.NotImplementedError(s"No rule to convert $scalaValue to the target language")
+      case _ => throw new scala.NotImplementedError(s"No rule to convert ${scalaValue.tpe} to the target language")
     }
   }
 

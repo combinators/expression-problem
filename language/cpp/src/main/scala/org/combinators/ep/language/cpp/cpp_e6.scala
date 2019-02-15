@@ -47,21 +47,27 @@ trait cpp_e6 extends Evolution with CPPGenerator with CPPBinaryMethod with TestG
     }
   }
 
-  /**
-    * Add testing capability for [[EqualsBinaryMethodTestCase]]
-    */
-  override def cppUnitTestMethod(test: TestCase, idx: Int): Seq[Statement] = {
+  override def cppUnitTestMethod(test:domain.TestCase, idx:Int) : Seq[Statement] = {
     test match {
       case eb: EqualsBinaryMethodTestCase =>
-        val source = NoSource
-        val code = contextDispatch(source, deltaExprOp(source, rec_convert(eb.inst1), Equals, rec_convert(eb.inst2)))
-        if (eb.result) {
-          Seq(new CPPStatement(s"CHECK_TRUE($code);"))
-        } else {
-          Seq(new CPPStatement(s"CHECK_TRUE(!($code));"))
-        }
-      case _ =>
-        super.cppUnitTestMethod(test, idx)
+        val leftBlock = toTargetLanguage(eb.inst1)
+        val rightBlock = toTargetLanguage(eb.inst2)
+        leftBlock.appendDependent { case Seq(leftExp) =>
+          rightBlock.appendDependent { case Seq(rightExp) =>
+            CodeBlockWithResultingExpressions(
+              if (eb.result) {
+                val delta = deltaExprOp(NoSource, leftExp, Equals, rightExp)
+                val code = contextDispatch (NoSource, delta)
+                new CPPStatement(s"CHECK_TRUE ($code);")
+              } else {
+                val delta = deltaExprOp(NoSource, leftExp, Equals, rightExp)
+                val code = contextDispatch (NoSource, delta)
+                new CPPStatement(s"CHECK_FALSE($code);")
+              }
+            )()
+          }
+        }.block
+      case _ => super.cppUnitTestMethod(test, idx)
     }
   }
 

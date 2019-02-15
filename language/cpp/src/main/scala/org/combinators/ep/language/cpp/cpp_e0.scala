@@ -19,6 +19,15 @@ trait cpp_e0 extends CPPGenerator with TestGenerator with M0 {
     }
   }
 
+  /** E0 Introduces Double and Int values. */
+  abstract override def toTargetLanguage(ei:domain.ExistsInstance) : CodeBlockWithResultingExpressions = {
+    ei.inst match {
+      case d:scala.Double => CodeBlockWithResultingExpressions(new CPPExpression(s"$d"))
+      case i:scala.Int => CodeBlockWithResultingExpressions(new CPPExpression(s"$i"))
+      case _ => super.toTargetLanguage(ei)
+    }
+  }
+
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
   abstract override def logic(exp:DataType, op:Operation): Seq[CPPStatement] = {
     // generate the actual body

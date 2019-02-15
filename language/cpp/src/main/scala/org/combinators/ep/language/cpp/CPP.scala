@@ -269,7 +269,7 @@ class CPPConstructor (val _name:String, val _params:String, val _body:Seq[CPPSta
 
   val name:String = _name
   val params:String = _params
-  val body = _body.mkString("\n")
+  val body = _body
 
   override def toString: String = {
     val signature = s"$name $params "

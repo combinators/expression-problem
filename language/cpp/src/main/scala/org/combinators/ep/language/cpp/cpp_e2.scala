@@ -28,6 +28,15 @@ trait cpp_e2 extends Evolution with CPPGenerator with TestGenerator with M0 with
     }
   }
 
+
+  /** E1 Introduces String values. */
+  abstract override def toTargetLanguage(ei:domain.ExistsInstance) : CodeBlockWithResultingExpressions = {
+    ei.inst match {
+      case s:String => CodeBlockWithResultingExpressions(new CPPExpression("\"" + s + "\""))
+      case _ => super.toTargetLanguage(ei)
+    }
+  }
+
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
   abstract override def logic(exp:DataType, op:Operation): Seq[CPPStatement] = {
     // generate the actual body

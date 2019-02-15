@@ -105,7 +105,7 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
   def methodGenerator(exp:DataType, op:Operation): CPPMethod = {
     val params = parameters(op)
     val stmts = Seq(s"${logic(exp, op).mkString("\n")}")
-    new CPPMethod("void", s"Visit", s"(${exp.name}& e)", stmts)
+    new CPPMethod("void", s"Visit", s"(const ${exp.name}& e)", stmts)
   }
 
   /** Default header file needed for most classes. */
@@ -147,13 +147,13 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
 
     // no-arg constructor
     val constructor:Seq[CPPElement] =
-      Seq(new CPPConstructor(op.concept, "(Exp *)", Seq(new CPPStatement("e->Accept(this);"))))
+      Seq(new CPPConstructor(op.concept, "(const Exp *e)", Seq(new CPPStatement("e->Accept(this);"))))
       //Seq(new CPPElement (s"${op.concept} (Exp *e) { e->Accept(this); }".stripMargin))
 
     // binary methods?
     val binaryConstructor:Seq[CPPElement] = op match {
       case bm:domain.BinaryMethod =>
-        Seq(new CPPConstructor(op.concept, "(Exp *e, Exp *t)", Seq(new CPPStatement("that = t; e->Accept(this);"))))
+        Seq(new CPPConstructor(op.concept, "(const Exp *e, const Exp *t)", Seq(new CPPStatement("that = t; e->Accept(this);"))))
 //        Seq(new CPPElement (s"""
 //                               |${op.concept} (Exp *e, Exp *t) {
 //                               |    that = t;
@@ -170,7 +170,7 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
 
     // binary fields?
     val binaryField:Seq[CPPElement] = op match {
-      case bm:domain.BinaryMethod => Seq(new CPPStatement (s""" Exp *that; """))
+      case bm:domain.BinaryMethod => Seq(new CPPStatement (s"""const Exp *that; """))
       case _ => Seq.empty
     }
 
@@ -213,7 +213,7 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
 
     // Method declaration (with implementation)
     val visitor =
-      new CPPMethod("void", "Accept", "(IVisitor* v)", Seq("v->Visit(*this);"))
+      new CPPMethod("void", "Accept", "(IVisitor* v)", Seq("v->Visit(*this);")).setConstant()
       //new CPPElement("void Accept(IVisitor* v) { v->Visit(*this); } ")
 
     // add Binary methods if needed
@@ -300,7 +300,7 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
 
     // Ignore passed in model in favor of just grabbing it on demand...
     val allOps = getModel.flatten().types.map(exp =>
-      new CPPMethodDeclaration("virtual void", "Visit", s"($exp& e)").setVirtual())
+      new CPPMethodDeclaration("virtual void", "Visit", s"(const $exp& e)").setVirtual())
         //new CPPElement(s"virtual void Visit($exp& e) = 0;"))
 
     // forward refers

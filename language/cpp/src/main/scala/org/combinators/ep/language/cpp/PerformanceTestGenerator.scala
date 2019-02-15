@@ -1,14 +1,12 @@
-package org.combinators.ep.language.java    /*DI:LD:AI*/
+package org.combinators.ep.language.cpp    /*DI:LD:AI*/
 
-import com.github.javaparser.ast.expr.NameExpr
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 import org.combinators.ep.generator.LanguageIndependentTestGenerator
-import org.combinators.templating.twirl.Java
 
 /**
   * Isolate Performance tests
   */
-trait PerformanceTestGenerator extends JavaGenerator with LanguageIndependentTestGenerator with TestGenerator {
+trait PerformanceTestGenerator extends CPPGenerator with LanguageIndependentTestGenerator with TestGenerator {
   val domain: BaseDomain with ModelDomain
   import domain._
 
@@ -17,18 +15,18 @@ trait PerformanceTestGenerator extends JavaGenerator with LanguageIndependentTes
     private var nextBestVar = 0
     private var nextCacheVar = 0
 
-    def nextNow(): NameExpr = {
-      val result = Java(s"now$nextNowVar").nameExpression()
+    def nextNow(): CPPExpression = {
+      val result = new CPPExpression(s"now$nextNowVar")
       nextNowVar += 1
       result
     }
-    def nextBest(): NameExpr = {
-      val result = Java(s"best$nextBestVar").nameExpression()
+    def nextBest(): CPPExpression = {
+      val result = new CPPExpression(s"best$nextBestVar")
       nextBestVar += 1
       result
     }
-    def nextCache(): NameExpr = {
-      val result = Java(s"cache$nextCacheVar").nameExpression()
+    def nextCache(): CPPExpression = {
+      val result = new CPPExpression(s"cache$nextCacheVar")
       nextCacheVar += 1
       result
     }
@@ -55,9 +53,8 @@ trait PerformanceTestGenerator extends JavaGenerator with LanguageIndependentTes
     }
   }
 
-
   /** Return MethodDeclaration associated with given test cases. */
-  abstract override def junitTestMethod(test: TestCase, idx: Int): Seq[Statement] = {
+  abstract override def cppUnitTestMethod(test: TestCase, idx: Int): Seq[Statement] = {
      test match {
 
        case perf: PerformanceTestCase =>
@@ -71,7 +68,7 @@ trait PerformanceTestGenerator extends JavaGenerator with LanguageIndependentTes
                case (b, (p, cacheLine)) =>
                  val pBlock = toTargetLanguage(p).appendDependent { case Seq(pExp) =>
                    CodeBlockWithResultingExpressions(
-                     Java(s"${testTypeConverter(p.tpe)} $cacheLine = $pExp;").statement()
+                     new CPPStatement(s"${testTypeConverter(p.tpe)} $cacheLine = $pExp;")
                    )(cacheLine)
                  }
                  b.appendIndependent(pBlock)
@@ -80,7 +77,7 @@ trait PerformanceTestGenerator extends JavaGenerator with LanguageIndependentTes
              val initialInstBlock =
                toTargetLanguage(perf.initialInst).appendDependent { case Seq(instExp) =>
                  CodeBlockWithResultingExpressions(
-                   Java(s"${testTypeConverter(baseTypeRep)} $initialInstanceCache = $instExp;").statement()
+                   new CPPStatement(s"${testTypeConverter(baseTypeRep)} $initialInstanceCache = $instExp;")
                  )(initialInstanceCache)
                }
              initialInstBlock.appendDependent { case Seq(instExp) =>
@@ -106,7 +103,7 @@ trait PerformanceTestGenerator extends JavaGenerator with LanguageIndependentTes
                    case (b, (p, cacheLine)) =>
                      val pBlock = toTargetLanguage(p).appendDependent { case Seq(pExp) =>
                        CodeBlockWithResultingExpressions(
-                         Java(s"${testTypeConverter(p.tpe)} $cacheLine = $pExp;").statement()
+                         new CPPStatement(s"${testTypeConverter(p.tpe)} $cacheLine = $pExp;")
                        )(cacheLine)
                      }
                      b.appendIndependent(pBlock)
@@ -116,7 +113,7 @@ trait PerformanceTestGenerator extends JavaGenerator with LanguageIndependentTes
                    val nextInstBlock =
                      toTargetLanguage(nextInst).appendDependent { case Seq(instExp) =>
                        CodeBlockWithResultingExpressions(
-                         Java(s"${testTypeConverter(baseTypeRep)} $nextInstCache = $instExp;").statement()
+                         new CPPStatement(s"${testTypeConverter(baseTypeRep)} $nextInstCache = $instExp;")
                        )(nextInstCache)
                      }
                    nextInstBlock.appendDependent { case Seq(instExp) =>
@@ -136,27 +133,30 @@ trait PerformanceTestGenerator extends JavaGenerator with LanguageIndependentTes
                  val best = PerformanceTestNameGenerator.nextBest()
                  val nextBlock =
                    CodeBlockWithResultingExpressions(
-                     Java(
-                       s"""
-                          |long $now = System.nanoTime();
+                     Seq(new CPPStatement(s"""
+                          |struct timeval before$now;
+                          |struct timeval after$now;
+                          |gettimeofday(&before$now, (struct timezone *) NULL);
                           |$nextExp;
-                          |long $best = System.nanoTime() - $now;
+                          |gettimeofday(&after$now, (struct timezone *) NULL);
+                          |long $best = diffTimer(&before$now, &after$now);
+                          |
                           |for (int i = 1; i < ${perf.bestOf}; i++) {
-                          |    $now = System.nanoTime();
+                          |    gettimeofday(&before$now, (struct timezone *) NULL);
                           |    $nextExp;
-                          |    long duration = System.nanoTime() - $now;
+                          |    gettimeofday(&after$now, (struct timezone *) NULL);
+                          |    long duration = diffTimer(&before$now, &after$now);
                           |    if (duration < $best) { $best = duration; }
                           |}
-                          |System.out.println($nextExpNumber + "," + $best);
-                        """.stripMargin).statements() : _*
+                          |std::cout << $nextExpNumber << "," << $best << std::endl;
+                        """.stripMargin)) : _*
                    )()
                (nextExpNumber + 1, nextBlock.appendIndependent(lastBlock))
              }._2
            )
          performanceBlock.block
 
-       case _ => super.junitTestMethod(test, idx)
+       case _ => super.cppUnitTestMethod(test, idx)
      }
   }
-
 }

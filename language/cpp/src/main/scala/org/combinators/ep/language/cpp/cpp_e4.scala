@@ -47,6 +47,44 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with CPPProd
     }
   }
 
+  /** Provides fresh names for temporary list objects. */
+  object ListNameGenerator {
+    private var nextNumber: Int = 0
+    def nextFreshListName(): CPPExpression = {
+      val nextName = new CPPExpression(s"tmpList$nextNumber")
+      nextNumber += 1
+      nextName
+    }
+  }
+
+  /** E4 Introduces Lists of values. */
+  abstract override def toTargetLanguage(ei:domain.ExistsInstance) : CodeBlockWithResultingExpressions = {
+    ei.tpe match {
+      case tpe: List[_] =>
+        ei.inst match {
+          case s:Seq[tpe.generic.scalaInstanceType] =>
+            val listName = ListNameGenerator.nextFreshListName()
+            val ctype:CPPType = typeConverter(tpe)
+            val initBlock =
+              CodeBlockWithResultingExpressions(
+                new CPPStatement(s"$ctype $listName;")
+              )(listName)
+
+            s.foldLeft(initBlock) {
+              case (block, nextElem) =>
+                block.appendDependent { case Seq(constructedList) =>
+                  toTargetLanguage(domain.ExistsInstance(tpe.generic)(nextElem)).appendDependent { case Seq(nextElemExpr) =>
+                    CodeBlockWithResultingExpressions(
+                      new CPPStatement(s"$constructedList.push_back($nextElemExpr);")
+                    )(constructedList)
+                  }
+                }
+            }
+        }
+      case _ => super.toTargetLanguage(ei)
+    }
+  }
+
   abstract override def typeConverter(tpe:domain.TypeRep) : CPPType = {
     tpe match {
       case el:List[_] =>
@@ -113,7 +151,7 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with CPPProd
 //            Seq(new CPPElement(s"""${result(inst(Lit, value)).mkString("\n")} """))
 
           case Lit =>
-              inst(Lit, expression(exp, litValue)).appendDependent{ case Seq(litExp) => {
+              inst(Lit, valueOf(expression(exp, litValue))).appendDependent{ case Seq(litExp) => {
               CodeBlockWithResultingExpressions(result(litExp): _*)()
             }}.block
 

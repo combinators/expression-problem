@@ -1,11 +1,12 @@
 package org.combinators.ep.language.cpp     /*DI:LD:AI*/
 
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.generator.LanguageIndependentTestGenerator
 
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait TestGenerator extends CPPGenerator {
+trait TestGenerator extends CPPGenerator with LanguageIndependentTestGenerator {
   val domain: BaseDomain with ModelDomain
   import domain._
 
@@ -17,6 +18,9 @@ trait TestGenerator extends CPPGenerator {
     * A Seq of Seq because each individual test case can be considered to be a (potential) sequence of statements.
     */
   def testGenerator: Seq[Seq[CPPElement]] = Seq.empty
+
+  /** Converts types in test code. */
+  def testTypeConverter(ty: TypeRep) : Type = typeConverter(ty)
 
   /**
     * Performance tests.
@@ -78,12 +82,12 @@ trait TestGenerator extends CPPGenerator {
     * Not sure, yet, how to properly pass in variable parameters.
     */
   //def actual(op:Operation, inst:Inst, params:CPPElement*):CPPElement
-
-  def actual(op: domain.Operation, inst: domain.Inst, params: Expression*): CodeBlockWithResultingExpressions = {
-    toTargetLanguage(inst).appendDependent(instExp =>
-      CodeBlockWithResultingExpressions(contextDispatch(NoSource, deltaExprOp(NoSource, instExp.head, op, params: _*)))
-    )
-  }
+//
+//  def actual(op: domain.Operation, inst: domain.Inst, params: Expression*): CodeBlockWithResultingExpressions = {
+//    toTargetLanguage(inst).appendDependent(instExp =>
+//      CodeBlockWithResultingExpressions(contextDispatch(NoSource, deltaExprOp(NoSource, instExp.head, op, params: _*)))
+//    )
+//  }
 
   /** Convert a test instance into a C++ Expression for instantiating that instance. */
   def rec_convert(inst: Inst): CPPExpression
@@ -215,66 +219,4 @@ trait TestGenerator extends CPPGenerator {
     tests.zipWithIndex.map{ case (test, idx) => cppUnitTestMethod(test, idx) }
   }
 
-  /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
-  def generateSuite(pkg: Option[String], model: Option[Model] = None): Seq[CPPFile] = {
-    val allTests = testGenerator.zipWithIndex.map{ case (t, num) =>
-
-      new CPPStatement(
-            s"""
-               |TEST_GROUP(TestGroup$num)
-               |{
-               |};
-               |
-              |TEST(TestGroup$num, a$num)
-               |{
-               |   ${t.mkString("\n")}
-               |}""".stripMargin
-      )
-    }
-
-    // include performance timing code
-    val sa = new StandAlone("test_e0",
-      s"""
-         |#include <sys/time.h>
-         |long diffTimer (struct timeval *before, struct timeval *after) {
-         |  long ds = after->tv_sec - before->tv_sec;
-         |  long uds = after->tv_usec - before->tv_usec;
-         |
-         |  /* if secs are same, then return simple delta */
-         |  if (ds == 0) {
-         |    return uds;
-         |  }
-         |
-         |  /* ok, so we are turned over. Something like: */
-         |  /* before: 1179256745 744597                  */
-         |  /* after:  1179256746 73514                   */
-         |
-         |  /* if we have 'turned over' then account properly */
-         |  if (uds < 0) {
-         |    ds = ds - 1;
-         |    uds += 1000000;
-         |  }
-         |
-         |  return 1000000*ds + uds;
-         |}
-         |
-         |${allTests.mkString("\n")}
-         |
-         |int main(int ac, char** av)
-         |{
-         |  MemoryLeakWarningPlugin::turnOffNewDeleteOverloads();
-         |  return CommandLineTestRunner::RunAllTests(ac, av);
-         |}""".stripMargin.split("\n")
-    )
-
-    sa.addHeader(Seq(
-      """#include "CppUTest/TestHarness.h" """,
-      """#include "CppUTest/SimpleString.h" """,
-      """#include "CppUTest/PlatformSpecificFunctions.h" """,
-      """#include "CppUTest/TestMemoryAllocator.h" """,
-      """#include "CppUTest/MemoryLeakDetector.h" """,
-      """#include "CppUTest/CommandLineTestRunner.h" """))
-
-    Seq(sa)
-  }
 }

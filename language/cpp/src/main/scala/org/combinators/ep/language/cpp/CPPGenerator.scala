@@ -49,7 +49,7 @@ trait CPPGenerator extends LanguageIndependentGenerator {
     *
     * Currently "build.sh"
     */
-  val cppResources:String = Seq("src", "main", "resources", "cpp-resources").mkString(File.separator)
+  val cppResources:String = Seq("language", "cpp", "src", "main", "resources", "cpp-resources").mkString(File.separator)
 
   /** Taken from scala meta web page. */
   def loadSource(entry:String*) : FileWithPath = {

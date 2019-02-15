@@ -24,7 +24,7 @@ import org.combinators.ep.language.cpp._
 abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends CodeGenerationController[CPPFile](web, app)
 {
-  val gen:WithDomain[MathDomain] with CPPVisitorGenerator with TestGenerator
+  val gen:WithDomain[MathDomain] with CPPVisitorGenerator with CPPUnitTestGenerator
 
 override lazy val generatedCode:Seq[CPPFile] =
     gen.generatedCode() ++

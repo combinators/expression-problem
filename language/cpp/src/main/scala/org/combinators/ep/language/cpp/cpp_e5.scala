@@ -56,23 +56,25 @@ trait cpp_e5 extends Evolution with CPPGenerator with TestGenerator with M0 with
     }
   }
 
-  //  abstract override def testMethod(tests:Seq[domain.TestCase]) : Seq[CPPElement] = {
   override def cppUnitTestMethod(test:TestCase, idx:Int) : Seq[Statement] = {
-      test match {
-        case ctc: SameTestCase =>
-          val tree1 = actual(AsTree, ctc.inst1)
-          val tree2 = actual(AsTree, ctc.inst2)
-
-          if (ctc.result) {
-            Seq(new CPPStatement(s"CHECK_TRUE($tree1->same($tree2));"))
-          } else {
-            Seq(new CPPStatement(s"CHECK_TRUE(!$tree1->same($tree2));"))
+    test match {
+      case ctc: SameTestCase =>
+        actual(AsTree, ctc.inst1).appendDependent { case Seq(treeLeft) =>
+          actual(AsTree, ctc.inst2).appendDependent { case Seq(treeRight) =>
+            val same = new CPPExpression(s"$treeLeft->same($treeRight)")
+            CodeBlockWithResultingExpressions(
+              if (ctc.result) {
+                new CPPStatement(s"CHECK_TRUE($same);")
+              } else {
+                new CPPStatement(s"CHECK_FALSE($same);")
+              }
+            )()
           }
+        }.block
 
-        case _ =>
-          super.cppUnitTestMethod(test, idx)
-      }
+      case _ => super.cppUnitTestMethod(test, idx)
     }
+  }
 
   abstract override def testGenerator: Seq[Seq[CPPElement]] = {
     super.testGenerator ++ testMethod(M5_tests)

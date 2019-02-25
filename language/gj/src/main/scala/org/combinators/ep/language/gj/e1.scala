@@ -26,9 +26,10 @@ trait e1 extends Evolution with GJGenerator with TestGenerator with M1 {
     val s1 = new domain.BinaryInst(Sub, LitInst(1.0), LitInst(2.0))
     val modName = getModel.name
 
+    // TODO: FIx hack
     super.testGenerator ++ Seq(GJ(
       s"""|   Lang$modName l = new Lang$modName();
-          |   assertEquals(-1.0, ${testDispatch(toTargetLanguage(s1), Eval)});
+          |   assertEquals(-1.0, ${testDispatch(toTargetLanguage(s1).resultingExpressions.head, Eval)});
           |""".stripMargin))
   }
 }

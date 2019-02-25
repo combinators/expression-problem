@@ -11,7 +11,11 @@ import org.combinators.templating.twirl.Java
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait AlgebraTestGenerator extends JUnitTestGenerator with JavaGenerator with LanguageIndependentTestGenerator with JavaBinaryMethod {
+trait AlgebraTestGenerator
+  extends JUnitTestGenerator
+    with JavaGenerator
+    with LanguageIndependentTestGenerator
+    with JavaBinaryMethod {
   val domain: BaseDomain with ModelDomain
   import domain._
 

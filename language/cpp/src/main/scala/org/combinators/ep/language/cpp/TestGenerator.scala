@@ -1,13 +1,16 @@
 package org.combinators.ep.language.cpp     /*DI:LD:AI*/
 
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.generator.LanguageIndependentTestGenerator
 
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait TestGenerator extends CPPGenerator {
+trait TestGenerator extends CPPGenerator with LanguageIndependentTestGenerator {
   val domain: BaseDomain with ModelDomain
   import domain._
+
+  type UnitTest = Seq[CPPElement]
 
   /**
     * Return sample C++ test cases.
@@ -16,12 +19,15 @@ trait TestGenerator extends CPPGenerator {
     */
   def testGenerator: Seq[Seq[CPPElement]] = Seq.empty
 
+  /** Converts types in test code. */
+  def testTypeConverter(ty: TypeRep) : Type = typeConverter(ty)
+
   /**
     * Performance tests.
     *
     * A Seq of Seq because each individual performance unit can be considered to be a (potential) sequence of statements.
     */
-  def performanceMethod: Seq[Seq[CPPElement]] = Seq.empty
+  //def performanceMethod: Seq[Seq[CPPElement]] = Seq.empty
 
   /** Counter to use for creating artificial variables during testing. */
   var id = 0
@@ -34,7 +40,7 @@ trait TestGenerator extends CPPGenerator {
   /** Used when one already has code fragments bound to variables, which are to be used for left and right. */
   def convertRecursive(inst: Binary, left:String, right:String): Expression = {
     val name = inst.name
-    new CPPElement(s"new $name($left, $right)")
+    new CPPExpression(s"new $name($left, $right)")
   }
 
   /** Register an instance and get its variable identifier. */
@@ -62,7 +68,7 @@ trait TestGenerator extends CPPGenerator {
     * you will have to override this method accordingly.
     */
   def expected(test:TestCaseExpectedValue, id:String) : (CPPElement => Seq[CPPElement]) => Seq[CPPElement] = continue => {
-    continue(new CPPElement(test.expect.inst.toString))
+    continue(new CPPExpression(test.expect.inst.toString))
   }
 
   /**
@@ -75,10 +81,16 @@ trait TestGenerator extends CPPGenerator {
     *
     * Not sure, yet, how to properly pass in variable parameters.
     */
-  def actual(op:Operation, inst:Inst, params:CPPElement*):CPPElement
+  //def actual(op:Operation, inst:Inst, params:CPPElement*):CPPElement
+//
+//  def actual(op: domain.Operation, inst: domain.Inst, params: Expression*): CodeBlockWithResultingExpressions = {
+//    toTargetLanguage(inst).appendDependent(instExp =>
+//      CodeBlockWithResultingExpressions(contextDispatch(NoSource, deltaExprOp(NoSource, instExp.head, op, params: _*)))
+//    )
+//  }
 
   /** Convert a test instance into a C++ Expression for instantiating that instance. */
-  def rec_convert(inst: Inst): CPPElement
+  def rec_convert(inst: Inst): CPPExpression
 
   /** Convert a test instance into a C++ Expression for instantiating that instance. */
   def convert(inst: Inst): CPPElement = {
@@ -86,19 +98,19 @@ trait TestGenerator extends CPPGenerator {
     id = id + 1
     inst match {
       case ui: UnaryInst =>
-        new CPPElement(s"$name ${vars(inst)} = $name(&${vars(ui.inner)});")
+        new CPPStatement(s"$name ${vars(inst)} = $name(&${vars(ui.inner)});")
 
       case bi: BinaryInst =>
-        new CPPElement(s"$name ${vars(inst)} = $name(&${vars(bi.left)}, &${vars(bi.right)});")
+        new CPPStatement(s"$name ${vars(inst)} = $name(&${vars(bi.left)}, &${vars(bi.right)});")
 
       case exp: AtomicInst =>
-        new CPPElement(
+        new CPPStatement(
         s"""
            |double val${vars(inst)} = ${exp.ei.inst};
            |$name ${vars(inst)} = $name(&val${vars(inst)});
          """.stripMargin)
 
-      case _ => new CPPElement(s""" "unknown $name" """)
+      case _ => new CPPStatement(s""" "unknown $name" """)
     }
   }
 
@@ -117,19 +129,84 @@ trait TestGenerator extends CPPGenerator {
         // method will pass in the expression (which is expected) into this function, and it is the job of that
         // function to return the variable.
         expected(eq, id)(expectedExpr =>
-          Seq(new CPPElement(s"CHECK_TRUE($expectedExpr == ${actual(eq.op, eq.inst)});")))
+          Seq(new CPPStatement(s"CHECK_TRUE($expectedExpr == ${actual(eq.op, eq.inst)});")))
+
+        val expectedBlock = toTargetLanguage(eq.expect)
+        val parameterBlock =
+          eq.params.foldLeft(CodeBlockWithResultingExpressions.empty) {
+            case (b, p) => b.appendIndependent(toTargetLanguage(p))
+          }
+
+        val actualBlock = parameterBlock.appendDependent(params =>
+          actual(eq.op, eq.inst, params: _*)
+        )
+
+        expectedBlock.appendDependent { case Seq(expectedValue) =>
+          actualBlock.appendDependent { case Seq(actualValue) =>
+            CodeBlockWithResultingExpressions(new CPPStatement(s"CHECK_TRUE($expectedValue == $actualValue);"))()
+          }
+        }.block
+
+
+//      case ne: NotEqualsTestCase =>
+//        // The expected method takes in a function that will be called by the expected method. Now, the expected
+//        // method will pass in the expression (which is expected) into this function, and it is the job of that
+//        // function to return the variable.
+//        expected(ne, id)(expectedExpr =>
+//          Seq(new CPPElement(s"CHECK_TRUE($expectedExpr != ${actual(ne.op, ne.inst)});")))
 
       case ne: NotEqualsTestCase =>
-        // The expected method takes in a function that will be called by the expected method. Now, the expected
-        // method will pass in the expression (which is expected) into this function, and it is the job of that
-        // function to return the variable.
-        expected(ne, id)(expectedExpr =>
-          Seq(new CPPElement(s"CHECK_TRUE($expectedExpr != ${actual(ne.op, ne.inst)});")))
+        val unExpectedBlock = toTargetLanguage(ne.expect)
+        val parameterBlock =
+          ne.params.foldLeft(CodeBlockWithResultingExpressions.empty) {
+            case (b, p) => b.appendIndependent(toTargetLanguage(p))
+          }
+        val actualBlock =
+          parameterBlock.appendDependent(params =>
+            actual(ne.op, ne.inst, params: _*)
+          )
+
+        unExpectedBlock.appendDependent { case Seq(unExpectedValue) =>
+          actualBlock.appendDependent { case Seq(actualValue) =>
+            CodeBlockWithResultingExpressions(new CPPStatement(s"CHECK_TRUE($unExpectedValue != $actualValue);"))()
+          }
+        }.block
+
+//      case seq: EqualsCompositeTestCase =>
+//        val x: Expression = actual(seq.ops.head, seq.inst) // HACK: Only works for two-deep
+//        val y: Expression = dispatch(x, seq.ops.tail.head)
+//        expected(seq, id)(expectedExpr => Seq(new CPPElement(s"CHECK_COMPARE($expectedExpr, ==, $y);")))
 
       case seq: EqualsCompositeTestCase =>
-        val x: Expression = actual(seq.ops.head, seq.inst) // HACK: Only works for two-deep
-        val y: Expression = dispatch(x, seq.ops.tail.head)
-        expected(seq, id)(expectedExpr => Seq(new CPPElement(s"CHECK_COMPARE($expectedExpr, ==, $y);")))
+        val expectedBlock = toTargetLanguage(seq.expect)
+        val actualStartBlock = {
+          val parameterBlock =
+            seq.ops.head._2.foldLeft(CodeBlockWithResultingExpressions.empty) {
+              case (b, p) => b.appendIndependent(toTargetLanguage(p))
+            }
+          parameterBlock.appendDependent(params =>
+            actual(seq.ops.head._1, seq.inst, params: _*)
+          )
+        }
+        val actualBlock = seq.ops.tail.foldLeft(actualStartBlock) { case (currentBlock, (nextOp, nextParams)) =>
+          currentBlock.appendDependent { case Seq(currentResult) =>
+            val parameterBlock =
+              nextParams.foldLeft(CodeBlockWithResultingExpressions.empty) {
+                case (b, p) => b.appendIndependent(toTargetLanguage(p))
+              }
+            parameterBlock.appendDependent(params =>
+              CodeBlockWithResultingExpressions(
+                contextDispatch(NoSource, deltaExprOp(NoSource, currentResult, nextOp, params: _*))
+              )
+            )
+          }
+        }
+
+        expectedBlock.appendDependent { case Seq(expectedValue) =>
+          actualBlock.appendDependent { case Seq(actualValue) =>
+            CodeBlockWithResultingExpressions(new CPPStatement(s"CHECK_COMPARE($expectedValue, ==, $actualValue);"))()
+          }
+        }.block
 
       case _ => Seq.empty
     }
@@ -142,67 +219,4 @@ trait TestGenerator extends CPPGenerator {
     tests.zipWithIndex.map{ case (test, idx) => cppUnitTestMethod(test, idx) }
   }
 
-  /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
-  def generateSuite(pkg: Option[String], model: Option[Model] = None): Seq[CPPFile] = {
-    val tests = testGenerator ++ performanceMethod
-    val allTests = tests.zipWithIndex.map{ case (t, num) =>
-
-      new CPPElement(
-            s"""
-               |TEST_GROUP(TestGroup$num)
-               |{
-               |};
-               |
-              |TEST(TestGroup$num, a$num)
-               |{
-               |   ${t.mkString("\n")}
-               |}""".stripMargin
-      )
-    }
-
-    // include performance timing code
-    val sa = new StandAlone("test_e0",
-      s"""
-         |#include <sys/time.h>
-         |long diffTimer (struct timeval *before, struct timeval *after) {
-         |  long ds = after->tv_sec - before->tv_sec;
-         |  long uds = after->tv_usec - before->tv_usec;
-         |
-         |  /* if secs are same, then return simple delta */
-         |  if (ds == 0) {
-         |    return uds;
-         |  }
-         |
-         |  /* ok, so we are turned over. Something like: */
-         |  /* before: 1179256745 744597                  */
-         |  /* after:  1179256746 73514                   */
-         |
-         |  /* if we have 'turned over' then account properly */
-         |  if (uds < 0) {
-         |    ds = ds - 1;
-         |    uds += 1000000;
-         |  }
-         |
-         |  return 1000000*ds + uds;
-         |}
-         |
-         |${allTests.mkString("\n")}
-         |
-         |int main(int ac, char** av)
-         |{
-         |  MemoryLeakWarningPlugin::turnOffNewDeleteOverloads();
-         |  return CommandLineTestRunner::RunAllTests(ac, av);
-         |}""".stripMargin.split("\n")
-    )
-
-    sa.addHeader(Seq(
-      """#include "CppUTest/TestHarness.h" """,
-      """#include "CppUTest/SimpleString.h" """,
-      """#include "CppUTest/PlatformSpecificFunctions.h" """,
-      """#include "CppUTest/TestMemoryAllocator.h" """,
-      """#include "CppUTest/MemoryLeakDetector.h" """,
-      """#include "CppUTest/CommandLineTestRunner.h" """))
-
-    Seq(sa)
-  }
 }

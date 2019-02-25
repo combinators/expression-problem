@@ -1,7 +1,7 @@
 package org.combinators.ep.language.cpp.visitorTable   /*DI:LD:AD*/
 
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
-import org.combinators.ep.language.cpp._
+import org.combinators.ep.language.cpp.{CPPElement, _}
 
 // visitor based solution that uses a hashtable to store partial results of recursive calls.
 trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerator with CPPBinaryMethod {
@@ -37,19 +37,19 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
     * values are stored in local table, indexed by e
     */
   override def result (expr:Expression) : Seq[Statement] = {
-    Seq(new CPPElement(s"value_map_[e] = $expr;"))
+    Seq(new CPPStatement(s"value_map_[e] = $expr;"))
   }
 
   /** For straight design solution, directly access attributes by name. */
   override def expression (exp:DataType, att:Attribute) : Expression = {
-    new CPPElement(s"${att.instance}")
+    new CPPExpression(s"${att.instance}")
   }
 
   /** Directly access local method, one per operation, with a parameter. For VisitorTable, must grab from valueMap. */
   // TODO: do something about capitalization
-  override def dispatch(expr:CPPElement, op:Operation, params:CPPElement*) : CPPElement = {
+  override def dispatch(expr:CPPExpression, op:Operation, params:CPPExpression*) : CPPExpression = {
     val args:String = params.mkString(",")
-    new CPPElement(s"value_map_[e->get${expr.toString.capitalize}($args)]")
+    new CPPExpression(s"value_map_[e->get${expr.toString.capitalize}($args)]")
   }
 
   override def contextDispatch(source:Context, delta:Delta) : Expression = {
@@ -61,11 +61,11 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
         ""
       }
 
-      new CPPElement(s"((new ${delta.op.get.concept}(${delta.expr.get}$opargs))->getValue())")
+      new CPPExpression(s"((new ${delta.op.get.concept}(${delta.expr.get}$opargs))->getValue())")
     } else if (delta.expr.isEmpty) {
       val op = delta.op.get.concept
       val args = delta.params.mkString (",")
-      new CPPElement(s"(new $op(e))->getValue()")
+      new CPPExpression(s"(new $op(e))->getValue()")
     } else if (delta.op.isDefined) {
       val opParams = if (delta.params.nonEmpty) {
         "(" + delta.params.mkString(",") + ")"
@@ -73,7 +73,7 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
         ""
       }
       val op = delta.op.get.concept
-      new CPPElement(s"(new $op(value_map_[e->get${delta.expr.get.toString.capitalize}($opParams)]))->getValue()")
+      new CPPExpression(s"(new $op(value_map_[e->get${delta.expr.get.toString.capitalize}($opParams)]))->getValue()")
     } else {
       super.contextDispatch(source, delta)
     }
@@ -82,9 +82,9 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
   /**
     * For Visitor table, must dereference
     */
-  override def valueOf(expr:Expression, params:CPPElement*): CPPElement = {
+  override def valueOf(expr:Expression, params:CPPElement*): CPPExpression = {
     val args:String = params.mkString(",")
-    new CPPElement(s"e->get${expr.toString.capitalize}($args)")
+    new CPPExpression(s"e->get${expr.toString.capitalize}($args)")
   }
 
   /** Return designated Java type associated with type, or void if all else fails. */
@@ -153,29 +153,32 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
 
     // no-arg constructor
     val constructor:Seq[CPPElement] =
-      Seq(new CPPElement (s"${op.concept} (const Exp *e) { top = e; e->Accept(this); }".stripMargin))
+      Seq(new CPPConstructor (op.concept, "(const Exp *e)", Seq(new CPPStatement("top = e; e->Accept(this);"))))
+
+      //Seq(new CPPMethod (s"${op.concept} (const Exp *e) { top = e; e->Accept(this); }".stripMargin))
 
     // binary methods?
     val binaryConstructor:Seq[CPPElement] = op match {
       case bm:domain.BinaryMethod =>
-        Seq(new CPPElement (s"""|${op.concept} (Exp *e, Exp *t) {
-                                |    that = t;
-                                |    top = e;
-                                |    e->Accept(this);
-                                |}""".stripMargin))
+        Seq(new CPPConstructor (op.concept, "(Exp *e, Exp *t)", Seq(new CPPStatement("that = t; top = e; e->Accept(this);"))))
+//        Seq(new CPPElement (s"""|${op.concept} (Exp *e, Exp *t) {
+//                                |    that = t;
+//                                |    top = e;
+//                                |    e->Accept(this);
+//                                |}""".stripMargin))
       case _ => Seq.empty
     }
 
     // binary fields?
     val binaryField:Seq[CPPElement] = op match {
-      case bm:domain.BinaryMethod => Seq(new CPPElement (s" Exp *that; "))
+      case bm:domain.BinaryMethod => Seq(new CPPStatement (s" Exp *that; "))
       case _ => Seq.empty
     }
 
-    val topField:Seq[CPPElement] = Seq(new CPPElement(s"const Exp *top;"))
+    val topField:Seq[CPPElement] = Seq(new CPPStatement(s"const Exp *top;"))
 
     new CPPClass (op.concept, op.concept, constructor ++ lookup ++ binaryConstructor ++ signatures,
-      Seq(new CPPElement(s"""std::map<const Exp*, $realType  > value_map_;""")) ++ topField ++ binaryField)
+      Seq(new CPPStatement(s"""std::map<const Exp*, $realType  > value_map_;""")) ++ topField ++ binaryField)
       .setSuperclass("ExpVisitor")
       .addHeader(Seq("""#include "ExpVisitor.h" """, """#include "visitor.h" """))
       .addHeader(extras)
@@ -185,31 +188,32 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
   def generateExpImpl(model:Model, sub:DataType) : CPPFile = {
     val signatures = sub.attributes
       .filter(att => att.tpe == domain.baseTypeRep)
-      .map(att => new CPPElement(s"${att.instance}->Accept(visitor);")).mkString("\n")
+      .map(att => new CPPStatement(s"${att.instance}->Accept(visitor);")).mkString("\n")
 
     val binaryMethods:Seq[CPPElement] = if (getModel.flatten().hasBinaryMethod()) {
       // sub
-      val method:String = sub match {
+      // CPPMethod (val _retType:String, val _name:String, val _params:String, val _body:Seq[String]) extends CPPElement {
+
+
+      val body:String = sub match {
         case _:Unary | _:Binary => {
           val atts = sub.attributes
             .filter(att => att.tpe == domain.baseTypeRep)
             .map(att => s"${att.instance}->astree()").mkString(",")
 
           s"""
-             |Tree *${sub.concept}::astree() const {
              |    std::vector<Tree *> vec_${sub.instance} = { $atts };
              |    return new Node(vec_${sub.instance}, DefinedSubtypes::${sub.concept}Subtype);
-             |}""".stripMargin
+             |""".stripMargin
         }
-        case lit:Atomic => {
+        case _:Atomic => {
           s"""
-             |Tree *${sub.concept}::astree() const {
              |    return new Leaf(getValue());    // hard-coded and could be replaced.
-             |}""".stripMargin
+             |""".stripMargin
         }
       }
-
-      Seq(new CPPElement(method))
+      Seq(new CPPMethod("Tree *", s"${sub.concept}::astree", "()", Seq(body)).setConstant())
+//      Seq(new CPPElement(method))
     } else {
       Seq.empty
     }
@@ -231,7 +235,7 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
   }
 
   /** Generate the full class for the given expression sub-type (except for impl). */
-  def generateExp(model:Model, sub:Atomic) : CPPFile = {
+  def generateExp(model:Model, sub:DataType) : CPPFile = {
     val name = sub.name
 
     // Builds up the attribute fields and set/get methods. Also prepares for one-line constructor.
@@ -254,25 +258,31 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
         }
       }
 
-      addedFields = addedFields :+ new CPPElement(s"const $tpe$ptr ${att.instance};")
+      addedFields = addedFields :+ new CPPStatement(s"const $tpe$ptr ${att.instance};")
 
       // prepare for constructor
       params = params :+ s"const $tpe$ptr ${att.instance}_"
       cons = cons :+ s"${att.instance}(${att.instance}_)"
 
       // make the set/get methods
-      addedMethods = addedMethods :+ new CPPElement(s"const $tpe$ptr get$capAtt() const { return ${att.instance}; }")
+      addedMethods = addedMethods :+
+        new CPPMethod(s"const $tpe$ptr", s"get$capAtt", "()", Seq(s"return ${att.instance};")).setConstant()
+//        new CPPElement(s"const $tpe$ptr get$capAtt() const { return ${att.instance}; }")
     })
 
     // make constructor
-    addedMethods = addedMethods :+ new CPPElement (s"${sub.concept} (${params.mkString(",")}) : ${cons.mkString(",")} {}")
+    addedMethods = addedMethods :+
+      new CPPConstructor(sub.concept, s"(${params.mkString(",")}) : ${cons.mkString(",")}", Seq(new CPPStatement("")))
+//      new CPPElement (s"${sub.concept} (${params.mkString(",")}) : ${cons.mkString(",")} {}")
 
     // Method declaration (not implementation)
-    val visitor = new CPPElement("void Accept(ExpVisitor* visitor) const;")
+    val visitor = new CPPMethodDeclaration ("void", "Accept", "(ExpVisitor* visitor)").setConstant()
+//      new CPPElement("void Accept(ExpVisitor* visitor) const;")
 
     // add Binary methods if needed
     val astreeMethod:Seq[CPPElement] = if (getModel.flatten().hasBinaryMethod()) {
-      Seq(new CPPElement (s"""Tree *${domain.AsTree.instance}() const; """))
+      Seq(new CPPMethodDeclaration ("Tree *", domain.AsTree.instance, "()").setConstant())
+      //Seq(new CPPElement (s"""Tree *${domain.AsTree.instance}() const; """))
     } else {
       Seq.empty
     }
@@ -290,7 +300,8 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
 
     // binary methods?
     val astreeMethod:Seq[CPPElement] = if (getModel.flatten().hasBinaryMethod()) {
-      Seq(new CPPElement ("""virtual Tree *astree() const = 0;"""))
+      Seq(new CPPMethodDeclaration ("virtual Tree *", domain.AsTree.instance, "()").setConstant().setVirtual())
+      //Seq(new CPPElement ("""virtual Tree *astree() const = 0;"""))
     } else {
       Seq.empty
     }
@@ -302,7 +313,8 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
     }
 
     new CPPClass("Exp", "Exp",
-      Seq(new CPPElement(s"""virtual void Accept(ExpVisitor* visitor) const = 0;""")) ++ astreeMethod, Seq.empty)
+      Seq(new CPPMethodDeclaration("virtual void", "Accept", "(ExpVisitor* visitor)").setConstant().setVirtual()) ++ astreeMethod, Seq.empty)
+      //Seq(new CPPElement(s"""virtual void Accept(ExpVisitor* visitor) const = 0;""")) ++ astreeMethod, Seq.empty)
       .addHeader(Seq(s"""#include "visitor.h" """, s"""class ExpVisitor;""") ++ astreeHeaders)
   }
 
@@ -311,7 +323,8 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
 
     // Ignore passed in model in favor of just grabbing it on demand...
     val allOps = getModel.flatten().types.map(exp =>
-      new CPPElement(s"""virtual void Visit(const $exp* e) = 0;"""))
+      new CPPMethodDeclaration("virtual void", "Visit", s"(const $exp* e)").setVirtual())
+      //new CPPElement(s"""virtual void Visit(const $exp* e) = 0;"""))
     val allHeaders = getModel.flatten().types.map(exp => s"""#include "$exp.h" """)
 
     val moreImports = if (getModel.flatten().hasBinaryMethod()) {

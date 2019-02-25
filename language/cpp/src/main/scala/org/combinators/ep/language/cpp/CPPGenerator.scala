@@ -17,20 +17,30 @@ trait CPPGenerator extends LanguageIndependentGenerator {
 
   type CompilationUnit = CPPFile
   type Type = CPPType
-  type Expression = CPPElement
-  type Statement = CPPElement
+  type Expression = CPPExpression
+  type Statement = CPPStatement
 
   /**
     * Default behavior in C++ is to return an expression value.
     */
   def result (expr:Expression) : Seq[Statement] = {
-    Seq(new CPPElement(s"return $expr;"))
+    Seq(new CPPStatement(s"return $expr;"))
+  }
+
+  /**
+    * For producer operations, there is a need to instantiate objects, and one would use this
+    * method (with specific parameters) to carry this out.
+    */
+  def inst(exp:domain.DataType, params:Expression*): CodeBlockWithResultingExpressions = {
+    CodeBlockWithResultingExpressions(
+      new CPPExpression(s"new ${exp.concept}${params.mkString("(", ", ", ")")}")
+    )
   }
 
   /**
     * Return just the expression.
     */
-  def valueOf(expr:Expression, params:CPPElement*): CPPElement = {
+  def valueOf(expr:Expression, params:CPPElement*): CPPExpression = {
     expr
   }
 
@@ -39,8 +49,7 @@ trait CPPGenerator extends LanguageIndependentGenerator {
     *
     * Currently "build.sh"
     */
-  val cppResources:String = Seq("src", "main", "resources", "cpp-resources").mkString(File.separator)
-
+  val cppResources:String = Seq("language", "cpp", "src", "main", "resources", "cpp-resources").mkString(File.separator)
 
   /** Taken from scala meta web page. */
   def loadSource(entry:String*) : FileWithPath = {

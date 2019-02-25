@@ -65,7 +65,7 @@ trait e5 extends Evolution with HaskellGenerator with HUnitTestGenerator with Ha
 
     test match {
       case ctc: SameTestCase =>
-        val source = NoSource()
+        val source = NoSource
         val tree1 = contextDispatch(source, deltaExprOp(source, toTargetLanguage(ctc.inst1), AsTree))
         val tree2 = contextDispatch(source, deltaExprOp(source, toTargetLanguage(ctc.inst2), AsTree))
 

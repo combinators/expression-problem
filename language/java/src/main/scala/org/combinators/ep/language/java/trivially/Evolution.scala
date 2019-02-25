@@ -13,7 +13,7 @@ import play.api.inject.ApplicationLifecycle
 abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends CodeGenerationController[CompilationUnit](web, app)
 {
-  val gen:WithDomain[MathDomain] with TriviallyGenerator with JUnitTestGenerator
+  val gen:WithDomain[MathDomain] with TriviallyGenerator with TriviallyTestGenerator
 
   override lazy val generatedCode:Seq[CompilationUnit] =
     gen.generatedCode() ++

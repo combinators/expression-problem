@@ -6,14 +6,16 @@ import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
 import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.deployment.CodeGenerationController
+import org.combinators.ep.language.cpp.CPPFileUtils.PersistCPPFile
 import org.combinators.ep.domain.WithDomain
 import org.combinators.ep.domain.math.MathDomain
+import org.combinators.ep.generator.FileWithPath
 import org.combinators.ep.language.cpp._
 
 abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends CodeGenerationController[CPPFile](web, app)
 {
-  val gen:WithDomain[MathDomain] with StraightGenerator with TestGenerator
+  val gen:WithDomain[MathDomain] with StraightGenerator with CPPUnitTestGenerator
 
   lazy val generatedCode:Seq[CPPFile] =
     gen.generatedCode() ++

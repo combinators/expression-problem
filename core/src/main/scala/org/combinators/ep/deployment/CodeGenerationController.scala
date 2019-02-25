@@ -1,6 +1,4 @@
-package org.combinators.ep.deployment
-
-/*DI:LI:AI*/
+package org.combinators.ep.deployment   /*DI:LI:AI*/
 
 import org.combinators.cls.git.{EmptyInhabitationBatchJobResults, InhabitationController, Results, RoutingEntries}
 import org.combinators.cls.interpreter.ReflectedRepository
@@ -12,8 +10,7 @@ import play.api.mvc.{Action, AnyContent}
 /**
   * This class is the foundation of any EP code generation strategy.
   *
-  * For each EP strategy, develop a subclass. [[ep.j.oo.Foundation]], for example,
-  * is defined as follows:
+  * For each EP strategy, develop a subclass, for example, one possibility is shown below:
   *
   * {{{
   *   abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)

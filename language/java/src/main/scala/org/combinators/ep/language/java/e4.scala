@@ -100,6 +100,7 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
             inst(Lit, expression(exp, litValue)).appendDependent{ case Seq(litExp) =>
               CodeBlockWithResultingExpressions(result(litExp):_*)()
             }.block
+
           case Add =>
             val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
             val deltaRight = deltaChildOp(source, domain.base.right, Eval)
@@ -122,6 +123,7 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
                      |} else {
                      |   ${dispatchBothResultBlock.block.mkString("\n")}
                      |}""".stripMargin).statements()
+
           case Sub =>
             val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
             val deltaRight = deltaChildOp(source, domain.base.right, Eval)
@@ -137,6 +139,7 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
                      |} else {
                      |   ${dispatchBothResultBlock.block.mkString("\n")}
                      |}""".stripMargin).statements()
+
           case Mult =>
             val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
             val deltaRight = deltaChildOp(source, domain.base.right, Eval)
@@ -159,6 +162,7 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
                      |   ${dispatchBothResultBlock.block.mkString("\n")}
                      |}
                      |""".stripMargin).statements()
+
           case Divd =>
             val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
             val deltaRight = deltaChildOp(source, domain.base.right, Eval)
@@ -183,6 +187,7 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
                      |   ${dispatchBothResultBlock.block.mkString("\n")}
                      |}
                      |""".stripMargin).statements()
+
             // TODO: Would love to have ability to simplify neg(neg(x)) to just be x. This requires a form
             // of inspection that might not be generalizable...
           case Neg =>
@@ -198,6 +203,7 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
                     |} else {
                     |   ${dispatchBothResultBlock.block.mkString("\n")}
                     |}""".stripMargin).statements()
+
           case _ => super.logic(exp, op)
         }
 

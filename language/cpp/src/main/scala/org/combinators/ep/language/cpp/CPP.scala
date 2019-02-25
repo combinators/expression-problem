@@ -15,9 +15,16 @@ class CPPBase {
 /**
   * A C++ Field or Method
   */
-class CPPElement (val stmt:String = "") extends CPPBase {
+abstract class CPPElement (val stmt:String = "") extends CPPBase {
   override def toString:String = stmt
 }
+
+/** An Expression in C++. */
+class CPPExpression(val exp:String = "") extends CPPElement(exp)
+
+/** A Statement that either ends in a ; or is a fully-formed block/ */
+class CPPStatement(val s:String = "") extends CPPElement(s)
+
 
 /**
   * A valid identifier of a type.
@@ -199,14 +206,20 @@ class CPPMethodDeclaration (val _retType:String, val _name:String, val _params:S
   val name:String = _name
   val params:String = _params
   var const:String = ""
+  var virtual:String = ""
 
   def setConstant(): CPPMethodDeclaration = {
     const = " const"
     this
   }
 
+  def setVirtual(): CPPMethodDeclaration = {
+    virtual = "= 0"
+    this
+  }
+
   override def toString: String = {
-    val signature = s"$retType $name$params$const"
+    val signature = s"$retType $name$params$const$virtual"
     indent(Seq(s"$signature;"))
   }
 }
@@ -237,6 +250,29 @@ class CPPMethod (val _retType:String, val _name:String, val _params:String, val 
 
   override def toString: String = {
     val signature = s"$retType $name$params$const"
+    indent(Seq(s"$signature {") ++ body ++ Seq("}"))
+  }
+}
+
+/**
+  * Represents the implementation of a C++ method, suitable to be included within a header .h file.
+  *
+  */
+class CPPConstructor (val _name:String, val _params:String, val _body:Seq[CPPStatement]) extends CPPElement {
+
+//  /**
+//    * Just a single statement
+//    */
+//  def this (_name:String, _params:String, _body:String) {
+//    this(_name, _params, Seq(_body))
+//  }
+
+  val name:String = _name
+  val params:String = _params
+  val body = _body
+
+  override def toString: String = {
+    val signature = s"$name $params "
     indent(Seq(s"$signature {") ++ body ++ Seq("}"))
   }
 }

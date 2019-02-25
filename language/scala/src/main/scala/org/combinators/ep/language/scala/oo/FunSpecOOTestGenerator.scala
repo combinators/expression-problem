@@ -22,8 +22,7 @@ trait FunSpecOOTestGenerator extends FunSpecTestGenerator {
       ""
     }
 
-    val allTests = testGenerator ++ performanceMethod
-    val files: Seq[ScalaWithPath] = allTests.zipWithIndex.map{ case (t, num) =>
+    val files: Seq[ScalaWithPath] = testGenerator.zipWithIndex.map{ case (t, num) =>
 
      ScalaTestWithPath(Scala(s"""
                              |$packageDeclaration

@@ -10,7 +10,9 @@ import org.combinators.templating.twirl.Java
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait ExtensibleVisitorTestGenerator extends JUnitTestGenerator with ExtensibleVisitorGenerator {
+trait ExtensibleVisitorTestGenerator
+  extends JUnitTestGenerator
+    with ExtensibleVisitorGenerator {
   val domain: BaseDomain with ModelDomain
   import domain._
 

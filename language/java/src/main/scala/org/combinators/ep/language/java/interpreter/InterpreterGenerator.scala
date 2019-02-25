@@ -2,6 +2,7 @@ package org.combinators.ep.language.java.interpreter
 
 /*DI:LD:AD*/
 
+import com.github.javaparser.ast.ImportDeclaration
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.expr.SimpleName
 import org.combinators.ep.language.java.{DataTypeSubclassGenerator, JavaBinaryMethod, JavaGenerator, OperationAsMethodGenerator}
@@ -22,7 +23,11 @@ import org.combinators.ep.language.java.ReplaceCovariantType._
   + EvalIdzInv [Missing]  + PrettypInv
 
   */
-trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator  with OperationAsMethodGenerator with JavaBinaryMethod {
+trait InterpreterGenerator
+  extends JavaGenerator
+    with DataTypeSubclassGenerator
+    with OperationAsMethodGenerator
+    with JavaBinaryMethod {
 
   /**
     * Generating an interpreter solution requires:
@@ -44,7 +49,8 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
 
     // one interface for every model that contains an operation
     // Each operation gets interface
-    decls ++ model.inChronologicalOrder.filter(m => m.ops.nonEmpty).map(m => generateBase(m)) ++
+    decls ++
+      model.inChronologicalOrder.filter(m => m.ops.nonEmpty).flatMap(m => Seq(generateBase(m), generateFactory(m))) ++
     //
     // Each operation must provide class implementations for all past dataTypes since last operation
     model.inChronologicalOrder.filter(m => m.ops.nonEmpty).flatMap(m => generateBaseExtensions(m)) ++
@@ -69,15 +75,13 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
   }
 
   /** Return designated Java type associated with type, or void if all else fails. */
-  override def typeConverter(tpe:domain.TypeRep) : Type = {
-    tpe match {
-      case domain.baseTypeRep => Java(s"${domain.baseTypeRep.concept}").tpe()
-      case _ => super.typeConverter(tpe)
-    }
+  abstract override def typeConverter(tpe:domain.TypeRep) : Type = {
+    if (tpe == domain.baseTypeRep) { Java(s"${domain.baseTypeRep.concept}").tpe() }
+    else super.typeConverter(tpe)
   }
 
   /** Handle self-case here. */
-  override def contextDispatch(source:Context, delta:Delta) : Expression = {
+  abstract override def contextDispatch(source:Context, delta:Delta) : Expression = {
     if (delta.expr.isEmpty) {
       val op = delta.op.get.instance
       val args = delta.params.mkString(",")
@@ -151,27 +155,7 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
     unit
    }
 
-  def interfaceName(exp: domain.DataType, op: domain.Operation): SimpleName = {
-    Java(s"${exp.concept}${op.concept}").simpleName()
-  }
 
-  def generateInterface(exp: domain.DataType, parents: Seq[SimpleName], op:domain.Operation): CompilationUnit = {
-    val name = interfaceName(exp, op)
-    val method: MethodDeclaration = methodGenerator(exp, op)
-    val atts:Seq[MethodDeclaration] =
-      exp.attributes.flatMap(att => Java(s"${typeConverter(att.tpe)} get${att.concept}();").methodDeclarations())
-
-    Java(s"""
-            |package interpreter;
-            |public interface $name extends ${parents.mkString(", ")} {
-            |
-            |  ${atts.mkString("\n")}
-            |
-            |  $method
-            |}""".stripMargin).compilationUnit()
-  }
-
-  def finalInterfaceName: SimpleName = Java("FinalI").simpleName()
 
   /**
     * Generate one interface for model that defines an operation. If two or more operations
@@ -216,11 +200,40 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
     val extension:String = if (lastWithOps.isEmpty) ""
       else "extends " + modelInterfaceName(lastWithOps)
 
+    val combinedOps:String = model.ops.sortWith(_.name < _.name).map(op => op.concept).mkString("")
+
+
+
+
+
     Java(s"""|package interpreter;
              |public interface ${fullType.toString} $extension {
              |  ${signatures.mkString("\n")}
              |}""".stripMargin).compilationUnit
   }
+
+  def generateFactory(model: domain.Model): CompilationUnit = {
+    val fullType:Type = Java(modelInterfaceName(model)).tpe()
+    val combinedOps:String = model.ops.sortWith(_.name < _.name).map(op => op.concept).mkString("")
+
+    def typeConverterRelativeToHere(rep: domain.TypeRep): Type = {
+      if (rep == domain.baseTypeRep) { fullType }
+      else typeConverter(rep)
+    }
+
+    val factoryMethods:Seq[MethodDeclaration] = model.pastDataTypes().flatMap(e => {
+      val params:Seq[String] = e.attributes.map(att => s"${typeConverterRelativeToHere(att.tpe)} ${att.instance}")
+      val paramNames:Seq[String] = e.attributes.map(att => s"${att.instance}")
+
+      Java(s"""public static ${fullType.toString} ${e.concept}(${params.mkString(",")}) { return new $combinedOps${e.concept}(${paramNames.mkString(",")}); }""").methodDeclarations()
+    })
+
+    Java(s"""|package interpreter;
+             |public class ${fullType.toString}Factory {
+             |    ${factoryMethods.mkString("\n")}
+             |}""".stripMargin).compilationUnit
+  }
+
 
   def lastTypesSinceAnOperation(model:domain.Model): Seq[domain.DataType] = {
     if (model.isEmpty || model.ops.nonEmpty) {
@@ -264,112 +277,116 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
   def generateForOp(model:domain.Model, ops:Seq[domain.Operation], pastTypes:Seq[domain.DataType], isBase:Boolean) : Seq[CompilationUnit] = {
     val combinedOps:String = ops.sortWith(_.name < _.name).map(op => op.concept).mkString("")
 
-      pastTypes.map(exp => {
-        val name = Java(s"${exp.concept}").simpleName()
-        val baseInterface:Type = Java(baseInterfaceName(model.lastModelWithOperation())).tpe()
+    pastTypes.map(exp => {
+      val name = Java(s"${exp.concept}").simpleName()
+      val baseInterface:Type = Java(baseInterfaceName(model.lastModelWithOperation())).tpe()
 
-        val atts:Seq[FieldDeclaration] = if (isBase) {
-          exp.attributes.flatMap(att => Java(s"${typeConverter(att.tpe)} ${att.instance};").fieldDeclarations())
+      val atts:Seq[FieldDeclaration] = if (isBase) {
+        exp.attributes.flatMap(att => Java(s"${typeConverter(att.tpe)} ${att.instance};").fieldDeclarations())
+      } else {
+        Seq.empty
+      }
+
+      val params:Seq[String] = exp.attributes.map(att => s"${typeConverter(att.tpe)} ${att.instance}")
+      val paramNames:Seq[String] = exp.attributes.map(att => s"${att.instance}")
+
+
+      val getters: Seq[MethodDeclaration] =
+        exp.attributes.flatMap(att => {
+          // anything that is an EXPR can be replaced
+          val cast = att.tpe match {
+            case domain.baseTypeRep => if (!isBase) { s"($baseInterface)" } else { "" }
+            case _ => ""
+          }
+
+          Java(s"""|public ${typeConverter(att.tpe)} get${att.concept}() {
+                   |    return $cast this.${att.instance};
+                   |}""".stripMargin).methodDeclarations()
+        })
+
+      val cons:Seq[Statement] = exp.attributes.flatMap(att => Java(s"  this.${att.instance} = ${att.instance};").statements())
+
+      val constructor = if (isBase) {
+        Java(s"""|public $combinedOps$name (${params.mkString(",")}) {
+                 |   ${cons.mkString("\n")}
+                 |}""".stripMargin).constructors().head
+      } else {
+        Java(s"""|public $combinedOps$name (${params.mkString(",")}) {
+                 |   super(${paramNames.mkString(",")});
+                 |}""".stripMargin).constructors().head
+      }
+
+      // provide method declarations for all past operations (including self) that are not already in our 'ops' set.
+      val allOps:Seq[domain.Operation] = model.pastOperations().filterNot(op => ops.contains(op))
+
+      // be sure to recursively change Exp to be fullType
+      val fullType:Type = Java(modelInterfaceName(model)).tpe()
+
+      // i.e., without this, you get (M4) PrettyPAdd and PrettyPSub both having eval method
+      val operations:Seq[MethodDeclaration] = (allOps ++ ops).flatMap(op => {
+
+        // can remove operations that already existed model.last.lastModelWithOperation().ops
+        // if exp existed PRIOR to model.last.lastModelWithOperation().ops than can omit
+        // must ensure op is not past of *this* model's newly added ops since those MUST appear.
+        if (!ops.contains(op) && model.lastModelWithOperation().flatten().types.contains(exp)) {
+          Seq.empty
+        } else {
+          val md: MethodDeclaration = methodGenerator(exp, op)
+
+          // be sure to recursively change any Exp into fullType, for producer capability
+          val returnType: Type = md.getType
+          if (returnType.equals(typeConverter(domain.baseTypeRep))) {
+            md.setType(fullType)
+          }
+
+          // same thing for parameters
+          md.getParameters.forEach(p => {
+            if (p.getType.equals(typeConverter(domain.baseTypeRep))) {
+              p.setType(fullType)
+            }
+          })
+
+          Seq(md)
+        }
+      })
+
+      // For this operation (i.e., "Print") and for this Exp (i.e., "Add") go back and find most recent class to extend (i.e., "EvalAdd")
+      // which is based on either (a) last operation
+      // when multiple operations defined in same model, then chain together arbitrarily
+      val extension:String =
+        if (isBase) {
+          ""
+        } else {
+          val past: String = model.last.lastModelWithOperation().ops.sortWith(_.name < _.name).map(op => op.concept).mkString("")
+          s"extends $past$name" // go backwards?
+        }
+
+      val factoryImports: Seq[ImportDeclaration] = {
+        if (model.ops.exists{
+              case _ : domain.ProducerOperation => true
+              case _ => false
+            }) {
+          Seq(Java(s"import static interpreter.${baseInterface.toString}Factory.*;").importDeclaration())
         } else {
           Seq.empty
         }
+      }
 
-        val params:Seq[String] = exp.attributes.map(att => s"${typeConverter(att.tpe)} ${att.instance}")
-        val paramNames:Seq[String] = exp.attributes.map(att => s"${att.instance}")
+      val unit = Java(s"""
+              |package interpreter;
+              |${factoryImports.mkString("\n")}
+              |public class $combinedOps$name $extension implements ${baseInterface.toString} {
+              |  ${constructor.toString}
+              |
+              |  ${getters.mkString("\n")}
+              |  ${atts.mkString("\n")}
+              |  ${operations.mkString("\n")}
+              |}""".stripMargin).compilationUnit()
 
-        val factoryMethods:Seq[MethodDeclaration] = pastTypes.flatMap(e => {
-          val params:Seq[String] = e.attributes.map(att => s"${typeConverter(att.tpe)} ${att.instance}")
-          val paramNames:Seq[String] = e.attributes.map(att => s"${att.instance}")
+      // replace all covariant types!
+      unit.replaceInCovariantPosition(Java(s"${domain.baseTypeRep.concept}").tpe, baseInterface)
 
-          Java(s"""${combinedOps}Exp ${e.concept}(${params.mkString(",")}) { return new $combinedOps${e.concept}(${paramNames.mkString(",")}); }""").methodDeclarations()
-        })
-
-        val getters: Seq[MethodDeclaration] =
-          exp.attributes.flatMap(att => {
-            // anything that is an EXPR can be replaced
-            val cast = att.tpe match {
-              case domain.baseTypeRep => if (!isBase) { s"($baseInterface)" } else { "" }
-              case _ => ""
-            }
-
-            Java(s"""|public ${typeConverter(att.tpe)} get${att.concept}() {
-                     |    return $cast this.${att.instance};
-                     |}""".stripMargin).methodDeclarations()
-          })
-
-        val cons:Seq[Statement] = exp.attributes.flatMap(att => Java(s"  this.${att.instance} = ${att.instance};").statements())
-
-        val constructor = if (isBase) {
-          Java(s"""|public $combinedOps$name (${params.mkString(",")}) {
-                   |   ${cons.mkString("\n")}
-                   |}""".stripMargin).constructors().head
-        } else {
-          Java(s"""|public $combinedOps$name (${params.mkString(",")}) {
-                   |   super(${paramNames.mkString(",")});
-                   |}""".stripMargin).constructors().head
-        }
-
-        // provide method declarations for all past operations (including self) that are not already in our 'ops' set.
-        val allOps:Seq[domain.Operation] = model.pastOperations().filterNot(op => ops.contains(op))
-
-        // be sure to recursively change Exp to be fullType
-        val fullType:Type = Java(modelInterfaceName(model)).tpe()
-
-        // i.e., without this, you get (M4) PrettyPAdd and PrettyPSub both having eval method
-        val operations:Seq[MethodDeclaration] = (allOps ++ ops).flatMap(op => {
-
-          // can remove operations that already existed model.last.lastModelWithOperation().ops
-          // if exp existed PRIOR to model.last.lastModelWithOperation().ops than can omit
-          // must ensure op is not past of *this* model's newly added ops since those MUST appear.
-          if (!ops.contains(op) && model.lastModelWithOperation().flatten().types.contains(exp)) {
-            Seq.empty
-          } else {
-            val md: MethodDeclaration = methodGenerator(exp, op)
-
-            // be sure to recursively change any Exp into fullType, for producer capability
-            val returnType: Type = md.getType
-            if (returnType.equals(typeConverter(domain.baseTypeRep))) {
-              md.setType(fullType)
-            }
-
-            // same thing for parameters
-            md.getParameters.forEach(p => {
-              if (p.getType.equals(typeConverter(domain.baseTypeRep))) {
-                p.setType(fullType)
-              }
-            })
-
-            Seq(md)
-          }
-        })
-
-        // For this operation (i.e., "Print") and for this Exp (i.e., "Add") go back and find most recent class to extend (i.e., "EvalAdd")
-        // which is based on either (a) last operation
-        // when multiple operations defined in same model, then chain together arbitrarily
-        val extension:String =
-          if (isBase) {
-            ""
-          } else {
-            val past: String = model.last.lastModelWithOperation().ops.sortWith(_.name < _.name).map(op => op.concept).mkString("")
-            s"extends $past$name" // go backwards?
-          }
-
-        val unit = Java(s"""
-                |package interpreter;
-                |public class $combinedOps$name $extension implements ${baseInterface.toString} {
-                |
-                |  ${factoryMethods.mkString("\n")}
-                |  ${constructor.toString}
-                |
-                |  ${getters.mkString("\n")}
-                |  ${atts.mkString("\n")}
-                |  ${operations.mkString("\n")}
-                |}""".stripMargin).compilationUnit()
-
-        // replace all covariant types!
-        unit.replaceInCovariantPosition(Java(s"${domain.baseTypeRep.concept}").tpe, baseInterface)
-
-        unit
-      })
+      unit
+    })
   }
 }

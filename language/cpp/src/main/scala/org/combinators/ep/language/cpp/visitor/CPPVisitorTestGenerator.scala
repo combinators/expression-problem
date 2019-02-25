@@ -3,7 +3,7 @@ package org.combinators.ep.language.cpp.visitor    /*DI:LD:AD*/
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 import org.combinators.ep.language.cpp._
 
-trait CPPVisitorTestGenerator extends CPPGenerator with TestGenerator {
+trait CPPVisitorTestGenerator extends CPPGenerator with CPPUnitTestGenerator {
 
   val domain: BaseDomain with ModelDomain
   import domain._
@@ -20,25 +20,25 @@ trait CPPVisitorTestGenerator extends CPPGenerator with TestGenerator {
     */
   def actual(op:Operation, inst:AtomicInst, params:CPPElement*):CPPElement = {
     val expression = rec_convert(inst)
-    new CPPElement(s"(new ${op.concept}($expression))->getValue()")
+    new CPPExpression(s"(new ${op.concept}($expression))->getValue()")
   }
 
   /** Convert a test instance into a C++ Expression for instantiating that instance. */
-  def rec_convert(inst: Inst): CPPElement = {
+  def rec_convert(inst: Inst): CPPExpression = {
     vars(inst)   // cause the creation of a mapping to this instance
     id = id + 1
     inst match {
       case ui: UnaryInst =>
         val inner = rec_convert(ui.inner).toString
-        new CPPElement(s"${ui.e.instance}($inner)")
+        new CPPExpression(s"${ui.e.instance}($inner)")
 
       case bi: BinaryInst =>
         val left = rec_convert(bi.left).toString
         val right = rec_convert(bi.right).toString
-        new CPPElement(s"${bi.e.instance}($left, $right)")
+        new CPPExpression(s"${bi.e.instance}($left, $right)")
 
-      case exp: AtomicInst => new CPPElement(s"${exp.e.instance}(${exp.ei.inst})")
-      case _ => new CPPElement(s""" "unknown ${inst.name}" """)
+      case exp: AtomicInst => new CPPExpression(s"${exp.e.instance}(${exp.ei.inst})")
+      case _ => new CPPExpression(s""" "unknown ${inst.name}" """)
     }
   }
 
@@ -53,10 +53,10 @@ trait CPPVisitorTestGenerator extends CPPGenerator with TestGenerator {
             case  domain.baseTypeRep => typeConverter(att.tpe)
             case _ => typeConverter(att.tpe)
           }
-          new CPPElement(s"$tpe ${att.instance}")
+          s"$tpe ${att.instance}"
         }).mkString(",")
       val params = exp.attributes
-        .map(att => new CPPElement(att.instance)).mkString(",")
+        .map(att => att.instance).mkString(",")
 
       s"${exp.concept} *${exp.instance}($list) { return new ${exp.concept}($params); }"
     })

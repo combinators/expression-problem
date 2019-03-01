@@ -34,7 +34,7 @@ trait e5 extends Evolution with HaskellGenerator with HUnitTestGenerator with Ha
     }
   }
 
-  abstract override def logic(exp:DataType, op:domain.Operation): Seq[Haskell] = {
+  abstract override def logic(exp:DataType, op:domain.Operation): Seq[HaskellStatement] = {
     val source = Source (exp, op)
     // generate the actual body
     op match {
@@ -45,7 +45,7 @@ trait e5 extends Evolution with HaskellGenerator with HUnitTestGenerator with Ha
         val children = exp match {
           case Lit => Seq(Haskell(s"Leaf ${expression(exp, litValue)}"))
           case _ =>
-            exp.attributes.map(att => { contextDispatch(source, deltaChildOp(source, att, AsTree))})
+            exp.attributes.map(att => { contextDispatch(source, deltaChildOp(exp, att, AsTree))})
         }
         result(Haskell(s" Node ${declType}Type [ ${children.mkString(",")} ]"))
       }
@@ -54,27 +54,23 @@ trait e5 extends Evolution with HaskellGenerator with HUnitTestGenerator with Ha
     }
   }
 
-  /**
-    * Override testMethod to cover [[SameTestCase]] situations.
-    *
-    * @param test    test case to inspect
-    * @param id      current number
-    * @return
-    */
-  override def hunitTestMethod(test:TestCase, id:Int) : Seq[Haskell] = {
 
+  override def hunitTestMethod(test:TestCase, idx:Int) : Seq[Statement] = {
     test match {
       case ctc: SameTestCase =>
-        val source = NoSource
-        val tree1 = contextDispatch(source, deltaExprOp(source, toTargetLanguage(ctc.inst1), AsTree))
-        val tree2 = contextDispatch(source, deltaExprOp(source, toTargetLanguage(ctc.inst2), AsTree))
+        actual(AsTree, ctc.inst1).appendDependent { case Seq(treeLeft) =>
+          actual(AsTree, ctc.inst2).appendDependent { case Seq(treeRight) =>
+            CodeBlockWithResultingExpressions(
+              if (ctc.result) {
+                HaskellStatement(s"""test_v$idx = TestCase (assertBool "${test.getClass.getSimpleName}" ($treeLeft == $treeRight))""")
+              } else {
+                HaskellStatement(s"""test_v$idx = TestCase (assertBool "${test.getClass.getSimpleName}" ($treeLeft /= $treeRight))""")
+              }
+            )()
+          }
+        }.block
 
-        if (ctc.result) {
-          Seq(new Haskell(s"""test_v$id = TestCase (assertBool "${test.getClass.getSimpleName}" ($tree1 == $tree2))"""))
-        } else {
-          Seq(new Haskell(s"""test_v$id = TestCase (assertBool "${test.getClass.getSimpleName}" ($tree1 /= $tree2))"""))
-        }
-      case _ => super.hunitTestMethod(test, id)
+      case _ => super.hunitTestMethod(test, idx)
     }
   }
 

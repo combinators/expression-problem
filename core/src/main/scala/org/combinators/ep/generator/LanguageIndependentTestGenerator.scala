@@ -26,7 +26,7 @@ trait LanguageIndependentTestGenerator extends LanguageIndependentGenerator {
     */
   def actual(op: domain.Operation, inst: domain.Inst, params: Expression*): CodeBlockWithResultingExpressions = {
     toTargetLanguage(inst).appendDependent(instExp =>
-      CodeBlockWithResultingExpressions(contextDispatch(NoSource, deltaExprOp(NoSource, instExp.head, op, params: _*)))
+      CodeBlockWithResultingExpressions(contextDispatch(NoSource, deltaExprOp(instExp.head, op, params: _*)))
     )
   }
 

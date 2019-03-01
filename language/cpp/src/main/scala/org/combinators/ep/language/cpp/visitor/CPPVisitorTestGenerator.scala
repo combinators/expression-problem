@@ -9,37 +9,15 @@ trait CPPVisitorTestGenerator extends CPPGenerator with CPPUnitTestGenerator {
   import domain._
 
   /**
-    * Actual value in a test case.
+    * Instantiating an expression invokes 'new'.
     *
-    * Each basic test case has an instance over which an operation is to be performed. This method
-    * returns the inline expression resulting from dispatching operation, op, over the given instance, inst.
-    *
-    * For more complicated structures, as with lists for example, this method will need to be overridden.
-    *
-    * Not sure, yet, how to properly pass in variable parameters.
+    * @param exp       desired DataType subtype
+    * @param params    potential parameters
+    * @return
     */
-  def actual(op:Operation, inst:AtomicInst, params:CPPElement*):CPPElement = {
-    val expression = rec_convert(inst)
-    new CPPExpression(s"(new ${op.concept}($expression))->getValue()")
-  }
-
-  /** Convert a test instance into a C++ Expression for instantiating that instance. */
-  def rec_convert(inst: Inst): CPPExpression = {
-    vars(inst)   // cause the creation of a mapping to this instance
-    id = id + 1
-    inst match {
-      case ui: UnaryInst =>
-        val inner = rec_convert(ui.inner).toString
-        new CPPExpression(s"${ui.e.instance}($inner)")
-
-      case bi: BinaryInst =>
-        val left = rec_convert(bi.left).toString
-        val right = rec_convert(bi.right).toString
-        new CPPExpression(s"${bi.e.instance}($left, $right)")
-
-      case exp: AtomicInst => new CPPExpression(s"${exp.e.instance}(${exp.ei.inst})")
-      case _ => new CPPExpression(s""" "unknown ${inst.name}" """)
-    }
+  override def inst(exp:domain.DataType, params:Expression*): CodeBlockWithResultingExpressions = {
+    val args = params.mkString(",")
+    CodeBlockWithResultingExpressions(new CPPExpression(s"new ${exp.concept}($args)"))
   }
 
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */

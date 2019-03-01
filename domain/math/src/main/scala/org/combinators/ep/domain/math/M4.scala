@@ -28,6 +28,9 @@ trait M4 extends Evolution {
   val m4_s_5 = new BinaryInst(Add, LitInst(5.0), LitInst(0.0))
   val m4_s_00 = new BinaryInst(Add, LitInst(0.0), LitInst(0.0))
   val m4_s_7 = new BinaryInst(Add, LitInst(0.0), LitInst(7.0))
+
+  // validates simplify ((5+0)+(0+7)) = (5+7)
+  val m4_together = new BinaryInst(Add, m4_s_5, m4_s_7)
   val m4_s_13 = new BinaryInst(Mult, LitInst(13.0), LitInst(1.0))
   val m4_s_12 = new BinaryInst(Mult, LitInst(1.0), LitInst(12.0))
   val m4_s_m0 = new BinaryInst(Sub, LitInst(7.0), LitInst(7.0))
@@ -56,6 +59,7 @@ trait M4 extends Evolution {
   )
 
   def M4_simplify_tests:Seq[TestCase] = Seq(
+    EqualsCompositeTestCase(m4_together, Seq((Simplify, Seq.empty), (PrettyP, Seq.empty)), ExistsInstance(String)("(5.0+7.0)")),
     EqualsCompositeTestCase(m4_d2, Seq((Simplify, Seq.empty), (PrettyP, Seq.empty)), ExistsInstance(String)("(5.0/7.0)")),
     EqualsCompositeTestCase(m4_s_0, Seq((Simplify, Seq.empty), (Eval, Seq.empty)), ExistsInstance(Double)(0.0)),
     EqualsCompositeTestCase(m4_s_5, Seq((Simplify, Seq.empty), (Eval, Seq.empty)), ExistsInstance(Double)(5.0)),

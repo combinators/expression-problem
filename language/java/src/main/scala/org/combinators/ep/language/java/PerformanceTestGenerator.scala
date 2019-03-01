@@ -84,7 +84,7 @@ trait PerformanceTestGenerator extends JavaGenerator with LanguageIndependentTes
                  )(initialInstanceCache)
                }
              initialInstBlock.appendDependent { case Seq(instExp) =>
-               CodeBlockWithResultingExpressions(contextDispatch(NoSource, deltaExprOp(NoSource, instExp, perf.op, params: _*)))
+               CodeBlockWithResultingExpressions(contextDispatch(NoSource, deltaExprOp(instExp, perf.op, params: _*)))
              }
            })
          }
@@ -120,7 +120,7 @@ trait PerformanceTestGenerator extends JavaGenerator with LanguageIndependentTes
                        )(nextInstCache)
                      }
                    nextInstBlock.appendDependent { case Seq(instExp) =>
-                     CodeBlockWithResultingExpressions(contextDispatch(NoSource, deltaExprOp(NoSource, instExp, perf.op, params: _*)))
+                     CodeBlockWithResultingExpressions(contextDispatch(NoSource, deltaExprOp(instExp, perf.op, params: _*)))
                    }
                  })
                (lastCodeBlock.appendIndependent(nextCodeBlock),

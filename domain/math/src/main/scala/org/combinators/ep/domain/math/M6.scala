@@ -50,6 +50,7 @@ trait M6 extends Evolution {
     EqualsBinaryMethodTestCase(m6_d3, m6_d3, result=true),  // parameter to operation
     EqualsBinaryMethodTestCase(m6_s3, m6_s3, result=true),  // parameter to operation
     EqualsBinaryMethodTestCase(m6_s3, m6_m2, result=false),  // parameter to operation
+
     PerformanceTestCase(
       11,
       8,

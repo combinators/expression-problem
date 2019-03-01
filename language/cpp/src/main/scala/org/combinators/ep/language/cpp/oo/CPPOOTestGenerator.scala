@@ -8,43 +8,6 @@ trait CPPOOTestGenerator extends CPPGenerator with CPPUnitTestGenerator {
   val domain: BaseDomain with ModelDomain
   import domain._
 
-  /**
-    * Actual value in a test case.
-    *
-    * Each basic test case has an instance over which an operation is to be performed. This method
-    * returns the inline expression resulting from dispatching operation, op, over the given instance, inst.
-    *
-    * For more complicated structures, as with lists for example, this method will need to be overridden.
-    *
-    * Not sure, yet, how to properly pass in variable parameters.
-    */
-  def actual(op:Operation, inst:Inst, params:CPPElement*):CPPElement = {
-    val preceding = rec_convert(inst)
-    new CPPExpression(preceding.toString + "->" + op.instance + "()")
-  }
-
-  /** Convert a test instance into a C++ Expression for instantiating that instance. */
-  def rec_convert(inst: Inst): CPPExpression = {
-    val name = inst.name
-    vars(inst)   // cause the creation of a mapping to this instance
-    id = id + 1
-    inst match {
-      case ui: UnaryInst =>
-        val inner = rec_convert(ui.inner).toString
-        new CPPExpression(s"${ui.e.instance}($inner)")
-
-      case bi: BinaryInst =>
-        val left = rec_convert(bi.left).toString
-        val right = rec_convert(bi.right).toString
-        new CPPExpression(s"${bi.e.instance}($left, $right)")
-
-      //  double val1 = 1.0;
-      //  Lit  lit1 = Lit(&val1);
-      case exp: AtomicInst => new CPPExpression(s"${exp.e.instance}(${exp.ei.inst})")
-      case _ => new CPPExpression(s""" "unknown $name" """)
-    }
-  }
-
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
   override def generateSuite(pkg: Option[String], model: Option[Model] = None): Seq[CPPFile] = {
 

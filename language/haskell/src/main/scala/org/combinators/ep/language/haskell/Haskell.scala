@@ -9,7 +9,7 @@ class HaskellType (val tpe:String) {
   override def toString = tpe
 }
 
-class Haskell private(elements: immutable.Seq[Haskell], text: String) extends BufferedContent[Haskell](elements, text) {
+class Haskell protected (elements: immutable.Seq[Haskell], text: String) extends BufferedContent[Haskell](elements, text) {
   def this(text: String) = this(Nil, Formats.safe(text))
   def this(elements: immutable.Seq[Haskell]) = this(elements, "")
 
@@ -31,6 +31,50 @@ class Haskell private(elements: immutable.Seq[Haskell], text: String) extends Bu
 
   /** Returns the code of this fragment as a String. */
   def getCode: String = fullText
+}
+
+///**
+//  * As with CPP implementation, I need to maintain a clean separation between expressions and statements
+//  * @param text
+//  */
+//class HaskellExpression(override val text:String) extends Haskell(Nil, text) {
+//
+//}
+//
+//class HaskellStatement(override val text:String) extends Haskell(Nil, text) {
+//  // convert an expression into a statement
+//  def this(expr:Haskell) = this(expr.elements, "")
+//}
+
+class HaskellStatement protected (elements: immutable.Seq[HaskellStatement], text: String) extends BufferedContent[HaskellStatement](elements, text) {
+  def this(text: String) = this(Nil, Formats.safe(text))
+  def this(elements: immutable.Seq[HaskellStatement]) = this(elements, "")
+
+  private lazy val fullText: String = (text +: elements).mkString
+
+  /** Content type of Haskell */
+  val contentType = "text/x-haskell"
+
+  /** Indents this fragment by 4 spaces. */
+  def indent: Haskell = {
+    Haskell(fullText.lines.map(l => s"    $l").mkString("\n"))
+  }
+
+  /** Indents everything except the first line in this fragment by 4 spaces. */
+  def indentExceptFirst: Haskell = {
+    val lines: Seq[String] = fullText.lines.toSeq
+    Haskell((lines.head +: lines.tail.map(l => s"    $l")).mkString("\n"))
+  }
+
+  /** Returns the code of this fragment as a String. */
+  def getCode: String = fullText
+}
+
+object HaskellStatement {
+  /** Creates a Haskell fragment with initial content specified. */
+  def apply(text: String): HaskellStatement = {
+    new HaskellStatement(text)
+  }
 }
 
 /**

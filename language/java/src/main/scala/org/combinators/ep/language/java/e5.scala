@@ -1,6 +1,4 @@
-package org.combinators.ep.language.java
-
-/*DD:LD:AI*/
+package org.combinators.ep.language.java    /*DD:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
 import org.combinators.ep.domain.math.{M0, M5, MathDomain}
@@ -34,10 +32,11 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
     }
   }
 
-  /** helper method for testing when goal is to check equality between tree objects . */
-  def treesAreSame(treeExp1:Expression, treeExp2:Expression) : Expression = {
-    Java(s"${treeExp1.toString}.same(${treeExp2.toString})").expression[Expression]()
-  }
+//
+//  /** helper method for testing when goal is to check equality between tree objects . */
+//  def treesAreSame(treeExp1:Expression, treeExp2:Expression) : Expression = {
+//    Java(s"${treeExp1.toString}.same(${treeExp2.toString})").expression[Expression]()
+//  }
 
   abstract override def logic(exp:domain.DataType, op:domain.Operation): Seq[Statement] = {
     // generate the actual body
@@ -50,13 +49,13 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
         exp match {
           case Lit =>
             val attParams = atts.map(att => att._2.toString).mkString(",")
-            val deltaSelf = deltaSelfOp(source, Identifier)
+            val deltaSelf = deltaSelfOp(Identifier)
             val rhs = contextDispatch(source, deltaSelf)
             result(Java(s" new tree.Node(java.util.Arrays.asList(new tree.Leaf($attParams)), $rhs) ").expression[Expression]())
 
           case Add|Sub|Mult|Divd|Neg =>
             val attParams = atts.map(att => att._2.toString + ".astree()").mkString(",")
-            val deltaSelf = deltaSelfOp(source, Identifier)
+            val deltaSelf = deltaSelfOp(Identifier)
             val rhs = contextDispatch(source, deltaSelf)
             result(Java(s" new tree.Node(java.util.Arrays.asList($attParams), $rhs) ").expression[Expression]())
           }

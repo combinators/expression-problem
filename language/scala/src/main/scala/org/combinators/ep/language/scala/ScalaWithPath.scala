@@ -20,7 +20,7 @@ case class ScalaTestWithPath(code: Source, persistTo: Path) extends ScalaWithPat
 
 trait ScalaWithPathPersistableInstances {
   /** Persistable instance for [ScalaWithPath]. */
-  implicit def gjWithPathPersistable:ScalaWithPathPersistable.Aux[ScalaWithPath] = new Persistable {
+  implicit def scalaWithPathPersistable:ScalaWithPathPersistable.Aux[ScalaWithPath] = new Persistable {
     type T = ScalaWithPath
     def rawText(elem: ScalaWithPath): Array[Byte] = elem.code.syntax.getBytes
     def path(elem: ScalaWithPath): Path = {

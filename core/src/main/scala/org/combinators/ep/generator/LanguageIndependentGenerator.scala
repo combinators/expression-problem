@@ -28,8 +28,8 @@ import org.combinators.ep.domain.{BaseDomain, ModelDomain}
   *     they are the same.
   *
   *  {{{
-  * val deltaLeft = deltaChildOp(source, left, Eval)
-  * val deltaRight = deltaChildOp(source, right, Eval)
+  * val deltaLeft = deltaChildOp(source.e, left, Eval)
+  * val deltaRight = deltaChildOp(source.e, right, Eval)
   * Java(s"""|if (\${contextDispatch(source, deltaLeft)} == \${contextDispatch(source, deltaRight)}) {
   * |   \${result(inst(Lit, zero)).mkString("\n")}
   * |} else {
@@ -49,9 +49,9 @@ import org.combinators.ep.domain.{BaseDomain, ModelDomain}
   *     are the same.
   **
   *{{{
-  * val deltaLeft = deltaSelfOp(source, domain.AsTree)
+  * val deltaLeft = deltaSelfOp(domain.AsTree)
   * val that = Java(domain.base.that.name).expression[Expression]()
-  * val deltaRight = deltaExprOp(source, that, domain.AsTree)
+  * val deltaRight = deltaExprOp(that, domain.AsTree)
   * val lhs = contextDispatch(source, deltaLeft)
   * val rhs = contextDispatch(source, deltaRight)
   * result(Java(s"$lhs.same($rhs)").expression())
@@ -130,7 +130,12 @@ trait LanguageIndependentGenerator {
     */
   type Statement
 
-  /** Base concept to represent a block of code with result values. */
+  /**
+    * Base concept to represent a block of code with result values.
+    *
+    * This separates out the resulting expressions from the block of statements (and they don't have to show up
+    * in the code block).
+    */
   trait CodeBlockWithResultingExpressions {
     def block: Seq[Statement]
     def resultingExpressions: Seq[Expression]
@@ -204,10 +209,22 @@ trait LanguageIndependentGenerator {
 
   /**
     * Given a data type (and potential arguments) returns an expression type that instantiates the data type.
+    *
+    * @param exp       desired DataType subtype
+    * @param params    potential parameters
+    * @return
     */
   def inst(exp:domain.DataType, params:Expression*): CodeBlockWithResultingExpressions
 
-  /** Convert a scala expression into the target language. */
+  /**
+    * Convert a scala expression into the target language.
+    *
+    * The ExistsInstance could be a primitive type (Double, String, int) and if a domain instance, the request
+    * is delegated to toTargetLanguage(domain.Inst)
+    *
+    * @param scalaValue   The ExistsInstance captures a type (TypeRep) and an instance which varies based on trait.
+    * @return
+    */
   def toTargetLanguage(scalaValue:ExistsInstance) : CodeBlockWithResultingExpressions = {
     scalaValue.inst match {
       case domInst: domain.Inst => toTargetLanguage(domInst)
@@ -215,17 +232,27 @@ trait LanguageIndependentGenerator {
     }
   }
 
-  /** Convert a domain specific data type instance into the target language. */
+  /**
+    * Convert a domain specific data type instance into the target language.
+    *
+    * Already configured for all known cases of DomainInst, namely [[UnaryInst]], [[BinaryInst]] and [[AtomicInst]]
+    *
+    * @param instance
+    * @return
+    */
   def toTargetLanguage(instance: domain.Inst): CodeBlockWithResultingExpressions = {
     instance match {
       case ui: domain.UnaryInst =>
         toTargetLanguage(ui.inner).appendDependent(innerResults => inst(ui.e, innerResults:_*))
+
       case bi: domain.BinaryInst =>
         toTargetLanguage(bi.left)
             .appendIndependent(toTargetLanguage(bi.right))
             .appendDependent(innerResults => inst(bi.e, innerResults: _*))
+
       case ai:domain.AtomicInst =>
         toTargetLanguage(ai.ei).appendDependent(innerResults => inst(ai.e, innerResults:_*))
+
       case _ => throw new scala.NotImplementedError(s"No rule to convert $instance to the target language")
     }
   }
@@ -407,14 +434,13 @@ trait LanguageIndependentGenerator {
     * This method uses [[expression]] on the source to generate the code fragment representing
     * the expression to use within the returned [[Delta]]
     *
-    * @param source    Source context.
     * @param att       child element, identified by actual attribute.
     * @param op        operation to perform on the child element.
     * @param params    optional variable length parameters for operation as code expressions.
     * @group deltaHelpers
     */
-  def deltaChildOp(source:Source, att:Attribute, op:Operation, params:Expression*) : Delta = {
-    deltaExprOp(source, expression(source.e, att), op, params : _ *)
+  def deltaChildOp(exp:DataType, att:Attribute, op:Operation, params:Expression*) : Delta = {
+    deltaExprOp(expression(exp, att), op, params : _ *)
   }
 
   /**
@@ -424,13 +450,12 @@ trait LanguageIndependentGenerator {
     *
     * If source operation is undefined, then this method returns a new independent
     *
-    * @param source    Source context.
     * @param expr      code fragment that will provide part of the new context.
     * @param op        designated operation on this new context.
     * @param params    optional variable length parameters for this operation as code expressions.
     * @group deltaHelpers
     */
-  def deltaExprOp(source:Context, expr:Expression, op:Operation, params:Expression*) : Delta = {
+  def deltaExprOp(expr:Expression, op:Operation, params:Expression*) : Delta = {
     new Delta(Some(expr), Some(op), params: _*)
   }
 
@@ -442,12 +467,11 @@ trait LanguageIndependentGenerator {
     *
     * NOTE: POTENTIAL INFINITE LOOP IF CALL deltaSelfOp on self with same operation
     *
-    * @param source    source Context.
     * @param op        desired operation.
     * @param params    optional variable length parameters of this operation as code expressions.
     * @group deltaHelpers
     */
-  def deltaSelfOp(source:Source, op:Operation, params:Expression*) : Delta = {
+  def deltaSelfOp(op:Operation, params:Expression*) : Delta = {
     new Delta(None, Some(op), params : _*)
   }
 }

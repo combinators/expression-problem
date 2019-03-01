@@ -24,11 +24,13 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
   override def contextDispatch(source:Context, delta:Delta) : Expression = {
     if (source.op.isEmpty) {
       val params = if (delta.params.nonEmpty) {
-        "(" + delta.params.mkString(" ") + ")"
+        // not neeede? delta.params.map(h => "(" + h.getCode + ")").mkString("(", " ", ")")
+        //"(" + delta.params.mkString(" ") + ")"
+        delta.params.mkString("("," ", ")")
       } else {
         ""
       }
-      new Haskell(s"(${delta.op.get.instance} (${delta.expr.get}) $params)")
+       Haskell(s"(${delta.op.get.instance} (${delta.expr.get} :: GeneralExpr) $params)")
     } else if (delta.op.isDefined && !source.op.get.equals(delta.op.get)) {
       if (delta.expr.isEmpty) {
         // this is to SELF so, just invoke
@@ -190,6 +192,18 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
 
   /** Responsible for dispatching sub-expressions with possible parameter(s). */
  override def dispatch(primary:Haskell, op:domain.Operation, params:Haskell*) : Haskell = {
-   Haskell(s"""$primary""")
+   // HACK doesn't cover producer methods. E4/M4 use of dispatch in haskell could be replaced with just 'expression'
+   // TODO: Start HERE
+   op match {
+     case b:BinaryMethod => {
+       val args:String = if (params.isEmpty) {
+         ""
+       } else {
+         params.map(h => "(" + h.getCode + ")").mkString(" ")
+       }
+       Haskell(s"""(${op.instance} (${primary.toString} :: GeneralExpr) $args)""")
+     }
+     case _ => Haskell(s"""$primary""")
+   }
   }
 }

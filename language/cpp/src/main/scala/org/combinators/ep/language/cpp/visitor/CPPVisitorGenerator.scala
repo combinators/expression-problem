@@ -154,11 +154,6 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
     val binaryConstructor:Seq[CPPElement] = op match {
       case bm:domain.BinaryMethod =>
         Seq(new CPPConstructor(op.concept, "(const Exp *e, const Exp *t)", Seq(new CPPStatement("that = t; e->Accept(this);"))))
-//        Seq(new CPPElement (s"""
-//                               |${op.concept} (Exp *e, Exp *t) {
-//                               |    that = t;
-//                               |    e->Accept(this);
-//                               |}""".stripMargin))
       case _ => Seq.empty
     }
 
@@ -166,7 +161,6 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
     val field:Seq[CPPElement] = Seq(new CPPStatement(s"$tpe value;"))
     val accessor:Seq[CPPElement] =
       Seq(new CPPMethod(tpe.toString, "getValue", "()", Seq("return value;")))
-//      Seq(new CPPElement(s"$tpe getValue() { return value; }"))
 
     // binary fields?
     val binaryField:Seq[CPPElement] = op match {
@@ -203,13 +197,11 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
       // make the set/get methods
       addedMethods = addedMethods :+
         new CPPMethod(tpe.toString, s"get${att.concept}", "()", Seq(s"return ${att.instance};")).setConstant()
-//      new CPPElement(s"$tpe get${att.concept}() const { return ${att.instance}; }")
     })
 
     // make constructor
     addedMethods = addedMethods :+
        new CPPConstructor(sub.name, s"(${params.mkString(",")}) : ${cons.mkString(",")}", Seq(new CPPStatement("")))
-      //new CPPElement (s"${sub.name} (${params.mkString(",")}) : ${cons.mkString(",")} {}")
 
     // Method declaration (with implementation)
     val visitor =
@@ -254,7 +246,6 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
 
       }
       Seq(new CPPMethod("Tree *", s"${sub.concept}::${domain.AsTree.instance}", "()", Seq(body)).setConstant())
-      //Seq(new CPPElement(method))
     } else {
       Seq.empty
     }
@@ -278,7 +269,6 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
     // binary methods?
     val astreeMethod:Seq[CPPElement] = if (getModel.flatten().hasBinaryMethod()) {
       Seq(new CPPMethodDeclaration("virtual Tree *", domain.AsTree.instance, "()").setConstant().setVirtual())
-//      Seq(new CPPElement ("""virtual Tree *astree() const = 0;"""))
     } else {
       Seq.empty
     }
@@ -291,7 +281,6 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
 
     new CPPClass("Exp", "Exp",
       Seq(new CPPMethodDeclaration("virtual void", "Accept", "(IVisitor* v)").setConstant().setVirtual()) ++ astreeMethod, Seq.empty)
-      //Seq(new CPPElement(s"""virtual void Accept(IVisitor* v) = 0;""")) ++ astreeMethod, Seq.empty)
       .addHeader(Seq(s"class IVisitor;") ++ astreeHeaders)
   }
 
@@ -301,7 +290,6 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
     // Ignore passed in model in favor of just grabbing it on demand...
     val allOps = getModel.flatten().types.map(exp =>
       new CPPMethodDeclaration("virtual void", "Visit", s"(const $exp& e)").setVirtual())
-        //new CPPElement(s"virtual void Visit($exp& e) = 0;"))
 
     // forward refers
     val allForwards = getModel.flatten().types.map(exp => s"class ${exp.concept};")

@@ -12,26 +12,46 @@ import org.combinators.ep.domain.math.M0
 trait e0 extends HaskellGenerator with HUnitTestGenerator with M0 {
   import domain._
 
-  /**
-    * negative numbers in haskell can't be simple -1.0 but must be (0 -1.0) for some reason?
-    */
-  override def expected(test:domain.TestCaseExpectedValue, id:Int) : (Expression => Seq[Statement]) => Seq[Statement] = continue => {
-    test.expect.tpe match {
-      case Double => {
-        val dbl:Double = test.expect.inst.asInstanceOf[Double]
 
+  /** E0 Introduces Double and Int values. */
+  abstract override def toTargetLanguage(ei:domain.ExistsInstance) : CodeBlockWithResultingExpressions = {
+    ei.inst match {
+      case d:scala.Double => {
         // Can't seem to use unary negation operation in Haskell ?!
-        val expect = if (dbl < 0) {
-          s"(0 - ${math.abs(dbl)})"
+        val expect = if (d < 0) {
+          s"(0 - ${math.abs(d)})"
         } else {
-          dbl.toString
+          d.toString
         }
-        continue (new Haskell(expect))
+        CodeBlockWithResultingExpressions(Haskell(s"$expect"))
       }
 
-      case _ => super.expected(test, id) (continue)
+      case i:scala.Int => CodeBlockWithResultingExpressions(Haskell(s"$i"))
+
+      case _ => super.toTargetLanguage(ei)
     }
   }
+//
+//  /**
+//    * negative numbers in haskell can't be simple -1.0 but must be (0 -1.0) for some reason?
+//    */
+//  override def expected(test:domain.TestCaseExpectedValue, id:Int) : (Expression => Seq[Statement]) => Seq[Statement] = continue => {
+//    test.expect.tpe match {
+//      case Double => {
+//        val dbl:Double = test.expect.inst.asInstanceOf[Double]
+//
+//        // Can't seem to use unary negation operation in Haskell ?!
+//        val expect = if (dbl < 0) {
+//          s"(0 - ${math.abs(dbl)})"
+//        } else {
+//          dbl.toString
+//        }
+//        continue (new Haskell(expect))
+//      }
+//
+//      case _ => super.expected(test, id) (continue)
+//    }
+//  }
 
   /** E0 Introduces the concept a Double type, used for the 'Eval' operation. */
   abstract override def typeConverter(tpe:TypeRep) : HaskellType = {
@@ -52,7 +72,7 @@ trait e0 extends HaskellGenerator with HUnitTestGenerator with M0 {
   }
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
-  abstract override def logic(exp:DataType, op:Operation): Seq[Haskell] = {
+  abstract override def logic(exp:DataType, op:Operation): Seq[HaskellStatement] = {
     // generate the actual body
     op match {
       case Eval =>
@@ -69,7 +89,6 @@ trait e0 extends HaskellGenerator with HUnitTestGenerator with M0 {
   }
 
   abstract override def testGenerator: Seq[Haskell] = {
-
     super.testGenerator :+ hunitMethod(M0_tests)
   }
 }

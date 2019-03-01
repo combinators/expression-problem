@@ -30,6 +30,8 @@ trait CPPGenerator extends LanguageIndependentGenerator {
   /**
     * For producer operations, there is a need to instantiate objects, and one would use this
     * method (with specific parameters) to carry this out.
+    *
+    * Override as needed by other approaches.
     */
   def inst(exp:domain.DataType, params:Expression*): CodeBlockWithResultingExpressions = {
     CodeBlockWithResultingExpressions(

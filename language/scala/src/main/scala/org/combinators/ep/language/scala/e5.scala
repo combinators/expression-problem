@@ -41,13 +41,13 @@ trait e5 extends Evolution with ScalaGenerator with TestGenerator with Operation
         exp match {
           case Lit =>
             val attParams = atts.map(att => att._2.toString).mkString(",")
-            val deltaSelf = deltaSelfOp(source, Identifier)
+            val deltaSelf = deltaSelfOp(Identifier)
             val rhs = contextDispatch(source, deltaSelf)
             result(Scala(s"""new tree.Node(Seq(new tree.Leaf($attParams)), $rhs) """).expression)
 
           case Add|Sub|Mult|Divd|Neg =>
             val seq = atts.map(att => dispatch(att._2, domain.AsTree)).mkString(",")
-            val deltaSelf = deltaSelfOp(source, Identifier)
+            val deltaSelf = deltaSelfOp(Identifier)
             val rhs = contextDispatch(source, deltaSelf)
             result(Scala(s"""new tree.Node(Seq($seq), $rhs ) """).expression)
           }

@@ -12,14 +12,14 @@ trait cpp_e2 extends Evolution with CPPGenerator with TestGenerator with M0 with
   self:cpp_e0 with cpp_e1 =>
 
   import domain._
-
-  /** For developing test cases with strings, must convert expected value into a C++ string expression. */
-  abstract override def expected(test:domain.TestCaseExpectedValue, id:String) : (CPPElement => Seq[CPPElement]) => Seq[CPPElement] = continue => {
-    test.expect.tpe match {
-      case String => continue (new CPPExpression("\"" + test.expect.inst.toString + "\""))
-      case _ => super.expected(test, id) (continue)
-    }
-  }
+//
+//  /** For developing test cases with strings, must convert expected value into a C++ string expression. */
+//  abstract override def expected(test:domain.TestCaseExpectedValue, id:String) : (CPPElement => Seq[CPPElement]) => Seq[CPPElement] = continue => {
+//    test.expect.tpe match {
+//      case String => continue (new CPPExpression("\"" + test.expect.inst.toString + "\""))
+//      case _ => super.expected(test, id) (continue)
+//    }
+//  }
 
   abstract override def typeConverter(tpe:TypeRep) :CPPType = {
     tpe match {
@@ -27,7 +27,6 @@ trait cpp_e2 extends Evolution with CPPGenerator with TestGenerator with M0 with
       case _ => super.typeConverter(tpe)
     }
   }
-
 
   /** E1 Introduces String values. */
   abstract override def toTargetLanguage(ei:domain.ExistsInstance) : CodeBlockWithResultingExpressions = {

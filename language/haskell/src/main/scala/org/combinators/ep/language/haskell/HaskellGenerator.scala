@@ -14,12 +14,12 @@ import org.combinators.ep.generator.{LanguageIndependentGenerator, Producer}
 trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskellBinaryMethod with OperationDependency with HaskellBinaryMethod with Producer {
 
   /** Specially required files are placed in this area. */
-  val haskellResources:String = Seq("src", "main", "resources", "haskell-code").mkString(File.separator)
+  val haskellResources:String = Seq("language", "haskell", "src", "main", "resources", "haskell-code").mkString(File.separator)
 
   type CompilationUnit = HaskellWithPath
   type Type = HaskellType
   type Expression = Haskell
-  type Statement = Haskell
+  type Statement = HaskellStatement    // in Haskell there is no essential difference between expressions and statements
   type InstanceExpression = Haskell
 
   /** Find the model which contains a given atomic inst. */
@@ -39,14 +39,14 @@ trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskell
     * Default behavior in Haskell is the expression itself
     */
   def result (expr:Expression) : Seq[Statement] = {
-    Seq(expr)
+    //Seq(expr)
+    Seq(HaskellStatement(expr.getCode))
   }
-
 
   /**
     * Haskell solutions require delegation to their respective traits
     */
-  def inst(exp:domain.DataType, params:InstanceExpression*): InstanceExpression
+  //def inst(exp:domain.DataType, params:InstanceExpression*): InstanceExpression
 
   /** Concatenate attributes by name in order */
   def standardArgs(exp:domain.DataType, suffix:String = "") : Haskell = {
@@ -145,5 +145,4 @@ trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskell
   def helperClasses():Seq[HaskellWithPath] = {
     getRecursiveListOfFiles(Paths.get(haskellResources).toFile)
   }
-
 }

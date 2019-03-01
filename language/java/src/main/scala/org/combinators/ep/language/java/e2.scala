@@ -24,7 +24,7 @@ trait e2 extends Evolution with JavaGenerator with JUnitTestGenerator with M0 wi
     }
   }
 
-  /** E1 Introduces String values. */
+  /** E2 Introduces String values. */
   abstract override def toTargetLanguage(ei:domain.ExistsInstance) : CodeBlockWithResultingExpressions = {
     ei.inst match {
       case s:String => CodeBlockWithResultingExpressions(new com.github.javaparser.ast.expr.StringLiteralExpr(s))

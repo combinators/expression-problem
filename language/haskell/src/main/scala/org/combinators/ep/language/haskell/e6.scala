@@ -48,7 +48,25 @@ trait e6 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
     }
   }
 
-  abstract override def logic(exp:DataType, op:Operation): Seq[Haskell] = {
+
+//  abstract override def logic(exp:domain.DataType, op:domain.Operation): Seq[Statement] = {
+//    val source = Source(exp, op)
+//    op match {
+//      case Equals =>
+//
+//        // GOAL: requesting AsTree on self produces same tree as invoking AsTree on that.
+//        val deltaLeft = deltaSelfOp(domain.AsTree)
+//        val that = Haskell(domain.base.that.name).expression[Expression]()
+//        val deltaRight = deltaExprOp(that, domain.AsTree)
+//        val lhs = contextDispatch(source, deltaLeft)
+//        val rhs = contextDispatch(source, deltaRight)
+//        result(Haskell(s"$lhs == $rhs)"))
+//
+//      case _ => super.logic(exp, op)
+//    }
+//  }
+
+  abstract override def logic(exp:DataType, op:Operation): Seq[HaskellStatement] = {
     // generate the actual body
     op match {
       case Equals =>
@@ -57,15 +75,18 @@ trait e6 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
             val value2 =  Haskell(expression(exp, litValue).getCode + "2")
             result(Haskell(s" ${expression(exp, litValue)} == $value2 "))
 
-          case Neg  =>
+//          case Neg  =>
+//            val inner2 = Haskell(expression(exp,base.inner).getCode + "2")
+//            result(Haskell(s" ${dispatch(expression(exp,base.inner), op, inner2)} "))
+
+          case u:Unary  =>
             val inner2 = Haskell(expression(exp,base.inner).getCode + "2")
             result(Haskell(s" ${dispatch(expression(exp,base.inner), op, inner2)} "))
 
-          case Add|Sub|Mult|Divd =>
+          case b:Binary =>
             val left2 = Haskell(expression(exp, base.left).getCode + "2")
             val right2 = Haskell(expression(exp, base.right).getCode + "2")
             result(Haskell(s" ${dispatch(expression(exp, base.left), op, left2)} && ${dispatch(expression(exp, base.right), op, right2)} "))
-
 
           case _ => super.logic(exp, op)
         }
@@ -74,45 +95,47 @@ trait e6 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
     }
   }
 
+//  override def hunitTestMethod(test:domain.TestCase, idx:Int) : Seq[Statement] = {
+//    test match {
+//      case eb: EqualsBinaryMethodTestCase =>
+//        val source = NoSource
+//        val full = contextDispatch(source, deltaExprOp(toTargetLanguage(eb.inst1), Equals, toTargetLanguage(eb.inst2)))
+//
+//        if (eb.result) {
+//          Seq(Haskell(s"""test_v$idx = TestCase (assertBool "EqualsCheck" ($full))"""))
+//        } else {
+//          Seq(Haskell(s"""test_v$idx = TestCase (assertBool "NotEqualsCheck" (not ($full)))"""))
+//        }
+////        if (eb.result) {
+////          Seq(Haskell(s"""test_v$idx = TestCase (assertBool "EqualsCheck" (${dispatch(convert(eb.inst1), Equals, convert(eb.inst2))}))"""))
+////        } else {
+////          Seq(Haskell(s"""test_v$idx = TestCase (assertBool "NotEqualsCheck" (not (${dispatch(convert(eb.inst1), Equals, convert(eb.inst2))})))"""))
+////        }
+//      case _ => super.hunitTestMethod(test, idx)
+//    }
+//  }
+
   override def hunitTestMethod(test:domain.TestCase, idx:Int) : Seq[Statement] = {
     test match {
       case eb: EqualsBinaryMethodTestCase =>
-        val source = NoSource
-        val full = contextDispatch(source, deltaExprOp(source, toTargetLanguage(eb.inst1), Equals, toTargetLanguage(eb.inst2)))
-
-        if (eb.result) {
-          Seq(Haskell(s"""test_v$idx = TestCase (assertBool "EqualsCheck" ($full))"""))
-        } else {
-          Seq(Haskell(s"""test_v$idx = TestCase (assertBool "NotEqualsCheck" (not ($full)))"""))
-        }
-//        if (eb.result) {
-//          Seq(Haskell(s"""test_v$idx = TestCase (assertBool "EqualsCheck" (${dispatch(convert(eb.inst1), Equals, convert(eb.inst2))}))"""))
-//        } else {
-//          Seq(Haskell(s"""test_v$idx = TestCase (assertBool "NotEqualsCheck" (not (${dispatch(convert(eb.inst1), Equals, convert(eb.inst2))})))"""))
-//        }
+        val leftBlock = toTargetLanguage(eb.inst1)
+        val rightBlock = toTargetLanguage(eb.inst2)
+        leftBlock.appendDependent { case Seq(leftExp) =>
+          rightBlock.appendDependent { case Seq(rightExp) =>
+            CodeBlockWithResultingExpressions(
+              if (eb.result) {
+                HaskellStatement(s"""test_v$idx = TestCase (assertBool "EqualsCheck" (${dispatch(leftExp, Equals, rightExp)}))""")
+              } else {
+                HaskellStatement(s"""test_v$idx = TestCase (assertBool "NotEqualsCheck" (not (${dispatch(leftExp, Equals, rightExp)})))""")
+              }
+            )()
+          }
+        }.block
       case _ => super.hunitTestMethod(test, idx)
     }
   }
 
   abstract override def testGenerator: Seq[Haskell] = {
     super.testGenerator :+ hunitMethod(M6_tests)
-//    val s1 = new BinaryInst(Sub, LitInst(1.0), LitInst(2.0))
-//    val s2 = new BinaryInst(Add, new BinaryInst(Sub, LitInst(1.0), LitInst(2.0)),
-//      new BinaryInst(Add, LitInst(5.0), LitInst(6.0)))
-//    val s3 = new BinaryInst(Sub, LitInst(1.0), LitInst(2.0))
-//
-//    super.testGenerator :+ new Haskell(
-//      s"""
-//         |s1 = ${convert(s1)}
-//         |s2 = ${convert(s2)}
-//         |s3 = ${convert(s3)}
-//         |test_e2_1 = TestCase (assertBool "EqualCheck" (${Equals.name} s1 s3))
-//         |test_e2_2 = TestCase (assertBool "EqualCheck" (not (${Equals.name} s1 s2)))
-//         |
-//         |test_e2 = TestList [ TestLabel "1" test_e2_1, TestLabel "2" test_e2_2 ]
-//         |
-//         |main :: IO Counts
-//         |main  = runTestTT test_e2
-//         |""".stripMargin)
   }
 }

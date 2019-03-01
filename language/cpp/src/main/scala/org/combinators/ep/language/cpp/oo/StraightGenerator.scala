@@ -72,22 +72,6 @@ trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with
     new CPPMethod(ret.toString, s"${op.instance}", s"($params)", logic(exp, op).mkString("\n"))
         .setConstant()
   }
-//
-//  /** Default header file needed for most classes. */
-//  def defaultHeaderFile() : CPPHeaderCode = {
-//    new CPPHeaderCode("visitor",
-//      s"""
-//         |#ifndef _VISITOR_H_
-//         |#define _VISITOR_H_
-//         |#include <iostream>
-//         |#include <map>
-//         |#include <memory>
-//         |#include <sstream>
-//         |#include <string>
-//         |#include <vector>
-//         |#endif /* _VISITOR_H_ */
-//       """.stripMargin.split("\n"))
-//  }
 
   // standard headers
   def standardHeader():Seq[String] = Seq.empty

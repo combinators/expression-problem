@@ -33,6 +33,7 @@ trait M0 extends Evolution {
   def M0_tests:Seq[TestCase] = Seq(
     EqualsTestCase(new BinaryInst(Add, LitInst(1.0), LitInst(2.0)), Eval, ExistsInstance(Double)(3.0)),
     EqualsTestCase(LitInst(5.0), Eval, ExistsInstance(Double)(5.0)),
+
     PerformanceTestCase(
       11,
       8,

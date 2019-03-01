@@ -116,8 +116,8 @@ trait e4 extends Evolution with ScalaGenerator with TestGenerator with Operation
             }.block
 
           case Add =>
-            val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
-            val deltaRight = deltaChildOp(source, domain.base.right, Eval)
+            val deltaLeft = deltaChildOp(exp, domain.base.left, Eval)
+            val deltaRight = deltaChildOp(exp, domain.base.right, Eval)
 
             val dispatchBothResultBlock =
               inst(Add,
@@ -139,8 +139,8 @@ trait e4 extends Evolution with ScalaGenerator with TestGenerator with Operation
                       |}""".stripMargin).statements
 
           case Sub =>
-            val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
-            val deltaRight = deltaChildOp(source, domain.base.right, Eval)
+            val deltaLeft = deltaChildOp(exp, domain.base.left, Eval)
+            val deltaRight = deltaChildOp(exp, domain.base.right, Eval)
             val dispatchBothResultBlock =
               inst(Sub,
                 dispatch(expression(exp, domain.base.left), Simplify),
@@ -155,8 +155,8 @@ trait e4 extends Evolution with ScalaGenerator with TestGenerator with Operation
                      |}""".stripMargin).statements
 
           case Mult =>
-            val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
-            val deltaRight = deltaChildOp(source, domain.base.right, Eval)
+            val deltaLeft = deltaChildOp(exp, domain.base.left, Eval)
+            val deltaRight = deltaChildOp(exp, domain.base.right, Eval)
             val dispatchBothResultBlock =
               inst(Mult,
                 dispatch(expression(exp, domain.base.left), Simplify),
@@ -178,8 +178,8 @@ trait e4 extends Evolution with ScalaGenerator with TestGenerator with Operation
                       |""".stripMargin).statements
 
           case Divd =>
-            val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
-            val deltaRight = deltaChildOp(source, domain.base.right, Eval)
+            val deltaLeft = deltaChildOp(exp, domain.base.left, Eval)
+            val deltaRight = deltaChildOp(exp, domain.base.right, Eval)
             val dispatchBothResultBlock =
               inst(Divd,
                 dispatch(expression(exp, domain.base.left), Simplify),
@@ -204,7 +204,7 @@ trait e4 extends Evolution with ScalaGenerator with TestGenerator with Operation
             // TODO: Would love to have ability to simplify neg(neg(x)) to just be x. This requires a form
             // of inspection that might not be generalizable...
           case Neg =>
-            val deltaInner = deltaChildOp(source, domain.base.inner, Eval)
+            val deltaInner = deltaChildOp(exp, domain.base.inner, Eval)
             val dispatchBothResultBlock =
               inst(Neg, dispatch(expression(exp, domain.base.inner), Simplify))
                 .appendDependent{ case Seq(addResult) =>

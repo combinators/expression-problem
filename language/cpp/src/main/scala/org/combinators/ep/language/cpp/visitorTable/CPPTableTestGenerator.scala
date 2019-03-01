@@ -9,66 +9,22 @@ trait CPPTableTestGenerator extends CPPGenerator with CPPUnitTestGenerator {
   import domain._
 
   /**
-    * Actual value in a test case.
+    * Instantiating an expression invokes 'new'.
     *
-    * Each basic test case has an instance over which an operation is to be performed. This method
-    * returns the inline expression resulting from dispatching operation, op, over the given instance, inst.
-    *
-    * For more complicated structures, as with lists for example, this method will need to be overridden.
-    *
-    * Not sure, yet, how to properly pass in variable parameters.
+    * @param exp       desired DataType subtype
+    * @param params    potential parameters
+    * @return
     */
-  def actual(op:Operation, inst:AtomicInst, params:CPPElement*):CPPElement = {
-    new CPPExpression(s"(new ${op.concept}(${rec_convert(inst)}))->getValue()")
+  override def inst(exp:domain.DataType, params:Expression*): CodeBlockWithResultingExpressions = {
+    val args = params.mkString(",")
+    CodeBlockWithResultingExpressions(new CPPExpression(s"new ${exp.concept}($args)"))
   }
 
-  /** Convert a test instance into a C++ Expression for instantiating that instance. */
-  def rec_convert(inst: Inst): CPPExpression = {
-    val name = inst.name
-    vars(inst)   // cause the creation of a mapping to this instance
-    id = id + 1
-    inst match {
-      case ui: UnaryInst =>
-        val inner = rec_convert(ui.inner).toString
-        new CPPExpression(s"new ${ui.e.concept}($inner)")
-
-      case bi: BinaryInst =>
-        val left = rec_convert(bi.left).toString
-        val right = rec_convert(bi.right).toString
-        new CPPExpression(s"new ${bi.e.concept}($left, $right)")
-
-      //  double val1 = 1.0;
-      //  Lit  lit1 = Lit(&val1);
-      case exp: AtomicInst => new CPPExpression(s"new ${exp.e.concept}(${exp.ei.inst})")
-      case _ => new CPPExpression(s""" "unknown $name" """)
-    }
-  }
-
-  /** Convert a test instance into a C++ Expression for instantiating that instance. */
-  def rec_convertOLD(inst: Inst): CPPElement = {
-    val name = inst.name
-    id = id + 1
-    inst match {
-      case ui: UnaryInst =>
-        val inner = rec_convert(ui.inner).toString
-        new CPPStatement(s"$inner\n$name ${vars(inst)} = $name(&${vars(ui.inner)});")
-
-      // Add  add3 = Add(&lit1, &lit2);
-      case bi: BinaryInst =>
-        val left = rec_convert(bi.left).toString
-        val right = rec_convert(bi.right).toString
-        new CPPStatement(s"$left\n$right\n$name ${vars(inst)} = $name(&${vars(bi.left)}, &${vars(bi.right)});")
-
-      //  double val1 = 1.0;
-      //  Lit  lit1 = Lit(&val1);
-      case exp: AtomicInst =>
-        new CPPStatement(
-          s"""
-             |double val${vars(inst)} = ${exp.ei.inst};
-             |$name ${vars(inst)} = $name(&val${vars(inst)});
-         """.stripMargin)
-
-      case _ => new CPPStatement(s""" "unknown $name" """)
+  /** Converts types in test code. Need to use "Exp *" not just "Exp" */
+  override def testTypeConverter(ty: TypeRep) : Type = {
+    ty match {
+      case domain.baseTypeRep => new CPPType(s"${typeConverter(ty)} *")
+      case _ => super.typeConverter(ty)
     }
   }
 

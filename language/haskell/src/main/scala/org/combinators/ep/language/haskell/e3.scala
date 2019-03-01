@@ -11,7 +11,7 @@ trait e3 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
   val domain:MathDomain
   import domain._
 
-   abstract override def logic(exp:domain.DataType, op:domain.Operation): Seq[Haskell] = {
+   abstract override def logic(exp:domain.DataType, op:domain.Operation): Seq[HaskellStatement] = {
     // generate the actual body
     op match {
       case PrettyP => {

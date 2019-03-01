@@ -151,10 +151,11 @@ trait BaseDomain {
     def name:String
   }
 
-  //
   /** Scala Dependent Pair Type is a dependent sum, Sigma, where there exists a type and an instance for that type.
     * Check https://partialflow.wordpress.com/2017/07/26/dependent-types-type-level-programming/ for an introduction
     * on dependent types in Scala.
+    *
+    * The type of the instance is captured by 'tpe'
     */
   sealed trait ExistsInstance {
     val tpe : TypeRep

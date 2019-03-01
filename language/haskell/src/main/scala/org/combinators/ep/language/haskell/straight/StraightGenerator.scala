@@ -17,7 +17,7 @@ trait StraightGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
 
   /** For the processed model, return generated code artifacts for solution. */
   def generatedCode():Seq[HaskellWithPath] = {
-    helperClasses() ++ flat.ops.map(op => generateOp(flat, op)) :+
+    flat.ops.map(op => generateOp(flat, op)) :+
       generateDataTypes(flat)
   }
 
@@ -70,7 +70,11 @@ trait StraightGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
       * Seems safest to include/embed parens here
       */
     override def dispatch(primary:Haskell, op:domain.Operation, params:Haskell*) : Haskell = {
-      val args:String = params.mkString(" ")
+      val args:String = if (params.isEmpty) {
+        ""
+      } else {
+        params.map(h => "(" + h.getCode + ")").mkString(" ")
+      }
 
       Haskell(s"""(${op.instance} (${primary.toString}) $args)""")
     }
@@ -84,7 +88,11 @@ trait StraightGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
     * For producer operations, there is a need to instantiate objects, and one would use this
     * method (with specific parameters) to carry this out.
     */
-  override def inst(exp:domain.DataType, params:Haskell*): Haskell = {
-    Haskell(exp.concept + " " + params.map(h => h.getCode).mkString(" "))
+//  override def inst(exp:domain.DataType, params:Haskell*): Haskell = {
+//    Haskell(exp.concept + " " + params.map(h => h.getCode).mkString(" "))
+//  }
+
+  override def inst(exp:domain.DataType, params:Expression*): CodeBlockWithResultingExpressions = {
+    CodeBlockWithResultingExpressions(Haskell(exp.concept + " " + params.map(h => "(" + h.getCode + ")").mkString(" ")))
   }
 }

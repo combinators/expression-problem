@@ -12,8 +12,6 @@ trait JUnitTestGenerator extends TestGenerator with PerformanceTestGenerator wit
   val domain: BaseDomain with ModelDomain
   import domain._
 
-
-
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
   def generateSuite(pkg: Option[String], model: Option[Model] = None): Seq[CompilationUnit] = {
     val packageDeclaration: String = if (pkg.isDefined) {
@@ -23,7 +21,6 @@ trait JUnitTestGenerator extends TestGenerator with PerformanceTestGenerator wit
     }
 
     val allTests = testGenerator
-
     val files = allTests.filter(md => md.getBody.isPresent).zipWithIndex.map(pair => {
       Java(s"""|$packageDeclaration
                |import junit.framework.TestCase;

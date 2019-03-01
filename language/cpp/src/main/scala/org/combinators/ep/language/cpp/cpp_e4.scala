@@ -23,29 +23,29 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with CPPProd
     }
   }
 
-  /**
-    * List can be accommodated (in C++) by populating vectors with values drawn from test case.
-    *
-    * Calls 'continue' with an expression (the result of the prior new statements) and just concatenates all statements
-    */
-  override def expected(test:domain.TestCaseExpectedValue, id:String) : (CPPElement => Seq[CPPElement]) => Seq[CPPElement] = continue => {
-    test.expect.tpe match {
-      case list:List[_] =>
-        val seq: Seq[Any] = test.expect.inst.asInstanceOf[Seq[Any]]
-        val ctype:CPPType = typeConverter(list)
-        //val inner:CPPType = typeConverter(list.generic)
-
-        val map = seq.map(elt => s"result$id.push_back($elt);")
-        val str = s"""
-                     |$ctype result$id;
-                     |${map.mkString("\n")}
-                     |${continue(new CPPExpression(s"result$id")).mkString("\n")}
-             """.stripMargin
-        str.split("\n").map(line => new CPPExpression(line))
-
-      case _ => super.expected(test,id)(continue)
-    }
-  }
+//  /**
+//    * List can be accommodated (in C++) by populating vectors with values drawn from test case.
+//    *
+//    * Calls 'continue' with an expression (the result of the prior new statements) and just concatenates all statements
+//    */
+//  override def expected(test:domain.TestCaseExpectedValue, id:String) : (CPPElement => Seq[CPPElement]) => Seq[CPPElement] = continue => {
+//    test.expect.tpe match {
+//      case list:List[_] =>
+//        val seq: Seq[Any] = test.expect.inst.asInstanceOf[Seq[Any]]
+//        val ctype:CPPType = typeConverter(list)
+//        //val inner:CPPType = typeConverter(list.generic)
+//
+//        val map = seq.map(elt => s"result$id.push_back($elt);")
+//        val str = s"""
+//                     |$ctype result$id;
+//                     |${map.mkString("\n")}
+//                     |${continue(new CPPExpression(s"result$id")).mkString("\n")}
+//             """.stripMargin
+//        str.split("\n").map(line => new CPPExpression(line))
+//
+//      case _ => super.expected(test,id)(continue)
+//    }
+//  }
 
   /** Provides fresh names for temporary list objects. */
   object ListNameGenerator {
@@ -156,8 +156,8 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with CPPProd
             }}.block
 
           case Add =>
-            val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
-            val deltaRight = deltaChildOp(source, domain.base.right, Eval)
+            val deltaLeft = deltaChildOp(exp, domain.base.left, Eval)
+            val deltaRight = deltaChildOp(exp, domain.base.right, Eval)
 
             val dispatchBothResultBlock =
               inst(Add,
@@ -195,8 +195,8 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with CPPProd
 //                      |}""".stripMargin))
 
           case Sub =>
-            val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
-            val deltaRight = deltaChildOp(source, domain.base.right, Eval)
+            val deltaLeft = deltaChildOp(exp, domain.base.left, Eval)
+            val deltaRight = deltaChildOp(exp, domain.base.right, Eval)
             val dispatchBothResultBlock =
               inst(Sub,
                 dispatch(expression(exp, domain.base.left), Simplify),
@@ -223,8 +223,8 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with CPPProd
 //                      |}""".stripMargin))
 
           case Mult =>
-            val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
-            val deltaRight = deltaChildOp(source, domain.base.right, Eval)
+            val deltaLeft = deltaChildOp(exp, domain.base.left, Eval)
+            val deltaRight = deltaChildOp(exp, domain.base.right, Eval)
             val dispatchBothResultBlock =
               inst(Mult,
                 dispatch(expression(exp, domain.base.left), Simplify),
@@ -262,8 +262,8 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with CPPProd
 //                      |}""".stripMargin))
 
           case Divd =>
-            val deltaLeft = deltaChildOp(source, domain.base.left, Eval)
-            val deltaRight = deltaChildOp(source, domain.base.right, Eval)
+            val deltaLeft = deltaChildOp(exp, domain.base.left, Eval)
+            val deltaRight = deltaChildOp(exp, domain.base.right, Eval)
             val dispatchBothResultBlock =
               inst(Divd,
                 dispatch(expression(exp, domain.base.left), Simplify),
@@ -305,7 +305,7 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with CPPProd
 //                      |}""".stripMargin))
 
           case Neg =>
-            val deltaInner = deltaChildOp(source, domain.base.inner, Eval)
+            val deltaInner = deltaChildOp(exp, domain.base.inner, Eval)
             val dispatchBothResultBlock =
               inst(Neg, dispatch(expression(exp, domain.base.inner), Simplify))
                 .appendDependent{ case Seq(addResult) =>

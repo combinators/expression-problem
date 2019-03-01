@@ -66,7 +66,7 @@ simplifyExp_M3 helpWithEval helpWith (Mult left right) =
                                                              (simplifyExp_M3 helpWithEval helpWith))))
     helpEval = evalExp_M0 (evalExp_M1 (evalExp_M2 (evalExp_M3 helpWithEval)))
   in let
-       leftVal = helpEval left   -- contextDispatch(source, deltaChildOp(source, domain.base.left, Eval))
+       leftVal = helpEval left   -- contextDispatch(source, deltaChildOp(source.e, domain.base.left, Eval))
        rightVal = helpEval right
      in if leftVal == 0 || rightVal == 0.0
          then Lit 0.0
@@ -103,14 +103,11 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     }
   }
 
-  /**
-    * For producer operations, there is a need to instantiate objects, and one would use this
-    * method (with specific parameters) to carry this out.
-    */
-  override def inst(exp:domain.DataType, params:Haskell*): Haskell = {
+  override def inst(exp:domain.DataType, params:Expression*): CodeBlockWithResultingExpressions = {
+    val args = params.mkString(",")
 
     val wrap = genWrap(findModel(exp))
-    exp match {
+    val inner = exp match {
       case ui: Unary =>
         Haskell(wrap(s"${ui.concept} (${params(0)}) "))
 
@@ -122,7 +119,30 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
 
       case _ => Haskell(s" -- unknown ${exp.concept} ")
     }
+
+    CodeBlockWithResultingExpressions(inner)
   }
+
+//  /**
+//    * For producer operations, there is a need to instantiate objects, and one would use this
+//    * method (with specific parameters) to carry this out.
+//    */
+//  override def inst(exp:domain.DataType, params:Haskell*): Haskell = {
+//
+//    val wrap = genWrap(findModel(exp))
+//    exp match {
+//      case ui: Unary =>
+//        Haskell(wrap(s"${ui.concept} (${params(0)}) "))
+//
+//      case bi: Binary =>
+//        Haskell(wrap(s"${bi.concept} (${params(0)}) (${params(1)}) "))
+//
+//      case exp: Atomic =>
+//        Haskell(wrap(s"${exp.concept} ${params(0)} "))
+//
+//      case _ => Haskell(s" -- unknown ${exp.concept} ")
+//    }
+//  }
 
   /**
     * Extended to handle producer operations specially.

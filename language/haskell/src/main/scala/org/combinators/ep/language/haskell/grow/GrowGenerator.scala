@@ -573,6 +573,27 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
   //    }
   //  }
 
+  /**
+    * HACK. TODO: FIX
+    * Grow generateDT only needs first half...
+    * @param m
+    * @return
+    */
+  override def generateDataTypes(m:domain.Model): HaskellWithPath = {
+    val binaryTreeInterface =  if (m.flatten().hasBinaryMethod()) {
+      definedDataSubTypes("", m.types) ++ declarations
+    } else {
+      Seq.empty
+    }
+
+    val code = Haskell(
+      s"""|module DataTypes where
+          |${binaryTreeInterface.mkString("\n")}
+          |""".stripMargin)
+
+    HaskellWithPath(code, Paths.get("DataTypes.hs"))
+  }
+
   /** Find Model entry in the past that defines type. */
   def findType(m:Model, name:String) : Model = {
     if (m.isEmpty || m.types.exists(dt => dt.name.equals(name))) {
@@ -617,8 +638,16 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
       val op = delta.op.get
       // if an operation has a dependency, that is expressed with a helper function
       val sop:Option[Operation] = source.op
+      val isBinary:Boolean = delta.op.get match {
+        case bm:BinaryMethodTreeBase => true
+        case _ => false
+      }
+
       if (sop.isDefined && !sop.equals(delta.op)) {
         Haskell(s"""help${op.concept} ${delta.expr.get}""")
+      } else if (sop.isDefined && isBinary) {
+        // post-processing will resolve this
+        Haskell(s"""help ${delta.expr.get}""")
       } else {
 
         //dispatch(delta.expr.get, delta.op.get, delta.params: _*)

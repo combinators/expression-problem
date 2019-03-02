@@ -91,8 +91,8 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
 
   /** For the processed model, return generated code artifacts for solution. */
   def generatedCode():Seq[HaskellWithPath] = {
-    helperClasses() ++
-      getModel.inChronologicalOrder.map(m => generateEvolution(m))
+    getModel.inChronologicalOrder.map(m => generateEvolution(m)) :+
+    generateDataTypes(flat)
   }
 
   /** Return designated HaskellType. */
@@ -102,6 +102,10 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
       case _ => super.typeConverter(tpe)
     }
   }
+
+//  override def inst(exp:domain.DataType, params:Expression*): CodeBlockWithResultingExpressions = {
+//    CodeBlockWithResultingExpressions(Haskell(exp.concept + " " + params.map(h => "(" + h.getCode + ")").mkString(" ")))
+//  }
 
   override def inst(exp:domain.DataType, params:Expression*): CodeBlockWithResultingExpressions = {
     val args = params.mkString(",")
@@ -513,7 +517,7 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     // HACK: Awkward to use stripmargin, since generateData might start with "|" char in Haskell!!
     val code = Haskell(s"""|{-# LANGUAGE TypeFamilies #-}
                            |module ${m.name.capitalize} where
-                           |
+                           |import DataTypes
                            |import GHC.Types (Constraint)
                            |import Data.Void
                            |$pastImports
@@ -527,7 +531,8 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     * Seems safest to include/embed parens here.
     *
     * middle operator is 'helpWith' or 'help' for extensions, and this needs to be 'fixed' by
-    * the one calling logic. This is not an ideal solution but it works
+    * the one calling logic. This is not an ideal solution but it works.
+    *
     */
   override def dispatch(primary:Haskell, op:domain.Operation, params:Haskell*) : Haskell = {
     val args:String = params.mkString("")
@@ -538,6 +543,64 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
   /** For straight design solution, directly access attributes by name. */
   override def expression (exp:DataType, att:Attribute) : Expression = {
     Haskell(s"${att.instance}")
+  }
+
+  //  /**
+  //    * Convert the given atomic instance, and use base as the variable name for all interior expansions.
+  //    *
+  //    * Need to find EVOLUTION in which an operation was defined (other than M0) so you can call the
+  //    * appropriate M*Ext to lift up for types
+  //    */
+  //  override def convert(inst:Inst) : Haskell = {
+  //    val name = inst.name
+  //
+  //    // For the base (and one above it), there is no need to wrap, otherwise must wrap
+  //
+  //    inst match {
+  //      case ui: UnaryInst =>
+  //        val wrap = genWrap(findModel(ui.e))
+  //        Haskell(wrap(s"${ui.e.concept} (${toTargetLanguage(ui.inner)}) "))
+  //
+  //      case bi: BinaryInst =>
+  //        val wrap = genWrap(findModel(bi.e))
+  //        Haskell(wrap(s"${bi.e.concept} (${toTargetLanguage(bi.left)}) (${toTargetLanguage(bi.right)}) "))
+  //
+  //      case exp: AtomicInst =>
+  //        val wrap = genWrap(findModel(exp.e))
+  //        Haskell(wrap(s"${exp.e.concept} ${exp.ei.inst}"))
+  //
+  //      case _ => Haskell(s""" -- unknown $name" """)
+  //    }
+  //  }
+
+  /** Find Model entry in the past that defines type. */
+  def findType(m:Model, name:String) : Model = {
+    if (m.isEmpty || m.types.exists(dt => dt.name.equals(name))) {
+      m
+    } else {
+      findType(m.last, name)
+    }
+  }
+
+  /**
+    * Given a string expression "(Mult (Lit 1.0) (Lit 12.0))" Find the highest level in model that is needed to define these.
+    *
+    * @param s
+    * @return
+    */
+  def retrieveHighestDataTypeLevel (s:String) : Model = {
+
+    // get all non empty models.
+    val all = getModel
+    val allFound:Seq[Model] = s.replaceAll("\\(", " ").replaceAll("\\)", " ").split(" ").map(name => findType(all, name)).distinct.filterNot(m => m.isEmpty)
+
+    // get all non-empty former models.
+    val previous = allFound.map(m => m.last).distinct.filterNot(m => m.isEmpty)
+
+    // find the only one that exists
+    val distinct = allFound.filterNot(m => previous.contains(m)).distinct
+
+    distinct.head
   }
 
   /**
@@ -551,9 +614,26 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     */
   override def contextDispatch(source:Context, delta:Delta) : Expression = {
     if (delta.op.isDefined) {
+      val op = delta.op.get
       // if an operation has a dependency, that is expressed with a helper function
-      Haskell(s"""help${delta.op.get.concept} ${delta.expr.get}""")
-      //dispatch(delta.expr.get, delta.op.get, delta.params: _*)
+      val sop:Option[Operation] = source.op
+      if (sop.isDefined && !sop.equals(delta.op)) {
+        Haskell(s"""help${op.concept} ${delta.expr.get}""")
+      } else {
+
+        //dispatch(delta.expr.get, delta.op.get, delta.params: _*)
+
+        // CHALLENGE: have to telescope preceding (Ext_M0 (Ext_M1 (Ext_M2 ...
+        // when using datatypes from levels other than M0. This requires complicated effort to recover the information
+        // from the generated code (delta.expr.get) that is passed in. Seems like we need to record information to
+        // be associated with it, otherwise we have to figure it out here.
+
+        //      val m = retrieveHighestDataTypeLevel(delta.expr.get.getCode)  // getModel.findOperation(op)
+        //      Haskell(s"(${op.instance}${domain.baseTypeRep.name}${getModel.name.capitalize} (${genWrap(m)(delta.expr.get.toString)}))")
+
+        Haskell(s"(${op.instance}${domain.baseTypeRep.name}${getModel.name.capitalize} (${delta.expr.get.toString}))")
+      }
+     // Haskell(operationForFixedLevel(getModel.findOperation(op), op, dependency(op)))
     } else {
       super.contextDispatch(source, delta)
     }

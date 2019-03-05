@@ -1,17 +1,21 @@
-package ep.performance
+package org.combinators.ep.language.java.performance
 
-import ep.domain._
-import ep.j._
-import ep.j.oo._
+/**
+  * Code exists to launch performance analysis of code generation of Java solutions. Not part of the
+  * standard code generator framework.
+  */
 import System.nanoTime
 
-import com.github.javaparser.ast.CompilationUnit
-import ep.j.algebra.AlgebraGenerator
-import ep.j.extensibleVisitor.ExtensibleVisitorGenerator
-import ep.j.interpreter.InterpreterGenerator
-import ep.j.trivially.TriviallyGenerator
-import ep.j.visitor.VisitorGenerator
-
+import org.combinators.ep.domain.WithDomain
+import org.combinators.ep.domain.math.MathDomain
+import org.combinators.ep.generator.{LanguageIndependentGenerator, LanguageIndependentTestGenerator}
+import org.combinators.ep.language.java._
+import org.combinators.ep.language.java.algebra.AlgebraGenerator
+import org.combinators.ep.language.java.extensibleVisitor.ExtensibleVisitorGenerator
+import org.combinators.ep.language.java.interpreter.InterpreterGenerator
+import org.combinators.ep.language.java.oo._
+import org.combinators.ep.language.java.trivially.TriviallyGenerator
+import org.combinators.ep.language.java.visitor.VisitorGenerator
 case class Score (n:Int,  min:Long,  average:Long,  max:Long)
 
 /** Execute twenty times, and take lowest. */
@@ -35,167 +39,90 @@ object Sample {
     val avgV = totalV / numTrials
     Score(numTrials, minV, avgV, maxV)
   }
-}
 
-abstract class OOTest {
-  val gen: WithDomain[MathDomain] with OOGenerator with JUnitTestGenerator
+  def process(name:Option[String], tests:Seq[BaseTest]) : Map[String,Score] = {
 
-  // time the synthesis of the generated code plus test suites
-  def generatedCode(t: Long = nanoTime): Long = {
-    val results:Seq[CompilationUnit] = gen.generatedCode() ++ gen.generateSuite(Some("oo"))
-    nanoTime - t
+    // get thing started. Burn this time to ensure we don't get biased by first run.
+    tests.foreach(t => t.generatedCode(name))
+
+    // now run the real tests
+    tests.map(t => t.id -> sample({t.generatedCode(name)})).toMap[String,Score]
   }
 }
 
-abstract class TriviallyTest {
-  val gen: WithDomain[MathDomain] with TriviallyGenerator with JUnitTestGenerator
+abstract class BaseTest(val id:String) {
+  val gen: WithDomain[MathDomain] with LanguageIndependentGenerator with LanguageIndependentTestGenerator
 
   // time the synthesis of the generated code plus test suites
-  def generatedCode(t: Long = nanoTime): Long = {
-    val results:Seq[CompilationUnit] = gen.generatedCode() ++ gen.generateSuite(Some("oo"))
-    nanoTime - t
+  def generatedCode(pkg:Option[String]): Long = {
+    val now = nanoTime
+    gen.generatedCode() ++ gen.generateSuite(pkg)
+    nanoTime - now
   }
 }
 
-abstract class AlgebraTest {
-  val gen: WithDomain[MathDomain] with AlgebraGenerator with JUnitTestGenerator
 
-  // time the synthesis of the generated code plus test suites
-  def generatedCode(t: Long = nanoTime): Long = {
-    val results:Seq[CompilationUnit] = gen.generatedCode() ++ gen.generateSuite(Some("oo"))
-    nanoTime - t
-  }
-}
-
-abstract class InterpreterTest {
-  val gen: WithDomain[MathDomain] with InterpreterGenerator with JUnitTestGenerator
-
-  // time the synthesis of the generated code plus test suites
-  def generatedCode(t: Long = nanoTime): Long = {
-    val results:Seq[CompilationUnit] = gen.generatedCode() ++ gen.generateSuite(Some("oo"))
-    nanoTime - t
-  }
-}
-
-abstract class VisitorTest {
-  val gen: WithDomain[MathDomain] with VisitorGenerator with JUnitTestGenerator
-
-  // time the synthesis of the generated code plus test suites
-  def generatedCode(t: Long = nanoTime): Long = {
-    val results:Seq[CompilationUnit] = gen.generatedCode() ++ gen.generateSuite(Some("oo"))
-    nanoTime - t
-  }
-}
-
-abstract class ExtensibleVisitorTest {
-  val gen: WithDomain[MathDomain] with ExtensibleVisitorGenerator with JUnitTestGenerator
-
-  // time the synthesis of the generated code plus test suites
-  def generatedCode(t: Long = nanoTime): Long = {
-    val results:Seq[CompilationUnit] = gen.generatedCode() ++ gen.generateSuite(Some("oo"))
-    nanoTime - t
-  }
-}
-
-// might be easier way to do this...
+  // might be easier way to do this...
 object OOEvaluateTest  {
-
-  def name : String = "oo"
+  def name = Some("oo")
 
   def evaluate() : Map[String,Score] = {
 
-    org.combinators.ep.language.java.deployment.
-
-    val e0 = new OOTest {
+    val e0 = new BaseTest("e0") {
       override val gen = new WithDomain(MathDomain) with OOGenerator with JUnitTestGenerator with e0
     }
-    val e1 = new OOTest {
+    val e1 = new BaseTest("e1") {
       override val gen = new WithDomain(MathDomain) with OOGenerator with JUnitTestGenerator with e0 with e1
     }
-    val e2 = new OOTest {
+    val e2 = new BaseTest("e2") {
       override val gen = new WithDomain(MathDomain) with OOGenerator with JUnitTestGenerator with e0 with e1 with e2
     }
-    val e3 = new OOTest {
+    val e3 = new BaseTest("e3") {
       override val gen = new WithDomain(MathDomain) with OOGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3
     }
-    val e4 = new OOTest {
+    val e4 = new BaseTest("e4") {
       override val gen = new WithDomain(MathDomain) with OOGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4
     }
-    val e5 = new OOTest {
+    val e5 = new BaseTest("e5") {
       override val gen = new WithDomain(MathDomain) with OOGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5
     }
-    val e6 = new OOTest {
+    val e6 = new BaseTest("e6") {
       override val gen = new WithDomain(MathDomain) with OOGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6
     }
 
-    // get thing started. Burn this time to ensure we don't get biased by first run.
-    e0.generatedCode()
-    e1.generatedCode()
-    e2.generatedCode()
-    e3.generatedCode()
-    e4.generatedCode()
-    e5.generatedCode()
-    e6.generatedCode()
-
-    Map(
-      "e0" -> Sample.sample ({e0.generatedCode()}),
-      "e1" -> Sample.sample ({e1.generatedCode()}),
-      "e2" -> Sample.sample ({e2.generatedCode()}),
-      "e3" -> Sample.sample ({e3.generatedCode()}),
-      "e4" -> Sample.sample ({e4.generatedCode()}),
-      "e5" -> Sample.sample ({e5.generatedCode()}),
-      "e6" -> Sample.sample ({e6.generatedCode()})
-    )
+    Sample.process(name, Seq(e0, e1, e2, e3, e4, e5, e6))
   }
 }
 
 // might be easier way to do this...
 object TriviallyEvaluateTest extends App {
-
-  def name : String = "trivially"
+  def name = Some("trivially")
 
   def evaluate() : Map[String,Score] = {
 
-    val e0 = new TriviallyTest {
+    val e0 = new BaseTest("e0") {
       override val gen = new WithDomain(MathDomain) with TriviallyGenerator with JUnitTestGenerator with e0
     }
-    val e1 = new TriviallyTest {
+    val e1 = new BaseTest("e1") {
       override val gen = new WithDomain(MathDomain) with TriviallyGenerator with JUnitTestGenerator with e0 with e1
     }
-    val e2 = new TriviallyTest {
+    val e2 = new BaseTest("e2") {
       override val gen = new WithDomain(MathDomain) with TriviallyGenerator with JUnitTestGenerator with e0 with e1 with e2
     }
-    val e3 = new TriviallyTest {
+    val e3 = new BaseTest("e3") {
       override val gen = new WithDomain(MathDomain) with TriviallyGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3
     }
-    val e4 = new TriviallyTest {
+    val e4 = new BaseTest("e4") {
       override val gen = new WithDomain(MathDomain) with TriviallyGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4
     }
-    val e5 = new TriviallyTest {
+    val e5 = new BaseTest("e5") {
       override val gen = new WithDomain(MathDomain) with TriviallyGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5
     }
-    val e6 = new TriviallyTest {
+    val e6 = new BaseTest("e6") {
       override val gen = new WithDomain(MathDomain) with TriviallyGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6
     }
 
-    // get thing started. Burn this time to ensure we don't get biased by first run.
-    e0.generatedCode()
-    e1.generatedCode()
-    e2.generatedCode()
-    e3.generatedCode()
-    e4.generatedCode()
-    e5.generatedCode()
-    e6.generatedCode()
-
-    Map(
-      "e0" -> Sample.sample ({e0.generatedCode()}),
-      "e1" -> Sample.sample ({e1.generatedCode()}),
-      "e2" -> Sample.sample ({e2.generatedCode()}),
-      "e3" -> Sample.sample ({e3.generatedCode()}),
-      "e4" -> Sample.sample ({e4.generatedCode()}),
-      "e5" -> Sample.sample ({e5.generatedCode()}),
-      "e6" -> Sample.sample ({e6.generatedCode()})
-    )
+    Sample.process(name, Seq(e0, e1, e2, e3, e4, e5, e6))
   }
 }
 
@@ -203,51 +130,33 @@ object TriviallyEvaluateTest extends App {
 // might be easier way to do this...
 object AlgebraEvaluateTest extends App {
 
-  def name : String = "algebra"
+  def name = Some("algebra")
 
   def evaluate() : Map[String,Score] = {
 
-    val e0 = new AlgebraTest {
+    val e0 = new BaseTest("e0") {
       override val gen = new WithDomain(MathDomain) with AlgebraGenerator with JUnitTestGenerator with e0
     }
-    val e1 = new AlgebraTest {
+    val e1 = new BaseTest("e1") {
       override val gen = new WithDomain(MathDomain) with AlgebraGenerator with JUnitTestGenerator with e0 with e1
     }
-    val e2 = new AlgebraTest {
+    val e2 = new BaseTest("e2") {
       override val gen = new WithDomain(MathDomain) with AlgebraGenerator with JUnitTestGenerator with e0 with e1 with e2
     }
-    val e3 = new AlgebraTest {
+    val e3 = new BaseTest("e3") {
       override val gen = new WithDomain(MathDomain) with AlgebraGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3
     }
-    val e4 = new AlgebraTest {
+    val e4 = new BaseTest("e4") {
       override val gen = new WithDomain(MathDomain) with AlgebraGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4
     }
-    val e5 = new AlgebraTest {
+    val e5 = new BaseTest("e5") {
       override val gen = new WithDomain(MathDomain) with AlgebraGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5
     }
-    val e6 = new AlgebraTest {
+    val e6 = new BaseTest("e6") {
       override val gen = new WithDomain(MathDomain) with AlgebraGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6
     }
 
-
-    // get thing started. Burn this time to ensure we don't get biased by first run.
-    e0.generatedCode()
-    e1.generatedCode()
-    e2.generatedCode()
-    e3.generatedCode()
-    e4.generatedCode()
-    e5.generatedCode()
-    e6.generatedCode()
-
-    Map(
-      "e0" -> Sample.sample ({e0.generatedCode()}),
-      "e1" -> Sample.sample ({e1.generatedCode()}),
-      "e2" -> Sample.sample ({e2.generatedCode()}),
-      "e3" -> Sample.sample ({e3.generatedCode()}),
-      "e4" -> Sample.sample ({e4.generatedCode()}),
-      "e5" -> Sample.sample ({e5.generatedCode()}),
-      "e6" -> Sample.sample ({e6.generatedCode()})
-    )
+    Sample.process(name, Seq(e0, e1, e2, e3, e4, e5, e6))
   }
 }
 
@@ -255,104 +164,64 @@ object AlgebraEvaluateTest extends App {
 // might be easier way to do this...
 object InterpreterEvaluateTest extends App {
 
-  def name : String = "interpreter"
-
+  def name = Some("interpreter")
 
   def evaluate() : Map[String,Score] = {
-
-
-    val e0 = new InterpreterTest {
+    val e0 = new BaseTest("e0") {
       override val gen = new WithDomain(MathDomain) with InterpreterGenerator with JUnitTestGenerator with e0
     }
-    val e1 = new InterpreterTest {
+    val e1 = new BaseTest("e1") {
       override val gen = new WithDomain(MathDomain) with InterpreterGenerator with JUnitTestGenerator with e0 with e1
     }
-    val e2 = new InterpreterTest {
+    val e2 = new BaseTest("e2") {
       override val gen = new WithDomain(MathDomain) with InterpreterGenerator with JUnitTestGenerator with e0 with e1 with e2
     }
-    val e3 = new InterpreterTest {
+    val e3 = new BaseTest("e3") {
       override val gen = new WithDomain(MathDomain) with InterpreterGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3
     }
-    val e4 = new InterpreterTest {
+    val e4 = new BaseTest("e4") {
       override val gen = new WithDomain(MathDomain) with InterpreterGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4
     }
-    val e5 = new InterpreterTest {
+    val e5 = new BaseTest("e5") {
       override val gen = new WithDomain(MathDomain) with InterpreterGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5
     }
-    val e6 = new InterpreterTest {
+    val e6 = new BaseTest("e6") {
       override val gen = new WithDomain(MathDomain) with InterpreterGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6
     }
 
-    // get thing started. Burn this time to ensure we don't get biased by first run.
-    e0.generatedCode()
-    e1.generatedCode()
-    e2.generatedCode()
-    e3.generatedCode()
-    e4.generatedCode()
-    e5.generatedCode()
-    e6.generatedCode()
-
-    Map(
-      "e0" -> Sample.sample ({e0.generatedCode()}),
-      "e1" -> Sample.sample ({e1.generatedCode()}),
-      "e2" -> Sample.sample ({e2.generatedCode()}),
-      "e3" -> Sample.sample ({e3.generatedCode()}),
-      "e4" -> Sample.sample ({e4.generatedCode()}),
-      "e5" -> Sample.sample ({e5.generatedCode()}),
-      "e6" -> Sample.sample ({e6.generatedCode()})
-    )
+    Sample.process(name, Seq(e0, e1, e2, e3, e4, e5, e6))
   }
 }
 
 
 // might be easier way to do this...
 object VisitorEvaluateTest extends App {
-
-  def name : String = "visitor"
-
+  def name = Some("visitor")
 
   def evaluate() : Map[String,Score] = {
-
-    val e0 = new VisitorTest {
+    val e0 = new BaseTest("e0") {
       override val gen = new WithDomain(MathDomain) with VisitorGenerator with JUnitTestGenerator with e0
     }
-    val e1 = new VisitorTest {
+    val e1 = new BaseTest("e1") {
       override val gen = new WithDomain(MathDomain) with VisitorGenerator with JUnitTestGenerator with e0 with e1
     }
-    val e2 = new VisitorTest {
+    val e2 = new BaseTest("e2") {
       override val gen = new WithDomain(MathDomain) with VisitorGenerator with JUnitTestGenerator with e0 with e1 with e2
     }
-    val e3 = new VisitorTest {
+    val e3 = new BaseTest("e3") {
       override val gen = new WithDomain(MathDomain) with VisitorGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3
     }
-    val e4 = new VisitorTest {
+    val e4 = new BaseTest("e4") {
       override val gen = new WithDomain(MathDomain) with VisitorGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4
     }
-    val e5 = new VisitorTest {
+    val e5 = new BaseTest("e5") {
       override val gen = new WithDomain(MathDomain) with VisitorGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5
     }
-    val e6 = new VisitorTest {
+    val e6 = new BaseTest("e6") {
       override val gen = new WithDomain(MathDomain) with VisitorGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6
     }
 
-    // get thing started. Burn this time to ensure we don't get biased by first run.
-    e0.generatedCode()
-    e1.generatedCode()
-    e2.generatedCode()
-    e3.generatedCode()
-    e4.generatedCode()
-    e5.generatedCode()
-    e6.generatedCode()
-
-    Map(
-      "e0" -> Sample.sample ({e0.generatedCode()}),
-      "e1" -> Sample.sample ({e1.generatedCode()}),
-      "e2" -> Sample.sample ({e2.generatedCode()}),
-      "e3" -> Sample.sample ({e3.generatedCode()}),
-      "e4" -> Sample.sample ({e4.generatedCode()}),
-      "e5" -> Sample.sample ({e5.generatedCode()}),
-      "e6" -> Sample.sample ({e6.generatedCode()})
-    )
+    Sample.process(name, Seq(e0, e1, e2, e3, e4, e5, e6))
   }
 }
 
@@ -360,50 +229,32 @@ object VisitorEvaluateTest extends App {
 // might be easier way to do this...
 object ExtensibleVisitorEvaluateTest extends App {
 
-  def name : String = "extensible"
+  def name = Some("extensible")
 
   def evaluate() : Map[String,Score] = {
-
-    val e0 = new ExtensibleVisitorTest {
+    val e0 = new BaseTest("e0") {
       override val gen = new WithDomain(MathDomain) with ExtensibleVisitorGenerator with JUnitTestGenerator with e0
     }
-    val e1 = new ExtensibleVisitorTest {
+    val e1 = new BaseTest("e1") {
       override val gen = new WithDomain(MathDomain) with ExtensibleVisitorGenerator with JUnitTestGenerator with e0 with e1
     }
-    val e2 = new ExtensibleVisitorTest {
+    val e2 = new BaseTest("e2") {
       override val gen = new WithDomain(MathDomain) with ExtensibleVisitorGenerator with JUnitTestGenerator with e0 with e1 with e2
     }
-    val e3 = new ExtensibleVisitorTest {
+    val e3 = new BaseTest("e3") {
       override val gen = new WithDomain(MathDomain) with ExtensibleVisitorGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3
     }
-    val e4 = new ExtensibleVisitorTest {
+    val e4 = new BaseTest("e4") {
       override val gen = new WithDomain(MathDomain) with ExtensibleVisitorGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4
     }
-    val e5 = new ExtensibleVisitorTest {
+    val e5 = new BaseTest("e5") {
       override val gen = new WithDomain(MathDomain) with ExtensibleVisitorGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5
     }
-    val e6 = new ExtensibleVisitorTest {
+    val e6 = new BaseTest("e6") {
       override val gen = new WithDomain(MathDomain) with ExtensibleVisitorGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6
     }
 
-    // get thing started. Burn this time to ensure we don't get biased by first run.
-    e0.generatedCode()
-    e1.generatedCode()
-    e2.generatedCode()
-    e3.generatedCode()
-    e4.generatedCode()
-    e5.generatedCode()
-    e6.generatedCode()
-
-    Map(
-      "e0" -> Sample.sample ({e0.generatedCode()}),
-      "e1" -> Sample.sample ({e1.generatedCode()}),
-      "e2" -> Sample.sample ({e2.generatedCode()}),
-      "e3" -> Sample.sample ({e3.generatedCode()}),
-      "e4" -> Sample.sample ({e4.generatedCode()}),
-      "e5" -> Sample.sample ({e5.generatedCode()}),
-      "e6" -> Sample.sample ({e6.generatedCode()})
-    )
+    Sample.process(name, Seq(e0, e1, e2, e3, e4, e5, e6))
   }
 }
 

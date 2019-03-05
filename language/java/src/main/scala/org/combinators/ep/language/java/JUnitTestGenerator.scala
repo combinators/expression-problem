@@ -10,10 +10,9 @@ import org.combinators.templating.twirl.Java
   */
 trait JUnitTestGenerator extends TestGenerator with PerformanceTestGenerator with JavaGenerator {
   val domain: BaseDomain with ModelDomain
-  import domain._
 
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
-  def generateSuite(pkg: Option[String], model: Option[Model] = None): Seq[CompilationUnit] = {
+  def generateSuite(pkg: Option[String]): Seq[CompilationUnit] = {
     val packageDeclaration: String = if (pkg.isDefined) {
       s"package ${pkg.get};"
     } else {

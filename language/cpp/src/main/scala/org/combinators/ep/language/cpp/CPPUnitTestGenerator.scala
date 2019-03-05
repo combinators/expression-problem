@@ -9,10 +9,14 @@ import org.combinators.ep.domain.{BaseDomain, ModelDomain}
   */
 trait CPPUnitTestGenerator extends TestGenerator with PerformanceTestGenerator with CPPGenerator {
   val domain: BaseDomain with ModelDomain
-  import domain._
+
+  /**
+    * Represents the sequence of total test cases.
+    */
+  def testGenerator : Seq[UnitTest] = Seq.empty
 
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
-  def generateSuite(pkg: Option[String], model: Option[Model] = None): Seq[CPPFile] = {
+  def generateSuite(pkg: Option[String]): Seq[CPPFile] = {
     val allTests = testGenerator.zipWithIndex.map{ case (t, num) =>
 
       new CPPStatement(

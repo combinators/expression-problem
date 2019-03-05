@@ -1,6 +1,4 @@
-package org.combinators.ep.language.java
-
-/*DD:LD:AI*/
+package org.combinators.ep.language.java   /*DD:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
 import org.combinators.ep.domain.Evolution

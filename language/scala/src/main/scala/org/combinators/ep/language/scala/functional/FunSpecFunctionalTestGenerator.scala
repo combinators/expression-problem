@@ -8,20 +8,20 @@ import org.combinators.ep.language.scala.FunSpecTestGenerator
 
 trait FunSpecFunctionalTestGenerator extends FunSpecTestGenerator {
   val domain: BaseDomain with ModelDomain
-  import domain._
-
 
   // should be able to use scala meta transformations, since only adding with clauses
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
-  override def generateSuite(pkg: Option[String], model: Option[Model] = None): Seq[ScalaWithPath] = {
+  override def generateSuite(pkg: Option[String]): Seq[ScalaWithPath] = {
+    val model = getModel
+
     val packageDeclaration: String = if (pkg.isDefined) {
       s"package ${pkg.get}"
     } else {
       ""
     }
-    val withClause = model.get.inChronologicalOrder.map(m => s"with ${m.name.capitalize}").mkString(" ")
+    val withClause = model.inChronologicalOrder.map(m => s"with ${m.name.capitalize}").mkString(" ")
 
-    val helpers:Seq[String] = model.get.flatten().ops.map(op => {
+    val helpers:Seq[String] = model.flatten().ops.map(op => {
       if (op.parameters.isEmpty) {
         s"  override def ${op.instance}:visitor with ${op.concept} = new Visitor with ${op.concept}"
       } else {
@@ -31,7 +31,8 @@ trait FunSpecFunctionalTestGenerator extends FunSpecTestGenerator {
       }
     })
 
-    val files:Seq[ScalaWithPath] = testGenerator.zipWithIndex.map{ case (t, num) =>
+    // t is a Seq[Stat] so we have to expand with mkString
+    testGenerator.zipWithIndex.map{ case (t, num) =>
       ScalaTestWithPath(Scala(s"""
            |$packageDeclaration
            |import org.scalatest.FunSpec
@@ -43,13 +44,11 @@ trait FunSpecFunctionalTestGenerator extends FunSpecTestGenerator {
            |
            |  describe("test cases") {
            |    it ("run test") {
-           |      $t
+           |      ${t.mkString("\n")}
            |    }
            |  }
            |}""".stripMargin).source(), Paths.get(s"TestSuite$num.scala"))
     }
-
-    files
   }
   
 }

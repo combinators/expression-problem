@@ -74,8 +74,8 @@ trait e5 extends Evolution with HaskellGenerator with HUnitTestGenerator with Ha
     }
   }
 
-  abstract override def testGenerator: Seq[Haskell] = {
-    super.testGenerator :+ hunitMethod(M5_tests)
+  abstract override def testGenerator: Seq[UnitTest] = {
+    super.testGenerator ++ testMethod(M5_tests)
   }
 
 }

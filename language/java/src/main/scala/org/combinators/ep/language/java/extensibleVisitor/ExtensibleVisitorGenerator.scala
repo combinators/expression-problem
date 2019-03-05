@@ -1,6 +1,4 @@
-package org.combinators.ep.language.java.extensibleVisitor
-
-/*DI:LD:AD*/
+package org.combinators.ep.language.java.extensibleVisitor   /*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.{MethodDeclaration, TypeDeclaration}
 import org.combinators.ep.domain.{BaseDomain, ModelDomain, OperationDependency}

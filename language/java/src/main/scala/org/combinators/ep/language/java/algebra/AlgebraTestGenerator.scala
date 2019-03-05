@@ -1,6 +1,4 @@
-package org.combinators.ep.language.java.algebra
-
-/*DI:LD:AD*/
+package org.combinators.ep.language.java.algebra   /*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
@@ -42,8 +40,7 @@ trait AlgebraTestGenerator
   }
 
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
-  override def generateSuite(pkg: Option[String], m:Option[Model] = None): Seq[CompilationUnit] = {
-    val model = m.getOrElse(emptyModel())
+  override def generateSuite(pkg: Option[String]): Seq[CompilationUnit] = {
     val methods: Seq[MethodDeclaration] = testGenerator
 
     val packageDeclaration: String = if (pkg.isDefined) {
@@ -56,7 +53,7 @@ trait AlgebraTestGenerator
       // must get all operations defined for this model and earlier. For each one, define algebra with
       // current extension
 
-      val operations: Seq[Operation] = model.flatten().ops
+      val operations: Seq[Operation] = getModel.flatten().ops
       var algebraDeclarations: Map[Operation, FieldDeclaration] = Map()
       var algParams:Map[Operation,String] = Map()
 
@@ -64,7 +61,7 @@ trait AlgebraTestGenerator
       operations
             .filterNot(op => op.isInstanceOf[domain.ProducerOperation])
             .sortWith(_.name < _.name).foreach(op => {
-        val finalAlgebra:String = classify(model) + s"${domain.baseTypeRep.name}Alg"
+        val finalAlgebra:String = classify(getModel) + s"${domain.baseTypeRep.name}Alg"
 
         val str = s"""${op.concept}$finalAlgebra algebra${op.concept} = new ${op.concept}$finalAlgebra();"""
         algebraDeclarations = algebraDeclarations updated(op, Java(str).fieldDeclarations().head)
@@ -156,7 +153,8 @@ trait AlgebraTestGenerator
   }
 
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
-  def combinedAlgebra(pack:Option[String], m:Model): CompilationUnit = {
+  def combinedAlgebra(pack:Option[String]): CompilationUnit = {
+    val m = getModel
     val operations:Seq[Operation] = m.flatten().ops
 
     var algebraNormalDeclarations:Map[Operation,FieldDeclaration] = Map()

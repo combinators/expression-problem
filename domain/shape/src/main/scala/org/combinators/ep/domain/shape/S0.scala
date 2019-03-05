@@ -1,6 +1,6 @@
-package org.combinators.ep.domain.shape
+package org.combinators.ep.domain.shape   /*DD:LI:AI*/
 
-import org.combinators.ep.domain.{BaseDomain, Evolution}
+import org.combinators.ep.domain.Evolution
 
 trait S0 extends Evolution {
 

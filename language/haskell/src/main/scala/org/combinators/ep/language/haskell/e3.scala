@@ -35,8 +35,8 @@ trait e3 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
     }
   }
 
-  abstract override def testGenerator: Seq[Haskell] = {
-    super.testGenerator :+ hunitMethod(M3_tests)
+  abstract override def testGenerator: Seq[UnitTest] = {
+    super.testGenerator ++ testMethod(M3_tests)
   }
 }
 

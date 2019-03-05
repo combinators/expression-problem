@@ -88,10 +88,6 @@ trait StraightGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
     * For producer operations, there is a need to instantiate objects, and one would use this
     * method (with specific parameters) to carry this out.
     */
-//  override def inst(exp:domain.DataType, params:Haskell*): Haskell = {
-//    Haskell(exp.concept + " " + params.map(h => h.getCode).mkString(" "))
-//  }
-
   override def inst(exp:domain.DataType, params:Expression*): CodeBlockWithResultingExpressions = {
     CodeBlockWithResultingExpressions(Haskell(exp.concept + " " + params.map(h => "(" + h.getCode + ")").mkString(" ")))
   }

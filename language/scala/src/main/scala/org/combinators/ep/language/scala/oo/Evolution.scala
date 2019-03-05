@@ -19,7 +19,7 @@ abstract class FoundationOO @Inject()(web: WebJarsUtil, app: ApplicationLifecycl
 
     override lazy val generatedCode:Seq[ScalaWithPath] =
       gen.generatedCode() ++
-      gen.generateSuite(routingPrefix, Some(gen.getModel))
+      gen.generateSuite(routingPrefix)
 
     /**
       * Add all helper classes to be external artifacts.

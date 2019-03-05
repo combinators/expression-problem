@@ -47,52 +47,6 @@ trait cpp_e0 extends CPPGenerator with TestGenerator with M0 {
     }
   }
 
-//  /**
-//    * Construct large trees and determine cost of evaluating over them.
-//    * @return
-//    */
-//  abstract override def performanceMethod: Seq[Seq[CPPElement]] = {
-//    val a1 = new BinaryInst(Add, LitInst(1.0), LitInst(2.0))
-//    val numTrials = 10
-//
-//    var trees = new BinaryInst(Add, a1, a1)
-//    var instantiations:String = s"Exp *tree0 = ${rec_convert(a1)};\n"
-//    var array:String = s"Exp *trees[] = {tree0 "
-//    for (i <- 1 to numTrials) {
-//      instantiations = instantiations + s"Exp *tree$i = ${convertRecursive(Add, s"tree${i-1}", s"tree${i-1}")};\n"
-//      trees = new BinaryInst(Add, trees, trees)
-//      array = array + s",tree$i"
-//    }
-//    array = array + "};"
-//
-//    val noSource = NoSource
-//    val delta = deltaExprOp(noSource, new CPPExpression("trees[i]"), Eval)   // was independentExpr
-//    val toTime = contextDispatch(noSource, delta)
-//    val evalPerfTest:CPPElement = new CPPStatement(
-//      s"""
-//         |$instantiations
-//         |$array
-//         |
-//         |for (int i = 10; i >= 0; i--) {
-//         |  long best = 2147483647;
-//         |  struct timeval before;     /** Time before process starts.   */
-//         |  struct timeval after;      /** Time after process completes. */
-//         |
-//         |  for (int t = 0; t < 8; t++) {
-//         |    gettimeofday(&before, (struct timezone *) NULL);
-//         |    $toTime;
-//         |    gettimeofday(&after, (struct timezone *) NULL);
-//         |    long duration = diffTimer(&before, &after);
-//         |    if (duration < best) {
-//         |      best = duration;
-//         |    }
-//         |  }
-//         |  std::cout << i << "," << best << std::endl;
-//         |}""".stripMargin)
-//
-//    super.performanceMethod :+ Seq(evalPerfTest)
-//  }
-
   abstract override def testGenerator: Seq[Seq[CPPElement]] = {
     super.testGenerator ++ testMethod(M0_tests)
   }

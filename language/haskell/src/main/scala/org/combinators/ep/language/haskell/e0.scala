@@ -2,8 +2,6 @@ package org.combinators.ep.language.haskell  /*DD:LD:AI*/
 
 import org.combinators.ep.domain.math.M0
 
-
-
 /**
   * Truly independent of the specific design solution.
   *
@@ -11,7 +9,6 @@ import org.combinators.ep.domain.math.M0
   */
 trait e0 extends HaskellGenerator with HUnitTestGenerator with M0 {
   import domain._
-
 
   /** E0 Introduces Double and Int values. */
   abstract override def toTargetLanguage(ei:domain.ExistsInstance) : CodeBlockWithResultingExpressions = {
@@ -31,27 +28,6 @@ trait e0 extends HaskellGenerator with HUnitTestGenerator with M0 {
       case _ => super.toTargetLanguage(ei)
     }
   }
-//
-//  /**
-//    * negative numbers in haskell can't be simple -1.0 but must be (0 -1.0) for some reason?
-//    */
-//  override def expected(test:domain.TestCaseExpectedValue, id:Int) : (Expression => Seq[Statement]) => Seq[Statement] = continue => {
-//    test.expect.tpe match {
-//      case Double => {
-//        val dbl:Double = test.expect.inst.asInstanceOf[Double]
-//
-//        // Can't seem to use unary negation operation in Haskell ?!
-//        val expect = if (dbl < 0) {
-//          s"(0 - ${math.abs(dbl)})"
-//        } else {
-//          dbl.toString
-//        }
-//        continue (new Haskell(expect))
-//      }
-//
-//      case _ => super.expected(test, id) (continue)
-//    }
-//  }
 
   /** E0 Introduces the concept a Double type, used for the 'Eval' operation. */
   abstract override def typeConverter(tpe:TypeRep) : HaskellType = {
@@ -88,7 +64,7 @@ trait e0 extends HaskellGenerator with HUnitTestGenerator with M0 {
     }
   }
 
-  abstract override def testGenerator: Seq[Haskell] = {
-    super.testGenerator :+ hunitMethod(M0_tests)
+  abstract override def testGenerator: Seq[UnitTest] = {
+    super.testGenerator ++ testMethod(M0_tests)
   }
 }

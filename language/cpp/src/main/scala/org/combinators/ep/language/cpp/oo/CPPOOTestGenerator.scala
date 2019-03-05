@@ -6,10 +6,9 @@ import org.combinators.ep.language.cpp._
 trait CPPOOTestGenerator extends CPPGenerator with CPPUnitTestGenerator {
 
   val domain: BaseDomain with ModelDomain
-  import domain._
 
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
-  override def generateSuite(pkg: Option[String], model: Option[Model] = None): Seq[CPPFile] = {
+  override def generateSuite(pkg: Option[String]): Seq[CPPFile] = {
 
     val builders:Seq[String] = getModel.flatten().types.map(exp => {
       val list = exp.attributes
@@ -31,7 +30,7 @@ trait CPPOOTestGenerator extends CPPGenerator with CPPUnitTestGenerator {
     val allTypes = getModel.flatten().types.map(exp => s"""#include "${exp.concept}.h" """)
 
     // add header files
-    super.generateSuite(pkg, model).map(file =>
+    super.generateSuite(pkg).map(file =>
       file.addHeader(allTypes).addHeader(builders))
   }
 

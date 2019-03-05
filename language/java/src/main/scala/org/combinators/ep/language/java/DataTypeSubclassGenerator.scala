@@ -1,6 +1,4 @@
-package org.combinators.ep.language.java
-
-/*DI:LD:AI*/
+package org.combinators.ep.language.java     /*DI:LD:AI*/
 
 import com.github.javaparser.ast.CompilationUnit
 import org.combinators.ep.domain.ModelDomain

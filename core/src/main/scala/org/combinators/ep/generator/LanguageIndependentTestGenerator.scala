@@ -1,4 +1,4 @@
-package org.combinators.ep.generator
+package org.combinators.ep.generator     /*DI:LI:AI*/
 
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 
@@ -15,7 +15,6 @@ trait LanguageIndependentTestGenerator extends LanguageIndependentGenerator {
   val domain:BaseDomain with ModelDomain
 
   type UnitTest      /** Base concept for the representation of a single test case. */
-  type Expression
 
   /**
     * Actual value in a test case.
@@ -31,10 +30,31 @@ trait LanguageIndependentTestGenerator extends LanguageIndependentGenerator {
   }
 
   /**
-    * Represents a specific unit test which could fail.
+    * Traits can override this method to add their test cases to the mix.
+    *
+    * Common usage is:
+    *
+    * {{{
+    *   abstract override def testGenerator: Seq[UnitTest] = {
+    *     super.testGenerator ++ testMethod(M4_tests)
+    *   }
+    * }}}
     *
     * @param tests   sequence of candidate test cases
     * @return        Code fragments (based on language and approach) representing unit test cases.
     */
   def testMethod(tests:Seq[domain.TestCase]) : Seq[UnitTest]
+
+  /**
+    * Represents the sequence of total test cases.
+    */
+  def testGenerator : Seq[UnitTest]
+
+  /**
+    * Test cases are placed in their own stand-along files.
+    *
+    * @param pkg     An optional string used for package or module declaration
+    * @return
+    */
+  def generateSuite(pkg: Option[String]): Seq[CompilationUnit]
 }

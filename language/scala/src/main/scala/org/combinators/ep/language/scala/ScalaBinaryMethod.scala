@@ -12,7 +12,7 @@ trait ScalaBinaryMethod {
   import domain._
 
   /** Specially required files are placed in this area. */
-  val scalaCode:String = Seq("src", "main", "resources", "scala-code").mkString(File.separator)
+  val scalaCode:String = Seq("language", "scala", "src", "main", "resources", "scala-code").mkString(File.separator)
 
   /** Taken from scala meta web page. */
   def loadCode(entry:String*) : ScalaMainWithPath = {
@@ -25,7 +25,6 @@ trait ScalaBinaryMethod {
   }
 
   /**
-    *
     * Helpful snippet to get all regular files below a given directory, using
     * the specified header as the relative path to those files
     */

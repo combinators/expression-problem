@@ -15,11 +15,11 @@ import org.combinators.ep.domain.math.MathDomain
 abstract class FoundationGrows @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends CodeGenerationController[ScalaWithPath](web, app)
   {
-    val gen:WithDomain[MathDomain] with FunctionalGenerator with FunSpecFunctionalTestGenerator with FunctionalTestGenerator
+    val gen:WithDomain[MathDomain] with FunctionalGenerator with FunSpecFunctionalTestGenerator
 
     override lazy val generatedCode:Seq[ScalaWithPath] =
       gen.generatedCode() ++
-      gen.generateSuite(routingPrefix, Some(gen.getModel))
+      gen.generateSuite(routingPrefix)
 
     /**
       * Add all helper classes to be external artifacts.

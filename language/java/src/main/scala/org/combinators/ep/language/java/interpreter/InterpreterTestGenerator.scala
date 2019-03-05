@@ -1,8 +1,5 @@
-package org.combinators.ep.language.java.interpreter
+package org.combinators.ep.language.java.interpreter   /*DI:LD:AD*/
 
-/*DI:LD:AD*/
-
-import com.github.javaparser.ast.expr.SimpleName
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 import org.combinators.ep.generator.LanguageIndependentTestGenerator
 import org.combinators.ep.language.java.{JUnitTestGenerator, JavaGenerator}
@@ -30,15 +27,14 @@ trait InterpreterTestGenerator
   }
 
   /** We need to import the static factory methods for the latest model with an operation */
-  abstract override def generateSuite(pkg: Option[String], model: Option[Model] = None): Seq[CompilationUnit] = {
-    val latestModelWithOp = model.getOrElse(getModel).lastModelWithOperation()
+  abstract override def generateSuite(pkg: Option[String]): Seq[CompilationUnit] = {
+    val latestModelWithOp = getModel.lastModelWithOperation()
     val factoryClassName: String = {
       val classify = latestModelWithOp.ops.sortWith(_.name < _.name).map(op => op.concept).mkString("")
       s"interpreter.$classify${baseTypeRep.concept}Factory"
     }
 
-
-    val suite = super.generateSuite(pkg, model)
+    val suite = super.generateSuite(pkg)
 
     suite.foreach { compilationUnit =>
       compilationUnit.addImport(factoryClassName, true, true)

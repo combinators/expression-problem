@@ -7,10 +7,23 @@ trait TestGenerator extends HaskellGenerator with LanguageIndependentTestGenerat
   val domain: BaseDomain with ModelDomain
   import domain._
 
-  type UnitTest = Seq[Statement]
+  type UnitTest = Seq[HaskellStatement]
 
-  /** Return sample test cases as method. */
-  def testGenerator: Seq[Haskell] = Seq.empty
+  /**
+    * Traits can override this method to add their test cases to the mix.
+    */
+  def testMethod(tests:Seq[TestCase]) : Seq[UnitTest] = {
+    val stmts = tests.zipWithIndex.flatMap{ case (test, idx) => hunitTestMethod(test, idx) }
+    val structure = tests.zipWithIndex.map(pair => new Haskell(s"""TestLabel "${pair._2}" test_v${pair._2}""")).mkString(",")
+    //
+    // Awkward. A Test case is a Seq[HaskellStatement]. Returns a sequence for simplicity downstream
+      Seq(Seq(HaskellStatement(
+        s"""|${stmts.mkString("\n")}
+            |test_all = TestList [ $structure ]
+            |
+            |main :: IO Counts
+            |main  = runTestTT test_all""".stripMargin)))
+}
 
   /**
     * Override as necessary
@@ -32,23 +45,7 @@ trait TestGenerator extends HaskellGenerator with LanguageIndependentTestGenerat
           actualBlock.appendDependent { case Seq(actualValue) =>
             CodeBlockWithResultingExpressions(HaskellStatement(s"""test_v$idx = TestCase (assertEqual "${test.getClass.getSimpleName}" $expectedValue $actualValue)"""))()
           }
-        }.block   // assertEquals($expectedValue, $actualValue);
-
-      //        expectedBlock.appendDependent { case Seq(expectedValue) =>
-      //          actualBlock.appendDependent { case Seq(actualValue) =>
-      //            CodeBlockWithResultingExpressions(STMT)()
-      //          }
-      //        }.block
-      //        val source = NoSource
-      //        val delta = deltaExprOp(toTargetLanguage(eq.inst), eq.op)
-      //        val disp = contextDispatch(source, delta)
-      //        expected(eq, idx)(expectedExpr => Seq(new Haskell(s"""test_v$idx = TestCase (assertEqual "${test.getClass.getSimpleName}" ($expectedExpr) $disp)""")))
-
-      //      case seq:EqualsCompositeTestCase =>
-      //        val x :Expression = actual(seq.ops.head, seq.inst)   // HACK: Only works for two-deep
-      //        val y :Expression = dispatch(x, seq.ops.tail.head)
-      //        expected(seq, idx)(expectedExpr => Seq(new Haskell(s"""test_v$idx = TestCase (assertEqual "${test.getClass.getSimpleName}" ($expectedExpr) $y)""")))
-
+        }.block
       case seq: EqualsCompositeTestCase =>
         val expectedBlock = toTargetLanguage(seq.expect)
         val actualStartBlock = {
@@ -83,4 +80,6 @@ trait TestGenerator extends HaskellGenerator with LanguageIndependentTestGenerat
       case _ => Seq.empty
     }
   }
+
+
 }

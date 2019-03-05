@@ -21,15 +21,7 @@ trait e2 extends Evolution with ScalaGenerator with TestGenerator with M0 with M
     }
   }
 
-  /** For developing test cases with strings, must convert expected value into a Java string expression. */
-  abstract override def expected(test:domain.TestCaseExpectedValue, id:String) : (Expression => Seq[Stat]) => Seq[Stat] = continue => {
-      test.expect.tpe match {
-      case String => continue (Scala("\"" + test.expect.inst.toString + "\"").expression)
-      case _ => super.expected(test, id) (continue)
-    }
-  }
-
-  /** E1 Introduces String values. */
+  /** E2 Introduces String values. */
   abstract override def toTargetLanguage(ei:domain.ExistsInstance) : CodeBlockWithResultingExpressions = {
     ei.inst match {
       case s:String => CodeBlockWithResultingExpressions(Scala(s""""$s"""").expression)

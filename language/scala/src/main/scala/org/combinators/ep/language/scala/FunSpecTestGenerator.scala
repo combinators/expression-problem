@@ -9,20 +9,24 @@ import org.combinators.ep.domain.{BaseDomain, ModelDomain}
   *
   * This code conforms to JUnit Test cases
   */
-trait FunSpecTestGenerator extends TestGenerator with ScalaGenerator {
+trait FunSpecTestGenerator extends TestGenerator with ScalaGenerator with PerformanceTestGenerator {
   val domain: BaseDomain with ModelDomain
-  import domain._
+
+  /**
+    * Represents the sequence of total test cases.
+    */
+  def testGenerator : Seq[UnitTest] = Seq.empty
 
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
-  def generateSuite(pkg: Option[String], model: Option[Model] = None): Seq[ScalaWithPath] = {
+  def generateSuite(pkg: Option[String]): Seq[ScalaWithPath] = {
     val packageDeclaration: String = if (pkg.isDefined) {
       s"package ${pkg.get}"
     } else {
       ""
     }
 
-    val allTests = testGenerator
-    val files: Seq[ScalaWithPath] = allTests.zipWithIndex.map{ case (t, num) =>
+    // t is a Seq[Stat] so we have to expand with mkString
+    testGenerator.zipWithIndex.map{ case (t, num) => {
       ScalaTestWithPath(Scala(s"""
                |$packageDeclaration
                |import org.scalatest.FunSpec
@@ -30,12 +34,11 @@ trait FunSpecTestGenerator extends TestGenerator with ScalaGenerator {
                |class TestSuite$num extends FunSpec  {
                |  describe("test cases") {
                |    it ("run test") {
-               |      $t
+               |      ${t.mkString("\n")}
                |    }
                |  }
                |}""".stripMargin).source(), Paths.get(s"TestSuite$num.scala"))
-    }
 
-    files
-  }
+    }
+  }}
 }

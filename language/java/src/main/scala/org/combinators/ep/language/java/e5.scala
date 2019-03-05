@@ -32,12 +32,6 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
     }
   }
 
-//
-//  /** helper method for testing when goal is to check equality between tree objects . */
-//  def treesAreSame(treeExp1:Expression, treeExp2:Expression) : Expression = {
-//    Java(s"${treeExp1.toString}.same(${treeExp2.toString})").expression[Expression]()
-//  }
-
   abstract override def logic(exp:domain.DataType, op:domain.Operation): Seq[Statement] = {
     // generate the actual body
     val source = Source(exp,op)

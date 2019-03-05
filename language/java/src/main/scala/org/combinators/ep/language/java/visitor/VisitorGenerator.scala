@@ -1,6 +1,4 @@
-package org.combinators.ep.language.java.visitor
-
-/*DI:LD:AD*/
+package org.combinators.ep.language.java.visitor   /*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.{BodyDeclaration, MethodDeclaration}
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}

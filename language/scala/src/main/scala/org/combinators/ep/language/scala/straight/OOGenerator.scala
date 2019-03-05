@@ -44,8 +44,7 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod {
   override def contextDispatch(source:Context, delta:Delta) : Expression = {
     if (delta.expr.isEmpty) {
       val op = delta.op.get.instance
-      val args:String = delta.params.mkString(",")
-      Scala(s"this.$op($args)").expression
+      Scala(s"this.$op${delta.params.mkString("(", ",", ")")}").expression
     } else {
       super.contextDispatch(source, delta)
     }
@@ -53,8 +52,7 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod {
 
   /** Directly access local method, one per operation, with a parameter. */
   override def dispatch(expr:Expression, op:Operation, params:Expression*) : Expression = {
-    val args:String = params.mkString(",")
-    Scala(s"$expr.${op.instance}($args)").expression
+    Scala(s"$expr.${op.instance}${params.mkString("(", ",", ")")}").expression
   }
 
   /** Computer return type for given operation (or void). */
@@ -68,12 +66,10 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod {
   /** Operations are implemented as methods in the Base and sub-type classes. */
   def methodGenerator(exp:DataType, op:Operation): Stat = {
     val params = op.parameters.map(param => param.name + ":" + typeConverter(param.tpe)).mkString(",")
-
-    val str:String = s"""|
-                         |def ${op.instance}($params) : ${returnType(op)} = {
-                         |  ${logic(exp, op).mkString("\n")}
-                         |}""".stripMargin
-    Scala(str).statement
+    Scala(s"""|
+              |def ${op.instance}($params) : ${returnType(op)} = {
+              |  ${logic(exp, op).mkString("\n")}
+              |}""".stripMargin).statement
   }
 
   /** Generate the full class for the given expression sub-type. */
@@ -83,17 +79,14 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod {
       val params = exp.attributes.map(att => s"${att.instance}_ : ${typeConverter(att.tpe)}").mkString(",")
       val locals = exp.attributes.map(att => s"val ${att.instance} = ${att.instance}_")
 
-      val str =
-        s"""
-           |package scala_oo
-           |class ${exp.toString}($params) extends ${domain.baseTypeRep.name} {
-           |    ${locals.mkString("\n")}
-           |    ${methods.mkString("\n")}
-           |  }
-         """.stripMargin
-
       ScalaMainWithPath(
-        Scala(str).source(), Paths.get(s"${exp.toString}.scala"))
+        Scala(s"""
+                 |package scala_oo
+                 |class ${exp.toString}($params) extends ${domain.baseTypeRep.name} {
+                 |    ${locals.mkString("\n")}
+                 |    ${methods.mkString("\n")}
+                 |  }
+         """.stripMargin).source(), Paths.get(s"${exp.toString}.scala"))
   }
 
   /** Generate the base class, with all operations from flattened history. */
@@ -104,13 +97,11 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod {
       s"def ${op.instance}($pars) : ${typeConverter(op.returnType.get)}"
     })
 
-    val str:String = s"""
-                  |package scala_oo
-                  |trait ${domain.baseTypeRep.concept} {
-                  |   ${ops.mkString("\n")}
-                  |}""".stripMargin
-
     ScalaMainWithPath(
-      Scala(str).source(), Paths.get(s"${domain.baseTypeRep.concept}.scala"))
+      Scala(s"""
+               |package scala_oo
+               |trait ${domain.baseTypeRep.concept} {
+               |   ${ops.mkString("\n")}
+               |}""".stripMargin).source(), Paths.get(s"${domain.baseTypeRep.concept}.scala"))
   }
 }

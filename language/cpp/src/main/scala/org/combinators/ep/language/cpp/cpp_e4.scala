@@ -8,7 +8,7 @@ import org.combinators.ep.domain.math._
   *
   * Still C++-based, naturally and CPPUnit
   */
-trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with CPPProducer with M0 with M1 with M2 with M3 with M4 {
+trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with M0 with M1 with M2 with M3 with M4 {
   self:cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3 =>
 
   import domain._
@@ -22,30 +22,6 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with CPPProd
       case _ => super.dependency(op)
     }
   }
-
-//  /**
-//    * List can be accommodated (in C++) by populating vectors with values drawn from test case.
-//    *
-//    * Calls 'continue' with an expression (the result of the prior new statements) and just concatenates all statements
-//    */
-//  override def expected(test:domain.TestCaseExpectedValue, id:String) : (CPPElement => Seq[CPPElement]) => Seq[CPPElement] = continue => {
-//    test.expect.tpe match {
-//      case list:List[_] =>
-//        val seq: Seq[Any] = test.expect.inst.asInstanceOf[Seq[Any]]
-//        val ctype:CPPType = typeConverter(list)
-//        //val inner:CPPType = typeConverter(list.generic)
-//
-//        val map = seq.map(elt => s"result$id.push_back($elt);")
-//        val str = s"""
-//                     |$ctype result$id;
-//                     |${map.mkString("\n")}
-//                     |${continue(new CPPExpression(s"result$id")).mkString("\n")}
-//             """.stripMargin
-//        str.split("\n").map(line => new CPPExpression(line))
-//
-//      case _ => super.expected(test,id)(continue)
-//    }
-//  }
 
   /** Provides fresh names for temporary list objects. */
   object ListNameGenerator {

@@ -33,19 +33,6 @@ class Haskell protected (elements: immutable.Seq[Haskell], text: String) extends
   def getCode: String = fullText
 }
 
-///**
-//  * As with CPP implementation, I need to maintain a clean separation between expressions and statements
-//  * @param text
-//  */
-//class HaskellExpression(override val text:String) extends Haskell(Nil, text) {
-//
-//}
-//
-//class HaskellStatement(override val text:String) extends Haskell(Nil, text) {
-//  // convert an expression into a statement
-//  def this(expr:Haskell) = this(expr.elements, "")
-//}
-
 class HaskellStatement protected (elements: immutable.Seq[HaskellStatement], text: String) extends BufferedContent[HaskellStatement](elements, text) {
   def this(text: String) = this(Nil, Formats.safe(text))
   def this(elements: immutable.Seq[HaskellStatement]) = this(elements, "")

@@ -15,17 +15,15 @@ trait e4 extends Evolution with ScalaGenerator with TestGenerator with Operation
   val domain:MathDomain
   import domain._
 
-  /**
-    * List can be accommodated (in Java) by populating ArrayList with values drawn from test case.
-    */
-   override def expected(test:domain.TestCaseExpectedValue, id:String) : (Expression => Seq[Stat]) => Seq[Stat] = continue => {
-    test.expect.tpe match {  // was op.returnType.get
-      case list:List[test.expect.tpe.scalaInstanceType] =>
-        val seq: Seq[Any] = test.expect.inst.asInstanceOf[Seq[Any]]
-
-        continue(Scala("Seq(" + seq.mkString(",") + ")").expression)
-
-      case _ => super.expected(test,id)(continue)
+  /** E4 Introduces Lists of values. */
+  abstract override def toTargetLanguage(ei:domain.ExistsInstance) : CodeBlockWithResultingExpressions = {
+    ei.tpe match {
+      case tpe: List[_] =>
+        ei.inst match {
+          case s:Seq[tpe.generic.scalaInstanceType] =>
+            CodeBlockWithResultingExpressions(Scala(s"Seq[${typeConverter(tpe.generic)}]" + s.mkString("(", ",", ")")).expression)
+        }
+      case _ => super.toTargetLanguage(ei)
     }
   }
 
@@ -55,35 +53,6 @@ trait e4 extends Evolution with ScalaGenerator with TestGenerator with Operation
       nextName
     }
   }
-
-  /** E4 Introduces Lists of values. OVERKILL FOR SCALA I EXPECT. TODO: FIX*/
-  abstract override def toTargetLanguage(ei:domain.ExistsInstance) : CodeBlockWithResultingExpressions = {
-    ei.tpe match {
-      case tpe: List[_] =>
-        ei.inst match {
-          case s:Seq[tpe.generic.scalaInstanceType] =>
-            val listName = ListNameGenerator.nextFreshListName()
-            val initBlock =
-              CodeBlockWithResultingExpressions(
-                Scala(s"var $listName = Seq[Double].empty").statement
-              )(listName)
-
-            s.foldLeft(initBlock) {
-              case (block, nextElem) =>
-                block.appendDependent { case Seq(constructedList) =>
-                  toTargetLanguage(domain.ExistsInstance(tpe.generic)(nextElem)).appendDependent { case Seq(nextElemExpr) =>
-                    CodeBlockWithResultingExpressions(
-                      Scala(s"$constructedList = $constructedList :+ $nextElemExpr").statement
-                    )(constructedList)
-                  }
-                }
-            }
-
-        }
-      case _ => super.toTargetLanguage(ei)
-    }
-  }
-
 
   abstract override def logic(exp:DataType, op:Operation): Seq[Statement] = {
     val source = Source(exp,op)

@@ -40,6 +40,37 @@ class GJ private(elements: immutable.Seq[GJ], text: String) extends BufferedCont
   def getCode: String = fullText
 }
 
+class GJStatement protected (elements: immutable.Seq[GJStatement], text: String) extends BufferedContent[GJStatement](elements, text) {
+  def this(text: String) = this(Nil, Formats.safe(text))
+  def this(elements: immutable.Seq[GJStatement]) = this(elements, "")
+
+  private lazy val fullText: String = (text +: elements).mkString
+
+  /** Content type of Haskell */
+  val contentType = "text/x-haskell"
+
+  /** Indents this fragment by 4 spaces. */
+  def indent: GJ = {
+    GJ(fullText.lines.map(l => s"    $l").mkString("\n"))
+  }
+
+  /** Indents everything except the first line in this fragment by 4 spaces. */
+  def indentExceptFirst: GJ = {
+    val lines: Seq[String] = fullText.lines.toSeq
+    GJ((lines.head +: lines.tail.map(l => s"    $l")).mkString("\n"))
+  }
+
+  /** Returns the code of this fragment as a String. */
+  def getCode: String = fullText
+}
+
+object GJStatement {
+  /** Creates a Haskell fragment with initial content specified. */
+  def apply(text: String): GJStatement = {
+    new GJStatement(text)
+  }
+}
+
 /**
   * Helper for GJ utility methods.
   */

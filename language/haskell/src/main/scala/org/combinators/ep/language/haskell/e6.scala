@@ -48,24 +48,6 @@ trait e6 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
     }
   }
 
-
-//  abstract override def logic(exp:domain.DataType, op:domain.Operation): Seq[Statement] = {
-//    val source = Source(exp, op)
-//    op match {
-//      case Equals =>
-//
-//        // GOAL: requesting AsTree on self produces same tree as invoking AsTree on that.
-//        val deltaLeft = deltaSelfOp(domain.AsTree)
-//        val that = Haskell(domain.base.that.name).expression[Expression]()
-//        val deltaRight = deltaExprOp(that, domain.AsTree)
-//        val lhs = contextDispatch(source, deltaLeft)
-//        val rhs = contextDispatch(source, deltaRight)
-//        result(Haskell(s"$lhs == $rhs)"))
-//
-//      case _ => super.logic(exp, op)
-//    }
-//  }
-
   abstract override def logic(exp:DataType, op:Operation): Seq[HaskellStatement] = {
     // generate the actual body
     op match {
@@ -74,10 +56,6 @@ trait e6 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
           case Lit  =>
             val value2 =  Haskell(expression(exp, litValue).getCode + "2")
             result(Haskell(s" ${expression(exp, litValue)} == $value2 "))
-
-//          case Neg  =>
-//            val inner2 = Haskell(expression(exp,base.inner).getCode + "2")
-//            result(Haskell(s" ${dispatch(expression(exp,base.inner), op, inner2)} "))
 
           case u:Unary  =>
             val inner2 = Haskell(expression(exp,base.inner).getCode + "2")
@@ -94,26 +72,6 @@ trait e6 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
       case _ => super.logic(exp, op)
     }
   }
-
-//  override def hunitTestMethod(test:domain.TestCase, idx:Int) : Seq[Statement] = {
-//    test match {
-//      case eb: EqualsBinaryMethodTestCase =>
-//        val source = NoSource
-//        val full = contextDispatch(source, deltaExprOp(toTargetLanguage(eb.inst1), Equals, toTargetLanguage(eb.inst2)))
-//
-//        if (eb.result) {
-//          Seq(Haskell(s"""test_v$idx = TestCase (assertBool "EqualsCheck" ($full))"""))
-//        } else {
-//          Seq(Haskell(s"""test_v$idx = TestCase (assertBool "NotEqualsCheck" (not ($full)))"""))
-//        }
-////        if (eb.result) {
-////          Seq(Haskell(s"""test_v$idx = TestCase (assertBool "EqualsCheck" (${dispatch(convert(eb.inst1), Equals, convert(eb.inst2))}))"""))
-////        } else {
-////          Seq(Haskell(s"""test_v$idx = TestCase (assertBool "NotEqualsCheck" (not (${dispatch(convert(eb.inst1), Equals, convert(eb.inst2))})))"""))
-////        }
-//      case _ => super.hunitTestMethod(test, idx)
-//    }
-//  }
 
   override def hunitTestMethod(test:domain.TestCase, idx:Int) : Seq[Statement] = {
     test match {
@@ -135,7 +93,7 @@ trait e6 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
     }
   }
 
-  abstract override def testGenerator: Seq[Haskell] = {
-    super.testGenerator :+ hunitMethod(M6_tests)
+  abstract override def testGenerator: Seq[UnitTest] = {
+    super.testGenerator ++ testMethod(M6_tests)
   }
 }

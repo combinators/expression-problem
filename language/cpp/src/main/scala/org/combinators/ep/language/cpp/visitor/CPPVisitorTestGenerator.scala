@@ -21,7 +21,7 @@ trait CPPVisitorTestGenerator extends CPPGenerator with CPPUnitTestGenerator {
   }
 
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
-  override def generateSuite(pkg: Option[String], model: Option[Model] = None): Seq[CPPFile] = {
+  override def generateSuite(pkg: Option[String]): Seq[CPPFile] = {
 
     val builders:Seq[String] = getModel.flatten().types.map(exp => {
       val list = exp.attributes
@@ -42,7 +42,7 @@ trait CPPVisitorTestGenerator extends CPPGenerator with CPPUnitTestGenerator {
     val allOps = getModel.flatten().ops.map(op => s"""#include "${op.concept}.h" """)
 
     // add header files
-    super.generateSuite(pkg, model).map(file =>
+    super.generateSuite(pkg).map(file =>
       file.addHeader(allOps).addHeader(builders))
   }
 }

@@ -1,6 +1,4 @@
-package org.combinators.ep.language.java.interpreter
-
-/*DI:LD:AD*/
+package org.combinators.ep.language.java.interpreter   /*DI:LD:AD*/
 
 import com.github.javaparser.ast.ImportDeclaration
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}

@@ -1,4 +1,4 @@
-package org.combinators.ep.domain
+package org.combinators.ep.domain    /*DI:LI:AI*/
 
 /** Foundational trait for all EP domains. */
 trait BaseDomain {

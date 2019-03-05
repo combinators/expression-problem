@@ -1,6 +1,4 @@
-package org.combinators.ep.language.java.extensibleVisitor
-
-/*DI:LD:AD*/
+package org.combinators.ep.language.java.extensibleVisitor   /*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.TypeDeclaration
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
@@ -14,7 +12,6 @@ trait ExtensibleVisitorTestGenerator
   extends JUnitTestGenerator
     with ExtensibleVisitorGenerator {
   val domain: BaseDomain with ModelDomain
-  import domain._
 
   /** Add virtual type generator. */
   def addVirtualConstructor(mainType:TypeDeclaration[_], op:domain.Operation, className:String) : Unit = {
@@ -27,8 +24,8 @@ trait ExtensibleVisitorTestGenerator
   }
 
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
-  override def generateSuite(pkg: Option[String], m:Option[Model] = None): Seq[CompilationUnit] = {
-    super.generateSuite(pkg, m).map(unit => {
+  override def generateSuite(pkg: Option[String]): Seq[CompilationUnit] = {
+    super.generateSuite(pkg).map(unit => {
 
       // get all operations (via flatten). Then find the most recent model that has types
       // defined. All operations that come *AFTER* have no trailing suffix. All operations

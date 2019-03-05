@@ -150,6 +150,7 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
               ).appendDependent{ case Seq(addResult) =>
                 CodeBlockWithResultingExpressions(result(addResult): _*)()
               }
+
             Java(s"""|double leftVal = ${contextDispatch(source, deltaLeft)};
                      |double rightVal = ${contextDispatch(source, deltaRight)};
                      |if (leftVal == 0 || rightVal == 0) {

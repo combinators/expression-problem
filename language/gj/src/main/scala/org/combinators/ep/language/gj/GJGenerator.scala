@@ -12,18 +12,23 @@ trait GJGenerator extends LanguageIndependentGenerator {
   type CompilationUnit = GJWithPath
   type Type = GJType
   type Expression = GJ
-  type Statement = GJ
+  type Statement = GJStatement
 
   /**
     * Default behavior in GJ is to return an expression value.
     */
   def result (expr:Expression) : Seq[Statement] = {
-    Seq(GJ(s"return $expr;"))
+    Seq(GJStatement(s"return $expr;"))
   }
 
-  // TODO: FIX
-  override def contextDispatch(source:Context, delta:Delta) : Expression = {
-    new GJ(s""""replaceMe"""")
+  /**
+    * For producer operations, there is a need to instantiate objects, and one would use this
+    * method (with specific parameters) to carry this out.
+    */
+  def inst(exp:domain.DataType, params:Expression*): CodeBlockWithResultingExpressions = {
+    CodeBlockWithResultingExpressions(
+      GJ(s"new ${exp.concept}${params.mkString("(", ", ", ")")}")
+    )
   }
 
   // Useful helper methods for any generator needing to craft common Java constructs
@@ -36,8 +41,8 @@ trait GJGenerator extends LanguageIndependentGenerator {
     val cons:Seq[GJ] = exp.attributes.map(att => GJ(s"  ${att.instance}_ = ${att.instance};"))
 
     GJ(s"""|public $name (${params.mkString(",")}) {
-             |   ${cons.mkString("\n")}
-             |}""".stripMargin)
+           |   ${cons.mkString("\n")}
+           |}""".stripMargin)
   }
 
   /** Compute parameter "name" comma-separated list from operation. */

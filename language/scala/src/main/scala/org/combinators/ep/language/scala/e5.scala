@@ -56,24 +56,6 @@ trait e5 extends Evolution with ScalaGenerator with TestGenerator with Operation
     }
   }
 
-//  override def scalaTestMethod2(test:domain.TestCase, idx:Int) : Seq[Stat] = { // EXTRACT all SameTestCase ones and handle here
-//    test match {
-//      case ctc: SameTestCase =>
-//        val source = NoSource()
-//        val tree1 = contextDispatch(source, deltaExprOp(source, toTargetLanguage(ctc.inst1), domain.AsTree))
-//        val tree2 = contextDispatch(source, deltaExprOp(source, toTargetLanguage(ctc.inst2), domain.AsTree))
-//
-//        val same = Scala(s"$tree1.same($tree2)").expression
-//
-//        if (ctc.result) {
-//          Scala(s"assert(true == $same)").statements
-//        } else {
-//          Scala(s"assert(false == $same)").statements
-//        }
-//      case _ => super.scalaTestMethod(test, idx)
-//    }
-//  }
-
   override def scalaTestMethod(test:domain.TestCase, idx:Int) : Seq[Statement] = {
     test match {
       case ctc: SameTestCase =>

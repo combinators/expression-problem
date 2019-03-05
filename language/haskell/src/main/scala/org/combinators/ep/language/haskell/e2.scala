@@ -10,16 +10,6 @@ trait e2 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
   self:e0 with e1 =>
   val domain:MathDomain
   import domain._
-//
-//  /**
-//    * List can be accommodated (in Haskell) as a [a,b,c,d,e]
-//    */
-//  override def expected(test:domain.TestCaseExpectedValue, id:Int) : (Expression => Seq[Statement]) => Seq[Statement] = continue => {
-//    test.expect.tpe match {
-//      case String => continue (new Haskell("\"" + test.expect.inst.toString + "\""))
-//      case _ => super.expected(test, id) (continue)
-//    }
-//  }
 
   /** E2 Introduces String values. */
   abstract override def toTargetLanguage(ei:domain.ExistsInstance) : CodeBlockWithResultingExpressions = {
@@ -59,7 +49,7 @@ trait e2 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
     }
   }
 
-  abstract override def testGenerator: Seq[Haskell] = {
-    super.testGenerator :+ hunitMethod(M2_tests)
+  abstract override def testGenerator: Seq[UnitTest] = {
+    super.testGenerator ++ testMethod(M2_tests)
   }
 }

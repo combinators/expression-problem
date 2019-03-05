@@ -1,12 +1,10 @@
-package org.combinators.ep.language.java
-
-/*DI:LD:AI*/
+package org.combinators.ep.language.java   /*DI:LD:AI*/
 
 import com.github.javaparser.JavaParser
 import com.github.javaparser.ast.body.{ConstructorDeclaration, FieldDeclaration, MethodDeclaration, TypeDeclaration}
 import com.github.javaparser.ast.stmt.BlockStmt
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
-import org.combinators.ep.generator.{LanguageIndependentGenerator, Producer}
+import org.combinators.ep.generator.LanguageIndependentGenerator
 import org.combinators.templating.twirl.Java
 
 import scala.collection.JavaConverters._
@@ -14,7 +12,7 @@ import scala.collection.JavaConverters._
 /**
   * Any Java-based EP approach can extend this Generator
   */
-trait JavaGenerator extends LanguageIndependentGenerator  with Producer {
+trait JavaGenerator extends LanguageIndependentGenerator {
   val domain:BaseDomain with ModelDomain
 
   type CompilationUnit = com.github.javaparser.ast.CompilationUnit
@@ -70,11 +68,9 @@ trait JavaGenerator extends LanguageIndependentGenerator  with Producer {
     val params:Seq[String] = op.parameters.map(param => s"${typeConverter(param.tpe)} ${param.name}")
     val cons:Seq[Statement] = op.parameters.flatMap(param => Java(s"  this.${param.name} = ${param.name};").statements())
 
-    val str = s"""|public $name (${params.mkString(",")}) {
+    Java(s"""|public $name (${params.mkString(",")}) {
                   |   ${cons.mkString("\n")}
-                  |}""".stripMargin
-    println ("STR2:" + str)
-    Java(str).constructors().head
+                  |}""".stripMargin).constructors().head
   }
 
   /** Compute parameter "name" comma-separated list from operation. */

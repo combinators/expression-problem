@@ -1,8 +1,5 @@
-package org.combinators.ep.language.java.trivially
+package org.combinators.ep.language.java.trivially   /*DI:LD:AD*/
 
-/*DI:LD:AD*/
-
-import com.github.javaparser.ast.expr.SimpleName
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 import org.combinators.ep.generator.LanguageIndependentTestGenerator
 import org.combinators.ep.language.java.{JUnitTestGenerator, JavaGenerator}
@@ -13,11 +10,10 @@ import org.combinators.templating.twirl.Java
   *
   * Note that we need LitInst for our test generation, so we just grab from M0
   */
-trait TriviallyTestGenerator
-  extends JUnitTestGenerator
-    with JavaGenerator
-    with LanguageIndependentTestGenerator {
+trait TriviallyTestGenerator extends JUnitTestGenerator
+    with JavaGenerator with LanguageIndependentTestGenerator {
   self: TriviallyGenerator =>
+
   val domain: BaseDomain with ModelDomain
   import domain._
 

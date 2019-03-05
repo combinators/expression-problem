@@ -260,13 +260,6 @@ class CPPMethod (val _retType:String, val _name:String, val _params:String, val 
   */
 class CPPConstructor (val _name:String, val _params:String, val _body:Seq[CPPStatement]) extends CPPElement {
 
-//  /**
-//    * Just a single statement
-//    */
-//  def this (_name:String, _params:String, _body:String) {
-//    this(_name, _params, Seq(_body))
-//  }
-
   val name:String = _name
   val params:String = _params
   val body = _body

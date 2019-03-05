@@ -17,7 +17,7 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
 
     lazy val generatedCode:Seq[HaskellWithPath] =
       gen.generatedCode() ++
-      gen.generateSuite(Some(gen.getModel))
+      gen.generateSuite(None)
 
     /**
       * Add all helper classes to be external artifacts.

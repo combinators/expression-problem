@@ -4,14 +4,14 @@ import java.io.File
 import java.nio.file.{Path, Paths}
 
 import org.combinators.ep.domain.OperationDependency
-import org.combinators.ep.generator.{LanguageIndependentGenerator, Producer}
+import org.combinators.ep.generator.LanguageIndependentGenerator
 
 /**
   * Any Haskell EP approach can extend this Generator
   *
   * Perhaps consider an Expression Problem application domain based on Monoids
   */
-trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskellBinaryMethod with OperationDependency with HaskellBinaryMethod with Producer {
+trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskellBinaryMethod with OperationDependency with HaskellBinaryMethod {
 
   /** Specially required files are placed in this area. */
   val haskellResources:String = Seq("language", "haskell", "src", "main", "resources", "haskell-code").mkString(File.separator)
@@ -39,14 +39,8 @@ trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskell
     * Default behavior in Haskell is the expression itself
     */
   def result (expr:Expression) : Seq[Statement] = {
-    //Seq(expr)
     Seq(HaskellStatement(expr.getCode))
   }
-
-  /**
-    * Haskell solutions require delegation to their respective traits
-    */
-  //def inst(exp:domain.DataType, params:InstanceExpression*): InstanceExpression
 
   /** Concatenate attributes by name in order */
   def standardArgs(exp:domain.DataType, suffix:String = "") : Haskell = {

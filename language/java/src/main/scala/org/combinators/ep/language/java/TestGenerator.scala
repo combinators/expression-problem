@@ -11,11 +11,13 @@ trait TestGenerator extends JavaGenerator with LanguageIndependentTestGenerator 
 
   type UnitTest = MethodDeclaration /** Base concept for the representation of a single test case. */
 
-  /** Return sample test cases as methods. */
-  def testGenerator: Seq[MethodDeclaration] = Seq.empty
-
   /** Converts types in test code. */
   def testTypeConverter(ty: TypeRep) : Type = typeConverter(ty)
+
+  /**
+    * Represents the sequence of total test cases.
+    */
+  def testGenerator : Seq[UnitTest] = Seq.empty
 
   /** Return MethodDeclaration associated with given test cases. */
   def junitTestMethod(test: TestCase, idx: Int): Seq[Statement] = {
@@ -88,10 +90,11 @@ trait TestGenerator extends JavaGenerator with LanguageIndependentTestGenerator 
   }
 
   /** Return MethodDeclaration associated with given test cases. */
-  def testMethod(tests: Seq[TestCase]): Seq[MethodDeclaration] = {
+  def testMethod(tests: Seq[TestCase]): Seq[UnitTest] = {
     val stmts = tests.zipWithIndex.flatMap { case (test, idx) => junitTestMethod(test, idx) }
-    if (stmts.isEmpty) Seq.empty
-    else {
+    if (stmts.isEmpty) {
+      Seq.empty
+    } else {
       Java(
         s"""|public void test() {
             |   ${stmts.mkString("\n")}

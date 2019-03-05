@@ -4,12 +4,12 @@ import java.io.File
 import java.nio.file.{Path, Paths}
 
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
-import org.combinators.ep.generator.{FileWithPath, LanguageIndependentGenerator, Producer}
+import org.combinators.ep.generator.{FileWithPath, LanguageIndependentGenerator}
 
 /**
   * Any Scala-based EP approach can extend this Generator
   */
-trait ScalaGenerator extends LanguageIndependentGenerator with Producer {
+trait ScalaGenerator extends LanguageIndependentGenerator {
   val domain:BaseDomain with ModelDomain
 
   type CompilationUnit = ScalaWithPath

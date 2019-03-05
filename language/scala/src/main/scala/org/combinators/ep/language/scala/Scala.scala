@@ -17,11 +17,6 @@ class Scala private(elements: immutable.Seq[Scala], text: String) extends Buffer
 
   /** Top level. */
   def source(): Source = fullText.parse[Source].get
-  //def pkg() : Pkg = fullText.parse[Pkg].get
-  //def obj(): scala.meta.Pkg.Object = fullText.parse[Pkg.Object].get
-
-  /** Parses an import declaration. */
-  //def importDeclaration(): Import = fullText.parse[Import].get
 
   /** Parses this element as declaration */
   def declaration(): Stat = fullText.parse[Stat].get
@@ -34,9 +29,6 @@ class Scala private(elements: immutable.Seq[Scala], text: String) extends Buffer
   def statement : Stat = fullText.parse[Stat].get
 
   def expression : Term = fullText.parse[Term].get
-
-  /** Parses this element as a (potentially qualified) name. */
-  //def name(): Name = fullText.parse[Name].get
 
   /** Parses this element as an interface body declaration (e.g. a method signature). */
   def definition: Stat = fullText.parse[Stat].get

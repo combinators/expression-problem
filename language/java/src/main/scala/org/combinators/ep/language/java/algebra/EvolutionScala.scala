@@ -1,6 +1,4 @@
-package org.combinators.ep.language.java.algebra
-
-/*DD:LD:AD*/
+package org.combinators.ep.language.java.algebra   /*DD:LD:AD*/
 
 /**
   * Extensibility for the Masses
@@ -25,55 +23,10 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   //lazy val process = gen.process(gen.getModel)
   override lazy val generatedCode:Seq[CompilationUnit] =
     gen.generatedCode() ++
-    gen.generateSuite(Some("algebra"), Some(gen.getModel)) :+
-    gen.combinedAlgebra(Some("algebra"), gen.getModel)       // requires a combined algebra for testing
+    gen.generateSuite(Some("algebra")) :+
+    gen.combinedAlgebra(Some("algebra"))
 
   override val routingPrefix: Option[String] = Some("algebra")
   override lazy val controllerAddress:String = gen.getModel.name
 }
 
-//class M0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-//  extends Foundation(web, app) {
-//  override val gen = new WithDomain(MathDomain) with AlgebraGenerator with AlgebraTestGenerator with e0
-//}
-//
-//class M1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-//  extends Foundation(web, app) {
-//  override val gen = new WithDomain(MathDomain) with AlgebraGenerator with AlgebraTestGenerator with e0 with e1
-//}
-//
-//class M2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-//  extends Foundation(web, app) {
-//  override val gen = new WithDomain(MathDomain) with AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with e2
-//}
-//
-//class M3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-//  extends Foundation(web, app) {
-//  override val gen = new WithDomain(MathDomain) with AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with e2 with e3
-//}
-//
-//class M4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-//  extends Foundation(web, app) {
-//  override val gen = new WithDomain(MathDomain) with AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with e2 with e3 with e4
-//}
-//
-//// Still not ready to have Equals.
-//class M5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-//  extends Foundation(web, app) {
-//  override val gen = new WithDomain(MathDomain) with AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with e2 with e3 with e4 with e5
-//}
-//
-//class M6_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-//  extends Foundation(web, app) {
-//  override val gen = new WithDomain(MathDomain) with AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6
-//}
-//
-//class I2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-//  extends Foundation(web, app) {
-//  override val gen = new WithDomain(MathDomain) with AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with i1 with i2
-//}
-//
-//class C1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-//  extends Foundation(web, app) {
-//  override val gen = new WithDomain(MathDomain) with AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with e2 with e3 with i1 with i2 with c1
-//}

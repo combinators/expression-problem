@@ -50,10 +50,6 @@ trait ALaCarteProducer extends HaskellGenerator {
     * or
     * In(Er(El(Op 2.0 7.0)))
     */
-//  override def inst(exp:domain.DataType, params:Haskell*): Haskell = {
-//    Haskell("In(" + treeRoute(exp, flat.types) + " " + params.map(h => h.getCode).mkString(" ") + closeTreeRoute(exp, flat.types) +")")
-//  }
-// override
    override def inst(exp:domain.DataType, params:Expression*): CodeBlockWithResultingExpressions = {
     CodeBlockWithResultingExpressions(Haskell("In(" + treeRoute(exp, flat.types) + " " + params.map(h => h.getCode).mkString(" ") + closeTreeRoute(exp, flat.types) +")"))
   }

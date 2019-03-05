@@ -103,10 +103,6 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     }
   }
 
-//  override def inst(exp:domain.DataType, params:Expression*): CodeBlockWithResultingExpressions = {
-//    CodeBlockWithResultingExpressions(Haskell(exp.concept + " " + params.map(h => "(" + h.getCode + ")").mkString(" ")))
-//  }
-
   override def inst(exp:domain.DataType, params:Expression*): CodeBlockWithResultingExpressions = {
     val args = params.mkString(",")
 
@@ -126,27 +122,6 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
 
     CodeBlockWithResultingExpressions(inner)
   }
-
-//  /**
-//    * For producer operations, there is a need to instantiate objects, and one would use this
-//    * method (with specific parameters) to carry this out.
-//    */
-//  override def inst(exp:domain.DataType, params:Haskell*): Haskell = {
-//
-//    val wrap = genWrap(findModel(exp))
-//    exp match {
-//      case ui: Unary =>
-//        Haskell(wrap(s"${ui.concept} (${params(0)}) "))
-//
-//      case bi: Binary =>
-//        Haskell(wrap(s"${bi.concept} (${params(0)}) (${params(1)}) "))
-//
-//      case exp: Atomic =>
-//        Haskell(wrap(s"${exp.concept} ${params(0)} "))
-//
-//      case _ => Haskell(s" -- unknown ${exp.concept} ")
-//    }
-//  }
 
   /**
     * Extended to handle producer operations specially.
@@ -199,8 +174,6 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     * @return
     */
   def operationForFixedLevel(m:Model, op:Operation, depends:Seq[Operation]) : String = {
-    println ("op:" + op.concept + ", depends:" + depends.map(d => d.concept).mkString(","))
-
     val mcaps = m.name.capitalize // haskell needs data to be capitalized!
     val baseDomain = domain.baseTypeRep.name
 
@@ -394,7 +367,9 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
       // for the first definition in M0
       val prior = m.toSeq.filterNot(m => m.isEmpty || m.last.isEmpty).map(m =>
         s"${expDeclaration(m)} f ~ ${extTypeDeclaration(m.last)} f")
-      "(" + prior.mkString(",") + s") => "
+
+      prior.mkString("(", ",", ")") + " => "
+//      "(" + prior.mkString(",") + s") => "
     } else {
       ""
     }
@@ -433,7 +408,7 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
                    #helpWith${op.concept}$mcaps = absurd
                    #
                    #""".stripMargin('#'))
-  }   // Void had been $previous
+  }
 
   def generateData(m:Model):Haskell = {
     val mcaps = m.name.capitalize    // haskell needs data to be capitalized!
@@ -545,34 +520,6 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     Haskell(s"${att.instance}")
   }
 
-  //  /**
-  //    * Convert the given atomic instance, and use base as the variable name for all interior expansions.
-  //    *
-  //    * Need to find EVOLUTION in which an operation was defined (other than M0) so you can call the
-  //    * appropriate M*Ext to lift up for types
-  //    */
-  //  override def convert(inst:Inst) : Haskell = {
-  //    val name = inst.name
-  //
-  //    // For the base (and one above it), there is no need to wrap, otherwise must wrap
-  //
-  //    inst match {
-  //      case ui: UnaryInst =>
-  //        val wrap = genWrap(findModel(ui.e))
-  //        Haskell(wrap(s"${ui.e.concept} (${toTargetLanguage(ui.inner)}) "))
-  //
-  //      case bi: BinaryInst =>
-  //        val wrap = genWrap(findModel(bi.e))
-  //        Haskell(wrap(s"${bi.e.concept} (${toTargetLanguage(bi.left)}) (${toTargetLanguage(bi.right)}) "))
-  //
-  //      case exp: AtomicInst =>
-  //        val wrap = genWrap(findModel(exp.e))
-  //        Haskell(wrap(s"${exp.e.concept} ${exp.ei.inst}"))
-  //
-  //      case _ => Haskell(s""" -- unknown $name" """)
-  //    }
-  //  }
-
   /**
     * HACK. TODO: FIX
     * Grow generateDT only needs first half...
@@ -649,20 +596,8 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
         // post-processing will resolve this
         Haskell(s"""help ${delta.expr.get}""")
       } else {
-
-        //dispatch(delta.expr.get, delta.op.get, delta.params: _*)
-
-        // CHALLENGE: have to telescope preceding (Ext_M0 (Ext_M1 (Ext_M2 ...
-        // when using datatypes from levels other than M0. This requires complicated effort to recover the information
-        // from the generated code (delta.expr.get) that is passed in. Seems like we need to record information to
-        // be associated with it, otherwise we have to figure it out here.
-
-        //      val m = retrieveHighestDataTypeLevel(delta.expr.get.getCode)  // getModel.findOperation(op)
-        //      Haskell(s"(${op.instance}${domain.baseTypeRep.name}${getModel.name.capitalize} (${genWrap(m)(delta.expr.get.toString)}))")
-
         Haskell(s"(${op.instance}${domain.baseTypeRep.name}${getModel.name.capitalize} (${delta.expr.get.toString}))")
       }
-     // Haskell(operationForFixedLevel(getModel.findOperation(op), op, dependency(op)))
     } else {
       super.contextDispatch(source, delta)
     }

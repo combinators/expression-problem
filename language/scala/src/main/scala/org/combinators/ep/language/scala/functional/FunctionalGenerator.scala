@@ -47,7 +47,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod {
       case _: BinaryMethod =>
         //params.map(p => p.toString).mkString(",")
         val opargs = if (params.nonEmpty) {
-          "(" + params.mkString(",") + ")"
+          params.mkString("(", ",", ")")
         } else {
           ""
         }
@@ -67,10 +67,10 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod {
             if (rest.isEmpty) {
               ""
             } else {
-              "(" + rest.mkString(",") + ")"
+              rest.mkString("(", ",", ")")
             }
           } else {
-            "(" + params.mkString(",") + ")"
+            params.mkString("(", ",", ")")
           }
         }
         Scala(s"apply($expr)$args").expression
@@ -88,7 +88,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod {
     } else {
       if (delta.op.isDefined) {
         val opParams = if (delta.params.nonEmpty) {
-          "(" + delta.params.mkString(",") + ")"
+          delta.params.mkString("(", ",", ")")
         } else {
           ""
         }
@@ -194,14 +194,13 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod {
       }
       // Data types that had existed earlier
       val baseMembers = typesToGenerate.map(exp => methodGenerator(exp, op))
-      val str = s"""
-                   |trait ${op.concept} extends $extendsClause Visitor { self: visitor =>
-                   |  $binary
-                   |  $result
-                   |  ${baseMembers.mkString("\n")}
-                   |}""".stripMargin
-      println ("STR:" + str)
-      Scala(str).declaration()
+
+      Scala(s"""
+               |trait ${op.concept} extends $extendsClause Visitor { self: visitor =>
+               |  $binary
+               |  $result
+               |  ${baseMembers.mkString("\n")}
+               |}""".stripMargin).declaration()
     })
 
     val factories = m.ops.map(op => {

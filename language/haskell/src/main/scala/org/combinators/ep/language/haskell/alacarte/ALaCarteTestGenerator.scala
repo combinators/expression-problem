@@ -14,49 +14,6 @@ trait ALaCarteTestGenerator extends HUnitTestGenerator {
 
   val flat:domain.Model
 
-//  /** normalize the atomic Instance by its position within flattened data types. */
-//  def treeRoute(a:UnaryInst, flattened:Seq[DataType]) : String = {
-//    if (flattened.size == 1) {
-//      s"${a.e.concept}"
-//    } else if (a.e.name == flattened.head.name) {
-//      s"El(${a.e.concept} "
-//    } else {
-//      "Er(" + treeRoute(a, flattened.tail) + " "
-//    }
-//  }
-//
-//  def treeRoute(a:BinaryInst, flattened:Seq[DataType]) : String = {
-//    if (flattened.size == 1) {
-//      s"${a.e.concept}"
-//    } else if (a.e.name == flattened.head.name) {
-//      s"El(${a.e.concept} "
-//    } else {
-//      "Er(" + treeRoute(a, flattened.tail) + " "
-//    }
-//  }
-//
-//  def treeRoute(a:AtomicInst, flattened:Seq[DataType]) : String = {
-//    if (flattened.size == 1) {
-//      s"${a.e.concept}"
-//    } else if (a.e.name == flattened.head.name) {
-//      s"El(${a.e.concept} "
-//    } else {
-//      "Er(" + treeRoute(a, flattened.tail) + " "
-//    }
-//  }
-
-  // ugly! works, though...
-
-//  def closeTreeRoute(a:Inst, flattened:Seq[DataType]) : String = {
-//    if (flattened.size == 1) {
-//      ""
-//    } else if (a.name == flattened.head.name) {
-//      ")"
-//    } else {
-//      ")" + closeTreeRoute(a, flattened.tail)
-//    }
-//  }
-
   /**
     * Actual value in a test case.
     *
@@ -67,50 +24,9 @@ trait ALaCarteTestGenerator extends HUnitTestGenerator {
   override def actual(op: domain.Operation, inst: domain.Inst, params: Expression*): CodeBlockWithResultingExpressions = {
     toTargetLanguage(inst).appendDependent(instExp => {
       val expr:Expression = contextDispatch(NoSource, deltaExprOp(instExp.head, op, params: _*))
-      //CodeBlockWithResultingExpressions(Haskell(expr.getCode + ":: GeneralExpr"))
       CodeBlockWithResultingExpressions(Haskell(expr.getCode))
     })
   }
-
-  /**
-    * Expand instance into its post-order traversal of interior definitions.
-    *
-    * a1 = (7*2)
-    *
-    * a1 = In(Er(Er(BinaryMul In(El(Constant 7.0))  In(El(Constant 2.0)))))
-    */
-//  override def convert(inst:Inst) : Haskell = {
-//    Haskell(convert0(inst).getCode + ":: GeneralExpr")
-//  }
-
-//  /** Recursive helper method. Creates the prefix In(Er(El(... Followed by dataType name. */
-//  def convert0(inst:Inst) : Haskell = {
-//    val name = inst.name
-//    inst match {
-//      case ui: UnaryInst =>
-//        Haskell(s"In(" + treeRoute(ui, flat.types) + s" (${convert0(ui.inner)}) " + closeTreeRoute(inst, flat.types) + ")")
-//
-//      case bi: BinaryInst =>
-//          Haskell(s"In(" + treeRoute(bi, flat.types) + s" (${convert0(bi.left)}) (${convert0(bi.right)}) " + closeTreeRoute(inst, flat.types) + ")")
-//
-//      case exp: AtomicInst =>
-//        Haskell(s"In(" + treeRoute(exp, flat.types) + exp.ei.inst + closeTreeRoute(inst, flat.types) + ")")
-//
-//      case _ => Haskell(s""" -- unknown $name" """)
-//    }
-//  }
-
-//  /**
-//    * For producer operations, there is a need to instantiate objects, and one would use this
-//    * method (with specific parameters) to carry this out.
-//    */
-//  def inst(exp:domain.DataType, params:Expression*): CodeBlockWithResultingExpressions = {
-//    CodeBlockWithResultingExpressions(
-//
-//
-//      Haskell(s"FIXME ${exp.concept}${params.mkString("(", ", ", ")")}")
-//    )
-//  }
 
   /**
     * Convert a scala expression into the target language.
@@ -190,7 +106,7 @@ trait ALaCarteTestGenerator extends HUnitTestGenerator {
   }
 
   /** Create multiple Haskell files for test cases. */
-  override def generateSuite(model: Option[Model] = None): Seq[HaskellWithPath] = {
+  override def generateSuite(pkg: Option[String]): Seq[HaskellWithPath] = {
     val opsImports = flat.ops.map(op => s"import ${op.concept}").mkString("\n")
     val typesImports = flat.types.map(exp => s"import ${exp.concept}").mkString("\n")
     var num: Int = -1
@@ -204,7 +120,8 @@ trait ALaCarteTestGenerator extends HUnitTestGenerator {
                                   |
                                   |$opsImports
                                   |$typesImports
-                                  |$md""".stripMargin), Paths.get(s"Main$num.hs"))
+                                  |${md.mkString("\n")}
+                                  |""".stripMargin), Paths.get(s"Main$num.hs"))
     })
   }
 }

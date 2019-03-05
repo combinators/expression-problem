@@ -1,6 +1,6 @@
 package org.combinators.ep.language.java
 
-import org.combinators.ep.domain.math.{I2, M3}
+import org.combinators.ep.domain.math._
 
 /**
   * This package contains the strawman object-oriented solution to the Expression Problem in Java.
@@ -72,14 +72,12 @@ import org.combinators.ep.domain.math.{I2, M3}
 *}}}
  *
  * == Evolutions ==
-  * There are six fundamental evolutions completed: [[ep.j.oo.M0_Variation]], [[ep.j.oo.M1_Variation]],
-  * [[ep.j.oo.M2_Variation]], [[ep.j.oo.M3_Variation]], [[ep.j.oo.M4_Variation]], [[ep.j.oo.M5_Variation]],
-  * [[ep.j.oo.M6_Variation]]
+  * There are six fundamental evolutions completed: [[M0]], [[M1]], [[M2]], [[M3]], [[M4]], [[M5]], [[M6]],
   *
-  * There is an independent branch [[ep.j.oo.I2_Variation]], that extends from [[ep.j.oo.M1_Variation]],
+  * There is an independent branch [[I2]], that extends from [[M1]],
   * thus demonstrating the ability to fork independent evolutionary paths.
   *
-  * There is one composite branch [[ep.j.oo.C1_Variation]] that connects together the evolutions
+  * There is one composite branch [[MC1]] that connects together the evolutions
   * up to [[M3]] and the evolutions up to [[I2]], thus demonstrating the
   * ability to join together previously independent paths.
   */

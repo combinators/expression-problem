@@ -1,6 +1,4 @@
-package org.combinators.ep.language.java.oo
-
-/*DI:LD:AD*/
+package org.combinators.ep.language.java.oo   /*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
@@ -50,7 +48,8 @@ trait OOGenerator
   override def contextDispatch(source:Context, delta:Delta) : Expression = {
     if (delta.expr.isEmpty) {
       val op = delta.op.get.instance
-      Java(s"this.$op()").expression()
+      val params = source.params.mkString(",")    // possible parameters to the operation
+      Java(s"this.$op($params)").expression()
     } else {
       super.contextDispatch(source, delta)
     }
@@ -83,7 +82,7 @@ trait OOGenerator
     val methods = model.ops.map(op => methodGenerator(exp, op))
 
     Java(s"""|package oo;
-             |public class ${exp.toString} extends ${domain.baseTypeRep.name} {
+             |public class $exp extends ${domain.baseTypeRep.name} {
              |  ${constructor(exp)}
              |  ${fields(exp).mkString("\n")}
              |  ${methods.mkString("\n")}

@@ -1,6 +1,4 @@
-package org.combinators.ep.domain
-
-/*DI:LI:AI*/
+package org.combinators.ep.domain    /*DI:LI:AI*/
 
 /** Enables access to specific domain. */
 class WithDomain[+E <: BaseDomain](val domain:E) { }   // a covariant class in Scala

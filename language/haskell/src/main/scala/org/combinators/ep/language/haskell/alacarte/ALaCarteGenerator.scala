@@ -192,8 +192,6 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
 
   /** Responsible for dispatching sub-expressions with possible parameter(s). */
  override def dispatch(primary:Haskell, op:domain.Operation, params:Haskell*) : Haskell = {
-   // HACK doesn't cover producer methods. E4/M4 use of dispatch in haskell could be replaced with just 'expression'
-   // TODO: Start HERE
    op match {
      case b:BinaryMethod => {
        val args:String = if (params.isEmpty) {

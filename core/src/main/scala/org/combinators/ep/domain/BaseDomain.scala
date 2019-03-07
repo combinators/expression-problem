@@ -123,7 +123,6 @@ trait BaseDomain {
   // TODO: in all cases (i.e., think graph structure) but also one can optimize the need for it away if you have Eq (for Haskell) or .equals for Java
 
   /** Pre-defined unary/binary subtypes that reflects either a unary or binary structure. This is extensible. */
-  // TODO: Rename as DataType
   abstract class DataType(raw:String, val attributes: Seq[Attribute]) {
     val name:String = sanitize(raw)
 

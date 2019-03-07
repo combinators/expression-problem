@@ -286,9 +286,6 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
 
       val modifiedRest = {
         // must embed 'help' properly, if needed.
-        // TODO: Perhaps handle in contextDispatch in the first place? or dispatch? Can't
-        // do so, since we need to know the MODEL m for which operation is first defined.
-        // or perhaps we could
         val code = logic(exp, op).mkString("\n")
         if (code.contains(" help")) { // THis sure looks like a hack. How to figure out from code?
 

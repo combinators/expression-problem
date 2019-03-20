@@ -47,12 +47,12 @@ trait InterpreterGenerator
 
     // one interface for every model that contains an operation
     // Each operation gets interface
-    decls ++
+    (decls ++
       model.inChronologicalOrder.filter(m => m.ops.nonEmpty).flatMap(m => Seq(generateBase(m), generateFactory(m))) ++
     //
     // Each operation must provide class implementations for all past dataTypes since last operation
     model.inChronologicalOrder.filter(m => m.ops.nonEmpty).flatMap(m => generateBaseExtensions(m)) ++
-    generateIntermediateTypes(model)
+    generateIntermediateTypes(model)).distinct
   }
 
   /**

@@ -35,13 +35,13 @@ trait M0 extends Evolution {
     EqualsTestCase(LitInst(5.0), Eval, ExistsInstance(Double)(5.0)),
 
     PerformanceTestCase(
-      11,
-      8,
+      11,    // how many iterations to continue the iter
+      8,     // how many times to try to find the best
       Eval,
-      new BinaryInst(Add, LitInst(1.0), LitInst(2.0)),
-      Seq.empty,
-      params => params,
-      inst => new BinaryInst(Add, inst, inst)
+      new BinaryInst(Add, LitInst(1.0), LitInst(2.0)),   // base instance
+      Seq.empty,   // base parameters
+      params => params,   // how parameters evolve (i.e., stay same)
+      inst => new BinaryInst(Add, inst, inst)     // object changes with each iteration
     )
   )
 }

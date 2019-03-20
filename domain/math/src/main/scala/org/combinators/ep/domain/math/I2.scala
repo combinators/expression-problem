@@ -8,6 +8,10 @@ trait I2 extends Evolution {
 
   // i2:model evolution.
   // -------------------
+  object independent {
+    val height:String = "height"
+  }
+
   case object Integer extends domain.TypeRep
   case object Height extends domain.Operation(independent.height, Some(Integer), Seq(domain.Parameter(independent.height, Integer)))
   val i2 = domain.Model("i2", Seq.empty, Seq(Height), last = i1)

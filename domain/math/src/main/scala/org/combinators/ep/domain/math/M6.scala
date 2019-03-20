@@ -55,15 +55,19 @@ trait M6 extends Evolution {
       11,
       8,
       Equals,
-      new BinaryInst(Add, LitInst(1.0), LitInst(2.0)),
+      new BinaryInst(Add, LitInst(1.0), LitInst(2.0)),     // first, base instance
+
+      // base parameter to use when testing equals
       Seq(ExistsInstance(baseTypeRep)(new BinaryInst(Add, LitInst(1.0), LitInst(2.0)))),
+
+      // function tells how parameters evolve with each iteration
       params => params.map(param =>
         param.inst match {
           case i: Inst =>
             ExistsInstance(baseTypeRep)(new BinaryInst(Add, i, i))
           case _ => param
         }),
-      inst => new BinaryInst(Add, inst, inst)
+      inst => new BinaryInst(Add, inst, inst)   // function tells how objects evolve with each iteration
     )
   )
 }

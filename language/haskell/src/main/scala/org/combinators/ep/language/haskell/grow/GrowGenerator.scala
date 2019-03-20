@@ -138,6 +138,13 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
 
         s"${op.instance}$baseDomain$mcaps :: ${expDeclaration(m.base())} $mcaps -> ${expDeclaration(m.base())} $mcaps"
 
+      case _:BinaryMethod =>
+        val mcaps = m.name.capitalize    // haskell needs data to be capitalized!
+      val baseDomain = domain.baseTypeRep.name
+
+        val result = typeConverter(op.returnType.get)
+        s"${op.instance}$baseDomain$mcaps :: ${expDeclaration(m.base())} $mcaps -> ${expDeclaration(m.base())} $mcaps -> $result"
+
       case _ =>
         val mcaps = m.name.capitalize    // haskell needs data to be capitalized!
       val baseDomain = domain.baseTypeRep.name
@@ -222,6 +229,38 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     }
   }
 
+  def binaryOperationForFixedLevel(m:Model, op:Operation, depends:Seq[Operation]) : String = {
+    val mcaps = m.name.capitalize // haskell needs data to be capitalized!
+    val baseDomain = domain.baseTypeRep.name
+
+    val allModels = m.inChronologicalOrder
+
+ //   if (depends.isEmpty || depends.size > 1) {
+      val invoke = allModels.reverse.tail.foldLeft(s"(${op.instance}${expDeclaration(m)} helpWith${op.concept}$mcaps)")((former, next) => {
+        s"(${op.instance}${expDeclaration(next)} $former)"
+      })
+
+      s"""
+         #${typeSignature(m, op)}
+         #${op.instance}$baseDomain$mcaps e1 e2 = $invoke e1 e2
+         #""".stripMargin('#')
+//    } else {
+//      val dop = depends.head
+//
+//      val invoke = allModels.indices.map(outer => {
+//        val lastOne = if (outer == allModels.size-1) { s"helpWith${op.concept}$mcaps" } else {""}
+//        s"(${op.instance}${expDeclaration(allModels(outer))} " + // inner goes from outer+1 .. Mn
+//          (allModels.size - 1 until outer by -1).foldLeft(s" helpWith${dop.concept}$mcaps")((state, inner) => s"(${dop.instance}${expDeclaration(allModels(inner))} $state)").mkString("") +
+//          s" $lastOne"  // ONLY LAST one has "helpWith${op.concept}$mcaps"
+//      }).mkString("") + allModels.indices.map(_ => ")").mkString("")
+//
+//      s"""
+//         #${typeSignature(m, op)}
+//         #${op.instance}$baseDomain$mcaps e1 e2 = $invoke e1 e2
+//         #""".stripMargin('#')
+//    }
+  }
+
   /**
     * Generates wrapper of instantiations using telescoping constructors
     *
@@ -255,11 +294,14 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     val returnType = typeConverter(op.returnType.get)
     val extType = extTypeDeclaration(m)
 
-    // If an operation has a single dependency, then add it in
+    // If an operation is a binary method ,add it in, or if it has a dependent operation. Needs cleaning up
     val extraParam = if (dependency(op).size == 1) {
       "_"
     } else {
-      ""
+     op match {
+        case _: BinaryMethod => "_"
+        case _ => ""
+      }
     }
 
     // keep track of (singular) dependent operation; fall-back to self-op if no dependencies.
@@ -284,10 +326,12 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
         case _ => s"${op.instance}${expDeclaration(m)} _ $extraParam "
       }
 
+      // how to handle binary operations?
+
       val modifiedRest = {
         // must embed 'help' properly, if needed.
         val code = logic(exp, op).mkString("\n")
-        if (code.contains(" help")) { // THis sure looks like a hack. How to figure out from code?
+        if (code.contains(" help")) { // This sure looks like a hack. How to figure out from code?
 
           // outer goes from M0 .. M1 .. Mn
           val help = if (dependency(op).isEmpty) {
@@ -345,10 +389,67 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
                #  ${code.replace(s"${op.instance}${domain.baseTypeRep.name} helpWith ", "help ")}""".stripMargin('#')
           }
         } else {
-          s"(${exp.concept} ${standardArgs(exp).getCode}) = " + code
+          val extraParam = op match {
+            case _: BinaryMethod => "_"
+            case _ => ""
+          }
+          s"(${exp.concept} ${standardArgs(exp).getCode} $extraParam) = " + code
         }
       }
-      head + modifiedRest
+
+      val modifiedBinaryRest = {
+        // must embed 'help' properly, if needed.
+        val code = logic(exp, op).mkString("\n")
+        val extraParam = op match {
+          case _: BinaryMethod => s"(${exp.concept} ${standardArgs(exp, "2").getCode})"
+          case _ => ""
+        }
+        if (code.contains(" help")) { // This sure looks like a hack. How to figure out from code?
+          if (!m.last.isEmpty) {
+            // convert "(simplifyExp helpWith right )" into "(help right )"
+            val helpOP = {
+              val invokeSimple = allModels.reverse.foldLeft(s" helpWith")((outerState,outerNext) =>
+                s"(${op.instance}${expDeclaration(outerNext)} $outerState)")
+              s"help = $invokeSimple"
+            }
+
+            s"""(${exp.concept} ${standardArgs(exp).getCode}) $extraParam =
+               #  let
+               #    $helpOP
+               #  in
+               #  ${code.replace(s"${op.instance}${domain.baseTypeRep.name} helpWith ", "help ")}""".stripMargin('#')
+          } else {
+            val name = if (dependency(op).size == 1) {
+              dependency(op).head.instance
+            } else {
+              op.instance
+            }
+
+            val helpDOP = s"help = (${op.instance}${expDeclaration(m)} helpWith)"
+
+            s"""(${exp.concept} ${standardArgs(exp).getCode}) $extraParam =
+               #  let
+               #    $helpDOP
+               #  in
+               #  ${code.replace(s"${op.instance}${domain.baseTypeRep.name} helpWith ", "help ")}""".stripMargin('#')
+          }
+        } else {
+          s"(${exp.concept} ${standardArgs(exp).getCode}) $extraParam = " + code
+        }
+      }
+
+      val binaryHead = exp match {
+        case b: Binary => s"${op.instance}${expDeclaration(m)} helpWith "
+        case u: Unary => s"${op.instance}${expDeclaration(m)} helpWith "
+        case _ => s"${op.instance}${expDeclaration(m)} _  "
+      }
+
+      // choose which one to use
+      op match {
+        case _: BinaryMethod => binaryHead + modifiedBinaryRest
+        case _ => head + modifiedRest
+      }
+
     }).mkString("\n")
 
     val previous:String = if (m.last.isEmpty) {
@@ -366,7 +467,6 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
         s"${expDeclaration(m)} f ~ ${extTypeDeclaration(m.last)} f")
 
       prior.mkString("(", ",", ")") + " => "
-//      "(" + prior.mkString(",") + s") => "
     } else {
       ""
     }
@@ -383,6 +483,47 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     // if we define new operations, we must expand as provided. Operations with dependent operations
     // have to be handled specially...
     val operationSpec = operationForFixedLevel(m, op, dependency(op))
+    val binaryOperationSpec = binaryOperationForFixedLevel(m, op, dependency(op))
+
+    //val binaryHeader = s"($extType f -> $extType f -> $returnType)"
+    val extraBinarySignature =
+      s"""#(Ext_${mcaps}Type f -> Ext_${mcaps}Type f -> Bool)
+         #  -- ^ Function to help with evaluating subexpression extensions""".stripMargin('#')
+
+    // Binary operations are different
+    val binaryOp = Haskell(
+      s"""
+         #-- | Evaluates binary expression.
+         #${op.instance}${expDeclaration(m)}
+         #  :: $precursor$extraBinarySignature
+         #  -> ${expDeclaration(m)} f
+         #  -- ^ The first expression to evaluate
+         #  -> ${expDeclaration(m)} f
+         #  -- ^ The second expression to evaluate
+         #  -> Bool
+         #
+         #$inner
+         #${op.instance}${expDeclaration(m)} helpWith (${extDeclaration(m)} inner) (${extDeclaration(m)} inner2) = helpWith inner inner2
+         #${op.instance}${expDeclaration(m)} _ _ _ = False
+         #
+         #-- | Evaluates an $mcaps expression
+         #-- | Calls ${op.instance}$baseDomain with the $mcaps helper
+         #$binaryOperationSpec
+         #
+         #-- | Helps with extensions $mcaps
+         #helpWith${op.concept}$mcaps :: Void -> Void -> ${typeConverter(op.returnType.get)}
+         #helpWith${op.concept}$mcaps = absurd
+         #
+         #""".stripMargin('#')
+    )
+
+    op match {
+      case _ : BinaryMethod =>
+        println (op.name + " is binary")
+        binaryOp
+
+      case _ =>
+        println (op.name + " is normal")
 
     new Haskell(s"""
                    #-- | Evaluates expression.
@@ -405,6 +546,7 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
                    #helpWith${op.concept}$mcaps = absurd
                    #
                    #""".stripMargin('#'))
+    }
   }
 
   def generateData(m:Model):Haskell = {
@@ -487,7 +629,10 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     }
 
     // HACK: Awkward to use stripmargin, since generateData might start with "|" char in Haskell!!
+    // no warning overlapping patterns is for Grow implementation
     val code = Haskell(s"""|{-# LANGUAGE TypeFamilies #-}
+                           |{-# OPTIONS_GHC -fno-warn-overlapping-patterns #-}
+                           |
                            |module ${m.name.capitalize} where
                            |import DataTypes
                            |import GHC.Types (Constraint)

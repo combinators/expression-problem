@@ -20,6 +20,8 @@ trait e6 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
 
   /**
     * Operations can declare dependencies, which leads to #include extras
+    *
+    * Haskell implementation no longer needs AsTree (for grow, but what about others?)
     */
   override def dependency(op: domain.Operation): scala.List[domain.Operation] = {
     op match {

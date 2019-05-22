@@ -210,6 +210,13 @@ trait InterpreterGenerator
              |}""".stripMargin).compilationUnit
   }
 
+  /**
+    * Factories must also support all future data types. For example, the EvalIdzExpFactory
+    * naturally supports Lit and Add, but it must support all future data types as well.
+    *
+    * @param model
+    * @return
+    */
   def generateFactory(model: domain.Model): CompilationUnit = {
     val fullType:Type = Java(modelInterfaceName(model)).tpe()
     val combinedOps:String = model.ops.sortWith(_.name < _.name).map(op => op.concept).mkString("")
@@ -219,11 +226,13 @@ trait InterpreterGenerator
       else typeConverter(rep)
     }
 
-    val factoryMethods:Seq[MethodDeclaration] = model.pastDataTypes().flatMap(e => {
+    // works not on 'model' but on latest one 'getModel'
+    val factoryMethods:Seq[MethodDeclaration] = getModel.pastDataTypes().flatMap(e => {
       val params:Seq[String] = e.attributes.map(att => s"${typeConverterRelativeToHere(att.tpe)} ${att.instance}")
       val paramNames:Seq[String] = e.attributes.map(att => s"${att.instance}")
 
-      Java(s"""public static ${fullType.toString} ${e.concept}(${params.mkString(",")}) { return new $combinedOps${e.concept}(${paramNames.mkString(",")}); }""").methodDeclarations()
+      // was ${fullType.toString}
+      Java(s"""public static $fullType ${e.concept}(${params.mkString(",")}) { return new $combinedOps${e.concept}(${paramNames.mkString(",")}); }""").methodDeclarations()
     })
 
     Java(s"""|package interpreter;
@@ -253,9 +262,13 @@ trait InterpreterGenerator
     if (model.ops.nonEmpty) { return generateIntermediateTypes(model.last) }   // continue onwards.
 
     // compute new types since last operation
+    // must go back and find all operations defined before these types
+    model.inChronologicalOrder
+      .filter(m => m.ops.nonEmpty)
+      .flatMap(m => generateForOp(m, m.ops, lastTypesSinceAnOperation(model), isBase=m.base() == m)) ++ generateIntermediateTypes(model.last)
 
-    val last = model.lastModelWithOperation()   // HACK. true is not best ansewr
-    generateForOp(model, last.ops, lastTypesSinceAnOperation(model), isBase=true) ++ generateIntermediateTypes(model.last)
+//    val last = model.lastModelWithOperation()   // HACK. true is not best answer
+//    generateForOp(model, last.ops, lastTypesSinceAnOperation(model), isBase=true) ++ generateIntermediateTypes(model.last)
   }
 
   // if multiple operations in the same model, then must chain together.

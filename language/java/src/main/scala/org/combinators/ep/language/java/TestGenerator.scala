@@ -12,7 +12,11 @@ trait TestGenerator extends JavaGenerator with LanguageIndependentTestGenerator 
   type UnitTest = MethodDeclaration /** Base concept for the representation of a single test case. */
 
   /** Converts types in test code. */
-  def testTypeConverter(ty: TypeRep) : Type = typeConverter(ty)
+  def testTypeConverter(ty: TypeRep) : Type = {
+    val tpe = typeConverter(ty)
+
+    tpe
+  }
 
   /**
     * Represents the sequence of total test cases.

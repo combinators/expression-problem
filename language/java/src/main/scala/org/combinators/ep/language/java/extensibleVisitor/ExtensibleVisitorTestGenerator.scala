@@ -39,7 +39,12 @@ trait ExtensibleVisitorTestGenerator
         if (m == lastTypes) {
           reached = true
           m.ops.foreach(op => {
-            addVirtualConstructor(unit.getType(0), op, op.concept + full)  // ???? these are not qualified
+            val clazzName = if (m.base == m) {
+              op.concept
+            } else {
+              op.concept + full
+            }
+            addVirtualConstructor(unit.getType(0), op, clazzName)  // ???? these are not qualified
           })
         } else {
           if (reached) {

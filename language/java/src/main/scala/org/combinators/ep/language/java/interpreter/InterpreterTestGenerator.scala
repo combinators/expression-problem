@@ -22,8 +22,14 @@ trait InterpreterTestGenerator
   def getModel:domain.Model
 
   abstract override def testTypeConverter(typeRep: TypeRep) : Type = {
-    if (typeRep == baseTypeRep) { Java(modelInterfaceName(getModel)).tpe() }
-    else super.testTypeConverter(typeRep)
+    if (typeRep == baseTypeRep) {
+      val myModel = getModel
+      //val mname = modelInterfaceName(myModel)
+      val mname = baseInterfaceName(myModel)
+      Java(mname).tpe()
+    } else {
+      super.testTypeConverter(typeRep)
+    }
   }
 
   /** We need to import the static factory methods for the latest model with an operation */
@@ -36,6 +42,7 @@ trait InterpreterTestGenerator
 
     val suite = super.generateSuite(pkg)
 
+    // these are static imports
     suite.foreach { compilationUnit =>
       compilationUnit.addImport(factoryClassName, true, true)
     }

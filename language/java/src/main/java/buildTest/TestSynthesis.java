@@ -24,6 +24,9 @@ public class TestSynthesis {
      * @return true on success. false otherwise
      */
     static boolean gitRetrieve(String family,String model) {
+        if (model.equals("m0")) {
+            System.out.println ("DEBUG M0");
+        }
         String url = String.format("http://localhost:9000/%s/%s/%s.git", family, model, model);
         File dir = new File (destination);
         if (!dir.exists() && !dir.mkdir()) {
@@ -146,38 +149,26 @@ public class TestSynthesis {
             out.forEach(System.out::println);
             System.out.println ("  ----"); System.out.flush();
             proc.waitFor();
+            int exitVal = proc.exitValue();
+            if (exitVal == 0) {
 
-            if (proc.exitValue() == 0) {
-
-                // execute JUnit 3 test cases for all .TestSuiteN where N is an integer from 1..
-                int retVal = -1;
+                // execute JUnit 3 test cases for all .TestSuiteN where N is an integer from 0..
+                boolean success = true;
                 int testNum = 0;
                 while (true) {
-                    String testSuite = pkgName + ".TestSuite";
-                    File testFile = null;
+                    String testSuite = pkgName + ".TestSuite" + testNum;
 
-                    if (testNum == 0) {
-                        // old-style has just TestSuite; see if this exists (but only for first one...)
-                        testFile =  new File(new File(dir, pkgName), "TestSuite.java");
-                        if (!testFile.exists()) {
-                            testFile = null;
-                        } else {
-                            testNum++; // be sure that *second time through* we stop...
-                        }
-                    }
+                    File testFile = new File(new File(dir, pkgName), "TestSuite" + testNum + ".java");
+                    testNum++;
+                    //testSuite = testSuite + testNum;
 
-                    if (testFile == null) {
-                        testNum++;
-                        testFile = new File(new File(dir, pkgName), "TestSuite" + testNum + ".java");
-                        testSuite = testSuite + testNum;
-                    }
                     if (!testFile.exists()) { break; }
 
                     args = new String[]{"java", "-cp",
                             junitJarFile + File.pathSeparator + ".",
                             "junit.textui.TestRunner",
-                            testSuite
-                    };
+                            testSuite};
+
                     proc = Runtime.getRuntime().exec(args, new String[0], dir);
                     File outputFile = new File(new File(destination, family), model + ".coverage.html");
 
@@ -186,9 +177,15 @@ public class TestSynthesis {
                     err = new BufferedReader(new InputStreamReader(proc.getErrorStream())).lines();
                     out = new BufferedReader(new InputStreamReader(proc.getInputStream())).lines();
                     proc.waitFor();
-                    retVal = proc.exitValue();
+                    int retVal = proc.exitValue();
+
+                    if (retVal != 0) {
+                        System.err.println ("RetVal is not 0:" + retVal);
+                        success = false;
+                    }
 
                     ps.println("<h1>Test Suite:" + pkgName + ".TestSuite" + testNum + "</h1>");
+                    ps.println("<h1>RetVal:" + retVal);
                     ps.println("<h1>Errors (if any):</h1><font color='##0000'>");
                     ps.flush();
                     out.forEach(line -> ps.println(line));
@@ -197,8 +194,9 @@ public class TestSynthesis {
                     ps.flush();
                     ps.close();
                 }
-                return retVal == 0;
+                return success;
             } else {
+                System.err.println ("  Unable to compile:" + exitVal);
                 return false;
             }
         } catch (Exception e) {

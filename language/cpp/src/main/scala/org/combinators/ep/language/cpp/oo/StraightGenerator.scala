@@ -164,7 +164,7 @@ trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with
       val tpe:CPPType = typeConverter(op.returnType.get)
       val realType:String = op match {
         case po:ProducerOperation => "Exp *"
-        case _ => tpe.stmt
+        case _ => tpe.name
       }
 
       val params = parameters(op)

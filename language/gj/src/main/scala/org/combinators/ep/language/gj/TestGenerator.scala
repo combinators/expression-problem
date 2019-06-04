@@ -1,7 +1,5 @@
 package org.combinators.ep.language.gj      /*DI:LD:AI*/
 
-import java.nio.file.Paths
-
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 import org.combinators.ep.generator.LanguageIndependentTestGenerator
 
@@ -14,25 +12,19 @@ trait TestGenerator extends GJGenerator with LanguageIndependentTestGenerator {
 
   type UnitTest = Seq[GJStatement]
 
-  /**
-    * In test cases, languages are instantiated from which new is called.
-    */
-  def testDispatch(expr:GJ, op:domain.Operation, params:GJ*) : GJ = {
-    val args:String = params.mkString(",")
-    GJ(s"""$expr.visit(l.new ${op.concept}())""")
+  /** Converts types in test code. */
+  def testTypeConverter(ty: TypeRep) : Type = {
+    val last = "Lang_" + getModel.name
+    ty match {
+      case domain.baseTypeRep => new GJType(s"$last.${domain.baseTypeRep.name}")
+      case _ => typeConverter(ty)
+    }
   }
 
   /**
     * Represents the sequence of total test cases.
     */
   def testGenerator : Seq[UnitTest] = Seq.empty
-
-  /**
-    * Traits can override this method to add their test cases to the mix.
-    */
-  def testMethod(tests:Seq[TestCase]) : Seq[UnitTest] = {
-    tests.zipWithIndex.map{ case (test, idx) => gjTestMethod(test, idx) }
-  }
 
   /** Return MethodDeclaration associated with given test cases. */
   def gjTestMethod(test: TestCase, idx: Int): Seq[Statement] = {
@@ -50,7 +42,7 @@ trait TestGenerator extends GJGenerator with LanguageIndependentTestGenerator {
 
         expectedBlock.appendDependent { case Seq(expectedValue) =>
           actualBlock.appendDependent { case Seq(actualValue) =>
-            CodeBlockWithResultingExpressions(GJStatement(s"assertEquals($expectedValue, $actualValue);"))()
+            CodeBlockWithResultingExpressions(GJStatement(s"""System.out.println ($expectedValue + " should equal " + $actualValue);"""))()
           }
         }.block
 
@@ -67,7 +59,7 @@ trait TestGenerator extends GJGenerator with LanguageIndependentTestGenerator {
 
         unExpectedBlock.appendDependent { case Seq(unExpectedValue) =>
           actualBlock.appendDependent { case Seq(actualValue) =>
-            CodeBlockWithResultingExpressions(GJStatement(s"assertNotEquals($unExpectedValue, $actualValue);"))()
+            CodeBlockWithResultingExpressions(GJStatement(s"""System.out.println ($unExpectedValue + " should NOT equal " + $actualValue);"""))()
           }
         }.block
 
@@ -98,35 +90,23 @@ trait TestGenerator extends GJGenerator with LanguageIndependentTestGenerator {
 
         expectedBlock.appendDependent { case Seq(expectedValue) =>
           actualBlock.appendDependent { case Seq(actualValue) =>
-            CodeBlockWithResultingExpressions(GJStatement(s"assertEquals($expectedValue, $actualValue);"))()
+            CodeBlockWithResultingExpressions(GJStatement(s"""System.out.println ($expectedValue + " should equal " + $actualValue);"""))()
           }
         }.block
     }
   }
 
-  /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
-  override def generateSuite(pkg: Option[String]): Seq[GJWithPath] = {
-    var num: Int = 0
-
-    val methods = testGenerator.map(md => {
-      num = num + 1
-      GJ(s"""|
-             |static public void test$num() {
-             | $md
-             |}""".stripMargin).getCode
-      }).mkString("\n")
-
-    val invocations = (1 to num).map(d => s"test$d();").mkString("\n")
-    val code = GJ(
-      s"""
-         |final class TestSuite {
-         |  $methods
-         |  static public void main (String[] args) {
-         |    $invocations
-         |  }
-         |}
-       """.stripMargin)
-
-    Seq(GJWithPath(code, Paths.get(s"TestSuite.gj")))
+  /** Return MethodDeclaration associated with given test cases. */
+  def testMethod(tests: Seq[TestCase]): Seq[UnitTest] = {
+    val stmts = tests.zipWithIndex.flatMap { case (test, idx) => gjTestMethod(test, idx) }
+    if (stmts.isEmpty) {
+      Seq.empty
+    } else {
+      Seq(Seq(GJStatement(
+        s"""|public static void main(String[] args) {
+            |   ${stmts.mkString("\n")}
+            |}""".stripMargin)))
+    }
   }
+
 }

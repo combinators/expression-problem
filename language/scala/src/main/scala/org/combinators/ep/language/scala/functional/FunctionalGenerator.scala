@@ -52,7 +52,7 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod {
           ""
         }
 
-        Scala(s"${op.instance}($expr)$opargs").term
+        Scala(s"${op.instance}($expr)$opargs").expression
       case _ =>
 
         var opParams = ""

@@ -10,8 +10,9 @@ trait M5 extends Evolution {
   // m5:model evolution.
   // -------------------
   // Represent structure as a tree
+  case object Identifier extends Operation("id", Some(Int))
 
-  val m5 = Model("m5", Seq.empty, Seq(domain.AsTree), last = m4)
+  val m5 = Model("m5", Seq.empty, Seq(domain.AsTree, Identifier), last = m4)
   override def getModel = m5
 
   // Tests

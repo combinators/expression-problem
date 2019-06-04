@@ -52,6 +52,9 @@ trait cpp_e5 extends Evolution with CPPGenerator with TestGenerator with M0 with
             Seq(vec1) ++ result(new CPPExpression(s" new Node(vec_${exp.name}, $rhs) "))
         }
 
+        // moved here from cpp_e0
+      case Identifier => result(new CPPExpression(exp.hashCode().toString))
+
       case _ => super.logic(exp, op)
     }
   }

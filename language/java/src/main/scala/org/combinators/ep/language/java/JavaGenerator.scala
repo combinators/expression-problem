@@ -19,7 +19,6 @@ trait JavaGenerator extends LanguageIndependentGenerator {
   type Type = com.github.javaparser.ast.`type`.Type
   type Expression = com.github.javaparser.ast.expr.Expression
   type Statement = com.github.javaparser.ast.stmt.Statement
-  type InstanceExpression = com.github.javaparser.ast.expr.Expression
 
   /** Return designated Java type associated with type, or void if all else fails. */
   override def typeConverter(tpe:domain.TypeRep) : Type = {

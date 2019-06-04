@@ -8,7 +8,7 @@ import org.combinators.ep.language.haskell.HaskellGenerator
 
 /**
   * Based on Grow Haskell paper.
-  *
+  * http://www.jucs.org/jucs_23_1/trees_that_grow/jucs_23_01_0042_0062_najd.pdf
   *
   * Most complicated part of this code is working with expanded functions:
   *

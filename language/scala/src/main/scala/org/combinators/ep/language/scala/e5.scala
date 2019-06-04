@@ -35,7 +35,7 @@ trait e5 extends Evolution with ScalaGenerator with TestGenerator with Operation
     val source = Source(exp,op)
     op match {
       // Simplify only works for solutions that instantiate expression instances. As a binary
-      case domain.AsTree => {
+      case domain.AsTree =>
         val atts = subExpressions(exp)
 
         exp match {
@@ -51,7 +51,10 @@ trait e5 extends Evolution with ScalaGenerator with TestGenerator with Operation
             val rhs = contextDispatch(source, deltaSelf)
             result(Scala(s"""new tree.Node(Seq($seq), $rhs ) """).expression)
           }
-      }
+
+      // moved here from e0
+      case Identifier => result(Scala(s"${exp.hashCode()}").expression)
+
       case _ => super.logic(exp, op)
     }
   }

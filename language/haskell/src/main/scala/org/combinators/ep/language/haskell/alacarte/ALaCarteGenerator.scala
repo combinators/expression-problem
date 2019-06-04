@@ -5,6 +5,10 @@ import java.nio.file.Paths
 import org.combinators.ep.language.haskell._
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 
+/**
+  * Based on Data Types a la Carte
+  * https://doi.org/10.1017/S0956796808006758
+  */
 trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMethod with HaskellBinaryMethod with ALaCarteProducer {
   val domain:BaseDomain with ModelDomain
   import domain._

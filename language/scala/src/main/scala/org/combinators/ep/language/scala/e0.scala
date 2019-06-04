@@ -42,7 +42,8 @@ trait e0 extends ScalaGenerator with TestGenerator with M0 {
         }
 
       // all future EXP sub-types can simply return hashcode.
-      case Identifier => result(Scala(s"${exp.hashCode()}").expression)
+      // move to m5
+      //case Identifier => result(Scala(s"${exp.hashCode()}").expression)
 
       case _ => super.logic(exp, op)
     }

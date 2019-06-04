@@ -29,8 +29,8 @@ class CPPStatement(val s:String = "") extends CPPElement(s)
 /**
   * A valid identifier of a type.
   */
-class CPPType (val stmt:String = "") extends CPPBase {
-  override def toString:String = stmt
+class CPPType (val name:String = "") extends CPPBase {
+  override def toString:String = name
 }
 
 /** Any CPP artifact that should be placed in a file. */
@@ -125,28 +125,28 @@ final class CPPHeaderCode (val _name:String, val _body:Seq[String]) extends CPPF
   }
 }
 
-// Code that contains an implementation
-final class CPPCode (val _name:String, val _body:Seq[CPPElement]) extends CPPFile {
-  val name:String = _name
-  val body:Seq[CPPElement] = _body
-
-  //override def isHeader:Boolean = false
-  override def fileName:String = name
-
-  // allow one to extend include definitions
-  override def addHeader(s:Seq[String]): CPPCode = {
-    standardHeader = standardHeader + "\n" + s.mkString("\n")
-    this
-  }
-
-  override def toString:String = {
-    val code:Seq[String] = body.map(elt => elt.toString).toSeq
-
-    s"""|$standardHeader
-        |${code.mkString("\n")}
-        """.stripMargin
-  }
-}
+//// Code that contains an implementation
+//final class CPPCode (val _name:String, val _body:Seq[CPPElement]) extends CPPFile {
+//  val name:String = _name
+//  val body:Seq[CPPElement] = _body
+//
+//  //override def isHeader:Boolean = false
+//  override def fileName:String = name
+//
+//  // allow one to extend include definitions
+//  override def addHeader(s:Seq[String]): CPPCode = {
+//    standardHeader = standardHeader + "\n" + s.mkString("\n")
+//    this
+//  }
+//
+//  override def toString:String = {
+//    val code:Seq[String] = body.map(elt => elt.toString).toSeq
+//
+//    s"""|$standardHeader
+//        |${code.mkString("\n")}
+//        """.stripMargin
+//  }
+//}
 
 /**
   * Represents a C++ class, which has a public and private area, in addition to include files.
@@ -262,7 +262,7 @@ class CPPConstructor (val _name:String, val _params:String, val _body:Seq[CPPSta
 
   val name:String = _name
   val params:String = _params
-  val body = _body
+  val body:Seq[CPPStatement] = _body
 
   override def toString: String = {
     val signature = s"$name $params "
@@ -270,12 +270,12 @@ class CPPConstructor (val _name:String, val _params:String, val _body:Seq[CPPSta
   }
 }
 
-/**
-  * Represents a field for a C++ class
-  */
-class CPPField (val _signature:String) extends CPPElement {
-
-  val signature:String = _signature
-
-  override def toString: String = indent(Seq(signature))
-}
+///**
+//  * Represents a field for a C++ class
+//  */
+//class CPPField (val _signature:String) extends CPPElement {
+//
+//  val signature:String = _signature
+//
+//  override def toString: String = indent(Seq(signature))
+//}

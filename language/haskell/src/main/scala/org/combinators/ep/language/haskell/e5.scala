@@ -50,6 +50,9 @@ trait e5 extends Evolution with HaskellGenerator with HUnitTestGenerator with Ha
         result(Haskell(s" Node ${declType}Type [ ${children.mkString(",")} ]"))
       }
 
+      // moved from e0
+      case Identifier => result(new Haskell(s"${exp.hashCode()}"))
+
       case _ => super.logic(exp, op)
     }
   }

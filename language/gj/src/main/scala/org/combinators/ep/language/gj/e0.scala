@@ -20,6 +20,15 @@ trait e0 extends GJGenerator with TestGenerator with M0 {
     }
   }
 
+  /** E0 Introduces Double and Int values. */
+  abstract override def toTargetLanguage(ei:domain.ExistsInstance) : CodeBlockWithResultingExpressions = {
+    ei.inst match {
+      case d:scala.Double => CodeBlockWithResultingExpressions(GJ(s"$d"))
+     // case i:scala.Int => CodeBlockWithResultingExpressions(GJ(s"$i"))
+      case _ => super.toTargetLanguage(ei)
+    }
+  }
+
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */
   abstract override def logic(exp:DataType, op:Operation): Seq[GJStatement] = {
     // generate the actual body
@@ -31,8 +40,9 @@ trait e0 extends GJGenerator with TestGenerator with M0 {
           case _ => super.logic(exp, op)
         }
 
-        // all future EXP sub-types can simply return hashcode.
-      case Identifier => result(GJ(exp.hashCode().toString))
+      // all future EXP sub-types can simply return hashcode.
+      // moved to higher level
+      //case Identifier => result(GJ(exp.hashCode().toString))
 
       case _ => super.logic(exp, op)
     }
@@ -40,15 +50,5 @@ trait e0 extends GJGenerator with TestGenerator with M0 {
 
   abstract override def testGenerator: Seq[UnitTest] = {
     super.testGenerator ++ testMethod(M0_tests)
-//    val a1 = new BinaryInst(Add, LitInst(1.0), LitInst(2.0))
-//    val lit1 = LitInst(5.0)
-//    val modName = getModel.name
-//
-//    //  TODO: change convert to toTargetLanguage
-//    super.testGenerator :+ Seq(GJStatement(
-//      s"""|   Lang$modName l = new Lang$modName();
-//          |   assertEquals(3.0, ${testDispatch(convert(a1), Eval)});
-//          |   assertEquals(5.0, ${testDispatch(convert(lit1), Eval)});
-//          |""".stripMargin))
   }
 }

@@ -42,7 +42,8 @@ trait e0 extends JavaGenerator with JUnitTestGenerator with M0 {
         }
 
         // all future EXP sub-types can simply return hashcode.
-      case Identifier => result(Java(exp.hashCode.toString).expression[Expression]())
+        // move to m5
+        //case Identifier => result(Java(exp.hashCode.toString).expression[Expression]())
 
       case _ => super.logic(exp, op)
     }

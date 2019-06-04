@@ -59,7 +59,8 @@ trait e0 extends HaskellGenerator with HUnitTestGenerator with M0 {
         }
 
       // all future EXP sub-types can simply return hashcode.
-      case Identifier => result(new Haskell(s"${exp.hashCode()}"))
+      // move to m5
+      //case Identifier => result(new Haskell(s"${exp.hashCode()}"))
       case _ => super.logic(exp, op)
     }
   }

@@ -32,7 +32,9 @@ trait WadlerGenerator extends GJGenerator  {
   /** Directly access local method, one per operation, with a parameter. */
   override def dispatch(expr:Expression, op:Operation, params:Expression*) : Expression = {
     val args:String = params.mkString(",")
-    GJ(s"$expr.visit(new ${op.concept}())")
+    // This is how visitor pattern does it. Wadler's original email uses 'this'
+    // GJ(s"$expr.visit(new ${op.concept}())")
+    GJ(s"$expr.visit(this)")
   }
 
   /** Return designated GJ type associated with type, or void if all else fails. */

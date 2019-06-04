@@ -18,16 +18,16 @@ class Haskell protected (elements: immutable.Seq[Haskell], text: String) extends
   /** Content type of Haskell */
   val contentType = "text/x-haskell"
 
-  /** Indents this fragment by 4 spaces. */
-  def indent: Haskell = {
-    Haskell(fullText.lines.map(l => s"    $l").mkString("\n"))
-  }
-
-  /** Indents everything except the first line in this fragment by 4 spaces. */
-  def indentExceptFirst: Haskell = {
-    val lines: Seq[String] = fullText.lines.toSeq
-    Haskell((lines.head +: lines.tail.map(l => s"    $l")).mkString("\n"))
-  }
+//  /** Indents this fragment by 4 spaces. */
+//  def indent: Haskell = {
+//    Haskell(fullText.lines.map(l => s"    $l").mkString("\n"))
+//  }
+//
+//  /** Indents everything except the first line in this fragment by 4 spaces. */
+//  def indentExceptFirst: Haskell = {
+//    val lines: Seq[String] = fullText.lines.toSeq
+//    Haskell((lines.head +: lines.tail.map(l => s"    $l")).mkString("\n"))
+//  }
 
   /** Returns the code of this fragment as a String. */
   def getCode: String = fullText
@@ -42,16 +42,16 @@ class HaskellStatement protected (elements: immutable.Seq[HaskellStatement], tex
   /** Content type of Haskell */
   val contentType = "text/x-haskell"
 
-  /** Indents this fragment by 4 spaces. */
-  def indent: Haskell = {
-    Haskell(fullText.lines.map(l => s"    $l").mkString("\n"))
-  }
-
-  /** Indents everything except the first line in this fragment by 4 spaces. */
-  def indentExceptFirst: Haskell = {
-    val lines: Seq[String] = fullText.lines.toSeq
-    Haskell((lines.head +: lines.tail.map(l => s"    $l")).mkString("\n"))
-  }
+//  /** Indents this fragment by 4 spaces. */
+//  def indent: Haskell = {
+//    Haskell(fullText.lines.map(l => s"    $l").mkString("\n"))
+//  }
+//
+//  /** Indents everything except the first line in this fragment by 4 spaces. */
+//  def indentExceptFirst: Haskell = {
+//    val lines: Seq[String] = fullText.lines.toSeq
+//    Haskell((lines.head +: lines.tail.map(l => s"    $l")).mkString("\n"))
+//  }
 
   /** Returns the code of this fragment as a String. */
   def getCode: String = fullText

@@ -184,7 +184,7 @@ public class TestSynthesis {
                         success = false;
                     }
 
-                    ps.println("<h1>Test Suite:" + pkgName + ".TestSuite" + testNum + "</h1>");
+                    ps.println("<h1>Test Suite:" + pkgName + ".TestSuite" + (testNum-1) + "</h1>");
                     ps.println("<h1>RetVal:" + retVal);
                     ps.println("<h1>Errors (if any):</h1><font color='##0000'>");
                     ps.flush();

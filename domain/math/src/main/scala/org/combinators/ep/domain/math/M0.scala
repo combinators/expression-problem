@@ -21,12 +21,13 @@ trait M0 extends Evolution {
   case object Eval extends Operation("eval", Some(Double))
   case class LitInst(d:scala.Double) extends AtomicInst(Lit, ExistsInstance(Double)(d))
 
+  // TODO: This could be moved until a future evolution. Here to make things easy
   case object Int extends TypeRep  {
     override type scalaInstanceType = scala.Int
   }
-  case object Identifier extends Operation("id", Some(Int))
+  //case object Identifier extends Operation("id", Some(Int))
 
-  val m0 = Model("m0", Seq(Lit, Add), Seq(Eval, Identifier))
+  val m0 = Model("m0", Seq(Lit, Add), Seq(Eval))
   override def getModel:Model = m0
 
   // Testing

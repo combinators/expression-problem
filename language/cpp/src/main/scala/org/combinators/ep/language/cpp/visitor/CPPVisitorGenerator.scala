@@ -139,7 +139,7 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
     val tpe:CPPType = typeConverter(op.returnType.get)
     val realType:String = op match {
       case po:ProducerOperation => "Exp *"
-      case _ => tpe.stmt
+      case _ => tpe.name
     }
 
     val allForwards = getModel.flatten().types.map(exp => s""" #include "${exp.concept}.h" """)

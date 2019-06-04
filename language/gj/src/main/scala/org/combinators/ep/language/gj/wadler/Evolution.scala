@@ -12,13 +12,13 @@ import play.api.inject.ApplicationLifecycle
 abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends CodeGenerationController[GJWithPath](web, app)
 {
-  val gen:WithDomain[MathDomain] with WadlerGenerator with TestGenerator
+  val gen:WithDomain[MathDomain] with WadlerGenerator with UnitTestGenerator
 
 override lazy val generatedCode:Seq[GJWithPath] =
     gen.generatedCode() ++
     gen.generateSuite(routingPrefix)
 
-  override val routingPrefix: Option[String] = Some("gj")
+  override val routingPrefix: Option[String] = Some("wadler")
   override lazy val controllerAddress:String = gen.getModel.name
 }
 

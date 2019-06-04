@@ -119,7 +119,7 @@ public class Create {
     static final Language lang_gj = new Language("gj")
             .addMapping(getGJName)
             .addEvolutions(gjEvolutions)
-            .add("wadler", "WithDomain(MathDomain) with WadlerGenerator with TestGenerator");  // not really anything good
+            .add("wadler", "WithDomain(MathDomain) with WadlerGenerator with UnitTestGenerator");  // not really anything good
 
     /** Could have used reflection, but this is simpler. */
     static final Language[] allLanguages = { lang_java, lang_haskell, lang_cpp, lang_gj };

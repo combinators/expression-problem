@@ -140,7 +140,7 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
     val tpe:CPPType = typeConverter(op.returnType.get)
     val realType:String = op match {
       case po:ProducerOperation => "Exp *"
-      case _ => tpe.stmt
+      case _ => tpe.name
     }
     // access value via lookup into value_map_
     // val _retType:String, val _name:String, val _params:String, val _body:Seq[String]

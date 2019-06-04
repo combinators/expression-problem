@@ -54,6 +54,9 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
             result(Java(s" new tree.Node(java.util.Arrays.asList($attParams), $rhs) ").expression[Expression]())
           }
 
+        // moved here from m0
+      case Identifier => result(Java(exp.hashCode.toString).expression[Expression]())
+
       case _ => super.logic(exp, op)
     }
   }

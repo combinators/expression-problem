@@ -85,7 +85,7 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod {
                  |class ${exp.toString}($params) extends ${domain.baseTypeRep.name} {
                  |    ${locals.mkString("\n")}
                  |    ${methods.mkString("\n")}
-                 |  }
+                 |}
          """.stripMargin).source(), Paths.get(s"${exp.toString}.scala"))
   }
 

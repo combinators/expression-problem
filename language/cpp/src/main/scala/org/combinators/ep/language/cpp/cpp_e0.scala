@@ -41,7 +41,7 @@ trait cpp_e0 extends CPPGenerator with TestGenerator with M0 {
         }
 
       // all future EXP sub-types can simply return hashcode.
-      case Identifier => result(new CPPExpression(exp.hashCode().toString))
+      //case Identifier => result(new CPPExpression(exp.hashCode().toString))
 
       case _ => super.logic(exp, op)
     }

@@ -26,8 +26,12 @@ trait GJGenerator extends LanguageIndependentGenerator {
     * method (with specific parameters) to carry this out.
     */
   def inst(exp:domain.DataType, params:Expression*): CodeBlockWithResultingExpressions = {
+    // determine Language to use for construction
+    val model = getModel
+    val lang = "new Lang_" + model.name + "()"
+
     CodeBlockWithResultingExpressions(
-      GJ(s"new ${exp.concept}${params.mkString("(", ", ", ")")}")
+      GJ(s"$lang.new ${exp.concept}${params.mkString("(", ", ", ")")}")
     )
   }
 
@@ -61,7 +65,7 @@ trait GJGenerator extends LanguageIndependentGenerator {
   }
 
   /**
-    * Produce all getter methods for the given exp, with suitable possibiity of using covariant replacement
+    * Produce all getter methods for the given exp, with suitable possibility of using covariant replacement
     * on domain.BaseTypeRep
     */
   def getters(exp:domain.DataType) : Seq[GJ] =
@@ -143,6 +147,4 @@ trait GJGenerator extends LanguageIndependentGenerator {
              |
              |}""".stripMargin)
   }
-
-
 }

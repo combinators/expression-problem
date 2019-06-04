@@ -7,7 +7,7 @@ trait MC1 extends Evolution {
   val domain:MathDomain
   import domain._
 
-  // m3 x i2:model evolution. linearize ala toplogical sort
+  // m3 x i2:model evolution. linearize ala topological sort
   // -------------------
   override def getModel = m3.merge("c1", i2)
 

@@ -16,7 +16,6 @@ trait ScalaGenerator extends LanguageIndependentGenerator {
   type Type = scala.meta.Type
   type Expression = scala.meta.Term
   type Statement = scala.meta.Stat
-  type InstanceExpression = scala.meta.Term
 
   /** Return designated Java type associated with type, or void if all else fails. */
   override def typeConverter(tpe:domain.TypeRep) : Type = {

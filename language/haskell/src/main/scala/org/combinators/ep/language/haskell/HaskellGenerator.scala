@@ -20,7 +20,6 @@ trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskell
   type Type = HaskellType
   type Expression = Haskell
   type Statement = HaskellStatement    // in Haskell there is no essential difference between expressions and statements
-  type InstanceExpression = Haskell
 
   /** Find the model which contains a given atomic inst. */
   def findModel (exp:domain.DataType) : domain.Model = {

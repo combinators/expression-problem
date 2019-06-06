@@ -41,7 +41,10 @@ trait TriviallyGenerator extends OOGenerator {
     val merged = exp.attributes.map(att => att.tpe).zip(params).map {
       case (paramTy, paramExp) =>
         paramTy match {
-          case domain.baseTypeRep => Java(s"""(FinalI)($paramExp)""").expression()
+            // In certain circumstances, in particular Simplify, the use of 'inst' demands
+            // that we introduce a run-time cast. What is frustrating is that this isn't
+            // needed in all cases, but we have to include here.
+          case domain.baseTypeRep => Java(s"(FinalI)($paramExp)").expression()
           case _ => paramExp
         }
     }
@@ -66,17 +69,13 @@ trait TriviallyGenerator extends OOGenerator {
     }
   }
 
-  def baseInterfaceName(op: domain.Operation): Type = {
-    Java(s"${domain.baseTypeRep.concept}${op.concept}").tpe()
-  }
-
   def baseInterfaceNames(ops: Seq[domain.Operation]): Type = {
     val sorted = ops.sortWith(_.name < _.name).map(op => op.concept).mkString("")
     Java(s"${domain.baseTypeRep.concept}$sorted").tpe()
   }
 
   // Needs covariant overriding!
-  override def generateExp(model:domain.Model, exp:domain.DataType) : CompilationUnit = {
+  def generateExp(model:domain.Model, exp:domain.DataType) : CompilationUnit = {
     val name = Java(s"${exp.concept}").simpleName()
 
     val interfaces = Seq[Type](finalInterfaceName, interfaceNames(exp, model.lastModelWithOperation().ops))     //     model.lastModelWithOperation().ops.map(op => interfaceName(exp, op))
@@ -98,10 +97,6 @@ trait TriviallyGenerator extends OOGenerator {
     compUnit
    }
 
-  def interfaceName(exp: domain.DataType, op: domain.Operation): Type = {
-    Java(s"${exp.concept}${op.concept}").tpe()
-  }
-
   def interfaceNames(exp: domain.DataType, ops: Seq[domain.Operation]): Type = {
     val sorted = ops.sortWith(_.name < _.name).map(op => op.concept).mkString("")
     Java(s"${exp.concept}$sorted").tpe()
@@ -113,7 +108,7 @@ trait TriviallyGenerator extends OOGenerator {
     method.setType(
       op.returnType match {
         case Some(domain.baseTypeRep) => typeConverter(domain.baseTypeRep)
-        case Some(tpe) => typeConverter(tpe) // , Some(interfaceName(exp, op)))
+        case Some(tpe) => typeConverter(tpe)
         case _ => Java("void").tpe
       })
 
@@ -169,7 +164,6 @@ trait TriviallyGenerator extends OOGenerator {
 
       def parentsFor(exp: domain.DataType): Seq[Type] =
         if (lastWithOps.isEmpty) Seq.empty
-        //else lastWithOps.ops.map(op => interfaceName(exp, op))
         else Seq[Type](interfaceNames(exp, lastWithOps.ops))
 
       // when two or more operations are defined in same model, we need to include all
@@ -183,8 +177,6 @@ trait TriviallyGenerator extends OOGenerator {
           generateBaseInterfaces(model.ops, parents) +:
           flat.types.map(exp => generateInterface(exp, baseInterfaceNames(model.ops) +: parentsFor(exp), model.ops))
         }
-//        model.ops.flatMap(op => generateBaseInterface(op, parents) +:
-//          flat.types.map(exp => generateInterface(exp, baseInterfaceName(op) +: parentsFor(exp), op)))
 
       parentUnits ++ newUnits
     }
@@ -228,34 +220,7 @@ trait TriviallyGenerator extends OOGenerator {
     compUnit
   }
 
-  def generateBaseInterface(op: domain.Operation, parents: Seq[Type]): CompilationUnit = {
-
-    val retType = op.returnType match {
-      case Some(tpe) => typeConverter(tpe)
-      case _ => Java("void").tpe
-    }
-
-    val params:String = op.parameters.map(param => typeConverter(param.tpe).toString + " " + param.name).mkString(",")
-
-    val methodSignature: MethodDeclaration =
-      Java(s"""public $retType ${op.instance}($params);""").methodDeclarations().head
-
-    val compUnit = Java(s"""
-         |package trivially;
-         |
-         |public interface ${baseInterfaceName(op)} extends ${parents.mkString(", ")} {
-         |
-         |    $methodSignature
-         |}
-       """.stripMargin).compilationUnit()
-
-    // replace all types!
-    compUnit.replaceInCovariantPosition(Java(s"${domain.baseTypeRep.concept}").tpe, baseInterfaceName(op))
-
-    compUnit
-  }
-
-  override def generateBase(model: domain.Model): CompilationUnit = {
+  def generateBase(model: domain.Model): CompilationUnit = {
 
     val binaryMethodHelper: Seq[BodyDeclaration[_]] = if (model.flatten().hasBinaryMethod()) {
       Java(s"""public tree.Tree ${domain.AsTree.instance}();""").classBodyDeclarations

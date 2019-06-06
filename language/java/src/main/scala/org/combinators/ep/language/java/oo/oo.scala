@@ -3,7 +3,7 @@ package org.combinators.ep.language.java
 import org.combinators.ep.domain.math._
 
 /**
-  * This package contains the strawman object-oriented solution to the Expression Problem in Java.
+  * This package contains the Strawman object-oriented solution to the Expression Problem in Java.
   *
   * Technically, this is not a valid solution, since one must change existing classes when new
   * operations are defined. Still, it is provided here to demonstrate the mechanics of generating
@@ -20,9 +20,8 @@ import org.combinators.ep.domain.math._
   *
 *{{{
 *package oo;
-*public abstract class Exp {
-  *public abstract Double eval();
-  *public abstract Integer idz();
+*  public abstract class Exp {
+*  public abstract Double eval();
 *}
 *}}}
  *
@@ -31,29 +30,27 @@ import org.combinators.ep.domain.math._
  *{{{
     *package oo;
     *public class Lit extends Exp {
-      *private Double value;
- **
- *public Lit(Double value) { this.value = value; }
-      *public Double eval() { return value; }
-      *public Integer idz() { return 76407; }
+    *  private Double value;
+    *
+    *  public Lit(Double value) { this.value = value; }
+    *  public Double eval() { return value; }
     *}
-*}}}
+    *}}}
  *
  * The Add data-type has the following implementation:
  **
  *{{{
 *package oo;
 *public class Add extends Exp {
-    *private Exp left;
-    *private Exp right;
- **
- *public Add(Exp left, Exp right) {
-        *this.left = left;
-        *this.right = right;
-    *}
- **
- *public Double eval() { return left.eval() + right.eval(); }
-    *public Integer idz() { return 65665; }
+*  private Exp left;
+*  private Exp right;
+*
+*  public Add(Exp left, Exp right) {
+*    this.left = left;
+*    this.right = right;
+*  }
+*
+*  public Double eval() { return left.eval() + right.eval(); }
 *}
 *}}}
  *
@@ -66,8 +63,8 @@ import org.combinators.ep.domain.math._
   *
 *{{{
 *public void test() {
-   *assertEquals(3.0, new Add(new Lit(1.0), new Lit(2.0)).eval());
-   *assertEquals(5.0, new Lit(5.0).eval());
+*  assertEquals(3.0, new Add(new Lit(1.0), new Lit(2.0)).eval());
+*  assertEquals(5.0, new Lit(5.0).eval());
 *}
 *}}}
  *

@@ -54,7 +54,7 @@ import org.combinators.ep.domain.{BaseDomain, ModelDomain}
   * val deltaRight = deltaExprOp(that, domain.AsTree)
   * val lhs = contextDispatch(source, deltaLeft)
   * val rhs = contextDispatch(source, deltaRight)
-  * result(Java(s"$lhs.same($rhs)").expression())
+  * result(Java(s"\$lhs.same(\$rhs)").expression())
   * }}}
   *
   * Calling '''contextDispatch''' using deltaSelfOp enables one to invoke a different operation
@@ -80,10 +80,8 @@ import org.combinators.ep.domain.{BaseDomain, ModelDomain}
   * @groupname context Context
   * @groupname types Parameterized Types
   * @groupname dependency External Dependencies
+  * @groupname inst Instantiating data types
   * @groupdesc dependency Depends upon BaseDomain (for the core logic) and the desired
-  *            ModelDomain (for the specific application domain logic). [[BaseDomain]]
-  *            provides the fundamental building blocks used to model domains
-  *            in [[ModelDomain]]
   * @groupdesc api Fundamental abstractions needed for any language-based solution to EP
   * @groupprio api 0
   * @groupdesc types Each language must define relevant abstractions that map to these types.
@@ -92,10 +90,14 @@ import org.combinators.ep.domain.{BaseDomain, ModelDomain}
   * @groupprio types 10
   * @groupdesc context Each language and approach needs different solutions to assemble the logic
   *           for a given (data-type and operation). The top-level concepts are shown here.
-  * @groupprio context 20
+  * @groupprio types 20
+  * @groupdesc inst When generating test cases, it is essential to include construction
+  *            code that constructs instances of the data types. In addition, some receursive
+  *            operations depend on being able to constrct instances of data types.
+  * @groupprio context 30
   * @groupdesc deltaHelpers When weaving together code expressions representing partial fragments
   *           for a given logic, these helper methods are useful in capturing the desired structures.
-  * @groupprio deltaHelpers 30
+  * @groupprio deltaHelpers 40
   */
 trait LanguageIndependentGenerator {
 
@@ -135,6 +137,7 @@ trait LanguageIndependentGenerator {
     *
     * This separates out the resulting expressions from the block of statements (and they don't have to show up
     * in the code block).
+    * @group inst
     */
   trait CodeBlockWithResultingExpressions {
     def block: Seq[Statement]
@@ -161,7 +164,10 @@ trait LanguageIndependentGenerator {
     }
   }
 
-  /** Helpers to construct code blocks with result expressions */
+  /**
+    * Helpers to construct code blocks with result expressions
+    * @group inst
+    */
   object CodeBlockWithResultingExpressions {
     val empty: CodeBlockWithResultingExpressions = apply()
     def apply(resultExps: Expression*): CodeBlockWithResultingExpressions =
@@ -212,7 +218,8 @@ trait LanguageIndependentGenerator {
     *
     * @param exp       desired DataType subtype
     * @param params    potential parameters
-    * @return
+    * @return          code fragment suitable for instantiating data type
+    * @group inst
     */
   def inst(exp:domain.DataType, params:Expression*): CodeBlockWithResultingExpressions
 
@@ -222,8 +229,10 @@ trait LanguageIndependentGenerator {
     * The ExistsInstance could be a primitive type (Double, String, int) and if a domain instance, the request
     * is delegated to toTargetLanguage(domain.Inst)
     *
-    * @param scalaValue   The ExistsInstance captures a type (TypeRep) and an instance which varies based on trait.
-    * @return
+    * @param scalaValue   the ExistsInstance captures a type (TypeRep) and an instance which varies based on trait.
+    * @return             code fragment that converts values from Meta-Model test cases into actual
+    *                     language-specific values.
+    * @group inst
     */
   def toTargetLanguage(scalaValue:ExistsInstance) : CodeBlockWithResultingExpressions = {
     scalaValue.inst match {
@@ -235,10 +244,10 @@ trait LanguageIndependentGenerator {
   /**
     * Convert a domain specific data type instance into the target language.
     *
-    * Already configured for all known cases of DomainInst, namely [[UnaryInst]], [[BinaryInst]] and [[AtomicInst]]
+    * Already configured for all known cases of DomainInst, namely [[UnaryInst]]  [[BinaryInst]] and [[AtomicInst]]
     *
-    * @param instance
-    * @return
+    * @param instance    desired instance for which a constructing code fragment is returned.
+    * @group inst
     */
   def toTargetLanguage(instance: domain.Inst): CodeBlockWithResultingExpressions = {
     instance match {
@@ -252,6 +261,13 @@ trait LanguageIndependentGenerator {
 
       case ai:domain.AtomicInst =>
         toTargetLanguage(ai.ei).appendDependent(innerResults => inst(ai.e, innerResults:_*))
+
+        // catch-all for any n-ary instance.
+      case ni: domain.NaryInst =>
+        val insts = ni.instances.foldLeft(CodeBlockWithResultingExpressions.empty) {
+          case (b, p) => b.appendIndependent(toTargetLanguage(p))
+        }
+        insts.appendDependent(results => inst(ni.e, results : _*))
 
       case _ => throw new scala.NotImplementedError(s"No rule to convert $instance to the target language")
     }

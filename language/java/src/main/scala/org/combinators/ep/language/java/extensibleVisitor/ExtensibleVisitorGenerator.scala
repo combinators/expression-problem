@@ -186,7 +186,11 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
 
     // convert 'extends visitor' into 'implements visitor'
     // rename class to have types at end (except for first)
-    val opType = typeConverter(op.returnType.get)
+    val opType = if (op.returnType.isEmpty) {
+      "Void"   // generics
+    } else {
+      typeConverter(op.returnType.get)
+    }
     val full:String = modelTypes(model)
 
     val fullVisitor:String = if (model.types.nonEmpty) {

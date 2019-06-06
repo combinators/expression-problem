@@ -185,6 +185,11 @@ trait BaseDomain {
     def name:String = e.name
   }
 
+  // catch all for any future expansion
+  class NaryInst(val e:DataType, val instances:Seq[Inst]) extends Inst {
+    def name:String = e.name
+  }
+
   /**
     * A Test case is determined by the expected result of an operation on a given instance.
     * For simple types, such as doubles and strings, we can rely on the default toString method to work properly,

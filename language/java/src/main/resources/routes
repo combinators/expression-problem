@@ -9,6 +9,7 @@
 ->	/		 org.combinators.ep.language.java.deployment.algebra.I1_Variation
 ->	/		 org.combinators.ep.language.java.deployment.algebra.I2_Variation
 ->	/		 org.combinators.ep.language.java.deployment.algebra.C1_Variation
+->	/		 org.combinators.ep.language.java.deployment.algebra.P1_Variation
 # extensibleVisitor(j) evolutions:
 ->	/		 org.combinators.ep.language.java.deployment.extensibleVisitor.M0_Variation
 ->	/		 org.combinators.ep.language.java.deployment.extensibleVisitor.M1_Variation
@@ -20,6 +21,7 @@
 ->	/		 org.combinators.ep.language.java.deployment.extensibleVisitor.I1_Variation
 ->	/		 org.combinators.ep.language.java.deployment.extensibleVisitor.I2_Variation
 ->	/		 org.combinators.ep.language.java.deployment.extensibleVisitor.C1_Variation
+->	/		 org.combinators.ep.language.java.deployment.extensibleVisitor.P1_Variation
 # interpreter(j) evolutions:
 ->	/		 org.combinators.ep.language.java.deployment.interpreter.M0_Variation
 ->	/		 org.combinators.ep.language.java.deployment.interpreter.M1_Variation
@@ -31,6 +33,7 @@
 ->	/		 org.combinators.ep.language.java.deployment.interpreter.I1_Variation
 ->	/		 org.combinators.ep.language.java.deployment.interpreter.I2_Variation
 ->	/		 org.combinators.ep.language.java.deployment.interpreter.C1_Variation
+->	/		 org.combinators.ep.language.java.deployment.interpreter.P1_Variation
 # oo(j) evolutions:
 ->	/		 org.combinators.ep.language.java.deployment.oo.M0_Variation
 ->	/		 org.combinators.ep.language.java.deployment.oo.M1_Variation
@@ -42,6 +45,7 @@
 ->	/		 org.combinators.ep.language.java.deployment.oo.I1_Variation
 ->	/		 org.combinators.ep.language.java.deployment.oo.I2_Variation
 ->	/		 org.combinators.ep.language.java.deployment.oo.C1_Variation
+->	/		 org.combinators.ep.language.java.deployment.oo.P1_Variation
 # trivially(j) evolutions:
 ->	/		 org.combinators.ep.language.java.deployment.trivially.M0_Variation
 ->	/		 org.combinators.ep.language.java.deployment.trivially.M1_Variation
@@ -53,6 +57,7 @@
 ->	/		 org.combinators.ep.language.java.deployment.trivially.I1_Variation
 ->	/		 org.combinators.ep.language.java.deployment.trivially.I2_Variation
 ->	/		 org.combinators.ep.language.java.deployment.trivially.C1_Variation
+->	/		 org.combinators.ep.language.java.deployment.trivially.P1_Variation
 # visitor(j) evolutions:
 ->	/		 org.combinators.ep.language.java.deployment.visitor.M0_Variation
 ->	/		 org.combinators.ep.language.java.deployment.visitor.M1_Variation
@@ -64,4 +69,5 @@
 ->	/		 org.combinators.ep.language.java.deployment.visitor.I1_Variation
 ->	/		 org.combinators.ep.language.java.deployment.visitor.I2_Variation
 ->	/		 org.combinators.ep.language.java.deployment.visitor.C1_Variation
+->	/		 org.combinators.ep.language.java.deployment.visitor.P1_Variation
 #

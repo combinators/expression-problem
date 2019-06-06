@@ -16,20 +16,20 @@ import org.combinators.ep.language.haskell.HaskellGenerator
   * help is to be used for just "lifting" a child to be the simplification:
 
 {{{let
-    leftVal = ${contextDispatch(source, deltaLeft)}
-    rightVal = ${contextDispatch(source, deltaRight)}
+    leftVal = \${contextDispatch(source, deltaLeft)}
+    rightVal = \${contextDispatch(source, deltaRight)}
   in if leftVal == 0 || rightVal == 0.0
-    then ${result(inst(Lit, zero)).mkString("\n")}
+    then \${result(inst(Lit, zero)).mkString("\n")}
     else if leftVal == 1
-      then ${result(dispatch(expression(exp,base.right), op)).mkString("\n")}
+      then \${result(dispatch(expression(exp,base.right), op)).mkString("\n")}
       else if rightVal == 1
-        then ${result(dispatch(expression(exp,base.left), op)).mkString("\n")}
-        else ${result(inst(Mult, standardVarArgs(Add) : _*)).mkString("\n")}
+        then \${result(dispatch(expression(exp,base.left), op)).mkString("\n")}
+        else \${result(inst(Mult, standardVarArgs(Add) : _*)).mkString("\n")}
 }}}
 
-  * contextDispatch results in "help${delta.op.get.concept} ${delta.expr.get}"
+  * contextDispatch results in "help\${delta.op.get.concept} \${delta.expr.get}"
   *
-  * dispatch results in "(${op.instance}${domain.baseTypeRep.name} helpWith ${primary.toString} $args)"
+  * dispatch results in "(\${op.instance}\${domain.baseTypeRep.name} helpWith \${primary.toString} \$args)"
   *
   * so look for strings "helpEval" and "helpWith". For example, logic is expanded as follows:
 
@@ -52,7 +52,7 @@ import org.combinators.ep.language.haskell.HaskellGenerator
   * of 'help' that recognizes the need to (recursively) apply both simplify and eval because
   * of the inherent dependency between Simplify and Eval.
   *
-  * Also one must replace "${op.instance}Exp helpWith " with "help "
+  * Also one must replace "\${op.instance}Exp helpWith " with "help "
   *
   * Since Simplify depends upon Eval, the initial signature needs two params (helpWithEval
   * and helpWith), both of which are used within the inner definition for 'help'

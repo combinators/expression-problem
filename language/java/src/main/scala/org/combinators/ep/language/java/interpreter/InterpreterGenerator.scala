@@ -3,7 +3,7 @@ package org.combinators.ep.language.java.interpreter   /*DI:LD:AD*/
 import com.github.javaparser.ast.ImportDeclaration
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.expr.SimpleName
-import org.combinators.ep.language.java.{DataTypeSubclassGenerator, JavaBinaryMethod, JavaGenerator, OperationAsMethodGenerator}
+import org.combinators.ep.language.java.{JavaBinaryMethod, JavaGenerator, OperationAsMethodGenerator}
 import org.combinators.templating.twirl.Java
 import org.combinators.ep.language.java.ReplaceCovariantType._
 
@@ -23,7 +23,6 @@ import org.combinators.ep.language.java.ReplaceCovariantType._
   */
 trait InterpreterGenerator
   extends JavaGenerator
-    with DataTypeSubclassGenerator
     with OperationAsMethodGenerator
     with JavaBinaryMethod {
 
@@ -128,7 +127,7 @@ trait InterpreterGenerator
     * @param exp
     * @return
     */
-  override def generateExp(model:domain.Model, exp:domain.DataType) : CompilationUnit = {
+  def generateExp(model:domain.Model, exp:domain.DataType) : CompilationUnit = {
     val name = Java(s"${exp.concept}").simpleName()
     val baseInterface:Option[Type] = Some(Java(baseInterfaceName(model.lastModelWithOperation())).tpe())
 
@@ -153,8 +152,6 @@ trait InterpreterGenerator
     unit
    }
 
-
-
   /**
     * Generate one interface for model that defines an operation. If two or more operations
     * are defined in the same model, then concatenate together.
@@ -166,7 +163,7 @@ trait InterpreterGenerator
     * @param model
     * @return
     */
-  override def generateBase(model: domain.Model): CompilationUnit = {
+  def generateBase(model: domain.Model): CompilationUnit = {
     // concatenate all names
     val fullType:Type = Java(modelInterfaceName(model)).tpe()
     val signatures:Seq[String] = model.ops.map(op => {
@@ -185,9 +182,16 @@ trait InterpreterGenerator
         }
       })
 
-      op.returnType.get match {
-        case domain.baseTypeRep => s"""public $fullType ${op.instance}(${params.mkString(",")});"""
-        case _ => s"""public ${typeConverter(op.returnType.get)}  ${op.instance}(${params.mkString(",")});"""
+      // Must be prepared for operations that are void.
+      op.returnType match {
+        case Some(domain.baseTypeRep) => s"""public $fullType ${op.instance}(${params.mkString(",")});"""
+        case _ =>
+          val returnType = if (op.returnType.isEmpty) {
+            "void"
+          } else {
+            typeConverter(op.returnType.get)
+          }
+          s"""public $returnType ${op.instance}(${params.mkString(",")});"""
       }
     })
 
@@ -211,7 +215,7 @@ trait InterpreterGenerator
   }
 
   /**
-    * Factories must also support all future data types. For example, the EvalIdzExpFactory
+    * Factories must also support all future data types. For example, the EvalExpFactory
     * naturally supports Lit and Add, but it must support all future data types as well.
     *
     * @param model
@@ -227,7 +231,8 @@ trait InterpreterGenerator
     }
 
     // works not on 'model' but on latest one 'getModel'
-    val factoryMethods:Seq[MethodDeclaration] = getModel.pastDataTypes().flatMap(e => {
+    val allDataTypes = getModel.pastDataTypes()
+    val factoryMethods:Seq[MethodDeclaration] = allDataTypes.flatMap(e => {
       val params:Seq[String] = e.attributes.map(att => s"${typeConverterRelativeToHere(att.tpe)} ${att.instance}")
       val paramNames:Seq[String] = e.attributes.map(att => s"${att.instance}")
 
@@ -266,29 +271,25 @@ trait InterpreterGenerator
     model.inChronologicalOrder
       .filter(m => m.ops.nonEmpty)
       .flatMap(m => generateForOp(m, m.ops, lastTypesSinceAnOperation(model), isBase=m.base() == m)) ++ generateIntermediateTypes(model.last)
-
-//    val last = model.lastModelWithOperation()   // HACK. true is not best answer
-//    generateForOp(model, last.ops, lastTypesSinceAnOperation(model), isBase=true) ++ generateIntermediateTypes(model.last)
   }
 
   // if multiple operations in the same model, then must chain together.
   def generateBaseExtensions(model:domain.Model) : Seq[CompilationUnit] = {
-    val pastTypes:Seq[domain.DataType] = model.pastDataTypes()
-
+    val allTypes:Seq[domain.DataType] = getModel.pastDataTypes()
     val isBase:Boolean = model.base().equals(model)
 
-    generateForOp(model, model.ops, pastTypes, isBase)
+    generateForOp(model, model.ops, allTypes, isBase)
   }
 
   /**
     * For each operation must generate a sequence of classes, one per subtype.
-    *
+    * Must make sure we include ALL subtypes, not just ones from the past.
     * Note that BinaryMethods must have their Exp parameters converted to be \${op.name}Exp.
      */
-  def generateForOp(model:domain.Model, ops:Seq[domain.Operation], pastTypes:Seq[domain.DataType], isBase:Boolean) : Seq[CompilationUnit] = {
+  def generateForOp(model:domain.Model, ops:Seq[domain.Operation], allTypes:Seq[domain.DataType], isBase:Boolean) : Seq[CompilationUnit] = {
     val combinedOps:String = ops.sortWith(_.name < _.name).map(op => op.concept).mkString("")
 
-    pastTypes.map(exp => {
+    allTypes.map(exp => {
       val name = Java(s"${exp.concept}").simpleName()
       val baseInterface:Type = Java(baseInterfaceName(model.lastModelWithOperation())).tpe()
 

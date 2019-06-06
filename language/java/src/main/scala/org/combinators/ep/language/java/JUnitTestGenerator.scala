@@ -8,7 +8,7 @@ import org.combinators.templating.twirl.Java
   *
   * This code conforms to JUnit Test cases
   */
-trait JUnitTestGenerator extends TestGenerator with PerformanceTestGenerator with JavaGenerator {
+trait JUnitTestGenerator extends TestGenerator with PerformanceTestGenerator { // had  with JavaGenerator
   val domain: BaseDomain with ModelDomain
 
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */

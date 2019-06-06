@@ -102,7 +102,6 @@ trait AlgebraTestGenerator
 
     val opsname:Seq[MethodDeclaration] = operations.flatMap(op => {
       val op_args = arguments(op)
-      //val op_params = parameters(op)
 
       // Handle binary methods...
       val op_params = op match {
@@ -110,14 +109,24 @@ trait AlgebraTestGenerator
         case _ => parameters(op)
       }
 
-
-      //val returnType = typeConverter(op.returnType.get)
-      val returnType = op.returnType.get match {
-        case domain.baseTypeRep => s"Combined"   // using algebra's internal interface for producer methods
-        case _ => typeConverter(op.returnType.get)
+      // Must handle when operation has no return type (i.e., void)
+      var useReturn = "return "
+      val returnType = op.returnType match {
+        case Some(domain.baseTypeRep) => s"Combined"   // using algebra's internal interface for producer methods
+        case _ =>
+          if (op.returnType.isEmpty) {
+            useReturn = ""
+            Java("void").tpe()
+          } else {
+            typeConverter(op.returnType.get)
+          }
       }
-      Java(
-        s"public $returnType ${op.instance}($op_params) { return algebra${op.concept}.${tpe.instance}(${args.mkString(",")}).${op.instance}($op_args); } ").methodDeclarations()
+
+      val str = s"""
+               |public $returnType ${op.instance}($op_params) {
+               |  $useReturn algebra${op.concept}.${tpe.instance}(${args.mkString(",")}).${op.instance}($op_args);
+               |}""".stripMargin
+      Java(str).methodDeclarations()
     })
 
     val producer = if (operations.exists {

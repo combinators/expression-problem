@@ -10,17 +10,57 @@ import org.combinators.templating.twirl.Java
 import scala.collection.JavaConverters._
 
 /**
-  * Any Java-based EP approach can extend this Generator
+  * Any Java-based EP approach can extend this Generator.
+  *
+  * @groupname lang Language Bindings
+  * @groupdesc lang Fundamental Language Bindings as required by EpCoGen framework
+  * @groupprio lang 5
+  *
+  * @groupname api Core API
+  * @groupdesc api Fundamental abstractions to provide context for [[LanguageIndependentGenerator]]
+  * @groupname api Core API
+  * @groupname deltaHelpers DeltaHelpers
+  * @groupname context Context
+  * @groupname types Parameterized Types
+  * @groupname dependency External Dependencies
+  * @groupname inst Instantiating data types
+  * @groupdesc dependency Depends upon BaseDomain (for the core logic) and the desired
+  * @groupdesc api Fundamental abstractions needed for any language-based solution to EP
+  * @groupprio api 0
+  * @groupdesc types Each language must define relevant abstractions that map to these types.
+  *            It is acceptable if the same structure is used for multiple types (as an example,
+  *            review CPPElement)
+  * @groupprio types 10
+  * @groupdesc context Each language and approach needs different solutions to assemble the logic
+  *           for a given (data-type and operation). The top-level concepts are shown here.
+  * @groupprio types 20
+  * @groupdesc inst When generating test cases, it is essential to include construction
+  *            code that constructs instances of the data types. In addition, some receursive
+  *            operations depend on being able to constrct instances of data types.
+  * @groupprio context 30
+  * @groupdesc deltaHelpers When weaving together code expressions representing partial fragments
+  *           for a given logic, these helper methods are useful in capturing the desired structures.
+  * @groupprio deltaHelpers 40
   */
 trait JavaGenerator extends LanguageIndependentGenerator {
   val domain:BaseDomain with ModelDomain
 
+  /** @group lang */
   type CompilationUnit = com.github.javaparser.ast.CompilationUnit
+
+  /** @group lang */
   type Type = com.github.javaparser.ast.`type`.Type
+
+  /** @group lang */
   type Expression = com.github.javaparser.ast.expr.Expression
+
+  /** @group lang */
   type Statement = com.github.javaparser.ast.stmt.Statement
 
-  /** Return designated Java type associated with type, or void if all else fails. */
+  /**
+    * Return designated Java type associated with type.
+    * @group api
+    */
   override def typeConverter(tpe:domain.TypeRep) : Type = {
     tpe match {
       case domain.baseTypeRep => Java(s"${domain.baseTypeRep.name}").tpe()
@@ -29,7 +69,8 @@ trait JavaGenerator extends LanguageIndependentGenerator {
   }
 
   /**
-    * Default behavior in Java is to return an expression value.
+    * In Java, an expression must be returned by the 'return' statement.
+    * @group api
     */
   def result (expr:Expression) : Seq[Statement] = {
     Java(s"return $expr;").statements()

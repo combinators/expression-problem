@@ -6,11 +6,14 @@ import org.combinators.ep.language.java.{DataTypeSubclassGenerator, JavaBinaryMe
 import org.combinators.templating.twirl.Java
 
 /**
-  * Each evolution has opportunity to enhance the code generators.
+  * Object-oriened generator
+  *
+  * @groupname approach Object-Oriented Approach to EP
+  * @groupdesc approach Fundamental Helper methods for the oo approach to EP
+  * @groupprio approach 0
   */
 trait OOGenerator
   extends JavaGenerator
-    with DataTypeSubclassGenerator
     with OperationAsMethodGenerator
     with JavaBinaryMethod {
 
@@ -22,21 +25,22 @@ trait OOGenerator
   /**
     * Generating a straight OO solution requires:
     * 1. A Class for every exp data type
-    * 2. A Base class to be superclass of them all
+    * 2. An Abstract Base class to be superclass of them all
+    *
+    * This method generates the proper code for the current model (retrieved via getModel).
     */
-  def generatedCode():Seq[CompilationUnit] = {
+  override def generatedCode():Seq[CompilationUnit] = {
     val flat = getModel.flatten()
 
-    //  binary methods for helper
+    // binary methods for helper
     val decls:Seq[CompilationUnit] = if (flat.hasBinaryMethod()) {
       helperClasses()
     } else {
       Seq.empty
     }
 
-    decls ++ flat.types.map(tpe => generateExp(flat, tpe)) :+      // one class for each sub-type
-      generateBase(flat)                                           // base class $BASE
-
+    decls ++ flat.types.map(tpe => generateExp(tpe, flat.ops)) :+      // one class for each sub-type
+      generateAbstractBaseClass(flat.ops)                              // base class $BASE
   }
 
   /** For straight design solution, directly access attributes by name. */
@@ -69,7 +73,15 @@ trait OOGenerator
     }
   }
 
-  /** Operations are implemented as methods in the Base and sub-type classes. */
+  /**
+    * Operations are implemented as methods in the Base and sub-type classes.
+    *
+    * @param exp  Desired Data type
+    * @param op   Desired Operation
+    * @return Method that contains the logic for applying given operation to this data type.
+    *
+    * @group api
+    */
   def methodGenerator(exp:DataType, op:Operation): MethodDeclaration = {
     val params = parameters(op)
     Java(s"""|public ${returnType(op)} ${op.instance}($params) {
@@ -77,9 +89,16 @@ trait OOGenerator
              |}""".stripMargin).methodDeclarations.head
   }
 
-  /** Generate the full class for the given expression sub-type. */
-  def generateExp(model:Model, exp:DataType) : CompilationUnit = {
-    val methods = model.ops.map(op => methodGenerator(exp, op))
+  /**
+    * Generate the full class for the given expression sub-type for the expected
+    * operations.
+    *
+    * @param exp   desired data type to construct class for
+    * @param ops   all operations required in the system
+    * @group api
+    */
+  def generateExp(exp:DataType, ops:Seq[Operation]) : CompilationUnit = {
+    val methods = ops.map(op => methodGenerator(exp, op))
 
     Java(s"""|package oo;
              |public class $exp extends ${domain.baseTypeRep.name} {
@@ -89,12 +108,18 @@ trait OOGenerator
              |}""".stripMargin).compilationUnit
   }
 
-  /** Generate the base class, with all operations from flattened history. */
-  def generateBase(model:Model): CompilationUnit = {
-    val signatures = model.ops.flatMap(op => {
+  /**
+    * Generate the abstract base class, with all operations from flattened history.
+    *
+    * The name of the generated class is drawn from the domain's baseTypeRep.
+    *
+    * @param ops   All desired operations
+    */
+  def generateAbstractBaseClass(ops:Seq[Operation]): CompilationUnit = {
+    val signatures = ops.flatMap(op =>
        Java(s"public abstract ${returnType(op)} " +
         s"${op.instance}(${parameters(op)});").methodDeclarations
-    })
+    )
 
     Java(s"""|package oo;
              |public abstract class ${domain.baseTypeRep.name} {

@@ -70,3 +70,7 @@ class C1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle) extend
   override val gen = new WithDomain(MathDomain) with InterpreterGenerator with InterpreterTestGenerator with e0 with e1 with i1 with i2 with e2 with e3 with c1
 }
 
+class P1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+  extends Foundation(web, app) {
+  override val gen = new WithDomain(MathDomain) with InterpreterGenerator with InterpreterTestGenerator with e0 with e1 with e2 with p1
+}

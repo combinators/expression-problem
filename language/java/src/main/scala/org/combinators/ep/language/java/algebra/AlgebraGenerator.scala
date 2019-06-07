@@ -228,8 +228,8 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
 
     // if this operation is a producer, then we need special constructor
     val producerConstructor = op match {
-      case po: domain.ProducerOperation => Java(
-        s"""
+      case po: domain.ProducerOperation =>
+        Java(s"""
           |// Binary operations are passed in necessary algebra to work with
           |Combined${domain.baseTypeRep.concept}Alg algebra;
           |public $opType$fullName${domain.baseTypeRep.concept}Alg(Combined${domain.baseTypeRep.concept}Alg alg) {
@@ -390,7 +390,7 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
 
         s"$tpe ${att.instance}"
       })
-      val cons:Seq[Statement] = exp.attributes.flatMap(att => Java(s"  this.${att.instance} = ${att.instance};").statements())
+     val cons:Seq[Statement] = exp.attributes.flatMap(att => Java(s"  this.${att.instance} = ${att.instance};").statements())
 
       val constructor =  s"""|public ${exp.concept} (${params.mkString(",")}) {
                              |   ${cons.mkString("\n")}

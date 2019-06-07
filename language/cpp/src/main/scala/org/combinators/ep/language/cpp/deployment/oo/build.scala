@@ -1,10 +1,10 @@
 package org.combinators.ep.language.cpp.deployment.oo
-/* Generated: Sun Feb 10 22:29:20 EST 2019 */
+/* Generated: Thu Jun 06 22:28:16 EDT 2019 */
 import org.combinators.ep.domain.math._
-import javax.inject.Inject
-import org.combinators.ep.domain.WithDomain
+import org.combinators.ep.domain._
 import org.combinators.ep.language.cpp._
 import org.combinators.ep.language.cpp.oo._
+import javax.inject.Inject
 import org.webjars.play.WebJarsUtil
 import play.api.inject.ApplicationLifecycle
 /* 

@@ -12,7 +12,7 @@ import org.combinators.ep.domain.math.MathDomain
 import org.combinators.ep.generator.FileWithPath
 import org.combinators.ep.language.scala._
 
-abstract class FoundationStraight @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
+abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends CodeGenerationController[ScalaWithPath](web, app)
   {
     val gen:WithDomain[MathDomain] with OOGenerator with FunSpecTestGenerator

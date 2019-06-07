@@ -182,7 +182,7 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
   }
 
   /**
-    * Pulled out since useful in both visitor AND extensible visitor, where it is overridedn
+    * Pulled out since useful in both visitor AND extensible visitor, where it is overriden
     * to take advantage of knowledge of the model within which op is defined.
     */
   def generateConstructor (op:domain.Operation, m:domain.Model): String = {

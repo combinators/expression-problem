@@ -139,7 +139,7 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
   }
 
   /**
-    * Pulled out since useful in both visitor AND extensible visitor, where it is overridedn
+    * Pulled out since useful in both visitor AND extensible visitor, where it is overriden
     * to take advantage of knowledge of the model within which op is defined.
     */
   override def generateConstructor (op:domain.Operation, model:domain.Model): String = {

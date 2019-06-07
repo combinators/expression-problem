@@ -9,14 +9,24 @@ import java.util.*;
  */
 public class Create {
 
-    /** Where routes file is to be placed for play. */
-    static final String routes = "src" + File.separator + "main" + File.separator + "resources" + File.separator + "routes";
+    /**
+     * Where routes file is to be placed for play. Each language has a subdirectory for routes.
+     */
+    static final String routePath = "src" + File.separatorChar + "main" + File.separatorChar + "resources" + File.separatorChar + "routes";
 
-    /** All synthesized scala build files are stored in this package. */
-    static final String destination = "src" + File.separator + "main" + File.separator + "scala" + File.separator + "build";
+    /**
+     * All synthesized scala build files are stored in this package. Prefix with language, and suffix by 'approach/' +  build.scala
+     */
+    static final String destinationPath(String lang) {
+        return "language" + File.separatorChar + lang + File.separatorChar + "src" +
+                File.separatorChar + "main" + File.separatorChar + "scala" +
+                File.separatorChar + "org" + File.separatorChar + "combinators" +
+                File.separatorChar + "ep" + File.separatorChar + "language" +
+                File.separatorChar + lang + File.separatorChar + "deployment";
+    }
 
     /** Known Java Variations to generate. */
-    static final Evolution[] standardEvolutions  = {
+    static final Evolution[] extendedEvolutions  = {
             new Evolution ("M0"),
             new Evolution ("M1", "M0"),
             new Evolution ("M2", "M1"),
@@ -28,12 +38,33 @@ public class Create {
     };
 
     /** Known Java Variations to generate. */
+    static final Evolution[] standardEvolutions  = {
+            new Evolution ("M0"),
+            new Evolution ("M1", "M0"),
+            new Evolution ("M2", "M1"),
+            new Evolution ("M3", "M2"),
+            new Evolution ("M4", "M3"),
+            new Evolution ("M5", "M4"),
+            new Evolution ("M6", "M5"),
+    };
+
+    /** Known Java Variations to generate. */
     static final Evolution[] gjEvolutions  = {
             new Evolution ("M0"),
             new Evolution ("M1", "M0"),
     };
 
     static Instance getJavaName = new Instance() {
+        public String instance(String name) {
+            if (name.charAt(0) == 'M') {
+                return "e" + name.charAt(1);
+            }
+
+            return name.toLowerCase();
+        }
+    };
+
+    static Instance getScalaName = new Instance() {
         public String instance(String name) {
             if (name.charAt(0) == 'M') {
                 return "e" + name.charAt(1);
@@ -94,8 +125,8 @@ public class Create {
 
     // each language has a number of possible variations. Names of languages are used to
     // construct package names, i.e., "ep.j" and "ep.haskell"
-    static final Language lang_java = new Language("j")
-            .addEvolutions(standardEvolutions)
+    static final Language lang_java = new Language("java")
+            .addEvolutions(extendedEvolutions)
             .addEvolutions(independentEvolutions)
             //.addEvolutions(shapeEvolutions)
             .addMapping(getJavaName)
@@ -104,7 +135,7 @@ public class Create {
             .add("extensibleVisitor", "WithDomain(MathDomain) with ExtensibleVisitorGenerator with ExtensibleVisitorTestGenerator")
             .add("interpreter", "WithDomain(MathDomain) with InterpreterGenerator with InterpreterTestGenerator")
             .add("oo", "WithDomain(MathDomain) with OOGenerator with JUnitTestGenerator")
-            .add("trivially", "WithDomain(MathDomain) with TriviallyGenerator with JUnitTestGenerator")
+            .add("trivially", "WithDomain(MathDomain) with TriviallyGenerator with TriviallyTestGenerator")
             .add("visitor", "WithDomain(MathDomain) with VisitorGenerator with JUnitTestGenerator");
     static final Language lang_haskell = new Language("haskell")
             .addMapping(getHaskellName)
@@ -118,14 +149,28 @@ public class Create {
             .add("oo", "WithDomain(MathDomain) with StraightGenerator with CPPOOTestGenerator")
             .add("visitor", "WithDomain(MathDomain) with CPPVisitorGenerator with CPPVisitorTestGenerator")
             .add("visitorTable", "WithDomain(MathDomain) with CPPVisitorTableGenerator with CPPTableTestGenerator");
+    static final Language lang_scala= new Language("scala")
+            .addMapping(getScalaName)
+            .addEvolutions(standardEvolutions)
+            .add("oo","WithDomain(MathDomain) with OderskyGenerator with FunSpecOOTestGenerator")
+            .add("functional", "WithDomain(MathDomain) with FunctionalGenerator with FunSpecFunctionalTestGenerator")
+            .add("straight", "WithDomain(MathDomain) with OOGenerator with FunSpecTestGenerator");
+
     static final Language lang_gj = new Language("gj")
             .addMapping(getGJName)
             .addEvolutions(gjEvolutions)
             .add("wadler", "WithDomain(MathDomain) with WadlerGenerator with UnitTestGenerator");  // not really anything good
 
     /** Could have used reflection, but this is simpler. */
-    static final Language[] allLanguages = { lang_java, lang_haskell, lang_cpp, lang_gj };
+    static final Language[] allLanguages = { lang_java, lang_haskell, lang_cpp, lang_gj, lang_scala };
 
+    /**
+     * Returns Scala class to represent the instantiation of this desired evolution.
+     *
+     * @param lang            desired language for which deployment object is created
+     * @param ev              desired evolution
+     * @param packageStruct   scala package into which file is created.
+     */
     static String create(Language lang, Evolution ev, String packageStruct) {
         String name = ev.name;
         String scalaClass = "class " + name + "_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle) extends Foundation(web, app) {";
@@ -155,29 +200,28 @@ public class Create {
      *
      * ->    /                              ep.scala.oo.M0_Variation
      *
-     * @param args
+     * Also creates the necessary deployment/ files in each language
      */
     public static void main(String[] args) throws Exception {
-        File rf = new File (routes);
-        PrintWriter routesFile = new PrintWriter(rf);
-
-        File output = new File(destination);
-        if (!output.exists()) {
-            output.mkdir();
-        }
-
         // for each language
         for (Language lang : allLanguages) {
-            File langDir = new File (output, lang.name);
-            if (!langDir.exists()) {
-                langDir.mkdir();
+            File rf = new File ("language" + File.separatorChar + lang.name + File.separatorChar + routePath);
+            PrintWriter routesFile = new PrintWriter(rf);
+
+            // make sure deployment directory exists
+            File output = new File(destinationPath(lang.name));
+            if (!output.exists()) {
+                output.mkdir();
             }
 
             // for each family
             for (String variation: lang) {
-                String packageName = "build." + lang.name + "." + variation;
+                //String packageName = "build." + lang.name + "." + variation;
+                String packageName = "org.combinators.ep.language." + lang.name + ".deployment." + variation;
                 String packageStruct = lang.constructors.get(variation);
-                File varDir = new File (langDir, variation);
+
+                // variation directory needs to be created.
+                File varDir = new File (output, variation);
                 if (!varDir.exists()) {
                     varDir.mkdir();
                 }
@@ -189,15 +233,16 @@ public class Create {
 
                     pw_output.println("package " + packageName);
                     pw_output.println("/* Generated: " + new Date() + " */");
-                    pw_output.println("import ep.domain._");
-                    pw_output.println("import ep." + lang.name + "._");
-                    pw_output.println("import ep." + lang.name + "." + variation + "._");
+                    pw_output.println("import org.combinators.ep.domain.math._");
+                    pw_output.println("import org.combinators.ep.domain._");
+                    pw_output.println("import org.combinators.ep.language." + lang.name + "._");
+                    pw_output.println("import org.combinators.ep.language." + lang.name + "." + variation + "._");
                     pw_output.println("import javax.inject.Inject");
                     pw_output.println("import org.webjars.play.WebJarsUtil");
                     pw_output.println("import play.api.inject.ApplicationLifecycle");
 
                     //String traits = "";
-                    routesFile.println ("# " + variation + "(" + lang.name + ") evolutions: ");
+                    routesFile.print ("# " + variation + "(" + lang.name + ") evolutions: ");
                     for (Evolution ev : lang.evolutions) {
                         System.out.print (ev.name + ", ");
                         String clazzDefinition = create(lang, ev, packageStruct);
@@ -218,10 +263,10 @@ public class Create {
                     ioe.printStackTrace();
                 }
             }
-        }
 
-        routesFile.close();
-        System.out.println ("Generated Routes file: " + rf.getAbsoluteFile());
+            routesFile.close();
+            System.out.println ("Generated Routes file: " + rf.getAbsoluteFile());
+        }
     }
 
 }

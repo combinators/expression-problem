@@ -46,6 +46,7 @@
 ->	/		 org.combinators.ep.language.java.deployment.oo.I2_Variation
 ->	/		 org.combinators.ep.language.java.deployment.oo.C1_Variation
 ->	/		 org.combinators.ep.language.java.deployment.oo.P1_Variation
+->	/		 org.combinators.ep.language.java.deployment.oo.M7_Variation
 # trivially(j) evolutions:
 ->	/		 org.combinators.ep.language.java.deployment.trivially.M0_Variation
 ->	/		 org.combinators.ep.language.java.deployment.trivially.M1_Variation

@@ -24,6 +24,7 @@ public class Create {
             new Evolution ("M4", "M3"),
             new Evolution ("M5", "M4"),
             new Evolution ("M6", "M5"),
+            new Evolution ("M7", "M6"),
     };
 
     /** Known Java Variations to generate. */
@@ -78,6 +79,7 @@ public class Create {
     static final Evolution[] independentEvolutions  = {
             new Evolution("I1", "M1"),
             new Evolution("I2", "I1"),
+            new Evolution("P1", "M2")
     };
 
     // HACK. TODO: Has to be M3 first otherwise ordering in generated code doesn't match.
@@ -205,12 +207,7 @@ public class Create {
                         pw_output.println(" * ");
                         pw_output.println(" * @group evolutions ");
                         pw_output.println(" */");
-                        //pw_output.println("class " + ev.name + "_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle) extends Foundation(web, app) {");
 
-                        //traits = traits + " with " + lang.mapping.instance(ev.name);
-                        //String packageInst = packageStruct.replace("[", "(").replace("]", ")");
-                        //pw_output.println("  override val gen = new " + packageInst + traits);
-                        //pw_output.println("}\n\n");
                         pw_output.println(clazzDefinition);
                         // output routes information
                         routesFile.println ("->\t/\t\t " + packageName + "." + ev.name + "_Variation");

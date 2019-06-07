@@ -99,3 +99,11 @@ override val gen = new WithDomain(MathDomain) with OOGenerator with JUnitTestGen
 class P1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle) extends Foundation(web, app) {
   override val gen = new WithDomain(MathDomain) with OOGenerator with JUnitTestGenerator with e0 with e1 with e2 with p1
 }
+/*
+ * oo solution in j for M7
+ *
+ * @group evolutions
+ */
+class M7_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle) extends Foundation(web, app) {
+  override val gen = new WithDomain(MathDomain) with OOGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6 with e7
+}

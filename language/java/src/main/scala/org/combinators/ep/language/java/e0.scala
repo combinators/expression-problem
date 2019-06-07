@@ -22,11 +22,16 @@ trait e0 extends JavaGenerator with JUnitTestGenerator with M0 {
     }
   }
 
-  /** E0 Introduces Double and Int values. */
+  /**
+    * E0 Introduces Double and Int values.
+    *
+    * Decide to use formal java.lang.Double and java.lang.Integer because of the ambiguity
+    * that can exist in JUnit when dealing with primitive types and boxed types.
+    */
   abstract override def toTargetLanguage(ei:domain.ExistsInstance) : CodeBlockWithResultingExpressions = {
      ei.inst match {
-      case d:scala.Double => CodeBlockWithResultingExpressions(Java(s"$d").expression())
-      case i:scala.Int => CodeBlockWithResultingExpressions(Java(s"$i").expression())
+      case d:scala.Double => CodeBlockWithResultingExpressions(Java(s"new Double($d)").expression())
+      case i:scala.Int => CodeBlockWithResultingExpressions(Java(s"new Integer($i)").expression())
       case _ => super.toTargetLanguage(ei)
     }
   }

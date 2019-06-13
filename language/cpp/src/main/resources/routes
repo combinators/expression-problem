@@ -1,4 +1,4 @@
-# oo(cpp) evolutions:
+# oo(cpp) evolutions: 
 ->	/		 org.combinators.ep.language.cpp.deployment.oo.M0_Variation
 ->	/		 org.combinators.ep.language.cpp.deployment.oo.M1_Variation
 ->	/		 org.combinators.ep.language.cpp.deployment.oo.M2_Variation
@@ -6,7 +6,7 @@
 ->	/		 org.combinators.ep.language.cpp.deployment.oo.M4_Variation
 ->	/		 org.combinators.ep.language.cpp.deployment.oo.M5_Variation
 ->	/		 org.combinators.ep.language.cpp.deployment.oo.M6_Variation
-# visitor(cpp) evolutions:
+# visitor(cpp) evolutions: 
 ->	/		 org.combinators.ep.language.cpp.deployment.visitor.M0_Variation
 ->	/		 org.combinators.ep.language.cpp.deployment.visitor.M1_Variation
 ->	/		 org.combinators.ep.language.cpp.deployment.visitor.M2_Variation
@@ -14,7 +14,7 @@
 ->	/		 org.combinators.ep.language.cpp.deployment.visitor.M4_Variation
 ->	/		 org.combinators.ep.language.cpp.deployment.visitor.M5_Variation
 ->	/		 org.combinators.ep.language.cpp.deployment.visitor.M6_Variation
-# visitorTable(cpp) evolutions:
+# visitorTable(cpp) evolutions: 
 ->	/		 org.combinators.ep.language.cpp.deployment.visitorTable.M0_Variation
 ->	/		 org.combinators.ep.language.cpp.deployment.visitorTable.M1_Variation
 ->	/		 org.combinators.ep.language.cpp.deployment.visitorTable.M2_Variation

@@ -126,40 +126,43 @@ public class Create {
     // each language has a number of possible variations. Names of languages are used to
     // construct package names, i.e., "ep.j" and "ep.haskell"
     static final Language lang_java = new Language("java")
-            .addEvolutions(extendedEvolutions)
-            .addEvolutions(independentEvolutions)
-            //.addEvolutions(shapeEvolutions)
+            .addEvolutions("math.MathDomain", "Foundation", extendedEvolutions)
+            .addEvolutions("math.MathDomain", "Foundation", independentEvolutions)
+            .addEvolutions("shape.ShapeDomain", "ShapeFoundation", shapeEvolutions)
             .addMapping(getJavaName)
-            .addEvolutions(mergedEvolutions)
-            .add("algebra", "WithDomain(MathDomain) with AlgebraGenerator with AlgebraTestGenerator")
-            .add("extensibleVisitor", "WithDomain(MathDomain) with ExtensibleVisitorGenerator with ExtensibleVisitorTestGenerator")
-            .add("interpreter", "WithDomain(MathDomain) with InterpreterGenerator with InterpreterTestGenerator")
-            .add("oo", "WithDomain(MathDomain) with OOGenerator with JUnitTestGenerator")
-            .add("trivially", "WithDomain(MathDomain) with TriviallyGenerator with TriviallyTestGenerator")
-            .add("visitor", "WithDomain(MathDomain) with VisitorGenerator with JUnitTestGenerator");
+            .addEvolutions("math.MathDomain", "Foundation", mergedEvolutions)
+            .add("algebra", "WithDomain(%DOMAIN%) with AlgebraGenerator with AlgebraTestGenerator")
+            .add("extensibleVisitor", "WithDomain(%DOMAIN%) with ExtensibleVisitorGenerator with ExtensibleVisitorTestGenerator")
+            .add("interpreter", "WithDomain(%DOMAIN%) with InterpreterGenerator with InterpreterTestGenerator")
+            .add("oo", "WithDomain(%DOMAIN%) with OOGenerator with JUnitTestGenerator")
+            .add("trivially", "WithDomain(%DOMAIN%) with TriviallyGenerator with TriviallyTestGenerator")
+            .add("visitor", "WithDomain(%DOMAIN%) with VisitorGenerator with JUnitTestGenerator");
+
     static final Language lang_haskell = new Language("haskell")
             .addMapping(getHaskellName)
-            .addEvolutions(standardEvolutions)
-            .add("alacarte", "WithDomain[MathDomain] with ALaCarteGenerator with ALaCarteTestGenerator")
-            .add("grow", "WithDomain(MathDomain) with GrowGenerator with GrowTestGenerator")
-            .add("straight", "WithDomain(MathDomain) with StraightGenerator with StraightTestGenerator");
+            .addEvolutions("math.MathDomain", "Foundation", standardEvolutions)
+            .add("alacarte", "WithDomain(%DOMAIN%) with ALaCarteGenerator with ALaCarteTestGenerator")
+            .add("grow", "WithDomain(%DOMAIN%) with GrowGenerator with GrowTestGenerator")
+            .add("straight", "WithDomain(%DOMAIN%) with StraightGenerator with StraightTestGenerator");
+
     static final Language lang_cpp = new Language("cpp")
             .addMapping(getCPPName)
-            .addEvolutions(standardEvolutions)
-            .add("oo", "WithDomain(MathDomain) with StraightGenerator with CPPOOTestGenerator")
-            .add("visitor", "WithDomain(MathDomain) with CPPVisitorGenerator with CPPVisitorTestGenerator")
-            .add("visitorTable", "WithDomain(MathDomain) with CPPVisitorTableGenerator with CPPTableTestGenerator");
+            .addEvolutions("math.MathDomain", "Foundation", standardEvolutions)
+            .add("oo", "WithDomain(%DOMAIN%) with StraightGenerator with CPPOOTestGenerator")
+            .add("visitor", "WithDomain(%DOMAIN%) with CPPVisitorGenerator with CPPVisitorTestGenerator")
+            .add("visitorTable", "WithDomain(%DOMAIN%) with CPPVisitorTableGenerator with CPPTableTestGenerator");
+
     static final Language lang_scala= new Language("scala")
             .addMapping(getScalaName)
-            .addEvolutions(standardEvolutions)
-            .add("oo","WithDomain(MathDomain) with OderskyGenerator with FunSpecOOTestGenerator")
-            .add("functional", "WithDomain(MathDomain) with FunctionalGenerator with FunSpecFunctionalTestGenerator")
-            .add("straight", "WithDomain(MathDomain) with OOGenerator with FunSpecTestGenerator");
+            .addEvolutions("math.MathDomain", "Foundation", standardEvolutions)
+            .add("oo","WithDomain(%DOMAIN%) with OderskyGenerator with FunSpecOOTestGenerator")
+            .add("functional", "WithDomain(%DOMAIN%) with FunctionalGenerator with FunSpecFunctionalTestGenerator")
+            .add("straight", "WithDomain(%DOMAIN%) with OOGenerator with FunSpecTestGenerator");
 
     static final Language lang_gj = new Language("gj")
             .addMapping(getGJName)
-            .addEvolutions(gjEvolutions)
-            .add("wadler", "WithDomain(MathDomain) with WadlerGenerator with UnitTestGenerator");  // not really anything good
+            .addEvolutions("math.MathDomain", "Foundation", gjEvolutions)
+            .add("wadler", "WithDomain(%DOMAIN%) with WadlerGenerator with UnitTestGenerator");  // not really anything good
 
     /** Could have used reflection, but this is simpler. */
     static final Language[] allLanguages = { lang_java, lang_haskell, lang_cpp, lang_gj, lang_scala };
@@ -173,7 +176,8 @@ public class Create {
      */
     static String create(Language lang, Evolution ev, String packageStruct) {
         String name = ev.name;
-        String scalaClass = "class " + name + "_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle) extends Foundation(web, app) {";
+        String foundation = lang.getFoundation(name);
+        String scalaClass = "class " + name + "_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle) extends " + foundation + "(web, app) {";
         String evolutions = "";
 
         // lower-case names for all evolutions. Must make sure no duplicates
@@ -190,6 +194,9 @@ public class Create {
             }
         }
 
+        // replace %DOMAIN% with proper domain.
+        String domain = lang.getDomain(name);
+        packageStruct = packageStruct.replace("%DOMAIN%", domain);
         String override = "override val gen = new " + packageStruct.replace("[", "(").replace("]", ")") + " with " + evolutions;
 
         return scalaClass + "\n" + override + "\n}";

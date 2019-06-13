@@ -1,5 +1,5 @@
 package org.combinators.ep.language.cpp.deployment.visitor
-/* Generated: Thu Jun 06 22:28:16 EDT 2019 */
+/* Generated: Thu Jun 13 12:39:16 EDT 2019 */
 import org.combinators.ep.domain.math._
 import org.combinators.ep.domain._
 import org.combinators.ep.language.cpp._
@@ -13,7 +13,7 @@ import play.api.inject.ApplicationLifecycle
  * @group evolutions 
  */
 class M0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle) extends Foundation(web, app) {
-override val gen = new WithDomain(MathDomain) with CPPVisitorGenerator with CPPVisitorTestGenerator with cpp_e0
+override val gen = new WithDomain(math.MathDomain) with CPPVisitorGenerator with CPPVisitorTestGenerator with cpp_e0
 }
 /* 
  * visitor solution in cpp for M1
@@ -21,7 +21,7 @@ override val gen = new WithDomain(MathDomain) with CPPVisitorGenerator with CPPV
  * @group evolutions 
  */
 class M1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle) extends Foundation(web, app) {
-override val gen = new WithDomain(MathDomain) with CPPVisitorGenerator with CPPVisitorTestGenerator with cpp_e0 with cpp_e1
+override val gen = new WithDomain(math.MathDomain) with CPPVisitorGenerator with CPPVisitorTestGenerator with cpp_e0 with cpp_e1
 }
 /* 
  * visitor solution in cpp for M2
@@ -29,7 +29,7 @@ override val gen = new WithDomain(MathDomain) with CPPVisitorGenerator with CPPV
  * @group evolutions 
  */
 class M2_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle) extends Foundation(web, app) {
-override val gen = new WithDomain(MathDomain) with CPPVisitorGenerator with CPPVisitorTestGenerator with cpp_e0 with cpp_e1 with cpp_e2
+override val gen = new WithDomain(math.MathDomain) with CPPVisitorGenerator with CPPVisitorTestGenerator with cpp_e0 with cpp_e1 with cpp_e2
 }
 /* 
  * visitor solution in cpp for M3
@@ -37,7 +37,7 @@ override val gen = new WithDomain(MathDomain) with CPPVisitorGenerator with CPPV
  * @group evolutions 
  */
 class M3_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle) extends Foundation(web, app) {
-override val gen = new WithDomain(MathDomain) with CPPVisitorGenerator with CPPVisitorTestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3
+override val gen = new WithDomain(math.MathDomain) with CPPVisitorGenerator with CPPVisitorTestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3
 }
 /* 
  * visitor solution in cpp for M4
@@ -45,7 +45,7 @@ override val gen = new WithDomain(MathDomain) with CPPVisitorGenerator with CPPV
  * @group evolutions 
  */
 class M4_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle) extends Foundation(web, app) {
-override val gen = new WithDomain(MathDomain) with CPPVisitorGenerator with CPPVisitorTestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3 with cpp_e4
+override val gen = new WithDomain(math.MathDomain) with CPPVisitorGenerator with CPPVisitorTestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3 with cpp_e4
 }
 /* 
  * visitor solution in cpp for M5
@@ -53,7 +53,7 @@ override val gen = new WithDomain(MathDomain) with CPPVisitorGenerator with CPPV
  * @group evolutions 
  */
 class M5_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle) extends Foundation(web, app) {
-override val gen = new WithDomain(MathDomain) with CPPVisitorGenerator with CPPVisitorTestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3 with cpp_e4 with cpp_e5
+override val gen = new WithDomain(math.MathDomain) with CPPVisitorGenerator with CPPVisitorTestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3 with cpp_e4 with cpp_e5
 }
 /* 
  * visitor solution in cpp for M6
@@ -61,5 +61,5 @@ override val gen = new WithDomain(MathDomain) with CPPVisitorGenerator with CPPV
  * @group evolutions 
  */
 class M6_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle) extends Foundation(web, app) {
-override val gen = new WithDomain(MathDomain) with CPPVisitorGenerator with CPPVisitorTestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3 with cpp_e4 with cpp_e5 with cpp_e6
+override val gen = new WithDomain(math.MathDomain) with CPPVisitorGenerator with CPPVisitorTestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3 with cpp_e4 with cpp_e5 with cpp_e6
 }

@@ -1,7 +1,6 @@
 package org.combinators.ep.language.java.deployment.oo
-/* Generated: Thu Jun 06 22:28:16 EDT 2019 */
-//import org.combinators.ep.domain.math._
-//import org.combinators.ep.domain.shape._
+/* Generated: Thu Jun 13 12:39:16 EDT 2019 */
+import org.combinators.ep.domain.math._
 import org.combinators.ep.domain._
 import org.combinators.ep.language.java._
 import org.combinators.ep.language.java.oo._
@@ -97,26 +96,26 @@ class P1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle) extend
 override val gen = new WithDomain(math.MathDomain) with OOGenerator with JUnitTestGenerator with e0 with e1 with e2 with p1
 }
 /* 
+ * oo solution in java for S0
+ * 
+ * @group evolutions 
+ */
+class S0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle) extends ShapeFoundation(web, app) {
+override val gen = new WithDomain(shape.ShapeDomain) with OOGenerator with JUnitTestGenerator with s0
+}
+/* 
+ * oo solution in java for S1
+ * 
+ * @group evolutions 
+ */
+class S1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle) extends ShapeFoundation(web, app) {
+override val gen = new WithDomain(shape.ShapeDomain) with OOGenerator with JUnitTestGenerator with s0 with s1
+}
+/* 
  * oo solution in java for C1
  * 
  * @group evolutions 
  */
 class C1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle) extends Foundation(web, app) {
 override val gen = new WithDomain(math.MathDomain) with OOGenerator with JUnitTestGenerator with e0 with e1 with i1 with i2 with e2 with e3 with c1
-}
-/*
- * oo solution in java for S0
- *
- * @group evolutions
- */
-class S0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle) extends ShapeFoundation(web, app) {
-  override val gen = new WithDomain(shape.ShapeDomain) with OOGenerator with JUnitTestGenerator with s0
-}
-/*
- * oo solution in java for S1
- *
- * @group evolutions
- */
-class S1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle) extends ShapeFoundation(web, app) {
-  override val gen = new WithDomain(shape.ShapeDomain) with OOGenerator with JUnitTestGenerator with s0 with s1
 }

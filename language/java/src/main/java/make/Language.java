@@ -11,6 +11,8 @@ public class Language implements Iterable<String> {
     final ArrayList<String> impls = new ArrayList<>();
 
     final ArrayList<Evolution> evolutions = new ArrayList<>();
+    final Hashtable<String,String> domains = new Hashtable<>();
+    final Hashtable<String,String> foundations = new Hashtable<>();
 
     final Hashtable<String, String> constructors = new Hashtable<>();
 
@@ -34,9 +36,11 @@ public class Language implements Iterable<String> {
     }
 
     /** Add a number of potential evolutions. */
-    public Language addEvolutions(Evolution[] evs) {
-        for (Evolution s : evs) {
-            evolutions.add(s);
+    public Language addEvolutions(String domainName, String foundationName, Evolution[] evs) {
+        for (Evolution ev : evs) {
+            evolutions.add(ev);
+            domains.put(ev.name, domainName);
+            foundations.put(ev.name, foundationName);
         }
         return this;
     }
@@ -45,6 +49,12 @@ public class Language implements Iterable<String> {
     public Iterator<Evolution> evolutions() {
         return evolutions.iterator();
     }
+
+    /** Return the name of the application domain. */
+    public String getDomain(String evName) { return domains.get(evName); }
+
+    /** Get name of class to use for the Foundation trait. */
+    public String getFoundation(String evName) { return foundations.get(evName); }
 
     /** Return all possible families. */
     @Override

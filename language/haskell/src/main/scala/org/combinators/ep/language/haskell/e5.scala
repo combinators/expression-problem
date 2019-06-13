@@ -45,7 +45,7 @@ trait e5 extends Evolution with HaskellGenerator with HUnitTestGenerator with Ha
         val children = exp match {
           case Lit => Seq(Haskell(s"Leaf ${expression(exp, litValue)}"))
           case _ =>
-            exp.attributes.map(att => { contextDispatch(source, deltaChildOp(exp, att, AsTree))})
+            exp.attributes.map(att => { contextDispatch(source, dispatchChild(exp, att, AsTree))})
         }
         result(Haskell(s" Node ${declType}Type [ ${children.mkString(",")} ]"))
       }

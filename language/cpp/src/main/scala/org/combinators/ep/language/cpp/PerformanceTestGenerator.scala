@@ -81,7 +81,7 @@ trait PerformanceTestGenerator extends CPPGenerator with LanguageIndependentTest
                  )(initialInstanceCache)
                }
              initialInstBlock.appendDependent { case Seq(instExp) =>
-               CodeBlockWithResultingExpressions(contextDispatch(NoSource, deltaExprOp(instExp, perf.op, params: _*)))
+               CodeBlockWithResultingExpressions(contextDispatch(NoSource, dispatchToExpression(instExp, perf.op, params: _*)))
              }
            })
          }
@@ -117,7 +117,7 @@ trait PerformanceTestGenerator extends CPPGenerator with LanguageIndependentTest
                        )(nextInstCache)
                      }
                    nextInstBlock.appendDependent { case Seq(instExp) =>
-                     CodeBlockWithResultingExpressions(contextDispatch(NoSource, deltaExprOp(instExp, perf.op, params: _*)))
+                     CodeBlockWithResultingExpressions(contextDispatch(NoSource, dispatchToExpression(instExp, perf.op, params: _*)))
                    }
                  })
                (lastCodeBlock.appendIndependent(nextCodeBlock),

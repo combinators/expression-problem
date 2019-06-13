@@ -242,7 +242,7 @@ public class Create {
                     pw_output.println("import play.api.inject.ApplicationLifecycle");
 
                     //String traits = "";
-                    routesFile.print ("# " + variation + "(" + lang.name + ") evolutions: ");
+                    routesFile.println ("# " + variation + "(" + lang.name + ") evolutions: ");
                     for (Evolution ev : lang.evolutions) {
                         System.out.print (ev.name + ", ");
                         String clazzDefinition = create(lang, ev, packageStruct);

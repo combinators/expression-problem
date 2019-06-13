@@ -66,7 +66,7 @@ simplifyExp_M3 helpWithEval helpWith (Mult left right) =
                                                              (simplifyExp_M3 helpWithEval helpWith))))
     helpEval = evalExp_M0 (evalExp_M1 (evalExp_M2 (evalExp_M3 helpWithEval)))
   in let
-       leftVal = helpEval left   -- contextDispatch(source, deltaChildOp(source.e, domain.base.left, Eval))
+       leftVal = helpEval left   -- contextDispatch(source, dispatchChild(source.e, domain.base.left, Eval))
        rightVal = helpEval right
      in if leftVal == 0 || rightVal == 0.0
          then Lit 0.0

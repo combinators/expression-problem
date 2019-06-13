@@ -79,7 +79,7 @@ trait TestGenerator extends JavaGenerator with LanguageIndependentTestGenerator 
                }
              parameterBlock.appendDependent(params =>
                CodeBlockWithResultingExpressions(
-                 contextDispatch(NoSource, deltaExprOp(currentResult, nextOp, params: _*))
+                 contextDispatch(NoSource, dispatchToExpression(currentResult, nextOp, params: _*))
                )
              )
            }

@@ -12,13 +12,12 @@ import org.combinators.templating.twirl.Java
   */
 trait e1 extends Evolution with JavaGenerator with JUnitTestGenerator with M1 {
   self:e0 =>
-  val domain:MathDomain
 
   abstract override def logic(exp:domain.DataType, op:domain.Operation): Seq[Statement] = {
     op match {
       case Eval =>
         exp match {
-          case Sub => result(Java(s"${dispatch(expression(exp, domain.base.left), Eval)} - ${dispatch(expression(exp, domain.base.right), Eval)}").expression[Expression]())
+          case Sub => result(Java(s"${dispatch(expression(exp, domain.base.left), Eval)} - ${dispatch(expression(exp, domain.base.right), Eval)}").expression())
           case _ => super.logic(exp, op)
         }
 

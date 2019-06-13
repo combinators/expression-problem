@@ -28,8 +28,8 @@ import org.combinators.ep.domain.{BaseDomain, ModelDomain}
   *     they are the same.
   *
   *  {{{
-  * val deltaLeft = deltaChildOp(source.e, left, Eval)
-  * val deltaRight = deltaChildOp(source.e, right, Eval)
+  * val deltaLeft = dispatchChild(source.e, left, Eval)
+  * val deltaRight = dispatchChild(source.e, right, Eval)
   * Java(s"""|if (\${contextDispatch(source, deltaLeft)} == \${contextDispatch(source, deltaRight)}) {
   * |   \${result(inst(Lit, zero)).mkString("\n")}
   * |} else {
@@ -367,9 +367,9 @@ trait LanguageIndependentGenerator {
     *
     * The three cases that are covered include:
     *
-    *   1. [[deltaChildOp]] : a new operation must be dispatched to a child sub-expression.
-    *   1. [[deltaSelfOp]]  : a new operation must be dispatched to self.
-    *   1. [[deltaExprOp]]  : a new (or same) operation must be dispatched to a new context expression
+    *   1. [[dispatchChild]] : a new operation must be dispatched to a child sub-expression.
+    *   1. [[dispatchSelf]]  : a new operation must be dispatched to self.
+    *   1. [[dispatchToExpression]]  : a new (or same) operation must be dispatched to a new context expression
     *
     * All of these options are handled by this interface. Some of the more complicated
     * EP approaches require complicated implementations of this method.
@@ -384,7 +384,6 @@ trait LanguageIndependentGenerator {
     *
     * @param source     The source context where dispatch occurs
     * @param delta      The delta context that describes desired expression and operation
-    *
     * @group api
     */
   def contextDispatch(source:Context, delta:Delta) : Expression = {
@@ -437,10 +436,10 @@ trait LanguageIndependentGenerator {
     *
     * @param expr     (optional) code fragment representing expression derived from current context.
     * @param op       (optional) operation.
-    * @param params   (optional variable length) parameters to the operation as code expressions.
+    * @param p        (optional variable length) parameters to the operation as code expressions.
     * @group context
     */
-  class Delta(val expr:Option[Expression], override val op:Option[Operation], override val params:Expression*) extends Context(None, op, params : _*)
+  class Delta(val expr:Option[Expression], override val op:Option[Operation], p:Expression*) extends Context(None, op, p : _*)
 
   /**
     * Helper method for creating a [[Delta]] context that represents a new operation (with
@@ -455,8 +454,8 @@ trait LanguageIndependentGenerator {
     * @param params    optional variable length parameters for operation as code expressions.
     * @group deltaHelpers
     */
-  def deltaChildOp(exp:DataType, att:Attribute, op:Operation, params:Expression*) : Delta = {
-    deltaExprOp(expression(exp, att), op, params : _ *)
+  def dispatchChild(exp:DataType, att:Attribute, op:Operation, params:Expression*) : Delta = {
+    dispatchToExpression(expression(exp, att), op, params : _ *)
   }
 
   /**
@@ -471,7 +470,7 @@ trait LanguageIndependentGenerator {
     * @param params    optional variable length parameters for this operation as code expressions.
     * @group deltaHelpers
     */
-  def deltaExprOp(expr:Expression, op:Operation, params:Expression*) : Delta = {
+  def dispatchToExpression(expr:Expression, op:Operation, params:Expression*) : Delta = {
     new Delta(Some(expr), Some(op), params: _*)
   }
 
@@ -487,7 +486,7 @@ trait LanguageIndependentGenerator {
     * @param params    optional variable length parameters of this operation as code expressions.
     * @group deltaHelpers
     */
-  def deltaSelfOp(op:Operation, params:Expression*) : Delta = {
+  def dispatchSelf(op: Operation, params:Expression*) : Delta = {
     new Delta(None, Some(op), params : _*)
   }
 }

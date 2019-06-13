@@ -1,18 +1,21 @@
-# alacarte(haskell) evolutions: ->	/		 org.combinators.ep.language.haskell.deployment.alacarte.M0_Variation
+# alacarte(haskell) evolutions:
+->	/		 org.combinators.ep.language.haskell.deployment.alacarte.M0_Variation
 ->	/		 org.combinators.ep.language.haskell.deployment.alacarte.M1_Variation
 ->	/		 org.combinators.ep.language.haskell.deployment.alacarte.M2_Variation
 ->	/		 org.combinators.ep.language.haskell.deployment.alacarte.M3_Variation
 ->	/		 org.combinators.ep.language.haskell.deployment.alacarte.M4_Variation
 ->	/		 org.combinators.ep.language.haskell.deployment.alacarte.M5_Variation
 ->	/		 org.combinators.ep.language.haskell.deployment.alacarte.M6_Variation
-# grow(haskell) evolutions: ->	/		 org.combinators.ep.language.haskell.deployment.grow.M0_Variation
+# grow(haskell) evolutions:
+->	/		 org.combinators.ep.language.haskell.deployment.grow.M0_Variation
 ->	/		 org.combinators.ep.language.haskell.deployment.grow.M1_Variation
 ->	/		 org.combinators.ep.language.haskell.deployment.grow.M2_Variation
 ->	/		 org.combinators.ep.language.haskell.deployment.grow.M3_Variation
 ->	/		 org.combinators.ep.language.haskell.deployment.grow.M4_Variation
 ->	/		 org.combinators.ep.language.haskell.deployment.grow.M5_Variation
 ->	/		 org.combinators.ep.language.haskell.deployment.grow.M6_Variation
-# straight(haskell) evolutions: ->	/		 org.combinators.ep.language.haskell.deployment.straight.M0_Variation
+# straight(haskell) evolutions:
+->	/		 org.combinators.ep.language.haskell.deployment.straight.M0_Variation
 ->	/		 org.combinators.ep.language.haskell.deployment.straight.M1_Variation
 ->	/		 org.combinators.ep.language.haskell.deployment.straight.M2_Variation
 ->	/		 org.combinators.ep.language.haskell.deployment.straight.M3_Variation

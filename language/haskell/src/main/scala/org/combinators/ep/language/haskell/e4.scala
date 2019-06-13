@@ -91,7 +91,7 @@ trait e4 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
             }.block
 
           case Neg =>
-            val deltaInner = deltaChildOp(exp, domain.base.inner, Eval)
+            val deltaInner = dispatchChild(exp, domain.base.inner, Eval)
             val dispatchBothResultBlock =
               inst(Neg, dispatch(expression(exp, domain.base.inner), Simplify))
                 .appendDependent{ case Seq(negResult) =>
@@ -106,8 +106,8 @@ trait e4 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
                   |""".stripMargin))
 
           case Add =>
-            val deltaLeft = deltaChildOp(exp, domain.base.left, Eval)
-            val deltaRight = deltaChildOp(exp, domain.base.right, Eval)
+            val deltaLeft = dispatchChild(exp, domain.base.left, Eval)
+            val deltaRight = dispatchChild(exp, domain.base.right, Eval)
 
             val dispatchBothResultBlock =
               inst(Add,
@@ -130,8 +130,8 @@ trait e4 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
                 |""".stripMargin))
 
           case Sub =>
-            val deltaLeft = deltaChildOp(exp, domain.base.left, Eval)
-            val deltaRight = deltaChildOp(exp, domain.base.right, Eval)
+            val deltaLeft = dispatchChild(exp, domain.base.left, Eval)
+            val deltaRight = dispatchChild(exp, domain.base.right, Eval)
             val dispatchBothResultBlock =
               inst(Sub,
                 dispatch(expression(exp, domain.base.left), Simplify),
@@ -149,8 +149,8 @@ trait e4 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
                   |""".stripMargin))
 
           case Mult =>
-            val deltaLeft = deltaChildOp(exp, domain.base.left, Eval)
-            val deltaRight = deltaChildOp(exp, domain.base.right, Eval)
+            val deltaLeft = dispatchChild(exp, domain.base.left, Eval)
+            val deltaRight = dispatchChild(exp, domain.base.right, Eval)
             val dispatchBothResultBlock =
               inst(Mult,
                 dispatch(expression(exp, domain.base.left), Simplify),
@@ -173,8 +173,8 @@ trait e4 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
                   |""".stripMargin))
 
           case Divd =>
-            val deltaLeft = deltaChildOp(exp, domain.base.left, Eval)
-            val deltaRight = deltaChildOp(exp, domain.base.right, Eval)
+            val deltaLeft = dispatchChild(exp, domain.base.left, Eval)
+            val deltaRight = dispatchChild(exp, domain.base.right, Eval)
             val dispatchBothResultBlock =
               inst(Divd,
                 dispatch(expression(exp, domain.base.left), Simplify),

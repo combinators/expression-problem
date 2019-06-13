@@ -2,7 +2,7 @@ package org.combinators.ep.language.java   /*DD:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
 import org.combinators.ep.domain.math._
-import org.combinators.ep.domain.{Evolution, ModelDomain, OperationDependency}
+import org.combinators.ep.domain.{Evolution, OperationDependency}
 import org.combinators.templating.twirl.Java
 
 /**
@@ -11,7 +11,6 @@ import org.combinators.templating.twirl.Java
   */
 trait e7 extends Evolution with JavaGenerator with JUnitTestGenerator with OperationDependency with M0 with M2 with M4 with M5 with M6 with M7 {
   self: e0 with e1 with e2 with e3 with e4 with e5 with e6 =>
-  val domain:MathDomain with ModelDomain
 
   abstract override def logic(exp:domain.DataType, op:domain.Operation): Seq[Statement] = {
     val source = Source(exp, op)
@@ -19,14 +18,14 @@ trait e7 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
 
       case Eval =>
         exp match {
-          case Sqrt => result(Java(s" Math.sqrt(${dispatch(expression(exp,domain.base.inner), Eval)}) ").expression[Expression]())
+          case Sqrt => result(Java(s" Math.sqrt(${dispatch(expression(exp,domain.base.inner), Eval)}) ").expression())
 
           case _ => super.logic(exp, op)
         }
 
       case PrettyP =>
         exp match {
-          case Sqrt => result(Java(s""" "Sqrt(" + ${dispatch(expression(exp,domain.base.inner), PrettyP)} + ")" """).expression[Expression]())
+          case Sqrt => result(Java(s""" "Sqrt(" + ${dispatch(expression(exp,domain.base.inner), PrettyP)} + ")" """).expression())
 
           case _ => super.logic(exp, op)
         }
@@ -34,7 +33,7 @@ trait e7 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
       case Simplify =>
         exp match {
           case Sqrt =>
-            val deltaInner = deltaChildOp(exp, domain.base.inner, Eval)
+            val deltaInner = dispatchChild(exp, domain.base.inner, Eval)
             val dispatchBothResultBlock =
               inst(Sqrt, dispatch(expression(exp, domain.base.inner), Simplify))
                 .appendDependent{ case Seq(addResult) =>
@@ -50,7 +49,7 @@ trait e7 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
         exp match {
           case Sqrt =>
             val attParams = atts.map(att => att._2.toString + ".astree()").mkString(",")
-            val deltaSelf = deltaSelfOp(Identifier)
+            val deltaSelf = dispatchSelf(Identifier)
             val rhs = contextDispatch(source, deltaSelf)
             result(Java(s" new tree.Node(java.util.Arrays.asList($attParams), $rhs) ").expression[Expression]())
 

@@ -14,7 +14,6 @@ import org.combinators.templating.twirl.Java
   */
 trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with OperationDependency with M0 with M1 with M2 with M3 with M4 {
   self:e0 with e1 with e2 with e3 =>
-  val domain:MathDomain
 
   /** Provides fresh names for temporary list objects. */
   object ListNameGenerator {
@@ -72,7 +71,7 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
   }
 
   abstract override def logic(exp:domain.DataType, op:domain.Operation): Seq[Statement] = {
-    val zero = Java("0.0").expression[Expression]()
+    val zero = Java("0.0").expression[Expression]() // [T] need to be here
     val one = Java("1.0").expression[Expression]()
     val negOne = Java("-1.0").expression[Expression]()
     val zeroResultBlock =
@@ -102,8 +101,8 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
             }.block
 
           case Add =>
-            val deltaLeft = deltaChildOp(exp, domain.base.left, Eval)
-            val deltaRight = deltaChildOp(exp, domain.base.right, Eval)
+            val deltaLeft = dispatchChild(exp, domain.base.left, Eval)
+            val deltaRight = dispatchChild(exp, domain.base.right, Eval)
 
             val dispatchBothResultBlock =
               inst(Add,
@@ -125,8 +124,8 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
                      |}""".stripMargin).statements()
 
           case Sub =>
-            val deltaLeft = deltaChildOp(exp, domain.base.left, Eval)
-            val deltaRight = deltaChildOp(exp, domain.base.right, Eval)
+            val deltaLeft = dispatchChild(exp, domain.base.left, Eval)
+            val deltaRight = dispatchChild(exp, domain.base.right, Eval)
             val dispatchBothResultBlock =
               inst(Sub,
                 dispatch(expression(exp, domain.base.left), Simplify),
@@ -141,8 +140,8 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
                      |}""".stripMargin).statements()
 
           case Mult =>
-            val deltaLeft = deltaChildOp(exp, domain.base.left, Eval)
-            val deltaRight = deltaChildOp(exp, domain.base.right, Eval)
+            val deltaLeft = dispatchChild(exp, domain.base.left, Eval)
+            val deltaRight = dispatchChild(exp, domain.base.right, Eval)
             val dispatchBothResultBlock =
               inst(Mult,
                 dispatch(expression(exp, domain.base.left), Simplify),
@@ -165,8 +164,8 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
                      |""".stripMargin).statements()
 
           case Divd =>
-            val deltaLeft = deltaChildOp(exp, domain.base.left, Eval)
-            val deltaRight = deltaChildOp(exp, domain.base.right, Eval)
+            val deltaLeft = dispatchChild(exp, domain.base.left, Eval)
+            val deltaRight = dispatchChild(exp, domain.base.right, Eval)
             val dispatchBothResultBlock =
               inst(Divd,
                 dispatch(expression(exp, domain.base.left), Simplify),
@@ -192,7 +191,7 @@ trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
             // TODO: Would love to have ability to simplify neg(neg(x)) to just be x. This requires a form
             // of inspection that might not be generalizable...
           case Neg =>
-            val deltaInner = deltaChildOp(exp, domain.base.inner, Eval)
+            val deltaInner = dispatchChild(exp, domain.base.inner, Eval)
             val dispatchBothResultBlock =
               inst(Neg, dispatch(expression(exp, domain.base.inner), Simplify))
                 .appendDependent{ case Seq(addResult) =>

@@ -12,7 +12,6 @@ import org.combinators.templating.twirl.Java
   */
 trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with OperationDependency with M0 with M5 {
   self: e0 with e1 with e2 with e3 with e4 =>
-  val domain:MathDomain
   import domain._
 
   /**
@@ -43,19 +42,19 @@ trait e5 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
         exp match {
           case Lit =>
             val attParams = atts.map(att => att._2.toString).mkString(",")
-            val deltaSelf = deltaSelfOp(Identifier)
+            val deltaSelf = dispatchSelf(Identifier)
             val rhs = contextDispatch(source, deltaSelf)
             result(Java(s" new tree.Node(java.util.Arrays.asList(new tree.Leaf($attParams)), $rhs) ").expression[Expression]())
 
           case Add|Sub|Mult|Divd|Neg =>
             val attParams = atts.map(att => att._2.toString + ".astree()").mkString(",")
-            val deltaSelf = deltaSelfOp(Identifier)
+            val deltaSelf = dispatchSelf(Identifier)
             val rhs = contextDispatch(source, deltaSelf)
             result(Java(s" new tree.Node(java.util.Arrays.asList($attParams), $rhs) ").expression[Expression]())
           }
 
         // moved here from m0
-      case Identifier => result(Java(exp.hashCode.toString).expression[Expression]())
+      case Identifier => result(Java(exp.hashCode.toString).expression())
 
       case _ => super.logic(exp, op)
     }

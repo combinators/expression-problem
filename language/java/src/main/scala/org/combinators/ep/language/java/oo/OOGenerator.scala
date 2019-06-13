@@ -6,7 +6,7 @@ import org.combinators.ep.language.java.{DataTypeSubclassGenerator, JavaBinaryMe
 import org.combinators.templating.twirl.Java
 
 /**
-  * Object-oriened generator
+  * Object-orienetd generator
   *
   * @groupname approach Object-Oriented Approach to EP
   * @groupdesc approach Fundamental Helper methods for the oo approach to EP

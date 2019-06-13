@@ -1,8 +1,8 @@
 package org.combinators.ep.language.java   /*DD:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
-import org.combinators.ep.domain.math.{M0, M5, M6, MathDomain}
-import org.combinators.ep.domain.{Evolution, ModelDomain, OperationDependency}
+import org.combinators.ep.domain.math.{M0, M5, M6}
+import org.combinators.ep.domain.{Evolution, OperationDependency}
 import org.combinators.templating.twirl.Java
 
 /**
@@ -14,7 +14,6 @@ import org.combinators.templating.twirl.Java
   */
 trait e6 extends Evolution with JavaGenerator with JUnitTestGenerator with OperationDependency with M0 with M5 with M6 {
   self: e0 with e1 with e2 with e3 with e4 with e5 =>
-  val domain:MathDomain with ModelDomain
 
   /**
     * Operations can declare dependencies, which leads to #include extras
@@ -39,9 +38,9 @@ trait e6 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
       case Equals =>
 
         // GOAL: requesting AsTree on self produces same tree as invoking AsTree on that.
-        val deltaLeft = deltaSelfOp(domain.AsTree)
-        val that = Java(domain.base.that.name).expression[Expression]()
-        val deltaRight = deltaExprOp(that, domain.AsTree)
+        val deltaLeft = dispatchSelf(domain.AsTree)
+        val that = Java(domain.base.that.name).expression[Expression]()  //[T] needs to be here
+        val deltaRight = dispatchToExpression(that, domain.AsTree)
         val lhs = contextDispatch(source, deltaLeft)
         val rhs = contextDispatch(source, deltaRight)
         result(Java(s"$lhs.same($rhs)").expression())

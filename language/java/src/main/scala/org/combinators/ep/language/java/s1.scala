@@ -17,18 +17,20 @@ trait s1 extends JavaGenerator with JUnitTestGenerator with S1 { self:s0 =>
     op match {
       case Shrink =>
         exp match {
-          case Circle =>
-            val shrunkRadius = Java(s"${expression(exp, radius)}*pct").expression()
+          case Circle =>  // These [Expression] qualifiers need to be here
+            val shrunkRadius = Java(s"${expression(exp, radius)}*pct").expression[Expression]()
             inst(Circle, shrunkRadius).appendDependent{ case Seq(returnVal) =>
               CodeBlockWithResultingExpressions(result(returnVal):_*)()
             }.block
-          case Square =>
-            val shrunkRadius = Java(s"${expression(exp, side)}*pct").expression()
-            inst(Square, shrunkRadius).appendDependent{ case Seq(returnVal) =>
+
+          case Square =>    // These [Expression] qualifiers need to be here
+            val shrunkSide = Java(s"${expression(exp, side)}*pct").expression[Expression]()
+            inst(Square, shrunkSide).appendDependent{ case Seq(returnVal) =>
               CodeBlockWithResultingExpressions(result(returnVal):_*)()
             }.block
+
           case Translate =>
-            val disp = dispatch(expression(exp, shape), op, Java("pct").expression())
+            val disp = dispatch(expression(exp, shape), op, Java("pct").expression[Expression]())
             inst(Translate, expression(exp, trans), disp).appendDependent{ case Seq(returnVal) =>
               CodeBlockWithResultingExpressions(result(returnVal):_*)()
             }.block

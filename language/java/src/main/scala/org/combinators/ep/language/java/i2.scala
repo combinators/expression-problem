@@ -2,7 +2,7 @@ package org.combinators.ep.language.java    /*DD:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
 import org.combinators.ep.domain.Evolution
-import org.combinators.ep.domain.math.{I2, MathDomain}
+import org.combinators.ep.domain.math.I2
 import org.combinators.templating.twirl.Java
 
 /**
@@ -12,7 +12,6 @@ import org.combinators.templating.twirl.Java
   */
 trait i2 extends  Evolution with JavaGenerator with JUnitTestGenerator with I2 {
   self: e0 with e1 with i1 =>
-  val domain:MathDomain
 
   abstract override def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {
     tpe match {

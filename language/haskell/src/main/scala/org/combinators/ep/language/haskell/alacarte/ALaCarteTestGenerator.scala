@@ -23,7 +23,7 @@ trait ALaCarteTestGenerator extends HUnitTestGenerator {
     */
   override def actual(op: domain.Operation, inst: domain.Inst, params: Expression*): CodeBlockWithResultingExpressions = {
     toTargetLanguage(inst).appendDependent(instExp => {
-      val expr:Expression = contextDispatch(NoSource, deltaExprOp(instExp.head, op, params: _*))
+      val expr:Expression = contextDispatch(NoSource, dispatchToExpression(instExp.head, op, params: _*))
       CodeBlockWithResultingExpressions(Haskell(expr.getCode))
     })
   }

@@ -82,7 +82,7 @@ trait PerformanceTestGenerator extends ScalaGenerator with LanguageIndependentTe
                  )(initialInstanceCache)
                }
              initialInstBlock.appendDependent { case Seq(instExp) =>
-               CodeBlockWithResultingExpressions(contextDispatch(NoSource, deltaExprOp(instExp, perf.op, params: _*)))
+               CodeBlockWithResultingExpressions(contextDispatch(NoSource, dispatchToExpression(instExp, perf.op, params: _*)))
              }
            })
          }
@@ -118,7 +118,7 @@ trait PerformanceTestGenerator extends ScalaGenerator with LanguageIndependentTe
                        )(nextInstCache)
                      }
                    nextInstBlock.appendDependent { case Seq(instExp) =>
-                     CodeBlockWithResultingExpressions(contextDispatch(NoSource, deltaExprOp(instExp, perf.op, params: _*)))
+                     CodeBlockWithResultingExpressions(contextDispatch(NoSource, dispatchToExpression(instExp, perf.op, params: _*)))
                    }
                  })
                (lastCodeBlock.appendIndependent(nextCodeBlock),

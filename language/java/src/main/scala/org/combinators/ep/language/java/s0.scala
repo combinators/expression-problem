@@ -55,10 +55,10 @@ trait s0 extends Evolution with JavaGenerator with JUnitTestGenerator with S0 {
       case ContainsPt =>
         exp match {
           case Circle =>
-            result(Java(s" Math.sqrt(point.x*point.x + point.y*point.y) <= ${expression(exp, radius)}").expression[Expression]())
+            result(Java(s" Math.sqrt(point.x*point.x + point.y*point.y) <= ${expression(exp, radius)}").expression())
 
           case Square =>
-            result(Java(s" (Math.abs(point.x) <= ${expression(exp, side)}/2 && Math.abs(point.y) <= ${expression(exp, side)}/2)").expression[Expression]())
+            result(Java(s" (Math.abs(point.x) <= ${expression(exp, side)}/2 && Math.abs(point.y) <= ${expression(exp, side)}/2)").expression())
 
           case Translate =>
             val str = s"""

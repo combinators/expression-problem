@@ -236,7 +236,6 @@ trait JavaGenerator extends LanguageIndependentGenerator {
     unit
   }
 
-
   def copyDeclarations (oldType:TypeDeclaration[_], newType:TypeDeclaration[_]) : Unit = {
     val elements = oldType.getMembers.iterator().asScala
     while (elements.hasNext) {
@@ -251,7 +250,7 @@ trait JavaGenerator extends LanguageIndependentGenerator {
     * @param stmts
     * @return
     */
-  def addStatements(method:MethodDeclaration, stmts:Seq[Statement]) : MethodDeclaration = {
+  def appendStatements(method:MethodDeclaration, stmts:Seq[Statement]) : MethodDeclaration = {
     if (!method.getBody.isPresent) {
       val bb:BlockStmt = new BlockStmt()
       method.setBody(bb)

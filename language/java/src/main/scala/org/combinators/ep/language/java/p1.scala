@@ -98,7 +98,7 @@ trait p1 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
         // FIX ME
       case Output =>
         val source = Source(exp,op)
-        val delta = deltaSelfOp(PrettyP)
+        val delta = dispatchSelf(PrettyP)
         Java(s""" System.out.println(${contextDispatch(source, delta)}); """).statements()
 
       case Eval =>
@@ -111,9 +111,9 @@ trait p1 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
             case Amortized =>
               val source = Source(exp,op)
 
-              val deltaP = deltaChildOp(exp, independent.P, Eval)
-              val deltaR = deltaChildOp(exp, independent.r, Eval)
-              val deltaN = deltaChildOp(exp, independent.n, Eval)
+              val deltaP = dispatchChild(exp, independent.P, Eval)
+              val deltaR = dispatchChild(exp, independent.r, Eval)
+              val deltaN = dispatchChild(exp, independent.n, Eval)
 
               val comp = Java("P*R*Math.pow(1+R,N)/(Math.pow(1+R,N)-1)").expression[Expression]()
               val retval = Java("val_").expression[Expression]()

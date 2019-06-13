@@ -37,7 +37,7 @@ override lazy val generatedCode:Seq[CPPFile] =
     */
   override lazy val results:Results = gen.helperClasses().foldLeft(defaultResults(generatedCode))((former, next) => former.addExternalArtifact[FileWithPath](next))
 
-  override val routingPrefix: Option[String] = Some("cppVisitor")
+  override val routingPrefix: Option[String] = Some("cpp_visitor")
   override lazy val controllerAddress:String = gen.getModel.name
 }
 

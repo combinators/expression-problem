@@ -36,9 +36,9 @@ trait cpp_e6 extends Evolution with CPPGenerator with CPPBinaryMethod with TestG
     op match {
       case Equals =>
         val thatSource = NoSource
-        val deltaLeft = deltaSelfOp(domain.AsTree)
+        val deltaLeft = dispatchSelf(domain.AsTree)
         val that = new CPPExpression(domain.base.that.name)
-        val deltaRight = deltaExprOp(that, domain.AsTree)
+        val deltaRight = dispatchToExpression(that, domain.AsTree)
         val lhs = contextDispatch(source, deltaLeft)
         val rhs = contextDispatch(thatSource, deltaRight)
         result(new CPPExpression(s"$lhs->same($rhs)"))
@@ -56,11 +56,11 @@ trait cpp_e6 extends Evolution with CPPGenerator with CPPBinaryMethod with TestG
           rightBlock.appendDependent { case Seq(rightExp) =>
             CodeBlockWithResultingExpressions(
               if (eb.result) {
-                val delta = deltaExprOp(leftExp, Equals, rightExp)
+                val delta = dispatchToExpression(leftExp, Equals, rightExp)
                 val code = contextDispatch (NoSource, delta)
                 new CPPStatement(s"CHECK_TRUE ($code);")
               } else {
-                val delta = deltaExprOp(leftExp, Equals, rightExp)
+                val delta = dispatchToExpression(leftExp, Equals, rightExp)
                 val code = contextDispatch (NoSource, delta)
                 new CPPStatement(s"CHECK_FALSE($code);")
               }

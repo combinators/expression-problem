@@ -12,10 +12,9 @@ import org.combinators.templating.twirl.Java
   */
 trait e2 extends Evolution with JavaGenerator with JUnitTestGenerator with M0 with M2 {
   self:e0 with e1 =>
-  val domain:MathDomain
 
-  /** E1 Introduces the concept a String type, used for the 'PrettyPrint' operation. */
-  abstract override def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {
+  /** E2 Introduces the concept a String type, used for the 'PrettyPrint' operation. */
+  abstract override def typeConverter(tpe:domain.TypeRep) : Type = {
     tpe match {
       case String => Java("String").tpe()
       case _ => super.typeConverter(tpe)
@@ -35,8 +34,8 @@ trait e2 extends Evolution with JavaGenerator with JUnitTestGenerator with M0 wi
       case PrettyP =>
         exp match {
           case Lit => result(Java(s""" "" + ${expression(exp,litValue)} + "" """).expression[Expression]())
-          case Add => result(Java(s""" "(" + ${dispatch(expression(exp, domain.base.left), PrettyP)} + "+" + ${dispatch(expression(exp, domain.base.right), PrettyP)}+ ")" """).expression[Expression]())
-          case Sub => result(Java(s""" "(" + ${dispatch(expression(exp, domain.base.left), PrettyP)} + "-" + ${dispatch(expression(exp, domain.base.right), PrettyP)} + ")" """).expression[Expression]())
+          case Add => result(Java(s""" "(" + ${dispatch(expression(exp, domain.base.left), PrettyP)} + "+" + ${dispatch(expression(exp, domain.base.right), PrettyP)}+ ")" """).expression())
+          case Sub => result(Java(s""" "(" + ${dispatch(expression(exp, domain.base.left), PrettyP)} + "-" + ${dispatch(expression(exp, domain.base.right), PrettyP)} + ")" """).expression())
           case _ => super.logic(exp, op)
         }
 

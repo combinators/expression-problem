@@ -1,4 +1,4 @@
-package org.combinators.ep.domain.math      /*DD:LI:AI*/
+package org.combinators.ep.domain.math
 
 import org.combinators.ep.domain.Evolution
 

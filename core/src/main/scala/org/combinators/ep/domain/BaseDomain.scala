@@ -1,5 +1,6 @@
 package org.combinators.ep.domain    /*DI:LI:AI*/
 
+
 /** Foundational trait for all EP domains. */
 trait BaseDomain {
 
@@ -115,9 +116,11 @@ trait BaseDomain {
   class BinaryMethod(override val name:String, override val returnType:Option[TypeRep]) extends Operation(name, returnType, Seq(base.that))
 
   /** Special operation that declares underlying support for BinaryMethods. */
-  case object Tree extends TypeRep
+  case object TreeType extends TypeRep {
+    type scalaInstanceType = tree.Tree
+  }
   class BinaryMethodTreeBase(override val name:String, override val returnType:Option[TypeRep]) extends Operation(name, Some(baseTypeRep))
-  case object AsTree extends BinaryMethodTreeBase ("astree", Some(Tree))
+  case object AsTree extends BinaryMethodTreeBase ("astree", Some(TreeType))
 
   // TODO: Maybe ultimately replace need for BinaryMethodTreeBase since AsTree becomes dependent operation. Also AsTree is not entirely approach
   // TODO: in all cases (i.e., think graph structure) but also one can optimize the need for it away if you have Eq (for Haskell) or .equals for Java

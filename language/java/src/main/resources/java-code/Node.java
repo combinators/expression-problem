@@ -16,4 +16,12 @@ public class Node implements Tree {
     }
 
     public java.util.Optional<Node> asNode() { return java.util.Optional.of(this); }
+
+    public String toString() {
+        String children = "";
+        for (Tree t : subtrees) {
+            children += t.toString() + ", ";
+        }
+        return "[Label=" + label + ", " + children + "]";
+    }
 }

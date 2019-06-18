@@ -2,7 +2,6 @@ package org.combinators.ep.language.java    /*DD:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
 import org.combinators.ep.domain.math.M0
-import org.combinators.ep.generator.LanguageIndependentGenerator
 import org.combinators.templating.twirl.Java
 
 /**
@@ -30,7 +29,7 @@ trait e0 extends JavaGenerator with JUnitTestGenerator with M0 {
     * Decide to use formal java.lang.Double and java.lang.Integer because of the ambiguity
     * that can exist in JUnit when dealing with primitive types and boxed types.
     */
-  abstract override def toTargetLanguage(ei:domain.ExistsInstance) : CodeBlockWithResultingExpressions = {
+  abstract override def toTargetLanguage(ei:ExistsInstance) : CodeBlockWithResultingExpressions = {
      ei.inst match {
       case d:scala.Double => CodeBlockWithResultingExpressions(Java(s"new Double($d)").expression())
       case i:scala.Int => CodeBlockWithResultingExpressions(Java(s"new Integer($i)").expression())

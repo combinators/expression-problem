@@ -37,7 +37,7 @@ public class Create {
             new Evolution ("M7", "M6"),
     };
 
-    /** Known Java Variations to generate. */
+    /** Known Variations to generate. */
     static final Evolution[] standardEvolutions  = {
             new Evolution ("M0"),
             new Evolution ("M1", "M0"),

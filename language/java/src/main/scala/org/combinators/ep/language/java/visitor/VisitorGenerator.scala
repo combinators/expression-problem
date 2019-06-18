@@ -8,8 +8,9 @@ import org.combinators.templating.twirl.Java
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with OperationAsMethodGenerator with JavaBinaryMethod {
+trait VisitorGenerator extends JavaGenerator with OperationAsMethodGenerator with JavaBinaryMethod {
   val domain:BaseDomain with ModelDomain
+  import domain._
 
   /**
     * Generating a visitor solution requires:
@@ -30,12 +31,13 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
     }
 
     decls ++ flat.types.map(tpe => generateExp(flat, tpe)) ++         // one class for each sub-type
-      getModel.inChronologicalOrder                          // visitors are constructed in order
-          .filter(m => m.ops.nonEmpty)
-          .flatMap(m =>
-              m.ops.map(op => generateOperation(flat, op))) :+    // one class for each op
-      generateBaseClass(flat) :+                              // abstract base class
-      generateBase(flat)                                      // visitor gets its own class (overriding concept)
+    flat.ops.map(op => generateOperation(flat, op)) :+
+//      getModel.inChronologicalOrder                          // visitors are constructed in order
+//          .filter(m => m.ops.nonEmpty)
+//          .flatMap(m =>
+//              m.ops.map(op => generateOperation(flat, op))) :+    // one class for each op
+      generateBaseClass(flat.ops) :+                           // abstract base class
+      generateBase(flat.types)                                      // visitor gets its own class (overriding concept)
   }
 
   /** Handle self-case here. */
@@ -52,12 +54,12 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
     *
     * Note: Depends on having an external context which defines the variable e.
     */
-  override def expression (exp:domain.DataType, att:domain.Attribute) : Expression = {
+  override def expression (exp:DataType, att:Attribute) : Expression = {
     Java(s"e.get${att.concept}()").expression[Expression]()
   }
 
   /** Directly access local method, one per operation, with a parameter. */
-  override def dispatch(expr:Expression, op:domain.Operation, params:Expression*) : Expression = {
+  override def dispatch(expr:Expression, op:Operation, params:Expression*) : Expression = {
     val args:String = params.mkString(",")
     Java(s"$expr.accept(new ${op.concept}($args))").expression()
   }
@@ -66,16 +68,16 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
     * Return designated Java type associated with type.
     *
     */
-  override def typeConverter(tpe:domain.TypeRep) : Type = {
+  override def typeConverter(tpe:TypeRep) : Type = {
     tpe match {
-      case domain.baseTypeRep => Java(s"${domain.baseTypeRep.name}").tpe()
+      case domain.baseTypeRep => Java(s"${baseTypeRep.name}").tpe()
       case _ => super.typeConverter(tpe)
     }
   }
 
   /** Return Visitor class, which contains a visit method for each available sub-type. */
-  override def generateBase(flat:domain.Model): CompilationUnit = {
-    val signatures = flat.types
+  def generateBase(types:Seq[DataType]): CompilationUnit = {
+    val signatures = types  // flat.types
       .map(exp => s"public abstract R visit(${exp.name} exp);").mkString("\n")
 
     Java (s"""|package visitor;
@@ -92,16 +94,19 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
     * For visitor, the base class defines the accept method used by all subclasses.
     * When BinaryMethods are present, also includes method to convert to Tree object
     */
-  def generateBaseClass(flat:domain.Model):CompilationUnit = {
-    val binaryTreeInterface = if (flat.hasBinaryMethod()) {
-      Java(s"""public abstract tree.Tree ${domain.AsTree.instance}();""").classBodyDeclarations
+  def generateBaseClass(ops:Seq[Operation]):CompilationUnit = {
+    val binaryTreeInterface = if (ops.exists {
+      case _ : BinaryMethodTreeBase => true
+      case _ => false
+    }) {
+      Java(s"""public abstract tree.Tree ${AsTree.instance}();""").classBodyDeclarations
     } else {
       Seq.empty
     }
 
     Java(s"""|package visitor;
              |
-             |public abstract class ${domain.baseTypeRep.concept} {
+             |public abstract class ${baseTypeRep.concept} {
              |    ${binaryTreeInterface.mkString("\n")}
              |    public abstract <R> R accept(Visitor<R> v);
              |}
@@ -114,7 +119,7 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
     * Note that BinaryMethodBase is handled separately
     * As is BinaryMethods
     */
-  override def methodGenerator(exp:domain.DataType, op:domain.Operation): MethodDeclaration = {
+  override def methodGenerator(exp:DataType, op:Operation): MethodDeclaration = {
     var VoidReturn = ""
     val retType = op.returnType match {
       case Some(tpe) => typeConverter(tpe)
@@ -129,33 +134,34 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
              |}""".stripMargin).methodDeclarations().head
   }
 
-  override def logicAsTree(exp:domain.DataType) : Seq[MethodDeclaration] = {
+  // TODO: Update to Nary
+  override def logicAsTree(exp:DataType) : Seq[MethodDeclaration] = {
     val atomicArgs = exp.attributes.map(att => att.instance).mkString(",")
 
     // changes whether attributes can be access *directly* or whether they are accessed via getXXX*() method.
-    val recursiveArgs = exp.attributes.map(att => att.instance + s".${domain.AsTree.instance}()").mkString(",")
+    val recursiveArgs = exp.attributes.map(att => att.instance + s".${AsTree.instance}()").mkString(",")
 
     val body:Seq[Statement] = exp match {
-      case b:domain.Binary => {
+      case b:Binary => {
         Java(s""" return new tree.Node(java.util.Arrays.asList($recursiveArgs), ${exp.hashCode()}); """).statements
       }
-      case u:domain.Unary => {
+      case u:Unary => {
         Java(s""" return new tree.Node(java.util.Arrays.asList($recursiveArgs), ${exp.hashCode()}); """).statements
       }
-      case a:domain.Atomic => {
+      case a:Atomic => {
         Java(s""" return new tree.Leaf($atomicArgs);""").statements
       }
     }
 
     Java(
       s"""
-         |public tree.Tree ${domain.AsTree.instance}() {
+         |public tree.Tree ${AsTree.instance}() {
          |  ${body.mkString("\n")}
          |}""".stripMargin).methodDeclarations()
   }
 
   /** Generate the full class for the given expression sub-type from flattened model. */
-  def generateExp(flat:domain.Model, exp:domain.DataType) : CompilationUnit = {
+  def generateExp(flat:Model, exp:DataType) : CompilationUnit = {
     val name = exp.toString
 
     val visitor = Java (s"""|public <R> R accept(Visitor<R> v) {
@@ -171,7 +177,7 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
     }
 
     Java(s"""|package visitor;
-             |public class $name extends ${domain.baseTypeRep.name} {
+             |public class $name extends ${baseTypeRep.name} {
              |
              |  ${constructor(exp)}
              |  ${helpers.mkString("\n")}
@@ -185,7 +191,7 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
     * Pulled out since useful in both visitor AND extensible visitor, where it is overriden
     * to take advantage of knowledge of the model within which op is defined.
     */
-  def generateConstructor (op:domain.Operation, m:domain.Model): String = {
+  def generateConstructor (op:Operation, m:Model): String = {
     if (op.parameters.isEmpty) {
       ""
     } else {
@@ -198,7 +204,7 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
     *
     * Must handle BinaryMethod (Equals) and BinaryMethodBase (Astree) specially.
     */
-  def generateOperation(flat:domain.Model, op:domain.Operation): CompilationUnit = {
+  def generateOperation(flat:Model, op:Operation): CompilationUnit = {
     val signatures = flat.types.map(exp => methodGenerator(exp, op))
 
     // if operation has parameters then must add to visitor as well

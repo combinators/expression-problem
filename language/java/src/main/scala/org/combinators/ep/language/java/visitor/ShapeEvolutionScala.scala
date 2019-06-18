@@ -14,21 +14,10 @@ abstract class ShapeFoundation @Inject()(web: WebJarsUtil, app: ApplicationLifec
   extends CodeGenerationController[CompilationUnit](web, app) {
   val gen:WithDomain[ShapeDomain] with VisitorGenerator with JUnitTestGenerator
 
-  //lazy val processed:gen.domain.Model = gen.getProcessedModel   // process model as necessary
   override lazy val generatedCode:Seq[CompilationUnit] =
     gen.generatedCode() ++
-    gen.generateSuite(Some("expression"))
+    gen.generateSuite(routingPrefix)
 
-  override val routingPrefix: Option[String] = Some("scalaVisitor")
+  override val routingPrefix: Option[String] = Some("visitor")
   override lazy val controllerAddress:String = gen.getModel.name
-}
-
-class S0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-  extends ShapeFoundation(web, app) {
-  override val gen = new WithDomain(ShapeDomain) with VisitorGenerator with JUnitTestGenerator with s0
-}
-
-class S1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
-  extends ShapeFoundation(web, app) {
-  override val gen = new WithDomain(ShapeDomain) with VisitorGenerator with JUnitTestGenerator with s0 with s1
 }

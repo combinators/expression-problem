@@ -26,7 +26,7 @@ trait e5 extends Evolution with ScalaGenerator with TestGenerator with Operation
 
   abstract override def typeConverter(tpe:domain.TypeRep) : Type = {
     tpe match {
-      case domain.Tree => Type.Name("tree.Tree")      // package class goes here.
+      case domain.TreeType => Type.Name("tree.Tree")      // package class goes here.
       case _ => super.typeConverter(tpe)
     }
   }

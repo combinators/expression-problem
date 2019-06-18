@@ -46,7 +46,7 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
       getModel.inChronologicalOrder
            .filter(m => m.types.nonEmpty)
            .map(m => generateBase(m))  :+           // visitor gets its own class (overriding concept)
-      generateBaseClass(flat)                 // abstract base class
+      generateBaseClass(flat.ops)                 // abstract base class
   }
 
 
@@ -120,7 +120,7 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
   }
 
   /** Return Visitor class, which contains a visit method for each available sub-type in past. */
-  override def generateBase(model:domain.Model): CompilationUnit = {
+  def generateBase(model:domain.Model): CompilationUnit = {
     val methods:Seq[MethodDeclaration] = model.types.flatMap(exp => Java(s"public R visit(${exp.name} exp);").methodDeclarations())
     val full:String = modelTypes(model)
 

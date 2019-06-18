@@ -2,7 +2,7 @@ package org.combinators.ep.language.java    /*DD:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.NameExpr
-import org.combinators.ep.domain.math.{M0, M5, MathDomain}
+import org.combinators.ep.domain.math.{M0, M5}
 import org.combinators.ep.domain.tree.{Leaf, Node, Tree}
 import org.combinators.ep.domain.{Evolution, OperationDependency}
 import org.combinators.templating.twirl.Java

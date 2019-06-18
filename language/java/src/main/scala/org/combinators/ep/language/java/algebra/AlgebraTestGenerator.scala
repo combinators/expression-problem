@@ -142,7 +142,7 @@ trait AlgebraTestGenerator
       }).mkString(",")
 
       s"""
-         |public algebra.oo.Exp convert() {
+         |public algebra.oo.${domain.baseTypeRep.name} convert() {
          |  return new algebra.oo.${tpe.concept}($args);
          |}
        """.stripMargin
@@ -210,7 +210,7 @@ trait AlgebraTestGenerator
       case bm: domain.ProducerOperation => true
       case _ => false
     }) {
-        s"algebra.oo.Exp convert();     // Convert from Algebra into OO straw-man implementation"
+        s"algebra.oo.${domain.baseTypeRep.name} convert();     // Convert from Algebra into OO straw-man implementation"
     } else {
       ""
     }

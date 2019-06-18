@@ -113,6 +113,12 @@ trait JavaGenerator extends LanguageIndependentGenerator {
                   |}""".stripMargin).constructors().head
   }
 
+  def superFromOp(op:domain.Operation) : Statement = {
+    val params = op.parameters.map(param => s"${param.name}").mkString(",")
+
+    Java(s"""super($params);""").statement()
+  }
+
   /** Compute parameter "name" comma-separated list from operation. */
   def arguments(op:domain.Operation) : String = {
     op.parameters.map(param => param.name).mkString(",")

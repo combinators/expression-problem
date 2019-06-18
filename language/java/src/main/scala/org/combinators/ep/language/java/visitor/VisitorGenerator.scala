@@ -30,13 +30,9 @@ trait VisitorGenerator extends JavaGenerator with OperationAsMethodGenerator wit
       Seq.empty
     }
 
-    decls ++ flat.types.map(tpe => generateExp(flat, tpe)) ++         // one class for each sub-type
+    decls ++ flat.types.map(tpe => generateExp(flat, tpe)) ++       // one class for each sub-type
     flat.ops.map(op => generateOperation(flat, op)) :+
-//      getModel.inChronologicalOrder                          // visitors are constructed in order
-//          .filter(m => m.ops.nonEmpty)
-//          .flatMap(m =>
-//              m.ops.map(op => generateOperation(flat, op))) :+    // one class for each op
-      generateBaseClass(flat.ops) :+                           // abstract base class
+      generateBaseClass(flat.ops) :+                                // abstract base class
       generateBase(flat.types)                                      // visitor gets its own class (overriding concept)
   }
 
@@ -188,7 +184,7 @@ trait VisitorGenerator extends JavaGenerator with OperationAsMethodGenerator wit
   }
 
   /**
-    * Pulled out since useful in both visitor AND extensible visitor, where it is overriden
+    * Pulled out since useful in both visitor AND extensible visitor, where it is overridden
     * to take advantage of knowledge of the model within which op is defined.
     */
   def generateConstructor (op:Operation, m:Model): String = {

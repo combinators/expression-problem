@@ -10,7 +10,7 @@ trait S1 extends Evolution {
   // m1:model evolution.
   // -------------------
   //case object Shrink extends domain.Operation("shrink", Some(domain.Shape), Seq(pct))
-  case object Shrink extends ProducerOperation("simplify", Seq(pct))
+  case object Shrink extends ProducerOperation("shrink", Seq(pct))
 
   val s1 = domain.Model("s1", Seq.empty, Seq(Shrink), s0)
   override def getModel:Model = s1

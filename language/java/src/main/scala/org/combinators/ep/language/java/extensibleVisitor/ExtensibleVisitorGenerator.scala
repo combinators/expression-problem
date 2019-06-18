@@ -1,6 +1,6 @@
 package org.combinators.ep.language.java.extensibleVisitor   /*DI:LD:AD*/
 
-import com.github.javaparser.ast.body.{MethodDeclaration, TypeDeclaration}
+import com.github.javaparser.ast.body.{ConstructorDeclaration, MethodDeclaration, TypeDeclaration}
 import org.combinators.ep.domain.{BaseDomain, ModelDomain, OperationDependency}
 import org.combinators.ep.language.java.visitor.VisitorGenerator
 import org.combinators.templating.twirl.Java
@@ -131,16 +131,14 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
       Some(s"Visitor$prior<R>")
     }
 
-    val unit = addMethods(makeInterface("visitor", s"Visitor$full<R>", Seq.empty, parent), methods)
-    addTypeComment(unit, s"""
-                           |A concrete visitor describes a concrete operation on expressions. There is one visit
-                           |method per type in the class hierarchy.
-                          """.stripMargin)
+    addMethods(makeInterface("visitor", s"Visitor$full<R>", Seq.empty, parent), methods)
   }
 
   /**
-    * Pulled out since useful in both visitor AND extensible visitor, where it is overriden
+    * Pulled out since useful in both visitor AND extensible visitor, where it is overridden
     * to take advantage of knowledge of the model within which op is defined.
+    *
+    * If a producer method
     */
   override def generateConstructor (op:domain.Operation, model:domain.Model): String = {
     val full:String = modelTypes(model)
@@ -170,10 +168,20 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
     }
 
     val replacement = makeClass("visitor", s"${op.concept}$full", Seq(s"Visitor$full<$opType>"), Some(s"${op.concept}$last"))
-
     // copy everything over from the originally generated class
     val newType = replacement.getType(0)
     copyDeclarations(regularVisitor.getType(0), newType)
+
+    val elements = newType.getMembers.iterator()
+
+    // any constructors have to have appropriate super invocations
+    while (elements.hasNext) {
+      elements.next match {
+        case constr:ConstructorDeclaration =>
+          constr.getBody.addStatement(0, superFromOp(op))
+        case _ =>
+      }
+    }
     addVirtualConstructorSubtype(newType, op, full)
 
     replacement
@@ -205,6 +213,7 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
 
     val newType = replacement.getType(0)
     copyDeclarations(mainType, newType)
+
 
     // dependent operations here; must be sure that the context for dependent operations
     // is based on the actual operation itself (and not just full).

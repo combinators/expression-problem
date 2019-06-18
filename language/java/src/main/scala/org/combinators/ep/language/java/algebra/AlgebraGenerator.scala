@@ -426,7 +426,7 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
 
     // base
     val iface = Java(s"""|package algebra.oo;
-                         |public abstract class Exp {
+                         |public abstract class ${domain.baseTypeRep.concept} {
                          |    // Converts from OO solution back to Algebra
                          |    public abstract $algebraAPI convert (algebra.Combined${domain.baseTypeRep.concept}Alg algebra);
                          |}""".stripMargin).compilationUnit()

@@ -8,18 +8,11 @@ import org.combinators.templating.twirl.Java
 import org.combinators.ep.language.java.ReplaceCovariantType._
 
 /**
-  * C1 doesn't yet compile properly. Missing some key classes
+  * Producer Operations
   *
-  * EvalIdzExp (IFace) -- PrettypExp (IFace)  -- HeightExp (IFace)
-  + EvalIdzAdd          + [PrettypDivd] MISSING
-    + PrettypAdd        + PrettypMult
-  + EvalIdzLit          + PrettypNeg
-    + PrettypLit
-  + EvalIdzSub
-    + PrettypSub
-
-  + EvalIdzInv [Missing]  + PrettypInv
-
+  * When a producer operation exists, there is no problem if it is the last one in the evolution.
+  * However, if others come after, then you need to generate conversion visitor interfaces for
+  * all successive levels.
   */
 trait InterpreterGenerator
   extends JavaGenerator
@@ -38,15 +31,25 @@ trait InterpreterGenerator
     val model = getModel
 
     //  binary methods for helper
-    val decls:Seq[CompilationUnit] = if (model.flatten().hasBinaryMethod()) {
+    val decls:Seq[CompilationUnit] = if (model.flatten().hasBinaryMethod) {
       helperClasses()
+    } else {
+      Seq.empty
+    }
+
+    // producer methods for helper
+    val hasProducer = model.flatten().hasProducerMethod
+
+    // producer conversion factories.
+    val factories:Seq[CompilationUnit] = if (hasProducer) {
+      generateConversionFactories()
     } else {
       Seq.empty
     }
 
     // one interface for every model that contains an operation
     // Each operation gets interface
-    (decls ++
+    (decls ++ factories ++
       model.inChronologicalOrder.filter(m => m.ops.nonEmpty).flatMap(m => Seq(generateBase(m), generateFactory(m))) ++
     //
     // Each operation must provide class implementations for all past dataTypes since last operation
@@ -116,8 +119,6 @@ trait InterpreterGenerator
              |}""".stripMargin).methodDeclarations().head
   }
 
-
-
   /**
     * Must extend base EvalExp
     * Must have constructor and access
@@ -158,7 +159,10 @@ trait InterpreterGenerator
     *
     * Shall only be called on a model with operations.
     *
-    * Added special logic for BinaryMethod
+    * Added special logic for BinaryMethod.
+    *
+    * if producer operation exists in this model (or indeed, in any previous model) then
+    * you need conversion implementation.
     *
     * @param model
     * @return
@@ -204,14 +208,144 @@ trait InterpreterGenerator
 
     val combinedOps:String = model.ops.sortWith(_.name < _.name).map(op => op.concept).mkString("")
 
+    // add types if (a) we have producer method; or (b) in past there was producer method and we have types.
+    val knownTypes = if (model.hasProducerMethod || (model.flatten().hasProducerMethod && model.types.nonEmpty)) {
+      // need to add conversion method to interface
+      var allKnown = model.flatten().types
 
+      // might extend from past; if so, only include those types that were indeed added (refinement)
+      var lastProducer = model.last
+      while (!lastProducer.isEmpty && !lastProducer.hasProducerMethod) {
+        lastProducer = lastProducer.last
+      }
 
+      // must include for first one only
+      val includeProducer = if (lastProducer.isEmpty) {
+        "<R> R accept(KnownDataTypes<R> from);"
+      } else {
+        ""
+      }
 
+      val past = if (lastProducer.isEmpty) {
+        ""
+      } else {
+        val lastOps:String = lastProducer.ops.sortWith(_.name < _.name).map(op => op.concept).mkString("")
+        s"extends ${lastOps}Exp.KnownDataTypes<R>"
+      }
+
+      val signatures = if (lastProducer.isEmpty) {
+        allKnown.map(e => s"R convert($combinedOps${e.concept} from);")
+      } else {
+        // remove all types that existed in lastProducer's time.
+        lastProducer.flatten().types.foreach(exp =>
+          if (allKnown.contains(exp)) {
+            allKnown = allKnown.filterNot(dt => dt.equals(exp))  // remove if contained.
+          }
+        )
+        val lastProducerOps:String = lastProducer.ops.sortWith(_.name < _.name).map(op => op.concept).mkString("")
+        allKnown.map(e => s"R convert($lastProducerOps${e.concept} from);")
+      }
+
+      // filter out those data types which are actually known in prior producer, remove them, and
+      // then make sure to properly type the parameters in allKnown. For example,
+      //      public interface FindExp extends EqualsExp {
+      //
+      //        // known at the time of this evolution;
+      //        interface KnownDataTypes<R> extends CollectSimplifyExp.KnownDataTypes<R> {
+      //          R convert(CollectSimplifySqrt from);
+      //        }
+      //
+      //        public Integer find(Double target);
+      //      }
+
+      Seq(s"""
+         |// All known data types up until this evolution.s
+         |interface KnownDataTypes<R> $past {
+         |   ${signatures.mkString("\n")}
+         |}
+         |
+         |$includeProducer
+       """.stripMargin)
+    } else {
+      Seq.empty
+    }
 
     Java(s"""|package interpreter;
              |public interface ${fullType.toString} $extension {
+             |  ${knownTypes.mkString("\n")}
              |  ${signatures.mkString("\n")}
              |}""".stripMargin).compilationUnit
+  }
+
+  def makeConversionFactory(fromModel:domain.Model, toModel:domain.Model) : CompilationUnit = {
+    val allKnownTypes = toModel.flatten().types
+
+    val formerType: Type = Java(modelInterfaceName(fromModel)).tpe()
+    val toType: Type = Java(modelInterfaceName(toModel)).tpe()
+
+    val combinedFromOps:String = fromModel.ops.sortWith(_.name < _.name).map(op => op.concept).mkString("")
+    val combinedToOps:String = toModel.ops.sortWith(_.name < _.name).map(op => op.concept).mkString("")
+
+    // works not on 'model' but on latest one 'getModel'
+    val factoryMethods:Seq[MethodDeclaration] = allKnownTypes.flatMap(e => {
+      val params:Seq[String] = e.attributes.map(att => {
+        att.tpe match {
+          case domain.baseTypeRep => s"from.get${att.concept}().accept(this)"   // recursive
+          case _ => s"from.get${att.concept}()"              // all others, non-recursive
+        }
+      })
+
+      Java(
+        s"""
+           |@Override
+           |public $combinedToOps${e.concept} convert($combinedFromOps${e.concept} from) {
+           |  return new $combinedToOps${e.concept}(${params.mkString(",")});
+           |}""".stripMargin).methodDeclarations()
+    })
+
+    Java(
+      s"""
+         |package interpreter;
+         |
+         |public class ${formerType}To${toType}Factory implements $toType.KnownDataTypes<$toType> {
+         |  ${factoryMethods.mkString("\n")}
+         |}""".stripMargin).compilationUnit()
+  }
+
+  /**
+    * Whenever producer method is introduced, we need conversion factories to step up
+    * from prior level to current level. This is tricky since each factory extends the
+    * one before it, and new data types are inserted only when they are defined. Plus
+    * there needs to be a dynamic instanceof check to call properly.
+    *
+    * Must have test case of intervening models with just new types (no ops) and just
+    * new ops (no types)
+    *
+    * @return
+    */
+  def generateConversionFactories(): Seq[CompilationUnit] = {
+    getModel.inChronologicalOrder.foldLeft(Seq[CompilationUnit]()) { case (seq, m) =>
+      val next = m
+
+      // if no operations OR there is no producer method, then we can just proceed with set we have
+      if (next.ops.isEmpty || !next.hasProducerMethod) {
+        seq
+      } else {
+        // so next has a producer method. For ALL FUTURE levels we need to have a conversion factory
+        var allFuture:Seq[CompilationUnit] = Seq.empty
+        var nextOne = getModel
+        while (!nextOne.isEmpty && !nextOne.name.equals(next.name)) {
+          if (nextOne.ops.nonEmpty) {
+            // need conversion from next to last
+            allFuture = allFuture :+ makeConversionFactory(m, nextOne)
+          }
+
+          nextOne = nextOne.last
+        }
+
+        seq ++ allFuture
+      }
+    }
   }
 
   /**
@@ -245,7 +379,6 @@ trait InterpreterGenerator
              |    ${factoryMethods.mkString("\n")}
              |}""".stripMargin).compilationUnit
   }
-
 
   def lastTypesSinceAnOperation(model:domain.Model): Seq[domain.DataType] = {
     if (model.isEmpty || model.ops.nonEmpty) {
@@ -292,7 +425,7 @@ trait InterpreterGenerator
     allTypes.map(exp => {
       val name = Java(s"${exp.concept}").simpleName()
       val baseInterface:Type = Java(baseInterfaceName(model.lastModelWithOperation())).tpe()
-
+      var liftedOps:Seq[ImportDeclaration] = Seq.empty   // any lifts? Store here.
       val atts:Seq[FieldDeclaration] = if (isBase) {
         exp.attributes.flatMap(att => Java(s"${typeConverter(att.tpe)} ${att.instance};").fieldDeclarations())
       } else {
@@ -301,7 +434,6 @@ trait InterpreterGenerator
 
       val params:Seq[String] = exp.attributes.map(att => s"${typeConverter(att.tpe)} ${att.instance}")
       val paramNames:Seq[String] = exp.attributes.map(att => s"${att.instance}")
-
 
       val getters: Seq[MethodDeclaration] =
         exp.attributes.flatMap(att => {
@@ -345,10 +477,16 @@ trait InterpreterGenerator
         } else {
           val md: MethodDeclaration = methodGenerator(exp, op)
 
+          // also have to convert inner producer invocations (i.e., return Sqrt(getInner().simplify());)
+          // into ones that lift up the inner first if needed, i.e.,
+          // return Sqrt(getInner().simplify().accept(new CollectSimplifyExpToExpFactory()));
+
           // be sure to recursively change any Exp into fullType, for producer capability
           val returnType: Type = md.getType
+          var isProducer:Boolean = false
           if (returnType.equals(typeConverter(domain.baseTypeRep))) {
             md.setType(fullType)
+            isProducer = true
           }
 
           // same thing for parameters
@@ -358,7 +496,29 @@ trait InterpreterGenerator
             }
           })
 
-          Seq(md)
+          // if producer AND type (exp) is defined after the level in which operation
+          // is defined, then we need to lift up by immediately calling accept. This
+          // appears to be a 'forced' solution that has some loopholes but works.
+          val revisedMD = if (isProducer) {
+            val definedOpLevel = getModel.findOperation(op)
+
+            val producer = definedOpLevel.ops.sortWith(_.name < _.name).map(op => op.concept).mkString("") + "Exp"
+            if (!producer.equals(fullType.toString)) {
+              // must replace inner execution
+              liftedOps = liftedOps :+
+                Java(s"import static interpreter.${fullType}Factory.*;").importDeclaration()
+
+              val fullCode = md.toString
+                .replace(s".${op.instance}()", s".${op.instance}().accept(new ${producer}To${fullType}Factory())")
+              Java(fullCode).methodDeclarations().head
+            } else {
+              md
+            }
+          } else {
+            md
+          }
+
+          Seq(revisedMD)
         }
       })
 
@@ -373,6 +533,9 @@ trait InterpreterGenerator
           s"extends $past$name" // go backwards?
         }
 
+      // bring in imports if (a) there is a producer operation in our model; or (b) there is a new
+      // data type defined after a former producer method was defined, and we need to bring that
+      // one in to "lift up"
       val factoryImports: Seq[ImportDeclaration] = {
         if (model.ops.exists{
               case _ : domain.ProducerOperation => true
@@ -384,15 +547,44 @@ trait InterpreterGenerator
         }
       }
 
+      // Only put producer method in if (a) this model has a producer operation; and (b)
+      // no prior level has a producer method. Each data type is iterated over (i.e., exp). Note that when new
+      // data types are defined (i.e., Sqrt in M7) then we need to do a runtime cast to the proper
+      // level (i.e., FindExp.KnownDataTypes) from the base level (i.e., CollectSimplify) which contains
+      // the producer operation.
+      val definedLevelType:domain.Model = getModel.findType(exp).lastModelWithOperation()
+
+      val conversionMethod:Seq[String] = if (model.hasProducerMethod && !model.last.flatten().hasProducerMethod) {
+        if (definedLevelType.before(model)) {
+          s"""|	@Override
+              |	public <R> R accept(KnownDataTypes<R> from) {
+              |		return from.convert(this);
+              |}""".stripMargin.split("\n")
+        } else {
+          val nextCombinedOps:String = definedLevelType.ops.sortWith(_.name < _.name).map(op => op.concept).mkString("")
+
+          s"""|	@Override
+              |	public <R> R accept(KnownDataTypes<R> from) {
+              |   if (from instanceof ${nextCombinedOps}Exp.KnownDataTypes) {
+              |      return ((${nextCombinedOps}Exp.KnownDataTypes<R>)from).convert(this);
+              |   }
+              |		throw new IllegalArgumentException ("unknown conversion.");
+              |}""".stripMargin.split("\n")
+        }
+      } else {
+        Seq.empty
+      }
       val unit = Java(s"""
               |package interpreter;
               |${factoryImports.mkString("\n")}
+              |${liftedOps.mkString("\n")}
               |public class $combinedOps$name $extension implements ${baseInterface.toString} {
               |  ${constructor.toString}
               |
               |  ${getters.mkString("\n")}
               |  ${atts.mkString("\n")}
               |  ${operations.mkString("\n")}
+              |  ${conversionMethod.mkString("\n")}
               |}""".stripMargin).compilationUnit()
 
       // replace all covariant types!

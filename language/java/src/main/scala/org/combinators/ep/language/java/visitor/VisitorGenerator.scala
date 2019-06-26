@@ -24,7 +24,7 @@ trait VisitorGenerator extends JavaGenerator with OperationAsMethodGenerator wit
     val flat = getModel.flatten()
 
     //  binary methods for helper
-    val decls:Seq[CompilationUnit] = if (flat.hasBinaryMethod()) {
+    val decls:Seq[CompilationUnit] = if (flat.hasBinaryMethod) {
       helperClasses()
     } else {
       Seq.empty
@@ -166,7 +166,7 @@ trait VisitorGenerator extends JavaGenerator with OperationAsMethodGenerator wit
 
     // Regardless of model passed in, we need to flatten everything to get any
     // BinaryMethodTreeBase ops. This is only necessary because of extensibleVisitor...
-    val helpers:Seq[BodyDeclaration[_]] = if (flat.hasBinaryMethod()) {
+    val helpers:Seq[BodyDeclaration[_]] = if (flat.hasBinaryMethod) {
       logicAsTree(exp)
     } else {
       Seq.empty

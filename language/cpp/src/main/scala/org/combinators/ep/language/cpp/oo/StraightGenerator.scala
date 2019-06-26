@@ -131,7 +131,7 @@ trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with
       //new CPPElement (s"${sub.name} (${params.mkString(",")}) : ${cons.mkString(",")} {}")
 
     // add Binary methods if needed
-    val treeHeader = if (getModel.flatten().hasBinaryMethod()) {
+    val treeHeader = if (getModel.flatten().hasBinaryMethod) {
       Seq("""#include "DefinedSubtypes.h" """, """#include "Node.h" """, """#include "Leaf.h" """, """#include "Tree.h" """)
     } else {
       Seq.empty
@@ -173,7 +173,7 @@ trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with
     })
 
     // add Binary #include file if needed
-    val headerIncludes = if (getModel.flatten().hasBinaryMethod()) {
+    val headerIncludes = if (getModel.flatten().hasBinaryMethod) {
       Seq("""#include "Tree.h" """)
     } else {
       Seq.empty
@@ -193,7 +193,7 @@ trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with
   }
 
   def generateBinaryMethodHelpers():Seq[CPPFile] = {
-    if (getModel.flatten().hasBinaryMethod()) {
+    if (getModel.flatten().hasBinaryMethod) {
       declarations
     } else {
       Seq.empty

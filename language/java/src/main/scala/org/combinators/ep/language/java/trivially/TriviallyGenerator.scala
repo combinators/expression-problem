@@ -19,7 +19,7 @@ trait TriviallyGenerator extends OOGenerator {
     val flat = getModel.flatten()
 
     //  binary methods for helper
-    val decls:Seq[CompilationUnit] = if (flat.hasBinaryMethod()) {
+    val decls:Seq[CompilationUnit] = if (flat.hasBinaryMethod) {
       helperClasses()
     } else {
       Seq.empty
@@ -222,7 +222,7 @@ trait TriviallyGenerator extends OOGenerator {
 
   def generateBase(model: domain.Model): CompilationUnit = {
 
-    val binaryMethodHelper: Seq[BodyDeclaration[_]] = if (model.flatten().hasBinaryMethod()) {
+    val binaryMethodHelper: Seq[BodyDeclaration[_]] = if (model.flatten().hasBinaryMethod) {
       Java(s"""public tree.Tree ${domain.AsTree.instance}();""").classBodyDeclarations
     } else {
       Seq.empty

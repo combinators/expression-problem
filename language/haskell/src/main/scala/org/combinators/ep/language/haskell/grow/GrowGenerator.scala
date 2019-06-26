@@ -669,7 +669,7 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     * @return
     */
   override def generateDataTypes(m:domain.Model): HaskellWithPath = {
-    val binaryTreeInterface =  if (m.flatten().hasBinaryMethod()) {
+    val binaryTreeInterface =  if (m.flatten().hasBinaryMethod) {
       definedDataSubTypes("", m.types) ++ declarations
     } else {
       Seq.empty

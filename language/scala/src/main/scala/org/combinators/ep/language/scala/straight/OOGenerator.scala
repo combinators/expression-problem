@@ -25,7 +25,7 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod {
     val flat = getModel.flatten()
 
     //  binary methods for helper
-    val decls:Seq[ScalaWithPath] = if (flat.hasBinaryMethod()) {
+    val decls:Seq[ScalaWithPath] = if (flat.hasBinaryMethod) {
       helperClasses()
     } else {
       Seq.empty

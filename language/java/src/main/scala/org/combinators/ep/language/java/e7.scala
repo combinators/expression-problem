@@ -30,10 +30,18 @@ trait e7 extends Evolution with JavaGenerator with JUnitTestGenerator with Opera
           case _ => super.logic(exp, op)
         }
 
+        // this has no simplify possibilities (yet) so just return regular construction.
+        // Note, however, that this data type (Sqrt) is defined after the producer method
+        // from an earlier level; some approaches may be challenged to make this work
+        // (only interpreter for now) but it isn't as simple as moving this logic into the
+        // dispatch() method, since that has embedded 'exp' into an expression. The only
+        // way to make that work is to unbundle it, and allow dispatch to be defined
+        // as dispatch (exp, attname, operation) and then have the default dispatch
+        // invoke 'expression(exp, attname)' which it could do since expression is in
+        // the languageIndependent API.
       case Simplify =>
         exp match {
           case Sqrt =>
-            val deltaInner = dispatchChild(exp, domain.base.inner, Eval)
             val dispatchBothResultBlock =
               inst(Sqrt, dispatch(expression(exp, domain.base.inner), Simplify))
                 .appendDependent{ case Seq(addResult) =>

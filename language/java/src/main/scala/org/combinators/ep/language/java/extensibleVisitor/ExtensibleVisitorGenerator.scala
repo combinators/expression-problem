@@ -28,7 +28,7 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
     val flat = getModel.flatten()
 
     //  binary methods for helper
-    val decls:Seq[CompilationUnit] = if (flat.hasBinaryMethod()) {
+    val decls:Seq[CompilationUnit] = if (flat.hasBinaryMethod) {
       helperClasses()
     } else {
       Seq.empty

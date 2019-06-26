@@ -170,7 +170,7 @@ trait ModelDomain extends BaseDomain {
       *
       * Typical usage is to call getModel.flatten before calling this method.
       */
-    def hasBinaryMethod():Boolean = {
+    def hasBinaryMethod:Boolean = {
       if (ops.exists {
         case _ : BinaryMethodTreeBase => true
         case _ => false
@@ -179,6 +179,41 @@ trait ModelDomain extends BaseDomain {
       } else {
         false
       }
+    }
+
+    /**
+      * Determine if model contains any Producer Methods.
+      *
+      * Typical usage is to call getModel.flatten before calling this method.
+      */
+    def hasProducerMethod:Boolean = {
+      if (ops.exists {
+        case _ : ProducerOperation => true
+        case _ => false
+      }) {
+        true
+      } else {
+        false
+      }
+    }
+
+    /**
+      * Determine if THIS model comes before the given model in the evolution history.
+      *
+      * Note that if models are the SAME then return false.
+      * @param other
+      */
+    def before(other:Model):Boolean = {
+      if (this.equals(other)) { return false; }
+
+      var n = other
+      while (!n.isEmpty) {
+        n = n.last
+        if (this.equals(n)) { return true; }
+      }
+
+      // ends on empty? Can't be before
+      false
     }
   }
 

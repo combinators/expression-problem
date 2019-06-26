@@ -87,7 +87,7 @@ trait TestGenerator extends JavaGenerator with LanguageIndependentTestGenerator 
 
          expectedBlock.appendDependent { case Seq(expectedValue) =>
            actualBlock.appendDependent { case Seq(actualValue) =>
-             CodeBlockWithResultingExpressions(Java(s"assertEquals($expectedValue, $actualValue);").statement())()
+             CodeBlockWithResultingExpressions(Java(s"assertEquals($expectedValue, $actualValue); ").statement())()
            }
          }.block
      }

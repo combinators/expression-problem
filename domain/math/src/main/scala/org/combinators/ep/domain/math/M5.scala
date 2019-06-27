@@ -42,8 +42,6 @@ trait M5 extends Evolution {
                                    new BinaryInst(Add, LitInst(0.0), LitInst(7.0)))
 
 
-  new Leaf(2.0)
-
   val treeSimplified = new Node(Seq(new Leaf(2.0), new Leaf(7.0)), Mult.name.hashCode)
   /**
     * Special test case for same queries.

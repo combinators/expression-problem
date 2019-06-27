@@ -65,7 +65,7 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
 
     //  binary methods for helper
     val decls:Seq[CompilationUnit] = if (getModel.flatten().hasBinaryMethod) {
-      helperClasses()
+      generateHelperClasses()
     } else {
       Seq.empty
     }

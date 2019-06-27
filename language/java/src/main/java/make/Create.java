@@ -35,6 +35,7 @@ public class Create {
             new Evolution ("M5", "M4"),
             new Evolution ("M6", "M5"),
             new Evolution ("M7", "M6"),
+            new Evolution ("M8", "M7"),
     };
 
     /** Known Variations to generate. */

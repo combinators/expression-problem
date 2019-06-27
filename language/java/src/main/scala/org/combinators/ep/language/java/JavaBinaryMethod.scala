@@ -17,7 +17,7 @@ trait JavaBinaryMethod {
     *
     * @return
     */
-  def helperClasses(): Seq[CompilationUnit] = {
+  def generateHelperClasses(): Seq[CompilationUnit] = {
     val classes =
       Seq(
         JavaParser.parse(getClass.getResourceAsStream("/java-code/Tree.java")),

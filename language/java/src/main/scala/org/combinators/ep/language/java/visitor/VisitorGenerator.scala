@@ -8,7 +8,7 @@ import org.combinators.templating.twirl.Java
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait VisitorGenerator extends JavaGenerator with OperationAsMethodGenerator with JavaBinaryMethod {
+trait VisitorGenerator extends JavaGenerator with JavaBinaryMethod {
   val domain:BaseDomain with ModelDomain
   import domain._
 
@@ -25,13 +25,15 @@ trait VisitorGenerator extends JavaGenerator with OperationAsMethodGenerator wit
 
     //  binary methods for helper
     val decls:Seq[CompilationUnit] = if (flat.hasBinaryMethod) {
-      helperClasses()
+      generateHelperClasses()
     } else {
       Seq.empty
     }
 
-    decls ++ flat.types.map(tpe => generateExp(flat, tpe)) ++       // one class for each sub-type
-    flat.ops.map(op => generateOperation(flat, op)) :+
+    val includeBinaryMethod = flat.hasBinaryMethod
+
+    decls ++ flat.types.map(tpe => generateExp(includeBinaryMethod, tpe)) ++       // one class for each sub-type
+    flat.ops.map(op => generateVisitorOperation(flat, op)) :+
       generateBaseClass(flat.ops) :+                                // abstract base class
       generateBase(flat.types)                                      // visitor gets its own class (overriding concept)
   }
@@ -115,7 +117,7 @@ trait VisitorGenerator extends JavaGenerator with OperationAsMethodGenerator wit
     * Note that BinaryMethodBase is handled separately
     * As is BinaryMethods
     */
-  override def methodGenerator(exp:DataType, op:Operation): MethodDeclaration = {
+  def methodGenerator(exp:DataType, op:Operation): MethodDeclaration = {
     var VoidReturn = ""
     val retType = op.returnType match {
       case Some(tpe) => typeConverter(tpe)
@@ -157,7 +159,7 @@ trait VisitorGenerator extends JavaGenerator with OperationAsMethodGenerator wit
   }
 
   /** Generate the full class for the given expression sub-type from flattened model. */
-  def generateExp(flat:Model, exp:DataType) : CompilationUnit = {
+  def generateExp(includeBinaryMethodSupport:Boolean, exp:DataType) : CompilationUnit = {
     val name = exp.toString
 
     val visitor = Java (s"""|public <R> R accept(Visitor<R> v) {
@@ -166,7 +168,7 @@ trait VisitorGenerator extends JavaGenerator with OperationAsMethodGenerator wit
 
     // Regardless of model passed in, we need to flatten everything to get any
     // BinaryMethodTreeBase ops. This is only necessary because of extensibleVisitor...
-    val helpers:Seq[BodyDeclaration[_]] = if (flat.hasBinaryMethod) {
+    val helpers:Seq[BodyDeclaration[_]] = if (includeBinaryMethodSupport) {
       logicAsTree(exp)
     } else {
       Seq.empty
@@ -174,7 +176,6 @@ trait VisitorGenerator extends JavaGenerator with OperationAsMethodGenerator wit
 
     Java(s"""|package visitor;
              |public class $name extends ${baseTypeRep.name} {
-             |
              |  ${constructor(exp)}
              |  ${helpers.mkString("\n")}
              |  ${fields(exp).mkString("\n")}
@@ -200,7 +201,7 @@ trait VisitorGenerator extends JavaGenerator with OperationAsMethodGenerator wit
     *
     * Must handle BinaryMethod (Equals) and BinaryMethodBase (Astree) specially.
     */
-  def generateOperation(flat:Model, op:Operation): CompilationUnit = {
+  def generateVisitorOperation(flat:Model, op:Operation): CompilationUnit = {
     val signatures = flat.types.map(exp => methodGenerator(exp, op))
 
     // if operation has parameters then must add to visitor as well

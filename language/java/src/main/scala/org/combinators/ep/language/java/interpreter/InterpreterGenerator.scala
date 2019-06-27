@@ -32,7 +32,7 @@ trait InterpreterGenerator
 
     //  binary methods for helper
     val decls:Seq[CompilationUnit] = if (model.flatten().hasBinaryMethod) {
-      helperClasses()
+      generateHelperClasses()
     } else {
       Seq.empty
     }
@@ -49,12 +49,30 @@ trait InterpreterGenerator
 
     // one interface for every model that contains an operation
     // Each operation gets interface
-    (decls ++ factories ++
+    val results = (decls ++ factories ++
       model.inChronologicalOrder.filter(m => m.ops.nonEmpty).flatMap(m => Seq(generateBase(m), generateFactory(m))) ++
     //
     // Each operation must provide class implementations for all past dataTypes since last operation
     model.inChronologicalOrder.filter(m => m.ops.nonEmpty).flatMap(m => generateBaseExtensions(m)) ++
     generateIntermediateTypes(model)).distinct
+
+    // In some cases, intermediateTypes() and generateBaseExtensions() generate the same class. Must
+    // make sure not to include twice.
+    var existingNames:Seq[String] = Seq.empty
+    var returnSeq:Seq[CompilationUnit] = Seq.empty
+    results.foreach(cu => {
+      val name = cu.getType(0).getName.toString
+      if (!existingNames.contains(name)) {
+        existingNames = existingNames :+ name
+        returnSeq = returnSeq :+ cu
+      }
+    })
+
+    // for now a limitation that IF there is a producer operation, then the final evolution
+    // must contain at least one operation.
+    // TODO: Fix this with an intermediate interface (with an inner KnownTypes as marker interface)
+    // TODO: for lifting up different elements.
+    returnSeq
   }
 
   /**

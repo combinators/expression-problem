@@ -1,5 +1,5 @@
 package org.combinators.ep.language.scala.deployment.straight
-/* Generated: Thu Jun 13 12:39:16 EDT 2019 */
+/* Generated: Wed Jun 26 17:53:47 EDT 2019 */
 import org.combinators.ep.domain.math._
 import org.combinators.ep.domain._
 import org.combinators.ep.language.scala._

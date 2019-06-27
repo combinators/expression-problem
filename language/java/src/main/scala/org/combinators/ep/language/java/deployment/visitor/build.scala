@@ -1,5 +1,5 @@
 package org.combinators.ep.language.java.deployment.visitor
-/* Generated: Thu Jun 13 12:39:16 EDT 2019 */
+/* Generated: Wed Jun 26 17:53:46 EDT 2019 */
 import org.combinators.ep.domain.math._
 import org.combinators.ep.domain._
 import org.combinators.ep.language.java._
@@ -70,6 +70,14 @@ override val gen = new WithDomain(math.MathDomain) with VisitorGenerator with JU
  */
 class M7_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle) extends Foundation(web, app) {
 override val gen = new WithDomain(math.MathDomain) with VisitorGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6 with e7
+}
+/* 
+ * visitor solution in java for M8
+ * 
+ * @group evolutions 
+ */
+class M8_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle) extends Foundation(web, app) {
+override val gen = new WithDomain(math.MathDomain) with VisitorGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6 with e7 with e8
 }
 /* 
  * visitor solution in java for I1

@@ -125,13 +125,16 @@ trait InterpreterTestGenerator
                 val defined = getModel.findOperation(firstOp)
                 val definedOps: String = defined.ops.sortWith(_.name < _.name).map(op => op.concept).mkString("")
 
-                val pastBody:String = produced.resultingExpressions.mkString("\n")
-                val expr2 = s"$pastBody.accept(new ${definedOps}ExpTo${highestOps}ExpFactory())"
-                CodeBlockWithResultingExpressions(
-                  Java(expr2).expression()
-                )
+                if (definedOps.equals(highestOps)) {
+                  actual(firstOp, seq.inst, params: _*)
+                } else {
+                  val pastBody: String = produced.resultingExpressions.mkString("\n")
+                  val expr2 = s"$pastBody.accept(new ${definedOps}ExpTo${highestOps}ExpFactory())"
+                  CodeBlockWithResultingExpressions(
+                    Java(expr2).expression()
+                  )
+                }
               }
-
                 case _ => actual(firstOp, seq.inst, params: _*)
               }
             }

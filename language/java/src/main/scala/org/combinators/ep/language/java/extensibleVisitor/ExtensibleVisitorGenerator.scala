@@ -29,13 +29,15 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
 
     //  binary methods for helper
     val decls:Seq[CompilationUnit] = if (flat.hasBinaryMethod) {
-      helperClasses()
+      generateHelperClasses()
     } else {
       Seq.empty
     }
 
+    val includeBinaryMethod = flat.hasBinaryMethod
+
     decls ++ getModel.inChronologicalOrder.flatMap(m =>
-      m.types.map(tpe => generateExtensibleExp(flat, m, tpe)) ++       // one for each type; important to pass in both 'flat' and 'm'
+      m.types.map(tpe => generateExtensibleExp(includeBinaryMethod, m, tpe)) ++       // one for each type; important to pass in both 'flat' and 'm'
         m.ops.map(op => generateOperation(m, op))                      // and new operations
     ) ++
       // cannot have extension for the FIRST model entry, so skip it
@@ -85,8 +87,8 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
     * Even though super-class method uses flatten, we cannot do so, because of the
     * requirement that "we only add visitor checks for models after first one."
     */
-   def generateExtensibleExp(flat: domain.Model, model:domain.Model, exp:domain.DataType) : CompilationUnit = {
-    val unit = generateExp(flat, exp)
+   def generateExtensibleExp(includeBinaryMethod:Boolean, model:domain.Model, exp:domain.DataType) : CompilationUnit = {
+    val unit = generateExp(includeBinaryMethod, exp)
 
     // replace old accept method with new one
     val klass = unit.getType(0)
@@ -152,7 +154,7 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
 
   /** Extensions based on past operation */
   def operationExtension(op:domain.Operation, model:domain.Model): CompilationUnit = {
-    val regularVisitor:CompilationUnit = super.generateOperation(model, op)
+    val regularVisitor:CompilationUnit = super.generateVisitorOperation(model, op)
 
     val opType:Type = typeConverter(op.returnType.get)
     val full:String = modelTypes(model)
@@ -188,8 +190,8 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
   }
 
   /** Brings in classes for each operation. These can only be completed with the implementations. */
-  override def generateOperation(model:domain.Model, op:domain.Operation): CompilationUnit = {
-    val regularVisitor:CompilationUnit = super.generateOperation(model, op)
+  def generateOperation(model:domain.Model, op:domain.Operation): CompilationUnit = {
+    val regularVisitor:CompilationUnit = super.generateVisitorOperation(model, op)
     val mainType:TypeDeclaration[_] = regularVisitor.getType(0)
 
     // convert 'extends visitor' into 'implements visitor'

@@ -20,7 +20,7 @@ trait TriviallyGenerator extends OOGenerator {
 
     //  binary methods for helper
     val decls:Seq[CompilationUnit] = if (flat.hasBinaryMethod) {
-      helperClasses()
+      generateHelperClasses()
     } else {
       Seq.empty
     }

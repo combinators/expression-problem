@@ -41,10 +41,21 @@ public class TestSynthesis {
             return false;
         }
         // git clone -n variation_0 http://localhost:9000/freecell/doublefreecell/doublefreecell.git
-        String command = "git clone -b variation_0 " + url;
+        //String command = "git clone -b variation_0 " + url;
+        ArrayList<String> gitCommand = new ArrayList<>();
+        gitCommand.add("git");
+        gitCommand.add("clone");
+        gitCommand.add("-b");
+        gitCommand.add("variation_0");
+        gitCommand.add(url);
+
         System.out.println ("  Clone into " + child);
         try {
-            Process proc = Runtime.getRuntime().exec(command, new String[0], child);
+            //Process proc = Runtime.getRuntime().exec(command, new String[0], child);
+            ProcessBuilder pb = new ProcessBuilder(gitCommand);
+            pb.directory(child);
+
+            Process proc = pb.start();
             System.out.println ("  Errors (if any):"); System.out.flush();
             Stream<String> err = new BufferedReader(new InputStreamReader(proc.getErrorStream())).lines();
             err.forEach(System.err::println); System.err.flush();
@@ -55,7 +66,7 @@ public class TestSynthesis {
             proc.waitFor();
             return true;
         } catch (Exception e) {
-            System.err.println ("  Unable to exec:" + command);
+            System.err.println ("  Unable to exec git command" + gitCommand);
             return false;
         }
     }
@@ -68,8 +79,8 @@ public class TestSynthesis {
      * TODO: Complete
      */
     static Iterator<String> compare(String family, String newer, String older) {
-        File dirNew = new File(new File(destination, family), newer);
-        File dirOld = new File(new File(destination, family), older);
+       // File dirNew = new File(new File(destination, family), newer);
+        //File dirOld = new File(new File(destination, family), older);
 
         // for every file in 'dirNew' check if exists in dirOld, and if changed.
         // TBA
@@ -120,27 +131,19 @@ public class TestSynthesis {
                     if (testSuite.exists()) {
                         pkgName = child.getName();
                     }
-//                    onlyChild = child;
                     compileCommand.add(child.getName() + fs + "*.java");
                 }
             }
-//            pkgNames = onlyChild.getName();
         }
 
-        // javac -cp standAlone.jar:./bigforty/src/main/java klondike/src/main/java/org/combinators/solitaire/bigforty/BigForty.java
-        //
-        //run-bigforty: bigforty
-        //        java -cp standAlone.jar:./bigforty/src/main/java org/combinators/solitaire/bigforty/BigForty
-
-//        String[] args = new String[] { "javac",  "-cp",
-//                junitJarFile + File.pathSeparator + ".",
-//                //"-Xlint:unchecked",
-//                pkgName + fs + "*.java"};
         String[] args = compileCommand.toArray(new String[0]);
 
         try {
-            Process proc = Runtime.getRuntime().exec(args, new String[0], dir);
+            //Process proc = Runtime.getRuntime().exec(args, new String[0], dir);
+            ProcessBuilder pb = new ProcessBuilder(compileCommand);
+            pb.directory(dir);
 
+            Process proc = pb.start();
             System.out.println ("  Errors (if any):"); System.out.flush();
             Stream<String> err = new BufferedReader(new InputStreamReader(proc.getErrorStream())).lines();
             err.forEach(System.err::println); System.err.flush();
@@ -160,16 +163,20 @@ public class TestSynthesis {
 
                     File testFile = new File(new File(dir, pkgName), "TestSuite" + testNum + ".java");
                     testNum++;
-                    //testSuite = testSuite + testNum;
 
                     if (!testFile.exists()) { break; }
 
-                    args = new String[]{"java", "-cp",
-                            junitJarFile + File.pathSeparator + ".",
-                            "junit.textui.TestRunner",
-                            testSuite};
+                    ArrayList<String> testCommand = new ArrayList<>();
+                    testCommand.add("java");
+                    testCommand.add("-cp");
+                    testCommand.add(junitJarFile + File.pathSeparator + ".");
+                    testCommand.add("junit.textui.TestRunner");
+                    testCommand.add(testSuite);
 
-                    proc = Runtime.getRuntime().exec(args, new String[0], dir);
+                    pb = new ProcessBuilder(testCommand);
+                    pb.directory(dir);
+                    proc= pb.start();
+
                     File outputFile = new File(new File(destination, family), model + ".coverage.html");
 
                     // append all output here...

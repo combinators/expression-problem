@@ -127,11 +127,7 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
   def operationGenerator(model:domain.Model, op:domain.Operation): CompilationUnit = {
 
     // this gets "eval" and we want the name of the Interface.
-    val returnType = if (op.returnType.isEmpty) {
-      Java("void").tpe()
-    } else {
-      typeConverter(op.returnType.get)
-    }
+    val returnType = typeConverter(op.returnType)
 
     val opType = Java(op.concept).tpe()
     var targetModel:domain.Model = null
@@ -266,11 +262,7 @@ trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
     */
   def baseInterface(op:domain.Operation) : CompilationUnit = {
     val name = op.instance
-    val tpe = if (op.returnType.isEmpty) {
-      Java("void").tpe()
-    } else {
-      typeConverter(op.returnType.get)
-    }
+    val tpe = typeConverter(op.returnType)
 
     val params = op match {
       case bm:domain.BinaryMethod => binaryMethodParameters(op, typeConverter)

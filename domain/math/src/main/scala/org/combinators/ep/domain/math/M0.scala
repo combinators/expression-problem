@@ -18,7 +18,7 @@ trait M0 extends Evolution {
   case object Lit extends Atomic("Lit", Seq(litValue))
   case object Add extends Binary("Add")
 
-  case object Eval extends Operation("eval", Some(Double))
+  case object Eval extends Operation("eval", Double)
   case class LitInst(d:scala.Double) extends AtomicInst(Lit, ExistsInstance(Double)(d))
 
   // TODO: This could be moved until a future evolution. Here to make things easy

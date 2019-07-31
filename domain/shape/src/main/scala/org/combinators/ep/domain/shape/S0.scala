@@ -32,7 +32,7 @@ trait S0 extends Evolution {
   case object Point extends domain.Atomic("Point", Seq(x, y))
   case object Translate extends domain.DataType("Translate", Seq(trans, shape))
 
-  case object ContainsPt extends domain.Operation("containsPt", Some(Boolean), Seq(point))
+  case object ContainsPt extends domain.Operation("containsPt", Boolean, Seq(point))
 
   case class SquareInst(d:scala.Double) extends domain.AtomicInst(Square, ExistsInstance(Double)(d))
   case class CircleInst(d:scala.Double) extends domain.AtomicInst(Circle, ExistsInstance(Double)(d))

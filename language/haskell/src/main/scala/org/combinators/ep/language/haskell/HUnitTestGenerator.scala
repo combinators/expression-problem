@@ -10,8 +10,6 @@ import org.combinators.ep.generator.LanguageIndependentTestGenerator
 trait HUnitTestGenerator extends HaskellGenerator with LanguageIndependentTestGenerator with TestGenerator with PerformanceTestGenerator {
   val domain: BaseDomain with ModelDomain
 
-  import domain._
-
   /**
     * Represents the sequence of total test cases.
     */

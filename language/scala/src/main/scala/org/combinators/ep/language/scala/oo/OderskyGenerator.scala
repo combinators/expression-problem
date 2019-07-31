@@ -58,13 +58,9 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod {
     }
   }
 
+  // TODO: consider removing this function
   /** Computer return type for given operation (or void). */
-  def returnType(op:Operation): Type = {
-    op.returnType match {
-      case Some(tpe) => typeConverter(tpe)
-      case _ => Scala("Unit").tpe
-    }
-  }
+  def returnType(op:Operation): Type = typeConverter(op.returnType)
 
   /** Operations are implemented as methods in the Base and sub-type classes. */
   def methodGenerator(exp:DataType, op:Operation): Stat = {
@@ -101,7 +97,7 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod {
     } else {
       val newOps = model.ops.map(op => {
         val pars = op.parameters.map(param => s"${param.name} : ${typeConverter(param.tpe)}").mkString(",")
-        s"def ${op.name}($pars) : ${typeConverter(op.returnType.get)}"
+        s"def ${op.name}($pars) : ${typeConverter(op.returnType)}"
       })
 
       val narrow =
@@ -142,7 +138,7 @@ trait OderskyGenerator extends ScalaGenerator with ScalaBinaryMethod {
   def generateBase(baseModel:Model): CompilationUnit = {
 
     val initialOpsDef = baseModel.ops.map(op =>
-      s"def ${op.instance}() : ${typeConverter(op.returnType.get)}")
+      s"def ${op.instance}() : ${typeConverter(op.returnType)}")
 
     // hack: initial op has no parameters...
     val initialTypes = baseModel.types.map(exp => {

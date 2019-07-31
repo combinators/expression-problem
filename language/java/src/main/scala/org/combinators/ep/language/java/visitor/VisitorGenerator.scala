@@ -115,16 +115,20 @@ trait VisitorGenerator extends JavaGenerator with JavaBinaryMethod {
     * Operations are implemented as methods in the Base and sub-type classes.
     *
     * Note that BinaryMethodBase is handled separately
-    * As is BinaryMethods
+    * As is BinaryMethods.
+    *
+    * Tricky resolution to Void methods.
     */
   def methodGenerator(exp:DataType, op:Operation): MethodDeclaration = {
     var VoidReturn = ""
     val retType = op.returnType match {
-      case Some(tpe) => typeConverter(tpe)
-      case _ => {
+
+      case Void => {
         VoidReturn = "return (null);"   // necessary for Void as generic.
         Java("Void").tpe
       }   // generics
+
+      case _ => typeConverter(op.returnType)
     }
 
     Java(s"""|public $retType visit(${exp.name} e) {
@@ -212,17 +216,19 @@ trait VisitorGenerator extends JavaGenerator with JavaBinaryMethod {
     val ctor = generateConstructor(op, flat)
 
     // special case to be handled for BinaryMethods
-    val tpe = if (op.returnType.isEmpty) {
-      "Void"   // Generic is void
-    } else {
-      typeConverter(op.returnType.get)
+    val tpe = op.returnType match {
+      case domain.Void => "Void"
+      case _ => typeConverter(op.returnType)
     }
-    Java(s"""|package visitor;
+
+    val str = s"""|package visitor;
              |public class ${op.concept} extends Visitor<$tpe>{
              |  $ctor
              |
              |  ${atts.mkString("\n")}
              |  ${signatures.mkString("\n")}
-             |}""".stripMargin).compilationUnit
+             |}""".stripMargin
+    println(str)
+    Java(str).compilationUnit
   }
 }

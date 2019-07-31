@@ -63,6 +63,7 @@ trait JavaGenerator extends LanguageIndependentGenerator {
     */
   override def typeConverter(tpe:domain.TypeRep) : Type = {
     tpe match {
+      case domain.Void => Java(s"void").tpe()
       case domain.baseTypeRep => Java(s"${domain.baseTypeRep.name}").tpe()
       case _ => super.typeConverter(tpe)
     }

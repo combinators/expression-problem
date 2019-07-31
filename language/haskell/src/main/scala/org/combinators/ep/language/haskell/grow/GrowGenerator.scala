@@ -142,14 +142,14 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
         val mcaps = m.name.capitalize    // haskell needs data to be capitalized!
       val baseDomain = domain.baseTypeRep.name
 
-        val result = typeConverter(op.returnType.get)
+        val result = typeConverter(op.returnType)
         s"${op.instance}$baseDomain$mcaps :: ${expDeclaration(m.base())} $mcaps -> ${expDeclaration(m.base())} $mcaps -> $result"
 
       case _ =>
         val mcaps = m.name.capitalize    // haskell needs data to be capitalized!
       val baseDomain = domain.baseTypeRep.name
 
-        s"${op.instance}$baseDomain$mcaps :: ${expDeclaration(m.base())} $mcaps -> ${typeConverter(op.returnType.get)}"
+        s"${op.instance}$baseDomain$mcaps :: ${expDeclaration(m.base())} $mcaps -> ${typeConverter(op.returnType)}"
     }
   }
 
@@ -291,7 +291,7 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     val baseDomain = domain.baseTypeRep.name
     //val name = op.name
 
-    val returnType = typeConverter(op.returnType.get)
+    val returnType = typeConverter(op.returnType)
     val extType = extTypeDeclaration(m)
 
     // If an operation is a binary method ,add it in, or if it has a dependent operation. Needs cleaning up
@@ -472,7 +472,7 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     }
 
     val extraSignature = if (dependency(op).size == 1) {
-      val ret = typeConverter(dop.returnType.get).tpe
+      val ret = typeConverter(dop.returnType).tpe
       s"""#(Ext_${mcaps}Type f -> $ret)
           #  -- ^ Function to help with evaluating subexpression extensions
           #  -> """.stripMargin('#')
@@ -511,7 +511,7 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
          #$binaryOperationSpec
          #
          #-- | Helps with extensions $mcaps
-         #helpWith${op.concept}$mcaps :: Void -> Void -> ${typeConverter(op.returnType.get)}
+         #helpWith${op.concept}$mcaps :: Void -> Void -> ${typeConverter(op.returnType)}
          #helpWith${op.concept}$mcaps = absurd
          #
          #""".stripMargin('#')
@@ -542,7 +542,7 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
                    #$operationSpec
                    #
                    #-- | Helps with extensions $mcaps
-                   #helpWith${op.concept}$mcaps :: Void -> ${typeConverter(op.returnType.get)}
+                   #helpWith${op.concept}$mcaps :: Void -> ${typeConverter(op.returnType)}
                    #helpWith${op.concept}$mcaps = absurd
                    #
                    #""".stripMargin('#'))

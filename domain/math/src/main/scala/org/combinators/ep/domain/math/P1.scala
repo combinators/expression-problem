@@ -25,9 +25,9 @@ trait P1 extends Evolution {
 
   // This Height implementation takes a parameter, into which the initial call passes the value '0'
   // and then it is passed downwards.
-  case object ParamHeight extends domain.Operation(independent.height, Some(Int), Seq(domain.Parameter(independent.height, Int)))
-  case object Output extends Operation("output", None)
-  case object CountBetween extends domain.Operation(independent.countBetween, Some(Int),
+  case object ParamHeight extends domain.Operation(independent.height, Int, Seq(domain.Parameter(independent.height, Int)))
+  case object Output extends Operation("output")
+  case object CountBetween extends domain.Operation(independent.countBetween, Int,
     Seq(domain.Parameter(independent.low, Double), domain.Parameter(independent.high, Double)))
 
   case object Pi extends Atomic("Pi", Seq.empty)

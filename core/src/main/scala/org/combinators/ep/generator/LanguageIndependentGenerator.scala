@@ -205,6 +205,8 @@ trait LanguageIndependentGenerator {
     * Note that the top-most type is ''domain.baseTypeRep''. If no converter is defined for the
     * given type, then this method will ultimately throw a ''scala.NotImplementedError'' exception.
     *
+    * Each language-specific extension must determine how to handle Void as a type.
+    *
     * @param tpe    type from model to be converted into language-specific type.
     * @group api
     */

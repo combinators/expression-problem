@@ -14,7 +14,7 @@ trait M2 extends Evolution {
     override type scalaInstanceType = java.lang.String
   }
 
-  case object PrettyP extends Operation("prettyp", Some(String)) // PROBLEMS WITH "print"
+  case object PrettyP extends Operation("prettyp", String) // PROBLEMS WITH "print"
 
   val m2 = Model("m2", Seq.empty, Seq(PrettyP), last = m1)
 

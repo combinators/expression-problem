@@ -15,7 +15,7 @@ trait M7 extends Evolution {
 
   // SquareRoot of inner value, and an operation Find that counts the number
   case object Sqrt extends Unary("Sqrt")
-  case object Find extends domain.Operation("Find", Some(Int),
+  case object Find extends domain.Operation("Find", Int,
     Seq(domain.Parameter(m7_extensions.target, Double)))
 
   val m7 = Model("m7", Seq(Sqrt), Seq(Find), last = m6)

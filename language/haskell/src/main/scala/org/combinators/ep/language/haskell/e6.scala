@@ -45,7 +45,7 @@ trait e6 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
     */
   abstract override def requireDefault(op:domain.Operation) : Option[(Int,Haskell)] = {
     op match {
-      case Equals => Some((2,standardDefault(op.returnType.get)))
+      case Equals => Some((2,standardDefault(op.returnType)))
       case _ => super.requireDefault(op)
     }
   }

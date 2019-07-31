@@ -54,6 +54,11 @@ trait BaseDomain {
   type BaseTypeRep <: TypeRep.Aux[Inst]
   val baseTypeRep:BaseTypeRep
 
+  // Operations that have no return, will be marked as Void
+  case object Void extends TypeRep {
+    override type scalaInstanceType = java.lang.Void
+  }
+
   // standard attributes for domain. As new ones are defined, create own object to store them
   // Admittedly not the best place
   object base {
@@ -92,8 +97,8 @@ trait BaseDomain {
     val name: String = sanitize(n)
   }
 
-  /** Each operation is named and has parameters and an optional return type. */
-  abstract class Operation(n1:String, val returnType:Option[TypeRep], val parameters:Seq[Parameter] = Seq.empty) extends Element {
+  /** Each operation is named and has parameters and return type, which defaults to Void (no return value). */
+  abstract class Operation(n1:String, val returnType:TypeRep = Void, val parameters:Seq[Parameter] = Seq.empty) extends Element {
     val name:String = sanitize(n1)
 
     /**
@@ -112,15 +117,15 @@ trait BaseDomain {
   }
 
   /** Producer and Binary Methods are tagged. */
-  class ProducerOperation(override val name:String, override val parameters:Seq[Parameter] = Seq.empty) extends Operation(name, Some(baseTypeRep), parameters)
-  class BinaryMethod(override val name:String, override val returnType:Option[TypeRep]) extends Operation(name, returnType, Seq(base.that))
+  class ProducerOperation(override val name:String, override val parameters:Seq[Parameter] = Seq.empty) extends Operation(name, baseTypeRep, parameters)
+  class BinaryMethod(override val name:String, override val returnType:TypeRep) extends Operation(name, returnType, Seq(base.that))
 
   /** Special operation that declares underlying support for BinaryMethods. */
   case object TreeType extends TypeRep {
     type scalaInstanceType = tree.Tree
   }
-  class BinaryMethodTreeBase(override val name:String, override val returnType:Option[TypeRep]) extends Operation(name, Some(baseTypeRep))
-  case object AsTree extends BinaryMethodTreeBase ("astree", Some(TreeType))
+  class BinaryMethodTreeBase(override val name:String, override val returnType:TypeRep) extends Operation(name, baseTypeRep)
+  case object AsTree extends BinaryMethodTreeBase ("astree", TreeType)
 
   // TODO: Maybe ultimately replace need for BinaryMethodTreeBase since AsTree becomes dependent operation. Also AsTree is not entirely approach
   // TODO: in all cases (i.e., think graph structure) but also one can optimize the need for it away if you have Eq (for Haskell) or .equals for Java

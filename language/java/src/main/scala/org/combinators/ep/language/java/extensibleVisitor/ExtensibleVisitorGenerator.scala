@@ -156,7 +156,7 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
   def operationExtension(op:domain.Operation, model:domain.Model): CompilationUnit = {
     val regularVisitor:CompilationUnit = super.generateVisitorOperation(model, op)
 
-    val opType:Type = typeConverter(op.returnType.get)
+    val opType:Type = typeConverter(op.returnType)
     val full:String = modelTypes(model)
     val lastWithType  = model.last.lastModelWithDataTypes()
     val lastOperation = lastWithType.findOperation(op)
@@ -196,11 +196,11 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
 
     // convert 'extends visitor' into 'implements visitor'
     // rename class to have types at end (except for first)
-    val opType = if (op.returnType.isEmpty) {
-      "Void"   // generics
-    } else {
-      typeConverter(op.returnType.get)
+    val opType = op.returnType match {
+      case domain.Void => "Void"    // generics
+      case _ => typeConverter(op.returnType)
     }
+
     val full:String = modelTypes(model)
 
     val fullVisitor:String = if (model.types.nonEmpty) {

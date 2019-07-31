@@ -112,14 +112,21 @@ trait AlgebraTestGenerator
       // Must handle when operation has no return type (i.e., void)
       var useReturn = "return "
       val returnType = op.returnType match {
-        case Some(domain.baseTypeRep) => s"Combined"   // using algebra's internal interface for producer methods
+        case domain.baseTypeRep => s"Combined"   // using algebra's internal interface for producer methods
         case _ =>
-          if (op.returnType.isEmpty) {
-            useReturn = ""
-            Java("void").tpe()
-          } else {
-            typeConverter(op.returnType.get)
+          op.returnType match {
+            case domain.Void => {
+              useReturn = ""
+              Java("void").tpe()
+            }
+            case _ => typeConverter(op.returnType)
           }
+//          if (op.returnType.isEmpty) {
+//            useReturn = ""
+//            Java("void").tpe()
+//          } else {
+//            typeConverter(op.returnType)
+//          }
       }
 
       val str = s"""

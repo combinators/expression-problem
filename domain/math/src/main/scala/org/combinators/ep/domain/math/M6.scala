@@ -15,7 +15,7 @@ trait M6 extends Evolution {
   // can short-circuit this logic, but in the most general case, it stands to reason
   // that we need to have a way to instantiate a structure that matches the expression
   // and then use those structure(s) to determine equality.
-  case object Equals extends BinaryMethod("equals", Some(Boolean))
+  case object Equals extends BinaryMethod("equals", Boolean)
   val m6 = Model("m6", Seq.empty, Seq(Equals), last = m5)
 
   override def getModel = m6

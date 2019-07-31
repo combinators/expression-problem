@@ -13,7 +13,7 @@ trait M4 extends Evolution {
   case class List[T](generic:TypeRep.Aux[T]) extends TypeRep {
     type scalaInstanceType = Seq[T]
   }
-  case object Collect extends Operation("collect", Some(List(Double)))
+  case object Collect extends Operation("collect", List(Double))
 
   val m4 = domain.Model("m4", Seq.empty, Seq(Simplify, Collect), last = m3)
   override def getModel:Model = m4

@@ -65,13 +65,9 @@ trait OOGenerator
     Java(s"$expr.${op.instance}($args)").expression()
   }
 
+  // TODO: Consider removing this function
   /** Computer return type for given operation (or void). */
-  def returnType(op:Operation): Type = {
-    op.returnType match {
-      case Some(tpe) => typeConverter(tpe)
-      case _ => Java("void").tpe
-    }
-  }
+  def returnType(op:Operation): Type = typeConverter(op.returnType)
 
   /**
     * Operations are implemented as methods in the Base and sub-type classes.

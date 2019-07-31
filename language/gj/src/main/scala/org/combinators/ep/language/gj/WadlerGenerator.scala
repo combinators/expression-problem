@@ -41,17 +41,13 @@ trait WadlerGenerator extends GJGenerator  {
   override def typeConverter(tpe:TypeRep) : Type = {
     tpe match {
       case domain.baseTypeRep => new GJType(s"This.${domain.baseTypeRep.name}")
+      case domain.Void => new GJType("void")
       case _ => super.typeConverter(tpe)
     }
   }
 
   /** Computer return type for given operation (or void). */
-  def returnType(op:Operation): Type = {
-    op.returnType match {
-      case Some(tpe) => typeConverter(tpe)
-      case _ => new GJType("void")
-    }
-  }
+  def returnType(op:Operation): Type = typeConverter(op.returnType)
 
   /** Operations are implemented as methods in the Base and sub-type classes. */
   def methodGenerator(exp:DataType, op:Operation): GJ = {

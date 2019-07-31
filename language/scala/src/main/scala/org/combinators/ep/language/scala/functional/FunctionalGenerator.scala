@@ -100,13 +100,9 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod {
     }
   }
 
+  // TODO: Consider removing this function
   /** Computer return type for given operation (or void). */
-  def returnType(op:Operation): Type = {
-    op.returnType match {
-      case Some(tpe) => typeConverter(tpe)
-      case _ => Scala("Unit").tpe
-    }
-  }
+  def returnType(op:Operation): Type = typeConverter(op.returnType)
 
   /**
     * Operations are implemented as methods in the Base and sub-type classes.
@@ -158,8 +154,8 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod {
       val set = if (m.types.isEmpty) {
         result =
           s"""
-             |  var result: ${typeConverter(op.returnType.get)} = _
-             |  def apply(t: ${domain.baseTypeRep.name}): ${typeConverter(op.returnType.get)} = {
+             |  var result: ${typeConverter(op.returnType)} = _
+             |  def apply(t: ${domain.baseTypeRep.name}): ${typeConverter(op.returnType)} = {
              |    t.accept(this)
              |    result
              |  }
@@ -240,8 +236,8 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod {
       val baseMembers = m.types.map(exp => methodGenerator(exp, op))
       Scala(s"""
            |trait ${op.concept} extends Visitor { self: visitor =>
-           |  var result: ${typeConverter(op.returnType.get)} = _
-           |  def apply(t: ${domain.baseTypeRep.name}): ${typeConverter(op.returnType.get)} = {
+           |  var result: ${typeConverter(op.returnType)} = _
+           |  def apply(t: ${domain.baseTypeRep.name}): ${typeConverter(op.returnType)} = {
            |    t.accept(this)
            |    result
            |  }

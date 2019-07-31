@@ -17,9 +17,10 @@ trait ScalaGenerator extends LanguageIndependentGenerator {
   type Expression = scala.meta.Term
   type Statement = scala.meta.Stat
 
-  /** Return designated Java type associated with type, or void if all else fails. */
+  /** Return designated Scala type associated with type, or Unit for Void. */
   override def typeConverter(tpe:domain.TypeRep) : Type = {
     tpe match {
+      case domain.Void => scala.meta.Type.Name("Unit")
       case domain.baseTypeRep => scala.meta.Type.Name(domain.baseTypeRep.name)
       case _ => super.typeConverter(tpe)
     }

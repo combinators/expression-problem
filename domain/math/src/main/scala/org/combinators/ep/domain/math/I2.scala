@@ -15,9 +15,9 @@ trait I2 extends Evolution {
   // TODO: Flip this around so there are no parameters in height; rather an atomic data type
   // returns 0 and all others return Max(1+attrubte). Woudl this work?
   //
-  // ALternatively: Write necessary code to make test case
+  // Alternatively: Write necessary code to make test case
   case object Integer extends domain.TypeRep
-  case object Height extends domain.Operation(independent.height, Some(Integer), Seq(domain.Parameter(independent.height, Integer)))
+  case object Height extends domain.Operation(independent.height, Integer, Seq(domain.Parameter(independent.height, Integer)))
   val i2 = domain.Model("i2", Seq.empty, Seq(Height), last = i1)
 
   override def getModel = i2

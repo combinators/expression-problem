@@ -15,4 +15,4 @@ import org.combinators.ep.domain._
 /**
   * Mathematical Expressions domain as an instance of EP.
   */
-object ShapeDomain extends BaseDomain(Inst("Shape"))
+object ShapeDomain extends BaseDomain(new Inst("Shape"))

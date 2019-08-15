@@ -1,7 +1,7 @@
 package org.combinators.ep.domain.math    /*DD:LI:AI*/
 
-import org.combinators.ep.domain.Evolution
-import org.combinators.ep.domain.tree.{Leaf, Node}
+import org.combinators.ep.domain.{Evolution, Leaf, Node}
+import org.combinators.ep.domain.tree.Leaf
 
 trait M8 extends Evolution {
   self: M0 with M1 with M2 with M3 with M4 with M5 with M6 with M7 =>

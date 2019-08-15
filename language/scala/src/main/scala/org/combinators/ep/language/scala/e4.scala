@@ -1,7 +1,8 @@
 package org.combinators.ep.language.scala    /*DD:LD:AI*/
 
 import org.combinators.ep.domain.math._
-import org.combinators.ep.domain.{Evolution, OperationDependency}
+import org.combinators.ep.domain.Evolution
+import org.combinators.ep.generator.OperationDependency
 
 import scala.meta._
 

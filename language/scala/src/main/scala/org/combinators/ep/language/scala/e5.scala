@@ -1,8 +1,9 @@
 package org.combinators.ep.language.scala    /*DD:LD:AI*/
 
 import org.combinators.ep.domain.math.{M0, M5, MathDomain}
-import org.combinators.ep.domain.tree.{Leaf, Node}
-import org.combinators.ep.domain.{Evolution, OperationDependency}
+import org.combinators.ep.domain.tree.Leaf
+import org.combinators.ep.domain.{Evolution, Leaf, Node}
+import org.combinators.ep.generator.OperationDependency
 
 import scala.meta.{Stat, Type}
 

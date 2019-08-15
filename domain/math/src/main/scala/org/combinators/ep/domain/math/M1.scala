@@ -4,7 +4,7 @@ import org.combinators.ep.domain._
 
 class M1(val m0:M0) extends Evolution {
 
-  val domain:BaseDomain = MathDomain
+  val domain: m0.domain.type = m0.domain
   import domain._
   import m0._
 

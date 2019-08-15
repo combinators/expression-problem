@@ -3,8 +3,8 @@ package org.combinators.ep.language.java    /*DD:LD:AI*/
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.NameExpr
 import org.combinators.ep.domain.math._
-import org.combinators.ep.domain.{Evolution, OperationDependency}
-import org.combinators.ep.generator.LanguageIndependentGenerator
+import org.combinators.ep.domain.Evolution
+import org.combinators.ep.generator.{LanguageIndependentGenerator, OperationDependency}
 import org.combinators.templating.twirl.Java
 
 /**

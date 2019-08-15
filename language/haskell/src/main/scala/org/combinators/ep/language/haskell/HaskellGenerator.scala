@@ -3,8 +3,7 @@ package org.combinators.ep.language.haskell     /*DI:LD:AI*/
 import java.io.File
 import java.nio.file.{Path, Paths}
 
-import org.combinators.ep.domain.OperationDependency
-import org.combinators.ep.generator.LanguageIndependentGenerator
+import org.combinators.ep.generator.{LanguageIndependentGenerator, OperationDependency}
 
 /**
   * Any Haskell EP approach can extend this Generator

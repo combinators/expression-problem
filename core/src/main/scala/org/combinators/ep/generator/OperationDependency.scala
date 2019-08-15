@@ -1,4 +1,4 @@
-package org.combinators.ep.domain    /*DI:LI:AI*/
+package org.combinators.ep.generator
 
 /**
   * If operation is dependent upon any other operations, maintain this information.

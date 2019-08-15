@@ -1,6 +1,6 @@
 package org.combinators.ep.generator    /*DI:LI:AI*/
 
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain._
 
 /**
   * This trait contains the fundamental abstractions that define an EP approach,
@@ -99,14 +99,14 @@ import org.combinators.ep.domain.{BaseDomain, ModelDomain}
   *           for a given logic, these helper methods are useful in capturing the desired structures.
   * @groupprio deltaHelpers 40
   */
-trait LanguageIndependentGenerator {
+abstract class LanguageIndependentGenerator(val evolution:Evolution) {
 
   /**
     * Any domain that extends BaseDomain with ModelDomain is suitable.
     * @group dependency
     */
-  val domain:BaseDomain with ModelDomain
-  import domain._
+//  val domain:BaseDomain
+//  import domain._
 
   /**
     * Base concept for the representation of program unit on disk.
@@ -183,11 +183,12 @@ trait LanguageIndependentGenerator {
       }
   }
 
-  /**
-    * Retrieve model under consideration.
-    * @group dependency
-    */
-  def getModel:Model
+//  /**
+//    * Retrieve model under consideration.
+//    * @group dependency
+//    */
+//  def getModel:Model
+  // TODO: now to be extracted from evolution
 
   /**
     * For the processed model, return generated code artifacts for solution.
@@ -211,7 +212,7 @@ trait LanguageIndependentGenerator {
     * @group api
     */
   @throws[NotImplementedError]("if given type has no resolution.")
-  def typeConverter(tpe:domain.TypeRep) : Type = {
+  def typeConverter(tpe:TypeRep) : Type = {
     throw new scala.NotImplementedError(s"""Unknown Type "$tpe" """)
   }
 
@@ -223,7 +224,7 @@ trait LanguageIndependentGenerator {
     * @return          code fragment suitable for instantiating data type
     * @group inst
     */
-  def inst(exp:domain.DataType, params:Expression*): CodeBlockWithResultingExpressions
+  def inst(exp:DataType, params:Expression*): CodeBlockWithResultingExpressions
 
   /**
     * Convert a scala expression into the target language.
@@ -238,7 +239,7 @@ trait LanguageIndependentGenerator {
     */
   def toTargetLanguage(scalaValue:ExistsInstance) : CodeBlockWithResultingExpressions = {
     scalaValue.inst match {
-      case domInst: domain.Inst => toTargetLanguage(domInst)
+      case domInst: Inst => toTargetLanguage(domInst)
       case _ => throw new scala.NotImplementedError(s"No rule to convert ${scalaValue.tpe} to the target language")
     }
   }
@@ -251,21 +252,21 @@ trait LanguageIndependentGenerator {
     * @param instance    desired instance for which a constructing code fragment is returned.
     * @group inst
     */
-  def toTargetLanguage(instance: domain.Inst): CodeBlockWithResultingExpressions = {
+  def toTargetLanguage(instance:Inst): CodeBlockWithResultingExpressions = {
     instance match {
-      case ui: domain.UnaryInst =>
+      case ui: evolution.domain.UnaryInst =>
         toTargetLanguage(ui.inner).appendDependent(innerResults => inst(ui.e, innerResults:_*))
 
-      case bi: domain.BinaryInst =>
+      case bi: evolution.domain.BinaryInst =>
         toTargetLanguage(bi.left)
             .appendIndependent(toTargetLanguage(bi.right))
             .appendDependent(innerResults => inst(bi.e, innerResults: _*))
 
-      case ai:domain.AtomicInst =>
+      case ai:evolution.domain.AtomicInst =>
         toTargetLanguage(ai.ei).appendDependent(innerResults => inst(ai.e, innerResults:_*))
 
         // catch-all for any n-ary instance.
-      case ni: domain.NaryInst =>
+      case ni: evolution.domain.NaryInst =>
         val insts = ni.instances.foldLeft(CodeBlockWithResultingExpressions.empty) {
           case (b, p) => b.appendIndependent(toTargetLanguage(p))
         }
@@ -360,7 +361,7 @@ trait LanguageIndependentGenerator {
     * @param params   potential parameters of this operation
     * @group api
     */
-  def dispatch(expr:Expression, op:domain.Operation, params:Expression*) : Expression
+  def dispatch(expr:Expression, op:Operation, params:Expression*) : Expression
 
   /**
     * The '''logic(exp,op)''' that represents the code statements for applying a given operation

@@ -3,7 +3,7 @@ package org.combinators.ep.language.scala    /*DI:LD:AI*/
 import java.io.File
 import java.nio.file.{Path, Paths}
 
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain.BaseDomain
 import org.combinators.ep.generator.{FileWithPath, LanguageIndependentGenerator}
 
 /**

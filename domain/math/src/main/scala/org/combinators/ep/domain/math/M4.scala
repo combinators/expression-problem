@@ -1,25 +1,30 @@
 package org.combinators.ep.domain.math      /*DD:LI:AI*/
 
-import org.combinators.ep.domain.Evolution
+import org.combinators.ep.domain._
 
-trait M4 extends Evolution {
-  self: M0 with M1 with M2 with M3 =>
-  val domain:MathDomain
+class M4(val m3:M3) extends Evolution {
+
+  val domain:BaseDomain = MathDomain
   import domain._
+  import m3.{m2, Divd, Mult, Neg, m3_m1}
+  import m2._
+  import m1._
+  import m0._    // note by ordering in this fashion, you will bring in m0
 
   // m4:model evolution.
   // -------------------
-  case object Simplify extends ProducerOperation("simplify")
+  case object Simplify extends ProducerOperation(baseTypeRep,"simplify")
   case class List[T](generic:TypeRep.Aux[T]) extends TypeRep {
     type scalaInstanceType = Seq[T]
   }
   case object Collect extends Operation("collect", List(Double))
 
-  val m4 = domain.Model("m4", Seq.empty, Seq(Simplify, Collect), last = m3)
+  val m4 = Model("m4", Seq.empty, Seq(Simplify, Collect), last = m3.getModel)
   override def getModel:Model = m4
 
   // Tests
   // (5/7) / (7-(2*3) --> just (5/7)
+
   val m4_m1 = new BinaryInst(Mult, new BinaryInst (Divd, LitInst(5.0), LitInst(2.0)), LitInst(4.0))
   val m4_m2 = new BinaryInst(Mult, LitInst(2.0), LitInst(3.0))
   val m4_d2 = new BinaryInst(Divd, new BinaryInst(Divd, LitInst(5.0), LitInst(7.0)), new BinaryInst(Sub, LitInst(7.0), m4_m2))

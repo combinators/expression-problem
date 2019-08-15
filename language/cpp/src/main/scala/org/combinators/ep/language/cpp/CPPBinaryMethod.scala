@@ -1,6 +1,6 @@
 package org.combinators.ep.language.cpp   /*DI:LD:AI*/
 
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain.BaseDomain
 
 trait CPPBinaryMethod {
   val domain:BaseDomain with ModelDomain

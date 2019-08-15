@@ -1,15 +1,19 @@
 package org.combinators.ep.domain.math   /*DD:LI:AI*/
 
-import org.combinators.ep.domain.Evolution
+import org.combinators.ep.domain._
 
 /**
   * Offers a "kitchen sink" of data types and operations envisioned as part of a publication.
   *
   */
-trait P1 extends Evolution {
-  self: M0 with M1 with M2 =>
-  val domain: MathDomain
+class P1(val m2:M2) extends Evolution {
+
+  val domain:BaseDomain = MathDomain
   import domain._
+  import m2._
+  import m1._
+  import m0._
+
 
   // p1:model evolution.
   // -------------------
@@ -25,10 +29,10 @@ trait P1 extends Evolution {
 
   // This Height implementation takes a parameter, into which the initial call passes the value '0'
   // and then it is passed downwards.
-  case object ParamHeight extends domain.Operation(independent.height, Int, Seq(domain.Parameter(independent.height, Int)))
+  case object ParamHeight extends Operation(independent.height, Int, Seq(Parameter(independent.height, Int)))
   case object Output extends Operation("output")
-  case object CountBetween extends domain.Operation(independent.countBetween, Int,
-    Seq(domain.Parameter(independent.low, Double), domain.Parameter(independent.high, Double)))
+  case object CountBetween extends Operation(independent.countBetween, Int,
+    Seq(Parameter(independent.low, Double), Parameter(independent.high, Double)))
 
   case object Pi extends Atomic("Pi", Seq.empty)
   case object Rnd extends Atomic("Rnd", Seq.empty)
@@ -41,7 +45,7 @@ trait P1 extends Evolution {
     NaryInst(e, Seq(P, r, n)) {
   }
 
-  val p1 = domain.Model("p1", Seq(Pi, Rnd, Amortized), Seq(CountBetween, Output, ParamHeight), last = m2)
+  val p1 = Model("p1", Seq(Pi, Rnd, Amortized), Seq(CountBetween, Output, ParamHeight), last = m2.getModel)
   val p1_a1 = new AmortizedInst(Amortized, LitInst(100000.0), LitInst(0.06), LitInst(360.0))
 
   override def getModel = p1

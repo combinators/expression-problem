@@ -3,7 +3,7 @@ package org.combinators.ep.language.haskell.alacarte    /*DI:LD:AD*/
 import java.nio.file.Paths
 
 import org.combinators.ep.language.haskell._
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain.BaseDomain
 
 /**
   * Based on Data Types a la Carte

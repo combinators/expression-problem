@@ -2,7 +2,7 @@ package org.combinators.ep.language.haskell.straight  /*DI:LD:AD*/
 
 import java.nio.file.Paths
 
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain.BaseDomain
 import org.combinators.ep.language.haskell._
 
 // https://eli.thegreenplace.net/2016/the-expression-problem-and-its-solutions/

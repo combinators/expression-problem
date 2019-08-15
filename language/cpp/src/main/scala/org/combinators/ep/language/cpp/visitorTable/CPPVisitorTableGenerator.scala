@@ -1,6 +1,6 @@
 package org.combinators.ep.language.cpp.visitorTable   /*DI:LD:AD*/
 
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain.BaseDomain
 import org.combinators.ep.language.cpp.{CPPElement, _}
 
 // visitor based solution that uses a hashtable to store partial results of recursive calls.

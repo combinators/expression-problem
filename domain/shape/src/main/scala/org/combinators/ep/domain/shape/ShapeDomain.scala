@@ -1,6 +1,6 @@
 package org.combinators.ep.domain.shape    /*DD:LI:AI*/
 
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain._
 
 
 /**
@@ -11,15 +11,8 @@ import org.combinators.ep.domain.{BaseDomain, ModelDomain}
   *
   * https://www.cs.rice.edu/~cork/teachjava/2003/readings/visitor1.pdf
   */
-trait ShapeDomain extends BaseDomain with ModelDomain {
 
-  case object Shape extends TypeRep {
-    type scalaInstanceType = Inst
-    override def name: String = "Shape"
-  }
-  type BaseTypeRep = Shape.type
-  val baseTypeRep:BaseTypeRep = Shape
-}
-
-/** Companion object to represent domain. */
-object ShapeDomain extends ShapeDomain
+/**
+  * Mathematical Expressions domain as an instance of EP.
+  */
+object ShapeDomain extends BaseDomain(Inst("Shape"))

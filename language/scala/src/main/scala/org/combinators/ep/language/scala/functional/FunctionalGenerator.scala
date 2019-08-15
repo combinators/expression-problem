@@ -3,7 +3,7 @@ package org.combinators.ep.language.scala.functional   /*DI:LD:AD*/
 import java.nio.file.Paths
 
 import org.combinators.ep.language.scala._
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain.BaseDomain
 
 import scala.meta.Stat
 

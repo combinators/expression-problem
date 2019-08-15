@@ -1,7 +1,7 @@
 package org.combinators.ep.language.java    /*DI:LD:AI*/
 
 import com.github.javaparser.ast.expr.NameExpr
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain.BaseDomain
 import org.combinators.ep.generator.LanguageIndependentTestGenerator
 import org.combinators.templating.twirl.Java
 

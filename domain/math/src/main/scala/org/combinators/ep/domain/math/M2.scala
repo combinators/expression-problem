@@ -1,12 +1,13 @@
 package org.combinators.ep.domain.math
 
-import org.combinators.ep.domain.Evolution
+import org.combinators.ep.domain._
 
-trait M2 extends Evolution {
-  self: M0 with M1 =>
-  val domain: MathDomain
+class M2(val m1:M1) extends Evolution {
 
+  val domain:BaseDomain = MathDomain
   import domain._
+  import m1._
+  import m0._    // note by ordering in this fashion, you will bring in m0
 
   // m2:model evolution.
   // -------------------
@@ -16,7 +17,7 @@ trait M2 extends Evolution {
 
   case object PrettyP extends Operation("prettyp", String) // PROBLEMS WITH "print"
 
-  val m2 = Model("m2", Seq.empty, Seq(PrettyP), last = m1)
+  val m2 = Model("m2", Seq.empty, Seq(PrettyP), last = m1.getModel)
 
   override def getModel: Model = m2
 

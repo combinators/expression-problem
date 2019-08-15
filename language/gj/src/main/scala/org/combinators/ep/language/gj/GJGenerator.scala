@@ -1,6 +1,6 @@
 package org.combinators.ep.language.gj    /*DI:LD:AI*/
 
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain.BaseDomain
 import org.combinators.ep.generator.LanguageIndependentGenerator
 
 /**

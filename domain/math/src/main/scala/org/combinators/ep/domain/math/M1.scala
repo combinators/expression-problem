@@ -1,18 +1,18 @@
 package org.combinators.ep.domain.math      /*DD:LI:AI*/
 
-import org.combinators.ep.domain.Evolution
+import org.combinators.ep.domain._
 
-trait M1 extends Evolution {
-  self: M0 =>
-  val domain: MathDomain
+class M1(val m0:M0) extends Evolution {
 
+  val domain:BaseDomain = MathDomain
   import domain._
+  import m0._
 
   // m1:model evolution.
   // -------------------
   case object Sub extends Binary("Sub")
 
-  val m1 = Model("m1", Seq(Sub), Seq.empty, last = m0)
+  val m1 = Model("m1", Seq(Sub), Seq.empty, last = m0.getModel)
 
   override def getModel: Model = m1
 

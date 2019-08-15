@@ -1,7 +1,7 @@
 package org.combinators.ep.language.java.oo   /*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain._
 import org.combinators.ep.language.java.{DataTypeSubclassGenerator, JavaBinaryMethod, JavaGenerator, OperationAsMethodGenerator}
 import org.combinators.templating.twirl.Java
 
@@ -12,15 +12,10 @@ import org.combinators.templating.twirl.Java
   * @groupdesc approach Fundamental Helper methods for the oo approach to EP
   * @groupprio approach 0
   */
-trait OOGenerator
-  extends JavaGenerator
-    with OperationAsMethodGenerator
-    with JavaBinaryMethod {
+class OOGenerator(override val evolution:Evolution, val binaryMethod:JavaBinaryMethod)
+  extends JavaGenerator(evolution)
+    with OperationAsMethodGenerator  {
 
-  val domain:BaseDomain with ModelDomain
-  import domain._
-
-  def getModel:domain.Model
 
   /**
     * Generating a straight OO solution requires:
@@ -30,11 +25,11 @@ trait OOGenerator
     * This method generates the proper code for the current model (retrieved via getModel).
     */
   override def generatedCode():Seq[CompilationUnit] = {
-    val flat = getModel.flatten()
+    val flat = evolution.getModel.flatten()
 
     // binary methods for helper
     val decls:Seq[CompilationUnit] = if (flat.hasBinaryMethod) {
-      generateHelperClasses()
+      binaryMethod.generateHelperClasses()
     } else {
       Seq.empty
     }
@@ -97,7 +92,7 @@ trait OOGenerator
     val methods = ops.map(op => methodGenerator(exp, op))
 
     Java(s"""|package oo;
-             |public class $exp extends ${domain.baseTypeRep.name} {
+             |public class $exp extends ${evolution.domain.baseTypeRep.name} {
              |  ${constructor(exp)}
              |  ${fields(exp).mkString("\n")}
              |  ${methods.mkString("\n")}
@@ -118,7 +113,7 @@ trait OOGenerator
     )
 
     Java(s"""|package oo;
-             |public abstract class ${domain.baseTypeRep.name} {
+             |public abstract class ${evolution.domain.baseTypeRep.name} {
              |  ${signatures.mkString("\n")}
              |}""".stripMargin).compilationUnit
   }

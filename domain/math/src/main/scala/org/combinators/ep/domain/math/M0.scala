@@ -1,10 +1,10 @@
 package org.combinators.ep.domain.math     /*DD:LI:AI*/
 
-import org.combinators.ep.domain.Evolution
+import org.combinators.ep.domain._
 
-trait M0 extends Evolution {
+class M0 extends Evolution {
 
-  val domain:MathDomain
+  val domain:BaseDomain = MathDomain
   import domain._
 
   val litValue = Attribute ("value", Double)

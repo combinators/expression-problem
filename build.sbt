@@ -2,11 +2,11 @@ import play.sbt.PlayLayoutPlugin
 import play.twirl.sbt.SbtTwirl
 
 
-/** Settings shared globally **/
+/** Settings shared globally. Updating to next version of SBT. **/
 lazy val commonSettings = Seq(
   version := "1.0.0-SNAPSHOT",
   organization := "org.combinators",
-  
+
   scalaVersion := "2.12.4",
 
   resolvers ++= Seq(

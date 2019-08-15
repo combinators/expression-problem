@@ -3,7 +3,7 @@ package org.combinators.ep.language.haskell.grow     /*DI:LD:AD*/
 import java.nio.file.Paths
 
 import org.combinators.ep.language.haskell._
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain.BaseDomain
 import org.combinators.ep.language.haskell.HaskellGenerator
 
 /**

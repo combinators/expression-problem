@@ -1,6 +1,6 @@
 package org.combinators.ep.generator     /*DI:LI:AI*/
 
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain.{BaseDomain, Inst, Operation}
 
 /**
   * Language-independent mechanism for generating test-cases code using client-side API.
@@ -12,7 +12,7 @@ import org.combinators.ep.domain.{BaseDomain, ModelDomain}
   *
   */
 trait LanguageIndependentTestGenerator extends LanguageIndependentGenerator {
-  val domain:BaseDomain with ModelDomain
+  val domain:BaseDomain
 
   type UnitTest      /** Base concept for the representation of a single test case. */
 
@@ -23,7 +23,7 @@ trait LanguageIndependentTestGenerator extends LanguageIndependentGenerator {
     * returns the inline expression resulting from dispatching operation, op, over the given instance, inst.
     *
     */
-  def actual(op: domain.Operation, inst: domain.Inst, params: Expression*): CodeBlockWithResultingExpressions = {
+  def actual(op: Operation, inst: Inst, params: Expression*): CodeBlockWithResultingExpressions = {
     toTargetLanguage(inst).appendDependent(instExp =>
       CodeBlockWithResultingExpressions(contextDispatch(NoSource, dispatchToExpression(instExp.head, op, params: _*)))
     )

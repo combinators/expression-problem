@@ -2,7 +2,7 @@ package org.combinators.ep.language.scala.oo   /*DI:LD:AD*/
 
 import java.nio.file.Paths
 
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain.BaseDomain
 import org.combinators.ep.language.scala._
 
 import scala.meta.Stat

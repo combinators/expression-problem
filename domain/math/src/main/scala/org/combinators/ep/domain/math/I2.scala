@@ -1,10 +1,12 @@
 package org.combinators.ep.domain.math      /*DD:LI:AI*/
 
-import org.combinators.ep.domain.Evolution
+import org.combinators.ep.domain._
 
-trait I2 extends Evolution {
-  self: M0 with M1 with I1 =>
-  val domain: MathDomain
+class I2(val i1:I1) extends Evolution {
+
+  val domain:BaseDomain = MathDomain
+  import domain._
+  import i1._
 
   // i2:model evolution.
   // -------------------
@@ -16,9 +18,9 @@ trait I2 extends Evolution {
   // returns 0 and all others return Max(1+attrubte). Woudl this work?
   //
   // Alternatively: Write necessary code to make test case
-  case object Integer extends domain.TypeRep
-  case object Height extends domain.Operation(independent.height, Integer, Seq(domain.Parameter(independent.height, Integer)))
-  val i2 = domain.Model("i2", Seq.empty, Seq(Height), last = i1)
+  case object Integer extends TypeRep
+  case object Height extends Operation(independent.height, Integer, Seq(Parameter(independent.height, Integer)))
+  val i2 = Model("i2", Seq.empty, Seq(Height), last = i1.getModel)
 
   override def getModel = i2
 

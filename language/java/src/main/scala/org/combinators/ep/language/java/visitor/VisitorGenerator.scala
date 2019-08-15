@@ -1,7 +1,7 @@
 package org.combinators.ep.language.java.visitor   /*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.{BodyDeclaration, MethodDeclaration}
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain.BaseDomain
 import org.combinators.ep.language.java.{DataTypeSubclassGenerator, JavaBinaryMethod, JavaGenerator, OperationAsMethodGenerator}
 import org.combinators.templating.twirl.Java
 

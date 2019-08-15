@@ -1,7 +1,5 @@
 package org.combinators.ep.language.cpp    /*DI:LD:AI*/
 
-import org.combinators.ep.domain.ModelDomain
-
 /**
   * Some solutions have classes that are represented by a base class and then one class for
   * each of the known data types.

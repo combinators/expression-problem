@@ -1,7 +1,7 @@
 package org.combinators.ep.language.java.algebra   /*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.BodyDeclaration
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain.BaseDomain
 import org.combinators.ep.language.java.{JavaBinaryMethod, JavaGenerator}
 import org.combinators.templating.twirl.Java
 

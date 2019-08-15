@@ -1,6 +1,6 @@
 package org.combinators.ep.language.java.interpreter   /*DI:LD:AD*/
 
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain.BaseDomain
 import org.combinators.ep.generator.LanguageIndependentTestGenerator
 import org.combinators.ep.language.java.{JUnitTestGenerator, JavaGenerator}
 import org.combinators.templating.twirl.Java

@@ -1,12 +1,12 @@
 package org.combinators.ep.language.java      /*DI:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain.{BaseDomain, TypeRep}
 import org.combinators.ep.generator.LanguageIndependentTestGenerator
 import org.combinators.templating.twirl.Java
 
 trait TestGenerator extends JavaGenerator with LanguageIndependentTestGenerator {
-  val domain: BaseDomain with ModelDomain
+  val domain: BaseDomain
   import domain._
 
   type UnitTest = MethodDeclaration /** Base concept for the representation of a single test case. */

@@ -1,7 +1,7 @@
 package org.combinators.ep.language.java.algebra   /*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain.BaseDomain
 import org.combinators.ep.generator.LanguageIndependentTestGenerator
 import org.combinators.ep.language.java.{JUnitTestGenerator, JavaBinaryMethod, JavaGenerator}
 import org.combinators.templating.twirl.Java

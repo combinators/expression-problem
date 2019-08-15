@@ -1,11 +1,14 @@
 package org.combinators.ep.domain.math      /*DD:LI:AI*/
 
-import org.combinators.ep.domain.Evolution
+import org.combinators.ep.domain._
 
-trait M3 extends Evolution {
-  self: M0 with M1 with M2 =>
-  val domain:MathDomain
+class M3(val m2:M2) extends Evolution {
+
+  val domain:BaseDomain = MathDomain
   import domain._
+  import m2._
+  import m1._
+  import m0._    // note by ordering in this fashion, you will bring in m0
 
   // m3:model evolution.
   // -------------------
@@ -13,7 +16,7 @@ trait M3 extends Evolution {
   case object Neg extends Unary("Neg")
   case object Divd extends Binary("Divd")
 
-  val m3 = Model("m3", Seq(Neg, Mult, Divd), Seq.empty, last = m2)
+  val m3 = Model("m3", Seq(Neg, Mult, Divd), Seq.empty, last = m2.getModel)
   override def getModel = m3
 
   // Tests

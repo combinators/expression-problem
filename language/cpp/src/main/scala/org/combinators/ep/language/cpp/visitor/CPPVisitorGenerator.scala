@@ -1,6 +1,6 @@
 package org.combinators.ep.language.cpp.visitor   /*DI:LD:AD*/
 
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain.BaseDomain
 import org.combinators.ep.language.cpp._
 
 // visitor based solution

@@ -4,11 +4,10 @@ import com.github.javaparser.JavaParser
 import com.github.javaparser.ast.{CompilationUnit, PackageDeclaration}
 import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.MethodDeclaration
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain._
 import org.combinators.templating.twirl.Java
 
-trait JavaBinaryMethod {
-  val domain:BaseDomain with ModelDomain
+class JavaBinaryMethod(val evolution:Evolution) {
 
   /**
     * Binary methods creates helper classes in package 'tree'. Completes description
@@ -35,7 +34,7 @@ trait JavaBinaryMethod {
     * @param typeConverter    existing typeconverter which we need for other types besides baseTypeRep
     * @return                 return new parameter type with op interface used in place of baseTypeRep
     */
-  def binaryMethodParameters(op:domain.Operation, typeConverter:(domain.TypeRep) => Type) : String = {
+  def binaryMethodParameters(op:Operation, typeConverter:(TypeRep) => Type) : String = {
     op.parameters.map(param => {
       // use operation name for binary method
       val realType = param.tpe match {
@@ -53,7 +52,7 @@ trait JavaBinaryMethod {
     * @param exp
     * @return
     */
-  def logicAsTree(exp:domain.DataType) : Seq[MethodDeclaration] = {
+  def logicAsTree(exp:DataType) : Seq[MethodDeclaration] = {
     val args = exp.attributes.map(att => att.instance).mkString(",")
           Java(
             s"""

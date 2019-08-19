@@ -12,7 +12,7 @@ package object matchers {
 
     /** Transforms a function on `Content` by composing it with the result of `toContent`. */
     def matcher[Result](onMatch: Content => Result): PartialFunction[Source, Result] =
-      matcher.andThen(onMatch)
+      Function.unlift(toContent).andThen(onMatch)
 
     /** Partially transforms a `Source` into `Content` by applying `toContent`. */
     def matcher: PartialFunction[Source, Content] = matcher(x => x)

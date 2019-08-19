@@ -1,7 +1,9 @@
 package org.combinators.ep.generator     /*DI:LI:AI*/
 
-import org.combinators.ep.domain.{BaseDomain, Inst, Operation}
+import org.combinators.ep.domain._
+import abstractions._
 
+// TODO: Fix documentation -- Jan
 /**
   * Language-independent mechanism for generating test-cases code using client-side API.
   *
@@ -11,8 +13,7 @@ import org.combinators.ep.domain.{BaseDomain, Inst, Operation}
   * test cases can enhance the generated code, but this is handled in the ex traits, not the Mx traits.
   *
   */
-trait LanguageIndependentTestGenerator extends LanguageIndependentGenerator {
-  val domain:BaseDomain
+abstract class LanguageIndependentTestGenerator(val langGen: LanguageIndependentGenerator) {
 
   type UnitTest      /** Base concept for the representation of a single test case. */
 
@@ -23,11 +24,11 @@ trait LanguageIndependentTestGenerator extends LanguageIndependentGenerator {
     * returns the inline expression resulting from dispatching operation, op, over the given instance, inst.
     *
     */
-  def actual(op: Operation, inst: Inst, params: Expression*): CodeBlockWithResultingExpressions = {
+  /*def actual(op: Operation, inst: Inst, params: Expression*): CodeBlockWithResultingExpressions = {
     toTargetLanguage(inst).appendDependent(instExp =>
       CodeBlockWithResultingExpressions(contextDispatch(NoSource, dispatchToExpression(instExp.head, op, params: _*)))
     )
-  }
+  }*/
 
   /**
     * Traits can override this method to add their test cases to the mix.
@@ -43,7 +44,7 @@ trait LanguageIndependentTestGenerator extends LanguageIndependentGenerator {
     * @param tests   sequence of candidate test cases
     * @return        Code fragments (based on language and approach) representing unit test cases.
     */
-  def testMethod(tests:Seq[domain.TestCase]) : Seq[UnitTest]
+  def testMethods(tests:Seq[TestCase]) : Seq[UnitTest]
 
   /**
     * Represents the sequence of total test cases.
@@ -56,5 +57,5 @@ trait LanguageIndependentTestGenerator extends LanguageIndependentGenerator {
     * @param pkg     An optional string used for package or module declaration
     * @return
     */
-  def generateSuite(pkg: Option[String]): Seq[CompilationUnit]
+  def generateSuite(pkg: Option[String]): Seq[langGen.CompilationUnit]
 }

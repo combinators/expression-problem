@@ -63,9 +63,9 @@ class M5(val m4:M4) extends Evolution {
     SameTestCase(m5_s1, m5_s2, result=false),
     SameTestCase(m5_s1, m5_s3, result=true),
     SameTestCase(m5_all, m5_all, result=true),
-    EqualsTestCase(m5_all, AsTree, ExistsInstance(TreeType)(tree_m5_all)),
+    EqualsTestCase(m5_all, AsTree, InstanceModel(TreeType)(tree_m5_all)),
     EqualsCompositeTestCase(m5_all, Seq((PrettyP, Seq.empty)), ExistsInstance(String)("(-2.0-((1.0-976.0)*((1.0*976.0)+(1.0/3.0))))")),
 
-    EqualsCompositeTestCase(m5_s4, Seq((Simplify, Seq.empty), (AsTree, Seq.empty)), ExistsInstance(TreeType)(treeSimplified)),
+    EqualsCompositeTestCase(m5_s4, Seq((Simplify, Seq.empty), (AsTree, Seq.empty)), InstanceModel(TreeType)(treeSimplified)),
   )
 }

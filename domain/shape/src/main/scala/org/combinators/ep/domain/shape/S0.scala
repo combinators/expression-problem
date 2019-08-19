@@ -41,7 +41,7 @@ class S0 extends Evolution {
   // Not sure if this will work
   case class TranslateInst(pt:(scala.Double,scala.Double), s:Inst) extends Inst(Translate.name) {
     val e: DataType = Translate
-    val ei: ExistsInstance = ExistsInstance(Point2D)(pt)
+    val ei: InstanceModel = ExistsInstance(Point2D)(pt)
   }
 
   val s0 = Model("s0", Seq(Square,Circle,Translate), Seq(ContainsPt))
@@ -62,7 +62,7 @@ class S0 extends Evolution {
     */
   case class ContainsTestCase(inst:Inst, pt:(Double,Double), result:Boolean)
     extends domain.TestCase {
-    val pti: ExistsInstance = ExistsInstance(Point2D)(pt)
+    val pti: InstanceModel = ExistsInstance(Point2D)(pt)
   }
 
   def S0_tests:Seq[TestCase] = Seq(

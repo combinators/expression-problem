@@ -1,16 +1,9 @@
 package org.combinators.ep.generator
 
-/**
-  * If operation is dependent upon any other operations, maintain this information.
-  *
-  * Initially, no dependencies anywhere.
-  */
-trait OperationDependency {
+import org.combinators.ep.domain.abstractions.Operation
 
-  /**
-    * To declare a dependency, override this method and add to list
-    * @param op
-    * @return
-    */
-  def dependency(op:Operation) : List[Operation] = List.empty
+/** Models knowledge of operational dependencies arising when implementing code for some domain. */
+trait OperationDependencies {
+  /** Returns the operations the implementation of the given operation dependes on. */
+  def dependencies(op:Operation) : Set[Operation] = Set.empty
 }

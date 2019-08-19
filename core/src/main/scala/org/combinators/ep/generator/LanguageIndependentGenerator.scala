@@ -1,7 +1,10 @@
 package org.combinators.ep.generator    /*DI:LI:AI*/
 
 import org.combinators.ep.domain._
+import abstractions._
+import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
 
+// TODO: Cleanup documentation -- Jan
 /**
   * This trait contains the fundamental abstractions that define an EP approach,
   * regardless of programming language or application domain.
@@ -99,15 +102,7 @@ import org.combinators.ep.domain._
   *           for a given logic, these helper methods are useful in capturing the desired structures.
   * @groupprio deltaHelpers 40
   */
-abstract class LanguageIndependentGenerator(val evolution:Evolution) {
-
-  /**
-    * Any domain that extends BaseDomain with ModelDomain is suitable.
-    * @group dependency
-    */
-//  val domain:BaseDomain
-//  import domain._
-
+abstract class LanguageIndependentGenerator(val evolution:Evolution, val names: NameProvider) {
   /**
     * Base concept for the representation of program unit on disk.
     * @group types
@@ -183,18 +178,12 @@ abstract class LanguageIndependentGenerator(val evolution:Evolution) {
       }
   }
 
-//  /**
-//    * Retrieve model under consideration.
-//    * @group dependency
-//    */
-//  def getModel:Model
-  // TODO: now to be extracted from evolution
 
   /**
     * For the processed model, return generated code artifacts for solution.
     * @group api
     */
-  def generatedCode() : Seq[CompilationUnit]
+  def generatedCode: Seq[CompilationUnit]
 
   /**
     * Expression-tree data has attributes with domain-specific types. This method returns
@@ -212,19 +201,19 @@ abstract class LanguageIndependentGenerator(val evolution:Evolution) {
     * @group api
     */
   @throws[NotImplementedError]("if given type has no resolution.")
-  def typeConverter(tpe:TypeRep) : Type = {
-    throw new scala.NotImplementedError(s"""Unknown Type "$tpe" """)
+  def tpe(tpe: TypeRep) : Type = {
+    throw new scala.NotImplementedError(s"""No rule to compile type "$tpe".""")
   }
 
   /**
     * Given a data type (and potential arguments) returns an expression type that instantiates the data type.
     *
-    * @param exp       desired DataType subtype
+    * @param tpeCase      desired DataType subtype
     * @param params    potential parameters
     * @return          code fragment suitable for instantiating data type
     * @group inst
     */
-  def inst(exp:DataType, params:Expression*): CodeBlockWithResultingExpressions
+  def instantiate(tpeCase: DataTypeCase, params:Expression*): CodeBlockWithResultingExpressions
 
   /**
     * Convert a scala expression into the target language.
@@ -232,85 +221,49 @@ abstract class LanguageIndependentGenerator(val evolution:Evolution) {
     * The ExistsInstance could be a primitive type (Double, String, int) and if a domain instance, the request
     * is delegated to toTargetLanguage(domain.Inst)
     *
-    * @param scalaValue   the ExistsInstance captures a type (TypeRep) and an instance which varies based on trait.
+    * @param inst   the ExistsInstance captures a type (TypeRep) and an instance which varies based on trait.
     * @return             code fragment that converts values from Meta-Model test cases into actual
     *                     language-specific values.
     * @group inst
     */
-  def toTargetLanguage(scalaValue:ExistsInstance) : CodeBlockWithResultingExpressions = {
-    scalaValue.inst match {
-      case domInst: Inst => toTargetLanguage(domInst)
-      case _ => throw new scala.NotImplementedError(s"No rule to convert ${scalaValue.tpe} to the target language")
+  def instantiate(inst: InstanceRep) : CodeBlockWithResultingExpressions = {
+    inst.inst match {
+      case domInst: DataTypeInstance => instantiate(domInst)
+      case _ => throw new scala.NotImplementedError(s"No rule to compile instantiations of ${inst.tpe}.")
     }
   }
 
   /**
     * Convert a domain specific data type instance into the target language.
     *
-    * Already configured for all known cases of DomainInst, namely [[UnaryInst]]  [[BinaryInst]] and [[AtomicInst]]
-    *
-    * @param instance    desired instance for which a constructing code fragment is returned.
+    * @param inst    desired instance for which a constructing code fragment is returned.
     * @group inst
     */
-  def toTargetLanguage(instance:Inst): CodeBlockWithResultingExpressions = {
-    instance match {
-      case ui: evolution.domain.UnaryInst =>
-        toTargetLanguage(ui.inner).appendDependent(innerResults => inst(ui.e, innerResults:_*))
-
-      case bi: evolution.domain.BinaryInst =>
-        toTargetLanguage(bi.left)
-            .appendIndependent(toTargetLanguage(bi.right))
-            .appendDependent(innerResults => inst(bi.e, innerResults: _*))
-
-      case ai:evolution.domain.AtomicInst =>
-        toTargetLanguage(ai.ei).appendDependent(innerResults => inst(ai.e, innerResults:_*))
-
-        // catch-all for any n-ary instance.
-      case ni: evolution.domain.NaryInst =>
-        val insts = ni.instances.foldLeft(CodeBlockWithResultingExpressions.empty) {
-          case (b, p) => b.appendIndependent(toTargetLanguage(p))
-        }
-        insts.appendDependent(results => inst(ni.e, results : _*))
-
-      case _ => throw new scala.NotImplementedError(s"No rule to convert $instance to the target language")
-    }
+  def instantiate(inst: DataTypeInstance): CodeBlockWithResultingExpressions = {
+    val attributeInstantiation =
+      inst.attributeInstances.foldLeft(CodeBlockWithResultingExpressions.empty) {
+        case (block, attributeInstance) => block.appendIndependent(instantiate(attributeInstance))
+      }
+    attributeInstantiation.appendDependent(attributeInstances =>
+      instantiate(inst.tpeCase, attributeInstances: _*)
+    )
   }
 
   /**
     * Return an expression that refers to the given sub-structure of a data-type by a
     * specific attribute.
     *
-    * Each EP approach must provide a suitable implementation, which is aggregated by
-    * the helper method [[subExpressions]].
     *
     * By throwing a runtime exception, this method terminates any code generation that
     * refers to an invalid attribute by mistake.
     *
-    * @param exp   desired data-type
+    * @param tpeCase   desired data-type
     * @param att   desired Attribute
     * @group api
     */
   @throws[scala.NotImplementedError]("If given attribute doesn't exist in data-type.")
-  def expression (exp:DataType, att:Attribute) : Expression = {
-    throw new scala.NotImplementedError(s"""Unknown Attribute "${att.instance}" for "${exp.concept}. """)
-  }
-
-  /**
-    * Determines the code expression for all children of a Exp subtype based on its attributes.
-    *
-    * For example, an expressions.BinaryExp has 'left' and 'right' attributes, whereas an
-    * expressions.UnaryExp only has an 'exp'. These attributes form the keys into this Map,
-    * and the values (Expression objects) represent code fragments for accessing these values.
-    *
-    * Each EP approach must provide a suitable [[expression]] method that is aggregated by this
-    * method
-    *
-    * @param exp   data subtype being considered
-    * @return      Map with entries for each attribute, and the resulting code expressions
-    * @group api
-    */
-  def subExpressions(exp:DataType) : Map[String, Expression] = {
-    exp.attributes.map(att => att.instance -> expression(exp, att)).toMap
+  def accessAttribute(tpeCase:DataTypeCase, att:Attribute) : Expression = {
+    throw new scala.NotImplementedError(s"""No rule to compile access to attribute "${att.name}" for "${tpeCase.name}.""")
   }
 
   /**
@@ -322,15 +275,15 @@ abstract class LanguageIndependentGenerator(val evolution:Evolution) {
     *
     * Must be Statements (rather than just an Expression) because in most operations, a value of
     * some sort is returned, thus instead of just "expr" it becomes "return expr;" To activate the
-    * "return expr;" statement, use the [[result]] method.
+    * "return expr;" statement, use the [[toOperationResult]] method.
     *
-    * @param exp    data-type for the context
+    * @param tpeCase    data-type for the context
     * @param op     operation for the context
     * @group api
     */
   @throws[scala.NotImplementedError]("If no (data-type, operation) combination defined.")
-  def logic(exp:DataType, op:Operation) : Seq[Statement] = {
-    throw new scala.NotImplementedError(s"""Operation "${op.concept}" does not handle case for sub-type "${exp.concept}" """)
+  def logic(tpeCase:DataTypeCase, op:Operation) : Seq[Statement] = {
+    throw new scala.NotImplementedError(s"""Operation "${op.name}" does not handle case for type case "${tpeCase.name}" """)
   }
 
   /**
@@ -346,7 +299,9 @@ abstract class LanguageIndependentGenerator(val evolution:Evolution) {
     * @param expr   Expression that represents the result of a log(exp, op).
     * @group api
     */
-  def result (expr:Expression) : Seq[Statement]
+  def toOperationResult (expr:Expression) : Seq[Statement]
+
+  // TODO: cleanup dispatch, naming conventions and parameter duplication in and Delta, Source
 
   /**
     * Responsible for dispatching sub-expressions with possible parameter(s).
@@ -361,7 +316,7 @@ abstract class LanguageIndependentGenerator(val evolution:Evolution) {
     * @param params   potential parameters of this operation
     * @group api
     */
-  def dispatch(expr:Expression, op:Operation, params:Expression*) : Expression
+  def dispatch(expr: Expression, op: Operation, params: Expression*) : Expression
 
   /**
     * The '''logic(exp,op)''' that represents the code statements for applying a given operation
@@ -411,7 +366,11 @@ abstract class LanguageIndependentGenerator(val evolution:Evolution) {
     * @param params   (optional variable length) parameters to the operation as code expressions.
     * @group context
     */
-  abstract class Context(val exp:Option[DataType], val op:Option[Operation], val params:Expression*)
+  abstract class Context(
+    val exp: Option[DataTypeCase],
+    val op: Option[Operation],
+    val params: Expression*
+  )
 
   /**
     * When code is being generated independently (either within a test case or perhaps even
@@ -431,7 +390,7 @@ abstract class LanguageIndependentGenerator(val evolution:Evolution) {
     * @param p    optional variable length parameters for this operation as code expressions.
     * @group context
     */
-  case class Source(e:DataType, o:Operation, p:Expression*) extends Context(Some(e), Some(o), p : _*)
+  case class Source(e:DataTypeCase, o:Operation, p:Expression*) extends Context(Some(e), Some(o), p : _*)
 
   /**
     * The logic for a given source context will typically need to weave together code fragments
@@ -449,7 +408,7 @@ abstract class LanguageIndependentGenerator(val evolution:Evolution) {
     * potential parameters) being applied to a child of the current source context (identified
     * by its attribute).
     *
-    * This method uses [[expression]] on the source to generate the code fragment representing
+    * This method uses [[accessAttribute]] on the source to generate the code fragment representing
     * the expression to use within the returned [[Delta]]
     *
     * @param att       child element, identified by actual attribute.
@@ -457,8 +416,8 @@ abstract class LanguageIndependentGenerator(val evolution:Evolution) {
     * @param params    optional variable length parameters for operation as code expressions.
     * @group deltaHelpers
     */
-  def dispatchChild(exp:DataType, att:Attribute, op:Operation, params:Expression*) : Delta = {
-    dispatchToExpression(expression(exp, att), op, params : _ *)
+  def dispatchChild(exp:DataTypeCase, att:Attribute, op:Operation, params:Expression*) : Delta = {
+    dispatchToExpression(accessAttribute(exp, att), op, params : _ *)
   }
 
   /**

@@ -1,11 +1,8 @@
 package org.combinators.ep.domain    /*DI:LI:AI*/
 
-/** Enables access to specific domain. */
-class WithDomain[+E <: BaseDomain](val domain:E) { }   // a covariant class in Scala
-
-/** Every individual evolution extends this Trait to have access to the domain.Model. */
+/** Models a point in time of an evolving data type. */
 trait Evolution {
-
-  val domain: BaseDomain                             // Every evolution has associated domain.
-  def getModel: Model
+  /** Returns the domain model associated with this point in time.
+    * Any [[org.combinators.ep.domain.Model]] also stores its evolution history. */
+  implicit def getModel: Model
 }

@@ -30,7 +30,7 @@ class e0(val gen:JavaGenerator, val m0:M0) extends JUnitTestGenerator(gen) {
     * Decide to use formal java.lang.Double and java.lang.Integer because of the ambiguity
     * that can exist in JUnit when dealing with primitive types and boxed types.
     */
-  override def toTargetLanguage(ei:ExistsInstance) : CodeBlockWithResultingExpressions = {
+  override def toTargetLanguage(ei:InstanceModel) : CodeBlockWithResultingExpressions = {
      ei.inst match {
       case d:scala.Double => CodeBlockWithResultingExpressions(Java(s"new Double($d)").expression())
       case i:scala.Int => CodeBlockWithResultingExpressions(Java(s"new Integer($i)").expression())

@@ -3,8 +3,8 @@ package org.combinators.ep.language.java   /*DI:LD:AI*/
 import com.github.javaparser.JavaParser
 import com.github.javaparser.ast.body.{ConstructorDeclaration, FieldDeclaration, MethodDeclaration, TypeDeclaration}
 import com.github.javaparser.ast.stmt.BlockStmt
-import org.combinators.ep.domain._
-import org.combinators.ep.generator.LanguageIndependentGenerator
+import org.combinators.ep.domain.abstractions._
+import org.combinators.ep.generator.{DomainDependentGenerator, DomainIndependentGenerator, NameProvider}
 import org.combinators.templating.twirl.Java
 
 import scala.collection.JavaConverters._
@@ -15,9 +15,8 @@ import scala.collection.JavaConverters._
   * @groupname lang Language Bindings
   * @groupdesc lang Fundamental Language Bindings as required by EpCoGen framework
   * @groupprio lang 5
-  *
   * @groupname api Core API
-  * @groupdesc api Fundamental abstractions to provide context for [[LanguageIndependentGenerator]]
+  * @groupdesc api Fundamental abstractions to provide context for [[DomainIndependentGenerator]]
   * @groupname api Core API
   * @groupname deltaHelpers DeltaHelpers
   * @groupname context Context
@@ -42,8 +41,7 @@ import scala.collection.JavaConverters._
   *           for a given logic, these helper methods are useful in capturing the desired structures.
   * @groupprio deltaHelpers 40
   */
-abstract class JavaGenerator(override val evolution:Evolution) extends LanguageIndependentGenerator(evolution) {
-  import evolution.domain._
+abstract class JavaGenerator(val names:NameProvider, val dependent:DomainDependentGenerator) {
 
   /** @group lang */
   type CompilationUnit = com.github.javaparser.ast.CompilationUnit
@@ -61,11 +59,11 @@ abstract class JavaGenerator(override val evolution:Evolution) extends LanguageI
     * Return designated Java type associated with type.
     * @group api
     */
-  override def typeConverter(tpe:TypeRep) : Type = {
-    tpe match {
-      case evolution.domain.Unit => Java(s"void").tpe()
-      case evolution.domain.baseTypeRep => Java(s"${evolution.domain.baseTypeRep.name}").tpe()
-      case _ => super.typeConverter(tpe)
+  override def tpe(aType:TypeRep) : Type = {
+    aType match {
+      case TypeRep.Unit => Java(s"void").tpe()
+      case TypeRep.DataType(tpe) => Java(s"${tpe.name}").tpe()
+      case _ => dependent.independent.tpe(aType)
     }
   }
 
@@ -73,7 +71,7 @@ abstract class JavaGenerator(override val evolution:Evolution) extends LanguageI
     * In Java, an expression must be returned by the 'return' statement.
     * @group api
     */
-  def result (expr:Expression) : Seq[Statement] = {
+  override def toOperationResult (expr:Expression) : Seq[Statement] = {
     Java(s"return $expr;").statements()
   }
 
@@ -81,20 +79,20 @@ abstract class JavaGenerator(override val evolution:Evolution) extends LanguageI
     * For producer operations, there is a need to instantiate objects, and one would use this
     * method (with specific parameters) to carry this out.
     */
-  def inst(exp:DataType, params:Expression*): CodeBlockWithResultingExpressions = {
+  def instantiate(exp:DataType, params:Expression*) : CodeBlockWithResultingExpressions = {
     CodeBlockWithResultingExpressions(
-      Java(s"new ${exp.concept}${params.mkString("(", ", ", ")")}").expression()
+      Java(s"new ${names.conceptNameOf(exp)}${params.mkString("(", ", ", ")")}").expression()
     )
   }
 
   // Useful helper methods for any generator needing to craft common Java constructs
 
   /** Generate constructor for given atomic concept, using suggested name */
-  def constructor(exp:DataType, suggestedName:Option[String] = None) : ConstructorDeclaration = {
+  def constructor(exp:DataTypeCase, suggestedName:Option[String] = None) : ConstructorDeclaration = {
     val name = if (suggestedName.isEmpty) { exp.name } else { suggestedName.get }
 
-    val params:Seq[String] = exp.attributes.map(att => s"${typeConverter(att.tpe)} ${att.instance}")
-    val cons:Seq[Statement] = exp.attributes.flatMap(att => Java(s"  this.${att.instance} = ${att.instance};").statements())
+    val params:Seq[String] = exp.attributes.map(att => s"${tpe(att.tpe)} ${names.instanceNameOf(att.tpe)}")
+    val cons:Seq[Statement] = exp.attributes.flatMap(att => Java(s"  this.${names.instanceNameOf(att.tpe)} = ${names.instanceNameOf(att.tpe)};").statements())
 
     val str =  s"""|public $name (${params.mkString(",")}) {
                    |   ${cons.mkString("\n")}
@@ -104,9 +102,9 @@ abstract class JavaGenerator(override val evolution:Evolution) extends LanguageI
 
   /** Generate constructor for given operation, using suggested name */
   def constructorFromOp(op:Operation, suggestedName:Option[String] = None) : ConstructorDeclaration = {
-    val name = if (suggestedName.isEmpty) { op.concept } else { suggestedName.get }
+    val name = if (suggestedName.isEmpty) { names.conceptNameOf(op) } else { suggestedName.get }
 
-    val params:Seq[String] = op.parameters.map(param => s"${typeConverter(param.tpe)} ${param.name}")
+    val params:Seq[String] = op.parameters.map(param => s"${tpe(param.tpe)} ${param.name}")
     val cons:Seq[Statement] = op.parameters.flatMap(param => Java(s"  this.${param.name} = ${param.name};").statements())
 
     Java(s"""|public $name (${params.mkString(",")}) {
@@ -127,17 +125,17 @@ abstract class JavaGenerator(override val evolution:Evolution) extends LanguageI
 
   /** Compute parameter "Type name" comma-separated list from operation. */
   def parameters(op:Operation) : String = {
-    op.parameters.map(param => typeConverter(param.tpe).toString + " " + param.name).mkString(",")
+    op.parameters.map(param => tpe(param.tpe).toString + " " + param.name).mkString(",")
   }
 
   /**
     * Produce all getter methods for the given exp, with suitable possibility of using covariant replacement
     * on domain.BaseTypeRep
     */
-  def getters(exp:DataType) : Seq[MethodDeclaration] =
+  def getters(exp:DataTypeCase) : Seq[MethodDeclaration] =
 
-    exp.attributes.flatMap(att => Java(s"""|public ${typeConverter(att.tpe)} get${att.concept}() {
-                                           |    return this.${att.instance};
+    exp.attributes.flatMap(att => Java(s"""|public ${tpe(att.tpe)} get${names.conceptNameOf(att.tpe)}() {
+                                           |    return this.${names.instanceNameOf(att.tpe)};
                                            |}""".stripMargin).methodDeclarations)
 
   /**
@@ -146,8 +144,8 @@ abstract class JavaGenerator(override val evolution:Evolution) extends LanguageI
     * @param exp
     * @return
     */
-  def fields(exp:DataType) : Seq[FieldDeclaration] = {
-    exp.attributes.flatMap(att => Java(s"private ${typeConverter(att.tpe)} ${att.instance};").fieldDeclarations())
+  def fields(exp:DataTypeCase) : Seq[FieldDeclaration] = {
+    exp.attributes.flatMap(att => Java(s"private ${tpe(att.tpe)} ${names.instanceNameOf(att.tpe)};").fieldDeclarations())
   }
 
   /**

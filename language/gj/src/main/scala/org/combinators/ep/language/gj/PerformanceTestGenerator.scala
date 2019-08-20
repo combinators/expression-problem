@@ -1,12 +1,12 @@
 package org.combinators.ep.language.gj   /*DI:LD:AI*/
 
 import org.combinators.ep.domain.BaseDomain
-import org.combinators.ep.generator.LanguageIndependentTestGenerator
+import org.combinators.ep.generator.DomainIndependentTestGenerator
 
 /**
   * Isolate Performance tests
   */
-trait PerformanceTestGenerator extends GJGenerator with LanguageIndependentTestGenerator with TestGenerator {
+trait PerformanceTestGenerator extends GJGenerator with DomainIndependentTestGenerator with TestGenerator {
   val domain: BaseDomain with ModelDomain
   import domain._
 

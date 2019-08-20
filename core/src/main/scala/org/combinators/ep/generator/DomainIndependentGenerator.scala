@@ -102,8 +102,8 @@ import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
   *           for a given logic, these helper methods are useful in capturing the desired structures.
   * @groupprio deltaHelpers 40
   */
-abstract class LanguageIndependentGenerator(val evolution:Evolution, val names: NameProvider) {
-  /**
+abstract class DomainIndependentGenerator  {
+   /**
     * Base concept for the representation of program unit on disk.
     * @group types
     */
@@ -178,13 +178,6 @@ abstract class LanguageIndependentGenerator(val evolution:Evolution, val names: 
       }
   }
 
-
-  /**
-    * For the processed model, return generated code artifacts for solution.
-    * @group api
-    */
-  def generatedCode: Seq[CompilationUnit]
-
   /**
     * Expression-tree data has attributes with domain-specific types. This method returns
     * the designated language-specific type associated with the abstract type.
@@ -215,6 +208,7 @@ abstract class LanguageIndependentGenerator(val evolution:Evolution, val names: 
     */
   def instantiate(tpeCase: DataTypeCase, params:Expression*): CodeBlockWithResultingExpressions
 
+  // was toTargetLanguage --> now instantiate
   /**
     * Convert a scala expression into the target language.
     *
@@ -249,10 +243,10 @@ abstract class LanguageIndependentGenerator(val evolution:Evolution, val names: 
     )
   }
 
+  // was expression()
   /**
     * Return an expression that refers to the given sub-structure of a data-type by a
     * specific attribute.
-    *
     *
     * By throwing a runtime exception, this method terminates any code generation that
     * refers to an invalid attribute by mistake.
@@ -266,26 +260,7 @@ abstract class LanguageIndependentGenerator(val evolution:Evolution, val names: 
     throw new scala.NotImplementedError(s"""No rule to compile access to attribute "${att.name}" for "${tpeCase.name}.""")
   }
 
-  /**
-    * For all possible EP solutions, this method generates the sequence of statements that result
-    * for a given operation and data-type.
-    *
-    * Must be return a sequence of statements since some operations require a more substantial
-    * implementation depending upon the programming language.
-    *
-    * Must be Statements (rather than just an Expression) because in most operations, a value of
-    * some sort is returned, thus instead of just "expr" it becomes "return expr;" To activate the
-    * "return expr;" statement, use the [[toOperationResult]] method.
-    *
-    * @param tpeCase    data-type for the context
-    * @param op     operation for the context
-    * @group api
-    */
-  @throws[scala.NotImplementedError]("If no (data-type, operation) combination defined.")
-  def logic(tpeCase:DataTypeCase, op:Operation) : Seq[Statement] = {
-    throw new scala.NotImplementedError(s"""Operation "${op.name}" does not handle case for type case "${tpeCase.name}" """)
-  }
-
+  // this was result(...)
   /**
     * Logic produces the sequence of statements that encodes the logic of an operation on a data-type.
     * As part of those statements, there is often a computed value that represents the result
@@ -302,7 +277,7 @@ abstract class LanguageIndependentGenerator(val evolution:Evolution, val names: 
   def toOperationResult (expr:Expression) : Seq[Statement]
 
   // TODO: cleanup dispatch, naming conventions and parameter duplication in and Delta, Source
-
+  // TODO: notion of SUBJECT and more clearly explain purpose of optional parameters...
   /**
     * Responsible for dispatching sub-expressions with possible parameter(s).
     *
@@ -311,12 +286,12 @@ abstract class LanguageIndependentGenerator(val evolution:Evolution, val names: 
     *
     * Intent of this function is to model the execute of operation on children of a datatype.
     *
-    * @param expr     expression representing the code fragment into which operation is being performed
-    * @param op       desired operation
-    * @param params   potential parameters of this operation
+    * @param subject    expression representing the code fragment into which operation is being performed
+    * @param op         desired operation
+    * @param params     potential parameters of this operation
     * @group api
     */
-  def dispatch(expr: Expression, op: Operation, params: Expression*) : Expression
+  def dispatch(subject: Expression, op: Operation, params: Expression*) : Expression
 
   /**
     * The '''logic(exp,op)''' that represents the code statements for applying a given operation
@@ -402,6 +377,8 @@ abstract class LanguageIndependentGenerator(val evolution:Evolution, val names: 
     * @group context
     */
   class Delta(val expr:Option[Expression], override val op:Option[Operation], p:Expression*) extends Context(None, op, p : _*)
+
+  // TODO: would you even call Delta on anything other than th einstance of a domain data type.
 
   /**
     * Helper method for creating a [[Delta]] context that represents a new operation (with

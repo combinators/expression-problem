@@ -1,8 +1,7 @@
 package org.combinators.ep.language.java    /*DD:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
-import org.combinators.ep.domain._
-import org.combinators.ep.domain.math.M0
+import org.combinators.ep.domain.abstractions._
 import org.combinators.templating.twirl.Java
 
 /**
@@ -10,15 +9,14 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-class e0(val gen:JavaGenerator, val m0:M0) extends JUnitTestGenerator(gen) {
-  import m0._
+class e0(override val gen:JavaGenerator) extends JUnitTestGenerator(gen) {
 
   /** E0 Introduces the concept a Double and Int type, used for the 'Eval' operation. */
-  override def typeConverter(tr:TypeRep) : Type = {
+  override def tpe(tr:TypeRep) : Type = {
     tr match {
-      case Double => Java("Double").tpe
-      case Int => Java("Integer").tpe
-      case _ => super.typeConverter(tr)
+      case TypeRep.Double => Java("Double").tpe
+      case TypeRep.Int => Java("Integer").tpe
+      case _ => super.tpe(tr)
     }
   }
 

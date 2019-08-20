@@ -2,6 +2,7 @@ package org.combinators.ep.generator     /*DI:LI:AI*/
 
 import org.combinators.ep.domain._
 import abstractions._
+import org.combinators.ep.domain.instances.DataTypeInstance
 
 // TODO: Fix documentation -- Jan
 /**
@@ -13,7 +14,8 @@ import abstractions._
   * test cases can enhance the generated code, but this is handled in the ex traits, not the Mx traits.
   *
   */
-abstract class LanguageIndependentTestGenerator(val langGen: LanguageIndependentGenerator) {
+abstract class DomainIndependentTestGenerator(val langGen: DomainIndependentGenerator) {
+  import langGen._
 
   type UnitTest      /** Base concept for the representation of a single test case. */
 
@@ -23,12 +25,19 @@ abstract class LanguageIndependentTestGenerator(val langGen: LanguageIndependent
     * Each basic test case has an instance over which an operation is to be performed. This method
     * returns the inline expression resulting from dispatching operation, op, over the given instance, inst.
     *
+    * This is like a dispatch, and hence it was renamed. Consider
+    *
     */
   /*def actual(op: Operation, inst: Inst, params: Expression*): CodeBlockWithResultingExpressions = {
     toTargetLanguage(inst).appendDependent(instExp =>
       CodeBlockWithResultingExpressions(contextDispatch(NoSource, dispatchToExpression(instExp.head, op, params: _*)))
     )
   }*/
+//  def dispatch (subject:DataTypeInstance, op:Operation, params:Expression*): CodeBlockWithResultingExpressions = {
+//    contextDispatch(NoSource, Delta(None, Some(op), params))
+//  }
+  // class Delta(val expr:Option[Expression], override val op:Option[Operation], p:Expression*) extends Context(None, op, p : _*)
+  // def instantiate(tpeCase: DataTypeCase, params:Expression*): CodeBlockWithResultingExpressions
 
   /**
     * Traits can override this method to add their test cases to the mix.

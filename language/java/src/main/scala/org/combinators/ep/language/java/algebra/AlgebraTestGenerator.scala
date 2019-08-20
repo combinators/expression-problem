@@ -2,7 +2,7 @@ package org.combinators.ep.language.java.algebra   /*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
 import org.combinators.ep.domain.BaseDomain
-import org.combinators.ep.generator.LanguageIndependentTestGenerator
+import org.combinators.ep.generator.DomainIndependentTestGenerator
 import org.combinators.ep.language.java.{JUnitTestGenerator, JavaBinaryMethod, JavaGenerator}
 import org.combinators.templating.twirl.Java
 
@@ -12,7 +12,7 @@ import org.combinators.templating.twirl.Java
 trait AlgebraTestGenerator
   extends JUnitTestGenerator
     with JavaGenerator
-    with LanguageIndependentTestGenerator
+    with DomainIndependentTestGenerator
     with JavaBinaryMethod {
   val domain: BaseDomain with ModelDomain
   import domain._

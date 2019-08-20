@@ -1,5 +1,4 @@
-package org.combinators.ep.domain
-/*DI:LI:AI*/
+package org.combinators.ep.domain    /*DI:LI:AI*/
 
 import abstractions._
 
@@ -17,7 +16,7 @@ package object instances {
     *
     * @see The companion model [[org.combinators.ep.domain.instances.InstanceRep$]] for creating new instances.
     */
-  sealed trait InstanceRep {
+  sealed trait InstanceRep {  // had been ExistsInstance
     /** Provides the domain representation of the instance type. */
     val tpe: TypeRep
     /** Provides the host language (Scala) instance. */
@@ -37,6 +36,13 @@ package object instances {
         val tpe: tpeArg.type = tpeArg
         val inst: tpeArg.HostType = instArg
       }
+    }
+
+   /** Creates a new instance representation for the given domain specific data type instance using the
+     * base data type of the implicitly given domain model.
+     */
+    def apply(inst:DataTypeInstance)(implicit domain:Model) : InstanceRep = {
+      InstanceRep(TypeRep.DataType(domain.baseDataType))(inst)
     }
   }
 

@@ -1,7 +1,7 @@
 package org.combinators.ep.language.haskell   /*DI:LD:AI*/
 
 import org.combinators.ep.domain.BaseDomain
-import org.combinators.ep.generator.LanguageIndependentTestGenerator
+import org.combinators.ep.generator.DomainIndependentTestGenerator
 
 /**
   * Skipping for now, until we have some haskell examples of performance
@@ -10,7 +10,7 @@ import org.combinators.ep.generator.LanguageIndependentTestGenerator
   *
   * https://mmhaskell.com/blog/2017/6/19/profiling-in-haskell
   */
-trait PerformanceTestGenerator extends HaskellGenerator with LanguageIndependentTestGenerator with TestGenerator  {
+trait PerformanceTestGenerator extends HaskellGenerator with DomainIndependentTestGenerator with TestGenerator  {
   val domain: BaseDomain with ModelDomain
   import domain._
 

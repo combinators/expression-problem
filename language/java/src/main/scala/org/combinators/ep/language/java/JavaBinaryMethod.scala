@@ -1,13 +1,16 @@
 package org.combinators.ep.language.java   /*DI:LD:AI*/
 
 import com.github.javaparser.JavaParser
-import com.github.javaparser.ast.{CompilationUnit, PackageDeclaration}
+import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.MethodDeclaration
 import org.combinators.ep.domain._
+import org.combinators.ep.domain.abstractions._
+import org.combinators.ep.generator.NameProvider
 import org.combinators.templating.twirl.Java
 
-class JavaBinaryMethod(val evolution:Evolution) {
+// Not sure why extracted into its own class.
+class JavaBinaryMethod(val evolution:Evolution, val naming:NameProvider) {
 
   /**
     * Binary methods creates helper classes in package 'tree'. Completes description
@@ -34,11 +37,11 @@ class JavaBinaryMethod(val evolution:Evolution) {
     * @param typeConverter    existing typeconverter which we need for other types besides baseTypeRep
     * @return                 return new parameter type with op interface used in place of baseTypeRep
     */
-  def binaryMethodParameters(op:Operation, typeConverter:(TypeRep) => Type) : String = {
+  def binaryMethodParameters(op:Operation, typeConverter:(TypeRep) => Type)(implicit domain:Model) : String = {
     op.parameters.map(param => {
       // use operation name for binary method
       val realType = param.tpe match {
-        case domain.baseTypeRep => op.concept
+        case domain.baseDataType =>  naming.conceptNameOf(op)
         case _ => typeConverter(param.tpe)
       }
 
@@ -52,12 +55,12 @@ class JavaBinaryMethod(val evolution:Evolution) {
     * @param exp
     * @return
     */
-  def logicAsTree(exp:DataType) : Seq[MethodDeclaration] = {
-    val args = exp.attributes.map(att => att.instance).mkString(",")
+  def logicAsTree(exp:DataTypeCase) : Seq[MethodDeclaration] = {
+    val args = exp.attributes.map(att => naming.instanceNameOf(att)).mkString(",")
           Java(
             s"""
-               |public tree.Tree ${domain.AsTree.instance}() {
-               |  return asTree.${exp.instance}($args).${domain.AsTree.instance}();
+               |public tree.Tree ${naming.instanceNameOf(Operation.asTree)}() {
+               |  return asTree.${naming.instanceNameOf(exp)}($args).${naming.instanceNameOf(Operation.asTree)}();
                |}""".stripMargin).methodDeclarations()
   }
 }

@@ -16,7 +16,8 @@ package object instances {
     *
     * @see The companion model [[org.combinators.ep.domain.instances.InstanceRep$]] for creating new instances.
     */
-  sealed trait InstanceRep {  // had been ExistsInstance
+  // TODO: Can't be sealed because PerformanceTestGenerators have an extenion
+  trait InstanceRep {  // had been ExistsInstance
     /** Provides the domain representation of the instance type. */
     val tpe: TypeRep
     /** Provides the host language (Scala) instance. */

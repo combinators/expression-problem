@@ -1,8 +1,9 @@
 package org.combinators.ep.language.java   /*DD:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
-import org.combinators.ep.domain.Evolution
-import org.combinators.ep.domain.math.M1
+import org.combinators.ep.domain.{Evolution, Model}
+import org.combinators.ep.domain.abstractions._
+import org.combinators.ep.domain.math.{M0, M1}
 import org.combinators.templating.twirl.Java
 
 /**
@@ -10,22 +11,27 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-trait e1 extends Evolution with JavaGenerator with JUnitTestGenerator with M1 {
-  self:e0 =>
-  import domain._
-  abstract override def logic(exp:DataType, op:Operation): Seq[Statement] = {
+case class e1(last:e0) extends Evolution {
+  val test = JUnitTestGenerator()
+  import test.langGen.{Type,Statement,dispatch,accessAttribute}
+  import test.gen
+
+  // classify e0 as fulfilling M1
+  def getModel:Model = M1.getModel
+
+  def logic(exp:DataTypeCase, op:Operation): Seq[Statement] = {
     op match {
-      case Eval =>
+      case M0.Eval =>
         exp match {
-          case Sub => result(Java(s"${dispatch(expression(exp, base.left), op)} - ${dispatch(expression(exp, base.right), op)}").expression())
-          case _ => super.logic(exp, op)
+          case M1.Sub => gen.toOperationResult(Java(s"${dispatch(accessAttribute(exp, Attribute.left(M0.getModel)),op)} - ${dispatch(accessAttribute(exp, Attribute.right(M0.getModel)),op)}").expression()).asInstanceOf
+          case _ => gen.dependent.logic(exp, op).asInstanceOf
         }
 
-      case _ => super.logic(exp, op)
+      case _ => gen.dependent.logic(exp, op).asInstanceOf
     }
   }
 
-  abstract override def testGenerator: Seq[MethodDeclaration] = {
-    super.testGenerator ++ testMethod(M1_tests)
+  def testGenerator: Seq[MethodDeclaration] = {
+    last.testGenerator ++ test.testMethod(M1.M1_tests)
   }
 }

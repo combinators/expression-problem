@@ -4,7 +4,8 @@ import com.github.javaparser.JavaParser
 import com.github.javaparser.ast.body.{ConstructorDeclaration, FieldDeclaration, MethodDeclaration, TypeDeclaration}
 import com.github.javaparser.ast.stmt.BlockStmt
 import org.combinators.ep.domain.abstractions._
-import org.combinators.ep.generator.{DomainDependentGenerator, DomainIndependentGenerator, NameProvider}
+import org.combinators.ep.domain.instances.InstanceRep
+import org.combinators.ep.generator.{DomainDependentGenerator, DomainIndependentGenerator}
 import org.combinators.templating.twirl.Java
 
 import scala.collection.JavaConverters._
@@ -41,7 +42,7 @@ import scala.collection.JavaConverters._
   *           for a given logic, these helper methods are useful in capturing the desired structures.
   * @groupprio deltaHelpers 40
   */
-abstract class JavaGenerator(val names:NameProvider, val dependent:DomainDependentGenerator) {
+case class JavaGenerator() extends DomainDependentGenerator {
 
   /** @group lang */
   type CompilationUnit = com.github.javaparser.ast.CompilationUnit
@@ -63,7 +64,7 @@ abstract class JavaGenerator(val names:NameProvider, val dependent:DomainDepende
     aType match {
       case TypeRep.Unit => Java(s"void").tpe()
       case TypeRep.DataType(tpe) => Java(s"${tpe.name}").tpe()
-      case _ => dependent.independent.tpe(aType)
+      case _ => super.tpe(aType).asInstanceOf[Type]
     }
   }
 
@@ -78,12 +79,17 @@ abstract class JavaGenerator(val names:NameProvider, val dependent:DomainDepende
   /**
     * For producer operations, there is a need to instantiate objects, and one would use this
     * method (with specific parameters) to carry this out.
+   *
+   * Was DataType for exp but this is too limiting
     */
-  def instantiate(exp:DataType, params:Expression*) : CodeBlockWithResultingExpressions = {
+  def instantiate(exp:TypeRep, params:Expression*) : CodeBlockWithResultingExpressions = {
     CodeBlockWithResultingExpressions(
-      Java(s"new ${names.conceptNameOf(exp)}${params.mkString("(", ", ", ")")}").expression()
+      Java(s"new ${JavaNameProvider.conceptNameOf(exp)}${params.mkString("(", ", ", ")")}").expression()
     )
   }
+
+  /** Helper method when given only an InstanceRep, since you can extract its tpe and work. */
+  def instantiate(exp:InstanceRep, params:Expression*) : CodeBlockWithResultingExpressions = instantiate(exp.tpe, params : _*)
 
   // Useful helper methods for any generator needing to craft common Java constructs
 
@@ -91,8 +97,8 @@ abstract class JavaGenerator(val names:NameProvider, val dependent:DomainDepende
   def constructor(exp:DataTypeCase, suggestedName:Option[String] = None) : ConstructorDeclaration = {
     val name = if (suggestedName.isEmpty) { exp.name } else { suggestedName.get }
 
-    val params:Seq[String] = exp.attributes.map(att => s"${tpe(att.tpe)} ${names.instanceNameOf(att.tpe)}")
-    val cons:Seq[Statement] = exp.attributes.flatMap(att => Java(s"  this.${names.instanceNameOf(att.tpe)} = ${names.instanceNameOf(att.tpe)};").statements())
+    val params:Seq[String] = exp.attributes.map(att => s"${tpe(att.tpe)} ${JavaNameProvider.instanceNameOf(att.tpe)}")
+    val cons:Seq[Statement] = exp.attributes.flatMap(att => Java(s"  this.${JavaNameProvider.instanceNameOf(att.tpe)} = ${JavaNameProvider.instanceNameOf(att.tpe)};").statements())
 
     val str =  s"""|public $name (${params.mkString(",")}) {
                    |   ${cons.mkString("\n")}
@@ -102,7 +108,7 @@ abstract class JavaGenerator(val names:NameProvider, val dependent:DomainDepende
 
   /** Generate constructor for given operation, using suggested name */
   def constructorFromOp(op:Operation, suggestedName:Option[String] = None) : ConstructorDeclaration = {
-    val name = if (suggestedName.isEmpty) { names.conceptNameOf(op) } else { suggestedName.get }
+    val name = if (suggestedName.isEmpty) { JavaNameProvider.conceptNameOf(op) } else { suggestedName.get }
 
     val params:Seq[String] = op.parameters.map(param => s"${tpe(param.tpe)} ${param.name}")
     val cons:Seq[Statement] = op.parameters.flatMap(param => Java(s"  this.${param.name} = ${param.name};").statements())
@@ -134,8 +140,8 @@ abstract class JavaGenerator(val names:NameProvider, val dependent:DomainDepende
     */
   def getters(exp:DataTypeCase) : Seq[MethodDeclaration] =
 
-    exp.attributes.flatMap(att => Java(s"""|public ${tpe(att.tpe)} get${names.conceptNameOf(att.tpe)}() {
-                                           |    return this.${names.instanceNameOf(att.tpe)};
+    exp.attributes.flatMap(att => Java(s"""|public ${tpe(att.tpe)} get${JavaNameProvider.conceptNameOf(att.tpe)}() {
+                                           |    return this.${JavaNameProvider.instanceNameOf(att.tpe)};
                                            |}""".stripMargin).methodDeclarations)
 
   /**
@@ -145,7 +151,7 @@ abstract class JavaGenerator(val names:NameProvider, val dependent:DomainDepende
     * @return
     */
   def fields(exp:DataTypeCase) : Seq[FieldDeclaration] = {
-    exp.attributes.flatMap(att => Java(s"private ${tpe(att.tpe)} ${names.instanceNameOf(att.tpe)};").fieldDeclarations())
+    exp.attributes.flatMap(att => Java(s"private ${tpe(att.tpe)} ${JavaNameProvider.instanceNameOf(att.tpe)};").fieldDeclarations())
   }
 
   /**

@@ -2,7 +2,7 @@ package org.combinators.ep.generator     /*DI:LI:AI*/
 
 import org.combinators.ep.domain._
 import abstractions._
-import org.combinators.ep.domain.instances.DataTypeInstance
+import org.combinators.ep.domain.instances._
 
 // TODO: Fix documentation -- Jan
 /**
@@ -28,11 +28,11 @@ abstract class DomainIndependentTestGenerator(val langGen: DomainIndependentGene
     * This is like a dispatch, and hence it was renamed. Consider
     *
     */
-  /*def actual(op: Operation, inst: Inst, params: Expression*): CodeBlockWithResultingExpressions = {
-    toTargetLanguage(inst).appendDependent(instExp =>
+  def actual(op: Operation, inst: InstanceRep, params: Expression*): CodeBlockWithResultingExpressions = {
+    instantiate(inst).appendDependent(instExp =>
       CodeBlockWithResultingExpressions(contextDispatch(NoSource, dispatchToExpression(instExp.head, op, params: _*)))
     )
-  }*/
+  }
 //  def dispatch (subject:DataTypeInstance, op:Operation, params:Expression*): CodeBlockWithResultingExpressions = {
 //    contextDispatch(NoSource, Delta(None, Some(op), params))
 //  }

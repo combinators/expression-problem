@@ -22,12 +22,12 @@ abstract class Foundation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle)
   extends CodeGenerationController[CompilationUnit](web, app) {
 
   /** Generator uses Straight OO solution for EP with JUnit test cases. */
-  val gen:WithDomain[MathDomain] with OOGenerator with JUnitTestGenerator
+  val gen:OOGenerator
 
   override lazy val generatedCode:Seq[CompilationUnit] =
     gen.generatedCode() ++
-      gen.generateSuite(routingPrefix)
+      gen.testGen.generateSuite(routingPrefix)
 
   override val routingPrefix: Option[String] = Some("oo")
-  override lazy val controllerAddress:String = gen.getModel.name
+  override lazy val controllerAddress:String = gen.evolution.getModel.name
 }

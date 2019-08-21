@@ -6,11 +6,10 @@ import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.MethodDeclaration
 import org.combinators.ep.domain._
 import org.combinators.ep.domain.abstractions._
-import org.combinators.ep.generator.NameProvider
 import org.combinators.templating.twirl.Java
 
 // Not sure why extracted into its own class.
-class JavaBinaryMethod(val evolution:Evolution, val naming:NameProvider) {
+case class JavaBinaryMethod(evolution:Evolution) {
 
   /**
     * Binary methods creates helper classes in package 'tree'. Completes description
@@ -41,7 +40,7 @@ class JavaBinaryMethod(val evolution:Evolution, val naming:NameProvider) {
     op.parameters.map(param => {
       // use operation name for binary method
       val realType = param.tpe match {
-        case domain.baseDataType =>  naming.conceptNameOf(op)
+        case domain.baseDataType =>  JavaNameProvider.conceptNameOf(op)
         case _ => typeConverter(param.tpe)
       }
 
@@ -56,11 +55,11 @@ class JavaBinaryMethod(val evolution:Evolution, val naming:NameProvider) {
     * @return
     */
   def logicAsTree(exp:DataTypeCase) : Seq[MethodDeclaration] = {
-    val args = exp.attributes.map(att => naming.instanceNameOf(att)).mkString(",")
+    val args = exp.attributes.map(att => JavaNameProvider.instanceNameOf(att)).mkString(",")
           Java(
             s"""
-               |public tree.Tree ${naming.instanceNameOf(Operation.asTree)}() {
-               |  return asTree.${naming.instanceNameOf(exp)}($args).${naming.instanceNameOf(Operation.asTree)}();
+               |public tree.Tree ${JavaNameProvider.instanceNameOf(Operation.asTree)}() {
+               |  return asTree.${JavaNameProvider.instanceNameOf(exp)}($args).${JavaNameProvider.instanceNameOf(Operation.asTree)}();
                |}""".stripMargin).methodDeclarations()
   }
 }

@@ -1,8 +1,10 @@
 package org.combinators.ep.language.java   /*DD:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
-import org.combinators.ep.domain.Evolution
-import org.combinators.ep.domain.math.{M0, M2}
+import org.combinators.ep.domain.abstractions._
+import org.combinators.ep.domain.instances._
+import org.combinators.ep.domain.{Evolution, Model}
+import org.combinators.ep.domain.math._
 import org.combinators.templating.twirl.Java
 
 /**
@@ -10,41 +12,46 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-trait e2 extends Evolution with JavaGenerator with JUnitTestGenerator with M0 with M2 {
-  self:e0 with e1 =>
-  import domain._
+case class e2(last:e1) extends Evolution {
+  val test = JUnitTestGenerator()
+  import test.langGen.{Type,Statement,dispatch,accessAttribute}
+  import test.langGen.CodeBlockWithResultingExpressions
+  import test.gen
+
+  // classify e0 as fulfilling M1
+  def getModel:Model = M2.getModel
 
   /** E2 Introduces the concept a String type, used for the 'PrettyPrint' operation. */
-  abstract override def typeConverter(tpe:TypeRep) : Type = {
+  def typeConverter(tpe:TypeRep) : Type = {
     tpe match {
-      case String => Java("String").tpe()
-      case _ => super.typeConverter(tpe)
+      case TypeRep.String => Java("String").tpe().asInstanceOf
+      case _ => gen.tpe(tpe).asInstanceOf
     }
   }
 
   /** E2 Introduces String values. */
-  abstract override def toTargetLanguage(ei:ExistsInstance) : CodeBlockWithResultingExpressions = {
+  def instantiate(ei:InstanceRep) : CodeBlockWithResultingExpressions = {
     ei.inst match {
-      case s:String => CodeBlockWithResultingExpressions(new com.github.javaparser.ast.expr.StringLiteralExpr(s))
-      case _ => super.toTargetLanguage(ei)
+      case s:String => CodeBlockWithResultingExpressions(new com.github.javaparser.ast.expr.StringLiteralExpr(s).asInstanceOf)
+      case _ => gen.instantiate(ei).asInstanceOf
     }
   }
 
-  abstract override def logic(exp:DataType, op:Operation): Seq[Statement] = {
+  def logic(exp:DataTypeCase, op:Operation): Seq[Statement] = {
     op match {
-      case PrettyP =>
+      case M2.PrettyP =>
         exp match {
-          case Lit => result(Java(s""" "" + ${expression(exp,litValue)} """).expression())
-          case Add => result(Java(s""" "(" + ${dispatch(expression(exp, base.left), PrettyP)} + "+" + ${dispatch(expression(exp, base.right), PrettyP)}+ ")" """).expression())
-          case Sub => result(Java(s""" "(" + ${dispatch(expression(exp, base.left), PrettyP)} + "-" + ${dispatch(expression(exp, base.right), PrettyP)} + ")" """).expression())
-          case _ => super.logic(exp, op)
+          case M0.Lit => gen.toOperationResult(Java(s""" "" + ${accessAttribute(exp, M0.litValue)} """).expression()).asInstanceOf
+          case M0.Add => gen.toOperationResult(Java(s""" "(" + ${dispatch(accessAttribute(exp, Attribute.left(M0.getModel)),op)} + "+" + ${dispatch(accessAttribute(exp, Attribute.right(M0.getModel)),op)} + ")" """).expression()).asInstanceOf
+          case M1.Sub => gen.toOperationResult(Java(s""" "(" + ${dispatch(accessAttribute(exp, Attribute.left(M0.getModel)),op)} + "-" + ${dispatch(accessAttribute(exp, Attribute.right(M0.getModel)),op)} + ")" """).expression()).asInstanceOf
+          case _ => last.logic(exp, op).asInstanceOf
         }
 
-      case _ => super.logic(exp, op)
+      case _ => last.logic(exp, op).asInstanceOf
     }
   }
 
-  abstract override def testGenerator: Seq[MethodDeclaration] = {
-    super.testGenerator ++ testMethod(M2_tests)
+  def testGenerator: Seq[MethodDeclaration] = {
+    last.testGenerator ++ test.testMethod(M2.M2_tests)
   }
 }

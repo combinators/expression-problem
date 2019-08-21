@@ -165,6 +165,7 @@ abstract class DomainIndependentGenerator  {
     */
   object CodeBlockWithResultingExpressions {
     val empty: CodeBlockWithResultingExpressions = apply()
+
     def apply(resultExps: Expression*): CodeBlockWithResultingExpressions =
       new CodeBlockWithResultingExpressions {
         def block: Seq[Statement] = Seq.empty
@@ -206,7 +207,10 @@ abstract class DomainIndependentGenerator  {
     * @return          code fragment suitable for instantiating data type
     * @group inst
     */
-  def instantiate(tpeCase: DataTypeCase, params:Expression*): CodeBlockWithResultingExpressions
+  @throws[NotImplementedError]("if instantiate not handled.")
+  def instantiate(tpeCase: DataTypeCase, params:Expression*): CodeBlockWithResultingExpressions = {
+    throw new scala.NotImplementedError(s"""No rule to instantiate $tpeCase($params).""")
+  }
 
   // was toTargetLanguage --> now instantiate
   /**
@@ -274,7 +278,10 @@ abstract class DomainIndependentGenerator  {
     * @param expr   Expression that represents the result of a log(exp, op).
     * @group api
     */
-  def toOperationResult (expr:Expression) : Seq[Statement]
+  @throws[scala.NotImplementedError]("If expression cannot be converted into a result.")
+  def toOperationResult (expr:Expression) : Seq[Statement] = {
+    throw new scala.NotImplementedError(s"""No rule to produce result from $expr.""")
+  }
 
   // TODO: cleanup dispatch, naming conventions and parameter duplication in and Delta, Source
   // TODO: notion of SUBJECT and more clearly explain purpose of optional parameters...
@@ -291,7 +298,10 @@ abstract class DomainIndependentGenerator  {
     * @param params     potential parameters of this operation
     * @group api
     */
-  def dispatch(subject: Expression, op: Operation, params: Expression*) : Expression
+  @throws[NotImplementedError]("Must be handled by domain dependent.")
+  def dispatch(subject: Expression, op: Operation, params: Expression*) : Expression = {
+    throw new scala.NotImplementedError(s"""No rule to dispatch operation "$op($params)" on $subject.""")
+  }
 
   /**
     * The '''logic(exp,op)''' that represents the code statements for applying a given operation

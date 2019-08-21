@@ -13,7 +13,7 @@ import play.api.inject.ApplicationLifecycle
  * @group evolutions 
  */
 class M0_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle) extends Foundation(web, app) {
-override val gen = new OOGenerator(e0) with JUnitTestGenerator with e0
+  override val gen = OOGenerator(e0(), JavaBinaryMethod(M0))
 }
 /* 
  * oo solution in java for M1
@@ -21,7 +21,8 @@ override val gen = new OOGenerator(e0) with JUnitTestGenerator with e0
  * @group evolutions 
  */
 class M1_Variation @Inject()(web: WebJarsUtil, app: ApplicationLifecycle) extends Foundation(web, app) {
-override val gen = new WithDomain(math.MathDomain) with OOGenerator with JUnitTestGenerator with e0 with e1
+  lazy val test = JUnitTestGenerator()
+  override val gen = OOGenerator(e1(e0()), JavaNameProvider, JavaBinaryMethod(M0), JavaGenerator(JavaNameProvider), test)
 }
 /* 
  * oo solution in java for M2

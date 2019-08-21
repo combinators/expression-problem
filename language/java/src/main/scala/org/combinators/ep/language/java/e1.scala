@@ -24,10 +24,10 @@ case class e1(last:e0) extends Evolution {
       case M0.Eval =>
         exp match {
           case M1.Sub => gen.toOperationResult(Java(s"${dispatch(accessAttribute(exp, Attribute.left(M0.getModel)),op)} - ${dispatch(accessAttribute(exp, Attribute.right(M0.getModel)),op)}").expression()).asInstanceOf
-          case _ => gen.dependent.logic(exp, op).asInstanceOf
+          case _ => gen.logic(exp, op).asInstanceOf
         }
 
-      case _ => gen.dependent.logic(exp, op).asInstanceOf
+      case _ => gen.logic(exp, op).asInstanceOf
     }
   }
 

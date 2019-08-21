@@ -14,7 +14,7 @@ import org.combinators.templating.twirl.Java
   * @groupdesc approach Fundamental Helper methods for the oo approach to EP
   * @groupprio approach 0
   */
-case class OOGenerator(evolution:Evolution, binaryMethod:JavaBinaryMethod) {
+case class OOGenerator(evolution:Evolution) {
   val javaGen = JavaGenerator()
   import javaGen.{CompilationUnit,Expression,Type}
   import javaGen.{Context, Delta}
@@ -31,7 +31,7 @@ case class OOGenerator(evolution:Evolution, binaryMethod:JavaBinaryMethod) {
 
     // binary methods for helper
     val decls:Seq[CompilationUnit] = if (flat.hasBinaryMethod) {
-      binaryMethod.generateHelperClasses().asInstanceOf[Seq[CompilationUnit]]
+      JavaBinaryMethod(evolution).generateHelperClasses()
     } else {
       Seq.empty
     }

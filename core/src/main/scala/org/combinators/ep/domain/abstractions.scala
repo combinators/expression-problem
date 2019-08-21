@@ -1,5 +1,4 @@
-package org.combinators.ep.domain
-/*DI:LI:AI*/
+package org.combinators.ep.domain   /*DI:LI:AI*/
 
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
 import org.combinators.ep.domain.matchers.Matchable
@@ -10,7 +9,11 @@ package object abstractions {
   /** Models a named data type. */
   case class DataType(name: String)
 
-  /** Models a named case of a data type with its attributes. */
+  /**
+   * Models a named case of a data type with its attributes.
+   *
+   * Evolution adds cases to an existing data type.
+   */
   case class DataTypeCase(name: String, attributes: Seq[Attribute]) {
     /** Returns if this data type case contains any attributes of the data type modeled in the
       * implicitly given domain model.
@@ -256,9 +259,9 @@ package object abstractions {
     iterations: Int,
     bestOf: Int,
     op: Operation,
-    initialObject: DataType,
+    initialObject: DataTypeInstance,
     initialParams: Seq[InstanceRep],
     stepParams: Seq[InstanceRep] => Seq[InstanceRep],
-    stepInstance: InstanceRep => InstanceRep
+    stepInstance: DataTypeInstance => DataTypeInstance
   ) extends TestCase
 }

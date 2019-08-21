@@ -2,7 +2,7 @@ package org.combinators.ep.language.java.trivially   /*DI:LD:AD*/
 
 import com.github.javaparser.ast.Modifier
 import com.github.javaparser.ast.body.{BodyDeclaration, MethodDeclaration}
-import org.combinators.ep.generator.LanguageIndependentGenerator
+import org.combinators.ep.generator.DomainIndependentGenerator
 import org.combinators.ep.language.java.oo.OOGenerator
 import org.combinators.templating.twirl.Java
 import org.combinators.ep.language.java.ReplaceCovariantType._

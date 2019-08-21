@@ -1,5 +1,4 @@
-package org.combinators.ep.domain
-/*DI:LI:AI*/
+package org.combinators.ep.domain   /*DI:LI:AI*/
 
 import scala.language.reflectiveCalls
 

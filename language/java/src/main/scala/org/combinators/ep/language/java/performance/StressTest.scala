@@ -8,7 +8,7 @@ import System.nanoTime
 
 import org.combinators.ep.domain.WithDomain
 import org.combinators.ep.domain.math.MathDomain
-import org.combinators.ep.generator.{LanguageIndependentGenerator, LanguageIndependentTestGenerator}
+import org.combinators.ep.generator.{DomainIndependentGenerator, DomainIndependentTestGenerator}
 import org.combinators.ep.language.java._
 import org.combinators.ep.language.java.algebra.AlgebraGenerator
 import org.combinators.ep.language.java.extensibleVisitor.ExtensibleVisitorGenerator
@@ -51,7 +51,7 @@ object Sample {
 }
 
 abstract class BaseTest(val id:String) {
-  val gen: WithDomain[MathDomain] with LanguageIndependentGenerator with LanguageIndependentTestGenerator
+  val gen: WithDomain[MathDomain] with DomainIndependentGenerator with DomainIndependentTestGenerator
 
   // time the synthesis of the generated code plus test suites
   def generatedCode(pkg:Option[String]): Long = {

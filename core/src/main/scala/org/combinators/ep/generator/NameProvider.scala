@@ -25,6 +25,12 @@ abstract class NameProvider {
   def conceptNameOf(operation: Operation): String =
     mangle(operation.name.capitalize)
 
+  /** Provides the name for a language representation of concepts (e.g. attributes) associated with the given data type
+   * case.
+   * Most languages just want to mangle the lower case name of the case. */
+  def conceptNameOf(att: Attribute): String =
+    mangle(att.name.capitalize)
+
   /** Provides the name for a language representation of concepts (e.g. classes) associated with the given type
     * representation.
     * Most languages just want to mangle the capitalized case name. */
@@ -51,6 +57,12 @@ abstract class NameProvider {
     * Most languages just want to mangle the lower case operation name. */
   def instanceNameOf(operation: Operation): String =
     mangle(operation.name.toLowerCase)
+
+  /** Provides the name for a language representation of instances (e.g. attributes) associated with the given data type
+   * case.
+   * Most languages just want to mangle the lower case name of the case. */
+  def instanceNameOf(att: Attribute): String =
+    mangle(att.name.toLowerCase)
 
   /** Provides the name for a language representation of instances (e.g. objects) associated with the given type
     * representation.

@@ -2,6 +2,8 @@ package org.combinators.ep.language.java.oo   /*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
 import org.combinators.ep.domain._
+import org.combinators.ep.domain.abstractions._
+import org.combinators.ep.generator._
 import org.combinators.ep.language.java.{DataTypeSubclassGenerator, JavaBinaryMethod, JavaGenerator, OperationAsMethodGenerator}
 import org.combinators.templating.twirl.Java
 
@@ -12,10 +14,11 @@ import org.combinators.templating.twirl.Java
   * @groupdesc approach Fundamental Helper methods for the oo approach to EP
   * @groupprio approach 0
   */
-class OOGenerator(override val evolution:Evolution, val binaryMethod:JavaBinaryMethod)
-  extends JavaGenerator(evolution)
+class OOGenerator(val evolution:Evolution, val binaryMethod:JavaBinaryMethod, val javaGen:JavaGenerator)
+  extends DomainDependentGenerator (javaGen)
     with OperationAsMethodGenerator  {
 
+  import javaGen._
 
   /**
     * Generating a straight OO solution requires:
@@ -25,7 +28,7 @@ class OOGenerator(override val evolution:Evolution, val binaryMethod:JavaBinaryM
     * This method generates the proper code for the current model (retrieved via getModel).
     */
   override def generatedCode():Seq[CompilationUnit] = {
-    val flat = evolution.getModel.flatten()
+    val flat = evolution.getModel.flatten
 
     // binary methods for helper
     val decls:Seq[CompilationUnit] = if (flat.hasBinaryMethod) {
@@ -34,13 +37,13 @@ class OOGenerator(override val evolution:Evolution, val binaryMethod:JavaBinaryM
       Seq.empty
     }
 
-    decls ++ flat.types.map(tpe => generateExp(tpe, flat.ops)) :+      // one class for each sub-type
+    decls ++ flat.typeCases.map(tpe => generateExp(tpe, flat.ops)) :+      // one class for each sub-type
       generateAbstractBaseClass(flat.ops)                              // base class $BASE
   }
 
   /** For straight design solution, directly access attributes by name. */
-  override def expression (exp:DataType, att:Attribute) : Expression = {
-    Java(s"${att.instance}").expression[Expression]
+  override def accessAttribute (exp:DataTypeCase, att:Attribute) : Expression = {
+    Java(s"${names.instanceNameOf(att.tpe)}").expression[Expression]
   }
 
   /** Handle self-case here. */
@@ -73,9 +76,9 @@ class OOGenerator(override val evolution:Evolution, val binaryMethod:JavaBinaryM
     *
     * @group api
     */
-  def methodGenerator(exp:DataType, op:Operation): MethodDeclaration = {
+  def methodGenerator(exp:DataTypeCase, op:Operation): MethodDeclaration = {
     val params = parameters(op)
-    Java(s"""|public ${returnType(op)} ${op.instance}($params) {
+    Java(s"""|public ${returnType(op)} ${names.instanceNameOf(op)}($params) {
              |  ${logic(exp, op).mkString("\n")}
              |}""".stripMargin).methodDeclarations.head
   }
@@ -88,7 +91,7 @@ class OOGenerator(override val evolution:Evolution, val binaryMethod:JavaBinaryM
     * @param ops   all operations required in the system
     * @group api
     */
-  def generateExp(exp:DataType, ops:Seq[Operation]) : CompilationUnit = {
+  def generateExp(exp:DataTypeCase, ops:Seq[Operation]) : CompilationUnit = {
     val methods = ops.map(op => methodGenerator(exp, op))
 
     Java(s"""|package oo;

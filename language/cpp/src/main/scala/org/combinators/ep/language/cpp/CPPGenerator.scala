@@ -3,7 +3,7 @@ package org.combinators.ep.language.cpp        /*DI:LD:AI*/
 import java.io.{ByteArrayInputStream, File}
 import java.nio.file.{Path, Paths}
 
-import org.combinators.ep.generator.{FileWithPath, LanguageIndependentGenerator}
+import org.combinators.ep.generator.{FileWithPath, DomainIndependentGenerator}
 
 /**
   * Any C++ EP approach can extend this Generator
@@ -13,7 +13,7 @@ import org.combinators.ep.generator.{FileWithPath, LanguageIndependentGenerator}
 g++ *.cpp  -I ../cpputest/include -L ../cpputest/cpputest_build/lib -lCppUTest -lCppUTestExt -std=c++11
 
   */
-trait CPPGenerator extends LanguageIndependentGenerator {
+trait CPPGenerator extends DomainIndependentGenerator {
 
   type CompilationUnit = CPPFile
   type Type = CPPType

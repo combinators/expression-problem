@@ -3,14 +3,14 @@ package org.combinators.ep.language.haskell     /*DI:LD:AI*/
 import java.io.File
 import java.nio.file.{Path, Paths}
 
-import org.combinators.ep.generator.{LanguageIndependentGenerator, OperationDependency}
+import org.combinators.ep.generator.{DomainIndependentGenerator, OperationDependency}
 
 /**
   * Any Haskell EP approach can extend this Generator
   *
   * Perhaps consider an Expression Problem application domain based on Monoids
   */
-trait HaskellGenerator extends LanguageIndependentGenerator with StandardHaskellBinaryMethod with OperationDependency with HaskellBinaryMethod {
+trait HaskellGenerator extends DomainIndependentGenerator with StandardHaskellBinaryMethod with OperationDependency with HaskellBinaryMethod {
 
   /** Specially required files are placed in this area. */
   val haskellResources:String = Seq("language", "haskell", "src", "main", "resources", "haskell-code").mkString(File.separator)

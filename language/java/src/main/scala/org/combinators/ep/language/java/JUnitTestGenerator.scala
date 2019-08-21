@@ -9,7 +9,6 @@ import org.combinators.templating.twirl.Java
   * This code conforms to JUnit Test cases
   */
 class JUnitTestGenerator(val evolution:Evolution) extends TestGenerator with PerformanceTestGenerator { // had  with JavaGenerator
-  val domain: BaseDomain
 
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
   def generateSuite(pkg: Option[String]): Seq[CompilationUnit] = {

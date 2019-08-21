@@ -5,4 +5,6 @@ import org.combinators.ep.domain._
 /**
   * Mathematical Expressions domain as an instance of EP.
   */
-object MathDomain extends BaseDomain(new Inst("Exp"))
+object MathDomain extends Evolution {
+  def getModel:Model = Model.base("MathDomain", "Exp")
+}

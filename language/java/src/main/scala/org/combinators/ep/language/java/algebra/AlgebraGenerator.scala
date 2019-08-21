@@ -2,13 +2,13 @@ package org.combinators.ep.language.java.algebra   /*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.BodyDeclaration
 import org.combinators.ep.domain.BaseDomain
-import org.combinators.ep.language.java.{JavaBinaryMethod, JavaGenerator}
+import org.combinators.ep.language.java.{JavaBinaryMethod, DomainIndependentJavaGenerator}
 import org.combinators.templating.twirl.Java
 
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait AlgebraGenerator extends JavaGenerator with JavaBinaryMethod {
+trait AlgebraGenerator extends DomainIndependentJavaGenerator with JavaBinaryMethod {
   val domain:BaseDomain with ModelDomain
 
   def useLambdaWherePossible: Boolean = true

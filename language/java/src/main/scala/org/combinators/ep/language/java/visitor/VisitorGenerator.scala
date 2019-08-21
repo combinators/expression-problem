@@ -2,13 +2,13 @@ package org.combinators.ep.language.java.visitor   /*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.{BodyDeclaration, MethodDeclaration}
 import org.combinators.ep.domain.BaseDomain
-import org.combinators.ep.language.java.{DataTypeSubclassGenerator, JavaBinaryMethod, JavaGenerator, OperationAsMethodGenerator}
+import org.combinators.ep.language.java.{DataTypeSubclassGenerator, JavaBinaryMethod, DomainIndependentJavaGenerator, OperationAsMethodGenerator}
 import org.combinators.templating.twirl.Java
 
 /**
   * Each evolution has opportunity to enhance the code generators.
   */
-trait VisitorGenerator extends JavaGenerator with JavaBinaryMethod {
+trait VisitorGenerator extends DomainIndependentJavaGenerator with JavaBinaryMethod {
   val domain:BaseDomain with ModelDomain
   import domain._
 

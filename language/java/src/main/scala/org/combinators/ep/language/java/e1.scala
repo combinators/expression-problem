@@ -10,7 +10,7 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-trait e1 extends Evolution with JavaGenerator with JUnitTestGenerator with M1 {
+trait e1 extends Evolution with DomainIndependentJavaGenerator with JUnitTestGenerator with M1 {
   self:e0 =>
   import domain._
   abstract override def logic(exp:DataType, op:Operation): Seq[Statement] = {

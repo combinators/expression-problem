@@ -4,7 +4,7 @@ import com.github.javaparser.ast.body.MethodDeclaration
 import org.combinators.ep.domain._
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator._
-import org.combinators.ep.language.java.{DataTypeSubclassGenerator, JavaBinaryMethod, JavaGenerator, OperationAsMethodGenerator}
+import org.combinators.ep.language.java.{DataTypeSubclassGenerator, JavaBinaryMethod, DomainIndependentJavaGenerator, OperationAsMethodGenerator}
 import org.combinators.templating.twirl.Java
 
 /**
@@ -14,7 +14,7 @@ import org.combinators.templating.twirl.Java
   * @groupdesc approach Fundamental Helper methods for the oo approach to EP
   * @groupprio approach 0
   */
-class OOGenerator(val evolution:Evolution, val binaryMethod:JavaBinaryMethod, val javaGen:JavaGenerator)
+class OOGenerator(val evolution:Evolution, val binaryMethod:JavaBinaryMethod, val javaGen:DomainIndependentJavaGenerator)
   extends DomainDependentGenerator (javaGen)
     with OperationAsMethodGenerator  {
 

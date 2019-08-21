@@ -9,7 +9,7 @@ import org.combinators.templating.twirl.Java
 /**
   * Independent branch to work with paper.
   */
-trait p1 extends Evolution with JavaGenerator with JUnitTestGenerator with OperationDependency with M0 with M1 with M2 with P1 {
+trait p1 extends Evolution with DomainIndependentJavaGenerator with JUnitTestGenerator with OperationDependency with M0 with M1 with M2 with P1 {
   self: e0 with e1 with e2  =>
 
   abstract override def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {

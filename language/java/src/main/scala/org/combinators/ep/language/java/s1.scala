@@ -9,7 +9,7 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-trait s1 extends JavaGenerator with JUnitTestGenerator with S1 { self:s0 =>
+trait s1 extends DomainIndependentJavaGenerator with JUnitTestGenerator with S1 { self:s0 =>
   val domain:ShapeDomain
 
   /** Eval operation needs to provide specification for current datatypes, namely Lit and Add. */

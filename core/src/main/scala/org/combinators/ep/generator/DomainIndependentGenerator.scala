@@ -102,81 +102,8 @@ import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
   *           for a given logic, these helper methods are useful in capturing the desired structures.
   * @groupprio deltaHelpers 40
   */
-abstract class DomainIndependentGenerator  {
-   /**
-    * Base concept for the representation of program unit on disk.
-    * @group types
-    */
-  type CompilationUnit
-
-  /**
-    * Base concept for a single expression in the language.
-    * @group types
-    */
-  type Expression
-
-  /**
-    * Base concept for a meaningful type in the language.
-    * @group types
-    */
-  type Type
-
-  /**
-    * Base concept for a meaningful line-of-code in the language.
-    * @group types
-    */
-  type Statement
-
-  /**
-    * Base concept to represent a block of code with result values.
-    *
-    * This separates out the resulting expressions from the block of statements (and they don't have to show up
-    * in the code block).
-    * @group inst
-    */
-  trait CodeBlockWithResultingExpressions {
-    def block: Seq[Statement]
-    def resultingExpressions: Seq[Expression]
-
-    /** Appends a code block that depends on the results of this code block */
-    def appendDependent(other: Seq[Expression] => CodeBlockWithResultingExpressions): CodeBlockWithResultingExpressions = {
-      val nextBlock = other(resultingExpressions)
-      val allStatements = block ++ nextBlock.block
-      new CodeBlockWithResultingExpressions {
-        def block: Seq[Statement] =  allStatements
-        def resultingExpressions: Seq[Expression] = nextBlock.resultingExpressions
-      }
-    }
-
-    /** Appends an independent code block and concatenate its results */
-    def appendIndependent(other: CodeBlockWithResultingExpressions): CodeBlockWithResultingExpressions = {
-      val allStatements = block ++ other.block
-      val allResults = resultingExpressions ++ other.resultingExpressions
-      new CodeBlockWithResultingExpressions {
-        def block: Seq[Statement] =  allStatements
-        def resultingExpressions: Seq[Expression] = allResults
-      }
-    }
-  }
-
-  /**
-    * Helpers to construct code blocks with result expressions
-    * @group inst
-    */
-  object CodeBlockWithResultingExpressions {
-    val empty: CodeBlockWithResultingExpressions = apply()
-    def apply(resultExps: Expression*): CodeBlockWithResultingExpressions =
-      new CodeBlockWithResultingExpressions {
-        def block: Seq[Statement] = Seq.empty
-        def resultingExpressions: Seq[Expression] = resultExps
-      }
-
-    def apply(stmts: Statement*)(resultExps: Expression*): CodeBlockWithResultingExpressions =
-      new CodeBlockWithResultingExpressions {
-        def block: Seq[Statement] = stmts
-        def resultingExpressions: Seq[Expression] = resultExps
-      }
-  }
+abstract class DomainIndependentGenerator[S <: AbstractSyntax](val syntax: S)  {
+  import syntax._
 
   /**
     * Expression-tree data has attributes with domain-specific types. This method returns
@@ -206,7 +133,7 @@ abstract class DomainIndependentGenerator  {
     * @return          code fragment suitable for instantiating data type
     * @group inst
     */
-  def instantiate(tpeCase: DataTypeCase, params:Expression*): CodeBlockWithResultingExpressions
+  def instantiate(tpeCase: DataTypeCase, params:Expression*): CodeBlockWithResultingExpressions[Expression, Statement]
 
   // was toTargetLanguage --> now instantiate
   /**
@@ -220,7 +147,7 @@ abstract class DomainIndependentGenerator  {
     *                     language-specific values.
     * @group inst
     */
-  def instantiate(inst: InstanceRep) : CodeBlockWithResultingExpressions = {
+  def instantiate(inst: InstanceRep) : CodeBlockWithResultingExpressions[Expression, Statement] = {
     inst.inst match {
       case domInst: DataTypeInstance => instantiate(domInst)
       case _ => throw new scala.NotImplementedError(s"No rule to compile instantiations of ${inst.tpe}.")
@@ -233,9 +160,9 @@ abstract class DomainIndependentGenerator  {
     * @param inst    desired instance for which a constructing code fragment is returned.
     * @group inst
     */
-  def instantiate(inst: DataTypeInstance): CodeBlockWithResultingExpressions = {
+  def instantiate(inst: DataTypeInstance): CodeBlockWithResultingExpressions[Expression, Statement] = {
     val attributeInstantiation =
-      inst.attributeInstances.foldLeft(CodeBlockWithResultingExpressions.empty) {
+      inst.attributeInstances.foldLeft(CodeBlockWithResultingExpressions.empty[Expression, Statement]) {
         case (block, attributeInstance) => block.appendIndependent(instantiate(attributeInstance))
       }
     attributeInstantiation.appendDependent(attributeInstances =>
@@ -256,9 +183,7 @@ abstract class DomainIndependentGenerator  {
     * @group api
     */
   @throws[scala.NotImplementedError]("If given attribute doesn't exist in data-type.")
-  def accessAttribute(tpeCase:DataTypeCase, att:Attribute) : Expression = {
-    throw new scala.NotImplementedError(s"""No rule to compile access to attribute "${att.name}" for "${tpeCase.name}.""")
-  }
+  def accessAttribute(tpeCase:DataTypeCase, att:Attribute) : Expression
 
   // this was result(...)
   /**

@@ -13,7 +13,7 @@ import org.combinators.templating.twirl.Java
   *
   * First operation that has parameter which has eExp-recursive structure
   */
-trait e6 extends Evolution with JavaGenerator with JUnitTestGenerator with OperationDependency with M0 with M5 with M6 {
+trait e6 extends Evolution with DomainIndependentJavaGenerator with JUnitTestGenerator with OperationDependency with M0 with M5 with M6 {
   self: e0 with e1 with e2 with e3 with e4 with e5 =>
 
   /**

@@ -3,7 +3,7 @@ package org.combinators.ep.language.java.interpreter   /*DI:LD:AD*/
 import com.github.javaparser.ast.ImportDeclaration
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.expr.SimpleName
-import org.combinators.ep.language.java.{JavaBinaryMethod, JavaGenerator, OperationAsMethodGenerator}
+import org.combinators.ep.language.java.{JavaBinaryMethod, DomainIndependentJavaGenerator, OperationAsMethodGenerator}
 import org.combinators.templating.twirl.Java
 import org.combinators.ep.language.java.ReplaceCovariantType._
 
@@ -15,7 +15,7 @@ import org.combinators.ep.language.java.ReplaceCovariantType._
   * all successive levels.
   */
 trait InterpreterGenerator
-  extends JavaGenerator
+  extends DomainIndependentJavaGenerator
     with OperationAsMethodGenerator
     with JavaBinaryMethod {
 

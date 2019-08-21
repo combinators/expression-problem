@@ -2,7 +2,7 @@ package org.combinators.ep.language.java.interpreter   /*DI:LD:AD*/
 
 import org.combinators.ep.domain.BaseDomain
 import org.combinators.ep.generator.DomainIndependentTestGenerator
-import org.combinators.ep.language.java.{JUnitTestGenerator, JavaGenerator}
+import org.combinators.ep.language.java.{JUnitTestGenerator, DomainIndependentJavaGenerator}
 import org.combinators.templating.twirl.Java
 
 /**
@@ -12,7 +12,7 @@ import org.combinators.templating.twirl.Java
   */
 trait InterpreterTestGenerator
   extends JUnitTestGenerator
-    with JavaGenerator
+    with DomainIndependentJavaGenerator
     with DomainIndependentTestGenerator {
   self: InterpreterGenerator =>
   val domain: BaseDomain with ModelDomain

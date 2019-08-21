@@ -7,32 +7,9 @@ import org.combinators.ep.domain.abstractions._
  *
  * @param independent
  */
-abstract class DomainDependentGenerator(val independent:DomainIndependentGenerator) {
+abstract class DomainDependentGenerator[S <: AbstractSyntax](val independent: DomainIndependentGenerator[S]) {
   import independent._
-//  /**
-//   * Base concept for the representation of program unit on disk.
-//   * @group types
-//   */
-//  abstract type CompilationUnit
-//
-//  /**
-//   * Base concept for a single expression in the language.
-//   * @group types
-//   */
-//  abstract type Expression
-//
-//  /**
-//   * Base concept for a meaningful type in the language.
-//   * @group types
-//   */
-//  abstract type Type
-//
-//  /**
-//   * Base concept for a meaningful line-of-code in the language.
-//   * @group types
-//   */
-//  abstract type Statement
-
+  import syntax._
 
   /**
    * For all possible EP solutions, this method generates the sequence of statements that result

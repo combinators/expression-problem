@@ -14,10 +14,10 @@ import org.combinators.ep.domain.instances.DataTypeInstance
   * test cases can enhance the generated code, but this is handled in the ex traits, not the Mx traits.
   *
   */
-abstract class DomainIndependentTestGenerator(val langGen: DomainIndependentGenerator) {
+abstract class DomainIndependentTestGenerator[S <: AbstractSyntax](val langGen: DomainIndependentGenerator[S]) {
   import langGen._
+  import syntax._
 
-  type UnitTest      /** Base concept for the representation of a single test case. */
 
   /**
     * Actual value in a test case.
@@ -66,5 +66,5 @@ abstract class DomainIndependentTestGenerator(val langGen: DomainIndependentGene
     * @param pkg     An optional string used for package or module declaration
     * @return
     */
-  def generateSuite(pkg: Option[String]): Seq[langGen.CompilationUnit]
+  def generateSuite(pkg: Option[String]): Seq[CompilationUnit]
 }

@@ -9,7 +9,7 @@ import org.combinators.templating.twirl.Java
 /**
   * Isolate Performance tests
   */
-trait PerformanceTestGenerator extends JavaGenerator with DomainIndependentTestGenerator with TestGenerator {
+trait PerformanceTestGenerator extends DomainIndependentJavaGenerator with DomainIndependentTestGenerator with TestGenerator {
 
   object PerformanceTestNameGenerator {
     private var nextNowVar = 0

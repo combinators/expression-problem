@@ -6,7 +6,7 @@ import org.combinators.ep.domain.instances._
 import org.combinators.ep.generator.DomainIndependentTestGenerator
 import org.combinators.templating.twirl.Java
 
-abstract class TestGenerator (val gen:JavaGenerator, independentTestGen: DomainIndependentTestGenerator) {
+abstract class TestGenerator (val gen:DomainIndependentJavaGenerator, independentTestGen: DomainIndependentTestGenerator) {
   import gen._
   import independentTestGen._
 

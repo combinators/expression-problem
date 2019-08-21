@@ -9,7 +9,7 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-class e0(override val gen:JavaGenerator) extends JUnitTestGenerator(gen) {
+class e0(override val gen:DomainIndependentJavaGenerator) extends JUnitTestGenerator(gen) {
 
   /** E0 Introduces the concept a Double and Int type, used for the 'Eval' operation. */
   override def tpe(tr:TypeRep) : Type = {

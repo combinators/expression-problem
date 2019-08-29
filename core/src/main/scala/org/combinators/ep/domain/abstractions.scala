@@ -57,7 +57,7 @@ package object abstractions {
     implicit def toNamedNaryMatchable(dtc: DataTypeCase): Matchable[DataTypeCase, Seq[Attribute]] =
       Matchable.named(
         dtc.name,
-        Matchable.nary[DataTypeCase, Attribute](PartialFunction(_.attributes)).matcher
+        Matchable.nary[DataTypeCase, Attribute]({ case x => x.attributes}).matcher
       )
 
     /** Returns a [[org.combinators.ep.domain.matchers.Matchable]] transforming the given function on a single type
@@ -73,7 +73,7 @@ package object abstractions {
     implicit def toNamedUnaryMatchable(dtc: DataTypeCase): Matchable[DataTypeCase, Attribute] =
       Matchable.named(
         dtc.name,
-        Matchable.unary[DataTypeCase, Attribute](PartialFunction(_.attributes)).matcher
+        Matchable.unary[DataTypeCase, Attribute]({ case x => x.attributes}).matcher
       )
 
     /** Returns a [[org.combinators.ep.domain.matchers.Matchable]] transforming the given function on two type
@@ -89,7 +89,7 @@ package object abstractions {
     implicit def toNamedBinaryMatchable(dtc: DataTypeCase): Matchable[DataTypeCase, (Attribute, Attribute)] =
       Matchable.named(
         dtc.name,
-        Matchable.binary[DataTypeCase, Attribute](PartialFunction(_.attributes)).matcher
+        Matchable.binary[DataTypeCase, Attribute]({ case x => x.attributes }).matcher
       )
   }
 
@@ -154,7 +154,7 @@ package object abstractions {
     implicit def toNamedNaryMatchable(dtc: DataTypeCase): Matchable[DataTypeCase, Seq[Attribute]] =
       Matchable.named(
         dtc.name,
-        Matchable.nary[DataTypeCase, Attribute](PartialFunction(_.attributes)).matcher
+        Matchable.nary[DataTypeCase, Attribute]({ case x => x.attributes }).matcher
       )
   }
 
@@ -204,7 +204,7 @@ package object abstractions {
       type HostType = org.combinators.ep.domain.tree.Tree
     }
 
-    /** Represents Scala models of instances of a domain specific data type. */
+    /** Represents a Scala model of an instance of the given domain specific data type. */
     case class DataType(tpe: abstractions.DataType) extends TypeRep {
       type HostType = DataTypeInstance
     }

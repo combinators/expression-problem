@@ -5,6 +5,9 @@ trait AbstractSyntax {
   /** Represents a single file of source code. */
   type CompilationUnit
 
+  /** Represent an import delcaration to pull in library code. */
+  type Import
+
   /** Represents a single expression. */
   type Expression
 

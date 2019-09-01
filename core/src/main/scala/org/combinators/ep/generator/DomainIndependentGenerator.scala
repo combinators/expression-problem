@@ -4,20 +4,21 @@ import org.combinators.ep.domain._
 import abstractions._
 import communication._
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
-
 import cats._
 import cats.data._
 import cats.implicits._
 import cats.instances._
 import cats.free.FreeApplicative._
 import cats.free.Free.catsFreeMonadForId
+import org.combinators.ep.generator.paradigm.AnyParadigm
 
 
 
 /** Provides implementations for language and approach specific code generation tasks which do not depend on a specific
   * EP domain. */
-abstract class DomainIndependentGenerator[S <: AbstractSyntax](val syntax: S)  {
+abstract class DomainIndependentGenerator[S <: AbstractSyntax](val syntax: AbstractSyntax, val paradigm: AnyParadigm[S])  {
   import syntax._
+  import paradigm._
 
   /** Translates the Scala representation of a type to target language specific code for referring to it. */
   def toTargetLanguageType(tpe: TypeRep): Type
@@ -27,11 +28,11 @@ abstract class DomainIndependentGenerator[S <: AbstractSyntax](val syntax: S)  {
     baseTpe: DataType,
     tpeCase: DataTypeCase,
     args: Expression*
-  ): CodeBlock.Generator[syntax.type, Expression]
+  ): Command.Generator[MethodBodyContext, Expression]
 
   // was toTargetLanguage --> now instantiate
   /** Converts a Scala model of any representable type into code. */
-  def instantiate(inst: InstanceRep): CodeBlock.Generator[syntax.type, Expression] = {
+  def instantiate(inst: InstanceRep): Command.Generator[MethodBodyContext, Expression] = {
     (inst.tpe, inst.inst) match {
       case  (TypeRep.DataType(baseTpe), domInst: DataTypeInstance) => instantiate(baseTpe, domInst)
       case _ => throw new scala.NotImplementedError(s"No rule to compile instantiations of ${inst.tpe}.")
@@ -39,7 +40,7 @@ abstract class DomainIndependentGenerator[S <: AbstractSyntax](val syntax: S)  {
   }
 
   /** Converts a Scala model of a domain specific type into code. */
-  def instantiate(baseType: DataType, inst: DataTypeInstance): CodeBlock.Generator[syntax.type, Expression] = {
+  def instantiate(baseType: DataType, inst: DataTypeInstance): Command.Generator[MethodBodyContext, Expression] = {
     for {
       attributeInstances <- inst.attributeInstances.toList.map(instantiate).sequence
       result <- instantiate(baseType, inst.tpeCase, attributeInstances: _*)
@@ -60,9 +61,9 @@ abstract class DomainIndependentGenerator[S <: AbstractSyntax](val syntax: S)  {
     *
     * @see [[toOperationResult()]] for the generation of code returning the resulting expression.
     */
-  def toMethodBody(block: CodeBlock.Generator[syntax.type, Expression]): Seq[Statement] = {
-    val compiler = new (CodeBlock[syntax.type, *] ~> State[Seq[Statement], *]) {
-      def apply[A](fa: CodeBlock[syntax.type, A]): State[Seq[Statement], A] = {
+  def toMethodBody(block: Command.Generator[MethodBodyContext, Expression]): Seq[Statement] = {
+    val compiler = new (Command.Generator[MethodBodyContext, *] ~> State[Seq[Statement], *]) {
+      def apply[A](fa: Command[MethodBodyContext, A]): State[Seq[Statement], A] = {
         fa match {
           case AddContext(stmts: Seq[Statement]) => State.modify[Seq[Statement]](_ ++ stmts).map(_.asInstanceOf[A])
           case AddImport(_) => State.pure(().asInstanceOf[A])

@@ -20,32 +20,12 @@ abstract class DomainIndependentGenerator[S <: AbstractSyntax](val syntax: Abstr
   import syntax._
   import paradigm._
 
-  /** Translates the Scala representation of a type to target language specific code for referring to it. */
-  def toTargetLanguageType(tpe: TypeRep): Type
 
-  /** Returns code to instantiate the given data type case, filling in `args` for its parameters. */
-  def instantiate(
-    baseTpe: DataType,
-    tpeCase: DataTypeCase,
-    args: Expression*
-  ): Command.Generator[MethodBodyContext, Expression]
+
+
 
   // was toTargetLanguage --> now instantiate
-  /** Converts a Scala model of any representable type into code. */
-  def instantiate(inst: InstanceRep): Command.Generator[MethodBodyContext, Expression] = {
-    (inst.tpe, inst.inst) match {
-      case  (TypeRep.DataType(baseTpe), domInst: DataTypeInstance) => instantiate(baseTpe, domInst)
-      case _ => throw new scala.NotImplementedError(s"No rule to compile instantiations of ${inst.tpe}.")
-    }
-  }
 
-  /** Converts a Scala model of a domain specific type into code. */
-  def instantiate(baseType: DataType, inst: DataTypeInstance): Command.Generator[MethodBodyContext, Expression] = {
-    for {
-      attributeInstances <- inst.attributeInstances.toList.map(instantiate).sequence
-      result <- instantiate(baseType, inst.tpeCase, attributeInstances: _*)
-    } yield result
-  }
 
   /** Produces the sequence of statements required to return `expr` as the result of some operation.
     *

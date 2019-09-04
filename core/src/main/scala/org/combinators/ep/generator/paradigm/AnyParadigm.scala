@@ -44,6 +44,10 @@ case class SetParameters[Type](params: Seq[(String, Type)]) extends Command {
   type Result = Unit
 }
 
+case class GetArguments[Type, Expression]() extends Command {
+  type Result = Seq[(String, Type, Expression)]
+}
+
 case class AddTestSuite[TestContext](name: String, suite: Generator[TestContext, Unit]) extends Command {
   type Result = Unit
 }
@@ -69,15 +73,28 @@ trait AnyParadigm {
   type TestContext
   type MethodBodyContext
 
-  implicit val canAddCompilationUnitInProject: Understands[ProjectContext, AddCompilationUnit[CompilationUnitContext]]
-  implicit val canAddImportInCompilationUnit: Understands[CompilationUnitContext, AddImport[Import]]
-  implicit val canAddImportInMethodBody: Understands[MethodBodyContext, AddImport[Import]]
-  implicit val canAddBlockDefinitionsInMethodBody: Understands[MethodBodyContext, AddBlockDefinitions[Statement]]
-  implicit val canSetReturnTypeInMethodBody: Understands[MethodBodyContext, SetReturnType[Type]]
-  implicit val canSetParametersInMethodBody: Understands[MethodBodyContext, SetParameters[Type]]
-  implicit val canTransformTypeInMethodBody: Understands[MethodBodyContext, ToTargetLanguageType[Type]]
-  implicit val canApplyInMethodBody: Understands[MethodBodyContext, Apply[Expression]]
-  implicit val canAddTestSuiteInCompilationUnit: Understands[CompilationUnitContext, AddTestSuite[TestContext]]
+  trait ProjectContextCapabilities {
+    implicit val canAddCompilationUnitInProject: Understands[ProjectContext, AddCompilationUnit[CompilationUnitContext]]
+  }
+  val projectContextCapabilities: ProjectContextCapabilities
+
+  trait CompilationUnitCapabilities {
+    implicit val canAddImportInCompilationUnit: Understands[CompilationUnitContext, AddImport[Import]]
+    implicit val canAddTestSuiteInCompilationUnit: Understands[CompilationUnitContext, AddTestSuite[TestContext]]
+  }
+  val compilationUnitCapabilities: CompilationUnitCapabilities
+
+  trait MethodBodyCapabilities {
+    implicit val canAddImportInMethodBody: Understands[MethodBodyContext, AddImport[Import]]
+    implicit val canAddBlockDefinitionsInMethodBody: Understands[MethodBodyContext, AddBlockDefinitions[Statement]]
+    implicit val canSetReturnTypeInMethodBody: Understands[MethodBodyContext, SetReturnType[Type]]
+    implicit val canSetParametersInMethodBody: Understands[MethodBodyContext, SetParameters[Type]]
+    implicit val canTransformTypeInMethodBody: Understands[MethodBodyContext, ToTargetLanguageType[Type]]
+    implicit val canApplyInMethodBody: Understands[MethodBodyContext, Apply[Expression]]
+    implicit val canGetArgumentsInMethodBody: Understands[MethodBodyContext, GetArguments[Type, Expression]]
+  }
+  val methodBodyCapabilities: MethodBodyCapabilities
+
   implicit val canAddTestCaseInTest: Understands[TestContext, AddTestCase[MethodBodyContext]]
 
   /** Creates an empty project */

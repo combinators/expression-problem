@@ -5,19 +5,14 @@ import org.combinators.ep.generator.communication.ReceivedRequest
 import org.combinators.ep.generator.paradigm.AnyParadigm
 
 /** Instances of this class provide the domain dependent implementation of an evolution. */
-trait EvolutionImplementationProvider {
-  val syntax: AbstractSyntax
-  import syntax._
+trait EvolutionImplementationProvider[API <: ApproachImplementationProvider] {
 
   /** Generates the code of request handlers relative to the target language and approach specific code generation
     * logic provided by the given `codeGenerator`. */
   def logic
-      (forApproach: ApproachImplementationProvider.WithSyntax[syntax.type])
-      (onRequest: ReceivedRequest[Expression]):
-    Generator[forApproach.paradigm.MethodBodyContext, Expression]
+      (forApproach: API)
+      (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
+    Generator[forApproach.paradigm.MethodBodyContext, forApproach.paradigm.syntax.Expression]
 
 }
 
-object EvolutionImplementationProvider {
-  type WithSyntax[S] = EvolutionImplementationProvider { val syntax: S }
-}

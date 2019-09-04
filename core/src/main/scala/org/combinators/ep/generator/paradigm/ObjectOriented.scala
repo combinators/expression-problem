@@ -18,7 +18,7 @@ case class AddImplemented[Type](interface: Type) extends Command {
   type Result = Unit
 }
 
-case class AddField[Type, Expression](name: String, tpe: Type) extends Command {
+case class AddField[Type](name: String, tpe: Type) extends Command {
   type Result = Unit
 }
 
@@ -30,10 +30,7 @@ case class InitializeParent[Expression](arguments: Seq[Expression]) extends Comm
   type Result = Unit
 }
 
-case class AddConstructor[ConstructorContext, Type](
-    parameters: Seq[(String, Type)],
-    ctor: Generator[ConstructorContext, Unit]
-  ) extends Command {
+case class AddConstructor[ConstructorContext](ctor: Generator[ConstructorContext, Unit]) extends Command {
   type Result = Unit
 }
 
@@ -45,6 +42,18 @@ case class GetMember[Expression](instance: Expression, member: String) extends C
   type Result = Expression
 }
 
+case class SetAbstract() extends Command {
+  type Result = Unit
+}
+
+case class SetInterface() extends Command {
+  type Result = Unit
+}
+
+case class SelfReference[Expression]() extends Command {
+  type Result = Expression
+}
+
 trait ObjectOriented {
   val base: AnyParadigm
   import base._
@@ -53,31 +62,64 @@ trait ObjectOriented {
   type ClassContext
   type ConstructorContext
 
-  implicit val canAddClassInCompilationUnit: Understands[CompilationUnitContext, AddClass[ClassContext]]
+  trait CompilationUnitCapabilities {
+    implicit val canAddClassInCompilationUnit: Understands[CompilationUnitContext, AddClass[ClassContext]]
+  }
+  val compilationUnitCapabilities: CompilationUnitCapabilities
 
-  implicit val canAddParentInClass: Understands[ClassContext, AddParent[Type]]
-  implicit val canAddImplementedInClass: Understands[ClassContext, AddImplemented[Type]]
-  implicit val canAddFieldInClass: Understands[ClassContext, AddField[Type, Expression]]
-  implicit val canAddMethodInClass: Understands[ClassContext, AddMethod[MethodBodyContext, Expression]]
-  implicit val canAddConstructorInClass: Understands[ClassContext, AddConstructor[ConstructorContext, Unit]]
-  implicit val canAddImportInClass: Understands[ClassContext, AddImport[Import]]
-  implicit val canResolveImportInClass: Understands[ClassContext, ResolveImport[Import, Type]]
+  trait ClassCapabilities {
+    implicit val canAddParentInClass: Understands[ClassContext, AddParent[Type]]
+    implicit val canAddImplementedInClass: Understands[ClassContext, AddImplemented[Type]]
+    implicit val canAddFieldInClass: Understands[ClassContext, AddField[Type]]
+    implicit val canAddMethodInClass: Understands[ClassContext, AddMethod[MethodBodyContext, Option[Expression]]]
+    implicit val canAddConstructorInClass: Understands[ClassContext, AddConstructor[ConstructorContext]]
+    implicit val canAddImportInClass: Understands[ClassContext, AddImport[Import]]
+    implicit val canResolveImportInClass: Understands[ClassContext, ResolveImport[Import, Type]]
+    implicit val canSetAbstractInClass: Understands[ClassContext, SetAbstract]
+    implicit val canSetInterfaceInClass: Understands[ClassContext, SetInterface]
+    implicit val canTranslateTypeInClass: Understands[ClassContext, ToTargetLanguageType[Type]]
+    implicit val canSelfReferenceInClass: Understands[ClassContext, SelfReference[Expression]]
+  }
+  val classCapabilities: ClassCapabilities
 
-  implicit val canInitializeParentInConstructor: Understands[ConstructorContext, InitializeParent[Expression]]
-  implicit val canInitializeFieldInConstructor: Understands[ConstructorContext, InitializeField[Expression]]
-  implicit val canAddBlockDefinitionsInConstructor: Understands[ConstructorContext, AddBlockDefinitions[Statement]]
-  implicit val canAddImportInConstructor: Understands[ConstructorContext, AddImport[Import]]
-  implicit val canResolveImportInConstructor: Understands[ConstructorContext, ResolveImport[Import, Type]]
-  implicit val canInstantiateObjectInConstructor: Understands[ConstructorContext, InstantiateObject[Type, Expression]]
-  implicit val canApplyInConstructor: Understands[ConstructorContext, Apply[Expression]]
-  implicit val canGetMemberInConstructor: Understands[ConstructorContext, GetMember[Expression]]
+  trait ConstructorCapabilities {
+    implicit val canInitializeParentInConstructor: Understands[ConstructorContext, InitializeParent[Expression]]
+    implicit val canInitializeFieldInConstructor: Understands[ConstructorContext, InitializeField[Expression]]
+    implicit val canAddBlockDefinitionsInConstructor: Understands[ConstructorContext, AddBlockDefinitions[Statement]]
+    implicit val canAddImportInConstructor: Understands[ConstructorContext, AddImport[Import]]
+    implicit val canResolveImportInConstructor: Understands[ConstructorContext, ResolveImport[Import, Type]]
+    implicit val canInstantiateObjectInConstructor: Understands[ConstructorContext, InstantiateObject[Type, Expression]]
+    implicit val canApplyInConstructor: Understands[ConstructorContext, Apply[Expression]]
+    implicit val canGetMemberInConstructor: Understands[ConstructorContext, GetMember[Expression]]
+    implicit val canSelfReferenceInConstructor: Understands[ConstructorContext, SelfReference[Expression]]
+    implicit val canGetArgumentsInConstructor: Understands[ConstructorContext, GetArguments[Type, Expression]]
+    implicit val canTranslateTypeInConstructor: Understands[ConstructorContext, ToTargetLanguageType[Type]]
+    implicit val canSetParametersInConstructor: Understands[ConstructorContext, SetParameters[Type]]
+  }
+  val constructorCapabilities: ConstructorCapabilities
 
-  implicit val canInstantiateObjectInMethod: Understands[MethodBodyContext, InstantiateObject[Type, Expression]]
-  implicit val canGetMemberInMethod: Understands[MethodBodyContext, GetMember[Expression]]
-  implicit val canResolveImportInMethod: Understands[MethodBodyContext, ResolveImport[Import, Type]]
+  trait MethodBodyCapabilities {
+    implicit val canInstantiateObjectInMethod: Understands[MethodBodyContext, InstantiateObject[Type, Expression]]
+    implicit val canGetMemberInMethod: Understands[MethodBodyContext, GetMember[Expression]]
+    implicit val canResolveImportInMethod: Understands[MethodBodyContext, ResolveImport[Import, Type]]
+    implicit val canSetAbstractInMethod: Understands[MethodBodyContext, SetAbstract]
+    implicit val canSelfReferenceInMethod: Understands[MethodBodyContext, SelfReference[Expression]]
+  }
+  val methodBodyCapabilities: MethodBodyCapabilities
 
-  def addClassToProject(name: String)(classGen: Generator[ClassContext, Unit]): Generator[ProjectContext, Unit] = {
+  def addClassToProject(name: String, classGen: Generator[ClassContext, Unit]): Generator[ProjectContext, Unit] = {
+    import compilationUnitCapabilities._
+    import base.projectContextCapabilities._
     AddCompilationUnit(name, AddClass(name, classGen).interpret).interpret
+  }
+
+  def addAbstractMethod(name: String, spec: Generator[MethodBodyContext, Unit], isPublic: Boolean = true): Generator[ClassContext, Unit] = {
+    import classCapabilities._
+    import methodBodyCapabilities._
+    AddMethod[MethodBodyContext, Option[Expression]](name,
+      spec.flatMap(_ => SetAbstract().interpret).map(_ => None),
+      isPublic
+    ).interpret
   }
 }
 

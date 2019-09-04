@@ -44,11 +44,11 @@ trait ApproachImplementationProvider {
   /** Produces all compilation units necessary to implement the given model.
     * Fills in domain specific code with the given approach independent [[EvolutionImplementationProvider]].
     */
-  def implement(domain: Model, domainSpecific: EvolutionImplementationProvider.WithSyntax[syntax.type]): Seq[CompilationUnit]
+  def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Seq[CompilationUnit]
 
 }
 
 object ApproachImplementationProvider {
   type WithParadigm[P <: AnyParadigm] = ApproachImplementationProvider { val paradigm: P }
-  type WithSyntax[S <: AbstractSyntax] = ApproachImplementationProvider { val paradigm: AnyParadigm.WithSyntax[S] }
+  type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 }

@@ -49,7 +49,8 @@ lazy val core = (Project(id = "core", base = file("core")))
   .settings(commonSettings: _*)
   .settings(
     moduleName := "expression-problem-core",
-    addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
+    addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3"),
+    addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")
   )
 
 /** Template for a subproject for a specific domain named `domainName`.

@@ -37,4 +37,6 @@ object Command {
 
   implicit def monadInstance[C]: Monad[Generator[C, *]] =
     cats.free.Free.catsFreeMonadForFree[Performable[C, *]]
+
+  def skip[Context]: Generator[Context, Unit] = monadInstance.pure(())
 }

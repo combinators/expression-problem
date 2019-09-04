@@ -28,13 +28,19 @@ case class ToTargetLanguageType[Type](tpe: TypeRep) extends Command {
 }
 
 /** Adds a method using the body generator's resulting expression as return value. */
-case class AddMethod[MethodBodyContext, Type, Expression](
+case class AddMethod[MethodBodyContext, Expression](
    name: String,
-   returnType: Type,
-   parameters: Seq[(String, Type)],
-   body: Generator[MethodBodyContext, Expression],
+   spec: Generator[MethodBodyContext, Expression],
    isPublic: Boolean = true
   ) extends Command {
+  type Result = Unit
+}
+
+case class SetReturnType[Type](tpe: Type) extends Command {
+  type Result = Unit
+}
+
+case class SetParameters[Type](params: Seq[(String, Type)]) extends Command {
   type Result = Unit
 }
 
@@ -45,7 +51,17 @@ case class AddTestCase[MethodBodyContext](name: String, code: Generator[MethodBo
   type Result = Unit
 }
 
-abstract class AnyParadigm[S <: AbstractSyntax](val syntax: S) {
+case class Apply[T](method: T, arguments: Seq[T]) extends Command {
+  type Result = T
+}
+
+case class ResolveImport[Import, T](forElem: T) extends Command {
+  type Result = Option[Import]
+}
+
+trait AnyParadigm {
+  val syntax: AbstractSyntax
+
   import syntax._
 
   type ProjectContext
@@ -57,7 +73,10 @@ abstract class AnyParadigm[S <: AbstractSyntax](val syntax: S) {
   implicit val canAddImportInCompilationUnit: Understands[CompilationUnitContext, AddImport[Import]]
   implicit val canAddImportInMethodBody: Understands[MethodBodyContext, AddImport[Import]]
   implicit val canAddBlockDefinitionsInMethodBody: Understands[MethodBodyContext, AddBlockDefinitions[Statement]]
+  implicit val canSetReturnTypeInMethodBody: Understands[MethodBodyContext, SetReturnType[Type]]
+  implicit val canSetParametersInMethodBody: Understands[MethodBodyContext, SetParameters[Type]]
   implicit val canTransformTypeInMethodBody: Understands[MethodBodyContext, ToTargetLanguageType[Type]]
+  implicit val canApplyInMethodBody: Understands[MethodBodyContext, Apply[Expression]]
   implicit val canAddTestSuiteInCompilationUnit: Understands[CompilationUnitContext, AddTestSuite[TestContext]]
   implicit val canAddTestCaseInTest: Understands[TestContext, AddTestCase[MethodBodyContext]]
 
@@ -88,3 +107,6 @@ abstract class AnyParadigm[S <: AbstractSyntax](val syntax: S) {
   }
 }
 
+object AnyParadigm {
+  type WithSyntax[S <: AbstractSyntax] = AnyParadigm { val syntax: S }
+}

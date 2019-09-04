@@ -16,7 +16,8 @@ import org.combinators.ep.generator.paradigm.AnyParadigm
 
 /** Provides implementations for language and approach specific code generation tasks which do not depend on a specific
   * EP domain. */
-abstract class ApproachImplementationProvider[S <: AbstractSyntax, P <: AnyParadigm[S]](val paradigm: P)  {
+trait ApproachImplementationProvider {
+  val paradigm: AnyParadigm
   import paradigm._
   import syntax._
 
@@ -43,6 +44,11 @@ abstract class ApproachImplementationProvider[S <: AbstractSyntax, P <: AnyParad
   /** Produces all compilation units necessary to implement the given model.
     * Fills in domain specific code with the given approach independent [[EvolutionImplementationProvider]].
     */
-  def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[S, P]): Seq[CompilationUnit]
+  def implement(domain: Model, domainSpecific: EvolutionImplementationProvider.WithSyntax[syntax.type]): Seq[CompilationUnit]
 
+}
+
+object ApproachImplementationProvider {
+  type WithParadigm[P <: AnyParadigm] = ApproachImplementationProvider { val paradigm: P }
+  type WithSyntax[S <: AbstractSyntax] = ApproachImplementationProvider { val paradigm: AnyParadigm.WithSyntax[S] }
 }

@@ -27,16 +27,24 @@ case class InstantiateType[Type, Expression](
 }
 
 
-abstract class Functional[S <: AbstractSyntax](override val syntax: S) extends AnyParadigm[S](syntax) {
+trait Functional {
+  val base: AnyParadigm
+  import base._
   import syntax._
 
   type TypeContext
 
   implicit val canAddTypeInCompilationUnit: Understands[CompilationUnitContext, AddType[TypeContext]]
-  implicit val canAddMethodInCompilationUnit: Understands[CompilationUnit, AddMethod[MethodBodyContext, Type, Expression]]
+  implicit val canAddMethodInCompilationUnit: Understands[CompilationUnit, AddMethod[MethodBodyContext, Expression]]
+  implicit val canResolveMethodImportInCompilationUnit: Understands[CompilationUnit, ResolveImport[Import, Expression]]
+  implicit val canResolveTypeImportInCompilationUnit: Understands[CompilationUnit, ResolveImport[Import, Type]]
 
   implicit val canAddTypeConstructorInType: Understands[TypeContext, AddTypeConstructor[Type]]
 
   implicit val canPatternMatchInMethod: Understands[MethodBodyContext, PatternMatch[MethodBodyContext, Expression]]
   implicit val canInstantiateTypeInMethod: Understands[MethodBodyContext, InstantiateType[Type, Expression]]
+}
+
+object Functional {
+  type WithBase[B <: AnyParadigm] = Functional { val base: B }
 }

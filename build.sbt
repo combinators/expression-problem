@@ -19,7 +19,8 @@ lazy val commonSettings = Seq(
     "-deprecation",
     "-feature",
     "-language:implicitConversions",
-    "-Ypartial-unification"
+    "-Ypartial-unification",
+    "-language:higherKinds"
   ),
 
   scalacOptions in (Compile,doc) ++= Seq(

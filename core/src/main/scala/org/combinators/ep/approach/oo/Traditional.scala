@@ -1,15 +1,14 @@
 package org.combinators.ep.approach.oo
 
 import org.combinators.ep.domain.Model
-import org.combinators.ep.generator.Command
-import org.combinators.ep.generator.{AbstractSyntax, ApproachImplementationProvider, EvolutionImplementationProvider, NameProvider, communication}
+import org.combinators.ep.generator.{AbstractSyntax, ApproachImplementationProvider, Command, EvolutionImplementationProvider, NameProvider, Understands, communication}
 import org.combinators.ep.generator.paradigm.{AddConstructor, AddField, AddImport, AddMethod, AddParent, AnyParadigm, Apply, FindClass, GetArguments, GetConstructor, GetMember, InitializeField, ObjectOriented, ResolveImport, SelfReference, SetAbstract, SetParameters, SetReturnType, ToTargetLanguageType}
 import Command._
 import cats.syntax._
 import cats.implicits._
 import org.combinators.ep.domain.abstractions.{Attribute, DataType, DataTypeCase, Operation, Parameter, TypeRep}
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
-import org.combinators.ep.generator.communication.{ReceivedRequest, Request}
+import org.combinators.ep.generator.communication.{ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.paradigm.ObjectOriented.WithBase
 
 sealed trait Traditional extends ApproachImplementationProvider {
@@ -22,7 +21,7 @@ sealed trait Traditional extends ApproachImplementationProvider {
   import syntax._
 
 
-  def dispatch(message: communication.SendRequest[Expression]): Generator[MethodBodyContext, Expression] = {
+  def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression] = {
     import ooParadigm.methodBodyCapabilities._
     import paradigm.methodBodyCapabilities._
 
@@ -33,14 +32,12 @@ sealed trait Traditional extends ApproachImplementationProvider {
 
   }
 
-  /** Returns code to instantiate the given data type case, filling in `args` for its parameters. */
   def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
     for {
       rt <- FindClass[Type](names.conceptNameOf(tpeCase)).interpret
-      rti <- ResolveImport[Import, Type](rt).interpret
-      _ <- rti.map(AddImport(_).interpret).getOrElse(skip)
+      _ <- resolveAndAddImport(rt)
       ctor <- GetConstructor[Type, Expression](rt).interpret
       res <- Apply(ctor, args).interpret
     } yield res
@@ -52,14 +49,12 @@ sealed trait Traditional extends ApproachImplementationProvider {
 
     for {
       rt <- ToTargetLanguageType[Type](op.returnType).interpret
-      rti <- ResolveImport[Import, Type](rt).interpret
-      _ <- rti.map(AddImport(_).interpret).getOrElse(skip)
+      _ <- resolveAndAddImport(rt)
       _ <- SetReturnType(rt).interpret
       params <- op.parameters.toList.map { param: Parameter =>
           for {
             pt <- ToTargetLanguageType[Type](param.tpe).interpret
-            pti <- ResolveImport[Import, Type](pt).interpret
-            _ <- rti.map(AddImport(_).interpret).getOrElse(skip)
+            _ <- resolveAndAddImport(pt)
           } yield (names.mangle(param.name), pt)
         }.sequence
       _ <- SetParameters(params).interpret
@@ -81,8 +76,7 @@ sealed trait Traditional extends ApproachImplementationProvider {
     import ooParadigm.classCapabilities._
     for {
       ft <- ToTargetLanguageType[Type](att.tpe).interpret
-      fti <- ResolveImport[Import, Type](ft).interpret
-      _ <- fti.map(AddImport(_).interpret).getOrElse(skip)
+      _ <- resolveAndAddImport(ft)
       _ <- AddField(names.instanceNameOf(att), ft).interpret
     } yield ()
   }
@@ -123,8 +117,7 @@ sealed trait Traditional extends ApproachImplementationProvider {
       params <- tpeCase.attributes.toList.map { att: Attribute =>
           for {
             at <- ToTargetLanguageType[Type](att.tpe).interpret
-            ati <- ResolveImport[Import, Type](at).interpret
-            _ <- ati.map(AddImport(_).interpret).getOrElse(skip)
+            _ <- resolveAndAddImport(at)
           } yield (names.instanceNameOf(att), at)
         }.sequence
       _ <- SetParameters(params).interpret
@@ -140,8 +133,7 @@ sealed trait Traditional extends ApproachImplementationProvider {
       import classCapabilities._
       for {
         pt <- ToTargetLanguageType[Type](TypeRep.DataType(tpe)).interpret
-        pti <- ResolveImport[Import, Type](pt).interpret
-        _ <- pti.map(AddImport(_).interpret).getOrElse(skip)
+        _ <- resolveAndAddImport(pt)
         _ <- AddParent(pt).interpret
         _ <- tpeCase.attributes.toList.foldMapM(att => makeField(att))
         _ <- AddConstructor(makeConstructor(tpeCase)).interpret

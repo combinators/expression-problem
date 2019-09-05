@@ -49,7 +49,13 @@ trait ApproachImplementationProvider {
     } yield result
   }
 
-
+  def resolveAndAddImport[Context, Elem](elem: Elem)
+    (implicit
+      canResolveImport: Understands[Context, ResolveImport[Import, Elem]],
+      canAddImport: Understands[Context, AddImport[Import]]
+    ) : Generator[Context, Unit] = {
+    ResolveImport[Import, Elem](elem).interpret.flatMap(imp => imp.map(AddImport(_).interpret).getOrElse(skip))
+  }
 
   /** Converts a Scala model of an instance of any representable type into code. */
   def reify(inst: InstanceRep): Generator[MethodBodyContext, Expression] = {
@@ -59,8 +65,7 @@ trait ApproachImplementationProvider {
         import paradigm.methodBodyCapabilities._
         for {
           resTy <- ToTargetLanguageType[Type](tpe).interpret
-          resTyI <- ResolveImport[Import, Type](resTy).interpret
-          _ <- resTyI.map(AddImport(_).interpret).getOrElse(skip)
+          _ <- resolveAndAddImport(resTy)
           res <- Reify[tpe.HostType, Expression](tpe, inst.asInstanceOf[tpe.HostType]).interpret
         } yield res
       case _ => throw new scala.NotImplementedError(s"No rule to compile instantiations of ${inst.tpe}.")

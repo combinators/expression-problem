@@ -7,7 +7,7 @@ case class AddType[TypeContext](name: String, tpeGen: Generator[TypeContext, Uni
   type Result = Unit
 }
 
-case class AddTypeConstructor[Type](name: String, parameters: Seq[Type]) extends Command {
+case class AddTypeConstructor[Type](name: String, parameters: Seq[(String, Type)]) extends Command {
   type Result = Unit
 }
 
@@ -40,14 +40,18 @@ trait Functional {
 
   trait CompilationUnitCapabilities {
     implicit val canAddTypeInCompilationUnit: Understands[CompilationUnitContext, AddType[TypeContext]]
-    implicit val canAddMethodInCompilationUnit: Understands[CompilationUnit, AddMethod[MethodBodyContext, Expression]]
-    implicit val canResolveMethodImportInCompilationUnit: Understands[CompilationUnit, ResolveImport[Import, Expression]]
-    implicit val canResolveTypeImportInCompilationUnit: Understands[CompilationUnit, ResolveImport[Import, Type]]
+    implicit val canAddMethodInCompilationUnit: Understands[CompilationUnitContext, AddMethod[MethodBodyContext, Expression]]
+    implicit val canResolveMethodImportInCompilationUnit: Understands[CompilationUnitContext, ResolveImport[Import, Expression]]
+    implicit val canResolveTypeImportInCompilationUnit: Understands[CompilationUnitContext, ResolveImport[Import, Type]]
   }
-  def compilationUnitCapabilities: CompilationUnitCapabilities
+  val compilationUnitCapabilities: CompilationUnitCapabilities
 
   trait TypeCapabilities {
     implicit val canAddTypeConstructorInType: Understands[TypeContext, AddTypeConstructor[Type]]
+    implicit val canTranslateTypeInType: Understands[TypeContext, ToTargetLanguageType[Type]]
+    implicit val canAddImportInType: Understands[TypeContext, AddImport[Import]]
+    implicit val canResolveTypeImportInType: Understands[TypeContext, ResolveImport[Import, Type]]
+    implicit val canResolveMethodImportInType: Understands[TypeContext, ResolveImport[Import, Expression]]
   }
   val typeCapabilities: TypeCapabilities
 

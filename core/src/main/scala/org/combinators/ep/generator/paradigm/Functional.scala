@@ -26,6 +26,10 @@ case class InstantiateType[Type, Expression](
   type Result = Expression
 }
 
+case class FindMethod[Expression](name: String) extends Command {
+  type Result = Expression
+}
+
 
 trait Functional {
   val base: AnyParadigm
@@ -34,15 +38,26 @@ trait Functional {
 
   type TypeContext
 
-  implicit val canAddTypeInCompilationUnit: Understands[CompilationUnitContext, AddType[TypeContext]]
-  implicit val canAddMethodInCompilationUnit: Understands[CompilationUnit, AddMethod[MethodBodyContext, Expression]]
-  implicit val canResolveMethodImportInCompilationUnit: Understands[CompilationUnit, ResolveImport[Import, Expression]]
-  implicit val canResolveTypeImportInCompilationUnit: Understands[CompilationUnit, ResolveImport[Import, Type]]
+  trait CompilationUnitCapabilities {
+    implicit val canAddTypeInCompilationUnit: Understands[CompilationUnitContext, AddType[TypeContext]]
+    implicit val canAddMethodInCompilationUnit: Understands[CompilationUnit, AddMethod[MethodBodyContext, Expression]]
+    implicit val canResolveMethodImportInCompilationUnit: Understands[CompilationUnit, ResolveImport[Import, Expression]]
+    implicit val canResolveTypeImportInCompilationUnit: Understands[CompilationUnit, ResolveImport[Import, Type]]
+  }
+  def compilationUnitCapabilities: CompilationUnitCapabilities
 
-  implicit val canAddTypeConstructorInType: Understands[TypeContext, AddTypeConstructor[Type]]
+  trait TypeCapabilities {
+    implicit val canAddTypeConstructorInType: Understands[TypeContext, AddTypeConstructor[Type]]
+  }
+  val typeCapabilities: TypeCapabilities
 
-  implicit val canPatternMatchInMethod: Understands[MethodBodyContext, PatternMatch[MethodBodyContext, Expression]]
-  implicit val canInstantiateTypeInMethod: Understands[MethodBodyContext, InstantiateType[Type, Expression]]
+  trait MethodBodyCapabilities {
+    implicit val canPatternMatchInMethod: Understands[MethodBodyContext, PatternMatch[MethodBodyContext, Expression]]
+    implicit val canInstantiateTypeInMethod: Understands[MethodBodyContext, InstantiateType[Type, Expression]]
+    implicit val canResolveMethodImportInMethod: Understands[MethodBodyContext, ResolveImport[Import, Expression]]
+    implicit val canFindMethodInMethod: Understands[MethodBodyContext, FindMethod[Expression]]
+  }
+  val methodBodyCapabilities: MethodBodyCapabilities
 }
 
 object Functional {

@@ -3,14 +3,16 @@ package org.combinators.ep.approach.oo
 import org.combinators.ep.domain.Model
 import org.combinators.ep.generator.Command
 import org.combinators.ep.generator.{AbstractSyntax, ApproachImplementationProvider, EvolutionImplementationProvider, NameProvider, communication}
-import org.combinators.ep.generator.paradigm.{AddConstructor, AddField, AddImport, AddMethod, AddParent, AnyParadigm, Apply, GetArguments, GetMember, InitializeField, ObjectOriented, ResolveImport, SelfReference, SetAbstract, SetParameters, SetReturnType, ToTargetLanguageType}
+import org.combinators.ep.generator.paradigm.{AddConstructor, AddField, AddImport, AddMethod, AddParent, AnyParadigm, Apply, FindClass, GetArguments, GetConstructor, GetMember, InitializeField, ObjectOriented, ResolveImport, SelfReference, SetAbstract, SetParameters, SetReturnType, ToTargetLanguageType}
 import Command._
 import cats.syntax._
 import cats.implicits._
 import org.combinators.ep.domain.abstractions.{Attribute, DataType, DataTypeCase, Operation, Parameter, TypeRep}
+import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
 import org.combinators.ep.generator.communication.{ReceivedRequest, Request}
+import org.combinators.ep.generator.paradigm.ObjectOriented.WithBase
 
-trait Traditional extends ApproachImplementationProvider {
+sealed trait Traditional extends ApproachImplementationProvider {
 
   val names: NameProvider
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
@@ -29,6 +31,19 @@ trait Traditional extends ApproachImplementationProvider {
       result <- Apply[Expression](method, message.request.op.parameters.map(message.request.arguments)).interpret
     } yield result
 
+  }
+
+  /** Returns code to instantiate the given data type case, filling in `args` for its parameters. */
+  def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
+    import paradigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+    for {
+      rt <- FindClass[Type](names.conceptNameOf(tpeCase)).interpret
+      rti <- ResolveImport[Import, Type](rt).interpret
+      _ <- rti.map(AddImport(_).interpret).getOrElse(skip)
+      ctor <- GetConstructor[Type, Expression](rt).interpret
+      res <- Apply(ctor, args).interpret
+    } yield res
   }
 
   def makeSignature(op: Operation): Generator[MethodBodyContext, Unit] = {
@@ -154,4 +169,13 @@ trait Traditional extends ApproachImplementationProvider {
 object Traditional {
   type WithParadigm[P <: AnyParadigm] = Traditional { val paradigm: P }
   type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
+
+  def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
+      (nameProvider: NameProvider, base: P)
+      (oo: ObjectOriented.WithBase[base.type]): Traditional.WithParadigm[base.type] =
+    new Traditional {
+      override val names: NameProvider = nameProvider
+      override val paradigm: base.type = base
+      override val ooParadigm: ObjectOriented.WithBase[paradigm.type] = oo
+    }
 }

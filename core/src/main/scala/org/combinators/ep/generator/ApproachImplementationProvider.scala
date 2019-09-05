@@ -6,13 +6,10 @@ import communication._
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
 import cats._
 import cats.data._
+import cats.syntax._
 import cats.implicits._
-import cats.instances._
-import cats.free.FreeApplicative._
-import cats.free.Free.catsFreeMonadForId
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.AnyParadigm
-
+import org.combinators.ep.generator.Command._
+import org.combinators.ep.generator.paradigm.{AddImport, AnyParadigm, Reify, ResolveImport, ToTargetLanguageType}
 
 /** Provides implementations for language and approach specific code generation tasks which do not depend on a specific
   * EP domain. */
@@ -40,6 +37,35 @@ trait ApproachImplementationProvider {
     * }}}
     */
   def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression]
+
+  /** Returns code to instantiate the given data type case, filling in `args` for its parameters. */
+  def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression]
+
+  /** Returns code to instantiate the given Scala model of a domain specific type. */
+  def instantiate(baseType: DataType, inst: DataTypeInstance): Generator[MethodBodyContext, Expression] = {
+    for {
+      attributeInstances <- inst.attributeInstances.toList.map(reify).sequence[Generator[MethodBodyContext, *], Expression]
+      result <- instantiate(baseType, inst.tpeCase, attributeInstances: _*)
+    } yield result
+  }
+
+
+
+  /** Converts a Scala model of an instance of any representable type into code. */
+  def reify(inst: InstanceRep): Generator[MethodBodyContext, Expression] = {
+    (inst.tpe, inst.inst) match {
+      case (TypeRep.DataType(baseTpe), domInst: DataTypeInstance) => instantiate(baseTpe, domInst)
+      case (tpe, inst) =>
+        import paradigm.methodBodyCapabilities._
+        for {
+          resTy <- ToTargetLanguageType[Type](tpe).interpret
+          resTyI <- ResolveImport[Import, Type](resTy).interpret
+          _ <- resTyI.map(AddImport(_).interpret).getOrElse(skip)
+          res <- Reify[tpe.HostType, Expression](tpe, inst.asInstanceOf[tpe.HostType]).interpret
+        } yield res
+      case _ => throw new scala.NotImplementedError(s"No rule to compile instantiations of ${inst.tpe}.")
+    }
+  }
 
   /** Produces all compilation units necessary to implement the given model.
     * Fills in domain specific code with the given approach independent [[EvolutionImplementationProvider]].

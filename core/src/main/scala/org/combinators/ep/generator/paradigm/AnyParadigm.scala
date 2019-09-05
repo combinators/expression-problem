@@ -27,6 +27,11 @@ case class ToTargetLanguageType[Type](tpe: TypeRep) extends Command {
   type Result = Type
 }
 
+/** Converts the given Scala value into code representing it in the target language. */
+case class Reify[T, Expression](tpe: TypeRep.OfHostType[T], value: T) extends Command {
+  type Result = Expression
+}
+
 /** Adds a method using the body generator's resulting expression as return value. */
 case class AddMethod[MethodBodyContext, Expression](
    name: String,
@@ -63,6 +68,8 @@ case class ResolveImport[Import, T](forElem: T) extends Command {
   type Result = Option[Import]
 }
 
+
+
 trait AnyParadigm {
   val syntax: AbstractSyntax
 
@@ -90,6 +97,8 @@ trait AnyParadigm {
     implicit val canSetReturnTypeInMethodBody: Understands[MethodBodyContext, SetReturnType[Type]]
     implicit val canSetParametersInMethodBody: Understands[MethodBodyContext, SetParameters[Type]]
     implicit val canTransformTypeInMethodBody: Understands[MethodBodyContext, ToTargetLanguageType[Type]]
+    implicit def canReifyInMethodBody[T]: Understands[MethodBodyContext, Reify[T, Expression]]
+    implicit val canResolveImportInMethod: Understands[MethodBodyContext, ResolveImport[Import, Type]]
     implicit val canApplyInMethodBody: Understands[MethodBodyContext, Apply[Expression]]
     implicit val canGetArgumentsInMethodBody: Understands[MethodBodyContext, GetArguments[Type, Expression]]
   }
@@ -100,28 +109,7 @@ trait AnyParadigm {
   /** Creates an empty project */
   def emptyProject(name: String): ProjectContext
 
-  /** Returns code to instantiate the given data type case, filling in `args` for its parameters. */
-  def instantiate[Expression](baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression]
 
-  /** Returns code to instantiate the given Scala model of a domain specific type. */
-  def instantiate(baseType: DataType, inst: DataTypeInstance): Generator[MethodBodyContext, Expression] = {
-    for {
-      attributeInstances <- inst.attributeInstances.toList.map(reify).sequence[Generator[MethodBodyContext, *], Expression]
-      result <- instantiate(baseType, inst.tpeCase, attributeInstances: _*)
-    } yield result
-  }
-
-  /** Converts the given Scala value into code representing it in the target language. */
-  def reify[T](tpe: TypeRep.OfHostType[T], value: T): Generator[MethodBodyContext, Expression]
-
-  /** Converts a Scala model of an instance of any representable type into code. */
-  def reify(inst: InstanceRep): Generator[MethodBodyContext, Expression] = {
-    (inst.tpe, inst.inst) match {
-      case (TypeRep.DataType(baseTpe), domInst: DataTypeInstance) => instantiate(baseTpe, domInst)
-      case (tpe, inst) => reify[tpe.HostType](tpe, inst.asInstanceOf[tpe.HostType])
-      case _ => throw new scala.NotImplementedError(s"No rule to compile instantiations of ${inst.tpe}.")
-    }
-  }
 }
 
 object AnyParadigm {

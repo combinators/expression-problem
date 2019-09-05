@@ -54,6 +54,14 @@ case class SelfReference[Expression]() extends Command {
   type Result = Expression
 }
 
+case class GetConstructor[Type, Expression](tpe: Type) extends Command {
+  type Result = Expression
+}
+
+case class FindClass[Type](name: String) extends Command {
+  type Result = Type
+}
+
 trait ObjectOriented {
   val base: AnyParadigm
   import base._
@@ -79,6 +87,7 @@ trait ObjectOriented {
     implicit val canSetInterfaceInClass: Understands[ClassContext, SetInterface]
     implicit val canTranslateTypeInClass: Understands[ClassContext, ToTargetLanguageType[Type]]
     implicit val canSelfReferenceInClass: Understands[ClassContext, SelfReference[Expression]]
+    implicit val canFindClassInClass: Understands[ClassContext, FindClass[Type]]
   }
   val classCapabilities: ClassCapabilities
 
@@ -94,16 +103,20 @@ trait ObjectOriented {
     implicit val canSelfReferenceInConstructor: Understands[ConstructorContext, SelfReference[Expression]]
     implicit val canGetArgumentsInConstructor: Understands[ConstructorContext, GetArguments[Type, Expression]]
     implicit val canTranslateTypeInConstructor: Understands[ConstructorContext, ToTargetLanguageType[Type]]
+    implicit def canReifyInConstructor[T]: Understands[ConstructorContext, Reify[T, Expression]]
     implicit val canSetParametersInConstructor: Understands[ConstructorContext, SetParameters[Type]]
+    implicit val canGetConstructorInConstructor: Understands[ConstructorContext, GetConstructor[Type, Expression]]
+    implicit val canFindClassInConstructor: Understands[ConstructorContext, FindClass[Type]]
   }
   val constructorCapabilities: ConstructorCapabilities
 
   trait MethodBodyCapabilities {
     implicit val canInstantiateObjectInMethod: Understands[MethodBodyContext, InstantiateObject[Type, Expression]]
     implicit val canGetMemberInMethod: Understands[MethodBodyContext, GetMember[Expression]]
-    implicit val canResolveImportInMethod: Understands[MethodBodyContext, ResolveImport[Import, Type]]
     implicit val canSetAbstractInMethod: Understands[MethodBodyContext, SetAbstract]
     implicit val canSelfReferenceInMethod: Understands[MethodBodyContext, SelfReference[Expression]]
+    implicit val canGetConstructorInMethod: Understands[MethodBodyContext, GetConstructor[Type, Expression]]
+    implicit val canFindClassInMethod: Understands[MethodBodyContext, FindClass[Type]]
   }
   val methodBodyCapabilities: MethodBodyCapabilities
 

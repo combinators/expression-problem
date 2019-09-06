@@ -9,6 +9,7 @@ import cats.implicits._
 import org.combinators.ep.domain.abstractions.{Attribute, DataType, DataTypeCase, Operation, Parameter, TypeRep}
 import org.combinators.ep.generator.communication.{ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.paradigm.{AddCompilationUnit, AddImport, AddMethod, AddType, AddTypeConstructor, AnyParadigm, Apply, FindMethod, Functional, GetArguments, InstantiateType, PatternMatch, ResolveImport, SetParameters, ToTargetLanguageType}
+import AnyParadigm.syntax._
 
 trait Traditional extends ApproachImplementationProvider {
   val names: NameProvider
@@ -23,9 +24,9 @@ trait Traditional extends ApproachImplementationProvider {
     import functional.methodBodyCapabilities._
 
     for {
-      method <- FindMethod[Expression](names.instanceNameOf(message.request.op)).interpret
+      method <- findMethod(names.instanceNameOf(message.request.op))
       _ <- resolveAndAddImport(method)
-      res <- Apply(method, message.to +: message.request.op.parameters.map(message.request.arguments)).interpret
+      res <- apply(method, message.to +: message.request.op.parameters.map(message.request.arguments))
     } yield res
   }
 
@@ -33,32 +34,37 @@ trait Traditional extends ApproachImplementationProvider {
     import paradigm.methodBodyCapabilities._
     import functional.methodBodyCapabilities._
     for {
-      rt <- ToTargetLanguageType[Type](TypeRep.DataType(baseTpe)).interpret
+      rt <- toTargetLanguageType(TypeRep.DataType(baseTpe))
       _ <- resolveAndAddImport(rt)
-      res <- InstantiateType[Type, Expression](rt, names.conceptNameOf(tpeCase), args).interpret
+      res <- instantiateType(rt, names.conceptNameOf(tpeCase), args)
     } yield res
   }
 
   def makeTypeConstructor(tpeCase: DataTypeCase): Generator[TypeContext, Unit] = {
     import typeCapabilities._
     for {
-      params <- tpeCase.attributes.toList.map { att =>
+      params <- forEach (tpeCase.attributes) { att =>
           for {
-            ty <- ToTargetLanguageType[Type](att.tpe).interpret
+            ty <- toTargetLanguageType(att.tpe)
             _ <- resolveAndAddImport(ty)
           } yield (names.instanceNameOf(att), ty)
-        }.sequence
-      _ <- AddTypeConstructor[Type](names.conceptNameOf(tpeCase), params).interpret
+        }
+      _ <- addTypeConstructor(names.conceptNameOf(tpeCase), params)
     } yield ()
   }
 
   def makeTypeInCompilationUnit(tpe: DataType, cases: Seq[DataTypeCase]): Generator[ProjectContext, Unit] = {
     import functional.compilationUnitCapabilities._
     import projectContextCapabilities._
-    AddCompilationUnit[CompilationUnitContext](
+    val caseCode =
+      for {
+        _ <- forEach (cases) { tpeCase => makeTypeConstructor(tpeCase) }
+      } yield ()
+
+    addCompilationUnit(
       names.conceptNameOf(tpe),
-      AddType(names.conceptNameOf(tpe), cases.toList.foldMapM(makeTypeConstructor)).interpret
-    ).interpret
+      addType(names.conceptNameOf(tpe), caseCode)
+    )
   }
 
   def makeCases(
@@ -89,18 +95,18 @@ trait Traditional extends ApproachImplementationProvider {
     import paradigm.methodBodyCapabilities._
     import functional.methodBodyCapabilities._
     for {
-      params <- (Parameter("this", TypeRep.DataType(tpe)) +: op.parameters).toList.map { param: Parameter =>
+      params <- forEach (Parameter("this", TypeRep.DataType(tpe)) +: op.parameters) { param: Parameter =>
           for {
-            pt <- ToTargetLanguageType[Type](param.tpe).interpret
+            pt <- toTargetLanguageType(param.tpe)
             _ <- resolveAndAddImport(pt)
           } yield (names.mangle(param.name), pt)
-        }.sequence
-      _ <- SetParameters(params).interpret
-      args <- GetArguments[Type, Expression]().interpret
-      result <- PatternMatch(
+        }
+      _ <- setParameters(params)
+      args <- getArguments()
+      result <- patternMatch(
           args.head._3,
           makeCases(tpe, cases, op, args.head._3, args.tail, domainSpecific)
-        ).interpret
+        )
     } yield result
   }
 
@@ -112,10 +118,10 @@ trait Traditional extends ApproachImplementationProvider {
   ): Generator[ProjectContext, Unit] = {
     import functional.compilationUnitCapabilities._
     import projectContextCapabilities._
-    AddCompilationUnit[CompilationUnitContext](
+    addCompilationUnit(
       names.conceptNameOf(op),
-      AddMethod(names.instanceNameOf(op), makeFunction(tpe, cases, op, domainSpecific)).interpret
-    ).interpret
+      addMethod(names.instanceNameOf(op), makeFunction(tpe, cases, op, domainSpecific))
+    )
   }
 
   def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Seq[CompilationUnit] = {
@@ -123,9 +129,9 @@ trait Traditional extends ApproachImplementationProvider {
     val project: Generator[ProjectContext, Unit] =
       for {
         _ <- makeTypeInCompilationUnit(flatDomain.baseDataType, flatDomain.typeCases)
-        _ <- flatDomain.ops.toList.map { op =>
+        _ <- forEach (flatDomain.ops) { op =>
             makeFunctionInCompilationUnit(flatDomain.baseDataType, flatDomain.typeCases, op, domainSpecific)
-          }.sequence
+          }
       } yield ()
 
     ???

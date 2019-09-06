@@ -15,14 +15,15 @@ trait ParametricPolymorphism {
 
   import base._
   import syntax._
-  import Command._
 
   type TypeParameterContext
 
-  implicit val canAddTypeParameterInMethod: Understands[MethodBodyContext, AddTypeParameter[TypeParameterContext, Type]]
-  implicit val canApplyTypeInMethod: Understands[MethodBodyContext, Apply[Type]]
+  trait MethodBodyCapabilities {
+    implicit val canAddTypeParameterInMethod: Understands[MethodBodyContext, AddTypeParameter[TypeParameterContext, Type]]
+    implicit val canApplyTypeInMethod: Understands[MethodBodyContext, Apply[Type]]
+  }
+  val methodBodyCapabilities: MethodBodyCapabilities
 
-  def emptyTypeParameterSpec: Generator[TypeParameterContext, Unit] = Command.monadInstance.pure(())
 }
 
 object ParametricPolymorphism {

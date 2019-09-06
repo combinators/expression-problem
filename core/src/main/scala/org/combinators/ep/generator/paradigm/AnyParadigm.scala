@@ -82,6 +82,8 @@ trait AnyParadigm {
 
   trait ProjectContextCapabilities {
     implicit val canAddCompilationUnitInProject: Understands[ProjectContext, AddCompilationUnit[CompilationUnitContext]]
+    def addCompilationUnit(name: String, unit: Generator[CompilationUnitContext, Unit]): Generator[ProjectContext, Unit] =
+      AnyParadigm.capabilitiy(AddCompilationUnit(name, unit))
   }
   val projectContextCapabilities: ProjectContextCapabilities
 
@@ -93,25 +95,64 @@ trait AnyParadigm {
 
   trait MethodBodyCapabilities {
     implicit val canAddImportInMethodBody: Understands[MethodBodyContext, AddImport[Import]]
+    def addImport(imp: Import): Generator[MethodBodyContext, Unit] =
+      AnyParadigm.capabilitiy(AddImport(imp))
+
     implicit val canAddBlockDefinitionsInMethodBody: Understands[MethodBodyContext, AddBlockDefinitions[Statement]]
+    def addBlockDefinitions(definitions: Seq[Statement]): Generator[MethodBodyContext, Unit] =
+      AnyParadigm.capabilitiy(AddBlockDefinitions[Statement](definitions))
+
     implicit val canSetReturnTypeInMethodBody: Understands[MethodBodyContext, SetReturnType[Type]]
+    def setReturnType(tpe: Type): Generator[MethodBodyContext, Unit] =
+      AnyParadigm.capabilitiy(SetReturnType(tpe))
+
     implicit val canSetParametersInMethodBody: Understands[MethodBodyContext, SetParameters[Type]]
+    def setParameters(params: Seq[(String, Type)]): Generator[MethodBodyContext, Unit] =
+      AnyParadigm.capabilitiy(SetParameters(params))
+
     implicit val canTransformTypeInMethodBody: Understands[MethodBodyContext, ToTargetLanguageType[Type]]
+    def toTargetLanguageType(tpe: TypeRep): Generator[MethodBodyContext, Type] =
+      AnyParadigm.capabilitiy(ToTargetLanguageType[Type](tpe))
+
     implicit def canReifyInMethodBody[T]: Understands[MethodBodyContext, Reify[T, Expression]]
+    def reify[T](tpe: TypeRep.OfHostType[T], value: T): Generator[MethodBodyContext, Expression] =
+      AnyParadigm.capabilitiy(Reify[T, Expression](tpe, value))
+
     implicit val canResolveImportInMethod: Understands[MethodBodyContext, ResolveImport[Import, Type]]
+    def resolveImport(tpe: Type): Generator[MethodBodyContext, Option[Import]] =
+      AnyParadigm.capabilitiy(ResolveImport[Import, Type](tpe))
+
     implicit val canApplyInMethodBody: Understands[MethodBodyContext, Apply[Expression]]
+    def apply(method: Expression, arguments: Seq[Expression]): Generator[MethodBodyContext, Expression] =
+      AnyParadigm.capabilitiy(Apply(method, arguments))
+
     implicit val canGetArgumentsInMethodBody: Understands[MethodBodyContext, GetArguments[Type, Expression]]
+    def getArguments(): Generator[MethodBodyContext, Seq[(String, Type, Expression)]] =
+      AnyParadigm.capabilitiy(GetArguments[Type, Expression]())
   }
   val methodBodyCapabilities: MethodBodyCapabilities
 
-  implicit val canAddTestCaseInTest: Understands[TestContext, AddTestCase[MethodBodyContext]]
+  trait TestCapabilities {
+    implicit val canAddTestCaseInTest: Understands[TestContext, AddTestCase[MethodBodyContext]]
+    def addTestCase(name: String, code: Generator[MethodBodyContext, Unit]): Generator[TestContext, Unit] =
+      AnyParadigm.capabilitiy(AddTestCase(name, code))
+  }
 
   /** Creates an empty project */
   def emptyProject(name: String): ProjectContext
-
-
 }
 
 object AnyParadigm {
   type WithSyntax[S <: AbstractSyntax] = AnyParadigm { val syntax: S }
+
+  def capabilitiy[Ctxt, R, Cmd <: Command.WithResult[R]]
+    (cmd: Cmd)
+    (implicit interp: Understands[Ctxt, Cmd]): Generator[Ctxt, R] = {
+    cmd.interpret[Ctxt, Cmd](interp)
+  }
+
+  object syntax {
+    def forEach[T, Ctxt, R](xs: Seq[T])(run: T => Generator[Ctxt, R]): Generator[Ctxt, List[R]] =
+      xs.toList.map(run).sequence
+  }
 }

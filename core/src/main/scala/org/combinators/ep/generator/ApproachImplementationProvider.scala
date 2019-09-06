@@ -10,6 +10,7 @@ import cats.syntax._
 import cats.implicits._
 import org.combinators.ep.generator.Command._
 import org.combinators.ep.generator.paradigm.{AddImport, AnyParadigm, Reify, ResolveImport, ToTargetLanguageType}
+import AnyParadigm.syntax._
 
 /** Provides implementations for language and approach specific code generation tasks which do not depend on a specific
   * EP domain. */
@@ -44,7 +45,7 @@ trait ApproachImplementationProvider {
   /** Returns code to instantiate the given Scala model of a domain specific type. */
   def instantiate(baseType: DataType, inst: DataTypeInstance): Generator[MethodBodyContext, Expression] = {
     for {
-      attributeInstances <- inst.attributeInstances.toList.map(reify).sequence[Generator[MethodBodyContext, *], Expression]
+      attributeInstances <- forEach (inst.attributeInstances) { ati => reify(ati) }
       result <- instantiate(baseType, inst.tpeCase, attributeInstances: _*)
     } yield result
   }
@@ -64,9 +65,9 @@ trait ApproachImplementationProvider {
       case (tpe, inst) =>
         import paradigm.methodBodyCapabilities._
         for {
-          resTy <- ToTargetLanguageType[Type](tpe).interpret
+          resTy <- toTargetLanguageType(tpe)
           _ <- resolveAndAddImport(resTy)
-          res <- Reify[tpe.HostType, Expression](tpe, inst.asInstanceOf[tpe.HostType]).interpret
+          res <- methodBodyCapabilities.reify[tpe.HostType](tpe, inst.asInstanceOf[tpe.HostType])
         } yield res
       case _ => throw new scala.NotImplementedError(s"No rule to compile instantiations of ${inst.tpe}.")
     }

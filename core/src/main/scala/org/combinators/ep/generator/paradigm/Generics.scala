@@ -20,10 +20,16 @@ trait Generics {
   import ppolyParadigm._
   import syntax._
 
-  implicit val canAddTypeParameterInClass: Understands[ClassContext, AddTypeParameter[TypeParameterContext, Type]]
-  implicit val canApplyTypeInClass: Understands[ClassContext, Apply[Type]]
-  implicit val canAddUpperBoundInTypeParameter: Understands[TypeParameterContext, AddUpperBound[Type]]
-  implicit val canAddLowerBoundInTypeParameter: Understands[TypeParameterContext, AddLowerBound[Type]]
+  trait ClassCapabilities {
+    implicit val canAddTypeParameterInClass: Understands[ClassContext, AddTypeParameter[TypeParameterContext, Type]]
+    implicit val canApplyTypeInClass: Understands[ClassContext, Apply[Type]]
+  }
+  val classCapabilities: ClassCapabilities
+  trait TypeParameterCapabilities {
+    implicit val canAddUpperBoundInTypeParameter: Understands[TypeParameterContext, AddUpperBound[Type]]
+    implicit val canAddLowerBoundInTypeParameter: Understands[TypeParameterContext, AddLowerBound[Type]]
+  }
+  val typeParameterCapabilities: TypeParameterCapabilities
 }
 
 object Generics {

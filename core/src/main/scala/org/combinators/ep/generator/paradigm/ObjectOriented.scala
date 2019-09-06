@@ -155,9 +155,9 @@ trait ObjectOriented {
     def instantiateObject(tpe: Type, constructorArguments: Seq[Expression]): Generator[ConstructorContext, Expression] =
       AnyParadigm.capabilitiy(InstantiateObject(tpe, constructorArguments))
 
-    implicit val canApplyInConstructor: Understands[ConstructorContext, Apply[Expression]]
+    implicit val canApplyInConstructor: Understands[ConstructorContext, Apply[Expression, Expression, Expression]]
     def apply(method: Expression, arguments: Seq[Expression]): Generator[ConstructorContext, Expression] =
-      AnyParadigm.capabilitiy(Apply(method, arguments))
+      AnyParadigm.capabilitiy(Apply[Expression, Expression, Expression](method, arguments))
 
     implicit val canGetMemberInConstructor: Understands[ConstructorContext, GetMember[Expression]]
     def getMember(instance: Expression, member: String): Generator[ConstructorContext, Expression] =

@@ -1,6 +1,6 @@
 package org.combinators.ep.language.cpp.visitorTable   /*DI:LD:AD*/
 
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain.BaseDomain
 import org.combinators.ep.language.cpp.{CPPElement, _}
 
 // visitor based solution that uses a hashtable to store partial results of recursive calls.
@@ -95,13 +95,9 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
     }
   }
 
+  // TODO: Consider removing this function
   /** Computer return type for given operation (or void). */
-  def returnType(op:Operation): CPPType = {
-    op.returnType match {
-      case Some(tpe) => typeConverter(tpe)
-      case _ => new CPPType("void")
-    }
-  }
+  def returnType(op:Operation): CPPType = typeConverter(op.returnType)
 
   /** Operations are implement ala visitor. */
   def methodGenerator(exp:DataType, op:Operation): CPPMethod = {
@@ -137,7 +133,7 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
     */
   def operationGenerator(model:domain.Model, op:domain.Operation): CPPFile = {
     val signatures:Seq[CPPMethod] = model.types.map(exp => methodGenerator(exp, op))
-    val tpe:CPPType = typeConverter(op.returnType.get)
+    val tpe:CPPType = typeConverter(op.returnType)
     val realType:String = op match {
       case po:ProducerOperation => "Exp *"
       case _ => tpe.name

@@ -1,6 +1,6 @@
 package org.combinators.ep.language.cpp.visitor   /*DI:LD:AD*/
 
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain.BaseDomain
 import org.combinators.ep.language.cpp._
 
 // visitor based solution
@@ -88,13 +88,9 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
     }
   }
 
+  // TODO: Consider removing this function
   /** Computer return type for given operation (or void). */
-  def returnType(op:Operation): CPPType = {
-    op.returnType match {
-      case Some(tpe) => typeConverter(tpe)
-      case _ => new CPPType("void")
-    }
-  }
+  def returnType(op:Operation): CPPType = typeConverter(op.returnType)
 
   /**
     * Operations are implement ala visitor.
@@ -136,7 +132,7 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
     */
   def operationGenerator(model:domain.Model, op:domain.Operation): CPPFile = {
     val signatures:Seq[CPPMethod] = model.types.map(exp => methodGenerator(exp, op))
-    val tpe:CPPType = typeConverter(op.returnType.get)
+    val tpe:CPPType = typeConverter(op.returnType)
     val realType:String = op match {
       case po:ProducerOperation => "Exp *"
       case _ => tpe.name

@@ -1,22 +1,30 @@
 package org.combinators.ep.domain.math      /*DD:LI:AI*/
 
-import org.combinators.ep.domain.Evolution
+import org.combinators.ep.domain.AsTree
+import org.combinators.ep.domain._
 import org.combinators.ep.domain.tree._
 
-trait M5 extends Evolution {
-  self: M0 with M1 with M2 with M3 with M4 =>
-  val domain:MathDomain
+class M5(val m4:M4) extends Evolution {
+
+  val domain:BaseDomain = MathDomain
   import domain._
+  import m4._
+  import m3._
+  import m2._
+  import m1._
+  import m0._    // note by ordering in this fashion, you will bring in m0
 
   // m5:model evolution.
   // -------------------
   // Represent structure as a tree
-  case object Identifier extends Operation("id", Some(Int))
+  case object Identifier extends Operation("id", Int)
 
-  val m5 = Model("m5", Seq.empty, Seq(domain.AsTree, Identifier), last = m4)
+  val m5 = Model("m5", Seq.empty, Seq(new AsTree(baseTypeRep), Identifier), last = m4.getModel)
   override def getModel = m5
 
   // Tests
+  val x:Binary = m4.m3.m2.m1.m0.Add
+
   val m5_s1 = new BinaryInst(Sub, LitInst(1.0), LitInst(976.0))
   val m5_s2 = new BinaryInst(Add, LitInst(1.0), LitInst(976.0))
   val m5_s3 = new BinaryInst(Sub, LitInst(1.0), LitInst(976.0))
@@ -55,9 +63,9 @@ trait M5 extends Evolution {
     SameTestCase(m5_s1, m5_s2, result=false),
     SameTestCase(m5_s1, m5_s3, result=true),
     SameTestCase(m5_all, m5_all, result=true),
-    EqualsTestCase(m5_all, AsTree, ExistsInstance(TreeType)(tree_m5_all)),
+    EqualsTestCase(m5_all, AsTree, InstanceModel(TreeType)(tree_m5_all)),
     EqualsCompositeTestCase(m5_all, Seq((PrettyP, Seq.empty)), ExistsInstance(String)("(-2.0-((1.0-976.0)*((1.0*976.0)+(1.0/3.0))))")),
 
-    EqualsCompositeTestCase(m5_s4, Seq((Simplify, Seq.empty), (AsTree, Seq.empty)), ExistsInstance(TreeType)(treeSimplified)),
+    EqualsCompositeTestCase(m5_s4, Seq((Simplify, Seq.empty), (AsTree, Seq.empty)), InstanceModel(TreeType)(treeSimplified)),
   )
 }

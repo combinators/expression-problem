@@ -1,9 +1,9 @@
 package org.combinators.ep.language.cpp        /*DI:LD:AI*/
 
-import java.io.File
+import java.io.{ByteArrayInputStream, File}
 import java.nio.file.{Path, Paths}
 
-import org.combinators.ep.generator.{FileWithPath, LanguageIndependentGenerator}
+import org.combinators.ep.generator.{FileWithPath, DomainIndependentGenerator}
 
 /**
   * Any C++ EP approach can extend this Generator
@@ -13,7 +13,7 @@ import org.combinators.ep.generator.{FileWithPath, LanguageIndependentGenerator}
 g++ *.cpp  -I ../cpputest/include -L ../cpputest/cpputest_build/lib -lCppUTest -lCppUTestExt -std=c++11
 
   */
-trait CPPGenerator extends LanguageIndependentGenerator {
+trait CPPGenerator extends DomainIndependentGenerator {
 
   type CompilationUnit = CPPFile
   type Type = CPPType
@@ -56,9 +56,17 @@ trait CPPGenerator extends LanguageIndependentGenerator {
   /** Taken from scala meta web page. */
   def loadSource(entry:String*) : FileWithPath = {
     val path:Path = java.nio.file.Paths.get(cppResources, entry: _*)
-    val contents = java.nio.file.Files.readAllBytes(path).map(_.toChar).mkString
 
-    FileWithPath(contents, Paths.get(entry.head, entry.tail : _*))
+    // C++ compiled resources need special treatment.
+    //val contents = java.nio.file.Files.readAllBytes(path).map(_.toChar).mkString
+    val fis = new java.io.FileInputStream(path.toFile)
+    val fileContent:Array[Byte] = new Array(path.toFile.length.toInt)
+    fis.read(fileContent)
+
+    fis.close()
+
+    // use rawBytes instead
+    FileWithPath("", Some(fileContent), Paths.get(entry.head, entry.tail : _*))
   }
 
   /**

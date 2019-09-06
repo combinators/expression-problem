@@ -1,4 +1,4 @@
-CPPUTEST = ../cpputest
+CPPUTEST = cpputest
 CPPFLAGS = -std=c++11
 LIBS = -lCppUTest -lCppUTestExt 
 

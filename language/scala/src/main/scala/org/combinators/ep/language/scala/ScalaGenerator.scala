@@ -3,13 +3,13 @@ package org.combinators.ep.language.scala    /*DI:LD:AI*/
 import java.io.File
 import java.nio.file.{Path, Paths}
 
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
-import org.combinators.ep.generator.{FileWithPath, LanguageIndependentGenerator}
+import org.combinators.ep.domain.BaseDomain
+import org.combinators.ep.generator.{FileWithPath, DomainIndependentGenerator}
 
 /**
   * Any Scala-based EP approach can extend this Generator
   */
-trait ScalaGenerator extends LanguageIndependentGenerator {
+trait ScalaGenerator extends DomainIndependentGenerator {
   val domain:BaseDomain with ModelDomain
 
   type CompilationUnit = ScalaWithPath
@@ -17,9 +17,10 @@ trait ScalaGenerator extends LanguageIndependentGenerator {
   type Expression = scala.meta.Term
   type Statement = scala.meta.Stat
 
-  /** Return designated Java type associated with type, or void if all else fails. */
+  /** Return designated Scala type associated with type, or Unit for Void. */
   override def typeConverter(tpe:domain.TypeRep) : Type = {
     tpe match {
+      case domain.Void => scala.meta.Type.Name("Unit")
       case domain.baseTypeRep => scala.meta.Type.Name(domain.baseTypeRep.name)
       case _ => super.typeConverter(tpe)
     }

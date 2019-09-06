@@ -1,6 +1,6 @@
 package org.combinators.ep.language.cpp.oo    /*DI:LD:AD*/
 
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain.BaseDomain
 import org.combinators.ep.language.cpp._
 
 // straight C++ solution
@@ -57,18 +57,14 @@ trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with
     }
   }
 
+  // TODO: Consider removing function
   /** Computer return type for given operation (or void). */
-  def returnType(op:Operation): CPPType = {
-    op.returnType match {
-      case Some(tpe) => typeConverter(tpe)
-      case _ => new CPPType("void")
-    }
-  }
+  def returnType(op:Operation): CPPType = typeConverter(op.returnType)
 
   /** Operations are implement ala visitor. */
   def methodGenerator(exp:Atomic, op:Operation): CPPMethod = {
     val params = parameters(op)
-    val ret = typeConverter(op.returnType.get)
+    val ret = typeConverter(op.returnType)
     new CPPMethod(ret.toString, s"${op.instance}", s"($params)", logic(exp, op).mkString("\n"))
         .setConstant()
   }
@@ -81,7 +77,7 @@ trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with
 
     val signatures:Seq[CPPMethod] = model.ops.map(op => {
       val params = parameters(op)
-      val ret = typeConverter(op.returnType.get)
+      val ret = typeConverter(op.returnType)
       new CPPMethod(ret.toString, s"${sub.concept}::${op.instance}", s"($params)", logic(sub, op).mkString("\n"))
         .setConstant()
     })
@@ -142,7 +138,7 @@ trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with
 
     val opMethods = model.ops.map(op => {
       val params = parameters(op)
-      val ret = typeConverter(op.returnType.get)
+      val ret = typeConverter(op.returnType)
       new CPPMethodDeclaration(ret.toString, s"${op.instance}", s"($params)")
         .setConstant()
     })
@@ -161,7 +157,7 @@ trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with
 
     // Ignore passed in model in favor of just grabbing it on demand...
     val allOps = getModel.flatten().ops.map(op => {
-      val tpe:CPPType = typeConverter(op.returnType.get)
+      val tpe:CPPType = typeConverter(op.returnType)
       val realType:String = op match {
         case po:ProducerOperation => "Exp *"
         case _ => tpe.name

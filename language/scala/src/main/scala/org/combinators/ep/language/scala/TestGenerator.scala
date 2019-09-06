@@ -1,11 +1,11 @@
 package org.combinators.ep.language.scala     /*DI:LD:AI*/
 
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
-import org.combinators.ep.generator.LanguageIndependentTestGenerator
+import org.combinators.ep.domain.BaseDomain
+import org.combinators.ep.generator.DomainIndependentTestGenerator
 
 import scala.meta.{Stat, Term}
 
-trait TestGenerator extends ScalaGenerator with LanguageIndependentTestGenerator {
+trait TestGenerator extends ScalaGenerator with DomainIndependentTestGenerator {
   val domain: BaseDomain with ModelDomain
   import domain._
 

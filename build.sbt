@@ -2,11 +2,11 @@ import play.sbt.PlayLayoutPlugin
 import play.twirl.sbt.SbtTwirl
 
 
-/** Settings shared globally **/
+/** Settings shared globally. **/
 lazy val commonSettings = Seq(
   version := "1.0.0-SNAPSHOT",
   organization := "org.combinators",
-  
+
   scalaVersion := "2.12.9",
 
   resolvers ++= Seq(
@@ -18,7 +18,9 @@ lazy val commonSettings = Seq(
     "-unchecked",
     "-deprecation",
     "-feature",
-    "-language:implicitConversions"
+    "-language:implicitConversions",
+    "-Ypartial-unification",
+    "-language:higherKinds"
   ),
 
   scalacOptions in (Compile,doc) ++= Seq(
@@ -34,7 +36,9 @@ lazy val commonSettings = Seq(
     "org.combinators" %% "cls-scala-presentation-play-git" % "1.0.0-RC1+8-63d5cf0b",
     "org.scalactic" %% "scalactic" % "3.0.5" % "test",
     "org.scalatest" %% "scalatest" % "3.0.5" % "test",
-    "org.scalameta" %% "scalameta" % "3.7.4"
+    "org.scalameta" %% "scalameta" % "3.7.4",
+    "org.typelevel" %% "cats-core" % "2.0.0-RC1",
+    "org.typelevel" %% "cats-free" % "2.0.0-RC1"
   )
 )
 
@@ -44,7 +48,9 @@ lazy val commonSettings = Seq(
 lazy val core = (Project(id = "core", base = file("core")))
   .settings(commonSettings: _*)
   .settings(
-    moduleName := "expression-problem-core"
+    moduleName := "expression-problem-core",
+    addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3"),
+    addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")
   )
 
 /** Template for a subproject for a specific domain named `domainName`.

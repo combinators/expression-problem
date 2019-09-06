@@ -1,22 +1,21 @@
 package org.combinators.ep.language.java      /*DI:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
-import org.combinators.ep.generator.LanguageIndependentTestGenerator
+import org.combinators.ep.domain.abstractions._
+import org.combinators.ep.domain.instances._
+import org.combinators.ep.generator.DomainIndependentTestGenerator
 import org.combinators.templating.twirl.Java
 
-trait TestGenerator extends JavaGenerator with LanguageIndependentTestGenerator {
-  val domain: BaseDomain with ModelDomain
-  import domain._
+abstract class TestGenerator (val gen:DomainIndependentJavaGenerator, independentTestGen: DomainIndependentTestGenerator) {
+  import gen._
+  import independentTestGen._
 
   type UnitTest = MethodDeclaration /** Base concept for the representation of a single test case. */
 
   /** Converts types in test code. */
-  def testTypeConverter(ty: TypeRep) : Type = {
-    val tpe = typeConverter(ty)
-
-    tpe
-  }
+//  def testTypeConverter(ty: TypeRep) : Type = {
+//    tpe(ty)
+//  }
 
   /**
     * Represents the sequence of total test cases.
@@ -25,9 +24,10 @@ trait TestGenerator extends JavaGenerator with LanguageIndependentTestGenerator 
 
   /** Return MethodDeclaration associated with given test cases. */
   def junitTestMethod(test: TestCase, idx: Int): Seq[Statement] = {
+
      test match {
        case eq: EqualsTestCase =>
-         val expectedBlock = toTargetLanguage(eq.expect)
+         val expectedBlock = gen.instantiate(InstanceRep(eq.expected))
          val parameterBlock =
            eq.params.foldLeft(CodeBlockWithResultingExpressions.empty) {
              case (b, p) => b.appendIndependent(toTargetLanguage(p))

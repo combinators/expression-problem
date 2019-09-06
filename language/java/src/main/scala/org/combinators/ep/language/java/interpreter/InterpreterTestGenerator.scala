@@ -1,8 +1,8 @@
 package org.combinators.ep.language.java.interpreter   /*DI:LD:AD*/
 
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
-import org.combinators.ep.generator.LanguageIndependentTestGenerator
-import org.combinators.ep.language.java.{JUnitTestGenerator, JavaGenerator}
+import org.combinators.ep.domain.BaseDomain
+import org.combinators.ep.generator.DomainIndependentTestGenerator
+import org.combinators.ep.language.java.{JUnitTestGenerator, DomainIndependentJavaGenerator}
 import org.combinators.templating.twirl.Java
 
 /**
@@ -12,8 +12,8 @@ import org.combinators.templating.twirl.Java
   */
 trait InterpreterTestGenerator
   extends JUnitTestGenerator
-    with JavaGenerator
-    with LanguageIndependentTestGenerator {
+    with DomainIndependentJavaGenerator
+    with DomainIndependentTestGenerator {
   self: InterpreterGenerator =>
   val domain: BaseDomain with ModelDomain
   import domain._
@@ -129,7 +129,7 @@ trait InterpreterTestGenerator
                   actual(firstOp, seq.inst, params: _*)
                 } else {
                   val pastBody: String = produced.resultingExpressions.mkString("\n")
-                  val expr2 = s"$pastBody.accept(new ${definedOps}ExpTo${highestOps}ExpFactory())"
+                  val expr2 = s"$pastBody.accept(new ${definedOps}ExpTo$highestOps${domain.baseTypeRep.concept}Factory())"
                   CodeBlockWithResultingExpressions(
                     Java(expr2).expression()
                   )
@@ -159,7 +159,7 @@ trait InterpreterTestGenerator
                   // any producer operation must be lifted to final one
                   val expr1 = contextDispatch(NoSource, dispatchToExpression(currentResult, nextOp, params: _*))
                   CodeBlockWithResultingExpressions(
-                    Java(s"$expr1.accept(new ${definedOps}ExpTo${highest}ExpFactory())").expression()
+                    Java(s"$expr1.accept(new ${definedOps}${domain.baseTypeRep.concept}To${highest}${domain.baseTypeRep.concept}Factory())").expression()
                   )
 
                 case _ =>

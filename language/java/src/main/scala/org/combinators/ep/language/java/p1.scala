@@ -1,14 +1,15 @@
 package org.combinators.ep.language.java    /*DD:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
-import org.combinators.ep.domain.{Evolution, OperationDependency}
+import org.combinators.ep.domain.Evolution
 import org.combinators.ep.domain.math.{M0, M1, M2, P1}
+import org.combinators.ep.generator.OperationDependency
 import org.combinators.templating.twirl.Java
 
 /**
   * Independent branch to work with paper.
   */
-trait p1 extends Evolution with JavaGenerator with JUnitTestGenerator with OperationDependency with M0 with M1 with M2 with P1 {
+trait p1 extends Evolution with DomainIndependentJavaGenerator with JUnitTestGenerator with OperationDependency with M0 with M1 with M2 with P1 {
   self: e0 with e1 with e2  =>
 
   abstract override def typeConverter(tpe:domain.TypeRep) : com.github.javaparser.ast.`type`.Type = {

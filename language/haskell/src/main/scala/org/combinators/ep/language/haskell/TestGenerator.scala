@@ -1,9 +1,9 @@
 package org.combinators.ep.language.haskell     /*DI:LD:AI*/
 
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
-import org.combinators.ep.generator.LanguageIndependentTestGenerator
+import org.combinators.ep.domain.BaseDomain
+import org.combinators.ep.generator.DomainIndependentTestGenerator
 
-trait TestGenerator extends HaskellGenerator with LanguageIndependentTestGenerator {
+trait TestGenerator extends HaskellGenerator with DomainIndependentTestGenerator {
   val domain: BaseDomain with ModelDomain
   import domain._
 

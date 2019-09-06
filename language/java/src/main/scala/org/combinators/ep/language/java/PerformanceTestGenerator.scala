@@ -1,16 +1,15 @@
 package org.combinators.ep.language.java    /*DI:LD:AI*/
 
 import com.github.javaparser.ast.expr.NameExpr
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
-import org.combinators.ep.generator.LanguageIndependentTestGenerator
+import org.combinators.ep.domain.abstractions._
+import org.combinators.ep.domain.instances.InstanceRep
+import org.combinators.ep.generator.DomainIndependentTestGenerator
 import org.combinators.templating.twirl.Java
 
 /**
   * Isolate Performance tests
   */
-trait PerformanceTestGenerator extends JavaGenerator with LanguageIndependentTestGenerator with TestGenerator {
-  val domain: BaseDomain with ModelDomain
-  import domain._
+trait PerformanceTestGenerator extends DomainIndependentJavaGenerator with DomainIndependentTestGenerator with TestGenerator {
 
   object PerformanceTestNameGenerator {
     private var nextNowVar = 0
@@ -37,18 +36,18 @@ trait PerformanceTestGenerator extends JavaGenerator with LanguageIndependentTes
   case class CachedTyRep(underlyingType: TypeRep) extends TypeRep {
     type scalaInstanceType = CachedExp
   }
-  case class CachedExp(cacheLine: Expression) extends Inst {
+  case class CachedExp(cacheLine: Expression) extends InstanceRep {
     val name = "cached"
   }
 
-  abstract override def typeConverter(tpe: TypeRep): Type = {
-    tpe match {
-      case CachedTyRep(ty) => typeConverter(ty)
-      case _ => super.typeConverter(tpe)
+  abstract override def tpe(aType: TypeRep): Type = {
+    aType match {
+      case CachedTyRep(ty) => tpe(ty)
+      case _ => super.tpe(aType)
     }
   }
 
-  abstract override def toTargetLanguage(instance: Inst): CodeBlockWithResultingExpressions = {
+  abstract override def instantiate(instance: InstanceRep): CodeBlockWithResultingExpressions = {
     instance match {
       case CachedExp(cacheLine) => CodeBlockWithResultingExpressions(cacheLine)
       case _ => super.toTargetLanguage(instance)

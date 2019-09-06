@@ -1,7 +1,9 @@
 package org.combinators.ep.language.scala    /*DD:LD:AI*/
 
 import org.combinators.ep.domain.math.{M0, M5, MathDomain}
-import org.combinators.ep.domain.{Evolution, OperationDependency}
+import org.combinators.ep.domain.tree.Leaf
+import org.combinators.ep.domain.{Evolution, Leaf, Node}
+import org.combinators.ep.generator.OperationDependency
 
 import scala.meta.{Stat, Type}
 
@@ -28,6 +30,60 @@ trait e5 extends Evolution with ScalaGenerator with TestGenerator with Operation
     tpe match {
       case domain.TreeType => Type.Name("tree.Tree")      // package class goes here.
       case _ => super.typeConverter(tpe)
+    }
+  }
+
+  /** Provides fresh names for temporary list objects. */
+  object TreeNameGenerator {
+    private var nextNumber: Int = 0
+    def nextName(prefix:String = "leaf"): Expression = {
+      val nextName = Scala(s"$prefix$nextNumber").expression
+      nextNumber += 1
+      nextName
+    }
+  }
+
+  /// TODO: FIX ME FIX ME FIX ME
+  abstract override def toTargetLanguage(ei:domain.ExistsInstance) : CodeBlockWithResultingExpressions = {
+    ei.tpe match {
+      case domain.TreeType =>
+        ei.inst match {
+          case node:Node =>
+            val listName = TreeNameGenerator.nextName("list")
+            val initBlock =
+              CodeBlockWithResultingExpressions(
+                Scala(s"var $listName:Seq[tree.Tree] = Seq.empty").statement
+              )(listName)
+
+            val nodeName = TreeNameGenerator.nextName("node")
+
+            // do in reverse order
+            node.children.reverse.foldRight(initBlock) {
+              case (nextElem, block) =>
+                // nextElem is of (scala) type Tree
+                block.appendDependent { case Seq(constructedList) =>
+                  toTargetLanguage(domain.ExistsInstance(domain.TreeType)(nextElem)).appendDependent { case Seq(nextElemExpr) =>
+                    CodeBlockWithResultingExpressions(
+                      Scala(s"$constructedList = $constructedList :+ $nextElemExpr").statement
+                    )(constructedList)
+                  }
+                }
+            }.appendDependent{ case Seq(constructedList) =>
+              CodeBlockWithResultingExpressions(Scala(s"var $nodeName = new tree.Node($listName, ${node.label})").statement)(nodeName)
+            }
+
+          // each leaf has value that must go BEFORE nodes. not properly sure how to address this right
+          // now sine this is meant to be recursive not iterative
+          case node:Leaf =>
+            val leafName = TreeNameGenerator.nextName()
+            val initBlock =
+              CodeBlockWithResultingExpressions(
+                Scala(s"var $leafName = new tree.Leaf(${node.value})").statement
+              )(leafName)
+            initBlock
+        }
+
+      case _ => super.toTargetLanguage(ei)
     }
   }
 

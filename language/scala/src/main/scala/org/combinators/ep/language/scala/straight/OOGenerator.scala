@@ -2,7 +2,7 @@ package org.combinators.ep.language.scala.straight   /*DI:LD:AD*/
 
 import java.nio.file.Paths
 
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain.BaseDomain
 import org.combinators.ep.language.scala._
 import scala.meta.Stat
 
@@ -55,13 +55,9 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod {
     Scala(s"$expr.${op.instance}${params.mkString("(", ",", ")")}").expression
   }
 
+  // TODO: Consider removing this function
   /** Computer return type for given operation (or void). */
-  def returnType(op:Operation): Type = {
-    op.returnType match {
-      case Some(tpe) => typeConverter(tpe)
-      case _ => Scala("Unit").tpe
-    }
-  }
+  def returnType(op:Operation): Type = typeConverter(op.returnType)
 
   /** Operations are implemented as methods in the Base and sub-type classes. */
   def methodGenerator(exp:DataType, op:Operation): Stat = {
@@ -94,7 +90,7 @@ trait OOGenerator extends ScalaGenerator with ScalaBinaryMethod {
 
     val ops = flat.ops.map(op => {
       val pars = op.parameters.map(param => { s"${param.name} : ${typeConverter(param.tpe)}" }).mkString(",")
-      s"def ${op.instance}($pars) : ${typeConverter(op.returnType.get)}"
+      s"def ${op.instance}($pars) : ${typeConverter(op.returnType)}"
     })
 
     ScalaMainWithPath(

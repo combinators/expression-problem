@@ -1,12 +1,12 @@
 package org.combinators.ep.language.gj    /*DI:LD:AI*/
 
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
-import org.combinators.ep.generator.LanguageIndependentGenerator
+import org.combinators.ep.domain.BaseDomain
+import org.combinators.ep.generator.DomainIndependentGenerator
 
 /**
   * Any Java-based EP approach can extend this Generator
   */
-trait GJGenerator extends LanguageIndependentGenerator {
+trait GJGenerator extends DomainIndependentGenerator {
   val domain:BaseDomain with ModelDomain
 
   type CompilationUnit = GJWithPath

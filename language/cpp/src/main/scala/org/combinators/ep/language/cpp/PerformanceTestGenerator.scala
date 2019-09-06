@@ -1,12 +1,12 @@
 package org.combinators.ep.language.cpp    /*DI:LD:AI*/
 
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
-import org.combinators.ep.generator.LanguageIndependentTestGenerator
+import org.combinators.ep.domain.BaseDomain
+import org.combinators.ep.generator.DomainIndependentTestGenerator
 
 /**
   * Isolate Performance tests
   */
-trait PerformanceTestGenerator extends CPPGenerator with LanguageIndependentTestGenerator with TestGenerator {
+trait PerformanceTestGenerator extends CPPGenerator with DomainIndependentTestGenerator with TestGenerator {
   val domain: BaseDomain with ModelDomain
   import domain._
 

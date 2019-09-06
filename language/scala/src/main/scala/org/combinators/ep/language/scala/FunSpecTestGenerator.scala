@@ -2,7 +2,7 @@ package org.combinators.ep.language.scala     /*DI:LD:AI*/
 
 import java.nio.file.Paths
 
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain.BaseDomain
 
 /**
   * Each evolution has opportunity to enhance the code generators.

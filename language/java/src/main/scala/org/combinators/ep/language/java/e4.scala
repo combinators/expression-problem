@@ -3,8 +3,8 @@ package org.combinators.ep.language.java    /*DD:LD:AI*/
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.NameExpr
 import org.combinators.ep.domain.math._
-import org.combinators.ep.domain.{Evolution, OperationDependency}
-import org.combinators.ep.generator.LanguageIndependentGenerator
+import org.combinators.ep.domain.Evolution
+import org.combinators.ep.generator.{DomainIndependentGenerator, OperationDependency}
 import org.combinators.templating.twirl.Java
 
 /**
@@ -12,7 +12,7 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-trait e4 extends Evolution with JavaGenerator with JUnitTestGenerator with OperationDependency with M0 with M1 with M2 with M3 with M4 {
+trait e4 extends Evolution with DomainIndependentJavaGenerator with JUnitTestGenerator with OperationDependency with M0 with M1 with M2 with M3 with M4 {
   self:e0 with e1 with e2 with e3 =>
 
   /** Provides fresh names for temporary list objects. */

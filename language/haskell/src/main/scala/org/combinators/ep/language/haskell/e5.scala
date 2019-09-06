@@ -1,7 +1,7 @@
 package org.combinators.ep.language.haskell      /*DD:LD:AI*/
 
 import org.combinators.ep.domain.math.{M0, M5, MathDomain}
-import org.combinators.ep.domain.{Evolution, ModelDomain}
+import org.combinators.ep.domain.Evolution
 
 /**
   * BinaryMethod capability

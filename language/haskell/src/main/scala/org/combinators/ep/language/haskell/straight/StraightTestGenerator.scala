@@ -3,7 +3,7 @@ package org.combinators.ep.language.haskell.straight   /*DI:LD:AD*/
 import java.nio.file.Paths
 
 import org.combinators.ep.language.haskell.{HUnitTestGenerator, Haskell, HaskellWithPath}
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain.BaseDomain
 
 /**
   * Each evolution has opportunity to enhance the code generators.

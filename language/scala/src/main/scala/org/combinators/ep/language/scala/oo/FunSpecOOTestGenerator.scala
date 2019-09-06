@@ -3,7 +3,7 @@ package org.combinators.ep.language.scala.oo   /*DI:LD:AD*/
 import java.nio.file.Paths
 
 import org.combinators.ep.language.scala.{FunSpecTestGenerator, Scala, ScalaTestWithPath, ScalaWithPath}
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain.BaseDomain
 
 trait FunSpecOOTestGenerator extends FunSpecTestGenerator {
   val domain: BaseDomain with ModelDomain

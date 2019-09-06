@@ -1,7 +1,7 @@
 package org.combinators.ep.language.haskell.alacarte    /*DI:LD:AD*/
 
 import org.combinators.ep.language.haskell.{Haskell, HaskellGenerator}
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain.BaseDomain
 
 /**
   * Any Java-based approach capable of supporting Producer must provide this capability.

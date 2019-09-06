@@ -1,9 +1,9 @@
 package org.combinators.ep.language.java.algebra   /*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
-import org.combinators.ep.generator.LanguageIndependentTestGenerator
-import org.combinators.ep.language.java.{JUnitTestGenerator, JavaBinaryMethod, JavaGenerator}
+import org.combinators.ep.domain.BaseDomain
+import org.combinators.ep.generator.DomainIndependentTestGenerator
+import org.combinators.ep.language.java.{JUnitTestGenerator, JavaBinaryMethod, DomainIndependentJavaGenerator}
 import org.combinators.templating.twirl.Java
 
 /**
@@ -11,8 +11,8 @@ import org.combinators.templating.twirl.Java
   */
 trait AlgebraTestGenerator
   extends JUnitTestGenerator
-    with JavaGenerator
-    with LanguageIndependentTestGenerator
+    with DomainIndependentJavaGenerator
+    with DomainIndependentTestGenerator
     with JavaBinaryMethod {
   val domain: BaseDomain with ModelDomain
   import domain._
@@ -112,14 +112,21 @@ trait AlgebraTestGenerator
       // Must handle when operation has no return type (i.e., void)
       var useReturn = "return "
       val returnType = op.returnType match {
-        case Some(domain.baseTypeRep) => s"Combined"   // using algebra's internal interface for producer methods
+        case domain.baseTypeRep => s"Combined"   // using algebra's internal interface for producer methods
         case _ =>
-          if (op.returnType.isEmpty) {
-            useReturn = ""
-            Java("void").tpe()
-          } else {
-            typeConverter(op.returnType.get)
+          op.returnType match {
+            case domain.Void => {
+              useReturn = ""
+              Java("void").tpe()
+            }
+            case _ => typeConverter(op.returnType)
           }
+//          if (op.returnType.isEmpty) {
+//            useReturn = ""
+//            Java("void").tpe()
+//          } else {
+//            typeConverter(op.returnType)
+//          }
       }
 
       val str = s"""

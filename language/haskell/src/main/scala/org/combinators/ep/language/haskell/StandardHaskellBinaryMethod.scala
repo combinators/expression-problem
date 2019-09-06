@@ -2,7 +2,8 @@ package org.combinators.ep.language.haskell      /*DI:LD:AI*/
 
 import java.nio.file.Paths
 
-import org.combinators.ep.domain.{BaseDomain, ModelDomain, OperationDependency}
+import org.combinators.ep.domain.BaseDomain
+import org.combinators.ep.generator.OperationDependency
 
 /**
 * Standard uses no context.

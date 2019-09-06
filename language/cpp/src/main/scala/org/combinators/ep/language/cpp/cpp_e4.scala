@@ -76,7 +76,7 @@ trait cpp_e4 extends Evolution with CPPGenerator with TestGenerator with M0 with
     val source = Source(exp,op)
     op match {
       case Collect =>
-        val tpe = op.returnType.get match {
+        val tpe = op.returnType match {
           case list:List[_] => typeConverter(list.generic)
         }
         exp match {

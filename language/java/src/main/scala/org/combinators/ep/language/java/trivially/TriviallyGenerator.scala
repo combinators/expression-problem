@@ -2,7 +2,7 @@ package org.combinators.ep.language.java.trivially   /*DI:LD:AD*/
 
 import com.github.javaparser.ast.Modifier
 import com.github.javaparser.ast.body.{BodyDeclaration, MethodDeclaration}
-import org.combinators.ep.generator.LanguageIndependentGenerator
+import org.combinators.ep.generator.DomainIndependentGenerator
 import org.combinators.ep.language.java.oo.OOGenerator
 import org.combinators.templating.twirl.Java
 import org.combinators.ep.language.java.ReplaceCovariantType._
@@ -107,9 +107,8 @@ trait TriviallyGenerator extends OOGenerator {
     method.setDefault(true)
     method.setType(
       op.returnType match {
-        case Some(domain.baseTypeRep) => typeConverter(domain.baseTypeRep)
-        case Some(tpe) => typeConverter(tpe)
-        case _ => Java("void").tpe
+        case domain.baseTypeRep => typeConverter(domain.baseTypeRep)
+        case _ => typeConverter(op.returnType)
       })
 
     method.setModifier(Modifier.PUBLIC, false)
@@ -197,10 +196,7 @@ trait TriviallyGenerator extends OOGenerator {
 
     val methodSignatures: Seq[MethodDeclaration] =
       ops.map(op => {
-        val retType = op.returnType match {
-          case Some(tpe) => typeConverter(tpe)
-          case _ => Java("void").tpe
-        }
+        val retType = typeConverter(op.returnType)
 
         val params:String = op.parameters.map(param => typeConverter(param.tpe).toString + " " + param.name).mkString(",")
         Java(s"""public $retType ${op.instance}($params);""").methodDeclarations().head

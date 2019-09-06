@@ -1,7 +1,6 @@
 package org.combinators.ep.language.java     /*DI:LD:AI*/
 
 import com.github.javaparser.ast.CompilationUnit
-import org.combinators.ep.domain.ModelDomain
 
 /**
   * Some solutions have classes that are represented by a base class and then one class for

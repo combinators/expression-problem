@@ -10,7 +10,7 @@ import org.combinators.templating.twirl.Java
   *
   * Still Java-based, naturally and JUnit
   */
-trait s0 extends Evolution with JavaGenerator with JUnitTestGenerator with S0 {
+trait s0 extends Evolution with DomainIndependentJavaGenerator with JUnitTestGenerator with S0 {
   val domain:ShapeDomain
 
   /** E0 Introduces the concept a Double type, used for the 'Eval' operation. */

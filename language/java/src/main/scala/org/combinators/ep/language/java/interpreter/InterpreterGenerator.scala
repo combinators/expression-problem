@@ -3,7 +3,7 @@ package org.combinators.ep.language.java.interpreter   /*DI:LD:AD*/
 import com.github.javaparser.ast.ImportDeclaration
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.expr.SimpleName
-import org.combinators.ep.language.java.{JavaBinaryMethod, JavaGenerator, OperationAsMethodGenerator}
+import org.combinators.ep.language.java.{JavaBinaryMethod, DomainIndependentJavaGenerator, OperationAsMethodGenerator}
 import org.combinators.templating.twirl.Java
 import org.combinators.ep.language.java.ReplaceCovariantType._
 
@@ -15,7 +15,7 @@ import org.combinators.ep.language.java.ReplaceCovariantType._
   * all successive levels.
   */
 trait InterpreterGenerator
-  extends JavaGenerator
+  extends DomainIndependentJavaGenerator
     with OperationAsMethodGenerator
     with JavaBinaryMethod {
 
@@ -116,20 +116,17 @@ trait InterpreterGenerator
   }
 
   def modelInterfaceName(model:domain.Model): String = {
-    model.ops.sortWith(_.name < _.name).map(op => op.concept).mkString("") + "Exp"
+    model.ops.sortWith(_.name < _.name).map(op => op.concept).mkString("") + domain.baseTypeRep.concept
   }
 
   /** Find Model with operations and return that one. */
   def baseInterfaceName(m:domain.Model): SimpleName = {
-      Java(m.lastModelWithOperation().ops.sortWith(_.name < _.name).map(op => op.concept).mkString("") + "Exp").simpleName()
+      Java(m.lastModelWithOperation().ops.sortWith(_.name < _.name).map(op => op.concept).mkString("") + domain.baseTypeRep.concept).simpleName()
   }
 
   /** Operations are implemented as methods in the Base and sub-type classes. */
   override def methodGenerator(exp:domain.DataType, op:domain.Operation): MethodDeclaration = {
-    val retType = op.returnType match {
-      case Some(tpe) => typeConverter(tpe)
-      case _ => Java("void").tpe
-    }
+    val retType = typeConverter(op.returnType)
 
     val params = parameters(op)
     Java(s"""|public $retType ${op.instance}($params) {
@@ -206,13 +203,10 @@ trait InterpreterGenerator
 
       // Must be prepared for operations that are void.
       op.returnType match {
-        case Some(domain.baseTypeRep) => s"""public $fullType ${op.instance}(${params.mkString(",")});"""
+        case domain.baseTypeRep => s"""public $fullType ${op.instance}(${params.mkString(",")});"""
         case _ =>
-          val returnType = if (op.returnType.isEmpty) {
-            "void"
-          } else {
-            typeConverter(op.returnType.get)
-          }
+          val returnType = typeConverter(op.returnType)
+
           s"""public $returnType ${op.instance}(${params.mkString(",")});"""
       }
     })
@@ -248,7 +242,7 @@ trait InterpreterGenerator
         ""
       } else {
         val lastOps:String = lastProducer.ops.sortWith(_.name < _.name).map(op => op.concept).mkString("")
-        s"extends ${lastOps}Exp.KnownDataTypes<R>"
+        s"extends $lastOps${domain.baseTypeRep.concept}.KnownDataTypes<R>"
       }
 
       val signatures = if (lastProducer.isEmpty) {
@@ -520,7 +514,7 @@ trait InterpreterGenerator
           val revisedMD = if (isProducer) {
             val definedOpLevel = getModel.findOperation(op)
 
-            val producer = definedOpLevel.ops.sortWith(_.name < _.name).map(op => op.concept).mkString("") + "Exp"
+            val producer = definedOpLevel.ops.sortWith(_.name < _.name).map(op => op.concept).mkString("") + domain.baseTypeRep.concept
             if (!producer.equals(fullType.toString)) {
               // must replace inner execution
               liftedOps = liftedOps :+
@@ -583,8 +577,8 @@ trait InterpreterGenerator
 
           s"""|	@Override
               |	public <R> R accept(KnownDataTypes<R> from) {
-              |   if (from instanceof ${nextCombinedOps}Exp.KnownDataTypes) {
-              |      return ((${nextCombinedOps}Exp.KnownDataTypes<R>)from).convert(this);
+              |   if (from instanceof $nextCombinedOps${domain.baseTypeRep.concept}.KnownDataTypes) {
+              |      return (($nextCombinedOps${domain.baseTypeRep.concept}.KnownDataTypes<R>)from).convert(this);
               |   }
               |		throw new IllegalArgumentException ("unknown conversion.");
               |}""".stripMargin.split("\n")

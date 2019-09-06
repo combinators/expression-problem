@@ -2,14 +2,15 @@ package org.combinators.ep.language.java   /*DD:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
 import org.combinators.ep.domain.math._
-import org.combinators.ep.domain.{Evolution, OperationDependency}
+import org.combinators.ep.domain.Evolution
+import org.combinators.ep.generator.OperationDependency
 import org.combinators.templating.twirl.Java
 
 /**
   * Truly independent of the specific design solution.
   *
   */
-trait e7 extends Evolution with JavaGenerator with JUnitTestGenerator with OperationDependency with M0 with M2 with M4 with M5 with M6 with M7 {
+trait e7 extends Evolution with DomainIndependentJavaGenerator with JUnitTestGenerator with OperationDependency with M0 with M2 with M4 with M5 with M6 with M7 {
   self: e0 with e1 with e2 with e3 with e4 with e5 with e6 =>
 
   abstract override def logic(exp:domain.DataType, op:domain.Operation): Seq[Statement] = {

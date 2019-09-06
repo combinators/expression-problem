@@ -1,6 +1,6 @@
 package org.combinators.ep.language.java    /*DI:LD:AI*/
 
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain.{BaseDomain, Evolution}
 import org.combinators.templating.twirl.Java
 
 /**
@@ -8,8 +8,7 @@ import org.combinators.templating.twirl.Java
   *
   * This code conforms to JUnit Test cases
   */
-trait JUnitTestGenerator extends TestGenerator with PerformanceTestGenerator { // had  with JavaGenerator
-  val domain: BaseDomain with ModelDomain
+class JUnitTestGenerator(val evolution:Evolution) extends TestGenerator with PerformanceTestGenerator { // had  with JavaGenerator
 
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
   def generateSuite(pkg: Option[String]): Seq[CompilationUnit] = {

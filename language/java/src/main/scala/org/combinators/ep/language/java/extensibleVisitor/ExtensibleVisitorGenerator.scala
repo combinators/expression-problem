@@ -1,7 +1,11 @@
 package org.combinators.ep.language.java.extensibleVisitor   /*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.{ConstructorDeclaration, MethodDeclaration, TypeDeclaration}
-import org.combinators.ep.domain.{BaseDomain, ModelDomain, OperationDependency}
+import org.combinators.ep.domain.BaseDomain
+import org.combinators.ep.domain.abstractions.Operation
+import org.combinators.ep.generator.OperationDependency
+import org.combinators.ep.language.java.JavaNameProvider.mangle
+import org.combinators.ep.language.java.JavaSyntax.Statement
 import org.combinators.ep.language.java.visitor.VisitorGenerator
 import org.combinators.templating.twirl.Java
 
@@ -16,6 +20,12 @@ import org.combinators.templating.twirl.Java
 trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependency {
   val domain:BaseDomain with ModelDomain
 
+
+  def superFromOp(op:Operation) : Statement = {
+    val params = op.parameters.map(param => s"${mangle(param.name)}").mkString(",")
+
+    Java(s"""super($params);""").statement()
+  }
   /**
     * Generating a visitor solution requires:
     *
@@ -156,7 +166,7 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
   def operationExtension(op:domain.Operation, model:domain.Model): CompilationUnit = {
     val regularVisitor:CompilationUnit = super.generateVisitorOperation(model, op)
 
-    val opType:Type = typeConverter(op.returnType.get)
+    val opType:Type = typeConverter(op.returnType)
     val full:String = modelTypes(model)
     val lastWithType  = model.last.lastModelWithDataTypes()
     val lastOperation = lastWithType.findOperation(op)
@@ -196,11 +206,11 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
 
     // convert 'extends visitor' into 'implements visitor'
     // rename class to have types at end (except for first)
-    val opType = if (op.returnType.isEmpty) {
-      "Void"   // generics
-    } else {
-      typeConverter(op.returnType.get)
+    val opType = op.returnType match {
+      case domain.Void => "Void"    // generics
+      case _ => typeConverter(op.returnType)
     }
+
     val full:String = modelTypes(model)
 
     val fullVisitor:String = if (model.types.nonEmpty) {

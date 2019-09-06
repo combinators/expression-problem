@@ -3,7 +3,7 @@ package org.combinators.ep.language.haskell.alacarte    /*DI:LD:AD*/
 import java.nio.file.Paths
 
 import org.combinators.ep.language.haskell._
-import org.combinators.ep.domain.{BaseDomain, ModelDomain}
+import org.combinators.ep.domain.BaseDomain
 
 /**
   * Based on Data Types a la Carte
@@ -130,7 +130,7 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
                    |  ${op.instance}OneLevel (${exp.toString} ${standardArgs(exp).getCode}) = $code""".stripMargin)
     })
 
-    val opRetType = typeConverter(op.returnType.get)
+    val opRetType = typeConverter(op.returnType)
     val dependencies = dependency(op).map(op => s"import ${op.concept}").mkString("\n")
     val code = Haskell(s"""|module $name where
                            |import Base
@@ -147,7 +147,7 @@ trait ALaCarteGenerator extends HaskellGenerator with StandardHaskellBinaryMetho
                            |  ${op.instance}OneLevel  (El x) = ${op.instance}OneLevel  x
                            |  ${op.instance}OneLevel  (Er y) = ${op.instance}OneLevel  y
                            |
-                           |${op.instance} :: $name f => Expr f -> ${typeConverter(op.returnType.get)}
+                           |${op.instance} :: $name f => Expr f -> ${typeConverter(op.returnType)}
                            |${op.instance} expr = foldExpr ${op.instance}OneLevel expr
                            |""".stripMargin)
     HaskellWithPath(code, Paths.get(s"$name.hs"))

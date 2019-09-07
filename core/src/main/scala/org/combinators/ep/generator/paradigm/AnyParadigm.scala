@@ -60,8 +60,8 @@ case class AddTestCase[MethodBodyContext](name: String, code: Generator[MethodBo
   type Result = Unit
 }
 
-case class Apply[T](method: T, arguments: Seq[T]) extends Command {
-  type Result = T
+case class Apply[F, S, R](functional: F, arguments: Seq[S]) extends Command {
+  type Result = R
 }
 
 case class ResolveImport[Import, T](forElem: T) extends Command {
@@ -122,9 +122,9 @@ trait AnyParadigm {
     def resolveImport(tpe: Type): Generator[MethodBodyContext, Option[Import]] =
       AnyParadigm.capabilitiy(ResolveImport[Import, Type](tpe))
 
-    implicit val canApplyInMethodBody: Understands[MethodBodyContext, Apply[Expression]]
+    implicit val canApplyInMethodBody: Understands[MethodBodyContext, Apply[Expression, Expression, Expression]]
     def apply(method: Expression, arguments: Seq[Expression]): Generator[MethodBodyContext, Expression] =
-      AnyParadigm.capabilitiy(Apply(method, arguments))
+      AnyParadigm.capabilitiy(Apply[Expression, Expression, Expression](method, arguments))
 
     implicit val canGetArgumentsInMethodBody: Understands[MethodBodyContext, GetArguments[Type, Expression]]
     def getArguments(): Generator[MethodBodyContext, Seq[(String, Type, Expression)]] =

@@ -1,27 +1,24 @@
 package org.combinators.ep.domain.math   /*DD:LI:AI*/
 
 import org.combinators.ep.domain._
+import org.combinators.ep.domain.abstractions.{Attribute, DataTypeCase, EqualsTestCase, Operation, Parameter, TestCase, TypeRep}
+import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
+import org.combinators.ep.domain.math.M0.{Eval, LitInst}
 
 /**
   * Offers a "kitchen sink" of data types and operations envisioned as part of a publication.
   *
   */
-class P1(val m2:M2) extends Evolution {
-
-  val domain:BaseDomain = MathDomain
-  import domain._
-  import m2._
-  import m1._
-  import m0._
-
+object P1 extends Evolution {
+  override implicit def getModel:Model = M2.getModel.evolve("p1", Seq(Pi, Rnd, Amortized), Seq(CountBetween, Output, ParamHeight))
 
   // p1:model evolution.
   // -------------------
   object independent {
     val height:String = "height"
-    val P = Attribute("P", baseTypeRep)
-    val r = Attribute("r", baseTypeRep)
-    val n = Attribute("n", baseTypeRep)
+    val P = Attribute("P", TypeRep.DataType(MathDomain.getModel.baseDataType))
+    val r = Attribute("r", TypeRep.DataType(MathDomain.getModel.baseDataType))
+    val n = Attribute("n", TypeRep.DataType(MathDomain.getModel.baseDataType))
     val countBetween:String = "countBetween"
     val low:String = "low"
     val high:String = "high"
@@ -29,28 +26,22 @@ class P1(val m2:M2) extends Evolution {
 
   // This Height implementation takes a parameter, into which the initial call passes the value '0'
   // and then it is passed downwards.
-  case object ParamHeight extends Operation(independent.height, Int, Seq(Parameter(independent.height, Int)))
-  case object Output extends Operation("output")
-  case object CountBetween extends Operation(independent.countBetween, Int,
-    Seq(Parameter(independent.low, Double), Parameter(independent.high, Double)))
-
-  case object Pi extends Atomic("Pi", Seq.empty)
-  case object Rnd extends Atomic("Rnd", Seq.empty)
-  case object Amortized extends Atomic("Amortized",
-    Seq(independent.P, independent.r, independent.n)
+  lazy val ParamHeight = Operation(independent.height, TypeRep.Int, Seq(Parameter(independent.height, TypeRep.Int)))
+  lazy val Output = Operation("output")
+  lazy val CountBetween = Operation(independent.countBetween, TypeRep.Int,
+    Seq(Parameter(independent.low, TypeRep.Double), Parameter(independent.high, TypeRep.Double)),
   )
 
-  // this is how you model an instance with attributes
-  class AmortizedInst(override val e:DataType, val P:Inst, val r:Inst, val n:Inst) extends
-    NaryInst(e, Seq(P, r, n)) {
-  }
+  lazy val Pi = DataTypeCase.atomic("Pi")
+  lazy val Rnd = DataTypeCase.atomic("Rnd")
+  lazy val Amortized =  DataTypeCase("Amortized", Seq(independent.P, independent.r, independent.n))
 
-  val p1 = Model("p1", Seq(Pi, Rnd, Amortized), Seq(CountBetween, Output, ParamHeight), last = m2.getModel)
-  val p1_a1 = new AmortizedInst(Amortized, LitInst(100000.0), LitInst(0.06), LitInst(360.0))
+  def AmortizedInst(P:DataTypeInstance, r:DataTypeInstance, n:DataTypeInstance): DataTypeInstance =
+    DataTypeInstance(Amortized, Seq(InstanceRep(P), InstanceRep(r), InstanceRep(n)))
 
-  override def getModel = p1
+  val p1_a1 = AmortizedInst(LitInst(100000.0), LitInst(0.06), LitInst(360.0))
 
   def P1_tests:Seq[TestCase] = Seq(
-    EqualsTestCase(p1_a1, Eval, ExistsInstance(Double)(599.55)),
+    EqualsTestCase(p1_a1, Eval, InstanceRep(LitInst(599.55)))
   )
 }

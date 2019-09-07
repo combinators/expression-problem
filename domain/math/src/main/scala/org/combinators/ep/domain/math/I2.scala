@@ -1,13 +1,10 @@
 package org.combinators.ep.domain.math      /*DD:LI:AI*/
 
 import org.combinators.ep.domain._
+import org.combinators.ep.domain.abstractions.{Operation, Parameter, TypeRep}
 
-class I2(val i1:I1) extends Evolution {
-
-  val domain:BaseDomain = MathDomain
-  import domain._
-  import i1._
-
+object I2 extends Evolution {
+  override implicit def getModel:Model = I1.getModel.evolve("i2", Seq.empty, Seq(Height))
   // i2:model evolution.
   // -------------------
   object independent {
@@ -18,11 +15,7 @@ class I2(val i1:I1) extends Evolution {
   // returns 0 and all others return Max(1+attrubte). Woudl this work?
   //
   // Alternatively: Write necessary code to make test case
-  case object Integer extends TypeRep
-  case object Height extends Operation(independent.height, Integer, Seq(Parameter(independent.height, Integer)))
-  val i2 = Model("i2", Seq.empty, Seq(Height), last = i1.getModel)
-
-  override def getModel = i2
+  lazy val Height = Operation("height", TypeRep.Int, Seq(Parameter(independent.height, TypeRep.Int)))
 
   // TODO: Model test cases for I2
 }

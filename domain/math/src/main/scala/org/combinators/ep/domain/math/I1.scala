@@ -1,19 +1,16 @@
 package org.combinators.ep.domain.math      /*DD:LI:AI*/
 
 import org.combinators.ep.domain._
+import org.combinators.ep.domain.abstractions.DataTypeCase
+import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
 
-class I1(val m1:M1) extends Evolution {
+object I1 extends Evolution {
+  override implicit def getModel:Model = M1.getModel.evolve("i1", Seq(Inv), Seq.empty)
 
-  val domain:BaseDomain = MathDomain
-  import domain._
-  import m1._
+  lazy val Inv = DataTypeCase.unary("Inv")
 
-  // i1:model evolution.
-  // -------------------
-  case object Inv extends domain.Unary("Inv")
-  val i1 = Model("i1", Seq(Inv), Seq.empty, last = m1.getModel)
-
-  override def getModel = i1
+  def InvInst(inner:DataTypeInstance): DataTypeInstance =
+    DataTypeInstance(Inv, Seq(InstanceRep(inner)))
 
   // TODO: Model test cases for I1
 }

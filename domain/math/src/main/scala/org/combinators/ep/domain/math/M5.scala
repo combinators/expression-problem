@@ -1,71 +1,67 @@
 package org.combinators.ep.domain.math      /*DD:LI:AI*/
 
-import org.combinators.ep.domain.AsTree
 import org.combinators.ep.domain._
+import org.combinators.ep.domain.abstractions.{EqualsCompositeTestCase, EqualsTestCase, Operation, TestCase, TypeRep}
+import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
 import org.combinators.ep.domain.tree._
+import org.combinators.ep.domain.math.M0.{Add, AddInst, LitInst}
+import org.combinators.ep.domain.math.M1.{Sub, SubInst}
+import org.combinators.ep.domain.math.M2.{PrettyP, StringInst}
+import org.combinators.ep.domain.math.M3.{Divd, DivdInst, Mult, MultInst, Neg, NegInst}
+import org.combinators.ep.domain.math.M4.Simplify
 
-class M5(val m4:M4) extends Evolution {
+object M5 extends Evolution {
+  override implicit def getModel:Model = M4.getModel.evolve("m5", Seq.empty, Seq(Operation.asTree, Identifier))
+  lazy val Identifier = Operation("id", TypeRep.Int)
 
-  val domain:BaseDomain = MathDomain
-  import domain._
-  import m4._
-  import m3._
-  import m2._
-  import m1._
-  import m0._    // note by ordering in this fashion, you will bring in m0
+  val m5_s1 = SubInst(LitInst(1.0), LitInst(976.0))
+  val m5_s2 = AddInst(LitInst(1.0), LitInst(976.0))
+  val m5_s3 = SubInst(LitInst(1.0), LitInst(976.0))
 
-  // m5:model evolution.
-  // -------------------
-  // Represent structure as a tree
-  case object Identifier extends Operation("id", Int)
-
-  val m5 = Model("m5", Seq.empty, Seq(new AsTree(baseTypeRep), Identifier), last = m4.getModel)
-  override def getModel = m5
-
-  // Tests
-  val x:Binary = m4.m3.m2.m1.m0.Add
-
-  val m5_s1 = new BinaryInst(Sub, LitInst(1.0), LitInst(976.0))
-  val m5_s2 = new BinaryInst(Add, LitInst(1.0), LitInst(976.0))
-  val m5_s3 = new BinaryInst(Sub, LitInst(1.0), LitInst(976.0))
-
-  val m5_all = new BinaryInst(Sub,
-    new UnaryInst(Neg, LitInst(2.0)), // Sub-Left
-    new BinaryInst(Mult,              // Sub-Right
-      new BinaryInst(Sub, LitInst(1.0), LitInst(976.0)),   // Mult-Left
-      new BinaryInst(Add,                                  // Mult-Right
-        new BinaryInst(Mult, LitInst(1.0), LitInst(976.0)),
-        new BinaryInst(Divd,  LitInst(1.0), LitInst(3.0)))))
+  val m5_all = SubInst(
+    NegInst(LitInst(2.0)), // Sub-Left
+    MultInst(             // Sub-Right
+      SubInst(LitInst(1.0), LitInst(976.0)),   // Mult-Left
+      AddInst(                                // Mult-Right
+        MultInst(LitInst(1.0), LitInst(976.0)),
+        DivdInst(LitInst(1.0), LitInst(3.0)))))
 
   val tree_m5_all =
-    new Node(Seq(new Node(Seq(new Leaf(2.0)), Neg.name.hashCode), // Sub-Left
-                 new Node(Seq(new Node(Seq(new Leaf(1.0), new Leaf(976.0)), Sub.name.hashCode), // Mult-Left
-                              new Node(Seq(new Node(Seq(new Leaf(1.0), new Leaf(976.0)), Mult.name.hashCode),
-                                           new Node(Seq(new Leaf(1.0), new Leaf(3.0)), Divd.name.hashCode)),
-                                       Add.name.hashCode)),  // Mult-Right
-                   Mult.name.hashCode)),   // Sub-Right
-              Sub.name.hashCode)
+    new Node(Sub.name.hashCode, Seq(new Node(Neg.name.hashCode, Seq(new Leaf(2.0))), // Sub-Left
+                 new Node(Mult.name.hashCode, Seq(new Node( Sub.name.hashCode, Seq(new Leaf(1.0), new Leaf(976.0))), // Mult-Left
+                              new Node(Add.name.hashCode, Seq(new Node(Mult.name.hashCode, Seq(new Leaf(1.0), new Leaf(976.0))),
+                                           new Node(Divd.name.hashCode, Seq(new Leaf(1.0), new Leaf(3.0)))),
+                                       )),  // Mult-Right
+                   )),   // Sub-Right
+              )
 
-  val m5_s4 = new BinaryInst(Mult, new BinaryInst(Mult, LitInst(2.0), LitInst(1.0)),
-                                   new BinaryInst(Add, LitInst(0.0), LitInst(7.0)))
+  val m5_s4 = MultInst(MultInst(LitInst(2.0), LitInst(1.0)),
+                                   AddInst(LitInst(0.0), LitInst(7.0)))
 
 
-  val treeSimplified = new Node(Seq(new Leaf(2.0), new Leaf(7.0)), Mult.name.hashCode)
+  val treeSimplified = new Node(Mult.name.hashCode, Seq(new Leaf(2.0), new Leaf(7.0)))
   /**
     * Special test case for same queries.
     *
     * Validates that calling AsTree on inst1 yields the tree called from AsTree on inst2
     */
-  case class SameTestCase(inst1:domain.Inst, inst2:domain.Inst, result:Boolean)
-    extends domain.TestCase
+  /** Models a test case which applies operation `op` to `domainObject` and `params`, expecting a result
+   * equal to `expected`. */
+  case class SameTestCase(
+         inst1: DataTypeInstance,
+         inst2: DataTypeInstance,
+         expected: Boolean,
+         params: InstanceRep*
+       ) extends TestCase
 
   def M5_tests:Seq[TestCase] = Seq(
-    SameTestCase(m5_s1, m5_s2, result=false),
-    SameTestCase(m5_s1, m5_s3, result=true),
-    SameTestCase(m5_all, m5_all, result=true),
-    EqualsTestCase(m5_all, AsTree, InstanceModel(TreeType)(tree_m5_all)),
-    EqualsCompositeTestCase(m5_all, Seq((PrettyP, Seq.empty)), ExistsInstance(String)("(-2.0-((1.0-976.0)*((1.0*976.0)+(1.0/3.0))))")),
+    SameTestCase(m5_s1, m5_s2, false),
+    SameTestCase(m5_s1, m5_s3, true),
+    SameTestCase(m5_all, m5_all, true),
 
-    EqualsCompositeTestCase(m5_s4, Seq((Simplify, Seq.empty), (AsTree, Seq.empty)), InstanceModel(TreeType)(treeSimplified)),
+    EqualsTestCase(m5_all, Operation.asTree, InstanceRep(TypeRep.Tree)(tree_m5_all)),
+    EqualsCompositeTestCase(m5_all, StringInst("(-2.0-((1.0-976.0)*((1.0*976.0)+(1.0/3.0))))"), (PrettyP, Seq.empty)),
+
+    EqualsCompositeTestCase(m5_s4, InstanceRep(TypeRep.Tree)(treeSimplified), (Simplify, Seq.empty), (Operation.asTree, Seq.empty)),
   )
 }

@@ -1,19 +1,16 @@
 package org.combinators.ep.domain.shape   /*DD:LI:AI*/
 
+
 import org.combinators.ep.domain._
+import org.combinators.ep.domain.abstractions._
 
-class S1(val s0:S0) extends Evolution {
-
-  val domain:BaseDomain = ShapeDomain
-  import domain._
-  import s0._
+object S1 extends Evolution {
+  override implicit def getModel:Model = S0.getModel.evolve("s1", Seq.empty, Seq(Shrink))
 
   // m1:model evolution.
   // -------------------
   //case object Shrink extends domain.Operation("shrink", Some(domain.Shape), Seq(pct))
-  case object Shrink extends ProducerOperation(baseTypeRep,"shrink", Seq(pct))
-
-  val s1 = Model("s1", Seq.empty, Seq(Shrink), s0.getModel)
-  override def getModel:Model = s1
+  lazy val Shrink = Operation("shrink",
+    TypeRep.DataType(ShapeDomain.getModel.baseDataType), Seq(Parameter("pct", TypeRep.Double)))
 
 }

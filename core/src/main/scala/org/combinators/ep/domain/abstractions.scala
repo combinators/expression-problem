@@ -199,6 +199,10 @@ package object abstractions {
     case object Double extends TypeRep {
       type HostType = scala.Double
     }
+    /** Represents the Scala type `Boolean`. */
+    case object Boolean extends TypeRep {
+      type HostType = scala.Boolean
+    }
     /** Represents the type [[org.combinators.ep.domain.tree.Tree]]. */
     case object Tree extends TypeRep {
       type HostType = org.combinators.ep.domain.tree.Tree

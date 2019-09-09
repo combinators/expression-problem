@@ -23,7 +23,7 @@ case class AddBlockDefinitions[Statement](definitions: Seq[Statement]) extends C
 }
 
 /** Translates the Scala representation of a type to target language specific code for referring to it. */
-case class ToTargetLanguageType[Type](tpe: TypeRep) extends Command {
+case class ToTargetLanguageType[Ctxt, Type](tpe: TypeRep, generated: DataType => Generator[Ctxt, Type]) extends Command {
   type Result = Type
 }
 
@@ -125,9 +125,9 @@ trait AnyParadigm {
     def setParameters(params: Seq[(String, Type)]): Generator[MethodBodyContext, Unit] =
       AnyParadigm.capabilitiy(SetParameters(params))
 
-    implicit val canTransformTypeInMethodBody: Understands[MethodBodyContext, ToTargetLanguageType[Type]]
-    def toTargetLanguageType(tpe: TypeRep): Generator[MethodBodyContext, Type] =
-      AnyParadigm.capabilitiy(ToTargetLanguageType[Type](tpe))
+    implicit val canTransformTypeInMethodBody: Understands[MethodBodyContext, ToTargetLanguageType[MethodBodyContext, Type]]
+    def toTargetLanguageType(tpe: TypeRep, generated: DataType => Generator[MethodBodyContext, Type]): Generator[MethodBodyContext, Type] =
+      AnyParadigm.capabilitiy(ToTargetLanguageType[MethodBodyContext, Type](tpe, generated))
 
     implicit def canReifyInMethodBody[T]: Understands[MethodBodyContext, Reify[T, Expression]]
     def reify[T](tpe: TypeRep.OfHostType[T], value: T): Generator[MethodBodyContext, Expression] =

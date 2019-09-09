@@ -1,14 +1,14 @@
 package org.combinators.ep.approach.functional
 
 import org.combinators.ep.domain.{Model, abstractions}
-import org.combinators.ep.generator.{AbstractSyntax, ApproachImplementationProvider, Command, EvolutionImplementationProvider, NameProvider, TestImplementationProvider, communication}
+import org.combinators.ep.generator.{AbstractSyntax, ApproachImplementationProvider, Command, EvolutionImplementationProvider, NameProvider, TestImplementationProvider, Understands, communication}
 import org.combinators.ep.generator.paradigm.control.{Functional => FunControl}
 import Command.{skip, _}
 import cats.syntax._
 import cats.implicits._
 import org.combinators.ep.domain.abstractions.{Attribute, DataType, DataTypeCase, Operation, Parameter, TestCase, TypeRep}
 import org.combinators.ep.generator.communication.{ReceivedRequest, Request, SendRequest}
-import org.combinators.ep.generator.paradigm.{AddCompilationUnit, AddImport, AddMethod, AddType, AddTypeConstructor, AnyParadigm, Apply, FindMethod, Functional, GetArguments, InstantiateType, ResolveImport, SetParameters, ToTargetLanguageType}
+import org.combinators.ep.generator.paradigm.{AddCompilationUnit, AddImport, AddMethod, AddType, AddTypeConstructor, AnyParadigm, Apply, FindClass, FindMethod, Functional, GetArguments, InstantiateType, ResolveImport, SetParameters, ToTargetLanguageType}
 import AnyParadigm.syntax._
 import org.combinators.ep.generator.paradigm.control.Functional.WithBase
 
@@ -31,8 +31,11 @@ trait Traditional extends ApproachImplementationProvider {
     } yield res
   }
 
+  implicit val canLookupTypeInMethod: Understands[paradigm.MethodBodyContext, GeneratedTypeLookupFunction[paradigm.MethodBodyContext]] = ???
+  implicit val canLookupTypeInCtor: Understands[functional.TypeContext, GeneratedTypeLookupFunction[functional.TypeContext]] = ???
+
   def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
-    import paradigm.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities.{toTargetLanguageType => _, _}
     import functional.methodBodyCapabilities._
     for {
       rt <- toTargetLanguageType(TypeRep.DataType(baseTpe))
@@ -42,7 +45,7 @@ trait Traditional extends ApproachImplementationProvider {
   }
 
   def makeTypeConstructor(tpeCase: DataTypeCase): Generator[TypeContext, Unit] = {
-    import typeCapabilities._
+    import typeCapabilities.{toTargetLanguageType => _, _}
     for {
       params <- forEach (tpeCase.attributes) { att =>
           for {
@@ -93,7 +96,7 @@ trait Traditional extends ApproachImplementationProvider {
       op: Operation,
       domainSpecific: EvolutionImplementationProvider[this.type]
     ): Generator[MethodBodyContext, Expression] = {
-    import paradigm.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities.{toTargetLanguageType => _, _}
     import functionalControl.functionalCapabilities._
     for {
       params <- forEach (Parameter("this", TypeRep.DataType(tpe)) +: op.parameters) { param: Parameter =>

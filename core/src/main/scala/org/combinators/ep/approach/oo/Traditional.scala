@@ -18,13 +18,26 @@ sealed trait Traditional extends ApproachImplementationProvider {
   def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression] = {
     import ooParadigm.methodBodyCapabilities._
     import paradigm.methodBodyCapabilities._
-
     for {
       method <- getMember(message.to, names.instanceNameOf(message.request.op))
       result <- apply(method, message.request.op.parameters.map(message.request.arguments))
     } yield result
 
   }
+
+  implicit def canLookupType[Ctxt](implicit canFindClass: Understands[Ctxt, FindClass[Type]]):
+    Understands[Ctxt, GeneratedTypeLookupFunction[Ctxt]] = {
+    new Understands[Ctxt, GeneratedTypeLookupFunction[Ctxt]] {
+      def perform(context: Ctxt, command: GeneratedTypeLookupFunction[Ctxt]):
+        (Ctxt, DataType => Generator[Ctxt, Type]) =
+        (context, tpe => FindClass(names.conceptNameOf(tpe)).interpret(canFindClass))
+    }
+  }
+  implicit val canLookupTypeInMethod = {
+    import ooParadigm.methodBodyCapabilities._
+    canLookupType[MethodBodyContext]
+  }
+
 
   def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
     import paradigm.methodBodyCapabilities._
@@ -38,8 +51,7 @@ sealed trait Traditional extends ApproachImplementationProvider {
   }
 
   def makeSignature(op: Operation): Generator[MethodBodyContext, Unit] = {
-    import ooParadigm.methodBodyCapabilities._
-    import paradigm.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities.{toTargetLanguageType => _, _}
 
     for {
       rt <- toTargetLanguageType(op.returnType)
@@ -68,7 +80,7 @@ sealed trait Traditional extends ApproachImplementationProvider {
   }
 
   def makeField(att: Attribute): Generator[ClassContext, Unit] = {
-    import ooParadigm.classCapabilities._
+    import ooParadigm.classCapabilities.{toTargetLanguageType => _, _}
     for {
       ft <- toTargetLanguageType(att.tpe)
       _ <- resolveAndAddImport(ft)
@@ -111,7 +123,7 @@ sealed trait Traditional extends ApproachImplementationProvider {
     for {
       params <- forEach (tpeCase.attributes) { att: Attribute =>
           for {
-            at <- toTargetLanguageType(att.tpe)
+            at <- super.toTargetLanguageType(att.tpe)
             _ <- resolveAndAddImport(at)
           } yield (names.instanceNameOf(att), at)
         }
@@ -126,7 +138,7 @@ sealed trait Traditional extends ApproachImplementationProvider {
     val makeClass: Generator[ClassContext, Unit] = {
       import classCapabilities._
       for {
-        pt <- toTargetLanguageType(TypeRep.DataType(tpe))
+        pt <- super.toTargetLanguageType(TypeRep.DataType(tpe))
         _ <- resolveAndAddImport(pt)
         _ <- addParent(pt)
         _ <- forEach (tpeCase.attributes) { att => makeField(att) }

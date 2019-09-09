@@ -1,6 +1,6 @@
 package org.combinators.ep.generator.paradigm
 
-import org.combinators.ep.domain.abstractions.TypeRep
+import org.combinators.ep.domain.abstractions.{DataType, TypeRep}
 import org.combinators.ep.generator.{AbstractSyntax, Command, Understands}
 import org.combinators.ep.generator.Command.Generator
 
@@ -60,9 +60,9 @@ trait Functional {
     def addTypeConstructor(name: String, parameters: Seq[(String, Type)]): Generator[TypeContext, Unit] =
       AnyParadigm.capabilitiy(AddTypeConstructor(name, parameters))
 
-    implicit val canTranslateTypeInType: Understands[TypeContext, ToTargetLanguageType[Type]]
-    def toTargetLanguageType(tpe: TypeRep): Generator[TypeContext, Type] =
-      AnyParadigm.capabilitiy(ToTargetLanguageType[Type](tpe))
+    implicit val canTranslateTypeInType: Understands[TypeContext, ToTargetLanguageType[TypeContext, Type]]
+    def toTargetLanguageType(tpe: TypeRep, generated: DataType => Generator[TypeContext, Type]): Generator[TypeContext, Type] =
+      AnyParadigm.capabilitiy(ToTargetLanguageType[TypeContext, Type](tpe, generated))
 
     implicit val canAddImportInType: Understands[TypeContext, AddImport[Import]]
     def addImport(imp: Import): Generator[TypeContext, Unit] =

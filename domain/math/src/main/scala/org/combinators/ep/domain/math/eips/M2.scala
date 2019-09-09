@@ -22,6 +22,7 @@ object M2 {
         import ffiStrings.stringCapabilities._
         import paradigm._
         import methodBodyCapabilities._
+        import forApproach.canLookupTypeInMethod
 
         assert(onRequest.request.op == math.M2.PrettyP)
 
@@ -29,7 +30,7 @@ object M2 {
           case litC@math.M0.Lit =>
             val att = litC.attributes.head
             for {
-              ty <- toTargetLanguageType(att.tpe)
+              ty <- forApproach.toTargetLanguageType(att.tpe)
               res <- asString(onRequest.attributes(att), ty)
             } yield res
           case other =>

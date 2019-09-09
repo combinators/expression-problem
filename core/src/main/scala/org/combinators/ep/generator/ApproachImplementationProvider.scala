@@ -40,6 +40,23 @@ trait ApproachImplementationProvider {
     */
   def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression]
 
+  case class GeneratedTypeLookupFunction[Ctxt]() extends Command {
+    type Result = DataType => Generator[Ctxt, Type]
+  }
+  implicit val canLookupTypeInMethod: Understands[MethodBodyContext, GeneratedTypeLookupFunction[MethodBodyContext]]
+
+  def toTargetLanguageType[Ctxt](tpe: TypeRep)
+    (implicit
+      canTranslate: Understands[Ctxt, ToTargetLanguageType[Ctxt, Type]],
+      canLookup: Understands[Ctxt, GeneratedTypeLookupFunction[Ctxt]]
+    ): Generator[Ctxt, Type] = {
+    for {
+      lookup <- GeneratedTypeLookupFunction[Ctxt]().interpret
+      translated <- ToTargetLanguageType(tpe, lookup).interpret
+    } yield translated
+  }
+
+
   /** Returns code to instantiate the given data type case, filling in `args` for its parameters. */
   def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression]
 
@@ -66,7 +83,7 @@ trait ApproachImplementationProvider {
       case (tpe, inst) =>
         import paradigm.methodBodyCapabilities._
         for {
-          resTy <- toTargetLanguageType(tpe)
+          resTy <- this.toTargetLanguageType(tpe)
           _ <- resolveAndAddImport(resTy)
           res <- methodBodyCapabilities.reify[tpe.HostType](tpe, inst.asInstanceOf[tpe.HostType])
         } yield res

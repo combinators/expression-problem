@@ -54,8 +54,9 @@ object TestImplementationProvider {
         ): Generator[forApproach.paradigm.MethodBodyContext, (forApproach.paradigm.syntax.Type, forApproach.paradigm.syntax.Expression, forApproach.paradigm.syntax.Expression)] = {
         import forApproach.paradigm.methodBodyCapabilities._
         import AnyParadigm.syntax._
+        import forApproach.canLookupTypeInMethod
         for {
-          tpe <- toTargetLanguageType(TypeRep.DataType(baseTpe))
+          tpe <- forApproach.toTargetLanguageType(TypeRep.DataType(baseTpe))
           _ <- forApproach.resolveAndAddImport(tpe)
           exp <- forApproach.reify(expected)
           inst <- forApproach.instantiate(baseTpe, domainObject)
@@ -90,6 +91,7 @@ object TestImplementationProvider {
         Generator[forApproach.paradigm.MethodBodyContext, Seq[forApproach.paradigm.syntax.Expression]] = {
         import ffiAssertions.assertionCapabilities._
         import ffiEquality.equalityCapabilities._
+        import forApproach.canLookupTypeInMethod
         import forApproach.paradigm._
         import methodBodyCapabilities._
         import syntax._
@@ -112,12 +114,12 @@ object TestImplementationProvider {
               } yield res
             case Seq() =>
               for {
-                resTpe <- toTargetLanguageType(tpe)
+                resTpe <- forApproach.toTargetLanguageType(tpe)
               } yield (resTpe, obj)
           }
 
         for {
-          tpe <- toTargetLanguageType(TypeRep.DataType(testCase.baseTpe))
+          tpe <- forApproach.toTargetLanguageType(TypeRep.DataType(testCase.baseTpe))
           _ <- forApproach.resolveAndAddImport(tpe)
           exp <- forApproach.reify(testCase.expected)
           inst <- forApproach.instantiate(testCase.baseTpe, testCase.startObject)

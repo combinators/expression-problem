@@ -2,7 +2,7 @@ package org.combinators.ep.generator.paradigm
 
 import org.combinators.ep.generator.{AbstractSyntax, Command, Understands}
 import Command.Generator
-import org.combinators.ep.domain.abstractions.TypeRep
+import org.combinators.ep.domain.abstractions.{DataType, TypeRep}
 
 case class AddClass[ClassContext](
     name: String,
@@ -120,9 +120,9 @@ trait ObjectOriented {
     def setInterface(): Generator[ClassContext, Unit] =
       AnyParadigm.capabilitiy(SetInterface())
 
-    implicit val canTranslateTypeInClass: Understands[ClassContext, ToTargetLanguageType[Type]]
-    def toTargetLanguageType(tpe: TypeRep): Generator[ClassContext, Type] =
-      AnyParadigm.capabilitiy(ToTargetLanguageType[Type](tpe))
+    implicit val canTranslateTypeInClass: Understands[ClassContext, ToTargetLanguageType[ClassContext, Type]]
+    def toTargetLanguageType(tpe: TypeRep, generated: DataType => Generator[ClassContext, Type]): Generator[ClassContext, Type] =
+      AnyParadigm.capabilitiy(ToTargetLanguageType[ClassContext, Type](tpe, generated))
 
     implicit val canSelfReferenceInClass: Understands[ClassContext, SelfReference[Expression]]
     def selfReference(): Generator[ClassContext, Expression] =
@@ -175,9 +175,9 @@ trait ObjectOriented {
     def getArguments(): Generator[ConstructorContext, Seq[(String, Type, Expression)]] =
       AnyParadigm.capabilitiy(GetArguments[Type, Expression]())
 
-    implicit val canTranslateTypeInConstructor: Understands[ConstructorContext, ToTargetLanguageType[Type]]
-    def toTargetLanguageType(tpe: TypeRep): Generator[ConstructorContext, Type] =
-      AnyParadigm.capabilitiy(ToTargetLanguageType[Type](tpe))
+    implicit val canTranslateTypeInConstructor: Understands[ConstructorContext, ToTargetLanguageType[ConstructorContext, Type]]
+    def toTargetLanguageType(tpe: TypeRep, generated: DataType => Generator[ConstructorContext, Type]): Generator[ConstructorContext, Type] =
+      AnyParadigm.capabilitiy(ToTargetLanguageType[ConstructorContext, Type](tpe, generated))
 
     implicit def canReifyInConstructor[T]: Understands[ConstructorContext, Reify[T, Expression]]
     def reify[T](tpe: TypeRep.OfHostType[T], elem: T): Generator[ConstructorContext, Expression] =

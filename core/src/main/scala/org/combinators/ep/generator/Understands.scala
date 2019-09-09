@@ -2,6 +2,7 @@ package org.combinators.ep.generator
 
 @scala.annotation.implicitNotFound(msg = "Context ${Context} does not understand ${Cmd}")
 trait Understands[Context, Cmd <: Command] {
+  /** Returns the updated context and the result of the command. */
   def perform(context: Context, command: Cmd): (Context, command.Result)
 }
 

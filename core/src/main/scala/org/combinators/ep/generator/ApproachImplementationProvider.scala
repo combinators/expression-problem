@@ -37,14 +37,26 @@ trait ApproachImplementationProvider {
     *     Java(s"${received.selfReference}.${Attribute.left.name}.eval()").expression())
     *   )
     * }}}
+   *
     */
   def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression]
 
   case class GeneratedTypeLookupFunction[Ctxt]() extends Command {
     type Result = DataType => Generator[Ctxt, Type]
   }
+
   implicit val canLookupTypeInMethod: Understands[MethodBodyContext, GeneratedTypeLookupFunction[MethodBodyContext]]
 
+  /**
+   * To properly convert to the target language type, this works only when the current context understands how
+   * to do this properly.
+   *
+   * @param tpe
+   * @param canTranslate
+   * @param canLookup
+   * @tparam Ctxt
+   * @return
+   */
   def toTargetLanguageType[Ctxt](tpe: TypeRep)
     (implicit
       canTranslate: Understands[Ctxt, ToTargetLanguageType[Ctxt, Type]],

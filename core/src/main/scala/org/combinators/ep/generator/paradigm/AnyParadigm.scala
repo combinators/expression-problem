@@ -85,9 +85,19 @@ trait AnyParadigm {
 
   import syntax._
 
+  /** Widest project context. */
   type ProjectContext
+
+  /** Individual source files that reflection compilation units. */
   type CompilationUnitContext
+
+  /**
+   * For testing, a different context is necessary. This ultimately depends on the language paradigm
+   * For example, object-oriented requires a class while functional paradigm uses a CompilationUnit
+   */
   type TestContext
+
+  /** Allows clean ability to capture dependencies (i.e., imports) within a given Method Body. */
   type MethodBodyContext
 
   trait ProjectContextCapabilities {

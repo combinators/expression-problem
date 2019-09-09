@@ -9,6 +9,11 @@ import org.combinators.ep.generator.paradigm.{AddBlockDefinitions, AddCompilatio
 
 import scala.collection.JavaConverters._
 
+/**
+ * Java-specific.
+ *
+ * These paradigm-specific traits are conceptually different from each other
+ */
 trait Paradigm extends AnyParadigm {
   val syntax: Syntax.default.type = Syntax.default
   import syntax._
@@ -120,7 +125,7 @@ trait Paradigm extends AnyParadigm {
             command.params.foreach { case (name, tpe) =>
               newMethod.addParameter(tpe, name)
             }
-            (context.copy(method = newMethod), ())
+            (context.copy(method = newMethod), ())   // second thing to be returned isn't optional, so make it () is like Unit
           }
         }
       implicit val canTransformTypeInMethodBody: Understands[MethodBodyCtxt, ToTargetLanguageType[MethodBodyContext, Type]] = ???

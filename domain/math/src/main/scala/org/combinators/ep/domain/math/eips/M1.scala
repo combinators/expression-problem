@@ -13,6 +13,7 @@ object M1 {
       (paradigm: P)
       (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type]):
     EvolutionImplementationProvider[AIP[paradigm.type]] = {
+
     val subProvider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override def logic
         (forApproach: AIP[paradigm.type])

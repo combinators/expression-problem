@@ -7,6 +7,7 @@ import cats.free.Free.liftF
 
 trait Command {
   type Result
+
   def interpret[Context, Self >: this.type <: Command.WithResult[Result]](implicit interp: Understands[Context, Self]): Command.Generator[Context, Result] = {
     val self: Self = this
     liftF[Command.Performable[Context, *], Result](new Command.Performable[Context, Result] {

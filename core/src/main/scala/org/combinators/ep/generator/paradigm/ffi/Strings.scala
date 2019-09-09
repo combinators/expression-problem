@@ -26,7 +26,7 @@ trait Strings[Context] {
       AnyParadigm.capabilitiy(Apply[StringAppend, Expression, Expression](StringAppend(), xs))
 
     implicit val canToStringInCtxt: Understands[Context, Apply[ToString[Type], Expression, Expression]]
-    def toString(expression: Expression, ofType: Type): Generator[Context, Expression] =
+    def asString(expression: Expression, ofType: Type): Generator[Context, Expression] =
       AnyParadigm.capabilitiy(Apply[ToString[Type], Expression, Expression](ToString(ofType), Seq(expression)))
 
     def makeString

@@ -11,18 +11,23 @@ import org.combinators.templating.persistable.Persistable
   *
   * When data is BINARY, must load up using rawBytes.
   */
-case class FileWithPath(code: String, rawBytes:Option[Array[Byte]] = None, persistTo: Path)
+case class FileWithPath(rawBytes: Array[Byte], persistTo: Path, charset: java.nio.charset.Charset = java.nio.charset.Charset.defaultCharset()) {
+  override def toString: String = s"FileWithPath(${new String(rawBytes, charset)}, $persistTo, $charset)"
+}
+
+object FileWithPath {
+  def apply(code: String, persistTo: Path, charset: java.nio.charset.Charset): FileWithPath =
+    FileWithPath(code.getBytes(charset), persistTo)
+  def apply(code: String, persistTo: Path): FileWithPath =
+    FileWithPath(code, persistTo, java.nio.charset.Charset.defaultCharset())
+}
 
 trait FileWithPathPersistableInstances {
   /** Persistable instance for [FileWithPath]. */
   implicit def fileWithPathPersistable: FileWithPathPersistable.Aux[FileWithPath] = new Persistable {
     type T = FileWithPath
     def rawText(elem: FileWithPath): Array[Byte] = {
-      if (elem.rawBytes.isDefined) {
-        elem.rawBytes.get
-      } else {
-        elem.code.getBytes
-      }
+      elem.rawBytes
     }
     def path(elem: FileWithPath): Path = elem.persistTo
   }

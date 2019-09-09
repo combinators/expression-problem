@@ -79,8 +79,6 @@ trait Functional {
   val typeCapabilities: TypeCapabilities
 
   trait MethodBodyCapabilities {
-
-
     implicit val canInstantiateTypeInMethod: Understands[MethodBodyContext, InstantiateType[Type, Expression]]
     def instantiateType(
         tpe: Type,

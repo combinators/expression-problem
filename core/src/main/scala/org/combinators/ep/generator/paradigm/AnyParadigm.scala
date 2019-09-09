@@ -2,7 +2,7 @@ package org.combinators.ep.generator.paradigm
 
 import org.combinators.ep.domain.abstractions.{DataType, DataTypeCase, TypeRep}
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
-import org.combinators.ep.generator.{AbstractSyntax, Command, Understands}
+import org.combinators.ep.generator.{AbstractSyntax, Command, FileWithPath, Understands}
 import Command._
 import cats.implicits._
 
@@ -154,8 +154,7 @@ trait AnyParadigm {
   }
   val testCapabilities: TestCapabilities
 
-  /** Creates an empty project */
-  def emptyProject(name: String): ProjectContext
+  def runGenerator(generator: Generator[ProjectContext, Unit]): Seq[FileWithPath]
 }
 
 object AnyParadigm {

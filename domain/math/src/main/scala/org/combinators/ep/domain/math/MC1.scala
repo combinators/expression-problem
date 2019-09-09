@@ -21,8 +21,8 @@ object MC1 extends Evolution {
 
   // testing
   def MC1_tests: Seq[TestCase] = Seq(
-    EqualsTestCase(mc1_s2, PrettyP, StringInst("(1.0/(1.0-2.0))")),
-    EqualsTestCase(mc1_d1, PrettyP, StringInst("(1.0/(1.0-2.0))"))
+    EqualsTestCase(getModel.baseDataType, mc1_s2, PrettyP, StringInst("(1.0/(1.0-2.0))")),
+    EqualsTestCase(getModel.baseDataType, mc1_d1, PrettyP, StringInst("(1.0/(1.0-2.0))"))
   )
 }
 

@@ -18,9 +18,9 @@ object M2 extends Evolution {
   val m2_s1 = SubInst(LitInst(1.0), LitInst(2.0))
   def M2_tests: Seq[TestCase] = Seq(
     //EqualsTestCase(m2_s1, PrettyP, ExistsInstance(String)("(1.0-2.0)")),
-    EqualsTestCase(m2_s1, PrettyP, StringInst("(1.0-2.0)")),
+    EqualsTestCase(getModel.baseDataType, m2_s1, PrettyP, StringInst("(1.0-2.0)")),
 
-    EqualsTestCase(AddInst(m2_s1, AddInst(LitInst(5.0), LitInst(6.0))),
+    EqualsTestCase(getModel.baseDataType, AddInst(m2_s1, AddInst(LitInst(5.0), LitInst(6.0))),
       PrettyP, StringInst("((1.0-2.0)+(5.0+6.0))"))
   )
 }

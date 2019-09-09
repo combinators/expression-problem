@@ -12,13 +12,6 @@ case class AddTypeConstructor[Type](name: String, parameters: Seq[(String, Type)
   type Result = Unit
 }
 
-case class PatternMatch[MethodBodyContext, Expression](
-    onValue: Expression,
-    options: (String, Seq[Expression]) => Generator[MethodBodyContext, Expression]
-  ) extends Command {
-  type Result = Expression
-}
-
 case class InstantiateType[Type, Expression](
     tpe: Type,
     constructor: String,
@@ -86,12 +79,7 @@ trait Functional {
   val typeCapabilities: TypeCapabilities
 
   trait MethodBodyCapabilities {
-    implicit val canPatternMatchInMethod: Understands[MethodBodyContext, PatternMatch[MethodBodyContext, Expression]]
-    def patternMatch(
-        onValue: Expression,
-        options: (String, Seq[Expression]) => Generator[MethodBodyContext, Expression]
-      ): Generator[MethodBodyContext, Expression] =
-      AnyParadigm.capabilitiy(PatternMatch(onValue, options))
+
 
     implicit val canInstantiateTypeInMethod: Understands[MethodBodyContext, InstantiateType[Type, Expression]]
     def instantiateType(

@@ -56,6 +56,7 @@ trait Generics {
     def instantiateTypeParameter(method: Expression, arguments: Seq[Type]): Generator[ConstructorContext, Expression] =
       AnyParadigm.capabilitiy(Apply[Expression, Type, Expression](method, arguments))
   }
+  val constructorCapabilities: ConstructorCapabilities
 }
 
 object Generics {

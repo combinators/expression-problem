@@ -220,6 +220,7 @@ package object abstractions {
   /** Models a test case which applies operation `op` to `domainObject` and `params`, expecting a result
     * equal to `expected`. */
   case class EqualsTestCase(
+    baseTpe: DataType,
     domainObject: DataTypeInstance,
     op: Operation,
     expected: InstanceRep,
@@ -229,6 +230,7 @@ package object abstractions {
   /** Models a test case which applies operation `op` to `domainObject` and `params`, expecting a result
     * not equal to `expected`. */
   case class NotEqualsTestCase(
+    baseTpe: DataType,
     domainObject: DataTypeInstance,
     op: Operation,
     expected: InstanceRep,
@@ -246,6 +248,7 @@ package object abstractions {
     * }}}
     */
   case class EqualsCompositeTestCase(
+    baseTpe: DataType,
     startObject: DataTypeInstance,
     expected: InstanceRep,
     ops: (Operation, Seq[InstanceRep])*
@@ -263,6 +266,7 @@ package object abstractions {
     iterations: Int,
     bestOf: Int,
     op: Operation,
+    baseTpe: DataType,
     initialObject: DataTypeInstance,
     initialParams: Seq[InstanceRep],
     stepParams: Seq[InstanceRep] => Seq[InstanceRep],

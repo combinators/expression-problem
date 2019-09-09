@@ -16,6 +16,7 @@ import AnyParadigm.syntax._
   * EP domain. */
 trait ApproachImplementationProvider {
   val paradigm: AnyParadigm
+  val names: NameProvider
   import paradigm._
   import syntax._
 
@@ -73,11 +74,33 @@ trait ApproachImplementationProvider {
     }
   }
 
-  /** Produces all compilation units necessary to implement the given model.
+  /** Adds everything necessary to implement the given model to the project context.
     * Fills in domain specific code with the given approach independent [[EvolutionImplementationProvider]].
     */
-  def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Seq[CompilationUnit]
+  def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit]
 
+  /** Adds tests to the project context */
+  def implement(tests: Map[Model, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
+    import projectContextCapabilities._
+    import paradigm.compilationUnitCapabilities._
+    import paradigm.testCapabilities._
+    for {
+      _ <-
+        forEach(tests.toList) { case (model, tests) =>
+          val testCode: Generator[MethodBodyContext, Seq[Expression]] =
+            for {
+              code <- forEach(tests) { test => testImplementationProvider.test(this)(test) }
+            } yield code.flatten
+
+          addCompilationUnit(
+            names.mangle(model.name + "Test"),
+            addTestSuite(
+              names.mangle(model.name + "Test"),
+              addTestCase(names.mangle("test"), testCode)
+            ))
+        }
+    } yield ()
+  }
 }
 
 object ApproachImplementationProvider {

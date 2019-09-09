@@ -54,28 +54,28 @@ object M4 extends Evolution {
     * Result should support a composite operation
     */
   def M4_tests:Seq[TestCase] = Seq(
-    EqualsTestCase(m4_d2, Collect, ListDoubleInst(Seq(5.0, 7.0, 7.0, 2.0, 3.0))),
-    EqualsTestCase(m4_s_00, Collect, ListDoubleInst(Seq(0.0, 0.0))),
-    EqualsTestCase(m4_s_0, Collect, ListDoubleInst(Seq(0.0))),
-    EqualsTestCase(m4_s_12, Collect, ListDoubleInst(Seq(1.0, 12.0))),
-    EqualsTestCase(m4_s_13, Collect, ListDoubleInst(Seq(13.0, 1.0))),
+    EqualsTestCase(getModel.baseDataType, m4_d2, Collect, ListDoubleInst(Seq(5.0, 7.0, 7.0, 2.0, 3.0))),
+    EqualsTestCase(getModel.baseDataType, m4_s_00, Collect, ListDoubleInst(Seq(0.0, 0.0))),
+    EqualsTestCase(getModel.baseDataType, m4_s_0, Collect, ListDoubleInst(Seq(0.0))),
+    EqualsTestCase(getModel.baseDataType, m4_s_12, Collect, ListDoubleInst(Seq(1.0, 12.0))),
+    EqualsTestCase(getModel.baseDataType, m4_s_13, Collect, ListDoubleInst(Seq(13.0, 1.0))),
 
-    EqualsTestCase(m4_m1, PrettyP, StringInst("((5.0/2.0)*4.0)")),
-    EqualsTestCase(m4_m1, Eval, InstanceRep(LitInst(10.0))),
+    EqualsTestCase(getModel.baseDataType, m4_m1, PrettyP, StringInst("((5.0/2.0)*4.0)")),
+    EqualsTestCase(getModel.baseDataType, m4_m1, Eval, InstanceRep(LitInst(10.0))),
   )  //
 
   def M4_simplify_tests:Seq[TestCase] = Seq(
-    EqualsCompositeTestCase(m4_together, StringInst("(5.0+7.0)"), (Simplify, Seq.empty), (PrettyP, Seq.empty)),
-    EqualsCompositeTestCase(m4_d2,  StringInst("(5.0/7.0)"), (Simplify, Seq.empty), (PrettyP, Seq.empty)),
-    EqualsCompositeTestCase(m4_s_0, InstanceRep(LitInst(0.0)), (Simplify, Seq.empty), (Eval, Seq.empty)),
-    EqualsCompositeTestCase(m4_s_5, InstanceRep(LitInst(5.0)), (Simplify, Seq.empty), (Eval, Seq.empty)),
-    EqualsCompositeTestCase(m4_s_7, InstanceRep(LitInst(7.0)), (Simplify, Seq.empty), (Eval, Seq.empty)),
-    EqualsCompositeTestCase(m4_s_13, InstanceRep(LitInst(13.0)) , (Simplify, Seq.empty), (Eval, Seq.empty)),
-    EqualsCompositeTestCase(m4_s_12, InstanceRep(LitInst(12.0)) , (Simplify, Seq.empty), (Eval, Seq.empty)),
-    EqualsCompositeTestCase(m4_s_m0, InstanceRep(LitInst(0.0)) , (Simplify, Seq.empty), (Eval, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, m4_together, StringInst("(5.0+7.0)"), (Simplify, Seq.empty), (PrettyP, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, m4_d2,  StringInst("(5.0/7.0)"), (Simplify, Seq.empty), (PrettyP, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, m4_s_0, InstanceRep(LitInst(0.0)), (Simplify, Seq.empty), (Eval, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, m4_s_5, InstanceRep(LitInst(5.0)), (Simplify, Seq.empty), (Eval, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, m4_s_7, InstanceRep(LitInst(7.0)), (Simplify, Seq.empty), (Eval, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, m4_s_13, InstanceRep(LitInst(13.0)) , (Simplify, Seq.empty), (Eval, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, m4_s_12, InstanceRep(LitInst(12.0)) , (Simplify, Seq.empty), (Eval, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, m4_s_m0, InstanceRep(LitInst(0.0)) , (Simplify, Seq.empty), (Eval, Seq.empty)),
 
-    EqualsCompositeTestCase(m4_s_n1, InstanceRep(LitInst(-1.0)) , (Simplify, Seq.empty), (Eval, Seq.empty)),
-    EqualsCompositeTestCase(m4_s_1, InstanceRep(LitInst(1.0)) , (Simplify, Seq.empty), (Eval, Seq.empty)),
-    EqualsCompositeTestCase(m4_s_d0, InstanceRep(LitInst(0.0)) , (Simplify, Seq.empty), (Eval, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, m4_s_n1, InstanceRep(LitInst(-1.0)) , (Simplify, Seq.empty), (Eval, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, m4_s_1, InstanceRep(LitInst(1.0)) , (Simplify, Seq.empty), (Eval, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, m4_s_d0, InstanceRep(LitInst(0.0)) , (Simplify, Seq.empty), (Eval, Seq.empty)),
   )
 }

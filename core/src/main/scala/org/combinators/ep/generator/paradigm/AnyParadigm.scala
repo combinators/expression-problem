@@ -56,7 +56,7 @@ case class GetArguments[Type, Expression]() extends Command {
 case class AddTestSuite[TestContext](name: String, suite: Generator[TestContext, Unit]) extends Command {
   type Result = Unit
 }
-case class AddTestCase[MethodBodyContext](name: String, code: Generator[MethodBodyContext, Unit]) extends Command {
+case class AddTestCase[MethodBodyContext, Expression](name: String, code: Generator[MethodBodyContext, Seq[Expression]]) extends Command {
   type Result = Unit
 }
 
@@ -68,7 +68,17 @@ case class ResolveImport[Import, T](forElem: T) extends Command {
   type Result = Option[Import]
 }
 
+case class DeclareVariable[Type, Init, Statement](name: String, tpe: Type, initialization: Init) extends Command {
+  type Result = Statement
+}
 
+case class IfThenElse[Expression, MandatoryBlock, Block, R](
+    condition: Expression,
+    ifBranch: MandatoryBlock,
+    elseIfBranches: Seq[(Expression, MandatoryBlock)],
+    elseBranch: Block) extends Command {
+  type Result = R
+}
 
 trait AnyParadigm {
   val syntax: AbstractSyntax
@@ -89,7 +99,12 @@ trait AnyParadigm {
 
   trait CompilationUnitCapabilities {
     implicit val canAddImportInCompilationUnit: Understands[CompilationUnitContext, AddImport[Import]]
+    def addImport(imp: Import): Generator[CompilationUnitContext, Unit] =
+      AnyParadigm.capabilitiy(AddImport(imp))
+
     implicit val canAddTestSuiteInCompilationUnit: Understands[CompilationUnitContext, AddTestSuite[TestContext]]
+    def addTestSuite(name: String, suite: Generator[TestContext, Unit]): Generator[CompilationUnitContext, Unit] =
+      AnyParadigm.capabilitiy(AddTestSuite[TestContext](name, suite))
   }
   val compilationUnitCapabilities: CompilationUnitCapabilities
 
@@ -133,10 +148,11 @@ trait AnyParadigm {
   val methodBodyCapabilities: MethodBodyCapabilities
 
   trait TestCapabilities {
-    implicit val canAddTestCaseInTest: Understands[TestContext, AddTestCase[MethodBodyContext]]
-    def addTestCase(name: String, code: Generator[MethodBodyContext, Unit]): Generator[TestContext, Unit] =
+    implicit val canAddTestCaseInTest: Understands[TestContext, AddTestCase[MethodBodyContext, Expression]]
+    def addTestCase(name: String, code: Generator[MethodBodyContext, Seq[Expression]]): Generator[TestContext, Unit] =
       AnyParadigm.capabilitiy(AddTestCase(name, code))
   }
+  val testCapabilities: TestCapabilities
 
   /** Creates an empty project */
   def emptyProject(name: String): ProjectContext

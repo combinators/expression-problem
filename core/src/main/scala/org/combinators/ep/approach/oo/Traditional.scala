@@ -9,8 +9,6 @@ import Command._
 import AnyParadigm.syntax._
 
 sealed trait Traditional extends ApproachImplementationProvider {
-
-  val names: NameProvider
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
 
   import paradigm._
@@ -58,6 +56,7 @@ sealed trait Traditional extends ApproachImplementationProvider {
   }
 
   def makeBase(tpe: DataType, ops: Seq[Operation]): Generator[ProjectContext, Unit] = {
+    import ooParadigm.projectCapabilities._
     val makeClass: Generator[ClassContext, Unit] = {
         import classCapabilities._
         for {
@@ -123,6 +122,7 @@ sealed trait Traditional extends ApproachImplementationProvider {
   }
 
   def makeDerived(tpe: DataType, tpeCase: DataTypeCase, ops: Seq[Operation], domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
+    import ooParadigm.projectCapabilities._
     val makeClass: Generator[ClassContext, Unit] = {
       import classCapabilities._
       for {
@@ -139,16 +139,14 @@ sealed trait Traditional extends ApproachImplementationProvider {
     addClassToProject(names.conceptNameOf(tpeCase), makeClass)
   }
 
-  def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Seq[CompilationUnit] = {
+  def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     val flatDomain = domain.flatten
-    val project =
-      for {
-        _ <- makeBase(flatDomain.baseDataType, flatDomain.ops)
-        _ <- forEach (flatDomain.typeCases) { tpeCase =>
-            makeDerived(flatDomain.baseDataType, tpeCase, flatDomain.ops, domainSpecific)
-          }
-      } yield ()
-    Seq.empty
+    for {
+      _ <- makeBase(flatDomain.baseDataType, flatDomain.ops)
+      _ <- forEach (flatDomain.typeCases) { tpeCase =>
+          makeDerived(flatDomain.baseDataType, tpeCase, flatDomain.ops, domainSpecific)
+        }
+    } yield ()
   }
 }
 

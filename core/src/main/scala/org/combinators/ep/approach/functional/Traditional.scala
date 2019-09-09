@@ -1,19 +1,20 @@
 package org.combinators.ep.approach.functional
 
-import org.combinators.ep.domain.Model
-import org.combinators.ep.generator.Command
-import org.combinators.ep.generator.{AbstractSyntax, ApproachImplementationProvider, EvolutionImplementationProvider, NameProvider, communication}
+import org.combinators.ep.domain.{Model, abstractions}
+import org.combinators.ep.generator.{AbstractSyntax, ApproachImplementationProvider, Command, EvolutionImplementationProvider, NameProvider, TestImplementationProvider, communication}
+import org.combinators.ep.generator.paradigm.control.{Functional => FunControl}
 import Command.{skip, _}
 import cats.syntax._
 import cats.implicits._
-import org.combinators.ep.domain.abstractions.{Attribute, DataType, DataTypeCase, Operation, Parameter, TypeRep}
+import org.combinators.ep.domain.abstractions.{Attribute, DataType, DataTypeCase, Operation, Parameter, TestCase, TypeRep}
 import org.combinators.ep.generator.communication.{ReceivedRequest, Request, SendRequest}
-import org.combinators.ep.generator.paradigm.{AddCompilationUnit, AddImport, AddMethod, AddType, AddTypeConstructor, AnyParadigm, Apply, FindMethod, Functional, GetArguments, InstantiateType, PatternMatch, ResolveImport, SetParameters, ToTargetLanguageType}
+import org.combinators.ep.generator.paradigm.{AddCompilationUnit, AddImport, AddMethod, AddType, AddTypeConstructor, AnyParadigm, Apply, FindMethod, Functional, GetArguments, InstantiateType, ResolveImport, SetParameters, ToTargetLanguageType}
 import AnyParadigm.syntax._
+import org.combinators.ep.generator.paradigm.control.Functional.WithBase
 
 trait Traditional extends ApproachImplementationProvider {
-  val names: NameProvider
   val functional: Functional.WithBase[paradigm.type]
+  val functionalControl: FunControl.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
   import paradigm._
   import functional._
@@ -93,7 +94,7 @@ trait Traditional extends ApproachImplementationProvider {
       domainSpecific: EvolutionImplementationProvider[this.type]
     ): Generator[MethodBodyContext, Expression] = {
     import paradigm.methodBodyCapabilities._
-    import functional.methodBodyCapabilities._
+    import functionalControl.functionalCapabilities._
     for {
       params <- forEach (Parameter("this", TypeRep.DataType(tpe)) +: op.parameters) { param: Parameter =>
           for {
@@ -124,18 +125,17 @@ trait Traditional extends ApproachImplementationProvider {
     )
   }
 
-  def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Seq[CompilationUnit] = {
+  def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     val flatDomain = domain.flatten
-    val project: Generator[ProjectContext, Unit] =
-      for {
-        _ <- makeTypeInCompilationUnit(flatDomain.baseDataType, flatDomain.typeCases)
-        _ <- forEach (flatDomain.ops) { op =>
-            makeFunctionInCompilationUnit(flatDomain.baseDataType, flatDomain.typeCases, op, domainSpecific)
-          }
-      } yield ()
-
-    ???
+    for {
+      _ <- makeTypeInCompilationUnit(flatDomain.baseDataType, flatDomain.typeCases)
+      _ <- forEach (flatDomain.ops) { op =>
+          makeFunctionInCompilationUnit(flatDomain.baseDataType, flatDomain.typeCases, op, domainSpecific)
+        }
+    } yield ()
   }
+
+
 }
 
 object Traditional {
@@ -144,10 +144,12 @@ object Traditional {
 
   def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
     (nameProvider: NameProvider, base: P)
-    (fun: Functional.WithBase[base.type]): Traditional.WithParadigm[base.type] =
+    (fun: Functional.WithBase[base.type],
+      funControl: FunControl.WithBase[base.MethodBodyContext, base.type]): Traditional.WithParadigm[base.type] =
     new Traditional {
       override val names: NameProvider = nameProvider
       override val paradigm: base.type = base
       override val functional: Functional.WithBase[paradigm.type] = fun
+      override val functionalControl: WithBase[paradigm.MethodBodyContext, paradigm.type] = funControl
     }
 }

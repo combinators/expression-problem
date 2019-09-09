@@ -8,7 +8,7 @@ import org.combinators.ep.domain.math.M0.{Add, AddInst, LitInst}
 import org.combinators.ep.domain.math.M1.{Sub, SubInst}
 import org.combinators.ep.domain.math.M2.{PrettyP, StringInst}
 import org.combinators.ep.domain.math.M3.{Divd, DivdInst, Mult, MultInst, Neg, NegInst}
-import org.combinators.ep.domain.math.M4.Simplify
+import org.combinators.ep.domain.math.M4.{Simplify}
 
 object M5 extends Evolution {
   override implicit def getModel:Model = M4.getModel.evolve("m5", Seq.empty, Seq(Operation.asTree, Identifier))
@@ -59,9 +59,9 @@ object M5 extends Evolution {
     SameTestCase(m5_s1, m5_s3, true),
     SameTestCase(m5_all, m5_all, true),
 
-    EqualsTestCase(m5_all, Operation.asTree, InstanceRep(TypeRep.Tree)(tree_m5_all)),
-    EqualsCompositeTestCase(m5_all, StringInst("(-2.0-((1.0-976.0)*((1.0*976.0)+(1.0/3.0))))"), (PrettyP, Seq.empty)),
+    EqualsTestCase(getModel.baseDataType, m5_all, Operation.asTree, InstanceRep(TypeRep.Tree)(tree_m5_all)),
+    EqualsCompositeTestCase(getModel.baseDataType, m5_all, StringInst("(-2.0-((1.0-976.0)*((1.0*976.0)+(1.0/3.0))))"), (PrettyP, Seq.empty)),
 
-    EqualsCompositeTestCase(m5_s4, InstanceRep(TypeRep.Tree)(treeSimplified), (Simplify, Seq.empty), (Operation.asTree, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, m5_s4, InstanceRep(TypeRep.Tree)(treeSimplified), (Simplify, Seq.empty), (Operation.asTree, Seq.empty)),
   )
 }

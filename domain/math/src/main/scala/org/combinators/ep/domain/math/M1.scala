@@ -18,6 +18,6 @@ object M1 extends Evolution {
 
   // testing
   def M1_tests: Seq[TestCase] = Seq(
-    EqualsTestCase(SubInst(LitInst(1.0), LitInst(2.0)), Eval, InstanceRep(LitInst(-1.0))),
+    EqualsTestCase(getModel.baseDataType, SubInst(LitInst(1.0), LitInst(2.0)), Eval, InstanceRep(LitInst(-1.0))),
   )
 }

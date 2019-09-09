@@ -23,7 +23,7 @@ object EvolutionImplementationProvider {
   /** Allows to combine multiple [[EvolutionImplementationProvider]] objects into one. */
   implicit def monoidInstance[AIP <: ApproachImplementationProvider]: Monoid[EvolutionImplementationProvider[AIP]] =
     new Monoid[EvolutionImplementationProvider[AIP]] {
-      /** Returns an [[EvolutionImplementationProvider]] which does not provice any implementation, and instead fails
+      /** Returns an [[EvolutionImplementationProvider]] which does not provide any implementation, and instead fails
         * with a runtime exception */
       def empty: EvolutionImplementationProvider[AIP] = new EvolutionImplementationProvider[AIP] {
         def logic
@@ -32,7 +32,7 @@ object EvolutionImplementationProvider {
           throw new RuntimeException(s"No logic to handle request ${onRequest}")
       }
 
-      /** Combines to [[EvolutionImplementationProvider]] objects by trying to resolve requests with the first provided
+      /** Combines two [[EvolutionImplementationProvider]] objects by trying to resolve requests with the first provided
         * logic, resorting to the second logic on failure.
         */
       def combine(

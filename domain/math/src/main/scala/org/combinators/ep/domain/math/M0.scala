@@ -24,13 +24,14 @@ object M0 extends Evolution {
 
   // Testing
   def M0_tests:Seq[TestCase] = Seq(
-    EqualsTestCase(AddInst(LitInst(1.0), LitInst(2.0)), Eval, InstanceRep(LitInst(3.0))),
-    EqualsTestCase(LitInst(5.0), Eval, InstanceRep(LitInst(5.0))),
+    EqualsTestCase(getModel.baseDataType, AddInst(LitInst(1.0), LitInst(2.0)), Eval, InstanceRep(LitInst(3.0))),
+    EqualsTestCase(getModel.baseDataType, LitInst(5.0), Eval, InstanceRep(LitInst(5.0))),
 
     PerformanceTestCase(
       11,    // how many iterations to continue the iter
       8,     // how many times to try to find the best
       Eval,
+      getModel.baseDataType,
       AddInst(LitInst(1.0), LitInst(2.0)),     // new BinaryInst(Add, LitInst(1.0), LitInst(2.0)),   // base instance
       Seq.empty,   // base parameters
       params => params,   // how parameters evolve (i.e., stay same)

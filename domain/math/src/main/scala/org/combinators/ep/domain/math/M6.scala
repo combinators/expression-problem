@@ -56,6 +56,7 @@ object M6 extends Evolution {
       11,
       8,
       Equals,
+      getModel.baseDataType,
       AddInst(LitInst(1.0), LitInst(2.0)),     // first, base instance
 
       // initial parameter to use when testing equals

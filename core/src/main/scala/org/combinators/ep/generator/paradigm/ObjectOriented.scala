@@ -96,6 +96,10 @@ trait ObjectOriented {
         isPublic: Boolean = true): Generator[ClassContext, Unit] =
       AnyParadigm.capabilitiy(AddMethod(name, spec, isPublic))
 
+    def addAbstractMethod(name: String, spec: Generator[MethodBodyContext, Unit], isPublic: Boolean = true): Generator[ClassContext, Unit] = {
+      addMethod(name, spec.flatMap(_ => methodBodyCapabilities.setAbstract()).map(_ => None), isPublic)
+    }
+
     implicit val canAddConstructorInClass: Understands[ClassContext, AddConstructor[ConstructorContext]]
     def addConstructor(ctor: Generator[ConstructorContext, Unit]): Generator[ClassContext, Unit] =
       AnyParadigm.capabilitiy(AddConstructor(ctor))
@@ -220,16 +224,14 @@ trait ObjectOriented {
   }
   val methodBodyCapabilities: MethodBodyCapabilities
 
-  def addClassToProject(name: String, classGen: Generator[ClassContext, Unit]): Generator[ProjectContext, Unit] = {
-    import compilationUnitCapabilities._
-    import base.projectContextCapabilities._
-    addCompilationUnit(name, AddClass(name, classGen).interpret)
+  trait ProjectCapabilities {
+    def addClassToProject(name: String, classGen: Generator[ClassContext, Unit]): Generator[ProjectContext, Unit] = {
+      import compilationUnitCapabilities._
+      import base.projectContextCapabilities._
+      addCompilationUnit(name, AddClass(name, classGen).interpret)
+    }
   }
-
-  def addAbstractMethod(name: String, spec: Generator[MethodBodyContext, Unit], isPublic: Boolean = true): Generator[ClassContext, Unit] = {
-    import classCapabilities._
-    addMethod(name, spec.flatMap(_ => methodBodyCapabilities.setAbstract()).map(_ => None), isPublic)
-  }
+  val projectCapabilities: ProjectCapabilities
 }
 
 object ObjectOriented {

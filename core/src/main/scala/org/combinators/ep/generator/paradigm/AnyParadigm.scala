@@ -100,6 +100,7 @@ trait AnyParadigm {
   /** Allows clean ability to capture dependencies (i.e., imports) within a given Method Body. */
   type MethodBodyContext
 
+  /** The overall project stores the CompilationUnits which can be added to it. */
   trait ProjectContextCapabilities {
     implicit val canAddCompilationUnitInProject: Understands[ProjectContext, AddCompilationUnit[CompilationUnitContext]]
     def addCompilationUnit(name: String, unit: Generator[CompilationUnitContext, Unit]): Generator[ProjectContext, Unit] =
@@ -107,6 +108,7 @@ trait AnyParadigm {
   }
   val projectContextCapabilities: ProjectContextCapabilities
 
+  /** Each CompilationUnit may have external import dependencies and associated test cases. */
   trait CompilationUnitCapabilities {
     implicit val canAddImportInCompilationUnit: Understands[CompilationUnitContext, AddImport[Import]]
     def addImport(imp: Import): Generator[CompilationUnitContext, Unit] =
@@ -118,6 +120,17 @@ trait AnyParadigm {
   }
   val compilationUnitCapabilities: CompilationUnitCapabilities
 
+  /**
+   * A method declaration can:
+   *
+   *   - request a new import in the enclosing context
+   *   - contain a block of statements
+   *   - has a return type
+   *   - may have parameters
+   *   - can convert TypeRep into local type in language
+   *   - TODO: explain reify
+   *
+   */
   trait MethodBodyCapabilities {
     implicit val canAddImportInMethodBody: Understands[MethodBodyContext, AddImport[Import]]
     def addImport(imp: Import): Generator[MethodBodyContext, Unit] =

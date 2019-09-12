@@ -24,6 +24,10 @@ case class FindMethod[Expression](name: String) extends Command {
   type Result = Expression
 }
 
+case class FindType[Type](name: String) extends Command {
+  type Result = Type
+}
+
 
 trait Functional {
   val base: AnyParadigm
@@ -60,9 +64,9 @@ trait Functional {
     def addTypeConstructor(name: String, parameters: Seq[(String, Type)]): Generator[TypeContext, Unit] =
       AnyParadigm.capabilitiy(AddTypeConstructor(name, parameters))
 
-    implicit val canTranslateTypeInType: Understands[TypeContext, ToTargetLanguageType[TypeContext, Type]]
-    def toTargetLanguageType(tpe: TypeRep, generated: DataType => Generator[TypeContext, Type]): Generator[TypeContext, Type] =
-      AnyParadigm.capabilitiy(ToTargetLanguageType[TypeContext, Type](tpe, generated))
+    implicit val canTranslateTypeInType: Understands[TypeContext, ToTargetLanguageType[Type]]
+    def toTargetLanguageType(tpe: TypeRep): Generator[TypeContext, Type] =
+      AnyParadigm.capabilitiy(ToTargetLanguageType[Type](tpe))
 
     implicit val canAddImportInType: Understands[TypeContext, AddImport[Import]]
     def addImport(imp: Import): Generator[TypeContext, Unit] =
@@ -75,6 +79,10 @@ trait Functional {
     implicit val canResolveExpressionImportInType: Understands[TypeContext, ResolveImport[Import, Expression]]
     def resolveExpressionImport(expr: Expression): Generator[TypeContext, Option[Import]] =
       AnyParadigm.capabilitiy(ResolveImport[Import, Expression](expr))
+
+    implicit val canFindTypeInType: Understands[TypeContext, FindType[Type]]
+    def findType(name: String): Generator[TypeContext, Type] =
+      AnyParadigm.capabilitiy(FindType[Type](name))
   }
   val typeCapabilities: TypeCapabilities
 
@@ -93,8 +101,19 @@ trait Functional {
     implicit val canFindMethodInMethod: Understands[MethodBodyContext, FindMethod[Expression]]
     def findMethod(name: String): Generator[MethodBodyContext, Expression] =
       AnyParadigm.capabilitiy(FindMethod[Expression](name))
+
+    implicit val canFindTypeInMethod: Understands[MethodBodyContext, FindType[Type]]
+    def findType(name: String): Generator[MethodBodyContext, Type] =
+      AnyParadigm.capabilitiy(FindType[Type](name))
   }
   val methodBodyCapabilities: MethodBodyCapabilities
+
+  trait ProjectContextCapabilities {
+    implicit val canAddTypeLookupForTypesInProject: Understands[ProjectContext, AddTypeLookup[TypeContext, Type]]
+    def addTypeLookupForTypes(tpe: TypeRep, lookup: Generator[TypeContext, Type]): Generator[ProjectContext, Unit] =
+      AnyParadigm.capabilitiy(AddTypeLookup[TypeContext, Type](tpe, lookup))
+  }
+  val projectContextCapabilities: ProjectContextCapabilities
 }
 
 object Functional {

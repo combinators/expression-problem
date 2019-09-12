@@ -25,20 +25,6 @@ sealed trait Traditional extends ApproachImplementationProvider {
 
   }
 
-  implicit def canLookupType[Ctxt](implicit canFindClass: Understands[Ctxt, FindClass[Type]]):
-    Understands[Ctxt, GeneratedTypeLookupFunction[Ctxt]] = {
-    new Understands[Ctxt, GeneratedTypeLookupFunction[Ctxt]] {
-      def perform(context: Ctxt, command: GeneratedTypeLookupFunction[Ctxt]):
-        (Ctxt, DataType => Generator[Ctxt, Type]) =
-        (context, tpe => FindClass(names.conceptNameOf(tpe)).interpret(canFindClass))
-    }
-  }
-  implicit val canLookupTypeInMethod = {
-    import ooParadigm.methodBodyCapabilities._
-    canLookupType[MethodBodyContext]
-  }
-
-
   def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
@@ -51,7 +37,7 @@ sealed trait Traditional extends ApproachImplementationProvider {
   }
 
   def makeSignature(op: Operation): Generator[MethodBodyContext, Unit] = {
-    import paradigm.methodBodyCapabilities.{toTargetLanguageType => _, _}
+    import paradigm.methodBodyCapabilities._
 
     for {
       rt <- toTargetLanguageType(op.returnType)
@@ -80,7 +66,7 @@ sealed trait Traditional extends ApproachImplementationProvider {
   }
 
   def makeField(att: Attribute): Generator[ClassContext, Unit] = {
-    import ooParadigm.classCapabilities.{toTargetLanguageType => _, _}
+    import ooParadigm.classCapabilities._
     for {
       ft <- toTargetLanguageType(att.tpe)
       _ <- resolveAndAddImport(ft)
@@ -123,7 +109,7 @@ sealed trait Traditional extends ApproachImplementationProvider {
     for {
       params <- forEach (tpeCase.attributes) { att: Attribute =>
           for {
-            at <- super.toTargetLanguageType(att.tpe)
+            at <- toTargetLanguageType(att.tpe)
             _ <- resolveAndAddImport(at)
           } yield (names.instanceNameOf(att), at)
         }
@@ -138,7 +124,7 @@ sealed trait Traditional extends ApproachImplementationProvider {
     val makeClass: Generator[ClassContext, Unit] = {
       import classCapabilities._
       for {
-        pt <- super.toTargetLanguageType(TypeRep.DataType(tpe))
+        pt <- toTargetLanguageType(TypeRep.DataType(tpe))
         _ <- resolveAndAddImport(pt)
         _ <- addParent(pt)
         _ <- forEach (tpeCase.attributes) { att => makeField(att) }
@@ -151,9 +137,29 @@ sealed trait Traditional extends ApproachImplementationProvider {
     addClassToProject(names.conceptNameOf(tpeCase), makeClass)
   }
 
+  def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Type]]): Generator[Ctxt, Type] = {
+    FindClass(names.conceptNameOf(dtpe)).interpret(canFindClass)
+  }
+
+  def initializeApproach(domain: Model): Generator[ProjectContext, Unit] = {
+    import paradigm.projectContextCapabilities._
+    import ooParadigm.projectCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+    import ooParadigm.classCapabilities._
+    import ooParadigm.constructorCapabilities._
+    val dtpeRep = TypeRep.DataType(domain.baseDataType)
+    for {
+      _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(domain.baseDataType))
+      _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(domain.baseDataType))
+      _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(domain.baseDataType))
+    } yield ()
+  }
+
   def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     val flatDomain = domain.flatten
     for {
+      _ <- initializeApproach(flatDomain)
+      _ <- domainSpecific.initialize(this)
       _ <- makeBase(flatDomain.baseDataType, flatDomain.ops)
       _ <- forEach (flatDomain.typeCases) { tpeCase =>
           makeDerived(flatDomain.baseDataType, tpeCase, flatDomain.ops, domainSpecific)

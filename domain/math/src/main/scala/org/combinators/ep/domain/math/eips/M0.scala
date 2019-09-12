@@ -13,6 +13,10 @@ object M0 {
       (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type]):
     EvolutionImplementationProvider[AIP[paradigm.type]] =
     new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
+        ffiArithmetic.enable()
+      }
+
       override def logic
           (forApproach: AIP[paradigm.type ])
           (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
@@ -23,7 +27,7 @@ object M0 {
 
         assert(onRequest.request.op == math.M0.Eval)
         val result = onRequest.tpeCase match {
-          case litC@math.M0.Lit => monadInstance[MethodBodyContext].pure(onRequest.attributes(litC.attributes.head))
+          case litC@math.M0.Lit => Command.lift[MethodBodyContext, paradigm.syntax.Expression](onRequest.attributes(litC.attributes.head))
           case addC@math.M0.Add =>
             for {
               left <- forApproach.dispatch(SendRequest(

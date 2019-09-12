@@ -6,9 +6,7 @@ import org.combinators.ep.generator.paradigm.{AnyParadigm, Apply}
 
 case class GetTime()
 
-trait Time[Context] {
-  val base: AnyParadigm
-
+trait Time[Context] extends FFI {
   import base.syntax._
 
   trait TimeCapabilities {

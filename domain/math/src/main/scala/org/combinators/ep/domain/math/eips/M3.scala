@@ -16,7 +16,14 @@ object M3 {
        ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val arithProvider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override def logic
+      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
+        for {
+          _ <- ffiArithmetic.enable()
+          _ <- ffiStrings.enable()
+        } yield ()
+      }
+
+      def logic
           (forApproach: AIP[paradigm.type])
           (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
         Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression] = {
@@ -50,6 +57,7 @@ object M3 {
                   } yield res
                 case _ => ???
               }
+            case _ => ???
           }
 
         val result =
@@ -57,7 +65,7 @@ object M3 {
               atts <- forEach (onRequest.tpeCase.attributes) { att =>
                   forApproach.dispatch(SendRequest(
                     onRequest.attributes(att),
-                    math.M2.getModel.baseDataType,
+                    math.M3.getModel.baseDataType,
                     onRequest.request,
                     Some(onRequest)
                   ))
@@ -67,6 +75,6 @@ object M3 {
         result
       }
     }
-    monoidInstance.combine(M1(paradigm)(ffiArithmetic), arithProvider)
+    monoidInstance.combine(arithProvider, M2(paradigm)(ffiArithmetic, ffiStrings))
   }
 }

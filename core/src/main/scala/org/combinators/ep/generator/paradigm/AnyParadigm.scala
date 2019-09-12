@@ -23,7 +23,7 @@ case class AddBlockDefinitions[Statement](definitions: Seq[Statement]) extends C
 }
 
 /** Translates the Scala representation of a type to target language specific code for referring to it. */
-case class ToTargetLanguageType[Ctxt, Type](tpe: TypeRep, generated: DataType => Generator[Ctxt, Type]) extends Command {
+case class ToTargetLanguageType[Type](tpe: TypeRep) extends Command {
   type Result = Type
 }
 
@@ -80,6 +80,10 @@ case class IfThenElse[Expression, MandatoryBlock, Block, R](
   type Result = R
 }
 
+case class AddTypeLookup[Ctxt, Type](tpe: TypeRep, lookup: Generator[Ctxt, Type]) extends Command {
+  type Result = Unit
+}
+
 trait AnyParadigm {
   val syntax: AbstractSyntax
 
@@ -94,6 +98,10 @@ trait AnyParadigm {
     implicit val canAddCompilationUnitInProject: Understands[ProjectContext, AddCompilationUnit[CompilationUnitContext]]
     def addCompilationUnit(name: String, unit: Generator[CompilationUnitContext, Unit]): Generator[ProjectContext, Unit] =
       AnyParadigm.capabilitiy(AddCompilationUnit(name, unit))
+
+    implicit val canAddTypeLookupForMethodsInProject: Understands[ProjectContext, AddTypeLookup[MethodBodyContext, Type]]
+    def addTypeLookupForMethods(tpe: TypeRep, lookup: Generator[MethodBodyContext, Type]): Generator[ProjectContext, Unit] =
+      AnyParadigm.capabilitiy(AddTypeLookup[MethodBodyContext, Type](tpe, lookup))
   }
   val projectContextCapabilities: ProjectContextCapabilities
 
@@ -125,9 +133,9 @@ trait AnyParadigm {
     def setParameters(params: Seq[(String, Type)]): Generator[MethodBodyContext, Unit] =
       AnyParadigm.capabilitiy(SetParameters(params))
 
-    implicit val canTransformTypeInMethodBody: Understands[MethodBodyContext, ToTargetLanguageType[MethodBodyContext, Type]]
-    def toTargetLanguageType(tpe: TypeRep, generated: DataType => Generator[MethodBodyContext, Type]): Generator[MethodBodyContext, Type] =
-      AnyParadigm.capabilitiy(ToTargetLanguageType[MethodBodyContext, Type](tpe, generated))
+    implicit val canTransformTypeInMethodBody: Understands[MethodBodyContext, ToTargetLanguageType[Type]]
+    def toTargetLanguageType(tpe: TypeRep): Generator[MethodBodyContext, Type] =
+      AnyParadigm.capabilitiy(ToTargetLanguageType[Type](tpe))
 
     implicit def canReifyInMethodBody[T]: Understands[MethodBodyContext, Reify[T, Expression]]
     def reify[T](tpe: TypeRep.OfHostType[T], value: T): Generator[MethodBodyContext, Expression] =

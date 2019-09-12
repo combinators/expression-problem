@@ -6,9 +6,7 @@ import org.combinators.ep.generator.paradigm.{AnyParadigm, Apply}
 
 case class Equals[Type](inType: Type)
 
-trait Equality[Context]  {
-  val base: AnyParadigm
-
+trait Equality[Context] extends FFI  {
   import base.syntax._
 
   trait EqualityCapabilities {

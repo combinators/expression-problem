@@ -15,6 +15,10 @@ case class While[Expression, Statement](condition: Expression, block: Seq[Statem
   type Result = Statement
 }
 
+case class Return[Expression, Statement](exp: Expression) extends Command {
+  type Result = Statement
+}
+
 trait Imperative[Context] {
   val base: AnyParadigm
 
@@ -68,6 +72,17 @@ trait Imperative[Context] {
         blk <- block
         result <- whileLoop(cond, blk)
       } yield result
+    }
+
+    implicit def canReturn: Understands[Context, Return[Expression, Statement]]
+    def returnStmt(exp: Expression): Generator[Context, Statement] =
+      AnyParadigm.capabilitiy(Return[Expression, Statement](exp))
+
+    def liftReturnStmt(expGen: Generator[Context, Expression]): Generator[Context, Statement] = {
+      for {
+        exp <- expGen
+        res <- returnStmt(exp)
+      } yield res
     }
   }
   val imperativeCapabilities: ImperativeCapabilities

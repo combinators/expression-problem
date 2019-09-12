@@ -38,5 +38,6 @@ object Command {
   implicit def monadInstance[C]: Monad[Generator[C, *]] =
     cats.free.Free.catsFreeMonadForFree[Performable[C, *]]
 
-  def skip[Context]: Generator[Context, Unit] = monadInstance.pure(())
+  def lift[Context, T](value: T): Command.Generator[Context, T] = monadInstance.pure(value)
+  def skip[Context]: Generator[Context, Unit] = lift(())
 }

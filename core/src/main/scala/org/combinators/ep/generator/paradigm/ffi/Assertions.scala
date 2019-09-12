@@ -6,9 +6,7 @@ import org.combinators.ep.generator.paradigm.{AnyParadigm, Apply}
 
 case class Assert(message: String = "")
 
-trait Assertions[Context] {
-  val base: AnyParadigm
-
+trait Assertions[Context] extends FFI {
   import base.syntax._
 
   trait AssertionCapabilities {

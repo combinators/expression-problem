@@ -8,7 +8,7 @@ import cats.syntax._
 import cats.implicits._
 import org.combinators.ep.domain.abstractions.{Attribute, DataType, DataTypeCase, Operation, Parameter, TestCase, TypeRep}
 import org.combinators.ep.generator.communication.{ReceivedRequest, Request, SendRequest}
-import org.combinators.ep.generator.paradigm.{AddCompilationUnit, AddImport, AddMethod, AddType, AddTypeConstructor, AnyParadigm, Apply, FindClass, FindMethod, Functional, GetArguments, InstantiateType, ResolveImport, SetParameters, ToTargetLanguageType}
+import org.combinators.ep.generator.paradigm.{AddCompilationUnit, AddImport, AddMethod, AddType, AddTypeConstructor, AnyParadigm, Apply, FindClass, FindMethod, FindType, Functional, GetArguments, InstantiateType, ResolveImport, SetParameters, ToTargetLanguageType}
 import AnyParadigm.syntax._
 import org.combinators.ep.generator.paradigm.control.Functional.WithBase
 
@@ -31,11 +31,8 @@ trait Traditional extends ApproachImplementationProvider {
     } yield res
   }
 
-  implicit val canLookupTypeInMethod: Understands[paradigm.MethodBodyContext, GeneratedTypeLookupFunction[paradigm.MethodBodyContext]] = ???
-  implicit val canLookupTypeInCtor: Understands[functional.TypeContext, GeneratedTypeLookupFunction[functional.TypeContext]] = ???
-
   def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
-    import paradigm.methodBodyCapabilities.{toTargetLanguageType => _, _}
+    import paradigm.methodBodyCapabilities._
     import functional.methodBodyCapabilities._
     for {
       rt <- toTargetLanguageType(TypeRep.DataType(baseTpe))
@@ -45,7 +42,7 @@ trait Traditional extends ApproachImplementationProvider {
   }
 
   def makeTypeConstructor(tpeCase: DataTypeCase): Generator[TypeContext, Unit] = {
-    import typeCapabilities.{toTargetLanguageType => _, _}
+    import typeCapabilities._
     for {
       params <- forEach (tpeCase.attributes) { att =>
           for {
@@ -59,7 +56,7 @@ trait Traditional extends ApproachImplementationProvider {
 
   def makeTypeInCompilationUnit(tpe: DataType, cases: Seq[DataTypeCase]): Generator[ProjectContext, Unit] = {
     import functional.compilationUnitCapabilities._
-    import projectContextCapabilities._
+    import paradigm.projectContextCapabilities._
     val caseCode =
       for {
         _ <- forEach (cases) { tpeCase => makeTypeConstructor(tpeCase) }
@@ -96,7 +93,7 @@ trait Traditional extends ApproachImplementationProvider {
       op: Operation,
       domainSpecific: EvolutionImplementationProvider[this.type]
     ): Generator[MethodBodyContext, Expression] = {
-    import paradigm.methodBodyCapabilities.{toTargetLanguageType => _, _}
+    import paradigm.methodBodyCapabilities._
     import functionalControl.functionalCapabilities._
     for {
       params <- forEach (Parameter("this", TypeRep.DataType(tpe)) +: op.parameters) { param: Parameter =>
@@ -121,16 +118,34 @@ trait Traditional extends ApproachImplementationProvider {
     domainSpecific: EvolutionImplementationProvider[this.type]
   ): Generator[ProjectContext, Unit] = {
     import functional.compilationUnitCapabilities._
-    import projectContextCapabilities._
+    import paradigm.projectContextCapabilities._
     addCompilationUnit(
       names.conceptNameOf(op),
       addMethod(names.instanceNameOf(op), makeFunction(tpe, cases, op, domainSpecific))
     )
   }
 
+  def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindType: Understands[Ctxt, FindType[Type]]): Generator[Ctxt, Type] = {
+    FindType(names.conceptNameOf(dtpe)).interpret(canFindType)
+  }
+
+  def initializeApproach(domain: Model): Generator[ProjectContext, Unit] = {
+    import paradigm.projectContextCapabilities._
+    import functional.projectContextCapabilities._
+    import functional.methodBodyCapabilities._
+    import functional.typeCapabilities._
+    val dtpeRep = TypeRep.DataType(domain.baseDataType)
+    for {
+      _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(domain.baseDataType))
+      _ <- addTypeLookupForTypes(dtpeRep, domainTypeLookup(domain.baseDataType))
+    } yield ()
+  }
+
   def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     val flatDomain = domain.flatten
     for {
+      _ <- initializeApproach(flatDomain)
+      _ <- domainSpecific.initialize(this)
       _ <- makeTypeInCompilationUnit(flatDomain.baseDataType, flatDomain.typeCases)
       _ <- forEach (flatDomain.ops) { op =>
           makeFunctionInCompilationUnit(flatDomain.baseDataType, flatDomain.typeCases, op, domainSpecific)

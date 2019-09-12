@@ -15,14 +15,21 @@ object M2 {
        ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
     EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val ppProvider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override def logic
+
+      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
+        for {
+          _ <- ffiArithmetic.enable()
+          _ <- ffiStrings.enable()
+        } yield ()
+      }
+
+      def logic
           (forApproach: AIP[paradigm.type])
           (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
         Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression] = {
         import ffiStrings.stringCapabilities._
         import paradigm._
         import methodBodyCapabilities._
-        import forApproach.canLookupTypeInMethod
 
         assert(onRequest.request.op == math.M2.PrettyP)
 
@@ -30,7 +37,7 @@ object M2 {
           case litC@math.M0.Lit =>
             val att = litC.attributes.head
             for {
-              ty <- forApproach.toTargetLanguageType(att.tpe)
+              ty <- toTargetLanguageType(att.tpe)
               res <- asString(onRequest.attributes(att), ty)
             } yield res
           case other =>
@@ -61,6 +68,6 @@ object M2 {
         result
       }
     }
-    monoidInstance.combine(M1(paradigm)(ffiArithmetic), ppProvider)
+    monoidInstance.combine(ppProvider, M1(paradigm)(ffiArithmetic))
   }
 }

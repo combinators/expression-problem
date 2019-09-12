@@ -9,6 +9,7 @@ import org.combinators.ep.generator.paradigm.AnyParadigm
 import org.combinators.ep.generator.paradigm.ffi.{Assertions, Booleans, Equality}
 
 trait TestImplementationProvider[AIP <: ApproachImplementationProvider] {
+  def initialize(forApproach: AIP): Generator[forApproach.paradigm.ProjectContext, Unit]
   def test(forApproach: AIP)(testCase: TestCase): Generator[forApproach.paradigm.MethodBodyContext, Seq[forApproach.paradigm.syntax.Expression]]
 }
 
@@ -19,8 +20,9 @@ object TestImplementationProvider {
       /** Returns an [[TestImplementationProvider]] which does not provide any implementation, and instead skips all
         * tests */
       def empty: TestImplementationProvider[AIP] = new TestImplementationProvider[AIP] {
+        def initialize(forApproach: AIP): Generator[forApproach.paradigm.ProjectContext, Unit] = Command.skip
         def test(forApproach: AIP)(testCase: TestCase): Generator[forApproach.paradigm.MethodBodyContext, Seq[forApproach.paradigm.syntax.Expression]] =
-          Command.monadInstance.pure(Seq.empty)
+          Command.lift(Seq.empty)
       }
 
       /** Combines to [[TestImplementationProvider]] objects by running test generation sequentially. */
@@ -28,6 +30,13 @@ object TestImplementationProvider {
         first: TestImplementationProvider[AIP],
         second: TestImplementationProvider[AIP]
       ): TestImplementationProvider[AIP] = new TestImplementationProvider[AIP] {
+        def initialize(forApproach: AIP): Generator[forApproach.paradigm.ProjectContext, Unit] = {
+          for {
+            _ <- first.initialize(forApproach)
+            _ <- second.initialize(forApproach)
+          } yield ()
+        }
+
         def test(forApproach: AIP)(testCase: TestCase):
           Generator[forApproach.paradigm.MethodBodyContext, Seq[forApproach.paradigm.syntax.Expression]] = {
           for {
@@ -45,6 +54,14 @@ object TestImplementationProvider {
         ffiBooleans: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type]
       ): TestImplementationProvider[AIP[paradigm.type]] =
     new TestImplementationProvider[AIP[paradigm.type]] {
+      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
+        for {
+          _ <- ffiAssertions.enable()
+          _ <- ffiEquality.enable()
+          _ <- ffiBooleans.enable()
+        } yield ()
+      }
+
       def prepareTestCase(forApproach: AIP[paradigm.type])
         (baseTpe: DataType,
           domainObject: DataTypeInstance,
@@ -54,9 +71,8 @@ object TestImplementationProvider {
         ): Generator[forApproach.paradigm.MethodBodyContext, (forApproach.paradigm.syntax.Type, forApproach.paradigm.syntax.Expression, forApproach.paradigm.syntax.Expression)] = {
         import forApproach.paradigm.methodBodyCapabilities._
         import AnyParadigm.syntax._
-        import forApproach.canLookupTypeInMethod
         for {
-          tpe <- forApproach.toTargetLanguageType(TypeRep.DataType(baseTpe))
+          tpe <- toTargetLanguageType(TypeRep.DataType(baseTpe))
           _ <- forApproach.resolveAndAddImport(tpe)
           exp <- forApproach.reify(expected)
           inst <- forApproach.instantiate(baseTpe, domainObject)
@@ -91,7 +107,6 @@ object TestImplementationProvider {
         Generator[forApproach.paradigm.MethodBodyContext, Seq[forApproach.paradigm.syntax.Expression]] = {
         import ffiAssertions.assertionCapabilities._
         import ffiEquality.equalityCapabilities._
-        import forApproach.canLookupTypeInMethod
         import forApproach.paradigm._
         import methodBodyCapabilities._
         import syntax._
@@ -114,12 +129,12 @@ object TestImplementationProvider {
               } yield res
             case Seq() =>
               for {
-                resTpe <- forApproach.toTargetLanguageType(tpe)
+                resTpe <- toTargetLanguageType(tpe)
               } yield (resTpe, obj)
           }
 
         for {
-          tpe <- forApproach.toTargetLanguageType(TypeRep.DataType(testCase.baseTpe))
+          tpe <- toTargetLanguageType(TypeRep.DataType(testCase.baseTpe))
           _ <- forApproach.resolveAndAddImport(tpe)
           exp <- forApproach.reify(testCase.expected)
           inst <- forApproach.instantiate(testCase.baseTpe, testCase.startObject)
@@ -134,7 +149,7 @@ object TestImplementationProvider {
           case eq: EqualsTestCase => makeEqualsTestCase(forApproach)(eq)
           case neq: NotEqualsTestCase => makeNotEqualsTestCase(forApproach)(neq)
           case ceq: EqualsCompositeTestCase => makeEqualsCompositeTestCase(forApproach)(ceq)
-          case _ => Command.monadInstance.pure(Seq.empty)
+          case _ => Command.lift(Seq.empty)
         }
       }
     }

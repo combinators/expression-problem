@@ -11,9 +11,7 @@ case class StringAppend()
 case class GetStringLength()
 case class ToString[Type](sourceType: Type)
 
-trait Strings[Context] {
-  val base: AnyParadigm
-
+trait Strings[Context] extends FFI {
   import base.syntax._
 
   trait StringCapabilities {

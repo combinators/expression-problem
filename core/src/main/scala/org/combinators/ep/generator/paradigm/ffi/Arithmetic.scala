@@ -10,9 +10,7 @@ case class Mult[T]()
 case class Div[T]()
 case class Mod[T]()
 
-trait Arithmetic[Context, T] {
-  val base: AnyParadigm
-
+trait Arithmetic[Context, T] extends FFI {
   import base.syntax._
 
   trait ArithmeticCapabilities {

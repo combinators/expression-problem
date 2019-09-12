@@ -120,9 +120,9 @@ trait ObjectOriented {
     def setInterface(): Generator[ClassContext, Unit] =
       AnyParadigm.capabilitiy(SetInterface())
 
-    implicit val canTranslateTypeInClass: Understands[ClassContext, ToTargetLanguageType[ClassContext, Type]]
-    def toTargetLanguageType(tpe: TypeRep, generated: DataType => Generator[ClassContext, Type]): Generator[ClassContext, Type] =
-      AnyParadigm.capabilitiy(ToTargetLanguageType[ClassContext, Type](tpe, generated))
+    implicit val canTranslateTypeInClass: Understands[ClassContext, ToTargetLanguageType[Type]]
+    def toTargetLanguageType(tpe: TypeRep): Generator[ClassContext, Type] =
+      AnyParadigm.capabilitiy(ToTargetLanguageType[Type](tpe))
 
     implicit val canSelfReferenceInClass: Understands[ClassContext, SelfReference[Expression]]
     def selfReference(): Generator[ClassContext, Expression] =
@@ -175,9 +175,9 @@ trait ObjectOriented {
     def getArguments(): Generator[ConstructorContext, Seq[(String, Type, Expression)]] =
       AnyParadigm.capabilitiy(GetArguments[Type, Expression]())
 
-    implicit val canTranslateTypeInConstructor: Understands[ConstructorContext, ToTargetLanguageType[ConstructorContext, Type]]
-    def toTargetLanguageType(tpe: TypeRep, generated: DataType => Generator[ConstructorContext, Type]): Generator[ConstructorContext, Type] =
-      AnyParadigm.capabilitiy(ToTargetLanguageType[ConstructorContext, Type](tpe, generated))
+    implicit val canTranslateTypeInConstructor: Understands[ConstructorContext, ToTargetLanguageType[Type]]
+    def toTargetLanguageType(tpe: TypeRep): Generator[ConstructorContext, Type] =
+      AnyParadigm.capabilitiy(ToTargetLanguageType[Type](tpe))
 
     implicit def canReifyInConstructor[T]: Understands[ConstructorContext, Reify[T, Expression]]
     def reify[T](tpe: TypeRep.OfHostType[T], elem: T): Generator[ConstructorContext, Expression] =
@@ -230,6 +230,14 @@ trait ObjectOriented {
       import base.projectContextCapabilities._
       addCompilationUnit(name, AddClass(name, classGen).interpret)
     }
+
+    implicit val canAddTypeLookupForClassesInProject: Understands[ProjectContext, AddTypeLookup[ClassContext, Type]]
+    def addTypeLookupForClasses(tpe: TypeRep, lookup: Generator[ClassContext, Type]): Generator[ProjectContext, Unit] =
+      AnyParadigm.capabilitiy(AddTypeLookup[ClassContext, Type](tpe, lookup))
+
+    implicit val canAddTypeLookupForConstructorsInProject: Understands[ProjectContext, AddTypeLookup[ConstructorContext, Type]]
+    def addTypeLookupForConstructors(tpe: TypeRep, lookup: Generator[ConstructorContext, Type]): Generator[ProjectContext, Unit] =
+      AnyParadigm.capabilitiy(AddTypeLookup[ConstructorContext, Type](tpe, lookup))
   }
   val projectCapabilities: ProjectCapabilities
 }

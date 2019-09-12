@@ -14,6 +14,11 @@ object M1 {
       (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type]):
     EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val subProvider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+
+      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
+        ffiArithmetic.enable()
+      }
+
       override def logic
         (forApproach: AIP[paradigm.type])
         (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
@@ -44,6 +49,6 @@ object M1 {
         result
       }
     }
-    monoidInstance.combine(M0(paradigm)(ffiArithmetic), subProvider)
+    monoidInstance.combine(subProvider, M0(paradigm)(ffiArithmetic))
   }
 }

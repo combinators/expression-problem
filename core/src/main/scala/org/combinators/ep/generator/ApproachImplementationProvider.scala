@@ -37,6 +37,7 @@ trait ApproachImplementationProvider {
     *     Java(s"${received.selfReference}.${Attribute.left.name}.eval()").expression())
     *   )
     * }}}
+   *
     */
   def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression]
 

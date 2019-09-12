@@ -10,6 +10,7 @@ case class Mult[T]()
 case class Div[T]()
 case class Mod[T]()
 
+// Foreign Function Interface (foreign to Scala for example)
 trait Arithmetic[Context, T] extends FFI {
   import base.syntax._
 

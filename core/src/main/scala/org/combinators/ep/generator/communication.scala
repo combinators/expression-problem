@@ -47,6 +47,6 @@ package object communication {
     to: Expression,
     receiverTpe: DataType,
     request: Request[Expression],
-    inReplyTo: Option[ReceivedRequest[Expression]] = None
+    inReplyTo: Option[ReceivedRequest[Expression]] = None    // TODO: models what was essentially done with Deltas in the past
   )
 }

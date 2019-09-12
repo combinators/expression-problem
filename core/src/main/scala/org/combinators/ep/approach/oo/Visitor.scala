@@ -64,29 +64,6 @@ sealed trait Visitor extends ApproachImplementationProvider {
     } yield result
   }
 
-  /**
-   * Sometimes code generator resolves a type (such as Scala Double to Java Double) but sometimes you have types
-   * that are specific to the domain/approach (i.e., "Sub.java").
-   *
-   * Whenever you need to look up a DataType, the domain base type, this provides way to get around this tension.
-   *
-   * Must be able to get base type (i.e., Exp) of each individual data type, and this is the same for visitor
-   * as for traditional OO. That is, it looks up the class which is named the same as the base type.
-   *
-   * This code relies on some advanced Scala capabilities, but is fairly boilerplate.
-   */
-  implicit def canLookupType[Ctxt](implicit canFindClass: Understands[Ctxt, FindClass[Type]]):
-  Understands[Ctxt, GeneratedTypeLookupFunction[Ctxt]] = {
-    new Understands[Ctxt, GeneratedTypeLookupFunction[Ctxt]] {
-      def perform(context: Ctxt, command: GeneratedTypeLookupFunction[Ctxt]):
-      (Ctxt, DataType => Generator[Ctxt, Type]) =
-        (context, tpe => FindClass(names.conceptNameOf(tpe)).interpret(canFindClass))
-    }
-  }
-  implicit val canLookupTypeInMethod = {
-    import ooParadigm.methodBodyCapabilities._
-    canLookupType[MethodBodyContext]
-  }
 
   /**
    * Instantiates an instance of the domain object.
@@ -130,8 +107,7 @@ sealed trait Visitor extends ApproachImplementationProvider {
       import ooParadigm.classCapabilities._
       for {
         _ <- setAbstract()
-        visitorSignature <- makeAcceptSignature()
-        _ <- addAbstractMethod(names.mangle(accept), visitorSignature)
+        _ <- addAbstractMethod(names.mangle(accept), makeAcceptSignature())
       } yield ()
     }
 
@@ -195,7 +171,7 @@ sealed trait Visitor extends ApproachImplementationProvider {
     val makeClass: Generator[ClassContext, Unit] = {
       import ooParadigm.classCapabilities._
       for {
-        parent <- super.toTargetLanguageType(TypeRep.DataType(parentType))
+        parent <- toTargetLanguageType(TypeRep.DataType(parentType))
         _ <- resolveAndAddImport(parent)
         _ <- addParent(parent)
         _ <- forEach (tpeCase.attributes) { att => makeField(att) }
@@ -213,7 +189,7 @@ sealed trait Visitor extends ApproachImplementationProvider {
    * }}}
    */
   def makeField(att: Attribute): Generator[ClassContext, Unit] = {
-    import ooParadigm.classCapabilities.{toTargetLanguageType => _, _}
+    import ooParadigm.classCapabilities._
     for {
       ft <- toTargetLanguageType(att.tpe)
       _ <- resolveAndAddImport(ft)
@@ -238,7 +214,7 @@ sealed trait Visitor extends ApproachImplementationProvider {
       // get all attributes and form a seuquence
       params <- forEach (tpeCase.attributes) { att: Attribute =>
         for {
-          at <- super.toTargetLanguageType(att.tpe)
+          at <- toTargetLanguageType(att.tpe)
           _ <- resolveAndAddImport(at)
         } yield (names.instanceNameOf(att), at)
       }
@@ -325,11 +301,11 @@ sealed trait Visitor extends ApproachImplementationProvider {
 
     val makeClass: Generator[ClassContext, Unit] = {
       import ooParadigm.classCapabilities._
-      import polymorphics.methodBodyCapabilities._
+      import genericsParadigm.classCapabilities._
       for {
         _ <- setAbstract()
         _ <- addTypeParameter(names.mangle(visitTypeParameter), Command.skip)    // R by itself, since not extending any other type parameter (hence Skip)
-        _ <- forEach (allTypes) { tpe => makeVisitSignature(tpe) }
+        _ <- forEach (allTypes) { tpe => addAbstractMethod(names.instanceNameOf(tpe), makeVisitSignature(tpe)) }
       } yield ()
     }
 
@@ -376,7 +352,7 @@ sealed trait Visitor extends ApproachImplementationProvider {
    * @return
    */
   def makeSignature(op: Operation): Generator[MethodBodyContext, Unit] = {
-    import paradigm.methodBodyCapabilities.{toTargetLanguageType => _, _}
+    import paradigm.methodBodyCapabilities._
 
     for {
       rt <- toTargetLanguageType(op.returnType)
@@ -454,17 +430,35 @@ sealed trait Visitor extends ApproachImplementationProvider {
 
     val makeClass: Generator[ClassContext, Unit] = {
       import ooParadigm.classCapabilities._
-      import polymorphics.methodBodyCapabilities._
+      import genericsParadigm.classCapabilities._
       for {
         _ <- setAbstract()
         _ <- addTypeParameter(names.mangle(visitTypeParameter), Command.skip)    // R by itself, since not extending any other type parameter (hence Skip)
         _ <- forEach (allTypes) { tpe =>
-          makeImplementation(tpeCase, tpe, op, domainSpecific)
+          addMethod(names.instanceNameOf(tpe), makeImplementation(tpeCase, tpe, op, domainSpecific))
         }
       } yield ()
     }
 
     addClassToProject(visitorClass, makeClass)
+  }
+
+  def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Type]]): Generator[Ctxt, Type] = {
+    FindClass(names.conceptNameOf(dtpe)).interpret(canFindClass)
+  }
+
+  def initializeApproach(domain: Model): Generator[ProjectContext, Unit] = {
+    import paradigm.projectContextCapabilities._
+    import ooParadigm.projectCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+    import ooParadigm.classCapabilities._
+    import ooParadigm.constructorCapabilities._
+    val dtpeRep = TypeRep.DataType(domain.baseDataType)
+    for {
+      _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(domain.baseDataType))
+      _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(domain.baseDataType))
+      _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(domain.baseDataType))
+    } yield ()
   }
 
   /**
@@ -481,6 +475,8 @@ sealed trait Visitor extends ApproachImplementationProvider {
   def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     val flatDomain = domain.flatten
     for {
+      _ <- initializeApproach(flatDomain)
+      _ <- domainSpecific.initialize(this)
       _ <- makeBase(flatDomain.baseDataType)
       _ <- forEach (flatDomain.typeCases) { tpeCase =>
         makeDerived(flatDomain.baseDataType, tpeCase, flatDomain.ops, domainSpecific)
@@ -494,15 +490,18 @@ sealed trait Visitor extends ApproachImplementationProvider {
 }
 
 object Visitor {
-  type WithParadigm[P <: AnyParadigm] = Traditional { val paradigm: P }
+  type WithParadigm[P <: AnyParadigm] = Visitor { val paradigm: P }
   type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 
   def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
   (nameProvider: NameProvider, base: P)
-  (oo: ObjectOriented.WithBase[base.type]): Traditional.WithParadigm[base.type] =
+  (oo: ObjectOriented.WithBase[base.type], parametricPolymorphism: ParametricPolymorphism.WithBase[base.type])
+  (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): Visitor.WithParadigm[base.type] =
     new Visitor {
-      override val names: NameProvider = nameProvider
-      override val paradigm: base.type = base
-      override val ooParadigm: ObjectOriented.WithBase[paradigm.type] = oo
+      val names: NameProvider = nameProvider
+      val paradigm: base.type = base
+      val ooParadigm: oo.type = oo
+      val polymorphics: parametricPolymorphism.type = parametricPolymorphism
+      val genericsParadigm: generics.type = generics
     }
 }

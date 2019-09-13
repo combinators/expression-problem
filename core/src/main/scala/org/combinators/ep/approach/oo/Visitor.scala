@@ -559,7 +559,7 @@ sealed trait ExtensibleVisitor extends Visitor {
    * @param domainSpecific
    * @return           Returns class context without actually adding to ProjectContext; this is job of caller of this function
    */
-  def makeOperationImplementation(domain:Model,
+  override def makeOperationImplementation(domain:Model,
                                   op: Operation,
                                   domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
       //flatDomain.typeCases, flatDomain.baseDataType
@@ -584,6 +584,8 @@ sealed trait ExtensibleVisitor extends Visitor {
       modelTypes(lastWithType.get)
     }
 
+
+
     val makeClass: Generator[ClassContext, Unit] = {
       import ooParadigm.classCapabilities._
       import genericsParadigm.classCapabilities._
@@ -591,7 +593,7 @@ sealed trait ExtensibleVisitor extends Visitor {
         _ <- setAbstract()
         _ <- addTypeParameter(names.mangle(visitTypeParameter), Command.skip)    // R by itself, since not extending any other type parameter (hence Skip)
         _ <- forEach (domain.typeCases) { tpe =>
-          makeImplementation(domain.baseDataType, tpe, op, domainSpecific)
+          addMethod(names.instanceNameOf(tpe), makeImplementation(domain.baseDataType, tpe, op, domainSpecific))
         }
       } yield ()
     }

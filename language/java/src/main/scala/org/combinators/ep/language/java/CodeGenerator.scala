@@ -6,7 +6,7 @@ import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.{ImportDeclaration, Modifier, PackageDeclaration}
 import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, ConstructorDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.expr.{MethodCallExpr, Name, NameExpr}
-import com.github.javaparser.ast.stmt.{BlockStmt, ExpressionStmt}
+import com.github.javaparser.ast.stmt.{BlockStmt, ExplicitConstructorInvocationStmt, ExpressionStmt}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.generator.Command.Generator
@@ -28,9 +28,9 @@ sealed class CodeGenerator(config: CodeGenerator.Config) {
 
   case class ContextSpecificResolver(
     methodTypeResulution: TypeRep => Generator[MethodBodyCtxt, Type],
-    constructorTypeResolution: TypeRep => Generator[MethodBodyCtxt, Type],
+    constructorTypeResolution: TypeRep => Generator[CtorCtxt, Type],
     classTypeResolution: TypeRep => Generator[ClassCtxt, Type],
-    reificationInConstructor: InstanceRep => Generator[ClassCtxt, Expression],
+    reificationInConstructor: InstanceRep => Generator[CtorCtxt, Expression],
     reificationInMethod: InstanceRep => Generator[MethodBodyCtxt, Expression],
     importResolution: Type => Option[Import],
     instantiationOverride: (Type, Seq[Expression]) => (Type, Seq[Expression])
@@ -515,7 +515,182 @@ sealed class CodeGenerator(config: CodeGenerator.Config) {
             }
         }
 
-      val constructorCapabilities: ConstructorCapabilities = ???
+      val constructorCapabilities: ConstructorCapabilities =
+        new ConstructorCapabilities {
+          implicit val canInitializeParentInConstructor: Understands[ConstructorContext, InitializeParent[Expression]] =
+            new Understands[ConstructorContext, InitializeParent[Expression]] {
+              def perform(
+                context: ConstructorContext,
+                command: InitializeParent[Expression]
+              ): (ConstructorContext, Unit) = {
+                val newCtor = context.ctor.clone()
+                val superCall =
+                  newCtor.getBody
+                    .findFirst(classOf[ExplicitConstructorInvocationStmt])
+                    .orElseGet(() => new ExplicitConstructorInvocationStmt())
+                superCall.setThis(false)
+                superCall.removeExpression()
+                superCall.getArguments.clear()
+                command.arguments.foreach { arg =>
+                  superCall.addArgument(arg.clone())
+                }
+                (context.copy(ctor = newCtor), ())
+              }
+            }
+          implicit val canInitializeFieldInConstructor: Understands[ConstructorContext, InitializeField[Expression]] =
+            new Understands[ConstructorContext, InitializeField[Expression]] {
+              def perform(
+                context: ConstructorContext,
+                command: InitializeField[Expression]
+              ): (ConstructorContext, Unit) = {
+                Command.runGenerator(
+                  addBlockDefinitions(Java(s"this.${command.name} = ${command.value}").statements()),
+                  context)
+              }
+            }
+          implicit val canAddBlockDefinitionsInConstructor: Understands[ConstructorContext, AddBlockDefinitions[Statement]] =
+            new Understands[ConstructorContext, AddBlockDefinitions[Statement]] {
+              def perform(
+                context: CtorCtxt,
+                command: AddBlockDefinitions[Statement]
+              ): (CtorCtxt, Unit) = {
+                val newCtor = context.ctor.clone()
+                val body = newCtor.getBody
+                command.definitions.foreach(stmt => body.addStatement(stmt))
+                (context.copy(ctor = newCtor), ())
+              }
+            }
+          implicit val canAddImportInConstructor: Understands[ConstructorContext, AddImport[Import]] =
+            new Understands[ConstructorContext, AddImport[Import]] {
+              def perform(
+                context: ConstructorContext,
+                command: AddImport[Import]
+              ): (ConstructorContext, Unit) =
+                (context.copy(extraImports = (context.extraImports :+ command.imp).distinct.map(_.clone())), ())
+            }
+          implicit val canResolveImportInConstructor: Understands[ConstructorContext, ResolveImport[Import, Type]] =
+            new Understands[ConstructorContext, ResolveImport[ImportDeclaration, Type]] {
+              def perform(
+                context: ConstructorContext,
+                command: ResolveImport[ImportDeclaration, Type]
+              ): (ConstructorContext, Option[ImportDeclaration]) = {
+                Try { (context, context.resolver.importResolution(command.forElem)) } getOrElse {
+                  val newImport =
+                    new ImportDeclaration(
+                      new Name(config.targetPackage.getName.clone(), command.forElem.toString()),
+                      false,
+                      false)
+                  if (context.extraImports.contains(newImport)) {
+                    (context, None)
+                  } else {
+                    (context, Some(newImport))
+                  }
+                }
+              }
+            }
+          implicit val canInstantiateObjectInConstructor: Understands[ConstructorContext, InstantiateObject[Type, Expression]] =
+            new Understands[ConstructorContext, InstantiateObject[Type, Expression]] {
+              def perform(
+                context: ConstructorContext,
+                command: InstantiateObject[Type, Expression]
+              ): (ConstructorContext, Expression) = {
+                val (tpe, args) = context.resolver.instantiationOverride(command.tpe, command.constructorArguments)
+                (context, Java(s"""new ${tpe}(${args.mkString(", ")})""").expression())
+              }
+            }
+          implicit val canApplyInConstructor: Understands[ConstructorContext, Apply[Expression, Expression, Expression]] =
+            new Understands[ConstructorContext, Apply[Expression, Expression, Expression]] {
+              def perform(
+                context: ConstructorContext,
+                command: Apply[Expression, Expression, Expression]
+              ): (ConstructorContext, Expression) = {
+                (context, Java(s"${command.functional}(${command.arguments.mkString(", ")})").expression())
+              }
+            }
+
+          implicit val canGetMemberInConstructor: Understands[ConstructorContext, GetMember[Expression]] =
+            new Understands[ConstructorContext, GetMember[Expression]] {
+              def perform(
+                context: ConstructorContext,
+                command: GetMember[Expression]
+              ): (ConstructorContext, Expression) = {
+                (context, Java(s"""this.${command.member}""").expression())
+              }
+            }
+          implicit val canSelfReferenceInConstructor: Understands[ConstructorContext, SelfReference[Expression]] =
+            new Understands[ConstructorContext, SelfReference[Expression]] {
+              def perform(
+                context: ConstructorContext,
+                command: SelfReference[Expression]
+              ): (ConstructorContext, Expression) = {
+                (context, new com.github.javaparser.ast.expr.ThisExpr())
+              }
+            }
+
+          implicit val canGetArgumentsInConstructor: Understands[ConstructorContext, GetArguments[Type, Expression]] =
+            new Understands[ConstructorContext, GetArguments[Type, Expression]] {
+              def perform(
+                context: ConstructorContext,
+                command: GetArguments[Type, Expression]
+              ): (ConstructorContext, Seq[(String, Type, Expression)]) = {
+                val args = context.ctor.getParameters().asScala.map { param =>
+                  (param.getName.toString(), param.getType().clone(), new NameExpr(param.getName.clone()))
+                }
+                (context, args)
+              }
+            }
+          implicit val canTranslateTypeInConstructor: Understands[ConstructorContext, ToTargetLanguageType[Type]] =
+            new Understands[ConstructorContext, ToTargetLanguageType[Type]] {
+              def perform(
+                context: ConstructorContext,
+                command: ToTargetLanguageType[Type]
+              ): (ConstructorContext, Type) = {
+                Command.runGenerator(context.resolver.constructorTypeResolution(command.tpe), context)
+              }
+            }
+          implicit def canReifyInConstructor[T]: Understands[ConstructorContext, Reify[T, Expression]] =
+            new Understands[ConstructorContext, Reify[T, Expression]] {
+              def perform(
+                context: ConstructorContext,
+                command: Reify[T, Expression]
+              ): (ConstructorContext, Expression) = {
+                Command.runGenerator(context.resolver.reificationInConstructor(InstanceRep(command.tpe)(command.value)), context)
+              }
+            }
+          implicit val canSetParametersInConstructor: Understands[ConstructorContext, SetParameters[Type]] =
+            new Understands[ConstructorContext, SetParameters[Type]] {
+              def perform(
+                context: ConstructorContext,
+                command: SetParameters[Type]
+              ): (ConstructorContext, Unit) = {
+                val newCtor = context.ctor.clone()
+                newCtor.getParameters.clear()
+                command.params.foreach { case (name, tpe) =>
+                  newCtor.addParameter(tpe, name)
+                }
+                (context.copy(ctor = newCtor), ()) // second thing to be returned isn't optional, so make it () is like Unit
+              }
+            }
+
+          implicit val canGetConstructorInConstructor: Understands[ConstructorContext, GetConstructor[Type, Expression]] =
+            new Understands[ConstructorContext, GetConstructor[Type, Expression]] {
+              def perform(
+                context: ConstructorContext,
+                command: GetConstructor[Type, Expression]
+              ): (ConstructorContext, Expression) = {
+                (context, Java(command.tpe).expression())
+              }
+            }
+          implicit val canFindClassInConstructor: Understands[ConstructorContext, FindClass[Type]] =
+            new Understands[ConstructorContext, FindClass[Type]] {
+              def perform(
+                context: ConstructorContext,
+                command: FindClass[Type]
+              ): (ConstructorContext, Type) = {
+                (context, Java(command.name).tpe())
+              }
+            }
+        }
       val methodBodyCapabilities: MethodBodyCapabilities = ???
       val projectCapabilities: ProjectCapabilities = ???
     }

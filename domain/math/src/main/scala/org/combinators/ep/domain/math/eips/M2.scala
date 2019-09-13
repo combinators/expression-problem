@@ -26,7 +26,7 @@ object M2 {
       def logic
           (forApproach: AIP[paradigm.type])
           (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
-        Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression] = {
+        Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
         import ffiStrings.stringCapabilities._
         import paradigm._
         import methodBodyCapabilities._
@@ -65,7 +65,7 @@ object M2 {
               res <- makeString(Seq(left, right), "(", operator, ")")
             } yield res
         }
-        result
+        result.map(Some(_))
       }
     }
     monoidInstance.combine(ppProvider, M1(paradigm)(ffiArithmetic))

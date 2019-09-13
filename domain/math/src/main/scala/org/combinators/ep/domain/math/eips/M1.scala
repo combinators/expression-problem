@@ -23,7 +23,7 @@ object M1 {
       override def logic
         (forApproach: AIP[paradigm.type])
         (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
-      Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression] = {
+      Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
         import ffiArithmetic.arithmeticCapabilities._
 
         assert(onRequest.request.op == math.M0.Eval)
@@ -47,7 +47,7 @@ object M1 {
             } yield res
           case _ => ???
         }
-        result
+        result.map(Some(_))
       }
     }
     monoidInstance.combine(subProvider, M0(paradigm)(ffiArithmetic))

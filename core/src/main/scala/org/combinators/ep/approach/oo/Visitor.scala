@@ -7,6 +7,7 @@ import org.combinators.ep.generator.communication._
 import org.combinators.ep.generator.paradigm._
 import Command._
 import AnyParadigm.syntax._
+import org.combinators.ep.approach
 
 /**
  * Using visitor approach.
@@ -524,11 +525,6 @@ object Visitor {
 }
 
 sealed trait ExtensibleVisitor extends Visitor {
-  val ooParadigm: ObjectOriented.WithBase[paradigm.type]
-  val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
-  val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
-
-
   import paradigm._
   import ooParadigm._
 
@@ -590,7 +586,7 @@ sealed trait ExtensibleVisitor extends Visitor {
 
     val makeClass: Generator[ClassContext, Unit] = {
       import ooParadigm.classCapabilities._
-      import polymorphics.methodBodyCapabilities._
+      import genericsParadigm.classCapabilities._
       for {
         _ <- setAbstract()
         _ <- addTypeParameter(names.mangle(visitTypeParameter), Command.skip)    // R by itself, since not extending any other type parameter (hence Skip)
@@ -608,20 +604,20 @@ sealed trait ExtensibleVisitor extends Visitor {
 }
 
 object ExtensibleVisitor {
-  type WithParadigm[P <: AnyParadigm] = Traditional { val paradigm: P }
+  type WithParadigm[P <: AnyParadigm] = ExtensibleVisitor { val paradigm: P }
   type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 
   def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
   (nameProvider: NameProvider, base: P)
   (oo: ObjectOriented.WithBase[base.type])
   (params: ParametricPolymorphism.WithBase[base.type])
-  (generics: Generics.WithBase[base.type,oo.type,params.type]): Traditional.WithParadigm[base.type] =
+  (generics: Generics.WithBase[base.type,oo.type,params.type]): ExtensibleVisitor.WithParadigm[base.type] =
     new ExtensibleVisitor {
-      override val names: NameProvider = nameProvider
-      override val paradigm: base.type = base
-      override val ooParadigm: ObjectOriented.WithBase[paradigm.type] = oo
-      override val polymorphics: ParametricPolymorphism.WithBase[paradigm.type] = params
-      override val genericsParadigm: Generics.WithBase[paradigm.type,ooParadigm.type,polymorphics.type] = generics
+      val names: NameProvider = nameProvider
+      val paradigm: base.type = base
+      val ooParadigm: oo.type = oo
+      val polymorphics: params.type = params
+      val genericsParadigm: generics.type = generics
     }
 
 

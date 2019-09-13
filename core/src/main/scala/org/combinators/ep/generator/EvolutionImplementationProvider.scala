@@ -20,7 +20,7 @@ trait EvolutionImplementationProvider[AIP <: ApproachImplementationProvider] {
   def logic
       (forApproach: AIP)
       (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
-    Generator[forApproach.paradigm.MethodBodyContext, forApproach.paradigm.syntax.Expression]
+    Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]]
 }
 
 object EvolutionImplementationProvider {

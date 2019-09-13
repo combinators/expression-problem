@@ -77,14 +77,17 @@ trait Traditional extends ApproachImplementationProvider {
       domainSpecific: EvolutionImplementationProvider[this.type]
     )(ctorName: String, ctorArgs: Seq[Expression]): Generator[MethodBodyContext, Expression] = {
     val tpeCase = cases.find(c => names.conceptNameOf(c) == ctorName).get
-    domainSpecific.logic(this)(
-      ReceivedRequest(
-        tpe,
-        tpeCase,
-        selfReference,
-        tpeCase.attributes.zip(ctorArgs).toMap,
-        Request(op, op.parameters.zip(args.map(_._3)).toMap)
-      ))
+    for {
+      result <- domainSpecific.logic(this)(
+        ReceivedRequest(
+          tpe,
+          tpeCase,
+          selfReference,
+          tpeCase.attributes.zip(ctorArgs).toMap,
+          Request(op, op.parameters.zip(args.map(_._3)).toMap)
+        ))
+       _ = assert(result.nonEmpty, "Functional code generator expects non empty result expression from EIP logic")
+    } yield result.get
   }
 
   def makeFunction(

@@ -11,7 +11,7 @@ case class AssignVariable[Expression, Statement](name: String, value: Expression
   type Result = Statement
 }
 
-case class While[Expression, Statement](condition: Expression, block: Seq[Statement]) extends Command {
+case class While[Ctxt, Expression, Statement](condition: Expression, block: Generator[Ctxt, Unit]) extends Command {
   type Result = Statement
 }
 
@@ -34,45 +34,20 @@ trait Imperative[Context] {
     def assignVar(name: String, value: Expression): Generator[Context, Statement] =
       AnyParadigm.capabilitiy(AssignVariable[Expression, Statement](name, value))
 
-    implicit val canIfThenElse: Understands[Context, IfThenElse[Expression, Seq[Statement], Option[Seq[Statement]], Statement]]
+    implicit val canIfThenElse: Understands[Context, IfThenElse[Expression, Generator[Context, Unit], Option[Generator[Context, Unit]], Statement]]
     def ifThenElse(
         condition: Expression,
-        ifBranch: Seq[Statement],
-        elseIfs: Seq[(Expression, Seq[Statement])],
-        elseBranch: Option[Seq[Statement]] = None
+        ifBranch: Generator[Context, Unit],
+        elseIfs: Seq[(Expression, Generator[Context, Unit])],
+        elseBranch: Option[Generator[Context, Unit]] = None
       ): Generator[Context, Statement] =
-      AnyParadigm.capabilitiy(IfThenElse[Expression, Seq[Statement], Option[Seq[Statement]], Statement](
+      AnyParadigm.capabilitiy(IfThenElse[Expression, Generator[Context, Unit], Option[Generator[Context, Unit]], Statement](
         condition, ifBranch, elseIfs, elseBranch
       ))
 
-    implicit val canWhile: Understands[Context, While[Expression, Statement]]
-    def whileLoop(condition: Expression, block: Seq[Statement]): Generator[Context, Statement] =
-      AnyParadigm.capabilitiy(While[Expression, Statement](condition, block))
-
-    def liftIfThenElse(
-        condition: Generator[Context, Expression],
-        ifBranch: Generator[Context, Seq[Statement]],
-        elseIfs: Seq[(Generator[Context,Expression], Generator[Context,Seq[Statement]])],
-        elseBranch: Option[Generator[Context,Seq[Statement]]] = None
-      ): Generator[Context, Statement] = {
-      for {
-        cond <- condition
-        ifPart <- ifBranch
-        elseIfPart <- forEach (elseIfs) { case (c, b) => for {eic <- c; eib <- b} yield (eic, eib) }
-        elsePart <- elseBranch.sequence
-        result <- ifThenElse(cond, ifPart, elseIfPart, elsePart)
-      } yield result
-    }
-
-    def liftWhile(
-        condition: Generator[Context, Expression], block: Generator[Context, Seq[Statement]]
-      ): Generator[Context, Statement] = {
-      for {
-        cond <- condition
-        blk <- block
-        result <- whileLoop(cond, blk)
-      } yield result
-    }
+    implicit val canWhile: Understands[Context, While[Context, Expression, Statement]]
+    def whileLoop(condition: Expression, block: Generator[Context, Unit]): Generator[Context, Statement] =
+      AnyParadigm.capabilitiy(While[Context, Expression, Statement](condition, block))
 
     implicit def canReturn: Understands[Context, Return[Expression, Statement]]
     def returnStmt(exp: Expression): Generator[Context, Statement] =

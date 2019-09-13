@@ -35,7 +35,7 @@ object M0 {
       override def logic
           (forApproach: AIP[paradigm.type ])
           (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
-        Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression] = {
+        Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
         import ffiArithmetic.arithmeticCapabilities._
         import Command._
         import paradigm._
@@ -75,7 +75,7 @@ object M0 {
           // Scala response to ultimately cause runtime exception
           case _ => ???
         }
-        result
+        result.map(Some(_))
       }
     }
 }

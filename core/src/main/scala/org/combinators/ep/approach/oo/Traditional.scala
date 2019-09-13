@@ -101,7 +101,7 @@ sealed trait Traditional extends ApproachImplementationProvider {
             Request(op, op.parameters.map(param => (param, args(names.mangle(param.name)))).toMap)
           )
         )
-    } yield Some(result)
+    } yield result
   }
 
   def makeConstructor(tpeCase: DataTypeCase): Generator[ConstructorContext, Unit] = {

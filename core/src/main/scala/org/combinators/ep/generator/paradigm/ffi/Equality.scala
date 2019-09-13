@@ -11,7 +11,7 @@ trait Equality[Context] extends FFI  {
 
   trait EqualityCapabilities {
     implicit val canEquals: Understands[Context, Apply[Equals[Type], Expression, Expression]]
-    def equals(inType: Type, left: Expression, right: Expression): Generator[Context, Expression] =
+    def areEqual(inType: Type, left: Expression, right: Expression): Generator[Context, Expression] =
       AnyParadigm.capabilitiy(Apply[Equals[Type], Expression, Expression](Equals(inType), Seq(left, right)))
   }
   val equalityCapabilities: EqualityCapabilities

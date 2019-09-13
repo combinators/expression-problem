@@ -691,8 +691,74 @@ sealed class CodeGenerator(config: CodeGenerator.Config) {
               }
             }
         }
-      val methodBodyCapabilities: MethodBodyCapabilities = ???
-      val projectCapabilities: ProjectCapabilities = ???
+      val methodBodyCapabilities: MethodBodyCapabilities =
+        new MethodBodyCapabilities {
+          import base._
+          val canInstantiateObjectInMethod: Understands[MethodBodyContext, InstantiateObject[Type, Expression]] =
+            new Understands[MethodBodyContext, InstantiateObject[Type, Expression]] {
+              def perform(
+                context: MethodBodyContext,
+                command: InstantiateObject[Type, Expression]
+              ): (MethodBodyContext, Expression) = {
+                val (tpe, args) = context.resolver.instantiationOverride(command.tpe, command.constructorArguments)
+                (context, Java(s"""new ${tpe}(${args.mkString(", ")})""").expression())
+              }
+            }
+          val canGetMemberInMethod: Understands[MethodBodyContext, GetMember[Expression]] =
+            new Understands[MethodBodyContext, GetMember[Expression]] {
+              def perform(
+                context: MethodBodyContext,
+                command: GetMember[Expression]
+              ): (MethodBodyContext, Expression) = {
+                (context, Java(s"""this.${command.member}""").expression())
+              }
+            }
+          val canSetAbstractInMethod: Understands[MethodBodyContext, SetAbstract] =
+            new Understands[MethodBodyContext, SetAbstract] {
+              def perform(
+                context: MethodBodyContext,
+                command: SetAbstract
+              ): (MethodBodyContext, Unit) = {
+                val newMethod = context.method.clone()
+                newMethod.removeBody()
+                newMethod.setAbstract(true)
+                (context.copy(method = newMethod), ())
+              }
+            }
+          val canSelfReferenceInMethod: Understands[MethodBodyContext, SelfReference[Expression]] =
+            new Understands[MethodBodyContext, SelfReference[Expression]] {
+              def perform(
+                context: MethodBodyContext,
+                command: SelfReference[Expression]
+              ): (MethodBodyContext, Expression) = {
+                (context, new com.github.javaparser.ast.expr.ThisExpr())
+              }
+            }
+          val canGetConstructorInMethod: Understands[MethodBodyContext, GetConstructor[Type, Expression]] =
+            new Understands[MethodBodyContext, GetConstructor[Type, Expression]] {
+              def perform(
+                context: MethodBodyContext,
+                command: GetConstructor[Type, Expression]
+              ): (MethodBodyContext, Expression) = {
+                (context, Java(command.tpe).expression())
+              }
+            }
+          val canFindClassInMethod: Understands[MethodBodyContext, FindClass[Type]] =
+            new Understands[MethodBodyContext, FindClass[Type]] {
+              def perform(
+                context: MethodBodyContext,
+                command: FindClass[Type]
+              ): (MethodBodyContext, Type) = {
+                (context, Java(command.name).tpe())
+              }
+            }
+        }
+      val projectCapabilities: ProjectCapabilities =
+        new ProjectCapabilities {
+          import base._
+          implicit val canAddTypeLookupForClassesInProject: Understands[ProjectContext, AddTypeLookup[ClassContext, Type]] = ???
+          implicit val canAddTypeLookupForConstructorsInProject: Understands[ProjectContext, AddTypeLookup[ConstructorContext, Type]] = ???
+        }
     }
 }
 

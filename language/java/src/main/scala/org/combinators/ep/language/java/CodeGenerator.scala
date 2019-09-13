@@ -1,39 +1,73 @@
 package org.combinators.ep.language.java
 
-import com.github.javaparser.ast.ImportDeclaration
-import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, MethodDeclaration}
-import com.github.javaparser.ast.stmt.BlockStmt
+import java.nio.file.Paths
+
+import com.github.javaparser.ast.`type`.Type
+import com.github.javaparser.ast.{ImportDeclaration, Modifier, PackageDeclaration}
+import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, ConstructorDeclaration, MethodDeclaration}
+import com.github.javaparser.ast.expr.{MethodCallExpr, Name, NameExpr}
+import com.github.javaparser.ast.stmt.{BlockStmt, ExpressionStmt}
 import org.combinators.ep.domain.abstractions.TypeRep
+import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{AbstractSyntax, Command, FileWithPath, Understands}
-import org.combinators.ep.generator.paradigm.{AddBlockDefinitions, AddCompilationUnit, AddImport, AddTestSuite, AnyParadigm, Apply, GetArguments, Reify, ResolveImport, SetParameters, SetReturnType, ToTargetLanguageType}
+import org.combinators.ep.generator.paradigm.{AddBlockDefinitions, AddClass, AddCompilationUnit, AddConstructor, AddField, AddImplemented, AddImport, AddMethod, AddParent, AddTestCase, AddTestSuite, AddTypeLookup, AnyParadigm, Apply, FindClass, GetArguments, GetConstructor, GetMember, InitializeField, InitializeParent, InstantiateObject, ObjectOriented, Reify, ResolveImport, SelfReference, SetAbstract, SetInterface, SetParameters, SetReturnType, ToTargetLanguageType}
+import org.combinators.templating.twirl.Java
+import org.combinators.templating.persistable.JavaPersistable
 
 import scala.collection.JavaConverters._
+import scala.util.Try
 
 /**
  * Java-specific.
  *
  * These paradigm-specific traits are conceptually different from each other
  */
-object CodeGenerator {
+sealed class CodeGenerator(config: CodeGenerator.Config) {
   import Syntax.default._
 
-  case class ContextSpecificTypeResolution(
+  case class ContextSpecificResolver(
     methodTypeResulution: TypeRep => Generator[MethodBodyCtxt, Type],
     constructorTypeResolution: TypeRep => Generator[MethodBodyCtxt, Type],
-    classTypeResolution: TypeRep => Generator[ClassContext, Type]
+    classTypeResolution: TypeRep => Generator[ClassCtxt, Type],
+    reificationInConstructor: InstanceRep => Generator[ClassCtxt, Expression],
+    reificationInMethod: InstanceRep => Generator[MethodBodyCtxt, Expression],
+    importResolution: Type => Option[Import],
+    instantiationOverride: (Type, Seq[Expression]) => (Type, Seq[Expression])
   )
 
-  case class ProjectCtxt(typeResolution: ContextSpecificTypeResolution, units: Seq[CompilationUnit])
-  case class CompilationUnitCtxt(typeResolution: ContextSpecificTypeResolution, unit: CompilationUnit, isTest: Boolean)
-  case class ClassContext(typeResolution: ContextSpecificTypeResolution, cls: ClassOrInterfaceDeclaration)
-  case class TestCtxt(typeResolution: ContextSpecificTypeResolution, extraImports: Seq[Import], testClass: ClassOrInterfaceDeclaration)
-  case class MethodBodyCtxt(typeResolution: ContextSpecificTypeResolution, extraImports: Seq[Import], method: MethodDeclaration)
+  case class ProjectCtxt(
+    resolver: ContextSpecificResolver,
+    units: Seq[CompilationUnit],
+    extraDependencies: Seq[String]
+  )
+  case class CompilationUnitCtxt(
+    resolver: ContextSpecificResolver,
+    unit: CompilationUnit,
+    isTest: Boolean
+  )
+  case class ClassCtxt(
+    resolver: ContextSpecificResolver,
+    extraImports: Seq[Import],
+    cls: ClassOrInterfaceDeclaration
+  )
+  case class TestCtxt(
+    resolver: ContextSpecificResolver,
+    extraImports: Seq[Import],
+    testClass: ClassOrInterfaceDeclaration
+  )
+  case class MethodBodyCtxt(
+    resolver: ContextSpecificResolver,
+    extraImports: Seq[Import],
+    method: MethodDeclaration
+  )
+  case class CtorCtxt(
+    resolver: ContextSpecificResolver,
+    extraImports: Seq[Import],
+    ctor: ConstructorDeclaration
+  )
 
-
-
-  val base: AnyParadigm.WithSyntax[Syntax.default.type] =
-    new AnyParadigm {
+  object paradigm extends AnyParadigm {
       val syntax: Syntax.default.type = Syntax.default
       type ProjectContext = ProjectCtxt
       type CompilationUnitContext = CompilationUnitCtxt
@@ -49,8 +83,24 @@ object CodeGenerator {
                 command: AddCompilationUnit[CompilationUnitCtxt]
               ): (ProjectCtxt, Unit) = {
                 val (uc, _) =
-                  Command.runGenerator(command.unit, CompilationUnitCtxt(new com.github.javaparser.ast.CompilationUnit(), false))
-                (context.copy(units = context.units :+ uc.unit), ())
+                  Command.runGenerator(command.unit,
+                    CompilationUnitCtxt(context.resolver, new com.github.javaparser.ast.CompilationUnit(), false))
+                (context.copy(resolver = uc.resolver, units = context.units :+ uc.unit), ())
+              }
+            }
+          implicit val canAddTypeLookupForMethodsInProject: Understands[ProjectContext, AddTypeLookup[MethodBodyContext, Type]] =
+            new Understands[ProjectContext, AddTypeLookup[MethodBodyContext, Type]] {
+              def perform(
+                context: ProjectContext,
+                command: AddTypeLookup[MethodBodyCtxt, Type]
+              ): (ProjectContext, Unit) = {
+                def newLookup(tpe: TypeRep): Generator[MethodBodyCtxt, Type] =
+                  if (tpe == command.tpe) {
+                    command.lookup
+                  } else {
+                    context.resolver.methodTypeResulution(tpe)
+                  }
+                (context.copy(resolver = context.resolver.copy(methodTypeResulution = newLookup)), ())
               }
             }
         }
@@ -77,7 +127,10 @@ object CodeGenerator {
                 command: AddTestSuite[TestCtxt]
               ): (CompilationUnitContext, Unit) = {
                 val newUnit = context.unit.clone
-                val (testRes, _) = Command.runGenerator(command.suite, TestCtxt(Seq.empty, new ClassOrInterfaceDeclaration()))
+                val (testRes, _) =
+                  Command.runGenerator(
+                    command.suite,
+                    TestCtxt(context.resolver, Seq.empty, new ClassOrInterfaceDeclaration()))
                 testRes.extraImports.foreach { imp =>
                   if (!newUnit.getImports.contains(imp)) {
                     newUnit.addImport(imp)
@@ -85,7 +138,7 @@ object CodeGenerator {
                 }
                 testRes.testClass.setName(command.name)
                 newUnit.addType(testRes.testClass)
-                (context.copy(unit = newUnit, isTest = true), ())
+                (context.copy(resolver = testRes.resolver, unit = newUnit, isTest = true), ())
               }
             }
         }
@@ -97,7 +150,7 @@ object CodeGenerator {
                 context: MethodBodyCtxt,
                 command: AddImport[ImportDeclaration]
               ): (MethodBodyCtxt, Unit) =
-                (context.copy(extraImports = (context.extraImports :+ command.imp).distinct), ())
+                (context.copy(extraImports = (context.extraImports :+ command.imp).distinct.map(_.clone())), ())
             }
           implicit val canAddBlockDefinitionsInMethodBody: Understands[MethodBodyCtxt, AddBlockDefinitions[Statement]] =
             new Understands[MethodBodyCtxt, AddBlockDefinitions[Statement]] {
@@ -139,16 +192,347 @@ object CodeGenerator {
                 (context.copy(method = newMethod), ()) // second thing to be returned isn't optional, so make it () is like Unit
               }
             }
-          implicit val canTransformTypeInMethodBody: Understands[MethodBodyCtxt, ToTargetLanguageType[MethodBodyContext, Type]] = ???
+          implicit val canTransformTypeInMethodBody: Understands[MethodBodyCtxt, ToTargetLanguageType[Type]] =
+            new Understands[MethodBodyContext, ToTargetLanguageType[Type]] {
+              def perform(
+                context: MethodBodyContext,
+                command: ToTargetLanguageType[Type]
+              ): (MethodBodyContext, Type) = {
+                Command.runGenerator(context.resolver.methodTypeResulution(command.tpe), context)
+              }
+            }
 
-          implicit def canReifyInMethodBody[T]: Understands[MethodBodyCtxt, Reify[T, Expression]] = ???
+          implicit def canReifyInMethodBody[T]: Understands[MethodBodyCtxt, Reify[T, Expression]] =
+            new Understands[MethodBodyCtxt, Reify[T, Expression]] {
+              def perform(
+                context: MethodBodyCtxt,
+                command: Reify[T, Expression]
+              ): (MethodBodyCtxt, Expression) = {
+                Command.runGenerator(context.resolver.reificationInMethod(InstanceRep(command.tpe)(command.value)), context)
+              }
+            }
 
-          implicit val canResolveImportInMethod: Understands[MethodBodyCtxt, ResolveImport[ImportDeclaration, Type]] = ???
-          implicit val canApplyInMethodBody: Understands[MethodBodyCtxt, Apply[Expression, Expression, Expression]] = ???
-          implicit val canGetArgumentsInMethodBody: Understands[MethodBodyCtxt, GetArguments[Type, Expression]] = ???
+
+          implicit val canResolveImportInMethod: Understands[MethodBodyCtxt, ResolveImport[ImportDeclaration, Type]] =
+            new Understands[MethodBodyCtxt, ResolveImport[ImportDeclaration, Type]] {
+              def perform(
+                context: MethodBodyCtxt,
+                command: ResolveImport[ImportDeclaration, Type]
+              ): (MethodBodyCtxt, Option[ImportDeclaration]) = {
+                Try { (context, context.resolver.importResolution(command.forElem)) } getOrElse {
+                  val newImport =
+                    new ImportDeclaration(
+                      new Name(config.targetPackage.getName.clone(), command.forElem.toString()),
+                      false,
+                      false)
+                  if (context.extraImports.contains(newImport)) {
+                    (context, None)
+                  } else {
+                    (context, Some(newImport))
+                  }
+                }
+              }
+            }
+
+          implicit val canApplyInMethodBody: Understands[MethodBodyCtxt, Apply[Expression, Expression, Expression]] =
+            new Understands[MethodBodyCtxt, Apply[Expression, Expression, Expression]] {
+              def perform(
+                context: MethodBodyCtxt,
+                command: Apply[Expression, Expression, Expression]
+              ): (MethodBodyCtxt, Expression) = {
+                (context, Java(s"${command.functional}(${command.arguments.mkString(", ")})").expression())
+              }
+            }
+
+          implicit val canGetArgumentsInMethodBody: Understands[MethodBodyCtxt, GetArguments[Type, Expression]] =
+            new Understands[MethodBodyCtxt, GetArguments[Type, Expression]] {
+              def perform(
+                context: MethodBodyCtxt,
+                command: GetArguments[Type, Expression]
+              ): (MethodBodyCtxt, Seq[(String, Type, Expression)]) = {
+                val args = context.method.getParameters().asScala.map { param =>
+                  (param.getName.toString(), param.getType().clone(), new NameExpr(param.getName.clone()))
+                }
+                (context, args)
+              }
+            }
         }
-      val testCapabilities: TestCapabilities = ???
-
-      override def runGenerator(generator: Generator[ProjectContext, Unit]): Seq[FileWithPath] = ???
+      val testCapabilities: TestCapabilities =
+        new TestCapabilities {
+          implicit val canAddTestCaseInTest: Understands[TestContext, AddTestCase[MethodBodyContext, Expression]] =
+            new Understands[TestContext, AddTestCase[MethodBodyContext, Expression]] {
+              def perform(
+                context: TestContext,
+                command: AddTestCase[MethodBodyContext, Expression]
+              ): (TestContext, Unit) = {
+                val gen: Generator[MethodBodyCtxt, Unit] = {
+                  import methodBodyCapabilities._
+                  for {
+                    assertions <- command.code
+                    _ <- addBlockDefinitions(assertions.map(exp => new ExpressionStmt(exp.clone())))
+                  } yield ()
+                }
+                val testMethod = new MethodDeclaration(
+                  Modifier.PUBLIC.toEnumSet,
+                  new com.github.javaparser.ast.`type`.VoidType(),
+                  "test" + command.name.capitalize)
+                testMethod.addAnnotation("@Test")
+                val (resultingContext, _) =
+                  Command.runGenerator(
+                    gen,
+                    MethodBodyCtxt(
+                      context.resolver,
+                      context.extraImports,
+                      testMethod)
+                  )
+                val newClass = context.testClass.clone()
+                newClass.addMember(resultingContext.method)
+                (context.copy(resolver = resultingContext.resolver, testClass = newClass), ())
+              }
+            }
+        }
+      override def runGenerator(generator: Generator[ProjectContext, Unit]): Seq[FileWithPath] = {
+        val (finalContext, _) =
+          Command.runGenerator(generator,
+            ProjectCtxt(
+              ContextSpecificResolver(
+                methodTypeResulution = _ => ???,
+                constructorTypeResolution = _ => ???,
+                classTypeResolution = _ => ???,
+                reificationInConstructor = _ => ???,
+                reificationInMethod = _ => ???,
+                importResolution = _ => ???,
+                instantiationOverride = (tpe, args) => (tpe, args)
+              ),
+              units = Seq.empty,
+              extraDependencies = Seq.empty
+            )
+          )
+        val nameEntry = config.projectName.map(n => s"""name := "${n}"""").getOrElse("")
+        val deps = finalContext.extraDependencies.mkString("Seq(\n", ",\n    ", "\n  )")
+        val buildFile =
+          s"""
+             |$nameEntry
+             |libraryDependencies ++= $deps
+           """.stripMargin
+        val javaFiles = finalContext.units.map { unit =>
+          FileWithPath(
+            JavaPersistable.compilationUnitInstance.rawText(unit),
+            JavaPersistable.compilationUnitInstance.fullPath(Paths.get("src", "main", "java"), unit)
+          )
+        }
+        FileWithPath(buildFile, Paths.get("build.sbt")) +: javaFiles
+      }
     }
+
+  object ooParadigm extends ObjectOriented {
+      val base: paradigm.type = paradigm
+      type ClassContext = ClassCtxt
+      type ConstructorContext = CtorCtxt
+      val compilationUnitCapabilities: CompilationUnitCapabilities =
+        new CompilationUnitCapabilities {
+          implicit val canAddClassInCompilationUnit: Understands[base.CompilationUnitContext, AddClass[ClassContext]] =
+            new Understands[base.CompilationUnitContext, AddClass[ClassContext]] {
+              def perform(
+                context: base.CompilationUnitContext,
+                command: AddClass[ClassContext]
+              ): (base.CompilationUnitContext, Unit) = {
+                val clsToAdd = new ClassOrInterfaceDeclaration()
+                clsToAdd.setName(command.name)
+                clsToAdd.setPublic(true)
+                val (resultCtxt, _) =
+                  Command.runGenerator(
+                    command.cls,
+                    ClassCtxt(context.resolver, context.unit.getImports().asScala, clsToAdd)
+                  )
+                val newUnit = context.unit.clone()
+                newUnit.addType(resultCtxt.cls)
+                resultCtxt.extraImports.foreach { imp =>
+                  if (!newUnit.getImports.contains(imp)) {
+                    newUnit.addImport(imp.clone())
+                  }
+                }
+                (context.copy(resolver = resultCtxt.resolver, unit = newUnit), ())
+              }
+            }
+        }
+
+      val classCapabilities: ClassCapabilities =
+        new ClassCapabilities {
+          import base.syntax._
+          implicit val canAddParentInClass: Understands[ClassContext, AddParent[Type]] =
+            new Understands[ClassContext, AddParent[Type]] {
+              def perform(
+                context: ClassContext,
+                command: AddParent[Type]
+              ): (ClassContext, Unit) = {
+                val resultCls = context.cls.clone()
+                resultCls.addExtendedType(command.parentClass.toString())
+                (context.copy(cls = resultCls), ())
+              }
+            }
+          implicit val canAddImplementedInClass: Understands[ClassContext, AddImplemented[Type]] =
+            new Understands[ClassContext, AddImplemented[Type]] {
+              def perform(
+                context: ClassContext,
+                command: AddImplemented[Type]
+              ): (ClassContext, Unit) = {
+                val resultCls = context.cls.clone()
+                resultCls.addImplementedType(command.interface.toString())
+                (context.copy(cls = resultCls), ())
+              }
+            }
+          implicit val canAddFieldInClass: Understands[ClassContext, AddField[Type]] =
+            new Understands[ClassContext, AddField[Type]] {
+              def perform(
+                context: ClassContext,
+                command: AddField[Type]
+              ): (ClassContext, Unit) = {
+                val resultCls = context.cls.clone()
+                resultCls.addField(command.tpe, command.name, Modifier.PRIVATE)
+                (context.copy(cls = resultCls), ())
+              }
+            }
+          implicit val canAddMethodInClass: Understands[ClassContext, AddMethod[base.MethodBodyContext, Option[Expression]]] =
+            new Understands[ClassContext, AddMethod[base.MethodBodyContext, Option[Expression]]] {
+              def perform(
+                context: ClassContext,
+                command: AddMethod[base.MethodBodyContext, Option[Expression]]
+              ): (ClassContext, Unit) = {
+                val methodToAdd = new MethodDeclaration()
+                methodToAdd.setName(command.name)
+                methodToAdd.setPublic(command.isPublic)
+                val (methodCtxt, _) =
+                  Command.runGenerator(command.spec, MethodBodyCtxt(context.resolver, context.extraImports, methodToAdd))
+                val resultCls = context.cls.clone()
+                resultCls.addMember(methodCtxt.method.clone())
+                val newImports = (context.extraImports ++ methodCtxt.extraImports).distinct.map(_.clone())
+                (context.copy(resolver = methodCtxt.resolver, extraImports = newImports, cls = resultCls), ())
+              }
+            }
+
+          implicit val canAddConstructorInClass: Understands[ClassContext, AddConstructor[ConstructorContext]] =
+            new Understands[ClassContext, AddConstructor[ConstructorContext]] {
+              def perform(
+                context: ClassContext,
+                command: AddConstructor[ConstructorContext]
+              ): (ClassContext, Unit) = {
+                val ctorToAdd = new ConstructorDeclaration()
+                ctorToAdd.setPublic(true)
+                val (ctorCtxt, _) =
+                  Command.runGenerator(command.ctor, CtorCtxt(context.resolver, context.extraImports, ctorToAdd))
+                val resultCls = context.cls.clone()
+                resultCls.addMember(ctorCtxt.ctor.clone())
+                val newImports = (context.extraImports ++ ctorCtxt.extraImports).distinct.map(_.clone())
+                (context.copy(resolver = ctorCtxt.resolver, extraImports = newImports, cls = resultCls), ())
+              }
+            }
+
+          implicit val canAddImportInClass: Understands[ClassContext, AddImport[Import]] =
+            new Understands[ClassContext, AddImport[Import]] {
+              def perform(
+                context: ClassContext,
+                command: AddImport[Import]
+              ): (ClassContext, Unit) = {
+                (context.copy(extraImports = (context.extraImports :+ command.imp).distinct.map(_.clone())), ())
+              }
+            }
+
+          implicit val canResolveImportInClass: Understands[ClassContext, ResolveImport[Import, Type]] =
+            new Understands[ClassContext, ResolveImport[Import, Type]] {
+              def perform(
+                context: ClassContext,
+                command: ResolveImport[Import, Type]
+              ): (ClassContext, Option[Import]) = {
+                Try { (context, context.resolver.importResolution(command.forElem)) } getOrElse {
+                  val newImport =
+                    new ImportDeclaration(
+                      new Name(config.targetPackage.getName.clone(), command.forElem.toString()),
+                      false,
+                      false)
+                  if (context.extraImports.contains(newImport)) {
+                    (context, None)
+                  } else {
+                    (context, Some(newImport))
+                  }
+                }
+              }
+            }
+          implicit val canSetAbstractInClass: Understands[ClassContext, SetAbstract] =
+            new Understands[ClassContext, SetAbstract] {
+              def perform(
+                context: ClassContext,
+                command: SetAbstract
+              ): (ClassContext, Unit) = {
+                val newClass = context.cls.clone()
+                newClass.setAbstract(true)
+                (context.copy(cls = newClass), ())
+              }
+            }
+          implicit val canSetInterfaceInClass: Understands[ClassContext, SetInterface] =
+            new Understands[ClassContext, SetInterface] {
+              def perform(
+                context: ClassContext,
+                command: SetInterface
+              ): (ClassContext, Unit) = {
+                val newClass = context.cls.clone()
+                newClass.setInterface(true)
+                newClass.getMethods.forEach { method =>
+                  if (method.getBody.isPresent) {
+                    method.setDefault(true)
+                  }
+                }
+                (context.copy(cls = newClass), ())
+              }
+            }
+
+          implicit val canTranslateTypeInClass: Understands[ClassContext, ToTargetLanguageType[Type]] =
+            new Understands[ClassContext, ToTargetLanguageType[Type]] {
+              def perform(
+                context: ClassContext,
+                command: ToTargetLanguageType[Type]
+              ): (ClassContext, Type) = {
+                Command.runGenerator(context.resolver.classTypeResolution(command.tpe), context)
+              }
+            }
+          implicit val canSelfReferenceInClass: Understands[ClassContext, SelfReference[Expression]] =
+            new Understands[ClassContext, SelfReference[Expression]] {
+              def perform(
+                context: ClassContext,
+                command: SelfReference[Expression]
+              ): (ClassContext, Expression) = {
+                (context, new com.github.javaparser.ast.expr.ThisExpr())
+              }
+            }
+          implicit val canFindClassInClass: Understands[ClassContext, FindClass[Type]] =
+            new Understands[ClassContext, FindClass[Type]] {
+              def perform(
+                context: ClassContext,
+                command: FindClass[Type]
+              ): (ClassContext, Type) = {
+                (context, Java(command.name).tpe())
+              }
+            }
+        }
+
+      val constructorCapabilities: ConstructorCapabilities = ???
+      val methodBodyCapabilities: MethodBodyCapabilities = ???
+      val projectCapabilities: ProjectCapabilities = ???
+    }
+}
+
+object CodeGenerator {
+  case class Config(
+    targetPackage: PackageDeclaration,
+    projectName: Option[String]
+  )
+
+  val defaultConfig =
+    Config(
+      targetPackage = new PackageDeclaration(),
+      projectName = None
+    )
+
+  def apply(config: Config = defaultConfig): CodeGenerator =
+    new CodeGenerator(config)
 }

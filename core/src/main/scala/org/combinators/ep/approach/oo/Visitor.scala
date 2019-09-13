@@ -11,13 +11,15 @@ import AnyParadigm.syntax._
 /**
  * Using visitor approach.
  *
- * Have to decide whether to use side effects or Generics (start here)
+ * Have to decide whether to use side effects or Generics. This current implementation uses the Visitor<R> generics
+ * approach, which can be adopted by different object oriented languages.
  */
 sealed trait Visitor extends ApproachImplementationProvider {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
 
+  // necessary constants used to ensure no typos
   val accept:String = "accept"
   val visit:String = "visit"
   val visitorClass:String = "Visitor"
@@ -231,7 +233,7 @@ sealed trait Visitor extends ApproachImplementationProvider {
    * public Exp getRight() {
    *   return this.right;
    * }
-   *   }}}
+   * }}}
    * @param att
    * @return
    */
@@ -370,7 +372,20 @@ sealed trait Visitor extends ApproachImplementationProvider {
   }
 
 
-
+  /** Make a method body for each operation, which is a visit method for a defined data type
+   *
+   * {{{
+   *     public Double visit(Sub e) {
+   *         return e.getLeft().accept(new Eval()) - e.getRight().accept(new Eval());
+   *     }
+   * }}}
+   *
+   * @param tpe
+   * @param tpeCase
+   * @param op
+   * @param domainSpecific
+   * @return
+   */
   def makeImplementation(tpe: DataType,
                           tpeCase: DataTypeCase,
                           op: Operation,
@@ -417,15 +432,14 @@ sealed trait Visitor extends ApproachImplementationProvider {
    *     }
    * }}}
    *
-   * @param allTypes
+   * @param domain     Model for which all types are to be incorporated
    * @param op
    * @param domainSpecific
-   * @return
+   * @return        The one invoking this method must be sure to add this class to project.
    */
-  def makeOperationImplementation(allTypes:Seq[DataTypeCase],
-                                  tpeCase: DataType,
+  def makeOperationImplementation(domain:Model,
                                   op: Operation,
-                                  domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
+                                  domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
     import ooParadigm.projectCapabilities._
 
     val makeClass: Generator[ClassContext, Unit] = {
@@ -434,13 +448,14 @@ sealed trait Visitor extends ApproachImplementationProvider {
       for {
         _ <- setAbstract()
         _ <- addTypeParameter(names.mangle(visitTypeParameter), Command.skip)    // R by itself, since not extending any other type parameter (hence Skip)
-        _ <- forEach (allTypes) { tpe =>
-          addMethod(names.instanceNameOf(tpe), makeImplementation(tpeCase, tpe, op, domainSpecific))
+        _ <- forEach (domain.typeCases) { tpe =>
+          addMethod(names.instanceNameOf(tpe), makeImplementation(domain.baseDataType, tpe, op, domainSpecific))
         }
       } yield ()
     }
 
-    addClassToProject(visitorClass, makeClass)
+    makeClass
+//    addClassToProject(visitorClass, makeClass)
   }
 
   def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Type]]): Generator[Ctxt, Type] = {
@@ -504,4 +519,109 @@ object Visitor {
       val polymorphics: parametricPolymorphism.type = parametricPolymorphism
       val genericsParadigm: generics.type = generics
     }
+}
+
+sealed trait ExtensibleVisitor extends Visitor {
+  val ooParadigm: ObjectOriented.WithBase[paradigm.type]
+  val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
+  val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
+
+
+  import paradigm._
+  import ooParadigm._
+
+  import syntax._
+
+  /** Concatenate all types in this model to form proper suffix for operation classes. */
+  def modelTypes(model:Model) : String = {
+    if (model.last.isEmpty) {
+      ""
+    } else {
+      model.typeCases.sortWith(_.name < _.name).mkString("")
+    }
+  }
+
+  /** Each operation is placed in its own class, with a 'visit' method for newly defined types.
+   *
+   * {{{
+   *   public class EvalSub extends Eval implements VisitorSub<Double> {
+   *
+   *     public Double visit(Sub e) {
+   *         return e.getLeft().accept(makeEval()) - e.getRight().accept(makeEval());
+   *     }
+   *
+   *     EvalSub makeEval() {
+   *         return new EvalSub();
+   *     }
+   * }
+   * }}}
+   *
+   * @param domain     Model for which new types are to be incorporated
+   * @param op
+   * @param domainSpecific
+   * @return           Returns class context without actually adding to ProjectContext; this is job of caller of this function
+   */
+  def makeOperationImplementation(domain:Model,
+                                  op: Operation,
+                                  domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
+    import ooParadigm.projectCapabilities._
+    //flatDomain.typeCases, flatDomain.baseDataType
+
+    val full:String = modelTypes(domain)
+    val lastWithType:Option[Model] = if (domain.last.isEmpty) {
+      None
+    } else {
+      domain.last.get.lastModelWithDataTypes
+    }
+    val lastOperation = if (lastWithType.isDefined) {
+      lastWithType.get.findOperation(op)
+    } else {
+      None
+    }
+
+    // Must take care to ensure we don't mistakenly go back *before* where the operation was defined.
+    // This is determined by looking for operations in the past.
+    val last = if (lastWithType.isEmpty || lastOperation.isEmpty) {
+      ""
+    } else {
+      modelTypes(lastWithType.get)
+    }
+
+    val makeClass: Generator[ClassContext, Unit] = {
+      import ooParadigm.classCapabilities._
+      import polymorphics.methodBodyCapabilities._
+      for {
+        _ <- setAbstract()
+        _ <- addTypeParameter(names.mangle(visitTypeParameter), Command.skip)    // R by itself, since not extending any other type parameter (hence Skip)
+        _ <- forEach (domain.typeCases) { tpe =>
+          makeImplementation(domain.baseDataType, tpe, op, domainSpecific)
+        }
+      } yield ()
+    }
+
+    makeClass
+    //    // if I want to override a super, this is a mistake since this will be added to project.
+    //    addClassToProject(visitorClass, makeClass)
+  }
+
+}
+
+object ExtensibleVisitor {
+  type WithParadigm[P <: AnyParadigm] = Traditional { val paradigm: P }
+  type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
+
+  def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
+  (nameProvider: NameProvider, base: P)
+  (oo: ObjectOriented.WithBase[base.type]
+  (params: ParametricPolymorphism.WithBase[base.type])
+  (generics: Generics.WithBase[base.type,oo.type,params.type]): Traditional.WithParadigm[base.type] =
+    new ExtensibleVisitor {
+      override val names: NameProvider = nameProvider
+      override val paradigm: base.type = base
+      override val ooParadigm: ObjectOriented.WithBase[paradigm.type] = oo
+      override val polymorphics: ParametricPolymorphism.WithBase[paradigm.type] = params
+      override val genericsParadigm: Generics.WithBase[paradigm.type,ooParadigm.type,polymorphics.type] = generics
+    }
+
+
 }

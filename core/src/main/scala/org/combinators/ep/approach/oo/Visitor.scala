@@ -488,6 +488,8 @@ sealed trait Visitor extends ApproachImplementationProvider {
    * @return
    */
   def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
+    import ooParadigm.projectCapabilities._
+
     val flatDomain = domain.flatten
     for {
       _ <- initializeApproach(flatDomain)
@@ -498,7 +500,7 @@ sealed trait Visitor extends ApproachImplementationProvider {
       }
       _ <- makeVisitorInterface(flatDomain.typeCases)
       _ <- forEach (flatDomain.ops) { op =>
-        makeOperationImplementation(flatDomain.typeCases, flatDomain.baseDataType, op, domainSpecific)
+        addClassToProject(names.conceptNameOf(op), makeOperationImplementation(flatDomain, op, domainSpecific))
       }
     } yield ()
   }
@@ -564,8 +566,7 @@ sealed trait ExtensibleVisitor extends Visitor {
   def makeOperationImplementation(domain:Model,
                                   op: Operation,
                                   domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
-    import ooParadigm.projectCapabilities._
-    //flatDomain.typeCases, flatDomain.baseDataType
+      //flatDomain.typeCases, flatDomain.baseDataType
 
     val full:String = modelTypes(domain)
     val lastWithType:Option[Model] = if (domain.last.isEmpty) {
@@ -612,7 +613,7 @@ object ExtensibleVisitor {
 
   def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
   (nameProvider: NameProvider, base: P)
-  (oo: ObjectOriented.WithBase[base.type]
+  (oo: ObjectOriented.WithBase[base.type])
   (params: ParametricPolymorphism.WithBase[base.type])
   (generics: Generics.WithBase[base.type,oo.type,params.type]): Traditional.WithParadigm[base.type] =
     new ExtensibleVisitor {

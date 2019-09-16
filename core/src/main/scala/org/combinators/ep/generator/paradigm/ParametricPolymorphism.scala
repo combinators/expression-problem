@@ -3,8 +3,8 @@ package org.combinators.ep.generator.paradigm
 import org.combinators.ep.generator.{AbstractSyntax, Command, Understands}
 import org.combinators.ep.generator.Command.Generator
 
-case class AddTypeParameter[TypeParameterContext](
-    name: String,
+case class AddTypeParameter[Name, TypeParameterContext](
+    name: Name,
     spec: Generator[TypeParameterContext, Unit]
   ) extends Command {
   type Result = Unit
@@ -23,9 +23,9 @@ trait ParametricPolymorphism {
   type TypeParameterContext
 
   trait MethodBodyCapabilities {
-    implicit val canAddTypeParameterInMethod: Understands[MethodBodyContext, AddTypeParameter[TypeParameterContext]]
-    def addTypeParameter(name: String, spec: Generator[TypeParameterContext, Unit]): Generator[MethodBodyContext, Unit] =
-      AnyParadigm.capabilitiy(AddTypeParameter[TypeParameterContext](name, spec))
+    implicit val canAddTypeParameterInMethod: Understands[MethodBodyContext, AddTypeParameter[Name, TypeParameterContext]]
+    def addTypeParameter(name: Name, spec: Generator[TypeParameterContext, Unit]): Generator[MethodBodyContext, Unit] =
+      AnyParadigm.capabilitiy(AddTypeParameter[Name, TypeParameterContext](name, spec))
 
     implicit val canGetTypeArgumentsInMethod: Understands[MethodBodyContext, GetTypeArguments[Type]]
     def getTypeArguments(): Generator[MethodBodyContext, Seq[Type]] =

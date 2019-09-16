@@ -22,9 +22,9 @@ trait Generics {
   import syntax._
 
   trait ClassCapabilities {
-    implicit val canAddTypeParameterInClass: Understands[ClassContext, AddTypeParameter[TypeParameterContext]]
-    def addTypeParameter(name: String, spec: Generator[TypeParameterContext, Unit]): Generator[ClassContext, Unit] =
-      AnyParadigm.capabilitiy(AddTypeParameter[TypeParameterContext](name, spec))
+    implicit val canAddTypeParameterInClass: Understands[ClassContext, AddTypeParameter[Name, TypeParameterContext]]
+    def addTypeParameter(name: Name, spec: Generator[TypeParameterContext, Unit]): Generator[ClassContext, Unit] =
+      AnyParadigm.capabilitiy(AddTypeParameter[Name, TypeParameterContext](name, spec))
 
     implicit val canGetTypeArgumentsInClass: Understands[ClassContext, GetTypeArguments[Type]]
     def getTypeArguments(): Generator[ClassContext, Seq[Type]] =

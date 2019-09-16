@@ -7,7 +7,7 @@ import org.combinators.ep.generator.paradigm.{AnyParadigm, DeclareVariable, IfTh
 import cats.implicits._
 import cats.free.Free._
 
-case class AssignVariable[Expression, Statement](name: String, value: Expression) extends Command {
+case class AssignVariable[Expression, Statement](variable: Expression, value: Expression) extends Command {
   type Result = Statement
 }
 
@@ -26,13 +26,13 @@ trait Imperative[Context] {
   import AnyParadigm.syntax._
 
   trait ImperativeCapabilities {
-    implicit val canDeclareVariable: Understands[Context, DeclareVariable[Type, Option[Expression], Statement]]
-    def declareVar(name: String, tpe: Type, init: Option[Expression] = None): Generator[Context, Statement] =
-      AnyParadigm.capabilitiy(DeclareVariable[Type, Option[Expression], Statement](name, tpe, init))
+    implicit val canDeclareVariable: Understands[Context, DeclareVariable[Name, Type, Option[Expression], Expression]]
+    def declareVar(name: Name, tpe: Type, init: Option[Expression] = None): Generator[Context, Expression] =
+      AnyParadigm.capabilitiy(DeclareVariable[Name, Type, Option[Expression], Expression](name, tpe, init))
 
     implicit val canAssignVariable: Understands[Context, AssignVariable[Expression, Statement]]
-    def assignVar(name: String, value: Expression): Generator[Context, Statement] =
-      AnyParadigm.capabilitiy(AssignVariable[Expression, Statement](name, value))
+    def assignVar(variable: Expression, value: Expression): Generator[Context, Statement] =
+      AnyParadigm.capabilitiy(AssignVariable[Expression, Statement](variable, value))
 
     implicit val canIfThenElse: Understands[Context, IfThenElse[Expression, Generator[Context, Unit], Option[Generator[Context, Unit]], Statement]]
     def ifThenElse(
@@ -49,7 +49,7 @@ trait Imperative[Context] {
     def whileLoop(condition: Expression, block: Generator[Context, Unit]): Generator[Context, Statement] =
       AnyParadigm.capabilitiy(While[Context, Expression, Statement](condition, block))
 
-    implicit def canReturn: Understands[Context, Return[Expression, Statement]]
+    implicit val canReturn: Understands[Context, Return[Expression, Statement]]
     def returnStmt(exp: Expression): Generator[Context, Statement] =
       AnyParadigm.capabilitiy(Return[Expression, Statement](exp))
 

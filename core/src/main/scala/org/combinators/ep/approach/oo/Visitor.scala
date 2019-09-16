@@ -20,18 +20,19 @@ sealed trait Visitor extends ApproachImplementationProvider {
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
 
-  // necessary constants used to ensure no typos
-  val accept:String = "accept"
-  val visit:String = "visit"
-  val visitorClass:String = "Visitor"
-  val visitorParameter:String = "v"
-  val expParameter:String = "exp"
-  val visitTypeParameter:String = "R"
-
   import paradigm._
   import ooParadigm._
-
   import syntax._
+
+  // necessary constants used to ensure no typos
+  val accept: Name = names.mangle("accept")
+  val visit: Name = names.mangle("visit")
+  val visitorClass: Name = names.mangle("Visitor")
+  val visitorParameter: String = "v"
+  val expParameter: String = "exp"
+  val visitTypeParameter: String = "R"
+
+
 
   /**
    * Dispatch in visitor we need to find context on which to accept a visitor.
@@ -52,11 +53,11 @@ sealed trait Visitor extends ApproachImplementationProvider {
     for {
 
       // In the "message.to" expression, invoke the 'accept' method with a visitor argument
-      method <- getMember(message.to, names.mangle(accept))   // things which are code-generated use the '<-' handles unpacking results
+      method <- getMember(message.to, accept)   // things which are code-generated use the '<-' handles unpacking results
 
       // the operation is encoded in its own class, which we must find to determine the visitor type
       op = message.request.op
-      visitorType <- findClass(names.conceptNameOf(op))     // each visitor is named based on operation
+      visitorType <- findClass(names.mangle(names.conceptNameOf(op)))     // each visitor is named based on operation
       _ <- resolveAndAddImport(visitorType)            // gives resulting import statement (if needed)
 
       // construct the visitor object for the given type (and parameters)
@@ -85,7 +86,7 @@ sealed trait Visitor extends ApproachImplementationProvider {
     import ooParadigm.methodBodyCapabilities._
     for {
       // access the constructor for the class associated with type case and invoke constructors with arguments.
-      rt <- findClass(names.conceptNameOf(tpeCase))
+      rt <- findClass(names.mangle(names.conceptNameOf(tpeCase)))
       _ <- resolveAndAddImport(rt)
       ctor <- getConstructor(rt)
       res <- apply(ctor, args)
@@ -110,12 +111,12 @@ sealed trait Visitor extends ApproachImplementationProvider {
       import ooParadigm.classCapabilities._
       for {
         _ <- setAbstract()
-        _ <- addAbstractMethod(names.mangle(accept), makeAcceptSignature())
+        _ <- addAbstractMethod(accept, makeAcceptSignature())
       } yield ()
     }
 
     // adds the 'Exp' class, with a single accept method
-    addClassToProject(names.conceptNameOf(tpe), makeClass)
+    addClassToProject(names.mangle(names.conceptNameOf(tpe)), makeClass)
   }
 
   /**
@@ -133,17 +134,19 @@ sealed trait Visitor extends ApproachImplementationProvider {
 
     for {
       // R by itself, since not extending any other type parameter (hence Skip)
-      _ <- addTypeParameter(names.mangle(visitTypeParameter), Command.skip)
+      visitTyPAram <- freshName(visitTypeParameter)
+      _ <- addTypeParameter(visitTyPAram, Command.skip)
 
       // this returns mangled visitTypeParameter name and gets list of all type parameters, for which there is only one, so we get head
       args <- getTypeArguments()
       _ <- setReturnType(args.head)
 
       // identify Visitor<R>
-      visitorClassType <- findClass(names.mangle(visitorClass))
+      visitorClassType <- findClass(visitorClass)
       visitorType  <- applyType (visitorClassType, args)
 
-      _ <- setParameters(Seq((names.mangle(visitorParameter), visitorType)))      // a pair (name,type) of only one sequence
+      visitParam <- freshName(visitorParameter)
+      _ <- setParameters(Seq((visitParam, visitorType)))      // a pair (name,type) of only one sequence
     } yield ()
   }
 
@@ -183,7 +186,7 @@ sealed trait Visitor extends ApproachImplementationProvider {
         _ <- makeAcceptImplementation()
       } yield ()
     }
-    addClassToProject(names.conceptNameOf(tpeCase), makeClass)
+    addClassToProject(names.mangle(names.conceptNameOf(tpeCase)), makeClass)
   }
 
   /** Make field for the data type subtype.
@@ -196,7 +199,7 @@ sealed trait Visitor extends ApproachImplementationProvider {
     for {
       ft <- toTargetLanguageType(att.tpe)
       _ <- resolveAndAddImport(ft)
-      _ <- addField(names.instanceNameOf(att), ft)
+      _ <- addField(names.mangle(names.instanceNameOf(att)), ft)
     } yield ()
   }
 
@@ -219,13 +222,16 @@ sealed trait Visitor extends ApproachImplementationProvider {
         for {
           at <- toTargetLanguageType(att.tpe)
           _ <- resolveAndAddImport(at)
-        } yield (names.instanceNameOf(att), at)
+          pName <- freshName(names.instanceNameOf(att))
+        } yield (pName, at)
       }
       _ <- setParameters(params)
 
       // initialize this.XXX = XXX
       args <- getArguments()
-      _ <- forEach(args) { case (name, _, exp) => initializeField(name, exp) }
+      _ <- forEach(tpeCase.attributes.zip(args)) { case (att, (_, _, exp)) =>
+        initializeField(names.mangle(names.instanceNameOf(att)), exp)
+      }
     } yield ()
   }
 
@@ -250,12 +256,12 @@ sealed trait Visitor extends ApproachImplementationProvider {
 
         // return // this.attribute name
         self <- selfReference()
-        result <- getMember(self, names.instanceNameOf(att))
+        result <- getMember(self, names.mangle(names.instanceNameOf(att)))
       } yield Some(result)
     }
 
     import ooParadigm.classCapabilities._
-    addMethod("get" + names.conceptNameOf(att), makeBody)
+    addMethod(names.addPrefix("get", names.mangle(names.conceptNameOf(att))), makeBody)
   }
 
   /** Create an accept implementation from the accept method signature.
@@ -277,14 +283,14 @@ sealed trait Visitor extends ApproachImplementationProvider {
         args <- getArguments()   // get name, type, expression
 
         // invoke visit method on 'v' with 'this' as argyment
-        visitFunction <- getMember(args.head._3, names.mangle(visit))
+        visitFunction <- getMember(args.head._3, visit)
         self <- selfReference()
         result <- apply(visitFunction, Seq(self))  // make the method invocation
       } yield Some(result)
     }
 
     import ooParadigm.classCapabilities._
-    addMethod(names.mangle("accept"), makeBody)
+    addMethod(accept, makeBody)
   }
 
   /** Visitor requires an abstract base class as follows, integrating all types:
@@ -307,8 +313,10 @@ sealed trait Visitor extends ApproachImplementationProvider {
       import genericsParadigm.classCapabilities._
       for {
         _ <- setAbstract()
-        _ <- addTypeParameter(names.mangle(visitTypeParameter), Command.skip)    // R by itself, since not extending any other type parameter (hence Skip)
-        _ <- forEach (allTypes) { tpe => addAbstractMethod(names.instanceNameOf(tpe), makeVisitSignature(tpe)) }
+        visitTyParam <- freshName(visitTypeParameter)
+        _ <- addTypeParameter(visitTyParam, Command.skip) // R by itself, since not extending any other type parameter (hence Skip)
+        visitResultType <- getTypeArguments().map(_.head)
+        _ <- forEach (allTypes) { tpe => addAbstractMethod(names.mangle(names.instanceNameOf(tpe)), makeVisitSignature(tpe, visitResultType)) }
       } yield ()
     }
 
@@ -320,57 +328,20 @@ sealed trait Visitor extends ApproachImplementationProvider {
    * thus become an abstract interface declaration or form the basis for an implementation.
    * @return
    */
-  def makeVisitSignature(tpe:DataTypeCase): Generator[MethodBodyContext, Unit] = {
+  def makeVisitSignature(tpe:DataTypeCase, visitResultType: Type): Generator[MethodBodyContext, Unit] = {
     import paradigm.methodBodyCapabilities.{toTargetLanguageType => _, _}
     import polymorphics.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
 
     for {
-      _ <- addTypeParameter(names.mangle(visit), Command.skip)    // R by itself, since not extending any other type parameter (hence Skip)
-      args <- getTypeArguments()     // this returns mangled visitTypeParameter name and gets list of all type parameters
-      _ <- setReturnType(args.head)  // only R
-      visitorClassType <- findClass(names.conceptNameOf(tpe))
-      _ <- setParameters(Seq((names.mangle(expParameter), visitorClassType)))      // a pair (name,type) of only one sequence
+      _ <- setReturnType(visitResultType)  // only R
+      visitorClassType <- findClass(names.mangle(names.conceptNameOf(tpe)))
+      visitParamName <- freshName(expParameter)
+      _ <- setParameters(Seq((visitParamName, visitorClassType)))      // a pair (name,type) of only one sequence
     } yield ()
   }
 
 
-
-  /**
-   * Prepare the signature for the method that performs a given operation.
-   * {{{
-   *   public Double visit(Lit e) {
-   *         return e.getValue();
-   *     }
-   *
-   *     public Double visit(Add e) {
-   *         return e.getLeft().accept(new Eval()) + e.getRight().accept(new Eval());
-   *     }
-   * }}}
-   *
-   *  Note for visitor approach, the name of method is always 'visit', but for our purposes
-   *  here, the method is not named. Not sure I have this right.
-   *
-   * @param op
-   * @return
-   */
-  def makeSignature(op: Operation): Generator[MethodBodyContext, Unit] = {
-    import paradigm.methodBodyCapabilities._
-
-    for {
-      rt <- toTargetLanguageType(op.returnType)
-      _ <- resolveAndAddImport(rt)
-      _ <- setReturnType(rt)
-
-      params <- forEach (op.parameters) { param: Parameter =>
-        for {
-          pt <- toTargetLanguageType(param.tpe)
-          _ <- resolveAndAddImport(pt)
-        } yield (names.mangle(param.name), pt)
-      }
-      _ <- setParameters(params)
-    } yield ()
-  }
 
 
   /** Make a method body for each operation, which is a visit method for a defined data type
@@ -395,14 +366,23 @@ sealed trait Visitor extends ApproachImplementationProvider {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
     for {
-      _ <- makeSignature(op)
-      thisRef <- selfReference()
+      returnType <- toTargetLanguageType(op.returnType)
+      _ <- resolveAndAddImport(returnType)
+      _ <- makeVisitSignature(tpeCase, returnType)
+      visitedRef <- getArguments().map(_.head._3)
       attAccessors: Seq[Expression] <- forEach (tpeCase.attributes) { att =>
-        GetMember(thisRef, names.instanceNameOf(att)).interpret
+        for {
+          getter <- getMember(visitedRef, names.addPrefix("get", names.mangle(names.instanceNameOf(att))))
+          getterCall <- apply(getter, Seq.empty)
+        } yield getterCall
       }
 
-      allArgs <- getArguments()
-      args = allArgs.map { case (name, _, exp) => (name, exp) }.toMap
+      args <- forEach (op.parameters) { param =>
+        for {
+          thisRef <- selfReference()
+          paramField <- getMember(thisRef, names.mangle(param.name))
+        } yield (param, paramField)
+      }
 
       // body of this implementation is the result of the individual domain-specific logic.
       result <-
@@ -410,13 +390,33 @@ sealed trait Visitor extends ApproachImplementationProvider {
           ReceivedRequest(
             tpe,
             tpeCase,
-            thisRef,
+            visitedRef,
             tpeCase.attributes.zip(attAccessors).toMap,
-            Request(op, op.parameters.map(param => (param, args(names.mangle(param.name)))).toMap)
+            Request(op, args.toMap)
           )
         )
     } yield result
   }
+
+  def makeOperationConstructor(op: Operation): Generator[ConstructorContext, Unit] = {
+    import constructorCapabilities._
+    for {
+      params <- forEach (op.parameters) { param =>
+          for {
+            paramTy <- toTargetLanguageType(param.tpe)
+            _ <- resolveAndAddImport(paramTy)
+            pName <- freshName(param.name)
+          } yield (pName, paramTy)
+        }
+      _ <- setParameters(params)
+      args <- getArguments()
+      _ <- forEach (op.parameters.zip(args)) { case (param, (_, _, arg)) =>
+        initializeField(names.mangle(param.name), arg)
+      }
+    } yield ()
+
+  }
+
 
   /** Each operation is placed in its own class, with a 'visit' method for each known data type.
    * {{{
@@ -441,16 +441,19 @@ sealed trait Visitor extends ApproachImplementationProvider {
   def makeOperationImplementation(domain:Model,
                                   op: Operation,
                                   domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
-    import ooParadigm.projectCapabilities._
-
     val makeClass: Generator[ClassContext, Unit] = {
       import ooParadigm.classCapabilities._
       import genericsParadigm.classCapabilities._
       for {
-        _ <- setAbstract()
-        _ <- addTypeParameter(names.mangle(visitTypeParameter), Command.skip)    // R by itself, since not extending any other type parameter (hence Skip)
+        visitorInterface <- findClass(visitorClass)
+        _ <- resolveAndAddImport(visitorInterface)
+        returnTpe <- toTargetLanguageType(op.returnType)
+        _ <- resolveAndAddImport(returnTpe)
+        visitorInterfaceWithReturnType <- applyType(visitorInterface, returnTpe)
+        _ <- addImplemented(visitorInterfaceWithReturnType)
+        _ <- addConstructor(makeOperationConstructor(op))
         _ <- forEach (domain.typeCases) { tpe =>
-          addMethod(names.instanceNameOf(tpe), makeImplementation(domain.baseDataType, tpe, op, domainSpecific))
+          addMethod(names.mangle(names.instanceNameOf(tpe)), makeImplementation(domain.baseDataType, tpe, op, domainSpecific))
         }
       } yield ()
     }
@@ -459,8 +462,8 @@ sealed trait Visitor extends ApproachImplementationProvider {
 //    addClassToProject(visitorClass, makeClass)
   }
 
-  def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Type]]): Generator[Ctxt, Type] = {
-    FindClass(names.conceptNameOf(dtpe)).interpret(canFindClass)
+  def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
+    FindClass(names.mangle(names.conceptNameOf(dtpe))).interpret(canFindClass)
   }
 
   def initializeApproach(domain: Model): Generator[ProjectContext, Unit] = {
@@ -501,7 +504,7 @@ sealed trait Visitor extends ApproachImplementationProvider {
       }
       _ <- makeVisitorInterface(flatDomain.typeCases)
       _ <- forEach (flatDomain.ops) { op =>
-        addClassToProject(names.conceptNameOf(op), makeOperationImplementation(flatDomain, op, domainSpecific))
+        addClassToProject(names.mangle(names.conceptNameOf(op)), makeOperationImplementation(flatDomain, op, domainSpecific))
       }
     } yield ()
   }
@@ -512,12 +515,14 @@ object Visitor {
   type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 
   def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
-  (nameProvider: NameProvider, base: P)
-  (oo: ObjectOriented.WithBase[base.type], parametricPolymorphism: ParametricPolymorphism.WithBase[base.type])
+  (base: P)
+  (nameProvider: NameProvider[base.syntax.Name],
+    oo: ObjectOriented.WithBase[base.type],
+    parametricPolymorphism: ParametricPolymorphism.WithBase[base.type])
   (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): Visitor.WithParadigm[base.type] =
     new Visitor {
-      val names: NameProvider = nameProvider
       val paradigm: base.type = base
+      val names: NameProvider[paradigm.syntax.Name] = nameProvider
       val ooParadigm: oo.type = oo
       val polymorphics: parametricPolymorphism.type = parametricPolymorphism
       val genericsParadigm: generics.type = generics
@@ -610,13 +615,13 @@ object ExtensibleVisitor {
   type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 
   def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
-  (nameProvider: NameProvider, base: P)
-  (oo: ObjectOriented.WithBase[base.type])
+  (base: P)
+  (nameProvider: NameProvider[base.syntax.Name], oo: ObjectOriented.WithBase[base.type])
   (params: ParametricPolymorphism.WithBase[base.type])
   (generics: Generics.WithBase[base.type,oo.type,params.type]): ExtensibleVisitor.WithParadigm[base.type] =
     new ExtensibleVisitor {
-      val names: NameProvider = nameProvider
       val paradigm: base.type = base
+      val names: NameProvider[paradigm.syntax.Name] = nameProvider
       val ooParadigm: oo.type = oo
       val polymorphics: params.type = params
       val genericsParadigm: generics.type = generics

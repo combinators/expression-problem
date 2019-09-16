@@ -19,4 +19,7 @@ trait AbstractSyntax {
 
   /** Represents a single test case. */
   type UnitTest
+
+  /** Represents a name. */
+  type Name
 }

@@ -3,74 +3,81 @@ package org.combinators.ep.generator
 import org.combinators.ep.domain.abstractions._
 
 /** Provides mangled names for domain entities. */
-abstract class NameProvider {
+abstract class NameProvider[Name] {
   /** Mangles `name` according to language specific rules. */
-  def mangle(name: String): String
+  def mangle(name: String): Name
+
+  /** The unmangled name this name was constructed from.
+    * Should observe: unmangle(mangle(x)) = x */
+  def unmangle(name: Name): String
+
+  /** Adds a prefix to the given name. The new name will be mangled if necessary. */
+  def addPrefix(prefix: String, name: Name): Name
 
   /** Provides the name for a language representation of concepts (e.g. classes) associated with the given data type.
-    * Most languages just want to mangle the capitalized data type name.
+    * Most languages just want to return the capitalized data type name.
     */
   def conceptNameOf(dataType: DataType): String =
-    mangle(dataType.name.capitalize)
+    dataType.name.capitalize
 
   /** Provides the name for a language representation of concepts (e.g. classes) associated with the given data type
     * case.
-    * Most languages just want to mangle the capitalized data type name.
+    * Most languages just want to return the capitalized data type name.
     */
   def conceptNameOf(dataTypeCase: DataTypeCase): String =
-    mangle(dataTypeCase.name.capitalize)
+    dataTypeCase.name.capitalize
 
   /** Provides the name for a language representation of concepts (e.g. classes) associated with the given operation.
     * Most languages just want to mangle the capitalized operation name. */
   def conceptNameOf(operation: Operation): String =
-    mangle(operation.name.capitalize)
+    operation.name.capitalize
 
   /** Provides the name for a language representation of concepts (e.g. attributes) associated with the given data type
    * case.
-   * Most languages just want to mangle the lower case name of the case. */
+   * Most languages just want to return the lower case name of the case. */
   def conceptNameOf(att: Attribute): String =
-    mangle(att.name.capitalize)
+    att.name.capitalize
 
   /** Provides the name for a language representation of concepts (e.g. classes) associated with the given type
     * representation.
-    * Most languages just want to mangle the capitalized case name. */
+    * Most languages just want to return the capitalized case name. */
   def conceptNameOf(tpe: TypeRep): String = {
     tpe match {
       case TypeRep.DataType(domainType) => conceptNameOf(domainType)
-      case _ => mangle(tpe.getClass.getName.capitalize)
+      case _ => tpe.getClass.getName.capitalize
     }
   }
 
   /** Provides the name for a language representation of instances (e.g. objects) associated with the given data type.
-    * Most languages just want to mangle the lower case data type name. */
+    * Most languages just want to return the lower case data type name. */
   def instanceNameOf(dataType: DataType): String =
-    mangle(dataType.name.toLowerCase)
+    dataType.name.toLowerCase
 
   /** Provides the name for a language representation of instances (e.g. objects) associated with the given data type
     * case.
-    * Most languages just want to mangle the lower case name of the case. */
+    * Most languages just want to return the lower case name of the case. */
   def instanceNameOf(dataTypeCase: DataTypeCase): String =
-    mangle(dataTypeCase.name.toLowerCase)
+    dataTypeCase.name.toLowerCase
 
   /** Provides the name for a language representation of instances (e.g. method definitions) associated with
     * the given operation.
-    * Most languages just want to mangle the lower case operation name. */
+    * Most languages just want to return the lower case operation name. */
   def instanceNameOf(operation: Operation): String =
-    mangle(operation.name.toLowerCase)
+    operation.name.toLowerCase
 
   /** Provides the name for a language representation of instances (e.g. attributes) associated with the given data type
    * case.
-   * Most languages just want to mangle the lower case name of the case. */
+   * Most languages just want to return the lower case name of the case. */
   def instanceNameOf(att: Attribute): String =
-    mangle(att.name.toLowerCase)
+    att.name.toLowerCase
 
   /** Provides the name for a language representation of instances (e.g. objects) associated with the given type
     * representation.
-    * Most languages just want to mangle the capitalized type name. */
+    * Most languages just want to return the capitalized type name. */
   def instanceNameOf(tpe: TypeRep): String = {
     tpe match {
       case TypeRep.DataType(domainType) => instanceNameOf(domainType)
-      case _ => mangle(tpe.getClass.getName.toLowerCase)
+      case _ => tpe.getClass.getName.toLowerCase
     }
   }
 }

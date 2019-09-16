@@ -1,10 +1,4 @@
-package org.combinators.ep.language.java    /*DD:LD:AI*/
-
-import com.github.javaparser.ast.body.MethodDeclaration
-import org.combinators.ep.domain.math._
-import org.combinators.ep.domain.Evolution
-import org.combinators.ep.generator.OperationDependency
-import org.combinators.templating.twirl.Java
+package org.combinators.ep.language.java;
 
 /**
   * Truly independent of the specific design solution.

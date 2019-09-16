@@ -19,7 +19,7 @@ sealed trait Traditional extends ApproachImplementationProvider {
     import ooParadigm.methodBodyCapabilities._
     import paradigm.methodBodyCapabilities._
     for {
-      method <- getMember(message.to, names.instanceNameOf(message.request.op))
+      method <- getMember(message.to, names.mangle(names.instanceNameOf(message.request.op)))
       result <- apply(method, message.request.op.parameters.map(message.request.arguments))
     } yield result
 
@@ -29,7 +29,7 @@ sealed trait Traditional extends ApproachImplementationProvider {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
     for {
-      rt <- findClass(names.conceptNameOf(tpeCase))
+      rt <- findClass(names.mangle(names.conceptNameOf(tpeCase)))
       _ <- resolveAndAddImport(rt)
       ctor <- getConstructor(rt)
       res <- apply(ctor, args)
@@ -47,7 +47,8 @@ sealed trait Traditional extends ApproachImplementationProvider {
           for {
             pt <- toTargetLanguageType(param.tpe)
             _ <- resolveAndAddImport(pt)
-          } yield (names.mangle(param.name), pt)
+            pName <- freshName(param.name)
+          } yield (pName, pt)
         }
       _ <- setParameters(params)
     } yield ()
@@ -59,10 +60,10 @@ sealed trait Traditional extends ApproachImplementationProvider {
         import classCapabilities._
         for {
           _ <- setAbstract()
-          _ <- forEach(ops) { op => addAbstractMethod(names.instanceNameOf(op), makeSignature(op)) }
+          _ <- forEach(ops) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), makeSignature(op)) }
         } yield ()
       }
-    addClassToProject(names.conceptNameOf(tpe), makeClass)
+    addClassToProject(names.mangle(names.conceptNameOf(tpe)), makeClass)
   }
 
   def makeField(att: Attribute): Generator[ClassContext, Unit] = {
@@ -70,7 +71,7 @@ sealed trait Traditional extends ApproachImplementationProvider {
     for {
       ft <- toTargetLanguageType(att.tpe)
       _ <- resolveAndAddImport(ft)
-      _ <- addField(names.instanceNameOf(att), ft)
+      _ <- addField(names.mangle(names.instanceNameOf(att)), ft)
     } yield ()
   }
 
@@ -86,11 +87,11 @@ sealed trait Traditional extends ApproachImplementationProvider {
       _ <- makeSignature(op)
       thisRef <- selfReference()
       attAccessors: Seq[Expression] <- forEach (tpeCase.attributes) { att =>
-          GetMember(thisRef, names.instanceNameOf(att)).interpret
+          getMember(thisRef, names.mangle(names.instanceNameOf(att)))
         }
       atts = tpeCase.attributes.zip(attAccessors).toMap
       allArgs <- getArguments()
-      args = allArgs.map { case (name, _, exp) => (name, exp) }.toMap
+      args = op.parameters.zip(allArgs).map { case (param, (_, _, exp)) => (param, exp) }.toMap
       result <-
         domainSpecific.logic(this)(
           ReceivedRequest(
@@ -98,7 +99,7 @@ sealed trait Traditional extends ApproachImplementationProvider {
             tpeCase,
             thisRef,
             atts,
-            Request(op, op.parameters.map(param => (param, args(names.mangle(param.name)))).toMap)
+            Request(op, args)
           )
         )
     } yield result
@@ -111,11 +112,14 @@ sealed trait Traditional extends ApproachImplementationProvider {
           for {
             at <- toTargetLanguageType(att.tpe)
             _ <- resolveAndAddImport(at)
-          } yield (names.instanceNameOf(att), at)
+            pName <- freshName(names.instanceNameOf(att))
+          } yield (pName, at)
         }
       _ <- setParameters(params)
       args <- getArguments()
-      _ <- forEach(args) { case (name, _, exp) => initializeField(name, exp) }
+      _ <- forEach(tpeCase.attributes.zip(args)) { case (att, (_, _, exp)) =>
+        initializeField(names.mangle(names.instanceNameOf(att)), exp)
+      }
     } yield ()
   }
 
@@ -130,15 +134,15 @@ sealed trait Traditional extends ApproachImplementationProvider {
         _ <- forEach (tpeCase.attributes) { att => makeField(att) }
         _ <- addConstructor(makeConstructor(tpeCase))
         _ <- forEach (ops) { op =>
-            addMethod(names.instanceNameOf(op), makeImplementation(tpe, tpeCase, op, domainSpecific))
+            addMethod(names.mangle(names.instanceNameOf(op)), makeImplementation(tpe, tpeCase, op, domainSpecific))
           }
       } yield ()
     }
-    addClassToProject(names.conceptNameOf(tpeCase), makeClass)
+    addClassToProject(names.mangle(names.conceptNameOf(tpeCase)), makeClass)
   }
 
-  def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Type]]): Generator[Ctxt, Type] = {
-    FindClass(names.conceptNameOf(dtpe)).interpret(canFindClass)
+  def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
+    FindClass(names.mangle(names.conceptNameOf(dtpe))).interpret(canFindClass)
   }
 
   def initializeApproach(domain: Model): Generator[ProjectContext, Unit] = {
@@ -173,11 +177,13 @@ object Traditional {
   type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 
   def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
-      (nameProvider: NameProvider, base: P)
-      (oo: ObjectOriented.WithBase[base.type]): Traditional.WithParadigm[base.type] =
+      (base: P)
+      (nameProvider: NameProvider[base.syntax.Name],
+        oo: ObjectOriented.WithBase[base.type]
+      ): Traditional.WithParadigm[base.type] =
     new Traditional {
-      override val names: NameProvider = nameProvider
       override val paradigm: base.type = base
+      override val names: NameProvider[paradigm.syntax.Name] = nameProvider
       override val ooParadigm: ObjectOriented.WithBase[paradigm.type] = oo
     }
 }

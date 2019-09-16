@@ -1,6 +1,4 @@
-package org.combinators.ep.language.java
-
-import org.combinators.ep.generator.AbstractSyntax
+package org.combinators.ep.language.java;
 
 /** Provides abstract syntax definitions for Java using the abstractions from [[https://javaparser.org java parser]]. */
 object JavaSyntax extends AbstractSyntax {

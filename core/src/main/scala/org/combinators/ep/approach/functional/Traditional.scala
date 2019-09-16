@@ -25,7 +25,7 @@ trait Traditional extends ApproachImplementationProvider {
     import functional.methodBodyCapabilities._
 
     for {
-      method <- findMethod(names.instanceNameOf(message.request.op))
+      method <- findMethod(names.mangle(names.instanceNameOf(message.request.op)))
       _ <- resolveAndAddImport(method)
       res <- apply(method, message.to +: message.request.op.parameters.map(message.request.arguments))
     } yield res
@@ -37,7 +37,7 @@ trait Traditional extends ApproachImplementationProvider {
     for {
       rt <- toTargetLanguageType(TypeRep.DataType(baseTpe))
       _ <- resolveAndAddImport(rt)
-      res <- instantiateType(rt, names.conceptNameOf(tpeCase), args)
+      res <- instantiateType(rt, names.mangle(names.conceptNameOf(tpeCase)), args)
     } yield res
   }
 
@@ -48,9 +48,9 @@ trait Traditional extends ApproachImplementationProvider {
           for {
             ty <- toTargetLanguageType(att.tpe)
             _ <- resolveAndAddImport(ty)
-          } yield (names.instanceNameOf(att), ty)
+          } yield (names.mangle(names.instanceNameOf(att)), ty)
         }
-      _ <- addTypeConstructor(names.conceptNameOf(tpeCase), params)
+      _ <- addTypeConstructor(names.mangle(names.conceptNameOf(tpeCase)), params)
     } yield ()
   }
 
@@ -63,8 +63,8 @@ trait Traditional extends ApproachImplementationProvider {
       } yield ()
 
     addCompilationUnit(
-      names.conceptNameOf(tpe),
-      addType(names.conceptNameOf(tpe), caseCode)
+      names.mangle(names.conceptNameOf(tpe)),
+      addType(names.mangle(names.conceptNameOf(tpe)), caseCode)
     )
   }
 
@@ -73,10 +73,10 @@ trait Traditional extends ApproachImplementationProvider {
       cases: Seq[DataTypeCase],
       op: Operation,
       selfReference: Expression,
-      args: Seq[(String, Type, Expression)],
+      args: Seq[(Name, Type, Expression)],
       domainSpecific: EvolutionImplementationProvider[this.type]
-    )(ctorName: String, ctorArgs: Seq[Expression]): Generator[MethodBodyContext, Expression] = {
-    val tpeCase = cases.find(c => names.conceptNameOf(c) == ctorName).get
+    )(ctorName: Name, ctorArgs: Seq[Expression]): Generator[MethodBodyContext, Expression] = {
+    val tpeCase = cases.find(c => names.conceptNameOf(c) == names.unmangle(ctorName)).get
     for {
       result <- domainSpecific.logic(this)(
         ReceivedRequest(
@@ -103,7 +103,8 @@ trait Traditional extends ApproachImplementationProvider {
           for {
             pt <- toTargetLanguageType(param.tpe)
             _ <- resolveAndAddImport(pt)
-          } yield (names.mangle(param.name), pt)
+            pName <- freshName(param.name)
+          } yield (pName, pt)
         }
       _ <- setParameters(params)
       args <- getArguments()
@@ -123,13 +124,13 @@ trait Traditional extends ApproachImplementationProvider {
     import functional.compilationUnitCapabilities._
     import paradigm.projectContextCapabilities._
     addCompilationUnit(
-      names.conceptNameOf(op),
-      addMethod(names.instanceNameOf(op), makeFunction(tpe, cases, op, domainSpecific))
+      names.mangle(names.conceptNameOf(op)),
+      addMethod(names.mangle(names.instanceNameOf(op)), makeFunction(tpe, cases, op, domainSpecific))
     )
   }
 
-  def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindType: Understands[Ctxt, FindType[Type]]): Generator[Ctxt, Type] = {
-    FindType(names.conceptNameOf(dtpe)).interpret(canFindType)
+  def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindType: Understands[Ctxt, FindType[Name, Type]]): Generator[Ctxt, Type] = {
+    FindType(names.mangle(names.conceptNameOf(dtpe))).interpret(canFindType)
   }
 
   def initializeApproach(domain: Model): Generator[ProjectContext, Unit] = {
@@ -164,12 +165,13 @@ object Traditional {
   type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 
   def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
-    (nameProvider: NameProvider, base: P)
-    (fun: Functional.WithBase[base.type],
+    (base: P)
+    (nameProvider: NameProvider[base.syntax.Name],
+      fun: Functional.WithBase[base.type],
       funControl: FunControl.WithBase[base.MethodBodyContext, base.type]): Traditional.WithParadigm[base.type] =
     new Traditional {
-      override val names: NameProvider = nameProvider
       override val paradigm: base.type = base
+      override val names: NameProvider[base.syntax.Name] = nameProvider
       override val functional: Functional.WithBase[paradigm.type] = fun
       override val functionalControl: WithBase[paradigm.MethodBodyContext, paradigm.type] = funControl
     }

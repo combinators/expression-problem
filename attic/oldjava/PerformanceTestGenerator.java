@@ -1,10 +1,4 @@
-package org.combinators.ep.language.java    /*DI:LD:AI*/
-
-import com.github.javaparser.ast.expr.NameExpr
-import org.combinators.ep.domain.abstractions._
-import org.combinators.ep.domain.instances.InstanceRep
-import org.combinators.ep.generator.DomainIndependentTestGenerator
-import org.combinators.templating.twirl.Java
+package org.combinators.ep.language.java;
 
 /**
   * Isolate Performance tests

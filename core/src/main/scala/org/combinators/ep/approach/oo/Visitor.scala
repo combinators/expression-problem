@@ -449,7 +449,7 @@ sealed trait Visitor extends ApproachImplementationProvider {
         _ <- resolveAndAddImport(visitorInterface)
         returnTpe <- toTargetLanguageType(op.returnType)
         _ <- resolveAndAddImport(returnTpe)
-        visitorInterfaceWithReturnType <- applyType(visitorInterface, returnTpe)
+        visitorInterfaceWithReturnType <- applyType(visitorInterface, Seq(returnTpe))
         _ <- addImplemented(visitorInterfaceWithReturnType)
         _ <- addConstructor(makeOperationConstructor(op))
         _ <- forEach (domain.typeCases) { tpe =>
@@ -598,7 +598,7 @@ sealed trait ExtensibleVisitor extends Visitor {
         _ <- setAbstract()
         _ <- addTypeParameter(names.mangle(visitTypeParameter), Command.skip)    // R by itself, since not extending any other type parameter (hence Skip)
         _ <- forEach (domain.typeCases) { tpe =>
-          addMethod(names.instanceNameOf(tpe), makeImplementation(domain.baseDataType, tpe, op, domainSpecific))
+          addMethod(names.mangle(names.instanceNameOf(tpe)), makeImplementation(domain.baseDataType, tpe, op, domainSpecific))
         }
       } yield ()
     }

@@ -1,13 +1,13 @@
 package org.combinators.ep.generator
 
-case class FreshNameProvider(used: Set[String] = Set.empty) {
+case class FreshNameProvider(pushName: (String, Int) => String, used: Set[String] = Set.empty) {
 
   def markUsed(name: String): FreshNameProvider = {
-    FreshNameProvider(used + name)
+    FreshNameProvider(pushName, used + name)
   }
 
   def markUnused(name: String): FreshNameProvider = {
-    FreshNameProvider(used - name)
+    FreshNameProvider(pushName, used - name)
   }
 
   def freshNameBasedOn(name: String): (String, FreshNameProvider) = {
@@ -15,8 +15,12 @@ case class FreshNameProvider(used: Set[String] = Set.empty) {
       (name, markUsed(name))
     } else {
       var suffix = 0
-      while (used(name + suffix)) suffix += 1
-      (name + suffix, markUsed(name + suffix))
+      var pushed = pushName(name, suffix)
+      while (used(pushed)) {
+        suffix += 1
+        pushed = pushName(name, suffix)
+      }
+      (pushed, markUsed(pushed))
     }
   }
 }

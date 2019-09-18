@@ -11,6 +11,7 @@ trait Syntax extends AbstractSyntax {
   type Type = State[FreshNameProvider, com.github.javaparser.ast.`type`.Type]
   type Statement = State[FreshNameProvider, com.github.javaparser.ast.stmt.Statement]
   type UnitTest = State[FreshNameProvider, com.github.javaparser.ast.body.ClassOrInterfaceDeclaration]
+  type Name = State[FreshNameProvider, com.github.javaparser.ast.expr.SimpleName]
 }
 
 object Syntax {

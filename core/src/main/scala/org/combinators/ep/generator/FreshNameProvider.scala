@@ -1,16 +1,16 @@
 package org.combinators.ep.generator
 
-case class FreshNameProvider(pushName: (String, Int) => String, used: Set[String] = Set.empty) {
+case class FreshNameProvider[Name](pushName: (Name, Int) => Name, used: Set[Name] = Set.empty) {
 
-  def markUsed(name: String): FreshNameProvider = {
+  def markUsed(name: Name): FreshNameProvider[Name] = {
     FreshNameProvider(pushName, used + name)
   }
 
-  def markUnused(name: String): FreshNameProvider = {
+  def markUnused(name: Name): FreshNameProvider[Name] = {
     FreshNameProvider(pushName, used - name)
   }
 
-  def freshNameBasedOn(name: String): (String, FreshNameProvider) = {
+  def freshNameBasedOn(name: Name): (Name, FreshNameProvider[Name]) = {
     if (!used(name)) {
       (name, markUsed(name))
     } else {

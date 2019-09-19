@@ -7,12 +7,11 @@ abstract class NameProvider[Name] {
   /** Mangles `name` according to language specific rules. */
   def mangle(name: String): Name
 
-  /** The unmangled name this name was constructed from.
-    * Should observe: unmangle(mangle(x)) = x */
-  def unmangle(name: Name): String
-
   /** Adds a prefix to the given name. The new name will be mangled if necessary. */
   def addPrefix(prefix: String, name: Name): Name
+
+  /** Adds a suffix to the given name. The new name will be mangled if necessary. */
+  def addSuffix(name: Name, suffix: String): Name
 
   /** Provides the name for a language representation of concepts (e.g. classes) associated with the given data type.
     * Most languages just want to return the capitalized data type name.

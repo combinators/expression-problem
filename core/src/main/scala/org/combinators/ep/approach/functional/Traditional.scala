@@ -76,7 +76,7 @@ trait Traditional extends ApproachImplementationProvider {
       args: Seq[(Name, Type, Expression)],
       domainSpecific: EvolutionImplementationProvider[this.type]
     )(ctorName: Name, ctorArgs: Seq[Expression]): Generator[MethodBodyContext, Expression] = {
-    val tpeCase = cases.find(c => names.conceptNameOf(c) == names.unmangle(ctorName)).get
+    val tpeCase = cases.find(c => names.conceptNameOf(c) == ctorName).get
     for {
       result <- domainSpecific.logic(this)(
         ReceivedRequest(

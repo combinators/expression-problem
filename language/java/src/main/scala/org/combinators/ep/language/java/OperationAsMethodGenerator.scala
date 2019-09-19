@@ -1,7 +1,7 @@
 package org.combinators.ep.language.java   /*DI:LD:AI*/
 
 import com.github.javaparser.ast.body.MethodDeclaration
-import org.combinators.ep.domain.{BaseDomain, DataType, Operation}
+//import org.combinators.ep.domain.{BaseDomain, DataType, Operation}
 
 /**
   * Some solutions have classes that are represented by a base class and then one class for
@@ -9,9 +9,9 @@ import org.combinators.ep.domain.{BaseDomain, DataType, Operation}
   * @deprecated
   */
 trait OperationAsMethodGenerator {
-
-  /**
-    * Operations for a given Exp DataType are implemented as a method. */
-  def methodGenerator(exp:DataType, op:Operation) : MethodDeclaration
+//
+//  /**
+//    * Operations for a given Exp DataType are implemented as a method. */
+//  def methodGenerator(exp:DataType, op:Operation) : MethodDeclaration
 
 }

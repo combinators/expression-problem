@@ -12,11 +12,12 @@ import com.github.javaparser.ast.CompilationUnit
   * Currently implemented by Interpreter, OO, Visitor
   */
 trait DataTypeSubclassGenerator {
-  val domain:ModelDomain
-
-  /** Generate the full class for the given expression sub-type. */
-  def generateExp(model:domain.Model, e:domain.DataType) : CompilationUnit
-
-  /** Generate the base class. */
-  def generateBase(model:domain.Model) : CompilationUnit
+// GOING AWAY
+//  val domain:ModelDomain
+//
+//  /** Generate the full class for the given expression sub-type. */
+//  def generateExp(model:domain.Model, e:domain.DataType) : CompilationUnit
+//
+//  /** Generate the base class. */
+//  def generateBase(model:domain.Model) : CompilationUnit
 }

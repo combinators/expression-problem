@@ -4,14 +4,14 @@ import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, Understands}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, DeclareVariable, IfThenElse}
 
-case class PatternMatch[MethodBodyContext, Expression](
+case class PatternMatch[MethodBodyContext, Name, Expression](
   onValue: Expression,
-  options: (String, Seq[Expression]) => Generator[MethodBodyContext, Expression]
+  options: (Name, Seq[Expression]) => Generator[MethodBodyContext, Expression]
 ) extends Command {
   type Result = Expression
 }
 
-case class Lambda[Type, Context, Expression](variable: String, tpe: Type, body: Generator[Context, Expression]) extends Command {
+case class Lambda[Name, Type, Context, Expression](variable: Name, tpe: Type, body: Expression => Generator[Context, Expression]) extends Command {
   type Result = Expression
 }
 
@@ -21,9 +21,9 @@ trait Functional[Context] {
   import base.syntax._
 
   trait FunctionalCapabilities {
-    implicit val canDeclareVar: Understands[Context, DeclareVariable[Type, Generator[Context, Expression], Statement]]
-    def declareVariable(name: String, tpe: Type, expression: Generator[Context, Expression]): Generator[Context, Statement] =
-      AnyParadigm.capabilitiy(DeclareVariable[Type, Generator[Context, Expression], Statement](name, tpe, expression))
+    implicit val canDeclareVar: Understands[Context, DeclareVariable[Name, Type, Generator[Context, Expression], Expression]]
+    def declareVariable(name: Name, tpe: Type, expression: Generator[Context, Expression]): Generator[Context, Expression] =
+      AnyParadigm.capabilitiy(DeclareVariable[Name, Type, Generator[Context, Expression], Expression](name, tpe, expression))
 
     implicit val canIfThenElse: Understands[Context, IfThenElse[Expression, Generator[Context, Expression], Generator[Context, Expression], Expression]]
     def ifThenElse(
@@ -39,15 +39,15 @@ trait Functional[Context] {
           elseBlock
         ))
 
-    implicit val canPatternMatchInMethod: Understands[Context, PatternMatch[Context, Expression]]
+    implicit val canPatternMatchInMethod: Understands[Context, PatternMatch[Context, Name, Expression]]
     def patternMatch(
         onValue: Expression,
-        options: (String, Seq[Expression]) => Generator[Context, Expression]
+        options: (Name, Seq[Expression]) => Generator[Context, Expression]
       ): Generator[Context, Expression] =
       AnyParadigm.capabilitiy(PatternMatch(onValue, options))
 
-    implicit val canLambda: Understands[Context, Lambda[Type, Context, Expression]]
-    def lambda(variable: String, tpe: Type, body: Generator[Context, Expression]): Generator[Context, Expression] =
+    implicit val canLambda: Understands[Context, Lambda[Name, Type, Context, Expression]]
+    def lambda(variable: Name, tpe: Type, body: Expression => Generator[Context, Expression]): Generator[Context, Expression] =
       AnyParadigm.capabilitiy(Lambda(variable, tpe, body))
   }
   val functionalCapabilities: FunctionalCapabilities

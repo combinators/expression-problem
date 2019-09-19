@@ -4,8 +4,8 @@ import org.combinators.ep.generator.{AbstractSyntax, Command, Understands}
 import Command.Generator
 import org.combinators.ep.domain.abstractions.{DataType, TypeRep}
 
-case class AddClass[ClassContext](
-    name: String,
+case class AddClass[ClassContext, Name](
+    name: Name,
     cls: Generator[ClassContext, Unit]
   ) extends Command {
   type Result = Unit
@@ -19,11 +19,11 @@ case class AddImplemented[Type](interface: Type) extends Command {
   type Result = Unit
 }
 
-case class AddField[Type](name: String, tpe: Type) extends Command {
+case class AddField[Name, Type](name: Name, tpe: Type) extends Command {
   type Result = Unit
 }
 
-case class InitializeField[Expression](name: String, value: Expression) extends Command {
+case class InitializeField[Name, Expression](name: Name, value: Expression) extends Command {
   type Result = Unit
 }
 
@@ -39,7 +39,7 @@ case class InstantiateObject[Type, Expression](tpe: Type, constructorArguments: 
   type Result = Expression
 }
 
-case class GetMember[Expression](instance: Expression, member: String) extends Command {
+case class GetMember[Expression, Name](instance: Expression, member: Name) extends Command {
   type Result = Expression
 }
 
@@ -59,7 +59,7 @@ case class GetConstructor[Type, Expression](tpe: Type) extends Command {
   type Result = Expression
 }
 
-case class FindClass[Type](name: String) extends Command {
+case class FindClass[Name, Type](name: Name) extends Command {
   type Result = Type
 }
 
@@ -72,7 +72,9 @@ trait ObjectOriented {
   type ConstructorContext
 
   trait CompilationUnitCapabilities {
-    implicit val canAddClassInCompilationUnit: Understands[CompilationUnitContext, AddClass[ClassContext]]
+    implicit val canAddClassInCompilationUnit: Understands[CompilationUnitContext, AddClass[ClassContext, Name]]
+    def addClass(name: Name, cls: Generator[ClassContext, Unit]): Generator[CompilationUnitContext, Unit] =
+      AnyParadigm.capabilitiy(AddClass(name, cls))
   }
   val compilationUnitCapabilities: CompilationUnitCapabilities
 
@@ -82,21 +84,21 @@ trait ObjectOriented {
       AnyParadigm.capabilitiy(AddParent(parentClass))
 
     implicit val canAddImplementedInClass: Understands[ClassContext, AddImplemented[Type]]
-    def addImplementedClass(interface: Type): Generator[ClassContext, Unit] =
+    def addImplemented(interface: Type): Generator[ClassContext, Unit] =
       AnyParadigm.capabilitiy(AddImplemented(interface))
 
-    implicit val canAddFieldInClass: Understands[ClassContext, AddField[Type]]
-    def addField(name: String, tpe: Type): Generator[ClassContext, Unit] =
-      AnyParadigm.capabilitiy(AddField(name, tpe))
+    implicit val canAddFieldInClass: Understands[ClassContext, AddField[Name, Type]]
+    def addField(name: Name, tpe: Type): Generator[ClassContext, Unit] =
+      AnyParadigm.capabilitiy(AddField[Name, Type](name, tpe))
 
-    implicit val canAddMethodInClass: Understands[ClassContext, AddMethod[MethodBodyContext, Option[Expression]]]
+    implicit val canAddMethodInClass: Understands[ClassContext, AddMethod[MethodBodyContext, Name, Option[Expression]]]
     def addMethod(
-        name: String,
+        name: Name,
         spec: Generator[MethodBodyContext, Option[Expression]],
         isPublic: Boolean = true): Generator[ClassContext, Unit] =
       AnyParadigm.capabilitiy(AddMethod(name, spec, isPublic))
 
-    def addAbstractMethod(name: String, spec: Generator[MethodBodyContext, Unit], isPublic: Boolean = true): Generator[ClassContext, Unit] = {
+    def addAbstractMethod(name: Name, spec: Generator[MethodBodyContext, Unit], isPublic: Boolean = true): Generator[ClassContext, Unit] = {
       addMethod(name, spec.flatMap(_ => methodBodyCapabilities.setAbstract()).map(_ => None), isPublic)
     }
 
@@ -128,9 +130,13 @@ trait ObjectOriented {
     def selfReference(): Generator[ClassContext, Expression] =
       AnyParadigm.capabilitiy(SelfReference[Expression]())
 
-    implicit val canFindClassInClass: Understands[ClassContext, FindClass[Type]]
-    def findClass(name: String): Generator[ClassContext, Type] =
-      AnyParadigm.capabilitiy(FindClass[Type](name))
+    implicit val canFindClassInClass: Understands[ClassContext, FindClass[Name, Type]]
+    def findClass(name: Name): Generator[ClassContext, Type] =
+      AnyParadigm.capabilitiy(FindClass[Name, Type](name))
+
+    implicit val canGetFreshNameInClass: Understands[ClassContext, FreshName[Name]]
+    def freshName(basedOn: String): Generator[ClassContext, Name] =
+      AnyParadigm.capabilitiy(FreshName[Name](basedOn))
   }
   val classCapabilities: ClassCapabilities
 
@@ -139,8 +145,8 @@ trait ObjectOriented {
     def initializeParent(arguments: Seq[Expression]): Generator[ConstructorContext, Unit] =
       AnyParadigm.capabilitiy(InitializeParent(arguments))
 
-    implicit val canInitializeFieldInConstructor: Understands[ConstructorContext, InitializeField[Expression]]
-    def initializeField(name: String, value: Expression): Generator[ConstructorContext, Unit] =
+    implicit val canInitializeFieldInConstructor: Understands[ConstructorContext, InitializeField[Name, Expression]]
+    def initializeField(name: Name, value: Expression): Generator[ConstructorContext, Unit] =
       AnyParadigm.capabilitiy(InitializeField(name, value))
 
     implicit val canAddBlockDefinitionsInConstructor: Understands[ConstructorContext, AddBlockDefinitions[Statement]]
@@ -163,17 +169,17 @@ trait ObjectOriented {
     def apply(method: Expression, arguments: Seq[Expression]): Generator[ConstructorContext, Expression] =
       AnyParadigm.capabilitiy(Apply[Expression, Expression, Expression](method, arguments))
 
-    implicit val canGetMemberInConstructor: Understands[ConstructorContext, GetMember[Expression]]
-    def getMember(instance: Expression, member: String): Generator[ConstructorContext, Expression] =
+    implicit val canGetMemberInConstructor: Understands[ConstructorContext, GetMember[Expression, Name]]
+    def getMember(instance: Expression, member: Name): Generator[ConstructorContext, Expression] =
       AnyParadigm.capabilitiy(GetMember(instance, member))
 
     implicit val canSelfReferenceInConstructor: Understands[ConstructorContext, SelfReference[Expression]]
     def selfReference(): Generator[ConstructorContext, Expression] =
       AnyParadigm.capabilitiy(SelfReference[Expression]())
 
-    implicit val canGetArgumentsInConstructor: Understands[ConstructorContext, GetArguments[Type, Expression]]
-    def getArguments(): Generator[ConstructorContext, Seq[(String, Type, Expression)]] =
-      AnyParadigm.capabilitiy(GetArguments[Type, Expression]())
+    implicit val canGetArgumentsInConstructor: Understands[ConstructorContext, GetArguments[Type, Name, Expression]]
+    def getArguments(): Generator[ConstructorContext, Seq[(Name, Type, Expression)]] =
+      AnyParadigm.capabilitiy(GetArguments[Type, Name, Expression]())
 
     implicit val canTranslateTypeInConstructor: Understands[ConstructorContext, ToTargetLanguageType[Type]]
     def toTargetLanguageType(tpe: TypeRep): Generator[ConstructorContext, Type] =
@@ -183,17 +189,21 @@ trait ObjectOriented {
     def reify[T](tpe: TypeRep.OfHostType[T], elem: T): Generator[ConstructorContext, Expression] =
       AnyParadigm.capabilitiy(Reify[T, Expression](tpe, elem))
 
-    implicit val canSetParametersInConstructor: Understands[ConstructorContext, SetParameters[Type]]
-    def setParameters(params: Seq[(String, Type)]): Generator[ConstructorContext, Unit] =
+    implicit val canSetParametersInConstructor: Understands[ConstructorContext, SetParameters[Name, Type]]
+    def setParameters(params: Seq[(Name, Type)]): Generator[ConstructorContext, Unit] =
       AnyParadigm.capabilitiy(SetParameters(params))
 
     implicit val canGetConstructorInConstructor: Understands[ConstructorContext, GetConstructor[Type, Expression]]
     def getConstructor(tpe: Type): Generator[ConstructorContext, Expression] =
       AnyParadigm.capabilitiy(GetConstructor[Type, Expression](tpe))
 
-    implicit val canFindClassInConstructor: Understands[ConstructorContext, FindClass[Type]]
-    def findClass(name: String): Generator[ConstructorContext, Type] =
-      AnyParadigm.capabilitiy(FindClass[Type](name))
+    implicit val canFindClassInConstructor: Understands[ConstructorContext, FindClass[Name, Type]]
+    def findClass(name: Name): Generator[ConstructorContext, Type] =
+      AnyParadigm.capabilitiy(FindClass[Name, Type](name))
+
+    implicit val canGetFreshNameInConstructor: Understands[ConstructorContext, FreshName[Name]]
+    def freshName(basedOn: String): Generator[ConstructorContext, Name] =
+      AnyParadigm.capabilitiy(FreshName[Name](basedOn))
   }
   val constructorCapabilities: ConstructorCapabilities
 
@@ -202,8 +212,8 @@ trait ObjectOriented {
     def instantiateObject(tpe: Type, constructorArguments: Seq[Expression]): Generator[MethodBodyContext, Expression] =
       AnyParadigm.capabilitiy(InstantiateObject(tpe, constructorArguments))
 
-    implicit val canGetMemberInMethod: Understands[MethodBodyContext, GetMember[Expression]]
-    def getMember(instance: Expression, member: String): Generator[MethodBodyContext, Expression] =
+    implicit val canGetMemberInMethod: Understands[MethodBodyContext, GetMember[Expression, Name]]
+    def getMember(instance: Expression, member: Name): Generator[MethodBodyContext, Expression] =
       AnyParadigm.capabilitiy(GetMember(instance, member))
 
     implicit val canSetAbstractInMethod: Understands[MethodBodyContext, SetAbstract]
@@ -218,14 +228,14 @@ trait ObjectOriented {
     def getConstructor(tpe: Type): Generator[MethodBodyContext, Expression] =
       AnyParadigm.capabilitiy(GetConstructor[Type, Expression](tpe))
 
-    implicit val canFindClassInMethod: Understands[MethodBodyContext, FindClass[Type]]
-    def findClass(name: String): Generator[MethodBodyContext, Type] =
-      AnyParadigm.capabilitiy(FindClass[Type](name))
+    implicit val canFindClassInMethod: Understands[MethodBodyContext, FindClass[Name, Type]]
+    def findClass(name: Name): Generator[MethodBodyContext, Type] =
+      AnyParadigm.capabilitiy(FindClass[Name, Type](name))
   }
   val methodBodyCapabilities: MethodBodyCapabilities
 
   trait ProjectCapabilities {
-    def addClassToProject(name: String, classGen: Generator[ClassContext, Unit]): Generator[ProjectContext, Unit] = {
+    def addClassToProject(name: Name, classGen: Generator[ClassContext, Unit]): Generator[ProjectContext, Unit] = {
       import compilationUnitCapabilities._
       import base.projectContextCapabilities._
       addCompilationUnit(name, AddClass(name, classGen).interpret)

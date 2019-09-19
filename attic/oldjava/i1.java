@@ -1,9 +1,4 @@
-package org.combinators.ep.language.java   /*DD:LD:AI*/
-
-import com.github.javaparser.ast.body.MethodDeclaration
-import org.combinators.ep.domain.Evolution
-import org.combinators.ep.domain.math.{I1, M0}
-import org.combinators.templating.twirl.Java
+package org.combinators.ep.language.java;
 
 class i1 {
 // GOING AWAY

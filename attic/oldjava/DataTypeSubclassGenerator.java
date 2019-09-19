@@ -1,6 +1,4 @@
-package org.combinators.ep.language.java     /*DI:LD:AI*/
-
-import com.github.javaparser.ast.CompilationUnit
+package org.combinators.ep.language.java;
 
 /**
   * Some solutions have classes that are represented by a base class and then one class for

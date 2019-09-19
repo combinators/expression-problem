@@ -7,7 +7,7 @@ import Command._
 import cats.implicits._
 
 /** Adds a compilation unit */
-case class AddCompilationUnit[CompilationUnitContext](name: String, unit: Generator[CompilationUnitContext, Unit])
+case class AddCompilationUnit[Name, CompilationUnitContext](name: Name, unit: Generator[CompilationUnitContext, Unit])
     extends Command {
   type Result = Unit
 }
@@ -33,8 +33,8 @@ case class Reify[T, Expression](tpe: TypeRep.OfHostType[T], value: T) extends Co
 }
 
 /** Adds a method using the body generator's resulting expression as return value. */
-case class AddMethod[MethodBodyContext, Expression](
-   name: String,
+case class AddMethod[MethodBodyContext, Name, Expression](
+   name: Name,
    spec: Generator[MethodBodyContext, Expression],
    isPublic: Boolean = true
   ) extends Command {
@@ -45,18 +45,18 @@ case class SetReturnType[Type](tpe: Type) extends Command {
   type Result = Unit
 }
 
-case class SetParameters[Type](params: Seq[(String, Type)]) extends Command {
+case class SetParameters[Name, Type](params: Seq[(Name, Type)]) extends Command {
   type Result = Unit
 }
 
-case class GetArguments[Type, Expression]() extends Command {
-  type Result = Seq[(String, Type, Expression)]
+case class GetArguments[Type, Name, Expression]() extends Command {
+  type Result = Seq[(Name, Type, Expression)]
 }
 
-case class AddTestSuite[TestContext](name: String, suite: Generator[TestContext, Unit]) extends Command {
+case class AddTestSuite[Name, TestContext](name: Name, suite: Generator[TestContext, Unit]) extends Command {
   type Result = Unit
 }
-case class AddTestCase[MethodBodyContext, Expression](name: String, code: Generator[MethodBodyContext, Seq[Expression]]) extends Command {
+case class AddTestCase[MethodBodyContext, Name, Expression](name: Name, code: Generator[MethodBodyContext, Seq[Expression]]) extends Command {
   type Result = Unit
 }
 
@@ -68,8 +68,8 @@ case class ResolveImport[Import, T](forElem: T) extends Command {
   type Result = Option[Import]
 }
 
-case class DeclareVariable[Type, Init, Statement](name: String, tpe: Type, initialization: Init) extends Command {
-  type Result = Statement
+case class DeclareVariable[Name, Type, Init, Res](name: Name, tpe: Type, initialization: Init) extends Command {
+  type Result = Res
 }
 
 case class IfThenElse[Expression, MandatoryBlock, Block, R](
@@ -82,6 +82,10 @@ case class IfThenElse[Expression, MandatoryBlock, Block, R](
 
 case class AddTypeLookup[Ctxt, Type](tpe: TypeRep, lookup: Generator[Ctxt, Type]) extends Command {
   type Result = Unit
+}
+
+case class FreshName[Name](basedOn: String) extends Command {
+  type Result = Name
 }
 
 trait AnyParadigm {
@@ -106,8 +110,8 @@ trait AnyParadigm {
 
   /** The overall project stores the CompilationUnits which can be added to it. */
   trait ProjectContextCapabilities {
-    implicit val canAddCompilationUnitInProject: Understands[ProjectContext, AddCompilationUnit[CompilationUnitContext]]
-    def addCompilationUnit(name: String, unit: Generator[CompilationUnitContext, Unit]): Generator[ProjectContext, Unit] =
+    implicit val canAddCompilationUnitInProject: Understands[ProjectContext, AddCompilationUnit[Name, CompilationUnitContext]]
+    def addCompilationUnit(name: Name, unit: Generator[CompilationUnitContext, Unit]): Generator[ProjectContext, Unit] =
       AnyParadigm.capabilitiy(AddCompilationUnit(name, unit))
 
     implicit val canAddTypeLookupForMethodsInProject: Understands[ProjectContext, AddTypeLookup[MethodBodyContext, Type]]
@@ -122,9 +126,13 @@ trait AnyParadigm {
     def addImport(imp: Import): Generator[CompilationUnitContext, Unit] =
       AnyParadigm.capabilitiy(AddImport(imp))
 
-    implicit val canAddTestSuiteInCompilationUnit: Understands[CompilationUnitContext, AddTestSuite[TestContext]]
-    def addTestSuite(name: String, suite: Generator[TestContext, Unit]): Generator[CompilationUnitContext, Unit] =
-      AnyParadigm.capabilitiy(AddTestSuite[TestContext](name, suite))
+    implicit val canAddTestSuiteInCompilationUnit: Understands[CompilationUnitContext, AddTestSuite[Name, TestContext]]
+    def addTestSuite(name: Name, suite: Generator[TestContext, Unit]): Generator[CompilationUnitContext, Unit] =
+      AnyParadigm.capabilitiy(AddTestSuite[Name, TestContext](name, suite))
+
+    implicit val canGetFreshNameInCompilationUnit: Understands[CompilationUnitContext, FreshName[Name]]
+    def freshName(basedOn: String): Generator[CompilationUnitContext, Name] =
+      AnyParadigm.capabilitiy(FreshName[Name](basedOn))
   }
   val compilationUnitCapabilities: CompilationUnitCapabilities
 
@@ -152,8 +160,8 @@ trait AnyParadigm {
     def setReturnType(tpe: Type): Generator[MethodBodyContext, Unit] =
       AnyParadigm.capabilitiy(SetReturnType(tpe))
 
-    implicit val canSetParametersInMethodBody: Understands[MethodBodyContext, SetParameters[Type]]
-    def setParameters(params: Seq[(String, Type)]): Generator[MethodBodyContext, Unit] =
+    implicit val canSetParametersInMethodBody: Understands[MethodBodyContext, SetParameters[Name, Type]]
+    def setParameters(params: Seq[(Name, Type)]): Generator[MethodBodyContext, Unit] =
       AnyParadigm.capabilitiy(SetParameters(params))
 
     implicit val canTransformTypeInMethodBody: Understands[MethodBodyContext, ToTargetLanguageType[Type]]
@@ -172,15 +180,19 @@ trait AnyParadigm {
     def apply(method: Expression, arguments: Seq[Expression]): Generator[MethodBodyContext, Expression] =
       AnyParadigm.capabilitiy(Apply[Expression, Expression, Expression](method, arguments))
 
-    implicit val canGetArgumentsInMethodBody: Understands[MethodBodyContext, GetArguments[Type, Expression]]
-    def getArguments(): Generator[MethodBodyContext, Seq[(String, Type, Expression)]] =
-      AnyParadigm.capabilitiy(GetArguments[Type, Expression]())
+    implicit val canGetArgumentsInMethodBody: Understands[MethodBodyContext, GetArguments[Type, Name, Expression]]
+    def getArguments(): Generator[MethodBodyContext, Seq[(Name, Type, Expression)]] =
+      AnyParadigm.capabilitiy(GetArguments[Type, Name, Expression]())
+
+    implicit val canGetFreshNameInMethodBody: Understands[MethodBodyContext, FreshName[Name]]
+    def freshName(basedOn: String): Generator[MethodBodyContext, Name] =
+      AnyParadigm.capabilitiy(FreshName[Name](basedOn))
   }
   val methodBodyCapabilities: MethodBodyCapabilities
 
   trait TestCapabilities {
-    implicit val canAddTestCaseInTest: Understands[TestContext, AddTestCase[MethodBodyContext, Expression]]
-    def addTestCase(name: String, code: Generator[MethodBodyContext, Seq[Expression]]): Generator[TestContext, Unit] =
+    implicit val canAddTestCaseInTest: Understands[TestContext, AddTestCase[MethodBodyContext, Name, Expression]]
+    def addTestCase(name: Name, code: Generator[MethodBodyContext, Seq[Expression]]): Generator[TestContext, Unit] =
       AnyParadigm.capabilitiy(AddTestCase(name, code))
   }
   val testCapabilities: TestCapabilities

@@ -16,7 +16,7 @@ import AnyParadigm.syntax._
   * EP domain. */
 trait ApproachImplementationProvider {
   val paradigm: AnyParadigm
-  val names: NameProvider
+  val names: NameProvider[paradigm.syntax.Name]
   import paradigm._
   import syntax._
 

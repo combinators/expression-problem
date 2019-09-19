@@ -4,27 +4,27 @@ import org.combinators.ep.domain.abstractions.{DataType, TypeRep}
 import org.combinators.ep.generator.{AbstractSyntax, Command, Understands}
 import org.combinators.ep.generator.Command.Generator
 
-case class AddType[TypeContext](name: String, tpeGen: Generator[TypeContext, Unit]) extends Command {
+case class AddType[Name, TypeContext](name: Name, tpeGen: Generator[TypeContext, Unit]) extends Command {
   type Result = Unit
 }
 
-case class AddTypeConstructor[Type](name: String, parameters: Seq[(String, Type)]) extends Command {
+case class AddTypeConstructor[Name, Type](name: Name, parameters: Seq[(Name, Type)]) extends Command {
   type Result = Unit
 }
 
-case class InstantiateType[Type, Expression](
+case class InstantiateType[Type, Name, Expression](
     tpe: Type,
-    constructor: String,
+    constructor: Name,
     arguments: Seq[Expression]
   ) extends Command {
   type Result = Expression
 }
 
-case class FindMethod[Expression](name: String) extends Command {
+case class FindMethod[Name, Expression](name: Name) extends Command {
   type Result = Expression
 }
 
-case class FindType[Type](name: String) extends Command {
+case class FindType[Name, Type](name: Name) extends Command {
   type Result = Type
 }
 
@@ -37,13 +37,13 @@ trait Functional {
   type TypeContext
 
   trait CompilationUnitCapabilities {
-    implicit val canAddTypeInCompilationUnit: Understands[CompilationUnitContext, AddType[TypeContext]]
-    def addType(name: String, spec: Generator[TypeContext, Unit]): Generator[CompilationUnitContext, Unit] =
-      AnyParadigm.capabilitiy(AddType[TypeContext](name, spec))
+    implicit val canAddTypeInCompilationUnit: Understands[CompilationUnitContext, AddType[Name, TypeContext]]
+    def addType(name: Name, spec: Generator[TypeContext, Unit]): Generator[CompilationUnitContext, Unit] =
+      AnyParadigm.capabilitiy(AddType[Name, TypeContext](name, spec))
 
-    implicit val canAddMethodInCompilationUnit: Understands[CompilationUnitContext, AddMethod[MethodBodyContext, Expression]]
+    implicit val canAddMethodInCompilationUnit: Understands[CompilationUnitContext, AddMethod[MethodBodyContext, Name, Expression]]
     def addMethod(
-        name: String,
+        name: Name,
         spec: Generator[MethodBodyContext, Expression],
         isPublic: Boolean = true
       ): Generator[CompilationUnitContext, Unit] =
@@ -60,8 +60,8 @@ trait Functional {
   val compilationUnitCapabilities: CompilationUnitCapabilities
 
   trait TypeCapabilities {
-    implicit val canAddTypeConstructorInType: Understands[TypeContext, AddTypeConstructor[Type]]
-    def addTypeConstructor(name: String, parameters: Seq[(String, Type)]): Generator[TypeContext, Unit] =
+    implicit val canAddTypeConstructorInType: Understands[TypeContext, AddTypeConstructor[Name, Type]]
+    def addTypeConstructor(name: Name, parameters: Seq[(Name, Type)]): Generator[TypeContext, Unit] =
       AnyParadigm.capabilitiy(AddTypeConstructor(name, parameters))
 
     implicit val canTranslateTypeInType: Understands[TypeContext, ToTargetLanguageType[Type]]
@@ -80,17 +80,17 @@ trait Functional {
     def resolveExpressionImport(expr: Expression): Generator[TypeContext, Option[Import]] =
       AnyParadigm.capabilitiy(ResolveImport[Import, Expression](expr))
 
-    implicit val canFindTypeInType: Understands[TypeContext, FindType[Type]]
-    def findType(name: String): Generator[TypeContext, Type] =
-      AnyParadigm.capabilitiy(FindType[Type](name))
+    implicit val canFindTypeInType: Understands[TypeContext, FindType[Name, Type]]
+    def findType(name: Name): Generator[TypeContext, Type] =
+      AnyParadigm.capabilitiy(FindType[Name, Type](name))
   }
   val typeCapabilities: TypeCapabilities
 
   trait MethodBodyCapabilities {
-    implicit val canInstantiateTypeInMethod: Understands[MethodBodyContext, InstantiateType[Type, Expression]]
+    implicit val canInstantiateTypeInMethod: Understands[MethodBodyContext, InstantiateType[Type, Name, Expression]]
     def instantiateType(
         tpe: Type,
-        constructor: String,
+        constructor: Name,
         arguments: Seq[Expression]): Generator[MethodBodyContext, Expression] =
       AnyParadigm.capabilitiy(InstantiateType(tpe, constructor, arguments))
 
@@ -98,13 +98,13 @@ trait Functional {
     def resolveExpressionImport(expr: Expression): Generator[MethodBodyContext, Option[Import]] =
       AnyParadigm.capabilitiy(ResolveImport[Import, Expression](expr))
 
-    implicit val canFindMethodInMethod: Understands[MethodBodyContext, FindMethod[Expression]]
-    def findMethod(name: String): Generator[MethodBodyContext, Expression] =
-      AnyParadigm.capabilitiy(FindMethod[Expression](name))
+    implicit val canFindMethodInMethod: Understands[MethodBodyContext, FindMethod[Name, Expression]]
+    def findMethod(name: Name): Generator[MethodBodyContext, Expression] =
+      AnyParadigm.capabilitiy(FindMethod[Name, Expression](name))
 
-    implicit val canFindTypeInMethod: Understands[MethodBodyContext, FindType[Type]]
-    def findType(name: String): Generator[MethodBodyContext, Type] =
-      AnyParadigm.capabilitiy(FindType[Type](name))
+    implicit val canFindTypeInMethod: Understands[MethodBodyContext, FindType[Name, Type]]
+    def findType(name: Name): Generator[MethodBodyContext, Type] =
+      AnyParadigm.capabilitiy(FindType[Name, Type](name))
   }
   val methodBodyCapabilities: MethodBodyCapabilities
 

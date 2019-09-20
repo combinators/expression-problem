@@ -47,7 +47,7 @@ sealed trait Traditional extends ApproachImplementationProvider {
           for {
             pt <- toTargetLanguageType(param.tpe)
             _ <- resolveAndAddImport(pt)
-            pName <- freshName(param.name)
+            pName <- freshName(names.mangle(param.name))
           } yield (pName, pt)
         }
       _ <- setParameters(params)
@@ -112,7 +112,7 @@ sealed trait Traditional extends ApproachImplementationProvider {
           for {
             at <- toTargetLanguageType(att.tpe)
             _ <- resolveAndAddImport(at)
-            pName <- freshName(names.instanceNameOf(att))
+            pName <- freshName(names.mangle(names.instanceNameOf(att)))
           } yield (pName, at)
         }
       _ <- setParameters(params)

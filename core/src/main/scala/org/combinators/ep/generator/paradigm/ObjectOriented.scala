@@ -135,7 +135,7 @@ trait ObjectOriented {
       AnyParadigm.capabilitiy(FindClass[Name, Type](name))
 
     implicit val canGetFreshNameInClass: Understands[ClassContext, FreshName[Name]]
-    def freshName(basedOn: String): Generator[ClassContext, Name] =
+    def freshName(basedOn: Name): Generator[ClassContext, Name] =
       AnyParadigm.capabilitiy(FreshName[Name](basedOn))
   }
   val classCapabilities: ClassCapabilities
@@ -202,7 +202,7 @@ trait ObjectOriented {
       AnyParadigm.capabilitiy(FindClass[Name, Type](name))
 
     implicit val canGetFreshNameInConstructor: Understands[ConstructorContext, FreshName[Name]]
-    def freshName(basedOn: String): Generator[ConstructorContext, Name] =
+    def freshName(basedOn: Name): Generator[ConstructorContext, Name] =
       AnyParadigm.capabilitiy(FreshName[Name](basedOn))
   }
   val constructorCapabilities: ConstructorCapabilities

@@ -1,6 +1,6 @@
 package org.combinators.ep.generator
 
-case class FreshNameProvider[Name](pushName: (Name, Int) => Name, used: Set[Name] = Set.empty) {
+case class FreshNameProvider[Name](pushName: (Name, Int) => Name, used: Set[Name] = Set.empty[Name]) {
 
   def markUsed(name: Name): FreshNameProvider[Name] = {
     FreshNameProvider(pushName, used + name)

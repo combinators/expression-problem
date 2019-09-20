@@ -84,7 +84,7 @@ case class AddTypeLookup[Ctxt, Type](tpe: TypeRep, lookup: Generator[Ctxt, Type]
   type Result = Unit
 }
 
-case class FreshName[Name](basedOn: String) extends Command {
+case class FreshName[Name](basedOn: Name) extends Command {
   type Result = Name
 }
 
@@ -131,7 +131,7 @@ trait AnyParadigm {
       AnyParadigm.capabilitiy(AddTestSuite[Name, TestContext](name, suite))
 
     implicit val canGetFreshNameInCompilationUnit: Understands[CompilationUnitContext, FreshName[Name]]
-    def freshName(basedOn: String): Generator[CompilationUnitContext, Name] =
+    def freshName(basedOn: Name): Generator[CompilationUnitContext, Name] =
       AnyParadigm.capabilitiy(FreshName[Name](basedOn))
   }
   val compilationUnitCapabilities: CompilationUnitCapabilities
@@ -185,7 +185,7 @@ trait AnyParadigm {
       AnyParadigm.capabilitiy(GetArguments[Type, Name, Expression]())
 
     implicit val canGetFreshNameInMethodBody: Understands[MethodBodyContext, FreshName[Name]]
-    def freshName(basedOn: String): Generator[MethodBodyContext, Name] =
+    def freshName(basedOn: Name): Generator[MethodBodyContext, Name] =
       AnyParadigm.capabilitiy(FreshName[Name](basedOn))
   }
   val methodBodyCapabilities: MethodBodyCapabilities

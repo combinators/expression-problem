@@ -134,7 +134,7 @@ sealed trait Visitor extends ApproachImplementationProvider {
 
     for {
       // R by itself, since not extending any other type parameter (hence Skip)
-      visitTyPAram <- freshName(visitTypeParameter)
+      visitTyPAram <- freshName(names.mangle(visitTypeParameter))
       _ <- addTypeParameter(visitTyPAram, Command.skip)
 
       // this returns mangled visitTypeParameter name and gets list of all type parameters, for which there is only one, so we get head
@@ -145,7 +145,7 @@ sealed trait Visitor extends ApproachImplementationProvider {
       visitorClassType <- findClass(visitorClass)
       visitorType  <- applyType (visitorClassType, args)
 
-      visitParam <- freshName(visitorParameter)
+      visitParam <- freshName(names.mangle(visitorParameter))
       _ <- setParameters(Seq((visitParam, visitorType)))      // a pair (name,type) of only one sequence
     } yield ()
   }
@@ -222,7 +222,7 @@ sealed trait Visitor extends ApproachImplementationProvider {
         for {
           at <- toTargetLanguageType(att.tpe)
           _ <- resolveAndAddImport(at)
-          pName <- freshName(names.instanceNameOf(att))
+          pName <- freshName(names.mangle(names.instanceNameOf(att)))
         } yield (pName, at)
       }
       _ <- setParameters(params)
@@ -313,7 +313,7 @@ sealed trait Visitor extends ApproachImplementationProvider {
       import genericsParadigm.classCapabilities._
       for {
         _ <- setAbstract()
-        visitTyParam <- freshName(visitTypeParameter)
+        visitTyParam <- freshName(names.mangle(visitTypeParameter))
         _ <- addTypeParameter(visitTyParam, Command.skip) // R by itself, since not extending any other type parameter (hence Skip)
         visitResultType <- getTypeArguments().map(_.head)
         _ <- forEach (allTypes) { tpe => addAbstractMethod(names.mangle(names.instanceNameOf(tpe)), makeVisitSignature(tpe, visitResultType)) }
@@ -336,7 +336,7 @@ sealed trait Visitor extends ApproachImplementationProvider {
     for {
       _ <- setReturnType(visitResultType)  // only R
       visitorClassType <- findClass(names.mangle(names.conceptNameOf(tpe)))
-      visitParamName <- freshName(expParameter)
+      visitParamName <- freshName(names.mangle(expParameter))
       _ <- setParameters(Seq((visitParamName, visitorClassType)))      // a pair (name,type) of only one sequence
     } yield ()
   }
@@ -405,7 +405,7 @@ sealed trait Visitor extends ApproachImplementationProvider {
           for {
             paramTy <- toTargetLanguageType(param.tpe)
             _ <- resolveAndAddImport(paramTy)
-            pName <- freshName(param.name)
+            pName <- freshName(names.mangle(param.name))
           } yield (pName, paramTy)
         }
       _ <- setParameters(params)

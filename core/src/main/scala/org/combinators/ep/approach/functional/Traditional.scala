@@ -103,7 +103,7 @@ trait Traditional extends ApproachImplementationProvider {
           for {
             pt <- toTargetLanguageType(param.tpe)
             _ <- resolveAndAddImport(pt)
-            pName <- freshName(param.name)
+            pName <- freshName(names.mangle(param.name))
           } yield (pName, pt)
         }
       _ <- setParameters(params)

@@ -40,7 +40,7 @@ object M6 extends Evolution {
   val m6_d3 = DivdInst(LitInst(6.0), LitInst(2.0))
   val m6_d4 = DivdInst(LitInst(8.0), LitInst(2.0))
 
-  def M6_tests:Seq[TestCase] = Seq(
+  def tests:Seq[TestCase] = Seq(
     EqualsBinaryMethodTestCase(m6_s2, m6_s1, result=true),  // parameter to operation
     EqualsBinaryMethodTestCase(m6_m1, m6_m2, result=false),  // parameter to operation
     EqualsBinaryMethodTestCase(m6_m1, m6_m1, result=true),  // parameter to operation

@@ -20,7 +20,7 @@ object MC1 extends Evolution {
   val mc1_s2 = InvInst(mc1_s1)
 
   // testing
-  def MC1_tests: Seq[TestCase] = Seq(
+  def tests: Seq[TestCase] = Seq(
     EqualsTestCase(getModel.baseDataType, mc1_s2, PrettyP, StringInst("(1.0/(1.0-2.0))")),
     EqualsTestCase(getModel.baseDataType, mc1_d1, PrettyP, StringInst("(1.0/(1.0-2.0))"))
   )

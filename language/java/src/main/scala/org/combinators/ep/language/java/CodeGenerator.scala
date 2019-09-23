@@ -351,7 +351,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                 testMethod.setModifiers(Modifier.publicModifier().getKeyword)
                 testMethod.setType(new com.github.javaparser.ast.`type`.VoidType())
                 testMethod.setName(JavaNameProvider.addPrefix("test", command.name).toAST)
-                testMethod.addAnnotation("@Test")
+                testMethod.addAnnotation("Test")
                 val (resultingContext, _) =
                   Command.runGenerator(
                     gen,

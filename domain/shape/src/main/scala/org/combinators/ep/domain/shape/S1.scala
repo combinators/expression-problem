@@ -13,4 +13,7 @@ object S1 extends Evolution {
   lazy val Shrink = Operation("shrink",
     TypeRep.DataType(ShapeDomain.getModel.baseDataType), Seq(Parameter("pct", TypeRep.Double)))
 
+  // TODO: Model test cases for S1
+  def tests: Seq[TestCase] = Seq.empty
+
 }

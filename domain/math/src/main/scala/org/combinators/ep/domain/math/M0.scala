@@ -23,7 +23,7 @@ object M0 extends Evolution {
     DataTypeInstance(Add, Seq(InstanceRep(left), InstanceRep(right)))
 
   // Testing
-  def M0_tests:Seq[TestCase] = Seq(
+  def tests: Seq[TestCase] = Seq(
     EqualsTestCase(getModel.baseDataType, AddInst(LitInst(1.0), LitInst(2.0)), Eval, InstanceRep(LitInst(3.0))),
     EqualsTestCase(getModel.baseDataType, LitInst(5.0), Eval, InstanceRep(LitInst(5.0))),
 

@@ -1,6 +1,7 @@
 package org.combinators.ep.domain.shape    /*DD:LI:AI*/
 
 import org.combinators.ep.domain._
+import org.combinators.ep.domain.abstractions.TestCase
 
 
 /**
@@ -17,4 +18,6 @@ import org.combinators.ep.domain._
   */
 object ShapeDomain  extends Evolution {
   def getModel:Model = Model.base("ShapeDomain", "Shape")
+
+  def tests: Seq[TestCase] = Seq.empty
 }

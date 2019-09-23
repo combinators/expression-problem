@@ -121,7 +121,7 @@ class FreshNameCleanup(nameInfo: Map[String, MangledName]) {
 
   def cleanup(units: CompilationUnit*): Seq[CompilationUnit] = {
     val cleanupVisitor = new CleanupVisitor
-    units.map(unit => unit.accept(cleanupVisitor, COLLECT_NAMES).asInstanceOf[CompilationUnit])
+    units.map(unit => unit.accept(cleanupVisitor, REPLACE_GENERATED).asInstanceOf[CompilationUnit])
   }
 }
 

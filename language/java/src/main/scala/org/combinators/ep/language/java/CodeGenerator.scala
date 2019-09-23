@@ -99,12 +99,14 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
               context: ProjectCtxt,
               command: AddCompilationUnit[Name, CompilationUnitCtxt]
             ): (ProjectCtxt, Unit) = {
+              val unit = new com.github.javaparser.ast.CompilationUnit()
+              unit.setPackageDeclaration(config.targetPackage)
               val (uc, _) =
                 Command.runGenerator(
                   command.unit,
                   CompilationUnitCtxt(
                     context.resolver,
-                    new com.github.javaparser.ast.CompilationUnit(),
+                    unit,
                     isTest = false)
                 )
               (context.copy(resolver = uc.resolver, units = context.units :+ uc.unit), ())
@@ -1507,7 +1509,7 @@ object CodeGenerator {
 
   val defaultConfig =
     Config(
-      targetPackage = new PackageDeclaration(),
+      targetPackage = new PackageDeclaration(Java("ep").name),
       projectName = None
     )
 

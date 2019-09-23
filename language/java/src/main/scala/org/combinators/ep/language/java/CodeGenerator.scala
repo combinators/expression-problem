@@ -6,8 +6,7 @@ import java.util.UUID
 import com.github.javaparser.ast.`type`.{ClassOrInterfaceType, TypeParameter}
 import com.github.javaparser.ast.{ImportDeclaration, Modifier, NodeList, PackageDeclaration}
 import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, ConstructorDeclaration, MethodDeclaration}
-import com.github.javaparser.ast.expr.AssignExpr.Operator
-import com.github.javaparser.ast.expr.{AssignExpr, MethodCallExpr, NameExpr, SimpleName, TypeExpr, VariableDeclarationExpr}
+import com.github.javaparser.ast.expr.{AssignExpr, BinaryExpr, BooleanLiteralExpr, DoubleLiteralExpr, MethodCallExpr, NameExpr, SimpleName, StringLiteralExpr, TypeExpr, UnaryExpr, VariableDeclarationExpr}
 import com.github.javaparser.ast.stmt.{BlockStmt, ExplicitConstructorInvocationStmt, ExpressionStmt, IfStmt, ReturnStmt, WhileStmt}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.domain.instances.InstanceRep
@@ -25,7 +24,9 @@ import scala.util.Try
 import cats.{Apply => _, _}
 import cats.implicits._
 import cats.data.State
+import org.combinators.ep.generator.paradigm.ffi.{Add, And, Arithmetic, Assert, Assertions, Booleans, Div, Equality, False, GetStringLength, Mod, Mult, Not, Or, StringAppend, Strings, Sub, ToString, True}
 import org.combinators.ep.language.java.Syntax.MangledName
+
 
 /**
  * Java-specific.
@@ -920,7 +921,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
             val decl = new VariableDeclarationExpr(command.tpe, command.name.toAST.toString)
             val withAssignment =
               if (command.initialization.isDefined) {
-                new AssignExpr(decl, command.initialization.get.clone(), Operator.ASSIGN)
+                new AssignExpr(decl, command.initialization.get.clone(), AssignExpr.Operator.ASSIGN)
               } else {
                 decl
               }
@@ -933,7 +934,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
       implicit val canAssignVariable: Understands[Ctxt, AssignVariable[Expression, Statement]] =
         new Understands[Ctxt, AssignVariable[Expression, Statement]] {
           def perform(context: Ctxt, command: AssignVariable[Expression, Statement]): (Ctxt, Statement) = {
-            (context, new ExpressionStmt(new AssignExpr(command.variable.clone(), command.value.clone(), Operator.ASSIGN)))
+            (context, new ExpressionStmt(new AssignExpr(command.variable.clone(), command.value.clone(), AssignExpr.Operator.ASSIGN)))
           }
         }
 
@@ -1127,6 +1128,361 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
       }
   }
 
+  def infixExprOp[Ctxt, Op](infixOp: BinaryExpr.Operator): Understands[Ctxt, Apply[Op, Expression, Expression]] =
+    new Understands[Ctxt, Apply[Op, Expression, Expression]] {
+      def perform(
+        context: Ctxt,
+        command: Apply[Op, Expression, Expression]
+      ): (Ctxt, Expression) = {
+        (context, new BinaryExpr(command.arguments(0), command.arguments(1), infixOp))
+      }
+    }
+
+  def shortCutInfixExprOp[Ctxt, Op <: { val shortcut: Boolean }](
+    shortCutOp: BinaryExpr.Operator,
+    normalOp: BinaryExpr.Operator
+  ): Understands[Ctxt, Apply[Op, Expression, Expression]] =
+    new Understands[Ctxt, Apply[Op, Expression, Expression]] {
+      def perform(
+        context: Ctxt,
+        command: Apply[Op, Expression, Expression]
+      ): (Ctxt, Expression) = {
+        import scala.language.reflectiveCalls
+        if (command.functional.shortcut) {
+          (context, new BinaryExpr(command.arguments(0), command.arguments(1), shortCutOp))
+        } else {
+          (context, new BinaryExpr(command.arguments(0), command.arguments(1), normalOp))
+        }
+      }
+    }
+
+  def prefixExprOp[Ctxt, Op](infixOp: UnaryExpr.Operator): Understands[Ctxt, Apply[Op, Expression, Expression]] =
+    new Understands[Ctxt, Apply[Op, Expression, Expression]] {
+      def perform(
+        context: Ctxt,
+        command: Apply[Op, Expression, Expression]
+      ): (Ctxt, Expression) = {
+        (context, new UnaryExpr(command.arguments(0), infixOp))
+      }
+    }
+
+  private case object Enable extends Command {
+    type Result = Unit
+  }
+
+  class ContextIndependentBooleans[Ctxt](
+    resolverTransformation: ContextSpecificResolver => ContextSpecificResolver
+  ) extends Booleans[Ctxt] {
+    val base: paradigm.type = paradigm
+    val booleanCapabilities: BooleanCapabilities =
+    new BooleanCapabilities {
+      implicit val canAnd: Understands[Ctxt, Apply[And, base.syntax.Expression, base.syntax.Expression]] =
+        shortCutInfixExprOp[Ctxt, And](BinaryExpr.Operator.AND, BinaryExpr.Operator.BINARY_AND)
+      implicit val canOr: Understands[Ctxt, Apply[Or, base.syntax.Expression, base.syntax.Expression]] =
+        shortCutInfixExprOp[Ctxt, Or](BinaryExpr.Operator.OR, BinaryExpr.Operator.BINARY_OR)
+      implicit val canNot: Understands[Ctxt, Apply[Not, base.syntax.Expression, base.syntax.Expression]] =
+        prefixExprOp[Ctxt, Not](UnaryExpr.Operator.LOGICAL_COMPLEMENT)
+      implicit val canTrue: Understands[Ctxt, True[base.syntax.Expression]] =
+        new Understands[Ctxt, True[base.syntax.Expression]] {
+          def perform(
+            context: Ctxt,
+            command: True[Expression]
+          ): (Ctxt, Expression) = {
+            (context, new BooleanLiteralExpr(true))
+          }
+        }
+      implicit val canFalse: Understands[Ctxt, False[base.syntax.Expression]] =
+        new Understands[Ctxt, False[base.syntax.Expression]] {
+          def perform(
+            context: Ctxt,
+            command: False[Expression]
+          ): (Ctxt, Expression) = {
+            (context, new BooleanLiteralExpr(false))
+          }
+        }
+    }
+    def enable(): Generator[base.ProjectContext, Unit] =
+      Enable.interpret(new Understands[base.ProjectContext, Enable.type] {
+        def perform(
+          context: ProjectCtxt,
+          command: Enable.type
+        ): (ProjectCtxt, Unit) = {
+          (context.copy(resolver = resolverTransformation(context.resolver)), ())
+        }
+      })
+  }
+
+  private def addResolutionType[Ctxt](
+    rep: TypeRep,
+    by: Type,
+    toResolution: TypeRep => Generator[Ctxt, Type]
+  ): TypeRep => Generator[Ctxt, Type] = {
+    case r if r == rep => Command.lift(by)
+    case other => toResolution(other)
+  }
+
+  private def addBooleanType[Ctxt](toResolution: TypeRep => Generator[Ctxt, Type]): TypeRep => Generator[Ctxt, Type] =
+    addResolutionType[Ctxt](TypeRep.Boolean, Java("boolean").tpe, toResolution)
+
+  private def addBooleanReification[Ctxt](reify: InstanceRep => Generator[Ctxt, Expression]):
+    InstanceRep => Generator[Ctxt, Expression] = {
+    case rep if rep.tpe == TypeRep.Boolean =>
+      Command.lift(new BooleanLiteralExpr(rep.inst.asInstanceOf[Boolean]))
+    case other => reify(other)
+  }
+
+  val booleansInMethod =
+    new ContextIndependentBooleans[MethodBodyCtxt](resolver =>
+      resolver.copy(
+        methodTypeResolution = addBooleanType(resolver.methodTypeResolution),
+        classTypeResolution = addBooleanType(resolver.classTypeResolution),
+        reificationInMethod = addBooleanReification(resolver.reificationInMethod)
+      )
+    )
+
+  val booleansInConstructor =
+    new ContextIndependentBooleans[MethodBodyCtxt](resolver =>
+      resolver.copy(
+        constructorTypeResolution = addBooleanType(resolver.constructorTypeResolution),
+        classTypeResolution = addBooleanType(resolver.classTypeResolution),
+        reificationInConstructor = addBooleanReification(resolver.reificationInConstructor)
+      )
+    )
+
+  class ContextIndependentArith[Ctxt, T](
+    resolverTransformation: ContextSpecificResolver => ContextSpecificResolver
+  ) extends Arithmetic[Ctxt, T] {
+    val base: paradigm.type = paradigm
+    val arithmeticCapabilities: ArithmeticCapabilities =
+      new ArithmeticCapabilities {
+        implicit val canAdd: Understands[Ctxt, Apply[Add[T], Expression, Expression]] =
+          infixExprOp(BinaryExpr.Operator.PLUS)
+        implicit val canSub: Understands[Ctxt, Apply[Sub[T], Expression, Expression]] =
+          infixExprOp(BinaryExpr.Operator.MINUS)
+        implicit val canMult: Understands[Ctxt, Apply[Mult[T], Expression, Expression]] =
+          infixExprOp(BinaryExpr.Operator.MULTIPLY)
+        implicit val canDiv: Understands[Ctxt, Apply[Div[T], Expression, Expression]] =
+          infixExprOp(BinaryExpr.Operator.DIVIDE)
+        implicit val canMod: Understands[Ctxt, Apply[Mod[T], Expression, Expression]] =
+          infixExprOp(BinaryExpr.Operator.REMAINDER)
+      }
+    def enable(): Generator[base.ProjectContext, Unit] =
+      Enable.interpret(new Understands[base.ProjectContext, Enable.type] {
+        def perform(
+          context: ProjectCtxt,
+          command: Enable.type
+        ): (ProjectCtxt, Unit) = {
+          (context.copy(resolver = resolverTransformation(context.resolver)), ())
+        }
+      })
+  }
+
+  private def addDoubleType[Ctxt](toResolution: TypeRep => Generator[Ctxt, Type]): TypeRep => Generator[Ctxt, Type] =
+    addResolutionType[Ctxt](TypeRep.Double, Java("double").tpe, toResolution)
+
+  private def addDoubleReification[Ctxt](reify: InstanceRep => Generator[Ctxt, Expression]):
+  InstanceRep => Generator[Ctxt, Expression] = {
+    case rep if rep.tpe == TypeRep.Double =>
+      Command.lift(new DoubleLiteralExpr(rep.inst.asInstanceOf[Double]))
+    case other => reify(other)
+  }
+
+  val doublesInMethod =
+    new ContextIndependentArith[MethodBodyCtxt, Double](resolver =>
+      resolver.copy(
+        methodTypeResolution = addDoubleType(resolver.methodTypeResolution),
+        classTypeResolution = addDoubleType(resolver.classTypeResolution),
+        reificationInMethod = addDoubleReification(resolver.reificationInMethod)
+      )
+    )
+
+  val doublesInConstructor =
+    new ContextIndependentArith[CtorCtxt, Double](resolver =>
+      resolver.copy(
+        constructorTypeResolution = addDoubleType(resolver.constructorTypeResolution),
+        classTypeResolution = addDoubleType(resolver.classTypeResolution),
+        reificationInConstructor = addDoubleReification(resolver.reificationInConstructor)
+      )
+    )
+
+  class ContextIndependentStrings[Ctxt](
+    resolverTransformation: ContextSpecificResolver => ContextSpecificResolver,
+    getMember: Understands[Ctxt, GetMember[Expression, Name]],
+    applyMethod: Understands[Ctxt, Apply[Expression, Expression, Expression]]
+  ) extends Strings[Ctxt] {
+    val base: paradigm.type = paradigm
+    val stringCapabilities: StringCapabilities =
+      new StringCapabilities {
+        implicit val canGetStringLength: Understands[Ctxt, Apply[GetStringLength, Expression, Expression]] =
+          new Understands[Ctxt, Apply[GetStringLength, Expression, Expression]] {
+            def perform(
+              context: Ctxt,
+              command: Apply[GetStringLength, Expression, Expression]
+            ): (Ctxt, Expression) = {
+              implicit val _getMember = getMember
+              implicit val _applyMethod = applyMethod
+              val gen = for {
+                lengthMethod <- GetMember[Expression, Name](command.arguments(0), JavaNameProvider.mangle("length")).interpret
+                res <- Apply[Expression, Expression, Expression](lengthMethod, Seq.empty).interpret
+              } yield res
+              Command.runGenerator(gen, context)
+            }
+          }
+        implicit val canAppend: Understands[Ctxt, Apply[StringAppend, Expression, Expression]] =
+          new Understands[Ctxt, Apply[StringAppend, Expression, Expression]] {
+            def perform(
+              context: Ctxt,
+              command: Apply[StringAppend, Expression, Expression]
+            ): (Ctxt, Expression) = {
+              (context, command.arguments.tail.foldLeft(command.arguments.head){ case (str, next) =>
+                new BinaryExpr(str, next, BinaryExpr.Operator.PLUS)
+              })
+            }
+          }
+        implicit val canToStringInCtxt: Understands[Ctxt, Apply[ToString[Type], Expression, Expression]] =
+          new Understands[Ctxt, Apply[ToString[Type], Expression, Expression]] {
+            def perform(
+              context: Ctxt,
+              command: Apply[ToString[Type], Expression, Expression]
+            ): (Ctxt, Expression) = {
+              implicit val _getMember = getMember
+              implicit val _applyMethod = applyMethod
+              val gen = for {
+                toStringMethod <- GetMember[Expression, Name](command.arguments(0), JavaNameProvider.mangle("toString")).interpret
+                res <- Apply[Expression, Expression, Expression](toStringMethod, Seq.empty).interpret
+              } yield res
+              Command.runGenerator(gen, context)
+            }
+          }
+      }
+
+    def enable(): Generator[base.ProjectContext, Unit] =
+      Enable.interpret(new Understands[base.ProjectContext, Enable.type] {
+        def perform(
+          context: ProjectCtxt,
+          command: Enable.type
+        ): (ProjectCtxt, Unit) = {
+          (context.copy(resolver = resolverTransformation(context.resolver)), ())
+        }
+      })
+  }
+
+  private def addStringType[Ctxt](toResolution: TypeRep => Generator[Ctxt, Type]): TypeRep => Generator[Ctxt, Type] =
+    addResolutionType[Ctxt](TypeRep.String, Java("String").tpe, toResolution)
+
+  private def addStringReification[Ctxt](reify: InstanceRep => Generator[Ctxt, Expression]):
+    InstanceRep => Generator[Ctxt, Expression] = {
+    case rep if rep.tpe == TypeRep.Double =>
+      Command.lift(new StringLiteralExpr(rep.inst.asInstanceOf[String]))
+    case other => reify(other)
+  }
+
+  val stringsInMethod =
+    new ContextIndependentStrings[MethodBodyCtxt](resolver =>
+      resolver.copy(
+        methodTypeResolution = addStringType(resolver.methodTypeResolution),
+        classTypeResolution = addStringType(resolver.classTypeResolution),
+        reificationInMethod = addStringReification(resolver.reificationInMethod)
+      ),
+      ooParadigm.methodBodyCapabilities.canGetMemberInMethod,
+      paradigm.methodBodyCapabilities.canApplyInMethodBody
+    )
+
+  val stringsInConstructor =
+    new ContextIndependentStrings[MethodBodyCtxt](resolver =>
+      resolver.copy(
+        constructorTypeResolution = addStringType(resolver.constructorTypeResolution),
+        classTypeResolution = addStringType(resolver.classTypeResolution),
+        reificationInConstructor = addStringReification(resolver.reificationInConstructor)
+      ),
+      ooParadigm.methodBodyCapabilities.canGetMemberInMethod,
+      paradigm.methodBodyCapabilities.canApplyInMethodBody
+    )
+
+  class ContextIndependentEquality[Ctxt](
+    getMember: Understands[Ctxt, GetMember[Expression, Name]],
+    applyMethod: Understands[Ctxt, Apply[Expression, Expression, Expression]]
+  ) extends Equality[Ctxt] {
+    val base: paradigm.type = paradigm
+    val equalityCapabilities: EqualityCapabilities =
+      new EqualityCapabilities {
+        implicit val canEquals: Understands[Ctxt, Apply[ffi.Equals[Type], Expression, Expression]] =
+          new Understands[Ctxt, Apply[ffi.Equals[Type], Expression, Expression]] {
+            def perform(
+              context: Ctxt,
+              command: Apply[ffi.Equals[Type], Expression, Expression]
+            ): (Ctxt, Expression) = {
+              if (command.functional.inType.isClassOrInterfaceType) {
+                implicit val _getMember = getMember
+                implicit val _applyMethod = applyMethod
+                val gen = for {
+                  equalsMethod <- GetMember[Expression, Name](command.arguments(0), JavaNameProvider.mangle("equals")).interpret
+                  res <- Apply[Expression, Expression, Expression](equalsMethod, command.arguments.tail).interpret
+                } yield res
+                Command.runGenerator(gen, context)
+              } else {
+                (context, new BinaryExpr(command.arguments(0), command.arguments(1), BinaryExpr.Operator.EQUALS))
+              }
+            }
+          }
+      }
+    def enable(): Generator[base.ProjectContext, Unit] = Command.skip
+  }
+
+  val equalityInMethod =
+    new ContextIndependentEquality[MethodBodyCtxt](
+      ooParadigm.methodBodyCapabilities.canGetMemberInMethod,
+      paradigm.methodBodyCapabilities.canApplyInMethodBody
+    )
+
+  val equalityInConstructor =
+    new ContextIndependentEquality[CtorCtxt](
+      ooParadigm.constructorCapabilities.canGetMemberInConstructor,
+      ooParadigm.constructorCapabilities.canApplyInConstructor
+    )
+
+  object assertionsInMethod extends Assertions[MethodBodyCtxt] {
+    val base: paradigm.type = paradigm
+    val assertionCapabilities: AssertionCapabilities =
+      new AssertionCapabilities {
+        implicit val canAssert: Understands[MethodBodyCtxt, Apply[Assert, base.syntax.Expression, base.syntax.Expression]] =
+          new Understands[MethodBodyCtxt, Apply[Assert, base.syntax.Expression, base.syntax.Expression]] {
+            def perform(
+              context: MethodBodyCtxt,
+              command: Apply[Assert, base.syntax.Expression, base.syntax.Expression]
+            ): (MethodBodyCtxt, base.syntax.Expression) = {
+              import ooParadigm.methodBodyCapabilities._
+              import paradigm.methodBodyCapabilities._
+              val gen = for {
+                imp <- resolveImport(Java("org.junit.Assert").tpe())
+                _ <- imp.map(addImport).getOrElse(Command.skip)
+                assertMethod <- getMember(Java("Assert").expression(), JavaNameProvider.mangle("assertTrue"))
+                msg <- reify[String](TypeRep.String, command.functional.message)
+                res <- apply(assertMethod, Seq(msg, command.arguments(0)))
+              } yield res
+              Command.runGenerator(gen, context)
+            }
+          }
+      }
+
+    override def enable(): Generator[base.ProjectContext, Unit] =
+      Enable.interpret(new Understands[base.ProjectContext, Enable.type] {
+        def perform(
+          context: ProjectCtxt,
+          command: Enable.type
+        ): (ProjectCtxt, Unit) = {
+          (context.copy(resolver = context.resolver.copy(
+            importResolution = {
+              case tpe if tpe == Java("org.junit.Assert").tpe() => Some(Java("org.junit.Assert").importDeclaration())
+              case other => context.resolver.importResolution(other)
+            }
+          )), ())
+        }
+      })
+  }
+
+
+
 }
 
 object CodeGenerator {
@@ -1134,7 +1490,6 @@ object CodeGenerator {
   case class MarkUsed(name: Syntax.default.Name) extends Command {
     type Result = Unit
   }
-
 
   case class Config(
     targetPackage: PackageDeclaration,

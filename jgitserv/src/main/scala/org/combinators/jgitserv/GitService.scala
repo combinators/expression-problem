@@ -1,13 +1,17 @@
 package org.combinators.jgitserv
 
+import java.io.{FileInputStream, InputStream}
 import java.nio.file.{Files, Path, Paths}
 
-import cats.effect.{IO, Resource}
+import cats.effect.{ContextShift, IO, Resource, Sync}
 import com.twitter.finagle.Http
+import com.twitter.io.Buf
 import com.twitter.util.Await
 import io.finch._
+import io.finch.endpoint._
 import org.apache.commons.io.FileUtils
 import org.eclipse.jgit.api.Git
+import shapeless.HNil
 
 /** A simple endpoint to host Git repositories.
   *
@@ -21,7 +25,10 @@ import org.eclipse.jgit.api.Git
   * @see This [[https://examples.javacodegeeks.com/core-java/io/java-io-tmpdir-example/ tutorial]] on
   *      how to set the temporary directory for repositories.
   */
-class GitService(val sourceDirectory: Path = Paths.get(".")) extends Endpoint.Module[IO] {
+class GitService(
+  val sourceDirectory: Path = Paths.get("."),
+  transactions: Seq[BranchTransaction]
+) extends Endpoint.Module[IO] {
   /** The Git repository in which files are stored while the server is active. */
   private lazy val git: Resource[IO, Git] = {
     def acquire: IO[Git] = IO {
@@ -36,7 +43,13 @@ class GitService(val sourceDirectory: Path = Paths.get(".")) extends Endpoint.Mo
     Resource.make(acquire)(release)
   }
 
-
+  /*def content(implicit F: Sync[IO], S: ContextShift[IO]): Endpoint[IO, Buf] = get(paths[String]) { (segments: List[String]) =>
+    fromInputStream(git.map(repo =>
+      new FileInputStream(Paths.get(repo.getRepository.getDirectory.toPath.toString, segments:_*).toFile)
+    )).map( buf =>
+      Ok(buf)
+    )
+  }*/
 
 /*
 

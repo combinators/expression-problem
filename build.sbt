@@ -39,7 +39,9 @@ lazy val commonSettings = Seq(
     "org.scalameta" %% "scalameta" % "3.7.4",
     "org.typelevel" %% "cats-core" % "2.0.0-RC1",
     "org.typelevel" %% "cats-free" % "2.0.0-RC1"
-  )
+  ),
+
+  addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
 )
 
 /** The core components to model expression problem code generators and domains.
@@ -49,7 +51,7 @@ lazy val core = (Project(id = "core", base = file("core")))
   .settings(commonSettings: _*)
   .settings(
     moduleName := "expression-problem-core",
-    addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3"),
+    //addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3"),
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")
   )
 
@@ -85,7 +87,7 @@ def standardLanguageProject(languageName: String): Project =
     .dependsOn(core, domainMath, domainShape)
 
 
-lazy val languageJava = standardLanguageProject("java")
+lazy val languageJava = standardLanguageProject("java").dependsOn(jgitserv)
 lazy val languageGJ = standardLanguageProject("gj")
 lazy val languageCPP = standardLanguageProject("cpp")
 lazy val languageHaskell = standardLanguageProject("haskell")
@@ -117,7 +119,7 @@ lazy val jgitserv =
         "com.github.finagle" %% "finchx-core" % "0.29.0",
         "org.eclipse.jgit" % "org.eclipse.jgit" % "5.4.0.201906121030-r",
         "commons-io" % "commons-io" % "2.6",
-        "org.combinators" %% "templating" % "1.0.0-RC1+4-ca285511"
+        "org.combinators" %% "templating" % "1.1.0"
       )
     )
     

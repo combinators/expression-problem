@@ -177,7 +177,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
         implicit val canGetFreshNameInCompilationUnit: Understands[CompilationUnitContext, FreshName[Name]] =
           new Understands[CompilationUnitContext, FreshName[Name]] {
             def perform(context: CompilationUnitContext, command: FreshName[Name]): (CompilationUnitContext, Name) = {
-              val freshName = JavaNameProvider.mangle("$$$$generatedName_${UUID.randomUUID()}$$$$")
+              val freshName = JavaNameProvider.mangle(s"$$$$generatedName_${UUID.randomUUID().toString.replace("-", "_")}$$$$")
               val updatedResolver = context.resolver.copy(
                 generatedVariables = context.resolver.generatedVariables + (freshName.toAST.getIdentifier -> command.basedOn)
               )
@@ -321,7 +321,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
         implicit val canGetFreshNameInMethodBody: Understands[MethodBodyContext, FreshName[Name]] =
           new Understands[MethodBodyContext, FreshName[Name]] {
             def perform(context: MethodBodyContext, command: FreshName[MangledName]): (MethodBodyContext, MangledName) = {
-              val freshName = JavaNameProvider.mangle("$$$$generatedName_${UUID.randomUUID()}$$$$")
+              val freshName = JavaNameProvider.mangle(s"$$$$generatedName_${UUID.randomUUID().toString.replace("-", "_")}$$$$")
               val updatedResolver = context.resolver.copy(
                 generatedVariables = context.resolver.generatedVariables + (freshName.toAST.getIdentifier -> command.basedOn)
               )
@@ -608,7 +608,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
           implicit val canGetFreshNameInClass: Understands[ClassContext, FreshName[Name]] =
             new Understands[ClassContext, FreshName[Name]] {
               def perform(context: ClassContext, command: FreshName[Name]): (ClassContext, Name) = {
-                val freshName = JavaNameProvider.mangle("$$$$generatedName_${UUID.randomUUID()}$$$$")
+                val freshName = JavaNameProvider.mangle(s"$$$$generatedName_${UUID.randomUUID().toString.replace("-", "_")}$$$$")
                 val updatedResolver = context.resolver.copy(
                   generatedVariables = context.resolver.generatedVariables + (freshName.toAST.getIdentifier -> command.basedOn)
                 )
@@ -797,7 +797,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
           implicit val canGetFreshNameInConstructor: Understands[ConstructorContext, FreshName[Name]] =
             new Understands[ConstructorContext, FreshName[Name]] {
               def perform(context: ConstructorContext, command: FreshName[MangledName]): (ConstructorContext, MangledName) = {
-                val freshName = JavaNameProvider.mangle("$$$$generatedName_${UUID.randomUUID()}$$$$")
+                val freshName = JavaNameProvider.mangle(s"$$$$generatedName_${UUID.randomUUID().toString.replace("-", "_")}$$$$")
                 val updatedResolver = context.resolver.copy(
                   generatedVariables = context.resolver.generatedVariables + (freshName.toAST.getIdentifier -> command.basedOn)
                 )

@@ -32,6 +32,13 @@ object M0 {
         ffiArithmetic.enable()
       }
 
+      def applicable
+        (forApproach: AIP[paradigm.type])
+        (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
+        (onRequest.request.op == math.M0.Eval) &&
+          (Set(math.M0.Add, math.M0.Lit).contains(onRequest.tpeCase))
+      }
+
       override def logic
           (forApproach: AIP[paradigm.type ])
           (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
@@ -41,7 +48,7 @@ object M0 {
         import paradigm._
 
         // no need to pass up to the chain since only Eval is known
-        assert(onRequest.request.op == math.M0.Eval)
+        assert(applicable(forApproach)(onRequest))
 
         val result = onRequest.tpeCase match {
 

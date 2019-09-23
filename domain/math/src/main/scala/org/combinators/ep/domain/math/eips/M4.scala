@@ -32,17 +32,23 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
     ): EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val m4Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
 
-        def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-          for {
-            _ <- ffiArithmetic.enable()
-            _ <- ffiBoolean.enable()
-            _ <- ffiStrings.enable()
-            _ <- ffiLists.enable()
-            _ <- ffiEquality.enable()
-          } yield ()
-        }
+      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
+        for {
+          _ <- ffiArithmetic.enable()
+          _ <- ffiBoolean.enable()
+          _ <- ffiStrings.enable()
+          _ <- ffiLists.enable()
+          _ <- ffiEquality.enable()
+        } yield ()
+      }
 
-        private def collectLogic
+      def applicable(forApproach: AIP[paradigm.type])
+        (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
+        (Set(math.M4.Collect, math.M4.Simplify).contains(onRequest.request.op)) &&
+          (math.M4.getModel.flatten.typeCases.toSet.contains(onRequest.tpeCase))
+      }
+
+      private def collectLogic
           (forApproach: AIP[paradigm.type])
             (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
         Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
@@ -78,7 +84,6 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
             }
           }
 
-          assert(onRequest.request.op == math.M4.Collect)
           for {
             listDoubleTy <- toTargetLanguageType(onRequest.request.op.returnType)
             _ <- forApproach.resolveAndAddImport(listDoubleTy)
@@ -96,8 +101,6 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
           import AnyParadigm.syntax._
           import ffiEquality.equalityCapabilities._
           import ffiBoolean.booleanCapabilities._
-
-          assert(onRequest.request.op == math.M4.Simplify)
 
           def evalChildren(atts: Seq[Expression]): Generator[MethodBodyContext, List[Expression]] =
             forEach (atts) { att =>
@@ -234,6 +237,7 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
         def logic(forApproach: AIP[paradigm.type])
           (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
         Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] = {
+          assert(applicable(forApproach)(onRequest))
           onRequest.request.op match {
             case math.M4.Collect => collectLogic(forApproach)(onRequest)
             case math.M4.Simplify => simplifyLogic(forApproach)(onRequest)

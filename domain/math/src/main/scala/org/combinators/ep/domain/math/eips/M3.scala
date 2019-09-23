@@ -14,7 +14,6 @@ object M3 {
       (paradigm: P)
       (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
        ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
-
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val arithProvider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
@@ -22,6 +21,13 @@ object M3 {
           _ <- ffiArithmetic.enable()
           _ <- ffiStrings.enable()
         } yield ()
+      }
+
+      def applicable
+        (forApproach: AIP[paradigm.type])
+          (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
+        (Set(math.M0.Eval, math.M2.PrettyP).contains(onRequest.request.op)) &&
+          (Set(math.M3.Divd, math.M3.Mult, math.M3.Neg).contains(onRequest.tpeCase))
       }
 
       def logic

@@ -23,6 +23,13 @@ object M2 {
         } yield ()
       }
 
+      def applicable
+        (forApproach: AIP[paradigm.type])
+          (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
+        (onRequest.request.op == math.M2.PrettyP) &&
+          (Set(math.M0.Lit, math.M0.Add, math.M1.Sub).contains(onRequest.tpeCase))
+      }
+
       def logic
           (forApproach: AIP[paradigm.type])
           (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
@@ -31,7 +38,7 @@ object M2 {
         import paradigm._
         import methodBodyCapabilities._
 
-        assert(onRequest.request.op == math.M2.PrettyP)
+        assert(applicable(forApproach)(onRequest))
 
         val result = onRequest.tpeCase match {
           case litC@math.M0.Lit =>

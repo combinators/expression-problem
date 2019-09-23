@@ -31,8 +31,7 @@ sealed trait Traditional extends ApproachImplementationProvider {
     for {
       rt <- findClass(names.mangle(names.conceptNameOf(tpeCase)))
       _ <- resolveAndAddImport(rt)
-      ctor <- getConstructor(rt)
-      res <- apply(ctor, args)
+      res <- instantiateObject(rt, args)
     } yield res
   }
 

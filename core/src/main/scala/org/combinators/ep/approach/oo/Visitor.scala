@@ -88,8 +88,7 @@ sealed abstract class Visitor extends ApproachImplementationProvider {
       // access the constructor for the class associated with type case and invoke constructors with arguments.
       rt <- findClass(names.mangle(names.conceptNameOf(tpeCase)))
       _ <- resolveAndAddImport(rt)
-      ctor <- getConstructor(rt)
-      res <- apply(ctor, args)
+      res <- instantiateObject(rt, args)
     } yield res
   }
 

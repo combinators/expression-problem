@@ -1,12 +1,13 @@
 package org.combinators.ep.language.java
 
 import java.nio.file.Paths
+import java.util.UUID
 
-import com.github.javaparser.ast.`type`.TypeParameter
-import com.github.javaparser.ast.{ImportDeclaration, Modifier, PackageDeclaration}
+import com.github.javaparser.ast.`type`.{ClassOrInterfaceType, TypeParameter}
+import com.github.javaparser.ast.{ImportDeclaration, Modifier, NodeList, PackageDeclaration}
 import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, ConstructorDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.expr.AssignExpr.Operator
-import com.github.javaparser.ast.expr.{AssignExpr, MethodCallExpr, NameExpr, VariableDeclarationExpr}
+import com.github.javaparser.ast.expr.{AssignExpr, MethodCallExpr, NameExpr, SimpleName, TypeExpr, VariableDeclarationExpr}
 import com.github.javaparser.ast.stmt.{BlockStmt, ExplicitConstructorInvocationStmt, ExpressionStmt, IfStmt, ReturnStmt, WhileStmt}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.domain.instances.InstanceRep
@@ -21,10 +22,9 @@ import org.combinators.templating.persistable.JavaPersistable
 
 import scala.collection.JavaConverters._
 import scala.util.Try
-import cats.{ Apply => _, _}
+import cats.{Apply => _, _}
 import cats.implicits._
 import cats.data.State
-import org.combinators.ep.language.java.CodeGenerator.MarkUsed
 import org.combinators.ep.language.java.Syntax.MangledName
 
 /**
@@ -42,7 +42,8 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
     reificationInConstructor: InstanceRep => Generator[CtorCtxt, Expression],
     reificationInMethod: InstanceRep => Generator[MethodBodyCtxt, Expression],
     importResolution: Type => Option[Import],
-    instantiationOverride: (Type, Seq[Expression]) => (Type, Seq[Expression])
+    instantiationOverride: (Type, Seq[Expression]) => (Type, Seq[Expression]),
+    generatedVariables: Map[String, MangledName]
   )
 
   case class ProjectCtxt(
@@ -52,47 +53,34 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
   )
   case class CompilationUnitCtxt(
     resolver: ContextSpecificResolver,
-    unit: State[FreshNameProvider[MangledName], com.github.javaparser.ast.CompilationUnit],
-    freshNames: FreshNameProvider[MangledName],
+    unit: com.github.javaparser.ast.CompilationUnit,
     isTest: Boolean
   )
   case class ClassCtxt(
     resolver: ContextSpecificResolver,
-    cls: State[FreshNameProvider[MangledName], ClassOrInterfaceDeclaration],
-    freshNames: FreshNameProvider[MangledName],
+    cls: ClassOrInterfaceDeclaration,
     extraImports: Seq[Import]
   )
   case class TestCtxt(
     resolver: ContextSpecificResolver,
-    freshNames: FreshNameProvider[MangledName],
     extraImports: Seq[Import],
-    testClass: State[FreshNameProvider[MangledName], ClassOrInterfaceDeclaration]
+    testClass: ClassOrInterfaceDeclaration
   )
   case class MethodBodyCtxt(
     resolver: ContextSpecificResolver,
-    freshNames: FreshNameProvider[MangledName],
     extraImports: Seq[Import],
-    method: State[FreshNameProvider[MangledName], MethodDeclaration]
+    method: MethodDeclaration
   )
   case class CtorCtxt(
     resolver: ContextSpecificResolver,
-    freshNames: FreshNameProvider[MangledName],
     extraImports: Seq[Import],
-    ctor: State[FreshNameProvider[MangledName], ConstructorDeclaration]
+    ctor: ConstructorDeclaration
   )
   case class TypeParamCtxt(
     param: TypeParameter
   )
 
-  private def pushName(name: MangledName, useCounter: Int): MangledName = {
-    if (useCounter == 0) {
-      name
-    } else if (useCounter == 1) {
-      MangledNameProvider.addPrefix("_", name)
-    } else {
-      MangledNameProvider.addSuffix(name, useCounter.toString)
-    }
-  }
+
 
   object paradigm extends AnyParadigm {
     val syntax: Syntax.default.type = Syntax.default
@@ -115,12 +103,10 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                   command.unit,
                   CompilationUnitCtxt(
                     context.resolver,
-                    State.pure(new com.github.javaparser.ast.CompilationUnit()),
-                    FreshNameProvider[MangledName](pushName),
+                    new com.github.javaparser.ast.CompilationUnit(),
                     isTest = false)
                 )
-              val (_, resultUnit) = uc.unit.run(uc.freshNames).value
-              (context.copy(resolver = uc.resolver, units = context.units :+ resultUnit), ())
+              (context.copy(resolver = uc.resolver, units = context.units :+ uc.unit), ())
             }
           }
         implicit val canAddTypeLookupForMethodsInProject: Understands[ProjectContext, AddTypeLookup[MethodBodyContext, Type]] =
@@ -148,17 +134,14 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
               context: CompilationUnitCtxt,
               command: AddImport[ImportDeclaration]
             ): (CompilationUnitContext, Unit) = {
-              val freshNames = context.freshNames.markUsed(MangledNameProvider.mangle(command.imp.getName.getIdentifier))
-              val updatedUnit: State[FreshNameProvider[MangledName], CompilationUnit] =
-                for {
-                  oldUnit <- context.unit
-                  newUnit = if (!oldUnit.getImports.contains(command.imp)) {
-                    val nextUnit = oldUnit.clone()
-                    nextUnit.addImport(command.imp)
-                    nextUnit
-                  } else oldUnit
-                } yield newUnit
-              (context.copy(unit = updatedUnit, freshNames = freshNames), ())
+              val oldUnit = context.unit
+              val newUnit =
+                if (!oldUnit.getImports.contains(command.imp)) {
+                  val nextUnit = oldUnit.clone()
+                  nextUnit.addImport(command.imp)
+                  nextUnit
+                } else oldUnit
+              (context.copy(unit = newUnit), ())
             }
           }
         implicit val canAddTestSuiteInCompilationUnit: Understands[CompilationUnitCtxt, AddTestSuite[Name, TestCtxt]] =
@@ -167,45 +150,38 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
               context: CompilationUnitCtxt,
               command: AddTestSuite[Name, TestCtxt]
             ): (CompilationUnitContext, Unit) = {
-              val (freshNames, testName) = command.name.run(context.freshNames).value
                val (testRes, _) =
                 Command.runGenerator(
                   command.suite,
                   TestCtxt(
                     context.resolver,
-                    freshNames.markUsed(testName),
                     Seq.empty,
-                    State.pure(new ClassOrInterfaceDeclaration())))
-              val updatedUnit =
-                for {
-                  oldUnit <- context.unit
-                  testClass <- testRes.testClass
-                  newUnit = {
-                    val nextUnit = oldUnit.clone()
-                    testRes.extraImports.foreach { imp =>
-                      if (!nextUnit.getImports.contains(imp))
-                        nextUnit.addImport(imp)
-                    }
-                    val classToAdd = testClass.clone()
-                    classToAdd.setName(testName.mangled)
-                    nextUnit.addType(classToAdd)
-                    nextUnit
-                  }
-                } yield newUnit
-              (context.copy(resolver = testRes.resolver, freshNames = testRes.freshNames, unit = updatedUnit, isTest = true), ())
+                    new ClassOrInterfaceDeclaration()))
+              val updatedUnit = {
+                val oldUnit = context.unit
+                val testClass = testRes.testClass
+                val nextUnit = oldUnit.clone()
+                testRes.extraImports.foreach { imp =>
+                  if (!nextUnit.getImports.contains(imp))
+                    nextUnit.addImport(imp)
+                }
+                val classToAdd = testClass.clone()
+                classToAdd.setName(command.name.mangled)
+                nextUnit.addType(classToAdd)
+                nextUnit
+              }
+              (context.copy(resolver = testRes.resolver, unit = updatedUnit, isTest = true), ())
             }
           }
 
         implicit val canGetFreshNameInCompilationUnit: Understands[CompilationUnitContext, FreshName[Name]] =
           new Understands[CompilationUnitContext, FreshName[Name]] {
             def perform(context: CompilationUnitContext, command: FreshName[Name]): (CompilationUnitContext, Name) = {
-              (context,
-                for {
-                  basedOn <- command.basedOn
-                  nameGen <- State.get[FreshNameProvider[MangledName]]
-                  (name, next) = nameGen.freshNameBasedOn(basedOn)
-                  _ <- State.set(next)
-                } yield name)
+              val freshName = JavaNameProvider.mangle("$$$$generatedName_${UUID.randomUUID()}$$$$")
+              val updatedResolver = context.resolver.copy(
+                generatedVariables = context.resolver.generatedVariables + (freshName.toAST.getIdentifier -> command.basedOn)
+              )
+              (context.copy(resolver = updatedResolver), freshName)
             }
           }
       }
@@ -218,10 +194,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
               command: AddImport[ImportDeclaration]
             ): (MethodBodyCtxt, Unit) = {
               val extraImports = (context.extraImports :+ command.imp).distinct.map(_.clone())
-              val freshNames = extraImports.foldLeft(context.freshNames) { case (s, imp) =>
-                s.markUsed(MangledNameProvider.mangle(imp.getName.getIdentifier))
-              }
-              (context.copy(extraImports = extraImports, freshNames = freshNames), ())
+              (context.copy(extraImports = extraImports), ())
             }
           }
         implicit val canAddBlockDefinitionsInMethodBody: Understands[MethodBodyCtxt, AddBlockDefinitions[Statement]] =
@@ -230,18 +203,15 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
               context: MethodBodyCtxt,
               command: AddBlockDefinitions[Statement]
             ): (MethodBodyCtxt, Unit) = {
-              val updatedMethod =
-                for {
-                  oldMethod <- context.method
-                  stmts <- command.definitions.toList.sequence
-                  newMethod = {
-                    val nextMethod = oldMethod.clone()
-                    val body = nextMethod.getBody.orElseGet(() => new BlockStmt())
-                    stmts.foreach(stmt => body.addStatement(stmt.clone()))
-                    nextMethod.setBody(body)
-                    nextMethod
-                  }
-                } yield newMethod
+              val updatedMethod = {
+                val oldMethod = context.method
+                val stmts = command.definitions
+                val nextMethod = oldMethod.clone()
+                val body = nextMethod.getBody.orElseGet(() => new BlockStmt())
+                stmts.foreach(stmt => body.addStatement(stmt.clone()))
+                nextMethod.setBody(body)
+                nextMethod
+              }
               (context.copy(method = updatedMethod), ())
             }
           }
@@ -252,15 +222,13 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
               context: MethodBodyCtxt,
               command: SetReturnType[Type]
             ): (MethodBodyCtxt, Unit) = {
-              val updatedMethod = for {
-                oldMethod <- context.method
-                tpe <- command.tpe
-                newMethod = {
-                  val nextMethod = oldMethod.clone()
-                  nextMethod.setType(tpe.clone())
-                  nextMethod
-                }
-              } yield newMethod
+              val updatedMethod =  {
+                val oldMethod = context.method
+                val tpe = command.tpe
+                val newMethod = oldMethod.clone()
+                newMethod.setType(tpe.clone())
+                newMethod
+              }
               (context.copy(method = updatedMethod), ())
             }
           }
@@ -271,34 +239,16 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
               context: MethodBodyCtxt,
               command: SetParameters[Name, Type]
             ): (MethodBodyCtxt, Unit) = {
-              val updatedMethod = for {
-                oldMethod <- context.method
-                _ <- State.modify { freeNames: FreshNameProvider[MangledName] =>
-                  oldMethod.getParameters.asScala.foldLeft(freeNames) { (nextFree, param) =>
-                    nextFree.markUnused(MangledNameProvider.mangle(param.getNameAsString))
-                  }
+              val updatedMethod = {
+                val oldMethod = context.method
+                val params = command.params
+                val newMethod = oldMethod.clone()
+                newMethod.getParameters.clear()
+                params.foreach { case (paramName, paramTpe) =>
+                  newMethod.addParameter(paramTpe.clone(), paramName.mangled)
                 }
-                params <-
-                  command
-                    .params
-                    .map { case (name, tpe) =>
-                      for {
-                        n <- name
-                        _ <- State.modify { freeNames: FreshNameProvider[MangledName] => freeNames.markUsed(n) }
-                        t <- tpe
-                      } yield (n, t)
-                    }
-                    .toList
-                    .sequence
-                newMethod = {
-                  val nextMethod = oldMethod.clone()
-                  nextMethod.getParameters.clear()
-                  params.foreach { case (paramName, paramTpe) =>
-                    nextMethod.addParameter(paramTpe.clone(), paramName.mangled)
-                  }
-                  nextMethod
-                }
-              } yield newMethod
+                newMethod
+              }
               (context.copy(method = updatedMethod), ()) // second thing to be returned isn't optional, so make it () is like Unit
             }
           }
@@ -329,8 +279,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
               command: ResolveImport[ImportDeclaration, Type]
             ): (MethodBodyCtxt, Option[ImportDeclaration]) = {
               Try { (context, context.resolver.importResolution(command.forElem)) } getOrElse {
-                val (freshNames, importTpe) = command.forElem.run(context.freshNames).value
-                val importName = importTpe.asClassOrInterfaceType().getNameAsString
+               val importName = command.forElem.asClassOrInterfaceType().getNameAsString
                 val newImport =
                   new ImportDeclaration(
                     new com.github.javaparser.ast.expr.Name(config.targetPackage.getName.clone(), importName),
@@ -339,7 +288,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                 if (context.extraImports.contains(newImport)) {
                   (context, None)
                 } else {
-                  (context.copy(freshNames = freshNames), Some(newImport))
+                  (context, Some(newImport))
                 }
               }
             }
@@ -352,10 +301,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
               command: Apply[Expression, Expression, Expression]
             ): (MethodBodyCtxt, Expression) = {
               val resultExp: Expression =
-                for {
-                  functional <- command.functional
-                  args <- command.arguments.toList.sequence
-                } yield Java(s"${functional}(${args.mkString(", ")})").expression()
+                Java(s"${command.functional}${command.arguments.mkString("(", ", ", ")")}").expression()
               (context, resultExp)
             }
           }
@@ -366,39 +312,30 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
               context: MethodBodyCtxt,
               command: GetArguments[Type, Name, Expression]
             ): (MethodBodyCtxt, Seq[(Name, Type, Expression)]) = {
-              val argIter = new Iterator {
-                var idx = 0
-                var nextElem = Try {
-                  val name = context.method.map {
-                    method.param
-                  }
-                }
-                def hasNext: Boolean = {
-
-                }
-
-                def next(): A = ???
+              val params = context.method.getParameters.asScala.map { param =>
+                (MangledName.fromAST(param.getName), param.getType, new NameExpr(param.getName))
               }
-              val names = context.method.map { method =>
-                method.getParameters.asScala.map(param => MangledNameProvider.mangle(param.getName.toString))
-              }
-              val types = context.method.map { method =>
-                method.getParameters.asScala.map(param => param.getType.clone())
-              }
-              val exps = context.method.map { method =>
-                method.getParameters.asScala.map(param => new NameExpr(param.getName.clone()))
-              }
-              (context, names.zip(types).zip(exps))
+              (context, params)
+            }
+          }
+        implicit val canGetFreshNameInMethodBody: Understands[MethodBodyContext, FreshName[Name]] =
+          new Understands[MethodBodyContext, FreshName[Name]] {
+            def perform(context: MethodBodyContext, command: FreshName[MangledName]): (MethodBodyContext, MangledName) = {
+              val freshName = JavaNameProvider.mangle("$$$$generatedName_${UUID.randomUUID()}$$$$")
+              val updatedResolver = context.resolver.copy(
+                generatedVariables = context.resolver.generatedVariables + (freshName.toAST.getIdentifier -> command.basedOn)
+              )
+              (context.copy(resolver = updatedResolver), freshName)
             }
           }
       }
       val testCapabilities: TestCapabilities =
         new TestCapabilities {
-          implicit val canAddTestCaseInTest: Understands[TestContext, AddTestCase[MethodBodyContext, Expression]] =
-            new Understands[TestContext, AddTestCase[MethodBodyContext, Expression]] {
+          implicit val canAddTestCaseInTest: Understands[TestContext, AddTestCase[MethodBodyContext, Name, Expression]] =
+            new Understands[TestContext, AddTestCase[MethodBodyContext, Name, Expression]] {
               def perform(
                 context: TestContext,
-                command: AddTestCase[MethodBodyContext, Expression]
+                command: AddTestCase[MethodBodyContext, Name, Expression]
               ): (TestContext, Unit) = {
                 val gen: Generator[MethodBodyCtxt, Unit] = {
                   import methodBodyCapabilities._
@@ -407,22 +344,21 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                     _ <- addBlockDefinitions(assertions.map(exp => new ExpressionStmt(exp.clone())))
                   } yield ()
                 }
-                val testMethod = new MethodDeclaration(
-                  Modifier.PUBLIC.toEnumSet,
-                  new com.github.javaparser.ast.`type`.VoidType(),
-                  "test" + command.name.capitalize)
+                val testMethod = new MethodDeclaration()
+                testMethod.setModifiers(Modifier.publicModifier().getKeyword)
+                testMethod.setType(new com.github.javaparser.ast.`type`.VoidType())
+                testMethod.setName(JavaNameProvider.addPrefix("test", command.name).toAST)
                 testMethod.addAnnotation("@Test")
                 val (resultingContext, _) =
                   Command.runGenerator(
                     gen,
                     MethodBodyCtxt(
                       context.resolver,
-                      new VariableNameProvider(),
                       context.extraImports,
                       testMethod)
                   )
                 val newClass = context.testClass.clone()
-                newClass.addMember(resultingContext.method)
+                newClass.addMember(resultingContext.method.clone)
                 (context.copy(resolver = resultingContext.resolver, testClass = newClass), ())
               }
             }
@@ -438,7 +374,8 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                 reificationInConstructor = _ => ???,
                 reificationInMethod = _ => ???,
                 importResolution = _ => ???,
-                instantiationOverride = (tpe, args) => (tpe, args)
+                instantiationOverride = (tpe, args) => (tpe, args),
+                generatedVariables = Map.empty
               ),
               units = Seq.empty,
               extraDependencies = Seq.empty
@@ -451,7 +388,8 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
              |$nameEntry
              |libraryDependencies ++= $deps
            """.stripMargin
-        val javaFiles = finalContext.units.map { unit =>
+        val cleanedUnits = FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.units: _*)
+        val javaFiles = cleanedUnits.map { unit =>
           FileWithPath(
             JavaPersistable.compilationUnitInstance.rawText(unit),
             JavaPersistable.compilationUnitInstance.fullPath(Paths.get("src", "main", "java"), unit)
@@ -461,25 +399,25 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
       }
     }
 
-  /*object ooParadigm extends ObjectOriented {
+  object ooParadigm extends ObjectOriented {
       val base: paradigm.type = paradigm
       type ClassContext = ClassCtxt
       type ConstructorContext = CtorCtxt
       val compilationUnitCapabilities: CompilationUnitCapabilities =
         new CompilationUnitCapabilities {
-          implicit val canAddClassInCompilationUnit: Understands[base.CompilationUnitContext, AddClass[ClassContext]] =
-            new Understands[base.CompilationUnitContext, AddClass[ClassContext]] {
+          implicit val canAddClassInCompilationUnit: Understands[base.CompilationUnitContext, AddClass[ClassContext, Name]] =
+            new Understands[base.CompilationUnitContext, AddClass[ClassContext, Name]] {
               def perform(
                 context: base.CompilationUnitContext,
-                command: AddClass[ClassContext]
+                command: AddClass[ClassContext, Name]
               ): (base.CompilationUnitContext, Unit) = {
                 val clsToAdd = new ClassOrInterfaceDeclaration()
-                clsToAdd.setName(command.name)
+                clsToAdd.setName(command.name.toAST)
                 clsToAdd.setPublic(true)
                 val (resultCtxt, _) =
                   Command.runGenerator(
                     command.cls,
-                    ClassCtxt(context.resolver, context.unit.getImports().asScala, clsToAdd)
+                    ClassCtxt(context.resolver, clsToAdd, context.unit.getImports().asScala)
                   )
                 val newUnit = context.unit.clone()
                 newUnit.addType(resultCtxt.cls)
@@ -503,7 +441,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                 command: AddParent[Type]
               ): (ClassContext, Unit) = {
                 val resultCls = context.cls.clone()
-                resultCls.addExtendedType(command.parentClass.toString())
+                resultCls.addExtendedType(command.parentClass.asClassOrInterfaceType())
                 (context.copy(cls = resultCls), ())
               }
             }
@@ -514,34 +452,34 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                 command: AddImplemented[Type]
               ): (ClassContext, Unit) = {
                 val resultCls = context.cls.clone()
-                resultCls.addImplementedType(command.interface.toString())
+                resultCls.addImplementedType(command.interface.asClassOrInterfaceType())
                 (context.copy(cls = resultCls), ())
               }
             }
-          implicit val canAddFieldInClass: Understands[ClassContext, AddField[Type]] =
-            new Understands[ClassContext, AddField[Type]] {
+          implicit val canAddFieldInClass: Understands[ClassContext, AddField[Name, Type]] =
+            new Understands[ClassContext, AddField[Name, Type]] {
               def perform(
                 context: ClassContext,
-                command: AddField[Type]
+                command: AddField[Name, Type]
               ): (ClassContext, Unit) = {
                 val resultCls = context.cls.clone()
-                resultCls.addField(command.tpe, command.name, Modifier.PRIVATE)
+                resultCls.addField(command.tpe, command.name.toAST.toString, Modifier.privateModifier().getKeyword)
                 (context.copy(cls = resultCls), ())
               }
             }
-          implicit val canAddMethodInClass: Understands[ClassContext, AddMethod[base.MethodBodyContext, Option[Expression]]] =
-            new Understands[ClassContext, AddMethod[base.MethodBodyContext, Option[Expression]]] {
+          implicit val canAddMethodInClass: Understands[ClassContext, AddMethod[base.MethodBodyContext, Name, Option[Expression]]] =
+            new Understands[ClassContext, AddMethod[base.MethodBodyContext, Name, Option[Expression]]] {
               def perform(
                 context: ClassContext,
-                command: AddMethod[base.MethodBodyContext, Option[Expression]]
+                command: AddMethod[base.MethodBodyContext, Name, Option[Expression]]
               ): (ClassContext, Unit) = {
                 val methodToAdd = new MethodDeclaration()
-                methodToAdd.setName(command.name)
+                methodToAdd.setName(command.name.toAST)
                 methodToAdd.setPublic(command.isPublic)
                 val (methodCtxt, returnExp) =
                   Command.runGenerator(
                     command.spec,
-                    MethodBodyCtxt(context.resolver, new VariableNameProvider(), context.extraImports, methodToAdd)
+                    MethodBodyCtxt(context.resolver, context.extraImports, methodToAdd)
                   )
                 val resultingMethod = methodCtxt.method.clone()
                 if (returnExp.isDefined) {
@@ -567,7 +505,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                 val (ctorCtxt, _) =
                   Command.runGenerator(
                     command.ctor,
-                    CtorCtxt(context.resolver, new VariableNameProvider(), context.extraImports, ctorToAdd)
+                    CtorCtxt(context.resolver, context.extraImports, ctorToAdd)
                   )
                 val resultCls = context.cls.clone()
                 resultCls.addMember(ctorCtxt.ctor.clone())
@@ -582,7 +520,11 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                 context: ClassContext,
                 command: AddImport[Import]
               ): (ClassContext, Unit) = {
-                (context.copy(extraImports = (context.extraImports :+ command.imp).distinct.map(_.clone())), ())
+                val newImports =
+                  if (context.extraImports.contains(command.imp)) {
+                    context.extraImports
+                  } else context.extraImports :+ command.imp.clone()
+                (context.copy(extraImports = newImports), ())
               }
             }
 
@@ -595,7 +537,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                 Try { (context, context.resolver.importResolution(command.forElem)) } getOrElse {
                   val newImport =
                     new ImportDeclaration(
-                      new Name(config.targetPackage.getName.clone(), command.forElem.toString()),
+                      new com.github.javaparser.ast.expr.Name(config.targetPackage.getName.clone(), command.forElem.toString()),
                       false,
                       false)
                   if (context.extraImports.contains(newImport)) {
@@ -652,13 +594,25 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                 (context, new com.github.javaparser.ast.expr.ThisExpr())
               }
             }
-          implicit val canFindClassInClass: Understands[ClassContext, FindClass[Type]] =
-            new Understands[ClassContext, FindClass[Type]] {
+          implicit val canFindClassInClass: Understands[ClassContext, FindClass[Name, Type]] =
+            new Understands[ClassContext, FindClass[Name, Type]] {
               def perform(
                 context: ClassContext,
-                command: FindClass[Type]
+                command: FindClass[Name, Type]
               ): (ClassContext, Type) = {
-                (context, Java(command.name).tpe())
+                val result = new ClassOrInterfaceType()
+                result.setName(command.name.toAST)
+                (context, result)
+              }
+            }
+          implicit val canGetFreshNameInClass: Understands[ClassContext, FreshName[Name]] =
+            new Understands[ClassContext, FreshName[Name]] {
+              def perform(context: ClassContext, command: FreshName[Name]): (ClassContext, Name) = {
+                val freshName = JavaNameProvider.mangle("$$$$generatedName_${UUID.randomUUID()}$$$$")
+                val updatedResolver = context.resolver.copy(
+                  generatedVariables = context.resolver.generatedVariables + (freshName.toAST.getIdentifier -> command.basedOn)
+                )
+                (context.copy(resolver = updatedResolver), freshName)
               }
             }
         }
@@ -685,11 +639,11 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                 (context.copy(ctor = newCtor), ())
               }
             }
-          implicit val canInitializeFieldInConstructor: Understands[ConstructorContext, InitializeField[Expression]] =
-            new Understands[ConstructorContext, InitializeField[Expression]] {
+          implicit val canInitializeFieldInConstructor: Understands[ConstructorContext, InitializeField[Name, Expression]] =
+            new Understands[ConstructorContext, InitializeField[Name, Expression]] {
               def perform(
                 context: ConstructorContext,
-                command: InitializeField[Expression]
+                command: InitializeField[Name, Expression]
               ): (ConstructorContext, Unit) = {
                 Command.runGenerator(
                   addBlockDefinitions(Java(s"this.${command.name} = ${command.value}").statements()),
@@ -725,7 +679,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                 Try { (context, context.resolver.importResolution(command.forElem)) } getOrElse {
                   val newImport =
                     new ImportDeclaration(
-                      new Name(config.targetPackage.getName.clone(), command.forElem.toString()),
+                      new com.github.javaparser.ast.expr.Name(config.targetPackage.getName.clone(), command.forElem.toString()),
                       false,
                       false)
                   if (context.extraImports.contains(newImport)) {
@@ -756,13 +710,13 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
               }
             }
 
-          implicit val canGetMemberInConstructor: Understands[ConstructorContext, GetMember[Expression]] =
-            new Understands[ConstructorContext, GetMember[Expression]] {
+          implicit val canGetMemberInConstructor: Understands[ConstructorContext, GetMember[Expression, Name]] =
+            new Understands[ConstructorContext, GetMember[Expression, Name]] {
               def perform(
                 context: ConstructorContext,
-                command: GetMember[Expression]
+                command: GetMember[Expression, Name]
               ): (ConstructorContext, Expression) = {
-                (context, Java(s"""this.${command.member}""").expression())
+                (context, Java(s"""${command.instance}.${command.member}""").expression())
               }
             }
           implicit val canSelfReferenceInConstructor: Understands[ConstructorContext, SelfReference[Expression]] =
@@ -775,14 +729,14 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
               }
             }
 
-          implicit val canGetArgumentsInConstructor: Understands[ConstructorContext, GetArguments[Type, Expression]] =
-            new Understands[ConstructorContext, GetArguments[Type, Expression]] {
+          implicit val canGetArgumentsInConstructor: Understands[ConstructorContext, GetArguments[Type, Name, Expression]] =
+            new Understands[ConstructorContext, GetArguments[Type, Name, Expression]] {
               def perform(
                 context: ConstructorContext,
-                command: GetArguments[Type, Expression]
-              ): (ConstructorContext, Seq[(String, Type, Expression)]) = {
-                val args = context.ctor.getParameters().asScala.map { param =>
-                  (param.getName.toString(), param.getType().clone(), new NameExpr(param.getName.clone()))
+                command: GetArguments[Type, Name, Expression]
+              ): (ConstructorContext, Seq[(Name, Type, Expression)]) = {
+                val args = context.ctor.getParameters.asScala.map { param =>
+                  (MangledName.fromAST(param.getName), param.getType.clone(), new NameExpr(param.getName.clone()))
                 }
                 (context, args)
               }
@@ -805,23 +759,18 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                 Command.runGenerator(context.resolver.reificationInConstructor(InstanceRep(command.tpe)(command.value)), context)
               }
             }
-          implicit val canSetParametersInConstructor: Understands[ConstructorContext, SetParameters[Type]] =
-            new Understands[ConstructorContext, SetParameters[Type]] {
+          implicit val canSetParametersInConstructor: Understands[ConstructorContext, SetParameters[Name, Type]] =
+            new Understands[ConstructorContext, SetParameters[Name, Type]] {
               def perform(
                 context: ConstructorContext,
-                command: SetParameters[Type]
+                command: SetParameters[Name, Type]
               ): (ConstructorContext, Unit) = {
                 val newCtor = context.ctor.clone()
-                val clearedNames = newCtor.getParameters.asScala.foldLeft(context.freshNames) { case (names, param) =>
-                    names.freeupName(param.getNameAsString)
-                }
                 newCtor.getParameters.clear()
-                val freshNames = command.params.foldLeft(clearedNames) { case (names, (name, tpe)) =>
-                  val (paramName, nextNames) = names.useName(name)
-                  newCtor.addParameter(tpe, paramName)
-                  nextNames
+                command.params.foreach { case (name, tpe) =>
+                  newCtor.addParameter(tpe, name.toAST.toString)
                 }
-                (context.copy(ctor = newCtor, freshNames = freshNames), ()) // second thing to be returned isn't optional, so make it () is like Unit
+                (context.copy(ctor = newCtor), ()) // second thing to be returned isn't optional, so make it () is like Unit
               }
             }
 
@@ -834,13 +783,25 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                 (context, Java(command.tpe).expression())
               }
             }
-          implicit val canFindClassInConstructor: Understands[ConstructorContext, FindClass[Type]] =
-            new Understands[ConstructorContext, FindClass[Type]] {
+          implicit val canFindClassInConstructor: Understands[ConstructorContext, FindClass[Name, Type]] =
+            new Understands[ConstructorContext, FindClass[Name, Type]] {
               def perform(
                 context: ConstructorContext,
-                command: FindClass[Type]
+                command: FindClass[Name, Type]
               ): (ConstructorContext, Type) = {
-                (context, Java(command.name).tpe())
+                val result = new ClassOrInterfaceType()
+                result.setName(command.name.toAST)
+                (context, result)
+              }
+            }
+          implicit val canGetFreshNameInConstructor: Understands[ConstructorContext, FreshName[Name]] =
+            new Understands[ConstructorContext, FreshName[Name]] {
+              def perform(context: ConstructorContext, command: FreshName[MangledName]): (ConstructorContext, MangledName) = {
+                val freshName = JavaNameProvider.mangle("$$$$generatedName_${UUID.randomUUID()}$$$$")
+                val updatedResolver = context.resolver.copy(
+                  generatedVariables = context.resolver.generatedVariables + (freshName.toAST.getIdentifier -> command.basedOn)
+                )
+                (context.copy(resolver = updatedResolver), freshName)
               }
             }
         }
@@ -857,13 +818,13 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                 (context, Java(s"""new ${tpe}(${args.mkString(", ")})""").expression())
               }
             }
-          val canGetMemberInMethod: Understands[MethodBodyContext, GetMember[Expression]] =
-            new Understands[MethodBodyContext, GetMember[Expression]] {
+          val canGetMemberInMethod: Understands[MethodBodyContext, GetMember[Expression, Name]] =
+            new Understands[MethodBodyContext, GetMember[Expression, Name]] {
               def perform(
                 context: MethodBodyContext,
-                command: GetMember[Expression]
+                command: GetMember[Expression, Name]
               ): (MethodBodyContext, Expression) = {
-                (context, Java(s"""this.${command.member}""").expression())
+                (context, Java(s"""${command.instance}.${command.member}""").expression())
               }
             }
           val canSetAbstractInMethod: Understands[MethodBodyContext, SetAbstract] =
@@ -896,13 +857,15 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                 (context, Java(command.tpe).expression())
               }
             }
-          val canFindClassInMethod: Understands[MethodBodyContext, FindClass[Type]] =
-            new Understands[MethodBodyContext, FindClass[Type]] {
+          val canFindClassInMethod: Understands[MethodBodyContext, FindClass[Name, Type]] =
+            new Understands[MethodBodyContext, FindClass[Name, Type]] {
               def perform(
                 context: MethodBodyContext,
-                command: FindClass[Type]
+                command: FindClass[Name, Type]
               ): (MethodBodyContext, Type) = {
-                (context, Java(command.name).tpe())
+                val result = new ClassOrInterfaceType()
+                result.setName(command.name.toAST)
+                (context, result)
               }
             }
         }
@@ -946,18 +909,15 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
     def getBlock(ctxt: Ctxt): BlockStmt
     def copyWithBlock(ctxt: Ctxt, blockStmt: BlockStmt): Ctxt
     def nextBlockContext(ctxt: Ctxt): Ctxt = copyWithBlock(ctxt, new BlockStmt())
-    def getVariableNameProvider(ctxt: Ctxt): VariableNameProvider
-    def copyWithVariableNameProvider(ctxt: Ctxt, freshNames: VariableNameProvider): Ctxt
   }
 
   protected class ContextIndependentImperativeCapabilities[Ctxt](manip: BlockContextManipulator[Ctxt]) extends Imperative[Ctxt] {
     val base: paradigm.type = paradigm
     object imperativeCapabilities extends ImperativeCapabilities {
-      implicit val canDeclareFreshVariable: Understands[Ctxt, DeclareVariable[Type, Option[Expression], Expression]] =
-        new Understands[Ctxt, DeclareVariable[Type, Option[Expression], Expression]] {
-          def perform(context: Ctxt, command: DeclareVariable[Type, Option[Expression], Expression]): (Ctxt, Expression) = {
-            val (vname, nextFresh) = manip.getVariableNameProvider(context).useName(command.name)
-            val decl = new VariableDeclarationExpr(command.tpe, vname)
+      implicit val canDeclareVariable: Understands[Ctxt, DeclareVariable[Name, Type, Option[Expression], Expression]] =
+        new Understands[Ctxt, DeclareVariable[Name, Type, Option[Expression], Expression]] {
+          def perform(context: Ctxt, command: DeclareVariable[Name, Type, Option[Expression], Expression]): (Ctxt, Expression) = {
+            val decl = new VariableDeclarationExpr(command.tpe, command.name.toAST.toString)
             val withAssignment =
               if (command.initialization.isDefined) {
                 new AssignExpr(decl, command.initialization.get.clone(), Operator.ASSIGN)
@@ -966,7 +926,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
               }
             val nextBlock = manip.getBlock(context).clone()
             nextBlock.addStatement(withAssignment)
-            (manip.copyWithBlock(manip.copyWithVariableNameProvider(context, nextFresh), nextBlock), new NameExpr(vname))
+            (manip.copyWithBlock(context, nextBlock), new NameExpr(command.name.toAST))
           }
         }
 
@@ -990,20 +950,19 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
             context: Ctxt,
             command: IfThenElse[Expression, Generator[Ctxt, Unit], Option[Generator[Ctxt, Unit]], Statement]
           ): (Ctxt, Statement) = {
-            val namesBeforeIf = manip.getVariableNameProvider(context)
             val (startCtxt, _) = Command.runGenerator(command.ifBranch, manip.nextBlockContext(context))
             val iteStmt: IfStmt = new IfStmt()
             iteStmt.setCondition(command.condition)
             iteStmt.setThenStmt(manip.getBlock(startCtxt))
             val (beforeElseCtxt, beforeElseIteStmt) =
-              command.elseIfBranches.foldLeft((manip.copyWithVariableNameProvider(manip.nextBlockContext(startCtxt), namesBeforeIf), iteStmt)) {
+              command.elseIfBranches.foldLeft((manip.nextBlockContext(startCtxt), iteStmt)) {
                 case ((ctxt, iteStmt), (cond, gen)) =>
                   val (nextCtxt, _) = Command.runGenerator(gen, manip.nextBlockContext(ctxt))
                   val nextIte = new IfStmt()
                   nextIte.setCondition(cond)
                   nextIte.setThenStmt(manip.getBlock(nextCtxt))
                   iteStmt.setElseStmt(nextIte)
-                  (manip.copyWithVariableNameProvider(nextCtxt, namesBeforeIf), nextIte)
+                  (nextCtxt, nextIte)
               }
             val afterElseCtxt =
               command.elseBranch
@@ -1012,18 +971,17 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                   beforeElseIteStmt.setElseStmt(manip.getBlock(resCtxt))
                   resCtxt
                 }.getOrElse(beforeElseCtxt)
-            (manip.copyWithVariableNameProvider(manip.copyWithBlock(afterElseCtxt, manip.getBlock(context)), namesBeforeIf), iteStmt.clone())
+            (manip.copyWithBlock(afterElseCtxt, manip.getBlock(context)), iteStmt.clone())
           }
         }
       implicit val canWhile: Understands[Ctxt, While[Ctxt, Expression, Statement]] =
         new Understands[Ctxt, While[Ctxt, Expression, Statement]] {
           def perform(context: Ctxt, command: While[Ctxt, Expression, Statement]): (Ctxt, Statement) = {
-            val namesBeforeIf = manip.getVariableNameProvider(context)
             val (whileCtxt, _) = Command.runGenerator(command.block, manip.nextBlockContext(context))
             val whileStmt = new WhileStmt()
             whileStmt.setCondition(command.condition)
             whileStmt.setBody(manip.getBlock(whileCtxt))
-            (manip.copyWithVariableNameProvider(manip.copyWithBlock(whileCtxt, manip.getBlock(context)), namesBeforeIf), whileStmt)
+            (manip.copyWithBlock(whileCtxt, manip.getBlock(context)), whileStmt)
           }
         }
     }
@@ -1037,23 +995,17 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
         newMethod.setBody(blockStmt)
         ctxt.copy(method = newMethod)
       }
-      def getVariableNameProvider(ctxt: MethodBodyCtxt): VariableNameProvider = ctxt.freshNames
-      def copyWithVariableNameProvider(ctxt: MethodBodyCtxt, freshNames: VariableNameProvider): MethodBodyCtxt =
-        ctxt.copy(freshNames = freshNames)
     }
   )
 
   val imperativeInConstructor = new ContextIndependentImperativeCapabilities[CtorCtxt](
     new BlockContextManipulator[CtorCtxt] {
-      def getBlock(ctxt: CtorCtxt): BlockStmt = ctxt.ctor.getBody()
+      def getBlock(ctxt: CtorCtxt): BlockStmt = ctxt.ctor.getBody
       def copyWithBlock(ctxt: CtorCtxt, blockStmt: BlockStmt): CtorCtxt = {
         val newCtor = ctxt.ctor.clone()
         newCtor.setBody(blockStmt.clone())
         ctxt.copy(ctor = newCtor)
       }
-      def getVariableNameProvider(ctxt: CtorCtxt): VariableNameProvider = ctxt.freshNames
-      def copyWithVariableNameProvider(ctxt: CtorCtxt, freshNames: VariableNameProvider): CtorCtxt =
-        ctxt.copy(freshNames = freshNames)
     }
   )
 
@@ -1063,10 +1015,39 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
     import base._
     val methodBodyCapabilities: MethodBodyCapabilities =
       new MethodBodyCapabilities {
-        implicit val canAddTypeParameterInMethod: Understands[MethodBodyContext, AddTypeParameter[TypeParameterContext]] = ???
-        implicit val canGetTypeArgumentsInMethod: Understands[MethodBodyContext, GetTypeArguments[Type]] = ???
-        implicit val canApplyTypeInMethod: Understands[MethodBodyContext, Apply[Type, Type, Type]] = ???
-        implicit val canApplyMethodToTypeInMethod: Understands[MethodBodyContext, Apply[Expression, Type, Expression]] = ???
+        implicit val canAddTypeParameterInMethod: Understands[MethodBodyContext, AddTypeParameter[Name, TypeParameterContext]] =
+          new Understands[MethodBodyContext, AddTypeParameter[Name, TypeParameterContext]] {
+            def perform(context: MethodBodyContext, command: AddTypeParameter[MangledName, TypeParamCtxt]): (MethodBodyContext, Unit) = {
+              val (resultCtxt, _) = Command.runGenerator(command.spec, TypeParamCtxt(new TypeParameter()))
+              val tpeParam = resultCtxt.param.clone()
+              tpeParam.setName(command.name.toAST)
+              val newMethod = context.method.clone()
+              newMethod.addTypeParameter(tpeParam)
+              (context.copy(method = newMethod), ())
+            }
+          }
+        implicit val canGetTypeArgumentsInMethod: Understands[MethodBodyContext, GetTypeArguments[Type]] =
+          new Understands[MethodBodyContext, GetTypeArguments[Type]] {
+            def perform(context: MethodBodyContext, command: GetTypeArguments[Type]): (MethodBodyContext, Seq[Type]) = {
+              (context, context.method.getTypeParameters.asScala)
+            }
+          }
+        implicit val canApplyTypeInMethod: Understands[MethodBodyContext, Apply[Type, Type, Type]] =
+          new Understands[MethodBodyContext, Apply[Type, Type, Type]] {
+            def perform(context: MethodBodyContext, command: Apply[Type, Type, Type]): (MethodBodyContext, Type) = {
+              val resultTpe = command.functional.clone().asClassOrInterfaceType()
+              resultTpe.setTypeArguments(command.arguments.map(_.clone().asClassOrInterfaceType()): _*)
+              (context, resultTpe)
+            }
+          }
+        implicit val canApplyMethodToTypeInMethod: Understands[MethodBodyContext, Apply[Expression, Type, Expression]] =
+          new Understands[MethodBodyContext, Apply[Expression, Type, Expression]] {
+            def perform(context: MethodBodyContext, command: Apply[Expression, Type, Expression]): (MethodBodyContext, Expression) = {
+              val resultExp = command.functional.clone().asMethodReferenceExpr()
+              resultExp.setTypeArguments(command.arguments.map(_.clone().asClassOrInterfaceType()):_*)
+              (context, resultExp)
+            }
+          }
       }
   }
 
@@ -1078,17 +1059,29 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
     import ppolyParadigm._    
     val classCapabilities: ClassCapabilities =
       new ClassCapabilities {
-        implicit val canAddTypeParameterInClass: Understands[ClassContext, AddTypeParameter[TypeParameterContext]] =
-          new Understands[ClassContext, AddTypeParameter[TypeParameterContext]] {
-            def perform(context: ClassContext, command: AddTypeParameter[TypeParameterContext]): (ClassContext, Unit) = {
-
+        implicit val canAddTypeParameterInClass: Understands[ClassContext, AddTypeParameter[Name, TypeParameterContext]] =
+          new Understands[ClassContext, AddTypeParameter[Name, TypeParameterContext]] {
+            def perform(context: ClassContext, command: AddTypeParameter[Name, TypeParameterContext]): (ClassContext, Unit) = {
+              val (resultCtxt, _) = Command.runGenerator(command.spec, TypeParamCtxt(new TypeParameter()))
+              val tpeParam = resultCtxt.param.clone()
+              tpeParam.setName(command.name.toAST)
+              val newCls = context.cls.clone()
+              newCls.addTypeParameter(tpeParam)
+              (context.copy(cls = newCls), ())
             }
           }
-        implicit val canGetTypeArgumentsInClass: Understands[ClassContext, GetTypeArguments[Type]] = ???
+        implicit val canGetTypeArgumentsInClass: Understands[ClassContext, GetTypeArguments[Type]] =
+          new Understands[ClassContext, GetTypeArguments[Type]] {
+            def perform(context: ClassContext, command: GetTypeArguments[Type]): (ClassContext, Seq[Type]) = {
+              (context, context.cls.getTypeParameters.asScala)
+            }
+          }
         implicit val canApplyTypeInClass: Understands[ClassContext, Apply[Type, Type, Type]] =
           new Understands[ClassContext, Apply[Type, Type, Type]] {
             def perform(context: ClassContext, command: Apply[Type, Type, Type]): (ClassContext, Type) = {
-              (context, Java(s"${command.functional}<${command.arguments.mkString(",")}>").tpe())
+              val resultTpe = command.functional.clone().asClassOrInterfaceType()
+              resultTpe.setTypeArguments(command.arguments.map(_.clone().asClassOrInterfaceType()): _*)
+              (context, resultTpe)
             }
           }
       }
@@ -1107,31 +1100,31 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
         implicit val canApplyTypeTypeParameter: Understands[TypeParameterContext, Apply[Type, Type, Type]] =
           new Understands[TypeParameterContext, Apply[Type, Type, Type]] {
             def perform(context: TypeParameterContext, command: Apply[Type, Type, Type]): (TypeParameterContext, Type) = {
-              (context, Java(s"${command.functional}<${command.arguments.mkString(",")}>").tpe())
+              val resultTpe = command.functional.clone().asClassOrInterfaceType()
+              resultTpe.setTypeArguments(command.arguments.map(_.clone().asClassOrInterfaceType()): _*)
+              (context, resultTpe)
             }
           }
       }
     val constructorCapabilities: ConstructorCapabilities =
       new ConstructorCapabilities {
-        implicit val canApplyTypeInConstructor: Understands[ConstructorContext, Apply[Type, Type, Type]] = ???
-        implicit val canApplyMethodToTypeInConstructor: Understands[ConstructorContext, Apply[Expression, Type, Expression]] = ???
+        implicit val canApplyTypeInConstructor: Understands[ConstructorContext, Apply[Type, Type, Type]] =
+          new Understands[ConstructorContext, Apply[Type, Type, Type]] {
+            def perform(context: ConstructorContext, command: Apply[Type, Type, Type]): (ConstructorContext, Type) = {
+              val resultTpe = command.functional.clone().asClassOrInterfaceType()
+              resultTpe.setTypeArguments(command.arguments.map(_.clone().asClassOrInterfaceType()): _*)
+              (context, resultTpe)
+            }
+          }
+        implicit val canApplyMethodToTypeInConstructor: Understands[ConstructorContext, Apply[Expression, Type, Expression]] =
+          new Understands[ConstructorContext, Apply[Expression, Type, Expression]] {
+            def perform(context: ConstructorContext, command: Apply[Expression, Type, Expression]): (ConstructorContext, Expression) = {
+              val resultExp = command.functional.clone().asMethodReferenceExpr()
+              resultExp.setTypeArguments(command.arguments.map(_.clone().asClassOrInterfaceType()):_*)
+              (context, resultExp)
+            }
+          }
       }
-  }
-*/
-
-  object javaSpecificCompilationUnitCapabilities {
-    implicit val canMarkUsedInCompulationUnit: Understands[CompilationUnitCtxt, MarkUsed] =
-      new Understands[CompilationUnitCtxt, MarkUsed] {
-        def perform(
-          context: CompilationUnitCtxt,
-          command: MarkUsed
-        ): (CompilationUnitCtxt, Unit) = {
-          val (next, name) = command.name.run(context.freshNames).value
-          (context.copy(freshNames = next.markUsed(name)), ())
-        }
-      }
-    def markUsed(name: Name): Generator[CompilationUnitCtxt, Unit] =
-      AnyParadigm.capabilitiy(MarkUsed(name))
   }
 
 }

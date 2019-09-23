@@ -15,7 +15,7 @@ import org.combinators.ep.approach
  * Have to decide whether to use side effects or Generics. This current implementation uses the Visitor<R> generics
  * approach, which can be adopted by different object oriented languages.
  */
-sealed trait Visitor extends ApproachImplementationProvider {
+sealed abstract class Visitor extends ApproachImplementationProvider {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
@@ -25,9 +25,9 @@ sealed trait Visitor extends ApproachImplementationProvider {
   import syntax._
 
   // necessary constants used to ensure no typos
-  val accept: Name = names.mangle("accept")
-  val visit: Name = names.mangle("visit")
-  val visitorClass: Name = names.mangle("Visitor")
+  lazy val accept: Name = names.mangle("accept")
+  lazy val visit: Name = names.mangle("visit")
+  lazy val visitorClass: Name = names.mangle("Visitor")
   val visitorParameter: String = "v"
   val expParameter: String = "exp"
   val visitTypeParameter: String = "R"

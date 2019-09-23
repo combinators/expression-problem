@@ -44,7 +44,7 @@ object M2 {
             val lAtt = other.attributes.head
             val rAtt = other.attributes.tail.head
             val operator =
-              onRequest.request.op match {
+              other match {
                 case math.M0.Add => "+"
                 case math.M1.Sub => "-"
                 case _ => ???

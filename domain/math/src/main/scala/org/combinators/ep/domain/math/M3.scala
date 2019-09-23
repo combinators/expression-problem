@@ -11,9 +11,9 @@ object M3 extends Evolution {
 
   // m3:model evolution.
   // -------------------
-  lazy val Mult = DataTypeCase.binary("Mult")
-  lazy val Neg = DataTypeCase.unary("Neg")
-  lazy val Divd = DataTypeCase.binary("Divd")
+  lazy val Mult = DataTypeCase.binary("Mult")(MathDomain.getModel)
+  lazy val Neg = DataTypeCase.unary("Neg")(MathDomain.getModel)
+  lazy val Divd = DataTypeCase.binary("Divd")(MathDomain.getModel)
 
   def NegInst(inner:DataTypeInstance): DataTypeInstance =
     DataTypeInstance(Neg, Seq(InstanceRep(inner)))

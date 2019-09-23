@@ -14,6 +14,7 @@ object M3 {
       (paradigm: P)
       (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
        ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
+
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val arithProvider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {

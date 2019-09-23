@@ -11,7 +11,7 @@ object M0 extends Evolution {
   lazy val litValue = Attribute ("value", TypeRep.Double)
 
   lazy val Lit = DataTypeCase("Lit", Seq(litValue))
-  lazy val Add = DataTypeCase.binary("Add")
+  lazy val Add = DataTypeCase.binary("Add")(MathDomain.getModel)
 
   lazy val Eval = Operation("eval", TypeRep.Double)
 

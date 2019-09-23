@@ -55,12 +55,11 @@ object EvolutionImplementationProvider {
         def logic
             (forApproach: AIP)
             (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]) =
-          Try {
+          try {
             first.logic(forApproach)(onRequest)
-          }.getOrElse {
-            second.logic(forApproach)(onRequest)
+          } catch {
+            case _: Throwable => second.logic(forApproach)(onRequest)
           }
       }
     }
-
 }

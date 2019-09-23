@@ -370,7 +370,9 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
             ProjectCtxt(
               ContextSpecificResolver(
                 methodTypeResolution = _ => ???,
-                constructorTypeResolution = _ => ???,
+                constructorTypeResolution = tpe => {
+                  Command.lift(Java("Double").tpe())   // necessary for visitor HACK
+                },
                 classTypeResolution = _ => ???,
                 reificationInConstructor = _ => ???,
                 reificationInMethod = _ => ???,
@@ -647,7 +649,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                 command: InitializeField[Name, Expression]
               ): (ConstructorContext, Unit) = {
                 Command.runGenerator(
-                  addBlockDefinitions(Java(s"this.${command.name} = ${command.value}").statements()),
+                  addBlockDefinitions(Java(s"this.${command.name} = ${command.value};").statements()),
                   context)
               }
             }
@@ -1037,7 +1039,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
           new Understands[MethodBodyContext, Apply[Type, Type, Type]] {
             def perform(context: MethodBodyContext, command: Apply[Type, Type, Type]): (MethodBodyContext, Type) = {
               val resultTpe = command.functional.clone().asClassOrInterfaceType()
-              resultTpe.setTypeArguments(command.arguments.map(_.clone().asClassOrInterfaceType()): _*)
+              resultTpe.setTypeArguments(command.arguments.map(_.clone()): _*)  // had removed .asClassOrInterfaceType()
               (context, resultTpe)
             }
           }
@@ -1097,7 +1099,11 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
             }
           }
         implicit val canAddLowerBoundInTypeParameter: Understands[TypeParameterContext, AddLowerBound[Type]] =
-          throw new UnsupportedOperationException("Sorry, Java does not support lower bounds on type parameters.")
+          new Understands[TypeParameterContext, AddLowerBound[Type]] {
+            def perform(context: TypeParameterContext, command: AddLowerBound[Type]): (TypeParameterContext, Unit) = {
+              throw new UnsupportedOperationException("Sorry, Java does not support lower bounds on type parameters.")
+            }
+          }
         implicit val canApplyTypeTypeParameter: Understands[TypeParameterContext, Apply[Type, Type, Type]] =
           new Understands[TypeParameterContext, Apply[Type, Type, Type]] {
             def perform(context: TypeParameterContext, command: Apply[Type, Type, Type]): (TypeParameterContext, Type) = {
@@ -1272,13 +1278,16 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
           context: ProjectCtxt,
           command: Enable.type
         ): (ProjectCtxt, Unit) = {
-          (context.copy(resolver = resolverTransformation(context.resolver)), ())
+          (context.copy(resolver = resolverTransformation(context.resolver.copy(importResolution = {
+            case tpe if tpe == Java("Double").tpe => None;  // TODO: clean up with primitives
+            case other => context.resolver.importResolution(other)
+          }))), ())
         }
       })
   }
 
   private def addDoubleType[Ctxt](toResolution: TypeRep => Generator[Ctxt, Type]): TypeRep => Generator[Ctxt, Type] =
-    addResolutionType[Ctxt](TypeRep.Double, Java("double").tpe, toResolution)
+    addResolutionType[Ctxt](TypeRep.Double, Java("Double").tpe, toResolution)
 
   private def addDoubleReification[Ctxt](reify: InstanceRep => Generator[Ctxt, Expression]):
   InstanceRep => Generator[Ctxt, Expression] = {
@@ -1372,7 +1381,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
 
   private def addStringReification[Ctxt](reify: InstanceRep => Generator[Ctxt, Expression]):
     InstanceRep => Generator[Ctxt, Expression] = {
-    case rep if rep.tpe == TypeRep.Double =>
+    case rep if rep.tpe == TypeRep.String =>
       Command.lift(new StringLiteralExpr(rep.inst.asInstanceOf[String]))
     case other => reify(other)
   }

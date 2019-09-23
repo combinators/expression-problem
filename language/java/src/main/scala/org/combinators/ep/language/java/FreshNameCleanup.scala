@@ -38,12 +38,14 @@ class FreshNameCleanup(nameInfo: Map[String, MangledName]) {
       }
     }
 
-    private def visitInNewContext[N](n: N)(doVisit: (N, Phase) => Visitable): Visitable = {
-      freshNames = freshNames.pushContext
-      doVisit(n, COLLECT_NAMES)
-      val updated = doVisit(n, REPLACE_GENERATED)
-      freshNames = freshNames.popContext
-      updated
+    private def visitInNewScope[N <: Visitable](n: N, phase: Phase)(doVisit: (N, Phase) => Visitable): Visitable = {
+      if (phase == REPLACE_GENERATED) {
+        freshNames = freshNames.pushContext
+        doVisit(n, COLLECT_NAMES)
+        val updated = doVisit(n, REPLACE_GENERATED)
+        freshNames = freshNames.popContext
+        updated
+      } else n
     }
 
     override def visit(n: SimpleName, arg: Phase): Visitable = {
@@ -67,49 +69,53 @@ class FreshNameCleanup(nameInfo: Map[String, MangledName]) {
     }
 
     override def visit(n: BlockStmt, arg: Phase): Visitable = {
-      visitInNewContext(n)(super.visit)
+      visitInNewScope(n, arg)(super.visit)
     }
 
     override def visit(n: ClassOrInterfaceDeclaration, arg: Phase): Visitable = {
-      freshNames = freshNames.markUsed(MangledName.fromAST(n.getName))
-      visitInNewContext(n)(super.visit)
+      if (arg == COLLECT_NAMES) {
+        freshNames = freshNames.markUsed(MangledName.fromAST(n.getName))
+      }
+      visitInNewScope(n, arg)(super.visit)
     }
 
     override def visit(n: MethodDeclaration, arg: Phase): Visitable = {
-      freshNames = freshNames.markUsed(MangledName.fromAST(n.getName))
-      visitInNewContext(n)(super.visit)
+      if (arg == COLLECT_NAMES) {
+        freshNames = freshNames.markUsed(MangledName.fromAST(n.getName))
+      }
+      visitInNewScope(n, arg)(super.visit)
     }
 
     override def visit(n: ForStmt, arg: Phase): Visitable = {
-      visitInNewContext(n)(super.visit)
+      visitInNewScope(n, arg)(super.visit)
     }
 
     override def visit(n: ForEachStmt, arg: Phase): Visitable = {
-      visitInNewContext(n)(super.visit)
+      visitInNewScope(n, arg)(super.visit)
     }
 
     override def visit(n: LambdaExpr, arg: Phase): Visitable = {
-      visitInNewContext(n)(super.visit)
+      visitInNewScope(n, arg)(super.visit)
     }
 
     override def visit(n: ConstructorDeclaration, arg: Phase): Visitable = {
-      visitInNewContext(n)(super.visit)
+      visitInNewScope(n, arg)(super.visit)
     }
 
     override def visit(n: CatchClause, arg: Phase): Visitable = {
-      visitInNewContext(n)(super.visit)
+      visitInNewScope(n, arg)(super.visit)
     }
 
     override def visit(n: SwitchStmt, arg: Phase): Visitable = {
-      visitInNewContext(n)(super.visit)
+      visitInNewScope(n, arg)(super.visit)
     }
 
     override def visit(n: SwitchEntry, arg: Phase): Visitable = {
-      visitInNewContext(n)(super.visit)
+      visitInNewScope(n, arg)(super.visit)
     }
 
     override def visit(n: CompilationUnit, arg: Phase): Visitable = {
-      visitInNewContext(n)(super.visit)
+      visitInNewScope(n, arg)(super.visit)
     }
   }
 

@@ -2,7 +2,7 @@ import play.sbt.PlayLayoutPlugin
 import play.twirl.sbt.SbtTwirl
 
 
-/** Settings shared globally. Updating to next version of SBT. **/
+/** Settings shared globally. **/
 lazy val commonSettings = Seq(
   version := "1.0.0-SNAPSHOT",
   organization := "org.combinators",
@@ -91,3 +91,33 @@ lazy val languageCPP = standardLanguageProject("cpp")
 lazy val languageHaskell = standardLanguageProject("haskell")
 lazy val languageScala = standardLanguageProject("scala")
 
+
+// TODO: This should be standalone at a later point.
+lazy val jgitserv =
+  Project(id = "jgitserv", base = file("jgitserv"))
+    .settings(
+      version := "1.0.0-SNAPSHOT",
+      organization := "org.combinators",
+      moduleName := "expression-problem-core",
+      
+      scalaVersion := "2.12.9",
+
+      resolvers ++= Seq(
+        Resolver.sonatypeRepo("releases"),
+        Resolver.typesafeRepo("releases")
+      ),
+
+      scalacOptions in (Compile) ++= Seq(
+        "-unchecked",
+        "-deprecation",
+        "-feature",
+        "-language:implicitConversions"
+      ),
+      libraryDependencies ++= Seq(
+        "com.github.finagle" %% "finchx-core" % "0.29.0",
+        "org.eclipse.jgit" % "org.eclipse.jgit" % "5.4.0.201906121030-r",
+        "commons-io" % "commons-io" % "2.6",
+        "org.combinators" %% "templating" % "1.0.0-RC1+4-ca285511"
+      )
+    )
+    

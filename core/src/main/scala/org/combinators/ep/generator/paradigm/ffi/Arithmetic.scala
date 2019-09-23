@@ -39,5 +39,5 @@ trait Arithmetic[Context, T] extends FFI {
 }
 
 object Arithmetic {
-  type WithBase[Ctxt, B <: AnyParadigm] = Arithmetic[Ctxt, B] { val base: B }
+  type WithBase[Ctxt, B <: AnyParadigm, T] = Arithmetic[Ctxt, T] { val base: B }
 }

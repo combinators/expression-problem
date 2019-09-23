@@ -11,7 +11,7 @@ import EvolutionImplementationProvider._
 object M1 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
       (paradigm: P)
-      (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type]):
+      (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double]):
     EvolutionImplementationProvider[AIP[paradigm.type]] = {
 
     val subProvider = new EvolutionImplementationProvider[AIP[paradigm.type]] {

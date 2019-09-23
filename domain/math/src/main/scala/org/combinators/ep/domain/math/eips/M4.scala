@@ -22,7 +22,7 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
     Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]]
 
   def apply
-    (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type],
+    (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
      ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
      ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
      ffiLists: Lists.WithBase[paradigm.MethodBodyContext, paradigm.type],
@@ -249,7 +249,7 @@ object M4 {
   def functional[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
     (paradigm: P)
     (functionalControl: Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
-     ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type],
+     ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
      ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
      ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
      ffiLists: Lists.WithBase[paradigm.MethodBodyContext, paradigm.type],
@@ -269,7 +269,7 @@ object M4 {
   def imperative[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
     (paradigm: P)
     (imperativeControl: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type],
-     ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type],
+     ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
      ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
      ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
      ffiLists: Lists.WithBase[paradigm.MethodBodyContext, paradigm.type],

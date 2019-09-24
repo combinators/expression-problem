@@ -283,16 +283,20 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
               command: ResolveImport[ImportDeclaration, Type]
             ): (MethodBodyCtxt, Option[ImportDeclaration]) = {
               Try { (context, context.resolver.importResolution(command.forElem)) } getOrElse {
-               val importName = command.forElem.asClassOrInterfaceType().getNameAsString
-                val newImport =
-                  new ImportDeclaration(
-                    new com.github.javaparser.ast.expr.Name(config.targetPackage.getName.clone(), importName),
-                    false,
-                    false)
-                if (context.extraImports.contains(newImport)) {
-                  (context, None)
+                if (command.forElem.isClassOrInterfaceType) {
+                  val importName = command.forElem.asClassOrInterfaceType().getNameAsString
+                  val newImport =
+                    new ImportDeclaration(
+                      new com.github.javaparser.ast.expr.Name(config.targetPackage.getName.clone(), importName),
+                      false,
+                      false)
+                  if (context.extraImports.contains(newImport)) {
+                    (context, None)
+                  } else {
+                    (context, Some(newImport))
+                  }
                 } else {
-                  (context, Some(newImport))
+                  None
                 }
               }
             }
@@ -445,7 +449,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                 command: AddParent[Type]
               ): (ClassContext, Unit) = {
                 val resultCls = context.cls.clone()
-                resultCls.addExtendedType(command.parentClass.asClassOrInterfaceType())
+                resultCls.addExtendedType(command.parentClass.toClassOrInterfaceType())
                 (context.copy(cls = resultCls), ())
               }
             }
@@ -1045,7 +1049,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                 if (arg.isPrimitiveType) arg.asPrimitiveType().toBoxedType
                 else arg.clone()
               }
-              resultTpe.setTypeArguments(boxedArguments: _*)  // had removed .asClassOrInterfaceType()
+              resultTpe.setTypeArguments(boxedArguments: _*)
               (context, resultTpe)
             }
           }
@@ -1107,22 +1111,26 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
         implicit val canAddUpperBoundInTypeParameter: Understands[TypeParameterContext, AddUpperBound[Type]] =
           new Understands[TypeParameterContext, AddUpperBound[Type]] {
             def perform(context: TypeParameterContext, command: AddUpperBound[Type]): (TypeParameterContext, Unit) = {
-              val newParam = context.param.clone()
-              newParam.getTypeBound.add(command.bound.asClassOrInterfaceType().clone())
-              (context.copy(param = newParam), ())
+              throw new UnsupportedOperationException("Sorry, Java does not support upper bounds on type parameters.")
             }
           }
         implicit val canAddLowerBoundInTypeParameter: Understands[TypeParameterContext, AddLowerBound[Type]] =
           new Understands[TypeParameterContext, AddLowerBound[Type]] {
             def perform(context: TypeParameterContext, command: AddLowerBound[Type]): (TypeParameterContext, Unit) = {
-              throw new UnsupportedOperationException("Sorry, Java does not support lower bounds on type parameters.")
+              val newParam = context.param.clone()
+              newParam.getTypeBound.add(command.bound.toClassOrInterfaceType().get().clone())
+              (context.copy(param = newParam), ())
             }
           }
         implicit val canApplyTypeTypeParameter: Understands[TypeParameterContext, Apply[Type, Type, Type]] =
           new Understands[TypeParameterContext, Apply[Type, Type, Type]] {
             def perform(context: TypeParameterContext, command: Apply[Type, Type, Type]): (TypeParameterContext, Type) = {
               val resultTpe = command.functional.clone().asClassOrInterfaceType()
-              resultTpe.setTypeArguments(command.arguments.map(_.clone().asClassOrInterfaceType()): _*)
+              val boxedArguments = command.arguments.map { arg =>
+                if (arg.isPrimitiveType) arg.asPrimitiveType().toBoxedType
+                else arg.clone()
+              }
+              resultTpe.setTypeArguments(boxedArguments: _*)
               (context, resultTpe)
             }
           }
@@ -1133,7 +1141,11 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
           new Understands[ConstructorContext, Apply[Type, Type, Type]] {
             def perform(context: ConstructorContext, command: Apply[Type, Type, Type]): (ConstructorContext, Type) = {
               val resultTpe = command.functional.clone().asClassOrInterfaceType()
-              resultTpe.setTypeArguments(command.arguments.map(_.clone().asClassOrInterfaceType()): _*)
+              val boxedArguments = command.arguments.map { arg =>
+                if (arg.isPrimitiveType) arg.asPrimitiveType().toBoxedType
+                else arg.clone()
+              }
+              resultTpe.setTypeArguments(boxedArguments: _*)
               (context, resultTpe)
             }
           }
@@ -1141,7 +1153,11 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
           new Understands[ConstructorContext, Apply[Expression, Type, Expression]] {
             def perform(context: ConstructorContext, command: Apply[Expression, Type, Expression]): (ConstructorContext, Expression) = {
               val resultExp = command.functional.clone().asMethodReferenceExpr()
-              resultExp.setTypeArguments(command.arguments.map(_.clone().asClassOrInterfaceType()):_*)
+              val boxedArguments = command.arguments.map { arg =>
+                if (arg.isPrimitiveType) arg.asPrimitiveType().toBoxedType
+                else arg.clone()
+              }
+              resultExp.setTypeArguments(boxedArguments: _*)
               (context, resultExp)
             }
           }

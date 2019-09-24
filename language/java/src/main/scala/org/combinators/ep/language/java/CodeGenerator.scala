@@ -25,6 +25,7 @@ import cats.{Apply => _, _}
 import cats.implicits._
 import cats.data.State
 import org.combinators.ep.generator.paradigm.ffi.{Add, And, Arithmetic, Assert, Assertions, Booleans, Div, Equality, False, GetStringLength, Mod, Mult, Not, Or, StringAppend, Strings, Sub, ToString, True}
+import org.combinators.ep.language.java.CodeGenerator.BoxLevel
 import org.combinators.ep.language.java.Syntax.MangledName
 
 
@@ -372,9 +373,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
             ProjectCtxt(
               ContextSpecificResolver(
                 methodTypeResolution = _ => ???,
-                constructorTypeResolution = tpe => {
-                  Command.lift(Java("Double").tpe())   // necessary for visitor HACK
-                },
+                constructorTypeResolution = _ => ???,
                 classTypeResolution = _ => ???,
                 reificationInConstructor = _ => ???,
                 reificationInMethod = _ => ???,
@@ -507,6 +506,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
               ): (ClassContext, Unit) = {
                 val ctorToAdd = new ConstructorDeclaration()
                 ctorToAdd.setPublic(true)
+                ctorToAdd.setName(context.cls.getName.clone)
                 val (ctorCtxt, _) =
                   Command.runGenerator(
                     command.ctor,
@@ -1041,7 +1041,11 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
           new Understands[MethodBodyContext, Apply[Type, Type, Type]] {
             def perform(context: MethodBodyContext, command: Apply[Type, Type, Type]): (MethodBodyContext, Type) = {
               val resultTpe = command.functional.clone().asClassOrInterfaceType()
-              resultTpe.setTypeArguments(command.arguments.map(_.clone()): _*)  // had removed .asClassOrInterfaceType()
+              val boxedArguments = command.arguments.map { arg =>
+                if (arg.isPrimitiveType) arg.asPrimitiveType().toBoxedType
+                else arg.clone()
+              }
+              resultTpe.setTypeArguments(boxedArguments: _*)  // had removed .asClassOrInterfaceType()
               (context, resultTpe)
             }
           }
@@ -1049,7 +1053,11 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
           new Understands[MethodBodyContext, Apply[Expression, Type, Expression]] {
             def perform(context: MethodBodyContext, command: Apply[Expression, Type, Expression]): (MethodBodyContext, Expression) = {
               val resultExp = command.functional.clone().asMethodReferenceExpr()
-              resultExp.setTypeArguments(command.arguments.map(_.clone().asClassOrInterfaceType()):_*)
+              val boxedArguments = command.arguments.map { arg =>
+                if (arg.isPrimitiveType) arg.asPrimitiveType().toBoxedType
+                else arg.clone()
+              }
+              resultExp.setTypeArguments(boxedArguments: _*)
               (context, resultExp)
             }
           }
@@ -1085,7 +1093,11 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
           new Understands[ClassContext, Apply[Type, Type, Type]] {
             def perform(context: ClassContext, command: Apply[Type, Type, Type]): (ClassContext, Type) = {
               val resultTpe = command.functional.clone().asClassOrInterfaceType()
-              resultTpe.setTypeArguments(command.arguments.map(_.clone().asClassOrInterfaceType()): _*)
+              val boxedArguments = command.arguments.map { arg =>
+                if (arg.isPrimitiveType) arg.asPrimitiveType().toBoxedType
+                else arg.clone()
+              }
+              resultTpe.setTypeArguments(boxedArguments: _*)
               (context, resultTpe)
             }
           }
@@ -1178,9 +1190,62 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
     type Result = Unit
   }
 
-  class ContextIndependentBooleans[Ctxt](
-    resolverTransformation: ContextSpecificResolver => ContextSpecificResolver
-  ) extends Booleans[Ctxt] {
+  private def updateResolver
+    (rep: TypeRep, translateTo: Type, extraImport: Option[ImportDeclaration] = None)
+    (reification: rep.HostType => Expression): ContextSpecificResolver => ContextSpecificResolver =
+    resolver => {
+    def possiblyBoxedTargetType(needsBox: Boolean): Type = {
+      if (needsBox && translateTo.isPrimitiveType) {
+        translateTo.asPrimitiveType().toBoxedType
+      } else translateTo
+    }
+
+    def addResolutionType[Ctxt](
+      targetType: Type,
+      toResolution: TypeRep => Generator[Ctxt, Type]
+    ): TypeRep => Generator[Ctxt, Type] = {
+      case r if r == rep => Command.lift(targetType)
+      case other => toResolution(other)
+    }
+
+    def addReification[Ctxt](
+      reify: InstanceRep => Generator[Ctxt, Expression]
+    ): InstanceRep => Generator[Ctxt, Expression] = {
+      case instRep if instRep.tpe == rep =>
+        Command.lift(reification(instRep.inst.asInstanceOf[rep.HostType]))
+      case other => reify(other)
+    }
+
+    def addExtraImport(
+      importResolution: Type => Option[Import]
+    ): Type => Option[Import] = {
+      case r if r == translateTo => extraImport
+      case other => importResolution(other)
+    }
+
+    resolver.copy(
+      methodTypeResolution =
+        addResolutionType(
+          possiblyBoxedTargetType(config.boxLevel.inMethods),
+          resolver.methodTypeResolution
+        ),
+      constructorTypeResolution =
+        addResolutionType(
+          possiblyBoxedTargetType(config.boxLevel.inConstructors),
+          resolver.constructorTypeResolution
+        ),
+      classTypeResolution =
+        addResolutionType(
+          possiblyBoxedTargetType(config.boxLevel.inClasses),
+          resolver.classTypeResolution
+        ),
+      reificationInConstructor = addReification(resolver.reificationInConstructor),
+      reificationInMethod = addReification(resolver.reificationInMethod),
+      importResolution = addExtraImport(resolver.importResolution)
+    )
+  }
+
+  class ContextIndependentBooleans[Ctxt] extends Booleans[Ctxt] {
     val base: paradigm.type = paradigm
     val booleanCapabilities: BooleanCapabilities =
     new BooleanCapabilities {
@@ -1215,50 +1280,20 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
           context: ProjectCtxt,
           command: Enable.type
         ): (ProjectCtxt, Unit) = {
-          (context.copy(resolver = resolverTransformation(context.resolver)), ())
+          val resolverUpdate =
+            updateResolver(TypeRep.Boolean, Java("boolean").tpe())(new BooleanLiteralExpr(_))
+          (context.copy(resolver = resolverUpdate(context.resolver)), ())
         }
       })
   }
 
-  private def addResolutionType[Ctxt](
-    rep: TypeRep,
-    by: Type,
-    toResolution: TypeRep => Generator[Ctxt, Type]
-  ): TypeRep => Generator[Ctxt, Type] = {
-    case r if r == rep => Command.lift(by)
-    case other => toResolution(other)
-  }
-
-  private def addBooleanType[Ctxt](toResolution: TypeRep => Generator[Ctxt, Type]): TypeRep => Generator[Ctxt, Type] =
-    addResolutionType[Ctxt](TypeRep.Boolean, Java("boolean").tpe, toResolution)
-
-  private def addBooleanReification[Ctxt](reify: InstanceRep => Generator[Ctxt, Expression]):
-    InstanceRep => Generator[Ctxt, Expression] = {
-    case rep if rep.tpe == TypeRep.Boolean =>
-      Command.lift(new BooleanLiteralExpr(rep.inst.asInstanceOf[Boolean]))
-    case other => reify(other)
-  }
-
-  val booleansInMethod =
-    new ContextIndependentBooleans[MethodBodyCtxt](resolver =>
-      resolver.copy(
-        methodTypeResolution = addBooleanType(resolver.methodTypeResolution),
-        classTypeResolution = addBooleanType(resolver.classTypeResolution),
-        reificationInMethod = addBooleanReification(resolver.reificationInMethod)
-      )
-    )
-
-  val booleansInConstructor =
-    new ContextIndependentBooleans[MethodBodyCtxt](resolver =>
-      resolver.copy(
-        constructorTypeResolution = addBooleanType(resolver.constructorTypeResolution),
-        classTypeResolution = addBooleanType(resolver.classTypeResolution),
-        reificationInConstructor = addBooleanReification(resolver.reificationInConstructor)
-      )
-    )
+  val booleansInMethod = new ContextIndependentBooleans[MethodBodyCtxt]
+  val booleansInConstructor = new ContextIndependentBooleans[MethodBodyCtxt]
 
   class ContextIndependentArith[Ctxt, T](
-    resolverTransformation: ContextSpecificResolver => ContextSpecificResolver
+    rep: TypeRep.OfHostType[T],
+    targetType: Type,
+    reification: T => Expression
   ) extends Arithmetic[Ctxt, T] {
     val base: paradigm.type = paradigm
     val arithmeticCapabilities: ArithmeticCapabilities =
@@ -1280,44 +1315,28 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
           context: ProjectCtxt,
           command: Enable.type
         ): (ProjectCtxt, Unit) = {
-          (context.copy(resolver = resolverTransformation(context.resolver.copy(importResolution = {
-            case tpe if tpe == Java("Double").tpe => None;  // TODO: clean up with primitives
-            case other => context.resolver.importResolution(other)
-          }))), ())
+          val resolverUpdate =
+            updateResolver(rep, targetType)(reification)(_)
+          (context.copy(resolver = resolverUpdate(context.resolver)), ())
         }
       })
   }
 
-  private def addDoubleType[Ctxt](toResolution: TypeRep => Generator[Ctxt, Type]): TypeRep => Generator[Ctxt, Type] =
-    addResolutionType[Ctxt](TypeRep.Double, Java("Double").tpe, toResolution)
-
-  private def addDoubleReification[Ctxt](reify: InstanceRep => Generator[Ctxt, Expression]):
-  InstanceRep => Generator[Ctxt, Expression] = {
-    case rep if rep.tpe == TypeRep.Double =>
-      Command.lift(new DoubleLiteralExpr(rep.inst.asInstanceOf[Double]))
-    case other => reify(other)
-  }
-
   val doublesInMethod =
-    new ContextIndependentArith[MethodBodyCtxt, Double](resolver =>
-      resolver.copy(
-        methodTypeResolution = addDoubleType(resolver.methodTypeResolution),
-        classTypeResolution = addDoubleType(resolver.classTypeResolution),
-        reificationInMethod = addDoubleReification(resolver.reificationInMethod)
-      )
+    new ContextIndependentArith[MethodBodyCtxt, Double](
+      TypeRep.Double,
+      Java("double").tpe(),
+      new DoubleLiteralExpr(_)
     )
 
   val doublesInConstructor =
-    new ContextIndependentArith[CtorCtxt, Double](resolver =>
-      resolver.copy(
-        constructorTypeResolution = addDoubleType(resolver.constructorTypeResolution),
-        classTypeResolution = addDoubleType(resolver.classTypeResolution),
-        reificationInConstructor = addDoubleReification(resolver.reificationInConstructor)
-      )
+    new ContextIndependentArith[CtorCtxt, Double](
+      TypeRep.Double,
+      Java("double").tpe(),
+      new DoubleLiteralExpr(_)
     )
 
   class ContextIndependentStrings[Ctxt](
-    resolverTransformation: ContextSpecificResolver => ContextSpecificResolver,
     getMember: Understands[Ctxt, GetMember[Expression, Name]],
     applyMethod: Understands[Ctxt, Apply[Expression, Expression, Expression]]
   ) extends Strings[Ctxt] {
@@ -1373,41 +1392,23 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
           context: ProjectCtxt,
           command: Enable.type
         ): (ProjectCtxt, Unit) = {
-          (context.copy(resolver = resolverTransformation(context.resolver)), ())
+          val resolverUpdate =
+            updateResolver(TypeRep.String, Java("String").tpe())(new StringLiteralExpr(_))
+          (context.copy(resolver = resolverUpdate(context.resolver)), ())
         }
       })
   }
 
-  private def addStringType[Ctxt](toResolution: TypeRep => Generator[Ctxt, Type]): TypeRep => Generator[Ctxt, Type] =
-    addResolutionType[Ctxt](TypeRep.String, Java("String").tpe, toResolution)
-
-  private def addStringReification[Ctxt](reify: InstanceRep => Generator[Ctxt, Expression]):
-    InstanceRep => Generator[Ctxt, Expression] = {
-    case rep if rep.tpe == TypeRep.String =>
-      Command.lift(new StringLiteralExpr(rep.inst.asInstanceOf[String]))
-    case other => reify(other)
-  }
-
   val stringsInMethod =
-    new ContextIndependentStrings[MethodBodyCtxt](resolver =>
-      resolver.copy(
-        methodTypeResolution = addStringType(resolver.methodTypeResolution),
-        classTypeResolution = addStringType(resolver.classTypeResolution),
-        reificationInMethod = addStringReification(resolver.reificationInMethod)
-      ),
+    new ContextIndependentStrings[MethodBodyCtxt](
       ooParadigm.methodBodyCapabilities.canGetMemberInMethod,
       paradigm.methodBodyCapabilities.canApplyInMethodBody
     )
 
   val stringsInConstructor =
-    new ContextIndependentStrings[MethodBodyCtxt](resolver =>
-      resolver.copy(
-        constructorTypeResolution = addStringType(resolver.constructorTypeResolution),
-        classTypeResolution = addStringType(resolver.classTypeResolution),
-        reificationInConstructor = addStringReification(resolver.reificationInConstructor)
-      ),
-      ooParadigm.methodBodyCapabilities.canGetMemberInMethod,
-      paradigm.methodBodyCapabilities.canApplyInMethodBody
+    new ContextIndependentStrings[CtorCtxt](
+      ooParadigm.constructorCapabilities.canGetMemberInConstructor,
+      ooParadigm.constructorCapabilities.canApplyInConstructor
     )
 
   class ContextIndependentEquality[Ctxt](
@@ -1437,7 +1438,16 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
             }
           }
       }
-    def enable(): Generator[base.ProjectContext, Unit] = Command.skip
+    def enable(): Generator[base.ProjectContext, Unit] = Enable.interpret(new Understands[base.ProjectContext, Enable.type] {
+      def perform(
+        context: ProjectCtxt,
+        command: Enable.type
+      ): (ProjectCtxt, Unit) = {
+        val resolverUpdate =
+          updateResolver(TypeRep.Boolean, Java("boolean").tpe())(new BooleanLiteralExpr(_))
+        (context.copy(resolver = resolverUpdate(context.resolver)), ())
+      }
+    })
   }
 
   val equalityInMethod =
@@ -1482,35 +1492,42 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
           context: ProjectCtxt,
           command: Enable.type
         ): (ProjectCtxt, Unit) = {
-          (context.copy(resolver = context.resolver.copy(
-            importResolution = {
-              case tpe if tpe == Java("org.junit.Assert").tpe() => Some(Java("org.junit.Assert").importDeclaration())
-              case other => context.resolver.importResolution(other)
-            }
-          )), ())
+
+          val resolverUpdate =
+            updateResolver(TypeRep.Boolean, Java("boolean").tpe())(new BooleanLiteralExpr(_))
+            .andThen(resolver =>
+              resolver.copy(
+                importResolution = {
+                  case tpe if tpe == Java("org.junit.Assert").tpe() => Some(Java("org.junit.Assert").importDeclaration())
+                  case other => context.resolver.importResolution(other)
+                }
+              )
+            )
+
+          (context.copy(resolver = resolverUpdate(context.resolver)), ())
         }
       })
   }
-
-
-
 }
 
 object CodeGenerator {
 
-  case class MarkUsed(name: Syntax.default.Name) extends Command {
-    type Result = Unit
-  }
+  sealed abstract class BoxLevel(val inMethods: Boolean, val inClasses: Boolean, val inConstructors: Boolean)
+  case object FullyBoxed extends BoxLevel(inMethods = true, inClasses = true, inConstructors = true)
+  case object PartiallyBoxed extends BoxLevel(inMethods = true, inClasses = false, inConstructors = false)
+  case object Unboxed extends BoxLevel(inMethods = false, inClasses = false, inConstructors = false)
 
   case class Config(
     targetPackage: PackageDeclaration,
-    projectName: Option[String]
+    projectName: Option[String],
+    boxLevel: BoxLevel
   )
 
   val defaultConfig =
     Config(
       targetPackage = new PackageDeclaration(Java("ep").name),
-      projectName = None
+      projectName = None,
+      boxLevel = FullyBoxed
     )
 
   def apply(config: Config = defaultConfig): CodeGenerator =

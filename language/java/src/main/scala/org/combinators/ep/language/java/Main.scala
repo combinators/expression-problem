@@ -15,7 +15,7 @@ object Main extends App {
   val targetDirectory = Paths.get("target", "ep-generated")
 
 
-  val generator = CodeGenerator()
+  val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = CodeGenerator.PartiallyBoxed))
   //val approach = Traditional[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
   val approach = Visitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val directory = Paths.get(targetDirectory.toString, approach.getClass.getSimpleName)

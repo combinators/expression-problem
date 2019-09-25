@@ -296,7 +296,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                     (context, Some(newImport))
                   }
                 } else {
-                  None
+                  (context, None)
                 }
               }
             }
@@ -449,7 +449,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                 command: AddParent[Type]
               ): (ClassContext, Unit) = {
                 val resultCls = context.cls.clone()
-                resultCls.addExtendedType(command.parentClass.toClassOrInterfaceType())
+                resultCls.addExtendedType(command.parentClass.asClassOrInterfaceType())
                 (context.copy(cls = resultCls), ())
               }
             }

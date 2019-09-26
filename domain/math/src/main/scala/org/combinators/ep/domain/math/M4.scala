@@ -53,7 +53,7 @@ object M4 extends Evolution {
     *
     * Result should support a composite operation
     */
-  def M4_tests:Seq[TestCase] = Seq(
+  def tests:Seq[TestCase] = Seq(
     EqualsTestCase(getModel.baseDataType, m4_d2, Collect, ListDoubleInst(Seq(5.0, 7.0, 7.0, 2.0, 3.0))),
     EqualsTestCase(getModel.baseDataType, m4_s_00, Collect, ListDoubleInst(Seq(0.0, 0.0))),
     EqualsTestCase(getModel.baseDataType, m4_s_0, Collect, ListDoubleInst(Seq(0.0))),

@@ -1,7 +1,7 @@
 package org.combinators.ep.domain.math      /*DD:LI:AI*/
 
 import org.combinators.ep.domain._
-import org.combinators.ep.domain.abstractions.{Operation, Parameter, TypeRep}
+import org.combinators.ep.domain.abstractions.{Operation, Parameter, TestCase, TypeRep}
 
 object I2 extends Evolution {
   override implicit def getModel:Model = I1.getModel.evolve("i2", Seq.empty, Seq(Height))
@@ -18,4 +18,5 @@ object I2 extends Evolution {
   lazy val Height = Operation("height", TypeRep.Int, Seq(Parameter(independent.height, TypeRep.Int)))
 
   // TODO: Model test cases for I2
+  def tests: Seq[TestCase] = Seq.empty
 }

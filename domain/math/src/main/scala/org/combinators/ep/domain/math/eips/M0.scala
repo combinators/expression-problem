@@ -25,11 +25,18 @@ import org.combinators.ep.generator.paradigm.ffi.Arithmetic
 object M0 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
       (paradigm: P)
-      (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type]):
+      (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double]):
     EvolutionImplementationProvider[AIP[paradigm.type]] =
     new EvolutionImplementationProvider[AIP[paradigm.type]] {
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         ffiArithmetic.enable()
+      }
+
+      def applicable
+        (forApproach: AIP[paradigm.type])
+        (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
+        (onRequest.request.op == math.M0.Eval) &&
+          (Set(math.M0.Add, math.M0.Lit).contains(onRequest.tpeCase))
       }
 
       override def logic
@@ -41,7 +48,7 @@ object M0 {
         import paradigm._
 
         // no need to pass up to the chain since only Eval is known
-        assert(onRequest.request.op == math.M0.Eval)
+        assert(applicable(forApproach)(onRequest))
 
         val result = onRequest.tpeCase match {
 

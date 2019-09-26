@@ -1,5 +1,6 @@
 package org.combinators.ep.generator
 
+import org.combinators.ep.domain.Model
 import org.combinators.ep.domain.abstractions._
 
 /** Provides mangled names for domain entities. */
@@ -12,6 +13,12 @@ abstract class NameProvider[Name] {
 
   /** Adds a suffix to the given name. The new name will be mangled if necessary. */
   def addSuffix(name: Name, suffix: String): Name
+
+  /** Provides the name for a language representation of concepts (e.g. classes) associated with the given Model.
+   * Most languages just want to return the capitalized model name.
+   */
+  def conceptNameOf(model: Model): String =
+    model.name.capitalize
 
   /** Provides the name for a language representation of concepts (e.g. classes) associated with the given data type.
     * Most languages just want to return the capitalized data type name.
@@ -46,6 +53,11 @@ abstract class NameProvider[Name] {
       case _ => tpe.getClass.getName.capitalize
     }
   }
+
+  /** Provides the name for a language representation of instances (e.g. objects) associated with the given model.
+   * Most languages just want to return the lower case model name. */
+  def instanceNameOf(model: Model): String =
+    model.name.toLowerCase
 
   /** Provides the name for a language representation of instances (e.g. objects) associated with the given data type.
     * Most languages just want to return the lower case data type name. */

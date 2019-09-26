@@ -11,7 +11,7 @@ import EvolutionImplementationProvider._
 object M1 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
       (paradigm: P)
-      (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type]):
+      (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double]):
     EvolutionImplementationProvider[AIP[paradigm.type]] = {
 
     val subProvider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
@@ -20,13 +20,20 @@ object M1 {
         ffiArithmetic.enable()
       }
 
+      def applicable
+        (forApproach: AIP[paradigm.type])
+          (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
+        (onRequest.request.op == math.M0.Eval) &&
+          (Set(math.M1.Sub).contains(onRequest.tpeCase))
+      }
+
       override def logic
         (forApproach: AIP[paradigm.type])
         (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
         import ffiArithmetic.arithmeticCapabilities._
 
-        assert(onRequest.request.op == math.M0.Eval)
+        assert(applicable(forApproach)(onRequest))
 
         val result = onRequest.tpeCase match {
           case subC@math.M1.Sub =>

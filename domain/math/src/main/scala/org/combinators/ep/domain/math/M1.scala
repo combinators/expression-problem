@@ -11,13 +11,13 @@ object M1 extends Evolution {
 
   // m1:model evolution.
   // -------------------
-  lazy val Sub:DataTypeCase = DataTypeCase.binary("Sub")
+  lazy val Sub:DataTypeCase = DataTypeCase.binary("Sub")(MathDomain.getModel)
 
   def SubInst(left:DataTypeInstance, right:DataTypeInstance): DataTypeInstance =
     DataTypeInstance(Sub, Seq(InstanceRep(left), InstanceRep(right)))
 
   // testing
-  def M1_tests: Seq[TestCase] = Seq(
+  def tests: Seq[TestCase] = Seq(
     EqualsTestCase(getModel.baseDataType, SubInst(LitInst(1.0), LitInst(2.0)), Eval, InstanceRep(LitInst(-1.0))),
   )
 }

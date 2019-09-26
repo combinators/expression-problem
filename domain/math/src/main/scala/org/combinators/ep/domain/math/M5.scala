@@ -54,7 +54,7 @@ object M5 extends Evolution {
          params: InstanceRep*
        ) extends TestCase
 
-  def M5_tests:Seq[TestCase] = Seq(
+  def tests:Seq[TestCase] = Seq(
     SameTestCase(m5_s1, m5_s2, false),
     SameTestCase(m5_s1, m5_s3, true),
     SameTestCase(m5_all, m5_all, true),

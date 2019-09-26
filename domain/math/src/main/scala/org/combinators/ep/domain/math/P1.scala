@@ -41,7 +41,7 @@ object P1 extends Evolution {
 
   val p1_a1 = AmortizedInst(LitInst(100000.0), LitInst(0.06), LitInst(360.0))
 
-  def P1_tests:Seq[TestCase] = Seq(
+  def tests:Seq[TestCase] = Seq(
     EqualsTestCase(getModel.baseDataType, p1_a1, Eval, InstanceRep(LitInst(599.55)))
   )
 }

@@ -1,7 +1,7 @@
 package org.combinators.ep.domain.math      /*DD:LI:AI*/
 
 import org.combinators.ep.domain._
-import org.combinators.ep.domain.abstractions.DataTypeCase
+import org.combinators.ep.domain.abstractions.{DataTypeCase, TestCase}
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
 
 object I1 extends Evolution {
@@ -13,4 +13,5 @@ object I1 extends Evolution {
     DataTypeInstance(Inv, Seq(InstanceRep(inner)))
 
   // TODO: Model test cases for I1
+  def tests: Seq[TestCase] = Seq.empty
 }

@@ -32,7 +32,7 @@ object M7 extends Evolution {
   val m7_6 = AddInst(LitInst(99.0), LitInst(2.0))
   val m7_7 = AddInst(m7_5, m7_6)
 
-  def M7_tests:Seq[TestCase] = Seq(
+  def tests:Seq[TestCase] = Seq(
     EqualsTestCase(getModel.baseDataType, m7_1, Eval, InstanceRep(LitInst(5.0))),
     EqualsTestCase(getModel.baseDataType, m7_4, Find, InstanceRep(LitInst(1.0)), InstanceRep(TypeRep.Int)(2)),
   )

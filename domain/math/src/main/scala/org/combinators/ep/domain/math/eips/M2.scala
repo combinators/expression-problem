@@ -11,7 +11,7 @@ import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Strings}
 object M2 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
       (paradigm: P)
-      (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type],
+      (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
        ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
     EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val ppProvider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
@@ -23,6 +23,13 @@ object M2 {
         } yield ()
       }
 
+      def applicable
+        (forApproach: AIP[paradigm.type])
+          (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
+        (onRequest.request.op == math.M2.PrettyP) &&
+          (Set(math.M0.Lit, math.M0.Add, math.M1.Sub).contains(onRequest.tpeCase))
+      }
+
       def logic
           (forApproach: AIP[paradigm.type])
           (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
@@ -31,7 +38,7 @@ object M2 {
         import paradigm._
         import methodBodyCapabilities._
 
-        assert(onRequest.request.op == math.M2.PrettyP)
+        assert(applicable(forApproach)(onRequest))
 
         val result = onRequest.tpeCase match {
           case litC@math.M0.Lit =>
@@ -44,7 +51,7 @@ object M2 {
             val lAtt = other.attributes.head
             val rAtt = other.attributes.tail.head
             val operator =
-              onRequest.request.op match {
+              other match {
                 case math.M0.Add => "+"
                 case math.M1.Sub => "-"
                 case _ => ???

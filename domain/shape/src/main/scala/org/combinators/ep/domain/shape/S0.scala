@@ -60,7 +60,7 @@ object S0 extends Evolution {
        params: InstanceRep*
      ) extends TestCase
 
-  def S0_tests:Seq[TestCase] = Seq(
+  def tests:Seq[TestCase] = Seq(
     ContainsTestCase(sq1, ContainsPt, p1, InstanceRep(TypeRep.Boolean)(true)),
     ContainsTestCase(c1, ContainsPt, p2, InstanceRep(TypeRep.Boolean)(true)),
 

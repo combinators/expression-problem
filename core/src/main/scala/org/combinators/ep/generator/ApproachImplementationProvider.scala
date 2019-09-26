@@ -94,9 +94,9 @@ trait ApproachImplementationProvider {
             } yield code.flatten
 
           addCompilationUnit(
-            names.mangle(model.name + "Test"),
+            names.addSuffix(names.mangle(names.conceptNameOf(model)), "Test"),
             addTestSuite(
-              names.mangle(model.name + "Test"),
+              names.addSuffix(names.mangle(names.conceptNameOf(model)), "Test"),
               addTestCase(names.mangle("test"), testCode)
             ))
         }

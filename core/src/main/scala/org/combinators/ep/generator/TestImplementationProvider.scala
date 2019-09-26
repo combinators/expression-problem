@@ -8,7 +8,7 @@ import org.combinators.ep.generator.communication.{Request, SendRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm
 import org.combinators.ep.generator.paradigm.ffi.{Assertions, Booleans, Equality}
 
-trait TestImplementationProvider[AIP <: ApproachImplementationProvider] {
+trait TestImplementationProvider[-AIP <: ApproachImplementationProvider] {
   def initialize(forApproach: AIP): Generator[forApproach.paradigm.ProjectContext, Unit]
   def test(forApproach: AIP)(testCase: TestCase): Generator[forApproach.paradigm.MethodBodyContext, Seq[forApproach.paradigm.syntax.Expression]]
 }

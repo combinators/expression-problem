@@ -38,7 +38,7 @@ class FreshNameCleanup(nameInfo: Map[String, MangledName]) {
       }
     }
 
-    private def visitInNewScope[N](n: N, phase: Phase)(doVisit: (N, Phase) => Visitable): Visitable = {
+    private def visitInNewScope[N <: Visitable](n: N, phase: Phase)(doVisit: (N, Phase) => Visitable): Visitable = {
       if (phase == REPLACE_GENERATED) {
         freshNames = freshNames.pushContext
         doVisit(n, COLLECT_NAMES)
@@ -121,7 +121,7 @@ class FreshNameCleanup(nameInfo: Map[String, MangledName]) {
 
   def cleanup(units: CompilationUnit*): Seq[CompilationUnit] = {
     val cleanupVisitor = new CleanupVisitor
-    units.map(unit => unit.accept(cleanupVisitor, COLLECT_NAMES).asInstanceOf[CompilationUnit])
+    units.map(unit => unit.accept(cleanupVisitor, REPLACE_GENERATED).asInstanceOf[CompilationUnit])
   }
 }
 

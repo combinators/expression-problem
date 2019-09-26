@@ -2,17 +2,20 @@ package org.combinators.ep.approach.oo
 
 import org.combinators.ep.domain.Model
 import org.combinators.ep.domain.abstractions._
+import org.combinators.ep.generator.Command._
 import org.combinators.ep.generator._
 import org.combinators.ep.generator.communication._
+import org.combinators.ep.generator.paradigm.AnyParadigm.syntax._
 import org.combinators.ep.generator.paradigm._
-import Command._
-import AnyParadigm.syntax._
 
-sealed trait Traditional extends ApproachImplementationProvider {
+
+// copied from visitor to start
+sealed trait Interpreter extends ApproachImplementationProvider {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
-
-  import paradigm._
+  val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
+  val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
   import ooParadigm._
+  import paradigm._
   import syntax._
 
   def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression] = {
@@ -26,8 +29,8 @@ sealed trait Traditional extends ApproachImplementationProvider {
   }
 
   def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
-    import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities._
     for {
       rt <- findClass(names.mangle(names.conceptNameOf(tpeCase)))
       _ <- resolveAndAddImport(rt)
@@ -35,6 +38,7 @@ sealed trait Traditional extends ApproachImplementationProvider {
     } yield res
   }
 
+  // this is commonly copied from numerous ones (Visitor/Traditional) seems to be best to lift up to some other place
   def makeSignature(op: Operation): Generator[MethodBodyContext, Unit] = {
     import paradigm.methodBodyCapabilities._
 
@@ -80,8 +84,8 @@ sealed trait Traditional extends ApproachImplementationProvider {
       op: Operation,
       domainSpecific: EvolutionImplementationProvider[this.type]
     ): Generator[MethodBodyContext, Option[Expression]] = {
-    import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities._
     for {
       _ <- makeSignature(op)
       thisRef <- selfReference()
@@ -144,45 +148,116 @@ sealed trait Traditional extends ApproachImplementationProvider {
     FindClass(names.mangle(names.conceptNameOf(dtpe))).interpret(canFindClass)
   }
 
-  def initializeApproach(domain: Model): Generator[ProjectContext, Unit] = {
-    import paradigm.projectContextCapabilities._
+//  def initializeApproach(domain: Model): Generator[ProjectContext, Unit] = {
+//    import ooParadigm.projectCapabilities._
+//    import paradigm.projectContextCapabilities._
+//    val dtpeRep = TypeRep.DataType(domain.baseDataType)
+//    for {
+//      _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(domain.baseDataType))
+//      _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(domain.baseDataType))
+//      _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(domain.baseDataType))
+//    } yield ()
+//  }
+
+  def makeBaseExtensions(model:Model): Generator[ProjectContext, Unit] = {
+    val allTypes = model.pastDataTypes
+    val isBase: Boolean = model.base.equals(model)
+    generateForOp(model, model.ops, allTypes, isBase)
+  }
+
+
+  /** Find Model with operations and return that one's name as concatenations of operations. */
+  def baseInterfaceName(m:Model): String = {
+    if (m.lastModelWithOperation.isEmpty) {
+      ""
+    } else {
+      m.lastModelWithOperation.get.ops.sortWith(_.name < _.name).map(op => names.conceptNameOf(op)).mkString("") + "Exp"
+    }
+  }
+
+  /**
+   * This is what I generated before, one for each subtype and the operations defined within it.
+   *
+   * package interpreter;
+   * ${factoryImports.mkString("\n")}
+   * ${liftedOps.mkString("\n")}
+   * public class $combinedOps$name $extension implements ${baseInterface.toString} {
+   *   ${constructor.toString}
+   *
+   *   ${getters.mkString("\n")}
+   *   ${atts.mkString("\n")}
+   *   ${operations.mkString("\n")}
+   *   ${conversionMethod.mkString("\n")}
+   * }""".stripMargin).compilationUnit()
+   *
+   * @param model
+   * @param ops
+   * @param allTypes
+   * @param isBase
+   * @return
+   */
+  def generateForOp(model:Model, ops:Seq[Operation], allTypes:Seq[DataTypeCase], isBase:Boolean) : Generator[ProjectContext, Unit] = {
+    val combinedOps:String = ops.sortWith(_.name < _.name).map(op => names.conceptNameOf(op)).mkString("")
     import ooParadigm.projectCapabilities._
-    import ooParadigm.methodBodyCapabilities._
-    import ooParadigm.classCapabilities._
-    import ooParadigm.constructorCapabilities._
-    val dtpeRep = TypeRep.DataType(domain.baseDataType)
-    for {
-      _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(domain.baseDataType))
-      _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(domain.baseDataType))
-      _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(domain.baseDataType))
-    } yield ()
+
+    // for all data subtypes
+    allTypes.foreach(exp => {
+
+      val baseInterface = baseInterfaceName(model)
+
+      // This is just a class
+      val makeClass: Generator[ClassContext, Unit] = {
+        import classCapabilities._
+        for {
+          pt <- toTargetLanguageType(TypeRep.DataType(model.baseDataType))  // TODO: How do I get DataType from DataTypeCase?
+          _ <- resolveAndAddImport(pt)
+          _ <- addParent(pt)
+          _ <- forEach(exp.attributes) { att => makeField(att) }
+
+        } yield ()
+
+        addClassToProject(names.mangle(combinedOps), makeClass)
+      }
+   })
+
+//    allTypes.zip(classes).foreach ()
+//    val name = names.conceptNameOf(exp)
+//    addClassToProject(names.mangle(combinedOps + name), makeClass)
+
   }
 
   def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
-    val flatDomain = domain.flatten
+
+    /**
+     * For each operation must generate a sequence of classes, one per subtype.
+     * Must make sure we include ALL subtypes, not just ones from the past.
+     */
     for {
-      _ <- initializeApproach(flatDomain)
+      //_ <- initializeApproach(domain)   // CAN'T GET THIS TO COMPILE YET??
       _ <- domainSpecific.initialize(this)
-      _ <- makeBase(flatDomain.baseDataType, flatDomain.ops)
-      _ <- forEach (flatDomain.typeCases) { tpeCase =>
-          makeDerived(flatDomain.baseDataType, tpeCase, flatDomain.ops, domainSpecific)
-        }
+      _ <- forEach (domain.inChronologicalOrder.filter(m => m.ops.nonEmpty)) { m =>
+        makeBaseExtensions(m)
+      }
+
     } yield ()
   }
 }
 
-object Traditional {
-  type WithParadigm[P <: AnyParadigm] = Traditional { val paradigm: P }
-  type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
+  object Interpreter {
+    type WithParadigm[P <: AnyParadigm] = Interpreter { val paradigm: P }
+    type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 
-  def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
-      (base: P)
-      (nameProvider: NameProvider[base.syntax.Name],
-        oo: ObjectOriented.WithBase[base.type]
-      ): Traditional.WithParadigm[base.type] =
-    new Traditional {
-      override val paradigm: base.type = base
-      override val names: NameProvider[paradigm.syntax.Name] = nameProvider
-      override val ooParadigm: ObjectOriented.WithBase[paradigm.type] = oo
-    }
-}
+    def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
+    (base: P)
+    (nameProvider: NameProvider[base.syntax.Name],
+     oo: ObjectOriented.WithBase[base.type],
+     parametricPolymorphism: ParametricPolymorphism.WithBase[base.type])
+    (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): Interpreter.WithParadigm[base.type] =
+      new Interpreter {
+        val paradigm: base.type = base
+        val names: NameProvider[paradigm.syntax.Name] = nameProvider
+        val ooParadigm: oo.type = oo
+        val polymorphics: parametricPolymorphism.type = parametricPolymorphism
+        val genericsParadigm: generics.type = generics
+      }
+  }

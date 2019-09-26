@@ -174,7 +174,6 @@ sealed trait Interpreter extends ApproachImplementationProvider {
       m.lastModelWithOperation.get.ops.sortWith(_.name < _.name).map(op => names.conceptNameOf(op)).mkString("") + "Exp"
     }
   }
-
   /**
    * This is what I generated before, one for each subtype and the operations defined within it.
    *
@@ -196,29 +195,27 @@ sealed trait Interpreter extends ApproachImplementationProvider {
    * @param isBase
    * @return
    */
+  def makeClassForCase(model: Model, ops: Seq[Operation], tpeCase: DataTypeCase): Generator[ClassContext, Unit] = {
+    import classCapabilities._
+    for {
+      pt <- toTargetLanguageType(TypeRep.DataType(model.baseDataType))  // TODO: How do I get DataType from DataTypeCase?
+      _ <- resolveAndAddImport(pt)
+      _ <- addParent(pt)
+      _ <- forEach(tpeCase.attributes) { att => makeField(att) }
+    } yield ()
+  }
+
   def generateForOp(model:Model, ops:Seq[Operation], allTypes:Seq[DataTypeCase], isBase:Boolean) : Generator[ProjectContext, Unit] = {
     val combinedOps:String = ops.sortWith(_.name < _.name).map(op => names.conceptNameOf(op)).mkString("")
     import ooParadigm.projectCapabilities._
 
-    // for all data subtypes
-    allTypes.foreach(exp => {
-
-      val baseInterface = baseInterfaceName(model)
-
-      // This is just a class
-      val makeClass: Generator[ClassContext, Unit] = {
-        import classCapabilities._
-        for {
-          pt <- toTargetLanguageType(TypeRep.DataType(model.baseDataType))  // TODO: How do I get DataType from DataTypeCase?
-          _ <- resolveAndAddImport(pt)
-          _ <- addParent(pt)
-          _ <- forEach(exp.attributes) { att => makeField(att) }
-
-        } yield ()
-
-        addClassToProject(names.mangle(combinedOps), makeClass)
+    for {
+      _ <- forEach (allTypes) { tpeCase =>
+        addClassToProject(names.mangle(combinedOps), makeClassForCase(model, ops, tpeCase))
       }
-   })
+    } yield ()
+
+
 
 //    allTypes.zip(classes).foreach ()
 //    val name = names.conceptNameOf(exp)

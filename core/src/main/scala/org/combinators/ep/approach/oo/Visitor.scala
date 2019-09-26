@@ -15,7 +15,7 @@ import org.combinators.ep.approach
  * Have to decide whether to use side effects or Generics. This current implementation uses the Visitor<R> generics
  * approach, which can be adopted by different object oriented languages.
  */
-sealed abstract class Visitor extends ApproachImplementationProvider {
+abstract class Visitor extends ApproachImplementationProvider {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
@@ -526,105 +526,4 @@ object Visitor {
       val polymorphics: parametricPolymorphism.type = parametricPolymorphism
       val genericsParadigm: generics.type = generics
     }
-}
-
-sealed trait ExtensibleVisitor extends Visitor {
-  import paradigm._
-  import ooParadigm._
-
-  import syntax._
-
-  /** Concatenate all types in this model to form proper suffix for operation classes. */
-  def modelTypes(model:Model) : String = {
-    if (model.last.isEmpty) {
-      ""
-    } else {
-      model.typeCases.sortWith(_.name < _.name).mkString("")
-    }
-  }
-
-  /** Each operation is placed in its own class, with a 'visit' method for newly defined types.
-   *
-   * {{{
-   *   public class EvalSub extends Eval implements VisitorSub<Double> {
-   *
-   *     public Double visit(Sub e) {
-   *         return e.getLeft().accept(makeEval()) - e.getRight().accept(makeEval());
-   *     }
-   *
-   *     EvalSub makeEval() {
-   *         return new EvalSub();
-   *     }
-   * }
-   * }}}
-   *
-   * @param domain     Model for which new types are to be incorporated
-   * @param op
-   * @param domainSpecific
-   * @return           Returns class context without actually adding to ProjectContext; this is job of caller of this function
-   */
-  override def makeOperationImplementation(domain:Model,
-                                  op: Operation,
-                                  domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
-      //flatDomain.typeCases, flatDomain.baseDataType
-
-    val full:String = modelTypes(domain)
-    val lastWithType:Option[Model] = if (domain.last.isEmpty) {
-      None
-    } else {
-      domain.last.get.lastModelWithDataTypes
-    }
-    val lastOperation = if (lastWithType.isDefined) {
-      lastWithType.get.findOperation(op)
-    } else {
-      None
-    }
-
-    // Must take care to ensure we don't mistakenly go back *before* where the operation was defined.
-    // This is determined by looking for operations in the past.
-    val last = if (lastWithType.isEmpty || lastOperation.isEmpty) {
-      ""
-    } else {
-      modelTypes(lastWithType.get)
-    }
-
-
-
-    val makeClass: Generator[ClassContext, Unit] = {
-      import ooParadigm.classCapabilities._
-      import genericsParadigm.classCapabilities._
-      for {
-        _ <- setAbstract()
-        _ <- addTypeParameter(names.mangle(visitTypeParameter), Command.skip)    // R by itself, since not extending any other type parameter (hence Skip)
-        _ <- forEach (domain.typeCases) { tpe =>
-          addMethod(names.mangle(names.instanceNameOf(tpe)), makeImplementation(domain.baseDataType, tpe, op, domainSpecific))
-        }
-      } yield ()
-    }
-
-    makeClass
-    //    // if I want to override a super, this is a mistake since this will be added to project.
-    //    addClassToProject(visitorClass, makeClass)
-  }
-
-}
-
-object ExtensibleVisitor {
-  type WithParadigm[P <: AnyParadigm] = ExtensibleVisitor { val paradigm: P }
-  type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
-
-  def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
-  (base: P)
-  (nameProvider: NameProvider[base.syntax.Name], oo: ObjectOriented.WithBase[base.type])
-  (params: ParametricPolymorphism.WithBase[base.type])
-  (generics: Generics.WithBase[base.type,oo.type,params.type]): ExtensibleVisitor.WithParadigm[base.type] =
-    new ExtensibleVisitor {
-      val paradigm: base.type = base
-      val names: NameProvider[paradigm.syntax.Name] = nameProvider
-      val ooParadigm: oo.type = oo
-      val polymorphics: params.type = params
-      val genericsParadigm: generics.type = generics
-    }
-
-
 }

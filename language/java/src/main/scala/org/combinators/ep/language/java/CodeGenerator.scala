@@ -400,7 +400,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
         val javaFiles = cleanedUnits.map { unit =>
           FileWithPath(
             JavaPersistable.compilationUnitInstance.rawText(unit),
-            JavaPersistable.compilationUnitInstance.fullPath(Paths.get("src", "main", "java"), unit)
+            JavaPersistable.compilationUnitInstance.fullPath(Paths.get("."), unit)
           )
         }
         FileWithPath(buildFile, Paths.get("build.sbt")) +: javaFiles

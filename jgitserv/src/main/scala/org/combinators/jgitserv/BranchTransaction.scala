@@ -46,7 +46,8 @@ sealed trait BranchTransaction { self =>
     val branchName = self.branchName
     def materialize(inGit: Git): IO[Unit] =
       self.materialize(inGit) *> IO {
-        val toDelete: Iterator[File] =
+        val tree = inGit.getRepository.getWorkTree.toPath
+        val toDelete: Iterator[(File, String)] =
           FileUtils
             .iterateFilesAndDirs(
               inGit.getRepository.getWorkTree,
@@ -56,9 +57,13 @@ sealed trait BranchTransaction { self =>
             .asScala
             .filterNot(f =>
               f == inGit.getRepository.getWorkTree ||
-              f == inGit.getRepository.getDirectory)
-        toDelete.foreach(FileUtils.deleteQuietly)
-        inGit.add().addFilepattern(".").call()
+              f.toPath.startsWith(inGit.getRepository.getDirectory.toPath))
+            .map(f => (f, tree.relativize(f.toPath).toString))
+        toDelete.foreach { case (f, pat) =>
+          if (!f.isDirectory) {
+            inGit.rm().addFilepattern(pat).call()
+          }
+        }
       }
   }
 
@@ -71,7 +76,12 @@ sealed trait BranchTransaction { self =>
       self.materialize(inGit) *> IO {
         val tree = inGit.getRepository.getWorkTree.toPath
         val persisted = persistable.persistOverwriting(tree.resolve(sourceDirectory), elem)
-        inGit.add().addFilepattern(persisted.toPath.relativize(tree).toString)
+        var targetPath = tree.relativize(tree.resolve(persisted.toPath))
+        // strip "./"
+        while (targetPath.startsWith(Paths.get("."))) {
+          targetPath = Paths.get(".").relativize(targetPath)
+        }
+        inGit.add().addFilepattern(targetPath.toString).call()
       }
   }
 
@@ -84,11 +94,7 @@ sealed trait BranchTransaction { self =>
     val branchName = self.branchName
     def materialize(inGit: Git): IO[Unit] =
       self.materialize(inGit) *> IO {
-        var commit = inGit.commit()
-        if (message.nonEmpty) {
-          commit = commit.setMessage(message)
-        }
-        commit.call()
+        inGit.commit().setMessage(message).call()
       }
   }
 }

@@ -97,7 +97,7 @@ trait ApproachImplementationProvider {
             names.addSuffix(names.mangle(names.conceptNameOf(model)), "Test"),
             addTestSuite(
               names.addSuffix(names.mangle(names.conceptNameOf(model)), "Test"),
-              addTestCase(names.mangle("test"), testCode)
+              addTestCase(names.mangle("Test"), testCode)
             ))
         }
     } yield ()

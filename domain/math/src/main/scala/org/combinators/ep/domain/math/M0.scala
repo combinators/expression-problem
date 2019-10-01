@@ -15,17 +15,20 @@ object M0 extends Evolution {
 
   lazy val Eval = Operation("eval", TypeRep.Double)
 
+  def DoubleInst(d: scala.Double): InstanceRep =
+    InstanceRep(TypeRep.Double)(d)
+
   //  case class LitInst(d:scala.Double) extends AtomicInst(Lit, ExistsInstance(Double)(d))
   def LitInst(d:scala.Double): DataTypeInstance =
-    DataTypeInstance(Lit, Seq(InstanceRep(TypeRep.Double)(d)))
+    DataTypeInstance(Lit, Seq(DoubleInst(d)))
 
   def AddInst(left:DataTypeInstance, right:DataTypeInstance): DataTypeInstance =
     DataTypeInstance(Add, Seq(InstanceRep(left), InstanceRep(right)))
 
   // Testing
   def tests: Seq[TestCase] = Seq(
-    EqualsTestCase(getModel.baseDataType, AddInst(LitInst(1.0), LitInst(2.0)), Eval, InstanceRep(LitInst(3.0))),
-    EqualsTestCase(getModel.baseDataType, LitInst(5.0), Eval, InstanceRep(LitInst(5.0))),
+    EqualsTestCase(getModel.baseDataType, AddInst(LitInst(1.0), LitInst(2.0)), Eval, DoubleInst(3.0)),
+    EqualsTestCase(getModel.baseDataType, LitInst(5.0), Eval, DoubleInst(5.0)),
 
     PerformanceTestCase(
       11,    // how many iterations to continue the iter

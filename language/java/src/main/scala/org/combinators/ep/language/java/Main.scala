@@ -19,26 +19,22 @@ import org.combinators.ep.generator.FileWithPathPersistable._
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
 object Main extends IOApp {
-  val targetDirectory = Paths.get("target", "ep-generated")
-
-  // can't have both of these?!
-  lazy val extensibleVisitorApproach = ExtensibleVisitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
-
-  lazy val visitorApproach = Visitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
-  lazy val ooApproach = Traditional[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
-  lazy val interpreterApproach = Interpreter[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
-
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = CodeGenerator.PartiallyBoxed))
 
-  // select one here.
-  val approach = ooApproach //extensibleVisitorApproach
+  // can't have both of these?!
+  val extensibleVisitorApproach = ExtensibleVisitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+  val visitorApproach = Visitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+  val ooApproach = Traditional[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
+  val interpreterApproach = Interpreter[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
-  val directory = Paths.get(targetDirectory.toString, approach.getClass.getSimpleName)
+  // select one here.
+  val approach = visitorApproach //extensibleVisitorApproach
+
   //val git = Git.init().setDirectory(directory.toFile).call()
   val evolutions = Seq(M0, M1, M2, M3)
   val tests = evolutions.scanLeft(Map.empty[Model, Seq[TestCase]]) { case (m, evolution) =>
-    m + ((evolution.getModel -> evolution.tests))
-  }
+    m + (evolution.getModel -> evolution.tests)
+  }.tail
 
   // I would love to be able to debug a partially contructed model, and I thought there
   // should be some way to call out to this Main class to do this...
@@ -49,7 +45,6 @@ object Main extends IOApp {
   val transaction =
     evolutions.zip(tests).foldLeft(Option.empty[BranchTransaction]) {
       case (transaction, (evolution, tests)) =>
-
     val impl =
       for {
         _ <- approach.implement(

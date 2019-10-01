@@ -28,9 +28,9 @@ object M8 extends Evolution {
   val m8_tree1 = new Node(Mult.name.hashCode, Seq(new Leaf(2.0), new Node(Sqrt.name.hashCode, Seq(new Leaf(7.0)))))
 
   def tests:Seq[TestCase] = Seq(
-    EqualsTestCase(getModel.baseDataType, m8_1, Eval, InstanceRep(LitInst(36.0))),
+    EqualsTestCase(getModel.baseDataType, m8_1, Eval, M0.DoubleInst(36.0)),
     EqualsTestCase(getModel.baseDataType, m8_2, PrettyP, StringInst("Power(25.0,-0.5)")),
-    EqualsTestCase(getModel.baseDataType, m8_3, Eval, InstanceRep(LitInst(1.0))),
+    EqualsTestCase(getModel.baseDataType, m8_3, Eval, M0.DoubleInst(1.0)),
 
     EqualsCompositeTestCase(getModel.baseDataType, m8_3, StringInst("1.0"), (Simplify, Seq.empty), (PrettyP, Seq.empty)),
     EqualsCompositeTestCase(getModel.baseDataType, m8_tree, InstanceRep(TypeRep.Tree)(m8_tree1), (Copy, Seq.empty), (Operation.asTree, Seq.empty)),

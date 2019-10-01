@@ -78,8 +78,10 @@ object TestImplementationProvider {
           inst <- forApproach.instantiate(baseTpe, domainObject)
           args <- forEach (argInsts) { param => forApproach.reify(param) }
           requestArgs = op.parameters.zip(args).toMap
+          resTpe <- toTargetLanguageType(op.returnType)
+          _ <- forApproach.resolveAndAddImport(resTpe)
           res <- forApproach.dispatch(SendRequest(inst, baseTpe, Request(op, requestArgs)))
-        } yield (tpe, res, exp)
+        } yield (resTpe, res, exp)
       }
 
       def makeEqualsTestCase(forApproach: AIP[paradigm.type])(testCase: EqualsTestCase):

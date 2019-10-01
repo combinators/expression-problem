@@ -17,7 +17,7 @@ import org.combinators.ep.generator.paradigm.control.{AssignVariable, Imperative
 import org.combinators.ep.generator.{Command, FileWithPath, FreshNameProvider, Understands}
 import org.combinators.ep.generator.paradigm._
 import org.combinators.templating.twirl.Java
-import org.combinators.templating.persistable.JavaPersistable
+import org.combinators.templating.persistable.{BundledResource, JavaPersistable, ResourcePersistable}
 
 import scala.collection.JavaConverters._
 import scala.util.Try
@@ -51,6 +51,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
   case class ProjectCtxt(
     resolver: ContextSpecificResolver,
     units: Seq[com.github.javaparser.ast.CompilationUnit],
+    testUnits: Seq[com.github.javaparser.ast.CompilationUnit],
     extraDependencies: Seq[String]
   )
   case class CompilationUnitCtxt(
@@ -110,7 +111,13 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                     unit,
                     isTest = false)
                 )
-              (context.copy(resolver = uc.resolver, units = context.units :+ uc.unit), ())
+              val (newUnits, newTestUnits) =
+                if (uc.isTest) {
+                  (context.units, context.testUnits :+ uc.unit)
+                } else {
+                  (context.units :+ uc.unit, context.testUnits)
+                }
+              (context.copy(resolver = uc.resolver, units = newUnits, testUnits = newTestUnits), ())
             }
           }
         implicit val canAddTypeLookupForMethodsInProject: Understands[ProjectContext, AddTypeLookup[MethodBodyContext, Type]] =
@@ -145,6 +152,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                   nextUnit.addImport(command.imp)
                   nextUnit
                 } else oldUnit
+              newUnit.getImports.sort((i1, i2) => i1.toString.compareTo(i2.toString))
               (context.copy(unit = newUnit), ())
             }
           }
@@ -154,24 +162,27 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
               context: CompilationUnitCtxt,
               command: AddTestSuite[Name, TestCtxt]
             ): (CompilationUnitContext, Unit) = {
-               val (testRes, _) =
+              val clsToAdd = new ClassOrInterfaceDeclaration()
+              clsToAdd.setPublic(true)
+              val (testRes, _) =
                 Command.runGenerator(
                   command.suite,
                   TestCtxt(
                     context.resolver,
                     Seq.empty,
-                    new ClassOrInterfaceDeclaration()))
+                    clsToAdd))
               val updatedUnit = {
                 val oldUnit = context.unit
                 val testClass = testRes.testClass
                 val nextUnit = oldUnit.clone()
                 testRes.extraImports.foreach { imp =>
                   if (!nextUnit.getImports.contains(imp))
-                    nextUnit.addImport(imp)
+                    nextUnit.addImport(imp.clone())
                 }
                 val classToAdd = testClass.clone()
                 classToAdd.setName(command.name.mangled)
                 nextUnit.addType(classToAdd)
+                nextUnit.getImports.sort((i1, i2) => i1.toString.compareTo(i2.toString))
                 nextUnit
               }
               (context.copy(resolver = testRes.resolver, unit = updatedUnit, isTest = true), ())
@@ -309,7 +320,13 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
               command: Apply[Expression, Expression, Expression]
             ): (MethodBodyCtxt, Expression) = {
               val resultExp: Expression =
-                Java(s"${command.functional}${command.arguments.mkString("(", ", ", ")")}").expression()
+                if (command.functional.isMethodCallExpr) {
+                  val res = command.functional.asMethodCallExpr().clone()
+                  command.arguments.foreach(arg => res.addArgument(arg))
+                  res
+                } else {
+                  Java(s"${command.functional}${command.arguments.mkString("(", ", ", ")")}").expression()
+                }
               (context, resultExp)
             }
           }
@@ -356,18 +373,19 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                 testMethod.setModifiers(Modifier.publicModifier().getKeyword)
                 testMethod.setType(new com.github.javaparser.ast.`type`.VoidType())
                 testMethod.setName(JavaNameProvider.addPrefix("test", command.name).toAST)
-                testMethod.addAnnotation("Test")
+                testMethod.addMarkerAnnotation("Test")
+                val testImport = new ImportDeclaration("org.junit.Test", false, false)
                 val (resultingContext, _) =
                   Command.runGenerator(
                     gen,
                     MethodBodyCtxt(
                       context.resolver,
-                      context.extraImports,
+                      (testImport +: context.extraImports).distinct.map(_.clone),
                       testMethod)
                   )
                 val newClass = context.testClass.clone()
                 newClass.addMember(resultingContext.method.clone)
-                (context.copy(resolver = resultingContext.resolver, testClass = newClass), ())
+                (context.copy(resolver = resultingContext.resolver, testClass = newClass, extraImports = resultingContext.extraImports), ())
               }
             }
         }
@@ -386,24 +404,45 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                 generatedVariables = Map.empty
               ),
               units = Seq.empty,
+              testUnits = Seq.empty,
               extraDependencies = Seq.empty
             )
           )
         val nameEntry = config.projectName.map(n => s"""name := "${n}"""").getOrElse("")
-        val deps = finalContext.extraDependencies.mkString("Seq(\n", ",\n    ", "\n  )")
+        val junitDep = """"com.novocode" % "junit-interface" % "0.11" % "test""""
+        val deps = (junitDep +: finalContext.extraDependencies).mkString("Seq(\n    ", ",\n    ", "\n  )")
         val buildFile =
           s"""
              |$nameEntry
+             |crossPaths := false
+             |autoScalaLibrary := false
              |libraryDependencies ++= $deps
            """.stripMargin
         val cleanedUnits = FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.units: _*)
+        val cleanedTestUnits = FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.testUnits: _*)
         val javaFiles = cleanedUnits.map { unit =>
           FileWithPath(
             JavaPersistable.compilationUnitInstance.rawText(unit),
             JavaPersistable.compilationUnitInstance.fullPath(Paths.get("."), unit)
           )
         }
-        FileWithPath(buildFile, Paths.get("build.sbt")) +: javaFiles
+        val javaTestFiles = cleanedTestUnits.map { unit =>
+          val javaPath =
+            Paths.get("src", "main")
+              .relativize(JavaPersistable.compilationUnitInstance.fullPath(Paths.get("."), unit))
+          val testPath =
+            Paths.get("src", "test").resolve(javaPath)
+          FileWithPath(
+            JavaPersistable.compilationUnitInstance.rawText(unit),
+            testPath
+          )
+        }
+        val gitIgnore = BundledResource(".gitignore", Paths.get(".gitignore"), this.getClass)
+        FileWithPath(
+          ResourcePersistable.bundledResourceInstance.rawText(gitIgnore),
+          ResourcePersistable.bundledResourceInstance.path(gitIgnore)) +:
+          FileWithPath(buildFile, Paths.get("build.sbt")) +:
+          (javaFiles ++ javaTestFiles)
       }
     }
 
@@ -430,10 +469,11 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                 val newUnit = context.unit.clone()
                 newUnit.addType(resultCtxt.cls)
                 resultCtxt.extraImports.foreach { imp =>
-                  if (!newUnit.getImports.contains(imp)) {
+                  if (!newUnit.getImports.contains(imp) && imp.getName.getIdentifier != command.name.toAST.getIdentifier) {
                     newUnit.addImport(imp.clone())
                   }
                 }
+                newUnit.getImports.sort((i1, i2) => i1.toString.compareTo(i2.toString))
                 (context.copy(resolver = resultCtxt.resolver, unit = newUnit), ())
               }
             }
@@ -1056,7 +1096,12 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
         implicit val canApplyMethodToTypeInMethod: Understands[MethodBodyContext, Apply[Expression, Type, Expression]] =
           new Understands[MethodBodyContext, Apply[Expression, Type, Expression]] {
             def perform(context: MethodBodyContext, command: Apply[Expression, Type, Expression]): (MethodBodyContext, Expression) = {
-              val resultExp = command.functional.clone().asMethodReferenceExpr()
+              val resultExp =
+                if (command.functional.isMethodCallExpr) {
+                  command.functional.clone().asMethodCallExpr()
+                } else {
+                  Java(s"${command.functional}()").expression[MethodCallExpr]()
+                }
               val boxedArguments = command.arguments.map { arg =>
                 if (arg.isPrimitiveType) arg.asPrimitiveType().toBoxedType
                 else arg.clone()
@@ -1235,7 +1280,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
     def addExtraImport(
       importResolution: Type => Option[Import]
     ): Type => Option[Import] = {
-      case r if r == translateTo => extraImport
+      case r if r == translateTo || r == possiblyBoxedTargetType(true) => extraImport
       case other => importResolution(other)
     }
 
@@ -1393,10 +1438,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
             ): (Ctxt, Expression) = {
               implicit val _getMember = getMember
               implicit val _applyMethod = applyMethod
-              val gen = for {
-                toStringMethod <- GetMember[Expression, Name](command.arguments(0), JavaNameProvider.mangle("toString")).interpret
-                res <- Apply[Expression, Expression, Expression](toStringMethod, Seq.empty).interpret
-              } yield res
+              val gen = Command.lift[Ctxt, Expression](Java(s"String.valueOf(${command.arguments.head})").expression())
               Command.runGenerator(gen, context)
             }
           }
@@ -1440,11 +1482,18 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
               context: Ctxt,
               command: Apply[ffi.Equals[Type], Expression, Expression]
             ): (Ctxt, Expression) = {
-              if (command.functional.inType.isClassOrInterfaceType) {
+              val tpe = command.functional.inType.toClassOrInterfaceType
+              if (tpe.isPresent) {
                 implicit val _getMember = getMember
                 implicit val _applyMethod = applyMethod
+                val boxedLhs =
+                  if (!config.boxLevel.isConsistent && tpe.get.isBoxedType) {
+                    Java(s"${tpe.get}.valueOf(${command.arguments.head})").expression()
+                  } else {
+                    command.arguments.head
+                  }
                 val gen = for {
-                  equalsMethod <- GetMember[Expression, Name](command.arguments(0), JavaNameProvider.mangle("equals")).interpret
+                  equalsMethod <- GetMember[Expression, Name](boxedLhs, JavaNameProvider.mangle("equals")).interpret
                   res <- Apply[Expression, Expression, Expression](equalsMethod, command.arguments.tail).interpret
                 } yield res
                 Command.runGenerator(gen, context)
@@ -1490,9 +1539,9 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
             ): (MethodBodyCtxt, base.syntax.Expression) = {
               import ooParadigm.methodBodyCapabilities._
               import paradigm.methodBodyCapabilities._
+              val assertImp = new ImportDeclaration("org.junit.Assert", false, false)
               val gen = for {
-                imp <- resolveImport(Java("org.junit.Assert").tpe())
-                _ <- imp.map(addImport).getOrElse(Command.skip)
+                _ <- addImport(assertImp)
                 assertMethod <- getMember(Java("Assert").expression(), JavaNameProvider.mangle("assertTrue"))
                 msg <- reify[String](TypeRep.String, command.functional.message)
                 res <- apply(assertMethod, Seq(msg, command.arguments(0)))
@@ -1528,7 +1577,10 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
 
 object CodeGenerator {
 
-  sealed abstract class BoxLevel(val inMethods: Boolean, val inClasses: Boolean, val inConstructors: Boolean)
+  sealed abstract class BoxLevel(val inMethods: Boolean, val inClasses: Boolean, val inConstructors: Boolean) {
+    val isConsistent: Boolean =
+      (inMethods == inClasses) && (inClasses == inConstructors)
+  }
   case object FullyBoxed extends BoxLevel(inMethods = true, inClasses = true, inConstructors = true)
   case object PartiallyBoxed extends BoxLevel(inMethods = true, inClasses = false, inConstructors = false)
   case object Unboxed extends BoxLevel(inMethods = false, inClasses = false, inConstructors = false)

@@ -28,7 +28,7 @@ object Main extends IOApp {
   val interpreterApproach = Interpreter[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
   // select one here.
-  val approach = visitorApproach //extensibleVisitorApproach
+  val approach = ooApproach //extensibleVisitorApproach
 
   //val git = Git.init().setDirectory(directory.toFile).call()
   val evolutions = Seq(M0, M1, M2, M3)

@@ -12,6 +12,7 @@ import org.apache.commons.io.filefilter.FileFilterUtils
 import org.combinators.templating.persistable.Persistable
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.ResetCommand.ResetType
+import org.eclipse.jgit.util.{FileUtils => JGitFileUtils}
 
 
 /** Bundles multiple Git commands into a sequence of actions,
@@ -46,7 +47,7 @@ sealed trait BranchTransaction { self =>
     val branchName = self.branchName
     def materialize(inGit: Git): IO[Unit] =
       self.materialize(inGit) *> IO {
-        val tree = inGit.getRepository.getWorkTree.toPath
+        val tree = JGitFileUtils.pathToString(JGitFileUtils.canonicalize(inGit.getRepository.getWorkTree))
         val toDelete: Iterator[(File, String)] =
           FileUtils
             .iterateFilesAndDirs(
@@ -58,7 +59,11 @@ sealed trait BranchTransaction { self =>
             .filterNot(f =>
               f == inGit.getRepository.getWorkTree ||
               f.toPath.startsWith(inGit.getRepository.getDirectory.toPath))
-            .map(f => (f, tree.relativize(f.toPath).toString))
+            .map(f => {
+              val canonicalF = JGitFileUtils.pathToString(JGitFileUtils.canonicalize(f))
+              val pat = JGitFileUtils.relativizeGitPath(tree, canonicalF)
+              (f, pat)
+            })
         toDelete.foreach { case (f, pat) =>
           if (!f.isDirectory) {
             inGit.rm().addFilepattern(pat).call()
@@ -75,13 +80,12 @@ sealed trait BranchTransaction { self =>
     def materialize(inGit: Git): IO[Unit] =
       self.materialize(inGit) *> IO {
         val tree = inGit.getRepository.getWorkTree.toPath
+        val treeString = JGitFileUtils.pathToString(JGitFileUtils.canonicalize(tree.toFile))
         val persisted = persistable.persistOverwriting(tree.resolve(sourceDirectory), elem)
-        var targetPath = tree.relativize(tree.resolve(persisted.toPath))
-        // strip "./"
-        while (targetPath.startsWith(Paths.get("."))) {
-          targetPath = Paths.get(".").relativize(targetPath)
-        }
-        inGit.add().addFilepattern(targetPath.toString).call()
+        val targetPath = tree.resolve(persisted.toPath)
+        val targetString = JGitFileUtils.pathToString(JGitFileUtils.canonicalize(targetPath.toFile))
+        val pat = JGitFileUtils.relativizeGitPath(treeString, targetString)
+        inGit.add().addFilepattern(pat).call()
       }
   }
 

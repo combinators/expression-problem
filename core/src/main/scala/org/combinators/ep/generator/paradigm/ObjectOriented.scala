@@ -79,6 +79,10 @@ trait ObjectOriented {
   val compilationUnitCapabilities: CompilationUnitCapabilities
 
   trait ClassCapabilities {
+    implicit val canDebugInClass: Understands[ClassContext, Debug]
+    def debug(): Generator[ClassContext, Unit] =
+      AnyParadigm.capabilitiy(Debug())
+
     implicit val canAddParentInClass: Understands[ClassContext, AddParent[Type]]
     def addParent(parentClass: Type): Generator[ClassContext, Unit] =
       AnyParadigm.capabilitiy(AddParent(parentClass))

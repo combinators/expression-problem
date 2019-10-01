@@ -94,6 +94,18 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
 
     val projectContextCapabilities: ProjectContextCapabilities =
       new ProjectContextCapabilities {
+        implicit val canDebugInProject: Understands[ProjectCtxt, Debug] =
+          new Understands[ProjectCtxt, Debug] {
+            def perform(
+                         context: ProjectCtxt,
+                         command: Debug
+                       ): (ProjectCtxt, Unit) = {
+
+              context.units.foreach (u => System.err.println (u))
+              (context,())
+            }
+          }
+
         implicit val canAddCompilationUnitInProject: Understands[ProjectCtxt, AddCompilationUnit[Name, CompilationUnitCtxt]] =
           new Understands[ProjectCtxt, AddCompilationUnit[Name, CompilationUnitCtxt]] {
             def perform(
@@ -132,6 +144,18 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
 
     val compilationUnitCapabilities: CompilationUnitCapabilities =
       new CompilationUnitCapabilities {
+        implicit val canDebugInCompilationUnit: Understands[CompilationUnitCtxt, Debug] =
+          new Understands[CompilationUnitCtxt, Debug] {
+            def perform(
+                         context: CompilationUnitCtxt,
+                         command: Debug
+                       ): (CompilationUnitCtxt, Unit) = {
+
+              System.err.println (context.unit)
+              (context,())
+            }
+          }
+
         implicit val canAddImportInCompilationUnit: Understands[CompilationUnitCtxt, AddImport[ImportDeclaration]] =
           new Understands[CompilationUnitCtxt, AddImport[ImportDeclaration]] {
             def perform(
@@ -189,8 +213,21 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
             }
           }
       }
+
     val methodBodyCapabilities: MethodBodyCapabilities =
       new MethodBodyCapabilities {
+        implicit val canDebugInMethodBody: Understands[MethodBodyCtxt, Debug] =
+          new Understands[MethodBodyCtxt, Debug] {
+            def perform(
+                         context: MethodBodyCtxt,
+                         command: Debug
+                       ): (MethodBodyCtxt, Unit) = {
+
+              System.err.println (context.method)
+              (context,())
+            }
+          }
+
         implicit val canAddImportInMethodBody: Understands[MethodBodyCtxt, AddImport[ImportDeclaration]] =
           new Understands[MethodBodyCtxt, AddImport[ImportDeclaration]] {
             def perform(
@@ -337,8 +374,21 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
             }
           }
       }
+
       val testCapabilities: TestCapabilities =
         new TestCapabilities {
+          implicit val canDebugInTest: Understands[TestContext, Debug] =
+            new Understands[TestContext, Debug] {
+              def perform(
+                           context: TestContext,
+                           command: Debug
+                         ): (TestContext, Unit) = {
+
+                System.err.println (context.testClass)
+                (context,())
+              }
+            }
+
           implicit val canAddTestCaseInTest: Understands[TestContext, AddTestCase[MethodBodyContext, Name, Expression]] =
             new Understands[TestContext, AddTestCase[MethodBodyContext, Name, Expression]] {
               def perform(
@@ -371,6 +421,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
               }
             }
         }
+
       override def runGenerator(generator: Generator[ProjectContext, Unit]): Seq[FileWithPath] = {
         val (finalContext, _) =
           Command.runGenerator(generator,
@@ -442,6 +493,19 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
       val classCapabilities: ClassCapabilities =
         new ClassCapabilities {
           import base.syntax._
+
+          implicit val canDebugInClass: Understands[ClassContext, Debug] =
+            new Understands[ClassContext, Debug] {
+              def perform(
+                           context: ClassContext,
+                           command: Debug
+                         ): (ClassContext, Unit) = {
+
+                System.err.println (context.cls)
+                (context,())
+              }
+            }
+
           implicit val canAddParentInClass: Understands[ClassContext, AddParent[Type]] =
             new Understands[ClassContext, AddParent[Type]] {
               def perform(

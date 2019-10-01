@@ -88,6 +88,11 @@ case class FreshName[Name](basedOn: Name) extends Command {
   type Result = Name
 }
 
+/** Ability for output of partial generated artifacts. */
+case class Debug() extends Command {
+  type Result = Unit
+}
+
 trait AnyParadigm {
   val syntax: AbstractSyntax
 
@@ -110,6 +115,10 @@ trait AnyParadigm {
 
   /** The overall project stores the CompilationUnits which can be added to it. */
   trait ProjectContextCapabilities {
+    implicit val canDebugInProject: Understands[ProjectContext, Debug]
+    def debug(): Generator[ProjectContext, Unit] =
+      AnyParadigm.capabilitiy(Debug())
+
     implicit val canAddCompilationUnitInProject: Understands[ProjectContext, AddCompilationUnit[Name, CompilationUnitContext]]
     def addCompilationUnit(name: Name, unit: Generator[CompilationUnitContext, Unit]): Generator[ProjectContext, Unit] =
       AnyParadigm.capabilitiy(AddCompilationUnit(name, unit))
@@ -122,6 +131,10 @@ trait AnyParadigm {
 
   /** Each CompilationUnit may have external import dependencies and associated test cases. */
   trait CompilationUnitCapabilities {
+    implicit val canDebugInCompilationUnit: Understands[CompilationUnitContext, Debug]
+    def debug(): Generator[CompilationUnitContext, Unit] =
+      AnyParadigm.capabilitiy(Debug())
+
     implicit val canAddImportInCompilationUnit: Understands[CompilationUnitContext, AddImport[Import]]
     def addImport(imp: Import): Generator[CompilationUnitContext, Unit] =
       AnyParadigm.capabilitiy(AddImport(imp))
@@ -148,6 +161,10 @@ trait AnyParadigm {
    *
    */
   trait MethodBodyCapabilities {
+    implicit val canDebugInMethodBody: Understands[MethodBodyContext, Debug]
+    def debug(): Generator[MethodBodyContext, Unit] =
+      AnyParadigm.capabilitiy(Debug())
+
     implicit val canAddImportInMethodBody: Understands[MethodBodyContext, AddImport[Import]]
     def addImport(imp: Import): Generator[MethodBodyContext, Unit] =
       AnyParadigm.capabilitiy(AddImport(imp))
@@ -191,6 +208,10 @@ trait AnyParadigm {
   val methodBodyCapabilities: MethodBodyCapabilities
 
   trait TestCapabilities {
+    implicit val canDebugInTest: Understands[TestContext, Debug]
+    def debug(): Generator[TestContext, Unit] =
+      AnyParadigm.capabilitiy(Debug())
+
     implicit val canAddTestCaseInTest: Understands[TestContext, AddTestCase[MethodBodyContext, Name, Expression]]
     def addTestCase(name: Name, code: Generator[MethodBodyContext, Seq[Expression]]): Generator[TestContext, Unit] =
       AnyParadigm.capabilitiy(AddTestCase(name, code))
@@ -203,6 +224,7 @@ trait AnyParadigm {
 object AnyParadigm {
   type WithSyntax[S <: AbstractSyntax] = AnyParadigm { val syntax: S }
 
+  // TODO: This needs to be renamed to be 'capability'
   def capabilitiy[Ctxt, R, Cmd <: Command.WithResult[R]]
     (cmd: Cmd)
     (implicit interp: Understands[Ctxt, Cmd]): Generator[Ctxt, R] = {

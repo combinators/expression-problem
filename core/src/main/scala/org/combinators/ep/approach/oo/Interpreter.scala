@@ -31,8 +31,10 @@ sealed trait Interpreter extends ApproachImplementationProvider {
   def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
     import ooParadigm.methodBodyCapabilities._
     import paradigm.methodBodyCapabilities._
+
     for {
       rt <- findClass(names.mangle(names.conceptNameOf(tpeCase)))
+
       _ <- resolveAndAddImport(rt)
       res <- instantiateObject(rt, args)
     } yield res
@@ -64,6 +66,7 @@ sealed trait Interpreter extends ApproachImplementationProvider {
         for {
           _ <- setAbstract()
           _ <- forEach(ops) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), makeSignature(op)) }
+          _ <- debug()
         } yield ()
       }
     addClassToProject(names.mangle(names.conceptNameOf(tpe)), makeClass)
@@ -131,7 +134,8 @@ sealed trait Interpreter extends ApproachImplementationProvider {
     val makeClass: Generator[ClassContext, Unit] = {
       import classCapabilities._
       for {
-        pt <- toTargetLanguageType(TypeRep.DataType(tpe))
+        pt <- findClass(names.mangle(names.conceptNameOf(tpe)))
+        //pt <- toTargetLanguageType(TypeRep.DataType(tpe))
         _ <- resolveAndAddImport(pt)
         _ <- addParent(pt)
         _ <- forEach (tpeCase.attributes) { att => makeField(att) }
@@ -148,16 +152,25 @@ sealed trait Interpreter extends ApproachImplementationProvider {
     FindClass(names.mangle(names.conceptNameOf(dtpe))).interpret(canFindClass)
   }
 
-//  def initializeApproach(domain: Model): Generator[ProjectContext, Unit] = {
-//    import ooParadigm.projectCapabilities._
-//    import paradigm.projectContextCapabilities._
-//    val dtpeRep = TypeRep.DataType(domain.baseDataType)
-//    for {
-//      _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(domain.baseDataType))
-//      _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(domain.baseDataType))
-//      _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(domain.baseDataType))
-//    } yield ()
-//  }
+  /**
+   * When trying to find an import that is needed for a class, there is a lookup function and ResolveImports uses this lookup
+   * to be able to import aclass.
+   * @param domain
+   * @return
+   */
+  def initializeApproach(domain: Model): Generator[ProjectContext, Unit] = {
+    import paradigm.projectContextCapabilities._
+    import ooParadigm.projectCapabilities._
+    import ooParadigm.methodBodyCapabilities._            // NOTE: DO NOT REMOVE SINCE USED BY BELOW AddTypeLookup
+    import ooParadigm.classCapabilities._
+    import ooParadigm.constructorCapabilities._
+    val dtpeRep = TypeRep.DataType(domain.baseDataType)
+    for {
+      _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(domain.baseDataType))
+      _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(domain.baseDataType))
+      _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(domain.baseDataType))
+    } yield ()
+  }
 
   def makeBaseExtensions(model:Model): Generator[ProjectContext, Unit] = {
     val allTypes = model.pastDataTypes
@@ -191,17 +204,17 @@ sealed trait Interpreter extends ApproachImplementationProvider {
    *
    * @param model
    * @param ops
-   * @param allTypes
-   * @param isBase
    * @return
    */
   def makeClassForCase(model: Model, ops: Seq[Operation], tpeCase: DataTypeCase): Generator[ClassContext, Unit] = {
     import classCapabilities._
+    import ooParadigm.projectCapabilities._
     for {
-      pt <- toTargetLanguageType(TypeRep.DataType(model.baseDataType))  // TODO: How do I get DataType from DataTypeCase?
+       pt <- toTargetLanguageType(TypeRep.DataType(model.baseDataType))  // TODO: How do I get DataType from DataTypeCase?
       _ <- resolveAndAddImport(pt)
       _ <- addParent(pt)
       _ <- forEach(tpeCase.attributes) { att => makeField(att) }
+      _ <- debug()
     } yield ()
   }
 
@@ -230,8 +243,9 @@ sealed trait Interpreter extends ApproachImplementationProvider {
      * Must make sure we include ALL subtypes, not just ones from the past.
      */
     for {
-      //_ <- initializeApproach(domain)   // CAN'T GET THIS TO COMPILE YET??
+      _ <- initializeApproach(domain)
       _ <- domainSpecific.initialize(this)
+      _ <- makeBase(domain.baseDataType, domain.ops)
       _ <- forEach (domain.inChronologicalOrder.filter(m => m.ops.nonEmpty)) { m =>
         makeBaseExtensions(m)
       }

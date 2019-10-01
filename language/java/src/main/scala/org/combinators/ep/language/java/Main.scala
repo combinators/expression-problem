@@ -29,28 +29,28 @@ object Main extends App {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = CodeGenerator.PartiallyBoxed))
 
   // select one here.
-  val approach = extensibleVisitorApproach
+  val approach = interpreterApproach
 
   val directory = Paths.get(targetDirectory.toString, approach.getClass.getSimpleName)
   //val git = Git.init().setDirectory(directory.toFile).call()
-  val evolutions = Seq(M0, M1, M2, M3)
+  val evolutions = Seq(M0, M1 , M2, M3)
   val tests = evolutions.scanLeft(Map.empty[Model, Seq[TestCase]]) { case (m, evolution) =>
     m + ((evolution.getModel -> evolution.tests))
   }
 
-  // I would love to be able to debug a partially contructed model, and I thought there
+  // I would love to be able to debug a partially constructed model, and I thought there
   // should be some way to call out to this Main class to do this...
-  //def debugResolve(val impl:Generator[ProjectContext, Unit]) : String = {
-  //  generator.paradigm.runGenerator(impl).foreach(file => new String(file.rawBytes))
-  //}
+//  def debugResolve(val impl:Generator[ProjectContext, Unit]) : String = {
+//    generator.paradigm.runGenerator(impl).foreach(file => new String(file.rawBytes))
+//  }
 
   evolutions.zip(tests).foreach { case (evolution, tests) =>
-
+    // can always use LARGEST EIP whenver
     val impl =
       for {
         _ <- approach.implement(
           evolution.getModel,
-          eips.M3.apply(approach.paradigm)(generator.doublesInMethod, generator.stringsInMethod)
+          eips.M3.apply(approach.paradigm)(generator.doublesInMethod , generator.stringsInMethod)
         )
         _ <- approach.implement(
           tests,

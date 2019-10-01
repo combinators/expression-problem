@@ -488,7 +488,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
             testPath
           )
         }
-        val gitIgnore = BundledResource(".gitignore", Paths.get(".gitignore"), this.getClass)
+        val gitIgnore = BundledResource("gitignore", Paths.get(".gitignore"), classOf[CodeGenerator])
         FileWithPath(
           ResourcePersistable.bundledResourceInstance.rawText(gitIgnore),
           ResourcePersistable.bundledResourceInstance.path(gitIgnore)) +:

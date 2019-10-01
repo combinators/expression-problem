@@ -460,8 +460,11 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
             )
           )
         val nameEntry = config.projectName.map(n => s"""name := "${n}"""").getOrElse("")
-        val junitDep = """"com.novocode" % "junit-interface" % "0.11" % "test""""
-        val deps = (junitDep +: finalContext.extraDependencies).mkString("Seq(\n    ", ",\n    ", "\n  )")
+        val junitDeps = Seq(
+          """"com.novocode" % "junit-interface" % "0.11" % "test"""",
+          """"junit" % "junit" % "4.12" % "test""""
+        )
+        val deps = (junitDeps ++ finalContext.extraDependencies).mkString("Seq(\n    ", ",\n    ", "\n  )")
         val buildFile =
           s"""
              |$nameEntry
@@ -480,7 +483,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
         val javaTestFiles = cleanedTestUnits.map { unit =>
           val javaPath =
             Paths.get("src", "main")
-              .relativize(JavaPersistable.compilationUnitInstance.fullPath(Paths.get("."), unit))
+              .relativize(JavaPersistable.compilationUnitInstance.fullPath(Paths.get(""), unit))
           val testPath =
             Paths.get("src", "test").resolve(javaPath)
           FileWithPath(

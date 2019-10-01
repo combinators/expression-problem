@@ -61,21 +61,21 @@ object M4 extends Evolution {
     EqualsTestCase(getModel.baseDataType, m4_s_13, Collect, ListDoubleInst(Seq(13.0, 1.0))),
 
     EqualsTestCase(getModel.baseDataType, m4_m1, PrettyP, StringInst("((5.0/2.0)*4.0)")),
-    EqualsTestCase(getModel.baseDataType, m4_m1, Eval, InstanceRep(LitInst(10.0))),
+    EqualsTestCase(getModel.baseDataType, m4_m1, Eval, M0.DoubleInst(10.0)),
   )  //
 
   def M4_simplify_tests:Seq[TestCase] = Seq(
     EqualsCompositeTestCase(getModel.baseDataType, m4_together, StringInst("(5.0+7.0)"), (Simplify, Seq.empty), (PrettyP, Seq.empty)),
     EqualsCompositeTestCase(getModel.baseDataType, m4_d2,  StringInst("(5.0/7.0)"), (Simplify, Seq.empty), (PrettyP, Seq.empty)),
-    EqualsCompositeTestCase(getModel.baseDataType, m4_s_0, InstanceRep(LitInst(0.0)), (Simplify, Seq.empty), (Eval, Seq.empty)),
-    EqualsCompositeTestCase(getModel.baseDataType, m4_s_5, InstanceRep(LitInst(5.0)), (Simplify, Seq.empty), (Eval, Seq.empty)),
-    EqualsCompositeTestCase(getModel.baseDataType, m4_s_7, InstanceRep(LitInst(7.0)), (Simplify, Seq.empty), (Eval, Seq.empty)),
-    EqualsCompositeTestCase(getModel.baseDataType, m4_s_13, InstanceRep(LitInst(13.0)) , (Simplify, Seq.empty), (Eval, Seq.empty)),
-    EqualsCompositeTestCase(getModel.baseDataType, m4_s_12, InstanceRep(LitInst(12.0)) , (Simplify, Seq.empty), (Eval, Seq.empty)),
-    EqualsCompositeTestCase(getModel.baseDataType, m4_s_m0, InstanceRep(LitInst(0.0)) , (Simplify, Seq.empty), (Eval, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, m4_s_0, M0.DoubleInst(0.0), (Simplify, Seq.empty), (Eval, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, m4_s_5, M0.DoubleInst(5.0), (Simplify, Seq.empty), (Eval, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, m4_s_7, M0.DoubleInst(7.0), (Simplify, Seq.empty), (Eval, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, m4_s_13, M0.DoubleInst(13.0) , (Simplify, Seq.empty), (Eval, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, m4_s_12, M0.DoubleInst(12.0) , (Simplify, Seq.empty), (Eval, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, m4_s_m0, M0.DoubleInst(0.0) , (Simplify, Seq.empty), (Eval, Seq.empty)),
 
-    EqualsCompositeTestCase(getModel.baseDataType, m4_s_n1, InstanceRep(LitInst(-1.0)) , (Simplify, Seq.empty), (Eval, Seq.empty)),
-    EqualsCompositeTestCase(getModel.baseDataType, m4_s_1, InstanceRep(LitInst(1.0)) , (Simplify, Seq.empty), (Eval, Seq.empty)),
-    EqualsCompositeTestCase(getModel.baseDataType, m4_s_d0, InstanceRep(LitInst(0.0)) , (Simplify, Seq.empty), (Eval, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, m4_s_n1, M0.DoubleInst(-1.0) , (Simplify, Seq.empty), (Eval, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, m4_s_1, M0.DoubleInst(1.0) , (Simplify, Seq.empty), (Eval, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, m4_s_d0, M0.DoubleInst(0.0) , (Simplify, Seq.empty), (Eval, Seq.empty)),
   )
 }

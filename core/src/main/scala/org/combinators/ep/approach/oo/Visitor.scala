@@ -50,10 +50,14 @@ abstract class Visitor extends ApproachImplementationProvider {
   def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression] = {
     import ooParadigm.methodBodyCapabilities._
     import paradigm.methodBodyCapabilities._
+    import polymorphics.methodBodyCapabilities._
     for {
 
       // In the "message.to" expression, invoke the 'accept' method with a visitor argument
-      method <- getMember(message.to, accept)   // things which are code-generated use the '<-' handles unpacking results
+      genericMethod <- getMember(message.to, accept)   // things which are code-generated use the '<-' handles unpacking results
+      rt <- toTargetLanguageType(message.request.op.returnType)
+      _ <- resolveAndAddImport(rt)
+      method <- instantiateTypeParameter(genericMethod, Seq(rt))
 
       // the operation is encoded in its own class, which we must find to determine the visitor type
       op = message.request.op
@@ -133,8 +137,8 @@ abstract class Visitor extends ApproachImplementationProvider {
 
     for {
       // R by itself, since not extending any other type parameter (hence Skip)
-      visitTyPAram <- freshName(names.mangle(visitTypeParameter))
-      _ <- addTypeParameter(visitTyPAram, Command.skip)
+      visitTyParam <- freshName(names.mangle(visitTypeParameter))
+      _ <- addTypeParameter(visitTyParam, Command.skip)
 
       // this returns mangled visitTypeParameter name and gets list of all type parameters, for which there is only one, so we get head
       args <- getTypeArguments()
@@ -142,6 +146,7 @@ abstract class Visitor extends ApproachImplementationProvider {
 
       // identify Visitor<R>
       visitorClassType <- findClass(visitorClass)
+      _ <- resolveAndAddImport(visitorClassType)
       visitorType  <- applyType (visitorClassType, args)
 
       visitParam <- freshName(names.mangle(visitorParameter))
@@ -311,11 +316,11 @@ abstract class Visitor extends ApproachImplementationProvider {
       import ooParadigm.classCapabilities._
       import genericsParadigm.classCapabilities._
       for {
-        _ <- setAbstract()
+        _ <- setInterface()
         visitTyParam <- freshName(names.mangle(visitTypeParameter))
         _ <- addTypeParameter(visitTyParam, Command.skip) // R by itself, since not extending any other type parameter (hence Skip)
         visitResultType <- getTypeArguments().map(_.head)
-        _ <- forEach (allTypes) { tpe => addAbstractMethod(names.mangle(names.instanceNameOf(tpe)), makeVisitSignature(tpe, visitResultType)) }
+        _ <- forEach (allTypes) { tpe => addAbstractMethod(visit, makeVisitSignature(tpe, visitResultType)) }
       } yield ()
     }
 
@@ -333,10 +338,11 @@ abstract class Visitor extends ApproachImplementationProvider {
     import ooParadigm.methodBodyCapabilities._
 
     for {
-      _ <- setReturnType(visitResultType)  // only R
-      visitorClassType <- findClass(names.mangle(names.conceptNameOf(tpe)))
+      _ <- setReturnType(visitResultType)
+      visitedClassType <- findClass(names.mangle(names.conceptNameOf(tpe)))
+      _ <- resolveAndAddImport(visitedClassType)
       visitParamName <- freshName(names.mangle(expParameter))
-      _ <- setParameters(Seq((visitParamName, visitorClassType)))      // a pair (name,type) of only one sequence
+      _ <- setParameters(Seq((visitParamName, visitedClassType)))      // a pair (name,type) of only one sequence
     } yield ()
   }
 
@@ -371,7 +377,7 @@ abstract class Visitor extends ApproachImplementationProvider {
       visitedRef <- getArguments().map(_.head._3)
       attAccessors: Seq[Expression] <- forEach (tpeCase.attributes) { att =>
         for {
-          getter <- getMember(visitedRef, names.addPrefix("get", names.mangle(names.instanceNameOf(att))))
+          getter <- getMember(visitedRef, names.addPrefix("get", names.mangle(names.conceptNameOf(att))))
           getterCall <- apply(getter, Seq.empty)
         } yield getterCall
       }
@@ -452,7 +458,7 @@ abstract class Visitor extends ApproachImplementationProvider {
         _ <- addImplemented(visitorInterfaceWithReturnType)
         _ <- addConstructor(makeOperationConstructor(op))
         _ <- forEach (domain.typeCases) { tpe =>
-          addMethod(names.mangle(names.instanceNameOf(tpe)), makeImplementation(domain.baseDataType, tpe, op, domainSpecific))
+          addMethod(visit, makeImplementation(domain.baseDataType, tpe, op, domainSpecific))
         }
       } yield ()
     }

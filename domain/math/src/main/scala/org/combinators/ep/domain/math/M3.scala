@@ -29,14 +29,14 @@ object M3 extends Evolution {
   val m3_m1 = NegInst(LitInst(1.0))
   val m3_m2 = MultInst(DivdInst(LitInst(5.0),  LitInst(2.0)), LitInst(4.0))
 
-  def tests:Seq[TestCase] = Seq(
-    EqualsTestCase(getModel.baseDataType, m3_m1, Eval, InstanceRep(LitInst(-1.0))),
+  def tests: Seq[TestCase] = Seq(
+    EqualsTestCase(getModel.baseDataType, m3_m1, Eval, M0.DoubleInst(-1.0)),
     EqualsTestCase(getModel.baseDataType, m3_m1, PrettyP, StringInst("-1.0")),
 
     EqualsTestCase(getModel.baseDataType, m3_m2, PrettyP, StringInst("((5.0/2.0)*4.0)")),
-    EqualsTestCase(getModel.baseDataType, m3_m2, Eval, InstanceRep(LitInst(10.0))),
+    EqualsTestCase(getModel.baseDataType, m3_m2, Eval, M0.DoubleInst(10.0)),
 
-    EqualsTestCase(getModel.baseDataType, m3_d1, Eval,InstanceRep(LitInst(-5.0))),
+    EqualsTestCase(getModel.baseDataType, m3_d1, Eval, M0.DoubleInst(-5.0)),
     EqualsTestCase(getModel.baseDataType, m3_s1, PrettyP, StringInst("-(2.0*3.0)"))
   )
 }

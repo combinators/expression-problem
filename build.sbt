@@ -37,8 +37,8 @@ lazy val commonSettings = Seq(
     "org.scalactic" %% "scalactic" % "3.0.5" % "test",
     "org.scalatest" %% "scalatest" % "3.0.5" % "test",
     "org.scalameta" %% "scalameta" % "3.7.4",
-    "org.typelevel" %% "cats-core" % "2.0.0-RC1",
-    "org.typelevel" %% "cats-free" % "2.0.0-RC1"
+    "org.typelevel" %% "cats-core" % "2.0.0-M4",
+    "org.typelevel" %% "cats-free" % "2.0.0-M4"
   ),
 
   addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
@@ -78,16 +78,14 @@ lazy val domainShape = standardDomainProject("shape")
 def standardLanguageProject(languageName: String): Project =
   (Project(id = s"language-$languageName", base = file(s"language/$languageName")))
     .settings(commonSettings: _*)
-    .enablePlugins(PlayScala)
-    .disablePlugins(PlayLayoutPlugin)
     .settings(
       moduleName := s"expression-problem-language-$languageName",
       libraryDependencies += guice
     )
-    .dependsOn(core, domainMath, domainShape)
+    .dependsOn(core, domainMath, domainShape, jgitserv)
 
 
-lazy val languageJava = standardLanguageProject("java").dependsOn(jgitserv)
+lazy val languageJava = standardLanguageProject("java")
 lazy val languageGJ = standardLanguageProject("gj")
 lazy val languageCPP = standardLanguageProject("cpp")
 lazy val languageHaskell = standardLanguageProject("haskell")
@@ -116,10 +114,12 @@ lazy val jgitserv =
         "-language:implicitConversions"
       ),
       libraryDependencies ++= Seq(
-        "com.github.finagle" %% "finchx-core" % "0.29.0",
+        "com.github.finagle" %% "finchx-core" % "0.31.0",
         "org.eclipse.jgit" % "org.eclipse.jgit" % "5.4.0.201906121030-r",
         "commons-io" % "commons-io" % "2.6",
-        "org.combinators" %% "templating" % "1.1.0"
-      )
+        "org.combinators" %% "templating" % "1.1.0",
+        "ch.qos.logback" % "logback-classic" % "1.2.3"
+      ),
+      addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
     )
     

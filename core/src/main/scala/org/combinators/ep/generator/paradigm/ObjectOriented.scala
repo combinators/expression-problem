@@ -80,8 +80,8 @@ trait ObjectOriented {
 
   trait ClassCapabilities {
     implicit val canDebugInClass: Understands[ClassContext, Debug]
-    def debug(): Generator[ClassContext, Unit] =
-      AnyParadigm.capabilitiy(Debug())
+    def debug(tag:String = ""): Generator[ClassContext, Unit] =
+      AnyParadigm.capabilitiy(Debug(tag))
 
     implicit val canAddParentInClass: Understands[ClassContext, AddParent[Type]]
     def addParent(parentClass: Type): Generator[ClassContext, Unit] =

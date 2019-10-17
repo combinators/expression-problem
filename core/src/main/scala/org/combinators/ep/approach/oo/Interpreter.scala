@@ -66,7 +66,7 @@ sealed trait Interpreter extends ApproachImplementationProvider {
         for {
           _ <- setAbstract()
           _ <- forEach(ops) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), makeSignature(op)) }
-          _ <- debug()
+          _ <- debug("makeBase")
         } yield ()
       }
     addClassToProject(names.mangle(names.conceptNameOf(tpe)), makeClass)
@@ -214,7 +214,7 @@ sealed trait Interpreter extends ApproachImplementationProvider {
       _ <- resolveAndAddImport(pt)
       _ <- addParent(pt)
       _ <- forEach(tpeCase.attributes) { att => makeField(att) }
-      _ <- debug()
+      _ <- debug("makeClassForCase")
     } yield ()
   }
 

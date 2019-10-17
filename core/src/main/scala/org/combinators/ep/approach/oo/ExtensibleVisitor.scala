@@ -16,6 +16,9 @@ import org.combinators.ep.approach
  *
  * TODO: Doesn't yet work for c1 merged, since it reuses code from visitor (constructors)
  * that need to be modified instead
+ *
+ * https://stackoverflow.com/questions/55501899/exception-in-intellijs-sbt-console-not-found-value-ideaport-ideaport-in-globa
+ * problem with sbt...
  */
 trait ExtensibleVisitor extends Visitor {
   import paradigm._
@@ -29,6 +32,20 @@ trait ExtensibleVisitor extends Visitor {
       ""
     } else {
       model.typeCases.sortWith(_.name < _.name).mkString("")
+    }
+  }
+
+  /** Concatenate operations to form a single class name, ending with "Exp" */
+  def modelInterfaceName(model:Model): String = {
+    model.ops.sortWith(_.name < _.name).map(op => names.conceptNameOf(op)).mkString("") + model.baseDataType.name
+  }
+
+  /** Find Model with operations and return that one. */
+  def baseInterfaceName(m:Model): String = {
+    if (m.lastModelWithOperation.isEmpty) {
+      ""
+    } else {
+      m.lastModelWithOperation.get.ops.sortWith(_.name < _.name).map(op => names.conceptNameOf(op)).mkString("") + m.baseDataType.name
     }
   }
 
@@ -83,8 +100,14 @@ trait ExtensibleVisitor extends Visitor {
       import ooParadigm.classCapabilities._
       import genericsParadigm.classCapabilities._
       for {
-        _ <- setAbstract()
-        _ <- addTypeParameter(names.mangle(visitTypeParameter), Command.skip)    // R by itself, since not extending any other type parameter (hence Skip)
+        rt <- toTargetLanguageType(op.returnType)  // TODO: How to convert return type into Double.
+
+        // identify Visitor<R>
+        visitorClassType <- findClass(visitorClass)
+        _ <- resolveAndAddImport(visitorClassType)
+        visitorType  <- applyType (visitorClassType, Seq(rt))
+
+        _ <- addImplemented(visitorType)
         _ <- forEach (domain.typeCases) { tpe =>
           addMethod(names.mangle(names.instanceNameOf(tpe)), makeImplementation(domain.baseDataType, tpe, op, domainSpecific))
         }
@@ -96,8 +119,126 @@ trait ExtensibleVisitor extends Visitor {
     //    addClassToProject(visitorClass, makeClass)
   }
 
+  /**
+   * Define the base class for Exp
+   * {{{
+   *  package visitor;
+   *  public abstract class Exp {
+   *    public abstract <R> R accept(Visitor<R> v);
+   *  }
+   * }}}
+   * @param tpe
+   * @return
+   */
+  def makeOperationsBase(tpe: DataType): Generator[ProjectContext, Unit] = {
+    import ooParadigm.projectCapabilities._
+
+    val makeClass: Generator[ClassContext, Unit] = {
+      import ooParadigm.classCapabilities._
+      for {
+        _ <- setAbstract()
+        _ <- addAbstractMethod(accept, makeAcceptSignature())
+      } yield ()
+    }
+
+    // adds the 'Exp' class, with a single accept method
+    addClassToProject(names.mangle(names.conceptNameOf(tpe)), makeClass)
+  }
+
+  /**
+   * This should create the following (when called three times):
+   *
+   * ```
+   * public class Eval implements Visitor<Double> {
+   *
+   * public Double visit(Lit e) {
+   * return e.getValue();
+   * }
+   *
+   * public Double visit(Add e) {
+   * return e.getLeft().accept(makeEval()) + e.getRight().accept(makeEval());
+   * }
+   *
+   * Eval makeEval() {
+   * return new Eval();
+   * }
+   * }```
+   *
+   * and then
+   *
+   * ```
+   * public class EvalSub extends Eval implements VisitorSub<Double> {
+   *
+   * public Double visit(Sub e) {
+   * return e.getLeft().accept(makeEval()) - e.getRight().accept(makeEval());
+   * }
+   *
+   * EvalSub makeEval() {
+   * return new EvalSub();
+   * }
+   * }
+   * ```
+   *
+   * ```
+   * package visitor;
+   *
+   * public class EvalDivdMultNeg extends EvalSub implements VisitorDivdMultNeg<Double> {
+   *
+   * public Double visit(Neg e) {
+   * return -e.getInner().accept(makeEval());
+   * }
+   *
+   * public Double visit(Mult e) {
+   * return e.getLeft().accept(makeEval()) * e.getRight().accept(makeEval());
+   * }
+   *
+   * public Double visit(Divd e) {
+   * return e.getLeft().accept(makeEval()) / e.getRight().accept(makeEval());
+   * }
+   *
+   * EvalDivdMultNeg makeEval() {
+   * return new EvalDivdMultNeg();
+   * }
+   * }
+   * ```
+   *
+   * I'm having trouble creating the method signatures for any of these....
+   * @return
+   */
+  def makeFactory(model: Model): Generator[ProjectContext, Unit] = {
+    val fullType: String = modelInterfaceName(model)
+    val combinedOps: String = model.ops.sortWith(_.name < _.name).map(op => names.conceptNameOf(op)).mkString("")
+
+    //    def typeConverterRelativeToHere(rep: TypeRep): Type = {
+    //      import ooParadigm.classCapabilities._
+    //      if (rep == model.baseDataType) { fullType }
+    //      else findClass("Double") // TODO:       else findClass(rep)
+    //    }
+
+    import ooParadigm.projectCapabilities._
+    import ooParadigm.classCapabilities._
 
 
+
+    def makeClass(model:Model): Generator[ClassContext, Unit] = {
+      val fullType: String = modelInterfaceName(model)
+      import ooParadigm.classCapabilities._
+
+      val makeClass: Generator[ClassContext, Unit] = {
+        for {
+          rt <- findClass(names.mangle(fullType))
+//          _ <- forEach(model.typeCases) { tpe =>
+//            addMethod(names.mangle(names.instanceNameOf(tpe)), factoryMethod(tpe, rt))
+//          }
+        } yield ()
+      }
+
+      makeClass
+    }
+
+    // adds the 'Exp' class, with a single accept method
+    addClassToProject(names.mangle(s"${fullType}Factory"), makeClass(model))
+  }
 
   /**
    * The Extensible Visitor approach is defined as follows
@@ -117,7 +258,14 @@ trait ExtensibleVisitor extends Visitor {
     for {
       _ <- initializeApproach(flatDomain)
       _ <- domainSpecific.initialize(this)
-      _ <- makeBase(flatDomain.baseDataType)
+      _ <- makeBase(flatDomain.baseDataType)                    // top-level Exp
+
+      _ <- forEach (domain.inChronologicalOrder.filter(m => m.ops.nonEmpty)) { m =>
+        makeOperationsBase(flatDomain.baseDataType)
+      }
+      _ <- forEach (domain.inChronologicalOrder.filter(m => m.ops.nonEmpty)) { m =>
+        makeFactory(domain)
+      }
       _ <- forEach (flatDomain.typeCases) { tpeCase =>
         makeDerived(flatDomain.baseDataType, tpeCase, flatDomain.ops, domainSpecific)
       }

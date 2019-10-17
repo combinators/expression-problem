@@ -102,7 +102,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                          command: Debug
                        ): (ProjectCtxt, Unit) = {
 
-              context.units.foreach (u => System.err.println (u))
+              context.units.foreach (u => System.err.println (command.tag + ": " + u))
               (context,())
             }
           }
@@ -158,7 +158,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                          command: Debug
                        ): (CompilationUnitCtxt, Unit) = {
 
-              System.err.println (context.unit)
+              System.err.println (command.tag + ": " + context.unit)
               (context,())
             }
           }
@@ -234,7 +234,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                          command: Debug
                        ): (MethodBodyCtxt, Unit) = {
 
-              System.err.println (context.method)
+              System.err.println (command.tag + ": " + context.method)
               (context,())
             }
           }
@@ -401,7 +401,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                            command: Debug
                          ): (TestContext, Unit) = {
 
-                System.err.println (context.testClass)
+                System.err.println (command.tag + ": " + context.testClass)
                 (context,())
               }
             }
@@ -544,7 +544,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                            command: Debug
                          ): (ClassContext, Unit) = {
 
-                System.err.println (context.cls)
+                System.err.println (command.tag + ": " + context.cls)
                 (context,())
               }
             }

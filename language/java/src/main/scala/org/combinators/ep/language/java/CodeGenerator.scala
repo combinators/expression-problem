@@ -549,6 +549,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
               }
             }
 
+
           implicit val canAddParentInClass: Understands[ClassContext, AddParent[Type]] =
             new Understands[ClassContext, AddParent[Type]] {
               def perform(
@@ -568,6 +569,21 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
               ): (ClassContext, Unit) = {
                 val resultCls = context.cls.clone()
                 resultCls.addImplementedType(command.interface.asClassOrInterfaceType())
+                (context.copy(cls = resultCls), ())
+              }
+            }
+          implicit val canRemoveMethodFromClass: Understands[ClassContext, RemoveMethod[Type, Name]] =
+            new Understands[ClassContext, RemoveMethod[Type, Name]] {
+              def perform(
+                           context: ClassContext,
+                           command: RemoveMethod[Type, Name]
+                         ): (ClassContext, Unit) = {
+                val resultCls = context.cls.clone()
+
+                // TODO: DO SOMETHING HERE (HEINEMAN)
+                val method = resultCls.getMethodsByName(command.name.mangled)
+                resultCls.remove(method.get(0))
+
                 (context.copy(cls = resultCls), ())
               }
             }
@@ -826,6 +842,16 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
               }
             }
 
+          implicit val canCastInConstructor: Understands[ConstructorContext, CastObject[Type, Expression]] =
+            new Understands[ConstructorContext, CastObject[Type, Expression]] {
+              def perform(
+                           context: ConstructorContext,
+                           command: CastObject[Type, Expression]
+                         ): (ConstructorContext, Expression) = {
+                (context, Java(s"""((${command.tpe})${command.expr})""").expression())
+              }
+            }
+
           implicit val canGetMemberInConstructor: Understands[ConstructorContext, GetMember[Expression, Name]] =
             new Understands[ConstructorContext, GetMember[Expression, Name]] {
               def perform(
@@ -934,6 +960,17 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                 (context, Java(s"""new ${tpe}(${args.mkString(", ")})""").expression())
               }
             }
+
+          implicit val canCastInMethod: Understands[MethodBodyContext, CastObject[Type, Expression]] =
+            new Understands[MethodBodyContext, CastObject[Type, Expression]] {
+              def perform(
+                           context: MethodBodyContext,
+                           command: CastObject[Type, Expression]
+                         ): (MethodBodyContext, Expression) = {
+                (context, Java(s"""((${command.tpe})${command.expr})""").expression())
+              }
+            }
+
           val canGetMemberInMethod: Understands[MethodBodyContext, GetMember[Expression, Name]] =
             new Understands[MethodBodyContext, GetMember[Expression, Name]] {
               def perform(

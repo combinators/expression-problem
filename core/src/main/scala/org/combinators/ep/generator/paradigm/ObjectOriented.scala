@@ -19,6 +19,10 @@ case class AddImplemented[Type](interface: Type) extends Command {
   type Result = Unit
 }
 
+case class RemoveMethod[Type, Name](interface: Type, name:Name) extends Command {
+  type Result = Unit
+}
+
 case class AddField[Name, Type](name: Name, tpe: Type) extends Command {
   type Result = Unit
 }
@@ -36,6 +40,10 @@ case class AddConstructor[ConstructorContext](ctor: Generator[ConstructorContext
 }
 
 case class InstantiateObject[Type, Expression](tpe: Type, constructorArguments: Seq[Expression]) extends Command {
+  type Result = Expression
+}
+
+case class CastObject[Type, Expression](tpe: Type, expr: Expression) extends Command {
   type Result = Expression
 }
 
@@ -90,6 +98,11 @@ trait ObjectOriented {
     implicit val canAddImplementedInClass: Understands[ClassContext, AddImplemented[Type]]
     def addImplemented(interface: Type): Generator[ClassContext, Unit] =
       AnyParadigm.capabilitiy(AddImplemented(interface))
+
+    // FIRST REMOVE CAPABILITY
+    implicit val canRemoveMethodFromClass: Understands[ClassContext, RemoveMethod[Type, Name]]
+    def removeMethod(interface: Type, name:Name): Generator[ClassContext, Unit] =
+      AnyParadigm.capabilitiy(RemoveMethod(interface, name))
 
     implicit val canAddFieldInClass: Understands[ClassContext, AddField[Name, Type]]
     def addField(name: Name, tpe: Type): Generator[ClassContext, Unit] =
@@ -148,6 +161,10 @@ trait ObjectOriented {
     implicit val canInitializeParentInConstructor: Understands[ConstructorContext, InitializeParent[Expression]]
     def initializeParent(arguments: Seq[Expression]): Generator[ConstructorContext, Unit] =
       AnyParadigm.capabilitiy(InitializeParent(arguments))
+
+    implicit val canCastInConstructor: Understands[ConstructorContext, CastObject[Type, Expression]]
+    def castObject(tpe:Type, expr: Expression): Generator[ConstructorContext, Expression] =
+      AnyParadigm.capabilitiy(CastObject(tpe, expr))
 
     implicit val canInitializeFieldInConstructor: Understands[ConstructorContext, InitializeField[Name, Expression]]
     def initializeField(name: Name, value: Expression): Generator[ConstructorContext, Unit] =
@@ -219,6 +236,10 @@ trait ObjectOriented {
     implicit val canGetMemberInMethod: Understands[MethodBodyContext, GetMember[Expression, Name]]
     def getMember(instance: Expression, member: Name): Generator[MethodBodyContext, Expression] =
       AnyParadigm.capabilitiy(GetMember(instance, member))
+
+    implicit val canCastInMethod: Understands[MethodBodyContext, CastObject[Type, Expression]]
+    def castObject(tpe:Type, expr: Expression): Generator[MethodBodyContext, Expression] =
+      AnyParadigm.capabilitiy(CastObject(tpe, expr))
 
     implicit val canSetAbstractInMethod: Understands[MethodBodyContext, SetAbstract]
     def setAbstract(): Generator[MethodBodyContext, Unit] =

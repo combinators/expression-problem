@@ -20,25 +20,13 @@ import org.combinators.ep.approach
  * https://stackoverflow.com/questions/55501899/exception-in-intellijs-sbt-console-not-found-value-ideaport-ideaport-in-globa
  * problem with sbt...
  */
-trait ExtensibleVisitor extends ApproachImplementationProvider {
-  val ooParadigm: ObjectOriented.WithBase[paradigm.type]
-  val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
-  val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
+trait ExtensibleVisitor extends ApproachImplementationProvider with SharedVisitor {
 
   import paradigm._
   import ooParadigm._
   import syntax._
 
-  // necessary constants used to ensure no typos
-  lazy val accept: Name = names.mangle("accept")
-  lazy val visit: Name = names.mangle("visit")
   lazy val visitorInstanceFactoryMethodPrefix: Name = names.mangle("make")
-  lazy val visitorClass: Name = names.mangle("Visitor")
-  val visitorParameter: String = "v"
-  val expParameter: String = "exp"
-  val visitTypeParameter: String = "R"
-
-
 
   /**
    * Instantiate an implementation of the visitor.
@@ -151,181 +139,22 @@ trait ExtensibleVisitor extends ApproachImplementationProvider {
     }
   }
 
-  /**
-   * {{{
-   *  public abstract <R> R accept(Visitor<R> v);
-   * }}}
-   */
-  def makeAcceptSignature(model: Model): Generator[MethodBodyContext, Unit] = {
-    import paradigm.methodBodyCapabilities.{toTargetLanguageType => _, _}
-    import polymorphics.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
-
-    for {
-      // R by itself, since not extending any other type parameter (hence Skip)
-      visitTyParam <- freshName(names.mangle(visitTypeParameter))
-      _ <- addTypeParameter(visitTyParam, Command.skip)
-
-      // this returns mangled visitTypeParameter name and gets list of all type parameters, for which there is only one, so we get head
-      args <- getTypeArguments()
-      _ <- setReturnType(args.head)
-
-      // identify Visitor<R>
-      visitorClassType <- findClass(visitorInterfaceName(model.base).get)
-      _ <- resolveAndAddImport(visitorClassType)
-      visitorType  <- applyType (visitorClassType, args)
-
-      visitParam <- freshName(names.mangle(visitorParameter))
-      _ <- setParameters(Seq((visitParam, visitorType)))      // a pair (name,type) of only one sequence
-    } yield ()
-  }
-
-  /**
-   * Define the base class for Exp
-   * {{{
-   *  package visitor;
-   *  public abstract class Exp {
-   *    public abstract <R> R accept(Visitor<R> v);
-   *  }
-   * }}}
-   */
-  def makeBase(model:Model, tpe: DataType): Generator[ProjectContext, Unit] = {
-    import ooParadigm.projectCapabilities._
-
-    val makeClass: Generator[ClassContext, Unit] = {
-      import ooParadigm.classCapabilities._
-      for {
-        _ <- setAbstract()
-        _ <- addAbstractMethod(accept, makeAcceptSignature(model))
-      } yield ()
+  /** Concatenate all types in this model to form proper suffix for operation classes. */
+  def modelTypes(model:Model) : String = {
+    if (model.last.isEmpty) {
+      ""
+  } else {
+      model.typeCases.sortWith(_.name < _.name).mkString("")
     }
-
-    // adds the 'Exp' class, with a single accept method
-    addClassToProject(names.mangle(names.conceptNameOf(tpe)), makeClass)
-  }
-
-  /**
-   * {{{
-   *   public class Add extends Exp {
-   *      public Add(Exp left, Exp right) {
-   *         this.left = left;
-   *         this.right = right;
-   *     }
-   *
-   *     private Exp left;
-   *     private Exp right;
-   *     public Exp getLeft() { return this.left; }
-   *     public Exp getRight() { return this.right; }
-   *     public <R> R accept(Visitor<R> v) { return v.visit(this); }
-   *   }
-   * }}}
-   *
-   * For data types that were added after an operation, this runtime check is demanded to protect the
-   * downcast. Eventually the instanceof check and the throw exception will be added.
-   *
-   * public <R> R accept(Visitor<R> v) {
-   *   if (v instanceof VisitorDivdMultNeg) {
-   *     return ((VisitorDivdMultNeg<R>) v).visit(this);
-   *   }
-   *   throw new RuntimeException("Older visitor used with newer datatype variant.");
-   * }
-   */
-  def makeDerived(parentType: DataType, tpeCase: DataTypeCase, model: Model): Generator[ProjectContext, Unit] = {
-    import ooParadigm.projectCapabilities._
-    val makeClass: Generator[ClassContext, Unit] = {
-      import ooParadigm.classCapabilities._
-      for {
-        parent <- toTargetLanguageType(TypeRep.DataType(parentType))
-        _ <- resolveAndAddImport(parent)
-        _ <- addParent(parent)
-        _ <- forEach (tpeCase.attributes) { att => makeField(att) }
-        _ <- addConstructor(makeConstructor(tpeCase))
-        _ <- forEach (tpeCase.attributes) { att => makeGetter(att) }
-        _ <- makeAcceptImplementation(model)
-      } yield ()
-    }
-    addClassToProject(names.mangle(names.conceptNameOf(tpeCase)), makeClass)
-  }
-
-  /** Make field for the data type subtype.
-   * {{{
-   *   private Exp left;
-   * }}}
-   */
-  def makeField(att: Attribute): Generator[ClassContext, Unit] = {
-    import ooParadigm.classCapabilities._
-    for {
-      ft <- toTargetLanguageType(att.tpe)
-      _ <- resolveAndAddImport(ft)
-      _ <- addField(names.mangle(names.instanceNameOf(att)), ft)
-    } yield ()
-  }
-
-  /** Make constructor for subtype.
-   * {{{
-   * public Add(Exp left, Exp right) {
-   *   this.left = left;
-   *   this.right = right;
-   * }
-   * }}}
-   * @param tpeCase
-   * @return
-   */
-  def makeConstructor(tpeCase: DataTypeCase): Generator[ConstructorContext, Unit] = {
-    import ooParadigm.constructorCapabilities._
-
-    for {
-      // get all attributes and form a seuquence
-      params <- forEach (tpeCase.attributes) { att: Attribute =>
-        for {
-          at <- toTargetLanguageType(att.tpe)
-          _ <- resolveAndAddImport(at)
-          pName <- freshName(names.mangle(names.instanceNameOf(att)))
-        } yield (pName, at)
-      }
-      _ <- setParameters(params)
-
-      // initialize this.XXX = XXX
-      args <- getArguments()
-      _ <- forEach(tpeCase.attributes.zip(args)) { case (att, (_, _, exp)) =>
-        initializeField(names.mangle(names.instanceNameOf(att)), exp)
-      }
-    } yield ()
-  }
-
-  /** Make a single getter method for the 'att' attribute, such as:
-   * {{{
-   * public Exp getRight() {
-   *   return this.right;
-   * }
-   * }}}
-   * @param att
-   * @return
-   */
-  def makeGetter(att:Attribute): Generator[ClassContext, Unit] = {
-    val makeBody: Generator[MethodBodyContext, Option[Expression]] = {
-      import paradigm.methodBodyCapabilities._
-      import ooParadigm.methodBodyCapabilities._
-
-      for {
-        rt <- toTargetLanguageType(att.tpe)
-        _ <- resolveAndAddImport(rt)
-        _ <- setReturnType(rt)
-
-        // return // this.attribute name
-        self <- selfReference()
-        result <- getMember(self, names.mangle(names.instanceNameOf(att)))
-      } yield Some(result)
-    }
-
-    import ooParadigm.classCapabilities._
-    addMethod(names.addPrefix("get", names.mangle(names.conceptNameOf(att))), makeBody)
   }
 
   /** Create an accept implementation from the accept method signature.
    * {{{
    *  public <R> R accept(Visitor<R> v) {
-   *     return v.visit(this);
+   *    if (v instanceof VisitorDivdMultNeg) {
+   *         return ((VisitorDivdMultNeg<R>) v).visit(this);
+   *    }
+   *     throw new RuntimeException("Older visitor used with newer datatype variant.");
    * }
    * }}}
    *
@@ -342,7 +171,7 @@ trait ExtensibleVisitor extends ApproachImplementationProvider {
 
       for {
         // start from the accept signature and add a method body.
-        _ <- makeAcceptSignature(model)
+        _ <- makeAcceptSignature()   // used to have model as parameter.
         args <- getArguments()   // get name, type, expression
         v = args.head._3
         vType = visitorInterfaceName(model).get              // convert Name to a class
@@ -363,131 +192,198 @@ trait ExtensibleVisitor extends ApproachImplementationProvider {
     addMethod(accept, makeBody)
   }
 
-
-  /** Compute the name for the visitor implementation of the given model and operation, if an implementation
-   *  is required. */
+  /**
+   * Produces, for example, Some(EvalDivdMultNeg).
+   *
+   * Either (1) the operation is defined in the current model and so you don't need to append class name, but can
+   * simply reply on past datatypes; or (2) concatenante and find recent one
+   *
+   * Compute the name for the visitor implementation of the given model and operation, if an implementation
+   *  is required.
+   */
   def visitorClassName(model: Model, operation: Operation) : Option[Name] = {
-    val sortedTypeCases = model.typeCases.sortWith(_.name < _.name)
     val operationName = names.mangle(names.conceptNameOf(operation))
-    if (model.last == Some(model.base)) {
+
+    if (model.ops.contains(operation)) {
       Some(operationName)
-    } else if (sortedTypeCases.isEmpty) {
-      None
     } else {
-      val name =
-        sortedTypeCases.foldLeft(operationName) { case (name, tpeCase) =>
-          names.addSuffix(name, names.conceptNameOf(tpeCase))
-        }
-      Some(name)
+      // must create a new name which concatenates
+      val sortedTypeCases = model.typeCases.sortWith(_.name < _.name)
+
+      // if no types then no additional class is necessary so we can return None; otherwise
+      // there are new type cases so we need to concatenate the names and so we generate a new
+      // visitor type case.
+      if (sortedTypeCases.isEmpty) {
+        None
+      } else {
+        val name =
+          sortedTypeCases.foldLeft(operationName) { case (name, tpeCase) =>
+            names.addSuffix(name, names.conceptNameOf(tpeCase))
+          }
+        Some(name)
+      }
     }
   }
 
+  /**
+   *   take existing visitor generated by SHared and add (where needed) a "extends VisitorSub<R>"
+   *
+   * @param domain
+   * @return
+   */
+  def makeExtensibleVisitorInterface(domain:Model): Generator[ClassContext, Unit] = {
+    // ignore degenerate case where the first model only has an operation without any types
+    def addParentInterface(): Generator[ClassContext, Unit] = if (domain.last == Some(domain.base)) {
+      Command.lift(()) // this is EMPTY
+    } else {
+      import ooParadigm.classCapabilities._
+      import genericsParadigm.classCapabilities._
 
+      val interfaceName = visitorInterfaceName(domain.last.get.lastModelWithDataTypes.get)
 
+      for {
+        // find former Op, such as "Eval" or "EvalSub"
+        visitorInterfaceType <- findClass(interfaceName.get)
+        _ <- resolveAndAddImport(visitorInterfaceType)
+        visitTyParam <- getTypeArguments()   // can do this because we need this interfaces paramType
+        modifiedType <- applyType(visitorInterfaceType, visitTyParam) // R by itself, since not extending any other type parameter (hence Skip)
+        // applyType generates a fresh Type and that is the one that is returned
+        _ <- addParent(modifiedType)
+      } yield ()
+    }
 
-
-
-
+    for {
+      _ <- makeVisitorInterface(domain.typeCases)
+      _ <- addParentInterface()
+    } yield ()
+  }
 //
 //
 //  // TODO: Rest of file..
 //
-//  /** Each operation is placed in its own class, with a 'visit' method for newly defined types.
-//   *
-//   * {{{
-//   *   public class EvalSub extends Eval implements VisitorSub<Double> {
-//   *
-//   *     public Double visit(Sub e) {
-//   *         return e.getLeft().accept(makeEval()) - e.getRight().accept(makeEval());
-//   *     }
-//   *
-//   *     EvalSub makeEval() {
-//   *         return new EvalSub();
-//   *     }
-//   * }
-//   * }}}
-//   *
-//   * @param domain     Model for which new types are to be incorporated
-//   * @param op
-//   * @param domainSpecific
-//   * @return           Returns class context without actually adding to ProjectContext; this is job of caller of this function
-//   */
-//  override def makeOperationImplementation(domain:Model,
-//                                  op: Operation,
-//                                  domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
-//    val regularVisitor = super.makeOperationImplementation(domain, op, domainSpecific)
-//
-//    val full:String = modelTypes(domain)
-//    val lastWithType:Option[Model] = if (domain.last.isEmpty) {
-//      None
-//    } else {
-//      domain.last.get.lastModelWithDataTypes
-//    }
-//    val lastOperation = if (lastWithType.isDefined) {
-//      lastWithType.get.findOperation(op)
-//    } else {
-//      None
-//    }
-//
-//    // Must take care to ensure we don't mistakenly go back *before* where the operation was defined.
-//    // This is determined by looking for operations in the past.
-//    val last = if (lastWithType.isEmpty || lastOperation.isEmpty) {
-//      ""
-//    } else {
-//      modelTypes(lastWithType.get)
-//    }
-//
-//    // add to regular visitor
-//
-//    val makeClass: Generator[ClassContext, Unit] = {
-//      import ooParadigm.classCapabilities._
-//      import genericsParadigm.classCapabilities._
-//      for {
-//        rt <- toTargetLanguageType(op.returnType)  // TODO: How to convert return type into Double.
-//
-//        // identify Visitor<R>
-//        visitorClassType <- findClass(visitorClass)
-//        _ <- resolveAndAddImport(visitorClassType)
-//        visitorType  <- applyType (visitorClassType, Seq(rt))
-//
-//        _ <- addImplemented(visitorType)
-//        _ <- forEach (domain.typeCases) { tpe =>
-//          addMethod(names.mangle(names.instanceNameOf(tpe)), makeImplementation(domain.baseDataType, tpe, op, domainSpecific))
-//        }
-//      } yield ()
-//    }
-//
-//    makeClass
-//    //    // if I want to override a super, this is a mistake since this will be added to project.
-//    //    addClassToProject(visitorClass, makeClass)
-//  }
-//
-//  /**
-//   * Define the base class for Exp
-//   * {{{
-//   *  package visitor;
-//   *  public abstract class Exp {
-//   *    public abstract <R> R accept(Visitor<R> v);
-//   *  }
-//   * }}}
-//   * @param tpe
-//   * @return
-//   */
-//  def makeOperationsBase(model:Model, tpe: DataType): Generator[ProjectContext, Unit] = {
-//    import ooParadigm.projectCapabilities._
-//
-//    val makeClass: Generator[ClassContext, Unit] = {
-//      import ooParadigm.classCapabilities._
-//      for {
-//        _ <- setAbstract()
-//        _ <- addAbstractMethod(accept, makeAcceptSignature(model))
-//      } yield ()
-//    }
-//
-//    // adds the 'Exp' class, with a single accept method
-//    addClassToProject(names.mangle(names.conceptNameOf(tpe)), makeClass)
-//  }
-//
+  /** Each operation is placed in its own class, with a 'visit' method for newly defined types.
+   *
+   * {{{
+   *   public class EvalSub extends Eval implements VisitorSub<Double> {
+   *
+   *     public Double visit(Sub e) {
+   *         return e.getLeft().accept(makeEval()) - e.getRight().accept(makeEval());
+   *     }
+   *
+   *     EvalSub makeEval() {
+   *         return new EvalSub();
+   *     }
+   * }
+   * }}}
+   *
+   * @param domain     Model for which new types are to be incorporated
+   * @param op
+   * @param domainSpecific
+   * @return           Returns class context without actually adding to ProjectContext; this is job of caller of this function
+   */
+  def makeOperationImplementation(domain:Model,
+                                  op: Operation,
+                                  domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
+
+    val factoryName = names.mangle("make" + names.conceptNameOf(op))
+
+    // ignore degenerate case where the first model only has an operation without any types
+    def addParentClass(): Generator[ClassContext, Unit] = if (domain.last == Some(domain.base)) {
+        Command.lift(())  // this is EMPTY
+      } else {
+        import ooParadigm.classCapabilities._
+        val className = visitorClassName(domain.last.get.lastModelWithDataTypes.get, op)
+
+        for {
+          // find former Op, such as "Eval" or "EvalSub"
+          visitorClassType <- findClass(className.get)
+          _ <- resolveAndAddImport(visitorClassType)
+          _ <- addParent(visitorClassType)
+        } yield ()
+      }
+
+     val makeClass: Generator[ClassContext, Unit] = {
+      import ooParadigm.classCapabilities._
+      import genericsParadigm.classCapabilities._
+
+      for {
+        rt <- toTargetLanguageType(op.returnType)  // TODO: How to convert return type into Double.
+
+        // identify Visitor<R>
+        visitorClassType <- findClass(visitorClass)
+        _ <- resolveAndAddImport(visitorClassType)
+        visitorType  <- applyType (visitorClassType, Seq(rt))
+
+        // public class EvalSub extends Eval implements VisitorSub<Double> {
+        _ <- addParentClass()
+
+        _ <- addImplemented(visitorType)
+        _ <- forEach (domain.typeCases) { tpe =>
+          addMethod(visit, makeImplementation(domain.baseDataType, tpe, op, domainSpecific))
+        }
+
+        _ <- addMethod(factoryName, makeFactoryMethod(domain, op))
+      } yield ()
+    }
+
+    makeClass
+    //    // if I want to override a super, this is a mistake since this will be added to project.
+    //    addClassToProject(visitorClass, makeClass)
+  }
+
+
+  /**
+   * {{{
+   * EvalDivdMultNeg makeEval() {
+   *     return new EvalDivdMultNeg();
+   * }
+   * }}}
+   *
+   * TODO: What To Do With Parameters...
+   * @return
+   */
+  def makeFactoryMethod(model:Model, op: Operation): Generator[MethodBodyContext, Option[Expression]] = {
+    import paradigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+
+    for {
+      opClass <- findClass(visitorClassName(model, op).get)    // should check!
+      _ <- resolveAndAddImport(opClass)
+      _ <- setReturnType(opClass)
+
+      ctor <- getConstructor(opClass)
+    } yield Some(ctor)
+  }
+
+  /**
+   * Define the base class for Exp
+   * {{{
+   *  package visitor;
+   *  public abstract class Exp {
+   *    public abstract <R> R accept(Visitor<R> v);
+   *  }
+   * }}}
+   * @param model
+   * @return
+   */
+  def makeOperationsBase(model:Model): Generator[ProjectContext, Unit] = {
+    import ooParadigm.projectCapabilities._
+
+    val makeClass: Generator[ClassContext, Unit] = {
+      import ooParadigm.classCapabilities._
+      for {
+        _ <- setAbstract()
+        _ <- addAbstractMethod(accept, makeAcceptSignature())
+      } yield ()
+    }
+
+
+    println("In MakeOperationBase:" + model.name + "," + names.mangle(names.conceptNameOf(model.baseDataType)))
+
+    // adds the 'Exp' class, with a single accept method
+    addClassToProject(names.mangle(names.conceptNameOf(model.baseDataType)), makeClass)
+  }
+
 //  /**
 //   * This should create the following (when called three times):
 //   *
@@ -602,7 +498,7 @@ trait ExtensibleVisitor extends ApproachImplementationProvider {
 
 
   /**
-   * The Extensible Visitor approach is defined as follows
+   * The Extensible Visitor approach is defined as follows. This handles the code generation for the implementation
    *
    * 1. Make the base class (for the domain)
    * 2. For each of the data types (in flattened set) create a derived class
@@ -619,12 +515,33 @@ trait ExtensibleVisitor extends ApproachImplementationProvider {
     for {
       _ <- initializeApproach(flatDomain)
       _ <- domainSpecific.initialize(this)
-      _ <- makeBase(domain.base, domain.baseDataType)                    // top-level Exp
+      _ <- makeBase(domain.baseDataType)                    // top-level Exp
+      _ <- makeOperationsBase(domain)
 
-//      _ <- forEach (domain.inChronologicalOrder.filter(m => m.ops.nonEmpty)) { m =>
-//        makeOperationsBase(flatDomain.baseDataType)
-//      }
-//      _ <- forEach (domain.inChronologicalOrder.filter(m => m.ops.nonEmpty)) { m =>
+      // WHEN new data types are added and there are existing operations in the past
+      // need to run generators in sequence and when that happens you need to group with a for {...} yield()
+      _ <- forEach (domain.inChronologicalOrder.filter(m => m.typeCases.nonEmpty)) { m =>
+      for {
+          // add the interfaces first
+          _ <- addClassToProject(visitorInterfaceName(m).get, makeExtensibleVisitorInterface(m))
+
+          // now come the classes
+          _ <- forEach(m.pastOperations) { op =>
+            // must ensure
+            addClassToProject(visitorClassName(m, op).get, makeOperationImplementation(m, op, domainSpecific))
+          }
+        } yield ()
+      }
+
+      // WHEN new operations are added and there are existing data types in the past...
+      _ <- forEach (domain.inChronologicalOrder.filter(m => m.ops.nonEmpty)) { m =>
+         forEach(m.ops) { op =>
+          // must ensure
+          addClassToProject(visitorClassName(m, op).get, makeOperationImplementation(m, op, domainSpecific))
+        }
+      }
+
+      //      _ <- forEach (domain.inChronologicalOrder.filter(m => m.ops.nonEmpty)) { m =>
 //        makeFactory(domain)
 //      }
       _ <- forEach (domain.inChronologicalOrder) { dm =>
@@ -654,6 +571,47 @@ trait ExtensibleVisitor extends ApproachImplementationProvider {
 
 //          addClassToProject(names.mangle(names.conceptNameOf(op)), makeOperationImplementation(flatDomain, op, domainSpecific))
 
+    } yield ()
+  }
+
+  /** Adds tests to the project context */
+  override def implement(tests: Map[Model, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
+    import projectContextCapabilities._
+    import paradigm.compilationUnitCapabilities._
+    import paradigm.testCapabilities._
+    for {
+      _ <-
+        forEach(tests.toList) { case (model, tests) => {
+          val testCode: Generator[MethodBodyContext, Seq[Expression]] =
+            for {
+              code <- forEach(tests) {
+                test => testImplementationProvider.test(this)(test)
+              }
+            } yield code.flatten
+
+//          val ops = model.pastOperations
+//          ops.foreach(op => makeFactoryMethod (model, op))
+
+          import ooParadigm.testCapabilities._
+          val compUnit = for {
+            _ <- addTestCase(names.mangle("Test"), testCode)
+
+            _ <- addMethod(names.mangle("makeSomething"), makeFactoryMethod (model, model.lastModelWithOperation.get.ops(0)))
+          } yield()
+
+          val testSuite = for {
+            _ <- addTestSuite(
+              names.addSuffix(names.mangle(names.conceptNameOf(model)), "Test"),
+              compUnit
+            )
+          } yield ()
+
+          addCompilationUnit(
+            names.addSuffix(names.mangle(names.conceptNameOf(model)), "Test"),
+            testSuite
+          )
+         }
+        }
     } yield ()
   }
 

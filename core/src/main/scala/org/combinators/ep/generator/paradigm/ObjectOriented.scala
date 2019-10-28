@@ -275,6 +275,17 @@ trait ObjectOriented {
       AnyParadigm.capabilitiy(AddTypeLookup[ConstructorContext, Type](tpe, lookup))
   }
   val projectCapabilities: ProjectCapabilities
+
+  trait TestCapabilities {
+    // helper methods can be added to OO test cases
+    implicit val canAddMethodInTest: Understands[TestContext, AddMethod[MethodBodyContext, Name, Option[Expression]]]
+    def addMethod(
+                   name: Name,
+                   spec: Generator[MethodBodyContext, Option[Expression]],
+                   isPublic: Boolean = true): Generator[TestContext, Unit] =
+      AnyParadigm.capabilitiy(AddMethod(name, spec, isPublic))
+  }
+  val testCapabilities: TestCapabilities
 }
 
 object ObjectOriented {

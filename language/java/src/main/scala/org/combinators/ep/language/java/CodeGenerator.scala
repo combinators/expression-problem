@@ -1056,6 +1056,36 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
               }
             }
         }
+     val testCapabilities: TestCapabilities =
+       new TestCapabilities {
+         implicit val canAddMethodInTest: Understands[TestCtxt, AddMethod[base.MethodBodyContext, Name, Option[Expression]]] =
+           new Understands[TestCtxt, AddMethod[base.MethodBodyContext, Name, Option[Expression]]] {
+             def perform(
+                          context: TestCtxt,
+                          command: AddMethod[base.MethodBodyContext, Name, Option[Expression]]
+                        ): (TestCtxt, Unit) = {
+               val methodToAdd = new MethodDeclaration()
+               methodToAdd.setName(command.name.toAST)
+               methodToAdd.setPublic(command.isPublic)
+               val (methodCtxt, returnExp) =
+                 Command.runGenerator(
+                   command.spec,
+                   MethodBodyCtxt(context.resolver, context.extraImports, methodToAdd)
+                 )
+               val resultingMethod = methodCtxt.method.clone()
+               if (returnExp.isDefined) {
+                 val body = resultingMethod.getBody.orElseGet(() => new BlockStmt())
+                 body.addStatement(new ReturnStmt(returnExp.get))
+                 resultingMethod.setBody(body)
+               }
+
+               val resultCls = context.testClass.clone()
+               resultCls.addMember(resultingMethod)
+               val newImports = (context.extraImports ++ methodCtxt.extraImports).distinct.map(_.clone())
+               (context.copy(resolver = methodCtxt.resolver, extraImports = newImports, testClass = resultCls), ())
+             }
+           }
+       }
     }
 
   trait BlockContextManipulator[Ctxt] {

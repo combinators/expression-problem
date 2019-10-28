@@ -23,7 +23,7 @@ object Main extends IOApp {
   val interpreterApproach = Interpreter[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
   // select one here.
-  val approach = extensibleVisitorApproach //interpreterApproach
+  val approach = extensibleVisitorApproach //  extensibleVisitorApproach //interpreterApproach
 
   val evolutions = Seq(M0, M1, M2, M3)
   val tests = evolutions.scanLeft(Map.empty[Model, Seq[TestCase]]) { case (m, evolution) =>

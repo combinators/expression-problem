@@ -2,6 +2,7 @@ package org.combinators.ep.approach.oo
 
 import org.combinators.ep.domain.Model
 import org.combinators.ep.domain.abstractions._
+import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.generator.Command._
 import org.combinators.ep.generator._
 import org.combinators.ep.generator.communication._
@@ -101,11 +102,36 @@ abstract class VisitorSideEffect extends ApproachImplementationProvider with Sha
     } yield res
   }
 
+  /** Create the accept method signature.
+    * Override to remove type parameter.
+    * {{{
+    *   public void accept(Visitor v)
+    * }}}
+    * @return
+    */
+  override def makeAcceptSignature(): Generator[MethodBodyContext, Unit] = {
+    import paradigm.methodBodyCapabilities.{toTargetLanguageType => _, _}
+    import polymorphics.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities._
+
+    for {
+      unitTpe <- toTargetLanguageType(TypeRep.Unit)
+      _ <- setReturnType(unitTpe)
+
+      // identify Visitor<R>
+      visitorType <- findClass(visitorClass)
+      _ <- resolveAndAddImport(visitorType)
+
+      visitParam <- freshName(names.mangle(visitorParameter))
+      _ <- setParameters(Seq((visitParam, visitorType)))      // a pair (name,type) of only one sequence
+    } yield ()
+  }
 
 
   /** Create an accept implementation from the accept method signature.
    * {{{
-   *  public <R> R accept(Visitor<R> v) {
+   *  public void accept(Visitor v) {
    *     return v.visit(this);
    * }
    * }}}
@@ -115,6 +141,7 @@ abstract class VisitorSideEffect extends ApproachImplementationProvider with Sha
     val makeBody: Generator[MethodBodyContext, Option[Expression]] = {
       import ooParadigm.methodBodyCapabilities._
       import paradigm.methodBodyCapabilities._
+      import impParadigm.imperativeCapabilities._
 
       for {
         // start from the accept signature and add a method body.
@@ -124,8 +151,11 @@ abstract class VisitorSideEffect extends ApproachImplementationProvider with Sha
         // invoke visit method on 'v' with 'this' as argument
         visitFunction <- getMember(args.head._3, visit)
         self <- selfReference()
-        result <- apply(visitFunction, Seq(self))  // make the method invocation
-      } yield Some(result)
+        result <- apply(visitFunction, Seq(self)) // make the method invocation
+        visitationStmt <- liftExpression(result)
+        _ <- addBlockDefinitions(Seq(visitationStmt))
+        unit <- this.reify(InstanceRep(TypeRep.Unit)(()))
+      } yield Some(unit)
     }
 
     import ooParadigm.classCapabilities._
@@ -133,6 +163,7 @@ abstract class VisitorSideEffect extends ApproachImplementationProvider with Sha
   }
 
 
+  // TODO: Update documentation
   /** Each operation is placed in its own class, with a 'visit' method for each known data type.
    * {{{
    * import sun.reflect.generics.visitor.Visitor
@@ -174,8 +205,7 @@ abstract class VisitorSideEffect extends ApproachImplementationProvider with Sha
         field <- getField(names.mangle("value"))
         _ <- addMethod(names.mangle("getValue"), returnValue(op, field))
 
-        visitorInterfaceWithReturnType <- applyType(visitorInterface, Seq(returnTpe))
-        _ <- addImplemented(visitorInterfaceWithReturnType)
+        _ <- addImplemented(visitorInterface)
         _ <- addConstructor(makeOperationConstructor(op))
         _ <- forEach (domain.typeCases) { tpe =>
           addMethod(visit, makeImplementation(domain.baseDataType, tpe, op, domainSpecific))
@@ -204,30 +234,28 @@ abstract class VisitorSideEffect extends ApproachImplementationProvider with Sha
     } yield (Some(field))
   }
 
+  /** Create the visitor interface.
+    * Override to remove type parameters.
+    * {{{
+    *   public interface Visitor {
+    *     public void visit(Lit lit);
+    *     public void visit(Add add);
+    *     ...
+    *   }
+    * }}}
+    * */
+  override def makeVisitorInterface(allTypes:Seq[DataTypeCase]): Generator[ClassContext, Unit] = {
+    import ooParadigm.classCapabilities._
+    import genericsParadigm.classCapabilities._
 
-  /**
-   * Creates the signature for the 'abstract void visit(DataType exp)' method which still has no body, and can
-   * thus become an abstract interface declaration or form the basis for an implementation.
-   *
-   * {{{
-   *   public R visit(Sub exp);
-   * }}}
-   * @return
-   *
-   *  TODO: This creates 'empty' as the type instead of 'void' not sure how to fix...
-   */
-//  def makeVoidVisitSignature(tpe:DataTypeCase): Generator[MethodBodyContext, Unit] = {
-//    import paradigm.methodBodyCapabilities.{toTargetLanguageType => _, _}
-//    import polymorphics.methodBodyCapabilities._
-//    import ooParadigm.methodBodyCapabilities._
-//
-//    for {
-//      visitedClassType <- findClass(names.mangle(names.conceptNameOf(tpe)))
-//      _ <- resolveAndAddImport(visitedClassType)
-//      visitParamName <- freshName(names.mangle(expParameter))
-//      _ <- setParameters(Seq((visitParamName, visitedClassType)))      // a pair (name,type) of only one sequence
-//    } yield ()
-//  }
+    for {
+      _ <- setInterface()
+      unitTpe <- toTargetLanguageType(TypeRep.Unit)
+      _ <- forEach (allTypes) { tpe => addAbstractMethod(visit, makeVisitSignature(tpe, unitTpe)) }
+    } yield ()
+  }
+
+
 
   /** Make a method body for each operation, which is a visit method for a defined data type
    *
@@ -289,7 +317,9 @@ abstract class VisitorSideEffect extends ApproachImplementationProvider with Sha
       storedField <- getMember(thisRef, names.mangle("value"))
       stmt <- assignVar(storedField, result.get)
       _ <- addBlockDefinitions(Seq(stmt))
-    } yield None
+      // Return unit (translates to no return/void in Java, real unit return in Scala)
+      result <- this.reify(InstanceRep(TypeRep.Unit)(()))
+    } yield Some(result)
   }
 
   def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
@@ -329,11 +359,11 @@ abstract class VisitorSideEffect extends ApproachImplementationProvider with Sha
       _ <- initializeApproach(flatDomain)
       _ <- domainSpecific.initialize(this)
       _ <- makeBase(flatDomain.baseDataType)
+      _ <- addClassToProject(visitorClass, makeVisitorInterface(flatDomain.typeCases))
+
       _ <- forEach (flatDomain.typeCases) { tpeCase =>
         makeDerived(flatDomain.baseDataType, tpeCase, domain)   // used to have flatDomain.ops,
       }  // parentType: DataType, tpeCase: DataTypeCase, model: Model
-
-      _ <- addClassToProject(visitorClass, makeVisitorInterface(flatDomain.typeCases))
 
       _ <- forEach (flatDomain.ops) { op =>
         addClassToProject(names.mangle(names.conceptNameOf(op)), makeOperationImplementation(flatDomain, op, domainSpecific))

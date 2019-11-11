@@ -3,10 +3,10 @@ package org.combinators.ep.language.java
 import java.nio.file.Paths
 import java.util.UUID
 
-import com.github.javaparser.ast.`type`.{ClassOrInterfaceType, TypeParameter}
+import com.github.javaparser.ast.`type`.{ClassOrInterfaceType, TypeParameter, VoidType}
 import com.github.javaparser.ast.{ImportDeclaration, Modifier, NodeList, PackageDeclaration}
 import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, ConstructorDeclaration, MethodDeclaration}
-import com.github.javaparser.ast.expr.{AssignExpr, BinaryExpr, BooleanLiteralExpr, DoubleLiteralExpr, MethodCallExpr, NameExpr, SimpleName, StringLiteralExpr, TypeExpr, UnaryExpr, VariableDeclarationExpr}
+import com.github.javaparser.ast.expr.{AssignExpr, BinaryExpr, BooleanLiteralExpr, DoubleLiteralExpr, MethodCallExpr, NameExpr, NullLiteralExpr, SimpleName, StringLiteralExpr, TypeExpr, UnaryExpr, VariableDeclarationExpr}
 import com.github.javaparser.ast.stmt.{BlockStmt, ExplicitConstructorInvocationStmt, ExpressionStmt, IfStmt, ReturnStmt, WhileStmt}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.domain.instances.InstanceRep
@@ -440,20 +440,28 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
             }
         }
 
+      private val defaultResolver: ContextSpecificResolver = {
+        val emptyResolver =
+          ContextSpecificResolver(
+            methodTypeResolution = _ => ???,
+            constructorTypeResolution = _ => ???,
+            classTypeResolution = _ => ???,
+            reificationInConstructor = _ => ???,
+            reificationInMethod = _ => ???,
+            importResolution = _ => ???,
+            instantiationOverride = (tpe, args) => (tpe, args),
+            generatedVariables = Map.empty
+          )
+        updateResolver(TypeRep.Unit, new VoidType())(rep => new NullLiteralExpr())(emptyResolver)
+      }
+
+
       override def runGenerator(generator: Generator[ProjectContext, Unit]): Seq[FileWithPath] = {
+
         val (finalContext, _) =
           Command.runGenerator(generator,
             ProjectCtxt(
-              ContextSpecificResolver(
-                methodTypeResolution = _ => ???,
-                constructorTypeResolution = _ => ???,
-                classTypeResolution = _ => ???,
-                reificationInConstructor = _ => ???,
-                reificationInMethod = _ => ???,
-                importResolution = _ => ???,
-                instantiationOverride = (tpe, args) => (tpe, args),
-                generatedVariables = Map.empty
-              ),
+              resolver = defaultResolver,
               units = Seq.empty,
               testUnits = Seq.empty,
               extraDependencies = Seq.empty
@@ -622,7 +630,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                     MethodBodyCtxt(context.resolver, context.extraImports, methodToAdd)
                   )
                 val resultingMethod = methodCtxt.method.clone()
-                if (returnExp.isDefined) {
+                if (returnExp.isDefined && !resultingMethod.getType.isVoidType) {
                   val body = resultingMethod.getBody.orElseGet(() => new BlockStmt())
                   body.addStatement(new ReturnStmt(returnExp.get))
                   resultingMethod.setBody(body)

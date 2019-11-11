@@ -27,6 +27,18 @@ case class AddField[Name, Type](name: Name, tpe: Type) extends Command {
   type Result = Unit
 }
 
+case class GetField[Name,Expression](name: Name) extends Command {
+  type Result = Expression
+}
+//
+//case class AddVariableDeclaration[Type, Name, Expression](params: Seq[(Type, Name, Expression)]) extends Command {
+//  type Result = Unit
+//}
+//
+//case class AddVariableAssignment[Name, Expression](params: Seq[(Name, Expression)]) extends Command {
+//  type Result = Unit
+//}
+
 case class InitializeField[Name, Expression](name: Name, value: Expression) extends Command {
   type Result = Unit
 }
@@ -107,6 +119,11 @@ trait ObjectOriented {
     implicit val canAddFieldInClass: Understands[ClassContext, AddField[Name, Type]]
     def addField(name: Name, tpe: Type): Generator[ClassContext, Unit] =
       AnyParadigm.capabilitiy(AddField[Name, Type](name, tpe))
+
+    // can get a field (by name) and it becomes an expression by itself
+    implicit val canGetFieldInClass: Understands[ClassContext, GetField[Name,Expression]]
+    def getField(name: Name): Generator[ClassContext, Expression] =
+      AnyParadigm.capabilitiy(GetField[Name,Expression](name))
 
     implicit val canAddMethodInClass: Understands[ClassContext, AddMethod[MethodBodyContext, Name, Option[Expression]]]
     def addMethod(
@@ -232,6 +249,14 @@ trait ObjectOriented {
     implicit val canInstantiateObjectInMethod: Understands[MethodBodyContext, InstantiateObject[Type, Expression]]
     def instantiateObject(tpe: Type, constructorArguments: Seq[Expression]): Generator[MethodBodyContext, Expression] =
       AnyParadigm.capabilitiy(InstantiateObject(tpe, constructorArguments))
+
+//    implicit val canAddVariableDeclarationInMethod: Understands[MethodBodyContext, AddVariableDeclaration[Type, Name, Expression]]
+//    def addVariableDeclaration(params: Seq[(Type, Name, Expression)]): Generator[MethodBodyContext, Unit] =
+//      AnyParadigm.capabilitiy(AddVariableDeclaration(params))
+//
+//    implicit val canAddVariableAssignmentInMethod: Understands[MethodBodyContext, AddVariableAssignment[Name, Expression]]
+//    def addVariableAssignment(params: Seq[(Name, Expression)]): Generator[MethodBodyContext, Unit] =
+//      AnyParadigm.capabilitiy(AddVariableAssignment(params))
 
     implicit val canGetMemberInMethod: Understands[MethodBodyContext, GetMember[Expression, Name]]
     def getMember(instance: Expression, member: Name): Generator[MethodBodyContext, Expression] =

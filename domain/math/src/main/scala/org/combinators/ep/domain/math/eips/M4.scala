@@ -1,8 +1,8 @@
 package org.combinators.ep.domain.math.eips
 
-import org.combinators.ep.domain.abstractions.TypeRep
+import org.combinators.ep.domain.abstractions.{DataTypeCase, TypeRep}
 import org.combinators.ep.domain.instances.InstanceRep
-import org.combinators.ep.domain.math
+import org.combinators.ep.domain.{abstractions, math}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
@@ -60,19 +60,25 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
 
           def collectOp(listDoubleTy: Type): Generator[MethodBodyContext, Expression] = {
             val atts = onRequest.tpeCase.attributes.map(onRequest.attributes)
+
             onRequest.tpeCase match {
               case math.M0.Lit => create(listDoubleTy, atts)
               case _ =>
                 for {
-                  collectedResults <- forEach(atts) { att =>
+                  collectedResults <- forEach(onRequest.attributes.toSeq) {
+
+                    attExpr => {
+                      val att = attExpr._1
+                      val expr = attExpr._2
                     forApproach.dispatch(
                       SendRequest(
-                        att,
+                        expr,
                         math.M4.getModel.baseDataType,
+                        Some(att),
                         Request(math.M4.Collect, Map.empty),
                         Some(onRequest)
                       )
-                    )
+                    )}
                   }
                   res <- collectedResults.foldLeft(create(listDoubleTy, Seq.empty)) { case (lastRes, nextCol) =>
                     for {
@@ -102,23 +108,26 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
           import ffiEquality.equalityCapabilities._
           import ffiBoolean.booleanCapabilities._
 
-          def evalChildren(atts: Seq[Expression]): Generator[MethodBodyContext, List[Expression]] =
-            forEach (atts) { att =>
+          def evalChildren(tpe:DataTypeCase, atts: Map[abstractions.Attribute,Expression]): Generator[MethodBodyContext, List[Expression]] =
+            forEach (atts.keys.toSeq) { att:abstractions.Attribute => {
+              val expr:Expression = atts.get(att).get
               forApproach.dispatch(
                 SendRequest(
-                  att,
+                  expr,
                   math.M4.getModel.baseDataType,
+                  Some(att),
                   Request(math.M0.Eval, Map.empty),
                   Some(onRequest)
                 )
-              )
+              )}
             }
 
-          def simplifyRec(att: Expression): Generator[MethodBodyContext, Expression] = {
+          def simplifyRec(att:abstractions.Attribute, attExpr: Expression): Generator[MethodBodyContext, Expression] = {
             forApproach.dispatch(
               SendRequest(
-                att,
+                attExpr,
                 math.M4.getModel.baseDataType,
+                Some(att),
                 Request(math.M4.Simplify, Map.empty),
                 Some(onRequest)
               )
@@ -126,7 +135,8 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
           }
 
           def simplifyOp(
-            atts: Seq[Expression],
+            atts:Seq[abstractions.Attribute],
+            attExprs: Seq[Expression],
             vals: Seq[Expression],
             doubleTy: Type,
             zero: Expression,
@@ -147,12 +157,12 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
                     ifThenElse(
                       addValZero, returnInIf(zeroLit),
                       Seq(
-                        (leftEqZero, returnInIf(simplifyRec(atts.tail.head))),
-                        (rightEqZero, returnInIf(simplifyRec(atts.head)))
+                        (leftEqZero, returnInIf(simplifyRec(atts.tail.head, attExprs.tail.head))),
+                        (rightEqZero, returnInIf(simplifyRec(atts.head, attExprs.head)))
                       ),
                       for {
-                        lsimp <- simplifyRec(atts.head)
-                        rsimp <- simplifyRec(atts.tail.head)
+                        lsimp <- simplifyRec(atts.tail.head, attExprs.head)
+                        rsimp <- simplifyRec(atts.head, attExprs.tail.head)
                         res <- returnInIf(forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Add, lsimp, rsimp))
                       } yield res
                     )
@@ -166,8 +176,8 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
                       lrEq, returnInIf(zeroLit),
                       Seq.empty,
                       for {
-                        lsimp <- simplifyRec(atts.head)
-                        rsimp <- simplifyRec(atts.tail.head)
+                        lsimp <- simplifyRec(atts.head, attExprs.head)
+                        rsimp <- simplifyRec(atts.tail.head, attExprs.tail.head)
                         res <- returnInIf(forApproach.instantiate(math.M0.getModel.baseDataType, math.M1.Sub, lsimp, rsimp))
                       } yield res
                     )
@@ -184,12 +194,12 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
                     ifThenElse(
                       anyEqZero, returnInIf(zeroLit),
                       Seq(
-                        (leftEqOne, returnInIf(simplifyRec(atts.tail.head))),
-                        (rightEqOne, returnInIf(simplifyRec(atts.head)))
+                        (leftEqOne, returnInIf(simplifyRec(atts.tail.head, attExprs.tail.head))),
+                        (rightEqOne, returnInIf(simplifyRec(atts.head, attExprs.head)))
                       ),
                       for {
-                        lsimp <- simplifyRec(atts.head)
-                        rsimp <- simplifyRec(atts.tail.head)
+                        lsimp <- simplifyRec(atts.head, attExprs.head)
+                        rsimp <- simplifyRec(atts.tail.head, attExprs.tail.head)
                         res <- returnInIf(forApproach.instantiate(math.M0.getModel.baseDataType, math.M3.Mult, lsimp, rsimp))
                       } yield res
                     )
@@ -207,13 +217,13 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
                     ifThenElse(
                       leftEqZero, returnInIf(zeroLit),
                       Seq(
-                        (rightEqOne, returnInIf(simplifyRec(atts.head))),
+                        (rightEqOne, returnInIf(simplifyRec(atts.head, attExprs.head))),
                         (leftRightEq, returnInIf(oneLit)),
                         (leftRightNeqEq, returnInIf(forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, minusOne)))
                       ),
                       for {
-                        lsimp <- simplifyRec(atts.head)
-                        rsimp <- simplifyRec(atts.tail.head)
+                        lsimp <- simplifyRec(atts.head, attExprs.head)
+                        rsimp <- simplifyRec(atts.tail.head, attExprs.tail.head)
                         res <- returnInIf(forApproach.instantiate(math.M0.getModel.baseDataType, math.M3.Divd, lsimp, rsimp))
                       } yield res
                     )
@@ -222,15 +232,15 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
             }
           }
 
-          val atts = onRequest.tpeCase.attributes.map(onRequest.attributes)
+           val atts = onRequest.tpeCase.attributes.map(onRequest.attributes)
           for {
             doubleTy <- toTargetLanguageType(TypeRep.Double)
             zero <- forApproach.reify(InstanceRep(TypeRep.Double)(0.0))
             one <- forApproach.reify(InstanceRep(TypeRep.Double)(1.0))
-            vals <- evalChildren(atts)
+            vals <- evalChildren(onRequest.tpeCase, onRequest.attributes)
             zeroLit = forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, zero)
             oneLit = forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, one)
-            result <- simplifyOp(atts, vals, doubleTy, zero, one, zeroLit, oneLit)
+            result <- simplifyOp(onRequest.attributes.keys.toSeq, atts, vals, doubleTy, zero, one, zeroLit, oneLit)
           } yield result
         }
 

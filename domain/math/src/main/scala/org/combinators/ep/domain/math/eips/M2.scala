@@ -60,12 +60,14 @@ object M2 {
               left <- forApproach.dispatch(SendRequest(
                 onRequest.attributes(lAtt),
                 math.M2.getModel.baseDataType,
+                Some(lAtt),
                 onRequest.request,
                 Some(onRequest)
               ))
               right <- forApproach.dispatch(SendRequest(
                 onRequest.attributes(rAtt),
                 math.M2.getModel.baseDataType,
+                Some(rAtt),
                 onRequest.request,
                 Some(onRequest)
               ))

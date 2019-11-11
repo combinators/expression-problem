@@ -65,12 +65,14 @@ object M0 {
               left <- forApproach.dispatch(SendRequest(
                 onRequest.attributes(addC.attributes.head),  // instead use look-up addC.attributes.find(att => att.name)
                 math.M0.getModel.baseDataType,
+                Some(addC.attributes.head),
                 onRequest.request,
                 Some(onRequest)  // being sent in response to Eval
               ))
               right <- forApproach.dispatch(SendRequest(
                 onRequest.attributes(addC.attributes.tail.head),
                 math.M0.getModel.baseDataType,
+                Some(addC.attributes.tail.head),
                 onRequest.request,
                 Some(onRequest)
               ))

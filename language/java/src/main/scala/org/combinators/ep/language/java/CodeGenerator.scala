@@ -13,7 +13,7 @@ import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.ObjectOriented.WithBase
 import org.combinators.ep.generator.paradigm.ParametricPolymorphism.WithBase
-import org.combinators.ep.generator.paradigm.control.{AssignVariable, Imperative, Return, While}
+import org.combinators.ep.generator.paradigm.control.{AssignVariable, Imperative, LiftExpression, Return, While}
 import org.combinators.ep.generator.{Command, FileWithPath, FreshNameProvider, Understands}
 import org.combinators.ep.generator.paradigm._
 import org.combinators.templating.twirl.Java
@@ -598,6 +598,15 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                 (context.copy(cls = resultCls), ())
               }
             }
+
+          implicit val canGetFieldInClass: Understands[ClassContext, GetField[Name,Expression]] =
+            new Understands[ClassContext, GetField[Name, Expression]] {
+              def perform(
+                           context: ClassContext,
+                           command: GetField[Name,Expression]
+                         ): (ClassContext, Expression) =
+                (context,  Java(s"""${command.name.mangled}""").expression())
+            }
           implicit val canAddMethodInClass: Understands[ClassContext, AddMethod[base.MethodBodyContext, Name, Option[Expression]]] =
             new Understands[ClassContext, AddMethod[base.MethodBodyContext, Name, Option[Expression]]] {
               def perform(
@@ -961,6 +970,46 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
               }
             }
 
+//          implicit val canAddVariableAssignmentInMethod: Understands[MethodBodyContext, AddVariableAssignment[Name, Expression]] =
+//            new Understands[MethodBodyContext, AddVariableAssignment[Name, Expression]] {
+//              def perform(
+//                           context: MethodBodyContext,
+//                           command: AddVariableAssignment[Name,Expression]
+//                         ): (MethodBodyContext, Unit) = {
+//                val newMethod = context.method.clone()
+//                val stmts = command.params.map( triple => {
+//                  val stmt = Java(s"""${triple._1} = ${triple._2};""").statement()
+//                  println ("assign stmt:" + stmt)
+//                  stmt
+//                })
+//                if (!newMethod.getBody.isPresent) {
+//                  newMethod.setBody(new BlockStmt())
+//                }
+//                stmts.foreach(stmt => newMethod.getBody.get.addStatement(stmt))
+//                (context.copy(method = newMethod), ())
+//              }
+//            }
+//
+//          implicit val canAddVariableDeclarationInMethod: Understands[MethodBodyContext, AddVariableDeclaration[Type, Name, Expression]] =
+//            new Understands[MethodBodyContext, AddVariableDeclaration[Type, Name, Expression]] {
+//              def perform(
+//                           context: MethodBodyContext,
+//                           command: AddVariableDeclaration[Type, Name, Expression]
+//                         ): (MethodBodyContext, Unit) = {
+//                          val newMethod = context.method.clone()
+//                          val stmts = command.params.map( triple => {
+//                            val stmt = Java(s"""${triple._1} ${triple._2} = ${triple._3};""").statement()
+//                            println ("stmt:" + stmt)
+//                            stmt
+//                          })
+//                          if (!newMethod.getBody.isPresent) {
+//                            newMethod.setBody(new BlockStmt())
+//                          }
+//                          stmts.foreach(stmt => newMethod.getBody.get.addStatement(stmt))
+//                          (context.copy(method = newMethod), ())
+//              }
+//            }
+
           implicit val canCastInMethod: Understands[MethodBodyContext, CastObject[Type, Expression]] =
             new Understands[MethodBodyContext, CastObject[Type, Expression]] {
               def perform(
@@ -1117,6 +1166,14 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
         new Understands[Ctxt, AssignVariable[Expression, Statement]] {
           def perform(context: Ctxt, command: AssignVariable[Expression, Statement]): (Ctxt, Statement) = {
             (context, new ExpressionStmt(new AssignExpr(command.variable.clone(), command.value.clone(), AssignExpr.Operator.ASSIGN)))
+          }
+        }
+
+      // tacitly converts an expression into a stand-alone statement.
+      implicit val canLiftExpression: Understands[Ctxt, LiftExpression[Expression, Statement]] =
+        new Understands[Ctxt, LiftExpression[Expression, Statement]] {
+          def perform(context: Ctxt, command: LiftExpression[Expression, Statement]): (Ctxt, Statement) = {
+            (context, new ExpressionStmt(command.expr.clone()))
           }
         }
 

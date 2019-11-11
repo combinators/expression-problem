@@ -41,12 +41,14 @@ object M1 {
               left <- forApproach.dispatch(SendRequest(
                 onRequest.attributes(subC.attributes.head),
                 math.M1.getModel.baseDataType,
+                Some(subC.attributes.head),
                 onRequest.request,
                 Some(onRequest)
               ))
               right <- forApproach.dispatch(SendRequest(
                 onRequest.attributes(subC.attributes.tail.head),
                 math.M1.getModel.baseDataType,
+                Some(subC.attributes.tail.head),
                 onRequest.request,
                 Some(onRequest)
               ))

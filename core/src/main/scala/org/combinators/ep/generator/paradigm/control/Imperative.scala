@@ -11,6 +11,10 @@ case class AssignVariable[Expression, Statement](variable: Expression, value: Ex
   type Result = Statement
 }
 
+case class LiftExpression[Expression, Statement](expr:Expression) extends Command {
+  type Result = Statement
+}
+
 case class While[Ctxt, Expression, Statement](condition: Expression, block: Generator[Ctxt, Unit]) extends Command {
   type Result = Statement
 }
@@ -33,6 +37,10 @@ trait Imperative[Context] {
     implicit val canAssignVariable: Understands[Context, AssignVariable[Expression, Statement]]
     def assignVar(variable: Expression, value: Expression): Generator[Context, Statement] =
       AnyParadigm.capabilitiy(AssignVariable[Expression, Statement](variable, value))
+
+    implicit val canLiftExpression: Understands[Context, LiftExpression[Expression, Statement]]
+    def liftExpression(expr: Expression): Generator[Context, Statement] =
+      AnyParadigm.capabilitiy(LiftExpression[Expression, Statement](expr))
 
     implicit val canIfThenElse: Understands[Context, IfThenElse[Expression, Generator[Context, Unit], Option[Generator[Context, Unit]], Statement]]
     def ifThenElse(

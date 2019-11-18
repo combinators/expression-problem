@@ -84,7 +84,6 @@ abstract class Visitor extends ApproachImplementationProvider with SharedVisitor
   }
 
 
-
   /** Create an accept implementation from the accept method signature.
    * {{{
    *  public <R> R accept(Visitor<R> v) {
@@ -113,14 +112,6 @@ abstract class Visitor extends ApproachImplementationProvider with SharedVisitor
     import ooParadigm.classCapabilities._
     addMethod(accept, makeBody)
   }
-
-
-
-
-
-
-
-
 
 
   /** Each operation is placed in its own class, with a 'visit' method for each known data type.

@@ -32,6 +32,38 @@ trait SharedVisitor extends ApproachImplementationProvider {
   def makeOperationImplementation(domain:Model, op: Operation, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit]
 
   /**
+   * Not part of approach implementation provider but was needed for OO provider and was used to provide code
+   * for making the actual signature of the
+   * {{{
+   *  public abstract <R> R accept(Visitor<R> v);
+   * }}}
+   * @return
+   */
+  def makeAcceptSignature(): Generator[MethodBodyContext, Unit] = {
+    import paradigm.methodBodyCapabilities.{toTargetLanguageType => _, _}
+    import polymorphics.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+
+    for {
+      // R by itself, since not extending any other type parameter (hence Skip)
+      visitTyParam <- freshName(names.mangle(visitTypeParameter))
+      _ <- addTypeParameter(visitTyParam, Command.skip)
+
+      // this returns mangled visitTypeParameter name and gets list of all type parameters, for which there is only one, so we get head
+      args <- getTypeArguments()
+      _ <- setReturnType(args.head)
+
+      // identify Visitor<R>
+      visitorClassType <- findClass(visitorClass)
+      _ <- resolveAndAddImport(visitorClassType)
+      visitorType  <- applyType (visitorClassType, args)
+
+      visitParam <- freshName(names.mangle(visitorParameter))
+      _ <- setParameters(Seq((visitParam, visitorType)))      // a pair (name,type) of only one sequence
+    } yield ()
+  }
+
+  /**
    * Define the base class for Exp
    * {{{
    *  package visitor;
@@ -105,37 +137,7 @@ trait SharedVisitor extends ApproachImplementationProvider {
     } yield ()
   }
 
-  /**
-   * Not part of approach implementation provider but was needed for OO provider and was used to provide code
-   * for making the actual signature of the
-   * {{{
-   *  public abstract <R> R accept(Visitor<R> v);
-   * }}}
-   * @return
-   */
-  def makeAcceptSignature(): Generator[MethodBodyContext, Unit] = {
-    import paradigm.methodBodyCapabilities.{toTargetLanguageType => _, _}
-    import polymorphics.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
 
-    for {
-      // R by itself, since not extending any other type parameter (hence Skip)
-      visitTyParam <- freshName(names.mangle(visitTypeParameter))
-      _ <- addTypeParameter(visitTyParam, Command.skip)
-
-      // this returns mangled visitTypeParameter name and gets list of all type parameters, for which there is only one, so we get head
-      args <- getTypeArguments()
-      _ <- setReturnType(args.head)
-
-      // identify Visitor<R>
-      visitorClassType <- findClass(visitorClass)
-      _ <- resolveAndAddImport(visitorClassType)
-      visitorType  <- applyType (visitorClassType, args)
-
-      visitParam <- freshName(names.mangle(visitorParameter))
-      _ <- setParameters(Seq((visitParam, visitorType)))      // a pair (name,type) of only one sequence
-    } yield ()
-  }
 
   /** Make field for the data type subtype.
    * {{{

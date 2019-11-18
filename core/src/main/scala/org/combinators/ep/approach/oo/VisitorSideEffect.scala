@@ -22,6 +22,10 @@ abstract class VisitorSideEffect extends ApproachImplementationProvider with Sha
   import syntax._
   val impParadigm: Imperative.WithBase[MethodBodyContext,paradigm.type]
 
+  lazy val getValue: Name = names.mangle("getValue")
+  lazy val value: Name = names.mangle("value")
+
+
   /**
    * Dispatch in visitor we need to find context on which to accept a visitor.
    *
@@ -46,11 +50,7 @@ abstract class VisitorSideEffect extends ApproachImplementationProvider with Sha
     import impParadigm.imperativeCapabilities._
     import polymorphics.methodBodyCapabilities._
 
-    // if no attribute as receive then MUST be a test
-    val varName:String = if (message.receiverAtt.isDefined) { message.receiverAtt.get.name } else { "test" }
-
     for {
-
       // In the "message.to" expression, invoke the 'accept' method with a visitor argument
       method <- getMember(message.to, accept)   // things which are code-generated use the '<-' handles unpacking results
 
@@ -71,12 +71,11 @@ abstract class VisitorSideEffect extends ApproachImplementationProvider with Sha
       _ <- addBlockDefinitions(Seq(stmt))
 
       // obtain actual result expression by getting method and then invoking it (with empty seq)
-      resultOfMethod <- getMember(fvar,  names.mangle("getValue"))
+      resultOfMethod <- getMember(fvar,  getValue)
       result <- apply(resultOfMethod, Seq.empty)
 
     // given result, call (and return) getValue()
     } yield result
-
   }
 
   /**
@@ -201,9 +200,9 @@ abstract class VisitorSideEffect extends ApproachImplementationProvider with Sha
         returnTpe <- toTargetLanguageType(op.returnType)
         _ <- resolveAndAddImport(returnTpe)
 
-        _ <- addField(names.mangle("value"), returnTpe)
-        field <- getField(names.mangle("value"))
-        _ <- addMethod(names.mangle("getValue"), returnValue(op, field))
+        _ <- addField(value, returnTpe)
+        field <- getField(value)
+        _ <- addMethod(getValue, returnValue(op, field))
 
         _ <- addImplemented(visitorInterface)
         _ <- addConstructor(makeOperationConstructor(op))
@@ -314,9 +313,10 @@ abstract class VisitorSideEffect extends ApproachImplementationProvider with Sha
         )
 
       // now need to store it. AND add those statements to the method body
-      storedField <- getMember(thisRef, names.mangle("value"))
+      storedField <- getMember(thisRef, value)
       stmt <- assignVar(storedField, result.get)
       _ <- addBlockDefinitions(Seq(stmt))
+
       // Return unit (translates to no return/void in Java, real unit return in Scala)
       result <- this.reify(InstanceRep(TypeRep.Unit)(()))
     } yield Some(result)

@@ -1,0 +1,415 @@
+package org.combinators.ep.approach.oo
+
+import org.combinators.ep.domain.Model
+import org.combinators.ep.domain.abstractions._
+import org.combinators.ep.generator.Command._
+import org.combinators.ep.generator._
+import org.combinators.ep.generator.communication._
+import org.combinators.ep.generator.paradigm.AnyParadigm.syntax._
+import org.combinators.ep.generator.paradigm._
+
+trait Trivially extends ApproachImplementationProvider with SharedOO {
+  //val ooParadigm: ObjectOriented.WithBase[paradigm.type]
+  val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
+  val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
+
+  import ooParadigm._
+  import paradigm._
+  import syntax._
+
+  def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression] = {
+    import ooParadigm.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities._
+    for {
+      method <- getMember(message.to, names.mangle(names.instanceNameOf(message.request.op)))
+      result <- apply(method, message.request.op.parameters.map(message.request.arguments))
+    } yield result
+
+  }
+
+  def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
+    import paradigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+    for {
+      rt <- findClass(names.mangle(names.conceptNameOf(tpeCase)))
+      _ <- resolveAndAddImport(rt)
+      res <- instantiateObject(rt, args)
+    } yield res
+  }
+
+  override def makeImplementation(
+                          tpe: DataType,
+                          tpeCase: DataTypeCase,
+                          op: Operation,
+                          domainSpecific: EvolutionImplementationProvider[this.type]
+                        ): Generator[MethodBodyContext, Option[Expression]] = {
+    import paradigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+    for {
+      thisRef <- selfReference()
+      attAccessors: Seq[Expression] <- forEach (tpeCase.attributes) { att =>
+        for {
+          getter <- getMember(thisRef, names.addPrefix("get", names.mangle(names.conceptNameOf(att))))
+          getterCall <- apply(getter, Seq.empty)
+        } yield getterCall
+      }
+
+      args <- forEach (op.parameters) { param =>
+        for {
+          paramField <- getMember(thisRef, names.mangle(param.name))
+        } yield (param, paramField)
+      }
+
+      opType <- toTargetLanguageType(op.returnType)
+      _ <- resolveAndAddImport(opType)
+      _ <- setReturnType(opType)
+
+      result <-
+        domainSpecific.logic(this)(
+          ReceivedRequest(
+            tpe,
+            tpeCase,
+            thisRef,
+            tpeCase.attributes.zip(attAccessors).toMap,
+            Request(op, args.toMap)
+          )
+        )
+    } yield result
+  }
+
+  /**
+   * Base Exp interface with no methods (for now).
+   *
+   * {{{
+   *   public interface Exp {
+   *
+   *     public tree.Tree astree();    // only when needed
+   * }
+   * }}}
+   * Eventually will have some here for producer/binary methods
+   *
+   * Override traditional OO use where this is a class; here it is an interface
+   *
+   * @param tpe
+   * @param ops -- ignored in this overridden capability
+   * @return
+   */
+  override def makeBase(tpe: DataType, ops: Seq[Operation]): Generator[ProjectContext, Unit] = {
+    import ooParadigm.projectCapabilities._
+    val makeClass: Generator[ClassContext, Unit] = {
+      import classCapabilities._
+      for {
+        _ <- setInterface()
+      } yield ()
+    }
+    addClassToProject(names.mangle(names.conceptNameOf(tpe)), makeClass)
+  }
+
+  def baseInterfaceNamesPrefix(ops: Seq[Operation], suffix:Name): Name = {
+    // Note: foldLeft requires swap of comparison operation because....
+    ops.sortWith(_.name > _.name).map(op => names.conceptNameOf(op)).foldLeft(suffix){ case (n,s) => names.addPrefix(s, n) }
+  }
+
+  def baseInterfaceNames(domain: Model, ops: Seq[Operation]): Name = {
+    baseInterfaceNamesPrefix(ops, names.mangle(domain.baseDataType.name))
+  }
+
+  def derivedInterfaceName(tpe: DataTypeCase, ops: Seq[Operation]): Name = {
+    names.addSuffix(names.mangle(ops.sortWith(_.name < _.name).map(op => names.conceptNameOf(op)).mkString("")), tpe.name)
+  }
+
+  // extends Exp [first one] or ExpEval [previous one]
+  // Works for both Exp* interface declarations as well as DataTypeOp declarations
+  def getParentInterface(domain: Model, tpe: DataType): Generator[ClassContext, Type] = {
+    import classCapabilities._
+
+    if (domain.isEmpty || domain.lastModelWithOperation.isEmpty) {
+      toTargetLanguageType(TypeRep.DataType(tpe))
+    } else {
+       findClass(baseInterfaceNames(domain, domain.lastModelWithOperation.get.ops))
+    }
+  }
+
+  /** Former derived interfaced  for the tpe based on its last defined operation. */
+  def getFormerDerivedInterface(domain: Model, current:DataTypeCase): Generator[ClassContext, Type] = {
+    import classCapabilities._
+
+    findClass(derivedInterfaceName(current, domain.last.get.lastModelWithOperation.get.ops))
+  }
+
+  /**
+   * Create intermediate interfaces, using the default implementation capability of Java 1.8
+   *
+   * {{{
+   *  public interface ExpEval extends Exp {
+   *   public Double eval();
+   * }
+   *
+   * public interface ExpPrettyp extends ExpEval {
+   *     public String prettyp();
+   * }
+   * }}}
+   *
+   * NOTE: a DataType there can exist only one so you don't have to pass in IF you have a Model instance
+   *
+   * @param tpe
+   * @param domainSpecific
+   * @return
+   */
+  def makeIntermediateInterface(domain:Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
+    import ooParadigm.projectCapabilities._
+
+    // create class which is an interface containing abstract methods
+    val makeInterface: Generator[ClassContext, Unit] = {
+      import classCapabilities._
+      for {
+        _ <- setInterface()
+        parent <- getParentInterface(domain.last.get, domain.baseDataType)
+        _ <- resolveAndAddImport(parent)
+        _ <- addParent(parent)
+        _ <- forEach (domain.ops) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), makeSignature(op)) }
+      } yield ()
+    }
+
+    addClassToProject(baseInterfaceNames(domain, domain.ops), makeInterface)
+  }
+
+  /**
+   * For any datatype that *could* have been defined in domain or perhaps was defined earlier
+   */
+  def makeDerivedInterfaces(domain:Model, tpeCase:DataTypeCase, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
+    import ooParadigm.projectCapabilities._
+
+    val ddn = derivedInterfaceName (tpeCase, domain.ops)
+    addClassToProject(ddn, makeDerivedInterface(domain.baseDataType, tpeCase, domain, domainSpecific))
+  }
+
+  /** Make a single getter method SIGNATURE ONLY for the 'att' attribute, such as:
+   * {{{
+   * public abstract ExpEval getRight();
+   * }}}
+   *
+   * Need to identify appropriate derived interface from existing ones based on new operations
+   * @param att
+   * @return
+   */
+  def makeGetterInterface(baseType:DataType, att:Attribute, parent:Type): Generator[ClassContext, Unit] = {
+    val makeBody: Generator[MethodBodyContext, Option[Expression]] = {
+      import paradigm.methodBodyCapabilities._
+      import ooParadigm.methodBodyCapabilities._
+
+      // TODO: How to get working TypeRep from a baseType:DataType
+      val realParent:Generator[MethodBodyContext, Type] = if (att.tpe.equals(TypeRep.DataType(baseType)))  {
+        Command.lift(parent)
+      } else {
+        for {
+          pt <- toTargetLanguageType(att.tpe)
+          _ <- resolveAndAddImport(pt)
+        } yield pt
+      }
+
+      for {
+        pt <- realParent   // PULL OUT of the context
+        _ <- setReturnType(pt)
+        _ <- setAbstract()
+      } yield (None)
+    }
+
+    import ooParadigm.classCapabilities._
+    addMethod(names.addPrefix("get", names.mangle(names.conceptNameOf(att))), makeBody)
+  }
+
+
+  /**
+   * Create a derived class for a datatype for a model that has operations
+   *
+   * {{{
+   *   public interface AddEval extends ExpEval {
+   *
+   *     ExpEval getLeft();
+   *
+   *     ExpEval getRight();
+   *
+   *     default Double eval() {
+   *         return getLeft().eval() + getRight().eval();
+   *     }
+   * }
+   * }}}
+   *
+   *  add another parent IF there is a prior operation defined before this model.
+   * @param tpe
+   * @param tpeCase
+   * @param domainSpecific
+   * @return
+   */
+  def makeDerivedInterface(tpe: DataType, tpeCase: DataTypeCase, model:Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
+    import ooParadigm.projectCapabilities._
+
+    val makeClass: Generator[ClassContext, Unit] = {
+      import classCapabilities._
+      for {
+        parent <- getParentInterface(model, tpe)
+        _ <- debug("parent:" + parent)
+        _ <- resolveAndAddImport(parent)
+        _ <- addParent(parent)
+        _ <- if (model.last.get.flatten.ops.nonEmpty) {  // NOTE: EXAMPLE OF IF ON RIGHT SIDE OF ARROW
+          for {
+            parentFormer <- getFormerDerivedInterface(model, tpeCase)
+            _ <- resolveAndAddImport(parentFormer)
+            _ <- addParent(parentFormer)
+          } yield ()
+        } else {
+          Command.skip[ClassContext]
+        }
+        _ <- forEach (tpeCase.attributes) { att => makeGetterInterface(model.baseDataType, att, parent) }
+        _ <- forEach (model.ops) { op =>
+            addMethod(names.mangle(names.instanceNameOf(op)), makeImplementation(tpe, tpeCase, op, domainSpecific))
+          }
+
+        _ <- setInterface()  // do LAST because then methods with bodies are turned into default methods in interface
+      } yield ()
+    }
+    println("  makeDerivedInterface:" + tpeCase.name + "," + model.name)
+    makeClass
+  }
+
+  /**
+   * Exp getE1() { return e1; }
+   *
+   */
+  def makeGetter(model:Model, att:Attribute): Generator[ClassContext, Unit] = {
+
+    val makeBody: Generator[MethodBodyContext, Option[Expression]] = {
+      import paradigm.methodBodyCapabilities._
+      import ooParadigm.methodBodyCapabilities._
+
+      for {
+        rt <- toTargetLanguageType(att.tpe)
+        _ <- resolveAndAddImport(rt)
+        _ <- setReturnType(rt)
+
+        // return // this.attribute name
+        self <- selfReference()
+        result <- getMember(self, names.mangle(names.instanceNameOf(att)))
+      } yield Some(result)
+    }
+
+    import ooParadigm.classCapabilities._
+
+    val makeStuff:Generator[ClassContext, Option[Expression]] = {
+      for {
+      parent <- getParentInterface(model, model.baseDataType)
+      interfaceMethod <- makeGetterInterface(model.baseDataType, att, parent)
+
+        // add body here
+
+    } yield(interfaceMethod)
+
+    addMethod(names.addPrefix("get", names.mangle(names.conceptNameOf(att))), makeBody)
+  }
+
+  /**
+   *
+   * @param domain
+   * @param tpeCase
+   * @return
+   */
+  def makeFinalClass(model:Model, modelDefiningOps:Model, tpeCase: DataTypeCase): Generator[ProjectContext,Unit] = {
+    import ooParadigm.projectCapabilities._
+
+    val binp = baseInterfaceNamesPrefix(modelDefiningOps.ops, names.mangle("Final"))
+    val actualName = names.addPrefix(names.conceptNameOf(tpeCase), binp)
+
+    val makeClass: Generator[ClassContext, Unit] = {
+        import ooParadigm.classCapabilities._
+
+        val parentType = derivedInterfaceName(tpeCase, modelDefiningOps.ops)
+        for {
+          // define based on the derivedInterface for that data type and operation
+          parent <- findClass(parentType)
+          _ <- resolveAndAddImport(parent)
+          _ <- addParent(parent)
+          _ <- forEach (tpeCase.attributes) { att => makeField(att) }
+          _ <- addConstructor(makeConstructor(tpeCase))
+          _ <- forEach (tpeCase.attributes) { att => makeGetter(att) }
+
+          // this is potentially different with extensible visitor
+          _ <- makeAcceptImplementation(model)
+        } yield ()
+      }
+      addClassToProject(actualName, makeClass)
+    }
+
+  def initializeApproach(domain: Model): Generator[ProjectContext, Unit] = {
+    import ooParadigm.projectCapabilities._
+    import paradigm.projectContextCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+    import ooParadigm.classCapabilities._
+    import ooParadigm.constructorCapabilities._
+
+    val dtpeRep = TypeRep.DataType(domain.baseDataType)
+    for {
+      _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(domain.baseDataType))
+      _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(domain.baseDataType))
+      _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(domain.baseDataType))
+    } yield ()
+  }
+
+  def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
+
+    for {
+      _ <- initializeApproach(domain)
+      _ <- domainSpecific.initialize(this)
+      _ <- makeBase(domain.baseDataType, Seq.empty)     // Marker interface -- ignores operations
+
+      // whenever new operation, this CREATES the capability of having intermediate interfaces
+      _ <- forEach (domain.inChronologicalOrder.filter(m => m.ops.nonEmpty)) { model =>
+
+        // for all PAST dataTypes that are already defined
+        for {
+          _ <- makeIntermediateInterface(model, domainSpecific)
+
+          _ <- forEach (model.flatten.typeCases)  { tpe =>
+            makeDerivedInterfaces(model, tpe, domainSpecific)
+          }
+        } yield ()
+      }
+
+      // if current state doesn't declare an operation then you need to iterate over everything in the past
+      // that *did* declare an operation [i.e., find those models] and create derived types for these new types
+      // that *do* declare operations and need to create derived data types
+      _ <- forEach (domain.inChronologicalOrder.filter(m => m.ops.isEmpty && m.typeCases.nonEmpty)) { modelDeclaringTypeCase =>
+            forEach (modelDeclaringTypeCase.typeCases) { tpe =>
+             forEach(modelDeclaringTypeCase.inChronologicalOrder.filter(m => m.ops.nonEmpty)) { modelDeclaringOp =>
+               makeDerivedInterfaces(modelDeclaringOp, tpe, domainSpecific)
+            }
+          }
+        }
+
+      /** For each DataType AND [cross-product] Operation you need a final Class. */
+      _ <- forEach (domain.flatten.typeCases) { tpeCase =>
+        makeFinalClasses(domain, tpeCase)
+      }
+    } yield ()
+  }
+}
+
+object Trivially {
+  type WithParadigm[P <: AnyParadigm] = Trivially { val paradigm: P }
+  type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
+
+  def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
+  (base: P)
+  (nameProvider: NameProvider[base.syntax.Name],
+   oo: ObjectOriented.WithBase[base.type],
+   params: ParametricPolymorphism.WithBase[base.type])
+  (generics: Generics.WithBase[base.type,oo.type,params.type]): Trivially.WithParadigm[base.type] =
+    new Trivially {
+      val paradigm: base.type = base
+      val names: NameProvider[paradigm.syntax.Name] = nameProvider
+      val ooParadigm: oo.type = oo
+      val polymorphics: params.type = params
+      val genericsParadigm: generics.type = generics
+    }
+}
+

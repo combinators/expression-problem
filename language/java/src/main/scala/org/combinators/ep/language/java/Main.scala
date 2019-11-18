@@ -1,7 +1,7 @@
 package org.combinators.ep.language.java
 
 import cats.effect.{ExitCode, IO, IOApp}
-import org.combinators.ep.approach.oo.{ExtensibleVisitor, Interpreter, Traditional, Visitor, VisitorSideEffect}
+import org.combinators.ep.approach.oo.{ExtensibleVisitor, Interpreter, Traditional, Trivially, Visitor, VisitorSideEffect}
 import org.combinators.ep.domain.Model
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.math._
@@ -22,8 +22,11 @@ object Main extends IOApp {
   val interpreterApproach = Interpreter[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
   val visitorSideEffectApproach = VisitorSideEffect[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+  val triviallyApproach = Trivially[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+
+
   // select one here.
-  val approach = visitorSideEffectApproach //  extensibleVisitorApproach //  extensibleVisitorApproach //interpreterApproach
+  val approach = triviallyApproach //  visitorSideEffectApproach //   //  extensibleVisitorApproach //interpreterApproach
 
   val evolutions = Seq(M0, M1, M2, M3)
   val tests = evolutions.scanLeft(Map.empty[Model, Seq[TestCase]]) { case (m, evolution) =>

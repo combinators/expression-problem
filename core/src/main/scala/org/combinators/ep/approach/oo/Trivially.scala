@@ -493,7 +493,7 @@ trait Trivially extends ApproachImplementationProvider with SharedOO {
     val binp = baseInterfaceNamesPrefix(lastModelWithOp.ops, names.mangle("Final"))
     val actualName = names.addPrefix(names.conceptNameOf(tpeCase), binp)
     val baseType = model.baseDataType
-    val paramType = baseInterfaceNames(model, model.ops)
+    val paramType = baseInterfaceNames(lastModelWithOp, lastModelWithOp.ops)  // was model
 
     for {
       opClass <- findClass(actualName)    // should check!

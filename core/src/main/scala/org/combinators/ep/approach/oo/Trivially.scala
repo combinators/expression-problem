@@ -27,13 +27,31 @@ trait Trivially extends ApproachImplementationProvider with SharedOO {
 
   }
 
+  /**
+   * new Sub((FinalI) (new Lit(1.0)), (FinalI) (new Lit(2.0))).prettyp()); was how we did in old code
+   *
+   * this becomes
+   *
+   * Sub(Lit(1.0), Lit(2.0)).prettyp());
+   *
+   * Relies on factory methods to instantiate based on latest classes generated
+   * @param baseTpe
+   * @param tpeCase
+   * @param args
+   * @return
+   */
   def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
+
+
     for {
-      rt <- findClass(names.mangle(names.conceptNameOf(tpeCase)))
-      _ <- resolveAndAddImport(rt)
-      res <- instantiateObject(rt, args)
+      //rt <- findClass(names.mangle(names.conceptNameOf(tpeCase)))
+      //_ <- resolveAndAddImport(rt)
+      //res <- instantiateObject(rt, args)
+      thisRef <- selfReference()
+      factory <- getMember(thisRef, names.mangle(names.conceptNameOf(tpeCase)))
+      res <- apply(factory, args)
     } yield res
   }
 
@@ -75,14 +93,6 @@ trait Trivially extends ApproachImplementationProvider with SharedOO {
         )
     } yield result
   }
-
-//  // start by making the abstract method signature AND THEN adding the methods to it
-//  def makeCompleteImplementation(model:Model, att:Attribute): Generator[MethodBodyContext, Unit] = {
-//    for {
-//      parent <- getParentInterface(model, model.baseDataType)
-//      interfaceMethod <- makeGetterInterface(model.baseDataType, att, parent)
-//    } yield interfaceMethod
-//  }
 
   /**
    * Base Exp interface with no methods (for now).
@@ -451,16 +461,125 @@ trait Trivially extends ApproachImplementationProvider with SharedOO {
 
         /** For each DataType AND [cross-product] Operation you need a final Class. */
         _ <- forEach (domain.flatten.typeCases) { tpeCase => {
-          // makeFinalClass(model:Model, modelDefiningOps:Model, tpeCase: DataTypeCase)
           val modelDefiningType = domain.findTypeCase(tpeCase).get
-          forEach (modelDefiningType.flatten.ops) { op =>
+          forEach (domain.flatten.ops) { op =>
             makeFinalClass(modelDefiningType, domain.findOperation(op).get, tpeCase)
           }
         }
         }
       } yield ()
     }
+
+  /**
+   * AddPrettypFinal Add(PrettypExp left, PrettypExp right) {
+   *   return new AddPrettypFinal(left, right);
+   * }
+   *
+   * LitPrettypFinal Lit(Double v) {
+   *    return new LitPrettypFinal(v);
+   * }
+   *
+   * @param model
+   * @param op
+   * @return
+   */
+  def makeFactoryMethod(model:Model, tpeCase:DataTypeCase): Generator[MethodBodyContext, Option[Expression]] = {
+    import paradigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+
+    // find last operation
+    val lastModelWithOp = model.lastModelWithOperation.get
+
+    val binp = baseInterfaceNamesPrefix(lastModelWithOp.ops, names.mangle("Final"))
+    val actualName = names.addPrefix(names.conceptNameOf(tpeCase), binp)
+    val baseType = model.baseDataType
+    val paramType = baseInterfaceNames(model, model.ops)
+
+    for {
+      opClass <- findClass(actualName)    // should check!
+      _ <- resolveAndAddImport(opClass)
+      _ <- setReturnType(opClass)
+
+     params <- forEach (tpeCase.attributes) { att: Attribute =>
+      if (att.tpe.equals(TypeRep.DataType(baseType))) {
+        for {
+          at <- findClass(paramType)
+          _ <- resolveAndAddImport(at)
+          pName <- freshName(names.mangle(names.instanceNameOf(att)))
+        } yield (pName, at)
+      } else {
+        for {
+          at <- toTargetLanguageType(att.tpe)
+          _ <- resolveAndAddImport(at)
+          pName <- freshName(names.mangle(names.instanceNameOf(att)))
+        } yield (pName, at)
+      }
+    }
+    _ <- setParameters(params)
+
+      // HACK. TODO: FIX this up
+      argSeq <- getArguments().map( args => { args.map(triple => triple._3) })
+     // ctor <- getConstructor(opClass)
+
+      res <- instantiateObject(opClass, argSeq)
+
+      //justArgs <- forEach(tpeCase.attributes.zip(args)) { case (att, (_, _, exp)) => exp }
+      //res <- apply(ctor, argSeq)
+      //res <- instantiateObject(opClass, Seq.empty)
+    } yield Some(res)
   }
+
+  /** Test cases all need factory methods to work.  */
+  override def implement(tests: Map[Model, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
+    import projectContextCapabilities._
+    import paradigm.compilationUnitCapabilities._
+    import paradigm.testCapabilities._
+    for {
+      _ <-
+        forEach(tests.toList) { case (model, tests) => {
+          val testCode: Generator[MethodBodyContext, Seq[Expression]] =
+            for {
+              code <- forEach(tests) {
+                test => testImplementationProvider.test(this)(test)
+              }
+            } yield code.flatten
+
+//          val pastModelsWithOps = model.inChronologicalOrder.filter(m => m.ops.nonEmpty).flatMap(m =>
+//            m.ops.map(op => {
+//              val targetModelForOp = model.toSeq.find(m => m.ops.contains(op) || m.typeCases.nonEmpty).get
+//              (names.addPrefix("make", names.mangle(names.conceptNameOf(op))), makeFactoryMethod(targetModelForOp, op))
+//            })
+//          )
+          import ooParadigm.testCapabilities._
+
+          val compUnit = for {
+            // add test case first
+            _ <- addTestCase(names.mangle("Test"), testCode)
+
+            // get list of all operations and MAP to the most recent model
+            _ <- forEach(model.flatten.typeCases) { tpeCase =>
+              // must ensure
+              addMethod(names.mangle(names.conceptNameOf(tpeCase)), makeFactoryMethod(model, tpeCase))
+            }
+
+          } yield()
+
+          val testSuite = for {
+            _ <- addTestSuite(
+              names.addSuffix(names.mangle(names.conceptNameOf(model)), "Test"),
+              compUnit
+            )
+          } yield ()
+
+          addCompilationUnit(
+            names.addSuffix(names.mangle(names.conceptNameOf(model)), "Test"),
+            testSuite
+          )
+        }
+        }
+    } yield ()
+  }
+}
 
   object Trivially {
     type WithParadigm[P <: AnyParadigm] = Trivially { val paradigm: P }

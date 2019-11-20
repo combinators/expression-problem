@@ -290,10 +290,45 @@ trait Trivially extends ApproachImplementationProvider with SharedOO {
     makeClass
   }
 
-  def covariantTypeOrPrimitive(baseType:DataType, att:Attribute, covariantType:Name):Generator[MethodBodyContext, Type] = {
+  /** Decision regarding when to choose covariant type over native defined type in attribute */
+  def chooseCovariant(baseType:DataType, att:Attribute): Boolean = att.tpe.equals(TypeRep.DataType(baseType))
+
+  /** Need to have ability within methods as well. Seems like framework could be improved to handle? */
+  def covariantTypeOrPrimitiveMethod(baseType:DataType, att:Attribute, covariantType:Name):Generator[MethodBodyContext, Type] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
-    if (att.tpe.equals(TypeRep.DataType(baseType)))  {
+    if (chooseCovariant(baseType, att))  {
+      for {
+        pt <- findClass(covariantType)
+        _ <- resolveAndAddImport(pt)
+      } yield pt
+    } else {
+      for {
+        pt <- toTargetLanguageType(att.tpe)
+        _ <- resolveAndAddImport(pt)
+      } yield pt
+    }
+  }
+
+  /** Need to have ability within methods as well. Seems like framework could be improved to handle? */
+  def covariantTypeOrPrimitiveConstructor(baseType:DataType, att:Attribute, covariantType:Name):Generator[ConstructorContext, Type] = {
+    import ooParadigm.constructorCapabilities._
+    if (chooseCovariant(baseType, att))  {
+      for {
+        pt <- findClass(covariantType)
+        _ <- resolveAndAddImport(pt)
+      } yield pt
+    } else {
+      for {
+        pt <- toTargetLanguageType(att.tpe)
+        _ <- resolveAndAddImport(pt)
+      } yield pt
+    }
+  }
+
+  def covariantTypeOrPrimitiveClass(baseType:DataType, att:Attribute, covariantType:Name):Generator[ClassContext, Type] = {
+    import ooParadigm.classCapabilities._
+    if (chooseCovariant(baseType, att))  {
         for {
           pt <- findClass(covariantType)
           _ <- resolveAndAddImport(pt)
@@ -306,28 +341,12 @@ trait Trivially extends ApproachImplementationProvider with SharedOO {
       }
     }
 
-
     def makeBodyImpl(baseType:DataType, att:Attribute, parent:Type, covariantType:Name): Generator[MethodBodyContext, Option[Expression]] = {
       import paradigm.methodBodyCapabilities._
       import ooParadigm.methodBodyCapabilities._
 
-//      // TODO: How to get working TypeRep from a baseType:DataType
-//      val realParent:Generator[MethodBodyContext, Type] = {
-//        if (att.tpe.equals(TypeRep.DataType(baseType)))  {
-//          for {
-//            pt <- findClass(covariantType)
-//            _ <- resolveAndAddImport(pt)
-//          } yield pt
-//      } else {
-//          for {
-//            pt <- toTargetLanguageType(att.tpe)
-//            _ <- resolveAndAddImport(pt)
-//          } yield pt
-//        }
-//      }
-
       for {
-        pt <- covariantTypeOrPrimitive(baseType, att, covariantType)   // PULL OUT of the context
+        pt <- covariantTypeOrPrimitiveMethod(baseType, att, covariantType)   // PULL OUT of the context
         _ <- setReturnType(pt)
 
         // provide an implementation here. but how?
@@ -336,43 +355,27 @@ trait Trivially extends ApproachImplementationProvider with SharedOO {
       } yield Some(result)
     }
 
+
   /** Trivially fields are based on closest derived interface. TODO: UGLY CLEAN UP! */
   def makeTriviallyField(baseType: DataType, att: Attribute, covariantType:Name): Generator[ClassContext, Unit] = {
     import ooParadigm.classCapabilities._
-    if (att.tpe.equals(TypeRep.DataType(baseType))) {
-      for {
-        ft <- findClass(covariantType)
-        _ <- resolveAndAddImport(ft)
-        _ <- addField(names.mangle(names.instanceNameOf(att)), ft)
-      } yield ()
-    } else {
-      for {
-        ft <- toTargetLanguageType(att.tpe)
-        _ <- resolveAndAddImport(ft)
-        _ <- addField(names.mangle(names.instanceNameOf(att)), ft)
-      } yield ()
-    }
+    for {
+      tpe <- covariantTypeOrPrimitiveClass(baseType, att, covariantType)
+      _ <- addField(names.mangle(names.instanceNameOf(att)), tpe)
+    } yield ()
   }
 
   def makeTriviallyConstructor(baseType: DataType, tpeCase: DataTypeCase, covariantType:Name): Generator[ConstructorContext, Unit] = {
     import ooParadigm.constructorCapabilities._
     for {
       params <- forEach (tpeCase.attributes) { att: Attribute =>
-        if (att.tpe.equals(TypeRep.DataType(baseType))) {
           for {
-            at <- findClass(covariantType)
-            _ <- resolveAndAddImport(at)
-            pName <- freshName(names.mangle(names.instanceNameOf(att)))
-          } yield (pName, at)
-        } else {
-          for {
-            at <- toTargetLanguageType(att.tpe)
-            _ <- resolveAndAddImport(at)
+            at <- covariantTypeOrPrimitiveConstructor(baseType, att, covariantType)
             pName <- freshName(names.mangle(names.instanceNameOf(att)))
           } yield (pName, at)
         }
-      }
       _ <- setParameters(params)
+
       args <- getArguments()
       _ <- forEach(tpeCase.attributes.zip(args)) { case (att, (_, _, exp)) =>
         initializeField(names.mangle(names.instanceNameOf(att)), exp)
@@ -480,7 +483,7 @@ trait Trivially extends ApproachImplementationProvider with SharedOO {
    * }
    *
    * @param model
-   * @param op
+   * @param tpeCase
    * @return
    */
   def makeFactoryMethod(model:Model, tpeCase:DataTypeCase): Generator[MethodBodyContext, Option[Expression]] = {
@@ -500,34 +503,21 @@ trait Trivially extends ApproachImplementationProvider with SharedOO {
       _ <- resolveAndAddImport(opClass)
       _ <- setReturnType(opClass)
 
-     params <- forEach (tpeCase.attributes) { att: Attribute =>
-      if (att.tpe.equals(TypeRep.DataType(baseType))) {
-        for {
-          at <- findClass(paramType)
-          _ <- resolveAndAddImport(at)
-          pName <- freshName(names.mangle(names.instanceNameOf(att)))
-        } yield (pName, at)
-      } else {
-        for {
-          at <- toTargetLanguageType(att.tpe)
-          _ <- resolveAndAddImport(at)
-          pName <- freshName(names.mangle(names.instanceNameOf(att)))
-        } yield (pName, at)
+      params <- forEach (tpeCase.attributes) { att: Attribute =>
+          for {
+            at <- covariantTypeOrPrimitiveMethod(model.baseDataType, att, paramType)
+            pName <- freshName(names.mangle(names.instanceNameOf(att)))
+          } yield (pName, at)
       }
-    }
-    _ <- setParameters(params)
+      _ <- setParameters(params)
 
       // HACK. TODO: FIX this up
       argSeq <- getArguments().map( args => { args.map(triple => triple._3) })
-     // ctor <- getConstructor(opClass)
-
       res <- instantiateObject(opClass, argSeq)
 
-      //justArgs <- forEach(tpeCase.attributes.zip(args)) { case (att, (_, _, exp)) => exp }
-      //res <- apply(ctor, argSeq)
-      //res <- instantiateObject(opClass, Seq.empty)
     } yield Some(res)
   }
+
 
   /** Test cases all need factory methods to work.  */
   override def implement(tests: Map[Model, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
@@ -544,12 +534,6 @@ trait Trivially extends ApproachImplementationProvider with SharedOO {
               }
             } yield code.flatten
 
-//          val pastModelsWithOps = model.inChronologicalOrder.filter(m => m.ops.nonEmpty).flatMap(m =>
-//            m.ops.map(op => {
-//              val targetModelForOp = model.toSeq.find(m => m.ops.contains(op) || m.typeCases.nonEmpty).get
-//              (names.addPrefix("make", names.mangle(names.conceptNameOf(op))), makeFactoryMethod(targetModelForOp, op))
-//            })
-//          )
           import ooParadigm.testCapabilities._
 
           val compUnit = for {

@@ -10,7 +10,7 @@ import org.combinators.ep.generator.paradigm._
 
 
 // copied from visitor to start
-sealed trait Interpreter extends ApproachImplementationProvider {
+sealed trait Interpreter extends ApproachImplementationProvider with OperationInterfaceChain with FieldDefinition {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
@@ -38,118 +38,6 @@ sealed trait Interpreter extends ApproachImplementationProvider {
       _ <- resolveAndAddImport(rt)
       res <- instantiateObject(rt, args)
     } yield res
-  }
-
-  // this is commonly copied from numerous ones (Visitor/Traditional) seems to be best to lift up to some other place
-  def makeSignature(op: Operation): Generator[MethodBodyContext, Unit] = {
-    import paradigm.methodBodyCapabilities._
-
-    for {
-      rt <- toTargetLanguageType(op.returnType)
-      _ <- resolveAndAddImport(rt)
-      _ <- setReturnType(rt)
-      params <- forEach (op.parameters) { param: Parameter =>
-          for {
-            pt <- toTargetLanguageType(param.tpe)
-            _ <- resolveAndAddImport(pt)
-            pName <- freshName(names.mangle(param.name))
-          } yield (pName, pt)
-        }
-      _ <- setParameters(params)
-    } yield ()
-  }
-
-  def makeBase(tpe: DataType, ops: Seq[Operation]): Generator[ProjectContext, Unit] = {
-    import ooParadigm.projectCapabilities._
-    val makeClass: Generator[ClassContext, Unit] = {
-        import classCapabilities._
-        for {
-          _ <- setAbstract()
-          _ <- forEach(ops) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), makeSignature(op)) }
-          _ <- debug("makeBase")
-        } yield ()
-      }
-    addClassToProject(names.mangle(names.conceptNameOf(tpe)), makeClass)
-  }
-
-  def makeField(att: Attribute): Generator[ClassContext, Unit] = {
-    import ooParadigm.classCapabilities._
-    for {
-      ft <- toTargetLanguageType(att.tpe)
-      _ <- resolveAndAddImport(ft)
-      _ <- addField(names.mangle(names.instanceNameOf(att)), ft)
-    } yield ()
-  }
-
-  def makeImplementation(
-      tpe: DataType,
-      tpeCase: DataTypeCase,
-      op: Operation,
-      domainSpecific: EvolutionImplementationProvider[this.type]
-    ): Generator[MethodBodyContext, Option[Expression]] = {
-    import ooParadigm.methodBodyCapabilities._
-    import paradigm.methodBodyCapabilities._
-    for {
-      _ <- makeSignature(op)
-      thisRef <- selfReference()
-      attAccessors: Seq[Expression] <- forEach (tpeCase.attributes) { att =>
-          getMember(thisRef, names.mangle(names.instanceNameOf(att)))
-        }
-      atts = tpeCase.attributes.zip(attAccessors).toMap
-      allArgs <- getArguments()
-      args = op.parameters.zip(allArgs).map { case (param, (_, _, exp)) => (param, exp) }.toMap
-      result <-
-        domainSpecific.logic(this)(
-          ReceivedRequest(
-            tpe,
-            tpeCase,
-            thisRef,
-            atts,
-            Request(op, args)
-          )
-        )
-    } yield result
-  }
-
-  def makeConstructor(tpeCase: DataTypeCase): Generator[ConstructorContext, Unit] = {
-    import ooParadigm.constructorCapabilities._
-    for {
-      params <- forEach (tpeCase.attributes) { att: Attribute =>
-          for {
-            at <- toTargetLanguageType(att.tpe)
-            _ <- resolveAndAddImport(at)
-            pName <- freshName(names.mangle(names.instanceNameOf(att)))
-          } yield (pName, at)
-        }
-      _ <- setParameters(params)
-      args <- getArguments()
-      _ <- forEach(tpeCase.attributes.zip(args)) { case (att, (_, _, exp)) =>
-        initializeField(names.mangle(names.instanceNameOf(att)), exp)
-      }
-    } yield ()
-  }
-
-  def makeDerived(tpe: DataType, tpeCase: DataTypeCase, ops: Seq[Operation], domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
-    import ooParadigm.projectCapabilities._
-    val makeClass: Generator[ClassContext, Unit] = {
-      import classCapabilities._
-      for {
-        pt <- findClass(names.mangle(names.conceptNameOf(tpe)))
-        //pt <- toTargetLanguageType(TypeRep.DataType(tpe))
-        _ <- resolveAndAddImport(pt)
-        _ <- addParent(pt)
-        _ <- forEach (tpeCase.attributes) { att => makeField(att) }
-        _ <- addConstructor(makeConstructor(tpeCase))
-        _ <- forEach (ops) { op =>
-            addMethod(names.mangle(names.instanceNameOf(op)), makeImplementation(tpe, tpeCase, op, domainSpecific))
-          }
-      } yield ()
-    }
-    addClassToProject(names.mangle(names.conceptNameOf(tpeCase)), makeClass)
-  }
-
-  def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
-    FindClass(names.mangle(names.conceptNameOf(dtpe))).interpret(canFindClass)
   }
 
   /**
@@ -228,12 +116,6 @@ sealed trait Interpreter extends ApproachImplementationProvider {
       }
     } yield ()
 
-
-
-//    allTypes.zip(classes).foreach ()
-//    val name = names.conceptNameOf(exp)
-//    addClassToProject(names.mangle(combinedOps + name), makeClass)
-
   }
 
   def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
@@ -245,10 +127,15 @@ sealed trait Interpreter extends ApproachImplementationProvider {
     for {
       _ <- initializeApproach(domain)
       _ <- domainSpecific.initialize(this)
-      _ <- makeBase(domain.baseDataType, domain.ops)
+      _ <- makeBase(domain.baseDataType, Seq.empty)     // Marker interface -- ignores operations
       _ <- forEach (domain.inChronologicalOrder.filter(m => m.ops.nonEmpty)) { m =>
         makeBaseExtensions(m)
       }
+
+      _ <- forEach (domain.inChronologicalOrder.filter(m => m.ops.nonEmpty)) { model =>
+        // for all PAST dataTypes that are already defined
+         makeIntermediateInterface(model, domainSpecific)
+       }
 
     } yield ()
   }

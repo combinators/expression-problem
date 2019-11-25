@@ -92,7 +92,6 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
     type TestContext = TestCtxt
     type MethodBodyContext = MethodBodyCtxt
 
-
     val projectContextCapabilities: ProjectContextCapabilities =
       new ProjectContextCapabilities {
         implicit val canDebugInProject: Understands[ProjectCtxt, Debug] =
@@ -1115,6 +1114,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
         }
      val testCapabilities: TestCapabilities =
        new TestCapabilities {
+
          implicit val canAddMethodInTest: Understands[TestCtxt, AddMethod[base.MethodBodyContext, Name, Option[Expression]]] =
            new Understands[TestCtxt, AddMethod[base.MethodBodyContext, Name, Option[Expression]]] {
              def perform(

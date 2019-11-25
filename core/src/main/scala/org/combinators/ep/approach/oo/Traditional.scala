@@ -8,7 +8,7 @@ import org.combinators.ep.generator.paradigm._
 import Command._
 import AnyParadigm.syntax._
 
-trait Traditional extends ApproachImplementationProvider with SharedOO {  // this had been sealed. not sure why
+trait Traditional extends ApproachImplementationProvider with SharedOO with FieldDefinition {  // this had been sealed. not sure why
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
 
   import paradigm._
@@ -54,6 +54,9 @@ trait Traditional extends ApproachImplementationProvider with SharedOO {  // thi
     addClassToProject(names.mangle(names.conceptNameOf(tpeCase)), makeClass)
   }
 
+  /**
+   * This affect the way toTargetLanguageType operates
+   */
   def initializeApproach(domain: Model): Generator[ProjectContext, Unit] = {
     import paradigm.projectContextCapabilities._
     import ooParadigm.projectCapabilities._

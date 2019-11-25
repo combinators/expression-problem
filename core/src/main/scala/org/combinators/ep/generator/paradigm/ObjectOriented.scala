@@ -250,14 +250,6 @@ trait ObjectOriented {
     def instantiateObject(tpe: Type, constructorArguments: Seq[Expression]): Generator[MethodBodyContext, Expression] =
       AnyParadigm.capabilitiy(InstantiateObject(tpe, constructorArguments))
 
-//    implicit val canAddVariableDeclarationInMethod: Understands[MethodBodyContext, AddVariableDeclaration[Type, Name, Expression]]
-//    def addVariableDeclaration(params: Seq[(Type, Name, Expression)]): Generator[MethodBodyContext, Unit] =
-//      AnyParadigm.capabilitiy(AddVariableDeclaration(params))
-//
-//    implicit val canAddVariableAssignmentInMethod: Understands[MethodBodyContext, AddVariableAssignment[Name, Expression]]
-//    def addVariableAssignment(params: Seq[(Name, Expression)]): Generator[MethodBodyContext, Unit] =
-//      AnyParadigm.capabilitiy(AddVariableAssignment(params))
-
     implicit val canGetMemberInMethod: Understands[MethodBodyContext, GetMember[Expression, Name]]
     def getMember(instance: Expression, member: Name): Generator[MethodBodyContext, Expression] =
       AnyParadigm.capabilitiy(GetMember(instance, member))

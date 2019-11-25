@@ -1,12 +1,11 @@
 package org.combinators.ep.approach.oo
 
-import org.combinators.ep.domain.Model
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.communication.{ReceivedRequest, Request}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.ep.generator.paradigm.{FindClass, Generics, ObjectOriented, ParametricPolymorphism}
-import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider, Understands}
+import org.combinators.ep.generator.paradigm.{FindClass, ObjectOriented, ToTargetLanguageType}
+import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider, Understands}
 
 trait SharedOO extends ApproachImplementationProvider {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
@@ -45,16 +44,35 @@ trait SharedOO extends ApproachImplementationProvider {
     addClassToProject(names.mangle(names.conceptNameOf(tpe)), makeClass)
   }
 
-  def makeField(att: Attribute): Generator[ClassContext, Unit] = {
-    import ooParadigm.classCapabilities._
+  /** Return Signature of getXXX() for an attribute. Can be made covariant as needed. Not abtstract; caller decides what to do. */
+  def makeGetterSignature(att:Attribute): Generator[MethodBodyContext, Option[Expression]] = {
+    import paradigm.methodBodyCapabilities._
+
     for {
-      ft <- toTargetLanguageType(att.tpe)
-      _ <- resolveAndAddImport(ft)
-      _ <- addField(names.mangle(names.instanceNameOf(att)), ft)
-    } yield ()
+      pt <- toTargetLanguageType(att.tpe)   // PULL OUT of the context
+      _ <- setReturnType(pt)
+      // _ <- setAbstract()
+    } yield (None)
   }
 
 
+
+  /**
+   * Provides a method implementation that contains the logic of the operation encoded
+   * as a single method.
+   *
+   * {{{
+   *   public Double eval() {
+   *      return getLeft().eval() + getRight().eval();
+   *   }
+   * }}}
+   *
+   * @param tpe
+   * @param tpeCase
+   * @param op
+   * @param domainSpecific
+   * @return
+   */
   def makeImplementation(
                           tpe: DataType,
                           tpeCase: DataTypeCase,
@@ -84,17 +102,75 @@ trait SharedOO extends ApproachImplementationProvider {
         )
     } yield result
   }
+//
+//  /** Identity transformation that converts an attribute into a type using toTargetLanguageType on att.tpe. */
+//  def defaultAttributeToTypeConstructor(att:Attribute): Generator[ConstructorContext, Type] = {
+//    import ooParadigm.constructorCapabilities._
+//    for {
+//      pt <- toTargetLanguageType(att.tpe)
+//      _ <- resolveAndAddImport(pt)
+//
+//    } yield pt
+//  }
+//
+//  /** Identity transformation that converts an attribute into a type using toTargetLanguageType on att.tpe. */
+//  def defaultAttributeToType[Ctxt](att:Attribute)
+//        (implicit canTranslateTypeInConstructor : Understands[Ctxt, ToTargetLanguageType[Type]]): Generator[Ctxt, Type] = {
+//    import ooParadigm.classCapabilities._
+//    for {
+//      pt <- toTargetLanguageType(att.tpe)
+//      _ <- resolveAndAddImport(pt)
+//    } yield pt
+//  }
 
+
+//  def covariantTypeOrPrimitive[Ctxt](baseType:DataType, covariantType:Name)(att:Attribute)
+//                                    (implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
+
+
+//    /** Identity transformation that converts an attribute into a type using toTargetLanguageType on att.tpe. */
+//  def defaultAttributeToType[Ctxt](att:Attribute) (implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
+//    import ooParadigm.classCapabilities._
+//    for {
+//      pt <- toTargetLanguageType(att.tpe)
+//      _ <- resolveAndAddImport(pt)
+//    } yield pt
+//  }
+//
+//  /** Identity transformation that converts an attribute into a type using toTargetLanguageType on att.tpe. */
+//  def defaultAttributeToTypeMethodBody(att:Attribute): Generator[MethodBodyContext, Type] = {
+//    import paradigm.methodBodyCapabilities._
+//    for {
+//      pt <- toTargetLanguageType(att.tpe)
+//      _ <- resolveAndAddImport(pt)
+//    } yield pt
+//  }
+
+  /**
+   * Create constructor for a class based on the given data type.
+   *
+   * {{{
+   *   public ?(ATT-TPE _left, ATT-TPE _right) {
+   *         this.left = _left;
+   *         this.right = _right;
+   *     }
+   * }}}
+   *
+   * Ultimately would provide a function that converts att.tpe into ATT-TPE, for example, as needed
+   * by Trivially
+   * @param tpeCase
+   * @return
+   */
   def makeConstructor(tpeCase: DataTypeCase): Generator[ConstructorContext, Unit] = {
     import ooParadigm.constructorCapabilities._
     for {
       params <- forEach (tpeCase.attributes) { att: Attribute =>
         for {
           at <- toTargetLanguageType(att.tpe)
-          _ <- resolveAndAddImport(at)
           pName <- freshName(names.mangle(names.instanceNameOf(att)))
         } yield (pName, at)
       }
+
       _ <- setParameters(params)
       args <- getArguments()
       _ <- forEach(tpeCase.attributes.zip(args)) { case (att, (_, _, exp)) =>
@@ -102,6 +178,87 @@ trait SharedOO extends ApproachImplementationProvider {
       }
     } yield ()
   }
+
+
+  /** Make a single getter method for the 'att' attribute, such as:
+   * {{{
+   * public abstract Exp getRight();
+   * }}}
+   *
+   * parameterized, as necessary, with attToType method that overrides default behavior
+   * @param att
+   * @return
+   */
+  def makeGetterInterface(att:Attribute): Generator[MethodBodyContext, Option[Expression]] = {
+     import paradigm.methodBodyCapabilities._
+      import ooParadigm.methodBodyCapabilities._
+      for {
+        rt <- toTargetLanguageType(att.tpe)
+        _ <- resolveAndAddImport(rt)
+        _ <- setReturnType(rt)
+      } yield (None)
+    }
+
+  /** Make a single getter method for the 'att' attribute, such as:
+   * {{{
+   * public Exp getRight() {
+   *   return this.right;
+   * }
+   * }}}
+   *
+   * parameterized, as necessary, with attToType method that overrides default behavior
+   * @param att
+   * @return
+   */
+  def makeGetter(att:Attribute): Generator[ClassContext, Unit] = {
+    val makeBody: Generator[MethodBodyContext, Option[Expression]] = {
+      import paradigm.methodBodyCapabilities._
+      import ooParadigm.methodBodyCapabilities._
+
+      for {
+        _ <- makeGetterInterface(att)
+
+        self <- selfReference()
+        result <- getMember(self, names.mangle(names.instanceNameOf(att)))
+      } yield Some(result)
+    }
+
+    import ooParadigm.classCapabilities._
+    addMethod(names.addPrefix("get", names.mangle(names.conceptNameOf(att))), makeBody)
+  }
+
+//  /**
+//   * Create constructor for a class based on the given data type.
+//   *
+//   * {{{
+//   *   public ?(ATT-TPE _left, ATT-TPE _right) {
+//   *         this.left = _left;
+//   *         this.right = _right;
+//   *     }
+//   * }}}
+//   *
+//   * Ultimately would provide a function that converts att.tpe into ATT-TPE, for example, as needed
+//   * by Trivially
+//   * @param tpeCase
+//   * @return
+//   */
+//  def makeConstructor(tpeCase: DataTypeCase): Generator[ConstructorContext, Unit] = {
+//    import ooParadigm.constructorCapabilities._
+//    for {
+//      params <- forEach (tpeCase.attributes) { att: Attribute =>
+//        for {
+//          at <- toTargetLanguageType(att.tpe)
+//          _ <- resolveAndAddImport(at)
+//          pName <- freshName(names.mangle(names.instanceNameOf(att)))
+//        } yield (pName, at)
+//      }
+//      _ <- setParameters(params)
+//      args <- getArguments()
+//      _ <- forEach(tpeCase.attributes.zip(args)) { case (att, (_, _, exp)) =>
+//        initializeField(names.mangle(names.instanceNameOf(att)), exp)
+//      }
+//    } yield ()
+//  }
 
   def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
     FindClass(names.mangle(names.conceptNameOf(dtpe))).interpret(canFindClass)

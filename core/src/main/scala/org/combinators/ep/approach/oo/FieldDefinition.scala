@@ -1,11 +1,9 @@
 package org.combinators.ep.approach.oo
 
-import org.combinators.ep.domain.Model
-import org.combinators.ep.domain.abstractions.{Attribute, DataType, Operation, TypeRep}
+import org.combinators.ep.domain.abstractions.Attribute
 import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm.ObjectOriented
-import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
+import org.combinators.ep.generator.ApproachImplementationProvider
 
 /**
  * Ability to create fields for given Attribute within an existing Class
@@ -41,6 +39,4 @@ trait FieldDefinition extends ApproachImplementationProvider with SharedOO {
       _ <- addField(names.mangle(names.instanceNameOf(att)), ft)
     } yield ft
   }
-
-
 }

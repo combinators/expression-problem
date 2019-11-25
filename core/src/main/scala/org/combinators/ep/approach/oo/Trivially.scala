@@ -2,7 +2,7 @@ package org.combinators.ep.approach.oo
 
 import org.combinators.ep.domain.Model
 import org.combinators.ep.domain.abstractions._
-import org.combinators.ep.generator.Command.{Generator, _}
+import org.combinators.ep.generator.Command._
 import org.combinators.ep.generator._
 import org.combinators.ep.generator.communication._
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax._
@@ -15,9 +15,6 @@ trait Trivially extends ApproachImplementationProvider with SharedOO with Operat
   import ooParadigm._
   import paradigm._
   import syntax._
-
-  // Override key default methods from woven traits
-  //covariantTypeOrPrimitive(model.baseDataType, baseInterface))
 
   def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression] = {
     import ooParadigm.methodBodyCapabilities._
@@ -115,50 +112,6 @@ trait Trivially extends ApproachImplementationProvider with SharedOO with Operat
     addClassToProject(ddn, makeDerivedInterface(domain.baseDataType, tpeCase, domain, domainSpecific))
   }
 
-//  /** Return Signature of getXXX() for an attribute. Can be made covariant as needed. */
-//  def makeGetterSignature(baseType:DataType, att:Attribute, parent:Type): Generator[MethodBodyContext, Option[Expression]] = {
-//    import paradigm.methodBodyCapabilities._
-//    import ooParadigm.methodBodyCapabilities._
-//
-//    // TODO: How to get working TypeRep from a baseType:DataType
-//    val realParent:Generator[MethodBodyContext, Type] = if (chooseCovariant(baseType, att)) {
-//      Command.lift(parent)
-//    } else {
-//      for {
-//        pt <- toTargetLanguageType(att.tpe)
-//        _ <- resolveAndAddImport(pt)
-//      } yield pt
-//    }
-//
-//    for {
-//
-//      pt <- realParent   // PULL OUT of the context
-//      _ <- setReturnType(pt)
-//      _ <- setAbstract()
-//    } yield (None)
-//  }
-
-//  /** Make a single getter method SIGNATURE ONLY for the 'att' attribute, such as:
-//   * {{{
-//   * public abstract ExpEval getRight();
-//   * }}}
-//   *
-//   * Need to identify appropriate derived interface from existing ones based on new operations
-//   * @param att
-//   * @return
-//   */
-//  def makeGetterInterface(baseType:DataType, att:Attribute, parent:Type): Generator[ClassContext, Unit] = {
-//
-//
-//    import ooParadigm.classCapabilities._
-//    addMethod(names.addPrefix("get", names.mangle(names.conceptNameOf(att))), makeBody)
-//  }
-//
-//
-//    import ooParadigm.classCapabilities._
-//    addMethod(names.addPrefix("get", names.mangle(names.conceptNameOf(att))), makeBody)
-//  }
-
   /** Make a single getter method for the 'att' attribute, such as:
    * {{{
    * public Exp getRight() {
@@ -244,84 +197,9 @@ trait Trivially extends ApproachImplementationProvider with SharedOO with Operat
   }
 
   /** Decision regarding when to choose covariant type over native defined type in attribute */
-  def chooseCovariant(baseType:DataType, att:Attribute): Boolean = att.tpe.equals(TypeRep.DataType(baseType))
-//
-//  /** Need to have ability within methods as well. Seems like framework could be improved to handle? */
-//  def covariantTypeOrPrimitiveMethod(baseType:DataType, att:Attribute, covariantType:Name):Generator[MethodBodyContext, Type] = {
-//    import paradigm.methodBodyCapabilities._
-//    import ooParadigm.methodBodyCapabilities._
-//    if (chooseCovariant(baseType, att))  {
-//      for {
-//        pt <- findClass(covariantType)
-//        _ <- resolveAndAddImport(pt)
-//      } yield pt
-//    } else {
-//      for {
-//        pt <- toTargetLanguageType(att.tpe)
-//        _ <- resolveAndAddImport(pt)
-//      } yield pt
-//    }
-//  }
+  //def chooseCovariant(baseType:DataType, att:Attribute): Boolean = att.tpe.equals(TypeRep.DataType(baseType))
 
-//  /** Can be used wherever trivially needs to convert att into a generated Type. */
-//  def covariantTypeOrPrimitiveConstructor(baseType:DataType, covariantType:Name)(att:Attribute): Generator[ConstructorContext, Type] = {
-//    import ooParadigm.constructorCapabilities._
-//      if (chooseCovariant(baseType, att))  {
-//        for {
-//          pt <- findClass(covariantType)
-//          _ <- resolveAndAddImport(pt)
-//        } yield pt
-//      } else defaultAttributeToTypeConstructor(att)
-//    }
-//
-//  def covariantTypeOrPrimitive[Ctxt](baseType:DataType, covariantType:Name)(att:Attribute)
-//                                    (implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
-//    import ooParadigm.classCapabilities._
-//    if (chooseCovariant(baseType, att))  {
-//      for {
-//        pt <- findClass(covariantType)
-//        _ <- resolveAndAddImport(pt)
-//      } yield pt
-//    } else defaultAttributeToType(att)
-//  }
-
-//  def covariantTypeOrPrimitiveClass(baseType:DataType, covariantType:Name)(att:Attribute): Generator[ClassContext, Type] = {
-//    import ooParadigm.classCapabilities._
-//    if (chooseCovariant(baseType, att))  {
-//      for {
-//        pt <- findClass(covariantType)
-//        _ <- resolveAndAddImport(pt)
-//      } yield pt
-//    } else defaultAttributeToType(att)
-//  }
-
-//
-//  /**
-//   * Need to have ability within methods as well. Seems like framework could be improved to handle?
-//   *
-//   * This is an example of a method that maps 'att' into the appropriate type to use
-//   */
-//  def covariantTypeOrPrimitiveConstructor(baseType:DataType, att:Attribute, covariantType:Name):Generator[ConstructorContext, Type] = {
-//    import ooParadigm.constructorCapabilities._
-//    if (chooseCovariant(baseType, att))  {
-//      for {
-//        pt <- findClass(covariantType)
-//        _ <- resolveAndAddImport(pt)
-//      } yield pt
-//    } else defaultAttributeToTypeConstructor(att)
-//  }
-//
-//  def covariantTypeOrPrimitiveClass(baseType:DataType, att:Attribute, covariantType:Name):Generator[ClassContext, Type] = {
-//    import ooParadigm.classCapabilities._
-//    if (chooseCovariant(baseType, att))  {
-//        for {
-//          pt <- findClass(covariantType)
-//          _ <- resolveAndAddImport(pt)
-//        } yield pt
-//      } else defaultAttributeToTypeClass(att)
-//    }
-
-    def makeBodyImpl(baseType:DataType, att:Attribute, parent:Type, covariantType:Name): Generator[MethodBodyContext, Option[Expression]] = {
+  def makeBodyImpl(baseType:DataType, att:Attribute, parent:Type, covariantType:Name): Generator[MethodBodyContext, Option[Expression]] = {
       import paradigm.methodBodyCapabilities._
       import ooParadigm.methodBodyCapabilities._
 
@@ -334,52 +212,6 @@ trait Trivially extends ApproachImplementationProvider with SharedOO with Operat
         result <- getMember(self, names.mangle(names.instanceNameOf(att)))
       } yield Some(result)
     }
-//
-//  /** Trivially fields are based on closest derived interface. TODO: UGLY CLEAN UP! */
-//  def makeTriviallyField(baseType: DataType, att: Attribute, covariantType:Name): Generator[ClassContext, Unit] = {
-//    import ooParadigm.classCapabilities._
-//    for {
-//      tpe <- covariantTypeOrPrimitiveClass(baseType, att, covariantType)
-//      _ <- addField(names.mangle(names.instanceNameOf(att)), tpe)
-//    } yield ()
-//  }
-
-//  def makeTriviallyConstructor2(tpeCase: DataTypeCase, dispatch: ConstructorDispatch): Generator[ConstructorContext, Unit] = {
-//    import ooParadigm.constructorCapabilities._
-//    for {
-//      params <- forEach (tpeCase.attributes) { att: Attribute =>
-//        for {
-//          at <- dispatch(att)
-//          pName <- freshName(names.mangle(names.instanceNameOf(att)))
-//        } yield (pName, at)
-//      }
-//      _ <- setParameters(params)
-//
-//      args <- getArguments()
-//      _ <- forEach(tpeCase.attributes.zip(args)) { case (att, (_, _, exp)) =>
-//        initializeField(names.mangle(names.instanceNameOf(att)), exp)
-//      }
-//    } yield ()
-//  }
-//
-//  def makeTriviallyConstructor(tpeCase: DataTypeCase, baseType: DataType, covariantType:Name): Generator[ConstructorContext, Unit] = {
-//    import ooParadigm.constructorCapabilities._
-//    for {
-//      params <- forEach (tpeCase.attributes) { att: Attribute =>
-//          for {
-//            at <- covariantTypeOrPrimitiveConstructor(baseType, att, covariantType)
-//            pName <- freshName(names.mangle(names.instanceNameOf(att)))
-//          } yield (pName, at)
-//        }
-//      _ <- setParameters(params)
-//
-//      args <- getArguments()
-//      _ <- forEach(tpeCase.attributes.zip(args)) { case (att, (_, _, exp)) =>
-//        initializeField(names.mangle(names.instanceNameOf(att)), exp)
-//      }
-//    } yield ()
-//  }
-
 
    /**
      * HACK: Just duplicate and embed; figure out later.

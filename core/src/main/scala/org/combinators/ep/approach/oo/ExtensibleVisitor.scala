@@ -363,35 +363,6 @@ trait ExtensibleVisitor extends ApproachImplementationProvider with SharedVisito
       res <- instantiateObject(opClass, Seq.empty)
     } yield Some(res)
   }
-//
-//  /**
-//   * {{{
-//   * EvalDivdMultNeg makeEval() {
-//   *     return new EvalDivdMultNeg();
-//   * }
-//   * }}}
-//   *
-//   * TODO: TEMP COPY
-//   * @return
-//   */
-//  def makeTestFactoryMethod(model:Model, op: Operation): Generator[MethodBodyContext, Option[Expression]] = {
-//    import paradigm.methodBodyCapabilities._
-//    import ooParadigm.methodBodyCapabilities._
-//
-//    // find the class outside of the for loop, since it could fail and we can check before the for loop.
-//    // In this case, want to find the most recent model that either (a) contains this operation; or (b) has data types defined.
-//    val targetClass = visitorClassName(model.toSeq.find(m => m.ops.contains(op) || m.typeCases.nonEmpty).get, op).get
-//    for {
-//      // can't just call directly visitorClassName with this op since it would short-circuit and always
-//      // choose the default Op() and we need to have
-//
-//      opClass <- findClass(targetClass)    // should check!
-//      _ <- resolveAndAddImport(opClass)
-//      _ <- setReturnType(opClass)
-//
-//      res <- instantiateObject(opClass, Seq.empty)
-//    } yield Some(res)
-//  }
 
   /**
    * Define the base class for Exp

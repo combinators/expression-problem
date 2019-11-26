@@ -55,8 +55,6 @@ trait SharedOO extends ApproachImplementationProvider {
     } yield (None)
   }
 
-
-
   /**
    * Provides a method implementation that contains the logic of the operation encoded
    * as a single method.
@@ -139,10 +137,10 @@ trait SharedOO extends ApproachImplementationProvider {
 
   /** Make a single getter method for the 'att' attribute, such as:
    * {{{
-   * public abstract Exp getRight();
+   * public Exp getRight();
    * }}}
    *
-   * parameterized, as necessary, with attToType method that overrides default behavior
+   * Caller can decide whether to make this abstract or leave concrete.
    * @param att
    * @return
    */
@@ -153,7 +151,7 @@ trait SharedOO extends ApproachImplementationProvider {
         rt <- toTargetLanguageType(att.tpe)
         _ <- resolveAndAddImport(rt)
         _ <- setReturnType(rt)
-      } yield (None)
+      } yield None
     }
 
   /** Make a single getter method for the 'att' attribute, such as:
@@ -163,13 +161,13 @@ trait SharedOO extends ApproachImplementationProvider {
    * }
    * }}}
    *
-   * parameterized, as necessary, with attToType method that overrides default behavior
+   * Directly access field attribute.
+   *
    * @param att
    * @return
    */
   def makeGetter(att:Attribute): Generator[ClassContext, Unit] = {
     val makeBody: Generator[MethodBodyContext, Option[Expression]] = {
-      import paradigm.methodBodyCapabilities._
       import ooParadigm.methodBodyCapabilities._
 
       for {
@@ -184,6 +182,14 @@ trait SharedOO extends ApproachImplementationProvider {
     addMethod(names.addPrefix("get", names.mangle(names.conceptNameOf(att))), makeBody)
   }
 
+  /**
+   * Default registration for findClass
+   *
+   * @param dtpe
+   * @param canFindClass
+   * @tparam Ctxt
+   * @return
+   */
   def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
     FindClass(names.mangle(names.conceptNameOf(dtpe))).interpret(canFindClass)
   }

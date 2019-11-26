@@ -78,29 +78,6 @@ abstract class VisitorSideEffect extends ApproachImplementationProvider with Sha
     } yield result
   }
 
-  /**
-   * Instantiates an instance of the domain object.
-   *
-   * Same implementation for OO as for visitor.
-   *
-   * new Add(new Lit(new Double(1.0)), new Lit(new Double(2.0)))
-   *
-   * @param baseTpe
-   * @param tpeCase
-   * @param args
-   * @return
-   */
-  def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
-    import ooParadigm.methodBodyCapabilities._
-    import paradigm.methodBodyCapabilities._
-    for {
-      // access the constructor for the class associated with type case and invoke constructors with arguments.
-      rt <- findClass(names.mangle(names.conceptNameOf(tpeCase)))
-      _ <- resolveAndAddImport(rt)
-      res <- instantiateObject(rt, args)
-    } yield res
-  }
-
   /** Create the accept method signature.
     * Override to remove type parameter.
     * {{{
@@ -322,11 +299,7 @@ abstract class VisitorSideEffect extends ApproachImplementationProvider with Sha
     } yield Some(result)
   }
 
-  def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
-    FindClass(names.mangle(names.conceptNameOf(dtpe))).interpret(canFindClass)
-  }
-
-  def initializeApproach(domain: Model): Generator[ProjectContext, Unit] = {
+  def registerTypeMapping(domain: Model): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
     import paradigm.projectContextCapabilities._
     import ooParadigm.methodBodyCapabilities._
@@ -356,7 +329,7 @@ abstract class VisitorSideEffect extends ApproachImplementationProvider with Sha
 
     val flatDomain = domain.flatten
     for {
-      _ <- initializeApproach(flatDomain)
+      _ <- registerTypeMapping(flatDomain)
       _ <- domainSpecific.initialize(this)
       _ <- makeBase(flatDomain.baseDataType)
       _ <- addClassToProject(visitorClass, makeVisitorInterface(flatDomain.typeCases))
@@ -371,7 +344,6 @@ abstract class VisitorSideEffect extends ApproachImplementationProvider with Sha
     } yield ()
   }
 }
-
 
 object VisitorSideEffect {
   type WithParadigm[P <: AnyParadigm] = VisitorSideEffect { val paradigm: P }

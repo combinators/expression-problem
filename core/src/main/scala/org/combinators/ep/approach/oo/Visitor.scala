@@ -59,31 +59,6 @@ abstract class Visitor extends ApproachImplementationProvider with SharedVisitor
     } yield result
   }
 
-
-  /**
-   * Instantiates an instance of the domain object.
-   *
-   * Same implementation for OO as for visitor.
-   *
-   * new Add(new Lit(new Double(1.0)), new Lit(new Double(2.0)))
-   *
-   * @param baseTpe
-   * @param tpeCase
-   * @param args
-   * @return
-   */
-  def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
-    import paradigm.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
-    for {
-      // access the constructor for the class associated with type case and invoke constructors with arguments.
-      rt <- findClass(names.mangle(names.conceptNameOf(tpeCase)))
-      _ <- resolveAndAddImport(rt)
-      res <- instantiateObject(rt, args)
-    } yield res
-  }
-
-
   /** Create an accept implementation from the accept method signature.
    * {{{
    *  public <R> R accept(Visitor<R> v) {
@@ -159,14 +134,9 @@ abstract class Visitor extends ApproachImplementationProvider with SharedVisitor
     }
 
     makeClass
-//    addClassToProject(visitorClass, makeClass)
   }
 
-  def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
-    FindClass(names.mangle(names.conceptNameOf(dtpe))).interpret(canFindClass)
-  }
-
-  def initializeApproach(domain: Model): Generator[ProjectContext, Unit] = {
+  def registerTypeMapping(domain: Model): Generator[ProjectContext, Unit] = {
     import paradigm.projectContextCapabilities._
     import ooParadigm.projectCapabilities._
     import ooParadigm.methodBodyCapabilities._
@@ -196,12 +166,12 @@ abstract class Visitor extends ApproachImplementationProvider with SharedVisitor
 
     val flatDomain = domain.flatten
     for {
-      _ <- initializeApproach(flatDomain)
+      _ <- registerTypeMapping(flatDomain)
       _ <- domainSpecific.initialize(this)
       _ <- makeBase(flatDomain.baseDataType)
       _ <- forEach (flatDomain.typeCases) { tpeCase =>
         makeDerived(flatDomain.baseDataType, tpeCase, domain)   // used to have flatDomain.ops,
-      }  // parentType: DataType, tpeCase: DataTypeCase, model: Model
+      }
 
       _ <- addClassToProject(visitorClass, makeVisitorInterface(flatDomain.typeCases))
 

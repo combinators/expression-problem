@@ -26,7 +26,11 @@ object Main extends IOApp {
 
 
   // select one here.
-  val approach = visitorSideEffectApproach // triviallyApproach // triviallyApproach //  visitorSideEffectApproach //   //  extensibleVisitorApproach //interpreterApproach
+  // WORKS!   visitorSideEffectApproach
+  // WORKS!  visitorApproach
+  // WORKS!   triviallyApproach
+  // WORKS!   extensibleVisitorApproach
+  val approach =   visitorApproach //interpreterApproach
 
   val evolutions = Seq(M0, M1, M2, M3)
   val tests = evolutions.scanLeft(Map.empty[Model, Seq[TestCase]]) { case (m, evolution) =>

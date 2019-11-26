@@ -101,24 +101,6 @@ trait ExtensibleVisitor extends ApproachImplementationProvider with SharedVisito
   }
 
   /**
-   * Instantiates an instance of the domain object.
-   *
-   * Same implementation for OO as for visitor.
-   *
-   * new Add(new Lit(new Double(1.0)), new Lit(new Double(2.0)))
-   */
-  def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
-    import paradigm.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
-    for {
-      // access the constructor for the class associated with type case and invoke constructors with arguments.
-      rt <- findClass(names.mangle(names.conceptNameOf(tpeCase)))
-      _ <- resolveAndAddImport(rt)
-      res <- instantiateObject(rt, args)
-    } yield res
-  }
-
-  /**
    * Compute the name for the visitor interface of the given model, if a new interface is required.
    *
    * Base remains as {visitorClass}
@@ -180,7 +162,7 @@ trait ExtensibleVisitor extends ApproachImplementationProvider with SharedVisito
         tpeParam <- getTypeArguments()
         instVisitClassType <- applyType(visitorClassType, tpeParam)
         castV <- castObject(instVisitClassType, v)
-        // invoke visit method on 'v' with 'this' as argyment
+        // invoke visit method on 'v' with 'this' as argument
         visitFunction <- getMember(castV, visit)
 
         self <- selfReference()
@@ -314,9 +296,8 @@ trait ExtensibleVisitor extends ApproachImplementationProvider with SharedVisito
       import ooParadigm.classCapabilities._
       import genericsParadigm.classCapabilities._
 
-      //val lastModelWithDT = domain.toSeq.find(m => m.ops.contains(op) || m.typeCases.nonEmpty).get, op)
       for {
-        rt <- toTargetLanguageType(op.returnType)  // TODO: How to convert return type into Double.
+        rt <- toTargetLanguageType(op.returnType)
 
         // identify Visitor<R> you need the most specific interface necessary based on the operation and domain
         visitorClassType <- findClass(visitorInterfaceName(domain.lastModelWithDataTypes.get).get)
@@ -336,8 +317,6 @@ trait ExtensibleVisitor extends ApproachImplementationProvider with SharedVisito
     }
 
     makeClass
-    //    // if I want to override a super, this is a mistake since this will be added to project.
-    //    addClassToProject(visitorClass, makeClass)
   }
 
 
@@ -386,18 +365,17 @@ trait ExtensibleVisitor extends ApproachImplementationProvider with SharedVisito
       } yield ()
     }
 
-
     println("In MakeOperationBase:" + model.name + "," + names.mangle(names.conceptNameOf(model.baseDataType)))
 
     // adds the 'Exp' class, with a single accept method
     addClassToProject(names.mangle(names.conceptNameOf(model.baseDataType)), makeClass)
   }
 
-  def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
-    FindClass(names.mangle(names.conceptNameOf(dtpe))).interpret(canFindClass)
-  }
+//  def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
+//    FindClass(names.mangle(names.conceptNameOf(dtpe))).interpret(canFindClass)
+//  }
 
-  def initializeApproach(domain: Model): Generator[ProjectContext, Unit] = {
+  def registerTypeMapping(domain: Model): Generator[ProjectContext, Unit] = {
     import paradigm.projectContextCapabilities._
     import ooParadigm.projectCapabilities._
     import ooParadigm.methodBodyCapabilities._
@@ -429,7 +407,7 @@ trait ExtensibleVisitor extends ApproachImplementationProvider with SharedVisito
 
     val flatDomain = domain.flatten
     for {
-      _ <- initializeApproach(flatDomain)
+      _ <- registerTypeMapping(flatDomain)
       _ <- domainSpecific.initialize(this)
       _ <- makeBase(domain.baseDataType)                    // top-level Exp
       _ <- makeOperationsBase(domain)

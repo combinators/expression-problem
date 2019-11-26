@@ -11,16 +11,9 @@ import org.combinators.ep.generator.paradigm.ObjectOriented
  * Ability to create a chain of interfaces, each one specifying operations.
  *
  *  {{{
- *     public interface Exp {}    // marker interface
- *
- *
- *     public interface ExpEval extends Exp {
- *       ...
- *     }
- *
- *     public interface ExpPrettyp extends ExpEval {
- *        ...
- *     }
+ *     public interface Exp {}                              // marker interface
+ *     public interface ExpEval extends Exp { ... }
+ *     public interface ExpPrettyp extends ExpEval { ... }
  * }}}
  *
  * Where 'Exp' comes from the BaseDataType of the domain.
@@ -58,7 +51,6 @@ trait OperationInterfaceChain extends ApproachImplementationProvider with Shared
    *
    * {{{
    *   public interface Exp {
-   *
    *     public tree.Tree astree();    // only when needed
    * }
    * }}}
@@ -104,5 +96,4 @@ trait OperationInterfaceChain extends ApproachImplementationProvider with Shared
 
     addClassToProject(baseInterfaceNames(domain, domain.ops), makeInterface)
   }
-
 }

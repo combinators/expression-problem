@@ -40,3 +40,4 @@ trait FieldDefinition extends ApproachImplementationProvider with SharedOO {
     } yield ft
   }
 }
+

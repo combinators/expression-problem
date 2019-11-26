@@ -89,8 +89,6 @@ trait Trivially extends ApproachImplementationProvider with SharedOO with Operat
     } yield result
   }
 
-
-
   def derivedInterfaceName(tpe: DataTypeCase, ops: Seq[Operation]): Name = {
     names.addSuffix(names.mangle(ops.sortWith(_.name < _.name).map(op => names.conceptNameOf(op)).mkString("")), tpe.name)
   }
@@ -112,11 +110,10 @@ trait Trivially extends ApproachImplementationProvider with SharedOO with Operat
     addClassToProject(ddn, makeDerivedInterface(domain.baseDataType, tpeCase, domain, domainSpecific))
   }
 
-  /** Make a single getter method for the 'att' attribute, such as:
+  /**
+   * Make a single getter method for the 'att' attribute, such as:
    * {{{
-   * public Exp getRight() {
-   *   return this.right;
-   * }
+   * public abstract Exp getRight();
    * }}}
    *
    * parameterized, as necessary, with attToType method that overrides default behavior
@@ -125,7 +122,6 @@ trait Trivially extends ApproachImplementationProvider with SharedOO with Operat
    */
   override def makeGetter(att:Attribute): Generator[ClassContext, Unit] = {
     val makeBody: Generator[MethodBodyContext, Option[Expression]] = {
-      import paradigm.methodBodyCapabilities._
       import ooParadigm.methodBodyCapabilities._
 
       for {
@@ -161,14 +157,13 @@ trait Trivially extends ApproachImplementationProvider with SharedOO with Operat
    * @return
    */
   def makeDerivedInterface(tpe: DataType, tpeCase: DataTypeCase, model:Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
-    import ooParadigm.projectCapabilities._
-
     val makeClass: Generator[ClassContext, Unit] = {
       import classCapabilities._
       for {
         parent <- getParentInterface(model, tpe)
         _ <- resolveAndAddImport(parent)
         _ <- addParent(parent)
+
         _ <- if (model.last.get.flatten.ops.nonEmpty) {  // NOTE: EXAMPLE OF IF ON RIGHT SIDE OF ARROW
           for {
             parentFormer <- getFormerDerivedInterface(model, tpeCase)
@@ -178,12 +173,13 @@ trait Trivially extends ApproachImplementationProvider with SharedOO with Operat
         } else {
           Command.skip[ClassContext]
         }
+
         _ <- forEach (tpeCase.attributes) { att => {
-          for {
-            mi <- makeGetter(att)
-            _ <- setAbstract()
-          } yield mi
-        }
+            for {
+              mi <- makeGetter(att)
+              _ <- setAbstract()
+            } yield mi
+          }
         }
         _ <- forEach (model.ops) { op =>
           addMethod(names.mangle(names.instanceNameOf(op)), makeImplementation(tpe, tpeCase, op, domainSpecific))
@@ -195,9 +191,6 @@ trait Trivially extends ApproachImplementationProvider with SharedOO with Operat
 
     makeClass
   }
-
-  /** Decision regarding when to choose covariant type over native defined type in attribute */
-  //def chooseCovariant(baseType:DataType, att:Attribute): Boolean = att.tpe.equals(TypeRep.DataType(baseType))
 
   def makeBodyImpl(baseType:DataType, att:Attribute, parent:Type, covariantType:Name): Generator[MethodBodyContext, Option[Expression]] = {
       import paradigm.methodBodyCapabilities._
@@ -304,16 +297,16 @@ trait Trivially extends ApproachImplementationProvider with SharedOO with Operat
 
         /** For each DataType AND [cross-product] Operation you need a final Class. */
         _ <- forEach (domain.flatten.typeCases) { tpeCase => {
-          val modelDefiningType = domain.findTypeCase(tpeCase).get
-          forEach (domain.flatten.ops) { op => {
-            val modelDefiningOp = domain.findOperation(op).get
-            for {
-              _ <- registerTypeMapping(modelDefiningOp)
-              _ <- makeFinalClass(modelDefiningType, modelDefiningOp, tpeCase)
-            } yield ()
+            val modelDefiningType = domain.findTypeCase(tpeCase).get
+            forEach (domain.flatten.ops) { op => {
+              val modelDefiningOp = domain.findOperation(op).get
+              for {
+                _ <- registerTypeMapping(modelDefiningOp)
+                _ <- makeFinalClass(modelDefiningType, modelDefiningOp, tpeCase)
+              } yield ()
+            }
+            }
           }
-          }
-        }
         }
       } yield ()
     }
@@ -357,7 +350,6 @@ trait Trivially extends ApproachImplementationProvider with SharedOO with Operat
       }
       _ <- setParameters(params)
 
-      // HACK. TODO: FIX this up
       argSeq <- getArguments().map( args => { args.map(triple => triple._3) })
       res <- instantiateObject(opClass, argSeq)
 

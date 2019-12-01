@@ -8,7 +8,7 @@ import org.combinators.ep.generator.paradigm._
 import Command._
 import AnyParadigm.syntax._
 
-trait Traditional extends ApproachImplementationProvider with SharedOO with FieldDefinition {  // this had been sealed. not sure why
+trait Traditional extends OOApproachImplementationProvider with SharedOO with FieldDefinition {  // this had been sealed. not sure why
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
 
   import paradigm._
@@ -35,7 +35,18 @@ trait Traditional extends ApproachImplementationProvider with SharedOO with Fiel
     } yield res
   }
 
-
+  /**
+   * When a DataTypeCase forms a class (given a sequence of operations) this function does the heavy lifting.
+   *
+   * A constructor is generated, using [[makeConstructor]]. Fields are generates, using [[makeField]]. Each
+   * operation is embedded as a method within each class, using [[makeImplementation]]
+   *
+   * @param tpe
+   * @param tpeCase
+   * @param ops
+   * @param domainSpecific
+   * @return
+   */
   def makeDerived(tpe: DataType, tpeCase: DataTypeCase, ops: Seq[Operation], domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
     val makeClass: Generator[ClassContext, Unit] = {
@@ -54,27 +65,10 @@ trait Traditional extends ApproachImplementationProvider with SharedOO with Fiel
     addClassToProject(names.mangle(names.conceptNameOf(tpeCase)), makeClass)
   }
 
-  /**
-   * This affect the way toTargetLanguageType operates
-   */
-  def initializeApproach(domain: Model): Generator[ProjectContext, Unit] = {
-    import paradigm.projectContextCapabilities._
-    import ooParadigm.projectCapabilities._
-    import ooParadigm.methodBodyCapabilities._
-    import ooParadigm.classCapabilities._
-    import ooParadigm.constructorCapabilities._
-    val dtpeRep = TypeRep.DataType(domain.baseDataType)
-    for {
-      _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(domain.baseDataType))
-      _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(domain.baseDataType))
-      _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(domain.baseDataType))
-    } yield ()
-  }
-
   def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     val flatDomain = domain.flatten
     for {
-      _ <- initializeApproach(flatDomain)
+      _ <- registerTypeMapping(flatDomain)
       _ <- domainSpecific.initialize(this)
       _ <- makeBase(flatDomain.baseDataType, flatDomain.ops)
       _ <- forEach (flatDomain.typeCases) { tpeCase =>

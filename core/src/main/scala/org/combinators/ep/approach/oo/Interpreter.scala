@@ -10,7 +10,7 @@ import org.combinators.ep.generator.paradigm._
 
 
 // copied from visitor to start
-sealed trait Interpreter extends ApproachImplementationProvider with OperationInterfaceChain with FieldDefinition {
+sealed trait Interpreter extends OOApproachImplementationProvider with OperationInterfaceChain with FieldDefinition {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
@@ -40,25 +40,6 @@ sealed trait Interpreter extends ApproachImplementationProvider with OperationIn
     } yield res
   }
 
-  /**
-   * When trying to find an import that is needed for a class, there is a lookup function and ResolveImports uses this lookup
-   * to be able to import aclass.
-   * @param domain
-   * @return
-   */
-  def initializeApproach(domain: Model): Generator[ProjectContext, Unit] = {
-    import paradigm.projectContextCapabilities._
-    import ooParadigm.projectCapabilities._
-    import ooParadigm.methodBodyCapabilities._            // NOTE: DO NOT REMOVE SINCE USED BY BELOW AddTypeLookup
-    import ooParadigm.classCapabilities._
-    import ooParadigm.constructorCapabilities._
-    val dtpeRep = TypeRep.DataType(domain.baseDataType)
-    for {
-      _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(domain.baseDataType))
-      _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(domain.baseDataType))
-      _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(domain.baseDataType))
-    } yield ()
-  }
 
   def makeBaseExtensions(model:Model): Generator[ProjectContext, Unit] = {
     val allTypes = model.pastDataTypes
@@ -66,6 +47,7 @@ sealed trait Interpreter extends ApproachImplementationProvider with OperationIn
     generateForOp(model, model.ops, allTypes, isBase)
   }
 
+  def opsName(ops:Seq[Operation]):String = ops.sortWith(_.name < _.name).map(op => names.conceptNameOf(op)).mkString("")
 
   /** Find Model with operations and return that one's name as concatenations of operations. */
   def baseInterfaceName(m:Model): String = {
@@ -102,7 +84,6 @@ sealed trait Interpreter extends ApproachImplementationProvider with OperationIn
       _ <- resolveAndAddImport(pt)
       _ <- addParent(pt)
       _ <- forEach(tpeCase.attributes) { att => makeField(att) }
-      _ <- debug("makeClassForCase")
     } yield ()
   }
 
@@ -125,12 +106,10 @@ sealed trait Interpreter extends ApproachImplementationProvider with OperationIn
      * Must make sure we include ALL subtypes, not just ones from the past.
      */
     for {
-      _ <- initializeApproach(domain)
+      _ <- registerTypeMapping(domain)
       _ <- domainSpecific.initialize(this)
       _ <- makeBase(domain.baseDataType, Seq.empty)     // Marker interface -- ignores operations
-      _ <- forEach (domain.inChronologicalOrder.filter(m => m.ops.nonEmpty)) { m =>
-        makeBaseExtensions(m)
-      }
+      _ <- forEach (domain.inChronologicalOrder.filter(m => m.ops.nonEmpty)) { m => generateForOp(m, m.ops, m.pastDataTypes, m.isBase) }
 
       _ <- forEach (domain.inChronologicalOrder.filter(m => m.ops.nonEmpty)) { model =>
         // for all PAST dataTypes that are already defined

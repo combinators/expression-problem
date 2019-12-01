@@ -9,7 +9,7 @@ import cats.data._
 import cats.syntax._
 import cats.implicits._
 import org.combinators.ep.generator.Command._
-import org.combinators.ep.generator.paradigm.{AddImport, AnyParadigm, Reify, ResolveImport, ToTargetLanguageType}
+import org.combinators.ep.generator.paradigm.{AddImport, AnyParadigm, FindClass, Reify, ResolveImport, ToTargetLanguageType}
 import AnyParadigm.syntax._
 
 /** Provides implementations for language and approach specific code generation tasks which do not depend on a specific
@@ -27,7 +27,7 @@ trait ApproachImplementationProvider {
     *   implicit val domain = ???
     *   val received: ReceivedRequest[Expression] = ???
     *   dispatch(
-    *     SendRequest(
+    *     SendRequest(t
     *       to = received.attributes(Attribute.left),
     *       receiverTpe = Attribute.left.tpe
     *       request = Request(Operation("eval"), Map.empty)
@@ -102,6 +102,7 @@ trait ApproachImplementationProvider {
         }
     } yield ()
   }
+
 }
 
 object ApproachImplementationProvider {

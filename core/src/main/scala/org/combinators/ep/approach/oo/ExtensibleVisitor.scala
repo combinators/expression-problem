@@ -20,7 +20,7 @@ import org.combinators.ep.approach
  * https://stackoverflow.com/questions/55501899/exception-in-intellijs-sbt-console-not-found-value-ideaport-ideaport-in-globa
  * problem with sbt...
  */
-trait ExtensibleVisitor extends ApproachImplementationProvider with SharedVisitor {
+trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedVisitor with FactoryConcepts {
 
   import paradigm._
   import ooParadigm._
@@ -153,10 +153,10 @@ trait ExtensibleVisitor extends ApproachImplementationProvider with SharedVisito
 
       for {
         // start from the accept signature and add a method body.
-        _ <- makeAcceptSignature()   // used to have model as parameter.
-        args <- getArguments()   // get name, type, expression
+        _ <- makeAcceptSignatureWithType() // used to have model as parameter.
+        args <- getArguments() // get name, type, expression
         v = args.head._3
-        vType = visitorInterfaceName(model).get              // convert Name to a class
+        vType = visitorInterfaceName(model).get // convert Name to a class
 
         visitorClassType <- findClass(vType)
         tpeParam <- getTypeArguments()
@@ -312,35 +312,12 @@ trait ExtensibleVisitor extends ApproachImplementationProvider with SharedVisito
           addMethod(visit, makeImplementation(domain.baseDataType, tpe, op, domainSpecific))
         }
 
-        _ <- addMethod(factoryName, makeFactoryMethod(domain, op))
+        _ <- createFactoryOp(factoryName, domain, op,  visitorClassName(domain, op).get)
+        //_ <- addMethod(factoryName, makeFactoryOperationMethod(domain, op, visitorClassName(domain, op).get))
       } yield ()
     }
 
     makeClass
-  }
-
-
-  /**
-   * {{{
-   * EvalDivdMultNeg makeEval() {
-   *     return new EvalDivdMultNeg();
-   * }
-   * }}}
-   *
-   * TODO: What To Do With Parameters...
-   * @return
-   */
-  def makeFactoryMethod(model:Model, op: Operation): Generator[MethodBodyContext, Option[Expression]] = {
-    import paradigm.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
-
-    for {
-      opClass <- findClass(visitorClassName(model, op).get)    // should check!
-      _ <- resolveAndAddImport(opClass)
-      _ <- setReturnType(opClass)
-
-      res <- instantiateObject(opClass, Seq.empty)
-    } yield Some(res)
   }
 
   /**
@@ -361,7 +338,7 @@ trait ExtensibleVisitor extends ApproachImplementationProvider with SharedVisito
       import ooParadigm.classCapabilities._
       for {
         _ <- setAbstract()
-        _ <- addAbstractMethod(accept, makeAcceptSignature())
+        _ <- addAbstractMethod(accept, makeAcceptSignatureWithType())
       } yield ()
     }
 
@@ -371,23 +348,19 @@ trait ExtensibleVisitor extends ApproachImplementationProvider with SharedVisito
     addClassToProject(names.mangle(names.conceptNameOf(model.baseDataType)), makeClass)
   }
 
-//  def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
-//    FindClass(names.mangle(names.conceptNameOf(dtpe))).interpret(canFindClass)
+//  def registerTypeMapping(domain: Model): Generator[ProjectContext, Unit] = {
+//    import paradigm.projectContextCapabilities._
+//    import ooParadigm.projectCapabilities._
+//    import ooParadigm.methodBodyCapabilities._
+//    import ooParadigm.classCapabilities._
+//    import ooParadigm.constructorCapabilities._
+//    val dtpeRep = TypeRep.DataType(domain.baseDataType)
+//    for {
+//      _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(domain.baseDataType))
+//      _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(domain.baseDataType))
+//      _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(domain.baseDataType))
+//    } yield ()
 //  }
-
-  def registerTypeMapping(domain: Model): Generator[ProjectContext, Unit] = {
-    import paradigm.projectContextCapabilities._
-    import ooParadigm.projectCapabilities._
-    import ooParadigm.methodBodyCapabilities._
-    import ooParadigm.classCapabilities._
-    import ooParadigm.constructorCapabilities._
-    val dtpeRep = TypeRep.DataType(domain.baseDataType)
-    for {
-      _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(domain.baseDataType))
-      _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(domain.baseDataType))
-      _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(domain.baseDataType))
-    } yield ()
-  }
 
 
 
@@ -404,9 +377,10 @@ trait ExtensibleVisitor extends ApproachImplementationProvider with SharedVisito
    */
   override def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
-
+    import paradigm.projectContextCapabilities._
     val flatDomain = domain.flatten
     for {
+      _ <- debug ("Processing Extensible Visitor")
       _ <- registerTypeMapping(flatDomain)
       _ <- domainSpecific.initialize(this)
       _ <- makeBase(domain.baseDataType)                    // top-level Exp
@@ -467,7 +441,8 @@ trait ExtensibleVisitor extends ApproachImplementationProvider with SharedVisito
           val pastModelsWithOps = model.inChronologicalOrder.filter(m => m.ops.nonEmpty).flatMap(m =>
             m.ops.map(op => {
               val targetModelForOp = model.toSeq.find(m => m.ops.contains(op) || m.typeCases.nonEmpty).get
-              (names.addPrefix("make", names.mangle(names.conceptNameOf(op))), makeFactoryMethod(targetModelForOp, op))
+              val name = visitorClassName(targetModelForOp, op).get
+              (names.addPrefix("make", names.mangle(names.conceptNameOf(op))), makeFactoryOperationImpl(targetModelForOp, op, name))
             })
           )
           import ooParadigm.testCapabilities._

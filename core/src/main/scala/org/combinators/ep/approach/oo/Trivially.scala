@@ -8,7 +8,7 @@ import org.combinators.ep.generator.communication._
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax._
 import org.combinators.ep.generator.paradigm._
 
-trait Trivially extends ApproachImplementationProvider with SharedOO with OperationInterfaceChain with FieldDefinition {
+trait Trivially extends OOApproachImplementationProvider with SharedOO with OperationInterfaceChain with FieldDefinition {
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
 
@@ -125,7 +125,7 @@ trait Trivially extends ApproachImplementationProvider with SharedOO with Operat
       import ooParadigm.methodBodyCapabilities._
 
       for {
-        _ <- makeGetterInterface(att)
+        _ <- makeGetterSignature(att)
         _ <- setAbstract()
       } yield None
     }
@@ -238,33 +238,35 @@ trait Trivially extends ApproachImplementationProvider with SharedOO with Operat
       addClassToProject(actualName, makeClass)
     }
 
-    /** For Trivially, the covariant type needs to be selected whenever a BaseType in the domain is expressed. */
-    def domainTypeLookup[Ctxt](covariantType: Name)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
-      FindClass(covariantType).interpret(canFindClass)
-    }
-
-    /** What model is delivered has operations which is essential for the mapping. */
-    def registerTypeMapping(model: Model): Generator[ProjectContext, Unit] = {
-      import ooParadigm.projectCapabilities._
-      import paradigm.projectContextCapabilities._
-      import ooParadigm.methodBodyCapabilities._
-      import ooParadigm.classCapabilities._
-      import ooParadigm.constructorCapabilities._
-      import paradigm.testCapabilities._
-      import ooParadigm.testCapabilities._
-
-      val baseInterface = baseInterfaceNames(model, model.ops)
-      val dtpeRep = TypeRep.DataType(model.baseDataType)
-      for {
-        _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(baseInterface))
-        _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(baseInterface))
-        _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(baseInterface))
-      } yield ()
-    }
+//    /** For Trivially, the covariant type needs to be selected whenever a BaseType in the domain is expressed. */
+//    def domainTypeLookup[Ctxt](covariantType: Name)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
+//      FindClass(covariantType).interpret(canFindClass)
+//    }
+//
+//    /** What model is delivered has operations which is essential for the mapping. */
+//    def registerTypeMapping(model: Model): Generator[ProjectContext, Unit] = {
+//      import ooParadigm.projectCapabilities._
+//      import paradigm.projectContextCapabilities._
+//      import ooParadigm.methodBodyCapabilities._
+//      import ooParadigm.classCapabilities._
+//      import ooParadigm.constructorCapabilities._
+//      import paradigm.testCapabilities._
+//      import ooParadigm.testCapabilities._
+//
+//      val baseInterface = baseInterfaceNames(model, model.ops)
+//      val dtpeRep = TypeRep.DataType(model.baseDataType)
+//      for {
+//        _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(baseInterface))
+//        _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(baseInterface))
+//        _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(baseInterface))
+//      } yield ()
+//    }
 
     def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
-
+      import paradigm.projectContextCapabilities._
       for {
+        _ <- debug ("Processing Trivially")
+        _ <- registerTypeMapping(domain)
         _ <- domainSpecific.initialize(this)
         _ <- makeBase(domain.baseDataType, Seq.empty)     // Marker interface -- ignores operations
 
@@ -334,7 +336,7 @@ trait Trivially extends ApproachImplementationProvider with SharedOO with Operat
     val binp = baseInterfaceNamesPrefix(lastModelWithOp.ops, names.mangle("Final"))
     val actualName = names.addPrefix(names.conceptNameOf(tpeCase), binp)
     //val baseType = model.baseDataType
-    val paramType = baseInterfaceNames(lastModelWithOp, lastModelWithOp.ops)  // was model
+    //val paramType = baseInterfaceNames(lastModelWithOp, lastModelWithOp.ops)  // was model
 
     for {
       opClass <- findClass(actualName)    // should check!
@@ -344,7 +346,6 @@ trait Trivially extends ApproachImplementationProvider with SharedOO with Operat
       params <- forEach (tpeCase.attributes) { att: Attribute =>
           for {
             at <- toTargetLanguageType(att.tpe)
-            _ <- debug(" found in test case att:" + at + " for model " + model.name)
             pName <- freshName(names.mangle(names.instanceNameOf(att)))
           } yield (pName, at)
       }
@@ -362,7 +363,7 @@ trait Trivially extends ApproachImplementationProvider with SharedOO with Operat
    * Note: shouldn't have to copy entire thing. Better to provide ability to extend inner part into which
    * the factory methods are injected.
    * */
-  override def implement(tests: Map[Model, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
+   override def implement(tests: Map[Model, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
     import projectContextCapabilities._
     import paradigm.compilationUnitCapabilities._
     import paradigm.testCapabilities._

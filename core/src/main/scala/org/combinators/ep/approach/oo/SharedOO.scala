@@ -44,17 +44,6 @@ trait SharedOO extends ApproachImplementationProvider {
     addClassToProject(names.mangle(names.conceptNameOf(tpe)), makeClass)
   }
 
-  /** Return Signature of getXXX() for an attribute. Can be made covariant as needed. Not abtstract; caller decides what to do. */
-  def makeGetterSignature(att:Attribute): Generator[MethodBodyContext, Option[Expression]] = {
-    import paradigm.methodBodyCapabilities._
-
-    for {
-      pt <- toTargetLanguageType(att.tpe)   // PULL OUT of the context
-      _ <- setReturnType(pt)
-      // _ <- setAbstract()
-    } yield (None)
-  }
-
   /**
    * Provides a method implementation that contains the logic of the operation encoded
    * as a single method.
@@ -102,17 +91,21 @@ trait SharedOO extends ApproachImplementationProvider {
   }
 
   /**
-   * Create constructor for a class based on the given data type.
+   * Create constructor for a class based on the given data type. The name of the class is not defined
+   * yet. Every attribute for the [[DataTypeCase]] is converted to the targetLanguage, and the parameters
+   * to the constructor are used to initialize the fields for the class.
    *
+   * An example for the Add DataType Case, which is a binary data type with a left and right attribute.
    * {{{
    *   public ?(ATT-TPE _left, ATT-TPE _right) {
    *         this.left = _left;
    *         this.right = _right;
-   *     }
+   *   }
    * }}}
    *
    * Ultimately would provide a function that converts att.tpe into ATT-TPE, for example, as needed
-   * by Trivially
+   * by Trivially.
+   *
    * @param tpeCase
    * @return
    */
@@ -135,7 +128,10 @@ trait SharedOO extends ApproachImplementationProvider {
   }
 
 
-  /** Make a single getter method for the 'att' attribute, such as:
+  /**
+   *  Make a single getter method for the 'att' attribute which only has signature, and no body.
+   *
+   * The following example is for the 'Right' attribute where the type is mapped to Exp
    * {{{
    * public Exp getRight();
    * }}}
@@ -144,9 +140,8 @@ trait SharedOO extends ApproachImplementationProvider {
    * @param att
    * @return
    */
-  def makeGetterInterface(att:Attribute): Generator[MethodBodyContext, Option[Expression]] = {
-     import paradigm.methodBodyCapabilities._
-      import ooParadigm.methodBodyCapabilities._
+  def makeGetterSignature(att:Attribute): Generator[MethodBodyContext, Option[Expression]] = {
+      import paradigm.methodBodyCapabilities._
       for {
         rt <- toTargetLanguageType(att.tpe)
         _ <- resolveAndAddImport(rt)
@@ -154,7 +149,9 @@ trait SharedOO extends ApproachImplementationProvider {
       } yield None
     }
 
-  /** Make a single getter method for the 'att' attribute, such as:
+  /**
+   * Make a single getter method for the 'att' attribute with a body that returns the associaed field's value.
+   *
    * {{{
    * public Exp getRight() {
    *   return this.right;
@@ -171,7 +168,7 @@ trait SharedOO extends ApproachImplementationProvider {
       import ooParadigm.methodBodyCapabilities._
 
       for {
-        _ <- makeGetterInterface(att)
+        _ <- makeGetterSignature(att)
 
         self <- selfReference()
         result <- getMember(self, names.mangle(names.instanceNameOf(att)))
@@ -181,17 +178,4 @@ trait SharedOO extends ApproachImplementationProvider {
     import ooParadigm.classCapabilities._
     addMethod(names.addPrefix("get", names.mangle(names.conceptNameOf(att))), makeBody)
   }
-
-  /**
-   * Default registration for findClass
-   *
-   * @param dtpe
-   * @param canFindClass
-   * @tparam Ctxt
-   * @return
-   */
-  def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
-    FindClass(names.mangle(names.conceptNameOf(dtpe))).interpret(canFindClass)
-  }
-
 }

@@ -15,7 +15,7 @@ import org.combinators.ep.approach
  * Have to decide whether to use side effects or Generics. This current implementation uses the Visitor<R> generics
  * approach, which can be adopted by different object oriented languages.
  */
-abstract class Visitor extends ApproachImplementationProvider with SharedVisitor {
+abstract class Visitor extends ApproachImplementationProvider with SharedVisitor with OperationAsClass {
 
   import paradigm._
   import ooParadigm._
@@ -74,7 +74,7 @@ abstract class Visitor extends ApproachImplementationProvider with SharedVisitor
 
       for {
         // start from the accept signature and add a method body.
-        _ <- makeAcceptSignature()
+        _ <- makeAcceptSignatureWithType()
         args <- getArguments()   // get name, type, expression
 
         // invoke visit method on 'v' with 'this' as argument
@@ -89,7 +89,11 @@ abstract class Visitor extends ApproachImplementationProvider with SharedVisitor
   }
 
 
-  /** Each operation is placed in its own class, with a 'visit' method for each known data type.
+  /**
+   * Each operation is placed in its own class, with a 'visit' method for each known data type.
+   *
+   * Uses the generic 'operationClass' capability to create the structure of the class.
+   *
    * {{{
    * import sun.reflect.generics.visitor.Visitor
    * class Eval extends Visitor[Double] { }
@@ -116,37 +120,17 @@ abstract class Visitor extends ApproachImplementationProvider with SharedVisitor
   def makeOperationImplementation(domain:Model,
                                   op: Operation,
                                   domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
-    val makeClass: Generator[ClassContext, Unit] = {
-      import ooParadigm.classCapabilities._
-      import genericsParadigm.classCapabilities._
-      for {
-        visitorInterface <- findClass(visitorClass)
-        _ <- resolveAndAddImport(visitorInterface)
-        returnTpe <- toTargetLanguageType(op.returnType)
-        _ <- resolveAndAddImport(returnTpe)
-        visitorInterfaceWithReturnType <- applyType(visitorInterface, Seq(returnTpe))
-        _ <- addImplemented(visitorInterfaceWithReturnType)
-        _ <- addConstructor(makeOperationConstructor(op))
-        _ <- forEach (domain.typeCases) { tpe =>
-          addMethod(visit, makeImplementation(domain.baseDataType, tpe, op, domainSpecific))
-        }
-      } yield ()
-    }
-
-    makeClass
-  }
-
-  def registerTypeMapping(domain: Model): Generator[ProjectContext, Unit] = {
-    import paradigm.projectContextCapabilities._
-    import ooParadigm.projectCapabilities._
-    import ooParadigm.methodBodyCapabilities._
     import ooParadigm.classCapabilities._
-    import ooParadigm.constructorCapabilities._
-    val dtpeRep = TypeRep.DataType(domain.baseDataType)
+    import genericsParadigm.classCapabilities._
     for {
-      _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(domain.baseDataType))
-      _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(domain.baseDataType))
-      _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(domain.baseDataType))
+      _ <- operationClass(visit, op, domain.typeCases, domain.baseDataType, domainSpecific)
+
+      visitorInterface <- findClass(visitorClass)
+      _ <- resolveAndAddImport(visitorInterface)
+      returnTpe <- toTargetLanguageType(op.returnType)
+      _ <- resolveAndAddImport(returnTpe)
+      visitorInterfaceWithReturnType <- applyType(visitorInterface, Seq(returnTpe))
+      _ <- addImplemented(visitorInterfaceWithReturnType)
     } yield ()
   }
 
@@ -163,9 +147,10 @@ abstract class Visitor extends ApproachImplementationProvider with SharedVisitor
    */
   def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
-
+    import paradigm.projectContextCapabilities._
     val flatDomain = domain.flatten
     for {
+      _ <- debug ("Processing Visitor")
       _ <- registerTypeMapping(flatDomain)
       _ <- domainSpecific.initialize(this)
       _ <- makeBase(flatDomain.baseDataType)

@@ -33,6 +33,9 @@ sealed class Model(
   /** Guard check for equals method. */
   private def canEqual(a: Any) : Boolean = a.isInstanceOf[Model]
 
+  /** Determines if model is the base in a series of evolutions. */
+  def isBase: Boolean = base.equals(this)
+
   /** Checks two models for equality.
     * Models are uniquely identified by their name.
     */

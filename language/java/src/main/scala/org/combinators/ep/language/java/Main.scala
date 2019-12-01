@@ -27,10 +27,10 @@ object Main extends IOApp {
 
   // select one here.
   // WORKS!   visitorSideEffectApproach
-  // WORKS!  visitorApproach
+  // WORKS!   visitorApproach
   // WORKS!   triviallyApproach
   // WORKS!   extensibleVisitorApproach
-  val approach =   visitorApproach //interpreterApproach
+  val approach =   triviallyApproach
 
   val evolutions = Seq(M0, M1, M2, M3)
   val tests = evolutions.scanLeft(Map.empty[Model, Seq[TestCase]]) { case (m, evolution) =>
@@ -62,6 +62,7 @@ object Main extends IOApp {
     for {
       _ <- IO { System.out.println(s"Use: git clone http://127.0.0.1:8081/$name ${evolutions.last.getModel.name}") }
       exitCode <- new GitService(transaction.toSeq, name).run(args)
+      //exitCode <- new GitService(transaction.toSeq, name).runProcess(Seq(s"sbt", "test"))
     } yield exitCode
   }
 }

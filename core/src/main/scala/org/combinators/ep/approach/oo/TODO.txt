@@ -1,5 +1,5 @@
 1. Make visitor with side effects and see how to share it (perhaps even using Strategy DP) -- DONE!!!!
-2. Tackle Trivially! implementation
+2. Tackle Trivially! implementation -- DONE!!!
 
 3. Algebra (aka Modularity for the Masses)
 4. Interpreter

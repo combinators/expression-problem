@@ -1,14 +1,14 @@
 package org.combinators.ep.approach.oo
 
 import org.combinators.ep.domain.Model
-import org.combinators.ep.domain.abstractions.{Attribute, DataType, DataTypeCase, Operation, TypeRep}
+import org.combinators.ep.domain.abstractions.{DataType, DataTypeCase, Operation, TypeRep}
 import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.communication.{ReceivedRequest, Request}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm.{Generics, ObjectOriented, ParametricPolymorphism}
 
-trait SharedVisitor extends ApproachImplementationProvider with FieldDefinition {
+trait SharedVisitor extends OOApproachImplementationProvider with FieldDefinition with OperationAsClass {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
@@ -32,6 +32,49 @@ trait SharedVisitor extends ApproachImplementationProvider with FieldDefinition 
   def makeOperationImplementation(domain:Model, op: Operation, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit]
 
   /**
+   * At heart a visitor class has specific structure:
+   *
+   * {{{
+   *   TBA TBA TBA
+   * }}}
+   * @param model
+   * @param name
+   * @param op
+   * @param domainSpecific
+   * @return
+   */
+  def visitorClass(model: Model, name:Name, op:Operation, domainSpecific: EvolutionImplementationProvider[this.type], useGenerics:Boolean): Generator[ClassContext, Unit] = {
+    import ooParadigm.classCapabilities._
+    import genericsParadigm.classCapabilities._
+    for {
+      visitorInterface <- findClass(name)
+      _ <- resolveAndAddImport(visitorInterface)
+
+      returnTpe <- toTargetLanguageType(op.returnType)
+      _ <- resolveAndAddImport(returnTpe)
+
+      implType <- if (useGenerics) {
+        for {
+          visitorInterfaceWithReturnType <- applyType(visitorInterface, Seq(returnTpe))
+        } yield visitorInterfaceWithReturnType
+      } else {
+        for {
+          vi <- findClass(name)   // unnecessary but can't seem to avoid it!
+        } yield vi
+      }
+
+      visitorInterfaceWithReturnType <- applyType(visitorInterface, Seq(returnTpe))
+      _ <- addImplemented(visitorInterfaceWithReturnType)
+
+      _ <- addConstructor(makeOperationConstructor(op))
+
+      _ <- forEach (model.typeCases) { tpe =>
+        addMethod(visit, makeImplementation(model.baseDataType, tpe, op, domainSpecific))
+      }
+    } yield ()
+  }
+
+  /**
    * Instantiates an instance of the domain object.
    *
    * Same implementation for OO as for visitor.
@@ -50,14 +93,16 @@ trait SharedVisitor extends ApproachImplementationProvider with FieldDefinition 
   }
 
   /**
-   * Not part of approach implementation provider but was needed for OO provider and was used to provide code
-   * for making the actual signature of the
+   * A visitor that returns values can have a type parameter that specifies the type of the value returned.
+   *
+   * In Java, for example, the following is an accept method that takes a type parameter R.
+   *
    * {{{
    *  public abstract <R> R accept(Visitor<R> v);
    * }}}
    * @return
    */
-  def makeAcceptSignature(): Generator[MethodBodyContext, Unit] = {
+  def makeAcceptSignatureWithType(): Generator[MethodBodyContext, Unit] = {
     import paradigm.methodBodyCapabilities.{toTargetLanguageType => _, _}
     import polymorphics.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
@@ -82,13 +127,14 @@ trait SharedVisitor extends ApproachImplementationProvider with FieldDefinition 
   }
 
   /**
-   * Define the base class for Exp
+   * Define the base class for Exp which must contain the accept method as an abstract method.
+   *
    * {{{
-   *  package visitor;
    *  public abstract class Exp {
    *    public abstract <R> R accept(Visitor<R> v);
    *  }
    * }}}
+   *
    * @param tpe
    * @return
    */
@@ -99,7 +145,7 @@ trait SharedVisitor extends ApproachImplementationProvider with FieldDefinition 
       import ooParadigm.classCapabilities._
       for {
         _ <- setAbstract()
-        _ <- addAbstractMethod(accept, makeAcceptSignature())
+        _ <- addAbstractMethod(accept, makeAcceptSignatureWithType())
       } yield ()
     }
 
@@ -210,32 +256,6 @@ trait SharedVisitor extends ApproachImplementationProvider with FieldDefinition 
         )
     } yield result
   }
-
-
-  /**
-   * Constructor for an operation which MAY have parameters
-   * @param op
-   * @return
-   */
-  def makeOperationConstructor(op: Operation): Generator[ConstructorContext, Unit] = {
-    import constructorCapabilities._
-    for {
-      params <- forEach (op.parameters) { param =>
-        for {
-          paramTy <- toTargetLanguageType(param.tpe)
-          _ <- resolveAndAddImport(paramTy)
-          pName <- freshName(names.mangle(param.name))
-        } yield (pName, paramTy)
-      }
-      _ <- setParameters(params)
-      args <- getArguments()
-      _ <- forEach (op.parameters.zip(args)) { case (param, (_, _, arg)) =>
-        initializeField(names.mangle(param.name), arg)
-      }
-    } yield ()
-
-  }
-
 
   /**
    * {{{

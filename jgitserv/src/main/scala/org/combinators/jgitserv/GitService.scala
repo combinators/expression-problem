@@ -2,6 +2,7 @@ package org.combinators.jgitserv
 
 import java.io.FileInputStream
 import java.nio.file.{Files, Paths}
+import java.util.concurrent.TimeUnit
 
 import cats.effect.{ExitCode, IO, IOApp, Resource}
 import cats.implicits._
@@ -12,6 +13,7 @@ import io.finch._
 import io.finch.Encode._
 import org.apache.commons.io.FileUtils
 import org.eclipse.jgit.api.Git
+
 import scala.jdk.CollectionConverters._
 
 /** A simple endpoint to host Git repositories.
@@ -46,7 +48,6 @@ class GitService(transactions: Seq[BranchTransaction], repositoryName: String = 
   }
 
   class Endpoints(repo: Git) extends Endpoint.Module[IO] {
-
     val dumbProtocol: Endpoint[IO, String] =
       get("info" :: "refs") {
         IO {
@@ -84,6 +85,53 @@ class GitService(transactions: Seq[BranchTransaction], repositoryName: String = 
           Bootstrap.configure().serve[Text.Plain](gitEndpoint).toService
         )
     )
+  }
+
+  /** Create a run.bat file within the git dir containing code that launches sbt test. */
+  def execute(cmd: Seq[String], dir: java.io.File): Int = {
+    val batFile = "run.bat"
+    val cmds = new java.util.ArrayList[String]
+    cmds.add(dir.getAbsolutePath + java.io.File.separator + batFile)
+
+    try {
+      val pw = new java.io.PrintWriter(new java.io.FileWriter(new java.io.File(dir, batFile)))
+      cmd.foreach(c => pw.print(c + " "))
+      pw.println()
+      pw.println("EXIT /B %errorlevel%")      // HACK for windows
+      pw.close
+      val pb = new ProcessBuilder(cmds)
+      pb.directory(dir)
+      val proc = pb.start
+      val sce = new java.util.Scanner(proc.getErrorStream)
+      val sco = new java.util.Scanner(proc.getInputStream)
+      while (sce.hasNextLine) System.err.println(sce.nextLine())
+      while (sco.hasNextLine) System.out.println(sco.nextLine())
+      proc.waitFor
+      proc.exitValue
+    } catch {
+      case e: Exception =>
+        e.printStackTrace()
+        -1
+    }
+  }
+
+  def runProcess(args: Seq[String]): IO[ExitCode] = {
+    git.use(git => {
+      val server = Resource.make(new Endpoints(git).serve){ s =>
+        IO.suspend(implicitly[ToAsync[Future, IO]].apply(s.close()))
+      }
+      server
+        .use(_ => IO {
+          println("working in:" + git.getRepository.getDirectory.getParentFile)
+          if (0 == execute(args, git.getRepository.getDirectory.getParentFile)) {
+            System.out.println("All tests pass! Press enter to stop server and delete files")
+            scala.io.StdIn.readLine()
+          } else {
+            System.out.println("Deleting files...")
+          }
+        })
+        .as(ExitCode.Success)
+    })
   }
 
   def run(args: List[String]): IO[ExitCode] = {

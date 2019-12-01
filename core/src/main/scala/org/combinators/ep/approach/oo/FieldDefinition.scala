@@ -30,7 +30,7 @@ trait FieldDefinition extends ApproachImplementationProvider with SharedOO {
   import paradigm._
   import syntax._
 
-  /** Make a field from an attribute in the given class.  If the type needs to be different from default, then overload attToType */
+  /** Make a field from an attribute in the given class.  If the type needs to be different from default, then register Types accordingly. */
   def makeField(att: Attribute): Generator[ClassContext, Type] = {
     import ooParadigm.classCapabilities._
     for {

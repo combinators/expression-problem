@@ -5,7 +5,7 @@ import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.communication.{ReceivedRequest, Request}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm.{FindClass, ObjectOriented, ToTargetLanguageType}
-import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider, Understands}
+import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider, Understands}
 
 trait SharedOO extends ApproachImplementationProvider {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
@@ -109,8 +109,9 @@ trait SharedOO extends ApproachImplementationProvider {
    * @param tpeCase
    * @return
    */
-  def makeConstructor(tpeCase: DataTypeCase): Generator[ConstructorContext, Unit] = {
+  def makeConstructor(tpeCase: DataTypeCase, useSuper:Boolean = false): Generator[ConstructorContext, Unit] = {
     import ooParadigm.constructorCapabilities._
+
     for {
       params <- forEach (tpeCase.attributes) { att: Attribute =>
         for {
@@ -121,8 +122,12 @@ trait SharedOO extends ApproachImplementationProvider {
 
       _ <- setParameters(params)
       args <- getArguments()
-      _ <- forEach(tpeCase.attributes.zip(args)) { case (att, (_, _, exp)) =>
-        initializeField(names.mangle(names.instanceNameOf(att)), exp)
+      _ <- if (useSuper) {
+        initializeParent(args.map(p => p._3))
+      } else {
+        forEach(tpeCase.attributes.zip(args)) { case (att, (_, _, exp)) =>
+          initializeField(names.mangle(names.instanceNameOf(att)), exp)
+        }
       }
     } yield ()
   }

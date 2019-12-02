@@ -12,8 +12,8 @@ case class AddCompilationUnit[Name, CompilationUnitContext](name: Name, unit: Ge
   type Result = Unit
 }
 
-/** Adds the given import. */
-case class AddImport[Import](imp: Import) extends Command {
+/** Adds the given import. Static Import = 1. */
+case class AddImport[Import](imp: Import, modifiers:Int = 0) extends Command {
   type Result = Unit
 }
 

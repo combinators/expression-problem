@@ -1,8 +1,8 @@
 1. Make visitor with side effects and see how to share it (perhaps even using Strategy DP) -- DONE!!!!
 2. Tackle Trivially! implementation -- DONE!!!
-
-3. Algebra (aka Modularity for the Masses)
-4. Interpreter
+3. Interpreter -- almost done! Need to have static import (which is Java-ability and not OO or anyParadigm) for test cases
+  Also need to fix 'instantiate' to call factory method that is statically imported.
+4. Algebra (aka Modularity for the Masses)
 
 
 in parallel Jan:

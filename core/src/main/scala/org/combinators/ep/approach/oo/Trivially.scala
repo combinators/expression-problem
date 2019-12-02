@@ -50,6 +50,23 @@ trait Trivially extends OOApproachImplementationProvider with SharedOO with Oper
     } yield res
   }
 
+  /**
+   * The class to instantiate is a sub-type (by default the same) as the [[factoryNameDataTypeCase]]
+   *
+   * {{{
+   *   EvalAdd
+   * }}}
+   *
+   * Model is passed in should it become necessary to be overridden more specifically
+   *
+   * @param tpeCase    DataTypeCase for which a factory is desired.
+   * @return
+   */
+  override def factoryInstanceDataTypeCase(model:Option[Model] = None, tpeCase:DataTypeCase) : Name = {
+    val binp = baseInterfaceNamesPrefix(model.get.lastModelWithOperation.get.ops, names.mangle("Final"))
+    names.addPrefix(names.conceptNameOf(tpeCase), binp)
+  }
+
   override def makeImplementation(tpe: DataType,
                                    tpeCase: DataTypeCase,
                                    op: Operation,

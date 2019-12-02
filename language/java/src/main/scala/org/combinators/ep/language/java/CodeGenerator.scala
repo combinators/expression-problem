@@ -527,6 +527,8 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                     command.cls,
                     ClassCtxt(context.resolver, clsToAdd, context.unit.getImports().asScala)
                   )
+
+                // TODO:  addImport(String name, boolean isStatic, boolean isAsterisk) {
                 val newUnit = context.unit.clone()
                 newUnit.addType(resultCtxt.cls)
                 resultCtxt.extraImports.foreach { imp =>
@@ -707,6 +709,17 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                 (context.copy(cls = newClass), ())
               }
             }
+          implicit val canSetStaticInClass: Understands[ClassContext, SetStatic] =
+            new Understands[ClassContext, SetStatic] {
+              def perform(
+                           context: ClassContext,
+                           command: SetStatic
+                         ): (ClassContext, Unit) = {
+                val newClass = context.cls.clone()
+                newClass.setStatic(true)
+                (context.copy(cls = newClass), ())
+              }
+            }
           implicit val canSetInterfaceInClass: Understands[ClassContext, SetInterface] =
             new Understands[ClassContext, SetInterface] {
               def perform(
@@ -784,6 +797,11 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                 command.arguments.foreach { arg =>
                   superCall.addArgument(arg.clone())
                 }
+
+                // have to create replacing block *in the event* that we created new ExplicitConstructor above...
+                val replacingBlock = new BlockStmt
+                replacingBlock.addStatement(superCall.clone())
+                newCtor.setBody(replacingBlock)
                 (context.copy(ctor = newCtor), ())
               }
             }
@@ -848,6 +866,7 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                 (context, Java(s"""new ${tpe}(${args.mkString(", ")})""").expression())
               }
             }
+
           implicit val canApplyInConstructor: Understands[ConstructorContext, Apply[Expression, Expression, Expression]] =
             new Understands[ConstructorContext, Apply[Expression, Expression, Expression]] {
               def perform(
@@ -857,7 +876,6 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                 (context, Java(s"${command.functional}(${command.arguments.mkString(", ")})").expression())
               }
             }
-
           implicit val canCastInConstructor: Understands[ConstructorContext, CastObject[Type, Expression]] =
             new Understands[ConstructorContext, CastObject[Type, Expression]] {
               def perform(
@@ -1045,6 +1063,18 @@ sealed class CodeGenerator(config: CodeGenerator.Config) { cc =>
                 val newMethod = context.method.clone()
                 newMethod.removeBody()
                 newMethod.setAbstract(true)
+                (context.copy(method = newMethod), ())
+              }
+            }
+          val canSetStaticInMethod: Understands[MethodBodyContext, SetStatic] =
+            new Understands[MethodBodyContext, SetStatic] {
+              def perform(
+                           context: MethodBodyContext,
+                           command: SetStatic
+                         ): (MethodBodyContext, Unit) = {
+                val newMethod = context.method.clone()
+                newMethod.removeBody()
+                newMethod.setStatic(true)
                 (context.copy(method = newMethod), ())
               }
             }

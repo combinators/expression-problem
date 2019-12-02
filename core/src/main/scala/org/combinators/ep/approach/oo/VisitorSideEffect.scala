@@ -52,7 +52,7 @@ abstract class VisitorSideEffect extends OOApproachImplementationProvider with S
     import polymorphics.methodBodyCapabilities._
 
     for {
-      // In the "message.to" expression, invoke the 'accept' method with a visitor argument
+      // In the 'message.to' expression, invoke the 'accept' method with a visitor argument
       method <- getMember(message.to, accept)   // things which are code-generated use the '<-' handles unpacking results
 
       // the operation is encoded in its own class, which we must find to determine the visitor type
@@ -187,7 +187,16 @@ abstract class VisitorSideEffect extends OOApproachImplementationProvider with S
     } yield ()
   }
 
-
+  /** Create a method implementation that simply returns field as an expression, with appropriate return type for operation.
+   *
+   * {{{
+   *   RETURNTYPE ???(op-params) { return FIELD; }
+   * }}}
+   *
+   * @param op
+   * @param field
+   * @return
+   */
   def returnValue(op: Operation, field:Expression): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
 
@@ -261,7 +270,7 @@ abstract class VisitorSideEffect extends OOApproachImplementationProvider with S
       visitedRef <- getArguments().map(_.head._3)
       attAccessors: Seq[Expression] <- forEach (tpeCase.attributes) { att =>
         for {
-          getter <- getMember(visitedRef, names.addPrefix("get", names.mangle(names.conceptNameOf(att))))
+          getter <- getMember(visitedRef, getterName(att))
           getterCall <- apply(getter, Seq.empty)
         } yield getterCall
       }

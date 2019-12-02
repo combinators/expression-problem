@@ -32,49 +32,6 @@ trait SharedVisitor extends OOApproachImplementationProvider with SharedOO with 
   def makeOperationImplementation(domain:Model, op: Operation, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit]
 
   /**
-   * At heart a visitor class has specific structure:
-   *
-   * {{{
-   *   TBA TBA TBA
-   * }}}
-   * @param model
-   * @param name
-   * @param op
-   * @param domainSpecific
-   * @return
-   */
-  def visitorClass(model: Model, name:Name, op:Operation, domainSpecific: EvolutionImplementationProvider[this.type], useGenerics:Boolean): Generator[ClassContext, Unit] = {
-    import ooParadigm.classCapabilities._
-    import genericsParadigm.classCapabilities._
-    for {
-      visitorInterface <- findClass(name)
-      _ <- resolveAndAddImport(visitorInterface)
-
-      returnTpe <- toTargetLanguageType(op.returnType)
-      _ <- resolveAndAddImport(returnTpe)
-
-      implType <- if (useGenerics) {
-        for {
-          visitorInterfaceWithReturnType <- applyType(visitorInterface, Seq(returnTpe))
-        } yield visitorInterfaceWithReturnType
-      } else {
-        for {
-          vi <- findClass(name)   // unnecessary but can't seem to avoid it!
-        } yield vi
-      }
-
-      visitorInterfaceWithReturnType <- applyType(visitorInterface, Seq(returnTpe))
-      _ <- addImplemented(visitorInterfaceWithReturnType)
-
-      _ <- addConstructor(makeOperationConstructor(op))
-
-      _ <- forEach (model.typeCases) { tpe =>
-        addMethod(visit, makeImplementation(model.baseDataType, tpe, op, domainSpecific))
-      }
-    } yield ()
-  }
-
-  /**
    * Instantiates an instance of the domain object.
    *
    * Same implementation for OO as for visitor.
@@ -231,7 +188,7 @@ trait SharedVisitor extends OOApproachImplementationProvider with SharedOO with 
       visitedRef <- getArguments().map(_.head._3)
       attAccessors: Seq[Expression] <- forEach (tpeCase.attributes) { att =>
         for {
-          getter <- getMember(visitedRef, names.addPrefix("get", names.mangle(names.conceptNameOf(att))))
+          getter <- getMember(visitedRef, getterName(att))
           getterCall <- apply(getter, Seq.empty)
         } yield getterCall
       }
@@ -273,15 +230,6 @@ trait SharedVisitor extends OOApproachImplementationProvider with SharedOO with 
    *   }
    * }}}
    *
-   * For data types that were added after an operation, this runtime check is demanded to protect the
-   * downcast. Eventually the instanceof check and the throw exception will be added.
-   *
-   * public <R> R accept(Visitor<R> v) {
-   *   if (v instanceof VisitorDivdMultNeg) {
-   *     return ((VisitorDivdMultNeg<R>) v).visit(this);
-   *   }
-   *   throw new RuntimeException("Older visitor used with newer datatype variant.");
-   * }
    */
   def makeDerived(parentType: DataType, tpeCase: DataTypeCase, model: Model): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._

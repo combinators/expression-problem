@@ -14,6 +14,11 @@ trait SharedOO extends ApproachImplementationProvider {
   import paradigm._
   import syntax._
 
+  /** Return standard method name getATTRIBUTE for given attribute. */
+  def getterName(att:Attribute):Name = {
+    names.addPrefix("get", names.mangle(names.conceptNameOf(att)))
+  }
+
   /** Create standard signature to access the result of an operation
    *
    * {{{
@@ -177,6 +182,6 @@ trait SharedOO extends ApproachImplementationProvider {
     }
 
     import ooParadigm.classCapabilities._
-    addMethod(names.addPrefix("get", names.mangle(names.conceptNameOf(att))), makeBody)
+    addMethod(getterName(att), makeBody)
   }
 }

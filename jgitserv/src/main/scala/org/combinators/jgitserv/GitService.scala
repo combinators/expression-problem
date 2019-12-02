@@ -2,7 +2,6 @@ package org.combinators.jgitserv
 
 import java.io.FileInputStream
 import java.nio.file.{Files, Paths}
-import java.util.concurrent.TimeUnit
 
 import cats.effect.{ExitCode, IO, IOApp, Resource}
 import cats.implicits._
@@ -42,7 +41,11 @@ class GitService(transactions: Seq[BranchTransaction], repositoryName: String = 
     def release(git: Git): IO[Unit] = IO {
       val directory = git.getRepository.getWorkTree
       git.close()
-      FileUtils.deleteDirectory(directory)
+      try {
+        FileUtils.deleteDirectory(directory)
+      } catch {
+        case io:java.io.IOException => println ("Couldn't delete:" + io.getMessage)
+      }
     }
     Resource.make(acquire)(release)
   }
@@ -87,50 +90,45 @@ class GitService(transactions: Seq[BranchTransaction], repositoryName: String = 
     )
   }
 
-  /** Create a run.bat file within the git dir containing code that launches sbt test. */
-  def execute(cmd: Seq[String], dir: java.io.File): Int = {
-    val batFile = "run.bat"
-    val cmds = new java.util.ArrayList[String]
-    cmds.add(dir.getAbsolutePath + java.io.File.separator + batFile)
+  def runProcess(cmd: String): IO[ExitCode] = {
+    var result = 0
 
-    try {
-      val pw = new java.io.PrintWriter(new java.io.FileWriter(new java.io.File(dir, batFile)))
-      cmd.foreach(c => pw.print(c + " "))
-      pw.println()
-      pw.println("EXIT /B %errorlevel%")      // HACK for windows
-      pw.close
-      val pb = new ProcessBuilder(cmds)
-      pb.directory(dir)
-      val proc = pb.start
-      val sce = new java.util.Scanner(proc.getErrorStream)
-      val sco = new java.util.Scanner(proc.getInputStream)
-      while (sce.hasNextLine) System.err.println(sce.nextLine())
-      while (sco.hasNextLine) System.out.println(sco.nextLine())
-      proc.waitFor
-      proc.exitValue
-    } catch {
-      case e: Exception =>
-        e.printStackTrace()
-        -1
-    }
-  }
-
-  def runProcess(args: Seq[String]): IO[ExitCode] = {
     git.use(git => {
       val server = Resource.make(new Endpoints(git).serve){ s =>
         IO.suspend(implicitly[ToAsync[Future, IO]].apply(s.close()))
       }
       server
         .use(_ => IO {
-          println("working in:" + git.getRepository.getDirectory.getParentFile)
-          if (0 == execute(args, git.getRepository.getDirectory.getParentFile)) {
-            System.out.println("All tests pass! Press enter to stop server and delete files")
-            scala.io.StdIn.readLine()
-          } else {
+          import sys.process._
+          val dir = git.getRepository.getDirectory.getParentFile
+
+          println("working in:" + dir)
+          val batFile = "run.bat"
+
+          val out = new StringBuilder
+          val err = new StringBuilder
+
+          val logger = ProcessLogger(
+            (o: String) => out.append(o).append("\n"),
+            (e: String) => err.append(e).append("\n"))
+
+          try {
+            val pw = new java.io.PrintWriter(new java.io.FileWriter(new java.io.File(dir, batFile)))
+            pw.println(cmd)
+            pw.println("EXIT /B %errorlevel%") // HACK for windows
+            pw.close()
+
+            result = Process(dir.getAbsolutePath + java.io.File.separator + batFile, git.getRepository.getDirectory.getParentFile)! logger
+
             System.out.println("Deleting files...")
+            System.out.println(out)
+            System.err.println(err)
+          } catch {
+            case e: Exception =>
+              println ("Unexpected error:" + e.getMessage)
           }
         })
-        .as(ExitCode.Success)
+        .as(ExitCode(result))
     })
   }
 

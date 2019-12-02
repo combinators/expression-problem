@@ -80,6 +80,16 @@ trait ApproachImplementationProvider {
     */
   def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit]
 
+  /** Define standard test name. */
+  def testName:Name = {
+    names.mangle("Test")
+  }
+
+  /** Define name for test case, given model. */
+  def testCaseName(model:Model):Name = {
+    names.addSuffix(names.mangle(names.conceptNameOf(model)), "Test")
+  }
+
   /** Adds tests to the project context */
   def implement(tests: Map[Model, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
     import projectContextCapabilities._
@@ -94,10 +104,10 @@ trait ApproachImplementationProvider {
             } yield code.flatten
 
           addCompilationUnit(
-            names.addSuffix(names.mangle(names.conceptNameOf(model)), "Test"),
+            testCaseName(model),
             addTestSuite(
-              names.addSuffix(names.mangle(names.conceptNameOf(model)), "Test"),
-              addTestCase(names.mangle("Test"), testCode)
+              testCaseName(model),
+              addTestCase(testName, testCode)
             ))
         }
     } yield ()

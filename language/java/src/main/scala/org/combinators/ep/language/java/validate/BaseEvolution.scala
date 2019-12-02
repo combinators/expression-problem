@@ -24,7 +24,7 @@ trait BaseEvolution {
     val name = evolutions.head.getModel.base.name
     for {
       _ <- IO { System.out.println(s"Use: git clone http://127.0.0.1:8081/$name ${evolutions.last.getModel.name}") }
-      exitCode <- new GitService(transaction.toSeq, name).runProcess(Seq(s"sbt", "test"))
+      exitCode <- new GitService(transaction.toSeq, name).runProcess("sbt test")
     } yield exitCode
   }
 }

@@ -40,7 +40,7 @@ abstract class Visitor extends OOApproachImplementationProvider with SharedVisit
     import polymorphics.methodBodyCapabilities._
     for {
 
-      // In the "message.to" expression, invoke the 'accept' method with a visitor argument
+      // In the 'message.to' expression, invoke the 'accept' method with a visitor argument
       genericMethod <- getMember(message.to, accept)   // things which are code-generated use the '<-' handles unpacking results
       rt <- toTargetLanguageType(message.request.op.returnType)
       _ <- resolveAndAddImport(rt)

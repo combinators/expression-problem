@@ -22,6 +22,7 @@ object ValidateAll extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
     var numSuccess = 0
 
+    // Can't get this to work. Seems like each of the other execs stops program
     approaches.foreach( f => {
       val result = f.run(List.empty)
     })

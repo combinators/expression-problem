@@ -59,6 +59,7 @@ object M0 {
             * result(Java("")) TODO: result is not necessary
             */
           case litC@math.M0.Lit => Command.lift[MethodBodyContext, paradigm.syntax.Expression](onRequest.attributes(litC.attributes.head))
+
           /** Need to dispatch 'eval' to the left and right. */
           case addC@math.M0.Add =>
             for {

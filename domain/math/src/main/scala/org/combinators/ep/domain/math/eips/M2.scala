@@ -47,6 +47,7 @@ object M2 {
               ty <- toTargetLanguageType(att.tpe)
               res <- asString(onRequest.attributes(att), ty)
             } yield res
+
           case other =>
             val lAtt = other.attributes.head
             val rAtt = other.attributes.tail.head

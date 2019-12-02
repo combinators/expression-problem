@@ -7,7 +7,6 @@ import org.combinators.ep.generator.communication._
 import org.combinators.ep.generator.paradigm._
 import Command._
 import AnyParadigm.syntax._
-import org.combinators.ep.approach
 
 /**
  * Synthesizing OO and Functional Design to promote Reuse

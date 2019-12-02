@@ -13,10 +13,8 @@ import org.combinators.ep.generator.{ApproachImplementationProvider, Understands
 trait OOApproachImplementationProvider extends ApproachImplementationProvider {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
 
-  //import ooParadigm._
   import paradigm._
   import syntax._
-
 
   /**
    * Default registration for findClass, which works with each registerTypeMapping for the different approaches.

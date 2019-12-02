@@ -7,23 +7,8 @@ import org.combinators.ep.generator.ApproachImplementationProvider
 
 /**
  * Ability to create fields for given Attribute within an existing Class
- *
- *  {{{
- *     public interface Exp {}    // marker interface
- *
- *
- *     public interface ExpEval extends Exp {
- *       ...
- *     }
- *
- *     public interface ExpPrettyp extends ExpEval {
- *        ...
- *     }
- * }}}
- *
- * Where 'Exp' comes from the BaseDataType of the domain.
  */
-trait FieldDefinition extends ApproachImplementationProvider with SharedOO {
+trait FieldDefinition extends ApproachImplementationProvider {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
 
   import ooParadigm._
@@ -40,4 +25,3 @@ trait FieldDefinition extends ApproachImplementationProvider with SharedOO {
     } yield ft
   }
 }
-

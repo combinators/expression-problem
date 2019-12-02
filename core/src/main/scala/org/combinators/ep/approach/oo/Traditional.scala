@@ -8,7 +8,7 @@ import org.combinators.ep.generator.paradigm._
 import Command._
 import AnyParadigm.syntax._
 
-trait Traditional extends OOApproachImplementationProvider with SharedOO with FieldDefinition {  // this had been sealed. not sure why
+trait Traditional extends OOApproachImplementationProvider with BaseDataTypeAsClass with SharedOO with FieldDefinition {  // this had been sealed. not sure why
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
 
   import paradigm._

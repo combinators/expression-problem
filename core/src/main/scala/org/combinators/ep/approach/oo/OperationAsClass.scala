@@ -10,12 +10,20 @@ import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionIm
  * In some EP approaches, each operation is mapped to a specific class.
  *
  */
-trait OperationAsClass extends ApproachImplementationProvider with SharedOO {
+trait OperationAsClass extends ApproachImplementationProvider /* with SharedOO */ {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
 
   import ooParadigm._
   import paradigm._
   import syntax._
+
+  /** Requires the capability of constructing an implementation */
+  def makeImplementation(
+                          tpe: DataType,
+                          tpeCase: DataTypeCase,
+                          op: Operation,
+                          domainSpecific: EvolutionImplementationProvider[this.type]
+                        ): Generator[MethodBodyContext, Option[Expression]]
 
   /**
    * Constructor for an operation which MAY have parameters

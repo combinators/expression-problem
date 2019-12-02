@@ -18,12 +18,15 @@ import org.combinators.ep.generator.paradigm.ObjectOriented
  *
  * Where 'Exp' comes from the BaseDataType of the domain.
  */
-trait OperationInterfaceChain extends ApproachImplementationProvider with SharedOO {
+trait OperationInterfaceChain extends ApproachImplementationProvider  {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
 
   import ooParadigm._
   import paradigm._
   import syntax._
+
+  /** Requires capability of defining the signature of a method associated with the given operation. */
+  def makeSignature(op: Operation): Generator[MethodBodyContext, Unit]
 
   def baseInterfaceNamesPrefix(ops: Seq[Operation], suffix:Name): Name = {
     // Note: foldLeft requires swap of comparison operation because....
@@ -46,32 +49,6 @@ trait OperationInterfaceChain extends ApproachImplementationProvider with Shared
     }
   }
 
-  /**
-   * Base Exp interface with no methods (for now).
-   *
-   * {{{
-   *   public interface Exp {
-   *     public tree.Tree astree();    // only when needed
-   * }
-   * }}}
-   * Eventually will have some here for producer/binary methods
-   *
-   * Override traditional OO use where this is a class; here it is an interface
-   *
-   * @param tpe
-   * @param ops -- ignored in this overridden capability
-   * @return
-   */
-  override def makeBase(tpe: DataType, ops: Seq[Operation]): Generator[ProjectContext, Unit] = {
-    import ooParadigm.projectCapabilities._
-    val makeClass: Generator[ClassContext, Unit] = {
-      import classCapabilities._
-      for {
-        _ <- setInterface()
-      } yield ()
-    }
-    addClassToProject(names.mangle(names.conceptNameOf(tpe)), makeClass)
-  }
 
   /**
    * Create intermediate interfaces that form a chain of operation definitions.

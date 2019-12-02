@@ -4,8 +4,8 @@ import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.communication.{ReceivedRequest, Request}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.ep.generator.paradigm.{FindClass, ObjectOriented, ToTargetLanguageType}
-import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider, Understands}
+import org.combinators.ep.generator.paradigm.ObjectOriented
+import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
 trait SharedOO extends ApproachImplementationProvider {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
@@ -14,6 +14,14 @@ trait SharedOO extends ApproachImplementationProvider {
   import paradigm._
   import syntax._
 
+  /** Create standard signature to access the result of an operation
+   *
+   * {{{
+   *   public Double OPERATION(PARAM...)
+   * }}}
+   * @param op
+   * @return
+   */
   def makeSignature(op: Operation): Generator[MethodBodyContext, Unit] = {
     import paradigm.methodBodyCapabilities._
 
@@ -30,18 +38,6 @@ trait SharedOO extends ApproachImplementationProvider {
       }
       _ <- setParameters(params)
     } yield ()
-  }
-
-  def makeBase(tpe: DataType, ops: Seq[Operation]): Generator[ProjectContext, Unit] = {
-    import ooParadigm.projectCapabilities._
-    val makeClass: Generator[ClassContext, Unit] = {
-      import classCapabilities._
-      for {
-        _ <- setAbstract()
-        _ <- forEach(ops) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), makeSignature(op)) }
-      } yield ()
-    }
-    addClassToProject(names.mangle(names.conceptNameOf(tpe)), makeClass)
   }
 
   /**

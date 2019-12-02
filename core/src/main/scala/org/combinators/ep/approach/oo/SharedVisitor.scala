@@ -8,7 +8,7 @@ import org.combinators.ep.generator.communication.{ReceivedRequest, Request}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm.{Generics, ObjectOriented, ParametricPolymorphism}
 
-trait SharedVisitor extends OOApproachImplementationProvider with FieldDefinition with OperationAsClass {
+trait SharedVisitor extends OOApproachImplementationProvider with SharedOO with FieldDefinition with OperationAsClass {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
@@ -301,5 +301,4 @@ trait SharedVisitor extends OOApproachImplementationProvider with FieldDefinitio
     }
     addClassToProject(names.mangle(names.conceptNameOf(tpeCase)), makeClass)
   }
-
 }

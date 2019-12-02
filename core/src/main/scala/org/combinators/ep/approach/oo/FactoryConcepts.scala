@@ -10,7 +10,7 @@ import org.combinators.ep.generator.paradigm.ObjectOriented
 /**
  * Some EP approaches need factory methods for either operations or data types
  */
-trait FactoryConcepts extends ApproachImplementationProvider with SharedOO {
+trait FactoryConcepts extends ApproachImplementationProvider {
     val ooParadigm: ObjectOriented.WithBase[paradigm.type]
 
     import ooParadigm._

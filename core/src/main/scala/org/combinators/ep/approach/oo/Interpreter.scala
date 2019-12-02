@@ -10,7 +10,7 @@ import org.combinators.ep.generator.paradigm._
 
 
 // copied from visitor to start
-sealed trait Interpreter extends OOApproachImplementationProvider with OperationInterfaceChain with FieldDefinition with FactoryConcepts {
+sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataTypeAsInterface with SharedOO with OperationInterfaceChain with FieldDefinition with FactoryConcepts {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]

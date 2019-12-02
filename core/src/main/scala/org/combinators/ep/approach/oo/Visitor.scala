@@ -15,7 +15,7 @@ import org.combinators.ep.approach
  * Have to decide whether to use side effects or Generics. This current implementation uses the Visitor<R> generics
  * approach, which can be adopted by different object oriented languages.
  */
-abstract class Visitor extends ApproachImplementationProvider with SharedVisitor with OperationAsClass {
+abstract class Visitor extends OOApproachImplementationProvider with SharedVisitor {
 
   import paradigm._
   import ooParadigm._

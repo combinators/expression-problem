@@ -13,7 +13,7 @@ import org.combinators.ep.generator.FileWithPathPersistable._
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
 object Main extends IOApp {
-  val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = CodeGenerator.PartiallyBoxed))
+  val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed))
 
   // can't have both of these?!
   val extensibleVisitorApproach = ExtensibleVisitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)

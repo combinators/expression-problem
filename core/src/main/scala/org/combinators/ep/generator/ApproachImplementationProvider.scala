@@ -9,7 +9,7 @@ import cats.data._
 import cats.syntax._
 import cats.implicits._
 import org.combinators.ep.generator.Command._
-import org.combinators.ep.generator.paradigm.{AddImport, AnyParadigm, Reify, ResolveImport, ToTargetLanguageType}
+import org.combinators.ep.generator.paradigm.{AddImport, AnyParadigm, FindClass, Reify, ResolveImport, ToTargetLanguageType}
 import AnyParadigm.syntax._
 
 /** Provides implementations for language and approach specific code generation tasks which do not depend on a specific
@@ -27,7 +27,7 @@ trait ApproachImplementationProvider {
     *   implicit val domain = ???
     *   val received: ReceivedRequest[Expression] = ???
     *   dispatch(
-    *     SendRequest(
+    *     SendRequest(t
     *       to = received.attributes(Attribute.left),
     *       receiverTpe = Attribute.left.tpe
     *       request = Request(Operation("eval"), Map.empty)
@@ -80,6 +80,16 @@ trait ApproachImplementationProvider {
     */
   def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit]
 
+  /** Define standard test name. */
+  def testName:Name = {
+    names.mangle("Test")
+  }
+
+  /** Define name for test case, given model. */
+  def testCaseName(model:Model):Name = {
+    names.addSuffix(names.mangle(names.conceptNameOf(model)), "Test")
+  }
+
   /** Adds tests to the project context */
   def implement(tests: Map[Model, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
     import projectContextCapabilities._
@@ -94,14 +104,15 @@ trait ApproachImplementationProvider {
             } yield code.flatten
 
           addCompilationUnit(
-            names.addSuffix(names.mangle(names.conceptNameOf(model)), "Test"),
+            testCaseName(model),
             addTestSuite(
-              names.addSuffix(names.mangle(names.conceptNameOf(model)), "Test"),
-              addTestCase(names.mangle("Test"), testCode)
+              testCaseName(model),
+              addTestCase(testName, testCode)
             ))
         }
     } yield ()
   }
+
 }
 
 object ApproachImplementationProvider {

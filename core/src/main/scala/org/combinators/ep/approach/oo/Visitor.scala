@@ -15,7 +15,7 @@ import org.combinators.ep.approach
  * Have to decide whether to use side effects or Generics. This current implementation uses the Visitor<R> generics
  * approach, which can be adopted by different object oriented languages.
  */
-abstract class Visitor extends ApproachImplementationProvider with SharedVisitor {
+abstract class Visitor extends OOApproachImplementationProvider with SharedVisitor {
 
   import paradigm._
   import ooParadigm._
@@ -40,7 +40,7 @@ abstract class Visitor extends ApproachImplementationProvider with SharedVisitor
     import polymorphics.methodBodyCapabilities._
     for {
 
-      // In the "message.to" expression, invoke the 'accept' method with a visitor argument
+      // In the 'message.to' expression, invoke the 'accept' method with a visitor argument
       genericMethod <- getMember(message.to, accept)   // things which are code-generated use the '<-' handles unpacking results
       rt <- toTargetLanguageType(message.request.op.returnType)
       _ <- resolveAndAddImport(rt)
@@ -59,31 +59,6 @@ abstract class Visitor extends ApproachImplementationProvider with SharedVisitor
     } yield result
   }
 
-
-  /**
-   * Instantiates an instance of the domain object.
-   *
-   * Same implementation for OO as for visitor.
-   *
-   * new Add(new Lit(new Double(1.0)), new Lit(new Double(2.0)))
-   *
-   * @param baseTpe
-   * @param tpeCase
-   * @param args
-   * @return
-   */
-  def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
-    import paradigm.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
-    for {
-      // access the constructor for the class associated with type case and invoke constructors with arguments.
-      rt <- findClass(names.mangle(names.conceptNameOf(tpeCase)))
-      _ <- resolveAndAddImport(rt)
-      res <- instantiateObject(rt, args)
-    } yield res
-  }
-
-
   /** Create an accept implementation from the accept method signature.
    * {{{
    *  public <R> R accept(Visitor<R> v) {
@@ -99,7 +74,7 @@ abstract class Visitor extends ApproachImplementationProvider with SharedVisitor
 
       for {
         // start from the accept signature and add a method body.
-        _ <- makeAcceptSignature()
+        _ <- makeAcceptSignatureWithType()
         args <- getArguments()   // get name, type, expression
 
         // invoke visit method on 'v' with 'this' as argument
@@ -114,7 +89,11 @@ abstract class Visitor extends ApproachImplementationProvider with SharedVisitor
   }
 
 
-  /** Each operation is placed in its own class, with a 'visit' method for each known data type.
+  /**
+   * Each operation is placed in its own class, with a 'visit' method for each known data type.
+   *
+   * Uses the generic 'operationClass' capability to create the structure of the class.
+   *
    * {{{
    * import sun.reflect.generics.visitor.Visitor
    * class Eval extends Visitor[Double] { }
@@ -141,42 +120,17 @@ abstract class Visitor extends ApproachImplementationProvider with SharedVisitor
   def makeOperationImplementation(domain:Model,
                                   op: Operation,
                                   domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
-    val makeClass: Generator[ClassContext, Unit] = {
-      import ooParadigm.classCapabilities._
-      import genericsParadigm.classCapabilities._
-      for {
-        visitorInterface <- findClass(visitorClass)
-        _ <- resolveAndAddImport(visitorInterface)
-        returnTpe <- toTargetLanguageType(op.returnType)
-        _ <- resolveAndAddImport(returnTpe)
-        visitorInterfaceWithReturnType <- applyType(visitorInterface, Seq(returnTpe))
-        _ <- addImplemented(visitorInterfaceWithReturnType)
-        _ <- addConstructor(makeOperationConstructor(op))
-        _ <- forEach (domain.typeCases) { tpe =>
-          addMethod(visit, makeImplementation(domain.baseDataType, tpe, op, domainSpecific))
-        }
-      } yield ()
-    }
-
-    makeClass
-//    addClassToProject(visitorClass, makeClass)
-  }
-
-  def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
-    FindClass(names.mangle(names.conceptNameOf(dtpe))).interpret(canFindClass)
-  }
-
-  def initializeApproach(domain: Model): Generator[ProjectContext, Unit] = {
-    import paradigm.projectContextCapabilities._
-    import ooParadigm.projectCapabilities._
-    import ooParadigm.methodBodyCapabilities._
     import ooParadigm.classCapabilities._
-    import ooParadigm.constructorCapabilities._
-    val dtpeRep = TypeRep.DataType(domain.baseDataType)
+    import genericsParadigm.classCapabilities._
     for {
-      _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(domain.baseDataType))
-      _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(domain.baseDataType))
-      _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(domain.baseDataType))
+      _ <- operationClass(visit, op, domain.typeCases, domain.baseDataType, domainSpecific)
+
+      visitorInterface <- findClass(visitorClass)
+      _ <- resolveAndAddImport(visitorInterface)
+      returnTpe <- toTargetLanguageType(op.returnType)
+      _ <- resolveAndAddImport(returnTpe)
+      visitorInterfaceWithReturnType <- applyType(visitorInterface, Seq(returnTpe))
+      _ <- addImplemented(visitorInterfaceWithReturnType)
     } yield ()
   }
 
@@ -193,15 +147,16 @@ abstract class Visitor extends ApproachImplementationProvider with SharedVisitor
    */
   def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
-
+    import paradigm.projectContextCapabilities._
     val flatDomain = domain.flatten
     for {
-      _ <- initializeApproach(flatDomain)
+      _ <- debug ("Processing Visitor")
+      _ <- registerTypeMapping(flatDomain)
       _ <- domainSpecific.initialize(this)
       _ <- makeBase(flatDomain.baseDataType)
       _ <- forEach (flatDomain.typeCases) { tpeCase =>
         makeDerived(flatDomain.baseDataType, tpeCase, domain)   // used to have flatDomain.ops,
-      }  // parentType: DataType, tpeCase: DataTypeCase, model: Model
+      }
 
       _ <- addClassToProject(visitorClass, makeVisitorInterface(flatDomain.typeCases))
 

@@ -1,14 +1,14 @@
 package org.combinators.ep.approach.oo
 
 import org.combinators.ep.domain.Model
-import org.combinators.ep.domain.abstractions.{Attribute, DataType, DataTypeCase, Operation, TypeRep}
+import org.combinators.ep.domain.abstractions.{DataType, DataTypeCase, Operation, TypeRep}
 import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.communication.{ReceivedRequest, Request}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm.{Generics, ObjectOriented, ParametricPolymorphism}
 
-trait SharedVisitor extends ApproachImplementationProvider {
+trait SharedVisitor extends OOApproachImplementationProvider with SharedOO with FieldDefinition with OperationAsClass {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
@@ -32,14 +32,34 @@ trait SharedVisitor extends ApproachImplementationProvider {
   def makeOperationImplementation(domain:Model, op: Operation, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit]
 
   /**
-   * Not part of approach implementation provider but was needed for OO provider and was used to provide code
-   * for making the actual signature of the
+   * Instantiates an instance of the domain object.
+   *
+   * Same implementation for OO as for visitor.
+   *
+   * new Add(new Lit(new Double(1.0)), new Lit(new Double(2.0)))
+   */
+  def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
+    import paradigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+    for {
+      // access the constructor for the class associated with type case and invoke constructors with arguments.
+      rt <- findClass(names.mangle(names.conceptNameOf(tpeCase)))
+      _ <- resolveAndAddImport(rt)
+      res <- instantiateObject(rt, args)
+    } yield res
+  }
+
+  /**
+   * A visitor that returns values can have a type parameter that specifies the type of the value returned.
+   *
+   * In Java, for example, the following is an accept method that takes a type parameter R.
+   *
    * {{{
    *  public abstract <R> R accept(Visitor<R> v);
    * }}}
    * @return
    */
-  def makeAcceptSignature(): Generator[MethodBodyContext, Unit] = {
+  def makeAcceptSignatureWithType(): Generator[MethodBodyContext, Unit] = {
     import paradigm.methodBodyCapabilities.{toTargetLanguageType => _, _}
     import polymorphics.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
@@ -64,13 +84,14 @@ trait SharedVisitor extends ApproachImplementationProvider {
   }
 
   /**
-   * Define the base class for Exp
+   * Define the base class for Exp which must contain the accept method as an abstract method.
+   *
    * {{{
-   *  package visitor;
    *  public abstract class Exp {
    *    public abstract <R> R accept(Visitor<R> v);
    *  }
    * }}}
+   *
    * @param tpe
    * @return
    */
@@ -81,7 +102,7 @@ trait SharedVisitor extends ApproachImplementationProvider {
       import ooParadigm.classCapabilities._
       for {
         _ <- setAbstract()
-        _ <- addAbstractMethod(accept, makeAcceptSignature())
+        _ <- addAbstractMethod(accept, makeAcceptSignatureWithType())
       } yield ()
     }
 
@@ -137,54 +158,6 @@ trait SharedVisitor extends ApproachImplementationProvider {
     } yield ()
   }
 
-
-
-  /** Make field for the data type subtype.
-   * {{{
-   *   private Exp left;
-   * }}}
-   */
-  def makeField(att: Attribute): Generator[ClassContext, Unit] = {
-    import ooParadigm.classCapabilities._
-    for {
-      ft <- toTargetLanguageType(att.tpe)
-      _ <- resolveAndAddImport(ft)
-      _ <- addField(names.mangle(names.instanceNameOf(att)), ft)
-    } yield ()
-  }
-
-  /** Make constructor for subtype.
-   * {{{
-   * public Add(Exp left, Exp right) {
-   *   this.left = left;
-   *   this.right = right;
-   * }
-   * }}}
-   * @param tpeCase
-   * @return
-   */
-  def makeConstructor(tpeCase: DataTypeCase): Generator[ConstructorContext, Unit] = {
-    import ooParadigm.constructorCapabilities._
-
-    for {
-      // get all attributes and form a seuquence
-      params <- forEach (tpeCase.attributes) { att: Attribute =>
-        for {
-          at <- toTargetLanguageType(att.tpe)
-          _ <- resolveAndAddImport(at)
-          pName <- freshName(names.mangle(names.instanceNameOf(att)))
-        } yield (pName, at)
-      }
-      _ <- setParameters(params)
-
-      // initialize this.XXX = XXX
-      args <- getArguments()
-      _ <- forEach(tpeCase.attributes.zip(args)) { case (att, (_, _, exp)) =>
-        initializeField(names.mangle(names.instanceNameOf(att)), exp)
-      }
-    } yield ()
-  }
-
   /** Make a method body for each operation, which is a visit method for a defined data type
    *
    * {{{
@@ -193,13 +166,15 @@ trait SharedVisitor extends ApproachImplementationProvider {
    *     }
    * }}}
    *
+   * Access the results via a visitor method which returns the information using accept method.
+   *
    * @param tpe
    * @param tpeCase
    * @param op
    * @param domainSpecific
    * @return
    */
-  def makeImplementation(tpe: DataType,
+  override def makeImplementation(tpe: DataType,
                          tpeCase: DataTypeCase,
                          op: Operation,
                          domainSpecific: EvolutionImplementationProvider[this.type]
@@ -213,7 +188,7 @@ trait SharedVisitor extends ApproachImplementationProvider {
       visitedRef <- getArguments().map(_.head._3)
       attAccessors: Seq[Expression] <- forEach (tpeCase.attributes) { att =>
         for {
-          getter <- getMember(visitedRef, names.addPrefix("get", names.mangle(names.conceptNameOf(att))))
+          getter <- getMember(visitedRef, getterName(att))
           getterCall <- apply(getter, Seq.empty)
         } yield getterCall
       }
@@ -239,62 +214,6 @@ trait SharedVisitor extends ApproachImplementationProvider {
     } yield result
   }
 
-
-  /**
-   * Constructor for an operation which MAY have parameters
-   * @param op
-   * @return
-   */
-  def makeOperationConstructor(op: Operation): Generator[ConstructorContext, Unit] = {
-    import constructorCapabilities._
-    for {
-      params <- forEach (op.parameters) { param =>
-        for {
-          paramTy <- toTargetLanguageType(param.tpe)
-          _ <- resolveAndAddImport(paramTy)
-          pName <- freshName(names.mangle(param.name))
-        } yield (pName, paramTy)
-      }
-      _ <- setParameters(params)
-      args <- getArguments()
-      _ <- forEach (op.parameters.zip(args)) { case (param, (_, _, arg)) =>
-        initializeField(names.mangle(param.name), arg)
-      }
-    } yield ()
-
-  }
-
-
-  /** Make a single getter method for the 'att' attribute, such as:
-   * {{{
-   * public Exp getRight() {
-   *   return this.right;
-   * }
-   * }}}
-   * @param att
-   * @return
-   */
-  def makeGetter(att:Attribute): Generator[ClassContext, Unit] = {
-    val makeBody: Generator[MethodBodyContext, Option[Expression]] = {
-      import paradigm.methodBodyCapabilities._
-      import ooParadigm.methodBodyCapabilities._
-
-      for {
-        rt <- toTargetLanguageType(att.tpe)
-        _ <- resolveAndAddImport(rt)
-        _ <- setReturnType(rt)
-
-        // return // this.attribute name
-        self <- selfReference()
-        result <- getMember(self, names.mangle(names.instanceNameOf(att)))
-      } yield Some(result)
-    }
-
-    import ooParadigm.classCapabilities._
-    addMethod(names.addPrefix("get", names.mangle(names.conceptNameOf(att))), makeBody)
-  }
-
-
   /**
    * {{{
    *   public class Add extends Exp {
@@ -311,15 +230,6 @@ trait SharedVisitor extends ApproachImplementationProvider {
    *   }
    * }}}
    *
-   * For data types that were added after an operation, this runtime check is demanded to protect the
-   * downcast. Eventually the instanceof check and the throw exception will be added.
-   *
-   * public <R> R accept(Visitor<R> v) {
-   *   if (v instanceof VisitorDivdMultNeg) {
-   *     return ((VisitorDivdMultNeg<R>) v).visit(this);
-   *   }
-   *   throw new RuntimeException("Older visitor used with newer datatype variant.");
-   * }
    */
   def makeDerived(parentType: DataType, tpeCase: DataTypeCase, model: Model): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
@@ -339,5 +249,4 @@ trait SharedVisitor extends ApproachImplementationProvider {
     }
     addClassToProject(names.mangle(names.conceptNameOf(tpeCase)), makeClass)
   }
-
 }

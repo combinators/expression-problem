@@ -2,21 +2,21 @@ package org.combinators.ep.approach.oo
 
 import org.combinators.ep.domain.Model
 import org.combinators.ep.domain.abstractions._
-import org.combinators.ep.generator.Command._
+import org.combinators.ep.generator.Command.{Generator, _}
 import org.combinators.ep.generator._
 import org.combinators.ep.generator.communication._
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax._
 import org.combinators.ep.generator.paradigm._
 
-
-// copied from visitor to start
-sealed trait Interpreter extends ApproachImplementationProvider {
+sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataTypeAsInterface with SharedOO with OperationInterfaceChain with FieldDefinition with FactoryConcepts {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
   import ooParadigm._
   import paradigm._
   import syntax._
+
+  val factoryName:String = "Factory"
 
   def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression] = {
     import ooParadigm.methodBodyCapabilities._
@@ -33,207 +33,188 @@ sealed trait Interpreter extends ApproachImplementationProvider {
     import paradigm.methodBodyCapabilities._
 
     for {
-      rt <- findClass(names.mangle(names.conceptNameOf(tpeCase)))
+      rt <- findClass(names.mangle(names.conceptNameOf(tpeCase))) // this will be to reference a factory method, not 'new'
 
       _ <- resolveAndAddImport(rt)
       res <- instantiateObject(rt, args)
     } yield res
   }
 
-  // this is commonly copied from numerous ones (Visitor/Traditional) seems to be best to lift up to some other place
-  def makeSignature(op: Operation): Generator[MethodBodyContext, Unit] = {
-    import paradigm.methodBodyCapabilities._
+  /** Concatenate operations in model to derive unique name for classes. */
+  def opsName(ops:Seq[Operation]):String = ops.sortWith(_.name < _.name).map(op => names.conceptNameOf(op)).mkString("")
 
-    for {
-      rt <- toTargetLanguageType(op.returnType)
-      _ <- resolveAndAddImport(rt)
-      _ <- setReturnType(rt)
-      params <- forEach (op.parameters) { param: Parameter =>
-          for {
-            pt <- toTargetLanguageType(param.tpe)
-            _ <- resolveAndAddImport(pt)
-            pName <- freshName(names.mangle(param.name))
-          } yield (pName, pt)
-        }
-      _ <- setParameters(params)
-    } yield ()
-  }
-
-  def makeBase(tpe: DataType, ops: Seq[Operation]): Generator[ProjectContext, Unit] = {
-    import ooParadigm.projectCapabilities._
-    val makeClass: Generator[ClassContext, Unit] = {
-        import classCapabilities._
-        for {
-          _ <- setAbstract()
-          _ <- forEach(ops) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), makeSignature(op)) }
-          _ <- debug("makeBase")
-        } yield ()
-      }
-    addClassToProject(names.mangle(names.conceptNameOf(tpe)), makeClass)
-  }
-
-  def makeField(att: Attribute): Generator[ClassContext, Unit] = {
-    import ooParadigm.classCapabilities._
-    for {
-      ft <- toTargetLanguageType(att.tpe)
-      _ <- resolveAndAddImport(ft)
-      _ <- addField(names.mangle(names.instanceNameOf(att)), ft)
-    } yield ()
-  }
-
-  def makeImplementation(
-      tpe: DataType,
-      tpeCase: DataTypeCase,
-      op: Operation,
-      domainSpecific: EvolutionImplementationProvider[this.type]
-    ): Generator[MethodBodyContext, Option[Expression]] = {
-    import ooParadigm.methodBodyCapabilities._
-    import paradigm.methodBodyCapabilities._
-    for {
-      _ <- makeSignature(op)
-      thisRef <- selfReference()
-      attAccessors: Seq[Expression] <- forEach (tpeCase.attributes) { att =>
-          getMember(thisRef, names.mangle(names.instanceNameOf(att)))
-        }
-      atts = tpeCase.attributes.zip(attAccessors).toMap
-      allArgs <- getArguments()
-      args = op.parameters.zip(allArgs).map { case (param, (_, _, exp)) => (param, exp) }.toMap
-      result <-
-        domainSpecific.logic(this)(
-          ReceivedRequest(
-            tpe,
-            tpeCase,
-            thisRef,
-            atts,
-            Request(op, args)
-          )
-        )
-    } yield result
-  }
-
-  def makeConstructor(tpeCase: DataTypeCase): Generator[ConstructorContext, Unit] = {
-    import ooParadigm.constructorCapabilities._
-    for {
-      params <- forEach (tpeCase.attributes) { att: Attribute =>
-          for {
-            at <- toTargetLanguageType(att.tpe)
-            _ <- resolveAndAddImport(at)
-            pName <- freshName(names.mangle(names.instanceNameOf(att)))
-          } yield (pName, at)
-        }
-      _ <- setParameters(params)
-      args <- getArguments()
-      _ <- forEach(tpeCase.attributes.zip(args)) { case (att, (_, _, exp)) =>
-        initializeField(names.mangle(names.instanceNameOf(att)), exp)
-      }
-    } yield ()
-  }
-
-  def makeDerived(tpe: DataType, tpeCase: DataTypeCase, ops: Seq[Operation], domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
-    import ooParadigm.projectCapabilities._
-    val makeClass: Generator[ClassContext, Unit] = {
-      import classCapabilities._
-      for {
-        pt <- findClass(names.mangle(names.conceptNameOf(tpe)))
-        //pt <- toTargetLanguageType(TypeRep.DataType(tpe))
-        _ <- resolveAndAddImport(pt)
-        _ <- addParent(pt)
-        _ <- forEach (tpeCase.attributes) { att => makeField(att) }
-        _ <- addConstructor(makeConstructor(tpeCase))
-        _ <- forEach (ops) { op =>
-            addMethod(names.mangle(names.instanceNameOf(op)), makeImplementation(tpe, tpeCase, op, domainSpecific))
-          }
-      } yield ()
-    }
-    addClassToProject(names.mangle(names.conceptNameOf(tpeCase)), makeClass)
-  }
-
-  def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
-    FindClass(names.mangle(names.conceptNameOf(dtpe))).interpret(canFindClass)
+  /**
+   * Standard factory name for a dataTypeCase ignores the tpeCase and only focuses on the model
+   *
+   * {{{
+   *   EvalExp
+   * }}}
+   *
+   * Model is passed in should it become necessary to be overridden more specifically
+   *
+   * @param tpeCase    DataTypeCase for which a factory is desired.
+   * @return
+   */
+  override def factoryNameDataTypeCase(model:Option[Model] = None, tpeCase:DataTypeCase) : Name = {
+    names.addSuffix(names.mangle(opsName(model.get.ops)), names.conceptNameOf(model.get.baseDataType))
   }
 
   /**
-   * When trying to find an import that is needed for a class, there is a lookup function and ResolveImports uses this lookup
-   * to be able to import aclass.
-   * @param domain
+   * Standard factory name for a dataTypeCase ignores the tpeCase and only focuses on the model
+   *
+   * {{{
+   *   EvalAdd
+   * }}}
+   *
+   * Model is passed in should it become necessary to be overridden more specifically
+   *
+   * @param tpeCase    DataTypeCase for which a factory is desired.
    * @return
    */
-  def initializeApproach(domain: Model): Generator[ProjectContext, Unit] = {
-    import paradigm.projectContextCapabilities._
-    import ooParadigm.projectCapabilities._
-    import ooParadigm.methodBodyCapabilities._            // NOTE: DO NOT REMOVE SINCE USED BY BELOW AddTypeLookup
-    import ooParadigm.classCapabilities._
-    import ooParadigm.constructorCapabilities._
-    val dtpeRep = TypeRep.DataType(domain.baseDataType)
-    for {
-      _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(domain.baseDataType))
-      _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(domain.baseDataType))
-      _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(domain.baseDataType))
-    } yield ()
+  override def factoryInstanceDataTypeCase(model:Option[Model] = None, tpeCase:DataTypeCase) : Name = {
+    names.addSuffix(names.mangle(opsName(model.get.ops)), names.conceptNameOf(tpeCase))
   }
-
-  def makeBaseExtensions(model:Model): Generator[ProjectContext, Unit] = {
-    val allTypes = model.pastDataTypes
-    val isBase: Boolean = model.base.equals(model)
-    generateForOp(model, model.ops, allTypes, isBase)
-  }
-
 
   /** Find Model with operations and return that one's name as concatenations of operations. */
   def baseInterfaceName(m:Model): String = {
     if (m.lastModelWithOperation.isEmpty) {
       ""
     } else {
-      m.lastModelWithOperation.get.ops.sortWith(_.name < _.name).map(op => names.conceptNameOf(op)).mkString("") + "Exp"
+      m.lastModelWithOperation.get.ops.sortWith(_.name < _.name).map(op => names.conceptNameOf(op)).mkString("") + m.baseDataType.name
     }
   }
-  /**
-   * This is what I generated before, one for each subtype and the operations defined within it.
-   *
-   * package interpreter;
-   * ${factoryImports.mkString("\n")}
-   * ${liftedOps.mkString("\n")}
-   * public class $combinedOps$name $extension implements ${baseInterface.toString} {
-   *   ${constructor.toString}
-   *
-   *   ${getters.mkString("\n")}
-   *   ${atts.mkString("\n")}
-   *   ${operations.mkString("\n")}
-   *   ${conversionMethod.mkString("\n")}
-   * }""".stripMargin).compilationUnit()
+
+  /** Generate class for each DataTypeCase and Operation. Be sure to keep extension chain going when there are prior classes available.
    *
    * @param model
    * @param ops
+   * @param tpeCase
+   * @param domainSpecific    Needed whenever an implementation is to be generated
    * @return
    */
-  def makeClassForCase(model: Model, ops: Seq[Operation], tpeCase: DataTypeCase): Generator[ClassContext, Unit] = {
+  def makeClassForCase(model: Model, ops: Seq[Operation], tpeCase: DataTypeCase, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
     import classCapabilities._
     import ooParadigm.projectCapabilities._
+
+    def addParentClass(): Generator[ClassContext, Unit] = if (!shouldAddParent()) {
+      Command.skip[ClassContext]
+    } else {
+      val lastOpModel = model.last.get.lastModelWithOperation.get
+      val priorClass = baseInterfaceNamesPrefix(lastOpModel.ops, names.mangle(names.conceptNameOf(tpeCase)))
+      for {
+        priorType <- findClass(priorClass)
+        _ <- resolveAndAddImport(priorType)
+        _ <- addParent(priorType)
+      } yield ()
+    }
+
+    // Should add parent when
+    //     There exists a prior operation for this model (since it was there)
+    def shouldAddParent(): Boolean = if (model.last == Some(model.base) || model.last.isEmpty) {
+      false
+    } else {
+      if (model.last.get.lastModelWithOperation.isEmpty) {
+        false
+      } else {
+       true
+      }
+    }
+
     for {
-       pt <- toTargetLanguageType(TypeRep.DataType(model.baseDataType))  // TODO: How do I get DataType from DataTypeCase?
-      _ <- resolveAndAddImport(pt)
-      _ <- addParent(pt)
-      _ <- forEach(tpeCase.attributes) { att => makeField(att) }
-      _ <- debug("makeClassForCase")
+       pt <- toTargetLanguageType(TypeRep.DataType(model.baseDataType))
+       _ <- resolveAndAddImport(pt)
+       _ <- addImplemented(pt)
+
+       _ <- addParentClass()
+       _ <- forEach(tpeCase.attributes) { att => makeField(att) }
+       _ <- addConstructor(makeConstructor(tpeCase, shouldAddParent()))
+       _ <- forEach (ops) { op =>
+         addMethod(names.mangle(names.instanceNameOf(op)), makeImplementation(model.baseDataType, tpeCase, op, domainSpecific))
+       }
     } yield ()
   }
 
-  def generateForOp(model:Model, ops:Seq[Operation], allTypes:Seq[DataTypeCase], isBase:Boolean) : Generator[ProjectContext, Unit] = {
+  def generateForOp(model:Model, ops:Seq[Operation], allTypes:Seq[DataTypeCase], isBase:Boolean, domainSpecific: EvolutionImplementationProvider[this.type]) : Generator[ProjectContext, Unit] = {
     val combinedOps:String = ops.sortWith(_.name < _.name).map(op => names.conceptNameOf(op)).mkString("")
     import ooParadigm.projectCapabilities._
 
     for {
-      _ <- forEach (allTypes) { tpeCase =>
-        addClassToProject(names.mangle(combinedOps), makeClassForCase(model, ops, tpeCase))
+      _ <- forEach (allTypes) { tpeCase => {
+        // register the *LAST* model -- either the one that defines the tpeCase or the one that defines the operation
+        val modelToUse = if (model.findTypeCase(tpeCase).isEmpty || model.findTypeCase(tpeCase).get.findOperation(ops.head).isEmpty) {
+          model.findOperation(ops.head).get
+        } else {
+          model.findTypeCase(tpeCase).get
+        }
+        for {
+          _ <- registerTypeMapping(modelToUse)
+          _ <- addClassToProject(names.addSuffix(names.mangle(combinedOps), names.conceptNameOf(tpeCase)), makeClassForCase(modelToUse, ops, tpeCase, domainSpecific))
+        } yield ()
+        }
       }
     } yield ()
+  }
 
+  /**
+   * Factories must also support all future data types. For example, the EvalExpFactory
+   * naturally supports Lit and Add, but it must support all future data types as well.
+   *
+   * These generated code files are part of the Construction code and are meant to ease
+   * the ability of clients to construct instances of the EP
+   *
+   * {{{
+   *   public class EvalIdzExpFactory {
+   *
+   *     public static EvalIdzExp Neg(EvalIdzExp inner) {
+   *         return new EvalIdzNeg(inner);
+   *     }
+   *
+   *     ...
+   * }
+   * }}}
+   *
+   * @param model
+   * @return
+   */
+  def generateFactory(model: Model): Generator[ProjectContext, Unit] = {
+    import ooParadigm.projectCapabilities._
 
+    def factoryClass(model: Model): Generator[ClassContext, Unit] = {
+      import ooParadigm.classCapabilities._
+      for {
+        _ <- forEach(model.pastDataTypes) {
+          tpe =>
+            addMethod(names.mangle(names.conceptNameOf(tpe)), createFactoryDataTypeCase(model, tpe, isStatic = true))
+        }
+      } yield ()
+    }
 
-//    allTypes.zip(classes).foreach ()
-//    val name = names.conceptNameOf(exp)
-//    addClassToProject(names.mangle(combinedOps + name), makeClass)
+    addClassToProject(names.addSuffix(names.mangle(opsName(model.ops)), factoryName), factoryClass(model))
+  }
 
+  /** For Trivially, the covariant type needs to be selected whenever a BaseType in the domain is expressed. */
+  def domainTypeLookup[Ctxt](covariantType: Name)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
+    FindClass(covariantType).interpret(canFindClass)
+  }
+
+  /** What model is delivered has operations which is essential for the mapping. */
+  override def registerTypeMapping(model: Model): Generator[ProjectContext, Unit] = {
+    import ooParadigm.projectCapabilities._
+    import paradigm.projectContextCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+    import ooParadigm.classCapabilities._
+    import ooParadigm.constructorCapabilities._
+    import paradigm.testCapabilities._
+    import ooParadigm.testCapabilities._
+
+    // must always be an operation in FIRST evolution
+    val baseInterface = baseInterfaceNames(model.lastModelWithOperation.get, model.lastModelWithOperation.get.ops)
+    val dtpeRep = TypeRep.DataType(model.baseDataType)
+    for {
+      _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(baseInterface))
+      _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(baseInterface))
+      _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(baseInterface))
+    } yield ()
   }
 
   def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
@@ -242,13 +223,38 @@ sealed trait Interpreter extends ApproachImplementationProvider {
      * For each operation must generate a sequence of classes, one per subtype.
      * Must make sure we include ALL subtypes, not just ones from the past.
      */
+    val flat = domain.flatten
     for {
-      _ <- initializeApproach(domain)
+      _ <- registerTypeMapping(domain)
       _ <- domainSpecific.initialize(this)
-      _ <- makeBase(domain.baseDataType, domain.ops)
-      _ <- forEach (domain.inChronologicalOrder.filter(m => m.ops.nonEmpty)) { m =>
-        makeBaseExtensions(m)
+
+      _ <- makeBase(domain.baseDataType, Seq.empty)
+
+      _ <- forEach (domain.inChronologicalOrder.filter(m => m.ops.nonEmpty)) {
+        m => for {
+          _ <- generateFactory(m)
+        } yield ()
       }
+
+      // for each model with operations, must create cross-product of all past datatypes
+      _ <- forEach (domain.inChronologicalOrder.filter(m => m.ops.nonEmpty)) { m => generateForOp(m, m.ops, m.pastDataTypes, m.isBase, domainSpecific) }
+
+      // for any model that has data types have to check for PAST operations that were defined.
+//      _ <- forEach (domain.inChronologicalOrder.filter(m => m.ops.isEmpty && m.typeCases.nonEmpty)) { m =>
+//        generateForOp(m.lastModelWithOperation.get, m.lastModelWithOperation.get.ops, m.typeCases, false, domainSpecific) }
+
+      _ <- forEach (domain.inChronologicalOrder.filter(m => m.ops.isEmpty && m.typeCases.nonEmpty)) { m => {
+        forEach(m.toSeq.filter(mi => mi.ops.nonEmpty)) { mi =>
+          generateForOp(mi, mi.ops, m.typeCases, false, domainSpecific)
+        }
+      }
+      }
+
+
+      _ <- forEach (domain.inChronologicalOrder.filter(m => m.ops.nonEmpty)) { model =>
+        // for all PAST dataTypes that are already defined
+         makeIntermediateInterface(model, domainSpecific)
+       }
 
     } yield ()
   }

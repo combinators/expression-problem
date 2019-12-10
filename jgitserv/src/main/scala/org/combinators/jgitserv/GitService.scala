@@ -12,6 +12,7 @@ import io.finch._
 import io.finch.Encode._
 import org.apache.commons.io.FileUtils
 import org.eclipse.jgit.api.Git
+
 import scala.jdk.CollectionConverters._
 
 /** A simple endpoint to host Git repositories.
@@ -40,13 +41,16 @@ class GitService(transactions: Seq[BranchTransaction], repositoryName: String = 
     def release(git: Git): IO[Unit] = IO {
       val directory = git.getRepository.getWorkTree
       git.close()
-      FileUtils.deleteDirectory(directory)
+      try {
+        FileUtils.deleteDirectory(directory)
+      } catch {
+        case io:java.io.IOException => println ("Couldn't delete:" + io.getMessage)
+      }
     }
     Resource.make(acquire)(release)
   }
 
   class Endpoints(repo: Git) extends Endpoint.Module[IO] {
-
     val dumbProtocol: Endpoint[IO, String] =
       get("info" :: "refs") {
         IO {
@@ -84,6 +88,48 @@ class GitService(transactions: Seq[BranchTransaction], repositoryName: String = 
           Bootstrap.configure().serve[Text.Plain](gitEndpoint).toService
         )
     )
+  }
+
+  def runProcess(cmd: String): IO[ExitCode] = {
+    var result = 0
+
+    git.use(git => {
+      val server = Resource.make(new Endpoints(git).serve){ s =>
+        IO.suspend(implicitly[ToAsync[Future, IO]].apply(s.close()))
+      }
+      server
+        .use(_ => IO {
+          import sys.process._
+          val dir = git.getRepository.getDirectory.getParentFile
+
+          println("working in:" + dir)
+          val batFile = "run.bat"
+
+          val out = new StringBuilder
+          val err = new StringBuilder
+
+          val logger = ProcessLogger(
+            (o: String) => out.append(o).append("\n"),
+            (e: String) => err.append(e).append("\n"))
+
+          try {
+            val pw = new java.io.PrintWriter(new java.io.FileWriter(new java.io.File(dir, batFile)))
+            pw.println(cmd)
+            pw.println("EXIT /B %errorlevel%") // HACK for windows
+            pw.close()
+
+            result = Process(dir.getAbsolutePath + java.io.File.separator + batFile, git.getRepository.getDirectory.getParentFile)! logger
+
+            System.out.println("Deleting files...")
+            System.out.println(out)
+            System.err.println(err)
+          } catch {
+            case e: Exception =>
+              println ("Unexpected error:" + e.getMessage)
+          }
+        })
+        .as(ExitCode(result))
+    })
   }
 
   def run(args: List[String]): IO[ExitCode] = {

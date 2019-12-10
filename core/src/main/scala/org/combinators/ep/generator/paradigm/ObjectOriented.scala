@@ -67,6 +67,10 @@ case class SetAbstract() extends Command {
   type Result = Unit
 }
 
+case class SetStatic() extends Command {
+  type Result = Unit
+}
+
 case class SetInterface() extends Command {
   type Result = Unit
 }
@@ -141,8 +145,8 @@ trait ObjectOriented {
       AnyParadigm.capabilitiy(AddConstructor(ctor))
 
     implicit val canAddImportInClass: Understands[ClassContext, AddImport[Import]]
-    def addImport(imp: Import): Generator[ClassContext, Unit] =
-      AnyParadigm.capabilitiy(AddImport(imp))
+    def addImport(imp: Import, modifiers:Int = 0): Generator[ClassContext, Unit] =
+      AnyParadigm.capabilitiy(AddImport(imp, modifiers))
 
     implicit val canResolveImportInClass: Understands[ClassContext, ResolveImport[Import, Type]]
     def resolveImport(tpe: Type): Generator[ClassContext, Option[Import]]  =
@@ -151,6 +155,10 @@ trait ObjectOriented {
     implicit val canSetAbstractInClass: Understands[ClassContext, SetAbstract]
     def setAbstract(): Generator[ClassContext, Unit] =
       AnyParadigm.capabilitiy(SetAbstract())
+
+    implicit val canSetStaticInClass: Understands[ClassContext, SetStatic]
+    def setStatic(): Generator[ClassContext, Unit] =
+      AnyParadigm.capabilitiy(SetStatic())
 
     implicit val canSetInterfaceInClass: Understands[ClassContext, SetInterface]
     def setInterface(): Generator[ClassContext, Unit] =
@@ -192,8 +200,8 @@ trait ObjectOriented {
       AnyParadigm.capabilitiy(AddBlockDefinitions(definitions))
 
     implicit val canAddImportInConstructor: Understands[ConstructorContext, AddImport[Import]]
-    def addImport(imp: Import): Generator[ConstructorContext, Unit] =
-      AnyParadigm.capabilitiy(AddImport(imp))
+    def addImport(imp: Import, modifiers:Int = 0): Generator[ConstructorContext, Unit] =
+      AnyParadigm.capabilitiy(AddImport(imp, modifiers))
 
     implicit val canResolveImportInConstructor: Understands[ConstructorContext, ResolveImport[Import, Type]]
     def resolveImport(tpe: Type): Generator[ConstructorContext, Option[Import]] =
@@ -250,14 +258,6 @@ trait ObjectOriented {
     def instantiateObject(tpe: Type, constructorArguments: Seq[Expression]): Generator[MethodBodyContext, Expression] =
       AnyParadigm.capabilitiy(InstantiateObject(tpe, constructorArguments))
 
-//    implicit val canAddVariableDeclarationInMethod: Understands[MethodBodyContext, AddVariableDeclaration[Type, Name, Expression]]
-//    def addVariableDeclaration(params: Seq[(Type, Name, Expression)]): Generator[MethodBodyContext, Unit] =
-//      AnyParadigm.capabilitiy(AddVariableDeclaration(params))
-//
-//    implicit val canAddVariableAssignmentInMethod: Understands[MethodBodyContext, AddVariableAssignment[Name, Expression]]
-//    def addVariableAssignment(params: Seq[(Name, Expression)]): Generator[MethodBodyContext, Unit] =
-//      AnyParadigm.capabilitiy(AddVariableAssignment(params))
-
     implicit val canGetMemberInMethod: Understands[MethodBodyContext, GetMember[Expression, Name]]
     def getMember(instance: Expression, member: Name): Generator[MethodBodyContext, Expression] =
       AnyParadigm.capabilitiy(GetMember(instance, member))
@@ -269,6 +269,10 @@ trait ObjectOriented {
     implicit val canSetAbstractInMethod: Understands[MethodBodyContext, SetAbstract]
     def setAbstract(): Generator[MethodBodyContext, Unit] =
       AnyParadigm.capabilitiy(SetAbstract())
+
+    implicit val canSetStaticInMethod: Understands[MethodBodyContext, SetStatic]
+    def setStatic(): Generator[MethodBodyContext, Unit] =
+      AnyParadigm.capabilitiy(SetStatic())
 
     implicit val canSelfReferenceInMethod: Understands[MethodBodyContext, SelfReference[Expression]]
     def selfReference(): Generator[MethodBodyContext, Expression] =

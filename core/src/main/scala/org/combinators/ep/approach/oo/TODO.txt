@@ -1,9 +1,33 @@
 1. Make visitor with side effects and see how to share it (perhaps even using Strategy DP) -- DONE!!!!
-2. Tackle Trivially! implementation
+2. Tackle Trivially! implementation -- DONE!!!
+3. Interpreter -- almost done! Need to have static import (which is Java-ability and not OO or anyParadigm) for test cases
+  Also need to fix 'instantiate' to call factory method that is statically imported.
 
-3. Algebra (aka Modularity for the Masses)
-4. Interpreter
+  when generating factories, only need to consider current context and before.
+
+   public static EvalExp Add(EvalExp left, EvalExp right) {
+          return new EvalAdd(left, right);
+   }
+
+   and then in the test cases, refer to
+
+   Assert.assertTrue("", Double.valueOf( ep.EvalFactory.Lit(5.0).eval()).equals(5.0));
+
+4. Algebra (aka Modularity for the Masses)
+  This will need Lambda Function capabilities
+
+  This needs inner class capabilities
 
 
 in parallel Jan:
 1. Start thinking about Haskell
+
+---------------------------- M4 ---------------------------
+
+ Work on java list generator
+
+
+ ---- swift -------
+
+ https://www.dotconferences.com/2018/01/brandon-kase-finally-solving-the-expression-problem
+

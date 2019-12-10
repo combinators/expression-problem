@@ -223,6 +223,18 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             (context.copy(cls = newClass), ())
           }
         }
+      implicit val canSetStaticInClass: Understands[ClassContext, SetStatic] =
+        new Understands[ClassContext, SetStatic] {
+          def perform(
+            context: ClassContext,
+            command: SetStatic
+          ): (ClassContext, Unit) = {
+            val newClass = context.cls.clone()
+            newClass.setStatic(true)
+            newClass.setAbstract(false)
+            (context.copy(cls = newClass), ())
+          }
+        }
       implicit val canSetInterfaceInClass: Understands[ClassContext, SetInterface] =
         new Understands[ClassContext, SetInterface] {
           def perform(
@@ -524,6 +536,20 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             (context.copy(method = newMethod), ())
           }
         }
+
+      val canSetStaticInMethod: Understands[MethodBodyContext, SetStatic] =
+        new Understands[MethodBodyContext, SetStatic] {
+          def perform(
+            context: MethodBodyContext,
+            command: SetStatic
+          ): (MethodBodyContext, Unit) = {
+            val newMethod = context.method.clone()
+            newMethod.setStatic(true)
+            newMethod.setAbstract(false)
+            (context.copy(method = newMethod), ())
+          }
+        }
+
       val canSelfReferenceInMethod: Understands[MethodBodyContext, SelfReference[Expression]] =
         new Understands[MethodBodyContext, SelfReference[Expression]] {
           def perform(

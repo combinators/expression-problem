@@ -1,6 +1,7 @@
 package org.combinators.ep.language.java
 
 import cats.effect.{ExitCode, IO, IOApp}
+import cats.implicits._
 import org.combinators.ep.language.java.validate.{ExtensibleVisitorValidate, InterpreterValidate, TraditionalValidate, TriviallyValidate, VisitorSideEffectValidate, VisitorValidate}
 
 /** Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
@@ -8,9 +9,9 @@ import org.combinators.ep.language.java.validate.{ExtensibleVisitorValidate, Int
  * Challenging because of the complex types we have used.
  */
 object ValidateAll extends IOApp {
-  val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = CodeGenerator.PartiallyBoxed))
+  val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed))
 
-  val approaches = Seq(
+  val approaches = List(
     ExtensibleVisitorValidate,
     InterpreterValidate,
     TraditionalValidate,
@@ -23,10 +24,8 @@ object ValidateAll extends IOApp {
     var numSuccess = 0
 
     // Can't get this to work. Seems like each of the other execs stops program
-    approaches.foreach( f => {
-      val result = f.run(List.empty)
-    })
-
-    IO.pure(ExitCode.Success)
+    for {
+      _ <- approaches.map { f => f.run(List.empty) }.sequence_
+    } yield ExitCode.Success
   }
 }

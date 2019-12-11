@@ -48,9 +48,9 @@ class Assertions[AP <: AnyParadigm](val base: AP)(ooParadigm: ObjectOriented[AP]
             .updateResolver(base.config, TypeRep.Boolean, Java("boolean").tpe())(new BooleanLiteralExpr(_))
             .andThen(resolver =>
               resolver.copy(
-                importResolution = {
+                _importResolution = k => {
                   case tpe if tpe == Java("org.junit.Assert").tpe() => Some(Java("org.junit.Assert").importDeclaration())
-                  case other => context.resolver.importResolution(other)
+                  case other => context.resolver._importResolution(k)(other)
                 }
               )
             )

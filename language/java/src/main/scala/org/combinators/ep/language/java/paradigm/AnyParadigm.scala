@@ -77,13 +77,14 @@ trait AnyParadigm extends AP {
             context: ProjectContext,
             command: AddTypeLookup[MethodBodyCtxt, Type]
           ): (ProjectContext, Unit) = {
-            def newLookup(tpe: TypeRep): Generator[MethodBodyCtxt, Type] =
+            def newLookup(k: TypeRep => Generator[MethodBodyContext, Type])(tpe: TypeRep): Generator[MethodBodyCtxt, Type] = {
               if (tpe == command.tpe) {
                 command.lookup
               } else {
-                context.resolver.methodTypeResolution(tpe)
+                context.resolver._methodTypeResolution(k)(tpe)
               }
-            (context.copy(resolver = context.resolver.copy(methodTypeResolution = newLookup)), ())
+            }
+            (context.copy(resolver = context.resolver.copy(_methodTypeResolution = newLookup)), ())
           }
         }
     }
@@ -382,13 +383,13 @@ trait AnyParadigm extends AP {
   private val defaultResolver: ContextSpecificResolver = {
     val emptyResolver =
       ContextSpecificResolver(
-        methodTypeResolution = _ => ???,
-        constructorTypeResolution = _ => ???,
-        classTypeResolution = _ => ???,
-        reificationInConstructor = _ => ???,
-        reificationInMethod = _ => ???,
-        importResolution = _ => ???,
-        instantiationOverride = (tpe, args) => (tpe, args),
+        _methodTypeResolution = _ => _ => ???,
+        _constructorTypeResolution = _ => _ => ???,
+        _classTypeResolution = _ => _ => ???,
+        _reificationInConstructor = _ => _ => ???,
+        _reificationInMethod = _ => _ => ???,
+        _importResolution = _ => _ => ???,
+        _instantiationOverride = _ => (tpe, args) => (tpe, args),
         generatedVariables = Map.empty
       )
     ContextSpecificResolver.updateResolver(config, TypeRep.Unit, new VoidType())(rep => new NullLiteralExpr())(emptyResolver)

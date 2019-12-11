@@ -589,13 +589,13 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             context: ProjectContext,
             command: AddTypeLookup[ClassContext, Type]
           ): (ProjectContext, Unit) = {
-            def newLookup(tpe: TypeRep): Generator[ClassContext, Type] =
+            def newLookup(k: TypeRep => Generator[ClassContext, Type])(tpe: TypeRep): Generator[ClassContext, Type] =
               if (tpe == command.tpe) {
                 command.lookup
               } else {
-                context.resolver.classTypeResolution(tpe)
+                context.resolver._classTypeResolution(k)(tpe)
               }
-            (context.copy(resolver = context.resolver.copy(classTypeResolution = newLookup)), ())
+            (context.copy(resolver = context.resolver.copy(_classTypeResolution = newLookup)), ())
           }
         }
       implicit val canAddTypeLookupForConstructorsInProject: Understands[ProjectContext, AddTypeLookup[ConstructorContext, Type]] =
@@ -604,13 +604,13 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             context: ProjectContext,
             command: AddTypeLookup[ConstructorContext, Type]
           ): (ProjectContext, Unit) = {
-            def newLookup(tpe: TypeRep): Generator[ConstructorContext, Type] =
+            def newLookup(k: TypeRep => Generator[ConstructorContext, Type])(tpe: TypeRep): Generator[ConstructorContext, Type] =
               if (tpe == command.tpe) {
                 command.lookup
               } else {
-                context.resolver.constructorTypeResolution(tpe)
+                context.resolver._constructorTypeResolution(k)(tpe)
               }
-            (context.copy(resolver = context.resolver.copy(constructorTypeResolution = newLookup)), ())
+            (context.copy(resolver = context.resolver.copy(_constructorTypeResolution = newLookup)), ())
           }
         }
     }

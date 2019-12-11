@@ -15,14 +15,10 @@ object M4 extends Evolution {
 
   // m4:model evolution.
   // -------------------
-  /** Represents the Scala type `Double`. */
-  case object ListDouble extends TypeRep {
-    type HostType = scala.Seq[Double]
-  }
 
-  def ListDoubleInst(doubles:Seq[scala.Double]): InstanceRep = InstanceRep(ListDouble)(doubles)
+  def ListDoubleInst(doubles:Seq[scala.Double]): InstanceRep = InstanceRep(TypeRep.Sequence(TypeRep.Double))(doubles)
 
-  lazy val Collect = Operation("collect", ListDouble)
+  lazy val Collect = Operation("collect", TypeRep.Sequence(TypeRep.Double))
 
   // Tests
   // (5/7) / (7-(2*3) --> just (5/7)

@@ -207,6 +207,10 @@ package object abstractions {
     case object Tree extends TypeRep {
       type HostType = org.combinators.ep.domain.tree.Tree
     }
+    /** Represents the type `Seq[A]` */
+    case class Sequence[T](elemTpe: TypeRep.OfHostType[T]) extends TypeRep {
+      type HostType = Seq[elemTpe.HostType]
+    }
 
     /** Represents a Scala model of an instance of the given domain specific data type. */
     case class DataType(tpe: abstractions.DataType) extends TypeRep {

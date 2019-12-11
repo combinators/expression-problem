@@ -8,8 +8,6 @@ import org.combinators.ep.generator.communication._
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax._
 import org.combinators.ep.generator.paradigm._
 
-
-// copied from visitor to start
 sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataTypeAsInterface with SharedOO with OperationInterfaceChain with FieldDefinition with FactoryConcepts {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
@@ -17,6 +15,8 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
   import ooParadigm._
   import paradigm._
   import syntax._
+
+  val factoryName:String = "Factory"
 
   def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression] = {
     import ooParadigm.methodBodyCapabilities._
@@ -40,6 +40,7 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
     } yield res
   }
 
+  /** Concatenate operations in model to derive unique name for classes. */
   def opsName(ops:Seq[Operation]):String = ops.sortWith(_.name < _.name).map(op => names.conceptNameOf(op)).mkString("")
 
   /**
@@ -79,31 +80,16 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
     if (m.lastModelWithOperation.isEmpty) {
       ""
     } else {
-      m.lastModelWithOperation.get.ops.sortWith(_.name < _.name).map(op => names.conceptNameOf(op)).mkString("") + "Exp"
+      m.lastModelWithOperation.get.ops.sortWith(_.name < _.name).map(op => names.conceptNameOf(op)).mkString("") + m.baseDataType.name
     }
   }
 
-  /**
-   * This is what I generated before, one for each subtype and the operations defined within it.  Have to be careful
-   * to keep extension chain going properly when there are prior classes available
-   *
-   * package interpreter;
-   * ${factoryImports.mkString("\n")}
-   * ${liftedOps.mkString("\n")}
-   * public class $combinedOps$name $extension implements ${baseInterface.toString} {
-   *   ${constructor.toString}
-   *
-   *   ${getters.mkString("\n")}
-   *   ${atts.mkString("\n")}
-   *   ${operations.mkString("\n")}
-   *   ${conversionMethod.mkString("\n")}
-   * }""".stripMargin).compilationUnit()
-   *
-   *
-   * // //public class PrettypAdd extends EvalIdzAdd implements PrettypExp {
+  /** Generate class for each DataTypeCase and Operation. Be sure to keep extension chain going when there are prior classes available.
    *
    * @param model
    * @param ops
+   * @param tpeCase
+   * @param domainSpecific    Needed whenever an implementation is to be generated
    * @return
    */
   def makeClassForCase(model: Model, ops: Seq[Operation], tpeCase: DataTypeCase, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
@@ -148,7 +134,6 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
     } yield ()
   }
 
-
   def generateForOp(model:Model, ops:Seq[Operation], allTypes:Seq[DataTypeCase], isBase:Boolean, domainSpecific: EvolutionImplementationProvider[this.type]) : Generator[ProjectContext, Unit] = {
     val combinedOps:String = ops.sortWith(_.name < _.name).map(op => names.conceptNameOf(op)).mkString("")
     import ooParadigm.projectCapabilities._
@@ -168,7 +153,6 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
         }
       }
     } yield ()
-
   }
 
   /**
@@ -185,25 +169,7 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
    *         return new EvalIdzNeg(inner);
    *     }
    *
-   *     public static EvalIdzExp Mult(EvalIdzExp left, EvalIdzExp right) {
-   *         return new EvalIdzMult(left, right);
-   *     }
-   *
-   *     public static EvalIdzExp Divd(EvalIdzExp left, EvalIdzExp right) {
-   *         return new EvalIdzDivd(left, right);
-   *     }
-   *
-   *     public static EvalIdzExp Sub(EvalIdzExp left, EvalIdzExp right) {
-   *         return new EvalIdzSub(left, right);
-   *     }
-   *
-   *     public static EvalIdzExp Lit(Double value) {
-   *         return new EvalIdzLit(value);
-   *     }
-   *
-   *     public static EvalIdzExp Add(EvalIdzExp left, EvalIdzExp right) {
-   *         return new EvalIdzAdd(left, right);
-   *     }
+   *     ...
    * }
    * }}}
    *
@@ -218,16 +184,12 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
       for {
         _ <- forEach(model.pastDataTypes) {
           tpe =>
-            addMethod(names.mangle(names.conceptNameOf(tpe)), createFactoryDataTypeCase(model, tpe, isStatic=true))
+            addMethod(names.mangle(names.conceptNameOf(tpe)), createFactoryDataTypeCase(model, tpe, isStatic = true))
         }
       } yield ()
     }
 
-    import paradigm.projectContextCapabilities._
-    for {
-      _ <- debug ("facName:" + opsName(model.ops))
-      _ <- addClassToProject(names.addSuffix(names.mangle(opsName(model.ops)), "Factory"), factoryClass(model))
-    } yield ()
+    addClassToProject(names.addSuffix(names.mangle(opsName(model.ops)), factoryName), factoryClass(model))
   }
 
   /** For Trivially, the covariant type needs to be selected whenever a BaseType in the domain is expressed. */

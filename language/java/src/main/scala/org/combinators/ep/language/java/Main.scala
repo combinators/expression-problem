@@ -13,9 +13,9 @@ import org.combinators.ep.generator.FileWithPathPersistable._
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
 object Main extends IOApp {
-  val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = CodeGenerator.PartiallyBoxed))
+  val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed))
 
-  // can't have both of these?!
+  // can't have all of these together
   val extensibleVisitorApproach = ExtensibleVisitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val visitorApproach = Visitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val ooApproach = Traditional[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
@@ -30,7 +30,7 @@ object Main extends IOApp {
   // WORKS!   visitorApproach
   // WORKS!   triviallyApproach
   // WORKS!   extensibleVisitorApproach
-  val approach = triviallyApproach//  interpreterApproach
+  val approach = triviallyApproach //interpreterApproach
 
   val evolutions = Seq(M0, M1, M2, M3)
   val tests = evolutions.scanLeft(Map.empty[Model, Seq[TestCase]]) { case (m, evolution) =>

@@ -53,6 +53,7 @@ object M3 {
                   } yield res
                 case _ => ???
               }
+
             case math.M2.PrettyP =>
               onRequest.tpeCase match {
                 case math.M3.Divd => makeString(atts, "(", "/", ")")

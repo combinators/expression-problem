@@ -16,6 +16,8 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
   import paradigm._
   import syntax._
 
+  lazy val finalName:Name = names.mangle("Final")
+
   def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression] = {
     import ooParadigm.methodBodyCapabilities._
     import paradigm.methodBodyCapabilities._
@@ -63,7 +65,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
    * @return
    */
   override def factoryInstanceDataTypeCase(model:Option[Model] = None, tpeCase:DataTypeCase) : Name = {
-    val binp = baseInterfaceNamesPrefix(model.get.lastModelWithOperation.get.ops, names.mangle("Final"))
+    val binp = baseInterfaceNamesPrefix(model.get.lastModelWithOperation.get.ops, finalName)
     names.addPrefix(names.conceptNameOf(tpeCase), binp)
   }
 
@@ -78,7 +80,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
       thisRef <- selfReference()
       attAccessors: Seq[Expression] <- forEach (tpeCase.attributes) { att =>
         for {
-          getter <- getMember(thisRef, names.addPrefix("get", names.mangle(names.conceptNameOf(att))))
+          getter <- getMember(thisRef, getterName(att))
           getterCall <- apply(getter, Seq.empty)
         } yield getterCall
       }
@@ -148,7 +150,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
     }
 
     import ooParadigm.classCapabilities._
-    addMethod(names.addPrefix("get", names.mangle(names.conceptNameOf(att))), makeBody)
+    addMethod(getterName(att), makeBody)
   }
 
   /**
@@ -232,7 +234,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
     def makeFinalClass(model:Model, modelDefiningOps:Model, tpeCase: DataTypeCase): Generator[ProjectContext,Unit] = {
       import ooParadigm.projectCapabilities._
 
-      val binp = baseInterfaceNamesPrefix(modelDefiningOps.ops, names.mangle("Final"))
+      val binp = baseInterfaceNamesPrefix(modelDefiningOps.ops, finalName)
       val actualName = names.addPrefix(names.conceptNameOf(tpeCase), binp)
 
       val makeClass: Generator[ClassContext, Unit] = {
@@ -248,7 +250,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
           _ <- forEach(tpeCase.attributes) { att => makeField(att) }
           _ <- addConstructor(makeConstructor(tpeCase))
           _ <- forEach(tpeCase.attributes) { att =>
-            addMethod(names.addPrefix("get", names.mangle(names.conceptNameOf(att))), makeBodyImpl(model.baseDataType, att, parent, baseInterface))
+            addMethod(getterName(att), makeBodyImpl(model.baseDataType, att, parent, baseInterface))
           }
         } yield ()
       }
@@ -345,7 +347,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
   override def factoryNameDataTypeCase(model:Option[Model], tpeCase:DataTypeCase) : Name = {
    val lastModelWithOp = model.get.lastModelWithOperation.get
 
-    val binp = baseInterfaceNamesPrefix(lastModelWithOp.ops, names.mangle("Final"))
+    val binp = baseInterfaceNamesPrefix(lastModelWithOp.ops, finalName)
     names.addPrefix(names.conceptNameOf(tpeCase), binp)
   }
 
@@ -375,7 +377,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
           val compUnit = for {
 
             // add test case first
-            _ <- addTestCase(names.mangle("Test"), testCode)
+            _ <- addTestCase(testName, testCode)
 
             // get list of all operations and MAP to the most recent model
             _ <- forEach(model.flatten.typeCases) { tpeCase =>
@@ -387,7 +389,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
 
           val testSuite = for {
             _ <- addTestSuite(
-              names.addSuffix(names.mangle(names.conceptNameOf(model)), "Test"),
+              testCaseName(model),
               compUnit
             )
           } yield ()
@@ -395,7 +397,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
           for {
             _ <- registerTypeMapping(model.lastModelWithOperation.get)   // must come here since it registers mappings that exist in the ProjectContext
             _ <- addCompilationUnit(
-                    names.addSuffix(names.mangle(names.conceptNameOf(model)), "Test"),
+                    testCaseName(model),
                     testSuite
             )
           } yield None

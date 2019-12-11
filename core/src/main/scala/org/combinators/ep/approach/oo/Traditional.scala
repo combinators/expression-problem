@@ -70,7 +70,9 @@ trait Traditional extends OOApproachImplementationProvider with BaseDataTypeAsCl
     for {
       _ <- registerTypeMapping(flatDomain)
       _ <- domainSpecific.initialize(this)
+
       _ <- makeBase(flatDomain.baseDataType, flatDomain.ops)
+
       _ <- forEach (flatDomain.typeCases) { tpeCase =>
           makeDerived(flatDomain.baseDataType, tpeCase, flatDomain.ops, domainSpecific)
         }

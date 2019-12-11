@@ -12,8 +12,9 @@ import org.combinators.ep.language.java.{CodeGenerator, ContextSpecificResolver,
 import org.combinators.templating.twirl.Java
 import org.combinators.ep.language.java.paradigm.AnyParadigm
 import org.combinators.ep.language.java.Syntax.default._
+import org.combinators.ep.generator.paradigm.AnyParadigm.syntax._
 
-/* Still working on this.
+/* Jan: I'm currently working on this.
 class Lists[Ctxt, AP <: AnyParadigm](
   val base: AP,
   getMember: Understands[Ctxt, GetMember[Expression, Name]],
@@ -87,7 +88,7 @@ class Lists[Ctxt, AP <: AnyParadigm](
           ): (TypeRep => Generator[Ctxt, Type]) => TypeRep => Generator[Ctxt, Type] = k => {
             case TypeRep.Sequence(elemRep) =>
               for {
-                elemType <- addResolutionType(toResolution)(k)(elemRep)
+                elemType <- k(elemRep)
                 resultType <- Apply(listType, Seq(elemType)).interpret(applyType)
               } yield resultType
             case other => toResolution(k)(other)
@@ -97,10 +98,13 @@ class Lists[Ctxt, AP <: AnyParadigm](
             reify: (InstanceRep => Generator[Ctxt, Expression]) => InstanceRep => Generator[Ctxt, Expression]
           ): (InstanceRep => Generator[Ctxt, Expression]) => InstanceRep => Generator[Ctxt, Expression] =
           k => rep => rep.tpe match {
-            case TypeRep.Sequence(elemTpe) =>
+            case TypeRep.Sequence(elemRep) =>
               for {
-                elems <- forEach (rep.inst.asInstanceOf[Seq[elemTpe.HostType]]) (elem => addReification(reify)(k)(elem))
-                Create()
+                elemType <-
+                elems <- forEach (rep.inst.asInstanceOf[Seq[elemRep.HostType]]) { elem =>
+                  k(InstanceRep(elemTpe)(elem))
+                }
+                res <- listCapabilities.create()
               }
             case _ => reify(k)(other)
           }

@@ -77,7 +77,7 @@ trait AnyParadigm extends AP {
             context: ProjectContext,
             command: AddTypeLookup[MethodBodyCtxt, Type]
           ): (ProjectContext, Unit) = {
-            def newLookup(k: TypeRep => Generator[MethodBodyContext, Type])(tpe: TypeRep): Generator[MethodBodyCtxt, Type] = {
+            def newLookup(k: ContextSpecificResolver)(tpe: TypeRep): Generator[MethodBodyCtxt, Type] = {
               if (tpe == command.tpe) {
                 command.lookup
               } else {
@@ -383,12 +383,12 @@ trait AnyParadigm extends AP {
   private val defaultResolver: ContextSpecificResolver = {
     val emptyResolver =
       ContextSpecificResolver(
-        _methodTypeResolution = _ => _ => ???,
-        _constructorTypeResolution = _ => _ => ???,
-        _classTypeResolution = _ => _ => ???,
-        _reificationInConstructor = _ => _ => ???,
-        _reificationInMethod = _ => _ => ???,
-        _importResolution = _ => _ => ???,
+        _methodTypeResolution = _ => tpe => throw new NotImplementedError(tpe.toString),
+        _constructorTypeResolution = _ => tpe => throw new NotImplementedError(tpe.toString),
+        _classTypeResolution = _ => tpe => throw new NotImplementedError(tpe.toString),
+        _reificationInConstructor = _ => rep => throw new NotImplementedError(rep.toString),
+        _reificationInMethod = _ => rep => throw new NotImplementedError(rep.toString),
+        _importResolution = _ => tpe => throw new NotImplementedError(tpe.toString),
         _instantiationOverride = _ => (tpe, args) => (tpe, args),
         generatedVariables = Map.empty
       )

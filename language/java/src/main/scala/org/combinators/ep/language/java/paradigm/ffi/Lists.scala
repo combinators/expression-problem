@@ -1,74 +1,99 @@
 package org.combinators.ep.language.java.paradigm.ffi
 
-import com.github.javaparser.ast.expr.{BinaryExpr, StringLiteralExpr}
+import com.github.javaparser.ast.expr.{BinaryExpr, MethodCallExpr, StringLiteralExpr}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, Understands}
-import org.combinators.ep.generator.paradigm.{Apply, GetMember}
+import org.combinators.ep.generator.paradigm.{AddImport, Apply, GetMember}
 import org.combinators.ep.generator.paradigm.ffi.{Lists => Lsts, _}
 import org.combinators.ep.language.java.CodeGenerator.Enable
-import org.combinators.ep.language.java.{CodeGenerator, ContextSpecificResolver, JavaNameProvider, ProjectCtxt, Syntax}
+import org.combinators.ep.language.java.{CodeGenerator, ContextSpecificResolver, CtorCtxt, JavaNameProvider, MethodBodyCtxt, ProjectCtxt, Syntax}
 import org.combinators.templating.twirl.Java
-import org.combinators.ep.language.java.paradigm.AnyParadigm
+import org.combinators.ep.language.java.paradigm.{AnyParadigm, Generics}
 import org.combinators.ep.language.java.Syntax.default._
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax._
+import cats.syntax._
+import cats.implicits._
 
-/* Jan: I'm currently working on this.
-class Lists[Ctxt, AP <: AnyParadigm](
-  val base: AP,
-  getMember: Understands[Ctxt, GetMember[Expression, Name]],
-  applyMethod: Understands[Ctxt, Apply[Expression, Expression, Expression]],
-  applyType: Understands[Ctxt, Apply[Type, Type, Type]]
-) extends Lsts[Ctxt] {
+trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
+  val base: AP
+  val applyType: Understands[Ctxt, Apply[Type, Type, Type]]
+  val addImport: Understands[Ctxt, AddImport[Import]]
+  val generics: Generics[base.type]
+
+  def listCreation[Ctxt](canAddImport: Understands[Ctxt, AddImport[Import]]): Understands[Ctxt, Apply[Create[Type], Expression, Expression]] =
+    new Understands[Ctxt, Apply[Create[Type], Expression, Expression]] {
+      def perform(
+        context: Ctxt,
+        command: Apply[Create[Type], Expression, Expression]
+      ): (Ctxt, Expression) = {
+        val gen: Generator[Ctxt, Expression] =
+          if (command.arguments.isEmpty) {
+            for {
+              _ <- AddImport[Import](Java("import java.util.Collections;").importDeclaration()).interpret(canAddImport)
+            } yield Java(s"Collections.emptyList()").expression[Expression]()
+          } else {
+            for {
+              _ <- AddImport[Import](Java("import java.util.Arrays;").importDeclaration()).interpret(canAddImport)
+            } yield Java(s"Arrays.asList(${command.arguments.mkString(", ")})").expression[Expression]()
+          }
+        Command.runGenerator[Ctxt, Expression](gen, context)
+      }
+    }
+
   val listCapabilities: ListCapabilities =
     new ListCapabilities {
 
-      implicit val canCreate: Understands[Ctxt, Apply[Create[Type], Expression, Expression]]
+      implicit val canCreate: Understands[Ctxt, Apply[Create[Type], Expression, Expression]] =
+        listCreation(addImport)
 
-      implicit val canCons: Understands[Ctxt, Apply[Cons, Expression, Expression]]
-
-      implicit val canHead: Understands[Ctxt, Apply[Head, Expression, Expression]]
-
-      implicit val canTail: Understands[Ctxt, Apply[Tail, Expression, Expression]]
-
-      implicit val canAppend: Understands[Ctxt, Apply[Append, Expression, Expression]]
-
-      implicit val canGetStringLength: Understands[Ctxt, Apply[GetStringLength, Expression, Expression]] =
-        new Understands[Ctxt, Apply[GetStringLength, Expression, Expression]] {
+      implicit val canCons: Understands[Ctxt, Apply[Cons, Expression, Expression]] =
+        new Understands[Ctxt, Apply[Cons, Expression, Expression]] {
           def perform(
             context: Ctxt,
-            command: Apply[GetStringLength, Expression, Expression]
+            command: Apply[Cons, Expression, Expression]
           ): (Ctxt, Expression) = {
-            implicit val _getMember = getMember
-            implicit val _applyMethod = applyMethod
-            val gen = for {
-              lengthMethod <- GetMember[Expression, Name](command.arguments(0), JavaNameProvider.mangle("length")).interpret
-              res <- Apply[Expression, Expression, Expression](lengthMethod, Seq.empty).interpret
-            } yield res
+            val gen: Generator[Ctxt, Expression] =
+              for {
+                _ <- AddImport[Import](Java("import java.util.stream.Stream;").importDeclaration()).interpret(addImport)
+                _ <- AddImport[Import](Java("import java.util.stream.Collectors;").importDeclaration()).interpret(addImport)
+              } yield Java(s"Stream.concat(Stream.of(${command.arguments(0)}), ${command.arguments(1)}.stream()).collect(Collectors.toList())").expression[Expression]()
             Command.runGenerator(gen, context)
           }
         }
-      implicit val canAppend: Understands[Ctxt, Apply[StringAppend, Expression, Expression]] =
-        new Understands[Ctxt, Apply[StringAppend, Expression, Expression]] {
-          def perform(
+
+      implicit val canHead: Understands[Ctxt, Apply[Head, Expression, Expression]] =
+        new Understands[Ctxt, Apply[Head, Expression, Expression]] {
+          override def perform(
             context: Ctxt,
-            command: Apply[StringAppend, Expression, Expression]
+            command: Apply[Head, Expression, Expression]
           ): (Ctxt, Expression) = {
-            (context, command.arguments.tail.foldLeft(command.arguments.head){ case (str, next) =>
-              new BinaryExpr(str, next, BinaryExpr.Operator.PLUS)
-            })
+            (context, Java(s"${command.arguments(0)}.get(0)").expression[Expression]())
           }
         }
-      implicit val canToStringInCtxt: Understands[Ctxt, Apply[ToString[Type], Expression, Expression]] =
-        new Understands[Ctxt, Apply[ToString[Type], Expression, Expression]] {
+
+      implicit val canTail: Understands[Ctxt, Apply[Tail, Expression, Expression]] =
+        new Understands[Ctxt, Apply[Tail, Expression, Expression]] {
+          override def perform(
+            context: Ctxt,
+            command: Apply[Tail, Expression, Expression]
+          ): (Ctxt, Expression) = {
+            (context, Java(s"${command.arguments(0)}.subList(1, ${command.arguments(0)}.size())").expression[Expression]())
+          }
+        }
+
+      implicit val canAppend: Understands[Ctxt, Apply[Append, Expression, Expression]] =
+        new Understands[Ctxt, Apply[Append, Expression, Expression]] {
           def perform(
             context: Ctxt,
-            command: Apply[ToString[Type], Expression, Expression]
+            command: Apply[Append, Expression, Expression]
           ): (Ctxt, Expression) = {
-            implicit val _getMember = getMember
-            implicit val _applyMethod = applyMethod
-            val gen = Command.lift[Ctxt, Expression](Java(s"String.valueOf(${command.arguments.head})").expression())
+            val gen: Generator[Ctxt, Expression] =
+              for {
+                _ <- AddImport[Import](Java("import java.util.stream.Stream;").importDeclaration()).interpret(addImport)
+                _ <- AddImport[Import](Java("import java.util.stream.Collectors;").importDeclaration()).interpret(addImport)
+              } yield Java(s"Stream.concat(${command.arguments(0)}.stream(), ${command.arguments(1)}.stream()).collect(Collectors.toList())").expression[Expression]()
             Command.runGenerator(gen, context)
           }
         }
@@ -82,75 +107,119 @@ class Lists[Ctxt, AP <: AnyParadigm](
       ): (ProjectCtxt, Unit) = {
         val listType = Java("List").tpe()
 
-        def updateResolver(contextSpecificResolver: ContextSpecificResolver): ContextSpecificResolver = {
+        def updateResolver(resolver: ContextSpecificResolver): ContextSpecificResolver = {
           def addResolutionType[Ctxt](
-            toResolution: (TypeRep => Generator[Ctxt, Type]) => TypeRep => Generator[Ctxt, Type]
-          ): (TypeRep => Generator[Ctxt, Type]) => TypeRep => Generator[Ctxt, Type] = k => {
+            toResolution: ContextSpecificResolver => TypeRep => Generator[Ctxt, Type],
+            projectResolution: ContextSpecificResolver => TypeRep => Generator[Ctxt, Type],
+            canApplyType: Understands[Ctxt, Apply[Type, Type, Type]]
+          ): ContextSpecificResolver => TypeRep => Generator[Ctxt, Type] = k => {
             case TypeRep.Sequence(elemRep) =>
               for {
-                elemType <- k(elemRep)
-                resultType <- Apply(listType, Seq(elemType)).interpret(applyType)
+                elemType <- projectResolution(k)(elemRep)
+                resultType <- Apply[Type, Type, Type](listType, Seq(elemType)).interpret(canApplyType)
               } yield resultType
             case other => toResolution(k)(other)
           }
 
           def addReification[Ctxt](
-            reify: (InstanceRep => Generator[Ctxt, Expression]) => InstanceRep => Generator[Ctxt, Expression]
-          ): (InstanceRep => Generator[Ctxt, Expression]) => InstanceRep => Generator[Ctxt, Expression] =
+            reify: ContextSpecificResolver => InstanceRep => Generator[Ctxt, Expression],
+            projectResolution: ContextSpecificResolver => TypeRep => Generator[Ctxt, Type],
+            projectReiification: ContextSpecificResolver => InstanceRep => Generator[Ctxt, Expression],
+            canCreateList: Understands[Ctxt, Apply[Create[Type], Expression, Expression]]
+          ): ContextSpecificResolver => InstanceRep => Generator[Ctxt, Expression] =
           k => rep => rep.tpe match {
-            case TypeRep.Sequence(elemRep) =>
+            case TypeRep.Sequence(elemTypeRep) =>
               for {
-                elemType <-
-                elems <- forEach (rep.inst.asInstanceOf[Seq[elemRep.HostType]]) { elem =>
-                  k(InstanceRep(elemTpe)(elem))
+                elems <- forEach (rep.inst.asInstanceOf[Seq[elemTypeRep.HostType]]) { elem =>
+                  projectReiification(k)(InstanceRep(elemTypeRep)(elem))
                 }
-                res <- listCapabilities.create()
-              }
-            case _ => reify(k)(other)
-          }
-          {
-            case instRep if instRep.tpe == rep =>
-              Command.lift(reification(instRep.inst.asInstanceOf[rep.HostType]))
-            case other => reify(other)
+                elemType <- projectResolution(k)(elemTypeRep)
+                res <- Apply[Create[Type], Expression, Expression](Create(elemType), elems).interpret(canCreateList)
+              } yield res
+            case _ => reify(k)(rep)
           }
 
           def addExtraImport(
-            importResolution: Type => Option[Import]
-          ): Type => Option[Import] = {
-            case r if r == translateTo || r == possiblyBoxedTargetType(true) => extraImport
-            case other => importResolution(other)
+            importResolution: ContextSpecificResolver => Type => Option[Import]
+          ): ContextSpecificResolver => Type => Option[Import] = k => {
+            case tpe
+              if tpe
+                .toClassOrInterfaceType
+                .map[Boolean](clsTy => clsTy.getName == listType.asClassOrInterfaceType().getName)
+                .orElse(false) =>
+              Some(Java("import java.util.List;").importDeclaration())
+            case other => importResolution(k)(other)
           }
 
           resolver.copy(
-            methodTypeResolution =
+            _methodTypeResolution =
               addResolutionType(
-                possiblyBoxedTargetType(config.boxLevel.inMethods),
-                resolver.methodTypeResolution
+                resolver._methodTypeResolution,
+                _.methodTypeResolution,
+                generics.ppolyParadigm.methodBodyCapabilities.canApplyTypeInMethod
               ),
-            constructorTypeResolution =
+            _constructorTypeResolution =
               addResolutionType(
-                possiblyBoxedTargetType(config.boxLevel.inConstructors),
-                resolver.constructorTypeResolution
+                resolver._constructorTypeResolution,
+                _.constructorTypeResolution,
+                generics.constructorCapabilities.canApplyTypeInConstructor
               ),
-            classTypeResolution =
+            _classTypeResolution =
               addResolutionType(
-                possiblyBoxedTargetType(config.boxLevel.inClasses),
-                resolver.classTypeResolution
+                resolver._classTypeResolution,
+                _.classTypeResolution,
+                generics.classCapabilities.canApplyTypeInClass
               ),
-            reificationInConstructor = addReification(resolver.reificationInConstructor),
-            reificationInMethod = addReification(resolver.reificationInMethod),
-            importResolution = addExtraImport(resolver.importResolution)
+            _reificationInConstructor =
+              addReification(
+                resolver._reificationInConstructor,
+                _.constructorTypeResolution,
+                _.reificationInConstructor,
+                listCreation(generics.ooParadigm.constructorCapabilities.canAddImportInConstructor)
+              ),
+            _reificationInMethod =
+              addReification(
+                resolver._reificationInMethod,
+                _.methodTypeResolution,
+                _.reificationInMethod,
+                listCreation(base.methodBodyCapabilities.canAddImportInMethodBody)
+              ),
+            _importResolution = addExtraImport(resolver._importResolution)
           )
-
-
-
         }
 
 
-        val resolverUpdate =
-          ContextSpecificResolver.updateResolver(base.config, TypeRep.String, Java("String").tpe())(new StringLiteralExpr(_))
-        (context.copy(resolver = resolverUpdate(context.resolver)), ())
+        (context.copy(resolver = updateResolver(context.resolver)), ())
       }
     })
 }
-*/
+
+object Lists {
+  type Aux[Ctxt, AP <: AnyParadigm, Gen <: Generics[AP]] = Lists[Ctxt, AP] {
+    val generics: Gen
+  }
+  def apply[Ctxt, AP <: AnyParadigm, Gen <: Generics[AP]](
+    base: AP,
+    getMember: Understands[Ctxt, GetMember[Expression, Name]],
+    applyMethod: Understands[Ctxt, Apply[Expression, Expression, Expression]],
+    applyType: Understands[Ctxt, Apply[Type, Type, Type]],
+    addImport: Understands[Ctxt, AddImport[Import]])(
+    generics: Generics[base.type]
+  ): Aux[Ctxt, base.type, generics.type] = {
+    val b: base.type = base
+    val gm = getMember
+    val appMeth = applyMethod
+    val appTy = applyType
+    val addImp = addImport
+    val gen: generics.type = generics
+
+    new Lists[Ctxt, b.type] {
+      lazy val base: b.type = b
+      lazy val getMember = gm
+      lazy val applyMethod = appMeth
+      lazy val applyType = appTy
+      lazy val addImport = addImp
+      lazy val generics: gen.type = gen
+    }
+  }
+}

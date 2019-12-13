@@ -15,24 +15,24 @@ import org.combinators.ep.generator.FileWithPathPersistable._
 object Main extends IOApp {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed))
 
-  // can't have all of these together
-  val extensibleVisitorApproach = ExtensibleVisitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
-  val visitorApproach = Visitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val ooApproach = Traditional[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
-  val interpreterApproach = Interpreter[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
-
+  // can't have all of these together
+  val visitorApproach = Visitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val visitorSideEffectApproach = VisitorSideEffect[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+  val extensibleVisitorApproach = ExtensibleVisitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+  val interpreterApproach = Interpreter[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val triviallyApproach = Trivially[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
 
   // select one here.
-  // WORKS!   visitorSideEffectApproach
-  // WORKS!   visitorApproach
-  // WORKS!   triviallyApproach
-  // WORKS!   extensibleVisitorApproach
-  val approach = triviallyApproach //interpreterApproach
+  // val approach = ooApproach // WORKS!
+  // val approach = visitorApproach // WORKS!
+  val approach = visitorSideEffectApproach // WORKS!
+  // val approach = extensibleVisitorApproach // Problem with M4 generated code: using makeEval in simplify
+  // val approach = triviallyApproach // Problem with M4 generated code: factory methods missing
+  // val approach = interpreterApproach // Not quite yet
 
-  val evolutions = Seq(M0, M1, M2, M3)
+  val evolutions = Seq(M0, M1, M2, M3, M4)
   val tests = evolutions.scanLeft(Map.empty[Model, Seq[TestCase]]) { case (m, evolution) =>
     m + (evolution.getModel -> evolution.tests)
   }.tail
@@ -44,7 +44,13 @@ object Main extends IOApp {
       for {
         _ <- approach.implement(
           evolution.getModel,
-          eips.M3.apply(approach.paradigm)(generator.doublesInMethod, generator.stringsInMethod)
+          eips.M4.imperative(approach.paradigm)(
+            generator.imperativeInMethod,
+            generator.doublesInMethod,
+            generator.booleansInMethod,
+            generator.stringsInMethod,
+            generator.listsInMethod,
+            generator.equalityInMethod)
         )
         _ <- approach.implement(
           tests,

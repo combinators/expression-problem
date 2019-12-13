@@ -209,7 +209,7 @@ package object abstractions {
     }
     /** Represents the type `Seq[A]` */
     case class Sequence[T](elemTpe: TypeRep.OfHostType[T]) extends TypeRep {
-      type HostType = Seq[elemTpe.HostType]
+      type HostType = Seq[T]
     }
 
     /** Represents a Scala model of an instance of the given domain specific data type. */

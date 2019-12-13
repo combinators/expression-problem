@@ -13,7 +13,7 @@ import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, Understands}
 import org.combinators.ep.generator.paradigm.{ObjectOriented => OO, AnyParadigm => _, _}
 import org.combinators.ep.language.java.Syntax.MangledName
-import org.combinators.ep.language.java.{ClassCtxt, CtorCtxt, JavaNameProvider, MethodBodyCtxt, TestCtxt}
+import org.combinators.ep.language.java.{ClassCtxt, ContextSpecificResolver, CtorCtxt, JavaNameProvider, MethodBodyCtxt, TestCtxt}
 import org.combinators.templating.twirl.Java
 
 import scala.util.Try
@@ -589,7 +589,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             context: ProjectContext,
             command: AddTypeLookup[ClassContext, Type]
           ): (ProjectContext, Unit) = {
-            def newLookup(k: TypeRep => Generator[ClassContext, Type])(tpe: TypeRep): Generator[ClassContext, Type] =
+            def newLookup(k: ContextSpecificResolver)(tpe: TypeRep): Generator[ClassContext, Type] =
               if (tpe == command.tpe) {
                 command.lookup
               } else {
@@ -604,7 +604,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             context: ProjectContext,
             command: AddTypeLookup[ConstructorContext, Type]
           ): (ProjectContext, Unit) = {
-            def newLookup(k: TypeRep => Generator[ConstructorContext, Type])(tpe: TypeRep): Generator[ConstructorContext, Type] =
+            def newLookup(k: ContextSpecificResolver)(tpe: TypeRep): Generator[ConstructorContext, Type] =
               if (tpe == command.tpe) {
                 command.lookup
               } else {

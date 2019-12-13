@@ -25,6 +25,7 @@ abstract class VisitorSideEffect extends OOApproachImplementationProvider with S
   val impParadigm: Imperative.WithBase[MethodBodyContext,paradigm.type]
 
   lazy val getValue: Name = names.mangle("getValue")
+  lazy val visitImpl: Name = names.mangle("visitImpl")
   lazy val value: Name = names.mangle("value")
 
   /**
@@ -181,8 +182,10 @@ abstract class VisitorSideEffect extends OOApproachImplementationProvider with S
 
       _ <- addField(value, returnTpe)
       field <- getField(value)
-      _ <- addMethod(getValue, returnValue(op, field))
-
+      _ <- addMethod(getValue, returnValue(op.returnType, field))
+      _ <- forEach (domain.typeCases) { tpe =>
+        addMethod(visitImpl, super.makeImplementation(domain.baseDataType, tpe, op, domainSpecific))
+      }
       _ <- addImplemented(visitorInterface)
     } yield ()
   }
@@ -190,29 +193,20 @@ abstract class VisitorSideEffect extends OOApproachImplementationProvider with S
   /** Create a method implementation that simply returns field as an expression, with appropriate return type for operation.
    *
    * {{{
-   *   RETURNTYPE ???(op-params) { return FIELD; }
+   *   RETURNTYPE ???() { return FIELD; }
    * }}}
    *
    * @param op
    * @param field
    * @return
    */
-  def returnValue(op: Operation, field:Expression): Generator[MethodBodyContext, Option[Expression]] = {
+  def returnValue(tpe: TypeRep, field:Expression): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
 
     for {
-      rt <- toTargetLanguageType(op.returnType)
+      rt <- toTargetLanguageType(tpe)
       _ <- resolveAndAddImport(rt)
       _ <- setReturnType(rt)
-
-      params <- forEach (op.parameters) { param: Parameter =>
-        for {
-          pt <- toTargetLanguageType(param.tpe)
-          _ <- resolveAndAddImport(pt)
-          pName <- freshName(names.mangle(param.name))
-        } yield (pName, pt)
-      }
-      _ <- setParameters(params)
     } yield (Some(field))
   }
 
@@ -255,6 +249,7 @@ abstract class VisitorSideEffect extends OOApproachImplementationProvider with S
    * @param domainSpecific
    * @return
    */
+
   override def makeImplementation(tpe: DataType,
                          tpeCase: DataTypeCase,
                          op: Operation,
@@ -267,35 +262,14 @@ abstract class VisitorSideEffect extends OOApproachImplementationProvider with S
     for {
       unitType <- toTargetLanguageType(TypeRep.Unit)
       _ <- makeVisitSignature(tpeCase, unitType)
-      visitedRef <- getArguments().map(_.head._3)
-      attAccessors: Seq[Expression] <- forEach (tpeCase.attributes) { att =>
-        for {
-          getter <- getMember(visitedRef, getterName(att))
-          getterCall <- apply(getter, Seq.empty)
-        } yield getterCall
-      }
-
       thisRef <- selfReference()
-      args <- forEach (op.parameters) { param =>
-        for {
-          paramField <- getMember(thisRef, names.mangle(param.name))
-        } yield (param, paramField)
-      }
-
-      result <-
-        domainSpecific.logic(this)(
-          ReceivedRequest(
-            tpe,
-            tpeCase,
-            visitedRef,
-            tpeCase.attributes.zip(attAccessors).toMap,
-            Request(op, args.toMap)
-          )
-        )
+      impl <- getMember(thisRef, visitImpl)
+      args <- getArguments().map(_.map(_._3))
+      result <- apply(impl, args)
 
       // now need to store it. AND add those statements to the method body
       storedField <- getMember(thisRef, value)
-      stmt <- assignVar(storedField, result.get)
+      stmt <- assignVar(storedField, result)
       _ <- addBlockDefinitions(Seq(stmt))
 
       // Return unit (translates to no return/void in Java, real unit return in Scala)

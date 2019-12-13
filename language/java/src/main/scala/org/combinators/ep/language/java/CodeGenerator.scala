@@ -66,6 +66,24 @@ sealed class CodeGenerator(config: Config) { cc =>
       ooParadigm.constructorCapabilities.canApplyInConstructor
     )
 
+  val listsInMethod =
+    Lists[MethodBodyCtxt, paradigm.type, generics.type](
+      paradigm,
+      ooParadigm.methodBodyCapabilities.canGetMemberInMethod,
+      paradigm.methodBodyCapabilities.canApplyInMethodBody,
+      parametricPolymorphism.methodBodyCapabilities.canApplyTypeInMethod,
+      paradigm.methodBodyCapabilities.canAddImportInMethodBody
+    )(generics)
+
+  val listsInConstructor =
+    Lists[CtorCtxt, paradigm.type, generics.type](
+      paradigm,
+      ooParadigm.constructorCapabilities.canGetMemberInConstructor,
+      ooParadigm.constructorCapabilities.canApplyInConstructor,
+      generics.constructorCapabilities.canApplyTypeInConstructor,
+      ooParadigm.constructorCapabilities.canAddImportInConstructor
+    )(generics)
+
   val assertionsInMethod = new Assertions[paradigm.type](paradigm)(ooParadigm)
 }
 

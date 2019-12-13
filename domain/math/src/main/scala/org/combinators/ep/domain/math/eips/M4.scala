@@ -80,7 +80,7 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
                       )
                     )}
                   }
-                  res <- collectedResults.foldLeft(create(listDoubleTy, Seq.empty)) { case (lastRes, nextCol) =>
+                  res <- collectedResults.tail.foldLeft(Command.lift[MethodBodyContext, Expression](collectedResults.head)) { case (lastRes, nextCol) =>
                     for {
                       lastExp <- lastRes
                       nextRes <- append(lastExp, nextCol)
@@ -137,7 +137,7 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
           def simplifyOp(
             atts:Seq[abstractions.Attribute],
             attExprs: Seq[Expression],
-            vals: Seq[Expression],
+            vals: Generator[MethodBodyContext, List[Expression]],
             doubleTy: Type,
             zero: Expression,
             one: Expression,
@@ -147,100 +147,118 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
             onRequest.tpeCase match {
               case math.M0.Lit => Command.lift(Some(onRequest.selfReference))
               case math.M0.Add =>
-                val List(leftVal, rightVal) = vals
-                for {
-                  addVals <- add(leftVal, rightVal)
-                  addValZero <- areEqual(doubleTy, addVals, zero)
-                  leftEqZero <- areEqual(doubleTy, leftVal, zero)
-                  rightEqZero <- areEqual(doubleTy, rightVal, zero)
-                  result <-
-                    ifThenElse(
-                      addValZero, returnInIf(zeroLit),
-                      Seq(
-                        (leftEqZero, returnInIf(simplifyRec(atts.tail.head, attExprs.tail.head))),
-                        (rightEqZero, returnInIf(simplifyRec(atts.head, attExprs.head)))
-                      ),
-                      for {
-                        lsimp <- simplifyRec(atts.tail.head, attExprs.head)
-                        rsimp <- simplifyRec(atts.head, attExprs.tail.head)
-                        res <- returnInIf(forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Add, lsimp, rsimp))
-                      } yield res
-                    )
-                } yield result
+                vals.flatMap { case List(leftVal, rightVal) =>
+                  for {
+                    addVals <- add(leftVal, rightVal)
+                    addValZero <- areEqual(doubleTy, addVals, zero)
+                    leftEqZero <- areEqual(doubleTy, leftVal, zero)
+                    rightEqZero <- areEqual(doubleTy, rightVal, zero)
+                    result <-
+                      ifThenElse(
+                        addValZero, returnInIf(zeroLit),
+                        Seq(
+                          (leftEqZero, returnInIf(simplifyRec(atts.tail.head, attExprs.tail.head))),
+                          (rightEqZero, returnInIf(simplifyRec(atts.head, attExprs.head)))
+                        ),
+                        for {
+                          lsimp <- simplifyRec(atts.tail.head, attExprs.head)
+                          rsimp <- simplifyRec(atts.head, attExprs.tail.head)
+                          res <- returnInIf(forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Add, lsimp, rsimp))
+                        } yield res
+                      )
+                  } yield result
+                }
               case math.M1.Sub =>
-                val List(leftVal, rightVal) = vals
-                for {
-                  lrEq <- areEqual(doubleTy, leftVal, rightVal)
-                  result <-
-                    ifThenElse(
-                      lrEq, returnInIf(zeroLit),
-                      Seq.empty,
-                      for {
-                        lsimp <- simplifyRec(atts.head, attExprs.head)
-                        rsimp <- simplifyRec(atts.tail.head, attExprs.tail.head)
-                        res <- returnInIf(forApproach.instantiate(math.M0.getModel.baseDataType, math.M1.Sub, lsimp, rsimp))
-                      } yield res
-                    )
-                } yield result
+                vals.flatMap { case List(leftVal, rightVal) =>
+                  for {
+                    lrEq <- areEqual(doubleTy, leftVal, rightVal)
+                    result <-
+                      ifThenElse(
+                        lrEq, returnInIf(zeroLit),
+                        Seq.empty,
+                        for {
+                          lsimp <- simplifyRec(atts.head, attExprs.head)
+                          rsimp <- simplifyRec(atts.tail.head, attExprs.tail.head)
+                          res <- returnInIf(forApproach.instantiate(math.M0.getModel.baseDataType, math.M1.Sub, lsimp, rsimp))
+                        } yield res
+                      )
+                  } yield result
+                }
               case math.M3.Mult =>
-                val List(leftVal, rightVal) = vals
-                for {
-                  leftEqZero <- areEqual(doubleTy, leftVal, zero)
-                  rightEqZero <- areEqual(doubleTy, rightVal, zero)
-                  anyEqZero <- or(Seq(leftEqZero, rightEqZero))
-                  leftEqOne <- areEqual(doubleTy, leftVal, one)
-                  rightEqOne <- areEqual(doubleTy, rightVal, one)
-                  result <-
-                    ifThenElse(
-                      anyEqZero, returnInIf(zeroLit),
-                      Seq(
-                        (leftEqOne, returnInIf(simplifyRec(atts.tail.head, attExprs.tail.head))),
-                        (rightEqOne, returnInIf(simplifyRec(atts.head, attExprs.head)))
-                      ),
-                      for {
-                        lsimp <- simplifyRec(atts.head, attExprs.head)
-                        rsimp <- simplifyRec(atts.tail.head, attExprs.tail.head)
-                        res <- returnInIf(forApproach.instantiate(math.M0.getModel.baseDataType, math.M3.Mult, lsimp, rsimp))
-                      } yield res
-                    )
-                } yield result
+                vals.flatMap { case List(leftVal, rightVal) =>
+                  for {
+                    leftEqZero <- areEqual(doubleTy, leftVal, zero)
+                    rightEqZero <- areEqual(doubleTy, rightVal, zero)
+                    anyEqZero <- or(Seq(leftEqZero, rightEqZero))
+                    leftEqOne <- areEqual(doubleTy, leftVal, one)
+                    rightEqOne <- areEqual(doubleTy, rightVal, one)
+                    result <-
+                      ifThenElse(
+                        anyEqZero, returnInIf(zeroLit),
+                        Seq(
+                          (leftEqOne, returnInIf(simplifyRec(atts.tail.head, attExprs.tail.head))),
+                          (rightEqOne, returnInIf(simplifyRec(atts.head, attExprs.head)))
+                        ),
+                        for {
+                          lsimp <- simplifyRec(atts.head, attExprs.head)
+                          rsimp <- simplifyRec(atts.tail.head, attExprs.tail.head)
+                          res <- returnInIf(forApproach.instantiate(math.M0.getModel.baseDataType, math.M3.Mult, lsimp, rsimp))
+                        } yield res
+                      )
+                  } yield result
+                }
               case math.M3.Divd =>
-                val List(leftVal, rightVal) = vals
-                for {
-                  minusOne <- forApproach.reify(InstanceRep(TypeRep.Double)(-1.0))
-                  leftEqZero <- areEqual(doubleTy, leftVal, zero)
-                  rightEqOne <- areEqual(doubleTy, rightVal, one)
-                  leftRightEq <- areEqual(doubleTy, leftVal, rightVal)
-                  negRightVal <- mult(minusOne, rightVal)
-                  leftRightNeqEq <- areEqual(doubleTy, leftVal, negRightVal)
-                  result <-
-                    ifThenElse(
-                      leftEqZero, returnInIf(zeroLit),
-                      Seq(
-                        (rightEqOne, returnInIf(simplifyRec(atts.head, attExprs.head))),
-                        (leftRightEq, returnInIf(oneLit)),
-                        (leftRightNeqEq, returnInIf(forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, minusOne)))
-                      ),
-                      for {
-                        lsimp <- simplifyRec(atts.head, attExprs.head)
-                        rsimp <- simplifyRec(atts.tail.head, attExprs.tail.head)
-                        res <- returnInIf(forApproach.instantiate(math.M0.getModel.baseDataType, math.M3.Divd, lsimp, rsimp))
-                      } yield res
-                    )
-                } yield result
-              case _ => ???
+                vals.flatMap { case List(leftVal, rightVal) =>
+                  for {
+                    minusOne <- forApproach.reify(InstanceRep(TypeRep.Double)(-1.0))
+                    leftEqZero <- areEqual(doubleTy, leftVal, zero)
+                    rightEqOne <- areEqual(doubleTy, rightVal, one)
+                    leftRightEq <- areEqual(doubleTy, leftVal, rightVal)
+                    negRightVal <- mult(minusOne, rightVal)
+                    leftRightNeqEq <- areEqual(doubleTy, leftVal, negRightVal)
+                    result <-
+                      ifThenElse(
+                        leftEqZero, returnInIf(zeroLit),
+                        Seq(
+                          (rightEqOne, returnInIf(simplifyRec(atts.head, attExprs.head))),
+                          (leftRightEq, returnInIf(oneLit)),
+                          (leftRightNeqEq, returnInIf(forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, minusOne)))
+                        ),
+                        for {
+                          lsimp <- simplifyRec(atts.head, attExprs.head)
+                          rsimp <- simplifyRec(atts.tail.head, attExprs.tail.head)
+                          res <- returnInIf(forApproach.instantiate(math.M0.getModel.baseDataType, math.M3.Divd, lsimp, rsimp))
+                        } yield res
+                      )
+                  } yield result
+                }
+              case math.M3.Neg =>
+                vals.flatMap { case List(innerVal) =>
+                  for {
+                    innerZero <- areEqual(doubleTy, innerVal, zero)
+                    result <-
+                      ifThenElse(
+                        innerZero, returnInIf(zeroLit),
+                        Seq.empty,
+                        for {
+                          innerSimp <- simplifyRec(atts.head, attExprs.head)
+                          res <- returnInIf(forApproach.instantiate(math.M3.getModel.baseDataType, math.M3.Neg, innerSimp))
+                        } yield res
+                      )
+                  } yield result
+                }
+              case other => throw new NotImplementedError(other.toString)
             }
           }
 
-           val atts = onRequest.tpeCase.attributes.map(onRequest.attributes)
+          val atts = onRequest.tpeCase.attributes.map(onRequest.attributes)
           for {
             doubleTy <- toTargetLanguageType(TypeRep.Double)
             zero <- forApproach.reify(InstanceRep(TypeRep.Double)(0.0))
             one <- forApproach.reify(InstanceRep(TypeRep.Double)(1.0))
-            vals <- evalChildren(onRequest.tpeCase, onRequest.attributes)
             zeroLit = forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, zero)
             oneLit = forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, one)
-            result <- simplifyOp(onRequest.attributes.keys.toSeq, atts, vals, doubleTy, zero, one, zeroLit, oneLit)
+            result <- simplifyOp(onRequest.attributes.keys.toSeq, atts, evalChildren(onRequest.tpeCase, onRequest.attributes), doubleTy, zero, one, zeroLit, oneLit)
           } yield result
         }
 

@@ -74,7 +74,6 @@ object M3 {
                   forApproach.dispatch(SendRequest(
                     onRequest.attributes(att),
                     math.M3.getModel.baseDataType,
-                    Some(att),
                     onRequest.request,
                     Some(onRequest)
                   ))

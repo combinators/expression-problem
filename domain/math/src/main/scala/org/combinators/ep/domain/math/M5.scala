@@ -4,7 +4,7 @@ import org.combinators.ep.domain._
 import org.combinators.ep.domain.abstractions.{EqualsCompositeTestCase, EqualsTestCase, Operation, TestCase, TypeRep}
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
 import org.combinators.ep.domain.tree._
-import org.combinators.ep.domain.math.M0.{Add, AddInst, LitInst}
+import org.combinators.ep.domain.math.M0.{Lit, Add, AddInst, LitInst, DoubleInst}
 import org.combinators.ep.domain.math.M1.{Sub, SubInst}
 import org.combinators.ep.domain.math.M2.{PrettyP, StringInst}
 import org.combinators.ep.domain.math.M3.{Divd, DivdInst, Mult, MultInst, Neg, NegInst}
@@ -27,19 +27,42 @@ object M5 extends Evolution {
         DivdInst(LitInst(1.0), LitInst(3.0)))))
 
   val tree_m5_all =
-    new Node(Sub.name.hashCode, Seq(new Node(Neg.name.hashCode, Seq(new Leaf(2.0))), // Sub-Left
-                 new Node(Mult.name.hashCode, Seq(new Node( Sub.name.hashCode, Seq(new Leaf(1.0), new Leaf(976.0))), // Mult-Left
-                              new Node(Add.name.hashCode, Seq(new Node(Mult.name.hashCode, Seq(new Leaf(1.0), new Leaf(976.0))),
-                                           new Node(Divd.name.hashCode, Seq(new Leaf(1.0), new Leaf(3.0)))),
-                                       )),  // Mult-Right
-                   )),   // Sub-Right
-              )
+    Node(Sub.name.hashCode,
+      Seq(
+        Node(Neg.name.hashCode, Seq(Node(Lit.name.hashCode, Seq(Leaf(DoubleInst(2.0)))))), // Sub-Left
+        Node(Mult.name.hashCode,
+          Seq(
+            Node(Sub.name.hashCode,
+              Seq(
+                Node(Lit.name.hashCode, Seq(Leaf(DoubleInst(1.0)))),
+                Node(Lit.name.hashCode, Seq(Leaf(DoubleInst(976.0))))
+              )), // Mult-Left
+            Node(Add.name.hashCode,
+              Seq(
+                Node(Mult.name.hashCode,
+                  Seq(
+                    Node(Lit.name.hashCode, Seq(Leaf(DoubleInst(1.0)))),
+                    Node(Lit.name.hashCode, Seq(Leaf(DoubleInst(976.0))))
+                  )),
+                Node(Divd.name.hashCode,
+                  Seq(
+                    Node(Lit.name.hashCode, Seq(Leaf(DoubleInst(1.0)))),
+                    Node(Lit.name.hashCode, Seq(Leaf(DoubleInst(3.0))))
+                  ))
+              ))
+          )) // Mult-Right
+      ))
 
   val m5_s4 = MultInst(MultInst(LitInst(2.0), LitInst(1.0)),
                                    AddInst(LitInst(0.0), LitInst(7.0)))
 
 
-  val treeSimplified = new Node(Mult.name.hashCode, Seq(new Leaf(2.0), new Leaf(7.0)))
+  val treeSimplified =
+    Node(Mult.name.hashCode,
+      Seq(
+        Node(Lit.name.hashCode, Seq(Leaf(DoubleInst(2.0)))),
+        Node(Lit.name.hashCode, Seq(Leaf(DoubleInst(7.0))))
+      ))
   /**
     * Special test case for same queries.
     *

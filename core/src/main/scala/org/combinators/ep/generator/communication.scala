@@ -46,7 +46,6 @@ package object communication {
   case class SendRequest[Expression](
     to: Expression,
     receiverTpe: DataType,
-    receiverAtt: Option[Attribute],                          // May be necessary/helpful to know *which* attribute of data type receives request
     request: Request[Expression],
     inReplyTo: Option[ReceivedRequest[Expression]] = None    // TODO: models what was essentially done with Deltas in the past
   )

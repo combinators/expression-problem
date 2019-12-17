@@ -25,14 +25,26 @@ object Main extends IOApp {
 
 
   // select one here.
-  // val approach = ooApproach // WORKS!
+  val approach = ooApproach // WORKS!
   // val approach = visitorApproach // WORKS!
-  val approach = visitorSideEffectApproach // WORKS!
+  // val approach = visitorSideEffectApproach // WORKS!
   // val approach = extensibleVisitorApproach // Problem with M4 generated code: using makeEval in simplify
   // val approach = triviallyApproach // Problem with M4 generated code: factory methods missing
   // val approach = interpreterApproach // Not quite yet
 
-  val evolutions = Seq(M0, M1, M2, M3, M4)
+  val evolutions = Seq(M0, M1, M2, M3, M4, M5)
+  val m4eip =
+    eips.M4.imperative(approach.paradigm)(
+      generator.imperativeInMethod,
+      generator.doublesInMethod,
+      generator.booleansInMethod,
+      generator.stringsInMethod,
+      generator.listsInMethod,
+      generator.equalityInMethod)
+  val eip = eips.M5(approach.paradigm)(m4eip)(
+    generator.intsInMethod,
+    generator.treesInMethod)
+
   val tests = evolutions.scanLeft(Map.empty[Model, Seq[TestCase]]) { case (m, evolution) =>
     m + (evolution.getModel -> evolution.tests)
   }.tail
@@ -42,16 +54,7 @@ object Main extends IOApp {
       case (transaction, (evolution, tests)) =>
     val impl =
       for {
-        _ <- approach.implement(
-          evolution.getModel,
-          eips.M4.imperative(approach.paradigm)(
-            generator.imperativeInMethod,
-            generator.doublesInMethod,
-            generator.booleansInMethod,
-            generator.stringsInMethod,
-            generator.listsInMethod,
-            generator.equalityInMethod)
-        )
+        _ <- approach.implement(evolution.getModel, eip)
         _ <- approach.implement(
           tests,
           TestImplementationProvider.defaultAssertionBasedTests(approach.paradigm)(generator.assertionsInMethod, generator.equalityInMethod, generator.booleansInMethod)

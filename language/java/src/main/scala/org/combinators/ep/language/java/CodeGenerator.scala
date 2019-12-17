@@ -2,7 +2,7 @@ package org.combinators.ep.language.java
 
 import cats.{Apply => _}
 import com.github.javaparser.ast.PackageDeclaration
-import com.github.javaparser.ast.expr.DoubleLiteralExpr
+import com.github.javaparser.ast.expr.{DoubleLiteralExpr, IntegerLiteralExpr}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command
 import org.combinators.ep.language.java.paradigm._
@@ -38,6 +38,21 @@ sealed class CodeGenerator(config: Config) { cc =>
       TypeRep.Double,
       Java("double").tpe(),
       new DoubleLiteralExpr(_)
+    )
+
+  val intsInMethod =
+    new Arithmetic[MethodBodyCtxt, Int, paradigm.type](
+      paradigm,
+      TypeRep.Int,
+      Java("int").tpe(),
+      new IntegerLiteralExpr(_)
+    )
+  val intsInConstructor =
+    new Arithmetic[CtorCtxt, Int, paradigm.type](
+      paradigm,
+      TypeRep.Int,
+      Java("int").tpe(),
+      new IntegerLiteralExpr(_)
     )
 
   val stringsInMethod =
@@ -83,6 +98,18 @@ sealed class CodeGenerator(config: Config) { cc =>
       generics.constructorCapabilities.canApplyTypeInConstructor,
       ooParadigm.constructorCapabilities.canAddImportInConstructor
     )(generics)
+
+  val treesInMethod =
+    Trees[MethodBodyCtxt, paradigm.type, ObjectOriented](
+      paradigm,
+      paradigm.methodBodyCapabilities.canAddImportInMethodBody
+    )(ooParadigm)
+
+  val treesInConstructor =
+    Trees[CtorCtxt, paradigm.type, ObjectOriented](
+      paradigm,
+      ooParadigm.constructorCapabilities.canAddImportInConstructor
+    )(ooParadigm)
 
   val assertionsInMethod = new Assertions[paradigm.type](paradigm)(ooParadigm)
 }

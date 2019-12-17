@@ -2,7 +2,7 @@ package org.combinators.ep.domain.math    /*DD:LI:AI*/
 
 import org.combinators.ep.domain.abstractions.{DataTypeCase, EqualsCompositeTestCase, EqualsTestCase, Operation, TestCase, TypeRep}
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
-import org.combinators.ep.domain.math.M0.{Eval, LitInst}
+import org.combinators.ep.domain.math.M0.{Eval, LitInst, DoubleInst}
 import org.combinators.ep.domain.math.M2.{PrettyP, StringInst}
 import org.combinators.ep.domain.math.M3.{Mult,MultInst}
 import org.combinators.ep.domain.math.M4.{Simplify}
@@ -25,7 +25,7 @@ object M8 extends Evolution {
   val m8_3 = PowerInst(LitInst(10.0), LitInst(0.0))
 
   val m8_tree = MultInst(LitInst(2.0), SqrtInst(LitInst(7.0)))
-  val m8_tree1 = new Node(Mult.name.hashCode, Seq(new Leaf(2.0), new Node(Sqrt.name.hashCode, Seq(new Leaf(7.0)))))
+  val m8_tree1 = new Node(Mult.name.hashCode, Seq(new Leaf(DoubleInst(2.0)), new Node(Sqrt.name.hashCode, Seq(new Leaf(DoubleInst(7.0))))))
 
   def tests:Seq[TestCase] = Seq(
     EqualsTestCase(getModel.baseDataType, m8_1, Eval, M0.DoubleInst(36.0)),

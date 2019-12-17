@@ -74,7 +74,6 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
                       SendRequest(
                         expr,
                         math.M4.getModel.baseDataType,
-                        Some(att),
                         Request(math.M4.Collect, Map.empty),
                         Some(onRequest)
                       )
@@ -115,7 +114,6 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
                 SendRequest(
                   expr,
                   math.M4.getModel.baseDataType,
-                  Some(att),
                   Request(math.M0.Eval, Map.empty),
                   Some(onRequest)
                 )
@@ -127,7 +125,6 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
               SendRequest(
                 attExpr,
                 math.M4.getModel.baseDataType,
-                Some(att),
                 Request(math.M4.Simplify, Map.empty),
                 Some(onRequest)
               )

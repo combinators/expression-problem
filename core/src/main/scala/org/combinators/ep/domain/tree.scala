@@ -1,4 +1,8 @@
-package org.combinators.ep.domain    /*DI:LI:AI*/
+package org.combinators.ep.domain
+
+import org.combinators.ep.domain.instances.InstanceRep
+
+/*DI:LI:AI*/
 
 /** Provides models of generic trees. */
 package object tree {
@@ -9,5 +13,5 @@ package object tree {
   case class Node(label: Int, children: Seq[Tree]) extends Tree
 
   /** Models leaf nodes with any type of data attached to them. */
-  case class Leaf(value: Any) extends Tree
+  case class Leaf(value: InstanceRep) extends Tree
 }

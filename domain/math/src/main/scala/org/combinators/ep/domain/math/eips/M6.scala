@@ -1,6 +1,6 @@
 package org.combinators.ep.domain.math.eips
 
-import org.combinators.ep.domain.abstractions.{Attribute, Operation, TypeRep}
+import org.combinators.ep.domain.abstractions.{Attribute, DataTypeCase, Operation, TypeRep}
 import org.combinators.ep.domain.math
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
@@ -22,6 +22,14 @@ object M6 {
           _ <- m5Provider.initialize(forApproach)
           _ <- ffiEquality.enable()
         } yield ()
+      }
+
+      /** Simplify depends upon having a working eval. */
+      override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
+        op match {
+          case math.M6.Equals => Set(Operation.asTree)
+          case _ => Set.empty
+        }
       }
 
       def applicable

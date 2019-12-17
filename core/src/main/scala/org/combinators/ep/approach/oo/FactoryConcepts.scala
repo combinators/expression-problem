@@ -78,7 +78,18 @@ trait FactoryConcepts extends ApproachImplementationProvider {
       _ <- resolveAndAddImport(opClass)
       _ <- setReturnType(opClass)
 
-      res <- instantiateObject(opClass, Seq.empty)
+      // need parameters for operations with parameters
+      params <- forEach (op.parameters) { param =>
+        for {
+          paramTy <- toTargetLanguageType(param.tpe)
+          _ <- resolveAndAddImport(paramTy)
+          pName <- freshName(names.mangle(param.name))
+        } yield (pName, paramTy)
+      }
+      _ <- setParameters(params)  // params: Seq[(Name, Type)]
+
+      args <- getArguments()
+      res <- instantiateObject(opClass,args.map(_._3))
     } yield Some(res)
   }
 

@@ -49,6 +49,7 @@ trait OperationAsClass extends ApproachImplementationProvider /* with SharedOO *
 
   }
 
+  /** Create parameter fields for operation parameter.  */
   def addParamFields(operation: Operation): Generator[ClassContext, Unit] = {
     import ooParadigm.classCapabilities._
     def addParamField(param: Parameter): Generator[ClassContext, Unit] =
@@ -62,7 +63,6 @@ trait OperationAsClass extends ApproachImplementationProvider /* with SharedOO *
       _ <- forEach (operation.parameters) { param => addParamField(param) }
     } yield ()
   }
-
 
   /**
    *

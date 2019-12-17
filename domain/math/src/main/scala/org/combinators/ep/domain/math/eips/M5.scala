@@ -1,6 +1,6 @@
 package org.combinators.ep.domain.math.eips
 
-import org.combinators.ep.domain.abstractions.{Attribute, Operation, TypeRep}
+import org.combinators.ep.domain.abstractions.{Attribute, DataTypeCase, Operation, TypeRep}
 import org.combinators.ep.domain.math
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
@@ -24,6 +24,15 @@ object M5 {
           _ <- ffiArithmetic.enable()
           _ <- ffiTrees.enable()
         } yield ()
+      }
+
+      /** Simplify depends upon having a working eval. */
+      override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
+        if (op == Operation.asTree) {
+          Set(math.M5.Identifier)
+        } else {
+          Set.empty
+        }
       }
 
       def applicable

@@ -1,6 +1,6 @@
 package org.combinators.ep.domain.math.eips
 
-import org.combinators.ep.domain.abstractions.{DataTypeCase, TypeRep}
+import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, TypeRep}
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.domain.{abstractions, math}
 import org.combinators.ep.generator.Command.Generator
@@ -31,6 +31,19 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
      ifThenElse: IfThenElseCommand
     ): EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val m4Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+
+      /** Simplify depends upon having a working eval. */
+      override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
+        dt match {
+          case math.M0.Lit => Set.empty
+          case _  => {
+            op match {
+              case math.M4.Simplify => Set(math.M0.Eval)
+              case _ => Set.empty
+            }
+          }
+        }
+      }
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {

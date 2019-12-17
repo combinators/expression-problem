@@ -2,9 +2,11 @@ package org.combinators.ep.generator
 
 import cats.free.Free
 import cats.kernel.Monoid
+import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.communication.ReceivedRequest
 import org.combinators.ep.generator.paradigm.AnyParadigm
+import shapeless.TypeCase
 
 import scala.util.Try
 
@@ -19,6 +21,8 @@ trait EvolutionImplementationProvider[-AIP <: ApproachImplementationProvider] {
   /** Tests if this evolution implementation provider is applicable for the given request */
   def applicable(forApproach: AIP)(onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean
 
+  /** Can vary by operation and data type. */
+  def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = Set.empty
 
   /** Generates the code of request handlers relative to the target language and approach specific code generation
     * logic provided by the given `codeGenerator`. */
@@ -53,6 +57,12 @@ object EvolutionImplementationProvider {
           first: EvolutionImplementationProvider[AIP],
           second: EvolutionImplementationProvider[AIP]
         ): EvolutionImplementationProvider[AIP] = new EvolutionImplementationProvider[AIP] {
+
+        /** Ensure dependencies are union'd through composition. */
+        override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
+          first.dependencies(op, dt) ++ second.dependencies(op, dt)
+        }
+
         def initialize(forApproach: AIP): Generator[forApproach.paradigm.ProjectContext, Unit] = {
           for {
             _ <- first.initialize(forApproach)

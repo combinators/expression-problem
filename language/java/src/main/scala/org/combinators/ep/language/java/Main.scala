@@ -27,8 +27,8 @@ object Main extends IOApp {
   // select one here.
   // val approach = ooApproach // WORKS!
   // val approach = visitorApproach // WORKS!
-  val approach = visitorSideEffectApproach // WORKS!
-  // val approach = extensibleVisitorApproach // Problem with M4 generated code: using makeEval in simplify
+  // val approach = visitorSideEffectApproach // WORKS!
+   val approach = extensibleVisitorApproach // Problem with M4 generated code: using makeEval in simplify
   // val approach = triviallyApproach // Problem with M4 generated code: factory methods missing
   // val approach = interpreterApproach // Not quite yet
 

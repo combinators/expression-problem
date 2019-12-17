@@ -49,7 +49,7 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedVisi
         getMember(
           self, factoryNameOp(None, message.request.op)   //         names.addSuffix(visitorInstanceFactoryMethodPrefix, names.conceptNameOf(message.request.op))
         )
-      instance <- apply(method, Seq.empty)  // no arguments
+      instance <- apply(method, message.request.arguments.toSeq.map(_._2))  // no arguments
     } yield instance
   }
 
@@ -291,11 +291,24 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedVisi
       // public class EvalSub extends Eval implements VisitorSub<Double> {
       _ <- addParentClass()
 
+      // instead of directly accessing [operationClass]
+      _ <- addParamFields(op)
+      _ <- addConstructor(makeOperationConstructor(op))
+
       _ <- addImplemented(visitorType)
-      _ <- forEach (domain.pastDataTypes) { tpe =>
-        addMethod(visit, makeImplementation(domain.baseDataType, tpe, op, domainSpecific))
+      computedSets <- forEach (domain.pastDataTypes) { tpe =>
+        for {
+          _ <- addMethod(visit, makeImplementation(domain.baseDataType, tpe, op, domainSpecific))
+
+          // if dependent operations exist, those factories need to be generated as well...
+        } yield domainSpecific.dependencies(op, tpe)
       }
 
+      _ <- forEach (computedSets.flatten.distinct) { dependentOp =>
+        createFactoryOp(domain.findOperation(dependentOp).get, dependentOp, visitorClassName(domain.findOperation(dependentOp).get, dependentOp).get)
+      }
+
+      // TODO: optimization to perhaps recurse and have this wrapped up in the above for loop...
       _ <- createFactoryOp(domain, op, visitorClassName(domain, op).get)
     } yield ()
   }

@@ -13,7 +13,7 @@ import org.combinators.jgitserv.{BranchTransaction, GitService}
 trait BaseEvolution {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed))
 
-  val evolutions = Seq(M0, M1, M2, M3)
+  val evolutions = Seq(M0, M1, M2, M3, M4)
   val tests = evolutions.scanLeft(Map.empty[Model, Seq[TestCase]]) { case (m, evolution) =>
     m + (evolution.getModel -> evolution.tests)
   }.tail

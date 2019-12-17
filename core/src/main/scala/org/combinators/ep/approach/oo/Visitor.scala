@@ -88,7 +88,6 @@ abstract class Visitor extends OOApproachImplementationProvider with SharedVisit
     addMethod(accept, makeBody)
   }
 
-
   /**
    * Each operation is placed in its own class, with a 'visit' method for each known data type.
    *

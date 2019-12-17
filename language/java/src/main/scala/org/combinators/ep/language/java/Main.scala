@@ -25,14 +25,14 @@ object Main extends IOApp {
 
 
   // select one here.
-  val approach = ooApproach // WORKS!
+  // val approach = ooApproach // WORKS!
   // val approach = visitorApproach // WORKS!
-  // val approach = visitorSideEffectApproach // WORKS!
+  val approach = visitorSideEffectApproach // WORKS!
   // val approach = extensibleVisitorApproach // Problem with M4 generated code: using makeEval in simplify
   // val approach = triviallyApproach // Problem with M4 generated code: factory methods missing
   // val approach = interpreterApproach // Not quite yet
 
-  val evolutions = Seq(M0, M1, M2, M3, M4, M5)
+  val evolutions = Seq(M0, M1, M2, M3, M4, M5, M6)
   val m4eip =
     eips.M4.imperative(approach.paradigm)(
       generator.imperativeInMethod,
@@ -41,9 +41,12 @@ object Main extends IOApp {
       generator.stringsInMethod,
       generator.listsInMethod,
       generator.equalityInMethod)
-  val eip = eips.M5(approach.paradigm)(m4eip)(
+  val m5eip = eips.M5(approach.paradigm)(m4eip)(
     generator.intsInMethod,
     generator.treesInMethod)
+  val eip = eips.M6(approach.paradigm)(m5eip)(
+    generator.equalityInMethod
+  )
 
   val tests = evolutions.scanLeft(Map.empty[Model, Seq[TestCase]]) { case (m, evolution) =>
     m + (evolution.getModel -> evolution.tests)

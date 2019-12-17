@@ -1,6 +1,6 @@
 package org.combinators.ep.approach.oo
 
-import org.combinators.ep.domain.abstractions.{DataType, DataTypeCase, Operation}
+import org.combinators.ep.domain.abstractions.{DataType, DataTypeCase, Operation, Parameter}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm.ObjectOriented
@@ -49,6 +49,20 @@ trait OperationAsClass extends ApproachImplementationProvider /* with SharedOO *
 
   }
 
+  def addParamFields(operation: Operation): Generator[ClassContext, Unit] = {
+    import ooParadigm.classCapabilities._
+    def addParamField(param: Parameter): Generator[ClassContext, Unit] =
+      for {
+        ft <- toTargetLanguageType(param.tpe)
+        _ <- resolveAndAddImport(ft)
+        _ <- addField(names.mangle(param.name), ft)
+      } yield ()
+
+    for {
+      _ <- forEach (operation.parameters) { param => addParamField(param) }
+    } yield ()
+  }
+
 
   /**
    *
@@ -56,7 +70,10 @@ trait OperationAsClass extends ApproachImplementationProvider /* with SharedOO *
    *
    * {{{
    * public class OP-NAME ... {
-   *    public OP-NAME () { }
+   *    T1 param1;
+   *    T2 param2;
+   *    ...
+   *    public OP-NAME (T1 param1, T2, param2, ...) { }
    *    public .... methodName(DataType ...) { ... }
    *    public .... methodName(DataType ...) { ... }
    * }
@@ -76,7 +93,7 @@ trait OperationAsClass extends ApproachImplementationProvider /* with SharedOO *
     for {
       returnTpe <- toTargetLanguageType(op.returnType)
       _ <- resolveAndAddImport(returnTpe)
-
+      _ <- addParamFields(op)
       _ <- addConstructor(makeOperationConstructor(op))
       _ <- forEach (typeCases) { tpe =>
         addMethod(methodName, makeImplementation(base, tpe, op, domainSpecific))

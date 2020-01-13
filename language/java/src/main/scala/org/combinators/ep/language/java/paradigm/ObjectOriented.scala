@@ -276,9 +276,12 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             context: ClassContext,
             command: FindClass[Name, Type]
           ): (ClassContext, Type) = {
-            val result = new ClassOrInterfaceType()
-            result.setName(command.name.toAST)
-            (context, result)
+            val start = new ClassOrInterfaceType()
+            start.setName(command.qualifiedName.head.toAST)
+            val qualifiedName = command.qualifiedName.tail.foldLeft(start){case (scopes, suffix) =>
+              new ClassOrInterfaceType(scopes, suffix.mangled)}
+
+            (context, qualifiedName)
           }
         }
       implicit val canGetFreshNameInClass: Understands[ClassContext, FreshName[Name]] =
@@ -475,9 +478,15 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             context: ConstructorContext,
             command: FindClass[Name, Type]
           ): (ConstructorContext, Type) = {
-            val result = new ClassOrInterfaceType()
-            result.setName(command.name.toAST)
-            (context, result)
+//            val result = new ClassOrInterfaceType()
+//            result.setName(command.name.toAST)
+//            (context, result)
+            val start = new ClassOrInterfaceType()
+            start.setName(command.qualifiedName.head.toAST)
+            val qualifiedName = command.qualifiedName.tail.foldLeft(start){case (scopes, suffix) =>
+              new ClassOrInterfaceType(scopes, suffix.mangled)}
+
+            (context, qualifiedName)
           }
         }
       implicit val canGetFreshNameInConstructor: Understands[ConstructorContext, FreshName[Name]] =
@@ -574,9 +583,15 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             context: MethodBodyContext,
             command: FindClass[Name, Type]
           ): (MethodBodyContext, Type) = {
-            val result = new ClassOrInterfaceType()
-            result.setName(command.name.toAST)
-            (context, result)
+//            val result = new ClassOrInterfaceType()
+//            result.setName(command.name.toAST)
+//            (context, result)
+            val start = new ClassOrInterfaceType()
+            start.setName(command.qualifiedName.head.toAST)
+            val qualifiedName = command.qualifiedName.tail.foldLeft(start){case (scopes, suffix) =>
+              new ClassOrInterfaceType(scopes, suffix.mangled)}
+
+            (context, qualifiedName)
           }
         }
     }

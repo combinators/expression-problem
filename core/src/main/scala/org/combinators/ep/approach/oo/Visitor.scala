@@ -157,10 +157,10 @@ abstract class Visitor extends OOApproachImplementationProvider with SharedVisit
         makeDerived(flatDomain.baseDataType, tpeCase, domain)   // used to have flatDomain.ops,
       }
 
-      _ <- addClassToProject(visitorClass, makeVisitorInterface(flatDomain.typeCases))
+      _ <- addClassToProject(makeVisitorInterface(flatDomain.typeCases), visitorClass)
 
       _ <- forEach (flatDomain.ops) { op =>
-        addClassToProject(names.mangle(names.conceptNameOf(op)), makeOperationImplementation(flatDomain, op, domainSpecific))
+        addClassToProject(makeOperationImplementation(flatDomain, op, domainSpecific), names.mangle(names.conceptNameOf(op)))
       }
     } yield ()
   }

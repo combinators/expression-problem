@@ -126,7 +126,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
     import ooParadigm.projectCapabilities._
 
     val ddn = derivedInterfaceName (tpeCase, domain.ops)
-    addClassToProject(ddn, makeDerivedInterface(domain.baseDataType, tpeCase, domain, domainSpecific))
+    addClassToProject(makeDerivedInterface(domain.baseDataType, tpeCase, domain, domainSpecific), names.mangle(domain.name), ddn)
   }
 
   /**
@@ -211,7 +211,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
     makeClass
   }
 
-  def makeBodyImpl(baseType:DataType, att:Attribute, parent:Type, covariantType:Name): Generator[MethodBodyContext, Option[Expression]] = {
+  def makeBodyImpl(baseType:DataType, att:Attribute, parent:Type): Generator[MethodBodyContext, Option[Expression]] = {
       import paradigm.methodBodyCapabilities._
       import ooParadigm.methodBodyCapabilities._
 
@@ -250,15 +250,15 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
           _ <- forEach(tpeCase.attributes) { att => makeField(att) }
           _ <- addConstructor(makeConstructor(tpeCase))
           _ <- forEach(tpeCase.attributes) { att =>
-            addMethod(getterName(att), makeBodyImpl(model.baseDataType, att, parent, baseInterface))
+            addMethod(getterName(att), makeBodyImpl(model.baseDataType, att, parent))
           }
         } yield ()
       }
-      addClassToProject(actualName, makeClass)
+      addClassToProject(makeClass, actualName)
     }
 
     /** For Trivially, the covariant type needs to be selected whenever a BaseType in the domain is expressed. */
-    def domainTypeLookup[Ctxt](covariantType: Name)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
+    def domainTypeLookup[Ctxt](covariantType: Name*)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
       FindClass(covariantType).interpret(canFindClass)
     }
 
@@ -275,9 +275,9 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
       val baseInterface = baseInterfaceNames(model, model.ops)
       val dtpeRep = TypeRep.DataType(model.baseDataType)
       for {
-        _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(baseInterface))
-        _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(baseInterface))
-        _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(baseInterface))
+        _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(baseInterface : _*))
+        _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(baseInterface : _*))
+        _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(baseInterface : _*))
       } yield ()
     }
 
@@ -377,7 +377,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
           val compUnit = for {
 
             // add test case first
-            _ <- addTestCase(testName, testCode)
+            _ <- addTestCase(testCode, testName)
 
             // get list of all operations and MAP to the most recent model
             _ <- forEach(model.flatten.typeCases) { tpeCase =>
@@ -397,8 +397,8 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
           for {
             _ <- registerTypeMapping(model.lastModelWithOperation.get)   // must come here since it registers mappings that exist in the ProjectContext
             _ <- addCompilationUnit(
-                    testCaseName(model),
-                    testSuite
+                    testSuite,
+                    testCaseName(model)
             )
           } yield None
         }

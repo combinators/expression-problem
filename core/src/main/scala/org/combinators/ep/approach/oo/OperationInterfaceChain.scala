@@ -33,8 +33,8 @@ trait OperationInterfaceChain extends ApproachImplementationProvider  {
     ops.sortWith(_.name > _.name).map(op => names.conceptNameOf(op)).foldLeft(suffix){ case (n,s) => names.addPrefix(s, n) }
   }
 
-  def baseInterfaceNames(domain: Model, ops: Seq[Operation]): Name = {
-    baseInterfaceNamesPrefix(ops, names.mangle(domain.baseDataType.name))
+  def baseInterfaceNames(domain: Model, ops: Seq[Operation]): Seq[Name] = {
+    Seq(names.mangle(domain.name), baseInterfaceNamesPrefix(ops, names.mangle(domain.baseDataType.name)))
   }
 
   // extends Exp [first one] or ExpEval [previous one]
@@ -45,7 +45,7 @@ trait OperationInterfaceChain extends ApproachImplementationProvider  {
     if (domain.isEmpty || domain.lastModelWithOperation.isEmpty) {
       findClass(names.mangle(domain.baseDataType.name))
     } else {
-      findClass(baseInterfaceNames(domain, domain.lastModelWithOperation.get.ops))
+      findClass(baseInterfaceNames(domain, domain.lastModelWithOperation.get.ops) : _*)
     }
   }
 
@@ -71,6 +71,5 @@ trait OperationInterfaceChain extends ApproachImplementationProvider  {
       } yield ()
     }
 
-    addClassToProject(baseInterfaceNames(domain, domain.ops), makeInterface)
-  }
+    addClassToProject(makeInterface, baseInterfaceNames(domain, domain.ops) : _*)  }
 }

@@ -336,7 +336,7 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedVisi
     }
 
     // adds the 'Exp' class, with a single accept method
-    addClassToProject(names.mangle(names.conceptNameOf(model.baseDataType)), makeClass)
+    addClassToProject(makeClass, names.mangle(names.conceptNameOf(model.baseDataType)))
   }
 
   /**
@@ -366,11 +366,11 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedVisi
       _ <- forEach (domain.inChronologicalOrder.filter(m => m.typeCases.nonEmpty)) { m => {
           for {
             // add the interfaces first
-            _ <- addClassToProject(visitorInterfaceName(m).get, makeExtensibleVisitorInterface(m))
+            _ <- addClassToProject(makeExtensibleVisitorInterface(m), visitorInterfaceName(m).get)
 
             // now come the classes
             _ <- forEach(m.pastOperations) { op => {
-              addClassToProject(visitorClassName(m, op).get, makeOperationImplementation(m, op, domainSpecific))
+              addClassToProject(makeOperationImplementation(m, op, domainSpecific), visitorClassName(m, op).get)
             }
             }
           } yield ()
@@ -380,7 +380,7 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedVisi
       // WHEN new operations are added and there are existing data types in the past...
       _ <- forEach (domain.inChronologicalOrder.filter(m => m.ops.nonEmpty)) { m =>
          forEach(m.ops) { op =>
-          addClassToProject(visitorClassName(m, op).get, makeOperationImplementation(m, op, domainSpecific))
+          addClassToProject(makeOperationImplementation(m, op, domainSpecific), visitorClassName(m, op).get)
         }
       }
 
@@ -411,7 +411,7 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedVisi
 
           val compUnit = for {
             // add test case first
-            _ <- addTestCase(testName, testCode)
+            _ <- addTestCase(testCode, testName)
 
             // TODO: CLEAN UP the for with a single statement
             _ <- forEach(model.inChronologicalOrder.filter(m => m.ops.nonEmpty)) { m => {
@@ -434,8 +434,8 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedVisi
           } yield ()
 
           addCompilationUnit(
-            testCaseName(model),
-            testSuite
+            testSuite,
+            testCaseName(model)
           )
          }
         }

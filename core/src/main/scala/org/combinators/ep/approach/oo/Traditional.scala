@@ -62,7 +62,7 @@ trait Traditional extends OOApproachImplementationProvider with BaseDataTypeAsCl
           }
       } yield ()
     }
-    addClassToProject(names.mangle(names.conceptNameOf(tpeCase)), makeClass)
+    addClassToProject(makeClass, names.mangle(names.conceptNameOf(tpeCase)))
   }
 
   def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {

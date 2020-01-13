@@ -28,7 +28,7 @@ trait OOApproachImplementationProvider extends ApproachImplementationProvider {
    * @return
    */
   def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
-    FindClass(names.mangle(names.conceptNameOf(dtpe))).interpret(canFindClass)
+    FindClass(Seq(names.mangle(names.conceptNameOf(dtpe)))).interpret(canFindClass)
   }
 
   def registerTypeMapping(domain: Model): Generator[ProjectContext, Unit] = {

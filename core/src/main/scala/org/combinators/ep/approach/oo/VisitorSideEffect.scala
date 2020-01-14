@@ -315,14 +315,14 @@ abstract class VisitorSideEffect extends OOApproachImplementationProvider with S
       _ <- registerTypeMapping(flatDomain)
       _ <- domainSpecific.initialize(this)
       _ <- makeBase(flatDomain.baseDataType)
-      _ <- addClassToProject(visitorClass, makeVisitorInterface(flatDomain.typeCases))
+      _ <- addClassToProject(makeVisitorInterface(flatDomain.typeCases), visitorClass)
 
       _ <- forEach (flatDomain.typeCases) { tpeCase =>
         makeDerived(flatDomain.baseDataType, tpeCase, domain)   // used to have flatDomain.ops,
       }  // parentType: DataType, tpeCase: DataTypeCase, model: Model
 
       _ <- forEach (flatDomain.ops) { op =>
-        addClassToProject(names.mangle(names.conceptNameOf(op)), makeOperationImplementation(flatDomain, op, domainSpecific))
+        addClassToProject(makeOperationImplementation(flatDomain, op, domainSpecific), names.mangle(names.conceptNameOf(op)))
       }
     } yield ()
   }

@@ -104,11 +104,11 @@ trait ApproachImplementationProvider {
             } yield code.flatten
 
           addCompilationUnit(
-            testCaseName(model),
             addTestSuite(
               testCaseName(model),
-              addTestCase(testName, testCode)
-            ))
+              addTestCase(testCode, testName)
+            ),
+            testCaseName(model))
         }
     } yield ()
   }

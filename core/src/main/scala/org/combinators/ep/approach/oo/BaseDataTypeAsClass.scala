@@ -28,6 +28,6 @@ trait BaseDataTypeAsClass extends ApproachImplementationProvider {
         _ <- forEach(ops) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), makeSignature(op)) }
       } yield ()
     }
-    addClassToProject(names.mangle(names.conceptNameOf(tpe)), makeClass)
+    addClassToProject(makeClass, names.mangle(names.conceptNameOf(tpe)))
   }
 }

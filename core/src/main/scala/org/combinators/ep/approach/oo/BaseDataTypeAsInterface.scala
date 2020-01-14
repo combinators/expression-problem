@@ -40,6 +40,6 @@ trait BaseDataTypeAsInterface extends ApproachImplementationProvider {
       } yield ()
     }
 
-    addClassToProject(names.mangle(names.conceptNameOf(tpe)), makeClass)
+    addClassToProject(makeClass, names.mangle(names.conceptNameOf(tpe)))
   }
 }

@@ -6,8 +6,8 @@ import org.combinators.ep.generator.{AbstractSyntax, Command, FileWithPath, Unde
 import Command._
 import cats.implicits._
 
-/** Adds a compilation unit */
-case class AddCompilationUnit[Name, CompilationUnitContext](name: Name, unit: Generator[CompilationUnitContext, Unit])
+/** Adds a compilation unit with sequence of names for hierarchy, if needed */
+case class AddCompilationUnit[Name, CompilationUnitContext](unit: Generator[CompilationUnitContext, Unit], name: Seq[Name])
     extends Command {
   type Result = Unit
 }
@@ -56,7 +56,7 @@ case class GetArguments[Type, Name, Expression]() extends Command {
 case class AddTestSuite[Name, TestContext](name: Name, suite: Generator[TestContext, Unit]) extends Command {
   type Result = Unit
 }
-case class AddTestCase[MethodBodyContext, Name, Expression](name: Name, code: Generator[MethodBodyContext, Seq[Expression]]) extends Command {
+case class AddTestCase[MethodBodyContext, Name, Expression](code: Generator[MethodBodyContext, Seq[Expression]], name: Name) extends Command {
   type Result = Unit
 }
 
@@ -120,8 +120,8 @@ trait AnyParadigm {
       AnyParadigm.capabilitiy(Debug(tag))
 
     implicit val canAddCompilationUnitInProject: Understands[ProjectContext, AddCompilationUnit[Name, CompilationUnitContext]]
-    def addCompilationUnit(name: Name, unit: Generator[CompilationUnitContext, Unit]): Generator[ProjectContext, Unit] =
-      AnyParadigm.capabilitiy(AddCompilationUnit(name, unit))
+    def addCompilationUnit(unit: Generator[CompilationUnitContext, Unit], qualifiedName: Name*): Generator[ProjectContext, Unit] =
+      AnyParadigm.capabilitiy(AddCompilationUnit(unit, qualifiedName))
 
     implicit val canAddTypeLookupForMethodsInProject: Understands[ProjectContext, AddTypeLookup[MethodBodyContext, Type]]
     def addTypeLookupForMethods(tpe: TypeRep, lookup: Generator[MethodBodyContext, Type]): Generator[ProjectContext, Unit] =
@@ -213,8 +213,8 @@ trait AnyParadigm {
       AnyParadigm.capabilitiy(Debug(tag))
 
     implicit val canAddTestCaseInTest: Understands[TestContext, AddTestCase[MethodBodyContext, Name, Expression]]
-    def addTestCase(name: Name, code: Generator[MethodBodyContext, Seq[Expression]]): Generator[TestContext, Unit] =
-      AnyParadigm.capabilitiy(AddTestCase(name, code))
+    def addTestCase(code: Generator[MethodBodyContext, Seq[Expression]], name: Name): Generator[TestContext, Unit] =
+      AnyParadigm.capabilitiy(AddTestCase(code, name))
   }
   val testCapabilities: TestCapabilities
 

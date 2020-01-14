@@ -63,8 +63,8 @@ trait Traditional extends ApproachImplementationProvider {
       } yield ()
 
     addCompilationUnit(
-      names.mangle(names.conceptNameOf(tpe)),
-      addType(names.mangle(names.conceptNameOf(tpe)), caseCode)
+      addType(names.mangle(names.conceptNameOf(tpe)), caseCode),
+      names.mangle(names.conceptNameOf(tpe))
     )
   }
 
@@ -124,8 +124,8 @@ trait Traditional extends ApproachImplementationProvider {
     import functional.compilationUnitCapabilities._
     import paradigm.projectContextCapabilities._
     addCompilationUnit(
-      names.mangle(names.conceptNameOf(op)),
-      addMethod(names.mangle(names.instanceNameOf(op)), makeFunction(tpe, cases, op, domainSpecific))
+      addMethod(names.mangle(names.instanceNameOf(op)), makeFunction(tpe, cases, op, domainSpecific)),
+      names.mangle(names.conceptNameOf(op))
     )
   }
 

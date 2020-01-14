@@ -53,7 +53,16 @@ trait AnyParadigm extends AP {
             command: AddCompilationUnit[Name, CompilationUnitCtxt]
           ): (ProjectCtxt, Unit) = {
             val unit = new com.github.javaparser.ast.CompilationUnit()
-            unit.setPackageDeclaration(config.targetPackage)
+            val tgtPackage = config.targetPackage.clone
+            // [a, b, C]  and "trivially" --> trivially.a.b.C
+            // .init drops last element ONLY if not empty
+            if (command.name.nonEmpty) {
+              tgtPackage.setName(
+                 command.name.init.foldLeft(tgtPackage.getName){case (qualName,suffix) => new com.github.javaparser.ast.expr.Name(qualName, suffix.mangled)}
+              )
+            }
+
+            unit.setPackageDeclaration(tgtPackage)
             val (uc, _) =
               Command.runGenerator(
                 command.unit,

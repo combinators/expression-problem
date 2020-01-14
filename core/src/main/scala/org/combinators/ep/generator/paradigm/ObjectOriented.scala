@@ -83,7 +83,7 @@ case class GetConstructor[Type, Expression](tpe: Type) extends Command {
   type Result = Expression
 }
 
-case class FindClass[Name, Type](name: Name) extends Command {
+case class FindClass[Name, Type](qualifiedName: Seq[Name]) extends Command {
   type Result = Type
 }
 
@@ -173,8 +173,8 @@ trait ObjectOriented {
       AnyParadigm.capabilitiy(SelfReference[Expression]())
 
     implicit val canFindClassInClass: Understands[ClassContext, FindClass[Name, Type]]
-    def findClass(name: Name): Generator[ClassContext, Type] =
-      AnyParadigm.capabilitiy(FindClass[Name, Type](name))
+    def findClass(qualifiedName: Name*): Generator[ClassContext, Type] =
+      AnyParadigm.capabilitiy(FindClass[Name, Type](qualifiedName))
 
     implicit val canGetFreshNameInClass: Understands[ClassContext, FreshName[Name]]
     def freshName(basedOn: Name): Generator[ClassContext, Name] =
@@ -244,8 +244,8 @@ trait ObjectOriented {
       AnyParadigm.capabilitiy(GetConstructor[Type, Expression](tpe))
 
     implicit val canFindClassInConstructor: Understands[ConstructorContext, FindClass[Name, Type]]
-    def findClass(name: Name): Generator[ConstructorContext, Type] =
-      AnyParadigm.capabilitiy(FindClass[Name, Type](name))
+    def findClass(qualifiedName: Name*): Generator[ConstructorContext, Type] =
+      AnyParadigm.capabilitiy(FindClass[Name, Type](qualifiedName))
 
     implicit val canGetFreshNameInConstructor: Understands[ConstructorContext, FreshName[Name]]
     def freshName(basedOn: Name): Generator[ConstructorContext, Name] =
@@ -283,16 +283,16 @@ trait ObjectOriented {
       AnyParadigm.capabilitiy(GetConstructor[Type, Expression](tpe))
 
     implicit val canFindClassInMethod: Understands[MethodBodyContext, FindClass[Name, Type]]
-    def findClass(name: Name): Generator[MethodBodyContext, Type] =
-      AnyParadigm.capabilitiy(FindClass[Name, Type](name))
+    def findClass(qualifiedName: Name*): Generator[MethodBodyContext, Type] =
+      AnyParadigm.capabilitiy(FindClass[Name, Type](qualifiedName))
   }
   val methodBodyCapabilities: MethodBodyCapabilities
 
   trait ProjectCapabilities {
-    def addClassToProject(name: Name, classGen: Generator[ClassContext, Unit]): Generator[ProjectContext, Unit] = {
+    def addClassToProject(classGen: Generator[ClassContext, Unit], qualifiedName: Name* ): Generator[ProjectContext, Unit] = {
       import compilationUnitCapabilities._
       import base.projectContextCapabilities._
-      addCompilationUnit(name, AddClass(name, classGen).interpret)
+      addCompilationUnit(AddClass(qualifiedName.last, classGen).interpret, qualifiedName: _*)
     }
 
     implicit val canAddTypeLookupForClassesInProject: Understands[ProjectContext, AddTypeLookup[ClassContext, Type]]

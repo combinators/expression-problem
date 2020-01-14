@@ -148,7 +148,7 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
         }
         for {
           _ <- registerTypeMapping(modelToUse)
-          _ <- addClassToProject(names.addSuffix(names.mangle(combinedOps), names.conceptNameOf(tpeCase)), makeClassForCase(modelToUse, ops, tpeCase, domainSpecific))
+          _ <- addClassToProject(makeClassForCase(modelToUse, ops, tpeCase, domainSpecific), names.addSuffix(names.mangle(combinedOps), names.conceptNameOf(tpeCase)))
         } yield ()
         }
       }
@@ -189,11 +189,11 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
       } yield ()
     }
 
-    addClassToProject(names.addSuffix(names.mangle(opsName(model.ops)), factoryName), factoryClass(model))
+    addClassToProject(factoryClass(model), names.addSuffix(names.mangle(opsName(model.ops)), factoryName))
   }
 
   /** For Trivially, the covariant type needs to be selected whenever a BaseType in the domain is expressed. */
-  def domainTypeLookup[Ctxt](covariantType: Name)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
+  def domainTypeLookup[Ctxt](covariantType: Name*)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
     FindClass(covariantType).interpret(canFindClass)
   }
 
@@ -211,9 +211,9 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
     val baseInterface = baseInterfaceNames(model.lastModelWithOperation.get, model.lastModelWithOperation.get.ops)
     val dtpeRep = TypeRep.DataType(model.baseDataType)
     for {
-      _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(baseInterface))
-      _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(baseInterface))
-      _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(baseInterface))
+      _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(baseInterface : _*))
+      _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(baseInterface : _*))
+      _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(baseInterface : _*))
     } yield ()
   }
 

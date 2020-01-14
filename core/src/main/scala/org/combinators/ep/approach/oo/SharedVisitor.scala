@@ -107,7 +107,7 @@ trait SharedVisitor extends OOApproachImplementationProvider with SharedOO with 
     }
 
     // adds the 'Exp' class, with a single accept method
-    addClassToProject(names.mangle(names.conceptNameOf(tpe)), makeClass)
+    addClassToProject( makeClass, names.mangle(names.conceptNameOf(tpe)))
   }
 
   /**
@@ -247,6 +247,6 @@ trait SharedVisitor extends OOApproachImplementationProvider with SharedOO with 
         _ <- makeAcceptImplementation(model)
       } yield ()
     }
-    addClassToProject(names.mangle(names.conceptNameOf(tpeCase)), makeClass)
+    addClassToProject(makeClass, names.mangle(names.conceptNameOf(tpeCase)))
   }
 }

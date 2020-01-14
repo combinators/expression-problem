@@ -30,14 +30,6 @@ case class AddField[Name, Type](name: Name, tpe: Type) extends Command {
 case class GetField[Name,Expression](name: Name) extends Command {
   type Result = Expression
 }
-//
-//case class AddVariableDeclaration[Type, Name, Expression](params: Seq[(Type, Name, Expression)]) extends Command {
-//  type Result = Unit
-//}
-//
-//case class AddVariableAssignment[Name, Expression](params: Seq[(Name, Expression)]) extends Command {
-//  type Result = Unit
-//}
 
 case class InitializeField[Name, Expression](name: Name, value: Expression) extends Command {
   type Result = Unit
@@ -145,8 +137,8 @@ trait ObjectOriented {
       AnyParadigm.capabilitiy(AddConstructor(ctor))
 
     implicit val canAddImportInClass: Understands[ClassContext, AddImport[Import]]
-    def addImport(imp: Import, modifiers:Int = 0): Generator[ClassContext, Unit] =
-      AnyParadigm.capabilitiy(AddImport(imp, modifiers))
+    def addImport(imp: Import): Generator[ClassContext, Unit] =
+      AnyParadigm.capabilitiy(AddImport(imp))
 
     implicit val canResolveImportInClass: Understands[ClassContext, ResolveImport[Import, Type]]
     def resolveImport(tpe: Type): Generator[ClassContext, Option[Import]]  =
@@ -201,7 +193,7 @@ trait ObjectOriented {
 
     implicit val canAddImportInConstructor: Understands[ConstructorContext, AddImport[Import]]
     def addImport(imp: Import, modifiers:Int = 0): Generator[ConstructorContext, Unit] =
-      AnyParadigm.capabilitiy(AddImport(imp, modifiers))
+      AnyParadigm.capabilitiy(AddImport(imp))
 
     implicit val canResolveImportInConstructor: Understands[ConstructorContext, ResolveImport[Import, Type]]
     def resolveImport(tpe: Type): Generator[ConstructorContext, Option[Import]] =

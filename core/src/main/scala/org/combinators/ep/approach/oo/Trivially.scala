@@ -8,6 +8,22 @@ import org.combinators.ep.generator.communication._
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax._
 import org.combinators.ep.generator.paradigm._
 
+/**
+ *
+Exp extends self
+
+need to ensure parent classes are qualified with ep within the extends clause
+
+need to make sure classes are registered from PROPER evolution
+
+  Lit in M1 needs to import m1.Exp NOT NOT NOT e0.exp
+
+Finals need to extend qualified parent
+
+factory method in test cases HAS to get from CURRENT for its parametesr
+
+ */
+
 trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInterface with SharedOO with OperationInterfaceChain with FieldDefinition with FactoryConcepts {
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
@@ -16,7 +32,8 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
   import paradigm._
   import syntax._
 
-  lazy val finalName:Name = names.mangle("Final")
+ // lazy val finalName:Name = names.mangle("Final")
+  lazy val finalized:Name = names.mangle("finalized")     // sub package within each evolution that contains final classes
 
   def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression] = {
     import ooParadigm.methodBodyCapabilities._
@@ -50,23 +67,6 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
       factory <- getMember(thisRef, names.mangle(names.conceptNameOf(tpeCase)))
       res <- apply(factory, args)
     } yield res
-  }
-
-  /**
-   * The class to instantiate is a sub-type (by default the same) as the [[factoryNameDataTypeCase]]
-   *
-   * {{{
-   *   EvalAdd
-   * }}}
-   *
-   * Model is passed in should it become necessary to be overridden more specifically
-   *
-   * @param tpeCase    DataTypeCase for which a factory is desired.
-   * @return
-   */
-  override def factoryInstanceDataTypeCase(model:Option[Model] = None, tpeCase:DataTypeCase) : Name = {
-    val binp = baseInterfaceNamesPrefix(model.get.lastModelWithOperation.get.ops, finalName)
-    names.addPrefix(names.conceptNameOf(tpeCase), binp)
   }
 
   override def makeImplementation(tpe: DataType,
@@ -108,25 +108,25 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
     } yield result
   }
 
-  def derivedInterfaceName(tpe: DataTypeCase, ops: Seq[Operation]): Name = {
-    names.addSuffix(names.mangle(ops.sortWith(_.name < _.name).map(op => names.conceptNameOf(op)).mkString("")), tpe.name)
+  def derivedInterfaceName(tpe: DataTypeCase): Name = {
+    names.mangle(tpe.name)
   }
 
-  /** Former derived interfaced  for the tpe based on its last defined operation. */
-  def getFormerDerivedInterface(domain: Model, current:DataTypeCase): Generator[ClassContext, Type] = {
+  /** Former derived interfaced for the tpe must be qualified with model package */
+  def getFormerDerivedInterface(domainDefiningType: Model, current:DataTypeCase): Generator[ClassContext, Type] = {
     import classCapabilities._
 
-    findClass(derivedInterfaceName(current, domain.last.get.lastModelWithOperation.get.ops))
+    findClass(names.mangle(domainDefiningType.last.get.name), derivedInterfaceName(current))
   }
 
   /**
    * For any datatype that *could* have been defined in domain or perhaps was defined earlier
    */
-  def makeDerivedInterfaces(domain:Model, tpeCase:DataTypeCase, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
+  def makeDerivedInterfaces(tpeCase:DataTypeCase, currentModel:Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
 
-    val ddn = derivedInterfaceName (tpeCase, domain.ops)
-    addClassToProject(makeDerivedInterface(domain.baseDataType, tpeCase, domain, domainSpecific), names.mangle(domain.name), ddn)
+    val ddn = derivedInterfaceName (tpeCase)
+    addClassToProject(makeDerivedInterface(currentModel.baseDataType, tpeCase, currentModel, domainSpecific), names.mangle(currentModel.name), ddn)
   }
 
   /**
@@ -157,19 +157,23 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
    * Create a derived class for a datatype for a model that has operations
    *
    * {{{
-   *   public interface AddEval extends ExpEval {
+   *   package m1
+   *   public interface Sub extends ep.m1.Exp {
    *
-   *     ExpEval getLeft();
+   *     ep.m1.Exp getLeft();
    *
-   *     ExpEval getRight();
+   *     ep.m1.Exp getRight();
    *
    *     default Double eval() {
-   *         return getLeft().eval() + getRight().eval();
+   *         return getLeft().eval() - getRight().eval();
    *     }
    * }
    * }}}
    *
    *  add another parent IF there is a prior operation defined before this model.
+   *
+   *  These are all defined in the "current" model.
+   *
    * @param tpe
    * @param tpeCase
    * @param domainSpecific
@@ -179,11 +183,12 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
     val makeClass: Generator[ClassContext, Unit] = {
       import classCapabilities._
       for {
-        parent <- getParentInterface(model, tpe)
+        parent <-  findClass(baseInterfaceNames(model): _*)   //getParentInterface(model, tpe)
         _ <- resolveAndAddImport(parent)
         _ <- addParent(parent)
 
-        _ <- if (model.last.get.flatten.ops.nonEmpty) {  // NOTE: EXAMPLE OF IF ON RIGHT SIDE OF ARROW
+        // only add parent to the chain if NOT the first one
+        _ <- if (model.last.isDefined && model.last.get.findTypeCase(tpeCase).isDefined) {
           for {
             parentFormer <- getFormerDerivedInterface(model, tpeCase)
             _ <- resolveAndAddImport(parentFormer)
@@ -231,20 +236,17 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
      * @param tpeCase
      * @return
      */
-    def makeFinalClass(model:Model, modelDefiningOps:Model, tpeCase: DataTypeCase): Generator[ProjectContext,Unit] = {
+    def makeFinalClass(model:Model, tpeCase: DataTypeCase): Generator[ProjectContext,Unit] = {
       import ooParadigm.projectCapabilities._
-
-      val binp = baseInterfaceNamesPrefix(modelDefiningOps.ops, finalName)
-      val actualName = names.addPrefix(names.conceptNameOf(tpeCase), binp)
 
       val makeClass: Generator[ClassContext, Unit] = {
         import ooParadigm.classCapabilities._
 
-        val parentType = derivedInterfaceName(tpeCase, modelDefiningOps.ops)
-        val baseInterface = baseInterfaceNames(model, modelDefiningOps.ops)
+        val parentType = derivedInterfaceName(tpeCase)
+
         for {
-          // define based on the derivedInterface for that data type and operation
-          parent <- findClass(parentType)
+          // define based on the derivedInterface for that data type and operation based on
+          parent <- findClass(names.mangle(model.name), parentType)
           _ <- resolveAndAddImport(parent)
           _ <- addImplemented(parent)                    // implements derived interface
           _ <- forEach(tpeCase.attributes) { att => makeField(att) }
@@ -254,7 +256,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
           }
         } yield ()
       }
-      addClassToProject(makeClass, actualName)
+      addClassToProject(makeClass, names.mangle(model.name), finalized, factoryInstanceDataTypeCase(Some(model), tpeCase))
     }
 
     /** For Trivially, the covariant type needs to be selected whenever a BaseType in the domain is expressed. */
@@ -272,7 +274,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
       import paradigm.testCapabilities._
       import ooParadigm.testCapabilities._
 
-      val baseInterface = baseInterfaceNames(model, model.ops)
+      val baseInterface = baseInterfaceNames(model)
       val dtpeRep = TypeRep.DataType(model.baseDataType)
       for {
         _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(baseInterface : _*))
@@ -290,66 +292,44 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
         _ <- makeBase(domain.baseDataType, Seq.empty)     // Marker interface -- ignores operations
 
         // whenever new operation, this CREATES the capability of having intermediate interfaces
-        _ <- forEach (domain.inChronologicalOrder.filter(m => m.ops.nonEmpty)) { model =>
+        _ <- forEach (domain.inChronologicalOrder) { currentModel =>
           // for all PAST dataTypes that are already defined
           for {
-            _ <- registerTypeMapping(model)
-            _ <- makeIntermediateInterface(model, domainSpecific)
+            _ <- registerTypeMapping(currentModel)
+            _ <- makeIntermediateInterface(currentModel, domainSpecific)
 
-            _ <- forEach(model.flatten.typeCases) { tpe =>
-              makeDerivedInterfaces(model, tpe, domainSpecific)
-            }
+            _ <- forEach(currentModel.inChronologicalOrder.filter(m => m.typeCases.nonEmpty)) { modelDefiningTypes =>
+                   forEach (modelDefiningTypes.typeCases) { tpe =>
+                     makeDerivedInterfaces(tpe, currentModel, domainSpecific)
+                   }
+              }
           } yield ()
         }
 
         // if current state doesn't declare an operation then you need to iterate over everything in the past
         // that *did* declare an operation [i.e., find those models] and create derived types for these new types
         // that *do* declare operations and need to create derived data types
-        _ <- forEach (domain.inChronologicalOrder.filter(m => m.ops.isEmpty && m.typeCases.nonEmpty)) { modelDeclaringTypeCase =>
+        _ <- forEach (domain.inChronologicalOrder) { modelDeclaringTypeCase =>
           forEach (modelDeclaringTypeCase.typeCases) { tpe =>
-            forEach(modelDeclaringTypeCase.inChronologicalOrder.filter(m => m.ops.nonEmpty)) { modelDeclaringOp =>
-              for {
-                _ <- registerTypeMapping(modelDeclaringOp)
-                _ <- makeDerivedInterfaces(modelDeclaringOp, tpe, domainSpecific)
-              } yield ()
-            }
+             for {
+              _ <- registerTypeMapping(modelDeclaringTypeCase)
+              _ <- makeDerivedInterfaces(tpe, modelDeclaringTypeCase, domainSpecific)
+            } yield ()
           }
         }
 
         /** For each DataType AND [cross-product] Operation you need a final Class. */
-        _ <- forEach (domain.flatten.typeCases) { tpeCase => {
-            val modelDefiningType = domain.findTypeCase(tpeCase).get
-            forEach (domain.flatten.ops) { op => {
-              val modelDefiningOp = domain.findOperation(op).get
+        _ <- forEach (domain.inChronologicalOrder) {  model =>
+          forEach (model.flatten.typeCases) { tpeCase => {
               for {
-                _ <- registerTypeMapping(modelDefiningOp)
-                _ <- makeFinalClass(modelDefiningType, modelDefiningOp, tpeCase)
+                _ <- registerTypeMapping(model)
+                _ <- makeFinalClass(model, tpeCase)
               } yield ()
-            }
             }
           }
         }
       } yield ()
     }
-
-  /**
-   * Override standard factory name for a dataTypeCase.
-   *
-   * {{{
-   *   AddPrettypFinal
-   * }}}
-   *
-   * Model is passed in should it become necessary to be overridden more specifically
-   *
-   * @param tpeCase    DataTypeCase for which a factory is desired.
-   * @return
-   */
-  override def factoryNameDataTypeCase(model:Option[Model], tpeCase:DataTypeCase) : Name = {
-   val lastModelWithOp = model.get.lastModelWithOperation.get
-
-    val binp = baseInterfaceNamesPrefix(lastModelWithOp.ops, finalName)
-    names.addPrefix(names.conceptNameOf(tpeCase), binp)
-  }
 
   /**
    * Test cases all need factory methods to work.

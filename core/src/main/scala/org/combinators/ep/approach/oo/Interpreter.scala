@@ -99,8 +99,7 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
     def addParentClass(): Generator[ClassContext, Unit] = if (!shouldAddParent()) {
       Command.skip[ClassContext]
     } else {
-      val lastOpModel = model.last.get.lastModelWithOperation.get
-      val priorClass = baseInterfaceNamesPrefix(lastOpModel.ops, names.mangle(names.conceptNameOf(tpeCase)))
+      val priorClass = names.mangle(names.conceptNameOf(tpeCase))
       for {
         priorType <- findClass(priorClass)
         _ <- resolveAndAddImport(priorType)
@@ -208,7 +207,7 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
     import ooParadigm.testCapabilities._
 
     // must always be an operation in FIRST evolution
-    val baseInterface = baseInterfaceNames(model.lastModelWithOperation.get, model.lastModelWithOperation.get.ops)
+    val baseInterface = baseInterfaceNames(model.lastModelWithOperation.get)
     val dtpeRep = TypeRep.DataType(model.baseDataType)
     for {
       _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(baseInterface : _*))

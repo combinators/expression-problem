@@ -1,6 +1,6 @@
 package org.combinators.ep.language.java
 
-import com.github.javaparser.ast.{CompilationUnit, ImportDeclaration, Node}
+import com.github.javaparser.ast.{CompilationUnit, ImportDeclaration, Node, PackageDeclaration}
 import com.github.javaparser.ast.`type`.ClassOrInterfaceType
 import com.github.javaparser.ast.expr.{Name, SimpleName}
 import com.github.javaparser.ast.visitor.Visitable
@@ -74,6 +74,10 @@ class ImportCleanup {
 
   private class CleanupVisitor extends com.github.javaparser.ast.visitor.ModifierVisitor[Phase] {
     var usageAnalyzer: UsageAnalyzer = UsageAnalyzer()
+
+    /** Make sure to leave alone the package declaration. */
+    override def visit(n: PackageDeclaration, arg: Phase): Visitable = n
+
     override def visit(classOrInterfaceType: ClassOrInterfaceType, phase: Phase): Visitable = {
       phase match {
         case ANALYZE =>
@@ -83,6 +87,7 @@ class ImportCleanup {
           usageAnalyzer.simplify(classOrInterfaceType)
       }
     }
+
     override def visit(name: Name, phase: Phase): Visitable = {
       phase match {
         case ANALYZE =>
@@ -102,12 +107,12 @@ class ImportCleanup {
     }
     override def visit(importDecl: ImportDeclaration, phase: Phase): Node = {
       phase match {
-        case CLEANUP =>
-          if (usageAnalyzer.keepImport(importDecl)) {
-            importDecl
-          } else {
-            null
-          }
+//        case CLEANUP =>
+//          if (usageAnalyzer.keepImport(importDecl)) {
+//            importDecl
+//          } else {
+//            null
+//          }
         case _ => importDecl
       }
     }
@@ -125,6 +130,6 @@ class ImportCleanup {
 }
 
 object ImportCleanup {
-  def cleaned(units: CompilationUnit*): Seq[CompilationUnit] =
-    new ImportCleanup().cleanup(units: _*)
+  def cleaned(units: CompilationUnit*): Seq[CompilationUnit] = units
+//    new ImportCleanup().cleanup(units: _*)
 }

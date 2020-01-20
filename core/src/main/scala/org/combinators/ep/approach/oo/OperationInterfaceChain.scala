@@ -2,7 +2,7 @@ package org.combinators.ep.approach.oo
 
 import org.combinators.ep.domain.Model
 import org.combinators.ep.domain.abstractions.{DataType, Operation, TypeRep}
-import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
+import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm.ObjectOriented
@@ -28,13 +28,13 @@ trait OperationInterfaceChain extends ApproachImplementationProvider  {
   /** Requires capability of defining the signature of a method associated with the given operation. */
   def makeSignature(op: Operation): Generator[MethodBodyContext, Unit]
 
-  def baseInterfaceNamesPrefix(ops: Seq[Operation], suffix:Name): Name = {
-    // Note: foldLeft requires swap of comparison operation because....
-    ops.sortWith(_.name > _.name).map(op => names.conceptNameOf(op)).foldLeft(suffix){ case (n,s) => names.addPrefix(s, n) }
-  }
+//  def baseInterfaceNamesPrefix(ops: Seq[Operation], suffix:Name): Name = {
+//    // Note: foldLeft requires swap of comparison operation because....
+//    ops.sortWith(_.name > _.name).map(op => names.conceptNameOf(op)).foldLeft(suffix){ case (n,s) => names.addPrefix(s, n) }
+//  }
 
-  def baseInterfaceNames(domain: Model, ops: Seq[Operation]): Seq[Name] = {
-    Seq(names.mangle(domain.name), baseInterfaceNamesPrefix(ops, names.mangle(domain.baseDataType.name)))
+  def baseInterfaceNames(domain: Model): Seq[Name] = {
+    Seq(names.mangle(domain.name), names.mangle(domain.baseDataType.name))
   }
 
   // extends Exp [first one] or ExpEval [previous one]
@@ -45,14 +45,14 @@ trait OperationInterfaceChain extends ApproachImplementationProvider  {
     if (domain.isEmpty || domain.lastModelWithOperation.isEmpty) {
       findClass(names.mangle(domain.baseDataType.name))
     } else {
-      findClass(baseInterfaceNames(domain, domain.lastModelWithOperation.get.ops) : _*)
+      findClass(baseInterfaceNames(domain) : _*)
     }
   }
 
 
   /**
    * Create intermediate interfaces that form a chain of operation definitions.
-   *
+   * Now this is created EVEN when an evolution doesn't create an operation
    * @param domainSpecific
    * @return
    */
@@ -64,12 +64,18 @@ trait OperationInterfaceChain extends ApproachImplementationProvider  {
       import classCapabilities._
       for {
         _ <- setInterface()
-        parent <- getParentInterface(domain.last.get, domain.baseDataType)
-        _ <- resolveAndAddImport(parent)
-        _ <- addParent(parent)
+        _ <- if (domain.last.isDefined) {   // avoid when the first one
+          for {
+            parent <- getParentInterface(domain.last.get, domain.baseDataType)
+            _ <- resolveAndAddImport(parent)
+            _ <- addParent(parent)
+          } yield ()
+        } else {
+          Command.skip[ClassContext]
+        }
         _ <- forEach (domain.ops) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), makeSignature(op)) }
       } yield ()
     }
 
-    addClassToProject(makeInterface, baseInterfaceNames(domain, domain.ops) : _*)  }
+    addClassToProject(makeInterface, baseInterfaceNames(domain) : _*)  }
 }

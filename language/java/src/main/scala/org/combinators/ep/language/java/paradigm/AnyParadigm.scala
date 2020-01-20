@@ -12,9 +12,9 @@ import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, FileWithPath, Understands}
-import org.combinators.ep.generator.paradigm.{AnyParadigm => AP, _ }
+import org.combinators.ep.generator.paradigm.{AnyParadigm => AP, _}
 import org.combinators.ep.language.java.Syntax.MangledName
-import org.combinators.ep.language.java.{CodeGenerator, CompilationUnitCtxt, Config, ContextSpecificResolver, FreshNameCleanup, JavaNameProvider, MethodBodyCtxt, ProjectCtxt, Syntax, TestCtxt}
+import org.combinators.ep.language.java.{CodeGenerator, CompilationUnitCtxt, Config, ContextSpecificResolver, FreshNameCleanup, ImportCleanup, JavaNameProvider, MethodBodyCtxt, ProjectCtxt, Syntax, TestCtxt}
 import org.combinators.templating.persistable.{BundledResource, JavaPersistable, ResourcePersistable}
 import org.combinators.templating.twirl.Java
 
@@ -429,8 +429,14 @@ trait AnyParadigm extends AP {
          |autoScalaLibrary := false
          |libraryDependencies ++= $deps
            """.stripMargin
-    val cleanedUnits = FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.units: _*)
-    val cleanedTestUnits = FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.testUnits: _*)
+    val cleanedUnits =
+      ImportCleanup.cleaned(
+        FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.units: _*): _*
+      )
+    val cleanedTestUnits =
+      ImportCleanup.cleaned(
+        FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.testUnits: _*): _*
+      )
     val javaFiles = cleanedUnits.map { unit =>
       FileWithPath(
         JavaPersistable.compilationUnitInstance.rawText(unit),

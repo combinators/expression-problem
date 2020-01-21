@@ -201,7 +201,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             Try { (context, context.resolver.importResolution(command.forElem)) } getOrElse {
               val newImport =
                 new ImportDeclaration(
-                  new com.github.javaparser.ast.expr.Name(config.targetPackage.getName.clone(), command.forElem.toString()),
+                  new com.github.javaparser.ast.expr.Name(command.forElem.toString()),
                   false,
                   false)
               if (context.extraImports.contains(newImport)) {
@@ -277,10 +277,11 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             command: FindClass[Name, Type]
           ): (ClassContext, Type) = {
             val start = new ClassOrInterfaceType()
-            start.setName(command.qualifiedName.head.toAST)
-            val qualifiedName = command.qualifiedName.tail.foldLeft(start){case (scopes, suffix) =>
-              new ClassOrInterfaceType(scopes, suffix.mangled)}
-
+            val fullName = ObjectOriented.components(config.targetPackage.getName).map(JavaNameProvider.mangle) ++ command.qualifiedName
+            start.setName(fullName.head.toAST)
+            val qualifiedName = fullName.tail.foldLeft(start){ case (scopes, suffix) =>
+              new ClassOrInterfaceType(scopes, suffix.mangled)
+            }
             (context, qualifiedName)
           }
         }
@@ -358,7 +359,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             Try { (context, context.resolver.importResolution(command.forElem)) } getOrElse {
               val newImport =
                 new ImportDeclaration(
-                  new com.github.javaparser.ast.expr.Name(config.targetPackage.getName.clone(), command.forElem.toString()),
+                  new com.github.javaparser.ast.expr.Name(command.forElem.toString()),
                   false,
                   false)
               if (context.extraImports.contains(newImport)) {
@@ -478,13 +479,12 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             context: ConstructorContext,
             command: FindClass[Name, Type]
           ): (ConstructorContext, Type) = {
-//            val result = new ClassOrInterfaceType()
-//            result.setName(command.name.toAST)
-//            (context, result)
             val start = new ClassOrInterfaceType()
-            start.setName(command.qualifiedName.head.toAST)
-            val qualifiedName = command.qualifiedName.tail.foldLeft(start){case (scopes, suffix) =>
-              new ClassOrInterfaceType(scopes, suffix.mangled)}
+            val fullName = ObjectOriented.components(config.targetPackage.getName).map(JavaNameProvider.mangle) ++ command.qualifiedName
+            start.setName(fullName.head.toAST)
+            val qualifiedName = fullName.tail.foldLeft(start){ case (scopes, suffix) =>
+              new ClassOrInterfaceType(scopes, suffix.mangled)
+            }
 
             (context, qualifiedName)
           }
@@ -583,12 +583,10 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             context: MethodBodyContext,
             command: FindClass[Name, Type]
           ): (MethodBodyContext, Type) = {
-//            val result = new ClassOrInterfaceType()
-//            result.setName(command.name.toAST)
-//            (context, result)
             val start = new ClassOrInterfaceType()
-            start.setName(command.qualifiedName.head.toAST)
-            val qualifiedName = command.qualifiedName.tail.foldLeft(start){case (scopes, suffix) =>
+            val fullName = ObjectOriented.components(config.targetPackage.getName).map(JavaNameProvider.mangle) ++ command.qualifiedName
+            start.setName(fullName.head.toAST)
+            val qualifiedName = fullName.tail.foldLeft(start){ case (scopes, suffix) =>
               new ClassOrInterfaceType(scopes, suffix.mangled)}
 
             (context, qualifiedName)
@@ -662,6 +660,14 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
 }
 
 object ObjectOriented {
+  def components(name: com.github.javaparser.ast.expr.Name): Seq[String] = {
+    val rest: Seq[String] =
+      name.getQualifier
+      .map[Seq[String]](components)
+      .orElse(Seq.empty[String])
+    name.getIdentifier +: rest
+  }
+
   def apply[AP <: AnyParadigm](base: AnyParadigm): ObjectOriented[base.type] = {
     val b: base.type = base
     new ObjectOriented[b.type] {

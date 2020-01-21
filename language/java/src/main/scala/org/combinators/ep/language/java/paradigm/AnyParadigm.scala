@@ -281,10 +281,10 @@ trait AnyParadigm extends AP {
           ): (MethodBodyCtxt, Option[ImportDeclaration]) = {
             Try { (context, context.resolver.importResolution(command.forElem)) } getOrElse {
               if (command.forElem.isClassOrInterfaceType) {
-                val importName = command.forElem.asClassOrInterfaceType().getNameAsString
+                val importName = command.forElem.asClassOrInterfaceType().asString()
                 val newImport =
                   new ImportDeclaration(
-                    new com.github.javaparser.ast.expr.Name(config.targetPackage.getName.clone(), importName),
+                    new com.github.javaparser.ast.expr.Name(importName),
                     false,
                     false)
                 if (context.extraImports.contains(newImport)) {
@@ -372,7 +372,7 @@ trait AnyParadigm extends AP {
             testMethod.setModifiers(Modifier.publicModifier().getKeyword)
             testMethod.setType(new com.github.javaparser.ast.`type`.VoidType())
             testMethod.setName(JavaNameProvider.addPrefix("test", command.name).toAST)
-            testMethod.addMarkerAnnotation("Test")
+            testMethod.addMarkerAnnotation("org.junit.Test")
             val testImport = new ImportDeclaration("org.junit.Test", false, false)
             val (resultingContext, _) =
               Command.runGenerator(

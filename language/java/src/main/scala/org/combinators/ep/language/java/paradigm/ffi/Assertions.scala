@@ -27,7 +27,7 @@ class Assertions[AP <: AnyParadigm](val base: AP)(ooParadigm: ObjectOriented[AP]
             val assertImp = new ImportDeclaration("org.junit.Assert", false, false)
             val gen = for {
               _ <- addImport(assertImp)
-              assertMethod <- getMember(Java("Assert").expression(), JavaNameProvider.mangle("assertTrue"))
+              assertMethod <- getMember(Java("org.junit.Assert").expression(), JavaNameProvider.mangle("assertTrue"))
               msg <- reify[String](TypeRep.String, command.functional.message)
               res <- apply(assertMethod, Seq(msg, command.arguments(0)))
             } yield res

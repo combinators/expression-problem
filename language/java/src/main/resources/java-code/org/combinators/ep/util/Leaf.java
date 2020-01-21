@@ -1,13 +1,16 @@
 package org.combinators.ep.util;
 
+import java.util.Optional;
 import java.util.Objects;
 
-public final class Leaf<T> implements Tree {
+import org.combinators.ep.util.Tree;
+
+public final class Leaf<T> implements org.combinators.ep.util.Tree {
     public final T value;
 
     @Override
     public int hashCode() {
-        return Objects.hash(value);
+        return java.util.Objects.hash(value);
     }
 
     @Override

@@ -1,7 +1,7 @@
 package org.combinators.ep.approach.oo
 
 import org.combinators.ep.domain.Model
-import org.combinators.ep.domain.abstractions.{Attribute, DataTypeCase, Operation}
+import org.combinators.ep.domain.abstractions.{Attribute, DataTypeCase, Operation, TypeRep}
 import org.combinators.ep.generator.{ApproachImplementationProvider, Command}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
@@ -74,7 +74,7 @@ trait FactoryConcepts extends ApproachImplementationProvider {
     import ooParadigm.methodBodyCapabilities._
 
     for {
-      opClass <- findClass(typeName)    // should check!
+      opClass <- toTargetLanguageType(op.returnType)    // should check!
       _ <- resolveAndAddImport(opClass)
       _ <- setReturnType(opClass)
 
@@ -121,8 +121,8 @@ trait FactoryConcepts extends ApproachImplementationProvider {
    * @param tpeCase    DataTypeCase for which a factory is desired.
    * @return
    */
-  def factoryInstanceDataTypeCase(model:Option[Model] = None, tpeCase:DataTypeCase) : Name = {
-    names.mangle(names.conceptNameOf(tpeCase))
+  def factoryInstanceDataTypeCase(model:Option[Model] = None, tpeCase:DataTypeCase) : Seq[Name] = {
+    model.map(m => names.mangle(m.name)).toSeq :+ names.mangle(names.conceptNameOf(tpeCase))
   }
 
   /**
@@ -167,7 +167,7 @@ trait FactoryConcepts extends ApproachImplementationProvider {
     import ooParadigm.methodBodyCapabilities._
 
     for {
-      opClass <- findClass(factoryNameDataTypeCase(Some(model), tpeCase))    // should check!
+      opClass <- toTargetLanguageType(TypeRep.DataType(model.baseDataType))   // should check!
       _ <- resolveAndAddImport(opClass)
       _ <- setReturnType(opClass)
       _ <- if (isStatic) { setStatic() } else { Command.skip[MethodBodyContext] }
@@ -179,7 +179,7 @@ trait FactoryConcepts extends ApproachImplementationProvider {
       }
       _ <- setParameters(params)
 
-      opInst <- findClass(factoryInstanceDataTypeCase(Some(model), tpeCase))    // should check!
+      opInst <- findClass(factoryInstanceDataTypeCase(Some(model), tpeCase): _*)    // should check!
       _ <- resolveAndAddImport(opInst)
 
       argSeq <- getArguments().map( args => { args.map(triple => triple._3) })

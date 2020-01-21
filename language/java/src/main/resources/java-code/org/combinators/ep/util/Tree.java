@@ -1,10 +1,13 @@
 package org.combinators.ep.util;
 
+import java.util.Optional;
+import java.util.Iterator;
+
 public interface Tree {
     default java.util.Optional<Leaf<?>> asLeaf() { return java.util.Optional.empty(); }
     default java.util.Optional<Node> asNode() {	return java.util.Optional.empty(); }
 
-    default boolean equals(Tree o) {
+    default boolean equals(org.combinators.ep.util.Tree o) {
         java.util.Optional<Boolean> leafCheck = this.asLeaf().flatMap(leaf -> o.asLeaf().map(leaf2 -> Boolean.valueOf(leaf.value.equals(leaf2.value))));
         java.util.Optional<Boolean> nodeCheck = this.asNode().flatMap(node -> o.asNode()
                 .map(node2 -> {

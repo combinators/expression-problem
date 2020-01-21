@@ -1,8 +1,8 @@
 package org.combinators.ep.language.java
 
-import com.github.javaparser.ast.{CompilationUnit, ImportDeclaration, Node, PackageDeclaration}
-import com.github.javaparser.ast.`type`.ClassOrInterfaceType
-import com.github.javaparser.ast.expr.{Name, SimpleName}
+import com.github.javaparser.ast.{CompilationUnit, ImportDeclaration, Node, NodeList, PackageDeclaration}
+import com.github.javaparser.ast.`type`.{ClassOrInterfaceType, Type}
+import com.github.javaparser.ast.expr.{FieldAccessExpr, MethodCallExpr, Name, SimpleName}
 import com.github.javaparser.ast.visitor.Visitable
 import org.combinators.templating.twirl.Java
 
@@ -45,7 +45,7 @@ class ImportCleanup {
      }
 
      def keepImport(importDecl: ImportDeclaration): Boolean = {
-       val qualifiedImportedName = importDecl.getName
+       val qualifiedImportedName = Java(importDecl.getNameAsString).name()
        val simpleImportedName = new SimpleName(qualifiedImportedName.getIdentifier)
        (importDecl.isStatic
          || importDecl.isAsterisk
@@ -55,7 +55,7 @@ class ImportCleanup {
 
      def simplify(name: Name): Name = {
        val simplePart = new SimpleName(name.getIdentifier)
-       if (mostRelevantFor(simplePart) == name) {
+       if (mostRelevantFor(simplePart) == name && usageData(simplePart).nonEmpty) {
          new Name(name.getIdentifier)
        } else {
          name
@@ -64,7 +64,13 @@ class ImportCleanup {
 
 
      def simplify(classOrInterfaceType: ClassOrInterfaceType): ClassOrInterfaceType = {
-        toClassOrInterfaceType(simplify(toQualifiedName(classOrInterfaceType)))
+       val qualifiedName = toQualifiedName(classOrInterfaceType)
+       val result = classOrInterfaceType.clone()
+       if (simplify(qualifiedName) != qualifiedName) {
+         result.removeScope()
+         result.setName(qualifiedName.getIdentifier)
+       }
+       result
      }
    }
 
@@ -82,9 +88,19 @@ class ImportCleanup {
       phase match {
         case ANALYZE =>
           usageAnalyzer = usageAnalyzer.use(classOrInterfaceType)
+          classOrInterfaceType.getTypeArguments.map[java.util.stream.Stream[Visitable]](_.stream().map[Visitable](_.accept(this, ANALYZE)))
           classOrInterfaceType
         case CLEANUP =>
-          usageAnalyzer.simplify(classOrInterfaceType)
+          val result = usageAnalyzer.simplify(classOrInterfaceType)
+          if (result.getTypeArguments.isPresent) {
+            val tyArgs = result.getTypeArguments.get
+            val newArgs = new NodeList[Type]()
+            tyArgs.stream.forEach(arg =>
+              newArgs.add(arg.accept(this, CLEANUP).asInstanceOf[Type])
+            )
+            result.setTypeArguments(newArgs)
+          }
+          result
       }
     }
 
@@ -107,12 +123,12 @@ class ImportCleanup {
     }
     override def visit(importDecl: ImportDeclaration, phase: Phase): Node = {
       phase match {
-//        case CLEANUP =>
-//          if (usageAnalyzer.keepImport(importDecl)) {
-//            importDecl
-//          } else {
-//            null
-//          }
+        case CLEANUP =>
+          if (usageAnalyzer.keepImport(importDecl)) {
+            importDecl
+          } else {
+            null
+          }
         case _ => importDecl
       }
     }
@@ -121,8 +137,10 @@ class ImportCleanup {
   def cleanup(units: CompilationUnit*): Seq[CompilationUnit] = {
     units.map(unit => {
       val cleanupVisitor = new CleanupVisitor
-      unit
+      val unit1 = unit
         .accept(cleanupVisitor, ANALYZE)
+        .asInstanceOf[CompilationUnit]
+      unit1
         .accept(cleanupVisitor, CLEANUP)
         .asInstanceOf[CompilationUnit]
     })
@@ -130,6 +148,6 @@ class ImportCleanup {
 }
 
 object ImportCleanup {
-  def cleaned(units: CompilationUnit*): Seq[CompilationUnit] = units
-//    new ImportCleanup().cleanup(units: _*)
+  def cleaned(units: CompilationUnit*): Seq[CompilationUnit] =
+    new ImportCleanup().cleanup(units: _*)
 }

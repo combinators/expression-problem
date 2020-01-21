@@ -71,8 +71,8 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
    * @param tpeCase    DataTypeCase for which a factory is desired.
    * @return
    */
-  override def factoryInstanceDataTypeCase(model:Option[Model] = None, tpeCase:DataTypeCase) : Name = {
-    names.addSuffix(names.mangle(opsName(model.get.ops)), names.conceptNameOf(tpeCase))
+  override def factoryInstanceDataTypeCase(model:Option[Model] = None, tpeCase:DataTypeCase) : Seq[Name] = {
+    Seq(names.addSuffix(names.mangle(opsName(model.get.ops)), names.conceptNameOf(tpeCase)))
   }
 
   /** Find Model with operations and return that one's name as concatenations of operations. */

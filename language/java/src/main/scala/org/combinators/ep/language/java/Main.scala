@@ -29,10 +29,10 @@ object Main extends IOApp {
   // val approach = visitorApproach // WORKS!
   // val approach = visitorSideEffectApproach // WORKS!
   // val approach = extensibleVisitorApproach // WORKS!
-   val approach = triviallyApproach // Problem with M4 generated code: factory methods missing
+  val approach = triviallyApproach // Problem with M4 generated code: factory methods missing
   // val approach = interpreterApproach // Not quite yet
 
-  val evolutions = Seq(M0, M1) //  , M2, M3, M4) // , M4, M5, M6)
+  val evolutions = Seq(M0, M1, M2, M3) // , M4) // , M4, M5, M6)
   val m4eip =
     eips.M4.imperative(approach.paradigm)(
       generator.imperativeInMethod,

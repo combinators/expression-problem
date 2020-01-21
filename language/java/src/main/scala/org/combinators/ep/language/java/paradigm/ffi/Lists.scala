@@ -32,11 +32,11 @@ trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
           if (command.arguments.isEmpty) {
             for {
               _ <- AddImport[Import](Java("import java.util.Collections;").importDeclaration()).interpret(canAddImport)
-            } yield Java(s"Collections.emptyList()").expression[Expression]()
+            } yield Java(s"java.util.Collections.emptyList()").expression[Expression]()
           } else {
             for {
               _ <- AddImport[Import](Java("import java.util.Arrays;").importDeclaration()).interpret(canAddImport)
-            } yield Java(s"Arrays.asList(${command.arguments.mkString(", ")})").expression[Expression]()
+            } yield Java(s"java.util.Arrays.asList(${command.arguments.mkString(", ")})").expression[Expression]()
           }
         Command.runGenerator[Ctxt, Expression](gen, context)
       }
@@ -58,7 +58,7 @@ trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
               for {
                 _ <- AddImport[Import](Java("import java.util.stream.Stream;").importDeclaration()).interpret(addImport)
                 _ <- AddImport[Import](Java("import java.util.stream.Collectors;").importDeclaration()).interpret(addImport)
-              } yield Java(s"Stream.concat(Stream.of(${command.arguments(0)}), ${command.arguments(1)}.stream()).collect(Collectors.toList())").expression[Expression]()
+              } yield Java(s"java.util.stream.Stream.concat(java.util.stream.Stream.of(${command.arguments(0)}), ${command.arguments(1)}.stream()).collect(java.util.stream.Collectors.toList())").expression[Expression]()
             Command.runGenerator(gen, context)
           }
         }
@@ -93,7 +93,7 @@ trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
               for {
                 _ <- AddImport[Import](Java("import java.util.stream.Stream;").importDeclaration()).interpret(addImport)
                 _ <- AddImport[Import](Java("import java.util.stream.Collectors;").importDeclaration()).interpret(addImport)
-              } yield Java(s"Stream.concat(${command.arguments(0)}.stream(), ${command.arguments(1)}.stream()).collect(Collectors.toList())").expression[Expression]()
+              } yield Java(s"java.util.stream.Stream.concat(${command.arguments(0)}.stream(), ${command.arguments(1)}.stream()).collect(java.util.stream.Collectors.toList())").expression[Expression]()
             Command.runGenerator(gen, context)
           }
         }
@@ -105,7 +105,7 @@ trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
         context: ProjectCtxt,
         command: Enable.type
       ): (ProjectCtxt, Unit) = {
-        val listType = Java("List").tpe()
+        val listType = Java("java.util.List").tpe()
 
         def updateResolver(resolver: ContextSpecificResolver): ContextSpecificResolver = {
           def addResolutionType[Ctxt](

@@ -32,7 +32,7 @@ trait Trees[Ctxt, AP <: AnyParadigm] extends Ts[Ctxt] {
         val gen =
           for {
             _ <- AddImport(Java("import org.combinators.ep.util.Leaf;").importDeclaration()).interpret(canAddImport)
-          } yield Java(s"new Leaf<${command.functional.valueType}>(${command.arguments.head})").expression[Expression]()
+          } yield Java(s"new org.combinators.ep.util.Leaf<${command.functional.valueType}>(${command.arguments.head})").expression[Expression]()
         Command.runGenerator(gen, context)
       }
     }
@@ -46,7 +46,7 @@ trait Trees[Ctxt, AP <: AnyParadigm] extends Ts[Ctxt] {
         val gen =
           for {
             _ <- AddImport(Java("import org.combinators.ep.util.Node;").importDeclaration()).interpret(canAddImport)
-          } yield Java(s"new Node(${command.arguments.mkString(",")})").expression[Expression]()
+          } yield Java(s"new org.combinators.ep.util.Node(${command.arguments.mkString(",")})").expression[Expression]()
         Command.runGenerator(gen, context)
       }
     }
@@ -65,7 +65,7 @@ trait Trees[Ctxt, AP <: AnyParadigm] extends Ts[Ctxt] {
         context: ProjectCtxt,
         command: Enable.type
       ): (ProjectCtxt, Unit) = {
-        val treeType = Java("Tree").tpe()
+        val treeType = Java("org.combinators.ep.util.Tree").tpe()
 
         def updateResolver(resolver: ContextSpecificResolver): ContextSpecificResolver = {
           def addResolutionType[Ctxt](

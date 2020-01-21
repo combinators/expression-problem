@@ -69,6 +69,10 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
     } yield res
   }
 
+  override def factoryInstanceDataTypeCase(model:Option[Model] = None, tpeCase:DataTypeCase) : Seq[Name] = {
+    model.map(m => names.mangle(m.name)).toSeq :+ finalized :+ names.mangle(names.conceptNameOf(tpeCase))
+  }
+
   override def makeImplementation(tpe: DataType,
                                    tpeCase: DataTypeCase,
                                    op: Operation,
@@ -182,8 +186,14 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
   def makeDerivedInterface(tpe: DataType, tpeCase: DataTypeCase, model:Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
     val makeClass: Generator[ClassContext, Unit] = {
       import classCapabilities._
+      // Either generate an implementation for every operation if data type is declared in this model, or just the new ones.
+      val opsToGenerate =
+        if (model.findTypeCase(tpeCase).contains(model)) {
+          model.flatten.ops
+        } else model.ops
+
       for {
-        parent <-  findClass(baseInterfaceNames(model): _*)   //getParentInterface(model, tpe)
+        parent <-  toTargetLanguageType(TypeRep.DataType(tpe))
         _ <- resolveAndAddImport(parent)
         _ <- addParent(parent)
 
@@ -205,7 +215,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
             } yield mi
           }
         }
-        _ <- forEach (model.ops) { op =>
+        _ <- forEach (opsToGenerate) { op =>
           addMethod(names.mangle(names.instanceNameOf(op)), makeImplementation(tpe, tpeCase, op, domainSpecific))
         }
 
@@ -256,7 +266,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
           }
         } yield ()
       }
-      addClassToProject(makeClass, names.mangle(model.name), finalized, factoryInstanceDataTypeCase(Some(model), tpeCase))
+      addClassToProject(makeClass, factoryInstanceDataTypeCase(Some(model), tpeCase): _*)
     }
 
     /** For Trivially, the covariant type needs to be selected whenever a BaseType in the domain is expressed. */
@@ -286,50 +296,34 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
     def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
       import paradigm.projectContextCapabilities._
       for {
-        _ <- debug ("Processing Trivially")
+        _ <- debug("Processing Trivially")
         _ <- registerTypeMapping(domain)
-        _ <- domainSpecific.initialize(this)
-        _ <- makeBase(domain.baseDataType, Seq.empty)     // Marker interface -- ignores operations
+        _ <- makeBase(domain.baseDataType, Seq.empty) // Marker interface -- ignores operations
 
         // whenever new operation, this CREATES the capability of having intermediate interfaces
-        _ <- forEach (domain.inChronologicalOrder) { currentModel =>
+        _ <- forEach(domain.inChronologicalOrder) { currentModel =>
           // for all PAST dataTypes that are already defined
           for {
+            _ <- domainSpecific.initialize(this)
             _ <- registerTypeMapping(currentModel)
             _ <- makeIntermediateInterface(currentModel, domainSpecific)
 
-            _ <- forEach(currentModel.inChronologicalOrder.filter(m => m.typeCases.nonEmpty)) { modelDefiningTypes =>
-                   forEach (modelDefiningTypes.typeCases) { tpe =>
-                     makeDerivedInterfaces(tpe, currentModel, domainSpecific)
-                   }
+            _ <- forEach(currentModel.inChronologicalOrder) { modelDefiningTypes =>
+              forEach(modelDefiningTypes.typeCases) { tpe =>
+                for {
+                  _ <- makeDerivedInterfaces(tpe, currentModel, domainSpecific)
+                  _ <- makeFinalClass(currentModel, tpe)
+                } yield ()
               }
-          } yield ()
-        }
-
-        // if current state doesn't declare an operation then you need to iterate over everything in the past
-        // that *did* declare an operation [i.e., find those models] and create derived types for these new types
-        // that *do* declare operations and need to create derived data types
-        _ <- forEach (domain.inChronologicalOrder) { modelDeclaringTypeCase =>
-          forEach (modelDeclaringTypeCase.typeCases) { tpe =>
-             for {
-              _ <- registerTypeMapping(modelDeclaringTypeCase)
-              _ <- makeDerivedInterfaces(tpe, modelDeclaringTypeCase, domainSpecific)
-            } yield ()
-          }
-        }
-
-        /** For each DataType AND [cross-product] Operation you need a final Class. */
-        _ <- forEach (domain.inChronologicalOrder) {  model =>
-          forEach (model.flatten.typeCases) { tpeCase => {
-              for {
-                _ <- registerTypeMapping(model)
-                _ <- makeFinalClass(model, tpeCase)
-              } yield ()
             }
-          }
+          } yield ()
         }
       } yield ()
     }
+
+  def finalBaseInterfaceNames(domain: Model): Seq[Name] = {
+    Seq(names.mangle(domain.name), finalized, names.mangle(domain.baseDataType.name))
+  }
 
   /**
    * Test cases all need factory methods to work.
@@ -338,53 +332,52 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
    * the factory methods are injected.
    * */
    override def implement(tests: Map[Model, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
-    import projectContextCapabilities._
-    import paradigm.compilationUnitCapabilities._
-    import paradigm.testCapabilities._
-    for {
+     import projectContextCapabilities._
+     import paradigm.compilationUnitCapabilities._
+     import paradigm.testCapabilities._
+     for {
 
-      _ <-
-        forEach(tests.toList) { case (model, tests) => {
-          val testCode: Generator[MethodBodyContext, Seq[Expression]] =
-            for {
-              code <- forEach(tests) {
-                test => testImplementationProvider.test(this)(test)
-              }
-            } yield code.flatten
+       _ <- forEach(tests.toList) { case (model, tests) => {
+         val testCode: Generator[MethodBodyContext, Seq[Expression]] =
+           for {
+             code <- forEach(tests) {
+               test => testImplementationProvider.test(this)(test)
+             }
+           } yield code.flatten
 
-          import ooParadigm.testCapabilities._
+         import ooParadigm.testCapabilities._
 
-          val compUnit = for {
+         val compUnit = for {
 
-            // add test case first
-            _ <- addTestCase(testCode, testName)
+           // add test case first
+           _ <- addTestCase(testCode, testName)
 
-            // get list of all operations and MAP to the most recent model
-            _ <- forEach(model.flatten.typeCases) { tpeCase =>
-              // must ensure
-              addMethod(names.mangle(names.conceptNameOf(tpeCase)), createFactoryDataTypeCase(model, tpeCase))
-            }
+           // get list of all operations and MAP to the most recent model
+           _ <- forEach(model.flatten.typeCases) { tpeCase =>
+             // must ensure
+             addMethod(names.mangle(names.conceptNameOf(tpeCase)), createFactoryDataTypeCase(model, tpeCase))
+           }
 
-          } yield()
+         } yield ()
 
-          val testSuite = for {
-            _ <- addTestSuite(
-              testCaseName(model),
-              compUnit
-            )
-          } yield ()
+         val testSuite = for {
+           _ <- addTestSuite(
+             testCaseName(model),
+             compUnit
+           )
+         } yield ()
 
-          for {
-            _ <- registerTypeMapping(model.lastModelWithOperation.get)   // must come here since it registers mappings that exist in the ProjectContext
-            _ <- addCompilationUnit(
-                    testSuite,
-                    testCaseName(model)
-            )
-          } yield None
-        }
-        }
-    } yield ()
-  }
+         for {
+           _ <- registerTypeMapping(model) // must come here since it registers mappings that exist in the ProjectContext
+           _ <- addCompilationUnit(
+             testSuite,
+             testCaseName(model)
+           )
+         } yield None
+       }
+       }
+     } yield ()
+   }
 }
 
   object Trivially {

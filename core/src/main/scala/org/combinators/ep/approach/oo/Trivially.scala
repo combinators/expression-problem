@@ -10,17 +10,8 @@ import org.combinators.ep.generator.paradigm._
 
 /**
  *
-Exp extends self
 
-need to ensure parent classes are qualified with ep within the extends clause
-
-need to make sure classes are registered from PROPER evolution
-
-  Lit in M1 needs to import m1.Exp NOT NOT NOT e0.exp
-
-Finals need to extend qualified parent
-
-factory method in test cases HAS to get from CURRENT for its parametesr
+ Producer methods must include factory methods for all known types so far.
 
  */
 
@@ -176,7 +167,8 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
    *
    *  add another parent IF there is a prior operation defined before this model.
    *
-   *  These are all defined in the "current" model.
+   *  These are all defined in the "current" model. Note that if the operation is a producer method, then
+   *  you need factory methods for all known data types.
    *
    * @param tpe
    * @param tpeCase
@@ -217,6 +209,10 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
         }
         _ <- forEach (opsToGenerate) { op =>
           addMethod(names.mangle(names.instanceNameOf(op)), makeImplementation(tpe, tpeCase, op, domainSpecific))
+        }
+        // these are factory methods in case they are needed for producer methods. Could generate on demand...
+        _ <- forEach (model.flatten.typeCases) { tpe =>
+          addMethod(names.mangle(names.conceptNameOf(tpe)), createFactoryDataTypeCase(model, tpe))
         }
 
         _ <- setInterface()  // do LAST because then methods with bodies are turned into default methods in interface

@@ -5,6 +5,7 @@ import org.combinators.ep.approach.oo._
 import org.combinators.ep.domain.math._
 import org.combinators.ep.generator.TestImplementationProvider
 import org.combinators.ep.generator.FileWithPathPersistable._
+import org.combinators.ep.language.java.Main.{approach, generator}
 import org.combinators.ep.language.java.{JavaNameProvider, Syntax}
 import org.combinators.jgitserv.BranchTransaction
 
@@ -14,6 +15,21 @@ import org.combinators.jgitserv.BranchTransaction
 object TriviallyValidate extends IOApp with BaseEvolution {
   val approach = Trivially[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
+  val m4eip =
+    eips.M4.imperative(approach.paradigm)(
+      generator.imperativeInMethod,
+      generator.doublesInMethod,
+      generator.booleansInMethod,
+      generator.stringsInMethod,
+      generator.listsInMethod,
+      generator.equalityInMethod)
+  val m5eip = eips.M5(approach.paradigm)(m4eip)(
+    generator.intsInMethod,
+    generator.treesInMethod)
+  val eip = eips.M6(approach.paradigm)(m5eip)(
+    generator.equalityInMethod
+  )
+
   val transaction =
     evolutions.zip(tests).foldLeft(Option.empty[BranchTransaction]) {
       case (transaction, (evolution, tests)) =>
@@ -21,7 +37,7 @@ object TriviallyValidate extends IOApp with BaseEvolution {
           for {
             _ <- approach.implement(
               evolution.getModel,
-              eips.M3.apply(approach.paradigm)(generator.doublesInMethod, generator.stringsInMethod)
+              eip
             )
             _ <- approach.implement(
               tests,

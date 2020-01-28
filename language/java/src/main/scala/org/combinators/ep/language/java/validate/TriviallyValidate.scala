@@ -6,6 +6,7 @@ import org.combinators.ep.domain.math._
 import org.combinators.ep.generator.TestImplementationProvider
 import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.language.java.Main.{approach, generator}
+import org.combinators.ep.language.java.validate.VisitorSideEffectValidate.generator
 import org.combinators.ep.language.java.{JavaNameProvider, Syntax}
 import org.combinators.jgitserv.BranchTransaction
 
@@ -13,7 +14,7 @@ import org.combinators.jgitserv.BranchTransaction
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
 object TriviallyValidate extends IOApp with BaseEvolution {
-  val approach = Trivially[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+  val approach = Trivially[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
   val m4eip =
     eips.M4.imperative(approach.paradigm)(

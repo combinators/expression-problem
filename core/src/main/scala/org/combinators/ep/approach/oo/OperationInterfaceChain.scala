@@ -5,7 +5,7 @@ import org.combinators.ep.domain.abstractions.{DataType, Operation, TypeRep}
 import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.ep.generator.paradigm.ObjectOriented
+import org.combinators.ep.generator.paradigm.{ObjectOriented, ParametricPolymorphism}
 
 /**
  * Ability to create a chain of interfaces, each one specifying operations.
@@ -20,6 +20,7 @@ import org.combinators.ep.generator.paradigm.ObjectOriented
  */
 trait OperationInterfaceChain extends ApproachImplementationProvider  {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
+  val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
 
   import ooParadigm._
   import paradigm._
@@ -56,15 +57,27 @@ trait OperationInterfaceChain extends ApproachImplementationProvider  {
    * @param domainSpecific
    * @return
    */
-  def makeIntermediateInterface(domain:Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
+  def makeIntermediateInterface(domain:Model, domainSpecific: EvolutionImplementationProvider[this.type], typeParameter:Option[Name] = None): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
 
     // create class which is an interface containing abstract methods
     val makeInterface: Generator[ClassContext, Unit] = {
       import classCapabilities._
+      import polymorphics.methodBodyCapabilities._
       for {
         _ <- setInterface()
-        _ <- if (domain.last.isDefined) {   // avoid when the first one
+
+        _ <- if (typeParameter.isDefined) {
+          for {
+            visitTyParam <- freshName(typeParameter.get)
+            // PROBLEM: CANNOT ADD TYPE PARAMETER WHILE IN CLASSCONTEXT
+            _ <- addTypeParameter(visitTyParam, Command.skip)
+          } yield ()
+        } else {
+          Command.skip[ClassContext]
+        }
+
+        _ <- if (domain.last.isDefined) {
           for {
             parent <- getParentInterface(domain.last.get, domain.baseDataType)
             _ <- resolveAndAddImport(parent)
@@ -73,6 +86,7 @@ trait OperationInterfaceChain extends ApproachImplementationProvider  {
         } else {
           Command.skip[ClassContext]
         }
+
         _ <- forEach (domain.ops) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), makeSignature(op)) }
       } yield ()
     }

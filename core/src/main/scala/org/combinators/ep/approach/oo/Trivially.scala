@@ -7,6 +7,7 @@ import org.combinators.ep.generator._
 import org.combinators.ep.generator.communication._
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax._
 import org.combinators.ep.generator.paradigm._
+import org.combinators.ep.generator.paradigm.control.Imperative
 
 /**
  *
@@ -15,7 +16,7 @@ import org.combinators.ep.generator.paradigm._
 
  */
 
-trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInterface with SharedOO with OperationInterfaceChain with FieldDefinition with FactoryConcepts {
+trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInterface with SharedOO with FutureVisitor with OperationInterfaceChain with FieldDefinition with FactoryConcepts {
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
 
@@ -25,6 +26,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
 
  // lazy val finalName:Name = names.mangle("Final")
   lazy val finalized:Name = names.mangle("finalized")     // sub package within each evolution that contains final classes
+  lazy val expTypeParameter:Name = names.mangle("V")
 
   def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression] = {
     import ooParadigm.methodBodyCapabilities._
@@ -260,6 +262,12 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
           _ <- forEach(tpeCase.attributes) { att =>
             addMethod(getterName(att), makeBodyImpl(model.baseDataType, att, parent))
           }
+
+          visitorType <- findClass(names.mangle(model.name), finalized, visitorClass)
+          baseType <-  findClass(names.mangle(model.baseDataType.name))
+          _ <- resolveAndAddImport(visitorType)
+          _ <- addAcceptMethod(makeAcceptImplementation(visitorType))
+          _ <- addConvertMethod(makeConvertImplementation(model, visitorType, baseType))
         } yield ()
       }
       addClassToProject(makeClass, factoryInstanceDataTypeCase(Some(model), tpeCase): _*)
@@ -289,12 +297,57 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
       } yield ()
     }
 
+  /**
+   * Instead of using the standard 'makeBase' we need to add accept and convert methods.
+   *
+   * This insists upon accessing registry for Exp, which unfortunately grabs ep.m4.Exp when
+   * I only want this top-level one. Cna't
+   */
+  def makeTriviallyBase(tpe: DataType, ops: Seq[Operation]): Generator[ProjectContext, Unit] = {
+    import ooParadigm.projectCapabilities._
+
+    val accept: Generator[MethodBodyContext, Option[Expression]] = {
+      import ooParadigm.methodBodyCapabilities._
+      import paradigm.methodBodyCapabilities._
+
+      for {
+        baseExp <- toTargetLanguageType(TypeRep.DataType(tpe))
+        _ <- makeAcceptSignature(baseExp)
+        _ <- setAbstract()
+      } yield None
+    }
+
+    def abstractMethod(baseExp:Type): Generator[MethodBodyContext, Option[Expression]] = {
+      import ooParadigm.methodBodyCapabilities._
+      import paradigm.methodBodyCapabilities._
+
+      for {
+        _ <- makeConvertSignature(baseExp, baseExp)
+        _ <- setAbstract()
+      } yield None
+    }
+
+    val makeClass: Generator[ClassContext, Unit] = {
+      import classCapabilities._
+
+      for {
+        _ <- setInterface()
+        baseExp <- toTargetLanguageType(TypeRep.DataType(tpe))
+        _ <- addAcceptMethod(accept)
+        _ <- addConvertMethod(abstractMethod(baseExp))
+      } yield ()
+    }
+
+    addClassToProject(makeClass, names.mangle(names.conceptNameOf(tpe)))
+  }
+
+
     def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
       import paradigm.projectContextCapabilities._
       for {
         _ <- debug("Processing Trivially")
         _ <- registerTypeMapping(domain)
-        _ <- makeBase(domain.baseDataType, Seq.empty) // Marker interface -- ignores operations
+        _ <- makeTriviallyBase(domain.baseDataType, Seq.empty)
 
         // whenever new operation, this CREATES the capability of having intermediate interfaces
         _ <- forEach(domain.inChronologicalOrder) { currentModel =>
@@ -302,7 +355,9 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
           for {
             _ <- domainSpecific.initialize(this)
             _ <- registerTypeMapping(currentModel)
-            _ <- makeIntermediateInterface(currentModel, domainSpecific)
+            _ <- makeIntermediateInterface(currentModel, domainSpecific, Some(expTypeParameter))
+
+            _ <- addFinalizedVisitor(currentModel, makeFinalizedVisitor(currentModel))
 
             _ <- forEach(currentModel.inChronologicalOrder) { modelDefiningTypes =>
               forEach(modelDefiningTypes.typeCases) { tpe =>
@@ -383,6 +438,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
     def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
     (base: P)
     (nameProvider: NameProvider[base.syntax.Name],
+     imp: Imperative.WithBase[base.MethodBodyContext, base.type],
      oo: ObjectOriented.WithBase[base.type],
      params: ParametricPolymorphism.WithBase[base.type])
     (generics: Generics.WithBase[base.type,oo.type,params.type]): Trivially.WithParadigm[base.type] =
@@ -390,6 +446,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
         val paradigm: base.type = base
         val names: NameProvider[paradigm.syntax.Name] = nameProvider
         val ooParadigm: oo.type = oo
+        val impParadigm: imp.type = imp
         val polymorphics: params.type = params
         val genericsParadigm: generics.type = generics
       }

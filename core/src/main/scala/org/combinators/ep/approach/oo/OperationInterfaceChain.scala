@@ -5,7 +5,7 @@ import org.combinators.ep.domain.abstractions.{DataType, Operation, TypeRep}
 import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.ep.generator.paradigm.{ObjectOriented, ParametricPolymorphism}
+import org.combinators.ep.generator.paradigm.{Generics, ObjectOriented, ParametricPolymorphism}
 
 /**
  * Ability to create a chain of interfaces, each one specifying operations.
@@ -21,6 +21,7 @@ import org.combinators.ep.generator.paradigm.{ObjectOriented, ParametricPolymorp
 trait OperationInterfaceChain extends ApproachImplementationProvider  {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
+  val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
 
   import ooParadigm._
   import paradigm._
@@ -63,7 +64,7 @@ trait OperationInterfaceChain extends ApproachImplementationProvider  {
     // create class which is an interface containing abstract methods
     val makeInterface: Generator[ClassContext, Unit] = {
       import classCapabilities._
-      import polymorphics.methodBodyCapabilities._
+      import genericsParadigm.classCapabilities._
       for {
         _ <- setInterface()
 

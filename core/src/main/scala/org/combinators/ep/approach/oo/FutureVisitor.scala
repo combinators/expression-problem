@@ -5,7 +5,7 @@ import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.communication.{ReceivedRequest, Request}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.ep.generator.paradigm.{ObjectOriented, ParametricPolymorphism}
+import org.combinators.ep.generator.paradigm.{Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
@@ -17,6 +17,7 @@ trait FutureVisitor extends ApproachImplementationProvider {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val impParadigm: Imperative.WithBase[MethodBodyContext,paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
+  val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
 
   import ooParadigm._
 
@@ -199,20 +200,20 @@ trait FutureVisitor extends ApproachImplementationProvider {
   def makeFinalizedVisitor(domain:Model): Generator[ClassContext, Unit] = {
 
     import ooParadigm.classCapabilities._
-    import polymorphics.methodBodyCapabilities._
+    import genericsParadigm.classCapabilities._
     for {
-      resultTpe:Type <- toTargetLanguageType(TypeRep.DataType(domain.baseDataType))
+      resultTpe <- toTargetLanguageType(TypeRep.DataType(domain.baseDataType))
       _ <- resolveAndAddImport(resultTpe)
-      visitorTpe:Type <- findClass(visitorClass)
+      visitorTpe <- findClass(visitorClass)
 
-      parameterizedTpe <- applyType(resultTpe, Seq(visitorTpe))
+      parameterizedTpe <- applyType(resultTpe, Seq[Type](visitorTpe))
 
-      _ <- addField(result, resultTpe)
+      _ <- addField(result, parameterizedTpe)
       field <- getField(result)
 
-      _ <- addMethod(getResult, returnValue(resultTpe, field))
+      _ <- addMethod(getResult, returnValue(parameterizedTpe, field))
 
-      _ <- addMethod(visit, makeVisitImplementation(resultTpe))
+      _ <- addMethod(visit, makeVisitImplementation(parameterizedTpe))
     } yield ()
   }
 

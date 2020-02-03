@@ -198,10 +198,11 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             context: ClassContext,
             command: ResolveImport[Import, Type]
           ): (ClassContext, Option[Import]) = {
-            Try { (context, context.resolver.importResolution(command.forElem)) } getOrElse {
+            val stripped = AnyParadigm.stripGenerics(command.forElem)
+            Try { (context, context.resolver.importResolution(stripped)) } getOrElse {
               val newImport =
                 new ImportDeclaration(
-                  new com.github.javaparser.ast.expr.Name(command.forElem.toString()),
+                  new com.github.javaparser.ast.expr.Name(stripped.asClassOrInterfaceType().getName.toString()),
                   false,
                   false)
               if (context.extraImports.contains(newImport)) {
@@ -356,10 +357,11 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             context: ConstructorContext,
             command: ResolveImport[ImportDeclaration, Type]
           ): (ConstructorContext, Option[ImportDeclaration]) = {
-            Try { (context, context.resolver.importResolution(command.forElem)) } getOrElse {
+            val stripped = AnyParadigm.stripGenerics(command.forElem)
+            Try { (context, context.resolver.importResolution(stripped)) } getOrElse {
               val newImport =
                 new ImportDeclaration(
-                  new com.github.javaparser.ast.expr.Name(command.forElem.toString()),
+                  new com.github.javaparser.ast.expr.Name(stripped.asClassOrInterfaceType().getName.toString()),
                   false,
                   false)
               if (context.extraImports.contains(newImport)) {
@@ -667,6 +669,8 @@ object ObjectOriented {
       .orElse(Seq.empty[String])
     name.getIdentifier +: rest
   }
+
+
 
   def apply[AP <: AnyParadigm](base: AnyParadigm): ObjectOriented[base.type] = {
     val b: base.type = base

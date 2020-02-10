@@ -7,6 +7,7 @@ import org.combinators.ep.generator._
 import org.combinators.ep.generator.communication._
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax._
 import org.combinators.ep.generator.paradigm._
+import org.combinators.ep.generator.paradigm.control.Imperative
 
 sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataTypeAsInterface with SharedOO with OperationInterfaceChain with FieldDefinition with FactoryConcepts {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
@@ -99,7 +100,9 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
     def addParentClass(): Generator[ClassContext, Unit] = if (!shouldAddParent()) {
       Command.skip[ClassContext]
     } else {
-      val priorClass = names.mangle(names.conceptNameOf(tpeCase))
+      //val definedModel = model.findTypeCase(tpeCase)    // NOT WORKING -- might not be defined
+      //val past = Seq(names.mangle(definedModel.get.name), names.mangle(names.conceptNameOf(tpeCase)))
+      val priorClass = names.mangle(names.conceptNameOf(tpeCase))   // WANT to get prior one in ealier package.
       for {
         priorType <- findClass(priorClass)
         _ <- resolveAndAddImport(priorType)
@@ -133,7 +136,12 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
     } yield ()
   }
 
-  def generateForOp(model:Model, ops:Seq[Operation], allTypes:Seq[DataTypeCase], isBase:Boolean, domainSpecific: EvolutionImplementationProvider[this.type]) : Generator[ProjectContext, Unit] = {
+  /** Place operation classes in appropriate package.  */
+  def operationNames(domain: Model, tpe:DataTypeCase): Seq[Name] = {
+    Seq(names.mangle(domain.name), names.mangle(names.conceptNameOf(tpe)))
+  }
+
+  def generateForOp(model:Model, ops:Seq[Operation], defining:Model, allTypes:Seq[DataTypeCase], isBase:Boolean, domainSpecific: EvolutionImplementationProvider[this.type]) : Generator[ProjectContext, Unit] = {
     val combinedOps:String = ops.sortWith(_.name < _.name).map(op => names.conceptNameOf(op)).mkString("")
     import ooParadigm.projectCapabilities._
 
@@ -146,8 +154,8 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
           model.findTypeCase(tpeCase).get
         }
         for {
-          _ <- registerTypeMapping(modelToUse)
-          _ <- addClassToProject(makeClassForCase(modelToUse, ops, tpeCase, domainSpecific), names.addSuffix(names.mangle(combinedOps), names.conceptNameOf(tpeCase)))
+          _ <- registerTypeMapping(modelToUse)  // below was names.addSuffix(names.mangle(combinedOps), names.conceptNameOf(tpeCase))
+          _ <- addClassToProject(makeClassForCase(modelToUse, ops, tpeCase, domainSpecific), operationNames(defining, tpeCase) : _ *)
         } yield ()
         }
       }
@@ -181,9 +189,11 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
     def factoryClass(model: Model): Generator[ClassContext, Unit] = {
       import ooParadigm.classCapabilities._
       for {
+        opClass <- toTargetLanguageType(TypeRep.DataType(model.baseDataType))   // should check!
+        _ <- resolveAndAddImport(opClass)
         _ <- forEach(model.pastDataTypes) {
           tpe =>
-            addMethod(names.mangle(names.conceptNameOf(tpe)), createFactoryDataTypeCase(model, tpe, isStatic = true))
+            addMethod(names.mangle(names.conceptNameOf(tpe)), createStaticFactoryDataTypeCase(model, tpe, opClass))
         }
       } yield ()
     }
@@ -196,15 +206,15 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
     FindClass(covariantType).interpret(canFindClass)
   }
 
+
+
   /** What model is delivered has operations which is essential for the mapping. */
   override def registerTypeMapping(model: Model): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
+    import ooParadigm.classCapabilities.canFindClassInClass
+    import ooParadigm.constructorCapabilities.canFindClassInConstructor
+    import ooParadigm.methodBodyCapabilities.canFindClassInMethod
     import paradigm.projectContextCapabilities._
-    import ooParadigm.methodBodyCapabilities._
-    import ooParadigm.classCapabilities._
-    import ooParadigm.constructorCapabilities._
-    import paradigm.testCapabilities._
-    import ooParadigm.testCapabilities._
 
     // must always be an operation in FIRST evolution
     val baseInterface = baseInterfaceNames(model.lastModelWithOperation.get)
@@ -236,7 +246,7 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
       }
 
       // for each model with operations, must create cross-product of all past datatypes
-      _ <- forEach (domain.inChronologicalOrder.filter(m => m.ops.nonEmpty)) { m => generateForOp(m, m.ops, m.pastDataTypes, m.isBase, domainSpecific) }
+      _ <- forEach (domain.inChronologicalOrder.filter(m => m.ops.nonEmpty)) { m => generateForOp(m, m.ops, m, m.pastDataTypes, m.isBase, domainSpecific) }
 
       // for any model that has data types have to check for PAST operations that were defined.
 //      _ <- forEach (domain.inChronologicalOrder.filter(m => m.ops.isEmpty && m.typeCases.nonEmpty)) { m =>
@@ -244,15 +254,14 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
 
       _ <- forEach (domain.inChronologicalOrder.filter(m => m.ops.isEmpty && m.typeCases.nonEmpty)) { m => {
         forEach(m.toSeq.filter(mi => mi.ops.nonEmpty)) { mi =>
-          generateForOp(mi, mi.ops, m.typeCases, false, domainSpecific)
+          generateForOp(mi, mi.ops, m, m.typeCases, false, domainSpecific)
         }
       }
       }
 
-
       _ <- forEach (domain.inChronologicalOrder.filter(m => m.ops.nonEmpty)) { model =>
         // for all PAST dataTypes that are already defined
-         makeIntermediateInterface(model, domainSpecific)
+        addIntermediateInterfaceToProject(model, domainSpecific, None)
        }
 
     } yield ()
@@ -266,12 +275,14 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
     def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
     (base: P)
     (nameProvider: NameProvider[base.syntax.Name],
+     imp: Imperative.WithBase[base.MethodBodyContext, base.type],
      oo: ObjectOriented.WithBase[base.type],
      parametricPolymorphism: ParametricPolymorphism.WithBase[base.type])
     (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): Interpreter.WithParadigm[base.type] =
       new Interpreter {
         val paradigm: base.type = base
         val names: NameProvider[paradigm.syntax.Name] = nameProvider
+        val impParadigm: imp.type = imp
         val ooParadigm: oo.type = oo
         val polymorphics: parametricPolymorphism.type = parametricPolymorphism
         val genericsParadigm: generics.type = generics

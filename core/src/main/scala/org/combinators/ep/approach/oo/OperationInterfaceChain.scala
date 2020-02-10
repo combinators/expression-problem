@@ -39,6 +39,7 @@ trait OperationInterfaceChain extends ApproachImplementationProvider  {
     Seq(names.mangle(domain.name), names.mangle(domain.baseDataType.name))
   }
 
+
   // extends Exp [first one] or ExpEval [previous one]
   // Works for both Exp* interface declarations as well as DataTypeOp declarations
   def getParentInterface(domain: Model, tpe: DataType): Generator[ClassContext, Type] = {
@@ -51,28 +52,20 @@ trait OperationInterfaceChain extends ApproachImplementationProvider  {
     }
   }
 
-
   /**
-   * Create intermediate interfaces that form a chain of operation definitions.
-   * Now this is created EVEN when an evolution doesn't create an operation
-   * @param domainSpecific
-   * @return
-   */
-  def makeIntermediateInterface(domain:Model, domainSpecific: EvolutionImplementationProvider[this.type], typeParameter:Option[Name] = None): Generator[ProjectContext, Unit] = {
-    import ooParadigm.projectCapabilities._
-
+   * UGLY code because of optional arguments and need to deal with generics.
+    */
+  def makeInterface(domain:Model, domainSpecific: EvolutionImplementationProvider[this.type], typeParameter:Option[Name] = None): Generator[ClassContext, Unit] = {
     // create class which is an interface containing abstract methods
-    val makeInterface: Generator[ClassContext, Unit] = {
-      import classCapabilities._
+     import classCapabilities._
       import genericsParadigm.classCapabilities._
+
       for {
         _ <- setInterface()
 
         _ <- if (typeParameter.isDefined) {
           for {
-            visitTyParam <- freshName(typeParameter.get)
-            // PROBLEM: CANNOT ADD TYPE PARAMETER WHILE IN CLASSCONTEXT
-            _ <- addTypeParameter(visitTyParam, Command.skip)
+            _ <- addTypeParameter(typeParameter.get, Command.skip)
           } yield ()
         } else {
           Command.skip[ClassContext]
@@ -81,8 +74,23 @@ trait OperationInterfaceChain extends ApproachImplementationProvider  {
         _ <- if (domain.last.isDefined) {
           for {
             parent <- getParentInterface(domain.last.get, domain.baseDataType)
-            _ <- resolveAndAddImport(parent)
-            _ <- addParent(parent)
+
+            // AWKWARD! Have to grab the type parameter from the current class since I can't seem
+            // to just convert a string like "V" into a Type... That would be useful!
+            _ <- if (typeParameter.isDefined) {
+              for {
+                justV <- getTypeArguments().map(_.head)
+                paramType <- applyType(parent, Seq(justV))
+
+                _ <- addParent(paramType)
+              } yield ()
+            } else {
+              for {
+                _ <- resolveAndAddImport(parent)
+                _ <- addParent(parent)
+              } yield ()
+            }
+
           } yield ()
         } else {
           Command.skip[ClassContext]
@@ -92,5 +100,14 @@ trait OperationInterfaceChain extends ApproachImplementationProvider  {
       } yield ()
     }
 
-    addClassToProject(makeInterface, baseInterfaceNames(domain) : _*)  }
+  /**
+   * Create intermediate interfaces that form a chain of operation definitions.
+   * Now this is created EVEN when an evolution doesn't create an operation
+   * @param domainSpecific
+   * @return
+   */
+  def addIntermediateInterfaceToProject(domain:Model, domainSpecific: EvolutionImplementationProvider[this.type], typeParameter:Option[Name] = None): Generator[ProjectContext, Unit] = {
+    import ooParadigm.projectCapabilities._
+
+    addClassToProject(makeInterface(domain, domainSpecific, typeParameter), baseInterfaceNames(domain) : _*)  }
 }

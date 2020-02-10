@@ -99,6 +99,18 @@ trait ObjectOriented {
     def debug(tag:String = ""): Generator[ClassContext, Unit] =
       AnyParadigm.capabilitiy(Debug(tag))
 
+    implicit val canAddTypeLookupForMethodsInClass: Understands[ClassContext, AddTypeLookup[MethodBodyContext, Type]]
+    def addTypeLookupForMethods(tpe: TypeRep, lookup: Generator[MethodBodyContext, Type]): Generator[ClassContext, Unit] =
+      AnyParadigm.capabilitiy(AddTypeLookup[MethodBodyContext, Type](tpe, lookup))
+
+    implicit val canAddTypeLookupForClassesInClass: Understands[ClassContext, AddTypeLookup[ClassContext, Type]]
+    def addTypeLookupForClasses(tpe: TypeRep, lookup: Generator[ClassContext, Type]): Generator[ClassContext, Unit] =
+      AnyParadigm.capabilitiy(AddTypeLookup[ClassContext, Type](tpe, lookup))
+
+    implicit val canAddTypeLookupForConstructorsInClass: Understands[ClassContext, AddTypeLookup[ConstructorContext, Type]]
+    def addTypeLookupForConstructors(tpe: TypeRep, lookup: Generator[ConstructorContext, Type]): Generator[ClassContext, Unit] =
+      AnyParadigm.capabilitiy(AddTypeLookup[ConstructorContext, Type](tpe, lookup))
+
     implicit val canAddParentInClass: Understands[ClassContext, AddParent[Type]]
     def addParent(parentClass: Type): Generator[ClassContext, Unit] =
       AnyParadigm.capabilitiy(AddParent(parentClass))
@@ -246,6 +258,18 @@ trait ObjectOriented {
   val constructorCapabilities: ConstructorCapabilities
 
   trait MethodBodyCapabilities {
+//    implicit val canAddTypeLookupForMethodsInMethod: Understands[MethodBodyContext, AddTypeLookup[MethodBodyContext, Type]]
+//    def addTypeLookupForMethods(tpe: TypeRep, lookup: Generator[MethodBodyContext, Type]): Generator[MethodBodyContext, Unit] =
+//      AnyParadigm.capabilitiy(AddTypeLookup[MethodBodyContext, Type](tpe, lookup))
+//
+//    implicit val canAddTypeLookupForClassesInMethod: Understands[MethodBodyContext, AddTypeLookup[ClassContext, Type]]
+//    def addTypeLookupForClasses(tpe: TypeRep, lookup: Generator[MethodBodyContext, Type]): Generator[MethodBodyContext, Unit] =
+//      AnyParadigm.capabilitiy(AddTypeLookup[MethodBodyContext, Type](tpe, lookup))
+//
+//    implicit val canAddTypeLookupForConstructorsInMethod: Understands[MethodBodyContext, AddTypeLookup[ConstructorContext, Type]]
+//    def addTypeLookupForConstructors(tpe: TypeRep, lookup: Generator[ConstructorContext, Type]): Generator[MethodBodyContext, Unit] =
+//      AnyParadigm.capabilitiy(AddTypeLookup[ConstructorContext, Type](tpe, lookup))
+
     implicit val canInstantiateObjectInMethod: Understands[MethodBodyContext, InstantiateObject[Type, Expression]]
     def instantiateObject(tpe: Type, constructorArguments: Seq[Expression]): Generator[MethodBodyContext, Expression] =
       AnyParadigm.capabilitiy(InstantiateObject(tpe, constructorArguments))

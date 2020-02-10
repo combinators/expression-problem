@@ -72,6 +72,55 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
           }
         }
 
+      implicit val canAddTypeLookupForClassesInClass: Understands[ClassContext, AddTypeLookup[ClassContext, Type]] =
+        new Understands[ClassContext, AddTypeLookup[ClassContext, Type]] {
+          def perform(
+                       context: ClassContext,
+                       command: AddTypeLookup[ClassContext, Type]
+                     ): (ClassContext, Unit) = {
+            def newLookup(k: ContextSpecificResolver)(tpe: TypeRep): Generator[ClassContext, Type] =
+              if (tpe == command.tpe) {
+                command.lookup
+              } else {
+                context.resolver._classTypeResolution(k)(tpe)
+              }
+            (context.copy(resolver = context.resolver.copy(_classTypeResolution = newLookup)), ())
+          }
+        }
+
+      implicit val canAddTypeLookupForConstructorsInClass: Understands[ClassContext, AddTypeLookup[ConstructorContext, Type]] =
+        new Understands[ClassContext, AddTypeLookup[ConstructorContext, Type]] {
+          def perform(
+                       context: ClassContext,
+                       command: AddTypeLookup[ConstructorContext, Type]
+                     ): (ClassContext, Unit) = {
+            def newLookup(k: ContextSpecificResolver)(tpe: TypeRep): Generator[ConstructorContext, Type] =
+              if (tpe == command.tpe) {
+                command.lookup
+              } else {
+                context.resolver._constructorTypeResolution(k)(tpe)
+              }
+            (context.copy(resolver = context.resolver.copy(_constructorTypeResolution = newLookup)), ())
+          }
+        }
+
+      import base.MethodBodyContext
+      implicit val canAddTypeLookupForMethodsInClass: Understands[ClassContext, AddTypeLookup[MethodBodyContext, Type]] =
+        new Understands[ClassContext, AddTypeLookup[MethodBodyContext, Type]] {
+          def perform(
+                       context: ClassContext,
+                       command: AddTypeLookup[MethodBodyCtxt, Type]
+                     ): (ClassContext, Unit) = {
+            def newLookup(k: ContextSpecificResolver)(tpe: TypeRep): Generator[MethodBodyCtxt, Type] = {
+              if (tpe == command.tpe) {
+                command.lookup
+              } else {
+                context.resolver._methodTypeResolution(k)(tpe)
+              }
+            }
+            (context.copy(resolver = context.resolver.copy(_methodTypeResolution = newLookup)), ())
+          }
+        }
 
       implicit val canAddParentInClass: Understands[ClassContext, AddParent[Type]] =
         new Understands[ClassContext, AddParent[Type]] {
@@ -505,6 +554,58 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
   val methodBodyCapabilities: MethodBodyCapabilities =
     new MethodBodyCapabilities {
       import base._
+
+
+//      implicit val canAddTypeLookupForClassesInMethod: Understands[MethodBodyContext, AddTypeLookup[ClassContext, Type]] =
+//        new Understands[MethodBodyContext, AddTypeLookup[ClassContext, Type]] {
+//          def perform(
+//                       context: MethodBodyContext,
+//                       command: AddTypeLookup[ClassContext, Type]
+//                     ): (MethodBodyContext, Unit) = {
+//            def newLookup(k: ContextSpecificResolver)(tpe: TypeRep): Generator[ClassContext, Type] =
+//              if (tpe == command.tpe) {
+//                command.lookup
+//              } else {
+//                context.resolver._classTypeResolution(k)(tpe)
+//              }
+//            (context.copy(resolver = context.resolver.copy(_classTypeResolution = newLookup)), ())
+//          }
+//        }
+//
+//      implicit val canAddTypeLookupForConstructorsInMethod: Understands[MethodBodyContext, AddTypeLookup[ConstructorContext, Type]] =
+//        new Understands[MethodBodyContext, AddTypeLookup[ConstructorContext, Type]] {
+//          def perform(
+//                       context: MethodBodyContext,
+//                       command: AddTypeLookup[ConstructorContext, Type]
+//                     ): (MethodBodyContext, Unit) = {
+//            def newLookup(k: ContextSpecificResolver)(tpe: TypeRep): Generator[ConstructorContext, Type] =
+//              if (tpe == command.tpe) {
+//                command.lookup
+//              } else {
+//                context.resolver._constructorTypeResolution(k)(tpe)
+//              }
+//            (context.copy(resolver = context.resolver.copy(_constructorTypeResolution = newLookup)), ())
+//          }
+//        }
+//
+//      import base.MethodBodyContext
+//      implicit val canAddTypeLookupForMethodsInMethod: Understands[MethodBodyContext, AddTypeLookup[MethodBodyContext, Type]] =
+//        new Understands[MethodBodyContext, AddTypeLookup[MethodBodyContext, Type]] {
+//          def perform(
+//                       context: MethodBodyContext,
+//                       command: AddTypeLookup[MethodBodyCtxt, Type]
+//                     ): (MethodBodyContext, Unit) = {
+//            def newLookup(k: ContextSpecificResolver)(tpe: TypeRep): Generator[MethodBodyCtxt, Type] = {
+//              if (tpe == command.tpe) {
+//                command.lookup
+//              } else {
+//                context.resolver._methodTypeResolution(k)(tpe)
+//              }
+//            }
+//            (context.copy(resolver = context.resolver.copy(_methodTypeResolution = newLookup)), ())
+//          }
+//        }
+
       val canInstantiateObjectInMethod: Understands[MethodBodyContext, InstantiateObject[Type, Expression]] =
         new Understands[MethodBodyContext, InstantiateObject[Type, Expression]] {
           def perform(

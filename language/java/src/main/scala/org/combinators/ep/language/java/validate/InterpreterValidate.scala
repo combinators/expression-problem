@@ -5,6 +5,7 @@ import org.combinators.ep.approach.oo._
 import org.combinators.ep.domain.math._
 import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.generator.TestImplementationProvider
+import org.combinators.ep.language.java.validate.TriviallyValidate.generator
 import org.combinators.ep.language.java.{JavaNameProvider, Syntax}
 import org.combinators.jgitserv.BranchTransaction
 
@@ -13,7 +14,7 @@ import org.combinators.jgitserv.BranchTransaction
  */
 object InterpreterValidate extends IOApp with BaseEvolution {
 
-  val approach = Interpreter[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+  val approach = Interpreter[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
   val transaction =
     evolutions.zip(tests).foldLeft(Option.empty[BranchTransaction]) {

@@ -5,14 +5,14 @@ import org.combinators.ep.domain.abstractions.{Attribute, DataTypeCase, Operatio
 import org.combinators.ep.generator.{ApproachImplementationProvider, Command}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.ep.generator.paradigm.ObjectOriented
+import org.combinators.ep.generator.paradigm.{ObjectOriented, ParametricPolymorphism}
 
 /**
  * Some EP approaches need factory methods for either operations or data types
  */
 trait FactoryConcepts extends ApproachImplementationProvider {
     val ooParadigm: ObjectOriented.WithBase[paradigm.type]
-
+    val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
     import ooParadigm._
     import paradigm._
     import syntax._
@@ -158,26 +158,106 @@ trait FactoryConcepts extends ApproachImplementationProvider {
    *     }
    * }}}
    *
+   * Can't set as abstract because later one might have default methods which can't be both default/abstract.
+   *
+   * Might require generics for the class.
    * @param model
    * @param tpeCase
    * @return
    */
-  def createFactoryDataTypeCase(model:Model, tpeCase:DataTypeCase, isStatic:Boolean = false): Generator[MethodBodyContext, Option[Expression]] = {
+  def createFactorySignatureDataTypeCase(model:Model, tpeCase:DataTypeCase, opClass:Type, isStatic:Boolean = false, typeParameters:Seq[Type] = Seq.empty): Generator[MethodBodyContext, Option[Expression]] = {
+    import paradigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+    import polymorphics.methodBodyCapabilities._
+    for {
+//      opClass <- toTargetLanguageType(TypeRep.DataType(model.baseDataType))   // should check!
+//      _ <- resolveAndAddImport(opClass)
+      _ <- setReturnType(opClass)
+      _ <- if (isStatic) { setStatic() } else { Command.skip[MethodBodyContext] }
+      params <- forEach (tpeCase.attributes) { att: Attribute => {
+          if (tpeCase.isRecursive(model)) {
+            for {
+              at <- toTargetLanguageType(att.tpe)
+
+              // bit of a hack -- likely better way to accomplish this alternative TYPE parameter
+              pair <- if (typeParameters.isEmpty) {
+               for {
+                 pName <- freshName(names.mangle(names.instanceNameOf(att)))
+               } yield (pName, at)
+              } else {
+                for {
+                  pat <- applyType(at, typeParameters)
+                  pName <- freshName(names.mangle(names.instanceNameOf(att)))
+                } yield (pName, pat)
+              }
+
+            } yield pair
+          } else {  // HACK: non parameterized for non-recursive types
+            for {
+              at <- toTargetLanguageType(att.tpe)
+
+              pName <- freshName(names.mangle(names.instanceNameOf(att)))
+            } yield (pName, at)
+          }
+        }
+      }
+
+      _ <- setParameters(params)
+
+    } yield None
+  }
+
+  def convertOptionToUnit (exp:Generator[MethodBodyContext, Option[Expression]]) : Generator[MethodBodyContext, Unit] = {
+    for {
+      par <- exp
+    } yield par
+  }
+
+  /**
+   * When factory-like methods need to be generated for a class based upon a dataTypeCase, this function
+   * does most of the heavy lifting.
+   *
+   * Return type can be overridden by [[factoryNameDataTypeCase]]
+   * Instantiated object internally can be overridden by [[factoryInstanceDataTypeCase]]
+   *
+   * Trivially requires the following in its test cases:
+   *
+   * {{{
+   * AddPrettypFinal Add(PrettypExp left, PrettypExp right) {
+   *   return new AddPrettypFinal(left, right);
+   * }
+   *
+   * LitPrettypFinal Lit(Double v) {
+   *    return new LitPrettypFinal(v);
+   * }
+   * }}}
+   *
+   * While interpreter calls for:
+   *
+   * {{{
+   *   public class EvalIdzExpFactory {
+   *
+   *     public static EvalIdzExp Neg(EvalIdzExp inner) {
+   *         return new EvalIdzNeg(inner);
+   *     }
+   *
+   *     public static EvalIdzExp Mult(EvalIdzExp left, EvalIdzExp right) {
+   *         return new EvalIdzMult(left, right);
+   *     }
+   * }}}
+   *
+   * base class might require type parameter, i.e., Exp<V>, so we must pass it in here since we can't add types
+   * once we get into a MethodBodyContext.
+   * @param model
+   * @param tpeCase
+   * @return
+   */
+  def createFactoryDataTypeCase(model:Model, tpeCase:DataTypeCase, tpe:Type, isStatic:Boolean = false, typeParameters:Seq[Type] = Seq.empty): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
 
     for {
-      opClass <- toTargetLanguageType(TypeRep.DataType(model.baseDataType))   // should check!
-      _ <- resolveAndAddImport(opClass)
-      _ <- setReturnType(opClass)
-      _ <- if (isStatic) { setStatic() } else { Command.skip[MethodBodyContext] }
-      params <- forEach (tpeCase.attributes) { att: Attribute =>
-        for {
-          at <- toTargetLanguageType(att.tpe)
-          pName <- freshName(names.mangle(names.instanceNameOf(att)))
-        } yield (pName, at)
-      }
-      _ <- setParameters(params)
+      _ <- createFactorySignatureDataTypeCase(model, tpeCase, tpe, isStatic, typeParameters)
 
       opInst <- findClass(factoryInstanceDataTypeCase(Some(model), tpeCase): _*)    // should check!
       _ <- resolveAndAddImport(opInst)
@@ -186,5 +266,13 @@ trait FactoryConcepts extends ApproachImplementationProvider {
       res <- instantiateObject(opInst, argSeq)
 
     } yield Some(res)
+  }
+
+  def createStaticFactoryDataTypeCase(model:Model, tpeCase:DataTypeCase, tpe:Type): Generator[MethodBodyContext, Option[Expression]] = {
+     createFactoryDataTypeCase(model, tpeCase, tpe, true);
+  }
+
+  def createDefaultFactoryDataTypeCase(model:Model, tpeCase:DataTypeCase, tpe:Type): Generator[MethodBodyContext, Option[Expression]] = {
+     createFactoryDataTypeCase(model, tpeCase, tpe, true);
   }
 }

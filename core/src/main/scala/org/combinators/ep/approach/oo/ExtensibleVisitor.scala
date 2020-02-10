@@ -165,6 +165,42 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedVisi
   }
 
   /**
+   * Just return the expression required for a factory, which must be the name of the class since
+   * we are the visitor
+   *
+   * {{{
+   *     return new EvalSub();
+   * }}}
+   *
+   * @return
+   */
+  override def makeFactoryOperationImpl(model:Model, op: Operation, typeName:Name): Generator[MethodBodyContext, Option[Expression]] = {
+    import paradigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+
+    //val visName = names.addSuffix(names.mangle(names.conceptNameOf(op)), typeName.toString)
+    for {
+      opClass <- findClass(typeName)
+      _ <- resolveAndAddImport(opClass)
+      _ <- setReturnType(opClass)
+
+      // need parameters for operations with parameters
+      params <- forEach (op.parameters) { param =>
+        for {
+          paramTy <- toTargetLanguageType(param.tpe)
+          _ <- resolveAndAddImport(paramTy)
+          pName <- freshName(names.mangle(param.name))
+        } yield (pName, paramTy)
+      }
+      _ <- setParameters(params)  // params: Seq[(Name, Type)]
+
+      args <- getArguments()
+      res <- instantiateObject(opClass,args.map(_._3))
+    } yield Some(res)
+  }
+
+
+    /**
    * Produces, for example, Some(EvalDivdMultNeg).
    *
    * Either (1) the operation is defined in the current model and so you don't need to append class name, but can

@@ -9,7 +9,7 @@ import org.combinators.ep.generator.paradigm.{Generics, ObjectOriented, Parametr
 import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
-trait FutureVisitor extends ApproachImplementationProvider {
+trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts {
 
   import paradigm._
   import syntax._
@@ -29,10 +29,17 @@ trait FutureVisitor extends ApproachImplementationProvider {
   lazy val convert: Name = names.mangle("convert")
   lazy val visit: Name = names.mangle("visit")
   lazy val visitorClass: Name = names.mangle("Visitor")
+  lazy val factoryClass: Name = names.mangle("Factory")
   lazy val visited: Name = names.mangle("visited")
 
   // HACK
   val finalized:Name    // sub package within each evolution that contains final classes
+
+  // must be present!
+  def registerLocally(tpe:DataType, paramType:Type) : Generator[ClassContext, Unit]
+
+  // access type mapping capability
+  def registerTypeMapping(model: Model): Generator[ProjectContext, Unit]
 
   // make Accept with abstract V
   /** Create standard signature to access the result of an operation
@@ -79,12 +86,31 @@ trait FutureVisitor extends ApproachImplementationProvider {
    }
 
   /**
-   * Adds an accept method for given context.
+   * Adds an accept method for given context, parameterized by justV type
    *
-   * @param bodyGenerator
    * @return
    */
-  def addAcceptMethod(bodyGenerator:Generator[MethodBodyContext, Option[Expression]]): Generator[ClassContext, Unit] = {
+  def addAcceptMethod(tpe: DataType, justV:Type): Generator[ClassContext, Unit] = {
+    import ooParadigm.classCapabilities._
+
+    def acceptBody(paramType:Type): Generator[MethodBodyContext, Option[Expression]] = {
+      import ooParadigm.methodBodyCapabilities._
+      import paradigm.methodBodyCapabilities._
+
+      for {
+        _ <- makeAcceptSignature(justV)
+        _ <- setAbstract()
+      } yield None
+    }
+
+    for {
+      _ <- addMethod(accept, acceptBody(justV))
+    } yield None
+
+   // addMethod(accept, acceptBody(justV))
+  }
+
+  def justAddAcceptMethod(bodyGenerator:Generator[MethodBodyContext, Option[Expression]]): Generator[ClassContext, Unit] = {
     import ooParadigm.classCapabilities._
     addMethod(accept, bodyGenerator)
   }
@@ -191,20 +217,88 @@ trait FutureVisitor extends ApproachImplementationProvider {
     import paradigm.methodBodyCapabilities._
 
     for {
-     _ <- resolveAndAddImport(tpe)
+      _ <- resolveAndAddImport(tpe)
       _ <- setReturnType(tpe)
     } yield (Some(field))
   }
 
-  // make Visitor class in each finalized package.
+  def futureCreateFactoryDataTypeCase(model:Model, tpeCase:DataTypeCase, tpe:Type, isStatic:Boolean = false, typeParameters:Seq[Type] = Seq.empty): Generator[MethodBodyContext, Option[Expression]] = {
+    import paradigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+
+    val definingModel = model.findTypeCase(tpeCase)
+
+    for {
+      _ <- registerTypeMapping(definingModel.getOrElse(model))
+    } yield ()
+
+    for {
+      _ <- createFactorySignatureDataTypeCase(definingModel.getOrElse(model), tpeCase, tpe, isStatic, typeParameters)
+
+      opInst <- findClass(factoryInstanceDataTypeCase(Some(model), tpeCase): _*)    // should check!
+      _ <- resolveAndAddImport(opInst)
+
+      argSeq <- getArguments().map( args => { args.map(triple => triple._3) })
+      res <- instantiateObject(opInst, argSeq)
+
+    } yield Some(res)
+  }
+
+  /**
+   * Make Finalized factory which each finalized datatype implements
+   *
+   * Each instance of Exp must be parameterized with ep.m#.finalized.Visitor
+   *
+   * CAN'T FORGET to call 'convert' for those recursive datatypes to be sure they work.
+   */
+  def makeFinalizedFactory(domain:Model): Generator[ClassContext, Unit] = {
+
+    import ooParadigm.classCapabilities._
+    import genericsParadigm.classCapabilities._
+    for {
+      // even though this expressly calls for ep.m#.Exp it becomes just Exp
+      // so missing the import.
+      resultTpe <- findClass(names.mangle(domain.name), names.mangle(domain.baseDataType.name))
+      _ <- resolveAndAddImport(resultTpe)
+
+      visitorTpe <- findClass(names.mangle(domain.name), finalized, visitorClass)
+      _ <- resolveAndAddImport(visitorTpe)
+
+      // extends Exp<Visitor>
+
+      parameterizedTpe <- applyType(resultTpe, Seq[Type](visitorTpe))
+
+      _ <- addParent(parameterizedTpe)
+
+      _ <- forEach(domain.flatten.typeCases) { tpeCase => {
+        for {
+          // These methods with recursive values must call convert; in addition, they must be properly
+          // defined to use appropriate ep.m#.Exp based on where the data type was defined... TRICK
+          _ <- addMethod (names.mangle(names.instanceNameOf(tpeCase)), futureCreateFactoryDataTypeCase(domain, tpeCase, parameterizedTpe, false, Seq(visitorTpe)))
+        } yield ()
+      }
+      }
+      // do this last so methods are declared as default
+      _ <- setInterface()
+    } yield ()
+  }
+
+  /**
+   * Make Visitor class in each finalized package.
+   *
+   * Each instance of Exp must be parameterized with ep.m#.finalized.Visitor
+   */
   def makeFinalizedVisitor(domain:Model): Generator[ClassContext, Unit] = {
 
     import ooParadigm.classCapabilities._
     import genericsParadigm.classCapabilities._
     for {
-      resultTpe <- toTargetLanguageType(TypeRep.DataType(domain.baseDataType))
+      // even though this expressly calls for ep.m#.Exp it becomes just Exp
+      // so missing the import.
+      resultTpe <- findClass(names.mangle(domain.name), names.mangle(domain.baseDataType.name))
+
       _ <- resolveAndAddImport(resultTpe)
-      visitorTpe <- findClass(visitorClass)
+      visitorTpe <- findClass(names.mangle(domain.name), finalized, visitorClass)
 
       parameterizedTpe <- applyType(resultTpe, Seq[Type](visitorTpe))
 
@@ -223,9 +317,20 @@ trait FutureVisitor extends ApproachImplementationProvider {
    * @param bodyGenerator
    * @return
    */
-  def addFinalizedVisitor(domain:Model, bodyGenerator:Generator[ClassContext, Unit]): Generator[ProjectContext, Unit] = {
+  def addVisitorToProject(domain:Model, bodyGenerator:Generator[ClassContext, Unit]): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
     addClassToProject(bodyGenerator, names.mangle(domain.name), finalized, visitorClass)
+  }
+
+  /**
+   * Adds an accept method for given context.
+   *
+   * @param bodyGenerator
+   * @return
+   */
+  def addFactoryToProject(domain:Model, bodyGenerator:Generator[ClassContext, Unit]): Generator[ProjectContext, Unit] = {
+    import ooParadigm.projectCapabilities._
+    addClassToProject(bodyGenerator, names.mangle(domain.name), finalized, factoryClass)
   }
 
   // factories for all data types, as they are added in...

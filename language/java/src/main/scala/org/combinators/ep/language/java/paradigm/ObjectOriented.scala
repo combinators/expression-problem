@@ -366,6 +366,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             command.arguments.foreach { arg =>
               superCall.addArgument(arg.clone())
             }
+            newCtor.getBody.addStatement(superCall)    // Necessary because of orElse above... [interpreter approach]
             (context.copy(ctor = newCtor), ())
           }
         }

@@ -158,6 +158,31 @@ sealed class Model(
     */
   def before(other:Model): Boolean =
     this != other && other.toSeq.contains(this)
+
+  /**
+   * Return the earlier model given the evolution history.
+   * Note that if models are the same, then just return the same one.
+   */
+  def earlier(other:Model):Model = {
+    if (before(other)) {
+      this
+    } else {
+      other
+    }
+  }
+
+  /**
+   * Return the earlier model given the evolution history.
+   * Note that if models are the same, then just return the same one.
+   */
+  def later(other:Model):Model = {
+    if (before(other)) {
+      other
+    } else {
+      this
+    }
+  }
+
 }
 
 object Model {

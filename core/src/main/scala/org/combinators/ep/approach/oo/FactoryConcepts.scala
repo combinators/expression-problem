@@ -260,7 +260,7 @@ trait FactoryConcepts extends ApproachImplementationProvider {
       _ <- createFactorySignatureDataTypeCase(model, tpeCase, tpe, isStatic, typeParameters)
 
       opInst <- findClass(factoryInstanceDataTypeCase(Some(model), tpeCase): _*)    // should check!
-      _ <- resolveAndAddImport(opInst)
+    //  _ <- resolveAndAddImport(opInst)
 
       argSeq <- getArguments().map( args => { args.map(triple => triple._3) })
       res <- instantiateObject(opInst, argSeq)

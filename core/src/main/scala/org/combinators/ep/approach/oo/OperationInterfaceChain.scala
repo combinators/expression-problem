@@ -39,7 +39,6 @@ trait OperationInterfaceChain extends ApproachImplementationProvider  {
     Seq(names.mangle(domain.name), names.mangle(domain.baseDataType.name))
   }
 
-
   // extends Exp [first one] or ExpEval [previous one]
   // Works for both Exp* interface declarations as well as DataTypeOp declarations
   def getParentInterface(domain: Model, tpe: DataType): Generator[ClassContext, Type] = {
@@ -50,6 +49,11 @@ trait OperationInterfaceChain extends ApproachImplementationProvider  {
     } else {
       findClass(baseInterfaceNames(domain) : _*)
     }
+  }
+
+  /** Returns the prior model declaring the necessary interface. To be overridden as needed (i.e., Interpreter). */
+  def modelDeclaringInterfaceParent(model:Model) : Model = {
+     model.last.get
   }
 
   /**
@@ -71,9 +75,9 @@ trait OperationInterfaceChain extends ApproachImplementationProvider  {
           Command.skip[ClassContext]
         }
 
-        _ <- if (domain.last.isDefined) {
+        _ <- if (domain.last.isDefined && domain.last.get.name != domain.base.name) {  // can't be first one (HACK)
           for {
-            parent <- getParentInterface(domain.last.get, domain.baseDataType)
+            parent <- getParentInterface(modelDeclaringInterfaceParent(domain), domain.baseDataType)
 
             // AWKWARD! Have to grab the type parameter from the current class since I can't seem
             // to just convert a string like "V" into a Type... That would be useful!

@@ -154,12 +154,12 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
    * Create a derived class for a datatype for a model that has operations
    *
    * {{{
-   *   package m1
-   *   public interface Sub<V> extends ep.m1.Exp<V> {
+   *   package ep.m1
+   *   public interface Sub<V> extends Exp<V> {
    *
-   *     ep.m1.Exp getLeft();
+   *     public abstract Exp getLeft();
    *
-   *     ep.m1.Exp getRight();
+   *     public abstract Exp getRight();
    *
    *     default Double eval() {
    *         return getLeft().eval() - getRight().eval();
@@ -197,7 +197,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
         parent <-  toTargetLanguageType(TypeRep.DataType(tpe))
         _ <- resolveAndAddImport(parent)
         paramType <- applyType(parent, genType)
-        _ <- registerLocally(tpe, paramType)
+        //_ <- registerLocally(tpe, parent)
 
         // only add parent to the chain if NOT the first one
         _ <- if (model.last.isDefined && model.last.get.findTypeCase(tpeCase).isDefined) {
@@ -255,7 +255,22 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
 
 
     /**
+     *
+     * package ep.m0.finalized;
+     *
+     * public class Add implements ep.m0.Add<Visitor>, Factory {
+     *   private Exp<Visitor> left;
+     *   private Exp<Visitor> right;
+     *
+     *   public Add(Exp<Visitor> _left, Exp<Visitor> _right) {
+     *     this.left = _left;
+     *     this.right = _right;
+     *   }
+     *
+     *   ...
+     * }
      * HACK: Just duplicate and embed; figure out later.
+     *
      * @param model
      * @param tpeCase
      * @return
@@ -271,9 +286,10 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
           // define based on the derivedInterface for that data type and operation based on
           finalVisitor <- findClass(names.mangle(model.name), finalized, visitorClass)
           parent <- findClass(names.mangle(model.name), names.mangle(model.baseDataType.name))   // names.mangle(names.conceptNameOf(tpeCase)))
-          _ <- resolveAndAddImport(parent)   // hope this brings in ep.m#.Exp
+
           parentParam <- applyType(parent, Seq(finalVisitor))
-          _ <- registerLocally(model.baseDataType, parentParam)
+          _ <- resolveAndAddImport(parentParam)   // hope this brings in ep.m#.Exp
+         // _ <- registerLocally(model.baseDataType, parent)
 
           parentTypeCase <- findClass(names.mangle(model.name), names.mangle(names.conceptNameOf(tpeCase)))
           parentTypeVisitor <- applyType(parentTypeCase, Seq(finalVisitor))
@@ -305,14 +321,15 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
     }
 
     /** Supports ability to re-register classes after they have acquired a type parameter. */
-    def registerLocally(tpe:DataType, paramType:Type) : Generator[ClassContext, Unit] = {
+    def registerLocally(tpe:DataType, paramTypeNonGeneric:Type) : Generator[ClassContext, Unit] = {
       import ooParadigm.classCapabilities._
 
       val dtpeRep = TypeRep.DataType(tpe)
+
       for {
-        _ <- addTypeLookupForMethods(dtpeRep, Command.lift(paramType))
-        _ <- addTypeLookupForClasses(dtpeRep, Command.lift(paramType))
-        _ <- addTypeLookupForConstructors(dtpeRep, Command.lift(paramType))
+        _ <- addTypeLookupForMethods(dtpeRep, Command.lift(paramTypeNonGeneric))
+        _ <- addTypeLookupForClasses(dtpeRep, Command.lift(paramTypeNonGeneric))
+        _ <- addTypeLookupForConstructors(dtpeRep, Command.lift(paramTypeNonGeneric))
       } yield ()
     }
 
@@ -324,7 +341,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
       import ooParadigm.methodBodyCapabilities.canFindClassInMethod
       import paradigm.projectContextCapabilities._
 
-      val baseInterface = baseInterfaceNames(model)
+      val baseInterface = baseInterfaceNames(model)   // registers as m#.Exp
       val dtpeRep = TypeRep.DataType(model.baseDataType)
       for {
         _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(baseInterface : _*))
@@ -549,8 +566,6 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
             _ <- addClassToProject(makeFinalizedVisitor(currentModel),  finalizedVisitorName(currentModel) : _*)
             _ <- addClassToProject(extendIntermediateInterface(currentModel, domainSpecific), baseInterfaceNames(currentModel) : _*)
 
-            _ <- addFactoryToProject(currentModel, makeFinalizedFactory(currentModel))
-
             _ <- forEach(currentModel.inChronologicalOrder) { modelDefiningTypes =>
               forEach(modelDefiningTypes.typeCases) { tpe =>
                 for {
@@ -559,6 +574,9 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
                 } yield ()
               }
             }
+
+            // can safely do NOW since this alters the registerTypeMapping
+            _ <- addFactoryToProject(currentModel, makeFinalizedFactory(currentModel))
           } yield ()
         }
       } yield ()

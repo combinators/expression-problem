@@ -145,7 +145,7 @@ trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
             case tpe
               if tpe
                 .toClassOrInterfaceType
-                .map[Boolean](clsTy => clsTy.getName == listType.asClassOrInterfaceType().getName)
+                .map[Boolean](clsTy => clsTy.getName == listType.asClassOrInterfaceType().getName)  // WARNING: might need to be asString
                 .orElse(false) =>
               Some(Java("import java.util.List;").importDeclaration())
             case other => importResolution(k)(other)

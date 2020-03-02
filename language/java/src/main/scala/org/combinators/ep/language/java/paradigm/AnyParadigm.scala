@@ -122,7 +122,7 @@ trait AnyParadigm extends AP {
             val newUnit =
               if (!oldUnit.getImports.contains(command.imp)) {
                 val nextUnit = oldUnit.clone()
-                nextUnit.addImport(command.imp)
+                nextUnit.addImport(command.imp.clone())
                 nextUnit
               } else oldUnit
             newUnit.getImports.sort((i1, i2) => i1.toString.compareTo(i2.toString))
@@ -282,7 +282,7 @@ trait AnyParadigm extends AP {
             val stripped = AnyParadigm.stripGenerics(command.forElem)
             Try { (context, context.resolver.importResolution(stripped)) } getOrElse {
               if (command.forElem.isClassOrInterfaceType) {
-                val importName = command.forElem.asClassOrInterfaceType().getName.asString()
+                val importName = command.forElem.asClassOrInterfaceType().asString()   // DEEP DEFECT: scope is necessary since getName is SimpleName
                 val newImport =
                   new ImportDeclaration(
                     new com.github.javaparser.ast.expr.Name(importName),
@@ -432,7 +432,7 @@ trait AnyParadigm extends AP {
            """.stripMargin
     val cleanedUnits =
      ImportCleanup.cleaned(
-        FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.units: _*)    : _*
+        FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.units: _*) : _*
       )
     val cleanedTestUnits =
       ImportCleanup.cleaned(

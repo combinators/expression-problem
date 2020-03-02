@@ -20,6 +20,7 @@ trait FieldDefinition extends ApproachImplementationProvider {
     import ooParadigm.classCapabilities._
     for {
       ft <- toTargetLanguageType(att.tpe)
+      _ <- debug("FT:" + ft)
       _ <- resolveAndAddImport(ft)
       _ <- addField(names.mangle(names.instanceNameOf(att)), ft)
     } yield ft

@@ -128,7 +128,6 @@ trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts 
   }
 
   /**
-   *
    * public mi.Exp<Visitor> convert(m0.Exp<Visitor> exp) {
    *     Visitor visitor = new Visitor();
    *     exp.accept(visitor);

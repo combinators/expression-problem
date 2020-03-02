@@ -23,13 +23,12 @@ object Main extends IOApp {
   val interpreterApproach = Interpreter[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val triviallyApproach = Trivially[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
-
   // select one here.
   // val approach = ooApproach // WORKS!
   // val approach = visitorApproach  // WORKS!
   // val approach = visitorSideEffectApproach // WORKS!
   // val approach = extensibleVisitorApproach // WORKS!
-  val approach = interpreterApproach // triviallyApproach // Problem with M4 generated code: factory methods missing
+  val approach = triviallyApproach // triviallyApproach // Problem with M4 generated code: factory methods missing
   // val approach = interpreterApproach // Not quite yet
 
   val evolutions = Seq(M0, M1, M2, M3, M4) // ) // , M4, M5, M6)

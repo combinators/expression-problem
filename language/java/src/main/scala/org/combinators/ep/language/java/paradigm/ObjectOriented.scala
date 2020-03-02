@@ -251,7 +251,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             Try { (context, context.resolver.importResolution(stripped)) } getOrElse {
               val newImport =
                 new ImportDeclaration(
-                  new com.github.javaparser.ast.expr.Name(stripped.asClassOrInterfaceType().getName.toString()),
+                  new com.github.javaparser.ast.expr.Name(stripped.asClassOrInterfaceType().asString()),   // DEFECT: SCOPE
                   false,
                   false)
               if (context.extraImports.contains(newImport)) {
@@ -411,7 +411,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             Try { (context, context.resolver.importResolution(stripped)) } getOrElse {
               val newImport =
                 new ImportDeclaration(
-                  new com.github.javaparser.ast.expr.Name(stripped.asClassOrInterfaceType().getName.toString()),
+                  new com.github.javaparser.ast.expr.Name(stripped.asClassOrInterfaceType().asString()),  // DEFECT: scope
                   false,
                   false)
               if (context.extraImports.contains(newImport)) {

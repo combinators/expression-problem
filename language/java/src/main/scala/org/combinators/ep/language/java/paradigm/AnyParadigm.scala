@@ -281,8 +281,8 @@ trait AnyParadigm extends AP {
           ): (MethodBodyCtxt, Option[ImportDeclaration]) = {
             val stripped = AnyParadigm.stripGenerics(command.forElem)
             Try { (context, context.resolver.importResolution(stripped)) } getOrElse {
-              if (command.forElem.isClassOrInterfaceType) {
-                val importName = command.forElem.asClassOrInterfaceType().asString()   // DEEP DEFECT: scope is necessary since getName is SimpleName
+              if (stripped.isClassOrInterfaceType) {
+                val importName = stripped.asClassOrInterfaceType().asString()   // DEEP DEFECT: scope is necessary since getName is SimpleName
                 val newImport =
                   new ImportDeclaration(
                     new com.github.javaparser.ast.expr.Name(importName),
@@ -433,7 +433,7 @@ trait AnyParadigm extends AP {
     val cleanedUnits =
      ImportCleanup.cleaned(
         FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.units: _*) : _*
-      )
+     )
     val cleanedTestUnits =
       ImportCleanup.cleaned(
         FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.testUnits: _*): _*

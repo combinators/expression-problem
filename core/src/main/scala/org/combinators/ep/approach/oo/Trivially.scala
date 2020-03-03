@@ -28,6 +28,24 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
   lazy val finalized:Name = names.mangle("finalized")     // sub package within each evolution that contains final classes
   lazy val expTypeParameter:Name = names.mangle("V")
 
+//  /** Top-level type. Need to hold onto for future mapping of Exp */
+//  var topLevelType:Type
+//
+//  /**
+//   * Hold onto the base ep.Exp so it can be used in conversion methods.
+//   * @return
+//   */
+//  def setBaseType(model:Model): Generator[ProjectContext, Unit] = {
+//
+//    import classCapabilities._
+//    topLevelType = for {
+//      b <- findClass(names.mangle(model.baseDataType.name))
+//    } yield (b)
+//
+//    Command.skip[ProjectContext]
+//  }
+
+
   def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression] = {
     import ooParadigm.methodBodyCapabilities._
     import paradigm.methodBodyCapabilities._
@@ -505,9 +523,20 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
   }
 
   /**
-   * Starting with the operation chain and add the requisite interfaces for known factories
+   * Starting with the operation chain and add the requisite interfaces for known factories.
+   *
+   * package ep.m0;
+   *
+   * public interface Exp<V> extends ep.Exp<V> {
+   *   public abstract Double eval();
+   *   public abstract ep.m0.Exp<V> lit(Double value);
+   *   public abstract ep.m0.Exp<V> add(ep.m0.Exp<V> left, ep.m0.Exp<V> right);
+   *
+   *   // conversion
+   *   public abstract ep.m0.Exp<V> convert(ep.Exp<V> toConvert);
+   * }
    */
-  def extendIntermediateInterface(domain:Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
+  def extendIntermediateInterface(domain:Model, topLevelType:Type, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
     import ooParadigm.classCapabilities._
     import genericsParadigm.classCapabilities._
     import polymorphics.TypeParameterContext
@@ -540,6 +569,14 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
         addMethod(names.mangle(names.instanceNameOf(tpe)), absMethod)
       }
       }
+
+      parent <- findClass(names.mangle(domain.baseDataType.name))
+      justV <- getTypeArguments().map(_.head)
+      paramType <- applyType(parent, Seq(justV))
+
+      //  public void accept(V visitor);
+      //    public Exp<V> convert(Exp<V> value);
+      _ <- addConvertMethod(makeConvertSignature(topLevelType, paramType))
     } yield ()
   }
 
@@ -551,9 +588,18 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
     def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
       import paradigm.projectContextCapabilities._
       import ooParadigm.projectCapabilities._
+
+      def getBaseType(): Type = {
+        import classCapabilities._
+        for {
+          bb <- findClass(names.mangle(domain.baseDataType.name))
+        } yield bb
+      }
+
       for {
         _ <- debug("Processing Trivially")
         _ <- registerTypeMapping(domain)
+
         _ <- makeTriviallyBase(domain.baseDataType, Seq.empty)
 
         // whenever new operation, this CREATES the capability of having intermediate interfaces
@@ -564,7 +610,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
             _ <- registerTypeMapping(currentModel)
 
             _ <- addClassToProject(makeFinalizedVisitor(currentModel),  finalizedVisitorName(currentModel) : _*)
-            _ <- addClassToProject(extendIntermediateInterface(currentModel, domainSpecific), baseInterfaceNames(currentModel) : _*)
+            _ <- addClassToProject(extendIntermediateInterface(currentModel, getBaseType(), domainSpecific), baseInterfaceNames(currentModel) : _*)
             _ <- addFactoryToProject(currentModel, makeFinalizedFactory(currentModel))
 
             _ <- forEach(currentModel.inChronologicalOrder) { modelDefiningTypes =>

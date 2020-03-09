@@ -152,6 +152,18 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
    *         return getLeft().eval() - getRight().eval();
    *     }
    * }
+   *
+   * when subsequent we have
+   *
+   * package ep.m2
+   * public abstract interface Lit<V> extends ep.m1.Lit<V>, ep.m2.Exp<V> {
+   *
+   *     public abstract Double getValue();
+   *
+   *     public default String prettyp() {
+   *         return String.valueOf(this.getValue());
+   *     }
+   * }
    * }}}
    *
    *  add another parent IF there is a prior operation defined before this model.
@@ -195,14 +207,17 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
             _ <- addParent(paramType)
           } yield ()
         } else {
-            for {
-              // first one needs to extend Exp
-              parent <-  toTargetLanguageType(TypeRep.DataType(tpe))
-              _ <- resolveAndAddImport(parent)
-              paramType <- applyType(parent, genType)
-              _ <- addParent(paramType)
-            } yield ()
+          Command.skip[ClassContext]
         }
+
+        // always have to extend current Exp at this level
+        _ <-  for {
+          // first one needs to extend Exp
+          parent <-  toTargetLanguageType(TypeRep.DataType(tpe))
+          _ <- resolveAndAddImport(parent)
+          paramType <- applyType(parent, genType)
+          _ <- addParent(paramType)
+        } yield ()
 
         _ <- forEach (tpeCase.attributes) { att => {
             for {
@@ -367,6 +382,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
     def addVisitorTypeParameter(): Generator[ClassContext, Type] = {
       import classCapabilities._
       import genericsParadigm.classCapabilities._
+      import polymorphics._
       for {
         visitorTypeParamName <- freshName(expTypeParameter)
         _ <- addTypeParameter(visitorTypeParamName, Command.skip[TypeParameterContext])
@@ -391,10 +407,6 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
     addClassToProject(makeClass, names.mangle(names.conceptNameOf(tpe)))
   }
 
-  /** Returns the base type of trivially. */
-  def triviallyBaseType[Context](ofModel: Model)(implicit canFindClass: Understands[Context, FindClass[Name, Type]]): Generator[Context, Type] = {
-    FindClass(Seq(names.mangle(names.conceptNameOf(ofModel.baseDataType)))).interpret(canFindClass)
-  }
 
   /** I had to copy this entire thing.
    *
@@ -452,7 +464,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
           //  public void accept(V visitor);
           //    public Exp<V> convert(Exp<V> value);
           _ <- addConvertMethod(makeConvertSignature(paramType, paramType))
-          _ <- addAcceptMethod(domain.baseDataType, justV)
+          _ <- addAcceptMethod(makeAcceptSignature(paramType))
         } yield ()
 
         Command.skip[ClassContext]
@@ -465,7 +477,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
   /**
    * Need to be sure return types and parameters become specialized to current/most recent model Exp
    *
-   *  public abstract ep.m0.Exp<V> add(ep.m0.Exp<V> left, ep.m0.Exp<V> right);
+   *  public abstract ep.m0.Exp<V> add(ep.Exp<V> left, ep.Exp<V> right);
    *
    * where
    * @param model
@@ -515,28 +527,38 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
    * public interface Exp<V> extends ep.Exp<V> {
    *   public abstract Double eval();
    *   public abstract ep.m0.Exp<V> lit(Double value);
-   *   public abstract ep.m0.Exp<V> add(ep.m0.Exp<V> left, ep.m0.Exp<V> right);
+   *   public abstract ep.m0.Exp<V> add(ep.Exp<V> left, ep.Exp<V> right);
    *
    *   // conversion
    *   public abstract ep.m0.Exp<V> convert(ep.Exp<V> toConvert);
    * }
    */
-  def extendIntermediateInterface(domain:Model, topLevelType:Type, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
+  def extendIntermediateInterface(domain:Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
     import ooParadigm.classCapabilities._
     import genericsParadigm.classCapabilities._
     import polymorphics.TypeParameterContext
 
+    def convertMethod(topLevelType:Type, paramType:Type) : Generator[MethodBodyContext, Option[Expression]] = {
+      import ooParadigm.methodBodyCapabilities._
+      for {
+        _ <- makeConvertSignature(topLevelType, paramType)
+        _ <- setAbstract()
+      } yield None
+    }
+
     for {
+
       _ <- makeInterface(domain, domainSpecific, Some(expTypeParameter))   // this creates TYPE
 
-//      fv <- freshName(expTypeParameter)  // HACK: MOVE UP
-//      _ <- addTypeParameter(fv, Command.skip[TypeParameterContext])
 
       // paramType is now Exp<V>. Couldn't get type arguments?
       //parent <- findClass(names.mangle(domain.baseDataType.name))
       parent <- findClass(names.mangle(domain.name), names.mangle(domain.baseDataType.name))
       justV <- getTypeArguments().map(_.head)
       paramType <- applyType(parent, Seq(justV))
+
+      tt <- computedBaseType(domain)
+      topLevelType <- applyType(tt, Seq(justV))
 
       // add factory methods
       // these are factory signatures.
@@ -545,7 +567,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
         val absMethod: Generator[MethodBodyContext, Option[Expression]] = {
           import ooParadigm.methodBodyCapabilities._
           for {
-            xf <- createLocalizedFactorySignatureDataTypeCase(domain, tpe, paramType, false, Seq(justV))
+            xf <- createFactorySignatureDataTypeCase(domain, tpe, topLevelType, paramType, false)
             _ <- setAbstract()
 
           } yield xf
@@ -555,13 +577,14 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
       }
       }
 
-      parent <- findClass(names.mangle(domain.baseDataType.name))
-      justV <- getTypeArguments().map(_.head)
-      paramType <- applyType(parent, Seq(justV))
+//      parent <- findClass(names.mangle(domain.baseDataType.name))
+//      justV <- getTypeArguments().map(_.head)
+//      paramType <- applyType(parent, Seq(justV))
 
       //  public void accept(V visitor);
       //    public Exp<V> convert(Exp<V> value);
-      _ <- addConvertMethod(makeConvertSignature(topLevelType, paramType))
+      _ <- addConvertMethod(convertMethod(topLevelType, paramType))
+      //_ <- addConvertMethod(makeConvertSignature(topLevelType, paramType))
     } yield ()
   }
 
@@ -570,19 +593,16 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
     Seq(names.mangle(domain.name), finalized, visitorClass)
   }
 
-  def implement(
-    domain: Model,
-    domainSpecific: EvolutionImplementationProvider[this.type]
-  ): Generator[ProjectContext, Unit] = {
+  def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     import paradigm.projectContextCapabilities._
     import ooParadigm.projectCapabilities._
 
-    def getBaseType(): Type = {
-      import classCapabilities._
-      for {
-        bb <- findClass(names.mangle(domain.baseDataType.name))
-      } yield bb
-    }
+//    def getBaseType(): Type = {
+//      import classCapabilities._
+//      for {
+//        bb <- findClass(names.mangle(domain.baseDataType.name))
+//      } yield bb
+//    }
 
     for {
       _ <- debug("Processing Trivially")
@@ -598,7 +618,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
           _ <- registerTypeMapping(currentModel)
 
           _ <- addClassToProject(makeFinalizedVisitor(currentModel), finalizedVisitorName(currentModel): _*)
-          _ <- addClassToProject(extendIntermediateInterface(currentModel, getBaseType(), domainSpecific), baseInterfaceNames(currentModel): _*)
+          _ <- addClassToProject(extendIntermediateInterface(currentModel, domainSpecific), baseInterfaceNames(currentModel): _*)
           _ <- addFactoryToProject(currentModel, makeFinalizedFactory(currentModel))
 
           _ <- forEach(currentModel.inChronologicalOrder) { modelDefiningTypes =>

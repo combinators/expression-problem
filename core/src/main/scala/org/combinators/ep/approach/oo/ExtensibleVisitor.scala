@@ -27,6 +27,7 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedVisi
 
   lazy val visitorInstanceFactoryMethodPrefix: Name = names.mangle("make")
 
+
   /**
    * Instantiate an implementation of the visitor.
    *

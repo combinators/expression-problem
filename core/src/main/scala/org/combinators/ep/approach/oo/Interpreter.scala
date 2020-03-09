@@ -19,6 +19,7 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
 
   val factoryName:String = "Factory"
 
+
   def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression] = {
     import ooParadigm.methodBodyCapabilities._
     import paradigm.methodBodyCapabilities._
@@ -196,8 +197,8 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
       for {
         opClass <- toTargetLanguageType(TypeRep.DataType(model.baseDataType))   // should check!
         _ <- forEach(model.pastDataTypes) {
-          tpe =>
-            addMethod(names.mangle(names.conceptNameOf(tpe)), createStaticFactoryDataTypeCase(model, tpe, opClass))
+          tpe =>   // returnType and paramType can be the same for Interpreter
+            addMethod(names.mangle(names.conceptNameOf(tpe)), createStaticFactoryDataTypeCase(model, tpe, opClass, opClass))
         }
       } yield ()
     }

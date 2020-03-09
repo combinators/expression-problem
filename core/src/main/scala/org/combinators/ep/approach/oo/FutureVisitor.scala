@@ -5,9 +5,9 @@ import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.communication.{ReceivedRequest, Request}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.ep.generator.paradigm.{Generics, ObjectOriented, ParametricPolymorphism}
+import org.combinators.ep.generator.paradigm.{FindClass, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
+import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider, Understands}
 
 trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts {
 
@@ -40,6 +40,11 @@ trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts 
 
   // access type mapping capability
   def registerTypeMapping(model: Model): Generator[ProjectContext, Unit]
+
+  /** Returns the base type of trivially. */
+  def computedBaseType[Context](ofModel: Model)(implicit canFindClass: Understands[Context, FindClass[Name, Type]]): Generator[Context, Type] = {
+    FindClass(Seq(names.mangle(names.conceptNameOf(ofModel.baseDataType)))).interpret(canFindClass)
+  }
 
   // make Accept with abstract V
   /** Create standard signature to access the result of an operation
@@ -196,7 +201,16 @@ trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts 
     } yield (Some(field))
   }
 
-  def futureCreateFactoryDataTypeCase(model:Model, tpeCase:DataTypeCase, tpe:Type, isStatic:Boolean = false, typeParameters:Seq[Type] = Seq.empty): Generator[MethodBodyContext, Option[Expression]] = {
+  /**
+   *??? lit(Double value) {
+   *   return new Lit(value);
+   * }
+   *
+   *??? (ep.Exp<ep.m0.finalized.Visitor> left, ep.Exp<ep.m0.finalized.Visitor> right) {
+   *   return new Add(this.convert(left), this.convert(right));
+   * }
+   */
+  def futureCreateFactoryDataTypeCase(model:Model, tpeCase:DataTypeCase, paramBaseClass:Type, tpe:Type, isStatic:Boolean = false): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
 
@@ -207,14 +221,26 @@ trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts 
     } yield ()
 
     for {
-      _ <- createFactorySignatureDataTypeCase(definingModel.getOrElse(model), tpeCase, tpe, isStatic, typeParameters)
+      _ <- createFactorySignatureDataTypeCase(definingModel.getOrElse(model), tpeCase, paramBaseClass, tpe, isStatic)
 
       opInst <- findClass(factoryInstanceDataTypeCase(Some(model), tpeCase): _*)    // should check!
       _ <- resolveAndAddImport(opInst)
 
-      argSeq <- getArguments().map( args => { args.map(triple => triple._3) })
-      res <- instantiateObject(opInst, argSeq)
+      // set method invocation to 'convert' with these arguments
+      self <- selfReference()
 
+      convertMethod <- getMember(self, convert)
+      argSeq <- getArguments()
+
+      convertedArgSeq <- forEach(argSeq) { arg =>
+        if (tpeCase.isRecursive(model)) {
+          apply(convertMethod, Seq(arg._3))
+        } else {
+          Command.lift[MethodBodyContext,Expression](arg._3)
+        }
+      }
+
+      res <- instantiateObject(opInst, convertedArgSeq)
     } yield Some(res)
   }
 
@@ -230,6 +256,7 @@ trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts 
     import ooParadigm.classCapabilities._
     import genericsParadigm.classCapabilities._
     for {
+
       // even though this expressly calls for ep.m#.Exp it becomes just Exp
       // so missing the import.
       resultTpe <- findClass(names.mangle(domain.name), names.mangle(domain.baseDataType.name))
@@ -239,16 +266,18 @@ trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts 
       _ <- resolveAndAddImport(visitorTpe)
 
       // extends Exp<Visitor>
+      tt <- computedBaseType(domain)
+      topLevelType <- applyType(tt, Seq(visitorTpe))
 
-      parameterizedTpe <- applyType(resultTpe, Seq[Type](visitorTpe))
+      returnType <- applyType(resultTpe, Seq[Type](visitorTpe))
 
-      _ <- addParent(parameterizedTpe)
+      _ <- addParent(returnType)
 
       _ <- forEach(domain.flatten.typeCases) { tpeCase => {
         for {
           // These methods with recursive values must call convert; in addition, they must be properly
           // defined to use appropriate ep.m#.Exp based on where the data type was defined... TRICK
-          _ <- addMethod (names.mangle(names.instanceNameOf(tpeCase)), futureCreateFactoryDataTypeCase(domain, tpeCase, parameterizedTpe, false, Seq(visitorTpe)))
+          _ <- addMethod (names.mangle(names.instanceNameOf(tpeCase)), futureCreateFactoryDataTypeCase(domain, tpeCase, topLevelType, returnType, false))
         } yield ()
       }
       }

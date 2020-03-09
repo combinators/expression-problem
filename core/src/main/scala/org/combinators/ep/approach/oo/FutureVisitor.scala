@@ -85,32 +85,7 @@ trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts 
 
    }
 
-  /**
-   * Adds an accept method for given context, parameterized by justV type
-   *
-   * @return
-   */
-  def addAcceptMethod(tpe: DataType, justV:Type): Generator[ClassContext, Unit] = {
-    import ooParadigm.classCapabilities._
-
-    def acceptBody(paramType:Type): Generator[MethodBodyContext, Option[Expression]] = {
-      import ooParadigm.methodBodyCapabilities._
-      import paradigm.methodBodyCapabilities._
-
-      for {
-        _ <- makeAcceptSignature(justV)
-        _ <- setAbstract()
-      } yield None
-    }
-
-    for {
-      _ <- addMethod(accept, acceptBody(justV))
-    } yield None
-
-   // addMethod(accept, acceptBody(justV))
-  }
-
-  def justAddAcceptMethod(bodyGenerator:Generator[MethodBodyContext, Option[Expression]]): Generator[ClassContext, Unit] = {
+  def addAcceptMethod(bodyGenerator:Generator[MethodBodyContext, Option[Expression]]): Generator[ClassContext, Unit] = {
     import ooParadigm.classCapabilities._
     addMethod(accept, bodyGenerator)
   }

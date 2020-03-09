@@ -28,24 +28,6 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
   lazy val finalized:Name = names.mangle("finalized")     // sub package within each evolution that contains final classes
   lazy val expTypeParameter:Name = names.mangle("V")
 
-//  /** Top-level type. Need to hold onto for future mapping of Exp */
-//  var topLevelType:Type
-//
-//  /**
-//   * Hold onto the base ep.Exp so it can be used in conversion methods.
-//   * @return
-//   */
-//  def setBaseType(model:Model): Generator[ProjectContext, Unit] = {
-//
-//    import classCapabilities._
-//    topLevelType = for {
-//      b <- findClass(names.mangle(model.baseDataType.name))
-//    } yield (b)
-//
-//    Command.skip[ProjectContext]
-//  }
-
-
   def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression] = {
     import ooParadigm.methodBodyCapabilities._
     import paradigm.methodBodyCapabilities._
@@ -53,29 +35,16 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
       method <- getMember(message.to, names.mangle(names.instanceNameOf(message.request.op)))
       result <- apply(method, message.request.op.parameters.map(message.request.arguments))
     } yield result
-
   }
 
-  /**
-   * new Sub((FinalI) (new Lit(1.0)), (FinalI) (new Lit(2.0))).prettyp()); was how we did in old code
-   *
-   * this becomes
-   *
-   * Sub(Lit(1.0), Lit(2.0)).prettyp());
-   *
-   * Relies on factory methods to instantiate based on latest classes generated
-   * @param baseTpe
-   * @param tpeCase
-   * @param args
-   * @return
-   */
+
   def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
 
     for {
       thisRef <- selfReference()
-      factory <- getMember(thisRef, names.mangle(names.conceptNameOf(tpeCase)))
+      factory <- getMember(thisRef, names.mangle(names.instanceNameOf(tpeCase)))
       res <- apply(factory, args)
     } yield res
   }
@@ -325,7 +294,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
           visitorType <- findClass(names.mangle(model.name), finalized, visitorClass)
           baseType <-  findClass(names.mangle(model.baseDataType.name))
           _ <- resolveAndAddImport(visitorType)
-          _ <- justAddAcceptMethod(makeAcceptImplementation(visitorType))
+          _ <- addAcceptMethod(makeAcceptImplementation(visitorType))
           _ <- addConvertMethod(makeConvertImplementation(model, visitorType, baseType))
         } yield ()
       }
@@ -371,44 +340,60 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
   /**
    * Instead of using the standard 'makeBase' we need to add accept and convert methods.
    *
-   * This insists upon accessing registry for Exp, which unfortunately grabs ep.m4.Exp when
-   * I only want this top-level one. Cna't
+   * Returns the fully qualified and not yet applied type to access this class, e.g. ep.Exp.
    */
   def makeTriviallyBase(tpe: DataType, ops: Seq[Operation]): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
 
-    def abstractMethod(baseExp:Type): Generator[MethodBodyContext, Option[Expression]] = {
+    def makeAbstractConvertSignature(selfClassWithVisitorType: Type): Generator[MethodBodyContext, Option[Expression]] = {
+      import ooParadigm.methodBodyCapabilities._
+      import paradigm.methodBodyCapabilities._
+      for {
+        _ <- makeConvertSignature(selfClassWithVisitorType, selfClassWithVisitorType)
+        _ <- setAbstract()
+      } yield None
+    }
+
+    def makeAbstractAcceptSignature(visitorType: Type): Generator[MethodBodyContext, Option[Expression]] = {
       import ooParadigm.methodBodyCapabilities._
       import paradigm.methodBodyCapabilities._
 
       for {
-        _ <- makeConvertSignature(baseExp, baseExp)
+        _ <- makeAcceptSignature(visitorType)
         _ <- setAbstract()
       } yield None
+    }
+
+    def addVisitorTypeParameter(): Generator[ClassContext, Type] = {
+      import classCapabilities._
+      import genericsParadigm.classCapabilities._
+      for {
+        visitorTypeParamName <- freshName(expTypeParameter)
+        _ <- addTypeParameter(visitorTypeParamName, Command.skip[TypeParameterContext])
+        visitorType <- getTypeArguments().map(_.head)
+      } yield visitorType
     }
 
     // at this point, we only want ep.Exp not the most qualified ep.m4.Exp
     val makeClass: Generator[ClassContext, Unit] = {
       import classCapabilities._
-
       import genericsParadigm.classCapabilities._
       import polymorphics.TypeParameterContext
       for {
-        // in new solution, all Exp<> references are parameterized
-        fv <- freshName(expTypeParameter)
-        _ <- addTypeParameter(fv, Command.skip[TypeParameterContext])
-        justV <- getTypeArguments().map(_.head)
-
+        visitorType <- addVisitorTypeParameter()
         _ <- setInterface()
-        baseExp <- findClass(names.mangle(names.conceptNameOf(tpe)))     //toTargetLanguageType(TypeRep.DataType(tpe))
-        _ <- addAcceptMethod(tpe, justV)
-
-        paramType <- applyType(baseExp, Seq(justV))
-        _ <- addConvertMethod(abstractMethod(paramType))  // was baseExp
+        selfClass <- findClass(names.mangle(names.conceptNameOf(tpe)))
+        selfClassWithVisitorType <- applyType(selfClass, Seq(visitorType))
+        _ <- addAcceptMethod(makeAbstractAcceptSignature(visitorType))
+        _ <- addConvertMethod(makeAbstractConvertSignature(selfClassWithVisitorType))
       } yield ()
     }
-
     addClassToProject(makeClass, names.mangle(names.conceptNameOf(tpe)))
+  }
+
+  /** Returns the base type of trivially. */
+  def triviallyBaseType[Context](ofModel: Model)(implicit canFindClass: Understands[Context, FindClass[Name, Type]]): Generator[Context, Type] = {
+    FindClass(Seq(names.mangle(names.conceptNameOf(ofModel.baseDataType)))).interpret(canFindClass)
   }
 
   /** I had to copy this entire thing.
@@ -585,46 +570,49 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
     Seq(names.mangle(domain.name), finalized, visitorClass)
   }
 
-    def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
-      import paradigm.projectContextCapabilities._
-      import ooParadigm.projectCapabilities._
+  def implement(
+    domain: Model,
+    domainSpecific: EvolutionImplementationProvider[this.type]
+  ): Generator[ProjectContext, Unit] = {
+    import paradigm.projectContextCapabilities._
+    import ooParadigm.projectCapabilities._
 
-      def getBaseType(): Type = {
-        import classCapabilities._
-        for {
-          bb <- findClass(names.mangle(domain.baseDataType.name))
-        } yield bb
-      }
-
+    def getBaseType(): Type = {
+      import classCapabilities._
       for {
-        _ <- debug("Processing Trivially")
-        _ <- registerTypeMapping(domain)
-
-        _ <- makeTriviallyBase(domain.baseDataType, Seq.empty)
-
-        // whenever new operation, this CREATES the capability of having intermediate interfaces
-        _ <- forEach(domain.inChronologicalOrder) { currentModel =>
-          // for all PAST dataTypes that are already defined
-          for {
-            _ <- domainSpecific.initialize(this)
-            _ <- registerTypeMapping(currentModel)
-
-            _ <- addClassToProject(makeFinalizedVisitor(currentModel),  finalizedVisitorName(currentModel) : _*)
-            _ <- addClassToProject(extendIntermediateInterface(currentModel, getBaseType(), domainSpecific), baseInterfaceNames(currentModel) : _*)
-            _ <- addFactoryToProject(currentModel, makeFinalizedFactory(currentModel))
-
-            _ <- forEach(currentModel.inChronologicalOrder) { modelDefiningTypes =>
-              forEach(modelDefiningTypes.typeCases) { tpe =>
-                for {
-                  _ <- makeDerivedInterfaces(tpe, currentModel, domainSpecific)
-                  _ <- makeFinalClass(currentModel, tpe)
-                } yield ()
-              }
-            }
-          } yield ()
-        }
-      } yield ()
+        bb <- findClass(names.mangle(domain.baseDataType.name))
+      } yield bb
     }
+
+    for {
+      _ <- debug("Processing Trivially")
+      _ <- registerTypeMapping(domain)
+
+      _ <- makeTriviallyBase(domain.baseDataType, Seq.empty)
+
+      // whenever new operation, this CREATES the capability of having intermediate interfaces
+      _ <- forEach(domain.inChronologicalOrder) { currentModel =>
+        // for all PAST dataTypes that are already defined
+        for {
+          _ <- domainSpecific.initialize(this)
+          _ <- registerTypeMapping(currentModel)
+
+          _ <- addClassToProject(makeFinalizedVisitor(currentModel), finalizedVisitorName(currentModel): _*)
+          _ <- addClassToProject(extendIntermediateInterface(currentModel, getBaseType(), domainSpecific), baseInterfaceNames(currentModel): _*)
+          _ <- addFactoryToProject(currentModel, makeFinalizedFactory(currentModel))
+
+          _ <- forEach(currentModel.inChronologicalOrder) { modelDefiningTypes =>
+            forEach(modelDefiningTypes.typeCases) { tpe =>
+              for {
+                _ <- makeDerivedInterfaces(tpe, currentModel, domainSpecific)
+                _ <- makeFinalClass(currentModel, tpe)
+              } yield ()
+            }
+          }
+        } yield ()
+      }
+    } yield ()
+  }
 
   def finalBaseInterfaceNames(domain: Model): Seq[Name] = {
     Seq(names.mangle(domain.name), finalized, names.mangle(domain.baseDataType.name))

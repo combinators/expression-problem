@@ -41,9 +41,14 @@ trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts 
   // access type mapping capability
   def registerTypeMapping(model: Model): Generator[ProjectContext, Unit]
 
+  /** Same as below but works without domain, providing you pass in the base type. */
+  def computedBaseType[Context](ofBaseType:DataType)(implicit canFindClass: Understands[Context, FindClass[Name, Type]]): Generator[Context, Type] = {
+    FindClass(Seq(names.mangle(names.conceptNameOf(ofBaseType)))).interpret(canFindClass)
+  }
+
   /** Returns the base type of trivially. */
   def computedBaseType[Context](ofModel: Model)(implicit canFindClass: Understands[Context, FindClass[Name, Type]]): Generator[Context, Type] = {
-    FindClass(Seq(names.mangle(names.conceptNameOf(ofModel.baseDataType)))).interpret(canFindClass)
+    computedBaseType(ofModel.baseDataType)
   }
 
   // make Accept with abstract V

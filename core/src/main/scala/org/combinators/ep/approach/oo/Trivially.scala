@@ -28,6 +28,9 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
   lazy val finalized:Name = names.mangle("finalized")     // sub package within each evolution that contains final classes
   lazy val expTypeParameter:Name = names.mangle("V")
 
+  /** Placeholder for the ancestral type ep.Exp so it can be registered separately within the type mapping */
+  lazy val ancestralTypePrefix:String = "ancestor"
+
   def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression] = {
     import ooParadigm.methodBodyCapabilities._
     import paradigm.methodBodyCapabilities._
@@ -37,7 +40,19 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
     } yield result
   }
 
-
+  /**
+   * Instantiating an instance of the data type.
+   *
+   * public void testTest() {
+   *   org.junit.Assert.assertTrue("", Double.valueOf(new Add(new Lit(1.0), new Lit(2.0)).eval()).equals(3.0));
+   *   org.junit.Assert.assertTrue("", Double.valueOf(new Lit(5.0).eval()).equals(5.0));
+   * }
+   *
+   * @param baseTpe
+   * @param tpeCase
+   * @param args
+   * @return
+   */
   def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
@@ -53,6 +68,21 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
     model.map(m => names.mangle(m.name)).toSeq :+ finalized :+ names.mangle(names.conceptNameOf(tpeCase))
   }
 
+  /**
+   * Defines an operation and must also insert parameters when they exist.
+   *
+   * public default Boolean equals(ep.Exp<V> other) {*
+   *   return this.astree().equals(convert(other).astree());
+   * }
+   *
+   * Be careful to call convert on recursive types
+   *
+   * @param tpe
+   * @param tpeCase
+   * @param op
+   * @param domainSpecific
+   * @return
+   */
   override def makeImplementation(tpe: DataType,
                                    tpeCase: DataTypeCase,
                                    op: Operation,
@@ -60,6 +90,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
                                  ): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
+    import polymorphics.methodBodyCapabilities._
     for {
       thisRef <- selfReference()
       attAccessors: Seq[Expression] <- forEach (tpeCase.attributes) { att =>
@@ -69,16 +100,41 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
         } yield getterCall
       }
 
-      args <- forEach (op.parameters) { param =>
+      _ <- triviallyMakeSignature(tpe, op)
+//      // must add a proper parameter to this method, using the most generic ep.Exp for recursive
+//      // types, and pass others through with native types.
+//      params <- forEach (op.parameters) { param =>
+//        for {
+//          //paramField <- getMember(thisRef, names.mangle(param.name))
+//          paramTpe <- if (param.tpe == TypeRep.DataType(tpe)) {
+//            toTargetLanguageType(TypeRep.DataType(triviallyBaseDataType(tpe)))
+//          } else {
+//            toTargetLanguageType(param.tpe)
+//        }
+//        } yield (names.mangle(param.name), paramTpe)
+//      }
+//
+//      _ <- setParameters(params)
+      args <- getArguments()
+
+      convertMethod <- getMember(thisRef, convert)
+
+      processedArgs <- forEach (args.zip(op.parameters)) { argPair =>
         for {
-          paramField <- getMember(thisRef, names.mangle(param.name))
-        } yield (param, paramField)
+          // must convert recursive using convert() invocations
+          pArg <- if (argPair._2.tpe == TypeRep.DataType(tpe)) {
+          // must invoke current convert()
+            apply(convertMethod, Seq(argPair._1._3))   // invoke convert() on the expression
+          } else {
+          Command.lift[MethodBodyContext, Expression](argPair._1._3)
+        }
+        } yield (argPair._2, pArg)
       }
+//      opType <- toTargetLanguageType(op.returnType)
+//      _ <- resolveAndAddImport(opType)
+//      _ <- setReturnType(opType)
 
-      opType <- toTargetLanguageType(op.returnType)
-      _ <- resolveAndAddImport(opType)
-      _ <- setReturnType(opType)
-
+      // TODO: must call convert(baseType) or pass literals through
       result <-
         domainSpecific.logic(this)(
           ReceivedRequest(
@@ -86,7 +142,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
             tpeCase,
             thisRef,
             tpeCase.attributes.zip(attAccessors).toMap,
-            Request(op, args.toMap)
+            Request(op, processedArgs.toMap)
           )
         )
     } yield result
@@ -197,6 +253,13 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
         _ <- resolveAndAddImport(parent)
         paramType <- applyType(parent, genType)
         _ <- registerLocally(tpe, paramType)
+
+        // Wow. Ok, so this is the derived interface which, for operations that involve parameters, will need
+        // to have access to the ancestral type. This is patched into the regular (locally!) type mapping
+        // by defining a special entry that refers to ep.Exp<V> -- this is used later by makeImplementation(...)
+        cbt <- computedBaseType(tpe)
+        parameterizedBase <- applyType(cbt, genType)
+        _ <- registerLocally(triviallyBaseDataType(tpe), parameterizedBase)
 
         // only add parent to the chain if NOT the first one
         _ <- if (model.last.isDefined && model.last.get.findTypeCase(tpeCase).isDefined) {
@@ -332,11 +395,17 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
         _ <- addTypeLookupForMethods(dtpeRep, Command.lift(paramType))
         _ <- addTypeLookupForClasses(dtpeRep, Command.lift(paramType))
         _ <- addTypeLookupForConstructors(dtpeRep, Command.lift(paramType))
+
       } yield ()
     }
 
-    /** What model is delivered has operations which is essential for the mapping. */
-    override def registerTypeMapping(model: Model): Generator[ProjectContext, Unit] = {
+  /**
+   * Allow for more fine-grained mapping for ancestral types
+   */
+  def triviallyBaseDataType(tpe:DataType): DataType = DataType(ancestralTypePrefix + tpe.name)
+
+  /** What model is delivered has operations which is essential for the mapping. */
+  override def registerTypeMapping(model: Model): Generator[ProjectContext, Unit] = {
       import ooParadigm.projectCapabilities._
       import ooParadigm.classCapabilities.canFindClassInClass
       import ooParadigm.constructorCapabilities.canFindClassInConstructor
@@ -345,10 +414,12 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
 
       val baseInterface = baseInterfaceNames(model)   // registers as m#.Exp
       val dtpeRep = TypeRep.DataType(model.baseDataType)
+
       for {
         _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(baseInterface : _*))
         _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(baseInterface : _*))
         _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(baseInterface : _*))
+
       } yield ()
     }
 
@@ -407,6 +478,39 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
     addClassToProject(makeClass, names.mangle(names.conceptNameOf(tpe)))
   }
 
+  /** Create standard signature to access the result of an operation
+   *
+   * {{{
+   *   public Double OPERATION(PARAM...)
+   * }}}
+   *
+   * @param baseType   which is necessary for the most ancestral type (and reason this method is not override of makeSignature)
+   * @param op
+   * @return
+   */
+  def triviallyMakeSignature(baseType:DataType, op: Operation): Generator[MethodBodyContext, Unit] = {
+    import paradigm.methodBodyCapabilities._
+
+    for {
+      rt <- toTargetLanguageType(op.returnType)
+      _ <- resolveAndAddImport(rt)
+      _ <- setReturnType(rt)
+
+      params <- forEach (op.parameters) { param: Parameter =>
+        for {
+         // pt <- toTargetLanguageType(param.tpe)
+          pt <- if (param.tpe == TypeRep.DataType(baseType)) {
+            toTargetLanguageType(TypeRep.DataType(triviallyBaseDataType(baseType)))
+          } else {
+            toTargetLanguageType(param.tpe)
+          }
+          _ <- resolveAndAddImport(pt)
+          pName <- freshName(names.mangle(param.name))
+        } yield (pName, pt)
+      }
+      _ <- setParameters(params)
+    } yield ()
+  }
 
   /** I had to copy this entire thing.
    *
@@ -470,7 +574,8 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
         Command.skip[ClassContext]
       }
 
-      _ <- forEach (domain.ops) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), makeSignature(op)) }
+  // must be moved OUTSIDE because only the extended interfaces will have methods defined....
+//      _ <- forEach (domain.ops) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), triviallyMakeSignature(domain.baseDataType, op)) }
     } yield ()
   }
 
@@ -525,12 +630,15 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
    * package ep.m0;
    *
    * public interface Exp<V> extends ep.Exp<V> {
-   *   public abstract Double eval();
+   *   public abstract Double eval();   // operation
    *   public abstract ep.m0.Exp<V> lit(Double value);
    *   public abstract ep.m0.Exp<V> add(ep.Exp<V> left, ep.Exp<V> right);
    *
+   *   public abstract Boolean equals(ep.Exp<V> other);    // binary operation MUST refer to ancestral type
+   *
    *   // conversion
    *   public abstract ep.m0.Exp<V> convert(ep.Exp<V> toConvert);
+   *
    * }
    */
   def extendIntermediateInterface(domain:Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
@@ -549,6 +657,25 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
     for {
 
       _ <- makeInterface(domain, domainSpecific, Some(expTypeParameter))   // this creates TYPE
+
+      // This block (up to forEach...) ensures that we are properly assigning ep.Exp<V> for future discovery
+      // in createFactorySignatureDataTypeCase
+      genType <- getTypeArguments()
+
+      parent <-  toTargetLanguageType(TypeRep.DataType(domain.baseDataType))
+      _ <- resolveAndAddImport(parent)
+      paramType <- applyType(parent, genType)
+      _ <- registerLocally(domain.baseDataType, paramType)
+
+      // Wow. Ok, so this is the derived interface which, for operations that involve parameters, will need
+      // to have access to the ancestral type. This is patched into the regular (locally!) type mapping
+      // by defining a special entry that refers to ep.Exp<V> -- this is used later by makeImplementation(...)
+      cbt <- computedBaseType(domain.baseDataType)
+      _ <- resolveAndAddImport(cbt)
+      parameterizedBase <- applyType(cbt, genType)
+      _ <- registerLocally(triviallyBaseDataType(domain.baseDataType), parameterizedBase)
+
+      _ <- forEach (domain.ops) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), triviallyMakeSignature(domain.baseDataType, op)) }
 
 
       // paramType is now Exp<V>. Couldn't get type arguments?
@@ -652,6 +779,29 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
      import projectContextCapabilities._
      import paradigm.compilationUnitCapabilities._
      import paradigm.testCapabilities._
+
+     def factoryMethod(model:Model, tpeCase:DataTypeCase) : Generator[MethodBodyContext, Option[Expression]] = {
+
+       import ooParadigm.methodBodyCapabilities._
+       import polymorphics.methodBodyCapabilities._
+       import paradigm.methodBodyCapabilities._
+       for {
+         // ep.m4.Exp<ep.m4.finalized.Visitor>
+         paramBaseType <- toTargetLanguageType(TypeRep.DataType(model.baseDataType))
+         _ <- resolveAndAddImport(paramBaseType)
+         visitorType <- findClass(names.mangle(model.name), finalized, visitorClass)
+         _ <- resolveAndAddImport(visitorType)
+
+         returnType <- findClass(names.mangle(model.name), finalized, names.mangle(names.conceptNameOf(tpeCase)))
+         _ <- resolveAndAddImport(returnType)
+
+         appliedType <- applyType(paramBaseType, Seq(visitorType))
+         //
+
+         facMethod <- createFactoryDataTypeCase(model, tpeCase, appliedType, returnType)
+       } yield facMethod
+     }
+
      for {
 
        _ <- forEach(tests.toList) { case (model, tests) => {
@@ -663,18 +813,19 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
            } yield code.flatten
 
          import ooParadigm.testCapabilities._
-
          val compUnit = for {
 
            // add test case first
            _ <- addTestCase(testCode, testName)
 
            // no longer necessary with finalized classes??
-//           // get list of all operations and MAP to the most recent model
-//           _ <- forEach(model.flatten.typeCases) { tpeCase =>
-//             // must ensure
-//             addMethod(names.mangle(names.conceptNameOf(tpeCase)), createFactoryDataTypeCase(model, tpeCase))
-//           }
+           // get list of all operations and MAP to the most recent model
+           _ <- forEach(model.flatten.typeCases) { tpeCase => {
+             for {
+               _ <- addMethod(names.mangle(names.instanceNameOf(tpeCase)), factoryMethod(model, tpeCase))
+             } yield (None)
+           }
+           }
 
          } yield ()
 

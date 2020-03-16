@@ -227,6 +227,12 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
    *  These are all defined in the "current" model. Note that if the operation is a producer method, then
    *  you need factory methods for all known data types.
    *
+   * All producer methods (from the past!) most provide future-proof conversions
+   *
+   * public default ep.m5.Exp<V> simplify() {
+   *    return convert(ep.m4.Add.super.simplify());
+   * }
+   *
    * @param tpe
    * @param tpeCase
    * @param domainSpecific
@@ -240,6 +246,27 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
         if (model.findTypeCase(tpeCase).contains(model)) {
           model.flatten.ops
         } else model.ops
+
+      def producerConvert(op:Operation) : Generator[MethodBodyContext, Option[Expression]] = {
+        import ooParadigm.methodBodyCapabilities._
+        import paradigm.methodBodyCapabilities._
+        for {
+          _ <- triviallyMakeSignature(model.baseDataType, op)
+          thisRef <- selfReference()
+          convertMethod <- getMember(thisRef, convert)
+
+          // TODO: Must fix this. Right now, this generates
+          //
+          //      return this.convert(this);
+          //
+          // but it must become...
+          //
+          //       return this.convert(ep.m4.Mult.super.simplify());
+
+          superRef <- selfReference()  // TODO: HAVE TO FIX THIS
+          result <- apply(convertMethod, Seq(superRef))
+        } yield Some(result)
+      }
 
       import genericsParadigm.classCapabilities._
       import polymorphics.TypeParameterContext
@@ -292,6 +319,17 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
         _ <- forEach (opsToGenerate) { op =>
           addMethod(names.mangle(names.instanceNameOf(op)), makeImplementation(tpe, tpeCase, op, domainSpecific))
         }
+
+        _ <- if (model.last.isDefined) {
+          for {
+            _ <- forEach(model.last.get.flatten.ops.filter(op => op.isProducer(model))) { op =>
+              addMethod(names.mangle(names.instanceNameOf(op)), producerConvert(op))
+            }
+          }yield ()
+        } else {
+          Command.skip[ClassContext]
+        }
+
         // these are factory signatures. Moved to the Exp class
 //        _ <- forEach (model.flatten.typeCases) { tpe =>
 //          addAbstractMethod(names.mangle(names.instanceNameOf(tpe)), convertOptionToUnit(createFactorySignatureDataTypeCase(model, tpe, paramType)))
@@ -636,6 +674,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
    *
    *   public abstract Boolean equals(ep.Exp<V> other);    // binary operation MUST refer to ancestral type
    *
+   *   public abstract ep.m5.Exp<V> simplify();   // any producer methods IN PAST MUST ALWAYS OVERLOAD
    *   // conversion
    *   public abstract ep.m0.Exp<V> convert(ep.Exp<V> toConvert);
    *
@@ -655,7 +694,6 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
     }
 
     for {
-
       _ <- makeInterface(domain, domainSpecific, Some(expTypeParameter))   // this creates TYPE
 
       // This block (up to forEach...) ensures that we are properly assigning ep.Exp<V> for future discovery
@@ -676,7 +714,16 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
       _ <- registerLocally(triviallyBaseDataType(domain.baseDataType), parameterizedBase)
 
       _ <- forEach (domain.ops) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), triviallyMakeSignature(domain.baseDataType, op)) }
-
+      _ <- if (domain.last.isDefined && domain.last.get.lastModelWithOperation.isDefined) {
+        // if there are past operations, find those that are producers and create overloaded specifications
+        for {
+          _ <- forEach(domain.last.get.lastModelWithOperation.get.flatten.ops.filter(op => op.isProducer(domain))) {
+            op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), triviallyMakeSignature(domain.baseDataType, op))
+          }
+        } yield ()
+      } else {
+        Command.skip[ClassContext]
+      }
 
       // paramType is now Exp<V>. Couldn't get type arguments?
       //parent <- findClass(names.mangle(domain.baseDataType.name))

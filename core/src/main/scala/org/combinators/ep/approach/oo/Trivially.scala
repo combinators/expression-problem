@@ -255,16 +255,13 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
           thisRef <- selfReference()
           convertMethod <- getMember(thisRef, convert)
 
-          // TODO: Must fix this. Right now, this generates
-          //
-          //      return this.convert(this);
-          //
-          // but it must become...
-          //
+          //args <- forEach (op.parameters) { param => freshName(names.mangle(param.name)) }
+          argSeq <- getArguments().map( args => { args.map(triple => triple._3) })
+
           //       return this.convert(ep.m4.Mult.super.simplify());
           superRef <- superReference(names.mangle(model.last.get.name), names.mangle(names.conceptNameOf(tpeCase)))  // TODO: HAVE TO FIX THIS
           opMethod <- getMember(superRef, names.mangle(names.instanceNameOf(op)))
-          innerResult <- apply(opMethod, Seq()) // TODO: hack: might have arguments
+          innerResult <- apply(opMethod, argSeq)
           result <- apply(convertMethod, Seq(innerResult))
         } yield Some(result)
       }

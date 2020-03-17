@@ -672,6 +672,26 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             (context, new com.github.javaparser.ast.expr.ThisExpr())
           }
         }
+
+      // if SuperReference has a base class, then use it, otherwise make standalone
+      val canSuperReferenceInMethod: Understands[MethodBodyContext, SuperReference[Name,Expression]] =
+        new Understands[MethodBodyContext, SuperReference[Name,Expression]] {
+          def perform(
+                       context: MethodBodyContext,
+                       command: SuperReference[Name,Expression]
+                     ): (MethodBodyContext, Expression) = {
+            val start = new ClassOrInterfaceType()
+            val fullName = ObjectOriented.components(config.targetPackage.getName).map(JavaNameProvider.mangle) ++ command.qualifiedName
+            start.setName(fullName.head.toAST)
+            val qualifiedName = fullName.tail.foldLeft(start){ case (scopes, suffix) =>
+              new ClassOrInterfaceType(scopes, suffix.mangled)}
+
+            //(context, qualifiedName)
+            val parentName = new com.github.javaparser.ast.expr.Name(qualifiedName.toString)
+
+            (context, new com.github.javaparser.ast.expr.SuperExpr(parentName))
+          }
+        }
       val canGetConstructorInMethod: Understands[MethodBodyContext, GetConstructor[Type, Expression]] =
         new Understands[MethodBodyContext, GetConstructor[Type, Expression]] {
           def perform(

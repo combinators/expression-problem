@@ -71,6 +71,11 @@ case class SelfReference[Expression]() extends Command {
   type Result = Expression
 }
 
+/** Used for super. or (when tpe exists) then qn.super. */
+case class SuperReference[Name, Expression](qualifiedName:Seq[Name] = Seq.empty) extends Command {
+  type Result = Expression
+}
+
 case class GetConstructor[Type, Expression](tpe: Type) extends Command {
   type Result = Expression
 }
@@ -282,6 +287,10 @@ trait ObjectOriented {
     implicit val canSelfReferenceInMethod: Understands[MethodBodyContext, SelfReference[Expression]]
     def selfReference(): Generator[MethodBodyContext, Expression] =
       AnyParadigm.capabilitiy(SelfReference[Expression]())
+
+    implicit val canSuperReferenceInMethod: Understands[MethodBodyContext, SuperReference[Name,Expression]]
+    def superReference(parent:Name*): Generator[MethodBodyContext, Expression] =
+      AnyParadigm.capabilitiy(SuperReference[Name,Expression](parent))
 
     implicit val canGetConstructorInMethod: Understands[MethodBodyContext, GetConstructor[Type, Expression]]
     def getConstructor(tpe: Type): Generator[MethodBodyContext, Expression] =

@@ -262,9 +262,10 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
           // but it must become...
           //
           //       return this.convert(ep.m4.Mult.super.simplify());
-
-          superRef <- selfReference()  // TODO: HAVE TO FIX THIS
-          result <- apply(convertMethod, Seq(superRef))
+          superRef <- superReference(names.mangle(model.last.get.name), names.mangle(names.conceptNameOf(tpeCase)))  // TODO: HAVE TO FIX THIS
+          opMethod <- getMember(superRef, names.mangle(names.instanceNameOf(op)))
+          innerResult <- apply(opMethod, Seq()) // TODO: hack: might have arguments
+          result <- apply(convertMethod, Seq(innerResult))
         } yield Some(result)
       }
 

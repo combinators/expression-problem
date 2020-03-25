@@ -24,7 +24,7 @@ object M6 {
         } yield ()
       }
 
-      /** Simplify depends upon having a working eval. */
+      /** Equals depends upon asTree method */
       override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
         op match {
           case math.M6.Equals => Set(Operation.asTree)

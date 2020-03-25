@@ -14,7 +14,8 @@ object M7 extends Evolution {
     val target = "target"
   }
 
-  // SquareRoot of inner value, and an operation Find that counts the number
+  // SquareRoot of inner value, and an operation Find that counts the number of occurences
+  // in an expression of a target value.
   lazy val Sqrt:DataTypeCase = DataTypeCase.unary("Sqrt")
 
   lazy val Find = Operation("find", TypeRep.Int, Seq(Parameter(m7_extensions.target, TypeRep.Double)))

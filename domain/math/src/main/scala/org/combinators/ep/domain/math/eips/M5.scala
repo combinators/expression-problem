@@ -26,7 +26,7 @@ object M5 {
         } yield ()
       }
 
-      /** Simplify depends upon having a working eval. */
+      /** AsTree depends upon Identifier. */
       override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
         if (op == Operation.asTree) {
           Set(math.M5.Identifier)

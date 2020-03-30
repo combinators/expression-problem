@@ -32,12 +32,20 @@ trait OOApproachImplementationProvider extends ApproachImplementationProvider {
   }
 
   def registerTypeMapping(domain: Model): Generator[ProjectContext, Unit] = {
-    import paradigm.projectContextCapabilities._
-    import ooParadigm.projectCapabilities._
-    import ooParadigm.methodBodyCapabilities._
-    import ooParadigm.classCapabilities._
-    import ooParadigm.constructorCapabilities._
-
+//    import paradigm.projectContextCapabilities._
+//    import ooParadigm.projectCapabilities._
+//    import ooParadigm.methodBodyCapabilities._
+//    import ooParadigm.classCapabilities.{canAddTypeLookupForClassesInClass => _,
+//                                         canAddTypeLookupForConstructorsInClass => _,
+//                                         _}
+//
+//    import ooParadigm.constructorCapabilities._
+    import paradigm.projectContextCapabilities.addTypeLookupForMethods
+    import ooParadigm.methodBodyCapabilities.canFindClassInMethod
+    import ooParadigm.projectCapabilities.addTypeLookupForClasses
+    import ooParadigm.projectCapabilities.addTypeLookupForConstructors
+    import ooParadigm.classCapabilities.canFindClassInClass
+    import ooParadigm.constructorCapabilities.canFindClassInConstructor
     val dtpeRep = TypeRep.DataType(domain.baseDataType)
     for {
       _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(domain.baseDataType))

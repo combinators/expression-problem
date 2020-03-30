@@ -28,9 +28,11 @@ trait Traditional extends OOApproachImplementationProvider with BaseDataTypeAsCl
   def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
+
     for {
       rt <- findClass(names.mangle(names.conceptNameOf(tpeCase)))
       _ <- resolveAndAddImport(rt)
+
       res <- instantiateObject(rt, args)
     } yield res
   }

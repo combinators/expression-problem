@@ -1,7 +1,7 @@
 package org.combinators.ep.language.java
 
 import cats.effect.{ExitCode, IO, IOApp}
-import org.combinators.ep.approach.oo.{ExtensibleVisitor, Interpreter, Traditional, Trivially, Visitor, VisitorSideEffect}
+import org.combinators.ep.approach.oo.{Algebra, ExtensibleVisitor, Interpreter, Traditional, Trivially, Visitor, VisitorSideEffect}
 import org.combinators.ep.domain.Model
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.math._
@@ -22,14 +22,15 @@ object Main extends IOApp {
   val extensibleVisitorApproach = ExtensibleVisitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val interpreterApproach = Interpreter[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val triviallyApproach = Trivially[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+  val algebraApproach = Algebra[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
   // select one here.
   // val approach = ooApproach // WORKS!
   // val approach = visitorApproach  // WORKS!
   // val approach = visitorSideEffectApproach // WORKS!
   // val approach = extensibleVisitorApproach // WORKS!
-  val approach = triviallyApproach // triviallyApproach // WORKS!
-  // val approach = interpreterApproach // Not quite yet
+  // val approach = triviallyApproach // triviallyApproach // WORKS!
+  val approach = algebraApproach // Not quite yet
 
   val evolutions = Seq(M0, M1, M2, M3, M4, M5, M6) // ) // , M4, M5, M6)
   //val m4eip =

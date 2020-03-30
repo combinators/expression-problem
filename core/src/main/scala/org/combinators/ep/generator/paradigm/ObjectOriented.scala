@@ -43,7 +43,11 @@ case class AddConstructor[ConstructorContext](ctor: Generator[ConstructorContext
   type Result = Unit
 }
 
-case class InstantiateObject[Type, Expression](tpe: Type, constructorArguments: Seq[Expression]) extends Command {
+/** Supports both traditional instantiation
+ * new X (a1,a2)
+ * new X (a1, a2) { ... body ... }
+ * */
+case class InstantiateObject[Type, Expression, ClassContext](tpe: Type, constructorArguments: Seq[Expression], body:Option[Generator[ClassContext,Unit]] = None) extends Command {
   type Result = Expression
 }
 
@@ -216,9 +220,9 @@ trait ObjectOriented {
     def resolveImport(tpe: Type): Generator[ConstructorContext, Option[Import]] =
       AnyParadigm.capabilitiy(ResolveImport[Import, Type](tpe))
 
-    implicit val canInstantiateObjectInConstructor: Understands[ConstructorContext, InstantiateObject[Type, Expression]]
-    def instantiateObject(tpe: Type, constructorArguments: Seq[Expression]): Generator[ConstructorContext, Expression] =
-      AnyParadigm.capabilitiy(InstantiateObject(tpe, constructorArguments))
+    implicit val canInstantiateObjectInConstructor: Understands[ConstructorContext, InstantiateObject[Type, Expression, ClassContext]]
+    def instantiateObject(tpe: Type, constructorArguments: Seq[Expression], body:Option[Generator[ClassContext,Unit]] = None): Generator[ConstructorContext, Expression] =
+      AnyParadigm.capabilitiy(InstantiateObject(tpe, constructorArguments, body))
 
     implicit val canApplyInConstructor: Understands[ConstructorContext, Apply[Expression, Expression, Expression]]
     def apply(method: Expression, arguments: Seq[Expression]): Generator[ConstructorContext, Expression] =
@@ -264,9 +268,9 @@ trait ObjectOriented {
 
   trait MethodBodyCapabilities {
 
-    implicit val canInstantiateObjectInMethod: Understands[MethodBodyContext, InstantiateObject[Type, Expression]]
-    def instantiateObject(tpe: Type, constructorArguments: Seq[Expression]): Generator[MethodBodyContext, Expression] =
-      AnyParadigm.capabilitiy(InstantiateObject(tpe, constructorArguments))
+    implicit val canInstantiateObjectInMethod: Understands[MethodBodyContext, InstantiateObject[Type, Expression, ClassContext]]
+    def instantiateObject(tpe: Type, constructorArguments: Seq[Expression], body:Option[Generator[ClassContext,Unit]] = None): Generator[MethodBodyContext, Expression] =
+      AnyParadigm.capabilitiy(InstantiateObject(tpe, constructorArguments, body))
 
     implicit val canGetMemberInMethod: Understands[MethodBodyContext, GetMember[Expression, Name]]
     def getMember(instance: Expression, member: Name): Generator[MethodBodyContext, Expression] =

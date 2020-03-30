@@ -11,5 +11,28 @@ trait Syntax extends AbstractSyntax{
   type Type = scala.meta.Type
   type Statement = Term
   type UnitTest = Defn.Class
-  type Name = scala.meta.Name
+  type Name = Syntax.MangledName
+}
+
+object Syntax {
+  case class MangledName(original: String, mangled: String) {
+    def toAST: scala.meta.Name = {
+      val decorated =
+        if (original != mangled) s"/*${original.replaceAll("\\*/", "* /")}*/$mangled" else mangled
+      decorated.parse[Term].get.asInstanceOf[Term.Name]
+    }
+
+    override def toString: String = toAST.toString
+  }
+  object MangledName {
+    def fromAST(ast: scala.meta.Name): MangledName = {
+      val mangled = ast.value
+      val original = ast.tokens.collectFirst {
+          case c: tokens.Token.Comment => c.value
+        }.getOrElse(mangled)
+      MangledName(original, mangled)
+    }
+  }
+
+  val default: Syntax = new Syntax {}
 }

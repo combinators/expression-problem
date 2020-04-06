@@ -422,16 +422,25 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             }
           }
         }
-      implicit val canInstantiateObjectInConstructor: Understands[ConstructorContext, InstantiateObject[Type, Expression]] =
-        new Understands[ConstructorContext, InstantiateObject[Type, Expression]] {
+      implicit val canInstantiateObjectInConstructor: Understands[ConstructorContext, InstantiateObject[Type, Expression, ClassContext]] =
+        new Understands[ConstructorContext, InstantiateObject[Type, Expression, ClassContext]] {
           def perform(
             context: ConstructorContext,
-            command: InstantiateObject[Type, Expression]
+            command: InstantiateObject[Type, Expression, ClassContext]
           ): (ConstructorContext, Expression) = {
             val (tpe, args) = context.resolver.instantiationOverride(command.tpe, command.constructorArguments)
-            (context, Java(s"""new ${tpe}(${args.mkString(", ")})""").expression())
+            /** Expand with instantiated body (if it exists). */
+            if (command.body.isDefined) {
+               val ci = new ClassOrInterfaceDeclaration()
+               val (newCtxt, classDef) = Command.runGenerator(command.body.get, ClassCtxt(context.resolver, ci, context.extraImports))
+               (context.copy(resolver = newCtxt.resolver, extraImports = newCtxt.extraImports),
+                 Java(s"""new ${tpe}(${args.mkString(", ")}) { ${newCtxt.cls.getMembers.asScala.mkString("\n")} }""").expression())
+             } else {
+               (context, Java(s"""new ${tpe}(${args.mkString(", ")})""").expression())
+             }
           }
         }
+
       implicit val canApplyInConstructor: Understands[ConstructorContext, Apply[Expression, Expression, Expression]] =
         new Understands[ConstructorContext, Apply[Expression, Expression, Expression]] {
           def perform(
@@ -607,14 +616,22 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
 //          }
 //        }
 
-      val canInstantiateObjectInMethod: Understands[MethodBodyContext, InstantiateObject[Type, Expression]] =
-        new Understands[MethodBodyContext, InstantiateObject[Type, Expression]] {
+      val canInstantiateObjectInMethod: Understands[MethodBodyContext, InstantiateObject[Type, Expression, ClassContext]] =
+        new Understands[MethodBodyContext, InstantiateObject[Type, Expression, ClassContext]] {
           def perform(
             context: MethodBodyContext,
-            command: InstantiateObject[Type, Expression]
+            command: InstantiateObject[Type, Expression, ClassContext]
           ): (MethodBodyContext, Expression) = {
             val (tpe, args) = context.resolver.instantiationOverride(command.tpe, command.constructorArguments)
-            (context, Java(s"""new ${tpe}(${args.mkString(", ")})""").expression())
+            /** Expand with instantiated body (if it exists). */
+            if (command.body.isDefined) {
+              val ci = new ClassOrInterfaceDeclaration()
+              val (newCtxt, classDef) = Command.runGenerator(command.body.get, ClassCtxt(context.resolver, ci, context.extraImports))
+              (context.copy(resolver = newCtxt.resolver, extraImports = newCtxt.extraImports),
+                Java(s"""new ${tpe}(${args.mkString(", ")}) { ${newCtxt.cls.getMembers.asScala.mkString("\n")} }""").expression())
+            } else {
+              (context, Java(s"""new ${tpe}(${args.mkString(", ")})""").expression())
+            }
           }
         }
 

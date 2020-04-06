@@ -25,12 +25,12 @@ case class TestCtxt(
 case class MethodBodyCtxt(
   resolver: ContextSpecificResolver,
   extraImports: Seq[scala.meta.Import],
-  method: scala.meta.Defn.Def
+  method: scala.meta.Stat
 )
 case class CtorCtxt(
   resolver: ContextSpecificResolver,
   extraImports: Seq[scala.meta.Import],
-  ctor: scala.meta.Defn.Def
+  ctor: scala.meta.Stat
 )
 case class TypeParamCtxt(
   param: scala.meta.Type.Param

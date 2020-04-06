@@ -5,9 +5,10 @@ import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.generator.Command
 import org.combinators.ep.generator.Command.Generator
 
-import scala.meta.Type
 import scala.meta.Term
 import scala.meta.Import
+
+import Syntax.default._
 
 case class ContextSpecificResolver(
   _methodTypeResolution: ContextSpecificResolver => TypeRep => Generator[MethodBodyCtxt, Type],

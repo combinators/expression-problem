@@ -9,7 +9,7 @@ trait Syntax extends AbstractSyntax{
   type Import = scala.meta.Import
   type Expression = Term
   type Type = scala.meta.Type
-  type Statement = Term
+  type Statement = Stat
   type UnitTest = Defn.Class
   type Name = Syntax.MangledName
 }

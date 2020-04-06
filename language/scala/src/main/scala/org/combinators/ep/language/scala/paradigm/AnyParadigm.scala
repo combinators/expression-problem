@@ -1,17 +1,20 @@
 package org.combinators.ep.language.scala.paradigm
 
-import java.nio.file.Paths
+import java.nio.file.{Path, Paths}
 
+import scala.meta._
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, FileWithPath, Understands}
 import org.combinators.ep.generator.paradigm.{AnyParadigm => AP, _}
 import org.combinators.ep.language.scala.Syntax.MangledName
-import org.combinators.ep.language.scala.{CompilationUnitCtxt, Config, ContextSpecificResolver, MethodBodyCtxt, ProjectCtxt, Syntax, TestCtxt}
+import org.combinators.ep.language.scala.{CodeGenerator, CompilationUnitCtxt, Config, ContextSpecificResolver, MethodBodyCtxt, ProjectCtxt, Syntax, TestCtxt}
 import org.combinators.templating.persistable.{BundledResource, ResourcePersistable}
 
-import scala.meta._
+import scala.util.Try
+
+
 
 trait AnyParadigm extends AP {
   val config: Config
@@ -43,10 +46,10 @@ trait AnyParadigm extends AP {
             context: ProjectCtxt,
             command: AddCompilationUnit[Name, CompilationUnitCtxt]
           ): (ProjectCtxt, Unit) = {
-            val tgtPackage =
+            val tgtPackage: Pkg =
               if (command.name.nonEmpty) {
-                command.name.init.foldLeft(config.targetPackage) { case (pkg, suffix) =>
-                  q"package ${pkg.ref}.${suffix.toAST} {}"
+                command.name.init.foldLeft[Pkg](config.targetPackage) { case (pkg, suffix) =>
+                  pkg.copy(ref = Term.Select(pkg.ref, Term.Name(suffix.toAST.value)))
                 }
               } else config.targetPackage
             val fileName: String =
@@ -116,7 +119,7 @@ trait AnyParadigm extends AP {
                 case imp: Import => imp
               } :+ command.imp
 
-            val sortedImports = imports.toSet.toList.sorted
+            val sortedImports = imports.distinct.sortBy(_.toString)
             val newStats =
               sortedImports ++ context.unit.stats.filter(!_.isInstanceOf[Import])
             (context.copy(unit = Source(newStats)), ())
@@ -128,7 +131,7 @@ trait AnyParadigm extends AP {
             context: CompilationUnitCtxt,
             command: AddTestSuite[Name, TestCtxt]
           ): (CompilationUnitContext, Unit) = {
-            val clsToAdd = q"class ${command.name.mangled} extends FunSuite {}"
+            val clsToAdd = q"class ${Type.Name(command.name.mangled)} extends FunSuite {}"
             val (testRes, _) =
               Command.runGenerator(
                 command.suite,
@@ -140,10 +143,14 @@ trait AnyParadigm extends AP {
             val updatedUnit = {
               val oldUnit = context.unit
               val testClass = testRes.testClass
+              val funSuiteImport =
+                Import(List(Importer(
+                  Term.Select(Term.Name("org"), Term.Name("scalatest")),
+                  List(Importee.Name(Type.Name("FunSuite"))))))
               val imports =
                 (oldUnit.stats.collect {
                   case imp: Import => imp
-                  } ++ testRes.extraImports).toSet.toList.sorted
+                } ++ testRes.extraImports :+ funSuiteImport).distinct.sortBy(_.toString)
 
               val nextUnit =
                 (imports ++ oldUnit.stats.filter(!_.isInstanceOf[Import])) :+ testClass
@@ -154,17 +161,11 @@ trait AnyParadigm extends AP {
           }
         }
 
-      // TODO: Continue from here...
-
       implicit val canGetFreshNameInCompilationUnit: Understands[CompilationUnitContext, FreshName[Name]] =
         new Understands[CompilationUnitContext, FreshName[Name]] {
           def perform(context: CompilationUnitContext, command: FreshName[Name]): (CompilationUnitContext, Name) = {
-            val freshName = JavaNameProvider.mangle(s"$$$$generatedName_${UUID.randomUUID().toString.replace("-", "_")}$$$$")
-            val updatedResolver = context.resolver.copy(
-              generatedVariables = context.resolver.generatedVariables + (freshName.toAST.getIdentifier -> command.basedOn)
-            )
-            (context.copy(resolver = updatedResolver), freshName)
-          }*/
+            (context, MangledName.fromAST(Type.fresh(command.basedOn.toAST.value)))
+          }
         }
     }
 
@@ -182,32 +183,46 @@ trait AnyParadigm extends AP {
           }
         }
 
-      implicit val canAddImportInMethodBody: Understands[MethodBodyCtxt, AddImport[ImportDeclaration]] =
-        new Understands[MethodBodyCtxt, AddImport[ImportDeclaration]] {
+      implicit val canAddImportInMethodBody: Understands[MethodBodyCtxt, AddImport[Import]] =
+        new Understands[MethodBodyCtxt, AddImport[Import]] {
           def perform(
             context: MethodBodyCtxt,
-            command: AddImport[ImportDeclaration]
+            command: AddImport[Import]
           ): (MethodBodyCtxt, Unit) = {
-            val extraImports = (context.extraImports :+ command.imp).distinct.map(_.clone())
-            (context.copy(extraImports = extraImports), ())
+            (context.copy(extraImports = (context.extraImports :+ command.imp).distinct), ())
           }
         }
+
       implicit val canAddBlockDefinitionsInMethodBody: Understands[MethodBodyCtxt, AddBlockDefinitions[Statement]] =
         new Understands[MethodBodyCtxt, AddBlockDefinitions[Statement]] {
           def perform(
             context: MethodBodyCtxt,
             command: AddBlockDefinitions[Statement]
           ): (MethodBodyCtxt, Unit) = {
-            val updatedMethod = {
-              val oldMethod = context.method
-              val stmts = command.definitions
-              val nextMethod = oldMethod.clone()
-              val body = nextMethod.getBody.orElseGet(() => new BlockStmt())
-              stmts.foreach(stmt => body.addStatement(stmt.clone()))
-              nextMethod.setBody(body)
-              nextMethod
-            }
-            (context.copy(method = updatedMethod), ())
+            val newMethod =
+              context.method match {
+                case definition: Defn.Def =>
+                  val newBody =
+                    definition.body match {
+                      case block: Term.Block =>
+                        block.copy(stats =
+                          block.stats ++ command.definitions
+                        )
+                      case exp =>
+                        Term.Block((exp +: command.definitions).toList)
+                    }
+                  definition.copy(body = newBody)
+                case decl: Decl.Def =>
+                  Defn.Def(
+                    mods = decl.mods,
+                    name = decl.name,
+                    tparams = decl.tparams,
+                    paramss = decl.paramss,
+                    decltpe = Some(decl.decltpe),
+                    body = Term.Block(command.definitions.toList)
+                  )
+              }
+            (context.copy(method = newMethod), ())
           }
         }
 
@@ -217,13 +232,13 @@ trait AnyParadigm extends AP {
             context: MethodBodyCtxt,
             command: SetReturnType[Type]
           ): (MethodBodyCtxt, Unit) = {
-            val updatedMethod =  {
-              val oldMethod = context.method
-              val tpe = command.tpe
-              val newMethod = oldMethod.clone()
-              newMethod.setType(tpe.clone())
-              newMethod
-            }
+            val updatedMethod =
+              context.method match {
+                case definition: Defn.Def =>
+                  definition.copy(decltpe = Some(command.tpe))
+                case decl: Decl.Def =>
+                  decl.copy(decltpe = command.tpe)
+              }
             (context.copy(method = updatedMethod), ())
           }
         }
@@ -234,17 +249,25 @@ trait AnyParadigm extends AP {
             context: MethodBodyCtxt,
             command: SetParameters[Name, Type]
           ): (MethodBodyCtxt, Unit) = {
-            val updatedMethod = {
-              val oldMethod = context.method
-              val params = command.params
-              val newMethod = oldMethod.clone()
-              newMethod.getParameters.clear()
-              params.foreach { case (paramName, paramTpe) =>
-                newMethod.addParameter(paramTpe.clone(), paramName.mangled)
+            val params: List[Term.Param] =
+              command.params.map {
+                case (name, tpe) =>
+                  Term.Param(
+                    mods = List.empty,
+                    name = name.toAST,
+                    decltpe = Some(tpe),
+                    default = None
+                  )
+              }.toList
+
+            val updatedMethod =
+              context.method match {
+                case definition: Defn.Def =>
+                  definition.copy(paramss = List(params))
+                case decl: Decl.Def =>
+                  decl.copy(paramss = List(params))
               }
-              newMethod
-            }
-            (context.copy(method = updatedMethod), ()) // second thing to be returned isn't optional, so make it () is like Unit
+            (context.copy(method = updatedMethod), ())
           }
         }
       implicit val canTransformTypeInMethodBody: Understands[MethodBodyCtxt, ToTargetLanguageType[Type]] =
@@ -267,29 +290,15 @@ trait AnyParadigm extends AP {
           }
         }
 
-      implicit val canResolveImportInMethod: Understands[MethodBodyCtxt, ResolveImport[ImportDeclaration, Type]] =
-        new Understands[MethodBodyCtxt, ResolveImport[ImportDeclaration, Type]] {
+      implicit val canResolveImportInMethod: Understands[MethodBodyCtxt, ResolveImport[Import, Type]] =
+        new Understands[MethodBodyCtxt, ResolveImport[Import, Type]] {
           def perform(
             context: MethodBodyCtxt,
-            command: ResolveImport[ImportDeclaration, Type]
-          ): (MethodBodyCtxt, Option[ImportDeclaration]) = {
+            command: ResolveImport[Import, Type]
+          ): (MethodBodyCtxt, Option[Import]) = {
             val stripped = AnyParadigm.stripGenerics(command.forElem)
             Try { (context, context.resolver.importResolution(stripped)) } getOrElse {
-              if (stripped.isClassOrInterfaceType) {
-                val importName = stripped.asClassOrInterfaceType().asString()   // DEEP DEFECT: scope is necessary since getName is SimpleName
-                val newImport =
-                  new ImportDeclaration(
-                    new com.github.javaparser.ast.expr.Name(importName),
-                    false,
-                    false)
-                if (context.extraImports.contains(newImport)) {
-                  (context, None)
-                } else {
-                  (context, Some(newImport))
-                }
-              } else {
-                (context, None)
-              }
+              (context, AnyParadigm.guessImport(config.targetPackage.ref, command.forElem))
             }
           }
         }
@@ -300,15 +309,7 @@ trait AnyParadigm extends AP {
             context: MethodBodyCtxt,
             command: Apply[Expression, Expression, Expression]
           ): (MethodBodyCtxt, Expression) = {
-            val resultExp: Expression =
-              if (command.functional.isMethodCallExpr) {
-                val res = command.functional.asMethodCallExpr().clone()
-                command.arguments.foreach(arg => res.addArgument(arg))
-                res
-              } else {
-                Java(s"${command.functional}${command.arguments.mkString("(", ", ", ")")}").expression()
-              }
-            (context, resultExp)
+            (context, Term.Apply(command.functional, command.arguments.toList))
           }
         }
 
@@ -318,20 +319,20 @@ trait AnyParadigm extends AP {
             context: MethodBodyCtxt,
             command: GetArguments[Type, Name, Expression]
           ): (MethodBodyCtxt, Seq[(Name, Type, Expression)]) = {
-            val params = context.method.getParameters.asScala.map { param =>
-              (MangledName.fromAST(param.getName), param.getType, new NameExpr(param.getName))
-            }
-            (context, params)
+            val params =
+              context.method match {
+                case definition: Defn.Def => definition.paramss.flatten
+                case decl: Decl.Def => decl.paramss.flatten
+              }
+            val result =
+              params.map(param => (MangledName.fromAST(param.name), param.decltpe.get, Term.Name(param.name.value)))
+            (context, result)
           }
         }
       implicit val canGetFreshNameInMethodBody: Understands[MethodBodyContext, FreshName[Name]] =
         new Understands[MethodBodyContext, FreshName[Name]] {
           def perform(context: MethodBodyContext, command: FreshName[MangledName]): (MethodBodyContext, MangledName) = {
-            val freshName = JavaNameProvider.mangle(s"$$$$generatedName_${UUID.randomUUID().toString.replace("-", "_")}$$$$")
-            val updatedResolver = context.resolver.copy(
-              generatedVariables = context.resolver.generatedVariables + (freshName.toAST.getIdentifier -> command.basedOn)
-            )
-            (context.copy(resolver = updatedResolver), freshName)
+            (context, MangledName.fromAST(Term.fresh(command.basedOn.toAST.value)))
           }
         }
     }
@@ -344,7 +345,6 @@ trait AnyParadigm extends AP {
             context: TestContext,
             command: Debug
           ): (TestContext, Unit) = {
-
             System.err.println (command.tag + ": " + context.testClass)
             (context,())
           }
@@ -356,30 +356,32 @@ trait AnyParadigm extends AP {
             context: TestContext,
             command: AddTestCase[MethodBodyContext, Name, Expression]
           ): (TestContext, Unit) = {
-            val gen: Generator[MethodBodyCtxt, Unit] = {
-              import methodBodyCapabilities._
-              for {
-                assertions <- command.code
-                _ <- addBlockDefinitions(assertions.map(exp => new ExpressionStmt(exp.clone())))
-              } yield ()
-            }
-            val testMethod = new MethodDeclaration()
-            testMethod.setModifiers(Modifier.publicModifier().getKeyword)
-            testMethod.setType(new com.github.javaparser.ast.`type`.VoidType())
-            testMethod.setName(JavaNameProvider.addPrefix("test", command.name).toAST)
-            testMethod.addMarkerAnnotation("org.junit.Test")
-            val testImport = new ImportDeclaration("org.junit.Test", false, false)
-            val (resultingContext, _) =
+
+            val testName = Term.Name(command.name.toAST.value)
+            val (resultingContext, testMethod) =
               Command.runGenerator(
-                gen,
+                command.code,
                 MethodBodyCtxt(
-                  context.resolver,
-                  (testImport +: context.extraImports).distinct.map(_.clone),
-                  testMethod)
+                  resolver = context.resolver,
+                  extraImports = context.extraImports,
+                  Defn.Def(List.empty, testName, List.empty, List.empty, None, Term.Block(List.empty))
+                )
               )
-            val newClass = context.testClass.clone()
-            newClass.addMember(resultingContext.method.clone)
-            (context.copy(resolver = resultingContext.resolver, testClass = newClass, extraImports = resultingContext.extraImports), ())
+
+            val testDecl =
+              Term.Apply(
+                Term.Apply(
+                  Term.Name("test"),
+                  List(Lit.String(testName.value))
+                ),
+                List(testMethod.asInstanceOf[Defn.Def].body)
+              )
+            val updatedClass =
+              context.testClass.copy(templ =
+                context.testClass.templ.copy(stats =
+                  context.testClass.templ.stats :+ testDecl
+                ))
+            (context.copy(resolver = resultingContext.resolver, testClass = updatedClass, extraImports = resultingContext.extraImports), ())
           }
         }
     }
@@ -393,10 +395,9 @@ trait AnyParadigm extends AP {
         _reificationInConstructor = _ => rep => throw new NotImplementedError(rep.toString),
         _reificationInMethod = _ => rep => throw new NotImplementedError(rep.toString),
         _importResolution = _ => tpe => throw new NotImplementedError(tpe.toString),
-        _instantiationOverride = _ => (tpe, args) => (tpe, args),
-        generatedVariables = Map.empty
+        _instantiationOverride = _ => (tpe, args) => (tpe, args)
       )
-    ContextSpecificResolver.updateResolver(config, TypeRep.Unit, new VoidType())(rep => new NullLiteralExpr())(emptyResolver)
+    ContextSpecificResolver.updateResolver(config, TypeRep.Unit, Type.Name("Unit"))(rep => Lit.Unit())(emptyResolver)
   }
 
 
@@ -412,41 +413,28 @@ trait AnyParadigm extends AP {
         )
       )
     val nameEntry = config.projectName.map(n => s"""name := "${n}"""").getOrElse("")
-    val junitDeps = Seq(
-      """"com.novocode" % "junit-interface" % "0.11" % "test"""",
-      """"junit" % "junit" % "4.12" % "test""""
+    val scalaTestDeps = Seq(
+      """"org.scalatest" %% "scalatest" % "3.1.1" % "test""""
     )
-    val deps = (junitDeps ++ finalContext.extraDependencies).mkString("Seq(\n    ", ",\n    ", "\n  )")
+    val deps = (scalaTestDeps ++ finalContext.extraDependencies).mkString("Seq(\n    ", ",\n    ", "\n  )")
     val buildFile =
       s"""
          |$nameEntry
-         |crossPaths := false
-         |autoScalaLibrary := false
          |libraryDependencies ++= $deps
            """.stripMargin
-    val cleanedUnits =
-      ImportCleanup.cleaned(
-        FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.units: _*) : _*
-      )
-    val cleanedTestUnits =
-      ImportCleanup.cleaned(
-        FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.testUnits: _*): _*
-      )
-    val javaFiles = cleanedUnits.map { unit =>
+    // TODO: Add more cleanup (imports?)..
+    val cleanedUnits = finalContext.units
+    val cleanedTestUnits = finalContext.testUnits
+    val scalaFiles = cleanedUnits.map { unit =>
       FileWithPath(
-        JavaPersistable.compilationUnitInstance.rawText(unit),
-        JavaPersistable.compilationUnitInstance.fullPath(Paths.get("."), unit)
+        unit.toString,
+        AnyParadigm.computePath(Paths.get("src", "main", "scala"), unit)
       )
     }
-    val javaTestFiles = cleanedTestUnits.map { unit =>
-      val javaPath =
-        Paths.get("src", "main")
-          .relativize(JavaPersistable.compilationUnitInstance.fullPath(Paths.get(""), unit))
-      val testPath =
-        Paths.get("src", "test").resolve(javaPath)
+    val scalaTestFiles = cleanedTestUnits.map { unit =>
       FileWithPath(
-        JavaPersistable.compilationUnitInstance.rawText(unit),
-        testPath
+        unit.toString,
+        AnyParadigm.computePath(Paths.get("src", "test", "scala"), unit)
       )
     }
     val gitIgnore = BundledResource("gitignore", Paths.get(".gitignore"), classOf[CodeGenerator])
@@ -454,18 +442,38 @@ trait AnyParadigm extends AP {
       ResourcePersistable.bundledResourceInstance.rawText(gitIgnore),
       ResourcePersistable.bundledResourceInstance.path(gitIgnore)) +:
       FileWithPath(buildFile, Paths.get("build.sbt")) +:
-      (javaFiles ++ javaTestFiles)
+      (scalaFiles ++ scalaTestFiles)
   }
 }
 
 object AnyParadigm {
-  def stripGenerics(tpe: com.github.javaparser.ast.`type`.Type): com.github.javaparser.ast.`type`.Type = {
-    if (tpe.isClassOrInterfaceType) {
-      val clsTpe = tpe.asClassOrInterfaceType()
-      clsTpe.clone().removeTypeArguments()
-    } else {
-      tpe
+  def stripGenerics(tpe: Type): Type = {
+    tpe match {
+      case app: scala.meta.Type.Apply => stripGenerics(app.tpe)
+      case _ => tpe
     }
+  }
+
+  def guessImport(relativeTo: Term.Ref, tpe: Type): Option[Import] = {
+    stripGenerics(tpe) match {
+      case name: Type.Name => Some(Import(List(Importer(relativeTo,  List(Importee.Name(name))))))
+      case apply: Type.Apply => guessImport(relativeTo, apply.tpe)
+      case applyInfix: Type.ApplyInfix  => guessImport(relativeTo, applyInfix.op)
+      case sel: Type.Select => Some(Import(List(Importer(sel.qual, List(Importee.Name(sel.name))))))
+      case _ => None // TODO: Might need to figure out guesses for other cases
+    }
+  }
+
+  def computePath(relativeTo: Path, forUnit: Source): Path = {
+    def refToPath(rel: Path, ref: Term): Path =
+      ref match {
+        case name: Name => rel.resolve(name.value)
+        case sel: Term.Select => refToPath(rel, sel.qual).resolve(sel.name.value)
+      }
+
+    forUnit.stats.collectFirst {
+      case pkg: Pkg => refToPath(relativeTo, pkg.ref)
+    }.getOrElse(relativeTo)
   }
 
   def apply(config: Config): AnyParadigm = {

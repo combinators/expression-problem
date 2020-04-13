@@ -36,7 +36,8 @@ lazy val commonSettings = Seq(
     "org.combinators" %% "cls-scala-presentation-play-git" % "1.0.0-RC1+8-63d5cf0b",
     "org.scalactic" %% "scalactic" % "3.0.5" % "test",
     "org.scalatest" %% "scalatest" % "3.0.5" % "test",
-    "org.scalameta" %% "scalameta" % "3.7.4",
+    "org.scalameta" %% "scalameta" % "4.3.8",
+    "org.scalameta" %% "contrib" % "4.1.6",
     "org.typelevel" %% "cats-core" % "2.0.0-M4",
     "org.typelevel" %% "cats-free" % "2.0.0-M4"
   ),

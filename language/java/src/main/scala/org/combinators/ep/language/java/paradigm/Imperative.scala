@@ -113,7 +113,7 @@ object Imperative {
           def getBlock(ctxt: MethodBodyCtxt): BlockStmt = ctxt.method.getBody.get()
           def copyWithBlock(ctxt: MethodBodyCtxt, blockStmt: BlockStmt): MethodBodyCtxt = {
             val newMethod = ctxt.method.clone()
-            newMethod.setBody(blockStmt)
+            newMethod.setBody(blockStmt.clone())
             ctxt.copy(method = newMethod)
           }
         }

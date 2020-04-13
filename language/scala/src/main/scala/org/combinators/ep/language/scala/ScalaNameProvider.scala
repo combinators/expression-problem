@@ -22,7 +22,7 @@ object ScalaNameProvider extends NameProvider[MangledName] {
   def mangle(name: String): MangledName = {
     MangledName(name,
       Try(name.parse[Term].get.asInstanceOf[Term.Name].value).getOrElse {
-        name.getBytes(java.nio.charset.StandardCharsets.UTF_8).mkString("_", "_", "")
+        name.getBytes(java.nio.charset.StandardCharsets.UTF_8).mkString("_", "_", "_")
       }
     )
   }

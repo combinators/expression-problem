@@ -20,10 +20,12 @@ case class InstantiateType[Type, Name, Expression](
   type Result = Expression
 }
 
+// TODO: Add qualifiers to name
 case class FindMethod[Name, Expression](name: Name) extends Command {
   type Result = Expression
 }
 
+// TODO: Add qualifiers to name
 case class FindType[Name, Type](name: Name) extends Command {
   type Result = Type
 }

@@ -3,7 +3,7 @@ package org.combinators.ep.approach.functional
 import org.combinators.ep.domain.{Model, abstractions}
 import org.combinators.ep.generator.{AbstractSyntax, ApproachImplementationProvider, Command, EvolutionImplementationProvider, NameProvider, TestImplementationProvider, Understands, communication}
 import org.combinators.ep.generator.paradigm.control.{Functional => FunControl}
-import Command.{skip, _}
+import Command.{Generator, skip, _}
 import cats.syntax._
 import cats.implicits._
 import org.combinators.ep.domain.abstractions.{Attribute, DataType, DataTypeCase, Operation, Parameter, TestCase, TypeRep}
@@ -76,7 +76,7 @@ trait Traditional extends ApproachImplementationProvider {
       args: Seq[(Name, Type, Expression)],
       domainSpecific: EvolutionImplementationProvider[this.type]
     )(ctorName: Name, ctorArgs: Seq[Expression]): Generator[MethodBodyContext, Expression] = {
-    val tpeCase = cases.find(c => names.conceptNameOf(c) == ctorName).get
+    val tpeCase = cases.find(c => names.mangle(names.conceptNameOf(c)) == ctorName).get
     for {
       result <- domainSpecific.logic(this)(
         ReceivedRequest(
@@ -99,7 +99,7 @@ trait Traditional extends ApproachImplementationProvider {
     import paradigm.methodBodyCapabilities._
     import functionalControl.functionalCapabilities._
     for {
-      params <- forEach (Parameter("this", TypeRep.DataType(tpe)) +: op.parameters) { param: Parameter =>
+      params <- forEach (Parameter(names.instanceNameOf(tpe), TypeRep.DataType(tpe)) +: op.parameters) { param: Parameter =>
           for {
             pt <- toTargetLanguageType(param.tpe)
             _ <- resolveAndAddImport(pt)
@@ -108,10 +108,16 @@ trait Traditional extends ApproachImplementationProvider {
         }
       _ <- setParameters(params)
       args <- getArguments()
-      result <- patternMatch(
+      result <- {
+        val matchGen = makeCases(tpe, cases, op, args.head._3, args.tail, domainSpecific)(_, _)
+        patternMatch(
           args.head._3,
-          makeCases(tpe, cases, op, args.head._3, args.tail, domainSpecific)
-        )
+          cases.map(tpeCase => {
+              val caseName = names.mangle(names.conceptNameOf(tpeCase))
+              val attributeNames = tpeCase.attributes.map(attName => names.mangle(names.instanceNameOf(attName)))
+              ((caseName, attributeNames), matchGen(caseName, _))
+            }).toMap)
+        }
     } yield result
   }
 

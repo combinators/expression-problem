@@ -14,9 +14,11 @@ case class ContextSpecificResolver(
   _methodTypeResolution: ContextSpecificResolver => TypeRep => Generator[MethodBodyCtxt, Type],
   _constructorTypeResolution: ContextSpecificResolver => TypeRep => Generator[CtorCtxt, Type],
   _classTypeResolution: ContextSpecificResolver => TypeRep => Generator[ClassCtxt, Type],
+  _typeTypeResolution: ContextSpecificResolver => TypeRep => Generator[TypeCtxt, Type],
   _reificationInConstructor: ContextSpecificResolver => InstanceRep => Generator[CtorCtxt, Term],
   _reificationInMethod: ContextSpecificResolver => InstanceRep => Generator[MethodBodyCtxt, Term],
-  _importResolution: ContextSpecificResolver => Type => Option[Import],
+  _tpeImportResolution: ContextSpecificResolver => Type => Option[Import],
+  _termImportResolution: ContextSpecificResolver => Term => Option[Import],
   _instantiationOverride: ContextSpecificResolver => (Type, Seq[Term]) => (Type, Seq[Term])
 ) {
   def methodTypeResolution(tpeRep: TypeRep): Generator[MethodBodyCtxt, Type] =
@@ -25,12 +27,16 @@ case class ContextSpecificResolver(
     _constructorTypeResolution(this)(tpeRep)
   def classTypeResolution(tpeRep: TypeRep): Generator[ClassCtxt, Type] =
     _classTypeResolution(this)(tpeRep)
+  def typeTypeResolution(tpeRep: TypeRep): Generator[TypeCtxt, Type] =
+    _typeTypeResolution(this)(tpeRep)
   def reificationInConstructor(instRep: InstanceRep): Generator[CtorCtxt, Term] =
     _reificationInConstructor(this)(instRep)
   def reificationInMethod(instRep: InstanceRep): Generator[MethodBodyCtxt, Term] =
     _reificationInMethod(this)(instRep)
   def importResolution(tpe: Type): Option[Import] =
-    _importResolution(this)(tpe)
+    _tpeImportResolution(this)(tpe)
+  def importResolution(term: Term): Option[Import] =
+    _termImportResolution(this)(term)
   def instantiationOverride(tpe: Type, args: Seq[Term]): (Type, Seq[Term]) =
     _instantiationOverride(this)(tpe,args)
 }
@@ -56,12 +62,20 @@ object ContextSpecificResolver {
         case other => reify(k)(other)
       }
 
-      def addExtraImport(
+      def addExtraTypeImport(
         importResolution: ContextSpecificResolver => Type => Option[Import]
       ): ContextSpecificResolver => Type => Option[Import] = k =>  {
         case r if r == translateTo => extraImport
         case other => importResolution(k)(other)
       }
+
+      def addExtraTermImport(
+        importResolution: ContextSpecificResolver => Term => Option[Import]
+      ): ContextSpecificResolver => Term => Option[Import] = k =>  {
+        case r if r == translateTo => extraImport
+        case other => importResolution(k)(other)
+      }
+
 
       resolver.copy(
         _methodTypeResolution =
@@ -79,9 +93,15 @@ object ContextSpecificResolver {
             translateTo,
             resolver._classTypeResolution
           ),
+        _typeTypeResolution =
+          addResolutionType(
+            translateTo,
+            resolver._typeTypeResolution
+          ),
         _reificationInConstructor = addReification(resolver._reificationInConstructor),
         _reificationInMethod = addReification(resolver._reificationInMethod),
-        _importResolution = addExtraImport(resolver._importResolution)
+        _tpeImportResolution = addExtraTypeImport(resolver._tpeImportResolution),
+        _termImportResolution = addExtraTermImport(resolver._termImportResolution)
       )
     }
 }

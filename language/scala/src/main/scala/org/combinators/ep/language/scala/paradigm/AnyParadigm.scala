@@ -63,10 +63,47 @@ trait AnyParadigm extends AP {
                   context.resolver,
                   fileName,
                   Source(List.empty),
-                  isTest = false)
+                  isTest = false,
+                  companionDefinitions = Seq.empty)
               )
-            val resultingUnit =
-              Source(List(tgtPackage.copy(stats = uc.unit.stats)))
+            val companionObject =
+              if (uc.companionDefinitions.nonEmpty) {
+                val name = 
+                  if (command.name.nonEmpty) Term.Name(command.name.last.toAST.value)
+                  else tgtPackage.ref match {
+                    case tgt: Term.Name => tgt
+                    case tgt: Term.Select => tgt.name
+                  }
+                val templ =
+                  Template(
+                    early = List.empty,
+                    inits = List.empty,
+                    self = Self(Name.Anonymous(), None),
+                    stats = uc.companionDefinitions.toList
+                  )
+                if (command.name.nonEmpty) Some(Defn.Object(List.empty, name, templ))
+                else Some(Pkg.Object(List.empty, name, templ))
+              } else None
+
+            val resultingUnit = {
+              val stats: List[Stat] =
+                if (command.name.isEmpty && companionObject.isDefined) {
+                  tgtPackage.ref match {
+                    case tgt: Term.Name => 
+                      uc.unit.stats ++ companionObject.toList
+                    case tgt: Term.Select => 
+                      List(
+                        tgtPackage.copy(
+                          ref = tgt.qual.asInstanceOf[Term.Ref],
+                          stats = uc.unit.stats ++ companionObject.toList
+                        )
+                      )
+                  }
+                } else {
+                  List(tgtPackage.copy(stats = uc.unit.stats ++ companionObject.toList))
+                }
+              (command.name.map(_.toAST), Source(stats))
+            }
             val (newUnits, newTestUnits) =
               if (uc.isTest) {
                 (context.units, context.testUnits :+ resultingUnit)
@@ -119,7 +156,7 @@ trait AnyParadigm extends AP {
                 case imp: Import => imp
               } :+ command.imp
 
-            val sortedImports = imports.distinct.sortBy(_.toString)
+            val sortedImports = imports.groupBy(_.structure).mapValues(_.head).values.toList.sortBy(_.toString)
             val newStats =
               sortedImports ++ context.unit.stats.filter(!_.isInstanceOf[Import])
             (context.copy(unit = Source(newStats)), ())
@@ -146,11 +183,11 @@ trait AnyParadigm extends AP {
               val funSuiteImport =
                 Import(List(Importer(
                   Term.Select(Term.Name("org"), Term.Name("scalatest")),
-                  List(Importee.Name(Type.Name("FunSuite"))))))
+                  List(Importee.Name(Name.Indeterminate("FunSuite"))))))
               val imports =
                 (oldUnit.stats.collect {
                   case imp: Import => imp
-                } ++ testRes.extraImports :+ funSuiteImport).distinct.sortBy(_.toString)
+                } ++ testRes.extraImports :+ funSuiteImport).groupBy(_.structure).mapValues(_.head).values.toList.sortBy(_.toString)
 
               val nextUnit =
                 (imports ++ oldUnit.stats.filter(!_.isInstanceOf[Import])) :+ testClass
@@ -189,7 +226,7 @@ trait AnyParadigm extends AP {
             context: MethodBodyCtxt,
             command: AddImport[Import]
           ): (MethodBodyCtxt, Unit) = {
-            (context.copy(extraImports = (context.extraImports :+ command.imp).distinct), ())
+            (context.copy(extraImports = (context.extraImports :+ command.imp).groupBy(_.structure).mapValues(_.head).values.toList), ())
           }
         }
 
@@ -358,7 +395,7 @@ trait AnyParadigm extends AP {
           ): (TestContext, Unit) = {
 
             val testName = Term.Name(command.name.toAST.value)
-            val (resultingContext, testMethod) =
+            val (resultingContext, assertions) =
               Command.runGenerator(
                 command.code,
                 MethodBodyCtxt(
@@ -368,13 +405,25 @@ trait AnyParadigm extends AP {
                 )
               )
 
+            val testBody: Term =
+              resultingContext.method match {
+                case defn: Defn.Def =>
+                  defn.body match {
+                    case Term.Block(stats) => Term.Block(stats ++ assertions.toList)
+                    case x => Term.Block(x +: assertions.toList)
+                  }
+                case decl: Decl.Def =>
+                  Term.Block(assertions.toList)
+              }
+
+
             val testDecl =
               Term.Apply(
                 Term.Apply(
                   Term.Name("test"),
                   List(Lit.String(testName.value))
                 ),
-                List(testMethod.asInstanceOf[Defn.Def].body)
+                List(testBody)
               )
             val updatedClass =
               context.testClass.copy(templ =
@@ -392,9 +441,11 @@ trait AnyParadigm extends AP {
         _methodTypeResolution = _ => tpe => throw new NotImplementedError(tpe.toString),
         _constructorTypeResolution = _ => tpe => throw new NotImplementedError(tpe.toString),
         _classTypeResolution = _ => tpe => throw new NotImplementedError(tpe.toString),
+        _typeTypeResolution = _ => tpe => throw new NotImplementedError(tpe.toString),
         _reificationInConstructor = _ => rep => throw new NotImplementedError(rep.toString),
         _reificationInMethod = _ => rep => throw new NotImplementedError(rep.toString),
-        _importResolution = _ => tpe => throw new NotImplementedError(tpe.toString),
+        _tpeImportResolution = _ => tpe => throw new NotImplementedError(tpe.toString),
+        _termImportResolution = _ => term => throw new NotImplementedError(term.toString),
         _instantiationOverride = _ => (tpe, args) => (tpe, args)
       )
     ContextSpecificResolver.updateResolver(config, TypeRep.Unit, Type.Name("Unit"))(rep => Lit.Unit())(emptyResolver)
@@ -425,16 +476,16 @@ trait AnyParadigm extends AP {
     // TODO: Add more cleanup (imports?)..
     val cleanedUnits = finalContext.units
     val cleanedTestUnits = finalContext.testUnits
-    val scalaFiles = cleanedUnits.map { unit =>
+    val scalaFiles = cleanedUnits.map { case (name, unit) =>
       FileWithPath(
         unit.toString,
-        AnyParadigm.computePath(Paths.get("src", "main", "scala"), unit)
+        AnyParadigm.computePath(Paths.get("src", "main", "scala"), name)
       )
     }
-    val scalaTestFiles = cleanedTestUnits.map { unit =>
+    val scalaTestFiles = cleanedTestUnits.map { case (name, unit) =>
       FileWithPath(
         unit.toString,
-        AnyParadigm.computePath(Paths.get("src", "test", "scala"), unit)
+        AnyParadigm.computePath(Paths.get("src", "test", "scala"), name)
       )
     }
     val gitIgnore = BundledResource("gitignore", Paths.get(".gitignore"), classOf[CodeGenerator])
@@ -454,17 +505,43 @@ object AnyParadigm {
     }
   }
 
+  def stripGenerics(term: Term): Term = {
+    term match {
+      case appt: Term.ApplyType => stripGenerics(appt.fun)
+      case _ => term
+    }
+  }
+
   def guessImport(relativeTo: Term.Ref, tpe: Type): Option[Import] = {
     stripGenerics(tpe) match {
-      case name: Type.Name => Some(Import(List(Importer(relativeTo,  List(Importee.Name(name))))))
+      case name: Type.Name => Some(Import(List(Importer(relativeTo,  List(Importee.Name(Name.Indeterminate(name.value)))))))
       case apply: Type.Apply => guessImport(relativeTo, apply.tpe)
       case applyInfix: Type.ApplyInfix  => guessImport(relativeTo, applyInfix.op)
-      case sel: Type.Select => Some(Import(List(Importer(sel.qual, List(Importee.Name(sel.name))))))
+      case sel: Type.Select => Some(Import(List(Importer(sel.qual, List(Importee.Name(Name.Indeterminate(sel.name.value)))))))
       case _ => None // TODO: Might need to figure out guesses for other cases
     }
   }
 
-  def computePath(relativeTo: Path, forUnit: Source): Path = {
+  def guessImport(tpe: Type): Option[Import] = {
+    stripGenerics(tpe) match {
+      case name: Type.Name => Some(Import(List(Importer(Term.Name("_root_"),  List(Importee.Name(Name.Indeterminate(name.value)))))))
+      case apply: Type.Apply => guessImport(apply.tpe)
+      case applyInfix: Type.ApplyInfix  => guessImport(applyInfix.op)
+      case sel: Type.Select => Some(Import(List(Importer(sel.qual, List(Importee.Name(Name.Indeterminate(sel.name.value)))))))
+      case _ => None // TODO: Might need to figure out guesses for other cases
+    }
+  }
+
+  def guessImport(term: Term): Option[Import] = {
+    stripGenerics(term) match {
+      case name: Term.Name => Some(Import(List(Importer(Term.Name("_root_"), List(Importee.Name(Name.Indeterminate(name.value)))))))
+      case Term.Select(ref: Term.Ref, name) => Some(Import(List(Importer(ref, List(Importee.Name(Name.Indeterminate(name.value)))))))
+      case app: Term.Apply => guessImport(app.fun)
+      case _ => None // TODO: Might need to figure out guesses for other cases
+    }
+  }
+
+  /*def computePath(relativeTo: Path, forUnit: Source): Path = {
     def refToPath(rel: Path, ref: Term): Path =
       ref match {
         case name: Name => rel.resolve(name.value)
@@ -474,6 +551,13 @@ object AnyParadigm {
     forUnit.stats.collectFirst {
       case pkg: Pkg => refToPath(relativeTo, pkg.ref)
     }.getOrElse(relativeTo)
+  }*/
+  def computePath(relativeTo: Path, tgt: Seq[Name]): Path = {
+    tgt match {
+      case Seq(file) => relativeTo.resolve(s"${file.value}.scala")
+      case pkg +: rest => computePath(relativeTo.resolve(pkg.value), rest)
+      case _ => relativeTo
+    }
   }
 
   def apply(config: Config): AnyParadigm = {

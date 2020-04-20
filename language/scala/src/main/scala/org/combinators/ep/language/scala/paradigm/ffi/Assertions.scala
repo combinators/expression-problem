@@ -27,7 +27,7 @@ class Assertions[AP <: AnyParadigm](val base: AP)(functional: Functional.WithBas
             import functional.methodBodyCapabilities._
             import base.methodBodyCapabilities._
             val gen = for {
-              assertMethod <- findMethod(MangledName.fromAST(Term.Name("assert")))
+              assertMethod <- findMethod(Seq(MangledName.fromAST(Term.Name("assert"))))
               msg <- reify[String](TypeRep.String, command.functional.message)
               res <- apply(assertMethod,
                 if (command.functional.message.isEmpty) Seq(command.arguments.head)

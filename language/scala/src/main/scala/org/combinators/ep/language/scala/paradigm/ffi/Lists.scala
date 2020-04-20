@@ -22,7 +22,15 @@ class Lists[Ctxt, AP <: AnyParadigm](val base: AP) extends Lsts[Ctxt] {
         context: Ctxt,
         command: Apply[Create[Type], Expression, Expression]
       ): (Ctxt, Expression) = {
-        (context, Term.Apply(Term.ApplyType(Term.Name("List"), List(command.functional.elementType)), command.arguments.toList))
+        val listCtor =
+          Term.Select(
+            Term.Select(Term.Select(Term.Name("scala"), Term.Name("collection")),
+              Term.Name("immutable")
+            ),
+            Term.Name("List")
+          )
+
+        (context, Term.Apply(Term.ApplyType(listCtor, List(command.functional.elementType)), command.arguments.toList))
       }
     }
 
@@ -94,7 +102,7 @@ class Lists[Ctxt, AP <: AnyParadigm](val base: AP) extends Lsts[Ctxt] {
             importResolution: ContextSpecificResolver => Type => Option[Import]
           ): ContextSpecificResolver => Type => Option[Import] = k => {
             case tpe
-              if tpe == listType => Some(
+              if AnyParadigm.stripGenerics(tpe).structure == listType.structure => Some(
               Import(List(
                   Importer(
                     Term.Select(Term.Select(Term.Name("scala"), Term.Name("collection")),

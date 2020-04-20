@@ -23,7 +23,7 @@ trait RealArithmetic[Context, T] extends FFI {
   trait RealArithmeticCapabilities {
     implicit val canSqrt: Understands[Context, Apply[Sqrt[T], Expression, Expression]]
     def sqrt(x: Expression): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Apply[Sqrt[T], Expression, Expression](Sqrt[T](), x))
+      AnyParadigm.capabilitiy(Apply[Sqrt[T], Expression, Expression](Sqrt[T](), Seq(x)))
 
     implicit val canPow: Understands[Context, Apply[Pow[T], Expression, Expression]]
     def pow(base: Expression, exponent: Expression): Generator[Context, Expression] =

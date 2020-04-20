@@ -4,7 +4,7 @@ import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.Understands
 import org.combinators.ep.generator.paradigm.Apply
-import org.combinators.ep.generator.paradigm.ffi.{Add, Div, Mod, Mult, Sub, Arithmetic => Arith}
+import org.combinators.ep.generator.paradigm.ffi.{Add, Div, LE, LT, Mod, Mult, Sub, Arithmetic => Arith}
 import org.combinators.ep.language.scala.CodeGenerator.Enable
 import org.combinators.ep.language.scala.{ContextSpecificResolver, ProjectCtxt}
 import org.combinators.ep.language.scala.paradigm.AnyParadigm
@@ -32,6 +32,10 @@ class Arithmetic[Ctxt, T, AP <: AnyParadigm](
         infixExprOp(Term.Name("/"))
       implicit val canMod: Understands[Ctxt, Apply[Mod[T], Expression, Expression]] =
         infixExprOp(Term.Name("%"))
+      implicit val canLT: Understands[Ctxt, Apply[LT[T], Term, Term]] =
+        infixExprOp(Term.Name("<"))
+      implicit val canLE: Understands[Ctxt, Apply[LE[T], Term, Term]] =
+        infixExprOp(Term.Name("<="))
     }
   def enable(): Generator[base.ProjectContext, Unit] =
     Enable.interpret(new Understands[base.ProjectContext, Enable.type] {

@@ -5,7 +5,7 @@ import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.Understands
 import org.combinators.ep.generator.paradigm.Apply
-import org.combinators.ep.generator.paradigm.ffi.{Add, Div, Mod, Mult, Sub, Arithmetic => Arith}
+import org.combinators.ep.generator.paradigm.ffi.{Add, Div, LE, LT, Mod, Mult, Sub, Arithmetic => Arith}
 import org.combinators.ep.language.java.paradigm.AnyParadigm
 import org.combinators.ep.language.java.{ContextSpecificResolver, ProjectCtxt}
 import org.combinators.ep.language.java.Syntax.default._
@@ -31,6 +31,10 @@ class Arithmetic[Ctxt, T, AP <: AnyParadigm](
         infixExprOp(BinaryExpr.Operator.DIVIDE)
       implicit val canMod: Understands[Ctxt, Apply[Mod[T], Expression, Expression]] =
         infixExprOp(BinaryExpr.Operator.REMAINDER)
+      implicit val canLT: Understands[Ctxt, Apply[LT[T], Expression, Expression]] =
+        infixExprOp(BinaryExpr.Operator.LESS)
+      implicit val canLE: Understands[Ctxt, Apply[LE[T], Expression, Expression]] =
+        infixExprOp(BinaryExpr.Operator.LESS_EQUALS)
     }
   def enable(): Generator[base.ProjectContext, Unit] =
     Enable.interpret(new Understands[base.ProjectContext, Enable.type] {

@@ -96,6 +96,7 @@ trait ApproachImplementationProvider {
     import paradigm.compilationUnitCapabilities._
     import paradigm.testCapabilities._
     for {
+      _ <- testImplementationProvider.initialize(this)
       _ <-
         forEach(tests.toList) { case (model, tests) =>
           val testCode: Generator[MethodBodyContext, Seq[Expression]] =

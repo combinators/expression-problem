@@ -6,7 +6,7 @@ import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.communication.{Request, SendRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm
-import org.combinators.ep.generator.paradigm.ffi.{Assertions, Booleans, Equality}
+import org.combinators.ep.generator.paradigm.ffi.{Assertions, Booleans, Equality, Strings}
 
 trait TestImplementationProvider[-AIP <: ApproachImplementationProvider] {
   def initialize(forApproach: AIP): Generator[forApproach.paradigm.ProjectContext, Unit]
@@ -51,7 +51,8 @@ object TestImplementationProvider {
       (paradigm: P)
       (ffiAssertions: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type],
         ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],
-        ffiBooleans: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type]
+        ffiBooleans: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
+        ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]
       ): TestImplementationProvider[AIP[paradigm.type]] =
     new TestImplementationProvider[AIP[paradigm.type]] {
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
@@ -59,6 +60,7 @@ object TestImplementationProvider {
           _ <- ffiAssertions.enable()
           _ <- ffiEquality.enable()
           _ <- ffiBooleans.enable()
+          _ <- ffiStrings.enable()     // because test cases have names
         } yield ()
       }
 

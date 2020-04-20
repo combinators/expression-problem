@@ -25,7 +25,7 @@ object VisitorValidate extends IOApp with BaseEvolution {
             )
             _ <- approach.implement(
               tests,
-              TestImplementationProvider.defaultAssertionBasedTests(approach.paradigm)(generator.assertionsInMethod, generator.equalityInMethod, generator.booleansInMethod)
+              TestImplementationProvider.defaultAssertionBasedTests(approach.paradigm)(generator.assertionsInMethod, generator.equalityInMethod, generator.booleansInMethod, generator.stringsInMethod)
             )
           } yield ()
         val nextTransaction =

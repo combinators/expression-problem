@@ -10,11 +10,22 @@ case class Mult[T]()
 case class Div[T]()
 case class Mod[T]()
 
+case class LE[T]()
+case class LT[T]()
+
 // Foreign Function Interface (foreign to Scala for example)
 trait Arithmetic[Context, T] extends FFI {
   import base.syntax._
 
   trait ArithmeticCapabilities {
+    implicit val canLT:Understands[Context, Apply[LT[T], Expression, Expression]]
+    def lt(left: Expression, right:Expression): Generator[Context, Expression] =
+      AnyParadigm.capabilitiy(Apply[LT[T], Expression, Expression](LT[T](), Seq(left, right)))
+
+    implicit val canLE:Understands[Context, Apply[LE[T], Expression, Expression]]
+    def le(left: Expression, right:Expression): Generator[Context, Expression] =
+      AnyParadigm.capabilitiy(Apply[LE[T], Expression, Expression](LE[T](), Seq(left, right)))
+
     implicit val canAdd: Understands[Context, Apply[Add[T], Expression, Expression]]
     def add(xs: Expression*): Generator[Context, Expression] =
       AnyParadigm.capabilitiy(Apply[Add[T], Expression, Expression](Add[T](), xs))

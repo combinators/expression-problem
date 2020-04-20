@@ -39,6 +39,20 @@ sealed class CodeGenerator(config: Config) { cc =>
       Java("double").tpe(),
       new DoubleLiteralExpr(_)
     )
+  val realDoublesInMethod =
+    new RealArithmetic[MethodBodyCtxt, Double, paradigm.type](
+      paradigm,
+      TypeRep.Double,
+      Java("double").tpe(),
+      new DoubleLiteralExpr(_)
+    )
+  val realDoublesInConstructor =
+    new RealArithmetic[MethodBodyCtxt, Double, paradigm.type](
+      paradigm,
+      TypeRep.Double,
+      Java("double").tpe(),
+      new DoubleLiteralExpr(_)
+    )
 
   val intsInMethod =
     new Arithmetic[MethodBodyCtxt, Int, paradigm.type](

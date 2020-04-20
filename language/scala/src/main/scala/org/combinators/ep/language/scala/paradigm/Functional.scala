@@ -127,7 +127,7 @@ trait Functional[AP <: AnyParadigm] extends Func {
           ): (CompilationUnitCtxt, Option[Import]) = {
             val stripped = AnyParadigm.stripGenerics(command.forElem)
             Try { (context, context.resolver.importResolution(stripped)) } getOrElse {
-              (context, AnyParadigm.guessImport(stripped))
+              (context, AnyParadigm.guessImport(base.config.targetPackage.ref, stripped))
             }
           }
         }
@@ -139,7 +139,7 @@ trait Functional[AP <: AnyParadigm] extends Func {
           ): (CompilationUnitCtxt, Option[Import]) = {
             val stripped = AnyParadigm.stripGenerics(command.forElem)
             Try { (context, context.resolver.importResolution(stripped)) } getOrElse {
-              (context, AnyParadigm.guessImport(stripped))
+              (context, AnyParadigm.guessImport(base.config.targetPackage.ref, stripped))
             }
           }
         }
@@ -199,7 +199,7 @@ trait Functional[AP <: AnyParadigm] extends Func {
         ): (TypeCtxt, Option[Import]) = {
           val stripped = AnyParadigm.stripGenerics(command.forElem)
           Try { (context, context.resolver.importResolution(stripped)) } getOrElse {
-            (context, AnyParadigm.guessImport(stripped))
+            (context, AnyParadigm.guessImport(base.config.targetPackage.ref, stripped))
           }
         }
       }
@@ -211,14 +211,14 @@ trait Functional[AP <: AnyParadigm] extends Func {
         ): (TypeCtxt, Option[Import]) = {
           val stripped = AnyParadigm.stripGenerics(command.forElem)
           Try { (context, context.resolver.importResolution(stripped)) } getOrElse {
-            (context, AnyParadigm.guessImport(stripped))
+            (context, AnyParadigm.guessImport(base.config.targetPackage.ref, stripped))
           }
         }
       }
     implicit val canFindTypeInType: Understands[TypeCtxt, FindType[Syntax.MangledName, Type]] =
       new Understands[TypeCtxt, FindType[Syntax.MangledName, Type]] {
         def perform(context: TypeCtxt, command: FindType[Syntax.MangledName, Type]): (TypeCtxt, Type) =
-          (context, Type.Name(command.name.toAST.value))
+          (context, AnyParadigm.toTypeSelection(command.name))
       }
   }
   object methodBodyCapabilities extends MethodBodyCapabilities {
@@ -239,19 +239,19 @@ trait Functional[AP <: AnyParadigm] extends Func {
         ): (MethodBodyCtxt, Option[Import]) = {
           val stripped = AnyParadigm.stripGenerics(command.forElem)
           Try { (context, context.resolver.importResolution(stripped)) } getOrElse {
-            (context, AnyParadigm.guessImport(stripped))
+            (context, AnyParadigm.guessImport(base.config.targetPackage.ref, stripped))
           }
         }
       }
     implicit val canFindMethodInMethod: Understands[MethodBodyCtxt, FindMethod[Syntax.MangledName, Term]] =
       new Understands[MethodBodyCtxt, FindMethod[Syntax.MangledName, Term]] {
         def perform(context: MethodBodyCtxt, command: FindMethod[Syntax.MangledName, Term]): (MethodBodyCtxt, Term) =
-          (context, Term.Name(command.name.toAST.value))
+          (context, AnyParadigm.toTermSelection(command.name))
       }
     implicit val canFindTypeInMethod: Understands[MethodBodyCtxt, FindType[Syntax.MangledName, Type]] =
       new Understands[MethodBodyCtxt, FindType[Syntax.MangledName, Type]] {
         def perform(context: MethodBodyCtxt, command: FindType[Syntax.MangledName, Type]): (MethodBodyCtxt, Type) =
-          (context, Type.Name(command.name.toAST.value))
+          (context, AnyParadigm.toTypeSelection(command.name))
       }
   }
   object projectContextCapabilities extends ProjectContextCapabilities {

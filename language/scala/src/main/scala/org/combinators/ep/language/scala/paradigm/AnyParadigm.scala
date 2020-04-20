@@ -512,12 +512,48 @@ object AnyParadigm {
     }
   }
 
+  def relativize(relativeTo: Term.Ref, term: Term.Ref): Option[Term.Ref] = {
+    term match {
+      case name: Term.Name => Some(Term.Select(relativeTo, name))
+      case Term.Select(ref: Term.Ref, name) =>
+        relativize(relativeTo, ref).map(Term.Select(_, name))
+      case _ => None
+    }
+  }
+
+  def relativize(relativeTo: Term.Ref, term: Type.Ref): Option[Type.Ref] = {
+    term match {
+      case name: Type.Name => Some(Type.Select(relativeTo, name))
+      case Type.Select(ref: Term.Ref, name) =>
+        relativize(relativeTo, ref).map(Type.Select(_, name))
+      case Type.Project(qual: Type.Ref, name) =>
+        relativize(relativeTo, qual).map(relTpe => Type.Project(relTpe, name))
+      case Type.Singleton(ref) => relativize(relativeTo, ref).map(Type.Singleton(_))
+      case _ => None
+    }
+  }
+
   def guessImport(relativeTo: Term.Ref, tpe: Type): Option[Import] = {
     stripGenerics(tpe) match {
       case name: Type.Name => Some(Import(List(Importer(relativeTo,  List(Importee.Name(Name.Indeterminate(name.value)))))))
       case apply: Type.Apply => guessImport(relativeTo, apply.tpe)
       case applyInfix: Type.ApplyInfix  => guessImport(relativeTo, applyInfix.op)
-      case sel: Type.Select => Some(Import(List(Importer(sel.qual, List(Importee.Name(Name.Indeterminate(sel.name.value)))))))
+      case Type.Select(ref: Term.Ref, name) =>
+        relativize(relativeTo, ref).map(relRef =>
+          Import(List(Importer(relRef, List(Importee.Name(Name.Indeterminate(name.value))))))
+        )
+      case _ => None // TODO: Might need to figure out guesses for other cases
+    }
+  }
+
+  def guessImport(relativeTo: Term.Ref, term: Term): Option[Import] = {
+    stripGenerics(term) match {
+      case name: Term.Name => Some(Import(List(Importer(relativeTo, List(Importee.Name(Name.Indeterminate(name.value)))))))
+      case Term.Select(ref: Term.Ref, name) =>
+        relativize(relativeTo, ref).map(relRef =>
+          Import(List(Importer(relRef, List(Importee.Name(Name.Indeterminate(name.value))))))
+        )
+      case app: Term.Apply => guessImport(relativeTo, app.fun)
       case _ => None // TODO: Might need to figure out guesses for other cases
     }
   }
@@ -541,17 +577,21 @@ object AnyParadigm {
     }
   }
 
-  /*def computePath(relativeTo: Path, forUnit: Source): Path = {
-    def refToPath(rel: Path, ref: Term): Path =
-      ref match {
-        case name: Name => rel.resolve(name.value)
-        case sel: Term.Select => refToPath(rel, sel.qual).resolve(sel.name.value)
-      }
+  def toTermSelection(qualifiedName: Seq[MangledName]): Term.Ref = {
+    qualifiedName.tail.foldLeft[Term.Ref](Term.Name(qualifiedName.head.toAST.value)) { case (qual, next) =>
+      Term.Select(qual, Term.Name(next.toAST.value))
+    }
+  }
 
-    forUnit.stats.collectFirst {
-      case pkg: Pkg => refToPath(relativeTo, pkg.ref)
-    }.getOrElse(relativeTo)
-  }*/
+  def toTypeSelection(qualifiedName: Seq[MangledName]): Type.Ref = {
+    if (qualifiedName.length > 1) {
+      Type.Select(toTermSelection(qualifiedName.init), Type.Name(qualifiedName.last.toAST.value))
+    } else {
+      Type.Name(qualifiedName.head.toAST.value)
+    }
+  }
+
+
   def computePath(relativeTo: Path, tgt: Seq[Name]): Path = {
     tgt match {
       case Seq(file) => relativeTo.resolve(s"${file.value}.scala")

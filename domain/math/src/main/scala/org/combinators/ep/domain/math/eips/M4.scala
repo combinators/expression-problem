@@ -71,11 +71,11 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
           import AnyParadigm.syntax._
           import methodBodyCapabilities._
 
-          def collectOp(listDoubleTy: Type): Generator[MethodBodyContext, Expression] = {
+          def collectOp(innerListTy: Type): Generator[MethodBodyContext, Expression] = {
             val atts = onRequest.tpeCase.attributes.map(onRequest.attributes)
 
             onRequest.tpeCase match {
-              case math.M0.Lit => create(listDoubleTy, atts)
+              case math.M0.Lit => create(innerListTy, atts)
               case _ =>
                 for {
                   collectedResults <- forEach(onRequest.attributes.toSeq) {
@@ -105,7 +105,9 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
           for {
             listDoubleTy <- toTargetLanguageType(onRequest.request.op.returnType)
             _ <- forApproach.resolveAndAddImport(listDoubleTy)
-            result <- collectOp(listDoubleTy)
+            innerTy <- toTargetLanguageType(onRequest.request.op.returnType.asInstanceOf[TypeRep.Sequence[Double]].elemTpe)
+            _ <- forApproach.resolveAndAddImport(innerTy)
+            result <- collectOp(innerTy)
           } yield Some(result)
         }
 

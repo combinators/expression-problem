@@ -25,7 +25,7 @@ trait Traditional extends ApproachImplementationProvider {
     import functional.methodBodyCapabilities._
 
     for {
-      method <- findMethod(names.mangle(names.instanceNameOf(message.request.op)))
+      method <- findMethod(Seq(names.mangle(names.conceptNameOf(message.request.op)), names.mangle(names.instanceNameOf(message.request.op))))
       _ <- resolveAndAddImport(method)
       res <- apply(method, message.to +: message.request.op.parameters.map(message.request.arguments))
     } yield res
@@ -107,6 +107,9 @@ trait Traditional extends ApproachImplementationProvider {
           } yield (pName, pt)
         }
       _ <- setParameters(params)
+      returnType <- toTargetLanguageType(op.returnType)
+      _ <- resolveAndAddImport(returnType)
+      _ <- setReturnType(returnType)
       args <- getArguments()
       result <- {
         val matchGen = makeCases(tpe, cases, op, args.head._3, args.tail, domainSpecific)(_, _)
@@ -136,7 +139,7 @@ trait Traditional extends ApproachImplementationProvider {
   }
 
   def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindType: Understands[Ctxt, FindType[Name, Type]]): Generator[Ctxt, Type] = {
-    FindType(names.mangle(names.conceptNameOf(dtpe))).interpret(canFindType)
+    FindType(Seq(names.mangle(names.conceptNameOf(dtpe)))).interpret(canFindType)
   }
 
   def initializeApproach(domain: Model): Generator[ProjectContext, Unit] = {

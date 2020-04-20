@@ -20,13 +20,11 @@ case class InstantiateType[Type, Name, Expression](
   type Result = Expression
 }
 
-// TODO: Add qualifiers to name
-case class FindMethod[Name, Expression](name: Name) extends Command {
+case class FindMethod[Name, Expression](name: Seq[Name]) extends Command {
   type Result = Expression
 }
 
-// TODO: Add qualifiers to name
-case class FindType[Name, Type](name: Name) extends Command {
+case class FindType[Name, Type](name: Seq[Name]) extends Command {
   type Result = Type
 }
 
@@ -83,7 +81,7 @@ trait Functional {
       AnyParadigm.capabilitiy(ResolveImport[Import, Expression](expr))
 
     implicit val canFindTypeInType: Understands[TypeContext, FindType[Name, Type]]
-    def findType(name: Name): Generator[TypeContext, Type] =
+    def findType(name: Seq[Name]): Generator[TypeContext, Type] =
       AnyParadigm.capabilitiy(FindType[Name, Type](name))
   }
   val typeCapabilities: TypeCapabilities
@@ -101,11 +99,11 @@ trait Functional {
       AnyParadigm.capabilitiy(ResolveImport[Import, Expression](expr))
 
     implicit val canFindMethodInMethod: Understands[MethodBodyContext, FindMethod[Name, Expression]]
-    def findMethod(name: Name): Generator[MethodBodyContext, Expression] =
+    def findMethod(name: Seq[Name]): Generator[MethodBodyContext, Expression] =
       AnyParadigm.capabilitiy(FindMethod[Name, Expression](name))
 
     implicit val canFindTypeInMethod: Understands[MethodBodyContext, FindType[Name, Type]]
-    def findType(name: Name): Generator[MethodBodyContext, Type] =
+    def findType(name: Seq[Name]): Generator[MethodBodyContext, Type] =
       AnyParadigm.capabilitiy(FindType[Name, Type](name))
   }
   val methodBodyCapabilities: MethodBodyCapabilities

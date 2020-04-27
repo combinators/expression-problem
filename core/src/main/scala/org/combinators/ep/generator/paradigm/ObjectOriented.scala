@@ -23,7 +23,7 @@ case class RemoveMethod[Type, Name](interface: Type, name:Name) extends Command 
   type Result = Unit
 }
 
-case class AddField[Name, Type](name: Name, tpe: Type) extends Command {
+case class AddField[Name, Type](name: Name, tpe: Type, isMutable: Boolean = true) extends Command {
   type Result = Unit
 }
 

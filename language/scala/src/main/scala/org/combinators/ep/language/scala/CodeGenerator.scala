@@ -40,6 +40,20 @@ sealed class CodeGenerator(config: Config) { cc =>
       Type.Name("Double"),
       Lit.Double(_)
     )
+  val realDoublesInMethod =
+    new RealArithmetic[MethodBodyCtxt, Double, paradigm.type](
+      paradigm,
+      TypeRep.Double,
+      scala.meta.Type.Name("Double"),
+      scala.meta.Lit.Double(_)
+    )
+  val realDoublesInConstructor =
+    new RealArithmetic[MethodBodyCtxt, Double, paradigm.type](
+      paradigm,
+      TypeRep.Double,
+      scala.meta.Type.Name("Double"),
+      scala.meta.Lit.Double(_)
+    )
 
   val intsInMethod =
     new Arithmetic[MethodBodyCtxt, Int, paradigm.type](

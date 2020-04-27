@@ -166,7 +166,10 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             command: AddField[Name, Type]
           ): (ClassContext, Unit) = {
             val resultCls = context.cls.clone()
-            resultCls.addField(command.tpe, command.name.toAST.toString, Modifier.privateModifier().getKeyword)
+            val modifiers: Seq[Modifier.Keyword] =
+              Seq(Modifier.privateModifier().getKeyword) ++
+              if (command.isMutable) Seq.empty else Seq(Modifier.finalModifier().getKeyword)
+            resultCls.addField(command.tpe, command.name.toAST.toString, modifiers:_*)
             (context.copy(cls = resultCls), ())
           }
         }

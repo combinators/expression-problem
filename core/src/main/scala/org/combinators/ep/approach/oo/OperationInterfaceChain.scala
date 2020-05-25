@@ -9,7 +9,7 @@ import org.combinators.ep.generator.paradigm.{Generics, ObjectOriented, Parametr
 
 /**
  * Ability to create a chain of interfaces, each one specifying operations.
- *
+ * Depends (for now) on lastModelWithOperation
  *  {{{
  *     public interface Exp {}                              // marker interface
  *     public interface ExpEval extends Exp { ... }

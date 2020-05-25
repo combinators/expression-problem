@@ -974,6 +974,7 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       _ <- makeViTAFactory(domain.baseDataType, Seq.empty)
 
       // whenever new operation, this CREATES the capability of having intermediate interfaces
+      // chronlogical order could just become Topological Ordering
       _ <- forEach(domain.inChronologicalOrder) { currentModel =>
         // for all PAST dataTypes that are already defined
         for {

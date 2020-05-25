@@ -7,6 +7,9 @@ import abstractions._
   *
   * Use `evolve` to obtain the next model and [[org.combinators.ep.domain.Model$.base]] for the initial one.
   *
+  * This will be renamed LinearModel and a superclass is non-linear model. In nonlinear model, could
+  * have a linearize() method that "zips" up to create a linear model.
+  *
   * @note Names act as unique identifiers within the context of one domain.
   */
 sealed class Model(

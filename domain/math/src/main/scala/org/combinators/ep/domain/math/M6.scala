@@ -1,14 +1,11 @@
 package org.combinators.ep.domain.math      /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.TypeRep.DataType
 import org.combinators.ep.domain.{Evolution, Model}
 import org.combinators.ep.domain.abstractions.{DataType, EqualsTestCase, Operation, Parameter, PerformanceTestCase, TestCase, TypeRep}
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
 import org.combinators.ep.domain.math.M0.{Add, AddInst, LitInst}
 import org.combinators.ep.domain.math.M1.{Sub, SubInst}
 import org.combinators.ep.domain.math.M3.{Divd, DivdInst, Mult, MultInst, Neg, NegInst}
-
-
 
 object M6 extends Evolution {
   override implicit def getModel:Model = M5.getModel.evolve("m6", Seq.empty, Seq(Equals))
@@ -17,6 +14,8 @@ object M6 extends Evolution {
   // can short-circuit this logic, but in the most general case, it stands to reason
   // that we need to have a way to instantiate a structure that matches the expression
   // and then use those structure(s) to determine equality.
+
+  // add a new DataType, just to show you can, after a Producer operation.
 
   lazy val Equals = Operation("equals", TypeRep.Boolean, Seq(Parameter("other", TypeRep.DataType(M5.getModel.baseDataType))))
 

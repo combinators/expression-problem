@@ -167,8 +167,8 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
           ): (ClassContext, Unit) = {
             val resultCls = context.cls.clone()
             val modifiers: Seq[Modifier.Keyword] =
-              Seq(Modifier.privateModifier().getKeyword) ++
-              if (command.isMutable) Seq.empty else Seq(Modifier.finalModifier().getKeyword)
+              Seq(Modifier.privateModifier().getKeyword) ///HACK++
+    ///HACK          if (command.isMutable) Seq.empty else Seq(Modifier.finalModifier().getKeyword)
             resultCls.addField(command.tpe, command.name.toAST.toString, modifiers:_*)
             (context.copy(cls = resultCls), ())
           }

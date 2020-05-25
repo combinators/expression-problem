@@ -11,6 +11,8 @@ object I2 extends Evolution {
     val height:String = "height"
   }
 
+  // add Power dataType
+
   // TODO: Flip this around so there are no parameters in height; rather an atomic data type
   // returns 0 and all others return Max(1+attrubte). Woudl this work?
   //

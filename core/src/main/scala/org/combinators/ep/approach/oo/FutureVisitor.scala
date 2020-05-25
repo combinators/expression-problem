@@ -20,10 +20,10 @@ trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts 
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
 
   import ooParadigm._
-
+  lazy val Factory:Name = names.mangle("Factory")
   lazy val result = names.mangle("result")
   lazy val visitor = names.mangle("visitor")
-  lazy val toConvert = names.mangle("toConvert")
+  lazy val toConvert = names.mangle("other")   // looks better this way
   lazy val getResult: Name = names.mangle("getResult")
   lazy val accept: Name = names.mangle("accept")
   lazy val convert: Name = names.mangle("convert")
@@ -117,6 +117,14 @@ trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts 
    *     Visitor visitor = new Visitor();
    *     exp.accept(visitor);
    *     return visitor.getResult();
+   * }
+   *
+   *  NOW BECOMES
+   *
+   * public Exp<ep.m0.finalized.Visitor> convert(ep.Exp<ep.m0.finalized.Visitor> other) {
+   *    Visitor visitor = new Visitor();
+   *    other.accept(visitor);
+   *    return visitor.getResult();
    * }
    *
    * @param visitClass
@@ -250,7 +258,23 @@ trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts 
   }
 
   /**
-   * Make Finalized factory which each finalized datatype implements
+   * Make Finalized factory which each finalized datatype implements. Now a class, something like:
+   *
+   * public class Factory implements ep.m0.Factory<ep.m0.finalized.Visitor> {
+   *   public Exp<ep.m0.finalized.Visitor> lit(Double value) {
+   *     return new Lit(value);
+   *   }
+   *
+   *   public Exp<ep.m0.finalized.Visitor> add(ep.Exp<ep.m0.finalized.Visitor> left, ep.Exp<ep.m0.finalized.Visitor> right) {
+   *     return new Add(this.convert(left), this.convert(right));
+   *   }
+   *
+   *   public Exp<ep.m0.finalized.Visitor> convert(ep.Exp<ep.m0.finalized.Visitor> other) {
+   *     Visitor visitor = new Visitor();
+   *     other.accept(visitor);
+   *     return visitor.getResult();
+   *   }
+   * }
    *
    * Each instance of Exp must be parameterized with ep.m#.finalized.Visitor
    *
@@ -275,8 +299,10 @@ trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts 
       topLevelType <- applyType(tt, Seq(visitorTpe))
 
       returnType <- applyType(resultTpe, Seq[Type](visitorTpe))
+      factory <- findClass(names.mangle(domain.name), Factory)
+      factoryType <- applyType(factory,Seq[Type](visitorTpe))
 
-      _ <- addParent(returnType)
+      _ <- addImplemented(factoryType)
 
       _ <- forEach(domain.flatten.typeCases) { tpeCase => {
         for {
@@ -286,8 +312,10 @@ trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts 
         } yield ()
       }
       }
-      // do this last so methods are declared as default
-      _ <- setInterface()
+
+      _ <- addConvertMethod(makeConvertImplementation(domain, visitorTpe, topLevelType))
+//      // do this last so methods are declared as default: NOW A CLASS!
+//      _ <- setInterface()
     } yield ()
   }
 

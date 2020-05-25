@@ -5,8 +5,9 @@ import org.combinators.ep.domain.abstractions.{DataTypeCase, TestCase}
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
 
 object I1 extends Evolution {
-  override implicit def getModel:Model = M1.getModel.evolve("i1", Seq(Inv), Seq.empty)
+  override implicit def getModel:Model = M2.getModel.evolve("i1", Seq(Inv), Seq.empty)
 
+  // add MultBy operation
   lazy val Inv = DataTypeCase.unary("Inv")
 
   def InvInst(inner:DataTypeInstance): DataTypeInstance =

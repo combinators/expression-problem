@@ -1,7 +1,7 @@
 package org.combinators.ep.language.java
 
 import cats.effect.{ExitCode, IO, IOApp}
-import org.combinators.ep.approach.oo.{Algebra, ExtensibleVisitor, Interpreter, Traditional, Trivially, Visitor, VisitorSideEffect}
+import org.combinators.ep.approach.oo.{Algebra, ExtensibleVisitor, Interpreter, Traditional, Trivially, ViTA, Visitor, VisitorSideEffect}
 import org.combinators.ep.domain.Model
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.math._
@@ -24,15 +24,20 @@ object Main extends IOApp {
   val triviallyApproach = Trivially[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val algebraApproach = Algebra[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
+  val vitaApproach = ViTA[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+
   // select one here.
   // val approach = ooApproach // WORKS!
   // val approach = visitorApproach  // WORKS!
   // val approach = visitorSideEffectApproach // WORKS!
   // val approach = extensibleVisitorApproach // WORKS!
   // val approach = triviallyApproach // triviallyApproach // WORKS!
-  val approach = algebraApproach // Not quite yet
+  val approach = vitaApproach // Not quite yet
 
   val evolutions = Seq(M0, M1, M2, M3, M4, M5, M6) // ) // , M4, M5, M6)
+  //val evolutions = Seq(M0, M1, M2, I1) // ) // , M4, M5, M6)    I1 and I2 not working...
+
+  // how do I just use M2 instead of this? HACK
   //val m4eip =
   val m4eip =
     eips.M4.imperative(approach.paradigm)(

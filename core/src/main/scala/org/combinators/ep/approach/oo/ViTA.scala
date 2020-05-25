@@ -908,18 +908,6 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       parameterizedBase <- applyType(cbt, genType)
       _ <- registerLocally(triviallyBaseDataType(domain.baseDataType), parameterizedBase)
 
-//      _ <- forEach (domain.ops) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), triviallyMakeSignature(domain.baseDataType, op)) }
-//      _ <- if (domain.last.isDefined && domain.last.get.lastModelWithOperation.isDefined) {
-//        // if there are past operations, find those that are producers and create overloaded specifications
-//        for {
-//          _ <- forEach(domain.last.get.lastModelWithOperation.get.flatten.ops.filter(op => op.isProducer(domain))) {
-//            op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), triviallyMakeSignature(domain.baseDataType, op))
-//          }
-//        } yield ()
-//      } else {
-//        Command.skip[ClassContext]
-//      }
-
       // paramType is now Exp<V>. Couldn't get type arguments?
       //parent <- findClass(names.mangle(domain.baseDataType.name))
       parent <- findClass(names.mangle(domain.name), names.mangle(domain.baseDataType.name))

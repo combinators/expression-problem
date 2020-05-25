@@ -34,25 +34,27 @@ object Main extends IOApp {
   // val approach = triviallyApproach // triviallyApproach // WORKS!
   val approach = vitaApproach // Not quite yet
 
-  val evolutions = Seq(M0, M1, M2, M3, M4, M5, M6) // ) // , M4, M5, M6)
+  val evolutions = Seq(M0, M1, M2, I1)    // , I2 //       M3, M4, M5, M6) // ) // , M4, M5, M6)
   //val evolutions = Seq(M0, M1, M2, I1) // ) // , M4, M5, M6)    I1 and I2 not working...
 
+  val eip = eips.I1(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod,
+    generator.stringsInMethod, generator.imperativeInMethod)
   // how do I just use M2 instead of this? HACK
   //val m4eip =
-  val m4eip =
-    eips.M4.imperative(approach.paradigm)(
-      generator.imperativeInMethod,
-      generator.doublesInMethod,
-      generator.booleansInMethod,
-      generator.stringsInMethod,
-      generator.listsInMethod,
-      generator.equalityInMethod)
-  val m5eip = eips.M5(approach.paradigm)(m4eip)(
-    generator.intsInMethod,
-    generator.treesInMethod)
-  val eip = eips.M6(approach.paradigm)(m5eip)(
-    generator.equalityInMethod
-  )
+//  val m4eip =
+//    eips.M4.imperative(approach.paradigm)(
+//      generator.imperativeInMethod,
+//      generator.doublesInMethod,
+//      generator.booleansInMethod,
+//      generator.stringsInMethod,
+//      generator.listsInMethod,
+//      generator.equalityInMethod)
+//  val m5eip = eips.M5(approach.paradigm)(m4eip)(
+//    generator.intsInMethod,
+//    generator.treesInMethod)
+//  val eip = eips.M6(approach.paradigm)(m5eip)(
+//    generator.equalityInMethod
+//  )
 
   val tests = evolutions.scanLeft(Map.empty[Model, Seq[TestCase]]) { case (m, evolution) =>
     m + (evolution.getModel -> evolution.tests)

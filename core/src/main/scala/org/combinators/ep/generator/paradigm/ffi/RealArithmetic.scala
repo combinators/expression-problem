@@ -10,6 +10,9 @@ case class Log[T]()
 case class Sin[T]()
 case class Cos[T]()
 
+case class Abs[T]()
+case class Floor[T]()
+
 case class EulersNumber[T]() extends Command {
   type Result = T
 }
@@ -48,6 +51,14 @@ trait RealArithmetic[Context, T] extends FFI {
     implicit val canPi: Understands[Context, Pi[Expression]]
     def pi(): Generator[Context, Expression] =
       AnyParadigm.capabilitiy(Pi[Expression])
+
+    implicit val canAbs: Understands[Context, Apply[Abs[T], Expression, Expression]]
+    def abs(xs: Expression): Generator[Context, Expression] =
+      AnyParadigm.capabilitiy(Apply[Abs[T], Expression, Expression](Abs[T](), Seq(xs)))
+
+    implicit val canFloor: Understands[Context, Apply[Floor[T], Expression, Expression]]
+    def floor(xs: Expression): Generator[Context, Expression] =
+      AnyParadigm.capabilitiy(Apply[Floor[T], Expression, Expression](Floor[T](), Seq(xs)))
   }
   val realArithmeticCapabilities: RealArithmeticCapabilities
 }

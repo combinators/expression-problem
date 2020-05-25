@@ -5,7 +5,7 @@ import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, Understands}
 import org.combinators.ep.generator.paradigm.Apply
-import org.combinators.ep.generator.paradigm.ffi.{Cos, EulersNumber, Pow, Log, Pi, Sin, Sqrt, RealArithmetic => RArith}
+import org.combinators.ep.generator.paradigm.ffi.{Abs, Cos, EulersNumber, Floor, Log, Pi, Pow, Sin, Sqrt, RealArithmetic => RArith}
 import org.combinators.ep.language.java.CodeGenerator.Enable
 import org.combinators.ep.language.java.Syntax.default._
 import org.combinators.ep.language.java.paradigm.AnyParadigm
@@ -56,6 +56,10 @@ class RealArithmetic[Ctxt, T, AP <: AnyParadigm](
         javaMathConst("E")
       implicit val canPi: Understands[Ctxt, Pi[Expression]] =
         javaMathConst("PI")
+      implicit val canAbs: Understands[Ctxt, Apply[Abs[T], Expression, Expression]] =
+        javaMathOp("abs")
+      implicit val canFloor: Understands[Ctxt, Apply[Floor[T], Expression, Expression]] =
+        javaMathOp("floor")
     }
 
   def enable(): Generator[base.ProjectContext, Unit] =

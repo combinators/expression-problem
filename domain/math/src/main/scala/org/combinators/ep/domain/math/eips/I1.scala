@@ -60,7 +60,6 @@ object I1 {
 //        }
 
           case litC@math.M0.Lit =>
-            val att = litC.attributes.head
             for {
               varName <- freshName(forApproach.names.mangle("result"))
               baseType <- toTargetLanguageType(onRequest.request.op.returnType)

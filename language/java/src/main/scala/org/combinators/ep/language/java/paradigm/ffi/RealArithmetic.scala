@@ -30,6 +30,17 @@ class RealArithmetic[Ctxt, T, AP <: AnyParadigm](
       }
     }
 
+  // Math.Log in java assumes base of E
+  private def javaMathLogOp[Ctxt, Op](): Understands[Ctxt, Apply[Op, Expression, Expression]] =
+    new Understands[Ctxt, Apply[Op, Expression, Expression]] {
+      def perform(
+                   context: Ctxt,
+                   command: Apply[Op, Expression, Expression]
+                 ): (Ctxt, Expression) = {
+        (context, Java(s"Math.log(${command.arguments(0)})/Math.log(${command.arguments(1)})").expression())
+      }
+    }
+
   private def javaMathConst[Ctxt, Const <: Command.WithResult[Expression]](constName: String): Understands[Ctxt, Const] =
     new Understands[Ctxt, Const] {
       def perform(
@@ -47,7 +58,7 @@ class RealArithmetic[Ctxt, T, AP <: AnyParadigm](
       implicit val canPow: Understands[Ctxt, Apply[Pow[T], Expression, Expression]] =
         javaMathOp("pow")
       implicit val canLog: Understands[Ctxt, Apply[Log[T], Expression, Expression]] =
-        javaMathOp("log")
+        javaMathLogOp()
       implicit val canSin: Understands[Ctxt, Apply[Sin[T], Expression, Expression]] =
         javaMathOp("sin")
       implicit val canCos: Understands[Ctxt, Apply[Cos[T], Expression, Expression]] =

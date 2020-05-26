@@ -1,24 +1,23 @@
 package org.combinators.ep.domain.math      /*DD:LI:AI*/
 
 import org.combinators.ep.domain._
-import org.combinators.ep.domain.abstractions.{Operation, Parameter, TestCase, TypeRep}
+import org.combinators.ep.domain.abstractions.{DataTypeCase, EqualsTestCase, TestCase}
+import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
+import org.combinators.ep.domain.math.M0.{DoubleInst, Eval, LitInst}
 
+// TODO: I2 still generates multBy twice in Power.
 object I2 extends Evolution {
-  override implicit def getModel:Model = I1.getModel.evolve("i2", Seq.empty, Seq(Height))
+  override implicit def getModel:Model = I1.getModel.evolve("i2", Seq(Power), Seq.empty)
+
   // i2:model evolution.
   // -------------------
-  object independent {
-    val height:String = "height"
-  }
+  lazy val Power:DataTypeCase = DataTypeCase.binary("Power")(MathDomain.getModel)
 
-  // add Power dataType
-
-  // TODO: Flip this around so there are no parameters in height; rather an atomic data type
-  // returns 0 and all others return Max(1+attrubte). Woudl this work?
-  //
-  // Alternatively: Write necessary code to make test case
-  lazy val Height = Operation("height", TypeRep.Int, Seq(Parameter(independent.height, TypeRep.Int)))
+  def PowerInst(base:DataTypeInstance, exponent:DataTypeInstance): DataTypeInstance =
+    DataTypeInstance(Power, Seq(InstanceRep(base), InstanceRep(exponent)))
 
   // TODO: Model test cases for I2
-  def tests: Seq[TestCase] = Seq.empty
+  def tests: Seq[TestCase] = Seq(
+    EqualsTestCase(getModel.baseDataType, PowerInst(LitInst(2.0), LitInst(5.0)), Eval, DoubleInst(32.0)),
+  )
 }

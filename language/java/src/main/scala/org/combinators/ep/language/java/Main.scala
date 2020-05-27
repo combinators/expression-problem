@@ -24,7 +24,7 @@ object Main extends IOApp {
   val triviallyApproach = Trivially[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val algebraApproach = Algebra[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
- // val vitaApproach = ViTA[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+  val vitaApproach = ViTA[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
   // select one here.
   // val approach = ooApproach // WORKS!
@@ -32,7 +32,7 @@ object Main extends IOApp {
   // val approach = visitorSideEffectApproach // WORKS!
   // val approach = extensibleVisitorApproach // WORKS!
   // val approach = triviallyApproach // triviallyApproach // WORKS!
-  val approach = triviallyApproach
+  val approach = vitaApproach
 
   //val evolutions = Seq(M0, M1, M2, I1, I2)    // , I2 //       M3, M4, M5, M6) // ) // , M4, M5, M6)
   val evolutions = Seq(M0, M1, M2, M3, M4, M5, M6, M7)

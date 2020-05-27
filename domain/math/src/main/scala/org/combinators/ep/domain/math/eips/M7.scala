@@ -1,6 +1,6 @@
 package org.combinators.ep.domain.math.eips
 
-import org.combinators.ep.domain.abstractions.{Attribute, DataTypeCase, Operation, Parameter, TypeRep}
+import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, Parameter, TypeRep}
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.domain.math
 import org.combinators.ep.generator.Command.Generator
@@ -8,9 +8,8 @@ import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionIm
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm
-import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Equality, RealArithmetic, Strings, Trees}
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, RealArithmetic, Strings}
 
 object M7 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]

@@ -258,6 +258,90 @@ trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts 
   }
 
   /**
+   * Make Finalized factory which each finalized datatype implements
+   *
+   * Each instance of Exp must be parameterized with ep.m#.finalized.Visitor
+   *
+   * CAN'T FORGET to call 'convert' for those recursive datatypes to be sure they work.
+   */
+  def makeFinalizedTriviallyFactory(domain:Model): Generator[ClassContext, Unit] = {
+
+    import ooParadigm.classCapabilities._
+    import genericsParadigm.classCapabilities._
+    for {
+
+      // even though this expressly calls for ep.m#.Exp it becomes just Exp
+      // so missing the import.
+      resultTpe <- findClass(names.mangle(domain.name), names.mangle(domain.baseDataType.name))
+      _ <- resolveAndAddImport(resultTpe)
+
+      visitorTpe <- findClass(names.mangle(domain.name), finalized, visitorClass)
+      _ <- resolveAndAddImport(visitorTpe)
+
+      // extends Exp<Visitor>
+      tt <- computedBaseType(domain)
+      topLevelType <- applyType(tt, Seq(visitorTpe))
+
+      returnType <- applyType(resultTpe, Seq[Type](visitorTpe))
+
+      _ <- addParent(returnType)
+
+      _ <- forEach(domain.flatten.typeCases) { tpeCase => {
+        for {
+          // These methods with recursive values must call convert; in addition, they must be properly
+          // defined to use appropriate ep.m#.Exp based on where the data type was defined... TRICK
+          _ <- addMethod (names.mangle(names.instanceNameOf(tpeCase)), futureCreateFactoryDataTypeCase(domain, tpeCase, topLevelType, returnType, false))
+        } yield ()
+      }
+      }
+      // do this last so methods are declared as default
+      _ <- setInterface()
+    } yield ()
+  }
+
+  /**
+   * Make Finalized factory which each finalized datatype implements
+   *
+   * Each instance of Exp must be parameterized with ep.m#.finalized.Visitor
+   *
+   * CAN'T FORGET to call 'convert' for those recursive datatypes to be sure they work.
+   */
+  def makeFinalizedFactory(domain:Model): Generator[ClassContext, Unit] = {
+
+    import ooParadigm.classCapabilities._
+    import genericsParadigm.classCapabilities._
+    for {
+
+      // even though this expressly calls for ep.m#.Exp it becomes just Exp
+      // so missing the import.
+      resultTpe <- findClass(names.mangle(domain.name), names.mangle(domain.baseDataType.name))
+      _ <- resolveAndAddImport(resultTpe)
+
+      visitorTpe <- findClass(names.mangle(domain.name), finalized, visitorClass)
+      _ <- resolveAndAddImport(visitorTpe)
+
+      // extends Exp<Visitor>
+      tt <- computedBaseType(domain)
+      topLevelType <- applyType(tt, Seq(visitorTpe))
+
+      returnType <- applyType(resultTpe, Seq[Type](visitorTpe))
+
+      _ <- addParent(returnType)
+
+      _ <- forEach(domain.flatten.typeCases) { tpeCase => {
+        for {
+          // These methods with recursive values must call convert; in addition, they must be properly
+          // defined to use appropriate ep.m#.Exp based on where the data type was defined... TRICK
+          _ <- addMethod (names.mangle(names.instanceNameOf(tpeCase)), futureCreateFactoryDataTypeCase(domain, tpeCase, topLevelType, returnType, false))
+        } yield ()
+      }
+      }
+      // do this last so methods are declared as default
+      _ <- setInterface()
+    } yield ()
+  }
+
+  /**
    * Make Finalized factory which each finalized datatype implements. Now a class, something like:
    *
    * public class Factory implements ep.m0.Factory<ep.m0.finalized.Visitor> {
@@ -280,7 +364,7 @@ trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts 
    *
    * CAN'T FORGET to call 'convert' for those recursive datatypes to be sure they work.
    */
-  def makeFinalizedFactory(domain:Model): Generator[ClassContext, Unit] = {
+  def makeFinalizedViTAFactory(domain:Model): Generator[ClassContext, Unit] = {
 
     import ooParadigm.classCapabilities._
     import genericsParadigm.classCapabilities._

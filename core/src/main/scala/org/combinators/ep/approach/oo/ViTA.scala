@@ -984,7 +984,7 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
           _ <- addClassToProject(makeFinalizedVisitor(currentModel), finalizedVisitorName(currentModel): _*)
           _ <- addClassToProject(extendIntermediateInterface(currentModel, domainSpecific), baseInterfaceNames(currentModel): _*)
           _ <- addClassToProject(extendFactory(currentModel, domainSpecific), baseFactoryName(currentModel): _*)
-          _ <- addFactoryToProject(currentModel, makeFinalizedFactory(currentModel))
+          _ <- addFactoryToProject(currentModel, makeFinalizedViTAFactory(currentModel))
 
           _ <- forEach(currentModel.inChronologicalOrder) { modelDefiningTypes =>
             forEach(modelDefiningTypes.typeCases) { tpe =>

@@ -7,6 +7,7 @@ import org.combinators.ep.domain.abstractions.TestCase
   * Mathematical Expressions domain as an instance of EP.
   */
 object MathDomain extends Evolution {
-  def getModel:Model = Model.base("MathDomain", "Exp")
+  def getModel:GenericModel = baseModel
+  def baseModel:GenericModel = GenericModel.base("MathDomain", "Exp")
   def tests: Seq[TestCase] = Seq.empty
 }

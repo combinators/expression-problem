@@ -1,6 +1,6 @@
 package org.combinators.ep.approach.oo
 
-import org.combinators.ep.domain.Model
+import org.combinators.ep.domain.{GenericModel, Model}
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.communication.{ReceivedRequest, Request}
@@ -39,7 +39,7 @@ trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts 
   def registerLocally(tpe:DataType, paramType:Type) : Generator[ClassContext, Unit]
 
   // access type mapping capability
-  def registerTypeMapping(model: Model): Generator[ProjectContext, Unit]
+  def registerTypeMapping(model: GenericModel): Generator[ProjectContext, Unit]
 
   /** Same as below but works without domain, providing you pass in the base type. */
   def computedBaseType[Context](ofBaseType:DataType)(implicit canFindClass: Understands[Context, FindClass[Name, Type]]): Generator[Context, Type] = {
@@ -47,7 +47,7 @@ trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts 
   }
 
   /** Returns the base type of trivially. */
-  def computedBaseType[Context](ofModel: Model)(implicit canFindClass: Understands[Context, FindClass[Name, Type]]): Generator[Context, Type] = {
+  def computedBaseType[Context](ofModel: GenericModel)(implicit canFindClass: Understands[Context, FindClass[Name, Type]]): Generator[Context, Type] = {
     computedBaseType(ofModel.baseDataType)
   }
 
@@ -130,7 +130,7 @@ trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts 
    * @param visitClass
    * @return
    */
-  def makeConvertImplementation(model:Model, visitClass:Type, baseExp:Type): Generator[MethodBodyContext, Option[Expression]] = {
+  def makeConvertImplementation(model:GenericModel, visitClass:Type, baseExp:Type): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
     import polymorphics.methodBodyCapabilities._
@@ -214,6 +214,10 @@ trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts 
     } yield (Some(field))
   }
 
+//   def factoryInstanceDataTypeCase(model:Option[GenericModel] = None, tpeCase:DataTypeCase) : Seq[Name] = {
+//    model.map(m => names.mangle(m.name)).toSeq :+ names.mangle(names.conceptNameOf(tpeCase))
+//  }
+
   /**
    *??? lit(Double value) {
    *   return new Lit(value);
@@ -223,7 +227,7 @@ trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts 
    *   return new Add(this.convert(left), this.convert(right));
    * }
    */
-  def futureCreateFactoryDataTypeCase(model:Model, tpeCase:DataTypeCase, paramBaseClass:Type, tpe:Type, isStatic:Boolean = false): Generator[MethodBodyContext, Option[Expression]] = {
+  def futureCreateFactoryDataTypeCase(model:GenericModel, tpeCase:DataTypeCase, paramBaseClass:Type, tpe:Type, isStatic:Boolean = false): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
 
@@ -364,7 +368,7 @@ trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts 
    *
    * CAN'T FORGET to call 'convert' for those recursive datatypes to be sure they work.
    */
-  def makeFinalizedViTAFactory(domain:Model): Generator[ClassContext, Unit] = {
+  def makeFinalizedViTAFactory(domain:GenericModel): Generator[ClassContext, Unit] = {
 
     import ooParadigm.classCapabilities._
     import genericsParadigm.classCapabilities._
@@ -408,7 +412,7 @@ trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts 
    *
    * Each instance of Exp must be parameterized with ep.m#.finalized.Visitor
    */
-  def makeFinalizedVisitor(domain:Model): Generator[ClassContext, Unit] = {
+  def makeFinalizedVisitor(domain:GenericModel): Generator[ClassContext, Unit] = {
 
     import ooParadigm.classCapabilities._
     import genericsParadigm.classCapabilities._
@@ -426,7 +430,6 @@ trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts 
       field <- getField(result)
 
       _ <- addMethod(getResult, returnValue(parameterizedTpe, field))
-
       _ <- addMethod(visit, makeVisitImplementation(parameterizedTpe))
     } yield ()
   }
@@ -448,7 +451,7 @@ trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts 
    * @param bodyGenerator
    * @return
    */
-  def addFactoryToProject(domain:Model, bodyGenerator:Generator[ClassContext, Unit]): Generator[ProjectContext, Unit] = {
+  def addFactoryToProject(domain:GenericModel, bodyGenerator:Generator[ClassContext, Unit]): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
     addClassToProject(bodyGenerator, names.mangle(domain.name), finalized, factoryClass)
   }

@@ -1,6 +1,6 @@
 package org.combinators.ep.approach.oo
 
-import org.combinators.ep.domain.Model
+import org.combinators.ep.domain.{GenericModel, Model}
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator._
 import org.combinators.ep.generator.communication._
@@ -175,7 +175,7 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedVisi
    *
    * @return
    */
-  override def makeFactoryOperationImpl(model:Model, op: Operation, typeName:Name): Generator[MethodBodyContext, Option[Expression]] = {
+  override def makeFactoryOperationImpl(model:GenericModel, op: Operation, typeName:Name): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
 
@@ -210,7 +210,7 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedVisi
    * Compute the name for the visitor implementation of the given model and operation, if an implementation
    * is required.
    */
-  def visitorClassName(model: Model, operation: Operation) : Option[Name] = {
+  def visitorClassName(model: GenericModel, operation: Operation) : Option[Name] = {
     val operationName = names.mangle(names.conceptNameOf(operation))
 
     if (model.ops.contains(operation)) {
@@ -248,7 +248,7 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedVisi
       import ooParadigm.classCapabilities._
       import genericsParadigm.classCapabilities._
 
-      val interfaceName = visitorInterfaceName(domain.last.get.lastModelWithDataTypes.get)
+      val interfaceName = visitorInterfaceName(domain.last.get.lastModelWithDataTypes.head)
 
       for {
         // find former Op, such as "Eval" or "EvalSub"
@@ -321,7 +321,7 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedVisi
       rt <- toTargetLanguageType(op.returnType)
 
       // identify Visitor<R> you need the most specific interface necessary based on the operation and domain
-      visitorClassType <- findClass(visitorInterfaceName(domain.lastModelWithDataTypes.get).get)
+      visitorClassType <- findClass(visitorInterfaceName(domain.lastModelWithDataTypes.head).get)
       _ <- resolveAndAddImport(visitorClassType)
       visitorType  <- applyType (visitorClassType, Seq(rt))
 
@@ -387,9 +387,15 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedVisi
    * @param domainSpecific
    * @return
    */
-  override def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
+  override def implement(gdomain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
     import paradigm.projectContextCapabilities._
+
+    val domain = gdomain match {
+      case _:Model => gdomain.asInstanceOf[Model]
+      case _ => gdomain.linearize
+    }
+
     val flatDomain = domain.flatten
     for {
       _ <- debug ("Processing Extensible Visitor")
@@ -430,7 +436,7 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedVisi
   }
 
   /** Adds tests to the project context */
-  override def implement(tests: Map[Model, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
+  override def implement(tests: Map[GenericModel, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
     import projectContextCapabilities._
     import paradigm.compilationUnitCapabilities._
     import paradigm.testCapabilities._

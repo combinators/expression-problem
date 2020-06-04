@@ -1,6 +1,6 @@
 package org.combinators.ep.generator
 
-import org.combinators.ep.domain.Model
+import org.combinators.ep.domain.{GenericModel, Model}
 import org.combinators.ep.domain.abstractions._
 
 /** Provides mangled names for domain entities. */
@@ -17,7 +17,7 @@ abstract class NameProvider[Name] {
   /** Provides the name for a language representation of concepts (e.g. classes) associated with the given Model.
    * Most languages just want to return the capitalized model name.
    */
-  def conceptNameOf(model: Model): String =
+  def conceptNameOf(model: GenericModel): String =
     model.name.capitalize
 
   /** Provides the name for a language representation of concepts (e.g. classes) associated with the given data type.
@@ -56,7 +56,7 @@ abstract class NameProvider[Name] {
 
   /** Provides the name for a language representation of instances (e.g. objects) associated with the given model.
    * Most languages just want to return the lower case model name. */
-  def instanceNameOf(model: Model): String =
+  def instanceNameOf(model: GenericModel): String =
     model.name.toLowerCase
 
   /** Provides the name for a language representation of instances (e.g. objects) associated with the given data type.

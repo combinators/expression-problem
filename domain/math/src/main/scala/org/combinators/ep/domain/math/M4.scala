@@ -9,7 +9,7 @@ import org.combinators.ep.domain.math.M2.{PrettyP, StringInst}
 import org.combinators.ep.domain.math.M3.{DivdInst, MultInst, NegInst}
 
 object M4 extends Evolution {
-  override implicit def getModel:Model = M3.getModel.evolve("m4", Seq.empty, Seq(Simplify, Collect))
+  override implicit def getModel:GenericModel = M3.getModel.evolve("m4", Seq.empty, Seq(Simplify, Collect))
 
   // this is a producer method (as you can tell by its return type).
   lazy val Simplify = Operation("simplify", TypeRep.DataType(MathDomain.getModel.baseDataType))

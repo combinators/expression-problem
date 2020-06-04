@@ -1,6 +1,6 @@
 package org.combinators.ep.approach.oo
 
-import org.combinators.ep.domain.Model
+import org.combinators.ep.domain.{GenericModel, Model}
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command._
 import org.combinators.ep.generator._
@@ -66,7 +66,8 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     } yield res
   }
 
-  override def factoryInstanceDataTypeCase(model:Option[Model] = None, tpeCase:DataTypeCase) : Seq[Name] = {
+  // critical.... new factory finalized classes are stored in proper package
+  override def factoryInstanceDataTypeCase(model:Option[GenericModel] = None, tpeCase:DataTypeCase) : Seq[Name] = {
     model.map(m => names.mangle(m.name)).toSeq :+ finalized :+ names.mangle(names.conceptNameOf(tpeCase))
   }
 
@@ -155,16 +156,23 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
   }
 
   /** Former derived interfaced for the tpe must be qualified with model package */
-  def getFormerDerivedInterface(domainDefiningType: Model, current:DataTypeCase): Generator[ClassContext, Type] = {
+  def getFormerDerivedInterfaces(domainDefiningType: GenericModel, current:DataTypeCase): Generator[ClassContext, List[Type]] = {
     import classCapabilities._
 
-    findClass(names.mangle(domainDefiningType.last.get.name), derivedInterfaceName(current))
+    for {
+      // only take those who are not the bottom
+      group <- forEach(domainDefiningType.former.filter(p => !p.isDomainbase)) { prior =>
+        findClass(names.mangle(prior.name), derivedInterfaceName(current))
+      }
+    } yield group
+
+//    findClass(names.mangle(domainDefiningType.former.get.name), derivedInterfaceName(current))
   }
 
   /**
    * For any datatype that *could* have been defined in domain or perhaps was defined earlier
    */
-  def makeDerivedInterfaces(tpeCase:DataTypeCase, currentModel:Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
+  def makeDerivedInterfaces(tpeCase:DataTypeCase, currentModel:GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
 
     val ddn = derivedInterfaceName (tpeCase)
@@ -240,7 +248,7 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    * @param domainSpecific
    * @return
    */
-  def makeDerivedInterface(tpe: DataType, tpeCase: DataTypeCase, model:Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
+  def makeDerivedInterface(tpe: DataType, tpeCase: DataTypeCase, model:GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
     val makeClass: Generator[ClassContext, Unit] = {
       import classCapabilities._
       // Either generate an implementation for every operation if data type is declared in this model, or just the new ones.
@@ -260,12 +268,43 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
           //args <- forEach (op.parameters) { param => freshName(names.mangle(param.name)) }
           argSeq <- getArguments().map( args => { args.map(triple => triple._3) })
 
+          // M0 <- M1 [producerOp] <- M2
+          //        \                   \
+          //          Ma <---------------Merge{m2,Ma} <- M3
+
+          // find which past branch contains the operation? Go to the last point where op was defined BUT be
+          // careful if any branch has chosen to override the operation in a way (not just forwarded). So
+          // new strategy is (a) where Mult was first declared; or (b) simplify was first declared for Mult.
           //       return this.convert(ep.m4.Mult.super.simplify());
-          superRef <- superReference(names.mangle(model.last.get.name), names.mangle(names.conceptNameOf(tpeCase)))  // TODO: HAVE TO FIX THIS
+          // Java Restriction: Turns out you cannot bypass the more direct superclass. So you are left with
+          // checking which past branch to go through
+          oldOnes = model.former.filter(prior => prior.findTypeCase(tpeCase).isDefined)
+          laterModelDef = oldOnes.head // anyone will do...
+//          typeCaseDef = model.findTypeCase(tpeCase).get
+//          opDef = model.findOperation(op).get
+//          laterModelDef = opDef.later(typeCaseDef)
+
+          // should work for merging?
+          superRef <- superReference(names.mangle(laterModelDef.name), names.mangle(names.conceptNameOf(tpeCase)))  // TODO: HAVE TO FIX THIS
           opMethod <- getMember(superRef, names.mangle(names.instanceNameOf(op)))
           innerResult <- apply(opMethod, argSeq)
           result <- apply(convertMethod, Seq(innerResult))
         } yield Some(result)
+      }
+
+      def extendParents(genType:Seq[Type]):Generator[ClassContext,Unit] = {
+        import genericsParadigm.classCapabilities._
+
+        for {
+          parentFormers <- getFormerDerivedInterfaces(model, tpeCase)
+          _ <- forEach(parentFormers) { parentFormer =>
+            for {
+              _ <- resolveAndAddImport(parentFormer)
+              paramType <- applyType(parentFormer, genType)
+              _ <- addParent(paramType)
+            } yield ()
+          }
+        } yield ()
       }
 
       import genericsParadigm.classCapabilities._
@@ -274,7 +313,7 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
         // in new solution, all Exp<> references are parameterized
         fv <- freshName(expTypeParameter)  // HACK: MOVE UP
         _ <- addTypeParameter(fv, Command.skip[TypeParameterContext])
-        genType <- getTypeArguments()
+        genType<- getTypeArguments()
 
         parent <-  toTargetLanguageType(TypeRep.DataType(tpe))
         _ <- resolveAndAddImport(parent)
@@ -288,14 +327,10 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
         parameterizedBase <- applyType(cbt, genType)
         _ <- registerLocally(triviallyBaseDataType(tpe), parameterizedBase)
 
-        // only add parent to the chain if NOT the first one
-        _ <- if (model.last.isDefined && model.last.get.findTypeCase(tpeCase).isDefined) {
-          for {
-            parentFormer <- getFormerDerivedInterface(model, tpeCase)
-            _ <- resolveAndAddImport(parentFormer)
-            paramType <- applyType(parentFormer, genType)
-            _ <- addParent(paramType)
-          } yield ()
+        // only add parent to the chain if NOT the first one OR defining type here
+        // this second condition was added when we introduced GenericModel
+        _ <- if (model.former.nonEmpty && !model.typeCases.contains(tpeCase)) {
+          extendParents(genType)
         } else {
           Command.skip[ClassContext]
         }
@@ -320,20 +355,17 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
           addMethod(names.mangle(names.instanceNameOf(op)), makeImplementation(tpe, tpeCase, op, domainSpecific))
         }
 
-        _ <- if (model.last.isDefined) {
+        _ <- if (model.former.nonEmpty) {
           for {
-            _ <- forEach(model.last.get.flatten.ops.filter(op => op.isProducer(model))) { op =>
+            // domain.former.flatMap(_.lastModelWithOperation.flatMap(_.flatten.ops).filter(_.isProducer(domain))).distinct
+
+            _ <- forEach(model.former.flatMap(_.flatten.ops.filter(op => op.isProducer(model))).distinct) { op =>
               addMethod(names.mangle(names.instanceNameOf(op)), producerConvert(op))
             }
           }yield ()
         } else {
           Command.skip[ClassContext]
         }
-
-        // these are factory signatures. Moved to the Exp class
-        //        _ <- forEach (model.flatten.typeCases) { tpe =>
-        //          addAbstractMethod(names.mangle(names.instanceNameOf(tpe)), convertOptionToUnit(createFactorySignatureDataTypeCase(model, tpe, paramType)))
-        //        }
 
         _ <- setInterface()  // do LAST because then methods with bodies are turned into default methods in interface
       } yield ()
@@ -378,7 +410,7 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    * @param tpeCase
    * @return
    */
-  def makeFinalClass(model:Model, tpeCase: DataTypeCase): Generator[ProjectContext,Unit] = {
+  def makeFinalClass(model:GenericModel, tpeCase: DataTypeCase): Generator[ProjectContext,Unit] = {
     import ooParadigm.projectCapabilities._
 
     val makeClass: Generator[ClassContext, Unit] = {
@@ -442,15 +474,16 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    */
   def triviallyBaseDataType(tpe:DataType): DataType = DataType(ancestralTypePrefix + tpe.name)
 
+
   /** What model is delivered has operations which is essential for the mapping. */
-  override def registerTypeMapping(model: Model): Generator[ProjectContext, Unit] = {
+  override def registerTypeMapping(model: GenericModel): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
     import ooParadigm.classCapabilities.canFindClassInClass
     import ooParadigm.constructorCapabilities.canFindClassInConstructor
     import ooParadigm.methodBodyCapabilities.canFindClassInMethod
     import paradigm.projectContextCapabilities._
 
-    val baseInterface = baseInterfaceNames(model)   // registers as m#.Exp
+    val baseInterface = baseInterfaceNames(model.standAlone)   // registers as m#.Exp   -- might not be necessary to convert standAlone
     val dtpeRep = TypeRep.DataType(model.baseDataType)
 
     for {
@@ -498,7 +531,7 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       for {
         visitorType <- addVisitorTypeParameter()
         _ <- setInterface()
-        selfClass <- findClass(names.mangle(names.conceptNameOf(tpe)))
+      //  selfClass <- findClass(names.mangle(names.conceptNameOf(tpe)))
 
         _ <- addAcceptMethod(makeAbstractAcceptSignature(visitorType))
         factory <- findClass(Factory)
@@ -586,14 +619,57 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     } yield ()
   }
 
+//  // probilem: in past we were able to use registry to locate the appropriate "prevOne"
+//  // extends Exp [first one] or ExpEval [previous one]
+//  // Works for both Exp* interface declarations as well as DataTypeOp declarations
+//  def getParentInterfaces(domain: GenericModel, tpe: DataType): Generator[ClassContext, Seq[Type]] = {
+//    import classCapabilities._
+//
+//    if (domain.isEmpty || domain.lastModelWithOperation.isEmpty) {
+//      for {
+//        fc <- findClass(names.mangle(domain.baseDataType.name))
+//      } yield (Seq(fc))
+//    } else {
+//      for {
+//        group <- forEach (baseInterfaceNames(domain)) { iface => {
+//
+//          }
+//        }
+//      } yield (group)
+////      findClass(baseInterfaceNames(domain) : _*)
+//    }
+//  }
+
+
   /** I had to copy this entire thing.
    *
    * is there any way to have one generator create a class and then another function can just ADD to it?
    *  */
-  override def makeInterface(domain:Model, domainSpecific: EvolutionImplementationProvider[this.type], typeParameter:Option[Name] = None): Generator[ClassContext, Unit] = {
+  def makeViTAInterface(domain:GenericModel, domainSpecific: EvolutionImplementationProvider[this.type], typeParameter:Option[Name] = None): Generator[ClassContext, Unit] = {
     // create class which is an interface containing abstract methods
     import classCapabilities._
     import genericsParadigm.classCapabilities._
+
+    def extendParents:Generator[ClassContext, Unit] = {
+      val formers:Seq[Seq[Name]] = domain.former.map(dom => baseInterfaceNames(dom))
+      for {
+        // get formers,filter all of those that "know" about the DataType, and then extend those
+        //parent <- getParentInterfaces(domain.former, domain.baseDataType)
+        _ <- forEach(formers) { former => {
+
+          for {
+            parent <- findClass(former: _*)
+            _ <- resolveAndAddImport(parent)
+            justV <- getTypeArguments().map(_.head)
+            paramType <- applyType(parent, Seq(justV))
+
+            _ <- resolveAndAddImport(paramType)
+            _ <- addParent(paramType)
+          } yield ()
+        }
+        }
+      } yield ()
+    }
 
     for {
       _ <- setInterface()
@@ -606,33 +682,8 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
         Command.skip[ClassContext]
       }
 
-      _ <- if (domain.last.isDefined) {
-        for {
-          parent <- getParentInterface(domain.last.get, domain.baseDataType)
-
-          // AWKWARD! Have to grab the type parameter from the current class since I can't seem
-          // to just convert a string like "V" into a Type... That would be useful!
-          _ <- if (typeParameter.isDefined) {
-            for {
-              justV <- getTypeArguments().map(_.head)
-              paramType <- applyType(parent, Seq(justV))
-              _ <- resolveAndAddImport(paramType)
-
-              _ <- addParent(paramType)
-
-              // don't forget to add accept and convert methods
-            } yield ()
-          } else {
-            for {
-              _ <- resolveAndAddImport(parent)
-              justV <- getTypeArguments().map(_.head)
-              paramType <- applyType(parent, Seq(justV))
-              _ <- resolveAndAddImport(paramType)
-              _ <- addParent(paramType)
-            } yield ()
-          }
-
-        } yield ()
+      _ <- if (domain.former.nonEmpty) {
+        extendParents
       } else {
         for {
           parent <- findClass(names.mangle(domain.baseDataType.name))
@@ -641,7 +692,7 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
 
           //  public void accept(V visitor);
           //    public Exp<V> convert(Exp<V> value);
-          _ <- addConvertMethod(makeConvertSignature(paramType, paramType))
+          //////////_ <- addConvertMethod(makeConvertSignature(paramType, paramType))
           _ <- addAcceptMethod(makeAcceptSignature(paramType))
         } yield ()
 
@@ -653,19 +704,18 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     } yield ()
   }
 
-  def baseFactoryInterfaceNames(domain: Model): Seq[Name] = {
+  def baseFactoryInterfaceNames(domain: GenericModel): Seq[Name] = {
     Seq(names.mangle(domain.name), Factory)
   }
 
   // extends Exp [first one] or ExpEval [previous one]
   // Works for both Exp* interface declarations as well as DataTypeOp declarations
-  def getParentFactoryInterface(domain: Model, tpe: DataType): Generator[ClassContext, Type] = {
-    import classCapabilities._
+  def getParentFactoryInterface(domain: GenericModel, tpe: DataType): Seq[Name] = {
 
     if (domain.isEmpty || domain.lastModelWithOperation.isEmpty) {
-      findClass(Factory)
+      Seq(Factory)
     } else {
-      findClass(baseFactoryInterfaceNames(domain) : _*)
+      baseFactoryInterfaceNames(domain)
     }
   }
 
@@ -673,10 +723,27 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    *
    * is there any way to have one generator create a class and then another function can just ADD to it?
    *  */
-  def makeFactoryInterface(domain:Model, domainSpecific: EvolutionImplementationProvider[this.type], typeParameter:Option[Name] = None): Generator[ClassContext, Unit] = {
+  def makeFactoryInterface(domain:GenericModel, domainSpecific: EvolutionImplementationProvider[this.type], typeParameter:Option[Name] = None): Generator[ClassContext, Unit] = {
     // create class which is an interface containing abstract methods
     import classCapabilities._
     import genericsParadigm.classCapabilities._
+
+    def extendParents:Generator[ClassContext, Unit] = {
+      val formers:Seq[Seq[Name]] = domain.former.map(dom => getParentFactoryInterface(dom, dom.baseDataType))
+      for {
+        _ <- forEach(formers) { former =>
+          for {
+            parent <- findClass(former: _*)
+            _ <- resolveAndAddImport(parent)
+            justV <- getTypeArguments().map(_.head)
+            paramType <- applyType(parent, Seq(justV))
+
+            _ <- resolveAndAddImport(paramType)
+            _ <- addParent(paramType)
+          } yield ()
+        }
+      } yield ()
+    }
 
     for {
       _ <- setInterface()
@@ -689,33 +756,8 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
         Command.skip[ClassContext]
       }
 
-      _ <- if (domain.last.isDefined) {
-        for {
-          parent <- getParentFactoryInterface(domain.last.get, domain.baseDataType)
-
-          // AWKWARD! Have to grab the type parameter from the current class since I can't seem
-          // to just convert a string like "V" into a Type... That would be useful!
-          _ <- if (typeParameter.isDefined) {
-            for {
-              justV <- getTypeArguments().map(_.head)
-              paramType <- applyType(parent, Seq(justV))
-              _ <- resolveAndAddImport(paramType)
-
-              _ <- addParent(paramType)
-
-              // don't forget to add accept and convert methods
-            } yield ()
-          } else {
-            for {
-              _ <- resolveAndAddImport(parent)
-              justV <- getTypeArguments().map(_.head)
-              paramType <- applyType(parent, Seq(justV))
-              _ <- resolveAndAddImport(paramType)
-              _ <- addParent(paramType)
-            } yield ()
-          }
-
-        } yield ()
+      _ <- if (domain.former.nonEmpty) {
+       extendParents
       } else {
         for {
           parent <- findClass(Factory)
@@ -749,7 +791,7 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    * @param typeParameters
    * @return
    */
-  def createLocalizedFactorySignatureDataTypeCase(model:Model, tpeCase:DataTypeCase, opClass:Type, isStatic:Boolean = false, typeParameters:Seq[Type] = Seq.empty): Generator[MethodBodyContext, Option[Expression]] = {
+  def createLocalizedFactorySignatureDataTypeCase(model:GenericModel, tpeCase:DataTypeCase, opClass:Type, isStatic:Boolean = false, typeParameters:Seq[Type] = Seq.empty): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
     import polymorphics.methodBodyCapabilities._
@@ -758,7 +800,7 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       //      _ <- resolveAndAddImport(opClass)
       _ <- setReturnType(opClass)
       _ <- if (isStatic) { setStatic() } else { Command.skip[MethodBodyContext] }
-      params <- forEach (tpeCase.attributes) { att: Attribute => {
+      params <- forEach (tpeCase.attributes) { att: Attribute =>
         if (tpeCase.isRecursive(model)) {
           for {
             at <- toTargetLanguageType(att.tpe)
@@ -774,10 +816,8 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
           } yield (pName, at)
         }
       }
-      }
 
       _ <- setParameters(params)
-
     } yield None
   }
 
@@ -799,21 +839,21 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    *
    * }
    */
-  def extendIntermediateInterface(domain:Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
+  def extendIntermediateInterface(domain:GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
     import ooParadigm.classCapabilities._
     import genericsParadigm.classCapabilities._
     import polymorphics.TypeParameterContext
 
-    def convertMethod(topLevelType:Type, paramType:Type) : Generator[MethodBodyContext, Option[Expression]] = {
-      import ooParadigm.methodBodyCapabilities._
-      for {
-        _ <- makeConvertSignature(topLevelType, paramType)
-        _ <- setAbstract()
-      } yield None
-    }
+//    def convertMethod(topLevelType:Type, paramType:Type) : Generator[MethodBodyContext, Option[Expression]] = {
+//      import ooParadigm.methodBodyCapabilities._
+//      for {
+//        _ <- makeConvertSignature(topLevelType, paramType)
+//        _ <- setAbstract()
+//      } yield None
+//    }
 
     for {
-      _ <- makeInterface(domain, domainSpecific, Some(expTypeParameter))   // this creates TYPE
+      _ <- makeViTAInterface(domain, domainSpecific, Some(expTypeParameter))   // this creates TYPE
 
       // This block (up to forEach...) ensures that we are properly assigning ep.Exp<V> for future discovery
       // in createFactorySignatureDataTypeCase
@@ -837,14 +877,12 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       parameterizedBase <- applyType(cbt, genType)
       _ <- registerLocally(triviallyBaseDataType(domain.baseDataType), parameterizedBase)
 
+      // if there are past operations, find those that are producers and create overloaded specifications
       _ <- forEach (domain.ops) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), triviallyMakeSignature(domain.baseDataType, op)) }
-      _ <- if (domain.last.isDefined && domain.last.get.lastModelWithOperation.isDefined) {
-        // if there are past operations, find those that are producers and create overloaded specifications
-        for {
-          _ <- forEach(domain.last.get.lastModelWithOperation.get.flatten.ops.filter(op => op.isProducer(domain))) {
-            op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), triviallyMakeSignature(domain.baseDataType, op))
-          }
-        } yield ()
+      _ <- if (domain.former.nonEmpty) {
+        forEach(domain.former.flatMap(_.lastModelWithOperation.flatMap(_.flatten.ops).filter(_.isProducer(domain))).distinct) {
+          op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), triviallyMakeSignature(domain.baseDataType, op))
+        }
       } else {
         Command.skip[ClassContext]
       }
@@ -875,7 +913,7 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    *
    * }
    */
-  def extendFactory(domain:Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
+  def extendFactory(domain:GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
     import ooParadigm.classCapabilities._
     import genericsParadigm.classCapabilities._
     import polymorphics.TypeParameterContext
@@ -947,24 +985,21 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
 
 
   /** I had to encapsulate since varargs approach didn't work... */
-  def finalizedVisitorName(domain: Model): Seq[Name] = {
+  def finalizedVisitorName(domain: GenericModel): Seq[Name] = {
     Seq(names.mangle(domain.name), finalized, visitorClass)
   }
 
-  def baseFactoryName(domain: Model): Seq[Name] = {
+  def baseFactoryName(domain: GenericModel): Seq[Name] = {
     Seq(names.mangle(domain.name), Factory)
   }
 
-  def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
+//   def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
+//     implementGeneric(domain, domainSpecific)
+//   }
+
+    override def implement(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     import paradigm.projectContextCapabilities._
     import ooParadigm.projectCapabilities._
-
-    //    def getBaseType(): Type = {
-    //      import classCapabilities._
-    //      for {
-    //        bb <- findClass(names.mangle(domain.baseDataType.name))
-    //      } yield bb
-    //    }
 
     for {
       _ <- debug("Processing ViTA")
@@ -999,13 +1034,17 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     } yield ()
   }
 
-  def finalBaseInterfaceNames(domain: Model): Seq[Name] = {
+  def finalBaseInterfaceNames(domain: GenericModel): Seq[Name] = {
     Seq(names.mangle(domain.name), finalized, names.mangle(domain.baseDataType.name))
   }
 
-  def specifiedInterface(domain: Model): Seq[Name] = {
+  def specifiedInterface(domain: GenericModel): Seq[Name] = {
     Seq(names.mangle(domain.name), names.mangle(domain.baseDataType.name))
   }
+
+//  override def implement(tests: Map[Model, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
+//    implementTestGeneric(tests.map({ case (k,v) => (k,v)}), testImplementationProvider)
+//  }
 
   /**
    * Test cases all need factory methods to work.
@@ -1013,12 +1052,12 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    * Note: shouldn't have to copy entire thing. Better to provide ability to extend inner part into which
    * the factory methods are injected.
    * */
-  override def implement(tests: Map[Model, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
+   override def implement(tests: Map[GenericModel, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
     import projectContextCapabilities._
     import paradigm.compilationUnitCapabilities._
     import paradigm.testCapabilities._
 
-    def factoryMethod(model:Model, tpeCase:DataTypeCase) : Generator[MethodBodyContext, Option[Expression]] = {
+    def factoryMethod(model:GenericModel, tpeCase:DataTypeCase) : Generator[MethodBodyContext, Option[Expression]] = {
 
       import ooParadigm.methodBodyCapabilities._
       import polymorphics.methodBodyCapabilities._

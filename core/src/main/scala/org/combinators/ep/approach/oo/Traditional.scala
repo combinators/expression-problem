@@ -1,6 +1,6 @@
 package org.combinators.ep.approach.oo
 
-import org.combinators.ep.domain.Model
+import org.combinators.ep.domain.{GenericModel, Model}
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator._
 import org.combinators.ep.generator.communication._
@@ -67,7 +67,12 @@ trait Traditional extends OOApproachImplementationProvider with BaseDataTypeAsCl
     addClassToProject(makeClass, names.mangle(names.conceptNameOf(tpeCase)))
   }
 
-  def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
+  def implement(gdomain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
+    val domain = gdomain match {
+      case _:Model => gdomain.asInstanceOf[Model]
+      case _ => gdomain.linearize
+    }
+
     val flatDomain = domain.flatten
     for {
       _ <- registerTypeMapping(flatDomain)

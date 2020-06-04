@@ -1,16 +1,12 @@
 package org.combinators.ep.domain.math    /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{DataTypeCase, EqualsCompositeTestCase, EqualsTestCase, Operation, TestCase, TypeRep}
+import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, TestCase, TypeRep}
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
-import org.combinators.ep.domain.math.M0.{Eval, LitInst, DoubleInst}
-import org.combinators.ep.domain.math.M2.{PrettyP, StringInst}
-import org.combinators.ep.domain.math.M3.{Mult,MultInst}
-import org.combinators.ep.domain.math.M4.{Simplify}
-import org.combinators.ep.domain.{Evolution, Model}
-import org.combinators.ep.domain.tree.{Leaf, Node}
+import org.combinators.ep.domain.math.M0.LitInst
+import org.combinators.ep.domain.{Evolution, GenericModel}
 
 object M8 extends Evolution {
-  override implicit def getModel:Model = M7.getModel.evolve("m8", Seq(Power), Seq(Copy))
+  override implicit def getModel:GenericModel = M7.getModel.evolve("m8", Seq(Power), Seq(Copy))
 
   // SquareRoot of inner value, and an operation Find that counts the number
   lazy val Power = DataTypeCase.binary("Power")

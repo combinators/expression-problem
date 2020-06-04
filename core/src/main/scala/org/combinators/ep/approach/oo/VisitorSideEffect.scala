@@ -1,6 +1,6 @@
 package org.combinators.ep.approach.oo
 
-import org.combinators.ep.domain.Model
+import org.combinators.ep.domain.{GenericModel, Model}
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.generator.Command._
@@ -307,8 +307,13 @@ abstract class VisitorSideEffect extends OOApproachImplementationProvider with S
    * @param domainSpecific
    * @return
    */
-  def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
+  def implement(gdomain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
+
+    val domain = gdomain match {
+      case _:Model => gdomain.asInstanceOf[Model]
+      case _ => gdomain.linearize
+    }
 
     val flatDomain = domain.flatten
     for {

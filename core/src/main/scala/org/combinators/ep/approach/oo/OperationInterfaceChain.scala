@@ -1,6 +1,6 @@
 package org.combinators.ep.approach.oo
 
-import org.combinators.ep.domain.Model
+import org.combinators.ep.domain.{GenericModel, Model}
 import org.combinators.ep.domain.abstractions.{DataType, Operation, TypeRep}
 import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
 import org.combinators.ep.generator.Command.Generator
@@ -35,8 +35,13 @@ trait OperationInterfaceChain extends ApproachImplementationProvider  {
 //    ops.sortWith(_.name > _.name).map(op => names.conceptNameOf(op)).foldLeft(suffix){ case (n,s) => names.addPrefix(s, n) }
 //  }
 
-  def baseInterfaceNames(domain: Model): Seq[Name] = {
-    Seq(names.mangle(domain.name), names.mangle(domain.baseDataType.name))
+  def baseInterfaceNames(domain: GenericModel): Seq[Name] = {
+    if (domain.isDomainbase) {
+      // ignore MathDomain, for example, and just grab name...
+      Seq(names.mangle(domain.baseDataType.name))
+    } else {
+      Seq(names.mangle(domain.name), names.mangle(domain.baseDataType.name))
+    }
   }
 
   // extends Exp [first one] or ExpEval [previous one]

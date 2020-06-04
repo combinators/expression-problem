@@ -5,7 +5,7 @@ import org.combinators.ep.domain._
 import org.combinators.ep.domain.abstractions._
 
 object S2 extends Evolution {
-  override implicit def getModel:Model = S1.getModel.evolve("s2", Seq.empty, Seq(Shrink))
+  override implicit def getModel:GenericModel = S1.getModel.evolve("s2", Seq.empty, Seq(Shrink))
 
   // s2:model evolution.
   // -------------------

@@ -78,7 +78,7 @@ trait ApproachImplementationProvider {
   /** Adds everything necessary to implement the given model to the project context.
     * Fills in domain specific code with the given approach independent [[EvolutionImplementationProvider]].
     */
-  def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit]
+  def implement(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit]
 
   /** Define standard test name. */
   def testName:Name = {
@@ -86,12 +86,12 @@ trait ApproachImplementationProvider {
   }
 
   /** Define name for test case, given model. */
-  def testCaseName(model:Model):Name = {
+  def testCaseName(model:GenericModel):Name = {
     names.addSuffix(names.mangle(names.conceptNameOf(model)), "Test")
   }
 
   /** Adds tests to the project context */
-  def implement(tests: Map[Model, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
+  def implement(tests: Map[GenericModel, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
     import projectContextCapabilities._
     import paradigm.compilationUnitCapabilities._
     import paradigm.testCapabilities._

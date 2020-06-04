@@ -11,7 +11,7 @@ import org.combinators.ep.domain.math.M3.{Divd, DivdInst, Mult, MultInst, Neg, N
 import org.combinators.ep.domain.math.M4.{Simplify}
 
 object M5 extends Evolution {
-  override implicit def getModel:Model = M4.getModel.evolve("m5", Seq.empty, Seq(Operation.asTree, Identifier))
+  override implicit def getModel:GenericModel = M4.getModel.evolve("m5", Seq.empty, Seq(Operation.asTree, Identifier))
   lazy val Identifier = Operation("id", TypeRep.Int)
 
   val m5_s1 = SubInst(LitInst(1.0), LitInst(976.0))

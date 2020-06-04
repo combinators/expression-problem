@@ -41,7 +41,7 @@ package object instances {
    /** Creates a new instance representation for the given domain specific data type instance using the
      * base data type of the implicitly given domain model.
      */
-    def apply(inst:DataTypeInstance)(implicit domain:Model) : InstanceRep = {
+    def apply(inst:DataTypeInstance)(implicit domain:GenericModel) : InstanceRep = {
       InstanceRep(TypeRep.DataType(domain.baseDataType))(inst)
     }
   }

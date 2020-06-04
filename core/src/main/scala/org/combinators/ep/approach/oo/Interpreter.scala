@@ -1,6 +1,6 @@
 package org.combinators.ep.approach.oo
 
-import org.combinators.ep.domain.Model
+import org.combinators.ep.domain.{GenericModel, Model}
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command._
 import org.combinators.ep.generator._
@@ -58,7 +58,7 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
    * @param tpeCase    DataTypeCase for which a factory is desired.
    * @return
    */
-  override def factoryNameDataTypeCase(model:Option[Model] = None, tpeCase:DataTypeCase) : Name = {
+  override def factoryNameDataTypeCase(model:Option[GenericModel] = None, tpeCase:DataTypeCase) : Name = {
     names.addSuffix(names.mangle(opsName(model.get.ops)), names.conceptNameOf(model.get.baseDataType))
   }
 
@@ -75,7 +75,7 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
    * @param tpeCase    DataTypeCase for which a factory is desired.
    * @return
    */
-  override def factoryInstanceDataTypeCase(model:Option[Model] = None, tpeCase:DataTypeCase) : Seq[Name] = {
+  override def factoryInstanceDataTypeCase(model:Option[GenericModel] = None, tpeCase:DataTypeCase) : Seq[Name] = {
     Seq(names.mangle(model.get.name), names.mangle(names.conceptNameOf(tpeCase)))
   }
 
@@ -84,7 +84,7 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
     if (m.lastModelWithOperation.isEmpty) {
       ""
     } else {
-      m.lastModelWithOperation.get.ops.sortWith(_.name < _.name).map(op => names.conceptNameOf(op)).mkString("") + m.baseDataType.name
+      m.lastModelWithOperation.head.ops.sortWith(_.name < _.name).map(op => names.conceptNameOf(op)).mkString("") + m.baseDataType.name
     }
   }
 
@@ -114,7 +114,7 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
       val lastDefiningOp = model.last.get.lastModelWithOperation    // go to last model which had defined operation (since it would have an Exp and thus a tpeCase)
 
       // could have better solution to deal with optionals.
-      val chosenModel = modelDefiningType.getOrElse(lastDefiningOp.get).later(lastDefiningOp.get)
+      val chosenModel = modelDefiningType.getOrElse(lastDefiningOp.head).later(lastDefiningOp.head)
 
       val priorClass = names.mangle(names.conceptNameOf(tpeCase))   // WANT to get prior one in earlier package.
       for {
@@ -143,7 +143,7 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
 
   /** Interpreter has to go back to the former Model which had defined an operation */
   override def modelDeclaringInterfaceParent(model:Model) : Model = {
-    model.last.getOrElse(model).lastModelWithOperation.getOrElse(model)
+    model.last.getOrElse(model).lastModelWithOperation.headOption.getOrElse(model)     // instead of     getOrElse(model)
   }
 
   /** Place operation classes in appropriate package.  */
@@ -212,7 +212,7 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
   }
 
   /** What model is delivered has operations which is essential for the mapping. */
-  override def registerTypeMapping(model: Model): Generator[ProjectContext, Unit] = {
+  override def registerTypeMapping(model: GenericModel): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
     import ooParadigm.classCapabilities.canFindClassInClass
     import ooParadigm.constructorCapabilities.canFindClassInConstructor
@@ -221,7 +221,7 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
 
     // must always be an operation in FIRST evolution  MISSING FULLY QUALIFIED NAMES HERE HACK
     // TODO: FIX HERE
-    val baseInterface = baseInterfaceNames(model.lastModelWithOperation.get)
+    val baseInterface = baseInterfaceNames(model.lastModelWithOperation.head)
     val dtpeRep = TypeRep.DataType(model.baseDataType)
     for {
       _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(baseInterface : _*))
@@ -230,7 +230,12 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
     } yield ()
   }
 
-  def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
+  def implement(gdomain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
+
+    val domain = gdomain match {
+      case _:Model => gdomain.asInstanceOf[Model]
+      case _ => gdomain.linearize
+    }
 
     /**
      * For each operation must generate a sequence of classes, one per subtype.
@@ -265,7 +270,7 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
           } yield ()
         } else {
           // no operations. Must spit out new types and pull together all operations from the past.
-          generateForOp(model.lastModelWithOperation.get, model.flatten.ops, model, model.typeCases, domainSpecific)
+          generateForOp(model.lastModelWithOperation.head, model.flatten.ops, model, model.typeCases, domainSpecific)
         }
       }
       }

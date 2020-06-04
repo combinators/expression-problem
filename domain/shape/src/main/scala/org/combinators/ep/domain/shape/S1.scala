@@ -7,7 +7,7 @@ import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
 import org.combinators.ep.domain.shape.S0._
 
 object S1 extends Evolution {
-  override implicit def getModel:Model = S0.getModel.evolve("s1", Seq(Union), Seq.empty)
+  override implicit def getModel:GenericModel = S0.getModel.evolve("s1", Seq(Union), Seq.empty)
 
   lazy val s1 = Attribute("s1", TypeRep.DataType(ShapeDomain.getModel.baseDataType))
   lazy val s2 = Attribute("s2", TypeRep.DataType(ShapeDomain.getModel.baseDataType))

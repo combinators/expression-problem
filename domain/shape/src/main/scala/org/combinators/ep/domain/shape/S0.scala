@@ -6,7 +6,7 @@ import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
 
 object S0 extends Evolution {
 
-  override implicit def getModel:Model = ShapeDomain.getModel.evolve("s0", Seq(Square,Circle,Translate), Seq(ContainsPt))
+  override implicit def getModel:GenericModel = ShapeDomain.getModel.evolve("s0", Seq(Square,Circle,Translate), Seq(ContainsPt))
 
   // standard attributes for domain. As new ones are defined, place in respective traits
   lazy val x = Attribute("x", TypeRep.Double)

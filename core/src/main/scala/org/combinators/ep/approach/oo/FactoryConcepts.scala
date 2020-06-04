@@ -1,6 +1,6 @@
 package org.combinators.ep.approach.oo
 
-import org.combinators.ep.domain.Model
+import org.combinators.ep.domain.{GenericModel, Model}
 import org.combinators.ep.domain.abstractions.{Attribute, DataTypeCase, Operation, TypeRep}
 import org.combinators.ep.generator.{ApproachImplementationProvider, Command, Understands}
 import org.combinators.ep.generator.Command.Generator
@@ -29,7 +29,7 @@ trait FactoryConcepts extends ApproachImplementationProvider {
    * @param op    operation for which a factory is desired.
    * @return
    */
-  def factoryNameOp(model:Option[Model] = None, op:Operation) : Name = {
+  def factoryNameOp(model:Option[GenericModel] = None, op:Operation) : Name = {
     names.addPrefix("make", names.mangle(names.conceptNameOf(op)))
   }
 
@@ -52,7 +52,7 @@ trait FactoryConcepts extends ApproachImplementationProvider {
   }
 
   // TODO: would love to avoid duplicating contexts
-  def createTestFactoryOp(model:Model, op:Operation, typeName:Name): Generator[TestContext, Unit] = {
+  def createTestFactoryOp(model:GenericModel, op:Operation, typeName:Name): Generator[TestContext, Unit] = {
     import ooParadigm.testCapabilities._
     for {
       _ <- addMethod(factoryNameOp(Some(model), op), makeFactoryOperationImpl(model, op, typeName))
@@ -69,7 +69,7 @@ trait FactoryConcepts extends ApproachImplementationProvider {
    * TODO: Eventually will have to add parameters...
    * @return
    */
-  def makeFactoryOperationImpl(model:Model, op: Operation, typeName:Name): Generator[MethodBodyContext, Option[Expression]] = {
+  def makeFactoryOperationImpl(model:GenericModel, op: Operation, typeName:Name): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
 
@@ -105,7 +105,7 @@ trait FactoryConcepts extends ApproachImplementationProvider {
    * @param tpeCase    DataTypeCase for which a factory is desired.
    * @return
    */
-  def factoryNameDataTypeCase(model:Option[Model] = None, tpeCase:DataTypeCase) : Name = {
+  def factoryNameDataTypeCase(model:Option[GenericModel] = None, tpeCase:DataTypeCase) : Name = {
     names.mangle(names.conceptNameOf(tpeCase))
   }
 
@@ -121,7 +121,7 @@ trait FactoryConcepts extends ApproachImplementationProvider {
    * @param tpeCase    DataTypeCase for which a factory is desired.
    * @return
    */
-  def factoryInstanceDataTypeCase(model:Option[Model] = None, tpeCase:DataTypeCase) : Seq[Name] = {
+  def factoryInstanceDataTypeCase(model:Option[GenericModel] = None, tpeCase:DataTypeCase) : Seq[Name] = {
     model.map(m => names.mangle(m.name)).toSeq :+ names.mangle(names.conceptNameOf(tpeCase))
   }
 
@@ -165,7 +165,7 @@ trait FactoryConcepts extends ApproachImplementationProvider {
    * @param tpeCase
    * @return
    */
-  def createFactorySignatureDataTypeCase(model:Model, tpeCase:DataTypeCase, paramBaseClass:Type, returnClass:Type, isStatic:Boolean = false): Generator[MethodBodyContext, Option[Expression]] = {
+  def createFactorySignatureDataTypeCase(model:GenericModel, tpeCase:DataTypeCase, paramBaseClass:Type, returnClass:Type, isStatic:Boolean = false): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
     import polymorphics.methodBodyCapabilities._
@@ -233,7 +233,7 @@ trait FactoryConcepts extends ApproachImplementationProvider {
    * @param tpeCase
    * @return
    */
-  def createFactoryDataTypeCase(model:Model, tpeCase:DataTypeCase, paramBaseType:Type, returnType:Type, isStatic:Boolean = false): Generator[MethodBodyContext, Option[Expression]] = {
+  def createFactoryDataTypeCase(model:GenericModel, tpeCase:DataTypeCase, paramBaseType:Type, returnType:Type, isStatic:Boolean = false): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
 

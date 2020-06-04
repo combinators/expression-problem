@@ -6,7 +6,7 @@ import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
 import org.combinators.ep.domain.math.M0.{AddInst, DoubleInst, Eval, LitInst}
 
 object I1 extends Evolution {
-  override implicit def getModel:Model = M2.getModel.evolve("i1", Seq.empty, Seq(MultBy))
+  override implicit def getModel:GenericModel = M2.getModel.evolve("i1", Seq.empty, Seq(MultBy))
 
   lazy val base = TypeRep.DataType(M2.getModel.baseDataType)
   lazy val MultBy = Operation("multBy", base, Seq(Parameter("other", base)))

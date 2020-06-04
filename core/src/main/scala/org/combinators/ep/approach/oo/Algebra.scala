@@ -1,6 +1,6 @@
 package org.combinators.ep.approach.oo
 
-import org.combinators.ep.domain.Model
+import org.combinators.ep.domain.{GenericModel, Model}
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command._
 import org.combinators.ep.generator._
@@ -64,7 +64,7 @@ trait Algebra extends OOApproachImplementationProvider with BaseDataTypeAsInterf
     } yield res
   }
 
-  override def factoryInstanceDataTypeCase(model:Option[Model] = None, tpeCase:DataTypeCase) : Seq[Name] = {
+   override def factoryInstanceDataTypeCase(model:Option[GenericModel] = None, tpeCase:DataTypeCase) : Seq[Name] = {
     model.map(m => names.mangle(m.name)).toSeq :+ finalized :+ names.mangle(names.conceptNameOf(tpeCase))
   }
 
@@ -441,7 +441,7 @@ trait Algebra extends OOApproachImplementationProvider with BaseDataTypeAsInterf
   def triviallyBaseDataType(tpe:DataType): DataType = DataType(ancestralTypePrefix + tpe.name)
 
   /** What model is delivered has operations which is essential for the mapping. */
-  override def registerTypeMapping(model: Model): Generator[ProjectContext, Unit] = {
+  override def registerTypeMapping(model: GenericModel): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
     import ooParadigm.classCapabilities.canFindClassInClass
     import ooParadigm.constructorCapabilities.canFindClassInConstructor
@@ -712,10 +712,10 @@ trait Algebra extends OOApproachImplementationProvider with BaseDataTypeAsInterf
       _ <- registerLocally(triviallyBaseDataType(domain.baseDataType), parameterizedBase)
 
       _ <- forEach (domain.ops) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), triviallyMakeSignature(domain.baseDataType, op)) }
-      _ <- if (domain.last.isDefined && domain.last.get.lastModelWithOperation.isDefined) {
+      _ <- if (domain.last.isDefined && domain.last.get.lastModelWithOperation.nonEmpty) {
         // if there are past operations, find those that are producers and create overloaded specifications
         for {
-          _ <- forEach(domain.last.get.lastModelWithOperation.get.flatten.ops.filter(op => op.isProducer(domain))) {
+          _ <- forEach(domain.last.get.lastModelWithOperation.head.flatten.ops.filter(op => op.isProducer(domain))) {
             op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), triviallyMakeSignature(domain.baseDataType, op))
           }
         } yield ()
@@ -765,16 +765,14 @@ trait Algebra extends OOApproachImplementationProvider with BaseDataTypeAsInterf
     Seq(names.mangle(domain.name), finalized, visitorClass)
   }
 
-  def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
+  def implement(gdomain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     import paradigm.projectContextCapabilities._
     import ooParadigm.projectCapabilities._
 
-    //    def getBaseType(): Type = {
-    //      import classCapabilities._
-    //      for {
-    //        bb <- findClass(names.mangle(domain.baseDataType.name))
-    //      } yield bb
-    //    }
+    val domain = gdomain match {
+      case _:Model => gdomain.asInstanceOf[Model]
+      case _ => gdomain.linearize
+    }
 
     for {
       _ <- debug("Processing Algebra")
@@ -820,12 +818,12 @@ trait Algebra extends OOApproachImplementationProvider with BaseDataTypeAsInterf
    * Note: shouldn't have to copy entire thing. Better to provide ability to extend inner part into which
    * the factory methods are injected.
    * */
-  override def implement(tests: Map[Model, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
+  override def implement(tests: Map[GenericModel, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
     import projectContextCapabilities._
     import paradigm.compilationUnitCapabilities._
     import paradigm.testCapabilities._
 
-    def factoryMethod(model:Model, tpeCase:DataTypeCase) : Generator[MethodBodyContext, Option[Expression]] = {
+    def factoryMethod(model:GenericModel, tpeCase:DataTypeCase) : Generator[MethodBodyContext, Option[Expression]] = {
 
       import ooParadigm.methodBodyCapabilities._
       import polymorphics.methodBodyCapabilities._

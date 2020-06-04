@@ -7,7 +7,7 @@ import org.combinators.ep.domain.math.M0.{DoubleInst, Eval, LitInst}
 
 // TODO: I2 still generates multBy twice in Power.
 object I2 extends Evolution {
-  override implicit def getModel:Model = I1.getModel.evolve("i2", Seq(Power), Seq.empty)
+  override implicit def getModel:GenericModel = I1.getModel.evolve("i2", Seq(Power), Seq.empty)
 
   // i2:model evolution.
   // -------------------

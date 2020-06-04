@@ -1,13 +1,12 @@
 package org.combinators.ep.domain.math   /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{DataTypeCase, EqualsCompositeTestCase, EqualsTestCase, Operation, Parameter, TestCase, TypeRep}
+import org.combinators.ep.domain.abstractions.{EqualsCompositeTestCase, Operation, Parameter, TestCase, TypeRep}
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
-import org.combinators.ep.domain.math.I1.base
-import org.combinators.ep.domain.{Evolution, Model}
-import org.combinators.ep.domain.math.M0.{AddInst, Eval, LitInst, DoubleInst}
+import org.combinators.ep.domain.{Evolution, GenericModel}
+import org.combinators.ep.domain.math.M0.{AddInst, DoubleInst, Eval, LitInst}
 
 object M7 extends Evolution {
-  override implicit def getModel:Model = M6.getModel.evolve("m7", Seq.empty, Seq(PowBy))
+  override implicit def getModel:GenericModel = M6.getModel.evolve("m7", Seq.empty, Seq(PowBy))
 
   // m7:model evolution.
   // -------------------

@@ -18,13 +18,13 @@ package object abstractions {
     /** Returns if this data type case contains any attributes of the data type modeled in the
       * implicitly given domain model.
       */
-    def isRecursive(implicit domain: Model): Boolean =
+    def isRecursive(implicit domain: GenericModel): Boolean =
       attributes.exists(_.tpe == TypeRep.DataType(domain.baseDataType))
 
     /** Returns if this data type case contains no attributes of the data type modeled in the
       * implicitly given domain model.
       */
-    def isNonRecursive(implicit domain: Model): Boolean = !isRecursive
+    def isNonRecursive(implicit domain: GenericModel): Boolean = !isRecursive
   }
 
   /** Default ways to construct and destruct data type cases. */
@@ -35,13 +35,13 @@ package object abstractions {
     /** Constructs a type case with a single attribute "inner" of the base data type
       * of the implicitly given domain model.
       */
-    def unary(name: String)(implicit domain: Model): DataTypeCase =
+    def unary(name: String)(implicit domain: GenericModel): DataTypeCase =
       DataTypeCase(name, Seq(Attribute.inner))
 
     /** Constructs a type case with a two attributes "left" and "right" of the base data type
       * of the implicitly given domain model.
       */
-    def binary(name: String)(implicit domain: Model): DataTypeCase =
+    def binary(name: String)(implicit domain: GenericModel): DataTypeCase =
       DataTypeCase(name, Seq(Attribute.left, Attribute.right))
 
     /** Returns a [[org.combinators.ep.domain.matchers.Matchable]] transforming the given function on type
@@ -99,11 +99,11 @@ package object abstractions {
   /** Provides some default attributes. */
   object Attribute {
     /** An attribute "inner" of the base data type of the implicitly given domain model. */
-    def inner(implicit domain: Model) = Attribute("inner", TypeRep.DataType(domain.baseDataType))
+    def inner(implicit domain: GenericModel) = Attribute("inner", TypeRep.DataType(domain.baseDataType))
     /** An attribute "left" of the base data type of the implicitly given domain model. */
-    def left(implicit domain: Model) = Attribute("left", TypeRep.DataType(domain.baseDataType))
+    def left(implicit domain: GenericModel) = Attribute("left", TypeRep.DataType(domain.baseDataType))
     /** An attribute "right" of the base data type of the implicitly given domain model. */
-    def right(implicit domain: Model) = Attribute("right", TypeRep.DataType(domain.baseDataType))
+    def right(implicit domain: GenericModel) = Attribute("right", TypeRep.DataType(domain.baseDataType))
   }
 
   /** Models a named operation on a [[DataType]] with parameters and a return type,
@@ -116,7 +116,7 @@ package object abstractions {
     /** Determines if this is a binary method, which has a single parameter of
       * the base type of the implicitly given domain model.
       */
-    def isBinary(implicit domain: Model): Boolean =
+    def isBinary(implicit domain: GenericModel): Boolean =
       parameters match {
         case Seq(param) => param.tpe == TypeRep.DataType(domain.baseDataType)
         case _ => false
@@ -125,7 +125,7 @@ package object abstractions {
     /** Determines if this is a producer operation, which returns an instance of
       * the base type of the implicitly given domain model.
       */
-    def isProducer(implicit domain: Model): Boolean =
+    def isProducer(implicit domain: GenericModel): Boolean =
       returnType == TypeRep.DataType(domain.baseDataType)
   }
 
@@ -164,7 +164,7 @@ package object abstractions {
   /** Provides some default parameters. */
   object Parameter {
     /** A parameter "that" of the base data type of the implicitly given domain model. */
-    def that(implicit domain: Model) = Parameter("that", TypeRep.DataType(domain.baseDataType))
+    def that(implicit domain: GenericModel) = Parameter("that", TypeRep.DataType(domain.baseDataType))
   }
 
 

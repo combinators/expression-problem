@@ -1,6 +1,6 @@
 package org.combinators.ep.domain.math      /*DD:LI:AI*/
 
-import org.combinators.ep.domain.{Evolution, Model}
+import org.combinators.ep.domain.{Evolution, GenericModel, Model}
 import org.combinators.ep.domain.abstractions.{DataType, EqualsTestCase, Operation, Parameter, PerformanceTestCase, TestCase, TypeRep}
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
 import org.combinators.ep.domain.math.M0.{Add, AddInst, LitInst}
@@ -8,7 +8,7 @@ import org.combinators.ep.domain.math.M1.{Sub, SubInst}
 import org.combinators.ep.domain.math.M3.{Divd, DivdInst, Mult, MultInst, Neg, NegInst}
 
 object M6 extends Evolution {
-  override implicit def getModel:Model = M5.getModel.evolve("m6", Seq.empty, Seq(Equals))
+  override implicit def getModel:GenericModel = M5.getModel.evolve("m6", Seq.empty, Seq(Equals))
 
   // Binary Methods, by definition, require special handling. Some generators
   // can short-circuit this logic, but in the most general case, it stands to reason

@@ -10,7 +10,7 @@ import org.combinators.ep.domain.math.M0.{Eval, LitInst}
   *
   */
 object P1 extends Evolution {
-  override implicit def getModel:Model = M2.getModel.evolve("p1", Seq(Pi, Rnd, Amortized), Seq(CountBetween, Output, ParamHeight))
+  override implicit def getModel:GenericModel = M2.getModel.evolve("p1", Seq(Pi, Rnd, Amortized), Seq(CountBetween, Output, ParamHeight))
 
   // p1:model evolution.
   // -------------------

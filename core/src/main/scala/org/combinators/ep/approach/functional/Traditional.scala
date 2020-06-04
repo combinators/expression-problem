@@ -1,6 +1,6 @@
 package org.combinators.ep.approach.functional
 
-import org.combinators.ep.domain.{Model, abstractions}
+import org.combinators.ep.domain.{GenericModel, Model, abstractions}
 import org.combinators.ep.generator.{AbstractSyntax, ApproachImplementationProvider, Command, EvolutionImplementationProvider, NameProvider, TestImplementationProvider, Understands, communication}
 import org.combinators.ep.generator.paradigm.control.{Functional => FunControl}
 import Command.{Generator, skip, _}
@@ -154,7 +154,13 @@ trait Traditional extends ApproachImplementationProvider {
     } yield ()
   }
 
-  def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
+  def implement(gdomain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
+
+    val domain = gdomain match {
+      case _:Model => gdomain.asInstanceOf[Model]
+      case _ => gdomain.linearize
+    }
+
     val flatDomain = domain.flatten
     for {
       _ <- initializeApproach(flatDomain)

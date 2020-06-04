@@ -1,6 +1,6 @@
 package org.combinators.ep.approach.oo
 
-import org.combinators.ep.domain.Model
+import org.combinators.ep.domain.{GenericModel, Model}
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.{FindClass, ObjectOriented}
@@ -31,7 +31,7 @@ trait OOApproachImplementationProvider extends ApproachImplementationProvider {
     FindClass(Seq(names.mangle(names.conceptNameOf(dtpe)))).interpret(canFindClass)
   }
 
-  def registerTypeMapping(domain: Model): Generator[ProjectContext, Unit] = {
+  def registerTypeMapping(domain: GenericModel): Generator[ProjectContext, Unit] = {
 //    import paradigm.projectContextCapabilities._
 //    import ooParadigm.projectCapabilities._
 //    import ooParadigm.methodBodyCapabilities._

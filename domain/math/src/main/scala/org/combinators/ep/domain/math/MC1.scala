@@ -4,11 +4,10 @@ import org.combinators.ep.domain._
 import org.combinators.ep.domain.abstractions.{EqualsTestCase, TestCase}
 import org.combinators.ep.domain.math.M0.{Eval, LitInst}
 import org.combinators.ep.domain.math.M1.SubInst
-import org.combinators.ep.domain.math.M2.{PrettyP,StringInst}
 import org.combinators.ep.domain.math.M3.DivdInst
 
 object MC1 extends Evolution {
-  override implicit def getModel:Model = M3.getModel.merge("c1", I2.getModel)
+  override implicit def getModel:GenericModel = M3.getModel.merge("c1", Seq(I2.getModel))
 
   // m3 x i2:model evolution. linearize ala topological sort
   // -------------------

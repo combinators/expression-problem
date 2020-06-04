@@ -20,21 +20,29 @@ class GenericModel(val name:String,
                    val former:Seq[GenericModel],
                    val baseDataType: DataType) {
 
-  def merge(str: String, past: Seq[GenericModel]): GenericModel = {
+  def extend(str:String, past: Seq[GenericModel]): GenericModel = {
     new GenericModel(str, Seq.empty, Seq.empty, Seq(this) ++ past, baseDataType)
   }
 
+  /** Straight merge of two Generic models into one, combining all typeCases, ops and formers.  */
+  def merge(name:String,  typeCases:Seq[DataTypeCase], ops:Seq[Operation], others:Seq[GenericModel]) : GenericModel = {
+    new GenericModel(name, typeCases, ops, others, baseDataType)
+  }
+
   // only the BASE has this set
-  def isDomainbase:Boolean = false
+  def isDomainBase:Boolean = false
 
   /** Adds an evolution to this model.
+   *
+   * Note that the DOMAIN at the bottom will be MathDomain or ShapeDomain, and that needs to be present.
    *
    * @param name  The unique name of the next evolution.
    * @param types The new data types.
    * @param ops   The new operations.
    */
-  def evolve(name: String, types: Seq[DataTypeCase], ops: Seq[Operation]): GenericModel =
+  def evolve(name: String, types: Seq[DataTypeCase], ops: Seq[Operation]): GenericModel = {
     new GenericModel(name, types, ops, Seq(this), baseDataType)
+  }
 
   /** Returns history of this model as a sequence. */
   def toSeq: Seq[GenericModel] = {
@@ -77,10 +85,15 @@ class GenericModel(val name:String,
     val (baseModel, evolutions) = (history.head.standAlone, history.tail.map(_.standAlone))
 
     def squash(intoModel: Model, nextModel: Model): Model =
-      new Model(name, intoModel.typeCases ++ nextModel.typeCases, intoModel.ops ++ nextModel.ops, baseDataType, Some(baseModel))
+      new Model(name, intoModel.typeCases ++ nextModel.typeCases, intoModel.ops ++ nextModel.ops, baseDataType, None)
 
-    if (evolutions.nonEmpty) evolutions.reduceLeft(squash)
-    else baseModel
+    if (evolutions.nonEmpty) {
+      val reduced = (evolutions :+ baseModel).reduceLeft(squash)
+
+      reduced
+    } else {
+      baseModel
+    }
   }
 
   /** Finds a present or past evolution that defines the given data type case. */
@@ -147,27 +160,33 @@ class GenericModel(val name:String,
    * linearize should result in (M0 <- M1 <- (I1,M2) <- (I2) <- M3 <- M4
    * */
   def linearize : Model = {
-//    def combineEvolutions(lastEvolution: Option[Model], evolutions: (Option[Model], Option[Model])): Option[Model] =
-//      evolutions match {
-//        case (Some(e1), Some(e2)) =>
-//          Some(
-//            new Model(
-//              Seq(e1.name, e2.name).distinct.mkString(":"),
-//              (e1.typeCases ++ e2.typeCases).distinct,
-//              (e1.ops ++ e2.ops).distinct,
-//              lastEvolution
-//            ))
-//        case (None, Some(e)) => Some(new Model(e.name, e.typeCases, e.ops, lastEvolution))
-//        case (Some(e), None) => Some(new Model(e.name, e.typeCases, e.ops, lastEvolution))
-//        case _ => lastEvolution
-//      }
-    // TODO: FIX ME
-    // but if you have two branches that come together in new model (with different lengths)
-    // m0[0] <- mA[1] <- mB[2] <- mC[3]
-    // m0[0] <- m1[1] <- m2[2]
-    //
-    // when merge (m2, mC) to create mD they may not line up properly
-    former.map(_.linearize).reduce[Model]{ case (m1:Model, m2:Model) => m1.merge(m1.name + m2.name, m2) }
+
+    def helpLinearize(model: GenericModel, current:Int,
+                      states:scala.collection.mutable.Map[Int,Seq[GenericModel]]): Unit = {
+
+      // more to process?
+      if (!model.isDomainBase) {
+        model.former.foreach(past => {
+          helpLinearize(past, current + 1, states)
+        })
+
+        if (!states.contains(current)) {
+          states.put(current, Seq(model))
+        } else {
+          states.put(current, states(current) :+ model)
+        }
+      }
+    }
+
+    val record = scala.collection.mutable.Map[Int,Seq[GenericModel]]()
+    helpLinearize(this, 0, record)
+    var prevModel:Option[Model] = None
+    for (i <- record.size-1 to 0 by -1) {
+
+      val combined = record(i).reduce( (m1: GenericModel, m2: GenericModel) => m1.standAlone.merge(m1.name + m2.name, m2.standAlone) )
+      prevModel = Some(new Model(combined.name, combined.typeCases, combined.ops, combined.baseDataType, prevModel))
+    }
+    prevModel.get
   }
 
   /**
@@ -217,6 +236,12 @@ class GenericModel(val name:String,
       this
     }
   }
+
+  /** Debugging function. */
+  def output = {
+    println("GenericModel " + name + "[" + typeCases.map(_.name).mkString(",")+ "," + ops.map(_.name).mkString(",") +
+      " former:" + former.map(_.name).mkString(",") + "]")
+  }
 }
 
 // Ignore IntelliJ ScalaDoc error: https://youtrack.jetbrains.com/issue/SCL-14638
@@ -252,7 +277,7 @@ sealed class Model (
   }
 
   /** Returns topological ordering which is chronological when linear. */
-  override def inChronologicalOrder: Seq[Model] = toSeq.reverse.tail
+  override def inChronologicalOrder: Seq[Model] = toSeq.reverse     // necessary anymore? .tail
 
   /** Find the most recent Model with an operation. */
   override def lastModelWithOperation: Seq[Model] = {
@@ -322,9 +347,40 @@ sealed class Model (
         case (Some(e), None) => Some(new Model(e.name, e.typeCases, e.ops, baseDataType, lastEvolution))
         case _ => lastEvolution
       }
+    println("merge " + name + " with " + other.name)
     val extendedHistory: Seq[(Option[Model], Option[Model])] =
       toSeq.reverse.map(Some(_)).zipAll(other.toSeq.reverse.map(Some(_)), None, None)
     extendedHistory.foldLeft[Option[Model]](None)(combineEvolutions).get
+  }
+
+  /**
+   * Return the earlier model given the evolution history.
+   * Note that if models are the same, then just return the same one.
+   */
+  def earlier(other:Model):Model = {
+    if (before(other)) {
+      this
+    } else {
+      other
+    }
+  }
+
+  /**
+   * Return the earlier model given the evolution history.
+   * Note that if models are the same, then just return the same one.
+   */
+  def later(other:Model):Model = {
+    if (before(other)) {
+      other
+    } else {
+      this
+    }
+  }
+
+  /** Debugging function. */
+  override def output = {
+    println("Model " + name + "[" + typeCases.map(_.name).mkString(",")+ "," + ops.map(_.name).mkString(",") +
+      " last:" + last.getOrElse("") + "]")
   }
 }
 
@@ -336,7 +392,7 @@ object GenericModel {
     */
   def base(domainName: String, baseTypeName: String): GenericModel =
     new GenericModel(domainName, Seq.empty, Seq.empty, Seq.empty, DataType(baseTypeName)) {
-      override def isDomainbase:Boolean = true
+      override def isDomainBase:Boolean = true
     }
 }
 
@@ -348,6 +404,6 @@ object Model {
    */
   def base(domainName: String, baseTypeName: String): Model =
     new Model(domainName, Seq.empty, Seq.empty, DataType(baseTypeName)) {
-      override def isDomainbase:Boolean = true
+      override def isDomainBase:Boolean = true
     }
 }

@@ -27,10 +27,10 @@ object M7 {
         } yield ()
       }
 
-      /** Equals depends upon asTree method */
+      /** Simplify depends on Eval. */
       override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
         op match {
-          case math.M6.Equals => Set(Operation.asTree)
+          case math.M7.PowBy => Set(math.M0.Eval)
           case _ => Set.empty
         }
       }

@@ -108,7 +108,7 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedVisi
    */
   def visitorInterfaceName(model: Model): Option[Name] = {
     val sortedTypeCases = model.typeCases.sortWith(_.name < _.name)
-    if (model == model.base || model.last == Some(model.base)) {
+    if (model.last.isEmpty) {
       Some(visitorClass)
     } else if (sortedTypeCases.isEmpty) {
       None
@@ -242,7 +242,7 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedVisi
    */
   def makeExtensibleVisitorInterface(domain:Model): Generator[ClassContext, Unit] = {
     // ignore degenerate case where the first model only has an operation without any types
-    def addParentInterface(): Generator[ClassContext, Unit] = if (domain.last == Some(domain.base)) {
+    def addParentInterface(): Generator[ClassContext, Unit] = if (domain.last.isEmpty) {
       Command.lift(()) // this is EMPTY
     } else {
       import ooParadigm.classCapabilities._
@@ -341,8 +341,14 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedVisi
         } yield domainSpecific.dependencies(op, tpe)
       }
 
-      _ <- forEach (computedSets.flatten.distinct) { dependentOp =>
-        createFactoryOp(domain.findOperation(dependentOp).get, dependentOp, visitorClassName(domain.findOperation(dependentOp).get, dependentOp).get)
+      // have to take LATEST version, which means the latest of either (a) where op was defined; or (b)
+      // most recently defined model with data types.
+      _ <- forEach (computedSets.flatten.distinct) { dependentOp => {
+          val opModel = domain.findOperation(dependentOp).head
+          val typeModel = domain.lastModelWithDataTypes.head
+          val modelToUse = typeModel.later(opModel)
+          createFactoryOp(modelToUse, dependentOp, visitorClassName(modelToUse, dependentOp).get)
+        }
       }
 
       // TODO: optimization to perhaps recurse and have this wrapped up in the above for loop...

@@ -36,7 +36,7 @@ trait OperationInterfaceChain extends ApproachImplementationProvider  {
 //  }
 
   def baseInterfaceNames(domain: GenericModel): Seq[Name] = {
-    if (domain.isDomainbase) {
+    if (domain.isDomainBase) {
       // ignore MathDomain, for example, and just grab name...
       Seq(names.mangle(domain.baseDataType.name))
     } else {

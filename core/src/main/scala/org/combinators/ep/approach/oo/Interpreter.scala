@@ -125,7 +125,13 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
     }
 
     // add a parent IF type defined earlier
-    def shouldAddParent(): Boolean = model.last.get.findTypeCase(tpeCase).isDefined
+    def shouldAddParent(): Boolean = {
+      if (model.last.isDefined) {
+        model.last.get.findTypeCase(tpeCase).isDefined
+      } else {
+        false
+      }
+    }
 
     for {
        pt <- toTargetLanguageType(TypeRep.DataType(model.baseDataType))

@@ -161,7 +161,7 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
 
     for {
       // only take those who are not the bottom
-      group <- forEach(domainDefiningType.former.filter(p => !p.isDomainbase)) { prior =>
+      group <- forEach(domainDefiningType.former.filter(p => !p.isDomainBase)) { prior =>
         findClass(names.mangle(prior.name), derivedInterfaceName(current))
       }
     } yield group

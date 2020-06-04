@@ -557,6 +557,17 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
     import classCapabilities._
     import genericsParadigm.classCapabilities._
 
+    // Revised since up dated the way last model is stored.
+    def getLastParentInterface(domain: Model, tpe: DataType): Generator[ClassContext, Type] = {
+      import classCapabilities._
+
+      if (domain.last.isEmpty) {
+        findClass(names.mangle(domain.baseDataType.name))
+      } else {
+        findClass(baseInterfaceNames(domain.last.get) : _*)
+      }
+    }
+
     for {
       _ <- setInterface()
 
@@ -568,47 +579,12 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
         Command.skip[ClassContext]
       }
 
-      _ <- if (domain.last.isDefined) {
-        for {
-          parent <- getParentInterface(domain.last.get, domain.baseDataType)
+      parent <- getLastParentInterface(domain, domain.baseDataType)
 
-          // AWKWARD! Have to grab the type parameter from the current class since I can't seem
-          // to just convert a string like "V" into a Type... That would be useful!
-          _ <- if (typeParameter.isDefined) {
-            for {
-              justV <- getTypeArguments().map(_.head)
-              paramType <- applyType(parent, Seq(justV))
-              _ <- resolveAndAddImport(paramType)
-
-              _ <- addParent(paramType)
-
-              // don't forget to add accept and convert methods
-            } yield ()
-          } else {
-            for {
-              _ <- resolveAndAddImport(parent)
-              justV <- getTypeArguments().map(_.head)
-              paramType <- applyType(parent, Seq(justV))
-              _ <- resolveAndAddImport(paramType)
-              _ <- addParent(paramType)
-            } yield ()
-          }
-
-        } yield ()
-      } else {
-        for {
-          parent <- findClass(names.mangle(domain.baseDataType.name))
-          justV <- getTypeArguments().map(_.head)
-          paramType <- applyType(parent, Seq(justV))
-
-          //  public void accept(V visitor);
-          //    public Exp<V> convert(Exp<V> value);
-          _ <- addConvertMethod(makeConvertSignature(paramType, paramType))
-          _ <- addAcceptMethod(makeAcceptSignature(paramType))
-        } yield ()
-
-        Command.skip[ClassContext]
-      }
+      justV <- getTypeArguments().map(_.head)
+      paramType <- applyType(parent, Seq(justV))
+      _ <- resolveAndAddImport(paramType)
+      _ <- addParent(paramType)
 
   // must be moved OUTSIDE because only the extended interfaces will have methods defined....
 //      _ <- forEach (domain.ops) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), triviallyMakeSignature(domain.baseDataType, op)) }

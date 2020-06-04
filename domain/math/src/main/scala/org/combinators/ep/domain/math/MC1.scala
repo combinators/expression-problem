@@ -7,7 +7,7 @@ import org.combinators.ep.domain.math.M1.SubInst
 import org.combinators.ep.domain.math.M3.DivdInst
 
 object MC1 extends Evolution {
-  override implicit def getModel:GenericModel = M3.getModel.merge("c1", Seq(I2.getModel))
+  override implicit def getModel:GenericModel = M3.getModel.merge("c1", Seq.empty, Seq.empty, Seq(I2.getModel))
 
   // m3 x i2:model evolution. linearize ala topological sort
   // -------------------

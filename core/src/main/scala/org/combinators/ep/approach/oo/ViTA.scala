@@ -1017,17 +1017,9 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     override def implement(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     import paradigm.projectContextCapabilities._
     import ooParadigm.projectCapabilities._
-//      println(domain.name)
-//      domain.inChronologicalOrder.foreach(_.output)
 
-      println(domain.name)
-      val se = domain.toSeq
-      domain.toSeq.foreach(_.output)
-      println("chrono")
-      val ce = domain.inChronologicalOrder
-      ce.foreach(_.output)
-      println("distinct")
-      ce.distinct.foreach(_.output)
+    println(domain.name)
+
     for {
       _ <- debug("Processing ViTA")
       _ <- registerTypeMapping(domain)

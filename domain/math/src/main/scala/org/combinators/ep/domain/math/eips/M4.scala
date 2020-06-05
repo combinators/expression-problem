@@ -57,8 +57,9 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
 
       def applicable(forApproach: AIP[paradigm.type])
         (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
-        (Set(math.M4.Collect, math.M4.Simplify).contains(onRequest.request.op)) &&
-          (math.M4.getModel.flatten.typeCases.toSet.contains(onRequest.tpeCase))
+        (Set(math.M4.Simplify).contains(onRequest.request.op) &&
+          math.M4.getModel.flatten.typeCases.toSet.contains(onRequest.tpeCase)) ||
+          Set(math.M4.Collect).contains(onRequest.request.op)  // any foreseeable DT can be collected
       }
 
       private def collectLogic
@@ -277,7 +278,7 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
         def logic(forApproach: AIP[paradigm.type])
           (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
         Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] = {
-          assert(applicable(forApproach)(onRequest))
+          assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name)
           onRequest.request.op match {
             case math.M4.Collect => collectLogic(forApproach)(onRequest)
             case math.M4.Simplify => simplifyLogic(forApproach)(onRequest)

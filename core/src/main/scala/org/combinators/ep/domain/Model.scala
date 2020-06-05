@@ -32,6 +32,11 @@ class GenericModel(val name:String,
   // only the BASE has this set
   def isDomainBase:Boolean = false
 
+  // if all our formers are domainbase then we are the bottom
+  def isBottom:Boolean = {
+    former.map(gm => gm.isDomainBase).forall(_ == true)
+  }
+
   /** Adds an evolution to this model.
    *
    * Note that the DOMAIN at the bottom will be MathDomain or ShapeDomain, and that needs to be present.
@@ -44,16 +49,51 @@ class GenericModel(val name:String,
     new GenericModel(name, types, ops, Seq(this), baseDataType)
   }
 
-  /** Returns history of this model as a sequence. */
+  /** Returns history of this model as a sequence (Removing the MathDomain or ShapeDomain). */
   def toSeq: Seq[GenericModel] = {
-    (this +: former.flatMap(_.toSeq)).distinct
+    (this +: former.flatMap(_.toSeq)).filterNot(_.isDomainBase)
   }
 
   /** Returns topological ordering which is chronological when linear. */
-  def inChronologicalOrder: Seq[GenericModel] = toSeq.reverse.tail
+  def inChronologicalOrder: Seq[GenericModel] = { //toSeq.reverse.filterNot(_.isDomainBase)
+
+    def helpLinearize(model: GenericModel, current:Int,
+                      states:scala.collection.mutable.Map[Int,Seq[GenericModel]]): Unit = {
+
+      // more to process?
+      if (!model.isDomainBase) {
+        model.former.foreach(past => {
+          helpLinearize(past, current + 1, states)
+        })
+
+        if (!states.contains(current)) {
+          states.put(current, Seq(model))
+        } else {
+          states.put(current, states(current) :+ model)
+        }
+      }
+    }
+
+    val record = scala.collection.mutable.Map[Int,Seq[GenericModel]]()
+    helpLinearize(this, 0, record)
+
+    // now we have Map that records furthest DISTANCE from M0 to latest evolution. We now
+    // have to read this backwards, and merge pairwise as we go, IGNORING THOSE WHICH HAVE
+    // ALREADY BEEN MERGED...
+    var order:Seq[GenericModel] = Seq.empty
+    var alreadySeen:Seq[String] = Seq.empty
+    for (i <- record.size-1 to 0 by -1) {
+      val newer = record(i).filterNot(m => alreadySeen.contains(m.toString))
+      newer.foreach(gm => {
+        order = Seq(gm) ++ order
+        alreadySeen = alreadySeen :+ gm.toString
+      })
+    }
+    order.reverse
+  }
 
   /** Guard check for equals method. */
-  private def canEqual(a: Any): Boolean = a.isInstanceOf[Model]
+  private def canEqual(a: Any): Boolean = a.isInstanceOf[GenericModel]
 
   /** Checks two models for equality.
    * Models are uniquely identified by their name.
@@ -180,10 +220,16 @@ class GenericModel(val name:String,
 
     val record = scala.collection.mutable.Map[Int,Seq[GenericModel]]()
     helpLinearize(this, 0, record)
-    var prevModel:Option[Model] = None
-    for (i <- record.size-1 to 0 by -1) {
 
-      val combined = record(i).reduce( (m1: GenericModel, m2: GenericModel) => m1.standAlone.merge(m1.name + m2.name, m2.standAlone) )
+    // now we have Map that records furthest DISTANCE from M0 to latest evolution. We now
+    // have to read this backwards, and merge pairwise as we go, IGNORING THOSE WHICH HAVE
+    // ALREADY BEEN MERGED...
+    var prevModel:Option[Model] = None
+    var alreadySeen:Seq[String] = Seq.empty
+    for (i <- record.size-1 to 0 by -1) {
+      val newer = record(i).filterNot(m => alreadySeen.contains(m.toString))
+      val combined = newer.reduce( (m1: GenericModel, m2: GenericModel) => m1.standAlone.merge(m1.name + m2.name, m2.standAlone) )
+      record(i).foreach(gm => alreadySeen = alreadySeen :+ gm.toString)
       prevModel = Some(new Model(combined.name, combined.typeCases, combined.ops, combined.baseDataType, prevModel))
     }
     prevModel.get
@@ -237,10 +283,14 @@ class GenericModel(val name:String,
     }
   }
 
+  override def toString:String = {
+    "GenericModel " + name + "[" + typeCases.map(_.name).mkString(",")+ "," + ops.map(_.name).mkString(",") +
+      " former:" + former.map(_.name).mkString(",") + "]"
+  }
+
   /** Debugging function. */
   def output = {
-    println("GenericModel " + name + "[" + typeCases.map(_.name).mkString(",")+ "," + ops.map(_.name).mkString(",") +
-      " former:" + former.map(_.name).mkString(",") + "]")
+    println(toString)
   }
 }
 
@@ -274,6 +324,15 @@ sealed class Model (
   override def toSeq: Seq[Model] = {
     this +: last.map(_.toSeq).getOrElse(Seq.empty)
    // (this +: last.toSeq.flatMap(_.toSeq)).distinct   +: last.map(_.toSeq).getOrElse(Seq.empty)
+  }
+
+  // if all our formers are domainbase then we are the bottom
+  override def isBottom:Boolean = {
+    if (last.isDefined) {
+      last.get.isDomainBase
+    } else {
+      true  // arbitrary choice. Not sure what else to do since should never happen
+    }
   }
 
   /** Returns topological ordering which is chronological when linear. */

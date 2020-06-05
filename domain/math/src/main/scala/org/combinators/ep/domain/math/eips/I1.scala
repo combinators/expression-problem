@@ -104,7 +104,7 @@ object I1 {
 //        default ep.alt1.Exp<V> multBy(ep.Exp<V> other) {
 //          return sub(getLeft().multBy(other), getRight().multBy(other));
 //        }
-          case other =>
+          case other => // handles nearly every method with two operands
             val lAtt = other.attributes.head
             val rAtt = other.attributes.tail.head
 

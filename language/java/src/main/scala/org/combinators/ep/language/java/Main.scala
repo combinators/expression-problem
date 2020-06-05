@@ -36,7 +36,7 @@ object Main extends IOApp {
   val approach = vitaApproach
 
   //val evolutions = Seq(M0, M1, M2, I1, I2)    // , I2 //       M3, M4, M5, M6) // ) // , M4, M5, M6)
-  val evolutions = Seq(M0, M1, M2, M3, M4, M5, M6, M7)    // all test cases become active WHEN all included.
+  val evolutions = Seq(M7I2) // M0, M1, M2, M3, M4, M5, M6, M7, I1, I2, M7I2)  // M0, M1, M2, M3, M4, M5, M6, M7, I1, I2,)    // all test cases become active WHEN all included.
 
 //  val eip = eips.I2(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod,
 //    generator.stringsInMethod, generator.imperativeInMethod)
@@ -55,7 +55,11 @@ object Main extends IOApp {
   val m6eip = eips.M6(approach.paradigm)(m5eip)(
     generator.equalityInMethod
   )
-  val eip = eips.M7(approach.paradigm)(m6eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
+  val e7_eip = eips.M7(approach.paradigm)(m6eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
+
+  val i2_eip = eips.I2(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
+
+  val eip = eips.M7I2(approach.paradigm)(e7_eip)(i2_eip)
 
   val tests = evolutions.scanLeft(Map.empty[GenericModel, Seq[TestCase]]) { case (m, evolution) =>
     m + (evolution.getModel -> evolution.tests)

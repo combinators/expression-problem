@@ -48,7 +48,7 @@ object M0 {
         import paradigm._
 
         // no need to pass up to the chain since only Eval is known
-        assert(applicable(forApproach)(onRequest))
+        assert(applicable(forApproach)(onRequest), "failed on " + onRequest.tpeCase.name + " for " + onRequest.request.op.name)
 
         val result = onRequest.tpeCase match {
 

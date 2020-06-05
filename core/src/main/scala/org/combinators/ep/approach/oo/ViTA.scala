@@ -243,6 +243,9 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    *    return convert(ep.m4.Add.super.simplify());
    * }
    *
+   * Note: when a GenericModel merges multiple pathways, must find the one where this operation
+   * is defined, and route that way. If defined in multiple branches, then either one is eligible!
+   *
    * @param tpe
    * @param tpeCase
    * @param domainSpecific
@@ -256,6 +259,21 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
         if (model.findTypeCase(tpeCase).contains(model)) {
           model.flatten.ops
         } else model.ops
+
+      // including self! Find branch where this operation was defined
+      def earlierModels(op:Operation): Seq[GenericModel] = {
+//        if (model.typeCases.contains(tpeCase)) {
+//          return Seq(model)
+//        }
+
+        //val oldOnes = model.former.filter(prior => prior.findTypeCase(tpeCase).isDefined)
+        val oldOnes = model.former.filter(prior => prior.findOperation(op).isDefined)
+        if (oldOnes.isEmpty) {
+          //println ("Couldn't find " + tpeCase.name + " in priors for " + model.name)
+          println ("Couldn't find " + op.name + " in priors for " + model.name)
+        }
+        oldOnes
+      }
 
       def producerConvert(op:Operation) : Generator[MethodBodyContext, Option[Expression]] = {
         import ooParadigm.methodBodyCapabilities._
@@ -278,7 +296,8 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
           //       return this.convert(ep.m4.Mult.super.simplify());
           // Java Restriction: Turns out you cannot bypass the more direct superclass. So you are left with
           // checking which past branch to go through
-          oldOnes = model.former.filter(prior => prior.findTypeCase(tpeCase).isDefined)
+          oldOnes = earlierModels(op)
+
           laterModelDef = oldOnes.head // anyone will do...
 //          typeCaseDef = model.findTypeCase(tpeCase).get
 //          opDef = model.findOperation(op).get
@@ -355,7 +374,7 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
           addMethod(names.mangle(names.instanceNameOf(op)), makeImplementation(tpe, tpeCase, op, domainSpecific))
         }
 
-        _ <- if (model.former.nonEmpty) {
+        _ <- if (!model.isBottom) {
           for {
             // domain.former.flatMap(_.lastModelWithOperation.flatMap(_.flatten.ops).filter(_.isProducer(domain))).distinct
 
@@ -900,17 +919,13 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    *
    * package ep.m0;
    *
-   * public interface Exp<V> extends ep.Exp<V> {
-   *   public abstract Double eval();   // operation
-   *   public abstract ep.m0.Exp<V> lit(Double value);
-   *   public abstract ep.m0.Exp<V> add(ep.Exp<V> left, ep.Exp<V> right);
+   * public interface Factory<V> extends ep.m0.Factory<V> {
    *
-   *   public abstract Boolean equals(ep.Exp<V> other);    // binary operation MUST refer to ancestral type
-   *
-   *   public abstract ep.m5.Exp<V> simplify();   // any producer methods IN PAST MUST ALWAYS OVERLOAD
-   *   // conversion
-   *   public abstract ep.m0.Exp<V> convert(ep.Exp<V> toConvert);
-   *
+   *    public abstract ep.m1.Exp<V> lit(Double value);
+   *    public abstract ep.m1.Exp<V> add(Exp<V> left, Exp<V> right);
+   *    public abstract ep.m1.Exp<V> sub(Exp<V> left, Exp<V> right);
+   *    public abstract ep.m1.Exp<V> convert(Exp<V> other);
+   * }
    * }
    */
   def extendFactory(domain:GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
@@ -925,6 +940,8 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
         _ <- setAbstract()
       } yield None
     }
+
+
 
     for {
       _ <- makeFactoryInterface(domain, domainSpecific, Some(expTypeParameter))   // this creates TYPE
@@ -1000,7 +1017,17 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     override def implement(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     import paradigm.projectContextCapabilities._
     import ooParadigm.projectCapabilities._
+//      println(domain.name)
+//      domain.inChronologicalOrder.foreach(_.output)
 
+      println(domain.name)
+      val se = domain.toSeq
+      domain.toSeq.foreach(_.output)
+      println("chrono")
+      val ce = domain.inChronologicalOrder
+      ce.foreach(_.output)
+      println("distinct")
+      ce.distinct.foreach(_.output)
     for {
       _ <- debug("Processing ViTA")
       _ <- registerTypeMapping(domain)

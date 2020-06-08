@@ -8,15 +8,15 @@ import org.combinators.ep.generator.communication.{ReceivedRequest, SendRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Strings}
 
-object A3 {
+object X3 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
-  (a1m3i2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
+  (x1Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
   (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
-    val a3Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.A3.getModel
+    val x3Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      override val model = math.X3.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
@@ -28,8 +28,8 @@ object A3 {
       def applicable
       (forApproach: AIP[paradigm.type])
       (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
-        Set(math.M0.Eval,math.M2.PrettyP, math.I1.MultBy).contains(onRequest.request.op) &&
-          Set(math.A3.Inv).contains(onRequest.tpeCase)
+        Set(math.M0.Eval, math.X1.PrettyP, math.X1.MultBy).contains(onRequest.request.op) &&
+          Set(math.X3.Divd).contains(onRequest.tpeCase)
       }
 
       def logic
@@ -46,43 +46,39 @@ object A3 {
           onRequest.request.op match {
             case math.M0.Eval =>
               onRequest.tpeCase match {
-                case math.A3.Inv => div(Seq(atts.tail.head, atts.head): _*)   // FLIP
+                case math.X3.Divd => div(atts: _*)
                 case _ => ???
               }
 
-            case math.I1.MultBy =>
+            case math.X1.MultBy =>
               onRequest.tpeCase match {
-                case other@math.A3.Inv =>
+                case other@math.X3.Divd =>
                   val lAtt = other.attributes.head
                   val rAtt = other.attributes.tail.head
 
                   for {
                     left <- forApproach.dispatch(SendRequest(
                       onRequest.attributes(lAtt),
-                      math.M2.getModel.baseDataType,
+                      math.M0.getModel.baseDataType,
                       onRequest.request,
                       Some(onRequest)
                     ))
                     right <- forApproach.dispatch(SendRequest(
                       onRequest.attributes(rAtt),
-                      math.M2.getModel.baseDataType,
+                      math.M0.getModel.baseDataType,
                       onRequest.request,
                       Some(onRequest)
                     ))
 
                     res <- forApproach.instantiate(math.M0.getModel.baseDataType, other, left, right)
                   } yield res
-              }
-//            case math.I1.MultBy => /** Specially handle MultMy with Power. */
-//              println (onRequest.tpeCase + " is to be addressed.")
-//              onRequest.tpeCase match {
-//                case math.A3.Inv => mult(atts: _ *)
-//                case _ => ???
-//              }
 
-            case math.M2.PrettyP =>
+                case _ => ???
+              }
+
+            case math.X1.PrettyP =>
               onRequest.tpeCase match {
-                case math.A3.Inv => makeString(Seq(atts.tail.head, atts.head), "(", "/", ")")
+                case math.X3.Divd => makeString(atts, "(", "/", ")")
                 case _ => ???
               }
             case _ => ???
@@ -93,7 +89,7 @@ object A3 {
             atts <- forEach (onRequest.tpeCase.attributes) { att =>
               forApproach.dispatch(SendRequest(
                 onRequest.attributes(att),
-                math.M3.getModel.baseDataType,
+                math.M0.getModel.baseDataType,
                 onRequest.request,
                 Some(onRequest)
               ))
@@ -103,7 +99,8 @@ object A3 {
         result.map(Some(_))
       }
     }
-    // newest first
-    monoidInstance.combine(a3Provider, a1m3i2Provider)
+
+    // newest one must come first
+    monoidInstance.combine(x3Provider, x1Provider)
   }
 }

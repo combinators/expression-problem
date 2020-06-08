@@ -1,6 +1,5 @@
 package org.combinators.ep.domain.math.eips
 
-import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.domain.math
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}

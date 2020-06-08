@@ -79,8 +79,7 @@ object M7I2 {
         // only return forwarding information when we have a hit on the currentModel.
         if (model == currentModel || model.before(currentModel)) {
             tblModel
-        }
-        else {
+        } else {
           None
         }
       }

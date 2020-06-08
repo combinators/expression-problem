@@ -14,7 +14,7 @@ object M1 {
       (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double]):
     EvolutionImplementationProvider[AIP[paradigm.type]] = {
 
-    val subProvider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+    val m1Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model = math.M1.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
@@ -60,6 +60,6 @@ object M1 {
     }
 
     // newest one must come first
-    monoidInstance.combine(subProvider, M0(paradigm)(ffiArithmetic))
+    monoidInstance.combine(m1Provider, M0(paradigm)(ffiArithmetic))
   }
 }

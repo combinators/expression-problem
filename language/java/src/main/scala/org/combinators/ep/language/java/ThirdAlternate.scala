@@ -4,12 +4,12 @@ import cats.effect.{ExitCode, IO, IOApp}
 import org.combinators.ep.approach.oo.ViTA
 import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions.TestCase
-import org.combinators.ep.domain.math.{A1, A1M3, A1M3I2, A3, I1, I2, M0, M1, M2, eips}
+import org.combinators.ep.domain.math.{M0, X1, X2, X2X3, X3, X4, eips}
 import org.combinators.ep.generator.TestImplementationProvider
 import org.combinators.jgitserv.{BranchTransaction, GitService}
 import org.combinators.ep.generator.FileWithPathPersistable._
 
-object AlternateMain extends IOApp {
+object ThirdAlternate extends IOApp {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed))
 
   val vitaApproach = ViTA[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
@@ -17,22 +17,17 @@ object AlternateMain extends IOApp {
   val approach = vitaApproach
 
   //val evolutions = Seq(M0, M1, M2, I1, I2)    // , I2 //       M3, M4, M5, M6) // ) // , M4, M5, M6)
-  val evolutions = Seq( A3) // M0, M1, M2, I1, I2, A1, A1M3, A1M3I2, A3)  // M0, M1, M2, M3, M4, M5, M6, M7, I1, I2,)    // all test cases become active WHEN all included.
+  val evolutions = Seq( M0, X1, X2, X3, X2X3, X4)
 
-  val m1eip = eips.M1(approach.paradigm)(generator.doublesInMethod)
-  val m2eip = eips.M2(approach.paradigm)(generator.doublesInMethod, generator.stringsInMethod)
-  val m3_eip = eips.M3(approach.paradigm)(generator.doublesInMethod, generator.stringsInMethod)
+  val x1_eip = eips.X1(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
+  val x2_eip = eips.X2(approach.paradigm)(x1_eip)(generator.doublesInMethod, generator.stringsInMethod)
+  val x3_eip = eips.X3(approach.paradigm)(x2_eip)(generator.doublesInMethod, generator.stringsInMethod)
 
-  val i1_eip = eips.I1(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
+  val x2x3_eip = eips.X2X3(approach.paradigm)(x2_eip, x3_eip)
 
-  val i2_eip = eips.I2(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
-  val a1_eip = eips.A1(approach.paradigm)(i1_eip)(generator.doublesInMethod, generator.stringsInMethod)
+  val x4_eip = eips.X4(approach.paradigm)(x2x3_eip)(generator.doublesInMethod, generator.stringsInMethod)
 
-  val a1m3_eip = eips.A1M3(approach.paradigm)(m3_eip, a1_eip)(generator.stringsInMethod)
-
-  val a1m3i2_eip = eips.A1M3I2(approach.paradigm)(a1m3_eip, i2_eip)(generator.stringsInMethod)
-
-  val eip = eips.A3(approach.paradigm)(a1m3i2_eip)(generator.doublesInMethod, generator.stringsInMethod)
+  val eip = x4_eip
 
   val tests = evolutions.scanLeft(Map.empty[GenericModel, Seq[TestCase]]) { case (m, evolution) =>
     m + (evolution.getModel -> evolution.tests)

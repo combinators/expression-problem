@@ -55,10 +55,9 @@ object A1M3 {
 
         // Because EIP could be "further in future" then a given model, we need to be sure to
         // only return forwarding information when we have a hit on the currentModel.
-        if (currentModel == model) {
+        if (model == currentModel || model.before(currentModel)) {
           tblModel
-        }
-        else {
+        } else {
           None
         }
       }

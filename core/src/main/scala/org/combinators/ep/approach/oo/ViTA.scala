@@ -80,13 +80,16 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    *
    * Be careful to call convert on recursive types
    *
+   * Special logic for ViTA ensures that the default producer method implementations are used when domainSpecific
+   * is not applicable, otherwise they are overriden.
+   *
    * @param tpe
    * @param tpeCase
    * @param op
    * @param domainSpecific
    * @return
    */
-  override def makeImplementation(tpe: DataType,
+   def makeViTAImplementation(model:GenericModel, tpe: DataType,
                                   tpeCase: DataTypeCase,
                                   op: Operation,
                                   domainSpecific: EvolutionImplementationProvider[this.type]
@@ -94,6 +97,42 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
     import polymorphics.methodBodyCapabilities._
+
+    // TODO: what happens when logic OVERRIDES this default behavior
+    def producerConvert(applicableModel:GenericModel) : Generator[MethodBodyContext, Option[Expression]] = {
+      import ooParadigm.methodBodyCapabilities._
+      import paradigm.methodBodyCapabilities._
+      for {
+        _ <- triviallyMakeSignature(tpe, op)
+        thisRef <- selfReference()
+        convertMethod <- getMember(thisRef, convert)
+
+        //args <- forEach (op.parameters) { param => freshName(names.mangle(param.name)) }
+        argSeq <- getArguments().map( args => { args.map(triple => triple._3) })
+
+        // M0 <- M1 [producerOp] <- M2
+        //        \                   \
+        //          Ma <---------------Merge{m2,Ma} <- M3
+
+        // find which past branch contains the operation? Go to the last point where op was defined BUT be
+        // careful if any branch has chosen to override the operation in a way (not just forwarded). So
+        // new strategy is (a) where Mult was first declared; or (b) simplify was first declared for Mult.
+        //       return this.convert(ep.m4.Mult.super.simplify());
+        // Java Restriction: Turns out you cannot bypass the more direct superclass. So you are left with
+        // checking which past branch to go through
+
+        // should work for merging?
+        superRef <- superReference(names.mangle(applicableModel.name), names.mangle(names.conceptNameOf(tpeCase)))  // TODO: HAVE TO FIX THIS
+        opMethod <- getMember(superRef, names.mangle(names.instanceNameOf(op)))
+        innerResult <- apply(opMethod, argSeq)
+        result <- if (op.isProducer(applicableModel)) {                    // only have to convert for producer methods.
+          apply(convertMethod, Seq(innerResult))
+        } else {
+          Command.lift[MethodBodyContext,Expression](innerResult)
+        }
+      } yield Some(result)
+    }
+
     for {
       thisRef <- selfReference()
       attAccessors: Seq[Expression] <- forEach (tpeCase.attributes) { att =>
@@ -104,20 +143,7 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       }
 
       _ <- triviallyMakeSignature(tpe, op)
-      //      // must add a proper parameter to this method, using the most generic ep.Exp for recursive
-      //      // types, and pass others through with native types.
-      //      params <- forEach (op.parameters) { param =>
-      //        for {
-      //          //paramField <- getMember(thisRef, names.mangle(param.name))
-      //          paramTpe <- if (param.tpe == TypeRep.DataType(tpe)) {
-      //            toTargetLanguageType(TypeRep.DataType(triviallyBaseDataType(tpe)))
-      //          } else {
-      //            toTargetLanguageType(param.tpe)
-      //        }
-      //        } yield (names.mangle(param.name), paramTpe)
-      //      }
-      //
-      //      _ <- setParameters(params)
+
       args <- getArguments()
 
       convertMethod <- getMember(thisRef, convert)
@@ -133,21 +159,29 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
           }
         } yield (argPair._2, pArg)
       }
-      //      opType <- toTargetLanguageType(op.returnType)
-      //      _ <- resolveAndAddImport(opType)
-      //      _ <- setReturnType(opType)
+
+      receivedRequest = ReceivedRequest(
+        tpe,
+        tpeCase,
+        thisRef,
+        tpeCase.attributes.zip(attAccessors).toMap,
+        Request(op, processedArgs.toMap)
+      )
+
+      _ <- debug(receivedRequest.request.op.name + "@" + receivedRequest.tpeCase.name + " for " + model.name)
+      applicableModel = domainSpecific.applicableIn(this)(receivedRequest, model).get
 
       // TODO: must call convert(baseType) or pass literals through
-      result <-
-        domainSpecific.logic(this)(
-          ReceivedRequest(
-            tpe,
-            tpeCase,
-            thisRef,
-            tpeCase.attributes.zip(attAccessors).toMap,
-            Request(op, processedArgs.toMap)
-          )
-        )
+      // if applicable model is self then WE want to do something, so we have to delegate to EIP
+      // to provide implementation; otherwise we fall back to default
+      result <- if (applicableModel == model) {
+          domainSpecific.logic(this)(receivedRequest)
+        } else {
+
+          // NOW have to find which of my former branches because this is a producer op
+         producerConvert(model.former.find(gm => applicableModel.before(gm) || gm == applicableModel).get)
+        }
+
     } yield result
   }
 
@@ -160,8 +194,8 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     import classCapabilities._
 
     for {
-      // only take those who are not the bottom
-      group <- forEach(domainDefiningType.former.filter(p => !p.isDomainBase)) { prior =>
+      // only take those who are not the bottom BUT ALSO only those for whom the current is meaningful.
+      group <- forEach(domainDefiningType.former.filter(!_.isDomainBase).filter(m => m.findTypeCase(current).isDefined)) { prior =>
         findClass(names.mangle(prior.name), derivedInterfaceName(current))
       }
     } yield group
@@ -209,9 +243,7 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    * {{{
    *   package ep.m1
    *   public interface Sub<V> extends Exp<V> {
-   *
    *     public abstract Exp getLeft();
-   *
    *     public abstract Exp getRight();
    *
    *     default Double eval() {
@@ -223,7 +255,6 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    *
    * package ep.m2
    * public abstract interface Lit<V> extends ep.m1.Lit<V>, ep.m2.Exp<V> {
-   *
    *     public abstract Double getValue();
    *
    *     public default String prettyp() {
@@ -254,62 +285,11 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
   def makeDerivedInterface(tpe: DataType, tpeCase: DataTypeCase, model:GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
     val makeClass: Generator[ClassContext, Unit] = {
       import classCapabilities._
-      // Either generate an implementation for every operation if data type is declared in this model, or just the new ones.
-      val opsToGenerate =
-        if (model.findTypeCase(tpeCase).contains(model)) {
-          model.flatten.ops
-        } else model.ops
-
-      // including self! Find branch where this operation was defined
-      def earlierModels(op:Operation): Seq[GenericModel] = {
-//        if (model.typeCases.contains(tpeCase)) {
-//          return Seq(model)
-//        }
-
-        //val oldOnes = model.former.filter(prior => prior.findTypeCase(tpeCase).isDefined)
-        val oldOnes = model.former.filter(prior => prior.findOperation(op).isDefined)
-        if (oldOnes.isEmpty) {
-          //println ("Couldn't find " + tpeCase.name + " in priors for " + model.name)
-          println ("Couldn't find " + op.name + " in priors for " + model.name)
-        }
-        oldOnes
-      }
-
-      def producerConvert(op:Operation) : Generator[MethodBodyContext, Option[Expression]] = {
-        import ooParadigm.methodBodyCapabilities._
-        import paradigm.methodBodyCapabilities._
-        for {
-          _ <- triviallyMakeSignature(model.baseDataType, op)
-          thisRef <- selfReference()
-          convertMethod <- getMember(thisRef, convert)
-
-          //args <- forEach (op.parameters) { param => freshName(names.mangle(param.name)) }
-          argSeq <- getArguments().map( args => { args.map(triple => triple._3) })
-
-          // M0 <- M1 [producerOp] <- M2
-          //        \                   \
-          //          Ma <---------------Merge{m2,Ma} <- M3
-
-          // find which past branch contains the operation? Go to the last point where op was defined BUT be
-          // careful if any branch has chosen to override the operation in a way (not just forwarded). So
-          // new strategy is (a) where Mult was first declared; or (b) simplify was first declared for Mult.
-          //       return this.convert(ep.m4.Mult.super.simplify());
-          // Java Restriction: Turns out you cannot bypass the more direct superclass. So you are left with
-          // checking which past branch to go through
-          oldOnes = earlierModels(op)
-
-          laterModelDef = oldOnes.head // anyone will do...
-//          typeCaseDef = model.findTypeCase(tpeCase).get
-//          opDef = model.findOperation(op).get
-//          laterModelDef = opDef.later(typeCaseDef)
-
-          // should work for merging?
-          superRef <- superReference(names.mangle(laterModelDef.name), names.mangle(names.conceptNameOf(tpeCase)))  // TODO: HAVE TO FIX THIS
-          opMethod <- getMember(superRef, names.mangle(names.instanceNameOf(op)))
-          innerResult <- apply(opMethod, argSeq)
-          result <- apply(convertMethod, Seq(innerResult))
-        } yield Some(result)
-      }
+//      // Either generate an implementation for every operation if data type is declared in this model, or just the new ones.
+//      val opsToGenerate =
+//        if (model.findTypeCase(tpeCase).contains(model)) {
+//          model.flatten.ops
+//        } else model.ops
 
       def extendParents(genType:Seq[Type]):Generator[ClassContext,Unit] = {
         import genericsParadigm.classCapabilities._
@@ -326,8 +306,15 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
         } yield ()
       }
 
+      val producers = if (model.former.isEmpty) {
+        Seq.empty
+      } else {
+        model.former.flatMap(_.flatten.ops.filter(op => op.isProducer(model))).distinct
+      }
+
       import genericsParadigm.classCapabilities._
       import polymorphics.TypeParameterContext
+
       for {
         // in new solution, all Exp<> references are parameterized
         fv <- freshName(expTypeParameter)  // HACK: MOVE UP
@@ -370,20 +357,10 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
           } yield mi
         }
         }
-        _ <- forEach (opsToGenerate) { op =>
-          addMethod(names.mangle(names.instanceNameOf(op)), makeImplementation(tpe, tpeCase, op, domainSpecific))
-        }
 
-        _ <- if (!model.isBottom) {
-          for {
-            // domain.former.flatMap(_.lastModelWithOperation.flatMap(_.flatten.ops).filter(_.isProducer(domain))).distinct
-
-            _ <- forEach(model.former.flatMap(_.flatten.ops.filter(op => op.isProducer(model))).distinct) { op =>
-              addMethod(names.mangle(names.instanceNameOf(op)), producerConvert(op))
-            }
-          }yield ()
-        } else {
-          Command.skip[ClassContext]
+        // Using new EIP capabilities, just generate
+        _ <- forEach (model.flatten.ops.distinct) { op =>
+          addMethod(names.mangle(names.instanceNameOf(op)), makeViTAImplementation(model, tpe, tpeCase, op, domainSpecific))
         }
 
         _ <- setInterface()  // do LAST because then methods with bodies are turned into default methods in interface
@@ -711,15 +688,11 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
 
           //  public void accept(V visitor);
           //    public Exp<V> convert(Exp<V> value);
-          //////////_ <- addConvertMethod(makeConvertSignature(paramType, paramType))
           _ <- addAcceptMethod(makeAcceptSignature(paramType))
         } yield ()
 
         Command.skip[ClassContext]
       }
-
-      // must be moved OUTSIDE because only the extended interfaces will have methods defined....
-      //      _ <- forEach (domain.ops) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), triviallyMakeSignature(domain.baseDataType, op)) }
     } yield ()
   }
 
@@ -897,6 +870,7 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       _ <- registerLocally(triviallyBaseDataType(domain.baseDataType), parameterizedBase)
 
       // if there are past operations, find those that are producers and create overloaded specifications
+      // make sure not to duplicate by calling distinct
       _ <- forEach (domain.ops) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), triviallyMakeSignature(domain.baseDataType, op)) }
       _ <- if (domain.former.nonEmpty) {
         forEach(domain.former.flatMap(_.lastModelWithOperation.flatMap(_.flatten.ops).filter(_.isProducer(domain))).distinct) {
@@ -941,8 +915,6 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       } yield None
     }
 
-
-
     for {
       _ <- makeFactoryInterface(domain, domainSpecific, Some(expTypeParameter))   // this creates TYPE
 
@@ -972,9 +944,9 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       tt <- computedBaseType(domain)
       topLevelType <- applyType(tt, Seq(justV))
 
-      // add factory methods
+      // add factory methods -- make sure to eliminate duplicates, in case there are merged branches.
       // these are factory signatures.
-      _ <- forEach (domain.flatten.typeCases) { tpe => {
+      _ <- forEach (domain.flatten.typeCases.distinct) { tpe => {
         // make this a helper capability in SharedOO -- ability to take an existing methodBodyContext and make it abstract...
         val absMethod: Generator[MethodBodyContext, Option[Expression]] = {
           import ooParadigm.methodBodyCapabilities._
@@ -989,14 +961,7 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       }
       }
 
-      //      parent <- findClass(names.mangle(domain.baseDataType.name))
-      //      justV <- getTypeArguments().map(_.head)
-      //      paramType <- applyType(parent, Seq(justV))
-
-      //  public void accept(V visitor);
-      //    public Exp<V> convert(Exp<V> value);
       _ <- addConvertMethod(convertMethod(topLevelType, paramType))
-      //_ <- addConvertMethod(makeConvertSignature(topLevelType, paramType))
     } yield ()
   }
 
@@ -1018,7 +983,8 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     import paradigm.projectContextCapabilities._
     import ooParadigm.projectCapabilities._
 
-    println(domain.name)
+    println(domain.name + ":" + new java.util.Date().toString())
+
 
     for {
       _ <- debug("Processing ViTA")
@@ -1115,8 +1081,9 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
           _ <- addTestCase(testCode, testName)
 
           // no longer necessary with finalized classes??
-          // get list of all operations and MAP to the most recent model
-          _ <- forEach(model.flatten.typeCases) { tpeCase => {
+          // get list of all operations and MAP to the most recent model. Make distinct to deal with
+          // potential graphing issues.
+          _ <- forEach(model.flatten.typeCases.distinct) { tpeCase => {
             for {
               _ <- addMethod(names.mangle(names.instanceNameOf(tpeCase)), factoryMethod(model, tpeCase))
             } yield (None)

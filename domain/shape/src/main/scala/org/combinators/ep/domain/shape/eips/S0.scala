@@ -5,7 +5,7 @@ import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.communication.{ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
-import org.combinators.ep.domain.shape
+import org.combinators.ep.domain.{GenericModel, shape}
 import org.combinators.ep.generator.paradigm.AnyParadigm
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Booleans, RealArithmetic}
 
@@ -33,6 +33,8 @@ object S0 {
   ):
   EvolutionImplementationProvider[AIP[paradigm.type]] =
     new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      val model:GenericModel = shape.S0.getModel
+
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
           _ <- ffiArithmetic.enable()

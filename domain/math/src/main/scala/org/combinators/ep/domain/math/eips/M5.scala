@@ -18,6 +18,8 @@ object M5 {
      ffiTrees: Trees.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val treeIdProvider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      override val model = math.M5.getModel
+
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
           _ <- m4Provider.initialize(forApproach)
@@ -85,6 +87,8 @@ object M5 {
         }
       }
     }
+
+    // newest one must come first
     monoidInstance.combine(treeIdProvider, m4Provider)
   }
 }

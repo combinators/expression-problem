@@ -134,7 +134,7 @@ package object abstractions {
     /** Models an "astree" operation, which converts a data type instance to a domain representation
       * [[org.combinators.ep.domain.tree.Tree]].
       */
-    def asTree: Operation = Operation("astree", TypeRep.Tree)
+    val asTree: Operation = Operation("astree", TypeRep.Tree)
 
     /** Returns a [[org.combinators.ep.domain.matchers.Matchable]] transforming the given function on
       * [[org.combinators.ep.domain.abstractions.Parameter Parameters]] and a

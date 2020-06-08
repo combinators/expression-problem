@@ -1,8 +1,7 @@
 package org.combinators.ep.domain.math.eips
 
 import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, Parameter, TypeRep}
-import org.combinators.ep.domain.instances.InstanceRep
-import org.combinators.ep.domain.{abstractions, math}
+import org.combinators.ep.domain.{GenericModel, abstractions, math}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
@@ -20,7 +19,9 @@ object M7I2 {
   (m7Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
   (i2Provider: EvolutionImplementationProvider[AIP[paradigm.type]]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
-    val combinedProvider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+    val m7i2Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      override val model = math.M7I2.getModel
+
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
           _ <- m7Provider.initialize(forApproach)
@@ -38,7 +39,50 @@ object M7I2 {
       (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
         (Set(math.M7.PowBy, math.M4.Simplify).contains(onRequest.request.op) &&
           Set(math.I2.Power).contains(onRequest.tpeCase)) ||
-          Set(math.I1.MultBy).contains(onRequest.request.op) // all MultBy optimized with Mult now
+          (Set(math.I1.MultBy).contains(onRequest.request.op) &&
+            Set(math.M3.Divd, math.M3.Mult, math.M3.Neg).contains(onRequest.tpeCase))
+      }
+
+      override def applicableIn(forApproach:  AIP[paradigm.type])(onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression],currentModel:GenericModel): Option[GenericModel] = {
+        // must be designed to only return (to be safe) Java-accessible which is former branch only one step in past.
+        val forwardTable:PartialFunction[(Operation,DataTypeCase),GenericModel] = {
+          case (math.I1.MultBy, math.M3.Divd) => model // I HANDLE these
+          case (math.I1.MultBy, math.M3.Mult) => model // I HANDLE these
+          case (math.I1.MultBy, math.M3.Neg) => model  // I HANDLE these
+          case (math.I1.MultBy, _) => math.I1.getModel
+
+          case (math.M2.PrettyP, math.I2.Power) => math.I2.getModel
+          case (math.M2.PrettyP, _) => math.M3.getModel
+
+          case (math.M4.Collect, math.I2.Power) => model
+          case (math.M4.Collect, _) => math.M4.getModel
+
+          case (math.M4.Simplify, math.I2.Power) => model
+          case (math.M4.Simplify, _) => math.M4.getModel
+
+          case (math.M5.Identifier, math.I2.Power) => model
+          case (math.M5.Identifier, _) => math.M5.getModel
+
+          case (Operation.asTree, math.I2.Power) => model
+          case (Operation.asTree, _) => math.M5.getModel
+
+          case (math.M6.Equals, math.I2.Power) => model
+          case (math.M6.Equals, _) => math.M6.getModel
+
+          case (math.M7.PowBy, math.I2.Power) => model
+          case (math.M7.PowBy, _) => math.M7.getModel
+        }
+
+        val tblModel = forwardTable.lift(onRequest.request.op, onRequest.tpeCase)
+
+        // Because EIP could be "further in future" then a given model, we need to be sure to
+        // only return forwarding information when we have a hit on the currentModel.
+        if (model == currentModel || model.before(currentModel)) {
+            tblModel
+        }
+        else {
+          None
+        }
       }
 
       def logic
@@ -93,8 +137,7 @@ object M7I2 {
       }
     }
 
-    // ORDER MATTERS! First use logic from each of the two branches, and then (at the end)
-    // resolve here in combined
-    monoidInstance.combine(i2Provider, monoidInstance.combine(m7Provider, combinedProvider))
+    // ORDER MATTERS! Need newest first, then subsequent branches shouldn't matter
+    monoidInstance.combine(m7i2Provider, monoidInstance.combine(m7Provider, i2Provider))
   }
 }

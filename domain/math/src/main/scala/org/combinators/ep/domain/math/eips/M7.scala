@@ -21,6 +21,8 @@ object M7 {
    ffiImper:Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val equalsProvider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      override val model = math.M7.getModel
+
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
           _ <- m6Provider.initialize(forApproach)
@@ -192,6 +194,7 @@ object M7 {
         result.map(Some(_))
       }
     }
+    // newest one must come first
     monoidInstance.combine(equalsProvider, m6Provider)
   }
 }

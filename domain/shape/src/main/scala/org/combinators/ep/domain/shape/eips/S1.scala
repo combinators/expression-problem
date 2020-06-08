@@ -1,7 +1,7 @@
 package org.combinators.ep.domain.shape.eips
 import org.combinators.ep.domain.abstractions.{Attribute, DataTypeCase, Operation, TypeRep}
 import org.combinators.ep.domain.instances.InstanceRep
-import org.combinators.ep.domain.shape
+import org.combinators.ep.domain.{GenericModel, shape}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
@@ -18,6 +18,8 @@ object S1 {
   ):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val s1Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      val model:GenericModel = shape.S1.getModel
+
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
           _ <- s0Provider.initialize(forApproach)

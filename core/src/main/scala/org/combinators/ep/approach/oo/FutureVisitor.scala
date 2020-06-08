@@ -366,6 +366,8 @@ trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts 
    *
    * Each instance of Exp must be parameterized with ep.m#.finalized.Visitor
    *
+   * Make sure to remove duplicates when spooted.
+   *
    * CAN'T FORGET to call 'convert' for those recursive datatypes to be sure they work.
    */
   def makeFinalizedViTAFactory(domain:GenericModel): Generator[ClassContext, Unit] = {
@@ -392,7 +394,8 @@ trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts 
 
       _ <- addImplemented(factoryType)
 
-      _ <- forEach(domain.flatten.typeCases) { tpeCase => {
+      // with multipl branches, there could be copies, so make sure to be distinct
+      _ <- forEach(domain.flatten.typeCases.distinct) { tpeCase => {
         for {
           // These methods with recursive values must call convert; in addition, they must be properly
           // defined to use appropriate ep.m#.Exp based on where the data type was defined... TRICK

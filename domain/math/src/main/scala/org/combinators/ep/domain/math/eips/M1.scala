@@ -1,6 +1,6 @@
 package org.combinators.ep.domain.math.eips
 
-import org.combinators.ep.domain.math
+import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
 import org.combinators.ep.generator.communication.{ReceivedRequest, SendRequest}
@@ -15,6 +15,7 @@ object M1 {
     EvolutionImplementationProvider[AIP[paradigm.type]] = {
 
     val subProvider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      override val model = math.M1.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         ffiArithmetic.enable()
@@ -57,6 +58,8 @@ object M1 {
         result.map(Some(_))
       }
     }
+
+    // newest one must come first
     monoidInstance.combine(subProvider, M0(paradigm)(ffiArithmetic))
   }
 }

@@ -19,7 +19,8 @@ object I2 {
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiImper:Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
-    val ppProvider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+    val i2Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      override val model = math.I2.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
@@ -32,8 +33,8 @@ object I2 {
       def applicable
       (forApproach: AIP[paradigm.type])
       (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
-        (onRequest.request.op == math.I1.MultBy || onRequest.request.op == math.M0.Eval || onRequest.request.op == math.M2.PrettyP) &&
-          (Set(math.I2.Power).contains(onRequest.tpeCase))
+        Set(math.I1.MultBy,math.M0.Eval,math.M2.PrettyP).contains(onRequest.request.op) &&
+          Set(math.I2.Power).contains(onRequest.tpeCase)
       }
 
       def logic
@@ -127,6 +128,8 @@ object I2 {
         result.map(Some(_))
       }
     }
-    monoidInstance.combine(ppProvider, I1(paradigm)(ffiArithmetic, ffiRealArithmetic, ffiStrings, ffiImper))
+
+    // newest first
+    monoidInstance.combine(i2Provider, I1(paradigm)(ffiArithmetic, ffiRealArithmetic, ffiStrings, ffiImper))
   }
 }

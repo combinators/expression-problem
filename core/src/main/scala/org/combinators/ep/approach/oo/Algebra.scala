@@ -14,6 +14,7 @@ import org.combinators.ep.generator.paradigm.control.Imperative
 
 Producer methods must include factory methods for all known types so far.
 
+ NOT UPGRADED TO NEW SYSTEM BECAUSE OF COMPLICATIONS WITH JAVA SYNTAX
  */
 
 trait Algebra extends OOApproachImplementationProvider with BaseDataTypeAsInterface with SharedOO with FutureVisitor with OperationInterfaceChain with FieldDefinition with FactoryConcepts {

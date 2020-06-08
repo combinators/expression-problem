@@ -31,6 +31,7 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
      ifThenElse: IfThenElseCommand
     ): EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val m4Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      override val model = math.M4.getModel
 
       /** Simplify depends upon having a working eval. */
       override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
@@ -286,7 +287,9 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
           }
         }
       }
-    monoidInstance.combine(M3(paradigm)(ffiArithmetic, ffiStrings), m4Provider)
+
+    // newest one must come first
+    monoidInstance.combine(m4Provider, M3(paradigm)(ffiArithmetic, ffiStrings))
   }
 }
 

@@ -19,7 +19,8 @@ object I1 {
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiImper:Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
-    val ppProvider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+    val i1Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      override val model = math.I1.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
@@ -128,6 +129,8 @@ object I1 {
         result.map(Some(_))
       }
     }
-    monoidInstance.combine(ppProvider, M2(paradigm)(ffiArithmetic, ffiStrings))
+
+    // newest first
+    monoidInstance.combine(i1Provider, M2(paradigm)(ffiArithmetic, ffiStrings))
   }
 }

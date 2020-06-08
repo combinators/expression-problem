@@ -121,18 +121,22 @@ class GenericModel(val name:String,
    * If no evolutions are present, the model is returned unchanged.
    */
   def flatten: Model = {
-    val history = toSeq.reverse
-    val (baseModel, evolutions) = (history.head.standAlone, history.tail.map(_.standAlone))
-
-    def squash(intoModel: Model, nextModel: Model): Model =
-      new Model(name, intoModel.typeCases ++ nextModel.typeCases, intoModel.ops ++ nextModel.ops, baseDataType, None)
-
-    if (evolutions.nonEmpty) {
-      val reduced = (evolutions :+ baseModel).reduceLeft(squash)
-
-      reduced
+    if (isBottom) {
+      this.standAlone
     } else {
-      baseModel
+      val history = toSeq.reverse
+      val (baseModel, evolutions) = (history.head.standAlone, history.tail.map(_.standAlone))
+
+      def squash(intoModel: Model, nextModel: Model): Model =
+        new Model(name, intoModel.typeCases ++ nextModel.typeCases, intoModel.ops ++ nextModel.ops, baseDataType, None)
+
+      if (evolutions.nonEmpty) {
+        val reduced = (evolutions :+ baseModel).reduceLeft(squash)
+
+        reduced
+      } else {
+        baseModel
+      }
     }
   }
 

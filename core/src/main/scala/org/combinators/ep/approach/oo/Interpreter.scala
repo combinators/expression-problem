@@ -5,7 +5,7 @@ import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command._
 import org.combinators.ep.generator._
 import org.combinators.ep.generator.communication._
-import org.combinators.ep.generator.paradigm.AnyParadigm.syntax._
+import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.{forEach, _}
 import org.combinators.ep.generator.paradigm._
 import org.combinators.ep.generator.paradigm.control.Imperative
 
@@ -118,6 +118,7 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
 
       val priorClass = names.mangle(names.conceptNameOf(tpeCase))   // WANT to get prior one in earlier package.
       for {
+
         priorType <- findClass(names.mangle(chosenModel.name), priorClass)
         _ <- resolveAndAddImport(priorType)
         _ <- addParent(priorType)
@@ -140,8 +141,19 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
 
        _ <- addParentClass()
        _ <- forEach (tpeCase.attributes) { att => makeField(att) }
-       _ <- forEach (tpeCase.attributes) { att => makeGetter(att) }
-       _ <- addConstructor(makeConstructor(tpeCase, shouldAddParent()))
+
+       _ <- forEach (model.flatten.typeCases) {
+             tpe => {
+               for {
+                 priorType <- findClass(names.mangle(model.lastModelWithOperation.head.later(model.findTypeCase(tpe).get).name), names.mangle(names.conceptNameOf(tpe)))
+                 _ <- registerLocally(DataType(tpe.name), priorType)
+               } yield ()
+             }
+           }
+
+       _ <- forEach (tpeCase.attributes) { att => makeCastableGetter(att) }
+       _ <- addConstructor(makeConstructor(tpeCase, true, shouldAddParent()))
+
        _ <- forEach (ops) { op => addMethod(names.mangle(names.instanceNameOf(op)), makeImplementation(model.baseDataType, tpeCase, op, domainSpecific))
        }
     } yield ()
@@ -165,9 +177,7 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
     for {
       _ <- forEach (allTypes) { tpeCase => {
          for {
-           // need to ensure 'Add' becomes 'ep.m3.Add'
-           // HOW TO DO THIS?
-          _ <- addClassToProject(makeClassForCase(model, ops, tpeCase, domainSpecific), operationNames(defining, tpeCase) : _ *)
+           _ <- addClassToProject(makeClassForCase(model, ops, tpeCase, domainSpecific), operationNames(defining, tpeCase) : _ *)
         } yield ()
         }
       }
@@ -215,6 +225,21 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
   /** For Interpreter, the covariant type needs to be selected whenever a BaseType in the domain is expressed. */
   def domainTypeLookup[Ctxt](covariantType: Name*)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
     FindClass(covariantType).interpret(canFindClass)
+  }
+
+  /** Enables mapping each DataType to the designated ep.?.DT class. */
+  def registerLocally(tpe:DataType, paramType:Type) : Generator[ClassContext, Unit] = {
+    import ooParadigm.classCapabilities._
+
+    val dtpeRep = TypeRep.DataType(tpe)
+    println ("register " + tpe.name + " with " + paramType)
+
+    for {
+      _ <- addTypeLookupForMethods(dtpeRep, Command.lift(paramType))
+      _ <- addTypeLookupForClasses(dtpeRep, Command.lift(paramType))
+      _ <- addTypeLookupForConstructors(dtpeRep, Command.lift(paramType))
+
+    } yield ()
   }
 
   /** What model is delivered has operations which is essential for the mapping. */

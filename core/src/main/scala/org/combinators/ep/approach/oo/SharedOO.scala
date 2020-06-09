@@ -5,7 +5,7 @@ import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.communication.{ReceivedRequest, Request}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm.ObjectOriented
-import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
+import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
 
 trait SharedOO extends ApproachImplementationProvider {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
@@ -110,7 +110,7 @@ trait SharedOO extends ApproachImplementationProvider {
    * @param tpeCase
    * @return
    */
-  def makeConstructor(tpeCase: DataTypeCase, useSuper:Boolean = false): Generator[ConstructorContext, Unit] = {
+  def makeConstructor(tpeCase: DataTypeCase, initFields:Boolean = true, useSuper:Boolean = false): Generator[ConstructorContext, Unit] = {
     import ooParadigm.constructorCapabilities._
 
     for {
@@ -123,13 +123,21 @@ trait SharedOO extends ApproachImplementationProvider {
 
       _ <- setParameters(params)
       args <- getArguments()
+
       _ <- if (useSuper) {
         initializeParent(args.map(p => p._3))
       } else {
+        Command.skip[ConstructorContext]
+      }
+
+      _ <- if (initFields) {
         forEach(tpeCase.attributes.zip(args)) { case (att, (_, _, exp)) =>
           initializeField(names.mangle(names.instanceNameOf(att)), exp)
         }
+      } else {
+        Command.skip[ConstructorContext]
       }
+
     } yield ()
   }
 
@@ -178,6 +186,39 @@ trait SharedOO extends ApproachImplementationProvider {
 
         self <- selfReference()
         result <- getMember(self, names.mangle(names.instanceNameOf(att)))
+      } yield Some(result)
+    }
+
+    import ooParadigm.classCapabilities._
+    addMethod(getterName(att), makeBody)
+  }
+
+  /**
+   * Make a single getter method for the 'att' attribute with a body that returns the associaed field's value.
+   *
+   * {{{
+   * public Exp getRight() {
+   *   return this.right;
+   * }
+   * }}}
+   *
+   * Directly access field attribute.
+   *
+   * @param att
+   * @return
+   */
+  def makeCastableGetter(att:Attribute): Generator[ClassContext, Unit] = {
+    val makeBody: Generator[MethodBodyContext, Option[Expression]] = {
+      import ooParadigm.methodBodyCapabilities._
+      import paradigm.methodBodyCapabilities._
+      for {
+        _ <- makeGetterSignature(att)
+        rt <- toTargetLanguageType(att.tpe)
+        _ <- resolveAndAddImport(rt)
+
+        self <- selfReference()
+        lower <- getMember(self, names.mangle(names.instanceNameOf(att)))
+        result <- castObject(rt, lower)
       } yield Some(result)
     }
 

@@ -101,20 +101,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
       }
 
       _ <- triviallyMakeSignature(tpe, op)
-//      // must add a proper parameter to this method, using the most generic ep.Exp for recursive
-//      // types, and pass others through with native types.
-//      params <- forEach (op.parameters) { param =>
-//        for {
-//          //paramField <- getMember(thisRef, names.mangle(param.name))
-//          paramTpe <- if (param.tpe == TypeRep.DataType(tpe)) {
-//            toTargetLanguageType(TypeRep.DataType(triviallyBaseDataType(tpe)))
-//          } else {
-//            toTargetLanguageType(param.tpe)
-//        }
-//        } yield (names.mangle(param.name), paramTpe)
-//      }
-//
-//      _ <- setParameters(params)
+
       args <- getArguments()
 
       convertMethod <- getMember(thisRef, convert)
@@ -130,9 +117,6 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
         }
         } yield (argPair._2, pArg)
       }
-//      opType <- toTargetLanguageType(op.returnType)
-//      _ <- resolveAndAddImport(opType)
-//      _ <- setReturnType(opType)
 
       // TODO: must call convert(baseType) or pass literals through
       result <-
@@ -247,7 +231,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
           model.flatten.ops
         } else model.ops
 
-      def producerConvert(op:Operation) : Generator[MethodBodyContext, Option[Expression]] = {
+      def producerConvert(applicableModel:GenericModel, op:Operation) : Generator[MethodBodyContext, Option[Expression]] = {
         import ooParadigm.methodBodyCapabilities._
         import paradigm.methodBodyCapabilities._
         for {
@@ -262,7 +246,13 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
           superRef <- superReference(names.mangle(model.last.get.name), names.mangle(names.conceptNameOf(tpeCase)))  // TODO: HAVE TO FIX THIS
           opMethod <- getMember(superRef, names.mangle(names.instanceNameOf(op)))
           innerResult <- apply(opMethod, argSeq)
-          result <- apply(convertMethod, Seq(innerResult))
+          //result <- apply(convertMethod, Seq(innerResult))
+
+          result <- if (op.isProducer(applicableModel)) {                    // only have to convert for producer methods.
+            apply(convertMethod, Seq(innerResult))
+          } else {
+            Command.lift[MethodBodyContext,Expression](innerResult)
+          }
         } yield Some(result)
       }
 
@@ -320,8 +310,8 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
 
         _ <- if (model.last.isDefined) {
           for {
-            _ <- forEach(model.last.get.flatten.ops.filter(op => op.isProducer(model))) { op =>
-              addMethod(names.mangle(names.instanceNameOf(op)), producerConvert(op))
+            _ <- forEach(model.last.get.flatten.ops.filter(op => op.isProducer(model)).filterNot(op => opsToGenerate.contains(op))) { op =>
+              addMethod(names.mangle(names.instanceNameOf(op)), producerConvert(model,op))
             }
           }yield ()
         } else {
@@ -750,6 +740,9 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
       case _ => gdomain.linearize
     }
 
+    println(domain.name + ":" + new java.util.Date().toString)
+    domain.inChronologicalOrder.foreach(_.output)
+
     for {
       _ <- debug("Processing Trivially")
       _ <- registerTypeMapping(domain)
@@ -805,6 +798,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
        import polymorphics.methodBodyCapabilities._
        import paradigm.methodBodyCapabilities._
        for {
+         // when merged together, the name of model is changed.
          // ep.m4.Exp<ep.m4.finalized.Visitor>
          paramBaseType <- toTargetLanguageType(TypeRep.DataType(model.baseDataType))
          _ <- resolveAndAddImport(paramBaseType)
@@ -815,7 +809,6 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
          _ <- resolveAndAddImport(returnType)
 
          appliedType <- applyType(paramBaseType, Seq(visitorType))
-         //
 
          facMethod <- createFactoryDataTypeCase(model, tpeCase, appliedType, returnType)
        } yield facMethod
@@ -839,7 +832,7 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
 
            // no longer necessary with finalized classes??
            // get list of all operations and MAP to the most recent model
-           _ <- forEach(model.flatten.typeCases) { tpeCase => {
+           _ <- forEach(model.flatten.typeCases.distinct) { tpeCase => {
              for {
                _ <- addMethod(names.mangle(names.instanceNameOf(tpeCase)), factoryMethod(model, tpeCase))
              } yield (None)

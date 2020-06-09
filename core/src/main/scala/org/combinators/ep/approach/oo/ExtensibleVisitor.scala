@@ -402,6 +402,9 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedVisi
       case _ => gdomain.linearize
     }
 
+    println(domain.name + ":" + new java.util.Date().toString)
+    domain.inChronologicalOrder.foreach(_.output)
+
     val flatDomain = domain.flatten
     for {
       _ <- debug ("Processing Extensible Visitor")

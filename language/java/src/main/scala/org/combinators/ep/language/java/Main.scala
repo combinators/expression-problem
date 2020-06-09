@@ -30,10 +30,10 @@ object Main extends IOApp {
   // val approach = ooApproach // WORKS!
   // val approach = visitorApproach  // WORKS!
   // val approach = visitorSideEffectApproach // WORKS!
-  // val approach = extensibleVisitorApproach // WORKS!
+  // val approach = extensibleVisitorApproach // Almost Works - some classes mis-computed
   // val approach = triviallyApproach // WORKS!
   // interpreterApproach NOT YET WORKING
-  val approach = vitaApproach
+  val approach = interpreterApproach
 
   //val evolutions = Seq(M0, M1, M2, I1, I2)    // , I2 //       M3, M4, M5, M6) // ) // , M4, M5, M6)
   val evolutions = Seq(M0, M1, M2, M3, M4, M5, M6, M7, I1, I2, M7I2)  // M0, M1, M2, M3, M4, M5, M6, M7, I1, I2,)    // all test cases become active WHEN all included.

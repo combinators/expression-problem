@@ -226,16 +226,17 @@ class GenericModel(val name:String,
     helpLinearize(this, 0, record)
 
     // now we have Map that records furthest DISTANCE from M0 to latest evolution. We now
-    // have to read this backwards, and merge pairwise as we go, IGNORING THOSE WHICH HAVE
-    // ALREADY BEEN MERGED...
+    // have to read this backwards, and chain together those we have not seen before, maintaining the
+    // partial order and IGNORING THOSE WHICH HAVE ALREADY BEEN MERGED...
     var prevModel:Option[Model] = None
     var alreadySeen:Seq[String] = Seq.empty
     for (i <- record.size-1 to 0 by -1) {
       val newer = record(i).filterNot(m => alreadySeen.contains(m.toString))
-      val combined = newer.reduce( (m1: GenericModel, m2: GenericModel) => m1.standAlone.merge(m1.name + m2.name, m2.standAlone) )
+      //val combined = newer.reduce( (m1: GenericModel, m2: GenericModel) => m1.standAlone.merge(m1.name + m2.name, m2.standAlone) )
       record(i).foreach(gm => alreadySeen = alreadySeen :+ gm.toString)
-      prevModel = Some(new Model(combined.name, combined.typeCases, combined.ops, combined.baseDataType, prevModel))
-    }
+      newer.foreach(gm =>
+        prevModel = Some(new Model(gm.name, gm.typeCases, gm.ops, gm.baseDataType, prevModel))
+      )}
     prevModel.get
   }
 
@@ -327,7 +328,15 @@ sealed class Model (
   /** From linear Model all will be Model. */
   override def toSeq: Seq[Model] = {
     this +: last.map(_.toSeq).getOrElse(Seq.empty)
-   // (this +: last.toSeq.flatMap(_.toSeq)).distinct   +: last.map(_.toSeq).getOrElse(Seq.empty)
+  }
+
+  /** Returns the bottom-most model in the sequence. */
+  override def base:Model = {
+    if (last.isEmpty) {
+      this
+    } else {
+      last.get.base
+    }
   }
 
   // if all our formers are domainbase then we are the bottom
@@ -368,24 +377,6 @@ sealed class Model (
   override def findOperation(op: Operation): Option[Model] =
     toSeq.find(_.ops.contains(op))
 
-
-  //  /** Returns a flattened model where all previous evolutions are squashed into a single evolution on top of the
-//    * base model.
-//    *
-//    * The name of the squashed evolution will be the name of this evolution.
-//    * If no evolutions are present, the model is returned unchanged.
-//    */
-//  override def flatten: Model = {
-//    val history = toSeq.reverse
-//    val (baseModel, evolutions) = (history.head, history.tail)
-//
-//    def squash(intoModel: Model, nextModel: Model): Model =
-//      new Model(name, intoModel.typeCases ++ nextModel.typeCases, intoModel.ops ++ nextModel.ops, Some(baseModel))
-//
-//    if (evolutions.nonEmpty) evolutions.reduceLeft(squash)
-//    else baseModel
-//  }
-
   /** Constructs new linear extension graph consistent with these two models.
     *
     * Example:
@@ -400,7 +391,7 @@ sealed class Model (
         case (Some(e1), Some(e2)) =>
           Some(
             new Model(
-              Seq(e1.name, e2.name).distinct.mkString(":"),
+              "merged" + Seq(e1.name, e2.name).distinct.mkString,    // used to have ":" separate
               (e1.typeCases ++ e2.typeCases).distinct,
               (e1.ops ++ e2.ops).distinct,
               baseDataType,
@@ -413,6 +404,7 @@ sealed class Model (
     println("merge " + name + " with " + other.name)
     val extendedHistory: Seq[(Option[Model], Option[Model])] =
       toSeq.reverse.map(Some(_)).zipAll(other.toSeq.reverse.map(Some(_)), None, None)
+
     extendedHistory.foldLeft[Option[Model]](None)(combineEvolutions).get
   }
 
@@ -442,8 +434,12 @@ sealed class Model (
 
   /** Debugging function. */
   override def output = {
-    println("Model " + name + "[" + typeCases.map(_.name).mkString(",")+ "," + ops.map(_.name).mkString(",") +
-      " last:" + last.getOrElse("") + "]")
+    println(toString)
+  }
+
+  override def toString:String = {
+    "Model " + name + "[" + typeCases.map(_.name).mkString(",")+ "," + ops.map(_.name).mkString(",") +
+      " last:" + last.getOrElse("*") + "]"
   }
 }
 

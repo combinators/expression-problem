@@ -1,20 +1,22 @@
 package org.combinators.ep.language.java
 
 import cats.effect.{ExitCode, IO, IOApp}
-import org.combinators.ep.approach.oo.ViTA
+import org.combinators.ep.approach.oo.{Trivially, ViTA}
 import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.math.{M0, X1, X2, X2X3, X3, X4, eips}
 import org.combinators.ep.generator.TestImplementationProvider
 import org.combinators.jgitserv.{BranchTransaction, GitService}
 import org.combinators.ep.generator.FileWithPathPersistable._
+import org.combinators.ep.language.java.Main.generator
 
 object ThirdAlternate extends IOApp {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed))
 
   val vitaApproach = ViTA[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+  val triviallyApproach = Trivially[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
-  val approach = vitaApproach
+  val approach = triviallyApproach
 
   //val evolutions = Seq(M0, M1, M2, I1, I2)    // , I2 //       M3, M4, M5, M6) // ) // , M4, M5, M6)
   val evolutions = Seq( M0, X1, X2, X3, X2X3, X4)

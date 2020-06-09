@@ -98,7 +98,6 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     import ooParadigm.methodBodyCapabilities._
     import polymorphics.methodBodyCapabilities._
 
-    // TODO: what happens when logic OVERRIDES this default behavior
     def producerConvert(applicableModel:GenericModel) : Generator[MethodBodyContext, Option[Expression]] = {
       import ooParadigm.methodBodyCapabilities._
       import paradigm.methodBodyCapabilities._
@@ -983,7 +982,7 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     import paradigm.projectContextCapabilities._
     import ooParadigm.projectCapabilities._
 
-    println(domain.name + ":" + new java.util.Date().toString())
+    println(domain.name + ":" + new java.util.Date().toString)
 
 
     for {
@@ -1026,10 +1025,6 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
   def specifiedInterface(domain: GenericModel): Seq[Name] = {
     Seq(names.mangle(domain.name), names.mangle(domain.baseDataType.name))
   }
-
-//  override def implement(tests: Map[Model, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
-//    implementTestGeneric(tests.map({ case (k,v) => (k,v)}), testImplementationProvider)
-//  }
 
   /**
    * Test cases all need factory methods to work.

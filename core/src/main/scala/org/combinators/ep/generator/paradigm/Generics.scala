@@ -30,7 +30,6 @@ trait Generics {
     def getTypeArguments(): Generator[ClassContext, Seq[Type]] =
       AnyParadigm.capabilitiy(GetTypeArguments[Type]())
 
-
     implicit val canApplyTypeInClass: Understands[ClassContext, Apply[Type, Type, Type]]
     def applyType(tpe: Type, arguments: Seq[Type]): Generator[ClassContext, Type] =
       AnyParadigm.capabilitiy(Apply[Type, Type, Type](tpe, arguments))

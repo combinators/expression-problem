@@ -3,13 +3,15 @@ package org.combinators.ep.language.scala
 import cats.{Apply => _}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command
+import org.combinators.ep.generator.paradigm.ffi.Trees
+import org.combinators.ep.generator.paradigm.{Generics, ParametricPolymorphism}
 import org.combinators.ep.language.scala.paradigm._
 import org.combinators.ep.language.scala.paradigm.ffi._
 
 import scala.meta._
 
 /**
-  * Java-specific.
+  * Scala-specific.
   *
   * These paradigm-specific traits are conceptually different from each other
   */
@@ -17,6 +19,7 @@ sealed class CodeGenerator(config: Config) { cc =>
   val paradigm: AnyParadigm = AnyParadigm(config)
   val functional: Functional[paradigm.type] = Functional(paradigm)
   val functionalInMethod: control.Functional[paradigm.MethodBodyContext, paradigm.type] = control.Functional.inMethodContext(paradigm)
+
   /*val ooParadigm: ObjectOriented[paradigm.type] = ObjectOriented(paradigm)
   val imperativeInMethod: Imperative[MethodBodyCtxt, paradigm.type] = Imperative.inMethodContext(paradigm)
   val imperativeInConstructor: Imperative[CtorCtxt, paradigm.type] = Imperative.inConstructorContext(paradigm)

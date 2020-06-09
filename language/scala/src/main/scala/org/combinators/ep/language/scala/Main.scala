@@ -1,9 +1,8 @@
 package org.combinators.ep.language.scala
 
 import cats.effect.{ExitCode, IO, IOApp}
-//import org.combinators.ep.approach.oo.{Algebra, ExtensibleVisitor, Interpreter, Traditional, Trivially, Visitor, VisitorSideEffect}
+import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.approach.functional.Traditional
-import org.combinators.ep.domain.Model
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.math._
 import org.combinators.ep.generator.TestImplementationProvider
@@ -18,7 +17,7 @@ object Main extends IOApp {
 
   val traditionalApproach = Traditional[Syntax.default.type, generator.paradigm.type](generator.paradigm)(ScalaNameProvider, generator.functional, generator.functionalInMethod)
 
-  /*val visitorApproach = Visitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+ /*val visitorApproach = Visitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val visitorSideEffectApproach = VisitorSideEffect[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val extensibleVisitorApproach = ExtensibleVisitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val interpreterApproach = Interpreter[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
@@ -36,8 +35,8 @@ object Main extends IOApp {
   val approach = traditionalApproach
 
   val evolutions = Seq(M0, M1, M2, M3, M4)
-  //val m4eip =
-  val eip =
+
+   val eip =
     eips.M4.functional(approach.paradigm)(
       generator.functionalInMethod,
       generator.doublesInMethod,
@@ -52,7 +51,7 @@ object Main extends IOApp {
     generator.equalityInMethod
   )*/
 
-  val tests = evolutions.scanLeft(Map.empty[Model, Seq[TestCase]]) { case (m, evolution) =>
+  val tests = evolutions.scanLeft(Map.empty[GenericModel, Seq[TestCase]]) { case (m, evolution) =>
     m + (evolution.getModel -> evolution.tests)
   }.tail
 

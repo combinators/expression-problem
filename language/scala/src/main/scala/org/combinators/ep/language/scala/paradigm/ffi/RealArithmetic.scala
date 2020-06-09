@@ -3,7 +3,7 @@ package org.combinators.ep.language.scala.paradigm.ffi
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.Apply
-import org.combinators.ep.generator.paradigm.ffi.{Cos, EulersNumber, Log, Pi, Pow, Sin, Sqrt, RealArithmetic => RArith}
+import org.combinators.ep.generator.paradigm.ffi.{Abs, Cos, EulersNumber, Floor, Log, Pi, Pow, Sin, Sqrt, RealArithmetic => RArith}
 import org.combinators.ep.generator.{Command, Understands}
 import org.combinators.ep.language.scala.CodeGenerator.Enable
 import org.combinators.ep.language.scala.{ContextSpecificResolver, ProjectCtxt}
@@ -74,6 +74,10 @@ class RealArithmetic[Ctxt, T, AP <: AnyParadigm](
         scalaMathConst("E")
       implicit val canPi: Understands[Ctxt, Pi[Expression]] =
         scalaMathConst("Pi")
+      implicit val canAbs: Understands[Ctxt, Apply[Abs[T], Expression, Expression]] =
+        scalaMathOp("abs")
+      implicit val canFloor: Understands[Ctxt, Apply[Floor[T], Expression, Expression]] =
+        scalaMathOp("floor")
     }
 
   def enable(): Generator[base.ProjectContext, Unit] =

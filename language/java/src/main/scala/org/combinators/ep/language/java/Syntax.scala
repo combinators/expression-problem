@@ -1,12 +1,8 @@
-package org.combinators.ep.language.java
+package org.combinators.ep.language.java     /*DI:LD:AI*/
 
-import java.nio.charset.StandardCharsets
-import java.util.Base64
-
-import org.combinators.ep.generator.{AbstractSyntax, FreshNameProvider}
+import org.combinators.ep.generator.AbstractSyntax
 import cats.data.State
 import cats._
-import com.github.javaparser.ast.comments.Comment
 
 trait Syntax extends AbstractSyntax {
   type CompilationUnit = com.github.javaparser.ast.CompilationUnit
@@ -17,7 +13,6 @@ trait Syntax extends AbstractSyntax {
   type UnitTest = com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
   type Name = Syntax.MangledName
 }
-
 
 object Syntax {
   case class MangledName(original: String, mangled: String) {

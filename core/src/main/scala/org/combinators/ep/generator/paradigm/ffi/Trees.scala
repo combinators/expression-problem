@@ -1,6 +1,5 @@
-package org.combinators.ep.generator.paradigm.ffi
+package org.combinators.ep.generator.paradigm.ffi   /*DI:LI:AI*/
 
-import org.combinators.ep.domain.tree.Tree
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.Understands
 import org.combinators.ep.generator.paradigm.{AnyParadigm, Apply}

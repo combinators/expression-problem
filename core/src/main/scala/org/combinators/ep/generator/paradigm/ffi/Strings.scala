@@ -1,4 +1,4 @@
-package org.combinators.ep.generator.paradigm.ffi
+package org.combinators.ep.generator.paradigm.ffi   /*DI:LI:AI*/
 
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator

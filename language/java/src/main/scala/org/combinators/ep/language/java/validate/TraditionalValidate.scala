@@ -1,4 +1,4 @@
-package org.combinators.ep.language.java.validate
+package org.combinators.ep.language.java.validate     /*DD:LD:AD*/
 
 import cats.effect.IOApp
 import org.combinators.ep.approach.oo._
@@ -15,15 +15,15 @@ object TraditionalValidate extends IOApp with BaseEvolution {
 
   val approach = Traditional[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
 
+  // Massive one-liner, but this aligns with M7I2
+  val eip = eips.M7I2(approach.paradigm)(eips.M7(approach.paradigm)(eips.M6(approach.paradigm)(eips.M5(approach.paradigm)(eips.M4.imperative(approach.paradigm)(generator.imperativeInMethod,generator.doublesInMethod,generator.booleansInMethod,generator.stringsInMethod,generator.listsInMethod,generator.equalityInMethod))(generator.intsInMethod,generator.treesInMethod))(generator.equalityInMethod))(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod))  (eips.I2(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod))
+
   val transaction =
     evolutions.zip(tests).foldLeft(Option.empty[BranchTransaction]) {
       case (transaction, (evolution, tests)) =>
         val impl =
           for {
-            _ <- approach.implement(
-              evolution.getModel,
-              eips.M3.apply(approach.paradigm)(generator.doublesInMethod, generator.stringsInMethod)
-            )
+            _ <- approach.implement(evolution.getModel,eip)
             _ <- approach.implement(
               tests,
               TestImplementationProvider.defaultAssertionBasedTests(approach.paradigm)(generator.assertionsInMethod, generator.equalityInMethod, generator.booleansInMethod, generator.stringsInMethod)

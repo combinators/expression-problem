@@ -11,8 +11,8 @@ import org.combinators.jgitserv.BranchTransaction
 /**
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
-object TriviallyValidate extends IOApp with BaseEvolution {
-  val approach = Trivially[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+object ViTAValidate extends IOApp with BaseEvolution {
+  val approach = ViTA[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
   // Massive one-liner, but this aligns with M7I2
   val eip = eips.M7I2(approach.paradigm)(eips.M7(approach.paradigm)(eips.M6(approach.paradigm)(eips.M5(approach.paradigm)(eips.M4.imperative(approach.paradigm)(generator.imperativeInMethod,generator.doublesInMethod,generator.booleansInMethod,generator.stringsInMethod,generator.listsInMethod,generator.equalityInMethod))(generator.intsInMethod,generator.treesInMethod))(generator.equalityInMethod))(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod))  (eips.I2(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod))

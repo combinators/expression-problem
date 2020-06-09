@@ -1,4 +1,4 @@
-package org.combinators.ep.generator
+package org.combinators.ep.generator   /*DI:LI:AI*/
 
 /** Provides type definitions for abstract syntax tree components. */
 trait AbstractSyntax {

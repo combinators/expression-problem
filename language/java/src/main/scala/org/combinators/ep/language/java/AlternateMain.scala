@@ -1,4 +1,4 @@
-package org.combinators.ep.language.java
+package org.combinators.ep.language.java     /*DD:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.combinators.ep.approach.oo.ViTA

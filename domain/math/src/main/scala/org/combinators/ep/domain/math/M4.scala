@@ -4,7 +4,7 @@ import org.combinators.ep.domain._
 import org.combinators.ep.domain.abstractions.{EqualsCompositeTestCase, EqualsTestCase, Operation, TestCase, TypeRep}
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.domain.math.M0.{AddInst, Eval, LitInst}
-import org.combinators.ep.domain.math.M1.{Sub, SubInst}
+import org.combinators.ep.domain.math.M1.SubInst
 import org.combinators.ep.domain.math.M2.{PrettyP, StringInst}
 import org.combinators.ep.domain.math.M3.{DivdInst, MultInst, NegInst}
 

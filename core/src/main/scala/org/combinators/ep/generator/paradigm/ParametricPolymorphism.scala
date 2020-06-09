@@ -1,6 +1,6 @@
-package org.combinators.ep.generator.paradigm
+package org.combinators.ep.generator.paradigm   /*DI:LI:AI*/
 
-import org.combinators.ep.generator.{AbstractSyntax, Command, Understands}
+import org.combinators.ep.generator.{Command, Understands}
 import org.combinators.ep.generator.Command.Generator
 
 case class AddTypeParameter[Name, TypeParameterContext](

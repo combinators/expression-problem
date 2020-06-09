@@ -1,4 +1,4 @@
-package org.combinators.ep.approach.oo
+package org.combinators.ep.approach.oo    /*DI:LI:AD*/
 
 import org.combinators.ep.domain.abstractions.{DataType, Operation}
 import org.combinators.ep.generator.ApproachImplementationProvider

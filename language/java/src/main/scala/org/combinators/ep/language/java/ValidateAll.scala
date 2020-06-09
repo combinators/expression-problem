@@ -1,4 +1,4 @@
-package org.combinators.ep.language.java
+package org.combinators.ep.language.java     /*DI:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
 import cats.implicits._
@@ -6,8 +6,9 @@ import org.combinators.ep.language.java.validate.{ExtensibleVisitorValidate, Int
 
 /** Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  *
- * Challenging because of the complex types we have used.
+ * Challenging because of the complex types we have used. Can't get this to work....
  */
+@deprecated
 object ValidateAll extends IOApp {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed))
 

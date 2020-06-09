@@ -1,8 +1,6 @@
-package org.combinators.ep.domain
+package org.combinators.ep.domain   /*DI:LI:AI*/
 
 import org.combinators.ep.domain.instances.InstanceRep
-
-/*DI:LI:AI*/
 
 /** Provides models of generic trees. */
 package object tree {

@@ -1,4 +1,4 @@
-package org.combinators.ep.language.java.paradigm.ffi
+package org.combinators.ep.language.java.paradigm.ffi    /*DI:LD:AI*/
 
 import java.nio.file.Paths
 

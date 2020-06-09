@@ -1,10 +1,10 @@
-package org.combinators.ep.domain.math
+package org.combinators.ep.domain.math      /*DD:LI:AI*/
 
 import org.combinators.ep.domain._
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
 import org.combinators.ep.domain.math.M0.LitInst
-import org.combinators.ep.domain.math.M1.{Sub, SubInst}
+import org.combinators.ep.domain.math.M1.SubInst
 
 object X3 extends Evolution {
   override implicit def getModel:GenericModel = X1.getModel.evolve("x3", Seq(Divd), Seq.empty)

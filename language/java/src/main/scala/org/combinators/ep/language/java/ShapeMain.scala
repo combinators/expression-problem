@@ -1,4 +1,4 @@
-package org.combinators.ep.language.java
+package org.combinators.ep.language.java     /*DI:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.combinators.ep.approach.oo.{Algebra, ExtensibleVisitor, Interpreter, Traditional, Trivially, Visitor, VisitorSideEffect}

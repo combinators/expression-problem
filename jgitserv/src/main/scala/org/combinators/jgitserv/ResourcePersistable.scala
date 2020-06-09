@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.combinators.jgitserv
+package org.combinators.jgitserv    /*DI:LI:AI*/
 
 import java.nio.file.{FileSystems, Files, Path, Paths}
 

@@ -1,4 +1,4 @@
-package org.combinators.ep.language.java
+package org.combinators.ep.language.java     /*DI:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.combinators.ep.approach.oo.{Algebra, ExtensibleVisitor, Interpreter, Traditional, Trivially, ViTA, Visitor, VisitorSideEffect}
@@ -41,24 +41,17 @@ object Main extends IOApp {
 //  val eip = eips.I2(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod,
 //    generator.stringsInMethod, generator.imperativeInMethod)
 //  // how do I just use M2 instead of this? HACK
-  val m4eip =
-    eips.M4.imperative(approach.paradigm)(
+  val m4eip = eips.M4.imperative(approach.paradigm)(
       generator.imperativeInMethod,
       generator.doublesInMethod,
       generator.booleansInMethod,
       generator.stringsInMethod,
       generator.listsInMethod,
       generator.equalityInMethod)
-  val m5eip = eips.M5(approach.paradigm)(m4eip)(
-    generator.intsInMethod,
-    generator.treesInMethod)
-  val m6eip = eips.M6(approach.paradigm)(m5eip)(
-    generator.equalityInMethod
-  )
+  val m5eip = eips.M5(approach.paradigm)(m4eip)(generator.intsInMethod,generator.treesInMethod)
+  val m6eip = eips.M6(approach.paradigm)(m5eip)(generator.equalityInMethod)
   val e7_eip = eips.M7(approach.paradigm)(m6eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
-
   val i2_eip = eips.I2(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
-
   val eip = eips.M7I2(approach.paradigm)(e7_eip)(i2_eip)
 
   val tests = evolutions.scanLeft(Map.empty[GenericModel, Seq[TestCase]]) { case (m, evolution) =>

@@ -1,4 +1,4 @@
-package org.combinators.ep.approach.oo
+package org.combinators.ep.approach.oo    /*DI:LI:AD*/
 
 import org.combinators.ep.domain.{GenericModel, Model}
 import org.combinators.ep.domain.abstractions._
@@ -13,9 +13,6 @@ import AnyParadigm.syntax._
  * Shriram Krishnamurthi, Matthias Felleisen, Daniel Friedman
  * https://dl.acm.org/citation.cfm?id=679709
  *
- * TODO: Doesn't yet work for c1 merged, since it reuses code from visitor (constructors)
- * that need to be modified instead
- *
  * https://stackoverflow.com/questions/55501899/exception-in-intellijs-sbt-console-not-found-value-ideaport-ideaport-in-globa
  * problem with sbt...
  */
@@ -26,7 +23,6 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedVisi
   import syntax._
 
   lazy val visitorInstanceFactoryMethodPrefix: Name = names.mangle("make")
-
 
   /**
    * Instantiate an implementation of the visitor.

@@ -1,4 +1,4 @@
-package org.combinators.ep.language.java.paradigm
+package org.combinators.ep.language.java.paradigm    /*DI:LD:AI*/
 
 import java.util.UUID
 

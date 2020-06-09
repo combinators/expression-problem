@@ -1,4 +1,4 @@
-package org.combinators.ep.generator
+package org.combinators.ep.generator   /*DI:LI:AI*/
 
 @scala.annotation.implicitNotFound(msg = "Context ${Context} does not understand ${Cmd}")
 trait Understands[Context, Cmd <: Command] {

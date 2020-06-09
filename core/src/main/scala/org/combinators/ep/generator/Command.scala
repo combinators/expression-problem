@@ -1,4 +1,4 @@
-package org.combinators.ep.generator
+package org.combinators.ep.generator   /*DI:LI:AI*/
 
 import cats.data.State
 import cats._

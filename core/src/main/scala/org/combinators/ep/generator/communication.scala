@@ -1,4 +1,4 @@
-package org.combinators.ep.generator
+package org.combinators.ep.generator   /*DI:LI:AI*/
 
 import org.combinators.ep.domain.abstractions.{Attribute, DataType, DataTypeCase, Operation, Parameter}
 
@@ -13,7 +13,6 @@ package object communication {
       s"Missing argument for parameter ${op.parameters.find(!arguments.isDefinedAt(_)).get} of operation ${op.name}"
     )
   }
-
 
   /** Models a received request to perform an operation on a data type.
     *

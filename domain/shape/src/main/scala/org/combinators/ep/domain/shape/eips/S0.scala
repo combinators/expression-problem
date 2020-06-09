@@ -1,4 +1,4 @@
-package org.combinators.ep.domain.shape.eips
+package org.combinators.ep.domain.shape.eips      /*DD:LI:AI*/
 
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.domain.instances.InstanceRep

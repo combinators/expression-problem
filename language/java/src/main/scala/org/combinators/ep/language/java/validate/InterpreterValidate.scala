@@ -1,4 +1,4 @@
-package org.combinators.ep.language.java.validate
+package org.combinators.ep.language.java.validate     /*DD:LD:AD*/
 
 import cats.effect.IOApp
 import org.combinators.ep.approach.oo._

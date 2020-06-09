@@ -1,10 +1,10 @@
-package org.combinators.ep.domain.math
+package org.combinators.ep.domain.math     /*DD:LI:AI*/
 
 import org.combinators.ep.domain._
 import org.combinators.ep.domain.abstractions._
-import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
-import org.combinators.ep.domain.math.M0.{AddInst, Eval, LitInst}
-import org.combinators.ep.domain.math.M1.{Sub, SubInst}
+import org.combinators.ep.domain.instances.InstanceRep
+import org.combinators.ep.domain.math.M0.{AddInst, LitInst}
+import org.combinators.ep.domain.math.M1.SubInst
 
 //class M2(val m1:M1) extends Evolution {
 object M2 extends Evolution {

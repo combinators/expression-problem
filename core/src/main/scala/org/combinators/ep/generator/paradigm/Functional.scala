@@ -1,7 +1,7 @@
-package org.combinators.ep.generator.paradigm
+package org.combinators.ep.generator.paradigm   /*DI:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{DataType, TypeRep}
-import org.combinators.ep.generator.{AbstractSyntax, Command, Understands}
+import org.combinators.ep.domain.abstractions.TypeRep
+import org.combinators.ep.generator.{Command, Understands}
 import org.combinators.ep.generator.Command.Generator
 
 case class AddType[Name, TypeContext](name: Name, tpeGen: Generator[TypeContext, Unit]) extends Command {

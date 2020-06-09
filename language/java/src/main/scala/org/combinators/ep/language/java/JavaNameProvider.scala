@@ -1,15 +1,10 @@
-package org.combinators.ep.language.java
+package org.combinators.ep.language.java     /*DI:LD:AI*/
 
-import org.combinators.ep.generator.{FreshNameProvider, NameProvider}
+import org.combinators.ep.generator.NameProvider
 import org.combinators.templating.twirl.Java
 import Syntax.MangledName
 
 import scala.util.Try
-import cats.data._
-import com.github.javaparser.ast.expr.SimpleName
-
-
-
 
 /** Provides name mangling for Java */
 object JavaNameProvider extends NameProvider[MangledName] {

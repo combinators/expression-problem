@@ -1,4 +1,4 @@
-package org.combinators.ep.language.java.paradigm.ffi
+package org.combinators.ep.language.java.paradigm.ffi    /*DI:LD:AI*/
 
 import com.github.javaparser.ast.expr.{BinaryExpr, BooleanLiteralExpr}
 import org.combinators.ep.domain.abstractions.TypeRep

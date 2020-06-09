@@ -9,7 +9,7 @@ import cats.data._
 import cats.syntax._
 import cats.implicits._
 import org.combinators.ep.generator.Command._
-import org.combinators.ep.generator.paradigm.{AddImport, AnyParadigm, FindClass, Reify, ResolveImport, ToTargetLanguageType}
+import org.combinators.ep.generator.paradigm.{AddImport, AnyParadigm, ResolveImport}
 import AnyParadigm.syntax._
 
 /** Provides implementations for language and approach specific code generation tasks which do not depend on a specific

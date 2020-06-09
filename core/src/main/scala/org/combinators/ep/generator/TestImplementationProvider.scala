@@ -1,4 +1,4 @@
-package org.combinators.ep.generator
+package org.combinators.ep.generator   /*DI:LI:AI*/
 
 import cats.kernel.Monoid
 import org.combinators.ep.domain.abstractions.{DataType, EqualsCompositeTestCase, EqualsTestCase, NotEqualsTestCase, Operation, TestCase, TypeRep}

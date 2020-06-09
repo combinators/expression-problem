@@ -1,4 +1,4 @@
-package org.combinators.ep.generator.paradigm
+package org.combinators.ep.generator.paradigm   /*DI:LI:AI*/
 
 import org.combinators.ep.generator.{AbstractSyntax, Command, Understands}
 import Command.Generator

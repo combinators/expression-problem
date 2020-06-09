@@ -1,7 +1,7 @@
-package org.combinators.ep.language.java.validate
+package org.combinators.ep.language.java.validate     /*DD:LD:AI*/
 
 import cats.effect.{ExitCode, IO}
-import org.combinators.ep.domain.{GenericModel, Model}
+import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.math._
 import org.combinators.ep.language.java.{CodeGenerator, PartiallyBoxed}
@@ -13,7 +13,9 @@ import org.combinators.jgitserv.{BranchTransaction, GitService}
 trait BaseEvolution {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed))
 
-  val evolutions = Seq(M0, M1, M2, M3, M4)  // can't bring in M4 just yet: scala.NotImplementedError: Sequence(Double)
+  // all known branches in largest initial case study.
+  val evolutions = Seq(M0, M1, M2, M3, M4, M5, M6, M7, I1, I2, M7I2)
+
   val tests = evolutions.scanLeft(Map.empty[GenericModel, Seq[TestCase]]) { case (m, evolution) =>
     m + (evolution.getModel -> evolution.tests)
   }.tail

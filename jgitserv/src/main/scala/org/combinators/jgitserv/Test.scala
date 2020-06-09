@@ -1,4 +1,4 @@
-package org.combinators.jgitserv
+package org.combinators.jgitserv    /*DI:LI:AI*/
 
 import java.nio.file.Path
 import java.nio.file.Paths

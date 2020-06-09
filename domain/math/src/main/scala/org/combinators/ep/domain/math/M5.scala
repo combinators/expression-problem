@@ -8,7 +8,7 @@ import org.combinators.ep.domain.math.M0.{Lit, Add, AddInst, LitInst, DoubleInst
 import org.combinators.ep.domain.math.M1.{Sub, SubInst}
 import org.combinators.ep.domain.math.M2.{PrettyP, StringInst}
 import org.combinators.ep.domain.math.M3.{Divd, DivdInst, Mult, MultInst, Neg, NegInst}
-import org.combinators.ep.domain.math.M4.{Simplify}
+import org.combinators.ep.domain.math.M4.Simplify
 
 object M5 extends Evolution {
   override implicit def getModel:GenericModel = M4.getModel.evolve("m5", Seq.empty, Seq(Operation.asTree, Identifier))

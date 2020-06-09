@@ -1,4 +1,4 @@
-package org.combinators.ep.language.java.paradigm
+package org.combinators.ep.language.java.paradigm    /*DI:LD:AI*/
 
 import com.github.javaparser.ast.`type`.TypeParameter
 import com.github.javaparser.ast.expr.MethodCallExpr

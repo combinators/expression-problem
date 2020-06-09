@@ -3,7 +3,6 @@ package org.combinators.ep.domain.shape    /*DD:LI:AI*/
 import org.combinators.ep.domain._
 import org.combinators.ep.domain.abstractions.TestCase
 
-
 /**
   * Shape domain as suitable for
   *

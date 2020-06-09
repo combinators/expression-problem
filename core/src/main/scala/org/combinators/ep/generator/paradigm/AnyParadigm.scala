@@ -1,7 +1,6 @@
-package org.combinators.ep.generator.paradigm
+package org.combinators.ep.generator.paradigm   /*DI:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{DataType, DataTypeCase, TypeRep}
-import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
+import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.{AbstractSyntax, Command, FileWithPath, Understands}
 import Command._
 import cats.implicits._

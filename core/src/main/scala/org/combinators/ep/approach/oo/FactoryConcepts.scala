@@ -241,7 +241,6 @@ trait FactoryConcepts extends ApproachImplementationProvider {
       _ <- createFactorySignatureDataTypeCase(model, tpeCase, paramBaseType, returnType, isStatic)
 
       opInst <- findClass(factoryInstanceDataTypeCase(Some(model), tpeCase): _*)    // should check!
-    //  _ <- resolveAndAddImport(opInst)
 
       argSeq <- getArguments().map( args => { args.map(triple => triple._3) })
       res <- instantiateObject(opInst, argSeq)
@@ -253,7 +252,4 @@ trait FactoryConcepts extends ApproachImplementationProvider {
      createFactoryDataTypeCase(model, tpeCase, paramBaseType, returnType, true);
   }
 
-  def createDefaultFactoryDataTypeCase(model:Model, tpeCase:DataTypeCase, paramBaseType:Type, returnType:Type): Generator[MethodBodyContext, Option[Expression]] = {
-     createFactoryDataTypeCase(model, tpeCase, paramBaseType, returnType, true);
-  }
 }

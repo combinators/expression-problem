@@ -90,6 +90,7 @@ object M7I2 {
       Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
         import paradigm._
         import methodBodyCapabilities._
+        assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name)
 
         // useful. Might make it larger in scope
         def simplifyRec(att:abstractions.Attribute, attExpr: paradigm.syntax.Expression): Generator[MethodBodyContext, paradigm.syntax.Expression] = {

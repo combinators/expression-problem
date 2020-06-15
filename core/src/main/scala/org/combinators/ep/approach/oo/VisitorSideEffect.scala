@@ -249,7 +249,6 @@ abstract class VisitorSideEffect extends OOApproachImplementationProvider with S
    * @param domainSpecific
    * @return
    */
-
   override def makeImplementation(tpe: DataType,
                          tpeCase: DataTypeCase,
                          op: Operation,
@@ -277,25 +276,6 @@ abstract class VisitorSideEffect extends OOApproachImplementationProvider with S
     } yield Some(result)
   }
 
-//  /**
-//   * Default type mapping for toTargetLanguage for MethodBodyContext, ClassContext, ConstructorContext
-//   * @param domain
-//   * @return
-//   */
-//  def registerTypeMapping(domain: Model): Generator[ProjectContext, Unit] = {
-//    import ooParadigm.projectCapabilities._
-//    import paradigm.projectContextCapabilities._
-//    import ooParadigm.methodBodyCapabilities._
-//    import ooParadigm.classCapabilities._
-//    import ooParadigm.constructorCapabilities._
-//    val dtpeRep = TypeRep.DataType(domain.baseDataType)
-//    for {
-//      _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(domain.baseDataType))
-//      _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(domain.baseDataType))
-//      _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(domain.baseDataType))
-//    } yield ()
-//  }
-
   /**
    * The Visitor approach is defined as follows
    *
@@ -303,7 +283,7 @@ abstract class VisitorSideEffect extends OOApproachImplementationProvider with S
    * 2. For each of the data types (in flattened set) create a derived class
    * 3. Create the Visitor interface
    *
-   * @param domain
+   * @param gdomain
    * @param domainSpecific
    * @return
    */

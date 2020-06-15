@@ -12,6 +12,7 @@ import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Strings}
 object M3 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
       (paradigm: P)
+      (m2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
       (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
        ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
@@ -87,6 +88,6 @@ object M3 {
     }
 
     // newest one must come first
-    monoidInstance.combine(m3Provider, M2(paradigm)(ffiArithmetic, ffiStrings))
+    monoidInstance.combine(m3Provider, m2Provider)
   }
 }

@@ -8,12 +8,14 @@ import org.combinators.ep.generator.{ApproachImplementationProvider, Command, Ev
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm
+import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm.control.{Functional, Imperative}
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Booleans, Equality, Lists, Strings}
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Booleans, Equality, Strings}
 
-// Code for M4. Takes adapters for return in if-then-else, s.t. functional- and imperative-style if-then-else can be
+// Code for M8. Takes adapters for return in if-then-else, s.t. functional- and imperative-style if-then-else can be
 // used in an uniform way.
-sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P], IfBlockType](val paradigm: P) {
+sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P], IfBlockType](val paradigm: P) {
+
   type IfThenElseCommand =
     (paradigm.syntax.Expression,
       Generator[paradigm.MethodBodyContext, IfBlockType],
@@ -22,17 +24,16 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
       Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]]
 
   def apply
-  (m3Provider : EvolutionImplementationProvider[AIP[paradigm.type]])
+  (m7I2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
   (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiLists: Lists.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],
    returnInIf: Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression] => Generator[paradigm.MethodBodyContext, IfBlockType],
    ifThenElse: IfThenElseCommand
   ): EvolutionImplementationProvider[AIP[paradigm.type]] = {
-    val m4Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.M4.getModel
+    val m8Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      override val model = math.M8.getModel
 
       /** Simplify depends upon having a working eval. */
       override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
@@ -52,67 +53,16 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
           _ <- ffiArithmetic.enable()
           _ <- ffiBoolean.enable()
           _ <- ffiStrings.enable()
-          _ <- ffiLists.enable()
           _ <- ffiEquality.enable()
         } yield ()
       }
 
       def applicable(forApproach: AIP[paradigm.type])
                     (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
-        (Set(math.M4.Simplify).contains(onRequest.request.op) &&
-          math.M4.getModel.flatten.typeCases.toSet.contains(onRequest.tpeCase)) ||
-          Set(math.M4.Collect).contains(onRequest.request.op)  // any foreseeable DT can be collected
+        Set(math.M4.Simplify,math.M4.Collect,math.M2.PrettyP,math.M0.Eval,math.I1.MultBy).contains(onRequest.request.op) &&
+          Set(math.M8.Inv).contains(onRequest.tpeCase)
       }
 
-      private def collectLogic
-      (forApproach: AIP[paradigm.type])
-      (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
-      Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
-        import ffiLists.listCapabilities._
-        import paradigm._
-        import syntax._
-        import AnyParadigm.syntax._
-        import methodBodyCapabilities._
-
-        def collectOp(innerListTy: Type): Generator[MethodBodyContext, Expression] = {
-          val atts = onRequest.tpeCase.attributes.map(onRequest.attributes)
-
-          onRequest.tpeCase match {
-            case math.M0.Lit => create(innerListTy, atts)
-            case _ =>
-              for {
-                collectedResults <- forEach(onRequest.attributes.toSeq) {
-
-                  attExpr => {
-                    val att = attExpr._1
-                    val expr = attExpr._2
-                    forApproach.dispatch(
-                      SendRequest(
-                        expr,
-                        math.M4.getModel.baseDataType,
-                        Request(math.M4.Collect, Map.empty),
-                        Some(onRequest)
-                      )
-                    )}
-                }
-                res <- collectedResults.tail.foldLeft(Command.lift[MethodBodyContext, Expression](collectedResults.head)) { case (lastRes, nextCol) =>
-                  for {
-                    lastExp <- lastRes
-                    nextRes <- append(lastExp, nextCol)
-                  } yield nextRes
-                }
-              } yield res
-          }
-        }
-
-        for {
-          listDoubleTy <- toTargetLanguageType(onRequest.request.op.returnType)
-          _ <- forApproach.resolveAndAddImport(listDoubleTy)
-          innerTy <- toTargetLanguageType(onRequest.request.op.returnType.asInstanceOf[TypeRep.Sequence[Double]].elemTpe)
-          _ <- forApproach.resolveAndAddImport(innerTy)
-          result <- collectOp(innerTy)
-        } yield Some(result)
-      }
 
       private def simplifyLogic(forApproach: AIP[paradigm.type])
                                (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
@@ -160,108 +110,34 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
                         oneLit: Generator[MethodBodyContext, Expression]
                       ): Generator[MethodBodyContext, Option[Expression]] = {
           onRequest.tpeCase match {
-            case math.M0.Lit => Command.lift(Some(onRequest.selfReference))
-            case math.M0.Add =>
-              vals.flatMap { case List(leftVal, rightVal) =>
-                for {
-                  addVals <- add(leftVal, rightVal)
-                  addValZero <- areEqual(doubleTy, addVals, zero)
-                  leftEqZero <- areEqual(doubleTy, leftVal, zero)
-                  rightEqZero <- areEqual(doubleTy, rightVal, zero)
-                  result <-
-                    ifThenElse(
-                      addValZero, returnInIf(zeroLit),
-                      Seq(
-                        (leftEqZero, returnInIf(simplifyRec(atts.tail.head, attExprs.tail.head))),
-                        (rightEqZero, returnInIf(simplifyRec(atts.head, attExprs.head)))
-                      ),
-                      for {
-                        lsimp <- simplifyRec(atts.tail.head, attExprs.head)
-                        rsimp <- simplifyRec(atts.head, attExprs.tail.head)
-                        res <- returnInIf(forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Add, lsimp, rsimp))
-                      } yield res
-                    )
-                } yield result
-              }
-            case math.M1.Sub =>
-              vals.flatMap { case List(leftVal, rightVal) =>
-                for {
-                  lrEq <- areEqual(doubleTy, leftVal, rightVal)
-                  result <-
-                    ifThenElse(
-                      lrEq, returnInIf(zeroLit),
-                      Seq.empty,
-                      for {
-                        lsimp <- simplifyRec(atts.head, attExprs.head)
-                        rsimp <- simplifyRec(atts.tail.head, attExprs.tail.head)
-                        res <- returnInIf(forApproach.instantiate(math.M0.getModel.baseDataType, math.M1.Sub, lsimp, rsimp))
-                      } yield res
-                    )
-                } yield result
-              }
-            case math.M3.Mult =>
-              vals.flatMap { case List(leftVal, rightVal) =>
-                for {
-                  leftEqZero <- areEqual(doubleTy, leftVal, zero)
-                  rightEqZero <- areEqual(doubleTy, rightVal, zero)
-                  anyEqZero <- or(Seq(leftEqZero, rightEqZero))
-                  leftEqOne <- areEqual(doubleTy, leftVal, one)
-                  rightEqOne <- areEqual(doubleTy, rightVal, one)
-                  result <-
-                    ifThenElse(
-                      anyEqZero, returnInIf(zeroLit),
-                      Seq(
-                        (leftEqOne, returnInIf(simplifyRec(atts.tail.head, attExprs.tail.head))),
-                        (rightEqOne, returnInIf(simplifyRec(atts.head, attExprs.head)))
-                      ),
-                      for {
-                        lsimp <- simplifyRec(atts.head, attExprs.head)
-                        rsimp <- simplifyRec(atts.tail.head, attExprs.tail.head)
-                        res <- returnInIf(forApproach.instantiate(math.M0.getModel.baseDataType, math.M3.Mult, lsimp, rsimp))
-                      } yield res
-                    )
-                } yield result
-              }
-            case math.M3.Divd =>
+            case math.M8.Inv =>
               vals.flatMap { case List(leftVal, rightVal) =>
                 for {
                   minusOne <- forApproach.reify(InstanceRep(TypeRep.Double)(-1.0))
-                  leftEqZero <- areEqual(doubleTy, leftVal, zero)
-                  rightEqOne <- areEqual(doubleTy, rightVal, one)
+
+                  rightEqZero <- areEqual(doubleTy, rightVal, zero)
+                  leftEqOne <- areEqual(doubleTy, leftVal, one)
                   leftRightEq <- areEqual(doubleTy, leftVal, rightVal)
-                  negRightVal <- mult(minusOne, rightVal)
-                  leftRightNeqEq <- areEqual(doubleTy, leftVal, negRightVal)
+                  negLeftVal <- mult(minusOne, leftVal)
+                  rightLeftNeqEq <- areEqual(doubleTy, rightVal, negLeftVal)
+
                   result <-
                     ifThenElse(
-                      leftEqZero, returnInIf(zeroLit),
+                      rightEqZero, returnInIf(zeroLit),
                       Seq(
-                        (rightEqOne, returnInIf(simplifyRec(atts.head, attExprs.head))),
+                        (leftEqOne, returnInIf(simplifyRec(atts.head, attExprs.head))),
                         (leftRightEq, returnInIf(oneLit)),
-                        (leftRightNeqEq, returnInIf(forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, minusOne)))
+                        (rightLeftNeqEq, returnInIf(forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, minusOne)))
                       ),
                       for {
                         lsimp <- simplifyRec(atts.head, attExprs.head)
                         rsimp <- simplifyRec(atts.tail.head, attExprs.tail.head)
-                        res <- returnInIf(forApproach.instantiate(math.M0.getModel.baseDataType, math.M3.Divd, lsimp, rsimp))
+                        res <- returnInIf(forApproach.instantiate(math.M0.getModel.baseDataType, math.M8.Inv, lsimp, rsimp))
                       } yield res
                     )
                 } yield result
               }
-            case math.M3.Neg =>
-              vals.flatMap { case List(innerVal) =>
-                for {
-                  innerZero <- areEqual(doubleTy, innerVal, zero)
-                  result <-
-                    ifThenElse(
-                      innerZero, returnInIf(zeroLit),
-                      Seq.empty,
-                      for {
-                        innerSimp <- simplifyRec(atts.head, attExprs.head)
-                        res <- returnInIf(forApproach.instantiate(math.M3.getModel.baseDataType, math.M3.Neg, innerSimp))
-                      } yield res
-                    )
-                } yield result
-              }
+
             case other => throw new NotImplementedError(other.toString)
           }
         }
@@ -277,70 +153,113 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
         } yield result
       }
 
-      /** Do not call 'assert' since might not be applicable. */
-      override def genericLogic(forApproach: AIP[paradigm.type])
-               (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
-      Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] = {
-        onRequest.request.op match {
-          case math.M4.Collect => collectLogic(forApproach)(onRequest)
-          case _ => ???
-        }
-      }
-
       def logic(forApproach: AIP[paradigm.type])
                (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] = {
         assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name)
+        import ffiStrings.stringCapabilities._
+        import ffiArithmetic.arithmeticCapabilities._
+        import paradigm._
+        import methodBodyCapabilities._      // Don't be fooled. NEEDS THIS ONE
+        import AnyParadigm.syntax._
+
+
+        val atts = for {
+          atts <- forEach (onRequest.tpeCase.attributes) { att =>
+            forApproach.dispatch(SendRequest(
+              onRequest.attributes(att),
+              math.M3.getModel.baseDataType,
+              onRequest.request,
+              Some(onRequest)
+            ))
+          }
+        } yield atts
 
         onRequest.request.op match {
-          case math.M4.Collect => genericLogic(forApproach)(onRequest)
+          case math.M4.Collect => m7I2Provider.genericLogic(forApproach)(onRequest)
           case math.M4.Simplify => simplifyLogic(forApproach)(onRequest)
+          case math.I1.MultBy => m7I2Provider.genericLogic(forApproach)(onRequest)
+
+          case math.M0.Eval =>
+            onRequest.tpeCase match {
+              case math.M8.Inv =>
+                for {
+                  atts <- forEach (onRequest.tpeCase.attributes) { att =>
+                    forApproach.dispatch(SendRequest(
+                      onRequest.attributes(att),
+                      math.M3.getModel.baseDataType,
+                      onRequest.request,
+                      Some(onRequest)
+                    ))
+                  }
+
+                  res <- div(atts: _*)
+                } yield Some(res)
+
+              case _ => ???
+            }
+
+          case math.M2.PrettyP =>
+            onRequest.tpeCase match {
+              case math.M8.Inv => for {
+                atts <- forEach (onRequest.tpeCase.attributes) { att =>
+                  forApproach.dispatch(SendRequest(
+                    onRequest.attributes(att),
+                    math.M3.getModel.baseDataType,
+                    onRequest.request,
+                    Some(onRequest)
+                  ))
+                }
+
+                res <- makeString(atts, "(", "<<>>", ")")
+              } yield Some(res)
+
+              case _ => ???
+            }
           case _ => ???
         }
       }
     }
 
     // newest one must come first
-    monoidInstance.combine(m4Provider, m3Provider)
+    monoidInstance.combine(m8Provider, m7I2Provider)
   }
 }
 
-object M4 {
+object M8 {
   def functional[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
-  (m3Provider : EvolutionImplementationProvider[AIP[paradigm.type]])
+  (m7I2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
   (functionalControl: Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiLists: Lists.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     import paradigm.syntax._
-    val mkImpl = new M4[paradigm.type, AIP, Expression](paradigm)
+    val mkImpl = new M8[paradigm.type, AIP, Expression](paradigm)
     val ite: mkImpl.IfThenElseCommand =
       (cond, ifBlock, ifElseBlocks, elseBlock) =>
         for {
           res <- functionalControl.functionalCapabilities.ifThenElse(cond, ifBlock, ifElseBlocks, elseBlock)
         } yield Some(res)
 
-    mkImpl(m3Provider)(ffiArithmetic, ffiBoolean, ffiStrings, ffiLists, ffiEquality, expGen => expGen, ite)
+    mkImpl(m7I2Provider)(ffiArithmetic, ffiBoolean, ffiStrings, ffiEquality, expGen => expGen, ite)
   }
 
   def imperative[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
-  (m3Provider : EvolutionImplementationProvider[AIP[paradigm.type]])
+  (m7I2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
   (imperativeControl: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiLists: Lists.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     import paradigm.syntax._
     import paradigm.methodBodyCapabilities._
     import imperativeControl.imperativeCapabilities._
-    val mkImpl = new M4[paradigm.type, AIP, Unit](paradigm)
+    val mkImpl = new M8[paradigm.type, AIP, Unit](paradigm)
     val returnInIf: Generator[paradigm.MethodBodyContext, Expression] => Generator[paradigm.MethodBodyContext, Unit] =
       (expGen) =>
         for {
@@ -356,6 +275,6 @@ object M4 {
           _ <- addBlockDefinitions(Seq(resultStmt))
         } yield None
 
-    mkImpl(m3Provider)(ffiArithmetic, ffiBoolean, ffiStrings, ffiLists, ffiEquality, returnInIf, ite)
+    mkImpl(m7I2Provider)(ffiArithmetic, ffiBoolean, ffiStrings, ffiEquality, returnInIf, ite)
   }
 }

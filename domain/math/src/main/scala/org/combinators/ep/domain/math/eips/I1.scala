@@ -14,6 +14,7 @@ import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, RealArithmetic, St
 object I1 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
+  (m2Provider : EvolutionImplementationProvider[AIP[paradigm.type]])
   (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiRealArithmetic: RealArithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
@@ -47,7 +48,7 @@ object I1 {
 
         assert(applicable(forApproach)(onRequest))
 
-        val result = onRequest.tpeCase match {
+        onRequest.tpeCase match {
 
 //        default ep.alt1.Exp<V> multBy(ep.Exp<V> other) {
 //          ep.Exp<V> result = other;
@@ -100,37 +101,19 @@ object I1 {
               )
 
               _ <- addBlockDefinitions(Seq(ifStmt))
-            } yield resultVar
+            } yield Some(resultVar)
 
 //        default ep.alt1.Exp<V> multBy(ep.Exp<V> other) {
 //          return sub(getLeft().multBy(other), getRight().multBy(other));
 //        }
-          case other => // handles nearly every method with two operands
-            val lAtt = other.attributes.head
-            val rAtt = other.attributes.tail.head
-
-            for {
-              left <- forApproach.dispatch(SendRequest(
-                onRequest.attributes(lAtt),
-                math.M2.getModel.baseDataType,
-                onRequest.request,
-                Some(onRequest)
-              ))
-              right <- forApproach.dispatch(SendRequest(
-                onRequest.attributes(rAtt),
-                math.M2.getModel.baseDataType,
-                onRequest.request,
-                Some(onRequest)
-              ))
-
-              res <- forApproach.instantiate(math.M0.getModel.baseDataType, other, left, right)
-            } yield res
+          case _ =>
+           genericLogic(forApproach)(onRequest)   // standard example of accessing the generic Logic
         }
-        result.map(Some(_))
+
       }
     }
 
     // newest first
-    monoidInstance.combine(i1Provider, M2(paradigm)(ffiArithmetic, ffiStrings))
+    monoidInstance.combine(i1Provider, m2Provider)
   }
 }

@@ -41,9 +41,9 @@ object M6 {
           m5Provider.applicable(forApproach)(onRequest.copy(request = Request(Operation.asTree, Map.empty))))
       }
 
-      def logic
+      override def genericLogic
         (forApproach: AIP[paradigm.type])
-          (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
+        (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
         import paradigm._
         import methodBodyCapabilities._
@@ -52,13 +52,13 @@ object M6 {
           case math.M6.Equals =>
             for {
               selfTree <- forApproach.dispatch(
-                  SendRequest(
-                    onRequest.selfReference,
-                    onRequest.onType,
-                    Request(Operation.asTree, Map.empty),
-                    Some(onRequest)
-                  )
+                SendRequest(
+                  onRequest.selfReference,
+                  onRequest.onType,
+                  Request(Operation.asTree, Map.empty),
+                  Some(onRequest)
                 )
+              )
               otherTree <- forApproach.dispatch(
                 SendRequest(
                   onRequest.request.arguments.toSeq.head._2,
@@ -70,6 +70,20 @@ object M6 {
               treeTpe <- toTargetLanguageType(TypeRep.Tree)
               eq <- areEqual(treeTpe, selfTree, otherTree)
             } yield Some(eq)
+          case _ => ???
+        }
+      }
+
+      def logic
+        (forApproach: AIP[paradigm.type])
+          (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
+      Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
+        import paradigm._
+        import methodBodyCapabilities._
+        import ffiEquality.equalityCapabilities._
+        assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name)
+        onRequest.request.op match {
+          case math.M6.Equals => genericLogic(forApproach)(onRequest)
           case _ => ???
         }
       }

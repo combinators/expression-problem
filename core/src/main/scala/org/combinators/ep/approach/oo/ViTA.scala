@@ -383,7 +383,6 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     } yield Some(result)
   }
 
-
   /**
    *
    * package ep.m0.finalized;
@@ -469,7 +468,6 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    */
   def triviallyBaseDataType(tpe:DataType): DataType = DataType(ancestralTypePrefix + tpe.name)
 
-
   /** What model is delivered has operations which is essential for the mapping. */
   override def registerTypeMapping(model: GenericModel): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
@@ -526,7 +524,6 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       for {
         visitorType <- addVisitorTypeParameter()
         _ <- setInterface()
-      //  selfClass <- findClass(names.mangle(names.conceptNameOf(tpe)))
 
         _ <- addAcceptMethod(makeAbstractAcceptSignature(visitorType))
         factory <- findClass(Factory)
@@ -614,28 +611,6 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     } yield ()
   }
 
-//  // probilem: in past we were able to use registry to locate the appropriate "prevOne"
-//  // extends Exp [first one] or ExpEval [previous one]
-//  // Works for both Exp* interface declarations as well as DataTypeOp declarations
-//  def getParentInterfaces(domain: GenericModel, tpe: DataType): Generator[ClassContext, Seq[Type]] = {
-//    import classCapabilities._
-//
-//    if (domain.isEmpty || domain.lastModelWithOperation.isEmpty) {
-//      for {
-//        fc <- findClass(names.mangle(domain.baseDataType.name))
-//      } yield (Seq(fc))
-//    } else {
-//      for {
-//        group <- forEach (baseInterfaceNames(domain)) { iface => {
-//
-//          }
-//        }
-//      } yield (group)
-////      findClass(baseInterfaceNames(domain) : _*)
-//    }
-//  }
-
-
   /** I had to copy this entire thing.
    *
    * is there any way to have one generator create a class and then another function can just ADD to it?
@@ -649,7 +624,6 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       val formers:Seq[Seq[Name]] = domain.former.map(dom => baseInterfaceNames(dom))
       for {
         // get formers,filter all of those that "know" about the DataType, and then extend those
-        //parent <- getParentInterfaces(domain.former, domain.baseDataType)
         _ <- forEach(formers) { former => {
 
           for {
@@ -763,9 +737,6 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
 
         Command.skip[ClassContext]
       }
-
-      // must be moved OUTSIDE because only the extended interfaces will have methods defined....
-      //      _ <- forEach (domain.ops) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), triviallyMakeSignature(domain.baseDataType, op)) }
     } yield ()
   }
 
@@ -787,8 +758,6 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     import ooParadigm.methodBodyCapabilities._
     import polymorphics.methodBodyCapabilities._
     for {
-      //      opClass <- toTargetLanguageType(TypeRep.DataType(model.baseDataType))   // should check!
-      //      _ <- resolveAndAddImport(opClass)
       _ <- setReturnType(opClass)
       _ <- if (isStatic) { setStatic() } else { Command.skip[MethodBodyContext] }
       params <- forEach (tpeCase.attributes) { att: Attribute =>
@@ -834,14 +803,6 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     import ooParadigm.classCapabilities._
     import genericsParadigm.classCapabilities._
     import polymorphics.TypeParameterContext
-
-//    def convertMethod(topLevelType:Type, paramType:Type) : Generator[MethodBodyContext, Option[Expression]] = {
-//      import ooParadigm.methodBodyCapabilities._
-//      for {
-//        _ <- makeConvertSignature(topLevelType, paramType)
-//        _ <- setAbstract()
-//      } yield None
-//    }
 
     for {
       _ <- makeViTAInterface(domain, domainSpecific, Some(expTypeParameter))   // this creates TYPE
@@ -935,7 +896,6 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       _ <- registerLocally(triviallyBaseDataType(domain.baseDataType), parameterizedBase)
 
       // paramType is now Exp<V>. Couldn't get type arguments?
-      //parent <- findClass(names.mangle(domain.baseDataType.name))
       parent <- findClass(names.mangle(domain.name), names.mangle(domain.baseDataType.name))
       justV <- getTypeArguments().map(_.head)
       paramType <- applyType(parent, Seq(justV))
@@ -974,16 +934,11 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     Seq(names.mangle(domain.name), Factory)
   }
 
-//   def implement(domain: Model, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
-//     implementGeneric(domain, domainSpecific)
-//   }
-
     override def implement(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     import paradigm.projectContextCapabilities._
     import ooParadigm.projectCapabilities._
 
     println(domain.name + ":" + new java.util.Date().toString)
-
 
     for {
       _ <- debug("Processing ViTA")
@@ -993,7 +948,7 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       _ <- makeViTAFactory(domain.baseDataType, Seq.empty)
 
       // whenever new operation, this CREATES the capability of having intermediate interfaces
-      // chronlogical order could just become Topological Ordering
+      // chronological order could just become Topological Ordering
       _ <- forEach(domain.inChronologicalOrder) { currentModel =>
         // for all PAST dataTypes that are already defined
         for {

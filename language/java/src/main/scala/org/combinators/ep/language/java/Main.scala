@@ -5,7 +5,7 @@ import org.combinators.ep.approach.oo.{Algebra, ExtensibleVisitor, Interpreter, 
 import org.combinators.ep.domain.{GenericModel, Model}
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.math._
-import org.combinators.ep.generator.TestImplementationProvider
+import org.combinators.ep.generator.{ApproachImplementationProvider, TestImplementationProvider}
 import org.combinators.jgitserv.{BranchTransaction, GitService}
 import org.combinators.ep.generator.FileWithPathPersistable._
 
@@ -33,26 +33,38 @@ object Main extends IOApp {
   // val approach = extensibleVisitorApproach // Almost Works - some classes mis-computed
   // val approach = triviallyApproach // WORKS!
   // interpreterApproach NOT YET WORKING
-  val approach = interpreterApproach
+  val approach = ooApproach
 
   //val evolutions = Seq(M0, M1, M2, I1, I2)    // , I2 //       M3, M4, M5, M6) // ) // , M4, M5, M6)
-  val evolutions = Seq(M0, M1, M2, I1, I2)  // M0, M1, M2, M3, M4, M5, M6, M7, I1, I2,)    // all test cases become active WHEN all included.
+  val evolutions = Seq(M0, M1, M2, I1, I2, M3, M4, M5, M6, M7, M7I2, M8)    // all test cases become active WHEN all included.
 
 //  val eip = eips.I2(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod,
 //    generator.stringsInMethod, generator.imperativeInMethod)
 //  // how do I just use M2 instead of this? HACK
-  val m4eip = eips.M4.imperative(approach.paradigm)(
+  val m0_eip = eips.M0(approach.paradigm)(generator.doublesInMethod)
+  val m1_eip = eips.M1(approach.paradigm)(m0_eip)(generator.doublesInMethod)
+  val m2_eip = eips.M2(approach.paradigm)(m1_eip)(generator.doublesInMethod, generator.stringsInMethod)
+  val m3_eip = eips.M3(approach.paradigm)(m2_eip)(generator.doublesInMethod, generator.stringsInMethod)
+  val m4_eip = eips.M4.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(m3_eip)(
       generator.imperativeInMethod,
       generator.doublesInMethod,
       generator.booleansInMethod,
       generator.stringsInMethod,
       generator.listsInMethod,
       generator.equalityInMethod)
-  val m5eip = eips.M5(approach.paradigm)(m4eip)(generator.intsInMethod,generator.treesInMethod)
-  val m6eip = eips.M6(approach.paradigm)(m5eip)(generator.equalityInMethod)
-  val e7_eip = eips.M7(approach.paradigm)(m6eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
-  val i2_eip = eips.I2(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
-  val eip = eips.M7I2(approach.paradigm)(e7_eip)(i2_eip)
+  val m5_eip = eips.M5(approach.paradigm)(m4_eip)(generator.intsInMethod,generator.treesInMethod)
+  val m6_eip = eips.M6(approach.paradigm)(m5_eip)(generator.equalityInMethod)
+  val m7_eip = eips.M7(approach.paradigm)(m6_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
+  val i1_eip = eips.I1(approach.paradigm)(m2_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
+  val i2_eip = eips.I2(approach.paradigm)(i1_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
+  val m7i2_eip = eips.M7I2(approach.paradigm)(m7_eip)(i2_eip)
+  val m8_eip =  eips.M8.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(m7i2_eip)(
+    generator.imperativeInMethod,
+    generator.doublesInMethod,
+    generator.booleansInMethod,
+    generator.stringsInMethod,
+    generator.equalityInMethod)
+  val eip = m8_eip
 
   val tests = evolutions.scanLeft(Map.empty[GenericModel, Seq[TestCase]]) { case (m, evolution) =>
     m + (evolution.getModel -> evolution.tests)

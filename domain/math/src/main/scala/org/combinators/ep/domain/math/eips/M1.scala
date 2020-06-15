@@ -11,6 +11,7 @@ import EvolutionImplementationProvider._
 object M1 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
       (paradigm: P)
+      (m0Provider : EvolutionImplementationProvider[AIP[paradigm.type]])
       (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double]):
     EvolutionImplementationProvider[AIP[paradigm.type]] = {
 
@@ -60,6 +61,6 @@ object M1 {
     }
 
     // newest one must come first
-    monoidInstance.combine(m1Provider, M0(paradigm)(ffiArithmetic))
+    monoidInstance.combine(m1Provider, m0Provider)
   }
 }

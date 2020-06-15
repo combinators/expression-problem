@@ -30,11 +30,6 @@ trait OperationInterfaceChain extends ApproachImplementationProvider  {
   /** Requires capability of defining the signature of a method associated with the given operation. */
   def makeSignature(op: Operation): Generator[MethodBodyContext, Unit]
 
-//  def baseInterfaceNamesPrefix(ops: Seq[Operation], suffix:Name): Name = {
-//    // Note: foldLeft requires swap of comparison operation because....
-//    ops.sortWith(_.name > _.name).map(op => names.conceptNameOf(op)).foldLeft(suffix){ case (n,s) => names.addPrefix(s, n) }
-//  }
-
   def baseInterfaceNames(domain: GenericModel): Seq[Name] = {
     if (domain.isDomainBase) {
       // ignore MathDomain, for example, and just grab name...

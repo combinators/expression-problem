@@ -11,10 +11,11 @@ import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Strings}
 object M2 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
       (paradigm: P)
-      (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
+      (m1Provider : EvolutionImplementationProvider[AIP[paradigm.type]])
+  (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
        ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
     EvolutionImplementationProvider[AIP[paradigm.type]] = {
-    val ppProvider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+    val m2Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model = math.M2.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
@@ -79,6 +80,6 @@ object M2 {
     }
 
     // newest one must come first
-    monoidInstance.combine(ppProvider, M1(paradigm)(ffiArithmetic))
+    monoidInstance.combine(m2Provider, m1Provider)
   }
 }

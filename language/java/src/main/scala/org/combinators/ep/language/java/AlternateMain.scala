@@ -19,13 +19,14 @@ object AlternateMain extends IOApp {
   //val evolutions = Seq(M0, M1, M2, I1, I2)    // , I2 //       M3, M4, M5, M6) // ) // , M4, M5, M6)
   val evolutions = Seq( A3) // M0, M1, M2, I1, I2, A1, A1M3, A1M3I2, A3)  // M0, M1, M2, M3, M4, M5, M6, M7, I1, I2,)    // all test cases become active WHEN all included.
 
-  val m1eip = eips.M1(approach.paradigm)(generator.doublesInMethod)
-  val m2eip = eips.M2(approach.paradigm)(generator.doublesInMethod, generator.stringsInMethod)
-  val m3_eip = eips.M3(approach.paradigm)(generator.doublesInMethod, generator.stringsInMethod)
+  val m0eip = eips.M0(approach.paradigm)(generator.doublesInMethod)
+  val m1eip = eips.M1(approach.paradigm)(m0eip)(generator.doublesInMethod)
+  val m2eip = eips.M2(approach.paradigm)(m1eip)(generator.doublesInMethod, generator.stringsInMethod)
+  val m3_eip = eips.M3(approach.paradigm)(m2eip)(generator.doublesInMethod, generator.stringsInMethod)
 
-  val i1_eip = eips.I1(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
+  val i1_eip = eips.I1(approach.paradigm)(m2eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
 
-  val i2_eip = eips.I2(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
+  val i2_eip = eips.I2(approach.paradigm)(i1_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
   val a1_eip = eips.A1(approach.paradigm)(i1_eip)(generator.doublesInMethod, generator.stringsInMethod)
 
   val a1m3_eip = eips.A1M3(approach.paradigm)(m3_eip, a1_eip)(generator.stringsInMethod)

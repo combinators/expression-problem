@@ -5,7 +5,8 @@ import cats.kernel.Monoid
 import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation}
 import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.communication.ReceivedRequest
+import org.combinators.ep.generator.communication.{ReceivedRequest, SendRequest}
+import org.combinators.ep.generator.paradigm.AnyParadigm
 import shapeless.TypeCase
 
 /** Instances of this class provide the domain dependent implementation of an evolution. */
@@ -34,6 +35,33 @@ trait EvolutionImplementationProvider[-AIP <: ApproachImplementationProvider] {
 
   /** Can vary by operation and data type. */
   def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = Set.empty
+
+  /** Default logic can be defined for any operation that suggests the potential for Write Once Use Anywhere. */
+  def genericLogic
+    (forApproach: AIP)
+    (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
+    Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] = {
+    import AnyParadigm.syntax._
+
+    val result = onRequest.tpeCase match {
+
+      // handles every DT with an arbitrary number of attributes. This works because we have the model, and
+      // the dispatch already abstracts over all requests.
+      case dt =>
+        for {
+          processedAtts <- forEach (dt.attributes) {
+            att => forApproach.dispatch(SendRequest(
+              onRequest.attributes(att),
+              model.baseDataType,
+              onRequest.request,
+              Some(onRequest)))
+          }
+
+          res <- forApproach.instantiate(model.baseDataType, dt, processedAtts : _ *)
+        } yield res
+    }
+    result.map(Some(_))
+  }
 
   /** Generates the code of request handlers relative to the target language and approach specific code generation
     * logic provided by the given `codeGenerator`. */
@@ -97,6 +125,17 @@ object EvolutionImplementationProvider {
           (forApproach: AIP)
           (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean =
           first.applicable(forApproach)(onRequest) || second.applicable(forApproach)(onRequest)
+
+        override def genericLogic
+            (forApproach: AIP)
+            (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
+        Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] = {
+          if (first.applicable(forApproach)(onRequest)) {
+            first.genericLogic(forApproach)(onRequest)
+          } else {
+            second.genericLogic(forApproach)(onRequest)
+          }
+        }
 
         def logic
             (forApproach: AIP)

@@ -14,6 +14,7 @@ import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, RealArithmetic, St
 object I2 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
+  (i1Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
   (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiRealArithmetic: RealArithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
@@ -130,6 +131,6 @@ object I2 {
     }
 
     // newest first
-    monoidInstance.combine(i2Provider, I1(paradigm)(ffiArithmetic, ffiRealArithmetic, ffiStrings, ffiImper))
+    monoidInstance.combine(i2Provider, i1Provider)
   }
 }

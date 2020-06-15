@@ -10,7 +10,7 @@ import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionIm
  * In some EP approaches, each operation is mapped to a specific class.
  *
  */
-trait OperationAsClass extends ApproachImplementationProvider /* with SharedOO */ {
+trait OperationAsClass extends ApproachImplementationProvider {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
 
   import ooParadigm._

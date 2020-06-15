@@ -140,7 +140,7 @@ abstract class Visitor extends OOApproachImplementationProvider with SharedVisit
    * 2. For each of the data types (in flattened set) create a derived class
    * 3. Create the Visitor interface
    *
-   * @param domain
+   * @param gdomain
    * @param domainSpecific
    * @return
    */

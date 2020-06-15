@@ -42,7 +42,7 @@ object M5 {
         (Set(math.M5.Identifier, Operation.asTree).contains(onRequest.request.op))
       }
 
-      def logic
+      override def genericLogic
         (forApproach: AIP[paradigm.type])
         (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
@@ -50,6 +50,7 @@ object M5 {
         import methodBodyCapabilities._
         import AnyParadigm.syntax._
         import ffiTrees.treeCapabilities._
+        assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name)
         onRequest.request.op match {
           case op if op == Operation.asTree =>
             for {
@@ -82,6 +83,19 @@ object M5 {
 
           case math.M5.Identifier =>
             reify(TypeRep.Int, onRequest.tpeCase.name.hashCode).map(Some(_))
+          case _ => ???
+        }
+      }
+
+      def logic
+      (forApproach: AIP[paradigm.type])
+      (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
+      Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
+        import paradigm._
+        assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name)
+        onRequest.request.op match {
+          case math.M5.Identifier => genericLogic(forApproach)(onRequest)
+          case op if op == Operation.asTree => genericLogic(forApproach)(onRequest)
           case _ => ???
         }
       }

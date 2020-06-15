@@ -405,8 +405,6 @@ trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts 
       }
 
       _ <- addConvertMethod(makeConvertImplementation(domain, visitorTpe, topLevelType))
-//      // do this last so methods are declared as default: NOW A CLASS!
-//      _ <- setInterface()
     } yield ()
   }
 
@@ -459,7 +457,4 @@ trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts 
     addClassToProject(bodyGenerator, names.mangle(domain.name), finalized, factoryClass)
   }
 
-  // factories for all data types, as they are added in...
-
-  // also need finalized visitors with side effects to be able to retrieve result.
 }

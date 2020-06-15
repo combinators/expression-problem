@@ -38,19 +38,22 @@ object M7 {
       }
 
       def applicable
-      (forApproach: AIP[paradigm.type])
-      (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
+        (forApproach: AIP[paradigm.type])
+        (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
         (Set(math.M7.PowBy).contains(onRequest.request.op))
       }
 
+
+
       def logic
-      (forApproach: AIP[paradigm.type])
-      (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
-      Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
+        (forApproach: AIP[paradigm.type])
+        (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
+        Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
         import paradigm._
         import methodBodyCapabilities._
+        assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name)
 
-        val result = onRequest.tpeCase match {
+        onRequest.tpeCase match {
           //        default Exp<V> powBy(ep.Exp<V> exponent) {
           //          double exponentValue = convert(exponent).eval();
           //          Exp<V> result = this;
@@ -114,7 +117,7 @@ object M7 {
               )
 
               _ <- addBlockDefinitions(Seq(ifStmt))
-            } yield resultVar
+            } yield Some(resultVar)
 
           case math.M0.Add | math.M1.Sub =>
             for {
@@ -132,7 +135,7 @@ object M7 {
                 onRequest.request,
                 Some(onRequest)
               ))
-            } yield res
+            } yield Some(res)
 
           case neg@math.M3.Neg =>
             val lAtt = neg.attributes.head
@@ -154,44 +157,12 @@ object M7 {
               ))
 
               res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M3.Mult, leftSide, left)
-            } yield res
-          //        default ep.alt1.Exp<V> powBy(ep.Exp<V> other) {
-          //          return sub(getLeft().powBy(other), getRight().powBy(other));
-          //        }
-          case other =>
-            val lAtt = other.attributes.head
-            if (other.attributes.length == 1) {
-              for {
-                left <- forApproach.dispatch(SendRequest(
-                  onRequest.attributes(lAtt),
-                  math.M2.getModel.baseDataType,
-                  onRequest.request,
-                  Some(onRequest)
-                ))
-                res <- forApproach.instantiate(math.M0.getModel.baseDataType, other, left)
-              } yield res
-            } else {
-              val rAtt = other.attributes.tail.head
+            } yield Some(res)
 
-              for {
-                left <- forApproach.dispatch(SendRequest(
-                  onRequest.attributes(lAtt),
-                  math.M2.getModel.baseDataType,
-                  onRequest.request,
-                  Some(onRequest)
-                ))
-                right <- forApproach.dispatch(SendRequest(
-                  onRequest.attributes(rAtt),
-                  math.M2.getModel.baseDataType,
-                  onRequest.request,
-                  Some(onRequest)
-                ))
+          case _ =>    // standard example of accessing the generic Logic
+            genericLogic(forApproach)(onRequest)
 
-                res <- forApproach.instantiate(math.M0.getModel.baseDataType, other, left, right)
-              } yield res
-            }
         }
-        result.map(Some(_))
       }
     }
     // newest one must come first

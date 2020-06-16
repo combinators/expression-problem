@@ -79,7 +79,7 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
           case (math.M4.Simplify, math.I2.Power) => model   // I have to handle this
           case (math.M4.Simplify, _) => math.M4.getModel
 
-          case (math.M5.Identifier, math.I2.Power) => math.M5.getModel   // delegate to M7 branch for generic Logic
+          case (math.M5.Identifier, math.I2.Power) => model   // I have to handle this (generically)
           case (math.M5.Identifier, _) => math.M5.getModel
 
           case (Operation.asTree, math.I2.Power) => model   // I have to handle this
@@ -184,6 +184,18 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
         } yield result
       }
 
+      // should be no need to define genericLogic since (by default) it will go through the chain of past providers...
+     override def genericLogic
+        (forApproach: AIP[paradigm.type])
+        (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
+      Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] = {
+        try {
+          m7Provider.genericLogic(forApproach)(onRequest)
+        } catch {
+          case _:RuntimeException | _:NotImplementedError => i2Provider.genericLogic(forApproach)(onRequest)
+        }
+      }
+
       def logic
         (forApproach: AIP[paradigm.type])
         (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
@@ -195,8 +207,10 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
         onRequest.request.op match {
           case math.M6.Equals => m7Provider.genericLogic(forApproach)(onRequest)
           case math.M4.Simplify => simplifyLogic(forApproach)(onRequest)
-          case op if op == Operation.asTree => m7Provider.genericLogic(forApproach)(onRequest)
-          case math.M5.Identifier => m7Provider.genericLogic(forApproach)(onRequest)
+          case op if op == Operation.asTree =>
+            m7Provider.genericLogic(forApproach)(onRequest)
+          case math.M5.Identifier =>
+            m7Provider.genericLogic(forApproach)(onRequest)
           case math.M4.Collect => m7Provider.genericLogic(forApproach)(onRequest)
 
           case mb@math.I1.MultBy =>    // WE CAN OPTIMIZE MultBy with Mult

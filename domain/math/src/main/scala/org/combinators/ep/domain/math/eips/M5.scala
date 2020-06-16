@@ -43,6 +43,7 @@ object M5 {
           Set(math.M3.Divd,math.M3.Mult, math.M3.Neg,math.M1.Sub,math.M0.Add,math.M0.Lit).contains(onRequest.tpeCase)
       }
 
+      /** Can handle any AsTree or Identifier operations. */
       override def genericLogic
         (forApproach: AIP[paradigm.type])
         (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
@@ -84,7 +85,8 @@ object M5 {
 
           case math.M5.Identifier =>
             reify(TypeRep.Int, onRequest.tpeCase.name.hashCode).map(Some(_))
-          case _ => ???
+
+          case _ => m4Provider.genericLogic(forApproach)(onRequest)
         }
       }
 

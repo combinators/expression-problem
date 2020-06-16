@@ -23,7 +23,7 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
       Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]]
 
   def apply
-  (m7I2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
+  (m7i2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
   (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
@@ -118,7 +118,7 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
                     ifThenElse(
                       rightEqZero, returnInIf(zeroLit),
                       Seq(
-                        (leftEqOne, returnInIf(simplifyRec(atts.head, attExprs.head))),
+                        (leftEqOne, returnInIf(simplifyRec(atts.tail.head, attExprs.tail.head))),
                         (leftRightEq, returnInIf(oneLit)),
                         (rightLeftNeqEq, returnInIf(forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, minusOne)))
                       ),
@@ -146,6 +146,14 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
         } yield result
       }
 
+
+      /** Do not call 'assert' since might not be applicable. */
+      override def genericLogic(forApproach: AIP[paradigm.type])
+                               (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
+      Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] =
+        m7i2Provider.genericLogic(forApproach)(onRequest)
+
+
       def logic(forApproach: AIP[paradigm.type])
                (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] = {
@@ -169,13 +177,15 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
         } yield atts
 
         onRequest.request.op match {
-          case math.M4.Collect => m7I2Provider.genericLogic(forApproach)(onRequest)
+          case math.M4.Collect =>
+            m7i2Provider.genericLogic(forApproach)(onRequest)
           case math.M4.Simplify => simplifyLogic(forApproach)(onRequest)
-          case math.I1.MultBy => m7I2Provider.genericLogic(forApproach)(onRequest)
-          case math.M7.PowBy => m7I2Provider.genericLogic(forApproach)(onRequest)
-          case math.M6.Equals => m7I2Provider.genericLogic(forApproach)(onRequest)
-          case math.M5.Identifier => m7I2Provider.genericLogic(forApproach)(onRequest)
-          case op if op == Operation.asTree => m7I2Provider.genericLogic(forApproach)(onRequest)
+          case math.I1.MultBy => m7i2Provider.genericLogic(forApproach)(onRequest)
+          case math.M7.PowBy => m7i2Provider.genericLogic(forApproach)(onRequest)
+          case math.M6.Equals => m7i2Provider.genericLogic(forApproach)(onRequest)
+          case math.M5.Identifier =>
+            m7i2Provider.genericLogic(forApproach)(onRequest)
+          case op if op == Operation.asTree => m7i2Provider.genericLogic(forApproach)(onRequest)
 
           case math.M0.Eval =>
             onRequest.tpeCase match {
@@ -190,7 +200,7 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
                     ))
                   }
 
-                  res <- div(atts: _*)
+                  res <- div(atts.tail.head, atts.head)   // SWAP order
                 } yield Some(res)
 
               case _ => ???
@@ -209,7 +219,7 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
                 }
 
                 // swap ordering
-                res <- makeString(Seq(atts.head, atts.tail.head), "(", "/", ")")
+                res <- makeString(Seq(atts.tail.head, atts.head), "(", "/", ")")
               } yield Some(res)
 
               case _ => ???
@@ -220,14 +230,14 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
     }
 
     // newest one must come first
-    monoidInstance.combine(m8Provider, m7I2Provider)
+    monoidInstance.combine(m8Provider, m7i2Provider)
   }
 }
 
 object M8 {
   def functional[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
-  (m7I2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
+  (m7i2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
   (functionalControl: Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
@@ -242,12 +252,12 @@ object M8 {
           res <- functionalControl.functionalCapabilities.ifThenElse(cond, ifBlock, ifElseBlocks, elseBlock)
         } yield Some(res)
 
-    mkImpl(m7I2Provider)(ffiArithmetic, ffiBoolean, ffiStrings, ffiEquality, expGen => expGen, ite)
+    mkImpl(m7i2Provider)(ffiArithmetic, ffiBoolean, ffiStrings, ffiEquality, expGen => expGen, ite)
   }
 
   def imperative[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
-  (m7I2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
+  (m7i2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
   (imperativeControl: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
@@ -273,6 +283,6 @@ object M8 {
           _ <- addBlockDefinitions(Seq(resultStmt))
         } yield None
 
-    mkImpl(m7I2Provider)(ffiArithmetic, ffiBoolean, ffiStrings, ffiEquality, returnInIf, ite)
+    mkImpl(m7i2Provider)(ffiArithmetic, ffiBoolean, ffiStrings, ffiEquality, returnInIf, ite)
   }
 }

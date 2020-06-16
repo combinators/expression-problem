@@ -47,6 +47,17 @@ object I1 {
           (Set(math.M0.Lit, math.M0.Add, math.M1.Sub).contains(onRequest.tpeCase))
       }
 
+      /** MultBy can support any N-ary data type, so prepare for this future eventuality here. */
+      override def genericLogic
+        (forApproach: AIP[paradigm.type])
+        (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
+      Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
+        onRequest.request.op match {
+          case math.I1.MultBy => defaultGenericLogic(forApproach)(onRequest)
+          case _ => m2Provider.genericLogic(forApproach)(onRequest)
+        }
+      }
+
       def logic
       (forApproach: AIP[paradigm.type])
       (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
@@ -115,7 +126,7 @@ object I1 {
 //        default ep.alt1.Exp<V> multBy(ep.Exp<V> other) {
 //          return sub(getLeft().multBy(other), getRight().multBy(other));
 //        }
-          case _ =>
+          case _ => /* Add and Sub */
            genericLogic(forApproach)(onRequest)   // standard example of accessing the generic Logic
         }
 

@@ -43,6 +43,17 @@ object M7 {
         (Set(math.M7.PowBy).contains(onRequest.request.op))
       }
 
+      /** PowBy can support any N-ary data type, so prepare for this future eventuality here. */
+      override def genericLogic
+        (forApproach: AIP[paradigm.type])
+        (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
+      Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
+        onRequest.request.op match {
+          case math.M7.PowBy => defaultGenericLogic(forApproach)(onRequest)
+          case _ => m6Provider.genericLogic(forApproach)(onRequest)
+        }
+      }
+
       def logic
         (forApproach: AIP[paradigm.type])
         (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):

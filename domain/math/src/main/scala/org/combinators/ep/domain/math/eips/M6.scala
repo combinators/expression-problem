@@ -41,6 +41,7 @@ object M6 {
           m5Provider.applicable(forApproach)(onRequest.copy(request = Request(Operation.asTree, Map.empty)))
       }
 
+      /** Can handle any equals requests, by constructing Trees from Expressions. */
       override def genericLogic
         (forApproach: AIP[paradigm.type])
         (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
@@ -70,7 +71,7 @@ object M6 {
               treeTpe <- toTargetLanguageType(TypeRep.Tree)
               eq <- areEqual(treeTpe, selfTree, otherTree)
             } yield Some(eq)
-          case _ => ???
+          case _ => m5Provider.genericLogic(forApproach)(onRequest)
         }
       }
 

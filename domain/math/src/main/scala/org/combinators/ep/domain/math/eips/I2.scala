@@ -38,6 +38,12 @@ object I2 {
           Set(math.I2.Power).contains(onRequest.tpeCase)
       }
 
+      /** Do not call 'assert' since might not be applicable. */
+      override def genericLogic(forApproach: AIP[paradigm.type])
+                               (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
+      Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] =
+        i1Provider.genericLogic(forApproach)(onRequest)
+
       def logic
       (forApproach: AIP[paradigm.type])
       (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):

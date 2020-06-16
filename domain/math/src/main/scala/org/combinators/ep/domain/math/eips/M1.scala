@@ -29,6 +29,12 @@ object M1 {
           (Set(math.M1.Sub).contains(onRequest.tpeCase))
       }
 
+      /** Do not call 'assert' since might not be applicable. */
+      override def genericLogic(forApproach: AIP[paradigm.type])
+                               (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
+      Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] =
+        m0Provider.genericLogic(forApproach)(onRequest)
+
       override def logic
         (forApproach: AIP[paradigm.type])
         (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):

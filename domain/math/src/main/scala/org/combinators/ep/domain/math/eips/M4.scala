@@ -283,7 +283,7 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
       Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] = {
         onRequest.request.op match {
           case math.M4.Collect => collectLogic(forApproach)(onRequest)
-          case _ => ???
+          case _ => m3Provider.genericLogic(forApproach)(onRequest)
         }
       }
 

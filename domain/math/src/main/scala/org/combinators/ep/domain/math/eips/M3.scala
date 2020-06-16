@@ -33,6 +33,12 @@ object M3 {
           Set(math.M3.Divd, math.M3.Mult, math.M3.Neg).contains(onRequest.tpeCase)
       }
 
+      /** Do not call 'assert' since might not be applicable. */
+      override def genericLogic(forApproach: AIP[paradigm.type])
+                               (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
+      Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] =
+        m2Provider.genericLogic(forApproach)(onRequest)
+
       def logic
           (forApproach: AIP[paradigm.type])
           (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
@@ -42,6 +48,7 @@ object M3 {
         import paradigm._
         import methodBodyCapabilities._
         import AnyParadigm.syntax._
+        assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name)
 
         def operate(atts: Seq[syntax.Expression]): Generator[paradigm.MethodBodyContext, syntax.Expression] =
           onRequest.request.op match {

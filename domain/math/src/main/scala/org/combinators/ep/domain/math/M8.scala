@@ -19,7 +19,7 @@ object M8 extends Evolution {
 
   // Tests
   val m8_d1 = InvInst(LitInst(5.0),  LitInst(2.0))
-  val m8_d2 = InvInst(LitInst(5.0),  LitInst(1.0))
+  val m8_d2 = InvInst(LitInst(1.0),  LitInst(5.0))
 
   def tests: Seq[TestCase] = Seq(
 

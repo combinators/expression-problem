@@ -25,10 +25,8 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
   import paradigm._
   import syntax._
 
-  // lazy val finalName:Name = names.mangle("Final")
   lazy val finalized:Name = names.mangle("finalized")     // sub package within each evolution that contains final classes
   lazy val expTypeParameter:Name = names.mangle("V")
- // lazy val Factory:Name = names.mangle("Factory")
 
   /** Placeholder for the ancestral type ep.Exp so it can be registered separately within the type mapping */
   lazy val ancestralTypePrefix:String = "ancestor"

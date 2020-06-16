@@ -36,9 +36,9 @@ object M6 {
       def applicable
         (forApproach: AIP[paradigm.type])
           (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
-        (Set(math.M6.Equals).contains(onRequest.request.op) &&
+        Set(math.M6.Equals).contains(onRequest.request.op) &&
           // Constraint to ensure we have an implementation for asTree, which is used in this equality implementation provider
-          m5Provider.applicable(forApproach)(onRequest.copy(request = Request(Operation.asTree, Map.empty))))
+          m5Provider.applicable(forApproach)(onRequest.copy(request = Request(Operation.asTree, Map.empty)))
       }
 
       override def genericLogic

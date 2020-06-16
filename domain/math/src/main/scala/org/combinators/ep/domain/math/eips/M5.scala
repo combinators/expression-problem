@@ -39,7 +39,8 @@ object M5 {
       def applicable
         (forApproach: AIP[paradigm.type])
         (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
-        (Set(math.M5.Identifier, Operation.asTree).contains(onRequest.request.op))
+        Set(math.M5.Identifier, Operation.asTree).contains(onRequest.request.op) &&
+          Set(math.M3.Divd,math.M3.Mult, math.M3.Neg,math.M1.Sub,math.M0.Add,math.M0.Lit).contains(onRequest.tpeCase)
       }
 
       override def genericLogic
@@ -50,7 +51,7 @@ object M5 {
         import methodBodyCapabilities._
         import AnyParadigm.syntax._
         import ffiTrees.treeCapabilities._
-        assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name)
+
         onRequest.request.op match {
           case op if op == Operation.asTree =>
             for {
@@ -88,10 +89,9 @@ object M5 {
       }
 
       def logic
-      (forApproach: AIP[paradigm.type])
-      (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
+        (forApproach: AIP[paradigm.type])
+        (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
-        import paradigm._
         assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name)
         onRequest.request.op match {
           case math.M5.Identifier => genericLogic(forApproach)(onRequest)

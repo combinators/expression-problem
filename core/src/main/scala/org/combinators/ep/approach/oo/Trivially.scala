@@ -11,9 +11,7 @@ import org.combinators.ep.generator.paradigm.control.Imperative
 
 /**
  *
-
  Producer methods must include factory methods for all known types so far.
-
  */
 
 trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInterface with SharedOO with FutureVisitor with OperationInterfaceChain with FieldDefinition with FactoryConcepts {
@@ -24,7 +22,6 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
   import paradigm._
   import syntax._
 
- // lazy val finalName:Name = names.mangle("Final")
   lazy val finalized:Name = names.mangle("finalized")     // sub package within each evolution that contains final classes
   lazy val expTypeParameter:Name = names.mangle("V")
 
@@ -239,16 +236,15 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
           thisRef <- selfReference()
           convertMethod <- getMember(thisRef, convert)
 
-          //args <- forEach (op.parameters) { param => freshName(names.mangle(param.name)) }
           argSeq <- getArguments().map( args => { args.map(triple => triple._3) })
 
           //       return this.convert(ep.m4.Mult.super.simplify());
           superRef <- superReference(names.mangle(model.last.get.name), names.mangle(names.conceptNameOf(tpeCase)))  // TODO: HAVE TO FIX THIS
           opMethod <- getMember(superRef, names.mangle(names.instanceNameOf(op)))
           innerResult <- apply(opMethod, argSeq)
-          //result <- apply(convertMethod, Seq(innerResult))
 
-          result <- if (op.isProducer(applicableModel)) {                    // only have to convert for producer methods.
+          // only have to convert for producer methods.
+          result <- if (op.isProducer(applicableModel)) {
             apply(convertMethod, Seq(innerResult))
           } else {
             Command.lift[MethodBodyContext,Expression](innerResult)
@@ -317,11 +313,6 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
         } else {
           Command.skip[ClassContext]
         }
-
-        // these are factory signatures. Moved to the Exp class
-//        _ <- forEach (model.flatten.typeCases) { tpe =>
-//          addAbstractMethod(names.mangle(names.instanceNameOf(tpe)), convertOptionToUnit(createFactorySignatureDataTypeCase(model, tpe, paramType)))
-//        }
 
         _ <- setInterface()  // do LAST because then methods with bodies are turned into default methods in interface
       } yield ()
@@ -524,7 +515,6 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
 
       params <- forEach (op.parameters) { param: Parameter =>
         for {
-         // pt <- toTargetLanguageType(param.tpe)
           pt <- if (param.tpe == TypeRep.DataType(baseType)) {
             toTargetLanguageType(TypeRep.DataType(triviallyBaseDataType(baseType)))
           } else {
@@ -599,8 +589,6 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
     import ooParadigm.methodBodyCapabilities._
     import polymorphics.methodBodyCapabilities._
     for {
-      //      opClass <- toTargetLanguageType(TypeRep.DataType(model.baseDataType))   // should check!
-      //      _ <- resolveAndAddImport(opClass)
       _ <- setReturnType(opClass)
       _ <- if (isStatic) { setStatic() } else { Command.skip[MethodBodyContext] }
       params <- forEach (tpeCase.attributes) { att: Attribute => {
@@ -715,14 +703,8 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
       }
       }
 
-//      parent <- findClass(names.mangle(domain.baseDataType.name))
-//      justV <- getTypeArguments().map(_.head)
-//      paramType <- applyType(parent, Seq(justV))
-
-      //  public void accept(V visitor);
       //    public Exp<V> convert(Exp<V> value);
       _ <- addConvertMethod(convertMethod(topLevelType, paramType))
-      //_ <- addConvertMethod(makeConvertSignature(topLevelType, paramType))
     } yield ()
   }
 

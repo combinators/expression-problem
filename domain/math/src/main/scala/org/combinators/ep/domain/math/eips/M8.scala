@@ -4,11 +4,10 @@ import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, TypeRep}
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.domain.{abstractions, math}
 import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
+import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm
-import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm.control.{Functional, Imperative}
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Booleans, Equality, Strings}
 
@@ -37,15 +36,10 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
 
       /** Simplify depends upon having a working eval. */
       override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
-        dt match {
-          case math.M0.Lit => Set.empty
-          case _  => {
-            op match {
-              case math.M4.Simplify => Set(math.M0.Eval)
-              case _ => Set.empty
-            }
+          op match {
+            case math.M4.Simplify => Set(math.M0.Eval)
+            case _ => Set.empty
           }
-        }
       }
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
@@ -59,10 +53,9 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
 
       def applicable(forApproach: AIP[paradigm.type])
                     (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
-        Set(math.M4.Simplify,math.M4.Collect,math.M2.PrettyP,math.M0.Eval,math.I1.MultBy).contains(onRequest.request.op) &&
+        Set(math.M4.Simplify,math.M4.Collect,math.M2.PrettyP,math.M0.Eval,math.I1.MultBy,math.M7.PowBy,math.M6.Equals,math.M5.Identifier,Operation.asTree).contains(onRequest.request.op) &&
           Set(math.M8.Inv).contains(onRequest.tpeCase)
       }
-
 
       private def simplifyLogic(forApproach: AIP[paradigm.type])
                                (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
@@ -179,6 +172,10 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
           case math.M4.Collect => m7I2Provider.genericLogic(forApproach)(onRequest)
           case math.M4.Simplify => simplifyLogic(forApproach)(onRequest)
           case math.I1.MultBy => m7I2Provider.genericLogic(forApproach)(onRequest)
+          case math.M7.PowBy => m7I2Provider.genericLogic(forApproach)(onRequest)
+          case math.M6.Equals => m7I2Provider.genericLogic(forApproach)(onRequest)
+          case math.M5.Identifier => m7I2Provider.genericLogic(forApproach)(onRequest)
+          case op if op == Operation.asTree => m7I2Provider.genericLogic(forApproach)(onRequest)
 
           case math.M0.Eval =>
             onRequest.tpeCase match {
@@ -211,7 +208,8 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
                   ))
                 }
 
-                res <- makeString(atts, "(", "<<>>", ")")
+                // swap ordering
+                res <- makeString(Seq(atts.head, atts.tail.head), "(", "/", ")")
               } yield Some(res)
 
               case _ => ???

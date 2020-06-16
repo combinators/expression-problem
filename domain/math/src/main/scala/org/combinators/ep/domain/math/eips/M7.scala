@@ -29,7 +29,7 @@ object M7 {
         } yield ()
       }
 
-      /** Simplify depends on Eval. */
+      /** PowBy depends on Eval. */
       override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
         op match {
           case math.M7.PowBy => Set(math.M0.Eval)
@@ -42,8 +42,6 @@ object M7 {
         (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
         (Set(math.M7.PowBy).contains(onRequest.request.op))
       }
-
-
 
       def logic
         (forApproach: AIP[paradigm.type])

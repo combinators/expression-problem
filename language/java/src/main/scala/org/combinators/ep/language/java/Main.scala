@@ -33,7 +33,7 @@ object Main extends IOApp {
   // val approach = extensibleVisitorApproach // Almost Works - some classes mis-computed
   // val approach = triviallyApproach // WORKS!
   // interpreterApproach NOT YET WORKING
-  val approach = ooApproach
+  val approach = extensibleVisitorApproach
 
   //val evolutions = Seq(M0, M1, M2, I1, I2)    // , I2 //       M3, M4, M5, M6) // ) // , M4, M5, M6)
   val evolutions = Seq(M0, M1, M2, I1, I2, M3, M4, M5, M6, M7, M7I2, M8)    // all test cases become active WHEN all included.
@@ -57,7 +57,11 @@ object Main extends IOApp {
   val m7_eip = eips.M7(approach.paradigm)(m6_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
   val i1_eip = eips.I1(approach.paradigm)(m2_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
   val i2_eip = eips.I2(approach.paradigm)(i1_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
-  val m7i2_eip = eips.M7I2(approach.paradigm)(m7_eip)(i2_eip)
+  val m7i2_eip = eips.M7I2.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(m7_eip,i2_eip)(
+    generator.imperativeInMethod,
+    generator.doublesInMethod,
+    generator.booleansInMethod,
+    generator.equalityInMethod)
   val m8_eip =  eips.M8.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(m7i2_eip)(
     generator.imperativeInMethod,
     generator.doublesInMethod,

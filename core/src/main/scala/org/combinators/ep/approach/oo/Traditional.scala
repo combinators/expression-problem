@@ -42,12 +42,6 @@ trait Traditional extends OOApproachImplementationProvider with BaseDataTypeAsCl
    *
    * A constructor is generated, using [[makeConstructor]]. Fields are generates, using [[makeField]]. Each
    * operation is embedded as a method within each class, using [[makeImplementation]]
-   *
-   * @param tpe
-   * @param tpeCase
-   * @param ops
-   * @param domainSpecific
-   * @return
    */
   def makeDerived(tpe: DataType, tpeCase: DataTypeCase, ops: Seq[Operation], domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
@@ -79,7 +73,6 @@ trait Traditional extends OOApproachImplementationProvider with BaseDataTypeAsCl
       _ <- domainSpecific.initialize(this)
 
       _ <- makeBase(flatDomain.baseDataType, flatDomain.ops)
-
       _ <- forEach (flatDomain.typeCases) { tpeCase =>
           makeDerived(flatDomain.baseDataType, tpeCase, flatDomain.ops, domainSpecific)
         }

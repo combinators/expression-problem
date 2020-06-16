@@ -1,6 +1,6 @@
 package org.combinators.ep.domain.math.eips
 
-import org.combinators.ep.domain.abstractions.TypeRep
+import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, TypeRep}
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.domain.math
 import org.combinators.ep.generator.Command.Generator
@@ -29,6 +29,15 @@ object I1 {
           _ <- ffiRealArithmetic.enable()
           _ <- ffiStrings.enable()
         } yield ()
+      }
+
+
+      /** MultBy requires Eval. */
+      override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
+        op match {
+          case math.I1.MultBy => Set(math.M0.Eval)
+          case _ => Set.empty
+        }
       }
 
       def applicable

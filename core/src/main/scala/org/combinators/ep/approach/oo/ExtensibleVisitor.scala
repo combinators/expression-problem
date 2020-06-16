@@ -451,8 +451,6 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedVisi
               }
             } yield code.flatten
 
-          import ooParadigm.testCapabilities._
-
           val compUnit = for {
             // add test case first
             _ <- addTestCase(testCode, testName)

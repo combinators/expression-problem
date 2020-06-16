@@ -5,7 +5,6 @@ import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.instances._
 
 object M0 extends Evolution {
-  //val m0 = Model("m0", Seq(Lit, Add), Seq(Eval))
   override implicit def getModel:GenericModel = MathDomain.baseModel.evolve("m0", Seq(Lit, Add), Seq(Eval))
   lazy val litValue = Attribute ("value", TypeRep.Double)
 

@@ -30,13 +30,13 @@ object Main extends IOApp {
   // val approach = ooApproach // WORKS!
   // val approach = visitorApproach  // WORKS!
   // val approach = visitorSideEffectApproach // WORKS!
-  // val approach = extensibleVisitorApproach // Almost Works - some classes mis-computed
+  // val approach = extensibleVisitorApproach // WORKS
   // val approach = triviallyApproach // WORKS!
   // interpreterApproach NOT YET WORKING
   val approach = vitaApproach
 
   //val evolutions = Seq(M0, M1, M2, I1, I2)    // , I2 //       M3, M4, M5, M6) // ) // , M4, M5, M6)
-  val evolutions = Seq(M0, M1, M2, I1, I2, M3, M4, M5, M6, M7, M7I2, M8)    // all test cases become active WHEN all included.
+  val evolutions = Seq(M0, M1, M2, I1, I2, M3, M4, M5, M6, M7, M7I2, M8, M9)    // all test cases become active WHEN all included.
 
 //  val eip = eips.I2(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod,
 //    generator.stringsInMethod, generator.imperativeInMethod)
@@ -68,8 +68,9 @@ object Main extends IOApp {
     generator.booleansInMethod,
     generator.stringsInMethod,
     generator.equalityInMethod)
-  val eip = m8_eip
+  val m9_eip = eips.M9(approach.paradigm)(m8_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.imperativeInMethod)
 
+  val eip = m9_eip
   val tests = evolutions.scanLeft(Map.empty[GenericModel, Seq[TestCase]]) { case (m, evolution) =>
     m + (evolution.getModel -> evolution.tests)
   }.tail

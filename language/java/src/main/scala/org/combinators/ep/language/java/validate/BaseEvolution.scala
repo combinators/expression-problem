@@ -14,7 +14,7 @@ trait BaseEvolution {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed))
 
   // all known branches in largest initial case study.
-  val evolutions = Seq(M0, M1, M2, M3, M4, M5, M6, M7, I1, I2, M7I2, M8)
+  val evolutions = Seq(M0, M1, M2, M3, M4, M5, M6, M7, I1, I2, M7I2, M8, M9)
 
   val tests = evolutions.scanLeft(Map.empty[GenericModel, Seq[TestCase]]) { case (m, evolution) =>
     m + (evolution.getModel -> evolution.tests)

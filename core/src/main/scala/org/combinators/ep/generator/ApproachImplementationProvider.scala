@@ -4,10 +4,7 @@ import org.combinators.ep.domain._
 import abstractions._
 import communication._
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
-import cats._
-import cats.data._
-import cats.syntax._
-import cats.implicits._
+
 import org.combinators.ep.generator.Command._
 import org.combinators.ep.generator.paradigm.{AddImport, AnyParadigm, ResolveImport}
 import AnyParadigm.syntax._
@@ -27,13 +24,13 @@ trait ApproachImplementationProvider {
     *   implicit val domain = ???
     *   val received: ReceivedRequest[Expression] = ???
     *   dispatch(
-    *     SendRequest(t
+    *     SendRequest(
     *       to = received.attributes(Attribute.left),
     *       receiverTpe = Attribute.left.tpe
     *       request = Request(Operation("eval"), Map.empty)
     *       inReplyTo = Some(received)
     *   )) // Results in:
-    *   CodeBlockWithResultingExpresions()(
+    *   CodeBlockWithResultingExpressions()(
     *     Java(s"${received.selfReference}.${Attribute.left.name}.eval()").expression())
     *   )
     * }}}
@@ -113,7 +110,6 @@ trait ApproachImplementationProvider {
         }
     } yield ()
   }
-
 }
 
 object ApproachImplementationProvider {

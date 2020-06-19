@@ -10,7 +10,7 @@ import org.combinators.ep.domain.{Evolution, GenericModel}
 object M8 extends Evolution {
   override implicit def getModel:GenericModel = M7I2.getModel.evolve("m8", Seq(Inv), Seq.empty)
 
-  // M8:model evolution.  INV which is opposite of DIV
+  // M8:model evolution.  INV which is opposite of DIV, or 1/DIV
   // -------------------
   lazy val Inv = DataTypeCase.binary("Inv")(MathDomain.getModel)
 
@@ -22,7 +22,6 @@ object M8 extends Evolution {
   val m8_d2 = InvInst(LitInst(1.0),  LitInst(5.0))
 
   def tests: Seq[TestCase] = Seq(
-
     EqualsTestCase(getModel.baseDataType, m8_d1, PrettyP, StringInst("(2.0/5.0)")),
     EqualsTestCase(getModel.baseDataType, m8_d1, Eval, M0.DoubleInst(0.4)),
 

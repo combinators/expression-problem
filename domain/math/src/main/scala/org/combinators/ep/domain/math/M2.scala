@@ -6,7 +6,6 @@ import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.domain.math.M0.{AddInst, LitInst}
 import org.combinators.ep.domain.math.M1.SubInst
 
-//class M2(val m1:M1) extends Evolution {
 object M2 extends Evolution {
   override implicit def getModel:GenericModel = M1.getModel.evolve("m2", Seq.empty, Seq(PrettyP))
 

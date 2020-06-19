@@ -16,15 +16,8 @@ object M7 extends Evolution {
 
   // add PowBy operation
 
-  // SquareRoot of inner value, and an operation Find that counts the number of occurences
-  // in an expression of a target value.
-//  lazy val Sqrt:DataTypeCase = DataTypeCase.unary("Sqrt")
-
   lazy val base = TypeRep.DataType(M2.getModel.baseDataType)
   lazy val PowBy = Operation("powBy", base, Seq(Parameter("other", base)))
-
-//  def SqrtInst(inner:DataTypeInstance): DataTypeInstance =
-//    DataTypeInstance(Sqrt, Seq(InstanceRep(inner)))
 
   object PowByTestCase {
     def apply(instance: DataTypeInstance, argument: InstanceRep, expected:InstanceRep): TestCase = {
@@ -42,7 +35,6 @@ object M7 extends Evolution {
   val m7_7 = AddInst(m7_5, m7_6)
 
   def tests:Seq[TestCase] = Seq(
-   // EqualsTestCase(getModel.baseDataType, m7_1, Eval, M0.DoubleInst(5.0)),
     PowByTestCase(AddInst(LitInst(1.0), LitInst(12.0)),
       InstanceRep(LitInst(4.0)), DoubleInst(13.0*13.0*13.0*13.0))
   )

@@ -214,10 +214,6 @@ trait FutureVisitor extends ApproachImplementationProvider with FactoryConcepts 
     } yield (Some(field))
   }
 
-//   def factoryInstanceDataTypeCase(model:Option[GenericModel] = None, tpeCase:DataTypeCase) : Seq[Name] = {
-//    model.map(m => names.mangle(m.name)).toSeq :+ names.mangle(names.conceptNameOf(tpeCase))
-//  }
-
   /**
    *??? lit(Double value) {
    *   return new Lit(value);

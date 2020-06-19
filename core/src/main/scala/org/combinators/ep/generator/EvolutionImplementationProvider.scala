@@ -42,8 +42,8 @@ trait EvolutionImplementationProvider[-AIP <: ApproachImplementationProvider] {
     Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] = ???
 
   /** Default logic can be defined for any operation that suggests the potential for Write Once Use Anywhere.
-   * Use genericLogic when you simply want to dispatch the operation for onRequest to each of its children
-   * attributes. */
+   * Use this default Generic Logic when you simply want to dispatch the operation for onRequest to each of
+   *  its children attributes. */
   def defaultGenericLogic
     (forApproach: AIP)
     (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
@@ -104,8 +104,7 @@ object EvolutionImplementationProvider {
       }
 
       /** Combines two [[EvolutionImplementationProvider]] objects by trying to resolve requests with the first provided
-        * logic, resorting to the second logic on failure.
-        */
+        * logic, resorting to the second logic on failure. */
       def combine(
           first: EvolutionImplementationProvider[AIP],
           second: EvolutionImplementationProvider[AIP]
@@ -133,8 +132,7 @@ object EvolutionImplementationProvider {
           (forApproach: AIP)
           (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = first.applicable(forApproach)(onRequest) || second.applicable(forApproach)(onRequest)
 
-        /** Do not call applicable, but rather check to see if genericLogic is in play
-         */
+        /** Do not call applicable, but rather check to see if genericLogic is in play. */
         override def genericLogic
             (forApproach: AIP)
             (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
@@ -146,6 +144,7 @@ object EvolutionImplementationProvider {
           }
         }
 
+        /** Logic is attempted on 'first' (if applicable), otherwise sent to second. */
         def logic
             (forApproach: AIP)
             (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):

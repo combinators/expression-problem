@@ -16,8 +16,7 @@ object AlternateMain extends IOApp {
 
   val approach = vitaApproach
 
-  //val evolutions = Seq(M0, M1, M2, I1, I2)    // , I2 //       M3, M4, M5, M6) // ) // , M4, M5, M6)
-  val evolutions = Seq( A3) // M0, M1, M2, I1, I2, A1, A1M3, A1M3I2, A3)  // M0, M1, M2, M3, M4, M5, M6, M7, I1, I2,)    // all test cases become active WHEN all included.
+  val evolutions = Seq(M0, M1, M2, I1, I2, A1, A1M3, A1M3I2, A3)  // M0, M1, M2, M3, M4, M5, M6, M7, I1, I2,)    // all test cases become active WHEN all included.
 
   val m0eip = eips.M0(approach.paradigm)(generator.doublesInMethod)
   val m1eip = eips.M1(approach.paradigm)(m0eip)(generator.doublesInMethod)

@@ -32,6 +32,7 @@ object Main extends IOApp {
   // val approach = visitorSideEffectApproach // WORKS!
   // val approach = extensibleVisitorApproach // WORKS
   // val approach = triviallyApproach // WORKS!
+  // val approach = vitaApproach // WORKS!
   // interpreterApproach NOT YET WORKING
   val approach = vitaApproach
 

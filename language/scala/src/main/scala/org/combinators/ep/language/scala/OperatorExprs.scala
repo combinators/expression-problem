@@ -1,4 +1,4 @@
-package org.combinators.ep.language.scala
+package org.combinators.ep.language.scala   /*DI:LD:AI*/
 
 import org.combinators.ep.generator.Understands
 import org.combinators.ep.generator.paradigm.Apply

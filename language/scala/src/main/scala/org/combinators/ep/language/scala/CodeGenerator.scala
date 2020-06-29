@@ -1,4 +1,4 @@
-package org.combinators.ep.language.scala
+package org.combinators.ep.language.scala   /*DI:LD:AI*/
 
 import cats.{Apply => _}
 import org.combinators.ep.domain.abstractions.TypeRep

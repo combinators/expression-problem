@@ -1,4 +1,4 @@
-package org.combinators.ep.language.scala
+package org.combinators.ep.language.scala     /*DI:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.combinators.ep.domain.GenericModel

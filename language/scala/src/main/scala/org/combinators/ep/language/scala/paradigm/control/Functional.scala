@@ -1,4 +1,4 @@
-package org.combinators.ep.language.scala.paradigm.control
+package org.combinators.ep.language.scala.paradigm.control   /*DI:LD:AI*/
 
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.control.{Lambda, PatternMatch, Functional => Func}

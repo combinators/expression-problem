@@ -1,4 +1,4 @@
-package org.combinators.ep.language.scala.paradigm
+package org.combinators.ep.language.scala.paradigm   /*DI:LD:AI*/
 
 import java.nio.file.{Path, Paths}
 

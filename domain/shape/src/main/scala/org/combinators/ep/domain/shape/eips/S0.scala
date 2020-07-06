@@ -4,7 +4,7 @@ import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.communication.{ReceivedRequest, Request, SendRequest}
-import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
+import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.ep.domain.{GenericModel, shape}
 import org.combinators.ep.generator.paradigm.AnyParadigm
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Booleans, RealArithmetic}

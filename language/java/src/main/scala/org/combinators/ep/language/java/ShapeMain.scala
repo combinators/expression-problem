@@ -33,7 +33,7 @@ object ShapeMain extends IOApp {
   // val approach = triviallyApproach // triviallyApproach // WORKS!
   val approach = ooApproach // Not quite yet
 
-  val evolutions = Seq(S0, S1) // ) // , M4, M5, M6)
+  val evolutions = Seq(S0, S1, S2) // ) // , M4, M5, M6)
   //val m4eip =
   val s0eip =
     eips.S0(approach.paradigm)(
@@ -45,7 +45,11 @@ object ShapeMain extends IOApp {
     generator.doublesInMethod,
     generator.booleansInMethod
   )
-  val eip = s1eip
+  val s2eip = eips.S2(approach.paradigm)(s1eip)(
+    generator.doublesInMethod,
+    generator.imperativeInMethod
+  )
+  val eip = s2eip
 
 
   val tests = evolutions.scanLeft(Map.empty[GenericModel, Seq[TestCase]]) { case (m, evolution) =>

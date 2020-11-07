@@ -59,6 +59,10 @@ case class AddTestCase[MethodBodyContext, Name, Expression](code: Generator[Meth
   type Result = Unit
 }
 
+case class AddImplementedTestCase[Type](interface: Type) extends Command {
+  type Result = Unit
+}
+
 case class Apply[F, S, R](functional: F, arguments: Seq[S]) extends Command {
   type Result = R
 }
@@ -210,6 +214,11 @@ trait AnyParadigm {
     implicit val canDebugInTest: Understands[TestContext, Debug]
     def debug(tag:String = ""): Generator[TestContext, Unit] =
       AnyParadigm.capabilitiy(Debug(tag))
+
+    // TODO: This needs to be added somehow
+//    implicit val canAddTypeLookupForClassesInTest: Understands[TestContext, AddTypeLookup[TestContext, Type]]
+//    def addTypeLookupForClasses(tpe: TypeRep, lookup: Generator[TestContext, Type]): Generator[TestContext, Unit] =
+//      AnyParadigm.capabilitiy(AddTypeLookup[TestContext, Type](tpe, lookup))
 
     implicit val canAddTestCaseInTest: Understands[TestContext, AddTestCase[MethodBodyContext, Name, Expression]]
     def addTestCase(code: Generator[MethodBodyContext, Seq[Expression]], name: Name): Generator[TestContext, Unit] =

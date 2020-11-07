@@ -5,7 +5,7 @@ import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.approach.functional.Traditional
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.math._
-import org.combinators.ep.generator.TestImplementationProvider
+import org.combinators.ep.generator.{ApproachImplementationProvider, TestImplementationProvider}
 import org.combinators.jgitserv.{BranchTransaction, GitService}
 import org.combinators.ep.generator.FileWithPathPersistable._
 
@@ -36,14 +36,27 @@ object Main extends IOApp {
 
   val evolutions = Seq(M0, M1, M2, M3, M4)
 
-   val eip =
-    eips.M4.functional(approach.paradigm)(
-      generator.functionalInMethod,
-      generator.doublesInMethod,
-      generator.booleansInMethod,
-      generator.stringsInMethod,
-      generator.listsInMethod,
-      generator.equalityInMethod)
+  val m0_eip = eips.M0(approach.paradigm)(generator.doublesInMethod)
+  val m1_eip = eips.M1(approach.paradigm)(m0_eip)(generator.doublesInMethod)
+  val m2_eip = eips.M2(approach.paradigm)(m1_eip)(generator.doublesInMethod, generator.stringsInMethod)
+  val m3_eip = eips.M3(approach.paradigm)(m2_eip)(generator.doublesInMethod, generator.stringsInMethod)
+  val m4_eip = eips.M4.functional[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(m3_eip)(
+    generator.functionalInMethod,
+    generator.doublesInMethod,
+    generator.booleansInMethod,
+    generator.stringsInMethod,
+    generator.listsInMethod,
+    generator.equalityInMethod)
+
+  val eip = m4_eip
+//   val eip =
+//    eips.M4.functional(approach.paradigm)(
+//      generator.functionalInMethod,
+//      generator.doublesInMethod,
+//      generator.booleansInMethod,
+//      generator.stringsInMethod,
+//      generator.listsInMethod,
+//      generator.equalityInMethod)
   /*val m5eip = eips.M5(approach.paradigm)(m4eip)(
     generator.intsInMethod,
     generator.treesInMethod) // TODO: implement trees

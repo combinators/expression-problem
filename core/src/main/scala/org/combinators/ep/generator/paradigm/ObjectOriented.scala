@@ -331,6 +331,15 @@ trait ObjectOriented {
                    spec: Generator[MethodBodyContext, Option[Expression]],
                    isPublic: Boolean = true): Generator[TestContext, Unit] =
       AnyParadigm.capabilitiy(AddMethod(name, spec, isPublic))
+
+    // TODO: This has to be added
+//    implicit val canAddTypeLookupForClassesInTest: Understands[TestContext, AddTypeLookup[ClassContext, Type]]
+//    def addTypeLookupForClasses(tpe: TypeRep, lookup: Generator[ClassContext, Type]): Generator[TestContext, Unit] =
+//      AnyParadigm.capabilitiy(AddTypeLookup[ClassContext, Type](tpe, lookup))
+
+    implicit val canAddImplementedInTest: Understands[TestContext, AddImplemented[Type]]
+    def addImplemented(interface: Type): Generator[TestContext, Unit] =
+      AnyParadigm.capabilitiy(AddImplemented(interface))
   }
   val testCapabilities: TestCapabilities
 }

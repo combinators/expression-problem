@@ -30,6 +30,7 @@ trait OperationInterfaceChain extends ApproachImplementationProvider  {
   /** Requires capability of defining the signature of a method associated with the given operation. */
   def makeSignature(op: Operation): Generator[MethodBodyContext, Unit]
 
+  // TODO: should be revised to pass in the base, and not presume it
   def baseInterfaceNames(domain: GenericModel): Seq[Name] = {
     if (domain.isDomainBase) {
       // ignore MathDomain, for example, and just grab name...

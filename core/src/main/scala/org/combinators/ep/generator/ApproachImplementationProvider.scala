@@ -87,6 +87,12 @@ trait ApproachImplementationProvider {
     names.addSuffix(names.mangle(names.conceptNameOf(model)), "Test")
   }
 
+  /** When test case class needs to extend another class, override this. */
+  def testCaseParent(model:GenericModel):Seq[Type] = Seq.empty
+
+  /** When test case class needs to implementsome interfaces, override this. */
+  def testCaseImplements(model:GenericModel):Seq[Type] = Seq.empty
+
   /** Adds tests to the project context */
   def implement(tests: Map[GenericModel, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
     import projectContextCapabilities._
@@ -100,6 +106,10 @@ trait ApproachImplementationProvider {
             for {
               code <- forEach(tests) { test => testImplementationProvider.test(this)(test) }
             } yield code.flatten
+
+          val tyz:Generator[CompilationUnitContext, Unit]  = addTestSuite(testCaseName(model), addTestCase(testCode, testName))
+
+          // TODO: How to take advantage of new capability AddImplementedInTests???
 
           addCompilationUnit(
             addTestSuite(

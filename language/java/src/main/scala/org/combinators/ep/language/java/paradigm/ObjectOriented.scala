@@ -799,6 +799,34 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             (context.copy(resolver = methodCtxt.resolver, extraImports = newImports, testClass = resultCls), ())
           }
         }
+
+//      implicit val canAddTypeLookupForClassesInTest: Understands[TestCtxt, AddTypeLookup[TestCtxt, Type]] =
+//        new Understands[TestCtxt, AddTypeLookup[TestCtxt, Type]] {
+//          def perform(
+//                       context: TestCtxt,
+//                       command: AddTypeLookup[TestCtxt, Type]
+//                     ): (TestCtxt, Unit) = {
+//            def newLookup(k: ContextSpecificResolver)(tpe: TypeRep): Generator[TestCtxt, Type] =
+//              if (tpe == command.tpe) {
+//                command.lookup
+//              } else {
+//                context.resolver._classTypeResolution(k)(tpe)
+//              }
+//            (context.copy(resolver = context.resolver.copy(_classTypeResolution = newLookup)), ())
+//          }
+//        }
+
+      implicit val canAddImplementedInTest: Understands[TestCtxt, AddImplemented[Type]] =
+        new Understands[TestCtxt, AddImplemented[Type]] {
+          def perform(
+                       context: TestCtxt,
+                       command: AddImplemented[Type]
+                     ): (TestCtxt, Unit) = {
+            val resultCls = context.testClass.clone()
+            resultCls.addImplementedType(command.interface.asClassOrInterfaceType())
+            (context.copy(testClass = resultCls), ())
+          }
+        }
     }
 }
 

@@ -247,8 +247,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
   def makeRecursiveGetterSignature(att:Attribute, expParentFT:Type): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     for {
-//      rt <- toTargetLanguageType(att.tpe)
-//      _ <- resolveAndAddImport(rt)
       _ <- setReturnType(expParentFT)
     } yield None
   }
@@ -492,26 +490,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     import ooParadigm.methodBodyCapabilities._
 
     for {
-//      pt <- if (names.conceptNameOf(att.tpe) == names.conceptNameOf(domain.baseDataType)) {
-//        findClass(names.mangle(domain.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
-//      } else {
-//        toTargetLanguageType(att.tpe)
-//      }
-////      pt <- if (domain.ops.nonEmpty) {
-////        findClass(names.mangle(domain.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
-////      } else {
-////        findClass(names.mangle(domain.lastModelWithOperation.head.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
-////      }
 
-//        pt <- if (names.conceptNameOf(att.tpe) == names.conceptNameOf(domain.baseDataType)) {
-//           if (domain.ops.nonEmpty) {
-//              findClass(names.mangle(domain.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
-//            } else {
-//              findClass(names.mangle(domain.lastModelWithOperation.head.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
-//            }
-//        } else {
-//          toTargetLanguageType(att.tpe)
-//        }
       pt <- properFinalizedType(domain, att)
       _ <- setReturnType(pt)
 
@@ -563,17 +542,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
   def makeCoCoField(domain:GenericModel, att: Attribute): Generator[ClassContext, Type] = {
     import ooParadigm.classCapabilities._
     for {
-//      ft <- if (names.conceptNameOf(att.tpe) == names.conceptNameOf(domain.baseDataType)) {
-//        findClass(names.mangle(domain.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
-//      } else {
-//        toTargetLanguageType(att.tpe)
-//      }
-////      ft <- if (domain.ops.nonEmpty) {
-////        findClass(names.mangle(domain.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
-////      } else {
-////        findClass(names.mangle(domain.lastModelWithOperation.head.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
-////      }
-
       ft <- properFinalizedTypeClass(domain, att)
       _ <- resolveAndAddImport(ft)
       _ <- addField(names.mangle(names.instanceNameOf(att)), ft)
@@ -587,16 +555,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     for {
       params <- forEach (tpeCase.attributes) { att: Attribute =>
         for {
-//          at <- if (names.conceptNameOf(att.tpe) == names.conceptNameOf(domain.baseDataType)) {
-//            findClass(names.mangle(domain.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
-//          } else {
-//            toTargetLanguageType(att.tpe)
-//          }
-////          at <- if (domain.ops.nonEmpty) {
-////            findClass(names.mangle(domain.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
-////          } else {
-////            findClass(names.mangle(domain.lastModelWithOperation.head.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
-////          }
           at <- properFinalizedTypeConstructor(domain, att)
 
           pName <- freshName(names.mangle(names.instanceNameOf(att)))

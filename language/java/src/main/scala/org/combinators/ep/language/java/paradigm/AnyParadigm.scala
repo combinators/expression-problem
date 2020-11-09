@@ -356,6 +356,33 @@ trait AnyParadigm extends AP {
           }
         }
 
+      implicit val canResolveImportInTest: Understands[TestContext, ResolveImport[ImportDeclaration, Type]] =
+        new Understands[TestContext, ResolveImport[ImportDeclaration, Type]] {
+          def perform(
+                       context: TestContext,
+                       command: ResolveImport[ImportDeclaration, Type]
+                     ): (TestContext, Option[ImportDeclaration]) = {
+            val stripped = AnyParadigm.stripGenerics(command.forElem)
+            Try { (context, context.resolver.importResolution(stripped)) } getOrElse {
+              if (stripped.isClassOrInterfaceType) {
+                val importName = stripped.asClassOrInterfaceType().asString()   // DEEP DEFECT: scope is necessary since getName is SimpleName
+                val newImport =
+                  new ImportDeclaration(
+                    new com.github.javaparser.ast.expr.Name(importName),
+                    false,
+                    false)
+                if (context.extraImports.contains(newImport)) {
+                  (context, None)
+                } else {
+                  (context, Some(newImport))
+                }
+              } else {
+                (context, None)
+              }
+            }
+          }
+        }
+
       implicit val canAddImplementInTest: Understands[TestContext, AddImplementedTestCase[Type]] =
         new Understands[TestContext, AddImplementedTestCase[Type]] {
           def perform(

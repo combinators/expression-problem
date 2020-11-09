@@ -13,7 +13,7 @@ import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, Understands}
 import org.combinators.ep.generator.paradigm.{ObjectOriented => OO, AnyParadigm => _, _}
 import org.combinators.ep.language.java.Syntax.MangledName
-import org.combinators.ep.language.java.{ClassCtxt, ContextSpecificResolver, CtorCtxt, JavaNameProvider, MethodBodyCtxt, TestCtxt}
+import org.combinators.ep.language.java.{ClassCtxt, CompilationUnitCtxt, ContextSpecificResolver, CtorCtxt, JavaNameProvider, MethodBodyCtxt, TestCtxt}
 import org.combinators.templating.twirl.Java
 
 import scala.util.Try
@@ -800,21 +800,57 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
           }
         }
 
-//      implicit val canAddTypeLookupForClassesInTest: Understands[TestCtxt, AddTypeLookup[TestCtxt, Type]] =
-//        new Understands[TestCtxt, AddTypeLookup[TestCtxt, Type]] {
-//          def perform(
-//                       context: TestCtxt,
-//                       command: AddTypeLookup[TestCtxt, Type]
-//                     ): (TestCtxt, Unit) = {
-//            def newLookup(k: ContextSpecificResolver)(tpe: TypeRep): Generator[TestCtxt, Type] =
-//              if (tpe == command.tpe) {
-//                command.lookup
-//              } else {
-//                context.resolver._classTypeResolution(k)(tpe)
-//              }
-//            (context.copy(resolver = context.resolver.copy(_classTypeResolution = newLookup)), ())
-//          }
-//        }
+      implicit val canAddImportInTest: Understands[TestCtxt, AddImport[Import]] =
+        new Understands[TestCtxt, AddImport[Import]] {
+          def perform(
+                       context: TestCtxt,
+                       command: AddImport[Import]
+                     ): (TestCtxt, Unit) = {
+            val newImports =
+              if (context.extraImports.contains(command.imp)) {
+                context.extraImports
+              } else context.extraImports :+ command.imp.clone()
+            (context.copy(extraImports = newImports), ())
+          }
+        }
+
+      implicit val canResolveImportInTest: Understands[TestCtxt, ResolveImport[Import, Type]] =
+        new Understands[TestCtxt, ResolveImport[Import, Type]] {
+          def perform(
+                       context: TestCtxt,
+                       command: ResolveImport[Import, Type]
+                     ): (TestCtxt, Option[Import]) = {
+            val stripped = AnyParadigm.stripGenerics(command.forElem)
+            Try { (context, context.resolver.importResolution(stripped)) } getOrElse {
+              val newImport =
+                new ImportDeclaration(
+                  new com.github.javaparser.ast.expr.Name(stripped.asClassOrInterfaceType().asString()),   // DEFECT: SCOPE
+                  false,
+                  false)
+              if (context.extraImports.contains(newImport)) {
+                (context, None)
+              } else {
+                (context, Some(newImport))
+              }
+            }
+          }
+        }
+
+      implicit val canFindClassInTest: Understands[TestCtxt, FindClass[Name, Type]] =
+        new Understands[TestCtxt, FindClass[Name, Type]] {
+          def perform(
+                       context: TestCtxt,
+                       command: FindClass[Name, Type]
+                     ): (TestCtxt, Type) = {
+            val start = new ClassOrInterfaceType()
+            val fullName = ObjectOriented.components(config.targetPackage.getName).map(JavaNameProvider.mangle) ++ command.qualifiedName
+            start.setName(fullName.head.toAST)
+            val qualifiedName = fullName.tail.foldLeft(start){ case (scopes, suffix) =>
+              new ClassOrInterfaceType(scopes, suffix.mangled)
+            }
+            (context, qualifiedName)
+          }
+        }
 
       implicit val canAddImplementedInTest: Understands[TestCtxt, AddImplemented[Type]] =
         new Understands[TestCtxt, AddImplemented[Type]] {

@@ -134,7 +134,8 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       import ooParadigm.methodBodyCapabilities._
       import paradigm.methodBodyCapabilities._
       for {
-        _ <- triviallyMakeSignature(tpe, op)
+        ft <- getTypeArguments()
+        _ <- triviallyMakeSignature(tpe, ft, op, op.isProducer(applicableModel))
         thisRef <- selfReference()
         convertMethod <- getMember(thisRef, convert)
 
@@ -172,7 +173,8 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
         } yield getterCall
       }
 
-      _ <- triviallyMakeSignature(tpe, op)
+      ft <- getTypeArguments()
+      _ <- triviallyMakeSignature(tpe, ft, op, op.isProducer(model))
 
       args <- getArguments()
 
@@ -223,11 +225,24 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
   def getFormerDerivedInterfaces(domainDefiningType: GenericModel, current:DataTypeCase): Generator[ClassContext, List[Type]] = {
     import classCapabilities._
 
+    //val pastTypes = domainDefiningType.former.filter(!_.isDomainBase).filter(m => m.findTypeCase(current).isDefined)
+    val whereDefined = domainDefiningType.findTypeCase(current).get
+    // if a former operation is defined between domainDefiningTypes and whereDefined, take that instead
+    val withOps = domainDefiningType.former.flatMap(prior => prior.lastModelWithOperation).distinct
+
+    val finalSet = withOps.map(pm => {
+      if (whereDefined.before(pm)) { pm } else {whereDefined}
+    })
     for {
       // only take those who are not the bottom BUT ALSO only those for whom the current is meaningful.
-      group <- forEach(domainDefiningType.former.filter(!_.isDomainBase).filter(m => m.findTypeCase(current).isDefined)) { prior =>
-        findClass(names.mangle(prior.name), derivedInterfaceName(current))
-      }
+      // COCO: May have to go back further to an operation-level in which this type was defined
+//      group <- forEach(domainDefiningType.former.filter(!_.isDomainBase).filter(m => m.findTypeCase(current).isDefined)) { prior =>
+//        findClass(names.mangle(prior.name), derivedInterfaceName(current))
+//      }
+      group <- forEach(finalSet) { prior =>
+                findClass(names.mangle(prior.name), derivedInterfaceName(current))
+        }
+
     } yield group
 
     //    findClass(names.mangle(domainDefiningType.former.get.name), derivedInterfaceName(current))
@@ -272,6 +287,18 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       }
     } yield pt
   }
+
+//  /** Relies on registration of Exp */
+//  def properExpTypeToExtend(domain:GenericModel): Generator[ClassContext, Type] = {
+//    import ooParadigm.classCapabilities._
+//    for {
+//      pt <-  if (domain.former.ops.nonEmpty) {
+//        toTargetLanguageType(TypeRep.DataType(domain.baseDataType))
+//        } else {
+//          findClass(names.mangle(domain.lastModelWithOperation.head.name), names.mangle(names.conceptNameOf(domain.baseDataType)))
+//        }
+//    } yield pt
+//  }
 
   /**
    * Pivotal concept in CoCo is to find the "proper finalized Type" to use. This depends on several factors, as encapsulated here.
@@ -409,14 +436,21 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
         } yield ()
       }
 
-      val producers = if (model.former.isEmpty) {
-        Seq.empty
-      } else {
-        model.former.flatMap(_.flatten.ops.filter(op => op.isProducer(model))).distinct
-      }
+//      val producers = if (model.former.isEmpty) {
+//        Seq.empty
+//      } else {
+//        model.former.flatMap(_.flatten.ops.filter(op => op.isProducer(model))).distinct
+//      }
 
       import genericsParadigm.classCapabilities._
       import polymorphics.TypeParameterContext
+
+      // If we are defining type, must output all methods for all past operations
+      val opsToGenerate = if (model.typeCases.contains(tpeCase)) {
+        model.flatten.ops
+      } else {
+        model.ops
+      }
 
       for {
         // in new solution, all Exp<> references are parameterized
@@ -453,7 +487,9 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
         // always have to extend current Exp at this level
         _ <-  for {
           // first one needs to extend Exp
-          parent <-  toTargetLanguageType(TypeRep.DataType(tpe))
+          // parent <-  toTargetLanguageType(TypeRep.DataType(tpe))
+          //TODO: only when defining Exp. Might Break in M1... MERGE -- when MULTIPLE HAVE to go to current one.
+          parent <- findClass(names.mangle(model.lastModelWithOperation.head.name), names.mangle(model.baseDataType.name))
           _ <- resolveAndAddImport(parent)
           paramType <- applyType(parent, genType)
           _ <- addParent(paramType)
@@ -464,17 +500,24 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
         _ <- resolveAndAddImport(expParent)
         expParentFT <- applyType(expParent, genType)
 
-        _ <- forEach (tpeCase.attributes) { att => {
-          val recursive = att.tpe.toString == "DataType(DataType(Exp))"    // TODO: HACK! NEEDS SOMETHING BETTER
-          for {
-            mi <- makeCoCoGetter(att, recursive, expParentFT)
-            _ <- setAbstract()
-          } yield mi
-        }
+        _ <- if (model.typeCases.contains(tpeCase)) {
+          forEach (tpeCase.attributes) { att => {
+            val recursive = att.tpe.toString == "DataType(DataType(Exp))"    // TODO: HACK! NEEDS SOMETHING BETTER
+            for {
+              mi <- makeCoCoGetter(att, recursive, expParentFT)
+              _ <- setAbstract()
+            } yield mi
+          }
+          }
+        } else {
+          Command.skip[ClassContext]
         }
 
+        // TODO: Need To Deal With Merging "If my data type is new since if a branch that I do not belong to has a new operation, then
+        // I need to incorporate that one"
         // Using new EIP capabilities, just generate
-        _ <- forEach (model.flatten.ops.distinct) { op =>
+        //_ <- forEach (model.flatten.ops.distinct) { op =>
+        _ <- forEach (opsToGenerate) { op =>
           addMethod(names.mangle(names.instanceNameOf(op)), makeCoCoImplementation(model, tpe, tpeCase, op, domainSpecific))
         }
 
@@ -670,13 +713,14 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     import ooParadigm.methodBodyCapabilities.canFindClassInMethod
     import paradigm.projectContextCapabilities._
 
-    val baseInterface = baseInterfaceNames(model.standAlone)   // registers as m#.Exp   -- might not be necessary to convert standAlone
+    val baseInterface = Seq(names.mangle(model.baseDataType.name)) //baseInterfaceNames(model.standAlone)   // registers as m#.Exp   -- might not be necessary to convert standAlone
     val dtpeRep = TypeRep.DataType(model.baseDataType)
 
     for {
       _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(baseInterface : _*))
       _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(baseInterface : _*))
       _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(baseInterface : _*))
+
 
     } yield ()
   }
@@ -760,7 +804,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       } yield None
     }
 
-    def addVisitorTypeParameter(): Generator[ClassContext, Type] = {
+    def addFTTypeParameter(): Generator[ClassContext, Type] = {
       import classCapabilities._
       import genericsParadigm.classCapabilities._
       import polymorphics._
@@ -777,10 +821,10 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       import genericsParadigm.classCapabilities._
       import polymorphics.TypeParameterContext
       for {
-        visitorType <- addVisitorTypeParameter()
+        ftType <- addFTTypeParameter()
         _ <- setInterface()
         selfClass <- findClass(names.mangle(names.conceptNameOf(tpe)))
-        selfClassWithVisitorType <- applyType(selfClass, Seq(visitorType))
+        selfClassWithVisitorType <- applyType(selfClass, Seq(ftType))
         _ <- addConvertMethod(makeAbstractConvertSignature(selfClassWithVisitorType))
       } yield ()
     }
@@ -797,11 +841,18 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    * @param op
    * @return
    */
-  def triviallyMakeSignature(baseType:DataType, op: Operation): Generator[MethodBodyContext, Unit] = {
+  def triviallyMakeSignature(baseType:DataType, ft:Seq[Type], op: Operation, isProducer:Boolean): Generator[MethodBodyContext, Unit] = {
     import paradigm.methodBodyCapabilities._
-
+    import ooParadigm.methodBodyCapabilities._
     for {
-      rt <- toTargetLanguageType(op.returnType)
+
+      //rt <- toTargetLanguageType(op.returnType)
+      rt <- if (isProducer) {
+        findClass(names.mangle(baseType.name))  // needs to have <FT> applied to it
+      } else {
+        toTargetLanguageType(op.returnType)
+      }
+
       _ <- resolveAndAddImport(rt)
       _ <- setReturnType(rt)
 
@@ -830,11 +881,16 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     import genericsParadigm.classCapabilities._
 
     def extendParents:Generator[ClassContext, Unit] = {
-      val formers:Seq[Seq[Name]] = domain.former.map(dom => baseInterfaceNames(dom))
-      for {
+      // HAVE TO GRAB LAST ONE THAT DEFINED OPERATION IN EACH OF FORMER
+      //val formers:Seq[Seq[Name]] = domain.former.map(dom => baseInterfaceNames(dom))
+      val formers:Seq[Seq[Name]] = if (domain.former.head.isBottom) {
+        domain.former.map(dom => baseInterfaceNames(dom))
+      } else {
+        domain.former.map(dom => dom.lastModelWithOperation.flatMap(dom => baseInterfaceNames(dom)))
+      }
+        for {
         // get formers,filter all of those that "know" about the DataType, and then extend those
         _ <- forEach(formers) { former => {
-
           for {
             parent <- findClass(former: _*)
             _ <- resolveAndAddImport(parent)
@@ -847,6 +903,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
         }
         }
       } yield ()
+
     }
 
     for {
@@ -983,19 +1040,11 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
   /**
    * Starting with the operation chain and add the requisite interfaces for known factories.
    *
-   * package ep.m0;
+   * package ep.m4;
    *
-   * public interface Exp<V> extends ep.Exp<V> {
-   *   public abstract Double eval();   // operation
-   *   public abstract ep.m0.Exp<V> lit(Double value);
-   *   public abstract ep.m0.Exp<V> add(ep.Exp<V> left, ep.Exp<V> right);
-   *
-   *   public abstract Boolean equals(ep.Exp<V> other);    // binary operation MUST refer to ancestral type
-   *
-   *   public abstract ep.m5.Exp<V> simplify();   // any producer methods IN PAST MUST ALWAYS OVERLOAD
-   *   // conversion
-   *   public abstract ep.m0.Exp<V> convert(ep.Exp<V> toConvert);
-   *
+   * public interface Exp<FT> extends ep.m2.Exp<FT>, Factory<FT> {
+   *  public abstract ep.Exp<FT> simplify();
+   *  public abstract List<Double> collect();
    * }
    */
   def extendIntermediateInterface(domain:GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
@@ -1029,15 +1078,15 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       _ <- registerLocally(triviallyBaseDataType(domain.baseDataType), parameterizedBase)
 
       // if there are past operations, find those that are producers and create overloaded specifications
-      // make sure not to duplicate by calling distinct
-      _ <- forEach (domain.ops) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), triviallyMakeSignature(domain.baseDataType, op)) }
-      _ <- if (domain.former.nonEmpty) {
-        forEach(domain.former.flatMap(_.lastModelWithOperation.flatMap(_.flatten.ops).filter(_.isProducer(domain))).distinct) {
-          op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), triviallyMakeSignature(domain.baseDataType, op))
-        }
-      } else {
-        Command.skip[ClassContext]
-      }
+      // make sure not to duplicate by calling distinct. TODO: MuST CLEAN UP WHEN MERGING COMES IN
+      _ <- forEach (domain.ops) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), triviallyMakeSignature(domain.baseDataType, genType, op, op.isProducer(domain))) }
+//      _ <- if (domain.former.nonEmpty) {
+//        forEach(domain.former.flatMap(_.lastModelWithOperation.flatMap(_.flatten.ops).filter(_.isProducer(domain))).distinct) {
+//          op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), triviallyMakeSignature(domain.baseDataType, genType, op, op.isProducer(domain)))
+//        }
+//      } else {
+//        Command.skip[ClassContext]
+//      }
 
     } yield ()
   }
@@ -1112,6 +1161,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       genType <- getTypeArguments()
 
       parent <-  toTargetLanguageType(TypeRep.DataType(domain.baseDataType))
+
       _ <- resolveAndAddImport(parent)
       paramType <- applyType(parent, genType)
       _ <- registerLocally(domain.baseDataType, paramType)
@@ -1248,7 +1298,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    *   return new Lit(value);
    * }
    *
-   *??? (ep.Exp<ep.m0.finalized.Visitor> left, ep.Exp<ep.m0.finalized.Visitor> right) {
+   *??? (ep.Exp<???> left, ep.Exp<???> right) {
    *   return new Add(this.convert(left), this.convert(right));
    * }
    */
@@ -1263,7 +1313,8 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     } yield ()
 
     for {
-      _ <- createCoCoFactorySignatureDataTypeCase(definingModel.getOrElse(model), tpeCase, isStatic)
+      //_ <- createCoCoFactorySignatureDataTypeCase(definingModel.getOrElse(model), tpeCase, isStatic)
+      _ <- createCoCoFactorySignatureDataTypeCase(model, tpeCase, isStatic)
 
       opInst <- findClass(factoryInstanceDataTypeCase(Some(model), tpeCase): _*)    // should check!
       _ <- resolveAndAddImport(opInst)
@@ -1346,18 +1397,21 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
 
       _ <- addParent(factoryType)
 
-      // chain factories together
-      _ <- forEach(domain.former) { former => {
-
-        for {
-          formerFactory <- findClass(names.mangle(former.name), finalized, Factory)
-          _ <- if (former.isDomainBase) {
-            Command.skip[ClassContext]
-          } else {
-            addParent(formerFactory)
-          }
-        } yield()
+      // chain factories together ONLY when don't have an operation declared
+      _ <- if (domain.ops.isEmpty) {
+        forEach(domain.former) { former => {
+          for {
+            formerFactory <- findClass(names.mangle(former.name), finalized, Factory)
+            _ <- if (former.isDomainBase) {
+              Command.skip[ClassContext]
+            } else {
+              addParent(formerFactory)
+            }
+          } yield()
         }
+        }
+      } else {
+        Command.skip[ClassContext]
       }
 
       // WE only need new ones now UNLESS there has been an operation
@@ -1465,18 +1519,19 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
         // for all PAST dataTypes that are already defined
         for {
           _ <- domainSpecific.initialize(this)
-          _ <- registerTypeMapping(currentModel)   // what if we skipped this....
-
-          _ <- addClassToProject(extendIntermediateInterface(currentModel, domainSpecific), baseInterfaceNames(currentModel): _*)
-          _ <- addClassToProject(extendFactory(currentModel, domainSpecific), baseFactoryName(currentModel): _*)
-          _ <- addFactoryToProject(currentModel, makeFinalizedCoCoFactory(currentModel))
-
           // only if operations are defined
           _ <- if (currentModel.ops.nonEmpty) {
-            addBaseToProject(currentModel, makeFinalizedCoCoBase(currentModel))
+            for {
+              _ <- addBaseToProject(currentModel, makeFinalizedCoCoBase(currentModel))
+              _ <- addClassToProject(extendIntermediateInterface(currentModel, domainSpecific), baseInterfaceNames(currentModel): _*)
+              _ <- registerTypeMapping(currentModel)   // what if we skipped this....
+            } yield()
           } else {
             Command.skip[ProjectContext]
           }
+
+          _ <- addClassToProject(extendFactory(currentModel, domainSpecific), baseFactoryName(currentModel): _*)
+          _ <- addFactoryToProject(currentModel, makeFinalizedCoCoFactory(currentModel))
 
           // only generate PAST data types if new operation is defined
           _ <- if (currentModel.ops.isEmpty) {
@@ -1557,8 +1612,9 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
 
           // add test case first
           _ <- addTestCase(testCode, testName)
-          //factory <- findClass(names.conceptNameOf(model.baseDataType))    // TODO: HACK
-          //_ <- addImplemented(model.baseDataType)    // TODO: HACK
+          factory <-  findClass(names.mangle(model.name), finalized, Factory)
+          _ <- resolveAndAddImport(factory)
+          _ <- addImplemented(factory)
 
           // no longer necessary with finalized classes??
           // get list of all operations and MAP to the most recent model. Make distinct to deal with

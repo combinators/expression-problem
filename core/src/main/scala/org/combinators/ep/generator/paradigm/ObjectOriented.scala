@@ -332,10 +332,17 @@ trait ObjectOriented {
                    isPublic: Boolean = true): Generator[TestContext, Unit] =
       AnyParadigm.capabilitiy(AddMethod(name, spec, isPublic))
 
-    // TODO: This has to be added
-//    implicit val canAddTypeLookupForClassesInTest: Understands[TestContext, AddTypeLookup[ClassContext, Type]]
-//    def addTypeLookupForClasses(tpe: TypeRep, lookup: Generator[ClassContext, Type]): Generator[TestContext, Unit] =
-//      AnyParadigm.capabilitiy(AddTypeLookup[ClassContext, Type](tpe, lookup))
+    implicit val canAddImportInTest: Understands[TestContext, AddImport[Import]]
+    def addImport(imp: Import): Generator[TestContext, Unit] =
+      AnyParadigm.capabilitiy(AddImport(imp))
+
+    implicit val canResolveImportInTest: Understands[TestContext, ResolveImport[Import, Type]]
+    def resolveImport(tpe: Type): Generator[TestContext, Option[Import]]  =
+      AnyParadigm.capabilitiy(ResolveImport[Import, Type](tpe))
+
+    implicit val canFindClassInTest: Understands[TestContext, FindClass[Name, Type]]
+    def findClass(qualifiedName: Name*): Generator[TestContext, Type] =
+      AnyParadigm.capabilitiy(FindClass[Name, Type](qualifiedName))
 
     implicit val canAddImplementedInTest: Understands[TestContext, AddImplemented[Type]]
     def addImplemented(interface: Type): Generator[TestContext, Unit] =

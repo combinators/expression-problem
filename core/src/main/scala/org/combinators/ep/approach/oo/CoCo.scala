@@ -37,10 +37,21 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
   /** Placeholder for the ancestral type ep.Exp so it can be registered separately within the type mapping */
   lazy val ancestralTypePrefix:String = "ancestor"
 
+  // figure out WHAT to do about the ancestral type? Seem useful but I'm not really using it properly!
+
   // dup from FutureVisitor (needs refactoring!)
   /** Same as below but works without domain, providing you pass in the base type. */
   def computedBaseType[Context](ofBaseType:DataType)(implicit canFindClass: Understands[Context, FindClass[Name, Type]]): Generator[Context, Type] = {
     FindClass(Seq(names.mangle(names.conceptNameOf(ofBaseType)))).interpret(canFindClass)
+  }
+
+  // names.mangle(domain.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType))
+  def finalizedBase[Context](model:GenericModel)(implicit canFindClass: Understands[Context, FindClass[Name, Type]]): Generator[Context, Type] = {
+    FindClass(Seq(names.mangle(model.name), finalized, names.mangle(names.conceptNameOf(model.baseDataType)))).interpret(canFindClass)
+  }
+
+  def finalizedFactory[Context](model:GenericModel)(implicit canFindClass: Understands[Context, FindClass[Name, Type]]): Generator[Context, Type] = {
+    FindClass(Seq(names.mangle(model.name), finalized, Factory)).interpret(canFindClass)
   }
 
   // dup from FutureVisitor (needs refactoring!)
@@ -258,14 +269,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     addClassToProject(makeDerivedInterface(currentModel.baseDataType, tpeCase, currentModel, domainSpecific), names.mangle(currentModel.name), ddn)
   }
 
-  // need to make as "ep.Exp<FT>"
-  def makeRecursiveGetterSignature(att:Attribute, expParentFT:Type): Generator[MethodBodyContext, Option[Expression]] = {
-    import paradigm.methodBodyCapabilities._
-    for {
-      _ <- setReturnType(expParentFT)
-    } yield None
-  }
-
   /**
    * Pivotal concept in CoCo is to find the "proper finalized Type" to use. This depends on several factors, as encapsulated here.
    * @param domain
@@ -278,7 +281,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     for {
       pt <- if (names.conceptNameOf(att.tpe) == names.conceptNameOf(domain.baseDataType)) {
         if (domain.ops.nonEmpty) {
-          findClass(names.mangle(domain.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
+          finalizedBase(domain)
         } else {
           findClass(names.mangle(domain.lastModelWithOperation.head.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
         }
@@ -287,18 +290,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       }
     } yield pt
   }
-
-//  /** Relies on registration of Exp */
-//  def properExpTypeToExtend(domain:GenericModel): Generator[ClassContext, Type] = {
-//    import ooParadigm.classCapabilities._
-//    for {
-//      pt <-  if (domain.former.ops.nonEmpty) {
-//        toTargetLanguageType(TypeRep.DataType(domain.baseDataType))
-//        } else {
-//          findClass(names.mangle(domain.lastModelWithOperation.head.name), names.mangle(names.conceptNameOf(domain.baseDataType)))
-//        }
-//    } yield pt
-//  }
 
   /**
    * Pivotal concept in CoCo is to find the "proper finalized Type" to use. This depends on several factors, as encapsulated here.
@@ -311,7 +302,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     for {
       pt <- if (names.conceptNameOf(att.tpe) == names.conceptNameOf(domain.baseDataType)) {
         if (domain.ops.nonEmpty) {
-          findClass(names.mangle(domain.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
+          finalizedBase(domain)
         } else {
           findClass(names.mangle(domain.lastModelWithOperation.head.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
         }
@@ -332,7 +323,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     for {
       pt <- if (names.conceptNameOf(att.tpe) == names.conceptNameOf(domain.baseDataType)) {
         if (domain.ops.nonEmpty) {
-          findClass(names.mangle(domain.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
+          finalizedBase(domain)
         } else {
           findClass(names.mangle(domain.lastModelWithOperation.head.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
         }
@@ -353,16 +344,12 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    * @param att
    * @return
    */
-  def makeCoCoGetter(att:Attribute, recursive:Boolean, expParentFT:Type): Generator[ClassContext, Unit] = {
+  override def makeGetter(att:Attribute): Generator[ClassContext, Unit] = {
     val makeBody: Generator[MethodBodyContext, Option[Expression]] = {
       import ooParadigm.methodBodyCapabilities._
 
       for {
-        _ <- if (recursive) {
-          makeRecursiveGetterSignature(att, expParentFT)
-        } else {
-          makeGetterSignature(att)
-        }
+        _ <- makeGetterSignature(att)
         _ <- setAbstract()
       } yield None
     }
@@ -436,12 +423,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
         } yield ()
       }
 
-//      val producers = if (model.former.isEmpty) {
-//        Seq.empty
-//      } else {
-//        model.former.flatMap(_.flatten.ops.filter(op => op.isProducer(model))).distinct
-//      }
-
       import genericsParadigm.classCapabilities._
       import polymorphics.TypeParameterContext
 
@@ -458,7 +439,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
         _ <- addTypeParameter(ft, Command.skip[TypeParameterContext])
         genType <- getTypeArguments()
 
-        //parent <-  toTargetLanguageType(TypeRep.DataType(tpe))
+        // TODO: will need to deal with multiple parents
         parent <- if (model.ops.nonEmpty) {
           toTargetLanguageType(TypeRep.DataType(tpe))
         } else {
@@ -496,16 +477,13 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
         } yield ()
 
         // prepare for makeGetters. // TODO: HACK! NEEDS SOMETHING BETTER
-        expParent <- findClass(names.mangle(model.baseDataType.name))
-        _ <- resolveAndAddImport(expParent)
-        expParentFT <- applyType(expParent, genType)
+//        expParent <- findClass(names.mangle(model.baseDataType.name))
+//        _ <- resolveAndAddImport(expParent)
 
         _ <- if (model.typeCases.contains(tpeCase)) {
           forEach (tpeCase.attributes) { att => {
-            val recursive = att.tpe.toString == "DataType(DataType(Exp))"    // TODO: HACK! NEEDS SOMETHING BETTER
             for {
-              mi <- makeCoCoGetter(att, recursive, expParentFT)
-              _ <- setAbstract()
+              mi <- makeGetter(att)
             } yield mi
           }
           }
@@ -528,16 +506,14 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     makeClass
   }
 
-  def makeBodyImpl(domain:GenericModel, baseType:DataType, att:Attribute, parent:Type): Generator[MethodBodyContext, Option[Expression]] = {
+  def makeBodyImpl(domain:GenericModel, baseType:DataType, att:Attribute): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
 
     for {
-
       pt <- properFinalizedType(domain, att)
       _ <- setReturnType(pt)
 
-      // provide an implementation here. but how?
       self <- selfReference()
       result <- getMember(self, names.mangle(names.instanceNameOf(att)))
     } yield Some(result)
@@ -570,14 +546,15 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
   }
 
   /**
-   * Adds a convert method for given context.
+   * Add Method to class with given name
    *
+   * @param methodName
    * @param bodyGenerator
    * @return
    */
-  def addConvertMethod(bodyGenerator:Generator[MethodBodyContext, Option[Expression]]): Generator[ClassContext, Unit] = {
+  def addMethodToClass(methodName: Name, bodyGenerator:Generator[MethodBodyContext, Option[Expression]]): Generator[ClassContext, Unit] = {
     import ooParadigm.classCapabilities._
-    addMethod(convert, bodyGenerator)
+    addMethod(methodName, bodyGenerator)
   }
 
   // TODO: if left unchecked, Exp => "Exp<FT>" so we need to match to finalized.
@@ -585,10 +562,10 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
   def makeCoCoField(domain:GenericModel, att: Attribute): Generator[ClassContext, Type] = {
     import ooParadigm.classCapabilities._
     for {
-      ft <- properFinalizedTypeClass(domain, att)
-      _ <- resolveAndAddImport(ft)
-      _ <- addField(names.mangle(names.instanceNameOf(att)), ft)
-    } yield ft
+      finalizedType <- properFinalizedTypeClass(domain, att)
+      _ <- resolveAndAddImport(finalizedType)
+      _ <- addField(names.mangle(names.instanceNameOf(att)), finalizedType)
+    } yield finalizedType
   }
 
   // TODO: if left unchecked, Exp => "Exp<FT>" so we need to match this. Is there a way to remove a generic once there?
@@ -599,7 +576,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       params <- forEach (tpeCase.attributes) { att: Attribute =>
         for {
           at <- properFinalizedTypeConstructor(domain, att)
-
           pName <- freshName(names.mangle(names.instanceNameOf(att)))
         } yield (pName, at)
       }
@@ -653,9 +629,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       import genericsParadigm.classCapabilities._
 
       for {
-        // define based on the derivedInterface for that data type and operation based on
-        parent <- findClass(names.mangle(model.name), names.mangle(model.baseDataType.name))
-
         // if no operation is defined, then must go back to last one which is defined
         //selfExp <- findClass(names.mangle(model.name), finalized, names.mangle(names.conceptNameOf(model.baseDataType)))
         selfExp <- if (model.ops.nonEmpty) {
@@ -673,7 +646,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
         _ <- forEach(tpeCase.attributes) { att => makeCoCoField(model, att) }
         _ <- addConstructor(makeCoCoConstructor(model, tpeCase))
         _ <- forEach(tpeCase.attributes) { att =>
-          addMethod(getterName(att), makeBodyImpl(model, model.baseDataType, att, parent))
+          addMethod(getterName(att), makeBodyImpl(model, model.baseDataType, att))
         }
       } yield ()
     }
@@ -720,25 +693,19 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(baseInterface : _*))
       _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(baseInterface : _*))
       _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(baseInterface : _*))
-
-
     } yield ()
   }
 
-  /** Create standard signature to access the result of an operation
-   * yields None since no return value for this void method
-   */
-  def makeSelfSignature(genericType:Type): Generator[MethodBodyContext, Option[Expression]] = {
-    import paradigm.methodBodyCapabilities._
-
+  // add type parameter to a class!
+  def addFTTypeParameter(): Generator[ClassContext, Type] = {
+    import classCapabilities._
+    import genericsParadigm.classCapabilities._
+    import polymorphics._
     for {
-      _ <- setReturnType(genericType)
-    } yield None
-  }
-
-  def addGetSelf(bodyGenerator:Generator[MethodBodyContext, Option[Expression]]): Generator[ClassContext, Unit] = {
-    import ooParadigm.classCapabilities._
-    addMethod(getSelf, bodyGenerator)
+      ftTypeParamName <- freshName(expTypeParameter)
+      _ <- addTypeParameter(ftTypeParamName, Command.skip[TypeParameterContext])
+      ftType <- getTypeArguments().map(_.head)
+    } yield ftType
   }
 
   /**
@@ -754,20 +721,9 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       import paradigm.methodBodyCapabilities._
 
       for {
-        _ <- makeSelfSignature(ft)
+        _ <- setReturnType(ft)
         _ <- setAbstract()
       } yield None
-    }
-
-    def addFTTypeParameter(): Generator[ClassContext, Type] = {
-      import classCapabilities._
-      import genericsParadigm.classCapabilities._
-      import polymorphics._
-      for {
-        ftTypeParamName <- freshName(expTypeParameter)
-        _ <- addTypeParameter(ftTypeParamName, Command.skip[TypeParameterContext])
-        ftType <- getTypeArguments().map(_.head)
-      } yield ftType
     }
 
     // at this point, we only want ep.Exp not the most qualified ep.m4.Exp
@@ -779,7 +735,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
         ftType <- addFTTypeParameter()
         _ <- setInterface()
 
-        _ <- addGetSelf(makeAbstractSelfSignature(ftType))
+        _ <- addMethodToClass(getSelf, makeAbstractSelfSignature(ftType))
         factory <- findClass(Factory)
         factoryParam <- applyType(factory, Seq(ftType))
         _ <- addParent(factoryParam)
@@ -804,17 +760,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       } yield None
     }
 
-    def addFTTypeParameter(): Generator[ClassContext, Type] = {
-      import classCapabilities._
-      import genericsParadigm.classCapabilities._
-      import polymorphics._
-      for {
-        visitorTypeParamName <- freshName(expTypeParameter)
-        _ <- addTypeParameter(visitorTypeParamName, Command.skip[TypeParameterContext])
-        visitorType <- getTypeArguments().map(_.head)
-      } yield visitorType
-    }
-
     // at this point, we only want ep.Exp not the most qualified ep.m4.Exp
     val makeClass: Generator[ClassContext, Unit] = {
       import classCapabilities._
@@ -824,8 +769,8 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
         ftType <- addFTTypeParameter()
         _ <- setInterface()
         selfClass <- findClass(names.mangle(names.conceptNameOf(tpe)))
-        selfClassWithVisitorType <- applyType(selfClass, Seq(ftType))
-        _ <- addConvertMethod(makeAbstractConvertSignature(selfClassWithVisitorType))
+        selfClassWithFTType <- applyType(selfClass, Seq(ftType))
+        _ <- addMethodToClass(convert, makeAbstractConvertSignature(selfClassWithFTType))
       } yield ()
     }
     addClassToProject(makeClass, Factory)
@@ -894,8 +839,8 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
           for {
             parent <- findClass(former: _*)
             _ <- resolveAndAddImport(parent)
-            justFT <- getTypeArguments().map(_.head)
-            paramType <- applyType(parent, Seq(justFT))
+            ft <- getTypeArguments().map(_.head)
+            paramType <- applyType(parent, Seq(ft))
 
             _ <- resolveAndAddImport(paramType)
             _ <- addParent(paramType)
@@ -985,56 +930,13 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
           justV <- getTypeArguments().map(_.head)
           paramType <- applyType(parent, Seq(justV))
 
-          //  public void accept(V visitor);
-          //    public Exp<V> convert(Exp<V> value);
-          _ <- addConvertMethod(makeConvertSignature(paramType, paramType))
-          //_ <- addAcceptMethod(makeAcceptSignature(paramType))
+          //_ <- addConvertMethod(makeConvertSignature(paramType, paramType))
+          _ <- addMethodToClass(convert, makeConvertSignature(paramType, paramType))
         } yield ()
 
         Command.skip[ClassContext]
       }
     } yield ()
-  }
-
-  /**
-   * Need to be sure return types and parameters become specialized to current/most recent model Exp
-   *
-   *  public abstract ep.m0.Exp<V> add(ep.Exp<V> left, ep.Exp<V> right);
-   *
-   * where
-   * @param model
-   * @param tpeCase
-   * @param opClass
-   * @param isStatic
-   * @param typeParameters
-   * @return
-   */
-  def createLocalizedFactorySignatureDataTypeCase(model:GenericModel, tpeCase:DataTypeCase, opClass:Type, isStatic:Boolean = false, typeParameters:Seq[Type] = Seq.empty): Generator[MethodBodyContext, Option[Expression]] = {
-    import paradigm.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
-    import polymorphics.methodBodyCapabilities._
-    for {
-      _ <- setReturnType(opClass)
-      _ <- if (isStatic) { setStatic() } else { Command.skip[MethodBodyContext] }
-      params <- forEach (tpeCase.attributes) { att: Attribute =>
-        if (tpeCase.isRecursive(model)) {
-          for {
-            at <- toTargetLanguageType(att.tpe)
-
-            pat <- applyType(at, typeParameters)
-            pName <- freshName(names.mangle(names.instanceNameOf(att)))
-          } yield (pName, pat)
-        } else {  // HACK: non parameterized for non-recursive types
-          for {
-            at <- toTargetLanguageType(att.tpe)
-
-            pName <- freshName(names.mangle(names.instanceNameOf(att)))
-          } yield (pName, at)
-        }
-      }
-
-      _ <- setParameters(params)
-    } yield None
   }
 
   /**
@@ -1097,24 +999,21 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
   }
 
   // TODO: Needs to return "ep.Exp<FT>" not "Exp<FT>" for all constructors and convert method
-  override def createFactorySignatureDataTypeCase(model:GenericModel, tpeCase:DataTypeCase, paramBaseClass:Type, returnClass:Type, isStatic:Boolean = false): Generator[MethodBodyContext, Option[Expression]] = {
+  def createFactorySignatureDataTypeCaseInFactory(model:GenericModel, tpeCase:DataTypeCase, paramBaseClass:Type): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
-    import polymorphics.methodBodyCapabilities._
     for {
       _ <- resolveAndAddImport(paramBaseClass)
-      _ <- setReturnType(paramBaseClass)  // was returnClass
-      _ <- if (isStatic) { setStatic() } else { Command.skip[MethodBodyContext] }
-      params <- forEach (tpeCase.attributes) { att: Attribute => {
+      _ <- setReturnType(paramBaseClass)
+
+      params <- forEach (tpeCase.attributes) { att => {
         if (tpeCase.isRecursive(model)) {
           for {
             pName <- freshName(names.mangle(names.instanceNameOf(att)))
-
           } yield (pName, paramBaseClass)
         } else {
           for {
             at <- toTargetLanguageType(att.tpe)
-
             pName <- freshName(names.mangle(names.instanceNameOf(att)))
           } yield (pName, at)
         }
@@ -1122,7 +1021,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       }
 
       _ <- setParameters(params)
-
     } yield None
   }
 
@@ -1161,7 +1059,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       genType <- getTypeArguments()
 
       parent <-  toTargetLanguageType(TypeRep.DataType(domain.baseDataType))
-
       _ <- resolveAndAddImport(parent)
       paramType <- applyType(parent, genType)
       _ <- registerLocally(domain.baseDataType, paramType)
@@ -1191,9 +1088,8 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
           import ooParadigm.methodBodyCapabilities._
           for {
             // return value for all methods needs to be ep.Exp<FT> as was the case for parameters
-            xf <- createFactorySignatureDataTypeCase(domain, tpe, topLevelType, paramType, false)
+            xf <- createFactorySignatureDataTypeCaseInFactory(domain, tpe, topLevelType)
             _ <- setAbstract()
-
           } yield xf
         }
 
@@ -1203,7 +1099,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
 
       // ONLY need when an operation is defined
       _ <- if (domain.ops.nonEmpty) {
-        addConvertMethod(convertMethod(topLevelType, paramType))
+        addMethodToClass(convert, convertMethod(topLevelType, paramType))
       } else {
         Command.skip[ClassContext]
       }
@@ -1214,35 +1110,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    * When factory-like methods need to be generated for a class based upon a dataTypeCase, this function
    * does most of the heavy lifting.
    *
-   * Return type can be overridden by [[factoryNameDataTypeCase]]
-   * Instantiated object internally can be overridden by [[factoryInstanceDataTypeCase]]
-   *
-   * Trivially requires the following in its test cases:
-   *
-   * {{{
-   * AddPrettypFinal Add(PrettypExp left, PrettypExp right) {
-   *   return new AddPrettypFinal(left, right);
-   * }
-   *
-   * LitPrettypFinal Lit(Double v) {
-   *    return new LitPrettypFinal(v);
-   * }
-   * }}}
-   *
-   * While interpreter calls for:
-   *
-   * {{{
-   *   public class EvalIdzExpFactory {
-   *
-   *     public static EvalIdzExp Neg(EvalIdzExp inner) {
-   *         return new EvalIdzNeg(inner);
-   *     }
-   *
-   *     public static EvalIdzExp Mult(EvalIdzExp left, EvalIdzExp right) {
-   *         return new EvalIdzMult(left, right);
-   *     }
-   * }}}
-   *
    * Can't set as abstract because later one might have default methods which can't be both default/abstract.
    *
    * Might require generics for the class.
@@ -1250,14 +1117,11 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    * @param tpeCase
    * @return
    */
-  def createCoCoFactorySignatureDataTypeCase(model:GenericModel, tpeCase:DataTypeCase, isStatic:Boolean = false): Generator[MethodBodyContext, Option[Expression]] = {
+  def createCoCoFactorySignatureDataTypeCase(model:GenericModel, tpeCase:DataTypeCase): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
     import polymorphics.methodBodyCapabilities._
     for {
-      topLevelType <- computedBaseType(model)
-      _ <- resolveAndAddImport(topLevelType)
-
       // might have to go back to EARLIER if no new operations defined
       // TODO: IF MULTIPLE PAST HAVE OPERATIONS CAN'T JUST GRAB FIRST AS I DO HERE. HELP! MIGHT HAVE TO GO BACK TO MERGE OR LAST OP
       selfExp <- if (model.ops.nonEmpty) {
@@ -1265,8 +1129,9 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       } else {
         findClass(names.mangle(model.lastModelWithOperation.head.name), finalized, names.mangle(names.conceptNameOf(model.baseDataType)))
       }
+
       _ <- setReturnType(selfExp)
-      _ <- if (isStatic) { setStatic() } else { Command.skip[MethodBodyContext] }
+      //_ <- if (isStatic) { setStatic() } else { Command.skip[MethodBodyContext] }
       params <- forEach (tpeCase.attributes) { att: Attribute => {
         if (tpeCase.isRecursive(model)) {
           for {
@@ -1289,7 +1154,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       }
 
       _ <- setParameters(params)
-
     } yield None
   }
 
@@ -1302,26 +1166,18 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    *   return new Add(this.convert(left), this.convert(right));
    * }
    */
-  def futureCreateFactoryDataTypeCase(model:GenericModel, tpeCase:DataTypeCase, isStatic:Boolean = false): Generator[MethodBodyContext, Option[Expression]] = {
+  def futureCreateFactoryDataTypeCase(model:GenericModel, tpeCase:DataTypeCase): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
 
-    val definingModel = model.findTypeCase(tpeCase)
-
     for {
-      _ <- registerTypeMapping(definingModel.getOrElse(model))
-    } yield ()
-
-    for {
-      //_ <- createCoCoFactorySignatureDataTypeCase(definingModel.getOrElse(model), tpeCase, isStatic)
-      _ <- createCoCoFactorySignatureDataTypeCase(model, tpeCase, isStatic)
+      _ <- createCoCoFactorySignatureDataTypeCase(model, tpeCase)
 
       opInst <- findClass(factoryInstanceDataTypeCase(Some(model), tpeCase): _*)    // should check!
       _ <- resolveAndAddImport(opInst)
 
       // set method invocation to 'convert' with these arguments
       self <- selfReference()
-
       convertMethod <- getMember(self, convert)
       argSeq <- getArguments()
 
@@ -1381,27 +1237,23 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       domain.typeCases
     }
     for {
-
       // even though this expressly calls for ep.m#.Exp it becomes just Exp so missing the import.
       resultTpe <- findClass(names.mangle(domain.baseDataType.name))
-
       factory <- findClass(names.mangle(domain.name), Factory)
 
       // this always gets the current one, but one might not have been defined...
       //selfExp <- findClass(names.mangle(domain.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
-      parents <- forEach (domain.lastModelWithOperation) { dm =>
-        findClass(names.mangle(dm.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
-      }
+      parents <- forEach (domain.lastModelWithOperation) { dm => finalizedBase(dm) }
 
       factoryType <- applyType(factory,parents)
-
       _ <- addParent(factoryType)
 
       // chain factories together ONLY when don't have an operation declared
       _ <- if (domain.ops.isEmpty) {
         forEach(domain.former) { former => {
           for {
-            formerFactory <- findClass(names.mangle(former.name), finalized, Factory)
+            //formerFactory <- findClass(names.mangle(former.name), finalized, Factory)
+            formerFactory <- finalizedFactory(former)
             _ <- if (former.isDomainBase) {
               Command.skip[ClassContext]
             } else {
@@ -1421,13 +1273,13 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
         for {
           // These methods with recursive values must call convert; in addition, they must be properly
           // defined to use appropriate ep.m#.Exp based on where the data type was defined... TRICK
-          _ <- addMethod (names.mangle(names.instanceNameOf(tpeCase)), futureCreateFactoryDataTypeCase(domain, tpeCase, false))
+          _ <- addMethod (names.mangle(names.instanceNameOf(tpeCase)), futureCreateFactoryDataTypeCase(domain, tpeCase))
         } yield ()
       }
       }
 
       _ <- if (domain.ops.nonEmpty) {
-        addConvertMethod(makeConvertImplementation(domain, resultTpe))
+        addMethodToClass(convert, makeConvertImplementation(domain, resultTpe))
       } else {
         Command.skip[ClassContext]
       }
@@ -1469,35 +1321,18 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       _ <- addImplemented(factory)
 
       expType <- findClass(names.mangle(domain.name), names.mangle(domain.baseDataType.name))
-      selfExp <- findClass(names.mangle(domain.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
+      selfExp <- finalizedBase(domain)
       expImpl <- applyType(expType,Seq[Type](selfExp))
 
       _ <- addImplemented(expImpl)
 
-      _ <- addGetSelf(getSelfMethod(selfExp))
+      _ <- addMethodToClass(getSelf, getSelfMethod(selfExp))
       _ <- setAbstract()
     } yield ()
   }
 
   def baseFactoryName(domain: GenericModel): Seq[Name] = {
     Seq(names.mangle(domain.name), Factory)
-  }
-
-   // dup
-  /**
-   * Adds an accept method for given context.
-   *
-   * @param bodyGenerator
-   * @return
-   */
-  def addFactoryToProject(domain:GenericModel, bodyGenerator:Generator[ClassContext, Unit]): Generator[ProjectContext, Unit] = {
-    import ooParadigm.projectCapabilities._
-    addClassToProject(bodyGenerator, names.mangle(domain.name), finalized, Factory)
-  }
-
-  def addBaseToProject(domain:GenericModel, bodyGenerator:Generator[ClassContext, Unit]): Generator[ProjectContext, Unit] = {
-    import ooParadigm.projectCapabilities._
-    addClassToProject(bodyGenerator, names.mangle(domain.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
   }
 
   override def implement(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
@@ -1522,7 +1357,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
           // only if operations are defined
           _ <- if (currentModel.ops.nonEmpty) {
             for {
-              _ <- addBaseToProject(currentModel, makeFinalizedCoCoBase(currentModel))
+              _ <- addClassToProject(makeFinalizedCoCoBase(currentModel), names.mangle(currentModel.name), finalized, names.mangle(names.conceptNameOf(currentModel.baseDataType)))
               _ <- addClassToProject(extendIntermediateInterface(currentModel, domainSpecific), baseInterfaceNames(currentModel): _*)
               _ <- registerTypeMapping(currentModel)   // what if we skipped this....
             } yield()
@@ -1531,7 +1366,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
           }
 
           _ <- addClassToProject(extendFactory(currentModel, domainSpecific), baseFactoryName(currentModel): _*)
-          _ <- addFactoryToProject(currentModel, makeFinalizedCoCoFactory(currentModel))
+          _ <- addClassToProject(makeFinalizedCoCoFactory(currentModel), names.mangle(currentModel.name), finalized, Factory)
 
           // only generate PAST data types if new operation is defined
           _ <- if (currentModel.ops.isEmpty) {
@@ -1575,28 +1410,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     import paradigm.compilationUnitCapabilities._
     import paradigm.testCapabilities._
 
-//    def factoryMethod(model:GenericModel, tpeCase:DataTypeCase) : Generator[MethodBodyContext, Option[Expression]] = {
-//
-//      import ooParadigm.methodBodyCapabilities._
-//      import polymorphics.methodBodyCapabilities._
-//      import paradigm.methodBodyCapabilities._
-//      for {
-//        // ep.m4.Exp<ep.m4.finalized.Visitor>
-//        paramBaseType <- toTargetLanguageType(TypeRep.DataType(model.baseDataType))
-//        _ <- resolveAndAddImport(paramBaseType)
-//       // visitorType <- findClass(names.mangle(model.name), finalized, visitorClass)
-//       // _ <- resolveAndAddImport(visitorType)
-//
-//        returnType <- findClass(names.mangle(model.name), finalized, names.mangle(names.conceptNameOf(tpeCase)))
-//        _ <- resolveAndAddImport(returnType)
-////
-////        appliedType <- applyType(paramBaseType, Seq(visitorType))
-////        //
-//
-//        facMethod <- createFactoryDataTypeCase(model, tpeCase, returnType, returnType)
-//      } yield facMethod
-//    }
-
     for {
 
       _ <- forEach(tests.toList) { case (model, tests) => {
@@ -1615,16 +1428,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
           factory <-  findClass(names.mangle(model.name), finalized, Factory)
           _ <- resolveAndAddImport(factory)
           _ <- addImplemented(factory)
-
-          // no longer necessary with finalized classes??
-          // get list of all operations and MAP to the most recent model. Make distinct to deal with
-          // potential graphing issues.
-//          _ <- forEach(model.flatten.typeCases.distinct) { tpeCase => {
-//            for {
-//              _ <- addMethod(names.mangle(names.instanceNameOf(tpeCase)), factoryMethod(model, tpeCase))
-//            } yield (None)
-//          }
-//          }
 
         } yield ()
 

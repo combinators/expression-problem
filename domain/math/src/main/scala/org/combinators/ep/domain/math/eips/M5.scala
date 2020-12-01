@@ -5,7 +5,7 @@ import org.combinators.ep.domain.math
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
-import org.combinators.ep.generator.communication.{ReceivedRequest, Request, SendRequest}
+import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Trees}
 
@@ -37,10 +37,9 @@ object M5 {
       }
 
       def applicable
-        (forApproach: AIP[paradigm.type])
-        (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
-        Set(math.M5.Identifier, Operation.asTree).contains(onRequest.request.op) &&
-          Set(math.M3.Divd,math.M3.Mult, math.M3.Neg,math.M1.Sub,math.M0.Add,math.M0.Lit).contains(onRequest.tpeCase)
+        (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
+        Set(math.M5.Identifier, Operation.asTree).contains(potentialRequest.op) &&
+          Set(math.M3.Divd,math.M3.Mult, math.M3.Neg,math.M1.Sub,math.M0.Add,math.M0.Lit).contains(potentialRequest.tpeCase)
       }
 
       /** Can handle any AsTree or Identifier operations. */

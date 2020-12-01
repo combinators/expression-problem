@@ -6,7 +6,7 @@ import org.combinators.ep.domain.{GenericModel, abstractions, math}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
-import org.combinators.ep.generator.communication.{ReceivedRequest, Request, SendRequest}
+import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm
 import org.combinators.ep.generator.paradigm.control.{Functional, Imperative}
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Booleans, Equality, Strings}
@@ -54,12 +54,11 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
       }
 
       def applicable
-      (forApproach: AIP[paradigm.type])
-      (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
-        (Set(math.M7.PowBy,math.M6.Equals,Operation.asTree,math.M5.Identifier,math.M4.Collect,math.M4.Simplify).contains(onRequest.request.op) &&
-          Set(math.I2.Power).contains(onRequest.tpeCase)) ||
-          (Set(math.I1.MultBy).contains(onRequest.request.op) &&
-            Set(math.M3.Divd, math.M3.Mult, math.M3.Neg).contains(onRequest.tpeCase))
+      (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
+        (Set(math.M7.PowBy,math.M6.Equals,Operation.asTree,math.M5.Identifier,math.M4.Collect,math.M4.Simplify).contains(potentialRequest.op) &&
+          Set(math.I2.Power).contains(potentialRequest.tpeCase)) ||
+          (Set(math.I1.MultBy).contains(potentialRequest.op) &&
+            Set(math.M3.Divd, math.M3.Mult, math.M3.Neg).contains(potentialRequest.tpeCase))
       }
 
       override def applicableIn(forApproach:  AIP[paradigm.type])(onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression],currentModel:GenericModel): Option[GenericModel] = {

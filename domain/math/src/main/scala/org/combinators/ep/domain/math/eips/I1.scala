@@ -6,7 +6,7 @@ import org.combinators.ep.domain.math
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
-import org.combinators.ep.generator.communication.{ReceivedRequest, SendRequest}
+import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
 import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.{AnyParadigm, ToTargetLanguageType}
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, RealArithmetic, Strings}
@@ -41,10 +41,9 @@ object I1 {
       }
 
       def applicable
-      (forApproach: AIP[paradigm.type])
-      (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
-        (onRequest.request.op == math.I1.MultBy) &&
-          (Set(math.M0.Lit, math.M0.Add, math.M1.Sub).contains(onRequest.tpeCase))
+      (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
+        (potentialRequest.op == math.I1.MultBy) &&
+          (Set(math.M0.Lit, math.M0.Add, math.M1.Sub).contains(potentialRequest.tpeCase))
       }
 
       /** MultBy can support any N-ary data type, so prepare for this future eventuality here. */

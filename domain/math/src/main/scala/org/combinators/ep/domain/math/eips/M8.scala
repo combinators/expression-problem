@@ -6,7 +6,7 @@ import org.combinators.ep.domain.{abstractions, math}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
-import org.combinators.ep.generator.communication.{ReceivedRequest, Request, SendRequest}
+import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm
 import org.combinators.ep.generator.paradigm.control.{Functional, Imperative}
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Booleans, Equality, Strings}
@@ -51,10 +51,9 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
         } yield ()
       }
 
-      def applicable(forApproach: AIP[paradigm.type])
-                    (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
-        Set(math.M4.Simplify,math.M4.Collect,math.M2.PrettyP,math.M0.Eval,math.I1.MultBy,math.M7.PowBy,math.M6.Equals,math.M5.Identifier,Operation.asTree).contains(onRequest.request.op) &&
-          Set(math.M8.Inv).contains(onRequest.tpeCase)
+      def applicable(forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
+        Set(math.M4.Simplify,math.M4.Collect,math.M2.PrettyP,math.M0.Eval,math.I1.MultBy,math.M7.PowBy,math.M6.Equals,math.M5.Identifier,Operation.asTree).contains(potentialRequest.op) &&
+          Set(math.M8.Inv).contains(potentialRequest.tpeCase)
       }
 
       private def simplifyLogic(forApproach: AIP[paradigm.type])

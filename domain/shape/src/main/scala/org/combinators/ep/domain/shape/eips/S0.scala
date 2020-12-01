@@ -3,7 +3,7 @@ package org.combinators.ep.domain.shape.eips      /*DD:LI:AI*/
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.communication.{ReceivedRequest, Request, SendRequest}
+import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.ep.domain.{GenericModel, shape}
 import org.combinators.ep.generator.paradigm.AnyParadigm
@@ -43,11 +43,10 @@ object S0 {
         } yield ()
       }
 // Seq(Square,Circle,Translate), Seq(ContainsPt))
-      def applicable
-      (forApproach: AIP[paradigm.type])
-      (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
-        (onRequest.request.op == shape.S0.ContainsPt) &&
-          (Set(shape.S0.Circle, shape.S0.Square, shape.S0.Translate).contains(onRequest.tpeCase))
+      override def applicable
+      (forApproach: AIP[paradigm.type], potentialRequest: PotentialRequest): Boolean = {
+        (potentialRequest.op == shape.S0.ContainsPt) &&
+          (Set(shape.S0.Circle, shape.S0.Square, shape.S0.Translate).contains(potentialRequest.tpeCase))
       }
 
       override def logic

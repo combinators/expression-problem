@@ -5,7 +5,7 @@ import org.combinators.ep.domain.math
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
-import org.combinators.ep.generator.communication.{ReceivedRequest, SendRequest}
+import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Strings}
 
@@ -27,10 +27,9 @@ object M3 {
       }
 
       def applicable
-        (forApproach: AIP[paradigm.type])
-          (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
-        Set(math.M0.Eval, math.M2.PrettyP).contains(onRequest.request.op) &&
-          Set(math.M3.Divd, math.M3.Mult, math.M3.Neg).contains(onRequest.tpeCase)
+        (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
+        Set(math.M0.Eval, math.M2.PrettyP).contains(potentialRequest.op) &&
+          Set(math.M3.Divd, math.M3.Mult, math.M3.Neg).contains(potentialRequest.tpeCase)
       }
 
       /** Do not call 'assert' since might not be applicable. */

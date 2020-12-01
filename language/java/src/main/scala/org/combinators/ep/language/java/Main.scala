@@ -39,8 +39,9 @@ object Main extends IOApp {
 
   //val evolutions = Seq(M0, M1, M2, I1, I2)    // , I2 //       M3, M4, M5, M6) // ) // , M4, M5, M6)
   //val evolutions = Seq(M0, M1, M2) // , M3, M4, M5, M6, M7) // , I1, I2, M3, M4, M5, M6, M7, M7I2, M8, M9)    // all test cases become active WHEN all included.
-  //val evolutions = Seq(M0, M1, M2, M3, I1, A1, A1M3)   //
-  val evolutions = Seq(M0, M1, M2, M3, M4, M5, M6, M7) //
+  val evolutions = Seq(M0, M1, M2, M3, I1, A1, A1M3)
+
+  //val evolutions = Seq(M0, M1, M2, M3, M4, M5, M6, M7) //
 //  val eip = eips.I2(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod,
 //    generator.stringsInMethod, generator.imperativeInMethod)
 //  // how do I just use M2 instead of this? HACK
@@ -74,17 +75,22 @@ object Main extends IOApp {
     generator.equalityInMethod)
   val m9_eip = eips.M9(approach.paradigm)(m8_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.imperativeInMethod)
 
-  val eip = m7_eip
+  //val eip = m7_eip
   val a1_eip = eips.A1(approach.paradigm)(i1_eip)(generator.doublesInMethod, generator.stringsInMethod)
   val a1m3_eip = eips.A1M3(approach.paradigm)(m3_eip, a1_eip)(generator.stringsInMethod)
 
-  //val eip = a1m3_eip
+  val eip = a1m3_eip
+  //val eip = m9_eip
   val tests = evolutions.scanLeft(Map.empty[GenericModel, Seq[TestCase]]) { case (m, evolution) =>
     m + (evolution.getModel -> evolution.tests)
   }.tail
 
+  // for CoCo, we only need the latest since all earlier ones are identical
+  val all = evolutions.zip(tests)
+  val latest = Seq(all.last)
+
   val transaction =
-    evolutions.zip(tests).foldLeft(Option.empty[BranchTransaction]) {
+    latest.foldLeft(Option.empty[BranchTransaction]) {
       case (transaction, (evolution, tests)) =>
     val impl =
       for {

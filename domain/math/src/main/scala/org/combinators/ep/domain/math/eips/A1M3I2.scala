@@ -5,7 +5,7 @@ import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
-import org.combinators.ep.generator.communication.{ReceivedRequest, SendRequest}
+import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm.ffi.Strings
@@ -58,11 +58,7 @@ object A1M3I2 {
       }
 
       // NOTHING NEW!
-      def applicable
-      (forApproach: AIP[paradigm.type])
-      (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
-        false
-      }
+      def applicable(forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = false
 
       def logic
       (forApproach: AIP[paradigm.type])

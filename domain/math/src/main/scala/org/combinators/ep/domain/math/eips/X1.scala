@@ -3,7 +3,7 @@ package org.combinators.ep.domain.math.eips      /*DD:LI:AI*/
 import org.combinators.ep.domain.math
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
-import org.combinators.ep.generator.communication.{ReceivedRequest, SendRequest}
+import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, RealArithmetic, Strings}
 import EvolutionImplementationProvider._
@@ -31,10 +31,9 @@ object X1 {
       }
 
       def applicable
-      (forApproach: AIP[paradigm.type])
-      (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
-        (onRequest.request.op == math.M0.Eval) && Set(math.X1.Sub).contains(onRequest.tpeCase) ||
-          Set(math.X1.PrettyP,math.X1.MultBy).contains(onRequest.request.op) && Set(math.X1.Sub,math.M0.Lit,math.M0.Add).contains(onRequest.tpeCase)
+      (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
+        (potentialRequest.op == math.M0.Eval) && Set(math.X1.Sub).contains(potentialRequest.tpeCase) ||
+          Set(math.X1.PrettyP,math.X1.MultBy).contains(potentialRequest.op) && Set(math.X1.Sub,math.M0.Lit,math.M0.Add).contains(potentialRequest.tpeCase)
       }
 
       override def logic

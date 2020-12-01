@@ -4,7 +4,7 @@ import org.combinators.ep.domain.math
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
-import org.combinators.ep.generator.communication.{ReceivedRequest, SendRequest}
+import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Strings}
 
@@ -26,9 +26,8 @@ object M2 {
       }
 
       def applicable
-        (forApproach: AIP[paradigm.type])
-          (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
-        (onRequest.request.op == math.M2.PrettyP) &&
+        (forApproach: AIP[paradigm.type], onRequest: PotentialRequest): Boolean = {
+        (onRequest.op == math.M2.PrettyP) &&
           (Set(math.M0.Lit, math.M0.Add, math.M1.Sub).contains(onRequest.tpeCase))
       }
 

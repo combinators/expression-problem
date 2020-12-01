@@ -5,7 +5,7 @@ import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
-import org.combinators.ep.generator.communication.{ReceivedRequest, SendRequest}
+import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm
 import org.combinators.ep.generator.paradigm.ffi.Strings
 
@@ -34,14 +34,14 @@ object A1M3 {
       }
 
       override def applicableIn
-        (forApproach:  AIP[paradigm.type])
-        (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression],currentModel:GenericModel): Option[GenericModel] = {
+        (forApproach:  AIP[paradigm.type], onRequest: PotentialRequest, currentModel:GenericModel): Option[GenericModel] = {
 
         val forwardTable:PartialFunction[(Operation,DataTypeCase),GenericModel] = {
           case (math.I1.MultBy, math.M3.Divd) => model // I HANDLE these
           case (math.I1.MultBy, math.M3.Mult) => model // I HANDLE these
           case (math.I1.MultBy, math.M3.Neg) => model  // I HANDLE these
           case (math.I1.MultBy, math.A1.Times) => math.A1.getModel
+
           case (math.I1.MultBy, _) => math.I1.getModel
           case (_, math.M3.Divd) => math.M3.getModel
           case (_, math.M3.Mult) => math.M3.getModel
@@ -51,7 +51,7 @@ object A1M3 {
           case _ => math.A1.getModel
         }
 
-        val tblModel = forwardTable.lift(onRequest.request.op, onRequest.tpeCase)
+        val tblModel = forwardTable.lift(onRequest.op, onRequest.tpeCase)
 
         // Because EIP could be "further in future" then a given model, we need to be sure to
         // only return forwarding information when we have a hit on the currentModel.
@@ -63,13 +63,12 @@ object A1M3 {
       }
 
       def applicable
-      (forApproach: AIP[paradigm.type])
-      (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
-        Set(math.I1.MultBy).contains(onRequest.request.op) &&
+      (forApproach: AIP[paradigm.type], onRequest: PotentialRequest): Boolean = {
+        Set(math.I1.MultBy).contains(onRequest.op) &&
           Set(math.M3.Mult,math.M3.Divd,math.M3.Neg).contains(onRequest.tpeCase)
       }
 
-      // HACK: THIS CAN ENTIRELY BE REMOVED BUT HOW TO DO SKIP HERE?
+      // NEED this since I have stated I will handle some of these
       def logic
       (forApproach: AIP[paradigm.type])
       (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):

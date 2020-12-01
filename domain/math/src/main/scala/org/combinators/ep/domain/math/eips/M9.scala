@@ -6,7 +6,7 @@ import org.combinators.ep.domain.{abstractions, math}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
-import org.combinators.ep.generator.communication.{ReceivedRequest, Request, SendRequest}
+import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.AnyParadigm
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, RealArithmetic}
@@ -32,10 +32,9 @@ object M9 {
       override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = Set.empty
 
       def applicable
-        (forApproach: AIP[paradigm.type])
-        (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
-        (onRequest.request.op == math.M9.Height) &&
-          (Set(math.M0.Lit, math.M0.Add, math.M1.Sub,math.M3.Divd,math.M3.Mult,math.M3.Neg,math.I2.Power,math.M8.Inv).contains(onRequest.tpeCase))
+        (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
+        (potentialRequest.op == math.M9.Height) &&
+          Set(math.M0.Lit, math.M0.Add, math.M1.Sub,math.M3.Divd,math.M3.Mult,math.M3.Neg,math.I2.Power,math.M8.Inv).contains(potentialRequest.tpeCase)
       }
 
       /** Pass Through. */

@@ -34,6 +34,13 @@ package object communication {
     )
   }
 
+  /** Models a potential request that is not yet directed to an instance of a data type but COULD be directed to given case of the data type. */
+  case class PotentialRequest (
+      onType: DataType,
+      tpeCase: DataTypeCase,
+      op: Operation
+    )
+
   /** Models sending a request to some instance of a data type.
     *
     * At the time of sending, the data type case is unknown and will be resolved by language and approach specific

@@ -5,7 +5,7 @@ import org.combinators.ep.domain.math
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
-import org.combinators.ep.generator.communication.{ReceivedRequest, Request, SendRequest}
+import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm
 import org.combinators.ep.generator.paradigm.ffi.Equality
 
@@ -34,11 +34,10 @@ object M6 {
       }
 
       def applicable
-        (forApproach: AIP[paradigm.type])
-          (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
-        Set(math.M6.Equals).contains(onRequest.request.op) &&
+        (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
+        Set(math.M6.Equals).contains(potentialRequest.op) &&
           // Constraint to ensure we have an implementation for asTree, which is used in this equality implementation provider
-          m5Provider.applicable(forApproach)(onRequest.copy(request = Request(Operation.asTree, Map.empty)))
+          m5Provider.applicable(forApproach,potentialRequest.copy(op = Operation.asTree))
       }
 
       /** Can handle any equals requests, by constructing Trees from Expressions. */

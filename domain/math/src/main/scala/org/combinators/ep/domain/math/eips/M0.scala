@@ -1,7 +1,7 @@
 package org.combinators.ep.domain.math.eips      /*DD:LI:AI*/
 
 import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.communication.{ReceivedRequest, SendRequest}
+import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
 import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
 import org.combinators.ep.domain.math
 import org.combinators.ep.generator.paradigm.AnyParadigm
@@ -35,9 +35,8 @@ object M0 {
       }
 
       def applicable
-        (forApproach: AIP[paradigm.type])
-        (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
-        (onRequest.request.op == math.M0.Eval) &&
+        (forApproach: AIP[paradigm.type], onRequest:PotentialRequest): Boolean = {
+        (onRequest.op == math.M0.Eval) &&
           (Set(math.M0.Add, math.M0.Lit).contains(onRequest.tpeCase))
       }
 

@@ -3,7 +3,7 @@ import org.combinators.ep.domain.{GenericModel, shape}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
-import org.combinators.ep.generator.communication.{ReceivedRequest, Request, SendRequest}
+import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Booleans}
 
@@ -27,9 +27,8 @@ object S1 {
       }
 
       def applicable
-      (forApproach: AIP[paradigm.type])
-      (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
-        (onRequest.request.op == shape.S0.ContainsPt) &&
+      (forApproach: AIP[paradigm.type], onRequest: PotentialRequest): Boolean = {
+        (onRequest.op == shape.S0.ContainsPt) &&
           (Set(shape.S1.Union).contains(onRequest.tpeCase))
       }
 

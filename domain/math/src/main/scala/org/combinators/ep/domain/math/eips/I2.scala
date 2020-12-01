@@ -6,7 +6,7 @@ import org.combinators.ep.domain.math
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
-import org.combinators.ep.generator.communication.{ReceivedRequest, Request, SendRequest}
+import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.{AnyParadigm, ToTargetLanguageType}
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, RealArithmetic, Strings}
@@ -32,10 +32,9 @@ object I2 {
       }
 
       def applicable
-      (forApproach: AIP[paradigm.type])
-      (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
-        Set(math.I1.MultBy,math.M0.Eval,math.M2.PrettyP).contains(onRequest.request.op) &&
-          Set(math.I2.Power).contains(onRequest.tpeCase)
+      (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
+        Set(math.I1.MultBy,math.M0.Eval,math.M2.PrettyP).contains(potentialRequest.op) &&
+          Set(math.I2.Power).contains(potentialRequest.tpeCase)
       }
 
       /** Do not call 'assert' since might not be applicable. */

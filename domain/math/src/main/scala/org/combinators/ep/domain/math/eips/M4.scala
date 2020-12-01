@@ -6,7 +6,7 @@ import org.combinators.ep.domain.{abstractions, math}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
-import org.combinators.ep.generator.communication.{ReceivedRequest, Request, SendRequest}
+import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm
 import org.combinators.ep.generator.paradigm.control.{Functional, Imperative}
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Booleans, Equality, Lists, Strings}
@@ -57,11 +57,10 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
         } yield ()
       }
 
-      def applicable(forApproach: AIP[paradigm.type])
-                    (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
-        (Set(math.M4.Simplify).contains(onRequest.request.op) &&
-          math.M4.getModel.flatten.typeCases.toSet.contains(onRequest.tpeCase)) ||
-          Set(math.M4.Collect).contains(onRequest.request.op)  // any foreseeable DT can be collected
+      def applicable(forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
+        (Set(math.M4.Simplify).contains(potentialRequest.op) &&
+          math.M4.getModel.flatten.typeCases.toSet.contains(potentialRequest.tpeCase)) ||
+          Set(math.M4.Collect).contains(potentialRequest.op)  // any foreseeable DT can be collected
       }
 
       private def collectLogic

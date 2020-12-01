@@ -265,6 +265,14 @@ class GenericModel(val name:String,
     this != other && other.toSeq.contains(this)
 
   /**
+   * Determines if this model comes before (orEqual) the given model in the evolution history.
+   *
+   * Note that if models are the same then return false.
+   */
+  def beforeOrEqual(other:GenericModel): Boolean =
+    other.toSeq.contains(this)
+
+  /**
    * Return the earlier model given the evolution history.
    * Note that if models are the same, then just return the same one.
    */

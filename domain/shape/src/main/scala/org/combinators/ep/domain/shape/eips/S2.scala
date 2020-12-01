@@ -5,7 +5,7 @@ import org.combinators.ep.domain.{GenericModel, shape}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
-import org.combinators.ep.generator.communication.{ReceivedRequest, Request, SendRequest}
+import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm
 import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Booleans}
@@ -25,15 +25,13 @@ object S2 {
         for {
           _ <- s1Provider.initialize(forApproach)
           _ <- ffiArithmetic.enable()
-
         } yield ()
       }
 
       def applicable
-      (forApproach: AIP[paradigm.type])
-      (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
-        (onRequest.request.op == shape.S2.Shrink) &&
-          (Set(shape.S1.Union,shape.S0.Translate,shape.S0.Circle, shape.S0.Square).contains(onRequest.tpeCase))
+      (forApproach: AIP[paradigm.type], potentialRequest: PotentialRequest): Boolean = {
+        (potentialRequest.op == shape.S2.Shrink) &&
+          (Set(shape.S1.Union,shape.S0.Translate,shape.S0.Circle, shape.S0.Square).contains(potentialRequest.tpeCase))
       }
 
       override def logic
@@ -47,7 +45,6 @@ object S2 {
         assert(applicable(forApproach)(onRequest))
 
         onRequest.tpeCase match {
-
 
           case square@shape.S0.Square =>
               for {

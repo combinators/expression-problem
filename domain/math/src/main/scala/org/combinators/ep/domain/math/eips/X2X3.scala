@@ -5,7 +5,7 @@ import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
-import org.combinators.ep.generator.communication.{ReceivedRequest, SendRequest}
+import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm
 
 object X2X3 {
@@ -66,10 +66,7 @@ object X2X3 {
       }
 
       def applicable
-      (forApproach: AIP[paradigm.type])
-      (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = {
-        false
-      }
+      (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = false
 
       // HACK: THIS CAN ENTIRELY BE REMOVED BUT HOW TO DO SKIP HERE?
       def logic

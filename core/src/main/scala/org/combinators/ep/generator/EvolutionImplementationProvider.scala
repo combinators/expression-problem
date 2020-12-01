@@ -4,7 +4,7 @@ import cats.kernel.Monoid
 import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation}
 import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.communication.{ReceivedRequest, SendRequest}
+import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm
 
 /** Instances of this class provide the domain dependent implementation of an evolution. */
@@ -17,19 +17,27 @@ trait EvolutionImplementationProvider[-AIP <: ApproachImplementationProvider] {
     */
   def initialize(forApproach: AIP): Generator[forApproach.paradigm.ProjectContext, Unit]
 
+  /** Accesses API with PotentialRequest derived from onRequest. */
+  def applicableIn(forApproach: AIP)(onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression], currentModel:GenericModel): Option[GenericModel] =
+    applicableIn(forApproach, PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op), currentModel)
+
   /** For more complicated ExtensionGraphs, this returns most appropriate evolution for which an EIP is available.
    * In linear histories, this is the most recent. For histories involving merging, the EIP is responsible
    * for choosing which branch(es) to forward request to. Takes care to check against "current model" to
    * avoid returning an implementation for the future. */
-  def applicableIn(forApproach: AIP)(onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression], currentModel:GenericModel): Option[GenericModel] =
-    if ((model == currentModel || model.before(currentModel)) && applicable(forApproach)(onRequest)) {
+  def applicableIn(forApproach: AIP, potentialRequest: PotentialRequest, currentModel:GenericModel): Option[GenericModel] =
+    if ((model == currentModel || model.before(currentModel)) && applicable(forApproach, potentialRequest)) {
       Some(model)
     } else {
       None
     }
 
   /** Tests if this evolution implementation provider is applicable for the given request */
-  def applicable(forApproach: AIP)(onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean
+  def applicable(forApproach: AIP)(onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean =
+    applicable(forApproach, PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op))
+
+  /** Tests if this evolution implementation provider is applicable for the given request */
+  def applicable(forApproach: AIP, onRequest: PotentialRequest): Boolean
 
   /** Can vary by operation and data type. */
   def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = Set.empty
@@ -90,9 +98,13 @@ object EvolutionImplementationProvider {
         override def applicableIn
            (forApproach: AIP)
            (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression], current:GenericModel): Option[GenericModel] = None
-        def applicable
+        override def applicableIn(forApproach: AIP, onRequest: PotentialRequest, current:GenericModel): Option[GenericModel] = None
+
+        override def applicable
            (forApproach: AIP)
            (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = false
+        override def applicable
+        (forApproach: AIP, onRequest: PotentialRequest): Boolean = false
         override def genericLogic
            (forApproach: AIP)
            (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]) =
@@ -116,6 +128,9 @@ object EvolutionImplementationProvider {
         /** Ensure dependencies are union'd through composition. */
         override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = first.dependencies(op, dt) ++ second.dependencies(op, dt)
 
+        override def applicableIn(forApproach: AIP, potentialRequest: PotentialRequest, currentModel:GenericModel): Option[GenericModel] =
+          first.applicableIn(forApproach, potentialRequest,currentModel).map(Some(_)).getOrElse(second.applicableIn(forApproach, potentialRequest,currentModel))
+
         override def applicableIn
           (forApproach: AIP)
           (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression],currentModel:GenericModel): Option[GenericModel] =
@@ -128,7 +143,10 @@ object EvolutionImplementationProvider {
           } yield ()
         }
 
-        def applicable
+        override def applicable
+        (forApproach: AIP, potentialRequest: PotentialRequest): Boolean = first.applicable(forApproach, potentialRequest) || second.applicable(forApproach, potentialRequest)
+
+        override def applicable
           (forApproach: AIP)
           (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = first.applicable(forApproach)(onRequest) || second.applicable(forApproach)(onRequest)
 

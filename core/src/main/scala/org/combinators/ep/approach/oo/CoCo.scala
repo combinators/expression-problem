@@ -317,7 +317,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
           val formerSpecialized = domain.former.map(m => modelDefiningExp(m))
           val keepers = domain.former.map(m => modelDefiningExp(m)).filterNot(m => formerSpecialized.exists(pm => m.before(pm)))
 
-          //findClass(names.mangle(domain.lastModelWithOperation.head.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
           findClass(names.mangle(keepers.head.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
         }
       } else {
@@ -343,7 +342,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
           val formerSpecialized = domain.former.map(m => modelDefiningExp(m))
           val keepers = domain.former.map(m => modelDefiningExp(m)).filterNot(m => formerSpecialized.exists(pm => m.before(pm)))
 
-          //findClass(names.mangle(domain.lastModelWithOperation.head.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
           findClass(names.mangle(keepers.head.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
         }
       } else {
@@ -450,38 +448,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
         } yield ()
       }
 
-//      def isApplicable(op:Operation):Generator[ClassContext,ReceivedRequest[Expression]] = {
-//        import genericsParadigm.classCapabilities._
-//        import ooParadigm.methodBodyCapabilities._
-//        import paradigm.methodBodyCapabilities._
-//        for {
-//          thisRef <- getSelf
-//          attAccessors: Seq[Expression] <- forEach (tpeCase.attributes) { att =>
-//            for {
-//              getter <- getMember(thisRef, getterName(att))
-//              getterCall <- apply(getter, Seq.empty)
-//            } yield getterCall
-//          }
-//
-//
-//        } yield ReceivedRequest(tpe,
-//          tpeCase,
-//          thisRef,
-//          tpeCase.attributes.zip(attAccessors).toMap,
-//          Request(op, processedArgs.toMap)
-//        )
-//      }
-
-     // val check = domainSpecific.applicableIn(this)()
-
-      // in the case of a merge NEITHER of these may hold. Flatten model and find all pairs of (op,type) that are not declared.
-
-      // If we are defining type, must output all methods for all past operations
-//      val opsToGenerate = if (model.typeCases.contains(tpeCase)) {
-//        model.flatten.ops
-//      } else {
-//        model.ops
-//      }
       val opsToGenerate = model.flatten.ops.distinct.
           filter(op => domainSpecific.applicableIn(this, PotentialRequest(tpe, tpeCase, op), model).contains(model))
 
@@ -492,8 +458,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
         _ <- addTypeParameter(ft, Command.skip[TypeParameterContext])
         genType <- getTypeArguments()
 
-        // TODO: will need to deal with multiple parents. If
-        // extends ep.i1.Exp<FT>,Factory<FT>
+        // TODO: could need to deal with multiple parents. If extends ep.i1.Exp<FT>,Factory<FT>
         parent <- if (model.ops.nonEmpty) {
           toTargetLanguageType(TypeRep.DataType(tpe))
         } else {
@@ -553,7 +518,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
         }
 
         // Using new EIP capabilities, just generate
-        //_ <- forEach (model.flatten.ops.distinct) { op =>
         _ <- forEach (opsToGenerate) { op =>
           addMethod(names.mangle(names.instanceNameOf(op)), makeCoCoImplementation(model, tpe, tpeCase, op, domainSpecific))
         }
@@ -674,21 +638,14 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       import ooParadigm.classCapabilities._
       import genericsParadigm.classCapabilities._
 
-      // TODO: Chose the "latest" one. Not sure what would happen if two are independent...
-      // now get those formers that map to these keepers
-      //val toExtend = model.former.filter(m => keepers.exists(pm => pm.beforeOrEqual(m)))
-
-      // might be just one?!
-      // TODO
       for {
-        selfExp <- if (definedExp == model) {// if (model.ops.nonEmpty) {
+        selfExp <- if (definedExp == model) {
           findClass(names.mangle(model.name), finalized, names.mangle(names.conceptNameOf(model.baseDataType)))
         } else {
           val formerSpecialized = model.former.map(m => modelDefiningExp(m))
           val keepers = model.former.map(m => modelDefiningExp(m)).filterNot(m => formerSpecialized.exists(pm => m.before(pm)))
 
           findClass(names.mangle(keepers.head.name), finalized, names.mangle(names.conceptNameOf(model.baseDataType)))
-          // findClass(names.mangle(model.lastModelWithOperation.head.name), finalized, names.mangle(names.conceptNameOf(model.baseDataType)))
         }
         _ <- addParent(selfExp)
 
@@ -924,7 +881,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
 
     def extendParents2:Generator[ClassContext, Unit] = {
       // NOT "HAVE TO GRAB LAST ONE THAT DEFINED OPERATION IN EACH OF FORMER" but "last Model defining Exp"
-      // yields ep.m7.Exp.i1.Exp<FT>  when it should be ep.m7i2.Exp<FT>
       val formers:Seq[Seq[Name]] = if (domain.former.head.isBottom) {
         domain.former.map(dom => baseInterfaceNames(dom))
       } else {
@@ -980,11 +936,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     } else {
       baseFactoryInterfaceNames(domain)
     }
-//    if (domain.isEmpty || domain.lastModelWithOperation.isEmpty) {
-//      Seq(Factory)
-//    } else {
-//      baseFactoryInterfaceNames(domain)
-//    }
   }
 
   /** I had to copy this entire thing. AGAIN from makeInterface
@@ -1081,20 +1032,14 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       _ <- registerLocally(triviallyBaseDataType(domain.baseDataType), parameterizedBase)
 
       // if there are past operations, find those that are producers and create overloaded specifications
-      // make sure not to duplicate by calling distinct. TODO: MUST CLEAN UP WHEN MERGING COMES IN
-      _ <- forEach (domain.ops) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), triviallyMakeSignature(domain.baseDataType, op, op.isProducer(domain))) }
-//      _ <- if (domain.former.nonEmpty) {
-//        forEach(domain.former.flatMap(_.lastModelWithOperation.flatMap(_.flatten.ops).filter(_.isProducer(domain))).distinct) {
-//          op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), triviallyMakeSignature(domain.baseDataType, genType, op, op.isProducer(domain)))
-//        }
-//      } else {
-//        Command.skip[ClassContext]
-//      }
+      // make sure not to duplicate by calling distinct.
+      _ <- forEach (domain.ops) {
+        op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), triviallyMakeSignature(domain.baseDataType, op, op.isProducer(domain)))
+      }
 
     } yield ()
   }
 
-  // TODO: Needs to return "ep.Exp<FT>" not "Exp<FT>" for all constructors and convert method
   def createFactorySignatureDataTypeCaseInFactory(model:GenericModel, tpeCase:DataTypeCase, paramBaseClass:Type): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
@@ -1179,7 +1124,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
 
       // add factory methods -- make sure to eliminate duplicates, in case there are merged branches.
       // these are factory signatures.
-      //_ <- forEach (domain.flatten.typeCases.distinct) { tpe => {
       _ <- forEach (domain.typeCases.distinct) { tpe => {
         // make this a helper capability in SharedOO -- ability to take an existing methodBodyContext and make it abstract...
         val absMethod: Generator[MethodBodyContext, Option[Expression]] = {
@@ -1229,7 +1173,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
         findClass(names.mangle(model.name), finalized, names.mangle(names.conceptNameOf(model.baseDataType)))
       } else {
         findClass(names.mangle(modelDefiningExp(model).name), finalized, names.mangle(names.conceptNameOf(model.baseDataType)))
-        //findClass(names.mangle(model.lastModelWithOperation.head.name), finalized, names.mangle(names.conceptNameOf(model.baseDataType)))
       }
 
       _ <- setReturnType(selfExp)
@@ -1237,13 +1180,8 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
         if (tpeCase.isRecursive(model)) {
           for {
             pName <- freshName(names.mangle(names.instanceNameOf(att)))
-            //rt <- toTargetLanguageType(att.tpe)
-            //_ <- resolveAndAddImport(rt)
             rt <- toTargetLanguageType(TypeRep.DataType(triviallyBaseDataType(model.baseDataType)))
             _ <- resolveAndAddImport(rt)
-
-            //baseExp <- findClass(names.mangle(model.baseDataType.name))
-            //typedExp <- applyType(baseExp, Seq(selfExp))
             typedExp <- applyType(rt, Seq(selfExp))
 
           } yield (pName, typedExp)
@@ -1337,14 +1275,11 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     val mostSpecialExp = modelDefiningExp(domain)
 
     // only need to generate constructors for (a) new data types when no op defined; or (b) all past ones when op defined
-    //val constructorsToGenerate = if (domain.ops.nonEmpty) {
     val constructorsToGenerate = if (mostSpecialExp == domain) {
       domain.flatten.typeCases.distinct
     } else {
       // still could be the case of merging with other branch that might have new stuff
-      //domain.typeCases
       domain.flatten.typeCases.distinct.filterNot(dt => domain.findTypeCase(dt).get.beforeOrEqual(mostSpecialExp))
-      //domain.flatten.typeCases.distinct.filterNot(dt => mostSpecialExp.typeCases.contains(dt))   // TODO: CHECK THIS OUT
     }
 
     for {
@@ -1371,7 +1306,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
           val keepers = domain.former.map(m => modelDefiningExp(m)).filterNot(m => formerSpecialized.exists(pm => m.before(pm)))
         // now get those formers that map to these keepers
           val toExtend = domain.former.filter(m => keepers.exists(pm => pm.beforeOrEqual(m)))
-          forEach(toExtend /*domain.former*/) { former => {
+          forEach(toExtend) { former => {
             for {
               formerFactory <- finalizedFactory(former)
               _ <- if (former.isDomainBase) {
@@ -1388,7 +1323,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
 
       // WE only need new ones now UNLESS there has been an operation
       // with multiple branches, there could be copies, so make sure to be distinct
-      //_ <- forEach(domain.flatten.typeCases.distinct) { tpeCase => {
       _ <- forEach(constructorsToGenerate) { tpeCase => {
         for {
           // These methods with recursive values must call convert; in addition, they must be properly
@@ -1488,10 +1422,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     import ooParadigm.projectCapabilities._
 
     println(domain.name + ":" + new java.util.Date().toString)
-// THIS is called multiple times and generated, but the underlying git branches are not merged so only last one "takes". FIX
-// OTHERWISE BECOMES O(N^2)
-//    val mostSpecialExp = modelDefiningExp(domain)
-//    val currentModel = domain
     for {
       _ <- debug("Processing CoCo")
       _ <- registerTypeMapping(domain)
@@ -1510,7 +1440,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
           // Critical aspect of CoCo is that the Extended Intermediate Interface (i.e., ep.m3.Exp) is only created when
           // needed, specifically: (a) a new operation is being defined, and this interface will host the default
           // implementation; or (b) a branch is being merged from branches in which new Exp had been defined
-          //_ <- if (currentModel.ops.nonEmpty) {
           _ <- if (mostSpecialExp == currentModel) {  // we have to define it anew
             for {
               _ <- addClassToProject(makeFinalizedCoCoBase(currentModel), names.mangle(currentModel.name), finalized, names.mangle(names.conceptNameOf(currentModel.baseDataType)))
@@ -1526,7 +1455,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
 
           // only generate PAST data types if new operation is defined OR a merge is happening (i.e., A1M3 which needs M3 data types for new operations
           // defined in A1
-          //_ <- if (currentModel.ops.isEmpty) {
           _ <- if (mostSpecialExp != currentModel && currentModel.former.size <= 1) {
             forEach(currentModel.typeCases) { tpe =>
               for {
@@ -1535,8 +1463,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
               } yield ()
             }
           } else if (mostSpecialExp != currentModel) { // multiple formers. Get all types defined AFTER most Specialized
-            val keepers /*formerSpecialized */= currentModel.former.map(m => modelDefiningExp(m))
-            //val keepers = currentModel.former.map(m => modelDefiningExp(m)).filterNot(m => formerSpecialized.exists(pm => m.before(pm)))
+            val keepers = currentModel.former.map(m => modelDefiningExp(m))
             forEach (keepers) { keeper =>
               forEach(allBetween(currentModel,keeper)) { modelDefiningTypes =>
                 forEach(modelDefiningTypes.typeCases) { tpe =>

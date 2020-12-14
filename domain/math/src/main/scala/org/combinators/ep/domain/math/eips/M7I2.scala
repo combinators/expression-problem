@@ -53,6 +53,8 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
         Set.empty
       }
 
+      // TODO: Why isn't PrettyP in this applicable check, since it appears below in the applicableIn. Because it was there before the branching,
+      // TODO: and so datatypes know what to do.
       def applicable
       (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
         (Set(math.M7.PowBy,math.M6.Equals,Operation.asTree,math.M5.Identifier,math.M4.Collect,math.M4.Simplify).contains(potentialRequest.op) &&
@@ -61,7 +63,7 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
             Set(math.M3.Divd, math.M3.Mult, math.M3.Neg).contains(potentialRequest.tpeCase))
       }
 
-      override def applicableIn(forApproach:  AIP[paradigm.type])(onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression],currentModel:GenericModel): Option[GenericModel] = {
+      override def applicableIn(forApproach:  AIP[paradigm.type], onRequest: PotentialRequest,currentModel:GenericModel): Option[GenericModel] = {
         // must be designed to only return (to be safe) Java-accessible which is former branch only one step in past.
         val forwardTable:PartialFunction[(Operation,DataTypeCase),GenericModel] = {
           case (math.I1.MultBy, math.M3.Divd) => model // I HANDLE these
@@ -69,7 +71,7 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
           case (math.I1.MultBy, math.M3.Neg) => model  // I HANDLE these
           case (math.I1.MultBy, _) => math.I1.getModel
 
-          case (math.M2.PrettyP, math.I2.Power) => math.I2.getModel     // delegate
+          case (math.M2.PrettyP, math.I2.Power) => math.I2.getModel     // delegate because POW is new type in independent branch
           case (math.M2.PrettyP, _) => math.M3.getModel
 
           case (math.M4.Collect, math.I2.Power) => model    // I have to handle this
@@ -87,11 +89,11 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
           case (math.M6.Equals, math.I2.Power) => model    // I have to handle this
           case (math.M6.Equals, _) => math.M6.getModel
 
-          case (math.M7.PowBy, math.I2.Power) => model    // I have to handle this
-          case (math.M7.PowBy, _) => math.M7.getModel
+          case (math.M7.PowBy, math.M0.Lit) => math.M7.getModel    // not sure why but perhaps it is a non-recursive type
+          case (math.M7.PowBy, _) => model                  // I take responsibility
         }
 
-        val tblModel = forwardTable.lift(onRequest.request.op, onRequest.tpeCase)
+        val tblModel = forwardTable.lift(onRequest.op, onRequest.tpeCase)
 
         // Because EIP could be "further in future" then a given model, we need to be sure to
         // only return forwarding information when we have a hit on the currentModel.

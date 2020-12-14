@@ -237,28 +237,30 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
   /** Former derived interfaced for the tpe must be qualified with model package */
   def getFormerDerivedInterfaces(domainDefiningType: GenericModel, current:DataTypeCase): Generator[ClassContext, List[Type]] = {
     import classCapabilities._
+    // it is all about the formers
+    var definedFormersExp = domainDefiningType.former.map(pm => modelDefiningExp(pm)).distinct
 
-    //val pastTypes = domainDefiningType.former.filter(!_.isDomainBase).filter(m => m.findTypeCase(current).isDefined)
     val whereDefined = domainDefiningType.findTypeCase(current).get
-    // if a former operation is defined between domainDefiningTypes and whereDefined, take that instead
-    val withOps = domainDefiningType.former.flatMap(prior => prior.lastModelWithOperation).distinct
 
-    val finalSet = withOps.map(pm => {
-      if (whereDefined.before(pm)) { pm } else {whereDefined}
+
+    // where type was defined before.
+    val finalSet = definedFormersExp.map(pm => {
+      if (whereDefined.before(pm)) {
+        pm
+      } else {
+        whereDefined
+      }
     })
+
     for {
       // only take those who are not the bottom BUT ALSO only those for whom the current is meaningful.
       // COCO: May have to go back further to an operation-level in which this type was defined
-//      group <- forEach(domainDefiningType.former.filter(!_.isDomainBase).filter(m => m.findTypeCase(current).isDefined)) { prior =>
-//        findClass(names.mangle(prior.name), derivedInterfaceName(current))
-//      }
       group <- forEach(finalSet) { prior =>
                 findClass(names.mangle(prior.name), derivedInterfaceName(current))
         }
 
     } yield group.distinct     // might be multiple from same
 
-    //    findClass(names.mangle(domainDefiningType.former.get.name), derivedInterfaceName(current))
   }
 
   /**
@@ -282,12 +284,13 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     import ooParadigm.methodBodyCapabilities._
     for {
       pt <- if (names.conceptNameOf(att.tpe) == names.conceptNameOf(domain.baseDataType)) {
-        val formerSpecialized = domain.former.map(m => modelDefiningExp(m))
-        val keepers = domain.former.map(m => modelDefiningExp(m)).filterNot(m => formerSpecialized.exists(pm => m.before(pm)))
-
-        if (domain.ops.nonEmpty) {
+       val definedExp = modelDefiningExp(domain)
+        if (definedExp == domain) {// if (domain.ops.nonEmpty) {
           finalizedBase(domain)
         } else {
+          val formerSpecialized = domain.former.map(m => modelDefiningExp(m))
+          val keepers = domain.former.map(m => modelDefiningExp(m)).filterNot(m => formerSpecialized.exists(pm => m.before(pm)))
+
           findClass(names.mangle(keepers.head.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
         }
       } else {
@@ -304,14 +307,16 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    */
   def properFinalizedTypeConstructor(domain:GenericModel,att:Attribute): Generator[ConstructorContext, Type] = {
     import ooParadigm.constructorCapabilities._
+    val mostSpecialExp = modelDefiningExp(domain)
+
     for {
       pt <- if (names.conceptNameOf(att.tpe) == names.conceptNameOf(domain.baseDataType)) {
-        val formerSpecialized = domain.former.map(m => modelDefiningExp(m))
-        val keepers = domain.former.map(m => modelDefiningExp(m)).filterNot(m => formerSpecialized.exists(pm => m.before(pm)))
-
-        if (domain.ops.nonEmpty) {
+        if (domain == mostSpecialExp) {  //if (domain.ops.nonEmpty) {
           finalizedBase(domain)
         } else {
+          val formerSpecialized = domain.former.map(m => modelDefiningExp(m))
+          val keepers = domain.former.map(m => modelDefiningExp(m)).filterNot(m => formerSpecialized.exists(pm => m.before(pm)))
+
           //findClass(names.mangle(domain.lastModelWithOperation.head.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
           findClass(names.mangle(keepers.head.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
         }
@@ -329,13 +334,15 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    */
   def properFinalizedTypeClass(domain:GenericModel,att:Attribute): Generator[ClassContext, Type] = {
     import ooParadigm.classCapabilities._
+    val mostSpecialExp = modelDefiningExp(domain)
     for {
       pt <- if (names.conceptNameOf(att.tpe) == names.conceptNameOf(domain.baseDataType)) {
-        val formerSpecialized = domain.former.map(m => modelDefiningExp(m))
-        val keepers = domain.former.map(m => modelDefiningExp(m)).filterNot(m => formerSpecialized.exists(pm => m.before(pm)))
-        if (domain.ops.nonEmpty) {
+        if (domain == mostSpecialExp) {  // domain.ops.nonEmpty) {
           finalizedBase(domain)
         } else {
+          val formerSpecialized = domain.former.map(m => modelDefiningExp(m))
+          val keepers = domain.former.map(m => modelDefiningExp(m)).filterNot(m => formerSpecialized.exists(pm => m.before(pm)))
+
           //findClass(names.mangle(domain.lastModelWithOperation.head.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
           findClass(names.mangle(keepers.head.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
         }
@@ -475,7 +482,8 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
 //      } else {
 //        model.ops
 //      }
-      val opsToGenerate = model.flatten.ops.filter(op => domainSpecific.applicableIn(this, PotentialRequest(tpe, tpeCase, op), model).contains(model))
+      val opsToGenerate = model.flatten.ops.distinct.
+          filter(op => domainSpecific.applicableIn(this, PotentialRequest(tpe, tpeCase, op), model).contains(model))
 
       val mostSpecialExp = modelDefiningExp(model)
       for {
@@ -660,29 +668,32 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
   def makeFinalClass(model:GenericModel, tpeCase: DataTypeCase): Generator[ProjectContext,Unit] = {
     import ooParadigm.projectCapabilities._
 
+    val definedExp = modelDefiningExp(model)
+
     val makeClass: Generator[ClassContext, Unit] = {
       import ooParadigm.classCapabilities._
       import genericsParadigm.classCapabilities._
 
       // TODO: Chose the "latest" one. Not sure what would happen if two are independent...
-      val formerSpecialized = model.former.map(m => modelDefiningExp(m))
-      val keepers = model.former.map(m => modelDefiningExp(m)).filterNot(m => formerSpecialized.exists(pm => m.before(pm)))
       // now get those formers that map to these keepers
       //val toExtend = model.former.filter(m => keepers.exists(pm => pm.beforeOrEqual(m)))
 
       // might be just one?!
+      // TODO
       for {
-        // if no operation is defined, then must go back to last one which is defined
-        selfExp <- if (model.ops.nonEmpty) {
+        selfExp <- if (definedExp == model) {// if (model.ops.nonEmpty) {
           findClass(names.mangle(model.name), finalized, names.mangle(names.conceptNameOf(model.baseDataType)))
         } else {
+          val formerSpecialized = model.former.map(m => modelDefiningExp(m))
+          val keepers = model.former.map(m => modelDefiningExp(m)).filterNot(m => formerSpecialized.exists(pm => m.before(pm)))
+
           findClass(names.mangle(keepers.head.name), finalized, names.mangle(names.conceptNameOf(model.baseDataType)))
           // findClass(names.mangle(model.lastModelWithOperation.head.name), finalized, names.mangle(names.conceptNameOf(model.baseDataType)))
         }
         _ <- addParent(selfExp)
 
-        // TODO: ADD Factory without any parameters IF NEEDED
-        _ <- if (model.ops.isEmpty) {
+        //  ADD Factory without any parameters IF NEEDED
+        _ <- if (model != definedExp) {
           for {
             fact <- findClass(Factory)
             _ <- addImplemented(fact)
@@ -892,7 +903,28 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     import genericsParadigm.classCapabilities._
 
     def extendParents:Generator[ClassContext, Unit] = {
-      // HAVE TO GRAB LAST ONE THAT DEFINED OPERATION IN EACH OF FORMER
+      val pasts:Seq[GenericModel] = mostSpecializedExp(domain)
+
+      for {
+        // get formers,filter all of those that "know" about the DataType, and then extend those
+        _ <- forEach(pasts.map(dom => baseInterfaceNames(dom))) { former => {
+          for {
+            parent <- findClass(former: _*)
+            _ <- resolveAndAddImport(parent)
+            ft <- getTypeArguments().map(_.head)
+            paramType <- applyType(parent, Seq(ft))
+
+            _ <- resolveAndAddImport(paramType)
+            _ <- addParent(paramType)
+          } yield ()
+        }
+        }
+      } yield ()
+    }
+
+    def extendParents2:Generator[ClassContext, Unit] = {
+      // NOT "HAVE TO GRAB LAST ONE THAT DEFINED OPERATION IN EACH OF FORMER" but "last Model defining Exp"
+      // yields ep.m7.Exp.i1.Exp<FT>  when it should be ep.m7i2.Exp<FT>
       val formers:Seq[Seq[Name]] = if (domain.former.head.isBottom) {
         domain.former.map(dom => baseInterfaceNames(dom))
       } else {
@@ -942,11 +974,17 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
   // extends Exp [first one] or ExpEval [previous one]
   // Works for both Exp* interface declarations as well as DataTypeOp declarations
   def getParentFactoryInterface(domain: GenericModel, tpe: DataType): Seq[Name] = {
-    if (domain.isEmpty || domain.lastModelWithOperation.isEmpty) {
+
+    if (domain.isDomainBase) {
       Seq(Factory)
     } else {
       baseFactoryInterfaceNames(domain)
     }
+//    if (domain.isEmpty || domain.lastModelWithOperation.isEmpty) {
+//      Seq(Factory)
+//    } else {
+//      baseFactoryInterfaceNames(domain)
+//    }
   }
 
   /** I had to copy this entire thing. AGAIN from makeInterface
@@ -1101,6 +1139,8 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     import genericsParadigm.classCapabilities._
     import polymorphics.TypeParameterContext
 
+    val mostSpecialExp = modelDefiningExp(domain)
+
     def convertMethod(topLevelType:Type, paramType:Type) : Generator[MethodBodyContext, Option[Expression]] = {
       import ooParadigm.methodBodyCapabilities._
       for {
@@ -1156,7 +1196,8 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       }
 
       // ONLY need when an operation is defined
-      _ <- if (domain.ops.nonEmpty) {
+      // IF We define the EXP then we need convert method to convert into latest one...
+      _ <- if (domain == mostSpecialExp) {
         addMethodToClass(convert, convertMethod(topLevelType, paramType))
       } else {
         Command.skip[ClassContext]
@@ -1357,7 +1398,8 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       }
       }
 
-      _ <- if (domain.ops.nonEmpty) {
+      // if we define Exp we need convert method
+      _ <- if (domain == mostSpecialExp) {
         addMethodToClass(convert, makeConvertImplementation(domain, resultTpe))
       } else {
         Command.skip[ClassContext]

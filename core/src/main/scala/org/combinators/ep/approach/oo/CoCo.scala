@@ -14,7 +14,7 @@ import org.combinators.ep.generator.paradigm.control.Imperative
  *
  *  HACK HACK -- had to hack java/ObjectOriented.scala for some reason. HELP!
  *  Minor Nitpick - can we avoid (a) generating public methods in public interfaces; (b) in an interface,
- *  methods are "public abstract" which is redunant and can be removed
+ *  methods are "public abstract" which is redundant and can be removed
  */
 
 trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface with SharedOO with OperationInterfaceChain with FieldDefinition with FactoryConcepts {
@@ -26,16 +26,16 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
   val impParadigm: Imperative.WithBase[MethodBodyContext,paradigm.type]
 
-  lazy val finalized:Name = names.mangle("finalized")     // sub package within each evolution that contains final classes
-  lazy val expTypeParameter:Name = names.mangle("FT")
-  lazy val getSelf:Name = names.mangle("getSelf")
-  lazy val Factory:Name = names.mangle("Factory")
-  lazy val toConvert = names.mangle("other")   // looks better this way
+  lazy val finalized : Name = names.mangle("finalized")     // sub package within each evolution that contains final classes
+  lazy val expTypeParameter : Name = names.mangle("FT")
+  lazy val getSelf : Name = names.mangle("getSelf")
+  lazy val Factory : Name = names.mangle("Factory")
+  lazy val toConvert : Name = names.mangle("other")   // looks better this way
 
-  lazy val convert: Name = names.mangle("convert")
+  lazy val convert : Name = names.mangle("convert")
 
   /** Placeholder for the ancestral type ep.Exp so it can be registered separately within the type mapping */
-  lazy val ancestralTypePrefix:String = "ancestor"
+  lazy val ancestralTypePrefix : String = "ancestor"
 
   // figure out WHAT to do about the ancestral type? Seem useful but I'm not really using it properly!
 
@@ -105,7 +105,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
   }
 
   /**
-   *
+   * A Conversion method is of form 'to ????(from toConvert'
    */
   def makeConvertSignature(from: Type, to:Type): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
@@ -213,16 +213,11 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       _ <- debug(receivedRequest.request.op.name + "@" + receivedRequest.tpeCase.name + " for " + model.name)
       applicableModel = domainSpecific.applicableIn(this)(receivedRequest, model).get
 
-      // TODO: must call convert(baseType) or pass literals through
       // if applicable model is self then WE want to do something, so we have to delegate to EIP
       // to provide implementation; otherwise we fall back to default
       result <- if (applicableModel == model) {
-        // TODO: whenever you see you need a new method (i.e., the applicable model, the one you are currently in)
-        // then you need a new intermediate interface and a new finalzied class
-
         domainSpecific.logic(this)(receivedRequest)
       } else {
-        // TODO: I have nothing for you but earlier branch does...
         // NOW have to find which of my former branches because this is a producer op
         producerConvert(model.former.find(gm => applicableModel.before(gm) || gm == applicableModel).get)
       }
@@ -242,7 +237,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
 
     val whereDefined = domainDefiningType.findTypeCase(current).get
 
-
     // where type was defined before.
     val finalSet = definedFormersExp.map(pm => {
       if (whereDefined.before(pm)) {
@@ -255,10 +249,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     for {
       // only take those who are not the bottom BUT ALSO only those for whom the current is meaningful.
       // COCO: May have to go back further to an operation-level in which this type was defined
-      group <- forEach(finalSet) { prior =>
-                findClass(names.mangle(prior.name), derivedInterfaceName(current))
-        }
-
+      group <- forEach(finalSet) { prior => findClass(names.mangle(prior.name), derivedInterfaceName(current)) }
     } yield group.distinct     // might be multiple from same
 
   }
@@ -279,13 +270,19 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    * @param att
    * @return
    */
-  def properFinalizedType(domain:GenericModel,att:Attribute): Generator[MethodBodyContext, Type] = {
-    import paradigm.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
+  def properFinalized[Ctxt](domain:GenericModel,att:Attribute)
+                           (implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]],
+                                     canToTargetLanguage: Understands[Ctxt, ToTargetLanguageType[Type]]): Generator[Ctxt, Type] = {
+    def findClass(qualifiedName: Name*): Generator[Ctxt, Type] =
+      AnyParadigm.capabilitiy(FindClass[Name, Type](qualifiedName))
+
+    def toTargetLanguageType(tpe: TypeRep): Generator[Ctxt, Type] =
+      AnyParadigm.capabilitiy(ToTargetLanguageType[Type](tpe))
+
     for {
       pt <- if (names.conceptNameOf(att.tpe) == names.conceptNameOf(domain.baseDataType)) {
-       val definedExp = modelDefiningExp(domain)
-        if (definedExp == domain) {// if (domain.ops.nonEmpty) {
+        val definedExp = modelDefiningExp(domain)
+        if (definedExp == domain) {
           finalizedBase(domain)
         } else {
           val formerSpecialized = domain.former.map(m => modelDefiningExp(m))
@@ -298,58 +295,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       }
     } yield pt
   }
-
-  /**
-   * Pivotal concept in CoCo is to find the "proper finalized Type" to use. This depends on several factors, as encapsulated here.
-   * @param domain
-   * @param att
-   * @return
-   */
-  def properFinalizedTypeConstructor(domain:GenericModel,att:Attribute): Generator[ConstructorContext, Type] = {
-    import ooParadigm.constructorCapabilities._
-    val mostSpecialExp = modelDefiningExp(domain)
-
-    for {
-      pt <- if (names.conceptNameOf(att.tpe) == names.conceptNameOf(domain.baseDataType)) {
-        if (domain == mostSpecialExp) {  //if (domain.ops.nonEmpty) {
-          finalizedBase(domain)
-        } else {
-          val formerSpecialized = domain.former.map(m => modelDefiningExp(m))
-          val keepers = domain.former.map(m => modelDefiningExp(m)).filterNot(m => formerSpecialized.exists(pm => m.before(pm)))
-
-          findClass(names.mangle(keepers.head.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
-        }
-      } else {
-        toTargetLanguageType(att.tpe)
-      }
-    } yield pt
-  }
-
-  /**
-   * Pivotal concept in CoCo is to find the "proper finalized Type" to use. This depends on several factors, as encapsulated here.
-   * @param domain
-   * @param att
-   * @return
-   */
-  def properFinalizedTypeClass(domain:GenericModel,att:Attribute): Generator[ClassContext, Type] = {
-    import ooParadigm.classCapabilities._
-    val mostSpecialExp = modelDefiningExp(domain)
-    for {
-      pt <- if (names.conceptNameOf(att.tpe) == names.conceptNameOf(domain.baseDataType)) {
-        if (domain == mostSpecialExp) {  // domain.ops.nonEmpty) {
-          finalizedBase(domain)
-        } else {
-          val formerSpecialized = domain.former.map(m => modelDefiningExp(m))
-          val keepers = domain.former.map(m => modelDefiningExp(m)).filterNot(m => formerSpecialized.exists(pm => m.before(pm)))
-
-          findClass(names.mangle(keepers.head.name), finalized, names.mangle(names.conceptNameOf(domain.baseDataType)))
-        }
-      } else {
-        toTargetLanguageType(att.tpe)
-      }
-    } yield pt
-  }
-
 
   /**
    * Make a single getter method for the 'att' attribute, such as:
@@ -435,7 +380,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       def extendParents(genType:Seq[Type]):Generator[ClassContext,Unit] = {
         import genericsParadigm.classCapabilities._
 
-        // Go back to
         for {
           parentFormers <- getFormerDerivedInterfaces(model, tpeCase)
           _ <- forEach(parentFormers) { parentFormer =>
@@ -534,7 +478,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     import ooParadigm.methodBodyCapabilities._
 
     for {
-      pt <- properFinalizedType(domain, att)
+      pt <- properFinalized(domain, att)
       _ <- setReturnType(pt)
 
       self <- selfReference()
@@ -585,7 +529,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
   def makeCoCoField(domain:GenericModel, att: Attribute): Generator[ClassContext, Type] = {
     import ooParadigm.classCapabilities._
     for {
-      finalizedType <- properFinalizedTypeClass(domain, att)
+      finalizedType <- properFinalized(domain, att)
       _ <- resolveAndAddImport(finalizedType)
       _ <- addField(names.mangle(names.instanceNameOf(att)), finalizedType)
     } yield finalizedType
@@ -598,7 +542,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     for {
       params <- forEach (tpeCase.attributes) { att: Attribute =>
         for {
-          at <- properFinalizedTypeConstructor(domain, att)
+          at <- properFinalized(domain, att)
           pName <- freshName(names.mangle(names.instanceNameOf(att)))
         } yield (pName, at)
       }
@@ -879,31 +823,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       } yield ()
     }
 
-    def extendParents2:Generator[ClassContext, Unit] = {
-      // NOT "HAVE TO GRAB LAST ONE THAT DEFINED OPERATION IN EACH OF FORMER" but "last Model defining Exp"
-      val formers:Seq[Seq[Name]] = if (domain.former.head.isBottom) {
-        domain.former.map(dom => baseInterfaceNames(dom))
-      } else {
-        domain.former.map(dom => dom.lastModelWithOperation.flatMap(dom => baseInterfaceNames(dom)))
-      }
-        for {
-        // get formers,filter all of those that "know" about the DataType, and then extend those
-        _ <- forEach(formers) { former => {
-          for {
-            parent <- findClass(former: _*)
-            _ <- resolveAndAddImport(parent)
-            ft <- getTypeArguments().map(_.head)
-            paramType <- applyType(parent, Seq(ft))
-
-            _ <- resolveAndAddImport(paramType)
-            _ <- addParent(paramType)
-          } yield ()
-        }
-        }
-      } yield ()
-
-    }
-
     for {
       _ <- setInterface()
 
@@ -930,7 +849,6 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
   // extends Exp [first one] or ExpEval [previous one]
   // Works for both Exp* interface declarations as well as DataTypeOp declarations
   def getParentFactoryInterface(domain: GenericModel, tpe: DataType): Seq[Name] = {
-
     if (domain.isDomainBase) {
       Seq(Factory)
     } else {

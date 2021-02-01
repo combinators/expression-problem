@@ -176,6 +176,8 @@ package object abstractions {
   trait TypeRep {
     /** The type to represent. */
     type HostType
+
+    def isModelBase(model:GenericModel):Boolean = (this == TypeRep.DataType(model.baseDataType))
   }
 
   /** Provides helpers to construct domain representations of host language types. */

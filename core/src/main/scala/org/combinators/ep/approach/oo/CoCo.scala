@@ -966,7 +966,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       _ <- setReturnType(paramBaseClass)
 
       params <- forEach (tpeCase.attributes) { att => {
-        if (tpeCase.isRecursive(model)) {
+        if (att.tpe.isModelBase(model)) {   //  if (att.tpe == TypeRep.DataType(model.baseDataType)) {
           for {
             pName <- freshName(names.mangle(names.instanceNameOf(att)))
           } yield (pName, paramBaseClass)
@@ -1095,7 +1095,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
 
       _ <- setReturnType(selfExp)
       params <- forEach (tpeCase.attributes) { att: Attribute => {
-        if (tpeCase.isRecursive(model)) {
+        if (att.tpe.isModelBase(model)) {
           for {
             pName <- freshName(names.mangle(names.instanceNameOf(att)))
             rt <- toTargetLanguageType(TypeRep.DataType(triviallyBaseDataType(model.baseDataType)))
@@ -1141,8 +1141,8 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       convertMethod <- getMember(self, convert)
       argSeq <- getArguments()
 
-      convertedArgSeq <- forEach(argSeq) { arg =>
-        if (tpeCase.isRecursive(model)) {
+      convertedArgSeq <- forEach(argSeq.zip(tpeCase.attributes)) { case (arg,att) =>
+        if (att.tpe.isModelBase(model)) {
           apply(convertMethod, Seq(arg._3))
         } else {
           Command.lift[MethodBodyContext,Expression](arg._3)

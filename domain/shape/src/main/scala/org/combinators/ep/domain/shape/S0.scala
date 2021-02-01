@@ -6,7 +6,7 @@ import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
 
 object S0 extends Evolution {
 
-  override implicit def getModel:GenericModel = ShapeDomain.getModel.evolve("s0", Seq(Square,Circle,Translate), Seq(ContainsPt))
+  override implicit def getModel:GenericModel = ShapeDomain.baseModel.evolve("s0", Seq(Square,Circle,Translate), Seq(ContainsPt))
 
   // standard attributes for domain. As new ones are defined, place in respective traits
   lazy val x = Attribute("x", TypeRep.Double)
@@ -65,11 +65,11 @@ object S0 extends Evolution {
  //   EqualsTestCase(getModel.baseDataType, sq1, ContainsPt, InstanceRep(TypeRep.Boolean)(true), DoubleInst(p1._1), DoubleInst(p1._2)),
 //    NotEqualsTestCase(getModel.baseDataType, c1, ContainsPt, TRUE, p2._1, p2._2),
 
-    ContainsTestCase(sq1,  p1, true),
-    ContainsTestCase(c1, p2, false),
-
-    ContainsTestCase(t1,  p1, false),
-    ContainsTestCase(t2,  p1, false),
-    ContainsTestCase(t2,  p2, true)
+    ContainsTestCase(sq1,  p1, result=true),
+    ContainsTestCase(c1, p2, result=false),
+//
+//    ContainsTestCase(t1,  p1, false),
+//    ContainsTestCase(t2,  p1, false),
+//    ContainsTestCase(t2,  p2, true)
   )
 }

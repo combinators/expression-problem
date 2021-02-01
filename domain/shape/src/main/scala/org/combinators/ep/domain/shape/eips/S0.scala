@@ -7,7 +7,7 @@ import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedReq
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.ep.domain.{GenericModel, shape}
 import org.combinators.ep.generator.paradigm.AnyParadigm
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Booleans, RealArithmetic}
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Booleans, RealArithmetic, Strings}
 
 /**
  * Truly language independent abstractions.  Since we are in the mathematical domain, the
@@ -30,6 +30,7 @@ object S0 {
   (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiRealArithmetic: RealArithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiBooleans: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
+   ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]
   ):
   EvolutionImplementationProvider[AIP[paradigm.type]] =
     new EvolutionImplementationProvider[AIP[paradigm.type]] {
@@ -40,6 +41,7 @@ object S0 {
           _ <- ffiArithmetic.enable()
           _ <- ffiBooleans.enable()
           _ <- ffiRealArithmetic.enable()
+          _ <- ffiStrings.enable()
         } yield ()
       }
 // Seq(Square,Circle,Translate), Seq(ContainsPt))
@@ -50,7 +52,7 @@ object S0 {
       }
 
       override def logic
-      (forApproach: AIP[paradigm.type ])
+      (forApproach: AIP[paradigm.type])
       (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
         import ffiArithmetic.arithmeticCapabilities._

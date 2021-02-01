@@ -16,7 +16,7 @@ import org.combinators.ep.domain.abstractions.TestCase
   * Mathematical Expressions domain as an instance of EP.
   */
 object ShapeDomain  extends Evolution {
-  def getModel:GenericModel = GenericModel.base("ShapeDomain", "Shape")
-
+  def getModel:GenericModel = baseModel
+  def baseModel:GenericModel = GenericModel.base("ShapeDomain", "Shape")
   def tests: Seq[TestCase] = Seq.empty
 }

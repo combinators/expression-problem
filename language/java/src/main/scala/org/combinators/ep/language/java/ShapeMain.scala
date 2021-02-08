@@ -9,7 +9,6 @@ import org.combinators.ep.domain.shape.S0
 import org.combinators.ep.generator.TestImplementationProvider
 import org.combinators.jgitserv.{BranchTransaction, GitService}
 import org.combinators.ep.generator.FileWithPathPersistable._
-import org.combinators.ep.language.java.Main.generator
 
 /**
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.

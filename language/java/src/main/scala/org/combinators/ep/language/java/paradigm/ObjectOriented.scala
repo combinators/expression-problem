@@ -1,11 +1,10 @@
 package org.combinators.ep.language.java.paradigm    /*DI:LD:AI*/
 
 import java.util.UUID
-
 import com.github.javaparser.ast.{ImportDeclaration, Modifier}
 import com.github.javaparser.ast.`type`.ClassOrInterfaceType
 import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, ConstructorDeclaration, MethodDeclaration}
-import com.github.javaparser.ast.expr.NameExpr
+import com.github.javaparser.ast.expr.{Expression, FieldAccessExpr, Name => JName, NameExpr}
 import com.github.javaparser.ast.stmt.{BlockStmt, ExplicitConstructorInvocationStmt, ReturnStmt}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.domain.instances.InstanceRep
@@ -14,6 +13,7 @@ import org.combinators.ep.generator.{Command, Understands}
 import org.combinators.ep.generator.paradigm.{ObjectOriented => OO, AnyParadigm => _, _}
 import org.combinators.ep.language.java.Syntax.MangledName
 import org.combinators.ep.language.java.{ClassCtxt, CompilationUnitCtxt, ContextSpecificResolver, CtorCtxt, JavaNameProvider, MethodBodyCtxt, TestCtxt}
+
 import org.combinators.templating.twirl.Java
 
 import scala.util.Try
@@ -179,7 +179,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             context: ClassContext,
             command: GetField[Name,Expression]
           ): (ClassContext, Expression) =
-            (context,  Java(s"""${command.name.mangled}""").expression())
+            (context, new NameExpr(command.name.mangled))
         }
       implicit val canAddMethodInClass: Understands[ClassContext, AddMethod[base.MethodBodyContext, Name, Option[Expression]]] =
         new Understands[ClassContext, AddMethod[base.MethodBodyContext, Name, Option[Expression]]] {
@@ -867,7 +867,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
 }
 
 object ObjectOriented {
-  def components(name: com.github.javaparser.ast.expr.Name): Seq[String] = {
+  def components(name: JName): Seq[String] = {
     val rest: Seq[String] =
       name.getQualifier
       .map[Seq[String]](components)
@@ -875,7 +875,23 @@ object ObjectOriented {
     name.getIdentifier +: rest
   }
 
+  def fromComponents(first: String, rest: String*): JName = {
+    rest.foldLeft(new JName(first))((result, next) => new JName(result, next))
+  }
 
+  def nameToExpression(name: JName): Expression = {
+    name.getQualifier
+      .map[Expression](n => nameToExpression(n))
+      .map[Expression](qual => new FieldAccessExpr(qual, name.getIdentifier))
+      .orElseGet(() => new NameExpr(name.getIdentifier))
+  }
+
+  def nameToType(name: JName): ClassOrInterfaceType = {
+    name.getQualifier
+      .map[ClassOrInterfaceType](n => nameToType(n))
+      .map[ClassOrInterfaceType](qual => new ClassOrInterfaceType(qual, name.getIdentifier))
+      .orElseGet(() => new ClassOrInterfaceType(null, name.getIdentifier))
+  }
 
   def apply[AP <: AnyParadigm](base: AnyParadigm): ObjectOriented[base.type] = {
     val b: base.type = base

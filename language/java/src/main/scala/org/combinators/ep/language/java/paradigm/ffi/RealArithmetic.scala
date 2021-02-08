@@ -1,6 +1,8 @@
 package org.combinators.ep.language.java.paradigm.ffi    /*DI:LD:AI*/
 
-import com.github.javaparser.ast.expr.{BinaryExpr, Expression, MethodCallExpr}
+import com.github.javaparser.ast.NodeList
+import com.github.javaparser.ast.expr.BinaryExpr.Operator
+import com.github.javaparser.ast.expr.{BinaryExpr, Expression, FieldAccessExpr, MethodCallExpr}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, Understands}
@@ -8,9 +10,9 @@ import org.combinators.ep.generator.paradigm.Apply
 import org.combinators.ep.generator.paradigm.ffi.{Abs, Cos, EulersNumber, Floor, Log, Pi, Pow, Sin, Sqrt, RealArithmetic => RArith}
 import org.combinators.ep.language.java.CodeGenerator.Enable
 import org.combinators.ep.language.java.Syntax.default._
-import org.combinators.ep.language.java.paradigm.AnyParadigm
+import org.combinators.ep.language.java.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.ep.language.java.{ContextSpecificResolver, ProjectCtxt}
-import org.combinators.templating.twirl.Java
+
 
 class RealArithmetic[Ctxt, T, AP <: AnyParadigm](
   val base: AP,
@@ -20,13 +22,16 @@ class RealArithmetic[Ctxt, T, AP <: AnyParadigm](
 ) extends RArith[Ctxt, T] {
   import org.combinators.ep.language.java.OperatorExprs._
 
+  val math = ObjectOriented.fromComponents("Math")
+  val mathExp = ObjectOriented.nameToExpression(math)
+
   private def javaMathOp[Ctxt, Op](methodName: String): Understands[Ctxt, Apply[Op, Expression, Expression]] =
     new Understands[Ctxt, Apply[Op, Expression, Expression]] {
       def perform(
         context: Ctxt,
         command: Apply[Op, Expression, Expression]
       ): (Ctxt, Expression) = {
-        (context, Java(s"Math.${methodName}(${command.arguments.mkString(", ")})").expression())
+        (context, new MethodCallExpr(mathExp, methodName, new NodeList[Expression](command.arguments: _*)))
       }
     }
 
@@ -37,7 +42,14 @@ class RealArithmetic[Ctxt, T, AP <: AnyParadigm](
                    context: Ctxt,
                    command: Apply[Op, Expression, Expression]
                  ): (Ctxt, Expression) = {
-        (context, Java(s"Math.log(${command.arguments(0)})/Math.log(${command.arguments(1)})").expression())
+        def logOp(arg: Expression): Expression =
+          new MethodCallExpr(mathExp, "log", new NodeList[Expression](arg))
+        (context,
+          new BinaryExpr(
+            logOp(command.arguments(0)),
+            logOp(command.arguments(1)),
+            Operator.DIVIDE
+          ))
       }
     }
 
@@ -47,7 +59,7 @@ class RealArithmetic[Ctxt, T, AP <: AnyParadigm](
         context: Ctxt,
         command: Const
       ): (Ctxt, Expression) = {
-        (context, Java(s"Math.${constName}").expression())
+        (context, new FieldAccessExpr(mathExp, constName))
       }
     }
 

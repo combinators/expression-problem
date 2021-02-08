@@ -1,13 +1,9 @@
-import play.sbt.PlayLayoutPlugin
-import play.twirl.sbt.SbtTwirl
-
-
 /** Settings shared globally. **/
 lazy val commonSettings = Seq(
   version := "1.0.0-SNAPSHOT",
   organization := "org.combinators",
 
-  scalaVersion := "2.12.9",
+  scalaVersion := "2.12.13",
 
   resolvers ++= Seq(
     Resolver.sonatypeRepo("releases"),
@@ -33,13 +29,14 @@ lazy val commonSettings = Seq(
 
   libraryDependencies ++= Seq(
     "org.combinators" %% "templating" % "1.1.0",
-    "org.combinators" %% "cls-scala-presentation-play-git" % "1.0.0-RC1+8-63d5cf0b",
-    "org.scalactic" %% "scalactic" % "3.0.5" % "test",
-    "org.scalatest" %% "scalatest" % "3.0.5" % "test",
+    "org.combinators" %% "jgitserv" % "0.0.1",
+    "org.scalactic" %% "scalactic" % "3.2.2" % "test",
+    "org.scalatest" %% "scalatest" % "3.2.2" % "test",
     "org.scalameta" %% "scalameta" % "4.3.8",
     "org.scalameta" %% "contrib" % "4.1.6",
-    "org.typelevel" %% "cats-core" % "2.0.0-M4",
-    "org.typelevel" %% "cats-free" % "2.0.0-M4"
+    "org.typelevel" %% "cats-core" % "2.3.1",
+    "org.typelevel" %% "cats-free" % "2.3.1",
+    "org.typelevel" %% "cats-effect" % "2.3.1"
   ),
 
   addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
@@ -74,16 +71,14 @@ lazy val domainShape = standardDomainProject("shape")
 
 /** Template for a subproject for a specific language and its EP approaches.
   * Contains code in the set {DD, DI} x LD x {AD, AI}.
-  * Includes startable play server to host generated solutions.
   */
 def standardLanguageProject(languageName: String): Project =
   (Project(id = s"language-$languageName", base = file(s"language/$languageName")))
     .settings(commonSettings: _*)
     .settings(
       moduleName := s"expression-problem-language-$languageName",
-      libraryDependencies += guice
     )
-    .dependsOn(core, domainMath, domainShape, jgitserv)
+    .dependsOn(core, domainMath, domainShape)
 
 
 lazy val languageJava = standardLanguageProject("java")
@@ -94,14 +89,14 @@ lazy val languageScala = standardLanguageProject("scala")
 
 
 // TODO: This should be standalone at a later point.
-lazy val jgitserv =
+/*lazy val jgitserv =
   Project(id = "jgitserv", base = file("jgitserv"))
     .settings(
       version := "1.0.0-SNAPSHOT",
       organization := "org.combinators",
       moduleName := "expression-problem-core",
       
-      scalaVersion := "2.12.9",
+      scalaVersion := "2.12.13",
 
       resolvers ++= Seq(
         Resolver.sonatypeRepo("releases"),
@@ -123,4 +118,4 @@ lazy val jgitserv =
       ),
       addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
     )
-    
+*/

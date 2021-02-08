@@ -2,11 +2,11 @@ package org.combinators.ep.language.java.paradigm    /*DI:LD:AI*/
 
 import java.nio.file.Paths
 import java.util.UUID
-
-import com.github.javaparser.ast.{ImportDeclaration, Modifier}
+import com.github.javaparser.ast.{ImportDeclaration, Modifier, NodeList}
 import com.github.javaparser.ast.`type`.VoidType
 import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, MethodDeclaration}
-import com.github.javaparser.ast.expr.{NameExpr, NullLiteralExpr}
+import com.github.javaparser.ast.expr.{MethodCallExpr, NameExpr, NullLiteralExpr}
+import com.github.javaparser.ast.nodeTypes.{NodeWithScope, NodeWithSimpleName}
 import com.github.javaparser.ast.stmt.{BlockStmt, ExpressionStmt}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.domain.instances.InstanceRep
@@ -15,8 +15,8 @@ import org.combinators.ep.generator.{Command, FileWithPath, Understands}
 import org.combinators.ep.generator.paradigm.{AnyParadigm => AP, _}
 import org.combinators.ep.language.java.Syntax.MangledName
 import org.combinators.ep.language.java.{CodeGenerator, CompilationUnitCtxt, Config, ContextSpecificResolver, FreshNameCleanup, ImportCleanup, JavaNameProvider, MethodBodyCtxt, ProjectCtxt, Syntax, TestCtxt}
-import org.combinators.templating.persistable.{BundledResource, JavaPersistable, ResourcePersistable}
-import org.combinators.templating.twirl.Java
+import org.combinators.templating.persistable.{BundledResource, JavaPersistable}
+import org.combinators.jgitserv.ResourcePersistable
 
 import scala.util.Try
 import scala.jdk.CollectionConverters._
@@ -312,7 +312,12 @@ trait AnyParadigm extends AP {
                 command.arguments.foreach(arg => res.addArgument(arg))
                 res
               } else {
-                Java(s"${command.functional}${command.arguments.mkString("(", ", ", ")")}").expression()
+                val scope =
+                  command.functional match {
+                    case n: NodeWithScope[Expression] => n.getScope
+                    case _ => null
+                  }
+                new MethodCallExpr(scope, command.functional.asInstanceOf[NodeWithSimpleName[_]].getNameAsString, new NodeList[Expression](command.arguments: _*))
               }
             (context, resultExp)
           }

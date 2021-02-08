@@ -1,9 +1,10 @@
 package org.combinators.ep.language.java.paradigm.ffi    /*DI:LD:AI*/
 
 import java.nio.file.Paths
-
 import com.github.javaparser.StaticJavaParser
+import com.github.javaparser.ast.{ImportDeclaration, NodeList}
 import com.github.javaparser.ast.`type`.Type
+import com.github.javaparser.ast.expr.ObjectCreationExpr
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.domain.tree.{Leaf, Node, Tree}
@@ -15,13 +16,16 @@ import org.combinators.ep.generator.paradigm.ffi.{Create, CreateLeaf, CreateNode
 import org.combinators.ep.language.java.CodeGenerator.Enable
 import org.combinators.ep.language.java.{ContextSpecificResolver, ProjectCtxt}
 import org.combinators.ep.language.java.paradigm.{AnyParadigm, Generics, ObjectOriented}
-import org.combinators.templating.twirl.Java
 import org.combinators.ep.language.java.Syntax.default._
 
 trait Trees[Ctxt, AP <: AnyParadigm] extends Ts[Ctxt] {
   val base: AP
   val addImport: Understands[Ctxt, AddImport[Import]]
   val ooParadigm: ObjectOriented[base.type]
+
+  val treeImport = new ImportDeclaration("org.combinators.ep.util.Tree", false, false)
+  val leafImport = new ImportDeclaration("org.combinators.ep.util.Leaf", false, false)
+  val nodeImport = new ImportDeclaration("org.combinators.ep.util.Node", false, false)
 
   def leafCreation[Ctxt](canAddImport: Understands[Ctxt, AddImport[Import]]): Understands[Ctxt, Apply[CreateLeaf[Type], Expression, Expression]] =
     new Understands[Ctxt, Apply[CreateLeaf[Type], Expression, Expression]] {
@@ -31,8 +35,15 @@ trait Trees[Ctxt, AP <: AnyParadigm] extends Ts[Ctxt] {
       ): (Ctxt, Expression) = {
         val gen =
           for {
-            _ <- AddImport(Java("import org.combinators.ep.util.Leaf;").importDeclaration()).interpret(canAddImport)
-          } yield Java(s"new org.combinators.ep.util.Leaf<${command.functional.valueType}>(${command.arguments.head})").expression[Expression]()
+            _ <- AddImport(leafImport).interpret(canAddImport)
+          } yield
+            new ObjectCreationExpr(
+              null,
+              ObjectOriented.nameToType(leafImport.getName),
+              new NodeList[Type](command.functional.valueType),
+              new NodeList[Expression](command.arguments.head),
+              null
+            )
         Command.runGenerator(gen, context)
       }
     }
@@ -45,8 +56,13 @@ trait Trees[Ctxt, AP <: AnyParadigm] extends Ts[Ctxt] {
       ): (Ctxt, Expression) = {
         val gen =
           for {
-            _ <- AddImport(Java("import org.combinators.ep.util.Node;").importDeclaration()).interpret(canAddImport)
-          } yield Java(s"new org.combinators.ep.util.Node(${command.arguments.mkString(",")})").expression[Expression]()
+            _ <- AddImport(nodeImport).interpret(canAddImport)
+          } yield
+            new ObjectCreationExpr(
+              null,
+              ObjectOriented.nameToType(nodeImport.getName),
+              new NodeList[Expression](command.arguments: _*)
+            )
         Command.runGenerator(gen, context)
       }
     }
@@ -65,7 +81,7 @@ trait Trees[Ctxt, AP <: AnyParadigm] extends Ts[Ctxt] {
         context: ProjectCtxt,
         command: Enable.type
       ): (ProjectCtxt, Unit) = {
-        val treeType = Java("org.combinators.ep.util.Tree").tpe()
+        val treeType = ObjectOriented.nameToType(treeImport.getName)
 
         def updateResolver(resolver: ContextSpecificResolver): ContextSpecificResolver = {
           def addResolutionType[Ctxt](
@@ -74,7 +90,7 @@ trait Trees[Ctxt, AP <: AnyParadigm] extends Ts[Ctxt] {
           ): ContextSpecificResolver => TypeRep => Generator[Ctxt, Type] = k => {
             case TypeRep.Tree =>
               for {
-                _ <- AddImport(Java("import org.combinators.ep.util.Tree;").importDeclaration()).interpret(canAddImport)
+                _ <- AddImport(treeImport).interpret(canAddImport)
               } yield treeType
             case other => toResolution(k)(other)
           }
@@ -111,7 +127,7 @@ trait Trees[Ctxt, AP <: AnyParadigm] extends Ts[Ctxt] {
                 .toClassOrInterfaceType
                 .map[Boolean](clsTy => clsTy.getName == treeType.asClassOrInterfaceType().getName)
                 .orElse(false) =>
-              Some(Java("import org.combinators.ep.util.Tree;").importDeclaration())
+              Some(treeImport)
             case other => importResolution(k)(other)
           }
 

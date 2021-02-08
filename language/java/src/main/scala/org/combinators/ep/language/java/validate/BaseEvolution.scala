@@ -7,6 +7,8 @@ import org.combinators.ep.domain.math._
 import org.combinators.ep.language.java.{CodeGenerator, PartiallyBoxed}
 import org.combinators.jgitserv.{BranchTransaction, GitService}
 
+// TODO: needs fixing!
+
 /**
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
@@ -26,7 +28,7 @@ trait BaseEvolution {
     val name = evolutions.head.getModel.base.name
     for {
       _ <- IO { System.out.println(s"Use: git clone http://127.0.0.1:8081/$name ${evolutions.last.getModel.name}") }
-      exitCode <- new GitService(transaction.toSeq, name).runProcess("sbt test")
+      exitCode <- new GitService(transaction.toSeq, name).run(args)
     } yield exitCode
   }
 }

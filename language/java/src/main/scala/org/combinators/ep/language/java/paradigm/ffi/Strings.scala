@@ -1,16 +1,16 @@
 package org.combinators.ep.language.java.paradigm.ffi    /*DI:LD:AI*/
 
-import com.github.javaparser.ast.expr.{BinaryExpr, StringLiteralExpr}
+import com.github.javaparser.ast.expr.{BinaryExpr, MethodCallExpr, StringLiteralExpr}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, Understands}
 import org.combinators.ep.generator.paradigm.{Apply, GetMember}
 import org.combinators.ep.generator.paradigm.ffi.{Strings => Strs, _}
 import org.combinators.ep.language.java.{CodeGenerator, ContextSpecificResolver, JavaNameProvider, ProjectCtxt, Syntax}
-import org.combinators.templating.twirl.Java
 import Syntax.default._
-import org.combinators.ep.language.java.paradigm.AnyParadigm
+import org.combinators.ep.language.java.paradigm.{AnyParadigm, ObjectOriented}
 import CodeGenerator.Enable
+import com.github.javaparser.ast.NodeList
 
 class Strings[Ctxt, AP <: AnyParadigm](
   val base: AP,
@@ -53,7 +53,7 @@ class Strings[Ctxt, AP <: AnyParadigm](
           ): (Ctxt, Expression) = {
             implicit val _getMember = getMember
             implicit val _applyMethod = applyMethod
-            val gen = Command.lift[Ctxt, Expression](Java(s"String.valueOf(${command.arguments.head})").expression())
+            val gen = Command.lift[Ctxt, Expression](new MethodCallExpr(ObjectOriented.nameToExpression(ObjectOriented.fromComponents("String")), "valueOf", new NodeList[Expression](command.arguments(0))))
             Command.runGenerator(gen, context)
           }
         }
@@ -66,7 +66,7 @@ class Strings[Ctxt, AP <: AnyParadigm](
         command: Enable.type
       ): (ProjectCtxt, Unit) = {
         val resolverUpdate =
-          ContextSpecificResolver.updateResolver(base.config, TypeRep.String, Java("String").tpe())(new StringLiteralExpr(_))
+          ContextSpecificResolver.updateResolver(base.config, TypeRep.String, ObjectOriented.nameToType(ObjectOriented.fromComponents("String")))(new StringLiteralExpr(_))
         (context.copy(resolver = resolverUpdate(context.resolver)), ())
       }
     })

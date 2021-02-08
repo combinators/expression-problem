@@ -9,8 +9,8 @@ import org.combinators.ep.generator.paradigm.ffi.{Booleans => Bools, _}
 import org.combinators.ep.language.java.paradigm.AnyParadigm
 import org.combinators.ep.language.java.{ContextSpecificResolver, OperatorExprs, ProjectCtxt, Syntax}
 import org.combinators.ep.language.java.CodeGenerator.Enable
-import org.combinators.templating.twirl.Java
 import Syntax.default._
+import com.github.javaparser.ast.`type`.PrimitiveType
 
 
 class Booleans[Ctxt, AP <: AnyParadigm](val base: AP) extends Bools[Ctxt] {
@@ -48,7 +48,7 @@ class Booleans[Ctxt, AP <: AnyParadigm](val base: AP) extends Bools[Ctxt] {
         command: Enable.type
       ): (ProjectCtxt, Unit) = {
         val resolverUpdate =
-          ContextSpecificResolver.updateResolver(base.config, TypeRep.Boolean, Java("boolean").tpe())(new BooleanLiteralExpr(_))
+          ContextSpecificResolver.updateResolver(base.config, TypeRep.Boolean, PrimitiveType.booleanType())(new BooleanLiteralExpr(_))
         (context.copy(resolver = resolverUpdate(context.resolver)), ())
       }
     })

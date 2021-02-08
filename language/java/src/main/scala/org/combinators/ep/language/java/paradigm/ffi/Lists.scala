@@ -1,6 +1,6 @@
 package org.combinators.ep.language.java.paradigm.ffi    /*DI:LD:AI*/
 
-import com.github.javaparser.ast.expr.{BinaryExpr, MethodCallExpr, StringLiteralExpr}
+import com.github.javaparser.ast.expr.{BinaryExpr, IntegerLiteralExpr, MethodCallExpr, StringLiteralExpr}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.generator.Command.Generator
@@ -9,18 +9,41 @@ import org.combinators.ep.generator.paradigm.{AddImport, Apply, GetMember}
 import org.combinators.ep.generator.paradigm.ffi.{Lists => Lsts, _}
 import org.combinators.ep.language.java.CodeGenerator.Enable
 import org.combinators.ep.language.java.{CodeGenerator, ContextSpecificResolver, CtorCtxt, JavaNameProvider, MethodBodyCtxt, ProjectCtxt, Syntax}
-import org.combinators.templating.twirl.Java
-import org.combinators.ep.language.java.paradigm.{AnyParadigm, Generics}
+import org.combinators.ep.language.java.paradigm.{AnyParadigm, Generics, ObjectOriented}
 import org.combinators.ep.language.java.Syntax.default._
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax._
 import cats.syntax._
 import cats.implicits._
+import com.github.javaparser.ast.{ImportDeclaration, NodeList}
 
 trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
   val base: AP
   val applyType: Understands[Ctxt, Apply[Type, Type, Type]]
   val addImport: Understands[Ctxt, AddImport[Import]]
   val generics: Generics[base.type]
+
+  val streamImp = new ImportDeclaration("java.util.stream.Stream", false, false)
+  val collectorsImp = new ImportDeclaration("java.util.stream.Collectors", false, false)
+  val collectorsToList = new MethodCallExpr(
+    ObjectOriented.nameToExpression(collectorsImp.getName),
+    "toList"
+  )
+  def streamConcat(arg1: Expression, arg2: Expression): Expression =
+      new MethodCallExpr(
+        ObjectOriented.nameToExpression(streamImp.getName),
+        "concat",
+        new NodeList[Expression](arg1, arg2)
+      )
+
+  def streamCollect(stream: Expression): Expression =
+    new MethodCallExpr(
+      stream,
+      "collect",
+      new NodeList[Expression](collectorsToList)
+    )
+
+  def toStream(exp: Expression): Expression =
+    new MethodCallExpr(exp,"stream")
 
   def listCreation[Ctxt](canAddImport: Understands[Ctxt, AddImport[Import]]): Understands[Ctxt, Apply[Create[Type], Expression, Expression]] =
     new Understands[Ctxt, Apply[Create[Type], Expression, Expression]] {
@@ -31,12 +54,12 @@ trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
         val gen: Generator[Ctxt, Expression] =
           if (command.arguments.isEmpty) {
             for {
-              _ <- AddImport[Import](Java("import java.util.Collections;").importDeclaration()).interpret(canAddImport)
-            } yield Java(s"java.util.Collections.emptyList()").expression[Expression]()
+              _ <- AddImport[Import](new ImportDeclaration("java.util.Collections", false, false)).interpret(canAddImport)
+            } yield new MethodCallExpr(ObjectOriented.nameToExpression(ObjectOriented.fromComponents("java", "util", "Collections")), "emptyList")
           } else {
             for {
-              _ <- AddImport[Import](Java("import java.util.Arrays;").importDeclaration()).interpret(canAddImport)
-            } yield Java(s"java.util.Arrays.asList(${command.arguments.mkString(", ")})").expression[Expression]()
+              _ <- AddImport[Import](new ImportDeclaration("java.util.Arrays", false, false)).interpret(canAddImport)
+            } yield new MethodCallExpr(ObjectOriented.nameToExpression(ObjectOriented.fromComponents("java", "util", "Arrays")), "asList", new NodeList[Expression](command.arguments:_*))
           }
         Command.runGenerator[Ctxt, Expression](gen, context)
       }
@@ -56,9 +79,20 @@ trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
           ): (Ctxt, Expression) = {
             val gen: Generator[Ctxt, Expression] =
               for {
-                _ <- AddImport[Import](Java("import java.util.stream.Stream;").importDeclaration()).interpret(addImport)
-                _ <- AddImport[Import](Java("import java.util.stream.Collectors;").importDeclaration()).interpret(addImport)
-              } yield Java(s"java.util.stream.Stream.concat(java.util.stream.Stream.of(${command.arguments(0)}), ${command.arguments(1)}.stream()).collect(java.util.stream.Collectors.toList())").expression[Expression]()
+                _ <- AddImport[Import](streamImp).interpret(addImport)
+                _ <- AddImport[Import](collectorsImp).interpret(addImport)
+              } yield {
+                streamCollect(
+                  streamConcat(
+                    new MethodCallExpr(
+                      ObjectOriented.nameToExpression(streamImp.getName),
+                      "of",
+                      new NodeList[Expression](command.arguments(0))
+                    ),
+                    toStream(command.arguments(1))
+                  )
+                )
+              }
             Command.runGenerator(gen, context)
           }
         }
@@ -69,7 +103,7 @@ trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
             context: Ctxt,
             command: Apply[Head, Expression, Expression]
           ): (Ctxt, Expression) = {
-            (context, Java(s"${command.arguments(0)}.get(0)").expression[Expression]())
+            (context, new MethodCallExpr(command.arguments(0), "get", new NodeList[Expression](new IntegerLiteralExpr(0))))
           }
         }
 
@@ -79,7 +113,15 @@ trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
             context: Ctxt,
             command: Apply[Tail, Expression, Expression]
           ): (Ctxt, Expression) = {
-            (context, Java(s"${command.arguments(0)}.subList(1, ${command.arguments(0)}.size())").expression[Expression]())
+            (context,
+              new MethodCallExpr(
+                command.arguments(0),
+                "subList",
+                new NodeList[Expression](
+                  new IntegerLiteralExpr(1),
+                  new MethodCallExpr(command.arguments(0), "size")
+                )
+              ))
           }
         }
 
@@ -91,9 +133,15 @@ trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
           ): (Ctxt, Expression) = {
             val gen: Generator[Ctxt, Expression] =
               for {
-                _ <- AddImport[Import](Java("import java.util.stream.Stream;").importDeclaration()).interpret(addImport)
-                _ <- AddImport[Import](Java("import java.util.stream.Collectors;").importDeclaration()).interpret(addImport)
-              } yield Java(s"java.util.stream.Stream.concat(${command.arguments(0)}.stream(), ${command.arguments(1)}.stream()).collect(java.util.stream.Collectors.toList())").expression[Expression]()
+                _ <- AddImport[Import](streamImp).interpret(addImport)
+                _ <- AddImport[Import](collectorsImp).interpret(addImport)
+              } yield
+                streamCollect(
+                  streamConcat(
+                    toStream(command.arguments(0)),
+                    toStream(command.arguments(1))
+                  )
+                )
             Command.runGenerator(gen, context)
           }
         }
@@ -105,7 +153,9 @@ trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
         context: ProjectCtxt,
         command: Enable.type
       ): (ProjectCtxt, Unit) = {
-        val listType = Java("java.util.List").tpe()
+        val listName = ObjectOriented.fromComponents("java", "util", "List")
+        val listType = ObjectOriented.nameToType(listName)
+        val listImp = new ImportDeclaration(listName, false, false)
 
         def updateResolver(resolver: ContextSpecificResolver): ContextSpecificResolver = {
           def addResolutionType[Ctxt](
@@ -147,7 +197,7 @@ trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
                 .toClassOrInterfaceType
                 .map[Boolean](clsTy => clsTy.getName == listType.asClassOrInterfaceType().getName)  // WARNING: might need to be asString
                 .orElse(false) =>
-              Some(Java("import java.util.List;").importDeclaration())
+              Some(listImp)
             case other => importResolution(k)(other)
           }
 

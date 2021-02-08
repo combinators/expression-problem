@@ -1,14 +1,15 @@
 package org.combinators.ep.language.java.paradigm.ffi    /*DI:LD:AI*/
 
-import com.github.javaparser.ast.expr.{BinaryExpr, BooleanLiteralExpr}
+import com.github.javaparser.ast.NodeList
+import com.github.javaparser.ast.`type`.PrimitiveType
+import com.github.javaparser.ast.expr.{BinaryExpr, BooleanLiteralExpr, MethodCallExpr, TypeExpr}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, Understands}
 import org.combinators.ep.generator.paradigm.{Apply, GetMember}
-import org.combinators.ep.generator.paradigm.ffi.{Equality => Eql, Equals}
+import org.combinators.ep.generator.paradigm.ffi.{Equals, Equality => Eql}
 import org.combinators.ep.language.java.{ContextSpecificResolver, JavaNameProvider, ProjectCtxt}
 import org.combinators.ep.language.java.paradigm.{AnyParadigm, ffi}
-import org.combinators.templating.twirl.Java
 import org.combinators.ep.language.java.Syntax.default._
 import org.combinators.ep.language.java.CodeGenerator.Enable
 
@@ -31,7 +32,7 @@ class Equality[Ctxt, AP <: AnyParadigm](
               implicit val _applyMethod = applyMethod
               val boxedLhs =
                 if (!base.config.boxLevel.isConsistent && tpe.get.isBoxedType) {
-                  Java(s"${tpe.get}.valueOf(${command.arguments.head})").expression()
+                  new MethodCallExpr(new TypeExpr(tpe.get()), "valueOf", new NodeList[Expression](command.arguments.head))
                 } else {
                   command.arguments.head
                 }
@@ -52,7 +53,7 @@ class Equality[Ctxt, AP <: AnyParadigm](
       command: Enable.type
     ): (ProjectCtxt, Unit) = {
       val resolverUpdate =
-        ContextSpecificResolver.updateResolver(base.config, TypeRep.Boolean, Java("boolean").tpe())(new BooleanLiteralExpr(_))
+        ContextSpecificResolver.updateResolver(base.config, TypeRep.Boolean, PrimitiveType.booleanType())(new BooleanLiteralExpr(_))
       (context.copy(resolver = resolverUpdate(context.resolver)), ())
     }
   })

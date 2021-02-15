@@ -1207,6 +1207,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
 
       // eitherExp type we declare or the Exp type from most specialExp
       base <- finalizedBase(mostSpecialExp)
+      _ <- resolveAndAddImport(base)      // make sure to resolve the Exp properly. DEFECT
       factoryType <- applyType(factory, Seq(base))
       _ <- addParent (factoryType)
 

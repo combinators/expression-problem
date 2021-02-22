@@ -1,11 +1,11 @@
 package org.combinators.ep.language.java.paradigm    /*DI:LD:AI*/
 
 import java.util.UUID
-import com.github.javaparser.ast.{ImportDeclaration, Modifier}
+import com.github.javaparser.ast.{ImportDeclaration, Modifier, NodeList}
 import com.github.javaparser.ast.`type`.ClassOrInterfaceType
 import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, ConstructorDeclaration, MethodDeclaration}
-import com.github.javaparser.ast.expr.{Expression, FieldAccessExpr, Name => JName, NameExpr}
-import com.github.javaparser.ast.stmt.{BlockStmt, ExplicitConstructorInvocationStmt, ReturnStmt}
+import com.github.javaparser.ast.expr.{AssignExpr, CastExpr, Expression, FieldAccessExpr, MethodCallExpr, NameExpr, ObjectCreationExpr, ThisExpr, TypeExpr, Name => JName}
+import com.github.javaparser.ast.stmt.{BlockStmt, ExplicitConstructorInvocationStmt, ExpressionStmt, ReturnStmt}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.generator.Command.Generator
@@ -13,8 +13,6 @@ import org.combinators.ep.generator.{Command, Understands}
 import org.combinators.ep.generator.paradigm.{ObjectOriented => OO, AnyParadigm => _, _}
 import org.combinators.ep.language.java.Syntax.MangledName
 import org.combinators.ep.language.java.{ClassCtxt, CompilationUnitCtxt, ContextSpecificResolver, CtorCtxt, JavaNameProvider, MethodBodyCtxt, TestCtxt}
-
-import org.combinators.templating.twirl.Java
 
 import scala.util.Try
 import scala.jdk.CollectionConverters._
@@ -378,9 +376,12 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             context: ConstructorContext,
             command: InitializeField[Name, Expression]
           ): (ConstructorContext, Unit) = {
+            val assignee = new FieldAccessExpr(new ThisExpr(), command.name.toAST.getIdentifier)
+            val stmt = new ExpressionStmt(new AssignExpr(assignee, command.value, AssignExpr.Operator.ASSIGN))
             Command.runGenerator(
-              addBlockDefinitions(Java(s"this.${command.name} = ${command.value};").statements()),
-              context)
+              addBlockDefinitions(Seq(stmt)),
+              context
+            )
           }
         }
       implicit val canAddBlockDefinitionsInConstructor: Understands[ConstructorContext, AddBlockDefinitions[Statement]] =
@@ -432,13 +433,16 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
           ): (ConstructorContext, Expression) = {
             val (tpe, args) = context.resolver.instantiationOverride(command.tpe, command.constructorArguments)
             /** Expand with instantiated body (if it exists). */
+            val result = new ObjectCreationExpr()
+            result.setType(tpe.asClassOrInterfaceType())
+            result.setArguments(new NodeList(args : _*))
             if (command.body.isDefined) {
-               val ci = new ClassOrInterfaceDeclaration()
-               val (newCtxt, classDef) = Command.runGenerator(command.body.get, ClassCtxt(context.resolver, ci, context.extraImports))
-               (context.copy(resolver = newCtxt.resolver, extraImports = newCtxt.extraImports),
-                 Java(s"""new ${tpe}(${args.mkString(", ")}) { ${newCtxt.cls.getMembers.asScala.mkString("\n")} }""").expression())
+              val ci = new ClassOrInterfaceDeclaration()
+              val (newCtxt, classDef) = Command.runGenerator(command.body.get, ClassCtxt(context.resolver, ci, context.extraImports))
+              result.setAnonymousClassBody(newCtxt.cls.getMembers)
+              (context.copy(resolver = newCtxt.resolver, extraImports = newCtxt.extraImports), result)
              } else {
-               (context, Java(s"""new ${tpe}(${args.mkString(", ")})""").expression())
+               (context, result)
              }
           }
         }
@@ -449,7 +453,21 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             context: ConstructorContext,
             command: Apply[Expression, Expression, Expression]
           ): (ConstructorContext, Expression) = {
-            (context, Java(s"${command.functional}(${command.arguments.mkString(", ")})").expression())
+            if (command.functional.isMethodCallExpr) {
+              val result = command.functional.asMethodCallExpr().clone()
+              command.arguments.foreach(arg => result.addArgument(arg.clone()))
+              (context, result)
+            } else if (command.functional.isFieldAccessExpr) {
+              val result = new MethodCallExpr()
+              val functional = command.functional.asFieldAccessExpr()
+              result.setScope(functional.getScope.clone())
+              result.setName(functional.getName.clone())
+              command.arguments.foreach(arg => result.addArgument(arg.clone()))
+              (context, result)
+            } else {
+              val result = new MethodCallExpr(command.functional.toString, command.arguments:_*)
+              (context, result)
+            }
           }
         }
 
@@ -459,7 +477,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             context: ConstructorContext,
             command: CastObject[Type, Expression]
           ): (ConstructorContext, Expression) = {
-            (context, Java(s"""((${command.tpe})${command.expr})""").expression())
+            (context, new CastExpr(command.tpe.clone(), command.expr.clone()))
           }
         }
 
@@ -469,7 +487,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             context: ConstructorContext,
             command: GetMember[Expression, Name]
           ): (ConstructorContext, Expression) = {
-            (context, Java(s"""${command.instance}.${command.member}""").expression())
+            (context, new FieldAccessExpr(command.instance.clone(), command.member.toAST.getIdentifier))
           }
         }
       implicit val canSelfReferenceInConstructor: Understands[ConstructorContext, SelfReference[Expression]] =
@@ -533,7 +551,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             context: ConstructorContext,
             command: GetConstructor[Type, Expression]
           ): (ConstructorContext, Expression) = {
-            (context, Java(command.tpe).expression())
+            (context, new TypeExpr(command.tpe.clone()))
           }
         }
       implicit val canFindClassInConstructor: Understands[ConstructorContext, FindClass[Name, Type]] =
@@ -575,13 +593,16 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
           ): (MethodBodyContext, Expression) = {
             val (tpe, args) = context.resolver.instantiationOverride(command.tpe, command.constructorArguments)
             /** Expand with instantiated body (if it exists). */
+            val result = new ObjectCreationExpr()
+            result.setType(tpe.asClassOrInterfaceType())
+            result.setArguments(new NodeList(args : _*))
             if (command.body.isDefined) {
               val ci = new ClassOrInterfaceDeclaration()
               val (newCtxt, classDef) = Command.runGenerator(command.body.get, ClassCtxt(context.resolver, ci, context.extraImports))
-              (context.copy(resolver = newCtxt.resolver, extraImports = newCtxt.extraImports),
-                Java(s"""new ${tpe}(${args.mkString(", ")}) { ${newCtxt.cls.getMembers.asScala.mkString("\n")} }""").expression())
+              result.setAnonymousClassBody(newCtxt.cls.getMembers)
+              (context.copy(resolver = newCtxt.resolver, extraImports = newCtxt.extraImports), result)
             } else {
-              (context, Java(s"""new ${tpe}(${args.mkString(", ")})""").expression())
+              (context, result)
             }
           }
         }
@@ -592,7 +613,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             context: MethodBodyContext,
             command: CastObject[Type, Expression]
           ): (MethodBodyContext, Expression) = {
-            (context, Java(s"""((${command.tpe})${command.expr})""").expression())
+            (context, new CastExpr(command.tpe.clone(), command.expr.clone()))
           }
         }
 
@@ -602,7 +623,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             context: MethodBodyContext,
             command: GetMember[Expression, Name]
           ): (MethodBodyContext, Expression) = {
-            (context, Java(s"""${command.instance}.${command.member}""").expression())
+            (context, new FieldAccessExpr(command.instance.clone(), command.member.toAST.getIdentifier))
           }
         }
       val canSetAbstractInMethod: Understands[MethodBodyContext, SetAbstract] =
@@ -666,7 +687,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             context: MethodBodyContext,
             command: GetConstructor[Type, Expression]
           ): (MethodBodyContext, Expression) = {
-            (context, Java(command.tpe).expression())
+            (context, new TypeExpr(command.tpe.clone()))
           }
         }
       val canFindClassInMethod: Understands[MethodBodyContext, FindClass[Name, Type]] =

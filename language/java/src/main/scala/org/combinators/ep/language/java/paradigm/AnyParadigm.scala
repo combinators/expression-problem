@@ -16,7 +16,7 @@ import org.combinators.ep.generator.paradigm.{AnyParadigm => AP, _}
 import org.combinators.ep.language.java.Syntax.MangledName
 import org.combinators.ep.language.java.{CodeGenerator, CompilationUnitCtxt, Config, ContextSpecificResolver, FreshNameCleanup, ImportCleanup, JavaNameProvider, MethodBodyCtxt, ProjectCtxt, Syntax, TestCtxt}
 import org.combinators.templating.persistable.{BundledResource, JavaPersistable}
-import org.combinators.jgitserv.ResourcePersistable
+import org.combinators.ep.language.java.ResourcePersistable
 
 import scala.util.Try
 import scala.jdk.CollectionConverters._

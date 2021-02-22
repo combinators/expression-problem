@@ -1,8 +1,8 @@
 package org.combinators.ep.language.java     /*DI:LD:AI*/
 
 import org.combinators.ep.generator.NameProvider
-import org.combinators.templating.twirl.Java
 import Syntax.MangledName
+import com.github.javaparser.StaticJavaParser
 
 import scala.util.Try
 
@@ -20,8 +20,8 @@ object JavaNameProvider extends NameProvider[MangledName] {
     */
   def mangle(name: String): MangledName = {
     MangledName(name,
-      Try(Java(name).simpleName().asString).getOrElse {
-      name.getBytes(java.nio.charset.StandardCharsets.UTF_8).mkString("_", "_", "")
+      Try(StaticJavaParser.parseSimpleName(name).getIdentifier).getOrElse {
+        name.getBytes(java.nio.charset.StandardCharsets.UTF_8).mkString("_", "_", "")
       }
     )
   }

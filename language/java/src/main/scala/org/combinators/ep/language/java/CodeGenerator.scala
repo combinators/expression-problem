@@ -2,12 +2,12 @@ package org.combinators.ep.language.java     /*DI:LD:AI*/
 
 import cats.{Apply => _}
 import com.github.javaparser.ast.PackageDeclaration
-import com.github.javaparser.ast.expr.{DoubleLiteralExpr, IntegerLiteralExpr}
+import com.github.javaparser.ast.`type`.PrimitiveType
+import com.github.javaparser.ast.expr.{DoubleLiteralExpr, IntegerLiteralExpr, TypeExpr}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command
 import org.combinators.ep.language.java.paradigm._
 import org.combinators.ep.language.java.paradigm.ffi._
-import org.combinators.templating.twirl.Java
 
 /**
  * Java-specific.
@@ -29,28 +29,28 @@ sealed class CodeGenerator(config: Config) { cc =>
     new Arithmetic[MethodBodyCtxt, Double, paradigm.type](
       paradigm,
       TypeRep.Double,
-      Java("double").tpe(),
+      PrimitiveType.doubleType(),
       new DoubleLiteralExpr(_)
     )
   val doublesInConstructor =
     new Arithmetic[CtorCtxt, Double, paradigm.type](
       paradigm,
       TypeRep.Double,
-      Java("double").tpe(),
+      PrimitiveType.doubleType(),
       new DoubleLiteralExpr(_)
     )
   val realDoublesInMethod =
     new RealArithmetic[MethodBodyCtxt, Double, paradigm.type](
       paradigm,
       TypeRep.Double,
-      Java("double").tpe(),
+      PrimitiveType.doubleType(),
       new DoubleLiteralExpr(_)
     )
   val realDoublesInConstructor =
     new RealArithmetic[MethodBodyCtxt, Double, paradigm.type](
       paradigm,
       TypeRep.Double,
-      Java("double").tpe(),
+      PrimitiveType.doubleType(),
       new DoubleLiteralExpr(_)
     )
 
@@ -58,15 +58,15 @@ sealed class CodeGenerator(config: Config) { cc =>
     new Arithmetic[MethodBodyCtxt, Int, paradigm.type](
       paradigm,
       TypeRep.Int,
-      Java("int").tpe(),
-      new IntegerLiteralExpr(_)
+      PrimitiveType.intType(),
+      x => new IntegerLiteralExpr(String.valueOf(x))
     )
   val intsInConstructor =
     new Arithmetic[CtorCtxt, Int, paradigm.type](
       paradigm,
       TypeRep.Int,
-      Java("int").tpe(),
-      new IntegerLiteralExpr(_)
+      PrimitiveType.intType(),
+      x => new IntegerLiteralExpr(String.valueOf(x))
     )
 
   val stringsInMethod =
@@ -136,7 +136,7 @@ object CodeGenerator {
 
   val defaultConfig: Config =
     Config(
-      targetPackage = new PackageDeclaration(Java("ep").name),
+      targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("ep")),
       projectName = None,
       boxLevel = FullyBoxed
     )

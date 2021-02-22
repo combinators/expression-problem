@@ -4,6 +4,7 @@ import com.github.javaparser.ast.{CompilationUnit, ImportDeclaration, Node, Node
 import com.github.javaparser.ast.`type`.{ClassOrInterfaceType, Type}
 import com.github.javaparser.ast.expr.{Name, SimpleName}
 import com.github.javaparser.ast.visitor.Visitable
+import org.combinators.templating.twirl.Java
 
 class ImportCleanup {
    case class UsageAnalyzer(usageData: Map[SimpleName, Map[Option[Name], Int]] = Map.empty.withDefaultValue(Map.empty.withDefaultValue(0))) {
@@ -24,7 +25,8 @@ class ImportCleanup {
      }
 
      def toClassOrInterfaceType(qualifiedName: Name): ClassOrInterfaceType = {
-       paradigm.ObjectOriented.nameToType(qualifiedName)
+       // paradigm.ObjectOriented.nameToType(qualifiedName)  POSSIBLE DROP OF qualifier
+       Java(qualifiedName).tpe().asClassOrInterfaceType()
      }
 
      def use(classOrInterfaceType: ClassOrInterfaceType): UsageAnalyzer = {
@@ -44,7 +46,8 @@ class ImportCleanup {
      }
 
      def keepImport(importDecl: ImportDeclaration): Boolean = {
-       val qualifiedImportedName = importDecl.getName
+       //val qualifiedImportedName = importDecl.getName
+       val qualifiedImportedName = Java(importDecl.getNameAsString).name()
        val simpleImportedName = new SimpleName(qualifiedImportedName.getIdentifier)
        (importDecl.isStatic
          || importDecl.isAsterisk

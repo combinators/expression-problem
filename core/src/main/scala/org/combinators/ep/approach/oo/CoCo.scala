@@ -1358,14 +1358,14 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
 
       _ <- makeCoCoBase(domain.baseDataType, Seq.empty)
       _ <- makeCoCoFactory(domain.baseDataType, Seq.empty)
-      _ <- domainSpecific.initialize(this)
+      //_ <- domainSpecific.initialize(this)
       // whenever new operation, this CREATES the capability of having intermediate interfaces
       // chronological order could just become Topological Ordering
       _ <- forEach(domain.inChronologicalOrder) { currentModel =>
         // for all PAST dataTypes that are already defined
         val mostSpecialExp = modelDefiningExp(currentModel)
         for {
-          //_ <- domainSpecific.initialize(this)
+          _ <- domainSpecific.initialize(this)   // HAS to be done each time to properly prepare for packaging...
 
           // Critical aspect of CoCo is that the Extended Intermediate Interface (i.e., ep.m3.Exp) is only created when
           // needed, specifically: (a) a new operation is being defined, and this interface will host the default

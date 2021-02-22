@@ -28,7 +28,6 @@ lazy val commonSettings = Seq(
   ),
 
   libraryDependencies ++= Seq(
-    "org.combinators" %% "templating" % "1.1.0",
     "org.combinators" %% "jgitserv" % "0.0.1",
     "org.scalactic" %% "scalactic" % "3.2.2" % "test",
     "org.scalatest" %% "scalatest" % "3.2.2" % "test",
@@ -81,41 +80,11 @@ def standardLanguageProject(languageName: String): Project =
     .dependsOn(core, domainMath, domainShape)
 
 
-lazy val languageJava = standardLanguageProject("java")
-lazy val languageGJ = standardLanguageProject("gj")
-lazy val languageCPP = standardLanguageProject("cpp")
-lazy val languageHaskell = standardLanguageProject("haskell")
+lazy val languageJava =
+  standardLanguageProject("java")
+    .settings(libraryDependencies += "com.github.javaparser" % "javaparser-core" % "3.19.0")
 lazy val languageScala = standardLanguageProject("scala")
 
-
-// TODO: This should be standalone at a later point.
-/*lazy val jgitserv =
-  Project(id = "jgitserv", base = file("jgitserv"))
-    .settings(
-      version := "1.0.0-SNAPSHOT",
-      organization := "org.combinators",
-      moduleName := "expression-problem-core",
-      
-      scalaVersion := "2.12.13",
-
-      resolvers ++= Seq(
-        Resolver.sonatypeRepo("releases"),
-        Resolver.typesafeRepo("releases")
-      ),
-
-      scalacOptions in (Compile) ++= Seq(
-        "-unchecked",
-        "-deprecation",
-        "-feature",
-        "-language:implicitConversions"
-      ),
-      libraryDependencies ++= Seq(
-        "com.github.finagle" %% "finchx-core" % "0.31.0",
-        "org.eclipse.jgit" % "org.eclipse.jgit" % "5.4.0.201906121030-r",
-        "commons-io" % "commons-io" % "2.6",
-        "org.combinators" %% "templating" % "1.1.0",
-        "ch.qos.logback" % "logback-classic" % "1.2.3"
-      ),
-      addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
-    )
-*/
+//lazy val languageGJ = standardLanguageProject("gj")
+//lazy val languageCPP = standardLanguageProject("cpp")
+//lazy val languageHaskell = standardLanguageProject("haskell")

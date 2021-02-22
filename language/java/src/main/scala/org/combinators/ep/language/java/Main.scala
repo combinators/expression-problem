@@ -8,6 +8,7 @@ import org.combinators.ep.domain.math._
 import org.combinators.ep.generator.{ApproachImplementationProvider, FileWithPath, FileWithPathPersistable, TestImplementationProvider}
 import org.combinators.jgitserv.{BranchTransaction, GitService, ResourcePersistable}
 import FileWithPathPersistable._
+import org.apache.commons.io.{FileSystemUtils, FileUtils}
 
 import java.nio.file.{Files, Path, Paths}
 
@@ -30,14 +31,14 @@ class Main {
   val cocoApproach = CoCo[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
   // select one here.
-  // val approach = ooApproach // WORKS!
+  val approach = ooApproach // WORKS!
   // val approach = visitorApproach  // WORKS!
   // val approach = visitorSideEffectApproach // WORKS!
   // val approach = extensibleVisitorApproach // WORKS
   // val approach = triviallyApproach // WORKS!
   // val approach = vitaApproach // WORKS!
   // interpreterApproach NOT YET WORKING
-  val approach = cocoApproach
+  // val approach = cocoApproach
 
   //val evolutions = Seq(M0, M1, M2, I1, I2)    // , I2 //       M3, M4, M5, M6) // ) // , M4, M5, M6)
   val evolutions = Seq(M0, M1, M2, M3, M4, M5, M6, M7, I1, I2, M3, M4, M5, M6, M7, M7I2, M8, M9)    // all test cases become active WHEN all included.
@@ -53,7 +54,7 @@ class Main {
   val m1_eip = eips.M1(approach.paradigm)(m0_eip)(generator.doublesInMethod)
   val m2_eip = eips.M2(approach.paradigm)(m1_eip)(generator.doublesInMethod, generator.stringsInMethod)
 
-  val m2_abs_eip = eips.M2_ABS(approach.paradigm)(m2_eip)(generator.doublesInMethod, generator.imperativeInMethod, generator.stringsInMethod)
+  //val m2_abs_eip = eips.M2_ABS(approach.paradigm)(m2_eip)(generator.doublesInMethod, generator.imperativeInMethod, generator.stringsInMethod)
 
   val m3_eip = eips.M3(approach.paradigm)(m2_eip)(generator.doublesInMethod, generator.stringsInMethod)
 
@@ -125,13 +126,18 @@ class Main {
 
   def directToDiskTransaction(targetDirectory: Path): IO[Unit] = {
     transaction[IO[Unit]](IO.unit, (transaction, evolutionName, files) => IO {
-        print("Computing Files...")
-        val computed = files()
+      print("Computing Files...")
+      val computed = files()
+      println("[OK]")
+      if (targetDirectory.toFile.exists()) {
+        print(s"Cleaning Target Directory (${targetDirectory})...")
+        FileUtils.deleteDirectory(targetDirectory.toFile)
         println("[OK]")
-        print("Persisting Files...")
-        files().foreach(file => persistable.persistOverwriting(targetDirectory, file))
-        println("[OK]")
-      })
+      }
+      print("Persisting Files...")
+      files().foreach(file => persistable.persistOverwriting(targetDirectory, file))
+      println("[OK]")
+    })
   }
 
   def runGit(args: List[String]): IO[ExitCode] = {

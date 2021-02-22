@@ -6,8 +6,6 @@ import org.combinators.ep.generator.{Command, Understands}
 import org.combinators.ep.generator.paradigm.{ParametricPolymorphism => PPoly, _}
 import org.combinators.ep.language.java.Syntax.MangledName
 import org.combinators.ep.language.java.TypeParamCtxt
-import org.combinators.templating.twirl.Java
-
 import scala.jdk.CollectionConverters._
 
 trait ParametricPolymorphism[AP <: AnyParadigm] extends PPoly {
@@ -54,8 +52,14 @@ trait ParametricPolymorphism[AP <: AnyParadigm] extends PPoly {
             val resultExp =
               if (command.functional.isMethodCallExpr) {
                 command.functional.clone().asMethodCallExpr()
+              } else if (command.functional.isFieldAccessExpr) {
+                val result = new MethodCallExpr()
+                val functional = command.functional.asFieldAccessExpr()
+                result.setScope(functional.getScope.clone())
+                result.setName(functional.getName.clone())
+                result
               } else {
-                Java(s"${command.functional}()").expression[MethodCallExpr]()
+                new MethodCallExpr(command.functional.toString)
               }
             val boxedArguments = command.arguments.map { arg =>
               if (arg.isPrimitiveType) arg.asPrimitiveType().toBoxedType

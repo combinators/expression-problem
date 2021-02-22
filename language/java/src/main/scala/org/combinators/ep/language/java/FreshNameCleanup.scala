@@ -7,7 +7,6 @@ import com.github.javaparser.ast.stmt.{BlockStmt, CatchClause, ForEachStmt, ForS
 import com.github.javaparser.ast.visitor.Visitable
 import org.combinators.ep.generator.FreshNameProvider
 import org.combinators.ep.language.java.Syntax.MangledName
-import org.combinators.templating.twirl.Java
 
 class FreshNameCleanup(nameInfo: Map[String, MangledName]) {
   sealed private trait Phase

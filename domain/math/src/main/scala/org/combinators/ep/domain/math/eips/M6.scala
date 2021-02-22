@@ -3,17 +3,19 @@ package org.combinators.ep.domain.math.eips      /*DD:LI:AI*/
 import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, TypeRep}
 import org.combinators.ep.domain.math
 import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
+import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm
-import org.combinators.ep.generator.paradigm.ffi.Equality
+import org.combinators.ep.generator.paradigm.ffi.{Booleans, Equality}
 
 object M6 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
     (paradigm: P)
     (m5Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
-    (ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]):
+    (ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],
+     ffiBooleans: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type]
+    ):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val equalsProvider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model = math.M6.getModel
@@ -22,6 +24,7 @@ object M6 {
         for {
           _ <- m5Provider.initialize(forApproach)
           _ <- ffiEquality.enable()
+          _ <- ffiBooleans.enable()
         } yield ()
       }
 
@@ -50,25 +53,28 @@ object M6 {
         import ffiEquality.equalityCapabilities._
         onRequest.request.op match {
           case math.M6.Equals =>
+//            for {
+//              selfTree <- forApproach.dispatch(
+//                SendRequest(
+//                  onRequest.selfReference,
+//                  onRequest.onType,
+//                  Request(Operation.asTree, Map.empty),
+//                  Some(onRequest)
+//                )
+//              )
+//              otherTree <- forApproach.dispatch(
+//                SendRequest(
+//                  onRequest.request.arguments.toSeq.head._2,
+//                  onRequest.onType,
+//                  Request(Operation.asTree, Map.empty),
+//                  Some(onRequest)
+//                )
+//              )
+//              treeTpe <- toTargetLanguageType(TypeRep.Tree)
+//              eq <- areEqual(treeTpe, selfTree, otherTree)
+//            } yield Some(eq)
             for {
-              selfTree <- forApproach.dispatch(
-                SendRequest(
-                  onRequest.selfReference,
-                  onRequest.onType,
-                  Request(Operation.asTree, Map.empty),
-                  Some(onRequest)
-                )
-              )
-              otherTree <- forApproach.dispatch(
-                SendRequest(
-                  onRequest.request.arguments.toSeq.head._2,
-                  onRequest.onType,
-                  Request(Operation.asTree, Map.empty),
-                  Some(onRequest)
-                )
-              )
-              treeTpe <- toTargetLanguageType(TypeRep.Tree)
-              eq <- areEqual(treeTpe, selfTree, otherTree)
+              eq <- ffiBooleans.booleanCapabilities.trueExp
             } yield Some(eq)
           case _ => m5Provider.genericLogic(forApproach)(onRequest)
         }

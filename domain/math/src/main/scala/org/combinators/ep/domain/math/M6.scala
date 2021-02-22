@@ -16,7 +16,6 @@ object M6 extends Evolution {
   // and then use those structure(s) to determine equality.
 
   // add a new DataType, just to show you can, after a Producer operation.
-
   lazy val Equals = Operation("equals", TypeRep.Boolean, Seq(Parameter("other", TypeRep.DataType(M5.getModel.baseDataType))))
 
   val m6_s1 = SubInst(LitInst(1.0), LitInst(73.0))

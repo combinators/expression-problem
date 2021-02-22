@@ -21,6 +21,17 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
   import ooParadigm._
   import paradigm._
   import syntax._
+  private final val times: scala.collection.mutable.Map[String, BigInt] =
+      scala.collection.mutable.Map.empty[String, BigInt].withDefaultValue(0)
+
+  private def time[R](location: String)(x: => R): R = {
+    val before = System.currentTimeMillis()
+    val forcedResult = x
+    val after = System.currentTimeMillis()
+    times.synchronized(times.update(location, times(location) + (after - before)))
+    //debugPrint(s"$location used:  ${after - before}",  forcedResult.toString)
+    x
+  }
 
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
@@ -62,7 +73,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     computedBaseType(ofModel.baseDataType)
   }
 
-  def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression] = {
+  def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression] = time("dispatch"){
     import ooParadigm.methodBodyCapabilities._
     import paradigm.methodBodyCapabilities._
     for {
@@ -138,7 +149,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
                              tpeCase: DataTypeCase,
                              op: Operation,
                              domainSpecific: EvolutionImplementationProvider[this.type]
-                            ): Generator[MethodBodyContext, Option[Expression]] = {
+                            ): Generator[MethodBodyContext, Option[Expression]] = time("makeCocoImplementation"){
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
     import polymorphics.methodBodyCapabilities._
@@ -230,7 +241,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
   }
 
   /** Former derived interfaced for the tpe must be qualified with model package */
-  def getFormerDerivedInterfaces(domainDefiningType: GenericModel, current:DataTypeCase): Generator[ClassContext, List[Type]] = {
+  def getFormerDerivedInterfaces(domainDefiningType: GenericModel, current:DataTypeCase): Generator[ClassContext, List[Type]] = time("getFormerDerivedInterfaces"){
     import classCapabilities._
     // it is all about the formers
     var definedFormersExp = domainDefiningType.former.map(pm => modelDefiningExp(pm)).distinct
@@ -272,7 +283,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    */
   def properFinalized[Ctxt](domain:GenericModel,att:Attribute)
                            (implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]],
-                                     canToTargetLanguage: Understands[Ctxt, ToTargetLanguageType[Type]]): Generator[Ctxt, Type] = {
+                                     canToTargetLanguage: Understands[Ctxt, ToTargetLanguageType[Type]]): Generator[Ctxt, Type] = time("properFinalized"){
     def findClass(qualifiedName: Name*): Generator[Ctxt, Type] =
       AnyParadigm.capabilitiy(FindClass[Name, Type](qualifiedName))
 
@@ -370,7 +381,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    * @param domainSpecific
    * @return
    */
-  def makeDerivedInterface(tpe: DataType, tpeCase: DataTypeCase, model:GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
+  def makeDerivedInterface(tpe: DataType, tpeCase: DataTypeCase, model:GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = time("makeDerivedInterface") {
     import genericsParadigm.classCapabilities._
     import polymorphics.TypeParameterContext
 
@@ -489,7 +500,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
   /**
    * @return
    */
-  def makeConvertImplementation(model:GenericModel, baseExp:Type): Generator[MethodBodyContext, Option[Expression]] = {
+  def makeConvertImplementation(model:GenericModel, baseExp:Type): Generator[MethodBodyContext, Option[Expression]] = time("makeConvertedImplementation"){
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
     import polymorphics.methodBodyCapabilities._
@@ -1078,7 +1089,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    * @param tpeCase
    * @return
    */
-  def createCoCoFactorySignatureDataTypeCase(model:GenericModel, tpeCase:DataTypeCase): Generator[MethodBodyContext, Option[Expression]] = {
+  def createCoCoFactorySignatureDataTypeCase(model:GenericModel, tpeCase:DataTypeCase): Generator[MethodBodyContext, Option[Expression]] =  time("createCoCoDactorySignatureDataTypeCase"){
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
     import polymorphics.methodBodyCapabilities._
@@ -1126,7 +1137,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    *   return new Add(this.convert(left), this.convert(right));
    * }
    */
-  def futureCreateFactoryDataTypeCase(model:GenericModel, tpeCase:DataTypeCase): Generator[MethodBodyContext, Option[Expression]] = {
+  def futureCreateFactoryDataTypeCase(model:GenericModel, tpeCase:DataTypeCase): Generator[MethodBodyContext, Option[Expression]] =  time("futureCreateFactoryDataTypeCase"){
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
 
@@ -1185,7 +1196,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    * in the ep.m1.Factory<Exp> above, we need to use the most recent finalized Exp
    *
    */
-  def makeFinalizedCoCoFactory(domain:GenericModel): Generator[ClassContext, Unit] = {
+  def makeFinalizedCoCoFactory(domain:GenericModel): Generator[ClassContext, Unit] =  time("makeFinalizedCoCoFactory"){
 
     import ooParadigm.classCapabilities._
     import genericsParadigm.classCapabilities._
@@ -1270,7 +1281,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    * Currently generates " public ep.Exp<ep.Exp> getSelf() {" but should generate "public Exp getSelf() { return this; }"
    * That is, it should refer to SELF
    */
-  def makeFinalizedCoCoBase(domain:GenericModel): Generator[ClassContext, Unit] = {
+  def makeFinalizedCoCoBase(domain:GenericModel): Generator[ClassContext, Unit] =  time("makeFinalizedCoCoBase"){
 
     import ooParadigm.classCapabilities._
     import genericsParadigm.classCapabilities._
@@ -1308,12 +1319,12 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
   // needed, specifically: (a) a new operation is being defined, and this interface will host the default
   // implementation; or (b) a branch is being merged from branches in which new Exp had been defined
   // useful when determining merging
-  def mostSpecializedExp(domain:GenericModel) : Seq[GenericModel] = {
+  def mostSpecializedExp(domain:GenericModel) : Seq[GenericModel] =  time("mostSpecializedExp"){
     val pastExp = domain.former.map(m => modelDefiningExp(m))
     pastExp.distinct.filterNot(m => pastExp.exists(otherM => m.before(otherM)))   // get rid of everything that has an antecedent
   }
 
-  def modelDefiningExp (domain:GenericModel): GenericModel = {
+  def modelDefiningExp (domain:GenericModel): GenericModel =  time("modelDefiningExp"){
     if (domain.isDomainBase || domain.ops.nonEmpty) {
        domain
      } else {
@@ -1328,7 +1339,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
   }
 
   /** All models from first up to last */
-  def allBetween(last:GenericModel, first:GenericModel) : Seq[GenericModel] = {
+  def allBetween(last:GenericModel, first:GenericModel) : Seq[GenericModel] =  time("allBetween"){
     if (first.beforeOrEqual(last)) {
       last.former.flatMap(m => allBetween(m, first)) :+ last
     } else {
@@ -1336,7 +1347,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     }
   }
 
-  override def implement(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
+  override def implement(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = time("implement"){
     import paradigm.projectContextCapabilities._
     import ooParadigm.projectCapabilities._
 
@@ -1347,14 +1358,14 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
 
       _ <- makeCoCoBase(domain.baseDataType, Seq.empty)
       _ <- makeCoCoFactory(domain.baseDataType, Seq.empty)
-
+      _ <- domainSpecific.initialize(this)
       // whenever new operation, this CREATES the capability of having intermediate interfaces
       // chronological order could just become Topological Ordering
       _ <- forEach(domain.inChronologicalOrder) { currentModel =>
         // for all PAST dataTypes that are already defined
         val mostSpecialExp = modelDefiningExp(currentModel)
         for {
-          _ <- domainSpecific.initialize(this)
+          //_ <- domainSpecific.initialize(this)
 
           // Critical aspect of CoCo is that the Extended Intermediate Interface (i.e., ep.m3.Exp) is only created when
           // needed, specifically: (a) a new operation is being defined, and this interface will host the default
@@ -1383,7 +1394,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
             }
           } else if (mostSpecialExp != currentModel) { // multiple formers. Get all types defined AFTER most Specialized
             val keepers = currentModel.former.map(m => modelDefiningExp(m))
-            forEach (keepers) { keeper =>
+            time("nestedLoop2"){forEach (keepers) { keeper =>
               forEach(allBetween(currentModel,keeper)) { modelDefiningTypes =>
                 forEach(modelDefiningTypes.typeCases) { tpe =>
                   for {
@@ -1392,19 +1403,20 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
                   } yield ()
                 }
               }
-            }
+            }     } // nestedLoop2
           } else { // if we have our new Exp, we have to do more work for existing type cases
-            forEach(currentModel.inChronologicalOrder) { modelDefiningTypes =>
+            time("nestedLoop1"){forEach(currentModel.inChronologicalOrder) { modelDefiningTypes =>
               forEach(modelDefiningTypes.typeCases) { tpe =>
                 for {
                   _ <- makeDerivedInterfaces(tpe, currentModel, domainSpecific)
                   _ <- makeFinalClass(currentModel, tpe)
                 } yield ()
               }
-            }
+            }    } // nestedLoop1
           }
         } yield ()
       }
+      _ <- debug("Ending CoCo" + times.mkString(","))
     } yield ()
   }
 
@@ -1422,7 +1434,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    * Note: shouldn't have to copy entire thing. Better to provide ability to extend inner part into which
    * the factory methods are injected.
    * */
-  override def implement(tests: Map[GenericModel, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
+  override def implement(tests: Map[GenericModel, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = time("implement_tests") {
     import projectContextCapabilities._
     import paradigm.compilationUnitCapabilities._
     import paradigm.testCapabilities._

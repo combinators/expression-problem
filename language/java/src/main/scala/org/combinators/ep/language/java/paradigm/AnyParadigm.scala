@@ -501,9 +501,9 @@ trait AnyParadigm extends AP {
       )
     }
     val gitIgnore = BundledResource("gitignore", Paths.get(".gitignore"), classOf[CodeGenerator])
-    FileWithPath(
-      ResourcePersistable.bundledResourceInstance.rawText(gitIgnore),
-      ResourcePersistable.bundledResourceInstance.path(gitIgnore)) +:
+      //FileWithPath(
+      //ResourcePersistable.bundledResourceInstance.rawText(gitIgnore),
+      //ResourcePersistable.bundledResourceInstance.path(gitIgnore)) +:
       FileWithPath(buildFile, Paths.get("build.sbt")) +:
       (javaFiles ++ javaTestFiles)
   }

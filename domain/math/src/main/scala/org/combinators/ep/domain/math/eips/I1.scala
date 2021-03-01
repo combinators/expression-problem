@@ -25,6 +25,7 @@ object I1 {
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
+          _ <- m2Provider.initialize(forApproach)
           _ <- ffiArithmetic.enable()
           _ <- ffiRealArithmetic.enable()
           _ <- ffiStrings.enable()

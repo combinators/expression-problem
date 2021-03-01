@@ -53,29 +53,27 @@ object M6 {
         import ffiEquality.equalityCapabilities._
         onRequest.request.op match {
           case math.M6.Equals =>
-//            for {
-//              selfTree <- forApproach.dispatch(
-//                SendRequest(
-//                  onRequest.selfReference,
-//                  onRequest.onType,
-//                  Request(Operation.asTree, Map.empty),
-//                  Some(onRequest)
-//                )
-//              )
-//              otherTree <- forApproach.dispatch(
-//                SendRequest(
-//                  onRequest.request.arguments.toSeq.head._2,
-//                  onRequest.onType,
-//                  Request(Operation.asTree, Map.empty),
-//                  Some(onRequest)
-//                )
-//              )
-//              treeTpe <- toTargetLanguageType(TypeRep.Tree)
-//              eq <- areEqual(treeTpe, selfTree, otherTree)
-//            } yield Some(eq)
             for {
-              eq <- ffiBooleans.booleanCapabilities.trueExp
+              selfTree <- forApproach.dispatch(
+                SendRequest(
+                  onRequest.selfReference,
+                  onRequest.onType,
+                  Request(Operation.asTree, Map.empty),
+                  Some(onRequest)
+                )
+              )
+              otherTree <- forApproach.dispatch(
+                SendRequest(
+                  onRequest.request.arguments.toSeq.head._2,
+                  onRequest.onType,
+                  Request(Operation.asTree, Map.empty),
+                  Some(onRequest)
+                )
+              )
+              treeTpe <- toTargetLanguageType(TypeRep.Tree)
+              eq <- areEqual(treeTpe, selfTree, otherTree)
             } yield Some(eq)
+
           case _ => m5Provider.genericLogic(forApproach)(onRequest)
         }
       }

@@ -127,6 +127,7 @@ sealed class CodeGenerator(config: Config) { cc =>
     )(ooParadigm)
 
   val assertionsInMethod = new Assertions[paradigm.type](paradigm)(ooParadigm)
+  val exceptionsInMethod = new Exceptions[paradigm.type](paradigm)
 }
 
 object CodeGenerator {

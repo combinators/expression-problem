@@ -55,6 +55,10 @@ case class CastObject[Type, Expression](tpe: Type, expr: Expression) extends Com
   type Result = Expression
 }
 
+case class InstanceOfType[Type, Expression](tpe: Type, expr: Expression) extends Command {
+  type Result = Expression
+}
+
 case class GetMember[Expression, Name](instance: Expression, member: Name) extends Command {
   type Result = Expression
 }
@@ -279,6 +283,10 @@ trait ObjectOriented {
     implicit val canCastInMethod: Understands[MethodBodyContext, CastObject[Type, Expression]]
     def castObject(tpe:Type, expr: Expression): Generator[MethodBodyContext, Expression] =
       AnyParadigm.capabilitiy(CastObject(tpe, expr))
+
+    implicit val canInstanceOfTypeInMethod: Understands[MethodBodyContext, InstanceOfType[Type, Expression]]
+    def instanceOfType(tpe:Type, expr: Expression): Generator[MethodBodyContext, Expression] =
+      AnyParadigm.capabilitiy(InstanceOfType(tpe, expr))
 
     implicit val canSetAbstractInMethod: Understands[MethodBodyContext, SetAbstract]
     def setAbstract(): Generator[MethodBodyContext, Unit] =

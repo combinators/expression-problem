@@ -4,7 +4,7 @@ import java.util.UUID
 import com.github.javaparser.ast.{ImportDeclaration, Modifier, NodeList}
 import com.github.javaparser.ast.`type`.ClassOrInterfaceType
 import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, ConstructorDeclaration, MethodDeclaration}
-import com.github.javaparser.ast.expr.{AssignExpr, CastExpr, Expression, FieldAccessExpr, MethodCallExpr, NameExpr, ObjectCreationExpr, ThisExpr, TypeExpr, Name => JName}
+import com.github.javaparser.ast.expr.{AssignExpr, CastExpr, Expression, FieldAccessExpr, InstanceOfExpr, MethodCallExpr, NameExpr, ObjectCreationExpr, ThisExpr, TypeExpr, Name => JName}
 import com.github.javaparser.ast.stmt.{BlockStmt, ExplicitConstructorInvocationStmt, ExpressionStmt, ReturnStmt}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.domain.instances.InstanceRep
@@ -614,6 +614,16 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             command: CastObject[Type, Expression]
           ): (MethodBodyContext, Expression) = {
             (context, new CastExpr(command.tpe.clone(), command.expr.clone()))
+          }
+        }
+
+      implicit val canInstanceOfTypeInMethod: Understands[MethodBodyContext, InstanceOfType[Type, Expression]] =
+        new Understands[MethodBodyContext, InstanceOfType[Type, Expression]] {
+          def perform(
+                       context: MethodBodyContext,
+                       command: InstanceOfType[Type, Expression]
+                     ): (MethodBodyContext, Expression) = {
+            (context, new InstanceOfExpr(command.expr.clone(), command.tpe.asClassOrInterfaceType().clone()))
           }
         }
 

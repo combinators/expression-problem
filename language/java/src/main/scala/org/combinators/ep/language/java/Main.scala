@@ -1,7 +1,7 @@
 package org.combinators.ep.language.java     /*DI:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
-import org.combinators.ep.approach.oo.{Algebra, CoCo, ExtensibleVisitor, Interpreter, Traditional, Trivially, ViTA, Visitor, VisitorSideEffect}
+import org.combinators.ep.approach.oo.{Algebra, CoCo, ExtensibleVisitor, Interpreter, Traditional, Trivially, ViTA, Visitor, VisitorSideEffect, RuntimeDispatching}
 import org.combinators.ep.domain.{GenericModel, Model}
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.math._
@@ -30,6 +30,10 @@ class Main {
   val vitaApproach = ViTA[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val cocoApproach = CoCo[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
+  val runtimeDispatchingApproach = RuntimeDispatching[Syntax.default.type, generator.paradigm.type](generator.paradigm)(
+    nameProvider=JavaNameProvider, impParadigmProvider=generator.imperativeInMethod, stringsProvider=generator.stringsInMethod,
+    exceptionsProvider = generator.exceptionsInMethod, oo = generator.ooParadigm)
+
   // select one here.
   //val approach = ooApproach // WORKS!
   // val approach = visitorApproach  // WORKS!
@@ -38,7 +42,7 @@ class Main {
   // val approach = triviallyApproach // WORKS!
   // val approach = vitaApproach // WORKS!
   // interpreterApproach NOT YET WORKING
-  val approach = cocoApproach
+  val approach = runtimeDispatchingApproach
 
   //val evolutions = Seq(M0, M1, M2, I1, I2)    // , I2 //       M3, M4, M5, M6) // ) // , M4, M5, M6)
   val evolutions = Seq(M0, M1, M2, M3, M4, M5, M6, M7, I1, I2, M3, M4, M5, M6, M7, M7I2, M8, M9)    // all test cases become active WHEN all included.

@@ -434,7 +434,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             val (tpe, args) = context.resolver.instantiationOverride(command.tpe, command.constructorArguments)
             /** Expand with instantiated body (if it exists). */
             val result = new ObjectCreationExpr()
-            result.setType(tpe.asClassOrInterfaceType())
+            result.setType(tpe.asClassOrInterfaceType().clone())
             result.setArguments(new NodeList(args : _*))
             if (command.body.isDefined) {
               val ci = new ClassOrInterfaceDeclaration()
@@ -594,7 +594,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             val (tpe, args) = context.resolver.instantiationOverride(command.tpe, command.constructorArguments)
             /** Expand with instantiated body (if it exists). */
             val result = new ObjectCreationExpr()
-            result.setType(tpe.asClassOrInterfaceType())
+            result.setType(tpe.asClassOrInterfaceType().clone())
             result.setArguments(new NodeList(args : _*))
             if (command.body.isDefined) {
               val ci = new ClassOrInterfaceDeclaration()

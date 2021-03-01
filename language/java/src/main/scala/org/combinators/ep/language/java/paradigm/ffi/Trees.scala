@@ -33,14 +33,16 @@ trait Trees[Ctxt, AP <: AnyParadigm] extends Ts[Ctxt] {
         context: Ctxt,
         command: Apply[CreateLeaf[Type], Expression, Expression]
       ): (Ctxt, Expression) = {
+        val leafType = ObjectOriented.nameToType(leafImport.getName)
+        leafType.setTypeArguments(new NodeList[Type](command.functional.valueType))
         val gen =
           for {
             _ <- AddImport(leafImport).interpret(canAddImport)
           } yield
             new ObjectCreationExpr(
               null,
-              ObjectOriented.nameToType(leafImport.getName),
-              new NodeList[Type](command.functional.valueType),
+              leafType,
+              new NodeList[Type](),
               new NodeList[Expression](command.arguments.head),
               null
             )

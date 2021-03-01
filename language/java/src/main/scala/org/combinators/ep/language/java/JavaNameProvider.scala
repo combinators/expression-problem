@@ -2,12 +2,14 @@ package org.combinators.ep.language.java     /*DI:LD:AI*/
 
 import org.combinators.ep.generator.NameProvider
 import Syntax.MangledName
-import com.github.javaparser.StaticJavaParser
+import com.github.javaparser.{JavaParser, StaticJavaParser}
 
 import scala.util.Try
 
 /** Provides name mangling for Java */
 object JavaNameProvider extends NameProvider[MangledName] {
+  val parser = new JavaParser(StaticJavaParser.getConfiguration)
+
   /** Tries to parse names as a
     * [[https://docs.oracle.com/javase/specs/jls/se7/html/jls-6.html#jls-6.2 simple Java name]] and mangles to
     * the arabic number representation of the UTF-8 bytes in the given string, where each byte is prefixed by "_".
@@ -20,7 +22,7 @@ object JavaNameProvider extends NameProvider[MangledName] {
     */
   def mangle(name: String): MangledName = {
     MangledName(name,
-      Try(StaticJavaParser.parseSimpleName(name).getIdentifier).getOrElse {
+      Try(parser.parseSimpleName(name).getResult.map[String](_.getIdentifier).get).getOrElse {
         name.getBytes(java.nio.charset.StandardCharsets.UTF_8).mkString("_", "_", "")
       }
     )

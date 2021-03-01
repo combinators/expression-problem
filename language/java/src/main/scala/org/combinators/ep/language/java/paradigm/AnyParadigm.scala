@@ -476,9 +476,9 @@ trait AnyParadigm extends AP {
          |libraryDependencies ++= $deps
            """.stripMargin
     val cleanedUnits =
-     ImportCleanup.cleaned(
-        FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.units: _*) : _*
-     )
+     //ImportCleanup.cleaned(
+        FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.units: _*) //: _*
+     //)
     val cleanedTestUnits =
       ImportCleanup.cleaned(
         FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.testUnits: _*): _*

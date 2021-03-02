@@ -17,6 +17,8 @@ import cats.implicits._
 import com.github.javaparser.ast.{ImportDeclaration, NodeList}
 
 trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
+  case object ListsEnabled
+
   val base: AP
   val applyType: Understands[Ctxt, Apply[Type, Type, Type]]
   val addImport: Understands[Ctxt, AddImport[Import]]
@@ -103,7 +105,7 @@ trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
             context: Ctxt,
             command: Apply[Head, Expression, Expression]
           ): (Ctxt, Expression) = {
-            (context, new MethodCallExpr(command.arguments(0), "get", new NodeList[Expression](new IntegerLiteralExpr(0))))
+            (context, new MethodCallExpr(command.arguments(0), "get", new NodeList[Expression](new IntegerLiteralExpr("0"))))
           }
         }
 
@@ -118,7 +120,7 @@ trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
                 command.arguments(0),
                 "subList",
                 new NodeList[Expression](
-                  new IntegerLiteralExpr(1),
+                  new IntegerLiteralExpr("1"),
                   new MethodCallExpr(command.arguments(0), "size")
                 )
               ))
@@ -153,93 +155,96 @@ trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
         context: ProjectCtxt,
         command: Enable.type
       ): (ProjectCtxt, Unit) = {
-        val listName = ObjectOriented.fromComponents("java", "util", "List")
-        val listType = ObjectOriented.nameToType(listName)
-        val listImp = new ImportDeclaration(listName, false, false)
+        if (!context.resolver.resolverInfo.contains(ListsEnabled)) {
 
-        def updateResolver(resolver: ContextSpecificResolver): ContextSpecificResolver = {
-          def addResolutionType[Ctxt](
-            toResolution: ContextSpecificResolver => TypeRep => Generator[Ctxt, Type],
-            projectResolution: ContextSpecificResolver => TypeRep => Generator[Ctxt, Type],
-            canApplyType: Understands[Ctxt, Apply[Type, Type, Type]]
-          ): ContextSpecificResolver => TypeRep => Generator[Ctxt, Type] = k => {
-            case TypeRep.Sequence(elemRep) =>
-              for {
-                elemType <- projectResolution(k)(elemRep)
-                resultType <- Apply[Type, Type, Type](listType, Seq(elemType)).interpret(canApplyType)
-              } yield resultType
-            case other => toResolution(k)(other)
+          val listName = ObjectOriented.fromComponents("java", "util", "List")
+          val listType = ObjectOriented.nameToType(listName)
+          val listImp = new ImportDeclaration(listName, false, false)
+
+          def updateResolver(resolver: ContextSpecificResolver): ContextSpecificResolver = {
+            def addResolutionType[Ctxt](
+              toResolution: ContextSpecificResolver => TypeRep => Generator[Ctxt, Type],
+              projectResolution: ContextSpecificResolver => TypeRep => Generator[Ctxt, Type],
+              canApplyType: Understands[Ctxt, Apply[Type, Type, Type]]
+            ): ContextSpecificResolver => TypeRep => Generator[Ctxt, Type] = k => {
+              case TypeRep.Sequence(elemRep) =>
+                for {
+                  elemType <- projectResolution(k)(elemRep)
+                  resultType <- Apply[Type, Type, Type](listType, Seq(elemType)).interpret(canApplyType)
+                } yield resultType
+              case other => toResolution(k)(other)
+            }
+
+            def addReification[Ctxt](
+              reify: ContextSpecificResolver => InstanceRep => Generator[Ctxt, Expression],
+              projectResolution: ContextSpecificResolver => TypeRep => Generator[Ctxt, Type],
+              projectReiification: ContextSpecificResolver => InstanceRep => Generator[Ctxt, Expression],
+              canCreateList: Understands[Ctxt, Apply[Create[Type], Expression, Expression]]
+            ): ContextSpecificResolver => InstanceRep => Generator[Ctxt, Expression] =
+              k => rep => rep.tpe match {
+                case TypeRep.Sequence(elemTypeRep) =>
+                  for {
+                    elems <- forEach(rep.inst.asInstanceOf[Seq[elemTypeRep.HostType]]) { elem =>
+                      projectReiification(k)(InstanceRep(elemTypeRep)(elem))
+                    }
+                    elemType <- projectResolution(k)(elemTypeRep)
+                    res <- Apply[Create[Type], Expression, Expression](Create(elemType), elems).interpret(canCreateList)
+                  } yield res
+                case _ => reify(k)(rep)
+              }
+
+            def addExtraImport(
+              importResolution: ContextSpecificResolver => Type => Option[Import]
+            ): ContextSpecificResolver => Type => Option[Import] = k => {
+              case tpe
+                if AnyParadigm.stripGenerics(tpe)
+                  .toClassOrInterfaceType
+                  .map[Boolean](clsTy => clsTy.getNameWithScope == listType.asClassOrInterfaceType().getNameWithScope)
+                  .orElse(false) =>
+                Some(listImp)
+              case other => importResolution(k)(other)
+            }
+
+            resolver.copy(
+              _methodTypeResolution =
+                addResolutionType(
+                  resolver._methodTypeResolution,
+                  _.methodTypeResolution,
+                  generics.ppolyParadigm.methodBodyCapabilities.canApplyTypeInMethod
+                ),
+              _constructorTypeResolution =
+                addResolutionType(
+                  resolver._constructorTypeResolution,
+                  _.constructorTypeResolution,
+                  generics.constructorCapabilities.canApplyTypeInConstructor
+                ),
+              _classTypeResolution =
+                addResolutionType(
+                  resolver._classTypeResolution,
+                  _.classTypeResolution,
+                  generics.classCapabilities.canApplyTypeInClass
+                ),
+              _reificationInConstructor =
+                addReification(
+                  resolver._reificationInConstructor,
+                  _.constructorTypeResolution,
+                  _.reificationInConstructor,
+                  listCreation(generics.ooParadigm.constructorCapabilities.canAddImportInConstructor)
+                ),
+              _reificationInMethod =
+                addReification(
+                  resolver._reificationInMethod,
+                  _.methodTypeResolution,
+                  _.reificationInMethod,
+                  listCreation(base.methodBodyCapabilities.canAddImportInMethodBody)
+                ),
+              _importResolution = addExtraImport(resolver._importResolution)
+            ).addInfo(ListsEnabled)
           }
 
-          def addReification[Ctxt](
-            reify: ContextSpecificResolver => InstanceRep => Generator[Ctxt, Expression],
-            projectResolution: ContextSpecificResolver => TypeRep => Generator[Ctxt, Type],
-            projectReiification: ContextSpecificResolver => InstanceRep => Generator[Ctxt, Expression],
-            canCreateList: Understands[Ctxt, Apply[Create[Type], Expression, Expression]]
-          ): ContextSpecificResolver => InstanceRep => Generator[Ctxt, Expression] =
-          k => rep => rep.tpe match {
-            case TypeRep.Sequence(elemTypeRep) =>
-              for {
-                elems <- forEach (rep.inst.asInstanceOf[Seq[elemTypeRep.HostType]]) { elem =>
-                  projectReiification(k)(InstanceRep(elemTypeRep)(elem))
-                }
-                elemType <- projectResolution(k)(elemTypeRep)
-                res <- Apply[Create[Type], Expression, Expression](Create(elemType), elems).interpret(canCreateList)
-              } yield res
-            case _ => reify(k)(rep)
-          }
 
-          def addExtraImport(
-            importResolution: ContextSpecificResolver => Type => Option[Import]
-          ): ContextSpecificResolver => Type => Option[Import] = k => {
-            case tpe
-              if tpe
-                .toClassOrInterfaceType
-                .map[Boolean](clsTy => clsTy.getName == listType.asClassOrInterfaceType().getName)  // WARNING: might need to be asString
-                .orElse(false) =>
-              Some(listImp)
-            case other => importResolution(k)(other)
-          }
-
-          resolver.copy(
-            _methodTypeResolution =
-              addResolutionType(
-                resolver._methodTypeResolution,
-                _.methodTypeResolution,
-                generics.ppolyParadigm.methodBodyCapabilities.canApplyTypeInMethod
-              ),
-            _constructorTypeResolution =
-              addResolutionType(
-                resolver._constructorTypeResolution,
-                _.constructorTypeResolution,
-                generics.constructorCapabilities.canApplyTypeInConstructor
-              ),
-            _classTypeResolution =
-              addResolutionType(
-                resolver._classTypeResolution,
-                _.classTypeResolution,
-                generics.classCapabilities.canApplyTypeInClass
-              ),
-            _reificationInConstructor =
-              addReification(
-                resolver._reificationInConstructor,
-                _.constructorTypeResolution,
-                _.reificationInConstructor,
-                listCreation(generics.ooParadigm.constructorCapabilities.canAddImportInConstructor)
-              ),
-            _reificationInMethod =
-              addReification(
-                resolver._reificationInMethod,
-                _.methodTypeResolution,
-                _.reificationInMethod,
-                listCreation(base.methodBodyCapabilities.canAddImportInMethodBody)
-              ),
-            _importResolution = addExtraImport(resolver._importResolution)
-          )
-        }
-
-
-        (context.copy(resolver = updateResolver(context.resolver)), ())
+          (context.copy(resolver = updateResolver(context.resolver)), ())
+        } else (context, ())
       }
     })
 }

@@ -18,6 +18,8 @@ class Equality[Ctxt, AP <: AnyParadigm](
   getMember: Understands[Ctxt, GetMember[Expression, Name]],
   applyMethod: Understands[Ctxt, Apply[Expression, Expression, Expression]]
 ) extends Eql[Ctxt] {
+  case object EqualityEnabled
+
   val equalityCapabilities: EqualityCapabilities =
     new EqualityCapabilities {
       implicit val canEquals: Understands[Ctxt, Apply[Equals[Type], Expression, Expression]] =
@@ -52,9 +54,11 @@ class Equality[Ctxt, AP <: AnyParadigm](
       context: ProjectCtxt,
       command: Enable.type
     ): (ProjectCtxt, Unit) = {
-      val resolverUpdate =
-        ContextSpecificResolver.updateResolver(base.config, TypeRep.Boolean, PrimitiveType.booleanType())(new BooleanLiteralExpr(_))
-      (context.copy(resolver = resolverUpdate(context.resolver)), ())
+      if (!context.resolver.resolverInfo.contains(EqualityEnabled)) {
+        val resolverUpdate =
+          ContextSpecificResolver.updateResolver(base.config, TypeRep.Boolean, PrimitiveType.booleanType())(new BooleanLiteralExpr(_))
+        (context.copy(resolver = resolverUpdate(context.resolver).addInfo(EqualityEnabled)), ())
+      } else (context, ())
     }
   })
 }

@@ -19,6 +19,8 @@ import org.combinators.ep.language.java.paradigm.{AnyParadigm, Generics, ObjectO
 import org.combinators.ep.language.java.Syntax.default._
 
 trait Trees[Ctxt, AP <: AnyParadigm] extends Ts[Ctxt] {
+  case object TreesEnabled
+
   val base: AP
   val addImport: Understands[Ctxt, AddImport[Import]]
   val ooParadigm: ObjectOriented[base.type]
@@ -83,100 +85,103 @@ trait Trees[Ctxt, AP <: AnyParadigm] extends Ts[Ctxt] {
         context: ProjectCtxt,
         command: Enable.type
       ): (ProjectCtxt, Unit) = {
-        val treeType = ObjectOriented.nameToType(treeImport.getName)
+        if (!context.resolver.resolverInfo.contains(TreesEnabled)) {
 
-        def updateResolver(resolver: ContextSpecificResolver): ContextSpecificResolver = {
-          def addResolutionType[Ctxt](
-            toResolution: ContextSpecificResolver => TypeRep => Generator[Ctxt, Type],
-            canAddImport: Understands[Ctxt, AddImport[Import]]
-          ): ContextSpecificResolver => TypeRep => Generator[Ctxt, Type] = k => {
-            case TypeRep.Tree =>
-              for {
-                _ <- AddImport(treeImport).interpret(canAddImport)
-              } yield treeType
-            case other => toResolution(k)(other)
-          }
+          val treeType = ObjectOriented.nameToType(treeImport.getName)
 
-          def addReification[Ctxt](
-            reify: ContextSpecificResolver => InstanceRep => Generator[Ctxt, Expression],
-            projectReiification: ContextSpecificResolver => InstanceRep => Generator[Ctxt, Expression],
-            projectResolution: ContextSpecificResolver => TypeRep => Generator[Ctxt, Type],
-            canAddImport: Understands[Ctxt, AddImport[Import]]
-          ): ContextSpecificResolver => InstanceRep => Generator[Ctxt, Expression] =
-            k => rep => rep.inst match {
-              case Node(id, elems) =>
+          def updateResolver(resolver: ContextSpecificResolver): ContextSpecificResolver = {
+            def addResolutionType[Ctxt](
+              toResolution: ContextSpecificResolver => TypeRep => Generator[Ctxt, Type],
+              canAddImport: Understands[Ctxt, AddImport[Import]]
+            ): ContextSpecificResolver => TypeRep => Generator[Ctxt, Type] = k => {
+              case TypeRep.Tree =>
                 for {
-                  elems <- forEach (elems) { elem =>
-                    projectReiification(k)(InstanceRep(TypeRep.Tree)(elem))
-                  }
-                  ident <- projectReiification(k)(InstanceRep(TypeRep.Int)(id))
-                  result <- Apply[CreateNode, Expression, Expression](CreateNode(), ident +: elems).interpret(nodeCreation(canAddImport))
-                } yield result
-              case Leaf(inst) =>
-                for {
-                  child <- projectReiification(k)(inst)
-                  childType <- projectResolution(k)(inst.tpe)
-                  result <- Apply[CreateLeaf[Type], Expression, Expression](CreateLeaf(childType), Seq(child)).interpret(leafCreation(canAddImport))
-                } yield result
-              case _ => reify(k)(rep)
+                  _ <- AddImport(treeImport).interpret(canAddImport)
+                } yield treeType
+              case other => toResolution(k)(other)
             }
 
-          def addExtraImport(
-            importResolution: ContextSpecificResolver => Type => Option[Import]
-          ): ContextSpecificResolver => Type => Option[Import] = k => {
-            case tpe
-              if tpe
-                .toClassOrInterfaceType
-                .map[Boolean](clsTy => clsTy.getName == treeType.asClassOrInterfaceType().getName)
-                .orElse(false) =>
-              Some(treeImport)
-            case other => importResolution(k)(other)
+            def addReification[Ctxt](
+              reify: ContextSpecificResolver => InstanceRep => Generator[Ctxt, Expression],
+              projectReiification: ContextSpecificResolver => InstanceRep => Generator[Ctxt, Expression],
+              projectResolution: ContextSpecificResolver => TypeRep => Generator[Ctxt, Type],
+              canAddImport: Understands[Ctxt, AddImport[Import]]
+            ): ContextSpecificResolver => InstanceRep => Generator[Ctxt, Expression] =
+              k => rep => rep.inst match {
+                case Node(id, elems) =>
+                  for {
+                    elems <- forEach(elems) { elem =>
+                      projectReiification(k)(InstanceRep(TypeRep.Tree)(elem))
+                    }
+                    ident <- projectReiification(k)(InstanceRep(TypeRep.Int)(id))
+                    result <- Apply[CreateNode, Expression, Expression](CreateNode(), ident +: elems).interpret(nodeCreation(canAddImport))
+                  } yield result
+                case Leaf(inst) =>
+                  for {
+                    child <- projectReiification(k)(inst)
+                    childType <- projectResolution(k)(inst.tpe)
+                    result <- Apply[CreateLeaf[Type], Expression, Expression](CreateLeaf(childType), Seq(child)).interpret(leafCreation(canAddImport))
+                  } yield result
+                case _ => reify(k)(rep)
+              }
+
+            def addExtraImport(
+              importResolution: ContextSpecificResolver => Type => Option[Import]
+            ): ContextSpecificResolver => Type => Option[Import] = k => {
+              case tpe
+                if tpe
+                  .toClassOrInterfaceType
+                  .map[Boolean](clsTy => clsTy.getNameWithScope == treeType.asClassOrInterfaceType().getNameWithScope)
+                  .orElse(false) =>
+                Some(treeImport)
+              case other => importResolution(k)(other)
+            }
+
+            resolver.copy(
+              _methodTypeResolution =
+                addResolutionType(
+                  resolver._methodTypeResolution,
+                  base.methodBodyCapabilities.canAddImportInMethodBody
+                ),
+              _constructorTypeResolution =
+                addResolutionType(
+                  resolver._constructorTypeResolution,
+                  ooParadigm.constructorCapabilities.canAddImportInConstructor
+                ),
+              _classTypeResolution =
+                addResolutionType(
+                  resolver._classTypeResolution,
+                  ooParadigm.classCapabilities.canAddImportInClass
+                ),
+              _reificationInConstructor =
+                addReification(
+                  resolver._reificationInConstructor,
+                  _.reificationInConstructor,
+                  _.constructorTypeResolution,
+                  ooParadigm.constructorCapabilities.canAddImportInConstructor
+                ),
+              _reificationInMethod =
+                addReification(
+                  resolver._reificationInMethod,
+                  _.reificationInMethod,
+                  _.methodTypeResolution,
+                  base.methodBodyCapabilities.canAddImportInMethodBody
+                ),
+              _importResolution = addExtraImport(resolver._importResolution)
+            ).addInfo(TreesEnabled)
           }
 
-          resolver.copy(
-            _methodTypeResolution =
-              addResolutionType(
-                resolver._methodTypeResolution,
-                base.methodBodyCapabilities.canAddImportInMethodBody
-              ),
-            _constructorTypeResolution =
-              addResolutionType(
-                resolver._constructorTypeResolution,
-                ooParadigm.constructorCapabilities.canAddImportInConstructor
-              ),
-            _classTypeResolution =
-              addResolutionType(
-                resolver._classTypeResolution,
-                ooParadigm.classCapabilities.canAddImportInClass
-              ),
-            _reificationInConstructor =
-              addReification(
-                resolver._reificationInConstructor,
-                _.reificationInConstructor,
-                _.constructorTypeResolution,
-                ooParadigm.constructorCapabilities.canAddImportInConstructor
-              ),
-            _reificationInMethod =
-              addReification(
-                resolver._reificationInMethod,
-                _.reificationInMethod,
-                _.methodTypeResolution,
-                base.methodBodyCapabilities.canAddImportInMethodBody
-              ),
-            _importResolution = addExtraImport(resolver._importResolution)
-          )
-        }
+          val extraUnits: Seq[CompilationUnit] =
+            Seq(
+              "Leaf.java",
+              "Node.java",
+              "Tree.java"
+            ).map(fileName =>
+              StaticJavaParser.parse(getClass.getResourceAsStream(s"/java-code/org/combinators/ep/util/$fileName"))
+            )
 
-        val extraUnits: Seq[CompilationUnit] =
-          Seq(
-            "Leaf.java",
-            "Node.java",
-            "Tree.java"
-          ).map(fileName =>
-            StaticJavaParser.parse(getClass.getResourceAsStream(s"/java-code/org/combinators/ep/util/$fileName"))
-          )
-
-        (context.copy(resolver = updateResolver(context.resolver), units = (context.units ++ extraUnits).distinct), ())
+          (context.copy(resolver = updateResolver(context.resolver), units = (context.units ++ extraUnits).distinct), ())
+        } else (context, ())
       }
     })
 }

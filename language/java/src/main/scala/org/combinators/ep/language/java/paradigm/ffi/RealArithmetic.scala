@@ -22,6 +22,8 @@ class RealArithmetic[Ctxt, T, AP <: AnyParadigm](
 ) extends RArith[Ctxt, T] {
   import org.combinators.ep.language.java.OperatorExprs._
 
+  case object RealArithmeticEnabled
+
   val math = ObjectOriented.fromComponents("Math")
   val mathExp = ObjectOriented.nameToExpression(math)
 
@@ -91,9 +93,11 @@ class RealArithmetic[Ctxt, T, AP <: AnyParadigm](
         context: ProjectCtxt,
         command: Enable.type
       ): (ProjectCtxt, Unit) = {
-        val resolverUpdate =
-          ContextSpecificResolver.updateResolver(base.config, rep, targetType)(reification)(_)
-        (context.copy(resolver = resolverUpdate(context.resolver)), ())
+        if (!context.resolver.resolverInfo.contains(RealArithmeticEnabled)) {
+          val resolverUpdate =
+            ContextSpecificResolver.updateResolver(base.config, rep, targetType)(reification)(_)
+          (context.copy(resolver = resolverUpdate(context.resolver).addInfo(RealArithmeticEnabled)), ())
+        } else (context, ())
       }
     })
 }

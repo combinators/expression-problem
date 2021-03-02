@@ -16,6 +16,8 @@ import org.combinators.ep.language.java.CodeGenerator.Enable
 class Assertions[AP <: AnyParadigm](val base: AP)(ooParadigm: ObjectOriented[AP]) extends Assrts[MethodBodyCtxt] {
   val assertImp = new ImportDeclaration("org.junit.Assert", false, false)
 
+  case object AssertionsEnabled
+
   val assertionCapabilities: AssertionCapabilities =
     new AssertionCapabilities {
       implicit val canAssert: Understands[MethodBodyCtxt, Apply[Assert, Expression, Expression]] =
@@ -44,20 +46,22 @@ class Assertions[AP <: AnyParadigm](val base: AP)(ooParadigm: ObjectOriented[AP]
         context: ProjectCtxt,
         command: Enable.type
       ): (ProjectCtxt, Unit) = {
-        val assertTpe = ObjectOriented.nameToType(assertImp.getName)
-        val resolverUpdate =
-          ContextSpecificResolver
-            .updateResolver(base.config, TypeRep.Boolean, PrimitiveType.booleanType())(new BooleanLiteralExpr(_))
-            .andThen(resolver =>
-              resolver.copy(
-                _importResolution = k => {
-                  case tpe if tpe == assertTpe => Some(assertImp)
-                  case other => context.resolver._importResolution(k)(other)
-                }
+        if (!context.resolver.resolverInfo.contains(AssertionsEnabled)) {
+          val assertTpe = ObjectOriented.nameToType(assertImp.getName)
+          val resolverUpdate =
+            ContextSpecificResolver
+              .updateResolver(base.config, TypeRep.Boolean, PrimitiveType.booleanType())(new BooleanLiteralExpr(_))
+              .andThen(resolver =>
+                resolver.copy(
+                  _importResolution = k => {
+                    case tpe if tpe == assertTpe => Some(assertImp)
+                    case other => context.resolver._importResolution(k)(other)
+                  }
+                ).addInfo(AssertionsEnabled)
               )
-            )
 
-        (context.copy(resolver = resolverUpdate(context.resolver)), ())
+          (context.copy(resolver = resolverUpdate(context.resolver)), ())
+        } else (context, ())
       }
     })
 }

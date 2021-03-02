@@ -4,7 +4,7 @@ import java.util.UUID
 import com.github.javaparser.ast.{ImportDeclaration, Modifier, NodeList}
 import com.github.javaparser.ast.`type`.ClassOrInterfaceType
 import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, ConstructorDeclaration, MethodDeclaration}
-import com.github.javaparser.ast.expr.{AssignExpr, CastExpr, Expression, FieldAccessExpr, InstanceOfExpr, MethodCallExpr, NameExpr, ObjectCreationExpr, ThisExpr, TypeExpr, Name => JName}
+import com.github.javaparser.ast.expr.{AssignExpr, CastExpr, EnclosedExpr, Expression, FieldAccessExpr, InstanceOfExpr, MethodCallExpr, NameExpr, ObjectCreationExpr, ThisExpr, TypeExpr, Name => JName}
 import com.github.javaparser.ast.stmt.{BlockStmt, ExplicitConstructorInvocationStmt, ExpressionStmt, ReturnStmt}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.domain.instances.InstanceRep
@@ -477,7 +477,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             context: ConstructorContext,
             command: CastObject[Type, Expression]
           ): (ConstructorContext, Expression) = {
-            (context, new CastExpr(command.tpe.clone(), command.expr.clone()))
+            (context, new EnclosedExpr(new CastExpr(command.tpe.clone(), command.expr.clone())))
           }
         }
 
@@ -613,7 +613,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             context: MethodBodyContext,
             command: CastObject[Type, Expression]
           ): (MethodBodyContext, Expression) = {
-            (context, new CastExpr(command.tpe.clone(), command.expr.clone()))
+            (context, new EnclosedExpr(new CastExpr(command.tpe.clone(), command.expr.clone())))
           }
         }
 

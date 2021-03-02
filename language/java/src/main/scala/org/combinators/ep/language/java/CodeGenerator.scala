@@ -8,7 +8,6 @@ import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command
 import org.combinators.ep.language.java.paradigm._
 import org.combinators.ep.language.java.paradigm.ffi._
-import org.combinators.templating.twirl.Java
 
 /**
  * Java-specific.
@@ -138,8 +137,7 @@ object CodeGenerator {
 
   val defaultConfig: Config =
     Config(
-      //targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("ep")),  POSSIBLE DEFECT?
-      targetPackage = new PackageDeclaration(Java("ep").name),
+      targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("ep")),
       projectName = None,
       boxLevel = FullyBoxed
     )

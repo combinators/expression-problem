@@ -251,7 +251,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             Try { (context, context.resolver.importResolution(stripped)) } getOrElse {
               val newImport =
                 new ImportDeclaration(
-                  new com.github.javaparser.ast.expr.Name(stripped.asClassOrInterfaceType().asString()),   // DEFECT: SCOPE
+                  ObjectOriented.typeToName(stripped.asClassOrInterfaceType()),
                   false,
                   false)
               if (context.extraImports.contains(newImport)) {
@@ -414,7 +414,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             Try { (context, context.resolver.importResolution(stripped)) } getOrElse {
               val newImport =
                 new ImportDeclaration(
-                  new com.github.javaparser.ast.expr.Name(stripped.asClassOrInterfaceType().asString()),  // DEFECT: scope
+                  ObjectOriented.typeToName(stripped.asClassOrInterfaceType()),
                   false,
                   false)
               if (context.extraImports.contains(newImport)) {
@@ -804,7 +804,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             Try { (context, context.resolver.importResolution(stripped)) } getOrElse {
               val newImport =
                 new ImportDeclaration(
-                  new com.github.javaparser.ast.expr.Name(stripped.asClassOrInterfaceType().asString()),   // DEFECT: SCOPE
+                  ObjectOriented.typeToName(stripped.asClassOrInterfaceType()),
                   false,
                   false)
               if (context.extraImports.contains(newImport)) {
@@ -871,6 +871,13 @@ object ObjectOriented {
       .map[ClassOrInterfaceType](n => nameToType(n))
       .map[ClassOrInterfaceType](qual => new ClassOrInterfaceType(qual, name.getIdentifier))
       .orElseGet(() => new ClassOrInterfaceType(null, name.getIdentifier))
+  }
+
+  def typeToName(tpe: ClassOrInterfaceType): JName = {
+    tpe.getScope
+      .map[JName](s => typeToName(s))
+      .map[JName](qual => new JName(qual, tpe.getName.getIdentifier))
+      .orElseGet(() => new JName(tpe.getName.getIdentifier))
   }
 
   def apply[AP <: AnyParadigm](base: AnyParadigm): ObjectOriented[base.type] = {

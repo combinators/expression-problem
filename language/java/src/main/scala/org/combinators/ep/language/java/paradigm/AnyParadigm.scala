@@ -12,7 +12,7 @@ import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, FileWithPath, Understands}
-import org.combinators.ep.generator.paradigm.{AnyParadigm => AP, _}
+import org.combinators.ep.generator.paradigm.{ObjectOriented, AnyParadigm => AP, _}
 import org.combinators.ep.language.java.Syntax.MangledName
 import org.combinators.ep.language.java.{CodeGenerator, CompilationUnitCtxt, Config, ContextSpecificResolver, FreshNameCleanup, ImportCleanup, JavaNameProvider, MethodBodyCtxt, ProjectCtxt, Syntax, TestCtxt}
 import org.combinators.templating.persistable.{BundledResource, JavaPersistable}
@@ -282,10 +282,10 @@ trait AnyParadigm extends AP {
             val stripped = AnyParadigm.stripGenerics(command.forElem)
             Try { (context, context.resolver.importResolution(stripped)) } getOrElse {
               if (stripped.isClassOrInterfaceType) {
-                val importName = stripped.asClassOrInterfaceType().asString()   // DEEP DEFECT: scope is necessary since getName is SimpleName
+                val importName = ObjectOriented.typeToName(stripped.asClassOrInterfaceType())
                 val newImport =
                   new ImportDeclaration(
-                    new com.github.javaparser.ast.expr.Name(importName),
+                    importName,
                     false,
                     false)
                 if (context.extraImports.contains(newImport)) {
@@ -370,10 +370,10 @@ trait AnyParadigm extends AP {
             val stripped = AnyParadigm.stripGenerics(command.forElem)
             Try { (context, context.resolver.importResolution(stripped)) } getOrElse {
               if (stripped.isClassOrInterfaceType) {
-                val importName = stripped.asClassOrInterfaceType().asString()   // DEEP DEFECT: scope is necessary since getName is SimpleName
+                val importName = ObjectOriented.typeToName(stripped.asClassOrInterfaceType())
                 val newImport =
                   new ImportDeclaration(
-                    new com.github.javaparser.ast.expr.Name(importName),
+                    importName,
                     false,
                     false)
                 if (context.extraImports.contains(newImport)) {
@@ -476,9 +476,9 @@ trait AnyParadigm extends AP {
          |libraryDependencies ++= $deps
            """.stripMargin
     val cleanedUnits =
-     //ImportCleanup.cleaned(
-        FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.units: _*) //: _*
-     //)
+     ImportCleanup.cleaned(
+        FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.units: _*) : _*
+     )
     val cleanedTestUnits =
       ImportCleanup.cleaned(
         FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.testUnits: _*): _*

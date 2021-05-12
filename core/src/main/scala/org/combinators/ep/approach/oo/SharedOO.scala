@@ -194,7 +194,7 @@ trait SharedOO extends ApproachImplementationProvider {
   }
 
   /**
-   * Make a single getter method for the 'att' attribute with a body that returns the associaed field's value.
+   * Make a single getter method for the 'att' attribute with a body that returns the associated field's value.
    *
    * {{{
    * public Exp getRight() {

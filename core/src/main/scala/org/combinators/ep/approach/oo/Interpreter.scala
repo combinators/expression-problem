@@ -9,7 +9,7 @@ import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.{forEach, _}
 import org.combinators.ep.generator.paradigm._
 import org.combinators.ep.generator.paradigm.control.Imperative
 
-sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataTypeAsInterface with SharedOO with OperationInterfaceChain with FieldDefinition {
+sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataTypeAsInterface with SharedOO with FieldDefinition {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
@@ -83,6 +83,73 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
     }
   }
 
+  /// ------------------------------------------------------ Operator As Chain Moved Here ---------------
+
+  // TODO: should be revised to pass in the base, and not presume it
+  def baseInterfaceNames(domain: GenericModel): Seq[Name] = {
+    if (domain.isDomainBase) {
+      // ignore MathDomain, for example, and just grab name...
+      Seq(names.mangle(domain.baseDataType.name))
+    } else {
+      Seq(names.mangle(domain.name), names.mangle(domain.baseDataType.name))
+    }
+  }
+
+//  // extends Exp [first one] or ExpEval [previous one]
+//  // Works for both Exp* interface declarations as well as DataTypeOp declarations
+//  def getParentInterface(domain: GenericModel): Generator[ClassContext, Type] = {
+//    import classCapabilities._
+//
+//    if (domain.isEmpty || domain.lastModelWithOperation.isEmpty) {
+//      findClass(names.mangle(domain.baseDataType.name))
+//    } else {
+//      findClass(baseInterfaceNames(domain) : _*)
+//    }
+//  }
+
+  /**
+   * Make sure to include past producer methods as well...
+   */
+  def makeInterface(domain:GenericModel): Generator[ClassContext, Unit] = {
+    // create class which is an interface containing abstract methods
+    import classCapabilities._
+    import genericsParadigm.classCapabilities._
+
+    for {
+      _ <- setInterface()
+
+      // former merge points need to be included, so  past.lastModelWithOperation) is changed to below
+      _ <- forEach(domain.former.map(past => latestModelDefiningInterface(past))) { m => for {
+           /** Interpreter has to go back to the former Model which had defined an operation */
+           //parent <- getParentInterface(m)
+           parent <- if (m.isDomainBase) {
+             findClass(names.mangle(names.conceptNameOf(m.baseDataType)))
+           } else {
+             findClass(names.mangle(names.instanceNameOf(m)), names.mangle(names.conceptNameOf(m.baseDataType)))
+           }
+           _ <- resolveAndAddImport(parent)
+           _ <- addParent(parent)
+         } yield ()
+        }
+
+      // grab current operations AND all producers. Do together to eliminate duplicates.
+      _ <- forEach ((domain.ops ++ domain.pastOperations.filter(op => op.isProducer(domain))).distinct) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), makeInterpreterSignature(domain, op)) }
+    } yield ()
+  }
+
+  /**
+   * Create intermediate interfaces that form a chain of operation definitions.
+   * Now this is created EVEN when an evolution doesn't create an operation.
+   *
+   * Make sure producer methods are subsequently copied...
+   * @param domainSpecific
+   * @return
+   */
+  def addIntermediateInterfaceToProject(domain:GenericModel): Generator[ProjectContext, Unit] = {
+    import ooParadigm.projectCapabilities._
+    addClassToProject(makeInterface(domain), baseInterfaceNames(domain) : _*)  }
+
+  /// -------------------------------------^^^^^^^^^^^^^^^^^^^^^^^^^^^^^-----------------------------------------------
 
   def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression] = {
     import ooParadigm.methodBodyCapabilities._
@@ -101,7 +168,8 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
       // goal is to find the class, i.e., "Sub", and have that become "ep.m4.Sub"
       // Using 'toTargetLanguage' brings in the type from where it had been registered using registerTypes
       rt <- toTargetLanguageType(TypeRep.DataType(DataType(tpeCase.name)))       //findClass(names.mangle(names.conceptNameOf(tpeCase)))
-      _ <- resolveAndAddImport(rt)
+//      rt <- findClass(names.mangle(tpeCase.name))
+      _ <- resolveAndAddImport(rt)   // SEEMS to have no impact for data type classess...
 
       res <- instantiateObject(rt, args)
     } yield res
@@ -119,6 +187,37 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
     }
   }
 
+  /** Create signature using contravariant baseDomain type from past Exps.
+   *
+   * {{{
+   *   public Double OPERATION(PARAM...)
+   * }}}
+   * @param op
+   * @return
+   */
+  def makeInterpreterSignature(domain:GenericModel, op: Operation): Generator[MethodBodyContext, Unit] = {
+    import paradigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+
+    for {
+      rt <- toTargetLanguageType(op.returnType)   // covariant overriding is still feasible
+      _ <- resolveAndAddImport(rt)
+      _ <- setReturnType(rt)
+      params <- forEach (op.parameters) { param: Parameter =>
+        for {// if a base type then must use original
+          pt <- if (param.tpe.isModelBase(domain)) {
+            findClass(names.mangle(names.instanceNameOf(domain.findOperation(op).get)), names.mangle(names.conceptNameOf(domain.baseDataType)))
+          } else {
+            toTargetLanguageType(param.tpe)
+          }
+          _ <- resolveAndAddImport(pt)
+          pName <- freshName(names.mangle(param.name))
+        } yield (pName, pt)
+      }
+      _ <- setParameters(params)
+    } yield ()
+  }
+
   def makeInterpreterImplementation(domain: GenericModel,
                           tpe: DataType,
                           tpeCase: DataTypeCase,
@@ -129,7 +228,7 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
     import ooParadigm.methodBodyCapabilities._
     import polymorphics.methodBodyCapabilities._
     for {
-      _ <- makeSignature(op)
+      _ <- makeInterpreterSignature(domain, op)
       thisRef <- selfReference()
       attAccessors: Seq[Expression] <- forEach (tpeCase.attributes) { att =>
         for {
@@ -172,6 +271,18 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
     } yield result
   }
 
+  def latestModelDefiningInterface(domain: GenericModel): GenericModel = {
+    if (domain.isDomainBase || domain.ops.nonEmpty || domain.former.length > 1) {   // handle merge case as well
+      domain
+    } else {
+      // find where tpe was defined and also where last operation was defined and choose later of the two
+      // will only have one, since merge case handled above.
+      // could be one of our ancestors is a merge point
+      latestModelDefiningInterface(domain.former.head)
+      //domain.lastModelWithOperation.head
+    }
+  }
+
   /** Generate class for each DataTypeCase and Operation. Be sure to keep extension chain going when there are prior classes available.
    *
    * package ep.m2;
@@ -180,58 +291,50 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
    *    ...
    * }
    *
-   * @param model
-   * @param ops
-   * @param tpeCase
-   * @param domainSpecific    Needed whenever an implementation is to be generated
    * @return
    */
-  def makeClassForCase(model: Model, ops: Seq[Operation], tpeCase: DataTypeCase, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
+  def makeClassForCase(model: GenericModel, ops: Seq[Operation], tpeCase: DataTypeCase,
+           domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
     import classCapabilities._
-    import ooParadigm.projectCapabilities._
 
-    def addParentClass(): Generator[ClassContext, Unit] = if (!shouldAddParent()) {
-      Command.skip[ClassContext]
-    } else {
-      // go to last model which had defined operation *OR* last model in which this tpeCase is defined.
+    def primaryParent(): GenericModel = {
       val modelDefiningType = model.findTypeCase(tpeCase)
-      val lastDefiningOp = model.last.get.lastModelWithOperation    // go to last model which had defined operation (since it would have an Exp and thus a tpeCase)
-
-      // could have better solution to deal with optionals.
-      val chosenModel = modelDefiningType.getOrElse(lastDefiningOp.head).later(lastDefiningOp.head)
-
-      val defOps = if (chosenModel.ops.nonEmpty) {
-        opsName(chosenModel.ops)
-      } else {
-        opsName(chosenModel.lastModelWithOperation.flatMap(m => m.ops))
-      }
-
-      //   but this won't always work SINCE this might not have the operations. Need to find the prior one that
-      //   was constructed (defOps was opsName(chosenModel.ops))
-      val priorClass = defOps + names.conceptNameOf(tpeCase)
-      for {
-
-        priorType <- findClass(names.mangle(chosenModel.name), names.mangle(priorClass))
-        _ <- resolveAndAddImport(priorType)
-        _ <- addParent(priorType)
-      } yield ()
+      val pastModel = model.former.map(m => latestModelDefiningInterface(m)).head
+      modelDefiningType.getOrElse(pastModel).later(pastModel)
     }
 
-    // add a parent IF type defined earlier
+    // if an ancestor branch doesn't define parent then add all operations
+
+    // Even though there *may* be multiple formers (due to a merge) we can't actually add multiple
+    // parents. If there are multiple, then must find which branch defines the tpeCase and choose
+    // that one -- if both do, then it doesn't matter which one you choose, so to be consistent
+    // always choose the first one.
+    def addPrimaryParent(): Generator[ClassContext, Unit] = {
+      if (!shouldAddParent()) {
+       Command.skip[ClassContext]
+      } else {
+        // go to last model which had defined operation *OR* last model in which this tpeCase is defined.
+        val chosenModel = primaryParent()
+        for {
+          priorType <- findClass(names.mangle(chosenModel.name), names.mangle(names.conceptNameOf(tpeCase)))
+            _ <- resolveAndAddImport(priorType)
+            _ <- addParent(priorType)
+          } yield ()
+        }
+      }
+
+    // add a parent IF type defined earlier, in ANY of its formers..
     def shouldAddParent(): Boolean = {
-      if (model.last.isDefined) {
-        model.last.get.findTypeCase(tpeCase).isDefined
-      } else {
-        false
-      }
+      model.former.exists(m => m.findTypeCase(tpeCase).isDefined)
     }
 
-    for {
-       pt <- toTargetLanguageType(TypeRep.DataType(model.baseDataType))
+    for {  // find latest model with operation, since that will be the proper one to use
+       //pt <- toTargetLanguageType(TypeRep.DataType(model.baseDataType))
+       pt <- findClass(names.mangle(names.instanceNameOf(latestModelDefiningInterface(model))), names.mangle(names.conceptNameOf(model.baseDataType)))
        _ <- resolveAndAddImport(pt)
        _ <- addImplemented(pt)
 
-       _ <- addParentClass()
+       _ <- addPrimaryParent()
        _ <- if (!shouldAddParent()) {
          for {
            _ <- forEach(tpeCase.attributes) { att => makeField(att) }
@@ -239,15 +342,6 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
        } else {
          Command.skip[ClassContext]
        }
-
-       _ <- forEach (model.flatten.typeCases) {
-             tpe => {
-               for {
-                 priorType <- findClass(names.mangle(model.lastModelWithOperation.head.later(model.findTypeCase(tpe).get).name), names.mangle(names.conceptNameOf(tpe)))
-                ///// _ <- registerLocally(DataType(tpe.name), priorType)
-               } yield ()
-             }
-           }
 
        // if super is being used, then you need to cast to Exp
        _ <- addConstructor(makeConstructor(tpeCase, !shouldAddParent(), useSuper = shouldAddParent()))
@@ -257,28 +351,22 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
     } yield ()
   }
 
-  /** Interpreter has to go back to the former Model which had defined an operation */
-  override def modelDeclaringInterfaceParent(model:Model) : Model = {
-    model.last.getOrElse(model).lastModelWithOperation.headOption.getOrElse(model)     // instead of     getOrElse(model)
-  }
-
   /** Place operation classes in appropriate package. Include ops names as well */
-  def operationNames(domain: Model, tpe:DataTypeCase, ops:Seq[Operation]): Seq[Name] = {
-    val concat = names.mangle(ops.sortWith(_.name < _.name).map(op => names.conceptNameOf(op)).mkString(""))
-    Seq(names.mangle(domain.name), names.mangle(concat + names.conceptNameOf(tpe)))
+  def qualifiedDataTypeCase(domain: GenericModel, tpe:DataTypeCase): Seq[Name] = {
+    Seq(names.mangle(domain.name), names.mangle(names.conceptNameOf(tpe)))
   }
 
-  def generateForOp(model:Model, ops:Seq[Operation], defining:Model, allTypes:Seq[DataTypeCase], domainSpecific: EvolutionImplementationProvider[this.type]) : Generator[ProjectContext, Unit] = {
-    val combinedOps:String = ops.sortWith(_.name < _.name).map(op => names.conceptNameOf(op)).mkString("")
+  def generateForOpForType(ops:Seq[Operation], defining:GenericModel, tpeCase:DataTypeCase, domainSpecific: EvolutionImplementationProvider[this.type]) : Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
-    import paradigm.projectContextCapabilities.debug
-
     for {
-      _ <- forEach (allTypes) { tpeCase => {
-         for {
-           _ <- addClassToProject(makeClassForCase(model, ops, tpeCase, domainSpecific), operationNames(defining, tpeCase, ops) : _ *)
-        } yield ()
-        }
+      _ <- addClassToProject(makeClassForCase(defining, ops, tpeCase, domainSpecific), qualifiedDataTypeCase(defining, tpeCase) : _ *)
+    } yield ()
+  }
+
+  /** Class is generated into 'defining' namespace package.  */
+  def generateForOp(ops:Seq[Operation], defining:GenericModel, allTypes:Seq[DataTypeCase], domainSpecific: EvolutionImplementationProvider[this.type]) : Generator[ProjectContext, Unit] = {
+    for {
+        _ <- forEach (allTypes) { tpeCase => generateForOpForType(ops, defining, tpeCase, domainSpecific)
       }
     } yield ()
   }
@@ -299,6 +387,18 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
       _ <- resolveAndAddImport(cname)
     } yield cname
   }
+
+  def latestModelDefiningNewTypeInterface(domain: GenericModel, tpe:DataTypeCase): GenericModel = {
+    if (domain.isDomainBase || domain.ops.nonEmpty || domain.former.length > 1) {   // handle merge case as well
+      domain
+    } else {
+      // find where tpe was defined and also where last operation was defined and choose later of the two
+      val tpeDefined = domain.findTypeCase(tpe).get
+      val lastOps = latestModelDefiningInterface(domain)
+      lastOps.later(tpeDefined)
+     }
+  }
+
   /** Enables mapping each DataType to the designated ep.?.DT class. */
   def registerTypeCases(domain:GenericModel) : Generator[ProjectContext, Unit] = {
     import ooParadigm.classCapabilities.{addTypeLookupForMethods => _, addTypeLookupForClasses => _, addTypeLookupForConstructors => _,_}
@@ -307,31 +407,18 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
     import ooParadigm.constructorCapabilities._
     import ooParadigm.projectCapabilities._
     import paradigm.projectContextCapabilities._
-    // domain.typeCases.
+
     for {
-      _ <- forEach(domain.flatten.typeCases) { tpe =>
-        for {
-          _ <- addTypeLookupForMethods(TypeRep.DataType(DataType(tpe.name)), paramType[MethodBodyContext](domain, tpe))
-          _ <- addTypeLookupForClasses(TypeRep.DataType(DataType(tpe.name)), paramType[ClassContext](domain, tpe))
-          _ <- addTypeLookupForConstructors(TypeRep.DataType(DataType(tpe.name)), paramType[ConstructorContext](domain, tpe))
-        } yield ()
+      _ <- forEach(domain.flatten.typeCases) { tpe => {
+          val tpeDomain = latestModelDefiningNewTypeInterface(domain, tpe)
+          for {
+            _ <- addTypeLookupForMethods(TypeRep.DataType(DataType(tpe.name)), paramType[MethodBodyContext](tpeDomain, tpe))
+            _ <- addTypeLookupForClasses(TypeRep.DataType(DataType(tpe.name)), paramType[ClassContext](tpeDomain, tpe))
+            _ <- addTypeLookupForConstructors(TypeRep.DataType(DataType(tpe.name)), paramType[ConstructorContext](tpeDomain, tpe))
+          } yield ()
+        }
       }
     } yield()
-  }
-
-  /** Enables mapping each DataType to the designated ep.?.DT class. */
-  def registerLocally(tpe:DataType, paramType:Type) : Generator[ClassContext, Unit] = {
-    import ooParadigm.classCapabilities._
-
-    val dtpeRep = TypeRep.DataType(tpe)
-    println ("register " + tpe.name + " with " + paramType)
-
-    for {
-//      _ <- addTypeLookupForMethods(dtpeRep, Command.lift(paramType))
-//      _ <- addTypeLookupForClasses(dtpeRep, Command.lift(paramType))
-//      _ <- addTypeLookupForConstructors(dtpeRep, Command.lift(paramType))
-        _ <- debug("something")
-    } yield ()
   }
 
   /** What model is delivered has operations which is essential for the mapping. */
@@ -342,9 +429,10 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
     import ooParadigm.methodBodyCapabilities.canFindClassInMethod
     import paradigm.projectContextCapabilities._
 
-    // must always be an operation in FIRST evolution  MISSING FULLY QUALIFIED NAMES HERE HACK
-    // TODO: FIX HERE
-    val baseInterface = baseInterfaceNames(model.lastModelWithOperation.head)
+    // must always be an operation in FIRST evolution
+    // If MERGED, then must derive new one
+    val baseInterface = baseInterfaceNames(latestModelDefiningInterface(model))  // model.lastModelWithOperation.head)
+
     val dtpeRep = TypeRep.DataType(model.baseDataType)
     for {
       _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(baseInterface : _*))
@@ -353,54 +441,149 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
     } yield ()
   }
 
-  def implement(gdomain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
+  def primaryParent(model:GenericModel, tpeCase:DataTypeCase): GenericModel = {
+    val modelDefiningType = model.findTypeCase(tpeCase)
+    val pastModel = model.former.flatMap(m => m.lastModelWithOperation).head
+    modelDefiningType.getOrElse(pastModel).later(pastModel)
+  }
 
-    val domain = gdomain match {
-      case _:Model => gdomain.asInstanceOf[Model]
-      case _ => gdomain.linearize
+  // find those operations that are not defined by the primary parent
+  def nonPrimaryParentOps(domain:GenericModel, tpe:DataTypeCase) : Seq[Operation] = {
+    (domain.flatten.ops.toSet -- primaryParent(domain, tpe).flatten.ops).toSeq
+  }
+
+  // Have to process models in chronological order to get the Exp mappings properly done.
+  // make sure that LATER merges do not generate.
+  def implement(model: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
+    def implementInner(domain: GenericModel): Generator[paradigm.ProjectContext, Unit] = {
+
+      val opsToHandle = (domain.ops ++ domain.flatten.ops.distinct.filter(op => op.isProducer(domain))).distinct
+      if (domain.isDomainBase) {
+        Command.skip[paradigm.ProjectContext]
+      } else {
+        for {
+          _ <- registerTypeMapping(domain) // this must be first SO Exp is properly bound within interfaces
+          _ <- registerTypeCases(domain)   // handle DataType classes as well for interpreter
+          _ <- if (domain.ops.nonEmpty) {   // MERGE must be here as well...
+            for {
+             _ <- addIntermediateInterfaceToProject(domain)   // Exp for each evolution that needs one
+
+              // needed for MERGE situation... (was domain.flatten.ops.distinct)
+              _ <- generateForOp(opsToHandle, domain, domain.flatten.typeCases, domainSpecific)
+            } yield ()
+          } else {
+           Command.skip[paradigm.ProjectContext]
+          }   //
+          // if extending a past operation chain, NO NEED for past ops
+          // new data types need all operations
+          _ <- generateForOp(domain.flatten.ops.distinct, domain, domain.typeCases, domainSpecific)
+
+          // new operations (and producers from the past) need generation for types IF a new Exp is required.
+          _ <- if (domain == latestModelDefiningInterface(domain)) {
+            for {
+               _ <- forEach(domain.former.flatMap(m => m.typeCases).distinct) { tpe => {
+                 generateForOpForType((nonPrimaryParentOps(domain, tpe) ++ domain.ops ++ domain.pastOperations.filter(op => op.isProducer(domain))).distinct,
+                   domain, tpe, domainSpecific)
+               }}
+            } yield ()
+          } else {
+            Command.skip[paradigm.ProjectContext]
+          }
+        } yield()
+      }
     }
 
-    /**
-     * For each operation must generate a sequence of classes, one per subtype.
-     * Must make sure we include ALL subtypes, not just ones from the past.
-     */
+    /** have to choose appropriate branch for each data type, and then re-implement non-producer
+     * methods that are not inherited.
+     *  */
+    def implementMerged(domain: GenericModel): Generator[paradigm.ProjectContext, Unit] = {
+      val opsToHandle = domain.flatten.ops.distinct
+       for {
+          _ <- registerTypeCases(domain)   // handle DataType classes as well for interpreter
+
+          _ <- registerTypeMapping(domain) // this must be first SO Exp is properly bound within interfaces
+          _ <- addIntermediateInterfaceToProject(domain)   // Exp for each evolution that needs one
+
+          // needed for MERGE situation... (was domain.flatten.ops.distinct)
+          _ <- generateForOp(opsToHandle, domain, domain.flatten.typeCases, domainSpecific)
+
+          // if extending a past operation chain, NO NEED for past ops
+          // new data types need all operations
+          _ <- generateForOp(domain.flatten.ops.distinct, domain, domain.typeCases, domainSpecific)
+
+          // new operations (and producers from the past) need generation for types
+          _ <- forEach(domain.former.flatMap(m => m.typeCases).distinct) { tpe => {
+            generateForOpForType((nonPrimaryParentOps(domain, tpe) ++ domain.ops ++ domain.pastOperations.filter(op => op.isProducer(domain))).distinct,
+              domain, tpe, domainSpecific)
+          }}
+//
+//          _ <- generateForOp((domain.ops ++ domain.pastOperations.filter(op => op.isProducer(domain))).distinct,
+//            domain, domain.former.flatMap(m => m.typeCases).distinct, domainSpecific)
+        } yield()
+    }
+
     for {
-      _ <- registerTypeMapping(domain)
       _ <- domainSpecific.initialize(this)
-
-      _ <- makeBase(domain.baseDataType, Seq.empty)
-
-     // required to do this first so interface/types are found
-      _ <- forEach (domain.inChronologicalOrder) { model => {
-        if (model.ops.nonEmpty) {
-         for {
-            _ <- registerTypeMapping(model) // this must be first SO Exp is properly bound within interfaces
-            _ <- registerTypeCases(model)   // handle DataType classes as well for interpreter
-            _ <- addIntermediateInterfaceToProject(model, domainSpecific, None)
-
-            _ <- generateForOp(model, model.ops, model, model.pastDataTypes,domainSpecific)
-
-            _ <- if (model.typeCases.nonEmpty) {
-              for {
-                _ <- forEach(model.toSeq.filter(mi => mi.ops.nonEmpty)) { mi =>
-                  generateForOp(mi, mi.ops, model, model.typeCases, domainSpecific)
-                }
-              } yield ()
-            } else {
-              Command.skip[ProjectContext]
-            }
-          } yield ()
-        } else {
-          // no operations. Must spit out new types and pull together all operations from the past.
-          for {
-            _ <- registerTypeCases(model)   // handle DataType classes as well for interpreter
-            _ <- generateForOp(model.lastModelWithOperation.head, model.flatten.ops, model, model.typeCases, domainSpecific)
-          } yield ()
-        }
-      }
+      _ <- makeBase(model.baseDataType, Seq.empty)
+      _ <- forEach(model.inChronologicalOrder) { m => {
+           if (m.former.length > 1) {
+             implementMerged(m)               // Merged are handled specially
+           } else {
+             implementInner(m)
+           }
+         }
       }
     } yield ()
   }
+
+//  def implement2(gdomain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
+//
+//    val domain = gdomain match {
+//      case _:Model => gdomain.asInstanceOf[Model]
+//      case _ => gdomain.linearize
+//    }
+//
+//    /**
+//     * For each operation must generate a sequence of classes, one per subtype.
+//     * Must make sure we include ALL subtypes, not just ones from the past.
+//     */
+//    for {
+//      _ <- registerTypeMapping(domain)
+//      _ <- domainSpecific.initialize(this)
+//
+//      _ <- makeBase(domain.baseDataType, Seq.empty)
+//
+//     // required to do this first so interface/types are found. Dealing with MERGE is issue...
+//      _ <- forEach (domain.inChronologicalOrder) { model => {
+//        if (model.ops.nonEmpty) {
+//         for {
+//            _ <- registerTypeMapping(model) // this must be first SO Exp is properly bound within interfaces
+//            _ <- registerTypeCases(model)   // handle DataType classes as well for interpreter
+//            _ <- addIntermediateInterfaceToProject(model, domainSpecific, None)
+//
+//            _ <- generateForOp(model, model.ops, model, model.pastDataTypes,domainSpecific)
+//
+//            _ <- if (model.typeCases.nonEmpty) {
+//              for {
+//                _ <- forEach(model.toSeq.filter(mi => mi.ops.nonEmpty)) { mi =>
+//                  generateForOp(mi, mi.ops, model, model.typeCases, domainSpecific)
+//                }
+//              } yield ()
+//            } else {
+//              Command.skip[ProjectContext]
+//            }
+//          } yield ()
+//        } else {
+//          // no operations. Must spit out new types and pull together all operations from the past.
+//          for {
+//            _ <- registerTypeCases(model)   // handle DataType classes as well for interpreter
+//            _ <- generateForOp(model.lastModelWithOperation.head, model.flatten.ops, model, model.typeCases, domainSpecific)
+//          } yield ()
+//        }
+//      }
+//      }
+//    } yield ()
+//  }
 }
 
 object Interpreter {

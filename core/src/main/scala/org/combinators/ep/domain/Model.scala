@@ -285,7 +285,7 @@ class GenericModel(val name:String,
   }
 
   /**
-   * Return the earlier model given the evolution history.
+   * Return the later model given the evolution history.
    * Note that if models are the same, then just return the same one.
    */
   def later(other:GenericModel):GenericModel = {

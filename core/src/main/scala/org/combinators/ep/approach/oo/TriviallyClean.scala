@@ -68,11 +68,44 @@ trait TriviallyClean extends ApproachImplementationProvider {
           canAddImport: Understands[Context, AddImport[paradigm.syntax.Import]]
   ): Generator[Context, paradigm.syntax.Type] = {
 
+    val _latestDomainDefiningInterface = latestModelDefiningInterface(domain)
     for {
       baseInterfaceType <-
-        FindClass[paradigm.syntax.Name, paradigm.syntax.Type](Seq(names.mangle(names.instanceNameOf(domain)), names.mangle(names.conceptNameOf(domain.baseDataType)))).interpret(canFindClass)
+        FindClass[paradigm.syntax.Name, paradigm.syntax.Type](Seq(names.mangle(names.instanceNameOf(_latestDomainDefiningInterface)), names.mangle(names.conceptNameOf(_latestDomainDefiningInterface.baseDataType)))).interpret(canFindClass)
       _ <- resolveAndAddImport(baseInterfaceType)
     } yield baseInterfaceType
+  }
+
+  def latestModelDefiningInterface(domain: GenericModel): GenericModel = {
+    if (domain.isDomainBase || domain.ops.nonEmpty || domain.former.length > 1) {   // handle merge case as well
+      domain
+    } else {
+      // find where tpe was defined and also where last operation was defined and choose later of the two
+      // will only have one, since merge case handled above.
+      // could be one of our ancestors is a merge point
+      latestModelDefiningInterface(domain.former.head)
+    }
+  }
+
+  def newerTypeCasesSinceInterface(domain:GenericModel) : Seq[DataTypeCase] = {
+    val lastExp = latestModelDefiningInterface(domain)
+    val toRemove = lastExp.flatten.typeCases //lastExp.former.flatMap(m => m.typeCases)
+
+    // will have to allow those IN the interface extension as well
+    domain.flatten.typeCases.filterNot(tpe => toRemove.contains(tpe)).seq
+  }
+
+  def newerTypeCasesIncludingInterface(domain:GenericModel) : Seq[DataTypeCase] = {
+    val lastExp = latestModelDefiningInterface(domain)
+    if (lastExp == domain) {
+      domain.flatten.typeCases
+    } else {
+      domain.typeCases
+//      val toRemove = lastExp.former.flatMap(m => m.typeCases)
+//
+//      // will have to allow those IN the interface extension as well
+//      domain.flatten.typeCases.filterNot(tpe => toRemove.contains(tpe)).seq
+    }
   }
 
   // binary methods need fixing since EARLIER evolutions would use EARLIER types
@@ -143,42 +176,53 @@ trait TriviallyClean extends ApproachImplementationProvider {
          canFindClass: Understands[Context, FindClass[paradigm.syntax.Name, paradigm.syntax.Type]],
          canResolveImport: Understands[Context, ResolveImport[paradigm.syntax.Import, paradigm.syntax.Type]],
          canAddImport: Understands[Context, AddImport[paradigm.syntax.Import]],
-  ): Generator[Context, Option[paradigm.syntax.Type]] = {
-    val _latestModelDefiningDataTypeCaseInterface = if (domain.findTypeCase(dataTypeCase).nonEmpty) {
-    Some(domain)
-  } else {
-    None
-  }
+  ): Generator[Context, Option[paradigm.syntax.Type]] = { // this should be if DEFINED here...
+//    val _latestModelDefiningDataTypeCaseInterface = if (domain.typeCases.contains(dataTypeCase)) {//if (domain.findTypeCase(dataTypeCase).nonEmpty) {
+//    Some(domain)
+//  } else {
+//    None
+//  }
 
+    val _latestModelDefiningDataTypeCaseInterface = if (domain.findTypeCase(dataTypeCase).isDefined) {
+      Some(latestModelDefiningInterface(domain).later(domain.findTypeCase(dataTypeCase).get))
+    } else {
+      None
+    }
     if (_latestModelDefiningDataTypeCaseInterface.isEmpty) {
       Command.lift[Context, Option[paradigm.syntax.Type]](Option.empty)
     } else {
-      for {
-        dataTypeCaseInterface <- FindClass[paradigm.syntax.Name, paradigm.syntax.Type](Seq(names.mangle(names.instanceNameOf(_latestModelDefiningDataTypeCaseInterface.get)), names.mangle(names.conceptNameOf(dataTypeCase)))).interpret(canFindClass)
-        _ <- resolveAndAddImport(dataTypeCaseInterface)
-      } yield Some(dataTypeCaseInterface)
-    }
+          for {
+            dataTypeCaseInterface <- FindClass[paradigm.syntax.Name, paradigm.syntax.Type](Seq(names.mangle(names.instanceNameOf(_latestModelDefiningDataTypeCaseInterface.get)), names.mangle(names.conceptNameOf(dataTypeCase)))).interpret(canFindClass)
+            _ <- resolveAndAddImport(dataTypeCaseInterface)
+          } yield Some(dataTypeCaseInterface)
+        }
   }
 
   def finalizedTypeCaseClass[Context](domain: GenericModel, dataTypeCase:DataTypeCase)(implicit
         canFindClass: Understands[Context, FindClass[paradigm.syntax.Name, paradigm.syntax.Type]],
         canResolveImport: Understands[Context, ResolveImport[paradigm.syntax.Import, paradigm.syntax.Type]],
         canAddImport: Understands[Context, AddImport[paradigm.syntax.Import]],
-  ): Generator[Context, Option[paradigm.syntax.Type]] = {
-    val _latestModelDefiningDataTypeCaseInterface = if (domain.findTypeCase(dataTypeCase).nonEmpty) {
-      Some(domain)
-    } else {
-      None
+  ): Generator[Context, paradigm.syntax.Type] = {
+    def latestDeclaringTypeCase(model:GenericModel): GenericModel = {
+      if (model.typeCases.contains(dataTypeCase)) {
+        model
+      } else {
+        if (model == latestModelDefiningInterface(model)) {
+          model
+        } else {
+          latestDeclaringTypeCase(model.former.head) //   can be sure there is only one, since merge is handled above
+        }
+      }
     }
 
-    if (_latestModelDefiningDataTypeCaseInterface.isEmpty) {
-      Command.lift[Context, Option[paradigm.syntax.Type]](Option.empty)
-    } else {
-      for {
-        dataTypeCaseInterface <- FindClass[paradigm.syntax.Name, paradigm.syntax.Type](Seq(names.mangle(names.instanceNameOf(_latestModelDefiningDataTypeCaseInterface.get)), ComponentNames.finalizedPackage, names.mangle(names.conceptNameOf(dataTypeCase)))).interpret(canFindClass)
+    // either domain directly defines type case or you need latest one defining interface
+    // latest one defining type case
+    val _latestModelDefiningDataTypeCaseInterface = latestDeclaringTypeCase(domain)
+
+    for {
+        dataTypeCaseInterface <- FindClass[paradigm.syntax.Name, paradigm.syntax.Type](Seq(names.mangle(names.instanceNameOf(_latestModelDefiningDataTypeCaseInterface)), ComponentNames.finalizedPackage, names.mangle(names.conceptNameOf(dataTypeCase)))).interpret(canFindClass)
         _ <- resolveAndAddImport(dataTypeCaseInterface)
-      } yield Some(dataTypeCaseInterface)
-    }
+      } yield dataTypeCaseInterface
   }
 
   def setAttributeGetterSignature(domain: GenericModel, attribute: abstractions.Attribute): Generator[paradigm.MethodBodyContext, Unit] = {
@@ -242,8 +286,13 @@ trait TriviallyClean extends ApproachImplementationProvider {
    * or require an update because of missing/overwritten operations or merging of multiple branches.
    */
   def dataTypeCasesWithNewOperations(evolutionImplementationProvider: EvolutionImplementationProvider[this.type], domain: GenericModel): Map[DataTypeCase, Set[Operation]] = {
+    val lastExp = latestModelDefiningInterface(domain)
     val flatDomain = domain.flatten
-    val allDataTypeCases = flatDomain.typeCases.toSet
+    val allDataTypeCases = if (lastExp == domain) {
+      flatDomain.typeCases.toSet
+    } else {
+      domain.typeCases    //flatDomain.typeCases.toSet
+    }
     val allOperations = flatDomain.ops.toSet
 
     allDataTypeCases.foldLeft(Map.empty[DataTypeCase, Set[Operation]]) { (resultMap, tpeCase) =>
@@ -301,12 +350,12 @@ trait TriviallyClean extends ApproachImplementationProvider {
           addAbstractMethod(ComponentNames.getter(attribute), setAttributeGetterSignature(domain, attribute))
         }
 
-        _ <- forEach (domain.flatten.typeCases) { tpeCase =>
+        _ <- forEach (newerTypeCasesSinceInterface(domain)) { tpeCase =>   // was domain.flatten.typeCases
           addTypeLookupForMethods(FinalizedDataTypeCase(tpeCase), finalizedTypeCaseClass(domain, tpeCase)(
             canFindClass = ooParadigm.methodBodyCapabilities.canFindClassInMethod,
             canResolveImport = paradigm.methodBodyCapabilities.canResolveImportInMethod,
             canAddImport = paradigm.methodBodyCapabilities.canAddImportInMethodBody
-          ).map(otpe => otpe.get))
+          ))
         }
 
         // Add methods for new operations
@@ -378,7 +427,11 @@ trait TriviallyClean extends ApproachImplementationProvider {
       for {
         // Inherit non finalized data type case implementation
         nonFinalizedDataTypeCaseInterface <- mostSpecificTypeCaseInterface(domain, newDataTypeCase)
-        _ <- addImplemented(nonFinalizedDataTypeCaseInterface.get)
+        _ <- if (nonFinalizedDataTypeCaseInterface.isDefined) {
+          addImplemented(nonFinalizedDataTypeCaseInterface.get)
+        } else {
+          Command.skip[ooParadigm.ClassContext]
+        }
 
         // Add fields and their getters
         baseTypeInterface <- mostSpecificBaseInterfaceType(domain)
@@ -399,7 +452,7 @@ trait TriviallyClean extends ApproachImplementationProvider {
 
     import ooParadigm.projectCapabilities._
     for {
-      _ <- forEach(domain.flatten.typeCases) { tpeCase =>
+      _ <- forEach(newerTypeCasesIncludingInterface(domain)) { tpeCase =>   // was domain.flatten.typeCases
         addClassToProject(makeNewFinalizedTypeCaseClass(tpeCase), names.mangle(names.instanceNameOf(domain)), ComponentNames.finalizedPackage, names.mangle(names.conceptNameOf(tpeCase)))
       }
     } yield ()
@@ -409,9 +462,18 @@ trait TriviallyClean extends ApproachImplementationProvider {
     def implementRecursive(domain: GenericModel): Generator[paradigm.ProjectContext, Unit] = {
 
       for {
-        _ <- addNewTypeInterface(domain)
+        _ <- registerTypeMapping(domain)    // handle DataType classes as well for interpreter
+        _ <- if (domain == latestModelDefiningInterface(domain)) {
+          for {
+            _ <- addNewTypeInterface(domain)   // Exp for each evolution that needs one
+          } yield ()
+        } else {
+          Command.skip[paradigm.ProjectContext]
+        }
+
         _ <- addDataTypeCaseInterfaces(domainSpecific, domain)
         _ <- addFinalizedTypeCaseClasses(domain)
+
         _ <- forEach(domain.former.filterNot(p => p.isDomainBase)) { ancestor => implementRecursive(ancestor) }
       } yield ()
 
@@ -422,7 +484,9 @@ trait TriviallyClean extends ApproachImplementationProvider {
     } yield ()
   }
 
-  def registerTypeMapping(model: GenericModel): Generator[paradigm.ProjectContext, Unit] = {
+
+
+  def registerTypeMapping(domain: GenericModel): Generator[paradigm.ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
     import ooParadigm.classCapabilities.canFindClassInClass
     import ooParadigm.constructorCapabilities.canFindClassInConstructor
@@ -431,20 +495,32 @@ trait TriviallyClean extends ApproachImplementationProvider {
     import org.combinators.ep.generator.Understands
     import org.combinators.ep.generator.paradigm.FindClass
 
-    val dtpeRep = TypeRep.DataType(model.baseDataType)
+    // all type cases that were defined AFTER last Exp need to be registered
+    val _latest = latestModelDefiningInterface(domain)
+    val seqs = domain.flatten.typeCases.map(tpe => {
+      (tpe, domain.findTypeCase(tpe).get.later(_latest))   // either find where it was defined OR a later interface
+    })
+
+    val dtpeRep = TypeRep.DataType(domain.baseDataType)
     for {
-      _ <- forEach (model.flatten.typeCases) { tpeCase =>
-        for {
-          _ <- addTypeLookupForMethods(FinalizedDataTypeCase(tpeCase), finalizedTypeCaseClass(model, tpeCase)(canFindClass = ooParadigm.methodBodyCapabilities.canFindClassInMethod, canAddImport = paradigm.methodBodyCapabilities.canAddImportInMethodBody, canResolveImport = paradigm.methodBodyCapabilities.canResolveImportInMethod).map(opte => opte.get))
-          _ <- addTypeLookupForClasses(FinalizedDataTypeCase(tpeCase), finalizedTypeCaseClass(model, tpeCase)(canFindClass = ooParadigm.classCapabilities.canFindClassInClass, canAddImport = ooParadigm.classCapabilities.canAddImportInClass, canResolveImport = ooParadigm.classCapabilities.canResolveImportInClass).map(opte => opte.get))
-          _ <- addTypeLookupForConstructors(FinalizedDataTypeCase(tpeCase), finalizedTypeCaseClass(model, tpeCase)(canFindClass = ooParadigm.constructorCapabilities.canFindClassInConstructor, canAddImport = ooParadigm.constructorCapabilities.canAddImportInConstructor, canResolveImport = ooParadigm.constructorCapabilities.canResolveImportInConstructor).map(opte => opte.get))
+       _ <- forEach (seqs) { case (tpeCase, model) =>   // passes on capabilities so it knows which generators to use...
+         val intermediate = finalizedTypeCaseClass(model, tpeCase)(canFindClass = ooParadigm.methodBodyCapabilities.canFindClassInMethod, canAddImport = paradigm.methodBodyCapabilities.canAddImportInMethodBody, canResolveImport = paradigm.methodBodyCapabilities.canResolveImportInMethod)
+
+         for {
+          _ <- addTypeLookupForMethods(FinalizedDataTypeCase(tpeCase), intermediate)
+          _ <- addTypeLookupForClasses(FinalizedDataTypeCase(tpeCase), finalizedTypeCaseClass(model, tpeCase)(canFindClass = ooParadigm.classCapabilities.canFindClassInClass, canAddImport = ooParadigm.classCapabilities.canAddImportInClass, canResolveImport = ooParadigm.classCapabilities.canResolveImportInClass))
+          _ <- addTypeLookupForConstructors(FinalizedDataTypeCase(tpeCase), finalizedTypeCaseClass(model, tpeCase)(canFindClass = ooParadigm.constructorCapabilities.canFindClassInConstructor, canAddImport = ooParadigm.constructorCapabilities.canAddImportInConstructor, canResolveImport = ooParadigm.constructorCapabilities.canResolveImportInConstructor))
         } yield ()
       }
 
-      _ <- addTypeLookupForMethods(dtpeRep, mostSpecificBaseInterfaceType(model)(canFindClass=ooParadigm.methodBodyCapabilities.canFindClassInMethod, canAddImport =paradigm.methodBodyCapabilities.canAddImportInMethodBody, canResolveImport = paradigm.methodBodyCapabilities.canResolveImportInMethod))
-      _ <- addTypeLookupForClasses(dtpeRep, mostSpecificBaseInterfaceType(model)(canFindClass=ooParadigm.classCapabilities.canFindClassInClass, canAddImport = ooParadigm.classCapabilities.canAddImportInClass, canResolveImport = ooParadigm.classCapabilities.canResolveImportInClass))
-      _ <- addTypeLookupForConstructors(dtpeRep, mostSpecificBaseInterfaceType(model)(canFindClass=ooParadigm.constructorCapabilities.canFindClassInConstructor, canAddImport = ooParadigm.constructorCapabilities.canAddImportInConstructor, canResolveImport = ooParadigm.constructorCapabilities.canResolveImportInConstructor))
+      _ <- addTypeLookupForMethods(dtpeRep, mostSpecificBaseInterfaceType(domain)(canFindClass=ooParadigm.methodBodyCapabilities.canFindClassInMethod, canAddImport =paradigm.methodBodyCapabilities.canAddImportInMethodBody, canResolveImport = paradigm.methodBodyCapabilities.canResolveImportInMethod))
+      _ <- addTypeLookupForClasses(dtpeRep, mostSpecificBaseInterfaceType(domain)(canFindClass=ooParadigm.classCapabilities.canFindClassInClass, canAddImport = ooParadigm.classCapabilities.canAddImportInClass, canResolveImport = ooParadigm.classCapabilities.canResolveImportInClass))
+      _ <- addTypeLookupForConstructors(dtpeRep, mostSpecificBaseInterfaceType(domain)(canFindClass=ooParadigm.constructorCapabilities.canFindClassInConstructor, canAddImport = ooParadigm.constructorCapabilities.canAddImportInConstructor, canResolveImport = ooParadigm.constructorCapabilities.canResolveImportInConstructor))
     } yield ()
+  }
+
+  def implement22(tests: Map[GenericModel, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
+    Command.skip[paradigm.ProjectContext]
   }
 
   override def implement(tests: Map[GenericModel, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {

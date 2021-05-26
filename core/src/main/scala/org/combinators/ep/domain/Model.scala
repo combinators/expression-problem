@@ -26,7 +26,7 @@ class GenericModel(val name:String,
 
   /** Straight merge of two Generic models into one, combining all typeCases, ops and formers.  */
   def merge(name:String,  typeCases:Seq[DataTypeCase], ops:Seq[Operation], others:Seq[GenericModel]) : GenericModel = {
-    new GenericModel(name, typeCases, ops, others, baseDataType)
+    new GenericModel(name, typeCases, ops, Seq(this) ++ others, baseDataType)
   }
 
   // only the BASE has this set

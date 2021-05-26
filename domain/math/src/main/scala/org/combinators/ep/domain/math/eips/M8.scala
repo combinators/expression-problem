@@ -53,7 +53,7 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
       }
 
       def applicable(forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        Set(math.M4.Simplify,math.M4.Collect,math.M2.PrettyP,math.M0.Eval,math.I1.MultBy,math.M7.PowBy,math.M6.Equals,math.M5.Identifier,Operation.asTree).contains(potentialRequest.op) &&
+        Set(math.M4.Simplify,math.M4.Collect,math.M2.PrettyP,math.M0.Eval,math.I1.MultBy,math.M7.PowBy,math.M6.Equals,math.M6.Eql,math.M5.Identifier,Operation.asTree).contains(potentialRequest.op) &&
           Set(math.M8.Inv).contains(potentialRequest.tpeCase)
       }
 
@@ -183,8 +183,11 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
           case math.I1.MultBy => m7i2Provider.genericLogic(forApproach)(onRequest)
           case math.M7.PowBy => m7i2Provider.genericLogic(forApproach)(onRequest)
           case math.M6.Equals => m7i2Provider.genericLogic(forApproach)(onRequest)
+          case math.M6.Eql => m7i2Provider.genericLogic(forApproach)(onRequest)
           case math.M5.Identifier =>
             m7i2Provider.genericLogic(forApproach)(onRequest)
+          case op if op.tags.contains(math.M6.IsOp) => m7i2Provider.genericLogic(forApproach)(onRequest)
+
           case op if op == Operation.asTree => m7i2Provider.genericLogic(forApproach)(onRequest)
 
           case math.M0.Eval =>

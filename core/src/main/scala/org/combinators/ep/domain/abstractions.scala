@@ -106,12 +106,15 @@ package object abstractions {
     def right(implicit domain: GenericModel) = Attribute("right", TypeRep.DataType(domain.baseDataType))
   }
 
+  /** Used to mark special operations (needed for isOp logic) and possible useful in other ways. */
+  trait Tag { }
+
   /** Models a named operation on a [[DataType]] with parameters and a return type,
     * which defaults to Unit (no return value).
     */
   case class Operation(name: String,
     returnType: TypeRep = TypeRep.Unit,
-    parameters: Seq[Parameter] = Seq.empty) {
+    parameters: Seq[Parameter] = Seq.empty, tags:Seq[Tag] = Seq.empty) {
 
     /** Determines if this is a binary method, which has a single parameter of
       * the base type of the implicitly given domain model.

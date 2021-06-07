@@ -24,9 +24,11 @@ abstract class VisitorSideEffect extends OOApproachImplementationProvider with S
   import syntax._
   val impParadigm: Imperative.WithBase[MethodBodyContext,paradigm.type]
 
-  lazy val getValue: Name = names.mangle("getValue")
-  lazy val visitImpl: Name = names.mangle("visitImpl")
-  lazy val value: Name = names.mangle("value")
+  object ComponentNames {
+    val getValue: Name = names.mangle("getValue")
+    val visitImpl: Name = names.mangle("visitImpl")
+    val value: Name = names.mangle("value")
+  }
 
   /**
    * Dispatch in visitor we need to find context on which to accept a visitor.
@@ -73,7 +75,7 @@ abstract class VisitorSideEffect extends OOApproachImplementationProvider with S
       _ <- addBlockDefinitions(Seq(stmt))
 
       // obtain actual result expression by getting method and then invoking it (with empty seq)
-      resultOfMethod <- getMember(fvar,  getValue)
+      resultOfMethod <- getMember(fvar,  ComponentNames.getValue)
       result <- apply(resultOfMethod, Seq.empty)
 
     } yield result
@@ -180,11 +182,11 @@ abstract class VisitorSideEffect extends OOApproachImplementationProvider with S
       returnTpe <- toTargetLanguageType(op.returnType)
       _ <- resolveAndAddImport(returnTpe)
 
-      _ <- addField(value, returnTpe)
-      field <- getField(value)
-      _ <- addMethod(getValue, returnValue(op.returnType, field))
+      _ <- addField(ComponentNames.value, returnTpe)
+      field <- getField(ComponentNames.value)
+      _ <- addMethod(ComponentNames.getValue, returnValue(op.returnType, field))
       _ <- forEach (domain.typeCases) { tpe =>
-        addMethod(visitImpl, super.makeImplementation(domain.baseDataType, tpe, op, domainSpecific))
+        addMethod(ComponentNames.visitImpl, super.makeImplementation(domain.baseDataType, tpe, op, domainSpecific))
       }
       _ <- addImplemented(visitorInterface)
     } yield ()
@@ -262,12 +264,12 @@ abstract class VisitorSideEffect extends OOApproachImplementationProvider with S
       unitType <- toTargetLanguageType(TypeRep.Unit)
       _ <- makeVisitSignature(tpeCase, unitType)
       thisRef <- selfReference()
-      impl <- getMember(thisRef, visitImpl)
+      impl <- getMember(thisRef, ComponentNames.visitImpl)
       args <- getArguments().map(_.map(_._3))
       result <- apply(impl, args)
 
       // now need to store it. AND add those statements to the method body
-      storedField <- getMember(thisRef, value)
+      storedField <- getMember(thisRef, ComponentNames.value)
       stmt <- assignVar(storedField, result)
       _ <- addBlockDefinitions(Seq(stmt))
 

@@ -44,7 +44,7 @@ trait FactoryConcepts extends ApproachImplementationProvider {
    * @param typeName
    * @return
    */
-  def createFactoryOp(model:Model, op:Operation, typeName:Name): Generator[ClassContext, Unit] = {
+  def createFactoryOp(model:GenericModel, op:Operation, typeName:Seq[Name]): Generator[ClassContext, Unit] = {
     import ooParadigm.classCapabilities._
     for {
       _ <- addMethod(factoryNameOp(Some(model), op), makeFactoryOperationImpl(model, op, typeName))
@@ -52,7 +52,7 @@ trait FactoryConcepts extends ApproachImplementationProvider {
   }
 
   // TODO: would love to avoid duplicating contexts
-  def createTestFactoryOp(model:GenericModel, op:Operation, typeName:Name): Generator[TestContext, Unit] = {
+  def createTestFactoryOp(model:GenericModel, op:Operation, typeName:Seq[Name]): Generator[TestContext, Unit] = {
     import ooParadigm.testCapabilities._
     for {
       _ <- addMethod(factoryNameOp(Some(model), op), makeFactoryOperationImpl(model, op, typeName))
@@ -69,7 +69,7 @@ trait FactoryConcepts extends ApproachImplementationProvider {
    * TODO: Eventually will have to add parameters...
    * @return
    */
-  def makeFactoryOperationImpl(model:GenericModel, op: Operation, typeName:Name): Generator[MethodBodyContext, Option[Expression]] = {
+  def makeFactoryOperationImpl(model:GenericModel, op: Operation, typeName:Seq[Name]): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
 

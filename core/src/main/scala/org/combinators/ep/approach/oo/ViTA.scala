@@ -87,11 +87,11 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    * @param domainSpecific
    * @return
    */
-   def makeViTAImplementation(model:GenericModel, tpe: DataType,
-                                  tpeCase: DataTypeCase,
-                                  op: Operation,
-                                  domainSpecific: EvolutionImplementationProvider[this.type]
-                                 ): Generator[MethodBodyContext, Option[Expression]] = {
+  def makeViTAImplementation(model:GenericModel, tpe: DataType,
+                             tpeCase: DataTypeCase,
+                             op: Operation,
+                             domainSpecific: EvolutionImplementationProvider[this.type]
+                            ): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
     import polymorphics.methodBodyCapabilities._
@@ -172,12 +172,12 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       // if applicable model is self then WE want to do something, so we have to delegate to EIP
       // to provide implementation; otherwise we fall back to default
       result <- if (applicableModel == model) {
-          domainSpecific.logic(this)(receivedRequest)
-        } else {
+        domainSpecific.logic(this)(receivedRequest)
+      } else {
 
-          // NOW have to find which of my former branches because this is a producer op
-         producerConvert(model.former.find(gm => applicableModel.before(gm) || gm == applicableModel).get)
-        }
+        // NOW have to find which of my former branches because this is a producer op
+        producerConvert(model.former.find(gm => applicableModel.before(gm) || gm == applicableModel).get)
+      }
 
     } yield result
   }
@@ -197,7 +197,7 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       }
     } yield group
 
-//    findClass(names.mangle(domainDefiningType.former.get.name), derivedInterfaceName(current))
+    //    findClass(names.mangle(domainDefiningType.former.get.name), derivedInterfaceName(current))
   }
 
   /**
@@ -282,11 +282,11 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
   def makeDerivedInterface(tpe: DataType, tpeCase: DataTypeCase, model:GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
     val makeClass: Generator[ClassContext, Unit] = {
       import classCapabilities._
-//      // Either generate an implementation for every operation if data type is declared in this model, or just the new ones.
-//      val opsToGenerate =
-//        if (model.findTypeCase(tpeCase).contains(model)) {
-//          model.flatten.ops
-//        } else model.ops
+      //      // Either generate an implementation for every operation if data type is declared in this model, or just the new ones.
+      //      val opsToGenerate =
+      //        if (model.findTypeCase(tpeCase).contains(model)) {
+      //          model.flatten.ops
+      //        } else model.ops
 
       def extendParents(genType:Seq[Type]):Generator[ClassContext,Unit] = {
         import genericsParadigm.classCapabilities._
@@ -720,7 +720,7 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       }
 
       _ <- if (domain.former.nonEmpty) {
-       extendParents
+        extendParents
       } else {
         for {
           parent <- findClass(Factory)
@@ -932,7 +932,7 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
     Seq(names.mangle(domain.name), Factory)
   }
 
-    override def implement(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
+  override def implement(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     import paradigm.projectContextCapabilities._
     import ooParadigm.projectCapabilities._
 
@@ -985,7 +985,7 @@ trait ViTA extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    * Note: shouldn't have to copy entire thing. Better to provide ability to extend inner part into which
    * the factory methods are injected.
    * */
-   override def implement(tests: Map[GenericModel, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
+  override def implement(tests: Map[GenericModel, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
     import projectContextCapabilities._
     import paradigm.compilationUnitCapabilities._
     import paradigm.testCapabilities._

@@ -33,6 +33,8 @@ object M6 {
       override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
         op match {
           case math.M6.Equals => Set(Operation.asTree)
+          case math.M6.Eql => math.M6.isOps(model.flatten.typeCases).toSet
+          case op if math.M6.isOps(model.flatten.typeCases).contains(op) => Set(math.M6.Eql)
           case _ => Set.empty
         }
       }

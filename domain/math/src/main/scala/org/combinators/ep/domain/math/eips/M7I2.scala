@@ -48,9 +48,13 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
         } yield ()
       }
 
-      /** Nothing special here */
+      /** Eql dependencies propagate. */
       override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
-        Set.empty
+        op match {
+          case math.M6.Eql => math.M6.isOps(model.flatten.typeCases).toSet
+          case op if math.M6.isOps(model.flatten.typeCases).contains(op) => Set(math.M6.Eql)
+          case _ => Set.empty
+        }
       }
 
       // TODO: Why isn't PrettyP in this applicable check, since it appears below in the applicableIn. Because it was there before the branching,

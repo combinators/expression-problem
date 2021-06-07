@@ -22,7 +22,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
   import paradigm._
   import syntax._
   private final val times: scala.collection.mutable.Map[String, BigInt] =
-      scala.collection.mutable.Map.empty[String, BigInt].withDefaultValue(0)
+    scala.collection.mutable.Map.empty[String, BigInt].withDefaultValue(0)
 
   private def time[R](location: String)(x: => R): R = {
     val before = System.currentTimeMillis()
@@ -283,7 +283,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
    */
   def properFinalized[Ctxt](domain:GenericModel,att:Attribute)
                            (implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]],
-                                     canToTargetLanguage: Understands[Ctxt, ToTargetLanguageType[Type]]): Generator[Ctxt, Type] = time("properFinalized"){
+                            canToTargetLanguage: Understands[Ctxt, ToTargetLanguageType[Type]]): Generator[Ctxt, Type] = time("properFinalized"){
     def findClass(qualifiedName: Name*): Generator[Ctxt, Type] =
       AnyParadigm.capabilitiy(FindClass[Name, Type](qualifiedName))
 
@@ -404,7 +404,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       }
 
       val opsToGenerate = model.flatten.ops.distinct.
-          filter(op => domainSpecific.applicableIn(this, PotentialRequest(tpe, tpeCase, op), model).contains(model))
+        filter(op => domainSpecific.applicableIn(this, PotentialRequest(tpe, tpeCase, op), model).contains(model))
 
       val mostSpecialExp = modelDefiningExp(model)
       for {
@@ -441,7 +441,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
 
         // always have to extend current Exp at this level
         _ <-  for {
-           //parent <- findClass(names.mangle(model.lastModelWithOperation.head.name), names.mangle(model.baseDataType.name))
+          //parent <- findClass(names.mangle(model.lastModelWithOperation.head.name), names.mangle(model.baseDataType.name))
           parent <- findClass(names.mangle(mostSpecialExp.name), names.mangle(model.baseDataType.name))
           _ <- resolveAndAddImport(parent)
           paramType <- applyType(parent, genType)
@@ -1232,20 +1232,20 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
       // and eliminate those that are "before" any in that collection
       //_ <- if (domain.ops.isEmpty) {
       _ <- if (mostSpecialExp != domain) {
-          val formerSpecialized = domain.former.map(m => modelDefiningExp(m))
-          val keepers = domain.former.map(m => modelDefiningExp(m)).filterNot(m => formerSpecialized.exists(pm => m.before(pm)))
+        val formerSpecialized = domain.former.map(m => modelDefiningExp(m))
+        val keepers = domain.former.map(m => modelDefiningExp(m)).filterNot(m => formerSpecialized.exists(pm => m.before(pm)))
         // now get those formers that map to these keepers
-          val toExtend = domain.former.filter(m => keepers.exists(pm => pm.beforeOrEqual(m)))
-          forEach(toExtend) { former => {
-            for {
-              formerFactory <- finalizedFactory(former)
-              _ <- if (former.isDomainBase) {
-                Command.skip[ClassContext]
-              } else {
-                addParent(formerFactory)
-              }
-            } yield()
-          }
+        val toExtend = domain.former.filter(m => keepers.exists(pm => pm.beforeOrEqual(m)))
+        forEach(toExtend) { former => {
+          for {
+            formerFactory <- finalizedFactory(former)
+            _ <- if (former.isDomainBase) {
+              Command.skip[ClassContext]
+            } else {
+              addParent(formerFactory)
+            }
+          } yield()
+        }
         }
       } else {
         Command.skip[ClassContext]
@@ -1326,16 +1326,16 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
 
   def modelDefiningExp (domain:GenericModel): GenericModel =  time("modelDefiningExp"){
     if (domain.isDomainBase || domain.ops.nonEmpty) {
-       domain
-     } else {
-       // is there a single type that can represent the "least upper bound" of all prior branches.
-       val mostSpecial = mostSpecializedExp(domain)
-       if (mostSpecial.size == 1 && !mostSpecial.head.isDomainBase) {   // take care to avoid falling below "floor"
-         mostSpecial.head
-       } else {
-         domain     // we have to do merge
-       }
-     }
+      domain
+    } else {
+      // is there a single type that can represent the "least upper bound" of all prior branches.
+      val mostSpecial = mostSpecializedExp(domain)
+      if (mostSpecial.size == 1 && !mostSpecial.head.isDomainBase) {   // take care to avoid falling below "floor"
+        mostSpecial.head
+      } else {
+        domain     // we have to do merge
+      }
+    }
   }
 
   /** All models from first up to last */
@@ -1376,7 +1376,7 @@ trait CoCo extends OOApproachImplementationProvider with BaseDataTypeAsInterface
               _ <- addClassToProject(extendIntermediateInterface(currentModel, domainSpecific), baseInterfaceNames(currentModel): _*)
               _ <- registerTypeMapping(currentModel)   // what if we skipped this....
             } yield()
-        } else {
+          } else {
             Command.skip[ProjectContext]
           }
 

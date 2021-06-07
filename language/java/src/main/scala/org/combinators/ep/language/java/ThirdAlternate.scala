@@ -1,7 +1,7 @@
 package org.combinators.ep.language.java     /*DI:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
-import org.combinators.ep.approach.oo.{Trivially, ViTA}
+import org.combinators.ep.approach.oo.{CoCoClean, TriviallyClean, ViTA}
 import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.math.{M0, X1, X2, X2X3, X3, X4, eips}
@@ -12,10 +12,10 @@ import org.combinators.ep.generator.FileWithPathPersistable._
 object ThirdAlternate extends IOApp {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed))
 
-  val vitaApproach = ViTA[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
-  val triviallyApproach = Trivially[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+  val cocoApproach = CoCoClean[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+  val triviallyApproach = TriviallyClean[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
 
-  val approach = vitaApproach
+  val approach = cocoApproach
 
   val evolutions = Seq( M0, X1, X2, X3, X2X3, X4)
 

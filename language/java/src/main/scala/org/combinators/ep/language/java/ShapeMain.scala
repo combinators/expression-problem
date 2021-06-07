@@ -1,7 +1,7 @@
 package org.combinators.ep.language.java     /*DI:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
-import org.combinators.ep.approach.oo.{Algebra, CoCo, ExtensibleVisitor, Interpreter, Traditional, Trivially, Visitor, VisitorSideEffect}
+import org.combinators.ep.approach.oo.{Algebra, CoCo, CoCoClean, ExtensibleVisitor, Interpreter, Traditional, Trivially, TriviallyClean, Visitor, VisitorSideEffect}
 import org.combinators.ep.domain.{GenericModel, Model}
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.shape._
@@ -22,9 +22,9 @@ object ShapeMain extends IOApp {
   val visitorSideEffectApproach = VisitorSideEffect[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val extensibleVisitorApproach = ExtensibleVisitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val interpreterApproach = Interpreter[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
-  val triviallyApproach = Trivially[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+  val triviallyApproach = TriviallyClean[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
   val algebraApproach = Algebra[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
-  val cocoApproach = CoCo[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+  val cocoApproach = CoCoClean[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
   // select one here.
   // val approach = ooApproach // WORKS!

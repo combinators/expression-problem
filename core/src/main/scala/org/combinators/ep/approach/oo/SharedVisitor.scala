@@ -2,7 +2,7 @@ package org.combinators.ep.approach.oo    /*DI:LI:AD*/
 
 import org.combinators.ep.domain.Model
 import org.combinators.ep.domain.abstractions.{DataType, DataTypeCase, Operation, TypeRep}
-import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
+import org.combinators.ep.generator.{Command, EvolutionImplementationProvider}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.communication.{ReceivedRequest, Request}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
@@ -247,6 +247,6 @@ trait SharedVisitor extends OOApproachImplementationProvider with SharedOO with 
         _ <- makeAcceptImplementation(model)
       } yield ()
     }
-    addClassToProject(makeClass, names.mangle(names.conceptNameOf(tpeCase)))
+    addClassToProject(makeClass, names.mangle(names.instanceNameOf(model)), names.mangle(names.conceptNameOf(tpeCase)))
   }
 }

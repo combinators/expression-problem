@@ -8,7 +8,7 @@ import org.combinators.ep.generator.paradigm._
 import Command._
 import AnyParadigm.syntax._
 
-trait Traditional extends OOApproachImplementationProvider with BaseDataTypeAsClass with SharedOO with FieldDefinition {  // this had been sealed. not sure why
+trait Traditional extends OOApproachImplementationProvider with SharedOO with FieldDefinition {  // this had been sealed. not sure why
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
 
   import paradigm._
@@ -59,6 +59,19 @@ trait Traditional extends OOApproachImplementationProvider with BaseDataTypeAsCl
       } yield ()
     }
     addClassToProject(makeClass, names.mangle(names.conceptNameOf(tpeCase)))
+  }
+
+  def makeBase(tpe: DataType, ops: Seq[Operation]): Generator[ProjectContext, Unit] = {
+    import ooParadigm.projectCapabilities._
+    val makeClass: Generator[ClassContext, Unit] = {
+      import classCapabilities._
+      for {
+        _ <- setAbstract()
+        _ <- forEach(ops) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), makeSignature(op)) }
+      } yield ()
+    }
+
+    addClassToProject(makeClass, names.mangle(names.conceptNameOf(tpe)))
   }
 
   def implement(gdomain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {

@@ -38,6 +38,9 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
       override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
           op match {
             case math.M4.Simplify => Set(math.M0.Eval)
+              // Since we are defining new type, we have to "carry over" the dependencies for Eql
+            case math.M6.Eql => math.M6.isOps(model.flatten.typeCases).toSet
+            case op if math.M6.isOps(model.flatten.typeCases).contains(op) => Set(math.M6.Eql)
             case _ => Set.empty
           }
       }

@@ -1,7 +1,7 @@
 package org.combinators.ep.language.java     /*DI:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
-import org.combinators.ep.approach.oo.{Algebra, CoCo, CoCoClean, ExtensibleVisitor, Interpreter, Traditional, Trivially, TriviallyClean, ViTA, Visitor, VisitorSideEffect}
+import org.combinators.ep.approach.oo.{Algebra, CoCoClean, ExtensibleVisitor, Interpreter, RuntimeDispatching, Traditional, TriviallyClean, Visitor, VisitorSideEffect}
 import org.combinators.ep.domain.{GenericModel, Model}
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.math._
@@ -24,28 +24,27 @@ class Main {
   val visitorSideEffectApproach = VisitorSideEffect[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val extensibleVisitorApproach = ExtensibleVisitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val interpreterApproach = Interpreter[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
-  val triviallyApproach = Trivially[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+  //val triviallyApproach = Trivially[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val algebraApproach = Algebra[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
-  val vitaApproach = ViTA[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
-  val cocoApproach = CoCo[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+  //val vitaApproach = ViTA[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+  //val cocoApproach = CoCo[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val cocoCleanApproach = CoCoClean[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val triviallyCleanApproach = TriviallyClean[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
+
+  val dispatchApproach = RuntimeDispatching[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.stringsInMethod, generator.exceptionsInMethod, generator.ooParadigm)
 
   // select one here.
   //val approach = ooApproach // WORKS!
   // val approach = visitorApproach  // WORKS!
   // val approach = visitorSideEffectApproach // WORKS!
   //val approach = extensibleVisitorApproach // WORKS
-  //val approach = triviallyApproach // WORKS!
-  val approach = cocoCleanApproach
+  val approach = extensibleVisitorApproach
   //val approach = vitaApproach // WORKS!
-  // interpreterApproach NOT YET WORKING
   //val approach = cocoCleanApproach
-  //val approach = cocoApproach
 
   //val evolutions = Seq(M0, M1, M2, I1, I2)    // , I2 //       M3, M4, M5, M6) // ) // , M4, M5, M6)
-  val evolutions = Seq(M0, M1, M2, M3, M4, M5, M6, M7, I1, I2, M7I2, M8, M9)    // all test cases become active WHEN all included.
+  val evolutions = Seq(M0, M1, M2, I1, I2, M3, M4, M5, M6, M7, M7I2, M8, M9)    // all test cases become active WHEN all included.
   //val evolutions = Seq(M0, M1, M2, M3, I1, A1, A1M3)
 
   //val evolutions = Seq(M0, M1, M2, M3, M4, M5, M6, M7) //

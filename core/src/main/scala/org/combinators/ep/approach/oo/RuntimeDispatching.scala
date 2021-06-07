@@ -1,6 +1,4 @@
-package org.combinators.ep.approach.oo
-
-/*DI:LI:AD*/
+package org.combinators.ep.approach.oo      /*DI:LI:AD*/
 
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.instances.InstanceRep
@@ -20,11 +18,14 @@ import org.combinators.ep.generator.paradigm.ffi.{Exceptions, Strings}
  * Have to decide whether to use side effects or Generics. This current implementation uses the Visitor<R> generics
  * approach, which can be adopted by different object oriented languages.
  */
-abstract class RuntimeDispatching extends OOApproachImplementationProvider with SharedOO with FieldDefinition with OperationAsClass {
-val ooParadigm: ObjectOriented.WithBase[paradigm.type]
-val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext,paradigm.type]
-val exceptions: Exceptions.WithBase[paradigm.MethodBodyContext,paradigm.type]
-val strings: Strings.WithBase[paradigm.MethodBodyContext,paradigm.type]
+trait RuntimeDispatching extends OOApproachImplementationProvider with SharedOO with FieldDefinition with OperationAsClass {
+    val paradigm: AnyParadigm
+    val ooParadigm: ObjectOriented.WithBase[paradigm.type]
+    val names: NameProvider[paradigm.syntax.Name]
+
+    val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext,paradigm.type]
+    val exceptions: Exceptions.WithBase[paradigm.MethodBodyContext,paradigm.type]
+    val strings: Strings.WithBase[paradigm.MethodBodyContext,paradigm.type]
 
   import ooParadigm._
   import paradigm._
@@ -65,10 +66,8 @@ val strings: Strings.WithBase[paradigm.MethodBodyContext,paradigm.type]
     import paradigm.methodBodyCapabilities._
     val op = message.request.op
     for {
-// return exp.getLeft().eval(new ep.Eval()) + exp.getRight().eval(new ep.Eval());
 
       // the operation is encoded in its own class, which we must find to determine the visitor type
-      //op = message.request.op
       opType <- findClass(names.mangle(names.conceptNameOf(op)))     // each visitor is named based on operation
       _ <- resolveAndAddImport(opType)            // gives resulting import statement (if needed)
 
@@ -155,23 +154,13 @@ val strings: Strings.WithBase[paradigm.MethodBodyContext,paradigm.type]
     }
 
     val makeBody: Generator[MethodBodyContext, Option[Expression]] = {
-      import ooParadigm.methodBodyCapabilities._
       import paradigm.methodBodyCapabilities._
 
       for {
-        // start from the accept signature and add a method body.
-
-        // identify Visitor<R>
         rt <- toTargetLanguageType(TypeRep.DataType(model.baseDataType))
         _ <- resolveAndAddImport(rt)
 
         _ <- makeOperationSignature(rt, op)
-        args <- getArguments()   // get name, type, expression
-
-        // invoke visit method on 'v' with 'this' as argument
-//        innerFunction <- getMember(args.head._3, names.addPrefix("_", names.mangle(names.instanceNameOf(op))))
-//        self <- selfReference()
-//        result <- apply(innerFunction, Seq(self))  // make the method invocation
         _ <- ifStmt()
       } yield None
     }
@@ -219,9 +208,6 @@ val strings: Strings.WithBase[paradigm.MethodBodyContext,paradigm.type]
       _ <- resolveAndAddImport(returnTpe)
 
       _ <- makeDispatchingOperation(domain, op)
-      // add multiplexing dispatcher
-//      _ <- addMethod(names.mangle(names.instanceNameOf(op)), makeImplementation(tpe: DataType,
-//        tpeCase: DataTypeCase, op, domainSpecific))
     } yield ()
   }
 
@@ -357,7 +343,7 @@ val strings: Strings.WithBase[paradigm.MethodBodyContext,paradigm.type]
       _ <- domainSpecific.initialize(this)
       _ <- makeBase(flatDomain.baseDataType)
       _ <- forEach (flatDomain.typeCases) { tpeCase =>
-        makeDerived(flatDomain.baseDataType, tpeCase, domain)   // used to have flatDomain.ops,
+        makeDerived(flatDomain.baseDataType, tpeCase, domain)
       }
       _ <- forEach (flatDomain.ops) { op =>
         addClassToProject(makeOperationImplementation(flatDomain, op, domainSpecific), names.mangle(names.conceptNameOf(op)))

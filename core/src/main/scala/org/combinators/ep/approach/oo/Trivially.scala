@@ -11,7 +11,7 @@ import org.combinators.ep.generator.paradigm.control.Imperative
 
 /**
  *
- Producer methods must include factory methods for all known types so far.
+Producer methods must include factory methods for all known types so far.
  */
 
 trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInterface with SharedOO with FutureVisitor with OperationInterfaceChain with FieldDefinition with FactoryConcepts {
@@ -81,9 +81,9 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
    * @return
    */
   override def makeImplementation(tpe: DataType,
-                                   tpeCase: DataTypeCase,
-                                   op: Operation,
-                                   domainSpecific: EvolutionImplementationProvider[this.type]
+                                  tpeCase: DataTypeCase,
+                                  op: Operation,
+                                  domainSpecific: EvolutionImplementationProvider[this.type]
                                  ): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
@@ -107,11 +107,11 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
         for {
           // must convert recursive using convert() invocations
           pArg <- if (argPair._2.tpe == TypeRep.DataType(tpe)) {
-          // must invoke current convert()
+            // must invoke current convert()
             apply(convertMethod, Seq(argPair._1._3))   // invoke convert() on the expression
           } else {
-          Command.lift[MethodBodyContext, Expression](argPair._1._3)
-        }
+            Command.lift[MethodBodyContext, Expression](argPair._1._3)
+          }
         } yield (argPair._2, pArg)
       }
 
@@ -294,11 +294,11 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
         } yield ()
 
         _ <- forEach (tpeCase.attributes) { att => {
-            for {
-              mi <- makeGetter(att)
-              _ <- setAbstract()
-            } yield mi
-          }
+          for {
+            mi <- makeGetter(att)
+            _ <- setAbstract()
+          } yield mi
+        }
         }
         _ <- forEach (opsToGenerate) { op =>
           addMethod(names.mangle(names.instanceNameOf(op)), makeImplementation(tpe, tpeCase, op, domainSpecific))
@@ -322,99 +322,99 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
   }
 
   def makeBodyImpl(baseType:DataType, att:Attribute, parent:Type): Generator[MethodBodyContext, Option[Expression]] = {
-      import paradigm.methodBodyCapabilities._
-      import ooParadigm.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
 
-      for {
-        pt <- toTargetLanguageType(att.tpe)   // PULL OUT of the context
-        _ <- setReturnType(pt)
+    for {
+      pt <- toTargetLanguageType(att.tpe)   // PULL OUT of the context
+      _ <- setReturnType(pt)
 
-        // provide an implementation here. but how?
-        self <- selfReference()
-        result <- getMember(self, names.mangle(names.instanceNameOf(att)))
-      } yield Some(result)
-    }
+      // provide an implementation here. but how?
+      self <- selfReference()
+      result <- getMember(self, names.mangle(names.instanceNameOf(att)))
+    } yield Some(result)
+  }
 
 
-    /**
-     *
-     * package ep.m0.finalized;
-     *
-     * public class Add implements ep.m0.Add<Visitor>, Factory {
-     *   private Exp<Visitor> left;
-     *   private Exp<Visitor> right;
-     *
-     *   public Add(Exp<Visitor> _left, Exp<Visitor> _right) {
-     *     this.left = _left;
-     *     this.right = _right;
-     *   }
-     *
-     *   ...
-     * }
-     * HACK: Just duplicate and embed; figure out later.
-     *
-     * @param model
-     * @param tpeCase
-     * @return
-     */
-    def makeFinalClass(model:Model, tpeCase: DataTypeCase): Generator[ProjectContext,Unit] = {
-      import ooParadigm.projectCapabilities._
+  /**
+   *
+   * package ep.m0.finalized;
+   *
+   * public class Add implements ep.m0.Add<Visitor>, Factory {
+   *   private Exp<Visitor> left;
+   *   private Exp<Visitor> right;
+   *
+   *   public Add(Exp<Visitor> _left, Exp<Visitor> _right) {
+   *     this.left = _left;
+   *     this.right = _right;
+   *   }
+   *
+   *   ...
+   * }
+   * HACK: Just duplicate and embed; figure out later.
+   *
+   * @param model
+   * @param tpeCase
+   * @return
+   */
+  def makeFinalClass(model:Model, tpeCase: DataTypeCase): Generator[ProjectContext,Unit] = {
+    import ooParadigm.projectCapabilities._
 
-      val makeClass: Generator[ClassContext, Unit] = {
-        import ooParadigm.classCapabilities._
-        import genericsParadigm.classCapabilities._
-
-        for {
-          // define based on the derivedInterface for that data type and operation based on
-          finalVisitor <- findClass(names.mangle(model.name), finalized, visitorClass)
-          parent <- findClass(names.mangle(model.name), names.mangle(model.baseDataType.name))   // names.mangle(names.conceptNameOf(tpeCase)))
-
-          parentParam <- applyType(parent, Seq(finalVisitor))
-          _ <- resolveAndAddImport(parentParam)   // hope this brings in ep.m#.Exp
-          _ <- registerLocally(model.baseDataType, parentParam)
-
-          parentTypeCase <- findClass(names.mangle(model.name), names.mangle(names.conceptNameOf(tpeCase)))
-          parentTypeVisitor <- applyType(parentTypeCase, Seq(finalVisitor))
-          _ <- resolveAndAddImport(parentTypeVisitor)
-          _ <- addImplemented(parentTypeVisitor)                    // implements derived interface
-
-          factory <- findClass(names.mangle(model.name), finalized, factoryClass)   // bring in Factory methods easily
-          _ <- addImplemented(factory)
-          _ <- forEach(tpeCase.attributes) { att => makeField(att) }
-          _ <- addConstructor(makeConstructor(tpeCase))
-          _ <- forEach(tpeCase.attributes) { att =>
-            addMethod(getterName(att), makeBodyImpl(model.baseDataType, att, parent))
-          }
-
-          visitorType <- findClass(names.mangle(model.name), finalized, visitorClass)
-          baseType <-  findClass(names.mangle(model.baseDataType.name))
-          _ <- resolveAndAddImport(visitorType)
-          _ <- addAcceptMethod(makeAcceptImplementation(visitorType))
-          _ <- addConvertMethod(makeConvertImplementation(model, visitorType, baseType))
-        } yield ()
-      }
-
-      addClassToProject(makeClass, factoryInstanceDataTypeCase(Some(model), tpeCase): _*)
-    }
-
-    /** For Trivially, the covariant type needs to be selected whenever a BaseType in the domain is expressed. */
-    def domainTypeLookup[Ctxt](covariantType: Name*)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
-      FindClass(covariantType).interpret(canFindClass)
-    }
-
-    /** Supports ability to re-register classes after they have acquired a type parameter. */
-    def registerLocally(tpe:DataType, paramType:Type) : Generator[ClassContext, Unit] = {
+    val makeClass: Generator[ClassContext, Unit] = {
       import ooParadigm.classCapabilities._
-
-      val dtpeRep = TypeRep.DataType(tpe)
+      import genericsParadigm.classCapabilities._
 
       for {
-        _ <- addTypeLookupForMethods(dtpeRep, Command.lift(paramType))
-        _ <- addTypeLookupForClasses(dtpeRep, Command.lift(paramType))
-        _ <- addTypeLookupForConstructors(dtpeRep, Command.lift(paramType))
+        // define based on the derivedInterface for that data type and operation based on
+        finalVisitor <- findClass(names.mangle(model.name), finalized, visitorClass)
+        parent <- findClass(names.mangle(model.name), names.mangle(model.baseDataType.name))   // names.mangle(names.conceptNameOf(tpeCase)))
 
+        parentParam <- applyType(parent, Seq(finalVisitor))
+        _ <- resolveAndAddImport(parentParam)   // hope this brings in ep.m#.Exp
+        _ <- registerLocally(model.baseDataType, parentParam)
+
+        parentTypeCase <- findClass(names.mangle(model.name), names.mangle(names.conceptNameOf(tpeCase)))
+        parentTypeVisitor <- applyType(parentTypeCase, Seq(finalVisitor))
+        _ <- resolveAndAddImport(parentTypeVisitor)
+        _ <- addImplemented(parentTypeVisitor)                    // implements derived interface
+
+        factory <- findClass(names.mangle(model.name), finalized, factoryClass)   // bring in Factory methods easily
+        _ <- addImplemented(factory)
+        _ <- forEach(tpeCase.attributes) { att => makeField(att) }
+        _ <- addConstructor(makeConstructor(tpeCase))
+        _ <- forEach(tpeCase.attributes) { att =>
+          addMethod(getterName(att), makeBodyImpl(model.baseDataType, att, parent))
+        }
+
+        visitorType <- findClass(names.mangle(model.name), finalized, visitorClass)
+        baseType <-  findClass(names.mangle(model.baseDataType.name))
+        _ <- resolveAndAddImport(visitorType)
+        _ <- addAcceptMethod(makeAcceptImplementation(visitorType))
+        _ <- addConvertMethod(makeConvertImplementation(model, visitorType, baseType))
       } yield ()
     }
+
+    addClassToProject(makeClass, factoryInstanceDataTypeCase(Some(model), tpeCase): _*)
+  }
+
+  /** For Trivially, the covariant type needs to be selected whenever a BaseType in the domain is expressed. */
+  def domainTypeLookup[Ctxt](covariantType: Name*)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
+    FindClass(covariantType).interpret(canFindClass)
+  }
+
+  /** Supports ability to re-register classes after they have acquired a type parameter. */
+  def registerLocally(tpe:DataType, paramType:Type) : Generator[ClassContext, Unit] = {
+    import ooParadigm.classCapabilities._
+
+    val dtpeRep = TypeRep.DataType(tpe)
+
+    for {
+      _ <- addTypeLookupForMethods(dtpeRep, Command.lift(paramType))
+      _ <- addTypeLookupForClasses(dtpeRep, Command.lift(paramType))
+      _ <- addTypeLookupForConstructors(dtpeRep, Command.lift(paramType))
+
+    } yield ()
+  }
 
   /**
    * Allow for more fine-grained mapping for ancestral types
@@ -423,22 +423,22 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
 
   /** What model is delivered has operations which is essential for the mapping. */
   override def registerTypeMapping(model: GenericModel): Generator[ProjectContext, Unit] = {
-      import ooParadigm.projectCapabilities._
-      import ooParadigm.classCapabilities.canFindClassInClass
-      import ooParadigm.constructorCapabilities.canFindClassInConstructor
-      import ooParadigm.methodBodyCapabilities.canFindClassInMethod
-      import paradigm.projectContextCapabilities._
+    import ooParadigm.projectCapabilities._
+    import ooParadigm.classCapabilities.canFindClassInClass
+    import ooParadigm.constructorCapabilities.canFindClassInConstructor
+    import ooParadigm.methodBodyCapabilities.canFindClassInMethod
+    import paradigm.projectContextCapabilities._
 
-      val baseInterface = baseInterfaceNames(model)   // registers as m#.Exp
-      val dtpeRep = TypeRep.DataType(model.baseDataType)
+    val baseInterface = baseInterfaceNames(model)   // registers as m#.Exp
+    val dtpeRep = TypeRep.DataType(model.baseDataType)
 
-      for {
-        _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(baseInterface : _*))
-        _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(baseInterface : _*))
-        _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(baseInterface : _*))
+    for {
+      _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(baseInterface : _*))
+      _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(baseInterface : _*))
+      _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(baseInterface : _*))
 
-      } yield ()
-    }
+    } yield ()
+  }
 
   /**
    * Instead of using the standard 'makeBase' we need to add accept and convert methods.
@@ -566,8 +566,8 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
       _ <- resolveAndAddImport(paramType)
       _ <- addParent(paramType)
 
-  // must be moved OUTSIDE because only the extended interfaces will have methods defined....
-//      _ <- forEach (domain.ops) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), triviallyMakeSignature(domain.baseDataType, op)) }
+      // must be moved OUTSIDE because only the extended interfaces will have methods defined....
+      //      _ <- forEach (domain.ops) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), triviallyMakeSignature(domain.baseDataType, op)) }
     } yield ()
   }
 
@@ -769,100 +769,100 @@ trait Trivially extends OOApproachImplementationProvider with BaseDataTypeAsInte
    * Note: shouldn't have to copy entire thing. Better to provide ability to extend inner part into which
    * the factory methods are injected.
    * */
-   override def implement(tests: Map[GenericModel, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
-     import projectContextCapabilities._
-     import paradigm.compilationUnitCapabilities._
-     import paradigm.testCapabilities._
+  override def implement(tests: Map[GenericModel, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
+    import projectContextCapabilities._
+    import paradigm.compilationUnitCapabilities._
+    import paradigm.testCapabilities._
 
-     def factoryMethod(model:GenericModel, tpeCase:DataTypeCase) : Generator[MethodBodyContext, Option[Expression]] = {
+    def factoryMethod(model:GenericModel, tpeCase:DataTypeCase) : Generator[MethodBodyContext, Option[Expression]] = {
 
-       import ooParadigm.methodBodyCapabilities._
-       import polymorphics.methodBodyCapabilities._
-       import paradigm.methodBodyCapabilities._
-       for {
-         // when merged together, the name of model is changed.
-         // ep.m4.Exp<ep.m4.finalized.Visitor>
-         paramBaseType <- toTargetLanguageType(TypeRep.DataType(model.baseDataType))
-         _ <- resolveAndAddImport(paramBaseType)
-         visitorType <- findClass(names.mangle(model.name), finalized, visitorClass)
-         _ <- resolveAndAddImport(visitorType)
+      import ooParadigm.methodBodyCapabilities._
+      import polymorphics.methodBodyCapabilities._
+      import paradigm.methodBodyCapabilities._
+      for {
+        // when merged together, the name of model is changed.
+        // ep.m4.Exp<ep.m4.finalized.Visitor>
+        paramBaseType <- toTargetLanguageType(TypeRep.DataType(model.baseDataType))
+        _ <- resolveAndAddImport(paramBaseType)
+        visitorType <- findClass(names.mangle(model.name), finalized, visitorClass)
+        _ <- resolveAndAddImport(visitorType)
 
-         returnType <- findClass(names.mangle(model.name), finalized, names.mangle(names.conceptNameOf(tpeCase)))
-         _ <- resolveAndAddImport(returnType)
+        returnType <- findClass(names.mangle(model.name), finalized, names.mangle(names.conceptNameOf(tpeCase)))
+        _ <- resolveAndAddImport(returnType)
 
-         appliedType <- applyType(paramBaseType, Seq(visitorType))
+        appliedType <- applyType(paramBaseType, Seq(visitorType))
 
-         facMethod <- createFactoryDataTypeCase(model, tpeCase, appliedType, returnType)
-       } yield facMethod
-     }
+        facMethod <- createFactoryDataTypeCase(model, tpeCase, appliedType, returnType)
+      } yield facMethod
+    }
 
-     for {
+    for {
 
-       _ <- forEach(tests.toList) { case (model, tests) => {
-         val testCode: Generator[MethodBodyContext, Seq[Expression]] =
-           for {
-             code <- forEach(tests) {
-               test => testImplementationProvider.test(this)(test)
-             }
-           } yield code.flatten
+      _ <- forEach(tests.toList) { case (model, tests) => {
+        val testCode: Generator[MethodBodyContext, Seq[Expression]] =
+          for {
+            code <- forEach(tests) {
+              test => testImplementationProvider.test(this)(test)
+            }
+          } yield code.flatten
 
-         import ooParadigm.testCapabilities._
-         val compUnit = for {
+        import ooParadigm.testCapabilities._
+        val compUnit = for {
 
-           // add test case first
-           _ <- addTestCase(testCode, testName)
+          // add test case first
+          _ <- addTestCase(testCode, testName)
 
-           // no longer necessary with finalized classes??
-           // get list of all operations and MAP to the most recent model
-           _ <- forEach(model.flatten.typeCases.distinct) { tpeCase => {
-             for {
-               _ <- addMethod(names.mangle(names.instanceNameOf(tpeCase)), factoryMethod(model, tpeCase))
-             } yield (None)
-           }
-           }
+          // no longer necessary with finalized classes??
+          // get list of all operations and MAP to the most recent model
+          _ <- forEach(model.flatten.typeCases.distinct) { tpeCase => {
+            for {
+              _ <- addMethod(names.mangle(names.instanceNameOf(tpeCase)), factoryMethod(model, tpeCase))
+            } yield (None)
+          }
+          }
 
-         } yield ()
+        } yield ()
 
-         val testSuite = for {
-           _ <- addTestSuite(
-             testCaseName(model),
-             compUnit
-           )
-         } yield ()
+        val testSuite = for {
+          _ <- addTestSuite(
+            testCaseName(model),
+            compUnit
+          )
+        } yield ()
 
-         for {
-           _ <- registerTypeMapping(model) // must come here since it registers mappings that exist in the ProjectContext
-           _ <- addCompilationUnit(
-             testSuite,
-             testCaseName(model)
-           )
-         } yield None
-       }
-       }
-     } yield ()
-   }
+        for {
+          _ <- registerTypeMapping(model) // must come here since it registers mappings that exist in the ProjectContext
+          _ <- addCompilationUnit(
+            testSuite,
+            testCaseName(model)
+          )
+        } yield None
+      }
+      }
+    } yield ()
+  }
 }
 
-  object Trivially {
-    type WithParadigm[P <: AnyParadigm] = Trivially { val paradigm: P }
-    type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
+object Trivially {
+  type WithParadigm[P <: AnyParadigm] = Trivially { val paradigm: P }
+  type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 
-    def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
-    (base: P)
-    (nameProvider: NameProvider[base.syntax.Name],
-     imp: Imperative.WithBase[base.MethodBodyContext, base.type],
-     oo: ObjectOriented.WithBase[base.type],
-     params: ParametricPolymorphism.WithBase[base.type])
-    (generics: Generics.WithBase[base.type,oo.type,params.type]): Trivially.WithParadigm[base.type] =
-      new Trivially {
-        val paradigm: base.type = base
-        val names: NameProvider[paradigm.syntax.Name] = nameProvider
-        val ooParadigm: oo.type = oo
-        val impParadigm: imp.type = imp
-        val polymorphics: params.type = params
-        val genericsParadigm: generics.type = generics
-      }
-  }
+  def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
+  (base: P)
+  (nameProvider: NameProvider[base.syntax.Name],
+   imp: Imperative.WithBase[base.MethodBodyContext, base.type],
+   oo: ObjectOriented.WithBase[base.type],
+   params: ParametricPolymorphism.WithBase[base.type])
+  (generics: Generics.WithBase[base.type,oo.type,params.type]): Trivially.WithParadigm[base.type] =
+    new Trivially {
+      val paradigm: base.type = base
+      val names: NameProvider[paradigm.syntax.Name] = nameProvider
+      val ooParadigm: oo.type = oo
+      val impParadigm: imp.type = imp
+      val polymorphics: params.type = params
+      val genericsParadigm: generics.type = generics
+    }
+}
 
 /**\
 

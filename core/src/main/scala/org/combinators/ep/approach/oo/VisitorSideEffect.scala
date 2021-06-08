@@ -25,9 +25,9 @@ abstract class VisitorSideEffect extends OOApproachImplementationProvider with S
   val impParadigm: Imperative.WithBase[MethodBodyContext,paradigm.type]
 
   object ComponentNames {
-    val getValue: Name = names.mangle("getValue")
+    val getValue: Name = names.mangle("getVisitorValue")
     val visitImpl: Name = names.mangle("visitImpl")
-    val value: Name = names.mangle("value")
+    val value: Name = names.mangle("visitorValue")     // HACK: Cannot conflict with 'value' from a datatype (i.e., Lit)
   }
 
   /**
@@ -169,8 +169,8 @@ abstract class VisitorSideEffect extends OOApproachImplementationProvider with S
    * @return        The one invoking this method must be sure to add this class to project.
    */
   def makeOperationImplementation(domain:Model,
-                                  op: Operation,
-                                  domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
+          op: Operation,
+          domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
 
     import ooParadigm.classCapabilities._
     for {
@@ -251,11 +251,9 @@ abstract class VisitorSideEffect extends OOApproachImplementationProvider with S
    * @param domainSpecific
    * @return
    */
-  override def makeImplementation(tpe: DataType,
-                         tpeCase: DataTypeCase,
-                         op: Operation,
-                         domainSpecific: EvolutionImplementationProvider[this.type]
-                        ): Generator[MethodBodyContext, Option[Expression]] = {
+  override def makeImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation,
+           domainSpecific: EvolutionImplementationProvider[this.type]
+          ): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
     import impParadigm.imperativeCapabilities._

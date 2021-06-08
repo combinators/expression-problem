@@ -8,6 +8,9 @@ import org.combinators.ep.generator.communication.{ReceivedRequest, Request}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm.{Generics, ObjectOriented, ParametricPolymorphism}
 
+/**
+ * Straightforward implementation places all generated code in the current ep.* package.
+ */
 trait SharedVisitor extends OOApproachImplementationProvider with SharedOO with FieldDefinition with OperationAsClass {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
@@ -174,9 +177,7 @@ trait SharedVisitor extends OOApproachImplementationProvider with SharedOO with 
    * @param domainSpecific
    * @return
    */
-  override def makeImplementation(tpe: DataType,
-                         tpeCase: DataTypeCase,
-                         op: Operation,
+  override def makeImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation,
                          domainSpecific: EvolutionImplementationProvider[this.type]
                         ): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
@@ -247,6 +248,7 @@ trait SharedVisitor extends OOApproachImplementationProvider with SharedOO with 
         _ <- makeAcceptImplementation(model)
       } yield ()
     }
-    addClassToProject(makeClass, names.mangle(names.instanceNameOf(model)), names.mangle(names.conceptNameOf(tpeCase)))
+    //addClassToProject(makeClass, names.mangle(names.instanceNameOf(model)), names.mangle(names.conceptNameOf(tpeCase)))
+    addClassToProject(makeClass, names.mangle(names.conceptNameOf(tpeCase)))
   }
 }

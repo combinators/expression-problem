@@ -8,7 +8,7 @@ import org.combinators.ep.generator.communication._
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.{forEach, _}
 import org.combinators.ep.generator.paradigm._
 
-sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataTypeAsInterface with SharedOO with FieldDefinition {
+sealed trait Interpreter extends OOApproachImplementationProvider with SharedOO {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
@@ -57,7 +57,7 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
     } yield baseInterfaceType
   }
 
-  /** Qualify the Exp propertly. */
+  /** Qualify the Exp properly. */
   def qualifiedBaseDataType(domain: GenericModel): Seq[Name] = {
     if (domain.isDomainBase) {
       Seq(names.mangle(names.conceptNameOf(domain.baseDataType)))
@@ -69,6 +69,49 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
   /** Place dataType classes in appropriate package. */
   def qualifiedDataTypeCase(domain: GenericModel, tpe:DataTypeCase): Seq[Name] = {
     Seq(names.mangle(names.instanceNameOf(domain)), names.mangle(names.conceptNameOf(tpe)))
+  }
+
+  //// ----- Base Data Type As Instance
+
+  /**
+   * Base Exp interface with no methods (for now).
+   *
+   * {{{
+   *   public interface Exp {
+   *     public tree.Tree astree();    // only when needed
+   * }
+   * }}}
+   *
+   * Eventually will have some work here for producer/binary methods
+   *
+   * Override traditional OO use where this is a class; here it is an interface
+   *
+   * @param tpe
+   * @param ops -- ignored in this overridden capability
+   * @return
+   */
+  def makeBase(tpe: DataType, ops: Seq[Operation]): Generator[ProjectContext, Unit] = {
+    import ooParadigm.projectCapabilities._
+    val makeClass: Generator[ClassContext, Unit] = {
+      import classCapabilities._
+      for {
+        _ <- setInterface()
+      } yield ()
+    }
+
+    addClassToProject(makeClass, names.mangle(names.conceptNameOf(tpe)))
+  }
+
+  /// ----- Field Definition moved here ------
+
+  /** Make a field from an attribute in the given class.  If the type needs to be different from default, then register Types accordingly. */
+  def makeField(att: Attribute): Generator[ClassContext, Type] = {
+    import ooParadigm.classCapabilities._
+    for {
+      ft <- toTargetLanguageType(att.tpe)
+      _ <- resolveAndAddImport(ft)
+      _ <- addField(names.mangle(names.instanceNameOf(att)), ft)
+    } yield ft
   }
 
   /// ------------------------------------------------------ Operator As Chain Moved Here ---------------
@@ -163,9 +206,15 @@ sealed trait Interpreter extends OOApproachImplementationProvider with BaseDataT
       _ <- setReturnType(rt)
       params <- forEach (op.parameters) { param: Parameter =>
         for {
-          pt <- findClass(qualifiedBaseDataType(domain.findOperation(op).get) : _ *)
-          _ <- resolveAndAddImport(pt)
           pName <- freshName(names.mangle(param.name))
+          // must handle case where a particular parameter is not recursive (i.e., is double)
+          pt <- if (param.tpe.isModelBase(domain)) {
+            findClass(qualifiedBaseDataType(domain.findOperation(op).get) : _ *)
+          } else {
+            toTargetLanguageType(param.tpe)
+          }
+
+          _ <- resolveAndAddImport(pt)
         } yield (pName, pt)
       }
       _ <- setParameters(params)

@@ -25,23 +25,17 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO w
   import ooParadigm._
   import syntax._
 
-  lazy val visitorInstanceFactoryMethodPrefix: Name = names.mangle("make")
-
   object factory {
+    val makePrefix = "make"
+
     /**
      * Standard factory name for an operation.
-     *
-     * {{{
-     *   makeEval
-     * }}}
-     *
-     * Model is passed in should it become necessary to be overridden more specifically
      *
      * @param op    operation for which a factory is desired.
      * @return
      */
     def name(op:Operation) : Name = {
-      names.addPrefix("make", names.mangle(names.conceptNameOf(op)))
+      names.addPrefix(makePrefix, names.mangle(names.conceptNameOf(op)))
     }
 
     /**
@@ -175,7 +169,7 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO w
          } yield ()
        }
 
-       addClassToProject(makeClass, names.mangle(names.instanceNameOf(model)), names.mangle(names.conceptNameOf(tpeCase)))
+       addClassToProject(makeClass, dataTypeClassName(model, tpeCase) : _ *)
      }
 
      /**
@@ -258,6 +252,23 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO w
   /** Before instantiate is called, use this to register class where type is placed. */
   case class OnlyDataTypeCase(tpeCase: DataTypeCase) extends TypeRep
 
+  /** Produces, for example, Some(EvalDivdMultNeg).
+   *
+   * Either (1) the operation is defined in the current model and so you don't need to append class name, but can
+   * simply reply on past datatypes; or (2) concatenate and find recent one
+   *
+   * Compute the name for the visitor implementation of the given model and operation, if an implementation
+   * is required.
+   */
+  def visitorClassName(model: GenericModel, operation: Operation) : Option[Seq[Name]] = {
+    val operationName = names.mangle(names.conceptNameOf(operation))
+    Some(Seq(names.mangle(names.instanceNameOf(model)), operationName))
+  }
+
+  def dataTypeClassName(model: GenericModel, tpeCase: DataTypeCase): Seq[Name] = {
+    Seq(names.mangle(names.instanceNameOf(model)), names.mangle(names.conceptNameOf(tpeCase)))
+  }
+
   /**
    * Instantiates an instance of the domain object.
    *
@@ -294,10 +305,7 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO w
     import paradigm.methodBodyCapabilities._
     for {
       self <- selfReference()
-      method <-
-        getMember(
-          self, factory.name(message.request.op)
-        )
+      method <- getMember(self, factory.name(message.request.op))
       instance <- apply(method, message.request.arguments.toSeq.map(_._2))  // no arguments
     } yield instance
   }
@@ -398,7 +406,7 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO w
    * {{{
    *    return ((VisitorDivdMultNeg<R>) v).visit(this);
    * }}}
-   * //TODO: change this to perform instanceof check + throw exceptions
+   * //TODO: Could change this to perform instanceof check + throw exceptions
    */
   def makeAcceptImplementation(model: GenericModel): Generator[ClassContext, Unit] = {
     val makeBody: Generator[MethodBodyContext, Option[Expression]] = {
@@ -407,11 +415,11 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO w
       import polymorphics.methodBodyCapabilities._
 
       for {
-        // start from the accept signature and add a method body.
-        _ <- visitor.makeAcceptSignatureWithType() // used to have model as parameter.
-        args <- getArguments() // get name, type, expression
+
+        _ <- visitor.makeAcceptSignatureWithType()   // start from the accept signature and add a method body.
+        args <- getArguments()                       // get name, type, expression
         v = args.head._3
-        vType = visitorInterfaceName(model) // convert Name to a class
+        vType = visitorInterfaceName(model)          // convert Name to a class
 
         visitorClassType <- findClass(vType : _ *)
         tpeParam <- getTypeArguments()
@@ -445,10 +453,6 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO w
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
 
-    if (model.findOperation(op).isEmpty) {
-      print("SDS")
-    }
-
     for {
       earliestOpClass <- findClass(visitorClassName(model.findOperation(op).get, op).get : _ *)
       _ <- resolveAndAddImport(earliestOpClass)
@@ -469,38 +473,6 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO w
       args <- getArguments()
       res <- instantiateObject(latestOpClass,args.map(_._3))
     } yield Some(res)
-  }
-
-  /** Produces, for example, Some(EvalDivdMultNeg).
-   *
-   * Either (1) the operation is defined in the current model and so you don't need to append class name, but can
-   * simply reply on past datatypes; or (2) concatenate and find recent one
-   *
-   * Compute the name for the visitor implementation of the given model and operation, if an implementation
-   * is required.
-   */
-  def visitorClassName(model: GenericModel, operation: Operation) : Option[Seq[Name]] = {
-    val operationName = names.mangle(names.conceptNameOf(operation))
-    Some(Seq(names.mangle(names.instanceNameOf(model)), operationName))
-//    if (model.ops.contains(operation)) {
-//      Some(Seq(names.mangle(names.instanceNameOf(model)), operationName))
-//    } else {
-//      // must create a new name which concatenates
-//      val sortedTypeCases = model.typeCases.sortWith(_.name < _.name)
-//
-//      // if no types then no additional class is necessary so we can return None; otherwise
-//      // there are new type cases so we need to concatenate the names and so we generate a new
-//      // visitor type case.
-//      if (sortedTypeCases.isEmpty) {
-//        None
-//      } else {
-//        val name =
-//          sortedTypeCases.foldLeft(operationName) { case (name, tpeCase) =>
-//            names.addSuffix(name, names.conceptNameOf(tpeCase))
-//          }
-//        Some(Seq(names.mangle(names.instanceNameOf(model)), name))
-//      }
-//    }
   }
 
   def makeEachVisitorInterface(domain:GenericModel): Generator[ClassContext, Unit] = {
@@ -532,7 +504,7 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO w
       for {
         _ <- forEach(parentModels) { parent => {
           for {
-            // find former Op, such as "Eval" or "EvalSub"
+            // find former Op interface
             visitorInterfaceType <- findClass(visitorInterfaceName(parent): _ *)
             _ <- resolveAndAddImport(visitorInterfaceType)
 
@@ -560,7 +532,7 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO w
     val whereDefined = domain.findTypeCase(tpe).get
     for {
       _ <- setReturnType(visitResultType)
-      visitedClassType <- findClass(names.mangle(names.instanceNameOf(whereDefined)), names.mangle(names.conceptNameOf(tpe)))
+      visitedClassType <- findClass(dataTypeClassName(whereDefined,tpe) : _ *)
       _ <- resolveAndAddImport(visitedClassType)
       visitParamName <- freshName(names.mangle(visitor.expParameter))
       _ <- setParameters(Seq((visitParamName, visitedClassType)))      // a pair (name,type) of only one sequence
@@ -628,8 +600,8 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO w
    * @return           Returns class context without actually adding to ProjectContext; this is job of caller of this function
    */
   def makeExtensibleOperationImplementation(domain:GenericModel,
-                                  op: Operation,
-                                  domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
+        op: Operation,
+        domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
 
     import ooParadigm.classCapabilities._
     import genericsParadigm.classCapabilities._
@@ -638,7 +610,6 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO w
     val previous = allPast.filterNot(m => allPast.exists(mnewer => m.before(mnewer)))
 
     // only capture new ones. Make sure to apply distinct to handle merging
-
     val typeCasesToDeclare = if (previous.isEmpty) {
       domain.flatten.typeCases.distinct
     } else {
@@ -648,14 +619,11 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO w
 
     // ignore degenerate case where the first model only has an operation without any types
     // if you get the last model with data types, you should stop if op is defined AFTER
-    // that one (for example with PrettyP which is defined in M2 but Sub is defined in M1
+    // that one (for example with PrettyP which is defined in M2 but Sub is defined in M1)
     def addParentClass(): Generator[ClassContext, Option[Type]] = if (domain.isDomainBase) {
         Command.lift[ClassContext, Option[Type]](Option.empty)
       } else {
-
         val latestVisitor = latestModelDefiningVisitor(domain)
-
-        // throw out everything for which there is a newer one in the former.
 
         for {
           visitTyParam <- toTargetLanguageType(op.returnType) // can do this because we need this interfaces paramType
@@ -721,7 +689,6 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO w
           factory.create(modelToUse, dependentOp, visitorClassName(modelToUse, dependentOp).get)
         }
 
-      // TODO: optimization to perhaps recurse and have this wrapped up in the above for loop...
       _ <- factory.create(domain, op, visitorClassName(domain, op).get)
     } yield ()
   }
@@ -758,7 +725,7 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO w
        canAddImport: Understands[Context, AddImport[paradigm.syntax.Import]],
   ): Generator[Context, paradigm.syntax.Type] = {
     for {
-      dataTypeCaseClass <- FindClass[paradigm.syntax.Name, paradigm.syntax.Type](Seq(names.mangle(names.instanceNameOf(domain)), names.mangle(names.conceptNameOf(dataTypeCase)))).interpret(canFindClass)
+      dataTypeCaseClass <- FindClass[paradigm.syntax.Name, paradigm.syntax.Type](dataTypeClassName(domain,dataTypeCase)).interpret(canFindClass)
       _ <- resolveAndAddImport(dataTypeCaseClass)
     } yield dataTypeCaseClass
   }
@@ -784,7 +751,6 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO w
     import ooParadigm.projectCapabilities.addTypeLookupForConstructors
 
     for {
-
       _ <- forEach(model.typeCases) { tpeCase => // passes on capabilities so it knows which generators to use...
         for {
           _ <- addTypeLookupForMethods(OnlyDataTypeCase(tpeCase), locateTypeCaseClass(model, tpeCase)(canFindClass = ooParadigm.methodBodyCapabilities.canFindClassInMethod, canAddImport = paradigm.methodBodyCapabilities.canAddImportInMethodBody, canResolveImport = paradigm.methodBodyCapabilities.canResolveImportInMethod))
@@ -798,9 +764,10 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO w
   override def registerTypeMapping(domain: GenericModel): Generator[ProjectContext, Unit] = {
 
     import paradigm.projectContextCapabilities.addTypeLookupForMethods
-    import ooParadigm.methodBodyCapabilities.canFindClassInMethod
     import ooParadigm.projectCapabilities.addTypeLookupForClasses
     import ooParadigm.projectCapabilities.addTypeLookupForConstructors
+
+    import ooParadigm.methodBodyCapabilities.canFindClassInMethod             // These three all are needed
     import ooParadigm.classCapabilities.canFindClassInClass
     import ooParadigm.constructorCapabilities.canFindClassInConstructor
 
@@ -828,33 +795,24 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO w
     import ooParadigm.projectCapabilities._
     import paradigm.projectContextCapabilities._
 
-    val fdomain = gdomain match {
-      case _:Model => gdomain.asInstanceOf[Model]
-      case _ => gdomain.linearize
-    }
+    gdomain.inChronologicalOrder.foreach(_.output)
 
-    println(fdomain.name + ":" + new java.util.Date().toString)
-    fdomain.inChronologicalOrder.foreach(_.output)
-
-    //val flatDomain = fdomain.flatten
     for {
       _ <- debug ("Processing Extensible Visitor")
-     // _ <- registerTypeMapping(flatDomain)
       _ <- domainSpecific.initialize(this)
-      _ <- visitor.makeBase(gdomain.baseDataType)                    // top-level Exp [was domain]
+      _ <- visitor.makeBase(gdomain.baseDataType)
       _ <- registerTypeMapping(gdomain)
       _ <- addClassToProject(visitor.makeVisitorInterface(Seq.empty), visitor.visitorClass)   // top-level Visitor
 
-      _ <- makeOperationsBase(gdomain)                       // [was domain]
+      _ <- makeOperationsBase(gdomain)
 
       // WHEN new data types are added and there are existing operations in the past
       // need to run generators in sequence and when that happens you need to group with a for {...} yield()
-      _ <- forEach (gdomain.inChronologicalOrder) { m => {    // [was domain]
+      _ <- forEach (gdomain.inChronologicalOrder) { m => {
           for {
-
             _ <- forEach (m.typeCases) { tpeCase =>
               for {
-                _ <- visitor.makeDerived(fdomain.baseDataType, tpeCase, m)
+                _ <- visitor.makeDerived(gdomain.baseDataType, tpeCase, m)
               } yield ()
             }
 
@@ -877,29 +835,21 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO w
                 }
               } yield ()
             }
-
-            // Now add the operation classes
-//            _ <- forEach(m.ops) { op =>
-//              addClassToProject(makeExtensibleOperationImplementation(m, op, domainSpecific), visitorClassName(m, op).get : _ *)
-//            }
           } yield ()
         }
       }
 
-      _ <- forEach (fdomain.inChronologicalOrder) { dm =>      // [was domain]
+      _ <- forEach (gdomain.inChronologicalOrder) { dm =>
             forEach (dm.typeCases) { tpeCase =>
               for {
-                _ <- visitor.makeDerived(fdomain.baseDataType, tpeCase, dm)
+                _ <- visitor.makeDerived(gdomain.baseDataType, tpeCase, dm)
                 _ <- registerNewlyDeclaredDataTypeClasses(dm)
-              } yield()      // [was domain]
+              } yield ()
             }
         }
     } yield ()
   }
 
-   def implementxx(tests: Map[GenericModel, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
-    Command.skip[paradigm.ProjectContext]
-  }
   /** Adds tests to the project context */
   override def implement(tests: Map[GenericModel, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
     import projectContextCapabilities._

@@ -37,6 +37,7 @@ lazy val commonSettings = Seq(
     "org.typelevel" %% "cats-free" % "2.3.1",
     "org.typelevel" %% "cats-effect" % "2.3.1"
   ),
+  evictionErrorLevel := Level.Info,
 
   addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
 )

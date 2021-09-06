@@ -15,7 +15,7 @@ case class CompilationUnitCtxt(
 )
 case class TypeCtxt(
   resolver: ContextSpecificResolver,
-  cases: Seq[scala.meta.Type => scala.meta.Defn.Class],
+  tpe: scala.meta.Type.Name => scala.meta.Defn.Enum,
   extraImports: Seq[scala.meta.Import]
 )
 

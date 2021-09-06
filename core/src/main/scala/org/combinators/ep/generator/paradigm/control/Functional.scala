@@ -6,7 +6,7 @@ import org.combinators.ep.generator.paradigm.{AnyParadigm, DeclareVariable, IfTh
 
 case class PatternMatch[MethodBodyContext, Name, Expression](
   onValue: Expression,
-  options: Map[(Name, Seq[Name]), Seq[Expression] => Generator[MethodBodyContext, Expression]]
+  options: Map[(Seq[Name], Seq[Name]), Seq[Expression] => Generator[MethodBodyContext, Expression]]
 ) extends Command {
   type Result = Expression
 }
@@ -42,7 +42,7 @@ trait Functional[Context] {
     implicit val canPatternMatch: Understands[Context, PatternMatch[Context, Name, Expression]]
     def patternMatch(
         onValue: Expression,
-        options: Map[(Name, Seq[Name]), Seq[Expression] => Generator[Context, Expression]]
+        options: Map[(Seq[Name], Seq[Name]), Seq[Expression] => Generator[Context, Expression]]
       ): Generator[Context, Expression] =
       AnyParadigm.capabilitiy(PatternMatch(onValue, options))
 

@@ -71,11 +71,11 @@ trait Functional[Ctxt, AP <: AnyParadigm] extends Func[Ctxt] {
         ): (Ctxt, Term) = {
           val matchExp =
             for {
-              cases <- forEach(command.options.toList) { case ((name, attNames), caseGen) =>
+              cases <- forEach(command.options.toList) { case ((names, attNames), caseGen) =>
                 val variables = attNames.map(attName => Term.fresh(attName.toAST.value))
                 caseGen(variables).map[Case](caseCode =>
                   Case(
-                    Pat.Extract(Term.Name(name.toAST.value), variables.toList.map(variable => Pat.Var(variable))),
+                    Pat.Extract(AnyParadigm.toTermSelection(names), variables.toList.map(variable => Pat.Var(variable))),
                     None,
                     caseCode
                   ))

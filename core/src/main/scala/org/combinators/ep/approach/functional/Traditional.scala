@@ -24,7 +24,7 @@ trait Traditional extends ApproachImplementationProvider {
     import functional.methodBodyCapabilities._
 
     for {
-      method <- findMethod(Seq(names.mangle(names.conceptNameOf(message.request.op)), names.mangle(names.instanceNameOf(message.request.op))))
+      method <- findMethod(Seq(names.mangle(names.instanceNameOf(message.request.op))))
       _ <- resolveAndAddImport(method)
       res <- apply(method, message.to +: message.request.op.parameters.map(message.request.arguments))
     } yield res
@@ -112,13 +112,14 @@ trait Traditional extends ApproachImplementationProvider {
       args <- getArguments()
       result <- {
         val matchGen = makeCases(tpe, cases, op, args.head._3, args.tail, domainSpecific)(_, _)
+        val tpeName = names.mangle(names.conceptNameOf(tpe))
         patternMatch(
           args.head._3,
-          cases.map(tpeCase => {
-              val caseName = names.mangle(names.conceptNameOf(tpeCase))
-              val attributeNames = tpeCase.attributes.map(attName => names.mangle(names.instanceNameOf(attName)))
-              ((caseName, attributeNames), matchGen(caseName, _))
-            }).toMap)
+          cases.map(tpeCase => {            
+            val caseName = names.mangle(names.conceptNameOf(tpeCase))
+            val attributeNames = tpeCase.attributes.map(attName => names.mangle(names.instanceNameOf(attName)))
+            ((Seq[Name](tpeName, caseName), attributeNames), matchGen(caseName, _))
+          }).toMap)
         }
     } yield result
   }

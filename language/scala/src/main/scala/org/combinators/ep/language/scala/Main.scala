@@ -1,18 +1,21 @@
 package org.combinators.ep.language.scala     /*DI:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
+import org.apache.commons.io.FileUtils
 import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.approach.functional.Traditional
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.math._
-import org.combinators.ep.generator.{ApproachImplementationProvider, TestImplementationProvider}
+import org.combinators.ep.generator.{ApproachImplementationProvider, FileWithPath, FileWithPathPersistable, TestImplementationProvider}
 import org.combinators.jgitserv.{BranchTransaction, GitService}
 import org.combinators.ep.generator.FileWithPathPersistable._
+
+import java.nio.file.{Path, Paths}
 
 /**
   * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
   */
-object Main extends IOApp {
+class Main  {
   val generator = CodeGenerator(CodeGenerator.defaultConfig)
 
   val traditionalApproach = Traditional[Syntax.default.type, generator.paradigm.type](generator.paradigm)(ScalaNameProvider, generator.functional, generator.functionalInMethod)
@@ -68,10 +71,13 @@ object Main extends IOApp {
     m + (evolution.getModel -> evolution.tests)
   }.tail
 
-  val transaction =
-    evolutions.zip(tests).foldLeft(Option.empty[BranchTransaction]) {
-      case (transaction, (evolution, tests)) =>
-        val impl =
+  // for CoCo, we only need the latest since all earlier ones are identical
+  val all = evolutions.zip(tests)
+
+  def transaction[T](initialTransaction: T, addToTransaction: (T, String, () => Seq[FileWithPath]) => T): T = {
+    all.foldLeft(initialTransaction) { case (transaction, (evolution, tests)) =>
+      val impl =
+        () => generator.paradigm.runGenerator {
           for {
             _ <- approach.implement(evolution.getModel, eip)
             _ <- approach.implement(
@@ -79,18 +85,65 @@ object Main extends IOApp {
               TestImplementationProvider.defaultAssertionBasedTests(approach.paradigm)(generator.assertionsInMethod, generator.equalityInMethod, generator.booleansInMethod, generator.stringsInMethod)
             )
           } yield ()
-        val nextTransaction =
-          transaction.map(_.fork(evolution.getModel.name).deleteAllFiles)
-            .getOrElse(BranchTransaction.empty(evolution.getModel.name))
-        Some(nextTransaction.persist(generator.paradigm.runGenerator(impl)).commit("Adding next evolution"))
+        }
+      addToTransaction(transaction, evolution.getModel.name, impl)
     }
+  }
+  val persistable = FileWithPathPersistable[FileWithPath]
 
-  def run(args: List[String]): IO[ExitCode] = {
+  def gitTransaction: Option[BranchTransaction] =
+    transaction[Option[BranchTransaction]](Option.empty, (transaction, evolutionName, files) => {
+      val nextTransaction =
+        transaction.map(_.fork(evolutionName).deleteAllFiles)
+          .getOrElse(BranchTransaction.empty(evolutionName))
+      Some(nextTransaction.persist(files())(persistable).commit("Adding next evolution"))
+    })
+
+  def directToDiskTransaction(targetDirectory: Path): IO[Unit] = {
+    transaction[IO[Unit]](IO.unit, (transaction, evolutionName, files) => IO {
+      print("Computing Files...")
+      val computed = files()
+      println("[OK]")
+      if (targetDirectory.toFile.exists()) {
+        print(s"Cleaning Target Directory (${targetDirectory})...")
+        FileUtils.deleteDirectory(targetDirectory.toFile)
+        println("[OK]")
+      }
+      print("Persisting Files...")
+      files().foreach(file => persistable.persistOverwriting(targetDirectory, file))
+      println("[OK]")
+    })
+  }
+
+  def runGit(args: List[String]): IO[ExitCode] = {
     val name = evolutions.head.getModel.base.name
     for {
       _ <- IO { System.out.println(s"Use: git clone http://127.0.0.1:8081/$name ${evolutions.last.getModel.name}") }
-      exitCode <- new GitService(transaction.toSeq, name).run(args)
+      exitCode <- new GitService(gitTransaction.toSeq, name).run(args)
       //exitCode <- new GitService(transaction.toSeq, name).runProcess(Seq(s"sbt", "test"))
     } yield exitCode
+  }
+
+  def runDirectToDisc(targetDirectory: Path): IO[ExitCode] = {
+    for {
+      _ <- directToDiskTransaction(targetDirectory)
+    } yield ExitCode.Success
+  }
+}
+
+object GitMain extends IOApp {
+  def run(args: List[String]): IO[ExitCode] = new Main().runGit(args)
+}
+
+object DirectToDiskMain extends IOApp {
+  val targetDirectory = Paths.get("target", "ep2")
+
+  def run(args: List[String]): IO[ExitCode] = {
+    for {
+      _ <- IO { print("Initializing Generator...") }
+      main <- IO { new Main() }
+      _ <- IO { println("[OK]") }
+      result <- main.runDirectToDisc(targetDirectory)
+    } yield result
   }
 }

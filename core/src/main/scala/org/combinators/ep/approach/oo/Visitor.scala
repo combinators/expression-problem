@@ -1,6 +1,6 @@
 package org.combinators.ep.approach.oo    /*DI:LI:AD*/
 
-import org.combinators.ep.domain.{GenericModel, Model}
+import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator._
 import org.combinators.ep.generator.communication._
@@ -66,7 +66,7 @@ abstract class Visitor extends OOApproachImplementationProvider with SharedVisit
    * }}}
    * @return
    */
-  def makeAcceptImplementation(model:Model): Generator[ClassContext, Unit] = {
+  def makeAcceptImplementation(model:GenericModel): Generator[ClassContext, Unit] = {
     val makeBody: Generator[MethodBodyContext, Option[Expression]] = {
       import paradigm.methodBodyCapabilities._
       import ooParadigm.methodBodyCapabilities._
@@ -115,7 +115,7 @@ abstract class Visitor extends OOApproachImplementationProvider with SharedVisit
    * @param domainSpecific
    * @return        The one invoking this method must be sure to add this class to project.
    */
-  def makeOperationImplementation(domain:Model,
+  def makeOperationImplementation(domain:GenericModel,
                                   op: Operation,
                                   domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
     import ooParadigm.classCapabilities._
@@ -147,19 +147,14 @@ abstract class Visitor extends OOApproachImplementationProvider with SharedVisit
     import ooParadigm.projectCapabilities._
     import paradigm.projectContextCapabilities._
 
-    val domain = gdomain match {
-      case _:Model => gdomain.asInstanceOf[Model]
-      case _ => gdomain.linearize
-    }
-
-    val flatDomain = domain.flatten
+    val flatDomain = gdomain.flatten
     for {
       _ <- debug ("Processing Visitor")
       _ <- registerTypeMapping(flatDomain)
       _ <- domainSpecific.initialize(this)
       _ <- makeBase(flatDomain.baseDataType)
       _ <- forEach (flatDomain.typeCases) { tpeCase =>
-        makeDerived(flatDomain.baseDataType, tpeCase, domain)   // used to have flatDomain.ops,
+        makeDerived(flatDomain.baseDataType, tpeCase, gdomain)   // used to have flatDomain.ops,
       }
 
       _ <- addClassToProject(makeVisitorInterface(flatDomain.typeCases), visitorClass)

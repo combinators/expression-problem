@@ -1,6 +1,6 @@
 package org.combinators.ep.approach.oo    /*DI:LI:AD*/
 
-import org.combinators.ep.domain.Model
+import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions.{DataType, DataTypeCase, Operation, TypeRep}
 import org.combinators.ep.generator.{Command, EvolutionImplementationProvider}
 import org.combinators.ep.generator.Command.Generator
@@ -29,10 +29,10 @@ trait SharedVisitor extends OOApproachImplementationProvider with SharedOO with 
   val visitTypeParameter: String = "R"
 
   // must be provided by the appropriate extension
-  def makeAcceptImplementation(model: Model): Generator[ClassContext, Unit]
+  def makeAcceptImplementation(model: GenericModel): Generator[ClassContext, Unit]
 
   // will need a visit method
-  def makeOperationImplementation(domain:Model, op: Operation, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit]
+  def makeOperationImplementation(domain:GenericModel, op: Operation, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit]
 
   /**
    * Instantiates an instance of the domain object.
@@ -232,7 +232,7 @@ trait SharedVisitor extends OOApproachImplementationProvider with SharedOO with 
    * }}}
    *
    */
-  def makeDerived(parentType: DataType, tpeCase: DataTypeCase, model: Model): Generator[ProjectContext, Unit] = {
+  def makeDerived(parentType: DataType, tpeCase: DataTypeCase, model: GenericModel): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
     val makeClass: Generator[ClassContext, Unit] = {
       import ooParadigm.classCapabilities._

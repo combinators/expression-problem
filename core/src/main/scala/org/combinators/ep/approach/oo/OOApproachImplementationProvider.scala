@@ -30,16 +30,12 @@ trait OOApproachImplementationProvider extends ApproachImplementationProvider {
   def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
     FindClass(Seq(names.mangle(names.conceptNameOf(dtpe)))).interpret(canFindClass)
   }
-
+  
+  /** Provides meaningful default solution to find the base data type in many object-oriented approaches.
+   * 
+   * This enables target-language classes to be retrieved from within the code generator in the Method, Class or Constructor contexts.
+   */
   def registerTypeMapping(domain: GenericModel): Generator[ProjectContext, Unit] = {
-//    import paradigm.projectContextCapabilities._
-//    import ooParadigm.projectCapabilities._
-//    import ooParadigm.methodBodyCapabilities._
-//    import ooParadigm.classCapabilities.{canAddTypeLookupForClassesInClass => _,
-//                                         canAddTypeLookupForConstructorsInClass => _,
-//                                         _}
-//
-//    import ooParadigm.constructorCapabilities._
     import paradigm.projectContextCapabilities.addTypeLookupForMethods
     import ooParadigm.methodBodyCapabilities.canFindClassInMethod
     import ooParadigm.projectCapabilities.addTypeLookupForClasses

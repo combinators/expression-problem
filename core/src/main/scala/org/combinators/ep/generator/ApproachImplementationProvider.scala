@@ -49,6 +49,7 @@ trait ApproachImplementationProvider {
     } yield result
   }
 
+  /** Available in any Context that can ResolveImport and AddImport. */
   def resolveAndAddImport[Context, Elem](elem: Elem)
     (implicit
       canResolveImport: Understands[Context, ResolveImport[Import, Elem]],

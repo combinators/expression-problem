@@ -302,12 +302,11 @@ class GenericModel(val name:String,
   }
 
   /** Debugging function. */
-  def output = {
+  def output():Unit = {
     println(toString)
   }
 }
 
-// Ignore IntelliJ ScalaDoc error: https://youtrack.jetbrains.com/issue/SCL-14638
 /** Models a named domain evolution with new data type cases and operations, as well as the last evolution.
   *
   * Use `evolve` to obtain the next model and [[org.combinators.ep.domain.GenericModel.base]] for the initial one.
@@ -441,7 +440,7 @@ sealed class Model (
   }
 
   /** Debugging function. */
-  override def output = {
+  override def output():Unit = {
     println(toString)
   }
 

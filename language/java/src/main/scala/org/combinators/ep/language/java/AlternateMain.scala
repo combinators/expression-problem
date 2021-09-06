@@ -1,7 +1,7 @@
 package org.combinators.ep.language.java     /*DD:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
-import org.combinators.ep.approach.oo.ViTA
+import org.combinators.ep.approach.oo.{CoCoClean}
 import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.math.{A1, A1M3, A1M3I2, A3, I1, I2, M0, M1, M2, eips}
@@ -11,10 +11,9 @@ import org.combinators.ep.generator.FileWithPathPersistable._
 
 object AlternateMain extends IOApp {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed))
+  val cocoCleanApproach = CoCoClean[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
-  val vitaApproach = ViTA[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
-
-  val approach = vitaApproach
+  val approach = cocoCleanApproach
 
   val evolutions = Seq(M0, M1, M2, I1, I2, A1, A1M3, A1M3I2, A3)  // M0, M1, M2, M3, M4, M5, M6, M7, I1, I2,)    // all test cases become active WHEN all included.
 

@@ -1,16 +1,16 @@
 package org.combinators.ep.language.java     /*DI:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
-import org.combinators.ep.approach.oo.{Algebra, CoCoClean, ExtensibleVisitor, Interpreter, RuntimeDispatching, Traditional, TriviallyClean, Visitor, VisitorSideEffect}
-import org.combinators.ep.domain.{GenericModel, Model}
+import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, RuntimeDispatching, Traditional, TriviallyClean, Visitor, VisitorSideEffect}
+import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.math._
 import org.combinators.ep.generator.{ApproachImplementationProvider, FileWithPath, FileWithPathPersistable, TestImplementationProvider}
-import org.combinators.jgitserv.{BranchTransaction, GitService, ResourcePersistable}
+import org.combinators.jgitserv.{BranchTransaction, GitService}
 import FileWithPathPersistable._
-import org.apache.commons.io.{FileSystemUtils, FileUtils}
+import org.apache.commons.io.FileUtils
 
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{Path, Paths}
 
 /**
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
@@ -39,9 +39,9 @@ class Main {
   //val algebraApproach = Algebra[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
   // select one here.
-  val approach = cocoCleanApproach
+  val approach = ooApproach
 
-  val evolutions = Seq(M0, M1, M2, I1, I2, M3, M4, M5, M6, M7, M7I2, M8, M9)    // all test cases become active WHEN all included.
+  val evolutions = Seq(M0, M1, M2, M3, M4, I1, I2, M3, M4, M5, M6, M7, M7I2, M8, M9)    // all test cases become active WHEN all included.
   //val evolutions = Seq(M0, M1, M2, M3, I1, A1, A1M3)
 
 //  val eip = eips.I2(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod,

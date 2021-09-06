@@ -66,41 +66,49 @@ trait AnyParadigm extends AP {
                   isTest = false,
                   companionDefinitions = Seq.empty)
               )
-            val companionObject =
-              if (uc.companionDefinitions.nonEmpty) {
-                val name = 
-                  if (command.name.nonEmpty) Term.Name(command.name.last.toAST.value)
-                  else tgtPackage.ref match {
-                    case tgt: Term.Name => tgt
-                    case tgt: Term.Select => tgt.name
-                  }
-                val templ =
-                  Template(
-                    early = List.empty,
-                    inits = List.empty,
-                    self = Self(Name.Anonymous(), None),
-                    stats = uc.companionDefinitions.toList
-                  )
-                if (command.name.nonEmpty) Some(Defn.Object(List.empty, name, templ))
-                else Some(Pkg.Object(List.empty, name, templ))
-              } else None
+
+            def keepImp(imp: Importer): Boolean = {
+
+              def dropLastSelected(imp: Term): Term =
+                imp match {
+                  case sel : Term.Select => sel.qual
+                  case _ => imp
+                }
+              def keepRec(tgt: Term, imp: Term): Boolean = {
+                (tgt, imp)  match {
+                  case (tgt: Term.Name, sel: Term.Name) =>
+                    tgt.value != sel.value
+                  case (tgt: Term.Select, sel: Term.Select) =>
+                    tgt.name != sel.name || keepRec(tgt.qual, sel.qual)
+                  case _ => true
+                }
+              }
+              keepRec(tgtPackage.ref, dropLastSelected(imp.ref))
+            }
+            def filterImps(stats: List[Stat]): List[Stat] =
+              stats.flatMap {
+                case i@Import(imps) =>
+                  val newImporters = imps.filter(keepImp)
+                  if (newImporters.isEmpty) List.empty else List(i.copy(importers = newImporters))
+                case s => List(s)
+              }
 
             val resultingUnit = {
               val stats: List[Stat] =
-                if (command.name.isEmpty && companionObject.isDefined) {
+                if (command.name.isEmpty) {
                   tgtPackage.ref match {
                     case tgt: Term.Name => 
-                      uc.unit.stats ++ companionObject.toList
+                      filterImps(uc.unit.stats ++ uc.companionDefinitions)
                     case tgt: Term.Select => 
                       List(
                         tgtPackage.copy(
                           ref = tgt.qual.asInstanceOf[Term.Ref],
-                          stats = uc.unit.stats ++ companionObject.toList
+                          stats = filterImps(uc.unit.stats ++ uc.companionDefinitions)
                         )
                       )
                   }
                 } else {
-                  List(tgtPackage.copy(stats = uc.unit.stats ++ companionObject.toList))
+                  List(tgtPackage.copy(stats = filterImps(uc.unit.stats ++ uc.companionDefinitions)))
                 }
               (command.name.map(_.toAST), Source(stats))
             }
@@ -155,7 +163,6 @@ trait AnyParadigm extends AP {
               context.unit.stats.collect {
                 case imp: Import => imp
               } :+ command.imp
-
             val sortedImports = imports.groupBy(_.structure).mapValues(_.head).values.toList.sortBy(_.toString)
             val newStats =
               sortedImports ++ context.unit.stats.filter(!_.isInstanceOf[Import])
@@ -465,12 +472,13 @@ trait AnyParadigm extends AP {
       )
     val nameEntry = config.projectName.map(n => s"""name := "${n}"""").getOrElse("")
     val scalaTestDeps = Seq(
-      """"org.scalatest" %% "scalatest" % "3.1.1" % "test""""
+      """"org.scalatest" %% "scalatest" % "3.2.9" % "test""""
     )
     val deps = (scalaTestDeps ++ finalContext.extraDependencies).mkString("Seq(\n    ", ",\n    ", "\n  )")
     val buildFile =
       s"""
          |$nameEntry
+         |scalaVersion := "3.0.1"
          |libraryDependencies ++= $deps
            """.stripMargin
     // TODO: Add more cleanup (imports?)..
@@ -590,7 +598,6 @@ object AnyParadigm {
       Type.Name(qualifiedName.head.toAST.value)
     }
   }
-
 
   def computePath(relativeTo: Path, tgt: Seq[Name]): Path = {
     tgt match {

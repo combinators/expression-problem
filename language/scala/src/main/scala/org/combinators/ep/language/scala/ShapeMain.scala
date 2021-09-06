@@ -3,6 +3,7 @@ package org.combinators.ep.language.scala     /*DI:LD:AD*/
 import cats.effect.{ExitCode, IO, IOApp}
 import org.combinators.ep.approach.functional
 import org.combinators.ep.approach.oo._
+import org.combinators.ep.language.scala.{ Syntax, ScalaNameProvider }
 import org.combinators.ep.domain.{GenericModel, Model}
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.shape.{S0, _}
@@ -40,7 +41,8 @@ object ShapeMain extends IOApp {
     eips.S0(approach.paradigm)(
       ffiArithmetic = generator.doublesInMethod,
       generator.realDoublesInMethod,
-      generator.booleansInMethod
+      generator.booleansInMethod,
+      generator.stringsInMethod
   )
   val s1eip = eips.S1(approach.paradigm)(s0eip)(
     generator.doublesInMethod,

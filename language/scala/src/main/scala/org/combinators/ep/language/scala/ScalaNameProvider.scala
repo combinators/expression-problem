@@ -8,7 +8,7 @@ import scala.util.Try
 
 
 /** Provides name mangling for Scala */
-object ScalaNameProvider extends NameProvider[MangledName] {
+object ScalaNameProvider extends NameProvider[Syntax.MangledName] {
   /** Tries to parse names as a
     * [[https://www.javadoc.io/static/org.scalameta/trees_2.12/4.3.7/scala/meta/Term$$Name.html name]] and mangles to
     * the arabic number representation of the UTF-8 bytes in the given string, where each byte is prefixed by "_".

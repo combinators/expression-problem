@@ -228,7 +228,7 @@ trait Functional[AP <: AnyParadigm] extends Func {
           context: MethodBodyCtxt,
           command: InstantiateType[Type, Syntax.MangledName, Term]
         ): (MethodBodyCtxt, Term) = {
-          (context, Term.Apply(Term.Name(command.constructor.toAST.value), command.arguments.toList))
+          (context, Term.Apply(AnyParadigm.selectConstructor(command.tpe, command.constructor.toAST).get, command.arguments.toList))
         }
       }
     implicit val canResolveExpressionImportInMethod: Understands[MethodBodyCtxt, ResolveImport[Import, Term]] =

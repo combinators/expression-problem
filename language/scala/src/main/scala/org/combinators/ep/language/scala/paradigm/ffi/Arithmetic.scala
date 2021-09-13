@@ -19,7 +19,9 @@ class Arithmetic[Ctxt, T, AP <: AnyParadigm](
   reification: T => Term
 ) extends Arith[Ctxt, T] {
   import base.syntax._
-
+  
+  case object ArithmeticEnabled
+  
   val arithmeticCapabilities: ArithmeticCapabilities =
     new ArithmeticCapabilities {
       implicit val canAdd: Understands[Ctxt, Apply[Add[T], Expression, Expression]] =
@@ -43,9 +45,11 @@ class Arithmetic[Ctxt, T, AP <: AnyParadigm](
         context: ProjectCtxt,
         command: Enable.type
       ): (ProjectCtxt, Unit) = {
-        val resolverUpdate =
-          ContextSpecificResolver.updateResolver(base.config, rep, targetType)(reification)(_)
-        (context.copy(resolver = resolverUpdate(context.resolver)), ())
+        if (!context.resolver.resolverInfo.contains(ArithmeticEnabled)) {
+          val resolverUpdate =
+            ContextSpecificResolver.updateResolver(base.config, rep, targetType)(reification)(_)
+          (context.copy(resolver = resolverUpdate(context.resolver)), ())
+        } else (context, ())
       }
     })
 }

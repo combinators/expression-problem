@@ -18,6 +18,8 @@ class RealArithmetic[Ctxt, T, AP <: AnyParadigm](
   targetType: Type,
   reification: T => Expression
 ) extends RArith[Ctxt, T] {
+  
+  case object RealArithmeticEnabled
 
   private def scalaMathOp[Ctxt, Op](methodName: String): Understands[Ctxt, Apply[Op, Expression, Expression]] =
     new Understands[Ctxt, Apply[Op, Expression, Expression]] {
@@ -86,9 +88,11 @@ class RealArithmetic[Ctxt, T, AP <: AnyParadigm](
         context: ProjectCtxt,
         command: Enable.type
       ): (ProjectCtxt, Unit) = {
-        val resolverUpdate =
-          ContextSpecificResolver.updateResolver(base.config, rep, targetType)(reification)(_)
-        (context.copy(resolver = resolverUpdate(context.resolver)), ())
+        if (!context.resolver.resolverInfo.contains(RealArithmeticEnabled)) {
+          val resolverUpdate =
+            ContextSpecificResolver.updateResolver(base.config, rep, targetType)(reification)(_)
+          (context.copy(resolver = resolverUpdate(context.resolver)), ())
+        } else (context, ())
       }
     })
 }

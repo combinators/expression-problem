@@ -175,7 +175,7 @@ trait AnyParadigm extends AP {
             context: CompilationUnitCtxt,
             command: AddTestSuite[Name, TestCtxt]
           ): (CompilationUnitContext, Unit) = {
-            val clsToAdd = q"class ${Type.Name(command.name.mangled)} extends FunSuite {}"
+            val clsToAdd = q"class ${Type.Name(command.name.mangled)} extends AnyFunSuite {}"
             val (testRes, _) =
               Command.runGenerator(
                 command.suite,
@@ -189,8 +189,9 @@ trait AnyParadigm extends AP {
               val testClass = testRes.testClass
               val funSuiteImport =
                 Import(List(Importer(
-                  Term.Select(Term.Name("org"), Term.Name("scalatest")),
-                  List(Importee.Name(Name.Indeterminate("FunSuite"))))))
+                  Term.Select(Term.Select(Term.Name("org"), Term.Name("scalatest")), Term.Name("funsuite")),
+                  List(Importee.Wildcard())
+                )))
               val imports =
                 (oldUnit.stats.collect {
                   case imp: Import => imp
@@ -537,6 +538,14 @@ object AnyParadigm {
       case Type.Project(qual: Type.Ref, name) =>
         relativize(relativeTo, qual).map(relTpe => Type.Project(relTpe, name))
       case Type.Singleton(ref) => relativize(relativeTo, ref).map(Type.Singleton(_))
+      case _ => None
+    }
+  }
+
+  def selectConstructor(relativeTo: Type, ctorName: Name): Option[Term.Ref] = {
+    stripGenerics(relativeTo) match {
+      case name: Type.Name => Some(Term.Select(Term.Name(name.value), Term.Name(ctorName.value)))
+      case Type.Select(ref: Term.Ref, name) => Some(Term.Select(Term.Select(ref, Term.Name(name.value)), Term.Name(ctorName.value)))
       case _ => None
     }
   }

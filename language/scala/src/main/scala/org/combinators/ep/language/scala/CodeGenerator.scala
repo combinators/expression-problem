@@ -3,12 +3,12 @@ package org.combinators.ep.language.scala   /*DI:LD:AI*/
 import cats.{Apply => _}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command
-import org.combinators.ep.generator.paradigm.ffi.Trees
 import org.combinators.ep.generator.paradigm.{Generics, ParametricPolymorphism}
 import org.combinators.ep.language.scala.paradigm._
 import org.combinators.ep.language.scala.paradigm.ffi._
 
 import scala.meta._
+import org.combinators.ep.language.scala.paradigm.ffi.Trees
 
 /**
   * Scala-specific.
@@ -89,17 +89,11 @@ sealed class CodeGenerator(config: Config) { cc =>
   val listsInConstructor =
     new Lists[CtorCtxt, paradigm.type](paradigm)
 
-  /*val treesInMethod =
-    Trees[MethodBodyCtxt, paradigm.type, ObjectOriented](
-      paradigm,
-      paradigm.methodBodyCapabilities.canAddImportInMethodBody
-    )(ooParadigm)
+  val treesInMethod =
+    new Trees[MethodBodyCtxt, paradigm.type](paradigm)
 
   val treesInConstructor =
-    Trees[CtorCtxt, paradigm.type, ObjectOriented](
-      paradigm,
-      ooParadigm.constructorCapabilities.canAddImportInConstructor
-    )(ooParadigm) */
+    new Trees[CtorCtxt, paradigm.type](paradigm)
 
   val assertionsInMethod = new Assertions[paradigm.type](paradigm)(functional)
 }

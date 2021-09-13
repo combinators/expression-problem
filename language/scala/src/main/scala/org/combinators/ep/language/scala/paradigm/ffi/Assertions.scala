@@ -15,6 +15,7 @@ import scala.meta._
 
 class Assertions[AP <: AnyParadigm](val base: AP)(functional: Functional.WithBase[AP]) extends Assrts[MethodBodyCtxt] {
   import base.syntax._
+  case object AssertionsEnabled
 
   val assertionCapabilities: AssertionCapabilities =
     new AssertionCapabilities {
@@ -44,12 +45,13 @@ class Assertions[AP <: AnyParadigm](val base: AP)(functional: Functional.WithBas
         context: ProjectCtxt,
         command: Enable.type
       ): (ProjectCtxt, Unit) = {
+        if (!context.resolver.resolverInfo.contains(AssertionsEnabled)) {
+          val resolverUpdate =
+            ContextSpecificResolver
+              .updateResolver(base.config, TypeRep.Boolean, Type.Name("Boolean"))(Lit.Boolean(_))
 
-        val resolverUpdate =
-          ContextSpecificResolver
-            .updateResolver(base.config, TypeRep.Boolean, Type.Name("Boolean"))(Lit.Boolean(_))
-
-        (context.copy(resolver = resolverUpdate(context.resolver)), ())
+          (context.copy(resolver = resolverUpdate(context.resolver)), ())
+        } else (context, ())
       }
     })
 }

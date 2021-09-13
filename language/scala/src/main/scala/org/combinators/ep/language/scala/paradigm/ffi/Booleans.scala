@@ -13,7 +13,8 @@ import scala.meta._
 
 class Booleans[Ctxt, AP <: AnyParadigm](val base: AP) extends Bools[Ctxt] {
   import base.syntax._
-
+  case object BooleansEnabled
+  
   val booleanCapabilities: BooleanCapabilities =
     new BooleanCapabilities {
       implicit val canAnd: Understands[Ctxt, Apply[And, base.syntax.Expression, base.syntax.Expression]] =
@@ -47,9 +48,11 @@ class Booleans[Ctxt, AP <: AnyParadigm](val base: AP) extends Bools[Ctxt] {
         context: ProjectCtxt,
         command: Enable.type
       ): (ProjectCtxt, Unit) = {
-        val resolverUpdate =
-          ContextSpecificResolver.updateResolver(base.config, TypeRep.Boolean, Type.Name("Boolean"))(Lit.Boolean(_))
-        (context.copy(resolver = resolverUpdate(context.resolver)), ())
+        if (!context.resolver.resolverInfo.contains(BooleansEnabled)) {
+          val resolverUpdate =
+            ContextSpecificResolver.updateResolver(base.config, TypeRep.Boolean, Type.Name("Boolean"))(Lit.Boolean(_))
+          (context.copy(resolver = resolverUpdate(context.resolver)), ())
+        } else (context, ())
       }
     })
 }

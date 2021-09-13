@@ -3,7 +3,7 @@ package org.combinators.ep.language.scala     /*DI:LD:AD*/
 import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
 import org.combinators.ep.approach.functional.{Traditional => TraditionalFunctional }
-import org.combinators.ep.approach.oo.{Algebra, CoCoClean, ExtensibleVisitor, Interpreter, RuntimeDispatching, Traditional => TraditionalOO, TriviallyClean, Visitor, VisitorSideEffect}
+import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, RuntimeDispatching, Traditional => TraditionalOO, TriviallyClean, Visitor, VisitorSideEffect}
 import org.combinators.ep.domain.{GenericModel, Model}
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.math._

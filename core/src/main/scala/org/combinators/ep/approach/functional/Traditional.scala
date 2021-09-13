@@ -1,14 +1,13 @@
 package org.combinators.ep.approach.functional    /*DI:LI:AI*/
 
-import org.combinators.ep.domain.{GenericModel, Model, abstractions}
-import org.combinators.ep.generator.{AbstractSyntax, ApproachImplementationProvider, Command, EvolutionImplementationProvider, NameProvider, TestImplementationProvider, Understands, communication}
+import org.combinators.ep.domain.{GenericModel, Model}
+import org.combinators.ep.generator.{AbstractSyntax, ApproachImplementationProvider, Command, EvolutionImplementationProvider, NameProvider, Understands}
 import org.combinators.ep.generator.paradigm.control.{Functional => FunControl}
-import Command.{Generator, skip, _}
-import cats.syntax._
+import Command.{Generator, _}
 import cats.implicits._
-import org.combinators.ep.domain.abstractions.{Attribute, DataType, DataTypeCase, Operation, Parameter, TestCase, TypeRep}
+import org.combinators.ep.domain.abstractions.{DataType, DataTypeCase, Operation, Parameter, TypeRep}
 import org.combinators.ep.generator.communication.{ReceivedRequest, Request, SendRequest}
-import org.combinators.ep.generator.paradigm.{AddCompilationUnit, AddImport, AddMethod, AddType, AddTypeConstructor, AnyParadigm, Apply, FindClass, FindMethod, FindType, Functional, GetArguments, InstantiateType, ResolveImport, SetParameters, ToTargetLanguageType}
+import org.combinators.ep.generator.paradigm.{AnyParadigm, FindType, Functional}
 import AnyParadigm.syntax._
 import org.combinators.ep.generator.paradigm.control.Functional.WithBase
 
@@ -146,8 +145,8 @@ trait Traditional extends ApproachImplementationProvider {
   def initializeApproach(domain: Model): Generator[ProjectContext, Unit] = {
     import paradigm.projectContextCapabilities._
     import functional.projectContextCapabilities._
-    import functional.methodBodyCapabilities._
-    import functional.typeCapabilities._
+    import functional.methodBodyCapabilities._         // Needed below
+    import functional.typeCapabilities._               // Needed below
     val dtpeRep = TypeRep.DataType(domain.baseDataType)
     for {
       _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(domain.baseDataType))
@@ -172,8 +171,6 @@ trait Traditional extends ApproachImplementationProvider {
         }
     } yield ()
   }
-
-
 }
 
 object Traditional {

@@ -38,11 +38,55 @@ object M9 {
           Set(math.M0.Lit, math.M0.Add, math.M1.Sub,math.M3.Divd,math.M3.Mult,math.M3.Neg,math.I2.Power,math.M8.Inv).contains(potentialRequest.tpeCase)
       }
 
-      /** Pass Through. */
+      /** Generic logic takes care of the structure-based cases, only Lit needs special handling. */
       override def genericLogic
         (forApproach: AIP[paradigm.type])
         (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
-      Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = m8Provider.genericLogic(forApproach)(onRequest)
+      Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
+        import paradigm._
+        import AnyParadigm.syntax._
+        import methodBodyCapabilities._
+
+        if (onRequest.request.op == math.M9.Height && onRequest.tpeCase != math.M0.Lit) {
+          for {
+            zero <- forApproach.reify(InstanceRep(TypeRep.Int)(0))
+            one <- forApproach.reify(InstanceRep(TypeRep.Int)(1))
+            intType <- toTargetLanguageType(TypeRep.Int)
+            maxName <- freshName(forApproach.names.mangle("max"))
+            maxDecl <- ffiImper.imperativeCapabilities.declareVar(maxName, intType, Some(zero))
+
+            _ <- forEach(onRequest.attributes.toSeq) { case (att, expr) => {
+              for {
+                attName <- freshName(forApproach.names.mangle(att.name))
+                exprVal <- forApproach.dispatch(
+                  SendRequest(
+                    expr,
+                    math.M4.getModel.baseDataType,
+                    Request(math.M9.Height, Map.empty),
+                    Some(onRequest)
+                  )
+                )
+                declVar <- ffiImper.imperativeCapabilities.declareVar(attName, intType, Some(exprVal))
+                ifExpr <- ffiArithmetic.arithmeticCapabilities.lt(maxDecl, declVar)
+
+                ifStmt <- ffiImper.imperativeCapabilities.ifThenElse(ifExpr, for {
+                  assignStmt <-  ffiImper.imperativeCapabilities.assignVar(maxDecl, declVar)
+                  _ <- addBlockDefinitions(Seq(assignStmt))
+                } yield (),
+                  Seq.empty
+                )
+
+                _ <- addBlockDefinitions(Seq(ifStmt))
+              } yield ()
+            }
+            }
+
+            resExpr <- ffiArithmetic.arithmeticCapabilities.add(maxDecl, one)
+          } yield Some(resExpr)
+        } else {
+          m8Provider.genericLogic(forApproach)(onRequest)
+        }
+      }
 
       def logic
       (forApproach: AIP[paradigm.type])
@@ -60,44 +104,8 @@ object M9 {
               zero <- forApproach.reify(InstanceRep(TypeRep.Int)(0))
             } yield Some(zero)
 
-          case dt => {
+          case _ => genericLogic(forApproach)(onRequest)
 
-            for {
-              zero <- forApproach.reify(InstanceRep(TypeRep.Int)(0))
-              one <- forApproach.reify(InstanceRep(TypeRep.Int)(1))
-              intType <- toTargetLanguageType(TypeRep.Int)
-              maxName <- freshName(forApproach.names.mangle("max"))
-              maxDecl <- ffiImper.imperativeCapabilities.declareVar(maxName, intType, Some(zero))
-
-              _ <- forEach(onRequest.attributes.toSeq) { case (att, expr) => {
-                for {
-                  attName <- freshName(forApproach.names.mangle(att.name))
-                  exprVal <- forApproach.dispatch(
-                    SendRequest(
-                      expr,
-                      math.M4.getModel.baseDataType,
-                      Request(math.M9.Height, Map.empty),
-                      Some(onRequest)
-                    )
-                  )
-                  declVar <- ffiImper.imperativeCapabilities.declareVar(attName, intType, Some(exprVal))
-                  ifExpr <- ffiArithmetic.arithmeticCapabilities.lt(maxDecl, declVar)
-
-                  ifStmt <- ffiImper.imperativeCapabilities.ifThenElse(ifExpr, for {
-                    assignStmt <-  ffiImper.imperativeCapabilities.assignVar(maxDecl, declVar)
-                    _ <- addBlockDefinitions(Seq(assignStmt))
-                  } yield (),
-                    Seq.empty
-                  )
-
-                  _ <- addBlockDefinitions(Seq(ifStmt))
-                } yield ()
-              }
-              }
-
-              resExpr <- ffiArithmetic.arithmeticCapabilities.add(maxDecl, one)
-            } yield Some(resExpr)
-          }
         }
       }
     }

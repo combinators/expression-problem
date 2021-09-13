@@ -1,8 +1,8 @@
 package org.combinators.ep.language.java     /*DI:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
-import org.combinators.ep.approach.oo.{Algebra, CoCo, CoCoClean, ExtensibleVisitor, Interpreter, Traditional, Trivially, TriviallyClean, Visitor, VisitorSideEffect}
-import org.combinators.ep.domain.{GenericModel, Model}
+import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, Traditional, TriviallyClean, Visitor, VisitorSideEffect}
+import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.shape._
 import org.combinators.ep.domain.shape.S0
@@ -23,7 +23,6 @@ object ShapeMain extends IOApp {
   val extensibleVisitorApproach = ExtensibleVisitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val interpreterApproach = Interpreter[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val triviallyApproach = TriviallyClean[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
-  val algebraApproach = Algebra[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val cocoApproach = CoCoClean[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
   // select one here.
@@ -33,7 +32,7 @@ object ShapeMain extends IOApp {
   // val approach = extensibleVisitorApproach // WORKS!
   // val approach = triviallyApproach // triviallyApproach // WORKS!
   //val approach = ooApproach // Not quite yet
-  val approach = cocoApproach
+  val approach = extensibleVisitorApproach   // cocoApproach
 
   val evolutions = Seq(S0, S1, S2)
   //val m4eip =

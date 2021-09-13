@@ -3,7 +3,7 @@ package org.combinators.ep.language.java.validate     /*DD:LD:AD*/
 import cats.effect.IOApp
 import org.combinators.ep.approach.oo._
 import org.combinators.ep.domain.math._
-import org.combinators.ep.generator.{ApproachImplementationProvider, TestImplementationProvider}
+import org.combinators.ep.generator.TestImplementationProvider
 import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.language.java.{JavaNameProvider, Syntax}
 import org.combinators.jgitserv.BranchTransaction
@@ -12,7 +12,7 @@ import org.combinators.jgitserv.BranchTransaction
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
 object TriviallyValidate extends IOApp with BaseEvolution {
-  val approach = Trivially[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+  val approach = TriviallyClean[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
 
   // Massive one-liner, but this aligns with M8. REPLACE WITH CI/CD
   //val eip = eips.M9(approach.paradigm)(eips.M8.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(eips.M7I2.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(eips.M7(approach.paradigm)(eips.M6(approach.paradigm)(eips.M5(approach.paradigm)(eips.M4.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(eips.M3(approach.paradigm)(eips.M2(approach.paradigm)(eips.M1(approach.paradigm)(eips.M0(approach.paradigm)(generator.doublesInMethod))(generator.doublesInMethod))(generator.doublesInMethod, generator.stringsInMethod))(generator.doublesInMethod, generator.stringsInMethod))(generator.imperativeInMethod,generator.doublesInMethod,generator.booleansInMethod,generator.stringsInMethod,generator.listsInMethod,generator.equalityInMethod))(generator.intsInMethod,generator.treesInMethod))(generator.equalityInMethod))(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod),eips.I2(approach.paradigm)(eips.I1(approach.paradigm)(eips.M2(approach.paradigm)(eips.M1(approach.paradigm)(eips.M0(approach.paradigm)(generator.doublesInMethod))(generator.doublesInMethod))(generator.doublesInMethod, generator.stringsInMethod))(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod))(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod))(generator.imperativeInMethod,generator.doublesInMethod,generator.booleansInMethod,generator.equalityInMethod))(generator.imperativeInMethod,generator.doublesInMethod,generator.booleansInMethod,generator.stringsInMethod,generator.equalityInMethod))(generator.doublesInMethod, generator.realDoublesInMethod, generator.imperativeInMethod)

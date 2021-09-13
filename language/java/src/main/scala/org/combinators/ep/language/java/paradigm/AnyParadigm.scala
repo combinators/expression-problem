@@ -12,7 +12,7 @@ import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, FileWithPath, Understands}
-import org.combinators.ep.generator.paradigm.{ObjectOriented, AnyParadigm => AP, _}
+import org.combinators.ep.generator.paradigm.{AnyParadigm => AP, _}
 import org.combinators.ep.language.java.Syntax.MangledName
 import org.combinators.ep.language.java.{CodeGenerator, CompilationUnitCtxt, Config, ContextSpecificResolver, FreshNameCleanup, ImportCleanup, JavaNameProvider, MethodBodyCtxt, ProjectCtxt, Syntax, TestCtxt}
 import org.combinators.templating.persistable.{BundledResource, JavaPersistable}
@@ -462,7 +462,7 @@ trait AnyParadigm extends AP {
           extraDependencies = Seq.empty
         )
       )
-    val nameEntry = config.projectName.map(n => s"""name := "${n}"""").getOrElse("")
+    val nameEntry = config.projectName.map(n => s"""name := "$n"""").getOrElse("")
     val junitDeps = Seq(
       """"com.novocode" % "junit-interface" % "0.11" % "test"""",
       """"junit" % "junit" % "4.12" % "test""""

@@ -142,7 +142,7 @@ trait Traditional extends ApproachImplementationProvider {
     FindType(Seq(names.mangle(names.conceptNameOf(dtpe)))).interpret(canFindType)
   }
 
-  def initializeApproach(domain: Model): Generator[ProjectContext, Unit] = {
+  def initializeApproach(domain: GenericModel): Generator[ProjectContext, Unit] = {
     import paradigm.projectContextCapabilities._
     import functional.projectContextCapabilities._
     import functional.methodBodyCapabilities._         // Needed below
@@ -156,12 +156,7 @@ trait Traditional extends ApproachImplementationProvider {
 
   def implement(gdomain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
 
-    val domain = gdomain match {
-      case _:Model => gdomain.asInstanceOf[Model]
-      case _ => gdomain.linearize
-    }
-
-    val flatDomain = domain.flatten
+    val flatDomain = gdomain.linearize.flatten
     for {
       _ <- initializeApproach(flatDomain)
       _ <- domainSpecific.initialize(this)

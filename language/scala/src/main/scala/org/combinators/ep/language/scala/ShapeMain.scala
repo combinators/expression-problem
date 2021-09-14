@@ -4,7 +4,7 @@ import cats.effect.{ExitCode, IO, IOApp}
 import org.combinators.ep.approach.functional
 import org.combinators.ep.approach.oo._
 import org.combinators.ep.language.scala.{ Syntax, ScalaNameProvider }
-import org.combinators.ep.domain.{GenericModel, Model}
+import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.shape.{S0, _}
 import org.combinators.ep.generator.FileWithPathPersistable._
@@ -49,7 +49,6 @@ object ShapeMain extends IOApp {
     generator.booleansInMethod
   )
   val eip = s1eip
-
 
   val tests = evolutions.scanLeft(Map.empty[GenericModel, Seq[TestCase]]) { case (m, evolution) =>
     m + (evolution.getModel -> evolution.tests)

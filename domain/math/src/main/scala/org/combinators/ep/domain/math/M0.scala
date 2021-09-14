@@ -29,7 +29,7 @@ object M0 extends Evolution {
     EqualsTestCase(getModel.baseDataType, LitInst(5.0), Eval, DoubleInst(5.0)),
 
     PerformanceTestCase(
-      11,    // how many iterations to continue the iter
+      11,    // how many iterations to continue the iteration
       8,     // how many times to try to find the best
       Eval,
       getModel.baseDataType,

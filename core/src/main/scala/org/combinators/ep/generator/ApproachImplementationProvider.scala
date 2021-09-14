@@ -91,7 +91,7 @@ trait ApproachImplementationProvider {
   /** When test case class needs to extend another class, override this. */
   def testCaseParent(model:GenericModel):Seq[Type] = Seq.empty
 
-  /** When test case class needs to implementsome interfaces, override this. */
+  /** When test case class needs to implement some interfaces, override this. */
   def testCaseImplements(model:GenericModel):Seq[Type] = Seq.empty
 
   /** Adds tests to the project context */

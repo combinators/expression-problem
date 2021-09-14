@@ -122,7 +122,7 @@ trait RuntimeDispatching extends OOApproachImplementationProvider with SharedOO 
    * }}}
    * @return
    */
-  def makeDispatchingOperation(model:Model, op:Operation): Generator[ClassContext, Unit] = {
+  def makeDispatchingOperation(model:GenericModel, op:Operation): Generator[ClassContext, Unit] = {
     def ifStmt(): Generator[MethodBodyContext, Option[Expression]] = {
       import ooParadigm.methodBodyCapabilities._
       import paradigm.methodBodyCapabilities._
@@ -196,7 +196,7 @@ trait RuntimeDispatching extends OOApproachImplementationProvider with SharedOO 
    * @param domainSpecific
    * @return        The one invoking this method must be sure to add this class to project.
    */
-  def makeOperationImplementation(domain:Model,
+  def makeOperationImplementation(domain:GenericModel,
                                   op: Operation,
                                   domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
     import ooParadigm.classCapabilities._
@@ -211,7 +211,7 @@ trait RuntimeDispatching extends OOApproachImplementationProvider with SharedOO 
     } yield ()
   }
 
-  def makeDerived(parentType: DataType, tpeCase: DataTypeCase, model: Model): Generator[ProjectContext, Unit] = {
+  def makeDerived(parentType: DataType, tpeCase: DataTypeCase): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
     val makeClass: Generator[ClassContext, Unit] = {
       import ooParadigm.classCapabilities._
@@ -329,12 +329,7 @@ trait RuntimeDispatching extends OOApproachImplementationProvider with SharedOO 
     import ooParadigm.projectCapabilities._
     import paradigm.projectContextCapabilities._
 
-    val domain = gdomain match {
-      case _:Model => gdomain.asInstanceOf[Model]
-      case _ => gdomain.linearize
-    }
-
-    val flatDomain = domain.flatten
+    val flatDomain = gdomain.linearize.flatten
     for {
       _ <- debug ("Processing RuntimeDispatching")
       _ <- strings.enable()
@@ -343,7 +338,7 @@ trait RuntimeDispatching extends OOApproachImplementationProvider with SharedOO 
       _ <- domainSpecific.initialize(this)
       _ <- makeBase(flatDomain.baseDataType)
       _ <- forEach (flatDomain.typeCases) { tpeCase =>
-        makeDerived(flatDomain.baseDataType, tpeCase, domain)
+        makeDerived(flatDomain.baseDataType, tpeCase)
       }
       _ <- forEach (flatDomain.ops) { op =>
         addClassToProject(makeOperationImplementation(flatDomain, op, domainSpecific), names.mangle(names.conceptNameOf(op)))

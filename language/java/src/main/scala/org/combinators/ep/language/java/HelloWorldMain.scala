@@ -21,7 +21,7 @@ import java.nio.file.{Path, Paths}
 class HelloWorldMain {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed))
   
-  val helloWorldApproach = HelloWorldObjectOrientedProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
+  val helloWorldApproach = HelloWorldObjectOrientedProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.consoleInMethod, generator.arraysInMethod)
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
@@ -30,8 +30,11 @@ class HelloWorldMain {
       () => generator.paradigm.runGenerator {
         for {
           _ <- generator.doublesInMethod.enable()
+          _ <- generator.intsInMethod.enable()
           _ <- generator.stringsInMethod.enable()
           _ <- generator.listsInMethod.enable()     // should be array, but this still needs to be added as an FFI
+          _ <- generator.consoleInMethod.enable()
+          _ <- generator.arraysInMethod.enable()
           _ <- helloWorldApproach.implement()
         } yield ()
       }

@@ -212,6 +212,10 @@ object TypeRep {
   case class Sequence[T](elemTpe: TypeRep.OfHostType[T]) extends TypeRep {
     type HostType = Seq[T]
   }
+  /** Represents the type `Array[T]` */
+  case class Array[T](elemTpe: TypeRep.OfHostType[T]) extends TypeRep {
+    type HostType = Array[T]
+  }
 
   /** Represents a Scala model of an instance of the given domain specific data type. */
   case class DataType(tpe: abstractions.DataType) extends TypeRep {

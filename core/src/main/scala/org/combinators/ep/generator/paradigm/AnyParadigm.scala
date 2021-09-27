@@ -59,9 +59,6 @@ case class AddTestCase[MethodBodyContext, Name, Expression](code: Generator[Meth
   type Result = Unit
 }
 
-case class AddImplementedTestCase[Type](interface: Type) extends Command {
-  type Result = Unit
-}
 
 case class Apply[F, S, R](functional: F, arguments: Seq[S]) extends Command {
   type Result = R

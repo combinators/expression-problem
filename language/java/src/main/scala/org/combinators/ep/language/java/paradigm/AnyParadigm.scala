@@ -388,19 +388,6 @@ trait AnyParadigm extends AP {
           }
         }
 
-      implicit val canAddImplementInTest: Understands[TestContext, AddImplementedTestCase[Type]] =
-        new Understands[TestContext, AddImplementedTestCase[Type]] {
-          def perform(
-                       context: TestContext,
-                       command: AddImplementedTestCase[Type]
-                     ): (TestContext, Unit) = {
-            val newClass = context.testClass.clone()
-
-            newClass.addImplementedType(command.interface.toString)
-            (context.copy(testClass = newClass), ())
-          }
-        }
-
       implicit val canAddTestCaseInTest: Understands[TestContext, AddTestCase[MethodBodyContext, Name, Expression]] =
         new Understands[TestContext, AddTestCase[MethodBodyContext, Name, Expression]] {
           def perform(

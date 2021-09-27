@@ -92,6 +92,11 @@ case class FindClass[Name, Type](qualifiedName: Seq[Name]) extends Command {
   type Result = Type
 }
 
+case class AddImplementedTestCase[Type](interface: Type) extends Command {
+  type Result = Unit
+}
+
+
 trait ObjectOriented {
   val base: AnyParadigm
   import base._

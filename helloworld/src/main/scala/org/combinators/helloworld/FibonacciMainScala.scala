@@ -1,41 +1,37 @@
-package org.combinators.ep.language.java
+package org.combinators.helloworld
 
-/* Generates Hello World program. */
-
-/** To truly make this work as expected, need to have a CONSOLE concept (much like getSelf()) which would be contextualized on each platform
- * 
- * On Java it would retrieve "System.out" for output or "System.in" for input. Punting on this right now...
- * 
- * */
+/* Generates Fibonacci Program. */
 
 import cats.effect.{ExitCode, IO, IOApp}
-import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
-import FileWithPathPersistable._
 import org.apache.commons.io.FileUtils
-import org.combinators.ep.generator.helloworld._
+import org.combinators.ep.generator.FileWithPathPersistable._
+import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
+import org.combinators.ep.language.scala.{CodeGenerator, ScalaNameProvider, Syntax}
+
 import java.nio.file.{Path, Paths}
+import scala.meta.{Pkg, Term}
 
 /**
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
-class HelloWorldMain {
-  val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed))
+class FibonacciMainScala {
+  val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(targetPackage = Pkg(Term.Name("fib"), List.empty)))
   
-  val helloWorldApproach = HelloWorldObjectOrientedProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.consoleInMethod, generator.arraysInMethod)
+  val fibonacciApproach = FibonacciIndependentProvider.functional[Syntax.default.type, generator.paradigm.type](generator.paradigm)(ScalaNameProvider, generator.functional, generator.functionalInMethod, generator.intsInMethod, generator.assertionsInMethod, generator.equalityInMethod)
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
   def directToDiskTransaction(targetDirectory: Path): IO[Unit] = {
+
     val files =
       () => generator.paradigm.runGenerator {
         for {
-          _ <- generator.doublesInMethod.enable()
           _ <- generator.intsInMethod.enable()
+          _ <- generator.booleansInMethod.enable()
           _ <- generator.stringsInMethod.enable()
-          _ <- generator.listsInMethod.enable()     // should be array, but this still needs to be added as an FFI
-          _ <- generator.consoleInMethod.enable()
-          _ <- generator.arraysInMethod.enable()
-          _ <- helloWorldApproach.implement()
+          _ <- generator.equalityInMethod.enable()
+          _ <- generator.assertionsInMethod.enable()
+          _ <- fibonacciApproach.make_project()
         } yield ()
       }
 
@@ -61,13 +57,13 @@ class HelloWorldMain {
   }
 }
 
-object HelloWorldDirectToDiskMain extends IOApp {
-  val targetDirectory = Paths.get("target", "ep3")
+object FibonacciScalaDirectToDiskMain extends IOApp {
+  val targetDirectory = Paths.get("target", "ep3", "scala")
 
   def run(args: List[String]): IO[ExitCode] = {
     for {
       _ <- IO { print("Initializing Generator...") }
-      main <- IO { new HelloWorldMain() }
+      main <- IO { new FibonacciMainScala() }
       _ <- IO { println("[OK]") }
       result <- main.runDirectToDisc(targetDirectory)
     } yield result

@@ -1,4 +1,4 @@
-package org.combinators.ep.domain.instances
+package org.combinators.ep.domain.instances     /*DI:LI:AI*/
 
 /** Provides abstractions used to represent type instances of the host language (Scala) in a domain specific context and
  * vice versa domain specific data types in the host language.

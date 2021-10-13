@@ -85,6 +85,14 @@ lazy val languageJava =
     .settings(libraryDependencies += "com.github.javaparser" % "javaparser-core" % "3.19.0")
 lazy val languageScala = standardLanguageProject("scala")
 
+lazy val helloWorld:Project =
+  (Project(id = s"helloworld", base = file(s"helloworld")))
+    .settings(commonSettings: _*)
+    .settings(
+      moduleName := s"helloworld",
+    )
+    .dependsOn(core, languageJava, languageScala)
+
 //lazy val languageGJ = standardLanguageProject("gj")
 //lazy val languageCPP = standardLanguageProject("cpp")
 //lazy val languageHaskell = standardLanguageProject("haskell")

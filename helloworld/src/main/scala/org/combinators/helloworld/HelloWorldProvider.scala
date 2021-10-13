@@ -1,10 +1,10 @@
-package org.combinators.ep.generator.helloworld
+package org.combinators.helloworld
 
 import org.combinators.ep.domain._
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
 import org.combinators.ep.generator.Command._
-import org.combinators.ep.generator.{AbstractSyntax, NameProvider, Understands}
+import org.combinators.ep.generator.{AbstractSyntax, NameProvider, TestImplementationProvider, Understands}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax._
 import org.combinators.ep.generator.paradigm.{AddImport, AnyParadigm, ObjectOriented, ResolveImport}
 
@@ -55,19 +55,9 @@ trait HelloWorldProvider {
   def implement(): Generator[ProjectContext, Unit]
 
   /** Define standard test name. */
-  def testName:Name = {
+  def testCaseName:Name = {
     names.mangle("Test")
   }
 
-  /** Define name for test case, given model. */
-  def testCaseName(model:GenericModel):Name = {
-    names.addSuffix(names.mangle(names.conceptNameOf(model)), "Test")
-  }
-
-  /** When test case class needs to extend another class, override this. */
-  def testCaseParent(model:GenericModel):Seq[Type] = Seq.empty
-
-  /** When test case class needs to implement some interfaces, override this. */
-  def testCaseImplements(model:GenericModel):Seq[Type] = Seq.empty
 }
 

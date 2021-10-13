@@ -1,4 +1,4 @@
-package org.combinators.ep.domain.abstractions
+package org.combinators.ep.domain.abstractions    /*DI:LI:AI*/
 
 import org.combinators.ep.domain.{GenericModel, abstractions}
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}

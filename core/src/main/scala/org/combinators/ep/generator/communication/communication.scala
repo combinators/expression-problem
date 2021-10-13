@@ -1,4 +1,4 @@
-package org.combinators.ep.generator.communication
+package org.combinators.ep.generator.communication    /*DI:LI:AI*/
 
 /** Provides abstractions for communicating with instances of domain specific data types. */
 

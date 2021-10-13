@@ -1,4 +1,4 @@
-package org.combinators.ep.language.java     /*DI:LD:AD*/
+package org.combinators.ep.language.java     /*DC:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.combinators.ep.approach.oo.{CoCoClean, TriviallyClean}

@@ -1,6 +1,4 @@
-package org.combinators.ep.language.java.paradigm.ffi
-
-/*DI:LD:AI*/
+package org.combinators.ep.language.java.paradigm.ffi     /*DI:LD:AI*/
 
 import com.github.javaparser.ast.{ImportDeclaration, NodeList}
 import com.github.javaparser.ast.expr.{BooleanLiteralExpr, ObjectCreationExpr}

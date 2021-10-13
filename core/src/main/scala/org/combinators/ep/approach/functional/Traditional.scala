@@ -1,4 +1,4 @@
-package org.combinators.ep.approach.functional    /*DI:LI:AI*/
+package org.combinators.ep.approach.functional    /*DI:LI:AD*/
 
 import org.combinators.ep.domain.{GenericModel, Model}
 import org.combinators.ep.generator.{AbstractSyntax, ApproachImplementationProvider, Command, EvolutionImplementationProvider, NameProvider, Understands}

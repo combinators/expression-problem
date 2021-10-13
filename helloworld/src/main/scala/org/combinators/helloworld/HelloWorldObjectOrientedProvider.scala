@@ -1,11 +1,11 @@
-package org.combinators.ep.generator.helloworld
+package org.combinators.helloworld
 
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arrays, Console}
+import org.combinators.ep.generator.paradigm.ffi.{Arrays, Assertions, Console, Equality}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, ObjectOriented}
-import org.combinators.ep.generator.{AbstractSyntax, NameProvider, Understands}
+import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
@@ -13,16 +13,19 @@ import org.combinators.ep.generator.{AbstractSyntax, NameProvider, Understands}
  */
 trait HelloWorldObjectOrientedProvider extends HelloWorldProvider {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
+  val names: NameProvider[paradigm.syntax.Name]
   val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext,paradigm.type]
   val console: Console.WithBase[paradigm.MethodBodyContext,paradigm.type]
   val array: Arrays.WithBase[paradigm.MethodBodyContext,paradigm.type]
-
+  val asserts: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val eqls: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
   import paradigm._
   import syntax._
   import ooParadigm._
 
-  val message:String = "message"
-  val main:String = "main"
+  lazy val message:String = "message"
+  lazy val main:String = "main"
+  lazy val testName = names.mangle("TestSuite")
 
   def getter(attr:String) : String = {
     "get" + attr.capitalize
@@ -183,11 +186,47 @@ trait HelloWorldObjectOrientedProvider extends HelloWorldProvider {
     addClassToProject(makeClass, names.mangle(clazzName))
   }
 
+  def makeTestMethod(): Generator[ClassContext, Unit] = {
+    for {
+      _ <- Command.skip
+    } yield ()
+  }
+
+  def makeTestCase(): Generator[MethodBodyContext, Seq[Expression]] = {
+    import paradigm.methodBodyCapabilities._
+    import eqls.equalityCapabilities._
+
+    for {
+      intType <- toTargetLanguageType(TypeRep.Int)
+      stringType <- toTargetLanguageType(TypeRep.String)
+      worldType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle("World"))
+
+      msg <- paradigm.methodBodyCapabilities.reify(TypeRep.String, "Hey There!")
+      res <- ooParadigm.methodBodyCapabilities.instantiateObject(worldType, Seq(msg))
+      msgMethod <- ooParadigm.methodBodyCapabilities.getMember(res, names.mangle(getter(message)))
+      result <- apply(msgMethod, Seq.empty)
+      asserteq1 <- asserts.assertionCapabilities.assertEquals(stringType, result, msg)
+
+    } yield Seq(asserteq1)
+  }
+
+  def makeTestCase(clazzName:String): Generator[TestContext, Unit] = {
+    import ooParadigm.projectCapabilities._
+    for {
+        _ <- paradigm.testCapabilities.addTestCase(makeTestCase(), names.mangle(clazzName))
+      } yield ()
+  }
+
   def implement(): Generator[ProjectContext, Unit] = {
 
     for {
       _ <- makeClass("World")
       _ <- makeMainClass("Main")
+      _ <- paradigm.projectContextCapabilities.addCompilationUnit(
+        paradigm.compilationUnitCapabilities.addTestSuite(
+          testName, makeTestCase("World")
+        )
+      )
     } yield ()
   }
 }
@@ -202,7 +241,9 @@ object HelloWorldObjectOrientedProvider {
    imp: Imperative.WithBase[base.MethodBodyContext, base.type],
    oo: ObjectOriented.WithBase[base.type],
    con: Console.WithBase[base.MethodBodyContext, base.type],
-   arr: Arrays.WithBase[base.MethodBodyContext, base.type]
+   arr: Arrays.WithBase[base.MethodBodyContext, base.type],
+   assertsIn: Assertions.WithBase[base.MethodBodyContext, base.type],
+   eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type]
   )
   : HelloWorldObjectOrientedProvider.WithParadigm[base.type] =
     new HelloWorldObjectOrientedProvider {
@@ -212,5 +253,7 @@ object HelloWorldObjectOrientedProvider {
       override val ooParadigm: ObjectOriented.WithBase[paradigm.type] = oo
       override val console: Console.WithBase[base.MethodBodyContext, paradigm.type] = con
       override val array: Arrays.WithBase[base.MethodBodyContext, paradigm.type] = arr
+      override val asserts: Assertions.WithBase[base.MethodBodyContext, paradigm.type] = assertsIn
+      override val eqls: Equality.WithBase[base.MethodBodyContext, paradigm.type] = eqlsIn
     }
 }

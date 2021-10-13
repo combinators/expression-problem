@@ -1,4 +1,4 @@
-package org.combinators.ep.approach.oo
+package org.combinators.ep.approach.oo  /*DI:LI:AD*/
 
 import org.combinators.ep.domain.abstractions.{DataType, DataTypeCase, Operation, TestCase, TypeRep}
 import org.combinators.ep.domain.{GenericModel, abstractions}

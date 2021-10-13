@@ -1,6 +1,4 @@
-package org.combinators.ep.generator.paradigm.ffi
-
-/*DI:LI:AI*/
+package org.combinators.ep.generator.paradigm.ffi    /*DI:LI:AI*/
 
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, Understands}

@@ -17,15 +17,15 @@ trait Strings[Context] extends FFI {
   trait StringCapabilities {
     implicit val canGetStringLength: Understands[Context, Apply[GetStringLength, Expression, Expression]]
     def getStringLength(expression: Expression): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Apply[GetStringLength, Expression, Expression](GetStringLength(), Seq(expression)))
+      AnyParadigm.capability(Apply[GetStringLength, Expression, Expression](GetStringLength(), Seq(expression)))
 
     implicit val canAppend: Understands[Context, Apply[StringAppend, Expression, Expression]]
     def stringAppend(xs: Expression*): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Apply[StringAppend, Expression, Expression](StringAppend(), xs))
+      AnyParadigm.capability(Apply[StringAppend, Expression, Expression](StringAppend(), xs))
 
     implicit val canToStringInCtxt: Understands[Context, Apply[ToString[Type], Expression, Expression]]
     def asString(expression: Expression, ofType: Type): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Apply[ToString[Type], Expression, Expression](ToString(ofType), Seq(expression)))
+      AnyParadigm.capability(Apply[ToString[Type], Expression, Expression](ToString(ofType), Seq(expression)))
 
     def makeString
         (exprs: Seq[Expression], start: String, sep: String, end: String)

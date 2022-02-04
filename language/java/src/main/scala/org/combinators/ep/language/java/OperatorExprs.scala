@@ -1,9 +1,13 @@
 package org.combinators.ep.language.java     /*DI:LD:AI*/
 
-import com.github.javaparser.ast.expr.{BinaryExpr, UnaryExpr, Expression}
+import com.github.javaparser.ast.expr.{BinaryExpr, EnclosedExpr, Expression, UnaryExpr}
 import org.combinators.ep.generator.Understands
 import org.combinators.ep.generator.paradigm.Apply
 
+/**
+ * Operator Expressions are enclosed with parens (EnclosedExpr) to ensure correctness, even though this might
+ * lead to extra parens. These could always be filtered out later by a simplifier.
+ */
 object OperatorExprs {
   def infixExprOp[Ctxt, Op](infixOp: BinaryExpr.Operator): Understands[Ctxt, Apply[Op, Expression, Expression]] =
     new Understands[Ctxt, Apply[Op, Expression, Expression]] {
@@ -11,7 +15,7 @@ object OperatorExprs {
         context: Ctxt,
         command: Apply[Op, Expression, Expression]
       ): (Ctxt, Expression) = {
-        (context, new BinaryExpr(command.arguments(0), command.arguments(1), infixOp))
+        (context, new EnclosedExpr(new BinaryExpr(command.arguments(0), command.arguments(1), infixOp)))
       }
     }
 
@@ -26,9 +30,9 @@ object OperatorExprs {
       ): (Ctxt, Expression) = {
         import scala.language.reflectiveCalls
         if (command.functional.shortcut) {
-          (context, new BinaryExpr(command.arguments(0), command.arguments(1), shortCutOp))
+          (context, new EnclosedExpr (new BinaryExpr(command.arguments(0), command.arguments(1), shortCutOp)))
         } else {
-          (context, new BinaryExpr(command.arguments(0), command.arguments(1), normalOp))
+          (context, new EnclosedExpr (new BinaryExpr(command.arguments(0), command.arguments(1), normalOp)))
         }
       }
     }

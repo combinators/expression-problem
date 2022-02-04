@@ -21,23 +21,23 @@ trait Booleans[Context] extends FFI {
   trait BooleanCapabilities {
     implicit val canAnd: Understands[Context, Apply[And, Expression, Expression]]
     def and(exprs: Seq[Expression], shortcut: Boolean = true): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Apply[And, Expression, Expression](And(shortcut), exprs))
+      AnyParadigm.capability(Apply[And, Expression, Expression](And(shortcut), exprs))
 
     implicit val canOr: Understands[Context, Apply[Or, Expression, Expression]]
     def or(exprs: Seq[Expression], shortcut: Boolean = true): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Apply[Or, Expression, Expression](Or(shortcut), exprs))
+      AnyParadigm.capability(Apply[Or, Expression, Expression](Or(shortcut), exprs))
 
     implicit val canNot: Understands[Context, Apply[Not, Expression, Expression]]
     def not(expr: Expression): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Apply[Not, Expression, Expression](Not(), Seq(expr)))
+      AnyParadigm.capability(Apply[Not, Expression, Expression](Not(), Seq(expr)))
 
     implicit val canTrue: Understands[Context, True[Expression]]
     def trueExp: Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(True[Expression]())
+      AnyParadigm.capability(True[Expression]())
 
     implicit val canFalse: Understands[Context, False[Expression]]
     def falseExp: Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(False[Expression]())
+      AnyParadigm.capability(False[Expression]())
   }
   val booleanCapabilities: BooleanCapabilities
 }

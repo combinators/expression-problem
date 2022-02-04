@@ -96,7 +96,7 @@ trait ApproachImplementationProvider {
 
   /** Adds tests to the project context */
   def implement(tests: Map[GenericModel, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
-    import projectContextCapabilities._
+    import projectCapabilities._
     import paradigm.compilationUnitCapabilities._
     import paradigm.testCapabilities._
     for {

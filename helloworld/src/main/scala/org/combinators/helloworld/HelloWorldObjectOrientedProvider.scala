@@ -51,7 +51,7 @@ trait HelloWorldObjectOrientedProvider extends HelloWorldProvider {
    * This enables target-language classes to be retrieved from within the code generator in the Method, Class or Constructor contexts.
    */
   def registerTypeMapping(tpe:DataType): Generator[ProjectContext, Unit] = {
-    import paradigm.projectContextCapabilities.addTypeLookupForMethods
+    import paradigm.projectCapabilities.addTypeLookupForMethods
     import ooParadigm.methodBodyCapabilities.canFindClassInMethod          // must be present, regardless of IntelliJ
     import ooParadigm.projectCapabilities.addTypeLookupForClasses
     import ooParadigm.projectCapabilities.addTypeLookupForConstructors
@@ -222,7 +222,7 @@ trait HelloWorldObjectOrientedProvider extends HelloWorldProvider {
     for {
       _ <- makeClass("World")
       _ <- makeMainClass("Main")
-      _ <- paradigm.projectContextCapabilities.addCompilationUnit(
+      _ <- paradigm.projectCapabilities.addCompilationUnit(
         paradigm.compilationUnitCapabilities.addTestSuite(
           testName, makeTestCase("World")
         )

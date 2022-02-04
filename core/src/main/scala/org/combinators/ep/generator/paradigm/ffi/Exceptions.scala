@@ -15,7 +15,7 @@ trait Exceptions[Context] extends FFI {
     implicit val canRaise: Understands[Context, Exception[Expression, Statement]]
 
     def raise(exp: Expression): Generator[Context, Statement] =
-      AnyParadigm.capabilitiy(Exception[Expression, Statement](exp))
+      AnyParadigm.capability(Exception[Expression, Statement](exp))
   }
   
   val exceptionCapabilities: ExceptionCapabilities

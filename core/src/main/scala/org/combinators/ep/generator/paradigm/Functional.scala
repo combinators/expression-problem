@@ -39,7 +39,7 @@ trait Functional {
   trait CompilationUnitCapabilities {
     implicit val canAddTypeInCompilationUnit: Understands[CompilationUnitContext, AddType[Name, TypeContext]]
     def addType(name: Name, spec: Generator[TypeContext, Unit]): Generator[CompilationUnitContext, Unit] =
-      AnyParadigm.capabilitiy(AddType[Name, TypeContext](name, spec))
+      AnyParadigm.capability(AddType[Name, TypeContext](name, spec))
 
     implicit val canAddMethodInCompilationUnit: Understands[CompilationUnitContext, AddMethod[MethodBodyContext, Name, Expression]]
     def addMethod(
@@ -47,42 +47,42 @@ trait Functional {
         spec: Generator[MethodBodyContext, Expression],
         isPublic: Boolean = true
       ): Generator[CompilationUnitContext, Unit] =
-      AnyParadigm.capabilitiy(AddMethod(name, spec, isPublic))
+      AnyParadigm.capability(AddMethod(name, spec, isPublic))
 
     implicit val canResolveExpressionImportInCompilationUnit: Understands[CompilationUnitContext, ResolveImport[Import, Expression]]
     def resolveExpressionImport(expr: Expression): Generator[CompilationUnitContext, Option[Import]] =
-      AnyParadigm.capabilitiy(ResolveImport[Import, Expression](expr))
+      AnyParadigm.capability(ResolveImport[Import, Expression](expr))
 
     implicit val canResolveTypeImportInCompilationUnit: Understands[CompilationUnitContext, ResolveImport[Import, Type]]
     def resolveTypeImport(tpe: Type): Generator[CompilationUnitContext, Option[Import]] =
-      AnyParadigm.capabilitiy(ResolveImport[Import, Type](tpe))
+      AnyParadigm.capability(ResolveImport[Import, Type](tpe))
   }
   val compilationUnitCapabilities: CompilationUnitCapabilities
 
   trait TypeCapabilities {
     implicit val canAddTypeConstructorInType: Understands[TypeContext, AddTypeConstructor[Name, Type]]
     def addTypeConstructor(name: Name, parameters: Seq[(Name, Type)]): Generator[TypeContext, Unit] =
-      AnyParadigm.capabilitiy(AddTypeConstructor(name, parameters))
+      AnyParadigm.capability(AddTypeConstructor(name, parameters))
 
     implicit val canTranslateTypeInType: Understands[TypeContext, ToTargetLanguageType[Type]]
     def toTargetLanguageType(tpe: TypeRep): Generator[TypeContext, Type] =
-      AnyParadigm.capabilitiy(ToTargetLanguageType[Type](tpe))
+      AnyParadigm.capability(ToTargetLanguageType[Type](tpe))
 
     implicit val canAddImportInType: Understands[TypeContext, AddImport[Import]]
     def addImport(imp: Import): Generator[TypeContext, Unit] =
-      AnyParadigm.capabilitiy(AddImport(imp))
+      AnyParadigm.capability(AddImport(imp))
 
     implicit val canResolveTypeImportInType: Understands[TypeContext, ResolveImport[Import, Type]]
     def resolveTypeImport(tpe: Type): Generator[TypeContext, Option[Import]] =
-      AnyParadigm.capabilitiy(ResolveImport[Import, Type](tpe))
+      AnyParadigm.capability(ResolveImport[Import, Type](tpe))
 
     implicit val canResolveExpressionImportInType: Understands[TypeContext, ResolveImport[Import, Expression]]
     def resolveExpressionImport(expr: Expression): Generator[TypeContext, Option[Import]] =
-      AnyParadigm.capabilitiy(ResolveImport[Import, Expression](expr))
+      AnyParadigm.capability(ResolveImport[Import, Expression](expr))
 
     implicit val canFindTypeInType: Understands[TypeContext, FindType[Name, Type]]
     def findType(name: Seq[Name]): Generator[TypeContext, Type] =
-      AnyParadigm.capabilitiy(FindType[Name, Type](name))
+      AnyParadigm.capability(FindType[Name, Type](name))
   }
   val typeCapabilities: TypeCapabilities
 
@@ -92,28 +92,28 @@ trait Functional {
         tpe: Type,
         constructor: Name,
         arguments: Seq[Expression]): Generator[MethodBodyContext, Expression] =
-      AnyParadigm.capabilitiy(InstantiateType(tpe, constructor, arguments))
+      AnyParadigm.capability(InstantiateType(tpe, constructor, arguments))
 
     implicit val canResolveExpressionImportInMethod: Understands[MethodBodyContext, ResolveImport[Import, Expression]]
     def resolveExpressionImport(expr: Expression): Generator[MethodBodyContext, Option[Import]] =
-      AnyParadigm.capabilitiy(ResolveImport[Import, Expression](expr))
+      AnyParadigm.capability(ResolveImport[Import, Expression](expr))
 
     implicit val canFindMethodInMethod: Understands[MethodBodyContext, FindMethod[Name, Expression]]
     def findMethod(name: Seq[Name]): Generator[MethodBodyContext, Expression] =
-      AnyParadigm.capabilitiy(FindMethod[Name, Expression](name))
+      AnyParadigm.capability(FindMethod[Name, Expression](name))
 
     implicit val canFindTypeInMethod: Understands[MethodBodyContext, FindType[Name, Type]]
     def findType(name: Seq[Name]): Generator[MethodBodyContext, Type] =
-      AnyParadigm.capabilitiy(FindType[Name, Type](name))
+      AnyParadigm.capability(FindType[Name, Type](name))
   }
   val methodBodyCapabilities: MethodBodyCapabilities
 
-  trait ProjectContextCapabilities {
+  trait ProjectCapabilities {
     implicit val canAddTypeLookupForTypesInProject: Understands[ProjectContext, AddTypeLookup[TypeContext, Type]]
     def addTypeLookupForTypes(tpe: TypeRep, lookup: Generator[TypeContext, Type]): Generator[ProjectContext, Unit] =
-      AnyParadigm.capabilitiy(AddTypeLookup[TypeContext, Type](tpe, lookup))
+      AnyParadigm.capability(AddTypeLookup[TypeContext, Type](tpe, lookup))
   }
-  val projectContextCapabilities: ProjectContextCapabilities
+  val projectCapabilities: ProjectCapabilities
 }
 
 object Functional {

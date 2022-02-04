@@ -717,7 +717,7 @@ trait CoCoClean extends ApproachImplementationProvider {
     import ooParadigm.classCapabilities.canFindClassInClass
     import ooParadigm.constructorCapabilities.canFindClassInConstructor
     import ooParadigm.methodBodyCapabilities.canFindClassInMethod
-    import paradigm.projectContextCapabilities._
+    import paradigm.projectCapabilities._
     import org.combinators.ep.generator.Understands
     import org.combinators.ep.generator.paradigm.FindClass
 
@@ -736,7 +736,7 @@ trait CoCoClean extends ApproachImplementationProvider {
   }
 
   override def implement(tests: Map[GenericModel, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
-    import paradigm.projectContextCapabilities._
+    import paradigm.projectCapabilities._
     import paradigm.compilationUnitCapabilities._
     import paradigm.testCapabilities._
 
@@ -784,7 +784,7 @@ trait CoCoClean extends ApproachImplementationProvider {
     import paradigm.methodBodyCapabilities._
     for {
       self <- selfReference()
-      convert <- getMember(self, ComponentNames.convertMethod)
+      convert <- getMember(self, ComponentNames.convertMethod)  // convert the receiver of the dispatch as late as possible
       converted <- apply(convert, Seq(message.to))
       method <- getMember(converted, names.mangle(names.instanceNameOf(message.request.op)))
 

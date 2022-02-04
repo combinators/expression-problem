@@ -33,12 +33,13 @@ trait Fibonacci {
       func <- functionalParadigm.methodBodyCapabilities.findMethod(Seq(fibName))
       one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
       two <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 2)
-      le1 <- ffiArithmetic.arithmeticCapabilities.le(args.head._3, one)
-      subexpr1 <- ffiArithmetic.arithmeticCapabilities.sub(args.head._3, one)
-      subexpr2 <- ffiArithmetic.arithmeticCapabilities.sub(args.head._3, two)
-      subcall1 <- apply(func, Seq(subexpr1))
-      subcall2 <- apply(func, Seq(subexpr2))
-      addExpr <- ffiArithmetic.arithmeticCapabilities.add(subcall1, subcall2)
+      (name,tpe,n) = args.head
+      le1 <- ffiArithmetic.arithmeticCapabilities.le(n, one)
+      n_1 <- ffiArithmetic.arithmeticCapabilities.sub(n, one)
+      n_2 <- ffiArithmetic.arithmeticCapabilities.sub(n, two)
+      fn_1 <- apply(func, Seq(n_1))
+      fn_2 <- apply(func, Seq(n_2))
+      addExpr <- ffiArithmetic.arithmeticCapabilities.add(fn_1, fn_2)
       res <- ifThenElse(le1, Command.lift(one), Seq.empty, Command.lift(addExpr))
     } yield res
   }
@@ -59,15 +60,15 @@ trait Fibonacci {
       one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
 
       check0 <- apply(func, Seq(zero))
-      asserteq0 <- ffiAssertions.assertionCapabilities.assertEquals(intType, check0, one)
+      asserteq0 <- ffiAssertions.assertionCapabilities.assertEquals(intType, check0, zero)
 
       check1 <- apply(func, Seq(one))
       asserteq1 <- ffiAssertions.assertionCapabilities.assertEquals(intType, check1, one)
 
       seven <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 7)
-      twentyone <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 21)
+      thirteen <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 13)
       check7 <- apply(func, Seq(seven))
-      asserteq7 <- ffiAssertions.assertionCapabilities.assertEquals(intType, check7, twentyone)
+      asserteq7 <- ffiAssertions.assertionCapabilities.assertEquals(intType, check7, thirteen)
 
     } yield Seq(asserteq0, asserteq1, asserteq7)
   }
@@ -80,8 +81,8 @@ trait Fibonacci {
 
   def make_project(): Generator[paradigm.ProjectContext, Unit] = {
     for {
-      _ <- paradigm.projectContextCapabilities.addCompilationUnit(make_unit(), fibName)
-      _ <- paradigm.projectContextCapabilities.addCompilationUnit(paradigm.compilationUnitCapabilities.addTestSuite(testFibName, make_test()), testFibName)
+      _ <- paradigm.projectCapabilities.addCompilationUnit(make_unit(), fibName)
+      _ <- paradigm.projectCapabilities.addCompilationUnit(paradigm.compilationUnitCapabilities.addTestSuite(testFibName, make_test()), testFibName)
     } yield ()
   }
 }

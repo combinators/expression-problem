@@ -36,7 +36,7 @@ trait OOApproachImplementationProvider extends ApproachImplementationProvider {
    * This enables target-language classes to be retrieved from within the code generator in the Method, Class or Constructor contexts.
    */
   def registerTypeMapping(domain: GenericModel): Generator[ProjectContext, Unit] = {
-    import paradigm.projectContextCapabilities.addTypeLookupForMethods
+    import paradigm.projectCapabilities.addTypeLookupForMethods
     import ooParadigm.methodBodyCapabilities.canFindClassInMethod
     import ooParadigm.projectCapabilities.addTypeLookupForClasses
     import ooParadigm.projectCapabilities.addTypeLookupForConstructors

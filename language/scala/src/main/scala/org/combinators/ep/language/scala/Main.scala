@@ -3,7 +3,7 @@ package org.combinators.ep.language.scala     /*DI:LD:AD*/
 import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
 import org.combinators.ep.approach.functional.{Traditional => TraditionalFunctional }
-import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, RuntimeDispatching, Traditional => TraditionalOO, TriviallyClean, Visitor, VisitorSideEffect}
+import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, RuntimeDispatching, Traditional => TraditionalOO, TriviallyClean}
 import org.combinators.ep.domain.{GenericModel, Model}
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.math._
@@ -15,12 +15,17 @@ import java.nio.file.{Path, Paths}
 
 /**
   * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
+  *
+  *
   */
 class Main  {
   val generator = CodeGenerator(CodeGenerator.defaultConfig)
 
   val traditionalFunctionalApproach = TraditionalFunctional[Syntax.default.type, generator.paradigm.type](generator.paradigm)(ScalaNameProvider, generator.functional, generator.functionalInMethod)
+
+  // can't get this to work!
   //val traditionalOOApproach = TraditionalOO[Syntax.default.type, generator.paradigm.type](generator.paradigm)(ScalaNameProvider, generator.ooParadigm)
+
   //val visitorApproach = Visitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   //val visitorSideEffectApproach = VisitorSideEffect[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   //val extensibleVisitorApproach = ExtensibleVisitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
@@ -40,7 +45,7 @@ class Main  {
   //val algebraApproach = Algebra[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
   // select one here.
-  val approach = traditionalFunctionalApproach
+  val approach = traditionalFunctionalApproach    // traditionalOOApproach
 
   val evolutions = Seq(M0, M1, M2, /*I1, I2,*/ M3, M4, M5/*, M6, M7, M7I2, M8, M9*/)    // all test cases become active WHEN all included.
   //val evolutions = Seq(M0, M1, M2, M3, I1, A1, A1M3)

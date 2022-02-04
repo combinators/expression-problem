@@ -480,7 +480,7 @@ trait TriviallyClean extends ApproachImplementationProvider {
     import ooParadigm.classCapabilities.canFindClassInClass
     import ooParadigm.constructorCapabilities.canFindClassInConstructor
     import ooParadigm.methodBodyCapabilities.canFindClassInMethod
-    import paradigm.projectContextCapabilities._
+    import paradigm.projectCapabilities._
     import org.combinators.ep.generator.Understands
     import org.combinators.ep.generator.paradigm.FindClass
 
@@ -507,7 +507,7 @@ trait TriviallyClean extends ApproachImplementationProvider {
   }
 
   override def implement(tests: Map[GenericModel, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
-    import paradigm.projectContextCapabilities._
+    import paradigm.projectCapabilities._
     import paradigm.compilationUnitCapabilities._
     import paradigm.testCapabilities._
 

@@ -26,39 +26,39 @@ trait RealArithmetic[Context, T] extends FFI {
   trait RealArithmeticCapabilities {
     implicit val canSqrt: Understands[Context, Apply[Sqrt[T], Expression, Expression]]
     def sqrt(x: Expression): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Apply[Sqrt[T], Expression, Expression](Sqrt[T](), Seq(x)))
+      AnyParadigm.capability(Apply[Sqrt[T], Expression, Expression](Sqrt[T](), Seq(x)))
 
     implicit val canPow: Understands[Context, Apply[Pow[T], Expression, Expression]]
     def pow(base: Expression, exponent: Expression): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Apply[Pow[T], Expression, Expression](Pow[T](), Seq(base, exponent)))
+      AnyParadigm.capability(Apply[Pow[T], Expression, Expression](Pow[T](), Seq(base, exponent)))
 
     implicit val canLog: Understands[Context, Apply[Log[T], Expression, Expression]]
     def log(base: Expression, x: Expression): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Apply[Log[T], Expression, Expression](Log[T](), Seq(base, x)))
+      AnyParadigm.capability(Apply[Log[T], Expression, Expression](Log[T](), Seq(base, x)))
 
     implicit val canSin: Understands[Context, Apply[Sin[T], Expression, Expression]]
     def sin(x: Expression): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Apply[Sin[T], Expression, Expression](Sin[T](), Seq(x)))
+      AnyParadigm.capability(Apply[Sin[T], Expression, Expression](Sin[T](), Seq(x)))
 
     implicit val canCos: Understands[Context, Apply[Cos[T], Expression, Expression]]
     def cos(x: Expression): Generator[Context, Expression]  =
-      AnyParadigm.capabilitiy(Apply[Cos[T], Expression, Expression](Cos[T](), Seq(x)))
+      AnyParadigm.capability(Apply[Cos[T], Expression, Expression](Cos[T](), Seq(x)))
 
     implicit val canEuler: Understands[Context, EulersNumber[Expression]]
     def eulersNumber(): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(EulersNumber[Expression]())
+      AnyParadigm.capability(EulersNumber[Expression]())
 
     implicit val canPi: Understands[Context, Pi[Expression]]
     def pi(): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Pi[Expression])
+      AnyParadigm.capability(Pi[Expression])
 
     implicit val canAbs: Understands[Context, Apply[Abs[T], Expression, Expression]]
     def abs(xs: Expression): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Apply[Abs[T], Expression, Expression](Abs[T](), Seq(xs)))
+      AnyParadigm.capability(Apply[Abs[T], Expression, Expression](Abs[T](), Seq(xs)))
 
     implicit val canFloor: Understands[Context, Apply[Floor[T], Expression, Expression]]
     def floor(xs: Expression): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Apply[Floor[T], Expression, Expression](Floor[T](), Seq(xs)))
+      AnyParadigm.capability(Apply[Floor[T], Expression, Expression](Floor[T](), Seq(xs)))
   }
   val realArithmeticCapabilities: RealArithmeticCapabilities
 }

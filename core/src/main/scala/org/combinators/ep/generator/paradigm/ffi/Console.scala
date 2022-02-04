@@ -13,7 +13,7 @@ trait Console[Context] extends FFI {
    
     implicit val canPrint: Understands[Context, Apply[Print.type, Expression, Expression]]
     def print(x: Expression): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Apply[Print.type, Expression, Expression](Print, Seq(x)))
+      AnyParadigm.capability(Apply[Print.type, Expression, Expression](Print, Seq(x)))
   }
   
   val consoleCapabilities: ConsoleCapabilities

@@ -15,7 +15,7 @@ case class GetTypeArguments[Type]() extends Command {
 }
 
 trait ParametricPolymorphism {
-  val base: AnyParadigm
+  val base: org.combinators.ep.generator.paradigm.AnyParadigm
 
   import base._
   import syntax._
@@ -25,19 +25,19 @@ trait ParametricPolymorphism {
   trait MethodBodyCapabilities {
     implicit val canAddTypeParameterInMethod: Understands[MethodBodyContext, AddTypeParameter[Name, TypeParameterContext]]
     def addTypeParameter(name: Name, spec: Generator[TypeParameterContext, Unit]): Generator[MethodBodyContext, Unit] =
-      AnyParadigm.capabilitiy(AddTypeParameter[Name, TypeParameterContext](name, spec))
+      AnyParadigm.capability(AddTypeParameter[Name, TypeParameterContext](name, spec))
 
     implicit val canGetTypeArgumentsInMethod: Understands[MethodBodyContext, GetTypeArguments[Type]]
     def getTypeArguments(): Generator[MethodBodyContext, Seq[Type]] =
-      AnyParadigm.capabilitiy(GetTypeArguments[Type]())
+      AnyParadigm.capability(GetTypeArguments[Type]())
 
     implicit val canApplyTypeInMethod: Understands[MethodBodyContext, Apply[Type, Type, Type]]
     def applyType(tpe: Type, arguments: Seq[Type]): Generator[MethodBodyContext, Type] =
-      AnyParadigm.capabilitiy(Apply[Type, Type, Type](tpe, arguments))
+      AnyParadigm.capability(Apply[Type, Type, Type](tpe, arguments))
 
     implicit val canApplyMethodToTypeInMethod: Understands[MethodBodyContext, Apply[Expression, Type, Expression]]
     def instantiateTypeParameter(method: Expression, arguments: Seq[Type]): Generator[MethodBodyContext, Expression] =
-      AnyParadigm.capabilitiy(Apply[Expression, Type, Expression](method, arguments))
+      AnyParadigm.capability(Apply[Expression, Type, Expression](method, arguments))
   }
   val methodBodyCapabilities: MethodBodyCapabilities
 

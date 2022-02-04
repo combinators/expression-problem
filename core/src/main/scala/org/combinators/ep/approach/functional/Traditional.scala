@@ -55,7 +55,7 @@ trait Traditional extends ApproachImplementationProvider {
 
   def makeTypeInCompilationUnit(tpe: DataType, cases: Seq[DataTypeCase]): Generator[ProjectContext, Unit] = {
     import functional.compilationUnitCapabilities._
-    import paradigm.projectContextCapabilities._
+    import paradigm.projectCapabilities._
     val caseCode =
       for {
         _ <- forEach (cases) { tpeCase => makeTypeConstructor(tpeCase) }
@@ -131,7 +131,7 @@ trait Traditional extends ApproachImplementationProvider {
     domainSpecific: EvolutionImplementationProvider[this.type]
   ): Generator[ProjectContext, Unit] = {
     import functional.compilationUnitCapabilities._
-    import paradigm.projectContextCapabilities._
+    import paradigm.projectCapabilities._
     addCompilationUnit(
       addMethod(names.mangle(names.instanceNameOf(op)), makeFunction(tpe, cases, op, domainSpecific)),
       names.mangle(names.conceptNameOf(op))
@@ -143,8 +143,8 @@ trait Traditional extends ApproachImplementationProvider {
   }
 
   def initializeApproach(domain: GenericModel): Generator[ProjectContext, Unit] = {
-    import paradigm.projectContextCapabilities._
-    import functional.projectContextCapabilities._
+    import paradigm.projectCapabilities._
+    import functional.projectCapabilities._
     import functional.methodBodyCapabilities._         // Needed below
     import functional.typeCapabilities._               // Needed below
     val dtpeRep = TypeRep.DataType(domain.baseDataType)

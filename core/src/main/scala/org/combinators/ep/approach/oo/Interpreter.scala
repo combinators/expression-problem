@@ -412,7 +412,7 @@ sealed trait Interpreter extends OOApproachImplementationProvider with SharedOO 
     import ooParadigm.methodBodyCapabilities._
     import ooParadigm.constructorCapabilities._
     import ooParadigm.projectCapabilities._
-    import paradigm.projectContextCapabilities._
+    import paradigm.projectCapabilities._
 
     for {
       _ <- forEach(domain.flatten.typeCases) { tpe => {
@@ -433,7 +433,7 @@ sealed trait Interpreter extends OOApproachImplementationProvider with SharedOO 
     import ooParadigm.classCapabilities.canFindClassInClass
     import ooParadigm.constructorCapabilities.canFindClassInConstructor
     import ooParadigm.methodBodyCapabilities.canFindClassInMethod
-    import paradigm.projectContextCapabilities._
+    import paradigm.projectCapabilities._
 
     val baseInterface = baseInterfaceNames(latestModelDefiningInterface(model))  // model.lastModelWithOperation.head)
 

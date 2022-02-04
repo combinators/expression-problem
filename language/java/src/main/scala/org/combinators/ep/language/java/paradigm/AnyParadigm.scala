@@ -32,8 +32,8 @@ trait AnyParadigm extends AP {
   type MethodBodyContext = MethodBodyCtxt
 
 
-  val projectContextCapabilities: ProjectContextCapabilities =
-    new ProjectContextCapabilities {
+  val projectCapabilities: ProjectCapabilities =
+    new ProjectCapabilities {
       implicit val canDebugInProject: Understands[ProjectCtxt, Debug] =
         new Understands[ProjectCtxt, Debug] {
           def perform(

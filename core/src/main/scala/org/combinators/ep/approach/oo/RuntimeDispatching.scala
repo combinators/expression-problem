@@ -327,7 +327,7 @@ trait RuntimeDispatching extends OOApproachImplementationProvider with SharedOO 
    */
   def implement(gdomain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
-    import paradigm.projectContextCapabilities._
+    import paradigm.projectCapabilities._
 
     val flatDomain = gdomain.linearize.flatten
     for {

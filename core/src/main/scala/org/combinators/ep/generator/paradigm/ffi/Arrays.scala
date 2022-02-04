@@ -16,19 +16,19 @@ trait Arrays[Context] extends FFI {
   trait ArrayCapabilities {
     implicit val canCreate: Understands[Context, Apply[CreateArray[Type], Expression, Expression]]
     def create(elemTpe: Type, contents: Seq[Expression]): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Apply[CreateArray[Type], Expression, Expression](CreateArray(elemTpe), contents))
+      AnyParadigm.capability(Apply[CreateArray[Type], Expression, Expression](CreateArray(elemTpe), contents))
 
     implicit val canGet: Understands[Context, Apply[Get, Expression, Expression]]
     def get(array: Expression, pos:Expression): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Apply[Get, Expression, Expression](Get(), Seq(array, pos)))
+      AnyParadigm.capability(Apply[Get, Expression, Expression](Get(), Seq(array, pos)))
 
     implicit val canSet: Understands[Context, Apply[Set, Expression, Expression]]
     def set(array: Expression, pos:Expression, value:Expression): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Apply[Set, Expression, Expression](Set(), Seq(array, pos, value)))
+      AnyParadigm.capability(Apply[Set, Expression, Expression](Set(), Seq(array, pos, value)))
 
     implicit val canLength: Understands[Context, Apply[Length, Expression, Expression]]
     def length(array:Expression): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Apply[Length, Expression, Expression](Length(), Seq(array)))
+      AnyParadigm.capability(Apply[Length, Expression, Expression](Length(), Seq(array)))
   }
   val arrayCapabilities: ArrayCapabilities
 }

@@ -53,6 +53,6 @@ case class SendRequest[Expression](
                                     to: Expression,
                                     receiverTpe: DataType,
                                     request: Request[Expression],
-                                    inReplyTo: Option[ReceivedRequest[Expression]] = None // TODO: models what was essentially done with Deltas in the past
+                                    inReplyTo: Option[Any]/*ReceivedRequest[Expression]*/ = None // TODO: models what was essentially done with Deltas in the past
                                   )
 

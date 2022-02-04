@@ -12,9 +12,9 @@ import java.nio.file.{Path, Paths}
 import scala.meta.{Pkg, Term}
 
 /**
- * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
+ * Takes paradigm-independent specification for Fibonacci and generates Java code
  */
-class FibonacciMainScala {
+class FibonacciIndependentMainScala {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(targetPackage = Pkg(Term.Name("fib"), List.empty)))
   
   val fibonacciApproach = FibonacciIndependentProvider.functional[Syntax.default.type, generator.paradigm.type](generator.paradigm)(ScalaNameProvider, generator.functional, generator.functionalInMethod, generator.intsInMethod, generator.assertionsInMethod, generator.equalityInMethod)
@@ -57,13 +57,13 @@ class FibonacciMainScala {
   }
 }
 
-object FibonacciScalaDirectToDiskMain extends IOApp {
+object FibonacciIndependentScalaDirectToDiskMain extends IOApp {
   val targetDirectory = Paths.get("target", "ep3", "scala")
 
   def run(args: List[String]): IO[ExitCode] = {
     for {
       _ <- IO { print("Initializing Generator...") }
-      main <- IO { new FibonacciMainScala() }
+      main <- IO { new FibonacciIndependentMainScala() }
       _ <- IO { println("[OK]") }
       result <- main.runDirectToDisc(targetDirectory)
     } yield result

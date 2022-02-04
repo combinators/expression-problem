@@ -746,7 +746,7 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO w
   }
 
   def registerNewlyDeclaredDataTypeClasses(model:GenericModel): Generator[ProjectContext, Unit] = {
-    import paradigm.projectContextCapabilities.addTypeLookupForMethods
+    import paradigm.projectCapabilities.addTypeLookupForMethods
     import ooParadigm.projectCapabilities.addTypeLookupForClasses
     import ooParadigm.projectCapabilities.addTypeLookupForConstructors
 
@@ -763,7 +763,7 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO w
 
   override def registerTypeMapping(domain: GenericModel): Generator[ProjectContext, Unit] = {
 
-    import paradigm.projectContextCapabilities.addTypeLookupForMethods
+    import paradigm.projectCapabilities.addTypeLookupForMethods
     import ooParadigm.projectCapabilities.addTypeLookupForClasses
     import ooParadigm.projectCapabilities.addTypeLookupForConstructors
 
@@ -793,7 +793,7 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO w
    */
   override def implement(gdomain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
-    import paradigm.projectContextCapabilities._
+    import paradigm.projectCapabilities._
 
     gdomain.inChronologicalOrder.foreach(_.output)
 
@@ -852,7 +852,8 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO w
 
   /** Adds tests to the project context */
   override def implement(tests: Map[GenericModel, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
-    import projectContextCapabilities._
+    // TODO: import projectCapabilities._
+    import paradigm.projectCapabilities._
     import paradigm.compilationUnitCapabilities._
     import paradigm.testCapabilities._
     for {

@@ -3,7 +3,7 @@ package org.combinators.ep.approach.oo    /*DI:LI:AD*/
 import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions.{DataType, DataTypeCase, Operation, TypeRep}
 import org.combinators.ep.domain.instances.InstanceRep
-import org.combinators.ep.generator.{AbstractSyntax, Command, EvolutionImplementationProvider, NameProvider}
+import org.combinators.ep.generator.{AbstractSyntax, ApproachImplementationProvider, Command, EvolutionImplementationProvider, NameProvider}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.communication.{ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
@@ -11,19 +11,26 @@ import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.control.Imperative.WithBase
 import org.combinators.ep.generator.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
 
+// TODO: HACK: Visitor With Side Effect PrettyP for Val still emits code that it shouldn't
+
 /**
  * Straightforward implementation places all generated code in the current ep.* package.
  */
-trait Visitor extends OOApproachImplementationProvider with SharedOO with FieldDefinition with OperationAsClass { self =>
+trait Visitor extends OOApproachImplementationProvider with SharedOO with OperationAsClass { self =>
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
-
   val visitorSpecifics: VisitorSpecifics
 
   import paradigm._
   import ooParadigm._
   import syntax._
 
-  def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression] = visitorSpecifics.dispatch(message)
+  def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression] =
+    visitorSpecifics.dispatch(message)
+
+   // override SharedOO
+   override def makeImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation,
+                         domainSpecific: EvolutionImplementationProvider[self.type]): Generator[MethodBodyContext, Option[Expression]] =
+    visitorSpecifics.makeImplementation(tpe, tpeCase, op, domainSpecific)
 
   /**
    * Instantiates an instance of the domain object.
@@ -46,6 +53,11 @@ trait Visitor extends OOApproachImplementationProvider with SharedOO with FieldD
   trait VisitorSpecifics {
     def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression]
 
+    // different based on side effect vs. return
+    def makeImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation,
+                           domainSpecific: EvolutionImplementationProvider[self.type]
+                          ): Generator[MethodBodyContext, Option[Expression]]
+
     // must be provided by the appropriate extension
     def makeAcceptImplementation(model: GenericModel): Generator[ClassContext, Unit]
 
@@ -63,7 +75,6 @@ trait Visitor extends OOApproachImplementationProvider with SharedOO with FieldD
      * @return
      */
     def makeAcceptSignatureWithType(): Generator[MethodBodyContext, Unit]
-
 
     /** Visitor requires an abstract base class as follows, integrating all types:
      * {{{
@@ -98,13 +109,66 @@ trait Visitor extends OOApproachImplementationProvider with SharedOO with FieldD
     def makeVisitImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation,
                            domainSpecific: EvolutionImplementationProvider[self.type]
                           ): Generator[MethodBodyContext, Option[Expression]]
-
   }
 
   trait GenericVisitor extends VisitorSpecifics {
     val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
     val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
     val visitTypeParameter: String = "R"
+
+    /** Make a method body for each operation, which is a visit method for a defined data type
+     *
+     * {{{
+     *     public Double visit(Sub e) {
+     *         return e.getLeft().accept(new Eval()) - e.getRight().accept(new Eval());
+     *     }
+     * }}}
+     *
+     * Access the results via a visitor method which returns the information using accept method.
+     *
+     * @param tpe
+     * @param tpeCase
+     * @param op
+     * @param domainSpecific
+     * @return
+     */
+    def makeImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation,
+                                  domainSpecific: EvolutionImplementationProvider[self.type]
+                                 ): Generator[MethodBodyContext, Option[Expression]] = {
+      import paradigm.methodBodyCapabilities._
+      import ooParadigm.methodBodyCapabilities._
+      for {
+        returnType <- toTargetLanguageType(op.returnType)
+        _ <- resolveAndAddImport(returnType)
+        _ <- makeVisitSignature(tpeCase, returnType)
+        visitedRef <- getArguments().map(_.head._3)
+        attAccessors: Seq[Expression] <- forEach (tpeCase.attributes) { att =>
+          for {
+            getter <- getMember(visitedRef, getterName(att))
+            getterCall <- apply(getter, Seq.empty)
+          } yield getterCall
+        }
+
+        args <- forEach (op.parameters) { param =>
+          for {
+            thisRef <- selfReference()
+            paramField <- getMember(thisRef, names.mangle(param.name))
+          } yield (param, paramField)
+        }
+
+        // body of this implementation is the result of the individual domain-specific logic.
+        result <-
+          domainSpecific.logic(self)(
+            ReceivedRequest(
+              tpe,
+              tpeCase,
+              visitedRef,
+              tpeCase.attributes.zip(attAccessors).toMap,
+              Request(op, args.toMap)
+            )
+          )
+      } yield result
+    }
 
     /**
      * Dispatch in visitor we need to find context on which to accept a visitor.
@@ -303,6 +367,88 @@ trait Visitor extends OOApproachImplementationProvider with SharedOO with FieldD
       val value: Name = names.mangle("visitorValue")     // HACK: Cannot conflict with 'value' from a datatype (i.e., Lit)
     }
 
+    /** Make a method body for each operation, which is a visit method for a defined data type
+     *
+     * {{{
+     *     public Double visit(Sub e) {
+     *         Eval evalleft = new Eval();
+     *         e.getLeft().accept(evalleft);
+     *         Eval evalright = new Eval();
+     *         e.getRight().accept(evalright);
+     *         return evalleft.getValue() - evalright.getValue();
+     *     }
+     * }}}
+     *
+     * @param tpe
+     * @param tpeCase
+     * @param op
+     * @param domainSpecific
+     * @return
+     */
+    def makeImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation,
+                                     domainSpecific: EvolutionImplementationProvider[self.type]
+                                    ): Generator[MethodBodyContext, Option[Expression]] = {
+      import paradigm.methodBodyCapabilities._
+      import ooParadigm.methodBodyCapabilities._
+      import impParadigm.imperativeCapabilities._
+
+      for {
+        unitType <- toTargetLanguageType(TypeRep.Unit)
+        _ <- makeVisitSignature(tpeCase, unitType)
+        thisRef <- selfReference()
+        impl <- getMember(thisRef, ComponentNames.visitImpl)
+        args <- getArguments().map(_.map(_._3))
+        result <- apply(impl, args)
+
+        // now need to store it. AND add those statements to the method body
+        storedField <- getMember(thisRef, ComponentNames.value)
+        stmt <- assignVar(storedField, result)
+        _ <- addBlockDefinitions(Seq(stmt))
+
+        // Return unit (translates to no return/void in Java, real unit return in Scala)
+        result <- self.reify(InstanceRep(TypeRep.Unit)(()))
+      } yield Some(result)
+    }
+
+    // WHY do I have to copy. TODO: FIX ME
+    def straightMakeImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation,
+                           domainSpecific: EvolutionImplementationProvider[self.type]
+                          ): Generator[MethodBodyContext, Option[Expression]] = {
+      import paradigm.methodBodyCapabilities._
+      import ooParadigm.methodBodyCapabilities._
+      for {
+        returnType <- toTargetLanguageType(op.returnType)
+        _ <- resolveAndAddImport(returnType)
+        _ <- makeVisitSignature(tpeCase, returnType)
+        visitedRef <- getArguments().map(_.head._3)
+        attAccessors: Seq[Expression] <- forEach (tpeCase.attributes) { att =>
+          for {
+            getter <- getMember(visitedRef, getterName(att))
+            getterCall <- apply(getter, Seq.empty)
+          } yield getterCall
+        }
+
+        args <- forEach (op.parameters) { param =>
+          for {
+            thisRef <- selfReference()
+            paramField <- getMember(thisRef, names.mangle(param.name))
+          } yield (param, paramField)
+        }
+
+        // body of this implementation is the result of the individual domain-specific logic.
+        result <-
+          domainSpecific.logic(self)(
+            ReceivedRequest(
+              tpe,
+              tpeCase,
+              visitedRef,
+              tpeCase.attributes.zip(attAccessors).toMap,
+              Request(op, args.toMap)
+            )
+          )
+      } yield result
+    }
+
     /**
      * Dispatch in visitor we need to find context on which to accept a visitor.
      *
@@ -347,7 +493,7 @@ trait Visitor extends OOApproachImplementationProvider with SharedOO with FieldD
         _ <- addBlockDefinitions(Seq(stmt))
 
         // obtain actual result expression by getting method and then invoking it (with empty seq)
-        resultOfMethod <- getMember(fvar,  ComponentNames.getValue)
+        resultOfMethod <- getMember(fvar, ComponentNames.getValue)
         result <- apply(resultOfMethod, Seq.empty)
 
       } yield result
@@ -457,7 +603,7 @@ trait Visitor extends OOApproachImplementationProvider with SharedOO with FieldD
         field <- getField(ComponentNames.value)
         _ <- addMethod(ComponentNames.getValue, returnValue(op.returnType, field))
         _ <- forEach (domain.typeCases) { tpe =>
-          addMethod(ComponentNames.visitImpl, makeImplementation(domain.baseDataType, tpe, op, domainSpecific))
+          addMethod(ComponentNames.visitImpl, straightMakeImplementation(domain.baseDataType, tpe, op, domainSpecific))
         }
         _ <- addImplemented(visitorInterface)
       } yield ()
@@ -603,40 +749,6 @@ trait Visitor extends OOApproachImplementationProvider with SharedOO with FieldD
       _ <- setParameters(Seq((visitParamName, visitedClassType)))      // a pair (name,type) of only one sequence
     } yield ()
   }
-//
-//  /** Visitor requires an abstract base class as follows, integrating all types:
-//   * {{{
-//   *     public abstract class Visitor<R> {
-//   *       public abstract R visit(Sub exp);
-//   *       public abstract R visit(Lit exp);
-//   *       ...
-//   *     }
-//   * }}}
-//   *
-//   * @param allTypes   the flattened types in the model, for which Visitor has a single method for each type.
-//   * @return
-//   */
-//  def makeVisitorInterface(allTypes:Seq[DataTypeCase]): Generator[ClassContext, Unit]
-//
-//  /** Make a method body for each operation, which is a visit method for a defined data type
-//   *
-//   * {{{
-//   *     public Double visit(Sub e) {
-//   *         return e.getLeft().accept(new Eval()) - e.getRight().accept(new Eval());
-//   *     }
-//   * }}}
-//   *
-//   * Access the results via a visitor method which returns the information using accept method.
-//   *
-//   * @param tpe
-//   * @param tpeCase
-//   * @param op
-//   * @param domainSpecific
-//   * @return
-//   */
-//  def makeImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation,
-//                         domainSpecific: EvolutionImplementationProvider[this.type]
-//                        ): Generator[MethodBodyContext, Option[Expression]]
 
   /**
    * {{{
@@ -695,11 +807,11 @@ trait Visitor extends OOApproachImplementationProvider with SharedOO with FieldD
       _ <- registerTypeMapping(flatDomain)
       _ <- domainSpecific.initialize(self)
       _ <- makeBase(flatDomain.baseDataType)
-      _ <- forEach (flatDomain.typeCases) { tpeCase =>
+      _ <- forEach (flatDomain.typeCases.distinct) { tpeCase =>
         makeDerived(flatDomain.baseDataType, tpeCase, gdomain)   // used to have flatDomain.ops,
       }
 
-      _ <- addClassToProject(visitorSpecifics.makeVisitorInterface(flatDomain.typeCases), visitorClass)
+      _ <- addClassToProject(visitorSpecifics.makeVisitorInterface(flatDomain.typeCases.distinct), visitorClass)
 
       _ <- forEach (flatDomain.ops) { op =>
         addClassToProject(visitorSpecifics.makeOperationImplementation(flatDomain, op, domainSpecific), names.mangle(names.conceptNameOf(op)))

@@ -1,4 +1,4 @@
-package org.combinators.ep.language.java     /*DD:LD:AD*/
+package org.combinators.ep.language.java    /*DD:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, RuntimeDispatching, Traditional, TriviallyClean, Visitor}
@@ -15,7 +15,7 @@ import java.nio.file.{Path, Paths}
 /**
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
-class Main {
+class MainJ {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed))
 
   val ooApproach = Traditional[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
@@ -39,52 +39,47 @@ class Main {
   //val algebraApproach = Algebra[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
   // select one here.
-  val approach = interpreterApproach// cocoCleanApproach//extensibleVisitorApproach
+  val approach = ooApproach
 
-  val evolutions = Seq(M0, M1, M2, I1, I2, M3, M4, M5, M6, M7, M7I2, M8, M9)    // all test cases become active WHEN all included.
-  //val evolutions = Seq(M0, M1, M2, M3, I1, A1, A1M3)
-
+  val evolutions = Seq(M0, J1, J2 , J4, J5, J3, J6, J7, J8, J5J8, J9, J10)
 //  val eip = eips.I2(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod,
 //    generator.stringsInMethod, generator.imperativeInMethod)
 //  // how do I just use M2 instead of this? HACK
   val m0_eip = eips.M0(approach.paradigm)(generator.doublesInMethod)
-  val m1_eip = eips.M1(approach.paradigm)(m0_eip)(generator.doublesInMethod)
-  val m2_eip = eips.M2(approach.paradigm)(m1_eip)(generator.doublesInMethod, generator.stringsInMethod)
+  // TODO: FIX ME
+  val j1_eip = eips.J1(approach.paradigm)(m0_eip)(generator.doublesInMethod,generator.realDoublesInMethod,generator.stringsInMethod,generator.imperativeInMethod)
+  val j2_eip = eips.J2(approach.paradigm)(j1_eip)(generator.doublesInMethod,generator.booleansInMethod,generator.equalityInMethod)
+  val j3_eip = eips.J3(approach.paradigm)(j2_eip)(generator.doublesInMethod,generator.booleansInMethod,generator.stringsInMethod)
+  val j4_eip = eips.J4(approach.paradigm)(j2_eip)(generator.doublesInMethod,generator.realDoublesInMethod,generator.booleansInMethod,generator.stringsInMethod,generator.imperativeInMethod)
+  val j6_eip = eips.J6(approach.paradigm)(j3_eip)(generator.intsInMethod,generator.treesInMethod)
+  val j7_eip = eips.J7(approach.paradigm)(j6_eip)(generator.equalityInMethod,generator.booleansInMethod)
+  val j8_eip = eips.J8(approach.paradigm)(j7_eip)(generator.doublesInMethod,generator.realDoublesInMethod,generator.stringsInMethod,generator.imperativeInMethod)
 
-  //val m2_abs_eip = eips.M2_ABS(approach.paradigm)(m2_eip)(generator.doublesInMethod, generator.imperativeInMethod, generator.stringsInMethod)
-
-  val m3_eip = eips.M3(approach.paradigm)(m2_eip)(generator.doublesInMethod, generator.stringsInMethod)
-
-  val m4_eip = eips.M4.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(m3_eip)(
-      generator.imperativeInMethod,
-      generator.doublesInMethod,
-      generator.booleansInMethod,
-      generator.stringsInMethod,
-      generator.listsInMethod,
-      generator.equalityInMethod)
-  val m5_eip = eips.M5(approach.paradigm)(m4_eip)(generator.intsInMethod,generator.treesInMethod)
-  val m6_eip = eips.M6(approach.paradigm)(m5_eip)(generator.equalityInMethod, generator.booleansInMethod)
-  val m7_eip = eips.M7(approach.paradigm)(m6_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
-  val i1_eip = eips.I1(approach.paradigm)(m2_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
-  val i2_eip = eips.I2(approach.paradigm)(i1_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
-  val m7i2_eip = eips.M7I2.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(m7_eip,i2_eip)(
+  val j5_eip = eips.J5.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(j4_eip)(
     generator.imperativeInMethod,
     generator.doublesInMethod,
     generator.booleansInMethod,
+    generator.stringsInMethod,
+    generator.listsInMethod,
     generator.equalityInMethod)
-  val m8_eip =  eips.M8.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(m7i2_eip)(
+
+  val j5j8_eip = eips.J5J8.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(j8_eip,j5_eip)(
     generator.imperativeInMethod,
     generator.doublesInMethod,
     generator.booleansInMethod,
     generator.stringsInMethod,
     generator.equalityInMethod)
-  val m9_eip = eips.M9(approach.paradigm)(m8_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.imperativeInMethod)
 
-  val a1_eip = eips.A1(approach.paradigm)(i1_eip)(generator.doublesInMethod, generator.stringsInMethod)
-  val a1m3_eip = eips.A1M3(approach.paradigm)(m3_eip, a1_eip)(generator.stringsInMethod)
+  val j9_eip =  eips.J9.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(j5j8_eip)(
+    generator.imperativeInMethod,
+    generator.doublesInMethod,
+    generator.booleansInMethod,
+    generator.stringsInMethod,
+    generator.equalityInMethod)
+  val j10_eip = eips.J10(approach.paradigm)(j9_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.imperativeInMethod)
 
   //val eip = a1m3_eip
-  val eip = m9_eip
+  val eip = j10_eip
 
   val tests = evolutions.scanLeft(Map.empty[GenericModel, Seq[TestCase]]) { case (m, evolution) =>
     m + (evolution.getModel -> evolution.tests)
@@ -151,17 +146,17 @@ class Main {
   }
 }
 
-object GitMain extends IOApp {
-  def run(args: List[String]): IO[ExitCode] = new Main().runGit(args)
+object GitMainJ extends IOApp {
+  def run(args: List[String]): IO[ExitCode] = new MainJ().runGit(args)
 }
 
-object DirectToDiskMain extends IOApp {
+object DirectToDiskMainJ extends IOApp {
   val targetDirectory = Paths.get("target", "ep2")
 
   def run(args: List[String]): IO[ExitCode] = {
     for {
       _ <- IO { print("Initializing Generator...") }
-      main <- IO { new Main() }
+      main <- IO { new MainJ() }
       _ <- IO { println("[OK]") }
       result <- main.runDirectToDisc(targetDirectory)
     } yield result

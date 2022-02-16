@@ -8,7 +8,7 @@ import org.combinators.ep.generator.paradigm._
 import Command._
 import AnyParadigm.syntax._
 
-trait Traditional extends OOApproachImplementationProvider with SharedOO with FieldDefinition {  // this had been sealed. not sure why
+trait Traditional extends OOApproachImplementationProvider with SharedOO {  // this had been sealed. not sure why
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
 
   import paradigm._
@@ -22,7 +22,6 @@ trait Traditional extends OOApproachImplementationProvider with SharedOO with Fi
       method <- getMember(message.to, names.mangle(names.instanceNameOf(message.request.op)))
       result <- apply(method, message.request.op.parameters.map(message.request.arguments))
     } yield result
-
   }
 
   def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
@@ -82,7 +81,7 @@ trait Traditional extends OOApproachImplementationProvider with SharedOO with Fi
       _ <- domainSpecific.initialize(this)
 
       _ <- makeBase(flatDomain.baseDataType, flatDomain.ops)
-      _ <- forEach (flatDomain.typeCases) { tpeCase =>
+      _ <- forEach (flatDomain.typeCases.distinct) { tpeCase =>
           makeDerived(flatDomain.baseDataType, tpeCase, flatDomain.ops, domainSpecific)
         }
     } yield ()

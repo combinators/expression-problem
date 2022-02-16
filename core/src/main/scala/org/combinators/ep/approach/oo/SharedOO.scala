@@ -19,6 +19,16 @@ trait SharedOO extends ApproachImplementationProvider {
     names.addPrefix("get", names.mangle(names.conceptNameOf(att)))
   }
 
+  /** Make a field from an attribute in the given class.  If the type needs to be different from default, then register Types accordingly. */
+  def makeField(att: Attribute): Generator[ClassContext, Type] = {
+    import ooParadigm.classCapabilities._
+    for {
+      ft <- toTargetLanguageType(att.tpe)
+      _ <- resolveAndAddImport(ft)
+      _ <- addField(names.mangle(names.instanceNameOf(att)), ft)
+    } yield ft
+  }
+
   /** Create standard signature to access the result of an operation
    *
    * {{{

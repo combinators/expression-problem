@@ -8,6 +8,8 @@ import org.combinators.ep.generator.communication._
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.{forEach, _}
 import org.combinators.ep.generator.paradigm._
 
+// TODO: Needs to be fixed to handle Power and other merging
+
 sealed trait Interpreter extends OOApproachImplementationProvider with SharedOO {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
@@ -100,18 +102,6 @@ sealed trait Interpreter extends OOApproachImplementationProvider with SharedOO 
     }
 
     addClassToProject(makeClass, names.mangle(names.conceptNameOf(tpe)))
-  }
-
-  /// ----- Field Definition moved here ------
-
-  /** Make a field from an attribute in the given class.  If the type needs to be different from default, then register Types accordingly. */
-  def makeField(att: Attribute): Generator[ClassContext, Type] = {
-    import ooParadigm.classCapabilities._
-    for {
-      ft <- toTargetLanguageType(att.tpe)
-      _ <- resolveAndAddImport(ft)
-      _ <- addField(names.mangle(names.instanceNameOf(att)), ft)
-    } yield ft
   }
 
   /// ------------------------------------------------------ Operator As Chain Moved Here ---------------
@@ -311,11 +301,11 @@ sealed trait Interpreter extends OOApproachImplementationProvider with SharedOO 
 
     // This is different than the top-level primaryParent() because this parent is not about a last
     // model with an operation, but rather about the last interface to define.
-    def primaryParent(): GenericModel = {
-      val modelDefiningType = model.findTypeCase(tpeCase)
-      val pastModel = model.former.map(m => latestModelDefiningInterface(m)).head
-      modelDefiningType.getOrElse(pastModel).later(pastModel)
-    }
+//    def primaryParent(): GenericModel = {
+//      val modelDefiningType = model.findTypeCase(tpeCase)
+//      val pastModel = model.former.map(m => latestModelDefiningInterface(m)).head
+//      modelDefiningType.getOrElse(pastModel).later(pastModel)
+//    }
 
     // if an ancestor branch doesn't define parent then add all operations
 
@@ -328,7 +318,7 @@ sealed trait Interpreter extends OOApproachImplementationProvider with SharedOO 
        Command.skip[ClassContext]
       } else {
         // go to last model which had defined operation *OR* last model in which this tpeCase is defined.
-        val chosenModel = primaryParent()
+        val chosenModel = primaryParent(model, tpeCase)
         for {
           priorType <- findClass(qualifiedDataTypeCase(chosenModel, tpeCase) : _ *)
             _ <- resolveAndAddImport(priorType)
@@ -371,9 +361,14 @@ sealed trait Interpreter extends OOApproachImplementationProvider with SharedOO 
   }
 
   /** Class is generated into 'defining' namespace package.  */
-  def generateForOp(ops:Seq[Operation], defining:GenericModel, allTypes:Seq[DataTypeCase], domainSpecific: EvolutionImplementationProvider[this.type]) : Generator[ProjectContext, Unit] = {
+  def generateForOp(defining:GenericModel, allTypes:Seq[DataTypeCase], domainSpecific: EvolutionImplementationProvider[this.type]) : Generator[ProjectContext, Unit] = {
     for {
-        _ <- forEach (allTypes) { tpeCase => generateForOpForType(ops, defining, tpeCase, domainSpecific)
+        _ <- forEach (allTypes) { tpe => {
+          val prime = primaryParent(defining, tpe)
+          val necessaryOps = if (defining.typeCases.contains(tpe)) { defining.flatten.ops.distinct} else { defining.ops }
+          val missing = defining.flatten.ops.distinct.filter(op => (! prime.supports(op)) || op.isProducer(defining))
+          generateForOpForType((missing ++ necessaryOps).distinct, defining, tpe, domainSpecific)   // don't forget to include self (defining)
+        }
       }
     } yield ()
   }
@@ -445,10 +440,19 @@ sealed trait Interpreter extends OOApproachImplementationProvider with SharedOO 
     } yield ()
   }
 
+  /**
+   * Find the (possibly older) model that actually defines this type case. Now, if some former model defines
+   * an operation and the model defining the type exists, then return the last.
+   *
+   * Look at all past branches and see if any is behind you and select the latest one of those.
+   */
   def primaryParent(model:GenericModel, tpeCase:DataTypeCase): GenericModel = {
     val modelDefiningType = model.findTypeCase(tpeCase)
-    val pastModel = model.former.flatMap(m => m.lastModelWithOperation).head
-    modelDefiningType.getOrElse(pastModel).later(pastModel)
+    val pastModels = model.former.flatMap(m => m.lastModelWithOperation)
+      .filter(m => modelDefiningType.getOrElse(m).before(m))
+
+    pastModels.foldLeft(modelDefiningType.get)((latest,m) => latest.later(m))
+    //modelDefiningType.getOrElse(pastModel).later(pastModel)
   }
 
   // find those operations that are not defined by the primary parent
@@ -473,25 +477,11 @@ sealed trait Interpreter extends OOApproachImplementationProvider with SharedOO 
              _ <- addIntermediateInterfaceToProject(domain)   // Exp for each evolution that needs one
 
               // needed for MERGE situation... (was domain.flatten.ops.distinct)
-              _ <- generateForOp(opsToHandle, domain, domain.flatten.typeCases, domainSpecific)
+              //_ <- generateForOp(opsToHandle, domain, domain.flatten.typeCases, domainSpecific)
+             _ <- generateForOp(domain, domain.flatten.typeCases, domainSpecific)
             } yield ()
           } else {
            Command.skip[paradigm.ProjectContext]
-          }   //
-          // if extending a past operation chain, NO NEED for past ops
-          // new data types need all operations
-          _ <- generateForOp(domain.flatten.ops.distinct, domain, domain.typeCases, domainSpecific)
-
-          // new operations (and producers from the past) need generation for types IF a new Exp is required.
-          _ <- if (domain == latestModelDefiningInterface(domain)) {
-            for {
-               _ <- forEach(domain.former.flatMap(m => m.typeCases).distinct) { tpe => {
-                 generateForOpForType((nonPrimaryParentOps(domain, tpe) ++ domain.ops ++ domain.pastOperations.filter(op => op.isProducer(domain))).distinct,
-                   domain, tpe, domainSpecific)
-               }}
-            } yield ()
-          } else {
-            Command.skip[paradigm.ProjectContext]
           }
         } yield()
       }

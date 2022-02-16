@@ -23,18 +23,21 @@ object M0 extends Evolution {
   def AddInst(left:DataTypeInstance, right:DataTypeInstance): DataTypeInstance =
     DataTypeInstance(Add, Seq(InstanceRep(left), InstanceRep(right)))
 
+  val addi:DataTypeInstance = AddInst(LitInst(1.0), LitInst(2.0))
+  val liti:DataTypeInstance = LitInst(5.0)
+
   // Testing
   def tests: Seq[TestCase] = Seq(
-    EqualsTestCase(getModel.baseDataType, AddInst(LitInst(1.0), LitInst(2.0)), Eval, DoubleInst(3.0)),
-    EqualsTestCase(getModel.baseDataType, LitInst(5.0), Eval, DoubleInst(5.0)),
+    EqualsTestCase(getModel.baseDataType, addi, Eval, DoubleInst(3.0)),
+    EqualsTestCase(getModel.baseDataType, liti, Eval, DoubleInst(5.0)),
 
     PerformanceTestCase(
       11,    // how many iterations to continue the iteration
       8,     // how many times to try to find the best
       Eval,
       getModel.baseDataType,
-      AddInst(LitInst(1.0), LitInst(2.0)),     // new BinaryInst(Add, LitInst(1.0), LitInst(2.0)),   // base instance
-      Seq.empty,   // base parameters
+      addi,          // base instance
+      Seq.empty,     // base parameters
       params => params,   // how parameters evolve (i.e., stay same)
       inst => AddInst( inst, inst)     // object changes with each iteration
     )

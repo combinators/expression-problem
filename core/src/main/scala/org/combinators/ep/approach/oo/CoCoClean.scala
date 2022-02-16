@@ -10,7 +10,6 @@ import org.combinators.ep.generator.paradigm.{AddImport, AnyParadigm, Apply, Fin
 
 import scala.tools.nsc.interpreter.NamedParamClass
 
-
 trait CoCoClean extends ApproachImplementationProvider {
   val paradigm: AnyParadigm
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]

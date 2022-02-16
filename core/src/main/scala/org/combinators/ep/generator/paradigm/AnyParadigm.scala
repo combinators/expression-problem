@@ -96,6 +96,11 @@ case class Debug(tag: String) extends Command {
   type Result = Unit
 }
 
+/** Can output an expression to the console. */
+case class OutputToConsole[Expression](expr: Expression) extends Command {
+  type Result = Unit
+}
+
 trait AnyParadigm {
   val syntax: AbstractSyntax
 
@@ -168,6 +173,10 @@ trait AnyParadigm {
     def debug(tag:String = ""): Generator[MethodBodyContext, Unit] =
       AnyParadigm.capability(Debug(tag))
 
+    implicit val canOutputToConsole: Understands[MethodBodyContext, OutputToConsole[Expression]]
+    def output(expr:Expression): Generator[MethodBodyContext, Unit] =
+      AnyParadigm.capability(OutputToConsole[Expression](expr))
+    
     implicit val canAddImportInMethodBody: Understands[MethodBodyContext, AddImport[Import]]
     def addImport(imp: Import): Generator[MethodBodyContext, Unit] =
       AnyParadigm.capability(AddImport(imp))

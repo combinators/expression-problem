@@ -15,8 +15,14 @@ import AnyParadigm.syntax._
  *
  * https://stackoverflow.com/questions/55501899/exception-in-intellijs-sbt-console-not-found-value-ideaport-ideaport-in-globa
  * problem with sbt...
+ *
+ * Original paper had no advice on merge case, so following is missing from j5j8
+ *
+     public ep.j4.IsPower makeIsPower(Exp left, Exp right) {
+        return new IsPower(left, right);
+    }
  */
-trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO with OperationAsClass with FieldDefinition {
+trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO with OperationAsClass {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
@@ -650,12 +656,24 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO w
 
     // have to be careful with merging, where dependent operations have to be managed
     val allDependentOps = domain.flatten.typeCases.distinct.flatMap(tpeCase => {
-      if (domain.findTypeCase(tpeCase).isDefined) {
+      if (domain.findTypeCase(tpeCase).isDefined && !domain.typeCases.contains(tpeCase)) {    // NO NEED TO DUPLICATE CURRENT ONES...
         domainSpecific.dependencies(op, tpeCase).filter(op => domain.findOperation(op).isDefined)
       } else {
         Seq.empty
       }
     }).distinct
+
+    // get all formers that are NOT latest visitors, and then take those operations and throw out those that are already supported...
+   // val latestVisitor = latestModelDefiningVisitor(domain). This case is clearly not covered in the original expression problem paper.
+    val otherBranchOps = if (previous.isEmpty) {
+      Seq.empty
+    } else {
+      val primaryParent = previous.maxBy(m => m.flatten.typeCases.length)
+     // might be too far in the past, but want the most direct
+     // former that leads to that branch
+     val latestInPrimaryParentBranch = domain.former.foldLeft(primaryParent)((latest,m) => latest.later(m))
+     domain.former.filterNot(p => p == latestInPrimaryParentBranch).flatMap(m => m.flatten.ops.filterNot(op => latestInPrimaryParentBranch.supports(op)))
+    }
 
     for {
       possibleParent <- addParentClass()
@@ -682,14 +700,14 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO w
       // most recently defined model with data types. When trying to call another operation, you need.
       // might have to go backward in time to find the model that declared that operation or had
       // an intervening visitor declaration.
-      _ <- forEach(allDependentOps) { dependentOp =>
+      _ <- forEach((allDependentOps ++ otherBranchOps ++ domain.ops :+ op).distinct) { dependentOp =>
           val modelsToUse = latestModelDefiningOperation(domain, dependentOp)
           val modelToUse = modelsToUse.head
 
           factory.create(modelToUse, dependentOp, visitorClassName(modelToUse, dependentOp).get)
         }
 
-      _ <- factory.create(domain, op, visitorClassName(domain, op).get)
+      //_ <- factory.create(domain, op, visitorClassName(domain, op).get)
     } yield ()
   }
 

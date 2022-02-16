@@ -1,0 +1,100 @@
+package org.combinators.ep.domain.math.eips     /*DD:LI:AI*/
+
+import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, TypeRep}
+import org.combinators.ep.domain.math
+import org.combinators.ep.generator.Command.Generator
+import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
+import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
+import org.combinators.ep.generator.paradigm.AnyParadigm
+import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
+import org.combinators.ep.generator.paradigm.ffi.{Booleans, Equality}
+import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
+
+object J7 {
+  def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
+    (paradigm: P)
+    (j6Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
+    (ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],
+     ffiBooleans: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type]
+    ):
+  EvolutionImplementationProvider[AIP[paradigm.type]] = {
+    val j7Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      override val model = math.J6.getModel
+
+      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
+        for {
+          _ <- j6Provider.initialize(forApproach)
+          _ <- ffiEquality.enable()
+          _ <- ffiBooleans.enable()
+        } yield ()
+      }
+
+      /** Equals depends upon asTree method */
+      override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
+        op match {
+          case math.J7.Equals => Set(Operation.asTree)
+          case _ => Set.empty
+        }
+      }
+
+      def applicable
+        (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
+           Seq(math.J7.Equals).contains(potentialRequest.op) &&
+          // Constraint to ensure we have an implementation for asTree, which is used in this equality implementation provider
+          j6Provider.applicable(forApproach,potentialRequest.copy(op = Operation.asTree))
+      }
+
+      /** Can handle any equals requests, by constructing Trees from Expressions. */
+      override def genericLogic
+        (forApproach: AIP[paradigm.type])
+        (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
+      Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
+        import ffiEquality.equalityCapabilities._
+        import paradigm._
+        import methodBodyCapabilities._
+        onRequest.request.op match {
+
+          case math.J7.Equals =>
+            for {
+              selfTree <- forApproach.dispatch(
+                SendRequest(
+                  onRequest.selfReference,
+                  onRequest.onType,
+                  Request(Operation.asTree, Map.empty),
+                  Some(onRequest)
+                )
+              )
+              otherTree <- forApproach.dispatch(
+                SendRequest(
+                  onRequest.request.arguments.toSeq.head._2,
+                  onRequest.onType,
+                  Request(Operation.asTree, Map.empty),
+                  Some(onRequest)
+                )
+              )
+              treeTpe <- toTargetLanguageType(TypeRep.Tree)
+              eq <- areEqual(treeTpe, selfTree, otherTree)
+            } yield Some(eq)
+
+          case _ => j6Provider.genericLogic(forApproach)(onRequest)
+        }
+      }
+
+      def logic
+        (forApproach: AIP[paradigm.type])
+          (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
+      Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
+        assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name)
+
+        onRequest.request.op match {
+          case math.J7.Equals =>
+            genericLogic(forApproach)(onRequest)
+
+          case _ => ???
+        }
+      }
+    }
+    // newest one must come first
+    monoidInstance.combine(j7Provider, j6Provider)
+  }
+}

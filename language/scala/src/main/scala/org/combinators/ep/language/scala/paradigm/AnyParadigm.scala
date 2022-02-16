@@ -226,6 +226,16 @@ trait AnyParadigm extends AP {
           }
         }
 
+      implicit val canOutputToConsole: Understands[MethodBodyContext, OutputToConsole[Expression]] =
+        new Understands[MethodBodyCtxt, OutputToConsole[Expression]] {
+          def perform(
+                       context: MethodBodyCtxt,
+                       command: OutputToConsole[Expression]
+                     ): (MethodBodyCtxt, Unit) = {
+            (context.copy(), ())
+          }
+        }
+
       implicit val canAddImportInMethodBody: Understands[MethodBodyCtxt, AddImport[Import]] =
         new Understands[MethodBodyCtxt, AddImport[Import]] {
           def perform(

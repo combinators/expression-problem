@@ -18,7 +18,7 @@ import org.combinators.ep.generator.paradigm.ffi.{Exceptions, Strings}
  * Have to decide whether to use side effects or Generics. This current implementation uses the Visitor<R> generics
  * approach, which can be adopted by different object oriented languages.
  */
-trait RuntimeDispatching extends OOApproachImplementationProvider with SharedOO with FieldDefinition with OperationAsClass {
+trait RuntimeDispatching extends OOApproachImplementationProvider with SharedOO with OperationAsClass {
     val paradigm: AnyParadigm
     val ooParadigm: ObjectOriented.WithBase[paradigm.type]
     val names: NameProvider[paradigm.syntax.Name]

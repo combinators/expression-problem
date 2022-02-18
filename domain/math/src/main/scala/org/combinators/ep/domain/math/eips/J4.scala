@@ -72,12 +72,12 @@ object J4 {
           val pastOps = math.J2.isOps(model.flatten.typeCases)
           if (pastOps.contains(onRequest.request.op)) {
             genericLogic(forApproach)(onRequest)
-          } else if (onRequest.request.op == math.J1.MultBy) {
-            /* Handle MultBy with these data types. */
-            onRequest.tpeCase match {
-              case math.J4.Power => genericLogic(forApproach)(onRequest)
-              case _ => ???
-            }
+//          } else if (onRequest.request.op == math.J1.MultBy) {
+//            /* Handle MultBy with these data types. */
+//            onRequest.tpeCase match {
+//              case math.J4.Power => genericLogic(forApproach)(onRequest)
+//              case _ => ???
+//            }
           } else if (onRequest.request.op == math.J2.Eql) {
             genericLogic(forApproach)(onRequest)
           } else {
@@ -106,7 +106,7 @@ object J4 {
                     for {
 
                       other <- forApproach.dispatch(SendRequest(
-                        onRequest.attributes(power.attributes.tail.head),
+                        onRequest.request.arguments.toSeq.head._2,   // onRequest.attributes(power.attributes.tail.head),
                         math.J1.getModel.baseDataType,
                         Request(math.M0.Eval, Map.empty),
                         Some(onRequest)
@@ -119,11 +119,11 @@ object J4 {
                       ))
                       // lit(Math.log(this.convert(other).eval()) / Math.log(getBase().eval()))));
 
-                      eulerNumFixMe <- forApproach.reify(InstanceRep(TypeRep.Double)(2.7182818284590452354))
-                      numExpr <- log(eulerNumFixMe, other)
-                      denomExpr <- log(eulerNumFixMe, baseEval)
-                      fraction <- div(numExpr, denomExpr)
-                      addend <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, fraction)
+                      //eulerNumFixMe <- forApproach.reify(InstanceRep(TypeRep.Double)(2.7182818284590452354))
+                      numExpr <- log(baseEval, other)
+//                      denomExpr <- log(eulerNumFixMe, baseEval)
+//                      fraction <- div(numExpr, denomExpr)
+                      addend <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, numExpr)  // fraction)
 
                       expExpr <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Add,
                         onRequest.attributes(power.attributes.tail.head), addend)

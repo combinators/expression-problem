@@ -3,7 +3,10 @@ package org.combinators.ep.domain.math    /*DD:LI:AI*/
 import org.combinators.ep.domain._
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.instances.InstanceRep
-import org.combinators.ep.domain.math.M0.{AddInst, Eval, LitInst}
+import org.combinators.ep.domain.math.J1.subi
+import org.combinators.ep.domain.math.J2.multi
+import org.combinators.ep.domain.math.J4.{PowerInst, powi}
+import org.combinators.ep.domain.math.M0.{AddInst, Eval, LitInst, addi}
 import org.combinators.ep.domain.math.M1.SubInst
 import org.combinators.ep.domain.math.M3.MultInst
 
@@ -13,15 +16,9 @@ object J5 extends Evolution {
   // this is a producer method (as you can tell by its return type).
   lazy val Simplify = Operation("simplify", TypeRep.DataType(MathDomain.getModel.baseDataType))
 
-  // m4:model evolution.
-  // -------------------
-
   def ListDoubleInst(doubles:Seq[scala.Double]): InstanceRep = InstanceRep(TypeRep.Sequence(TypeRep.Double))(doubles)
 
   lazy val Collect = Operation("collect", TypeRep.Sequence(TypeRep.Double))
-
-  // Tests
-  // (5/7) / (7-(2*3) --> just (5/7)
 
   val m4_m2 = MultInst(LitInst(2.0), LitInst(3.0))
 
@@ -46,14 +43,23 @@ object J5 extends Evolution {
     EqualsTestCase(getModel.baseDataType, m4_s_00, Collect, ListDoubleInst(Seq(0.0, 0.0))),
     EqualsTestCase(getModel.baseDataType, m4_s_12, Collect, ListDoubleInst(Seq(1.0, 12.0))),
     EqualsTestCase(getModel.baseDataType, m4_s_13, Collect, ListDoubleInst(Seq(13.0, 1.0))),
+    EqualsTestCase(getModel.baseDataType, powi, Collect, ListDoubleInst(Seq(3.0, 5.0))),
 
-  )  //
-
-  def M4_simplify_tests:Seq[TestCase] = Seq(
     EqualsCompositeTestCase(getModel.baseDataType, m4_s_5, M0.DoubleInst(5.0), (Simplify, Seq.empty), (Eval, Seq.empty)),
     EqualsCompositeTestCase(getModel.baseDataType, m4_s_7, M0.DoubleInst(7.0), (Simplify, Seq.empty), (Eval, Seq.empty)),
     EqualsCompositeTestCase(getModel.baseDataType, m4_s_13, M0.DoubleInst(13.0) , (Simplify, Seq.empty), (Eval, Seq.empty)),
     EqualsCompositeTestCase(getModel.baseDataType, m4_s_12, M0.DoubleInst(12.0) , (Simplify, Seq.empty), (Eval, Seq.empty)),
     EqualsCompositeTestCase(getModel.baseDataType, m4_s_m0, M0.DoubleInst(0.0) , (Simplify, Seq.empty), (Eval, Seq.empty)),
+
+    EqualsCompositeTestCase(getModel.baseDataType, AddInst(LitInst(0.0), LitInst(5.0)), M0.DoubleInst(5.0) , (Simplify, Seq.empty), (Eval, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, AddInst(LitInst(5.0), LitInst(0.0)), M0.DoubleInst(5.0) , (Simplify, Seq.empty), (Eval, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, addi, M0.DoubleInst(3.0) , (Simplify, Seq.empty), (Eval, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, subi, M0.DoubleInst(-1.0) , (Simplify, Seq.empty), (Eval, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, multi, M0.DoubleInst(6.0) , (Simplify, Seq.empty), (Eval, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, AddInst(LitInst(-5.0), LitInst(5.0)), M0.DoubleInst(0.0) , (Simplify, Seq.empty), (Eval, Seq.empty)),
+
+    EqualsCompositeTestCase(getModel.baseDataType, PowerInst(LitInst(5.0), LitInst(1.0)), M0.DoubleInst(5.0) , (Simplify, Seq.empty), (Eval, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, PowerInst(LitInst(1.0), LitInst(9.0)), M0.DoubleInst(1.0) , (Simplify, Seq.empty), (Eval, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, PowerInst(LitInst(5.0), LitInst(0.0)), M0.DoubleInst(1.0) , (Simplify, Seq.empty), (Eval, Seq.empty)),
   )
 }

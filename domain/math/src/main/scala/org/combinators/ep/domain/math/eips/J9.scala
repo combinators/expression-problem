@@ -8,7 +8,7 @@ import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstan
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm
 import org.combinators.ep.generator.paradigm.control.{Functional, Imperative}
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Booleans, Equality, Lists, Strings}
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Booleans, Equality, Strings}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
 // Code for M8. Takes adapters for return in if-then-else, s.t. functional- and imperative-style if-then-else can be
@@ -56,6 +56,7 @@ sealed class J9[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
 
       def applicable(forApproach: AIP[paradigm.type], potentialRequest: PotentialRequest): Boolean = {
         potentialRequest.op.tags.contains(math.J2.IsOp) ||
+          Set(math.J1.MultBy, math.J8.PowBy).contains(potentialRequest.op) ||  // short-circuit all of these for Inv only
           (Set(math.J5.Simplify, math.J5.Collect, math.J3.PrettyP, math.M0.Eval, math.J1.MultBy, math.J8.PowBy, math.J7.Equals, math.J2.Eql, math.J6.Identifier, Operation.asTree).contains(potentialRequest.op) &&
             Set(math.J9.Inv).contains(potentialRequest.tpeCase))
       }
@@ -76,7 +77,7 @@ sealed class J9[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
             forApproach.dispatch(
               SendRequest(
                 expr,
-                math.M4.getModel.baseDataType,
+                math.M0.getModel.baseDataType,
                 Request(math.M0.Eval, Map.empty),
                 Some(onRequest)
               )
@@ -88,8 +89,8 @@ sealed class J9[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
           forApproach.dispatch(
             SendRequest(
               attExpr,
-              math.M4.getModel.baseDataType,
-              Request(math.M4.Simplify, Map.empty),
+              math.M0.getModel.baseDataType,
+              Request(math.J5.Simplify, Map.empty),
               Some(onRequest)
             )
           )
@@ -106,7 +107,7 @@ sealed class J9[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
                         oneLit: Generator[MethodBodyContext, Expression]
                       ): Generator[MethodBodyContext, Option[Expression]] = {
           onRequest.tpeCase match {
-            case math.M8.Inv =>
+            case math.J9.Inv =>
               vals.flatMap { case List(leftVal, rightVal) =>
                 for {
                   minusOne <- forApproach.reify(InstanceRep(TypeRep.Double)(-1.0))
@@ -205,16 +206,32 @@ sealed class J9[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
             onRequest.request.op match {
               case op if op.tags.contains(math.J2.IsOp) => j5j8Provider.genericLogic(forApproach)(onRequest) // where isXXX is generically defined
 
-              case math.M4.Collect =>
+              case math.J5.Collect =>
                 j5j8Provider.genericLogic(forApproach)(onRequest)
-              case math.M4.Simplify => simplifyLogic(forApproach)(onRequest)
-              case math.I1.MultBy => j5j8Provider.genericLogic(forApproach)(onRequest)
-              case math.M7.PowBy => j5j8Provider.genericLogic(forApproach)(onRequest)
-              case math.M6.Equals => j5j8Provider.genericLogic(forApproach)(onRequest)
-              case math.M6.Eql => j5j8Provider.genericLogic(forApproach)(onRequest)
-              case math.M5.Identifier =>
+              case math.J5.Simplify => simplifyLogic(forApproach)(onRequest)
+              case math.J1.MultBy => // take advantage of Mult
+                if (onRequest.tpeCase == math.J9.Inv) {
+                  for {
+                    res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.J2.Mult, onRequest.selfReference, onRequest.request.arguments.head._2)
+                  } yield Some(res)
+                } else {
+                  j5j8Provider.logic(forApproach)(onRequest)
+                }
+
+              case math.J8.PowBy => // take advantage of new Power
+                if (onRequest.tpeCase == math.J9.Inv) {
+                  for {
+                    res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.J4.Power, onRequest.selfReference, onRequest.request.arguments.head._2)
+                  } yield Some(res)
+                } else {
+                  j5j8Provider.logic(forApproach)(onRequest)
+                }
+
+              case math.J7.Equals => j5j8Provider.genericLogic(forApproach)(onRequest)
+              case math.J2.Eql => j5j8Provider.genericLogic(forApproach)(onRequest)
+              case math.J6.Identifier =>
                 j5j8Provider.genericLogic(forApproach)(onRequest)
-              case op if op.tags.contains(math.M6.IsOp) => j5j8Provider.genericLogic(forApproach)(onRequest)
+              case op if op.tags.contains(math.J2.IsOp) => j5j8Provider.genericLogic(forApproach)(onRequest)
 
               case op if op == Operation.asTree => j5j8Provider.genericLogic(forApproach)(onRequest)
 
@@ -225,7 +242,7 @@ sealed class J9[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
                       atts <- forEach(onRequest.tpeCase.attributes) { att =>
                         forApproach.dispatch(SendRequest(
                           onRequest.attributes(att),
-                          math.M3.getModel.baseDataType,
+                          math.M0.getModel.baseDataType,
                           onRequest.request,
                           Some(onRequest)
                         ))
@@ -243,7 +260,7 @@ sealed class J9[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
                     atts <- forEach(onRequest.tpeCase.attributes) { att =>
                       forApproach.dispatch(SendRequest(
                         onRequest.attributes(att),
-                        math.M3.getModel.baseDataType,
+                        math.M0.getModel.baseDataType,
                         onRequest.request,
                         Some(onRequest)
                       ))
@@ -272,7 +289,7 @@ sealed class J9[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
 object J9 {
   def functional[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
-  (m3Provider : EvolutionImplementationProvider[AIP[paradigm.type]])
+  (j5j8Provider : EvolutionImplementationProvider[AIP[paradigm.type]])
   (functionalControl: Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
@@ -287,12 +304,12 @@ object J9 {
           res <- functionalControl.functionalCapabilities.ifThenElse(cond, ifBlock, ifElseBlocks, elseBlock)
         } yield Some(res)
 
-    mkImpl(m3Provider)(ffiArithmetic, ffiBoolean, ffiStrings, ffiEquality, expGen => expGen, ite)
+    mkImpl(j5j8Provider)(ffiArithmetic, ffiBoolean, ffiStrings, ffiEquality, expGen => expGen, ite)
   }
 
   def imperative[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
-  (m3Provider : EvolutionImplementationProvider[AIP[paradigm.type]])
+  (j5j8Provider : EvolutionImplementationProvider[AIP[paradigm.type]])
   (imperativeControl: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
@@ -318,6 +335,6 @@ object J9 {
           _ <- addBlockDefinitions(Seq(resultStmt))
         } yield None
 
-    mkImpl(m3Provider)(ffiArithmetic, ffiBoolean, ffiStrings, ffiEquality, returnInIf, ite)
+    mkImpl(j5j8Provider)(ffiArithmetic, ffiBoolean, ffiStrings, ffiEquality, returnInIf, ite)
   }
 }

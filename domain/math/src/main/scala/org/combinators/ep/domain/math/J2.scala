@@ -21,6 +21,9 @@ object J2 extends Evolution {
     Operation("is" + tpeCase.name.capitalize, TypeRep.Boolean, args, Seq(IsOp))
   }
 
+  def BooleanInst(b: scala.Boolean): InstanceRep =
+    InstanceRep(TypeRep.Boolean)(b)
+  
   // Binary Methods, by definition, require special handling. Some generators
   // can short-circuit this logic, but in the most general case, it stands to reason
   // that we need to have a way to instantiate a structure that matches the expression

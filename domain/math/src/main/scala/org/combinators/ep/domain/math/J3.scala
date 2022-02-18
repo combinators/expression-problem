@@ -23,14 +23,12 @@ object J3 extends Evolution {
   // Tests
   def NegInst(inner:DataTypeInstance): DataTypeInstance =
     DataTypeInstance(Neg, Seq(InstanceRep(inner)))
-  def MultInst(left:DataTypeInstance, right:DataTypeInstance): DataTypeInstance =
-    DataTypeInstance(math.J2.Mult, Seq(InstanceRep(left), InstanceRep(right)))
   def DivdInst(left:DataTypeInstance, right:DataTypeInstance): DataTypeInstance =
     DataTypeInstance(Divd, Seq(InstanceRep(left), InstanceRep(right)))
 
   // Tests
   val negi:DataTypeInstance = NegInst(LitInst(3.0))
-  val divdi:DataTypeInstance = DivdInst(LitInst(7.0), LitInst(5.0))
+  val divdi:DataTypeInstance = DivdInst(LitInst(10.0), LitInst(5.0))
 
   val negi_same_lhs = NegInst(LitInst(1.0))
   val negi_same_rhs = NegInst(LitInst(-1.0))
@@ -43,16 +41,16 @@ object J3 extends Evolution {
 
   def tests: Seq[TestCase] = Seq(
     EqualsTestCase(getModel.baseDataType, negi, Eval, M0.DoubleInst(-3.0)),
-    EqualsTestCase(getModel.baseDataType, divdi, Eval, M0.DoubleInst(1.4)),
+    EqualsTestCase(getModel.baseDataType, divdi, Eval, M0.DoubleInst(2.0)),
 
     EqualsTestCase(getModel.baseDataType, negi, PrettyP, StringInst("-3.0")),
-    EqualsTestCase(getModel.baseDataType, divdi, PrettyP, StringInst("(7.0/5.0)")),
+    EqualsTestCase(getModel.baseDataType, divdi, PrettyP, StringInst("(10.0/5.0)")),
     EqualsTestCase(getModel.baseDataType, multi, PrettyP, StringInst("(2.0*3.0)")),
     EqualsTestCase(getModel.baseDataType, addi, PrettyP, StringInst("(1.0+2.0)")),
     EqualsTestCase(getModel.baseDataType, subi, PrettyP, StringInst("(1.0-2.0)")),
 
     EqualsTestCase(getModel.baseDataType, AddInst(subi, addi), PrettyP, StringInst("((1.0-2.0)+(1.0+2.0))")),
-    MultByTestCase(divdi, InstanceRep(LitInst(3.0)), DoubleInst(4.2)),
+    MultByTestCase(divdi, InstanceRep(LitInst(3.0)), DoubleInst(6.0)),
     MultByTestCase(negi, InstanceRep(LitInst(3.0)), DoubleInst(-9.0)),
 
   ) ++ eqls(all_instances) ++ not_eqls(all_instances) ++ struct_not_eqls(all_instances, lhs, rhs)

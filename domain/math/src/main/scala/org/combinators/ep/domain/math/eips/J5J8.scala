@@ -61,7 +61,7 @@ sealed class J5J8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
       (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
         potentialRequest.op.tags.contains(math.J2.IsOp) || (
         (Set(math.J3.PrettyP,math.J6.Identifier,Operation.asTree,math.J7.Equals,math.J8.PowBy).contains(potentialRequest.op) &&
-          Set(math.I2.Power).contains(potentialRequest.tpeCase)) ||
+          Set(math.J4.Power).contains(potentialRequest.tpeCase)) ||
           (Set(math.J5.Simplify,math.J5.Collect).contains(potentialRequest.op) &&
             Set(math.J3.Divd, math.J3.Neg).contains(potentialRequest.tpeCase)))
       }
@@ -72,26 +72,27 @@ sealed class J5J8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
           case (op,tpe) if op.tags.contains(math.J2.IsOp) => math.J2.getModel    // where isXXX is generically defined
 
           case (math.J3.PrettyP, math.J4.Power) => model   // I have to handle this
-          case (math.M2.PrettyP, _) => math.J3.getModel
+          case (math.J3.PrettyP, _) => math.J3.getModel
 
           case (math.J5.Collect, math.J3.Divd) => model    // I have to handle this
           case (math.J5.Collect, math.J3.Neg) => model    // I have to handle this
-          case (math.J5.Collect, _) => math.M4.getModel
+          case (math.J5.Collect, _) => math.J5.getModel
 
-          case (math.J5.Simplify, math.I2.Power) => model   // I have to handle this
+          case (math.J5.Simplify, math.J4.Power) => model   // I have to handle this
           case (math.J5.Simplify, _) => math.J5.getModel
 
-          case (math.J6.Identifier, math.I2.Power) => model   // I have to handle this (generically)
+          case (math.J6.Identifier, math.J4.Power) => model   // I have to handle this (generically)
           case (math.J6.Identifier, _) => math.J6.getModel
 
           case (Operation.asTree, math.J4.Power) => model   // I have to handle this
           case (Operation.asTree, _) => math.J6.getModel
 
-          case (math.J7.Equals, math.J4.Power) => model    // I have to handle this
+          case (math.J7.Equals, math.J4.Power) =>
+            model    // I have to handle this
           case (math.J7.Equals, _) => math.J7.getModel
 
           case (math.J8.PowBy, math.M0.Lit) => math.J8.getModel    // not sure why but perhaps it is a non-recursive type
-          case (math.M7.PowBy, _) => model                  // I take responsibility
+          case (math.J8.PowBy, _) => model                  // I take responsibility
         }
 
         val tblModel = forwardTable.lift(onRequest.op, onRequest.tpeCase)
@@ -186,7 +187,7 @@ sealed class J5J8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
                       Seq.empty,
                       for {
                         innerSimp <- simplifyRec(atts.head, attExprs.head)
-                        res <- returnInIf(forApproach.instantiate(math.M3.getModel.baseDataType, math.J3.Neg, innerSimp))
+                        res <- returnInIf(forApproach.instantiate(math.M0.getModel.baseDataType, math.J3.Neg, innerSimp))
                       } yield res
                     )
                 } yield result
@@ -230,7 +231,8 @@ sealed class J5J8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
         import paradigm._
         import methodBodyCapabilities._     // needed for reify (in makeString)
         onRequest.request.op match {
-          case math.J7.Equals => j8Provider.genericLogic(forApproach)(onRequest)
+          case math.J7.Equals =>
+            j8Provider.genericLogic(forApproach)(onRequest)
           case op if op == math.J2.isOp(onRequest.tpeCase) => j8Provider.genericLogic(forApproach)(onRequest)
           case op if op != math.J2.isOp(onRequest.tpeCase) && op.tags.contains(math.J2.IsOp) => j8Provider.genericLogic(forApproach)(onRequest)
 
@@ -249,7 +251,7 @@ sealed class J5J8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
                     res <- makeString(atts, "(", "^", ")")
                   } yield Some(res)
             }
-          case math.M4.Simplify => simplifyLogic(forApproach)(onRequest)
+          case math.J5.Simplify => simplifyLogic(forApproach)(onRequest)
           case op if op == Operation.asTree =>
             j8Provider.genericLogic(forApproach)(onRequest)
           case math.J6.Identifier =>
@@ -258,8 +260,6 @@ sealed class J5J8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
 
           case p@math.J8.PowBy =>  // on Power
           // must handle Power dataType. HERE WE CAN OPTIMIZED.
-          val atts = onRequest.attributes.keys.toSeq
-            val attExprs = onRequest.attributes.values.toSeq
             for {
               res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.J4.Power, onRequest.selfReference, onRequest.request.arguments.head._2)
             } yield Some(res)

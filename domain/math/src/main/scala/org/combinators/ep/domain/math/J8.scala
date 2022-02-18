@@ -2,6 +2,10 @@ package org.combinators.ep.domain.math     /*DD:LI:AI*/
 
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
+import org.combinators.ep.domain.math.J1.SubInst
+import org.combinators.ep.domain.math.J2.MultInst
+import org.combinators.ep.domain.math.J3.{DivdInst, NegInst}
+import org.combinators.ep.domain.math.J8.PowByTestCase
 import org.combinators.ep.domain.math.M0.{AddInst, DoubleInst, Eval, LitInst}
 import org.combinators.ep.domain.{Evolution, GenericModel}
 
@@ -24,7 +28,7 @@ object J8 extends Evolution {
         instance, expected, (PowBy, Seq(argument)), (Eval, Seq.empty))
     }
   }
- // val m7_1 = SqrtInst(LitInst(25.0))
+
   val m7_2 = AddInst(LitInst(1.0), LitInst(2.0))
   val m7_3 = AddInst(LitInst(1.0), LitInst(2.0))
   val m7_4 = AddInst(m7_2, m7_3)
@@ -35,6 +39,13 @@ object J8 extends Evolution {
 
   def tests:Seq[TestCase] = Seq(
     PowByTestCase(AddInst(LitInst(1.0), LitInst(12.0)),
-      InstanceRep(LitInst(4.0)), DoubleInst(13.0*13.0*13.0*13.0))
+      InstanceRep(LitInst(4.0)), DoubleInst(13.0*13.0*13.0*13.0)),
+
+    PowByTestCase(SubInst(LitInst(13.0), LitInst(5.0)),      InstanceRep(LitInst(4.0)), DoubleInst(8.0*8.0*8.0*8.0)),
+    PowByTestCase(LitInst(4.0),                              InstanceRep(LitInst(-1.0)), DoubleInst(0.25)),
+    PowByTestCase(DivdInst(LitInst(4.0), LitInst(2.0)),      InstanceRep(LitInst(4.0)), DoubleInst(2.0*2.0*2.0*2.0)),
+    PowByTestCase(MultInst(LitInst(4.0), LitInst(2.0)),      InstanceRep(LitInst(4.0)), DoubleInst(8.0*8.0*8.0*8.0)),
+    PowByTestCase(NegInst(LitInst(2.0)),                     InstanceRep(LitInst(4.0)), DoubleInst((-2.0)*(-2.0)*(-2.0)*(-2.0)))
+
   )
 }

@@ -3,18 +3,17 @@ package org.combinators.ep.domain.math    /*DD:LI:AI*/
 import org.combinators.ep.domain._
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
+import org.combinators.ep.domain.math.J1.{Sub, SubInst}
+import org.combinators.ep.domain.math.J2.{Mult, MultInst}
+import org.combinators.ep.domain.math.J3.{Divd, DivdInst, Neg, NegInst, PrettyP, StringInst}
 import org.combinators.ep.domain.math.M0.{Add, AddInst, DoubleInst, Lit, LitInst}
-import org.combinators.ep.domain.math.M1.{Sub, SubInst}
-import org.combinators.ep.domain.math.M2.{PrettyP, StringInst}
-import org.combinators.ep.domain.math.M3.{Divd, DivdInst, Mult, MultInst, Neg, NegInst}
-import org.combinators.ep.domain.math.M4.Simplify
 import org.combinators.ep.domain.tree._
 
 object J6 extends Evolution {
   override implicit def getModel:GenericModel = J3.getModel.evolve("j6", Seq.empty, Seq(Operation.asTree, Identifier))
   lazy val Identifier = Operation("id", TypeRep.Int)
 
-  val m5_s1 = SubInst(LitInst(1.0), LitInst(976.0))
+  val m5_s1 = AddInst(LitInst(1.0), LitInst(376.0))
   val m5_s2 = AddInst(LitInst(1.0), LitInst(976.0))
   val m5_s3 = SubInst(LitInst(1.0), LitInst(976.0))
 
@@ -55,7 +54,6 @@ object J6 extends Evolution {
 
   val m5_s4 = MultInst(MultInst(LitInst(2.0), LitInst(1.0)),
                                    AddInst(LitInst(0.0), LitInst(7.0)))
-
 
   val treeSimplified =
     Node(Mult.name.hashCode,

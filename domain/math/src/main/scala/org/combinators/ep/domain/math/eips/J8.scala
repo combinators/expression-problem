@@ -116,7 +116,7 @@ object J8 {
 
               // if stmt next
               zero <- forApproach.reify(InstanceRep(TypeRep.Double)(0.0))
-              ifExpr <- ffiArithmetic.arithmeticCapabilities.lt(onRequest.attributes.head._2, zero)
+              ifExpr <- ffiArithmetic.arithmeticCapabilities.lt(/*onRequest.attributes.head._2*/ expValue, zero)
 
               ifStmt <- ffiImper.imperativeCapabilities.ifThenElse(ifExpr, for {
                 oneLit <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, one)

@@ -11,13 +11,12 @@ for %%a in (oo visitor visitorSideEffect extensibleVisitor interpreter coco triv
   echo %%a
   echo %%a > scripts\jacoco.%%a
 
-  echo Current time is %date% @ %time% >> scripts\jacoco.%%a
-
   @REM for each approach x model, execute to generate into target\ep2
   for %%e in (M0 J1 J2 J3 J4 J5 J6 J7 J8 J5J8 J9 J10) do (
      @echo off
      echo ====================================== >> scripts\jacoco.%%a
      echo %%e                                    >> scripts\jacoco.%%a
+     echo Current time is %date% @ %time%        >> scripts\jacoco.%%a
      echo ====================================== >> scripts\jacoco.%%a
      set JAVA_HOME=%SAVED_JAVA_HOME%
 

@@ -47,7 +47,7 @@ class MainK {
 //  val eip = eips.I2(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod,
 //    generator.stringsInMethod, generator.imperativeInMethod)
 //  // how do I just use M2 instead of this? HACK
-  val m0_eip = eips.M0(approach.paradigm)(generator.doublesInMethod)
+  val m0_eip = eips.M0(approach.paradigm)(generator.doublesInMethod,generator.stringsInMethod)
   val m1_eip = eips.M1(approach.paradigm)(m0_eip)(generator.doublesInMethod)
   val m2_eip = eips.M2(approach.paradigm)(m1_eip)(generator.doublesInMethod, generator.stringsInMethod)
 

@@ -59,7 +59,7 @@ class MainJ(choice:String, select:String) {
     case _ => ???
   }
 
-    val m0_eip = eips.M0(approach.paradigm)(generator.doublesInMethod)
+    val m0_eip = eips.M0(approach.paradigm)(generator.doublesInMethod,generator.stringsInMethod)
 
     val j1_eip = eips.J1(approach.paradigm)(m0_eip)(generator.doublesInMethod,generator.realDoublesInMethod,generator.stringsInMethod,generator.imperativeInMethod)
     val j2_eip = eips.J2(approach.paradigm)(j1_eip)(generator.doublesInMethod,generator.booleansInMethod,generator.equalityInMethod)
@@ -167,8 +167,8 @@ object DirectToDiskMainJ extends IOApp {
   val targetDirectory = Paths.get("target", "ep2")
 
   def run(args: List[String]): IO[ExitCode] = {
-    val approach = if (args.isEmpty) "oo" else args.head
-    val selection = if (args.isEmpty || args.tail.isEmpty) "J10" else args.tail.head
+    val approach = if (args.isEmpty) "trivially" else args.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "M0" else args.tail.head
     println("Generating " + approach + " for " + selection)
     for {
       _ <- IO { print("Initializing Generator...") }

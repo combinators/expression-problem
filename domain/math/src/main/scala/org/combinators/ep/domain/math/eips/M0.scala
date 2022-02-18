@@ -5,7 +5,7 @@ import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedReq
 import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
 import org.combinators.ep.domain.math
 import org.combinators.ep.generator.paradigm.AnyParadigm
-import org.combinators.ep.generator.paradigm.ffi.Arithmetic
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Strings}
 
 /**
  * Truly language independent abstractions.  Since we are in the mathematical domain, the
@@ -25,13 +25,17 @@ import org.combinators.ep.generator.paradigm.ffi.Arithmetic
 object M0 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
       (paradigm: P)
-      (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double]):
+      (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
+       ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
     EvolutionImplementationProvider[AIP[paradigm.type]] =
     new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model = math.M0.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        ffiArithmetic.enable()
+        for {
+          _ <- ffiArithmetic.enable()
+          _ <- ffiStrings.enable()      // need strings BECAUSE test cases require empty string for messages.
+        } yield ()
       }
 
       def applicable (forApproach: AIP[paradigm.type], onRequest:PotentialRequest): Boolean = {
@@ -46,7 +50,7 @@ object M0 {
         import paradigm._
 
         assert(applicable(forApproach)(onRequest), "failed on " + onRequest.tpeCase.name + " for " + onRequest.request.op.name)
-
+        print("M0:" + onRequest.tpeCase.name + " x " + onRequest.request.op.name + "\n")
         val result = onRequest.tpeCase match {
 
           /** Get and return first (and only) attribute. */

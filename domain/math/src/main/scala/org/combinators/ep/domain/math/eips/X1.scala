@@ -171,6 +171,6 @@ object X1 {
     }
 
     // newest one must come first
-    monoidInstance.combine(x1Provider, M0(paradigm)(ffiArithmetic))
+    monoidInstance.combine(x1Provider, M0(paradigm)(ffiArithmetic,ffiStrings))
   }
 }

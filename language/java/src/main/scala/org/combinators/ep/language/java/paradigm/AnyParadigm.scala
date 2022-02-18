@@ -479,13 +479,20 @@ trait AnyParadigm extends AP {
       """"junit" % "junit" % "4.12" % "test""""
     )
     val deps = (junitDeps ++ finalContext.extraDependencies).mkString("Seq(\n    ", ",\n    ", "\n  )")
+
+    // hard-code output to 1.8 for jacoco compatibility. TODO: Try to remove this dependency
     val buildFile =
       s"""
+         |javacOptions ++= Seq("-source", "1.8", "-target", "1.8")
          |$nameEntry
          |crossPaths := false
          |autoScalaLibrary := false
          |libraryDependencies ++= $deps
            """.stripMargin
+    val pluginFile =
+      s"""
+         |addSbtPlugin("com.github.sbt" % "sbt-jacoco" % "3.0.3")
+         """.stripMargin
     val cleanedUnits =
      ImportCleanup.cleaned(
         FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.units: _*) : _*
@@ -515,6 +522,7 @@ trait AnyParadigm extends AP {
       //FileWithPath(
       //ResourcePersistable.bundledResourceInstance.rawText(gitIgnore),
       //ResourcePersistable.bundledResourceInstance.path(gitIgnore)) +:
+      FileWithPath(pluginFile, Paths.get("project", "plugin.sbt")) +:
       FileWithPath(buildFile, Paths.get("build.sbt")) +:
       (javaFiles ++ javaTestFiles)
   }

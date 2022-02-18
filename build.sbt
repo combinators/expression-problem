@@ -83,6 +83,9 @@ def standardLanguageProject(languageName: String): Project =
 lazy val languageJava =
   standardLanguageProject("java")
     .settings(libraryDependencies += "com.github.javaparser" % "javaparser-core" % "3.19.0")
+    .settings(
+       mainClass in (Compile, run) := Some("org.combinators.ep.language.java.DirectToDiskMainJ")
+     )
 lazy val languageScala = standardLanguageProject("scala")
 
 lazy val helloWorld:Project =
@@ -96,3 +99,5 @@ lazy val helloWorld:Project =
 //lazy val languageGJ = standardLanguageProject("gj")
 //lazy val languageCPP = standardLanguageProject("cpp")
 //lazy val languageHaskell = standardLanguageProject("haskell")
+
+

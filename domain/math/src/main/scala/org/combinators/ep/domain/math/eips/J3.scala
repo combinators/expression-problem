@@ -35,7 +35,6 @@ object J3 {
 
         val new_ones = op match {
           case math.J2.Eql => math.J2.isOps(model.flatten.typeCases).toSet
-          //case op if math.J3.isOps(model.flatten.typeCases).contains(op) => Set(math.J2.Eql)
           case op if math.J2.isOps(Seq(dt)).contains(op) => Set(math.J2.Eql)
           case _ => Set.empty
         }

@@ -50,7 +50,6 @@ object M0 {
         import paradigm._
 
         assert(applicable(forApproach)(onRequest), "failed on " + onRequest.tpeCase.name + " for " + onRequest.request.op.name)
-        print("M0:" + onRequest.tpeCase.name + " x " + onRequest.request.op.name + "\n")
         val result = onRequest.tpeCase match {
 
           /** Get and return first (and only) attribute. */

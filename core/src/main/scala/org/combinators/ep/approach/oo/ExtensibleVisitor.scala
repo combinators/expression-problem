@@ -655,14 +655,16 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO w
       }
 
     // have to be careful with merging, where dependent operations have to be managed
+//    val allDependentOps = domain.flatten.typeCases.distinct.flatMap(tpeCase => {
+//      if (domain.findTypeCase(tpeCase).isDefined && !domain.typeCases.contains(tpeCase)) {    // NO NEED TO DUPLICATE CURRENT ONES...
+//        domainSpecific.dependencies(op, tpeCase).filter(op => domain.findOperation(op).isDefined)
+//      } else {
+//        Seq.empty
+//      }
+//    }).distinct
     val allDependentOps = domain.flatten.typeCases.distinct.flatMap(tpeCase => {
-      if (domain.findTypeCase(tpeCase).isDefined && !domain.typeCases.contains(tpeCase)) {    // NO NEED TO DUPLICATE CURRENT ONES...
-        domainSpecific.dependencies(op, tpeCase).filter(op => domain.findOperation(op).isDefined)
-      } else {
-        Seq.empty
-      }
+      domainSpecific.dependencies(op, tpeCase).filter(op => domain.findOperation(op).isDefined)
     }).distinct
-
     // get all formers that are NOT latest visitors, and then take those operations and throw out those that are already supported...
    // val latestVisitor = latestModelDefiningVisitor(domain). This case is clearly not covered in the original expression problem paper.
     val otherBranchOps = if (previous.isEmpty) {

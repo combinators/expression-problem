@@ -1,6 +1,6 @@
 package org.combinators.ep.domain.math.eips   /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.TypeRep
+import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, TypeRep}
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.domain.math
 import org.combinators.ep.generator.Command.Generator
@@ -31,6 +31,20 @@ object J4 {
           _ <- ffiRealArithmetic.enable()
           _ <- ffiStrings.enable()
         } yield ()
+      }
+
+      override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
+        // cannot forget that isXXX operations are dependencies (Extensible Visitor identified this oversight)
+        val initial = math.J2.isOps(Seq(math.J4.Power)).toSet
+
+        val new_ones = op match {
+          case math.J2.Eql => math.J2.isOps(model.flatten.typeCases).toSet
+          case op if math.J2.isOps(Seq(dt)).contains(op) => Set(math.J2.Eql)
+          case op if Seq(math.J1.MultBy).contains(op) => Set(math.M0.Eval)    // needed for extensible visitor for J4 for some reason
+          case _ => Set.empty
+        }
+
+        initial ++ new_ones
       }
 
       def applicable

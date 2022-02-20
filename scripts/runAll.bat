@@ -32,7 +32,7 @@ for %%a in (oo visitor visitorSideEffect extensibleVisitor interpreter dispatch 
 
      @REM generated into target\ep2
      cd target\ep2
-     zip -r ..\analysis\%%a-%%e-src.zip src
+     zip -qr ..\analysis\%%a-%%e-src.zip src
      
      set JAVA_HOME=C:\Program Files\AdoptOpenJDK\jdk-8.0.212.03-hotspot
      echo ====================================== >> ..\analysis\jacoco.%%a

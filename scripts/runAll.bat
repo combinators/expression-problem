@@ -9,9 +9,6 @@ cd ..
 
 mkdir target\analysis
 
-@REM burn one run, to ensure no bias from "first one run"
-sbt "language-java/runMain org.combinators.ep.language.java.DirectToDiskMainJ coco j10"
-
 set SAVED_JAVA_HOME=%JAVA_HOME%
 
 for %%a in (oo visitor visitorSideEffect extensibleVisitor interpreter dispatch trivially coco) do (

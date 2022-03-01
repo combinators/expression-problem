@@ -11,7 +11,7 @@ mkdir target\analysis
 
 set SAVED_JAVA_HOME=%JAVA_HOME%
 
-for %%a in (oo visitor visitorSideEffect extensibleVisitor interpreter coco trivially dispatch) do (
+for %%a in (oo visitor visitorSideEffect extensibleVisitor interpreter dispatch trivially coco) do (
   @echo off
   echo %%a
   echo %%a > target\analysis\jacoco.%%a
@@ -20,7 +20,7 @@ for %%a in (oo visitor visitorSideEffect extensibleVisitor interpreter coco triv
   for %%e in (M0 J1 J2 J3 K1 K2 J4 J5 J8 K2J6 J7 J8) do (
      @echo off
      echo ====================================== >> target\analysis\jacoco.%%a
-     echo %%e                                    >> target\analysis\jacoco.%%a
+     echo %%e-Generate                           >> target\analysis\jacoco.%%a
      java -cp scripts Time                       >> target\analysis\jacoco.%%a
      echo ====================================== >> target\analysis\jacoco.%%a
      set JAVA_HOME=%SAVED_JAVA_HOME%
@@ -32,9 +32,18 @@ for %%a in (oo visitor visitorSideEffect extensibleVisitor interpreter coco triv
      zip -qr ..\analysis\%%a-%%e-src.zip src
      
      set JAVA_HOME=C:\Program Files\AdoptOpenJDK\jdk-8.0.212.03-hotspot
+     echo ====================================== >> ..\analysis\jacoco.%%a
+     echo %%e-Test-Begin                         >> ..\analysis\jacoco.%%a
+     java -cp ..\..\scripts Time                 >> ..\analysis\jacoco.%%a
+     echo ====================================== >> ..\analysis\jacoco.%%a
 
      sbt jacoco            >> ..\analysis\jacoco.%%a
      echo                  >> ..\analysis\jacoco.%%a
+
+     echo ====================================== >> ..\analysis\jacoco.%%a
+     echo %%e-Test-End                           >> ..\analysis\jacoco.%%a
+     java -cp ..\..\scripts Time                 >> ..\analysis\jacoco.%%a
+     echo ====================================== >> ..\analysis\jacoco.%%a
 
      @REM back up to main
      cd ..\..

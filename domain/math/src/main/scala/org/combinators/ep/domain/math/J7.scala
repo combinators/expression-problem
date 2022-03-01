@@ -1,71 +1,57 @@
-package org.combinators.ep.domain.math     /*DD:LI:AI*/
+package org.combinators.ep.domain.math      /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions._
+import org.combinators.ep.domain.abstractions.{DataTypeCase, EqualsCompositeTestCase, EqualsTestCase, TestCase}
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
-import org.combinators.ep.domain.math.J3.{all_instances}
-import org.combinators.ep.domain.math.M0.{Add, AddInst, LitInst, addi}
+import org.combinators.ep.domain.math.J1.MultBy
+import org.combinators.ep.domain.math.J2.{MultInst, eqls, not_eqls, struct_not_eqls}
+import org.combinators.ep.domain.math.J3.{DivdInst, PrettyP, StringInst}
+import org.combinators.ep.domain.math.K1.PowerInst
+import org.combinators.ep.domain.math.K2.{Collect, ListDoubleInst, Simplify}
+import org.combinators.ep.domain.math.J5.{op_equals, op_not_equals}
+import org.combinators.ep.domain.math.J6.{PowBy, PowByTestCase}
+import org.combinators.ep.domain.math.M0.{DoubleInst, Eval, LitInst}
 import org.combinators.ep.domain.{Evolution, GenericModel}
 
 object J7 extends Evolution {
-  override implicit def getModel:GenericModel = J6.getModel.evolve("j7", Seq.empty, Seq(Equals))
+  override implicit def getModel:GenericModel = K2J6.getModel.evolve("j7", Seq(Inv), J2.isOps(Seq(Inv)))
 
-  lazy val Equals = Operation("equal_to", TypeRep.Boolean, Seq(Parameter("other", TypeRep.DataType(M5.getModel.baseDataType))))
+  lazy val Inv = DataTypeCase.binary("Inv")(MathDomain.getModel)
 
-  object EqualsBinaryMethodTestCase {
-    def apply(op:Operation,instance: DataTypeInstance, instance1: DataTypeInstance, result: Boolean): TestCase = {
-      EqualsTestCase(
-        M5.getModel.baseDataType,
-        instance,
-        op,
-        InstanceRep(TypeRep.Boolean)(result),
-        InstanceRep.apply(instance1)(getModel)
-      )
-    }
-  }
+  def InvInst(left:DataTypeInstance, right:DataTypeInstance): DataTypeInstance =
+    DataTypeInstance(Inv, Seq(InstanceRep(left), InstanceRep(right)))
 
-  /** Useful helper function to define essential eql=true test cases for instances */
-  def op_equals(instances:Seq[DataTypeInstance]):Seq[TestCase] = {
-    var tcs:Seq[TestCase] = Seq.empty
-    for (idx <- instances.indices) {
-      tcs = tcs :+ EqualsBinaryMethodTestCase(Equals, instances(idx), instances(idx), result=true)
-    }
-    tcs
-  }
+  val invi = InvInst(LitInst(3.0), LitInst(5.0))
 
-  /** Useful helper function to ensure all other eql=false test cases for instances */
-  def op_not_equals(instances:Seq[DataTypeInstance]):Seq[TestCase] = {
-    var tcs:Seq[TestCase] = Seq.empty
-    for (idx <- instances.indices) {
-      for (jdx <- instances.indices) {
-        if (idx != jdx) {
-          tcs = tcs :+ EqualsBinaryMethodTestCase(Equals, instances(idx), instances(jdx), result = false)
-        }
-      }
-    }
-    tcs
-  }
+  val invi_same_lhs = InvInst(LitInst(3.0), LitInst(4.0))
+  val invi_same_rhs = InvInst(LitInst(4.0), LitInst(5.0))
 
-  def tests:Seq[TestCase] = Seq(
-    PerformanceTestCase(
-      11,
-      8,
-      Equals,
-      getModel.baseDataType,
-      addi,     // first, base instance
+  val all_instances = K2J6.all_instances ++ Seq(invi)
+  val lhs           = K2J6.lhs ++ Seq(invi_same_lhs)   // changes on left hand side
+  val rhs           = K2J6.rhs ++ Seq(invi_same_rhs)   // changes on right hand side
 
-      // initial parameter to use when testing equals
-      Seq(InstanceRep(AddInst(LitInst(1.0), LitInst(2.0)))),
+  def tests: Seq[TestCase] = Seq(
+    EqualsTestCase(getModel.baseDataType, invi, PrettyP, StringInst("(5.0/3.0)")),
+    EqualsTestCase(getModel.baseDataType, invi, Eval, M0.DoubleInst(5.0/3.0)),
 
-      // function tells how InstanceRep parameters evolve with each iteration
-      // Seq[InstanceRep] => Seq[InstanceRep]
-      params => params.map(param =>
-        param.inst match {
-          case i: InstanceRep => InstanceRep(DataTypeInstance(Add, Seq(i,i)))
-          case _ => param
-        }),
+    EqualsCompositeTestCase(getModel.baseDataType, InvInst(LitInst(1.0),LitInst(5.0)), StringInst("5.0"), (Simplify, Seq.empty), (PrettyP, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, InvInst(LitInst(-5.0),LitInst(5.0)), StringInst("-1.0"), (Simplify, Seq.empty), (PrettyP, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, InvInst(LitInst(5.0),LitInst(5.0)), StringInst("1.0"), (Simplify, Seq.empty), (PrettyP, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, InvInst(LitInst(3.0),LitInst(0.0)), StringInst("0.0"), (Simplify, Seq.empty), (PrettyP, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, invi, StringInst("(5.0/3.0)"), (Simplify, Seq.empty), (PrettyP, Seq.empty)),
 
-      inst => AddInst(inst, inst)   // function tells how objects evolve with each iteration
-    )
-  ) ++ op_equals(all_instances) ++ op_not_equals(all_instances)
+    // these are not possible in SOME EP implementations, because of 'equals' being used.
+//    EqualsTestCase(getModel.baseDataType, InvInst(LitInst(2.0), LitInst(4.0)), PowBy, InstanceRep(PowerInst(InvInst(LitInst(2.0), LitInst(4.0)), LitInst(3.0))),
+//      InstanceRep(LitInst(3.0))),
+//    EqualsTestCase(getModel.baseDataType, MultInst(LitInst(2.0), LitInst(4.0)), PowBy, InstanceRep(PowerInst(MultInst(LitInst(2.0), LitInst(4.0)), LitInst(3.0))),
+//      InstanceRep(LitInst(3.0))),
+//    EqualsTestCase(getModel.baseDataType, InvInst(LitInst(2.0), LitInst(4.0)), MultBy, InstanceRep(MultInst(InvInst(LitInst(2.0), LitInst(4.0)), LitInst(6.0))),
+//      InstanceRep(LitInst(6.0))),
 
+    // do this instead
+    EqualsCompositeTestCase(getModel.baseDataType, InvInst(LitInst(3.0),LitInst(6.0)), DoubleInst(6.0), (MultBy, Seq(InstanceRep(LitInst(3.0)))), (Eval, Seq.empty)),
+
+    EqualsTestCase(getModel.baseDataType, invi, Collect, ListDoubleInst(Seq(3.0, 5.0))),
+    PowByTestCase(InvInst(LitInst(4.0), LitInst(2.0)),      InstanceRep(LitInst(4.0)), DoubleInst(0.5*0.5*0.5*0.5)),
+
+  ) ++ eqls(all_instances) ++ not_eqls(all_instances) ++ struct_not_eqls(all_instances, lhs, rhs) ++ op_equals(all_instances) ++ op_not_equals(all_instances)
 }

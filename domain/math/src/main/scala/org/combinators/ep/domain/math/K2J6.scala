@@ -6,15 +6,15 @@ import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.domain.math.J1.subi
 import org.combinators.ep.domain.math.J2.{MultInst, eqls, multi, not_eqls, struct_not_eqls}
 import org.combinators.ep.domain.math.J3.{Divd, DivdInst, NegInst, PrettyP, StringInst, divdi, negi}
-import org.combinators.ep.domain.math.J4.{PowerInst, powi, powi_same_lhs, powi_same_rhs}
-import org.combinators.ep.domain.math.J5.{Collect, ListDoubleInst, Simplify}
-import org.combinators.ep.domain.math.J7.{op_equals, op_not_equals}
-import org.combinators.ep.domain.math.J8.PowBy
+import org.combinators.ep.domain.math.K1.{PowerInst, powi, powi_same_lhs, powi_same_rhs}
+import org.combinators.ep.domain.math.K2.{Collect, ListDoubleInst, Simplify}
+import org.combinators.ep.domain.math.J5.{op_equals, op_not_equals}
+import org.combinators.ep.domain.math.J6.PowBy
 import org.combinators.ep.domain.math.M0.{AddInst, DoubleInst, Eval, Lit, LitInst, addi, liti}
 import org.combinators.ep.domain.tree.{Leaf, Node}
 
-object J5J8 extends Evolution {
-  override implicit def getModel:GenericModel = J8.getModel.merge("j5j8", Seq.empty, Seq.empty, Seq(J5.getModel))
+object K2J6 extends Evolution {
+  override implicit def getModel:GenericModel = J6.getModel.merge("k2j6", Seq.empty, Seq.empty, Seq(K2.getModel))
 
   val all_instances = J3.all_instances ++ Seq(powi)
   val lhs           = J3.lhs ++ Seq(powi_same_lhs)   // changes on left hand side

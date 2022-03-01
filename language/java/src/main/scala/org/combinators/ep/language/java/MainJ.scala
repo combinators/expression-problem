@@ -48,14 +48,14 @@ class MainJ(choice:String, select:String) {
     case "J1" => Seq(M0, J1)
     case "J2" => Seq(M0, J1, J2)
     case "J3" => Seq(M0, J1, J2, J3)
-    case "J4" => Seq(M0, J1, J2, J4)
-    case "J5" => Seq(M0, J1, J2, J4, J5)
-    case "J6" => Seq(M0, J1, J2, J3, J6)
-    case "J7" => Seq(M0, J1, J2, J3, J6, J7)
-    case "J8" => Seq(M0, J1, J2, J3, J6, J7, J8)
-    case "J5J8" => Seq(M0, J1, J2, J4, J5, J3, J6, J7, J8, J5J8)
-    case "J9" => Seq(M0, J1, J2, J4, J5, J3, J6, J7, J8, J5J8, J9)
-    case "J10" => Seq(M0, J1, J2, J4, J5, J3, J6, J7, J8, J5J8, J9, J10)
+    case "K1" => Seq(M0, J1, J2, K1)
+    case "K2" => Seq(M0, J1, J2, K1, K2)
+    case "J4" => Seq(M0, J1, J2, J3, J4)
+    case "J5" => Seq(M0, J1, J2, J3, J4, J5)
+    case "J6" => Seq(M0, J1, J2, J3, J4, J5, J6)
+    case "K2J6" => Seq(M0, J1, J2, K1, K2, J3, J4, J5, J6, K2J6)
+    case "J7" => Seq(M0, J1, J2, K1, K2, J3, J4, J5, J6, K2J6, J7)
+    case "J8" => Seq(M0, J1, J2, K1, K2, J3, J4, J5, J6, K2J6, J7, J8)
     case _ => ???
   }
 
@@ -64,12 +64,12 @@ class MainJ(choice:String, select:String) {
     val j1_eip = eips.J1(approach.paradigm)(m0_eip)(generator.doublesInMethod,generator.realDoublesInMethod,generator.stringsInMethod,generator.imperativeInMethod)
     val j2_eip = eips.J2(approach.paradigm)(j1_eip)(generator.doublesInMethod,generator.booleansInMethod,generator.equalityInMethod)
     val j3_eip = eips.J3(approach.paradigm)(j2_eip)(generator.doublesInMethod,generator.booleansInMethod,generator.stringsInMethod)
-    val j4_eip = eips.J4(approach.paradigm)(j2_eip)(generator.doublesInMethod,generator.realDoublesInMethod,generator.booleansInMethod,generator.stringsInMethod,generator.imperativeInMethod)
-    val j6_eip = eips.J6(approach.paradigm)(j3_eip)(generator.intsInMethod,generator.treesInMethod)
-    val j7_eip = eips.J7(approach.paradigm)(j6_eip)(generator.equalityInMethod,generator.booleansInMethod)
-    val j8_eip = eips.J8(approach.paradigm)(j7_eip)(generator.doublesInMethod,generator.realDoublesInMethod,generator.stringsInMethod,generator.imperativeInMethod)
+    val k1_eip = eips.K1(approach.paradigm)(j2_eip)(generator.doublesInMethod,generator.realDoublesInMethod,generator.booleansInMethod,generator.stringsInMethod,generator.imperativeInMethod)
+    val j4_eip = eips.J4(approach.paradigm)(j3_eip)(generator.intsInMethod,generator.treesInMethod)
+    val j5_eip = eips.J5(approach.paradigm)(j4_eip)(generator.equalityInMethod,generator.booleansInMethod)
+    val j6_eip = eips.J6(approach.paradigm)(j5_eip)(generator.doublesInMethod,generator.realDoublesInMethod,generator.stringsInMethod,generator.imperativeInMethod)
 
-    val j5_eip = eips.J5.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(j4_eip)(
+    val k2_eip = eips.K2.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(k1_eip)(
       generator.imperativeInMethod,
       generator.doublesInMethod,
       generator.booleansInMethod,
@@ -77,34 +77,34 @@ class MainJ(choice:String, select:String) {
       generator.listsInMethod,
       generator.equalityInMethod)
 
-    val j5j8_eip = eips.J5J8.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(j8_eip,j5_eip)(
+    val k2j6_eip = eips.K2J6.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(j6_eip,k2_eip)(
       generator.imperativeInMethod,
       generator.doublesInMethod,
       generator.booleansInMethod,
       generator.stringsInMethod,
       generator.equalityInMethod)
 
-    val j9_eip =  eips.J9.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(j5j8_eip)(
+    val j7_eip =  eips.J7.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(k2j6_eip)(
       generator.imperativeInMethod,
       generator.doublesInMethod,
       generator.booleansInMethod,
       generator.stringsInMethod,
       generator.equalityInMethod)
-    val j10_eip = eips.J10(approach.paradigm)(j9_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.imperativeInMethod)
+    val j8_eip = eips.J8(approach.paradigm)(j7_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.imperativeInMethod)
 
   val eip = select match {
     case "M0" => m0_eip
     case "J1" => j1_eip
     case "J2" => j2_eip
     case "J3" => j3_eip
+    case "K1" => k1_eip
+    case "K2" => k2_eip
     case "J4" => j4_eip
     case "J5" => j5_eip
     case "J6" => j6_eip
+    case "K2J6" => k2j6_eip
     case "J7" => j7_eip
     case "J8" => j8_eip
-    case "J5J8" => j5j8_eip
-    case "J9" => j9_eip
-    case "J10" => j10_eip
   }
 
   val tests = evolutions.scanLeft(Map.empty[GenericModel, Seq[TestCase]]) { case (m, evolution) =>
@@ -168,7 +168,7 @@ object DirectToDiskMainJ extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
     val approach = if (args.isEmpty) "coco" else args.head
-    val selection = if (args.isEmpty || args.tail.isEmpty) "J9" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "J8" else args.tail.head
     println("Generating " + approach + " for " + selection)
     for {
       _ <- IO { print("Initializing Generator...") }

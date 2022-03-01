@@ -17,7 +17,7 @@ import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionIm
  *
  * These all have to be captured here...
  */
-sealed class J5J8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P], IfBlockType](val paradigm: P) {
+sealed class K2J6[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P], IfBlockType](val paradigm: P) {
 
   type IfThenElseCommand =
     (paradigm.syntax.Expression,
@@ -27,7 +27,7 @@ sealed class J5J8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
       Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]]
 
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
-    (j8Provider: EvolutionImplementationProvider[AIP[paradigm.type]],j5Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
+    (j6Provider: EvolutionImplementationProvider[AIP[paradigm.type]], k2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
     (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
      ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
      ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
@@ -36,8 +36,8 @@ sealed class J5J8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
      ifThenElse: IfThenElseCommand):
 
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
-    val j5j8Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.J5J8.getModel
+    val k2j6Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      override val model = math.K2J6.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
@@ -45,8 +45,8 @@ sealed class J5J8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
           _ <- ffiBoolean.enable()
           _ <- ffiEquality.enable()
 
-          _ <- j8Provider.initialize(forApproach)
-          _ <- j5Provider.initialize(forApproach)
+          _ <- j6Provider.initialize(forApproach)
+          _ <- k2Provider.initialize(forApproach)
         } yield ()
       }
 
@@ -60,9 +60,9 @@ sealed class J5J8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
       def applicable
       (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
         potentialRequest.op.tags.contains(math.J2.IsOp) || (
-        (Set(math.J3.PrettyP,math.J6.Identifier,Operation.asTree,math.J7.Equals,math.J8.PowBy).contains(potentialRequest.op) &&
-          Set(math.J4.Power).contains(potentialRequest.tpeCase)) ||
-          (Set(math.J5.Simplify,math.J5.Collect).contains(potentialRequest.op) &&
+        (Set(math.J3.PrettyP,math.J4.Identifier,Operation.asTree,math.J5.Equals,math.J6.PowBy).contains(potentialRequest.op) &&
+          Set(math.K1.Power).contains(potentialRequest.tpeCase)) ||
+          (Set(math.K2.Simplify,math.K2.Collect).contains(potentialRequest.op) &&
             Set(math.J3.Divd, math.J3.Neg).contains(potentialRequest.tpeCase)))
       }
 
@@ -71,28 +71,28 @@ sealed class J5J8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
         val forwardTable:PartialFunction[(Operation,DataTypeCase),GenericModel] = {
           case (op,tpe) if op.tags.contains(math.J2.IsOp) => math.J2.getModel    // where isXXX is generically defined
 
-          case (math.J3.PrettyP, math.J4.Power) => model   // I have to handle this
+          case (math.J3.PrettyP, math.K1.Power) => model   // I have to handle this
           case (math.J3.PrettyP, _) => math.J3.getModel
 
-          case (math.J5.Collect, math.J3.Divd) => model    // I have to handle this
-          case (math.J5.Collect, math.J3.Neg) => model    // I have to handle this
-          case (math.J5.Collect, _) => math.J5.getModel
+          case (math.K2.Collect, math.J3.Divd) => model    // I have to handle this
+          case (math.K2.Collect, math.J3.Neg) => model    // I have to handle this
+          case (math.K2.Collect, _) => math.K2.getModel
 
-          case (math.J5.Simplify, math.J4.Power) => model   // I have to handle this
-          case (math.J5.Simplify, _) => math.J5.getModel
+          case (math.K2.Simplify, math.K1.Power) => model   // I have to handle this
+          case (math.K2.Simplify, _) => math.K2.getModel
 
-          case (math.J6.Identifier, math.J4.Power) => model   // I have to handle this (generically)
-          case (math.J6.Identifier, _) => math.J6.getModel
+          case (math.J4.Identifier, math.K1.Power) => model   // I have to handle this (generically)
+          case (math.J4.Identifier, _) => math.J4.getModel
 
-          case (Operation.asTree, math.J4.Power) => model   // I have to handle this
-          case (Operation.asTree, _) => math.J6.getModel
+          case (Operation.asTree, math.K1.Power) => model   // I have to handle this
+          case (Operation.asTree, _) => math.J4.getModel
 
-          case (math.J7.Equals, math.J4.Power) =>
+          case (math.J5.Equals, math.K1.Power) =>
             model    // I have to handle this
-          case (math.J7.Equals, _) => math.J7.getModel
+          case (math.J5.Equals, _) => math.J5.getModel
 
-          case (math.J8.PowBy, math.M0.Lit) => math.J8.getModel    // not sure why but perhaps it is a non-recursive type
-          case (math.J8.PowBy, _) => model                  // I take responsibility
+          case (math.J6.PowBy, math.M0.Lit) => math.J6.getModel    // not sure why but perhaps it is a non-recursive type
+          case (math.J6.PowBy, _) => model                  // I take responsibility
         }
 
         val tblModel = forwardTable.lift(onRequest.op, onRequest.tpeCase)
@@ -134,7 +134,7 @@ sealed class J5J8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
             SendRequest(
               attExpr,
               math.M0.getModel.baseDataType,
-              Request(math.J5.Simplify, Map.empty),
+              Request(math.K2.Simplify, Map.empty),
               Some(onRequest)
             )
           )
@@ -214,9 +214,9 @@ sealed class J5J8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
         (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] = {
         try {
-          j8Provider.genericLogic(forApproach)(onRequest)
+          j6Provider.genericLogic(forApproach)(onRequest)
         } catch {
-          case _:RuntimeException | _:NotImplementedError => j5Provider.genericLogic(forApproach)(onRequest)
+          case _:RuntimeException | _:NotImplementedError => k2Provider.genericLogic(forApproach)(onRequest)
         }
       }
 
@@ -231,14 +231,14 @@ sealed class J5J8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
         import paradigm._
         import methodBodyCapabilities._     // needed for reify (in makeString)
         onRequest.request.op match {
-          case math.J7.Equals =>
-            j8Provider.genericLogic(forApproach)(onRequest)
-          case op if op == math.J2.isOp(onRequest.tpeCase) => j8Provider.genericLogic(forApproach)(onRequest)
-          case op if op != math.J2.isOp(onRequest.tpeCase) && op.tags.contains(math.J2.IsOp) => j8Provider.genericLogic(forApproach)(onRequest)
+          case math.J5.Equals =>
+            j6Provider.genericLogic(forApproach)(onRequest)
+          case op if op == math.J2.isOp(onRequest.tpeCase) => j6Provider.genericLogic(forApproach)(onRequest)
+          case op if op != math.J2.isOp(onRequest.tpeCase) && op.tags.contains(math.J2.IsOp) => j6Provider.genericLogic(forApproach)(onRequest)
 
           case math.J3.PrettyP =>
             onRequest.tpeCase match {
-              case math.J4.Power =>
+              case math.K1.Power =>
                 for {
                     atts <- forEach(onRequest.tpeCase.attributes) { att =>
                       forApproach.dispatch(SendRequest(
@@ -251,17 +251,17 @@ sealed class J5J8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
                     res <- makeString(atts, "(", "^", ")")
                   } yield Some(res)
             }
-          case math.J5.Simplify => simplifyLogic(forApproach)(onRequest)
+          case math.K2.Simplify => simplifyLogic(forApproach)(onRequest)
           case op if op == Operation.asTree =>
-            j8Provider.genericLogic(forApproach)(onRequest)
-          case math.J6.Identifier =>
-            j8Provider.genericLogic(forApproach)(onRequest)
-          case math.J5.Collect => j5Provider.genericLogic(forApproach)(onRequest)
+            j6Provider.genericLogic(forApproach)(onRequest)
+          case math.J4.Identifier =>
+            j6Provider.genericLogic(forApproach)(onRequest)
+          case math.K2.Collect => k2Provider.genericLogic(forApproach)(onRequest)
 
-          case p@math.J8.PowBy =>  // on Power
+          case p@math.J6.PowBy =>  // on Power
           // must handle Power dataType. HERE WE CAN OPTIMIZED.
             for {
-              res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.J4.Power, onRequest.selfReference, onRequest.request.arguments.head._2)
+              res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.K1.Power, onRequest.selfReference, onRequest.request.arguments.head._2)
             } yield Some(res)
 
           case _ => ???
@@ -270,15 +270,15 @@ sealed class J5J8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
     }
 
     // ORDER MATTERS! Need newest first, then subsequent branches shouldn't matter
-    monoidInstance.combine(j5j8Provider, monoidInstance.combine(j8Provider, j5Provider))
+    monoidInstance.combine(k2j6Provider, monoidInstance.combine(j6Provider, k2Provider))
   }
 }
 
-object J5J8 {
+object K2J6 {
   def functional[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
-  (j8Provider: EvolutionImplementationProvider[AIP[paradigm.type]],
-   j5Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
+  (j6Provider: EvolutionImplementationProvider[AIP[paradigm.type]],
+   k2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
   (functionalControl: Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
@@ -286,20 +286,20 @@ object J5J8 {
    ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     import paradigm.syntax._
-    val mkImpl = new J5J8[paradigm.type, AIP, Expression](paradigm)
+    val mkImpl = new K2J6[paradigm.type, AIP, Expression](paradigm)
     val ite: mkImpl.IfThenElseCommand =
       (cond, ifBlock, ifElseBlocks, elseBlock) =>
         for {
           res <- functionalControl.functionalCapabilities.ifThenElse(cond, ifBlock, ifElseBlocks, elseBlock)
         } yield Some(res)
 
-    mkImpl(j8Provider,j5Provider)(ffiArithmetic, ffiBoolean, ffiStrings, ffiEquality, expGen => expGen, ite)
+    mkImpl(j6Provider,k2Provider)(ffiArithmetic, ffiBoolean, ffiStrings, ffiEquality, expGen => expGen, ite)
   }
 
   def imperative[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
-  (j8Provider: EvolutionImplementationProvider[AIP[paradigm.type]],
-   j5Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
+  (j6Provider: EvolutionImplementationProvider[AIP[paradigm.type]],
+   k2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
   (imperativeControl: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
@@ -309,7 +309,7 @@ object J5J8 {
     import paradigm.syntax._
     import paradigm.methodBodyCapabilities._
     import imperativeControl.imperativeCapabilities._
-    val mkImpl = new J5J8[paradigm.type, AIP, Unit](paradigm)
+    val mkImpl = new K2J6[paradigm.type, AIP, Unit](paradigm)
     val returnInIf: Generator[paradigm.MethodBodyContext, Expression] => Generator[paradigm.MethodBodyContext, Unit] =
       (expGen) =>
         for {
@@ -325,7 +325,7 @@ object J5J8 {
           _ <- addBlockDefinitions(Seq(resultStmt))
         } yield None
 
-    mkImpl(j8Provider,j5Provider)(ffiArithmetic, ffiBoolean, ffiStrings, ffiEquality, returnInIf, ite)
+    mkImpl(j6Provider,k2Provider)(ffiArithmetic, ffiBoolean, ffiStrings, ffiEquality, returnInIf, ite)
   }
 }
 

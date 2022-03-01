@@ -1,32 +1,86 @@
 package org.combinators.ep.domain.math    /*DD:LI:AI*/
 
 import org.combinators.ep.domain._
-import org.combinators.ep.domain.abstractions.{DataTypeCase, EqualsTestCase, TestCase}
+import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
-import org.combinators.ep.domain.math.J1.MultByTestCase
-import org.combinators.ep.domain.math.J2.{eqls, not_eqls, struct_not_eqls}
-import org.combinators.ep.domain.math.M0.{DoubleInst, Eval, LitInst}
+import org.combinators.ep.domain.math.J1.{Sub, SubInst}
+import org.combinators.ep.domain.math.J2.{Mult, MultInst}
+import org.combinators.ep.domain.math.J3.{Divd, DivdInst, Neg, NegInst, PrettyP, StringInst}
+import org.combinators.ep.domain.math.M0.{Add, AddInst, DoubleInst, Lit, LitInst}
+import org.combinators.ep.domain.tree._
 
 object J4 extends Evolution {
-  override implicit def getModel:GenericModel = J2.getModel.evolve("j4", Seq(Power), J2.isOps(Seq(Power)))
+  override implicit def getModel:GenericModel = J3.getModel.evolve("j4", Seq.empty, Seq(Operation.asTree, Identifier))
+  lazy val Identifier = Operation("id", TypeRep.Int)
 
-  lazy val Power:DataTypeCase = DataTypeCase.binary("Power")(MathDomain.getModel)
+  val m5_s1 = AddInst(LitInst(1.0), LitInst(376.0))
+  val m5_s2 = AddInst(LitInst(1.0), LitInst(976.0))
+  val m5_s3 = SubInst(LitInst(1.0), LitInst(976.0))
 
-  def PowerInst(base:DataTypeInstance, exponent:DataTypeInstance): DataTypeInstance =
-    DataTypeInstance(Power, Seq(InstanceRep(base), InstanceRep(exponent)))
+  val m5_all = SubInst(
+    NegInst(LitInst(2.0)), // Sub-Left
+    MultInst(             // Sub-Right
+      SubInst(LitInst(1.0), LitInst(976.0)),   // Mult-Left
+      AddInst(                                // Mult-Right
+        MultInst(LitInst(1.0), LitInst(976.0)),
+        DivdInst(LitInst(1.0), LitInst(3.0)))))
 
-  val powi = PowerInst(LitInst(3.0), LitInst(5.0))
+  val tree_m5_all =
+    Node(Sub.name.hashCode,
+      Seq(
+        Node(Neg.name.hashCode, Seq(Node(Lit.name.hashCode, Seq(Leaf(DoubleInst(2.0)))))), // Sub-Left
+        Node(Mult.name.hashCode,
+          Seq(
+            Node(Sub.name.hashCode,
+              Seq(
+                Node(Lit.name.hashCode, Seq(Leaf(DoubleInst(1.0)))),
+                Node(Lit.name.hashCode, Seq(Leaf(DoubleInst(976.0))))
+              )), // Mult-Left
+            Node(Add.name.hashCode,
+              Seq(
+                Node(Mult.name.hashCode,
+                  Seq(
+                    Node(Lit.name.hashCode, Seq(Leaf(DoubleInst(1.0)))),
+                    Node(Lit.name.hashCode, Seq(Leaf(DoubleInst(976.0))))
+                  )),
+                Node(Divd.name.hashCode,
+                  Seq(
+                    Node(Lit.name.hashCode, Seq(Leaf(DoubleInst(1.0)))),
+                    Node(Lit.name.hashCode, Seq(Leaf(DoubleInst(3.0))))
+                  ))
+              ))
+          )) // Mult-Right
+      ))
 
-  val powi_same_lhs = PowerInst(LitInst(3.0), LitInst(4.0))
-  val powi_same_rhs = PowerInst(LitInst(4.0), LitInst(5.0))
+  val m5_s4 = MultInst(MultInst(LitInst(2.0), LitInst(1.0)),
+                                   AddInst(LitInst(0.0), LitInst(7.0)))
 
-  val all_instances = J2.all_instances ++ Seq(powi)
-  val lhs           = J2.lhs ++ Seq(powi_same_lhs)   // changes on left hand side
-  val rhs           = J2.rhs ++ Seq(powi_same_rhs)   // changes on right hand side
+  val treeSimplified =
+    Node(Mult.name.hashCode,
+      Seq(
+        Node(Lit.name.hashCode, Seq(Leaf(DoubleInst(2.0)))),
+        Node(Lit.name.hashCode, Seq(Leaf(DoubleInst(7.0))))
+      ))
+  /**
+    * Special test case for same queries.
+    *
+    * Validates that calling AsTree on inst1 yields the tree called from AsTree on inst2
+    */
+  /** Models a test case which applies operation `op` to `domainObject` and `params`, expecting a result
+   * equal to `expected`. */
+  case class SameTestCase(
+         inst1: DataTypeInstance,
+         inst2: DataTypeInstance,
+         expected: Boolean,
+         params: InstanceRep*
+       ) extends TestCase
 
-  def tests: Seq[TestCase] = Seq(
-    EqualsTestCase(getModel.baseDataType, PowerInst(LitInst(2.0), LitInst(5.0)), Eval, DoubleInst(32.0)),
+  def tests:Seq[TestCase] = Seq(
+    SameTestCase(m5_s1, m5_s2, false),
+    SameTestCase(m5_s1, m5_s3, true),
+    SameTestCase(m5_all, m5_all, true),
 
-    MultByTestCase(powi, InstanceRep(LitInst(3.0)), DoubleInst(729.0)),
-  ) ++ eqls(all_instances) ++ not_eqls(all_instances) ++ struct_not_eqls(all_instances, lhs, rhs)
+    EqualsTestCase(getModel.baseDataType, m5_all, Operation.asTree, InstanceRep(TypeRep.Tree)(tree_m5_all)),
+    EqualsCompositeTestCase(getModel.baseDataType, m5_all, StringInst("(-2.0-((1.0-976.0)*((1.0*976.0)+(1.0/3.0))))"), (PrettyP, Seq.empty)),
+  )
 }

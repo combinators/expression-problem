@@ -1,51 +1,68 @@
-package org.combinators.ep.domain.math     /*DD:LI:AI*/
+package org.combinators.ep.domain.math      /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions._
-import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
+import org.combinators.ep.domain.abstractions.{EqualsTestCase, Operation, TestCase, TypeRep}
+import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.domain.math.J1.SubInst
 import org.combinators.ep.domain.math.J2.MultInst
 import org.combinators.ep.domain.math.J3.{DivdInst, NegInst}
-import org.combinators.ep.domain.math.J8.PowByTestCase
-import org.combinators.ep.domain.math.M0.{AddInst, DoubleInst, Eval, LitInst}
+import org.combinators.ep.domain.math.K1.PowerInst
+import org.combinators.ep.domain.math.J7.InvInst
+import org.combinators.ep.domain.math.M0.{AddInst, LitInst}
 import org.combinators.ep.domain.{Evolution, GenericModel}
 
 object J8 extends Evolution {
-  override implicit def getModel:GenericModel = J7.getModel.evolve("j8", Seq.empty, Seq(PowBy))
+  override implicit def getModel:GenericModel = J7.getModel.evolve("j8", Seq.empty, Seq(Height))
 
-  // m7:model evolution.
-  // -------------------
-  object j8_extensions {
-    val target = "target"
-  }
+  lazy val Height = Operation("height", TypeRep.Int, Seq.empty)
 
-  // add PowBy operation
-  lazy val base = TypeRep.DataType(J3.getModel.baseDataType)
-  lazy val PowBy = Operation("powBy", base, Seq(Parameter("other", base)))
+  //      m9_3                 <-- m9_3 has height of 3
+  //      /  \
+  //   m9_0   m9_2             <-- m9_2 has height of 2
+  //           / \
+  //        m9_0  m9_1         <-- m9_1 has height of 1
+  //               / \
+  //           m9_0   m9_0     <-- height(s) of 0
+  //
+  // and also do right-leaning...
+  val m9_0 = LitInst(2.0)
+  val m9_1 = AddInst(m9_0, m9_0)
+  val m9_2 = SubInst(m9_0, m9_1)
+  val m9_3 = DivdInst(m9_0, m9_2)
+  val m9_1r = AddInst(m9_0, m9_0)
+  val m9_2r = SubInst(m9_0, m9_1r)
+  val m9_3r = DivdInst(m9_2r, m9_0)
 
-  object PowByTestCase {
-    def apply(instance: DataTypeInstance, argument: InstanceRep, expected:InstanceRep): TestCase = {
-      EqualsCompositeTestCase(getModel.baseDataType,
-        instance, expected, (PowBy, Seq(argument)), (Eval, Seq.empty))
-    }
-  }
+  val ma_1 = InvInst(m9_0, m9_0)
+  val ma_2 = MultInst(m9_0, ma_1)
+  val ma_3 = DivdInst(m9_0, ma_2)
+  val ma_4 = NegInst(ma_3)
+  val ma_5 = PowerInst(ma_4, ma_4)
+  val ma_2r = MultInst(m9_0, ma_1)
+  val ma_3r = DivdInst(m9_0, ma_2r)
+  val ma_4r = NegInst(ma_3r)
+  val ma_5r = PowerInst(ma_4r, ma_4r)
 
-  val m7_2 = AddInst(LitInst(1.0), LitInst(2.0))
-  val m7_3 = AddInst(LitInst(1.0), LitInst(2.0))
-  val m7_4 = AddInst(m7_2, m7_3)
-
-  val m7_5 = AddInst(LitInst(99.0), LitInst(2.0))
-  val m7_6 = AddInst(LitInst(99.0), LitInst(2.0))
-  val m7_7 = AddInst(m7_5, m7_6)
+  def IntInst(i: scala.Int): InstanceRep =
+    InstanceRep(TypeRep.Int)(i)
 
   def tests:Seq[TestCase] = Seq(
-    PowByTestCase(AddInst(LitInst(1.0), LitInst(12.0)),
-      InstanceRep(LitInst(4.0)), DoubleInst(13.0*13.0*13.0*13.0)),
+    EqualsTestCase(getModel.baseDataType, m9_0, Height, IntInst(0)),
+    EqualsTestCase(getModel.baseDataType, m9_1, Height, IntInst(1)),
+    EqualsTestCase(getModel.baseDataType, m9_2, Height, IntInst(2)),
+    EqualsTestCase(getModel.baseDataType, m9_3, Height, IntInst(3)),
 
-    PowByTestCase(SubInst(LitInst(13.0), LitInst(5.0)),      InstanceRep(LitInst(4.0)), DoubleInst(8.0*8.0*8.0*8.0)),
-    PowByTestCase(LitInst(4.0),                              InstanceRep(LitInst(-1.0)), DoubleInst(0.25)),
-    PowByTestCase(DivdInst(LitInst(4.0), LitInst(2.0)),      InstanceRep(LitInst(4.0)), DoubleInst(2.0*2.0*2.0*2.0)),
-    PowByTestCase(MultInst(LitInst(4.0), LitInst(2.0)),      InstanceRep(LitInst(4.0)), DoubleInst(8.0*8.0*8.0*8.0)),
-    PowByTestCase(NegInst(LitInst(2.0)),                     InstanceRep(LitInst(4.0)), DoubleInst((-2.0)*(-2.0)*(-2.0)*(-2.0)))
+    EqualsTestCase(getModel.baseDataType, m9_1r, Height, IntInst(1)),
+    EqualsTestCase(getModel.baseDataType, m9_2r, Height, IntInst(2)),
+    EqualsTestCase(getModel.baseDataType, m9_3r, Height, IntInst(3)),
 
+    EqualsTestCase(getModel.baseDataType, ma_1, Height, IntInst(1)),
+    EqualsTestCase(getModel.baseDataType, ma_2, Height, IntInst(2)),
+    EqualsTestCase(getModel.baseDataType, ma_3, Height, IntInst(3)),
+    EqualsTestCase(getModel.baseDataType, ma_4, Height, IntInst(4)),
+    EqualsTestCase(getModel.baseDataType, ma_5, Height, IntInst(5)),
+    EqualsTestCase(getModel.baseDataType, ma_2r, Height, IntInst(2)),
+    EqualsTestCase(getModel.baseDataType, ma_3r, Height, IntInst(3)),
+    EqualsTestCase(getModel.baseDataType, ma_4r, Height, IntInst(4)),
+    EqualsTestCase(getModel.baseDataType, ma_5r, Height, IntInst(5)),
   )
 }

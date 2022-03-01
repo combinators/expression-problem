@@ -10,7 +10,7 @@ import org.combinators.ep.generator.paradigm.{AddImport, AnyParadigm, Apply, Fin
 
 import scala.tools.nsc.interpreter.NamedParamClass
 
-// j9 mistakenly generates lit/multBy and lit/powBy
+// j7 mistakenly generates lit/multBy and lit/powBy
 // might be in newDataTypeCasesWithNewOperations...
 trait CoCoClean extends ApproachImplementationProvider {
   val paradigm: AnyParadigm

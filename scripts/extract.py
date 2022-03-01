@@ -4,7 +4,7 @@ import os
 analysis_dir = os.path.join('..', 'target', 'analysis')
 
 approaches = 'oo visitor visitorSideEffect extensibleVisitor interpreter coco trivially dispatch'
-evolutions = 'M0 J1 J2 J3 J4 J5 J6 J7 J8 J5J8 J9 J10'
+evolutions = 'M0 J1 J2 J3 K1 K2 J4 J5 J8 K2J6 J7 J8'
 
 def zipFileSize(aip, eip):
     zf = aip + "-" + eip + "-src.zip"

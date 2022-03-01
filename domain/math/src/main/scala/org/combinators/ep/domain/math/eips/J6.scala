@@ -1,108 +1,182 @@
-package org.combinators.ep.domain.math.eips      /*DD:LI:AI*/
+package org.combinators.ep.domain.math.eips    /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{Attribute, DataTypeCase, Operation, TypeRep}
+import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, Parameter, TypeRep}
+import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.domain.math
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Trees}
+import org.combinators.ep.generator.paradigm.control.Imperative
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, RealArithmetic, Strings}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
 object J6 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
-    (paradigm: P)
-    (j3Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
-    (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Int],
-     ffiTrees: Trees.WithBase[paradigm.MethodBodyContext, paradigm.type]):
+  (paradigm: P)
+  (j5Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
+  (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
+   ffiRealArithmetic: RealArithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
+   ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
+   ffiImper:Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val j6Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.J6.getModel
+      override val model = math.M7.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
-          _ <- j3Provider.initialize(forApproach)
+          _ <- j5Provider.initialize(forApproach)
           _ <- ffiArithmetic.enable()
-          _ <- ffiTrees.enable()
+          _ <- ffiRealArithmetic.enable()
+          _ <- ffiStrings.enable()
         } yield ()
       }
 
-      /** AsTree depends upon Identifier. */
+      /** PowBy depends on Eval. */
       override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
-        if (op == Operation.asTree) {
-          Set(math.J6.Identifier)
-        } else {
-          Set.empty
+        op match {
+          case math.J6.PowBy => Set(math.M0.Eval)
+          case _ => Set.empty
         }
       }
 
       def applicable
         (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        Set(math.J6.Identifier, Operation.asTree).contains(potentialRequest.op) &&
-          Set(math.M0.Add,math.M0.Lit,math.J1.Sub,math.J2.Mult, math.J3.Neg, math.J3.Divd).contains(potentialRequest.tpeCase)
+        Set(math.J6.PowBy).contains(potentialRequest.op)
       }
 
-      /** Can handle any AsTree or Identifier operations. */
+      /** PowBy can support any N-ary data type, so prepare for this future eventuality here. */
       override def genericLogic
         (forApproach: AIP[paradigm.type])
         (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
-        import AnyParadigm.syntax._
-        import ffiTrees.treeCapabilities._
-        import paradigm._
-        import methodBodyCapabilities._
-
         onRequest.request.op match {
-          case op if op == Operation.asTree =>
-            for {
-              children <- forEach (onRequest.attributes.toSeq) {
-                  case (att@Attribute(_, TypeRep.DataType(dt)), attExp) =>
-                    forApproach.dispatch(
-                      SendRequest(
-                        attExp,
-                        dt,
-                        Request(Operation.asTree, Map.empty),
-                        Some(onRequest)
-                      )
-                    )
-                  case (att@Attribute(_, attTpe), attExp) =>
-                    for {
-                      tpe <- toTargetLanguageType(attTpe)
-                      result <- createLeaf(tpe, attExp)
-                    } yield result
-                }
-              id <- forApproach.dispatch(
-                  SendRequest(
-                    onRequest.selfReference,
-                    onRequest.onType,
-                    Request(math.M5.Identifier, Map.empty),
-                    Some(onRequest)
-                  )
-                )
-              inst <- createNode(id, children)
-            } yield Some(inst)
-
-          case math.M5.Identifier =>
-            reify(TypeRep.Int, onRequest.tpeCase.name.hashCode).map(Some(_))
-
-          case _ => j3Provider.genericLogic(forApproach)(onRequest)
+          case math.J6.PowBy => defaultGenericLogic(forApproach)(onRequest)
+          case _ => j5Provider.genericLogic(forApproach)(onRequest)
         }
       }
 
       def logic
         (forApproach: AIP[paradigm.type])
         (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
-      Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
+        Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
+        import paradigm._
+        import methodBodyCapabilities._
         assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name)
-        onRequest.request.op match {
-          case math.J6.Identifier => genericLogic(forApproach)(onRequest)
-          case op if op == Operation.asTree => genericLogic(forApproach)(onRequest)
-          case _ => ???
+
+        onRequest.tpeCase match {
+          //        default Exp<V> powBy(ep.Exp<V> exponent) {
+          //          double exponentValue = convert(exponent).eval();
+          //          Exp<V> result = this;
+          //          for (double counter = Math.floor(Math.abs(exponentValue)); counter > 1; --counter) {
+          //            result = mult(result, this);
+          //          }
+          //          if (exponentValue < 0) {
+          //            result = divd(lit(1.0), result);
+          //          }
+          //          return result;
+          //        }
+
+          case litC@math.M0.Lit =>
+            for {
+              expName <- freshName(forApproach.names.mangle("exponentValue"))
+              expType <- toTargetLanguageType(TypeRep.Double)
+
+              evalExponent <- forApproach.dispatch(SendRequest(
+                onRequest.request.arguments.head._2,
+                math.M2.getModel.baseDataType,
+                Request(math.M0.Eval, Map.empty),
+                Some(onRequest)
+              ))
+              expValue <- ffiImper.imperativeCapabilities.declareVar(expName, expType, Some(evalExponent))
+
+              varName <- freshName(forApproach.names.mangle("result"))
+              baseType <- toTargetLanguageType(onRequest.request.op.returnType)
+              resultVar <- ffiImper.imperativeCapabilities.declareVar(varName, baseType, Some(onRequest.selfReference))
+
+              ctrName <- freshName(forApproach.names.mangle("counter"))
+              ctrType <- toTargetLanguageType(TypeRep.Double)
+              absValue <- ffiRealArithmetic.realArithmeticCapabilities.abs(expValue)
+              floorValue <- ffiRealArithmetic.realArithmeticCapabilities.floor(absValue)
+              ctrVar <- ffiImper.imperativeCapabilities.declareVar(ctrName, ctrType, Some(floorValue))
+
+              one <- forApproach.reify(InstanceRep(TypeRep.Double)(1.0))
+
+              // Know you have add data type so you can construct it
+              condExpr <- ffiArithmetic.arithmeticCapabilities.lt(one, ctrVar)
+              stmt <- ffiImper.imperativeCapabilities.whileLoop(condExpr, for {
+                res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M3.Mult, resultVar, onRequest.selfReference)
+                assignStmt <- ffiImper.imperativeCapabilities.assignVar(resultVar, res)
+                decrExpr <- ffiArithmetic.arithmeticCapabilities.sub(ctrVar, one)
+                decrStmt <- ffiImper.imperativeCapabilities.assignVar(ctrVar, decrExpr)
+                _ <- addBlockDefinitions(Seq(assignStmt, decrStmt))
+              } yield()
+              )
+              _ <- addBlockDefinitions(Seq(stmt))
+
+              // if stmt next
+              zero <- forApproach.reify(InstanceRep(TypeRep.Double)(0.0))
+              ifExpr <- ffiArithmetic.arithmeticCapabilities.lt(/*onRequest.attributes.head._2*/ expValue, zero)
+
+              ifStmt <- ffiImper.imperativeCapabilities.ifThenElse(ifExpr, for {
+                oneLit <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, one)
+                res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M3.Divd, oneLit, resultVar)
+                assignStmt <-  ffiImper.imperativeCapabilities.assignVar(resultVar, res)
+                _ <- addBlockDefinitions(Seq(assignStmt))
+              } yield (),
+                Seq.empty
+              )
+
+              _ <- addBlockDefinitions(Seq(ifStmt))
+            } yield Some(resultVar)
+
+          case math.M0.Add | math.M1.Sub =>
+            for {
+              inner <- forApproach.dispatch(SendRequest(
+                onRequest.selfReference,
+                math.M2.getModel.baseDataType,
+                Request(math.M0.Eval, Map.empty),
+                Some(onRequest)
+              ))
+
+              innerRes <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, inner)
+              res <- forApproach.dispatch(SendRequest(
+                innerRes,
+                math.M2.getModel.baseDataType,
+                onRequest.request,
+                Some(onRequest)
+              ))
+            } yield Some(res)
+
+          case neg@math.M3.Neg =>
+            val lAtt = neg.attributes.head
+            for {
+              left <- forApproach.dispatch(SendRequest(
+                onRequest.attributes(lAtt),
+                math.M2.getModel.baseDataType,
+                onRequest.request,
+                Some(onRequest)
+              ))
+              negOne <- forApproach.reify(InstanceRep(TypeRep.Double)(1.0))
+              innerLit <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, negOne)
+
+              leftSide <- forApproach.dispatch(SendRequest(
+                innerLit,
+                math.M2.getModel.baseDataType,
+                Request(math.M7.PowBy,  Map(Parameter("other", onRequest.request.op.returnType) -> onRequest.attributes.head._2)),  // MUST contain exp some how?
+                Some(onRequest)
+              ))
+
+              res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M3.Mult, leftSide, left)
+            } yield Some(res)
+
+          case _ =>    // standard example of accessing the generic Logic
+            genericLogic(forApproach)(onRequest)
+
         }
       }
     }
-
     // newest one must come first
-    monoidInstance.combine(j6Provider, j3Provider)
+    monoidInstance.combine(j6Provider, j5Provider)
   }
 }

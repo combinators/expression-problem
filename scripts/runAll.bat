@@ -17,7 +17,7 @@ for %%a in (oo visitor visitorSideEffect extensibleVisitor interpreter coco triv
   echo %%a > target\analysis\jacoco.%%a
 
   @REM for each approach x model, execute to generate into target\ep2
-  for %%e in (M0 J1 J2 J3 J4 J5 J6 J7 J8 J5J8 J9 J10) do (
+  for %%e in (M0 J1 J2 J3 K1 K2 J4 J5 J8 K2J6 J7 J8) do (
      @echo off
      echo ====================================== >> target\analysis\jacoco.%%a
      echo %%e                                    >> target\analysis\jacoco.%%a

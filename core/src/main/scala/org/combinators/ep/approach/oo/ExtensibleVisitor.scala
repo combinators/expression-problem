@@ -16,7 +16,7 @@ import AnyParadigm.syntax._
  * https://stackoverflow.com/questions/55501899/exception-in-intellijs-sbt-console-not-found-value-ideaport-ideaport-in-globa
  * problem with sbt...
  *
- * Original paper had no advice on merge case, so following is missing from j5j8
+ * Original paper had no advice on merge case, so following is missing from k2j6
  *
      public ep.j4.IsPower makeIsPower(Exp left, Exp right) {
         return new IsPower(left, right);

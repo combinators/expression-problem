@@ -30,8 +30,17 @@ for %%a in (oo visitor visitorSideEffect extensibleVisitor interpreter dispatch 
      @REM generated into target\ep2
      cd target\ep2
      zip -qr ..\analysis\%%a-%%e-src.zip src
-     
+
      set JAVA_HOME=C:\Program Files\AdoptOpenJDK\jdk-8.0.212.03-hotspot
+
+     @REM run Jacoco twice: the first time compiles. The second time only instruments
+     @REM doesn't seem to be any way to avoid instrumentation
+     echo ====================================== >> ..\analysis\jacoco.%%a
+     echo %%e-Compile-Begin                      >> ..\analysis\jacoco.%%a
+     java -cp ..\..\scripts Time                 >> ..\analysis\jacoco.%%a
+     echo ====================================== >> ..\analysis\jacoco.%%a
+     sbt jacoco            >> ..\analysis\jacoco.%%a
+
      echo ====================================== >> ..\analysis\jacoco.%%a
      echo %%e-Test-Begin                         >> ..\analysis\jacoco.%%a
      java -cp ..\..\scripts Time                 >> ..\analysis\jacoco.%%a

@@ -2,7 +2,7 @@ package org.combinators.ep.domain.math.eips     /*DD:LI:AI*/
 
 import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, TypeRep}
 import org.combinators.ep.domain.instances.InstanceRep
-import org.combinators.ep.domain.{abstractions, math}
+import org.combinators.ep.domain.{GenericModel, abstractions, math}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
@@ -56,10 +56,33 @@ sealed class J7[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
 
       def applicable(forApproach: AIP[paradigm.type], potentialRequest: PotentialRequest): Boolean = {
         potentialRequest.op.tags.contains(math.J2.IsOp) ||
-          Set(math.J1.MultBy, math.J6.PowBy).contains(potentialRequest.op) ||  // short-circuit all of these for Inv only
+        //  Set(math.J1.MultBy, math.J6.PowBy).contains(potentialRequest.op) ||  // short-circuit all of these for Inv only
           (Set(math.K2.Simplify, math.K2.Collect, math.J3.PrettyP, math.M0.Eval, math.J1.MultBy, math.J6.PowBy, math.J5.Equals, math.J2.Eql, math.J4.Identifier, Operation.asTree).contains(potentialRequest.op) &&
             Set(math.J7.Inv).contains(potentialRequest.tpeCase))
       }
+
+//      override def applicableIn(forApproach:  AIP[paradigm.type], onRequest: PotentialRequest,currentModel:GenericModel): Option[GenericModel] = {
+//        // must be designed to only return (to be safe) Java-accessible which is former branch only one step in past.
+//        val forwardTable: PartialFunction[(Operation, DataTypeCase), GenericModel] = {
+//          case (op, tpe) if op.tags.contains(math.J2.IsOp) => math.J2.getModel // where isXXX is generically defined
+//
+//          case (math.K2.Collect, math.J3.Divd) => model // I have to handle this
+//          case (math.K2.Collect, math.J3.Neg) => model // I have to handle this
+//          case (math.K2.Collect, _) => math.K2.getModel
+//
+//          case (math.K2.Simplify, math.J3.Divd) => model // I have to handle this
+//        }
+//
+//        val tblModel = forwardTable.lift(onRequest.op, onRequest.tpeCase)
+//
+//        // Because EIP could be "further in future" then a given model, we need to be sure to
+//        // only return forwarding information when we have a hit on the currentModel.
+//        if (model == currentModel || model.before(currentModel)) {
+//          tblModel
+//        } else {
+//          None
+//        }
+//      }
 
       private def simplifyLogic(forApproach: AIP[paradigm.type])
                                (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):

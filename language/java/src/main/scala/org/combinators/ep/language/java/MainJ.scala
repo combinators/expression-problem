@@ -167,7 +167,7 @@ object DirectToDiskMainJ extends IOApp {
   val targetDirectory = Paths.get("target", "ep2")
 
   def run(args: List[String]): IO[ExitCode] = {
-    val approach = if (args.isEmpty) "coco" else args.head
+    val approach = if (args.isEmpty) "extensibleVisitor" else args.head
     val selection = if (args.isEmpty || args.tail.isEmpty) "J8" else args.tail.head
     println("Generating " + approach + " for " + selection)
     for {

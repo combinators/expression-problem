@@ -287,7 +287,9 @@ trait CoCoClean extends ApproachImplementationProvider {
     val flatDomain = domain.flatten
     val allDataTypeCases = flatDomain.typeCases.toSet
     val allOperations = flatDomain.ops.toSet
+    
     allDataTypeCases.foldLeft(Map.empty[DataTypeCase, Set[Operation]]) { (resultMap, tpeCase) =>
+      // Remembers all operations that are already supported
       val presentOperations = domain.former.flatMap(ancestor => {
         if (ancestor.supports(tpeCase)) {
           ancestor.flatten.ops.toSet
@@ -295,7 +297,9 @@ trait CoCoClean extends ApproachImplementationProvider {
           Set.empty[Operation]
         }
       })
+      
       val overwrittenOperations = allOperations.filter { operation =>
+        // Are we applicable based on EIP? Tells us in which domain EIP is applicable
         val lastOverwritingDomain =
           evolutionImplementationProvider.applicableIn(
             forApproach = this,
@@ -305,6 +309,7 @@ trait CoCoClean extends ApproachImplementationProvider {
         lastOverwritingDomain.contains(domain)
       }
       val updatedOperations = (allOperations -- presentOperations) ++ overwrittenOperations
+      // If we have any updated operations, if we have a former one that doesn't support the current type case, or if we are in a merge.
       if (updatedOperations.nonEmpty || domain.former.exists(ancestor => !ancestor.supports(tpeCase)) || domain.former.size > 1) {
         resultMap.updated(tpeCase, updatedOperations)
       } else {

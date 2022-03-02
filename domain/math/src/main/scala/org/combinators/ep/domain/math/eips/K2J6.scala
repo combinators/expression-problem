@@ -71,15 +71,16 @@ sealed class K2J6[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
         val forwardTable:PartialFunction[(Operation,DataTypeCase),GenericModel] = {
           case (op,tpe) if op.tags.contains(math.J2.IsOp) => math.J2.getModel    // where isXXX is generically defined
 
-          case (math.J3.PrettyP, math.K1.Power) => model   // I have to handle this
-          case (math.J3.PrettyP, _) => math.J3.getModel
-
           case (math.K2.Collect, math.J3.Divd) => model    // I have to handle this
           case (math.K2.Collect, math.J3.Neg) => model    // I have to handle this
           case (math.K2.Collect, _) => math.K2.getModel
 
-          case (math.K2.Simplify, math.K1.Power) => model   // I have to handle this
+          case (math.K2.Simplify, math.J3.Divd) => model   // I have to handle this
+          case (math.K2.Simplify, math.J3.Neg) => model    // I have to handle this
           case (math.K2.Simplify, _) => math.K2.getModel
+
+          case (math.J3.PrettyP, math.K1.Power) => model   // I have to handle this
+          case (math.J3.PrettyP, _) => math.J3.getModel
 
           case (math.J4.Identifier, math.K1.Power) => model   // I have to handle this (generically)
           case (math.J4.Identifier, _) => math.J4.getModel
@@ -87,12 +88,11 @@ sealed class K2J6[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
           case (Operation.asTree, math.K1.Power) => model   // I have to handle this
           case (Operation.asTree, _) => math.J4.getModel
 
-          case (math.J5.Equals, math.K1.Power) =>
-            model    // I have to handle this
+          case (math.J5.Equals, math.K1.Power) =>  model    // I have to handle this
           case (math.J5.Equals, _) => math.J5.getModel
 
-          case (math.J6.PowBy, math.M0.Lit) => math.J6.getModel    // not sure why but perhaps it is a non-recursive type
-          case (math.J6.PowBy, _) => model                  // I take responsibility
+          case (math.J6.PowBy, math.K1.Power) => model      // I take responsibility
+          case (math.J6.PowBy, _) => math.J6.getModel
         }
 
         val tblModel = forwardTable.lift(onRequest.op, onRequest.tpeCase)

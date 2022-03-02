@@ -91,6 +91,7 @@ for aip in approaches.split():
     for eip in evolutions.split():
         times[aip][eip] = {}
         gen_time = int(tags[aip][eip + '-Generate'])
+        compile_begin = int(tags[aip][eip + '-Compile-Begin'])
         test_begin = int(tags[aip][eip + '-Test-Begin'])
         test_end = int(tags[aip][eip + '-Test-End'])
         times[aip][eip][gen_str] = test_begin - gen_time

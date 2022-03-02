@@ -47,20 +47,20 @@ object J2 {
           (model.flatten.typeCases.contains(potentialRequest.tpeCase) && model.ops.contains(potentialRequest.op))   // needed for isTypeCase x past Type Cases 
       }
 
-      // need to say we are NOT applicable when doing MultBy while still in J1
-      override def applicableIn(forApproach:  AIP[paradigm.type], onRequest: PotentialRequest,currentModel:GenericModel): Option[GenericModel] = {
-        // must be designed to only return (to be safe) Java-accessible which is former branch only one step in past.
-
-        // NEEDED because of overwriting an existing MultBy with Mult.
-
-        // Because EIP could be "further in future" then a given model, we need to be sure to
-        // only return forwarding information when we have a hit on the currentModel.
-        if (model == currentModel) {
-          Some(model)
-        } else {
-          None  // no idea who can handle previous stuff
-        }
-      }
+//      // need to say we are NOT applicable when doing MultBy while still in J1
+//      override def applicableIn(forApproach:  AIP[paradigm.type], onRequest: PotentialRequest,currentModel:GenericModel): Option[GenericModel] = {
+//        // must be designed to only return (to be safe) Java-accessible which is former branch only one step in past.
+//
+//        // NEEDED because of overwriting an existing MultBy with Mult.
+//
+//        // Because EIP could be "further in future" then a given model, we need to be sure to
+//        // only return forwarding information when we have a hit on the currentModel.
+//        if (model == currentModel) {
+//          Some(model)
+//        } else {
+//          None  // no idea who can handle previous stuff
+//        }
+//      }
 
       /** Can handle any equals requests, by constructing Trees from Expressions. */
       override def genericLogic

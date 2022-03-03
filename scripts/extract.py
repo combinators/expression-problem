@@ -3,8 +3,8 @@ import os
 
 analysis_dir = os.path.join('..', 'target', 'analysis')
 
-# extensibleVisitor
-approaches = 'oo visitor visitorSideEffect interpreter coco trivially dispatch'
+# 
+approaches = 'oo visitor visitorSideEffect extensibleVisitor interpreter coco trivially dispatch'
 evolutions = 'M0 J1 J2 J3 K1 K2 J4 J5 J8 K2J6 J7 J8'
 
 gen_str = 'Generate'
@@ -94,7 +94,7 @@ for aip in approaches.split():
         compile_begin = int(tags[aip][eip + '-Compile-Begin'])
         test_begin = int(tags[aip][eip + '-Test-Begin'])
         test_end = int(tags[aip][eip + '-Test-End'])
-        times[aip][eip][gen_str] = test_begin - gen_time
+        times[aip][eip][gen_str] = compile_begin - gen_time
         times[aip][eip][test_str] = test_end - test_begin
 
     line =''

@@ -808,11 +808,10 @@ trait Visitor extends OOApproachImplementationProvider with SharedOO with Operat
       _ <- domainSpecific.initialize(self)
       _ <- makeBase(flatDomain.baseDataType)
       _ <- forEach (flatDomain.typeCases.distinct) { tpeCase =>
-        makeDerived(flatDomain.baseDataType, tpeCase, gdomain)   // used to have flatDomain.ops,
+        makeDerived(flatDomain.baseDataType, tpeCase, gdomain) 
       }
 
       _ <- addClassToProject(visitorSpecifics.makeVisitorInterface(flatDomain.typeCases.distinct), visitorClass)
-
       _ <- forEach (flatDomain.ops) { op =>
         addClassToProject(visitorSpecifics.makeOperationImplementation(flatDomain, op, domainSpecific), names.mangle(names.conceptNameOf(op)))
       }

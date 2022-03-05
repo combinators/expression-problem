@@ -465,19 +465,15 @@ sealed trait Interpreter extends OOApproachImplementationProvider with SharedOO 
   def implement(model: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
     def implementInner(domain: GenericModel): Generator[paradigm.ProjectContext, Unit] = {
 
-      val opsToHandle = (domain.ops ++ domain.flatten.ops.distinct.filter(op => op.isProducer(domain))).distinct
       if (domain.isDomainBase) {
         Command.skip[paradigm.ProjectContext]
       } else {
         for {
           _ <- registerTypeMapping(domain)  // this must be first SO Exp is properly bound within interfaces
           _ <- registerTypeCases(domain)    // handle DataType classes as well for interpreter
-          _ <- if (domain == latestModelDefiningInterface(domain)) { // if (domain.ops.nonEmpty) {   // MERGE must be here as well...
+          _ <- if (domain == latestModelDefiningInterface(domain)) { // MERGE must be here as well...
             for {
              _ <- addIntermediateInterfaceToProject(domain)   // Exp for each evolution that needs one
-
-              // needed for MERGE situation... (was domain.flatten.ops.distinct)
-              //_ <- generateForOp(opsToHandle, domain, domain.flatten.typeCases, domainSpecific)
              _ <- generateForOp(domain, domain.flatten.typeCases, domainSpecific)
             } yield ()
           } else {

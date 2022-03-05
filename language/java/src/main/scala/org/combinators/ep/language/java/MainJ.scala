@@ -30,6 +30,7 @@ class MainJ(choice:String, select:String) {
 
   val dispatchApproach = RuntimeDispatching[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.stringsInMethod, generator.exceptionsInMethod, generator.ooParadigm)
 
+  // select one here
   val approach = choice match {
     case "oo" => ooApproach
     case "visitor" => visitorApproach
@@ -42,6 +43,7 @@ class MainJ(choice:String, select:String) {
 
     case _ => ???
   }
+
   // select one here
   val evolutions = select match {
     case "M0" => Seq(M0)
@@ -167,8 +169,8 @@ object DirectToDiskMainJ extends IOApp {
   val targetDirectory = Paths.get("target", "ep2")
 
   def run(args: List[String]): IO[ExitCode] = {
-    val approach = if (args.isEmpty) "extensibleVisitor" else args.head
-    val selection = if (args.isEmpty || args.tail.isEmpty) "J8" else args.tail.head
+    val approach = if (args.isEmpty) "oo" else args.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "J1" else args.tail.head
     println("Generating " + approach + " for " + selection)
     for {
       _ <- IO { print("Initializing Generator...") }

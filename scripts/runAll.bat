@@ -34,7 +34,8 @@ for %%a in (oo visitor visitorSideEffect extensibleVisitor interpreter dispatch 
      set JAVA_HOME=C:\Program Files\AdoptOpenJDK\jdk-8.0.212.03-hotspot
 
      @REM run Jacoco twice: the first time compiles. The second time only instruments
-     @REM doesn't seem to be any way to avoid instrumentation
+     @REM doesn't seem to be any way to avoid instrumentation in the second pass, but
+     @REM at least this doesn't conflate initial compilation time
      echo ====================================== >> ..\analysis\jacoco.%%a
      echo %%e-Compile-Begin                      >> ..\analysis\jacoco.%%a
      java -cp ..\..\scripts Time                 >> ..\analysis\jacoco.%%a

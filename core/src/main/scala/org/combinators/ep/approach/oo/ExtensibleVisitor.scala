@@ -812,6 +812,31 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO w
       }
     } yield ()
   }
+  
+  def makeOperationsClassesInChronologicalOrder(gdomain:GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]) : Generator[ProjectContext, Unit] = {
+    import ooParadigm.projectCapabilities._
+    for {
+      // WHEN new data types are added and there are existing operations in the past
+      // need to run generators in sequence and when that happens you need to group with a for {...} yield()
+      _ <- forEach (gdomain.inChronologicalOrder) { m => {
+        for {
+          _ <- registerNewlyDeclaredDataTypeClasses(m)
+
+          // If a new Extensible Visitor interface is required, add the interface AND THEN for all operations
+          // add their corresponding classes.
+          _ <- if (m == latestModelDefiningVisitor(m)) {
+            for {
+              _ <- addClassToProject(makeExtensibleVisitorInterface(m), visitorInterfaceName(m) : _ *)
+              _ <- addOperationsAsClasses(m.flatten.ops, m, domainSpecific)
+            } yield ()
+          } else {
+            addOperationsAsClasses(m.ops, m, domainSpecific)
+          }
+        } yield ()
+      }
+      }
+    } yield ()
+  }
 
   /**
    * The Extensible Visitor approach is defined as follows. This handles the code generation for the implementation
@@ -828,7 +853,7 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO w
     import ooParadigm.projectCapabilities._
     import paradigm.projectCapabilities._
 
-    gdomain.inChronologicalOrder.foreach(_.output())
+    // gdomain.inChronologicalOrder.foreach(_.output())
 
     for {
       _ <- debug ("Processing Extensible Visitor")
@@ -838,27 +863,7 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO w
       _ <- addClassToProject(visitor.makeVisitorInterface(Seq.empty), visitor.visitorClass)   // top-level Visitor
 
       _ <- makeOperationsBase(gdomain)
-
-      // WHEN new data types are added and there are existing operations in the past
-      // need to run generators in sequence and when that happens you need to group with a for {...} yield()
-      _ <- forEach (gdomain.inChronologicalOrder) { m => {
-          for {
-            _ <- registerNewlyDeclaredDataTypeClasses(m)
-
-            // If a new Extensible Visitor interface is required, add the interface AND THEN for all operations
-            // add their corresponding classes.
-            _ <- if (m == latestModelDefiningVisitor(m)) {
-              for {
-                _ <- addClassToProject(makeExtensibleVisitorInterface(m), visitorInterfaceName(m) : _ *)
-                _ <- addOperationsAsClasses(m.flatten.ops, m, domainSpecific)
-              } yield ()
-            } else {
-              addOperationsAsClasses(m.ops, m, domainSpecific)
-            }
-          } yield ()
-        }
-      }
-
+      _ <- makeOperationsClassesInChronologicalOrder(gdomain, domainSpecific)
       _ <- makeDerivedClassesInChronologicalOrder(gdomain)
     } yield ()
   }

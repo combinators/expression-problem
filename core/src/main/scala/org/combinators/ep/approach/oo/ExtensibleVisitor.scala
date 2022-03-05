@@ -698,7 +698,6 @@ trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO w
           factory.create(modelToUse, dependentOp, visitorClassName(modelToUse, dependentOp).get)
         }
 
-      //_ <- factory.create(domain, op, visitorClassName(domain, op).get)
     } yield ()
   }
 

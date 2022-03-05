@@ -202,37 +202,37 @@ trait SharedOO extends ApproachImplementationProvider {
     import ooParadigm.classCapabilities._
     addMethod(getterName(att), makeBody)
   }
-
-  /**
-   * Make a single getter method for the 'att' attribute with a body that returns the associated field's value.
-   *
-   * {{{
-   * public Exp getRight() {
-   *   return this.right;
-   * }
-   * }}}
-   *
-   * Directly access field attribute.
-   *
-   * @param att
-   * @return
-   */
-  def makeCastableGetter(att:Attribute): Generator[ClassContext, Unit] = {
-    val makeBody: Generator[MethodBodyContext, Option[Expression]] = {
-      import ooParadigm.methodBodyCapabilities._
-      import paradigm.methodBodyCapabilities._
-      for {
-        _ <- makeGetterSignature(att)
-        rt <- toTargetLanguageType(att.tpe)
-        _ <- resolveAndAddImport(rt)
-
-        self <- selfReference()
-        lower <- getMember(self, names.mangle(names.instanceNameOf(att)))
-        result <- castObject(rt, lower)
-      } yield Some(result)
-    }
-
-    import ooParadigm.classCapabilities._
-    addMethod(getterName(att), makeBody)
-  }
+//
+//  /**
+//   * Make a single getter method for the 'att' attribute with a body that returns the associated field's value.
+//   *
+//   * {{{
+//   * public Exp getRight() {
+//   *   return this.right;
+//   * }
+//   * }}}
+//   *
+//   * Directly access field attribute.
+//   *
+//   * @param att
+//   * @return
+//   */
+//  def makeCastableGetter(att:Attribute): Generator[ClassContext, Unit] = {
+//    val makeBody: Generator[MethodBodyContext, Option[Expression]] = {
+//      import ooParadigm.methodBodyCapabilities._
+//      import paradigm.methodBodyCapabilities._
+//      for {
+//        _ <- makeGetterSignature(att)
+//        rt <- toTargetLanguageType(att.tpe)
+//        _ <- resolveAndAddImport(rt)
+//
+//        self <- selfReference()
+//        lower <- getMember(self, names.mangle(names.instanceNameOf(att)))
+//        result <- castObject(rt, lower)
+//      } yield Some(result)
+//    }
+//
+//    import ooParadigm.classCapabilities._
+//    addMethod(getterName(att), makeBody)
+//  }
 }

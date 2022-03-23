@@ -103,14 +103,12 @@ object K1 {
                       base <- forApproach.dispatch(SendRequest(
                         onRequest.attributes(power.attributes.head),
                         math.J2.getModel.baseDataType,
-                        onRequest.request,
-                        Some(onRequest)
+                        onRequest.request
                       ))
                       exponent <- forApproach.dispatch(SendRequest(
                         onRequest.attributes(power.attributes.tail.head),
                         math.J2.getModel.baseDataType,
-                        onRequest.request,
-                        Some(onRequest)
+                        onRequest.request
                       ))
                       res <- pow(base, exponent)
                     } yield res
@@ -122,14 +120,12 @@ object K1 {
                       other <- forApproach.dispatch(SendRequest(
                         onRequest.request.arguments.toSeq.head._2,   // onRequest.attributes(power.attributes.tail.head),
                         math.J1.getModel.baseDataType,
-                        Request(math.M0.Eval, Map.empty),
-                        Some(onRequest)
+                        Request(math.M0.Eval, Map.empty)
                       ))
                       baseEval <- forApproach.dispatch(SendRequest(
                         onRequest.attributes(power.attributes.head),
                         math.J1.getModel.baseDataType,
-                        Request(math.M0.Eval, Map.empty),
-                        Some(onRequest)
+                        Request(math.M0.Eval, Map.empty)
                       ))
                       // lit(Math.log(this.convert(other).eval()) / Math.log(getBase().eval()))));
 

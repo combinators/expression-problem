@@ -18,7 +18,7 @@ import org.combinators.ep.generator.paradigm.ffi.{Exceptions, Strings}
  * Have to decide whether to use side effects or Generics. This current implementation uses the Visitor<R> generics
  * approach, which can be adopted by different object oriented languages.
  */
-trait RuntimeDispatching extends OOApproachImplementationProvider with SharedOO with OperationAsClass {
+trait RuntimeDispatch extends SharedOO with OperationAsClass {
     val paradigm: AnyParadigm
     val ooParadigm: ObjectOriented.WithBase[paradigm.type]
     val names: NameProvider[paradigm.syntax.Name]
@@ -93,7 +93,6 @@ trait RuntimeDispatching extends OOApproachImplementationProvider with SharedOO 
    */
   def makeOperationSignature(paramType:Type, op:Operation): Generator[MethodBodyContext, Unit] = {
     import paradigm.methodBodyCapabilities._
-
     for {
 
       // this returns mangled visitTypeParameter name and gets list of all type parameters, for which there is only one, so we get head
@@ -329,26 +328,26 @@ trait RuntimeDispatching extends OOApproachImplementationProvider with SharedOO 
     import ooParadigm.projectCapabilities._
     import paradigm.projectCapabilities._
 
-    val flatDomain = gdomain.linearize.flatten
+    val flat = gdomain.linearize.flatten
     for {
       _ <- debug ("Processing RuntimeDispatching")
       _ <- strings.enable()
       _ <- exceptions.enable()
-      _ <- registerTypeMapping(flatDomain)
+      _ <- registerTypeMapping(flat)
       _ <- domainSpecific.initialize(this)
-      _ <- makeBase(flatDomain.baseDataType)
-      _ <- forEach (flatDomain.typeCases) { tpeCase =>
-        makeDerived(flatDomain.baseDataType, tpeCase)
+      _ <- makeBase(flat.baseDataType)
+      _ <- forEach (flat.typeCases) { tpeCase =>
+        makeDerived(flat.baseDataType, tpeCase)
       }
-      _ <- forEach (flatDomain.ops) { op =>
-        addClassToProject(makeOperationImplementation(flatDomain, op, domainSpecific), names.mangle(names.conceptNameOf(op)))
+      _ <- forEach (flat.ops) { op =>
+        addClassToProject(makeOperationImplementation(flat, op, domainSpecific), names.mangle(names.conceptNameOf(op)))
       }
     } yield ()
   }
 }
 
-object RuntimeDispatching {
-  type WithParadigm[P <: AnyParadigm] = RuntimeDispatching { val paradigm: P }
+object RuntimeDispatch {
+  type WithParadigm[P <: AnyParadigm] = RuntimeDispatch { val paradigm: P }
   type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 
   def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
@@ -357,8 +356,8 @@ object RuntimeDispatching {
    impParadigmProvider: Imperative.WithBase[base.MethodBodyContext, base.type],
    stringsProvider: Strings.WithBase[base.MethodBodyContext, base.type],
    exceptionsProvider: Exceptions.WithBase[base.MethodBodyContext, base.type],
-   oo: ObjectOriented.WithBase[base.type]) : RuntimeDispatching.WithParadigm[base.type] =
-    new RuntimeDispatching {
+   oo: ObjectOriented.WithBase[base.type]) : RuntimeDispatch.WithParadigm[base.type] =
+    new RuntimeDispatch {
       val paradigm: base.type = base
       val strings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type ] = stringsProvider
       val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type ] = impParadigmProvider

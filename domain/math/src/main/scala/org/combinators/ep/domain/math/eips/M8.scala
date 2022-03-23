@@ -78,8 +78,7 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
               SendRequest(
                 expr,
                 math.M4.getModel.baseDataType,
-                Request(math.M0.Eval, Map.empty),
-                Some(onRequest)
+                Request(math.M0.Eval, Map.empty)
               )
             )}
           }
@@ -89,8 +88,7 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
             SendRequest(
               attExpr,
               math.M4.getModel.baseDataType,
-              Request(math.M4.Simplify, Map.empty),
-              Some(onRequest)
+              Request(math.M4.Simplify, Map.empty)
             )
           )
         }
@@ -173,8 +171,7 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
             forApproach.dispatch(SendRequest(
               onRequest.attributes(att),
               math.M3.getModel.baseDataType,
-              onRequest.request,
-              Some(onRequest)
+              onRequest.request
             ))
           }
         } yield atts
@@ -201,8 +198,7 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
                     forApproach.dispatch(SendRequest(
                       onRequest.attributes(att),
                       math.M3.getModel.baseDataType,
-                      onRequest.request,
-                      Some(onRequest)
+                      onRequest.request
                     ))
                   }
 
@@ -219,8 +215,7 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
                   forApproach.dispatch(SendRequest(
                     onRequest.attributes(att),
                     math.M3.getModel.baseDataType,
-                    onRequest.request,
-                    Some(onRequest)
+                    onRequest.request
                   ))
                 }
 

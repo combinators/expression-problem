@@ -82,7 +82,7 @@ object TestImplementationProvider {
           requestArgs = op.parameters.zip(args).toMap
           resTpe <- toTargetLanguageType(op.returnType)
           _ <- forApproach.resolveAndAddImport(resTpe)
-          res <- forApproach.dispatch(SendRequest(inst, baseTpe, Request(op, requestArgs), None))
+          res <- forApproach.dispatch(SendRequest(inst, baseTpe, Request(op, requestArgs)))
         } yield (resTpe, res, exp)
       }
 
@@ -125,7 +125,7 @@ object TestImplementationProvider {
                 nextObj <-
                   tpe match {
                     case TypeRep.DataType(dtpe) =>
-                      forApproach.dispatch(SendRequest(obj, dtpe, Request(op, requestArgs), None))
+                      forApproach.dispatch(SendRequest(obj, dtpe, Request(op, requestArgs)))
                     case _ if ops.nonEmpty =>
                       throw new RuntimeException(s"Intermediate results in composite test cases must be domain data types (cannot dispatch to: ${tpe})")
                   }

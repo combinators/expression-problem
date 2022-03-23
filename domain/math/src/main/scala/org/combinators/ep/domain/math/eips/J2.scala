@@ -79,8 +79,7 @@ object J2 {
                 SendRequest(
                   onRequest.request.arguments.toSeq.head._2,   // 'other'
                   onRequest.onType,
-                  Request(op, op.parameters.zip(onRequest.attributes.values).toMap),
-                  Some(onRequest)
+                  Request(op, op.parameters.zip(onRequest.attributes.values).toMap)
                 )
               )
             } yield Some(other)
@@ -98,8 +97,7 @@ object J2 {
                     SendRequest(
                       att._2,
                       onRequest.onType,
-                      Request(math.J2.Eql, math.J2.Eql.parameters.zip(Seq(arg._2)).toMap),
-                      Some(onRequest)
+                      Request(math.J2.Eql, math.J2.Eql.parameters.zip(Seq(arg._2)).toMap)
                     )
                   )
                 } else {
@@ -148,14 +146,12 @@ object J2 {
               left <- forApproach.dispatch(SendRequest(
                 onRequest.attributes(onRequest.tpeCase.attributes.head),  // instead use look-up addC.attributes.find(att => att.name)
                 math.M0.getModel.baseDataType,
-                onRequest.request,
-                Some(onRequest)  // being sent in response to Eval
+                onRequest.request
               ))
               right <- forApproach.dispatch(SendRequest(
                 onRequest.attributes(onRequest.tpeCase.attributes.tail.head),
                 math.M0.getModel.baseDataType,
-                onRequest.request,
-                Some(onRequest)
+                onRequest.request
               ))
 
               // FFI capability provided in truly language independent manner

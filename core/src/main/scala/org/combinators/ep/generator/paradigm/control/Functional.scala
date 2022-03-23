@@ -11,11 +11,7 @@ case class PatternMatch[MethodBodyContext, Name, Expression](
   type Result = Expression
 }
 
-case class Lambda[Name, Type, Context, Expression](variable: Name, tpe: Type, body: Expression => Generator[Context, Expression]) extends Command {
-  type Result = Expression
-}
-
-trait Functional[Context] {
+trait Functional[Context] extends Lambdas[Context] {
   val base: AnyParadigm
 
   import base.syntax._
@@ -45,10 +41,6 @@ trait Functional[Context] {
         options: Map[(Seq[Name], Seq[Name]), Seq[Expression] => Generator[Context, Expression]]
       ): Generator[Context, Expression] =
       AnyParadigm.capability(PatternMatch(onValue, options))
-
-    implicit val canLambda: Understands[Context, Lambda[Name, Type, Context, Expression]]
-    def lambda(variable: Name, tpe: Type, body: Expression => Generator[Context, Expression]): Generator[Context, Expression] =
-      AnyParadigm.capability(Lambda(variable, tpe, body))
   }
   val functionalCapabilities: FunctionalCapabilities
 }

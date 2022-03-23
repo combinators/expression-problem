@@ -8,9 +8,7 @@ import org.combinators.ep.generator.communication._
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.{forEach, _}
 import org.combinators.ep.generator.paradigm._
 
-// TODO: Needs to be fixed to handle Power and other merging
-
-sealed trait Interpreter extends OOApproachImplementationProvider with SharedOO {
+sealed trait Interpreter extends SharedOO {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]

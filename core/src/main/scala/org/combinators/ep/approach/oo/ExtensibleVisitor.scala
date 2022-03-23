@@ -22,7 +22,7 @@ import AnyParadigm.syntax._
         return new IsPower(left, right);
     }
  */
-trait ExtensibleVisitor extends OOApproachImplementationProvider with SharedOO with OperationAsClass {
+trait ExtensibleVisitor extends SharedOO with OperationAsClass {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]

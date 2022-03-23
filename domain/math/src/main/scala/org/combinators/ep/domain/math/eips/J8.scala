@@ -62,8 +62,7 @@ object J8 {
                   SendRequest(
                     expr,
                     math.M4.getModel.baseDataType,
-                    Request(math.J8.Height, Map.empty),
-                    Some(onRequest)
+                    Request(math.J8.Height, Map.empty)
                   )
                 )
                 declVar <- ffiImper.imperativeCapabilities.declareVar(attName, intType, Some(exprVal))

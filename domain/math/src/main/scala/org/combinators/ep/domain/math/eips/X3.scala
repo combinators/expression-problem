@@ -59,14 +59,12 @@ object X3 {
                     left <- forApproach.dispatch(SendRequest(
                       onRequest.attributes(lAtt),
                       math.M0.getModel.baseDataType,
-                      onRequest.request,
-                      Some(onRequest)
+                      onRequest.request
                     ))
                     right <- forApproach.dispatch(SendRequest(
                       onRequest.attributes(rAtt),
                       math.M0.getModel.baseDataType,
-                      onRequest.request,
-                      Some(onRequest)
+                      onRequest.request
                     ))
 
                     res <- forApproach.instantiate(math.M0.getModel.baseDataType, other, left, right)
@@ -89,8 +87,7 @@ object X3 {
               forApproach.dispatch(SendRequest(
                 onRequest.attributes(att),
                 math.M0.getModel.baseDataType,
-                onRequest.request,
-                Some(onRequest)
+                onRequest.request
               ))
             }
             res <- operate(atts)

@@ -45,14 +45,10 @@ case class PotentialRequest(
  *
  * At the time of sending, the data type case is unknown and will be resolved by language and approach specific
  * dispatch code.
- *
- * When the message is sent while handling another message (inside the domain-specific code generated for an
- * operation), it should include its request information in the `inReplyTo` field.
  */
 case class SendRequest[Expression](
                                     to: Expression,
                                     receiverTpe: DataType,
-                                    request: Request[Expression],
-                                    inReplyTo: Option[Any]/*ReceivedRequest[Expression]*/ = None // TODO: models what was essentially done with Deltas in the past
+                                    request: Request[Expression]
                                   )
 

@@ -89,8 +89,7 @@ sealed class K2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
                       SendRequest(
                         expr,
                         math.K2.getModel.baseDataType,
-                        Request(math.K2.Collect, Map.empty),
-                        Some(onRequest)
+                        Request(math.K2.Collect, Map.empty)
                       )
                     )}
                 }
@@ -131,8 +130,7 @@ sealed class K2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
               SendRequest(
                 expr,
                 math.J3.getModel.baseDataType,
-                Request(math.M0.Eval, Map.empty),
-                Some(onRequest)
+                Request(math.M0.Eval, Map.empty)
               )
             )}
           }
@@ -142,8 +140,7 @@ sealed class K2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
             SendRequest(
               attExpr,
               math.K2.getModel.baseDataType,
-              Request(math.K2.Simplify, Map.empty),
-              Some(onRequest)
+              Request(math.K2.Simplify, Map.empty)
             )
           )
         }

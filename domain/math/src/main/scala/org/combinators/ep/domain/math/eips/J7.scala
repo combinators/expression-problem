@@ -101,8 +101,7 @@ sealed class J7[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
               SendRequest(
                 expr,
                 math.M0.getModel.baseDataType,
-                Request(math.M0.Eval, Map.empty),
-                Some(onRequest)
+                Request(math.M0.Eval, Map.empty)
               )
             )
           }
@@ -113,8 +112,7 @@ sealed class J7[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
             SendRequest(
               attExpr,
               math.M0.getModel.baseDataType,
-              Request(math.K2.Simplify, Map.empty),
-              Some(onRequest)
+              Request(math.K2.Simplify, Map.empty)
             )
           )
         }
@@ -220,8 +218,7 @@ sealed class J7[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
                 forApproach.dispatch(SendRequest(
                   onRequest.attributes(att),
                   math.J3.getModel.baseDataType,
-                  onRequest.request,
-                  Some(onRequest)
+                  onRequest.request
                 ))
               }
             } yield atts
@@ -266,8 +263,7 @@ sealed class J7[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
                         forApproach.dispatch(SendRequest(
                           onRequest.attributes(att),
                           math.M0.getModel.baseDataType,
-                          onRequest.request,
-                          Some(onRequest)
+                          onRequest.request
                         ))
                       }
 
@@ -284,8 +280,7 @@ sealed class J7[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
                       forApproach.dispatch(SendRequest(
                         onRequest.attributes(att),
                         math.M0.getModel.baseDataType,
-                        onRequest.request,
-                        Some(onRequest)
+                        onRequest.request
                       ))
                     }
 

@@ -131,8 +131,7 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
               SendRequest(
                 expr,
                 math.M0.getModel.baseDataType,
-                Request(math.M0.Eval, Map.empty),
-                Some(onRequest)
+                Request(math.M0.Eval, Map.empty)
               )
             )}
           }
@@ -142,8 +141,7 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
             SendRequest(
               attExpr,
               math.M0.getModel.baseDataType,
-              Request(math.M4.Simplify, Map.empty),
-              Some(onRequest)
+              Request(math.M4.Simplify, Map.empty)
             )
           )
         }

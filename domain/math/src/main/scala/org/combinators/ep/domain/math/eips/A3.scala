@@ -59,14 +59,12 @@ object A3 {
                     left <- forApproach.dispatch(SendRequest(
                       onRequest.attributes(lAtt),
                       math.M2.getModel.baseDataType,
-                      onRequest.request,
-                      Some(onRequest)
+                      onRequest.request
                     ))
                     right <- forApproach.dispatch(SendRequest(
                       onRequest.attributes(rAtt),
                       math.M2.getModel.baseDataType,
-                      onRequest.request,
-                      Some(onRequest)
+                      onRequest.request
                     ))
 
                     res <- forApproach.instantiate(math.M0.getModel.baseDataType, other, left, right)
@@ -93,8 +91,7 @@ object A3 {
               forApproach.dispatch(SendRequest(
                 onRequest.attributes(att),
                 math.M3.getModel.baseDataType,
-                onRequest.request,
-                Some(onRequest)
+                onRequest.request
               ))
             }
             res <- operate(atts)

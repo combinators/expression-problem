@@ -28,7 +28,6 @@ trait ApproachImplementationProvider {
     *       to = received.attributes(Attribute.left),
     *       receiverTpe = Attribute.left.tpe
     *       request = Request(Operation("eval"), Map.empty)
-    *       inReplyTo = Some(received)
     *   )) // Results in:
     *   CodeBlockWithResultingExpressions()(
     *     Java(s"${received.selfReference}.${Attribute.left.name}.eval()").expression())

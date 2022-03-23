@@ -64,8 +64,7 @@ object M6 {
                 SendRequest(
                   onRequest.request.arguments.toSeq.head._2,   // 'other'
                   onRequest.onType,
-                  Request(op, op.parameters.zip(onRequest.attributes.values).toMap),
-                  Some(onRequest)
+                  Request(op, op.parameters.zip(onRequest.attributes.values).toMap)
                 )
               )
             } yield Some(other)
@@ -76,16 +75,14 @@ object M6 {
                 SendRequest(
                   onRequest.selfReference,
                   onRequest.onType,
-                  Request(Operation.asTree, Map.empty),
-                  Some(onRequest)
+                  Request(Operation.asTree, Map.empty)
                 )
               )
               otherTree <- forApproach.dispatch(
                 SendRequest(
                   onRequest.request.arguments.toSeq.head._2,
                   onRequest.onType,
-                  Request(Operation.asTree, Map.empty),
-                  Some(onRequest)
+                  Request(Operation.asTree, Map.empty)
                 )
               )
               treeTpe <- toTargetLanguageType(TypeRep.Tree)
@@ -105,8 +102,7 @@ object M6 {
                     SendRequest(
                       att._2,
                       onRequest.onType,
-                      Request(math.M6.Eql, math.M6.Eql.parameters.zip(Seq(arg._2)).toMap),
-                      Some(onRequest)
+                      Request(math.M6.Eql, math.M6.Eql.parameters.zip(Seq(arg._2)).toMap)
                     )
                   )
                 } else {

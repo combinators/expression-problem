@@ -61,12 +61,12 @@ object M0 {
               left <- forApproach.dispatch(SendRequest(
                 onRequest.attributes(addC.attributes.head),
                 math.M0.getModel.baseDataType,
-                onRequest.request, Some(onRequest)
+                onRequest.request
               ))
               right <- forApproach.dispatch(SendRequest(
                 onRequest.attributes(addC.attributes.tail.head),
                 math.M0.getModel.baseDataType,
-                onRequest.request, Some(onRequest)
+                onRequest.request
               ))
 
               res <- add(left, right)    // FFI capability

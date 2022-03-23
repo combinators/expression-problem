@@ -80,15 +80,13 @@ object S2 {
                 s1Result <- forApproach.dispatch(SendRequest(
                   onRequest.attributes(shape.S1.s1),
                   shape.S0.getModel.baseDataType,
-                  Request(shape.S2.Shrink, Map(shape.S2.pct -> onRequest.request.arguments(shape.S2.pct))),
-                  Some(onRequest) // being sent in response to Eval
+                  Request(shape.S2.Shrink, Map(shape.S2.pct -> onRequest.request.arguments(shape.S2.pct)))
                 ))
 
                 s2Result <- forApproach.dispatch(SendRequest(
                   onRequest.attributes(shape.S1.s2),
                   shape.S0.getModel.baseDataType,
-                  Request(shape.S2.Shrink, Map(shape.S2.pct -> onRequest.request.arguments(shape.S2.pct))),
-                  Some(onRequest) // being sent in response to Eval
+                  Request(shape.S2.Shrink, Map(shape.S2.pct -> onRequest.request.arguments(shape.S2.pct)))
                 ))
 
                 res <- forApproach.instantiate(shape.S0.getModel.baseDataType, shape.S1.Union, s1Result, s2Result)
@@ -100,8 +98,7 @@ object S2 {
                 shapeResult <- forApproach.dispatch(SendRequest(
                   onRequest.attributes(shape.S0.shape),
                   shape.S0.getModel.baseDataType,
-                  Request(shape.S2.Shrink, Map(shape.S2.pct -> onRequest.request.arguments(shape.S2.pct))),
-                  Some(onRequest) // being sent in response to Eval
+                  Request(shape.S2.Shrink, Map(shape.S2.pct -> onRequest.request.arguments(shape.S2.pct)))
                 ))
 
                 res <- forApproach.instantiate(shape.S0.getModel.baseDataType, shape.S0.Translate,

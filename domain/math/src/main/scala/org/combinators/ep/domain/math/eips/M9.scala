@@ -62,8 +62,7 @@ object M9 {
                   SendRequest(
                     expr,
                     math.M4.getModel.baseDataType,
-                    Request(math.M9.Height, Map.empty),
-                    Some(onRequest)
+                    Request(math.M9.Height, Map.empty)
                   )
                 )
                 declVar <- ffiImper.imperativeCapabilities.declareVar(attName, intType, Some(exprVal))

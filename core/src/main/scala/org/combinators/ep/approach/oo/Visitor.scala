@@ -11,12 +11,10 @@ import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.control.Imperative.WithBase
 import org.combinators.ep.generator.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
 
-// TODO: HACK: Visitor With Side Effect PrettyP for Val still emits code that it shouldn't
-
 /**
  * Straightforward implementation places all generated code in the current ep.* package.
  */
-trait Visitor extends OOApproachImplementationProvider with SharedOO with OperationAsClass { self =>
+trait Visitor extends SharedOO with OperationAsClass { self =>
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val visitorSpecifics: VisitorSpecifics
 
@@ -24,10 +22,22 @@ trait Visitor extends OOApproachImplementationProvider with SharedOO with Operat
   import ooParadigm._
   import syntax._
 
+  // necessary constants used to ensure no typos
+  lazy val accept: Name = names.mangle("accept")
+  lazy val visit: Name = names.mangle("visit")
+  lazy val visitorClass: Name = names.mangle("Visitor")
+  val visitorParameter: String = "v"
+  val expParameter: String = "exp"
+
+  /**
+   * The Visitor-specific implementation knows how to dispatch.
+   */
   def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression] =
     visitorSpecifics.dispatch(message)
 
-   // override SharedOO
+  /**
+   * Override SharedOO by delegating to visitor-specific implementation
+   */
    override def makeImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation,
                          domainSpecific: EvolutionImplementationProvider[self.type]): Generator[MethodBodyContext, Option[Expression]] =
     visitorSpecifics.makeImplementation(tpe, tpeCase, op, domainSpecific)
@@ -693,13 +703,6 @@ trait Visitor extends OOApproachImplementationProvider with SharedOO with Operat
     }
   }
 
-  // necessary constants used to ensure no typos
-  lazy val accept: Name = names.mangle("accept")
-  lazy val visit: Name = names.mangle("visit")
-  lazy val visitorClass: Name = names.mangle("Visitor")
-  val visitorParameter: String = "v"
-  val expParameter: String = "exp"
-
   /**
    * Define the base class for Exp which must contain the accept method as an abstract method.
    *
@@ -737,7 +740,6 @@ trait Visitor extends OOApproachImplementationProvider with SharedOO with Operat
    * @return
    */
   def makeVisitSignature(tpe:DataTypeCase, visitResultType: Type): Generator[MethodBodyContext, Unit] = {
-    //import paradigm.methodBodyCapabilities.{toTargetLanguageType => _, _}
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
 

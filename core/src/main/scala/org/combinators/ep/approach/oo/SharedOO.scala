@@ -1,11 +1,12 @@
 package org.combinators.ep.approach.oo    /*DI:LI:AD*/
 
+import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.communication.{ReceivedRequest, Request}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.ep.generator.paradigm.ObjectOriented
-import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
+import org.combinators.ep.generator.paradigm.{FindClass, ObjectOriented}
+import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider, Understands}
 
 trait SharedOO extends ApproachImplementationProvider {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
@@ -13,6 +14,44 @@ trait SharedOO extends ApproachImplementationProvider {
   import ooParadigm._
   import paradigm._
   import syntax._
+
+
+  import paradigm._
+  import syntax._
+
+  /**
+   * Default registration for findClass, which works with each registerTypeMapping for the different approaches.
+   *
+   * Sometimes the mapping is fixed for an EP approach, but sometimes it matters when a particular class is requested
+   * in the evolution of the system over time.
+   *
+   * @param dtpe
+   * @param canFindClass
+   * @tparam Ctxt
+   * @return
+   */
+  def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
+    FindClass(Seq(names.mangle(names.conceptNameOf(dtpe)))).interpret(canFindClass)
+  }
+
+  /** Provides meaningful default solution to find the base data type in many object-oriented approaches.
+   *
+   * This enables target-language classes to be retrieved from within the code generator in the Method, Class or Constructor contexts.
+   */
+  def registerTypeMapping(domain: GenericModel): Generator[ProjectContext, Unit] = {
+    import paradigm.projectCapabilities.addTypeLookupForMethods
+    import ooParadigm.methodBodyCapabilities.canFindClassInMethod
+    import ooParadigm.projectCapabilities.addTypeLookupForClasses
+    import ooParadigm.projectCapabilities.addTypeLookupForConstructors
+    import ooParadigm.classCapabilities.canFindClassInClass
+    import ooParadigm.constructorCapabilities.canFindClassInConstructor
+    val dtpeRep = TypeRep.DataType(domain.baseDataType)
+    for {
+      _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(domain.baseDataType))
+      _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(domain.baseDataType))
+      _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(domain.baseDataType))
+    } yield ()
+  }
 
   /** Return standard method name getATTRIBUTE for given attribute. */
   def getterName(att:Attribute):Name = {
@@ -82,12 +121,12 @@ trait SharedOO extends ApproachImplementationProvider {
     for {
       _ <- makeSignature(op)
       thisRef <- selfReference()
-      attAccessors: Seq[Expression] <- forEach (tpeCase.attributes) { att =>
+      attAccessors <- forEach (tpeCase.attributes) { att =>
         getMember(thisRef, names.mangle(names.instanceNameOf(att)))
       }
       atts = tpeCase.attributes.zip(attAccessors).toMap
       allArgs <- getArguments()
-      args = op.parameters.zip(allArgs).map { case (param, (_, _, exp)) => (param, exp) }.toMap
+      args = op.parameters.zip(allArgs).map { case (param, arg) => (param, arg._3) }.toMap
       result <-
         domainSpecific.logic(this)(
           ReceivedRequest(
@@ -202,37 +241,5 @@ trait SharedOO extends ApproachImplementationProvider {
     import ooParadigm.classCapabilities._
     addMethod(getterName(att), makeBody)
   }
-//
-//  /**
-//   * Make a single getter method for the 'att' attribute with a body that returns the associated field's value.
-//   *
-//   * {{{
-//   * public Exp getRight() {
-//   *   return this.right;
-//   * }
-//   * }}}
-//   *
-//   * Directly access field attribute.
-//   *
-//   * @param att
-//   * @return
-//   */
-//  def makeCastableGetter(att:Attribute): Generator[ClassContext, Unit] = {
-//    val makeBody: Generator[MethodBodyContext, Option[Expression]] = {
-//      import ooParadigm.methodBodyCapabilities._
-//      import paradigm.methodBodyCapabilities._
-//      for {
-//        _ <- makeGetterSignature(att)
-//        rt <- toTargetLanguageType(att.tpe)
-//        _ <- resolveAndAddImport(rt)
-//
-//        self <- selfReference()
-//        lower <- getMember(self, names.mangle(names.instanceNameOf(att)))
-//        result <- castObject(rt, lower)
-//      } yield Some(result)
-//    }
-//
-//    import ooParadigm.classCapabilities._
-//    addMethod(getterName(att), makeBody)
-//  }
+
 }

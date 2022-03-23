@@ -123,8 +123,7 @@ sealed class K2J6[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
               SendRequest(
                 expr,
                 math.M0.getModel.baseDataType,
-                Request(math.M0.Eval, Map.empty),
-                Some(onRequest)
+                Request(math.M0.Eval, Map.empty)
               )
             )}
           }
@@ -134,8 +133,7 @@ sealed class K2J6[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
             SendRequest(
               attExpr,
               math.M0.getModel.baseDataType,
-              Request(math.K2.Simplify, Map.empty),
-              Some(onRequest)
+              Request(math.K2.Simplify, Map.empty)
             )
           )
         }
@@ -244,8 +242,7 @@ sealed class K2J6[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
                       forApproach.dispatch(SendRequest(
                         onRequest.attributes(att),
                         math.J3.getModel.baseDataType,
-                        onRequest.request,
-                        Some(onRequest)
+                        onRequest.request
                       ))
                     }
                     res <- makeString(atts, "(", "^", ")")

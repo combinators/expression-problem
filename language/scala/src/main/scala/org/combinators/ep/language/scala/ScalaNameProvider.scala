@@ -20,11 +20,24 @@ object ScalaNameProvider extends NameProvider[Syntax.MangledName] {
     * }}
     */
   def mangle(name: String): MangledName = {
-    MangledName(name,
-      Try(name.parse[Term].get.asInstanceOf[Term.Name].value).getOrElse {
-        name.getBytes(java.nio.charset.StandardCharsets.UTF_8).mkString("_", "_", "_")
-      }
-    )
+    // to avoid conflicts with 'equals', mangle that if it every is called for. There may be others, based on language...
+    val keywords = Seq[String] ("equals")
+
+    val mangledName = MangledName(name, Try(name.parse[Term].get.asInstanceOf[Term.Name].value).getOrElse {
+      name.getBytes(java.nio.charset.StandardCharsets.UTF_8).mkString("_", "_", "_")
+    })
+    if (keywords.contains(name)) {
+      addSuffix(mangledName, "_")
+    } else {
+      mangledName
+    }
+//      name + name.getBytes(java.nio.charset.StandardCharsets.UTF_8).mkString("_", "_", "_")
+//    } else {
+//      Try(name.parse[Term].get.asInstanceOf[Term.Name].value).getOrElse {
+//        name.getBytes(java.nio.charset.StandardCharsets.UTF_8).mkString("_", "_", "_")
+//      }
+//    }
+//    MangledName(name, mangledName)
   }
 
   def addPrefix(prefix: String, name: MangledName): MangledName = {

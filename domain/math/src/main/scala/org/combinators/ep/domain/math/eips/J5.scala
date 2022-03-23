@@ -60,16 +60,14 @@ object J5 {
                 SendRequest(
                   onRequest.selfReference,
                   onRequest.onType,
-                  Request(Operation.asTree, Map.empty),
-                  Some(onRequest)
+                  Request(Operation.asTree, Map.empty)
                 )
               )
               otherTree <- forApproach.dispatch(
                 SendRequest(
                   onRequest.request.arguments.toSeq.head._2,
                   onRequest.onType,
-                  Request(Operation.asTree, Map.empty),
-                  Some(onRequest)
+                  Request(Operation.asTree, Map.empty)
                 )
               )
               treeTpe <- toTargetLanguageType(TypeRep.Tree)

@@ -75,8 +75,7 @@ object J3 {
               forApproach.dispatch(SendRequest(
                 onRequest.attributes(att),
                 math.J3.getModel.baseDataType,
-                onRequest.request,
-                Some(onRequest)
+                onRequest.request
               ))
             }
           } yield atts
@@ -170,7 +169,6 @@ object J3 {
                       onRequest.attributes.toSeq.head._2,
                       onRequest.onType,
                       onRequest.request,    // multby
-                      Some(onRequest)
                     )
                   )
 

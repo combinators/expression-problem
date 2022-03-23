@@ -85,8 +85,7 @@ object J6 {
               evalExponent <- forApproach.dispatch(SendRequest(
                 onRequest.request.arguments.head._2,
                 math.M2.getModel.baseDataType,
-                Request(math.M0.Eval, Map.empty),
-                Some(onRequest)
+                Request(math.M0.Eval, Map.empty)
               ))
               expValue <- ffiImper.imperativeCapabilities.declareVar(expName, expType, Some(evalExponent))
 
@@ -135,16 +134,14 @@ object J6 {
               inner <- forApproach.dispatch(SendRequest(
                 onRequest.selfReference,
                 math.M2.getModel.baseDataType,
-                Request(math.M0.Eval, Map.empty),
-                Some(onRequest)
+                Request(math.M0.Eval, Map.empty)
               ))
 
               innerRes <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, inner)
               res <- forApproach.dispatch(SendRequest(
                 innerRes,
                 math.M2.getModel.baseDataType,
-                onRequest.request,
-                Some(onRequest)
+                onRequest.request
               ))
             } yield Some(res)
 
@@ -154,8 +151,7 @@ object J6 {
               left <- forApproach.dispatch(SendRequest(
                 onRequest.attributes(lAtt),
                 math.M2.getModel.baseDataType,
-                onRequest.request,
-                Some(onRequest)
+                onRequest.request
               ))
               negOne <- forApproach.reify(InstanceRep(TypeRep.Double)(1.0))
               innerLit <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, negOne)
@@ -163,8 +159,7 @@ object J6 {
               leftSide <- forApproach.dispatch(SendRequest(
                 innerLit,
                 math.M2.getModel.baseDataType,
-                Request(math.M7.PowBy,  Map(Parameter("other", onRequest.request.op.returnType) -> onRequest.attributes.head._2)),  // MUST contain exp some how?
-                Some(onRequest)
+                Request(math.M7.PowBy,  Map(Parameter("other", onRequest.request.op.returnType) -> onRequest.attributes.head._2))  // MUST contain exp some how?
               ))
 
               res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M3.Mult, leftSide, left)

@@ -87,4 +87,4 @@ lazy val languageScala = standardLanguageProject("scala")
 
 //lazy val languageGJ = standardLanguageProject("gj")
 //lazy val languageCPP = standardLanguageProject("cpp")
-//lazy val languageHaskell = standardLanguageProject("haskell")
+lazy val languageHaskell = standardLanguageProject("haskell")

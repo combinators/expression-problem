@@ -5,7 +5,7 @@ import scala.meta._
 
 import org.combinators.ep.generator.AbstractSyntax
 
-trait Syntax extends AbstractSyntax{
+trait Syntax extends AbstractSyntax {
   type CompilationUnit = Source
   type Import = scala.meta.Import
   type Expression = Term

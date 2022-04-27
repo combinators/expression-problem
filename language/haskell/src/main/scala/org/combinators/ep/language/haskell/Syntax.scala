@@ -6,7 +6,7 @@ import java.nio.charset.StandardCharsets
 
 trait Syntax extends AbstractSyntax {
   type CompilationUnit = ast.CompilationUnit
-  type Import = ast.Name
+  type Import = ast.Import
   type Expression = ast.Expression
   type Type = ast.Type
   type Statement = ast.Expression

@@ -8,6 +8,7 @@ import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, FileWithPath, FreshNameProvider, Understands}
 import org.combinators.ep.generator.paradigm.{AnyParadigm => AP, _}
 import org.combinators.ep.language.haskell.Syntax.MangledName
+import org.combinators.ep.language.haskell.ast
 import org.combinators.ep.language.haskell.ast.CompilationUnit
 import org.combinators.ep.language.haskell.{CompilationUnitCtxt, MethodBodyCtxt, ProjectCtxt, Syntax, TestCtxt, ContextSpecificResolver}
 //import org.combinators.templating.persistable.{BundledResource, JavaPersistable}
@@ -23,137 +24,134 @@ trait AnyParadigm extends AP {
   type TestContext = TestCtxt
   type MethodBodyContext = MethodBodyCtxt
 
-    val projectContextCapabilities: ProjectContextCapabilities =
-    new ProjectContextCapabilities {
-      implicit val canDebugInProject: Understands[ProjectCtxt, Debug] =
-        new Understands[ProjectCtxt, Debug] {
-          def perform(
-            context: ProjectCtxt,
-            command: Debug
-          ): (ProjectCtxt, Unit) = {
-            context.units.foreach (u => System.err.println (command.tag + ": " + u))
-            (context,())
-          }
-        }
 
-      implicit val canAddCompilationUnitInProject: Understands[ProjectCtxt, AddCompilationUnit[Name, CompilationUnitCtxt]] =
-        new Understands[ProjectCtxt, AddCompilationUnit[Name, CompilationUnitCtxt]] {
-          def perform(
-            context: ProjectCtxt,
-            command: AddCompilationUnit[Name, CompilationUnitCtxt]
-          ): (ProjectCtxt, Unit) = {
-            val (uc, _) = Command.runGenerator(
-              command.unit,
-              CompilationUnitCtxt(
-                context.resolver,
-                FreshNameProvider((n, s) => n.copy(n.original + s)),
-                CompilationUnit(
-                  command.name.toAST,
-                  Seq.empty,
-                  Seq.empty,
-                  Seq.empty,
-                  Seq.empty,
-                  Seq.empty
-                ),
-                false
-              )
-            )
-            (context.copy(resolver = uc.resolver, units = context.units :+ uc.unit), ())
-          }
-        }
-      implicit val canAddTypeLookupForMethodsInProject: Understands[ProjectContext, AddTypeLookup[MethodBodyContext, Type]] =
-        new Understands[ProjectContext, AddTypeLookup[MethodBodyContext, Type]] {
-          def perform(
-            context: ProjectContext,
-            command: AddTypeLookup[MethodBodyCtxt, Type]
-          ): (ProjectContext, Unit) = {
-            def newLookup(k: ContextSpecificResolver)(tpe: TypeRep): Generator[MethodBodyCtxt, Type] = {
+  val projectCapabilities: ProjectCapabilities = new ProjectCapabilities {
+    implicit val canDebugInProject: Understands[ProjectContext,Debug] = new Understands[ProjectCtxt, Debug] {
+      def perform(context: ProjectCtxt, command: Debug): (ProjectCtxt, Unit) = {
+        context.units.foreach (u => System.err.println (command.tag + ": " + u))
+        (context,())
+      }
+    }
+    
+    implicit val canAddCompilationUnitInProject: Understands[ProjectContext,AddCompilationUnit[Name,CompilationUnitContext]] = new Understands[ProjectContext, AddCompilationUnit[Name,CompilationUnitContext]] {
+      def perform(context: ProjectContext, command: AddCompilationUnit[Name,CompilationUnitContext]): (ProjectContext, Unit) = {
+        val (uc, _) = Command.runGenerator(command.unit, CompilationUnitCtxt(
+          resolver = context.resolver,
+          freshNameProvider = FreshNameProvider[Name]((n, s) => n.copy(n.original + s)),
+          unit = CompilationUnit(
+            name = command.name.toAST,
+            imports = Seq.empty,
+            typeDecls = Seq.empty,
+            typeClassDecls = Seq.empty,
+            typeClassInstances = Seq.empty,
+            funDecls = Seq.empty
+          ),
+          isTest = false
+        ))
+        (context.copy(resolver = uc.resolver, units = context.units :+ uc.unit), ())
+      }
+    }
+    
+    implicit val canAddTypeLookupForMethodsInProject: Understands[ProjectContext,AddTypeLookup[MethodBodyContext,Type]] =
+      new Understands[ProjectContext,AddTypeLookup[MethodBodyContext,Type]] {
+        def perform(context: ProjectContext, command: AddTypeLookup[MethodBodyContext,Type]): (ProjectContext, Unit) = {
+          def newLookup(k: ContextSpecificResolver)(tpe: TypeRep): Generator[MethodBodyCtxt, Type] = {
               if (tpe == command.tpe) {
                 command.lookup
               } else {
                 context.resolver._methodTypeResolution(k)(tpe)
               }
             }
-            (context.copy(resolver = context.resolver.copy(_methodTypeResolution = newLookup)), ())
-          }
+          (context.copy(resolver = context.resolver.copy(_methodTypeResolution = newLookup)), ())
         }
-    }
+      }
+  }
 
   val compilationUnitCapabilities: CompilationUnitCapabilities =
     new CompilationUnitCapabilities {
-      implicit val canDebugInCompilationUnit: Understands[CompilationUnitCtxt, Debug] =
-        new Understands[CompilationUnitCtxt, Debug] {
-          def perform(
-            context: CompilationUnitCtxt,
-            command: Debug
-          ): (CompilationUnitCtxt, Unit) = {
-
-            System.err.println (command.tag + ": " + context.unit)
-            (context,())
+     implicit val canDebugInCompilationUnit: Understands[CompilationUnitContext, Debug] =
+       new Understands[CompilationUnitContext, Debug] {
+        def perform(context: CompilationUnitContext, command: Debug): (CompilationUnitContext, Unit) = {
+          System.err.println (command.tag + ": " + context.unit)
+          (context,())
+        }
+      }
+     
+     implicit val canAddImportInCompilationUnit: Understands[CompilationUnitContext,AddImport[Import]] = 
+       new Understands[CompilationUnitContext,AddImport[Import]] {
+        def perform(context: CompilationUnitContext, command: AddImport[Import]): (CompilationUnitContext, Unit) = {
+          val imports = (context.unit.imports :+ command.imp).distinct
+          (context.copy(unit = context.unit.copy(imports = imports)), ())
+        }
+       }
+     
+     implicit val canAddTestSuiteInCompilationUnit: Understands[CompilationUnitContext,AddTestSuite[Name,TestContext]] = 
+        new Understands[CompilationUnitContext,AddTestSuite[Name,TestContext]] {
+          def perform(context: CompilationUnitContext, command: AddTestSuite[Name,TestContext]): (CompilationUnitContext, Unit) = {
+            val (uc, _) = Command.runGenerator(command.suite, TestCtxt(
+              resolver = context.resolver,
+              freshNameProvider = FreshNameProvider[Name]((n, s) => n.copy(n.original + s)),
+              extraImports = Seq.empty
+              ))
+            Command.runGenerator(debug("FIXME: do something for tests in Haskell"), context)
+            (context, ())
           }
         }
-
-      implicit val canAddImportInCompilationUnit: Understands[CompilationUnitCtxt, AddImport[Import]] =
-        new Understands[CompilationUnitCtxt, AddImport[Import]] {
-          def perform(
-            context: CompilationUnitCtxt,
-            command: AddImport[Import]
-          ): (CompilationUnitContext, Unit) = {
-            val imports =
-              context.unit.stats.collect {
-                case imp: Import => imp
-              } :+ command.imp
-            val sortedImports = imports.groupBy(_.structure).mapValues(_.head).values.toList.sortBy(_.toString)
-            val newStats =
-              sortedImports ++ context.unit.stats.filter(!_.isInstanceOf[Import])
-            (context.copy(unit = Source(newStats)), ())
+     
+     implicit val canGetFreshNameInCompilationUnit: Understands[CompilationUnitContext,FreshName[Name]] = 
+       new Understands[CompilationUnitContext,FreshName[Name]] {
+         def perform(context: CompilationUnitContext, command: FreshName[Name]): (CompilationUnitContext, Name) = {
+            val (name, np) = context.freshNameProvider.freshNameBasedOn(command.basedOn)
+            (context.copy(freshNameProvider = np), name)
+          }
+       }
+      
+    }
+  
+  val methodBodyCapabilities: MethodBodyCapabilities =
+    new MethodBodyCapabilities {
+      implicit val canDebugInMethodBody: Understands[MethodBodyContext,Debug] =
+        new Understands[MethodBodyContext,Debug] {
+          def perform(context: MethodBodyContext, command: Debug): (MethodBodyContext, Unit) = {
+            System.err.println (command.tag + ": " + context.method(ast.Name("placeholder_for_a_name")))
+          (context,())
           }
         }
-      implicit val canAddTestSuiteInCompilationUnit: Understands[CompilationUnitCtxt, AddTestSuite[Name, TestCtxt]] =
-        new Understands[CompilationUnitCtxt, AddTestSuite[Name, TestCtxt]] {
-          def perform(
-            context: CompilationUnitCtxt,
-            command: AddTestSuite[Name, TestCtxt]
-          ): (CompilationUnitContext, Unit) = {
-            val clsToAdd = q"class ${Type.Name(command.name.mangled)} extends AnyFunSuite {}"
-            val (testRes, _) =
-              Command.runGenerator(
-                command.suite,
-                TestCtxt(
-                  context.resolver,
-                  Seq.empty,
-                  clsToAdd))
-
-            val updatedUnit = {
-              val oldUnit = context.unit
-              val testClass = testRes.testClass
-              val funSuiteImport =
-                Import(List(Importer(
-                  Term.Select(Term.Select(Term.Name("org"), Term.Name("scalatest")), Term.Name("funsuite")),
-                  List(Importee.Wildcard())
-                )))
-              val imports =
-                (oldUnit.stats.collect {
-                  case imp: Import => imp
-                } ++ testRes.extraImports :+ funSuiteImport).groupBy(_.structure).mapValues(_.head).values.toList.sortBy(_.toString)
-
-              val nextUnit =
-                (imports ++ oldUnit.stats.filter(!_.isInstanceOf[Import])) :+ testClass
-
-              Source(nextUnit)
-            }
-            (context.copy(resolver = testRes.resolver, unit = updatedUnit, isTest = true), ())
+      
+      implicit val canAddImportInMethodBody: Understands[MethodBodyContext,AddImport[Import]] = 
+        new Understands[MethodBodyContext,AddImport[Import]] {
+          def perform(context: MethodBodyContext, command: AddImport[Import]): (MethodBodyContext, Unit) = {
+            val imports = (context.extraImports :+ command.imp).distinct
+            (context.copy(extraImports = imports), ())
           }
         }
+      
+      implicit val canAddBlockDefinitionsInMethodBody: Understands[MethodBodyContext,AddBlockDefinitions[Statement]] =
+        new Understands[MethodBodyContext,AddBlockDefinitions[Statement]] {
+          
 
-      implicit val canGetFreshNameInCompilationUnit: Understands[CompilationUnitContext, FreshName[Name]] =
-        new Understands[CompilationUnitContext, FreshName[Name]] {
-          def perform(context: CompilationUnitContext, command: FreshName[Name]): (CompilationUnitContext, Name) = {
-            (context, MangledName.fromAST(Type.fresh(command.basedOn.toAST.value)))
-          }
         }
+      
+      implicit val canSetReturnTypeInMethodBody: Understands[MethodBodyContext,SetReturnType[Type]] = ???
+      
+      implicit val canSetParametersInMethodBody: Understands[MethodBodyContext,SetParameters[Name,Type]] = ???
+      
+      implicit val canTransformTypeInMethodBody: Understands[MethodBodyContext,ToTargetLanguageType[Type]] = ???
+      
+      implicit def canReifyInMethodBody[T]: Understands[MethodBodyContext,Reify[T,Expression]] = ???
+      
+      implicit val canResolveImportInMethod: Understands[MethodBodyContext,ResolveImport[Import,Type]] = ???
+      
+      implicit val canApplyInMethodBody: Understands[MethodBodyContext,Apply[Expression,Expression,Expression]] = ???
+      
+      implicit val canGetArgumentsInMethodBody: Understands[MethodBodyContext,GetArguments[Type,Name,Expression]] = ???
+      
+      implicit val canGetFreshNameInMethodBody: Understands[MethodBodyContext,FreshName[Name]] = ???
+      
     }
 
+
+    /*
   val methodBodyCapabilities: MethodBodyCapabilities =
     new MethodBodyCapabilities {
       implicit val canDebugInMethodBody: Understands[MethodBodyCtxt, Debug] =
@@ -443,7 +441,7 @@ trait AnyParadigm extends AP {
       ResourcePersistable.bundledResourceInstance.path(gitIgnore)) +:
       FileWithPath(buildFile, Paths.get("build.sbt")) +:
       (scalaFiles ++ scalaTestFiles)
-  }
+  }*/
 }
 
 

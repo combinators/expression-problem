@@ -7,12 +7,14 @@ case class SimpleName(name: String)
 
 case class CompilationUnit(
   name: Name,
-  imports: Seq[Name],
+  imports: Seq[Import],
   typeDecls: Seq[TypeDecl],
   typeClassDecls: Seq[TypeClassDecl],
   typeClassInstances: Seq[TypeClassInstance],
   funDecls: Seq[(Option[FunDecl], FunBody)]
 )
+
+case class Import(name: Name, qualified: Boolean)
 
 case class TypeDecl(name: SimpleName, params: Seq[SimpleName], cases: Seq[TypeCase])
 
@@ -41,6 +43,7 @@ sealed trait Expression
 case class Ref(name: Name) extends Expression
 case class App(function: Expression, argument: Expression) extends Expression
 case class Lambda(variable: SimpleName, body: Expression) extends Expression
+case class Let(variable: SimpleName, value: Expression, body: Expression) extends Expression
 case class Case(exp: Expression, ofs: Seq[MatchExpression]) extends Expression
 case class IfThenElse(exp: Expression, thenPart: Expression, elsePart: Expression) extends Expression
 case class IntValue(num: Int) extends Expression
@@ -186,6 +189,9 @@ object AST {
             if (prec > iPrec) parens(inner) else inner
           case Lambda(v, b) =>
             parens("\\ " <> v.name <> " -> " <> b.prettyPrec(0))
+          case Let(variable, value, body) => 
+            "let " <> variable.name <> " = " <> value.pretty.indent() <> " in " <> newline <>
+              body.pretty
           case Case(exp, ofs) =>
             val iPrec = 0
             val exps = ofs.foldLeft[Doc](newline)((d, mexp) => d <> newline <> mexp.pretty)
@@ -289,6 +295,14 @@ object AST {
           funBody.bodyExp.pretty.indent()
     }
 
+  implicit def prettyPrintableImport(imp: Import): PrettyPrintable[Import] =
+    new PrettyPrintable[Import] {
+      override def pretty: Doc = {
+        "import" <> (if (imp.qualified) { " qualified "} else {" "}) <> imp.name.components.mkString(".")
+      }
+
+    }
+
   implicit def prettyPrintableTypeClassInstance(typeClassInstance: TypeClassInstance): PrettyPrintable[TypeClassInstance] =
     new PrettyPrintable[TypeClassInstance] {
       override def pretty: Doc = {
@@ -309,9 +323,9 @@ object AST {
     new PrettyPrintable[CompilationUnit] {
       override def pretty: Doc = {
         val imps = compilationUnit.imports
-          .map(n => n.components.mkString("."))
-          .sorted
-          .foldLeft[Doc](nil)((d, i) => d <> newline <> "import " <> i)
+          .sortBy(i => i.name.components.mkString("."))
+          .map(i => i.pretty)          
+          .foldLeft[Doc](nil)((d, i) => d <> newline <> i)
         val tyDecls = compilationUnit.typeDecls
           .foldLeft[Doc](nil)((d, td) => d <> newline <> newline <> td.pretty)
         val clsDecls = compilationUnit.typeClassDecls

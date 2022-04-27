@@ -27,7 +27,6 @@ object M6 extends Evolution {
   // that we need to have a way to instantiate a structure that matches the expression
   // and then use those structure(s) to determine equality.
 
-  // add a new DataType, just to show you can, after a Producer operation.
   lazy val Equals = Operation("equals", TypeRep.Boolean, Seq(Parameter("other", TypeRep.DataType(M5.getModel.baseDataType))))
 
   // EQL depends on past IsXXX which you know from ALL PAST evolutions

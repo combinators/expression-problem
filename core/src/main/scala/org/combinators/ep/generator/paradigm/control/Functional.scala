@@ -11,11 +11,7 @@ case class PatternMatch[MethodBodyContext, Name, Expression](
   type Result = Expression
 }
 
-case class Lambda[Name, Type, Context, Expression](variable: Name, tpe: Type, body: Expression => Generator[Context, Expression]) extends Command {
-  type Result = Expression
-}
-
-trait Functional[Context] {
+trait Functional[Context] extends Lambdas[Context] {
   val base: AnyParadigm
 
   import base.syntax._
@@ -23,7 +19,7 @@ trait Functional[Context] {
   trait FunctionalCapabilities {
     implicit val canDeclareVar: Understands[Context, DeclareVariable[Name, Type, Generator[Context, Expression], Expression]]
     def declareVariable(name: Name, tpe: Type, expression: Generator[Context, Expression]): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(DeclareVariable[Name, Type, Generator[Context, Expression], Expression](name, tpe, expression))
+      AnyParadigm.capability(DeclareVariable[Name, Type, Generator[Context, Expression], Expression](name, tpe, expression))
 
     implicit val canIfThenElse: Understands[Context, IfThenElse[Expression, Generator[Context, Expression], Generator[Context, Expression], Expression]]
     def ifThenElse(
@@ -31,7 +27,7 @@ trait Functional[Context] {
         ifBlock: Generator[Context, Expression],
         elseIfs: Seq[(Expression, Generator[Context, Expression])],
         elseBlock: Generator[Context, Expression]): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(
+      AnyParadigm.capability(
         IfThenElse[Expression, Generator[Context, Expression], Generator[Context, Expression], Expression](
           cond,
           ifBlock,
@@ -44,11 +40,7 @@ trait Functional[Context] {
         onValue: Expression,
         options: Map[(Seq[Name], Seq[Name]), Seq[Expression] => Generator[Context, Expression]]
       ): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(PatternMatch(onValue, options))
-
-    implicit val canLambda: Understands[Context, Lambda[Name, Type, Context, Expression]]
-    def lambda(variable: Name, tpe: Type, body: Expression => Generator[Context, Expression]): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Lambda(variable, tpe, body))
+      AnyParadigm.capability(PatternMatch(onValue, options))
   }
   val functionalCapabilities: FunctionalCapabilities
 }

@@ -1,6 +1,4 @@
-package org.combinators.ep.generator.paradigm.ffi
-
-/*DI:LI:AI*/
+package org.combinators.ep.generator.paradigm.ffi    /*DI:LI:AI*/
 
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, Understands}
@@ -17,7 +15,7 @@ trait Exceptions[Context] extends FFI {
     implicit val canRaise: Understands[Context, Exception[Expression, Statement]]
 
     def raise(exp: Expression): Generator[Context, Statement] =
-      AnyParadigm.capabilitiy(Exception[Expression, Statement](exp))
+      AnyParadigm.capability(Exception[Expression, Statement](exp))
   }
   
   val exceptionCapabilities: ExceptionCapabilities

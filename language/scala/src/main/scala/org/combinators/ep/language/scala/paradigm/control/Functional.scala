@@ -17,6 +17,24 @@ trait Functional[Ctxt, AP <: AnyParadigm] extends Func[Ctxt] {
 
   val blockContextManipulator: BlockContextManipulator[Ctxt]
 
+  object lambdaCapabilities extends LambdaCapabilities {
+    implicit val canLambda: Understands[Ctxt, Lambda[Syntax.MangledName, Type, Ctxt, Term]] =
+      new Understands[Ctxt, Lambda[Syntax.MangledName, Type, Ctxt, Term]] {
+        def perform(
+                     context: Ctxt,
+                     command: Lambda[Syntax.MangledName, Type, Ctxt, Term]
+                   ): (Ctxt, Term) = {
+
+          val variables = command.variables.map(variable => (Term.fresh(variable._1.toAST.value), variable._2))
+          val variablesExprs = command.variables.zip(variables).map {case ((name, _), (expr, _)) => (name, expr)} .toMap
+          val params = variables.map { case (name, tpe) => Term.Param(List.empty, name, Some(tpe), None)}.toList
+          val lambdaGen = command.body(variablesExprs).map(body =>  Term.Function(params, body))
+
+          Command.runGenerator(lambdaGen, context)
+        }
+      }
+  }
+
   object functionalCapabilities extends FunctionalCapabilities {
     implicit val canDeclareVar: Understands[Ctxt, DeclareVariable[Syntax.MangledName, Type, Generator[Ctxt, Term], Term]] =
       new Understands[Ctxt, DeclareVariable[Syntax.MangledName, Type, Generator[Ctxt, Term], Term]] {
@@ -85,20 +103,7 @@ trait Functional[Ctxt, AP <: AnyParadigm] extends Func[Ctxt] {
           Command.runGenerator(matchExp, context)
         }
       }
-    implicit val canLambda: Understands[Ctxt, Lambda[Syntax.MangledName, Type, Ctxt, Term]] =
-      new Understands[Ctxt, Lambda[Syntax.MangledName, Type, Ctxt, Term]] {
-        def perform(
-          context: Ctxt, 
-          command: Lambda[Syntax.MangledName, Type, Ctxt, Term]
-        ): (Ctxt, Term) = {
-          val variable = Term.fresh(command.variable.toAST.value)
-          val lambdaGen = 
-            command.body(variable).map(body =>
-              Term.Function(List(Term.Param(List.empty, variable, Some(command.tpe), None)), body)
-            )
-          Command.runGenerator(lambdaGen, context)
-        }
-      }
+
   }
 
 

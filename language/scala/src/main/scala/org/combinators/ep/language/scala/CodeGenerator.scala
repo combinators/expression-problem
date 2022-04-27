@@ -3,7 +3,7 @@ package org.combinators.ep.language.scala   /*DI:LD:AI*/
 import cats.{Apply => _}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command
-import org.combinators.ep.generator.paradigm.{Generics, ParametricPolymorphism}
+//import org.combinators.ep.generator.paradigm.{Generics, ParametricPolymorphism}
 import org.combinators.ep.language.scala.paradigm._
 import org.combinators.ep.language.scala.paradigm.ffi._
 
@@ -19,8 +19,9 @@ sealed class CodeGenerator(config: Config) { cc =>
   val paradigm: AnyParadigm = AnyParadigm(config)
   val functional: Functional[paradigm.type] = Functional(paradigm)
   val functionalInMethod: control.Functional[paradigm.MethodBodyContext, paradigm.type] = control.Functional.inMethodContext(paradigm)
+  val ooParadigm = org.combinators.ep.language.scala.paradigm.ObjectOriented // : ObjectOriented[paradigm.type]
 
-  /*val ooParadigm: ObjectOriented[paradigm.type] = ObjectOriented(paradigm)
+  /*
   val imperativeInMethod: Imperative[MethodBodyCtxt, paradigm.type] = Imperative.inMethodContext(paradigm)
   val imperativeInConstructor: Imperative[CtorCtxt, paradigm.type] = Imperative.inConstructorContext(paradigm)
   val parametricPolymorphism: ParametricPolymorphism[paradigm.type] = ParametricPolymorphism(paradigm)
@@ -51,7 +52,7 @@ sealed class CodeGenerator(config: Config) { cc =>
       scala.meta.Lit.Double(_)
     )
   val realDoublesInConstructor =
-    new RealArithmetic[MethodBodyCtxt, Double, paradigm.type](
+    new RealArithmetic[CtorCtxt, Double, paradigm.type](
       paradigm,
       TypeRep.Double,
       scala.meta.Type.Name("Double"),
@@ -73,27 +74,17 @@ sealed class CodeGenerator(config: Config) { cc =>
       Lit.Int(_)
     )
 
-  val stringsInMethod =
-    new Strings[MethodBodyCtxt, paradigm.type](paradigm)
-  val stringsInConstructor =
-    new Strings[CtorCtxt, paradigm.type](paradigm)
+  val stringsInMethod = new Strings[MethodBodyCtxt, paradigm.type](paradigm)
+  val stringsInConstructor = new Strings[CtorCtxt, paradigm.type](paradigm)
 
-  val equalityInMethod =
-    new Equality[MethodBodyCtxt, paradigm.type](paradigm)
-  val equalityInConstructor =
-    new Equality[CtorCtxt, paradigm.type](paradigm)
+  val equalityInMethod = new Equality[MethodBodyCtxt, paradigm.type](paradigm)
+  val equalityInConstructor = new Equality[CtorCtxt, paradigm.type](paradigm)
 
-  val listsInMethod =
-    new Lists[MethodBodyCtxt, paradigm.type](paradigm)
+  val listsInMethod = new Lists[MethodBodyCtxt, paradigm.type](paradigm)
+  val listsInConstructor = new Lists[CtorCtxt, paradigm.type](paradigm)
 
-  val listsInConstructor =
-    new Lists[CtorCtxt, paradigm.type](paradigm)
-
-  val treesInMethod =
-    new Trees[MethodBodyCtxt, paradigm.type](paradigm)
-
-  val treesInConstructor =
-    new Trees[CtorCtxt, paradigm.type](paradigm)
+  val treesInMethod = new Trees[MethodBodyCtxt, paradigm.type](paradigm)
+  val treesInConstructor = new Trees[CtorCtxt, paradigm.type](paradigm)
 
   val assertionsInMethod = new Assertions[paradigm.type](paradigm)(functional)
 }

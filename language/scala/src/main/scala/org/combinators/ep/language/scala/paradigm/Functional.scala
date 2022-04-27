@@ -254,7 +254,7 @@ trait Functional[AP <: AnyParadigm] extends Func {
           (context, AnyParadigm.toTypeSelection(command.name))
       }
   }
-  object projectContextCapabilities extends ProjectContextCapabilities {
+  object projectCapabilities extends ProjectCapabilities {
     implicit val canAddTypeLookupForTypesInProject: Understands[ProjectCtxt, AddTypeLookup[TypeCtxt, Type]] =
       new Understands[ProjectCtxt, AddTypeLookup[TypeCtxt, Type]] {
         def perform(context: ProjectCtxt, command: AddTypeLookup[TypeCtxt, Type]): (ProjectCtxt, Unit) = {

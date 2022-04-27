@@ -61,8 +61,7 @@ object M5 {
                       SendRequest(
                         attExp,
                         dt,
-                        Request(Operation.asTree, Map.empty),
-                        Some(onRequest)
+                        Request(Operation.asTree, Map.empty)
                       )
                     )
                   case (att@Attribute(_, attTpe), attExp) =>
@@ -75,8 +74,7 @@ object M5 {
                   SendRequest(
                     onRequest.selfReference,
                     onRequest.onType,
-                    Request(math.M5.Identifier, Map.empty),
-                    Some(onRequest)
+                    Request(math.M5.Identifier, Map.empty)
                   )
                 )
               inst <- createNode(id, children)

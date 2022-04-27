@@ -53,17 +53,15 @@ object S1 {
                     onRequest.attributes(shape.S1.s1),
                     shape.S0.getModel.baseDataType,
                     Request(shape.S0.ContainsPt, Map(shape.S0.pointx -> onRequest.request.arguments(shape.S0.pointx),
-                      shape.S0.pointy -> onRequest.request.arguments(shape.S0.pointy))), // must be changed in response to translate
-                    Some(onRequest) // being sent in response to Eval
-                  ))
+                      shape.S0.pointy -> onRequest.request.arguments(shape.S0.pointy))) // must be changed in response to translate
+                    ))
 
                   s2Result <- forApproach.dispatch(SendRequest(
                     onRequest.attributes(shape.S1.s2),
                     shape.S0.getModel.baseDataType,
                     Request(shape.S0.ContainsPt, Map(shape.S0.pointx -> onRequest.request.arguments(shape.S0.pointx),
-                      shape.S0.pointy -> onRequest.request.arguments(shape.S0.pointy))),
-                    Some(onRequest) // being sent in response to Eval
-                  ))
+                      shape.S0.pointy -> onRequest.request.arguments(shape.S0.pointy)))
+                    ))
 
                   orRes <- or(Seq(s1Result, s2Result))
                 } yield orRes

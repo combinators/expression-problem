@@ -12,7 +12,7 @@ trait Assertions[Context] extends FFI {
   trait AssertionCapabilities {
     implicit val canAssert: Understands[Context, Apply[Assert, Expression, Expression]]
     def assert(exp: Expression, message: String = ""): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Apply[Assert, Expression, Expression](Assert(message), Seq(exp)))
+      AnyParadigm.capability(Apply[Assert, Expression, Expression](Assert(message), Seq(exp)))
 
     def assertEquals
       (inTpe: Type, got: Expression, expected: Expression, message: String = "")

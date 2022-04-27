@@ -1,4 +1,4 @@
-package org.combinators.ep.approach.functional    /*DI:LI:AI*/
+package org.combinators.ep.approach.functional    /*DI:LI:AD*/
 
 import org.combinators.ep.domain.{GenericModel, Model}
 import org.combinators.ep.generator.{AbstractSyntax, ApproachImplementationProvider, Command, EvolutionImplementationProvider, NameProvider, Understands}
@@ -55,7 +55,7 @@ trait Traditional extends ApproachImplementationProvider {
 
   def makeTypeInCompilationUnit(tpe: DataType, cases: Seq[DataTypeCase]): Generator[ProjectContext, Unit] = {
     import functional.compilationUnitCapabilities._
-    import paradigm.projectContextCapabilities._
+    import paradigm.projectCapabilities._
     val caseCode =
       for {
         _ <- forEach (cases) { tpeCase => makeTypeConstructor(tpeCase) }
@@ -131,7 +131,7 @@ trait Traditional extends ApproachImplementationProvider {
     domainSpecific: EvolutionImplementationProvider[this.type]
   ): Generator[ProjectContext, Unit] = {
     import functional.compilationUnitCapabilities._
-    import paradigm.projectContextCapabilities._
+    import paradigm.projectCapabilities._
     addCompilationUnit(
       addMethod(names.mangle(names.instanceNameOf(op)), makeFunction(tpe, cases, op, domainSpecific)),
       names.mangle(names.conceptNameOf(op))
@@ -142,9 +142,9 @@ trait Traditional extends ApproachImplementationProvider {
     FindType(Seq(names.mangle(names.conceptNameOf(dtpe)))).interpret(canFindType)
   }
 
-  def initializeApproach(domain: Model): Generator[ProjectContext, Unit] = {
-    import paradigm.projectContextCapabilities._
-    import functional.projectContextCapabilities._
+  def initializeApproach(domain: GenericModel): Generator[ProjectContext, Unit] = {
+    import paradigm.projectCapabilities._
+    import functional.projectCapabilities._
     import functional.methodBodyCapabilities._         // Needed below
     import functional.typeCapabilities._               // Needed below
     val dtpeRep = TypeRep.DataType(domain.baseDataType)
@@ -156,12 +156,7 @@ trait Traditional extends ApproachImplementationProvider {
 
   def implement(gdomain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
 
-    val domain = gdomain match {
-      case _:Model => gdomain.asInstanceOf[Model]
-      case _ => gdomain.linearize
-    }
-
-    val flatDomain = domain.flatten
+    val flatDomain = gdomain.linearize.flatten
     for {
       _ <- initializeApproach(flatDomain)
       _ <- domainSpecific.initialize(this)

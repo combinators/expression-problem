@@ -109,7 +109,7 @@ class GenericModel(val name:String,
     name.hashCode
   }
 
-  // Eliminate all past
+  // Eliminate all past (not sure needed anymore...)
   def standAlone:Model = {
     new Model(name, typeCases, ops, baseDataType)   // good enough?
   }
@@ -118,17 +118,17 @@ class GenericModel(val name:String,
    * base model.
    *
    * The name of the squashed evolution will be the name of this evolution.
-   * If no evolutions are present, the model is returned unchanged.
+   * If no evolutions are present, the model is returned unchanged. Ensures uniqueness of data Type cases and ops
    */
   def flatten: Model = {
     if (isBottom) {
-      this.standAlone
+      new Model(this.name, this.typeCases.distinct, this.ops.distinct, this.baseDataType)
     } else {
       val history = toSeq.reverse
       val (baseModel, evolutions) = (history.head.standAlone, history.tail.map(_.standAlone))
 
       def squash(intoModel: Model, nextModel: Model): Model =
-        new Model(name, intoModel.typeCases ++ nextModel.typeCases, intoModel.ops ++ nextModel.ops, baseDataType, None)
+        new Model(name, (intoModel.typeCases ++ nextModel.typeCases).distinct, (intoModel.ops ++ nextModel.ops).distinct, baseDataType, None)
 
       if (evolutions.nonEmpty) {
         val reduced = (evolutions :+ baseModel).reduceLeft(squash)

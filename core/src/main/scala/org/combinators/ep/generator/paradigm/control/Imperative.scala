@@ -32,15 +32,15 @@ trait Imperative[Context] {
   trait ImperativeCapabilities {
     implicit val canDeclareVariable: Understands[Context, DeclareVariable[Name, Type, Option[Expression], Expression]]
     def declareVar(name: Name, tpe: Type, init: Option[Expression] = None): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(DeclareVariable[Name, Type, Option[Expression], Expression](name, tpe, init))
+      AnyParadigm.capability(DeclareVariable[Name, Type, Option[Expression], Expression](name, tpe, init))
 
     implicit val canAssignVariable: Understands[Context, AssignVariable[Expression, Statement]]
     def assignVar(variable: Expression, value: Expression): Generator[Context, Statement] =
-      AnyParadigm.capabilitiy(AssignVariable[Expression, Statement](variable, value))
+      AnyParadigm.capability(AssignVariable[Expression, Statement](variable, value))
 
     implicit val canLiftExpression: Understands[Context, LiftExpression[Expression, Statement]]
     def liftExpression(expr: Expression): Generator[Context, Statement] =
-      AnyParadigm.capabilitiy(LiftExpression[Expression, Statement](expr))
+      AnyParadigm.capability(LiftExpression[Expression, Statement](expr))
 
     implicit val canIfThenElse: Understands[Context, IfThenElse[Expression, Generator[Context, Unit], Option[Generator[Context, Unit]], Statement]]
     def ifThenElse(
@@ -49,17 +49,17 @@ trait Imperative[Context] {
         elseIfs: Seq[(Expression, Generator[Context, Unit])],
         elseBranch: Option[Generator[Context, Unit]] = None
       ): Generator[Context, Statement] =
-      AnyParadigm.capabilitiy(IfThenElse[Expression, Generator[Context, Unit], Option[Generator[Context, Unit]], Statement](
+      AnyParadigm.capability(IfThenElse[Expression, Generator[Context, Unit], Option[Generator[Context, Unit]], Statement](
         condition, ifBranch, elseIfs, elseBranch
       ))
 
     implicit val canWhile: Understands[Context, While[Context, Expression, Statement]]
     def whileLoop(condition: Expression, block: Generator[Context, Unit]): Generator[Context, Statement] =
-      AnyParadigm.capabilitiy(While[Context, Expression, Statement](condition, block))
+      AnyParadigm.capability(While[Context, Expression, Statement](condition, block))
 
     implicit val canReturn: Understands[Context, Return[Expression, Statement]]
     def returnStmt(exp: Expression): Generator[Context, Statement] =
-      AnyParadigm.capabilitiy(Return[Expression, Statement](exp))
+      AnyParadigm.capability(Return[Expression, Statement](exp))
 
     def liftReturnStmt(expGen: Generator[Context, Expression]): Generator[Context, Statement] = {
       for {

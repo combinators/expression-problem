@@ -20,31 +20,31 @@ trait Arithmetic[Context, T] extends FFI {
   trait ArithmeticCapabilities {
     implicit val canLT:Understands[Context, Apply[LT[T], Expression, Expression]]
     def lt(left: Expression, right:Expression): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Apply[LT[T], Expression, Expression](LT[T](), Seq(left, right)))
+      AnyParadigm.capability(Apply[LT[T], Expression, Expression](LT[T](), Seq(left, right)))
 
     implicit val canLE:Understands[Context, Apply[LE[T], Expression, Expression]]
     def le(left: Expression, right:Expression): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Apply[LE[T], Expression, Expression](LE[T](), Seq(left, right)))
+      AnyParadigm.capability(Apply[LE[T], Expression, Expression](LE[T](), Seq(left, right)))
 
     implicit val canAdd: Understands[Context, Apply[Add[T], Expression, Expression]]
     def add(xs: Expression*): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Apply[Add[T], Expression, Expression](Add[T](), xs))
+      AnyParadigm.capability(Apply[Add[T], Expression, Expression](Add[T](), xs))
 
     implicit val canSub: Understands[Context, Apply[Sub[T], Expression, Expression]]
     def sub(xs: Expression*): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Apply[Sub[T], Expression, Expression](Sub[T](), xs))
+      AnyParadigm.capability(Apply[Sub[T], Expression, Expression](Sub[T](), xs))
 
     implicit val canMult: Understands[Context, Apply[Mult[T], Expression, Expression]]
     def mult(xs: Expression*): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Apply[Mult[T], Expression, Expression](Mult[T](), xs))
+      AnyParadigm.capability(Apply[Mult[T], Expression, Expression](Mult[T](), xs))
 
     implicit val canDiv: Understands[Context, Apply[Div[T], Expression, Expression]]
     def div(xs: Expression*): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Apply[Div[T], Expression, Expression](Div[T](), xs))
+      AnyParadigm.capability(Apply[Div[T], Expression, Expression](Div[T](), xs))
 
     implicit val canMod: Understands[Context, Apply[Mod[T], Expression, Expression]]
     def mod(xs: Expression*): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Apply[Mod[T], Expression, Expression](Mod[T](), xs))
+      AnyParadigm.capability(Apply[Mod[T], Expression, Expression](Mod[T](), xs))
   }
   val arithmeticCapabilities: ArithmeticCapabilities
 }

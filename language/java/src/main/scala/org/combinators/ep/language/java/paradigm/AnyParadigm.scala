@@ -32,8 +32,8 @@ trait AnyParadigm extends AP {
   type MethodBodyContext = MethodBodyCtxt
 
 
-  val projectContextCapabilities: ProjectContextCapabilities =
-    new ProjectContextCapabilities {
+  val projectCapabilities: ProjectCapabilities =
+    new ProjectCapabilities {
       implicit val canDebugInProject: Understands[ProjectCtxt, Debug] =
         new Understands[ProjectCtxt, Debug] {
           def perform(
@@ -188,6 +188,16 @@ trait AnyParadigm extends AP {
           }
         }
 
+      implicit val canOutputToConsole: Understands[MethodBodyCtxt, OutputToConsole[Expression]] =
+        new Understands[MethodBodyCtxt, OutputToConsole[Expression]] {
+          def perform(
+                       context: MethodBodyCtxt,
+                       command: OutputToConsole[Expression]
+                     ): (MethodBodyCtxt, Unit) = {
+            (context.copy(), ())
+          }
+        }
+
       implicit val canAddImportInMethodBody: Understands[MethodBodyCtxt, AddImport[ImportDeclaration]] =
         new Understands[MethodBodyCtxt, AddImport[ImportDeclaration]] {
           def perform(
@@ -198,6 +208,7 @@ trait AnyParadigm extends AP {
             (context.copy(extraImports = extraImports), ())
           }
         }
+
       implicit val canAddBlockDefinitionsInMethodBody: Understands[MethodBodyCtxt, AddBlockDefinitions[Statement]] =
         new Understands[MethodBodyCtxt, AddBlockDefinitions[Statement]] {
           def perform(
@@ -455,13 +466,20 @@ trait AnyParadigm extends AP {
       """"junit" % "junit" % "4.12" % "test""""
     )
     val deps = (junitDeps ++ finalContext.extraDependencies).mkString("Seq(\n    ", ",\n    ", "\n  )")
+
+    // hard-code output to 1.8 for jacoco compatibility. TODO: Try to remove this dependency
     val buildFile =
       s"""
+         |javacOptions ++= Seq("-source", "1.8", "-target", "1.8")
          |$nameEntry
          |crossPaths := false
          |autoScalaLibrary := false
          |libraryDependencies ++= $deps
            """.stripMargin
+    val pluginFile =
+      s"""
+         |addSbtPlugin("com.github.sbt" % "sbt-jacoco" % "3.0.3")
+         """.stripMargin
     val cleanedUnits =
      ImportCleanup.cleaned(
         FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.units: _*) : _*
@@ -491,6 +509,7 @@ trait AnyParadigm extends AP {
       //FileWithPath(
       //ResourcePersistable.bundledResourceInstance.rawText(gitIgnore),
       //ResourcePersistable.bundledResourceInstance.path(gitIgnore)) +:
+      FileWithPath(pluginFile, Paths.get("project", "plugin.sbt")) +:
       FileWithPath(buildFile, Paths.get("build.sbt")) +:
       (javaFiles ++ javaTestFiles)
   }

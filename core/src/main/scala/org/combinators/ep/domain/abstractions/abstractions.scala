@@ -1,4 +1,4 @@
-package org.combinators.ep.domain.abstractions
+package org.combinators.ep.domain.abstractions    /*DI:LI:AI*/
 
 import org.combinators.ep.domain.{GenericModel, abstractions}
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
@@ -211,6 +211,10 @@ object TypeRep {
   /** Represents the type `Seq[A]` */
   case class Sequence[T](elemTpe: TypeRep.OfHostType[T]) extends TypeRep {
     type HostType = Seq[T]
+  }
+  /** Represents the type `Array[T]` */
+  case class Array[T](elemTpe: TypeRep.OfHostType[T]) extends TypeRep {
+    type HostType = Array[T]
   }
 
   /** Represents a Scala model of an instance of the given domain specific data type. */

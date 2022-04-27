@@ -68,8 +68,8 @@ trait EvolutionImplementationProvider[-AIP <: ApproachImplementationProvider] {
             att => forApproach.dispatch(SendRequest(
               onRequest.attributes(att),
               model.baseDataType,
-              onRequest.request,
-              Some(onRequest)))
+              onRequest.request
+              ))
           }
 
           res <- forApproach.instantiate(model.baseDataType, dt, processedAtts : _ *)

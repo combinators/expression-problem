@@ -1,4 +1,4 @@
-package org.combinators.ep.approach.oo
+package org.combinators.ep.approach.oo  /*DI:LI:AD*/
 
 import org.combinators.ep.domain.abstractions.{DataType, DataTypeCase, Operation, TestCase, TypeRep}
 import org.combinators.ep.domain.{GenericModel, abstractions}
@@ -10,7 +10,8 @@ import org.combinators.ep.generator.paradigm.{AddImport, AnyParadigm, Apply, Fin
 
 import scala.tools.nsc.interpreter.NamedParamClass
 
-
+// j7 mistakenly generates lit/multBy and lit/powBy
+// might be in newDataTypeCasesWithNewOperations...
 trait CoCoClean extends ApproachImplementationProvider {
   val paradigm: AnyParadigm
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
@@ -286,7 +287,9 @@ trait CoCoClean extends ApproachImplementationProvider {
     val flatDomain = domain.flatten
     val allDataTypeCases = flatDomain.typeCases.toSet
     val allOperations = flatDomain.ops.toSet
+    
     allDataTypeCases.foldLeft(Map.empty[DataTypeCase, Set[Operation]]) { (resultMap, tpeCase) =>
+      // Remembers all operations that are already supported
       val presentOperations = domain.former.flatMap(ancestor => {
         if (ancestor.supports(tpeCase)) {
           ancestor.flatten.ops.toSet
@@ -294,7 +297,9 @@ trait CoCoClean extends ApproachImplementationProvider {
           Set.empty[Operation]
         }
       })
+      
       val overwrittenOperations = allOperations.filter { operation =>
+        // Are we applicable based on EIP? Tells us in which domain EIP is applicable
         val lastOverwritingDomain =
           evolutionImplementationProvider.applicableIn(
             forApproach = this,
@@ -304,6 +309,7 @@ trait CoCoClean extends ApproachImplementationProvider {
         lastOverwritingDomain.contains(domain)
       }
       val updatedOperations = (allOperations -- presentOperations) ++ overwrittenOperations
+      // If we have any updated operations, if we have a former one that doesn't support the current type case, or if we are in a merge.
       if (updatedOperations.nonEmpty || domain.former.exists(ancestor => !ancestor.supports(tpeCase)) || domain.former.size > 1) {
         resultMap.updated(tpeCase, updatedOperations)
       } else {
@@ -717,7 +723,7 @@ trait CoCoClean extends ApproachImplementationProvider {
     import ooParadigm.classCapabilities.canFindClassInClass
     import ooParadigm.constructorCapabilities.canFindClassInConstructor
     import ooParadigm.methodBodyCapabilities.canFindClassInMethod
-    import paradigm.projectContextCapabilities._
+    import paradigm.projectCapabilities._
     import org.combinators.ep.generator.Understands
     import org.combinators.ep.generator.paradigm.FindClass
 
@@ -736,7 +742,7 @@ trait CoCoClean extends ApproachImplementationProvider {
   }
 
   override def implement(tests: Map[GenericModel, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
-    import paradigm.projectContextCapabilities._
+    import paradigm.projectCapabilities._
     import paradigm.compilationUnitCapabilities._
     import paradigm.testCapabilities._
 
@@ -784,7 +790,7 @@ trait CoCoClean extends ApproachImplementationProvider {
     import paradigm.methodBodyCapabilities._
     for {
       self <- selfReference()
-      convert <- getMember(self, ComponentNames.convertMethod)
+      convert <- getMember(self, ComponentNames.convertMethod)  // convert the receiver of the dispatch as late as possible
       converted <- apply(convert, Seq(message.to))
       method <- getMember(converted, names.mangle(names.instanceNameOf(message.request.op)))
 

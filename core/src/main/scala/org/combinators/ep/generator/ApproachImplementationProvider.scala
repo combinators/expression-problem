@@ -28,7 +28,6 @@ trait ApproachImplementationProvider {
     *       to = received.attributes(Attribute.left),
     *       receiverTpe = Attribute.left.tpe
     *       request = Request(Operation("eval"), Map.empty)
-    *       inReplyTo = Some(received)
     *   )) // Results in:
     *   CodeBlockWithResultingExpressions()(
     *     Java(s"${received.selfReference}.${Attribute.left.name}.eval()").expression())
@@ -91,12 +90,12 @@ trait ApproachImplementationProvider {
   /** When test case class needs to extend another class, override this. */
   def testCaseParent(model:GenericModel):Seq[Type] = Seq.empty
 
-  /** When test case class needs to implementsome interfaces, override this. */
+  /** When test case class needs to implement some interfaces, override this. */
   def testCaseImplements(model:GenericModel):Seq[Type] = Seq.empty
 
   /** Adds tests to the project context */
   def implement(tests: Map[GenericModel, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
-    import projectContextCapabilities._
+    import projectCapabilities._
     import paradigm.compilationUnitCapabilities._
     import paradigm.testCapabilities._
     for {

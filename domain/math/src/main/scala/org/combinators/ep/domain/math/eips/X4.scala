@@ -73,8 +73,7 @@ object X4 {
                     inner <- forApproach.dispatch(SendRequest(
                       onRequest.attributes(innerAtt),
                       math.M0.getModel.baseDataType,
-                      onRequest.request,
-                      Some(onRequest)
+                      onRequest.request
                     ))
 
                     res <- forApproach.instantiate(math.M0.getModel.baseDataType, other, inner)
@@ -90,8 +89,7 @@ object X4 {
               forApproach.dispatch(SendRequest(
                 onRequest.attributes(att),
                 math.M0.getModel.baseDataType,
-                onRequest.request,
-                Some(onRequest)
+                onRequest.request
               ))
             }
             res <- operate(atts)

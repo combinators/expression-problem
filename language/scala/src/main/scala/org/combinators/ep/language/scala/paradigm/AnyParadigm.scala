@@ -14,8 +14,6 @@ import org.combinators.templating.persistable.{BundledResource, ResourcePersista
 
 import scala.util.Try
 
-
-
 trait AnyParadigm extends AP {
   val config: Config
   val syntax: Syntax.default.type = Syntax.default
@@ -27,8 +25,8 @@ trait AnyParadigm extends AP {
   type MethodBodyContext = MethodBodyCtxt
 
 
-  val projectContextCapabilities: ProjectContextCapabilities =
-    new ProjectContextCapabilities {
+  val projectCapabilities: ProjectCapabilities =
+    new ProjectCapabilities {
       implicit val canDebugInProject: Understands[ProjectCtxt, Debug] =
         new Understands[ProjectCtxt, Debug] {
           def perform(
@@ -225,6 +223,16 @@ trait AnyParadigm extends AP {
 
             System.err.println (command.tag + ": " + context.method)
             (context,())
+          }
+        }
+
+      implicit val canOutputToConsole: Understands[MethodBodyContext, OutputToConsole[Expression]] =
+        new Understands[MethodBodyCtxt, OutputToConsole[Expression]] {
+          def perform(
+                       context: MethodBodyCtxt,
+                       command: OutputToConsole[Expression]
+                     ): (MethodBodyCtxt, Unit) = {
+            (context.copy(), ())
           }
         }
 
@@ -473,16 +481,21 @@ trait AnyParadigm extends AP {
       )
     val nameEntry = config.projectName.map(n => s"""name := "${n}"""").getOrElse("")
     val scalaTestDeps = Seq(
-      """"org.scalatest" %% "scalatest" % "3.2.9" % "test""""
+      """"org.scalatest" %% "scalatest" % "3.2.11" % "test""""
     )
     val deps = (scalaTestDeps ++ finalContext.extraDependencies).mkString("Seq(\n    ", ",\n    ", "\n  )")
     val buildFile =
       s"""
          |$nameEntry
-         |scalaVersion := "3.0.1"
+         |scalaVersion := "3.0.2"
          |libraryDependencies ++= $deps
            """.stripMargin
     // TODO: Add more cleanup (imports?)..
+    val buildProperties =
+      s"""
+         |sbt.version=1.6.2
+         |""".stripMargin
+
     val cleanedUnits = finalContext.units
     val cleanedTestUnits = finalContext.testUnits
     val scalaFiles = cleanedUnits.map { case (name, unit) =>
@@ -502,6 +515,7 @@ trait AnyParadigm extends AP {
       ResourcePersistable.bundledResourceInstance.rawText(gitIgnore),
       ResourcePersistable.bundledResourceInstance.path(gitIgnore)) +:
       FileWithPath(buildFile, Paths.get("build.sbt")) +:
+      FileWithPath(buildProperties, Paths.get("project", "build.properties")) +:
       (scalaFiles ++ scalaTestFiles)
   }
 }

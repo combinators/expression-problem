@@ -62,8 +62,7 @@ object M2_ABS {
                   inner <- forApproach.dispatch(SendRequest(
                     onRequest.attributes(innerAtt),
                     math.M2_ABS.getModel.baseDataType,
-                    onRequest.request,
-                    Some(onRequest)
+                    onRequest.request
                   ))
 
                   // Wrap inner-prettified with ABS(...)
@@ -83,8 +82,7 @@ object M2_ABS {
                     SendRequest(
                       onRequest.attributes.head._2,
                       math.M2_ABS.getModel.baseDataType,
-                      Request(math.M0.Eval, Map.empty),
-                      Some(onRequest)
+                      Request(math.M0.Eval, Map.empty)
                     )
                   )
                   innerDecl <- ffiImper.imperativeCapabilities.declareVar(innerResult, doubleType, Some(innerVal))

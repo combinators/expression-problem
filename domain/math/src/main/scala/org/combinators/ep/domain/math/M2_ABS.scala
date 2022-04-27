@@ -1,6 +1,4 @@
-package org.combinators.ep.domain.math
-
-/*DD:LI:AI*/
+package org.combinators.ep.domain.math      /*DD:LI:AI*/
 
 import org.combinators.ep.domain._
 import org.combinators.ep.domain.abstractions._

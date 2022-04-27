@@ -1,4 +1,4 @@
-package org.combinators.ep.domain.tree
+package org.combinators.ep.domain.tree     /*DI:LI:AI*/
 
 /** Provides models of generic trees. */
 import org.combinators.ep.domain.instances.InstanceRep

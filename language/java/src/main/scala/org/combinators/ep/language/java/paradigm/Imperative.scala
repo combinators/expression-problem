@@ -103,20 +103,30 @@ object Imperative {
     def copyWithBlock(ctxt: Ctxt, blockStmt: BlockStmt): Ctxt
     def nextBlockContext(ctxt: Ctxt): Ctxt = copyWithBlock(ctxt, new BlockStmt())
   }
+  
+  object MethodBlockContextManipulator extends BlockContextManipulator[MethodBodyCtxt] {
+    def getBlock(ctxt: MethodBodyCtxt): BlockStmt = ctxt.method.getBody.get()
+    def copyWithBlock(ctxt: MethodBodyCtxt, blockStmt: BlockStmt): MethodBodyCtxt = {
+      val newMethod = ctxt.method.clone()
+      newMethod.setBody(blockStmt.clone())
+      ctxt.copy(method = newMethod)
+    }
+  }
+  
+  object CtorBlockContextManipulator extends BlockContextManipulator[CtorCtxt] {
+    def getBlock(ctxt: CtorCtxt): BlockStmt = ctxt.ctor.getBody
+    def copyWithBlock(ctxt: CtorCtxt, blockStmt: BlockStmt): CtorCtxt = {
+      val newCtor = ctxt.ctor.clone()
+      newCtor.setBody(blockStmt.clone())
+      ctxt.copy(ctor = newCtor)
+    }
+  }
 
   def inMethodContext[AP <: AnyParadigm](base: AP): Imperative[MethodBodyCtxt, base.type] = {
     val b: base.type = base
     new Imperative[MethodBodyCtxt, b.type] {
       val base: b.type = b
-      val manip: BlockContextManipulator[MethodBodyCtxt] =
-        new BlockContextManipulator[MethodBodyCtxt] {
-          def getBlock(ctxt: MethodBodyCtxt): BlockStmt = ctxt.method.getBody.get()
-          def copyWithBlock(ctxt: MethodBodyCtxt, blockStmt: BlockStmt): MethodBodyCtxt = {
-            val newMethod = ctxt.method.clone()
-            newMethod.setBody(blockStmt.clone())
-            ctxt.copy(method = newMethod)
-          }
-        }
+      val manip: MethodBlockContextManipulator.type = MethodBlockContextManipulator
     }
   }
 
@@ -124,15 +134,7 @@ object Imperative {
     val b: base.type = base
     new Imperative[CtorCtxt, b.type] {
       val base: b.type = b
-      val manip: BlockContextManipulator[CtorCtxt] =
-        new BlockContextManipulator[CtorCtxt] {
-          def getBlock(ctxt: CtorCtxt): BlockStmt = ctxt.ctor.getBody
-          def copyWithBlock(ctxt: CtorCtxt, blockStmt: BlockStmt): CtorCtxt = {
-            val newCtor = ctxt.ctor.clone()
-            newCtor.setBody(blockStmt.clone())
-            ctxt.copy(ctor = newCtor)
-          }
-        }
+      val manip: CtorBlockContextManipulator.type = CtorBlockContextManipulator
     }
   }
 }

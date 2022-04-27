@@ -20,6 +20,8 @@ sealed class CodeGenerator(config: Config) { cc =>
   val ooParadigm: ObjectOriented[paradigm.type] = ObjectOriented(paradigm)
   val imperativeInMethod: Imperative[MethodBodyCtxt, paradigm.type] = Imperative.inMethodContext(paradigm)
   val imperativeInConstructor: Imperative[CtorCtxt, paradigm.type] = Imperative.inConstructorContext(paradigm)
+  val lambdasInMethod: Lambdas[MethodBodyCtxt, paradigm.type] = Lambdas.inMethodContext(paradigm)
+  val lambdasInConstructor: Lambdas[CtorCtxt, paradigm.type] = Lambdas.inConstructorContext(paradigm)
   val parametricPolymorphism: ParametricPolymorphism[paradigm.type] = ParametricPolymorphism(paradigm)
   val generics: Generics.Aux[paradigm.type, ooParadigm.type, parametricPolymorphism.type] = Generics(paradigm)(ooParadigm, parametricPolymorphism)
 

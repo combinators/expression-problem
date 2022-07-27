@@ -68,14 +68,12 @@ object M2 {
               left <- forApproach.dispatch(SendRequest(
                 onRequest.attributes(lAtt),
                 math.M2.getModel.baseDataType,
-                onRequest.request,
-                Some(onRequest)
+                onRequest.request
               ))
               right <- forApproach.dispatch(SendRequest(
                 onRequest.attributes(rAtt),
                 math.M2.getModel.baseDataType,
-                onRequest.request,
-                Some(onRequest)
+                onRequest.request
               ))
               res <- makeString(Seq(left, right), "(", operator, ")")
             } yield res

@@ -16,7 +16,8 @@ case class ContextSpecificResolver(
   _reificationInMethod: ContextSpecificResolver => InstanceRep => Generator[MethodBodyCtxt, Expression],
   _importResolution: ContextSpecificResolver => Type => Option[Import],
   _instantiationOverride: ContextSpecificResolver => (Type, Seq[Expression]) => (Type, Seq[Expression]),
-  generatedVariables: Map[String, MangledName]
+  generatedVariables: Map[String, MangledName],
+  resolverInfo: Set[Any] = Set.empty
 ) {
   def methodTypeResolution(tpeRep: TypeRep): Generator[MethodBodyCtxt, Type] =
     _methodTypeResolution(this)(tpeRep)
@@ -32,6 +33,8 @@ case class ContextSpecificResolver(
     _importResolution(this)(tpe)
   def instantiationOverride(tpe: Type, args: Seq[Expression]): (Type, Seq[Expression]) =
     _instantiationOverride(this)(tpe,args)
+
+  def addInfo(info: Any): ContextSpecificResolver = copy(resolverInfo = resolverInfo + info)
 }
 
 object ContextSpecificResolver {

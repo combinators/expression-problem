@@ -70,6 +70,7 @@ object I1 {
 
         onRequest.tpeCase match {
 
+// Example code that would be generated 
 //        default ep.alt1.Exp<V> multBy(ep.Exp<V> other) {
 //          ep.Exp<V> result = other;
 //          for (double counter = Math.floor(Math.abs(getValue())); counter > 1; --counter) {
@@ -123,9 +124,12 @@ object I1 {
               _ <- addBlockDefinitions(Seq(ifStmt))
             } yield Some(resultVar)
 
+
+// Example code that would be generated
 //        default ep.alt1.Exp<V> multBy(ep.Exp<V> other) {
 //          return sub(getLeft().multBy(other), getRight().multBy(other));
 //        }
+          
           case _ => /* Add and Sub */
            genericLogic(forApproach)(onRequest)   // standard example of accessing the generic Logic
         }

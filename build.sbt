@@ -10,7 +10,7 @@ lazy val commonSettings = Seq(
     Resolver.typesafeRepo("releases")
   ),
 
-  scalacOptions in (Compile) ++= Seq(
+  Compile/scalacOptions ++= Seq(
     "-unchecked",
     "-deprecation",
     "-feature",
@@ -19,11 +19,10 @@ lazy val commonSettings = Seq(
     "-language:higherKinds"
   ),
 
-  scalacOptions in (Compile,doc) ++= Seq(
+  Compile/scalacOptions ++= Seq(
     "-unchecked",
     "-deprecation",
     "-feature",
-    "-groups",
     "-language:implicitConversions"
   ),
 
@@ -31,12 +30,13 @@ lazy val commonSettings = Seq(
     "org.combinators" %% "jgitserv" % "0.0.1",
     "org.scalactic" %% "scalactic" % "3.2.2" % "test",
     "org.scalatest" %% "scalatest" % "3.2.2" % "test",
-    "org.scalameta" %% "scalameta" % "4.3.8",
+    "org.scalameta" %% "scalameta" % "4.4.27",
     "org.scalameta" %% "contrib" % "4.1.6",
     "org.typelevel" %% "cats-core" % "2.3.1",
     "org.typelevel" %% "cats-free" % "2.3.1",
     "org.typelevel" %% "cats-effect" % "2.3.1"
   ),
+  evictionErrorLevel := Level.Info,
 
   addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
 )
@@ -83,8 +83,21 @@ def standardLanguageProject(languageName: String): Project =
 lazy val languageJava =
   standardLanguageProject("java")
     .settings(libraryDependencies += "com.github.javaparser" % "javaparser-core" % "3.19.0")
+    .settings(
+       mainClass in (Compile, run) := Some("org.combinators.ep.language.java.DirectToDiskMainJ")
+     )
 lazy val languageScala = standardLanguageProject("scala")
+
+lazy val helloWorld:Project =
+  (Project(id = s"helloworld", base = file(s"helloworld")))
+    .settings(commonSettings: _*)
+    .settings(
+      moduleName := s"helloworld",
+    )
+    .dependsOn(core, languageJava, languageScala)
 
 //lazy val languageGJ = standardLanguageProject("gj")
 //lazy val languageCPP = standardLanguageProject("cpp")
 //lazy val languageHaskell = standardLanguageProject("haskell")
+
+

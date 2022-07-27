@@ -47,14 +47,12 @@ object M1 {
               left <- forApproach.dispatch(SendRequest(
                 onRequest.attributes(subC.attributes.head),
                 math.M1.getModel.baseDataType,
-                onRequest.request,
-                Some(onRequest)
+                onRequest.request
               ))
               right <- forApproach.dispatch(SendRequest(
                 onRequest.attributes(subC.attributes.tail.head),
                 math.M1.getModel.baseDataType,
-                onRequest.request,
-                Some(onRequest)
+                onRequest.request
               ))
               res <- sub(left, right)
             } yield res

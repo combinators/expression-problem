@@ -20,29 +20,29 @@ trait Functional[AP <: AnyParadigm] extends Func {
     implicit val canAddTypeInCompilationUnit: Understands[CompilationUnitCtxt, AddType[Name, TypeContext]] =
       new Understands[CompilationUnitCtxt, AddType[Name, TypeContext]] {
         def perform(context: CompilationUnitCtxt, command: AddType[Syntax.MangledName, TypeCtxt]): (CompilationUnitCtxt, Unit) = {
+          def emptyEnum(name: scala.meta.Type.Name): scala.meta.Defn.Enum = {
+            scala.meta.Defn.Enum(
+              mods = List.empty,
+              name = name,
+              tparams = List.empty,
+              ctor = Ctor.Primary(mods = List.empty, name = Name.Anonymous(), paramss = List.empty),
+              templ = Template(
+                early = List.empty,
+                inits = List.empty,
+                self = Self(Name.Anonymous(), None),
+                stats = List.empty
+              )
+            )
+          }
+
           val (commandCtxt, _) = 
                 Command.runGenerator(
                   command.tpeGen,
-                  TypeCtxt(context.resolver, Seq.empty, Seq.empty)
+                  TypeCtxt(context.resolver, emptyEnum, Seq.empty)
                 )
 
           val updatedUnit: Source = {
               val oldUnit = context.unit
-              val typeTrait = 
-                Defn.Trait(
-                  mods = List(Mod.Sealed()),
-                  name = Type.Name(command.name.toAST.value),
-                  tparams = List.empty,
-                  ctor = Ctor.Primary(List.empty, Name.Anonymous(), List.empty),
-                  templ =
-                    Template(
-                      early = List.empty,
-                      inits = List.empty,
-                      self = Self(Name.Anonymous(), None),
-                      stats = List.empty
-                    ))
-
-              
               val imports =
                 (context.unit.stats.collect {
                    case imp: Import => imp
@@ -52,8 +52,7 @@ trait Functional[AP <: AnyParadigm] extends Func {
                 List(
                   imports,
                   oldUnit.stats.filter(!_.isInstanceOf[Import]),
-                  List(typeTrait),
-                  commandCtxt.cases.map(cls => cls(typeTrait.name))
+                  List(commandCtxt.tpe(scala.meta.Type.Name(command.name.toAST.value)))
                 ).flatten
 
               Source(nextUnit)
@@ -152,11 +151,13 @@ trait Functional[AP <: AnyParadigm] extends Func {
           context: TypeCtxt,
           command: AddTypeConstructor[Syntax.MangledName, Type]
         ): (TypeCtxt, Unit) = {
-          val newCase =
-            (parent: Type) =>
-              Defn.Class(
-                mods = List(Mod.Case()),
-                name = Type.Name(command.name.toAST.value),
+
+          def newCase(parentName: scala.meta.Type.Name): scala.meta.Defn.Enum = {
+            val prior = context.tpe(parentName)
+            val newCase =
+              Defn.EnumCase(
+                mods = List.empty,
+                name = Term.Name(command.name.toAST.value),
                 tparams = List.empty,
                 ctor = Ctor.Primary(
                   mods = List.empty,
@@ -170,14 +171,13 @@ trait Functional[AP <: AnyParadigm] extends Func {
                     )
                   })
                 ),
-                Template(
-                  early = List.empty,
-                  inits = List(Init(tpe = parent, name = Name.Anonymous(), argss = List.empty)),
-                  self = Self(Name.Anonymous(), None),
-                  stats = List.empty
-                )
+                inits = List.empty
               )
-          (context.copy(cases = context.cases :+ newCase), Unit)
+            prior.copy(templ = prior.templ.copy(
+              stats = prior.templ.stats :+ newCase
+            ))
+          }
+          (context.copy(tpe = newCase), Unit)
         }
       }
     implicit val canTranslateTypeInType: Understands[TypeCtxt, ToTargetLanguageType[Type]] =
@@ -228,7 +228,7 @@ trait Functional[AP <: AnyParadigm] extends Func {
           context: MethodBodyCtxt,
           command: InstantiateType[Type, Syntax.MangledName, Term]
         ): (MethodBodyCtxt, Term) = {
-          (context, Term.Apply(Term.Name(command.constructor.toAST.value), command.arguments.toList))
+          (context, Term.Apply(AnyParadigm.selectConstructor(command.tpe, command.constructor.toAST).get, command.arguments.toList))
         }
       }
     implicit val canResolveExpressionImportInMethod: Understands[MethodBodyCtxt, ResolveImport[Import, Term]] =
@@ -254,7 +254,7 @@ trait Functional[AP <: AnyParadigm] extends Func {
           (context, AnyParadigm.toTypeSelection(command.name))
       }
   }
-  object projectContextCapabilities extends ProjectContextCapabilities {
+  object projectCapabilities extends ProjectCapabilities {
     implicit val canAddTypeLookupForTypesInProject: Understands[ProjectCtxt, AddTypeLookup[TypeCtxt, Type]] =
       new Understands[ProjectCtxt, AddTypeLookup[TypeCtxt, Type]] {
         def perform(context: ProjectCtxt, command: AddTypeLookup[TypeCtxt, Type]): (ProjectCtxt, Unit) = {

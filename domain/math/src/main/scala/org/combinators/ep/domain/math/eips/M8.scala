@@ -38,6 +38,9 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
       override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
           op match {
             case math.M4.Simplify => Set(math.M0.Eval)
+              // Since we are defining new type, we have to "carry over" the dependencies for Eql
+            case math.M6.Eql => math.M6.isOps(model.flatten.typeCases).toSet
+            case op if math.M6.isOps(model.flatten.typeCases).contains(op) => Set(math.M6.Eql)
             case _ => Set.empty
           }
       }
@@ -53,7 +56,7 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
       }
 
       def applicable(forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        Set(math.M4.Simplify,math.M4.Collect,math.M2.PrettyP,math.M0.Eval,math.I1.MultBy,math.M7.PowBy,math.M6.Equals,math.M5.Identifier,Operation.asTree).contains(potentialRequest.op) &&
+        Set(math.M4.Simplify,math.M4.Collect,math.M2.PrettyP,math.M0.Eval,math.I1.MultBy,math.M7.PowBy,math.M6.Equals,math.M6.Eql,math.M5.Identifier,Operation.asTree).contains(potentialRequest.op) &&
           Set(math.M8.Inv).contains(potentialRequest.tpeCase)
       }
 
@@ -75,8 +78,7 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
               SendRequest(
                 expr,
                 math.M4.getModel.baseDataType,
-                Request(math.M0.Eval, Map.empty),
-                Some(onRequest)
+                Request(math.M0.Eval, Map.empty)
               )
             )}
           }
@@ -86,8 +88,7 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
             SendRequest(
               attExpr,
               math.M4.getModel.baseDataType,
-              Request(math.M4.Simplify, Map.empty),
-              Some(onRequest)
+              Request(math.M4.Simplify, Map.empty)
             )
           )
         }
@@ -170,8 +171,7 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
             forApproach.dispatch(SendRequest(
               onRequest.attributes(att),
               math.M3.getModel.baseDataType,
-              onRequest.request,
-              Some(onRequest)
+              onRequest.request
             ))
           }
         } yield atts
@@ -183,8 +183,11 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
           case math.I1.MultBy => m7i2Provider.genericLogic(forApproach)(onRequest)
           case math.M7.PowBy => m7i2Provider.genericLogic(forApproach)(onRequest)
           case math.M6.Equals => m7i2Provider.genericLogic(forApproach)(onRequest)
+          case math.M6.Eql => m7i2Provider.genericLogic(forApproach)(onRequest)
           case math.M5.Identifier =>
             m7i2Provider.genericLogic(forApproach)(onRequest)
+          case op if op.tags.contains(math.M6.IsOp) => m7i2Provider.genericLogic(forApproach)(onRequest)
+
           case op if op == Operation.asTree => m7i2Provider.genericLogic(forApproach)(onRequest)
 
           case math.M0.Eval =>
@@ -195,8 +198,7 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
                     forApproach.dispatch(SendRequest(
                       onRequest.attributes(att),
                       math.M3.getModel.baseDataType,
-                      onRequest.request,
-                      Some(onRequest)
+                      onRequest.request
                     ))
                   }
 
@@ -213,8 +215,7 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
                   forApproach.dispatch(SendRequest(
                     onRequest.attributes(att),
                     math.M3.getModel.baseDataType,
-                    onRequest.request,
-                    Some(onRequest)
+                    onRequest.request
                   ))
                 }
 

@@ -1,5 +1,6 @@
 package org.combinators.ep.language.scala   /*DI:LD:AI*/
 
+import scala.meta.dialects.Scala3._
 import scala.meta._
 
 import org.combinators.ep.generator.AbstractSyntax

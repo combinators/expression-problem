@@ -12,7 +12,7 @@ trait Time[Context] extends FFI {
   trait TimeCapabilities {
     implicit val canGetTime: Understands[Context, Apply[GetTime, Expression, Expression]]
     def getTime(): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Apply[GetTime, Expression, Expression](GetTime(), Seq.empty))
+      AnyParadigm.capability(Apply[GetTime, Expression, Expression](GetTime(), Seq.empty))
   }
   val timeCapabilities: TimeCapabilities
 }

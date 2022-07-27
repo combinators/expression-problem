@@ -92,8 +92,7 @@ object A1M3 {
               forApproach.dispatch(SendRequest(
                 onRequest.attributes(att),
                 math.M3.getModel.baseDataType,
-                onRequest.request,
-                Some(onRequest)
+                onRequest.request
               ))
             }
             res <- operate(atts)

@@ -17,6 +17,8 @@ class Strings[Ctxt, AP <: AnyParadigm](
   getMember: Understands[Ctxt, GetMember[Expression, Name]],
   applyMethod: Understands[Ctxt, Apply[Expression, Expression, Expression]]
 ) extends Strs[Ctxt] {
+  case object StringsEnabled
+
   val stringCapabilities: StringCapabilities =
     new StringCapabilities {
       implicit val canGetStringLength: Understands[Ctxt, Apply[GetStringLength, Expression, Expression]] =
@@ -65,9 +67,11 @@ class Strings[Ctxt, AP <: AnyParadigm](
         context: ProjectCtxt,
         command: Enable.type
       ): (ProjectCtxt, Unit) = {
-        val resolverUpdate =
-          ContextSpecificResolver.updateResolver(base.config, TypeRep.String, ObjectOriented.nameToType(ObjectOriented.fromComponents("String")))(new StringLiteralExpr(_))
-        (context.copy(resolver = resolverUpdate(context.resolver)), ())
+        if (!context.resolver.resolverInfo.contains(StringsEnabled)) {
+          val resolverUpdate =
+            ContextSpecificResolver.updateResolver(base.config, TypeRep.String, ObjectOriented.nameToType(ObjectOriented.fromComponents("String")))(new StringLiteralExpr(_))
+          (context.copy(resolver = resolverUpdate(context.resolver).addInfo(StringsEnabled)), ())
+        } else (context, ())
       }
     })
 }

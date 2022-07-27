@@ -62,7 +62,8 @@ trait CoCoClean extends ApproachImplementationProvider {
       domain
     } else {
       // is there a single type that can represent the "least upper bound" of all prior branches.
-      val ancestorsWithTypeInterfaces = ancestorsDefiningNewTypeInterfaces(domain)
+      val ancestorsWithTypeInterfaces = domain.former.map(ancestor => latestModelDefiningNewTypeInterface(ancestor)).distinct
+      // To validate this works, need multiple branches where NEITHER defines operators
       if (ancestorsWithTypeInterfaces.size == 1 && !ancestorsWithTypeInterfaces.head.isDomainBase) { // take care to avoid falling below "floor"
         ancestorsWithTypeInterfaces.head
       } else {

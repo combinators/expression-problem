@@ -65,8 +65,7 @@ object Q1 {
                       SendRequest(
                         attExp,
                         dt,
-                        Request(Operation.asTree, Map.empty),
-                        Some(onRequest)
+                        Request(Operation.asTree, Map.empty)
                       )
                     )
                   case (att@Attribute(_, attTpe), attExp) =>
@@ -79,8 +78,7 @@ object Q1 {
                   SendRequest(
                     onRequest.selfReference,
                     onRequest.onType,
-                    Request(math.Q1.Identifier, Map.empty),
-                    Some(onRequest)
+                    Request(math.Q1.Identifier, Map.empty)
                   )
                 )
               inst <- createNode(id, children)
@@ -111,8 +109,7 @@ object Q1 {
                 inner <- forApproach.dispatch(SendRequest(
                   onRequest.attributes(onRequest.tpeCase.attributes.head),
                   math.M1.getModel.baseDataType,
-                  onRequest.request,
-                  Some(onRequest)
+                  onRequest.request
                 ))
 
                 res <- sqrt(inner)
@@ -123,8 +120,7 @@ object Q1 {
               inner <- forApproach.dispatch(SendRequest(
                 onRequest.attributes(onRequest.tpeCase.attributes.head),
                 math.M1.getModel.baseDataType,
-                onRequest.request,
-                Some(onRequest)
+                onRequest.request
               ))
 
               front <- reify(TypeRep.String, "(sqrt ")

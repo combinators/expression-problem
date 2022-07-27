@@ -78,8 +78,7 @@ sealed class V1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
                     forApproach.dispatch(SendRequest(
                       onRequest.attributes(att),
                       math.M3.getModel.baseDataType,
-                      onRequest.request,
-                      Some(onRequest)
+                      onRequest.request
                     ))
                   }
 

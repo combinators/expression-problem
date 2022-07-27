@@ -111,14 +111,12 @@ sealed class M3W1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
                   base <- forApproach.dispatch(SendRequest(
                     onRequest.attributes(power.attributes.head),
                     math.M1.getModel.baseDataType,
-                    onRequest.request,
-                    Some(onRequest)
+                    onRequest.request
                   ))
                   exponent <- forApproach.dispatch(SendRequest(
                     onRequest.attributes(power.attributes.tail.head),
                     math.M1.getModel.baseDataType,
-                    onRequest.request,
-                    Some(onRequest)
+                    onRequest.request
                   ))
 
                   res <- makeString(Seq(base, exponent), "(", "^", ")")

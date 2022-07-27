@@ -1,7 +1,7 @@
 package org.combinators.ep.language.java    /*DI:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
-import org.combinators.ep.approach.oo.{Algebra, CoCo, CoCoClean, ExtensibleVisitor, Interpreter, Traditional, Trivially, ViTA, Visitor, VisitorSideEffect}
+import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, Traditional, Visitor}
 import org.combinators.ep.domain.{GenericModel, Model}
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.math._
@@ -21,14 +21,8 @@ class MainProducer {
   val ooApproach = Traditional[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
   // can't have all of these together
   val visitorApproach = Visitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
-  val visitorSideEffectApproach = VisitorSideEffect[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val extensibleVisitorApproach = ExtensibleVisitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
-  val interpreterApproach = Interpreter[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
-  val triviallyApproach = Trivially[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
-  val algebraApproach = Algebra[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
-  val vitaApproach = ViTA[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
-  val cocoApproach = CoCo[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val cocoCleanApproach = CoCoClean[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
   // select one here.
@@ -47,7 +41,7 @@ class MainProducer {
 //  val eip = eips.I2(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod,
 //    generator.stringsInMethod, generator.imperativeInMethod)
 //  // how do I just use M2 instead of this? HACK
-  val m0_eip = eips.M0(approach.paradigm)(generator.doublesInMethod)
+  val m0_eip = eips.M0(approach.paradigm)(generator.doublesInMethod, generator.stringsInMethod)
   val m1_eip = eips.M1(approach.paradigm)(m0_eip)(generator.doublesInMethod)
   val m2_eip = eips.M2(approach.paradigm)(m1_eip)(generator.doublesInMethod, generator.stringsInMethod)
 

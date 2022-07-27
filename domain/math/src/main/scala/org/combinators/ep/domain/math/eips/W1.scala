@@ -60,14 +60,12 @@ object W1 {
                   base <- forApproach.dispatch(SendRequest(
                     onRequest.attributes(power.attributes.head),
                     math.M1.getModel.baseDataType,
-                    onRequest.request,
-                    Some(onRequest)
+                    onRequest.request
                   ))
                   exponent <- forApproach.dispatch(SendRequest(
                     onRequest.attributes(power.attributes.tail.head),
                     math.M1.getModel.baseDataType,
-                    onRequest.request,
-                    Some(onRequest)
+                    onRequest.request
                   ))
                   res <- pow(base, exponent)
                 } yield res

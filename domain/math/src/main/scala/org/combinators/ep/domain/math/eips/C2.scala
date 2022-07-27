@@ -45,7 +45,7 @@ sealed class C2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
       }
 
       def applicable(forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        Set(math.C2.Collect).contains(potentialRequest.op)  // any foreseeable DT can be collected
+        scala.collection.Set(math.C2.Collect).contains(potentialRequest.op)  // any foreseeable DT can be collected
       }
 
       private def collectLogic
@@ -74,8 +74,7 @@ sealed class C2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
                       SendRequest(
                         expr,
                         math.M4.getModel.baseDataType,
-                        Request(math.M4.Collect, Map.empty),
-                        Some(onRequest)
+                        Request(math.M4.Collect, Map.empty)
                       )
                     )}
                 }

@@ -14,8 +14,6 @@ import org.combinators.templating.persistable.{BundledResource, ResourcePersista
 
 import scala.util.Try
 
-
-
 trait AnyParadigm extends AP {
   val config: Config
   val syntax: Syntax.default.type = Syntax.default
@@ -27,8 +25,8 @@ trait AnyParadigm extends AP {
   type MethodBodyContext = MethodBodyCtxt
 
 
-  val projectContextCapabilities: ProjectContextCapabilities =
-    new ProjectContextCapabilities {
+  val projectCapabilities: ProjectCapabilities =
+    new ProjectCapabilities {
       implicit val canDebugInProject: Understands[ProjectCtxt, Debug] =
         new Understands[ProjectCtxt, Debug] {
           def perform(
@@ -66,41 +64,49 @@ trait AnyParadigm extends AP {
                   isTest = false,
                   companionDefinitions = Seq.empty)
               )
-            val companionObject =
-              if (uc.companionDefinitions.nonEmpty) {
-                val name = 
-                  if (command.name.nonEmpty) Term.Name(command.name.last.toAST.value)
-                  else tgtPackage.ref match {
-                    case tgt: Term.Name => tgt
-                    case tgt: Term.Select => tgt.name
-                  }
-                val templ =
-                  Template(
-                    early = List.empty,
-                    inits = List.empty,
-                    self = Self(Name.Anonymous(), None),
-                    stats = uc.companionDefinitions.toList
-                  )
-                if (command.name.nonEmpty) Some(Defn.Object(List.empty, name, templ))
-                else Some(Pkg.Object(List.empty, name, templ))
-              } else None
+
+            def keepImp(imp: Importer): Boolean = {
+
+              def dropLastSelected(imp: Term): Term =
+                imp match {
+                  case sel : Term.Select => sel.qual
+                  case _ => imp
+                }
+              def keepRec(tgt: Term, imp: Term): Boolean = {
+                (tgt, imp)  match {
+                  case (tgt: Term.Name, sel: Term.Name) =>
+                    tgt.value != sel.value
+                  case (tgt: Term.Select, sel: Term.Select) =>
+                    tgt.name != sel.name || keepRec(tgt.qual, sel.qual)
+                  case _ => true
+                }
+              }
+              keepRec(tgtPackage.ref, dropLastSelected(imp.ref))
+            }
+            def filterImps(stats: List[Stat]): List[Stat] =
+              stats.flatMap {
+                case i@Import(imps) =>
+                  val newImporters = imps.filter(keepImp)
+                  if (newImporters.isEmpty) List.empty else List(i.copy(importers = newImporters))
+                case s => List(s)
+              }
 
             val resultingUnit = {
               val stats: List[Stat] =
-                if (command.name.isEmpty && companionObject.isDefined) {
+                if (command.name.isEmpty) {
                   tgtPackage.ref match {
                     case tgt: Term.Name => 
-                      uc.unit.stats ++ companionObject.toList
+                      filterImps(uc.unit.stats ++ uc.companionDefinitions)
                     case tgt: Term.Select => 
                       List(
                         tgtPackage.copy(
                           ref = tgt.qual.asInstanceOf[Term.Ref],
-                          stats = uc.unit.stats ++ companionObject.toList
+                          stats = filterImps(uc.unit.stats ++ uc.companionDefinitions)
                         )
                       )
                   }
                 } else {
-                  List(tgtPackage.copy(stats = uc.unit.stats ++ companionObject.toList))
+                  List(tgtPackage.copy(stats = filterImps(uc.unit.stats ++ uc.companionDefinitions)))
                 }
               (command.name.map(_.toAST), Source(stats))
             }
@@ -155,7 +161,6 @@ trait AnyParadigm extends AP {
               context.unit.stats.collect {
                 case imp: Import => imp
               } :+ command.imp
-
             val sortedImports = imports.groupBy(_.structure).mapValues(_.head).values.toList.sortBy(_.toString)
             val newStats =
               sortedImports ++ context.unit.stats.filter(!_.isInstanceOf[Import])
@@ -168,7 +173,7 @@ trait AnyParadigm extends AP {
             context: CompilationUnitCtxt,
             command: AddTestSuite[Name, TestCtxt]
           ): (CompilationUnitContext, Unit) = {
-            val clsToAdd = q"class ${Type.Name(command.name.mangled)} extends FunSuite {}"
+            val clsToAdd = q"class ${Type.Name(command.name.mangled)} extends AnyFunSuite {}"
             val (testRes, _) =
               Command.runGenerator(
                 command.suite,
@@ -182,8 +187,9 @@ trait AnyParadigm extends AP {
               val testClass = testRes.testClass
               val funSuiteImport =
                 Import(List(Importer(
-                  Term.Select(Term.Name("org"), Term.Name("scalatest")),
-                  List(Importee.Name(Name.Indeterminate("FunSuite"))))))
+                  Term.Select(Term.Select(Term.Name("org"), Term.Name("scalatest")), Term.Name("funsuite")),
+                  List(Importee.Wildcard())
+                )))
               val imports =
                 (oldUnit.stats.collect {
                   case imp: Import => imp
@@ -217,6 +223,16 @@ trait AnyParadigm extends AP {
 
             System.err.println (command.tag + ": " + context.method)
             (context,())
+          }
+        }
+
+      implicit val canOutputToConsole: Understands[MethodBodyContext, OutputToConsole[Expression]] =
+        new Understands[MethodBodyCtxt, OutputToConsole[Expression]] {
+          def perform(
+                       context: MethodBodyCtxt,
+                       command: OutputToConsole[Expression]
+                     ): (MethodBodyCtxt, Unit) = {
+            (context.copy(), ())
           }
         }
 
@@ -465,15 +481,21 @@ trait AnyParadigm extends AP {
       )
     val nameEntry = config.projectName.map(n => s"""name := "${n}"""").getOrElse("")
     val scalaTestDeps = Seq(
-      """"org.scalatest" %% "scalatest" % "3.1.1" % "test""""
+      """"org.scalatest" %% "scalatest" % "3.2.11" % "test""""
     )
     val deps = (scalaTestDeps ++ finalContext.extraDependencies).mkString("Seq(\n    ", ",\n    ", "\n  )")
     val buildFile =
       s"""
          |$nameEntry
+         |scalaVersion := "3.0.2"
          |libraryDependencies ++= $deps
            """.stripMargin
     // TODO: Add more cleanup (imports?)..
+    val buildProperties =
+      s"""
+         |sbt.version=1.6.2
+         |""".stripMargin
+
     val cleanedUnits = finalContext.units
     val cleanedTestUnits = finalContext.testUnits
     val scalaFiles = cleanedUnits.map { case (name, unit) =>
@@ -493,6 +515,7 @@ trait AnyParadigm extends AP {
       ResourcePersistable.bundledResourceInstance.rawText(gitIgnore),
       ResourcePersistable.bundledResourceInstance.path(gitIgnore)) +:
       FileWithPath(buildFile, Paths.get("build.sbt")) +:
+      FileWithPath(buildProperties, Paths.get("project", "build.properties")) +:
       (scalaFiles ++ scalaTestFiles)
   }
 }
@@ -529,6 +552,14 @@ object AnyParadigm {
       case Type.Project(qual: Type.Ref, name) =>
         relativize(relativeTo, qual).map(relTpe => Type.Project(relTpe, name))
       case Type.Singleton(ref) => relativize(relativeTo, ref).map(Type.Singleton(_))
+      case _ => None
+    }
+  }
+
+  def selectConstructor(relativeTo: Type, ctorName: Name): Option[Term.Ref] = {
+    stripGenerics(relativeTo) match {
+      case name: Type.Name => Some(Term.Select(Term.Name(name.value), Term.Name(ctorName.value)))
+      case Type.Select(ref: Term.Ref, name) => Some(Term.Select(Term.Select(ref, Term.Name(name.value)), Term.Name(ctorName.value)))
       case _ => None
     }
   }
@@ -590,7 +621,6 @@ object AnyParadigm {
       Type.Name(qualifiedName.head.toAST.value)
     }
   }
-
 
   def computePath(relativeTo: Path, tgt: Seq[Name]): Path = {
     tgt match {

@@ -5,6 +5,7 @@ import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.generator.Command
 import org.combinators.ep.generator.Command.Generator
 
+import scala.meta.dialects.Scala3._
 import scala.meta.Term
 import scala.meta.Import
 
@@ -19,7 +20,8 @@ case class ContextSpecificResolver(
   _reificationInMethod: ContextSpecificResolver => InstanceRep => Generator[MethodBodyCtxt, Term],
   _tpeImportResolution: ContextSpecificResolver => Type => Option[Import],
   _termImportResolution: ContextSpecificResolver => Term => Option[Import],
-  _instantiationOverride: ContextSpecificResolver => (Type, Seq[Term]) => (Type, Seq[Term])
+  _instantiationOverride: ContextSpecificResolver => (Type, Seq[Term]) => (Type, Seq[Term]),
+  resolverInfo: Set[Any] = Set.empty
 ) {
   def methodTypeResolution(tpeRep: TypeRep): Generator[MethodBodyCtxt, Type] =
     _methodTypeResolution(this)(tpeRep)
@@ -39,6 +41,8 @@ case class ContextSpecificResolver(
     _termImportResolution(this)(term)
   def instantiationOverride(tpe: Type, args: Seq[Term]): (Type, Seq[Term]) =
     _instantiationOverride(this)(tpe,args)
+
+  def addInfo(info: Any): ContextSpecificResolver = copy(resolverInfo = resolverInfo + info)
 }
 
 object ContextSpecificResolver {

@@ -19,6 +19,8 @@ class Arithmetic[Ctxt, T, AP <: AnyParadigm](
 ) extends Arith[Ctxt, T] {
   import org.combinators.ep.language.java.OperatorExprs._
 
+  case object ArithmeticEnabled
+
   val arithmeticCapabilities: ArithmeticCapabilities =
     new ArithmeticCapabilities {
       implicit val canAdd: Understands[Ctxt, Apply[Add[T], Expression, Expression]] =
@@ -42,9 +44,13 @@ class Arithmetic[Ctxt, T, AP <: AnyParadigm](
         context: ProjectCtxt,
         command: Enable.type
       ): (ProjectCtxt, Unit) = {
-        val resolverUpdate =
-          ContextSpecificResolver.updateResolver(base.config, rep, targetType)(reification)(_)
-        (context.copy(resolver = resolverUpdate(context.resolver)), ())
+        if (!context.resolver.resolverInfo.contains(ArithmeticEnabled)) {
+          val resolverUpdate =
+            ContextSpecificResolver.updateResolver(base.config, rep, targetType)(reification)(_)
+          (context.copy(resolver = resolverUpdate(context.resolver).addInfo(ArithmeticEnabled)), ())
+        } else {
+          (context, ())
+        }
       }
     })
 }

@@ -4,7 +4,7 @@ import java.util.UUID
 import com.github.javaparser.ast.{ImportDeclaration, Modifier, NodeList}
 import com.github.javaparser.ast.`type`.ClassOrInterfaceType
 import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, ConstructorDeclaration, MethodDeclaration}
-import com.github.javaparser.ast.expr.{AssignExpr, CastExpr, Expression, FieldAccessExpr, MethodCallExpr, NameExpr, ObjectCreationExpr, ThisExpr, TypeExpr, Name => JName}
+import com.github.javaparser.ast.expr.{AssignExpr, CastExpr, EnclosedExpr, Expression, FieldAccessExpr, InstanceOfExpr, MethodCallExpr, NameExpr, ObjectCreationExpr, ThisExpr, TypeExpr, Name => JName}
 import com.github.javaparser.ast.stmt.{BlockStmt, ExplicitConstructorInvocationStmt, ExpressionStmt, ReturnStmt}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.domain.instances.InstanceRep
@@ -251,7 +251,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             Try { (context, context.resolver.importResolution(stripped)) } getOrElse {
               val newImport =
                 new ImportDeclaration(
-                  new com.github.javaparser.ast.expr.Name(stripped.asClassOrInterfaceType().asString()),   // DEFECT: SCOPE
+                  ObjectOriented.typeToName(stripped.asClassOrInterfaceType()),
                   false,
                   false)
               if (context.extraImports.contains(newImport)) {
@@ -414,7 +414,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             Try { (context, context.resolver.importResolution(stripped)) } getOrElse {
               val newImport =
                 new ImportDeclaration(
-                  new com.github.javaparser.ast.expr.Name(stripped.asClassOrInterfaceType().asString()),  // DEFECT: scope
+                  ObjectOriented.typeToName(stripped.asClassOrInterfaceType()),
                   false,
                   false)
               if (context.extraImports.contains(newImport)) {
@@ -477,7 +477,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             context: ConstructorContext,
             command: CastObject[Type, Expression]
           ): (ConstructorContext, Expression) = {
-            (context, new CastExpr(command.tpe.clone(), command.expr.clone()))
+            (context, new EnclosedExpr(new CastExpr(command.tpe.clone(), command.expr.clone())))
           }
         }
 
@@ -613,7 +613,17 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             context: MethodBodyContext,
             command: CastObject[Type, Expression]
           ): (MethodBodyContext, Expression) = {
-            (context, new CastExpr(command.tpe.clone(), command.expr.clone()))
+            (context, new EnclosedExpr(new CastExpr(command.tpe.clone(), command.expr.clone())))
+          }
+        }
+
+      implicit val canInstanceOfTypeInMethod: Understands[MethodBodyContext, InstanceOfType[Type, Expression]] =
+        new Understands[MethodBodyContext, InstanceOfType[Type, Expression]] {
+          def perform(
+                       context: MethodBodyContext,
+                       command: InstanceOfType[Type, Expression]
+                     ): (MethodBodyContext, Expression) = {
+            (context, new InstanceOfExpr(command.expr.clone(), command.tpe.asClassOrInterfaceType().clone()))
           }
         }
 
@@ -794,7 +804,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             Try { (context, context.resolver.importResolution(stripped)) } getOrElse {
               val newImport =
                 new ImportDeclaration(
-                  new com.github.javaparser.ast.expr.Name(stripped.asClassOrInterfaceType().asString()),   // DEFECT: SCOPE
+                  ObjectOriented.typeToName(stripped.asClassOrInterfaceType()),
                   false,
                   false)
               if (context.extraImports.contains(newImport)) {
@@ -861,6 +871,13 @@ object ObjectOriented {
       .map[ClassOrInterfaceType](n => nameToType(n))
       .map[ClassOrInterfaceType](qual => new ClassOrInterfaceType(qual, name.getIdentifier))
       .orElseGet(() => new ClassOrInterfaceType(null, name.getIdentifier))
+  }
+
+  def typeToName(tpe: ClassOrInterfaceType): JName = {
+    tpe.getScope
+      .map[JName](s => typeToName(s))
+      .map[JName](qual => new JName(qual, tpe.getName.getIdentifier))
+      .orElseGet(() => new JName(tpe.getName.getIdentifier))
   }
 
   def apply[AP <: AnyParadigm](base: AnyParadigm): ObjectOriented[base.type] = {

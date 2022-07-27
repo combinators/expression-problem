@@ -14,6 +14,8 @@ import com.github.javaparser.ast.`type`.PrimitiveType
 
 
 class Booleans[Ctxt, AP <: AnyParadigm](val base: AP) extends Bools[Ctxt] {
+  case object BooleansEnabled
+
   val booleanCapabilities: BooleanCapabilities =
     new BooleanCapabilities {
       implicit val canAnd: Understands[Ctxt, Apply[And, base.syntax.Expression, base.syntax.Expression]] =
@@ -47,9 +49,11 @@ class Booleans[Ctxt, AP <: AnyParadigm](val base: AP) extends Bools[Ctxt] {
         context: ProjectCtxt,
         command: Enable.type
       ): (ProjectCtxt, Unit) = {
-        val resolverUpdate =
-          ContextSpecificResolver.updateResolver(base.config, TypeRep.Boolean, PrimitiveType.booleanType())(new BooleanLiteralExpr(_))
-        (context.copy(resolver = resolverUpdate(context.resolver)), ())
+        if (!context.resolver.resolverInfo.contains(BooleansEnabled)) {
+          val resolverUpdate =
+            ContextSpecificResolver.updateResolver(base.config, TypeRep.Boolean, PrimitiveType.booleanType())(new BooleanLiteralExpr(_))
+          (context.copy(resolver = resolverUpdate(context.resolver).addInfo(BooleansEnabled)), ())
+        } else (context, ())
       }
     })
 }

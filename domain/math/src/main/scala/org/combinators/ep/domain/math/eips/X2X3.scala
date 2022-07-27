@@ -88,8 +88,7 @@ object X2X3 {
               forApproach.dispatch(SendRequest(
                 onRequest.attributes(att),
                 math.M0.getModel.baseDataType,
-                onRequest.request,
-                Some(onRequest)
+                onRequest.request
               ))
             }
             res <- operate(atts)

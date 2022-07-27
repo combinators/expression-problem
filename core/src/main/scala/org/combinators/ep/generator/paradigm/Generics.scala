@@ -12,7 +12,7 @@ case class AddUpperBound[Type](bound: Type) extends Command {
 }
 
 trait Generics {
-  val base: AnyParadigm
+  val base: org.combinators.ep.generator.paradigm.AnyParadigm
   val ooParadigm: ObjectOriented.WithBase[base.type]
   val ppolyParadigm: ParametricPolymorphism.WithBase[base.type]
 
@@ -24,15 +24,15 @@ trait Generics {
   trait ClassCapabilities {
     implicit val canAddTypeParameterInClass: Understands[ClassContext, AddTypeParameter[Name, TypeParameterContext]]
     def addTypeParameter(name: Name, spec: Generator[TypeParameterContext, Unit]): Generator[ClassContext, Unit] =
-      AnyParadigm.capabilitiy(AddTypeParameter[Name, TypeParameterContext](name, spec))
+      AnyParadigm.capability(AddTypeParameter[Name, TypeParameterContext](name, spec))
 
     implicit val canGetTypeArgumentsInClass: Understands[ClassContext, GetTypeArguments[Type]]
     def getTypeArguments(): Generator[ClassContext, Seq[Type]] =
-      AnyParadigm.capabilitiy(GetTypeArguments[Type]())
+      AnyParadigm.capability(GetTypeArguments[Type]())
 
     implicit val canApplyTypeInClass: Understands[ClassContext, Apply[Type, Type, Type]]
     def applyType(tpe: Type, arguments: Seq[Type]): Generator[ClassContext, Type] =
-      AnyParadigm.capabilitiy(Apply[Type, Type, Type](tpe, arguments))
+      AnyParadigm.capability(Apply[Type, Type, Type](tpe, arguments))
   }
   val classCapabilities: ClassCapabilities
 
@@ -42,18 +42,18 @@ trait Generics {
 
     implicit val canApplyTypeTypeParameter: Understands[TypeParameterContext, Apply[Type, Type, Type]]
     def applyType(tpe: Type, arguments: Seq[Type]): Generator[TypeParameterContext, Type] =
-      AnyParadigm.capabilitiy(Apply[Type, Type, Type](tpe, arguments))
+      AnyParadigm.capability(Apply[Type, Type, Type](tpe, arguments))
   }
   val typeParameterCapabilities: TypeParameterCapabilities
 
   trait ConstructorCapabilities {
     implicit val canApplyTypeInConstructor: Understands[ConstructorContext, Apply[Type, Type, Type]]
     def applyType(tpe: Type, arguments: Seq[Type]): Generator[ConstructorContext, Type] =
-      AnyParadigm.capabilitiy(Apply[Type, Type, Type](tpe, arguments))
+      AnyParadigm.capability(Apply[Type, Type, Type](tpe, arguments))
 
     implicit val canApplyMethodToTypeInConstructor: Understands[ConstructorContext, Apply[Expression, Type, Expression]]
     def instantiateTypeParameter(method: Expression, arguments: Seq[Type]): Generator[ConstructorContext, Expression] =
-      AnyParadigm.capabilitiy(Apply[Expression, Type, Expression](method, arguments))
+      AnyParadigm.capability(Apply[Expression, Type, Expression](method, arguments))
   }
   val constructorCapabilities: ConstructorCapabilities
 }

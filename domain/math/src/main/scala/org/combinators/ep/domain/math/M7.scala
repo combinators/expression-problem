@@ -1,6 +1,6 @@
 package org.combinators.ep.domain.math   /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{EqualsCompositeTestCase, Operation, Parameter, TestCase, TypeRep}
+import org.combinators.ep.domain.abstractions.{DataTypeCase, EqualsCompositeTestCase, Operation, Parameter, TestCase, TypeRep}
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
 import org.combinators.ep.domain.{Evolution, GenericModel}
 import org.combinators.ep.domain.math.M0.{AddInst, DoubleInst, Eval, LitInst}

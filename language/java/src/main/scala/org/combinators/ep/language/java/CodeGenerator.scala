@@ -9,6 +9,7 @@ import org.combinators.ep.generator.Command
 import org.combinators.ep.language.java.paradigm._
 import org.combinators.ep.language.java.paradigm.ffi._
 
+
 /**
  * Java-specific.
  *
@@ -95,6 +96,27 @@ sealed class CodeGenerator(config: Config) { cc =>
       ooParadigm.constructorCapabilities.canApplyInConstructor
     )
 
+  val consoleInMethod =
+    new Console[MethodBodyCtxt, paradigm.type](
+      paradigm, stringsInMethod
+    )
+
+  val consoleInConstructor =
+    new Console[CtorCtxt, paradigm.type](
+      paradigm, stringsInConstructor
+    )
+  
+  val arraysInMethod =
+    new Arrays[MethodBodyCtxt, paradigm.type](
+      paradigm
+    )
+
+  val arraysInConstructor =
+    new Arrays[CtorCtxt, paradigm.type](
+      paradigm
+    )
+    
+
   val listsInMethod =
     Lists[MethodBodyCtxt, paradigm.type, generics.type](
       paradigm,
@@ -126,6 +148,7 @@ sealed class CodeGenerator(config: Config) { cc =>
     )(ooParadigm)
 
   val assertionsInMethod = new Assertions[paradigm.type](paradigm)(ooParadigm)
+  val exceptionsInMethod = new Exceptions[paradigm.type](paradigm)
 }
 
 object CodeGenerator {

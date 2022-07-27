@@ -204,9 +204,6 @@ cleanly compile this code and confirm all test cases.
  ![Retrieve ZIP file](https://github.com/combinators/expression-problem/raw/master/cpp.zip) with generated source files
 
  
-
-
-
 # References
 
 1. Wadler, Philip, [Email to to Java Genericity Mailing List](http://homepages.inf.ed.ac.uk/wadler/papers/expression/expression.txt)

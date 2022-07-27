@@ -1,6 +1,6 @@
 package org.combinators.ep.approach.oo    /*DI:LI:AD*/
 
-import org.combinators.ep.domain.{GenericModel, Model}
+import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator._
 import org.combinators.ep.generator.communication._
@@ -8,7 +8,7 @@ import org.combinators.ep.generator.paradigm._
 import Command._
 import AnyParadigm.syntax._
 
-trait Traditional extends OOApproachImplementationProvider with BaseDataTypeAsClass with SharedOO with FieldDefinition {  // this had been sealed. not sure why
+trait Traditional extends SharedOO {  // this had been sealed. not sure why
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
 
   import paradigm._
@@ -22,7 +22,6 @@ trait Traditional extends OOApproachImplementationProvider with BaseDataTypeAsCl
       method <- getMember(message.to, names.mangle(names.instanceNameOf(message.request.op)))
       result <- apply(method, message.request.op.parameters.map(message.request.arguments))
     } yield result
-
   }
 
   def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
@@ -61,19 +60,28 @@ trait Traditional extends OOApproachImplementationProvider with BaseDataTypeAsCl
     addClassToProject(makeClass, names.mangle(names.conceptNameOf(tpeCase)))
   }
 
-  def implement(gdomain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
-    val domain = gdomain match {
-      case _:Model => gdomain.asInstanceOf[Model]
-      case _ => gdomain.linearize
+  def makeBase(tpe: DataType, ops: Seq[Operation]): Generator[ProjectContext, Unit] = {
+    import ooParadigm.projectCapabilities._
+    val makeClass: Generator[ClassContext, Unit] = {
+      import classCapabilities._
+      for {
+        _ <- setAbstract()
+        _ <- forEach(ops) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), makeSignature(op)) }
+      } yield ()
     }
 
-    val flatDomain = domain.flatten
+    addClassToProject(makeClass, names.mangle(names.conceptNameOf(tpe)))
+  }
+
+  def implement(gdomain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
+
+    val flatDomain = gdomain.linearize.flatten
     for {
       _ <- registerTypeMapping(flatDomain)
       _ <- domainSpecific.initialize(this)
 
       _ <- makeBase(flatDomain.baseDataType, flatDomain.ops)
-      _ <- forEach (flatDomain.typeCases) { tpeCase =>
+      _ <- forEach (flatDomain.typeCases.distinct) { tpeCase =>
           makeDerived(flatDomain.baseDataType, tpeCase, flatDomain.ops, domainSpecific)
         }
     } yield ()

@@ -8,7 +8,7 @@ import org.combinators.ep.domain.math.M4.Simplify
 import org.combinators.ep.domain.{Evolution, GenericModel}
 
 object M8 extends Evolution {
-  override implicit def getModel:GenericModel = M7I2.getModel.evolve("m8", Seq(Inv), Seq.empty)
+  override implicit def getModel:GenericModel = M7I2.getModel.evolve("m8", Seq(Inv), M6.isOps(Seq(Inv)))
 
   // M8:model evolution.  INV which is opposite of DIV, or 1/DIV
   // -------------------

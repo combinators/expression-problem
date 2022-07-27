@@ -1,14 +1,13 @@
-package org.combinators.ep.approach.functional    /*DI:LI:AI*/
+package org.combinators.ep.approach.functional    /*DI:LI:AD*/
 
-import org.combinators.ep.domain.{GenericModel, Model, abstractions}
-import org.combinators.ep.generator.{AbstractSyntax, ApproachImplementationProvider, Command, EvolutionImplementationProvider, NameProvider, TestImplementationProvider, Understands, communication}
+import org.combinators.ep.domain.{GenericModel, Model}
+import org.combinators.ep.generator.{AbstractSyntax, ApproachImplementationProvider, Command, EvolutionImplementationProvider, NameProvider, Understands}
 import org.combinators.ep.generator.paradigm.control.{Functional => FunControl}
-import Command.{Generator, skip, _}
-import cats.syntax._
+import Command.{Generator, _}
 import cats.implicits._
-import org.combinators.ep.domain.abstractions.{Attribute, DataType, DataTypeCase, Operation, Parameter, TestCase, TypeRep}
+import org.combinators.ep.domain.abstractions.{DataType, DataTypeCase, Operation, Parameter, TypeRep}
 import org.combinators.ep.generator.communication.{ReceivedRequest, Request, SendRequest}
-import org.combinators.ep.generator.paradigm.{AddCompilationUnit, AddImport, AddMethod, AddType, AddTypeConstructor, AnyParadigm, Apply, FindClass, FindMethod, FindType, Functional, GetArguments, InstantiateType, ResolveImport, SetParameters, ToTargetLanguageType}
+import org.combinators.ep.generator.paradigm.{AnyParadigm, FindType, Functional}
 import AnyParadigm.syntax._
 import org.combinators.ep.generator.paradigm.control.Functional.WithBase
 
@@ -25,7 +24,7 @@ trait Traditional extends ApproachImplementationProvider {
     import functional.methodBodyCapabilities._
 
     for {
-      method <- findMethod(Seq(names.mangle(names.conceptNameOf(message.request.op)), names.mangle(names.instanceNameOf(message.request.op))))
+      method <- findMethod(Seq(names.mangle(names.instanceNameOf(message.request.op))))
       _ <- resolveAndAddImport(method)
       res <- apply(method, message.to +: message.request.op.parameters.map(message.request.arguments))
     } yield res
@@ -56,7 +55,7 @@ trait Traditional extends ApproachImplementationProvider {
 
   def makeTypeInCompilationUnit(tpe: DataType, cases: Seq[DataTypeCase]): Generator[ProjectContext, Unit] = {
     import functional.compilationUnitCapabilities._
-    import paradigm.projectContextCapabilities._
+    import paradigm.projectCapabilities._
     val caseCode =
       for {
         _ <- forEach (cases) { tpeCase => makeTypeConstructor(tpeCase) }
@@ -113,13 +112,14 @@ trait Traditional extends ApproachImplementationProvider {
       args <- getArguments()
       result <- {
         val matchGen = makeCases(tpe, cases, op, args.head._3, args.tail, domainSpecific)(_, _)
+        val tpeName = names.mangle(names.conceptNameOf(tpe))
         patternMatch(
           args.head._3,
-          cases.map(tpeCase => {
-              val caseName = names.mangle(names.conceptNameOf(tpeCase))
-              val attributeNames = tpeCase.attributes.map(attName => names.mangle(names.instanceNameOf(attName)))
-              ((caseName, attributeNames), matchGen(caseName, _))
-            }).toMap)
+          cases.map(tpeCase => {            
+            val caseName = names.mangle(names.conceptNameOf(tpeCase))
+            val attributeNames = tpeCase.attributes.map(attName => names.mangle(names.instanceNameOf(attName)))
+            ((Seq[Name](tpeName, caseName), attributeNames), matchGen(caseName, _))
+          }).toMap)
         }
     } yield result
   }
@@ -131,7 +131,7 @@ trait Traditional extends ApproachImplementationProvider {
     domainSpecific: EvolutionImplementationProvider[this.type]
   ): Generator[ProjectContext, Unit] = {
     import functional.compilationUnitCapabilities._
-    import paradigm.projectContextCapabilities._
+    import paradigm.projectCapabilities._
     addCompilationUnit(
       addMethod(names.mangle(names.instanceNameOf(op)), makeFunction(tpe, cases, op, domainSpecific)),
       names.mangle(names.conceptNameOf(op))
@@ -142,11 +142,11 @@ trait Traditional extends ApproachImplementationProvider {
     FindType(Seq(names.mangle(names.conceptNameOf(dtpe)))).interpret(canFindType)
   }
 
-  def initializeApproach(domain: Model): Generator[ProjectContext, Unit] = {
-    import paradigm.projectContextCapabilities._
-    import functional.projectContextCapabilities._
-    import functional.methodBodyCapabilities._
-    import functional.typeCapabilities._
+  def initializeApproach(domain: GenericModel): Generator[ProjectContext, Unit] = {
+    import paradigm.projectCapabilities._
+    import functional.projectCapabilities._
+    import functional.methodBodyCapabilities._         // Needed below
+    import functional.typeCapabilities._               // Needed below
     val dtpeRep = TypeRep.DataType(domain.baseDataType)
     for {
       _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(domain.baseDataType))
@@ -156,12 +156,7 @@ trait Traditional extends ApproachImplementationProvider {
 
   def implement(gdomain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
 
-    val domain = gdomain match {
-      case _:Model => gdomain.asInstanceOf[Model]
-      case _ => gdomain.linearize
-    }
-
-    val flatDomain = domain.flatten
+    val flatDomain = gdomain.linearize.flatten
     for {
       _ <- initializeApproach(flatDomain)
       _ <- domainSpecific.initialize(this)
@@ -171,8 +166,6 @@ trait Traditional extends ApproachImplementationProvider {
         }
     } yield ()
   }
-
-
 }
 
 object Traditional {

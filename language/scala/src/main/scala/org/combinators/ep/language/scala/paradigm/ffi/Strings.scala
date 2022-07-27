@@ -13,6 +13,7 @@ import scala.meta._
 
 class Strings[Ctxt, AP <: AnyParadigm](val base: AP) extends Strs[Ctxt] {
   import base.syntax._
+  case object StringsEnabled
 
   val stringCapabilities: StringCapabilities =
     new StringCapabilities {
@@ -58,9 +59,11 @@ class Strings[Ctxt, AP <: AnyParadigm](val base: AP) extends Strs[Ctxt] {
         context: ProjectCtxt,
         command: Enable.type
       ): (ProjectCtxt, Unit) = {
-        val resolverUpdate =
-          ContextSpecificResolver.updateResolver(base.config, TypeRep.String, Type.Name("String"))(Lit.String(_))
-        (context.copy(resolver = resolverUpdate(context.resolver)), ())
+        if (!context.resolver.resolverInfo.contains(StringsEnabled)) {
+          val resolverUpdate =
+            ContextSpecificResolver.updateResolver(base.config, TypeRep.String, Type.Name("String"))(Lit.String(_))
+          (context.copy(resolver = resolverUpdate(context.resolver)), ())
+        } else (context, ())
       }
     })
 }

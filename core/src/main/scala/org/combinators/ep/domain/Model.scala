@@ -26,7 +26,7 @@ class GenericModel(val name:String,
 
   /** Straight merge of two Generic models into one, combining all typeCases, ops and formers.  */
   def merge(name:String,  typeCases:Seq[DataTypeCase], ops:Seq[Operation], others:Seq[GenericModel]) : GenericModel = {
-    new GenericModel(name, typeCases, ops, others, baseDataType)
+    new GenericModel(name, typeCases, ops, Seq(this) ++ others, baseDataType)
   }
 
   // only the BASE has this set
@@ -109,7 +109,7 @@ class GenericModel(val name:String,
     name.hashCode
   }
 
-  // Eliminate all past
+  // Eliminate all past (not sure needed anymore...)
   def standAlone:Model = {
     new Model(name, typeCases, ops, baseDataType)   // good enough?
   }
@@ -118,17 +118,17 @@ class GenericModel(val name:String,
    * base model.
    *
    * The name of the squashed evolution will be the name of this evolution.
-   * If no evolutions are present, the model is returned unchanged.
+   * If no evolutions are present, the model is returned unchanged. Ensures uniqueness of data Type cases and ops
    */
   def flatten: Model = {
     if (isBottom) {
-      this.standAlone
+      new Model(this.name, this.typeCases.distinct, this.ops.distinct, this.baseDataType)
     } else {
       val history = toSeq.reverse
       val (baseModel, evolutions) = (history.head.standAlone, history.tail.map(_.standAlone))
 
       def squash(intoModel: Model, nextModel: Model): Model =
-        new Model(name, intoModel.typeCases ++ nextModel.typeCases, intoModel.ops ++ nextModel.ops, baseDataType, None)
+        new Model(name, (intoModel.typeCases ++ nextModel.typeCases).distinct, (intoModel.ops ++ nextModel.ops).distinct, baseDataType, None)
 
       if (evolutions.nonEmpty) {
         val reduced = (evolutions :+ baseModel).reduceLeft(squash)
@@ -285,7 +285,7 @@ class GenericModel(val name:String,
   }
 
   /**
-   * Return the earlier model given the evolution history.
+   * Return the later model given the evolution history.
    * Note that if models are the same, then just return the same one.
    */
   def later(other:GenericModel):GenericModel = {
@@ -302,12 +302,11 @@ class GenericModel(val name:String,
   }
 
   /** Debugging function. */
-  def output = {
+  def output():Unit = {
     println(toString)
   }
 }
 
-// Ignore IntelliJ ScalaDoc error: https://youtrack.jetbrains.com/issue/SCL-14638
 /** Models a named domain evolution with new data type cases and operations, as well as the last evolution.
   *
   * Use `evolve` to obtain the next model and [[org.combinators.ep.domain.GenericModel.base]] for the initial one.
@@ -441,7 +440,7 @@ sealed class Model (
   }
 
   /** Debugging function. */
-  override def output = {
+  override def output():Unit = {
     println(toString)
   }
 

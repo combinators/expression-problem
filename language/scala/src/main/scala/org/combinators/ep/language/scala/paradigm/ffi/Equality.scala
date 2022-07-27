@@ -14,6 +14,8 @@ import scala.meta._
 
 class Equality[Ctxt, AP <: AnyParadigm](val base: AP) extends Eql[Ctxt] {
   import base.syntax._
+  case object EqualityEnabled
+  
   val equalityCapabilities: EqualityCapabilities =
     new EqualityCapabilities {
       implicit val canEquals: Understands[Ctxt, Apply[Equals[Type], Expression, Expression]] =
@@ -24,9 +26,11 @@ class Equality[Ctxt, AP <: AnyParadigm](val base: AP) extends Eql[Ctxt] {
       context: ProjectCtxt,
       command: Enable.type
     ): (ProjectCtxt, Unit) = {
-      val resolverUpdate =
-        ContextSpecificResolver.updateResolver(base.config, TypeRep.Boolean, Type.Name("Boolean"))(Lit.Boolean(_))
-      (context.copy(resolver = resolverUpdate(context.resolver)), ())
+      if (!context.resolver.resolverInfo.contains(EqualityEnabled)) {
+        val resolverUpdate =
+          ContextSpecificResolver.updateResolver(base.config, TypeRep.Boolean, Type.Name("Boolean"))(Lit.Boolean(_))
+        (context.copy(resolver = resolverUpdate(context.resolver)), ())
+      } else (context, ())
     }
   })
 }

@@ -14,11 +14,11 @@ trait Trees[Context] extends FFI {
   trait TreeCapabilities {
     implicit val canCreateLeaf: Understands[Context, Apply[CreateLeaf[Type], Expression, Expression]]
     def createLeaf(elemTpe: Type, value: Expression): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Apply[CreateLeaf[Type], Expression, Expression](CreateLeaf(elemTpe), Seq(value)))
+      AnyParadigm.capability(Apply[CreateLeaf[Type], Expression, Expression](CreateLeaf(elemTpe), Seq(value)))
 
     implicit val canCreateNode: Understands[Context, Apply[CreateNode, Expression, Expression]]
     def createNode(label: Expression, children: Seq[Expression]): Generator[Context, Expression] =
-      AnyParadigm.capabilitiy(Apply[CreateNode, Expression, Expression](CreateNode(), label +: children))
+      AnyParadigm.capability(Apply[CreateNode, Expression, Expression](CreateNode(), label +: children))
   }
 
   val treeCapabilities: TreeCapabilities

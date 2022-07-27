@@ -102,9 +102,8 @@ object S0 {
                     inner <- forApproach.dispatch(SendRequest(
                       onRequest.attributes(shape.S0.shape),  // instead use look-up addC.attributes.find(att => att.name)
                       shape.S0.getModel.baseDataType,
-                      Request(shape.S0.ContainsPt, Map(shape.S0.pointx -> normx, shape.S0.pointy -> normy)),         // must be changed in response to translate
-                      Some(onRequest)  // being sent in response to Eval
-                    ))
+                      Request(shape.S0.ContainsPt, Map(shape.S0.pointx -> normx, shape.S0.pointy -> normy))         // must be changed in response to translate
+                      ))
 
                   } yield inner
 

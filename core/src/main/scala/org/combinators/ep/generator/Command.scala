@@ -5,11 +5,20 @@ import cats._
 import cats.free.Free
 import cats.free.Free.liftF
 
+/**
+ * Every Command represents something delivered to a code generator for processing. Each Command has a result, which
+ * can depend upon the kind of command. The result type is customized as needed. Every Command comes with a Context that
+ * provides the means to interpret that Command.
+ *
+ * The interpretation of a Command can change based upon the context in which the command was created. The actual contexts
+ * themselves depend on the code generation
+ */
 trait Command {
   type Result
 
   def interpret[Context, Self >: this.type <: Command.WithResult[Result]](implicit interp: Understands[Context, Self]): Command.Generator[Context, Result] = {
     val self: Self = this
+
     liftF[Command.Performable[Context, *], Result](new Command.Performable[Context, Result] {
       type Cmd = Self
       val cmd = self

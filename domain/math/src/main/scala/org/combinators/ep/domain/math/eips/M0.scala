@@ -5,7 +5,7 @@ import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedReq
 import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
 import org.combinators.ep.domain.math
 import org.combinators.ep.generator.paradigm.AnyParadigm
-import org.combinators.ep.generator.paradigm.ffi.Arithmetic
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Strings}
 
 /**
  * Truly language independent abstractions.  Since we are in the mathematical domain, the
@@ -25,19 +25,21 @@ import org.combinators.ep.generator.paradigm.ffi.Arithmetic
 object M0 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
       (paradigm: P)
-      (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double]):
+      (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
+       ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
     EvolutionImplementationProvider[AIP[paradigm.type]] =
     new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model = math.M0.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        ffiArithmetic.enable()
+        for {
+          _ <- ffiArithmetic.enable()
+          _ <- ffiStrings.enable()      // need strings BECAUSE test cases require empty string for messages.
+        } yield ()
       }
 
-      def applicable
-        (forApproach: AIP[paradigm.type], onRequest:PotentialRequest): Boolean = {
-        (onRequest.op == math.M0.Eval) &&
-          Set(math.M0.Add, math.M0.Lit).contains(onRequest.tpeCase)
+      def applicable (forApproach: AIP[paradigm.type], onRequest:PotentialRequest): Boolean = {
+        (onRequest.op == math.M0.Eval) && Set(math.M0.Add, math.M0.Lit).contains(onRequest.tpeCase)
       }
 
       override def logic
@@ -45,43 +47,31 @@ object M0 {
           (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
         Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
         import ffiArithmetic.arithmeticCapabilities._
-        import Command._
         import paradigm._
 
-        // no need to pass up to the chain since only Eval is known
         assert(applicable(forApproach)(onRequest), "failed on " + onRequest.tpeCase.name + " for " + onRequest.request.op.name)
-
         val result = onRequest.tpeCase match {
 
-          /**
-            * Simple enough to handle directly since we know what to return. Get first attribute and this is
-            * ultimately just the expression which is to be returned.
-            *
-            * result(Java("")) TODO: result is not necessary
-            */
+          /** Get and return first (and only) attribute. */
           case litC@math.M0.Lit => Command.lift[MethodBodyContext, paradigm.syntax.Expression](onRequest.attributes(litC.attributes.head))
 
           /** Need to dispatch 'eval' to the left and right. */
           case addC@math.M0.Add =>
             for {
               left <- forApproach.dispatch(SendRequest(
-                onRequest.attributes(addC.attributes.head),  // instead use look-up addC.attributes.find(att => att.name)
+                onRequest.attributes(addC.attributes.head),
                 math.M0.getModel.baseDataType,
-                onRequest.request,
-                Some(onRequest)  // being sent in response to Eval
+                onRequest.request
               ))
               right <- forApproach.dispatch(SendRequest(
                 onRequest.attributes(addC.attributes.tail.head),
                 math.M0.getModel.baseDataType,
-                onRequest.request,
-                Some(onRequest)
+                onRequest.request
               ))
 
-              // FFI capability provided in truly language independent manner
-              res <- add(left, right)
+              res <- add(left, right)    // FFI capability
             } yield res
 
-          // Scala response to ultimately cause runtime exception
           case _ => ???
         }
         result.map(Some(_))

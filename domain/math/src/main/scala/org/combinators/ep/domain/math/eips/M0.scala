@@ -37,7 +37,7 @@ object M0 {
       def applicable
         (forApproach: AIP[paradigm.type], onRequest:PotentialRequest): Boolean = {
         (onRequest.op == math.M0.Eval) &&
-          (Set(math.M0.Add, math.M0.Lit).contains(onRequest.tpeCase))
+          Set(math.M0.Add, math.M0.Lit).contains(onRequest.tpeCase)
       }
 
       override def logic

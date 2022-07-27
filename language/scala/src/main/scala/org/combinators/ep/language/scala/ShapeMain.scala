@@ -40,7 +40,8 @@ object ShapeMain extends IOApp {
     eips.S0(approach.paradigm)(
       ffiArithmetic = generator.doublesInMethod,
       generator.realDoublesInMethod,
-      generator.booleansInMethod
+      generator.booleansInMethod,
+      generator.stringsInMethod
   )
   val s1eip = eips.S1(approach.paradigm)(s0eip)(
     generator.doublesInMethod,

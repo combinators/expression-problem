@@ -60,7 +60,7 @@ package object instances {
           attribute.tpe == attributeInstance.tpe
         }
       },
-      "Attribute instances need to match the attribute types described in the type case"
+      "Attribute instances need to match the attribute types described in the type case" + tpeCase.name
     )
   }
 }

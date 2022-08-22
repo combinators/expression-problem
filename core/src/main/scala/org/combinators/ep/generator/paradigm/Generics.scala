@@ -38,7 +38,12 @@ trait Generics {
 
   trait TypeParameterCapabilities {
     implicit val canAddUpperBoundInTypeParameter: Understands[TypeParameterContext, AddUpperBound[Type]]
+    def addUpperBound(tpe: Type): Generator[TypeParameterContext, Unit] =
+      AnyParadigm.capability(AddUpperBound[Type](tpe))
+
     implicit val canAddLowerBoundInTypeParameter: Understands[TypeParameterContext, AddLowerBound[Type]]
+    def addLowerBound(tpe: Type): Generator[TypeParameterContext, Unit] =
+      AnyParadigm.capability(AddLowerBound[Type](tpe))
 
     implicit val canApplyTypeTypeParameter: Understands[TypeParameterContext, Apply[Type, Type, Type]]
     def applyType(tpe: Type, arguments: Seq[Type]): Generator[TypeParameterContext, Type] =

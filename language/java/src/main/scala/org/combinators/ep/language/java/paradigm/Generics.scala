@@ -42,7 +42,9 @@ trait Generics[AP <: AnyParadigm] extends Gen {
               if (arg.isPrimitiveType) arg.asPrimitiveType().toBoxedType
               else arg.clone()
             }
-            resultTpe.setTypeArguments(boxedArguments: _*)
+            if (boxedArguments.nonEmpty) {
+              resultTpe.setTypeArguments(boxedArguments: _*)
+            }
             (context, resultTpe)
           }
         }
@@ -71,7 +73,9 @@ trait Generics[AP <: AnyParadigm] extends Gen {
               if (arg.isPrimitiveType) arg.asPrimitiveType().toBoxedType
               else arg.clone()
             }
-            resultTpe.setTypeArguments(boxedArguments: _*)
+            if (boxedArguments.nonEmpty) {
+              resultTpe.setTypeArguments(boxedArguments: _*)
+            }
             (context, resultTpe)
           }
         }
@@ -86,7 +90,9 @@ trait Generics[AP <: AnyParadigm] extends Gen {
               if (arg.isPrimitiveType) arg.asPrimitiveType().toBoxedType
               else arg.clone()
             }
-            resultTpe.setTypeArguments(boxedArguments: _*)
+            if (boxedArguments.nonEmpty) {
+              resultTpe.setTypeArguments(boxedArguments: _*)
+            }
             (context, resultTpe)
           }
         }
@@ -98,7 +104,9 @@ trait Generics[AP <: AnyParadigm] extends Gen {
               if (arg.isPrimitiveType) arg.asPrimitiveType().toBoxedType
               else arg.clone()
             }
-            resultExp.setTypeArguments(boxedArguments: _*)
+            if (boxedArguments.nonEmpty) {
+              resultExp.setTypeArguments(boxedArguments: _*)
+            }
             (context, resultExp)
           }
         }

@@ -1,7 +1,7 @@
 package org.combinators.ep.language.java    /*DI:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
-import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, Traditional, Visitor}
+import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, ObjectAlgebras, Traditional, Visitor}
 import org.combinators.ep.domain.{GenericModel, Model}
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.math._
@@ -24,6 +24,7 @@ class MainProducer {
   val extensibleVisitorApproach = ExtensibleVisitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
   val cocoCleanApproach = CoCoClean[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+  val algebraApproach = ObjectAlgebras[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
   // select one here.
   //val approach = ooApproach // WORKS!
@@ -33,7 +34,7 @@ class MainProducer {
   // val approach = triviallyApproach // WORKS!
   // val approach = vitaApproach // WORKS!
   // interpreterApproach NOT YET WORKING
-  val approach = cocoCleanApproach
+  val approach = algebraApproach  // cocoCleanApproach
 
   val evolutions = Seq(M0, M1, M2, M3, W1, M3W1, Q1, C2, V1)    // all test cases become active WHEN all included.
 

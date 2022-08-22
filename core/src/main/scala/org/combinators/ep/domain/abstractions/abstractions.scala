@@ -114,14 +114,13 @@ case class Operation(name: String,
                      returnType: TypeRep = TypeRep.Unit,
                      parameters: Seq[Parameter] = Seq.empty, tags:Seq[Tag] = Seq.empty) {
 
-  /** Determines if this is a binary method, which has a single parameter of
+  /** Determines if this is a binary method, which has at least one parameter of
    * the base type of the implicitly given domain model.
+   *
+   * In original formulation, was restricted to ONLY operations with a single parameter
    */
   def isBinary(implicit domain: GenericModel): Boolean =
-    parameters match {
-      case Seq(param) => param.tpe == TypeRep.DataType(domain.baseDataType)
-      case _ => false
-    }
+    parameters.exists(param => param.tpe == TypeRep.DataType(domain.baseDataType))
 
   /** Determines if this is a producer operation, which returns an instance of
    * the base type of the implicitly given domain model.

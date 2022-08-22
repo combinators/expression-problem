@@ -21,9 +21,18 @@ object JavaNameProvider extends NameProvider[MangledName] {
     * }}
     */
   def mangle(name: String): MangledName = {
-    MangledName(name,
-      Try(parser.parseSimpleName(name).getResult.map[String](_.getIdentifier).get).getOrElse {
-        name.getBytes(java.nio.charset.StandardCharsets.UTF_8).mkString("_", "_", "")
+    var cleanName = name
+
+    // some default methods in java.lang.Object CANNOT be overridden as needed by some AIPs, so
+    // take steps to avoid special java methods
+    val forbidden = Set("Object", "equals", "hashCode", "toString", "getClass")
+    while (forbidden.contains(cleanName)) {
+      cleanName = "_" + cleanName
+    }
+
+    MangledName(cleanName,
+      Try(parser.parseSimpleName(cleanName).getResult.map[String](_.getIdentifier).get).getOrElse {
+        cleanName.getBytes(java.nio.charset.StandardCharsets.UTF_8).mkString("_", "_", "")
       }
     )
   }

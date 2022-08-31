@@ -11,6 +11,10 @@ case class AddUpperBound[Type](bound: Type) extends Command {
   type Result = Unit
 }
 
+case class GetCurrentTypeParameter[Type]() extends Command {
+  type Result = Type
+}
+
 trait Generics {
   val base: org.combinators.ep.generator.paradigm.AnyParadigm
   val ooParadigm: ObjectOriented.WithBase[base.type]
@@ -37,6 +41,10 @@ trait Generics {
   val classCapabilities: ClassCapabilities
 
   trait TypeParameterCapabilities {
+    implicit val canGetCurrentTypeParameter: Understands[TypeParameterContext, GetCurrentTypeParameter[Type]]
+    def getCurrentTypeParameter(): Generator[TypeParameterContext, Type] =
+      AnyParadigm.capability(GetCurrentTypeParameter[Type]())
+
     implicit val canAddUpperBoundInTypeParameter: Understands[TypeParameterContext, AddUpperBound[Type]]
     def addUpperBound(tpe: Type): Generator[TypeParameterContext, Unit] =
       AnyParadigm.capability(AddUpperBound[Type](tpe))

@@ -1,6 +1,6 @@
 package org.combinators.ep.language.java.paradigm    /*DI:LD:AI*/
 
-import com.github.javaparser.ast.`type`.TypeParameter
+import com.github.javaparser.ast.`type`.{ClassOrInterfaceType, TypeParameter}
 import org.combinators.ep.generator.{Command, Understands}
 import org.combinators.ep.generator.paradigm.{Generics => Gen, AnyParadigm => _, ObjectOriented => _, _}
 import org.combinators.ep.language.java.TypeParamCtxt
@@ -20,18 +20,25 @@ trait Generics[AP <: AnyParadigm] extends Gen {
       implicit val canAddTypeParameterInClass: Understands[ClassContext, AddTypeParameter[Name, TypeParameterContext]] =
         new Understands[ClassContext, AddTypeParameter[Name, TypeParameterContext]] {
           def perform(context: ClassContext, command: AddTypeParameter[Name, TypeParameterContext]): (ClassContext, Unit) = {
-            val (resultCtxt, _) = Command.runGenerator(command.spec, TypeParamCtxt(new TypeParameter()))
-            val tpeParam = resultCtxt.param.clone()
+            val tpeParam = new TypeParameter()
             tpeParam.setName(command.name.toAST)
+            val (resultCtxt, _) = Command.runGenerator(command.spec, TypeParamCtxt(tpeParam))
+
             val newCls = context.cls.clone()
-            newCls.addTypeParameter(tpeParam)
+
+            newCls.addTypeParameter(resultCtxt.param.clone())
             (context.copy(cls = newCls), ())
           }
         }
       implicit val canGetTypeArgumentsInClass: Understands[ClassContext, GetTypeArguments[Type]] =
         new Understands[ClassContext, GetTypeArguments[Type]] {
           def perform(context: ClassContext, command: GetTypeArguments[Type]): (ClassContext, Seq[Type]) = {
-            (context, context.cls.getTypeParameters.asScala)
+            val ctp = context.cls.getTypeParameters.asScala.map(tp => {
+              val result = new ClassOrInterfaceType()
+              result.setName(tp.getName)
+            })
+
+            (context, ctp)
           }
         }
       implicit val canApplyTypeInClass: Understands[ClassContext, Apply[Type, Type, Type]] =
@@ -51,6 +58,16 @@ trait Generics[AP <: AnyParadigm] extends Gen {
     }
   val typeParameterCapabilities: TypeParameterCapabilities =
     new TypeParameterCapabilities {
+      implicit val canGetCurrentTypeParameter: Understands[TypeParameterContext, GetCurrentTypeParameter[Type]] =
+        new Understands[TypeParameterContext, GetCurrentTypeParameter[Type]] {
+          def perform(context: TypeParameterContext, command: GetCurrentTypeParameter[Type]): (TypeParameterContext, Type) = {
+            val existParam = context.param
+            val ci = new ClassOrInterfaceType()
+            ci.setName(existParam.getName)
+            (context, ci)
+          }
+        }
+
       implicit val canAddUpperBoundInTypeParameter: Understands[TypeParameterContext, AddUpperBound[Type]] =
         new Understands[TypeParameterContext, AddUpperBound[Type]] {
           def perform(context: TypeParameterContext, command: AddUpperBound[Type]): (TypeParameterContext, Unit) = {
@@ -61,7 +78,7 @@ trait Generics[AP <: AnyParadigm] extends Gen {
         new Understands[TypeParameterContext, AddLowerBound[Type]] {
           def perform(context: TypeParameterContext, command: AddLowerBound[Type]): (TypeParameterContext, Unit) = {
             val newParam = context.param.clone()
-            newParam.getTypeBound.add(command.bound.toClassOrInterfaceType().get().clone())
+            newParam.getTypeBound.add(command.bound.toClassOrInterfaceType.get().clone())
             (context.copy(param = newParam), ())
           }
         }

@@ -62,6 +62,7 @@ sealed class V1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
         import ffiArithmetic.arithmeticCapabilities._
         import ffiStrings.stringCapabilities._
         import paradigm._
+        import methodBodyCapabilities._   // only eligible after import paradigm._ above
 
         onRequest.request.op match {
           case math.C2.Collect =>
@@ -90,23 +91,20 @@ sealed class V1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
 
           case math.M2.PrettyP =>
             onRequest.tpeCase match {
-              // HACK: DON'T KNOW HOW TO FIX REIFY ISSUE
-//              case math.V1.Inv => for {
-//                atts <- forEach (onRequest.tpeCase.attributes) { att =>
-//                  forApproach.dispatch(SendRequest(
-//                    onRequest.attributes(att),
-//                    math.M3.getModel.baseDataType,
-//                    onRequest.request,
-//                    Some(onRequest)
-//                  ))
-//                }
-//
-//                // swap ordering
-//                res <- makeString(Seq(atts.tail.head, atts.head), "(", "/", ")")
-//              } yield Some(res)
+              case math.V1.Inv => for {
+                atts <- forEach (onRequest.tpeCase.attributes) { att =>
+                  forApproach.dispatch(SendRequest(
+                    onRequest.attributes(att),
+                    math.V1.getModel.baseDataType,
+                    onRequest.request
+                  ))
+                }
+                res <- makeString(atts.reverse, "(", "/", ")")
+              } yield Some(res)
 
               case _ => ???
             }
+
           case _ => ???
         }
       }

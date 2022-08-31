@@ -1,11 +1,12 @@
 package org.combinators.ep.language.java.paradigm    /*DI:LD:AI*/
 
-import com.github.javaparser.ast.`type`.TypeParameter
+import com.github.javaparser.ast.`type`.{ClassOrInterfaceType, TypeParameter}
 import com.github.javaparser.ast.expr.MethodCallExpr
 import org.combinators.ep.generator.{Command, Understands}
 import org.combinators.ep.generator.paradigm.{ParametricPolymorphism => PPoly, _}
 import org.combinators.ep.language.java.Syntax.MangledName
 import org.combinators.ep.language.java.TypeParamCtxt
+
 import scala.jdk.CollectionConverters._
 
 trait ParametricPolymorphism[AP <: AnyParadigm] extends PPoly {
@@ -20,18 +21,24 @@ trait ParametricPolymorphism[AP <: AnyParadigm] extends PPoly {
       implicit val canAddTypeParameterInMethod: Understands[MethodBodyContext, AddTypeParameter[Name, TypeParameterContext]] =
         new Understands[MethodBodyContext, AddTypeParameter[Name, TypeParameterContext]] {
           def perform(context: MethodBodyContext, command: AddTypeParameter[MangledName, TypeParamCtxt]): (MethodBodyContext, Unit) = {
-            val (resultCtxt, _) = Command.runGenerator(command.spec, TypeParamCtxt(new TypeParameter()))
-            val tpeParam = resultCtxt.param.clone()
+            val tpeParam = new TypeParameter()
             tpeParam.setName(command.name.toAST)
+            val (resultCtxt, _) = Command.runGenerator(command.spec, TypeParamCtxt(tpeParam))
+
             val newMethod = context.method.clone()
-            newMethod.addTypeParameter(tpeParam)
+
+            newMethod.addTypeParameter(resultCtxt.param.clone())
             (context.copy(method = newMethod), ())
           }
         }
       implicit val canGetTypeArgumentsInMethod: Understands[MethodBodyContext, GetTypeArguments[Type]] =
         new Understands[MethodBodyContext, GetTypeArguments[Type]] {
           def perform(context: MethodBodyContext, command: GetTypeArguments[Type]): (MethodBodyContext, Seq[Type]) = {
-            (context, context.method.getTypeParameters.asScala)
+            val ctp = context.method.getTypeParameters.asScala.map(tp => {
+              val result = new ClassOrInterfaceType()
+              result.setName(tp.getName)
+            })
+            (context, ctp)
           }
         }
       implicit val canApplyTypeInMethod: Understands[MethodBodyContext, Apply[Type, Type, Type]] =

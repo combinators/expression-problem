@@ -19,7 +19,7 @@ object Q1 {
      ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val q1Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.M3.getModel
+      override val model = math.Q1.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {

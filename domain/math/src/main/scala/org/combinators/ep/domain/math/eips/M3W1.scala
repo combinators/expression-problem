@@ -58,13 +58,13 @@ sealed class M3W1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
       override def applicable
       (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
         Set(math.M2.PrettyP).contains(potentialRequest.op) &&
-          Set(math.I2.Power).contains(potentialRequest.tpeCase)
+          Set(math.W1.Power).contains(potentialRequest.tpeCase)
       }
 
       override def applicableIn(forApproach:  AIP[paradigm.type], onRequest: PotentialRequest,currentModel:GenericModel): Option[GenericModel] = {
         // must be designed to only return (to be safe) Java-accessible which is former branch only one step in past.
         val forwardTable:PartialFunction[(Operation,DataTypeCase),GenericModel] = {
-          case (math.M2.PrettyP, math.I2.Power) => model    // I handle this one as merge
+          case (math.M2.PrettyP, math.W1.Power) => model    // I handle this one as merge
           case (math.M2.PrettyP, _) => math.M3.getModel
 
         }

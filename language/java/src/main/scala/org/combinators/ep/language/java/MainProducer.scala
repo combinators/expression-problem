@@ -36,7 +36,7 @@ class MainProducer {
   // interpreterApproach NOT YET WORKING
   val approach = algebraApproach// algebraApproach  // cocoCleanApproach
 
-  val evolutions = Seq(M0, M1, M2, M3, W1, M3W1, Q1, C2, V1)    // all test cases become active WHEN all included.
+  val evolutions = Seq(M0, M1, W1, M2, M3, M3W1, Q1, C2, V1)    // all test cases become active WHEN all included.
 
   //val evolutions = Seq(M0, M1, M2, M3, M4, M5, M6, M7) //
 //  val eip = eips.I2(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod,

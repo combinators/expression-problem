@@ -10,7 +10,7 @@ import org.combinators.ep.generator.paradigm.control.{Functional, Imperative}
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Booleans, Equality, Strings}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
-// Code for M8. Takes adapters for return in if-then-else, s.t. functional- and imperative-style if-then-else can be
+// Code for V1. Takes adapters for return in if-then-else, s.t. functional- and imperative-style if-then-else can be
 // used in an uniform way.
 sealed class V1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P], IfBlockType](val paradigm: P) {
 
@@ -127,7 +127,7 @@ object V1 {
    ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     import paradigm.syntax._
-    val mkImpl = new M8[paradigm.type, AIP, Expression](paradigm)
+    val mkImpl = new V1[paradigm.type, AIP, Expression](paradigm)
     val ite: mkImpl.IfThenElseCommand =
       (cond, ifBlock, ifElseBlocks, elseBlock) =>
         for {
@@ -149,7 +149,7 @@ object V1 {
     import paradigm.syntax._
     import paradigm.methodBodyCapabilities._
     import imperativeControl.imperativeCapabilities._
-    val mkImpl = new M8[paradigm.type, AIP, Unit](paradigm)
+    val mkImpl = new V1[paradigm.type, AIP, Unit](paradigm)
     val returnInIf: Generator[paradigm.MethodBodyContext, Expression] => Generator[paradigm.MethodBodyContext, Unit] =
       (expGen) =>
         for {

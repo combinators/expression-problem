@@ -32,7 +32,7 @@ sealed class C2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
    ifThenElse: IfThenElseCommand
   ): EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val c2Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.M4.getModel
+      override val model = math.C2.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
@@ -73,8 +73,8 @@ sealed class C2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
                     forApproach.dispatch(
                       SendRequest(
                         expr,
-                        math.M4.getModel.baseDataType,
-                        Request(math.M4.Collect, Map.empty)
+                        math.C2.getModel.baseDataType,
+                        Request(math.C2.Collect, Map.empty)
                       )
                     )}
                 }
@@ -137,7 +137,7 @@ object C2 {
    ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     import paradigm.syntax._
-    val mkImpl = new M4[paradigm.type, AIP, Expression](paradigm)
+    val mkImpl = new C2[paradigm.type, AIP, Expression](paradigm)
     val ite: mkImpl.IfThenElseCommand =
       (cond, ifBlock, ifElseBlocks, elseBlock) =>
         for {
@@ -160,7 +160,7 @@ object C2 {
     import paradigm.syntax._
     import paradigm.methodBodyCapabilities._
     import imperativeControl.imperativeCapabilities._
-    val mkImpl = new M4[paradigm.type, AIP, Unit](paradigm)
+    val mkImpl = new C2[paradigm.type, AIP, Unit](paradigm)
     val returnInIf: Generator[paradigm.MethodBodyContext, Expression] => Generator[paradigm.MethodBodyContext, Unit] =
       (expGen) =>
         for {

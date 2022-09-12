@@ -1,6 +1,6 @@
 package org.combinators.ep.domain.math.eips     /*DD:LI:AI*/
 
-import org.combinators.ep.domain.math
+import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
@@ -17,7 +17,7 @@ object W1 {
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val w1Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.I2.getModel
+      override val model = math.W1.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
@@ -33,8 +33,7 @@ object W1 {
         Set(math.M0.Eval).contains(potentialRequest.op) &&
           Set(math.W1.Power).contains(potentialRequest.tpeCase)
       }
-
-      /** Do not call 'assert' since might not be applicable. */
+        /** Do not call 'assert' since might not be applicable. */
       override def genericLogic(forApproach: AIP[paradigm.type])
                                (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] =

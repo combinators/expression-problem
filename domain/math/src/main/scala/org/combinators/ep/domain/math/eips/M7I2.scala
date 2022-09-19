@@ -76,7 +76,7 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
           case (math.I1.MultBy, math.M3.Divd) => model // I HANDLE these
           case (math.I1.MultBy, math.M3.Mult) => model // I HANDLE these
           case (math.I1.MultBy, math.M3.Neg) => model  // I HANDLE these
-          case (math.I1.MultBy, _) => math.I1.getModel
+          case (math.I1.MultBy, _) => math.I2.getModel
 
           case (math.M2.PrettyP, math.I2.Power) => math.I2.getModel     // delegate because POW is new type in independent branch
           case (math.M2.PrettyP, _) => math.M3.getModel

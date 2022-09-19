@@ -26,8 +26,8 @@ object M6 extends Evolution {
   // can short-circuit this logic, but in the most general case, it stands to reason
   // that we need to have a way to instantiate a structure that matches the expression
   // and then use those structure(s) to determine equality.
-
-  lazy val Equals = Operation("equals", TypeRep.Boolean, Seq(Parameter("other", TypeRep.DataType(M5.getModel.baseDataType))))
+  // TODO: HACK -- have to manually change 'equals' to something other than equals
+  lazy val Equals = Operation("ep_equals", TypeRep.Boolean, Seq(Parameter("other", TypeRep.DataType(M5.getModel.baseDataType))))
 
   // EQL depends on past IsXXX which you know from ALL PAST evolutions
   lazy val Eql = Operation("eql", TypeRep.Boolean, Seq(Parameter("other", TypeRep.DataType(M5.getModel.baseDataType))))

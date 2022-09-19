@@ -157,11 +157,11 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             (context.copy(cls = resultCls), ())
           }
         }
-      implicit val canAddFieldInClass: Understands[ClassContext, AddField[Name, Type]] =
-        new Understands[ClassContext, AddField[Name, Type]] {
+      implicit val canAddFieldInClass: Understands[ClassContext, AddField[Name, Type, Expression]] =
+        new Understands[ClassContext, AddField[Name, Type, Expression]] {
           def perform(
             context: ClassContext,
-            command: AddField[Name, Type]
+            command: AddField[Name, Type, Expression]
           ): (ClassContext, Unit) = {
             val resultCls = context.cls.clone()
             val modifiers: Seq[Modifier.Keyword] =
@@ -777,6 +777,97 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             resultCls.addMember(resultingMethod)
             val newImports = (context.extraImports ++ methodCtxt.extraImports).distinct.map(_.clone())
             (context.copy(resolver = methodCtxt.resolver, extraImports = newImports, testClass = resultCls), ())
+          }
+        }
+
+      implicit val canAddFieldInTest: Understands[TestCtxt, AddField[Name, Type, Expression]] =
+        new Understands[TestCtxt, AddField[Name, Type, Expression]] {
+          def perform(
+                       context: TestCtxt,
+                       command: AddField[Name, Type, Expression]
+                     ): (TestCtxt, Unit) = {
+            val resultCls = context.testClass.clone()
+            val expr = new ObjectCreationExpr()
+            val (tpe, _) = context.resolver.instantiationOverride(command.tpe, Seq.empty)
+            expr.setType(tpe.asClassOrInterfaceType().clone())
+
+            val modifiers: Seq[Modifier.Keyword] =
+              (if (command.isVisibleToSubclasses) Seq(Modifier.protectedModifier().getKeyword) else Seq(Modifier.privateModifier().getKeyword)) ++ (if (command.isMutable) Seq.empty else Seq(Modifier.finalModifier().getKeyword))
+
+            if (command.initializer.isDefined) {
+              resultCls.addFieldWithInitializer(command.tpe, command.name.toAST.toString, expr, modifiers: _*)
+            } else {
+              resultCls.addField(command.tpe, command.name.toAST.toString, modifiers: _*)
+            }
+
+            (context.copy(testClass = resultCls), ())
+          }
+        }
+
+      implicit val canAddBlockDefinitionsInTest: Understands[TestCtxt, AddBlockDefinitions[Statement]] =
+        new Understands[TestCtxt, AddBlockDefinitions[Statement]] {
+          def perform(
+                       context: TestCtxt,
+                       command: AddBlockDefinitions[Statement]
+                     ): (TestCtxt, Unit) = {
+            val resultCls = context.testClass.clone()
+            if (!resultCls.getDefaultConstructor.isPresent) {  // add or create default constructor
+              resultCls.addConstructor()
+            }
+            val body = resultCls.getDefaultConstructor.get.getBody
+            command.definitions.foreach(stmt => body.addStatement(stmt))
+            (context.copy(testClass = resultCls), ())
+          }
+        }
+
+      implicit val canInitializeFieldInTest: Understands[TestCtxt, InitializeField[Name, Expression]] =
+        new Understands[TestCtxt, InitializeField[Name, Expression]] {
+          def perform(
+                       context: TestCtxt,
+                       command: InitializeField[Name, Expression]
+                     ): (TestCtxt, Unit) = {
+            val assignee = new FieldAccessExpr(new ThisExpr(), command.name.toAST.getIdentifier)
+            val stmt = new ExpressionStmt(new AssignExpr(assignee, command.value, AssignExpr.Operator.ASSIGN))
+            Command.runGenerator(
+              addBlockDefinitions(Seq(stmt)),
+              context
+            )
+          }
+        }
+
+      implicit val canInstantiateObjectInTest: Understands[TestCtxt, InstantiateObject[Type, Expression, TestCtxt]] =
+        new Understands[TestCtxt, InstantiateObject[Type, Expression, TestCtxt]] {
+          def perform(
+                       context: TestCtxt,
+                       command: InstantiateObject[Type, Expression, TestCtxt]
+                     ): (TestCtxt, Expression) = {
+            val (tpe, args) = context.resolver.instantiationOverride(command.tpe, command.constructorArguments)
+            /** REMOVED [Expand with instantiated body (if it exists).] */
+            val result = new ObjectCreationExpr()
+            result.setType(tpe.asClassOrInterfaceType().clone())
+            result.setArguments(new NodeList(args : _*))
+            (context, result)
+          }
+        }
+
+      implicit val canAddConstructorInTest: Understands[TestCtxt, AddConstructor[ConstructorContext]] =
+        new Understands[TestCtxt, AddConstructor[ConstructorContext]] {
+          def perform(
+                       context: TestCtxt,
+                       command: AddConstructor[ConstructorContext]
+                     ): (TestCtxt, Unit) = {
+            val ctorToAdd = new ConstructorDeclaration()
+            ctorToAdd.setPublic(true)
+            ctorToAdd.setName(context.testClass.getName.clone)
+            val (ctorCtxt, _) =
+              Command.runGenerator(
+                command.ctor,
+                CtorCtxt(context.resolver, context.extraImports, ctorToAdd)
+              )
+            val resultCls = context.testClass.clone()
+            resultCls.addMember(ctorCtxt.ctor.clone())
+            val newImports = (context.extraImports ++ ctorCtxt.extraImports).distinct.map(_.clone())
+            (context.copy(resolver = ctorCtxt.resolver, extraImports = newImports, testClass = resultCls), ())
           }
         }
 

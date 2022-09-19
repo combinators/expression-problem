@@ -10,6 +10,11 @@ import scala.util.Try
 object JavaNameProvider extends NameProvider[MangledName] {
   val parser = new JavaParser(StaticJavaParser.getConfiguration)
 
+  /** Need to have single-param version so this can be used in map. */
+  def mangle(name: String): MangledName = {
+    mangle(name, Set("Object", "hashCode", "equals", "toString", "getClass"))
+  }
+
   /** Tries to parse names as a
     * [[https://docs.oracle.com/javase/specs/jls/se7/html/jls-6.html#jls-6.2 simple Java name]] and mangles to
     * the arabic number representation of the UTF-8 bytes in the given string, where each byte is prefixed by "_".
@@ -20,12 +25,12 @@ object JavaNameProvider extends NameProvider[MangledName] {
     * JavaNameProvider.mangle("class") // returns "_99_108_97_115_115" because "class" is a reserved keyword
     * }}
     */
-  def mangle(name: String): MangledName = {
+  def mangle(name: String, forbidden:Set[String]): MangledName = {
     var cleanName = name
 
     // some default methods in java.lang.Object CANNOT be overridden as needed by some AIPs, so
-    // take steps to avoid special java methods
-    val forbidden = Set("Object", "equals", "hashCode", "toString", "getClass")
+    // take steps to avoid special java methods. To ensure 'equals' and other FFI-required names
+    // go through unchanged, we allow for optional parameter to eliminate.
     while (forbidden.contains(cleanName)) {
       cleanName = "_" + cleanName
     }

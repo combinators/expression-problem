@@ -39,7 +39,7 @@ class Equality[Ctxt, AP <: AnyParadigm](
                   command.arguments.head
                 }
               val gen = for {
-                equalsMethod <- GetMember[Expression, Name](boxedLhs, JavaNameProvider.mangle("equals")).interpret
+                equalsMethod <- GetMember[Expression, Name](boxedLhs, JavaNameProvider.mangle("equals", Set.empty)).interpret
                 res <- Apply[Expression, Expression, Expression](equalsMethod, command.arguments.tail).interpret
               } yield res
               Command.runGenerator(gen, context)

@@ -1,15 +1,13 @@
 package org.combinators.ep.approach.oo    /*DI:LI:AD*/
 
-import org.combinators.ep.domain.abstractions.{DataType, DataTypeCase, Operation, TestCase, TypeRep}
+import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, Parameter, TestCase, TypeRep}
 import org.combinators.ep.domain.{GenericModel, abstractions}
 import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
+import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm._
 import org.combinators.ep.generator._
 
-// j7 mistakenly generates lit/multBy and lit/powBy
-// might be in newDataTypeCasesWithNewOperations...
 trait ObjectAlgebras extends ApproachImplementationProvider {
   val paradigm: AnyParadigm
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
@@ -39,29 +37,25 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
     }
   }
 
-  def leastSpecialBaseInterfaceType[Context](domain: GenericModel, finalizedType: paradigm.syntax.Type)(implicit
-                                                                                                        canFindClass: Understands[Context, FindClass[paradigm.syntax.Name, paradigm.syntax.Type]],
-                                                                                                        canResolveImport: Understands[Context, ResolveImport[paradigm.syntax.Import, paradigm.syntax.Type]],
-                                                                                                        canAddImport: Understands[Context, AddImport[paradigm.syntax.Import]],
-                                                                                                        canApplyType: Understands[Context, Apply[paradigm.syntax.Type, paradigm.syntax.Type, paradigm.syntax.Type]],
-  ): Generator[Context, paradigm.syntax.Type] = {
+  def dispatch(message: communication.SendRequest[paradigm.syntax.Expression]): Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression] = {
+    import ooParadigm.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities._
     for {
-      baseInterfaceType <- FindClass[paradigm.syntax.Name, paradigm.syntax.Type](Seq(names.mangle(names.conceptNameOf(domain.baseDataType)))).interpret(canFindClass)
-      _ <- resolveAndAddImport(baseInterfaceType)
-      resultType <- Apply[paradigm.syntax.Type, paradigm.syntax.Type, paradigm.syntax.Type](baseInterfaceType, Seq(finalizedType)).interpret(canApplyType)
-    } yield resultType
+      method <- getMember(message.to, names.mangle(names.instanceNameOf(message.request.op)))
+      result <- apply(method, message.request.op.parameters.map(message.request.arguments))
+    } yield result
   }
 
-  // Critical aspect of CoCo is that the Extended Intermediate Interface (i.e., ep.m3.Exp) is only created when
-  // needed, specifically: (a) a new operation is being defined, and this interface will host the default
-  // implementation; or (b) a branch is being merged from branches in which new Exp had been defined
-  // useful when determining merging
-  def ancestorsDefiningNewTypeInterfaces(domain: GenericModel): Set[GenericModel] = {
-    val ancestorsWithNewTypeInterfaces = domain.former.map(ancestor => latestModelDefiningNewTypeInterface(ancestor))
-    ancestorsWithNewTypeInterfaces.distinct.filterNot { ancestor =>
-      // get rid of everything that has an antecedent
-      ancestorsWithNewTypeInterfaces.exists(otherAncestor => ancestor.before(otherAncestor))
-    }.toSet
+  def instantiate(baseTpe: abstractions.DataType, tpeCase: abstractions.DataTypeCase, args: paradigm.syntax.Expression*): Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression] = {
+    import ooParadigm.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities._
+
+    for {
+      thisRef <- selfReference()
+      algebra <- getMember(thisRef, ComponentNames.algebraAtt)
+      tpeMethod <- getMember(algebra, names.mangle(names.instanceNameOf(tpeCase)))
+      res <- apply(tpeMethod, args)
+    } yield res
   }
 
   def latestModelDefiningNewTypeInterface(domain: GenericModel): GenericModel = {
@@ -77,27 +71,6 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
         domain // we have to do merge
       }
     }
-  }
-
-  def mostSpecificBaseInterfaceType[Context](domain: GenericModel, finalizedType: paradigm.syntax.Type)(implicit
-                                                                                                        canFindClass: Understands[Context, FindClass[paradigm.syntax.Name, paradigm.syntax.Type]],
-                                                                                                        canResolveImport: Understands[Context, ResolveImport[paradigm.syntax.Import, paradigm.syntax.Type]],
-                                                                                                        canAddImport: Understands[Context, AddImport[paradigm.syntax.Import]],
-                                                                                                        canApplyType: Understands[Context, Apply[paradigm.syntax.Type, paradigm.syntax.Type, paradigm.syntax.Type]],
-  ): Generator[Context, paradigm.syntax.Type] = {
-
-    val resultModelStage = latestModelDefiningNewTypeInterface(domain)
-
-    for {
-      baseInterfaceType <-
-        if (resultModelStage.isDomainBase) {
-          FindClass[paradigm.syntax.Name, paradigm.syntax.Type](Seq(names.mangle(names.conceptNameOf(domain.baseDataType)))).interpret(canFindClass)
-        } else {
-          FindClass[paradigm.syntax.Name, paradigm.syntax.Type](Seq(names.mangle(names.instanceNameOf(resultModelStage)), names.mangle(names.conceptNameOf(domain.baseDataType)))).interpret(canFindClass)
-        }
-      _ <- resolveAndAddImport(baseInterfaceType)
-      resultType <- Apply[paradigm.syntax.Type, paradigm.syntax.Type, paradigm.syntax.Type](baseInterfaceType, Seq(finalizedType)).interpret(canApplyType)
-    } yield resultType
   }
 
   // aims to find the appropriate domain that provides the Mxxx.algebra.OPERATION artifact
@@ -125,18 +98,6 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
     }
   }
 
-  def addNewAlgebraInterfaceIfNecessary(model: GenericModel): Generator[paradigm.ProjectContext, Unit] = {
-    throw new NotImplementedError("not yet done")
-  }
-
-  def addNewAlgebraProducerInterfaceIfNecessary(model: GenericModel): Generator[paradigm.ProjectContext, Unit] = {
-    throw new NotImplementedError("not yet done")
-  }
-
-  def addOperationAlgebras(domainSpecific: EvolutionImplementationProvider[this.type], model: GenericModel): Generator[paradigm.ProjectContext, Unit] = {
-    throw new NotImplementedError("not yet done")
-  }
-
   def appliedSignatureType(domain: GenericModel, carrierType: paradigm.syntax.Type): Generator[ooParadigm.ClassContext, paradigm.syntax.Type] = {
     import genericsParadigm.classCapabilities._
     import ooParadigm.classCapabilities._
@@ -149,9 +110,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
   }
 
   def setSignatureMethodSignature(domain: GenericModel, carrierType: paradigm.syntax.Type, tpeCase: DataTypeCase): Generator[paradigm.MethodBodyContext, Unit] = {
-    import ooParadigm.methodBodyCapabilities._
     import paradigm.methodBodyCapabilities._
-    import polymorphics.methodBodyCapabilities._
     for {
       parameters <- forEach(tpeCase.attributes) { attribute =>
         if (attribute.tpe.isModelBase(domain)) {
@@ -169,9 +128,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
   }
 
   def setOperationMethodSignature(domain: GenericModel, op:Operation): Generator[paradigm.MethodBodyContext, Unit] = {
-    import ooParadigm.methodBodyCapabilities._
     import paradigm.methodBodyCapabilities._
-    import polymorphics.methodBodyCapabilities._
     for {
       parameters <- forEach(op.parameters) { parameter =>
         for {
@@ -187,9 +144,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
   }
 
   def getSelfSignature(domain: GenericModel): Generator[paradigm.MethodBodyContext, Unit] = {
-    import ooParadigm.methodBodyCapabilities._
     import paradigm.methodBodyCapabilities._
-    import polymorphics.methodBodyCapabilities._
     for {
       returnType <- toTargetLanguageType(TypeRep.DataType(domain.baseDataType))
       _ <- setReturnType(returnType)
@@ -241,7 +196,6 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
     def makeOperationCarrierInterface(): Generator[ooParadigm.ClassContext, Unit] = {
       import genericsParadigm.classCapabilities._
       import ooParadigm.classCapabilities._
-      val dtpeRep = TypeRep.DataType(domain.baseDataType)
       for {
         _ <- setInterface()
 
@@ -454,40 +408,32 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
       for {
         baseType <- toTargetLanguageType(TypeRep.DataType(domain.baseDataType))
         signature <- forEach(tpe.attributes) { att => toTargetLanguageType(att.tpe) }
-        //          if (att.tpe.isModelBase(domain)) {
-        //            Command.lift[paradigm.MethodBodyContext, paradigm.syntax.Type](carrierType)
-        //          } else {
-        //            for {
-        //              signatureType <- toTargetLanguageType(att.tpe)
-        //              _ <- resolveAndAddImport(signatureType)
-        //            } yield signatureType
-        //          }
-        //        }
         _ <- setParameters(tpe.attributes.map(att => names.mangle(att.name)).zip(signature))
         _ <- setReturnType(baseType)
       } yield ()
     }
 
-
     def newOpMethod(tpe:DataTypeCase, carrierType:paradigm.syntax.Type): Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
       import paradigm.methodBodyCapabilities._
       import ooParadigm.methodBodyCapabilities._
       import polymorphics.methodBodyCapabilities._
-      val latestTpe = domain.findTypeCase(tpe).get
-      //val latest = if (domain.ops.nonEmpty) { domain } else { latestTpe}
-      val latest = domainSpecific.applicableIn(this, PotentialRequest(domain.baseDataType, tpe, op), domain)
+      //val latest = domainSpecific.applicableIn(this, PotentialRequest(domain.baseDataType, tpe, op), domain)
+      val newOperations = newDataTypeCasesWithNewOperations(domainSpecific, domain).getOrElse(tpe, Set.empty)
+      val latest = if (newOperations.contains(op)) {
+          domain
+      } else {
+        domainSpecific.applicableIn(this, PotentialRequest(domain.baseDataType, tpe, op), domain).get
+      }
       for {
         _ <- setMethodSignature(tpe)
-        //latest = latestModelDefiningNewTypeInterface(domain)
-        //inst <- findClass(names.mangle(names.instanceNameOf(latest)), ComponentNames.pkgCarrier, ComponentNames.pkgInstance, names.mangle(names.conceptNameOf(op)))
-
 
         attributeValues <- getArguments()
         selfRef <- selfReference()
         inner <- getMember(selfRef, ComponentNames.inner)
-        result <- if (latest == Some(domain)) {   // newly defined....or new operation?
+
+        result <- if (latest == domain) {   // newly defined....or new operation?
           for {
-            inst <- findClass(names.mangle(names.instanceNameOf(latest.get)), ComponentNames.pkgCarrier, ComponentNames.pkgInstance,
+            inst <- findClass(names.mangle(names.instanceNameOf(latest)), ComponentNames.pkgCarrier, ComponentNames.pkgInstance,
                         names.mangle(names.instanceNameOf(op)), names.mangle(names.conceptNameOf(tpe)))
             _ <- resolveAndAddImport(inst)
             instGeneric <- applyType(inst, Seq(carrierType))
@@ -509,7 +455,6 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
           } yield result
         } else {
           // when accessing through older algebra, access
-          //val defined = domain.findTypeCase(tpe).get
           val definedMaybe =
             domainSpecific.applicableIn(
               forApproach = this,
@@ -556,9 +501,16 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
           } yield ()
         }
 
-        // TODO: Cannot Apply Type in Constructor
-        _ <- forEach(domain.flatten.typeCases.flatMap(dte =>
-          domainSpecific.applicableIn(this, PotentialRequest(domain.baseDataType, dte, op), domain).toSeq).distinct) {
+        _ <- forEach(domain.flatten.typeCases.flatMap(dte => {
+          val newOperations = newDataTypeCasesWithNewOperations(domainSpecific, domain).getOrElse(dte, Set.empty)
+          val latest = if (newOperations.contains(op)) {
+            domain
+          } else {
+            domainSpecific.applicableIn(this, PotentialRequest(domain.baseDataType, dte, op), domain).get
+          }
+
+          Seq(latest)
+        }).distinct) {
           dom => {
             for {
               _ <- if (!dom.equals(domain)) {  // only if not the same
@@ -591,7 +543,8 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
         interfaceType <- findClass(names.mangle(names.instanceNameOf(domain.findOperation(op).get)), ComponentNames.pkgCarrier, names.mangle(names.conceptNameOf(op)))
         carrierTypeParam <- freshName(ComponentNames.returnTypeParameter)
 
-        diTypes <- forEach(domain.flatten.typeCases.flatMap(dt => domainSpecific.dependencies(op, dt).toSeq).distinct) { dop => {
+        // might pull up dependent operation (i.e., m6 and isPower) which is not defined...
+        diTypes <- forEach(domain.flatten.typeCases.flatMap(dt => domainSpecific.dependencies(op, dt).toSeq).distinct.filter(fop => domain.findOperation(fop).isDefined)) { dop => {
           for {
             ditype <- findClass(names.mangle(names.instanceNameOf(domain.findOperation(dop).get)), ComponentNames.pkgCarrier, names.mangle(names.conceptNameOf(dop)))
             _ <- resolveAndAddImport(ditype)
@@ -614,24 +567,32 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
 
         // if in MERGE case, need to add oldNNN for each operation that was defined on a previous branch, we need
         // oldNNN to record that branch
-
-        _ <- forEach(domain.flatten.typeCases.flatMap(dte =>
-              domainSpecific.applicableIn(this, PotentialRequest(domain.baseDataType, dte, op), domain).toSeq).distinct) {
-          dom => {
-            for {
-              _ <- if (!dom.equals(domain)) {  // only if not the same
-                for {
-                  // m3.algebra.PrettyPrint
-                  clazz <- findClass(names.mangle(names.instanceNameOf(dom)), ComponentNames.pkgAlgebra, names.mangle(names.conceptNameOf(op)))
-                  _ <- resolveAndAddImport(clazz)
-                  appliedClazz <- applyType(clazz, Seq(tpeParams.head))
-                  _ <- addField(names.mangle(names.instanceNameOf(dom)), appliedClazz)
-                } yield ()
+        _ <- forEach(domain.flatten.typeCases.flatMap(dte => {
+              // Find if you have new implementation, otherwise find where the newest one was.
+              val newOperations = newDataTypeCasesWithNewOperations(domainSpecific, domain).getOrElse(dte, Set.empty)
+              val latest = if (newOperations.contains(op)) {
+                domain
               } else {
-                Command.skip[ooParadigm.ClassContext]
+                domainSpecific.applicableIn(this, PotentialRequest(domain.baseDataType, dte, op), domain).get
               }
-            } yield ()
-          }
+
+              Seq(latest)
+            }).distinct) {
+            dom => {
+              for {
+                _ <- if (!dom.equals(domain)) {  // only if not the same
+                  for {
+                    // m3.algebra.PrettyPrint
+                    clazz <- findClass(names.mangle(names.instanceNameOf(dom)), ComponentNames.pkgAlgebra, names.mangle(names.conceptNameOf(op)))
+                    _ <- resolveAndAddImport(clazz)
+                    appliedClazz <- applyType(clazz, Seq(tpeParams.head))
+                    _ <- addField(names.mangle(names.instanceNameOf(dom)), appliedClazz)
+                  } yield ()
+                } else {
+                  Command.skip[ooParadigm.ClassContext]
+                }
+              } yield ()
+            }
         }
 
         _ <- addConstructor(makeAlgebraConstructor(signatureTpeCarrierGeneric, tpeParams.head))
@@ -644,8 +605,13 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
 
       } yield ()
     }
-    import ooParadigm.projectCapabilities._
-    addClassToProject(makeAlgebraOperation(), names.mangle(names.instanceNameOf(domain)), ComponentNames.pkgAlgebra, names.mangle(names.conceptNameOf(op)))
+
+    if (domain.findOperation(op).isDefined) {
+      import ooParadigm.projectCapabilities._
+      addClassToProject(makeAlgebraOperation(), names.mangle(names.instanceNameOf(domain)), ComponentNames.pkgAlgebra, names.mangle(names.conceptNameOf(op)))
+    } else {
+      Command.skip[paradigm.ProjectContext]
+    }
   }
 
   // //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -699,7 +665,6 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
       for {
         _ <- setMethodSignature(tpe)
         latest = latestModelDefiningNewTypeInterface(domain)
-        //inst <- findClass(names.mangle(names.instanceNameOf(latest)), ComponentNames.pkgCarrier, ComponentNames.pkgInstance, names.mangle(names.conceptNameOf(op)))
         inst <- findClass(names.mangle(names.instanceNameOf(latest)), ComponentNames.pkgCarrier, ComponentNames.pkgInstance,
           names.mangle(names.conceptNameOf(latest)))
         _ <- resolveAndAddImport(inst)
@@ -729,11 +694,8 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
       for {
         _ <- setParameters(Seq())
         _ <- forEach(domain.flatten.ops) { op =>
-          //val defined = domain.findOperation(op).get
-          //val defined = if (domain.ops.contains(op)) { domain } else { domain.former.head } // HACK.
 
-          // Use DomainSpecific to determine those operations that are newly created. These will get created
-          // into domain.algebra.OPERATION; otherwise have to find
+          // Use DomainSpecific to determine those operations that are newly created.
           val defined = carrierToUse(domain)
 
           for {
@@ -757,10 +719,6 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
       val pastOps = domain.former.foldLeft(Seq[Operation]()) {
         case (accumulatedOps, gm) => (accumulatedOps ++ gm.ops).distinct
       }
-      //val latestCarrierDomain =  domain.former.find(p => p.flatten.ops != domain.flatten.ops).getOrElse(domain)
-//      val latestCarrierDomain = if (domain.ops.nonEmpty) { domain } else {
-//        domain.former.find(p => p.ops.nonEmpty).getOrElse(domain)
-//      }
       val latestCarrierDomain = carrierToUse(domain)
       for {
         // make sure to grab appropriate carrier interface from where op is defined
@@ -773,25 +731,17 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
         _ <- addImplemented(signatureTpeGeneric)
 
         _ <- forEach(domain.flatten.ops) { op =>
-          val defined = domain.findOperation(op).get
-          val earlier = if (domain.ops.nonEmpty) { domain } else { defined.earlier(domain) }
           val carrier = carrierToUse(domain)
-          // still not right:     protected Eval<ep.m2.carrier.M2> eval;    BUT in generated code, this remains m0 / M0
           for {
             carrierType <- findClass(names.mangle(names.instanceNameOf(carrier)), ComponentNames.pkgCarrier, names.mangle(names.conceptNameOf(carrier)))
 
-            // register operations with Algebra classes
-            //_ <- registerAlgebraMappingOperation(domain, domainSpecific, op)
-
             opType <- findClass(names.mangle(names.instanceNameOf(latestDomainWithAlgebraOperation(domain, domainSpecific, op))), ComponentNames.pkgAlgebra, names.mangle(names.conceptNameOf(op)))
             _ <- resolveAndAddImport(opType)
-            //opType <- toTargetLanguageType(TypeRep.DataType(domain.baseDataType))  // ????
-            //_ <- resolveAndAddImport(carrierType)
             appliedType <- applyType(opType, Seq(carrierType))
             _ <- addField(names.mangle(names.instanceNameOf(op)), appliedType)
           } yield()
         }
-//
+
         _ <- addConstructor(makeAlgebraConstructor())
 
         _ <- forEach (domain.flatten.typeCases) { tpe =>
@@ -869,66 +819,6 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
       resultType <- applyType(signatureInteface, Seq(carrierInterface))
       _ <- addImplemented(resultType)
     } yield resultType
-  }
-
-  // //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  def addAlgebraModel(domain: GenericModel): Generator[paradigm.ProjectContext, Unit] = {
-
-
-    def makeNewAlgebraModel(): Generator[ooParadigm.ClassContext, Unit] = {
-      import genericsParadigm.classCapabilities._
-      import genericsParadigm.classCapabilities._
-      import ooParadigm.classCapabilities._
-      val latest = latestModelDefiningNewTypeInterface(domain)
-      for {
-        // Add type parameter for the finalized type
-        _ <- appliedSignatureType(latest)
-
-        tpeParam <- findClass(names.mangle(names.instanceNameOf(latest)), ComponentNames.pkgCarrier, names.mangle(names.conceptNameOf(latest)))
-        _ <- resolveAndAddImport(tpeParam)
-
-        // Need to add final attributes for all existing operations
-        _ <- forEach (domain.flatten.ops) { op =>
-          //val location = domain.findOperation(op).get //must always exist
-
-          for {
-            opType <- findClass(names.mangle(names.instanceNameOf(latest)), ComponentNames.pkgAlgebra, names.mangle(names.conceptNameOf(op)))
-            _ <- resolveAndAddImport(opType)
-            _ <- addField(names.mangle(names.instanceNameOf(op)), opType)
-
-          } yield ()
-        }
-
-        //_ <- addImplemented(tpeParam)
-        //_ <- addTypeParameter(tpeParam, Command.skip)
-        //finalizedType <- getTypeArguments().map(tpeArgs => tpeArgs.head)
-        //
-        //        // Set parent factory type
-        //        parentFactoryType <- appliedFactoryInterfaceType(domain, finalizedType)
-        //        _ <- addParent(parentFactoryType)
-        //
-        //        // Set parent type interfaces
-        //        _ <- forEach(ancestorsDefiningNewTypeInterfaces(domain).toList) { ancestor =>
-        //          for {
-        //            parentTypeInterface <- mostSpecificBaseInterfaceType(ancestor, finalizedType)
-        //            _ <- addParent(parentTypeInterface)
-        //          } yield ()
-        //        }
-        //
-        //        // Add methods for new operations
-        //        _ <- forEach(domain.ops) { operation =>
-        //          ooParadigm.classCapabilities.addAbstractMethod(
-        //            names.mangle(names.instanceNameOf(operation)),
-        //            setOperationMethodSignature(domain, finalizedType, operation)
-        //          )
-        //        }
-        //
-        //        _ <- setInterface()
-      } yield ()
-    }
-    // DO in all cases because we don't want to get involved in inheritance
-    import ooParadigm.projectCapabilities._
-    addClassToProject(makeNewAlgebraModel(), names.mangle(names.instanceNameOf(domain)), ComponentNames.pkgAlgebra, names.mangle(names.conceptNameOf(domain)))
   }
 
   // //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1083,6 +973,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
       def makeOperationImpl(): Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
         import ooParadigm.methodBodyCapabilities._
         import paradigm.methodBodyCapabilities._
+
         for {
           returnType <- toTargetLanguageType(op.returnType)
           _ <- resolveAndAddImport(returnType)
@@ -1097,18 +988,44 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
             } yield (param, paramField)
           }
 
-          // body of this implementation is the result of the individual domain-specific logic.
-          args <- getArguments()
-          result <- domainSpecific.logic(this)(
-            ReceivedRequest(
-              domain.baseDataType,
-              dt,
-              selfCall,
-              dt.attributes.zip(dtElements.map(_._2)).toMap,
-              Request(op, op.parameters.zip(args.map (_._3)).toMap)
-            )
-          )
+          dtParams <- forEach (dt.attributes) { param =>
+            for {
+              paramField <- getMember(selfRef, names.mangle(param.name))
+            } yield (new Parameter(param.name, param.tpe), paramField)
+          }
 
+          // An operation -- like equals(other) -- has an argument; the isXXX() operations have two arguments
+          // or one argument -- based on whether the corresponding data type has 1 or 2 attributes. Somehow have
+          // to collect together arguments to use within the ReceivedRequest(). Sometimes from the op... sometimes
+          // from the data type. TRICKY!
+          myargs <- forEach(op.parameters) { op =>
+            val name = names.mangle(op.name)
+            for {
+              tpe <- toTargetLanguageType(op.tpe)
+            } yield (name, tpe)
+          }
+          _ <- setParameters(myargs)
+          args <- getArguments()
+          argsToUse <- forEach (dt.attributes) { param =>
+            for {
+              _ <- getMember(selfRef, names.mangle(param.name))    // IGNORE. HACK
+              tpe <- toTargetLanguageType(param.tpe)
+            } yield (names.mangle(names.instanceNameOf(param)), tpe)
+          }
+
+          // currently fails for the isXXX equality isOp methods, where the arguments comes from the DT not the OP
+          // body of this implementation is the result of the individual domain-specific logic.
+          //// TODO: WRONG THING TO DO _ <- setParameters(argsToUse)   // TODO: is this right????
+
+          result <- domainSpecific.logic(this)(
+                        ReceivedRequest(
+                          domain.baseDataType,
+                          dt,
+                          selfCall,
+                          dt.attributes.zip(dtElements.map(_._2)).toMap,
+                          Request(op, op.parameters.zip(args.map(_._3)).toMap)
+                        )
+                      )
         } yield result
       }
 
@@ -1141,7 +1058,6 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
           signatureTpe <- findClass(names.mangle(names.instanceNameOf(domain)), ComponentNames.signature)
           _ <- resolveAndAddImport(signatureTpe)
           appliedSignatureTpe <- applyType(signatureTpe, Seq(tpeParam))
-          parameter <- toTargetLanguageType(op.returnType)
           params <- forEach(dt.attributes) { att => {
             for {
               tpe <- toTargetLanguageType(att.tpe)
@@ -1164,7 +1080,8 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
         interfaceType <- findClass(names.mangle(names.instanceNameOf(domain.findOperation(op).get)), ComponentNames.pkgCarrier, names.mangle(names.conceptNameOf(op)))
         carrierTypeParam <- freshName(ComponentNames.returnTypeParameter)
 
-        diTypes <- forEach(domainSpecific.dependencies(op, dt).toSeq.distinct) { dop => {
+        // might not exist? must filter as well?
+        diTypes <- forEach(domainSpecific.dependencies(op, dt).toSeq.distinct.filter(fop => domain.findOperation(fop).isDefined)) { dop => {
           for {
             ditype <- findClass(names.mangle(names.instanceNameOf(domain.findOperation(dop).get)), ComponentNames.pkgCarrier, names.mangle(names.conceptNameOf(dop)))
             _ <- resolveAndAddImport(ditype)
@@ -1202,7 +1119,6 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
     addClassToProject(makeOperationClass(), names.mangle(names.instanceNameOf(domain)), ComponentNames.pkgCarrier, ComponentNames.pkgInstance, names.mangle(names.instanceNameOf(op)), names.mangle(names.conceptNameOf(dt)))
   }
 
-
   def implement(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
     def implementRecursive(domain: GenericModel): Generator[paradigm.ProjectContext, Unit] = {
       if (domain.isDomainBase) {
@@ -1219,12 +1135,6 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
               _ <- addOperationCarrierInterface(domain, op)
             } yield ()
           }
-
-//          _ <- forEach(newDataTypeCasesWithNewOperations(domainSpecific, domain).flatMap(_._2).toSeq) { op =>
-//            for {
-//              _ <- addAlgebraOperation(domain, domainSpecific, op) // only for dependencies...
-//            } yield ()
-//          }
 
           // if there has been any update to the signature then we need this
           // (1) new data type; (2) merge position to dispatch to different branches
@@ -1256,12 +1166,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
             Command.skip[paradigm.ProjectContext]
           }
 
-          // _ <- addAlgebraModel (domain)
-
           _ <- addCombinedCarrierInterfaceIfNecessary(domain)
-          //          _ <- addNewAlgebraInterfaceIfNecessary(domain)
-          //          _ <- addNewAlgebraProducerInterfaceIfNecessary(domain)
-          //          _ <- addOperationAlgebras(domainSpecific, domain)
           _ <- forEach(domain.former) { ancestor => implementRecursive(ancestor) }
         } yield ()
       }
@@ -1306,43 +1211,6 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
       _ <- addTypeLookupForConstructors(dtpeRep, properCarrierType[ooParadigm.ConstructorContext])
     } yield ()
   }
-
-//  // must be the case that op is valid in model
-//  def registerAlgebraMappingOperation(model: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type], op:Operation): Generator[ooParadigm.ClassContext, Unit] = {
-//    import ooParadigm.classCapabilities._
-//    import genericsParadigm.classCapabilities._
-//    import genericsParadigm.constructorCapabilities._     // NEEDED, despite IntelliJ editor
-//    import paradigm.methodBodyCapabilities._
-//    import polymorphics.methodBodyCapabilities._
-//    import ooParadigm.constructorCapabilities._
-//    import ooParadigm.methodBodyCapabilities._
-//    val dtpeRep = TypeRep.DataType(model.baseDataType)
-//
-//    // Operation must be discoverable already for this model
-//    assert(model.findOperation(op).nonEmpty)
-//
-//    def properCarrierType[Context](implicit
-//                                   canFindClass: Understands[Context, FindClass[paradigm.syntax.Name, paradigm.syntax.Type]],
-//                                   canResolveImport: Understands[Context, ResolveImport[paradigm.syntax.Import, paradigm.syntax.Type]],
-//                                   canAddImport: Understands[Context, AddImport[paradigm.syntax.Import]],
-//                                   canApplyType: Understands[Context, Apply[paradigm.syntax.Type,paradigm.syntax.Type,paradigm.syntax.Type]]
-//                                  ): Generator[Context, paradigm.syntax.Type] = {
-//
-//      val appropriate = findDomainToUse(model, domainSpecific, op)
-//      for {
-//        // can't be FIND but must be "latest" or something...
-//        baseInterfaceType <- FindClass[paradigm.syntax.Name, paradigm.syntax.Type](Seq(names.mangle(names.instanceNameOf(appropriate)), ComponentNames.pkgAlgebra, names.mangle(names.conceptNameOf(op)))).interpret(canFindClass)
-//        _ <- resolveAndAddImport(baseInterfaceType)(canResolveImport,canAddImport)
-//
-//      } yield baseInterfaceType
-//    }
-//
-//    for {
-//      _ <- addTypeLookupForMethods(dtpeRep, properCarrierType[paradigm.MethodBodyContext])
-//      _ <- addTypeLookupForClasses(dtpeRep, properCarrierType[ooParadigm.ClassContext])
-//      _ <- addTypeLookupForConstructors(dtpeRep, properCarrierType[ooParadigm.ConstructorContext])
-//    } yield ()
-//  }
 
   def registerCarrierInstanceTypeMapping(model: GenericModel, tpeParams:Seq[paradigm.syntax.Type]): Generator[ooParadigm.ClassContext, Unit] = {
     import ooParadigm.classCapabilities._
@@ -1402,13 +1270,34 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
   }
 
   override def implement(tests: Map[GenericModel, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
-    import paradigm.compilationUnitCapabilities._
     import paradigm.projectCapabilities._
+    import paradigm.compilationUnitCapabilities._
     import paradigm.testCapabilities._
-    Command.skip[paradigm.ProjectContext]
 
-    /*for {
-      _ <- forEach(tests.toList) { case (model, tests) => {
+    def addAlgebraFieldAutoinitialized(model:GenericModel) : Generator[paradigm.TestContext, Unit] = {
+      import ooParadigm.testCapabilities._
+      for {
+        tpe <- findClass(names.mangle(names.instanceNameOf(model)), ComponentNames.pkgAlgebra, names.mangle(names.conceptNameOf(model)))
+        _ <- resolveAndAddImport(tpe)
+        expr <- instantiateObject(tpe, Seq.empty)
+        _ <- addField(ComponentNames.algebraAtt, tpe, initializer = Some(expr))
+      } yield ()
+    }
+
+//    def initializeAlgebra(domain:GenericModel): Generator[paradigm.TestContext, Unit] = {
+//      import ooParadigm.testCapabilities._
+//      for {
+//
+//        clazz <- findClass(names.mangle(names.instanceNameOf(domain)), ComponentNames.pkgAlgebra, names.mangle(names.conceptNameOf(domain)))
+//        _ <- resolveAndAddImport(clazz)
+//        expr <- instantiateObject(clazz, Seq.empty)
+//        _ <- initializeField(ComponentNames.algebraAtt, expr)
+//      } yield ()
+//    }
+
+    for {
+      _ <- forEach(tests.toList) { case (model, tests) =>
+
         val testCode: Generator[paradigm.MethodBodyContext, Seq[paradigm.syntax.Expression]] =
           for {
             code <- forEach(tests) {
@@ -1416,59 +1305,26 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
             }
           } yield code.flatten
 
-        import ooParadigm.testCapabilities._
+
         val compUnit = for {
+          _ <- addAlgebraFieldAutoinitialized(model)    // made this autoinitialized using default constructor new CLASS()
 
           // add test case first
           _ <- addTestCase(testCode, testName)
-          factory <- findClass(names.mangle(model.name), ComponentNames.finalizedPackage, ComponentNames.factory)
-          _ <- resolveAndAddImport(factory)
-          _ <- addImplemented(factory)
-
         } yield ()
 
         val testSuite = for {
-          _ <- addTestSuite(
-            testCaseName(model),
-            compUnit
-          )
+          _ <- addTestSuite(testCaseName(model), compUnit)
         } yield ()
 
-        for {
-          _ <- registerTypeMapping(model) // must come here since it registers mappings that exist in the ProjectContext
-          _ <- addCompilationUnit(
+        addCompilationUnit(
             testSuite,
-            testCaseName(model)
-          )
-        } yield None
+            testCaseName(model))
       }
-      }
-    } yield () */
+    } yield ()
   }
 
-  def dispatch(message: communication.SendRequest[paradigm.syntax.Expression]): Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression] = {
-    import ooParadigm.methodBodyCapabilities._
-    import paradigm.methodBodyCapabilities._
-    for {
-      method <- getMember(message.to, names.mangle(names.instanceNameOf(message.request.op)))
-      result <- apply(method, message.request.op.parameters.map(message.request.arguments))
-    } yield result
-  }
-
-  def instantiate(baseTpe: abstractions.DataType, tpeCase: abstractions.DataTypeCase, args: paradigm.syntax.Expression*): Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression] = {
-    import ooParadigm.methodBodyCapabilities._
-    import paradigm.methodBodyCapabilities._
-
-    /*for {
-      thisRef <- selfReference()
-      factory <- getMember(thisRef, names.mangle(names.instanceNameOf(tpeCase)))
-      res <- apply(factory, args)
-    } yield res */
-    throw new NotImplementedError("not yet done")
-
-  }
 }
-
 
 object ObjectAlgebras {
   type WithParadigm[P <: AnyParadigm] = ObjectAlgebras {val paradigm: P}

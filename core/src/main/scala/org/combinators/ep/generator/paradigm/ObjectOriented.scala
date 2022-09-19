@@ -23,7 +23,7 @@ case class RemoveMethod[Type, Name](interface: Type, name:Name) extends Command 
   type Result = Unit
 }
 
-case class AddField[Name, Type](name: Name, tpe: Type, isMutable: Boolean = true, isVisibleToSubclasses:Boolean = true) extends Command {
+case class AddField[Name, Type, Expression](name: Name, tpe: Type, isMutable: Boolean = true, isVisibleToSubclasses:Boolean = true, initializer:Option[Expression] = Option.empty) extends Command {
   type Result = Unit
 }
 
@@ -137,9 +137,9 @@ trait ObjectOriented {
     def removeMethod(interface: Type, name:Name): Generator[ClassContext, Unit] =
       AnyParadigm.capability(RemoveMethod(interface, name))
 
-    implicit val canAddFieldInClass: Understands[ClassContext, AddField[Name, Type]]
-    def addField(name: Name, tpe: Type): Generator[ClassContext, Unit] =
-      AnyParadigm.capability(AddField[Name, Type](name, tpe))
+    implicit val canAddFieldInClass: Understands[ClassContext, AddField[Name, Type, Expression]]
+    def addField(name: Name, tpe: Type, init:Option[Expression] = Option.empty): Generator[ClassContext, Unit] =
+      AnyParadigm.capability(AddField[Name, Type, Expression](name, tpe, initializer = init))
 
     // can get a field (by name) and it becomes an expression by itself
     implicit val canGetFieldInClass: Understands[ClassContext, GetField[Name,Expression]]
@@ -339,6 +339,26 @@ trait ObjectOriented {
                    spec: Generator[MethodBodyContext, Option[Expression]],
                    isPublic: Boolean = true): Generator[TestContext, Unit] =
       AnyParadigm.capability(AddMethod(name, spec, isPublic))
+
+    implicit val canAddBlockDefinitionsInTest: Understands[TestContext, AddBlockDefinitions[Statement]]
+    def addBlockDefinitions(definitions: Seq[Statement]): Generator[TestContext, Unit] =
+      AnyParadigm.capability(AddBlockDefinitions(definitions))
+
+    implicit val canAddFieldInTest: Understands[TestContext, AddField[Name, Type, Expression]]
+    def addField(name: Name, tpe: Type, initializer:Option[Expression] = Option.empty): Generator[TestContext, Unit] =
+      AnyParadigm.capability(AddField[Name, Type, Expression](name, tpe, initializer = initializer))
+
+    implicit val canInitializeFieldInTest: Understands[TestContext, InitializeField[Name, Expression]]
+    def initializeField(name: Name, value: Expression): Generator[TestContext, Unit] =
+      AnyParadigm.capability(InitializeField(name, value))
+
+    implicit val canInstantiateObjectInTest: Understands[TestContext, InstantiateObject[Type, Expression, TestContext]]
+    def instantiateObject(tpe: Type, constructorArguments: Seq[Expression], body:Option[Generator[TestContext,Unit]] = None): Generator[TestContext, Expression] =
+      AnyParadigm.capability(InstantiateObject(tpe, constructorArguments, body))
+
+    implicit val canAddConstructorInTest: Understands[TestContext, AddConstructor[ConstructorContext]]
+    def addConstructor(ctor: Generator[ConstructorContext, Unit]): Generator[TestContext, Unit] =
+      AnyParadigm.capability(AddConstructor(ctor))
 
     implicit val canAddImportInTest: Understands[TestContext, AddImport[Import]]
     def addImport(imp: Import): Generator[TestContext, Unit] =

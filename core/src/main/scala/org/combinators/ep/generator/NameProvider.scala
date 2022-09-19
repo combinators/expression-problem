@@ -5,7 +5,7 @@ import org.combinators.ep.domain.abstractions._
 
 /** Provides mangled names for domain entities. */
 abstract class NameProvider[Name] {
-  /** Mangles `name` according to language specific rules. */
+  /** Mangles `name` according to language specific rules, with set . */
   def mangle(name: String): Name
 
   /** Adds a prefix to the given name. The new name will be mangled if necessary. */

@@ -419,11 +419,14 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
       import polymorphics.methodBodyCapabilities._
       //val latest = domainSpecific.applicableIn(this, PotentialRequest(domain.baseDataType, tpe, op), domain)
       val newOperations = newDataTypeCasesWithNewOperations(domainSpecific, domain).getOrElse(tpe, Set.empty)
-      val latest = if (newOperations.contains(op)) {
+      val possible = if (newOperations.contains(op)) {
           domain
       } else {
         domainSpecific.applicableIn(this, PotentialRequest(domain.baseDataType, tpe, op), domain).get
       }
+
+      // CANNOT go earlier than when operation is defined.
+      val latest = possible.later(domain.findOperation(op).get)
       for {
         _ <- setMethodSignature(tpe)
 
@@ -461,7 +464,8 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
               potentialRequest = PotentialRequest(domain.baseDataType, tpe, op),
               currentModel = domain
             )
-          val defined = if (definedMaybe.nonEmpty) { definedMaybe.get } else { domain.findTypeCase(tpe).get }
+          val definedPossible = if (definedMaybe.nonEmpty) { definedMaybe.get } else { domain.findTypeCase(tpe).get }
+          val defined = definedPossible.later(domain.findOperation(op).get)   // CANNOT be earlier than operation was defined... TODO: HACK
           for {
 
             selfRef <- selfReference()
@@ -509,7 +513,8 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
             domainSpecific.applicableIn(this, PotentialRequest(domain.baseDataType, dte, op), domain).get
           }
 
-          Seq(latest)
+          // CANNOT go earlier than when operation is defined.
+          Seq(latest.later(domain.findOperation(op).get))
         }).distinct) {
           dom => {
             for {
@@ -575,25 +580,19 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
               } else {
                 domainSpecific.applicableIn(this, PotentialRequest(domain.baseDataType, dte, op), domain).get
               }
-
-              Seq(latest)
+              // CANNOT go earlier than when operation is defined.
+              Seq(latest.later(domain.findOperation(op).get))
             }).distinct) {
             dom => {
               for {
-                _ <- if (!dom.equals(domain)) {  // only if not the same
-                  for {
                     // m3.algebra.PrettyPrint
                     clazz <- findClass(names.mangle(names.instanceNameOf(dom)), ComponentNames.pkgAlgebra, names.mangle(names.conceptNameOf(op)))
                     _ <- resolveAndAddImport(clazz)
                     appliedClazz <- applyType(clazz, Seq(tpeParams.head))
                     _ <- addField(names.mangle(names.instanceNameOf(dom)), appliedClazz)
                   } yield ()
-                } else {
-                  Command.skip[ooParadigm.ClassContext]
                 }
-              } yield ()
             }
-        }
 
         _ <- addConstructor(makeAlgebraConstructor(signatureTpeCarrierGeneric, tpeParams.head))
 

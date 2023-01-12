@@ -20,7 +20,7 @@ sealed class I2M3I1N1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImpleme
 
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val i2m3i1n1_provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.M3I1.getModel
+      override val model = math.I2M3I1N1.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {

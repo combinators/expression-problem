@@ -419,14 +419,14 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
       import polymorphics.methodBodyCapabilities._
       //val latest = domainSpecific.applicableIn(this, PotentialRequest(domain.baseDataType, tpe, op), domain)
       val newOperations = newDataTypeCasesWithNewOperations(domainSpecific, domain).getOrElse(tpe, Set.empty)
-      val possible = if (newOperations.contains(op)) {
+      val latest = if (newOperations.contains(op)) {
           domain
       } else {
         domainSpecific.applicableIn(this, PotentialRequest(domain.baseDataType, tpe, op), domain).get
       }
 
       // CANNOT go earlier than when operation is defined.
-      val latest = possible.later(domain.findOperation(op).get)
+      //val latest = possible.later(domain.findOperation(op).get)
       for {
         _ <- setMethodSignature(tpe)
 
@@ -464,8 +464,8 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
               potentialRequest = PotentialRequest(domain.baseDataType, tpe, op),
               currentModel = domain
             )
-          val definedPossible = if (definedMaybe.nonEmpty) { definedMaybe.get } else { domain.findTypeCase(tpe).get }
-          val defined = definedPossible.later(domain.findOperation(op).get)   // CANNOT be earlier than operation was defined... TODO: HACK
+          val defined = if (definedMaybe.nonEmpty) { definedMaybe.get } else { domain.findTypeCase(tpe).get }
+          //val defined = definedPossible.later(domain.findOperation(op).get)   // CANNOT be earlier than operation was defined... TODO: HACK
           for {
 
             selfRef <- selfReference()
@@ -513,8 +513,8 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
             domainSpecific.applicableIn(this, PotentialRequest(domain.baseDataType, dte, op), domain).get
           }
 
-          // CANNOT go earlier than when operation is defined.
-          Seq(latest.later(domain.findOperation(op).get))
+          // CANNOT go earlier than when operation is defined. [.later(domain.findOperation(op).get)]
+          Seq(latest)
         }).distinct) {
           dom => {
             for {
@@ -580,19 +580,25 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
               } else {
                 domainSpecific.applicableIn(this, PotentialRequest(domain.baseDataType, dte, op), domain).get
               }
-              // CANNOT go earlier than when operation is defined.
-              Seq(latest.later(domain.findOperation(op).get))
+              // CANNOT go earlier than when operation is defined. [.later(domain.findOperation(op).get)] HACK
+              Seq(latest)
             }).distinct) {
-            dom => {
-              for {
-                    // m3.algebra.PrettyPrint
-                    clazz <- findClass(names.mangle(names.instanceNameOf(dom)), ComponentNames.pkgAlgebra, names.mangle(names.conceptNameOf(op)))
-                    _ <- resolveAndAddImport(clazz)
-                    appliedClazz <- applyType(clazz, Seq(tpeParams.head))
-                    _ <- addField(names.mangle(names.instanceNameOf(dom)), appliedClazz)
-                  } yield ()
-                }
-            }
+          dom => {
+            for {
+              _ <- if (!dom.equals(domain)) {   // you don't need to generate for self since will be invoking NEW
+                for {
+                  // m3.algebra.PrettyPrint
+                  clazz <- findClass(names.mangle(names.instanceNameOf(dom)), ComponentNames.pkgAlgebra, names.mangle(names.conceptNameOf(op)))
+                  _ <- resolveAndAddImport(clazz)
+                  appliedClazz <- applyType(clazz, Seq(tpeParams.head))
+                  _ <- addField(names.mangle(names.instanceNameOf(dom)), appliedClazz)
+                } yield ()
+              } else {
+                Command.skip[ooParadigm.ClassContext]
+              }
+            } yield ()
+          }
+        }
 
         _ <- addConstructor(makeAlgebraConstructor(signatureTpeCarrierGeneric, tpeParams.head))
 
@@ -1119,62 +1125,55 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
   }
 
   def implement(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
+
     def implementRecursive(domain: GenericModel): Generator[paradigm.ProjectContext, Unit] = {
-      if (domain.isDomainBase) {
-        Command.skip[paradigm.ProjectContext]
-      } else {
+      if (!domain.isDomainBase) { step(domain) } else { Command.skip }
+    }
+    def step(domain: GenericModel): Generator[paradigm.ProjectContext, Unit] = {
 
-        for {
-          _ <- addSignatureInterface(domain)
-          _ <- addCombinedAlgebra(domain, domainSpecific)   // need domainSpecific to find appropriate algebra.Op artifact
-
-          // only necessary if operation is new
-          _ <- forEach(domain.ops) { op =>
-            for {
-              _ <- addOperationCarrierInterface(domain, op)
-            } yield ()
-          }
-
-          // if there has been any update to the signature then we need this
-          // (1) new data type; (2) merge position to dispatch to different branches
-          // per-operation, so find last point where operation was implemented - if HERE then generate algebra; if two
-          // formers that define different ones; if just one former that does it, we don't need to \
-          _ <- forEach(domain.flatten.ops.filter(op => latestDomainWithAlgebraOperation(domain, domainSpecific, op) == domain)) { op =>
-              addAlgebraOperation(domain, domainSpecific, op)
-          }
-
-          _ <- forEach(newDataTypeCasesWithNewOperations(domainSpecific, domain).toSeq) { case (dataTypeCase, ops) =>
-            for {
-              _ <- forEach (ops.toSeq){ op =>
-                for {
-                  _ <- addOperationCarrierInstanceForDataTypeCase(domainSpecific, domain, dataTypeCase, op)
-                } yield()
-              }
-            } yield()
-          }
-
-          // case 1: if just doing new data types, no need for new carrier
-          // case 2: if a new operation
-          // check if we are carrier to use....
-          _ <- if (domain == carrierToUse(domain)) {
-            for {
-              _ <- addCarrierModel(domain)
-              _ <- addCombinedCarrierInstance(domain)
-            } yield ()
-          } else {
-            Command.skip[paradigm.ProjectContext]
-          }
-
-          _ <- addCombinedCarrierInterfaceIfNecessary(domain)
-          _ <- forEach(domain.former) { ancestor => implementRecursive(ancestor) }
-        } yield ()
+      def newOpsInSignature = {
+        domain.flatten.ops.filter(op => latestDomainWithAlgebraOperation(domain, domainSpecific, op) == domain)
       }
+
+      for {
+        _ <- addSignatureInterface(domain)
+        _ <- addCombinedAlgebra(domain, domainSpecific)   // need domainSpecific to find appropriate algebra.Op artifact
+
+        // only necessary if operation is new
+        _ <- forEach(domain.ops) { op => addOperationCarrierInterface(domain, op) }
+
+        // Generate a new operation when signature changes
+        _ <- forEach(newOpsInSignature) { op =>
+          addAlgebraOperation(domain, domainSpecific, op)
+        }
+
+        _ <- forEach(newDataTypeCasesWithNewOperations(domainSpecific, domain).toSeq) {
+          case (dataTypeCase, ops) => forEach (ops.toSeq) { op =>
+            addOperationCarrierInstanceForDataTypeCase(domainSpecific, domain, dataTypeCase, op)
+        }}
+
+        // case 1: if just doing new data types, no need for new carrier
+        // case 2: if a new operation
+        // check if we are carrier to use....
+        _ <- if (domain == carrierToUse(domain)) {
+          for {
+            _ <- addCarrierModel(domain)
+            _ <- addCombinedCarrierInstance(domain)
+          } yield ()
+        } else {
+          Command.skip[paradigm.ProjectContext]
+        }
+
+        _ <- addCombinedCarrierInterfaceIfNecessary(domain)
+        _ <- forEach(domain.former) { ancestor => implementRecursive(ancestor) }
+      } yield ()
     }
 
     for {
       _ <- domainSpecific.initialize(this)
       _ <- implementRecursive(domain)
     } yield ()
+
   }
 
   // must be the case that op is valid in model

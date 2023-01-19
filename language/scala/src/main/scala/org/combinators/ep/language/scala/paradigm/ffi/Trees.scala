@@ -14,7 +14,6 @@ import org.combinators.ep.language.scala.paradigm.{AnyParadigm, Functional}
 
 import java.nio.file.Paths
 import scala.meta._
-import scala.meta.dialects.Scala3._
 
 class Trees[Ctxt, AP <: AnyParadigm](val base: AP) extends org.combinators.ep.generator.paradigm.ffi.Trees[Ctxt] {
   case object TreesEnabled
@@ -125,7 +124,7 @@ class Trees[Ctxt, AP <: AnyParadigm](val base: AP) extends org.combinators.ep.ge
             ).addInfo(TreesEnabled)
           }
 
-          implicit val dialect = scala.meta.dialects.Scala3
+          //implicit val dialect = scala.meta.dialects.Scala3 [removed by heineman]
           val extraUnits: Seq[(Seq[scala.meta.Term.Name], Source)] = Seq(
             ((pkgName :+ ScalaNameProvider.mangle("Tree")).map(n => Term.Name(n.toAST.value)),
             s"""package ${pkgName.map(_.original).mkString(".")}

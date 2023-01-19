@@ -20,8 +20,8 @@ trait Functional[AP <: AnyParadigm] extends Func {
     implicit val canAddTypeInCompilationUnit: Understands[CompilationUnitCtxt, AddType[Name, TypeContext]] =
       new Understands[CompilationUnitCtxt, AddType[Name, TypeContext]] {
         def perform(context: CompilationUnitCtxt, command: AddType[Syntax.MangledName, TypeCtxt]): (CompilationUnitCtxt, Unit) = {
-          def emptyEnum(name: scala.meta.Type.Name): scala.meta.Defn.Enum = {
-            scala.meta.Defn.Enum(
+          def emptyEnum(name: scala.meta.Type.Name): scala.meta.Defn.Class = {
+            scala.meta.Defn.Class(
               mods = List.empty,
               name = name,
               tparams = List.empty,
@@ -152,12 +152,12 @@ trait Functional[AP <: AnyParadigm] extends Func {
           command: AddTypeConstructor[Syntax.MangledName, Type]
         ): (TypeCtxt, Unit) = {
 
-          def newCase(parentName: scala.meta.Type.Name): scala.meta.Defn.Enum = {
+          def newCase(parentName: scala.meta.Type.Name): scala.meta.Defn.Class = {
             val prior = context.tpe(parentName)
             val newCase =
-              Defn.EnumCase(
+              Defn.Class(
                 mods = List.empty,
-                name = Term.Name(command.name.toAST.value),
+                name = Type.Name(command.name.toAST.value),
                 tparams = List.empty,
                 ctor = Ctor.Primary(
                   mods = List.empty,
@@ -170,8 +170,7 @@ trait Functional[AP <: AnyParadigm] extends Func {
                       default = None
                     )
                   })
-                ),
-                inits = List.empty
+                ), templ = Template(Nil, List.empty, Self(Name.Anonymous(), None), Nil)  // trying HEINEMAN
               )
             prior.copy(templ = prior.templ.copy(
               stats = prior.templ.stats :+ newCase

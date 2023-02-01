@@ -150,8 +150,9 @@ trait ObjectOriented {
     def addMethod(
         name: Name,
         spec: Generator[MethodBodyContext, Option[Expression]],
-        isPublic: Boolean = true): Generator[ClassContext, Unit] =
-      AnyParadigm.capability(AddMethod(name, spec, isPublic))
+        isPublic: Boolean = true,
+        isOverride: Boolean = false): Generator[ClassContext, Unit] =
+      AnyParadigm.capability(AddMethod(name, spec, isPublic, isOverride))
 
     def addAbstractMethod(name: Name, spec: Generator[MethodBodyContext, Unit], isPublic: Boolean = true): Generator[ClassContext, Unit] = {
       addMethod(name, spec.flatMap(_ => methodBodyCapabilities.setAbstract()).map(_ => None), isPublic)
@@ -259,6 +260,7 @@ trait ObjectOriented {
     implicit val canGetConstructorInConstructor: Understands[ConstructorContext, GetConstructor[Type, Expression]]
     def getConstructor(tpe: Type): Generator[ConstructorContext, Expression] =
       AnyParadigm.capability(GetConstructor[Type, Expression](tpe))
+    // TODO: remove
 
     implicit val canFindClassInConstructor: Understands[ConstructorContext, FindClass[Name, Type]]
     def findClass(qualifiedName: Name*): Generator[ConstructorContext, Type] =
@@ -275,6 +277,7 @@ trait ObjectOriented {
     implicit val canInstantiateObjectInMethod: Understands[MethodBodyContext, InstantiateObject[Type, Expression, ClassContext]]
     def instantiateObject(tpe: Type, constructorArguments: Seq[Expression], body:Option[Generator[ClassContext,Unit]] = None): Generator[MethodBodyContext, Expression] =
       AnyParadigm.capability(InstantiateObject(tpe, constructorArguments, body))
+    // TODO: body is never used
 
     implicit val canGetMemberInMethod: Understands[MethodBodyContext, GetMember[Expression, Name]]
     def getMember(instance: Expression, member: Name): Generator[MethodBodyContext, Expression] =
@@ -303,10 +306,12 @@ trait ObjectOriented {
     implicit val canSuperReferenceInMethod: Understands[MethodBodyContext, SuperReference[Name,Expression]]
     def superReference(parent:Name*): Generator[MethodBodyContext, Expression] =
       AnyParadigm.capability(SuperReference[Name,Expression](parent))
+    //TODO: change parent to be a type
 
     implicit val canGetConstructorInMethod: Understands[MethodBodyContext, GetConstructor[Type, Expression]]
     def getConstructor(tpe: Type): Generator[MethodBodyContext, Expression] =
       AnyParadigm.capability(GetConstructor[Type, Expression](tpe))
+    // TODO: remove this
 
     implicit val canFindClassInMethod: Understands[MethodBodyContext, FindClass[Name, Type]]
     def findClass(qualifiedName: Name*): Generator[MethodBodyContext, Type] =

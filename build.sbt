@@ -3,7 +3,7 @@ lazy val commonSettings = Seq(
   version := "1.0.0-SNAPSHOT",
   organization := "org.combinators",
 
-  scalaVersion := "2.12.13",
+  scalaVersion := "2.12.17",
 
   resolvers ++= Seq(
     Resolver.sonatypeRepo("releases"),
@@ -84,9 +84,28 @@ lazy val languageJava =
   standardLanguageProject("java")
     .settings(libraryDependencies += "com.github.javaparser" % "javaparser-core" % "3.19.0")
     .settings(
-       mainClass in (Compile, run) := Some("org.combinators.ep.language.java.DirectToDiskMainJ")
+      Compile/run/mainClass := Some("org.combinators.ep.language.java.DirectToDiskMainJ")
      )
+
+lazy val languageInbetween =
+  standardLanguageProject("inbetween")
+    .dependsOn(core)
+
+lazy val languageNewScala =
+  standardLanguageProject("newScala")
+    .dependsOn(languageInbetween)
+
+
 lazy val languageScala = standardLanguageProject("scala")
+
+
+
+  /*(Project(id = s"language-inbetween", base = file(s"language/inbetween")))
+    .settings(
+      scalaVersion := "3.2.0",
+      version := "1.0.0-SNAPSHOT",
+      organization := "org.combinators"
+    )*/
 
 lazy val helloWorld:Project =
   (Project(id = s"helloworld", base = file(s"helloworld")))

@@ -35,7 +35,8 @@ case class Reify[T, Expression](tpe: TypeRep.OfHostType[T], value: T) extends Co
 case class AddMethod[MethodBodyContext, Name, Expression](
    name: Name,
    spec: Generator[MethodBodyContext, Expression],
-   isPublic: Boolean = true
+   isPublic: Boolean = true,
+   isOverride: Boolean = false
   ) extends Command {
   type Result = Unit
 }

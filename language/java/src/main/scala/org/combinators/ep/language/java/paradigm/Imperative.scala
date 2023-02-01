@@ -16,6 +16,7 @@ trait Imperative[Ctxt, AP <: AnyParadigm] extends Imp[Ctxt] {
   import base.syntax._
 
   object imperativeCapabilities extends ImperativeCapabilities {
+    // Returns a reference (Expression) to the newly declared variable
     implicit val canDeclareVariable: Understands[Ctxt, DeclareVariable[Name, Type, Option[Expression], Expression]] =
       new Understands[Ctxt, DeclareVariable[Name, Type, Option[Expression], Expression]] {
         def perform(context: Ctxt, command: DeclareVariable[Name, Type, Option[Expression], Expression]): (Ctxt, Expression) = {

@@ -24,7 +24,7 @@ package object imperative {
 
   trait AssignVariable[FT <: FinalTypes] extends any.Statement[FT] with Factory[FT] {
     def getSelfAssignVariable: finalTypes.AssignVariable
-    def name: any.Name[FT]
+    def variable: any.Expression[FT]
     def assignmentExpression: any.Expression[FT]
   }
 
@@ -56,7 +56,7 @@ package object imperative {
       initializer: Option[any.Expression[FT]]): DeclareVariable[FT]
 
     def variableReferenceExpression(name: any.Name[FT]): VariableReferenceExpression[FT]
-    def assignVariable(name: any.Name[FT], expression: any.Expression[FT]): AssignVariable[FT]
+    def assignVariable(variable: any.Expression[FT], expression: any.Expression[FT]): AssignVariable[FT]
     def liftExpression(expression: any.Expression[FT]): LiftExpression[FT]
     
     def ifThenElse(

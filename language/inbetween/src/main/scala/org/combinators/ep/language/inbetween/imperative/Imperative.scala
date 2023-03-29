@@ -32,14 +32,14 @@ trait Imperative[FT <: FinalTypes, FactoryType <: Factory[FT]] extends Imp[any.M
       new Understands[Ctxt, control.AssignVariable[any.Expression[FT], any.Statement[FT]]] {
         override def perform(context: Ctxt, command: control.AssignVariable[any.Expression[FT], any.Statement[FT]]): (Ctxt, any.Statement[FT]) = {
           val assignStmt = factory.assignVariable(command.variable, command.value)
-          (pushToContext(context, assignStmt), assignStmt)
+          (context, assignStmt)
         }
       }
     implicit val canLiftExpression: Understands[Ctxt, control.LiftExpression[any.Expression[FT], any.Statement[FT]]] =
       new Understands[Ctxt, control.LiftExpression[any.Expression[FT], any.Statement[FT]]] {
         override def perform(context: Ctxt, command: control.LiftExpression[any.Expression[FT], any.Statement[FT]]): (Ctxt, any.Statement[FT]) = {
           val liftStmt = factory.liftExpression(command.expr)
-          (pushToContext(context, liftStmt), liftStmt)
+          (context, liftStmt)
         }
       }
     implicit val canIfThenElse: Understands[Ctxt, paradigm.IfThenElse[any.Expression[FT], Generator[Ctxt, Unit], Option[Generator[Ctxt, Unit]], any.Statement[FT]]] =
@@ -65,8 +65,22 @@ trait Imperative[FT <: FinalTypes, FactoryType <: Factory[FT]] extends Imp[any.M
           (lastCtxt.copy(statements = context.statements), ifThenElseStmt)
         }
       }
-    implicit val canWhile: Understands[Ctxt, control.While[Ctxt, any.Expression[FT], any.Statement[FT]]] = ???
-    implicit val canReturn: Understands[Ctxt, Return[any.Expression[FT], any.Statement[FT]]] = ???
+    implicit val canWhile: Understands[Ctxt, control.While[Ctxt, any.Expression[FT], any.Statement[FT]]] = new Understands[Ctxt, control.While[Ctxt, any.Expression[FT], any.Statement[FT]]] {
+      def perform(context: Ctxt, command: control.While[Ctxt, any.Expression[FT], any.Statement[FT]]): (Ctxt, any.Statement[FT]) = {
+        def contextWithoutMethodBody(context: Ctxt) =
+          context.copy(statements = Seq.empty)
+
+        val (blockCtxt, _) = Command.runGenerator(command.block, contextWithoutMethodBody(context))
+        val whileStmt = factory.whileLoop(command.condition, blockCtxt.statements)
+        (blockCtxt.copy(statements = context.statements), whileStmt)
+      }
+    }
+    implicit val canReturn: Understands[Ctxt, Return[any.Expression[FT], any.Statement[FT]]] = new Understands[Ctxt, Return[any.Expression[FT], any.Statement[FT]]] {
+      def perform(context: Ctxt, command: Return[any.Expression[FT], any.Statement[FT]]): (Ctxt, any.Statement[FT]) = {
+        val returnStmt = factory.returnExpression(command.exp)
+        (context, returnStmt)
+      }
+    }
   }
 
 }

@@ -28,7 +28,6 @@ object operatorExpression {
 
   trait Factory[FT <: FinalTypes] extends any.Factory[FT] {
 
-    def operator(name: any.Name[FT]): Operator[FT]
     def binaryExpression(operator: Operator[FT], left: any.Expression[FT], right: any.Expression[FT]): BinaryExpression[FT]
     def unaryExpression(operator: Operator[FT], operand: any.Expression[FT]): UnaryExpression[FT]
 

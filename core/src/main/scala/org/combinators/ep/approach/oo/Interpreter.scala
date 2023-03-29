@@ -311,9 +311,9 @@ sealed trait Interpreter extends SharedOO {
     // parents. If there are multiple, then must find which branch defines the tpeCase and choose
     // that one -- if both do, then it doesn't matter which one you choose, so to be consistent
     // always choose the first one.
-    def addPrimaryParent(): Generator[ClassContext, Unit] = {
+    def addPrimaryParent(): Generator[ClassContext, Option[Type]] = {
       if (!shouldAddParent()) {
-       Command.skip[ClassContext]
+       Command.lift[ClassContext, Option[Type]](Option.empty)
       } else {
         // go to last model which had defined operation *OR* last model in which this tpeCase is defined.
         val chosenModel = primaryParent(model, tpeCase)
@@ -321,7 +321,7 @@ sealed trait Interpreter extends SharedOO {
           priorType <- findClass(qualifiedDataTypeCase(chosenModel, tpeCase) : _ *)
             _ <- resolveAndAddImport(priorType)
             _ <- addParent(priorType)
-          } yield ()
+          } yield Some(priorType)
         }
       }
 
@@ -335,7 +335,7 @@ sealed trait Interpreter extends SharedOO {
        _ <- resolveAndAddImport(pt)
        _ <- addImplemented(pt)
 
-       _ <- addPrimaryParent()
+       primaryParent <- addPrimaryParent()
        _ <- if (!shouldAddParent()) {
          for {
            _ <- forEach(tpeCase.attributes) { att => makeField(att) }
@@ -345,7 +345,7 @@ sealed trait Interpreter extends SharedOO {
        }
 
        // if super is being used, then you need to cast to Exp
-       _ <- addConstructor(makeConstructor(tpeCase, !shouldAddParent(), useSuper = shouldAddParent()))
+       _ <- addConstructor(makeConstructor(tpeCase, !shouldAddParent(), useSuper = primaryParent))
        _ <- forEach (ops) { op => addMethod(names.mangle(names.instanceNameOf(op)), makeInterpreterImplementation(model, model.baseDataType, tpeCase, op, domainSpecific))
        }
     } yield ()

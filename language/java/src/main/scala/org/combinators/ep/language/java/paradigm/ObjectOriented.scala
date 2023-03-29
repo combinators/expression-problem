@@ -349,11 +349,11 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
 
   val constructorCapabilities: ConstructorCapabilities =
     new ConstructorCapabilities {
-      implicit val canInitializeParentInConstructor: Understands[ConstructorContext, InitializeParent[Expression]] =
-        new Understands[ConstructorContext, InitializeParent[Expression]] {
+      implicit val canInitializeParentInConstructor: Understands[ConstructorContext, InitializeParent[Type, Expression]] =
+        new Understands[ConstructorContext, InitializeParent[Type, Expression]] {
           def perform(
             context: ConstructorContext,
-            command: InitializeParent[Expression]
+            command: InitializeParent[Type, Expression]
           ): (ConstructorContext, Unit) = {
             val newCtor = context.ctor.clone()
             val superCall =

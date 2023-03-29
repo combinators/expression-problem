@@ -79,7 +79,7 @@ class OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]](val base: AnyPara
     }
     implicit val canAddConstructorInClass: Understands[Class[FT], AddConstructor[ConstructorContext]] = new Understands[Class[FT], AddConstructor[ConstructorContext]] {
       def perform(context: Class[FT], command: AddConstructor[Constructor[FT]]): (Class[FT], Unit) = {
-        val emptyConstructor = factory.constructor()
+        val emptyConstructor = factory.constructor(constructedType = Some(factory.classReferenceType(context.name)))
         val (generatedConstructor, ()) = Command.runGenerator(command.ctor, emptyConstructor)
         (context.copy(constructors = context.constructors :+ generatedConstructor), ())
       }
@@ -131,9 +131,9 @@ class OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]](val base: AnyPara
     }
   }
   val constructorCapabilities: ConstructorCapabilities = new ConstructorCapabilities {
-    implicit val canInitializeParentInConstructor: Understands[Constructor[FT], InitializeParent[Expression]] = new Understands[Constructor[FT], InitializeParent[Expression]] {
-      def perform(context: Constructor[FT], command: InitializeParent[Expression]): (Constructor[FT], Unit) = {
-        (context.copyAsConstructor(superInitialization = Some(command.arguments)), ())
+    implicit val canInitializeParentInConstructor: Understands[Constructor[FT], InitializeParent[Type, Expression]] = new Understands[Constructor[FT], InitializeParent[Type, Expression]] {
+      def perform(context: Constructor[FT], command: InitializeParent[Type, Expression]): (Constructor[FT], Unit) = {
+        (context.copyAsConstructor(superInitialization = Some((command.parent, command.arguments))), ())
       }
     }
     implicit val canCastInConstructor: Understands[Constructor[FT], CastObject[Type, Expression]] = new Understands[Constructor[FT], CastObject[Type, Expression]] {
@@ -203,7 +203,7 @@ class OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]](val base: AnyPara
     }
     implicit val canGetConstructorInConstructor: Understands[Constructor[FT], GetConstructor[Type, Expression]] = new Understands[Constructor[FT], GetConstructor[Type, Expression]] {
       def perform(context: Constructor[FT], command: GetConstructor[Type, Expression]): (Constructor[FT], Expression) = {
-        (context, factory.constructorExpression(command.tpe))
+        ???
       }
     }
     implicit val canFindClassInConstructor: Understands[Constructor[FT], FindClass[Name, Type]] = new Understands[Constructor[FT], FindClass[Name, Type]] {
@@ -260,7 +260,7 @@ class OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]](val base: AnyPara
     }
     implicit val canGetConstructorInMethod: Understands[any.Method[FT], GetConstructor[Type, Expression]] = new Understands[any.Method[FT], GetConstructor[Type, Expression]] {
       def perform(context: any.Method[FT], command: GetConstructor[Type, Expression]): (any.Method[FT], Expression) = {
-        (context, factory.constructorExpression(command.tpe))
+        ???
       }
     }
     implicit val canFindClassInMethod: Understands[any.Method[FT], FindClass[Name, Type]] = new Understands[any.Method[FT], FindClass[Name, Type]] {

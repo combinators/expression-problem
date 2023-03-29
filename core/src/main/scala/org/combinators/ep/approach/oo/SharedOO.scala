@@ -159,7 +159,7 @@ trait SharedOO extends ApproachImplementationProvider {
    * @param tpeCase
    * @return
    */
-  def makeConstructor(tpeCase: DataTypeCase, initFields:Boolean = true, useSuper:Boolean = false): Generator[ConstructorContext, Unit] = {
+  def makeConstructor(tpeCase: DataTypeCase, initFields:Boolean = true, useSuper:Option[Type] = Option.empty): Generator[ConstructorContext, Unit] = {
     import ooParadigm.constructorCapabilities._
 
     for {
@@ -173,8 +173,8 @@ trait SharedOO extends ApproachImplementationProvider {
       _ <- setParameters(params)
       args <- getArguments()
 
-      _ <- if (useSuper) {
-        initializeParent(args.map(p => p._3))
+      _ <- if (useSuper.isDefined) {
+        initializeParent(useSuper.get, args.map(p => p._3))
       } else {
         Command.skip[ConstructorContext]
       }

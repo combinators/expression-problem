@@ -72,7 +72,7 @@ package object any {
   trait Expression[FT <: FinalTypes] extends Factory[FT] {
     def getSelfExpression: finalTypes.Expression
 
-    def apply(other: Expression[FT]): Expression[FT]
+    def apply(other: Expression[FT]): Expression[FT] = applyExpression(this, arguments=Seq(other))
   }
 
   trait ApplyExpression[FT <: FinalTypes] extends Expression[FT] with Factory[FT] {
@@ -90,7 +90,11 @@ package object any {
   trait ArgumentExpression[FT <: FinalTypes] extends Expression[FT] {
     def getSelfArgumentExpression: finalTypes.ArgumentExpression
 
-    def getParameterName: Name[FT]
+    def parameterName: any.Name[FT]
+
+    def copy(
+      parameterName: any.Name[FT] = this.parameterName
+    ): ArgumentExpression[FT] = argumentExpression(parameterName)
   }
 
   trait CompilationUnit[FT <: FinalTypes] extends Factory[FT] {

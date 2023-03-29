@@ -35,7 +35,7 @@ case class InitializeField[Name, Expression](name: Name, value: Expression) exte
   type Result = Unit
 }
 
-case class InitializeParent[Expression](arguments: Seq[Expression]) extends Command {
+case class InitializeParent[Type, Expression](parent: Type, arguments: Seq[Expression]) extends Command {
   type Result = Unit
 }
 
@@ -201,9 +201,9 @@ trait ObjectOriented {
   val classCapabilities: ClassCapabilities
 
   trait ConstructorCapabilities {
-    implicit val canInitializeParentInConstructor: Understands[ConstructorContext, InitializeParent[Expression]]
-    def initializeParent(arguments: Seq[Expression]): Generator[ConstructorContext, Unit] =
-      AnyParadigm.capability(InitializeParent(arguments))
+    implicit val canInitializeParentInConstructor: Understands[ConstructorContext, InitializeParent[Type, Expression]]
+    def initializeParent(parent: Type, arguments: Seq[Expression]): Generator[ConstructorContext, Unit] =
+      AnyParadigm.capability(InitializeParent(parent, arguments))
 
     implicit val canCastInConstructor: Understands[ConstructorContext, CastObject[Type, Expression]]
     def castObject(tpe:Type, expr: Expression): Generator[ConstructorContext, Expression] =

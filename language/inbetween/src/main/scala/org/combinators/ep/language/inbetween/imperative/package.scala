@@ -19,6 +19,7 @@ package object imperative {
   }
 
   trait VariableReferenceExpression[FT <: FinalTypes] extends any.Expression[FT] with Factory[FT] {
+    def getSelfVariableReferenceExpression: finalTypes.VariableReferenceExpression
     def name: any.Name[FT]
   }
 

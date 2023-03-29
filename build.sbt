@@ -96,7 +96,7 @@ lazy val languageNewScala =
     .dependsOn(languageInbetween)
 
 
-lazy val languageScala = standardLanguageProject("scala")
+//lazy val languageScala = standardLanguageProject("scala")
 
 
 
@@ -107,13 +107,13 @@ lazy val languageScala = standardLanguageProject("scala")
       organization := "org.combinators"
     )*/
 
-lazy val helloWorld:Project =
+/*lazy val helloWorld:Project =
   (Project(id = s"helloworld", base = file(s"helloworld")))
     .settings(commonSettings: _*)
     .settings(
       moduleName := s"helloworld",
     )
-    .dependsOn(core, languageJava, languageScala)
+    .dependsOn(core, languageJava, languageScala)*/
 
 //lazy val languageGJ = standardLanguageProject("gj")
 //lazy val languageCPP = standardLanguageProject("cpp")

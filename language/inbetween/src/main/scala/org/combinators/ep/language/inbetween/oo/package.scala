@@ -15,7 +15,6 @@ package object oo {
     type CastExpression <: Expression
     type InstanceOfExpression <: Expression
     type SuperReferenceExpression <: Expression
-    type ConstructorExpression <: Expression
     type ClassReferenceType <: Type
   }
 
@@ -182,11 +181,11 @@ package object oo {
   trait MemberAccessExpression[FT <: FinalTypes] extends Expression[FT] {
     def getSelfMemberAccessExpression: finalTypes.MemberAccessExpression
 
-    def owner: Expression[FT]
+    def owner: any.Expression[FT]
     def field: any.Name[FT]
 
     def copy(
-      owner: Expression[FT] = this.owner,
+      owner: any.Expression[FT] = this.owner,
       field: any.Name[FT] = this.field,
     ): MemberAccessExpression[FT] = memberAccessExpression(owner = owner, field = field)
   }
@@ -216,7 +215,7 @@ package object oo {
       tpe: any.Type[FT] = this.tpe,
       constructorArguments: Seq[any.Expression[FT]] = this.constructorArguments,
       body: Option[Class[FT]] = this.body
-    ): ObjectInstantiationExpression[FT] = objectInstantiationExpression(tpe, constructorArguments)
+    ): ObjectInstantiationExpression[FT] = objectInstantiationExpression(tpe, constructorArguments, body)
   }
 
   trait CastExpression[FT <: FinalTypes] extends Expression[FT] {
@@ -243,23 +242,14 @@ package object oo {
     ): InstanceOfExpression[FT] = instanceOfExpression(tpe, expression)
   }
 
-  trait ConstructorExpression[FT <: FinalTypes] extends Expression[FT] {
-    def getSelfConstructorExpression: finalTypes.ConstructorExpression
-
-    def tpe: any.Type[FT]
-
-    def copy(
-      tpe: any.Type[FT] = this.tpe
-    ): ConstructorExpression[FT] = constructorExpression(tpe)
-  }
-
   trait Constructor[FT <: FinalTypes] extends Method[FT] {
     def getSelfConstructor: finalTypes.Constructor
 
     override def isAbstract: Boolean = false
     override def isOverride: Boolean = false
 
-    def superInitialization: Option[Seq[any.Expression[FT]]] = Option.empty
+    def constructedType: Option[any.Type[FT]] = Option.empty
+    def superInitialization: Option[(any.Type[FT], Seq[any.Expression[FT]])] = Option.empty
     def fieldInitializers: Seq[(any.Name[FT], any.Expression[FT])] = Seq.empty
 
     override def addTypeLookup(tpeRep: TypeRep, tpe: any.Type[FT]): Constructor[FT] = {
@@ -277,16 +267,17 @@ package object oo {
       isStatic: Boolean = this.isStatic,
       isPublic: Boolean = this.isPublic,
       isOverride: Boolean = this.isOverride,
-    ): Method[FT] = copyAsConstructor(imports, statements, parameters, typeLookupMap)
+    ): Method[FT] = copyAsConstructor(this.constructedType, imports, statements, parameters, typeLookupMap)
 
     def copyAsConstructor(
+      constructedType: Option[any.Type[FT]] = this.constructedType,
       imports: Set[any.Import[FT]] = this.imports,
       statements: Seq[any.Statement[FT]] = this.statements,
       parameters: Seq[(any.Name[FT], any.Type[FT])] = this.parameters,
       typeLookupMap: Map[TypeRep, any.Type[FT]] = this.typeLookupMap,
-      superInitialization: Option[Seq[any.Expression[FT]]] = this.superInitialization,
+      superInitialization: Option[(any.Type[FT], Seq[any.Expression[FT]])] = this.superInitialization,
       fieldInitializers: Seq[(any.Name[FT], any.Expression[FT])] = this.fieldInitializers,
-    ): Constructor[FT] = constructor(imports, statements, parameters, typeLookupMap, superInitialization, fieldInitializers)
+    ): Constructor[FT] = constructor(constructedType, imports, statements, parameters, typeLookupMap, superInitialization, fieldInitializers)
   }
 
   trait Field[FT <: FinalTypes] extends Factory[FT] {
@@ -304,6 +295,8 @@ package object oo {
   }
 
   trait ClassReferenceType[FT <: FinalTypes] extends any.Type[FT] with Factory[FT] {
+    def getSelfClassReferenceType: finalTypes.ClassReferenceType
+
     def qualifiedClassName: Seq[any.Name[FT]]
 
     def copy(
@@ -354,11 +347,12 @@ package object oo {
     ): Class[FT]
 
     def constructor(
+      constructedType: Option[any.Type[FT]] = Option.empty,
       imports: Set[any.Import[FT]] = Set.empty,
       statements: Seq[any.Statement[FT]] = Seq.empty,
       parameters: Seq[(any.Name[FT], any.Type[FT])] = Seq.empty,
       typeLookupMap: Map[TypeRep, any.Type[FT]] = Map.empty,
-      superInitialization: Option[Seq[any.Expression[FT]]] = Option.empty,
+      superInitialization: Option[(any.Type[FT], Seq[any.Expression[FT]])] = Option.empty,
       fieldInitializers: Seq[(any.Name[FT], any.Expression[FT])] = Seq.empty,
     ): Constructor[FT]
 
@@ -395,8 +389,6 @@ package object oo {
 
     def selfReferenceExpression: SelfReferenceExpression[FT]
 
-    def constructorExpression(tpe: any.Type[FT]): ConstructorExpression[FT]
-
     def classReferenceType(qualifiedClassName: any.Name[FT]*): ClassReferenceType[FT]
 
     implicit def convert(other: any.Project[FT]): Project[FT]
@@ -411,7 +403,6 @@ package object oo {
     implicit def convert(other: CastExpression[FT]): CastExpression[FT]
     implicit def convert(other: InstanceOfExpression[FT]): InstanceOfExpression[FT]
     implicit def convert(other: SuperReferenceExpression[FT]): SuperReferenceExpression[FT]
-    implicit def convert(other: ConstructorExpression[FT]): ConstructorExpression[FT]
     implicit def convert(other: ClassReferenceType[FT]): ClassReferenceType[FT]
   }
 }

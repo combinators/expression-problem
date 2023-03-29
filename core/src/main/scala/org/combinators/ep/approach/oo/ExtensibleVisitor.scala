@@ -248,7 +248,7 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
            initializeField(names.mangle(param.name), arg)
          }
        } else {
-         initializeParent(args.map(p => p._3))
+         initializeParent(parent.get, args.map(p => p._3))
        }
      } yield ()
 

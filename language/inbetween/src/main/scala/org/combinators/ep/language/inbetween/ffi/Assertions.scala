@@ -7,7 +7,8 @@ import org.combinators.ep.generator.paradigm.ffi.{Assert, Assertions => Asrts}
 import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
-class Assertions[FT <: operatorExpression.FinalTypes, FactoryType <: assertions.Factory[FT]](val base: AnyParadigm[FT, FactoryType]) extends Asrts[any.Method[FT]] {
+trait Assertions[FT <: operatorExpression.FinalTypes, FactoryType <: assertions.Factory[FT]] extends Asrts[any.Method[FT]] {
+  val base: AnyParadigm.WithFT[FT, FactoryType]
   import base.factory
 
   val assertionCapabilities: AssertionCapabilities = new AssertionCapabilities {
@@ -19,4 +20,11 @@ class Assertions[FT <: operatorExpression.FinalTypes, FactoryType <: assertions.
       }
   }
   def enable(): Generator[any.Project[FT], Unit] =  Command.skip[any.Project[FT]]
+}
+
+object Assertions {
+  type WithBase[FT <: operatorExpression.FinalTypes, FactoryType <: assertions.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]] = Assertions[FT, FactoryType] { val base: B }
+  def apply[FT <: operatorExpression.FinalTypes, FactoryType <: assertions.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]](_base: B): WithBase[FT, FactoryType, _base.type] = new Assertions[FT, FactoryType] {
+    val base: _base.type = _base
+  }
 }

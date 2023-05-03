@@ -2,6 +2,7 @@ package org.combinators.ep.language
 
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.domain.abstractions.TypeRep.OfHostType
+import org.combinators.ep.generator.NameProvider
 import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.oo
 import org.combinators.ep.language.inbetween.imperative
@@ -213,16 +214,18 @@ package object scala {
 
   trait Name[FT <: FinalTypes] extends any.Name[FT] with Factory[FT] {
     def component: String
+    def mangled: String
     def toScala: String = component
   }
 
   trait Util[FT <: FinalTypes] extends Factory[FT] {
+    def nameProvider: NameProvider[any.Name[FT]]
     def reify[T](tpe: OfHostType[T], value: T): any.Expression[FT] = reifiedScalaValue(tpe, value)
 
     def resolveImport(tpe: any.Type[FT]): Option[any.Import[FT]] = tpe.toImport
     def getFreshName(basedOn: any.Name[FT]): any.Name[FT] = {
       val id = UUID.randomUUID().toString.replace("-", "")
-      name(s"${basedOn.component}_${id}")
+      nameProvider.mangle(s"${basedOn.component}_${id}")
     }
   }
 
@@ -252,7 +255,9 @@ package object scala {
   }
 
   trait Constructor[FT <: FinalTypes] extends oo.Constructor[FT] with scala.Method[FT] with Factory[FT] {
-    override def name: any.Name[FT] = name(constructedType.map(_.toScala).getOrElse(""))
+
+
+    override def name: any.Name[FT] = nameProvider.mangle(constructedType.map(_.toScala).getOrElse(""))
     override def returnType: Option[any.Type[FT]] = constructedType
 
     override def toScala: String = {
@@ -363,7 +368,7 @@ package object scala {
     with operatorExpression.Factory[FT]
     with strings.Factory[FT] {
 
-    def name(name: String): Name[FT]
+    def name(name: String, mangled: String): Name[FT]
     def importStatement(components: Seq[any.Name[FT]]): Import[FT]
 
     def reifiedScalaValue[T](ofHostType: OfHostType[T], value: T): ReifiedScalaValue[FT, T]
@@ -436,7 +441,7 @@ package object scala {
     trait Factory extends scala.Factory[FinalTypes] {
       val finalTypes: FinalTypes = new FinalTypes
 
-      def name(name: String): Name = Name(name)
+      def name(name: String, mangled: String): Name = Name(name, mangled)
       override def importStatement(components: Seq[any.Name[FinalTypes]]): Import = Import(components)
       override def binaryExpression(operator: operatorExpression.Operator[FinalTypes], left: any.Expression[FinalTypes], right: any.Expression[FinalTypes]): operatorExpression.BinaryExpression[FinalTypes] = BinaryExpression(operator, left, right)
       override def unaryExpression(operator: operatorExpression.Operator[FinalTypes], operand: any.Expression[FinalTypes]): operatorExpression.UnaryExpression[FinalTypes] = unaryExpression(operator, operand)
@@ -575,8 +580,12 @@ package object scala {
       override def applyExpression(function: any.Expression[FinalTypes], arguments: Seq[any.Expression[FinalTypes]]): any.ApplyExpression[FinalTypes] = ApplyExpression(function, arguments)
     }
 
-    case class Name(override val component: String) extends scala.Name[FinalTypes] with Factory {
+    case class Name(override val component: String, override val mangled: String) extends scala.Name[FinalTypes] with Factory {
       override def getSelfName: this.type = this
+    }
+
+    trait Util extends scala.Util[FinalTypes] with Factory {
+      override def nameProvider: NameProvider[any.Name[FinalTypes]] = new ScalaNameProvider[FinalTypes](this)
     }
 
     case class Method(
@@ -590,7 +599,7 @@ package object scala {
       override val isStatic: Boolean,
       override val isPublic: Boolean,
       override val isOverride: Boolean
-    ) extends scala.Method[FinalTypes] with Factory {
+    ) extends scala.Method[FinalTypes] with Util {
       def getSelfMethod: this.type = this
     }
 
@@ -687,7 +696,7 @@ package object scala {
       override val isAbstract: Boolean = false,
       override val isInterface: Boolean = false,
       override val isStatic: Boolean = false
-    ) extends scala.Class[FinalTypes] with Factory {
+    ) extends scala.Class[FinalTypes] with Util {
       override def getSelfClass: this.type = this
     }
 
@@ -698,8 +707,7 @@ package object scala {
       override val parameters: Seq[(any.Name[FinalTypes], any.Type[FinalTypes])],
       override val typeLookupMap: Map[TypeRep, any.Type[FinalTypes]],
       override val superInitialization: Option[(any.Type[FinalTypes], Seq[any.Expression[FinalTypes]])],
-      override val fieldInitializers: Seq[(any.Name[FinalTypes], any.Expression[FinalTypes])],
-    ) extends scala.Constructor[FinalTypes] with Factory {
+      override val fieldInitializers: Seq[(any.Name[FinalTypes], any.Expression[FinalTypes])]) extends scala.Constructor[FinalTypes] with Util {
       override def getSelfMethod: this.type = this
       override def getSelfConstructor: this.type = this
       override def toScala: String = {
@@ -764,7 +772,7 @@ package object scala {
       override val name: Seq[any.Name[FinalTypes]] = Seq.empty,
       override val imports: Seq[any.Import[FinalTypes]] = Seq.empty,
       override val classes: Seq[oo.Class[FinalTypes]] = Seq.empty
-    ) extends scala.CompilationUnit[FinalTypes] with Factory {
+    ) extends scala.CompilationUnit[FinalTypes] with Util {
       override def getSelfCompilationUnit: this.type = this
     }
 

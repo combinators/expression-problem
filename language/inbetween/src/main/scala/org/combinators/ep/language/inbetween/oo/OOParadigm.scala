@@ -7,10 +7,11 @@ import org.combinators.ep.generator.paradigm.{AddBlockDefinitions, AddClass, Add
 import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.ffi.arithmetic.SubOp
 
-class OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]](val base: AnyParadigm[FT, FactoryType]) extends OOP {
-  import base._
+trait OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends OOP {
+  val base: AnyParadigm.WithFT[FT, FactoryType]
+  import base.{FT=>_, _}
   import syntax._
-  lazy val factory: FactoryType = base.factory
+  lazy val factory: base.factory.type = base.factory
   type ClassContext = Class[FT]
   type MethodBodyContext = any.Method[FT]
   type ConstructorContext = Constructor[FT]
@@ -68,7 +69,8 @@ class OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]](val base: AnyPara
         val emptyMethod = factory.clsMethod(
           name = command.name,
           isPublic = command.isPublic,
-          isOverride = command.isOverride
+          isOverride = command.isOverride,
+          typeLookupMap = context.typeLookupMap
         )
         var (generatedMethod, result) = Command.runGenerator(command.spec, emptyMethod)
         if (result.isDefined) {
@@ -79,7 +81,7 @@ class OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]](val base: AnyPara
     }
     implicit val canAddConstructorInClass: Understands[Class[FT], AddConstructor[ConstructorContext]] = new Understands[Class[FT], AddConstructor[ConstructorContext]] {
       def perform(context: Class[FT], command: AddConstructor[Constructor[FT]]): (Class[FT], Unit) = {
-        val emptyConstructor = factory.constructor(constructedType = Some(factory.classReferenceType(context.name)))
+        val emptyConstructor = factory.constructor(constructedType = Some(factory.classReferenceType(context.name)), typeLookupMap = context.typeLookupMap)
         val (generatedConstructor, ()) = Command.runGenerator(command.ctor, emptyConstructor)
         (context.copy(constructors = context.constructors :+ generatedConstructor), ())
       }
@@ -273,7 +275,7 @@ class OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]](val base: AnyPara
     implicit val canAddClassInCompilationUnit: Understands[CompilationUnit, AddClass[Class[FT], Name]] = new Understands[CompilationUnit, AddClass[Class[FT], Name]] {
       def perform(context: CompilationUnit, command: AddClass[Class[FT], Name]): (CompilationUnit, Unit) = {
         val converted = factory.convert(context)
-        val emptyCls = factory.cls(name = command.name)
+        val emptyCls = factory.cls(name = command.name, typeLookupMap = context.)
         var (generatedClass, result) = Command.runGenerator(command.cls, emptyCls)
         (converted.copyAsCompilationUnitWithClasses(classes = converted.classes :+ generatedClass), ())
       }
@@ -344,5 +346,12 @@ class OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]](val base: AnyPara
         (context, ()) // TODO
       }
     }
+  }
+}
+
+object OOParadigm {
+  type WithBase[FT <: FinalTypes, FactoryType <: Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]] = OOParadigm[FT, FactoryType] { val base: B }
+  def apply[FT <: FinalTypes, FactoryType <: Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]](_base: B): WithBase[FT, FactoryType, _base.type] = new OOParadigm[FT, FactoryType] {
+    val base: _base.type = _base
   }
 }

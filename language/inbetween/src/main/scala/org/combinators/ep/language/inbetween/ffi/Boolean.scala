@@ -9,7 +9,8 @@ import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.generator.Command
 
-class Booleans[FT <: operatorExpression.FinalTypes, FactoryType <: boolean.Factory[FT]](val base: AnyParadigm[FT, FactoryType]) extends Bools[any.Method[FT]] {
+trait Booleans[FT <: operatorExpression.FinalTypes, FactoryType <: boolean.Factory[FT]] extends Bools[any.Method[FT]] {
+  val base: AnyParadigm.WithFT[FT, FactoryType]
   import base.factory
   val booleanCapabilities: BooleanCapabilities =
     new BooleanCapabilities {
@@ -49,4 +50,11 @@ class Booleans[FT <: operatorExpression.FinalTypes, FactoryType <: boolean.Facto
     }
 
   override def enable(): Generator[any.Project[FT], Unit] = Command.skip[any.Project[FT]]
+}
+
+object Booleans {
+  type WithBase[FT <: operatorExpression.FinalTypes, FactoryType <: boolean.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]] = Booleans[FT, FactoryType] { val base: B }
+  def apply[FT <: operatorExpression.FinalTypes, FactoryType <: boolean.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]](_base: B): WithBase[FT, FactoryType, _base.type] = new Booleans[FT, FactoryType] {
+    val base: _base.type = _base
+  }
 }

@@ -7,7 +7,8 @@ import org.combinators.ep.generator.paradigm.ffi.{Add, Div, LE, LT, Mod, Mult, S
 import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
-class Arithmetic[FT <: operatorExpression.FinalTypes, FactoryType <: arithmetic.Factory[FT], T](val base: AnyParadigm[FT, FactoryType]) extends Arith[any.Method[FT], T] {
+trait Arithmetic[FT <: operatorExpression.FinalTypes, FactoryType <: arithmetic.Factory[FT], T] extends Arith[any.Method[FT], T] {
+  val base: AnyParadigm.WithFT[FT, FactoryType]
   import base.factory
   val arithmeticCapabilities: ArithmeticCapabilities = new ArithmeticCapabilities {
     implicit val canLT: Understands[any.Method[FT], Apply[LT[T], any.Expression[FT], any.Expression[FT]]] =
@@ -54,4 +55,10 @@ class Arithmetic[FT <: operatorExpression.FinalTypes, FactoryType <: arithmetic.
       }
   }
   def enable(): Generator[any.Project[FT], Unit] = Command.skip[any.Project[FT]]
+}
+object Arithmetic {
+  type WithBase[FT <: operatorExpression.FinalTypes, FactoryType <: arithmetic.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType], T] = Arithmetic[FT, FactoryType, T] { val base: B }
+  def apply[FT <: operatorExpression.FinalTypes, FactoryType <: arithmetic.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType], T](_base: B): WithBase[FT, FactoryType, _base.type, T] = new Arithmetic[FT, FactoryType, T] {
+    val base: _base.type = _base
+  }
 }

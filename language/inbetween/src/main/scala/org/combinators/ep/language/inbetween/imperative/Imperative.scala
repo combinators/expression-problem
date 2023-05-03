@@ -12,7 +12,7 @@ import org.combinators.ep.language.inbetween.any.AnyParadigm
 // Requires "recursive solution" to the EP, where Ctxt has a producer method and so this needs an EP solution, while
 // talking about something which doesn't need to have one..
 trait Imperative[FT <: FinalTypes, FactoryType <: Factory[FT]] extends Imp[any.Method[FT]] {
-  val base: AnyParadigm[FT, FactoryType]
+  val base: AnyParadigm.WithFT[FT, FactoryType]
   import base.factory
 
   type Ctxt = any.Method[FT]
@@ -83,4 +83,11 @@ trait Imperative[FT <: FinalTypes, FactoryType <: Factory[FT]] extends Imp[any.M
     }
   }
 
+}
+
+object Imperative {
+  type WithBase[FT <: FinalTypes, FactoryType <: Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]] = Imperative[FT, FactoryType] { val base: B }
+  def apply[FT <: FinalTypes, FactoryType <: Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]](_base: B): WithBase[FT, FactoryType, _base.type] = new Imperative[FT, FactoryType] {
+    val base: _base.type = _base
+  }
 }

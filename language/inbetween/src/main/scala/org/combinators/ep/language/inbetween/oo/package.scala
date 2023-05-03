@@ -306,7 +306,7 @@ package object oo {
 
   trait Factory[FT <: FinalTypes] extends any.Factory[FT] {
     override def compilationUnit(name: Seq[any.Name[FT]], imports: Seq[any.Import[FT]]): CompilationUnit[FT] =
-      compilationUnit(name, imports)
+      compilationUnit(name, imports, classes=Seq.empty)
 
     def compilationUnit(name: Seq[any.Name[FT]], imports: Seq[any.Import[FT]], classes: Seq[Class[FT]] = Seq.empty): CompilationUnit[FT]
 

@@ -5,8 +5,12 @@ import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, FileWithPath, Understands}
 import org.combinators.ep.generator.paradigm.{AddBlockDefinitions, AddCompilationUnit, AddImport, AddTestCase, AddTestSuite, AddTypeLookup, Apply, Debug, FreshName, GetArguments, OutputToConsole, Reify, ResolveImport, SetParameters, SetReturnType, ToTargetLanguageType, AnyParadigm => AP}
 
-class AnyParadigm[FT <: FinalTypes, FatoryType <: Factory[FT]](val factory: FatoryType, _runGenerator: Generator[Project[FT], Unit] => Seq[FileWithPath]) extends AP {
-  override val syntax: AbstractSyntax[FT] = new AbstractSyntax[FT]
+trait AnyParadigm extends AP {
+  type FT <: FinalTypes
+  type FatoryType <: Factory[FT]
+  val factory: FatoryType
+  val _runGenerator: Generator[Project[FT], Unit] => Seq[FileWithPath]
+  val syntax: AbstractSyntax[FT]
   type ProjectContext = Project[FT]
   type CompilationUnitContext = CompilationUnit[FT]
   type TestContext = Unit // TODO
@@ -137,4 +141,27 @@ class AnyParadigm[FT <: FinalTypes, FatoryType <: Factory[FT]](val factory: Fato
     }
   }
   def runGenerator(generator: Generator[Project[FT], Unit]): Seq[FileWithPath] = _runGenerator(generator)
+}
+object AnyParadigm {
+  type WithFT[_FT <: FinalTypes, _FactoryType <: Factory[_FT]] = AnyParadigm {
+    type FT = _FT
+    type FatoryType = _FactoryType
+  }
+  
+  type WithSyntax[_FT <: FinalTypes, _FactoryType <: Factory[_FT], S <: AbstractSyntax[_FT]] = AnyParadigm {
+    type FT = _FT
+    type FatoryType = _FactoryType
+    val syntax: S 
+  }
+  def apply[_FT <: FinalTypes, _FactoryType <: Factory[_FT], S <: AbstractSyntax[_FT]]
+    (_factory: _FactoryType,
+     __runGenerator: Generator[Project[_FT], Unit] => Seq[FileWithPath],
+     _syntax: S
+    ): WithSyntax[_FT, _factory.type, _syntax.type] = new AnyParadigm {
+    type FT = _FT
+    type FatoryType = _factory.type
+    override val factory = _factory
+    override val _runGenerator: Generator[Project[FT], Unit] => Seq[FileWithPath] = __runGenerator
+    override val syntax: _syntax.type = _syntax
+  }
 }

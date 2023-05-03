@@ -7,7 +7,8 @@ import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.generator.paradigm.ffi.{GetStringLength, StringAppend, ToString, Strings => Strs}
 
-class Strings[FT <: operatorExpression.FinalTypes, FactoryType <: strings.Factory[FT]](val base: AnyParadigm[FT, FactoryType]) extends Strs[any.Method[FT]] {
+trait Strings[FT <: operatorExpression.FinalTypes, FactoryType <: strings.Factory[FT]] extends Strs[any.Method[FT]] {
+  val base: AnyParadigm.WithFT[FT, FactoryType]
   import base.factory
 
   val stringCapabilities: StringCapabilities = new StringCapabilities {
@@ -32,4 +33,11 @@ class Strings[FT <: operatorExpression.FinalTypes, FactoryType <: strings.Factor
       }
   }
   def enable(): Generator[any.Project[FT], Unit] = Command.skip[any.Project[FT]]
+}
+
+object Strings {
+  type WithBase[FT <: operatorExpression.FinalTypes, FactoryType <: strings.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]] = Strings[FT, FactoryType] { val base: B }
+  def apply[FT <: operatorExpression.FinalTypes, FactoryType <: strings.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]](_base: B): WithBase[FT, FactoryType, _base.type] = new Strings[FT, FactoryType] {
+    val base: _base.type = _base
+  }
 }

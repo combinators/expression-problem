@@ -104,6 +104,9 @@ package object any {
     def imports: Seq[Import[FT]] = Seq.empty
 
     def getFreshName(basedOn: Name[FT]): Name[FT]
+
+    def initializeInProject(project: Project[FT]): CompilationUnit[FT]
+
     // TODO: Tests?
 
     def copy(
@@ -128,6 +131,7 @@ package object any {
     val finalTypes: FT
 
     def project(compilationUnits: Set[CompilationUnit[FT]] = Set.empty): Project[FT]
+
     def compilationUnit(name: Seq[Name[FT]], imports: Seq[Import[FT]]): CompilationUnit[FT]
     def method(
       name: Name[FT],

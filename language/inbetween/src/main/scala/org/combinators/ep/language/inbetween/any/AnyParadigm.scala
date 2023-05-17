@@ -24,7 +24,7 @@ trait AnyParadigm extends AP {
     }
     implicit val canAddCompilationUnitInProject: Understands[ProjectContext, AddCompilationUnit[Name[FT], CompilationUnitContext]] = new Understands[ProjectContext, AddCompilationUnit[Name[FT], CompilationUnitContext]] {
       def perform(context: ProjectContext, command: AddCompilationUnit[Name[FT], CompilationUnitContext]): (ProjectContext, Unit) = {
-        val emptyUnit = factory.compilationUnit(command.name, Seq.empty)
+        val emptyUnit = factory.compilationUnit(command.name, Seq.empty).initializeInProject(context)
         val (generatedUnit, ()) = Command.runGenerator(command.unit, emptyUnit)
         (context.copy(compilationUnits = context.compilationUnits + generatedUnit), ())
       }

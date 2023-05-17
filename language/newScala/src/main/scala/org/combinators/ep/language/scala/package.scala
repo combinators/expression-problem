@@ -2,6 +2,7 @@ package org.combinators.ep.language
 
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.domain.abstractions.TypeRep.OfHostType
+import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.NameProvider
 import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.oo
@@ -12,6 +13,7 @@ import org.combinators.ep.language.inbetween.ffi.boolean
 import org.combinators.ep.language.inbetween.ffi.eqls
 import org.combinators.ep.language.inbetween.ffi.operatorExpression
 import org.combinators.ep.language.inbetween.ffi.strings
+import org.combinators.ep.language.inbetween.oo.{Class, Constructor}
 
 import java.util.UUID
 
@@ -91,7 +93,13 @@ package object scala {
     val ofHostType: OfHostType[T]
     val value: T
 
-    def toScala: String = value.toString
+    def toScala: String =
+      if (value.isInstanceOf[String]) {
+        s""""$value""""
+      } else {
+        value.toString
+      }
+
   }
 
   trait ArgumentExpression[FT <: FinalTypes] extends Expression[FT] with any.ArgumentExpression[FT] with Factory[FT] {
@@ -154,19 +162,19 @@ package object scala {
   }
 
   trait DivOp[FT <: FinalTypes] extends arithmetic.DivOp[FT] with Operator[FT] with Factory[FT] {
-    override def toScala: String = "*"
+    override def toScala: String = "/"
   }
 
   trait ModOp[FT <: FinalTypes] extends arithmetic.ModOp[FT] with Operator[FT] with Factory[FT] {
-    override def toScala: String = "*"
+    override def toScala: String = "%"
   }
 
   trait LtOp[FT <: FinalTypes] extends arithmetic.LtOp[FT] with Operator[FT] with Factory[FT] {
-    override def toScala: String = "*"
+    override def toScala: String = "<"
   }
 
   trait LeOp[FT <: FinalTypes] extends arithmetic.LeOp[FT] with Operator[FT] with Factory[FT] {
-    override def toScala: String = "*"
+    override def toScala: String = "<="
   }
 
   trait AndOp[FT <: FinalTypes] extends boolean.AndOp[FT] with Operator[FT] with Factory[FT] {
@@ -194,11 +202,11 @@ package object scala {
   }
 
   trait Return[FT <: FinalTypes] extends any.Return[FT] with Statement[FT] with Factory[FT] {
-    def toScala: String = s"return ${this.expression}"
+    def toScala: String = s"return ${this.expression.toScala}"
   }
 
   trait LiftExpression[FT <: FinalTypes] extends imperative.LiftExpression[FT] with Statement[FT] with Factory[FT] {
-    def toScala: String = s"${this.expression};"
+    def toScala: String = s"${this.expression.toScala};"
   }
 
   trait Type[FT <: FinalTypes] extends any.Type[FT] with Factory[FT] {
@@ -246,8 +254,7 @@ package object scala {
            |  ${imports.map(_.toScala).mkString("\n    ")}
            |  ${statements.map(_.toScala).mkString("\n    ")}
            |}
-    }
-    """.stripMargin
+          """.stripMargin
       } else ""
 
       s"""${mods} def ${name.toScala}(${params}): ${returnTpe} ${body}""".stripMargin
@@ -274,7 +281,8 @@ package object scala {
         |  ${statements.map(_.toScala).mkString("\n    ")}
         """.stripMargin
 
-      s"""${constructedType.get.toScala}(${params}) = {
+      s"""def this(${params}) = {
+         |  this()
          |  ${importDecls}
          |  ${superInitDecls}
          |  ${fieldInitDecls}
@@ -316,16 +324,16 @@ package object scala {
       val abstractMod = if (isAbstract && !isInterface) "abstract" else ""
       val extendsClause = {
         val supers = (parents ++ implemented)
-        if (supers.nonEmpty) supers.mkString("extends", "with", "") else ""
+        if (supers.nonEmpty) supers.map(_.toScala).mkString("extends ", " with ", "") else ""
       }
 
       s"""
-         |${abstractMod} ${kind} ${name} ${extendsClause} ${classBodyDefinitionToScala}""".stripMargin
+         |${abstractMod} ${kind} ${name.toScala} ${extendsClause} ${classBodyDefinitionToScala}""".stripMargin
     }
   }
 
   trait ApplyExpression[FT <: FinalTypes] extends Expression[FT] with any.ApplyExpression[FT] with Factory[FT] {
-    def toScala : String = s"${function.toScala}(${arguments.map(_.toScala).mkString(",")}"
+    def toScala : String = s"${function.toScala}(${arguments.map(_.toScala).mkString(",")})"
   }
 
   trait VariableReferenceExpression[FT <: FinalTypes] extends Expression[FT] with imperative.VariableReferenceExpression[FT] with Factory[FT] {
@@ -444,14 +452,31 @@ package object scala {
       def name(name: String, mangled: String): Name = Name(name, mangled)
       override def importStatement(components: Seq[any.Name[FinalTypes]]): Import = Import(components)
       override def binaryExpression(operator: operatorExpression.Operator[FinalTypes], left: any.Expression[FinalTypes], right: any.Expression[FinalTypes]): operatorExpression.BinaryExpression[FinalTypes] = BinaryExpression(operator, left, right)
-      override def unaryExpression(operator: operatorExpression.Operator[FinalTypes], operand: any.Expression[FinalTypes]): operatorExpression.UnaryExpression[FinalTypes] = unaryExpression(operator, operand)
+      override def unaryExpression(operator: operatorExpression.Operator[FinalTypes], operand: any.Expression[FinalTypes]): operatorExpression.UnaryExpression[FinalTypes] = UnaryExpression(operator, operand)
       implicit def convert(operator: operatorExpression.Operator[FinalTypes]): Operator = operator.getSelfOperator
       implicit def convert(binaryExpression: operatorExpression.BinaryExpression[FinalTypes]): BinaryExpression = binaryExpression.getSelfBinaryExpression
       implicit def convert(unaryExpression: operatorExpression.UnaryExpression[FinalTypes]): UnaryExpression = unaryExpression.getSelfUnaryExpression
-      override def compilationUnit(name: Seq[any.Name[FinalTypes]], imports: Seq[any.Import[FinalTypes]], classes: Seq[oo.Class[FinalTypes]]): oo.CompilationUnit[FinalTypes] = CompilationUnit(name, imports, classes)
+      override def compilationUnit(name: Seq[any.Name[FinalTypes]],
+        imports: Seq[any.Import[FinalTypes]],
+        methodTypeLookupMap: Map[TypeRep, Generator[any.Method[FinalTypes], any.Type[FinalTypes]]] = Map.empty,
+        constructorTypeLookupMap: Map[TypeRep, Generator[oo.Constructor[FinalTypes], any.Type[FinalTypes]]] = Map.empty,
+        classTypeLookupMap: Map[TypeRep, Generator[oo.Class[FinalTypes], any.Type[FinalTypes]]] = Map.empty,
+        classes: Seq[oo.Class[FinalTypes]]): oo.CompilationUnit[FinalTypes] = CompilationUnit(name, imports, methodTypeLookupMap, constructorTypeLookupMap, classTypeLookupMap, classes)
 
       override def cls(
-        name: any.Name[FinalTypes], imports: Seq[any.Import[FinalTypes]], parents: Seq[any.Type[FinalTypes]], implemented: Seq[any.Type[FinalTypes]], fields: Seq[oo.Field[FinalTypes]], methods: Seq[any.Method[FinalTypes]], constructors: Seq[oo.Constructor[FinalTypes]], typeLookupMap: Map[TypeRep, any.Type[FinalTypes]], isAbstract: Boolean, isInterface: Boolean, isStatic: Boolean
+        name: any.Name[FinalTypes],
+        imports: Seq[any.Import[FinalTypes]],
+        parents: Seq[any.Type[FinalTypes]],
+        implemented: Seq[any.Type[FinalTypes]],
+        fields: Seq[oo.Field[FinalTypes]],
+        methods: Seq[any.Method[FinalTypes]],
+        constructors: Seq[oo.Constructor[FinalTypes]],
+        methodTypeLookupMap: Map[TypeRep, Generator[any.Method[FinalTypes], any.Type[FinalTypes]]],
+        constructorTypeLookupMap: Map[TypeRep, Generator[oo.Constructor[FinalTypes], any.Type[FinalTypes]]],
+        typeLookupMap: Map[TypeRep, any.Type[FinalTypes]],
+        isAbstract: Boolean,
+        isInterface: Boolean,
+        isStatic: Boolean
       ): Class = Class(
         name = name,
         imports = imports,
@@ -460,6 +485,8 @@ package object scala {
         fields = fields,
         methods = methods,
         constructors = constructors,
+        methodTypeLookupMap = methodTypeLookupMap,
+        constructorTypeLookupMap = constructorTypeLookupMap,
         typeLookupMap = typeLookupMap,
         isAbstract = isAbstract,
         isInterface = isInterface,
@@ -493,7 +520,7 @@ package object scala {
       override def selfReferenceExpression: oo.SelfReferenceExpression[FinalTypes] = SelfReferenceExpression()
       implicit def convert(other: any.Project[FinalTypes]): Project = other.getSelfProject
       implicit def convert(other: any.CompilationUnit[FinalTypes]): CompilationUnit = other.getSelfCompilationUnit
-      implicit def convert(other: any.Method[FinalTypes]): Method = other.getSelfMethod
+      implicit def convert(other: any.Method[FinalTypes]): scala.Method[FinalTypes] = other.getSelfMethod
       implicit def convert(other: oo.Class[FinalTypes]): Class = other.getSelfClass
       implicit def convert(other: oo.Constructor[FinalTypes]): Constructor = other.getSelfConstructor
       implicit def convert(other: oo.Field[FinalTypes]): Field = other.getSelfField
@@ -537,7 +564,10 @@ package object scala {
       override def stringLengthOp(): strings.StringLengthOp[FinalTypes] = StringLengthOp()
       override def assertTrueOp(): assertions.AssertTrueOp[FinalTypes] = AssertTrueOp()
 
-      override def project(compilationUnits: Set[any.CompilationUnit[FinalTypes]]): any.Project[FinalTypes] = Project(compilationUnits)
+      override def ooProject(compilationUnits: Set[any.CompilationUnit[FinalTypes]],
+        methodTypeLookupMap: Map[TypeRep, Generator[any.Method[FinalTypes], any.Type[FinalTypes]]],
+        constructorTypeLookupMap: Map[TypeRep, Generator[oo.Constructor[FinalTypes], any.Type[FinalTypes]]],
+        classTypeLookupMap: Map[TypeRep, Generator[oo.Class[FinalTypes], any.Type[FinalTypes]]]): any.Project[FinalTypes] = Project(compilationUnits, methodTypeLookupMap, constructorTypeLookupMap, classTypeLookupMap)
       override def argumentExpression(parameterName: any.Name[FinalTypes]): any.ArgumentExpression[FinalTypes] = ArgumentExpression(parameterName)
       implicit def convert(other: any.Import[FinalTypes]): Import = other.getSelfImport
       implicit def convert(other: any.Statement[FinalTypes]): Statement = other.getSelfStatement
@@ -692,6 +722,8 @@ package object scala {
       override val fields: Seq[oo.Field[FinalTypes]] = Seq.empty,
       override val methods: Seq[any.Method[FinalTypes]] = Seq.empty,
       override val constructors: Seq[oo.Constructor[FinalTypes]] = Seq.empty,
+      override val methodTypeLookupMap: Map[TypeRep, Generator[any.Method[FinalTypes], any.Type[FinalTypes]]],
+      override val constructorTypeLookupMap: Map[TypeRep, Generator[oo.Constructor[FinalTypes], any.Type[FinalTypes]]],
       override val typeLookupMap: Map[TypeRep, any.Type[FinalTypes]] = Map.empty,
       override val isAbstract: Boolean = false,
       override val isInterface: Boolean = false,
@@ -771,12 +803,20 @@ package object scala {
     case class CompilationUnit(
       override val name: Seq[any.Name[FinalTypes]] = Seq.empty,
       override val imports: Seq[any.Import[FinalTypes]] = Seq.empty,
+      override val methodTypeLookupMap: Map[TypeRep, Generator[any.Method[FinalTypes], any.Type[FinalTypes]]] = Map.empty,
+      override val constructorTypeLookupMap: Map[TypeRep, Generator[oo.Constructor[FinalTypes], any.Type[FinalTypes]]] = Map.empty,
+      override val classTypeLookupMap: Map[TypeRep, Generator[oo.Class[FinalTypes], any.Type[FinalTypes]]] = Map.empty,
       override val classes: Seq[oo.Class[FinalTypes]] = Seq.empty
     ) extends scala.CompilationUnit[FinalTypes] with Util {
       override def getSelfCompilationUnit: this.type = this
     }
 
-    case class Project(override val compilationUnits: Set[any.CompilationUnit[FinalTypes]]) extends scala.Project[FinalTypes] with Factory {
+    case class Project(
+      override val compilationUnits: Set[any.CompilationUnit[FinalTypes]],
+      override val methodTypeLookupMap: Map[TypeRep, Generator[any.Method[FinalTypes], any.Type[FinalTypes]]] = Map.empty,
+      override val constructorTypeLookupMap: Map[TypeRep, Generator[oo.Constructor[FinalTypes], any.Type[FinalTypes]]] = Map.empty,
+      override val classTypeLookupMap: Map[TypeRep, Generator[oo.Class[FinalTypes], any.Type[FinalTypes]]] = Map.empty
+    ) extends scala.Project[FinalTypes] with Factory {
       override def getSelfProject: this.type = this
     }
 

@@ -8,8 +8,8 @@ import org.combinators.ep.language.scala.{Finalized, ScalaNameProvider}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator
 import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.language.inbetween.any.{AbstractSyntax, AnyParadigm, Project}
-import org.combinators.ep.language.inbetween.oo.OOParadigm
+import org.combinators.ep.language.inbetween.any.{AbstractSyntax, AnyParadigm, Project, Method, Type}
+import org.combinators.ep.language.inbetween.oo.{OOParadigm, Constructor, Class}
 import org.combinators.ep.language.inbetween.imperative.Imperative
 import org.combinators.ep.language.inbetween.ffi.Booleans
 import org.combinators.ep.language.inbetween.ffi.Arithmetic
@@ -30,11 +30,31 @@ sealed class CodeGenerator { cc =>
   val syntax: AbstractSyntax[Finalized.FinalTypes] = new AbstractSyntax[Finalized.FinalTypes] {}
   val nameProvider = new ScalaNameProvider[Finalized.FinalTypes](factory)
   def runGenerator(generator: Generator[Project[Finalized.FinalTypes], Unit]): Seq[FileWithPath] = {
-    val project = factory.project().addTypeLookupForMethods(TypeRep.Double, Command.lift(factory.classReferenceType(nameProvider.mangle("Double"))))
-    Command.runGenerator(generator,project)._1.compilationUnits.map(cu => FileWithPath(factory.convert(cu).toScala,
-      cu.name.foldLeft(Paths.get("src"))({ case (path, name) =>
-        Paths.get(path.toString, factory.convert(name).toScala)
-      }))).toSeq
+    val projectWithMethodLookup = factory.convert(
+      factory.ooProject()
+      .addTypeLookupForMethods(TypeRep.Double, Command.lift(factory.classReferenceType(nameProvider.mangle("Double"))))
+      .addTypeLookupForMethods(TypeRep.String, Command.lift(factory.classReferenceType(nameProvider.mangle("String"))))
+      .addTypeLookupForMethods(TypeRep.Unit, Command.lift(factory.classReferenceType(nameProvider.mangle("Unit"))))
+    )
+    val projectWithOtherLookups =
+      projectWithMethodLookup.copyAsProjectWithTypeLookups(
+        classTypeLookupMap = projectWithMethodLookup.classTypeLookupMap
+          .updated(TypeRep.Double, Command.lift[Class[Finalized.FinalTypes], Type[Finalized.FinalTypes]](factory.classReferenceType(nameProvider.mangle("Double"))))
+          .updated(TypeRep.String, Command.lift[Class[Finalized.FinalTypes], Type[Finalized.FinalTypes]](factory.classReferenceType(nameProvider.mangle("String"))))
+          .updated(TypeRep.Unit, Command.lift[Class[Finalized.FinalTypes], Type[Finalized.FinalTypes]](factory.classReferenceType(nameProvider.mangle("Unit")))),
+        constructorTypeLookupMap = projectWithMethodLookup.constructorTypeLookupMap
+          .updated(TypeRep.Double, Command.lift[Constructor[Finalized.FinalTypes], Type[Finalized.FinalTypes]](factory.classReferenceType(nameProvider.mangle("Double"))))
+          .updated(TypeRep.String, Command.lift[Constructor[Finalized.FinalTypes], Type[Finalized.FinalTypes]](factory.classReferenceType(nameProvider.mangle("String"))))
+          .updated(TypeRep.Unit, Command.lift[Constructor[Finalized.FinalTypes], Type[Finalized.FinalTypes]](factory.classReferenceType(nameProvider.mangle("Unit"))))
+      )
+    Command.runGenerator(generator,projectWithOtherLookups)._1.compilationUnits.map(cu => FileWithPath(factory.convert(cu).toScala, {
+      val nameAsStrings = cu.name.map(name => factory.convert(name).toScala)
+      val nameWithScalaExtension = nameAsStrings.init :+ (nameAsStrings.last + ".scala")
+
+      nameWithScalaExtension.foldLeft(Paths.get("src"))({ case (path, name) =>
+        Paths.get(path.toString, name)
+      })
+    })).toSeq
   }
 
   val paradigm = AnyParadigm[Finalized.FinalTypes, factory.type, syntax.type](factory, runGenerator, syntax)

@@ -22,7 +22,7 @@ trait Strings[FT <: operatorExpression.FinalTypes, FactoryType <: strings.Factor
     implicit val canAppend: Understands[any.Method[FT], Apply[StringAppend, any.Expression[FT], any.Expression[FT]]] =
       new Understands[any.Method[FT], Apply[StringAppend, any.Expression[FT], any.Expression[FT]]] {
         def perform(context: any.Method[FT], command: Apply[StringAppend, any.Expression[FT], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
-          (context, factory.appendString(command.arguments(0), command.arguments(1)))
+          (context, command.arguments.tail.foldLeft(command.arguments.head){case (r, l) => factory.appendString(r, l)})
         }
       }
     implicit val canToStringInCtxt: Understands[any.Method[FT], Apply[ToString[any.Type[FT]], any.Expression[FT], any.Expression[FT]]] =

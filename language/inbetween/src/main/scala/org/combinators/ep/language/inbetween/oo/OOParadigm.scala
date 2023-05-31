@@ -5,7 +5,6 @@ import org.combinators.ep.generator.{Command, FileWithPath, Understands, paradig
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.generator.paradigm.{AddBlockDefinitions, AddClass, AddConstructor, AddField, AddImplemented, AddImport, AddMethod, AddParent, AddTypeLookup, Apply, CastObject, Debug, FindClass, FreshName, GetArguments, GetConstructor, GetField, GetMember, InitializeField, InitializeParent, InstanceOfType, InstantiateObject, Reify, RemoveMethod, ResolveImport, SelfReference, SetAbstract, SetInterface, SetParameters, SetStatic, SuperReference, ToTargetLanguageType, ObjectOriented => OOP}
 import org.combinators.ep.language.inbetween.any
-import org.combinators.ep.language.inbetween.ffi.arithmetic.SubOp
 
 trait OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends OOP {
   val base: AnyParadigm.WithFT[FT, FactoryType]

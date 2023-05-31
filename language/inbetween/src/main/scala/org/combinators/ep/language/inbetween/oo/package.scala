@@ -153,7 +153,7 @@ package object oo {
       returnType: Option[any.Type[FT]] = this.returnType,
       parameters: Seq[(any.Name[FT], any.Type[FT])] = this.parameters,
       typeLookupMap: Map[TypeRep, any.Type[FT]] = this.typeLookupMap
-    ): Method[FT] = clsMethod(name, imports, statements, returnType, parameters, typeLookupMap, isAbstract, isStatic, isPublic, isOverride)
+    ): any.Method[FT] = clsMethod(name, imports, statements, returnType, parameters, typeLookupMap, isAbstract, isStatic, isPublic, isOverride)
 
     def copyAsClsMethod(
       name: any.Name[FT] = this.name,
@@ -330,7 +330,7 @@ package object oo {
       returnType: Option[any.Type[FT]] = Option.empty,
       parameters: Seq[(any.Name[FT], any.Type[FT])] = Seq.empty,
       typeLookupMap: Map[TypeRep, any.Type[FT]] = Map.empty
-    ): Method[FT] = clsMethod(name, imports, statements, returnType, parameters, typeLookupMap, false, false, false, false)
+    ): any.Method[FT] = clsMethod(name, imports, statements, returnType, parameters, typeLookupMap, false, false, false, false)
 
     def clsMethod(
       name: any.Name[FT],

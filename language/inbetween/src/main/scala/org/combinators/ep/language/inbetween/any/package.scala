@@ -37,18 +37,18 @@ package object any {
     def statements: Seq[Statement[FT]] = Seq.empty
     def returnType: Option[Type[FT]] = Option.empty
     def parameters: Seq[(Name[FT], Type[FT])] = Seq.empty
-    def typeLookupMap: Map[TypeRep, Type[FT]] = Map.empty
+    def typeLookupMap: TypeRep => Generator[Method[FT], Type[FT]] = Map.empty
 
-    def addTypeLookup(tpeRep: TypeRep, tpe: Type[FT]): Method[FT] = {
-      copy(typeLookupMap = typeLookupMap.updated(tpeRep, tpe))
+    def addTypeLookups(lookups: TypeRep => Option[Generator[Method[FT], Type[FT]]]): Method[FT] = {
+      copy(typeLookupMap = (tpeRep: TypeRep) => lookups(tpeRep).getOrElse(this.typeLookupMap(tpeRep)))
     }
     def getArguments(): Seq[(Name[FT], Type[FT], Expression[FT])] = {
       parameters.map(param => (param._1, param._2, argumentExpression(param._1)))
     }
-    def toTargetLanguageType(tpe: TypeRep): Type[FT] = typeLookupMap(tpe)
+    def toTargetLanguageType(tpe: TypeRep): Generator[Method[FT], Type[FT]] = typeLookupMap(tpe)
 
     def reify[T](tpe: TypeRep.OfHostType[T], value: T): Expression[FT]
-    def resolveImport(tpe: Type[FT]): Option[Import[FT]]
+    def resolveImport(tpe: Type[FT]): Seq[Import[FT]]
     def getFreshName(basedOn: Name[FT]): Name[FT]
 
     def copy(
@@ -57,7 +57,7 @@ package object any {
       statements: Seq[Statement[FT]] = this.statements,
       returnType: Option[Type[FT]] = this.returnType,
       parameters: Seq[(Name[FT], Type[FT])] = this.parameters,
-      typeLookupMap: Map[TypeRep, Type[FT]] = this.typeLookupMap,
+      typeLookupMap: TypeRep => Generator[Method[FT], Type[FT]] = this.typeLookupMap,
     ): Method[FT] = method(name, imports, statements, returnType, parameters)
   }
 
@@ -120,7 +120,7 @@ package object any {
 
     def compilationUnits: Set[CompilationUnit[FT]] = Set.empty
 
-    def addTypeLookupForMethods(tpeRep: TypeRep, tpe: Generator[Method[FT], Type[FT]]): Project[FT]
+    def addTypeLookupsForMethods(lookups: TypeRep => Option[Generator[Method[FT], Type[FT]]]): Project[FT]
 
     def copy(
       compilationUnits: Set[CompilationUnit[FT]] = this.compilationUnits
@@ -139,7 +139,7 @@ package object any {
       statements: Seq[Statement[FT]] = Seq.empty,
       returnType: Option[Type[FT]] = Option.empty,
       parameters: Seq[(Name[FT], Type[FT])] = Seq.empty,
-      typeLookupMap: Map[TypeRep, Type[FT]] = Map.empty,
+      typeLookupMap: TypeRep => Generator[Method[FT], Type[FT]] = Map.empty,
     ): Method[FT]
     def returnExpression(expression: Expression[FT]): Return[FT]
     def applyExpression(function: Expression[FT], arguments: Seq[Expression[FT]]): ApplyExpression[FT]

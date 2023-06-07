@@ -20,12 +20,18 @@ package object oo {
   }
 
   trait Project[FT <: FinalTypes] extends any.Project[FT] with Factory[FT] {
-    def methodTypeLookupMap: Map[TypeRep, Generator[any.Method[FT], any.Type[FT]]] = Map.empty
-    def constructorTypeLookupMap: Map[TypeRep, Generator[Constructor[FT], any.Type[FT]]] = Map.empty
-    def classTypeLookupMap: Map[TypeRep, Generator[Class[FT], any.Type[FT]]] = Map.empty
+    def methodTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty
+    def constructorTypeLookupMap: TypeRep => Generator[Constructor[FT], any.Type[FT]] = Map.empty
+    def classTypeLookupMap: TypeRep => Generator[Class[FT], any.Type[FT]] = Map.empty
 
-    override def addTypeLookupForMethods(tpeRep: TypeRep, tpe: Generator[any.Method[FT], any.Type[FT]]): any.Project[FT] =
-      copyAsProjectWithTypeLookups(methodTypeLookupMap = this.methodTypeLookupMap + (tpeRep -> tpe))
+    override def addTypeLookupsForMethods(lookups: TypeRep => Option[Generator[any.Method[FT], any.Type[FT]]]): any.Project[FT] =
+      copyAsProjectWithTypeLookups(methodTypeLookupMap = (tpeRep: TypeRep) => lookups(tpeRep).getOrElse(this.methodTypeLookupMap(tpeRep)))
+
+    def addTypeLookupsForConstructors(lookups: TypeRep => Option[Generator[oo.Constructor[FT], any.Type[FT]]]): any.Project[FT] =
+      copyAsProjectWithTypeLookups(constructorTypeLookupMap = (tpeRep: TypeRep) => lookups(tpeRep).getOrElse(this.constructorTypeLookupMap(tpeRep)))
+
+    def addTypeLookupsForClasses(lookups: TypeRep => Option[Generator[oo.Class[FT], any.Type[FT]]]): any.Project[FT] =
+      copyAsProjectWithTypeLookups(classTypeLookupMap = (tpeRep: TypeRep) => lookups(tpeRep).getOrElse(this.classTypeLookupMap(tpeRep)))
 
     override def copy(
       compilationUnits: Set[any.CompilationUnit[FT]]
@@ -33,17 +39,26 @@ package object oo {
 
     def copyAsProjectWithTypeLookups(
       compilationUnits: Set[any.CompilationUnit[FT]] = this.compilationUnits,
-      methodTypeLookupMap: Map[TypeRep, Generator[any.Method[FT], any.Type[FT]]] = this.methodTypeLookupMap,
-      constructorTypeLookupMap: Map[TypeRep, Generator[Constructor[FT], any.Type[FT]]] = this.constructorTypeLookupMap,
-      classTypeLookupMap: Map[TypeRep, Generator[Class[FT], any.Type[FT]]] = this.classTypeLookupMap
+      methodTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = this.methodTypeLookupMap,
+      constructorTypeLookupMap: TypeRep => Generator[Constructor[FT], any.Type[FT]] = this.constructorTypeLookupMap,
+      classTypeLookupMap: TypeRep => Generator[Class[FT], any.Type[FT]] = this.classTypeLookupMap
     ): Project[FT] = ooProject(compilationUnits, methodTypeLookupMap, constructorTypeLookupMap, classTypeLookupMap)
   }
 
   trait CompilationUnit[FT <: FinalTypes] extends any.CompilationUnit[FT] with Factory[FT] {
     def classes: Seq[Class[FT]] = Seq.empty
-    def methodTypeLookupMap: Map[TypeRep, Generator[any.Method[FT], any.Type[FT]]] = Map.empty
-    def constructorTypeLookupMap: Map[TypeRep, Generator[Constructor[FT], any.Type[FT]]] = Map.empty
-    def classTypeLookupMap: Map[TypeRep, Generator[Class[FT], any.Type[FT]]] = Map.empty
+    def methodTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty
+    def constructorTypeLookupMap: TypeRep => Generator[Constructor[FT], any.Type[FT]] = Map.empty
+    def classTypeLookupMap: TypeRep => Generator[Class[FT], any.Type[FT]] = Map.empty
+
+    def addTypeLookupsForMethods(lookups: TypeRep => Option[Generator[any.Method[FT], any.Type[FT]]]): any.CompilationUnit[FT] =
+      copyAsCompilationUnitWithClasses(methodTypeLookupMap = (tpeRep: TypeRep) => lookups(tpeRep).getOrElse(this.methodTypeLookupMap(tpeRep)))
+
+    def addTypeLookupsForConstructors(lookups: TypeRep => Option[Generator[oo.Constructor[FT], any.Type[FT]]]): any.CompilationUnit[FT] =
+      copyAsCompilationUnitWithClasses(constructorTypeLookupMap = (tpeRep: TypeRep) => lookups(tpeRep).getOrElse(this.constructorTypeLookupMap(tpeRep)))
+
+    def addTypeLookupsForClasses(lookups: TypeRep => Option[Generator[oo.Class[FT], any.Type[FT]]]): any.CompilationUnit[FT] =
+      copyAsCompilationUnitWithClasses(classTypeLookupMap = (tpeRep: TypeRep) => lookups(tpeRep).getOrElse(this.classTypeLookupMap(tpeRep)))
 
     override def initializeInProject(project: any.Project[FT]): any.CompilationUnit[FT] =
       copyAsCompilationUnitWithClasses(classTypeLookupMap = project.classTypeLookupMap,
@@ -59,9 +74,9 @@ package object oo {
     def copyAsCompilationUnitWithClasses(
       name: Seq[any.Name[FT]] = this.name,
       imports: Seq[any.Import[FT]] = this.imports,
-      methodTypeLookupMap: Map[TypeRep, Generator[any.Method[FT], any.Type[FT]]] = this.methodTypeLookupMap,
-      constructorTypeLookupMap: Map[TypeRep, Generator[Constructor[FT], any.Type[FT]]] = this.constructorTypeLookupMap,
-      classTypeLookupMap: Map[TypeRep, Generator[Class[FT], any.Type[FT]]] = this.classTypeLookupMap,
+      methodTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = this.methodTypeLookupMap,
+      constructorTypeLookupMap: TypeRep => Generator[Constructor[FT], any.Type[FT]] = this.constructorTypeLookupMap,
+      classTypeLookupMap: TypeRep => Generator[Class[FT], any.Type[FT]] = this.classTypeLookupMap,
       classes: Seq[Class[FT]] = this.classes
     ): CompilationUnit[FT] = compilationUnit(name, imports, methodTypeLookupMap, constructorTypeLookupMap, classTypeLookupMap, classes)
   }
@@ -76,14 +91,24 @@ package object oo {
     def fields: Seq[Field[FT]] = Seq.empty
     def methods: Seq[any.Method[FT]] = Seq.empty
     def constructors: Seq[Constructor[FT]] = Seq.empty
-    def typeLookupMap: Map[TypeRep, any.Type[FT]] = Map.empty
-    def methodTypeLookupMap: Map[TypeRep, Generator[any.Method[FT], any.Type[FT]]] = Map.empty
-    def constructorTypeLookupMap: Map[TypeRep, Generator[Constructor[FT], any.Type[FT]]] = Map.empty
+    def methodTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty
+    def constructorTypeLookupMap: TypeRep => Generator[Constructor[FT], any.Type[FT]] = Map.empty
+    def typeLookupMap: TypeRep => Generator[Class[FT], any.Type[FT]] = Map.empty
     def isAbstract: Boolean = false
     def isInterface: Boolean = false
     def isStatic: Boolean = false
 
-    def toTargetLanguageType(tpe: TypeRep): any.Type[FT] = typeLookupMap(tpe)
+    def toTargetLanguageType(tpe: TypeRep): Generator[Class[FT], any.Type[FT]] = typeLookupMap(tpe)
+
+    def addTypeLookupsForMethods(lookups: TypeRep => Option[Generator[any.Method[FT], any.Type[FT]]]): oo.Class[FT] =
+      copy(methodTypeLookupMap = (tpeRep: TypeRep) => lookups(tpeRep).getOrElse(this.methodTypeLookupMap(tpeRep)))
+
+    def addTypeLookupsForConstructors(lookups: TypeRep => Option[Generator[oo.Constructor[FT], any.Type[FT]]]): oo.Class[FT] =
+      copy(constructorTypeLookupMap = (tpeRep: TypeRep) => lookups(tpeRep).getOrElse(this.constructorTypeLookupMap(tpeRep)))
+
+    def addTypeLookupsForClasses(lookups: TypeRep => Option[Generator[Class[FT], any.Type[FT]]]): oo.Class[FT] = {
+      copy(typeLookupMap = (tpeRep: TypeRep) => lookups(tpeRep).getOrElse(this.typeLookupMap(tpeRep)))
+    }
 
     def addParent(parent: any.Type[FT]): Class[FT] =
       copy(parents = (this.parents :+ parent).distinct)
@@ -103,7 +128,7 @@ package object oo {
     def addConstructor(constructor: Constructor[FT]): Class[FT] =
       copy(constructors = this.constructors :+ constructor)
 
-    def resolveImport(tpe: any.Type[FT]): Option[any.Import[FT]]
+    def resolveImport(tpe: any.Type[FT]): Seq[any.Import[FT]]
     def findClass(qualifiedName: any.Name[FT]*): any.Type[FT]
     def getFreshName(basedOn: any.Name[FT]): any.Name[FT]
 
@@ -115,9 +140,9 @@ package object oo {
       fields: Seq[Field[FT]] = this.fields,
       methods: Seq[any.Method[FT]] = this.methods,
       constructors: Seq[Constructor[FT]] = this.constructors,
-      methodTypeLookupMap: Map[TypeRep, Generator[any.Method[FT], any.Type[FT]]] = this.methodTypeLookupMap,
-      constructorTypeLookupMap: Map[TypeRep, Generator[Constructor[FT], any.Type[FT]]] = this.constructorTypeLookupMap,
-      typeLookupMap: Map[TypeRep, any.Type[FT]] = this.typeLookupMap,
+      methodTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = this.methodTypeLookupMap,
+      constructorTypeLookupMap: TypeRep => Generator[Constructor[FT], any.Type[FT]] = this.constructorTypeLookupMap,
+      typeLookupMap: TypeRep => Generator[Class[FT], any.Type[FT]] = this.typeLookupMap,
       isAbstract: Boolean = this.isAbstract,
       isInterface: Boolean = this.isInterface,
       isStatic: Boolean = this.isStatic,
@@ -152,7 +177,7 @@ package object oo {
       statements: Seq[any.Statement[FT]] = this.statements,
       returnType: Option[any.Type[FT]] = this.returnType,
       parameters: Seq[(any.Name[FT], any.Type[FT])] = this.parameters,
-      typeLookupMap: Map[TypeRep, any.Type[FT]] = this.typeLookupMap
+      typeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = this.typeLookupMap
     ): any.Method[FT] = clsMethod(name, imports, statements, returnType, parameters, typeLookupMap, isAbstract, isStatic, isPublic, isOverride)
 
     def copyAsClsMethod(
@@ -161,7 +186,7 @@ package object oo {
       statements: Seq[any.Statement[FT]] = this.statements,
       returnType: Option[any.Type[FT]] = this.returnType,
       parameters: Seq[(any.Name[FT], any.Type[FT])] = this.parameters,
-      typeLookupMap: Map[TypeRep, any.Type[FT]] = this.typeLookupMap,
+      typeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = this.typeLookupMap,
       isAbstract: Boolean = this.isAbstract,
       isStatic: Boolean = this.isStatic,
       isPublic: Boolean = this.isPublic,
@@ -238,6 +263,7 @@ package object oo {
   }
 
   trait Constructor[FT <: FinalTypes] extends Method[FT] {
+    def constructorTypeLookupMap: TypeRep => Generator[Constructor[FT], any.Type[FT]] = Map.empty
     def getSelfConstructor: finalTypes.Constructor
 
     override def isAbstract: Boolean = false
@@ -247,9 +273,10 @@ package object oo {
     def superInitialization: Option[(any.Type[FT], Seq[any.Expression[FT]])] = Option.empty
     def fieldInitializers: Seq[(any.Name[FT], any.Expression[FT])] = Seq.empty
 
-    override def addTypeLookup(tpeRep: TypeRep, tpe: any.Type[FT]): Constructor[FT] = {
-      copyAsConstructor(typeLookupMap = typeLookupMap.updated(tpeRep, tpe))
+    def addConstructorTypeLookups(lookups: TypeRep => Option[Generator[Constructor[FT], any.Type[FT]]]): Constructor[FT] = {
+      copyAsConstructor(constructorTypeLookupMap = (tpeRep: TypeRep) => lookups(tpeRep).getOrElse(this.constructorTypeLookupMap(tpeRep)))
     }
+    def toTargetLanguageTypeInConstructor(tpe: TypeRep): Generator[Constructor[FT], any.Type[FT]] = constructorTypeLookupMap(tpe)
 
     override def  copyAsClsMethod(
       name: any.Name[FT] = this.name,
@@ -257,7 +284,7 @@ package object oo {
       statements: Seq[any.Statement[FT]] = this.statements,
       returnType: Option[any.Type[FT]] = this.returnType,
       parameters: Seq[(any.Name[FT], any.Type[FT])] = this.parameters,
-      typeLookupMap: Map[TypeRep, any.Type[FT]] = this.typeLookupMap,
+      typeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = this.typeLookupMap,
       isAbstract: Boolean = this.isAbstract,
       isStatic: Boolean = this.isStatic,
       isPublic: Boolean = this.isPublic,
@@ -269,10 +296,11 @@ package object oo {
       imports: Set[any.Import[FT]] = this.imports,
       statements: Seq[any.Statement[FT]] = this.statements,
       parameters: Seq[(any.Name[FT], any.Type[FT])] = this.parameters,
-      typeLookupMap: Map[TypeRep, any.Type[FT]] = this.typeLookupMap,
+      typeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = this.typeLookupMap,
+      constructorTypeLookupMap: TypeRep => Generator[Constructor[FT],any.Type[FT]] = this.constructorTypeLookupMap,
       superInitialization: Option[(any.Type[FT], Seq[any.Expression[FT]])] = this.superInitialization,
       fieldInitializers: Seq[(any.Name[FT], any.Expression[FT])] = this.fieldInitializers,
-    ): Constructor[FT] = constructor(constructedType, imports, statements, parameters, typeLookupMap, superInitialization, fieldInitializers)
+    ): Constructor[FT] = constructor(constructedType, imports, statements, parameters, typeLookupMap, constructorTypeLookupMap, superInitialization, fieldInitializers)
   }
 
   trait Field[FT <: FinalTypes] extends Factory[FT] {
@@ -306,9 +334,9 @@ package object oo {
 
     def ooProject(
       compilationUnits: Set[any.CompilationUnit[FT]] = Set.empty,
-      methodTypeLookupMap: Map[TypeRep, Generator[any.Method[FT], any.Type[FT]]] = Map.empty,
-      constructorTypeLookupMap: Map[TypeRep, Generator[Constructor[FT], any.Type[FT]]] = Map.empty,
-      classTypeLookupMap: Map[TypeRep, Generator[Class[FT], any.Type[FT]]] = Map.empty
+      methodTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty,
+      constructorTypeLookupMap: TypeRep => Generator[Constructor[FT], any.Type[FT]] = Map.empty,
+      classTypeLookupMap: TypeRep => Generator[Class[FT], any.Type[FT]] = Map.empty
     ): any.Project[FT]
 
 
@@ -318,9 +346,9 @@ package object oo {
     def compilationUnit(
       name: Seq[any.Name[FT]],
       imports: Seq[any.Import[FT]],
-      methodTypeLookupMap: Map[TypeRep, Generator[any.Method[FT], any.Type[FT]]] = Map.empty,
-      constructorTypeLookupMap: Map[TypeRep, Generator[Constructor[FT], any.Type[FT]]] = Map.empty,
-      classTypeLookupMap: Map[TypeRep, Generator[Class[FT], any.Type[FT]]] = Map.empty,
+      methodTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty,
+      constructorTypeLookupMap: TypeRep => Generator[Constructor[FT], any.Type[FT]] = Map.empty,
+      classTypeLookupMap: TypeRep => Generator[Class[FT], any.Type[FT]] = Map.empty,
       classes: Seq[Class[FT]] = Seq.empty): CompilationUnit[FT]
 
     override def method(
@@ -329,7 +357,7 @@ package object oo {
       statements: Seq[any.Statement[FT]] = Seq.empty,
       returnType: Option[any.Type[FT]] = Option.empty,
       parameters: Seq[(any.Name[FT], any.Type[FT])] = Seq.empty,
-      typeLookupMap: Map[TypeRep, any.Type[FT]] = Map.empty
+      typeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty
     ): any.Method[FT] = clsMethod(name, imports, statements, returnType, parameters, typeLookupMap, false, false, false, false)
 
     def clsMethod(
@@ -338,7 +366,7 @@ package object oo {
       statements: Seq[any.Statement[FT]] = Seq.empty,
       returnType: Option[any.Type[FT]] = Option.empty,
       parameters: Seq[(any.Name[FT], any.Type[FT])] = Seq.empty,
-      typeLookupMap: Map[TypeRep, any.Type[FT]] = Map.empty,
+      typeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty,
       isAbstract: Boolean = false,
       isStatic: Boolean = false,
       isPublic: Boolean = false,
@@ -353,9 +381,9 @@ package object oo {
       fields: Seq[Field[FT]] = Seq.empty,
       methods: Seq[any.Method[FT]] = Seq.empty,
       constructors: Seq[Constructor[FT]] = Seq.empty,
-      methodTypeLookupMap: Map[TypeRep, Generator[any.Method[FT], any.Type[FT]]] = Map.empty,
-      constructorTypeLookupMap: Map[TypeRep, Generator[Constructor[FT], any.Type[FT]]] = Map.empty,
-      typeLookupMap: Map[TypeRep, any.Type[FT]] = Map.empty,
+      methodTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty,
+      constructorTypeLookupMap: TypeRep => Generator[Constructor[FT], any.Type[FT]] = Map.empty,
+      typeLookupMap: TypeRep => Generator[Class[FT], any.Type[FT]] = Map.empty,
       isAbstract: Boolean = false,
       isInterface: Boolean = false,
       isStatic: Boolean = false,
@@ -366,7 +394,8 @@ package object oo {
       imports: Set[any.Import[FT]] = Set.empty,
       statements: Seq[any.Statement[FT]] = Seq.empty,
       parameters: Seq[(any.Name[FT], any.Type[FT])] = Seq.empty,
-      typeLookupMap: Map[TypeRep, any.Type[FT]] = Map.empty,
+      typeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty,
+      constructorTypeLookupMap: TypeRep => Generator[Constructor[FT], any.Type[FT]] = Map.empty,
       superInitialization: Option[(any.Type[FT], Seq[any.Expression[FT]])] = Option.empty,
       fieldInitializers: Seq[(any.Name[FT], any.Expression[FT])] = Seq.empty,
     ): Constructor[FT]

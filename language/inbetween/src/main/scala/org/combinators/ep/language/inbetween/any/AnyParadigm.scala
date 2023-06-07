@@ -1,5 +1,6 @@
 package org.combinators.ep.language.inbetween.any
 
+import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, FileWithPath, Understands}
@@ -31,8 +32,7 @@ trait AnyParadigm extends AP {
     }
     implicit val canAddTypeLookupForMethodsInProject: Understands[ProjectContext, AddTypeLookup[Method[FT], Type[FT]]] = new Understands[ProjectContext, AddTypeLookup[Method[FT], Type[FT]]] {
       def perform(context: Project[FT], command: AddTypeLookup[Method[FT], Type[FT]]): (Project[FT], Unit) = {
-
-        (context.addTypeLookupForMethods(command.tpe, command.lookup), ())
+        (context.addTypeLookupsForMethods((tpeRep: TypeRep) => if (tpeRep == command.tpe) Some(command.lookup) else None), ())
       }
     }
   }
@@ -97,7 +97,7 @@ trait AnyParadigm extends AP {
     }
     implicit val canTransformTypeInMethodBody: Understands[MethodBodyContext, ToTargetLanguageType[syntax.Type]] = new Understands[MethodBodyContext, ToTargetLanguageType[syntax.Type]] {
       def perform(context: Method[FT], command: ToTargetLanguageType[Type[FT]]): (Method[FT], Type[FT]) = {
-        (context, context.toTargetLanguageType(command.tpe))
+        Command.runGenerator(context.toTargetLanguageType(command.tpe), context)
       }
     }
     implicit def canReifyInMethodBody[T]: Understands[MethodBodyContext, Reify[T, syntax.Expression]] = new Understands[MethodBodyContext, Reify[T, syntax.Expression]] {
@@ -107,7 +107,7 @@ trait AnyParadigm extends AP {
     }
     implicit val canResolveImportInMethod: Understands[MethodBodyContext, ResolveImport[syntax.Import, syntax.Type]] = new Understands[MethodBodyContext, ResolveImport[syntax.Import, syntax.Type]] {
       def perform(context: Method[FT], command: ResolveImport[Import[FT], Type[FT]]): (Method[FT], Option[Import[FT]]) = {
-        (context, context.resolveImport(command.forElem))
+        (context, context.resolveImport(command.forElem).headOption) // TODO: Change code generator to Seq[Import]
       }
     }
     implicit val canApplyInMethodBody: Understands[MethodBodyContext, Apply[syntax.Expression, syntax.Expression, syntax.Expression]] = new Understands[MethodBodyContext, Apply[syntax.Expression, syntax.Expression, syntax.Expression]] {

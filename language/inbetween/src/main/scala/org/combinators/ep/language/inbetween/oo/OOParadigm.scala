@@ -1,5 +1,6 @@
 package org.combinators.ep.language.inbetween.oo
 
+import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, FileWithPath, Understands, paradigm}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
@@ -24,18 +25,17 @@ trait OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends OOP {
     }
     implicit val canAddTypeLookupForMethodsInClass: Understands[Class[FT], AddTypeLookup[MethodBodyContext, Type]] = new Understands[Class[FT], AddTypeLookup[MethodBodyContext, Type]] {
       def perform(context: Class[FT], command: AddTypeLookup[MethodBodyContext, Type]): (Class[FT], Unit) = {
-        (context.copy(methodTypeLookupMap = context.methodTypeLookupMap + (command.tpe -> command.lookup)), ())
+        (context.addTypeLookupsForMethods((tpeRep: TypeRep) => if (tpeRep == command.tpe) Some(command.lookup) else None), ())
       }
     }
     implicit val canAddTypeLookupForClassesInClass: Understands[Class[FT], AddTypeLookup[Class[FT], Type]] = new Understands[Class[FT], AddTypeLookup[Class[FT], Type]] {
       def perform(context: Class[FT], command: AddTypeLookup[Class[FT], Type]): (Class[FT], Unit) = {
-        val (updated, lookup) = Command.runGenerator(command.lookup, context)
-        (updated.copy(typeLookupMap = updated.typeLookupMap + (command.tpe -> lookup)), ())
+        (context.addTypeLookupsForClasses((tpeRep: TypeRep) => if (tpeRep == command.tpe) Some(command.lookup) else None), ())
       }
     }
     implicit val canAddTypeLookupForConstructorsInClass: Understands[Class[FT], AddTypeLookup[ConstructorContext, Type]] = new Understands[Class[FT], AddTypeLookup[ConstructorContext, Type]] {
       def perform(context: Class[FT], command: AddTypeLookup[ConstructorContext, Type]): (Class[FT], Unit) = {
-        (context.copy(constructorTypeLookupMap = context.constructorTypeLookupMap + (command.tpe -> command.lookup)), ())
+        (context.addTypeLookupsForConstructors((tpeRep: TypeRep) => if (tpeRep == command.tpe) Some(command.lookup) else None), ())
       }
     }
     implicit val canAddParentInClass: Understands[Class[FT], AddParent[Type]] = new Understands[Class[FT], AddParent[Type]] {
@@ -70,13 +70,9 @@ trait OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends OOP {
           name = command.name,
           isPublic = command.isPublic,
           isOverride = command.isOverride,
-          typeLookupMap = context.typeLookupMap
+          typeLookupMap = context.methodTypeLookupMap
         )
-        val methodWithLookups = converted.methodTypeLookupMap.foldLeft(emptyMethod) { case (method, (tpeRep, lookupGenerator)) => {
-          val (methodWithLookup, tpe) = Command.runGenerator(lookupGenerator, method)
-          factory.convert(methodWithLookup).copyAsClsMethod(typeLookupMap = methodWithLookup.typeLookupMap + (tpeRep -> tpe))
-        }}
-        var (generatedMethod, result) = Command.runGenerator(command.spec, methodWithLookups)
+        var (generatedMethod, result) = Command.runGenerator(command.spec, emptyMethod)
         if (result.isDefined) {
           generatedMethod = generatedMethod.copy(statements = generatedMethod.statements :+ factory.returnExpression(result.get))
         }
@@ -86,12 +82,11 @@ trait OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends OOP {
     implicit val canAddConstructorInClass: Understands[Class[FT], AddConstructor[ConstructorContext]] = new Understands[Class[FT], AddConstructor[ConstructorContext]] {
       def perform(context: Class[FT], command: AddConstructor[Constructor[FT]]): (Class[FT], Unit) = {
         val converted = factory.convert(context)
-        val emptyConstructor = factory.constructor(constructedType = Some(factory.classReferenceType(context.name)), typeLookupMap = context.typeLookupMap)
-        val constructorWithLookups = converted.constructorTypeLookupMap.foldLeft(emptyConstructor) { case (ctor, (tpeRep, lookupGenerator)) => {
-          val (ctorWithLookup, tpe) = Command.runGenerator(lookupGenerator, ctor)
-          ctorWithLookup.copyAsConstructor(typeLookupMap = ctorWithLookup.typeLookupMap + (tpeRep -> tpe))
-        }}
-        val (generatedConstructor, ()) = Command.runGenerator(command.ctor, constructorWithLookups)
+        val emptyConstructor = factory.constructor(
+          constructedType = Some(factory.classReferenceType(context.name)),
+          constructorTypeLookupMap = context.constructorTypeLookupMap,
+          typeLookupMap = context.methodTypeLookupMap)
+        val (generatedConstructor, ()) = Command.runGenerator(command.ctor, emptyConstructor)
         (context.copy(constructors = context.constructors :+ generatedConstructor), ())
       }
     }
@@ -102,7 +97,7 @@ trait OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends OOP {
     }
     implicit val canResolveImportInClass: Understands[Class[FT], ResolveImport[Import, Type]] = new Understands[Class[FT], ResolveImport[Import, Type]] {
       def perform(context: Class[FT], command: ResolveImport[Import, Type]): (Class[FT], Option[Import]) = {
-        (context, context.resolveImport(command.forElem))
+        (context, context.resolveImport(command.forElem).headOption)
       }
     }
     implicit val canSetAbstractInClass: Understands[Class[FT], SetAbstract] = new Understands[Class[FT], SetAbstract] {
@@ -122,7 +117,7 @@ trait OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends OOP {
     }
     implicit val canTranslateTypeInClass: Understands[Class[FT], ToTargetLanguageType[Type]] = new Understands[Class[FT], ToTargetLanguageType[Type]] {
       def perform(context: Class[FT], command: ToTargetLanguageType[Type]): (Class[FT], Type) = {
-        (context, context.typeLookupMap(command.tpe))
+        Command.runGenerator(context.toTargetLanguageType(command.tpe), context)
       }
     }
     implicit val canSelfReferenceInClass: Understands[Class[FT], SelfReference[Expression]] = new Understands[Class[FT], SelfReference[Expression]] {
@@ -169,7 +164,7 @@ trait OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends OOP {
     }
     implicit val canResolveImportInConstructor: Understands[Constructor[FT], ResolveImport[Import, Type]] = new Understands[Constructor[FT], ResolveImport[Import, Type]] {
       def perform(context: Constructor[FT], command: ResolveImport[Import, Type]): (Constructor[FT], Option[Import]) = {
-        (context, context.resolveImport(command.forElem))
+        (context, context.resolveImport(command.forElem).headOption)
       }
     }
     implicit val canInstantiateObjectInConstructor: Understands[Constructor[FT], InstantiateObject[Type, Expression, Class[FT]]] = new Understands[Constructor[FT], InstantiateObject[Type, Expression, Class[FT]]] {
@@ -199,7 +194,7 @@ trait OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends OOP {
     }
     implicit val canTranslateTypeInConstructor: Understands[Constructor[FT], ToTargetLanguageType[Type]] = new Understands[Constructor[FT], ToTargetLanguageType[Type]] {
       def perform(context: Constructor[FT], command: ToTargetLanguageType[Type]): (Constructor[FT], Type) = {
-        (context, context.toTargetLanguageType(command.tpe))
+        Command.runGenerator(context.toTargetLanguageTypeInConstructor(command.tpe), context)
       }
     }
     implicit def canReifyInConstructor[T]: Understands[Constructor[FT], Reify[T, Expression]] = new Understands[Constructor[FT], Reify[T, Expression]] {
@@ -271,7 +266,7 @@ trait OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends OOP {
     }
     implicit val canGetConstructorInMethod: Understands[any.Method[FT], GetConstructor[Type, Expression]] = new Understands[any.Method[FT], GetConstructor[Type, Expression]] {
       def perform(context: any.Method[FT], command: GetConstructor[Type, Expression]): (any.Method[FT], Expression) = {
-        ???
+        ??? // TODO: Remove
       }
     }
     implicit val canFindClassInMethod: Understands[any.Method[FT], FindClass[Name, Type]] = new Understands[any.Method[FT], FindClass[Name, Type]] {
@@ -284,14 +279,12 @@ trait OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends OOP {
     implicit val canAddClassInCompilationUnit: Understands[CompilationUnit, AddClass[Class[FT], Name]] = new Understands[CompilationUnit, AddClass[Class[FT], Name]] {
       def perform(context: CompilationUnit, command: AddClass[Class[FT], Name]): (CompilationUnit, Unit) = {
         val converted = factory.convert(context)
-        val emptyCls = factory.cls(name = command.name, methodTypeLookupMap = converted.methodTypeLookupMap, constructorTypeLookupMap = converted.constructorTypeLookupMap)
-        val generatorWithLookups = converted.classTypeLookupMap.foldLeft(command.cls){case (generator, (tpeRep, lookupGenerator)) => {
-          for {
-            _ <- classCapabilities.addTypeLookupForClasses(tpeRep, lookupGenerator)
-            _ <- generator
-          } yield ()
-        }}
-        var (generatedClass, result) = Command.runGenerator(generatorWithLookups, emptyCls)
+        val emptyCls = factory.cls(
+          name = command.name,
+          methodTypeLookupMap = converted.methodTypeLookupMap,
+          constructorTypeLookupMap = converted.constructorTypeLookupMap,
+          typeLookupMap = converted.classTypeLookupMap)
+        var (generatedClass, result) = Command.runGenerator(command.cls, emptyCls)
         (converted.copyAsCompilationUnitWithClasses(classes = converted.classes :+ generatedClass), ())
       }
     }
@@ -299,14 +292,12 @@ trait OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends OOP {
   val projectCapabilities: ProjectCapabilities = new ProjectCapabilities {
     implicit val canAddTypeLookupForClassesInProject: Understands[ProjectContext, AddTypeLookup[Class[FT], Type]] = new Understands[ProjectContext, AddTypeLookup[Class[FT], Type]] {
       def perform(context: ProjectContext, command: AddTypeLookup[Class[FT], Type]): (ProjectContext, Unit) = {
-        val converted = factory.convert(context)
-        (converted.copyAsProjectWithTypeLookups(classTypeLookupMap = converted.classTypeLookupMap + (command.tpe -> command.lookup)), ())
+        (factory.convert(context).addTypeLookupsForClasses((tpeRep: TypeRep) => if (tpeRep == command.tpe) Some(command.lookup) else None), ())
       }
     }
     implicit val canAddTypeLookupForConstructorsInProject: Understands[ProjectContext, AddTypeLookup[Constructor[FT], Type]] = new Understands[ProjectContext, AddTypeLookup[Constructor[FT], Type]] {
       def perform(context: ProjectContext, command: AddTypeLookup[Constructor[FT], Type]): (ProjectContext, Unit) = {
-        val converted = factory.convert(context)
-        (converted.copyAsProjectWithTypeLookups(constructorTypeLookupMap = converted.constructorTypeLookupMap + (command.tpe -> command.lookup)), ())
+        (factory.convert(context).addTypeLookupsForConstructors((tpeRep: TypeRep) => if (tpeRep == command.tpe) Some(command.lookup) else None), ())
       }
     }
   }

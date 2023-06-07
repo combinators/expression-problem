@@ -143,55 +143,70 @@ package object scala {
   }
 
   trait BinaryExpression[FT <: FinalTypes] extends Expression[FT] with operatorExpression.BinaryExpression[FT] with Factory[FT] {
-    def toScala: String = s"(${left.toScala} ${operator.toScala} ${right.toScala})"
+    def toScala: String = operator.toScala(left, right)
   }
 
   trait UnaryExpression[FT <: FinalTypes] extends Expression[FT] with operatorExpression.UnaryExpression[FT] with Factory[FT] {
-    def toScala: String = s"($operator $operand)"
+    def toScala: String = operator.toScala(operand)
   }
 
   trait Operator[FT <: FinalTypes] extends operatorExpression.Operator[FT] with Factory[FT] {
-    def toScala: String
+    def toScala(operands: any.Expression[FT]*): String
   }
 
-  trait AddOp[FT <: FinalTypes] extends arithmetic.AddOp[FT] with Operator[FT] with Factory[FT] {
-    override def toScala: String = "+"
+  trait InfixOperator[FT <: FinalTypes] { self: Factory[FT] =>
+    def operator: String
+    def toScala(operands: any.Expression[FT]*): String = operands.map(_.toScala).mkString(operator)
   }
 
-  trait SubOp[FT <: FinalTypes] extends arithmetic.SubOp[FT] with Operator[FT] with Factory[FT] {
-    override def toScala: String = "-"
+  trait PrefixOperator[FT <: FinalTypes] { self: Factory[FT] =>
+    def operator: String
+    def toScala(operands: any.Expression[FT]*): String = s"(${operator}${operands.head.toScala})"
   }
 
-  trait MultOp[FT <: FinalTypes] extends arithmetic.MultOp[FT] with Operator[FT] with Factory[FT] {
-    override def toScala: String = "*"
+  trait PostfixOperator[FT <: FinalTypes] { self: Factory[FT] =>
+    def operator: String
+    def toScala(operands: any.Expression[FT]*): String = s"(${operands.head.toScala}${operator})"
   }
 
-  trait DivOp[FT <: FinalTypes] extends arithmetic.DivOp[FT] with Operator[FT] with Factory[FT] {
-    override def toScala: String = "/"
+  trait AddOp[FT <: FinalTypes] extends arithmetic.AddOp[FT] with Operator[FT] with Factory[FT] with InfixOperator[FT] {
+    override def operator: String = "+"
   }
 
-  trait ModOp[FT <: FinalTypes] extends arithmetic.ModOp[FT] with Operator[FT] with Factory[FT] {
-    override def toScala: String = "%"
+  trait SubOp[FT <: FinalTypes] extends arithmetic.SubOp[FT] with Operator[FT] with Factory[FT] with InfixOperator[FT] {
+    override def operator: String = "-"
   }
 
-  trait LtOp[FT <: FinalTypes] extends arithmetic.LtOp[FT] with Operator[FT] with Factory[FT] {
-    override def toScala: String = "<"
+  trait MultOp[FT <: FinalTypes] extends arithmetic.MultOp[FT] with Operator[FT] with Factory[FT] with InfixOperator[FT] {
+    override def operator: String = "*"
   }
 
-  trait LeOp[FT <: FinalTypes] extends arithmetic.LeOp[FT] with Operator[FT] with Factory[FT] {
-    override def toScala: String = "<="
+  trait DivOp[FT <: FinalTypes] extends arithmetic.DivOp[FT] with Operator[FT] with Factory[FT] with InfixOperator[FT] {
+    override def operator: String = "/"
   }
 
-  trait AndOp[FT <: FinalTypes] extends boolean.AndOp[FT] with Operator[FT] with Factory[FT] {
-    override def toScala: String = "&&"
+  trait ModOp[FT <: FinalTypes] extends arithmetic.ModOp[FT] with Operator[FT] with Factory[FT] with InfixOperator[FT] {
+    override def operator: String = "%"
   }
 
-  trait OrOp[FT <: FinalTypes] extends boolean.OrOp[FT] with Operator[FT] with Factory[FT] {
-    override def toScala: String = "||"
+  trait LtOp[FT <: FinalTypes] extends arithmetic.LtOp[FT] with Operator[FT] with Factory[FT] with InfixOperator[FT] {
+    override def operator: String = "<"
   }
 
-  trait NotOp[FT <: FinalTypes] extends boolean.NotOp[FT] with Operator[FT] with Factory[FT] {
-    override def toScala: String = "~"
+  trait LeOp[FT <: FinalTypes] extends arithmetic.LeOp[FT] with Operator[FT] with Factory[FT] with InfixOperator[FT] {
+    override def operator: String = "<="
+  }
+
+  trait AndOp[FT <: FinalTypes] extends boolean.AndOp[FT] with Operator[FT] with Factory[FT] with InfixOperator[FT] {
+    override def operator: String = "&&"
+  }
+
+  trait OrOp[FT <: FinalTypes] extends boolean.OrOp[FT] with Operator[FT] with Factory[FT] with InfixOperator[FT] {
+    override def operator: String = "||"
+  }
+
+  trait NotOp[FT <: FinalTypes] extends boolean.NotOp[FT] with Operator[FT] with Factory[FT] with PrefixOperator[FT] {
+    override def operator: String = "!"
   }
 
   trait True[FT <: FinalTypes] extends boolean.True[FT] with Expression[FT] with Factory[FT] {
@@ -216,13 +231,13 @@ package object scala {
 
   trait Type[FT <: FinalTypes] extends any.Type[FT] with Factory[FT] {
     def toScala: String
-    def toImport: Option[any.Import[FT]]
+    def toImport: Seq[any.Import[FT]]
   }
 
   trait ClassReferenceType[FT <: FinalTypes] extends oo.ClassReferenceType[FT] with Type[FT] with Factory[FT] {
     def toScala: String = qualifiedClassName.map(_.toScala).mkString(".")
 
-    def toImport: Option[any.Import[FT]] = Some(importStatement(qualifiedClassName))
+    def toImport: Seq[any.Import[FT]] = Seq(importStatement(qualifiedClassName))
   }
 
   trait Name[FT <: FinalTypes] extends any.Name[FT] with Factory[FT] {
@@ -235,14 +250,14 @@ package object scala {
     def nameProvider: NameProvider[any.Name[FT]]
     def reify[T](tpe: OfHostType[T], value: T): any.Expression[FT] = reifiedScalaValue(tpe, value)
 
-    def resolveImport(tpe: any.Type[FT]): Option[any.Import[FT]] = tpe.toImport
+    def resolveImport(tpe: any.Type[FT]): Seq[any.Import[FT]] = tpe.toImport
     def getFreshName(basedOn: any.Name[FT]): any.Name[FT] = {
       val id = UUID.randomUUID().toString.replace("-", "")
       nameProvider.mangle(s"${basedOn.component}_${id}")
     }
   }
 
-  trait Method[FT <: FinalTypes] extends oo.Method[FT] with Factory[FT] with Util[FT] {
+  trait Method[FT <: FinalTypes] extends generics.Method[FT] with Factory[FT] with Util[FT] {
 
     def findClass(qualifiedName: any.Name[FT]*): any.Type[FT] =
       classReferenceType(qualifiedName:_*)
@@ -253,6 +268,7 @@ package object scala {
       val mods = Seq(overrideMod, privateMod).mkString(" ")
 
       val params = parameters.map(p => s"${p._1.toScala} : ${p._2.toScala}").mkString(",")
+      val typeParams = if (typeParameters.isEmpty) "" else typeParameters.map(_.toScala).mkString("[", ",", "]")
       val returnTpe = returnType.map(_.toScala).getOrElse("Unit")
       val body = if (!isAbstract) {
         s"""= {
@@ -262,13 +278,13 @@ package object scala {
           """.stripMargin
       } else ""
 
-      s"""${mods} def ${name.toScala}(${params}): ${returnTpe} ${body}""".stripMargin
+      s"""${mods} def ${name.toScala}${typeParams}(${params}): ${returnTpe} ${body}""".stripMargin
     }
   }
 
   trait Constructor[FT <: FinalTypes] extends oo.Constructor[FT] with scala.Method[FT] with Factory[FT] {
 
-
+    override def typeParameters: Seq[polymorphism.TypeParameter[FT]] = Seq.empty
     override def name: any.Name[FT] = nameProvider.mangle(constructedType.map(_.toScala).getOrElse(""))
     override def returnType: Option[any.Type[FT]] = constructedType
 
@@ -309,9 +325,29 @@ package object scala {
         if (lowerBounds.nonEmpty) lowerBounds.map(_.toScala).mkString(" with ") + " >: " else ""
       val ubs =
         if (upperBounds.nonEmpty) " <: " + upperBounds.map(_.toScala).mkString(" with ") else ""
-      s"""${name}${lbs}${ubs}"""
+      s"""${name.toScala}${lbs}${ubs}"""
     }
   }
+
+  trait TypeReferenceExpression[FT <: FinalTypes] extends polymorphism.TypeReferenceExpression[FT] with Expression[FT] with Factory[FT] {
+    def toScala: String = tpe.toScala
+  }
+
+  trait TypeArgument[FT <: FinalTypes] extends polymorphism.TypeArgument[FT] with Type[FT] with Factory[FT] {
+    def toScala: String = name.toScala
+
+    def toImport: Seq[any.Import[FT]] = Seq.empty
+  }
+
+  trait TypeApplication[FT <: FinalTypes] extends polymorphism.TypeApplication[FT] with Type[FT] with Factory[FT] {
+    def toScala: String = {
+      s"${function.toScala}[${arguments.map(_.toScala).mkString(", ")}]"
+    }
+
+    def toImport: Seq[any.Import[FT]] = function.toImport ++ arguments.flatMap(_.toImport)
+  }
+
+
 
   trait Class[FT <: FinalTypes] extends generics.Class[FT] with Factory[FT] with Util[FT] {
 
@@ -370,18 +406,48 @@ package object scala {
     }
   }
 
-  trait ToStringOp[FT <: FinalTypes] extends strings.ToStringOp[FT] with Operator[FT] {
-    def toScala: String = ".toString()"
+  trait ToStringOp[FT <: FinalTypes] extends strings.ToStringOp[FT] with Operator[FT] with PostfixOperator[FT] {
+    def operator: String = ".toString()"
   }
 
-  trait AppendStringOp[FT <: FinalTypes] extends strings.AppendStringOp[FT] with Operator[FT] {
-    def toScala: String = "++"
+  trait AppendStringOp[FT <: FinalTypes] extends strings.AppendStringOp[FT] with Operator[FT] with InfixOperator[FT] {
+    def operator: String = "++"
   }
-  trait StringLengthOp[FT <: FinalTypes] extends strings.StringLengthOp[FT] with Operator[FT] {
-    def toScala: String = ".length"
+  trait StringLengthOp[FT <: FinalTypes] extends strings.StringLengthOp[FT] with Operator[FT] with PostfixOperator[FT] {
+    def operator: String = ".length"
   }
-  trait AssertTrueOp[FT <: FinalTypes] extends assertions.AssertTrueOp[FT] with Operator[FT] {
-    def toScala: String = "assert"
+  trait AssertTrueOp[FT <: FinalTypes] extends assertions.AssertTrueOp[FT] with Operator[FT] with PrefixOperator[FT] {
+    def operator: String = "assert "
+  }
+
+/*override def createListExpr(): lists.CreateListExpr[FinalTypes] = ???
+
+override def consListOp(): lists.ConsListOp[FinalTypes] = ???
+
+override def headListOp(): lists.HeadListOp[FinalTypes] = ???
+
+override def tailListOp(): lists.TailListOp[FinalTypes] = ???
+
+override def appendListOp(): lists.AppendListOp[FinalTypes] = ???*/
+
+  trait CreateListExpr[FT <: FinalTypes] extends lists.CreateListExpr[FT] with Expression[FT] {
+    def toScala: String = "Seq"
+  }
+
+  trait ConsListOp[FT <: FinalTypes] extends lists.ConsListOp[FT] with Operator[FT] with InfixOperator[FT] {
+    def operator: String = "+:"
+  }
+
+  trait HeadListOp[FT <: FinalTypes] extends lists.HeadListOp[FT] with Operator[FT] with PostfixOperator[FT] {
+    def operator: String = ".head"
+  }
+
+  trait TailListOp[FT <: FinalTypes] extends lists.TailListOp[FT] with Operator[FT] with PostfixOperator[FT] {
+    def operator: String = ".tail"
+  }
+
+  trait AppendListOp[FT <: FinalTypes] extends lists.AppendListOp[FT] with Operator[FT] with InfixOperator[FT] {
+    def operator: String = "++"
   }
 
   trait Factory[FT <: FinalTypes]
@@ -433,7 +499,7 @@ package object scala {
     implicit def convert(other: oo.ClassReferenceType[FT]): ClassReferenceType[FT]
     implicit def convert(varRef: imperative.VariableReferenceExpression[FT]): VariableReferenceExpression[FT]
 
-    override def convert(other: polymorphism.TypeParameter[FT]): TypeParameter[FT]
+    override implicit def convert(other: polymorphism.TypeParameter[FT]): TypeParameter[FT]
     override implicit def convert(other: polymorphism.TypeReferenceExpression[FT]): TypeReferenceExpression[FT]
     override implicit def convert(other: polymorphism.TypeArgument[FT]): TypeArgument[FT]
     override implicit def convert(other: polymorphism.TypeApplication[FT]): TypeApplication[FT]
@@ -471,6 +537,9 @@ package object scala {
       override type ClassReferenceType = Finalized.ClassReferenceType
       override type VariableReferenceExpression = Finalized.VariableReferenceExpression
       override type TypeParameter = Finalized.TypeParameter
+      override type TypeReferenceExpression = Finalized.TypeReferenceExpression
+      override type TypeArgument = Finalized.TypeArgument
+      override type TypeApplication = Finalized.TypeApplication
     }
 
     trait Factory extends scala.Factory[FinalTypes] {
@@ -485,45 +554,19 @@ package object scala {
       implicit def convert(unaryExpression: operatorExpression.UnaryExpression[FinalTypes]): UnaryExpression = unaryExpression.getSelfUnaryExpression
       override def compilationUnit(name: Seq[any.Name[FinalTypes]],
         imports: Seq[any.Import[FinalTypes]],
-        methodTypeLookupMap: Map[TypeRep, Generator[any.Method[FinalTypes], any.Type[FinalTypes]]] = Map.empty,
-        constructorTypeLookupMap: Map[TypeRep, Generator[oo.Constructor[FinalTypes], any.Type[FinalTypes]]] = Map.empty,
-        classTypeLookupMap: Map[TypeRep, Generator[oo.Class[FinalTypes], any.Type[FinalTypes]]] = Map.empty,
+        methodTypeLookupMap: TypeRep => Generator[any.Method[FinalTypes], any.Type[FinalTypes]] = Map.empty,
+        constructorTypeLookupMap: TypeRep => Generator[oo.Constructor[FinalTypes], any.Type[FinalTypes]] = Map.empty,
+        classTypeLookupMap: TypeRep => Generator[oo.Class[FinalTypes], any.Type[FinalTypes]] = Map.empty,
         classes: Seq[oo.Class[FinalTypes]]): oo.CompilationUnit[FinalTypes] = CompilationUnit(name, imports, methodTypeLookupMap, constructorTypeLookupMap, classTypeLookupMap, classes)
 
-      override def cls(
-        name: any.Name[FinalTypes],
-        imports: Seq[any.Import[FinalTypes]],
-        parents: Seq[any.Type[FinalTypes]],
-        implemented: Seq[any.Type[FinalTypes]],
-        fields: Seq[oo.Field[FinalTypes]],
-        methods: Seq[any.Method[FinalTypes]],
-        constructors: Seq[oo.Constructor[FinalTypes]],
-        methodTypeLookupMap: Map[TypeRep, Generator[any.Method[FinalTypes], any.Type[FinalTypes]]],
-        constructorTypeLookupMap: Map[TypeRep, Generator[oo.Constructor[FinalTypes], any.Type[FinalTypes]]],
-        typeLookupMap: Map[TypeRep, any.Type[FinalTypes]],
-        isAbstract: Boolean,
-        isInterface: Boolean,
-        isStatic: Boolean
-      ): Class = Class(
-        name = name,
-        imports = imports,
-        parents = parents,
-        implemented = implemented,
-        fields = fields,
-        methods = methods,
-        constructors = constructors,
-        methodTypeLookupMap = methodTypeLookupMap,
-        constructorTypeLookupMap = constructorTypeLookupMap,
-        typeLookupMap = typeLookupMap,
-        isAbstract = isAbstract,
-        isInterface = isInterface,
-        isStatic = isStatic)
+
       override def constructor(
         constructedType: Option[any.Type[FinalTypes]],
         imports: Set[any.Import[FinalTypes]],
         statements: Seq[any.Statement[FinalTypes]],
         parameters: Seq[(any.Name[FinalTypes], any.Type[FinalTypes])],
-        typeLookupMap: Map[TypeRep, any.Type[FinalTypes]],
+        typeLookupMap: TypeRep => Generator[any.Method[FinalTypes], any.Type[FinalTypes]],
+        constructorTypeLookupMap: TypeRep => Generator[oo.Constructor[FinalTypes], any.Type[FinalTypes]],
         superInitialization: Option[(any.Type[FinalTypes], Seq[any.Expression[FinalTypes]])],
         fieldInitializers: Seq[(any.Name[FinalTypes], any.Expression[FinalTypes])]): Constructor =
         Constructor(
@@ -532,6 +575,7 @@ package object scala {
           statements = statements,
           parameters = parameters,
           typeLookupMap = typeLookupMap,
+          constructorTypeLookupMap = constructorTypeLookupMap,
           superInitialization = superInitialization,
           fieldInitializers = fieldInitializers
         )
@@ -592,9 +636,9 @@ package object scala {
       override def assertTrueOp(): assertions.AssertTrueOp[FinalTypes] = AssertTrueOp()
 
       override def ooProject(compilationUnits: Set[any.CompilationUnit[FinalTypes]],
-        methodTypeLookupMap: Map[TypeRep, Generator[any.Method[FinalTypes], any.Type[FinalTypes]]],
-        constructorTypeLookupMap: Map[TypeRep, Generator[oo.Constructor[FinalTypes], any.Type[FinalTypes]]],
-        classTypeLookupMap: Map[TypeRep, Generator[oo.Class[FinalTypes], any.Type[FinalTypes]]]): any.Project[FinalTypes] = Project(compilationUnits, methodTypeLookupMap, constructorTypeLookupMap, classTypeLookupMap)
+        methodTypeLookupMap: TypeRep => Generator[any.Method[FinalTypes], any.Type[FinalTypes]],
+        constructorTypeLookupMap: TypeRep => Generator[oo.Constructor[FinalTypes], any.Type[FinalTypes]],
+        classTypeLookupMap: TypeRep => Generator[oo.Class[FinalTypes], any.Type[FinalTypes]]): any.Project[FinalTypes] = Project(compilationUnits, methodTypeLookupMap, constructorTypeLookupMap, classTypeLookupMap)
       override def argumentExpression(parameterName: any.Name[FinalTypes]): any.ArgumentExpression[FinalTypes] = ArgumentExpression(parameterName)
       implicit def convert(other: any.Import[FinalTypes]): Import = other.getSelfImport
       implicit def convert(other: any.Statement[FinalTypes]): Statement = other.getSelfStatement
@@ -609,20 +653,63 @@ package object scala {
       implicit def convert(other: oo.ClassReferenceType[FinalTypes]): ClassReferenceType = other.getSelfClassReferenceType
       implicit def convert(varRef: imperative.VariableReferenceExpression[FinalTypes]): VariableReferenceExpression = varRef.getSelfVariableReferenceExpression
       override def variableReferenceExpression(name: any.Name[FinalTypes]): imperative.VariableReferenceExpression[FinalTypes] = VariableReferenceExpression(name)
-      override def clsMethod(
+
+      override def classReferenceType(qualifiedClassName: any.Name[FinalTypes]*): oo.ClassReferenceType[FinalTypes] = ClassReferenceType(qualifiedClassName)
+      override def applyExpression(function: any.Expression[FinalTypes], arguments: Seq[any.Expression[FinalTypes]]): any.ApplyExpression[FinalTypes] = ApplyExpression(function, arguments)
+
+      override def convert(other: polymorphism.TypeParameter[FinalTypes]): TypeParameter = other.getSelfTypeParameter
+
+      override implicit def convert(other: polymorphism.TypeReferenceExpression[FinalTypes]): TypeReferenceExpression = other.getSelfTypeReferenceExpression
+
+      override implicit def convert(other: polymorphism.TypeArgument[FinalTypes]): TypeArgument = other.getSelfTypeArgument
+
+      override implicit def convert(other: polymorphism.TypeApplication[FinalTypes]): TypeApplication = other.getSelfTypeApplication
+
+      override def genericClass(name: any.Name[FinalTypes],
+        imports: Seq[any.Import[FinalTypes]],
+        typeParameters: Seq[polymorphism.TypeParameter[FinalTypes]],
+        parents: Seq[any.Type[FinalTypes]],
+        implemented: Seq[any.Type[FinalTypes]],
+        fields: Seq[oo.Field[FinalTypes]],
+        methods: Seq[any.Method[FinalTypes]],
+        constructors: Seq[oo.Constructor[FinalTypes]],
+        methodTypeLookupMap: TypeRep => Generator[any.Method[FinalTypes], any.Type[FinalTypes]],
+        constructorTypeLookupMap: TypeRep => Generator[oo.Constructor[FinalTypes], any.Type[FinalTypes]],
+        typeLookupMap: TypeRep => Generator[oo.Class[FinalTypes], any.Type[FinalTypes]],
+        isAbstract: Boolean,
+        isInterface: Boolean,
+        isStatic: Boolean): oo.Class[FinalTypes] =
+        Class(
+          name = name,
+          typeParameters = typeParameters,
+          imports = imports,
+          parents = parents,
+          implemented = implemented,
+          fields = fields,
+          methods = methods,
+          constructors = constructors,
+          methodTypeLookupMap = methodTypeLookupMap,
+          constructorTypeLookupMap = constructorTypeLookupMap,
+          typeLookupMap = typeLookupMap,
+          isAbstract = isAbstract,
+          isInterface = isInterface,
+          isStatic = isStatic)
+
+      override def genericMethod(
         name: any.Name[FinalTypes],
         imports: Set[any.Import[FinalTypes]],
         statements: Seq[any.Statement[FinalTypes]],
         returnType: Option[any.Type[FinalTypes]],
+        typeParameters: Seq[polymorphism.TypeParameter[FinalTypes]],
         parameters: Seq[(any.Name[FinalTypes], any.Type[FinalTypes])],
-        typeLookupMap: Map[TypeRep, any.Type[FinalTypes]],
+        typeLookupMap: TypeRep => Generator[any.Method[FinalTypes], any.Type[FinalTypes]],
         isAbstract: Boolean,
         isStatic: Boolean,
         isPublic: Boolean,
-        isOverride: Boolean
-      ): oo.Method[FinalTypes] =
+        isOverride: Boolean): generics.Method[FinalTypes] =
         Method(
           name = name,
+          typeParameters = typeParameters,
           imports = imports,
           statements = statements,
           returnType = returnType,
@@ -633,38 +720,27 @@ package object scala {
           isPublic = isPublic,
           isOverride = isOverride
         )
-      override def classReferenceType(qualifiedClassName: any.Name[FinalTypes]*): oo.ClassReferenceType[FinalTypes] = ClassReferenceType(qualifiedClassName)
-      override def applyExpression(function: any.Expression[FinalTypes], arguments: Seq[any.Expression[FinalTypes]]): any.ApplyExpression[FinalTypes] = ApplyExpression(function, arguments)
 
-      override def convert(other: polymorphism.TypeParameter[FinalTypes]): TypeParameter = other.getSelfTypeParameter
-
-      override implicit def convert(other: polymorphism.TypeReferenceExpression[FinalTypes]) = ???
-
-      override implicit def convert(other: polymorphism.TypeArgument[FinalTypes]) = ???
-
-      override implicit def convert(other: polymorphism.TypeApplication[FinalTypes]) = ???
-
-      override def genericClass(name: any.Name[FinalTypes], imports: Seq[any.Import[FinalTypes]], typeParameters: Seq[polymorphism.TypeParameter[FinalTypes]], parents: Seq[any.Type[FinalTypes]], implemented: Seq[any.Type[FinalTypes]], fields: Seq[oo.Field[FinalTypes]], methods: Seq[any.Method[FinalTypes]], constructors: Seq[oo.Constructor[FinalTypes]], methodTypeLookupMap: Map[TypeRep, Generator[any.Method[FinalTypes], any.Type[FinalTypes]]], constructorTypeLookupMap: Map[TypeRep, Generator[oo.Constructor[FinalTypes], any.Type[FinalTypes]]], typeLookupMap: Map[TypeRep, any.Type[FinalTypes]], isAbstract: Boolean, isInterface: Boolean, isStatic: Boolean): oo.Class[FinalTypes] = ???
-
-      override def genericMethod(name: any.Name[FinalTypes], imports: Set[any.Import[FinalTypes]], statements: Seq[any.Statement[FinalTypes]], returnType: Option[any.Type[FinalTypes]], typeParameters: Seq[polymorphism.TypeParameter[FinalTypes]], parameters: Seq[(any.Name[FinalTypes], any.Type[FinalTypes])], typeLookupMap: Map[TypeRep, any.Type[FinalTypes]], isAbstract: Boolean, isStatic: Boolean, isPublic: Boolean, isOverride: Boolean): generics.Method[FinalTypes] = ???
-
-      override def typeParameterWithBounds(name: any.Name[FinalTypes], upperBounds: Seq[any.Type[FinalTypes]], lowerBounds: Seq[any.Type[FinalTypes]]): TypeParameter=
+      override def typeParameterWithBounds(name: any.Name[FinalTypes], upperBounds: Seq[any.Type[FinalTypes]], lowerBounds: Seq[any.Type[FinalTypes]]): TypeParameter =
         TypeParameter(name, lowerBounds = lowerBounds, upperBounds = upperBounds)
-      override def createListExpr(): lists.CreateListExpr[FinalTypes] = ???
+      override def createListExpr(): lists.CreateListExpr[FinalTypes] = CreateListExpr()
 
-      override def consListOp(): lists.ConsListOp[FinalTypes] = ???
+      override def consListOp(): lists.ConsListOp[FinalTypes] = ConsListOp()
 
-      override def headListOp(): lists.HeadListOp[FinalTypes] = ???
+      override def headListOp(): lists.HeadListOp[FinalTypes] = HeadListOp()
 
-      override def tailListOp(): lists.TailListOp[FinalTypes] = ???
+      override def tailListOp(): lists.TailListOp[FinalTypes] = TailListOp()
 
-      override def appendListOp(): lists.AppendListOp[FinalTypes] = ???
+      override def appendListOp(): lists.AppendListOp[FinalTypes] = AppendListOp()
 
-      override def typeArgument(name: any.Name[FinalTypes]): polymorphism.TypeArgument[FinalTypes] = ???
+      override def typeArgument(name: any.Name[FinalTypes]): TypeArgument =
+        TypeArgument(name)
 
-      override def typeApplication(function: any.Type[FinalTypes], arguments: Seq[any.Type[FinalTypes]]): polymorphism.TypeApplication[FinalTypes] = ???
+      override def typeApplication(function: any.Type[FinalTypes], arguments: Seq[any.Type[FinalTypes]]): TypeApplication =
+        TypeApplication(function, arguments)
 
-      override def typeReferenceExpression(tpe: any.Type[FinalTypes]): polymorphism.TypeReferenceExpression[FinalTypes] = ???
+      override def typeReferenceExpression(tpe: any.Type[FinalTypes]): TypeReferenceExpression =
+        TypeReferenceExpression(tpe)
     }
 
     case class Name(override val component: String, override val mangled: String) extends scala.Name[FinalTypes] with Factory {
@@ -677,11 +753,12 @@ package object scala {
 
     case class Method(
       override val name: any.Name[FinalTypes],
+      override val typeParameters: Seq[polymorphism.TypeParameter[FinalTypes]],
       override val imports: Set[any.Import[FinalTypes]],
       override val statements: Seq[any.Statement[FinalTypes]],
       override val returnType: Option[any.Type[FinalTypes]],
       override val parameters: Seq[(any.Name[FinalTypes], any.Type[FinalTypes])],
-      override val typeLookupMap: Map[TypeRep, any.Type[FinalTypes]],
+      override val typeLookupMap: TypeRep => Generator[any.Method[FinalTypes], any.Type[FinalTypes]],
       override val isAbstract: Boolean,
       override val isStatic: Boolean,
       override val isPublic: Boolean,
@@ -773,15 +850,16 @@ package object scala {
 
     case class Class(
       override val name: any.Name[FinalTypes],
+      override val typeParameters: Seq[polymorphism.TypeParameter[FinalTypes]],
       override val imports: Seq[any.Import[FinalTypes]] = Seq.empty,
       override val parents: Seq[any.Type[FinalTypes]] = Seq.empty,
       override val implemented: Seq[any.Type[FinalTypes]] = Seq.empty,
       override val fields: Seq[oo.Field[FinalTypes]] = Seq.empty,
       override val methods: Seq[any.Method[FinalTypes]] = Seq.empty,
       override val constructors: Seq[oo.Constructor[FinalTypes]] = Seq.empty,
-      override val methodTypeLookupMap: Map[TypeRep, Generator[any.Method[FinalTypes], any.Type[FinalTypes]]],
-      override val constructorTypeLookupMap: Map[TypeRep, Generator[oo.Constructor[FinalTypes], any.Type[FinalTypes]]],
-      override val typeLookupMap: Map[TypeRep, any.Type[FinalTypes]] = Map.empty,
+      override val methodTypeLookupMap: TypeRep => Generator[any.Method[FinalTypes], any.Type[FinalTypes]],
+      override val constructorTypeLookupMap: TypeRep => Generator[oo.Constructor[FinalTypes], any.Type[FinalTypes]],
+      override val typeLookupMap: TypeRep => Generator[oo.Class[FinalTypes], any.Type[FinalTypes]] = Map.empty,
       override val isAbstract: Boolean = false,
       override val isInterface: Boolean = false,
       override val isStatic: Boolean = false
@@ -794,10 +872,11 @@ package object scala {
       override val imports: Set[any.Import[FinalTypes]],
       override val statements: Seq[any.Statement[FinalTypes]],
       override val parameters: Seq[(any.Name[FinalTypes], any.Type[FinalTypes])],
-      override val typeLookupMap: Map[TypeRep, any.Type[FinalTypes]],
+      override val typeLookupMap: TypeRep => Generator[any.Method[FinalTypes], any.Type[FinalTypes]],
+      override val constructorTypeLookupMap: TypeRep => Generator[oo.Constructor[FinalTypes], any.Type[FinalTypes]],
       override val superInitialization: Option[(any.Type[FinalTypes], Seq[any.Expression[FinalTypes]])],
       override val fieldInitializers: Seq[(any.Name[FinalTypes], any.Expression[FinalTypes])]) extends scala.Constructor[FinalTypes] with Util {
-      override def getSelfMethod: this.type = this
+      override def getSelfMethod: scala.Method[FinalTypes] = this
       override def getSelfConstructor: this.type = this
       override def toScala: String = {
         super[Constructor].toScala
@@ -860,9 +939,9 @@ package object scala {
     case class CompilationUnit(
       override val name: Seq[any.Name[FinalTypes]] = Seq.empty,
       override val imports: Seq[any.Import[FinalTypes]] = Seq.empty,
-      override val methodTypeLookupMap: Map[TypeRep, Generator[any.Method[FinalTypes], any.Type[FinalTypes]]] = Map.empty,
-      override val constructorTypeLookupMap: Map[TypeRep, Generator[oo.Constructor[FinalTypes], any.Type[FinalTypes]]] = Map.empty,
-      override val classTypeLookupMap: Map[TypeRep, Generator[oo.Class[FinalTypes], any.Type[FinalTypes]]] = Map.empty,
+      override val methodTypeLookupMap: TypeRep => Generator[any.Method[FinalTypes], any.Type[FinalTypes]] = Map.empty,
+      override val constructorTypeLookupMap: TypeRep => Generator[oo.Constructor[FinalTypes], any.Type[FinalTypes]] = Map.empty,
+      override val classTypeLookupMap: TypeRep => Generator[oo.Class[FinalTypes], any.Type[FinalTypes]] = Map.empty,
       override val classes: Seq[oo.Class[FinalTypes]] = Seq.empty
     ) extends scala.CompilationUnit[FinalTypes] with Util {
       override def getSelfCompilationUnit: this.type = this
@@ -870,9 +949,9 @@ package object scala {
 
     case class Project(
       override val compilationUnits: Set[any.CompilationUnit[FinalTypes]],
-      override val methodTypeLookupMap: Map[TypeRep, Generator[any.Method[FinalTypes], any.Type[FinalTypes]]] = Map.empty,
-      override val constructorTypeLookupMap: Map[TypeRep, Generator[oo.Constructor[FinalTypes], any.Type[FinalTypes]]] = Map.empty,
-      override val classTypeLookupMap: Map[TypeRep, Generator[oo.Class[FinalTypes], any.Type[FinalTypes]]] = Map.empty
+      override val methodTypeLookupMap: TypeRep => Generator[any.Method[FinalTypes], any.Type[FinalTypes]] = Map.empty,
+      override val constructorTypeLookupMap: TypeRep => Generator[oo.Constructor[FinalTypes], any.Type[FinalTypes]] = Map.empty,
+      override val classTypeLookupMap: TypeRep => Generator[oo.Class[FinalTypes], any.Type[FinalTypes]] = Map.empty
     ) extends scala.Project[FinalTypes] with Factory {
       override def getSelfProject: this.type = this
     }
@@ -926,8 +1005,35 @@ package object scala {
       override def getSelfVariableReferenceExpression: this.type = this
     }
 
-    case class TypeParameter(override val name: any.Name[FinalTypes], override val lowerBounds: Seq[any.Type[FinalTypes]], override val upperBounds: Seq[any.Type[FinalTypes]]) extends scala.TypeParameter[FinalTypes] {
+    case class TypeParameter(override val name: any.Name[FinalTypes], override val lowerBounds: Seq[any.Type[FinalTypes]], override val upperBounds: Seq[any.Type[FinalTypes]]) extends scala.TypeParameter[FinalTypes] with Factory {
       override def getSelfTypeParameter: this.type = this
+    }
+
+    case class TypeArgument(override val name: any.Name[FinalTypes]) extends scala.TypeArgument[FinalTypes] with Type with Factory {
+      override def getSelfTypeArgument: this.type = this
+    }
+
+    case class TypeReferenceExpression(override val tpe: any.Type[FinalTypes]) extends scala.TypeReferenceExpression[FinalTypes] with Expression with Factory {
+      override def getSelfTypeReferenceExpression: this.type = this
+    }
+
+    case class TypeApplication(override val function: any.Type[FinalTypes], override val arguments: Seq[any.Type[FinalTypes]]) extends scala.TypeApplication[FinalTypes] with Type with Factory {
+      override def getSelfTypeApplication: this.type = this
+    }
+
+    case class CreateListExpr() extends scala.CreateListExpr[FinalTypes] with Expression {
+    }
+
+    case class ConsListOp() extends scala.ConsListOp[FinalTypes] with Operator {
+    }
+
+    case class HeadListOp() extends scala.HeadListOp[FinalTypes] with Operator {
+    }
+
+    case class TailListOp() extends scala.TailListOp[FinalTypes] with Operator {
+    }
+
+    case class AppendListOp() extends scala.AppendListOp[FinalTypes] with Operator {
     }
   }
 }

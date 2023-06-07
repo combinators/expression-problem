@@ -1,6 +1,7 @@
 package org.combinators.ep.language.inbetween
 
 import org.combinators.ep.domain.abstractions.TypeRep
+import org.combinators.ep.generator.Command.Generator
 
 package object polymorphism {
   trait FinalTypes extends any.FinalTypes {
@@ -48,7 +49,7 @@ package object polymorphism {
                        statements: Seq[any.Statement[FT]] = this.statements,
                        returnType: Option[any.Type[FT]] = this.returnType,
                        parameters: Seq[(any.Name[FT], any.Type[FT])] = this.parameters,
-                       typeLookupMap: Map[TypeRep, any.Type[FT]] = this.typeLookupMap
+                       typeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = this.typeLookupMap
                      ): any.Method[FT] =
       typeParamMethod(name, imports, statements, returnType, this.typeParameters, parameters, typeLookupMap)
 
@@ -59,7 +60,7 @@ package object polymorphism {
                        returnType: Option[any.Type[FT]] = this.returnType,
                        typeParameters: Seq[TypeParameter[FT]] = this.typeParameters,
                        parameters: Seq[(any.Name[FT], any.Type[FT])] = this.parameters,
-                       typeLookupMap: Map[TypeRep, any.Type[FT]] = this.typeLookupMap
+                       typeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = this.typeLookupMap
                      ): Method[FT] =
       typeParamMethod(name, imports, statements, returnType, typeParameters, parameters, typeLookupMap)
   }
@@ -85,7 +86,7 @@ package object polymorphism {
                          statements: Seq[any.Statement[FT]] = Seq.empty,
                          returnType: Option[any.Type[FT]] = Option.empty,
                          parameters: Seq[(any.Name[FT], any.Type[FT])] = Seq.empty,
-                         typeLookupMap: Map[TypeRep, any.Type[FT]] = Map.empty
+                         typeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty
                        ): any.Method[FT] = typeParamMethod(name, imports, statements, returnType, Seq.empty, parameters, typeLookupMap)
 
     def typeParamMethod(
@@ -95,7 +96,7 @@ package object polymorphism {
                    returnType: Option[any.Type[FT]] = Option.empty,
                    typeParameters: Seq[TypeParameter[FT]] = Seq.empty,
                    parameters: Seq[(any.Name[FT], any.Type[FT])] = Seq.empty,
-                   typeLookupMap: Map[TypeRep, any.Type[FT]] = Map.empty
+                   typeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty
                  ): Method[FT]
     def typeReferenceExpression(tpe: any.Type[FT]): TypeReferenceExpression[FT]
     implicit def convert(other: TypeReferenceExpression[FT]): TypeReferenceExpression[FT]

@@ -67,6 +67,8 @@ package object any {
 
   trait Return[FT <: FinalTypes] extends Statement[FT] with Factory[FT] {
     def expression: Expression[FT]
+    
+    def copy(expression: Expression[FT]): Return[FT] = returnExpression(expression)
   }
 
   trait Expression[FT <: FinalTypes] extends Factory[FT] {

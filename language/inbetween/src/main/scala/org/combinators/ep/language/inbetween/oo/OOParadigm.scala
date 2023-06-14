@@ -45,7 +45,7 @@ trait OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends OOP {
     }
     implicit val canAddImplementedInClass: Understands[Class[FT], AddImplemented[Type]] = new Understands[Class[FT], AddImplemented[Type]] {
       def perform(context: Class[FT], command: AddImplemented[Type]): (Class[FT], Unit) = {
-        (context.copy(parents = context.implemented :+ command.interface), ())
+        (context.copy(implemented = context.implemented :+ command.interface), ())
       }
     }
     implicit val canRemoveMethodFromClass: Understands[Class[FT], RemoveMethod[Type, Name]] = new Understands[Class[FT], RemoveMethod[Type, Name]] {

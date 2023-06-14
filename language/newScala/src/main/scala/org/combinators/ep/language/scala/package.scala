@@ -14,6 +14,7 @@ import org.combinators.ep.language.inbetween.ffi.eqls
 import org.combinators.ep.language.inbetween.ffi.operatorExpression
 import org.combinators.ep.language.inbetween.ffi.strings
 import org.combinators.ep.language.inbetween.ffi.lists
+import org.combinators.ep.language.inbetween.ffi.trees
 import org.combinators.ep.language.inbetween.polymorphism.generics
 import org.combinators.ep.language.inbetween.polymorphism
 import org.combinators.ep.language.inbetween.oo.{Class, Constructor}
@@ -27,21 +28,43 @@ package object scala {
       with imperative.FinalTypes
       with operatorExpression.FinalTypes
       with lists.FinalTypes
+      with trees.FinalTypes
       with generics.FinalTypes {
     type ReifiedScalaValue[T] <: Expression
   }
 
-  trait Project[FT <: FinalTypes] extends oo.Project[FT] with Factory[FT] {}
+  trait Project[FT <: FinalTypes] extends oo.Project[FT] with Factory[FT] {
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): any.Project[FT] =
+      copyAsProjectWithTypeLookups(
+        compilationUnits = compilationUnits.map(cu => convert(cu).prefixRootPackage(rootPackageName, excludedTypeNames)),
+        methodTypeLookupMap = tpeRep => methodTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        constructorTypeLookupMap = tpeRep => constructorTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        classTypeLookupMap = tpeRep => classTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+      )
+  }
 
   trait Import[FT <: FinalTypes] extends any.Import[FT] with Factory[FT] {
     def components: Seq[any.Name[FT]]
 
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): any.Import[FT] = {
+      if (excludedTypeNames.contains(components)) {
+        this
+      } else {
+        copy(components = rootPackageName ++ components)
+      }
+    }
+
     def toScala: String =
       s"""import ${components.map(_.toScala).mkString(".")}"""
+
+    def copy(components: Seq[any.Name[FT]] = this.components): any.Import[FT] =
+      importStatement(components)
   }
 
   trait Statement[FT <: FinalTypes] extends any.Statement[FT] with Factory[FT] {
     def toScala: String
+
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): any.Statement[FT]
   }
 
   trait DeclareVariable[FT <: FinalTypes] extends imperative.DeclareVariable[FT] with Statement[FT] with Factory[FT] {
@@ -51,6 +74,13 @@ package object scala {
          |var ${this.name.toScala}${init}
          |""".stripMargin
     }
+
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): imperative.DeclareVariable[FT] = {
+      copy(
+        tpe = tpe.prefixRootPackage(rootPackageName, excludedTypeNames),
+        initializer = initializer.map(_.prefixRootPackage(rootPackageName, excludedTypeNames))
+      )
+    }
   }
 
   trait AssignVariable[FT <: FinalTypes] extends imperative.AssignVariable[FT] with Statement[FT] with Factory[FT] {
@@ -59,6 +89,9 @@ package object scala {
          |${this.variable.toScala} = ${this.assignmentExpression.toScala}
          |""".stripMargin
     }
+
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): imperative.AssignVariable[FT] =
+      copy(assignmentExpression = assignmentExpression.prefixRootPackage(rootPackageName, excludedTypeNames))
   }
 
   trait IfThenElse[FT <: FinalTypes] extends imperative.IfThenElse[FT] with Statement[FT] with Factory[FT] {
@@ -74,10 +107,21 @@ package object scala {
           |if (${condition.toScala}) {
           |  ${this.ifBranch.map(_.toScala).mkString("\n  ")}"
           |}${elseIfs.mkString("")} {
-          |  ${elseBranch.mkString("\n  ")}
+          |  ${elseBranch.map(_.toScala).mkString("\n  ")}
           |}
           """
     }
+
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): imperative.IfThenElse[FT] =
+      copy(
+        condition = condition.prefixRootPackage(rootPackageName, excludedTypeNames),
+        ifBranch = ifBranch.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        elseIfBranches = elseIfBranches.map { case (cond, branch) =>
+          (cond.prefixRootPackage(rootPackageName, excludedTypeNames),
+            branch.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)))
+        },
+        elseBranch = elseBranch.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+      )
   }
 
   trait While[FT <: FinalTypes] extends imperative.While[FT] with Statement[FT] with Factory[FT] {
@@ -87,10 +131,18 @@ package object scala {
          |  ${body.map(_.toScala).mkString("\n  ")}
          |}""".stripMargin
     }
+
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): imperative.While[FT] =
+      copy(
+        condition = condition.prefixRootPackage(rootPackageName, excludedTypeNames),
+        body = body.map(_.prefixRootPackage(rootPackageName, excludedTypeNames))
+      )
   }
 
   trait Expression[FT <: FinalTypes] extends oo.Expression[FT] with Factory[FT] {
     def toScala: String
+
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): any.Expression[FT]
   }
 
   trait ReifiedScalaValue[FT <: FinalTypes, T] extends Expression[FT] with Factory[FT] {
@@ -105,18 +157,29 @@ package object scala {
         value.toString
       }
 
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): ReifiedScalaValue[FT, T] =
+      this
   }
 
   trait ArgumentExpression[FT <: FinalTypes] extends Expression[FT] with any.ArgumentExpression[FT] with Factory[FT] {
     def toScala: String = s"${parameterName.toScala}"
+
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): any.ArgumentExpression[FT] =
+      this
   }
 
   trait MemberAccessExpression[FT <: FinalTypes] extends Expression[FT] with oo.MemberAccessExpression[FT] with Factory[FT] {
     def toScala: String = s"${owner.toScala}.${field.toScala}"
+
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): oo.MemberAccessExpression[FT] =
+      copy(owner = owner.prefixRootPackage(rootPackageName, excludedTypeNames))
   }
 
   trait SelfReferenceExpression[FT <: FinalTypes] extends Expression[FT] with oo.SelfReferenceExpression[FT] with Factory[FT] {
     def toScala: String = s"this"
+
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): oo.SelfReferenceExpression[FT] =
+      this
   }
 
   trait ObjectInstantiationExpression[FT <: FinalTypes] extends Expression[FT] with oo.ObjectInstantiationExpression[FT] with Factory[FT] {
@@ -124,30 +187,65 @@ package object scala {
       val bodyScala = body.map(_.classBodyDefinitionToScala).getOrElse("")
       s"""new ${tpe.toScala}(${constructorArguments.map(_.toScala).mkString(",")})${bodyScala}"""
     }
+
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): oo.ObjectInstantiationExpression[FT] =
+      copy(
+        tpe = tpe.prefixRootPackage(rootPackageName, excludedTypeNames),
+        constructorArguments = constructorArguments.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        body = body.map(_.prefixRootPackage(rootPackageName, excludedTypeNames))
+      )
   }
 
   trait CastExpression[FT <: FinalTypes] extends Expression[FT] with oo.CastExpression[FT] with Factory[FT] {
     def toScala: String = s"${this.expression.toScala}.asInstanceOf[${tpe.toScala}]"
+
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): oo.CastExpression[FT] =
+      copy(
+        tpe = tpe.prefixRootPackage(rootPackageName, excludedTypeNames),
+        expression = expression.prefixRootPackage(rootPackageName, excludedTypeNames)
+      )
   }
 
   trait InstanceOfExpression[FT <: FinalTypes] extends Expression[FT] with oo.InstanceOfExpression[FT] with Factory[FT] {
     def toScala: String = {
       s"${this.expression.toScala}.isInstanceOf[${this.tpe.toScala}]"
     }
+
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): oo.InstanceOfExpression[FT] =
+      copy(
+        tpe = tpe.prefixRootPackage(rootPackageName, excludedTypeNames),
+        expression = expression.prefixRootPackage(rootPackageName, excludedTypeNames)
+      )
   }
 
   trait SuperReferenceExpression[FT <: FinalTypes] extends Expression[FT] with oo.SuperReferenceExpression[FT] with Factory[FT] {
     def toScala: String = {
       s"super[${parentType.toScala}]"
     }
+
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): oo.SuperReferenceExpression[FT] =
+      copy(
+        parentType = parentType.prefixRootPackage(rootPackageName, excludedTypeNames)
+      )
   }
 
   trait BinaryExpression[FT <: FinalTypes] extends Expression[FT] with operatorExpression.BinaryExpression[FT] with Factory[FT] {
     def toScala: String = operator.toScala(left, right)
+
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): operatorExpression.BinaryExpression[FT] =
+      copy(
+        left = left.prefixRootPackage(rootPackageName, excludedTypeNames),
+        right = right.prefixRootPackage(rootPackageName, excludedTypeNames)
+      )
   }
 
   trait UnaryExpression[FT <: FinalTypes] extends Expression[FT] with operatorExpression.UnaryExpression[FT] with Factory[FT] {
     def toScala: String = operator.toScala(operand)
+
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): operatorExpression.UnaryExpression[FT] =
+      copy(
+        operand = operand.prefixRootPackage(rootPackageName, excludedTypeNames)
+      )
   }
 
   trait Operator[FT <: FinalTypes] extends operatorExpression.Operator[FT] with Factory[FT] {
@@ -211,33 +309,68 @@ package object scala {
 
   trait True[FT <: FinalTypes] extends boolean.True[FT] with Expression[FT] with Factory[FT] {
     override def toScala: String = "true"
+
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): boolean.True[FT] =
+      this
   }
 
   trait False[FT <: FinalTypes] extends boolean.False[FT] with Expression[FT] with Factory[FT] {
     override def toScala: String = "false"
+
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): boolean.False[FT] =
+      this
   }
 
   trait Equals[FT <: FinalTypes] extends eqls.Equals[FT] with Expression[FT] with Factory[FT] {
     def toScala: String = s"${left.toScala} == ${right.toScala}"
+
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): eqls.Equals[FT] =
+      copy(
+        tpe = tpe.prefixRootPackage(rootPackageName, excludedTypeNames),
+        left = left.prefixRootPackage(rootPackageName, excludedTypeNames),
+        right = right.prefixRootPackage(rootPackageName, excludedTypeNames)
+      )
   }
 
   trait Return[FT <: FinalTypes] extends any.Return[FT] with Statement[FT] with Factory[FT] {
     def toScala: String = s"return ${this.expression.toScala}"
+
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): any.Return[FT] =
+      copy(
+        expression = expression.prefixRootPackage(rootPackageName, excludedTypeNames)
+      )
   }
 
   trait LiftExpression[FT <: FinalTypes] extends imperative.LiftExpression[FT] with Statement[FT] with Factory[FT] {
     def toScala: String = s"${this.expression.toScala};"
+
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): imperative.LiftExpression[FT] =
+      copy(
+        expression = expression.prefixRootPackage(rootPackageName, excludedTypeNames)
+      )
   }
 
   trait Type[FT <: FinalTypes] extends any.Type[FT] with Factory[FT] {
     def toScala: String
     def toImport: Seq[any.Import[FT]]
+
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): any.Type[FT]
   }
 
   trait ClassReferenceType[FT <: FinalTypes] extends oo.ClassReferenceType[FT] with Type[FT] with Factory[FT] {
     def toScala: String = qualifiedClassName.map(_.toScala).mkString(".")
 
-    def toImport: Seq[any.Import[FT]] = Seq(importStatement(qualifiedClassName))
+    def toImport: Seq[any.Import[FT]] = Seq.empty
+
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): oo.ClassReferenceType[FT] = {
+      if (excludedTypeNames.contains(qualifiedClassName)) {
+        this
+      } else {
+        copy(
+          qualifiedClassName = rootPackageName ++ qualifiedClassName
+        )
+      }
+    }
   }
 
   trait Name[FT <: FinalTypes] extends any.Name[FT] with Factory[FT] {
@@ -280,6 +413,18 @@ package object scala {
 
       s"""${mods} def ${name.toScala}${typeParams}(${params}): ${returnTpe} ${body}""".stripMargin
     }
+
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): any.Method[FT] = {
+      copyAsGenericMethod(
+        name = name,
+        imports = imports.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        statements = statements.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        returnType = returnType.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        typeParameters = typeParameters.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        parameters = parameters.map { case (name, tpe) => (name, tpe.prefixRootPackage(rootPackageName, excludedTypeNames)) },
+        typeLookupMap = tpeRep => typeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames))
+      )
+    }
   }
 
   trait Constructor[FT <: FinalTypes] extends oo.Constructor[FT] with scala.Method[FT] with Factory[FT] {
@@ -310,6 +455,21 @@ package object scala {
          |  ${bodyDecls}
          |}""".stripMargin
     }
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): oo.Constructor[FT] = {
+      copyAsConstructor(
+        constructedType = constructedType.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        imports = imports.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        statements = statements.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        parameters = parameters.map { case (name, tpe) => (name, tpe.prefixRootPackage(rootPackageName, excludedTypeNames)) },
+        typeLookupMap = tpeRep => typeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        constructorTypeLookupMap = tpeRep => constructorTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        superInitialization = superInitialization.map { case (tpe, exps) =>
+          (tpe.prefixRootPackage(rootPackageName, excludedTypeNames),
+            exps.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)))
+        },
+        fieldInitializers = fieldInitializers.map { case (name, exp) => (name, exp.prefixRootPackage(rootPackageName, excludedTypeNames)) }
+      )
+    }
   }
 
   trait Field[FT <: FinalTypes] extends oo.Field[FT] with Factory[FT] {
@@ -317,6 +477,14 @@ package object scala {
       val initExp = init.map(exp => s" = ${exp.toScala}").getOrElse("")
       s"var ${name.toScala}: ${tpe.toScala}${initExp}"
     }
+
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): oo.Field[FT] = {
+      copy(
+        tpe = tpe.prefixRootPackage(rootPackageName, excludedTypeNames),
+        init = init.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+      )
+    }
+
   }
 
   trait TypeParameter[FT <: FinalTypes] extends generics.TypeParameter[FT] with Factory[FT] {
@@ -327,16 +495,33 @@ package object scala {
         if (upperBounds.nonEmpty) " <: " + upperBounds.map(_.toScala).mkString(" with ") else ""
       s"""${name.toScala}${lbs}${ubs}"""
     }
+
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): polymorphism.TypeParameter[FT] = {
+      copyAsTypeParameterWithBounds(
+        upperBounds = upperBounds.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        lowerBounds = lowerBounds.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+      )
+    }
   }
 
   trait TypeReferenceExpression[FT <: FinalTypes] extends polymorphism.TypeReferenceExpression[FT] with Expression[FT] with Factory[FT] {
     def toScala: String = tpe.toScala
+
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): polymorphism.TypeReferenceExpression[FT] = {
+      copy(
+        tpe = tpe.prefixRootPackage(rootPackageName, excludedTypeNames)
+      )
+    }
   }
 
   trait TypeArgument[FT <: FinalTypes] extends polymorphism.TypeArgument[FT] with Type[FT] with Factory[FT] {
     def toScala: String = name.toScala
 
     def toImport: Seq[any.Import[FT]] = Seq.empty
+
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): polymorphism.TypeArgument[FT] = {
+      this
+    }
   }
 
   trait TypeApplication[FT <: FinalTypes] extends polymorphism.TypeApplication[FT] with Type[FT] with Factory[FT] {
@@ -345,6 +530,13 @@ package object scala {
     }
 
     def toImport: Seq[any.Import[FT]] = function.toImport ++ arguments.flatMap(_.toImport)
+
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): polymorphism.TypeApplication[FT] = {
+      copy(
+        function = function.prefixRootPackage(rootPackageName, excludedTypeNames),
+        arguments = arguments.map(_.prefixRootPackage(rootPackageName, excludedTypeNames))
+      )
+    }
   }
 
 
@@ -385,24 +577,60 @@ package object scala {
       s"""
          |${abstractMod} ${kind} ${name.toScala}${typeParams} ${extendsClause} ${classBodyDefinitionToScala}""".stripMargin
     }
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): oo.Class[FT] = {
+      copyAsGenericClass(
+        imports = imports.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        parents = parents.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        implemented = implemented.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        fields = fields.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        methods = methods.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        constructors = constructors.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        methodTypeLookupMap = tpeRep => methodTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        constructorTypeLookupMap = tpeRep => constructorTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        typeLookupMap = tpeRep => typeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames))
+      )
+    }
   }
 
   trait ApplyExpression[FT <: FinalTypes] extends Expression[FT] with any.ApplyExpression[FT] with Factory[FT] {
     def toScala : String = s"${function.toScala}(${arguments.map(_.toScala).mkString(",")})"
+
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): any.ApplyExpression[FT] = {
+      copy(
+        function = function.prefixRootPackage(rootPackageName, excludedTypeNames),
+        arguments = arguments.map(_.prefixRootPackage(rootPackageName, excludedTypeNames))
+      )
+    }
   }
 
   trait VariableReferenceExpression[FT <: FinalTypes] extends Expression[FT] with imperative.VariableReferenceExpression[FT] with Factory[FT] {
     def toScala: String = s"${name.toScala}"
+
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): imperative.VariableReferenceExpression[FT] =
+      this
   }
 
   trait CompilationUnit[FT <: FinalTypes] extends oo.CompilationUnit[FT] with Factory[FT] with Util[FT] {
     def toScala: String = {
       val importDecls = imports.map(_.toScala).mkString("\n    ")
       val clsDecls = classes.map(_.toScala).mkString("\n\n")
+      val packageDecl = if (name.init.isEmpty) "" else s"package ${name.init.map(_.toScala).mkString(".")}"
       s"""
+         |${packageDecl}
          |${importDecls}
          |${clsDecls}
          |""".stripMargin
+    }
+
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): any.CompilationUnit[FT] = {
+      copyAsCompilationUnitWithClasses(
+        name = rootPackageName ++ name,
+        imports = imports.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        methodTypeLookupMap = tpeRep => methodTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        constructorTypeLookupMap = tpeRep => constructorTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        classTypeLookupMap = tpeRep => classTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        classes = classes.map(_.prefixRootPackage(rootPackageName, excludedTypeNames))
+      )
     }
   }
 
@@ -432,6 +660,31 @@ override def appendListOp(): lists.AppendListOp[FinalTypes] = ???*/
 
   trait CreateListExpr[FT <: FinalTypes] extends lists.CreateListExpr[FT] with Expression[FT] {
     def toScala: String = "Seq"
+
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): lists.CreateListExpr[FT] =
+      this
+  }
+
+  trait CreateLeafExpr[FT <: FinalTypes] extends trees.CreateLeafExpr[FT] with Expression[FT] {
+    def leafClass: oo.ClassReferenceType[FT]
+    def toScala: String = leafClass.toScala
+
+    def copyWithLeafClass(leafClass: oo.ClassReferenceType[FT] = leafClass): trees.CreateLeafExpr[FT] =
+      createLeafExprWithLeafClass(leafClass)
+
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): trees.CreateLeafExpr[FT] =
+      copyWithLeafClass(leafClass = leafClass.prefixRootPackage(rootPackageName, excludedTypeNames))
+  }
+
+  trait CreateNodeExpr[FT <: FinalTypes] extends trees.CreateNodeExpr[FT] with Expression[FT] {
+    def nodeClass: oo.ClassReferenceType[FT]
+    def toScala: String = nodeClass.toScala
+
+    def copyWithNodeClass(nodeClass: oo.ClassReferenceType[FT] = nodeClass): trees.CreateNodeExpr[FT] =
+      createNodeExprWithNodeClass(nodeClass)
+
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): trees.CreateNodeExpr[FT] =
+      copyWithNodeClass(nodeClass = nodeClass.prefixRootPackage(rootPackageName, excludedTypeNames))
   }
 
   trait ConsListOp[FT <: FinalTypes] extends lists.ConsListOp[FT] with Operator[FT] with InfixOperator[FT] {
@@ -461,12 +714,28 @@ override def appendListOp(): lists.AppendListOp[FinalTypes] = ???*/
     with operatorExpression.Factory[FT]
     with strings.Factory[FT]
     with lists.Factory[FT]
+    with trees.Factory[FT]
     with generics.Factory[FT] {
 
     def name(name: String, mangled: String): Name[FT]
     def importStatement(components: Seq[any.Name[FT]]): Import[FT]
 
     def reifiedScalaValue[T](ofHostType: OfHostType[T], value: T): ReifiedScalaValue[FT, T]
+
+
+    override def createNodeExpr(): trees.CreateNodeExpr[FT] = {
+      createNodeExprWithNodeClass(classReferenceType(
+        Seq("org", "combinators", "ep", "util", "Node").map(n => name(n, n)):_*
+      ))
+    }
+    def createNodeExprWithNodeClass(nodeClass: oo.ClassReferenceType[FT]): CreateNodeExpr[FT]
+
+    override def createLeafExpr(): trees.CreateLeafExpr[FT] = {
+      createLeafExprWithLeafClass(classReferenceType(
+        Seq("org", "combinators", "ep", "util", "Leaf").map(n => name(n, n)):_*
+      ))
+    }
+    def createLeafExprWithLeafClass(leafClass: oo.ClassReferenceType[FT]): CreateLeafExpr[FT]
 
     implicit def convert(other: any.Import[FT]): Import[FT]
     implicit def convert(other: any.Statement[FT]): Statement[FT]
@@ -503,6 +772,11 @@ override def appendListOp(): lists.AppendListOp[FinalTypes] = ???*/
     override implicit def convert(other: polymorphism.TypeReferenceExpression[FT]): TypeReferenceExpression[FT]
     override implicit def convert(other: polymorphism.TypeArgument[FT]): TypeArgument[FT]
     override implicit def convert(other: polymorphism.TypeApplication[FT]): TypeApplication[FT]
+
+    implicit def convert(other: trees.CreateLeafExpr[FT]): CreateLeafExpr[FT]
+    implicit def convert(other: trees.CreateNodeExpr[FT]): CreateNodeExpr[FT]
+
+
   }
 
   object Finalized {
@@ -540,6 +814,8 @@ override def appendListOp(): lists.AppendListOp[FinalTypes] = ???*/
       override type TypeReferenceExpression = Finalized.TypeReferenceExpression
       override type TypeArgument = Finalized.TypeArgument
       override type TypeApplication = Finalized.TypeApplication
+      type CreateLeafExpr = Finalized.CreateLeafExpr
+      type CreateNodeExpr = Finalized.CreateNodeExpr
     }
 
     trait Factory extends scala.Factory[FinalTypes] {
@@ -741,6 +1017,10 @@ override def appendListOp(): lists.AppendListOp[FinalTypes] = ???*/
 
       override def typeReferenceExpression(tpe: any.Type[FinalTypes]): TypeReferenceExpression =
         TypeReferenceExpression(tpe)
+      def createNodeExprWithNodeClass(nodeClass: oo.ClassReferenceType[FinalTypes]): scala.CreateNodeExpr[FinalTypes] = CreateNodeExpr(nodeClass)
+      def createLeafExprWithLeafClass(leafClass: oo.ClassReferenceType[FinalTypes]): scala.CreateLeafExpr[FinalTypes] = CreateLeafExpr(leafClass)
+      implicit def convert(other: trees.CreateLeafExpr[FinalTypes]): scala.CreateLeafExpr[FinalTypes] = other.getSelfCreateLeafExpr
+      implicit def convert(other: trees.CreateNodeExpr[FinalTypes]): scala.CreateNodeExpr[FinalTypes] = other.getSelfCreateNodeExpr
     }
 
     case class Name(override val component: String, override val mangled: String) extends scala.Name[FinalTypes] with Factory {
@@ -1035,5 +1315,14 @@ override def appendListOp(): lists.AppendListOp[FinalTypes] = ???*/
 
     case class AppendListOp() extends scala.AppendListOp[FinalTypes] with Operator {
     }
+
+    case class CreateLeafExpr(override val leafClass: oo.ClassReferenceType[FinalTypes]) extends scala.CreateLeafExpr[FinalTypes] with Expression {
+      def getSelfCreateLeafExpr: this.type = this
+    }
+
+    case class CreateNodeExpr(override val nodeClass: oo.ClassReferenceType[FinalTypes]) extends scala.CreateNodeExpr[FinalTypes] with Expression {
+      def getSelfCreateNodeExpr: this.type = this
+    }
+
   }
 }

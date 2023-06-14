@@ -7,6 +7,12 @@ object eqls {
     def tpe: any.Type[FT]
     def left: any.Expression[FT]
     def right: any.Expression[FT]
+
+    def copy(
+      tpe: any.Type[FT],
+      left: any.Expression[FT] = left,
+      right: any.Expression[FT] = right
+    ): Equals[FT] = equals(tpe, left, right)
   }
 
   trait Factory[FT <: any.FinalTypes] extends any.Factory[FT] {

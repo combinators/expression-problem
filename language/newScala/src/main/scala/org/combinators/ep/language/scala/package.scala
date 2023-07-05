@@ -8,6 +8,7 @@ import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.oo
 import org.combinators.ep.language.inbetween.imperative
 import org.combinators.ep.language.inbetween.ffi.arithmetic
+import org.combinators.ep.language.inbetween.ffi.realArithmetic
 import org.combinators.ep.language.inbetween.ffi.assertions
 import org.combinators.ep.language.inbetween.ffi.boolean
 import org.combinators.ep.language.inbetween.ffi.eqls
@@ -71,7 +72,7 @@ package object scala {
     def toScala: String = {
       val init = this.initializer.map(ie => s" = ${ie.toScala}").getOrElse("")
       s"""
-         |var ${this.name.toScala}${init}
+         |var ${this.name.toScala}: ${this.tpe.toScala}${init}
          |""".stripMargin
     }
 
@@ -105,8 +106,8 @@ package object scala {
 
       s"""
           |if (${condition.toScala}) {
-          |  ${this.ifBranch.map(_.toScala).mkString("\n  ")}"
-          |}${elseIfs.mkString("")} {
+          |  ${this.ifBranch.map(_.toScala).mkString("\n  ")}
+          |}${elseIfs.mkString("")} else {
           |  ${elseBranch.map(_.toScala).mkString("\n  ")}
           |}
           """
@@ -262,6 +263,13 @@ package object scala {
     def toScala(operands: any.Expression[FT]*): String = s"(${operator}${operands.head.toScala})"
   }
 
+  trait MathFunctionOperator[FT <: FinalTypes] { self: Factory[FT] =>
+    def operator: String
+    def toScala(operands: any.Expression[FT]*): String = {
+      s"Math.${operator}${operands.map(_.toScala).mkString("(", ", ", ")")}"
+    }
+  }
+
   trait PostfixOperator[FT <: FinalTypes] { self: Factory[FT] =>
     def operator: String
     def toScala(operands: any.Expression[FT]*): String = s"(${operands.head.toScala}${operator})"
@@ -306,6 +314,49 @@ package object scala {
   trait NotOp[FT <: FinalTypes] extends boolean.NotOp[FT] with Operator[FT] with Factory[FT] with PrefixOperator[FT] {
     override def operator: String = "!"
   }
+
+  trait SqrtOp[FT <: FinalTypes] extends realArithmetic.SqrtOp[FT] with Operator[FT] with Factory[FT] with MathFunctionOperator[FT] {
+    override def operator: String = "sqrt"
+  }
+
+  trait PowOp[FT <: FinalTypes] extends realArithmetic.PowOp[FT] with Operator[FT] with Factory[FT] with MathFunctionOperator[FT] {
+    override def operator: String = "pow"
+  }
+
+  trait LogOp[FT <: FinalTypes] extends realArithmetic.LogOp[FT] with Operator[FT] with Factory[FT] with MathFunctionOperator[FT] {
+    override def operator: String = "log"
+  }
+
+  trait SinOp[FT <: FinalTypes] extends realArithmetic.SinOp[FT] with Operator[FT] with Factory[FT] with MathFunctionOperator[FT] {
+    override def operator: String = "sin"
+  }
+
+  trait CosOp[FT <: FinalTypes] extends realArithmetic.CosOp[FT] with Operator[FT] with Factory[FT] with MathFunctionOperator[FT] {
+    override def operator: String = "cos"
+  }
+
+  trait AbsOp[FT <: FinalTypes] extends realArithmetic.AbsOp[FT] with Operator[FT] with Factory[FT] with MathFunctionOperator[FT] {
+    override def operator: String = "abs"
+  }
+
+  trait FloorOp[FT <: FinalTypes] extends realArithmetic.FloorOp[FT] with Operator[FT] with Factory[FT] with MathFunctionOperator[FT] {
+    override def operator: String = "floor"
+  }
+
+  trait EulersNumber[FT <: FinalTypes] extends realArithmetic.EulersNumber[FT] with Expression[FT] with Factory[FT] {
+    override def toScala: String = "Math.E"
+
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): realArithmetic.EulersNumber[FT] =
+      this
+  }
+
+  trait Pi[FT <: FinalTypes] extends realArithmetic.Pi[FT] with Expression[FT] with Factory[FT] {
+    override def toScala: String = "Math.PI"
+
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): realArithmetic.Pi[FT] =
+      this
+  }
+
 
   trait True[FT <: FinalTypes] extends boolean.True[FT] with Expression[FT] with Factory[FT] {
     override def toScala: String = "true"
@@ -376,7 +427,7 @@ package object scala {
   trait Name[FT <: FinalTypes] extends any.Name[FT] with Factory[FT] {
     def component: String
     def mangled: String
-    def toScala: String = component
+    def toScala: String = mangled
   }
 
   trait Util[FT <: FinalTypes] extends Factory[FT] {
@@ -433,28 +484,81 @@ package object scala {
     override def name: any.Name[FT] = nameProvider.mangle(constructedType.map(_.toScala).getOrElse(""))
     override def returnType: Option[any.Type[FT]] = constructedType
 
+    def importDecls: String = imports.map(_.toScala).mkString("\n    ")
+
     override def toScala: String = {
-      val importDecls = imports.map(_.toScala).mkString("\n    ")
       val params = parameters.map(p => s"${p._1.toScala} : ${p._2.toScala}").mkString(",")
       val superInitDecls = if (superInitialization.isDefined) {
-        s"super.${superInitialization.get._1.toScala}(${superInitialization.get._2.map(_.toScala).mkString(", ")})"
+        s"// Potential Generator Defect: Scala cannot declare supers in secondary constructor"
       } else ""
       val fieldInitDecls = fieldInitializers.map(fi =>{
-         s"this.${fi._1.toScala} = ${fi._2.toScala}"
-      }).mkString("  \n")
+         s"${fi._2.toScala}"
+      }).mkString(", ")
       val bodyDecls =
         s"""
         |  ${statements.map(_.toScala).mkString("\n    ")}
         """.stripMargin
 
       s"""def this(${params}) = {
-         |  this()
+         |  this(${fieldInitDecls})
          |  ${importDecls}
-         |  ${superInitDecls}
-         |  ${fieldInitDecls}
          |  ${bodyDecls}
          |}""".stripMargin
     }
+
+    def primaryConstructorParams: String = {
+      parameters.map(p => s"${p._1.toScala} : ${p._2.toScala}").mkString("(", ",", ")")
+    }
+
+    def parentInitializers(ofClass: oo.Class[FT]): String = {
+      val supers = (ofClass.parents ++ ofClass.implemented)
+      superInitialization match {
+        case Some((parent, parentArgs)) =>
+          val rest = supers.filter(sp => sp != parent).map(_.toScala).mkString(" with ")
+          s"extends ${parent.toScala}(${parentArgs.map(_.toScala).mkString(", ")}) ${rest}"
+        case None =>
+          if (supers.nonEmpty) supers.map(_.toScala).mkString("extends ", " with ", "") else ""
+      }
+    }
+
+    def primaryConstructorBody(ofClass: oo.Class[FT]): String = {
+      val (fieldDeclarations, remainingPrimaryInits) = {
+        ofClass.fields.foldLeft[(Seq[String], Seq[(any.Name[FT], any.Expression[FT])])]((Seq.empty, fieldInitializers)) {
+          case ((decls, remainingInitializers), declaredField) => {
+            if (declaredField.init.isDefined) {
+              (decls :+ convert(declaredField).toScala, remainingInitializers)
+            } else {
+              val x: Seq[oo.Field[FT]] = Seq.empty
+              def extractFirstDeclaration(decls: Seq[(any.Name[FT], any.Expression[FT])]): (Seq[(any.Name[FT], any.Expression[FT])], Option[any.Expression[FT]]) =
+                decls match {
+                  case (name, init) +: rest if name == declaredField.name =>
+                    (rest, Some(init))
+                  case hd +: rest =>
+                    val (remaining, init) = extractFirstDeclaration(rest)
+                    (hd +: remaining, init)
+                  case _ => (Seq.empty, None)
+                }
+              val (remaining, init) = extractFirstDeclaration(remainingInitializers)
+              (decls :+ convert(declaredField.copy(init = init)).toScala, remaining)
+            }
+          }
+        }
+      }
+      val overrideInits = remainingPrimaryInits.map(fi => {
+        s"this.${fi._1.toScala} = ${fi._2.toScala}"
+      }).mkString("  \n")
+      val bodyDecls =
+        s"""
+           |  ${statements.map(_.toScala).mkString("\n    ")}
+        """.stripMargin
+      s"""
+         |  ${importDecls}
+         |  ${fieldDeclarations.mkString("\n  ")}
+         |  ${overrideInits}
+         |  ${bodyDecls}
+         |  """.stripMargin
+    }
+
     override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): oo.Constructor[FT] = {
       copyAsConstructor(
         constructedType = constructedType.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
@@ -474,7 +578,7 @@ package object scala {
 
   trait Field[FT <: FinalTypes] extends oo.Field[FT] with Factory[FT] {
     def toScala: String = {
-      val initExp = init.map(exp => s" = ${exp.toScala}").getOrElse("")
+      val initExp = init.map(exp => s" = ${exp.toScala}").getOrElse(" = null")
       s"var ${name.toScala}: ${tpe.toScala}${initExp}"
     }
 
@@ -552,12 +656,15 @@ package object scala {
       val importDecls = imports.map(_.toScala).mkString("\n    ")
       val fieldDecls = fields.map(_.toScala).mkString("\n  ")
       val methodDecls = methods.map(_.toScala).mkString("\n  ")
-      val constructorDecls = constructors.map(_.toScala).mkString("\n  ")
+      val secondaryConstructorDecls = if (constructors.isEmpty) "" else constructors.tail.map(_.toScala).mkString("\n  ")
+      val initBlock = constructors.headOption.map(ctor =>
+        convert(ctor).primaryConstructorBody(this)
+      ).getOrElse(fieldDecls)
       s"""
          |{
          |  ${importDecls}
-         |  ${fieldDecls}
-         |  ${constructorDecls}
+         |  ${initBlock}
+         |  ${secondaryConstructorDecls}
          |  ${methodDecls}
          |}""".stripMargin
     }
@@ -569,13 +676,19 @@ package object scala {
         val ps = typeParameters.map(_.toScala)
         if (!isStatic && ps.nonEmpty) ps.mkString("[", ",", "]") else ""
       }
-      val extendsClause = {
-        val supers = (parents ++ implemented)
-        if (supers.nonEmpty) supers.map(_.toScala).mkString("extends ", " with ", "") else ""
-      }
+      val extendsClause = constructors.headOption.map(ctor =>
+          convert(ctor).parentInitializers(this)
+        ).getOrElse {
+          val supers = (parents ++ implemented)
+          if (supers.nonEmpty) supers.map(_.toScala).mkString("extends ", " with ", "") else ""
+        }
+      val primaryConstructorParams = constructors.headOption.map(ctor =>
+          convert(ctor).primaryConstructorParams
+        ).getOrElse("")
+
 
       s"""
-         |${abstractMod} ${kind} ${name.toScala}${typeParams} ${extendsClause} ${classBodyDefinitionToScala}""".stripMargin
+         |${abstractMod} ${kind} ${name.toScala}${typeParams}${primaryConstructorParams} ${extendsClause} ${classBodyDefinitionToScala}""".stripMargin
     }
     def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): oo.Class[FT] = {
       copyAsGenericClass(
@@ -648,32 +761,25 @@ package object scala {
     def operator: String = "assert "
   }
 
-/*override def createListExpr(): lists.CreateListExpr[FinalTypes] = ???
-
-override def consListOp(): lists.ConsListOp[FinalTypes] = ???
-
-override def headListOp(): lists.HeadListOp[FinalTypes] = ???
-
-override def tailListOp(): lists.TailListOp[FinalTypes] = ???
-
-override def appendListOp(): lists.AppendListOp[FinalTypes] = ???*/
-
-  trait CreateListExpr[FT <: FinalTypes] extends lists.CreateListExpr[FT] with Expression[FT] {
+  trait CreateList[FT <: FinalTypes] extends lists.CreateList[FT] with Type[FT] {
     def toScala: String = "Seq"
 
-    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): lists.CreateListExpr[FT] =
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): lists.CreateList[FT] =
       this
+    def toImport: Seq[any.Import[FT]] = Seq.empty
   }
 
-  trait CreateLeafExpr[FT <: FinalTypes] extends trees.CreateLeafExpr[FT] with Expression[FT] {
+  trait CreateLeaf[FT <: FinalTypes] extends trees.CreateLeaf[FT] with Type[FT] {
     def leafClass: oo.ClassReferenceType[FT]
     def toScala: String = leafClass.toScala
 
-    def copyWithLeafClass(leafClass: oo.ClassReferenceType[FT] = leafClass): trees.CreateLeafExpr[FT] =
-      createLeafExprWithLeafClass(leafClass)
+    def copyWithLeafClass(leafClass: oo.ClassReferenceType[FT] = leafClass): trees.CreateLeaf[FT] =
+      createLeafWithLeafClass(leafClass)
 
-    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): trees.CreateLeafExpr[FT] =
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): trees.CreateLeaf[FT] =
       copyWithLeafClass(leafClass = leafClass.prefixRootPackage(rootPackageName, excludedTypeNames))
+
+    def toImport: Seq[any.Import[FT]] = leafClass.toImport
   }
 
   trait CreateNodeExpr[FT <: FinalTypes] extends trees.CreateNodeExpr[FT] with Expression[FT] {
@@ -708,6 +814,7 @@ override def appendListOp(): lists.AppendListOp[FinalTypes] = ???*/
     with oo.Factory[FT]
     with imperative.Factory[FT]
     with arithmetic.Factory[FT]
+    with realArithmetic.Factory[FT]
     with assertions.Factory[FT]
     with boolean.Factory[FT]
     with eqls.Factory[FT]
@@ -730,12 +837,12 @@ override def appendListOp(): lists.AppendListOp[FinalTypes] = ???*/
     }
     def createNodeExprWithNodeClass(nodeClass: oo.ClassReferenceType[FT]): CreateNodeExpr[FT]
 
-    override def createLeafExpr(): trees.CreateLeafExpr[FT] = {
-      createLeafExprWithLeafClass(classReferenceType(
+    override def createLeaf(): trees.CreateLeaf[FT] = {
+      createLeafWithLeafClass(classReferenceType(
         Seq("org", "combinators", "ep", "util", "Leaf").map(n => name(n, n)):_*
       ))
     }
-    def createLeafExprWithLeafClass(leafClass: oo.ClassReferenceType[FT]): CreateLeafExpr[FT]
+    def createLeafWithLeafClass(leafClass: oo.ClassReferenceType[FT]): CreateLeaf[FT]
 
     implicit def convert(other: any.Import[FT]): Import[FT]
     implicit def convert(other: any.Statement[FT]): Statement[FT]
@@ -773,7 +880,7 @@ override def appendListOp(): lists.AppendListOp[FinalTypes] = ???*/
     override implicit def convert(other: polymorphism.TypeArgument[FT]): TypeArgument[FT]
     override implicit def convert(other: polymorphism.TypeApplication[FT]): TypeApplication[FT]
 
-    implicit def convert(other: trees.CreateLeafExpr[FT]): CreateLeafExpr[FT]
+    implicit def convert(other: trees.CreateLeaf[FT]): CreateLeaf[FT]
     implicit def convert(other: trees.CreateNodeExpr[FT]): CreateNodeExpr[FT]
 
 
@@ -814,8 +921,8 @@ override def appendListOp(): lists.AppendListOp[FinalTypes] = ???*/
       override type TypeReferenceExpression = Finalized.TypeReferenceExpression
       override type TypeArgument = Finalized.TypeArgument
       override type TypeApplication = Finalized.TypeApplication
-      type CreateLeafExpr = Finalized.CreateLeafExpr
-      type CreateNodeExpr = Finalized.CreateNodeExpr
+      override type CreateLeaf = Finalized.CreateLeaf
+      override type CreateNodeExpr = Finalized.CreateNodeExpr
     }
 
     trait Factory extends scala.Factory[FinalTypes] {
@@ -882,6 +989,15 @@ override def appendListOp(): lists.AppendListOp[FinalTypes] = ???*/
       override def multOp(): arithmetic.MultOp[FinalTypes] = MultOp()
       override def divOp(): arithmetic.DivOp[FinalTypes] = DivOp()
       override def modOp(): arithmetic.ModOp[FinalTypes] = ModOp()
+      def sqrtOp(): realArithmetic.SqrtOp[FinalTypes] = SqrtOp()
+      def powOp(): realArithmetic.PowOp[FinalTypes] = PowOp()
+      def logOp(): realArithmetic.LogOp[FinalTypes] = LogOp()
+      def sinOp(): realArithmetic.SinOp[FinalTypes] = SinOp()
+      def cosOp(): realArithmetic.CosOp[FinalTypes] = CosOp()
+      def absOp(): realArithmetic.AbsOp[FinalTypes] = AbsOp()
+      def floorOp(): realArithmetic.FloorOp[FinalTypes] = FloorOp()
+      def pi(): realArithmetic.Pi[FinalTypes] = Pi()
+      def eulersNumber(): realArithmetic.EulersNumber[FinalTypes] = EulersNumber()
       override def ltOp(): arithmetic.LtOp[FinalTypes] = LtOp()
       override def leOp(): arithmetic.LeOp[FinalTypes] = LeOp()
       override def equals(tpe: any.Type[FinalTypes], left: any.Expression[FinalTypes], right: any.Expression[FinalTypes]): eqls.Equals[FinalTypes] = Equals(tpe, left, right)
@@ -999,7 +1115,7 @@ override def appendListOp(): lists.AppendListOp[FinalTypes] = ???*/
 
       override def typeParameterWithBounds(name: any.Name[FinalTypes], upperBounds: Seq[any.Type[FinalTypes]], lowerBounds: Seq[any.Type[FinalTypes]]): TypeParameter =
         TypeParameter(name, lowerBounds = lowerBounds, upperBounds = upperBounds)
-      override def createListExpr(): lists.CreateListExpr[FinalTypes] = CreateListExpr()
+      override def createList(): lists.CreateList[FinalTypes] = CreateList()
 
       override def consListOp(): lists.ConsListOp[FinalTypes] = ConsListOp()
 
@@ -1018,8 +1134,8 @@ override def appendListOp(): lists.AppendListOp[FinalTypes] = ???*/
       override def typeReferenceExpression(tpe: any.Type[FinalTypes]): TypeReferenceExpression =
         TypeReferenceExpression(tpe)
       def createNodeExprWithNodeClass(nodeClass: oo.ClassReferenceType[FinalTypes]): scala.CreateNodeExpr[FinalTypes] = CreateNodeExpr(nodeClass)
-      def createLeafExprWithLeafClass(leafClass: oo.ClassReferenceType[FinalTypes]): scala.CreateLeafExpr[FinalTypes] = CreateLeafExpr(leafClass)
-      implicit def convert(other: trees.CreateLeafExpr[FinalTypes]): scala.CreateLeafExpr[FinalTypes] = other.getSelfCreateLeafExpr
+      def createLeafWithLeafClass(leafClass: oo.ClassReferenceType[FinalTypes]): scala.CreateLeaf[FinalTypes] = CreateLeaf(leafClass)
+      implicit def convert(other: trees.CreateLeaf[FinalTypes]): scala.CreateLeaf[FinalTypes] = other.getSelfCreateLeaf
       implicit def convert(other: trees.CreateNodeExpr[FinalTypes]): scala.CreateNodeExpr[FinalTypes] = other.getSelfCreateNodeExpr
     }
 
@@ -1251,6 +1367,18 @@ override def appendListOp(): lists.AppendListOp[FinalTypes] = ???*/
 
     case class LeOp() extends scala.LeOp[FinalTypes] with Operator with Factory
 
+    case class SqrtOp() extends scala.SqrtOp[FinalTypes] with Operator with Factory
+    case class PowOp() extends scala.PowOp[FinalTypes] with Operator with Factory
+    case class LogOp() extends scala.LogOp[FinalTypes] with Operator with Factory
+    case class SinOp() extends scala.SinOp[FinalTypes] with Operator with Factory
+    case class CosOp() extends scala.CosOp[FinalTypes] with Operator with Factory
+    case class AbsOp() extends scala.AbsOp[FinalTypes] with Operator with Factory
+    case class FloorOp() extends scala.FloorOp[FinalTypes] with Operator with Factory
+
+    case class EulersNumber() extends scala.EulersNumber[FinalTypes] with Expression with Factory
+
+    case class Pi() extends scala.Pi[FinalTypes] with Expression with Factory
+
     case class Equals(
       override val tpe: any.Type[FinalTypes],
       override val left: any.Expression[FinalTypes],
@@ -1301,7 +1429,7 @@ override def appendListOp(): lists.AppendListOp[FinalTypes] = ???*/
       override def getSelfTypeApplication: this.type = this
     }
 
-    case class CreateListExpr() extends scala.CreateListExpr[FinalTypes] with Expression {
+    case class CreateList() extends scala.CreateList[FinalTypes] with Type {
     }
 
     case class ConsListOp() extends scala.ConsListOp[FinalTypes] with Operator {
@@ -1316,8 +1444,8 @@ override def appendListOp(): lists.AppendListOp[FinalTypes] = ???*/
     case class AppendListOp() extends scala.AppendListOp[FinalTypes] with Operator {
     }
 
-    case class CreateLeafExpr(override val leafClass: oo.ClassReferenceType[FinalTypes]) extends scala.CreateLeafExpr[FinalTypes] with Expression {
-      def getSelfCreateLeafExpr: this.type = this
+    case class CreateLeaf(override val leafClass: oo.ClassReferenceType[FinalTypes]) extends scala.CreateLeaf[FinalTypes] with Type {
+      def getSelfCreateLeaf: this.type = this
     }
 
     case class CreateNodeExpr(override val nodeClass: oo.ClassReferenceType[FinalTypes]) extends scala.CreateNodeExpr[FinalTypes] with Expression {

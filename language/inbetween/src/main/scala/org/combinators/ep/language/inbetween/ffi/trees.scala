@@ -7,11 +7,11 @@ import java.beans.Expression
 object trees {
 
   trait FinalTypes extends operatorExpression.FinalTypes with polymorphism.FinalTypes {
-    type CreateLeafExpr <: Expression
+    type CreateLeaf <: Type
     type CreateNodeExpr <: Expression
   }
-  trait CreateLeafExpr[FT <: FinalTypes] extends any.Expression[FT] {
-    def getSelfCreateLeafExpr: finalTypes.CreateLeafExpr
+  trait CreateLeaf[FT <: FinalTypes] extends any.Type[FT] {
+    def getSelfCreateLeaf: finalTypes.CreateLeaf
   }
 
   trait CreateNodeExpr[FT <: FinalTypes] extends any.Expression[FT] {
@@ -19,15 +19,15 @@ object trees {
   }
   trait Factory[FT <: FinalTypes] extends operatorExpression.Factory[FT] with polymorphism.Factory[FT] {
     def createNodeExpr(): CreateNodeExpr[FT]
-    def createLeafExpr(): CreateLeafExpr[FT]
+    def createLeaf(): CreateLeaf[FT]
 
     def createNode(label: any.Expression[FT], children: Seq[any.Expression[FT]]): any.ApplyExpression[FT] =
       applyExpression(createNodeExpr(), label +: children)
 
     def createLeaf(tpe: any.Type[FT], value: any.Expression[FT]): any.ApplyExpression[FT] =
-      applyExpression(createLeafExpr(), Seq(typeReferenceExpression(tpe), value))
+      applyExpression(typeReferenceExpression(typeApplication(createLeaf(), Seq(tpe))), Seq(value))
 
-    implicit def convert(other: CreateLeafExpr[FT]): CreateLeafExpr[FT]
+    implicit def convert(other: CreateLeaf[FT]): CreateLeaf[FT]
     implicit def convert(other: CreateNodeExpr[FT]): CreateNodeExpr[FT]
   }
 }

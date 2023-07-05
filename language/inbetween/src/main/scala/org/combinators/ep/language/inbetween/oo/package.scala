@@ -449,4 +449,5 @@ package object oo {
     implicit def convert(other: SuperReferenceExpression[FT]): SuperReferenceExpression[FT]
     implicit def convert(other: ClassReferenceType[FT]): ClassReferenceType[FT]
   }
+
 }

@@ -393,12 +393,15 @@ trait TriviallyClean extends ApproachImplementationProvider {
     for {
       parameters <- forEach(dataTypeCase.attributes) { attribute =>
         if (attribute.tpe.isModelBase(domain)) {
-          Command.lift[ooParadigm.ConstructorContext, (paradigm.syntax.Name, paradigm.syntax.Type)]((names.mangle(names.instanceNameOf(attribute)), baseTypeInterface))
+          for {
+            name <- freshName(names.mangle(names.instanceNameOf(attribute)))
+          } yield (name, baseTypeInterface)
         } else {
           for {
             parameterType <- toTargetLanguageType(attribute.tpe)
             _ <- resolveAndAddImport(parameterType)
-          } yield (names.mangle(names.instanceNameOf(attribute)), parameterType)
+            name <- freshName(names.mangle(names.instanceNameOf(attribute)))
+          } yield (name, parameterType)
         }
       }
       _ <- setParameters(parameters)

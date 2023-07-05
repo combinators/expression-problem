@@ -13,7 +13,7 @@ import org.combinators.ep.generator.paradigm.{Apply, ToTargetLanguageType}
 import org.combinators.ep.language.inbetween.any.{AbstractSyntax, AnyParadigm, Method, Name, Project, Type}
 import org.combinators.ep.language.inbetween.oo.{Class, Constructor, OOParadigm}
 import org.combinators.ep.language.inbetween.imperative.Imperative
-import org.combinators.ep.language.inbetween.ffi.{Arithmetic, Booleans, Equals, Lists, Trees, Strings}
+import org.combinators.ep.language.inbetween.ffi.{Arithmetic, RealArithmetic, Booleans, Equals, Lists, Trees, Strings}
 import org.combinators.ep.language.inbetween.polymorphism.ParametricPolymorphism
 import org.combinators.ep.language.inbetween.polymorphism.generics.Generics
 
@@ -103,7 +103,7 @@ sealed class CodeGenerator(domainName: String) { cc =>
       val nameAsStrings = cu.name.map(name => factory.convert(name).toScala)
       val nameWithScalaExtension = nameAsStrings.init :+ (nameAsStrings.last + ".scala")
 
-      nameWithScalaExtension.foldLeft(Paths.get("src"))({ case (path, name) =>
+      nameWithScalaExtension.foldLeft(Paths.get("src", "main", "scala"))({ case (path, name) =>
         Paths.get(path.toString, name)
       })
     })).toSeq :+ treeLibrary
@@ -119,20 +119,7 @@ sealed class CodeGenerator(domainName: String) { cc =>
 
   val doubles = Arithmetic[Finalized.FinalTypes, factory.type, paradigm.type, Double](paradigm)
 
-  /*val realDoublesInMethod =
-    new RealArithmetic[MethodBodyCtxt, Double, paradigm.type](
-      paradigm,
-      TypeRep.Double,
-      PrimitiveType.doubleType(),
-      new DoubleLiteralExpr(_)
-    )
-  val realDoublesInConstructor =
-    new RealArithmetic[MethodBodyCtxt, Double, paradigm.type](
-      paradigm,
-      TypeRep.Double,
-      PrimitiveType.doubleType(),
-      new DoubleLiteralExpr(_)
-    )*/
+  val realDoubles = RealArithmetic[Finalized.FinalTypes, factory.type, paradigm.type, Double](paradigm)
 
   val ints = Arithmetic[Finalized.FinalTypes, factory.type, paradigm.type, Int](paradigm)
 
@@ -187,7 +174,7 @@ sealed class CodeGenerator(domainName: String) { cc =>
   def treeLibrary: FileWithPath = {
     FileWithPath(
       getClass.getResourceAsStream(s"/scala-code/org/combinators/ep/util/Trees.scala").readAllBytes(),
-      Paths.get("src", "org", "combinators", "ep", "util", "Trees.scala")
+      Paths.get("src", "main", "scala", "org", "combinators", "ep", "util", "Trees.scala")
     )
   }
 }

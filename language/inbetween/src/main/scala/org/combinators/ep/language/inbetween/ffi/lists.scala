@@ -7,17 +7,17 @@ object lists {
   trait FinalTypes extends operatorExpression.FinalTypes with polymorphism.FinalTypes {
 
   }
-  trait CreateListExpr[FT <: FinalTypes] extends any.Expression[FT]
+  trait CreateList[FT <: FinalTypes] extends any.Type[FT]
   trait ConsListOp[FT <: FinalTypes] extends operatorExpression.Operator[FT]
   trait HeadListOp[FT <: FinalTypes] extends operatorExpression.Operator[FT]
   trait TailListOp[FT <: FinalTypes] extends operatorExpression.Operator[FT]
   trait AppendListOp[FT <: FinalTypes] extends operatorExpression.Operator[FT]
 
   trait Factory[FT <: FinalTypes] extends operatorExpression.Factory[FT] with polymorphism.Factory[FT] {
-    def createListExpr(): CreateListExpr[FT]
+    def createList(): CreateList[FT]
 
     def createList(tpe: any.Type[FT], elems: Seq[any.Expression[FT]]): any.ApplyExpression[FT] =
-      applyExpression(createListExpr(), typeReferenceExpression(tpe) +: elems)
+      applyExpression(typeReferenceExpression(typeApplication(createList(), Seq(tpe))), elems)
 
     def consListOp(): ConsListOp[FT]
     def headListOp(): HeadListOp[FT]

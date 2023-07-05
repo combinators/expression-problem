@@ -282,7 +282,8 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
               tpe <- findClass(names.mangle(names.instanceNameOf(domain.findOperation(op).get)), ComponentNames.pkgCarrier, names.mangle(names.conceptNameOf(op)))
               _ <- resolveAndAddImport(tpe)
               finalTpe <- applyType(tpe, Seq(interfaceType))
-            } yield (names.mangle(names.instanceNameOf(op)), finalTpe)
+              name <- freshName(names.mangle(names.instanceNameOf(op)))
+            } yield (name, finalTpe)
           }
 
           _ <- setParameters(parameters)
@@ -497,7 +498,8 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
       import genericsParadigm.constructorCapabilities._
 
       for {
-        _ <- setParameters(Seq((ComponentNames.inner, signatureTpe)))
+        paramName <- freshName(ComponentNames.inner)
+        _ <- setParameters(Seq((paramName, signatureTpe)))
         arguments <- getArguments()
         _ <- forEach(arguments) { arg =>
           for {
@@ -1060,7 +1062,8 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
           params <- forEach(dt.attributes) { att => {
             for {
               tpe <- toTargetLanguageType(att.tpe)
-            } yield (names.mangle(att.name), tpe)
+              name <- freshName(names.mangle(att.name))
+            } yield (name, tpe)
           }}
           _ <- setParameters((ComponentNames.algebraAtt, appliedSignatureTpe) +: params)
           arguments <- getArguments()

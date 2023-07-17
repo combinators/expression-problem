@@ -143,6 +143,8 @@ package object scala {
   trait Expression[FT <: FinalTypes] extends oo.Expression[FT] with Factory[FT] {
     def toScala: String
 
+    def isTypeReferenceExpression: Boolean = false
+
     def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): any.Expression[FT]
   }
 
@@ -528,7 +530,6 @@ package object scala {
             if (declaredField.init.isDefined) {
               (decls :+ convert(declaredField).toScala, remainingInitializers)
             } else {
-              val x: Seq[oo.Field[FT]] = Seq.empty
               def extractFirstDeclaration(decls: Seq[(any.Name[FT], any.Expression[FT])]): (Seq[(any.Name[FT], any.Expression[FT])], Option[any.Expression[FT]]) =
                 decls match {
                   case (name, init) +: rest if name == declaredField.name =>
@@ -610,6 +611,8 @@ package object scala {
 
   trait TypeReferenceExpression[FT <: FinalTypes] extends polymorphism.TypeReferenceExpression[FT] with Expression[FT] with Factory[FT] {
     def toScala: String = tpe.toScala
+
+    override def isTypeReferenceExpression: Boolean = true
 
     def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): polymorphism.TypeReferenceExpression[FT] = {
       copy(
@@ -706,7 +709,12 @@ package object scala {
   }
 
   trait ApplyExpression[FT <: FinalTypes] extends Expression[FT] with any.ApplyExpression[FT] with Factory[FT] {
-    def toScala : String = s"${function.toScala}(${arguments.map(_.toScala).mkString(",")})"
+    def toScala : String = {
+      val (typeArguments, regularArguments) = arguments.partition(_.isTypeReferenceExpression)
+      val tyArgs = if (typeArguments.isEmpty) "" else typeArguments.map(_.toScala).mkString("[",  ", ", "]")
+      val args = if (regularArguments.isEmpty) "" else regularArguments.map(_.toScala).mkString("(",  ", ", ")")
+      s"${function.toScala}${tyArgs}${args}"
+    }
 
     def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): any.ApplyExpression[FT] = {
       copy(

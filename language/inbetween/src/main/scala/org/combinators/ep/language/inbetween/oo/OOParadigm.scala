@@ -4,7 +4,7 @@ import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, FileWithPath, Understands, paradigm}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
-import org.combinators.ep.generator.paradigm.{AddBlockDefinitions, AddClass, AddConstructor, AddField, AddImplemented, AddImport, AddMethod, AddParent, AddTypeLookup, Apply, CastObject, Debug, FindClass, FreshName, GetArguments, GetConstructor, GetField, GetMember, InitializeField, InitializeParent, InstanceOfType, InstantiateObject, Reify, RemoveMethod, ResolveImport, SelfReference, SetAbstract, SetInterface, SetParameters, SetStatic, SuperReference, ToTargetLanguageType, ObjectOriented => OOP}
+import org.combinators.ep.generator.paradigm.{AddBlockDefinitions, AddClass, AddConstructor, AddField, AddImplemented, AddImport, AddMethod, AddParent, AddTypeLookup, Apply, CastObject, Debug, FindClass, FreshName, GetArguments, GetConstructor, GetField, GetMember, InitializeField, InitializeParent, InstanceOfType, InstantiateObject, Reify, RemoveMethod, ResolveImport, SelfReference, SetAbstract, SetInterface, SetOverride, SetParameters, SetStatic, SuperReference, ToTargetLanguageType, ObjectOriented => OOP}
 import org.combinators.ep.language.inbetween.any
 
 trait OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends OOP {
@@ -252,6 +252,11 @@ trait OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends OOP {
     implicit val canSetStaticInMethod: Understands[any.Method[FT], SetStatic] = new Understands[any.Method[FT], SetStatic] {
       def perform(context: any.Method[FT], command: SetStatic): (any.Method[FT], Unit) = {
         (factory.convert(context).copyAsClsMethod(isStatic = true), ())
+      }
+    }
+    implicit val canSetOverrideInMethod: Understands[any.Method[FT], SetOverride] = new Understands[any.Method[FT], SetOverride] {
+      def perform(context: any.Method[FT], command: SetOverride): (any.Method[FT], Unit) = {
+        (factory.convert(context).copyAsClsMethod(isOverride = true), ())
       }
     }
     implicit val canSelfReferenceInMethod: Understands[any.Method[FT], SelfReference[Expression]] = new Understands[any.Method[FT], SelfReference[Expression]] {

@@ -291,14 +291,8 @@ trait CoCoClean extends ApproachImplementationProvider {
     
     allDataTypeCases.foldLeft(Map.empty[DataTypeCase, Set[Operation]]) { (resultMap, tpeCase) =>
       // Remembers all operations that are already supported
-      val presentOperations = domain.former.flatMap(ancestor => {
-        if (ancestor.supports(tpeCase)) {
-          ancestor.flatten.ops.toSet
-        } else {
-          Set.empty[Operation]
-        }
-      })
-      
+      val presentOperations = domain.operationsPresentEarlier(tpeCase)
+
       val overwrittenOperations = allOperations.filter { operation =>
         // Are we applicable based on EIP? Tells us in which domain EIP is applicable
         val lastOverwritingDomain =
@@ -382,6 +376,11 @@ trait CoCoClean extends ApproachImplementationProvider {
     import ooParadigm.methodBodyCapabilities._
     for {
       _ <- setOperationMethodSignature(domain, finalizedType, operation)
+      _ <- if (domain.operationsPresentEarlier(dataTypeCase).contains(operation)) {
+          setOverride()
+        } else {
+          Command.skip[paradigm.MethodBodyContext]
+        }
       arguments <- getArguments()
       self <- selfReference()
       attributes <- forEach(dataTypeCase.attributes) { attribute =>
@@ -531,6 +530,7 @@ trait CoCoClean extends ApproachImplementationProvider {
     import ooParadigm.methodBodyCapabilities._
     for {
       _ <- setConvertMethodSignature(domain, finalizedType)
+      _ <- setOverride()
       arguments <- getArguments()
       toConvert = arguments.head._3
       getSelfMethod <- getMember(toConvert, ComponentNames.getSelfMethod)

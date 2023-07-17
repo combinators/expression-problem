@@ -240,6 +240,11 @@ trait TriviallyClean extends ApproachImplementationProvider {
     import ooParadigm.methodBodyCapabilities._
     for {
       _ <- setOperationMethodSignature(domain, operation)
+      _ <- if (domain.operationsPresentEarlier(dataTypeCase).contains(operation)) {
+          setOverride()
+        } else {
+          Command.skip[paradigm.MethodBodyContext]
+        }
       argumentsRaw <- getArguments()
       baseInterfaceType <- mostSpecificBaseInterfaceType(domain)
       arguments <- forEach(argumentsRaw.zip(operation.parameters)) { case (arg,param) =>
@@ -258,16 +263,16 @@ trait TriviallyClean extends ApproachImplementationProvider {
         } yield (attribute, getterCall)
       }
       receivedRequest =
-      ReceivedRequest(
-        onType = domain.baseDataType,
-        tpeCase = dataTypeCase,
-        selfReference = self,
-        attributes = attributes.toMap,
-        request = Request(
-          op = operation,
-          arguments = operation.parameters.zip(arguments).toMap
+        ReceivedRequest(
+          onType = domain.baseDataType,
+          tpeCase = dataTypeCase,
+          selfReference = self,
+          attributes = attributes.toMap,
+          request = Request(
+            op = operation,
+            arguments = operation.parameters.zip(arguments).toMap
+          )
         )
-      )
       result <- evolutionImplementationProvider.logic(this)(receivedRequest)
     } yield result
   }

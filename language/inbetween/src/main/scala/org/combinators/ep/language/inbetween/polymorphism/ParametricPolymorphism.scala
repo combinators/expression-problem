@@ -20,7 +20,8 @@ trait ParametricPolymorphism[FT <: FinalTypes, FactoryType <: Factory[FT]] exten
           val emptyTypeParam = factory.typeParameter(command.name)
           val (tpeParam, _) = Command.runGenerator(command.spec, emptyTypeParam)
           val currentMethod = factory.convert(context)
-          (currentMethod.copyAsTypeParamMethod(typeParameters = currentMethod.typeParameters :+ tpeParam), ())
+          val withTypeParameter = currentMethod.copyAsTypeParamMethod(typeParameters = currentMethod.typeParameters :+ tpeParam)
+          (withTypeParameter, ())
         }
       }
     override implicit val canGetTypeArgumentsInMethod: Understands[any.Method[FT], GetTypeArguments[any.Type[FT]]] =

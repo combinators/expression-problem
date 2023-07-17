@@ -71,6 +71,10 @@ case class SetStatic() extends Command {
   type Result = Unit
 }
 
+case class SetOverride() extends Command {
+  type Result = Unit
+}
+
 case class SetInterface() extends Command {
   type Result = Unit
 }
@@ -298,6 +302,10 @@ trait ObjectOriented {
     implicit val canSetStaticInMethod: Understands[MethodBodyContext, SetStatic]
     def setStatic(): Generator[MethodBodyContext, Unit] =
       AnyParadigm.capability(SetStatic())
+
+    implicit val canSetOverrideInMethod: Understands[MethodBodyContext, SetOverride]
+    def setOverride(): Generator[MethodBodyContext, Unit] =
+      AnyParadigm.capability(SetOverride())
 
     implicit val canSelfReferenceInMethod: Understands[MethodBodyContext, SelfReference[Expression]]
     def selfReference(): Generator[MethodBodyContext, Expression] =

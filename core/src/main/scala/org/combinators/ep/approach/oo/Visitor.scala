@@ -238,7 +238,7 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
         visitorType  <- applyType (visitorClassType, args)
 
         visitParam <- freshName(names.mangle(visitorParameter))
-        _ <- setParameters(Seq((visitParam, visitorType)))      // a pair (name,type) of only one sequence
+        _ <- setParameters(Seq((visitParam, visitorType))) // a pair (name,type) of only one sequence
       } yield ()
     }
 
@@ -255,11 +255,11 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
         import paradigm.methodBodyCapabilities._
         import ooParadigm.methodBodyCapabilities._
 
+        import polymorphics.methodBodyCapabilities._
         for {
           // start from the accept signature and add a method body.
           _ <- makeAcceptSignatureWithType()
           args <- getArguments()   // get name, type, expression
-
           // invoke visit method on 'v' with 'this' as argument
           visitFunction <- getMember(args.head._3, visit)
           self <- selfReference()

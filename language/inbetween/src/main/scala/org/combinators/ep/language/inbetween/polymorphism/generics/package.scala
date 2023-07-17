@@ -90,6 +90,22 @@ package object generics {
   trait Method[FT <: FinalTypes] extends pp.Method[FT] with oo.Method[FT] with Factory[FT] {
 
 
+    override def copy(
+      name: any.Name[FT] = this.name,
+      imports: Set[any.Import[FT]] = this.imports,
+      statements: Seq[any.Statement[FT]] = this.statements,
+      returnType: Option[any.Type[FT]] = this.returnType,
+      parameters: Seq[(any.Name[FT], any.Type[FT])] = this.parameters,
+      typeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = this.typeLookupMap
+    ): any.Method[FT] =
+      copyAsGenericMethod(
+        name = name,
+        imports = imports,
+        statements = statements,
+        returnType = returnType,
+        parameters = parameters,
+        typeLookupMap = typeLookupMap)
+
     override def copyAsTypeParamMethod(name: any.Name[FT] = this.name,
                                        imports: Set[any.Import[FT]] = this.imports,
                                        statements: Seq[any.Statement[FT]] = this.statements,

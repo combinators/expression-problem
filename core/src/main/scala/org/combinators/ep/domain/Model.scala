@@ -296,6 +296,19 @@ class GenericModel(val name:String,
     }
   }
 
+  /**
+   * Return the operations available for the given datatype before this evolution. 
+   */
+  def operationsPresentEarlier(tpeCase: DataTypeCase): Set[Operation] = {
+    former.flatMap(ancestor => {
+      if (ancestor.supports(tpeCase)) {
+        ancestor.flatten.ops.toSet
+      } else {
+        Set.empty[Operation]
+      }
+    }).toSet
+  }
+
   override def toString:String = {
     "GenericModel " + name + "[" + typeCases.map(_.name).mkString(",")+ "," + ops.map(_.name).mkString(",") +
       " former:" + former.map(_.name).mkString(",") + "]"

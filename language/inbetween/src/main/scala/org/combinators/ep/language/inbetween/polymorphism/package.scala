@@ -51,7 +51,13 @@ package object polymorphism {
                        parameters: Seq[(any.Name[FT], any.Type[FT])] = this.parameters,
                        typeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = this.typeLookupMap
                      ): any.Method[FT] =
-      typeParamMethod(name, imports, statements, returnType, this.typeParameters, parameters, typeLookupMap)
+      copyAsTypeParamMethod(
+        name = name,
+        imports = imports,
+        statements = statements,
+        returnType = returnType,
+        parameters = parameters,
+        typeLookupMap = typeLookupMap)
 
     def copyAsTypeParamMethod(
                        name: any.Name[FT] = this.name,

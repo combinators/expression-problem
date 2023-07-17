@@ -662,6 +662,18 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
           }
         }
 
+      val canSetOverrideInMethod: Understands[MethodBodyContext, SetOverride] =
+        new Understands[MethodBodyContext, SetOverride] {
+          def perform(
+            context: MethodBodyContext,
+            command: SetOverride
+          ): (MethodBodyContext, Unit) = {
+            val newMethod = context.method.clone()
+            newMethod.addAnnotation("Override")
+            (context.copy(method = newMethod), ())
+          }
+        }
+
       val canSelfReferenceInMethod: Understands[MethodBodyContext, SelfReference[Expression]] =
         new Understands[MethodBodyContext, SelfReference[Expression]] {
           def perform(

@@ -516,8 +516,9 @@ package object scala {
       val supers = (ofClass.parents ++ ofClass.implemented)
       superInitialization match {
         case Some((parent, parentArgs)) =>
-          val rest = supers.filter(sp => sp != parent).map(_.toScala).mkString(" with ")
-          s"extends ${parent.toScala}(${parentArgs.map(_.toScala).mkString(", ")}) ${rest}"
+          val rest = supers.filter(sp => sp != parent).map(_.toScala)
+          val withRest = if (rest.isEmpty) "" else rest.mkString("with ", " with ", "")
+          s"extends ${parent.toScala}(${parentArgs.map(_.toScala).mkString(", ")}) ${withRest}"
         case None =>
           if (supers.nonEmpty) supers.map(_.toScala).mkString("extends ", " with ", "") else ""
       }
@@ -579,7 +580,7 @@ package object scala {
 
   trait Field[FT <: FinalTypes] extends oo.Field[FT] with Factory[FT] {
     def toScala: String = {
-      val initExp = init.map(exp => s" = ${exp.toScala}").getOrElse(" = null")
+      val initExp = init.map(exp => s" = ${exp.toScala}").getOrElse(s" = null.asInstanceOf[${tpe.toScala}]")
       s"var ${name.toScala}: ${tpe.toScala}${initExp}"
     }
 

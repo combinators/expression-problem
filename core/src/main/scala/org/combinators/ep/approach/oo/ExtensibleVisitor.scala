@@ -653,8 +653,11 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
       }
 
     val allDependentOps = domain.flatten.typeCases.distinct.flatMap(tpeCase => {
-      domainSpecific.dependencies(op, tpeCase).filter(op => domain.findOperation(op).isDefined)
-    }).distinct
+      //domainSpecific.dependencies(op, tpeCase).filter(op => domain.findOperation(op).isDefined)
+      domainSpecific.evolutionSpecificDependencies(op, tpeCase).toSeq.sortWith { case ((d1, _), (d2, _)) =>
+        d1.before(d2)
+      }.lastOption.map(_._2).getOrElse(Set.empty)
+     }).distinct
 
     // get all formers that are NOT latest visitors, and then take those operations and throw out those that are already supported...
     val otherBranchOps = if (previous.isEmpty) {

@@ -33,11 +33,6 @@ sealed class M3I1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
         } yield ()
       }
 
-      /** Nothing special here */
-      override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
-        Set.empty
-      }
-
       override def applicableIn
         (forApproach:  AIP[paradigm.type], onRequest: PotentialRequest, currentModel:GenericModel): Option[GenericModel] = {
 

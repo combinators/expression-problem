@@ -31,11 +31,11 @@ object Q1 {
       }
 
       /** AsTree depends upon Identifier. */
-      override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
+      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
         if (op == Operation.asTree) {
-          Set(math.Q1.Identifier)
+          Some(Set(math.Q1.Identifier))
         } else {
-          Set.empty
+          None
         }
       }
 

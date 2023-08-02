@@ -25,11 +25,6 @@ object X2X3 {
         } yield ()
       }
 
-      /** Nothing special here */
-      override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
-        Set.empty
-      }
-
       override def applicableIn
       (forApproach:  AIP[paradigm.type])
       (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression],currentModel:GenericModel): Option[GenericModel] = {

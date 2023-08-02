@@ -35,13 +35,13 @@ sealed class K2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
       override val model = math.K2.getModel
 
       /** Simplify depends upon having a working eval. */
-      override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
+      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
         dt match {
-          case math.M0.Lit => Set.empty
+          case math.M0.Lit => Some(Set.empty)
           case _  => {
             op match {
-              case math.K2.Simplify => Set(math.M0.Eval)
-              case _ => Set.empty
+              case math.K2.Simplify => Some(Set(math.M0.Eval))
+              case _ => None
             }
           }
         }

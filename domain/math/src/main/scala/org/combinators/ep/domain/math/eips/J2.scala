@@ -33,11 +33,11 @@ object J2 {
       }
 
       /** Equals depends upon asTree method */
-      override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
+      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
         op match {
-          case math.J2.Eql => math.J2.isOps(model.flatten.typeCases).toSet
-          case op if math.J2.isOps(model.flatten.typeCases).contains(op) => Set(math.J2.Eql)
-          case _ => Set.empty
+          case math.J2.Eql => Some(math.J2.isOps(model.flatten.typeCases).toSet)
+          case op if math.J2.isOps(model.flatten.typeCases).contains(op) => Some(Set(math.J2.Eql))
+          case _ => None
         }
       }
 

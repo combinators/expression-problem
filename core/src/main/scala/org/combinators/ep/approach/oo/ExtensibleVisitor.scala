@@ -583,6 +583,30 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
     } yield result
   }
 
+  def dependentOperationsOf(
+    domain: GenericModel,
+    op: Operation,
+    domainSpecific: EvolutionImplementationProvider[this.type],
+  ): Set[Operation] = {
+    val allTpeCases = domain.flatten.typeCases.distinct
+    val allDependencies = allTpeCases.map(tpeCase => domainSpecific.evolutionSpecificDependencies(op, tpeCase))
+    val combinedDependencies = allDependencies.foldLeft(Map.empty[GenericModel, Set[Operation]]){ case (combined, singular) =>
+      val allDomainsWithDependencies = singular.keySet ++ combined.keySet
+      allDomainsWithDependencies.foldLeft(Map.empty[GenericModel, Set[Operation]]){ case (newCombinedMap, currentDomain) =>
+        newCombinedMap + (currentDomain -> (singular.getOrElse(currentDomain, Set.empty) ++ combined.getOrElse(currentDomain, Set.empty)))
+      }
+    }
+    val priorDomainsDeclaringDependencies = combinedDependencies.keySet.filter(dependencyDomain => dependencyDomain.beforeOrEqual(domain))
+    if (priorDomainsDeclaringDependencies.isEmpty) {
+      Set.empty
+    } else {
+      val lastPriorDomainDeclaringDependencies = priorDomainsDeclaringDependencies.max((d1: GenericModel, d2: GenericModel) =>
+        if (d1.before(d2)) -1 else if (d2.before(d1)) 1 else 0
+      )
+      combinedDependencies(lastPriorDomainDeclaringDependencies)
+    }
+  }
+
   /** Each operation is placed in its own class, with a 'visit' method for newly defined types.
    *
    * {{{
@@ -652,12 +676,7 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
         } yield possibleParent
       }
 
-    val allDependentOps = domain.flatten.typeCases.distinct.flatMap(tpeCase => {
-      //domainSpecific.dependencies(op, tpeCase).filter(op => domain.findOperation(op).isDefined)
-      domainSpecific.evolutionSpecificDependencies(op, tpeCase).toSeq.sortWith { case ((d1, _), (d2, _)) =>
-        d1.before(d2)
-      }.lastOption.map(_._2).getOrElse(Set.empty)
-     }).distinct
+    val allDependentOps = dependentOperationsOf(domain, op, domainSpecific)
 
     // get all formers that are NOT latest visitors, and then take those operations and throw out those that are already supported...
     val otherBranchOps = if (previous.isEmpty) {
@@ -694,7 +713,7 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
       // most recently defined model with data types. When trying to call another operation, you need.
       // might have to go backward in time to find the model that declared that operation or had
       // an intervening visitor declaration.
-      _ <- forEach((allDependentOps ++ otherBranchOps ++ domain.ops :+ op).distinct) { dependentOp =>
+      _ <- forEach((allDependentOps.toSeq/* ++ otherBranchOps ++ domain.ops */ :+ op).distinct) { dependentOp =>
           val modelsToUse = latestModelDefiningOperation(domain, dependentOp)
           val modelToUse = modelsToUse.head
 

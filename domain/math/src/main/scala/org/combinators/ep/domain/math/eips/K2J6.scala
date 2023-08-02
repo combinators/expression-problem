@@ -50,11 +50,6 @@ sealed class K2J6[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
         } yield ()
       }
 
-      /** Eql dependencies propagate. */
-      override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
-        Set.empty
-      }
-
       // TODO: Why isn't PrettyP in this applicable check, since it appears below in the applicableIn. Because it was there before the branching,
       // TODO: and so datatypes know what to do.
       def applicable

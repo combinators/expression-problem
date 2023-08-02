@@ -30,10 +30,10 @@ object J5 {
       }
 
       /** Equals depends upon asTree method */
-      override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
+      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
         op match {
-          case math.J5.Equals => Set(Operation.asTree)
-          case _ => Set.empty
+          case math.J5.Equals => Some(Set(Operation.asTree))
+          case _ => None
         }
       }
 

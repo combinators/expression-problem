@@ -33,10 +33,10 @@ object N1 {
       }
 
       /** PowBy depends on Eval. */
-      override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
+      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
         op match {
-          case math.N1.PowBy => Set(math.M0.Eval)
-          case _ => Set.empty
+          case math.N1.PowBy => Some(Set(math.M0.Eval))
+          case _ => None
         }
       }
 

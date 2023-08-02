@@ -30,8 +30,6 @@ object J8 {
         } yield ()
       }
 
-      override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = Set.empty
-
       def applicable
         (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
         (potentialRequest.op == math.J8.Height) &&

@@ -28,11 +28,11 @@ object M5 {
       }
 
       /** AsTree depends upon Identifier. */
-      override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
+      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
         if (op == Operation.asTree) {
-          Set(math.M5.Identifier)
+          Some(Set(math.M5.Identifier))
         } else {
-          Set.empty
+          None
         }
       }
 

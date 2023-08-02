@@ -30,12 +30,12 @@ object M6 {
       }
 
       /** Equals depends upon asTree method */
-      override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
+      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
         op match {
-          case math.M6.Equals => Set(Operation.asTree)
-          case math.M6.Eql => math.M6.isOps(model.flatten.typeCases).toSet
-          case op if math.M6.isOps(model.flatten.typeCases).contains(op) => Set(math.M6.Eql)
-          case _ => Set.empty
+          case math.M6.Equals => Some(Set(Operation.asTree))
+          case math.M6.Eql => Some(math.M6.isOps(model.flatten.typeCases).toSet)
+          case op if math.M6.isOps(model.flatten.typeCases).contains(op) => Some(Set(math.M6.Eql))
+          case _ => None
         }
       }
 

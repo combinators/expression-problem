@@ -32,11 +32,6 @@ object J1 {
         } yield ()
       }
 
-      /** Doesn't need Eval, because knows about Lit and how to get values directly. */
-      override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
-        Set.empty
-      }
-
       def applicable
       (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
         (potentialRequest.op == math.J1.MultBy && Set(math.M0.Lit, math.M0.Add, math.J1.Sub).contains(potentialRequest.tpeCase)) ||

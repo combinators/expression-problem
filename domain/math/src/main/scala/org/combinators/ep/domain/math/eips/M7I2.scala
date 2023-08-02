@@ -49,11 +49,11 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
       }
 
       /** Eql dependencies propagate. */
-      override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
+      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
         op match {
-          case math.M6.Eql => math.M6.isOps(model.flatten.typeCases).toSet
-          case op if math.M6.isOps(model.flatten.typeCases).contains(op) => Set(math.M6.Eql)
-          case _ => Set.empty
+          case math.M6.Eql => Some(math.M6.isOps(model.flatten.typeCases).toSet)
+          case op if math.M6.isOps(model.flatten.typeCases).contains(op) => Some(Set(math.M6.Eql))
+          case _ => None
         }
       }
 

@@ -40,10 +40,10 @@ trait EvolutionImplementationProvider[-AIP <: ApproachImplementationProvider] {
   def applicable(forApproach: AIP, onRequest: PotentialRequest): Boolean
 
   /** Can vary by operation and data type. */
-  def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = Set.empty
+  def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = None
 
   def evolutionSpecificDependencies(op: Operation, dt: DataTypeCase): Map[GenericModel, Set[Operation]] =
-    Map(model -> dependencies(op, dt))
+    dependencies(op, dt).map(deps => Map(model -> deps)).getOrElse(Map.empty)
 
   /** Default logic can be defined for any operation that suggests the potential for Write Once Use Anywhere.
    * If we get here, no generic logic was defined. */
@@ -128,8 +128,14 @@ object EvolutionImplementationProvider {
         // bias is to use the first
         override val model = first.model
 
-        override def dependencies(op: Operation, dt: DataTypeCase): Set[Operation] =
-          first.dependencies(op, dt) ++ second.dependencies(op, dt)
+        override def dependencies(op: Operation, dt: DataTypeCase): Option[Set[Operation]] = {
+          (first.dependencies(op, dt), second.dependencies(op, dt)) match {
+            case (None, None) => None
+            case (Some(deps1), Some(deps2)) => Some(deps1 ++ deps2)
+            case (Some(deps1), _) => Some(deps1)
+            case (_, deps) => deps
+          }
+        }
 
         /** Ensure dependencies are union'd through composition. */
         override def evolutionSpecificDependencies(op:Operation, dt:DataTypeCase) : Map[GenericModel, Set[Operation]] =

@@ -33,18 +33,13 @@ object K1 {
         } yield ()
       }
 
-      override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
-        // cannot forget that isXXX operations are dependencies (Extensible Visitor identified this oversight)
-        val initial = math.J2.isOps(Seq(math.K1.Power)).toSet
-
-        val new_ones = op match {
-          case math.J2.Eql => math.J2.isOps(model.flatten.typeCases).toSet
-          case op if math.J2.isOps(Seq(dt)).contains(op) => Set(math.J2.Eql)
-          case op if Seq(math.J1.MultBy).contains(op) => Set(math.M0.Eval)    // needed for extensible visitor for K1 for some reason
-          case _ => Set.empty
+      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
+        op match {
+          case math.J2.Eql => Some(math.J2.isOps(model.flatten.typeCases).toSet)
+          case op if math.J2.isOps(Seq(dt)).contains(op) => Some(Set(math.J2.Eql))
+          case op if Seq(math.J1.MultBy).contains(op) => Some(Set(math.M0.Eval))    // needed for extensible visitor for K1 for some reason
+          case _ => None
         }
-
-        initial ++ new_ones
       }
 
       def applicable

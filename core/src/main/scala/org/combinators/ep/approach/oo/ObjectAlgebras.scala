@@ -288,9 +288,9 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
 
           _ <- setParameters(parameters)
           arguments <- getArguments()
-          _ <- forEach (arguments) { arg =>
+          _ <- forEach (arguments.zip(domain.flatten.ops.map(op => names.mangle(names.instanceNameOf(op))))) { case (arg, att) =>
             for {
-              _ <- initializeField(arg._1, arg._3)
+              _ <- initializeField(att, arg._3)
             } yield ()
           }
         } yield ()
@@ -501,9 +501,9 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
         paramName <- freshName(ComponentNames.inner)
         _ <- setParameters(Seq((paramName, signatureTpe)))
         arguments <- getArguments()
-        _ <- forEach(arguments) { arg =>
+        _ <- forEach(arguments.zip(Seq(ComponentNames.inner))) { case (arg, att) =>
           for {
-            _ <- initializeField(arg._1, arg._3)
+            _ <- initializeField(att, arg._3)
           } yield ()
         }
 
@@ -551,7 +551,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
         carrierTypeParam <- freshName(ComponentNames.returnTypeParameter)
 
         // might pull up dependent operation (i.e., m6 and isPower) which is not defined...
-        diTypes <- forEach(domain.flatten.typeCases.flatMap(dt => domainSpecific.dependencies(op, dt).toSeq).distinct.filter(fop => domain.findOperation(fop).isDefined)) { dop => {
+        diTypes <- forEach(domain.flatten.typeCases.flatMap(dt => domainSpecific.dependencies(op, dt).getOrElse(Seq.empty).toSeq).distinct.filter(fop => domain.findOperation(fop).isDefined)) { dop => {
           for {
             ditype <- findClass(names.mangle(names.instanceNameOf(domain.findOperation(dop).get)), ComponentNames.pkgCarrier, names.mangle(names.conceptNameOf(dop)))
             _ <- resolveAndAddImport(ditype)
@@ -1065,11 +1065,12 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
               name <- freshName(names.mangle(att.name))
             } yield (name, tpe)
           }}
-          _ <- setParameters((ComponentNames.algebraAtt, appliedSignatureTpe) +: params)
+          attParamName <- freshName(ComponentNames.algebraAtt)
+          _ <- setParameters((attParamName, appliedSignatureTpe) +: params)
           arguments <- getArguments()
-          _ <- forEach(arguments) { arg =>
+          _ <- forEach(arguments.zip(ComponentNames.algebraAtt +: dt.attributes.map(att => names.mangle(att.name)))) { case (arg, att) =>
             for {
-              _ <- initializeField(arg._1, arg._3)
+              _ <- initializeField(att, arg._3)
             } yield ()
           }
         } yield ()
@@ -1083,7 +1084,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
         carrierTypeParam <- freshName(ComponentNames.returnTypeParameter)
 
         // might not exist? must filter as well?
-        diTypes <- forEach(domainSpecific.dependencies(op, dt).toSeq.distinct.filter(fop => domain.findOperation(fop).isDefined)) { dop => {
+        diTypes <- forEach(domainSpecific.dependencies(op, dt).getOrElse(Seq.empty).toSeq.distinct.filter(fop => domain.findOperation(fop).isDefined)) { dop => {
           for {
             ditype <- findClass(names.mangle(names.instanceNameOf(domain.findOperation(dop).get)), ComponentNames.pkgCarrier, names.mangle(names.conceptNameOf(dop)))
             _ <- resolveAndAddImport(ditype)

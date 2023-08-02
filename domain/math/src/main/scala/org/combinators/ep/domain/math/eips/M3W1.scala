@@ -46,12 +46,7 @@ sealed class M3W1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
           _ <- w1Provider.initialize(forApproach)
         } yield ()
       }
-
-      /** Nothing special here */
-      override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
-        Set.empty
-      }
-
+      
       // TODO: Why isn't PrettyP in this applicable check, since it appears below in the applicableIn. Because it was there
       // TODO: before the branching,
       // TODO: and so datatypes know what to do.

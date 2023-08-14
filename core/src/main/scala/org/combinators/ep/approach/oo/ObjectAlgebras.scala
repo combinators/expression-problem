@@ -78,7 +78,11 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
     if (model.isBottom) { return model }
 
     // contained here? Use it
-    model.toSeq.find(p => newDataTypeCasesWithNewOperations(domainSpecific, p).flatMap(_._2).toSeq.contains(op)).get
+    model.toSeq.find(p => {
+      val isMergePointSupportingTheCurrentOperation = p.former.size > 1 && p.supports(op)
+      val overridesTheImplementation = newDataTypeCasesWithNewOperations(domainSpecific, p).flatMap(_._2).toSeq.contains(op)
+      isMergePointSupportingTheCurrentOperation || overridesTheImplementation
+    }).get
   }
 
   // find carrier to use. Note that M3 goes back to M2 (likely because that is when last operation was defined)
@@ -458,15 +462,9 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
             result <- instantiateObject(instGeneric, inner +: processedAtts)
           } yield result
         } else {
-          // when accessing through older algebra, access
-          val definedMaybe =
-            domainSpecific.applicableIn(
-              forApproach = this,
-              potentialRequest = PotentialRequest(domain.baseDataType, tpe, op),
-              currentModel = domain
-            )
-          val definedPossible = if (definedMaybe.nonEmpty) { definedMaybe.get } else { domain.findTypeCase(tpe).get }
-          val defined = definedPossible.later(domain.findOperation(op).get)   // CANNOT be earlier than operation was defined... TODO: HACK
+          val defined = domain.former.collectFirst { case dom if dom.supports(op) && dom.supports(tpe) =>
+            findDomainToUse(dom, domainSpecific, op)
+          }.get
           for {
 
             selfRef <- selfReference()
@@ -507,17 +505,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
           } yield ()
         }
 
-        _ <- forEach(domain.flatten.typeCases.flatMap(dte => {
-          val newOperations = newDataTypeCasesWithNewOperations(domainSpecific, domain).getOrElse(dte, Set.empty)
-          val latest = if (newOperations.contains(op)) {
-            domain
-          } else {
-            domainSpecific.applicableIn(this, PotentialRequest(domain.baseDataType, dte, op), domain).get
-          }
-
-          // CANNOT go earlier than when operation is defined.
-          Seq(latest.later(domain.findOperation(op).get))
-        }).distinct) {
+        _ <- forEach(domain.former.collect { case dom if dom.supports(op) => findDomainToUse(dom, domainSpecific, op) }.distinct) {
           dom => {
             for {
               _ <- if (!dom.equals(domain)) {  // only if not the same
@@ -574,17 +562,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
 
         // if in MERGE case, need to add oldNNN for each operation that was defined on a previous branch, we need
         // oldNNN to record that branch
-        _ <- forEach(domain.flatten.typeCases.flatMap(dte => {
-              // Find if you have new implementation, otherwise find where the newest one was.
-              val newOperations = newDataTypeCasesWithNewOperations(domainSpecific, domain).getOrElse(dte, Set.empty)
-              val latest = if (newOperations.contains(op)) {
-                domain
-              } else {
-                domainSpecific.applicableIn(this, PotentialRequest(domain.baseDataType, dte, op), domain).get
-              }
-              // CANNOT go earlier than when operation is defined.
-              Seq(latest.later(domain.findOperation(op).get))
-            }).distinct) {
+        _ <- forEach(domain.former.collect { case dom if dom.supports(op) => findDomainToUse(dom, domainSpecific, op) }.distinct) {
             dom => {
               for {
                     // m3.algebra.PrettyPrint
@@ -874,13 +852,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
 
     allDataTypeCases.foldLeft(Map.empty[DataTypeCase, Set[Operation]]) { (resultMap, tpeCase) =>
       // Remembers all operations that are already supported
-      val presentOperations = domain.former.flatMap(ancestor => {
-        if (ancestor.supports(tpeCase)) {
-          ancestor.flatten.ops.toSet
-        } else {
-          Set.empty[Operation]
-        }
-      })
+      val presentOperations = domain.operationsPresentEarlier(tpeCase)
 
       val overwrittenOperations = allOperations.filter { operation =>
         // Are we applicable based on EIP? Tells us in which domain EIP is applicable

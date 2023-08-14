@@ -61,11 +61,12 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
       // TODO: and so datatypes know what to do.
       def applicable
       (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        potentialRequest.op.tags.contains(math.M6.IsOp) || (
-        (Set(math.M7.PowBy,math.M6.Equals,math.M6.Eql,Operation.asTree,math.M5.Identifier,math.M4.Collect,math.M4.Simplify).contains(potentialRequest.op) &&
+        potentialRequest.op.tags.contains(math.M6.IsOp) ||
+        (potentialRequest.op == math.M7.PowBy) ||
+        (Set(math.M6.Equals,math.M6.Eql,Operation.asTree,math.M5.Identifier,math.M4.Collect,math.M4.Simplify).contains(potentialRequest.op) &&
           Set(math.I2.Power).contains(potentialRequest.tpeCase)) ||
-          (Set(math.I1.MultBy).contains(potentialRequest.op) &&
-            Set(math.M3.Divd, math.M3.Mult, math.M3.Neg).contains(potentialRequest.tpeCase)))
+        (Set(math.I1.MultBy).contains(potentialRequest.op) &&
+          Set(math.M3.Divd, math.M3.Mult, math.M3.Neg).contains(potentialRequest.tpeCase))
       }
 
       override def applicableIn(forApproach:  AIP[paradigm.type], onRequest: PotentialRequest,currentModel:GenericModel): Option[GenericModel] = {
@@ -99,7 +100,7 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
           case (math.M6.Eql, math.I2.Power) => model    // I have to handle this
           case (math.M6.Eql, _) => math.M6.getModel
 
-          case (math.M7.PowBy, math.M0.Lit) => math.M7.getModel    // not sure why but perhaps it is a non-recursive type
+          //case (math.M7.PowBy, math.M0.Lit) => math.M7.getModel    // not sure why but perhaps it is a non-recursive type
           case (math.M7.PowBy, _) => model                  // I take responsibility
         }
 

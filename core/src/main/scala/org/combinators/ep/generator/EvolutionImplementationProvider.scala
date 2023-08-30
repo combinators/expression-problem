@@ -40,10 +40,15 @@ trait EvolutionImplementationProvider[-AIP <: ApproachImplementationProvider] {
   def applicable(forApproach: AIP, onRequest: PotentialRequest): Boolean
 
   /** Can vary by operation and data type. */
-  def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = None
+  @Deprecated def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = None
 
-  def evolutionSpecificDependencies(op: Operation, dt: DataTypeCase): Map[GenericModel, Set[Operation]] =
+  def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = None
+
+  @Deprecated def evolutionSpecificDependencies(op: Operation, dt: DataTypeCase): Map[GenericModel, Set[Operation]] =
     dependencies(op, dt).map(deps => Map(model -> deps)).getOrElse(Map.empty)
+
+  def evolutionSpecificDependencies(potentialRequest: PotentialRequest): Map[GenericModel, Set[Operation]] =
+    dependencies(potentialRequest).map(deps => Map(model -> deps)).getOrElse(Map.empty)
 
   /** Default logic can be defined for any operation that suggests the potential for Write Once Use Anywhere.
    * If we get here, no generic logic was defined. */
@@ -128,7 +133,7 @@ object EvolutionImplementationProvider {
         // bias is to use the first
         override val model = first.model
 
-        override def dependencies(op: Operation, dt: DataTypeCase): Option[Set[Operation]] = {
+        @Deprecated override def dependencies(op: Operation, dt: DataTypeCase): Option[Set[Operation]] = {
           (first.dependencies(op, dt), second.dependencies(op, dt)) match {
             case (None, None) => None
             case (Some(deps1), Some(deps2)) => Some(deps1 ++ deps2)
@@ -138,8 +143,21 @@ object EvolutionImplementationProvider {
         }
 
         /** Ensure dependencies are union'd through composition. */
-        override def evolutionSpecificDependencies(op:Operation, dt:DataTypeCase) : Map[GenericModel, Set[Operation]] =
+        @Deprecated override def evolutionSpecificDependencies(op:Operation, dt:DataTypeCase) : Map[GenericModel, Set[Operation]] =
           second.evolutionSpecificDependencies(op, dt) ++ first.evolutionSpecificDependencies(op, dt)
+
+        override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+          (first.dependencies(potentialRequest), second.dependencies(potentialRequest)) match {
+            case (None, None) => None
+            case (Some(deps1), Some(deps2)) => Some(deps1 ++ deps2)
+            case (Some(deps1), _) => Some(deps1)
+            case (_, deps) => deps
+          }
+        }
+
+        /** Ensure dependencies are union'd through composition. */
+        override def evolutionSpecificDependencies(potentialRequest: PotentialRequest): Map[GenericModel, Set[Operation]] =
+          second.evolutionSpecificDependencies(potentialRequest) ++ first.evolutionSpecificDependencies(potentialRequest)
 
         override def applicableIn(forApproach: AIP, potentialRequest: PotentialRequest, currentModel:GenericModel): Option[GenericModel] =
           first.applicableIn(forApproach, potentialRequest,currentModel).map(Some(_)).getOrElse(second.applicableIn(forApproach, potentialRequest,currentModel))
@@ -180,11 +198,19 @@ object EvolutionImplementationProvider {
             (forApproach: AIP)
             (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
         Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] = {
-          if (first.applicable(forApproach)(onRequest)) {
-            first.logic(forApproach)(onRequest)
-          } else {
-            second.logic(forApproach)(onRequest)
+          val potentialRequest = PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)
+          val dependenciesInFirst = first.evolutionSpecificDependencies(potentialRequest)
+          onRequest.model match {
+            case None if dependenciesInFirst.nonEmpty => first.logic(forApproach)(onRequest)
+            case Some(model) if dependenciesInFirst.contains(model) => first.logic(forApproach)(onRequest)
+            case _ => second.logic(forApproach)(onRequest)
           }
+
+//          if (first.applicable(forApproach)(onRequest)) {
+//            first.logic(forApproach)(onRequest)
+//          } else {
+//            second.logic(forApproach)(onRequest)
+//          }
         }
       }
     }

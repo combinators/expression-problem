@@ -2,6 +2,7 @@ package org.combinators.ep.generator.communication    /*DI:LI:AI*/
 
 /** Provides abstractions for communicating with instances of domain specific data types. */
 
+import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions._
 
 /** Models a request to perform operation `op` supplying arguments for each of its parameters.
@@ -27,7 +28,8 @@ case class ReceivedRequest[Expression](
                                         tpeCase: DataTypeCase,
                                         selfReference: Expression,
                                         attributes: Map[Attribute, Expression],
-                                        request: Request[Expression]
+                                        request: Request[Expression],
+                                        model: Option[GenericModel] = None
                                       ) {
   require(tpeCase.attributes.forall(attributes.isDefinedAt),
     s"Missing accessor expression for attribute ${tpeCase.attributes.find(!attributes.isDefinedAt(_)).get} of data type case ${tpeCase.name}"

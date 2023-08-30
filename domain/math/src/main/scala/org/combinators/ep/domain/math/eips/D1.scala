@@ -33,10 +33,10 @@ object D1 {
       }
 
       /** MultBy requires Eval. */
-      override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
+      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
         op match {
-          case math.D1.MultBy => Set(math.M0.Eval)
-          case _ => Set.empty
+          case math.D1.MultBy => Some(Set(math.M0.Eval))
+          case _ => None
         }
       }
 

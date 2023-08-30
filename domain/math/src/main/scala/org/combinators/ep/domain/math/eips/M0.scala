@@ -1,5 +1,6 @@
 package org.combinators.ep.domain.math.eips      /*DD:LI:AI*/
 
+import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
 import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
@@ -36,6 +37,14 @@ object M0 {
           _ <- ffiArithmetic.enable()
           _ <- ffiStrings.enable()      // need strings BECAUSE test cases require empty string for messages.
         } yield ()
+      }
+
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        if ((potentialRequest.op == math.M0.Eval) && Set(math.M0.Add, math.M0.Lit).contains(potentialRequest.tpeCase)) {
+          Some(Set.empty)
+        } else {
+          None
+        }
       }
 
       def applicable (forApproach: AIP[paradigm.type], onRequest:PotentialRequest): Boolean = {

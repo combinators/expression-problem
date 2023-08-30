@@ -39,8 +39,8 @@ sealed class D1D2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
       }
 
       /** Nothing special here */
-      override def dependencies(op:Operation, dt:DataTypeCase) : Set[Operation] = {
-        Set.empty
+      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
+        None
       }
 
       override def applicableIn

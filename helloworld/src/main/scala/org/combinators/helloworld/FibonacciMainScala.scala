@@ -17,8 +17,8 @@ import scala.meta.{Pkg, Term}
 class FibonacciIndependentMainScala {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(targetPackage = Pkg(Term.Name("fib"), List.empty)))
   
-  val fibonacciApproach = FibonacciIndependentProvider.functional[Syntax.default.type, generator.paradigm.type](generator.paradigm)(ScalaNameProvider, generator.functional, generator.functionalInMethod, generator.intsInMethod, generator.assertionsInMethod, generator.equalityInMethod)
-
+  //val fibonacciApproach = FibonacciIndependentProvider.functional[Syntax.default.type, generator.paradigm.type](generator.paradigm)(ScalaNameProvider, generator.functional, generator.functionalInMethod, generator.intsInMethod, generator.assertionsInMethod, generator.equalityInMethod)
+  val fibonacciApproach = FibonacciIndependentProvider.imperative[Syntax.default.type, generator.paradigm.type](generator.paradigm)(ScalaNameProvider, generator.functional, generator.functionalInMethod, generator.intsInMethod, generator.assertionsInMethod, generator.equalityInMethod)
   val persistable = FileWithPathPersistable[FileWithPath]
 
   def directToDiskTransaction(targetDirectory: Path): IO[Unit] = {

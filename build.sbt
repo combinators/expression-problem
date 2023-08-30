@@ -88,7 +88,7 @@ lazy val languageJava =
      )
 lazy val languageScala = standardLanguageProject("scala")
 
-lazy val helloWorld:Project =
+lazy val helloWorld =
   (Project(id = s"helloworld", base = file(s"helloworld")))
     .settings(commonSettings: _*)
     .settings(

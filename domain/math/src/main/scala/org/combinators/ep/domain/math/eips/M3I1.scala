@@ -40,15 +40,6 @@ sealed class M3I1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
           case (math.I1.MultBy, math.M3.Divd) => model // I HANDLE these
           case (math.I1.MultBy, math.M3.Mult) => model // I HANDLE these
           case (math.I1.MultBy, math.M3.Neg) => model  // I HANDLE these
-
-          case (math.I1.MultBy, _) => math.I1.getModel
-
-          case (_, math.M3.Divd) => math.M3.getModel
-          case (_, math.M3.Mult) => math.M3.getModel
-          case (_, math.M3.Neg) => math.M3.getModel
-
-            // handles everything else
-          //case _ => model  // math.I1.getModel
         }
 
         val tblModel = forwardTable.lift(onRequest.op, onRequest.tpeCase)

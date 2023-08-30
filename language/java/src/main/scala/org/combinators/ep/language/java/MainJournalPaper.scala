@@ -36,7 +36,7 @@ class MainJournalPaper {
   // interpreterApproach NOT YET WORKING
   val approach = algebraApproach// algebraApproach  // cocoCleanApproach
 
-  val evolutions = Seq(M0, M1, M2, I1, M3, M3I1, N1, I2M3I1N1)    // all test cases become active WHEN all included.
+  val evolutions = Seq(M0, M1, M2, I1, I2, M3, M3I1, N1, I2M3I1N1)    // all test cases become active WHEN all included.
 
   //val evolutions = Seq(M0, M1, M2, M3, M4, M5, M6, M7) //
 //  val eip = eips.I2(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod,

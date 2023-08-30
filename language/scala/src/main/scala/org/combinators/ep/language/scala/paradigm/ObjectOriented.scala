@@ -146,7 +146,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             (context.copy(cls = ObjectOriented.patchClass(context.cls, updateTemplate)), ())
           }
         }
-      implicit val canAddFieldInClass: Understands[ClassCtxt, AddField[MangledName, Type]] = ???
+      implicit val canAddFieldInClass: Understands[ClassCtxt, AddField[MangledName, Type, Expression]] = ???
       implicit val canGetFieldInClass: Understands[ClassCtxt, GetField[MangledName, Term]] = ???
       implicit val canAddMethodInClass: Understands[ClassCtxt, AddMethod[MethodBodyCtxt, MangledName, Option[Term]]] = ???
       implicit val canAddConstructorInClass: Understands[ClassCtxt, AddConstructor[CtorCtxt]] = ???

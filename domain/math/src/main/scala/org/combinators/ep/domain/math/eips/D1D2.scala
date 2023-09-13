@@ -43,6 +43,14 @@ sealed class D1D2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
         None
       }
 
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        if (Set(math.D1.MultBy).contains(potentialRequest.op) && Set(math.D2.Mult, math.M1.Sub, math.M0.Add, math.M0.Lit).contains(potentialRequest.tpeCase)) {
+          Some(Set.empty)
+        } else {
+          None
+        }
+      }
+
       override def applicableIn
         (forApproach:  AIP[paradigm.type], onRequest: PotentialRequest, currentModel:GenericModel): Option[GenericModel] = {
 
@@ -79,27 +87,16 @@ sealed class D1D2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
         import AnyParadigm.syntax._
         import paradigm._
 
-        def operate(atts: Seq[syntax.Expression]): Generator[paradigm.MethodBodyContext, syntax.Expression] =
+
+        val result =
           onRequest.request.op match {
-            case mb@math.D1.MultBy =>      // take advantage of Mult data type
+            case mb@math.D1.MultBy => // take advantage of Mult data type
               for {
                 res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.D2.Mult, onRequest.selfReference, onRequest.request.arguments.head._2)
               } yield res
 
             case _ => ???
           }
-
-        val result =
-          for {
-            atts <- forEach (onRequest.tpeCase.attributes) { att =>
-              forApproach.dispatch(SendRequest(
-                onRequest.attributes(att),
-                math.M0.getModel.baseDataType,
-                onRequest.request
-              ))
-            }
-            res <- operate(atts)
-          } yield res
 
         result.map(Some(_))
       }

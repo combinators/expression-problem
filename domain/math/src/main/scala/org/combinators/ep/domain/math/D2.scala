@@ -7,7 +7,7 @@ import org.combinators.ep.domain.math.M0.{Eval, LitInst}
 import org.combinators.ep.domain.math.M2.{PrettyP, StringInst}
 
 object D2 extends Evolution {
-  override implicit def getModel:GenericModel = M1.getModel.evolve("m1", Seq(Mult), Seq.empty)
+  override implicit def getModel:GenericModel = M1.getModel.evolve("d2", Seq(Mult), Seq.empty)
 
   // m3:model evolution.
   // -------------------

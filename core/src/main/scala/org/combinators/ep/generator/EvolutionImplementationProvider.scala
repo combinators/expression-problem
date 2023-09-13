@@ -200,9 +200,15 @@ object EvolutionImplementationProvider {
         Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] = {
           val potentialRequest = PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)
           val dependenciesInFirst = first.evolutionSpecificDependencies(potentialRequest)
+          val firstKeys = dependenciesInFirst.keySet
+          def check(model: GenericModel): GenericModel => Boolean = m => {
+            m.beforeOrEqual(model)
+          }
           onRequest.model match {
             case None if dependenciesInFirst.nonEmpty => first.logic(forApproach)(onRequest)
-            case Some(model) if dependenciesInFirst.contains(model) => first.logic(forApproach)(onRequest)
+            case Some(model) if firstKeys.exists(check(model)) => {
+              first.logic(forApproach)(onRequest)
+            }
             case _ => second.logic(forApproach)(onRequest)
           }
 

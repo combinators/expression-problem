@@ -996,7 +996,8 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
                           dt,
                           selfCall,
                           dt.attributes.zip(dtElements.map(_._2)).toMap,
-                          Request(op, op.parameters.zip(args.map(_._3)).toMap)
+                          Request(op, op.parameters.zip(args.map(_._3)).toMap),
+                          Some(domain)
                         )
                       )
         } yield result

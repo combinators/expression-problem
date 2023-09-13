@@ -58,7 +58,7 @@ object M0 {
         import ffiArithmetic.arithmeticCapabilities._
         import paradigm._
 
-        assert(applicable(forApproach)(onRequest), "failed on " + onRequest.tpeCase.name + " for " + onRequest.request.op.name)
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty, "failed on " + onRequest.tpeCase.name + " for " + onRequest.request.op.name)
         val result = onRequest.tpeCase match {
 
           /** Get and return first (and only) attribute. */

@@ -1,5 +1,6 @@
 package org.combinators.ep.domain.math.eips     /*DD:LI:AI*/
 
+import org.combinators.ep.domain.abstractions.Operation
 import org.combinators.ep.domain.math
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
@@ -30,6 +31,14 @@ object D2 {
           Set(math.D2.Mult).contains(potentialRequest.tpeCase)
       }
 
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        if (Set(math.M0.Eval).contains(potentialRequest.op) && Set(math.D2.Mult).contains(potentialRequest.tpeCase)) {
+          Some(Set.empty)
+        } else {
+          None
+        }
+      }
+
       /** Do not call 'assert' since might not be applicable. */
       override def genericLogic(forApproach: AIP[paradigm.type])
                                (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
@@ -45,7 +54,7 @@ object D2 {
         import ffiStrings.stringCapabilities._
         import paradigm._
         import methodBodyCapabilities._
-        assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name)
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty, onRequest.tpeCase.name + " failed for " + onRequest.request.op.name)
 
         def operate(atts: Seq[syntax.Expression]): Generator[paradigm.MethodBodyContext, syntax.Expression] =
           onRequest.request.op match {

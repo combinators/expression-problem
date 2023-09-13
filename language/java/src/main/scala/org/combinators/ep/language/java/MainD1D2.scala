@@ -42,7 +42,7 @@ class MainD1D2 {
   //val algebraApproach = Algebra[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
   // select one here.
-  val approach = algebraApproach // cocoCleanApproach//extensibleVisitorApproach
+  val approach = algebraApproach // algebraApproach // cocoCleanApproach//extensibleVisitorApproach
 
   val evolutions = Seq(M0, M1, D1, D2, D1D2)    // all test cases become active WHEN all included.
   //val evolutions = Seq(M0, M1, M2, M3, I1, A1, A1M3)

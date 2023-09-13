@@ -7,6 +7,7 @@ import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedReq
 import org.combinators.ep.generator.paradigm.AnyParadigm
 import org.combinators.ep.generator.paradigm.ffi.Arithmetic
 import EvolutionImplementationProvider._
+import org.combinators.ep.domain.abstractions.Operation
 
 object M1 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
@@ -27,6 +28,14 @@ object M1 {
         (onRequest.op == math.M0.Eval) && Set(math.M1.Sub).contains(onRequest.tpeCase)
       }
 
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        if ((potentialRequest.op == math.M0.Eval) && Set(math.M1.Sub).contains(potentialRequest.tpeCase)) {
+          Some(Set.empty)
+        } else {
+          None
+        }
+      }
+
       /** Do not call 'assert' since might not be applicable. */
       override def genericLogic(forApproach: AIP[paradigm.type])
                                (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
@@ -39,7 +48,7 @@ object M1 {
       Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
         import ffiArithmetic.arithmeticCapabilities._
 
-        assert(applicable(forApproach)(onRequest))
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         val result = onRequest.tpeCase match {
           case subC@math.M1.Sub =>

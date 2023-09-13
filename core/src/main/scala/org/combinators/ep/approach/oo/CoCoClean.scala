@@ -398,7 +398,8 @@ trait CoCoClean extends ApproachImplementationProvider {
           request = Request(
             op = operation,
             arguments = operation.parameters.zip(arguments.map(argument => argument._3)).toMap
-          )
+          ),
+          model = Some(domain)
         )
       result <- evolutionImplementationProvider.logic(this)(receivedRequest)
     } yield result

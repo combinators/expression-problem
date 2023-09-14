@@ -42,9 +42,9 @@ class MainD1D2 {
   //val algebraApproach = Algebra[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
   // select one here.
-  val approach = algebraApproach // algebraApproach // cocoCleanApproach//extensibleVisitorApproach
+  val approach = cocoCleanApproach // algebraApproach // cocoCleanApproach//extensibleVisitorApproach
 
-  val evolutions = Seq(M0, M1, D1, D2, D1D2)    // all test cases become active WHEN all included.
+  val evolutions = Seq(M0, M1, D1, D2, D1D2, D3)    // all test cases become active WHEN all included.
   //val evolutions = Seq(M0, M1, M2, M3, I1, A1, A1M3)
 
 //  val eip = eips.I2(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod,
@@ -62,8 +62,10 @@ class MainD1D2 {
     generator.booleansInMethod,
     generator.equalityInMethod)
 
+  val d3_eip = eips.D3(approach.paradigm)(d1d2_eip)(generator.doublesInMethod, generator.stringsInMethod)
+
   //val eip = a1m3_eip
-  val eip = d1d2_eip
+  val eip = d3_eip
 
   val tests = evolutions.scanLeft(Map.empty[GenericModel, Seq[TestCase]]) { case (m, evolution) =>
     m + (evolution.getModel -> evolution.tests)

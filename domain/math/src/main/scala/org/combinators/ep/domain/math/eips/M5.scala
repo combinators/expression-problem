@@ -36,6 +36,19 @@ object M5 {
         }
       }
 
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        val cases = math.M5.getModel.flatten.typeCases
+        if (cases.contains(potentialRequest.tpeCase)) {
+          potentialRequest.op match {
+            case Operation.asTree => Some(Set(math.M5.Identifier))
+            case math.M5.Identifier => Some(Set.empty)
+            case _ => None
+          }
+        } else {
+          None
+        }
+      }
+
       def applicable
         (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
         Set(math.M5.Identifier, Operation.asTree).contains(potentialRequest.op) &&
@@ -91,7 +104,7 @@ object M5 {
         (forApproach: AIP[paradigm.type])
         (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
-        assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name)
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
         onRequest.request.op match {
           case math.M5.Identifier => genericLogic(forApproach)(onRequest)
           case op if op == Operation.asTree => genericLogic(forApproach)(onRequest)

@@ -427,7 +427,10 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
       val possible = if (newOperations.contains(op)) {
           domain
       } else {
-        domainSpecific.applicableIn(this, PotentialRequest(domain.baseDataType, tpe, op), domain).get
+        domainSpecific.evolutionSpecificDependencies(PotentialRequest(domain.baseDataType, tpe, op)).keySet.max((l: GenericModel, r: GenericModel) => {
+          if (l.before(r)) -1 else if (r.before(l)) 1 else 0
+        })
+        //domainSpecific.applicableIn(this, PotentialRequest(domain.baseDataType, tpe, op), domain).get
       }
 
       // CANNOT go earlier than when operation is defined.
@@ -855,14 +858,18 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
       val presentOperations = domain.operationsPresentEarlier(tpeCase)
 
       val overwrittenOperations = allOperations.filter { operation =>
-        // Are we applicable based on EIP? Tells us in which domain EIP is applicable
-        val lastOverwritingDomain =
-          evolutionImplementationProvider.applicableIn(
-            forApproach = this,
-            potentialRequest = PotentialRequest(domain.baseDataType, tpeCase, operation),
-            currentModel = domain
-          )
-        lastOverwritingDomain.contains(domain)
+        // Does our current domain contain an override implementation?
+        evolutionImplementationProvider.evolutionSpecificDependencies(
+          PotentialRequest(domain.baseDataType, tpeCase, operation)
+        ).contains(domain)
+//        // Are we applicable based on EIP? Tells us in which domain EIP is applicable
+//        val lastOverwritingDomain =
+//          evolutionImplementationProvider.applicableIn(
+//            forApproach = this,
+//            potentialRequest = PotentialRequest(domain.baseDataType, tpeCase, operation),
+//            currentModel = domain
+//          )
+//        lastOverwritingDomain.contains(domain)
       }
       val updatedOperations = (allOperations -- presentOperations) ++ overwrittenOperations
       // If we have any updated operations, if we have a former one that doesn't support the current type case, or if we are in a merge.
@@ -875,28 +882,33 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
   }
 
   def latestDomainWithAlgebraOperation(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type], op:Operation) : GenericModel = {
-
-    // find type case where domainSpecific says you are implemented here.
-    val result = domain.flatten.typeCases.map(tpeCase =>
-      // are we implementing or overriding.
-        domainSpecific.applicableIn(
-          forApproach = this,
-          potentialRequest = PotentialRequest(domain.baseDataType, tpeCase, op),
-          currentModel = domain
-        )
+    val domainsImplementingOp = domain.flatten.typeCases.flatMap(tpeCase =>
+      domainSpecific.evolutionSpecificDependencies(PotentialRequest(domain.baseDataType, tpeCase, op)).keySet
     )
+    domainsImplementingOp.distinct.max((l: GenericModel, r: GenericModel) => { if (l.before(r)) -1 else if (r.before(l)) 1 else 0 })
 
-    val implementedHere = result.contains(Some(domain))
-    if (implementedHere) {
-      domain
-    } else {
-       val pastOnes = domain.former.map(m => latestDomainWithAlgebraOperation(m, domainSpecific, op)).distinct
-       if (domain.isDomainBase || pastOnes.size > 1) {
-         domain
-       } else {
-         pastOnes.head
-       }
-    }
+
+//    // find type case where domainSpecific says you are implemented here.
+//    val result = domain.flatten.typeCases.map(tpeCase =>
+//      // are we implementing or overriding.
+//        domainSpecific.applicableIn(
+//          forApproach = this,
+//          potentialRequest = PotentialRequest(domain.baseDataType, tpeCase, op),
+//          currentModel = domain
+//        )
+//    )
+//
+//    val implementedHere = result.contains(Some(domain))
+//    if (implementedHere) {
+//      domain
+//    } else {
+//       val pastOnes = domain.former.map(m => latestDomainWithAlgebraOperation(m, domainSpecific, op)).distinct
+//       if (domain.isDomainBase || pastOnes.size > 1) {
+//         domain
+//       } else {
+//         pastOnes.head
+//       }
+//    }
   }
 
   def makeTypeParameter(tpe:paradigm.syntax.Type, dependentOpTypes:Seq[paradigm.syntax.Type]) :  Generator[polymorphics.TypeParameterContext, Unit] = {

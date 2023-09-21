@@ -41,6 +41,15 @@ object I1 {
         }
       }
 
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        val cases = math.I1.getModel.flatten.typeCases
+        if (potentialRequest.op == math.I1.MultBy && cases.contains(potentialRequest.tpeCase)) {
+          Some(Set.empty)
+        } else {
+          None
+        }
+      }
+
       def applicable
       (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
         (potentialRequest.op == math.I1.MultBy) &&
@@ -66,7 +75,7 @@ object I1 {
         import paradigm._
         import methodBodyCapabilities._
 
-        assert(applicable(forApproach)(onRequest))
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         onRequest.tpeCase match {
 

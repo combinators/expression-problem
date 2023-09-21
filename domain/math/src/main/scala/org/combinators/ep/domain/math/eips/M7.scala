@@ -40,6 +40,18 @@ object M7 {
         }
       }
 
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        val cases = math.M7.getModel.flatten.typeCases
+        if (potentialRequest.op == math.M7.PowBy && cases.contains(potentialRequest.tpeCase)) {
+          potentialRequest.tpeCase match {
+            case math.M3.Neg => Some(Set.empty)
+            case _ => Some(Set(math.M0.Eval))
+          }
+        } else {
+          None
+        }
+      }
+
       def applicable
         (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
         Set(math.M7.PowBy).contains(potentialRequest.op)
@@ -62,7 +74,7 @@ object M7 {
         Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
         import paradigm._
         import methodBodyCapabilities._
-        assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name)
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         onRequest.tpeCase match {
           //        default Exp<V> powBy(ep.Exp<V> exponent) {

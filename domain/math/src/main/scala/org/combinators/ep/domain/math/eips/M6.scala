@@ -39,6 +39,20 @@ object M6 {
         }
       }
 
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        val cases = math.M6.getModel.flatten.typeCases
+        if (cases.contains(potentialRequest.tpeCase)) {
+          potentialRequest.op match {
+            case math.M6.Equals => Some(Set(Operation.asTree))
+            case math.M6.Eql => Some(math.M6.isOps(Seq(potentialRequest.tpeCase)).toSet)
+            case isOp if math.M6.isOps(cases).contains(isOp) => Some(Set.empty)
+            case _ => None
+          }
+        } else {
+          None
+        }
+      }
+
       def applicable
         (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
         potentialRequest.op.tags.contains(math.M6.IsOp) ||
@@ -46,6 +60,8 @@ object M6 {
           // Constraint to ensure we have an implementation for asTree, which is used in this equality implementation provider
           m5Provider.applicable(forApproach,potentialRequest.copy(op = Operation.asTree)))
       }
+
+
 
       /** Can handle any equals requests, by constructing Trees from Expressions. */
       override def genericLogic
@@ -137,7 +153,7 @@ object M6 {
         import paradigm._
         import methodBodyCapabilities._
         import ffiEquality.equalityCapabilities._
-        assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name)
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
         onRequest.request.op match {
           case math.M6.Equals => genericLogic(forApproach)(onRequest)
           case math.M6.Eql =>  genericLogic(forApproach)(onRequest)

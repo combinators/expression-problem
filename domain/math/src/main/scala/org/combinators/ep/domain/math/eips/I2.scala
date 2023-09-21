@@ -1,6 +1,6 @@
 package org.combinators.ep.domain.math.eips      /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.TypeRep
+import org.combinators.ep.domain.abstractions.{Operation, TypeRep}
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.domain.math
 import org.combinators.ep.generator.Command.Generator
@@ -32,6 +32,18 @@ object I2 {
         } yield ()
       }
 
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        val ops = math.I2.getModel.flatten.ops
+        if (potentialRequest.tpeCase == math.I2.Power && ops.contains(potentialRequest.op)) {
+          potentialRequest.op match {
+            case math.I1.MultBy => Some(Set(math.M0.Eval))
+            case _ => Some(Set.empty)
+          }
+        } else {
+          None
+        }
+      }
+
       def applicable
       (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
         Set(math.I1.MultBy,math.M0.Eval,math.M2.PrettyP).contains(potentialRequest.op) &&
@@ -54,7 +66,7 @@ object I2 {
         import ffiArithmetic.arithmeticCapabilities._
         import ffiRealArithmetic.realArithmeticCapabilities._
         import ffiStrings.stringCapabilities._
-        assert(applicable(forApproach)(onRequest))
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         val result = onRequest.tpeCase match {
           case power@math.I2.Power => {

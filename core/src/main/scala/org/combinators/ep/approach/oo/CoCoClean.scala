@@ -294,14 +294,10 @@ trait CoCoClean extends ApproachImplementationProvider {
       val presentOperations = domain.operationsPresentEarlier(tpeCase)
 
       val overwrittenOperations = allOperations.filter { operation =>
-        // Are we applicable based on EIP? Tells us in which domain EIP is applicable
-        val lastOverwritingDomain =
-          evolutionImplementationProvider.applicableIn(
-            forApproach = this,
-            potentialRequest = PotentialRequest(domain.baseDataType, tpeCase, operation),
-            currentModel = domain
-          )
-        lastOverwritingDomain.contains(domain)
+        // Does our current domain contain an override implementation?
+        evolutionImplementationProvider.evolutionSpecificDependencies(
+          PotentialRequest(domain.baseDataType, tpeCase, operation)
+        ).contains(domain)
       }
       val updatedOperations = (allOperations -- presentOperations) ++ overwrittenOperations
       // If we have any updated operations, if we have a former one that doesn't support the current type case, or if we are in a merge.

@@ -57,6 +57,24 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
         }
       }
 
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        val cases = math.M7I2.getModel.flatten.typeCases
+        (potentialRequest.op, potentialRequest.tpeCase) match {
+          case (math.I1.MultBy, tpeCase) if cases.contains(tpeCase) => Some(Set.empty)
+          case (math.M7.PowBy, tpeCase) if cases.contains(tpeCase) => Some(Set.empty)
+          case (math.M4.Collect, math.I2.Power) => Some(Set.empty)
+          case (math.M4.Simplify, math.I2.Power) => Some(Set(math.M0.Eval))
+          case (math.M5.Identifier, math.I2.Power) => Some(Set.empty)
+          case (Operation.asTree, math.I2.Power) => Some(Set(math.M5.Identifier))
+          case (math.M6.Equals, math.I2.Power) => Some(Set(Operation.asTree))
+          case (math.M6.Eql, math.I2.Power) => Some(Set(math.M6.isOp(math.I2.Power)))
+          case (isOp, math.I2.Power) if math.M6.isOps(cases).contains(isOp) => Some(Set.empty)
+          case (isOp, tpeCase) if isOp == math.M6.isOp(math.I2.Power) && cases.contains(tpeCase) => Some(Set.empty)
+          // rest handled above by first two cases
+          case (_, _) => None
+        }
+      }
+
       // TODO: Why isn't PrettyP in this applicable check, since it appears below in the applicableIn. Because it was there before the branching,
       // TODO: and so datatypes know what to do.
       def applicable
@@ -212,7 +230,7 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
       Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
         import paradigm._
         import methodBodyCapabilities._
-        assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name)
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         onRequest.request.op match {
           case math.M6.Equals => m7Provider.genericLogic(forApproach)(onRequest)

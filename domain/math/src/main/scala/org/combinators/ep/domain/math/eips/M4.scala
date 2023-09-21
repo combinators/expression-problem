@@ -47,6 +47,20 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
         }
       }
 
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        val cases = math.M4.getModel.flatten.typeCases
+        if (cases.contains(potentialRequest.tpeCase)) {
+          (potentialRequest.op, potentialRequest.tpeCase) match {
+            case (math.M4.Simplify, math.M0.Lit) => Some(Set.empty)
+            case (math.M4.Simplify, _) => Some(Set(math.M0.Eval))
+            case (math.M4.Collect, _) => Some(Set.empty)
+            case (_, _) => None
+          }
+        } else {
+          None
+        }
+      }
+
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
           _ <- ffiArithmetic.enable()
@@ -286,7 +300,7 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
       def logic(forApproach: AIP[paradigm.type])
                (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] = {
-        assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name)
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         onRequest.request.op match {
           case math.M4.Collect => genericLogic(forApproach)(onRequest)

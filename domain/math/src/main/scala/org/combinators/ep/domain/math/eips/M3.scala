@@ -1,6 +1,7 @@
 package org.combinators.ep.domain.math.eips      /*DD:LI:AI*/
 
 import org.combinators.ep.domain.abstractions.TypeRep
+import org.combinators.ep.domain.abstractions.Operation
 import org.combinators.ep.domain.math
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
@@ -32,6 +33,15 @@ object M3 {
           Set(math.M3.Divd, math.M3.Mult, math.M3.Neg).contains(potentialRequest.tpeCase)
       }
 
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        val ops = math.M3.getModel.flatten.ops
+        if ((math.M3.getModel.typeCases.contains(potentialRequest.tpeCase)) && ops.contains(potentialRequest.op)) {
+          Some(Set.empty)
+        } else {
+          None
+        }
+      }
+
       /** Do not call 'assert' since might not be applicable. */
       override def genericLogic(forApproach: AIP[paradigm.type])
                                (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
@@ -47,7 +57,7 @@ object M3 {
         import paradigm._
         import methodBodyCapabilities._
         import AnyParadigm.syntax._
-        assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name)
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         def operate(atts: Seq[syntax.Expression]): Generator[paradigm.MethodBodyContext, syntax.Expression] =
           onRequest.request.op match {

@@ -1,5 +1,6 @@
 package org.combinators.ep.domain.math.eips      /*DD:LI:AI*/
 
+import org.combinators.ep.domain.abstractions.Operation
 import org.combinators.ep.domain.math
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
@@ -31,6 +32,15 @@ object M2 {
           (Set(math.M0.Lit, math.M0.Add, math.M1.Sub).contains(onRequest.tpeCase))
       }
 
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        val cases = math.M2.getModel.flatten.typeCases
+        if ((potentialRequest.op == math.M2.PrettyP) && cases.contains(potentialRequest.tpeCase)) {
+          Some(Set.empty)
+        } else {
+          None
+        }
+      }
+
       /** Do not call 'assert' since might not be applicable. */
       override def genericLogic(forApproach: AIP[paradigm.type])
                                (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
@@ -45,7 +55,7 @@ object M2 {
         import paradigm._
         import methodBodyCapabilities._
 
-        assert(applicable(forApproach)(onRequest))
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         val result = onRequest.tpeCase match {
           case litC@math.M0.Lit =>

@@ -542,7 +542,8 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
         carrierTypeParam <- freshName(ComponentNames.returnTypeParameter)
 
         // might pull up dependent operation (i.e., m6 and isPower) which is not defined...
-        diTypes <- forEach(domain.flatten.typeCases.flatMap(dt => domainSpecific.dependencies(op, dt).getOrElse(Seq.empty).toSeq).distinct.filter(fop => domain.findOperation(fop).isDefined)) { dop => {
+        // forEach(domain.flatten.typeCases.flatMap(dt => domainSpecific.dependencies(op, dt).getOrElse(Seq.empty).toSeq).distinct.filter(fop => domain.findOperation(fop).isDefined))
+        diTypes <- forEach(latestDependenciesForOp(domain, domainSpecific, op)) { dop => {
           for {
             ditype <- findClass(names.mangle(names.instanceNameOf(domain.findOperation(dop).get)), ComponentNames.pkgCarrier, names.mangle(names.conceptNameOf(dop)))
             _ <- resolveAndAddImport(ditype)
@@ -881,11 +882,30 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
     }
   }
 
+
+  def latestDependenciesForOp(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type], op: Operation): Seq[Operation] = {
+    val allTpeCases = domain.flatten.typeCases.distinct
+    allTpeCases.flatMap(tpeCase => {
+      val dependencies = domainSpecific.evolutionSpecificDependencies(PotentialRequest(domain.baseDataType, tpeCase, op))
+      val dependenciesDeclaredBeforeCurrentDomain = dependencies.filterKeys(d => d.beforeOrEqual(domain))
+      val latestDependencies = dependenciesDeclaredBeforeCurrentDomain
+        .max((l: (GenericModel, Set[Operation]), r: (GenericModel, Set[Operation])) => {
+          if (l._1.before(r._1)) -1 else if (r._1.before(l._1)) 1 else 0
+        })
+      latestDependencies._2
+    }).distinct
+  }
+
   def latestDomainWithAlgebraOperation(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type], op:Operation) : GenericModel = {
+    // Find all domains with an EIP that implements op for any type case
     val domainsImplementingOp = domain.flatten.typeCases.flatMap(tpeCase =>
       domainSpecific.evolutionSpecificDependencies(PotentialRequest(domain.baseDataType, tpeCase, op)).keySet
     )
-    domainsImplementingOp.distinct.max((l: GenericModel, r: GenericModel) => { if (l.before(r)) -1 else if (r.before(l)) 1 else 0 })
+
+    val result = domainsImplementingOp.distinct
+      .filter(d => d.beforeOrEqual(domain)) // filter to make sure we are before the current domain (we are not interested in later EIPs)
+      .max((l: GenericModel, r: GenericModel) => { if (l.before(r)) -1 else if (r.before(l)) 1 else 0 }) // find latest one
+    result
 
 
 //    // find type case where domainSpecific says you are implemented here.
@@ -952,6 +972,8 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
     //        return algebra.add(left.multBy(other), right.multBy(other));
     //      }
     //    }
+
+
 
     def makeOperationClass(): Generator[ooParadigm.ClassContext, Unit] = {
 
@@ -1069,7 +1091,8 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
         carrierTypeParam <- freshName(ComponentNames.returnTypeParameter)
 
         // might not exist? must filter as well?
-        diTypes <- forEach(domainSpecific.dependencies(op, dt).getOrElse(Seq.empty).toSeq.distinct.filter(fop => domain.findOperation(fop).isDefined)) { dop => {
+        // domainSpecific.dependencies(op, dt)
+        diTypes <- forEach(latestDependenciesForOp(domain, domainSpecific, op)) { dop => {
           for {
             ditype <- findClass(names.mangle(names.instanceNameOf(domain.findOperation(dop).get)), ComponentNames.pkgCarrier, names.mangle(names.conceptNameOf(dop)))
             _ <- resolveAndAddImport(ditype)

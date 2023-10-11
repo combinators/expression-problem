@@ -32,17 +32,9 @@ object D1 {
         } yield ()
       }
 
-      /** MultBy requires Eval. */
-      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
-        op match {
-          case math.D1.MultBy => Some(Set(math.M0.Eval))
-          case _ => None
-        }
-      }
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         if ((potentialRequest.op == math.D1.MultBy) && (Set(math.M0.Lit, math.M0.Add, math.M1.Sub).contains(potentialRequest.tpeCase))) {
-          Some(Set(math.M0.Eval))
+          Some(Set.empty)
         } else {
           None
         }

@@ -45,6 +45,31 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
           }
       }
 
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        ( potentialRequest.op, potentialRequest.tpeCase) match {
+          case (math.M4.Simplify, math.M8.Inv) => Some(Set(math.M0.Eval))
+          case (Operation.asTree, math.M8.Inv) => Some(Set(math.M5.Identifier))
+          case (math.M6.Equals, math.M8.Inv) => Some(Set(Operation.asTree))
+          case (math.M6.Eql, math.M8.Inv) => Some(Set(math.M6.isOp(math.M8.Inv)))
+          case (op, math.M8.Inv) if math.M8.getModel.flatten.ops.contains(op) => Some(Set.empty)
+          case (_, _) => None
+        }
+      }
+
+      /*
+      case (math.I1.MultBy, tpeCase) if cases.contains(tpeCase) => Some(Set.empty)
+      case (math.M7.PowBy, tpeCase) if cases.contains(tpeCase) => Some(Set.empty)
+      case (math.M4.Collect, math.I2.Power) => Some(Set.empty)
+      case (math.M4.Simplify, math.I2.Power) => Some(Set(math.M0.Eval))
+      case (math.M5.Identifier, math.I2.Power) => Some(Set.empty)
+      case (Operation.asTree, math.I2.Power) => Some(Set(math.M5.Identifier))
+      case (math.M6.Equals, math.I2.Power) => Some(Set(Operation.asTree))
+      case (math.M6.Eql, math.I2.Power) => Some(Set(math.M6.isOp(math.I2.Power)))
+      case (isOp, math.I2.Power) if math.M6.isOps(cases).contains(isOp) => Some(Set.empty)
+      case (isOp, tpeCase) if isOp == math.M6.isOp(math.I2.Power) && cases.contains(tpeCase) => Some(Set(math.M6.Eql))
+      // rest handled above by first two cases
+       */
+
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
           _ <- m7i2Provider.initialize(forApproach)

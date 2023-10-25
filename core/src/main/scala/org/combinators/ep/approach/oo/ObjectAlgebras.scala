@@ -541,9 +541,11 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
         interfaceType <- findClass(names.mangle(names.instanceNameOf(domain.findOperation(op).get)), ComponentNames.pkgCarrier, names.mangle(names.conceptNameOf(op)))
         carrierTypeParam <- freshName(ComponentNames.returnTypeParameter)
 
-        // might pull up dependent operation (i.e., m6 and isPower) which is not defined...
-        // forEach(domain.flatten.typeCases.flatMap(dt => domainSpecific.dependencies(op, dt).getOrElse(Seq.empty).toSeq).distinct.filter(fop => domain.findOperation(fop).isDefined))
-        diTypes <- forEach(latestDependenciesForOp(domain, domainSpecific, op)) { dop => {
+        // Needs to add all prior dependencies, because the algebra operation pulls together all previous carriers with
+        // all constraints on dependent operations.
+        diTypes <- forEach(domain.flatten.typeCases.distinct.flatMap(tpeCase =>
+            domainSpecific.dependencies(PotentialRequest(domain.baseDataType, tpeCase, op)).getOrElse(Set.empty)
+          ).distinct) { dop => {
           for {
             ditype <- findClass(names.mangle(names.instanceNameOf(domain.findOperation(dop).get)), ComponentNames.pkgCarrier, names.mangle(names.conceptNameOf(dop)))
             _ <- resolveAndAddImport(ditype)
@@ -902,10 +904,18 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
       domainSpecific.evolutionSpecificDependencies(PotentialRequest(domain.baseDataType, tpeCase, op)).keySet
     )
 
-    val result = domainsImplementingOp.distinct
+    def cmp(l: GenericModel, r: GenericModel) = {
+      if (l.before(r)) -1 else if (r.before(l)) 1 else 0
+    }
+
+    val orderedImplementers = domainsImplementingOp.distinct
       .filter(d => d.beforeOrEqual(domain)) // filter to make sure we are before the current domain (we are not interested in later EIPs)
-      .max((l: GenericModel, r: GenericModel) => { if (l.before(r)) -1 else if (r.before(l)) 1 else 0 }) // find latest one
-    result
+      .sorted(cmp)
+      .reverse
+    if (orderedImplementers.size > 1 && cmp(orderedImplementers(0), orderedImplementers(1)) == 0) {
+      return domain
+    }
+    orderedImplementers.head
 
 
 //    // find type case where domainSpecific says you are implemented here.

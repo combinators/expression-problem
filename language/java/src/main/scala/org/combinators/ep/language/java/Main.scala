@@ -42,7 +42,7 @@ class Main {
   // select one here.
   val approach = algebraApproach//algebraApproach// cocoCleanApproach//extensibleVisitorApproach
 
-  val evolutions = Seq(M0, M1, M2, M3, M4, M5, M6, I1, I2, M7, M7I2)//, M8)    // all test cases become active WHEN all included.
+  val evolutions = Seq(M0, M1, M2, M3, M4, M5, M6, I1, I2, M7, M7I2)    // all test cases become active WHEN all included.
   //val evolutions = Seq(M0, M1, M2, M3, I1, A1, A1M3)
 
 //  val eip = eips.I2(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod,
@@ -85,7 +85,7 @@ class Main {
   val a1m3_eip = eips.A1M3(approach.paradigm)(m3_eip, a1_eip)(generator.stringsInMethod)
 
   //val eip = a1m3_eip
-  val eip = m7i2_eip//m8_eip
+  val eip = m7i2_eip// m8_eip
 
   val tests = evolutions.scanLeft(Map.empty[GenericModel, Seq[TestCase]]) { case (m, evolution) =>
     m + (evolution.getModel -> evolution.tests)

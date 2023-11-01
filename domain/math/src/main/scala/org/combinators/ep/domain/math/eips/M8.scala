@@ -46,11 +46,16 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
       }
 
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
-        ( potentialRequest.op, potentialRequest.tpeCase) match {
+        val cases = math.M8.getModel.flatten.typeCases
+        (potentialRequest.op, potentialRequest.tpeCase) match {
           case (math.M4.Simplify, math.M8.Inv) => Some(Set(math.M0.Eval))
           case (Operation.asTree, math.M8.Inv) => Some(Set(math.M5.Identifier))
           case (math.M6.Equals, math.M8.Inv) => Some(Set(Operation.asTree))
           case (math.M6.Eql, math.M8.Inv) => Some(Set(math.M6.isOp(math.M8.Inv)))
+          // isInv => empty for any non inv argument (returns false), eql for inv argument (left and right eql)
+          case (isOp, tpeCase) if isOp == math.M6.isOp(math.M8.Inv) => Some(if (isOp == math.M6.isOp(tpeCase)) Set(math.M6.Eql) else Set.empty)
+          // isXXX for inv argument => empty, e.g. isAdd(inv) = false
+          case (isOp, math.M8.Inv) if math.M6.isOps(cases).contains(isOp) => Some(Set.empty)
           case (op, math.M8.Inv) if math.M8.getModel.flatten.ops.contains(op) => Some(Set.empty)
           case (_, _) => None
         }
@@ -183,7 +188,7 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
       def logic(forApproach: AIP[paradigm.type])
                (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] = {
-        assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name)
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
         import ffiStrings.stringCapabilities._
         import ffiArithmetic.arithmeticCapabilities._
         import paradigm._

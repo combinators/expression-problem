@@ -45,7 +45,7 @@ object M6 {
           potentialRequest.op match {
             case math.M6.Equals => Some(Set(Operation.asTree))
             case math.M6.Eql => Some(math.M6.isOps(Seq(potentialRequest.tpeCase)).toSet)
-            case isOp if math.M6.isOps(cases).contains(isOp) => Some(Set(math.M6.Eql))
+            case isOp if math.M6.isOps(cases).contains(isOp) => Some(if (isOp == math.M6.isOp(potentialRequest.tpeCase)) Set(math.M6.Eql) else Set.empty)
             case _ => None
           }
         } else {

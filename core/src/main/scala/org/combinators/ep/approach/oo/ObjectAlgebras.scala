@@ -885,9 +885,8 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
   }
 
 
-  def latestDependenciesForOp(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type], op: Operation): Seq[Operation] = {
-    val allTpeCases = domain.flatten.typeCases.distinct
-    allTpeCases.flatMap(tpeCase => {
+  def latestDependenciesForOp(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type], op: Operation)(tpeCases: Seq[DataTypeCase] = domain.flatten.typeCases.distinct): Seq[Operation] = {
+    tpeCases.distinct.flatMap(tpeCase => {
       val dependencies = domainSpecific.evolutionSpecificDependencies(PotentialRequest(domain.baseDataType, tpeCase, op))
       val dependenciesDeclaredBeforeCurrentDomain = dependencies.filterKeys(d => d.beforeOrEqual(domain))
       val latestDependencies = dependenciesDeclaredBeforeCurrentDomain
@@ -1102,7 +1101,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
 
         // might not exist? must filter as well?
         // domainSpecific.dependencies(op, dt)
-        diTypes <- forEach(latestDependenciesForOp(domain, domainSpecific, op)) { dop => {
+        diTypes <- forEach(latestDependenciesForOp(domain, domainSpecific, op)(Seq(dt))) { dop => {
           for {
             ditype <- findClass(names.mangle(names.instanceNameOf(domain.findOperation(dop).get)), ComponentNames.pkgCarrier, names.mangle(names.conceptNameOf(dop)))
             _ <- resolveAndAddImport(ditype)

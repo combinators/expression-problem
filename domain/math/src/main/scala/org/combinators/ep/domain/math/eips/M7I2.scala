@@ -68,8 +68,11 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
           case (Operation.asTree, math.I2.Power) => Some(Set(math.M5.Identifier))
           case (math.M6.Equals, math.I2.Power) => Some(Set(Operation.asTree))
           case (math.M6.Eql, math.I2.Power) => Some(Set(math.M6.isOp(math.I2.Power)))
+          //case isOp if math.M6.isOps(cases).contains(isOp) => Some(if (isOp == math.M6.isOp(potentialRequest.tpeCase)) Set(math.M6.Eql) else Set.empty)
 
-          case (isOp, tpeCase) if isOp == math.M6.isOp(math.I2.Power) && cases.contains(tpeCase) => Some(Set(math.M6.Eql))
+          // isPower => empty for any non power argument (returns false), eql for power argument (left and right eql)
+          case (isOp, tpeCase) if isOp == math.M6.isOp(math.I2.Power) => Some(if (isOp == math.M6.isOp(tpeCase)) Set(math.M6.Eql) else Set.empty)
+          // isXXX for power argument => empty, e.g. isAdd(power) = false
           case (isOp, math.I2.Power) if math.M6.isOps(cases).contains(isOp) => Some(Set.empty)
           // rest handled above by first two cases
           case (_, _) => None

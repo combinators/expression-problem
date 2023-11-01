@@ -31,15 +31,7 @@ object I1 {
           _ <- ffiStrings.enable()
         } yield ()
       }
-
-
-      /** MultBy requires Eval. */
-      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
-        op match {
-          case math.I1.MultBy => Some(Set(math.M0.Eval))
-          case _ => None
-        }
-      }
+      
 
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = math.I1.getModel.flatten.typeCases
@@ -48,12 +40,6 @@ object I1 {
         } else {
           None
         }
-      }
-
-      def applicable
-      (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        (potentialRequest.op == math.I1.MultBy) &&
-          (Set(math.M0.Lit, math.M0.Add, math.M1.Sub).contains(potentialRequest.tpeCase))
       }
 
       /** MultBy can support any N-ary data type, so prepare for this future eventuality here. */

@@ -34,10 +34,15 @@ sealed class I2M3I1N1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImpleme
         } yield ()
       }
 
-      def applicable
-      (forApproach: AIP[paradigm.type], onRequest: PotentialRequest): Boolean = {
-        Set(math.N1.PowBy).contains(onRequest.op) &&
-          Set(math.I2.Power).contains(onRequest.tpeCase)
+//      def applicable
+//      (forApproach: AIP[paradigm.type], onRequest: PotentialRequest): Boolean = {
+//        Set(math.N1.PowBy).contains(onRequest.op) &&
+//          Set(math.I2.Power).contains(onRequest.tpeCase)
+//      }
+
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        // TODO: dependency fix
+        None
       }
 
       // NEED this since I have stated I will handle some of these

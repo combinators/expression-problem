@@ -34,15 +34,6 @@ sealed class J7[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
     val j7Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model = math.J7.getModel
 
-      /** Simplify depends upon having a working eval. */
-      override def dependencies(op: Operation, dt: DataTypeCase): Option[Set[Operation]] = {
-        op match {
-          case math.K2.Simplify => Some(Set(math.M0.Eval))
-          // Since we are defining new type, we have to "carry over" the dependencies for Eql
-          case op if math.J2.isOps(model.flatten.typeCases).contains(op) => Some(Set(math.J2.Eql))
-          case _ => None
-        }
-      }
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
@@ -54,12 +45,27 @@ sealed class J7[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
         } yield ()
       }
 
-      def applicable(forApproach: AIP[paradigm.type], potentialRequest: PotentialRequest): Boolean = {
-        potentialRequest.op.tags.contains(math.J2.IsOp) ||
-        //  Set(math.J1.MultBy, math.J6.PowBy).contains(potentialRequest.op) ||  // short-circuit all of these for Inv only
-          (Set(math.K2.Simplify, math.K2.Collect, math.J3.PrettyP, math.M0.Eval, math.J1.MultBy, math.J6.PowBy, math.J5.Equals, math.J2.Eql, math.J4.Identifier, Operation.asTree).contains(potentialRequest.op) &&
-            Set(math.J7.Inv).contains(potentialRequest.tpeCase))
+//      /** Simplify depends upon having a working eval. */
+//      override def dependencies(op: Operation, dt: DataTypeCase): Option[Set[Operation]] = {
+//        op match {
+//          case math.K2.Simplify => Some(Set(math.M0.Eval))
+//          // Since we are defining new type, we have to "carry over" the dependencies for Eql
+//          case op if math.J2.isOps(model.flatten.typeCases).contains(op) => Some(Set(math.J2.Eql))
+//          case _ => None
+//        }
+//      }
+//      def applicable(forApproach: AIP[paradigm.type], potentialRequest: PotentialRequest): Boolean = {
+//        potentialRequest.op.tags.contains(math.J2.IsOp) ||
+//        //  Set(math.J1.MultBy, math.J6.PowBy).contains(potentialRequest.op) ||  // short-circuit all of these for Inv only
+//          (Set(math.K2.Simplify, math.K2.Collect, math.J3.PrettyP, math.M0.Eval, math.J1.MultBy, math.J6.PowBy, math.J5.Equals, math.J2.Eql, math.J4.Identifier, Operation.asTree).contains(potentialRequest.op) &&
+//            Set(math.J7.Inv).contains(potentialRequest.tpeCase))
+//      }
+
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        // TODO: dependency fix
+        None
       }
+      
 
 //      override def applicableIn(forApproach:  AIP[paradigm.type], onRequest: PotentialRequest,currentModel:GenericModel): Option[GenericModel] = {
 //        // must be designed to only return (to be safe) Java-accessible which is former branch only one step in past.
@@ -182,7 +188,7 @@ sealed class J7[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
       def logic(forApproach: AIP[paradigm.type])
                (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] = {
-        assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name)
+        //assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name) TODO: fix assert
         import AnyParadigm.syntax._
         import ffiArithmetic.arithmeticCapabilities._
         import ffiStrings.stringCapabilities._

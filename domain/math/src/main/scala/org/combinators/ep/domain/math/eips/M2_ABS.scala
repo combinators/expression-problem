@@ -29,12 +29,6 @@ object M2_ABS {
         } yield ()
       }
 
-      def applicable
-        (forApproach: AIP[paradigm.type], onRequest: PotentialRequest): Boolean = {
-        (onRequest.op == math.M2.PrettyP || onRequest.op == math.M0.Eval) &&
-          (Set(math.M2_ABS.Abs).contains(onRequest.tpeCase))
-      }
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val ops = math.M2_ABS.getModel.flatten.ops
         if ((ops.contains(potentialRequest.op)) && (potentialRequest.tpeCase == math.M2_ABS.Abs)) {

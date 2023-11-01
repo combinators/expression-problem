@@ -34,17 +34,6 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
     val m8Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model = math.M8.getModel
 
-      /** Simplify depends upon having a working eval. */
-      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
-          op match {
-            case math.M4.Simplify => Some(Set(math.M0.Eval))
-              // Since we are defining new type, we have to "carry over" the dependencies for Eql
-            case math.M6.Eql => Some(math.M6.isOps(model.flatten.typeCases).toSet)
-            case op if math.M6.isOps(model.flatten.typeCases).contains(op) => Some(Set(math.M6.Eql))
-            case _ => None
-          }
-      }
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = math.M8.getModel.flatten.typeCases
         (potentialRequest.op, potentialRequest.tpeCase) match {
@@ -61,19 +50,7 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
         }
       }
 
-      /*
-      case (math.I1.MultBy, tpeCase) if cases.contains(tpeCase) => Some(Set.empty)
-      case (math.M7.PowBy, tpeCase) if cases.contains(tpeCase) => Some(Set.empty)
-      case (math.M4.Collect, math.I2.Power) => Some(Set.empty)
-      case (math.M4.Simplify, math.I2.Power) => Some(Set(math.M0.Eval))
-      case (math.M5.Identifier, math.I2.Power) => Some(Set.empty)
-      case (Operation.asTree, math.I2.Power) => Some(Set(math.M5.Identifier))
-      case (math.M6.Equals, math.I2.Power) => Some(Set(Operation.asTree))
-      case (math.M6.Eql, math.I2.Power) => Some(Set(math.M6.isOp(math.I2.Power)))
-      case (isOp, math.I2.Power) if math.M6.isOps(cases).contains(isOp) => Some(Set.empty)
-      case (isOp, tpeCase) if isOp == math.M6.isOp(math.I2.Power) && cases.contains(tpeCase) => Some(Set(math.M6.Eql))
-      // rest handled above by first two cases
-       */
+
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
@@ -83,11 +60,6 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
           _ <- ffiStrings.enable()
           _ <- ffiEquality.enable()
         } yield ()
-      }
-
-      def applicable(forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        math.M8.getModel.flatten.ops.contains(potentialRequest.op) &&
-          Set(math.M8.Inv).contains(potentialRequest.tpeCase)
       }
 
       private def simplifyLogic(forApproach: AIP[paradigm.type])

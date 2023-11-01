@@ -43,13 +43,6 @@ object I2 {
           None
         }
       }
-
-      def applicable
-      (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        Set(math.I1.MultBy,math.M0.Eval,math.M2.PrettyP).contains(potentialRequest.op) &&
-          Set(math.I2.Power).contains(potentialRequest.tpeCase)
-      }
-
       /** Do not call 'assert' since might not be applicable. */
       override def genericLogic(forApproach: AIP[paradigm.type])
                                (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):

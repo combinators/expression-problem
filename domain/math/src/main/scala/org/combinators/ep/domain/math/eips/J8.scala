@@ -30,10 +30,15 @@ object J8 {
         } yield ()
       }
 
-      def applicable
-        (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        (potentialRequest.op == math.J8.Height) &&
-          Set(math.M0.Lit, math.M0.Add, math.J1.Sub,math.J2.Mult,math.J3.Divd,math.J3.Neg,math.K1.Power,math.J7.Inv).contains(potentialRequest.tpeCase)
+//      def applicable
+//        (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
+//        (potentialRequest.op == math.J8.Height) &&
+//          Set(math.M0.Lit, math.M0.Add, math.J1.Sub,math.J2.Mult,math.J3.Divd,math.J3.Neg,math.K1.Power,math.J7.Inv).contains(potentialRequest.tpeCase)
+//      }
+
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        // TODO: dependency fix
+        None
       }
 
       /** Generic logic takes care of the structure-based cases, only Lit needs special handling. */
@@ -90,7 +95,7 @@ object J8 {
       (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
 
-        assert(applicable(forApproach)(onRequest))
+        //assert(applicable(forApproach)(onRequest)) TODO: fix assert
 
         onRequest.tpeCase match {
           case math.M0.Lit =>

@@ -26,15 +26,7 @@ object M5 {
           _ <- ffiTrees.enable()
         } yield ()
       }
-
-      /** AsTree depends upon Identifier. */
-      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
-        if (op == Operation.asTree) {
-          Some(Set(math.M5.Identifier))
-        } else {
-          None
-        }
-      }
+      
 
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = math.M5.getModel.flatten.typeCases
@@ -48,12 +40,7 @@ object M5 {
           None
         }
       }
-
-      def applicable
-        (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        Set(math.M5.Identifier, Operation.asTree).contains(potentialRequest.op) &&
-          Set(math.M3.Divd,math.M3.Mult, math.M3.Neg,math.M1.Sub,math.M0.Add,math.M0.Lit).contains(potentialRequest.tpeCase)
-      }
+      
 
       /** Can handle any AsTree or Identifier operations. */
       override def genericLogic

@@ -26,13 +26,7 @@ object M3 {
           _ <- ffiStrings.enable()
         } yield ()
       }
-
-      def applicable
-        (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        Set(math.M0.Eval, math.M2.PrettyP).contains(potentialRequest.op) &&
-          Set(math.M3.Divd, math.M3.Mult, math.M3.Neg).contains(potentialRequest.tpeCase)
-      }
-
+      
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val ops = math.M3.getModel.flatten.ops
         if ((math.M3.getModel.typeCases.contains(potentialRequest.tpeCase)) && ops.contains(potentialRequest.op)) {

@@ -32,14 +32,6 @@ object M7 {
         } yield ()
       }
 
-      /** PowBy depends on Eval. */
-      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
-        op match {
-          case math.M7.PowBy => Some(Set(math.M0.Eval))
-          case _ => None
-        }
-      }
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = math.M7.getModel.flatten.typeCases
         if (potentialRequest.op == math.M7.PowBy && cases.contains(potentialRequest.tpeCase)) {
@@ -50,11 +42,6 @@ object M7 {
         } else {
           None
         }
-      }
-
-      def applicable
-        (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        Set(math.M7.PowBy).contains(potentialRequest.op)
       }
 
       /** PowBy can support any N-ary data type, so prepare for this future eventuality here. */

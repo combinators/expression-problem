@@ -38,10 +38,6 @@ sealed class D1D2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
         } yield ()
       }
 
-      /** Nothing special here */
-      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
-        None
-      }
 
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         if (Set(math.D1.MultBy).contains(potentialRequest.op) && Set(math.D2.Mult, math.M1.Sub, math.M0.Add, math.M0.Lit).contains(potentialRequest.tpeCase)) {
@@ -49,34 +45,6 @@ sealed class D1D2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
         } else {
           None
         }
-      }
-
-      override def applicableIn
-        (forApproach:  AIP[paradigm.type], onRequest: PotentialRequest, currentModel:GenericModel): Option[GenericModel] = {
-
-        val forwardTable:PartialFunction[(Operation,DataTypeCase),GenericModel] = {
-          case (math.D1.MultBy, _) => model // I HANDLE these
-          //case (_, math.D2.Mult) => math.D2.getModel
-
-            // handles everything else
-          case _ => math.D1D2.getModel
-        }
-
-        val tblModel = forwardTable.lift(onRequest.op, onRequest.tpeCase)
-
-        // Because EIP could be "further in future" then a given model, we need to be sure to
-        // only return forwarding information when we have a hit on the currentModel.
-        if (model == currentModel || model.before(currentModel)) {
-          tblModel
-        } else {
-          None
-        }
-      }
-
-      def applicable
-      (forApproach: AIP[paradigm.type], onRequest: PotentialRequest): Boolean = {
-        Set(math.D1.MultBy).contains(onRequest.op) &&
-          Set(math.D2.Mult,math.M1.Sub,math.M0.Add,math.M0.Lit).contains(onRequest.tpeCase)
       }
 
       // NEED this since I have stated I will handle some of these

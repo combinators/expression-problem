@@ -7,7 +7,7 @@ import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedReq
 import org.combinators.ep.generator.paradigm.AnyParadigm
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, RealArithmetic, Strings}
 import EvolutionImplementationProvider._
-import org.combinators.ep.domain.abstractions.TypeRep
+import org.combinators.ep.domain.abstractions.{Operation, TypeRep}
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.generator.paradigm.control.Imperative
 
@@ -30,10 +30,15 @@ object X1 {
         } yield ()
       }
 
-      def applicable
-      (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        (potentialRequest.op == math.M0.Eval) && Set(math.X1.Sub).contains(potentialRequest.tpeCase) ||
-          Set(math.X1.PrettyP,math.X1.MultBy).contains(potentialRequest.op) && Set(math.X1.Sub,math.M0.Lit,math.M0.Add).contains(potentialRequest.tpeCase)
+//      def applicable
+//      (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
+//        (potentialRequest.op == math.M0.Eval) && Set(math.X1.Sub).contains(potentialRequest.tpeCase) ||
+//          Set(math.X1.PrettyP,math.X1.MultBy).contains(potentialRequest.op) && Set(math.X1.Sub,math.M0.Lit,math.M0.Add).contains(potentialRequest.tpeCase)
+//      }
+
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        // TODO: dependency fix
+        None
       }
 
       override def logic
@@ -45,7 +50,7 @@ object X1 {
         import paradigm._
         import methodBodyCapabilities._
         import AnyParadigm.syntax._
-        assert(applicable(forApproach)(onRequest))
+        // assert(applicable(forApproach)(onRequest)) TODO: fix assert
 
         def operate(atts: Seq[syntax.Expression]): Generator[paradigm.MethodBodyContext, syntax.Expression] =
           onRequest.request.op match {

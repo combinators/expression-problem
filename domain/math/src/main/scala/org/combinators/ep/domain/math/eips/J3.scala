@@ -29,20 +29,25 @@ object J3 {
         } yield ()
       }
 
-      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
-        op match {
-          case math.J2.Eql => Some(math.J2.isOps(model.flatten.typeCases).toSet)
-          case op if math.J2.isOps(Seq(dt)).contains(op) => Some(Set(math.J2.Eql))
-          case _ => None
-        }
-      }
+//      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
+//        op match {
+//          case math.J2.Eql => Some(math.J2.isOps(model.flatten.typeCases).toSet)
+//          case op if math.J2.isOps(Seq(dt)).contains(op) => Some(Set(math.J2.Eql))
+//          case _ => None
+//        }
+//      }
+//
+//      def applicable
+//      (forApproach: AIP[paradigm.type], potentialRequest: PotentialRequest): Boolean = {
+//        (Set(math.M0.Eval,math.J1.MultBy,math.J2.Eql).contains(potentialRequest.op) && Set(math.J3.Divd, math.J3.Neg).contains(potentialRequest.tpeCase)) ||
+//          Set(math.J3.PrettyP).contains(potentialRequest.op) ||
+//          math.J2.isOps(Seq(math.J3.Neg, math.J3.Divd)).contains(potentialRequest.op) || // needed for isTypeCase for new type cases being applied to old types... [handles isNeg x sub]
+//          Set(math.J3.Divd, math.J3.Neg).contains(potentialRequest.tpeCase)   // needed for isSub x Neg (and others)
+//      }
 
-      def applicable
-      (forApproach: AIP[paradigm.type], potentialRequest: PotentialRequest): Boolean = {
-        (Set(math.M0.Eval,math.J1.MultBy,math.J2.Eql).contains(potentialRequest.op) && Set(math.J3.Divd, math.J3.Neg).contains(potentialRequest.tpeCase)) ||
-          Set(math.J3.PrettyP).contains(potentialRequest.op) ||
-          math.J2.isOps(Seq(math.J3.Neg, math.J3.Divd)).contains(potentialRequest.op) || // needed for isTypeCase for new type cases being applied to old types... [handles isNeg x sub]
-          Set(math.J3.Divd, math.J3.Neg).contains(potentialRequest.tpeCase)   // needed for isSub x Neg (and others)
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        // TODO: dependency fix
+        None
       }
 
       /** Do not call 'assert' since might not be applicable. */
@@ -61,7 +66,7 @@ object J3 {
         import paradigm._
         import methodBodyCapabilities._
 
-        assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name)
+        // assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name) TODO: fix assert
 
         def operate(): Generator[paradigm.MethodBodyContext, Option[syntax.Expression]] = {
 

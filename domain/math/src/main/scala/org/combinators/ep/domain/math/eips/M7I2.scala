@@ -48,15 +48,6 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
         } yield ()
       }
 
-      /** Eql dependencies propagate. */
-      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
-        op match {
-          case math.M6.Eql => Some(math.M6.isOps(model.flatten.typeCases).toSet)
-          case op if math.M6.isOps(model.flatten.typeCases).contains(op) => Some(Set(math.M6.Eql))
-          case _ => None
-        }
-      }
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = math.M7I2.getModel.flatten.typeCases
         (potentialRequest.op, potentialRequest.tpeCase) match {
@@ -78,64 +69,7 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
           case (_, _) => None
         }
       }
-
-      // TODO: Why isn't PrettyP in this applicable check, since it appears below in the applicableIn. Because it was there before the branching,
-      // TODO: and so datatypes know what to do.
-      def applicable
-      (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        potentialRequest.op.tags.contains(math.M6.IsOp) ||
-        (potentialRequest.op == math.M7.PowBy) ||
-        (Set(math.M6.Equals,math.M6.Eql,Operation.asTree,math.M5.Identifier,math.M4.Collect,math.M4.Simplify).contains(potentialRequest.op) &&
-          Set(math.I2.Power).contains(potentialRequest.tpeCase)) ||
-        (Set(math.I1.MultBy).contains(potentialRequest.op) &&
-          Set(math.M3.Divd, math.M3.Mult, math.M3.Neg).contains(potentialRequest.tpeCase))
-      }
-
-      override def applicableIn(forApproach:  AIP[paradigm.type], onRequest: PotentialRequest,currentModel:GenericModel): Option[GenericModel] = {
-        // must be designed to only return (to be safe) Java-accessible which is former branch only one step in past.
-        val forwardTable:PartialFunction[(Operation,DataTypeCase),GenericModel] = {
-          case (op,tpe) if op.tags.contains(math.M6.IsOp) => math.M6.getModel    // where isXXX is generically defined
-
-          case (math.I1.MultBy, math.M3.Divd) => model // I HANDLE these
-          case (math.I1.MultBy, math.M3.Mult) => model // I HANDLE these
-          case (math.I1.MultBy, math.M3.Neg) => model  // I HANDLE these
-          case (math.I1.MultBy, _) => math.I2.getModel
-
-          case (math.M2.PrettyP, math.I2.Power) => math.I2.getModel     // delegate because POW is new type in independent branch
-          case (math.M2.PrettyP, _) => math.M3.getModel
-
-          case (math.M4.Collect, math.I2.Power) => model    // I have to handle this
-          case (math.M4.Collect, _) => math.M4.getModel
-
-          case (math.M4.Simplify, math.I2.Power) => model   // I have to handle this
-          case (math.M4.Simplify, _) => math.M4.getModel
-
-          case (math.M5.Identifier, math.I2.Power) => model   // I have to handle this (generically)
-          case (math.M5.Identifier, _) => math.M5.getModel
-
-          case (Operation.asTree, math.I2.Power) => model   // I have to handle this
-          case (Operation.asTree, _) => math.M5.getModel
-
-          case (math.M6.Equals, math.I2.Power) => model    // I have to handle this
-          case (math.M6.Equals, _) => math.M6.getModel
-
-          case (math.M6.Eql, math.I2.Power) => model    // I have to handle this
-          case (math.M6.Eql, _) => math.M6.getModel
-
-          //case (math.M7.PowBy, math.M0.Lit) => math.M7.getModel    // not sure why but perhaps it is a non-recursive type
-          case (math.M7.PowBy, _) => model                  // I take responsibility
-        }
-
-        val tblModel = forwardTable.lift(onRequest.op, onRequest.tpeCase)
-
-        // Because EIP could be "further in future" then a given model, we need to be sure to
-        // only return forwarding information when we have a hit on the currentModel.
-        if (model == currentModel || model.before(currentModel)) {
-            tblModel
-        } else {
-          None
-        }
-      }
+      
 
       // Simplify of Power -- if exponent is 1, then ignore! If exponent is 0, turn to 1; if exponent is -1, turn to DivD
       private def simplifyLogic(forApproach: AIP[paradigm.type])

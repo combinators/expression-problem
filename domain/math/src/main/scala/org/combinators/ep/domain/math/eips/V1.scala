@@ -43,9 +43,14 @@ sealed class V1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
         } yield ()
       }
 
-      def applicable(forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        Set(math.C2.Collect,math.M2.PrettyP,math.M0.Eval,math.Q1.Identifier,Operation.asTree).contains(potentialRequest.op) &&
-          Set(math.V1.Inv).contains(potentialRequest.tpeCase)
+//      def applicable(forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
+//        Set(math.C2.Collect,math.M2.PrettyP,math.M0.Eval,math.Q1.Identifier,Operation.asTree).contains(potentialRequest.op) &&
+//          Set(math.V1.Inv).contains(potentialRequest.tpeCase)
+//      }
+
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        // TODO: dependency fix
+        None
       }
 
       /** Do not call 'assert' since might not be applicable. */
@@ -57,7 +62,7 @@ sealed class V1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
       def logic(forApproach: AIP[paradigm.type])
                (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] = {
-        assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name)
+        // assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name) TODO: fix assert
         import AnyParadigm.syntax._
         import ffiArithmetic.arithmeticCapabilities._
         import ffiStrings.stringCapabilities._

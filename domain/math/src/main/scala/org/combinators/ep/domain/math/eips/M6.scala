@@ -28,16 +28,7 @@ object M6 {
           _ <- ffiBooleans.enable()
         } yield ()
       }
-
-      /** Equals depends upon asTree method */
-      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
-        op match {
-          case math.M6.Equals => Some(Set(Operation.asTree))
-          case math.M6.Eql => Some(math.M6.isOps(model.flatten.typeCases).toSet)
-          case op if math.M6.isOps(model.flatten.typeCases).contains(op) => Some(Set(math.M6.Eql))
-          case _ => None
-        }
-      }
+      
 
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = math.M6.getModel.flatten.typeCases
@@ -51,14 +42,6 @@ object M6 {
         } else {
           None
         }
-      }
-
-      def applicable
-        (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        potentialRequest.op.tags.contains(math.M6.IsOp) ||
-          (math.M6.getModel.ops.contains(potentialRequest.op) &&
-          // Constraint to ensure we have an implementation for asTree, which is used in this equality implementation provider
-          m5Provider.applicable(forApproach,potentialRequest.copy(op = Operation.asTree)))
       }
 
 

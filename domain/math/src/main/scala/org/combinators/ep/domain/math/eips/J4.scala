@@ -27,19 +27,24 @@ object J4 {
         } yield ()
       }
 
-      /** AsTree depends upon Identifier. */
-      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
-        if (op == Operation.asTree) {
-          Some(Set(math.J4.Identifier))
-        } else {
-          None
-        }
-      }
+//      /** AsTree depends upon Identifier. */
+//      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
+//        if (op == Operation.asTree) {
+//          Some(Set(math.J4.Identifier))
+//        } else {
+//          None
+//        }
+//      }
+//
+//      def applicable
+//        (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
+//        Set(math.J4.Identifier, Operation.asTree).contains(potentialRequest.op) &&
+//          Set(math.M0.Add,math.M0.Lit,math.J1.Sub,math.J2.Mult, math.J3.Neg, math.J3.Divd).contains(potentialRequest.tpeCase)
+//      }
 
-      def applicable
-        (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        Set(math.J4.Identifier, Operation.asTree).contains(potentialRequest.op) &&
-          Set(math.M0.Add,math.M0.Lit,math.J1.Sub,math.J2.Mult, math.J3.Neg, math.J3.Divd).contains(potentialRequest.tpeCase)
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        // TODO: dependency fix
+        None
       }
 
       /** Can handle any AsTree or Identifier operations. */
@@ -91,7 +96,7 @@ object J4 {
         (forApproach: AIP[paradigm.type])
         (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
-        assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name)
+        // assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name) TODO: fix assert
         onRequest.request.op match {
           case math.J4.Identifier => genericLogic(forApproach)(onRequest)
           case op if op == Operation.asTree => genericLogic(forApproach)(onRequest)

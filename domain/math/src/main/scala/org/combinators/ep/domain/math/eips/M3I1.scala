@@ -33,30 +33,35 @@ sealed class M3I1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
         } yield ()
       }
 
-      override def applicableIn
-        (forApproach:  AIP[paradigm.type], onRequest: PotentialRequest, currentModel:GenericModel): Option[GenericModel] = {
+//      override def applicableIn
+//        (forApproach:  AIP[paradigm.type], onRequest: PotentialRequest, currentModel:GenericModel): Option[GenericModel] = {
+//
+//        val forwardTable:PartialFunction[(Operation,DataTypeCase),GenericModel] = {
+//          case (math.I1.MultBy, math.M3.Divd) => model // I HANDLE these
+//          case (math.I1.MultBy, math.M3.Mult) => model // I HANDLE these
+//          case (math.I1.MultBy, math.M3.Neg) => model  // I HANDLE these
+//        }
+//
+//        val tblModel = forwardTable.lift(onRequest.op, onRequest.tpeCase)
+//
+//        // Because EIP could be "further in future" then a given model, we need to be sure to
+//        // only return forwarding information when we have a hit on the currentModel.
+//        if (model == currentModel || model.before(currentModel)) {
+//          tblModel
+//        } else {
+//          None
+//        }
+//      }
+//
+//      def applicable
+//      (forApproach: AIP[paradigm.type], onRequest: PotentialRequest): Boolean = {
+//        Set(math.I1.MultBy).contains(onRequest.op) &&
+//          Set(math.M3.Mult,math.M3.Divd,math.M3.Neg).contains(onRequest.tpeCase)
+//      }
 
-        val forwardTable:PartialFunction[(Operation,DataTypeCase),GenericModel] = {
-          case (math.I1.MultBy, math.M3.Divd) => model // I HANDLE these
-          case (math.I1.MultBy, math.M3.Mult) => model // I HANDLE these
-          case (math.I1.MultBy, math.M3.Neg) => model  // I HANDLE these
-        }
-
-        val tblModel = forwardTable.lift(onRequest.op, onRequest.tpeCase)
-
-        // Because EIP could be "further in future" then a given model, we need to be sure to
-        // only return forwarding information when we have a hit on the currentModel.
-        if (model == currentModel || model.before(currentModel)) {
-          tblModel
-        } else {
-          None
-        }
-      }
-
-      def applicable
-      (forApproach: AIP[paradigm.type], onRequest: PotentialRequest): Boolean = {
-        Set(math.I1.MultBy).contains(onRequest.op) &&
-          Set(math.M3.Mult,math.M3.Divd,math.M3.Neg).contains(onRequest.tpeCase)
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        // TODO: dependency fix
+        None
       }
 
       // NEED this since I have stated I will handle some of these

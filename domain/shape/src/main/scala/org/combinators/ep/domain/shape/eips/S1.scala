@@ -1,4 +1,5 @@
 package org.combinators.ep.domain.shape.eips      /*DD:LI:AI*/
+import org.combinators.ep.domain.abstractions.Operation
 import org.combinators.ep.domain.{GenericModel, shape}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
@@ -26,10 +27,15 @@ object S1 {
         } yield ()
       }
 
-      def applicable
-      (forApproach: AIP[paradigm.type], onRequest: PotentialRequest): Boolean = {
-        (onRequest.op == shape.S0.ContainsPt) &&
-          (Set(shape.S1.Union).contains(onRequest.tpeCase))
+//      def applicable
+//      (forApproach: AIP[paradigm.type], onRequest: PotentialRequest): Boolean = {
+//        (onRequest.op == shape.S0.ContainsPt) &&
+//          (Set(shape.S1.Union).contains(onRequest.tpeCase))
+//      }
+
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        // TODO: dependency fix
+        None
       }
 
       override def logic
@@ -40,7 +46,7 @@ object S1 {
         import ffiBoolean.booleanCapabilities._
 
         // no need to pass up to the chain since only Eval is known
-        assert(applicable(forApproach)(onRequest))
+        //assert(applicable(forApproach)(onRequest)) TODO: fix assert
 
         onRequest.request.op match {
           case op if op == shape.S0.ContainsPt => {

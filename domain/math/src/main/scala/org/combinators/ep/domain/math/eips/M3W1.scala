@@ -46,33 +46,37 @@ sealed class M3W1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
           _ <- w1Provider.initialize(forApproach)
         } yield ()
       }
-      
-      // TODO: Why isn't PrettyP in this applicable check, since it appears below in the applicableIn. Because it was there
-      // TODO: before the branching,
-      // TODO: and so datatypes know what to do.
-      override def applicable
-      (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        Set(math.M2.PrettyP).contains(potentialRequest.op) &&
-          Set(math.W1.Power).contains(potentialRequest.tpeCase)
-      }
 
-      override def applicableIn(forApproach:  AIP[paradigm.type], onRequest: PotentialRequest,currentModel:GenericModel): Option[GenericModel] = {
-        // must be designed to only return (to be safe) Java-accessible which is former branch only one step in past.
-        val forwardTable:PartialFunction[(Operation,DataTypeCase),GenericModel] = {
-          case (math.M2.PrettyP, math.W1.Power) => model    // I handle this one as merge
-          case (math.M2.PrettyP, _) => math.M3.getModel
-
-        }
-
-        val tblModel = forwardTable.lift(onRequest.op, onRequest.tpeCase)
-
-        // Because EIP could be "further in future" then a given model, we need to be sure to
-        // only return forwarding information when we have a hit on the currentModel.
-        if (model == currentModel || model.before(currentModel)) {
-            tblModel
-        } else {
-          None
-        }
+      //      // TODO: Why isn't PrettyP in this applicable check, since it appears below in the applicableIn. Because it was there
+      //      // TODO: before the branching,
+      //      // TODO: and so datatypes know what to do.
+      //      override def applicable
+      //      (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
+      //        Set(math.M2.PrettyP).contains(potentialRequest.op) &&
+      //          Set(math.W1.Power).contains(potentialRequest.tpeCase)
+      //      }
+      //
+      //      override def applicableIn(forApproach:  AIP[paradigm.type], onRequest: PotentialRequest,currentModel:GenericModel): Option[GenericModel] = {
+      //        // must be designed to only return (to be safe) Java-accessible which is former branch only one step in past.
+      //        val forwardTable:PartialFunction[(Operation,DataTypeCase),GenericModel] = {
+      //          case (math.M2.PrettyP, math.W1.Power) => model    // I handle this one as merge
+      //          case (math.M2.PrettyP, _) => math.M3.getModel
+      //
+      //        }
+      //
+      //        val tblModel = forwardTable.lift(onRequest.op, onRequest.tpeCase)
+      //
+      //        // Because EIP could be "further in future" then a given model, we need to be sure to
+      //        // only return forwarding information when we have a hit on the currentModel.
+      //        if (model == currentModel || model.before(currentModel)) {
+      //            tblModel
+      //        } else {
+      //          None
+      //        }
+      //      }
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        // TODO: dependency fix
+        None
       }
 
       // should be no need to define genericLogic since (by default) it will go through the chain of past providers...
@@ -95,7 +99,7 @@ sealed class M3W1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
         import paradigm._
         import methodBodyCapabilities._
         import ffiStrings.stringCapabilities._
-        assert(applicable(forApproach)(onRequest))
+        //assert(applicable(forApproach)(onRequest)) TODO: fix assert
 
         val result = onRequest.tpeCase match {
           case power@math.W1.Power => {

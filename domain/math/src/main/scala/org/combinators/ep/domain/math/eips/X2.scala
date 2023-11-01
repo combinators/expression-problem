@@ -1,5 +1,6 @@
 package org.combinators.ep.domain.math.eips      /*DD:LI:AI*/
 
+import org.combinators.ep.domain.abstractions.Operation
 import org.combinators.ep.domain.math
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
@@ -24,10 +25,14 @@ object X2  {
         } yield ()
       }
 
-      def applicable
-      (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        Set(math.M0.Eval,math.X1.PrettyP,math.X1.MultBy).contains(potentialRequest.op) &&
-          Set(math.X2.Times).contains(potentialRequest.tpeCase)
+//      def applicable
+//      (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
+//        Set(math.M0.Eval,math.X1.PrettyP,math.X1.MultBy).contains(potentialRequest.op) &&
+//          Set(math.X2.Times).contains(potentialRequest.tpeCase)
+//      }
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        // TODO: dependency fix
+        None
       }
 
       def logic

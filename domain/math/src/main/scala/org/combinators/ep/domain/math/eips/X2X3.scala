@@ -25,43 +25,48 @@ object X2X3 {
         } yield ()
       }
 
-      override def applicableIn
-      (forApproach:  AIP[paradigm.type])
-      (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression],currentModel:GenericModel): Option[GenericModel] = {
+//      override def applicableIn
+//      (forApproach:  AIP[paradigm.type])
+//      (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression],currentModel:GenericModel): Option[GenericModel] = {
+//
+//        val forwardTable:PartialFunction[(Operation,DataTypeCase),GenericModel] = {
+//          case (_, math.X2.Times) => math.X2.getModel
+//          case (_, math.X3.Divd) => math.X3.getModel
+//
+//          case (math.X1.MultBy, math.X1.Sub) => math.X3.getModel   // COULD BE EITHER ONE!!!
+//          case (math.X1.MultBy, math.M0.Add) => math.X3.getModel   // COULD BE EITHER ONE!!!
+//          case (math.X1.MultBy, math.M0.Lit) => math.X3.getModel   // COULD BE EITHER ONE!!!
+//
+//          case (math.X1.PrettyP, math.X1.Sub) => math.X3.getModel   // COULD BE EITHER ONE!!!
+//          case (math.X1.PrettyP, math.M0.Add) => math.X3.getModel   // COULD BE EITHER ONE!!!
+//          case (math.X1.PrettyP, math.M0.Lit) => math.X3.getModel   // COULD BE EITHER ONE!!!
+//
+//          case (math.M0.Eval, math.X1.Sub) => math.X3.getModel      // COULD BE EITHER ONE!!!
+//          case (math.M0.Eval, math.M0.Add) => math.X3.getModel      // COULD BE EITHER ONE!!!
+//          case (math.M0.Eval, math.M0.Lit) => math.X3.getModel      // COULD BE EITHER ONE!!!
+//
+//          // handles everything else
+//          case _ => math.X2X3.getModel
+//        }
+//
+//        val tblModel = forwardTable.lift(onRequest.request.op, onRequest.tpeCase)
+//
+//        // Because EIP could be "further in future" then a given model, we need to be sure to
+//        // only return forwarding information when we have a hit on the currentModel.
+//        if (model == currentModel || model.before(currentModel)) {
+//          tblModel
+//        } else {
+//          None
+//        }
+//      }
+//
+//      def applicable
+//      (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = false
 
-        val forwardTable:PartialFunction[(Operation,DataTypeCase),GenericModel] = {
-          case (_, math.X2.Times) => math.X2.getModel
-          case (_, math.X3.Divd) => math.X3.getModel
-
-          case (math.X1.MultBy, math.X1.Sub) => math.X3.getModel   // COULD BE EITHER ONE!!!
-          case (math.X1.MultBy, math.M0.Add) => math.X3.getModel   // COULD BE EITHER ONE!!!
-          case (math.X1.MultBy, math.M0.Lit) => math.X3.getModel   // COULD BE EITHER ONE!!!
-
-          case (math.X1.PrettyP, math.X1.Sub) => math.X3.getModel   // COULD BE EITHER ONE!!!
-          case (math.X1.PrettyP, math.M0.Add) => math.X3.getModel   // COULD BE EITHER ONE!!!
-          case (math.X1.PrettyP, math.M0.Lit) => math.X3.getModel   // COULD BE EITHER ONE!!!
-
-          case (math.M0.Eval, math.X1.Sub) => math.X3.getModel      // COULD BE EITHER ONE!!!
-          case (math.M0.Eval, math.M0.Add) => math.X3.getModel      // COULD BE EITHER ONE!!!
-          case (math.M0.Eval, math.M0.Lit) => math.X3.getModel      // COULD BE EITHER ONE!!!
-
-          // handles everything else
-          case _ => math.X2X3.getModel
-        }
-
-        val tblModel = forwardTable.lift(onRequest.request.op, onRequest.tpeCase)
-
-        // Because EIP could be "further in future" then a given model, we need to be sure to
-        // only return forwarding information when we have a hit on the currentModel.
-        if (model == currentModel || model.before(currentModel)) {
-          tblModel
-        } else {
-          None
-        }
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        // TODO: dependency fix
+        None
       }
-
-      def applicable
-      (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = false
 
       // HACK: THIS CAN ENTIRELY BE REMOVED BUT HOW TO DO SKIP HERE?
       def logic

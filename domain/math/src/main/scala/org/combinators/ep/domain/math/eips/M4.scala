@@ -34,19 +34,6 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
     val m4Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model = math.M4.getModel
 
-      /** Simplify depends upon having a working eval. */
-      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
-        dt match {
-          case math.M0.Lit => Some(Set.empty)
-          case _  => {
-            op match {
-              case math.M4.Simplify => Some(Set(math.M0.Eval))
-              case _ => None
-            }
-          }
-        }
-      }
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = math.M4.getModel.flatten.typeCases
         if (cases.contains(potentialRequest.tpeCase)) {
@@ -70,12 +57,7 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
           _ <- ffiEquality.enable()
         } yield ()
       }
-
-      def applicable(forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        (Set(math.M4.Simplify).contains(potentialRequest.op) &&
-          math.M4.getModel.flatten.typeCases.toSet.contains(potentialRequest.tpeCase)) ||
-          Set(math.M4.Collect).contains(potentialRequest.op)  // any foreseeable DT can be collected
-      }
+      
 
       private def collectLogic
       (forApproach: AIP[paradigm.type])

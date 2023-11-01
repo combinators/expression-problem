@@ -32,19 +32,24 @@ object J2 {
         } yield ()
       }
 
-      /** Equals depends upon asTree method */
-      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
-        op match {
-          case math.J2.Eql => Some(math.J2.isOps(model.flatten.typeCases).toSet)
-          case op if math.J2.isOps(model.flatten.typeCases).contains(op) => Some(Set(math.J2.Eql))
-          case _ => None
-        }
-      }
+//      /** Equals depends upon asTree method */
+//      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
+//        op match {
+//          case math.J2.Eql => Some(math.J2.isOps(model.flatten.typeCases).toSet)
+//          case op if math.J2.isOps(model.flatten.typeCases).contains(op) => Some(Set(math.J2.Eql))
+//          case _ => None
+//        }
+//      }
+//
+//      def applicable
+//      (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
+//        (Set(math.J2.Mult).contains(potentialRequest.tpeCase) && model.flatten.ops.contains(potentialRequest.op)) ||
+//          (model.flatten.typeCases.contains(potentialRequest.tpeCase) && model.ops.contains(potentialRequest.op))   // needed for isTypeCase x past Type Cases
+//      }
 
-      def applicable
-      (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        (Set(math.J2.Mult).contains(potentialRequest.tpeCase) && model.flatten.ops.contains(potentialRequest.op)) ||
-          (model.flatten.typeCases.contains(potentialRequest.tpeCase) && model.ops.contains(potentialRequest.op))   // needed for isTypeCase x past Type Cases 
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        // TODO: dependency fix
+        None
       }
 
 //      // need to say we are NOT applicable when doing MultBy while still in J1
@@ -134,7 +139,7 @@ object J2 {
         import ffiEquality.equalityCapabilities._
         import ffiArithmetic.arithmeticCapabilities._
 
-        assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name)
+        // assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name) TODO: fix assert
         onRequest.request.op match {
           case math.J2.Eql =>  genericLogic(forApproach)(onRequest)
           case op if op == math.J2.isOp(onRequest.tpeCase) => genericLogic(forApproach)(onRequest)

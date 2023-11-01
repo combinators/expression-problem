@@ -33,20 +33,25 @@ object K1 {
         } yield ()
       }
 
-      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
-        op match {
-          case math.J2.Eql => Some(math.J2.isOps(model.flatten.typeCases).toSet)
-          case op if math.J2.isOps(Seq(dt)).contains(op) => Some(Set(math.J2.Eql))
-          case op if Seq(math.J1.MultBy).contains(op) => Some(Set(math.M0.Eval))    // needed for extensible visitor for K1 for some reason
-          case _ => None
-        }
-      }
+//      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
+//        op match {
+//          case math.J2.Eql => Some(math.J2.isOps(model.flatten.typeCases).toSet)
+//          case op if math.J2.isOps(Seq(dt)).contains(op) => Some(Set(math.J2.Eql))
+//          case op if Seq(math.J1.MultBy).contains(op) => Some(Set(math.M0.Eval))    // needed for extensible visitor for K1 for some reason
+//          case _ => None
+//        }
+//      }
+//
+//      def applicable
+//      (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
+//        (Set(math.J1.MultBy,math.M0.Eval,math.J2.Eql).contains(potentialRequest.op) && Set(math.K1.Power).contains(potentialRequest.tpeCase)) ||
+//          math.J2.isOps(Seq(math.K1.Power)).contains(potentialRequest.op) || // needed for isTypeCase for new type cases being applied to old types... [handles isNeg x sub]
+//          Set(math.K1.Power).contains(potentialRequest.tpeCase)   // needed for isSub x Neg (and others)
+//      }
 
-      def applicable
-      (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        (Set(math.J1.MultBy,math.M0.Eval,math.J2.Eql).contains(potentialRequest.op) && Set(math.K1.Power).contains(potentialRequest.tpeCase)) ||
-          math.J2.isOps(Seq(math.K1.Power)).contains(potentialRequest.op) || // needed for isTypeCase for new type cases being applied to old types... [handles isNeg x sub]
-          Set(math.K1.Power).contains(potentialRequest.tpeCase)   // needed for isSub x Neg (and others)
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        // TODO: dependency fix
+        None
       }
 
       /** Do not call 'assert' since might not be applicable. */
@@ -65,7 +70,7 @@ object K1 {
         import ffiStrings.stringCapabilities._
         import paradigm._
         import methodBodyCapabilities._
-        assert(applicable(forApproach)(onRequest))
+        // assert(applicable(forApproach)(onRequest)) TODO: fix assert
 
         // need to know when isOp is not in the onRequest Type (to handle return false; default implementation)
         // because then we can return FALSE

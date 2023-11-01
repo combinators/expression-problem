@@ -34,19 +34,28 @@ sealed class K2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
     val k2Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model = math.K2.getModel
 
-      /** Simplify depends upon having a working eval. */
-      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
-        dt match {
-          case math.M0.Lit => Some(Set.empty)
-          case _  => {
-            op match {
-              case math.K2.Simplify => Some(Set(math.M0.Eval))
-              case _ => None
-            }
-          }
-        }
-      }
+//      /** Simplify depends upon having a working eval. */
+//      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
+//        dt match {
+//          case math.M0.Lit => Some(Set.empty)
+//          case _  => {
+//            op match {
+//              case math.K2.Simplify => Some(Set(math.M0.Eval))
+//              case _ => None
+//            }
+//          }
+//        }
+//      }
+//      def applicable(forApproach: AIP[paradigm.type], potentialRequest: PotentialRequest): Boolean = {
+//        (Set(math.K2.Simplify).contains(potentialRequest.op) &&
+//          math.K1.getModel.flatten.typeCases.toSet.contains(potentialRequest.tpeCase)) ||
+//          Set(math.K2.Collect).contains(potentialRequest.op) // any foreseeable DT can be collected
+//      }
 
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        // TODO: dependency fix
+        None
+      }
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
           _ <- ffiArithmetic.enable()
@@ -57,11 +66,7 @@ sealed class K2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
         } yield ()
       }
 
-      def applicable(forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        (Set(math.K2.Simplify).contains(potentialRequest.op) &&
-          math.K1.getModel.flatten.typeCases.toSet.contains(potentialRequest.tpeCase)) ||
-          Set(math.K2.Collect).contains(potentialRequest.op)  // any foreseeable DT can be collected
-      }
+
 
       private def collectLogic
       (forApproach: AIP[paradigm.type])
@@ -268,7 +273,7 @@ sealed class K2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
       def logic(forApproach: AIP[paradigm.type])
                (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] = {
-        assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name)
+        // assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name) TODO: fix assert
 
         onRequest.request.op match {
           case math.K2.Collect => genericLogic(forApproach)(onRequest)

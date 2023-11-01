@@ -33,13 +33,6 @@ object D3 {
           None
         }
       }
-
-      def applicable
-      (forApproach: AIP[paradigm.type], onRequest: PotentialRequest): Boolean = {
-        (onRequest.op == math.D3.PrettyP) &&
-          (Set(math.M0.Lit, math.M0.Add, math.M1.Sub, math.D2.Mult).contains(onRequest.tpeCase))
-      }
-
       /** Do not call 'assert' since might not be applicable. */
       override def genericLogic(forApproach: AIP[paradigm.type])
                                (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
@@ -54,7 +47,7 @@ object D3 {
         import paradigm._
         import methodBodyCapabilities._
 
-        assert(applicable(forApproach)(onRequest))
+        // assert(applicable(forApproach)(onRequest)) TODO: fix assert
 
         val result = onRequest.tpeCase match {
           case litC@math.M0.Lit =>

@@ -22,12 +22,7 @@ object M1 {
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         ffiArithmetic.enable()
       }
-
-      def applicable
-        (forApproach: AIP[paradigm.type], onRequest: PotentialRequest): Boolean = {
-        (onRequest.op == math.M0.Eval) && Set(math.M1.Sub).contains(onRequest.tpeCase)
-      }
-
+      
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         if ((potentialRequest.op == math.M0.Eval) && Set(math.M1.Sub).contains(potentialRequest.tpeCase)) {
           Some(Set.empty)

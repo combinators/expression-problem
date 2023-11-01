@@ -25,11 +25,6 @@ object D2 {
         } yield ()
       }
 
-      def applicable
-        (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        Set(math.M0.Eval).contains(potentialRequest.op) &&
-          Set(math.D2.Mult).contains(potentialRequest.tpeCase)
-      }
 
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         if (Set(math.M0.Eval).contains(potentialRequest.op) && Set(math.D2.Mult).contains(potentialRequest.tpeCase)) {

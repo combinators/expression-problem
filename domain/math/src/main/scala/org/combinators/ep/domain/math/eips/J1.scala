@@ -32,10 +32,15 @@ object J1 {
         } yield ()
       }
 
-      def applicable
-      (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        (potentialRequest.op == math.J1.MultBy && Set(math.M0.Lit, math.M0.Add, math.J1.Sub).contains(potentialRequest.tpeCase)) ||
-          (potentialRequest.op == math.M0.Eval) && Set(math.J1.Sub).contains(potentialRequest.tpeCase)
+//      def applicable
+//      (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
+//        (potentialRequest.op == math.J1.MultBy && Set(math.M0.Lit, math.M0.Add, math.J1.Sub).contains(potentialRequest.tpeCase)) ||
+//          (potentialRequest.op == math.M0.Eval) && Set(math.J1.Sub).contains(potentialRequest.tpeCase)
+//      }
+
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        // TODO: dependency fix
+        None
       }
 
       /** MultBy can support any N-ary data type, so prepare for this future eventuality here. */
@@ -57,7 +62,7 @@ object J1 {
         import paradigm._
         import methodBodyCapabilities._
 
-        assert(applicable(forApproach)(onRequest))
+        // assert(applicable(forApproach)(onRequest)) TODO: fix assert
 
         onRequest.tpeCase match {
 

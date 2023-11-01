@@ -33,16 +33,21 @@ object N1 {
       }
 
       /** PowBy depends on Eval. */
-      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
-        op match {
-          case math.N1.PowBy => Some(Set(math.M0.Eval))
-          case _ => None
-        }
-      }
+//      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
+//        op match {
+//          case math.N1.PowBy => Some(Set(math.M0.Eval))
+//          case _ => None
+//        }
+//      }
+//
+//      def applicable
+//        (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
+//        Set(math.N1.PowBy).contains(potentialRequest.op)
+//      }
 
-      def applicable
-        (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        Set(math.N1.PowBy).contains(potentialRequest.op)
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        // TODO: dependency fix
+        None
       }
 
       /** PowBy can support any N-ary data type, so prepare for this future eventuality here. */
@@ -62,7 +67,7 @@ object N1 {
         Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
         import paradigm._
         import methodBodyCapabilities._
-        assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name)
+        //assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name) TODO: fix assert
 
         onRequest.tpeCase match {
           //        default Exp<V> powBy(ep.Exp<V> exponent) {

@@ -1,5 +1,6 @@
 package org.combinators.ep.domain.math.eips     /*DD:LI:AI*/
 
+import org.combinators.ep.domain.abstractions.Operation
 import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
@@ -28,10 +29,15 @@ object W1 {
         } yield ()
       }
 
-      def applicable
-      (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        Set(math.M0.Eval).contains(potentialRequest.op) &&
-          Set(math.W1.Power).contains(potentialRequest.tpeCase)
+//      def applicable
+//      (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
+//        Set(math.M0.Eval).contains(potentialRequest.op) &&
+//          Set(math.W1.Power).contains(potentialRequest.tpeCase)
+//      }
+
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        // TODO: dependency fix
+        None
       }
         /** Do not call 'assert' since might not be applicable. */
       override def genericLogic(forApproach: AIP[paradigm.type])
@@ -49,7 +55,7 @@ object W1 {
         import ffiStrings.stringCapabilities._
         import paradigm._
         import methodBodyCapabilities._
-        assert(applicable(forApproach)(onRequest))
+        //assert(applicable(forApproach)(onRequest)) TODO: fix assert
 
         val result = onRequest.tpeCase match {
           case power@math.W1.Power => {

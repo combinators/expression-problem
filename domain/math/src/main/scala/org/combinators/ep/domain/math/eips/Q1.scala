@@ -31,21 +31,25 @@ object Q1 {
       }
 
       /** AsTree depends upon Identifier. */
-      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
-        if (op == Operation.asTree) {
-          Some(Set(math.Q1.Identifier))
-        } else {
+//      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
+//        if (op == Operation.asTree) {
+//          Some(Set(math.Q1.Identifier))
+//        } else {
+//          None
+//        }
+//      }
+//
+//      def applicable
+//        (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
+//        (Set(math.Q1.Identifier, Operation.asTree).contains(potentialRequest.op) &&
+//          Set(math.M3.Divd,math.M3.Mult, math.M3.Neg,math.M1.Sub,math.M0.Add,math.M0.Lit,math.W1.Power).contains(potentialRequest.tpeCase)) ||
+//          (Set(math.Q1.Sqrt).contains(potentialRequest.tpeCase) && Set(math.M2.PrettyP,math.M0.Eval,math.Q1.Identifier,Operation.asTree).contains(potentialRequest.op))
+//      }
+        
+        override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+          // TODO: dependency fix
           None
         }
-      }
-
-      def applicable
-        (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        (Set(math.Q1.Identifier, Operation.asTree).contains(potentialRequest.op) &&
-          Set(math.M3.Divd,math.M3.Mult, math.M3.Neg,math.M1.Sub,math.M0.Add,math.M0.Lit,math.W1.Power).contains(potentialRequest.tpeCase)) ||
-          (Set(math.Q1.Sqrt).contains(potentialRequest.tpeCase) && Set(math.M2.PrettyP,math.M0.Eval,math.Q1.Identifier,Operation.asTree).contains(potentialRequest.op))
-      }
-
       /** Can handle any AsTree or Identifier operations. */
       override def genericLogic
         (forApproach: AIP[paradigm.type])
@@ -100,7 +104,7 @@ object Q1 {
         import paradigm._
         import methodBodyCapabilities._
 
-        assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name)
+        //assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name) TODO: fix assert
         onRequest.request.op match {
           case math.Q1.Identifier => genericLogic(forApproach)(onRequest)
           case op if op == Operation.asTree => genericLogic(forApproach)(onRequest)

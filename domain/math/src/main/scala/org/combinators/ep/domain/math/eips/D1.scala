@@ -39,13 +39,6 @@ object D1 {
           None
         }
       }
-
-      def applicable
-      (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        (potentialRequest.op == math.D1.MultBy) &&
-          (Set(math.M0.Lit, math.M0.Add).contains(potentialRequest.tpeCase))
-      }
-
       /** MultBy can support any N-ary data type, so prepare for this future eventuality here. */
       override def genericLogic
         (forApproach: AIP[paradigm.type])

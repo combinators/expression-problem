@@ -29,31 +29,35 @@ object A1M3I2 {
         } yield ()
       }
 
-      override def applicableIn
-        (forApproach:  AIP[paradigm.type])
-        (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression],currentModel:GenericModel): Option[GenericModel] = {
-
-        val forwardTable:PartialFunction[(Operation,DataTypeCase),GenericModel] = {
-
-          case (_, math.I2.Power) => math.I2.getModel
-
-          // handles everything else
-          case _ => math.A1M3.getModel
-        }
-
-        val tblModel = forwardTable.lift(onRequest.request.op, onRequest.tpeCase)
-
-        // Because EIP could be "further in future" then a given model, we need to be sure to
-        // only return forwarding information when we have a hit on the currentModel.
-        if (model == currentModel || model.before(currentModel)) {
-          tblModel
-        } else {
-          None
-        }
+//      override def applicableIn
+//        (forApproach:  AIP[paradigm.type])
+//        (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression],currentModel:GenericModel): Option[GenericModel] = {
+//
+//        val forwardTable:PartialFunction[(Operation,DataTypeCase),GenericModel] = {
+//
+//          case (_, math.I2.Power) => math.I2.getModel
+//
+//          // handles everything else
+//          case _ => math.A1M3.getModel
+//        }
+//
+//        val tblModel = forwardTable.lift(onRequest.request.op, onRequest.tpeCase)
+//
+//        // Because EIP could be "further in future" then a given model, we need to be sure to
+//        // only return forwarding information when we have a hit on the currentModel.
+//        if (model == currentModel || model.before(currentModel)) {
+//          tblModel
+//        } else {
+//          None
+//        }
+//      }
+//
+//      // NOTHING NEW!
+//      def applicable(forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = false
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        // TODO: dependency fix
+        None
       }
-
-      // NOTHING NEW!
-      def applicable(forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = false
 
       def logic
       (forApproach: AIP[paradigm.type])

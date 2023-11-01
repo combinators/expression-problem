@@ -589,7 +589,7 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
     domainSpecific: EvolutionImplementationProvider[this.type],
   ): Set[Operation] = {
     val allTpeCases = domain.flatten.typeCases.distinct
-    val allDependencies = allTpeCases.map(tpeCase => domainSpecific.evolutionSpecificDependencies(op, tpeCase))
+    val allDependencies = allTpeCases.map(tpeCase => domainSpecific.evolutionSpecificDependencies(PotentialRequest(domain.baseDataType, tpeCase, op)))
     val combinedDependencies = allDependencies.foldLeft(Map.empty[GenericModel, Set[Operation]]){ case (combined, singular) =>
       val allDomainsWithDependencies = singular.keySet ++ combined.keySet
       allDomainsWithDependencies.foldLeft(Map.empty[GenericModel, Set[Operation]]){ case (newCombinedMap, currentDomain) =>

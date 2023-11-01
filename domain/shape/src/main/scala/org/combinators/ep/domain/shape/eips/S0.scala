@@ -1,6 +1,6 @@
 package org.combinators.ep.domain.shape.eips      /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.TypeRep
+import org.combinators.ep.domain.abstractions.{Operation, TypeRep}
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
@@ -44,11 +44,16 @@ object S0 {
           _ <- ffiStrings.enable()
         } yield ()
       }
-// Seq(Square,Circle,Translate), Seq(ContainsPt))
-      override def applicable
-      (forApproach: AIP[paradigm.type], potentialRequest: PotentialRequest): Boolean = {
-        (potentialRequest.op == shape.S0.ContainsPt) &&
-          (Set(shape.S0.Circle, shape.S0.Square, shape.S0.Translate).contains(potentialRequest.tpeCase))
+//// Seq(Square,Circle,Translate), Seq(ContainsPt))
+//      override def applicable
+//      (forApproach: AIP[paradigm.type], potentialRequest: PotentialRequest): Boolean = {
+//        (potentialRequest.op == shape.S0.ContainsPt) &&
+//          (Set(shape.S0.Circle, shape.S0.Square, shape.S0.Translate).contains(potentialRequest.tpeCase))
+//      }
+
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        // TODO: dependency fix
+        None
       }
 
       override def logic
@@ -60,7 +65,7 @@ object S0 {
         import ffiRealArithmetic.realArithmeticCapabilities._
 
         // no need to pass up to the chain since only Eval is known
-        assert(applicable(forApproach)(onRequest))
+        // assert(applicable(forApproach)(onRequest)) TODO: fix assert
 
         onRequest.request.op match {
           case op if op == shape.S0.ContainsPt =>

@@ -11,6 +11,8 @@ import org.combinators.ep.generator.paradigm.control.{Functional, Imperative}
 import org.combinators.ep.generator.paradigm.ffi._
 import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
 
+import scala.collection.immutable.Set
+
 // Code for M4. Takes adapters for return in if-then-else, s.t. functional- and imperative-style if-then-else can be
 // used in an uniform way.
 sealed class C2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P], IfBlockType](val paradigm: P) {
@@ -44,8 +46,13 @@ sealed class C2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
         } yield ()
       }
 
-      def applicable(forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        scala.collection.Set(math.C2.Collect).contains(potentialRequest.op)  // any foreseeable DT can be collected
+//      def applicable(forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
+//        scala.collection.Set(math.C2.Collect).contains(potentialRequest.op)  // any foreseeable DT can be collected
+//      }
+
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        // TODO: dependency fix
+        None
       }
 
       private def collectLogic
@@ -110,7 +117,7 @@ sealed class C2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
       def logic(forApproach: AIP[paradigm.type])
                (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] = {
-        assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name)
+        // assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name) TODO: fix assert
 
         onRequest.request.op match {
           case math.C2.Collect => genericLogic(forApproach)(onRequest)

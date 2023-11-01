@@ -30,10 +30,9 @@ object M9 {
         } yield ()
       }
 
-      def applicable
-        (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-        (potentialRequest.op == math.M9.Height) &&
-          Set(math.M0.Lit, math.M0.Add, math.M1.Sub,math.M3.Divd,math.M3.Mult,math.M3.Neg,math.I2.Power,math.M8.Inv).contains(potentialRequest.tpeCase)
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        // TODO: dependency fix
+        None
       }
 
       /** Generic logic takes care of the structure-based cases, only Lit needs special handling. */
@@ -93,7 +92,7 @@ object M9 {
         import AnyParadigm.syntax._
         import methodBodyCapabilities._
 
-        assert(applicable(forApproach)(onRequest))
+        //assert(applicable(forApproach)(onRequest)) TODO: fix assert
 
         onRequest.tpeCase match {
           case math.M0.Lit =>

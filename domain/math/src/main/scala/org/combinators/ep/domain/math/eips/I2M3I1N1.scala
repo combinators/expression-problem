@@ -1,6 +1,7 @@
 package org.combinators.ep.domain.math.eips    /*DD:LI:AI*/
 
 import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation}
+import org.combinators.ep.domain.math.systemI.I2
 import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
@@ -60,7 +61,7 @@ sealed class I2M3I1N1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImpleme
             val atts = onRequest.attributes.keys.toSeq
             val attExprs = onRequest.attributes.values.toSeq
             for {
-              res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.I2.Power, onRequest.selfReference, onRequest.request.arguments.head._2)
+              res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.systemI.I2.Power, onRequest.selfReference, onRequest.request.arguments.head._2)
             } yield Some(res)
         }
       }

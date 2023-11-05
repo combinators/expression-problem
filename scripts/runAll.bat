@@ -25,7 +25,7 @@ for %%a in (oo visitor visitorSideEffect extensibleVisitor interpreter dispatch 
      echo ====================================== >> target\analysis\jacoco.%%a
      set JAVA_HOME=%SAVED_JAVA_HOME%
 
-     sbt "language-java/runMain org.combinators.ep.language.java.DirectToDiskMainJ %%a %%e"
+     sbt "language-java/runMain org.combinators.ep.language.java.systemJ.DirectToDiskMainJ %%a %%e"
 
      @REM generated into target\ep2
      cd target\ep2

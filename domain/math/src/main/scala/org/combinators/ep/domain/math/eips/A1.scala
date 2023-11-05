@@ -2,6 +2,8 @@ package org.combinators.ep.domain.math.eips      /*DD:LI:AI*/
 
 import org.combinators.ep.domain.abstractions.Operation
 import org.combinators.ep.domain.math
+import org.combinators.ep.domain.math.{eips, systemI}
+import org.combinators.ep.domain.math.systemI.I1
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
@@ -25,15 +27,14 @@ object A1  {
         } yield ()
       }
 
-//      def applicable
-//      (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-//        Set(math.M0.Eval,math.M2.PrettyP,math.I1.MultBy).contains(potentialRequest.op) &&
-//          Set(math.A1.Times).contains(potentialRequest.tpeCase)
-//      }
+      // A1 adds TIMES data type
 
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
-        // TODO: dependency fix
-        None
+        if ((Set(math.M0.Eval, math.M2.PrettyP, math.systemI.I1.MultBy).contains(potentialRequest.op)) && Set(math.A1.Times).contains(potentialRequest.tpeCase)) {
+          Some(Set.empty)
+        } else {
+          None
+        }
       }
 
       def logic
@@ -46,6 +47,7 @@ object A1  {
         import ffiStrings.stringCapabilities._
         import AnyParadigm.syntax._
 
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
         def operate(atts: Seq[syntax.Expression]): Generator[paradigm.MethodBodyContext, syntax.Expression] =
           onRequest.request.op match {
             case math.M0.Eval =>
@@ -54,7 +56,7 @@ object A1  {
                 case _ => ???
               }
 
-            case math.I1.MultBy =>
+            case math.systemI.I1.MultBy =>
               onRequest.tpeCase match {
                 case other@math.A1.Times =>
                   val lAtt = other.attributes.head

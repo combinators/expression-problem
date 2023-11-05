@@ -47,7 +47,7 @@ object D3 {
         import paradigm._
         import methodBodyCapabilities._
 
-        // assert(applicable(forApproach)(onRequest)) TODO: fix assert
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         val result = onRequest.tpeCase match {
           case litC@math.M0.Lit =>

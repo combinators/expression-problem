@@ -28,7 +28,6 @@ object M6 {
           _ <- ffiBooleans.enable()
         } yield ()
       }
-      
 
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = math.M6.getModel.flatten.typeCases
@@ -43,8 +42,6 @@ object M6 {
           None
         }
       }
-
-
 
       /** Can handle any equals requests, by constructing Trees from Expressions. */
       override def genericLogic

@@ -914,6 +914,9 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
     if (orderedImplementers.size > 1 && cmp(orderedImplementers(0), orderedImplementers(1)) == 0) {
       return domain
     }
+    if (orderedImplementers.isEmpty) {
+      println(op + "," + domain.name)
+    }
     orderedImplementers.head
 
 

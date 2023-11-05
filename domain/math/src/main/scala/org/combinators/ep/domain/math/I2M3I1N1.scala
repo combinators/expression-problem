@@ -1,6 +1,7 @@
 package org.combinators.ep.domain.math     /*DD:LI:AI*/
 
 import org.combinators.ep.domain.abstractions.TestCase
+import org.combinators.ep.domain.math.systemI.I2
 import org.combinators.ep.domain.{Evolution, GenericModel}
 
 object I2M3I1N1 extends Evolution {

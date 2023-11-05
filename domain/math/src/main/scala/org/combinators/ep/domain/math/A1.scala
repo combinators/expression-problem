@@ -5,6 +5,7 @@ import org.combinators.ep.domain.abstractions.{DataTypeCase, EqualsTestCase, Tes
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
 import org.combinators.ep.domain.math.M0.{Eval, LitInst}
 import org.combinators.ep.domain.math.M2.{PrettyP, StringInst}
+import org.combinators.ep.domain.math.systemI.I1
 
 // Yes this is "Times" but I wanted to get something quick and dirty. Better to replace
 // with Abs(...) which returns absolute value of expression, but wanted this to be binary.

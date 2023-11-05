@@ -2,6 +2,7 @@ package org.combinators.ep.domain.math.eips      /*DD:LI:AI*/
 
 import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, TypeRep}
 import org.combinators.ep.domain.instances.InstanceRep
+import org.combinators.ep.domain.math.systemI.I1
 import org.combinators.ep.domain.{abstractions, math}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
@@ -182,7 +183,7 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
           case math.M4.Collect =>
             m7i2Provider.genericLogic(forApproach)(onRequest)
           case math.M4.Simplify => simplifyLogic(forApproach)(onRequest)
-          case math.I1.MultBy => m7i2Provider.genericLogic(forApproach)(onRequest)
+          case math.systemI.I1.MultBy => m7i2Provider.genericLogic(forApproach)(onRequest)
           case math.M7.PowBy => m7i2Provider.genericLogic(forApproach)(onRequest)
           case math.M6.Equals => m7i2Provider.genericLogic(forApproach)(onRequest)
           case math.M6.Eql => m7i2Provider.genericLogic(forApproach)(onRequest)

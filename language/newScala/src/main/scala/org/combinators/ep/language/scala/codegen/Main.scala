@@ -7,7 +7,8 @@ import org.apache.commons.io.FileUtils
 import org.combinators.ep.approach.oo._
 import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions.TestCase
-import org.combinators.ep.domain.math._
+import org.combinators.ep.domain.math.{eips, _}
+import org.combinators.ep.domain.math.systemI.{I1, I2}
 import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.generator.{ApproachImplementationProvider, FileWithPath, FileWithPathPersistable, TestImplementationProvider}
 import org.combinators.ep.language.inbetween.any.AbstractSyntax
@@ -64,8 +65,8 @@ class Main {
   val m5_eip = eips.M5(approach.paradigm)(m4_eip)(generator.ints,generator.treesInMethod)
   val m6_eip = eips.M6(approach.paradigm)(m5_eip)(generator.equality, generator.booleans)
   val m7_eip = eips.M7(approach.paradigm)(m6_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.imperative)
-  val i1_eip = eips.I1(approach.paradigm)(m2_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.imperative)
-  val i2_eip = eips.I2(approach.paradigm)(i1_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.imperative)
+  val i1_eip = eips.systemI.I1(approach.paradigm)(m2_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.imperative)
+  val i2_eip = eips.systemI.I2(approach.paradigm)(i1_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.imperative)
   val m7i2_eip = eips.M7I2.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(m7_eip,i2_eip)(
     generator.imperative,
     generator.doubles,

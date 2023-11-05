@@ -2,6 +2,8 @@ package org.combinators.ep.domain.math.eips      /*DD:LI:AI*/
 
 import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, TypeRep}
 import org.combinators.ep.domain.instances.InstanceRep
+import org.combinators.ep.domain.math.{eips, systemI}
+import org.combinators.ep.domain.math.systemI.{I1, I2}
 import org.combinators.ep.domain.{GenericModel, abstractions, math}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
@@ -51,20 +53,20 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = math.M7I2.getModel.flatten.typeCases
         (potentialRequest.op, potentialRequest.tpeCase) match {
-          case (math.I1.MultBy, tpeCase) if cases.contains(tpeCase) => Some(Set.empty)
+          case (math.systemI.I1.MultBy, tpeCase) if cases.contains(tpeCase) => Some(Set.empty)
           case (math.M7.PowBy, tpeCase) if cases.contains(tpeCase) => Some(Set.empty)
-          case (math.M4.Collect, math.I2.Power) => Some(Set.empty)
-          case (math.M4.Simplify, math.I2.Power) => Some(Set(math.M0.Eval))
-          case (math.M5.Identifier, math.I2.Power) => Some(Set.empty)
-          case (Operation.asTree, math.I2.Power) => Some(Set(math.M5.Identifier))
-          case (math.M6.Equals, math.I2.Power) => Some(Set(Operation.asTree))
-          case (math.M6.Eql, math.I2.Power) => Some(Set(math.M6.isOp(math.I2.Power)))
+          case (math.M4.Collect, math.systemI.I2.Power) => Some(Set.empty)
+          case (math.M4.Simplify, math.systemI.I2.Power) => Some(Set(math.M0.Eval))
+          case (math.M5.Identifier, math.systemI.I2.Power) => Some(Set.empty)
+          case (Operation.asTree, math.systemI.I2.Power) => Some(Set(math.M5.Identifier))
+          case (math.M6.Equals, math.systemI.I2.Power) => Some(Set(Operation.asTree))
+          case (math.M6.Eql, math.systemI.I2.Power) => Some(Set(math.M6.isOp(math.systemI.I2.Power)))
           //case isOp if math.M6.isOps(cases).contains(isOp) => Some(if (isOp == math.M6.isOp(potentialRequest.tpeCase)) Set(math.M6.Eql) else Set.empty)
 
           // isPower => empty for any non power argument (returns false), eql for power argument (left and right eql)
-          case (isOp, tpeCase) if isOp == math.M6.isOp(math.I2.Power) => Some(if (isOp == math.M6.isOp(tpeCase)) Set(math.M6.Eql) else Set.empty)
+          case (isOp, tpeCase) if isOp == math.M6.isOp(math.systemI.I2.Power) => Some(if (isOp == math.M6.isOp(tpeCase)) Set(math.M6.Eql) else Set.empty)
           // isXXX for power argument => empty, e.g. isAdd(power) = false
-          case (isOp, math.I2.Power) if math.M6.isOps(cases).contains(isOp) => Some(Set.empty)
+          case (isOp, math.systemI.I2.Power) if math.M6.isOps(cases).contains(isOp) => Some(Set.empty)
           // rest handled above by first two cases
           case (_, _) => None
         }
@@ -114,7 +116,7 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
                 oneLit: Generator[MethodBodyContext, Expression]
               ): Generator[MethodBodyContext, Option[Expression]] = {
           onRequest.tpeCase match {
-            case math.I2.Power =>
+            case math.systemI.I2.Power =>
               vals.flatMap { case List(leftVal, rightVal) =>
                 for {
                   rightEqZero <- areEqual(doubleTy, rightVal, zero)
@@ -129,7 +131,7 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
                       for {                                       // default
                         lsimp <- simplifyRec(atts.head, attExprs.head)
                         rsimp <- simplifyRec(atts.tail.head, attExprs.tail.head)
-                        res <- returnInIf(forApproach.instantiate(math.M0.getModel.baseDataType, math.I2.Power, lsimp, rsimp))
+                        res <- returnInIf(forApproach.instantiate(math.M0.getModel.baseDataType, math.systemI.I2.Power, lsimp, rsimp))
                       } yield res
                     )
                 } yield result
@@ -183,7 +185,7 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
             m7Provider.genericLogic(forApproach)(onRequest)
           case math.M4.Collect => m7Provider.genericLogic(forApproach)(onRequest)
 
-          case mb@math.I1.MultBy =>    // WE CAN OPTIMIZE MultBy with Mult
+          case mb@math.systemI.I1.MultBy =>    // WE CAN OPTIMIZE MultBy with Mult
              for {
                res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M3.Mult, onRequest.selfReference, onRequest.request.arguments.head._2)
              } yield Some(res)
@@ -193,7 +195,7 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
           val atts = onRequest.attributes.keys.toSeq
             val attExprs = onRequest.attributes.values.toSeq
             for {
-              res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.I2.Power, onRequest.selfReference, onRequest.request.arguments.head._2)
+              res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.systemI.I2.Power, onRequest.selfReference, onRequest.request.arguments.head._2)
             } yield Some(res)
         }
       }

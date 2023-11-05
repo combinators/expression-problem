@@ -67,6 +67,8 @@ object A1M3I2 {
         import paradigm._
         import methodBodyCapabilities._
 
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
+
     // HACK HACK HACK EMPTY CAN REMOVE
         def operate(atts: Seq[syntax.Expression]): Generator[paradigm.MethodBodyContext, syntax.Expression] =
           onRequest.request.op match {

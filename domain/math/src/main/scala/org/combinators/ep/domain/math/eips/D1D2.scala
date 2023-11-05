@@ -55,6 +55,7 @@ sealed class D1D2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
         import AnyParadigm.syntax._
         import paradigm._
 
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         val result =
           onRequest.request.op match {

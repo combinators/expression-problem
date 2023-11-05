@@ -28,6 +28,17 @@ object A1M3 {
         } yield ()
       }
 
+      // A1:
+      // M3:
+
+      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+        if (Set(math.systemI.I1.MultBy).contains(potentialRequest.op) && Set(math.M3.Mult, math.M3.Neg, math.M3.Divd, math.A1.Times).contains(potentialRequest.tpeCase)) {
+          Some(Set.empty)
+        } else {
+          None
+        }
+      }
+
 //      override def applicableIn
 //        (forApproach:  AIP[paradigm.type], onRequest: PotentialRequest, currentModel:GenericModel): Option[GenericModel] = {
 //
@@ -63,10 +74,6 @@ object A1M3 {
 //          Set(math.M3.Mult,math.M3.Divd,math.M3.Neg).contains(onRequest.tpeCase)
 //      }
 
-      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
-        // TODO: dependency fix
-        None
-      }
 
       // NEED this since I have stated I will handle some of these
       def logic
@@ -75,10 +82,11 @@ object A1M3 {
       Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
         import paradigm._
         import AnyParadigm.syntax._
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         def operate(atts: Seq[syntax.Expression]): Generator[paradigm.MethodBodyContext, syntax.Expression] =
           onRequest.request.op match {
-            case mb@math.I1.MultBy =>      // take advantage of Mult data type
+            case mb@math.systemI.I1.MultBy =>      // take advantage of Mult data type
               for {
                 res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M3.Mult, onRequest.selfReference, onRequest.request.arguments.head._2)
               } yield res

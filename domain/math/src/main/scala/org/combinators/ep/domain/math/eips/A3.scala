@@ -26,16 +26,14 @@ object A3 {
         } yield ()
       }
 
-//      def applicable
-//      (forApproach: AIP[paradigm.type], potentialRequest: PotentialRequest): Boolean = {
-//        Set(math.M0.Eval,math.M2.PrettyP, math.I1.MultBy).contains(potentialRequest.op) &&
-//          Set(math.A3.Inv).contains(potentialRequest.tpeCase)
-//      }
+    override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
 
-      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
-        // TODO: dependency fix
+      if ((potentialRequest.tpeCase == math.A3.Inv) && Set(math.M0.Eval, math.M2.PrettyP, math.systemI.I1.MultBy).contains(potentialRequest.op)) {
+        Some(Set.empty)
+      } else {
         None
       }
+    }
 
       def logic
       (forApproach: AIP[paradigm.type])
@@ -47,6 +45,8 @@ object A3 {
         import methodBodyCapabilities._
         import AnyParadigm.syntax._
 
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
+
         def operate(atts: Seq[syntax.Expression]): Generator[paradigm.MethodBodyContext, syntax.Expression] =
           onRequest.request.op match {
             case math.M0.Eval =>
@@ -55,7 +55,7 @@ object A3 {
                 case _ => ???
               }
 
-            case math.I1.MultBy =>
+            case math.systemI.I1.MultBy =>
               onRequest.tpeCase match {
                 case other@math.A3.Inv =>
                   val lAtt = other.attributes.head

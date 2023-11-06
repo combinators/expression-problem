@@ -1,7 +1,8 @@
-package org.combinators.ep.domain.math.eips     /*DD:LI:AI*/
+package org.combinators.ep.domain.math.eips.systemD    /*DD:LI:AI*/
 
 import org.combinators.ep.domain.abstractions.Operation
 import org.combinators.ep.domain.math
+import org.combinators.ep.domain.math.systemD
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
@@ -11,13 +12,13 @@ import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionIm
 
 object D2 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
-      (paradigm: P)
-      (m1Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
-      (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
-       ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
+  (paradigm: P)
+  (m1Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
+  (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
+   ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val d2Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.D2.getModel
+      override val model = math.systemD.D2.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
@@ -27,7 +28,7 @@ object D2 {
 
 
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
-        if (Set(math.M0.Eval).contains(potentialRequest.op) && Set(math.D2.Mult).contains(potentialRequest.tpeCase)) {
+        if (Set(math.M0.Eval).contains(potentialRequest.op) && Set(systemD.D2.Mult).contains(potentialRequest.tpeCase)) {
           Some(Set.empty)
         } else {
           None
@@ -41,21 +42,19 @@ object D2 {
         m1Provider.genericLogic(forApproach)(onRequest)
 
       def logic
-          (forApproach: AIP[paradigm.type])
-          (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
-        Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
+      (forApproach: AIP[paradigm.type])
+      (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
+      Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
         import AnyParadigm.syntax._
         import ffiArithmetic.arithmeticCapabilities._
-        import ffiStrings.stringCapabilities._
         import paradigm._
-        import methodBodyCapabilities._
         assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         def operate(atts: Seq[syntax.Expression]): Generator[paradigm.MethodBodyContext, syntax.Expression] =
           onRequest.request.op match {
             case math.M0.Eval =>
               onRequest.tpeCase match {
-                case math.D2.Mult => mult(atts: _*)
+                case systemD.D2.Mult => mult(atts: _*)
 
                 case _ => ???
               }
@@ -64,16 +63,16 @@ object D2 {
           }
 
         val result =
-            for {
-              atts <- forEach (onRequest.tpeCase.attributes) { att =>
-                  forApproach.dispatch(SendRequest(
-                    onRequest.attributes(att),
-                    math.M3.getModel.baseDataType,
-                    onRequest.request
-                  ))
-                }
-              res <- operate(atts)
-            } yield res
+          for {
+            atts <- forEach(onRequest.tpeCase.attributes) { att =>
+              forApproach.dispatch(SendRequest(
+                onRequest.attributes(att),
+                math.M3.getModel.baseDataType,
+                onRequest.request
+              ))
+            }
+            res <- operate(atts)
+          } yield res
         result.map(Some(_))
       }
     }

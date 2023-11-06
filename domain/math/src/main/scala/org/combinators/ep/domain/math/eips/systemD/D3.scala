@@ -1,7 +1,8 @@
-package org.combinators.ep.domain.math.eips     /*DD:LI:AI*/
+package org.combinators.ep.domain.math.eips.systemD    /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation}
+import org.combinators.ep.domain.abstractions.Operation
 import org.combinators.ep.domain.math
+import org.combinators.ep.domain.math.systemD
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
@@ -12,12 +13,12 @@ import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionIm
 object D3 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
-  (d1d2Provider : EvolutionImplementationProvider[AIP[paradigm.type]])
+  (d1d2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
   (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val d3Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.D3.getModel
+      override val model = math.systemD.D3.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
@@ -27,12 +28,13 @@ object D3 {
       }
 
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
-        if (Set(math.D3.PrettyP).contains(potentialRequest.op) && Set(math.M0.Lit, math.M0.Add, math.M1.Sub, math.D2.Mult).contains(potentialRequest.tpeCase)) {
+        if (Set(systemD.D3.PrettyP).contains(potentialRequest.op) && Set(math.M0.Lit, math.M0.Add, math.M1.Sub, math.systemD.D2.Mult).contains(potentialRequest.tpeCase)) {
           Some(Set.empty)
         } else {
           None
         }
       }
+
       /** Do not call 'assert' since might not be applicable. */
       override def genericLogic(forApproach: AIP[paradigm.type])
                                (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
@@ -64,7 +66,7 @@ object D3 {
               other match {
                 case math.M0.Add => "+"
                 case math.M1.Sub => "-"
-                case math.D2.Mult => "*"
+                case math.systemD.D2.Mult => "*"
                 case _ => ???
               }
             for {

@@ -36,9 +36,17 @@ object W1 {
 //      }
 
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
-        // TODO: dependency fix
-        None
+        val ops = math.W1.getModel.flatten.ops
+        if (potentialRequest.tpeCase == math.W1.Power && ops.contains(potentialRequest.op)) {
+          potentialRequest.op match {
+            case math.M0.Eval => Some(Set.empty)
+            case _ => Some(Set.empty)
+          }
+        } else {
+          None
+        }
       }
+
         /** Do not call 'assert' since might not be applicable. */
       override def genericLogic(forApproach: AIP[paradigm.type])
                                (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
@@ -55,7 +63,7 @@ object W1 {
         import ffiStrings.stringCapabilities._
         import paradigm._
         import methodBodyCapabilities._
-        //assert(applicable(forApproach)(onRequest)) TODO: fix assert
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         val result = onRequest.tpeCase match {
           case power@math.W1.Power => {

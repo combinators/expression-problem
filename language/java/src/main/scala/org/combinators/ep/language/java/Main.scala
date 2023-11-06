@@ -21,7 +21,7 @@ import java.nio.file.{Path, Paths}
 /**
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
-class Main {
+class Main(choice:String, select:String) {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed))
 
   val ooApproach = Traditional[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
@@ -46,17 +46,52 @@ class Main {
   //val algebraApproach = Algebra[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
   // select one here.
-  val approach = algebraApproach// algebraApproach//algebraApproach// cocoCleanApproach//extensibleVisitorApproach
+  //val approach = algebraApproach// algebraApproach//algebraApproach// cocoCleanApproach//extensibleVisitorApproach
 
-  val evolutions = Seq(M0, M1, M2, M3, M4, M5, M6, M7, I1, I2, M7I2, M8)    // all test cases become active WHEN all included.
+  //val evolutions = Seq(M0, M1, M2, M3, M4, M5, M6, M7, I1, I2, M7I2, M8)    // all test cases become active WHEN all included.
 
-  // second path of evolutions. Sorry. Choose this or the other.
-  // val evolutions = Seq(M0, M1, M2, I1, A1)// , A1M3)
-  // val evolutions = Seq(M0, M1, M2, M3, I1, A1, A1M3)
-  // val evolutions = Seq(M0, M1, M2, M3, I1, A1, A1M3, I2, A1M3I2)
   //val evolutions = Seq(M0, M1, M2, M3, I1, A1, A1M3, I2, A1M3I2, A3)
 
-//  val eip = eips.I2(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod,
+  // select one here
+  val approach = choice match {
+    case "oo" => ooApproach
+    case "visitor" => visitorApproach
+    case "visitorSideEffect" => visitorSideEffectApproach
+    case "extensibleVisitor" => extensibleVisitorApproach
+    case "interpreter" => interpreterApproach
+    case "coco" => cocoCleanApproach
+    case "trivially" => triviallyCleanApproach
+    case "dispatch" => dispatchApproach
+    case "algebra" => algebraApproach
+
+    case _ => ???
+  }
+
+  val evolutions = select match {
+    case "M0" => Seq(M0)
+    case "M1" => Seq(M0, M1)
+    case "M2" => Seq(M0, M1, M2)
+    case "M3" => Seq(M0, M1, M2, M3)
+    case "M4" => Seq(M0, M1, M2, M3, M4)
+    case "M5" => Seq(M0, M1, M2, M3, M4, M5)
+    case "M6" => Seq(M0, M1, M2, M3, M4, M5, M6)
+    case "M7" => Seq(M0, M1, M2, M3, M4, M5, M7)
+    case "M7I2" => Seq(M0, M1, M2, M3, M4, M5, M7, I1, I2, M7I2)
+    case "M8" => Seq(M0, M1, M2, M3, M4, M5, M7, I1, I2, M7I2, M8)
+    case "M9" => Seq(M0, M1, M2, M3, M4, M5, M7, I1, I2, M7I2, M8, M9)
+
+    case "I1" => Seq(M0, M1, M2, I1)
+    case "A1" => Seq(M0, M1, M2, I1, A1)
+    case "A1M3" => Seq(M0, M1, M2, M3, I1, A1, A1M3)
+    case "A1M3I2" => Seq(M0, M1, M2, M3, I1, A1, A1M3, I2, A1M3I2)
+    case "A3" => Seq(M0, M1, M2, M3, I1, A1, A1M3, I2, A1M3I2, A3)
+
+    case "I2" => Seq(M0, M1, M2, I1, I2)
+
+    case _ => ???
+  }
+
+  //  val eip = eips.I2(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod,
 //    generator.stringsInMethod, generator.imperativeInMethod)
 //  // how do I just use M2 instead of this? HACK
   val m0_eip = eips.M0(approach.paradigm)(generator.doublesInMethod,generator.stringsInMethod)
@@ -97,8 +132,32 @@ class Main {
   val a1m3i2_eip = eips.A1M3I2(approach.paradigm)(a1m3_eip, i2_eip)(generator.stringsInMethod)
   val a3_eip = eips.A3(approach.paradigm)(a1m3i2_eip)(generator.doublesInMethod, generator.stringsInMethod)
 
-  //val eip = a3_eip// a1m3i2_eip// a1m3_eip
-  val eip = m8_eip//m8_eip //m7i2_eip// m8_eip
+  //val eip = a1_eip// a1m3i2_eip// a1m3_eip   //  a3_eip
+  //val eip = m8_eip//m8_eip //m7i2_eip// m8_eip
+
+  val eip = select match {
+    case "M0" => m0_eip
+    case "M1" => m1_eip
+    case "M2" => m2_eip
+    case "M3" => m3_eip
+    case "M4" => m4_eip
+    case "M5" => m5_eip
+    case "M6" => m6_eip
+    case "M7" => m7_eip
+    case "M7I2" => m7i2_eip
+    case "M8" => m8_eip
+    case "M9" => m9_eip
+
+    case "I1" => i1_eip
+    case "A1" => a1_eip
+    case "A1M3" => a1m3_eip
+    case "A1M3I2" => a1m3i2_eip
+    case "A3" => a3_eip
+
+    case "I2" => i2_eip
+
+    case _ => ???
+  }
 
   val tests = evolutions.scanLeft(Map.empty[GenericModel, Seq[TestCase]]) { case (m, evolution) =>
     m + (evolution.getModel -> evolution.tests)
@@ -166,16 +225,24 @@ class Main {
 }
 
 object GitMain extends IOApp {
-  def run(args: List[String]): IO[ExitCode] = new Main().runGit(args)
+
+  def run(args: List[String]): IO[ExitCode] = {
+    val approach = if (args.isEmpty) "algebra" else args.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "M7I2" else args.tail.head
+    new Main(approach, selection).runGit(args)
+  }
 }
 
 object DirectToDiskMain extends IOApp {
-  val targetDirectory = Paths.get("target", "ep2")
+  val targetDirectory = Paths.get("target", "ep3")
 
   def run(args: List[String]): IO[ExitCode] = {
+    val approach = if (args.isEmpty) "algebra" else args.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "A1M3I2" else args.tail.head
+    println("Generating " + approach + " for " + selection)
     for {
       _ <- IO { print("Initializing Generator...") }
-      main <- IO { new Main() }
+      main <- IO { new Main(approach, selection) }
       _ <- IO { println("[OK]") }
       result <- main.runDirectToDisc(targetDirectory)
     } yield result

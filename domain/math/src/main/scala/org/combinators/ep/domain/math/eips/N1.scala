@@ -45,10 +45,14 @@ object N1 {
 //        Set(math.N1.PowBy).contains(potentialRequest.op)
 //      }
 
-      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
-        // TODO: dependency fix
-        None
-      }
+        override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+          val cases = math.N1.getModel.flatten.typeCases
+          (potentialRequest.op, potentialRequest.tpeCase) match {
+            case (math.N1.PowBy, tpeCase) if cases.contains(tpeCase) => Some(Set(math.M0.Eval))
+
+            case _ => None
+          }
+        }
 
       /** PowBy can support any N-ary data type, so prepare for this future eventuality here. */
       override def genericLogic
@@ -67,7 +71,7 @@ object N1 {
         Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
         import paradigm._
         import methodBodyCapabilities._
-        //assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name) TODO: fix assert
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         onRequest.tpeCase match {
           //        default Exp<V> powBy(ep.Exp<V> exponent) {

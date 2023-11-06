@@ -32,7 +32,7 @@ object A1M3 {
       // M3:
 
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
-        if (Set(math.systemI.I1.MultBy).contains(potentialRequest.op) && Set(math.M3.Mult, math.M3.Neg, math.M3.Divd, math.A1.Times).contains(potentialRequest.tpeCase)) {
+        if (Set(math.systemI.I1.MultBy).contains(potentialRequest.op) && Set(math.M3.Mult, math.M3.Neg, math.M3.Divd).contains(potentialRequest.tpeCase)) {
           Some(Set.empty)
         } else {
           None

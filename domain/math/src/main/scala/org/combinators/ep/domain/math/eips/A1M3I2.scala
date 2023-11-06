@@ -13,8 +13,8 @@ import org.combinators.ep.generator.paradigm.ffi.Strings
 object A1M3I2 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
-  (i2Provider: EvolutionImplementationProvider[AIP[paradigm.type]],
-  a1m2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
+  (a1m3Provider: EvolutionImplementationProvider[AIP[paradigm.type]],
+   i2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
   (ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type])
   :
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
@@ -25,7 +25,7 @@ object A1M3I2 {
         for {
           _ <- ffiStrings.enable()
           _ <- i2Provider.initialize(forApproach)
-          _ <- a1m2Provider.initialize(forApproach)
+          _ <- a1m3Provider.initialize(forApproach)
         } yield ()
       }
 
@@ -54,8 +54,9 @@ object A1M3I2 {
 //
 //      // NOTHING NEW!
 //      def applicable(forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = false
+
+      // brings in Power but no new operations so there SHOULD be nothing to do
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
-        // TODO: dependency fix
         None
       }
 
@@ -91,7 +92,7 @@ object A1M3I2 {
       }
     }
 
-    // should work?
-    monoidInstance.combine(a1m3i2Provider, monoidInstance.combine(i2Provider, a1m2Provider))
+    // ORDER IMPORTANT
+    monoidInstance.combine(a1m3i2Provider, monoidInstance.combine(a1m3Provider, i2Provider))
   }
 }

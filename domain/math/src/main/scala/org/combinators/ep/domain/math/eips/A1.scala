@@ -56,32 +56,37 @@ object A1  {
                 case _ => ???
               }
 
-            case math.systemI.I1.MultBy =>
-              onRequest.tpeCase match {
-                case other@math.A1.Times =>
-                  val lAtt = other.attributes.head
-                  val rAtt = other.attributes.tail.head
+//            case math.systemI.I1.MultBy =>
+//              onRequest.tpeCase match {
+//                case other@math.A1.Times =>
+//                  val lAtt = other.attributes.head
+//                  val rAtt = other.attributes.tail.head
+//
+//                  for {
+//                    left <- forApproach.dispatch(SendRequest(
+//                      onRequest.attributes(lAtt),
+//                      math.M2.getModel.baseDataType,
+//                      onRequest.request
+//                    ))
+//                    right <- forApproach.dispatch(SendRequest(
+//                      onRequest.attributes(rAtt),
+//                      math.M2.getModel.baseDataType,
+//                      onRequest.request
+//                    ))
+//
+//                    res <- forApproach.instantiate(math.M0.getModel.baseDataType, other, left, right)
+//                  } yield res
+//                case _ => ???
+//              }
 
-                  for {
-                    left <- forApproach.dispatch(SendRequest(
-                      onRequest.attributes(lAtt),
-                      math.M2.getModel.baseDataType,
-                      onRequest.request
-                    ))
-                    right <- forApproach.dispatch(SendRequest(
-                      onRequest.attributes(rAtt),
-                      math.M2.getModel.baseDataType,
-                      onRequest.request
-                    ))
-
-                    res <- forApproach.instantiate(math.M0.getModel.baseDataType, other, left, right)
-                  } yield res
-                case _ => ???
-              }
+            case mb@math.systemI.I1.MultBy =>    // WE CAN OPTIMIZE MultBy with Mult
+              for {
+                res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.A1.Times, onRequest.selfReference, onRequest.request.arguments.head._2)
+              } yield  res
 
             case math.M2.PrettyP =>
               onRequest.tpeCase match {
-                case math.A1.Times => makeString(atts, "(", "*", ")")
+                case math.A1.Times => makeString(atts, "(", "x", ")")
                 case _ => ???
               }
             case _ => ???

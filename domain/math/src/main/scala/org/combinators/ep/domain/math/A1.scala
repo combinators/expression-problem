@@ -23,7 +23,7 @@ object A1 extends Evolution {
   val a1_m3_m2 = TimesInst(LitInst(5.0),  LitInst(2.0))
 
   def tests: Seq[TestCase] = Seq(
-    EqualsTestCase(getModel.baseDataType, a1_m3_m2, PrettyP, StringInst("(5.0*2.0)")),
+    EqualsTestCase(getModel.baseDataType, a1_m3_m2, PrettyP, StringInst("(5.0x2.0)")),
     EqualsTestCase(getModel.baseDataType, a1_m3_m2, Eval, M0.DoubleInst(10.0)),
   )
 }

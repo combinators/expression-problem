@@ -42,8 +42,14 @@ sealed class I2M3I1N1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImpleme
 //      }
 
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
-        // TODO: dependency fix
-        None
+        val cases = math.I2M3I1N1.getModel.flatten.typeCases
+        (potentialRequest.op, potentialRequest.tpeCase) match {
+          case (math.systemI.I1.MultBy, tpeCase) if cases.contains(tpeCase) => Some(Set.empty)
+          case (math.N1.PowBy, tpeCase) if cases.contains(tpeCase) => Some(Set.empty)
+
+          // rest handled above by first two cases
+          case (_, _) => None
+        }
       }
 
       // NEED this since I have stated I will handle some of these
@@ -53,16 +59,20 @@ sealed class I2M3I1N1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImpleme
       Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
         import AnyParadigm.syntax._
         import paradigm._
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         onRequest.request.op match {
 
-          case p@math.M7.PowBy =>  // on Power
+          case p@math.N1.PowBy =>  // on Power
             // must handle Power dataType. HERE WE CAN OPTIMIZED.
             val atts = onRequest.attributes.keys.toSeq
             val attExprs = onRequest.attributes.values.toSeq
             for {
               res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.systemI.I2.Power, onRequest.selfReference, onRequest.request.arguments.head._2)
             } yield Some(res)
+
+          case p@math.systemI.I1.MultBy =>  // on Power
+            defaultGenericLogic(forApproach)(onRequest)
         }
       }
     }

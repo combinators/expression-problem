@@ -9,29 +9,29 @@ cd ..
 
 mkdir target\analysis
 
-set SAVED_JAVA_HOME=%JAVA_HOME%
+@REM: KEEP? set SAVED_JAVA_HOME=%JAVA_HOME%
 
-for %%a in (oo visitor visitorSideEffect extensibleVisitor interpreter dispatch trivially coco) do (
+for %%a in (oo visitor visitorSideEffect extensibleVisitor interpreter dispatch trivially coco algebra) do (
   @echo off
   echo %%a
   echo %%a > target\analysis\jacoco.%%a
 
   @REM for each approach x model, execute to generate into target\ep2
-  for %%e in (M0 J1 J2 J3 K1 K2 J4 J5 J8 K2J6 J7 J8) do (
+  for %%e in (M0 J1 J2 J3 K1 K2 J4 J5 J6 K2J6 J7 J8) do (
      @echo off
      echo ====================================== >> target\analysis\jacoco.%%a
      echo %%e-Generate                           >> target\analysis\jacoco.%%a
      java -cp scripts Time                       >> target\analysis\jacoco.%%a
      echo ====================================== >> target\analysis\jacoco.%%a
-     set JAVA_HOME=%SAVED_JAVA_HOME%
+     @REM: KEEP? set JAVA_HOME=%SAVED_JAVA_HOME%
 
      sbt "language-java/runMain org.combinators.ep.language.java.systemJ.DirectToDiskMainJ %%a %%e"
 
      @REM generated into target\ep2
      cd target\ep2
-     zip -qr ..\analysis\%%a-%%e-src.zip src
+     xcopy src ..\analysis\src-%%a-%%e /E/H/C/I
 
-     set JAVA_HOME=C:\Program Files\AdoptOpenJDK\jdk-8.0.212.03-hotspot
+     @REM: KEEP? set JAVA_HOME=C:\Users\heineman\Development\jdk-11.0.21+9
 
      @REM run Jacoco twice: the first time compiles. The second time only instruments
      @REM doesn't seem to be any way to avoid instrumentation in the second pass, but

@@ -48,9 +48,17 @@ sealed class V1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
 //          Set(math.V1.Inv).contains(potentialRequest.tpeCase)
 //      }
 
+      // adds Inv data Type
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
-        // TODO: dependency fix
-        None
+        (potentialRequest.op, potentialRequest.tpeCase) match {
+          case (math.Q1.Identifier, math.V1.Inv) => Some(Set.empty)
+          case (Operation.asTree, math.V1.Inv) => Some(Set(math.Q1.Identifier))
+          case (math.M2.PrettyP, math.V1.Inv) => Some(Set.empty)
+          case (math.C2.Collect, math.V1.Inv) => Some(Set.empty)
+          case (math.M0.Eval, math.V1.Inv) => Some(Set.empty)
+
+          case (_, _) => None
+        }
       }
 
       /** Do not call 'assert' since might not be applicable. */
@@ -62,7 +70,9 @@ sealed class V1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
       def logic(forApproach: AIP[paradigm.type])
                (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] = {
-        // assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name) TODO: fix assert
+
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
+
         import AnyParadigm.syntax._
         import ffiArithmetic.arithmeticCapabilities._
         import ffiStrings.stringCapabilities._

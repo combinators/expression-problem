@@ -1,6 +1,7 @@
 package org.combinators.ep.domain.math.eips     /*DD:LI:AI*/
 
 import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation}
+import org.combinators.ep.domain.math.systemI
 import org.combinators.ep.domain.math.systemI.I1
 import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.ep.generator.Command.Generator
@@ -34,35 +35,14 @@ sealed class M3I1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
         } yield ()
       }
 
-//      override def applicableIn
-//        (forApproach:  AIP[paradigm.type], onRequest: PotentialRequest, currentModel:GenericModel): Option[GenericModel] = {
-//
-//        val forwardTable:PartialFunction[(Operation,DataTypeCase),GenericModel] = {
-//          case (math.I1.MultBy, math.M3.Divd) => model // I HANDLE these
-//          case (math.I1.MultBy, math.M3.Mult) => model // I HANDLE these
-//          case (math.I1.MultBy, math.M3.Neg) => model  // I HANDLE these
-//        }
-//
-//        val tblModel = forwardTable.lift(onRequest.op, onRequest.tpeCase)
-//
-//        // Because EIP could be "further in future" then a given model, we need to be sure to
-//        // only return forwarding information when we have a hit on the currentModel.
-//        if (model == currentModel || model.before(currentModel)) {
-//          tblModel
-//        } else {
-//          None
-//        }
-//      }
-//
-//      def applicable
-//      (forApproach: AIP[paradigm.type], onRequest: PotentialRequest): Boolean = {
-//        Set(math.I1.MultBy).contains(onRequest.op) &&
-//          Set(math.M3.Mult,math.M3.Divd,math.M3.Neg).contains(onRequest.tpeCase)
-//      }
-
+      // MultBy with Mult but must also handle DivD and Neg
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
-        // TODO: dependency fix
-        None
+        val cases = math.M3I1.getModel.flatten.typeCases
+        (potentialRequest.op, potentialRequest.tpeCase) match {
+          case (math.systemI.I1.MultBy, tpeCase) if cases.contains(tpeCase) => Some(Set.empty)
+
+          case _ => None
+        }
       }
 
       // NEED this since I have stated I will handle some of these
@@ -73,7 +53,9 @@ sealed class M3I1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
         import AnyParadigm.syntax._
         import paradigm._
 
-        def operate(atts: Seq[syntax.Expression]): Generator[paradigm.MethodBodyContext, syntax.Expression] =
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
+
+        def operate(): Generator[paradigm.MethodBodyContext, syntax.Expression] =
           onRequest.request.op match {
             case mb@math.systemI.I1.MultBy =>      // take advantage of Mult data type
               for {
@@ -92,7 +74,7 @@ sealed class M3I1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
                 onRequest.request
               ))
             }
-            res <- operate(atts)
+            res <- operate()
           } yield res
 
         result.map(Some(_))

@@ -1,7 +1,7 @@
 package org.combinators.ep.language.java    /*DI:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
-import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, ObjectAlgebras, Traditional, Visitor}
+import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, ObjectAlgebras, RuntimeDispatch, Traditional, TriviallyClean, Visitor}
 import org.combinators.ep.domain.{GenericModel, Model}
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.math._
@@ -15,13 +15,17 @@ import java.nio.file.{Files, Path, Paths}
 /**
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
-class MainProducer {
+class MainProducer(choice:String, select:String) {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed))
 
   val ooApproach = Traditional[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
-  // can't have all of these together
   val visitorApproach = Visitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val extensibleVisitorApproach = ExtensibleVisitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+  val visitorSideEffectApproach = Visitor.withSideEffects[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm)
+  val interpreterApproach = Interpreter[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+  val triviallyCleanApproach = TriviallyClean[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
+
+  val dispatchApproach = RuntimeDispatch[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.stringsInMethod, generator.exceptionsInMethod, generator.ooParadigm)
 
   val cocoCleanApproach = CoCoClean[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val algebraApproach = ObjectAlgebras[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
@@ -34,9 +38,35 @@ class MainProducer {
   // val approach = triviallyApproach // WORKS!
   // val approach = vitaApproach // WORKS!
   // interpreterApproach NOT YET WORKING
-  val approach = algebraApproach// algebraApproach  // cocoCleanApproach
 
-  val evolutions = Seq(M0, M1, W1, M2, M3, M3W1, Q1, C2, V1)    // all test cases become active WHEN all included.
+  // select one here
+  val approach = choice match {
+    case "oo" => ooApproach
+    case "visitor" => visitorApproach
+    case "visitorSideEffect" => visitorSideEffectApproach
+    case "extensibleVisitor" => extensibleVisitorApproach
+    case "interpreter" => interpreterApproach
+    case "coco" => cocoCleanApproach
+    case "trivially" => triviallyCleanApproach
+    case "dispatch" => dispatchApproach
+    case "algebra" => algebraApproach
+
+    case _ => ???
+  }
+
+  val evolutions = select match {
+    case "M0" => Seq(M0)
+    case "M1" => Seq(M0, M1)
+    case "M2" => Seq(M0, M1, M2)
+    case "M3" => Seq(M0, M1, M2, M3)
+    case "W1" => Seq(M0, M1, W1)
+    case "M3W1" => Seq(M0, M1, M2, M3, W1, M3W1)
+    case "Q1" => Seq(M0, M1, M2, M3, W1, M3W1, Q1)
+    case "C2" => Seq(M0, M1, M2, M3, W1, M3W1, Q1, C2)
+    case "V1" => Seq(M0, M1, M2, M3, W1, M3W1, Q1, C2, V1)
+
+    case _ => ???
+  }
 
   //val evolutions = Seq(M0, M1, M2, M3, M4, M5, M6, M7) //
 //  val eip = eips.I2(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod,
@@ -81,9 +111,19 @@ class MainProducer {
     generator.equalityInMethod)
 
   //val eip = a1m3_eip
-  val eip = v1_eip
-
-  val tests = evolutions.scanLeft(Map.empty[GenericModel, Seq[TestCase]]) { case (m, evolution) =>
+  val eip = select match {
+    case "M0" => m0_eip
+    case "M1" => m1_eip
+    case "M2" => m2_eip
+    case "M3" => m3_eip
+    case "W1" => w1_eip
+    case "M3W1" => m3w1_eip
+    case "Q1" => q1_eip
+    case "C2" => c2_eip
+    case "V1" => v1_eip
+    case _ => ???
+  }
+      val tests = evolutions.scanLeft(Map.empty[GenericModel, Seq[TestCase]]) { case (m, evolution) =>
     m + (evolution.getModel -> evolution.tests)
   }.tail
 
@@ -149,16 +189,24 @@ class MainProducer {
 }
 
 object GitMainProducer extends IOApp {
-  def run(args: List[String]): IO[ExitCode] = new MainProducer().runGit(args)
+
+  def run(args: List[String]): IO[ExitCode] = {
+    val approach = if (args.isEmpty) "algebra" else args.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "W1" else args.tail.head
+    new MainProducer(approach, selection).runGit(args)
+  }
 }
 
 object DirectToDiskMainProducer extends IOApp {
-  val targetDirectory = Paths.get("target", "ep2")
+  val targetDirectory = Paths.get("target", "ep3")
 
   def run(args: List[String]): IO[ExitCode] = {
+    val approach = if (args.isEmpty) "algebra" else args.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "V1" else args.tail.head
+
     for {
       _ <- IO { print("Initializing Generator...") }
-      main <- IO { new MainProducer() }
+      main <- IO { new MainProducer(approach, selection) }
       _ <- IO { println("[OK]") }
       result <- main.runDirectToDisc(targetDirectory)
     } yield result

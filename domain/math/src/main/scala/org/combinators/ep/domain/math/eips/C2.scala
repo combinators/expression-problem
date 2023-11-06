@@ -49,10 +49,13 @@ sealed class C2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
 //      def applicable(forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
 //        scala.collection.Set(math.C2.Collect).contains(potentialRequest.op)  // any foreseeable DT can be collected
 //      }
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
-        // TODO: dependency fix
-        None
+        val cases = math.Q1.getModel.flatten.typeCases
+        (potentialRequest.op, potentialRequest.tpeCase) match {
+          case (math.C2.Collect, tpeCase) if cases.contains(tpeCase) => Some(Set.empty)
+
+          case (_, _) => None
+        }
       }
 
       private def collectLogic
@@ -117,7 +120,8 @@ sealed class C2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
       def logic(forApproach: AIP[paradigm.type])
                (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] = {
-        // assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name) TODO: fix assert
+
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         onRequest.request.op match {
           case math.C2.Collect => genericLogic(forApproach)(onRequest)

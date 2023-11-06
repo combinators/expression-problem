@@ -1,13 +1,14 @@
-package org.combinators.ep.domain.math.eips     /*DD:LI:AI*/
+package org.combinators.ep.domain.math.eips.systemD    /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation}
-import org.combinators.ep.domain.{GenericModel, math}
+import org.combinators.ep.domain.abstractions.Operation
+import org.combinators.ep.domain.math
+import org.combinators.ep.domain.math.systemD
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
-import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
+import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm
 import org.combinators.ep.generator.paradigm.control.{Functional, Imperative}
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Booleans, Equality, Strings}
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Booleans, Equality}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
 sealed class D1D2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P], IfBlockType](val paradigm: P) {
@@ -29,7 +30,7 @@ sealed class D1D2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
 
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val d1d2_provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.D1D2.getModel
+      override val model = systemD.D1D2.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
@@ -40,7 +41,7 @@ sealed class D1D2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
 
 
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
-        if (Set(math.D1.MultBy).contains(potentialRequest.op) && Set(math.D2.Mult, math.M1.Sub, math.M0.Add, math.M0.Lit).contains(potentialRequest.tpeCase)) {
+        if (Set(math.systemD.D1.MultBy).contains(potentialRequest.op) && Set(math.systemD.D2.Mult, math.M1.Sub, math.M0.Add, math.M0.Lit).contains(potentialRequest.tpeCase)) {
           Some(Set.empty)
         } else {
           None
@@ -52,16 +53,14 @@ sealed class D1D2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
       (forApproach: AIP[paradigm.type])
       (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
-        import AnyParadigm.syntax._
-        import paradigm._
 
         assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         val result =
           onRequest.request.op match {
-            case mb@math.D1.MultBy => // take advantage of Mult data type
+            case mb@math.systemD.D1.MultBy => // take advantage of Mult data type
               for {
-                res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.D2.Mult, onRequest.selfReference, onRequest.request.arguments.head._2)
+                res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.systemD.D2.Mult, onRequest.selfReference, onRequest.request.arguments.head._2)
               } yield res
 
             case _ => ???
@@ -107,9 +106,9 @@ object D1D2 {
    ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
-    import paradigm.syntax._
-    import paradigm.methodBodyCapabilities._
     import imperativeControl.imperativeCapabilities._
+    import paradigm.methodBodyCapabilities._
+    import paradigm.syntax._
     val mkImpl = new D1D2[paradigm.type, AIP, Unit](paradigm)
     val returnInIf: Generator[paradigm.MethodBodyContext, Expression] => Generator[paradigm.MethodBodyContext, Unit] =
       (expGen) =>

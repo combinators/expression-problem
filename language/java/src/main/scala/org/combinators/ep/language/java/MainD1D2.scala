@@ -6,11 +6,12 @@ import cats.effect.{ExitCode, IO, IOApp}
 import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, ObjectAlgebras, RuntimeDispatch, Traditional, TriviallyClean, Visitor}
 import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions.TestCase
-import org.combinators.ep.domain.math._
+import org.combinators.ep.domain.math.{eips, _}
 import org.combinators.ep.generator.{ApproachImplementationProvider, FileWithPath, FileWithPathPersistable, TestImplementationProvider}
 import org.combinators.jgitserv.{BranchTransaction, GitService}
 import FileWithPathPersistable._
 import org.apache.commons.io.FileUtils
+import org.combinators.ep.domain.math.systemD.{D1, D1D2, D2, D3}
 
 import java.nio.file.{Path, Paths}
 
@@ -53,16 +54,16 @@ class MainD1D2 {
   val m0_eip = eips.M0(approach.paradigm)(generator.doublesInMethod,generator.stringsInMethod)
   val m1_eip = eips.M1(approach.paradigm)(m0_eip)(generator.doublesInMethod)
 
-  val d1_eip = eips.D1(approach.paradigm)(m1_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
-  val d2_eip = eips.D2(approach.paradigm)(m1_eip)(generator.doublesInMethod, generator.stringsInMethod)
+  val d1_eip = eips.systemD.D1(approach.paradigm)(m1_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
+  val d2_eip = eips.systemD.D2(approach.paradigm)(m1_eip)(generator.doublesInMethod, generator.stringsInMethod)
 
-  val d1d2_eip = eips.D1D2.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(d1_eip,d2_eip)(
+  val d1d2_eip = eips.systemD.D1D2.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(d1_eip,d2_eip)(
     generator.imperativeInMethod,
     generator.doublesInMethod,
     generator.booleansInMethod,
     generator.equalityInMethod)
 
-  val d3_eip = eips.D3(approach.paradigm)(d1d2_eip)(generator.doublesInMethod, generator.stringsInMethod)
+  val d3_eip = eips.systemD.D3(approach.paradigm)(d1d2_eip)(generator.doublesInMethod, generator.stringsInMethod)
 
   //val eip = a1m3_eip
   val eip = d3_eip

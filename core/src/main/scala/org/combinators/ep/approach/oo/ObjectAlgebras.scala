@@ -155,43 +155,6 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
     } yield ()
   }
 
-  def addCombinedCarrierInterfaceIfNecessary(domain:GenericModel) : Generator[paradigm.ProjectContext, Unit] = {
-    //    package m0.carrier;
-    //
-    //    public interface M0 extends Eval<M0> {
-    //
-    //    }
-    def makeCarrierInterface(): Generator[ooParadigm.ClassContext, Unit] = {
-      import genericsParadigm.classCapabilities._
-      import ooParadigm.classCapabilities._
-      for {
-        _ <- setInterface()
-        us <- findClass(names.mangle(names.instanceNameOf(domain)), ComponentNames.pkgCarrier, names.mangle(names.conceptNameOf(domain)))
-        _ <- resolveAndAddImport(us)
-
-        // Add type parameter for the finalized type
-        _ <- forEach(domain.flatten.ops) { op =>
-          val home = domain.findOperation(op).get
-
-          for {
-            parent <- findClass(names.mangle(names.instanceNameOf(home)), ComponentNames.pkgCarrier, names.mangle(names.conceptNameOf(op)))
-            _ <- resolveAndAddImport(parent)
-            appliedParent <- applyType(parent, Seq(us))
-            _ <- addParent(appliedParent)
-          } yield()
-        }
-      } yield ()
-    }
-
-    // If you find that your flattened ops doesn't match at least one of your formers, then you need this
-    if (domain.former.exists(p => p.flatten.ops != domain.flatten.ops)) {
-      import ooParadigm.projectCapabilities._
-      addClassToProject(makeCarrierInterface(), names.mangle(names.instanceNameOf(domain)), ComponentNames.pkgCarrier, names.mangle(names.conceptNameOf(domain)))
-    } else {
-      Command.skip[paradigm.ProjectContext]
-    }
-  }
-
   def addOperationCarrierInterface(domain:GenericModel, op:Operation): Generator[paradigm.ProjectContext, Unit] = {
     //    public interface PowBy<C> {
     //      C getSelf();
@@ -823,13 +786,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
           for {
             carrierType <- findClass(names.mangle(names.instanceNameOf(location)), ComponentNames.pkgCarrier, names.mangle(names.conceptNameOf(op)))
             _ <- resolveAndAddImport(carrierType)
-            fullCarrierType <- if (op.isProducer(domain) || op.isBinary(domain)) {
-              for {
-                result <- applyType(carrierType, Seq(tpeParam))
-              } yield (result)
-            } else {
-              Command.lift[ooParadigm.ClassContext, paradigm.syntax.Type](carrierType)
-            }
+            fullCarrierType <- applyType(carrierType, Seq(tpeParam))
             _ <- addParent(fullCarrierType)
           } yield ()
         }
@@ -907,11 +864,21 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
       if (l.before(r)) -1 else if (r.before(l)) 1 else 0
     }
 
+    def futureMergePoint(l: GenericModel, r: GenericModel)(m: GenericModel): Boolean = {
+      l.beforeOrEqual(m) && r.beforeOrEqual(m)
+    }
+
     val orderedImplementers = domainsImplementingOp.distinct
       .filter(d => d.beforeOrEqual(domain)) // filter to make sure we are before the current domain (we are not interested in later EIPs)
       .sorted(cmp)
       .reverse
-    if (orderedImplementers.size > 1 && cmp(orderedImplementers(0), orderedImplementers(1)) == 0) {
+
+
+    // Are there two non-comparable ancestors l, r that haven't been merged by a third m which is past both? Then we are
+    // responsible for the merge!
+    if (orderedImplementers.size > 1 && orderedImplementers.exists(l => orderedImplementers.exists(r =>
+      cmp(l, r) == 0 && !orderedImplementers.exists(futureMergePoint(l, r))))
+    ) {
       return domain
     }
     if (orderedImplementers.isEmpty) {
@@ -1188,8 +1155,6 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
           } else {
             Command.skip[paradigm.ProjectContext]
           }
-
-          _ <- addCombinedCarrierInterfaceIfNecessary(domain)
           _ <- forEach(domain.former) { ancestor => implementRecursive(ancestor) }
         } yield ()
       }

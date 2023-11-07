@@ -126,7 +126,6 @@ object J2 {
       Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
         import ffiArithmetic.arithmeticCapabilities._
 
-        println("J2", onRequest.request.op.name, onRequest.tpeCase.name) // leave it here to show the case that failed
         assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         onRequest.request.op match {

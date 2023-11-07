@@ -36,7 +36,6 @@ sealed class J7[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
     val j7Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model = systemJK.J7.getModel
 
-
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
           _ <- k2j6Provider.initialize(forApproach)

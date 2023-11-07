@@ -62,7 +62,6 @@ object J1 {
         import paradigm._
         import methodBodyCapabilities._
 
-        println("J1", onRequest.request.op.name, onRequest.tpeCase.name) // leave it here to show the case that failed
         assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         onRequest.tpeCase match {

@@ -1,6 +1,4 @@
-package org.combinators.ep.language.java.systemJ
-
-/*DD:LD:AD*/
+package org.combinators.ep.language.java.systemJ     /*DD:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
@@ -171,6 +169,12 @@ class MainJ(choice:String, select:String) {
       _ <- directToDiskTransaction(targetDirectory)
     } yield ExitCode.Success
   }
+
+  def endProgram(): IO[ExitCode] = {
+    // this should properly terminate program from within sbt (all background threads)
+    // unfortunately it kills the sbt process in which it runs. back to drawing board
+    IO(System.exit(0)).as(ExitCode.Success)
+  }
 }
 
 object DirectToDiskMainJ extends IOApp {
@@ -178,13 +182,15 @@ object DirectToDiskMainJ extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
     val approach = if (args.isEmpty) "algebra" else args.head
-    val selection = if (args.isEmpty || args.tail.isEmpty) "J7" else args.tail.head
-    println("Generating " + approach + " for " + selection)
+    val selection = if (args.isEmpty || args.tail.isEmpty) "J8" else args.tail.head
+    println("MainJ: Generating " + approach + " for " + selection)
     for {
       _ <- IO { print("Initializing Generator...") }
       main <- IO { new MainJ(approach, selection) }
       _ <- IO { println("[OK]") }
       result <- main.runDirectToDisc(targetDirectory)
+      //_ <- main.endProgram()
     } yield result
+
   }
 }

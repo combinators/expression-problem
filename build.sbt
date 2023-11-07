@@ -84,7 +84,7 @@ lazy val languageJava =
   standardLanguageProject("java")
     .settings(libraryDependencies += "com.github.javaparser" % "javaparser-core" % "3.19.0")
     .settings(
-      Compile/run/mainClass := Some("org.combinators.ep.language.java.DirectToDiskMainJ")
+      Compile/run/mainClass := Some("org.combinators.ep.language.java.systemJ.DirectToDiskMainJ")
      )
 
 lazy val languageInbetween =

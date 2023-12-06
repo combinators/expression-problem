@@ -577,7 +577,8 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
                     tpeCase,
                     visitedRef,
                     tpeCase.attributes.zip(attAccessors).toMap,
-                    Request(op, args.toMap)
+                    Request(op, args.toMap),
+                    Some(domain)
                   )
         )
     } yield result
@@ -641,8 +642,20 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
     val typeCasesToDeclare = if (previous.isEmpty) {
       domain.flatten.typeCases.distinct
     } else {
-      val primaryParentTypeCases = previous.maxBy(m => m.flatten.typeCases.length).flatten.typeCases
-      domain.flatten.typeCases.filterNot(tpe => primaryParentTypeCases.contains(tpe)).distinct
+      val primaryParent = previous.maxBy(m => m.flatten.typeCases.length)
+      val primaryParentTypeCases = primaryParent.flatten.typeCases
+
+      domain.flatten.typeCases.filter(tpe => {
+        val knownDependencies = domainSpecific.evolutionSpecificDependencies(PotentialRequest(
+          domain.baseDataType,
+          tpe,
+          op
+        ))
+        val containsOverride = knownDependencies.exists{ case (overridingDomain, _) =>
+          primaryParent.before(overridingDomain) && overridingDomain.beforeOrEqual(domain)
+        }
+        !primaryParentTypeCases.contains(tpe) || containsOverride
+      }).distinct
     }
 
     // ignore degenerate case where the first model only has an operation without any types
@@ -779,7 +792,6 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
     import paradigm.projectCapabilities.addTypeLookupForMethods
     import ooParadigm.projectCapabilities.addTypeLookupForClasses
     import ooParadigm.projectCapabilities.addTypeLookupForConstructors
-
     for {
       _ <- forEach(model.typeCases) { tpeCase => // passes on capabilities so it knows which generators to use...
         for {
@@ -824,12 +836,15 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
   def makeDerivedClassesInChronologicalOrder(gdomain:GenericModel) : Generator[ProjectContext, Unit] = {
     for {
       _ <- forEach(gdomain.inChronologicalOrder) { dm =>
-        forEach(dm.typeCases) { tpeCase =>
-          for {
-            _ <- visitor.makeDerived(gdomain.baseDataType, tpeCase, dm)
-            _ <- registerNewlyDeclaredDataTypeClasses(dm)
-          } yield ()
-        }
+
+        for {
+          _ <- registerNewlyDeclaredDataTypeClasses(dm)
+          _ <- forEach (dm.typeCases) {tpeCase =>
+            for {
+            _ <- visitor.makeDerived (gdomain.baseDataType, tpeCase, dm)
+            } yield ()
+          }
+        } yield ()
       }
     } yield ()
   }

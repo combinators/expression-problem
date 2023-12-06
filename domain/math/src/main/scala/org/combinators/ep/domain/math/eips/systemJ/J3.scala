@@ -69,7 +69,6 @@ object J3 {
         import paradigm._
         import methodBodyCapabilities._
 
-        println("J3", onRequest.request.op.name, onRequest.tpeCase.name) // leave it here to show the case that failed
         assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         def operate(): Generator[paradigm.MethodBodyContext, Option[syntax.Expression]] = {

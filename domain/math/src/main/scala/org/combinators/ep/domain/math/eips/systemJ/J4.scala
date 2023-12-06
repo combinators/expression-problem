@@ -90,7 +90,6 @@ object J4 {
       (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
 
-        println("J4", onRequest.request.op.name, onRequest.tpeCase.name) // leave it here to show the case that failed
         assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         onRequest.request.op match {

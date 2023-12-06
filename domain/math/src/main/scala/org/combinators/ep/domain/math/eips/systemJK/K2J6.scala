@@ -255,7 +255,6 @@ sealed class K2J6[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
         import paradigm._
         import methodBodyCapabilities._                   // DON'T BE FOOLED. NEEDED
 
-        println(onRequest.request)
         onRequest.request.op match {
           case math.systemJ.J5.Equals => genericLogic(forApproach)(onRequest)
           case math.systemJ.J2.Eql => genericLogic(forApproach)(onRequest)

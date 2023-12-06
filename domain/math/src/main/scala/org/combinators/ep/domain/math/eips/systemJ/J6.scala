@@ -76,7 +76,7 @@ object J6 {
       Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
         import paradigm._
         import methodBodyCapabilities._
-        // assert(applicable(forApproach)(onRequest), onRequest.tpeCase.name + " failed for " + onRequest.request.op.name) TODO: fix assert
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         onRequest.tpeCase match {
           //        default Exp<V> powBy(ep.Exp<V> exponent) {

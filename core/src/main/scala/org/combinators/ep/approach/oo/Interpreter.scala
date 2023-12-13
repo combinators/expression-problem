@@ -266,7 +266,8 @@ sealed trait Interpreter extends SharedOO {
             tpeCase,
             thisRef,
             atts,
-            Request(op, castedArgsMap)
+            Request(op, castedArgsMap),
+            Some(domain)
           )
         )
     } yield result
@@ -312,7 +313,7 @@ sealed trait Interpreter extends SharedOO {
     // that one -- if both do, then it doesn't matter which one you choose, so to be consistent
     // always choose the first one.
     def addPrimaryParent(): Generator[ClassContext, Option[Type]] = {
-      if (!shouldAddParent()) {
+      if (!shouldAddParent) {
        Command.lift[ClassContext, Option[Type]](Option.empty)
       } else {
         // go to last model which had defined operation *OR* last model in which this tpeCase is defined.
@@ -326,7 +327,7 @@ sealed trait Interpreter extends SharedOO {
       }
 
     // add a parent IF type defined earlier, in ANY of its formers..
-    def shouldAddParent(): Boolean = {
+    def shouldAddParent: Boolean = {
       model.former.exists(m => m.findTypeCase(tpeCase).isDefined)
     }
 
@@ -336,7 +337,7 @@ sealed trait Interpreter extends SharedOO {
        _ <- addImplemented(pt)
 
        primaryParent <- addPrimaryParent()
-       _ <- if (!shouldAddParent()) {
+       _ <- if (!shouldAddParent) {
          for {
            _ <- forEach(tpeCase.attributes) { att => makeField(att) }
          } yield ()
@@ -345,7 +346,7 @@ sealed trait Interpreter extends SharedOO {
        }
 
        // if super is being used, then you need to cast to Exp
-       _ <- addConstructor(makeConstructor(tpeCase, !shouldAddParent(), useSuper = primaryParent))
+       _ <- addConstructor(makeConstructor(tpeCase, !shouldAddParent, useSuper = primaryParent))
        _ <- forEach (ops) { op => addMethod(names.mangle(names.instanceNameOf(op)), makeInterpreterImplementation(model, model.baseDataType, tpeCase, op, domainSpecific))
        }
     } yield ()
@@ -475,8 +476,11 @@ sealed trait Interpreter extends SharedOO {
              _ <- generateForOp(domain, domain.flatten.typeCases, domainSpecific)
             } yield ()
           } else {
-           Command.skip[paradigm.ProjectContext]
+           for {
+             _ <- generateForOp(domain, domain.typeCases, domainSpecific)
+           } yield ()
           }
+
         } yield()
       }
     }

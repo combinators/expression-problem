@@ -31,8 +31,15 @@ object M9 {
       }
 
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
-        // TODO: dependency fix
-        None
+        val cases = math.M9.getModel.flatten.typeCases
+        if (cases.contains(potentialRequest.tpeCase)) {
+          (potentialRequest.op, potentialRequest.tpeCase) match {
+            case (math.M9.Height, _) => Some(Set.empty)
+            case (_, _) => None
+          }
+        } else {
+          None
+        }
       }
 
       /** Generic logic takes care of the structure-based cases, only Lit needs special handling. */
@@ -92,7 +99,7 @@ object M9 {
         import AnyParadigm.syntax._
         import methodBodyCapabilities._
 
-        //assert(applicable(forApproach)(onRequest)) TODO: fix assert
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         onRequest.tpeCase match {
           case math.M0.Lit =>

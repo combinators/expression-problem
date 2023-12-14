@@ -601,10 +601,10 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
     if (priorDomainsDeclaringDependencies.isEmpty) {
       Set.empty
     } else {
-      val lastPriorDomainDeclaringDependencies = priorDomainsDeclaringDependencies.max((d1: GenericModel, d2: GenericModel) =>
-        if (d1.before(d2)) -1 else if (d2.before(d1)) 1 else 0
+      val lastPriorDomainsDeclaringDependencies = priorDomainsDeclaringDependencies.filter(d1 =>
+        !priorDomainsDeclaringDependencies.exists(d2 => d1.before(d2))
       )
-      combinedDependencies(lastPriorDomainDeclaringDependencies)
+      lastPriorDomainsDeclaringDependencies.foldLeft[Set[Operation]](Set.empty){ case (s, d) => s ++ combinedDependencies(d) }
     }
   }
 

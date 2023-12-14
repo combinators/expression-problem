@@ -271,7 +271,8 @@ trait TriviallyClean extends ApproachImplementationProvider {
           request = Request(
             op = operation,
             arguments = operation.parameters.zip(arguments).toMap
-          )
+          ),
+          Some(domain)
         )
       result <- evolutionImplementationProvider.logic(this)(receivedRequest)
     } yield result

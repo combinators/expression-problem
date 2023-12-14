@@ -237,12 +237,9 @@ object DirectToDiskMain extends IOApp {
   val targetDirectory = Paths.get("target", "ep3")
 
   def run(args: List[String]): IO[ExitCode] = {
-    val approach = if (args.isEmpty) "trivially" else args.head
-    val selection = if (args.isEmpty || args.tail.isEmpty) "M7I2" else args.tail.head
-    // trivially M7I2 doesn't compile
-    // interpreter M4 fails to compile, M7I2 fails to generate
-    // extensibleVisitor M7I2 fails to generate
-    // A1M3I2 generates for all, falis to compile in extensibleVisitor, interpreter, works in trivially
+    val approach = if (args.isEmpty) "interpreter" else args.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "A1M3I2" else args.tail.head
+    // A1M3I2 generates for all, falis to compile in interpreter
     println("Generating " + approach + " for " + selection)
     for {
       _ <- IO { print("Initializing Generator...") }

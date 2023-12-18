@@ -37,21 +37,6 @@ class Main(choice:String, select:String) {
   val dispatchApproach = RuntimeDispatch[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.stringsInMethod, generator.exceptionsInMethod, generator.ooParadigm)
   val algebraApproach = ObjectAlgebras[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
-  // these are all older versions of the cleaned-up Trivially and CoCo. Vita was intermediate result, kept around for historical accuracy
-  //val vitaApproach = ViTA[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
-  //val triviallyApproach = Trivially[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
-  //val cocoApproach = CoCo[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
-
-  // this one is not even working anymore. Needs serious work to get back to speed, and even then, it might not work past merging
-  //val algebraApproach = Algebra[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
-
-  // select one here.
-  //val approach = algebraApproach// algebraApproach//algebraApproach// cocoCleanApproach//extensibleVisitorApproach
-
-  //val evolutions = Seq(M0, M1, M2, M3, M4, M5, M6, M7, I1, I2, M7I2, M8)    // all test cases become active WHEN all included.
-
-  //val evolutions = Seq(M0, M1, M2, M3, I1, A1, A1M3, I2, A1M3I2, A3)
-
   // select one here
   val approach = choice match {
     case "oo" => ooApproach
@@ -238,8 +223,10 @@ object DirectToDiskMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
     val approach = if (args.isEmpty) "interpreter" else args.head
-    val selection = if (args.isEmpty || args.tail.isEmpty) "A1M3I2" else args.tail.head
-    // A1M3I2 generates for all, falis to compile in interpreter
+    if (approach == "exit") { sys.exit(0) }
+    val selection = if (args.isEmpty || args.tail.isEmpty) "M8" else args.tail.head
+    // A1M3 fails for interpreter
+    // A1M3I2 generates for all, fails to compile in interpreter
     println("Generating " + approach + " for " + selection)
     for {
       _ <- IO { print("Initializing Generator...") }

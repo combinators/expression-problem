@@ -7,7 +7,7 @@ import org.combinators.ep.domain.math.M0.{Eval, LitInst}
 
 /**
   * Offers a "kitchen sink" of data types and operations envisioned as part of a publication.
-  *
+  * NEVER IMPLEMENTED
   */
 object P1 extends Evolution {
   override implicit def getModel:GenericModel = M2.getModel.evolve("p1", Seq(Pi, Rnd, Amortized), Seq(CountBetween, Output, ParamHeight))

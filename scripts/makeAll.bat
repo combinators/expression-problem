@@ -1,6 +1,3 @@
-
-
-
 @REM move into proper directory and create target
 cd ..
 

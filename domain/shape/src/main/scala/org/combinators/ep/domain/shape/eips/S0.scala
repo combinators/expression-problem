@@ -44,16 +44,14 @@ object S0 {
           _ <- ffiStrings.enable()
         } yield ()
       }
-//// Seq(Square,Circle,Translate), Seq(ContainsPt))
-//      override def applicable
-//      (forApproach: AIP[paradigm.type], potentialRequest: PotentialRequest): Boolean = {
-//        (potentialRequest.op == shape.S0.ContainsPt) &&
-//          (Set(shape.S0.Circle, shape.S0.Square, shape.S0.Translate).contains(potentialRequest.tpeCase))
-//      }
 
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
-        // TODO: dependency fix
-        None
+        if ((potentialRequest.op == shape.S0.ContainsPt) &&
+          Set(shape.S0.Circle, shape.S0.Square, shape.S0.Translate).contains(potentialRequest.tpeCase)) {
+          Some(Set.empty)
+        } else {
+          None
+        }
       }
 
       override def logic
@@ -64,8 +62,7 @@ object S0 {
         import ffiBooleans.booleanCapabilities._
         import ffiRealArithmetic.realArithmeticCapabilities._
 
-        // no need to pass up to the chain since only Eval is known
-        // assert(applicable(forApproach)(onRequest)) TODO: fix assert
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         onRequest.request.op match {
           case op if op == shape.S0.ContainsPt =>

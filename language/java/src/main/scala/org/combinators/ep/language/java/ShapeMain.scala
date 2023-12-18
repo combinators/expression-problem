@@ -2,7 +2,7 @@ package org.combinators.ep.language.java     /*DD:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
-import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, ObjectAlgebras, Traditional, TriviallyClean, Visitor}
+import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, ObjectAlgebras, RuntimeDispatch, Traditional, TriviallyClean, Visitor}
 import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.shape._
@@ -16,7 +16,7 @@ import java.nio.file.{Path, Paths}
 /**
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
-class ShapeMain {
+class ShapeMain(choice:String, select:String) {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed))
 
   val ooApproach = Traditional[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
@@ -25,38 +25,57 @@ class ShapeMain {
   val visitorSideEffectApproach = Visitor.withSideEffects[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm)
   val extensibleVisitorApproach = ExtensibleVisitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val interpreterApproach = Interpreter[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
-  val triviallyApproach = TriviallyClean[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
-  val cocoApproach = CoCoClean[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+  val cocoCleanApproach = CoCoClean[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val algebraApproach = ObjectAlgebras[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+  val dispatchApproach = RuntimeDispatch[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.stringsInMethod, generator.exceptionsInMethod, generator.ooParadigm)
+  val triviallyCleanApproach = TriviallyClean[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
 
-  // select one here.
-  // val approach = ooApproach // WORKS!
-  // val approach = visitorApproach  // WORKS!
-  // val approach = visitorSideEffectApproach // WORKS!
-  // val approach = extensibleVisitorApproach // WORKS!
-  // val approach = triviallyApproach // triviallyApproach // WORKS!
-  //val approach = ooApproach // Not quite yet
-  val approach = cocoApproach// extensibleVisitorApproach   // cocoApproach
+  // select one here
+  val approach = choice match {
+    case "oo" => ooApproach
+    case "visitor" => visitorApproach
+    case "visitorSideEffect" => visitorSideEffectApproach
+    case "extensibleVisitor" => extensibleVisitorApproach
+    case "interpreter" => interpreterApproach
+    case "coco" => cocoCleanApproach
+    case "trivially" => triviallyCleanApproach
+    case "dispatch" => dispatchApproach
+    case "algebra" => algebraApproach
 
-  val evolutions = Seq(S0, S1, S2)
-  //val m4eip =
-  val s0eip =
+    case _ => ???
+  }
+
+  val evolutions = select match {
+    case "S0" => Seq(S0)
+    case "S1" => Seq(S0, S1)
+    case "S2" => Seq(S0, S1, S2)
+
+    case _ => ???
+  }
+
+  val s0_eip =
     eips.S0(approach.paradigm)(
       ffiArithmetic = generator.doublesInMethod,
       generator.realDoublesInMethod,
       generator.booleansInMethod,
       generator.stringsInMethod
   )
-  val s1eip = eips.S1(approach.paradigm)(s0eip)(
+  val s1_eip = eips.S1(approach.paradigm)(s0_eip)(
     generator.doublesInMethod,
     generator.booleansInMethod
   )
-  val s2eip = eips.S2(approach.paradigm)(s1eip)(
+  val s2_eip = eips.S2(approach.paradigm)(s1_eip)(
     generator.doublesInMethod,
     generator.imperativeInMethod
   )
-  val eip = s2eip
 
+  val eip = select match {
+    case "S0" => s0_eip
+    case "S1" => s1_eip
+    case "S2" => s2_eip
+
+    case _ => ???
+  }
 
   val tests = evolutions.scanLeft(Map.empty[GenericModel, Seq[TestCase]]) { case (m, evolution) =>
     m + (evolution.getModel -> evolution.tests)
@@ -64,7 +83,6 @@ class ShapeMain {
 
   // for CoCo, we only need the latest since all earlier ones are identical
   val all = evolutions.zip(tests)
-
 
   def transaction[T](initialTransaction: T, addToTransaction: (T, String, () => Seq[FileWithPath]) => T): T = {
     all.foldLeft(initialTransaction) { case (transaction, (evolution, tests)) =>
@@ -113,7 +131,6 @@ class ShapeMain {
     for {
       _ <- IO { System.out.println(s"Use: git clone http://127.0.0.1:8081/$name ${evolutions.last.getModel.name}") }
       exitCode <- new GitService(gitTransaction.toSeq, name).run(args)
-      //exitCode <- new GitService(transaction.toSeq, name).runProcess(Seq(s"sbt", "test"))
     } yield exitCode
   }
 
@@ -128,9 +145,13 @@ object DirectToDiskMainForShape extends IOApp {
   val targetDirectory = Paths.get("target", "ep2")
 
   def run(args: List[String]): IO[ExitCode] = {
+    val approach = if (args.isEmpty) "algebra" else args.head
+    if (approach == "exit") { sys.exit(0) }
+    val selection = if (args.isEmpty || args.tail.isEmpty) "S2" else args.tail.head
+
     for {
       _ <- IO { print("Initializing Generator...") }
-      main <- IO { new ShapeMain() }
+      main <- IO { new ShapeMain(approach, selection) }
       _ <- IO { println("[OK]") }
       result <- main.runDirectToDisc(targetDirectory)
     } yield result

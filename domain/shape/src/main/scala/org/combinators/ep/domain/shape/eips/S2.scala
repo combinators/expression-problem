@@ -1,4 +1,4 @@
-package org.combinators.ep.domain.shape.eips
+package org.combinators.ep.domain.shape.eips      /*DD:LI:AI*/
 
 import org.combinators.ep.domain.abstractions.{Operation, TypeRep}
 import org.combinators.ep.domain.{GenericModel, shape}
@@ -28,16 +28,15 @@ object S2 {
         } yield ()
       }
 
-//      def applicable
-//      (forApproach: AIP[paradigm.type], potentialRequest: PotentialRequest): Boolean = {
-//        (potentialRequest.op == shape.S2.Shrink) &&
-//          (Set(shape.S1.Union,shape.S0.Translate,shape.S0.Circle, shape.S0.Square).contains(potentialRequest.tpeCase))
-//      }
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
-        // TODO: dependency fix
-        None
+        val cases = shape.S2.getModel.flatten.typeCases
+        if ((potentialRequest.op == shape.S2.Shrink) && cases.contains(potentialRequest.tpeCase)) {
+          Some(Set.empty)
+        } else {
+          None
+        }
       }
+
       override def logic
       (forApproach: AIP[paradigm.type])
       (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
@@ -45,8 +44,7 @@ object S2 {
         import paradigm._
         import methodBodyCapabilities._
 
-        // no need to pass up to the chain since only Eval is known
-        // assert(applicable(forApproach)(onRequest)) TODO: fix assert
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         onRequest.tpeCase match {
 

@@ -27,15 +27,12 @@ object S1 {
         } yield ()
       }
 
-//      def applicable
-//      (forApproach: AIP[paradigm.type], onRequest: PotentialRequest): Boolean = {
-//        (onRequest.op == shape.S0.ContainsPt) &&
-//          (Set(shape.S1.Union).contains(onRequest.tpeCase))
-//      }
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
-        // TODO: dependency fix
-        None
+        if ((potentialRequest.op == shape.S0.ContainsPt) && Set(shape.S1.Union).contains(potentialRequest.tpeCase)) {
+          Some(Set.empty)
+        } else {
+          None
+        }
       }
 
       override def logic
@@ -45,8 +42,7 @@ object S1 {
         import ffiArithmetic.arithmeticCapabilities._
         import ffiBoolean.booleanCapabilities._
 
-        // no need to pass up to the chain since only Eval is known
-        //assert(applicable(forApproach)(onRequest)) TODO: fix assert
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         onRequest.request.op match {
           case op if op == shape.S0.ContainsPt => {

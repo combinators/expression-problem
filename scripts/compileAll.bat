@@ -16,9 +16,8 @@ for %%a in (oo visitor visitorSideEffect extensibleVisitor interpreter dispatch 
      @echo off
 
      @REM: You will need to remove " from the generated file
-     echo language-java/runMain org.combinators.ep.language.java.systemJ.DirectToDiskMainJ %%a %%e ^>^> target\make\outputgen >> target\make\commands.sbt
+     echo language-java/runMain org.combinators.ep.language.java.systemJ.DirectToDiskMainJ %%a %%e >> target\makeJ\commands.sbt
   )
 )
 
-echo exit >> target\make\commands.sbt
-
+echo language-java/runMain org.combinators.ep.language.java.DirectToDiskMain exit >> target\makeJ\commands.sbt

@@ -1,7 +1,6 @@
-package org.combinators.ep.domain.GraphViz
+package org.combinators.ep.domain
 
 import org.combinators.ep.domain.abstractions.Operation
-import org.combinators.ep.domain.{Evolution, GenericModel}
 import org.combinators.ep.generator.communication.PotentialRequest
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
@@ -12,6 +11,8 @@ import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionIm
  */
 object GraphViz {
   def outputNodes(model:GenericModel) : Unit = {
+    val added = scala.collection.mutable.Map[String,Int]()
+
     model.inChronologicalOrder
       .map(m => {
 
@@ -34,8 +35,13 @@ object GraphViz {
         println(entry)
 
         // edges
-        m.former.map(pm => println(s"${m.name.toUpperCase()} -> ${pm.name.toUpperCase()}"))
+        m.former.map(pm => {
+          val arrow = s"${m.name.toUpperCase()} -> ${pm.name.toUpperCase()}"
+          added += arrow -> 1
+        })
       })
+
+    added.map(pair => println (pair._1))
   }
 
   def outputGraphWithDependenciesViz[AIP <: ApproachImplementationProvider](model:GenericModel, domainSpecific: EvolutionImplementationProvider[AIP]): Unit = {
@@ -110,9 +116,7 @@ object GraphViz {
     println("OUTPUT DM")
   }
 
-  def outputGraphViz(lastOne:Evolution): Unit = {
-
-    val model = lastOne.getModel
+  def outputGraphViz(model:GenericModel): Unit = {
 
     println("----------------------------------------------------------")
     println("digraph G {")

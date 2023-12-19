@@ -1,7 +1,7 @@
 package org.combinators.ep.language.java     /*DD:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
-import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, ObjectAlgebras, RuntimeDispatch, Traditional, TriviallyClean, Visitor}
+import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, ObjectAlgebras, RuntimeDispatch, Traditional, TriviallyClean, Visitor, Visualize}
 import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.math._
@@ -24,6 +24,8 @@ import java.nio.file.{Path, Paths}
 class Main(choice:String, select:String) {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed))
 
+  val visualizeApproach = Visualize[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
+
   val ooApproach = Traditional[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
   // can't have all of these together
   val visitorApproach = Visitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
@@ -39,6 +41,7 @@ class Main(choice:String, select:String) {
 
   // select one here
   val approach = choice match {
+    case "graphviz" => visualizeApproach
     case "oo" => ooApproach
     case "visitor" => visitorApproach
     case "visitorSideEffect" => visitorSideEffectApproach
@@ -222,19 +225,13 @@ object DirectToDiskMain extends IOApp {
   val targetDirectory = Paths.get("target", "ep3")
 
   def run(args: List[String]): IO[ExitCode] = {
-    val approach = if (args.isEmpty) "oo" else args.head
+    val approach = if (args.isEmpty) "graphviz" else args.head
     if (approach == "exit") { sys.exit(0) }
     val selection = if (args.isEmpty || args.tail.isEmpty) "M9" else args.tail.head
     // A1M3 fails for interpreter
     // A1M3I2 generates for all, fails to compile in interpreter
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
-
-    // this generates graph SOLELY based on the models and their relationships.
-    GraphViz.outputGraphViz(main.evolutions.last)   // documenting graph
-
-    // if you choose traditional, I've dropped code there to spit out different graph, including
-    // eip dependencies as well
 
     for {
       _ <- IO { print("Initializing Generator...") }

@@ -1,7 +1,7 @@
 package org.combinators.ep.language.java     /*DI:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
-import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, ObjectAlgebras, RuntimeDispatch, Traditional, TriviallyClean, Visitor}
+import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, ObjectAlgebras, RuntimeDispatch, Traditional, TriviallyClean, Visitor, Visualize}
 import org.combinators.ep.domain.{GenericModel, Model}
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.math.{eips, _}
@@ -18,6 +18,7 @@ import java.nio.file.{Files, Path, Paths}
  */
 class MainJournalPaper(choice:String, select:String) {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed))
+  val visualizeApproach = Visualize[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
 
   val ooApproach = Traditional[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
   val visitorApproach = Visitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
@@ -33,6 +34,7 @@ class MainJournalPaper(choice:String, select:String) {
 
   // select one here
   val approach = choice match {
+    case "graphviz" => visualizeApproach
     case "oo" => ooApproach
     case "visitor" => visitorApproach
     case "visitorSideEffect" => visitorSideEffectApproach
@@ -180,7 +182,7 @@ object DirectToDiskMainJournalPaper extends IOApp {
   val targetDirectory = Paths.get("target", "ep2")
 
   def run(args: List[String]): IO[ExitCode] = {
-    val approach = if (args.isEmpty) "algebra" else args.head
+    val approach = if (args.isEmpty) "graphviz" else args.head
     val selection = if (args.isEmpty || args.tail.isEmpty) "I2M3I1N1" else args.tail.head
 
     for {

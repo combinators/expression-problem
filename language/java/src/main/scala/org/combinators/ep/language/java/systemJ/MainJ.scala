@@ -21,6 +21,7 @@ import java.nio.file.{Path, Paths}
  */
 class MainJ(choice:String, select:String) {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed))
+  val visualizeApproach = Visualize[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
 
   val ooApproach = Traditional[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
   // can't have all of these together
@@ -37,6 +38,7 @@ class MainJ(choice:String, select:String) {
 
   // select one here
   val approach = choice match {
+    case "graphviz" => visualizeApproach
     case "oo" => ooApproach
     case "visitor" => visitorApproach
     case "visitorSideEffect" => visitorSideEffectApproach
@@ -181,8 +183,8 @@ object DirectToDiskMainJ extends IOApp {
   val targetDirectory = Paths.get("target", "ep2")
 
   def run(args: List[String]): IO[ExitCode] = {
-    val approach = if (args.isEmpty) "oo" else args.head
-    val selection = if (args.isEmpty || args.tail.isEmpty) "K1" else args.tail.head
+    val approach = if (args.isEmpty) "graphviz" else args.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "J8" else args.tail.head
     println("MainJ: Generating " + approach + " for " + selection)
     for {
       _ <- IO { print("Initializing Generator...") }

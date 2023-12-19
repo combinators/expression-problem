@@ -5,6 +5,11 @@ import org.combinators.ep.domain.{Evolution, GenericModel}
 import org.combinators.ep.generator.communication.PotentialRequest
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
+/**
+ * Generate online at
+ *
+ * https://dreampuf.github.io/GraphvizOnline
+ */
 object GraphViz {
   def outputNodes(model:GenericModel) : Unit = {
     model.inChronologicalOrder
@@ -16,7 +21,11 @@ object GraphViz {
         <TABLE BORDER="0">
           <TR>
             <TD BGCOLOR="lightblue">${m.typeCases.map(tpe => tpe.name).mkString(", ")}</TD>
-            <TD BGCOLOR="beige">${m.ops.map(op => op.name).mkString(", ")}</TD>
+            <TD BGCOLOR="beige">${m.ops.map(op =>
+          if (op.isBinary(model) && op.isProducer(model)) { f"${op.name}<sub>BP</sub>" }
+          else if (op.isBinary(model)) { f"${op.name}<sub>B</sub>"}
+          else if (op.isProducer(model)) { f"${op.name}<sub>P</sub>"}
+          else { op.name } ).mkString(", ")}</TD>
           </TR>
           <tr><td colspan="2" style="text-align:center">${m.name.toUpperCase()}</td></tr>
         </TABLE>
@@ -30,7 +39,6 @@ object GraphViz {
   }
 
   def outputGraphWithDependenciesViz[AIP <: ApproachImplementationProvider](model:GenericModel, domainSpecific: EvolutionImplementationProvider[AIP]): Unit = {
-    //eip.dep
     println("==========================================================")
     println("digraph G {")
     println("label = \"Dependency Graph\"")

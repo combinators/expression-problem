@@ -9,7 +9,7 @@ import org.combinators.ep.generator.{ApproachImplementationProvider, FileWithPat
 import org.combinators.jgitserv.{BranchTransaction, GitService}
 import FileWithPathPersistable._
 import org.apache.commons.io.FileUtils
-
+import org.combinators.ep.domain.GraphViz.GraphViz
 import org.combinators.ep.domain.math.{M0, eips}
 import org.combinators.ep.domain.math.systemI.{I1, I2}
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable, TestImplementationProvider}
@@ -222,15 +222,24 @@ object DirectToDiskMain extends IOApp {
   val targetDirectory = Paths.get("target", "ep3")
 
   def run(args: List[String]): IO[ExitCode] = {
-    val approach = if (args.isEmpty) "interpreter" else args.head
+    val approach = if (args.isEmpty) "oo" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "M8" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "M9" else args.tail.head
     // A1M3 fails for interpreter
     // A1M3I2 generates for all, fails to compile in interpreter
     println("Generating " + approach + " for " + selection)
+    val main = new Main(approach, selection)
+
+    // this generates graph SOLELY based on the models and their relationships.
+    GraphViz.outputGraphViz(main.evolutions.last)   // documenting graph
+
+    // if you choose traditional, I've dropped code there to spit out different graph, including
+    // eip dependencies as well
+
     for {
       _ <- IO { print("Initializing Generator...") }
-      main <- IO { new Main(approach, selection) }
+      main <- IO { main }
+
       _ <- IO { println("[OK]") }
       result <- main.runDirectToDisc(targetDirectory)
     } yield result

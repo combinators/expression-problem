@@ -7,6 +7,7 @@ import org.combinators.ep.generator.communication._
 import org.combinators.ep.generator.paradigm._
 import Command._
 import AnyParadigm.syntax._
+import org.combinators.ep.domain.GraphViz.GraphViz
 
 trait Traditional extends SharedOO {  // this had been sealed. not sure why
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
@@ -74,6 +75,10 @@ trait Traditional extends SharedOO {  // this had been sealed. not sure why
   }
 
   def implement(gdomain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
+
+    // Just trying to find a spot to generate graphviz of eips.
+    GraphViz.outputGraphWithDependenciesViz(gdomain, domainSpecific)   // documenting graph
+
 
     val flatDomain = gdomain.linearize.flatten
     for {

@@ -83,7 +83,7 @@ object GraphViz {
         // built in operations. NOTE: IN this case, it MIGHT happen the m.findOperation cannot find
         // the dependent operation, so it must be skipped
         Set(Operation.asTree).map(op => {
-          m.flatten.typeCases.map(tpe => {
+          m.typeCases.map(tpe => {
             val result = domainSpecific.dependencies(PotentialRequest(model.baseDataType, tpe, op))
             if (result.isDefined) {
               result.get.map(depend_op => {

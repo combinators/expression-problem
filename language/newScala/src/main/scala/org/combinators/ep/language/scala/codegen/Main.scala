@@ -39,7 +39,7 @@ class Main {
   val algebraApproach = ObjectAlgebras[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
   // select one here.
-  val approach = algebraApproach// cocoCleanApproach//extensibleVisitorApproach
+  val approach = ooApproach// cocoCleanApproach//extensibleVisitorApproach
 
   val evolutions = Seq(M0, M1, M2, M3, M4, M5, M6, I1, I2, M7, M7I2, M8)    // all test cases become active WHEN all included.
   //val evolutions = Seq(M0, M1, M2, M3, I1, A1, A1M3)

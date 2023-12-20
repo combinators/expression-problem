@@ -1,0 +1,90 @@
+digraph G {
+label = "Evolution Graph"
+M0 [shape=rect label=<
+
+        <TABLE BORDER="0">
+          <TR>
+            <TD BGCOLOR="lightblue">Lit, Add</TD>
+            <TD BGCOLOR="beige">eval</TD>
+          </TR>
+          <tr><td colspan="2" style="text-align:center">M0</td></tr>
+        </TABLE>
+        >]
+M0 [shape=rect label=<
+
+        <TABLE BORDER="0">
+          <TR>
+            <TD BGCOLOR="lightblue">Lit, Add</TD>
+            <TD BGCOLOR="beige">eval</TD>
+          </TR>
+          <tr><td colspan="2" style="text-align:center">M0</td></tr>
+        </TABLE>
+        >]
+X1 [shape=rect label=<
+
+        <TABLE BORDER="0">
+          <TR>
+            <TD BGCOLOR="lightblue">Sub</TD>
+            <TD BGCOLOR="beige">prettyp, multBy<sub>BP</sub></TD>
+          </TR>
+          <tr><td colspan="2" style="text-align:center">X1</td></tr>
+        </TABLE>
+        >]
+X1 [shape=rect label=<
+
+        <TABLE BORDER="0">
+          <TR>
+            <TD BGCOLOR="lightblue">Sub</TD>
+            <TD BGCOLOR="beige">prettyp, multBy<sub>BP</sub></TD>
+          </TR>
+          <tr><td colspan="2" style="text-align:center">X1</td></tr>
+        </TABLE>
+        >]
+X2 [shape=rect label=<
+
+        <TABLE BORDER="0">
+          <TR>
+            <TD BGCOLOR="lightblue">Times</TD>
+            <TD BGCOLOR="beige"></TD>
+          </TR>
+          <tr><td colspan="2" style="text-align:center">X2</td></tr>
+        </TABLE>
+        >]
+X3 [shape=rect label=<
+
+        <TABLE BORDER="0">
+          <TR>
+            <TD BGCOLOR="lightblue">Divd</TD>
+            <TD BGCOLOR="beige"></TD>
+          </TR>
+          <tr><td colspan="2" style="text-align:center">X3</td></tr>
+        </TABLE>
+        >]
+X2X3 [shape=rect label=<
+
+        <TABLE BORDER="0">
+          <TR>
+            <TD BGCOLOR="lightblue"></TD>
+            <TD BGCOLOR="beige"></TD>
+          </TR>
+          <tr><td colspan="2" style="text-align:center">X2X3</td></tr>
+        </TABLE>
+        >]
+X4 [shape=rect label=<
+
+        <TABLE BORDER="0">
+          <TR>
+            <TD BGCOLOR="lightblue">Neg</TD>
+            <TD BGCOLOR="beige"></TD>
+          </TR>
+          <tr><td colspan="2" style="text-align:center">X4</td></tr>
+        </TABLE>
+        >]
+X2 -> X1
+M0 -> MATHDOMAIN
+X2X3 -> X3
+X4 -> X2X3
+X1 -> M0
+X3 -> X1
+X2X3 -> X2
+}

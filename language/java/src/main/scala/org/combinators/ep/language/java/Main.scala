@@ -9,7 +9,6 @@ import org.combinators.ep.generator.{ApproachImplementationProvider, FileWithPat
 import org.combinators.jgitserv.{BranchTransaction, GitService}
 import FileWithPathPersistable._
 import org.apache.commons.io.FileUtils
-import org.combinators.ep.domain.GraphViz.GraphViz
 import org.combinators.ep.domain.math.{M0, eips}
 import org.combinators.ep.domain.math.systemI.{I1, I2}
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable, TestImplementationProvider}

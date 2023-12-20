@@ -1,7 +1,7 @@
 package org.combinators.ep.language.java    /*DI:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
-import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, ObjectAlgebras, RuntimeDispatch, Traditional, TriviallyClean, Visitor}
+import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, ObjectAlgebras, RuntimeDispatch, Traditional, TriviallyClean, Visitor, Visualize}
 import org.combinators.ep.domain.{GenericModel, Model}
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.math._
@@ -18,6 +18,8 @@ import java.nio.file.{Files, Path, Paths}
 class MainProducer(choice:String, select:String) {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed))
 
+  val visualizeApproach = Visualize[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
+
   val ooApproach = Traditional[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
   val visitorApproach = Visitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val extensibleVisitorApproach = ExtensibleVisitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
@@ -30,17 +32,10 @@ class MainProducer(choice:String, select:String) {
   val cocoCleanApproach = CoCoClean[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val algebraApproach = ObjectAlgebras[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
-  // select one here.
-  //val approach = ooApproach // WORKS!
-  // val approach = visitorApproach  // WORKS!
-  // val approach = visitorSideEffectApproach // WORKS!
-  // val approach = extensibleVisitorApproach // WORKS
-  // val approach = triviallyApproach // WORKS!
-  // val approach = vitaApproach // WORKS!
-  // interpreterApproach NOT YET WORKING
 
   // select one here
   val approach = choice match {
+    case "graphviz" => visualizeApproach
     case "oo" => ooApproach
     case "visitor" => visitorApproach
     case "visitorSideEffect" => visitorSideEffectApproach
@@ -201,7 +196,8 @@ object DirectToDiskMainProducer extends IOApp {
   val targetDirectory = Paths.get("target", "ep3")
 
   def run(args: List[String]): IO[ExitCode] = {
-    val approach = if (args.isEmpty) "algebra" else args.head
+    val approach = if (args.isEmpty) "graphviz" else args.head
+    if (approach == "exit") { sys.exit(0) }
     val selection = if (args.isEmpty || args.tail.isEmpty) "V1" else args.tail.head
 
     for {

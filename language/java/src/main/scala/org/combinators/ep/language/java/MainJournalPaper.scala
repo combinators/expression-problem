@@ -183,6 +183,7 @@ object DirectToDiskMainJournalPaper extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
     val approach = if (args.isEmpty) "graphviz" else args.head
+    if (approach == "exit") { sys.exit(0) }
     val selection = if (args.isEmpty || args.tail.isEmpty) "I2M3I1N1" else args.tail.head
 
     for {

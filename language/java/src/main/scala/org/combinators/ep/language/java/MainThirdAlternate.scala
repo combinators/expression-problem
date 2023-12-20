@@ -2,7 +2,7 @@ package org.combinators.ep.language.java     /*DC:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
-import org.combinators.ep.approach.oo.{CoCoClean, ObjectAlgebras, TriviallyClean}
+import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, ObjectAlgebras, RuntimeDispatch, Traditional, TriviallyClean, Visitor, Visualize}
 import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.math.eips.systemX
@@ -14,17 +14,47 @@ import org.combinators.ep.generator.FileWithPathPersistable._
 
 import java.nio.file.{Path, Paths}
 
-class MainThirdAlternate {
+class MainThirdAlternate(choice:String, select:String) {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed))
+  val visualizeApproach = Visualize[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
 
-  val cocoApproach = CoCoClean[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
-  val triviallyApproach = TriviallyClean[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
+  val ooApproach = Traditional[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
+  val visitorApproach = Visitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+  val extensibleVisitorApproach = ExtensibleVisitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+  val visitorSideEffectApproach = Visitor.withSideEffects[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm)
+  val interpreterApproach = Interpreter[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+  val triviallyCleanApproach = TriviallyClean[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
+
+  val dispatchApproach = RuntimeDispatch[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.stringsInMethod, generator.exceptionsInMethod, generator.ooParadigm)
+
+  val cocoCleanApproach = CoCoClean[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val algebraApproach = ObjectAlgebras[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
-  val approach = algebraApproach  // cocoApproach
+  // select one here
+  val approach = choice match {
+    case "graphviz" => visualizeApproach
+    case "oo" => ooApproach
+    case "visitor" => visitorApproach
+    case "visitorSideEffect" => visitorSideEffectApproach
+    case "extensibleVisitor" => extensibleVisitorApproach
+    case "interpreter" => interpreterApproach
+    case "coco" => cocoCleanApproach
+    case "trivially" => triviallyCleanApproach
+    case "dispatch" => dispatchApproach
+    case "algebra" => algebraApproach
 
-  // COCO shows duplicate interface for X2X3
-  val evolutions = Seq( M0, X1, X2, X3, X2X3, X4)  // , X4)
+    case _ => ???
+  }
+
+  val evolutions = select match {
+    case "M0" => Seq(M0)
+    case "X1" => Seq(M0, X1)
+    case "X2" => Seq(M0, X1, X2)
+    case "X3" => Seq(M0, X1, X2, X3)
+    case "X2X3" => Seq(M0, X1, X2, X3, X2X3)
+    case "X4" => Seq(M0, X1, X2, X3, X2X3, X4)
+    case _ => ???
+  }
 
   val x1_eip = systemX.X1(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
   val x2_eip = systemX.X2(approach.paradigm)(x1_eip)(generator.doublesInMethod, generator.stringsInMethod)
@@ -101,14 +131,17 @@ class MainThirdAlternate {
   }
 }
 
-
 object DirectToDiskMainThirdAlternate extends IOApp {
   val targetDirectory = Paths.get("target", "ep2")
 
   def run(args: List[String]): IO[ExitCode] = {
+    val approach = if (args.isEmpty) "graphviz" else args.head
+    if (approach == "exit") { sys.exit(0) }
+    val selection = if (args.isEmpty || args.tail.isEmpty) "X4" else args.tail.head
+
     for {
       _ <- IO { print("Initializing Generator...") }
-      main <- IO { new MainThirdAlternate() }
+      main <- IO { new MainThirdAlternate(approach, selection) }
       _ <- IO { println("[OK]") }
       result <- main.runDirectToDisc(targetDirectory)
     } yield result

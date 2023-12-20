@@ -10,9 +10,10 @@ import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionIm
  * https://dreampuf.github.io/GraphvizOnline
  */
 object GraphViz {
-  def outputNodes(model:GenericModel) : Unit = {
+  def outputNodes(model:GenericModel) : String = {
     val added = scala.collection.mutable.Map[String,Int]()
 
+    var result = new String("")
     model.inChronologicalOrder
       .map(m => {
 
@@ -32,7 +33,7 @@ object GraphViz {
         </TABLE>
         >]"""
 
-        println(entry)
+        result += entry + "\n"
 
         // edges
         m.former.map(pm => {
@@ -41,16 +42,21 @@ object GraphViz {
         })
       })
 
-    added.map(pair => println (pair._1))
+    added.foreach(pair => result += pair._1 + "\n")
+    result
   }
 
-  def outputGraphWithDependenciesViz[AIP <: ApproachImplementationProvider](model:GenericModel, domainSpecific: EvolutionImplementationProvider[AIP]): Unit = {
-    println("==========================================================")
-    println("digraph G {")
-    println("label = \"Dependency Graph\"")
+  def outputGraphWithDependenciesViz[AIP <: ApproachImplementationProvider]
+               (model:GenericModel,
+                domainSpecific: EvolutionImplementationProvider[AIP],
+                fileName:String = "eip.viz"): Unit = {
+
+    val fileWriter = new java.io.FileWriter (new java.io.File(fileName))
+    fileWriter.write("digraph G {\n")
+    fileWriter.write("label = \"Dependency Graph\"\n")
 
     // includes edges
-    outputNodes(model)
+    fileWriter.write (outputNodes(model))
 
     // special edges based on operation dependencies.
 
@@ -108,23 +114,24 @@ object GraphViz {
         })
 
         // now add to the graph as an edge
-        added.map(pair => println (pair._1))
+        added.foreach(pair => fileWriter.write (pair._1 + "\n"))
       })
 
-    println("}")
-    println("==========================================================")
-    println("OUTPUT DM")
+    fileWriter.write("}\n")
+    fileWriter.close()
+    println("GraphViz Dependency written to " + fileName)
   }
 
-  def outputGraphViz(model:GenericModel): Unit = {
+  def outputGraphViz(model:GenericModel, fileName:String = "evolution.viz"): Unit = {
 
-    println("----------------------------------------------------------")
-    println("digraph G {")
-    println("label = \"Evolution Graph\"")
+    val fileWriter = new java.io.FileWriter (new java.io.File(fileName))
+    fileWriter.write("digraph G {\n")
+    fileWriter.write("label = \"Evolution Graph\"\n")
 
-    outputNodes(model)
+    fileWriter.write(outputNodes(model))
 
-    println("}")
-    println("----------------------------------------------------------")
+    fileWriter.write("}\n")
+    fileWriter.close()
+    println("GraphViz EvolutionGraph written to " + fileName)
   }
 }

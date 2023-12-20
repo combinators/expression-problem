@@ -2,7 +2,7 @@ package org.combinators.ep.language.java     /*DD:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
-import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, ObjectAlgebras, RuntimeDispatch, Traditional, TriviallyClean, Visitor}
+import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, ObjectAlgebras, RuntimeDispatch, Traditional, TriviallyClean, Visitor, Visualize}
 import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.shape._
@@ -18,6 +18,7 @@ import java.nio.file.{Path, Paths}
  */
 class ShapeMain(choice:String, select:String) {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed))
+  val visualizeApproach = Visualize[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
 
   val ooApproach = Traditional[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
   // can't have all of these together
@@ -32,6 +33,7 @@ class ShapeMain(choice:String, select:String) {
 
   // select one here
   val approach = choice match {
+    case "graphviz" => visualizeApproach
     case "oo" => ooApproach
     case "visitor" => visitorApproach
     case "visitorSideEffect" => visitorSideEffectApproach
@@ -145,7 +147,7 @@ object DirectToDiskMainForShape extends IOApp {
   val targetDirectory = Paths.get("target", "ep2")
 
   def run(args: List[String]): IO[ExitCode] = {
-    val approach = if (args.isEmpty) "algebra" else args.head
+    val approach = if (args.isEmpty) "graphviz" else args.head
     if (approach == "exit") { sys.exit(0) }
     val selection = if (args.isEmpty || args.tail.isEmpty) "S2" else args.tail.head
 

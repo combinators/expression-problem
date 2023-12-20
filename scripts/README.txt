@@ -51,7 +51,7 @@
             }
         }
 
-     // Within original M4 evolution
+     // Within original M7I2 evolution
      // ------------------------------
      public Exp simplify() {
          if ((Double.valueOf(((Exp) this.left).eval()).equals(0.0) || Double.valueOf(((Exp) this.right).eval()).equals(0.0))) {

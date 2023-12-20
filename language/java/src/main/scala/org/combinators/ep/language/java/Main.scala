@@ -224,9 +224,9 @@ object DirectToDiskMain extends IOApp {
   val targetDirectory = Paths.get("target", "ep3")
 
   def run(args: List[String]): IO[ExitCode] = {
-    val approach = if (args.isEmpty) "graphviz" else args.head
+    val approach = if (args.isEmpty) "interpreter" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "M9" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "A1M3" else args.tail.head
     // A1M3 fails for interpreter
     // A1M3I2 generates for all, fails to compile in interpreter
     println("Generating " + approach + " for " + selection)

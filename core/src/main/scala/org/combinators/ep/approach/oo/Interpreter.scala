@@ -126,7 +126,8 @@ sealed trait Interpreter extends SharedOO {
       _ <- setInterface()
 
       // former merge points need to be included, so  past.lastModelWithOperation) is changed to below
-      _ <- forEach(domain.former.map(past => latestModelDefiningInterface(past))) { m => for {
+      //_ <- forEach(domain.former.map(past => latestModelDefiningInterface(past))) { m => for {
+      _ <- forEach(domain.former.map(past => latestModelDefiningNewTypeInterface(past))) { m => for {
            /** Interpreter has to go back to the former Model which had defined an operation */
            parent <- findClass(qualifiedBaseDataType(m) : _ *)
            _ <- resolveAndAddImport(parent)
@@ -216,7 +217,8 @@ sealed trait Interpreter extends SharedOO {
    */
   def mustCastToAccess(domain:GenericModel, op:Operation, tpeCase:DataTypeCase) : Boolean = {
     val definingModel = domain.findTypeCase(tpeCase).get
-    definingModel.before(latestModelDefiningInterface(domain))
+    //definingModel.before(latestModelDefiningInterface(domain))
+    definingModel.before(latestModelDefiningNewTypeInterface(domain))
   }
 
   def makeInterpreterImplementation(domain: GenericModel,
@@ -273,7 +275,7 @@ sealed trait Interpreter extends SharedOO {
     } yield result
   }
 
-  def latestModelDefiningInterface(domain: GenericModel): GenericModel = {
+  /*def latestModelDefiningInterface(domain: GenericModel): GenericModel = {
     if (domain.isDomainBase || domain.ops.nonEmpty || domain.former.length > 1) {   // handle merge case as well
       domain
     } else {
@@ -282,7 +284,7 @@ sealed trait Interpreter extends SharedOO {
       // could be one of our ancestors is a merge point
       latestModelDefiningInterface(domain.former.head)
     }
-  }
+  }*/
 
   /** Generate class for each DataTypeCase and Operation. Be sure to keep extension chain going when there are prior classes available.
    *
@@ -332,7 +334,8 @@ sealed trait Interpreter extends SharedOO {
     }
 
     for {  // find latest model with operation, since that will be the proper one to use
-      pt <- findClass(qualifiedBaseDataType(latestModelDefiningInterface(model)) : _ *)
+      //pt <- findClass(qualifiedBaseDataType(latestModelDefiningInterface(model)) : _ *)
+      pt <- findClass(qualifiedBaseDataType(latestModelDefiningNewTypeInterface(model)) : _ *)
        _ <- resolveAndAddImport(pt)
        _ <- addImplemented(pt)
 
@@ -389,13 +392,15 @@ sealed trait Interpreter extends SharedOO {
   }
 
   def latestModelDefiningNewTypeInterface(domain: GenericModel, tpe:DataTypeCase): GenericModel = {
-    if (domain.isDomainBase || domain.ops.nonEmpty || domain.former.length > 1) {   // handle merge case as well
+    val latestDefiningInterface = latestModelDefiningNewTypeInterface(domain)
+    if (domain == latestDefiningInterface) {   // handle merge case as well
       domain
     } else {
-      // find where tpe was defined and also where last operation was defined and choose later of the two
+      // find where tpe was defined
       val tpeDefined = domain.findTypeCase(tpe).get
-      val lastOps = latestModelDefiningInterface(domain)
-      lastOps.later(tpeDefined)
+      val past = domain.inChronologicalOrder
+      val pastWithTpeAndInterfaceDefined = past.filter(p => tpeDefined.beforeOrEqual(p) && latestDefiningInterface.beforeOrEqual(p))
+      pastWithTpeAndInterfaceDefined.head
      }
   }
 
@@ -429,8 +434,8 @@ sealed trait Interpreter extends SharedOO {
     import ooParadigm.methodBodyCapabilities.canFindClassInMethod
     import paradigm.projectCapabilities._
 
-    val baseInterface = baseInterfaceNames(latestModelDefiningInterface(model))  // model.lastModelWithOperation.head)
-
+    //val baseInterface = baseInterfaceNames(latestModelDefiningInterface(model))  // model.lastModelWithOperation.head)
+    val baseInterface = baseInterfaceNames(latestModelDefiningNewTypeInterface(model))
     val dtpeRep = TypeRep.DataType(model.baseDataType)
     for {
       _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(baseInterface : _*))
@@ -447,10 +452,14 @@ sealed trait Interpreter extends SharedOO {
    */
   def primaryParent(model:GenericModel, tpeCase:DataTypeCase): GenericModel = {
     val modelDefiningType = model.findTypeCase(tpeCase)
-    val pastModels = model.former.flatMap(m => m.lastModelWithOperation)
-      .filter(m => modelDefiningType.getOrElse(m).before(m))
-
+    val pastModels = model.former.filter(m => modelDefiningType.getOrElse(m).before(m)).map(m => latestModelDefiningNewTypeInterface(m, tpeCase))
     pastModels.foldLeft(modelDefiningType.get)((latest,m) => latest.later(m))
+
+//    val modelDefiningType = model.findTypeCase(tpeCase)
+//    val pastModels = model.former.flatMap(m => m.lastModelWithOperation)
+//      .filter(m => modelDefiningType.getOrElse(m).before(m))
+//
+//    pastModels.foldLeft(modelDefiningType.get)((latest,m) => latest.later(m))
     //modelDefiningType.getOrElse(pastModel).later(pastModel)
   }
 
@@ -463,6 +472,7 @@ sealed trait Interpreter extends SharedOO {
   // make sure that LATER merges do not generate.
   def implement(model: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
     def implementInner(domain: GenericModel): Generator[paradigm.ProjectContext, Unit] = {
+      val typeCasesNotGeneratedYet = domain.flatten.typeCases.distinct.filter(tpeCase => latestModelDefiningNewTypeInterface(domain, tpeCase) == domain)
 
       if (domain.isDomainBase) {
         Command.skip[paradigm.ProjectContext]
@@ -470,14 +480,14 @@ sealed trait Interpreter extends SharedOO {
         for {
           _ <- registerTypeMapping(domain)  // this must be first SO Exp is properly bound within interfaces
           _ <- registerTypeCases(domain)    // handle DataType classes as well for interpreter
-          _ <- if (domain == latestModelDefiningInterface(domain)) { // MERGE must be here as well...
+          _ <- if (domain == latestModelDefiningNewTypeInterface(domain)) {//if (domain == latestModelDefiningInterface(domain)) { // MERGE must be here as well...
             for {
              _ <- addIntermediateInterfaceToProject(domain)   // Exp for each evolution that needs one
              _ <- generateForOp(domain, domain.flatten.typeCases, domainSpecific)
             } yield ()
           } else {
            for {
-             _ <- generateForOp(domain, domain.typeCases, domainSpecific)
+             _ <- generateForOp(domain, typeCasesNotGeneratedYet, domainSpecific)
            } yield ()
           }
 

@@ -51,7 +51,8 @@ object GraphViz {
                 domainSpecific: EvolutionImplementationProvider[AIP],
                 fileName:String = "eip.viz"): Unit = {
 
-    val fileWriter = new java.io.FileWriter (new java.io.File(fileName))
+    val output = new java.io.File(new java.io.File("target"), fileName)
+    val fileWriter = new java.io.FileWriter (output)
     fileWriter.write("digraph G {\n")
     fileWriter.write("label = \"Dependency Graph\"\n")
 
@@ -119,12 +120,13 @@ object GraphViz {
 
     fileWriter.write("}\n")
     fileWriter.close()
-    println("GraphViz Dependency written to " + fileName)
+    println("GraphViz Dependency written to " + output)
   }
 
   def outputGraphViz(model:GenericModel, fileName:String = "evolution.viz"): Unit = {
 
-    val fileWriter = new java.io.FileWriter (new java.io.File(fileName))
+    val output = new java.io.File(new java.io.File("target"), fileName)
+    val fileWriter = new java.io.FileWriter (output)
     fileWriter.write("digraph G {\n")
     fileWriter.write("label = \"Evolution Graph\"\n")
 
@@ -132,6 +134,6 @@ object GraphViz {
 
     fileWriter.write("}\n")
     fileWriter.close()
-    println("GraphViz EvolutionGraph written to " + fileName)
+    println("GraphViz EvolutionGraph written to " + output)
   }
 }

@@ -186,6 +186,9 @@ object DirectToDiskMainJournalPaper extends IOApp {
     if (approach == "exit") { sys.exit(0) }
     val selection = if (args.isEmpty || args.tail.isEmpty) "I2M3I1N1" else args.tail.head
 
+    // the above fails for algebra. BUT ALSO, trivially and coco. In all cases, the same logical
+    // situation might exist (which we fixed in interpreter) and now needs to be cross-applied
+    // to others.
     for {
       _ <- IO { print("Initializing Generator...") }
       main <- IO { new MainJournalPaper(approach, selection) }

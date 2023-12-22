@@ -56,17 +56,17 @@ sealed class M3W1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
         }
       }
 
-      // should be no need to define genericLogic since (by default) it will go through the chain of past providers...
-     override def genericLogic
-        (forApproach: AIP[paradigm.type])
-        (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
-      Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] = {
-        try {
-          m3Provider.genericLogic(forApproach)(onRequest)
-        } catch {
-          case _:RuntimeException | _:NotImplementedError => w1Provider.genericLogic(forApproach)(onRequest)
-        }
-      }
+//      // should be no need to define genericLogic since (by default) it will go through the chain of past providers...
+//     override def genericLogic
+//        (forApproach: AIP[paradigm.type])
+//        (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
+//      Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] = {
+//        try {
+//          m3Provider.genericLogic(forApproach)(onRequest)
+//        } catch {
+//          case _:RuntimeException | _:NotImplementedError => w1Provider.genericLogic(forApproach)(onRequest)
+//        }
+//      }
 
       def logic
       (forApproach: AIP[paradigm.type])

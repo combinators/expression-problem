@@ -63,15 +63,9 @@ class MainProducer(choice:String, select:String) {
     case _ => ???
   }
 
-  //val evolutions = Seq(M0, M1, M2, M3, M4, M5, M6, M7) //
-//  val eip = eips.I2(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod,
-//    generator.stringsInMethod, generator.imperativeInMethod)
-//  // how do I just use M2 instead of this? HACK
   val m0_eip = eips.M0(approach.paradigm)(generator.doublesInMethod, generator.stringsInMethod)
   val m1_eip = eips.M1(approach.paradigm)(m0_eip)(generator.doublesInMethod)
   val m2_eip = eips.M2(approach.paradigm)(m1_eip)(generator.doublesInMethod, generator.stringsInMethod)
-
-  //val m2_abs_eip = eips.M2_ABS(approach.paradigm)(m2_eip)(generator.doublesInMethod, generator.imperativeInMethod, generator.stringsInMethod)
 
   val m3_eip = eips.M3(approach.paradigm)(m2_eip)(generator.doublesInMethod, generator.stringsInMethod)
 
@@ -97,7 +91,6 @@ class MainProducer(choice:String, select:String) {
     generator.listsInMethod,
     generator.equalityInMethod)
 
-  //val eip = m7_eip
   val v1_eip = eips.V1.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(c2_eip)(
     generator.imperativeInMethod,
     generator.doublesInMethod,
@@ -105,7 +98,6 @@ class MainProducer(choice:String, select:String) {
     generator.stringsInMethod,
     generator.equalityInMethod)
 
-  //val eip = a1m3_eip
   val eip = select match {
     case "M0" => m0_eip
     case "M1" => m1_eip
@@ -198,7 +190,9 @@ object DirectToDiskMainProducer extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
     val approach = if (args.isEmpty) "graphviz" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "V1" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "M3W1" else args.tail.head
+
+    // M3W1 fails for most -- double check EIP for accuracy
 
     for {
       _ <- IO { print("Initializing Generator...") }

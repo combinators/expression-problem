@@ -61,10 +61,11 @@ object GraphViz {
 
     // special edges based on operation dependencies.
 
+    val addedNodes = scala.collection.mutable.Map[String,Int]()
+    val addedArrows = scala.collection.mutable.Map[String,Int]()
+
     model.inChronologicalOrder.reverse
       .map(m => {
-        val added = scala.collection.mutable.Map[String,Int]()
-
         m.typeCases.map(tpe => {
           m.flatten.ops.map(op => {
             val result = domainSpecific.dependencies(PotentialRequest(model.baseDataType, tpe, op))
@@ -74,7 +75,7 @@ object GraphViz {
                 // now we know that for this m, there is a dashed line to the model that defined operation
                 // and the label on that dashed arrow must be
                 val arrow = f" ${m.name.toUpperCase()} -> ${defining_model.name.toUpperCase()} [style=dashed, color=grey label=<${op.name}-${depend_op.name}>]"
-                added += arrow -> 1
+                addedArrows += arrow -> 1
               })
             }
           })
@@ -92,14 +93,14 @@ object GraphViz {
                 // and the label on that dashed arrow must be
                 if (defining_model.isDefined) {
                   val arrow = f" ${m.name.toUpperCase()} -> ${defining_model.get.name.toUpperCase()} [style=dashed, color=grey label=<${op.name}-${depend_op.name}>]"
-                  added += arrow -> 1
+                  addedArrows += arrow -> 1
                 }
               })
             }
           })
         })
 
-        m.ops.map(op => {
+        m.flatten.ops.map(op => {
           m.flatten.typeCases.map(tpe => {
             val result = domainSpecific.dependencies(PotentialRequest(model.baseDataType, tpe, op))
             if (result.isDefined) {
@@ -108,15 +109,28 @@ object GraphViz {
                 // now we know that for this m, there is a dashed line to the model that defined operation
                 // and the label on that dashed arrow must be
                 val arrow = f" ${m.name.toUpperCase()} -> ${defining_model.name.toUpperCase()} [style=dashed, color=grey label=<${op.name}-${depend_op.name}>]"
-                added += arrow -> 1
+                addedArrows += arrow -> 1
               })
+
+              // MIGHT be too much detail but is accurate
+//              if (result.get.isEmpty) {
+//                // at least want to record that this EIP is responsible for the op/eip
+//
+//                val arrow = f"""${m.name.toUpperCase()} -> ${op.name} [shape=dot dir=none]"""
+//                addedArrows += arrow -> 1
+//                val node =f"""${op.name} [shape=circle fixedsize=true width="0.25" label=<${op.name}>]"""
+//                addedNodes += node -> 1
+//              }
             }
           })
         })
 
-        // now add to the graph as an edge
-        added.foreach(pair => fileWriter.write (pair._1 + "\n"))
+        // even if neither types or ops (especially then, since a merge) must find dependencies.
+
       })
+
+    addedNodes.foreach(pair => fileWriter.write (pair._1 + "\n"))
+    addedArrows.foreach(pair => fileWriter.write (pair._1 + "\n"))
 
     fileWriter.write("}\n")
     fileWriter.close()

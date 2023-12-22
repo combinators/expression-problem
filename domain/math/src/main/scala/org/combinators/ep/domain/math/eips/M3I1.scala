@@ -55,29 +55,38 @@ sealed class M3I1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
 
         assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
-        def operate(): Generator[paradigm.MethodBodyContext, syntax.Expression] =
-          onRequest.request.op match {
-            case mb@math.systemI.I1.MultBy =>      // take advantage of Mult data type
-              for {
-                res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M3.Mult, onRequest.selfReference, onRequest.request.arguments.head._2)
-              } yield res
+        onRequest.request.op match {
 
-            case _ => ???
-          }
+          case mb@math.systemI.I1.MultBy => // WE CAN OPTIMIZE MultBy with Mult
+            for {
+              res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M3.Mult, onRequest.selfReference, onRequest.request.arguments.head._2)
+            } yield Some(res)
 
-        val result =
-          for {
-            atts <- forEach (onRequest.tpeCase.attributes) { att =>
-              forApproach.dispatch(SendRequest(
-                onRequest.attributes(att),
-                math.M3.getModel.baseDataType,
-                onRequest.request
-              ))
-            }
-            res <- operate()
-          } yield res
-
-        result.map(Some(_))
+          case _ => ???
+        }
+//        def operate(): Generator[paradigm.MethodBodyContext, syntax.Expression] =
+//          onRequest.request.op match {
+//            case mb@math.systemI.I1.MultBy =>      // take advantage of Mult data type
+//              for {
+//                res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M3.Mult, onRequest.selfReference, onRequest.request.arguments.head._2)
+//              } yield res
+//
+//            case _ => ???
+//          }
+//
+//        val result =
+//          for {
+//            atts <- forEach (onRequest.tpeCase.attributes) { att =>
+//              forApproach.dispatch(SendRequest(
+//                onRequest.attributes(att),
+//                math.M3.getModel.baseDataType,
+//                onRequest.request
+//              ))
+//            }
+//            res <- operate()
+//          } yield res
+//
+//        result.map(Some(_))
       }
     }
 

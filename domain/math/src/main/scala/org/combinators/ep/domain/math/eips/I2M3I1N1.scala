@@ -35,16 +35,10 @@ sealed class I2M3I1N1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImpleme
         } yield ()
       }
 
-//      def applicable
-//      (forApproach: AIP[paradigm.type], onRequest: PotentialRequest): Boolean = {
-//        Set(math.N1.PowBy).contains(onRequest.op) &&
-//          Set(math.I2.Power).contains(onRequest.tpeCase)
-//      }
-
+      //ONLY have to handle PowBy, Power
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = math.I2M3I1N1.getModel.flatten.typeCases
         (potentialRequest.op, potentialRequest.tpeCase) match {
-          case (math.systemI.I1.MultBy, tpeCase) if cases.contains(tpeCase) => Some(Set.empty)
           case (math.N1.PowBy, tpeCase) if cases.contains(tpeCase) => Some(Set.empty)
 
           // rest handled above by first two cases
@@ -65,14 +59,9 @@ sealed class I2M3I1N1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImpleme
 
           case p@math.N1.PowBy =>  // on Power
             // must handle Power dataType. HERE WE CAN OPTIMIZED.
-            val atts = onRequest.attributes.keys.toSeq
-            val attExprs = onRequest.attributes.values.toSeq
             for {
               res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.systemI.I2.Power, onRequest.selfReference, onRequest.request.arguments.head._2)
             } yield Some(res)
-
-          case p@math.systemI.I1.MultBy =>  // on Power
-            defaultGenericLogic(forApproach)(onRequest)
         }
       }
     }
@@ -81,7 +70,6 @@ sealed class I2M3I1N1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImpleme
     monoidInstance.combine(i2m3i1n1_provider, monoidInstance.combine(monoidInstance.combine(i2Provider, m3i1Provider), n1Provider))
   }
 }
-
 
 object I2M3I1N1 {
   def functional[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]

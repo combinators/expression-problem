@@ -125,9 +125,10 @@ sealed trait Interpreter extends SharedOO {
     for {
       _ <- setInterface()
 
-      // former merge points need to be included, so  past.lastModelWithOperation) is changed to below
+      // former merge points need to be included, so  past.lastModelWithOperation) is changed to below. Make
+      // sure to 'distinct' these models to avoid adding same interface multiple time (can happen with 3-way merge)
       //_ <- forEach(domain.former.map(past => latestModelDefiningInterface(past))) { m => for {
-      _ <- forEach(domain.former.map(past => latestModelDefiningNewTypeInterface(past))) { m => for {
+      _ <- forEach(domain.former.map(past => latestModelDefiningNewTypeInterface(past)).distinct) { m => for {
            /** Interpreter has to go back to the former Model which had defined an operation */
            parent <- findClass(qualifiedBaseDataType(m) : _ *)
            _ <- resolveAndAddImport(parent)
@@ -300,14 +301,6 @@ sealed trait Interpreter extends SharedOO {
            domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
     import classCapabilities._
 
-    // This is different than the top-level primaryParent() because this parent is not about a last
-    // model with an operation, but rather about the last interface to define.
-//    def primaryParent(): GenericModel = {
-//      val modelDefiningType = model.findTypeCase(tpeCase)
-//      val pastModel = model.former.map(m => latestModelDefiningInterface(m)).head
-//      modelDefiningType.getOrElse(pastModel).later(pastModel)
-//    }
-
     // if an ancestor branch doesn't define parent then add all operations
 
     // Even though there *may* be multiple formers (due to a merge) we can't actually add multiple
@@ -334,7 +327,6 @@ sealed trait Interpreter extends SharedOO {
     }
 
     for {  // find latest model with operation, since that will be the proper one to use
-      //pt <- findClass(qualifiedBaseDataType(latestModelDefiningInterface(model)) : _ *)
       pt <- findClass(qualifiedBaseDataType(latestModelDefiningNewTypeInterface(model)) : _ *)
        _ <- resolveAndAddImport(pt)
        _ <- addImplemented(pt)

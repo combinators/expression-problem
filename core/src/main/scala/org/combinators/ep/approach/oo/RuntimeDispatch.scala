@@ -52,11 +52,9 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
   }
 
   /**
-   * Dispatch in visitor we need to find context on which to accept a visitor.
+   * Dispatch creates a new dispatch object and invokes operation with attributes.
    *
-   * That is, e.getLeft().accept(new Eval()) + e.getRight().accept(new Eval());
-   *
-   *          new Eval().op(e.getLeft()) + new Eval().op(e.getRight())
+   *          new Eval().eval(e.getLeft()) + new Eval().eval(e.getRight())
    *
    * @param message
    * @return
@@ -106,7 +104,8 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
   }
 
 
-  /** Create an accept implementation from the accept method signature.
+  /**
+   * Create an operation that dispatches accordingly to all known data types to helper method.
    * {{{
    *  public RT op(Exp exp) {
    *     if (exp instanceof Lit) {
@@ -253,16 +252,18 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
     addClassToProject( makeClass, names.mangle(names.conceptNameOf(tpe)))
   }
 
-  /** Make a method body for each operation, which is a visit method for a defined data type
+  /** Make a method body for each operation, which dispatches to appropriate method
    *
    * {{{
-   *     public Double _op(Sub e) {
-   *         return e.getLeft().accept(new Eval()) - e.getRight().accept(new Eval());
-   *         return op(e.getLeft()) - op(e.getRight);
-   *     }
+   *     public class Eval {
+           public Eval() { }
+           public Double _eval(Add exp) {
+             return (new ep.Eval().eval(exp.getLeft()) + new ep.Eval().eval(exp.getRight()));
+           }
+         }
    * }}}
    *
-   * Access the results via a visitor method which returns the information using accept method.
+   * A runtime dispatcher will direct to appropriate _op() method from the op() method in class
    *
    * @param tpe
    * @param tpeCase
@@ -314,11 +315,12 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
   }
 
   /**
-   * The Visitor approach is defined as follows
+   * The Runtime Dispatch approach is defined as follows
    *
    * 1. Make the base class (for the domain)
-   * 2. For each of the data types (in flattened set) create a derived class
-   * 3. Create the Visitor interface
+   * 2. For each of the operations (in flattened set) create an operation class that has
+   *     dynamic runtime checks to dispatch to appropriate method
+   * 3. For each data type (in flatted set) create data type class to hold information
    *
    * @param gdomain
    * @param domainSpecific

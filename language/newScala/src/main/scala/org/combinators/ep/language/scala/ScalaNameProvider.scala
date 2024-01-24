@@ -1,6 +1,4 @@
-package org.combinators.ep.language.scala
-
-/*DI:LD:AI*/
+package org.combinators.ep.language.scala    /*DI:LD:AI*/
 
 import com.github.javaparser.{JavaParser, StaticJavaParser}
 import org.combinators.ep.generator.NameProvider

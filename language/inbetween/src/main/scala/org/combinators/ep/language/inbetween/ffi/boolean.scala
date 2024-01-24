@@ -1,4 +1,4 @@
-package org.combinators.ep.language.inbetween.ffi /*DI:LD:AI*/
+package org.combinators.ep.language.inbetween.ffi  /*DI:LI:AI*/
 
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator

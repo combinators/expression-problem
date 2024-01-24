@@ -183,9 +183,9 @@ object DirectToDiskMainJ extends IOApp {
   val targetDirectory = Paths.get("target", "ep2")
 
   def run(args: List[String]): IO[ExitCode] = {
-    val approach = if (args.isEmpty) "graphviz" else args.head
+    val approach = if (args.isEmpty) "algebra" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "J8" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "J2" else args.tail.head
 
     for {
       _ <- IO { print("Initializing Generator...") }

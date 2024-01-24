@@ -1,4 +1,4 @@
-package org.combinators.ep.util
+package org.combinators.ep.util  /*DI:LD:AI*/
 
 trait Tree {}
 case class Leaf[T](element: T) extends Tree

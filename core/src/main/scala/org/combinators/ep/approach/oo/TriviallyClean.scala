@@ -303,15 +303,6 @@ trait TriviallyClean extends ApproachImplementationProvider {
       val overwrittenOperations = allOperations.filter { operation =>
         evolutionImplementationProvider.evolutionSpecificDependencies(PotentialRequest(domain.baseDataType, tpeCase, operation)).contains(domain)
       }
-      //        allOperations.filter { operation =>
-//        val lastOverwritingDomain =
-//          evolutionImplementationProvider.applicableIn(
-//            forApproach = this,
-//            potentialRequest = PotentialRequest(domain.baseDataType, tpeCase, operation),
-//            currentModel = domain
-//          )
-//        lastOverwritingDomain.contains(domain)
-//      }
 
       val producerOperations = allOperations.filter(op => op.isProducer(domain))
 

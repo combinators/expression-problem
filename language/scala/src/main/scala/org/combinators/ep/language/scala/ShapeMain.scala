@@ -1,4 +1,4 @@
-package org.combinators.ep.language.scala     /*DI:LD:AD*/
+package org.combinators.ep.language.scala     /*DD:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.combinators.ep.approach.functional

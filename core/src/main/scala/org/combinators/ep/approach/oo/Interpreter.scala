@@ -16,10 +16,16 @@ sealed trait Interpreter extends SharedOO {
   import paradigm._
   import syntax._
 
-  // Extended Intermediate Interface (i.e., ep.m3.Exp) is only created when
-  // needed, specifically: (a) a new operation is being defined, and this interface will host the default
-  // implementation; or (b) a branch is being merged from branches in which new Exp had been defined
-  // useful when determining merging
+  /**
+   * Extended Intermediate Interface (i.e., ep.m3.Exp) is only created when
+   * needed, specifically: (a) a new operation is being defined, and this interface will host the default
+   * implementation; or (b) a branch is being merged from branches in which new Exp had been defined
+   * useful when determining merging
+   *
+   * Also found in CoCo
+   *
+   * @param domain
+   */
   def ancestorsDefiningNewTypeInterfaces(domain: GenericModel): Set[GenericModel] = {
     val ancestorsWithNewTypeInterfaces = domain.former.map(ancestor => latestModelDefiningNewTypeInterface(ancestor))
     ancestorsWithNewTypeInterfaces.distinct.filterNot { ancestor =>
@@ -218,7 +224,6 @@ sealed trait Interpreter extends SharedOO {
    */
   def mustCastToAccess(domain:GenericModel, op:Operation, tpeCase:DataTypeCase) : Boolean = {
     val definingModel = domain.findTypeCase(tpeCase).get
-    //definingModel.before(latestModelDefiningInterface(domain))
     definingModel.before(latestModelDefiningNewTypeInterface(domain))
   }
 
@@ -275,17 +280,6 @@ sealed trait Interpreter extends SharedOO {
         )
     } yield result
   }
-
-  /*def latestModelDefiningInterface(domain: GenericModel): GenericModel = {
-    if (domain.isDomainBase || domain.ops.nonEmpty || domain.former.length > 1) {   // handle merge case as well
-      domain
-    } else {
-      // find where tpe was defined and also where last operation was defined and choose later of the two
-      // will only have one, since merge case handled above.
-      // could be one of our ancestors is a merge point
-      latestModelDefiningInterface(domain.former.head)
-    }
-  }*/
 
   /** Generate class for each DataTypeCase and Operation. Be sure to keep extension chain going when there are prior classes available.
    *
@@ -446,18 +440,6 @@ sealed trait Interpreter extends SharedOO {
     val modelDefiningType = model.findTypeCase(tpeCase)
     val pastModels = model.former.filter(m => modelDefiningType.getOrElse(m).before(m)).map(m => latestModelDefiningNewTypeInterface(m, tpeCase))
     pastModels.foldLeft(modelDefiningType.get)((latest,m) => latest.later(m))
-
-//    val modelDefiningType = model.findTypeCase(tpeCase)
-//    val pastModels = model.former.flatMap(m => m.lastModelWithOperation)
-//      .filter(m => modelDefiningType.getOrElse(m).before(m))
-//
-//    pastModels.foldLeft(modelDefiningType.get)((latest,m) => latest.later(m))
-    //modelDefiningType.getOrElse(pastModel).later(pastModel)
-  }
-
-  // find those operations that are not defined by the primary parent
-  def nonPrimaryParentOps(domain:GenericModel, tpe:DataTypeCase) : Seq[Operation] = {
-    (domain.flatten.ops.toSet -- primaryParent(domain, tpe).flatten.ops).toSeq
   }
 
   // Have to process models in chronological order to get the Exp mappings properly done.
@@ -472,7 +454,7 @@ sealed trait Interpreter extends SharedOO {
         for {
           _ <- registerTypeMapping(domain)  // this must be first SO Exp is properly bound within interfaces
           _ <- registerTypeCases(domain)    // handle DataType classes as well for interpreter
-          _ <- if (domain == latestModelDefiningNewTypeInterface(domain)) {//if (domain == latestModelDefiningInterface(domain)) { // MERGE must be here as well...
+          _ <- if (domain == latestModelDefiningNewTypeInterface(domain)) {
             for {
              _ <- addIntermediateInterfaceToProject(domain)   // Exp for each evolution that needs one
              _ <- generateForOp(domain, domain.flatten.typeCases, domainSpecific)

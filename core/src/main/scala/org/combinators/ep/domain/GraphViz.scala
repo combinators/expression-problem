@@ -10,6 +10,9 @@ import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionIm
  * https://dreampuf.github.io/GraphvizOnline
  */
 object GraphViz {
+
+  val collapse_isOps:Boolean = true
+
   def outputNodes(model:GenericModel) : String = {
     val added = scala.collection.mutable.Map[String,Int]()
 
@@ -74,7 +77,15 @@ object GraphViz {
                 val defining_model = m.findOperation(depend_op).get
                 // now we know that for this m, there is a dashed line to the model that defined operation
                 // and the label on that dashed arrow must be
-                val arrow = f" ${m.name.toUpperCase()} -> ${defining_model.name.toUpperCase()} [style=dashed, color=grey label=<${op.name}-${depend_op.name}>]"
+
+                val fromName = if (collapse_isOps && op.name.startsWith("is")) {
+                  "isOP"
+                } else { op.name }
+                val toName = if (collapse_isOps && depend_op.name.startsWith("is")) {
+                  "isOP"
+                } else { depend_op.name }
+
+                val arrow = f" ${m.name.toUpperCase()} -> ${defining_model.name.toUpperCase()} [style=dashed, color=grey label=<${fromName}-${toName}>]"
                 addedArrows += arrow -> 1
               })
             }
@@ -92,7 +103,15 @@ object GraphViz {
                 // now we know that for this m, there is a dashed line to the model that defined operation
                 // and the label on that dashed arrow must be
                 if (defining_model.isDefined) {
-                  val arrow = f" ${m.name.toUpperCase()} -> ${defining_model.get.name.toUpperCase()} [style=dashed, color=grey label=<${op.name}-${depend_op.name}>]"
+
+                  val fromName = if (collapse_isOps && op.name.startsWith("is")) {
+                    "isOP"
+                  } else { op.name }
+                  val toName = if (collapse_isOps && depend_op.name.startsWith("is")) {
+                    "isOP"
+                  } else { depend_op.name }
+
+                  val arrow = f" ${m.name.toUpperCase()} -> ${defining_model.get.name.toUpperCase()} [style=dashed, color=grey label=<${fromName}-${toName}>]"
                   addedArrows += arrow -> 1
                 }
               })
@@ -106,9 +125,17 @@ object GraphViz {
             if (result.isDefined) {
               result.get.map(depend_op => {
                 val defining_model = m.findOperation(depend_op).get
+
+                val fromName = if (collapse_isOps && op.name.startsWith("is")) {
+                  "isOP"
+                } else { op.name }
+                val toName = if (collapse_isOps && depend_op.name.startsWith("is")) {
+                  "isOP"
+                } else { depend_op.name }
+
                 // now we know that for this m, there is a dashed line to the model that defined operation
                 // and the label on that dashed arrow must be
-                val arrow = f" ${m.name.toUpperCase()} -> ${defining_model.name.toUpperCase()} [style=dashed, color=grey label=<${op.name}-${depend_op.name}>]"
+                val arrow = f" ${m.name.toUpperCase()} -> ${defining_model.name.toUpperCase()} [style=dashed, color=grey label=<${fromName}-${toName}>]"
                 addedArrows += arrow -> 1
               })
 
@@ -126,7 +153,6 @@ object GraphViz {
         })
 
         // even if neither types or ops (especially then, since a merge) must find dependencies.
-
       })
 
     addedNodes.foreach(pair => fileWriter.write (pair._1 + "\n"))

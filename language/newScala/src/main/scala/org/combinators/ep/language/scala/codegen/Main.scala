@@ -1,6 +1,4 @@
-package org.combinators.ep.language.scala.codegen
-
-/*DD:LD:AD*/
+package org.combinators.ep.language.scala.codegen    /*DD:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
@@ -23,14 +21,12 @@ import java.nio.file.{Path, Paths}
 class Main {
   val generator = CodeGenerator(M0.getModel.base.name.toLowerCase)
 
-
   val ooApproach = Traditional[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.ooParadigm)
   // can't have all of these together
   val visitorApproach = Visitor[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val visitorSideEffectApproach = Visitor.withSideEffects[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.imperative, generator.ooParadigm)
   val extensibleVisitorApproach = ExtensibleVisitor[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val interpreterApproach = Interpreter[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
-
 
   val cocoCleanApproach = CoCoClean[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val triviallyCleanApproach = TriviallyClean[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.ooParadigm)
@@ -41,7 +37,7 @@ class Main {
   // select one here.
   val approach = ooApproach// cocoCleanApproach//extensibleVisitorApproach
 
-  val evolutions = Seq(M0, M1, M2, M3, M4, M5, M6, I1, I2, M7, M7I2, M8)    // all test cases become active WHEN all included.
+  val evolutions = Seq(M0, M1) // , M2, M3, M4, M5, M6, I1, I2, M7, M7I2, M8)    // all test cases become active WHEN all included.
   //val evolutions = Seq(M0, M1, M2, M3, I1, A1, A1M3)
 
 //  val eip = eips.I2(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod,
@@ -84,7 +80,7 @@ class Main {
   val a1m3_eip = eips.A1M3(approach.paradigm)(m3_eip, a1_eip)(generator.strings)
 
   //val eip = a1m3_eip*/
-  val eip = m8_eip
+  val eip = m1_eip
 
   val tests = evolutions.scanLeft(Map.empty[GenericModel, Seq[TestCase]]) { case (m, evolution) =>
     m + (evolution.getModel -> evolution.tests)

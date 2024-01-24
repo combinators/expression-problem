@@ -1,6 +1,4 @@
-package org.combinators.ep.language.scala.codegen
-
-/*DI:LD:AI*/
+package org.combinators.ep.language.scala.codegen    /*DI:LD:AI*/
 
 import cats.{Apply => _}
 import org.combinators.ep.domain.GenericModel

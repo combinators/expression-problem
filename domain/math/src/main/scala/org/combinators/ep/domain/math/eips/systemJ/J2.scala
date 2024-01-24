@@ -42,7 +42,7 @@ object J2 {
           // isMult => empty for any non MULT argument (returns false), eql for mult argument (left and right eql)
           case (isOp, tpeCase) if math.systemJ.J2.isOps(cases).contains(isOp) => Some(if (isOp == math.systemJ.J2.isOp(tpeCase)) Set(math.systemJ.J2.Eql) else Set.empty)
           // isXXX for M argument => empty, e.g. isMult(ADD) = false
-          case (isOp, math.systemJ.J2.Mult) if math.systemJ.J2.isOps(cases).contains(isOp) => Some(Set.empty)
+          //case (isOp, math.systemJ.J2.Mult) if math.systemJ.J2.isOps(cases).contains(isOp) => Some(Set.empty)
 
           // here is where Eval and MultBy are processed. MUST COME AFTER EARLIER CHECK FOR ISOP...
           case (_, math.systemJ.J2.Mult) if ops.contains(potentialRequest.op) => Some(Set.empty)

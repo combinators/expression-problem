@@ -45,10 +45,16 @@ trait CoCoClean extends ApproachImplementationProvider {
     } yield resultType
   }
 
-  // Critical aspect of CoCo is that the Extended Intermediate Interface (i.e., ep.m3.Exp) is only created when
-  // needed, specifically: (a) a new operation is being defined, and this interface will host the default
-  // implementation; or (b) a branch is being merged from branches in which new Exp had been defined
-  // useful when determining merging
+  /**
+   * Critical aspect of CoCo is that the Extended Intermediate Interface (i.e., ep.m3.Exp) is only created when
+   * needed, specifically: (a) a new operation is being defined, and this interface will host the default
+   * implementation; or (b) a branch is being merged from branches in which new Exp had been defined
+   * useful when determining merging.
+   *
+   * Also found in CoCo
+   *
+   * @param domain
+   */
   def ancestorsDefiningNewTypeInterfaces(domain: GenericModel): Set[GenericModel] = {
     val ancestorsWithNewTypeInterfaces = domain.former.map(ancestor => latestModelDefiningNewTypeInterface(ancestor))
     ancestorsWithNewTypeInterfaces.distinct.filterNot { ancestor =>

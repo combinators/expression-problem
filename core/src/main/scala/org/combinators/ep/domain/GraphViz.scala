@@ -119,7 +119,8 @@ object GraphViz {
           })
         })
 
-        m.flatten.ops.map(op => {
+        // check dependencies on operations defined anew ONLY
+        m.ops.map(op => {
           m.flatten.typeCases.map(tpe => {
             val result = domainSpecific.dependencies(PotentialRequest(model.baseDataType, tpe, op))
             if (result.isDefined) {
@@ -138,6 +139,8 @@ object GraphViz {
                 val arrow = f" ${m.name.toUpperCase()} -> ${defining_model.name.toUpperCase()} [style=dashed, color=grey label=<${fromName}-${toName}>]"
                 addedArrows += arrow -> 1
               })
+
+
 
               // MIGHT be too much detail but is accurate
 //              if (result.get.isEmpty) {

@@ -19,7 +19,6 @@ trait Fibonacci {
   lazy val testFibName = names.mangle("fibTest")
   lazy val nName = names.mangle("n")
 
-
   def make_fibonacci(): Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression] = {
     import functionalControlParadigm.functionalCapabilities._
     import paradigm.methodBodyCapabilities._
@@ -96,9 +95,9 @@ object FibonacciProvider {
   (nameProvider: NameProvider[base.syntax.Name],
    func:  Functional.WithBase[base.type],
    c1: control.Functional.WithBase[base.MethodBodyContext, base.type],
-   c2:  Arithmetic.WithBase[base.MethodBodyContext, base.type, Int],
-   c3:  Assertions.WithBase[base.MethodBodyContext, base.type],
-   c4 : Equality.WithBase[base.MethodBodyContext, base.type]
+   c2: Arithmetic.WithBase[base.MethodBodyContext, base.type, Int],
+   c3: Assertions.WithBase[base.MethodBodyContext, base.type],
+   c4: Equality.WithBase[base.MethodBodyContext, base.type]
   )
   : FibonacciProvider.WithParadigm[base.type] =
     new Fibonacci {

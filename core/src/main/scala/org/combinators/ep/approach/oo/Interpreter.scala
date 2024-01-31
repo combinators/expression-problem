@@ -224,7 +224,11 @@ sealed trait Interpreter extends SharedOO {
    */
   def mustCastToAccess(domain:GenericModel, op:Operation, tpeCase:DataTypeCase) : Boolean = {
     val definingModel = domain.findTypeCase(tpeCase).get
-    definingModel.before(latestModelDefiningNewTypeInterface(domain))
+
+    // either before OR could be on unrelated branches owing to a merge. M3W1 caught this
+    //definingModel.before(latestModelDefiningNewTypeInterface(domain))
+
+    !latestModelDefiningNewTypeInterface(domain).beforeOrEqual(definingModel)
   }
 
   def makeInterpreterImplementation(domain: GenericModel,

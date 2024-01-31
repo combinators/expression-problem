@@ -227,8 +227,6 @@ object DirectToDiskMain extends IOApp {
     val approach = if (args.isEmpty) "graphviz" else args.head
     if (approach == "exit") { sys.exit(0) }
     val selection = if (args.isEmpty || args.tail.isEmpty) "M9" else args.tail.head
-    // A1M3I2 generates for all, fails to compile in interpreter
-    //
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 

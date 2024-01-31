@@ -1,0 +1,8 @@
+for i in `find ep -name '*.java'`
+do
+    echo `basename $i` >> names
+done
+
+sort names | awk -f ~/awk.tally
+
+

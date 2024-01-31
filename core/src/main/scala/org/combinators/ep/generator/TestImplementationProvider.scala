@@ -14,7 +14,7 @@ trait TestImplementationProvider[-AIP <: ApproachImplementationProvider] {
 }
 
 object TestImplementationProvider {
-  /** Allows to combine multiple [[EvolutionImplementationProvider]] objects into one. */
+  /** Allows to combine multiple [[TestImplementationProvider]] objects into one. */
   implicit def monoidInstance[AIP <: ApproachImplementationProvider]: Monoid[TestImplementationProvider[AIP]] =
     new Monoid[TestImplementationProvider[AIP]] {
       /** Returns an [[TestImplementationProvider]] which does not provide any implementation, and instead skips all
@@ -25,7 +25,7 @@ object TestImplementationProvider {
           Command.lift(Seq.empty)
       }
 
-      /** Combines to [[TestImplementationProvider]] objects by running test generation sequentially. */
+      /** Combines two [[TestImplementationProvider]] objects by running test generation sequentially. */
       def combine(
         first: TestImplementationProvider[AIP],
         second: TestImplementationProvider[AIP]

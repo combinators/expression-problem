@@ -188,11 +188,10 @@ object DirectToDiskMainProducer extends IOApp {
   val targetDirectory = Paths.get("target", "ep3")
 
   def run(args: List[String]): IO[ExitCode] = {
-    val approach = if (args.isEmpty) "graphviz" else args.head
+    val approach = if (args.isEmpty) "interpreter" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "M3W1" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "V1" else args.tail.head
 
-    // M3W1 fails for most -- double check EIP for accuracy
 
     for {
       _ <- IO { print("Initializing Generator...") }

@@ -1,5 +1,5 @@
-import play.sbt.PlayLayoutPlugin
-import play.twirl.sbt.SbtTwirl
+//import play.sbt.PlayLayoutPlugin
+//import play.twirl.sbt.SbtTwirl
 
 
 /** Settings shared globally **/
@@ -7,7 +7,7 @@ lazy val commonSettings = Seq(
   version := "1.0.0-SNAPSHOT",
   organization := "org.combinators",
   
-  scalaVersion := "2.12.4",
+  scalaVersion := "2.12.17",
 
   resolvers ++= Seq(
     Resolver.sonatypeRepo("releases"),
@@ -34,8 +34,14 @@ lazy val commonSettings = Seq(
     "org.combinators" %% "cls-scala-presentation-play-git" % "1.0.0-RC1+8-63d5cf0b",
     "org.scalactic" %% "scalactic" % "3.0.5" % "test",
     "org.scalatest" %% "scalatest" % "3.0.5" % "test",
-    "org.scalameta" %% "scalameta" % "3.7.4"
-  )
+    "org.scalameta" %% "scalameta" % "3.7.4",
+    "com.chuusai" %% "shapeless" % "2.3.2",
+    "com.google.inject" % "guice" % "3.0",
+    "junit" % "junit" % "4.12",
+
+    // https://mvnrepository.com/artifact/org.webjars/bootstrap
+    "org.webjars" % "bootstrap" % "3.3.7-1"
+)
 )
 
 /** The core components to model expression problem code generators and domains.
@@ -70,11 +76,11 @@ lazy val domainShape = standardDomainProject("shape")
 def standardLanguageProject(languageName: String): Project =
   (Project(id = s"language-$languageName", base = file(s"language/$languageName")))
     .settings(commonSettings: _*)
-    .enablePlugins(PlayScala)
-    .disablePlugins(PlayLayoutPlugin)
+    //.enablePlugins(PlayScala)
+    //.disablePlugins(PlayLayoutPlugin)
     .settings(
       moduleName := s"expression-problem-language-$languageName",
-      libraryDependencies += guice
+      //libraryDependencies += guice
     )
     .dependsOn(core, domainMath, domainShape)
 

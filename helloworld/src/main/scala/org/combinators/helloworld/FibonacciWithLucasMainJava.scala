@@ -60,7 +60,7 @@ class FibonacciWithLucasMainJava {
 
 object FibonacciWithLucasJavaDirectToDiskMain extends IOApp {
   val targetDirectory = Paths.get("target", "ep3", "java")
-
+  print(targetDirectory)
   def run(args: List[String]): IO[ExitCode] = {
     for {
       _ <- IO { print("Initializing Generator...") }

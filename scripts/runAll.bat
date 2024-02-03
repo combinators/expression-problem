@@ -7,6 +7,10 @@ javac Time.java
 @REM move into proper directory and create target
 cd ..
 
+@REM directory in target/ where generated code was placed...
+set DIR=ep2
+
+@REM directory in target/ where analysis files will be generated
 mkdir target\analysis
 
 @REM: KEEP? set SAVED_JAVA_HOME=%JAVA_HOME%
@@ -27,8 +31,9 @@ for %%a in (oo visitor visitorSideEffect extensibleVisitor interpreter dispatch 
 
      sbt "language-java/runMain org.combinators.ep.language.java.systemJ.DirectToDiskMainJ %%a %%e"
 
-     @REM generated into target\ep2
-     cd target\ep2
+     @REM generated into target\%DIR%
+     cd target
+     cd %DIR%
      xcopy src ..\analysis\src-%%a-%%e /E/H/C/I
 
      @REM: KEEP? set JAVA_HOME=C:\Users\heineman\Development\jdk-11.0.21+9

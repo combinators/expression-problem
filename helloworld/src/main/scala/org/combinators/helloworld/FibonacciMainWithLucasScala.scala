@@ -6,8 +6,8 @@ import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
 import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
-import org.combinators.ep.language.java.AlternateMain.generator
-import org.combinators.ep.language.scala.{CodeGenerator, ScalaNameProvider, Syntax}
+//FIX: import org.combinators.ep.language.java.AlternateMain.generator
+//FIX: import org.combinators.ep.language.scala.{CodeGenerator, ScalaNameProvider, Syntax}
 
 import java.nio.file.{Path, Paths}
 import scala.meta.{Pkg, Term}
@@ -16,29 +16,29 @@ import scala.meta.{Pkg, Term}
  * Takes functional specification of Fibonacci with Lucas and generates Scala code.
  */
 class FibonacciMainWithLucasScala {
-  val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(targetPackage = Pkg(Term.Name("fib"), List.empty)))
+  //FIX:  val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(targetPackage = Pkg(Term.Name("fib"), List.empty)))
 
-  val fibonacciApproach = FibonacciWithLucasProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(ScalaNameProvider, generator.functional, generator.functionalInMethod, generator.intsInMethod, generator.assertionsInMethod, generator.equalityInMethod)
+  //FIX:  val fibonacciApproach = FibonacciWithLucasProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(ScalaNameProvider, generator.functional, generator.functionalInMethod, generator.intsInMethod, generator.assertionsInMethod, generator.equalityInMethod)
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
   def directToDiskTransaction(targetDirectory: Path): IO[Unit] = {
-
-    val files =
-      () => generator.paradigm.runGenerator {
-        for {
-          _ <- generator.intsInMethod.enable()
-          _ <- generator.booleansInMethod.enable()
-          _ <- generator.stringsInMethod.enable()
-          _ <- generator.equalityInMethod.enable()
-          _ <- generator.assertionsInMethod.enable()
-          _ <- fibonacciApproach.make_project()
-        } yield ()
-      }
+    //FIX:
+//    val files =
+//      () => generator.paradigm.runGenerator {
+//        for {
+//          _ <- generator.intsInMethod.enable()
+//          _ <- generator.booleansInMethod.enable()
+//          _ <- generator.stringsInMethod.enable()
+//          _ <- generator.equalityInMethod.enable()
+//          _ <- generator.assertionsInMethod.enable()
+//          _ <- fibonacciApproach.make_project()
+//        } yield ()
+//      }
 
      IO {
       print("Computing Files...")
-      val computed = files()
+       //FIX:      val computed = files()
       println("[OK]")
       if (targetDirectory.toFile.exists()) {
         print(s"Cleaning Target Directory (${targetDirectory})...")
@@ -46,7 +46,7 @@ class FibonacciMainWithLucasScala {
         println("[OK]")
       }
       print("Persisting Files...")
-      files().foreach(file => persistable.persistOverwriting(targetDirectory, file))
+       //FIX:      files().foreach(file => persistable.persistOverwriting(targetDirectory, file))
       println("[OK]")
     }
   }

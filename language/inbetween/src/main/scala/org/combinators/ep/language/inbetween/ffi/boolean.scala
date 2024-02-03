@@ -9,6 +9,7 @@ import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.generator.Command
 
+// cannot find 'boolean'
 trait Booleans[FT <: operatorExpression.FinalTypes, FactoryType <: boolean.Factory[FT]] extends Bools[any.Method[FT]] {
   val base: AnyParadigm.WithFT[FT, FactoryType]
   import base.factory

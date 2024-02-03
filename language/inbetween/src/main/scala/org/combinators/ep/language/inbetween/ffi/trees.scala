@@ -7,6 +7,8 @@ import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax
 import org.combinators.ep.generator.paradigm.ffi.{CreateLeaf, CreateNode, Trees => Trs}
+
+// cannot find 'trees'
 trait Trees[FT <: trees.FinalTypes, FactoryType <: trees.Factory[FT]] extends Trs[any.Method[FT]] {
   val base: AnyParadigm.WithFT[FT, FactoryType]
   import base.factory

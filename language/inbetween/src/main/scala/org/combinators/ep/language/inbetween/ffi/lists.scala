@@ -1,5 +1,6 @@
 package org.combinators.ep.language.inbetween.ffi  /*DI:LI:AI*/
 
+// cannot find 'lists'
 import org.combinators.ep.generator.{Command, Understands}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.Apply

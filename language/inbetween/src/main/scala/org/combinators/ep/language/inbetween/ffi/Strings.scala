@@ -1,4 +1,4 @@
-package org.combinators.ep.language.inbetween.ffi
+package org.combinators.ep.language.inbetween.ffi   /*DI:LI:AI*/
 
 import org.combinators.ep.generator.{Command, Understands}
 import org.combinators.ep.generator.Command.Generator
@@ -7,6 +7,7 @@ import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.generator.paradigm.ffi.{GetStringLength, StringAppend, ToString, Strings => Strs}
 
+// cannot find 'strings'
 trait Strings[FT <: operatorExpression.FinalTypes, FactoryType <: strings.Factory[FT]] extends Strs[any.Method[FT]] {
   val base: AnyParadigm.WithFT[FT, FactoryType]
   import base.factory

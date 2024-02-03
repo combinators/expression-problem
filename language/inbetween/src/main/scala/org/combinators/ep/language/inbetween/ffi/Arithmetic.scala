@@ -1,4 +1,4 @@
-package org.combinators.ep.language.inbetween.ffi
+package org.combinators.ep.language.inbetween.ffi   /*DI:LI:AI*/
 
 import org.combinators.ep.generator.{Command, Understands}
 import org.combinators.ep.generator.Command.Generator
@@ -7,6 +7,7 @@ import org.combinators.ep.generator.paradigm.ffi.{Add, Div, LE, LT, Mod, Mult, S
 import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
+// cannot find 'arithmetic'
 trait Arithmetic[FT <: operatorExpression.FinalTypes, FactoryType <: arithmetic.Factory[FT], T] extends Arith[any.Method[FT], T] {
   val base: AnyParadigm.WithFT[FT, FactoryType]
   import base.factory

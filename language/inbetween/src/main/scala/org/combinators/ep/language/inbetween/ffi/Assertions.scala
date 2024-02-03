@@ -1,4 +1,4 @@
-package org.combinators.ep.language.inbetween.ffi
+package org.combinators.ep.language.inbetween.ffi   /*DI:LI:AI*/
 
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, Understands}
@@ -7,6 +7,7 @@ import org.combinators.ep.generator.paradigm.ffi.{Assert, Assertions => Asrts}
 import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
+// cannot find 'assertions'
 trait Assertions[FT <: operatorExpression.FinalTypes, FactoryType <: assertions.Factory[FT]] extends Asrts[any.Method[FT]] {
   val base: AnyParadigm.WithFT[FT, FactoryType]
   import base.factory

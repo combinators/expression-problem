@@ -1,4 +1,4 @@
-package org.combinators.ep.language.inbetween.ffi
+package org.combinators.ep.language.inbetween.ffi   /*DI:LI:AI*/
 
 import org.combinators.ep.generator.{Command, Understands}
 import org.combinators.ep.generator.Command.Generator
@@ -7,6 +7,8 @@ import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax
 import org.combinators.ep.generator.paradigm.ffi.{CreateLeaf, CreateNode, Trees => Trs}
+
+// cannot find 'trees'
 trait Trees[FT <: trees.FinalTypes, FactoryType <: trees.Factory[FT]] extends Trs[any.Method[FT]] {
   val base: AnyParadigm.WithFT[FT, FactoryType]
   import base.factory
@@ -41,9 +43,9 @@ trait Trees[FT <: trees.FinalTypes, FactoryType <: trees.Factory[FT]] extends Tr
 object Trees {
   type WithBase[FT <: trees.FinalTypes, FactoryType <: trees.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]] = Trees[FT, FactoryType] { val base: B }
   def apply[FT <: trees.FinalTypes, FactoryType <: trees.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]](
-    _base: B)(
-    _treeLibrary: Map[Seq[any.Name[FT]], Generator[any.CompilationUnit[FT], Unit]]
-  ): WithBase[FT, FactoryType, _base.type] = new Trees[FT, FactoryType] {
+                                                                                                                 _base: B)(
+                                                                                                                 _treeLibrary: Map[Seq[any.Name[FT]], Generator[any.CompilationUnit[FT], Unit]]
+                                                                                                               ): WithBase[FT, FactoryType, _base.type] = new Trees[FT, FactoryType] {
     val base: _base.type = _base
     val treeLibrary = _treeLibrary
   }

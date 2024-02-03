@@ -1,4 +1,4 @@
-package org.combinators.ep.language.inbetween.ffi
+package org.combinators.ep.language.inbetween.ffi  /*DI:LI:AI*/
 
 import org.combinators.ep.generator.{Command, Understands}
 import org.combinators.ep.generator.Command.Generator
@@ -7,6 +7,7 @@ import org.combinators.ep.generator.paradigm.ffi.{Abs, Add, Cos, Div, EulersNumb
 import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
+// cannot find 'realArithmetic'
 trait RealArithmetic[FT <: operatorExpression.FinalTypes, FactoryType <: realArithmetic.Factory[FT], T] extends RealArith[any.Method[FT], T] {
   val base: AnyParadigm.WithFT[FT, FactoryType]
   import base.factory

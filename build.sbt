@@ -1,5 +1,5 @@
-//import play.sbt.PlayLayoutPlugin
-//import play.twirl.sbt.SbtTwirl
+import play.sbt.PlayLayoutPlugin
+import play.twirl.sbt.SbtTwirl
 
 
 /** Settings shared globally **/
@@ -38,7 +38,8 @@ lazy val commonSettings = Seq(
     "com.chuusai" %% "shapeless" % "2.3.2",
     "com.google.inject" % "guice" % "3.0",
     "junit" % "junit" % "4.12",
-
+    "javax.inject" % "javax.inject" % "1",
+    guice,
     // https://mvnrepository.com/artifact/org.webjars/bootstrap
     "org.webjars" % "bootstrap" % "3.3.7-1"
 )
@@ -76,8 +77,8 @@ lazy val domainShape = standardDomainProject("shape")
 def standardLanguageProject(languageName: String): Project =
   (Project(id = s"language-$languageName", base = file(s"language/$languageName")))
     .settings(commonSettings: _*)
-    //.enablePlugins(PlayScala)
-    //.disablePlugins(PlayLayoutPlugin)
+    .enablePlugins(PlayScala)
+    .disablePlugins(PlayLayoutPlugin)
     .settings(
       moduleName := s"expression-problem-language-$languageName",
       //libraryDependencies += guice

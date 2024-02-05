@@ -4,6 +4,8 @@ package org.combinators.ep.language.java.performance
   * Code exists to launch performance analysis of code generation of Java solutions. Not part of the
   * standard code generator framework.
   */
+import org.apache.commons.io.FileUtils
+
 import System.nanoTime
 import org.combinators.ep.domain.WithDomain
 import org.combinators.ep.domain.math.MathDomain
@@ -60,14 +62,16 @@ abstract class BaseTest(val id:String) {
     nanoTime - now
     val outputDir = Paths.get("target", outputName)
 
-    FileUtils.deleteDirectory()
-    Files.createDirectory(Paths.get(outputDir))
+    println("Cleaning " + outputDir.toAbsolutePath.toString + " ...")
+    FileUtils.deleteDirectory(outputDir.toFile)
+    Files.createDirectory(outputDir)
 
     all_code.foreach(u => {
 
       val packName = u.getPackageDeclaration.get().getName.toString
       val dirs = packName.split(".")
       if (dirs.isEmpty) {
+        Paths.get(outputDir.toAbsolutePath.toString, u.getN)
         val path = Paths.get(outputDir, packName)
         Files.write(path, u.toString.getBytes, StandardOpenOption.APPEND, StandardOpenOption.CREATE)
       } else {

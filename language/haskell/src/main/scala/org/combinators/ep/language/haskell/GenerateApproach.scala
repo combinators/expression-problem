@@ -35,7 +35,7 @@ abstract class BaseTest(val id:String) {
 
     // all code is FLAT in the same directory. Just extract the interface or class name
     haskell_code.foreach(u => {
-      val path = Paths.get("target", "ep-firstVersion", approachName, systemName, u.persistTo.toString)
+      val path = Paths.get("target", "ep-firstVersion", "haskell", approachName, systemName, u.persistTo.toString)
       Files.write(path, u.code.getCode.getBytes, StandardOpenOption.APPEND, StandardOpenOption.CREATE)
     })
 

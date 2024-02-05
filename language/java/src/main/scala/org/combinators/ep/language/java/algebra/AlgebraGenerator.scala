@@ -4,7 +4,12 @@ import com.github.javaparser.ast.body.BodyDeclaration
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 import org.combinators.ep.language.java.{JavaBinaryMethod, JavaGenerator}
 import org.combinators.templating.twirl.Java
-
+/**
+ * Extensibility for the Masses
+ * Bruno C. d. S. Oliveira & William R. Cook
+ * ECOOP 2012
+ * https://dl.acm.org/citation.cfm?id=2367167
+ */
 /**
   * Each evolution has opportunity to enhance the code generators.
   */

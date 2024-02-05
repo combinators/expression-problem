@@ -44,9 +44,7 @@ lazy val commonSettings = Seq(
     "com.google.inject" % "guice" % "3.0",
     "junit" % "junit" % "4.12",
     "javax.inject" % "javax.inject" % "1",
-    guice,
-    // https://mvnrepository.com/artifact/org.webjars/bootstrap
-    "org.webjars" % "bootstrap" % "3.3.7-1"
+    guice
 )
 )
 

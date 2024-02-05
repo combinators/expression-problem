@@ -1,6 +1,5 @@
-package org.combinators.ep.language.cpp.visitor    /*DI:LD:AD*/
+package org.combinators.ep.language.cpp    /*DI:LD:AD*/
 
-import org.combinators.ep.language.cpp._
 import org.combinators.ep.domain.WithDomain
 import org.combinators.ep.domain.math.MathDomain
 import org.combinators.ep.generator.{FileWithPath, LanguageIndependentGenerator, LanguageIndependentTestGenerator}
@@ -9,7 +8,7 @@ import java.nio.file.{Files, Paths, StandardOpenOption}
 import org.apache.commons.io.FileUtils
 import org.combinators.ep.language.cpp.oo.StraightGenerator
 import org.combinators.ep.language.cpp.visitorTable.{CPPTableTestGenerator, CPPVisitorTableGenerator}
-
+import org.combinators.ep.language.cpp.visitor.{CPPVisitorGenerator, CPPVisitorTestGenerator}
 import System.nanoTime
 
 abstract class BaseTest(val id:String) {
@@ -64,7 +63,7 @@ object StraightTest extends App {
         override val gen = new WithDomain(MathDomain) with StraightGenerator with CPPUnitTestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3
       }
       case "e4" => new BaseTest("e4") {
-        override val gen = new WithDomain(MathDomain) with CPPVisitorGenerator with CPPVisitorTestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3 with cpp_e4
+        override val gen = new WithDomain(MathDomain) with StraightGenerator with CPPUnitTestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3 with cpp_e4
       }
 
       case _ => ???
@@ -137,8 +136,17 @@ object GenerateApproach extends App {
   println ("Generating code...")
 
   // Choose your own adventure
-  val approach = "visitorTable"
-  val system = "e4"
+  val approach = if (args.length == 0) {
+    "oo"
+  } else {
+    args(0)
+  }
+
+  val system = if (args.length == 0) {
+    "e8"
+  } else {
+    args(1)
+  }
 
   approach match {
     case "oo" => StraightTest.evaluate (system).generatedCode (approach, system)

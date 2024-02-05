@@ -9,7 +9,9 @@ In this project, we explore a number of such solutions. Our concern is not with 
 
 ## Installation
 
-Once you have cloned this repository (branch `firstVersion`) you will need to make sure that you have a working JDK 1.8 installation, because this original version (from 2018) used libraries (the Play Framework) that required this original version.
+Once you have cloned this repository (branch `firstVersion`) you will need to make sure 
+that you have a working Scala Built Tool (SBT) installation. If your installation is older than SBT 1.8.2, you will need a 
+JDK 1.8 installation.
 
 On a Windows PC, for example, you would issue the following commands. Note that to eliminate spaces in the Path names, use the old DOS-style
 option to replace "Program Files (x86)" with either progra~2, if the path
@@ -24,37 +26,14 @@ be the host for different approaches in that language.
 <b style='color:#5FCA1C'>sbt:expression-problem></b> compile
 </code></pre>
 
-This will properly compile all code 
-
-For example, to initiate Java code generation, type:
+Alternative, you could launch `sbt` with the command line argument to choose the desired JVM to use:
 
 <pre><code>
-<b style='color:#5FCA1C'>sbt:expression-problem></b> language-java/run
-[info] Updating core...
-[info] Done updating.
-[warn] There may be incompatibilities among your library dependencies; run 'evicted' to see detailed eviction warnings.
-[info] Updating domain-math...
-[info] Updating domain-shape...
-[info] Done updating.
-[warn] There may be incompatibilities among your library dependencies; run 'evicted' to see detailed eviction warnings.
-[info] Done updating.
-[warn] There may be incompatibilities among your library dependencies; run 'evicted' to see detailed eviction warnings.
-[info] Updating language-java...
-[info] Done updating.
-[warn] There may be incompatibilities among your library dependencies; run 'evicted' to see detailed eviction warnings.
-[info] Compiling 12 Scala sources to C:\YOUR-HOME-DIR\expression-problem\core\target\scala-2.12\classes ...
-[info] Done compiling.
-[info] Compiling 14 Scala sources to C:\YOUR-HOME-DIR\expression-problem\domain\math\target\scala-2.12\classes ...
-[info] Compiling 3 Scala sources to C:\YOUR-HOME-DIR\expression-problem\domain\shape\target\scala-2.12\classes ...
-[info] Done compiling.
-[info] Done compiling.
-
---- (Running the application, auto-reloading is enabled) ---
-
-[info] p.c.s.AkkaHttpServer - Listening for HTTP on /0:0:0:0:0:0:0:0:9000
-
-(Server started, use Enter to stop and go back to the console...)
+sbt --java-home="C:/Progra~2/Java/jdk1.8.0_161/"
+<b style='color:#5FCA1C'>sbt:expression-problem></b> compile
 </code></pre>
+
+This will properly compile all code 
 
 At this point, you can now request different EP approaches to generate code in Java that contain 
 implementations for the Math Domain.
@@ -185,12 +164,67 @@ trait M4 extends Evolution {
   override def getModel = m4
 }
 
+trait M5 extends Evolution {
+  self: M0 with M1 with M2 with M3 with M4 =>
+  val domain:MathDomain
+
+  case object Identifier extends Operation("id", Some(Int))
+
+  val m5 = Model("m5", Seq.empty, Seq(domain.AsTree, Identifier), last = m4)
+  override def getModel = m5
+}
+
+trait M6 extends Evolution {
+  self: M0 with M1 with M2 with M3 with M4 with M5 =>
+  val domain:MathDomain
+  
+  case object Boolean extends TypeRep
+
+  case object Equals extends BinaryMethod("equals", Some(Boolean))
+  val m6 = Model("m6", Seq.empty, Seq(Equals), last = m5)
+
+  override def getModel = m6
+}
+
+trait M7 extends Evolution {
+  self: M0 with M1 with M2 with M3 with M4 with M5 with M6 =>
+  val domain:MathDomain
+ 
+  object m7_extensions {
+    val target = "target"
+  }
+
+  case object Sqrt extends Unary("Sqrt")
+  case object Find extends domain.Operation("Find", Some(Int),
+    Seq(domain.Parameter(m7_extensions.target, Double)))
+
+  val m7 = Model("m7", Seq(Sqrt), Seq(Find), last = m6)
+
+  override def getModel = m7
+}
+
+trait M8 extends Evolution {
+  self: M0 with M1 with M2 with M3 with M4 with M5 with M6 with M7 =>
+  val domain:MathDomain
+ 
+  case object Power extends Binary("Power")
+  case object Copy extends ProducerOperation("copy")
+
+  val m8 = Model("m8", Seq(Power), Seq(Copy), last = m7)
+
+  override def getModel = m8
+}
+
 ```
 
 In this application domain, an initial model (M0) is extended four times, adding new data
 types and operations. We have encoded a number of approaches to the Expression Problem that 
 generates solutions in Java. To request the code generation, the following are the completed 
 implementations
+
+# Java Solutions
+
+We encoded several EP approaches that generate Java code.
 
 ## OO Solution
 
@@ -200,41 +234,16 @@ no trouble with existing code; however, defining new operations means that all e
 subtypes need to have new methods added to their class. As such, this is not a solution
 to the EP problem.
 
-To generate the code, start up a web browser and type the following 
-as the URL address:
+To generate the code for system M3, type the following in SBT:
 
-`http://localhost:9000/oo/m4`
+<pre><code>
+<b style='color:#5FCA1C'>sbt:expression-problem></b> language-java/runMain org.combinators.ep.language.java.GenerateApproach oo e3
+</code></pre>
 
-The first time you issue this request, it may take up to 30 seconds to respond.
-This requests the Java code generator to generate system `m4` using the `oo` EP approach.
-In response, the SBT console will compile (if necessary) and produce output
-showing that the Dev application has started:
-
-```
-[info] Compiling 56 Scala sources and 7 Java sources to C:\Users\heineman\IdeaProjects\expression-problem\language\java\target\scala-2.12\classes ...
-[info] Done compiling.
-DEBUG  - Generated dev mode secret ad38443e8cf8f6eddfa941b4049cbc97 for app at file:/C:/Users/heineman/IdeaProjects/expression-problem/language/java/target/scala-2.12/classes/application.conf
-INFO   - Slf4jLogger started
-DEBUG  - Starting application default Akka system: application
-DEBUG application - logger log1-Slf4jLogger started
-DEBUG application - Default Loggers started
-INFO   - Enabled Filters (see <https://www.playframework.com/documentation/latest/Filters>):
-
-    play.filters.csrf.CSRFFilter
-    play.filters.headers.SecurityHeadersFilter
-    play.filters.hosts.AllowedHostsFilter
-
-INFO   - Application started (Dev)
-```
-
-Once SBT has compiled and executed, the browser will then change to a 
-web page where you can 
-
-Then in a separate console window, type the following git request:
-
-`git clone localhost:9000/oo/m4/m4.git`
-
-![Retrieve ZIP file](https://github.com/combinators/expression-problem/raw/master/oo.zip) with generated source files
+The first time you issue this request, it may compile sources. 
+This requests the Java code generator to generate system `e3` using the `oo` EP approach. All 
+generated files appear in the `target` directory under the top-level
+folder of `ep-firstVersion`.
 
 ## Visitor Solution
 
@@ -244,9 +253,12 @@ requires modifications to all existing `Visitor` classes. However, using our
 approach, we can simply resynthesize all classes with every change to the 
 Application Domain. 
 
-`git clone localhost:9000/scalaVisitor/m4/m4.git`
 
-![Retrieve ZIP file](https://github.com/combinators/expression-problem/raw/master/scalaVisitor.zip) with generated source files
+To generate the code for system M3, type the following in SBT:
+
+<pre><code>
+<b style='color:#5FCA1C'>sbt:expression-problem></b> language-java/runMain org.combinators.ep.language.java.GenerateApproach visitor e3
+</code></pre>
 
 ## Covariant Java Solution
 
@@ -255,18 +267,22 @@ by *Yanling Wang* and *Bruno C. d. S. Oliveira* [2]
 describes an approach using _covariant type refinement_ of return types and fields. Unlike existing solutions in
 Java-like languages, this solution does not use any kind of generics.
 
-`git clone localhost:9000/trivially/m4/m4.git`
+To generate the code for system M3, type the following in SBT:
 
-![Retrieve ZIP file](https://github.com/combinators/expression-problem/raw/master/trivially.zip) with generated source files
+<pre><code>
+<b style='color:#5FCA1C'>sbt:expression-problem></b> language-java/runMain org.combinators.ep.language.java.GenerateApproach trivially e3
+</code></pre>
 
 ## Interpreter Design Pattern
 
 The *TCS 2003 paper* [Solving Expression problem using Interpreter Pattern](http://www.cs.pomona.edu/~kim/ftp/WOOD.pdf) by 
 *Bruce Kim* [3] describes an approach to solving the EP problem using the Interpreter Design Pattern.
 
-`git clone localhost:9000/interpreter/m4/m4.git`
+To generate the code for system M3, type the following in SBT:
 
-![Retrieve ZIP file](https://github.com/combinators/expression-problem/raw/master/interpreter.zip) with generated source files
+<pre><code>
+<b style='color:#5FCA1C'>sbt:expression-problem></b> language-java/runMain org.combinators.ep.language.java.GenerateApproach interpreter e3
+</code></pre>
 
 ## Object Algebras
 
@@ -274,17 +290,56 @@ The *ECOOP 2012 paper* [Extensibility for the Masses](https://dl.acm.org/citatio
 *Bruno C. d. S. Oliveira & William R. Cook* [4] describes an approach to solving the EP problem using
 Object Algebras.
 
-`git clone localhost:9000/algebra/m4/m4.git`
+To generate the code for system M3, type the following in SBT:
 
-![Retrieve ZIP file](https://github.com/combinators/expression-problem/raw/master/algebra.zip) with generated source files
+<pre><code>
+<b style='color:#5FCA1C'>sbt:expression-problem></b> language-java/runMain org.combinators.ep.language.java.GenerateApproach algebra e3
+</code></pre>
 
-## C++ Solution
+# C++ Solutions
 
-C++ solutions exist as well. 
+We can generate several C++ solutions.
+
+## OO Solution
+
+To generate the code for system M3, type the following in SBT:
+
+<pre><code>
+<b style='color:#5FCA1C'>sbt:expression-problem></b> language-cpp/runMain org.combinators.ep.language.cpp.GenerateApproach oo e3
+</code></pre>
+
+This solution only generates for the first three evolutions. It compiles as follows:
+
+`g++ *.cpp -Icpputest/include -Lcpputest/cpputest_build/lib -lCppUTest -lCppUTestExt`
+
+The [CPPUnit test project](https://github.com/cpputest/cpputest) contains the necessary includes and libraries to
+cleanly compile this code and confirm all test cases.
+
+## Visitor Solution
+
+To generate the code for system M3, type the following in SBT:
+
+<pre><code>
+<b style='color:#5FCA1C'>sbt:expression-problem></b> language-cpp/runMain org.combinators.ep.language.cpp.GenerateApproach visitor e3
+</code></pre>
+
+This solution only generates for the first three evolutions. It compiles as follows:
+
+`g++ *.cpp -Icpputest/include -Lcpputest/cpputest_build/lib -lCppUTest -lCppUTestExt`
+
+The [CPPUnit test project](https://github.com/cpputest/cpputest) contains the necessary includes and libraries to
+cleanly compile this code and confirm all test cases.
+
+## Visitor Table Solution
+
 In a blog [Expression Problem and its solutions](https://eli.thegreenplace.net/2016/the-expression-problem-and-its-solutions "Expression Problem and its solutions")
 Eli Bendersky outlines an approach for using the visitor design pattern as implemented in C++.
 
-`git clone localhost:9000/cpp/m3/m3.git`
+To generate the code for system M3, type the following in SBT:
+
+<pre><code>
+<b style='color:#5FCA1C'>sbt:expression-problem></b> language-cpp/runMain org.combinators.ep.language.cpp.GenerateApproach visitorTable e3
+</code></pre>
 
  This solution only generates for the first three evolutions. It compiles as follows:
  
@@ -293,15 +348,48 @@ Eli Bendersky outlines an approach for using the visitor design pattern as imple
 The [CPPUnit test project](https://github.com/cpputest/cpputest) contains the necessary includes and libraries to 
 cleanly compile this code and confirm all test cases.
  
- ![Retrieve ZIP file](https://github.com/combinators/expression-problem/raw/master/cpp.zip) with generated source files
+# Haskell Solutions
 
- 
+We generate a number of solutions in Haskell.
 
+## Straight functional
 
+To generate the code for system M3, type the following in SBT:
 
+<pre><code>
+<b style='color:#5FCA1C'>sbt:expression-problem></b> language-haskell/runMain org.combinators.ep.language.haskell.GenerateApproach straight e3
+</code></pre>
+
+This solution only generates for the first three evolutions. 
+
+## Trees that grow
+
+The JUCS 2017 paper [Trees that Grow](https://lib.jucs.org/article/22912/list/9/) by _Najd & Jones_ describes a programming idiom that exploits type-level functions to allow a particular form of extensibility.
+
+To generate the code for system M3, type the following in SBT:
+
+<pre><code>
+<b style='color:#5FCA1C'>sbt:expression-problem></b> language-haskell/runMain org.combinators.ep.language.haskell.GenerateApproach grow e3
+</code></pre>
+
+This solution only generates for the first three evolutions. 
+## Data Types A La Carte
+
+The 2008 paper [Data Types à la carte](https://doi.org/10.1017/S0956796808006758) by
+Swierstra describes a technique for assembling both data types and functions from isolated individual components.
+
+To generate the code for system M3, type the following in SBT:
+
+<pre><code>
+<b style='color:#5FCA1C'>sbt:expression-problem></b> language-haskell/runMain org.combinators.ep.language.haskell.GenerateApproach alacarte e3
+</code></pre>
+
+This solution only generates for the first three evolutions. 
 # References
 
 1. Wadler, Philip, [Email to to Java Genericity Mailing List](http://homepages.inf.ed.ac.uk/wadler/papers/expression/expression.txt)
 2. Wang, Yanling and Bruno C. d. S. Oliveira, [The Expression Problem, Trivially!](https://dl.acm.org/citation.cfm?id=2889448), MODULARITY 2016, pp. 37-41.
 3. Kim, Bruce, [Some Challenging Typing Issues in Object-Oriented Languages: Extended Abstract](http://doi.org/10.1016/S1571-0661(04)80799-0), TCS 82(8) 2003.
 4. d. S. Oliveira, Bruno C. and William R. Cook [Extensibility for the Masses](https://dl.acm.org/citation.cfm?id=236716), ECOOP 2012
+5. Swierstra, W. [Data types à la carte](https://doi.org/10.1017/S0956796808006758). Journal of Functional Programming. 2008;18(4):423-436
+6. Najd S, Jones SP [Trees that Grow](https://lib.jucs.org/article/22912/list/9/). JUCS - Journal of Universal Computer Science 23(1): 42-62. 2017; https://doi.org/10.3217/jucs-023-01-0042

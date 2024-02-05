@@ -35,6 +35,11 @@ lazy val commonSettings = Seq(
     "org.scalactic" %% "scalactic" % "3.0.5" % "test",
     "org.scalatest" %% "scalatest" % "3.0.5" % "test",
     "org.scalameta" %% "scalameta" % "3.7.4",
+
+    "org.typelevel" %% "cats-core" % "2.3.1",
+    "org.typelevel" %% "cats-free" % "2.3.1",
+    "org.typelevel" %% "cats-effect" % "2.3.1",
+
     "com.chuusai" %% "shapeless" % "2.3.2",
     "com.google.inject" % "guice" % "3.0",
     "junit" % "junit" % "4.12",

@@ -5,7 +5,6 @@ package org.combinators.ep.language.java.performance
   * standard code generator framework.
   */
 import System.nanoTime
-
 import org.combinators.ep.domain.WithDomain
 import org.combinators.ep.domain.math.MathDomain
 import org.combinators.ep.generator.{LanguageIndependentGenerator, LanguageIndependentTestGenerator}
@@ -16,11 +15,14 @@ import org.combinators.ep.language.java.interpreter.InterpreterGenerator
 import org.combinators.ep.language.java.oo._
 import org.combinators.ep.language.java.trivially.TriviallyGenerator
 import org.combinators.ep.language.java.visitor.VisitorGenerator
+
+import java.nio.file.{Files, Paths, StandardOpenOption}
 case class Score (n:Int,  min:Long,  average:Long,  max:Long)
 
 /** Execute twenty times, and take lowest. */
 object Sample {
   val numTrials:Int = 20
+  val outputDir:String = "epAppNew"
 
   def sample(block: => Long): Score = {
 
@@ -42,22 +44,38 @@ object Sample {
 
   def process(name:Option[String], tests:Seq[BaseTest]) : Map[String,Score] = {
 
-    // get thing started. Burn this time to ensure we don't get biased by first run.
-    tests.foreach(t => t.generatedCode(name))
-
     // now run the real tests
-    tests.map(t => t.id -> sample({t.generatedCode(name)})).toMap[String,Score]
+    tests.map(t => t.id -> sample({t.generatedCode(outputDir, name)})).toMap[String,Score]
   }
 }
 
 abstract class BaseTest(val id:String) {
-  val gen: WithDomain[MathDomain] with LanguageIndependentGenerator with LanguageIndependentTestGenerator
+  // We know these are java files, so rely on JavaGenerator
+  val gen: WithDomain[MathDomain] with JavaGenerator with LanguageIndependentTestGenerator
 
-  // time the synthesis of the generated code plus test suites
-  def generatedCode(pkg:Option[String]): Long = {
+  // time the synthesis of the generated code plus test suites. Output to 'ep'
+  def generatedCode(outputName: String, pkg:Option[String]): Long = {
     val now = nanoTime
-    gen.generatedCode() ++ gen.generateSuite(pkg)
+    val all_code = gen.generatedCode() ++ gen.generateSuite(pkg)
     nanoTime - now
+    val outputDir = Paths.get("target", outputName)
+
+    Files.createDirectory(Paths.get(outputDir))
+
+    all_code.foreach(u => {
+
+      val packName = u.getPackageDeclaration.get().getName.toString
+      val dirs = packName.split(".")
+      if (dirs.isEmpty) {
+        val path = Paths.get(outputDir, packName)
+        Files.write(path, u.toString.getBytes, StandardOpenOption.APPEND, StandardOpenOption.CREATE)
+      } else {
+        val path = Paths.get(outputDir, dirs:_*)
+        Files.write(path, u.toString.getBytes, StandardOpenOption.APPEND, StandardOpenOption.CREATE)
+      }
+    })
+
+    nanoTime
   }
 }
 

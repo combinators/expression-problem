@@ -60,6 +60,7 @@ abstract class BaseTest(val id:String) {
     nanoTime - now
     val outputDir = Paths.get("target", outputName)
 
+    FileUtils.deleteDirectory()
     Files.createDirectory(Paths.get(outputDir))
 
     all_code.foreach(u => {

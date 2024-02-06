@@ -80,8 +80,8 @@ lazy val domainShape = standardDomainProject("shape")
 def standardLanguageProject(languageName: String): Project =
   (Project(id = s"language-$languageName", base = file(s"language/$languageName")))
     .settings(commonSettings: _*)
-    .enablePlugins(PlayScala)
-    .disablePlugins(PlayLayoutPlugin)
+//    .enablePlugins(PlayScala)
+//    .disablePlugins(PlayLayoutPlugin)
     .settings(
       moduleName := s"expression-problem-language-$languageName",
       //libraryDependencies += guice

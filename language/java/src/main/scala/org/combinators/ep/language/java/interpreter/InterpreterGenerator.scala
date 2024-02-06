@@ -6,6 +6,10 @@ import com.github.javaparser.ast.expr.SimpleName
 import org.combinators.ep.language.java.{JavaBinaryMethod, JavaGenerator, OperationAsMethodGenerator}
 import org.combinators.templating.twirl.Java
 import org.combinators.ep.language.java.ReplaceCovariantType._
+// Bruce2003	Solving Expression problem using Interpreter Pattern
+// Some challenging typing issues in object-oriented languages
+// TCS (82) 2003
+// http://www.cs.pomona.edu/~kim/ftp/WOOD.pdf
 
 /**
   * Producer Operations

@@ -1,4 +1,4 @@
-package org.combinators.ep.language.haskell
+package org.combinators.ep.language.haskell     /*DD:LD:AD*/
 
 object GenerateAll extends App {
   println ("Generating code...")

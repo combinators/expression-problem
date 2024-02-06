@@ -1,4 +1,4 @@
-package org.combinators.ep.language.haskell
+package org.combinators.ep.language.haskell     /*DD:LD:AD*/
 
 /**
   * Code exists to launch performance analysis of code generation of Java solutions. Not part of the

@@ -1,6 +1,5 @@
-package org.combinators.ep.domain.tree
+package org.combinators.ep.domain.tree   /*DI:LI:AI*/
 
-// TODO: update this to be a case class.
 abstract class Tree {
 
   def asLeaf(): Option[Leaf] = None
@@ -40,5 +39,4 @@ abstract class Tree {
     // only two possibilities, else false
     leafCheck.getOrElse(nodeCheck.getOrElse(false))
   }
-
 }

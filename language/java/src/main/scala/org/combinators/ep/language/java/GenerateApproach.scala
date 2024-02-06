@@ -1,4 +1,4 @@
-package org.combinators.ep.language.java
+package org.combinators.ep.language.java       /*DD:LD:AD*/
 
 /**
   * Code exists to launch performance analysis of code generation of Java solutions. Not part of the
@@ -9,6 +9,7 @@ import org.apache.commons.io.FileUtils
 import System.nanoTime
 import org.combinators.ep.domain.WithDomain
 import org.combinators.ep.domain.math.MathDomain
+import org.combinators.ep.domain.shape.ShapeDomain
 import org.combinators.ep.generator.LanguageIndependentTestGenerator
 import org.combinators.ep.language.java._
 import org.combinators.ep.language.java.algebra.AlgebraGenerator
@@ -23,7 +24,7 @@ import java.nio.file.{Files, Paths, StandardOpenOption}
 
 abstract class BaseTest(val id:String) {
   // Each subclass overrides accordingly
-  val gen: WithDomain[MathDomain] with JavaGenerator with LanguageIndependentTestGenerator
+  val gen: JavaGenerator with LanguageIndependentTestGenerator
 
   // time the synthesis of the generated code plus test suites. Output to 'ep'
   def generatedCode(approachName:String, systemName: String): Unit = {
@@ -90,6 +91,14 @@ object OOEvaluateTest  {
         override val gen = new WithDomain(MathDomain) with OOGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6 with e7 with e8
       }
 
+      case "s0" => new BaseTest("s0") {
+        override val gen = new WithDomain(ShapeDomain) with OOGenerator with JUnitTestGenerator with s0
+      }
+
+      case "s1" => new BaseTest("s1") {
+        override val gen = new WithDomain(ShapeDomain) with OOGenerator with JUnitTestGenerator with s0 with s1
+      }
+
       case _ => ???
     }
 
@@ -136,6 +145,14 @@ object TriviallyEvaluateTest extends App {
 
       case "e8" => new BaseTest("e8") {
         override val gen = new WithDomain(MathDomain) with OOGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6 with e7 with e8
+      }
+
+      case "s0" => new BaseTest("s0") {
+        override val gen = new WithDomain(ShapeDomain) with OOGenerator with JUnitTestGenerator with s0
+      }
+
+      case "s1" => new BaseTest("s1") {
+        override val gen = new WithDomain(ShapeDomain) with OOGenerator with JUnitTestGenerator with s0 with s1
       }
 
       case _ => ???
@@ -186,6 +203,14 @@ object AlgebraEvaluateTest extends App {
         override val gen = new WithDomain(MathDomain) with OOGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6 with e7 with e8
       }
 
+      case "s0" => new BaseTest("s0") {
+        override val gen = new WithDomain(ShapeDomain) with OOGenerator with JUnitTestGenerator with s0
+      }
+
+      case "s1" => new BaseTest("s1") {
+        override val gen = new WithDomain(ShapeDomain) with OOGenerator with JUnitTestGenerator with s0 with s1
+      }
+
       case _ => ???
     }
   }
@@ -234,6 +259,14 @@ object InterpreterEvaluateTest extends App {
         override val gen = new WithDomain(MathDomain) with OOGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6 with e7 with e8
       }
 
+      case "s0" => new BaseTest("s0") {
+        override val gen = new WithDomain(ShapeDomain) with OOGenerator with JUnitTestGenerator with s0
+      }
+
+      case "s1" => new BaseTest("s1") {
+        override val gen = new WithDomain(ShapeDomain) with OOGenerator with JUnitTestGenerator with s0 with s1
+      }
+
       case _ => ???
     }
   }
@@ -279,6 +312,14 @@ object VisitorEvaluateTest extends App {
 
       case "e8" => new BaseTest("e8") {
         override val gen = new WithDomain(MathDomain) with OOGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6 with e7 with e8
+      }
+
+      case "s0" => new BaseTest("s0") {
+        override val gen = new WithDomain(ShapeDomain) with OOGenerator with JUnitTestGenerator with s0
+      }
+
+      case "s1" => new BaseTest("s1") {
+        override val gen = new WithDomain(ShapeDomain) with OOGenerator with JUnitTestGenerator with s0 with s1
       }
 
       case _ => ???
@@ -329,6 +370,14 @@ object ExtensibleVisitorEvaluateTest extends App {
         override val gen = new WithDomain(MathDomain) with OOGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6 with e7 with e8
       }
 
+      case "s0" => new BaseTest("s0") {
+        override val gen = new WithDomain(ShapeDomain) with OOGenerator with JUnitTestGenerator with s0
+      }
+
+      case "s1" => new BaseTest("s1") {
+        override val gen = new WithDomain(ShapeDomain) with OOGenerator with JUnitTestGenerator with s0 with s1
+      }
+
       case _ => ???
     }
   }
@@ -345,7 +394,7 @@ object GenerateApproach extends App {
   }
 
   val system = if (args.length == 0) {
-    "e8"
+    "s1"
   } else {
     args(1)
   }

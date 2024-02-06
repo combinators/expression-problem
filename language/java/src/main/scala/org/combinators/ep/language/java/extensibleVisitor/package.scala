@@ -168,15 +168,15 @@ import org.combinators.ep.domain.math.{I2, M0, M1, M3}
  * == Evolutions ==
   *
   * There are six fundamental evolutions completed:
-  * [[org.combinators.ep.language.java.deployment.oo.M0_Variation]],
-  * [[org.combinators.ep.language.java.deployment.oo.M1_Variation]],
-  * [[org.combinators.ep.language.java.deployment.oo.M2_Variation]],
-  * [[org.combinators.ep.language.java.deployment.oo.M3_Variation]],
-  * [[org.combinators.ep.language.java.deployment.oo.M4_Variation]],
-  * [[org.combinators.ep.language.java.deployment.oo.M5_Variation]],
-  * [[org.combinators.ep.language.java.deployment.oo.M6_Variation]],
+  * [[M0]],
+  * [[M1]],
+  * [[M2]],
+  * [[M3]],
+  * [[M4]],
+  * [[M5]],
+  * [[M6]],
   *
-  * There is one composite branch [[org.combinators.ep.language.java.deployment.oo.C1_Variation]],
+  * There is one composite branch [[C1]],
   * that connects together the evolutions
   * up to [[M3]] and the evolutions up to [[I2]], thus demonstrating the
   * ability to join together previously independent paths.

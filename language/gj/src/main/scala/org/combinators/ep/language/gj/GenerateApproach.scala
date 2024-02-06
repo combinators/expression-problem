@@ -1,4 +1,4 @@
-package org.combinators.ep.language.gj
+package org.combinators.ep.language.gj   /*DD:LD:AD*/
 
 /**
  * Code exists to launch performance analysis of code generation of Java solutions. Not part of the

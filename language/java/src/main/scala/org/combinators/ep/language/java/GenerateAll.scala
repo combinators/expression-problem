@@ -1,10 +1,10 @@
-package org.combinators.ep.language.java
+package org.combinators.ep.language.java      /*DD:LD:AD*/
 
 object GenerateAll extends App {
   println ("Generating code...")
 
   val approaches = Seq("oo", "visitor", "extensibleVisitor", "interpreter", "trivially", "algebra")
-  val systems = Seq("e0", "e1", "e2", "e3", "e4", "e5", "e6", "e7", "e8")
+  val systems = Seq("e0", "e1", "e2", "e3", "e4", "e5", "e6", "e7", "e8", "s0", "s1")
 
   approaches.foreach(approach =>
     systems.foreach(system =>

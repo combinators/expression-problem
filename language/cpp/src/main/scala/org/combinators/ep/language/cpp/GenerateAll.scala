@@ -1,4 +1,4 @@
-package org.combinators.ep.language.cpp
+package org.combinators.ep.language.cpp   /*DD:LD:AD*/
 
 object GenerateAll extends App {
   println ("Generating code...")

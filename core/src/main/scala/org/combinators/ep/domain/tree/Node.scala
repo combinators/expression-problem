@@ -1,5 +1,4 @@
-package org.combinators.ep.domain.tree
-
+package org.combinators.ep.domain.tree   /*DI:LI:AI*/
 
 class Node(val children:Seq[Tree], val label:Int) extends Tree {
 

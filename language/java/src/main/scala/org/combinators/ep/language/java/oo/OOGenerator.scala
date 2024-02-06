@@ -4,7 +4,12 @@ import com.github.javaparser.ast.body.MethodDeclaration
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 import org.combinators.ep.language.java.{DataTypeSubclassGenerator, JavaBinaryMethod, JavaGenerator, OperationAsMethodGenerator}
 import org.combinators.templating.twirl.Java
-
+/**
+ * Synthesizing Object-Oriented and Functional Design to Promote Re-Use
+ * Shriram Krishnamurthi, Matthias Felleisen, Daniel P. Friedman
+ * European Conference on Object-Oriented Programming
+ * https://cs.brown.edu/~sk/Publications/Papers/Published/kff-synth-fp-oo/
+ */
 /**
   * Object-orienetd generator
   *

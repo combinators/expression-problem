@@ -40,7 +40,7 @@ implementations for the Math Domain.
 
 ## Math Domain
 
-Let's start with a language for a simple form of arithmetic expressions. We first model the domain using Scala in [BaseDomain](src/main/scala/example/expression/domain/BaseDomain.scala):
+Let's start with a language for a simple form of arithmetic expressions. We first model the domain using Scala.
 
 ```
 trait BaseDomain {
@@ -83,7 +83,7 @@ trait ModelDomain extends BaseDomain {
 
 ```
 
-For more details on [ModelDomain](core/src/main/scala/org/combinators/ep/domain/ModelDomain.scala) check out this Scala file. Once these concepts are identified, the designer chooses a programming language and implements a desired solution.
+For more details on `org.combinators.ep.domain.ModelDomain`, review the repository. Once these concepts are identified, the designer chooses a programming language and implements a desired solution.
 
 ## Application Domain
 
@@ -91,8 +91,7 @@ The desired application domain (in this case mathematical expressions)
 extends these traits to provide a specific domain within which to work. 
 The entire evolution history is modeled, from an initial state M0 through 
 successive evolutions. 
-The following [MathDomain](domain/math/src/main/scala/org/combinators/ep/domain/math/MathDomain.scala) 
-describes the common domain used in the literature when describing the 
+The following MathDomain describes the common domain used in the literature when describing the 
 Expression Problem.
 
 ```
@@ -214,7 +213,6 @@ trait M8 extends Evolution {
 
   override def getModel = m8
 }
-
 ```
 
 In this application domain, an initial model (M0) is extended four times, adding new data
@@ -222,9 +220,81 @@ types and operations. We have encoded a number of approaches to the Expression P
 generates solutions in Java. To request the code generation, the following are the completed 
 implementations
 
+## Shape Domain
+
+There is nothing essential about `MathDomain`. We constructed another `ShapeDomain`, inspired by 
+Krishnamurthi [7].
+
+```
+trait ShapeDomain extends BaseDomain with ModelDomain {
+  case object Shape extends TypeRep {
+    override def name: String = "Shape"
+  }
+  type BaseTypeRep = Shape.type
+  val baseTypeRep:BaseTypeRep = Shape
+}
+object ShapeDomain extends ShapeDomain
+
+trait S0 extends Evolution {
+  val domain:ShapeDomain
+
+  // standard attributes for domain. As new ones are defined, place in respective traits
+  val side = Attribute("side", Double)
+  val radius = Attribute("radius", Double)
+  val x = Attribute("x", Double)
+  val y = Attribute("y", Double)
+  val trans = Attribute("trans", Point2D)
+  val shape = Attribute("shape", domain.Shape)
+  val point = Parameter("point", Point2D)
+  val pct = Parameter("pct", Double)
+
+  case object Double extends domain.TypeRep {
+    type scalaInstanceType = scala.Double
+  }
+  case object Boolean extends domain.TypeRep {
+    type scalaInstanceType = scala.Boolean
+  }
+  case object Point2D extends domain.TypeRep {
+    type scalaInstanceType = (scala.Double, scala.Double)
+  }
+
+  case object Square extends domain.Atomic("Square", Seq(side))
+  case object Circle extends domain.Atomic("Circle", Seq(radius))
+  case object Point extends domain.Atomic("Point", Seq(x, y))
+  case object Translate extends domain.DataType("Translate", Seq(trans, shape))
+
+  case object ContainsPt extends domain.Operation("containsPt", Some(Boolean), Seq(point))
+
+  case class SquareInst(d:scala.Double) extends domain.AtomicInst(Square, ExistsInstance(Double)(d))
+  case class CircleInst(d:scala.Double) extends domain.AtomicInst(Circle, ExistsInstance(Double)(d))
+  case class PointInst(x:scala.Double, y:scala.Double) extends domain.AtomicInst(Point, ExistsInstance(Point2D)((x,y)))
+  case class TranslateInst(pt:(scala.Double,scala.Double), s:Inst) extends domain.Inst {
+    val e: DataType = Translate
+    val ei: ExistsInstance = ExistsInstance(Point2D)(pt)
+    override def name: String = e.name
+  }
+
+  val s0 = domain.Model("s0", Seq(Square,Circle,Translate), Seq(ContainsPt))
+  override def getModel:Model = s0
+}
+
+trait S1 extends Evolution {
+  self: S0 =>
+  val domain: ShapeDomain
+
+  case object Shrink extends ProducerOperation("shrink", Seq(pct))
+
+  val s1 = domain.Model("s1", Seq.empty, Seq(Shrink), s0)
+  override def getModel:Model = s1
+}
+```
+
 # Java Solutions
 
-We encoded several EP approaches that generate Java code.
+We encoded several EP approaches that generate Java code for both `MathDomain` and `ShapeDomain`.
+
+For these Java EP approaches, we can generate up to eight systems for `MathDomain` (e1 through e8) 
+and for the `ShapeDomain` we can generate (s0, s1).
 
 ## OO Solution
 
@@ -410,3 +480,6 @@ Inside the `target\ep-firstVersion` folder, you will find all the generated code
 4. d. S. Oliveira, Bruno C. and William R. Cook [Extensibility for the Masses](https://dl.acm.org/citation.cfm?id=236716), ECOOP 2012
 5. Swierstra, W. [Data types à la carte](https://doi.org/10.1017/S0956796808006758). Journal of Functional Programming. 2008;18(4):423-436
 6. Najd S, Jones SP [Trees that Grow](https://lib.jucs.org/article/22912/list/9/). JUCS - Journal of Universal Computer Science 23(1): 42-62. 2017; https://doi.org/10.3217/jucs-023-01-0042
+7. Krishnamurthi, S., Matthias, F., and Friedman, D. [Syn-
+   thesizing object-oriented and functional design to promote re-use](https://doi.org/10.1007/BFb0054088). 
+   ECOOP’98 - Object-Oriented Programming, 12th European Conference, 1998

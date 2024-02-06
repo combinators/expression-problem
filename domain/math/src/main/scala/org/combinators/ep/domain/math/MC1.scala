@@ -2,6 +2,7 @@ package org.combinators.ep.domain.math      /*DD:LI:AI*/
 
 import org.combinators.ep.domain.Evolution
 
+// not fully integrated into generator yet
 trait MC1 extends Evolution {
   self:  M0 with M1 with M2 with M3 with I1 with I2 =>
   val domain:MathDomain

@@ -8,5 +8,4 @@ trait Evolution {
 
   val domain: ModelDomain                             // Every evolution has associated domain.
   def getModel: domain.Model
-
 }

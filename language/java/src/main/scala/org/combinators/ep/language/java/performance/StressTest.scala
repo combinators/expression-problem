@@ -1,8 +1,22 @@
-package org.combinators.ep.language.java.performance
+package org.combinators.ep.language.java.performance    /*DD:LD:AD*/
 
 /**
  * Code exists to launch performance analysis of code generation of Java solutions. Not part of the
  * standard code generator framework.
+
+ Sample Output:
+
+   oo,algebra,visitor,trivially,extensible,interpreter,
+e0,24126880,24004500,28934090,30117285,28878365,25917380,
+e1,29360255,26254185,32807415,36965530,34220745,37076425,
+e2,31982805,32178135,37271155,45851300,38058750,45118055,
+e3,43204990,44145620,51380010,64064635,55050355,76217850,
+e4,95646095,108493300,109321720,135653990,109738390,148040390,
+e5,138147130,148478295,153373295,197174480,152872910,197541240,
+e6,193640380,202159795,202067930,265225100,204183860,255743590,
+e7,263275820,224855320,222852915,225278120,228189720,234703735,
+e8,273889535,258914080,255338890,256583075,265652510,256929890,
+
  */
 import System.nanoTime
 
@@ -89,8 +103,14 @@ object OOEvaluateTest  {
     val e6 = new BaseTest("e6") {
       override val gen = new WithDomain(MathDomain) with OOGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6
     }
+    val e7 = new BaseTest("e7") {
+      override val gen = new WithDomain(MathDomain) with ExtensibleVisitorGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6 with e7
+    }
+    val e8 = new BaseTest("e8") {
+      override val gen = new WithDomain(MathDomain) with ExtensibleVisitorGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6 with e7 with e8
+    }
 
-    Sample.process(name, Seq(e0, e1, e2, e3, e4, e5, e6))
+    Sample.process(name, Seq(e0, e1, e2, e3, e4, e5, e6, e7, e8))
   }
 }
 
@@ -121,8 +141,14 @@ object TriviallyEvaluateTest extends App {
     val e6 = new BaseTest("e6") {
       override val gen = new WithDomain(MathDomain) with TriviallyGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6
     }
+    val e7 = new BaseTest("e7") {
+      override val gen = new WithDomain(MathDomain) with ExtensibleVisitorGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6 with e7
+    }
+    val e8 = new BaseTest("e8") {
+      override val gen = new WithDomain(MathDomain) with ExtensibleVisitorGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6 with e7 with e8
+    }
 
-    Sample.process(name, Seq(e0, e1, e2, e3, e4, e5, e6))
+    Sample.process(name, Seq(e0, e1, e2, e3, e4, e5, e6, e7, e8))
   }
 }
 
@@ -155,8 +181,14 @@ object AlgebraEvaluateTest extends App {
     val e6 = new BaseTest("e6") {
       override val gen = new WithDomain(MathDomain) with AlgebraGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6
     }
+    val e7 = new BaseTest("e7") {
+      override val gen = new WithDomain(MathDomain) with ExtensibleVisitorGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6 with e7
+    }
+    val e8 = new BaseTest("e8") {
+      override val gen = new WithDomain(MathDomain) with ExtensibleVisitorGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6 with e7 with e8
+    }
 
-    Sample.process(name, Seq(e0, e1, e2, e3, e4, e5, e6))
+    Sample.process(name, Seq(e0, e1, e2, e3, e4, e5, e6, e7, e8))
   }
 }
 
@@ -188,8 +220,14 @@ object InterpreterEvaluateTest extends App {
     val e6 = new BaseTest("e6") {
       override val gen = new WithDomain(MathDomain) with InterpreterGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6
     }
+    val e7 = new BaseTest("e7") {
+      override val gen = new WithDomain(MathDomain) with ExtensibleVisitorGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6 with e7
+    }
+    val e8 = new BaseTest("e8") {
+      override val gen = new WithDomain(MathDomain) with ExtensibleVisitorGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6 with e7 with e8
+    }
 
-    Sample.process(name, Seq(e0, e1, e2, e3, e4, e5, e6))
+    Sample.process(name, Seq(e0, e1, e2, e3, e4, e5, e6, e7, e8))
   }
 }
 
@@ -220,8 +258,14 @@ object VisitorEvaluateTest extends App {
     val e6 = new BaseTest("e6") {
       override val gen = new WithDomain(MathDomain) with VisitorGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6
     }
+    val e7 = new BaseTest("e7") {
+      override val gen = new WithDomain(MathDomain) with ExtensibleVisitorGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6 with e7
+    }
+    val e8 = new BaseTest("e8") {
+      override val gen = new WithDomain(MathDomain) with ExtensibleVisitorGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6 with e7 with e8
+    }
 
-    Sample.process(name, Seq(e0, e1, e2, e3, e4, e5, e6))
+    Sample.process(name, Seq(e0, e1, e2, e3, e4, e5, e6, e7, e8))
   }
 }
 
@@ -253,8 +297,13 @@ object ExtensibleVisitorEvaluateTest extends App {
     val e6 = new BaseTest("e6") {
       override val gen = new WithDomain(MathDomain) with ExtensibleVisitorGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6
     }
-
-    Sample.process(name, Seq(e0, e1, e2, e3, e4, e5, e6))
+    val e7 = new BaseTest("e7") {
+      override val gen = new WithDomain(MathDomain) with ExtensibleVisitorGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6 with e7
+    }
+    val e8 = new BaseTest("e8") {
+      override val gen = new WithDomain(MathDomain) with ExtensibleVisitorGenerator with JUnitTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6 with e7 with e8
+    }
+    Sample.process(name, Seq(e0, e1, e2, e3, e4, e5, e6, e7, e8))
   }
 }
 
@@ -285,7 +334,8 @@ object RunAll extends App {
 
   results.foreach(r => print (r.name + ","))
   println()
-  val variations = Seq("e0", "e1", "e2", "e3", "e4", "e5", "e6")
+  val variations = Seq("e0", "e1", "e2", "e3", "e4", "e5", "e6", "e7", "e8")
+
   variations.foreach(mi => {
     print(mi + ",")
     results.foreach(r => print (r.scores(mi).average + ","))

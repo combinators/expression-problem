@@ -150,7 +150,7 @@ object GenerateApproach extends App {
 
   // Choose your own adventure
   val approach = "grow"
-  val system = "e1"
+  val system = "e4"
 
   approach match {
     case "straight" => StraightTest.evaluate (system).generatedCode (approach, system)

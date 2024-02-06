@@ -19,7 +19,7 @@ abstract class BaseTest(val id:String) {
   def generatedCode(approachName:String, systemName: String): Long = {
     val now = nanoTime
     val all_code = gen.generatedCode() ++ gen.generateSuite(None)
-    val haskell_code = all_code.asInstanceOf[Seq[CPPFile]]
+    val cpp_code = all_code.asInstanceOf[Seq[CPPFile]]
 
     val outputDir = Paths.get("target", "ep-firstVersion", "cpp", approachName, systemName)
 
@@ -28,7 +28,7 @@ abstract class BaseTest(val id:String) {
     Files.createDirectories(outputDir)
 
     // all code is FLAT in the same directory. Just extract the interface or class name
-    haskell_code.foreach(u => {
+    cpp_code.foreach(u => {
       val name = if (u.isHeader) {
         Paths.get(u.fileName + ".h")
       } else {
@@ -94,9 +94,7 @@ object VisitorTest extends App {
       case "e4" => new BaseTest("e4") {
         override val gen = new WithDomain(MathDomain) with CPPVisitorGenerator with CPPVisitorTestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3 with cpp_e4
       }
-      case "e5" => new BaseTest("e5") {
-        override val gen = new WithDomain(MathDomain) with CPPVisitorGenerator with CPPVisitorTestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3 with cpp_e4 with cpp_e5
-      }
+
       case _ => ???
     }
   }
@@ -124,9 +122,7 @@ object VisitorTableTest extends App {
       case "e4" => new BaseTest("e4") {
         override val gen = new WithDomain(MathDomain) with CPPVisitorTableGenerator with CPPTableTestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3 with cpp_e4
       }
-      case "e5" => new BaseTest("e5") {
-        override val gen = new WithDomain(MathDomain) with CPPVisitorTableGenerator with CPPTableTestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3 with cpp_e4 with cpp_e5
-      }
+
       case _ => ???
     }
   }
@@ -142,8 +138,9 @@ object GenerateApproach extends App {
     args(0)
   }
 
+  // no higher than e4 unfortunately since not yet converting TreeType to target language
   val system = if (args.length == 0) {
-    "e8"
+    "e4"
   } else {
     args(1)
   }

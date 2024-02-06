@@ -10,8 +10,8 @@ In this project, we explore a number of such solutions. Our concern is not with 
 ## Installation
 
 Once you have cloned this repository (branch `firstVersion`) you will need to make sure 
-that you have a working Scala Built Tool (SBT) installation. If your installation is older than SBT 1.8.2, you will need a 
-JDK 1.8 installation.
+that you have a working Scala Built Tool (SBT) installation. You should have a working JDK 
+installation that is `1.8` and `11`; it should also work with JDK `17`.
 
 On a Windows PC, for example, you would issue the following commands. Note that to eliminate spaces in the Path names, use the old DOS-style
 option to replace "Program Files (x86)" with either progra~2, if the path

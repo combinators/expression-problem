@@ -21,7 +21,7 @@ abstract class BaseTest(val id:String) {
   def generatedCode(approachName:String, systemName: String): Long = {
     val now = nanoTime
     val all_code = gen.generatedCode() ++ gen.generateSuite(None)
-    val haskell_code = all_code.asInstanceOf[Seq[ScalaWithPath]]
+    val scala_code = all_code.asInstanceOf[Seq[ScalaWithPath]]
 
     val outputDir = Paths.get("target", "ep-firstVersion", "scala", approachName, systemName)
 
@@ -30,7 +30,7 @@ abstract class BaseTest(val id:String) {
     Files.createDirectories(outputDir)
 
     // all code is FLAT in the same directory. Just extract the interface or class name
-    haskell_code.foreach(u => {
+    scala_code.foreach(u => {
       val path = Paths.get("target", "ep-firstVersion",  "scala", approachName, systemName, u.persistTo.toString)
       Files.write(path, u.code.toString.getBytes, StandardOpenOption.APPEND, StandardOpenOption.CREATE)
     })
@@ -38,7 +38,6 @@ abstract class BaseTest(val id:String) {
     nanoTime - now
   }
 }
-
 
 object OOTest extends App {
 

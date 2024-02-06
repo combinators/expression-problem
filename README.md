@@ -385,6 +385,23 @@ To generate the code for system M3, type the following in SBT:
 </code></pre>
 
 This solution only generates for the first three evolutions. 
+
+# Generate All code
+
+If you just want to generate all code for the different approaches, then do the following:
+
+<pre><code>
+<b style='color:#5FCA1C'>></b> set %JAVA_HOME%=c:\progra~2\java\jdk1.8.0_161
+<b style='color:#5FCA1C'>></b> sbt
+<b style='color:#5FCA1C'>sbt:expression-problem></b> language-cpp/runMain org.combinators.ep.language.cpp.GenerateAll
+<b style='color:#5FCA1C'>sbt:expression-problem></b> language-haskell/runMain org.combinators.ep.language.haskell.GenerateAll
+<b style='color:#5FCA1C'>sbt:expression-problem></b> language-java/runMain org.combinators.ep.language.java.GenerateAll
+<b style='color:#5FCA1C'>sbt:expression-problem></b> language-scala/runMain org.combinators.ep.language.scala.GenerateAll
+<b style='color:#5FCA1C'>sbt:expression-problem></b> exit
+</code></pre>
+
+Inside the `target\ep-firstVersion` folder, you will find all the generated code.
+
 # References
 
 1. Wadler, Philip, [Email to to Java Genericity Mailing List](http://homepages.inf.ed.ac.uk/wadler/papers/expression/expression.txt)

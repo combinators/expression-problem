@@ -61,12 +61,6 @@ object OOTest extends App {
       case "e4" => new BaseTest("e4") {
         override val gen = new WithDomain(MathDomain) with OderskyGenerator with FunSpecTestGenerator with e0 with e1 with e2 with e3 with e4
       }
-      case "e5" => new BaseTest("e5") {
-        override val gen = new WithDomain(MathDomain) with OderskyGenerator with FunSpecTestGenerator with e0 with e1 with e2 with e3 with e4 with e5
-      }
-      case "e6" => new BaseTest("e6") {
-        override val gen = new WithDomain(MathDomain) with OderskyGenerator with FunSpecTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6
-      }
 
       case _ => ???
     }
@@ -96,12 +90,7 @@ object StraightTest extends App {
       case "e4" => new BaseTest("e4") {
         override val gen = new WithDomain(MathDomain) with OOGenerator with FunSpecTestGenerator with e0 with e1 with e2 with e3 with e4
       }
-      case "e5" => new BaseTest("e5") {
-        override val gen = new WithDomain(MathDomain) with OOGenerator with FunSpecTestGenerator with e0 with e1 with e2 with e3 with e4 with e5
-      }
-      case "e6" => new BaseTest("e6") {
-        override val gen = new WithDomain(MathDomain) with OOGenerator with FunSpecTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6
-      }
+
 
       case _ => ???
     }
@@ -130,12 +119,7 @@ object FunctionalTest extends App {
       case "e4" => new BaseTest("e4") {
         override val gen = new WithDomain(MathDomain) with FunctionalGenerator with FunSpecFunctionalTestGenerator with e0 with e1 with e2 with e3 with e4
       }
-      case "e5" => new BaseTest("e5") {
-        override val gen = new WithDomain(MathDomain) with FunctionalGenerator with FunSpecFunctionalTestGenerator with e0 with e1 with e2 with e3 with e4 with e5
-      }
-      case "e6" => new BaseTest("e6") {
-        override val gen = new WithDomain(MathDomain) with FunctionalGenerator with FunSpecFunctionalTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6
-      }
+
 
       case _ => ???
     }
@@ -146,7 +130,7 @@ object GenerateApproach extends App {
   println ("Generating code...")
 
   // Choose your own adventure. Cannot go higher than e4 for now...
-  val approach = "functional"
+  val approach = "oo"
   val system = "e4"
 
   approach match {

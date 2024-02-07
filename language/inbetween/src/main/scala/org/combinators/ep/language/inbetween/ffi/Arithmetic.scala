@@ -8,7 +8,7 @@ import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
 // cannot find 'arithmetic'
-trait Arithmetic[FT <: operatorExpression.FinalTypes, FactoryType <: arithmetic.Factory[FT], T] extends Arith[any.Method[FT], T] {
+trait Arithmetic[FT <: OperatorExpressionOps.FinalTypes, FactoryType <: ArithmeticOps.Factory[FT], T] extends Arith[any.Method[FT], T] {
   val base: AnyParadigm.WithFT[FT, FactoryType]
   import base.factory
   val arithmeticCapabilities: ArithmeticCapabilities = new ArithmeticCapabilities {
@@ -58,8 +58,43 @@ trait Arithmetic[FT <: operatorExpression.FinalTypes, FactoryType <: arithmetic.
   def enable(): Generator[any.Project[FT], Unit] = Command.skip[any.Project[FT]]
 }
 object Arithmetic {
-  type WithBase[FT <: operatorExpression.FinalTypes, FactoryType <: arithmetic.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType], T] = Arithmetic[FT, FactoryType, T] { val base: B }
-  def apply[FT <: operatorExpression.FinalTypes, FactoryType <: arithmetic.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType], T](_base: B): WithBase[FT, FactoryType, _base.type, T] = new Arithmetic[FT, FactoryType, T] {
+  type WithBase[FT <: OperatorExpressionOps.FinalTypes, FactoryType <: ArithmeticOps.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType], T] = Arithmetic[FT, FactoryType, T] { val base: B }
+  def apply[FT <: OperatorExpressionOps.FinalTypes, FactoryType <: ArithmeticOps.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType], T](_base: B): WithBase[FT, FactoryType, _base.type, T] = new Arithmetic[FT, FactoryType, T] {
     val base: _base.type = _base
+  }
+}
+
+object ArithmeticOps {
+  trait AddOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
+  trait SubOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
+  trait MultOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
+  trait DivOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
+  trait ModOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
+  trait LtOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
+  trait LeOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
+
+  trait Factory[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Factory[FT] {
+    def addOp(): AddOp[FT]
+    def subOp(): SubOp[FT]
+    def multOp(): MultOp[FT]
+    def divOp(): DivOp[FT]
+    def modOp(): ModOp[FT]
+    def ltOp(): LtOp[FT]
+    def leOp(): LeOp[FT]
+
+    def add(left: any.Expression[FT], right: any.Expression[FT]): OperatorExpressionOps.BinaryExpression[FT] =
+      binaryExpression(addOp(), left, right)
+    def sub(left: any.Expression[FT], right: any.Expression[FT]): OperatorExpressionOps.BinaryExpression[FT] =
+      binaryExpression(subOp(), left, right)
+    def mult(left: any.Expression[FT], right: any.Expression[FT]): OperatorExpressionOps.BinaryExpression[FT] =
+      binaryExpression(multOp(), left, right)
+    def div(left: any.Expression[FT], right: any.Expression[FT]): OperatorExpressionOps.BinaryExpression[FT] =
+      binaryExpression(divOp(), left, right)
+    def mod(left: any.Expression[FT], right: any.Expression[FT]): OperatorExpressionOps.BinaryExpression[FT] =
+      binaryExpression(modOp(), left, right)
+    def lt(left: any.Expression[FT], right: any.Expression[FT]): OperatorExpressionOps.BinaryExpression[FT] =
+      binaryExpression(ltOp(), left, right)
+    def le(left: any.Expression[FT], right: any.Expression[FT]): OperatorExpressionOps.BinaryExpression[FT] =
+      binaryExpression(leOp(), left, right)
   }
 }

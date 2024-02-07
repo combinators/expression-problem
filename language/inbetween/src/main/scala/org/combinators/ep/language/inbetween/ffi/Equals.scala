@@ -10,7 +10,7 @@ import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.generator.Command
 
 
-trait Equals[FT <: operatorExpression.FinalTypes, FactoryType <: eqls.Factory[FT]] extends Eqls[any.Method[FT]] {
+trait Equals[FT <: OperatorExpressionOps.FinalTypes, FactoryType <: EqualsOps.Factory[FT]] extends Eqls[any.Method[FT]] {
   val base: AnyParadigm.WithFT[FT, FactoryType]
   import base.factory
 
@@ -25,8 +25,26 @@ trait Equals[FT <: operatorExpression.FinalTypes, FactoryType <: eqls.Factory[FT
 }
 
 object Equals {
-  type WithBase[FT <: operatorExpression.FinalTypes, FactoryType <: eqls.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]] = Equals[FT, FactoryType] { val base: B }
-  def apply[FT <: operatorExpression.FinalTypes, FactoryType <: eqls.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]](_base: B): WithBase[FT, FactoryType, _base.type] = new Equals[FT, FactoryType] {
+  type WithBase[FT <: OperatorExpressionOps.FinalTypes, FactoryType <: EqualsOps.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]] = Equals[FT, FactoryType] { val base: B }
+  def apply[FT <: OperatorExpressionOps.FinalTypes, FactoryType <: EqualsOps.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]](_base: B): WithBase[FT, FactoryType, _base.type] = new Equals[FT, FactoryType] {
     val base: _base.type = _base
+  }
+}
+
+object EqualsOps {
+  trait Equals[FT <: any.FinalTypes] extends any.Expression[FT] with Factory[FT] {
+    def tpe: any.Type[FT]
+    def left: any.Expression[FT]
+    def right: any.Expression[FT]
+
+    def copy(
+      tpe: any.Type[FT],
+      left: any.Expression[FT] = left,
+      right: any.Expression[FT] = right
+    ): Equals[FT] = equals(tpe, left, right)
+  }
+
+  trait Factory[FT <: any.FinalTypes] extends any.Factory[FT] {
+    def equals(tpe: any.Type[FT], left: any.Expression[FT], right: any.Expression[FT]): Equals[FT]
   }
 }

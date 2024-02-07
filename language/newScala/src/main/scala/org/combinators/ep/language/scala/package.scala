@@ -7,15 +7,15 @@ import org.combinators.ep.generator.NameProvider
 import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.oo
 import org.combinators.ep.language.inbetween.imperative
-import org.combinators.ep.language.inbetween.ffi.arithmetic
-import org.combinators.ep.language.inbetween.ffi.realArithmetic
-import org.combinators.ep.language.inbetween.ffi.assertions
-import org.combinators.ep.language.inbetween.ffi.boolean
-import org.combinators.ep.language.inbetween.ffi.eqls
-import org.combinators.ep.language.inbetween.ffi.operatorExpression
-import org.combinators.ep.language.inbetween.ffi.strings
-import org.combinators.ep.language.inbetween.ffi.lists
-import org.combinators.ep.language.inbetween.ffi.trees
+import org.combinators.ep.language.inbetween.ffi.ArithmeticOps
+import org.combinators.ep.language.inbetween.ffi.RealArithmeticOps
+import org.combinators.ep.language.inbetween.ffi.AssertionOps
+import org.combinators.ep.language.inbetween.ffi.BooleanOps
+import org.combinators.ep.language.inbetween.ffi.EqualsOps
+import org.combinators.ep.language.inbetween.ffi.OperatorExpressionOps
+import org.combinators.ep.language.inbetween.ffi.StringOps
+import org.combinators.ep.language.inbetween.ffi.ListOps
+import org.combinators.ep.language.inbetween.ffi.TreeOps
 import org.combinators.ep.language.inbetween.polymorphism.generics
 import org.combinators.ep.language.inbetween.polymorphism
 import org.combinators.ep.language.inbetween.oo.{Class, Constructor}
@@ -27,9 +27,9 @@ package object scala {
     extends any.FinalTypes
       with oo.FinalTypes
       with imperative.FinalTypes
-      with operatorExpression.FinalTypes
-      with lists.FinalTypes
-      with trees.FinalTypes
+      with OperatorExpressionOps.FinalTypes
+      with ListOps.FinalTypes
+      with TreeOps.FinalTypes
       with generics.FinalTypes {
     type ReifiedScalaValue[T] <: Expression
   }
@@ -232,26 +232,26 @@ package object scala {
       )
   }
 
-  trait BinaryExpression[FT <: FinalTypes] extends Expression[FT] with operatorExpression.BinaryExpression[FT] with Factory[FT] {
+  trait BinaryExpression[FT <: FinalTypes] extends Expression[FT] with OperatorExpressionOps.BinaryExpression[FT] with Factory[FT] {
     def toScala: String = operator.toScala(left, right)
 
-    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): operatorExpression.BinaryExpression[FT] =
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): OperatorExpressionOps.BinaryExpression[FT] =
       copy(
         left = left.prefixRootPackage(rootPackageName, excludedTypeNames),
         right = right.prefixRootPackage(rootPackageName, excludedTypeNames)
       )
   }
 
-  trait UnaryExpression[FT <: FinalTypes] extends Expression[FT] with operatorExpression.UnaryExpression[FT] with Factory[FT] {
+  trait UnaryExpression[FT <: FinalTypes] extends Expression[FT] with OperatorExpressionOps.UnaryExpression[FT] with Factory[FT] {
     def toScala: String = operator.toScala(operand)
 
-    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): operatorExpression.UnaryExpression[FT] =
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): OperatorExpressionOps.UnaryExpression[FT] =
       copy(
         operand = operand.prefixRootPackage(rootPackageName, excludedTypeNames)
       )
   }
 
-  trait Operator[FT <: FinalTypes] extends operatorExpression.Operator[FT] with Factory[FT] {
+  trait Operator[FT <: FinalTypes] extends OperatorExpressionOps.Operator[FT] with Factory[FT] {
     def toScala(operands: any.Expression[FT]*): String
   }
 
@@ -277,107 +277,107 @@ package object scala {
     def toScala(operands: any.Expression[FT]*): String = s"(${operands.head.toScala}${operator})"
   }
 
-  trait AddOp[FT <: FinalTypes] extends arithmetic.AddOp[FT] with Operator[FT] with Factory[FT] with InfixOperator[FT] {
+  trait AddOp[FT <: FinalTypes] extends ArithmeticOps.AddOp[FT] with Operator[FT] with Factory[FT] with InfixOperator[FT] {
     override def operator: String = "+"
   }
 
-  trait SubOp[FT <: FinalTypes] extends arithmetic.SubOp[FT] with Operator[FT] with Factory[FT] with InfixOperator[FT] {
+  trait SubOp[FT <: FinalTypes] extends ArithmeticOps.SubOp[FT] with Operator[FT] with Factory[FT] with InfixOperator[FT] {
     override def operator: String = "-"
   }
 
-  trait MultOp[FT <: FinalTypes] extends arithmetic.MultOp[FT] with Operator[FT] with Factory[FT] with InfixOperator[FT] {
+  trait MultOp[FT <: FinalTypes] extends ArithmeticOps.MultOp[FT] with Operator[FT] with Factory[FT] with InfixOperator[FT] {
     override def operator: String = "*"
   }
 
-  trait DivOp[FT <: FinalTypes] extends arithmetic.DivOp[FT] with Operator[FT] with Factory[FT] with InfixOperator[FT] {
+  trait DivOp[FT <: FinalTypes] extends ArithmeticOps.DivOp[FT] with Operator[FT] with Factory[FT] with InfixOperator[FT] {
     override def operator: String = "/"
   }
 
-  trait ModOp[FT <: FinalTypes] extends arithmetic.ModOp[FT] with Operator[FT] with Factory[FT] with InfixOperator[FT] {
+  trait ModOp[FT <: FinalTypes] extends ArithmeticOps.ModOp[FT] with Operator[FT] with Factory[FT] with InfixOperator[FT] {
     override def operator: String = "%"
   }
 
-  trait LtOp[FT <: FinalTypes] extends arithmetic.LtOp[FT] with Operator[FT] with Factory[FT] with InfixOperator[FT] {
+  trait LtOp[FT <: FinalTypes] extends ArithmeticOps.LtOp[FT] with Operator[FT] with Factory[FT] with InfixOperator[FT] {
     override def operator: String = "<"
   }
 
-  trait LeOp[FT <: FinalTypes] extends arithmetic.LeOp[FT] with Operator[FT] with Factory[FT] with InfixOperator[FT] {
+  trait LeOp[FT <: FinalTypes] extends ArithmeticOps.LeOp[FT] with Operator[FT] with Factory[FT] with InfixOperator[FT] {
     override def operator: String = "<="
   }
 
-  trait AndOp[FT <: FinalTypes] extends boolean.AndOp[FT] with Operator[FT] with Factory[FT] with InfixOperator[FT] {
+  trait AndOp[FT <: FinalTypes] extends BooleanOps.AndOp[FT] with Operator[FT] with Factory[FT] with InfixOperator[FT] {
     override def operator: String = "&&"
   }
 
-  trait OrOp[FT <: FinalTypes] extends boolean.OrOp[FT] with Operator[FT] with Factory[FT] with InfixOperator[FT] {
+  trait OrOp[FT <: FinalTypes] extends BooleanOps.OrOp[FT] with Operator[FT] with Factory[FT] with InfixOperator[FT] {
     override def operator: String = "||"
   }
 
-  trait NotOp[FT <: FinalTypes] extends boolean.NotOp[FT] with Operator[FT] with Factory[FT] with PrefixOperator[FT] {
+  trait NotOp[FT <: FinalTypes] extends BooleanOps.NotOp[FT] with Operator[FT] with Factory[FT] with PrefixOperator[FT] {
     override def operator: String = "!"
   }
 
-  trait SqrtOp[FT <: FinalTypes] extends realArithmetic.SqrtOp[FT] with Operator[FT] with Factory[FT] with MathFunctionOperator[FT] {
+  trait SqrtOp[FT <: FinalTypes] extends RealArithmeticOps.SqrtOp[FT] with Operator[FT] with Factory[FT] with MathFunctionOperator[FT] {
     override def operator: String = "sqrt"
   }
 
-  trait PowOp[FT <: FinalTypes] extends realArithmetic.PowOp[FT] with Operator[FT] with Factory[FT] with MathFunctionOperator[FT] {
+  trait PowOp[FT <: FinalTypes] extends RealArithmeticOps.PowOp[FT] with Operator[FT] with Factory[FT] with MathFunctionOperator[FT] {
     override def operator: String = "pow"
   }
 
-  trait LogOp[FT <: FinalTypes] extends realArithmetic.LogOp[FT] with Operator[FT] with Factory[FT] with MathFunctionOperator[FT] {
+  trait LogOp[FT <: FinalTypes] extends RealArithmeticOps.LogOp[FT] with Operator[FT] with Factory[FT] with MathFunctionOperator[FT] {
     override def operator: String = "log"
   }
 
-  trait SinOp[FT <: FinalTypes] extends realArithmetic.SinOp[FT] with Operator[FT] with Factory[FT] with MathFunctionOperator[FT] {
+  trait SinOp[FT <: FinalTypes] extends RealArithmeticOps.SinOp[FT] with Operator[FT] with Factory[FT] with MathFunctionOperator[FT] {
     override def operator: String = "sin"
   }
 
-  trait CosOp[FT <: FinalTypes] extends realArithmetic.CosOp[FT] with Operator[FT] with Factory[FT] with MathFunctionOperator[FT] {
+  trait CosOp[FT <: FinalTypes] extends RealArithmeticOps.CosOp[FT] with Operator[FT] with Factory[FT] with MathFunctionOperator[FT] {
     override def operator: String = "cos"
   }
 
-  trait AbsOp[FT <: FinalTypes] extends realArithmetic.AbsOp[FT] with Operator[FT] with Factory[FT] with MathFunctionOperator[FT] {
+  trait AbsOp[FT <: FinalTypes] extends RealArithmeticOps.AbsOp[FT] with Operator[FT] with Factory[FT] with MathFunctionOperator[FT] {
     override def operator: String = "abs"
   }
 
-  trait FloorOp[FT <: FinalTypes] extends realArithmetic.FloorOp[FT] with Operator[FT] with Factory[FT] with MathFunctionOperator[FT] {
+  trait FloorOp[FT <: FinalTypes] extends RealArithmeticOps.FloorOp[FT] with Operator[FT] with Factory[FT] with MathFunctionOperator[FT] {
     override def operator: String = "floor"
   }
 
-  trait EulersNumber[FT <: FinalTypes] extends realArithmetic.EulersNumber[FT] with Expression[FT] with Factory[FT] {
+  trait EulersNumber[FT <: FinalTypes] extends RealArithmeticOps.EulersNumber[FT] with Expression[FT] with Factory[FT] {
     override def toScala: String = "Math.E"
 
-    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): realArithmetic.EulersNumber[FT] =
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): RealArithmeticOps.EulersNumber[FT] =
       this
   }
 
-  trait Pi[FT <: FinalTypes] extends realArithmetic.Pi[FT] with Expression[FT] with Factory[FT] {
+  trait Pi[FT <: FinalTypes] extends RealArithmeticOps.Pi[FT] with Expression[FT] with Factory[FT] {
     override def toScala: String = "Math.PI"
 
-    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): realArithmetic.Pi[FT] =
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): RealArithmeticOps.Pi[FT] =
       this
   }
 
 
-  trait True[FT <: FinalTypes] extends boolean.True[FT] with Expression[FT] with Factory[FT] {
+  trait True[FT <: FinalTypes] extends BooleanOps.True[FT] with Expression[FT] with Factory[FT] {
     override def toScala: String = "true"
 
-    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): boolean.True[FT] =
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): BooleanOps.True[FT] =
       this
   }
 
-  trait False[FT <: FinalTypes] extends boolean.False[FT] with Expression[FT] with Factory[FT] {
+  trait False[FT <: FinalTypes] extends BooleanOps.False[FT] with Expression[FT] with Factory[FT] {
     override def toScala: String = "false"
 
-    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): boolean.False[FT] =
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): BooleanOps.False[FT] =
       this
   }
 
-  trait Equals[FT <: FinalTypes] extends eqls.Equals[FT] with Expression[FT] with Factory[FT] {
+  trait Equals[FT <: FinalTypes] extends EqualsOps.Equals[FT] with Expression[FT] with Factory[FT] {
     def toScala: String = s"${left.toScala} == ${right.toScala}"
 
-    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): eqls.Equals[FT] =
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): EqualsOps.Equals[FT] =
       copy(
         tpe = tpe.prefixRootPackage(rootPackageName, excludedTypeNames),
         left = left.prefixRootPackage(rootPackageName, excludedTypeNames),
@@ -756,65 +756,65 @@ package object scala {
     }
   }
 
-  trait ToStringOp[FT <: FinalTypes] extends strings.ToStringOp[FT] with Operator[FT] with PostfixOperator[FT] {
+  trait ToStringOp[FT <: FinalTypes] extends StringOps.ToStringOp[FT] with Operator[FT] with PostfixOperator[FT] {
     def operator: String = ".toString()"
   }
 
-  trait AppendStringOp[FT <: FinalTypes] extends strings.AppendStringOp[FT] with Operator[FT] with InfixOperator[FT] {
+  trait AppendStringOp[FT <: FinalTypes] extends StringOps.AppendStringOp[FT] with Operator[FT] with InfixOperator[FT] {
     def operator: String = "++"
   }
-  trait StringLengthOp[FT <: FinalTypes] extends strings.StringLengthOp[FT] with Operator[FT] with PostfixOperator[FT] {
+  trait StringLengthOp[FT <: FinalTypes] extends StringOps.StringLengthOp[FT] with Operator[FT] with PostfixOperator[FT] {
     def operator: String = ".length"
   }
-  trait AssertTrueOp[FT <: FinalTypes] extends assertions.AssertTrueOp[FT] with Operator[FT] with PrefixOperator[FT] {
+  trait AssertTrueOp[FT <: FinalTypes] extends AssertionOps.AssertTrueOp[FT] with Operator[FT] with PrefixOperator[FT] {
     def operator: String = "assert "
   }
 
-  trait CreateList[FT <: FinalTypes] extends lists.CreateList[FT] with Type[FT] {
+  trait CreateList[FT <: FinalTypes] extends ListOps.CreateList[FT] with Type[FT] {
     def toScala: String = "Seq"
 
-    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): lists.CreateList[FT] =
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): ListOps.CreateList[FT] =
       this
     def toImport: Seq[any.Import[FT]] = Seq.empty
   }
 
-  trait CreateLeaf[FT <: FinalTypes] extends trees.CreateLeaf[FT] with Type[FT] {
+  trait CreateLeaf[FT <: FinalTypes] extends TreeOps.CreateLeaf[FT] with Type[FT] {
     def leafClass: oo.ClassReferenceType[FT]
     def toScala: String = leafClass.toScala
 
-    def copyWithLeafClass(leafClass: oo.ClassReferenceType[FT] = leafClass): trees.CreateLeaf[FT] =
+    def copyWithLeafClass(leafClass: oo.ClassReferenceType[FT] = leafClass): TreeOps.CreateLeaf[FT] =
       createLeafWithLeafClass(leafClass)
 
-    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): trees.CreateLeaf[FT] =
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): TreeOps.CreateLeaf[FT] =
       copyWithLeafClass(leafClass = leafClass.prefixRootPackage(rootPackageName, excludedTypeNames))
 
     def toImport: Seq[any.Import[FT]] = leafClass.toImport
   }
 
-  trait CreateNodeExpr[FT <: FinalTypes] extends trees.CreateNodeExpr[FT] with Expression[FT] {
+  trait CreateNodeExpr[FT <: FinalTypes] extends TreeOps.CreateNodeExpr[FT] with Expression[FT] {
     def nodeClass: oo.ClassReferenceType[FT]
     def toScala: String = nodeClass.toScala
 
-    def copyWithNodeClass(nodeClass: oo.ClassReferenceType[FT] = nodeClass): trees.CreateNodeExpr[FT] =
+    def copyWithNodeClass(nodeClass: oo.ClassReferenceType[FT] = nodeClass): TreeOps.CreateNodeExpr[FT] =
       createNodeExprWithNodeClass(nodeClass)
 
-    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): trees.CreateNodeExpr[FT] =
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): TreeOps.CreateNodeExpr[FT] =
       copyWithNodeClass(nodeClass = nodeClass.prefixRootPackage(rootPackageName, excludedTypeNames))
   }
 
-  trait ConsListOp[FT <: FinalTypes] extends lists.ConsListOp[FT] with Operator[FT] with InfixOperator[FT] {
+  trait ConsListOp[FT <: FinalTypes] extends ListOps.ConsListOp[FT] with Operator[FT] with InfixOperator[FT] {
     def operator: String = "+:"
   }
 
-  trait HeadListOp[FT <: FinalTypes] extends lists.HeadListOp[FT] with Operator[FT] with PostfixOperator[FT] {
+  trait HeadListOp[FT <: FinalTypes] extends ListOps.HeadListOp[FT] with Operator[FT] with PostfixOperator[FT] {
     def operator: String = ".head"
   }
 
-  trait TailListOp[FT <: FinalTypes] extends lists.TailListOp[FT] with Operator[FT] with PostfixOperator[FT] {
+  trait TailListOp[FT <: FinalTypes] extends ListOps.TailListOp[FT] with Operator[FT] with PostfixOperator[FT] {
     def operator: String = ".tail"
   }
 
-  trait AppendListOp[FT <: FinalTypes] extends lists.AppendListOp[FT] with Operator[FT] with InfixOperator[FT] {
+  trait AppendListOp[FT <: FinalTypes] extends ListOps.AppendListOp[FT] with Operator[FT] with InfixOperator[FT] {
     def operator: String = "++"
   }
 
@@ -822,15 +822,15 @@ package object scala {
     extends any.Factory[FT]
     with oo.Factory[FT]
     with imperative.Factory[FT]
-    with arithmetic.Factory[FT]
-    with realArithmetic.Factory[FT]
-    with assertions.Factory[FT]
-    with boolean.Factory[FT]
-    with eqls.Factory[FT]
-    with operatorExpression.Factory[FT]
-    with strings.Factory[FT]
-    with lists.Factory[FT]
-    with trees.Factory[FT]
+    with ArithmeticOps.Factory[FT]
+    with RealArithmeticOps.Factory[FT]
+    with AssertionOps.Factory[FT]
+    with BooleanOps.Factory[FT]
+    with EqualsOps.Factory[FT]
+    with OperatorExpressionOps.Factory[FT]
+    with StringOps.Factory[FT]
+    with ListOps.Factory[FT]
+    with TreeOps.Factory[FT]
     with generics.Factory[FT] {
 
     def name(name: String, mangled: String): Name[FT]
@@ -839,14 +839,14 @@ package object scala {
     def reifiedScalaValue[T](ofHostType: OfHostType[T], value: T): ReifiedScalaValue[FT, T]
 
 
-    override def createNodeExpr(): trees.CreateNodeExpr[FT] = {
+    override def createNodeExpr(): TreeOps.CreateNodeExpr[FT] = {
       createNodeExprWithNodeClass(classReferenceType(
         Seq("org", "combinators", "ep", "util", "Node").map(n => name(n, n)):_*
       ))
     }
     def createNodeExprWithNodeClass(nodeClass: oo.ClassReferenceType[FT]): CreateNodeExpr[FT]
 
-    override def createLeaf(): trees.CreateLeaf[FT] = {
+    override def createLeaf(): TreeOps.CreateLeaf[FT] = {
       createLeafWithLeafClass(classReferenceType(
         Seq("org", "combinators", "ep", "util", "Leaf").map(n => name(n, n)):_*
       ))
@@ -875,9 +875,9 @@ package object scala {
     implicit def convert(assignVariable: imperative.AssignVariable[FT]): AssignVariable[FT]
     implicit def convert(ifThenElse: imperative.IfThenElse[FT]): IfThenElse[FT]
     implicit def convert(whileLoop: imperative.While[FT]): While[FT]
-    implicit def convert(operator: operatorExpression.Operator[FT]): Operator[FT]
-    implicit def convert(binaryExpression: operatorExpression.BinaryExpression[FT]): BinaryExpression[FT]
-    implicit def convert(unaryExpression: operatorExpression.UnaryExpression[FT]): UnaryExpression[FT]
+    implicit def convert(operator: OperatorExpressionOps.Operator[FT]): Operator[FT]
+    implicit def convert(binaryExpression: OperatorExpressionOps.BinaryExpression[FT]): BinaryExpression[FT]
+    implicit def convert(unaryExpression: OperatorExpressionOps.UnaryExpression[FT]): UnaryExpression[FT]
 
     implicit def convert[T](reifiedScalaValue: ReifiedScalaValue[FT, T]): ReifiedScalaValue[FT, T]
     implicit def convert(other: any.ApplyExpression[FT]): ApplyExpression[FT]
@@ -889,8 +889,8 @@ package object scala {
     override implicit def convert(other: polymorphism.TypeArgument[FT]): TypeArgument[FT]
     override implicit def convert(other: polymorphism.TypeApplication[FT]): TypeApplication[FT]
 
-    implicit def convert(other: trees.CreateLeaf[FT]): CreateLeaf[FT]
-    implicit def convert(other: trees.CreateNodeExpr[FT]): CreateNodeExpr[FT]
+    implicit def convert(other: TreeOps.CreateLeaf[FT]): CreateLeaf[FT]
+    implicit def convert(other: TreeOps.CreateNodeExpr[FT]): CreateNodeExpr[FT]
 
 
   }
@@ -939,11 +939,11 @@ package object scala {
 
       def name(name: String, mangled: String): Name = Name(name, mangled)
       override def importStatement(components: Seq[any.Name[FinalTypes]]): Import = Import(components)
-      override def binaryExpression(operator: operatorExpression.Operator[FinalTypes], left: any.Expression[FinalTypes], right: any.Expression[FinalTypes]): operatorExpression.BinaryExpression[FinalTypes] = BinaryExpression(operator, left, right)
-      override def unaryExpression(operator: operatorExpression.Operator[FinalTypes], operand: any.Expression[FinalTypes]): operatorExpression.UnaryExpression[FinalTypes] = UnaryExpression(operator, operand)
-      implicit def convert(operator: operatorExpression.Operator[FinalTypes]): Operator = operator.getSelfOperator
-      implicit def convert(binaryExpression: operatorExpression.BinaryExpression[FinalTypes]): BinaryExpression = binaryExpression.getSelfBinaryExpression
-      implicit def convert(unaryExpression: operatorExpression.UnaryExpression[FinalTypes]): UnaryExpression = unaryExpression.getSelfUnaryExpression
+      override def binaryExpression(operator: OperatorExpressionOps.Operator[FinalTypes], left: any.Expression[FinalTypes], right: any.Expression[FinalTypes]): OperatorExpressionOps.BinaryExpression[FinalTypes] = BinaryExpression(operator, left, right)
+      override def unaryExpression(operator: OperatorExpressionOps.Operator[FinalTypes], operand: any.Expression[FinalTypes]): OperatorExpressionOps.UnaryExpression[FinalTypes] = UnaryExpression(operator, operand)
+      implicit def convert(operator: OperatorExpressionOps.Operator[FinalTypes]): Operator = operator.getSelfOperator
+      implicit def convert(binaryExpression: OperatorExpressionOps.BinaryExpression[FinalTypes]): BinaryExpression = binaryExpression.getSelfBinaryExpression
+      implicit def convert(unaryExpression: OperatorExpressionOps.UnaryExpression[FinalTypes]): UnaryExpression = unaryExpression.getSelfUnaryExpression
       override def compilationUnit(name: Seq[any.Name[FinalTypes]],
         imports: Seq[any.Import[FinalTypes]],
         methodTypeLookupMap: TypeRep => Generator[any.Method[FinalTypes], any.Type[FinalTypes]] = Map.empty,
@@ -993,28 +993,28 @@ package object scala {
       implicit def convert(other: oo.CastExpression[FinalTypes]): CastExpression = other.getSelfCastExpression
       implicit def convert(other: oo.InstanceOfExpression[FinalTypes]): InstanceOfExpression = other.getSelfInstanceOfExpression
       implicit def convert(other: oo.SuperReferenceExpression[FinalTypes]): SuperReferenceExpression = other.getSelfSuperReferenceExpression
-      override def addOp(): arithmetic.AddOp[FinalTypes] = AddOp()
-      override def subOp(): arithmetic.SubOp[FinalTypes] = SubOp()
-      override def multOp(): arithmetic.MultOp[FinalTypes] = MultOp()
-      override def divOp(): arithmetic.DivOp[FinalTypes] = DivOp()
-      override def modOp(): arithmetic.ModOp[FinalTypes] = ModOp()
-      def sqrtOp(): realArithmetic.SqrtOp[FinalTypes] = SqrtOp()
-      def powOp(): realArithmetic.PowOp[FinalTypes] = PowOp()
-      def logOp(): realArithmetic.LogOp[FinalTypes] = LogOp()
-      def sinOp(): realArithmetic.SinOp[FinalTypes] = SinOp()
-      def cosOp(): realArithmetic.CosOp[FinalTypes] = CosOp()
-      def absOp(): realArithmetic.AbsOp[FinalTypes] = AbsOp()
-      def floorOp(): realArithmetic.FloorOp[FinalTypes] = FloorOp()
-      def pi(): realArithmetic.Pi[FinalTypes] = Pi()
-      def eulersNumber(): realArithmetic.EulersNumber[FinalTypes] = EulersNumber()
-      override def ltOp(): arithmetic.LtOp[FinalTypes] = LtOp()
-      override def leOp(): arithmetic.LeOp[FinalTypes] = LeOp()
-      override def equals(tpe: any.Type[FinalTypes], left: any.Expression[FinalTypes], right: any.Expression[FinalTypes]): eqls.Equals[FinalTypes] = Equals(tpe, left, right)
-      override def andOp(): boolean.AndOp[FinalTypes] = AndOp()
-      override def orOp(): boolean.OrOp[FinalTypes] = OrOp()
-      override def notOp(): boolean.NotOp[FinalTypes] = NotOp()
-      override def trueExp(): boolean.True[FinalTypes] = True()
-      override def falseExp(): boolean.False[FinalTypes] = False()
+      override def addOp(): ArithmeticOps.AddOp[FinalTypes] = AddOp()
+      override def subOp(): ArithmeticOps.SubOp[FinalTypes] = SubOp()
+      override def multOp(): ArithmeticOps.MultOp[FinalTypes] = MultOp()
+      override def divOp(): ArithmeticOps.DivOp[FinalTypes] = DivOp()
+      override def modOp(): ArithmeticOps.ModOp[FinalTypes] = ModOp()
+      def sqrtOp(): RealArithmeticOps.SqrtOp[FinalTypes] = SqrtOp()
+      def powOp(): RealArithmeticOps.PowOp[FinalTypes] = PowOp()
+      def logOp(): RealArithmeticOps.LogOp[FinalTypes] = LogOp()
+      def sinOp(): RealArithmeticOps.SinOp[FinalTypes] = SinOp()
+      def cosOp(): RealArithmeticOps.CosOp[FinalTypes] = CosOp()
+      def absOp(): RealArithmeticOps.AbsOp[FinalTypes] = AbsOp()
+      def floorOp(): RealArithmeticOps.FloorOp[FinalTypes] = FloorOp()
+      def pi(): RealArithmeticOps.Pi[FinalTypes] = Pi()
+      def eulersNumber(): RealArithmeticOps.EulersNumber[FinalTypes] = EulersNumber()
+      override def ltOp(): ArithmeticOps.LtOp[FinalTypes] = LtOp()
+      override def leOp(): ArithmeticOps.LeOp[FinalTypes] = LeOp()
+      override def equals(tpe: any.Type[FinalTypes], left: any.Expression[FinalTypes], right: any.Expression[FinalTypes]): EqualsOps.Equals[FinalTypes] = Equals(tpe, left, right)
+      override def andOp(): BooleanOps.AndOp[FinalTypes] = AndOp()
+      override def orOp(): BooleanOps.OrOp[FinalTypes] = OrOp()
+      override def notOp(): BooleanOps.NotOp[FinalTypes] = NotOp()
+      override def trueExp(): BooleanOps.True[FinalTypes] = True()
+      override def falseExp(): BooleanOps.False[FinalTypes] = False()
       override def declareVariable(name: any.Name[FinalTypes], tpe: any.Type[FinalTypes], initializer: Option[any.Expression[FinalTypes]]): imperative.DeclareVariable[FinalTypes] =
         DeclareVariable(name, tpe, initializer)
       override def assignVariable(variable: any.Expression[FinalTypes], expression: any.Expression[FinalTypes]): imperative.AssignVariable[FinalTypes] =
@@ -1031,10 +1031,10 @@ package object scala {
       implicit def convert(assignVariable: imperative.AssignVariable[FinalTypes]): AssignVariable = assignVariable.getSelfAssignVariable
       implicit def convert(ifThenElse: imperative.IfThenElse[FinalTypes]): IfThenElse = ifThenElse.getSelfIfThenElse
       implicit def convert(whileLoop: imperative.While[FinalTypes]): While = whileLoop.getSelfWhile
-      override def toStringOp(): strings.ToStringOp[FinalTypes] = ToStringOp()
-      override def appendStringOp(): strings.AppendStringOp[FinalTypes] = AppendStringOp()
-      override def stringLengthOp(): strings.StringLengthOp[FinalTypes] = StringLengthOp()
-      override def assertTrueOp(): assertions.AssertTrueOp[FinalTypes] = AssertTrueOp()
+      override def toStringOp(): StringOps.ToStringOp[FinalTypes] = ToStringOp()
+      override def appendStringOp(): StringOps.AppendStringOp[FinalTypes] = AppendStringOp()
+      override def stringLengthOp(): StringOps.StringLengthOp[FinalTypes] = StringLengthOp()
+      override def assertTrueOp(): AssertionOps.AssertTrueOp[FinalTypes] = AssertTrueOp()
 
       override def ooProject(compilationUnits: Set[any.CompilationUnit[FinalTypes]],
         methodTypeLookupMap: TypeRep => Generator[any.Method[FinalTypes], any.Type[FinalTypes]],
@@ -1124,15 +1124,15 @@ package object scala {
 
       override def typeParameterWithBounds(name: any.Name[FinalTypes], upperBounds: Seq[any.Type[FinalTypes]], lowerBounds: Seq[any.Type[FinalTypes]]): TypeParameter =
         TypeParameter(name, lowerBounds = lowerBounds, upperBounds = upperBounds)
-      override def createList(): lists.CreateList[FinalTypes] = CreateList()
+      override def createList(): ListOps.CreateList[FinalTypes] = CreateList()
 
-      override def consListOp(): lists.ConsListOp[FinalTypes] = ConsListOp()
+      override def consListOp(): ListOps.ConsListOp[FinalTypes] = ConsListOp()
 
-      override def headListOp(): lists.HeadListOp[FinalTypes] = HeadListOp()
+      override def headListOp(): ListOps.HeadListOp[FinalTypes] = HeadListOp()
 
-      override def tailListOp(): lists.TailListOp[FinalTypes] = TailListOp()
+      override def tailListOp(): ListOps.TailListOp[FinalTypes] = TailListOp()
 
-      override def appendListOp(): lists.AppendListOp[FinalTypes] = AppendListOp()
+      override def appendListOp(): ListOps.AppendListOp[FinalTypes] = AppendListOp()
 
       override def typeArgument(name: any.Name[FinalTypes]): TypeArgument =
         TypeArgument(name)
@@ -1144,8 +1144,8 @@ package object scala {
         TypeReferenceExpression(tpe)
       def createNodeExprWithNodeClass(nodeClass: oo.ClassReferenceType[FinalTypes]): scala.CreateNodeExpr[FinalTypes] = CreateNodeExpr(nodeClass)
       def createLeafWithLeafClass(leafClass: oo.ClassReferenceType[FinalTypes]): scala.CreateLeaf[FinalTypes] = CreateLeaf(leafClass)
-      implicit def convert(other: trees.CreateLeaf[FinalTypes]): scala.CreateLeaf[FinalTypes] = other.getSelfCreateLeaf
-      implicit def convert(other: trees.CreateNodeExpr[FinalTypes]): scala.CreateNodeExpr[FinalTypes] = other.getSelfCreateNodeExpr
+      implicit def convert(other: TreeOps.CreateLeaf[FinalTypes]): scala.CreateLeaf[FinalTypes] = other.getSelfCreateLeaf
+      implicit def convert(other: TreeOps.CreateNodeExpr[FinalTypes]): scala.CreateNodeExpr[FinalTypes] = other.getSelfCreateNodeExpr
     }
 
     case class Name(override val component: String, override val mangled: String) extends scala.Name[FinalTypes] with Factory {
@@ -1193,7 +1193,7 @@ package object scala {
     }
 
     case class BinaryExpression(
-      override val operator: operatorExpression.Operator[FinalTypes],
+      override val operator: OperatorExpressionOps.Operator[FinalTypes],
       override val left: any.Expression[FinalTypes],
       override val right: any.Expression[FinalTypes]
     )
@@ -1203,7 +1203,7 @@ package object scala {
     }
 
     case class UnaryExpression(
-      override val operator: operatorExpression.Operator[FinalTypes],
+      override val operator: OperatorExpressionOps.Operator[FinalTypes],
       override val operand: any.Expression[FinalTypes]
     )
       extends Expression with scala.UnaryExpression[FinalTypes] with Factory {

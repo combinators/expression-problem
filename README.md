@@ -14,7 +14,7 @@ that you have a working Scala Built Tool (SBT) installation. You should have a w
 installation that is `1.8` and `11`; it should also work with JDK `17`.
 
 On a Windows PC, for example, you would issue the following commands. Note that to eliminate spaces in the Path names, use the old DOS-style
-option to replace "Program Files (x86)" with either progra~2, if the path
+option to replace "Program Files (x86)" with either progra~2 or progra~1, if the path
 to your JDK installation contains spaces.
 
 Once SBT is running, you can launch the language-specific server that will

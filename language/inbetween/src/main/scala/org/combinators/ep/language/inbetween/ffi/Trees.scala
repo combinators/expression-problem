@@ -3,13 +3,13 @@ package org.combinators.ep.language.inbetween.ffi   /*DI:LI:AI*/
 import org.combinators.ep.generator.{Command, Understands}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.Apply
-import org.combinators.ep.language.inbetween.any
+import org.combinators.ep.language.inbetween.{any, polymorphism}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax
 import org.combinators.ep.generator.paradigm.ffi.{CreateLeaf, CreateNode, Trees => Trs}
 
 // cannot find 'trees'
-trait Trees[FT <: trees.FinalTypes, FactoryType <: trees.Factory[FT]] extends Trs[any.Method[FT]] {
+trait Trees[FT <: TreeOps.FinalTypes, FactoryType <: TreeOps.Factory[FT]] extends Trs[any.Method[FT]] {
   val base: AnyParadigm.WithFT[FT, FactoryType]
   import base.factory
   val treeLibrary: Map[Seq[any.Name[FT]], Generator[any.CompilationUnit[FT], Unit]]
@@ -41,12 +41,40 @@ trait Trees[FT <: trees.FinalTypes, FactoryType <: trees.Factory[FT]] extends Tr
 }
 
 object Trees {
-  type WithBase[FT <: trees.FinalTypes, FactoryType <: trees.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]] = Trees[FT, FactoryType] { val base: B }
-  def apply[FT <: trees.FinalTypes, FactoryType <: trees.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]](
-                                                                                                                 _base: B)(
-                                                                                                                 _treeLibrary: Map[Seq[any.Name[FT]], Generator[any.CompilationUnit[FT], Unit]]
-                                                                                                               ): WithBase[FT, FactoryType, _base.type] = new Trees[FT, FactoryType] {
+  type WithBase[FT <: TreeOps.FinalTypes, FactoryType <: TreeOps.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]] = Trees[FT, FactoryType] { val base: B }
+  def apply[FT <: TreeOps.FinalTypes, FactoryType <: TreeOps.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]](
+     _base: B)(
+     _treeLibrary: Map[Seq[any.Name[FT]], Generator[any.CompilationUnit[FT], Unit]]
+   ): WithBase[FT, FactoryType, _base.type] = new Trees[FT, FactoryType] {
     val base: _base.type = _base
     val treeLibrary = _treeLibrary
+  }
+}
+
+object TreeOps {
+
+  trait FinalTypes extends OperatorExpressionOps.FinalTypes with polymorphism.FinalTypes {
+    type CreateLeaf <: Type
+    type CreateNodeExpr <: Expression
+  }
+  trait CreateLeaf[FT <: FinalTypes] extends any.Type[FT] {
+    def getSelfCreateLeaf: finalTypes.CreateLeaf
+  }
+
+  trait CreateNodeExpr[FT <: FinalTypes] extends any.Expression[FT] {
+    def getSelfCreateNodeExpr: finalTypes.CreateNodeExpr
+  }
+  trait Factory[FT <: FinalTypes] extends OperatorExpressionOps.Factory[FT] with polymorphism.Factory[FT] {
+    def createNodeExpr(): CreateNodeExpr[FT]
+    def createLeaf(): CreateLeaf[FT]
+
+    def createNode(label: any.Expression[FT], children: Seq[any.Expression[FT]]): any.ApplyExpression[FT] =
+      applyExpression(createNodeExpr(), label +: children)
+
+    def createLeaf(tpe: any.Type[FT], value: any.Expression[FT]): any.ApplyExpression[FT] =
+      applyExpression(typeReferenceExpression(typeApplication(createLeaf(), Seq(tpe))), Seq(value))
+
+    implicit def convert(other: CreateLeaf[FT]): CreateLeaf[FT]
+    implicit def convert(other: CreateNodeExpr[FT]): CreateNodeExpr[FT]
   }
 }

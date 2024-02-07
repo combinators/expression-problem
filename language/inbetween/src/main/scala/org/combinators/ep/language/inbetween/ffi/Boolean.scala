@@ -10,7 +10,7 @@ import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.generator.Command
 
 // cannot find 'boolean'
-trait Booleans[FT <: operatorExpression.FinalTypes, FactoryType <: boolean.Factory[FT]] extends Bools[any.Method[FT]] {
+trait Booleans[FT <: OperatorExpressionOps.FinalTypes, FactoryType <: BooleanOps.Factory[FT]] extends Bools[any.Method[FT]] {
   val base: AnyParadigm.WithFT[FT, FactoryType]
   import base.factory
   val booleanCapabilities: BooleanCapabilities =
@@ -54,8 +54,33 @@ trait Booleans[FT <: operatorExpression.FinalTypes, FactoryType <: boolean.Facto
 }
 
 object Booleans {
-  type WithBase[FT <: operatorExpression.FinalTypes, FactoryType <: boolean.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]] = Booleans[FT, FactoryType] { val base: B }
-  def apply[FT <: operatorExpression.FinalTypes, FactoryType <: boolean.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]](_base: B): WithBase[FT, FactoryType, _base.type] = new Booleans[FT, FactoryType] {
+  type WithBase[FT <: OperatorExpressionOps.FinalTypes, FactoryType <: BooleanOps.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]] = Booleans[FT, FactoryType] { val base: B }
+  def apply[FT <: OperatorExpressionOps.FinalTypes, FactoryType <: BooleanOps.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]](_base: B): WithBase[FT, FactoryType, _base.type] = new Booleans[FT, FactoryType] {
     val base: _base.type = _base
+  }
+}
+
+object BooleanOps {
+  trait AndOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
+  trait OrOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
+
+  trait NotOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
+
+  trait True[FT <: OperatorExpressionOps.FinalTypes] extends any.Expression[FT]
+  trait False[FT <: OperatorExpressionOps.FinalTypes] extends any.Expression[FT]
+
+  trait Factory[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Factory[FT] {
+    def andOp(): AndOp[FT]
+    def orOp(): OrOp[FT]
+    def notOp(): NotOp[FT]
+
+    def trueExp(): True[FT]
+    def falseExp(): False[FT]
+    def and(left: any.Expression[FT], right: any.Expression[FT]): OperatorExpressionOps.BinaryExpression[FT] =
+      binaryExpression(andOp(), left, right)
+    def or(left: any.Expression[FT], right: any.Expression[FT]): OperatorExpressionOps.BinaryExpression[FT] =
+      binaryExpression(orOp(), left, right)
+    def not(exp: any.Expression[FT]): OperatorExpressionOps.UnaryExpression[FT] =
+      unaryExpression(notOp(), exp)
   }
 }

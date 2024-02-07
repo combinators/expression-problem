@@ -5,12 +5,12 @@ import org.apache.commons.io.FileUtils
 import org.combinators.ep.approach.oo._
 import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions.TestCase
-import org.combinators.ep.domain.math.{eips, _}
+import org.combinators.ep.domain.math._
 import org.combinators.ep.domain.math.systemI.{I1, I2}
 import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.generator.{ApproachImplementationProvider, FileWithPath, FileWithPathPersistable, TestImplementationProvider}
 import org.combinators.ep.language.inbetween.any.AbstractSyntax
-import org.combinators.ep.language.inbetween.ffi.operatorExpression.FinalTypes
+import org.combinators.ep.language.inbetween.ffi.OperatorExpressionOps.FinalTypes
 import org.combinators.jgitserv.{BranchTransaction, GitService}
 
 import java.nio.file.{Path, Paths}

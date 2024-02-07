@@ -8,7 +8,7 @@ import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.generator.paradigm.ffi.{GetStringLength, StringAppend, ToString, Strings => Strs}
 
 // cannot find 'strings'
-trait Strings[FT <: operatorExpression.FinalTypes, FactoryType <: strings.Factory[FT]] extends Strs[any.Method[FT]] {
+trait Strings[FT <: OperatorExpressionOps.FinalTypes, FactoryType <: StringOps.Factory[FT]] extends Strs[any.Method[FT]] {
   val base: AnyParadigm.WithFT[FT, FactoryType]
   import base.factory
 
@@ -37,8 +37,28 @@ trait Strings[FT <: operatorExpression.FinalTypes, FactoryType <: strings.Factor
 }
 
 object Strings {
-  type WithBase[FT <: operatorExpression.FinalTypes, FactoryType <: strings.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]] = Strings[FT, FactoryType] { val base: B }
-  def apply[FT <: operatorExpression.FinalTypes, FactoryType <: strings.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]](_base: B): WithBase[FT, FactoryType, _base.type] = new Strings[FT, FactoryType] {
+  type WithBase[FT <: OperatorExpressionOps.FinalTypes, FactoryType <: StringOps.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]] = Strings[FT, FactoryType] { val base: B }
+  def apply[FT <: OperatorExpressionOps.FinalTypes, FactoryType <: StringOps.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]](_base: B): WithBase[FT, FactoryType, _base.type] = new Strings[FT, FactoryType] {
     val base: _base.type = _base
+  }
+}
+
+object StringOps {
+  trait ToStringOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
+  trait AppendStringOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
+  trait StringLengthOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
+
+
+  trait Factory[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Factory[FT] {
+    def toStringOp(): ToStringOp[FT]
+    def appendStringOp(): AppendStringOp[FT]
+    def stringLengthOp(): StringLengthOp[FT]
+
+    def toString(exp: any.Expression[FT]): OperatorExpressionOps.UnaryExpression[FT] =
+      unaryExpression(toStringOp(), exp)
+    def appendString(left: any.Expression[FT], right: any.Expression[FT]): OperatorExpressionOps.BinaryExpression[FT] =
+      binaryExpression(appendStringOp(), left, right)
+    def stringLength(exp: any.Expression[FT]): OperatorExpressionOps.UnaryExpression[FT] =
+      unaryExpression(stringLengthOp(), exp)
   }
 }

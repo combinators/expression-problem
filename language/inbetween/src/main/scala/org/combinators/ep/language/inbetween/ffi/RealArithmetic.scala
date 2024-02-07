@@ -8,7 +8,7 @@ import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
 // cannot find 'realArithmetic'
-trait RealArithmetic[FT <: operatorExpression.FinalTypes, FactoryType <: realArithmetic.Factory[FT], T] extends RealArith[any.Method[FT], T] {
+trait RealArithmetic[FT <: OperatorExpressionOps.FinalTypes, FactoryType <: RealArithmeticOps.Factory[FT], T] extends RealArith[any.Method[FT], T] {
   val base: AnyParadigm.WithFT[FT, FactoryType]
   import base.factory
   val realArithmeticCapabilities: RealArithmeticCapabilities = new RealArithmeticCapabilities {
@@ -70,8 +70,51 @@ trait RealArithmetic[FT <: operatorExpression.FinalTypes, FactoryType <: realAri
   def enable(): Generator[any.Project[FT], Unit] = Command.skip[any.Project[FT]]
 }
 object RealArithmetic {
-  type WithBase[FT <: operatorExpression.FinalTypes, FactoryType <: realArithmetic.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType], T] = RealArithmetic[FT, FactoryType, T] { val base: B }
-  def apply[FT <: operatorExpression.FinalTypes, FactoryType <: realArithmetic.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType], T](_base: B): WithBase[FT, FactoryType, _base.type, T] = new RealArithmetic[FT, FactoryType, T] {
+  type WithBase[FT <: OperatorExpressionOps.FinalTypes, FactoryType <: RealArithmeticOps.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType], T] = RealArithmetic[FT, FactoryType, T] { val base: B }
+  def apply[FT <: OperatorExpressionOps.FinalTypes, FactoryType <: RealArithmeticOps.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType], T](_base: B): WithBase[FT, FactoryType, _base.type, T] = new RealArithmetic[FT, FactoryType, T] {
     val base: _base.type = _base
+  }
+}
+
+object RealArithmeticOps {
+  trait SqrtOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
+  trait PowOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
+  trait LogOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
+  trait SinOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
+  trait CosOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
+  trait AbsOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
+  trait FloorOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
+
+  trait EulersNumber[FT <: OperatorExpressionOps.FinalTypes] extends any.Expression[FT]
+
+  trait Pi[FT <: OperatorExpressionOps.FinalTypes] extends any.Expression[FT]
+
+
+  trait Factory[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Factory[FT] {
+    def sqrtOp(): SqrtOp[FT]
+    def powOp(): PowOp[FT]
+    def logOp(): LogOp[FT]
+    def sinOp(): SinOp[FT]
+    def cosOp(): CosOp[FT]
+    def absOp(): AbsOp[FT]
+    def floorOp(): FloorOp[FT]
+
+    def pi(): Pi[FT]
+    def eulersNumber(): EulersNumber[FT]
+
+    def sqrt(of: any.Expression[FT]): OperatorExpressionOps.UnaryExpression[FT] =
+      unaryExpression(sqrtOp(), of)
+    def pow(left: any.Expression[FT], right: any.Expression[FT]): OperatorExpressionOps.BinaryExpression[FT] =
+      binaryExpression(powOp(), left, right)
+    def log(of: any.Expression[FT]): OperatorExpressionOps.UnaryExpression[FT] =
+      unaryExpression(logOp(), of)
+    def sin(of: any.Expression[FT]): OperatorExpressionOps.UnaryExpression[FT] =
+      unaryExpression(sinOp(), of)
+    def cos(of: any.Expression[FT]): OperatorExpressionOps.UnaryExpression[FT] =
+      unaryExpression(cosOp(), of)
+    def abs(of: any.Expression[FT]): OperatorExpressionOps.UnaryExpression[FT] =
+      unaryExpression(absOp(), of)
+    def floor(of: any.Expression[FT]): OperatorExpressionOps.UnaryExpression[FT] =
+      unaryExpression(floorOp(), of)
   }
 }

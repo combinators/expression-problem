@@ -29,7 +29,7 @@ be the host for different approaches in that language.
 Alternative, you could launch `sbt` with the command line argument to choose the desired JVM to use:
 
 <pre><code>
-sbt --java-home="C:/Progra~2/Java/jdk1.8.0_161/"
+<b style='color:#5FCA1C'>></b> sbt --java-home="C:/Progra~2/Java/jdk1.8.0_161/"
 <b style='color:#5FCA1C'>sbt:expression-problem></b> compile
 </code></pre>
 
@@ -456,7 +456,7 @@ To generate the code for system M3, type the following in SBT:
 
 This solution only generates for the first three evolutions. 
 
-# Generate All code
+# Generate All Code
 
 If you just want to generate all code for the different approaches, then do the following:
 

@@ -4,6 +4,7 @@ package org.combinators.ep.language.java       /*DD:LD:AD*/
   * Code exists to launch performance analysis of code generation of Java solutions. Not part of the
   * standard code generator framework.
   */
+import com.github.javaparser.ast.body.TypeDeclaration
 import org.apache.commons.io.FileUtils
 
 import System.nanoTime
@@ -29,7 +30,7 @@ abstract class BaseTest(val id:String) {
   // time the synthesis of the generated code plus test suites. Output to 'ep'
   def generatedCode(approachName:String, systemName: String): Unit = {
     val now = nanoTime
-    val all_code = gen.generatedCode() ++ gen.generateSuite(None)
+    val all_code = gen.generatedCode() ++ gen.generateSuite(Some(approachName))
     nanoTime - now
     val outputDir = Paths.get("target", "ep-firstVersion", "java", approachName, systemName)
 
@@ -39,8 +40,29 @@ abstract class BaseTest(val id:String) {
 
     // all code is FLAT in the same directory. Just extract the interface or class name
     all_code.foreach(u => {
-      val clsName = s"${u.getTypes.asScala.head.getName}.java"
-      val path = Paths.get("target", "ep-firstVersion", "java", approachName, systemName, clsName)
+      val tpe = u.getTypes.get(0).asTypeDeclaration()
+      val pkg = if (tpe.isTopLevelType) {
+        if (tpe.findCompilationUnit().get().getPackageDeclaration.isPresent) {
+          val pkgName = tpe.findCompilationUnit().get().getPackageDeclaration.get().getNameAsString
+          pkgName + "." + tpe.getNameAsString
+        } else {
+          tpe.getNameAsString
+        }
+      } else {
+        tpe.getNameAsString
+      }
+
+      val all = pkg.split("\\.")
+      all(all.length-1) = all(all.length-1) + ".java"    // need suffix
+
+      // ALL but the last
+      val top = Seq("ep-firstVersion", "java", approachName, systemName) ++ all.init.toSeq
+      Files.createDirectories(Paths.get("target", top: _*))
+
+      val the_file = Seq("ep-firstVersion", "java", approachName, systemName) ++ all.toSeq
+
+      //val path = Paths.get("target", "ep-firstVersion", "java", approachName, systemName, clsName)
+      val path = Paths.get("target", the_file:_*)
       Files.write(path, u.toString.getBytes, StandardOpenOption.APPEND, StandardOpenOption.CREATE)
     })
 

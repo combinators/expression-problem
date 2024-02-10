@@ -5,17 +5,15 @@ import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter
 import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.math._
-import org.combinators.ep.generator.{ApproachImplementationProvider, FileWithPath, FileWithPathPersistable, TestImplementationProvider}
+import org.combinators.ep.generator.{ApproachImplementationProvider, FileWithPath, FileWithPathPersistable, NameProvider, TestImplementationProvider}
 import org.combinators.jgitserv.{BranchTransaction, GitService}
 import FileWithPathPersistable._
 import org.apache.commons.io.FileUtils
 import org.combinators.ep.domain.math.{M0, eips}
 import org.combinators.ep.domain.math.systemI.{I1, I2}
-import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable, TestImplementationProvider}
-import org.combinators.jgitserv.{BranchTransaction, GitService}
-import org.combinators.ep.generator.FileWithPathPersistable._
 
 import java.nio.file.{Path, Paths}
+import scala.sys.process.Process
 
 /**
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
@@ -217,6 +215,43 @@ object GitMain extends IOApp {
     val approach = if (args.isEmpty) "interpreter" else args.head
     val selection = if (args.isEmpty || args.tail.isEmpty) "M7I2" else args.tail.head
     new Main(approach, selection).runGit(args)
+  }
+}
+
+object GenerateAll extends IOApp {
+
+  def run(args: List[String]): IO[ExitCode] = {
+
+    val approaches = Seq("graphviz","oo","visitor","visitorSideEffect","extensibleVisitor","interpreter","coco","trivially","dispatch","algebra")
+    val evolutions = Seq("M0","M1","M2","M3","M4","M5","M6","M7","M7I2","M8","M9","I1","A1","A1M3","A1M3I2","A3","I2")
+
+    approaches.foreach(approach => {
+      println("Generating " + approach + "...")
+      evolutions.foreach(selection => {
+        println("   " + selection)
+
+        val targetDirectory = Paths.get("target", "ep-all", approach, selection)
+        val program :IO[Unit] = {
+          for {
+            _ <- IO { print("Initializing Generator...") }
+            main <- IO {  new Main(approach, selection) }
+
+            _ <- IO { println("[OK]") }
+            result <- main.runDirectToDisc(targetDirectory)
+          } yield result
+        }
+
+        // execute above as a stand-alone program
+        program.unsafeRunSync()
+
+        // TBD:  Would be nice to launch 'sbt' in each of these generated directories
+      })
+    })
+
+    for {
+      _ <- IO { print("DONE") }
+    } yield ExitCode.Success
+
   }
 }
 

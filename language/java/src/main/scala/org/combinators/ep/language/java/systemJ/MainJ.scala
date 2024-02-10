@@ -179,6 +179,43 @@ class MainJ(choice:String, select:String) {
   }
 }
 
+object GenerateAllJ extends IOApp {
+
+  def run(args: List[String]): IO[ExitCode] = {
+
+    val approaches = Seq("graphviz","oo","visitor","visitorSideEffect","extensibleVisitor","interpreter","coco","trivially","dispatch","algebra")
+    val evolutions = Seq("M0","J1","J2","J3","K1","K2","J4","J5","J6","K2J6","J7","J8")
+
+    approaches.foreach(approach => {
+      println("Generating " + approach + "...")
+      evolutions.foreach(selection => {
+        println("   " + selection)
+
+        val targetDirectory = Paths.get("target", "ep-all", approach, selection)
+        val program :IO[Unit] = {
+          for {
+            _ <- IO { print("Initializing Generator...") }
+            main <- IO {  new MainJ(approach, selection) }
+
+            _ <- IO { println("[OK]") }
+            result <- main.runDirectToDisc(targetDirectory)
+          } yield result
+        }
+
+        // execute above as a stand-alone program
+        program.unsafeRunSync()
+
+        // TBD:  Would be nice to launch 'sbt' in each of these generated directories
+      })
+    })
+
+    for {
+      _ <- IO { print("DONE") }
+    } yield ExitCode.Success
+
+  }
+}
+
 object DirectToDiskMainJ extends IOApp {
   val targetDirectory = Paths.get("target", "ep2")
 

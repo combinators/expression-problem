@@ -50,7 +50,7 @@ class MainThirdAlternate(choice:String, select:String) {
     case "M0" => Seq(M0)
     case "X1" => Seq(M0, X1)
     case "X2" => Seq(M0, X1, X2)
-    case "X3" => Seq(M0, X1, X2, X3)
+    case "X3" => Seq(M0, X1, X3)
     case "X2X3" => Seq(M0, X1, X2, X3, X2X3)
     case "X4" => Seq(M0, X1, X2, X3, X2X3, X4)
     case _ => ???
@@ -58,7 +58,7 @@ class MainThirdAlternate(choice:String, select:String) {
 
   val x1_eip = systemX.X1(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
   val x2_eip = systemX.X2(approach.paradigm)(x1_eip)(generator.doublesInMethod, generator.stringsInMethod)
-  val x3_eip = systemX.X3(approach.paradigm)(x2_eip)(generator.doublesInMethod, generator.stringsInMethod)
+  val x3_eip = systemX.X3(approach.paradigm)(x1_eip)(generator.doublesInMethod, generator.stringsInMethod)
 
   val x2x3_eip = systemX.X2X3(approach.paradigm)(x2_eip, x3_eip)
 
@@ -131,13 +131,50 @@ class MainThirdAlternate(choice:String, select:String) {
   }
 }
 
+object GenerateAllThirdAlternate extends IOApp {
+
+  def run(args: List[String]): IO[ExitCode] = {
+
+    val approaches = Seq("graphviz","oo","visitor","visitorSideEffect","extensibleVisitor","interpreter","coco","trivially","dispatch","algebra")
+    val evolutions = Seq("M0","X1","X2","X3","X2X3","X4")
+
+    approaches.foreach(approach => {
+      println("Generating " + approach + "...")
+      evolutions.foreach(selection => {
+        println("   " + selection)
+
+        val targetDirectory = Paths.get("target", "ep-all", approach, selection)
+        val program :IO[Unit] = {
+          for {
+            _ <- IO { print("Initializing Generator...") }
+            main <- IO {  new MainThirdAlternate(approach, selection) }
+
+            _ <- IO { println("[OK]") }
+            result <- main.runDirectToDisc(targetDirectory)
+          } yield result
+        }
+
+        // execute above as a stand-alone program
+        program.unsafeRunSync()
+
+        // TBD:  Would be nice to launch 'sbt' in each of these generated directories
+      })
+    })
+
+    for {
+      _ <- IO { print("DONE") }
+    } yield ExitCode.Success
+
+  }
+}
+
 object DirectToDiskMainThirdAlternate extends IOApp {
   val targetDirectory = Paths.get("target", "ep2")
 
   def run(args: List[String]): IO[ExitCode] = {
-    val approach = if (args.isEmpty) "graphviz" else args.head
+    val approach = if (args.isEmpty) "extensibleVisitor" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "X4" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "X3" else args.tail.head
 
     for {
       _ <- IO { print("Initializing Generator...") }

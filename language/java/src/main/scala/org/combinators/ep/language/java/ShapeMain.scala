@@ -143,6 +143,43 @@ class ShapeMain(choice:String, select:String) {
   }
 }
 
+object GenerateAllForShape extends IOApp {
+
+  def run(args: List[String]): IO[ExitCode] = {
+
+    val approaches = Seq("graphviz","oo","visitor","visitorSideEffect","extensibleVisitor","interpreter","coco","trivially","dispatch","algebra")
+    val evolutions = Seq("S0","S1","S2")
+
+    approaches.foreach(approach => {
+      println("Generating " + approach + "...")
+      evolutions.foreach(selection => {
+        println("   " + selection)
+
+        val targetDirectory = Paths.get("target", "ep-all", approach, selection)
+        val program :IO[Unit] = {
+          for {
+            _ <- IO { print("Initializing Generator...") }
+            main <- IO {  new ShapeMain(approach, selection) }
+
+            _ <- IO { println("[OK]") }
+            result <- main.runDirectToDisc(targetDirectory)
+          } yield result
+        }
+
+        // execute above as a stand-alone program
+        program.unsafeRunSync()
+
+        // TBD:  Would be nice to launch 'sbt' in each of these generated directories
+      })
+    })
+
+    for {
+      _ <- IO { print("DONE") }
+    } yield ExitCode.Success
+
+  }
+}
+
 object DirectToDiskMainForShape extends IOApp {
   val targetDirectory = Paths.get("target", "ep2")
 

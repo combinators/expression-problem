@@ -2,15 +2,15 @@ package org.combinators.ep.language.java    /*DD:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, ObjectAlgebras, RuntimeDispatch, Traditional, TriviallyClean, Visitor, Visualize}
-import org.combinators.ep.domain.{GenericModel, Model}
+import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.math._
 import org.combinators.ep.generator.{ApproachImplementationProvider, FileWithPath, FileWithPathPersistable, TestImplementationProvider}
 import org.combinators.jgitserv.{BranchTransaction, GitService, ResourcePersistable}
 import FileWithPathPersistable._
-import org.apache.commons.io.{FileSystemUtils, FileUtils}
+import org.apache.commons.io.FileUtils
 
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{Path, Paths}
 
 /**
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
@@ -181,6 +181,43 @@ object GitMainProducer extends IOApp {
     val approach = if (args.isEmpty) "algebra" else args.head
     val selection = if (args.isEmpty || args.tail.isEmpty) "W1" else args.tail.head
     new MainProducer(approach, selection).runGit(args)
+  }
+}
+
+object GenerateAllProducer extends IOApp {
+
+  def run(args: List[String]): IO[ExitCode] = {
+
+    val approaches = Seq("graphviz","oo","visitor","visitorSideEffect","extensibleVisitor","interpreter","coco","trivially","dispatch","algebra")
+    val evolutions = Seq("M0","M1","M2","M3","W1","M3W1","Q1","C2","V1")
+
+    approaches.foreach(approach => {
+      println("Generating " + approach + "...")
+      evolutions.foreach(selection => {
+        println("   " + selection)
+
+        val targetDirectory = Paths.get("target", "ep-all", approach, selection)
+        val program :IO[Unit] = {
+          for {
+            _ <- IO { print("Initializing Generator...") }
+            main <- IO {  new MainProducer(approach, selection) }
+
+            _ <- IO { println("[OK]") }
+            result <- main.runDirectToDisc(targetDirectory)
+          } yield result
+        }
+
+        // execute above as a stand-alone program
+        program.unsafeRunSync()
+
+        // TBD:  Would be nice to launch 'sbt' in each of these generated directories
+      })
+    })
+
+    for {
+      _ <- IO { print("DONE") }
+    } yield ExitCode.Success
+
   }
 }
 

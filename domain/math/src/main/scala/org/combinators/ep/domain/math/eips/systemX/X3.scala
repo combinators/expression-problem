@@ -22,6 +22,7 @@ object X3 {
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
+          _ <- x1Provider.initialize(forApproach)
           _ <- ffiArithmetic.enable()
           _ <- ffiStrings.enable()
         } yield ()

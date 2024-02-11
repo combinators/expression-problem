@@ -476,8 +476,8 @@ Inside the `target\ep-firstVersion` folder, you will find all the generated code
 
 The `dependencies` folder contains JUnit 4.0 jar files that are necessary for compiling and running the JUnit test cases.
 
-On Windows, execute the `execute.bat` script within its current
-directory. On Linux, execute the `execute.sh` script within its current
+On Windows, execute the `evaluate_java.bat` script within its current
+directory. On Linux, execute the `evaluate_java.sh` script within its current
 directory.
 
 Both scripts will create a `java-report.txt` file within `target/ep-firstVersion/`.
@@ -490,6 +490,14 @@ to you, then retrieve the latest Cpputest from their [github repository](https:/
 
 On linux, execute the `evaluate_cp.sh` script within its current directory and it will create
 a `cpp-report.txt` file within `target/ep-firstVersion`
+
+## Compiling Haskel and running test cases with HUnit
+
+The Haskell code uses [HUnit](https://hackage.haskell.org/package/HUnit) for testing. The `resources` folder in the haskell
+language subproject contains the Data and Test folders necessary.
+
+On linux, execute the `evaluate_haskell.sh` script within its current directory and it will create
+a `haskell-report.txt` file within `target/ep-firstVersion`
 
 # References
 

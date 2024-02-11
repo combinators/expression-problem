@@ -105,7 +105,7 @@ trait OOGenerator
   def generateExp(exp:DataType, ops:Seq[Operation]) : CompilationUnit = {
     val methods = ops.map(op => methodGenerator(exp, op))
 
-    Java(s"""|package visitor;
+    Java(s"""|package oo;
              |public class $exp extends ${domain.baseTypeRep.name} {
              |  ${constructor(exp)}
              |  ${fields(exp).mkString("\n")}

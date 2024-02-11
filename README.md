@@ -472,6 +472,16 @@ If you just want to generate all code for the different approaches, then do the 
 
 Inside the `target\ep-firstVersion` folder, you will find all the generated code.
 
+## Compiling Java and running test cases with JUnit 4
+
+The `dependencies` folder contains JUnit 4.0 jar files that are necessary for compiling and running the JUnit test cases.
+
+On Windows, execute the `execute.bat` script within its current
+directory. On Linux, execute the `execute.sh` script within its current
+directory.
+
+Both scripts will create a `java-report.txt` file within `target/ep-firstVersion/`.
+
 # References
 
 1. Wadler, Philip, [Email to to Java Genericity Mailing List](http://homepages.inf.ed.ac.uk/wadler/papers/expression/expression.txt)

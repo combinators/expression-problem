@@ -11,7 +11,7 @@ set JAVAC=javac
 set JAVA=java
 
 @REM Refer back to the JAR files in top-level so they can be accessed
-set CLASSPATH=..\..\..\..\..\junit-4.11.jar;.;..\..\..\..\..\org.hamcrest.core_1.3.0.v20180420-1519.jar
+set CLASSPATH=..\..\..\..\..\dependencies\junit-4.11.jar;.;..\..\..\..\..\dependencies\org.hamcrest.core_1.3.0.v20180420-1519.jar
 
 if exist target (
     rem file exists

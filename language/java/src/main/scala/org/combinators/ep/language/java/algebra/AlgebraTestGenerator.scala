@@ -83,7 +83,7 @@ trait AlgebraTestGenerator
       Java(str).compilationUnit()
     })
 
-    unitTests
+    unitTests  :+ combinedAlgebra(pkg)
   }
 
   /** Produce inner methods. */

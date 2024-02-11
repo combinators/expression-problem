@@ -519,11 +519,10 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
 
     op match {
       case _ : BinaryMethod =>
-        println (op.name + " is binary")
         binaryOp
 
       case _ =>
-        println (op.name + " is normal")
+
 
     new Haskell(s"""
                    #-- | Evaluates expression.

@@ -1,11 +1,12 @@
 @ECHO OFF
 
-@REM you Need to copy this file into target\java so it will properly run
-
-@REM must be present somewhere. Either you have already on your system path (option1)
+@REM 'java' and 'javac' must be present somewhere.
+@REM Either you have already on your system path (option1)
 @REM or you set to a valid JDK installation (preferably JDK 1.8)
 @REM OPTION 1: set JAVAC=javac
 @REM OPTION 2: set JAVAC=C:\Users\name\Desktop\jdk1.8.0_161\bin\javac.exe
+@REM
+@REM Change as necessary
 set JAVAC=javac
 set JAVA=java
 

@@ -1,0 +1,415 @@
+------ Try to compile all code with test cases -------
+
+.\algebra
+.\e0
+"compiling .\algebra .\e0"
+"... FAIL"
+.\e1
+"compiling .\algebra .\e1"
+"... FAIL"
+.\e2
+"compiling .\algebra .\e2"
+"... FAIL"
+.\e3
+"compiling .\algebra .\e3"
+"... FAIL"
+.\e4
+"compiling .\algebra .\e4"
+"... FAIL"
+.\e5
+"compiling .\algebra .\e5"
+"... FAIL"
+.\e6
+"compiling .\algebra .\e6"
+"... FAIL"
+.\e7
+"compiling .\algebra .\e7"
+"... FAIL"
+.\e8
+"compiling .\algebra .\e8"
+"... FAIL"
+.\s0
+"compiling .\algebra .\s0"
+"... FAIL"
+.\s1
+"compiling .\algebra .\s1"
+"... FAIL"
+.\extensibleVisitor
+.\e0
+"compiling .\extensibleVisitor .\e0"
+"... FAIL"
+.\e1
+"compiling .\extensibleVisitor .\e1"
+"... FAIL"
+.\e2
+"compiling .\extensibleVisitor .\e2"
+"... FAIL"
+.\e3
+"compiling .\extensibleVisitor .\e3"
+"... FAIL"
+.\e4
+"compiling .\extensibleVisitor .\e4"
+"... FAIL"
+.\e5
+"compiling .\extensibleVisitor .\e5"
+"... FAIL"
+.\e6
+"compiling .\extensibleVisitor .\e6"
+"... FAIL"
+.\e7
+"compiling .\extensibleVisitor .\e7"
+"... FAIL"
+.\e8
+"compiling .\extensibleVisitor .\e8"
+"... FAIL"
+.\s0
+"compiling .\extensibleVisitor .\s0"
+"... FAIL"
+.\s1
+"compiling .\extensibleVisitor .\s1"
+"... FAIL"
+.\interpreter
+.\e0
+"compiling .\interpreter .\e0"
+"... FAIL"
+.\e1
+"compiling .\interpreter .\e1"
+"... FAIL"
+.\e2
+"compiling .\interpreter .\e2"
+"... FAIL"
+.\e3
+"compiling .\interpreter .\e3"
+"... FAIL"
+.\e4
+"compiling .\interpreter .\e4"
+"... FAIL"
+.\e5
+"compiling .\interpreter .\e5"
+"... FAIL"
+.\e6
+"compiling .\interpreter .\e6"
+"... FAIL"
+.\e7
+"compiling .\interpreter .\e7"
+"... FAIL"
+.\e8
+"compiling .\interpreter .\e8"
+"... FAIL"
+.\s0
+"compiling .\interpreter .\s0"
+"... FAIL"
+.\s1
+"compiling .\interpreter .\s1"
+"... FAIL"
+.\oo
+.\e0
+"compiling .\oo .\e0"
+"... success"
+.\e1
+"compiling .\oo .\e1"
+"... success"
+.\e2
+"compiling .\oo .\e2"
+"... success"
+.\e3
+"compiling .\oo .\e3"
+"... success"
+.\e4
+"compiling .\oo .\e4"
+"... success"
+.\e5
+"compiling .\oo .\e5"
+"... success"
+.\e6
+"compiling .\oo .\e6"
+"... success"
+.\e7
+"compiling .\oo .\e7"
+"... success"
+.\e8
+"compiling .\oo .\e8"
+"... success"
+.\s0
+"compiling .\oo .\s0"
+"... success"
+.\s1
+"compiling .\oo .\s1"
+"... success"
+.\trivially
+.\e0
+"compiling .\trivially .\e0"
+"... FAIL"
+.\e1
+"compiling .\trivially .\e1"
+"... FAIL"
+.\e2
+"compiling .\trivially .\e2"
+"... FAIL"
+.\e3
+"compiling .\trivially .\e3"
+"... FAIL"
+.\e4
+"compiling .\trivially .\e4"
+"... FAIL"
+.\e5
+"compiling .\trivially .\e5"
+"... FAIL"
+.\e6
+"compiling .\trivially .\e6"
+"... FAIL"
+.\e7
+"compiling .\trivially .\e7"
+"... FAIL"
+.\e8
+"compiling .\trivially .\e8"
+"... FAIL"
+.\s0
+"compiling .\trivially .\s0"
+"... FAIL"
+.\s1
+"compiling .\trivially .\s1"
+"... FAIL"
+.\visitor
+.\e0
+"compiling .\visitor .\e0"
+"... success"
+.\e1
+"compiling .\visitor .\e1"
+"... success"
+.\e2
+"compiling .\visitor .\e2"
+"... success"
+.\e3
+"compiling .\visitor .\e3"
+"... success"
+.\e4
+"compiling .\visitor .\e4"
+"... success"
+.\e5
+"compiling .\visitor .\e5"
+"... success"
+.\e6
+"compiling .\visitor .\e6"
+"... success"
+.\e7
+"compiling .\visitor .\e7"
+"... FAIL"
+.\e8
+"compiling .\visitor .\e8"
+"... FAIL"
+.\s0
+"compiling .\visitor .\s0"
+"... FAIL"
+.\s1
+"compiling .\visitor .\s1"
+"... FAIL"
+
+------ Now remove all test cases and try to compile again -------
+
+.\algebra
+.\e0
+"compiling .\algebra .\e0"
+"... success"
+.\e1
+"compiling .\algebra .\e1"
+"... success"
+.\e2
+"compiling .\algebra .\e2"
+"... success"
+.\e3
+"compiling .\algebra .\e3"
+"... success"
+.\e4
+"compiling .\algebra .\e4"
+"... FAIL"
+.\e5
+"compiling .\algebra .\e5"
+"... FAIL"
+.\e6
+"compiling .\algebra .\e6"
+"... FAIL"
+.\e7
+"compiling .\algebra .\e7"
+"... FAIL"
+.\e8
+"compiling .\algebra .\e8"
+"... FAIL"
+.\s0
+"compiling .\algebra .\s0"
+"... FAIL"
+.\s1
+"compiling .\algebra .\s1"
+"... FAIL"
+.\extensibleVisitor
+.\e0
+"compiling .\extensibleVisitor .\e0"
+"... FAIL"
+.\e1
+"compiling .\extensibleVisitor .\e1"
+"... FAIL"
+.\e2
+"compiling .\extensibleVisitor .\e2"
+"... FAIL"
+.\e3
+"compiling .\extensibleVisitor .\e3"
+"... FAIL"
+.\e4
+"compiling .\extensibleVisitor .\e4"
+"... FAIL"
+.\e5
+"compiling .\extensibleVisitor .\e5"
+"... FAIL"
+.\e6
+"compiling .\extensibleVisitor .\e6"
+"... FAIL"
+.\e7
+"compiling .\extensibleVisitor .\e7"
+"... FAIL"
+.\e8
+"compiling .\extensibleVisitor .\e8"
+"... FAIL"
+.\s0
+"compiling .\extensibleVisitor .\s0"
+"... FAIL"
+.\s1
+"compiling .\extensibleVisitor .\s1"
+"... FAIL"
+.\interpreter
+.\e0
+"compiling .\interpreter .\e0"
+"... success"
+.\e1
+"compiling .\interpreter .\e1"
+"... success"
+.\e2
+"compiling .\interpreter .\e2"
+"... success"
+.\e3
+"compiling .\interpreter .\e3"
+"... success"
+.\e4
+"compiling .\interpreter .\e4"
+"... success"
+.\e5
+"compiling .\interpreter .\e5"
+"... success"
+.\e6
+"compiling .\interpreter .\e6"
+"... success"
+.\e7
+"compiling .\interpreter .\e7"
+"... FAIL"
+.\e8
+"compiling .\interpreter .\e8"
+"... FAIL"
+.\s0
+"compiling .\interpreter .\s0"
+"... FAIL"
+.\s1
+"compiling .\interpreter .\s1"
+"... FAIL"
+.\oo
+.\e0
+"compiling .\oo .\e0"
+"... success"
+.\e1
+"compiling .\oo .\e1"
+"... success"
+.\e2
+"compiling .\oo .\e2"
+"... success"
+.\e3
+"compiling .\oo .\e3"
+"... success"
+.\e4
+"compiling .\oo .\e4"
+"... success"
+.\e5
+"compiling .\oo .\e5"
+"... success"
+.\e6
+"compiling .\oo .\e6"
+"... success"
+.\e7
+"compiling .\oo .\e7"
+"... success"
+.\e8
+"compiling .\oo .\e8"
+"... success"
+.\s0
+"compiling .\oo .\s0"
+"... success"
+.\s1
+"compiling .\oo .\s1"
+"... success"
+.\trivially
+.\e0
+"compiling .\trivially .\e0"
+"... success"
+.\e1
+"compiling .\trivially .\e1"
+"... success"
+.\e2
+"compiling .\trivially .\e2"
+"... success"
+.\e3
+"compiling .\trivially .\e3"
+"... success"
+.\e4
+"compiling .\trivially .\e4"
+"... success"
+.\e5
+"compiling .\trivially .\e5"
+"... success"
+.\e6
+"compiling .\trivially .\e6"
+"... success"
+.\e7
+"compiling .\trivially .\e7"
+"... FAIL"
+.\e8
+"compiling .\trivially .\e8"
+"... FAIL"
+.\s0
+"compiling .\trivially .\s0"
+"... FAIL"
+.\s1
+"compiling .\trivially .\s1"
+"... FAIL"
+.\visitor
+.\e0
+"compiling .\visitor .\e0"
+"... success"
+.\e1
+"compiling .\visitor .\e1"
+"... success"
+.\e2
+"compiling .\visitor .\e2"
+"... success"
+.\e3
+"compiling .\visitor .\e3"
+"... success"
+.\e4
+"compiling .\visitor .\e4"
+"... success"
+.\e5
+"compiling .\visitor .\e5"
+"... success"
+.\e6
+"compiling .\visitor .\e6"
+"... success"
+.\e7
+"compiling .\visitor .\e7"
+"... FAIL"
+.\e8
+"compiling .\visitor .\e8"
+"... FAIL"
+.\s0
+"compiling .\visitor .\s0"
+"... FAIL"
+.\s1
+"compiling .\visitor .\s1"
+"... FAIL"
+
+C:\Users\heineman\Code\expression-problem\target\ep-firstVersion\java>

@@ -482,6 +482,15 @@ directory.
 
 Both scripts will create a `java-report.txt` file within `target/ep-firstVersion/`.
 
+## Compiling C++ and running test cases with CPPUnit test
+
+The C++ code uses [Cpputest](https://cpputest.github.io/) for testing. The `dependencies` folder contains
+a snapshot of the includes and compiled libraries for use on linux. Should these files prove to not be useful 
+to you, then retrieve the latest Cpputest from their [github repository](https://cpputest.github.io/).
+
+On linux, execute the `evaluate_cp.sh` script within its current directory and it will create
+a `cpp-report.txt` file within `target/ep-firstVersion`
+
 # References
 
 1. Wadler, Philip, [Email to to Java Genericity Mailing List](http://homepages.inf.ed.ac.uk/wadler/papers/expression/expression.txt)

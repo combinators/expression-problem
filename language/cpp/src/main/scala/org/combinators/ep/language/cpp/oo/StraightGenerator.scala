@@ -181,7 +181,6 @@ trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with
 
     val basic:Seq[String] = s"""
                                |#include <iostream>
-                               |#include <map>
                                |#include <memory>
                                |#include <sstream>
                                |#include <string>

@@ -115,7 +115,6 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
          |#ifndef _VISITOR_H_
          |#define _VISITOR_H_
          |#include <iostream>
-         |#include <map>
          |#include <memory>
          |#include <sstream>
          |#include <string>

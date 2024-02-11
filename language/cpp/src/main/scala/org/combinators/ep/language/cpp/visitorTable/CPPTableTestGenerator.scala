@@ -33,7 +33,6 @@ trait CPPTableTestGenerator extends CPPGenerator with CPPUnitTestGenerator {
     val allOps = getModel.flatten().ops.map(op => s"""#include "${op.concept}.h" """)
 
     // add header files
-    super.generateSuite(pkg).map(file =>
-      file.addHeader(allOps))
+    super.generateSuite(pkg, allOps)
   }
 }

@@ -30,7 +30,7 @@ trait CPPOOTestGenerator extends CPPGenerator with CPPUnitTestGenerator {
     val allTypes = getModel.flatten().types.map(exp => s"""#include "${exp.concept}.h" """)
 
     // add header files
-    super.generateSuite(pkg).map(file =>
+    super.generateSuite(pkg, Seq.empty).map(file =>
       file.addHeader(allTypes).addHeader(builders))
   }
 

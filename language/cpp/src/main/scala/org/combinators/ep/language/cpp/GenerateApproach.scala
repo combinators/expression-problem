@@ -6,9 +6,10 @@ import org.combinators.ep.generator.{FileWithPath, LanguageIndependentGenerator,
 
 import java.nio.file.{Files, Paths, StandardOpenOption}
 import org.apache.commons.io.FileUtils
-import org.combinators.ep.language.cpp.oo.StraightGenerator
+import org.combinators.ep.language.cpp.oo.{CPPOOTestGenerator, StraightGenerator}
 import org.combinators.ep.language.cpp.visitorTable.{CPPTableTestGenerator, CPPVisitorTableGenerator}
 import org.combinators.ep.language.cpp.visitor.{CPPVisitorGenerator, CPPVisitorTestGenerator}
+
 import System.nanoTime
 
 abstract class BaseTest(val id:String) {
@@ -51,19 +52,19 @@ object StraightTest extends App {
 
     selected match {
       case "e0" => new BaseTest("e0") {
-        override val gen = new WithDomain(MathDomain) with StraightGenerator with CPPUnitTestGenerator with cpp_e0
+        override val gen = new WithDomain(MathDomain) with StraightGenerator with CPPOOTestGenerator with cpp_e0
       }
       case "e1" => new BaseTest("e1") {
-        override val gen = new WithDomain(MathDomain) with StraightGenerator with CPPUnitTestGenerator with cpp_e0 with cpp_e1
+        override val gen = new WithDomain(MathDomain) with StraightGenerator with CPPOOTestGenerator with cpp_e0 with cpp_e1
       }
       case "e2" => new BaseTest("e2") {
-        override val gen = new WithDomain(MathDomain) with StraightGenerator with CPPUnitTestGenerator with cpp_e0 with cpp_e1 with cpp_e2
+        override val gen = new WithDomain(MathDomain) with StraightGenerator with CPPOOTestGenerator with cpp_e0 with cpp_e1 with cpp_e2
       }
       case "e3" => new BaseTest("e3") {
-        override val gen = new WithDomain(MathDomain) with StraightGenerator with CPPUnitTestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3
+        override val gen = new WithDomain(MathDomain) with StraightGenerator with CPPOOTestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3
       }
       case "e4" => new BaseTest("e4") {
-        override val gen = new WithDomain(MathDomain) with StraightGenerator with CPPUnitTestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3 with cpp_e4
+        override val gen = new WithDomain(MathDomain) with StraightGenerator with CPPOOTestGenerator with cpp_e0 with cpp_e1 with cpp_e2 with cpp_e3 with cpp_e4
       }
 
       case _ => ???
@@ -133,14 +134,14 @@ object GenerateApproach extends App {
 
   // Choose your own adventure
   val approach = if (args.length == 0) {
-    "oo"
+    "visitorTable"
   } else {
     args(0)
   }
 
   // no higher than e4 unfortunately since not yet converting TreeType to target language
   val system = if (args.length == 0) {
-    "e4"
+    "e0"
   } else {
     args(1)
   }

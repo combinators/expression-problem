@@ -116,11 +116,11 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
          |#ifndef _VISITOR_H_
          |#define _VISITOR_H_
          |#include <iostream>
-         |#include <map>
          |#include <memory>
          |#include <sstream>
          |#include <string>
          |#include <vector>
+         |#include <map>
          |#endif /* _VISITOR_H_ */
        """.stripMargin.split("\n"))
   }

@@ -16,7 +16,7 @@ trait CPPUnitTestGenerator extends TestGenerator with PerformanceTestGenerator w
   def testGenerator : Seq[UnitTest] = Seq.empty
 
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
-  def generateSuite(pkg: Option[String]): Seq[CPPFile] = {
+  def generateSuite(pkg: Option[String], beforeCPPUnit:Seq[String]): Seq[CPPFile] = {
     val allTests = testGenerator.zipWithIndex.map{ case (t, num) =>
 
       new CPPStatement(
@@ -66,6 +66,9 @@ trait CPPUnitTestGenerator extends TestGenerator with PerformanceTestGenerator w
          |  return CommandLineTestRunner::RunAllTests(ac, av);
          |}""".stripMargin.split("\n")
     )
+
+    // for memory detection on CPP, some standard template imports (i.e., <map>) must be done FIRST, so do so here, if necessary
+    sa.addHeader(beforeCPPUnit)
 
     sa.addHeader(Seq(
       """#include "CppUTest/TestHarness.h" """,

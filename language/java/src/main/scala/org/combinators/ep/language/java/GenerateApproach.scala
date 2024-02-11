@@ -4,7 +4,6 @@ package org.combinators.ep.language.java       /*DD:LD:AD*/
   * Code exists to launch performance analysis of code generation of Java solutions. Not part of the
   * standard code generator framework.
   */
-import com.github.javaparser.ast.body.TypeDeclaration
 import org.apache.commons.io.FileUtils
 
 import System.nanoTime
@@ -12,7 +11,6 @@ import org.combinators.ep.domain.WithDomain
 import org.combinators.ep.domain.math.MathDomain
 import org.combinators.ep.domain.shape.ShapeDomain
 import org.combinators.ep.generator.LanguageIndependentTestGenerator
-import org.combinators.ep.language.java._
 import org.combinators.ep.language.java.algebra.AlgebraGenerator
 import org.combinators.ep.language.java.extensibleVisitor.ExtensibleVisitorGenerator
 import org.combinators.ep.language.java.interpreter.InterpreterGenerator
@@ -20,7 +18,6 @@ import org.combinators.ep.language.java.oo._
 import org.combinators.ep.language.java.trivially.TriviallyGenerator
 import org.combinators.ep.language.java.visitor.VisitorGenerator
 
-import scala.collection.JavaConverters._
 import java.nio.file.{Files, Paths, StandardOpenOption}
 
 abstract class BaseTest(val id:String) {
@@ -410,7 +407,7 @@ object GenerateApproach extends App {
 
   // Choose your own adventure
   val approach = if (args.length == 0) {
-    "trivially"
+    "extensibleVisitor"
   } else {
     args(0)
   }

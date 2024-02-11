@@ -32,10 +32,10 @@ trait VisitorGenerator extends JavaGenerator with JavaBinaryMethod {
 
     val includeBinaryMethod = flat.hasBinaryMethod
 
-    decls ++ flat.types.map(tpe => generateExp(includeBinaryMethod, tpe)) ++       // one class for each sub-type
+    decls ++ flat.types.map(tpe => generateExp(includeBinaryMethod, tpe, "visitor")) ++       // one class for each sub-type
     flat.ops.map(op => generateVisitorOperation(flat, op)) :+
-      generateBaseClass(flat.ops) :+                                // abstract base class
-      generateBase(flat.types)                                      // visitor gets its own class (overriding concept)
+      generateBaseClass(flat.ops, "visitor") :+                          // abstract base class
+      generateBase(flat.types, "visitor")                                // visitor gets its own class (overriding concept)
   }
 
   /** Handle self-case here. */
@@ -74,11 +74,11 @@ trait VisitorGenerator extends JavaGenerator with JavaBinaryMethod {
   }
 
   /** Return Visitor class, which contains a visit method for each available sub-type. */
-  def generateBase(types:Seq[DataType]): CompilationUnit = {
+  def generateBase(types:Seq[DataType], pkgName:String): CompilationUnit = {
     val signatures = types  // flat.types
       .map(exp => s"public abstract R visit(${exp.name} exp);").mkString("\n")
 
-    Java (s"""|package visitor;
+    Java (s"""|package $pkgName;
               |/*
               | * A concrete visitor describes a concrete operation on expressions. There is one visit
               | * method per type in the class hierarchy.
@@ -92,7 +92,7 @@ trait VisitorGenerator extends JavaGenerator with JavaBinaryMethod {
     * For visitor, the base class defines the accept method used by all subclasses.
     * When BinaryMethods are present, also includes method to convert to Tree object
     */
-  def generateBaseClass(ops:Seq[Operation]):CompilationUnit = {
+  def generateBaseClass(ops:Seq[Operation], pkgName:String):CompilationUnit = {
     val binaryTreeInterface = if (ops.exists {
       case _ : BinaryMethodTreeBase => true
       case _ => false
@@ -102,7 +102,7 @@ trait VisitorGenerator extends JavaGenerator with JavaBinaryMethod {
       Seq.empty
     }
 
-    Java(s"""|package visitor;
+    Java(s"""|package ${pkgName};
              |
              |public abstract class ${baseTypeRep.concept} {
              |    ${binaryTreeInterface.mkString("\n")}
@@ -159,7 +159,7 @@ trait VisitorGenerator extends JavaGenerator with JavaBinaryMethod {
   }
 
   /** Generate the full class for the given expression sub-type from flattened model. */
-  def generateExp(includeBinaryMethodSupport:Boolean, exp:DataType) : CompilationUnit = {
+  def generateExp(includeBinaryMethodSupport:Boolean, exp:DataType, pkgName:String) : CompilationUnit = {
     val name = exp.toString
 
     val visitor = Java (s"""|public <R> R accept(Visitor<R> v) {
@@ -174,7 +174,7 @@ trait VisitorGenerator extends JavaGenerator with JavaBinaryMethod {
       Seq.empty
     }
 
-    Java(s"""|package visitor;
+    Java(s"""|package $pkgName;
              |public class $name extends ${baseTypeRep.name} {
              |  ${constructor(exp)}
              |  ${helpers.mkString("\n")}

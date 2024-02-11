@@ -48,7 +48,7 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
       getModel.inChronologicalOrder
            .filter(m => m.types.nonEmpty)
            .map(m => generateBase(m))  :+           // visitor gets its own class (overriding concept)
-      generateBaseClass(flat.ops)                 // abstract base class
+      generateBaseClass(flat.ops, "extensibleVisitor")                 // abstract base class
   }
 
 
@@ -88,7 +88,7 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
     * requirement that "we only add visitor checks for models after first one."
     */
    def generateExtensibleExp(includeBinaryMethod:Boolean, model:domain.Model, exp:domain.DataType) : CompilationUnit = {
-    val unit = generateExp(includeBinaryMethod, exp)
+    val unit = generateExp(includeBinaryMethod, exp, "extensibleVisitor")
 
     // replace old accept method with new one
     val klass = unit.getType(0)
@@ -133,7 +133,7 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
       Some(s"Visitor$prior<R>")
     }
 
-    addMethods(makeInterface("visitor", s"Visitor$full<R>", Seq.empty, parent), methods)
+    addMethods(makeInterface("extensibleVisitor", s"Visitor$full<R>", Seq.empty, parent), methods)
   }
 
   /**
@@ -169,7 +169,7 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
       modelTypes(lastWithType)
     }
 
-    val replacement = makeClass("visitor", s"${op.concept}$full", Seq(s"Visitor$full<$opType>"), Some(s"${op.concept}$last"))
+    val replacement = makeClass("extensibleVisitor", s"${op.concept}$full", Seq(s"Visitor$full<$opType>"), Some(s"${op.concept}$last"))
     // copy everything over from the originally generated class
     val newType = replacement.getType(0)
     copyDeclarations(regularVisitor.getType(0), newType)
@@ -210,7 +210,7 @@ trait ExtensibleVisitorGenerator extends VisitorGenerator with OperationDependen
     }
 
     val replacement:CompilationUnit =
-       addMethods(makeClass("visitor", s"${op.concept}$full", Seq(s"Visitor$fullVisitor<$opType>")),
+       addMethods(makeClass("extensibleVisitor", s"${op.concept}$full", Seq(s"Visitor$fullVisitor<$opType>")),
          model.last.pastDataTypes().map(exp => methodGenerator(exp, op)))
 
     val newType = replacement.getType(0)

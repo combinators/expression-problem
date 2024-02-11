@@ -13,9 +13,6 @@ set JAVA=java
 @REM Refer back to the JAR files in top-level so they can be accessed
 set CLASSPATH=..\..\..\..\..\junit-4.11.jar;.;..\..\..\..\..\org.hamcrest.core_1.3.0.v20180420-1519.jar
 
-@REM All output will appear in the full-report.txt
-@echo REPORT > full-report.txt
-
 if exist target (
     rem file exists
 ) else (
@@ -43,28 +40,31 @@ if exist java (
     goto:EOF
 )
 
+@REM All output will appear in the full-report.txt
+@echo REPORT > java-report.txt
+
 cd java
 
 setlocal enabledelayedexpansion
 for /D %%d in (.\*) do (
 
-  @echo %%d >> full-report.txt
+  @echo %%d >> ..\java-report.txt
   @echo %%d
   cd %%d
     for /D %%m in (.\*) do (
-      @echo %%m >> ..\full-report.txt
+      @echo %%m >> ..\..\java-report.txt
       @echo %%m
       cd %%m
         echo "compiling %%d %%m"
-        %JAVAC% %%d\*.java >> ..\..\full-report.txt 2>&1 && (
+        %JAVAC% %%d\*.java >> ..\..\..\java-report.txt 2>&1 && (
           echo "... success"
 
           for %%v in (%%d\TestSuite*.java) do (
-            %JAVA% org.junit.runner.JUnitCore %%~nd.%%~nv >> ..\..\full-report.txt 2>&1 && (
+            %JAVA% org.junit.runner.JUnitCore %%~nd.%%~nv >> ..\..\..\java-report.txt 2>&1 && (
                 @echo "%%~nv success"
               ) || (
                 @echo "%%~nv failed"
-                @echo failed on %%~nd.%%~nv >> ..\..\full-report.txt
+                @echo failed on %%~nd.%%~nv >> ..\..\..\java-report.txt
               )
           )
         ) || (
@@ -75,11 +75,11 @@ for /D %%d in (.\*) do (
   cd ..
 )
 
-echo "-------------"                >> full-report.txt
-echo "FINALLY DONE"                 >> full-report.txt
-echo "-------------"                >> full-report.txt
+echo "-------------"                >> ..\java-report.txt
+echo "FINALLY DONE"                 >> ..\java-report.txt
+echo "-------------"                >> ..\java-report.txt
 
 @rem go back home
 cd ..\..\..
 
-dir target\ep-firstVersion\java\full-report.txt
+dir target\ep-firstVersion\java-report.txt

@@ -9,9 +9,9 @@ object GenerateAll extends App {
   approaches.foreach(approach =>
     systems.foreach(system =>
       approach match {
-        case "straight" => StraightTest.evaluate (system).generatedCode (approach, system)
-        case "oo" => OOTest.evaluate (system).generatedCode (approach, system)
-        case "functional" => FunctionalTest.evaluate (system).generatedCode (approach, system)
+        case "straight" => StraightTest.evaluate (system).generatedCode (approach, system, Some("scala_oo"))
+        case "oo" => OOTest.evaluate (system).generatedCode (approach, system, Some("odersky"))
+        case "functional" => FunctionalTest.evaluate (system).generatedCode (approach, system, Some("scala_func"))
 
         case _ => ???
       })

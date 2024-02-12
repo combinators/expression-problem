@@ -29,9 +29,10 @@ trait FunSpecTestGenerator extends TestGenerator with ScalaGenerator with Perfor
     testGenerator.zipWithIndex.map{ case (t, num) => {
       ScalaTestWithPath(Scala(s"""
                |$packageDeclaration
-               |import org.scalatest.FunSpec
                |
-               |class TestSuite$num extends FunSpec  {
+               |import org.scalatest.funspec.AnyFunSpec
+               |
+               |class TestSuite$num extends AnyFunSpec  {
                |  describe("test cases") {
                |    it ("run test") {
                |      ${t.mkString("\n")}

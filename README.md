@@ -499,6 +499,13 @@ language subproject contains the Data and Test folders necessary.
 On linux, execute the `evaluate_haskell.sh` script within its current directory and it will create
 a `haskell-report.txt` file within `target/ep-firstVersion`
 
+## Compiling Scala and running test cases with FunSpec
+
+The Haskell code uses [FunSpec](https://www.scalatest.org/getting_started_with_fun_spec) for testing.
+
+On Windows, execute the `evaluate_scala.bat` script within its current directory and it will create
+a `scala-report.txt` file within `target/ep-firstVersion`
+
 # References
 
 1. Wadler, Philip, [Email to to Java Genericity Mailing List](http://homepages.inf.ed.ac.uk/wadler/papers/expression/expression.txt)

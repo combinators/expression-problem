@@ -8,7 +8,7 @@ import java.nio.file.{Files, Paths, StandardOpenOption}
 import org.apache.commons.io.FileUtils
 import org.combinators.ep.generator.{LanguageIndependentGenerator, LanguageIndependentTestGenerator}
 import org.combinators.ep.language.scala.functional.{FunSpecFunctionalTestGenerator, FunctionalGenerator}
-import org.combinators.ep.language.scala.oo.OderskyGenerator
+import org.combinators.ep.language.scala.oo.{FunSpecOOTestGenerator, OderskyGenerator}
 import org.combinators.ep.language.scala.straight.OOGenerator
 
 import System.nanoTime
@@ -18,9 +18,9 @@ abstract class BaseTest(val id:String) {
   val gen: WithDomain[MathDomain] with LanguageIndependentGenerator with LanguageIndependentTestGenerator
 
   // time the synthesis of the generated code plus test suites
-  def generatedCode(approachName:String, systemName: String): Long = {
+  def generatedCode(approachName:String, systemName: String, pkg: Option[String]): Long = {
     val now = nanoTime
-    val all_code = gen.generatedCode() ++ gen.generateSuite(None)
+    val all_code = gen.generatedCode() ++ gen.generateSuite(pkg)
     val scala_code = all_code.asInstanceOf[Seq[ScalaWithPath]]
 
     val outputDir = Paths.get("target", "ep-firstVersion", "scala", approachName, systemName)
@@ -47,19 +47,19 @@ object OOTest extends App {
 
     selected match {
       case "e0" => new BaseTest("e0") {
-        override val gen = new WithDomain(MathDomain) with OderskyGenerator with FunSpecTestGenerator with e0
+        override val gen = new WithDomain(MathDomain) with OderskyGenerator with FunSpecOOTestGenerator with e0
       }
       case "e1" => new BaseTest("e1") {
-        override val gen = new WithDomain(MathDomain) with OderskyGenerator with FunSpecTestGenerator with e0 with e1
+        override val gen = new WithDomain(MathDomain) with OderskyGenerator with FunSpecOOTestGenerator with e0 with e1
       }
       case "e2" => new BaseTest("e2") {
-        override val gen = new WithDomain(MathDomain) with OderskyGenerator with FunSpecTestGenerator with e0 with e1 with e2
+        override val gen = new WithDomain(MathDomain) with OderskyGenerator with FunSpecOOTestGenerator with e0 with e1 with e2
       }
       case "e3" => new BaseTest("e3") {
-        override val gen = new WithDomain(MathDomain) with OderskyGenerator with FunSpecTestGenerator with e0 with e1 with e2 with e3
+        override val gen = new WithDomain(MathDomain) with OderskyGenerator with FunSpecOOTestGenerator with e0 with e1 with e2 with e3
       }
       case "e4" => new BaseTest("e4") {
-        override val gen = new WithDomain(MathDomain) with OderskyGenerator with FunSpecTestGenerator with e0 with e1 with e2 with e3 with e4
+        override val gen = new WithDomain(MathDomain) with OderskyGenerator with FunSpecOOTestGenerator with e0 with e1 with e2 with e3 with e4
       }
 
       case _ => ???
@@ -130,13 +130,13 @@ object GenerateApproach extends App {
   println ("Generating code...")
 
   // Choose your own adventure. Cannot go higher than e4 for now...
-  val approach = "oo"
-  val system = "e4"
+  val approach = "straight"
+  val system = "e0"
 
   approach match {
-    case "straight" => StraightTest.evaluate (system).generatedCode (approach, system)
-    case "oo" => OOTest.evaluate (system).generatedCode (approach, system)
-    case "functional" => FunctionalTest.evaluate (system).generatedCode (approach, system)
+    case "straight" => StraightTest.evaluate (system).generatedCode (approach, system, Some("scala_oo"))
+    case "oo" => OOTest.evaluate (system).generatedCode (approach, system, Some("odersky"))
+    case "functional" => FunctionalTest.evaluate (system).generatedCode (approach, system, Some("scala_func"))
 
     case _ => ???
   }

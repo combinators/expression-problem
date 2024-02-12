@@ -5,6 +5,8 @@ import java.nio.file.Paths
 import org.combinators.ep.language.scala.{FunSpecTestGenerator, Scala, ScalaTestWithPath, ScalaWithPath}
 import org.combinators.ep.domain.{BaseDomain, ModelDomain}
 
+// Note: never got these test cases to work...
+
 trait FunSpecOOTestGenerator extends FunSpecTestGenerator {
   val domain: BaseDomain with ModelDomain
 
@@ -22,16 +24,17 @@ trait FunSpecOOTestGenerator extends FunSpecTestGenerator {
       ""
     }
 
-    // t is a Seq[Stat] so we have to expand with mkString
+    // t is a Seq[Stat] so we have to expand with mkString. Would inject ${t.mkString("\n")} below
     testGenerator.zipWithIndex.map{ case (t, num) =>
      ScalaTestWithPath(Scala(s"""
                              |$packageDeclaration
-                             |import org.scalatest.FunSpec
+                             |import org.scalatest.funspec.AnyFunSpec
                              |
-                             |class TestSuite$num extends FunSpec with ${model.name.capitalize} {
+                             |class TestSuite$num extends AnyFunSpec with ${model.name.capitalize} {
                              |  describe("test cases") {
                              |    it ("run test") {
-                             |      ${t.mkString("\n")}
+                             |      alert("Not generating test cases for Odersky")
+                             |      assert(false == true)
                              |    }
                              |  }
                              |}""".stripMargin).source(), Paths.get(s"TestSuite$num.scala"))

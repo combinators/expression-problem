@@ -35,9 +35,9 @@ trait FunSpecFunctionalTestGenerator extends FunSpecTestGenerator {
     testGenerator.zipWithIndex.map{ case (t, num) =>
       ScalaTestWithPath(Scala(s"""
            |$packageDeclaration
-           |import org.scalatest.FunSpec
+           |import org.scalatest.funspec.AnyFunSpec
            |
-           |class TestSuite$num extends FunSpec $withClause {
+           |class TestSuite$num extends AnyFunSpec $withClause {
            |
            |  type visitor = Visitor
            |  ${helpers.mkString("\n")}

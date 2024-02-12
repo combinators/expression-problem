@@ -1,7 +1,3 @@
-import play.sbt.PlayLayoutPlugin
-import play.twirl.sbt.SbtTwirl
-
-
 /** Settings shared globally **/
 lazy val commonSettings = Seq(
   version := "1.0.0-SNAPSHOT",
@@ -80,8 +76,6 @@ lazy val domainShape = standardDomainProject("shape")
 def standardLanguageProject(languageName: String): Project =
   (Project(id = s"language-$languageName", base = file(s"language/$languageName")))
     .settings(commonSettings: _*)
-    //    .enablePlugins(PlayScala)
-    //    .disablePlugins(PlayLayoutPlugin)
     .settings(
       moduleName := s"expression-problem-language-$languageName",
       //libraryDependencies += guice

@@ -443,6 +443,7 @@ To generate the code for system M3, type the following in SBT:
 </code></pre>
 
 This solution only generates for the first three evolutions. 
+
 ## Data Types A La Carte
 
 The 2008 paper [Data Types à la carte](https://doi.org/10.1017/S0956796808006758) by
@@ -456,17 +457,30 @@ To generate the code for system M3, type the following in SBT:
 
 This solution only generates for the first three evolutions. 
 
+# GJ Solutions
+
+We can generate gj code using the Wadler approach.
+
+To generate the code for system M1, type the following in SBT:
+
+<pre><code>
+<b style='color:#5FCA1C'>sbt:expression-problem></b> language-cpp/runMain org.combinators.ep.language.gj.GenerateApproach wadler e1
+</code></pre>
+
+This solution only generates for the first two evolutions, and there is no gj compiler available to validate it.
+
 # Generate All Code
 
 If you just want to generate all code for the different approaches, then do the following:
 
 <pre><code>
-<b style='color:#5FCA1C'>></b> set %JAVA_HOME%=c:\progra~2\java\jdk1.8.0_161
+<b style='color:#5FCA1C'>></b> set JAVA_HOME=c:\progra~2\java\jdk1.8.0_161
 <b style='color:#5FCA1C'>></b> sbt
 <b style='color:#5FCA1C'>sbt:expression-problem></b> language-cpp/runMain org.combinators.ep.language.cpp.GenerateAll
 <b style='color:#5FCA1C'>sbt:expression-problem></b> language-haskell/runMain org.combinators.ep.language.haskell.GenerateAll
 <b style='color:#5FCA1C'>sbt:expression-problem></b> language-java/runMain org.combinators.ep.language.java.GenerateAll
 <b style='color:#5FCA1C'>sbt:expression-problem></b> language-scala/runMain org.combinators.ep.language.scala.GenerateAll
+<b style='color:#5FCA1C'>sbt:expression-problem></b> language-gj/runMain org.combinators.ep.language.gj.GenerateApproach
 <b style='color:#5FCA1C'>sbt:expression-problem></b> exit
 </code></pre>
 

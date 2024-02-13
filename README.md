@@ -177,6 +177,10 @@ To generate the code for system M3, type the following in SBT:
 <b style='color:#5FCA1C'>sbt:expression-problem></b> runMain ep.j.GenerateAll
 </code></pre>
 
+In this original prototype, sometimes the test cases for an approach do not compile because of incompatible
+or missing interfaces and classes. In particular, the test code for the algebra and interpreter approaches may not compile.
+
+These challenges were eventually fixed in subsequent releases of the repository.
 
 # Haskell Solutions
 

@@ -24,15 +24,9 @@ lazy val commonSettings = Seq(
     "-language:implicitConversions"
   ),
 
-
   libraryDependencies ++= Seq(
     "org.combinators" %% "templating" % "1.0.0-RC1+4-ca285511",
-
     "commons-io" % "commons-io" % "2.15.1",
-    "org.scalactic" %% "scalactic" % "3.0.5" % "test",
-    "com.chuusai" %% "shapeless" % "2.3.2",
-    guice,
-    "junit" % "junit" % "4.12",
     "org.scalameta" %% "scalameta" % "3.7.4"
   )
 )

@@ -231,14 +231,17 @@ object AlgebraEvaluateTest extends App {
 
       case "i1" => new BaseTest("i1") {
         override val gen = new WithDomain(MathDomain) with AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with i1
+        extras :+ gen.combinedAlgebra(Some("algebra"), gen.getModel)
       }
 
       case "i2" => new BaseTest("i2") {
         override val gen = new WithDomain(MathDomain) with AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with i1 with i2
+        extras :+ gen.combinedAlgebra(Some("algebra"), gen.getModel)
       }
 
       case "c1" => new BaseTest("c1") {
         override val gen = new WithDomain(MathDomain) with AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with e2 with e3 with i1 with i2 with c1
+        extras :+ gen.combinedAlgebra(Some("algebra"), gen.getModel)
       }
 
       case "s0" => new BaseTest("s0") {

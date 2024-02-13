@@ -177,6 +177,9 @@ To generate the code for system M3, type the following in SBT:
 <b style='color:#5FCA1C'>sbt:expression-problem></b> runMain ep.j.GenerateAll
 </code></pre>
 
+Once you have generated the Java versions, there is a Windows BAT file `evaluate_java.bat` which you can 
+execute from its own directory to compile and run JUnit test cases for the generated code.
+
 In this original prototype, sometimes the test cases for an approach do not compile because of incompatible
 or missing interfaces and classes. In particular, the test code for the algebra and interpreter approaches may not compile.
 

@@ -196,62 +196,62 @@ object AlgebraEvaluateTest extends App {
     selected match {
       case "e0" => new BaseTest("e0") {
         override val gen = new WithDomain(MathDomain) with AlgebraGenerator with AlgebraTestGenerator with e0
-        extras :+ gen.combinedAlgebra(Some("algebra"), gen.getModel)
+        extras = extras :+ gen.combinedAlgebra(Some("algebra"), gen.getModel)
       }
 
       case "e1" => new BaseTest("e1") {
         override val gen = new WithDomain(MathDomain) with AlgebraGenerator with AlgebraTestGenerator with e0 with e1
-        extras :+ gen.combinedAlgebra(Some("algebra"), gen.getModel)
+        extras = extras :+ gen.combinedAlgebra(Some("algebra"), gen.getModel)
       }
 
       case "e2" => new BaseTest("e2") {
         override val gen = new WithDomain(MathDomain) with AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with e2
-        extras :+ gen.combinedAlgebra(Some("algebra"), gen.getModel)
+        extras = extras :+ gen.combinedAlgebra(Some("algebra"), gen.getModel)
       }
 
       case "e3" => new BaseTest("e3") {
         override val gen = new WithDomain(MathDomain) with AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with e2 with e3
-        extras :+ gen.combinedAlgebra(Some("algebra"), gen.getModel)
+        extras = extras :+ gen.combinedAlgebra(Some("algebra"), gen.getModel)
       }
 
       case "e4" => new BaseTest("e4") {
         override val gen = new WithDomain(MathDomain) with AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with e2 with e3 with e4
-        extras :+ gen.combinedAlgebra(Some("algebra"), gen.getModel)
+        extras = extras :+ gen.combinedAlgebra(Some("algebra"), gen.getModel)
       }
 
       case "e5" => new BaseTest("e5") {
         override val gen = new WithDomain(MathDomain) with AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with e2 with e3 with e4 with e5
-        extras :+ gen.combinedAlgebra(Some("algebra"), gen.getModel)
+        extras = extras :+ gen.combinedAlgebra(Some("algebra"), gen.getModel)
       }
 
       case "e6" => new BaseTest("e6") {
         override val gen = new WithDomain(MathDomain) with AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6
-        extras :+ gen.combinedAlgebra(Some("algebra"), gen.getModel)
+        extras = extras :+ gen.combinedAlgebra(Some("algebra"), gen.getModel)
       }
 
       case "i1" => new BaseTest("i1") {
         override val gen = new WithDomain(MathDomain) with AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with i1
-        extras :+ gen.combinedAlgebra(Some("algebra"), gen.getModel)
+        extras = extras :+ gen.combinedAlgebra(Some("algebra"), gen.getModel)
       }
 
       case "i2" => new BaseTest("i2") {
         override val gen = new WithDomain(MathDomain) with AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with i1 with i2
-        extras :+ gen.combinedAlgebra(Some("algebra"), gen.getModel)
+        extras = extras :+ gen.combinedAlgebra(Some("algebra"), gen.getModel)
       }
 
       case "c1" => new BaseTest("c1") {
         override val gen = new WithDomain(MathDomain) with AlgebraGenerator with AlgebraTestGenerator with e0 with e1 with e2 with e3 with i1 with i2 with c1
-        extras :+ gen.combinedAlgebra(Some("algebra"), gen.getModel)
+        extras = extras :+ gen.combinedAlgebra(Some("algebra"), gen.getModel)
       }
 
       case "s0" => new BaseTest("s0") {
         override val gen = new WithDomain(ShapeDomain) with AlgebraGenerator with AlgebraTestGenerator with s0
-        extras :+ gen.combinedAlgebra(Some("algebra"), gen.getModel)
+        extras = extras :+ gen.combinedAlgebra(Some("algebra"), gen.getModel)
       }
 
       case "s1" => new BaseTest("s1") {
         override val gen = new WithDomain(ShapeDomain) with AlgebraGenerator with AlgebraTestGenerator with s0 with s1
-        extras :+ gen.combinedAlgebra(Some("algebra"), gen.getModel)
+        extras = extras :+ gen.combinedAlgebra(Some("algebra"), gen.getModel)
       }
 
       case _ => ???
@@ -443,7 +443,7 @@ object GenerateApproach extends App {
 
   // Choose your own adventure
   val approach = if (args.length == 0) {
-    "oo"
+    "algebra"
   } else {
     args(0)
   }

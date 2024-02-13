@@ -1,6 +1,4 @@
-package ep.java    /*DD:LD:AD*/
-
-import ep.j.{AlgebraEvaluateTest, ExtensibleVisitorEvaluateTest, InterpreterEvaluateTest, OOEvaluateTest, TriviallyEvaluateTest, VisitorEvaluateTest}
+package ep.j    /*DD:LD:AD*/
 
 object GenerateAll extends App {
   println ("Generating code...")

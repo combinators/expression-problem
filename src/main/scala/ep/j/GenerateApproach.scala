@@ -27,7 +27,7 @@ abstract class BaseTest(val id:String) {
   // time the synthesis of the generated code plus test suites. Output to 'ep'
   def generatedCode(approachName:String, systemName: String): Unit = {
     val now = nanoTime
-    val all_code = gen.generatedCode() ++ gen.generateSuite(None) ++ extras
+    val all_code = gen.generatedCode() ++ gen.generateSuite(Some(approachName)) ++ extras
     nanoTime - now
     val outputDir = Paths.get("target", "ep-originalPrototype", "java", approachName, systemName)
 
@@ -37,8 +37,29 @@ abstract class BaseTest(val id:String) {
 
     // all code is FLAT in the same directory. Just extract the interface or class name
     all_code.foreach(u => {
-      val clsName = s"${u.getTypes.asScala.head.getName}.java"
-      val path = Paths.get("target", "ep-originalPrototype", "java", approachName, systemName, clsName)
+      val tpe = u.getTypes.get(0).asTypeDeclaration()
+      val pkg = if (tpe.isTopLevelType) {
+        if (tpe.findCompilationUnit().get().getPackageDeclaration.isPresent) {
+          val pkgName = tpe.findCompilationUnit().get().getPackageDeclaration.get().getNameAsString
+          pkgName + "." + tpe.getNameAsString
+        } else {
+          tpe.getNameAsString
+        }
+      } else {
+        tpe.getNameAsString
+      }
+
+      val all = pkg.split("\\.")
+      all(all.length-1) = all(all.length-1) + ".java"    // need suffix
+
+      // ALL but the last
+      val top = Seq("ep-originalPrototype", "java", approachName, systemName) ++ all.init.toSeq
+      Files.createDirectories(Paths.get("target", top: _*))
+
+      val the_file = Seq("ep-originalPrototype", "java", approachName, systemName) ++ all.toSeq
+
+      //val path = Paths.get("target", "ep-firstVersion", "java", approachName, systemName, clsName)
+      val path = Paths.get("target", the_file:_*)
       Files.write(path, u.toString.getBytes, StandardOpenOption.APPEND, StandardOpenOption.CREATE)
     })
 

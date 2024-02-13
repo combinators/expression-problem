@@ -10,7 +10,7 @@ import org.combinators.templating.twirl.Java
   *
   * Note that we need LitInst for our test generation, so we just grab from M0
   */
-trait InterpreterTestGenerator extends JUnitTestGenerator with M0 {
+trait InterpreterTestGenerator extends JUnitTestGenerator {
 
   /** Interpreter needs a function to get the active model. */
   def getModel:domain.Model
@@ -23,7 +23,7 @@ trait InterpreterTestGenerator extends JUnitTestGenerator with M0 {
     val classify:SimpleName = Java(model.lastModelWithOperation().ops.sortWith(_.name < _.name).map(op => op.concept).mkString("")).simpleName()
 
     inst match {
-      case lit:LitInst => Java(s"new $classify$name(${lit.i.get.toString})").expression()
+      //case lit:LitInst => Java(s"new $classify$name(${lit.i.get.toString})").expression()
       case ui:domain.UnaryInst =>
         Java(s"new $classify$name(${convert(ui.inner)})").expression()
       case bi:domain.BinaryInst =>

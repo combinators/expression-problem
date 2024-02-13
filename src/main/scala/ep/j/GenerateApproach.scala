@@ -443,7 +443,7 @@ object GenerateApproach extends App {
 
   // Choose your own adventure
   val approach = if (args.length == 0) {
-    "extensibleVisitor"
+    "interpreter"
   } else {
     args(0)
   }

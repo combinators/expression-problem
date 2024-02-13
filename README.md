@@ -7,7 +7,39 @@ There are various "solutions" to the Expression Problem. Each solution varies in
 
 In this project, we explore a number of such solutions. Our concern is not with the individual solutions to the Expression Problem (of which there are many), but rather the engineering of these. We provide an alternative, namely, to regenerate all code after modifying the domain.
 
-Let's start with a language for a simple form of arithmetic expressions. We first model the domain using Scala in [BaseDomain](src/main/scala/example/expression/domain/BaseDomain.scala):
+
+## Installation
+
+Once you have cloned this repository (branch `originalPrototype`) you will need to make sure
+that you have a working Scala Built Tool (SBT) installation. You should have a working JDK
+installation that is `1.8` and `11`; it should also work with JDK `17`.
+
+On a Windows PC, for example, you would issue the following commands. Note that to eliminate spaces in the Path names, use the old DOS-style
+option to replace "Program Files (x86)" with either progra~2 or progra~1, if the path
+to your JDK installation contains spaces.
+
+Once SBT is running, you can launch the language-specific server that will
+be the host for different approaches in that language.
+
+<pre><code>
+<b style='color:#5FCA1C'>></b> set %JAVA_HOME%=c:\progra~2\java\jdk1.8.0_161
+<b style='color:#5FCA1C'>></b> sbt
+<b style='color:#5FCA1C'>sbt:expression-problem></b> compile
+</code></pre>
+
+Alternative, you could launch `sbt` with the command line argument to choose the desired JVM to use:
+
+<pre><code>
+<b style='color:#5FCA1C'>></b> sbt --java-home="C:/Progra~2/Java/jdk1.8.0_161/"
+<b style='color:#5FCA1C'>sbt:expression-problem></b> compile
+</code></pre>
+
+This will properly compile all code
+
+At this point, you can now request different EP approaches to generate code in Java that contain
+implementations for the Math Domain.
+
+Let's start with a language for a simple form of arithmetic expressions. We first model the domain using Scala in BaseDomain:
 
 ```
 trait BaseDomain {
@@ -50,11 +82,11 @@ trait ModelDomain extends BaseDomain {
 
 ```
 
-For more details on [ModelDomain](src/main/scala/example/expression/domain/ModelDomain.scala) check out this Scala file. Once these concepts are identified, the designer chooses a programming language and implements a desired solution.
+For more details on `ModelDomain` check out this Scala file. Once these concepts are identified, the designer chooses a programming language and implements a desired solution.
 
 ## Application Domain
 
-The desired application domain (in this case mathematical expressions) extends these traits to provide a specific domain within which to work. The entire evolution history is modeled, from an initial state M0 through successive evolutions. The following [MathDomain](src/main/scala/example/expression/domain/MathDomain.scala) describes the common domain used in the literature when describing the Expression Problem.
+The desired application domain (in this case mathematical expressions) extends these traits to provide a specific domain within which to work. The entire evolution history is modeled, from an initial state M0 through successive evolutions. The following `MathDomain` describes the common domain used in the literature when describing the Expression Problem.
 
 ```
 trait MathDomain extends BaseDomain with ModelDomain {  
@@ -132,80 +164,59 @@ types and operations. We have encoded a number of approaches to the Expression P
 generates solutions in Java. To request the code generation, the following are the completed 
 implementations
 
-## OO Solution
+# Java Solutions
 
-A straight object-oriented approach requires operations to be added to each data type
-class. As new subtypes are created, each can be placed in its own class and there is 
-no trouble with existing code; however, defining new operations means that all existing
-subtypes need to have new methods added to their class. As such, this is not a solution
-to the EP problem:
+We encoded several EP approaches that generate Java code for both `MathDomain` and `ShapeDomain`.
 
-`git clone localhost:9000/oo/m4/m4.git`
+For these Java EP approaches, we can generate up to eight systems for `MathDomain` (e1 through e6)
+and for the `ShapeDomain` we can generate (s0, s1).
 
-![Retrieve ZIP file](https://github.com/combinators/expression-problem/raw/master/oo.zip) with generated source files
+To generate the code for system M3, type the following in SBT:
 
-## Visitor Solution
-
-The Visitor Design Pattern is not an acceptable solution to the Expression Problem 
-because defining new data variants (i.e., `Neg` which negates an expression) 
-requires modifications to all existing `Visitor` classes. However, using our 
-approach, we can simply resynthesize all classes with every change to the 
-Application Domain. 
-
-`git clone localhost:9000/scalaVisitor/m4/m4.git`
-
-![Retrieve ZIP file](https://github.com/combinators/expression-problem/raw/master/scalaVisitor.zip) with generated source files
-
-## Covariant Java Solution
-
-The *Modularity 2016* paper [The Expression Problem, Trivially!](http://i.cs.hku.hk/~bruno/papers/Modularity2016.pdf "Expression Problem, Trivially!")
-by *Yanling Wang* and *Bruno C. d. S. Oliveira* [2]
-describes an approach using _covariant type refinement_ of return types and fields. Unlike existing solutions in
-Java-like languages, this solution does not use any kind of generics.
-
-`git clone localhost:9000/trivially/m4/m4.git`
-
-![Retrieve ZIP file](https://github.com/combinators/expression-problem/raw/master/trivially.zip) with generated source files
-
-## Interpreter Design Pattern
-
-The *TCS 2003 paper* [Solving Expression problem using Interpreter Pattern](http://www.cs.pomona.edu/~kim/ftp/WOOD.pdf) by 
-*Bruce Kim* [3] describes an approach to solving the EP problem using the Interpreter Design Pattern.
-
-`git clone localhost:9000/interpreter/m4/m4.git`
-
-![Retrieve ZIP file](https://github.com/combinators/expression-problem/raw/master/interpreter.zip) with generated source files
-
-## Object Algebras
-
-The *ECOOP 2012 paper* [Extensibility for the Masses](https://dl.acm.org/citation.cfm?id=236716) by 
-*Bruno C. d. S. Oliveira & William R. Cook* [4] describes an approach to solving the EP problem using
-Object Algebras.
-
-`git clone localhost:9000/algebra/m4/m4.git`
-
-![Retrieve ZIP file](https://github.com/combinators/expression-problem/raw/master/algebra.zip) with generated source files
-
-## C++ Solution
-
-C++ solutions exist as well. 
-In a blog [Expression Problem and its solutions](https://eli.thegreenplace.net/2016/the-expression-problem-and-its-solutions "Expression Problem and its solutions")
-Eli Bendersky outlines an approach for using the visitor design pattern as implemented in C++.
-
-`git clone localhost:9000/cpp/m3/m3.git`
-
- This solution only generates for the first three evolutions. It compiles as follows:
- 
-`g++ *.cpp -Icpputest/include -Lcpputest/cpputest_build/lib -lCppUTest -lCppUTestExt`
-
-The [CPPUnit test project](https://github.com/cpputest/cpputest) contains the necessary includes and libraries to 
-cleanly compile this code and confirm all test cases.
- 
- ![Retrieve ZIP file](https://github.com/combinators/expression-problem/raw/master/cpp.zip) with generated source files
-
- 
+<pre><code>
+<b style='color:#5FCA1C'>sbt:expression-problem></b> runMain ep.j.GenerateAll
+</code></pre>
 
 
+# Haskell Solutions
+
+We generate a number of solutions in Haskell, which can be generated as follows:
+
+<pre><code>
+<b style='color:#5FCA1C'>sbt:expression-problem></b> runMain ep.haskell.GenerateAll
+</code></pre>
+
+
+## Trees that grow
+
+The JUCS 2017 paper [Trees that Grow](https://lib.jucs.org/article/22912/list/9/) by _Najd & Jones_ describes a programming idiom that exploits type-level functions to allow a particular form of extensibility.
+
+This solution only generates for the first three evolutions.
+
+## Data Types A La Carte
+
+The 2008 paper [Data Types à la carte](https://doi.org/10.1017/S0956796808006758) by
+Swierstra describes a technique for assembling both data types and functions from isolated individual components.
+
+# GJ Solutions
+
+We can generate gj code using the Wadler approach.
+
+To generate the code for system M1, type the following in SBT:
+
+<pre><code>
+<b style='color:#5FCA1C'>sbt:expression-problem></b> runMain ep.gj.GenerateAll
+</code></pre>
+
+This solution only generates for the first two evolutions, and there is no gj compiler available to validate it.
+
+# C++ Solutions
+
+We can generate several C++ solutions.
+
+<pre><code>
+<b style='color:#5FCA1C'>sbt:expression-problem></b> runMain ep.cpp.GenerateAll
+</code></pre>
 
 # References
 

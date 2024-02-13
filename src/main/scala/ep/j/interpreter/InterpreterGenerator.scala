@@ -42,7 +42,7 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
 
     // one interface for every model that contains an operation
     // Each operation gets interface
-    decls ++ model.inChronologicalOrder.filter(m => m.ops.nonEmpty).map(m => generateBase(m)) ++
+    decls ++ model.inChronologicalOrder.filter(m => m.ops.nonEmpty).map(m => generateBase(m, "interpreter")) ++
     //
     // Each operation must provide class implementations for all past dataTypes since last operation
     model.inChronologicalOrder.filter(m => m.ops.nonEmpty).flatMap(m => generateBaseExtensions(m)) ++
@@ -120,7 +120,7 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
     * @param exp
     * @return
     */
-  override def generateExp(model:domain.Model, exp:domain.Atomic) : CompilationUnit = {
+  override def generateExp(model:domain.Model, exp:domain.Atomic, pkgName:String) : CompilationUnit = {
     val name = Java(s"${exp.concept}").simpleName()
     val baseInterface:Option[Type] = Some(Java(baseInterfaceName(model.lastModelWithOperation())).tpe())
 
@@ -129,7 +129,7 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
     val operations:Seq[MethodDeclaration] = allOps.map(op => methodGenerator(exp,op))
 
     val unit = Java(s"""
-            |package interpreter;
+            |package $pkgName;
             |public class $name implements ${baseInterface.toString} {
             |
             |  ${constructor(exp).toString}
@@ -178,7 +178,7 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
     * @param model
     * @return
     */
-  override def generateBase(model: domain.Model): CompilationUnit = {
+  override def generateBase(model: domain.Model, pkgName:String): CompilationUnit = {
     // concatenate all names
     val fullType:Type = Java(modelInterfaceName(model)).tpe()
     val signatures:Seq[String] = model.ops.map(op => {
@@ -210,7 +210,7 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
     val extension:String = if (lastWithOps.isEmpty) ""
       else "extends " + modelInterfaceName(lastWithOps)
 
-    Java(s"""|package interpreter;
+    Java(s"""|package $pkgName;
              |public interface ${fullType.toString} $extension {
              |  ${signatures.mkString("\n")}
              |}""".stripMargin).compilationUnit
@@ -237,7 +237,7 @@ trait InterpreterGenerator extends JavaGenerator with DataTypeSubclassGenerator 
 
     // compute new types since last operation
 
-    val last = model.lastModelWithOperation()   // HACK. true is not best ansewr
+    val last = model.lastModelWithOperation()   // HACK. true is not best answer
     generateForOp(model, last.ops, lastTypesSinceAnOperation(model), isBase=true) ++ generateIntermediateTypes(model.last)
   }
 

@@ -23,9 +23,9 @@ trait TriviallyGenerator extends ep.j.oo.OOGenerator {
       Seq.empty
     }
 
-    decls ++ flat.types.map(tpe => generateExp(model, tpe)) ++     // one class for each sub-type
-      generateInterfaces(model) :+                        // interfaces for all subtypes
-      generateBase(model)                                 // base interface
+    decls ++ flat.types.map(tpe => generateExp(model, tpe, "trivially")) ++   // one class for each sub-type
+      generateInterfaces(model) :+                                                      // interfaces for all subtypes
+      generateBase(model, "trivially")                                        // base interface
   }
 
   /**
@@ -70,14 +70,14 @@ trait TriviallyGenerator extends ep.j.oo.OOGenerator {
   }
 
   // Needs covariant overriding!
-  override def generateExp(model:domain.Model, exp:domain.Atomic) : CompilationUnit = {
+  override def generateExp(model:domain.Model, exp:domain.Atomic, pkgName:String) : CompilationUnit = {
     val name = Java(s"${exp.concept}").simpleName()
 
     val interfaces = finalInterfaceName +: model.lastModelWithOperation().ops.map(op => interfaceName(exp, op))
     val newType:com.github.javaparser.ast.`type`.Type = Java(finalInterfaceName).tpe()
 
     val compUnit = Java(s"""
-            |package trivially;
+            |package $pkgName;
             |public class $name implements ${interfaces.mkString(",")} {
             |
             |  ${constructor(exp).toString}
@@ -195,7 +195,7 @@ trait TriviallyGenerator extends ep.j.oo.OOGenerator {
     compUnit
   }
 
-  override def generateBase(model: domain.Model): CompilationUnit = {
+  override def generateBase(model: domain.Model, pkgName:String): CompilationUnit = {
 
     val binaryMethodHelper: Seq[BodyDeclaration[_]] = if (model.flatten().hasBinaryMethod()) {
       Java(s"""public tree.Tree ${domain.AsTree.instance}();""").classBodyDeclarations
@@ -204,7 +204,7 @@ trait TriviallyGenerator extends ep.j.oo.OOGenerator {
     }
 
     Java(
-      s"""package trivially;
+      s"""package $pkgName;
          |
          |public interface ${typeConverter(domain.baseTypeRep)} {
          |    ${binaryMethodHelper.mkString("\n")}

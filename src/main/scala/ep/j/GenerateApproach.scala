@@ -443,13 +443,13 @@ object GenerateApproach extends App {
 
   // Choose your own adventure
   val approach = if (args.length == 0) {
-    "algebra"
+    "extensibleVisitor"
   } else {
     args(0)
   }
 
   val system = if (args.length == 0) {
-    "e0"
+    "e3"
   } else {
     args(1)
   }

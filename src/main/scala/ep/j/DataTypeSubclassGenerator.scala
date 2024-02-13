@@ -13,8 +13,8 @@ trait DataTypeSubclassGenerator {
   val domain:ModelDomain
 
   /** Generate the full class for the given expression sub-type. */
-  def generateExp(model:domain.Model, e:domain.Atomic) : CompilationUnit
+  def generateExp(model:domain.Model, e:domain.Atomic, pkgName:String) : CompilationUnit
 
   /** Generate the base class. */
-  def generateBase(model:domain.Model) : CompilationUnit
+  def generateBase(model:domain.Model, pkgName:String) : CompilationUnit
 }

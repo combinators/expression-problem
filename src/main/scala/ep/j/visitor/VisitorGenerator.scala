@@ -29,13 +29,13 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
       Seq.empty
     }
 
-    decls ++ flat.types.map(tpe => generateExp(flat, tpe)) ++         // one class for each sub-type
-      getModel.inChronologicalOrder                          // visitors are constructed in order
+    decls ++ flat.types.map(tpe => generateExp(flat, tpe, "visitor")) ++     // one class for each sub-type
+      getModel.inChronologicalOrder                                                   // visitors are constructed in order
           .filter(m => m.ops.nonEmpty)
           .flatMap(m =>
-              m.ops.map(op => generateOperation(flat, op))) :+    // one class for each op
-      generateBaseClass(flat) :+                              // abstract base class
-      generateBase(flat)                                      // visitor gets its own class (overriding concept)
+              m.ops.map(op => generateOperation(flat, op, "visitor"))) :+    // one class for each op
+      generateBaseClass(flat, "visitor") :+                                  // abstract base class
+      generateBase(flat, "visitor")                                          // visitor gets its own class (overriding concept)
   }
 
   /** Handle self-case here. */
@@ -74,11 +74,11 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
   }
 
   /** Return Visitor class, which contains a visit method for each available sub-type. */
-  override def generateBase(flat:domain.Model): CompilationUnit = {
+  override def generateBase(flat:domain.Model, pkgName:String): CompilationUnit = {
     val signatures = flat.types
       .map(exp => s"public abstract R visit(${exp.name} exp);").mkString("\n")
 
-    Java (s"""|package visitor;
+    Java (s"""|package $pkgName;
               |/*
               | * A concrete visitor describes a concrete operation on expressions. There is one visit
               | * method per type in the class hierarchy.
@@ -92,14 +92,14 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
     * For visitor, the base class defines the accept method used by all subclasses.
     * When BinaryMethods are present, also includes method to convert to Tree object
     */
-  def generateBaseClass(flat:domain.Model):CompilationUnit = {
+  def generateBaseClass(flat:domain.Model, pkgName:String):CompilationUnit = {
     val binaryTreeInterface = if (flat.hasBinaryMethod()) {
       Java(s"""public abstract tree.Tree ${domain.AsTree.instance}();""").classBodyDeclarations
     } else {
       Seq.empty
     }
 
-    Java(s"""|package visitor;
+    Java(s"""|package $pkgName;
              |
              |public abstract class ${domain.baseTypeRep.concept} {
              |    ${binaryTreeInterface.mkString("\n")}
@@ -151,7 +151,7 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
   }
 
   /** Generate the full class for the given expression sub-type from flattened model. */
-  override def generateExp(flat:domain.Model, exp:domain.Atomic) : CompilationUnit = {
+  override def generateExp(flat:domain.Model, exp:domain.Atomic, pkgName:String) : CompilationUnit = {
     val name = exp.toString
 
     val visitor = Java (s"""|public <R> R accept(Visitor<R> v) {
@@ -166,7 +166,7 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
       Seq.empty
     }
 
-    Java(s"""|package visitor;
+    Java(s"""|package $pkgName;
              |public class $name extends ${domain.baseTypeRep.name} {
              |
              |  ${constructor(exp)}
@@ -194,7 +194,7 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
     *
     * Must handle BinaryMethod (Equals) and BinaryMethodBase (Astree) specially.
     */
-  def generateOperation(flat:domain.Model, op:domain.Operation): CompilationUnit = {
+  def generateOperation(flat:domain.Model, op:domain.Operation, pkgName:String): CompilationUnit = {
     val signatures = flat.types.map(exp => methodGenerator(exp, op))
 
     // if operation has parameters then must add to visitor as well
@@ -206,7 +206,7 @@ trait VisitorGenerator extends JavaGenerator with DataTypeSubclassGenerator with
 
     // special case to be handled for BinaryMethods
     val tpe = typeConverter(op.returnType.get)
-    Java(s"""|package visitor;
+    Java(s"""|package $pkgName;
              |public class ${op.concept} extends Visitor<$tpe>{
              |  $ctor
              |

@@ -30,8 +30,8 @@ trait OOGenerator extends JavaGenerator with DataTypeSubclassGenerator with Oper
       Seq.empty
     }
 
-    decls ++ flat.types.map(tpe => generateExp(flat, tpe)) :+      // one class for each sub-type
-      generateBase(flat)                                           // base class $BASE
+    decls ++ flat.types.map(tpe => generateExp(flat, tpe, "oo")) :+      // one class for each sub-type
+      generateBase(flat, "oo")                                           // base class $BASE
 
   }
 
@@ -73,10 +73,10 @@ trait OOGenerator extends JavaGenerator with DataTypeSubclassGenerator with Oper
   }
 
   /** Generate the full class for the given expression sub-type. */
-  def generateExp(model:Model, exp:Atomic) : CompilationUnit = {
+  def generateExp(model:Model, exp:Atomic, pkgName:String) : CompilationUnit = {
     val methods = model.ops.map(op => methodGenerator(exp, op))
 
-    Java(s"""|package oo;
+    Java(s"""|package $pkgName;
              |public class ${exp.toString} extends ${domain.baseTypeRep.name} {
              |  ${constructor(exp)}
              |  ${fields(exp).mkString("\n")}
@@ -85,13 +85,13 @@ trait OOGenerator extends JavaGenerator with DataTypeSubclassGenerator with Oper
   }
 
   /** Generate the base class, with all operations from flattened history. */
-  def generateBase(model:Model): CompilationUnit = {
+  def generateBase(model:Model, pkgName:String): CompilationUnit = {
     val signatures = model.ops.flatMap(op => {
        Java(s"public abstract ${returnType(op)} " +
         s"${op.instance}(${parameters(op)});").methodDeclarations
     })
 
-    Java(s"""|package oo;
+    Java(s"""|package $pkgName;
              |public abstract class ${domain.baseTypeRep.name} {
              |  ${signatures.mkString("\n")}
              |}""".stripMargin).compilationUnit

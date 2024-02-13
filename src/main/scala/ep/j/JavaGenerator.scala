@@ -69,7 +69,6 @@ trait JavaGenerator extends LanguageIndependentGenerator  with Producer {
     val str = s"""|public $name (${params.mkString(",")}) {
                   |   ${cons.mkString("\n")}
                   |}""".stripMargin
-    println ("STR2:" + str)
     Java(str).constructors().head
   }
 
@@ -195,7 +194,6 @@ trait JavaGenerator extends LanguageIndependentGenerator  with Producer {
     unit.getType(typeIndex).setComment(JavaParser.parseJavadoc(doc).toComment(""))
     unit
   }
-
 
   def copyDeclarations (oldType:TypeDeclaration[_], newType:TypeDeclaration[_]) : Unit = {
     val elements = oldType.getMembers.iterator().asScala

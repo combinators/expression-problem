@@ -174,7 +174,6 @@ trait GrowGenerator extends HaskellGenerator with StandardHaskellBinaryMethod wi
     * @return
     */
   def operationForFixedLevel(m:Model, op:Operation, depends:Seq[Operation]) : String = {
-    println ("op:" + op.concept + ", depends:" + depends.map(d => d.concept).mkString(","))
 
     val mcaps = m.name.capitalize // haskell needs data to be capitalized!
     val baseDomain = domain.baseTypeRep.name

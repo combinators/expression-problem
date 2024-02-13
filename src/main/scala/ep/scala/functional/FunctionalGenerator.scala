@@ -200,7 +200,6 @@ trait FunctionalGenerator extends ScalaGenerator with ScalaBinaryMethod {
                    |  $result
                    |  ${baseMembers.mkString("\n")}
                    |}""".stripMargin
-      println ("STR:" + str)
       Scala(str).declaration()
     })
 

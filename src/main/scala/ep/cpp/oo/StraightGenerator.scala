@@ -206,11 +206,4 @@ trait StraightGenerator extends CPPGenerator with DataTypeSubclassGenerator with
         .addHeader(basic).addHeader(headerIncludes)
   }
 
-  def generateBinaryMethodHelpers():Seq[CPPFile] = {
-    if (getModel.flatten().hasBinaryMethod()) {
-      declarations
-    } else {
-      Seq.empty
-    }
-  }
 }

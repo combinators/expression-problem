@@ -1,6 +1,3 @@
-import play.sbt.PlayLayoutPlugin
-import play.twirl.sbt.SbtTwirl
-
 lazy val commonSettings = Seq(
   version := "1.0.0-SNAPSHOT",
   organization := "org.combinators",
@@ -29,11 +26,14 @@ lazy val commonSettings = Seq(
 
 
   libraryDependencies ++= Seq(
-    "org.combinators" %% "cls-scala" % "2.0.0-RC1",
+//    "org.combinators" %% "cls-scala" % "2.0.0-RC1",
     "org.combinators" %% "templating" % "1.0.0-RC1+4-ca285511",
-    "org.combinators" %% "cls-scala-presentation-play-git" % "1.0.0-RC1+8-63d5cf0b",
+//    "org.combinators" %% "cls-scala-presentation-play-git" % "1.0.0-RC1+8-63d5cf0b",
+//    "com.github.javaparser" % "javaparser-core" % "3.14.14",
+//    "com.github.javaparser" % "javaparser-symbol-solver-core" % "3.14.14",
+
+    "commons-io" % "commons-io" % "2.15.1",
     "org.scalactic" %% "scalactic" % "3.0.5" % "test",
-    "org.scalatest" %% "scalatest" % "3.0.5" % "test",
     "com.chuusai" %% "shapeless" % "2.3.2",
     guice,
     "junit" % "junit" % "4.12",
@@ -44,20 +44,19 @@ lazy val commonSettings = Seq(
 lazy val root = (Project(id = "expression-problem", base = file(".")))
   .settings(commonSettings: _*)
   .enablePlugins(SbtTwirl)
-  .enablePlugins(PlayScala)
-  .disablePlugins(PlayLayoutPlugin)
+//  .enablePlugins(PlayScala)
+//  .disablePlugins(PlayLayoutPlugin)
   .settings(
     moduleName := "expression-problem",
-
-    sourceDirectories in (Compile, TwirlKeys.compileTemplates) := Seq(
-      sourceDirectory.value / "main" / "java-templates",
-      sourceDirectory.value / "main" / "python-templates"
-    ),
+//
+//    sourceDirectories in (Compile, TwirlKeys.compileTemplates) := Seq(
+//      sourceDirectory.value / "main" / "java-templates",
+//      sourceDirectory.value / "main" / "python-templates"
+//    ),
     TwirlKeys.templateFormats += ("java" -> "org.combinators.templating.twirl.JavaFormat"),
-    TwirlKeys.templateFormats += ("py" -> "org.combinators.templating.twirl.PythonFormat"),
+//    TwirlKeys.templateFormats += ("py" -> "org.combinators.templating.twirl.PythonFormat"),
     TwirlKeys.templateImports := Seq(),
     TwirlKeys.templateImports += "org.combinators.templating.twirl.Java",
-    TwirlKeys.templateImports += "org.combinators.templating.twirl.Python",
     TwirlKeys.templateImports += "com.github.javaparser.ast._",
     TwirlKeys.templateImports += "com.github.javaparser.ast.body._",
     TwirlKeys.templateImports += "com.github.javaparser.ast.comments._",
@@ -65,8 +64,8 @@ lazy val root = (Project(id = "expression-problem", base = file(".")))
     TwirlKeys.templateImports += "com.github.javaparser.ast.stmt._",
     TwirlKeys.templateImports += "com.github.javaparser.ast.`type`._",
 
-    unmanagedResourceDirectories in Compile += sourceDirectory.value / "main" / "java",
+    unmanagedResourceDirectories in Compile += sourceDirectory.value / "main" / "java"
 
-    PlayKeys.playMonitoredFiles ++= (sourceDirectories in (Compile, TwirlKeys.compileTemplates)).value
+   // PlayKeys.playMonitoredFiles ++= (sourceDirectories in (Compile, TwirlKeys.compileTemplates)).value
   )
 

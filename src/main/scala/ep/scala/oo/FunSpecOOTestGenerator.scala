@@ -15,13 +15,14 @@ trait FunSpecOOTestGenerator extends FunSpecTestGenerator {
     * Annoying to override entire method JUST to add the "with ..." clause. Perhaps this
     * could be revised later.
     */
-  override def generateSuite(pkg: Option[String], model: Option[Model] = None): Seq[ScalaWithPath] = {
+  override def generateSuite(pkg: Option[String], m: Option[Model] = None): Seq[ScalaWithPath] = {
     val packageDeclaration: String = if (pkg.isDefined) {
       s"package ${pkg.get}"
     } else {
       ""
     }
 
+    val model = Some(getModel)
     val allTests = testGenerator ++ performanceMethod
     val files: Seq[ScalaWithPath] = allTests.zipWithIndex.map{ case (t, num) =>
      ScalaTestWithPath(Scala(s"""

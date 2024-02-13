@@ -1,5 +1,6 @@
 package ep.j      /*DI:LD:AI*/
 
+import com.github.javaparser.JavaParser
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.MethodDeclaration
@@ -16,12 +17,15 @@ trait JavaBinaryMethod {
     *
     * @return
     */
-  def helperClasses():Seq[CompilationUnit] = {
-    Seq(
-      example.expression.java.Tree.render(Java("tree").name()).compilationUnit(),
-      example.expression.java.Node.render(Java("tree").name()).compilationUnit(),
-      example.expression.java.Leaf.render(Java("tree").name()).compilationUnit()
-    )
+  def helperClasses(): Seq[CompilationUnit] = {
+    val classes =
+      Seq(
+        JavaParser.parse(getClass.getResourceAsStream("/java-code/Tree.java")),
+        JavaParser.parse(getClass.getResourceAsStream("/java-code/Node.java")),
+        JavaParser.parse(getClass.getResourceAsStream("/java-code/Leaf.java"))
+      )
+    classes.foreach(compilationUnit => compilationUnit.setPackageDeclaration("tree"))
+    classes
   }
 
   /**

@@ -13,7 +13,7 @@ import ep.generator.{FileWithPath, LanguageIndependentGenerator}
 g++ *.cpp  -I ../cpputest/include -L ../cpputest/cpputest_build/lib -lCppUTest -lCppUTestExt -std=c++11
 
   */
-trait CPPGenerator extends LanguageIndependentGenerator {
+trait CPPGenerator extends LanguageIndependentGenerator with CPPBinaryMethod {
 
   type CompilationUnit = CPPFile
   type Type = CPPType
@@ -90,5 +90,15 @@ trait CPPGenerator extends LanguageIndependentGenerator {
   /** Compute parameter "Type name" comma-separated list from operation. */
   def parameters(op:domain.Operation) : String = {
     op.parameters.map(param => typeConverter(param.tpe).toString + " " + param.name).mkString(",")
+  }
+
+  def generateBinaryMethodHelpers():Seq[CPPFile] = {
+
+    // If BinaryMethodTreeBase, need the declarations here.
+    if (getModel.flatten().hasBinaryMethod()) {
+      declarations
+    } else {
+      Seq.empty
+    }
   }
 }

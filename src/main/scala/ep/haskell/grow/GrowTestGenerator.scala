@@ -41,7 +41,8 @@ trait GrowTestGenerator extends HUnitTestGenerator with GrowGenerator {
   }
 
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
-  override def generateSuite(model: Option[Model] = None): Seq[HaskellWithPath] = {
+  override def generateSuite(m: Option[Model] = None): Seq[HaskellWithPath] = {
+    val model = Some(getModel)
     val opsImports = model.get.toSeq.filterNot(m => m.isEmpty).map(m => s"import ${m.name.capitalize}").reverse.mkString("\n")
     var num: Int = -1
     val files: Seq[HaskellWithPath] = testGenerator.map(md => {

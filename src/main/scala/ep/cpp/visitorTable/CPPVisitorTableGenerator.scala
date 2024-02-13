@@ -329,13 +329,4 @@ trait CPPVisitorTableGenerator extends CPPGenerator with DataTypeSubclassGenerat
       .addHeader(Seq(s"""#include "visitor.h" """) ++ allHeaders ++ moreImports)
   }
 
-  def generateBinaryMethodHelpers():Seq[CPPFile] = {
-
-    // If BinaryMethodTreeBase, need the declarations here.
-    if (getModel.flatten().hasBinaryMethod()) {
-      declarations
-    } else {
-      Seq.empty
-    }
-  }
 }

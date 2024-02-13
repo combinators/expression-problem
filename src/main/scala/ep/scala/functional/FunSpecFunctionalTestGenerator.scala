@@ -12,12 +12,14 @@ trait FunSpecFunctionalTestGenerator extends FunSpecTestGenerator {
 
   // should be able to use scala meta transformations, since only adding with clauses
   /** Combine all test cases together into a single JUnit 3.0 TestSuite class. */
-  override def generateSuite(pkg: Option[String], model: Option[Model] = None): Seq[ScalaWithPath] = {
+  override def generateSuite(pkg: Option[String], m: Option[Model] = None): Seq[ScalaWithPath] = {
     val packageDeclaration: String = if (pkg.isDefined) {
       s"package ${pkg.get}"
     } else {
       ""
     }
+
+    val model = Some(getModel)
     val withClause = model.get.inChronologicalOrder.map(m => s"with ${m.name.capitalize}").mkString(" ")
     val allTests = testGenerator ++ performanceMethod
 

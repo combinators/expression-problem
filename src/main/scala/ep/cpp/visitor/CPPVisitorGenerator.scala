@@ -310,15 +310,4 @@ trait CPPVisitorGenerator extends CPPGenerator with DataTypeSubclassGenerator wi
     new CPPClass("IVisitor", "IVisitor", allOps, Seq.empty)
       .addHeader(allForwards ++ moreImports)
   }
-
-  def generateBinaryMethodHelpers():Seq[CPPFile] = {
-
-    // If BinaryMethodTreeBase, need the declarations here.
-    if (getModel.flatten().hasBinaryMethod()) {
-      declarations
-    } else {
-      Seq.empty
-    }
-  }
-
 }

@@ -105,7 +105,6 @@ trait TriviallyGenerator extends ep.j.oo.OOGenerator {
         case Some(tpe) => typeConverter(tpe) // , Some(interfaceName(exp, op)))
         case _ => Java("void").tpe
       })
-
     method.setModifier(Modifier.PUBLIC, false)
 
     // replace all types!

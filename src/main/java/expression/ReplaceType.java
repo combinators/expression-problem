@@ -19,7 +19,7 @@ public class ReplaceType {
         CompilationUnit unit = JavaParser.parse("public class X { Exp a; public X (Exp a) { } public Exp some(String a, Exp b) { return null; } Exp b; String c; }");
         System.out.println(unit.toString());
         replace(unit, JavaParser.parseType("Exp"), JavaParser.parseType("Replacement"));
-        System.out.println(unit.toString());
+        System.out.println(unit);
     }
 
     public static void replace (CompilationUnit unit, Type original, Type covariant ) {

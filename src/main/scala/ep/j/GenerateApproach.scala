@@ -8,7 +8,7 @@ import com.github.javaparser.ast.CompilationUnit
 import ep.domain.{MathDomain, ShapeDomain, WithDomain}
 import ep.j.algebra.{AlgebraGenerator, AlgebraTestGenerator}
 import ep.j.extensibleVisitor.{ExtensibleVisitorGenerator, ExtensibleVisitorTestGenerator}
-import ep.j.interpreter.{InterpreterGenerator, InterpreterTestGenerator}
+import ep.j.interpreter.{InterpreterGenerator, InterpreterMathTestGenerator, InterpreterShapeTestGenerator}
 import ep.j.oo.OOGenerator
 import ep.j.trivially.TriviallyGenerator
 import ep.j.visitor.VisitorGenerator
@@ -267,51 +267,51 @@ object InterpreterEvaluateTest extends App {
   def evaluate(selected:String) : BaseTest = {
     selected match {
       case "e0" => new BaseTest("e0") {
-        override val gen = new WithDomain(MathDomain) with InterpreterGenerator with InterpreterTestGenerator with e0
+        override val gen = new WithDomain(MathDomain) with InterpreterGenerator with InterpreterMathTestGenerator with e0
       }
 
       case "e1" => new BaseTest("e1") {
-        override val gen = new WithDomain(MathDomain) with InterpreterGenerator with InterpreterTestGenerator with e0 with e1
+        override val gen = new WithDomain(MathDomain) with InterpreterGenerator with InterpreterMathTestGenerator with e0 with e1
       }
 
       case "e2" => new BaseTest("e2") {
-        override val gen = new WithDomain(MathDomain) with InterpreterGenerator with InterpreterTestGenerator with e0 with e1 with e2
+        override val gen = new WithDomain(MathDomain) with InterpreterGenerator with InterpreterMathTestGenerator with e0 with e1 with e2
       }
 
       case "e3" => new BaseTest("e3") {
-        override val gen = new WithDomain(MathDomain) with InterpreterGenerator with InterpreterTestGenerator with e0 with e1 with e2 with e3
+        override val gen = new WithDomain(MathDomain) with InterpreterGenerator with InterpreterMathTestGenerator with e0 with e1 with e2 with e3
       }
 
       case "e4" => new BaseTest("e4") {
-        override val gen = new WithDomain(MathDomain) with InterpreterGenerator with InterpreterTestGenerator with e0 with e1 with e2 with e3 with e4
+        override val gen = new WithDomain(MathDomain) with InterpreterGenerator with InterpreterMathTestGenerator with e0 with e1 with e2 with e3 with e4
       }
 
       case "e5" => new BaseTest("e5") {
-        override val gen = new WithDomain(MathDomain) with InterpreterGenerator with InterpreterTestGenerator with e0 with e1 with e2 with e3 with e4 with e5
+        override val gen = new WithDomain(MathDomain) with InterpreterGenerator with InterpreterMathTestGenerator with e0 with e1 with e2 with e3 with e4 with e5
       }
 
       case "e6" => new BaseTest("e6") {
-        override val gen = new WithDomain(MathDomain) with InterpreterGenerator with InterpreterTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6
+        override val gen = new WithDomain(MathDomain) with InterpreterGenerator with InterpreterMathTestGenerator with e0 with e1 with e2 with e3 with e4 with e5 with e6
       }
 
       case "i1" => new BaseTest("i1") {
-        override val gen = new WithDomain(MathDomain) with InterpreterGenerator with InterpreterTestGenerator with e0 with e1 with i1
+        override val gen = new WithDomain(MathDomain) with InterpreterGenerator with InterpreterMathTestGenerator with e0 with e1 with i1
       }
 
       case "i2" => new BaseTest("i2") {
-        override val gen = new WithDomain(MathDomain) with InterpreterGenerator with InterpreterTestGenerator with e0 with e1 with i1 with i2
+        override val gen = new WithDomain(MathDomain) with InterpreterGenerator with InterpreterMathTestGenerator with e0 with e1 with i1 with i2
       }
 
       case "c1" => new BaseTest("c1") {
-        override val gen = new WithDomain(MathDomain) with InterpreterGenerator with InterpreterTestGenerator with e0 with e1 with e2 with e3 with i1 with i2 with c1
+        override val gen = new WithDomain(MathDomain) with InterpreterGenerator with InterpreterMathTestGenerator with e0 with e1 with e2 with e3 with i1 with i2 with c1
       }
 
       case "s0" => new BaseTest("s0") {
-        override val gen = new WithDomain(ShapeDomain) with InterpreterGenerator with InterpreterTestGenerator with s0
+        override val gen = new WithDomain(ShapeDomain) with InterpreterGenerator with InterpreterShapeTestGenerator with s0
       }
 
       case "s1" => new BaseTest("s1") {
-        override val gen = new WithDomain(ShapeDomain) with InterpreterGenerator with InterpreterTestGenerator with s0 with s1
+        override val gen = new WithDomain(ShapeDomain) with InterpreterGenerator with InterpreterShapeTestGenerator with s0 with s1
       }
 
       case _ => ???

@@ -1,4 +1,4 @@
-package org.combinators.helloworld
+package org.combinators.fibonacci
 
 /* Generates Fibonacci Program. */
 
@@ -10,7 +10,6 @@ import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 //FIX: import org.combinators.ep.language.scala.{CodeGenerator, ScalaNameProvider, Syntax}
 
 import java.nio.file.{Path, Paths}
-import scala.meta.{Pkg, Term}
 
 /**
  * Takes functional specification of Fibonacci with Lucas and generates Scala code.
@@ -41,7 +40,7 @@ class FibonacciMainWithLucasScala {
        //FIX:      val computed = files()
       println("[OK]")
       if (targetDirectory.toFile.exists()) {
-        print(s"Cleaning Target Directory (${targetDirectory})...")
+        print(s"Cleaning Target Directory ($targetDirectory)...")
         FileUtils.deleteDirectory(targetDirectory.toFile)
         println("[OK]")
       }
@@ -59,7 +58,7 @@ class FibonacciMainWithLucasScala {
 }
 
 object FibonacciWithLucasScalaDirectToDiskMain extends IOApp {
-  val targetDirectory = Paths.get("target", "ep3", "scala")
+  val targetDirectory:Path = Paths.get("target", "ep3", "scala")
 
   // generated!
   def fib(n: Int): Int = {

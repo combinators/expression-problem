@@ -1,23 +1,21 @@
-package org.combinators.helloworld
+package org.combinators.fibonacci
 
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.ObjectOriented
-import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider}
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Assertions, Equality}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, Functional, control}
+import org.combinators.ep.generator.paradigm.{AnyParadigm, Functional, ObjectOriented, control}
+import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider}
 
-trait FibonacciIndependentWithLucas {
+trait FibonacciIndependent {
   val paradigm: AnyParadigm
   val names: NameProvider[paradigm.syntax.Name]
   val ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Int]
   val ffiAssertions : Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val ffiEquality : Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
-  lazy val fibName = names.mangle("fib")
-  lazy val lucasName = names.mangle("lucas")
-  lazy val testFibName = names.mangle("fibTest")
-  lazy val nName = names.mangle("n")
+  lazy val fibName:paradigm.syntax.Name  = names.mangle("fib")
+  lazy val testFibName:paradigm.syntax.Name = names.mangle("fibTest")
+  lazy val nName:paradigm.syntax.Name  = names.mangle("n")
 
   type IfBlockType
 
@@ -33,12 +31,13 @@ trait FibonacciIndependentWithLucas {
   def find_method(name:paradigm.syntax.Name) : Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression]
 
   // add method (in OO this would require construction of a class first...)
-  def add_methods(methods:Map[paradigm.syntax.Name, Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]]]):
-      Generator[paradigm.CompilationUnitContext, Unit]
+  def add_method(name: paradigm.syntax.Name,
+                 spec: Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]]
+                 ): Generator[paradigm.CompilationUnitContext, Unit]
 
   def return_in_if(toReturn:Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression]): Generator[paradigm.MethodBodyContext, IfBlockType]
 
-  def make_fibonacci22(): Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
+  def make_fibonacci(): Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
     import paradigm.methodBodyCapabilities._
 
     for {
@@ -60,105 +59,20 @@ trait FibonacciIndependentWithLucas {
       fn_2 <- apply(func, Seq(n_2))
       addExpr <- ffiArithmetic.arithmeticCapabilities.add(fn_1, fn_2)
 
-      // control
-      res <- if_then_else(le1, return_in_if(Command.lift(one)), Seq.empty, return_in_if(Command.lift(addExpr)))
-    } yield res
-  }
-
-  def make_lucas(): Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
-    import paradigm.methodBodyCapabilities._
-
-    for {
-      intType <- toTargetLanguageType(TypeRep.Int)
-
-      _ <- paradigm.methodBodyCapabilities.setParameters(Seq((nName, intType)))
-      _ <- paradigm.methodBodyCapabilities.setReturnType(intType)
-      args <- getArguments()
-      func <- find_method_recursive(fibName)
-      zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
-      one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
-      two <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 2)
-      (name,tpe,n) = args.head
-      le0 <- ffiArithmetic.arithmeticCapabilities.le(n, zero)
-      le1 <- ffiArithmetic.arithmeticCapabilities.le(n, one)
-
-      // Lucas(n) = Fib(n-1) + F(n+1) for n > 1
-      n_sub_1 <- ffiArithmetic.arithmeticCapabilities.sub(n, one)
-      n_add_1 <- ffiArithmetic.arithmeticCapabilities.add(n, one)
-      fn_sub_1 <- apply(func, Seq(n_sub_1))
-      fn_add_1 <- apply(func, Seq(n_add_1))
-
-      addExpr <- ffiArithmetic.arithmeticCapabilities.add(fn_sub_1, fn_add_1)
-
-      res <- if_then_else(le0, return_in_if(Command.lift(two)), Seq(
-        (le1, return_in_if(Command.lift(one)))
-      ), return_in_if(Command.lift(addExpr)))
-
-    } yield res
-  }
-
-  def make_fibonacci(): Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
-    import paradigm.methodBodyCapabilities._
-
-    for {
-      intType <- toTargetLanguageType(TypeRep.Int)
-      _ <- paradigm.methodBodyCapabilities.setParameters(Seq((nName, intType)))
-      _ <- paradigm.methodBodyCapabilities.setReturnType(intType)
-      args <- getArguments()
-
-      zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
-      one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
-      two <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 2)
-      three <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 3)
-
-      /*
-       *   n1 = floor(n/2)
-       *   n2 = n - n1
-       *   Fib(n) = [(Fib(n1)*Lucas(n2) + Fib(n2)*Lucas(n1)] / 2
-       */
-      (name,tpe,n) = args.head
-      n1 <- ffiArithmetic.arithmeticCapabilities.div(n, two)
-      n2 <- ffiArithmetic.arithmeticCapabilities.sub(n, n1)
-
-      func_fib <- find_method_recursive(fibName)
-      func_lucas <- find_method_recursive(lucasName)
-
-      n1_fib <- apply(func_fib, Seq(n1))
-      n2_lucas <- apply(func_lucas, Seq(n2))
-
-      n1_lucas <- apply(func_lucas, Seq(n1))
-      n2_fib <- apply(func_fib, Seq(n2))
-
-      mult1Expr <- ffiArithmetic.arithmeticCapabilities.mult(n1_fib,n2_lucas)
-      mult2Expr <- ffiArithmetic.arithmeticCapabilities.mult(n1_lucas,n2_fib)
-      addExpr <- ffiArithmetic.arithmeticCapabilities.add(mult1Expr, mult2Expr)
-      resExpr <- ffiArithmetic.arithmeticCapabilities.div(addExpr, two)
-
-      le0 <- ffiArithmetic.arithmeticCapabilities.le(n, zero)
-      le1 <- ffiArithmetic.arithmeticCapabilities.le(n, one)
-      le2 <- ffiArithmetic.arithmeticCapabilities.le(n, two)
-      le3 <- ffiArithmetic.arithmeticCapabilities.le(n, three)
-
-      // not right but need to compile
-      res <- if_then_else(le0, return_in_if(Command.lift(zero)), Seq(
-        (le1, return_in_if(Command.lift(one))),
-        (le2, return_in_if(Command.lift(one))),
-        (le3, return_in_if(Command.lift(two))),
-      ), return_in_if(Command.lift(resExpr)))
-
+      // for n <= 1 just return n. This ensures F0=0 and F1=1
+      res <- if_then_else(le1, return_in_if(Command.lift(n)), Seq.empty, return_in_if(Command.lift(addExpr)))
     } yield res
   }
 
   def make_unit(): Generator[paradigm.CompilationUnitContext, Unit] = {
-    add_methods(Map(
-      lucasName -> make_lucas(),
-      fibName -> make_fibonacci()
-    ))
+    for {
+      _ <- add_method(fibName, make_fibonacci())
+    } yield ()
   }
 
   def make_fibonacci_test(): Generator[paradigm.MethodBodyContext, Seq[paradigm.syntax.Expression]] = {
-    import paradigm.methodBodyCapabilities._
     import ffiEquality.equalityCapabilities._
+    import paradigm.methodBodyCapabilities._
     for {
       intType <- toTargetLanguageType(TypeRep.Int)
       func <- find_method(fibName)
@@ -173,15 +87,10 @@ trait FibonacciIndependentWithLucas {
 
       seven <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 7)
       thirteen <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 13)
-      twentynine <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 29)
       check7 <- apply(func, Seq(seven))
       asserteq7 <- ffiAssertions.assertionCapabilities.assertEquals(intType, check7, thirteen)
 
-      lucasfunc <- find_method(lucasName)
-      lucascheck7 <- apply(lucasfunc, Seq(seven))
-      asserteq8 <- ffiAssertions.assertionCapabilities.assertEquals(intType, lucascheck7, twentynine)
-
-    } yield Seq(asserteq0, asserteq1, asserteq7, asserteq8)
+    } yield Seq(asserteq0, asserteq1, asserteq7)
   }
 
   def make_test() : Generator[paradigm.TestContext, Unit] = {
@@ -198,8 +107,8 @@ trait FibonacciIndependentWithLucas {
   }
 }
 
-object FibonacciIndependentWithLucasProvider {
-  type WithParadigm[P <: AnyParadigm] = FibonacciIndependentWithLucas { val paradigm: P }
+object FibonacciIndependentProvider {
+  type WithParadigm[P <: AnyParadigm] = FibonacciIndependent { val paradigm: P }
   type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 
   def functional[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
@@ -211,8 +120,8 @@ object FibonacciIndependentWithLucasProvider {
    c3:  Assertions.WithBase[base.MethodBodyContext, base.type],
    c4: Equality.WithBase[base.MethodBodyContext, base.type],
   )
-  : FibonacciIndependentWithLucasProvider.WithParadigm[base.type] =
-    new FibonacciIndependentWithLucas {
+  : FibonacciIndependentProvider.WithParadigm[base.type] =
+    new FibonacciIndependent {
       override val paradigm: base.type = base
       override val names: NameProvider[paradigm.syntax.Name] = nameProvider
 
@@ -233,13 +142,8 @@ object FibonacciIndependentWithLucasProvider {
         func.methodBodyCapabilities.findMethod(Seq(name))
       }
 
-      override def add_methods(methods: Map[paradigm.syntax.Name, Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]]]): Generator[paradigm.CompilationUnitContext, Unit] = {
-        import AnyParadigm.syntax._
-        for {
-          _ <- forEach(methods.toList) { case (name, spec) =>
-            func.compilationUnitCapabilities.addMethod(name, spec.map(x => x.get))
-          }
-        } yield ()
+      override def add_method(name: paradigm.syntax.Name, spec: Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]]): Generator[paradigm.CompilationUnitContext, Unit] = {
+        func.compilationUnitCapabilities.addMethod(name, spec.map(x => x.get))
       }
 
       override def return_in_if(toReturn: Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression]): Generator[paradigm.MethodBodyContext, IfBlockType] = {
@@ -256,8 +160,8 @@ object FibonacciIndependentWithLucasProvider {
    c3:  Assertions.WithBase[base.MethodBodyContext, base.type],
    c4: Equality.WithBase[base.MethodBodyContext, base.type],
   )
-  : FibonacciIndependentWithLucasProvider.WithParadigm[base.type] =
-    new FibonacciIndependentWithLucas {
+  : FibonacciIndependentProvider.WithParadigm[base.type] =
+    new FibonacciIndependent {
       override val paradigm: base.type = base
       override val names: NameProvider[paradigm.syntax.Name] = nameProvider
 
@@ -266,7 +170,7 @@ object FibonacciIndependentWithLucasProvider {
       override val ffiEquality : Equality.WithBase[paradigm.MethodBodyContext, paradigm.type] = c4
 
       override type IfBlockType = Unit
-      lazy val fibClass = names.mangle("Fib")
+      lazy val fibClass:paradigm.syntax.Name  = names.mangle("Fib")
 
       override def if_then_else(cond: paradigm.syntax.Expression, ifBlock: Generator[paradigm.MethodBodyContext, IfBlockType], ifElseBlocks: Seq[(paradigm.syntax.Expression, Generator[paradigm.MethodBodyContext, IfBlockType])], elseBlock: Generator[paradigm.MethodBodyContext, IfBlockType]): Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
         for {
@@ -289,19 +193,8 @@ object FibonacciIndependentWithLucasProvider {
           res <- obj.methodBodyCapabilities.getMember(fib, name)
         } yield res
       }
-      override def add_methods(methods:Map[paradigm.syntax.Name, Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]]]) :
-        Generator[paradigm.CompilationUnitContext, Unit] = {
-        import AnyParadigm.syntax._
-
-          def makeMethods(): Generator[obj.ClassContext, Unit] = {
-            for {
-              _ <- forEach(methods.toList) { case (name, spec) =>
-                obj.classCapabilities.addMethod(name, spec)
-              }
-            } yield ()
-          }
-
-          obj.compilationUnitCapabilities.addClass(fibClass, makeMethods())
+      override def add_method(name: paradigm.syntax.Name, spec: Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]]): Generator[paradigm.CompilationUnitContext, Unit] = {
+        obj.compilationUnitCapabilities.addClass(fibClass, obj.classCapabilities.addMethod(name, spec))
       }
 
       override def return_in_if(toReturn: Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression]): Generator[paradigm.MethodBodyContext, IfBlockType] = {

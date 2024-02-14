@@ -1,4 +1,4 @@
-package org.combinators.helloworld
+package org.combinators.fibonacci
 
 /* Generates Fibonacci Program. */
 

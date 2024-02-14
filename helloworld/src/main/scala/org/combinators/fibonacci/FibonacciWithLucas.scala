@@ -1,10 +1,10 @@
-package org.combinators.helloworld
+package org.combinators.fibonacci
 
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider}
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Assertions, Equality}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, Functional, control}
+import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider}
 
 /**
  * Take advantage of observation that:
@@ -29,10 +29,10 @@ trait FibonacciWithLucas {
   val ffiAssertions : Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val ffiEquality : Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
-  lazy val fibName = names.mangle("fib")
-  lazy val lucasName = names.mangle("lucas")
-  lazy val testFibName = names.mangle("fibTest")
-  lazy val nName = names.mangle("n")
+  lazy val fibName:paradigm.syntax.Name  = names.mangle("fib")
+  lazy val lucasName:paradigm.syntax.Name  = names.mangle("lucas")
+  lazy val testFibName:paradigm.syntax.Name  = names.mangle("fibTest")
+  lazy val nName:paradigm.syntax.Name  = names.mangle("n")
 
   def make_lucas(): Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression] = {
     import functionalControlParadigm.functionalCapabilities._
@@ -121,8 +121,8 @@ trait FibonacciWithLucas {
   }
 
   def make_fibonacci_test(): Generator[paradigm.MethodBodyContext, Seq[paradigm.syntax.Expression]] = {
-    import paradigm.methodBodyCapabilities._
     import ffiEquality.equalityCapabilities._
+    import paradigm.methodBodyCapabilities._
     for {
       intType <- toTargetLanguageType(TypeRep.Int)
       func <- functionalParadigm.methodBodyCapabilities.findMethod(Seq(fibName))

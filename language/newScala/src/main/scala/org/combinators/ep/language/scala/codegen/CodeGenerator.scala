@@ -18,7 +18,7 @@ import org.combinators.ep.language.inbetween.polymorphism.generics.Generics
 import java.nio.file.{Path, Paths}
 
 /**
- * Java-specific.
+ * Scala-specific.
  *
  * These paradigm-specific traits are conceptually different from each other
  */
@@ -171,7 +171,7 @@ sealed class CodeGenerator(domainName: String) { cc =>
 
   def treeLibrary: FileWithPath = {
     FileWithPath(
-      getClass.getResourceAsStream(s"/scala-code/org/combinators/ep/util/Trees.scala").readAllBytes(),
+      getClass.getResourceAsStream("/scala-code/org/combinators/ep/util/Trees.scala").readAllBytes(),
       Paths.get("src", "main", "scala", "org", "combinators", "ep", "util", "Trees.scala")
     )
   }

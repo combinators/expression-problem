@@ -289,7 +289,7 @@ object DirectToDiskMain extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
 
     // extensibleVisitor, trivially, interpreter all have issues with O1.
-    val approach = if (args.isEmpty) "interpreter" else args.head
+    val approach = if (args.isEmpty) "extensibleVisitor" else args.head
     if (approach == "exit") { sys.exit(0) }
     val selection = if (args.isEmpty || args.tail.isEmpty) "O2" else args.tail.head
     println("Generating " + approach + " for " + selection)

@@ -63,6 +63,32 @@ trait CoCoClean extends ApproachImplementationProvider {
     }.toSet
   }
 
+  /**
+   * Base domain always needs. With new data types, we need a new factory. If current domain defines a new type interface, then
+   * we need to define factory.
+   *
+   * Otherwise if merge case and have more than one ancestor that defines type interface then definitely need a factory
+   */
+  def latestModelDefiningNewFactoryType(domain: GenericModel): GenericModel = {
+    if (domain.isDomainBase || domain.typeCases.nonEmpty || domain == latestModelDefiningNewTypeInterface(domain)) {
+      domain
+    } else {
+      // is there a single type that can represent the "least upper bound" of all prior branches.
+      val ancestorsWithFactoryTypes = domain.former.map(ancestor => latestModelDefiningNewFactoryType(ancestor)).distinct
+      // To validate this works, need multiple branches where NEITHER defines operators
+      if (ancestorsWithFactoryTypes.size == 1 && !ancestorsWithFactoryTypes.head.isDomainBase) { // take care to avoid falling below "floor"
+        ancestorsWithFactoryTypes.head
+      } else {
+        domain
+      }
+    }
+  }
+
+  /**
+   * When there is a new operation, definitely need a new Exp interface.
+   *
+   * Merge case handed here.
+   */
   def latestModelDefiningNewTypeInterface(domain: GenericModel): GenericModel = {
     if (domain.isDomainBase || domain.ops.nonEmpty) {
       domain
@@ -190,7 +216,19 @@ trait CoCoClean extends ApproachImplementationProvider {
     } yield ()
   }
 
-  def addNewFactoryInterface(domain: GenericModel): Generator[paradigm.ProjectContext, Unit] = {
+  /**
+   * Could have a merge case where both branches only add data types, and so the subsequent merge has no EIP.
+   *
+   * Could have a merge case where both branches only add operations, and so the subsequent merge has no EIP.
+   *
+   * Could have a merge case where both branches only have EIP optimizations, and the subsequent merge has no EIP.
+   *   (a) could be the case that both optimizations involve the same op/datatype case
+   *   (b) could be independent
+   *
+   * Check if all ops and data types present at the current point are present in all formers. If this is not the
+   * case then structurally there is a need for a Factory
+   */
+  def addNewFactoryInterfaceIfNecessary(domain: GenericModel): Generator[paradigm.ProjectContext, Unit] = {
     def makeNewFactoryInterface(): Generator[ooParadigm.ClassContext, Unit] = {
       import ooParadigm.classCapabilities._
       import genericsParadigm.classCapabilities._
@@ -219,8 +257,12 @@ trait CoCoClean extends ApproachImplementationProvider {
       } yield ()
     }
 
-    import ooParadigm.projectCapabilities._
-    addClassToProject(makeNewFactoryInterface(), names.mangle(names.instanceNameOf(domain)), ComponentNames.factory)
+    if (domain != latestModelDefiningNewFactoryType(domain)) {
+      Command.skip
+    } else {
+      import ooParadigm.projectCapabilities._
+      addClassToProject(makeNewFactoryInterface(), names.mangle(names.instanceNameOf(domain)), ComponentNames.factory)
+    }
   }
 
   def setOperationMethodSignature(domain: GenericModel, finalizedType: paradigm.syntax.Type, operation: Operation): Generator[paradigm.MethodBodyContext, Unit] = {
@@ -245,6 +287,11 @@ trait CoCoClean extends ApproachImplementationProvider {
     } yield ()
   }
 
+  /**
+   * When a new Exp is necessary, there must be a factory.
+   *
+   * When a new DT is defined or an Operation then you
+   */
   def addNewTypeInterfaceIfNecessary(domain: GenericModel): Generator[paradigm.ProjectContext, Unit] = {
     def makeNewTypeInterface(): Generator[ooParadigm.ClassContext, Unit] = {
       import ooParadigm.classCapabilities._
@@ -290,7 +337,7 @@ trait CoCoClean extends ApproachImplementationProvider {
     * Will only contain data type cases which have been newly introduced in at least one of the ancestor branches
     * or require an update because of missing/overwritten operations or merging of multiple branches.
     */
-  def newDataTypeCasesWithNewOperations(evolutionImplementationProvider: EvolutionImplementationProvider[this.type], domain: GenericModel): Map[DataTypeCase, Set[Operation]] = {
+  def newDataTypeCasesWithNewOperations(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Map[DataTypeCase, Set[Operation]] = {
     val flatDomain = domain.flatten
     val allDataTypeCases = flatDomain.typeCases.toSet
     val allOperations = flatDomain.ops.toSet
@@ -301,7 +348,7 @@ trait CoCoClean extends ApproachImplementationProvider {
 
       val overwrittenOperations = allOperations.filter { operation =>
         // Does our current domain contain an override implementation?
-        evolutionImplementationProvider.evolutionSpecificDependencies(
+        domainSpecific.evolutionSpecificDependencies(
           PotentialRequest(domain.baseDataType, tpeCase, operation)
         ).contains(domain)
       }
@@ -315,31 +362,36 @@ trait CoCoClean extends ApproachImplementationProvider {
     }
   }
 
-  def latestModelDefiningDataTypeCaseInterface(domain: GenericModel, dataTypeCase: DataTypeCase): Option[GenericModel] = {
+  def latestModelDefiningDataTypeCaseInterface(domain: GenericModel, dataTypeCase: DataTypeCase, domainSpecific: EvolutionImplementationProvider[this.type]): Option[GenericModel] = {
     // Either this is the current domain (new Exp interface, then we know dataTypeCase is being redeclared anyway because of new operation); or
     // it is a prior domain (using a former Exp interface, we are currently freshly declaring the data type case interface either because our
     // branch has never seen this data type case OR if it has seen it, since ancestor had added data type and we need to find latest point where
     // it was seen)
-    val _latestModelDefiningNewTypeInterface = latestModelDefiningNewTypeInterface(domain)
-    val modelDeclaringTypeCase = domain.findTypeCase(dataTypeCase)
-    if (modelDeclaringTypeCase.isEmpty) {
-      // wasn't declared at all, so it can't be found
-      Option.empty
-    } else if (_latestModelDefiningNewTypeInterface.before(modelDeclaringTypeCase.get)) {
-      // type case had been declared on a model between us and this one, so take intervening one
-      modelDeclaringTypeCase
+
+    // cannot skip over intervening models that have EIP overridden for this dataTypeCase on any operation
+    val m = newDataTypeCasesWithNewOperations(domain, domainSpecific)
+
+    if (m.contains(dataTypeCase)) {
+      // then we are in charge
+      Some(domain)
     } else {
-      Some(_latestModelDefiningNewTypeInterface)
+      val latestModelsForBranches = domain.former.flatMap(gm => latestModelDefiningDataTypeCaseInterface(gm, dataTypeCase, domainSpecific).toSeq).distinct
+      if (latestModelsForBranches.size == 1 && !latestModelsForBranches.head.isDomainBase) {
+        Some(latestModelsForBranches.head)
+      } else {
+        // If more than one ancestor doing this,
+        None
+      }
     }
   }
 
-  def mostSpecificTypeCaseInterface[Context](domain: GenericModel, finalizedType: paradigm.syntax.Type, dataTypeCase:DataTypeCase)(implicit
+  def mostSpecificTypeCaseInterface[Context](domain: GenericModel, finalizedType: paradigm.syntax.Type, dataTypeCase:DataTypeCase, domainSpecific: EvolutionImplementationProvider[this.type])(implicit
           canFindClass: Understands[Context, FindClass[paradigm.syntax.Name, paradigm.syntax.Type]],
           canResolveImport: Understands[Context, ResolveImport[paradigm.syntax.Import, paradigm.syntax.Type]],
           canAddImport: Understands[Context, AddImport[paradigm.syntax.Import]],
           canApplyType: Understands[Context, Apply[paradigm.syntax.Type, paradigm.syntax.Type, paradigm.syntax.Type]],
   ): Generator[Context, Option[paradigm.syntax.Type]] = {
-    val _latestModelDefiningDataTypeCaseInterface = latestModelDefiningDataTypeCaseInterface(domain, dataTypeCase)
+    val _latestModelDefiningDataTypeCaseInterface = latestModelDefiningDataTypeCaseInterface(domain, dataTypeCase, domainSpecific)
 
     if (_latestModelDefiningDataTypeCaseInterface.isEmpty) {
       Command.lift[Context, Option[paradigm.syntax.Type]](Option.empty)
@@ -368,7 +420,7 @@ trait CoCoClean extends ApproachImplementationProvider {
   }
 
   def makeOperationImplementation(
-      evolutionImplementationProvider: EvolutionImplementationProvider[this.type],
+      domainSpecific: EvolutionImplementationProvider[this.type],
       domain: GenericModel,
       finalizedType: paradigm.syntax.Type,
       dataTypeCase: DataTypeCase,
@@ -403,12 +455,12 @@ trait CoCoClean extends ApproachImplementationProvider {
           ),
           model = Some(domain)
         )
-      result <- evolutionImplementationProvider.logic(this)(receivedRequest)
+      result <- domainSpecific.logic(this)(receivedRequest)
     } yield result
   }
 
-  def addDataTypeCaseInterfaces(evolutionImplementationProvider: EvolutionImplementationProvider[this.type], domain: GenericModel): Generator[paradigm.ProjectContext, Unit] = {
-    val _newDataTypeCasesWithNewOperations = newDataTypeCasesWithNewOperations(evolutionImplementationProvider, domain)
+  def addDataTypeCaseInterfaces(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
+    val _newDataTypeCasesWithNewOperations = newDataTypeCasesWithNewOperations(domain, domainSpecific)
 
     def makeNewTypeCaseInterface(newDataTypeCase:DataTypeCase, newOperations:Set[Operation]) : Generator[ooParadigm.ClassContext, Unit] = {
       import ooParadigm.classCapabilities._
@@ -423,10 +475,11 @@ trait CoCoClean extends ApproachImplementationProvider {
         parentBaseInterfaceType <- mostSpecificBaseInterfaceType(domain, finalizedType)
         _ <- addParent(parentBaseInterfaceType)
 
-        // Also inherit from latest factory if necessary because no new base interface was declared
-        _ <- if (latestModelDefiningNewTypeInterface(domain) != domain) {
+        // Also inherit from latest factory if necessary because no new base interface was declared.
+        // If these are identical, then we get stuff from the Exp (since it is always latest factory); if different we need to pull in.
+        _ <- if (latestModelDefiningNewTypeInterface(domain) != latestModelDefiningNewFactoryType(domain)) {
           for {
-            parentFactoryInterfaceType <- appliedFactoryInterfaceType(domain, finalizedType)
+            parentFactoryInterfaceType <- appliedFactoryInterfaceType(latestModelDefiningNewFactoryType(domain), finalizedType)
             _ <- addParent(parentFactoryInterfaceType)
           } yield ()
         } else Command.skip[ooParadigm.ClassContext]
@@ -434,7 +487,7 @@ trait CoCoClean extends ApproachImplementationProvider {
         // Inherit previous data type case implementations
         _ <- forEach(domain.former) { ancestor =>
           for {
-             parentDataTypeCaseInterface <- mostSpecificTypeCaseInterface(ancestor, finalizedType, newDataTypeCase)
+             parentDataTypeCaseInterface <- mostSpecificTypeCaseInterface(ancestor, finalizedType, newDataTypeCase, domainSpecific)
             _ <- if (parentDataTypeCaseInterface.nonEmpty) {
               addParent(parentDataTypeCaseInterface.get)
             } else {
@@ -460,7 +513,7 @@ trait CoCoClean extends ApproachImplementationProvider {
           addMethod(
             names.mangle(names.instanceNameOf(newOperation)),
             makeOperationImplementation(
-              evolutionImplementationProvider = evolutionImplementationProvider,
+              domainSpecific = domainSpecific,
               domain = domain,
               finalizedType = finalizedType,
               dataTypeCase = newDataTypeCase,
@@ -500,12 +553,12 @@ trait CoCoClean extends ApproachImplementationProvider {
     } yield finalizedFactoryType
   }
 
-  def mostSpecificTypeCaseClass[Context](domain: GenericModel, finalizedType: paradigm.syntax.Type, dataTypeCase: DataTypeCase)(implicit
+  def mostSpecificTypeCaseClass[Context](domain: GenericModel, finalizedType: paradigm.syntax.Type, dataTypeCase: DataTypeCase, domainSpecific: EvolutionImplementationProvider[this.type])(implicit
     canFindClass: Understands[Context, FindClass[paradigm.syntax.Name, paradigm.syntax.Type]],
     canResolveImport: Understands[Context, ResolveImport[paradigm.syntax.Import, paradigm.syntax.Type]],
     canAddImport: Understands[Context, AddImport[paradigm.syntax.Import]]
   ): Generator[Context, Option[paradigm.syntax.Type]] = {
-    val _latestModelDefiningDataTypeCaseInterface = latestModelDefiningDataTypeCaseInterface(domain, dataTypeCase)
+    val _latestModelDefiningDataTypeCaseInterface = latestModelDefiningDataTypeCaseInterface(domain, dataTypeCase, domainSpecific)
 
     if (_latestModelDefiningDataTypeCaseInterface.isEmpty) {
       Command.lift[Context, Option[paradigm.syntax.Type]](Option.empty)
@@ -517,13 +570,13 @@ trait CoCoClean extends ApproachImplementationProvider {
     }
   }
 
-  def makeFinalizedFactoryMethod(domain: GenericModel, finalizedType: paradigm.syntax.Type, dataTypeCase: DataTypeCase): Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
+  def makeFinalizedFactoryMethod(domain: GenericModel, finalizedType: paradigm.syntax.Type, dataTypeCase: DataTypeCase, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
     for {
       _ <- setFactoryMethodSignature(domain, finalizedType, dataTypeCase)
       attributeValues <- getArguments()
-      typeToInstantiate <- mostSpecificTypeCaseClass(domain, finalizedType, dataTypeCase)
+      typeToInstantiate <- mostSpecificTypeCaseClass(domain, finalizedType, dataTypeCase, domainSpecific)
       result <- instantiateObject(typeToInstantiate.get, attributeValues.map(_._3))
     } yield Some(result)
   }
@@ -541,17 +594,18 @@ trait CoCoClean extends ApproachImplementationProvider {
     } yield Some(result)
   }
 
-  def addFinalizedFactoryInterface(domain: GenericModel): Generator[paradigm.ProjectContext, Unit] = {
+  def addFinalizedFactoryInterface(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
     def makeNewFinalizedFactoryInterface(): Generator[ooParadigm.ClassContext, Unit] = {
       import ooParadigm.classCapabilities._
       import genericsParadigm.classCapabilities._
       val _latestModelDefiningNewTypeInterface = latestModelDefiningNewTypeInterface(domain)
+      val latestFactory = latestModelDefiningNewFactoryType(domain)
       val currentDomainDefinesNewTypeInterface = _latestModelDefiningNewTypeInterface == domain
       for {
         finalizedType <- finalizedBaseInterfaceType(domain)
 
         // Set parent factory types
-        nonFinalizedParentFactoryType <- appliedFactoryInterfaceType(domain, finalizedType)
+        nonFinalizedParentFactoryType <- appliedFactoryInterfaceType(latestFactory, finalizedType)
         _ <- addParent(nonFinalizedParentFactoryType)
 
         _ <- if (!currentDomainDefinesNewTypeInterface) {
@@ -564,8 +618,8 @@ trait CoCoClean extends ApproachImplementationProvider {
         } else Command.skip[ooParadigm.ClassContext]
 
         // Add factory methods
-        _ <- forEach(domain.flatten.typeCases.distinct.filter(dataTypeCase => latestModelDefiningDataTypeCaseInterface(domain, dataTypeCase).contains(domain))) { tpeCase =>
-          addMethod(names.mangle(names.instanceNameOf(tpeCase)), makeFinalizedFactoryMethod(domain, finalizedType, tpeCase))
+        _ <- forEach(domain.flatten.typeCases.distinct.filter(dataTypeCase => latestModelDefiningDataTypeCaseInterface(domain, dataTypeCase, domainSpecific).contains(domain))) { tpeCase =>
+          addMethod(names.mangle(names.instanceNameOf(tpeCase)), makeFinalizedFactoryMethod(domain, finalizedType, tpeCase, domainSpecific))
         }
 
         // Add convert method
@@ -650,8 +704,8 @@ trait CoCoClean extends ApproachImplementationProvider {
     } yield ()
   }
 
-  def addFinalizedTypeCaseClasses(evolutionImplementationProvider: EvolutionImplementationProvider[this.type], domain: GenericModel): Generator[paradigm.ProjectContext, Unit] = {
-    val _newDataTypeCasesWithNewOperations = newDataTypeCasesWithNewOperations(evolutionImplementationProvider, domain)
+  def addFinalizedTypeCaseClasses(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
+    val _newDataTypeCasesWithNewOperations = newDataTypeCasesWithNewOperations(domain, domainSpecific)
 
     def makeNewFinalizedTypeCaseClass(newDataTypeCase: DataTypeCase) : Generator[ooParadigm.ClassContext, Unit] = {
       import ooParadigm.classCapabilities._
@@ -672,7 +726,7 @@ trait CoCoClean extends ApproachImplementationProvider {
         } else Command.skip[ooParadigm.ClassContext]
 
         // Inherit non finalized data type case implementation
-        nonFinalizedDataTypeCaseInterface <- mostSpecificTypeCaseInterface(domain, finalizedType, newDataTypeCase)
+        nonFinalizedDataTypeCaseInterface <- mostSpecificTypeCaseInterface(domain, finalizedType, newDataTypeCase, domainSpecific)
         _ <- addImplemented(nonFinalizedDataTypeCaseInterface.get)
 
         // Add fields and their getters
@@ -709,12 +763,12 @@ trait CoCoClean extends ApproachImplementationProvider {
         } yield ()
       } else {
         for {
-          _ <- addNewFactoryInterface(domain)
+          _ <- addNewFactoryInterfaceIfNecessary(domain)
           _ <- addNewTypeInterfaceIfNecessary(domain)
-          _ <- addDataTypeCaseInterfaces(domainSpecific, domain)
-          _ <- addFinalizedFactoryInterface(domain)
+          _ <- addDataTypeCaseInterfaces(domain, domainSpecific)
+          _ <- addFinalizedFactoryInterface(domain, domainSpecific)
           _ <- addFinalizedTypeInterfaceIfNecessary(domain)
-          _ <- addFinalizedTypeCaseClasses(domainSpecific, domain)
+          _ <- addFinalizedTypeCaseClasses(domain, domainSpecific)
           _ <- forEach(domain.former) { ancestor => implementRecursive(ancestor) }
         } yield ()
       }

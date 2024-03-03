@@ -57,7 +57,6 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
           _ <- ffiEquality.enable()
         } yield ()
       }
-      
 
       private def collectLogic
       (forApproach: AIP[paradigm.type])
@@ -334,7 +333,7 @@ object M4 {
     import imperativeControl.imperativeCapabilities._
     val mkImpl = new M4[paradigm.type, AIP, Unit](paradigm)
     val returnInIf: Generator[paradigm.MethodBodyContext, Expression] => Generator[paradigm.MethodBodyContext, Unit] =
-      (expGen) =>
+      expGen =>
         for {
           resultExp <- expGen
           resultStmt <- returnStmt(resultExp)

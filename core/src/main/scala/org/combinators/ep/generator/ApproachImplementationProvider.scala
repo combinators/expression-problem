@@ -93,7 +93,12 @@ trait ApproachImplementationProvider {
   /** When test case class needs to implement some interfaces, override this. */
   def testCaseImplements(model:GenericModel):Seq[Type] = Seq.empty
 
-  /** Adds tests to the project context */
+  /** Can be overridden by those advanced approaches that need access to domainSpecific during testing. */
+  def implementWithDomain(tests: Map[GenericModel, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type], domainSpecific: EvolutionImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
+    implement(tests, testImplementationProvider)
+  }
+
+    /** Adds tests to the project context */
   def implement(tests: Map[GenericModel, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
     import projectCapabilities._
     import paradigm.compilationUnitCapabilities._

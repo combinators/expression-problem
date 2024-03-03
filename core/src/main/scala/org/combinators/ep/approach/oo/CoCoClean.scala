@@ -20,12 +20,12 @@ trait CoCoClean extends ApproachImplementationProvider {
   val names: NameProvider[paradigm.syntax.Name]
 
   object ComponentNames {
-    val factory = names.mangle("Factory")
-    val convertMethod = names.mangle("convert")
-    val convertMethodParameter = names.mangle("toConvert")
-    val finalizedTypeParameter = names.mangle("FT")
-    val finalizedPackage = names.mangle("finalized")
-    val getSelfMethod = names.mangle("getSelf")
+    val factory: paradigm.syntax.Name = names.mangle("Factory")
+    val convertMethod: paradigm.syntax.Name = names.mangle("convert")
+    val convertMethodParameter: paradigm.syntax.Name = names.mangle("toConvert")
+    val finalizedTypeParameter: paradigm.syntax.Name = names.mangle("FT")
+    val finalizedPackage: paradigm.syntax.Name = names.mangle("finalized")
+    val getSelfMethod: paradigm.syntax.Name = names.mangle("getSelf")
 
     def getter(attribute: abstractions.Attribute): paradigm.syntax.Name = {
       names.addPrefix("get", names.mangle(names.conceptNameOf(attribute)))
@@ -53,7 +53,7 @@ trait CoCoClean extends ApproachImplementationProvider {
    *
    * Also found in CoCo
    *
-   * @param domain
+   * @param domain     typically last domain for which the ancestor is sought
    */
   def ancestorsDefiningNewTypeInterfaces(domain: GenericModel): Set[GenericModel] = {
     val ancestorsWithNewTypeInterfaces = domain.former.map(ancestor => latestModelDefiningNewTypeInterface(ancestor))
@@ -466,6 +466,9 @@ trait CoCoClean extends ApproachImplementationProvider {
       import ooParadigm.classCapabilities._
       import genericsParadigm.classCapabilities._
 
+      // all interfaces to add. Likely there is a better way to implement this...
+      val added:scala.collection.mutable.Set[paradigm.syntax.Type] = scala.collection.mutable.Set[paradigm.syntax.Type]()
+
       for {
         // Add type parameter for the finalized type
         _ <- addTypeParameter(ComponentNames.finalizedTypeParameter, Command.skip)
@@ -473,27 +476,41 @@ trait CoCoClean extends ApproachImplementationProvider {
 
         // Set parent data type interface
         parentBaseInterfaceType <- mostSpecificBaseInterfaceType(domain, finalizedType)
-        _ <- addParent(parentBaseInterfaceType)
+        _ <- forEach(Seq(parentBaseInterfaceType)) {
+            tpe => added.add(tpe)
+            Command.skip[ooParadigm.ClassContext]
+        }
 
         // Also inherit from latest factory if necessary because no new base interface was declared.
         // If these are identical, then we get stuff from the Exp (since it is always latest factory); if different we need to pull in.
         _ <- if (latestModelDefiningNewTypeInterface(domain) != latestModelDefiningNewFactoryType(domain)) {
           for {
-            parentFactoryInterfaceType <- appliedFactoryInterfaceType(latestModelDefiningNewFactoryType(domain), finalizedType)
-            _ <- addParent(parentFactoryInterfaceType)
-          } yield ()
+            pfi <- appliedFactoryInterfaceType(latestModelDefiningNewFactoryType(domain), finalizedType)
+            _ <- forEach(Seq(pfi)) {
+              tpe => added.add(tpe)
+                Command.skip[ooParadigm.ClassContext]
+            }
+          } yield pfi
         } else Command.skip[ooParadigm.ClassContext]
 
-        // Inherit previous data type case implementations
+        // Inherit previous data type case implementations. Make sure not added twice...
         _ <- forEach(domain.former) { ancestor =>
           for {
              parentDataTypeCaseInterface <- mostSpecificTypeCaseInterface(ancestor, finalizedType, newDataTypeCase, domainSpecific)
-            _ <- if (parentDataTypeCaseInterface.nonEmpty) {
-              addParent(parentDataTypeCaseInterface.get)
+            _ <- if (parentDataTypeCaseInterface.nonEmpty && !added.contains(parentDataTypeCaseInterface.get)) {
+              added.add(parentDataTypeCaseInterface.get)
+              Command.skip[ooParadigm.ClassContext]
             } else {
               Command.skip[ooParadigm.ClassContext]
             }
-          } yield()
+          } yield ()
+        }
+
+        // now that all parent interfaces are prepared, add them, so distinct and non-duplicated
+        _ <- forEach(added.toSeq) { tpe =>
+          for {
+            _ <- addParent(tpe)
+          } yield ()
         }
 
         // Add abstract getters if defined here
@@ -779,36 +796,13 @@ trait CoCoClean extends ApproachImplementationProvider {
     } yield ()
   }
 
-  def registerTypeMapping(model: GenericModel): Generator[paradigm.ProjectContext, Unit] = {
-    import ooParadigm.projectCapabilities._
-    import ooParadigm.classCapabilities.canFindClassInClass
-    import ooParadigm.constructorCapabilities.canFindClassInConstructor
-    import ooParadigm.methodBodyCapabilities.canFindClassInMethod
-    import paradigm.projectCapabilities._
-    import org.combinators.ep.generator.Understands
-    import org.combinators.ep.generator.paradigm.FindClass
-
-    def domainTypeLookup[Ctxt](covariantType: paradigm.syntax.Name*)(implicit canFindClass: Understands[Ctxt, FindClass[paradigm.syntax.Name, paradigm.syntax.Type]]): Generator[Ctxt, paradigm.syntax.Type] = {
-      FindClass(covariantType).interpret(canFindClass)
-    }
-
-    val baseInterface = Seq(names.mangle(names.conceptNameOf(model.baseDataType)))
-    val dtpeRep = TypeRep.DataType(model.baseDataType)
-
-    for {
-      _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(baseInterface: _*))
-      _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(baseInterface: _*))
-      _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(baseInterface: _*))
-    } yield ()
-  }
-
   override def implement(tests: Map[GenericModel, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
     import paradigm.projectCapabilities._
     import paradigm.compilationUnitCapabilities._
     import paradigm.testCapabilities._
 
     for {
-      _ <- forEach(tests.toList) { case (model, tests) => {
+      _ <- forEach(tests.toList) { case (model, tests) =>
         val testCode: Generator[paradigm.MethodBodyContext, Seq[paradigm.syntax.Expression]] =
           for {
             code <- forEach(tests) {
@@ -835,13 +829,11 @@ trait CoCoClean extends ApproachImplementationProvider {
         } yield ()
 
         for {
-          _ <- registerTypeMapping(model) // must come here since it registers mappings that exist in the ProjectContext
           _ <- addCompilationUnit(
             testSuite,
             testCaseName(model)
           )
         } yield None
-      }
       }
     } yield ()
   }

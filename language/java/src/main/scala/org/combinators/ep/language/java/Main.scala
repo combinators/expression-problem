@@ -12,7 +12,7 @@ import org.apache.commons.io.FileUtils
 import org.combinators.ep.approach.oo.Visualize.WithParadigm
 import org.combinators.ep.domain.math.{M0, eips}
 import org.combinators.ep.domain.math.systemI.{I1, I2}
-import org.combinators.ep.domain.math.systemO.{O1, O2}
+import org.combinators.ep.domain.math.systemO.{O1, O1OA, O2, OA, OD1, OD2, OD3, OO1, OO2, OO3}
 
 import java.nio.file.{Path, Paths}
 import scala.sys.process.Process
@@ -76,7 +76,18 @@ class Main(choice:String, select:String) {
     case "I2" => Seq(M0, M1, M2, I1, I2)
 
     case "O1" => Seq(M0, M1, M2, O1)
+    case "OA" => Seq(M0, M1, M2, OA)
+    case "O1OA" => Seq(M0, M1, M2, O1, OA, O1OA)
     case "O2" => Seq(M0, M1, M2, O1, O2)
+
+    case "OD1" => Seq(M0, M1, M2, OD1)
+    case "OD2" => Seq(M0, M1, M2, OD2)
+    case "OD3" => Seq(M0, M1, M2, OD1, OD2, OD3)
+
+    case "OO1" => Seq(M0, M1, M2, OO1)
+    case "OO2" => Seq(M0, M1, M2, OO2)
+    case "OO3" => Seq(M0, M1, M2, OO1, OO2, OO3)
+
 
     case _ => ???
   }
@@ -97,17 +108,30 @@ class Main(choice:String, select:String) {
     eips.M3(approach.paradigm)(m2_eip)(generator.doublesInMethod, generator.stringsInMethod)
   val o1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.systemO.O1(approach.paradigm)(m2_eip)(generator.doublesInMethod, generator.stringsInMethod)
+  val oa_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
+    eips.systemO.OA(approach.paradigm)(m2_eip)(generator.doublesInMethod)
+  val o1oa_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
+    eips.systemO.O1OA(approach.paradigm)(o1_eip, oa_eip)
   val o2_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.systemO.O2(approach.paradigm)(o1_eip)(generator.doublesInMethod, generator.stringsInMethod)
 
+  val od1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
+    eips.systemO.OD1(approach.paradigm)(m2_eip)(generator.doublesInMethod, generator.stringsInMethod)
+  val od2_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
+    eips.systemO.OD2(approach.paradigm)(m2_eip)(generator.doublesInMethod, generator.stringsInMethod)
+  val od3_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
+    eips.systemO.OD3(approach.paradigm)(od1_eip, od2_eip)
+
+  val oo1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
+    eips.systemO.OO1(approach.paradigm)(m2_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod)
+  val oo2_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
+    eips.systemO.OO2(approach.paradigm)(m2_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod)
+  val oo3_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
+    eips.systemO.OO3(approach.paradigm)(oo1_eip, oo2_eip)
+
   val m4_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.M4.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(m3_eip)(
-      generator.imperativeInMethod,
-      generator.doublesInMethod,
-      generator.booleansInMethod,
-      generator.stringsInMethod,
-      generator.listsInMethod,
-      generator.equalityInMethod)
+      generator.imperativeInMethod, generator.doublesInMethod, generator.booleansInMethod, generator.stringsInMethod, generator.listsInMethod, generator.equalityInMethod)
   val m5_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.M5(approach.paradigm)(m4_eip)(generator.intsInMethod,generator.treesInMethod)
   val m6_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
@@ -120,17 +144,10 @@ class Main(choice:String, select:String) {
     eips.systemI.I2(approach.paradigm)(i1_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
   val m7i2_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.M7I2.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(m7_eip,i2_eip)(
-    generator.imperativeInMethod,
-    generator.doublesInMethod,
-    generator.booleansInMethod,
-    generator.equalityInMethod)
+    generator.imperativeInMethod, generator.doublesInMethod, generator.booleansInMethod, generator.equalityInMethod)
   val m8_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.M8.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(m7i2_eip)(
-    generator.imperativeInMethod,
-    generator.doublesInMethod,
-    generator.booleansInMethod,
-    generator.stringsInMethod,
-    generator.equalityInMethod)
+    generator.imperativeInMethod, generator.doublesInMethod, generator.booleansInMethod, generator.stringsInMethod, generator.equalityInMethod)
   val m9_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.M9(approach.paradigm)(m8_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.imperativeInMethod)
 
@@ -143,10 +160,8 @@ class Main(choice:String, select:String) {
   val a3_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.A3(approach.paradigm)(a1m3i2_eip)(generator.doublesInMethod, generator.stringsInMethod)
 
-  //val eip = a1_eip// a1m3i2_eip// a1m3_eip   //  a3_eip
-  //val eip = m8_eip//m8_eip //m7i2_eip// m8_eip
 
-  val eip = select match {
+  val eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] = select match {
     case "M0" => m0_eip
     case "M1" => m1_eip
     case "M2" => m2_eip
@@ -167,7 +182,17 @@ class Main(choice:String, select:String) {
 
     case "I2" => i2_eip
     case "O1" => o1_eip
+    case "OA" => oa_eip
+    case "O1OA" => o1oa_eip
     case "O2" => o2_eip
+
+    case "OD1" => od1_eip
+    case "OD2" => od2_eip
+    case "OD3" => od3_eip
+
+    case "OO1" => oo1_eip
+    case "OO2" => oo2_eip
+    case "OO3" => oo3_eip
 
     case _ => ???
   }
@@ -211,7 +236,7 @@ class Main(choice:String, select:String) {
       val computed = files()
       println("[OK]")
       if (targetDirectory.toFile.exists()) {
-        print(s"Cleaning Target Directory (${targetDirectory})...")
+        print(s"Cleaning Target Directory ($targetDirectory)...")
         FileUtils.deleteDirectory(targetDirectory.toFile)
         println("[OK]")
       }
@@ -251,7 +276,8 @@ object GenerateAll extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
 
     val approaches = Seq("graphviz","oo","visitor","visitorSideEffect","extensibleVisitor","interpreter","coco","trivially","dispatch","algebra")
-    val evolutions = Seq("M0","M1","M2","M3","M4","M5","M6","M7","M7I2","M8","M9","I1","A1","A1M3","A1M3I2","A3","I2")
+    val evolutions = Seq("M0","M1","M2","M3","M4","M5","M6","M7","M7I2","M8","M9","I1","A1","A1M3","A1M3I2","A3","I2",
+      "O1","O2","OA","O1OA","OD1","OD2","OD3","OO1","OO2","OO3")
 
     approaches.foreach(approach => {
       println("Generating " + approach + "...")
@@ -265,8 +291,8 @@ object GenerateAll extends IOApp {
             main <- IO {  new Main(approach, selection) }
 
             _ <- IO { println("[OK]") }
-            result <- main.runDirectToDisc(targetDirectory)
-          } yield result
+            _ <- main.runDirectToDisc(targetDirectory)
+          } yield ()
         }
 
         // execute above as a stand-alone program
@@ -288,10 +314,28 @@ object DirectToDiskMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
 
-    // extensibleVisitor, trivially, interpreter all have issues with O1.
-    val approach = if (args.isEmpty) "extensibleVisitor" else args.head
+    // O2 (overrides implementation, built off of O1 which does same)
+    //   trivially generates proper code BUT test cases do not find proper classes to use
+    //   interpreter generates proper code BUT test cases do not find proper class to use
+    //   algebra works
+    //   coco works
+    //   oo test cases cannot be made to work, since latest implementation overwrites
+    //   visitor test cases cannot be made to work, since latest implementation overwrites
+    //   visitorSideEffect test cases cannot be made to work, since latest implementation overwrites
+    //   extensibleVisitor (line 734) is where I need to find JUST latest model and CANNOT
+    // OD3 (merge of two independent branches that have added data types)
+    //   works: algebra, coco, interpreter, visitor, visitorSideEffect, extensibleVisitor
+    //   trivially creates an Exp for od3 for no reason and test cases are unable to find right classes
+    // O1OA (two independent operator overrides in O1 and OA brought together)
+    //   extensibleVisitor doesn't generate any 'oa' so it DOESN'T WORK
+    //   oo works (though fails testing because operator override is inconsistent)
+    //   coco works (though it generates unnecessary 'extra' code that can be deleted)
+    //   trivially doesn't generator 'oa'
+    //   interpreter doesn't work
+    //   algebra works (though it makes a change to "o1" when generating "o1oa"; it loses an import, not sure why)
+    val approach = if (args.isEmpty) "algebra" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "O2" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "O1" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 

@@ -1,0 +1,26 @@
+package org.combinators.ep.domain.math.systemO    /*DD:LI:AI*/
+
+import org.combinators.ep.domain._
+import org.combinators.ep.domain.abstractions._
+import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
+import org.combinators.ep.domain.math.M0.{AddInst, LitInst}
+import org.combinators.ep.domain.math.M1.SubInst
+import org.combinators.ep.domain.math.M2
+
+object OO1 extends Evolution {
+  override implicit def getModel:GenericModel = M2.getModel.evolve("oo1", Seq.empty, Seq(Atomic))
+
+  def StringInst(s:String): InstanceRep = InstanceRep(TypeRep.String)(s)
+
+  lazy val Atomic = Operation("atomic", TypeRep.String)
+
+  // Tests
+  val oo1_s1: DataTypeInstance = SubInst(LitInst(1.0), LitInst(2.0))
+  def tests: Seq[TestCase] = Seq(
+    EqualsTestCase(getModel.baseDataType, oo1_s1, Atomic, StringInst("(L-L)")),
+
+    EqualsTestCase(getModel.baseDataType, AddInst(oo1_s1, AddInst(LitInst(5.0), LitInst(6.0))),
+      Atomic, StringInst("((L-L)+(L+L))"))
+  )
+
+}

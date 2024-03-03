@@ -12,7 +12,7 @@ sealed trait Interpreter extends SharedOO {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
-  //var existingDomainSpecific: Some[EvolutionImplementationProvider[this.type]]
+
   import ooParadigm._
   import paradigm._
   import syntax._
@@ -25,7 +25,7 @@ sealed trait Interpreter extends SharedOO {
    *
    * Also found in CoCo
    *
-   * @domain Domain under investigation
+   * @param Domain under investigation
    */
   def ancestorsDefiningNewTypeInterfaces(domain: GenericModel): Set[GenericModel] = {
     val ancestorsWithNewTypeInterfaces = domain.former.map(ancestor => latestModelDefiningNewTypeInterface(ancestor))
@@ -223,7 +223,8 @@ sealed trait Interpreter extends SharedOO {
    * {{{
    *   public Double OPERATION(PARAM...)
    * }}}
-   * @param op
+   * @param op      operation for which method needs to be written
+   * @param domain  current domain for the operation.
    * @return
    */
   def makeInterpreterSignature(domain:GenericModel, op: Operation): Generator[MethodBodyContext, Unit] = {

@@ -1,35 +1,34 @@
-package org.combinators.ep.domain.math.eips      /*DD:LI:AI*/
+package org.combinators.ep.domain.math.eips.systemO   /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.Operation
+import org.combinators.ep.domain.abstractions.{Operation, TypeRep}
 import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Strings}
+import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
-object M2 {
+object OD1 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
       (paradigm: P)
-      (m1Provider : EvolutionImplementationProvider[AIP[paradigm.type]])
-  (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
+      (m2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
+      (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
        ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
-    EvolutionImplementationProvider[AIP[paradigm.type]] = {
-    val m2Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model: GenericModel = math.M2.getModel
+  EvolutionImplementationProvider[AIP[paradigm.type]] = {
+    val od1Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      override val model: GenericModel = math.systemO.OD1.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
-          _ <- m1Provider.initialize(forApproach)
           _ <- ffiArithmetic.enable()
           _ <- ffiStrings.enable()
         } yield ()
       }
-
+      
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
-        val cases = math.M2.getModel.flatten.typeCases
-        if ((potentialRequest.op == math.M2.PrettyP) && cases.contains(potentialRequest.tpeCase)) {
+        val ops = math.systemO.OD1.getModel.flatten.ops
+        if (Seq(math.systemO.OD1.Mult).contains(potentialRequest.tpeCase) && ops.contains(potentialRequest.op)) {
           Some(Set.empty)
         } else {
           None
@@ -40,54 +39,51 @@ object M2 {
       override def genericLogic(forApproach: AIP[paradigm.type])
                                (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] =
-        m1Provider.genericLogic(forApproach)(onRequest)
+        m2Provider.genericLogic(forApproach)(onRequest)
 
       def logic
           (forApproach: AIP[paradigm.type])
           (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
         Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
+        import AnyParadigm.syntax._
+        import ffiArithmetic.arithmeticCapabilities._
         import ffiStrings.stringCapabilities._
         import paradigm._
         import methodBodyCapabilities._
-
         assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
-        val result = onRequest.tpeCase match {
-          case litC@math.M0.Lit =>
-            val att = litC.attributes.head
-            for {
-              ty <- toTargetLanguageType(att.tpe)
-              res <- asString(onRequest.attributes(att), ty)
-            } yield res
-
-          case other =>
-            val lAtt = other.attributes.head
-            val rAtt = other.attributes.tail.head
-            val operator =
-              other match {
-                case math.M0.Add => "+"
-                case math.M1.Sub => "-"
+        def operate(atts: Seq[syntax.Expression]): Generator[paradigm.MethodBodyContext, syntax.Expression] =
+          onRequest.request.op match {
+            case math.M0.Eval =>
+              onRequest.tpeCase match {
+                case math.systemO.OD1.Mult => mult(atts: _*)
                 case _ => ???
               }
+
+            case math.M2.PrettyP =>
+              onRequest.tpeCase match {
+                case math.systemO.OD1.Mult => makeString(atts, "(", "*", ")")
+                case _ => ???
+              }
+            case _ => ???
+          }
+
+        val result =
             for {
-              left <- forApproach.dispatch(SendRequest(
-                onRequest.attributes(lAtt),
-                math.M2.getModel.baseDataType,
-                onRequest.request
-              ))
-              right <- forApproach.dispatch(SendRequest(
-                onRequest.attributes(rAtt),
-                math.M2.getModel.baseDataType,
-                onRequest.request
-              ))
-              res <- makeString(Seq(left, right), "(", operator, ")")
+              atts <- forEach (onRequest.tpeCase.attributes) { att =>
+                  forApproach.dispatch(SendRequest(
+                    onRequest.attributes(att),
+                    math.systemO.OD1.getModel.baseDataType,
+                    onRequest.request
+                  ))
+                }
+              res <- operate(atts)
             } yield res
-        }
         result.map(Some(_))
       }
     }
 
     // newest one must come first
-    monoidInstance.combine(m2Provider, m1Provider)
+    monoidInstance.combine(od1Provider, m2Provider)
   }
 }

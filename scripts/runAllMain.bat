@@ -21,7 +21,7 @@ for %%a in (oo visitor visitorSideEffect extensibleVisitor interpreter dispatch 
   echo %%a > target\analysis\jacoco.%%a
 
   @REM for each approach x model, execute to generate into target\%DIR%
-  for %%e in (M0 M1 M2 M3 M4 M5 M6 M7 M7I2 M8 M9 I1 A1 A1M3 A1M3I2 A3 I2) do (
+  for %%e in (M0 M1 M2 M3 M4 M5 M6 M7 M7I2 M8 M9 I1 A1 A1M3 A1M3I2 A3 I2 O1 O2 OA O1OA OD1 OD2 OD3 OO1 OO2 OO3) do (
      @echo off
      echo ====================================== >> target\analysis\jacoco.%%a
      echo %%e-Generate                           >> target\analysis\jacoco.%%a

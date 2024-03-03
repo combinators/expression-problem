@@ -449,7 +449,8 @@ trait AnyParadigm extends AP {
   private val defaultResolver: ContextSpecificResolver = {
     val emptyResolver =
       ContextSpecificResolver(
-        _methodTypeResolution = _ => tpe => throw new NotImplementedError(tpe.toString),
+        _methodTypeResolution = _ =>
+          tpe => throw new NotImplementedError(tpe.toString),
         _constructorTypeResolution = _ => tpe => throw new NotImplementedError(tpe.toString),
         _classTypeResolution = _ => tpe => throw new NotImplementedError(tpe.toString),
         _reificationInConstructor = _ => rep => throw new NotImplementedError(rep.toString),

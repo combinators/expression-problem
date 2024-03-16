@@ -1,7 +1,7 @@
 """
   Run with Python3 to generate report of approaches that satisfy EP criteria.
 
-  python3 compare.py [EVOLUTION-JSON]
+  python3 ..\..\scripts\compare.py ..\..\scripts\[EVOLUTION-JSON]
 
   where the JSON file has a single 'evolutions' tag, where each entry
 
@@ -15,7 +15,8 @@
       ]
    }
 
-  Depends on having successfully executed "runAll.bat"
+  Depends on having successfully executed "runAll.bat" or a variant.  Must execute within
+  the directory that resulted from this "runAll.bat" script.
 
   Currently only checks that OLD files are not changed from one evolution to the next.
   Does not check that non-trivia code is copied from one iteration to the next (which can
@@ -32,6 +33,7 @@ import sys
 
 if len(sys.argv) <= 1:
     print ("Usage: python3 compare.py JSON-FILE")
+    print ("  Execute this command within the target/analysis directory where all subdirectories were generated.")
     exit (0)
 
 # Load up description of system
@@ -41,7 +43,6 @@ with open(sys.argv[1], 'r') as file:
 
 # Choose evolutions to generate
 evolutions = []
-directory = description["directory"]
 pairs = {}
 for k in description["evolutions"]:
     key = list(k.keys())[0]
@@ -49,7 +50,7 @@ for k in description["evolutions"]:
     pairs[key] = vals
     evolutions.append(list(k.keys())[0])
 
-DIR         = f"..\\target\\{directory}"
+DIR         = f"."
 
 # Want to be able to detect differences in the actual source code. Note that test cases are a
 # different story, and even solutions to the EP require special handling with regard to test cases

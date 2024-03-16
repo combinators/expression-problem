@@ -1,0 +1,378 @@
+validating oo
+ compare ..\target\analysis-Main\src-oo-M1\main\java with ..\target\analysis-Main\src-oo-M0\main\java
+ compare ..\target\analysis-Main\src-oo-M2\main\java with ..\target\analysis-Main\src-oo-M1\main\java
+  oo fails on M2: ep\Add.java has changed in M2 for oo compared to M1.
+ compare ..\target\analysis-Main\src-oo-M3\main\java with ..\target\analysis-Main\src-oo-M2\main\java
+ compare ..\target\analysis-Main\src-oo-M4\main\java with ..\target\analysis-Main\src-oo-M3\main\java
+  oo fails on M4: ep\Add.java has changed in M4 for oo compared to M3.
+ compare ..\target\analysis-Main\src-oo-M5\main\java with ..\target\analysis-Main\src-oo-M4\main\java
+  oo fails on M5: ep\Add.java has changed in M5 for oo compared to M4.
+ compare ..\target\analysis-Main\src-oo-M6\main\java with ..\target\analysis-Main\src-oo-M5\main\java
+  oo fails on M6: ep\Add.java has changed in M6 for oo compared to M5.
+ compare ..\target\analysis-Main\src-oo-M7\main\java with ..\target\analysis-Main\src-oo-M6\main\java
+  oo fails on M7: ep\Add.java has changed in M7 for oo compared to M6.
+ compare ..\target\analysis-Main\src-oo-M7I2\main\java with ..\target\analysis-Main\src-oo-M7\main\java
+  oo fails on M7I2: ep\Add.java has changed in M7I2 for oo compared to M7.
+ compare ..\target\analysis-Main\src-oo-M7I2\main\java with ..\target\analysis-Main\src-oo-I2\main\java
+  oo fails on M7I2: ep\Add.java has changed in M7I2 for oo compared to I2.
+ compare ..\target\analysis-Main\src-oo-M8\main\java with ..\target\analysis-Main\src-oo-M7I2\main\java
+  oo fails on M8: ep\Add.java has changed in M8 for oo compared to M7I2.
+ compare ..\target\analysis-Main\src-oo-M9\main\java with ..\target\analysis-Main\src-oo-M8\main\java
+  oo fails on M9: ep\Add.java has changed in M9 for oo compared to M8.
+ compare ..\target\analysis-Main\src-oo-I1\main\java with ..\target\analysis-Main\src-oo-M2\main\java
+  oo fails on I1: ep\Add.java has changed in I1 for oo compared to M2.
+ compare ..\target\analysis-Main\src-oo-I2\main\java with ..\target\analysis-Main\src-oo-I1\main\java
+ compare ..\target\analysis-Main\src-oo-A1\main\java with ..\target\analysis-Main\src-oo-I1\main\java
+ compare ..\target\analysis-Main\src-oo-A1M3\main\java with ..\target\analysis-Main\src-oo-A1\main\java
+ compare ..\target\analysis-Main\src-oo-A1M3\main\java with ..\target\analysis-Main\src-oo-M3\main\java
+  oo fails on A1M3: ep\Add.java has changed in A1M3 for oo compared to M3.
+ compare ..\target\analysis-Main\src-oo-A1M3I2\main\java with ..\target\analysis-Main\src-oo-A1M3\main\java
+ compare ..\target\analysis-Main\src-oo-A1M3I2\main\java with ..\target\analysis-Main\src-oo-I2\main\java
+ compare ..\target\analysis-Main\src-oo-A3\main\java with ..\target\analysis-Main\src-oo-A1M3I2\main\java
+ compare ..\target\analysis-Main\src-oo-O1\main\java with ..\target\analysis-Main\src-oo-M2\main\java
+  oo fails on O1: ep\Lit.java has changed in O1 for oo compared to M2.
+ compare ..\target\analysis-Main\src-oo-O2\main\java with ..\target\analysis-Main\src-oo-O1\main\java
+  oo fails on O2: ep\Lit.java has changed in O2 for oo compared to O1.
+ compare ..\target\analysis-Main\src-oo-OA\main\java with ..\target\analysis-Main\src-oo-M2\main\java
+ compare ..\target\analysis-Main\src-oo-O1OA\main\java with ..\target\analysis-Main\src-oo-O1\main\java
+  oo fails on O1OA: ep\Add.java has changed in O1OA for oo compared to O1.
+ compare ..\target\analysis-Main\src-oo-O1OA\main\java with ..\target\analysis-Main\src-oo-OA\main\java
+  oo fails on O1OA: ep\Add.java has changed in O1OA for oo compared to OA.
+ compare ..\target\analysis-Main\src-oo-OO1\main\java with ..\target\analysis-Main\src-oo-M2\main\java
+  oo fails on OO1: ep\Add.java has changed in OO1 for oo compared to M2.
+ compare ..\target\analysis-Main\src-oo-OO2\main\java with ..\target\analysis-Main\src-oo-M2\main\java
+  oo fails on OO2: ep\Add.java has changed in OO2 for oo compared to M2.
+ compare ..\target\analysis-Main\src-oo-OO3\main\java with ..\target\analysis-Main\src-oo-OO1\main\java
+  oo fails on OO3: ep\Add.java has changed in OO3 for oo compared to OO1.
+ compare ..\target\analysis-Main\src-oo-OO3\main\java with ..\target\analysis-Main\src-oo-OO2\main\java
+  oo fails on OO3: ep\Add.java has changed in OO3 for oo compared to OO2.
+ compare ..\target\analysis-Main\src-oo-OD1\main\java with ..\target\analysis-Main\src-oo-M2\main\java
+ compare ..\target\analysis-Main\src-oo-OD2\main\java with ..\target\analysis-Main\src-oo-M2\main\java
+ compare ..\target\analysis-Main\src-oo-OD3\main\java with ..\target\analysis-Main\src-oo-OD1\main\java
+  oo fails on OD3: ep\Add.java has changed in OD3 for oo compared to OD1.
+ compare ..\target\analysis-Main\src-oo-OD3\main\java with ..\target\analysis-Main\src-oo-OD2\main\java
+  oo fails on OD3: ep\Add.java has changed in OD3 for oo compared to OD2.
+validating visitor
+ compare ..\target\analysis-Main\src-visitor-M1\main\java with ..\target\analysis-Main\src-visitor-M0\main\java
+  visitor fails on M1: ep\Eval.java has changed in M1 for visitor compared to M0.
+ compare ..\target\analysis-Main\src-visitor-M2\main\java with ..\target\analysis-Main\src-visitor-M1\main\java
+ compare ..\target\analysis-Main\src-visitor-M3\main\java with ..\target\analysis-Main\src-visitor-M2\main\java
+  visitor fails on M3: ep\Eval.java has changed in M3 for visitor compared to M2.
+ compare ..\target\analysis-Main\src-visitor-M4\main\java with ..\target\analysis-Main\src-visitor-M3\main\java
+ compare ..\target\analysis-Main\src-visitor-M5\main\java with ..\target\analysis-Main\src-visitor-M4\main\java
+ compare ..\target\analysis-Main\src-visitor-M6\main\java with ..\target\analysis-Main\src-visitor-M5\main\java
+ compare ..\target\analysis-Main\src-visitor-M7\main\java with ..\target\analysis-Main\src-visitor-M6\main\java
+ compare ..\target\analysis-Main\src-visitor-M7I2\main\java with ..\target\analysis-Main\src-visitor-M7\main\java
+  visitor fails on M7I2: ep\Astree.java has changed in M7I2 for visitor compared to M7.
+ compare ..\target\analysis-Main\src-visitor-M7I2\main\java with ..\target\analysis-Main\src-visitor-I2\main\java
+  visitor fails on M7I2: ep\Eval.java has changed in M7I2 for visitor compared to I2.
+ compare ..\target\analysis-Main\src-visitor-M8\main\java with ..\target\analysis-Main\src-visitor-M7I2\main\java
+  visitor fails on M8: ep\Astree.java has changed in M8 for visitor compared to M7I2.
+ compare ..\target\analysis-Main\src-visitor-M9\main\java with ..\target\analysis-Main\src-visitor-M8\main\java
+ compare ..\target\analysis-Main\src-visitor-I1\main\java with ..\target\analysis-Main\src-visitor-M2\main\java
+ compare ..\target\analysis-Main\src-visitor-I2\main\java with ..\target\analysis-Main\src-visitor-I1\main\java
+  visitor fails on I2: ep\Eval.java has changed in I2 for visitor compared to I1.
+ compare ..\target\analysis-Main\src-visitor-A1\main\java with ..\target\analysis-Main\src-visitor-I1\main\java
+  visitor fails on A1: ep\Eval.java has changed in A1 for visitor compared to I1.
+ compare ..\target\analysis-Main\src-visitor-A1M3\main\java with ..\target\analysis-Main\src-visitor-A1\main\java
+  visitor fails on A1M3: ep\Eval.java has changed in A1M3 for visitor compared to A1.
+ compare ..\target\analysis-Main\src-visitor-A1M3\main\java with ..\target\analysis-Main\src-visitor-M3\main\java
+  visitor fails on A1M3: ep\Eval.java has changed in A1M3 for visitor compared to M3.
+ compare ..\target\analysis-Main\src-visitor-A1M3I2\main\java with ..\target\analysis-Main\src-visitor-A1M3\main\java
+  visitor fails on A1M3I2: ep\Eval.java has changed in A1M3I2 for visitor compared to A1M3.
+ compare ..\target\analysis-Main\src-visitor-A1M3I2\main\java with ..\target\analysis-Main\src-visitor-I2\main\java
+  visitor fails on A1M3I2: ep\Eval.java has changed in A1M3I2 for visitor compared to I2.
+ compare ..\target\analysis-Main\src-visitor-A3\main\java with ..\target\analysis-Main\src-visitor-A1M3I2\main\java
+  visitor fails on A3: ep\Eval.java has changed in A3 for visitor compared to A1M3I2.
+ compare ..\target\analysis-Main\src-visitor-O1\main\java with ..\target\analysis-Main\src-visitor-M2\main\java
+  visitor fails on O1: ep\Prettyp.java has changed in O1 for visitor compared to M2.
+ compare ..\target\analysis-Main\src-visitor-O2\main\java with ..\target\analysis-Main\src-visitor-O1\main\java
+  visitor fails on O2: ep\Prettyp.java has changed in O2 for visitor compared to O1.
+ compare ..\target\analysis-Main\src-visitor-OA\main\java with ..\target\analysis-Main\src-visitor-M2\main\java
+ compare ..\target\analysis-Main\src-visitor-O1OA\main\java with ..\target\analysis-Main\src-visitor-O1\main\java
+ compare ..\target\analysis-Main\src-visitor-O1OA\main\java with ..\target\analysis-Main\src-visitor-OA\main\java
+  visitor fails on O1OA: ep\Prettyp.java has changed in O1OA for visitor compared to OA.
+ compare ..\target\analysis-Main\src-visitor-OO1\main\java with ..\target\analysis-Main\src-visitor-M2\main\java
+ compare ..\target\analysis-Main\src-visitor-OO2\main\java with ..\target\analysis-Main\src-visitor-M2\main\java
+ compare ..\target\analysis-Main\src-visitor-OO3\main\java with ..\target\analysis-Main\src-visitor-OO1\main\java
+ compare ..\target\analysis-Main\src-visitor-OO3\main\java with ..\target\analysis-Main\src-visitor-OO2\main\java
+ compare ..\target\analysis-Main\src-visitor-OD1\main\java with ..\target\analysis-Main\src-visitor-M2\main\java
+  visitor fails on OD1: ep\Eval.java has changed in OD1 for visitor compared to M2.
+ compare ..\target\analysis-Main\src-visitor-OD2\main\java with ..\target\analysis-Main\src-visitor-M2\main\java
+  visitor fails on OD2: ep\Eval.java has changed in OD2 for visitor compared to M2.
+ compare ..\target\analysis-Main\src-visitor-OD3\main\java with ..\target\analysis-Main\src-visitor-OD1\main\java
+  visitor fails on OD3: ep\Eval.java has changed in OD3 for visitor compared to OD1.
+ compare ..\target\analysis-Main\src-visitor-OD3\main\java with ..\target\analysis-Main\src-visitor-OD2\main\java
+  visitor fails on OD3: ep\Eval.java has changed in OD3 for visitor compared to OD2.
+validating visitorSideEffect
+ compare ..\target\analysis-Main\src-visitorSideEffect-M1\main\java with ..\target\analysis-Main\src-visitorSideEffect-M0\main\java
+  visitorSideEffect fails on M1: ep\Eval.java has changed in M1 for visitorSideEffect compared to M0.
+ compare ..\target\analysis-Main\src-visitorSideEffect-M2\main\java with ..\target\analysis-Main\src-visitorSideEffect-M1\main\java
+ compare ..\target\analysis-Main\src-visitorSideEffect-M3\main\java with ..\target\analysis-Main\src-visitorSideEffect-M2\main\java
+  visitorSideEffect fails on M3: ep\Eval.java has changed in M3 for visitorSideEffect compared to M2.
+ compare ..\target\analysis-Main\src-visitorSideEffect-M4\main\java with ..\target\analysis-Main\src-visitorSideEffect-M3\main\java
+ compare ..\target\analysis-Main\src-visitorSideEffect-M5\main\java with ..\target\analysis-Main\src-visitorSideEffect-M4\main\java
+ compare ..\target\analysis-Main\src-visitorSideEffect-M6\main\java with ..\target\analysis-Main\src-visitorSideEffect-M5\main\java
+ compare ..\target\analysis-Main\src-visitorSideEffect-M7\main\java with ..\target\analysis-Main\src-visitorSideEffect-M6\main\java
+ compare ..\target\analysis-Main\src-visitorSideEffect-M7I2\main\java with ..\target\analysis-Main\src-visitorSideEffect-M7\main\java
+  visitorSideEffect fails on M7I2: ep\Astree.java has changed in M7I2 for visitorSideEffect compared to M7.
+ compare ..\target\analysis-Main\src-visitorSideEffect-M7I2\main\java with ..\target\analysis-Main\src-visitorSideEffect-I2\main\java
+  visitorSideEffect fails on M7I2: ep\Eval.java has changed in M7I2 for visitorSideEffect compared to I2.
+ compare ..\target\analysis-Main\src-visitorSideEffect-M8\main\java with ..\target\analysis-Main\src-visitorSideEffect-M7I2\main\java
+  visitorSideEffect fails on M8: ep\Astree.java has changed in M8 for visitorSideEffect compared to M7I2.
+ compare ..\target\analysis-Main\src-visitorSideEffect-M9\main\java with ..\target\analysis-Main\src-visitorSideEffect-M8\main\java
+ compare ..\target\analysis-Main\src-visitorSideEffect-I1\main\java with ..\target\analysis-Main\src-visitorSideEffect-M2\main\java
+ compare ..\target\analysis-Main\src-visitorSideEffect-I2\main\java with ..\target\analysis-Main\src-visitorSideEffect-I1\main\java
+  visitorSideEffect fails on I2: ep\Eval.java has changed in I2 for visitorSideEffect compared to I1.
+ compare ..\target\analysis-Main\src-visitorSideEffect-A1\main\java with ..\target\analysis-Main\src-visitorSideEffect-I1\main\java
+  visitorSideEffect fails on A1: ep\Eval.java has changed in A1 for visitorSideEffect compared to I1.
+ compare ..\target\analysis-Main\src-visitorSideEffect-A1M3\main\java with ..\target\analysis-Main\src-visitorSideEffect-A1\main\java
+  visitorSideEffect fails on A1M3: ep\Eval.java has changed in A1M3 for visitorSideEffect compared to A1.
+ compare ..\target\analysis-Main\src-visitorSideEffect-A1M3\main\java with ..\target\analysis-Main\src-visitorSideEffect-M3\main\java
+  visitorSideEffect fails on A1M3: ep\Eval.java has changed in A1M3 for visitorSideEffect compared to M3.
+ compare ..\target\analysis-Main\src-visitorSideEffect-A1M3I2\main\java with ..\target\analysis-Main\src-visitorSideEffect-A1M3\main\java
+  visitorSideEffect fails on A1M3I2: ep\Eval.java has changed in A1M3I2 for visitorSideEffect compared to A1M3.
+ compare ..\target\analysis-Main\src-visitorSideEffect-A1M3I2\main\java with ..\target\analysis-Main\src-visitorSideEffect-I2\main\java
+  visitorSideEffect fails on A1M3I2: ep\Eval.java has changed in A1M3I2 for visitorSideEffect compared to I2.
+ compare ..\target\analysis-Main\src-visitorSideEffect-A3\main\java with ..\target\analysis-Main\src-visitorSideEffect-A1M3I2\main\java
+  visitorSideEffect fails on A3: ep\Eval.java has changed in A3 for visitorSideEffect compared to A1M3I2.
+ compare ..\target\analysis-Main\src-visitorSideEffect-O1\main\java with ..\target\analysis-Main\src-visitorSideEffect-M2\main\java
+  visitorSideEffect fails on O1: ep\Prettyp.java has changed in O1 for visitorSideEffect compared to M2.
+ compare ..\target\analysis-Main\src-visitorSideEffect-O2\main\java with ..\target\analysis-Main\src-visitorSideEffect-O1\main\java
+  visitorSideEffect fails on O2: ep\Prettyp.java has changed in O2 for visitorSideEffect compared to O1.
+ compare ..\target\analysis-Main\src-visitorSideEffect-OA\main\java with ..\target\analysis-Main\src-visitorSideEffect-M2\main\java
+ compare ..\target\analysis-Main\src-visitorSideEffect-O1OA\main\java with ..\target\analysis-Main\src-visitorSideEffect-O1\main\java
+ compare ..\target\analysis-Main\src-visitorSideEffect-O1OA\main\java with ..\target\analysis-Main\src-visitorSideEffect-OA\main\java
+  visitorSideEffect fails on O1OA: ep\Prettyp.java has changed in O1OA for visitorSideEffect compared to OA.
+ compare ..\target\analysis-Main\src-visitorSideEffect-OO1\main\java with ..\target\analysis-Main\src-visitorSideEffect-M2\main\java
+ compare ..\target\analysis-Main\src-visitorSideEffect-OO2\main\java with ..\target\analysis-Main\src-visitorSideEffect-M2\main\java
+ compare ..\target\analysis-Main\src-visitorSideEffect-OO3\main\java with ..\target\analysis-Main\src-visitorSideEffect-OO1\main\java
+ compare ..\target\analysis-Main\src-visitorSideEffect-OO3\main\java with ..\target\analysis-Main\src-visitorSideEffect-OO2\main\java
+ compare ..\target\analysis-Main\src-visitorSideEffect-OD1\main\java with ..\target\analysis-Main\src-visitorSideEffect-M2\main\java
+  visitorSideEffect fails on OD1: ep\Eval.java has changed in OD1 for visitorSideEffect compared to M2.
+ compare ..\target\analysis-Main\src-visitorSideEffect-OD2\main\java with ..\target\analysis-Main\src-visitorSideEffect-M2\main\java
+  visitorSideEffect fails on OD2: ep\Eval.java has changed in OD2 for visitorSideEffect compared to M2.
+ compare ..\target\analysis-Main\src-visitorSideEffect-OD3\main\java with ..\target\analysis-Main\src-visitorSideEffect-OD1\main\java
+  visitorSideEffect fails on OD3: ep\Eval.java has changed in OD3 for visitorSideEffect compared to OD1.
+ compare ..\target\analysis-Main\src-visitorSideEffect-OD3\main\java with ..\target\analysis-Main\src-visitorSideEffect-OD2\main\java
+  visitorSideEffect fails on OD3: ep\Eval.java has changed in OD3 for visitorSideEffect compared to OD2.
+validating extensibleVisitor
+ compare ..\target\analysis-Main\src-extensibleVisitor-M1\main\java with ..\target\analysis-Main\src-extensibleVisitor-M0\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-M2\main\java with ..\target\analysis-Main\src-extensibleVisitor-M1\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-M3\main\java with ..\target\analysis-Main\src-extensibleVisitor-M2\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-M4\main\java with ..\target\analysis-Main\src-extensibleVisitor-M3\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-M5\main\java with ..\target\analysis-Main\src-extensibleVisitor-M4\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-M6\main\java with ..\target\analysis-Main\src-extensibleVisitor-M5\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-M7\main\java with ..\target\analysis-Main\src-extensibleVisitor-M6\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-M7I2\main\java with ..\target\analysis-Main\src-extensibleVisitor-M7\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-M7I2\main\java with ..\target\analysis-Main\src-extensibleVisitor-I2\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-M8\main\java with ..\target\analysis-Main\src-extensibleVisitor-M7I2\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-M9\main\java with ..\target\analysis-Main\src-extensibleVisitor-M8\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-I1\main\java with ..\target\analysis-Main\src-extensibleVisitor-M2\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-I2\main\java with ..\target\analysis-Main\src-extensibleVisitor-I1\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-A1\main\java with ..\target\analysis-Main\src-extensibleVisitor-I1\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-A1M3\main\java with ..\target\analysis-Main\src-extensibleVisitor-A1\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-A1M3\main\java with ..\target\analysis-Main\src-extensibleVisitor-M3\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-A1M3I2\main\java with ..\target\analysis-Main\src-extensibleVisitor-A1M3\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-A1M3I2\main\java with ..\target\analysis-Main\src-extensibleVisitor-I2\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-A3\main\java with ..\target\analysis-Main\src-extensibleVisitor-A1M3I2\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-O1\main\java with ..\target\analysis-Main\src-extensibleVisitor-M2\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-O2\main\java with ..\target\analysis-Main\src-extensibleVisitor-O1\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-OA\main\java with ..\target\analysis-Main\src-extensibleVisitor-M2\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-O1OA\main\java with ..\target\analysis-Main\src-extensibleVisitor-O1\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-O1OA\main\java with ..\target\analysis-Main\src-extensibleVisitor-OA\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-OO1\main\java with ..\target\analysis-Main\src-extensibleVisitor-M2\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-OO2\main\java with ..\target\analysis-Main\src-extensibleVisitor-M2\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-OO3\main\java with ..\target\analysis-Main\src-extensibleVisitor-OO1\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-OO3\main\java with ..\target\analysis-Main\src-extensibleVisitor-OO2\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-OD1\main\java with ..\target\analysis-Main\src-extensibleVisitor-M2\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-OD2\main\java with ..\target\analysis-Main\src-extensibleVisitor-M2\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-OD3\main\java with ..\target\analysis-Main\src-extensibleVisitor-OD1\main\java
+ compare ..\target\analysis-Main\src-extensibleVisitor-OD3\main\java with ..\target\analysis-Main\src-extensibleVisitor-OD2\main\java
+validating interpreter
+ compare ..\target\analysis-Main\src-interpreter-M1\main\java with ..\target\analysis-Main\src-interpreter-M0\main\java
+ compare ..\target\analysis-Main\src-interpreter-M2\main\java with ..\target\analysis-Main\src-interpreter-M1\main\java
+ compare ..\target\analysis-Main\src-interpreter-M3\main\java with ..\target\analysis-Main\src-interpreter-M2\main\java
+ compare ..\target\analysis-Main\src-interpreter-M4\main\java with ..\target\analysis-Main\src-interpreter-M3\main\java
+ compare ..\target\analysis-Main\src-interpreter-M5\main\java with ..\target\analysis-Main\src-interpreter-M4\main\java
+ compare ..\target\analysis-Main\src-interpreter-M6\main\java with ..\target\analysis-Main\src-interpreter-M5\main\java
+ compare ..\target\analysis-Main\src-interpreter-M7\main\java with ..\target\analysis-Main\src-interpreter-M6\main\java
+ compare ..\target\analysis-Main\src-interpreter-M7I2\main\java with ..\target\analysis-Main\src-interpreter-M7\main\java
+ compare ..\target\analysis-Main\src-interpreter-M7I2\main\java with ..\target\analysis-Main\src-interpreter-I2\main\java
+ compare ..\target\analysis-Main\src-interpreter-M8\main\java with ..\target\analysis-Main\src-interpreter-M7I2\main\java
+ compare ..\target\analysis-Main\src-interpreter-M9\main\java with ..\target\analysis-Main\src-interpreter-M8\main\java
+ compare ..\target\analysis-Main\src-interpreter-I1\main\java with ..\target\analysis-Main\src-interpreter-M2\main\java
+ compare ..\target\analysis-Main\src-interpreter-I2\main\java with ..\target\analysis-Main\src-interpreter-I1\main\java
+ compare ..\target\analysis-Main\src-interpreter-A1\main\java with ..\target\analysis-Main\src-interpreter-I1\main\java
+ compare ..\target\analysis-Main\src-interpreter-A1M3\main\java with ..\target\analysis-Main\src-interpreter-A1\main\java
+ compare ..\target\analysis-Main\src-interpreter-A1M3\main\java with ..\target\analysis-Main\src-interpreter-M3\main\java
+ compare ..\target\analysis-Main\src-interpreter-A1M3I2\main\java with ..\target\analysis-Main\src-interpreter-A1M3\main\java
+ compare ..\target\analysis-Main\src-interpreter-A1M3I2\main\java with ..\target\analysis-Main\src-interpreter-I2\main\java
+ compare ..\target\analysis-Main\src-interpreter-A3\main\java with ..\target\analysis-Main\src-interpreter-A1M3I2\main\java
+ compare ..\target\analysis-Main\src-interpreter-O1\main\java with ..\target\analysis-Main\src-interpreter-M2\main\java
+ compare ..\target\analysis-Main\src-interpreter-O2\main\java with ..\target\analysis-Main\src-interpreter-O1\main\java
+ compare ..\target\analysis-Main\src-interpreter-OA\main\java with ..\target\analysis-Main\src-interpreter-M2\main\java
+ compare ..\target\analysis-Main\src-interpreter-O1OA\main\java with ..\target\analysis-Main\src-interpreter-O1\main\java
+ compare ..\target\analysis-Main\src-interpreter-O1OA\main\java with ..\target\analysis-Main\src-interpreter-OA\main\java
+ compare ..\target\analysis-Main\src-interpreter-OO1\main\java with ..\target\analysis-Main\src-interpreter-M2\main\java
+ compare ..\target\analysis-Main\src-interpreter-OO2\main\java with ..\target\analysis-Main\src-interpreter-M2\main\java
+ compare ..\target\analysis-Main\src-interpreter-OO3\main\java with ..\target\analysis-Main\src-interpreter-OO1\main\java
+ compare ..\target\analysis-Main\src-interpreter-OO3\main\java with ..\target\analysis-Main\src-interpreter-OO2\main\java
+ compare ..\target\analysis-Main\src-interpreter-OD1\main\java with ..\target\analysis-Main\src-interpreter-M2\main\java
+ compare ..\target\analysis-Main\src-interpreter-OD2\main\java with ..\target\analysis-Main\src-interpreter-M2\main\java
+ compare ..\target\analysis-Main\src-interpreter-OD3\main\java with ..\target\analysis-Main\src-interpreter-OD1\main\java
+ compare ..\target\analysis-Main\src-interpreter-OD3\main\java with ..\target\analysis-Main\src-interpreter-OD2\main\java
+validating dispatch
+ compare ..\target\analysis-Main\src-dispatch-M1\main\java with ..\target\analysis-Main\src-dispatch-M0\main\java
+  dispatch fails on M1: ep\Eval.java has changed in M1 for dispatch compared to M0.
+ compare ..\target\analysis-Main\src-dispatch-M2\main\java with ..\target\analysis-Main\src-dispatch-M1\main\java
+ compare ..\target\analysis-Main\src-dispatch-M3\main\java with ..\target\analysis-Main\src-dispatch-M2\main\java
+  dispatch fails on M3: ep\Eval.java has changed in M3 for dispatch compared to M2.
+ compare ..\target\analysis-Main\src-dispatch-M4\main\java with ..\target\analysis-Main\src-dispatch-M3\main\java
+ compare ..\target\analysis-Main\src-dispatch-M5\main\java with ..\target\analysis-Main\src-dispatch-M4\main\java
+ compare ..\target\analysis-Main\src-dispatch-M6\main\java with ..\target\analysis-Main\src-dispatch-M5\main\java
+ compare ..\target\analysis-Main\src-dispatch-M7\main\java with ..\target\analysis-Main\src-dispatch-M6\main\java
+ compare ..\target\analysis-Main\src-dispatch-M7I2\main\java with ..\target\analysis-Main\src-dispatch-M7\main\java
+  dispatch fails on M7I2: ep\Astree.java has changed in M7I2 for dispatch compared to M7.
+ compare ..\target\analysis-Main\src-dispatch-M7I2\main\java with ..\target\analysis-Main\src-dispatch-I2\main\java
+  dispatch fails on M7I2: ep\Eval.java has changed in M7I2 for dispatch compared to I2.
+ compare ..\target\analysis-Main\src-dispatch-M8\main\java with ..\target\analysis-Main\src-dispatch-M7I2\main\java
+  dispatch fails on M8: ep\Astree.java has changed in M8 for dispatch compared to M7I2.
+ compare ..\target\analysis-Main\src-dispatch-M9\main\java with ..\target\analysis-Main\src-dispatch-M8\main\java
+ compare ..\target\analysis-Main\src-dispatch-I1\main\java with ..\target\analysis-Main\src-dispatch-M2\main\java
+ compare ..\target\analysis-Main\src-dispatch-I2\main\java with ..\target\analysis-Main\src-dispatch-I1\main\java
+  dispatch fails on I2: ep\Eval.java has changed in I2 for dispatch compared to I1.
+ compare ..\target\analysis-Main\src-dispatch-A1\main\java with ..\target\analysis-Main\src-dispatch-I1\main\java
+  dispatch fails on A1: ep\Eval.java has changed in A1 for dispatch compared to I1.
+ compare ..\target\analysis-Main\src-dispatch-A1M3\main\java with ..\target\analysis-Main\src-dispatch-A1\main\java
+  dispatch fails on A1M3: ep\Eval.java has changed in A1M3 for dispatch compared to A1.
+ compare ..\target\analysis-Main\src-dispatch-A1M3\main\java with ..\target\analysis-Main\src-dispatch-M3\main\java
+  dispatch fails on A1M3: ep\Eval.java has changed in A1M3 for dispatch compared to M3.
+ compare ..\target\analysis-Main\src-dispatch-A1M3I2\main\java with ..\target\analysis-Main\src-dispatch-A1M3\main\java
+  dispatch fails on A1M3I2: ep\Eval.java has changed in A1M3I2 for dispatch compared to A1M3.
+ compare ..\target\analysis-Main\src-dispatch-A1M3I2\main\java with ..\target\analysis-Main\src-dispatch-I2\main\java
+  dispatch fails on A1M3I2: ep\Eval.java has changed in A1M3I2 for dispatch compared to I2.
+ compare ..\target\analysis-Main\src-dispatch-A3\main\java with ..\target\analysis-Main\src-dispatch-A1M3I2\main\java
+  dispatch fails on A3: ep\Eval.java has changed in A3 for dispatch compared to A1M3I2.
+ compare ..\target\analysis-Main\src-dispatch-O1\main\java with ..\target\analysis-Main\src-dispatch-M2\main\java
+  dispatch fails on O1: ep\Prettyp.java has changed in O1 for dispatch compared to M2.
+ compare ..\target\analysis-Main\src-dispatch-O2\main\java with ..\target\analysis-Main\src-dispatch-O1\main\java
+  dispatch fails on O2: ep\Prettyp.java has changed in O2 for dispatch compared to O1.
+ compare ..\target\analysis-Main\src-dispatch-OA\main\java with ..\target\analysis-Main\src-dispatch-M2\main\java
+ compare ..\target\analysis-Main\src-dispatch-O1OA\main\java with ..\target\analysis-Main\src-dispatch-O1\main\java
+  dispatch fails on O1OA: ep\Eval.java has changed in O1OA for dispatch compared to O1.
+ compare ..\target\analysis-Main\src-dispatch-O1OA\main\java with ..\target\analysis-Main\src-dispatch-OA\main\java
+  dispatch fails on O1OA: ep\Eval.java has changed in O1OA for dispatch compared to OA.
+ compare ..\target\analysis-Main\src-dispatch-OO1\main\java with ..\target\analysis-Main\src-dispatch-M2\main\java
+ compare ..\target\analysis-Main\src-dispatch-OO2\main\java with ..\target\analysis-Main\src-dispatch-M2\main\java
+ compare ..\target\analysis-Main\src-dispatch-OO3\main\java with ..\target\analysis-Main\src-dispatch-OO1\main\java
+  dispatch fails on OO3: ep\Atomic.java has changed in OO3 for dispatch compared to OO1.
+ compare ..\target\analysis-Main\src-dispatch-OO3\main\java with ..\target\analysis-Main\src-dispatch-OO2\main\java
+  dispatch fails on OO3: ep\Eval.java has changed in OO3 for dispatch compared to OO2.
+ compare ..\target\analysis-Main\src-dispatch-OD1\main\java with ..\target\analysis-Main\src-dispatch-M2\main\java
+  dispatch fails on OD1: ep\Eval.java has changed in OD1 for dispatch compared to M2.
+ compare ..\target\analysis-Main\src-dispatch-OD2\main\java with ..\target\analysis-Main\src-dispatch-M2\main\java
+  dispatch fails on OD2: ep\Eval.java has changed in OD2 for dispatch compared to M2.
+ compare ..\target\analysis-Main\src-dispatch-OD3\main\java with ..\target\analysis-Main\src-dispatch-OD1\main\java
+  dispatch fails on OD3: ep\Eval.java has changed in OD3 for dispatch compared to OD1.
+ compare ..\target\analysis-Main\src-dispatch-OD3\main\java with ..\target\analysis-Main\src-dispatch-OD2\main\java
+  dispatch fails on OD3: ep\Eval.java has changed in OD3 for dispatch compared to OD2.
+validating trivially
+ compare ..\target\analysis-Main\src-trivially-M1\main\java with ..\target\analysis-Main\src-trivially-M0\main\java
+ compare ..\target\analysis-Main\src-trivially-M2\main\java with ..\target\analysis-Main\src-trivially-M1\main\java
+ compare ..\target\analysis-Main\src-trivially-M3\main\java with ..\target\analysis-Main\src-trivially-M2\main\java
+ compare ..\target\analysis-Main\src-trivially-M4\main\java with ..\target\analysis-Main\src-trivially-M3\main\java
+ compare ..\target\analysis-Main\src-trivially-M5\main\java with ..\target\analysis-Main\src-trivially-M4\main\java
+ compare ..\target\analysis-Main\src-trivially-M6\main\java with ..\target\analysis-Main\src-trivially-M5\main\java
+ compare ..\target\analysis-Main\src-trivially-M7\main\java with ..\target\analysis-Main\src-trivially-M6\main\java
+ compare ..\target\analysis-Main\src-trivially-M7I2\main\java with ..\target\analysis-Main\src-trivially-M7\main\java
+ compare ..\target\analysis-Main\src-trivially-M7I2\main\java with ..\target\analysis-Main\src-trivially-I2\main\java
+ compare ..\target\analysis-Main\src-trivially-M8\main\java with ..\target\analysis-Main\src-trivially-M7I2\main\java
+ compare ..\target\analysis-Main\src-trivially-M9\main\java with ..\target\analysis-Main\src-trivially-M8\main\java
+ compare ..\target\analysis-Main\src-trivially-I1\main\java with ..\target\analysis-Main\src-trivially-M2\main\java
+ compare ..\target\analysis-Main\src-trivially-I2\main\java with ..\target\analysis-Main\src-trivially-I1\main\java
+ compare ..\target\analysis-Main\src-trivially-A1\main\java with ..\target\analysis-Main\src-trivially-I1\main\java
+ compare ..\target\analysis-Main\src-trivially-A1M3\main\java with ..\target\analysis-Main\src-trivially-A1\main\java
+ compare ..\target\analysis-Main\src-trivially-A1M3\main\java with ..\target\analysis-Main\src-trivially-M3\main\java
+ compare ..\target\analysis-Main\src-trivially-A1M3I2\main\java with ..\target\analysis-Main\src-trivially-A1M3\main\java
+ compare ..\target\analysis-Main\src-trivially-A1M3I2\main\java with ..\target\analysis-Main\src-trivially-I2\main\java
+ compare ..\target\analysis-Main\src-trivially-A3\main\java with ..\target\analysis-Main\src-trivially-A1M3I2\main\java
+ compare ..\target\analysis-Main\src-trivially-O1\main\java with ..\target\analysis-Main\src-trivially-M2\main\java
+ compare ..\target\analysis-Main\src-trivially-O2\main\java with ..\target\analysis-Main\src-trivially-O1\main\java
+ compare ..\target\analysis-Main\src-trivially-OA\main\java with ..\target\analysis-Main\src-trivially-M2\main\java
+ compare ..\target\analysis-Main\src-trivially-O1OA\main\java with ..\target\analysis-Main\src-trivially-O1\main\java
+ compare ..\target\analysis-Main\src-trivially-O1OA\main\java with ..\target\analysis-Main\src-trivially-OA\main\java
+ compare ..\target\analysis-Main\src-trivially-OO1\main\java with ..\target\analysis-Main\src-trivially-M2\main\java
+ compare ..\target\analysis-Main\src-trivially-OO2\main\java with ..\target\analysis-Main\src-trivially-M2\main\java
+ compare ..\target\analysis-Main\src-trivially-OO3\main\java with ..\target\analysis-Main\src-trivially-OO1\main\java
+ compare ..\target\analysis-Main\src-trivially-OO3\main\java with ..\target\analysis-Main\src-trivially-OO2\main\java
+ compare ..\target\analysis-Main\src-trivially-OD1\main\java with ..\target\analysis-Main\src-trivially-M2\main\java
+ compare ..\target\analysis-Main\src-trivially-OD2\main\java with ..\target\analysis-Main\src-trivially-M2\main\java
+ compare ..\target\analysis-Main\src-trivially-OD3\main\java with ..\target\analysis-Main\src-trivially-OD1\main\java
+ compare ..\target\analysis-Main\src-trivially-OD3\main\java with ..\target\analysis-Main\src-trivially-OD2\main\java
+validating coco
+ compare ..\target\analysis-Main\src-coco-M1\main\java with ..\target\analysis-Main\src-coco-M0\main\java
+ compare ..\target\analysis-Main\src-coco-M2\main\java with ..\target\analysis-Main\src-coco-M1\main\java
+ compare ..\target\analysis-Main\src-coco-M3\main\java with ..\target\analysis-Main\src-coco-M2\main\java
+ compare ..\target\analysis-Main\src-coco-M4\main\java with ..\target\analysis-Main\src-coco-M3\main\java
+ compare ..\target\analysis-Main\src-coco-M5\main\java with ..\target\analysis-Main\src-coco-M4\main\java
+ compare ..\target\analysis-Main\src-coco-M6\main\java with ..\target\analysis-Main\src-coco-M5\main\java
+ compare ..\target\analysis-Main\src-coco-M7\main\java with ..\target\analysis-Main\src-coco-M6\main\java
+ compare ..\target\analysis-Main\src-coco-M7I2\main\java with ..\target\analysis-Main\src-coco-M7\main\java
+ compare ..\target\analysis-Main\src-coco-M7I2\main\java with ..\target\analysis-Main\src-coco-I2\main\java
+ compare ..\target\analysis-Main\src-coco-M8\main\java with ..\target\analysis-Main\src-coco-M7I2\main\java
+ compare ..\target\analysis-Main\src-coco-M9\main\java with ..\target\analysis-Main\src-coco-M8\main\java
+ compare ..\target\analysis-Main\src-coco-I1\main\java with ..\target\analysis-Main\src-coco-M2\main\java
+ compare ..\target\analysis-Main\src-coco-I2\main\java with ..\target\analysis-Main\src-coco-I1\main\java
+ compare ..\target\analysis-Main\src-coco-A1\main\java with ..\target\analysis-Main\src-coco-I1\main\java
+ compare ..\target\analysis-Main\src-coco-A1M3\main\java with ..\target\analysis-Main\src-coco-A1\main\java
+ compare ..\target\analysis-Main\src-coco-A1M3\main\java with ..\target\analysis-Main\src-coco-M3\main\java
+ compare ..\target\analysis-Main\src-coco-A1M3I2\main\java with ..\target\analysis-Main\src-coco-A1M3\main\java
+ compare ..\target\analysis-Main\src-coco-A1M3I2\main\java with ..\target\analysis-Main\src-coco-I2\main\java
+ compare ..\target\analysis-Main\src-coco-A3\main\java with ..\target\analysis-Main\src-coco-A1M3I2\main\java
+ compare ..\target\analysis-Main\src-coco-O1\main\java with ..\target\analysis-Main\src-coco-M2\main\java
+ compare ..\target\analysis-Main\src-coco-O2\main\java with ..\target\analysis-Main\src-coco-O1\main\java
+ compare ..\target\analysis-Main\src-coco-OA\main\java with ..\target\analysis-Main\src-coco-M2\main\java
+ compare ..\target\analysis-Main\src-coco-O1OA\main\java with ..\target\analysis-Main\src-coco-O1\main\java
+ compare ..\target\analysis-Main\src-coco-O1OA\main\java with ..\target\analysis-Main\src-coco-OA\main\java
+ compare ..\target\analysis-Main\src-coco-OO1\main\java with ..\target\analysis-Main\src-coco-M2\main\java
+ compare ..\target\analysis-Main\src-coco-OO2\main\java with ..\target\analysis-Main\src-coco-M2\main\java
+ compare ..\target\analysis-Main\src-coco-OO3\main\java with ..\target\analysis-Main\src-coco-OO1\main\java
+ compare ..\target\analysis-Main\src-coco-OO3\main\java with ..\target\analysis-Main\src-coco-OO2\main\java
+ compare ..\target\analysis-Main\src-coco-OD1\main\java with ..\target\analysis-Main\src-coco-M2\main\java
+ compare ..\target\analysis-Main\src-coco-OD2\main\java with ..\target\analysis-Main\src-coco-M2\main\java
+ compare ..\target\analysis-Main\src-coco-OD3\main\java with ..\target\analysis-Main\src-coco-OD1\main\java
+ compare ..\target\analysis-Main\src-coco-OD3\main\java with ..\target\analysis-Main\src-coco-OD2\main\java
+validating algebra
+ compare ..\target\analysis-Main\src-algebra-M1\main\java with ..\target\analysis-Main\src-algebra-M0\main\java
+ compare ..\target\analysis-Main\src-algebra-M2\main\java with ..\target\analysis-Main\src-algebra-M1\main\java
+ compare ..\target\analysis-Main\src-algebra-M3\main\java with ..\target\analysis-Main\src-algebra-M2\main\java
+ compare ..\target\analysis-Main\src-algebra-M4\main\java with ..\target\analysis-Main\src-algebra-M3\main\java
+ compare ..\target\analysis-Main\src-algebra-M5\main\java with ..\target\analysis-Main\src-algebra-M4\main\java
+ compare ..\target\analysis-Main\src-algebra-M6\main\java with ..\target\analysis-Main\src-algebra-M5\main\java
+ compare ..\target\analysis-Main\src-algebra-M7\main\java with ..\target\analysis-Main\src-algebra-M6\main\java
+ compare ..\target\analysis-Main\src-algebra-M7I2\main\java with ..\target\analysis-Main\src-algebra-M7\main\java
+ compare ..\target\analysis-Main\src-algebra-M7I2\main\java with ..\target\analysis-Main\src-algebra-I2\main\java
+ compare ..\target\analysis-Main\src-algebra-M8\main\java with ..\target\analysis-Main\src-algebra-M7I2\main\java
+ compare ..\target\analysis-Main\src-algebra-M9\main\java with ..\target\analysis-Main\src-algebra-M8\main\java
+ compare ..\target\analysis-Main\src-algebra-I1\main\java with ..\target\analysis-Main\src-algebra-M2\main\java
+ compare ..\target\analysis-Main\src-algebra-I2\main\java with ..\target\analysis-Main\src-algebra-I1\main\java
+ compare ..\target\analysis-Main\src-algebra-A1\main\java with ..\target\analysis-Main\src-algebra-I1\main\java
+ compare ..\target\analysis-Main\src-algebra-A1M3\main\java with ..\target\analysis-Main\src-algebra-A1\main\java
+ compare ..\target\analysis-Main\src-algebra-A1M3\main\java with ..\target\analysis-Main\src-algebra-M3\main\java
+ compare ..\target\analysis-Main\src-algebra-A1M3I2\main\java with ..\target\analysis-Main\src-algebra-A1M3\main\java
+ compare ..\target\analysis-Main\src-algebra-A1M3I2\main\java with ..\target\analysis-Main\src-algebra-I2\main\java
+ compare ..\target\analysis-Main\src-algebra-A3\main\java with ..\target\analysis-Main\src-algebra-A1M3I2\main\java
+ compare ..\target\analysis-Main\src-algebra-O1\main\java with ..\target\analysis-Main\src-algebra-M2\main\java
+ compare ..\target\analysis-Main\src-algebra-O2\main\java with ..\target\analysis-Main\src-algebra-O1\main\java
+ compare ..\target\analysis-Main\src-algebra-OA\main\java with ..\target\analysis-Main\src-algebra-M2\main\java
+ compare ..\target\analysis-Main\src-algebra-O1OA\main\java with ..\target\analysis-Main\src-algebra-O1\main\java
+ compare ..\target\analysis-Main\src-algebra-O1OA\main\java with ..\target\analysis-Main\src-algebra-OA\main\java
+ compare ..\target\analysis-Main\src-algebra-OO1\main\java with ..\target\analysis-Main\src-algebra-M2\main\java
+ compare ..\target\analysis-Main\src-algebra-OO2\main\java with ..\target\analysis-Main\src-algebra-M2\main\java
+ compare ..\target\analysis-Main\src-algebra-OO3\main\java with ..\target\analysis-Main\src-algebra-OO1\main\java
+ compare ..\target\analysis-Main\src-algebra-OO3\main\java with ..\target\analysis-Main\src-algebra-OO2\main\java
+ compare ..\target\analysis-Main\src-algebra-OD1\main\java with ..\target\analysis-Main\src-algebra-M2\main\java
+ compare ..\target\analysis-Main\src-algebra-OD2\main\java with ..\target\analysis-Main\src-algebra-M2\main\java
+ compare ..\target\analysis-Main\src-algebra-OD3\main\java with ..\target\analysis-Main\src-algebra-OD1\main\java
+ compare ..\target\analysis-Main\src-algebra-OD3\main\java with ..\target\analysis-Main\src-algebra-OD2\main\java

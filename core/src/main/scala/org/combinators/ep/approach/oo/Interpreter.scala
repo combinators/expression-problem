@@ -1,6 +1,6 @@
 package org.combinators.ep.approach.oo    /*DI:LI:AD*/
 
-import org.combinators.ep.domain.{GenericModel, Model}
+import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command._
 import org.combinators.ep.generator._
@@ -36,7 +36,7 @@ sealed trait Interpreter extends SharedOO {
     }.toSet
   }
 
-  def updatedImplementationCurrentDomain(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Option[GenericModel] = {
+  def updatedImplementationCurrentDomain(domain: GenericModel): Option[GenericModel] = {
 
     // current domain might have implementation that overrides an existing implementation, and that has
     // to be captured. Go through all past operations and past data types, and see if the domainSpecific dependencies
@@ -44,15 +44,28 @@ sealed trait Interpreter extends SharedOO {
 
     domain.pastOperations.foreach(op =>
       domain.pastDataTypes.foreach(tpe =>
-          // Because of EIP composition, we have to extract out from the MAP of evolutionSpecificDependencies.
-          if (domainSpecific.dependencies(PotentialRequest(domain.baseDataType, tpe, op)).isDefined) {
-            val selectMap = domainSpecific.evolutionSpecificDependencies(PotentialRequest(domain.baseDataType, tpe, op))
-            if (selectMap.contains(domain)) {
-              returnVal = Some(domain)
-            }
+          // cannot just invoke 'haveImplementation' since that covers cases where a new data type has been defined,
+          // and so a past operation needs to be implemented. ONLY deal with optimizations
+          if (domain.optimizations.contains((tpe, op))) {
+            returnVal = Some(domain)
           }
         )
       )
+
+    returnVal
+  }
+
+  def updatedImplementationCurrentDomainByType(domain: GenericModel, tpe:DataTypeCase): Option[GenericModel] = {
+
+    // current domain might have implementation that overrides an existing implementation, and that has
+    // to be captured. Go through all past operations for this data type, and see if the domainSpecific dependencies
+    var returnVal:Option[GenericModel] = None
+
+    domain.pastOperations.foreach(op =>
+        if (domain.haveImplementation(PotentialRequest(domain.baseDataType, tpe, op)).contains(domain)) {
+          returnVal = Some(domain)
+        }
+    )
 
     returnVal
   }
@@ -71,7 +84,7 @@ sealed trait Interpreter extends SharedOO {
     }
   }
 
-  def mostSpecificBaseInterfaceType[Context](domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type])(implicit
+  def mostSpecificBaseInterfaceType[Context](domain: GenericModel)(implicit
       canFindClass: Understands[Context, FindClass[paradigm.syntax.Name, paradigm.syntax.Type]],
       canResolveImport: Understands[Context, ResolveImport[paradigm.syntax.Import, paradigm.syntax.Type]],
       canAddImport: Understands[Context, AddImport[paradigm.syntax.Import]],
@@ -79,7 +92,7 @@ sealed trait Interpreter extends SharedOO {
   ): Generator[Context, paradigm.syntax.Type] = {
 
     // might have to use current because of revised implementation
-    val updateCurrent = updatedImplementationCurrentDomain(domain, domainSpecific)
+    val updateCurrent = updatedImplementationCurrentDomain(domain)
     val resultModelStage = if (updateCurrent.isDefined) {
       latestModelDefiningNewTypeInterface(domain).later(updateCurrent.get)
     } else {
@@ -143,7 +156,7 @@ sealed trait Interpreter extends SharedOO {
   // TODO: should be revised to pass in the base, and not presume it
   def baseInterfaceNames(domain: GenericModel): Seq[Name] = {
     if (domain.isDomainBase) {
-      // ignore MathDomain, for example, and just grab name...
+      // ignore base Domain, for example, and just grab name...
       Seq(names.mangle(domain.baseDataType.name))
     } else {
       Seq(names.mangle(domain.name), names.mangle(domain.baseDataType.name))
@@ -169,7 +182,6 @@ sealed trait Interpreter extends SharedOO {
 
       // former merge points need to be included, so  past.lastModelWithOperation) is changed to below. Make
       // sure to 'distinct' these models to avoid adding same interface multiple time (can happen with 3-way merge)
-      //_ <- forEach(domain.former.map(past => latestModelDefiningInterface(past))) { m => for {
       _ <- forEach(domain.former.map(past => latestModelDefiningNewTypeInterface(past)).distinct) { m => for {
            /** Interpreter has to go back to the former Model which had defined an operation */
            parent <- findClass(qualifiedBaseDataType(m) : _ *)
@@ -179,7 +191,7 @@ sealed trait Interpreter extends SharedOO {
         }
 
       // grab current operations AND all producers. Do together to eliminate duplicates.
-      _ <- forEach ((domain.ops ++ opsToBuild).distinct) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), makeInterpreterSignature(domain, op)) }
+      _ <- forEach ((domain.ops ++ opsToBuild ++ producers).distinct) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), makeInterpreterSignature(domain, op)) }
     } yield ()
   }
 
@@ -257,11 +269,8 @@ sealed trait Interpreter extends SharedOO {
    * If a new operation is defined, then a local DataType Case Class is created, and it will inherit
    * baseDomain attributes that need to be cast to current domain
    */
-  def mustCastToAccess(domain:GenericModel, op:Operation, tpeCase:DataTypeCase, domainSpecific: EvolutionImplementationProvider[this.type]) : Boolean = {
+  def mustCastToAccess(domain:GenericModel, op:Operation, tpeCase:DataTypeCase) : Boolean = {
     val definingModel = domain.findTypeCase(tpeCase).get
-
-    // either before OR could be on unrelated branches owing to a merge. M3W1 caught this
-    //definingModel.before(latestModelDefiningNewTypeInterface(domain))
 
     !latestModelDefiningNewTypeInterface(domain).beforeOrEqual(definingModel)
   }
@@ -281,8 +290,8 @@ sealed trait Interpreter extends SharedOO {
       attAccessors: Seq[Expression] <- forEach (tpeCase.attributes) { att =>
         for {
           att_member <- getMember(thisRef, names.mangle(names.instanceNameOf(att)))
-          mostSpecificExp <- mostSpecificBaseInterfaceType(domain, domainSpecific)
-          casted <- if (att.tpe.isModelBase(domain) && mustCastToAccess(domain, op, tpeCase, domainSpecific)) {    // only cast if Exp AND comes from older Exp
+          mostSpecificExp <- mostSpecificBaseInterfaceType(domain)
+          casted <- if (att.tpe.isModelBase(domain) && mustCastToAccess(domain, op, tpeCase)) {    // only cast if Exp AND comes from older Exp
             castObject(mostSpecificExp, att_member)
           } else {
             Command.lift[MethodBodyContext, Expression](att_member)
@@ -295,7 +304,7 @@ sealed trait Interpreter extends SharedOO {
       allArgs <- getArguments()
       castedArgs <- forEach(op.parameters.zip(allArgs)) { case (param,arg) =>
         for {
-          mostSpecificExp <- mostSpecificBaseInterfaceType(domain, domainSpecific)
+          mostSpecificExp <- mostSpecificBaseInterfaceType(domain)
           casted <- if (param.tpe.isModelBase(domain)) {    // only cast if Exp
             castObject(mostSpecificExp, arg._3)
           } else {
@@ -395,13 +404,12 @@ sealed trait Interpreter extends SharedOO {
           val necessaryOps = if (defining.typeCases.contains(tpe)) { defining.flatten.ops.distinct} else { defining.ops }
           val missing = defining.flatten.ops.distinct.filter(op => (! prime.supports(op)) || op.isProducer(defining))
           val overridden = defining.flatten.ops.distinct.filter(op => {
-            // cannot filter by domainSpecific.model --
             val selectMap = domainSpecific.evolutionSpecificDependencies(PotentialRequest(defining.baseDataType, tpe, op))
             val hasDependency = domainSpecific.dependencies(PotentialRequest(defining.baseDataType, tpe, op)).isDefined
             hasDependency && selectMap.contains(defining)
           })
           if ((missing ++ necessaryOps ++ overridden).isEmpty) {
-            Command.lift[ProjectContext, Unit]()
+            Command.skip[ProjectContext]
           } else {
             generateForOpForType((missing ++ necessaryOps ++ overridden).distinct, defining, tpe, domainSpecific)   // don't forget to include self (defining)
           }
@@ -440,20 +448,17 @@ sealed trait Interpreter extends SharedOO {
   }
 
   /** Enables mapping each DataType to the designated ep.?.DT class. */
-  def registerTypeCases(domain:GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]) : Generator[ProjectContext, Unit] = {
+  def registerTypeCases(domain:GenericModel) : Generator[ProjectContext, Unit] = {
     import ooParadigm.classCapabilities.{addTypeLookupForMethods => _, addTypeLookupForClasses => _, addTypeLookupForConstructors => _,_}
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
     import ooParadigm.constructorCapabilities._
     import ooParadigm.projectCapabilities._
     import paradigm.projectCapabilities._
-    // this needs to be modified (for testing and other reasons) to get latest tpe which might have been
-    // added because of some operation optimization.
-    for {
+     for {
       _ <- forEach(domain.flatten.typeCases) { tpe => {
-          //val tpeDomain = latestModelDefiningNewTypeInterface(domain, tpe)
 
-          val updateCurrent = updatedImplementationCurrentDomain(domain, domainSpecific)
+          val updateCurrent = updatedImplementationCurrentDomainByType(domain, tpe)
           val tpeDomain = if (updateCurrent.isDefined) {
             latestModelDefiningNewTypeInterface(domain, tpe).later(updateCurrent.get)
           } else {
@@ -470,37 +475,6 @@ sealed trait Interpreter extends SharedOO {
     } yield()
   }
 
-//  /** Enables mapping each DataType to the designated ep.?.DT class. */
-//  def registerTypeCasesTest(domain:GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]) : Generator[TestContext, Unit] = {
-//    import ooParadigm.classCapabilities.{addTypeLookupForMethods => _, addTypeLookupForClasses => _, addTypeLookupForConstructors => _,_}
-//    import paradigm.methodBodyCapabilities._
-//    import ooParadigm.projectCapabilities._
-//    import paradigm.projectCapabilities._
-//    import ooParadigm.testCapabilities._
-//
-//    // this needs to be modified (for testing and other reasons) to get latest tpe which might have been
-//    // added because of some operation optimization.
-//    for {
-//      _ <- forEach(domain.flatten.typeCases) { tpe => {
-//        //val tpeDomain = latestModelDefiningNewTypeInterface(domain, tpe)
-//
-//        val updateCurrent = updatedImplementationCurrentDomain(domain, domainSpecific)
-//        val tpeDomain = if (updateCurrent.isDefined) {
-//          latestModelDefiningNewTypeInterface(domain, tpe).later(updateCurrent.get)
-//        } else {
-//          latestModelDefiningNewTypeInterface(domain, tpe)
-//        }
-//
-//        for {
-//          _ <- addTypeLookupForMethods(TypeRep.DataType(DataType(tpe.name)), paramType[MethodBodyContext](tpeDomain, tpe))
-//          _ <- addTypeLookupForClasses(TypeRep.DataType(DataType(tpe.name)), paramType[ClassContext](tpeDomain, tpe))
-//          _ <- addTypeLookupForConstructors(TypeRep.DataType(DataType(tpe.name)), paramType[ConstructorContext](tpeDomain, tpe))
-//        } yield ()
-//      }
-//      }
-//    } yield()
-//  }
-
   /** What model is delivered has operations which is essential for the mapping. */
   override def registerTypeMapping(model: GenericModel): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
@@ -509,7 +483,6 @@ sealed trait Interpreter extends SharedOO {
     import ooParadigm.methodBodyCapabilities.canFindClassInMethod
     import paradigm.projectCapabilities._
 
-    //val baseInterface = baseInterfaceNames(latestModelDefiningInterface(model))  // model.lastModelWithOperation.head)
     val baseInterface = baseInterfaceNames(latestModelDefiningNewTypeInterface(model))
     val dtpeRep = TypeRep.DataType(model.baseDataType)
     for {
@@ -518,24 +491,6 @@ sealed trait Interpreter extends SharedOO {
       _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(baseInterface : _*))
     } yield ()
   }
-
-  /** What model is delivered has operations which is essential for the mapping. */
-//  def registerTypeMappingTest(model: GenericModel): Generator[TestContext, Unit] = {
-//    import ooParadigm.projectCapabilities._
-//    import ooParadigm.classCapabilities.canFindClassInClass
-//    import ooParadigm.constructorCapabilities.canFindClassInConstructor
-//    import ooParadigm.methodBodyCapabilities.canFindClassInMethod
-//    import paradigm.projectCapabilities._
-//
-//    //val baseInterface = baseInterfaceNames(latestModelDefiningInterface(model))  // model.lastModelWithOperation.head)
-//    val baseInterface = baseInterfaceNames(latestModelDefiningNewTypeInterface(model))
-//    val dtpeRep = TypeRep.DataType(model.baseDataType)
-//    for {
-//      _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(baseInterface : _*))
-//      _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(baseInterface : _*))
-//      _ <- addTypeLookupForConstructors(dtpeRep, domainTypeLookup(baseInterface : _*))
-//    } yield ()
-//  }
 
   /**
    * Find the (possibly older) model that actually defines this type case. Now, if some former model defines
@@ -554,18 +509,16 @@ sealed trait Interpreter extends SharedOO {
   def implement(model: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
     def implementInner(domain: GenericModel): Generator[paradigm.ProjectContext, Unit] = {
       val typeCasesNotGeneratedYet = domain.flatten.typeCases.distinct.filter(tpeCase => latestModelDefiningNewTypeInterface(domain, tpeCase) == domain)
-
-      // Note: domainSpecific is always the LATEST EIP and so it's .getModel() is always latest and cannot be used
-      // to discriminate to an EIP at a particular moment in time. Unless there is provided some means of going "backward"
-      // through the EIP compositions to locate a specific level.
+      val b1 = domain == latestModelDefiningNewTypeInterface(domain)
+      val b2 = updatedImplementationCurrentDomain(domain).isDefined
       val createLevel = (domain == latestModelDefiningNewTypeInterface(domain)) ||
-        updatedImplementationCurrentDomain(domain, domainSpecific).isDefined
+        updatedImplementationCurrentDomain(domain).isDefined
       if (domain.isDomainBase) {
         Command.skip[paradigm.ProjectContext]
       } else {
         for {
           _ <- registerTypeMapping(domain)       // this must be first SO Exp is properly bound within interfaces
-          _ <- registerTypeCases(domain, domainSpecific)         // handle DataType classes as well for interpreter
+          _ <- registerTypeCases(domain)         // handle DataType classes as well for interpreter
           _ <- if (createLevel) {
             for {
              _ <- addIntermediateInterfaceToProject(domain, domainSpecific)   // Exp for each evolution that needs one
@@ -581,7 +534,6 @@ sealed trait Interpreter extends SharedOO {
       }
     }
 
-    //existingDomainSpecific = Some(domainSpecific)
     for {
       _ <- domainSpecific.initialize(this)
       _ <- makeBase(model.baseDataType, Seq.empty)
@@ -594,38 +546,36 @@ sealed trait Interpreter extends SharedOO {
     import paradigm.projectCapabilities._
     import paradigm.compilationUnitCapabilities._
     import paradigm.testCapabilities._
+
+    def implementInner(domain: GenericModel, tests:Seq[TestCase]): Generator[paradigm.ProjectContext, Unit] = {
+      val testCode: Generator[MethodBodyContext, Seq[Expression]] =
+        for {
+          code <- forEach(tests) {
+            test => testImplementationProvider.test(this)(test)
+          }
+        } yield code.flatten
+
+      val compUnit = for {
+        _ <- addTestCase(testCode, testName)
+      } yield()
+
+      val testSuite = for {
+        _ <- addTestSuite(testCaseName(domain), compUnit)
+      } yield ()
+
+      for {
+        _ <- addCompilationUnit(testSuite, testCaseName(domain))
+      } yield()
+    }
+
     for {
-      _ <-
-        forEach(tests.toList) { case (model, tests) =>
-          val testCode: Generator[MethodBodyContext, Seq[Expression]] =
-            for {
-              code <- forEach(tests) {
-                test => testImplementationProvider.test(this)(test)
-              }
-            } yield code.flatten
-
-          val compUnit = for {
-            // NOTE: Does not have access to domainSpecific -- I think we need this information to be in the model!
-            //_ <- registerTypeMappingTest(model)                                 // this must be first SO Exp is properly bound within interfaces
-            //_ <- registerTypeCasesTest(model, existingDomainSpecific.get)       // handle DataType classes as well for interpreter
-
-            _ <- addTestCase(testCode, testName)
-
-          } yield()
-
-          val testSuite = for {
-            _ <- addTestSuite(
-              testCaseName(model),
-              compUnit
-            )
-          } yield ()
-
-          addCompilationUnit(
-            testSuite,
-            testCaseName(model)
-          )
-
-        }
+      _ <- forEach(tests.toList) { case (model, tests) =>
+        for {
+          _ <- registerTypeMapping(model)    // this must be first SO Exp is properly bound within interfaces
+          _ <- registerTypeCases(model)      // handle DataType classes as well for interpreter
+          _ <- implementInner(model, tests)
+        } yield ()
+      }
     } yield ()
   }
 }

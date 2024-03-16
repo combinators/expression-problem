@@ -1,6 +1,6 @@
 package org.combinators.ep.generator   /*DI:LI:AI*/
 
-import org.combinators.ep.domain.{GenericModel, Model}
+import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions._
 
 /** Provides mangled names for domain entities. */

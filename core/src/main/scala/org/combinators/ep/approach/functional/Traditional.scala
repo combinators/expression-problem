@@ -1,6 +1,6 @@
 package org.combinators.ep.approach.functional    /*DI:LI:AD*/
 
-import org.combinators.ep.domain.{GenericModel, Model}
+import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.generator.{AbstractSyntax, ApproachImplementationProvider, Command, EvolutionImplementationProvider, NameProvider, Understands}
 import org.combinators.ep.generator.paradigm.control.{Functional => FunControl}
 import Command.{Generator, _}

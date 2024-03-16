@@ -18,12 +18,12 @@
 
 2. Produce full report to validate which AIPs are truly correct
 
-  `python3 compare.py [EVOLUTION-JSON]` where EVOLUTION-JSON is either "system-j.json" or "system-main.json".
-  Note that the JSON files look like the following, so you can specify the location of the analysis
-  directory.
+  c:\Python37\python.exe ..\..\scripts\compare.py ..\..\scripts\[EVOLUTION-JSON] > REPORT
+
+  where EVOLUTION-JSON is either "system-j.json" or "system-main.json". Note that the JSON files look like the following and contain
+  predecessor information for each EIP to make the Python processing a bit easier.
 
          {
-           "directory" : "analysis-J",
            "evolutions" : [
              { "J1" : ["M0"] },
              { "J2" : ["J1"] },
@@ -33,6 +33,8 @@
 
   This script assesses whether an approach minimally satisfies the Expression Problem. That is, future evolutions
   do not require any changes to former artifacts.
+
+  This script must be run in the directory that was generated from runAll.bat or a variant.
 
   Note that it does not identify situations where, for example, non-trivial code is copied and used in a subsequent
   evolution. For example, the 'interpreter' approach requires code to be copies with producer operations.
@@ -66,9 +68,11 @@
      }
 
 3. Generate statistics regarding the results of runAll.bat, which includes Generation time, Compilation time,
-   and time to complete test cases.
+   and time to complete test cases. This script also detects errors in these three phases.
 
    CD into the directory in target\analysis and run the following on each of the jacoco.*** generated files
 
-   c:\Python37\python.exe ..\..\scripts\process.py
+   c:\Python37\python.exe ..\..\scripts\process.py > STATISTICS
 
+4. When all scripts have run, you will need to delete lots of temporary directories inside of target/bg-jobs that were created
+   by SBT. A full run of the scripts often results in several GB worth of directories to be deleted.

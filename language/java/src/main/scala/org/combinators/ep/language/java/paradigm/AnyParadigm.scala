@@ -440,7 +440,32 @@ trait AnyParadigm extends AP {
                   testMethod)
               )
             val newClass = context.testClass.clone()
-            newClass.addMember(resultingContext.method.clone)
+            val statements = resultingContext.method.getBody.get.getStatements
+            // Test case methods COULD exceed the byte-code limit for an individual method in Java. Arbitrarily
+            // break up these test case methods into "chunks" of no more than 500 statements. Caution: Magic constant!
+            if (statements.size() > 500) {
+              var start = 0
+              while (start < statements.size()) {
+                val smallerTestMethod = new MethodDeclaration()
+                smallerTestMethod.setModifiers(Modifier.publicModifier().getKeyword)
+                smallerTestMethod.setType(new com.github.javaparser.ast.`type`.VoidType())
+                smallerTestMethod.setName(JavaNameProvider.addPrefix(f"test$start", command.name).toAST)
+                smallerTestMethod.addMarkerAnnotation("org.junit.Test")
+                val extractor = statements.listIterator(start)
+                var idx = 0
+                val newBody = smallerTestMethod.getBody.get
+                while (idx < 500 && extractor.hasNext) {
+                  newBody.getStatements.add(extractor.next())
+                  idx = idx + 1
+                }
+                start = start + 500
+                newClass.addMember(smallerTestMethod)
+              }
+
+            } else {
+              newClass.addMember(resultingContext.method.clone)
+            }
+
             (context.copy(resolver = resultingContext.resolver, testClass = newClass, extraImports = resultingContext.extraImports), ())
           }
         }

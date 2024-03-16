@@ -1,6 +1,7 @@
 package org.combinators.ep.domain    /*DI:LI:AI*/
 
 import abstractions._
+import org.combinators.ep.generator.communication.PotentialRequest
 
 /**
  * M0 <- M1 <- M2
@@ -18,13 +19,36 @@ class GenericModel(val name:String,
                    val typeCases:Seq[DataTypeCase],
                    val ops:Seq[Operation],
                    val former:Seq[GenericModel],
-                   val baseDataType: DataType) {
+                   val baseDataType: DataType,
+                   val optimizations: Set[(DataTypeCase,Operation)] = Set.empty) {
+
+  /**
+   * Can be fully computed, based on extensionGraph and optimizations
+   */
+  def haveImplementation(potentialRequest:PotentialRequest): Set[GenericModel] = {
+    val noFormerImplementation = former.forall(fmr => fmr.haveImplementation(potentialRequest).isEmpty)
+    val hasOptimization = optimizations.contains((potentialRequest.tpeCase, potentialRequest.op))
+    val validPotentialRequest = findOperation(potentialRequest.op).isDefined && findTypeCase(potentialRequest.tpeCase).isDefined
+
+    val us = if (validPotentialRequest && (noFormerImplementation || hasOptimization)) {
+      Set(this)
+    } else {
+      Set.empty
+    }
+
+    former.flatMap(gm => gm.haveImplementation(potentialRequest)).toSet ++ us
+  }
+
 
   def extend(str:String, past: Seq[GenericModel]): GenericModel = {
     new GenericModel(str, Seq.empty, Seq.empty, Seq(this) ++ past, baseDataType)
   }
 
-  /** Straight merge of two Generic models into one, combining all typeCases, ops and formers.  */
+  def optimize(new_optimizations: Set[(DataTypeCase,Operation)]) : GenericModel = {
+    new GenericModel(name, typeCases, ops, former, baseDataType, new_optimizations)
+  }
+
+  /** Straight merge of two Generic models into one, maintaining links to all formers. */
   def merge(name:String,  typeCases:Seq[DataTypeCase], ops:Seq[Operation], others:Seq[GenericModel]) : GenericModel = {
     new GenericModel(name, typeCases, ops, Seq(this) ++ others, baseDataType)
   }
@@ -45,8 +69,8 @@ class GenericModel(val name:String,
    * @param types The new data types.
    * @param ops   The new operations.
    */
-  def evolve(name: String, types: Seq[DataTypeCase], ops: Seq[Operation]): GenericModel = {
-    new GenericModel(name, types, ops, Seq(this), baseDataType)
+  def evolve(name: String, types: Seq[DataTypeCase], ops: Seq[Operation], optimizations:Set[(DataTypeCase,Operation)] = Set.empty): GenericModel = {
+    new GenericModel(name, types, ops, Seq(this), baseDataType, optimizations)
   }
 
   /** Returns history of this model as a sequence (Removing the MathDomain or ShapeDomain). */
@@ -111,7 +135,7 @@ class GenericModel(val name:String,
 
   // Eliminate all past (not sure needed anymore...)
   def standAlone:Model = {
-    new Model(name, typeCases, ops, baseDataType)   // good enough?
+    new Model(name, typeCases, ops, baseDataType, optimizations)   // good enough?
   }
 
   /** Returns a flattened model where all previous evolutions are squashed into a single evolution on top of the
@@ -122,13 +146,15 @@ class GenericModel(val name:String,
    */
   def flatten: Model = {
     if (isBottom) {
-      new Model(this.name, this.typeCases.distinct, this.ops.distinct, this.baseDataType)
+      new Model(this.name, this.typeCases.distinct, this.ops.distinct, this.baseDataType, this.optimizations)
     } else {
       val history = toSeq.reverse
       val (baseModel, evolutions) = (history.head.standAlone, history.tail.map(_.standAlone))
 
-      def squash(intoModel: Model, nextModel: Model): Model =
-        new Model(name, (intoModel.typeCases ++ nextModel.typeCases).distinct, (intoModel.ops ++ nextModel.ops).distinct, baseDataType, None)
+      def squash(intoModel: Model, nextModel: Model): Model = {
+        val joined = intoModel.optimizations ++ nextModel.optimizations
+        new Model(name, (intoModel.typeCases ++ nextModel.typeCases).distinct, (intoModel.ops ++ nextModel.ops).distinct, baseDataType, joined, None)
+      }
 
       if (evolutions.nonEmpty) {
         val reduced = (evolutions :+ baseModel).reduceLeft(squash)
@@ -234,8 +260,10 @@ class GenericModel(val name:String,
       val newer = record(i).filterNot(m => alreadySeen.contains(m.toString))
       //val combined = newer.reduce( (m1: GenericModel, m2: GenericModel) => m1.standAlone.merge(m1.name + m2.name, m2.standAlone) )
       record(i).foreach(gm => alreadySeen = alreadySeen :+ gm.toString)
-      newer.foreach(gm =>
-        prevModel = Some(new Model(gm.name, gm.typeCases, gm.ops, gm.baseDataType, prevModel))
+      newer.foreach(gm => {
+        val newm = new Model(gm.name, gm.typeCases, gm.ops, gm.baseDataType, gm.optimizations, prevModel)
+        prevModel = Some(newm)
+      }
       )}
     prevModel.get
   }
@@ -334,7 +362,8 @@ sealed class Model (
    typeCases:Seq[DataTypeCase],
    ops:Seq[Operation],
    bdt: DataType,
-   val last:Option[Model] = None) extends GenericModel (name, typeCases, ops, last.toSeq, bdt) {
+   optimizations: Set[(DataTypeCase,Operation)],
+   val last:Option[Model] = None) extends GenericModel (name, typeCases, ops, last.toSeq, bdt, optimizations) {
 
   /** Adds an evolution to this model.
    *
@@ -342,8 +371,8 @@ sealed class Model (
    * @param types The new data types.
    * @param ops   The new operations.
    */
-  override def evolve(name: String, types: Seq[DataTypeCase], ops: Seq[Operation]): Model =
-    new Model(name, types, ops, baseDataType, Some(this))
+  override def evolve(name: String, types: Seq[DataTypeCase], ops: Seq[Operation], optimizations:Set[(DataTypeCase,Operation)] = Set.empty): Model =
+    new Model(name, types, ops, baseDataType, optimizations, Some(this))
 
   /** From linear Model all will be Model. */
   override def toSeq: Seq[Model] = {
@@ -415,10 +444,11 @@ sealed class Model (
               (e1.typeCases ++ e2.typeCases).distinct,
               (e1.ops ++ e2.ops).distinct,
               baseDataType,
+              e1.optimizations ++ e2.optimizations,
               lastEvolution
             ))
-        case (None, Some(e)) => Some(new Model(e.name, e.typeCases, e.ops, baseDataType, lastEvolution))
-        case (Some(e), None) => Some(new Model(e.name, e.typeCases, e.ops, baseDataType, lastEvolution))
+        case (None, Some(e)) => Some(new Model(e.name, e.typeCases, e.ops, baseDataType, e.optimizations, lastEvolution))
+        case (Some(e), None) => Some(new Model(e.name, e.typeCases, e.ops, baseDataType, e.optimizations, lastEvolution))
         case _ => lastEvolution
       }
     println("merge " + name + " with " + other.name)
@@ -482,7 +512,7 @@ object Model {
    * @param baseTypeName The name of the data type that is being modeled.
    */
   def base(domainName: String, baseTypeName: String): Model =
-    new Model(domainName, Seq.empty, Seq.empty, DataType(baseTypeName)) {
+    new Model(domainName, Seq.empty, Seq.empty, DataType(baseTypeName), Set.empty) {
       override def isDomainBase:Boolean = true
     }
 }

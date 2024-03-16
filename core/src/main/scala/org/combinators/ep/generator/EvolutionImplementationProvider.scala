@@ -156,16 +156,16 @@ object EvolutionImplementationProvider {
         }
 
         /** Ensure dependencies are union'd through composition. */
-        override def evolutionSpecificDependencies(potentialRequest: PotentialRequest): Map[GenericModel, Set[Operation]] =
-          second.evolutionSpecificDependencies(potentialRequest) ++ first.evolutionSpecificDependencies(potentialRequest)
+        override def evolutionSpecificDependencies(potentialRequest: PotentialRequest): Map[GenericModel, Set[Operation]] = {
+          val result = second.evolutionSpecificDependencies(potentialRequest) ++ first.evolutionSpecificDependencies(potentialRequest)
 
-//        override def applicableIn(forApproach: AIP, potentialRequest: PotentialRequest, currentModel:GenericModel): Option[GenericModel] =
-//          first.applicableIn(forApproach, potentialRequest,currentModel).map(Some(_)).getOrElse(second.applicableIn(forApproach, potentialRequest,currentModel))
-//
-//        override def applicableIn
-//          (forApproach: AIP)
-//          (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression],currentModel:GenericModel): Option[GenericModel] =
-//               first.applicableIn(forApproach)(onRequest,currentModel).map(Some(_)).getOrElse(second.applicableIn(forApproach)(onRequest,currentModel))
+          // make sure that all models that are implemented appear in the result
+          assert(model.haveImplementation(potentialRequest).forall(m => result.contains(m)))
+
+          //assert(result.keys == model.haveImplementation(potentialRequest))
+
+          result
+        }
 
         def initialize(forApproach: AIP): Generator[forApproach.paradigm.ProjectContext, Unit] = {
           for {
@@ -173,13 +173,6 @@ object EvolutionImplementationProvider {
             _ <- second.initialize(forApproach)
           } yield ()
         }
-
-//        override def applicable
-//        (forApproach: AIP, potentialRequest: PotentialRequest): Boolean = first.applicable(forApproach, potentialRequest) || second.applicable(forApproach, potentialRequest)
-//
-//        override def applicable
-//          (forApproach: AIP)
-//          (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = first.applicable(forApproach)(onRequest) || second.applicable(forApproach)(onRequest)
 
         /** Do not call applicable, but rather check to see if genericLogic is in play. */
         override def genericLogic

@@ -43,6 +43,9 @@ object M4 extends Evolution {
   val m4_s_1 = DivdInst(LitInst(-5.0), LitInst(-5.0))
   val m4_s_d0 = DivdInst(LitInst(0.0), LitInst(-5.0))
 
+  override def allTests: Map[GenericModel, Seq[TestCase]] = M3.allTests +
+    (getModel -> (tests ++ M4_simplify_tests ++ M3.allTests.values.flatten))
+
   /**
     * Test cases for Simplify are oddly complicated. The Simplify operation returns a new Exp object, but
     * making test cases depends upon having the ability to PrettyP the result. We therefore want to check

@@ -172,7 +172,7 @@ object DirectToDiskMainThirdAlternate extends IOApp {
   val targetDirectory = Paths.get("target", "ep2")
 
   def run(args: List[String]): IO[ExitCode] = {
-    val approach = if (args.isEmpty) "extensibleVisitor" else args.head
+    val approach = if (args.isEmpty) "visitorSideEffect" else args.head
     if (approach == "exit") { sys.exit(0) }
     val selection = if (args.isEmpty || args.tail.isEmpty) "X3" else args.tail.head
 

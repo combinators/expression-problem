@@ -18,8 +18,8 @@ object A1M3I2 {
   (ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type])
   :
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
-    val a1m3i2Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.A1M3I2.getModel
+    val a1m3i2Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      override val model: GenericModel = math.A1M3I2.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
@@ -28,32 +28,6 @@ object A1M3I2 {
           _ <- a1m3Provider.initialize(forApproach)
         } yield ()
       }
-
-//      override def applicableIn
-//        (forApproach:  AIP[paradigm.type])
-//        (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression],currentModel:GenericModel): Option[GenericModel] = {
-//
-//        val forwardTable:PartialFunction[(Operation,DataTypeCase),GenericModel] = {
-//
-//          case (_, math.I2.Power) => math.I2.getModel
-//
-//          // handles everything else
-//          case _ => math.A1M3.getModel
-//        }
-//
-//        val tblModel = forwardTable.lift(onRequest.request.op, onRequest.tpeCase)
-//
-//        // Because EIP could be "further in future" then a given model, we need to be sure to
-//        // only return forwarding information when we have a hit on the currentModel.
-//        if (model == currentModel || model.before(currentModel)) {
-//          tblModel
-//        } else {
-//          None
-//        }
-//      }
-//
-//      // NOTHING NEW!
-//      def applicable(forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = false
 
       // brings in Power but no new operations so there SHOULD be nothing to do
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {

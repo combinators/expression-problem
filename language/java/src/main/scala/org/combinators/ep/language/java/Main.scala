@@ -2,8 +2,7 @@ package org.combinators.ep.language.java     /*DD:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, ObjectAlgebras, RuntimeDispatch, Traditional, TriviallyClean, Visitor, Visualize}
-import org.combinators.ep.domain.{Evolution, GenericModel}
-import org.combinators.ep.domain.abstractions.TestCase
+import org.combinators.ep.domain.Evolution
 import org.combinators.ep.domain.math._
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider, FileWithPath, FileWithPathPersistable, NameProvider, TestImplementationProvider}
 import org.combinators.jgitserv.{BranchTransaction, GitService}
@@ -15,7 +14,6 @@ import org.combinators.ep.domain.math.systemI.{I1, I2}
 import org.combinators.ep.domain.math.systemO.{O1, O1OA, O2, OA, OD1, OD2, OD3, OO1, OO2, OO3}
 
 import java.nio.file.{Path, Paths}
-import scala.sys.process.Process
 
 /**
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
@@ -92,17 +90,12 @@ class Main(choice:String, select:String) {
     case _ => ???
   }
 
-  //  val eip = eips.I2(approach.paradigm)(generator.doublesInMethod, generator.realDoublesInMethod,
-//    generator.stringsInMethod, generator.imperativeInMethod)
-//  // how do I just use M2 instead of this? HACK
   val m0_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.M0(approach.paradigm)(generator.doublesInMethod,generator.stringsInMethod)
   val m1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.M1(approach.paradigm)(m0_eip)(generator.doublesInMethod)
   val m2_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.M2(approach.paradigm)(m1_eip)(generator.doublesInMethod, generator.stringsInMethod)
-
-  //val m2_abs_eip = eips.M2_ABS(approach.paradigm)(m2_eip)(generator.doublesInMethod, generator.imperativeInMethod, generator.stringsInMethod)
 
   val m3_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.M3(approach.paradigm)(m2_eip)(generator.doublesInMethod, generator.stringsInMethod)
@@ -160,7 +153,6 @@ class Main(choice:String, select:String) {
   val a3_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.A3(approach.paradigm)(a1m3i2_eip)(generator.doublesInMethod, generator.stringsInMethod)
 
-
   val eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] = select match {
     case "M0" => m0_eip
     case "M1" => m1_eip
@@ -197,21 +189,24 @@ class Main(choice:String, select:String) {
     case _ => ???
   }
 
-  val tests: Seq[Map[GenericModel, Seq[TestCase]]] = evolutions.scanLeft(Map.empty[GenericModel, Seq[TestCase]]) { case (m, evolution) =>
-    m + (evolution.getModel -> evolution.tests)
-  }.tail
+  // domain model can choose to return all test cases which, by default, would be total set of all test cases past and current
+  // BUT would also give the domain model a chance to excise a past test which is no longer relevant.
+
+//  val tests: Seq[Map[GenericModel, Seq[TestCase]]] = evolutions.scanLeft(Map.empty[GenericModel, Seq[TestCase]]) { case (m, evolution) =>
+//    m + (evolution.getModel -> evolution.tests)
+//  }.tail
 
   // for CoCo, we only need the latest since all earlier ones are identical
-  val all: Seq[(Evolution, Map[GenericModel, Seq[TestCase]])] = evolutions.zip(tests)
+  //val all: Seq[(Evolution, Map[GenericModel, Seq[TestCase]])] = evolutions.map(m => m.allTests)
 
   def transaction[T](initialTransaction: T, addToTransaction: (T, String, () => Seq[FileWithPath]) => T): T = {
-    all.foldLeft(initialTransaction) { case (transaction, (evolution, tests)) =>
+    evolutions.foldLeft(initialTransaction) { case (transaction, evolution) =>
       val impl =
         () => generator.paradigm.runGenerator {
           for {
             _ <- approach.implement(evolution.getModel, eip)
             _ <- approach.implement(
-              tests,
+              evolution.allTests,
               TestImplementationProvider.defaultAssertionBasedTests(approach.paradigm)(generator.assertionsInMethod, generator.equalityInMethod, generator.booleansInMethod, generator.stringsInMethod)
             )
           } yield ()
@@ -317,25 +312,25 @@ object DirectToDiskMain extends IOApp {
     // O2 (overrides implementation, built off of O1 which does same)
     //   trivially generates proper code BUT test cases do not find proper classes to use
     //   interpreter generates proper code BUT test cases do not find proper class to use
-    //   algebra works
-    //   coco works
-    //   oo test cases cannot be made to work, since latest implementation overwrites
-    //   visitor test cases cannot be made to work, since latest implementation overwrites
-    //   visitorSideEffect test cases cannot be made to work, since latest implementation overwrites
-    //   extensibleVisitor (line 734) is where I need to find JUST latest model and CANNOT
+    //   algebra, coco works
+    //   oo, visitor, visitorSideEffect, dispatch test cases cannot be made to work, since latest implementation overwrites
+    //   extensibleVisitor works (though test cases fail to find proper import)
     // OD3 (merge of two independent branches that have added data types)
     //   works: algebra, coco, interpreter, visitor, visitorSideEffect, extensibleVisitor
     //   trivially creates an Exp for od3 for no reason and test cases are unable to find right classes
     // O1OA (two independent operator overrides in O1 and OA brought together)
-    //   extensibleVisitor doesn't generate any 'oa' so it DOESN'T WORK
-    //   oo works (though fails testing because operator override is inconsistent)
-    //   coco works (though it generates unnecessary 'extra' code that can be deleted)
-    //   trivially doesn't generator 'oa'
-    //   interpreter doesn't work
+    //   extensibleVisitor works (though fails testing because OTest doesn't import proper class)
+    //   oo, visitor, visitorSideEffect, dispatch work (though fails testing because operator override is inconsistent)
+    //   coco works (though it generates unnecessary 'extra' code that can be deleted, as you can see in finalized factories)
+    //   trivially works (though its test cases aren't properly finding classes)
+    //   interpreter works (though O1Test doesn't load proper Lit class)
     //   algebra works (though it makes a change to "o1" when generating "o1oa"; it loses an import, not sure why)
-    val approach = if (args.isEmpty) "algebra" else args.head
+    //
+    // Interpreter -- O1OA fails because cannot register types for testing... But also O1 fails...
+    // Trivially M5 encountered error that was fixed, but now Q1/C2/V1 have issues. (producer)
+    val approach = if (args.isEmpty) "trivially" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "O1" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "M5" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 

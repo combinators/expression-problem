@@ -15,11 +15,15 @@ object M2 extends Evolution {
 
   // Tests
   val m2_s1 = SubInst(LitInst(1.0), LitInst(2.0))
+
+  case object LitPrettyPM2 extends Tag
+
+  override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(M1)
+
   def tests: Seq[TestCase] = Seq(
-    //EqualsTestCase(m2_s1, PrettyP, ExistsInstance(String)("(1.0-2.0)")),
-    EqualsTestCase(getModel.baseDataType, m2_s1, PrettyP, StringInst("(1.0-2.0)")),
+    EqualsTestCase(getModel.baseDataType, m2_s1, PrettyP, Seq(LitPrettyPM2), StringInst("(1.0-2.0)")),
 
     EqualsTestCase(getModel.baseDataType, AddInst(m2_s1, AddInst(LitInst(5.0), LitInst(6.0))),
-      PrettyP, StringInst("((1.0-2.0)+(5.0+6.0))"))
+      PrettyP, Seq(LitPrettyPM2), StringInst("((1.0-2.0)+(5.0+6.0))"))
   )
 }

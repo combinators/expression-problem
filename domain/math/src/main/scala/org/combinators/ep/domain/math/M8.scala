@@ -21,6 +21,8 @@ object M8 extends Evolution {
   val m8_d1 = InvInst(LitInst(5.0),  LitInst(2.0))
   val m8_d2 = InvInst(LitInst(1.0),  LitInst(5.0))
 
+  override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(M7I2)
+
   def tests: Seq[TestCase] = Seq(
     EqualsTestCase(getModel.baseDataType, m8_d1, PrettyP, StringInst("(2.0/5.0)")),
     EqualsTestCase(getModel.baseDataType, m8_d1, Eval, M0.DoubleInst(0.4)),

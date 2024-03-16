@@ -52,7 +52,7 @@ class MainD1D2(choice:String, select:String) {
     case "M0" => Seq(M0)
     case "M1" => Seq(M0, M1)
     case "D1" => Seq(M0, M1, D1)
-    case "D2" => Seq(M0, M1, D1, D2)
+    case "D2" => Seq(M0, M1, D2)
     case "D1D2" => Seq(M0, M1, D1, D2, D1D2)
     case "D3" => Seq(M0, M1, D1, D2, D1D2, D3)
 

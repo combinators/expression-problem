@@ -1,6 +1,6 @@
 package org.combinators.ep.approach.oo    /*DI:LI:AD*/
 
-import org.combinators.ep.domain.{GenericModel, Model}
+import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator._
 import org.combinators.ep.generator.communication._
@@ -458,11 +458,18 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
 
-    for {
-      earliestOpClass <- findClass(visitorClassName(model.findOperation(op).get, op).get : _ *)
+    // The earliest this operation occurs is the first candidate. BUT must then find whether there is some type such that (op, tpe) has
+    // an overridden implementation
+    val earliest = model.findOperation(op).get
+    val chosen = model.flatten.typeCases.foldLeft(earliest)((earliest,tpe) =>
+      model.haveImplementation(PotentialRequest(model.baseDataType, tpe, op)).foldLeft(earliest)((earliest, m) => m.later(earliest)))
+
+   for {
+      // Type signature uses the earliest one to define, but instantiates the latest with covariant overriding.
+      earliestOpClass <- findClass(visitorClassName(earliest, op).get : _ *)
       _ <- resolveAndAddImport(earliestOpClass)
       _ <- setReturnType(earliestOpClass)
-      latestOpClass <- findClass(typeName : _ *)
+      latestOpClass <- findClass(visitorClassName(chosen, op).get : _ *) // findClass(typeName : _ *)
       _ <- resolveAndAddImport(latestOpClass)
 
       // need parameters for operations with parameters
@@ -504,7 +511,8 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
       import ooParadigm.classCapabilities._
       import genericsParadigm.classCapabilities._
 
-      val parentModels = domain.former.map(m => latestModelDefiningVisitor(m))
+      // may have duplicates because of merge
+      val parentModels = domain.former.map(m => latestModelDefiningVisitor(m)).distinct
 
       for {
         _ <- forEach(parentModels) { parent => {
@@ -689,6 +697,8 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
         } yield possibleParent
       }
 
+    // When new data types are defined in a model (after the EQL), all isXXX() operations need to be regenerated
+    // and thus SHOULD be in the dependentOperations, but right now not.
     val allDependentOps = dependentOperationsOf(domain, op, domainSpecific)
 
     // get all formers that are NOT latest visitors, and then take those operations and throw out those that are already supported...

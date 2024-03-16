@@ -1,9 +1,7 @@
 package org.combinators.ep.domain.math.eips      /*DD:LI:AI*/
 
 import org.combinators.ep.domain.abstractions.Operation
-import org.combinators.ep.domain.math
-import org.combinators.ep.domain.math.{eips, systemI}
-import org.combinators.ep.domain.math.systemI.I1
+import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
@@ -18,19 +16,20 @@ object A1  {
   (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
-    val a1Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.A1.getModel
+    val a1Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      override val model: GenericModel = math.A1.getModel
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
           _ <- ffiArithmetic.enable()
           _ <- ffiStrings.enable()
+          _ <- i1Provider.initialize(forApproach)
         } yield ()
       }
 
       // A1 adds TIMES data type
 
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
-        if ((Set(math.M0.Eval, math.M2.PrettyP, math.systemI.I1.MultBy).contains(potentialRequest.op)) && Set(math.A1.Times).contains(potentialRequest.tpeCase)) {
+        if (Set(math.M0.Eval, math.M2.PrettyP, math.systemI.I1.MultBy).contains(potentialRequest.op) && Set(math.A1.Times).contains(potentialRequest.tpeCase)) {
           Some(Set.empty)
         } else {
           None

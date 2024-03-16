@@ -353,7 +353,7 @@ trait CoCoClean extends ApproachImplementationProvider {
         ).contains(domain)
       }
       val updatedOperations = (allOperations -- presentOperations) ++ overwrittenOperations
-      // If we have any updated operations, if we have a former one that doesn't support the current type case, or if we are in a merge.
+      // If we have any updated operations, if we have a former one that doesn't support the current type case, or if we are in a merge
       if (updatedOperations.nonEmpty || domain.former.exists(ancestor => !ancestor.supports(tpeCase)) || domain.former.size > 1) {
         resultMap.updated(tpeCase, updatedOperations)
       } else {
@@ -634,7 +634,7 @@ trait CoCoClean extends ApproachImplementationProvider {
           }
         } else Command.skip[ooParadigm.ClassContext]
 
-        // Add factory methods
+        // Add factory methods BUT ONLY for type cases that need it. Ordinarily
         _ <- forEach(domain.flatten.typeCases.distinct.filter(dataTypeCase => latestModelDefiningDataTypeCaseInterface(domain, dataTypeCase, domainSpecific).contains(domain))) { tpeCase =>
           addMethod(names.mangle(names.instanceNameOf(tpeCase)), makeFinalizedFactoryMethod(domain, finalizedType, tpeCase, domainSpecific))
         }

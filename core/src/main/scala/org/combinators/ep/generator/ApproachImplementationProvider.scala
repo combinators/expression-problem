@@ -94,7 +94,10 @@ trait ApproachImplementationProvider {
   def testCaseImplements(model:GenericModel):Seq[Type] = Seq.empty
 
   /** Can be overridden by those advanced approaches that need access to domainSpecific during testing. */
-  def implementWithDomain(tests: Map[GenericModel, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type], domainSpecific: EvolutionImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
+  def implementWithDomain(tests: Map[GenericModel, Seq[TestCase]],
+                          testImplementationProvider: TestImplementationProvider[this.type],
+                          domainSpecific: EvolutionImplementationProvider[this.type]
+                         ): Generator[paradigm.ProjectContext, Unit] = {
     implement(tests, testImplementationProvider)
   }
 
@@ -111,8 +114,6 @@ trait ApproachImplementationProvider {
             for {
               code <- forEach(tests) { test => testImplementationProvider.test(this)(test) }
             } yield code.flatten
-
-          val tyz:Generator[CompilationUnitContext, Unit]  = addTestSuite(testCaseName(model), addTestCase(testCode, testName))
 
           // TODO: How to take advantage of new capability AddImplementedInTests???
 

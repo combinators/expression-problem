@@ -1,0 +1,33 @@
+0. Showcase the .optimize I added to GenericModel
+
+Could add higher-level meta testing to the GenericModel space and possibly enforce
+that every operation/datatypecase pair has an implementation.
+
+EIP responsibility for operations (Some/None)
+
+There is integrity constraint that could be validated between Model and EIPs.
+
+Should have ability to filter out tests, based on domain model. Useful to have tagging
+for tests. Add in tags:Seq[Tag] = Seq.empty for the test cases and then could filter
+by them as well.
+
+Nature of test cases and how they should be applied. Each domain level should be able 
+to declare test cases.
+
+
+1. Review Analysis-J
+
+1. Run MainJ and you will see ExtensibleVisitor fail b/c missing factory implementation methods
+   for dependent ops that for some reason have not been captured (are we too aggressive in pruning these away)
+
+2. Review Analysis-Main
+2. RunMain.scala and for Interpreter it fails for O1 (FIXED)
+
+3. Review Analysis-Producer
+
+3. Run MainProducer and see how trivially fails on Q1
+
+4. Review Analysis-Third-Alternate
+
+4. Run MainThirdAlternate and check visitorSideEffect on X1 for why it fails....
+

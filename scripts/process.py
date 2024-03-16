@@ -20,20 +20,28 @@ def extract(A):
     """Extract information from the lines in the file."""
     printIt = 0
     results = []
+    hasError = ''
+    errors = []
     for line in A:
+        if '[error]' in line:
+            hasError = 'error'
         if printIt > 0:
             if not '==' in line:
                 results.append(line.strip())
+                errors.append(hasError)
+                hasError = ''
         if '==' in line and printIt <= 0:
             printIt = 4
 
         printIt -= 1
-    return results
 
-def extract_modes_and_phases(results):
+    return (results,errors)
+
+def extract_modes_and_phases(results, in_errors):
     modes = []
     phases = []
     timings = {}
+    errs = {}
     for x in range(0, len(results),2):
         dash = results[x].index('-')
         mode = results[x][:dash]
@@ -42,9 +50,10 @@ def extract_modes_and_phases(results):
             phases.append(phase)
 
         timings[results[x]] = int(results[x+1].split(',')[0])
+        errs[results[x]] = in_errors[x]
         if not mode in modes:
             modes.append(mode)
-    return (modes, phases, timings)
+    return (modes, phases, timings, errs)
 
 def extract_rows(modes, phases, timings):
     """Return dictionary of rows."""
@@ -63,31 +72,38 @@ def extract_rows(modes, phases, timings):
             last_key = key
     return info
 
-results = extract(ooA)
-modes,phases,timings = extract_modes_and_phases(results)
+results,errors = extract(ooA)
+modes,phases,timings,errors = extract_modes_and_phases(results,errors)
 info = extract_rows(modes, phases, timings)
 
 # Create table[mode][phase]
-def create_table(modes, phases, info):
+def create_table(modes, phases, info, errors):
     tbl = {}
+    err = {}
     tbl['header'] = {}
+    err['header'] = {}
     for ph in phases[:-1]:
         tbl['header'][ph] = ph
+        err['header'][ph] = ph
         for m in modes:
             if not m in tbl:
                 tbl[m] = {}
+                err[m] = {}
             tbl[m][ph] = info[m + '-' + ph]
-    return tbl
+            err[m][ph] = errors[m + '-' + ph]
+    return (tbl,err)
 
-oo_table = create_table(modes, phases, info)
+oo_table,oo_err_table = create_table(modes, phases, info, errors)
 
-def output_table(name, modes, phases, table):
+def output_table(name, modes, phases, table, errors):
     # Use OO  as baseline.
     print(name,',',','.join(phases[:-1]))
     for m in modes:
         print(m, end=',')
         for p in phases[:-1]:
             print('{0:.2f}'.format(table[m][p]), end=',')
+        for p in phases[:-1]:
+            print(errors[m][p], end=',')
         print()
 
     if GMEAN in table:
@@ -122,25 +138,28 @@ def add_geometric_mean(table, modes, phases):
 
 filenamesList = glob.glob('jacoco.*')
 all_tables = {}
+err_tables = {}
 all_tables['oo'] = oo_table
+err_tables['oo'] = oo_err_table
 
 for name in filenamesList:
     f = open(name)
     A = f.readlines()
     f.close()
-    results = extract(A)
-    modes,phases,timings = extract_modes_and_phases(results)
+    results,errors = extract(A)
+    modes,phases,timings,errors = extract_modes_and_phases(results,errors)
     info = extract_rows(modes, phases, timings)
-    table = create_table(modes, phases, info)
+    table,err_table = create_table(modes, phases, info, errors)
 
     normalize_table(table, oo_table, modes, phases)
     add_geometric_mean(table, modes, phases)
 
     descr = name.split('.')[1]
     all_tables[descr] = table
+    err_tables[descr] = err_table
 
 for key in all_tables:
-    output_table(key, modes, phases, all_tables[key])
+    output_table(key, modes, phases, all_tables[key], err_tables[key])
 
 print()
 for p in phases[:-1]:

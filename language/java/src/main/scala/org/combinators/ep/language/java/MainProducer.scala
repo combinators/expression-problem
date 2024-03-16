@@ -6,7 +6,7 @@ import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.math._
 import org.combinators.ep.generator.{ApproachImplementationProvider, FileWithPath, FileWithPathPersistable, TestImplementationProvider}
-import org.combinators.jgitserv.{BranchTransaction, GitService, ResourcePersistable}
+import org.combinators.jgitserv.{BranchTransaction, GitService}
 import FileWithPathPersistable._
 import org.apache.commons.io.FileUtils
 
@@ -31,7 +31,6 @@ class MainProducer(choice:String, select:String) {
 
   val cocoCleanApproach = CoCoClean[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val algebraApproach = ObjectAlgebras[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
-
 
   // select one here
   val approach = choice match {
@@ -224,11 +223,12 @@ object GenerateAllProducer extends IOApp {
 object DirectToDiskMainProducer extends IOApp {
   val targetDirectory = Paths.get("target", "ep3")
 
+  // FAILS IN Finding appropriate parent class to use. Mistakenly chooses "ep.m3w1." instead of appropriate ones
+  // CANNOT debug for some reason! Need help!
   def run(args: List[String]): IO[ExitCode] = {
-    val approach = if (args.isEmpty) "interpreter" else args.head
+    val approach = if (args.isEmpty) "trivially" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "V1" else args.tail.head
-
+    val selection = if (args.isEmpty || args.tail.isEmpty) "Q1" else args.tail.head
 
     for {
       _ <- IO { print("Initializing Generator...") }

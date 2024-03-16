@@ -2,14 +2,13 @@ package org.combinators.ep.approach.oo      /*DI:LI:AD*/
 
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.instances.InstanceRep
-import org.combinators.ep.domain.{GenericModel, Model}
+import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.generator.Command._
 import org.combinators.ep.generator._
 import org.combinators.ep.generator.communication._
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax._
 import org.combinators.ep.generator.paradigm._
 import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.control.Imperative.WithBase
 import org.combinators.ep.generator.paradigm.ffi.{Exceptions, Strings}
 
 /**

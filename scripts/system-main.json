@@ -1,6 +1,5 @@
 {
-  "directory" : "analysis-Main",
-  "evolutions" : [
+   "evolutions" : [
     { "M1" : ["M0"]},
     { "M2" : ["M1"]},
     { "M3" : ["M2"]},

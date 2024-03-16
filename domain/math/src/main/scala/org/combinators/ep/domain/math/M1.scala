@@ -15,6 +15,8 @@ object M1 extends Evolution {
   def SubInst(left:DataTypeInstance, right:DataTypeInstance): DataTypeInstance =
     DataTypeInstance(Sub, Seq(InstanceRep(left), InstanceRep(right)))
 
+  override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(M0)
+
   // testing
   def tests: Seq[TestCase] = Seq(
     EqualsTestCase(getModel.baseDataType, SubInst(LitInst(1.0), LitInst(2.0)), Eval, M0.DoubleInst(-1.0)),

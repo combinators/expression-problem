@@ -1,5 +1,4 @@
 {
-  "directory" : "analysis-Producer",
   "evolutions" : [
     { "M1" : ["M0"] },
     { "W1" : ["M1"] },

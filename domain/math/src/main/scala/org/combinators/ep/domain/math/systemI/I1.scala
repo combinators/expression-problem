@@ -19,6 +19,8 @@ object I1 extends Evolution {
     }
   }
 
+  override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(M2)
+
   def tests: Seq[TestCase] = Seq(
     MultByTestCase(AddInst(LitInst(1.0), LitInst(2.0)),
       InstanceRep(LitInst(3.0)), DoubleInst(9.0))

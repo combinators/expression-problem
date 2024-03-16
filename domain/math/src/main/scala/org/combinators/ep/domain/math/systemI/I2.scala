@@ -17,6 +17,8 @@ object I2 extends Evolution {
   def PowerInst(base: DataTypeInstance, exponent: DataTypeInstance): DataTypeInstance =
     DataTypeInstance(Power, Seq(InstanceRep(base), InstanceRep(exponent)))
 
+  override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(I1)
+
   // TODO: Model test cases for I2
   def tests: Seq[TestCase] = Seq(
     EqualsTestCase(getModel.baseDataType, PowerInst(LitInst(2.0), LitInst(5.0)), Eval, DoubleInst(32.0)),

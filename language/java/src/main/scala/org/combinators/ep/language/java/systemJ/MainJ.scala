@@ -217,12 +217,14 @@ object GenerateAllJ extends IOApp {
 }
 
 object DirectToDiskMainJ extends IOApp {
-  val targetDirectory = Paths.get("target", "ep2")
+  val targetDirectory = Paths.get("target", "ep3")
 
+  // When new data types are defined in a model (after the EQL), all isXXX() operations need to be regenerated
+  // and thus SHOULD be in the dependentOperations, but right now not. Test cases FAIL for even J3 for this reason.
   def run(args: List[String]): IO[ExitCode] = {
-    val approach = if (args.isEmpty) "algebra" else args.head
+    val approach = if (args.isEmpty) "extensibleVisitor" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "J8" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "J3" else args.tail.head
 
     for {
       _ <- IO { print("Initializing Generator...") }

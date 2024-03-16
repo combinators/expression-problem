@@ -74,7 +74,6 @@ trait Traditional extends SharedOO {  // this had been sealed. not sure why
   }
 
   def implement(gdomain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
-
     val flatDomain = gdomain.linearize.flatten
     for {
       _ <- registerTypeMapping(flatDomain)

@@ -596,9 +596,9 @@ package object scala {
   trait TypeParameter[FT <: FinalTypes] extends generics.TypeParameter[FT] with Factory[FT] {
     def toScala: String = {
       val lbs =
-        if (lowerBounds.nonEmpty) lowerBounds.map(_.toScala).mkString(" with ") + " >: " else ""
+        if (lowerBounds.nonEmpty) " <: " + lowerBounds.map(_.toScala).mkString(" with ") else ""
       val ubs =
-        if (upperBounds.nonEmpty) " <: " + upperBounds.map(_.toScala).mkString(" with ") else ""
+        if (upperBounds.nonEmpty) " >: " + upperBounds.map(_.toScala).mkString(" with ") else ""
       s"""${name.toScala}${lbs}${ubs}"""
     }
 
@@ -697,6 +697,7 @@ package object scala {
     def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): oo.Class[FT] = {
       copyAsGenericClass(
         imports = imports.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        typeParameters = typeParameters.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
         parents = parents.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
         implemented = implemented.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
         fields = fields.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
@@ -1123,7 +1124,7 @@ package object scala {
         )
 
       override def typeParameterWithBounds(name: any.Name[FinalTypes], upperBounds: Seq[any.Type[FinalTypes]], lowerBounds: Seq[any.Type[FinalTypes]]): TypeParameter =
-        TypeParameter(name, lowerBounds = lowerBounds, upperBounds = upperBounds)
+        TypeParameter(name, upperBounds = upperBounds, lowerBounds = lowerBounds)
       override def createList(): ListOps.CreateList[FinalTypes] = CreateList()
 
       override def consListOp(): ListOps.ConsListOp[FinalTypes] = ConsListOp()
@@ -1422,7 +1423,7 @@ package object scala {
       override def getSelfVariableReferenceExpression: this.type = this
     }
 
-    case class TypeParameter(override val name: any.Name[FinalTypes], override val lowerBounds: Seq[any.Type[FinalTypes]], override val upperBounds: Seq[any.Type[FinalTypes]]) extends scala.TypeParameter[FinalTypes] with Factory {
+    case class TypeParameter(override val name: any.Name[FinalTypes], override val upperBounds: Seq[any.Type[FinalTypes]], override val lowerBounds: Seq[any.Type[FinalTypes]]) extends scala.TypeParameter[FinalTypes] with Factory {
       override def getSelfTypeParameter: this.type = this
     }
 

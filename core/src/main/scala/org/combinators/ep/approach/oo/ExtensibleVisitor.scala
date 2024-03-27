@@ -58,7 +58,7 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
     def create(model:GenericModel, op:Operation, typeName:Seq[Name]): Generator[ClassContext, Unit] = {
       import ooParadigm.classCapabilities._
       for {
-        _ <- addMethod(name(op), makeFactoryOperationImpl(model, op, typeName))
+        _ <- addMethod(name(op), makeFactoryOperationImpl(model, op, typeName), isPublic = false)
       } yield ()
     }
 
@@ -749,7 +749,7 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
             }.reduce((b1,b2) => b1 || b2)
 
 
-        factory.create(modelToUse, dependentOp, visitorClassName(modelToUse, dependentOp).get)
+          factory.create(modelToUse, dependentOp, visitorClassName(modelToUse, dependentOp).get)
         }
 
     } yield ()

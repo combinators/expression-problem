@@ -286,6 +286,11 @@ sealed trait Interpreter extends SharedOO {
     import polymorphics.methodBodyCapabilities._
     for {
       _ <- makeInterpreterSignature(domain, op)
+      _ <- if (domain.operationsPresentEarlier(tpeCase).contains(op)) {
+          setOverride()
+        } else {
+          Command.skip[MethodBodyContext]
+        }
       thisRef <- selfReference()
       attAccessors: Seq[Expression] <- forEach (tpeCase.attributes) { att =>
         for {

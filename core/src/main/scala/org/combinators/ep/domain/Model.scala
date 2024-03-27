@@ -344,6 +344,15 @@ class GenericModel(val name:String,
     }).toSet
   }
 
+  /**
+    * Return the operations available before this evolution.
+    */
+  def operationsPresentEarlier: Set[Operation] = {
+    former.flatMap(ancestor => {
+      ancestor.flatten.ops.toSet
+    }).toSet
+  }
+
   override def toString:String = {
     "GenericModel " + name + "[" + typeCases.map(_.name).mkString(",")+ "," + ops.map(_.name).mkString(",") +
       " former:" + former.map(_.name).mkString(",") + "]"

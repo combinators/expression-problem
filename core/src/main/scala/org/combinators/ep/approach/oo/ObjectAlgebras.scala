@@ -35,6 +35,10 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
     def constructor(tpeCase: abstractions.DataTypeCase): paradigm.syntax.Name = {
       names.mangle(names.instanceNameOf(tpeCase))
     }
+
+    def carrierInstance(op: Operation): paradigm.syntax.Name = {
+      names.mangle(names.instanceNameOf(op) + "Carrier")
+    }
   }
 
   def dispatch(message: communication.SendRequest[paradigm.syntax.Expression]): Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression] = {
@@ -224,7 +228,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
           _ <- setParameters(parameters)
 
           self <- selfReference()
-          carrierInstance <- getMember(self, names.mangle(names.instanceNameOf(op)))
+          carrierInstance <- getMember(self, ComponentNames.carrierInstance(op))
           method <- getMember(carrierInstance, names.mangle(names.instanceNameOf(op)))
           args <- getArguments()
           result <- apply(method, args.map(_._3))
@@ -256,7 +260,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
 
           _ <- setParameters(parameters)
           arguments <- getArguments()
-          _ <- forEach (arguments.zip(domain.flatten.ops.map(op => names.mangle(names.instanceNameOf(op))))) { case (arg, att) =>
+          _ <- forEach (arguments.zip(domain.flatten.ops.map(op => ComponentNames.carrierInstance(op)))) { case (arg, att) =>
             for {
               _ <- initializeField(att, arg._3)
             } yield ()
@@ -280,7 +284,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
             _ <- resolveAndAddImport(tpe)
             finalTpe <- applyType(tpe, Seq(interfaceType))
 
-            _ <- addField(names.mangle(names.instanceNameOf(op)), finalTpe)
+            _ <- addField(ComponentNames.carrierInstance(op), finalTpe)
             _ <- addMethod(names.mangle(names.instanceNameOf(op)), makeOperationImpl(op))
           } yield ()
         }

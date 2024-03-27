@@ -181,7 +181,7 @@ trait ObjectOriented {
     implicit val canSetStaticInClass: Understands[ClassContext, SetStatic]
     def setStatic(): Generator[ClassContext, Unit] =
       AnyParadigm.capability(SetStatic())
-
+    
     implicit val canSetInterfaceInClass: Understands[ClassContext, SetInterface]
     def setInterface(): Generator[ClassContext, Unit] =
       AnyParadigm.capability(SetInterface())
@@ -303,10 +303,12 @@ trait ObjectOriented {
     def setStatic(): Generator[MethodBodyContext, Unit] =
       AnyParadigm.capability(SetStatic())
 
+    
+    // TODO: remove, already there in addMethod
     implicit val canSetOverrideInMethod: Understands[MethodBodyContext, SetOverride]
     def setOverride(): Generator[MethodBodyContext, Unit] =
       AnyParadigm.capability(SetOverride())
-
+    
     implicit val canSelfReferenceInMethod: Understands[MethodBodyContext, SelfReference[Expression]]
     def selfReference(): Generator[MethodBodyContext, Expression] =
       AnyParadigm.capability(SelfReference[Expression]())

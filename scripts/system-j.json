@@ -1,5 +1,4 @@
 {
-  "directory" : "analysis-J",
   "evolutions" : [
     { "J1" : ["M0"] },
     { "J2" : ["J1"] },

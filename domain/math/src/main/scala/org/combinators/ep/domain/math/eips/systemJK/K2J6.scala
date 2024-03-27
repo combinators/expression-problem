@@ -3,7 +3,7 @@ package org.combinators.ep.domain.math.eips.systemJK    /*DD:LI:AI*/
 import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, TypeRep}
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.domain.math.systemJK
-import org.combinators.ep.domain.{abstractions, math}
+import org.combinators.ep.domain.{GenericModel, abstractions, math}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
@@ -36,8 +36,8 @@ sealed class K2J6[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
      ifThenElse: IfThenElseCommand):
 
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
-    val k2j6Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = systemJK.K2J6.getModel
+    val k2j6Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      override val model: GenericModel = systemJK.K2J6.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {

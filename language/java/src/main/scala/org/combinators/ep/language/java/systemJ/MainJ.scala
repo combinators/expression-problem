@@ -221,6 +221,10 @@ object DirectToDiskMainJ extends IOApp {
 
   // When new data types are defined in a model (after the EQL), all isXXX() operations need to be regenerated
   // and thus SHOULD be in the dependentOperations, but right now not. Test cases FAIL for even J3 for this reason.
+  // Problem is how to model this. Once factory methods for IsLit, IsAdd, IsSub and IsMult are added, code runs perfectly.
+  // BECAUSE new data types are defined in J3 and new Eql must be created, but those dependentOperations are in the past
+  // and there is no EASY WAY to FIGURE out that they need to be brought in. This is one of those dependencies that is
+  // abstract (i.e., on any IsXXX that has been defined in the past).
   def run(args: List[String]): IO[ExitCode] = {
     val approach = if (args.isEmpty) "extensibleVisitor" else args.head
     if (approach == "exit") { sys.exit(0) }

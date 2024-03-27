@@ -1,7 +1,7 @@
 package org.combinators.ep.domain.math.eips.systemX     /*DD:LI:AI*/
 
 import org.combinators.ep.domain.abstractions.{Operation, TypeRep}
-import org.combinators.ep.domain.math
+import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.ep.domain.math.{systemJ, systemX}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
@@ -17,8 +17,8 @@ object X4 {
   (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
-    val x4Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.systemX.X4.getModel
+    val x4Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      override val model: GenericModel = math.systemX.X4.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
@@ -27,15 +27,8 @@ object X4 {
         } yield ()
       }
 
-      //      def applicable
-      //      (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-      //        Set(math.M0.Eval, math.X1.PrettyP, math.X1.MultBy).contains(potentialRequest.op) &&
-      //          Set(math.M3.Neg).contains(potentialRequest.tpeCase)
-      //      }
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
-        val cases = math.systemJ.J3.getModel.flatten.typeCases
         (potentialRequest.op, potentialRequest.tpeCase) match {
-
           case (op, math.systemX.X4.Neg) if systemJ.J3.getModel.flatten.ops.contains(op) => Some(Set.empty)
 
           case (_, _) => None
@@ -51,6 +44,8 @@ object X4 {
         import ffiStrings.stringCapabilities._
         import paradigm._
         import methodBodyCapabilities._
+
+        assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         def operate(atts: Seq[syntax.Expression]): Generator[paradigm.MethodBodyContext, syntax.Expression] =
           onRequest.request.op match {

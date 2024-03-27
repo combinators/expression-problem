@@ -96,7 +96,7 @@ object A1  {
             atts <- forEach (onRequest.tpeCase.attributes) { att =>
               forApproach.dispatch(SendRequest(
                 onRequest.attributes(att),
-                math.M3.getModel.baseDataType,
+                math.M0.getModel.baseDataType,
                 onRequest.request
               ))
             }

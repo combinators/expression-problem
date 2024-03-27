@@ -2,7 +2,7 @@ package org.combinators.ep.domain.math.eips.systemJ   /*DD:LI:AI*/
 
 import org.combinators.ep.domain.abstractions.{Operation, Parameter, TypeRep}
 import org.combinators.ep.domain.instances.InstanceRep
-import org.combinators.ep.domain.math
+import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.ep.domain.math.systemJ
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
@@ -21,8 +21,8 @@ object J6 {
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiImper: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
-    val j6Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.systemJ.J6.getModel
+    val j6Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      override val model: GenericModel = math.systemJ.J6.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
@@ -143,7 +143,7 @@ object J6 {
               _ <- addBlockDefinitions(Seq(ifStmt))
             } yield Some(resultVar)
 
-          case math.M0.Add | math.M1.Sub =>
+          case math.M0.Add | systemJ.J1.Sub =>
             for {
               inner <- forApproach.dispatch(SendRequest(
                 onRequest.selfReference,

@@ -131,7 +131,7 @@ class MainD1D2(choice:String, select:String) {
         println("[OK]")
       }
       print("Persisting Files...")
-      files().foreach(file => persistable.persistOverwriting(targetDirectory, file))
+      computed.foreach(file => persistable.persistOverwriting(targetDirectory, file))
       println("[OK]")
     })
   }

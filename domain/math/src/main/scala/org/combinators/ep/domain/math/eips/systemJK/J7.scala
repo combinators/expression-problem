@@ -4,7 +4,7 @@ import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, TypeRep}
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.domain.math.systemK.{K1, K2}
 import org.combinators.ep.domain.math.{systemJK, systemK}
-import org.combinators.ep.domain.{abstractions, math}
+import org.combinators.ep.domain.{GenericModel, abstractions, math}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
@@ -33,8 +33,8 @@ sealed class J7[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
    returnInIf: Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression] => Generator[paradigm.MethodBodyContext, IfBlockType],
    ifThenElse: IfThenElseCommand
   ): EvolutionImplementationProvider[AIP[paradigm.type]] = {
-    val j7Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = systemJK.J7.getModel
+    val j7Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      override val model: GenericModel = systemJK.J7.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {

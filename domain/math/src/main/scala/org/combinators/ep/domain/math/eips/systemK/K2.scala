@@ -3,7 +3,7 @@ package org.combinators.ep.domain.math.eips.systemK    /*DD:LI:AI*/
 import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, TypeRep}
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.domain.math.systemK
-import org.combinators.ep.domain.{abstractions, math}
+import org.combinators.ep.domain.{GenericModel, abstractions, math}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
@@ -32,8 +32,8 @@ sealed class K2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
    returnInIf: Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression] => Generator[paradigm.MethodBodyContext, IfBlockType],
    ifThenElse: IfThenElseCommand
   ): EvolutionImplementationProvider[AIP[paradigm.type]] = {
-    val k2Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = systemK.K2.getModel
+    val k2Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      override val model: GenericModel = systemK.K2.getModel
 
       // K2 adds "k2", Seq.empty, Seq(Simplify, Collect))
 
@@ -285,7 +285,7 @@ sealed class K2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
 object K2 {
   def functional[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
-  (m3Provider : EvolutionImplementationProvider[AIP[paradigm.type]])
+  (k1Provider : EvolutionImplementationProvider[AIP[paradigm.type]])
   (functionalControl: Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
@@ -301,12 +301,12 @@ object K2 {
           res <- functionalControl.functionalCapabilities.ifThenElse(cond, ifBlock, ifElseBlocks, elseBlock)
         } yield Some(res)
 
-    mkImpl(m3Provider)(ffiArithmetic, ffiBoolean, ffiStrings, ffiLists, ffiEquality, expGen => expGen, ite)
+    mkImpl(k1Provider)(ffiArithmetic, ffiBoolean, ffiStrings, ffiLists, ffiEquality, expGen => expGen, ite)
   }
 
   def imperative[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
-  (m3Provider : EvolutionImplementationProvider[AIP[paradigm.type]])
+  (k1Provider : EvolutionImplementationProvider[AIP[paradigm.type]])
   (imperativeControl: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
@@ -333,6 +333,6 @@ object K2 {
           _ <- addBlockDefinitions(Seq(resultStmt))
         } yield None
 
-    mkImpl(m3Provider)(ffiArithmetic, ffiBoolean, ffiStrings, ffiLists, ffiEquality, returnInIf, ite)
+    mkImpl(k1Provider)(ffiArithmetic, ffiBoolean, ffiStrings, ffiLists, ffiEquality, returnInIf, ite)
   }
 }

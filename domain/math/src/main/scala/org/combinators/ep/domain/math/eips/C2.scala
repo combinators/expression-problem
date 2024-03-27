@@ -1,7 +1,7 @@
 package org.combinators.ep.domain.math.eips    /*DD:LI:AI*/
 
 import org.combinators.ep.domain.abstractions.{Operation, TypeRep}
-import org.combinators.ep.domain.math
+import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
@@ -32,8 +32,8 @@ sealed class C2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
    returnInIf: Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression] => Generator[paradigm.MethodBodyContext, IfBlockType],
    ifThenElse: IfThenElseCommand
   ): EvolutionImplementationProvider[AIP[paradigm.type]] = {
-    val c2Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.C2.getModel
+    val c2Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      override val model: GenericModel = math.C2.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
@@ -42,12 +42,10 @@ sealed class C2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
           _ <- ffiStrings.enable()
           _ <- ffiLists.enable()
           _ <- ffiEquality.enable()
+          _ <- q1Provider.initialize(forApproach)
         } yield ()
       }
 
-//      def applicable(forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-//        scala.collection.Set(math.C2.Collect).contains(potentialRequest.op)  // any foreseeable DT can be collected
-//      }
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = math.Q1.getModel.flatten.typeCases
         (potentialRequest.op, potentialRequest.tpeCase) match {

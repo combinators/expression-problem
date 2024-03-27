@@ -295,7 +295,6 @@ class GenericModel(val name:String,
   /**
    * Determines if this model comes before (orEqual) the given model in the evolution history.
    *
-   * Note that if models are the same then return false.
    */
   def beforeOrEqual(other:GenericModel): Boolean =
     other.toSeq.contains(this)
@@ -322,6 +321,14 @@ class GenericModel(val name:String,
     } else {
       this
     }
+  }
+
+  /**
+   * Determines if other is an ancestor of this (or vice versa).
+   *
+   */
+  def comparableTo(other:GenericModel): Boolean = {
+    !beforeOrEqual(other) && !other.beforeOrEqual(this)
   }
 
   /**

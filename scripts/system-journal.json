@@ -1,5 +1,4 @@
 {
-  "directory" : "analysis-Journal",
   "evolutions" : [
     { "M1" : ["M0"] },
     { "M2" : ["M1"] },

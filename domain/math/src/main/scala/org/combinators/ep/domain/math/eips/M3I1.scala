@@ -1,7 +1,7 @@
 package org.combinators.ep.domain.math.eips     /*DD:LI:AI*/
 
 import org.combinators.ep.domain.abstractions.Operation
-import org.combinators.ep.domain.math
+import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest}
@@ -19,8 +19,8 @@ sealed class M3I1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
     ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
 
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
-    val m3i1_provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.M3I1.getModel
+    val m3i1_provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      override val model: GenericModel = math.M3I1.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {

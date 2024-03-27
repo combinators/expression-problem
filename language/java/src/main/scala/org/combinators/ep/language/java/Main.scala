@@ -236,7 +236,7 @@ class Main(choice:String, select:String) {
         println("[OK]")
       }
       print("Persisting Files...")
-      files().foreach(file => persistable.persistOverwriting(targetDirectory, file))
+      computed.foreach(file => persistable.persistOverwriting(targetDirectory, file))
       println("[OK]")
     })
   }
@@ -328,9 +328,10 @@ object DirectToDiskMain extends IOApp {
     //
     // Interpreter -- O1OA fails because cannot register types for testing... But also O1 fails...
     // Trivially M5 encountered error that was fixed, but now Q1/C2/V1 have issues. (producer)
-    val approach = if (args.isEmpty) "trivially" else args.head
+    // review VisitorSideEffect -- looks like (mainThirdAlternate) for X1 it generates extra code that can be deleted and actually doesn't compile....
+    val approach = if (args.isEmpty) "algebra" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "M5" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "M4" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 

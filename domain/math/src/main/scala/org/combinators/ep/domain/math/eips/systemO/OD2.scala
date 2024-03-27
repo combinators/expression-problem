@@ -25,6 +25,7 @@ object OD2 {
         for {
           _ <- ffiArithmetic.enable()
           _ <- ffiStrings.enable()
+          _ <- m2Provider.initialize(forApproach)
         } yield ()
       }
       

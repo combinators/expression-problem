@@ -33,8 +33,8 @@ sealed class M3W1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
      ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
 
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
-    val m3w1Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.M3W1.getModel
+    val m3w1Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      override val model: GenericModel = math.M3W1.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
@@ -55,18 +55,6 @@ sealed class M3W1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
           None
         }
       }
-
-//      // should be no need to define genericLogic since (by default) it will go through the chain of past providers...
-//     override def genericLogic
-//        (forApproach: AIP[paradigm.type])
-//        (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
-//      Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] = {
-//        try {
-//          m3Provider.genericLogic(forApproach)(onRequest)
-//        } catch {
-//          case _:RuntimeException | _:NotImplementedError => w1Provider.genericLogic(forApproach)(onRequest)
-//        }
-//      }
 
       def logic
       (forApproach: AIP[paradigm.type])

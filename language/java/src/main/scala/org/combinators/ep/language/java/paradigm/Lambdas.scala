@@ -1,4 +1,4 @@
-package org.combinators.ep.language.java.paradigm
+package org.combinators.ep.language.java.paradigm    /*DI:LD:AI*/
 
 import org.combinators.ep.generator.{Command, Understands}
 import org.combinators.ep.generator.paradigm.control.{Lambdas => Lams, _}

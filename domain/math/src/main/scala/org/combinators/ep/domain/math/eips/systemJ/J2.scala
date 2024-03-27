@@ -1,7 +1,7 @@
 package org.combinators.ep.domain.math.eips.systemJ   /*DD:LI:AI*/
 
 import org.combinators.ep.domain.abstractions.Operation
-import org.combinators.ep.domain.math
+import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.ep.domain.math.systemJ
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
@@ -19,8 +19,8 @@ object J2 {
    ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
   ): EvolutionImplementationProvider[AIP[paradigm.type]] = {
-    val j2Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.systemJ.J2.getModel
+    val j2Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      override val model: GenericModel = math.systemJ.J2.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {

@@ -1,4 +1,4 @@
-package org.combinators.ep.domain
+package org.combinators.ep.domain    /*DI:LI:AI*/
 
 import org.combinators.ep.domain.abstractions.Operation
 import org.combinators.ep.generator.communication.PotentialRequest

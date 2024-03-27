@@ -1,7 +1,7 @@
 package org.combinators.ep.domain.math.eips.systemJ   /*DD:LI:AI*/
 
 import org.combinators.ep.domain.abstractions.{Attribute, Operation, TypeRep}
-import org.combinators.ep.domain.math
+import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.ep.domain.math.systemJ
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
@@ -18,11 +18,12 @@ object J3 {
    ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
-    val j3Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.systemJ.J3.getModel
+    val j3Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      override val model: GenericModel = math.systemJ.J3.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
+          _ <- j2Provider.initialize(forApproach)
           _ <- ffiArithmetic.enable()
           _ <- ffiStrings.enable()
           _ <- ffiBoolean.enable()

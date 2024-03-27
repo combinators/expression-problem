@@ -2,8 +2,7 @@ package org.combinators.ep.domain.math.eips.systemX     /*DD:LI:AI*/
 
 import org.combinators.ep.domain.abstractions.{Operation, TypeRep}
 import org.combinators.ep.domain.instances.InstanceRep
-import org.combinators.ep.domain.math
-import org.combinators.ep.domain.math.eips.M0
+import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.ep.domain.math.systemX
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
@@ -16,17 +15,19 @@ import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionIm
 object X1 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
+  (m0Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
   (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiRealArithmetic: RealArithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiImper: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
 
-    val x1Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.systemX.X1.getModel
+    val x1Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      override val model: GenericModel = math.systemX.X1.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
+          _ <- m0Provider.initialize(forApproach)
           _ <- ffiArithmetic.enable()
           _ <- ffiStrings.enable()
         } yield ()
@@ -61,7 +62,7 @@ object X1 {
                 case _ => ???
               }
 
-            case math.M2.PrettyP =>
+            case systemX.X1.PrettyP =>
               onRequest.tpeCase match {
                 case systemX.X1.Sub => makeString(atts, "(", "-", ")")
                 case math.M0.Add => makeString(atts, "(", "+", ")")
@@ -121,7 +122,7 @@ object X1 {
 
                     ifStmt <- ffiImper.imperativeCapabilities.ifThenElse(ifExpr, for {
                       zeroLit <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, zero)
-                      res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M1.Sub, zeroLit, resultVar)
+                      res <- forApproach.instantiate(math.M0.getModel.baseDataType, systemX.X1.Sub, zeroLit, resultVar)
                       assignStmt <- ffiImper.imperativeCapabilities.assignVar(resultVar, res)
                       _ <- addBlockDefinitions(Seq(assignStmt))
                     } yield (),
@@ -141,12 +142,12 @@ object X1 {
                   for {
                     left <- forApproach.dispatch(SendRequest(
                       onRequest.attributes(lAtt),
-                      math.M2.getModel.baseDataType,
+                      math.M0.getModel.baseDataType,
                       onRequest.request
                     ))
                     right <- forApproach.dispatch(SendRequest(
                       onRequest.attributes(rAtt),
-                      math.M2.getModel.baseDataType,
+                      math.M0.getModel.baseDataType,
                       onRequest.request
                     ))
 
@@ -162,7 +163,7 @@ object X1 {
             atts <- forEach(onRequest.tpeCase.attributes) { att =>
               forApproach.dispatch(SendRequest(
                 onRequest.attributes(att),
-                math.M3.getModel.baseDataType,
+                math.M0.getModel.baseDataType,
                 onRequest.request
               ))
             }
@@ -174,6 +175,6 @@ object X1 {
     }
 
     // newest one must come first
-    monoidInstance.combine(x1Provider, M0(paradigm)(ffiArithmetic, ffiStrings))
+    monoidInstance.combine(x1Provider, m0Provider)
   }
 }

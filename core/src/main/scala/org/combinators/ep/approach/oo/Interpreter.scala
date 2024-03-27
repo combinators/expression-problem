@@ -509,8 +509,7 @@ sealed trait Interpreter extends SharedOO {
   def implement(model: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
     def implementInner(domain: GenericModel): Generator[paradigm.ProjectContext, Unit] = {
       val typeCasesNotGeneratedYet = domain.flatten.typeCases.distinct.filter(tpeCase => latestModelDefiningNewTypeInterface(domain, tpeCase) == domain)
-      val b1 = domain == latestModelDefiningNewTypeInterface(domain)
-      val b2 = updatedImplementationCurrentDomain(domain).isDefined
+
       val createLevel = (domain == latestModelDefiningNewTypeInterface(domain)) ||
         updatedImplementationCurrentDomain(domain).isDefined
       if (domain.isDomainBase) {

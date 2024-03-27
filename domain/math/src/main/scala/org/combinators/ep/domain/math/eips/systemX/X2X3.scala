@@ -1,7 +1,7 @@
 package org.combinators.ep.domain.math.eips.systemX   /*DD:LI:AI*/
 
 import org.combinators.ep.domain.abstractions.Operation
-import org.combinators.ep.domain.math
+import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
@@ -15,8 +15,8 @@ object X2X3 {
    x3Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
   :
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
-    val x2x3_provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.systemX.X2X3.getModel
+    val x2x3_provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      override val model: GenericModel = math.systemX.X2X3.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {

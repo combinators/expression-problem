@@ -153,7 +153,7 @@ class MainProducer(choice:String, select:String) {
         println("[OK]")
       }
       print("Persisting Files...")
-      files().foreach(file => persistable.persistOverwriting(targetDirectory, file))
+      computed.foreach(file => persistable.persistOverwriting(targetDirectory, file))
       println("[OK]")
     })
   }
@@ -226,7 +226,7 @@ object DirectToDiskMainProducer extends IOApp {
   // FAILS IN Finding appropriate parent class to use. Mistakenly chooses "ep.m3w1." instead of appropriate ones
   // CANNOT debug for some reason! Need help!
   def run(args: List[String]): IO[ExitCode] = {
-    val approach = if (args.isEmpty) "trivially" else args.head
+    val approach = if (args.isEmpty) "algebra" else args.head
     if (approach == "exit") { sys.exit(0) }
     val selection = if (args.isEmpty || args.tail.isEmpty) "Q1" else args.tail.head
 

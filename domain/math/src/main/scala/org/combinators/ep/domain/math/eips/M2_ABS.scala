@@ -2,7 +2,7 @@ package org.combinators.ep.domain.math.eips    /*DD:LI:AI*/
 
 import org.combinators.ep.domain.abstractions.{Operation, TypeRep}
 import org.combinators.ep.domain.instances.InstanceRep
-import org.combinators.ep.domain.math
+import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
@@ -19,13 +19,14 @@ object M2_ABS {
        ffiImper:Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type],
        ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
     EvolutionImplementationProvider[AIP[paradigm.type]] = {
-    val m2_abs_Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.M2_ABS.getModel
+    val m2_abs_Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      override val model: GenericModel = math.M2_ABS.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
           _ <- ffiArithmetic.enable()
           _ <- ffiStrings.enable()
+          _ <- m2Provider.initialize(forApproach)
         } yield ()
       }
 

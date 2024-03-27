@@ -77,7 +77,8 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
   def findDomainToUse(model: GenericModel, domainSpecific:EvolutionImplementationProvider[this.type], op: Operation) : GenericModel = {
     if (model.isBottom) { return model }
 
-    // contained here? Use it
+    // I2M3I1N1 exposes a subtle case. when I2M3I1N1 looks for PrettyP and mistakenly chooses M3I1 even though that merge didn't
+    // have a PrettyP because I1 didn't have PrettyP while M3 did. Need to somehow capture this and I want to do cleanly. TODO: Need help
     model.toSeq.find(p => {
       val isMergePointSupportingTheCurrentOperation = p.former.size > 1 && p.supports(op)
       val overridesTheImplementation = newDataTypeCasesWithNewOperations(domainSpecific, p).flatMap(_._2).toSeq.contains(op)
@@ -1129,7 +1130,8 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
           // if there has been any update to the signature then we need this
           // (1) new data type; (2) merge position to dispatch to different branches
           // per-operation, so find last point where operation was implemented - if HERE then generate algebra; if two
-          // formers that define different ones; if just one former that does it, we don't need to \
+          // formers that define different ones; if just one former that does it, we don't need to (though later it is
+          // necessary to take this into account when searching for the past algebra.operation class
           _ <- forEach(domain.flatten.ops.filter(op => latestDomainWithAlgebraOperation(domain, domainSpecific, op) == domain)) { op =>
               addAlgebraOperation(domain, domainSpecific, op)
           }

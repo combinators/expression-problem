@@ -7,21 +7,22 @@ javac Time.java
 @REM move into proper directory and create target
 cd ..
 
-@REM directory in target/ where generated code was placed...
+@REM directory in target/ where generated code is placed...
 set DIR=ep2
 
 @REM directory in target/ where analysis files will be generated
 mkdir target\analysis
 
-@REM: KEEP? set SAVED_JAVA_HOME=%JAVA_HOME%
+@REM bring over the evolution specification for ease of use later
+copy scripts\system-journal.json target\analysis
 
-for %%a in (oo visitor visitorSideEffect extensibleVisitor interpreter dispatch trivially coco algebra) do (
+for %%a in (oo extensibleVisitor interpreter trivially coco algebra visitor visitorSideEffect dispatch) do (
   @echo off
   echo %%a
   echo %%a > target\analysis\jacoco.%%a
 
-  @REM for each approach x model, execute to generate into target\ep2
-  for %%e in (M0 X1 X2 X3 X2X3 X4) do (
+  @REM for each approach x model, execute to generate into target\%DIR%
+  for %%e in (M0 M1 M2 M3 I1 N1 M3I1 I2M3I1N1) do (
      @echo off
      echo ====================================== >> target\analysis\jacoco.%%a
      echo %%e-Generate                           >> target\analysis\jacoco.%%a
@@ -29,7 +30,7 @@ for %%a in (oo visitor visitorSideEffect extensibleVisitor interpreter dispatch 
      echo ====================================== >> target\analysis\jacoco.%%a
      @REM: KEEP? set JAVA_HOME=%SAVED_JAVA_HOME%
 
-     sbt "language-java/runMain org.combinators.ep.language.java.DirectToDiskMainThirdAlternate %%a %%e"
+     call sbt "language-java/runMain org.combinators.ep.language.java.DirectToDiskMainJournalPaper %%a %%e"
 
      @REM generated into target\%DIR%
      cd target
@@ -45,14 +46,14 @@ for %%a in (oo visitor visitorSideEffect extensibleVisitor interpreter dispatch 
      echo %%e-Compile-Begin                      >> ..\analysis\jacoco.%%a
      java -cp ..\..\scripts Time                 >> ..\analysis\jacoco.%%a
      echo ====================================== >> ..\analysis\jacoco.%%a
-     sbt jacoco            >> ..\analysis\jacoco.%%a
+     call sbt jacoco       >> ..\analysis\jacoco.%%a
 
      echo ====================================== >> ..\analysis\jacoco.%%a
      echo %%e-Test-Begin                         >> ..\analysis\jacoco.%%a
      java -cp ..\..\scripts Time                 >> ..\analysis\jacoco.%%a
      echo ====================================== >> ..\analysis\jacoco.%%a
 
-     sbt jacoco            >> ..\analysis\jacoco.%%a
+     call sbt jacoco       >> ..\analysis\jacoco.%%a
      echo                  >> ..\analysis\jacoco.%%a
 
      echo ====================================== >> ..\analysis\jacoco.%%a

@@ -563,6 +563,11 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
       returnType <- toTargetLanguageType(op.returnType)
       _ <- resolveAndAddImport(returnType)
       _ <- makeEachVisitSignature(domain, tpeCase, returnType)
+      _ <- if (!domain.ops.contains(op)) {
+        setOverride()    // Hmmm: Might be able to infer this from the model and operation
+      } else {
+        Command.skip[MethodBodyContext]
+      }
       visitedRef <- getArguments().map(_.head._3)
       attAccessors: Seq[Expression] <- forEach (tpeCase.attributes) { att =>
         for {
@@ -894,7 +899,7 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
               }
             }.toSet
 
-            addOperationsAsClasses(m.ops ++ over, m, domainSpecific)
+            addOperationsAsClasses(m.ops ++ over, m, domainSpecific)   // these override from past
           }
         } yield ()
       }

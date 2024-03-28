@@ -593,6 +593,11 @@ trait CoCoClean extends ApproachImplementationProvider {
     for {
       _ <- setFactoryMethodSignature(domain, finalizedType, dataTypeCase)
       attributeValues <- getArguments()
+      _ <- if (!domain.typeCases.contains(dataTypeCase)) {
+        setOverride()     // override when not defined herein
+      } else {
+        Command.skip[paradigm.MethodBodyContext]
+      }
       typeToInstantiate <- mostSpecificTypeCaseClass(domain, finalizedType, dataTypeCase, domainSpecific)
       result <- instantiateObject(typeToInstantiate.get, attributeValues.map(_._3))
     } yield Some(result)

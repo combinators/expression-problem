@@ -76,6 +76,23 @@ sealed class CodeGenerator(domainName: String) { cc =>
 
   def runGenerator(generator: Generator[Project[Finalized.FinalTypes], Unit]): Seq[FileWithPath] = {
     var projectWithLookups = factory.ooProject()
+
+   def buildFile: FileWithPath = {
+      // create a rudimentary build.sbt for Scala just to work with sbt version 1.7.1
+      val cmds = s"""
+                    |libraryDependencies ++= Seq(
+                    |    "org.scalactic" %% "scalactic" % "3.2.2" % "test",
+                    |    "org.scalatest" %% "scalatest" % "3.2.2" % "test",
+                    |    "org.scalameta" %% "scalameta" % "4.4.27",
+                    |    "org.scalameta" %% "contrib" % "4.1.6",
+                    |    "org.typelevel" %% "cats-core" % "2.3.1",
+                    |    "org.typelevel" %% "cats-free" % "2.3.1",
+                    |    "org.typelevel" %% "cats-effect" % "2.3.1"
+                    |  )
+           """.stripMargin
+      FileWithPath(cmds, Paths.get("build.sbt"))
+    }
+
     projectWithLookups =
       addLookupsForImplementedGenerators[Method[Finalized.FinalTypes]](
         projectWithLookups,
@@ -104,7 +121,7 @@ sealed class CodeGenerator(domainName: String) { cc =>
       nameWithScalaExtension.foldLeft(Paths.get("src", "main", "scala"))({ case (path, name) =>
         Paths.get(path.toString, name)
       })
-    })).toSeq :+ treeLibrary
+    })).toSeq :+ treeLibrary :+ buildFile
   }
 
   val paradigm = AnyParadigm[Finalized.FinalTypes, factory.type, syntax.type](factory, runGenerator, syntax)

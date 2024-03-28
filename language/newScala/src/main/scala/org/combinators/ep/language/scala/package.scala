@@ -513,7 +513,7 @@ package object scala {
     }
 
     def parentInitializers(ofClass: oo.Class[FT]): String = {
-      val supers = (ofClass.parents ++ ofClass.implemented)
+      val supers = (ofClass.parents ++ ofClass.implemented).distinct
       superInitialization match {
         case Some((parent, parentArgs)) =>
           val rest = supers.filter(sp => sp != parent).map(_.toScala)
@@ -683,7 +683,7 @@ package object scala {
       val extendsClause = constructors.headOption.map(ctor =>
           convert(ctor).parentInitializers(this)
         ).getOrElse {
-          val supers = (parents ++ implemented)
+          val supers = (parents ++ implemented).distinct
           if (supers.nonEmpty) supers.map(_.toScala).mkString("extends ", " with ", "") else ""
         }
       val primaryConstructorParams = constructors.headOption.map(ctor =>

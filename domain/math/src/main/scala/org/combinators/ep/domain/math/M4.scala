@@ -44,7 +44,7 @@ object M4 extends Evolution {
   val m4_s_d0 = DivdInst(LitInst(0.0), LitInst(-5.0))
 
   override def allTests: Map[GenericModel, Seq[TestCase]] = M3.allTests +
-    (getModel -> (tests ++ M4_simplify_tests ++ M3.allTests.values.flatten))
+    (getModel -> (tests ++ M4_simplify_tests ++ M3.allTests(M3.getModel)))
 
   /**
     * Test cases for Simplify are oddly complicated. The Simplify operation returns a new Exp object, but

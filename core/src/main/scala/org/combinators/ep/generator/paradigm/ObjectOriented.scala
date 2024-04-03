@@ -24,6 +24,7 @@ case class RemoveMethod[Type, Name](interface: Type, name:Name) extends Command 
 }
 
 case class AddField[Name, Type, Expression](name: Name, tpe: Type, isMutable: Boolean = true, isVisibleToSubclasses:Boolean = true, initializer:Option[Expression] = Option.empty) extends Command {
+  // TODO: investigate why this has isMutable: Boolean = true, isVisibleToSubclasses:Boolean = true,
   type Result = Unit
 }
 

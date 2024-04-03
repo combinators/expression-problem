@@ -11,7 +11,7 @@ import org.combinators.ep.generator.paradigm.{Apply, ToTargetLanguageType}
 import org.combinators.ep.language.inbetween.any.{AbstractSyntax, AnyParadigm, Method, Name, Project, Type}
 import org.combinators.ep.language.inbetween.oo.{Class, Constructor, OOParadigm}
 import org.combinators.ep.language.inbetween.imperative.Imperative
-import org.combinators.ep.language.inbetween.ffi.{Arithmetic, RealArithmetic, Booleans, Equals, Lists, Trees, Strings}
+import org.combinators.ep.language.inbetween.ffi.{Arithmetic, RealArithmetic, Booleans, Equals, Lists, Trees, Strings, Assertions}
 import org.combinators.ep.language.inbetween.polymorphism.ParametricPolymorphism
 import org.combinators.ep.language.inbetween.polymorphism.generics.Generics
 
@@ -185,6 +185,8 @@ sealed class CodeGenerator(domainName: String) { cc =>
 
   val assertionsInMethod = new Assertions[paradigm.type](paradigm)(ooParadigm)
   val exceptionsInMethod = new Exceptions[paradigm.type](paradigm)*/
+
+  val assertionsInMethod = Assertions[Finalized.FinalTypes, factory.type, paradigm.type](paradigm)
 
   def treeLibrary: FileWithPath = {
     FileWithPath(

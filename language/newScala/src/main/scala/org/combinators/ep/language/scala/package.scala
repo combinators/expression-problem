@@ -32,6 +32,7 @@ package object scala {
       with TreeOps.FinalTypes
       with generics.FinalTypes {
     type ReifiedScalaValue[T] <: Expression
+    type BlockExpression <: Expression
   }
 
   trait Project[FT <: FinalTypes] extends oo.Project[FT] with Factory[FT] {
@@ -445,6 +446,10 @@ package object scala {
 
   trait Method[FT <: FinalTypes] extends generics.Method[FT] with Factory[FT] with Util[FT] {
 
+    def addTestExpressions(exprs: Seq[any.Expression[FT]]): any.Method[FT] = {
+      copy(statements = exprs.map(liftExpression))
+    }
+
     def findClass(qualifiedName: any.Name[FT]*): any.Type[FT] =
       classReferenceType(qualifiedName:_*)
 
@@ -710,6 +715,59 @@ package object scala {
     }
   }
 
+  trait TestSuite[FT <: FinalTypes] extends oo.TestSuite[FT] with Factory[FT] with Util[FT] {
+    def inFunSuiteStyle: oo.Class[FT] = {
+      val withFunSuiteExtension =
+        underlyingClass.addParent(classReferenceType(
+          Seq("org", "scalatest", "funsuite", "AnyFunSuite").map(n => nameProvider.mangle(n)): _*
+        ))
+      val methodsAsTests = withFunSuiteExtension.methods.map(m =>
+        liftExpression(applyExpression(
+            applyExpression(
+              memberAccessExpression(selfReferenceExpression, nameProvider.mangle("test")),
+              Seq(reifiedScalaValue(TypeRep.String, m.name.component))
+            ),
+            Seq(blockExpression(m.statements))
+          ))
+      )
+      val withPrimaryClsConstructor = if (underlyingClass.constructors.isEmpty) {
+        underlyingClass.addConstructor(constructor(statements = methodsAsTests))
+      } else {
+        val updatedPrimary = underlyingClass.constructors.head.copyAsConstructor(
+          statements = underlyingClass.constructors.head.statements ++ methodsAsTests
+        )
+        underlyingClass.copy(constructors = updatedPrimary +: underlyingClass.constructors.tail)
+      }
+
+      withPrimaryClsConstructor.copy(methods = Seq.empty)
+    }
+
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): any.TestSuite[FT] = {
+      copyAsClassBasedTestSuite(underlyingClass = underlyingClass.prefixRootPackage(rootPackageName, excludedTypeNames))
+    }
+
+    def toScala: String = inFunSuiteStyle.toString
+  }
+
+  trait BlockExpression[FT <: FinalTypes] extends Expression[FT] with Factory[FT] {
+    def getSelfBlockExpression: finalTypes.BlockExpression
+
+    def statements: Seq[any.Statement[FT]] = Seq.empty
+
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): BlockExpression[FT] = {
+      copy(
+        statements = statements.map(_.prefixRootPackage(rootPackageName, excludedTypeNames))
+      )
+    }
+
+    def toScala: String = {
+      statements.map(_.toScala).mkString("{\n", "\n  ", "}")
+    }
+
+    def copy(statements: Seq[any.Statement[FT]] = this.statements): BlockExpression[FT] =
+      blockExpression(statements)
+  }
+
   trait ApplyExpression[FT <: FinalTypes] extends Expression[FT] with any.ApplyExpression[FT] with Factory[FT] {
     def toScala : String = {
       val (typeArguments, regularArguments) = arguments.partition(_.isTypeReferenceExpression)
@@ -737,11 +795,13 @@ package object scala {
     def toScala: String = {
       val importDecls = imports.map(_.toScala).mkString("\n    ")
       val clsDecls = classes.map(_.toScala).mkString("\n\n")
+      val testDecls = tests.map(_.toScala).mkString("\n\n")
       val packageDecl = if (name.init.isEmpty) "" else s"package ${name.init.map(_.toScala).mkString(".")}"
       s"""
          |${packageDecl}
          |${importDecls}
          |${clsDecls}
+         |${testDecls}
          |""".stripMargin
     }
 
@@ -752,7 +812,8 @@ package object scala {
         methodTypeLookupMap = tpeRep => methodTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
         constructorTypeLookupMap = tpeRep => constructorTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
         classTypeLookupMap = tpeRep => classTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
-        classes = classes.map(_.prefixRootPackage(rootPackageName, excludedTypeNames))
+        classes = classes.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        tests = tests.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
       )
     }
   }
@@ -863,6 +924,7 @@ package object scala {
     implicit def convert(other: any.Project[FT]): Project[FT]
     implicit def convert(other: any.CompilationUnit[FT]): CompilationUnit[FT]
     implicit def convert(other: any.Method[FT]): Method[FT]
+    implicit def convert(other: any.TestSuite[FT]): TestSuite[FT]
     implicit def convert(other: oo.Class[FT]): Class[FT]
     implicit def convert(other: oo.Constructor[FT]): Constructor[FT]
     implicit def convert(other: oo.Field[FT]): Field[FT]
@@ -893,6 +955,9 @@ package object scala {
     implicit def convert(other: TreeOps.CreateLeaf[FT]): CreateLeaf[FT]
     implicit def convert(other: TreeOps.CreateNodeExpr[FT]): CreateNodeExpr[FT]
 
+    implicit def convert(other: scala.BlockExpression[FT]): scala.BlockExpression[FT]
+
+    def blockExpression(statements: Seq[any.Statement[FT]]): scala.BlockExpression[FT]
 
   }
 
@@ -933,6 +998,8 @@ package object scala {
       override type TypeApplication = Finalized.TypeApplication
       override type CreateLeaf = Finalized.CreateLeaf
       override type CreateNodeExpr = Finalized.CreateNodeExpr
+      override type BlockExpression = Finalized.BlockExpression
+      override type TestSuite = Finalized.TestSuite
     }
 
     trait Factory extends scala.Factory[FinalTypes] {
@@ -950,7 +1017,8 @@ package object scala {
         methodTypeLookupMap: TypeRep => Generator[any.Method[FinalTypes], any.Type[FinalTypes]] = Map.empty,
         constructorTypeLookupMap: TypeRep => Generator[oo.Constructor[FinalTypes], any.Type[FinalTypes]] = Map.empty,
         classTypeLookupMap: TypeRep => Generator[oo.Class[FinalTypes], any.Type[FinalTypes]] = Map.empty,
-        classes: Seq[oo.Class[FinalTypes]]): oo.CompilationUnit[FinalTypes] = CompilationUnit(name, imports, methodTypeLookupMap, constructorTypeLookupMap, classTypeLookupMap, classes)
+        classes: Seq[oo.Class[FinalTypes]],
+        tests: Seq[any.TestSuite[FinalTypes]]): oo.CompilationUnit[FinalTypes] = CompilationUnit(name, imports, methodTypeLookupMap, constructorTypeLookupMap, classTypeLookupMap, classes, tests)
 
 
       override def constructor(
@@ -985,6 +1053,7 @@ package object scala {
       implicit def convert(other: any.Project[FinalTypes]): Project = other.getSelfProject
       implicit def convert(other: any.CompilationUnit[FinalTypes]): CompilationUnit = other.getSelfCompilationUnit
       implicit def convert(other: any.Method[FinalTypes]): scala.Method[FinalTypes] = other.getSelfMethod
+      implicit def convert(other: any.TestSuite[FinalTypes]): scala.TestSuite[FinalTypes] = other.getSelfTestSuite
       implicit def convert(other: oo.Class[FinalTypes]): Class = other.getSelfClass
       implicit def convert(other: oo.Constructor[FinalTypes]): Constructor = other.getSelfConstructor
       implicit def convert(other: oo.Field[FinalTypes]): Field = other.getSelfField
@@ -1048,6 +1117,9 @@ package object scala {
       implicit def convert(other: any.Name[FinalTypes]): Name = other.getSelfName
       implicit def convert(other: any.Expression[FinalTypes]): Expression = other.getSelfExpression
       implicit def convert(other: any.ArgumentExpression[FinalTypes]): ArgumentExpression = other.getSelfArgumentExpression
+      implicit def convert(other: scala.BlockExpression[FinalTypes]): BlockExpression = other.getSelfBlockExpression
+
+      override def blockExpression(statements: Seq[any.Statement[FinalTypes]]): BlockExpression = BlockExpression(statements)
 
       override def reifiedScalaValue[T](ofHostType: OfHostType[T], value: T): ReifiedScalaValue[T] = ReifiedScalaValue(ofHostType, value)
       implicit def convert[T](other: scala.ReifiedScalaValue[FinalTypes, T]): ReifiedScalaValue[T] = other.getSelfAsReifiedScalaValue
@@ -1147,6 +1219,8 @@ package object scala {
       def createLeafWithLeafClass(leafClass: oo.ClassReferenceType[FinalTypes]): scala.CreateLeaf[FinalTypes] = CreateLeaf(leafClass)
       implicit def convert(other: TreeOps.CreateLeaf[FinalTypes]): scala.CreateLeaf[FinalTypes] = other.getSelfCreateLeaf
       implicit def convert(other: TreeOps.CreateNodeExpr[FinalTypes]): scala.CreateNodeExpr[FinalTypes] = other.getSelfCreateNodeExpr
+
+      override def classBasedTestSuite(underlyingClass: oo.Class[FinalTypes]): TestSuite = TestSuite(underlyingClass)
     }
 
     case class Name(override val component: String, override val mangled: String) extends scala.Name[FinalTypes] with Factory {
@@ -1348,7 +1422,8 @@ package object scala {
       override val methodTypeLookupMap: TypeRep => Generator[any.Method[FinalTypes], any.Type[FinalTypes]] = Map.empty,
       override val constructorTypeLookupMap: TypeRep => Generator[oo.Constructor[FinalTypes], any.Type[FinalTypes]] = Map.empty,
       override val classTypeLookupMap: TypeRep => Generator[oo.Class[FinalTypes], any.Type[FinalTypes]] = Map.empty,
-      override val classes: Seq[oo.Class[FinalTypes]] = Seq.empty
+      override val classes: Seq[oo.Class[FinalTypes]] = Seq.empty,
+      override val tests: Seq[any.TestSuite[FinalTypes]] = Seq.empty,
     ) extends scala.CompilationUnit[FinalTypes] with Util {
       override def getSelfCompilationUnit: this.type = this
     }
@@ -1460,6 +1535,14 @@ package object scala {
 
     case class CreateNodeExpr(override val nodeClass: oo.ClassReferenceType[FinalTypes]) extends scala.CreateNodeExpr[FinalTypes] with Expression {
       def getSelfCreateNodeExpr: this.type = this
+    }
+
+    case class TestSuite(override val underlyingClass: oo.Class[FinalTypes]) extends scala.TestSuite[FinalTypes] with Factory with Util {
+      def getSelfTestSuite: this.type = this
+    }
+
+    case class BlockExpression(override val statements: Seq[any.Statement[FinalTypes]]) extends scala.BlockExpression[FinalTypes] with Expression {
+      def getSelfBlockExpression: this.type = this
     }
 
   }

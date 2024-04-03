@@ -205,10 +205,10 @@ class Main(choice:String, select:String) {
         () => generator.paradigm.runGenerator {
           for {
             _ <- approach.implement(evolution.getModel, eip)
-            /*_ <- approach.implement(
+            _ <- approach.implement(
               tests,
-              TestImplementationProvider.defaultAssertionBasedTests(approach.paradigm)(generator.assertionsInMethod, generator.equalityInMethod, generator.booleansInMethod, generator.stringsInMethod)
-            )*/
+              TestImplementationProvider.defaultAssertionBasedTests(approach.paradigm)(generator.assertionsInMethod, generator.equality, generator.booleans, generator.strings)
+            )
           } yield ()
         }
       addToTransaction(transaction, evolution.getModel.name, impl)

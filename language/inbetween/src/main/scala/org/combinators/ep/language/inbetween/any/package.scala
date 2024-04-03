@@ -13,6 +13,7 @@ package object any {
     type Expression
     type ApplyExpression <: Expression
     type ArgumentExpression <: Expression
+    type TestSuite
     type CompilationUnit
     type Project
   }
@@ -44,7 +45,9 @@ package object any {
     }
     def getArguments(): Seq[(Name[FT], Type[FT], Expression[FT])] = {
       parameters.map(param => (param._1, param._2, argumentExpression(param._1)))
-    }
+    }    
+    def addTestExpressions(exprs: Seq[Expression[FT]]): Method[FT]
+    
     def toTargetLanguageType(tpe: TypeRep): Generator[Method[FT], Type[FT]] = typeLookupMap(tpe)
 
     def reify[T](tpe: TypeRep.OfHostType[T], value: T): Expression[FT]
@@ -98,6 +101,24 @@ package object any {
       parameterName: any.Name[FT] = this.parameterName
     ): ArgumentExpression[FT] = argumentExpression(parameterName)
   }
+  
+  trait TestSuite[FT <: FinalTypes] extends Factory[FT] {
+    def getSelfTestSuite: finalTypes.TestSuite
+    
+    def name: Name[FT]
+    
+    def tests: Seq[Method[FT]]
+
+    def methodTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty
+    
+    def initializeInCompilationUnit(compilationUnit: any.CompilationUnit[FT]): TestSuite[FT]
+    
+    def copy(
+      name: Name[FT] = this.name,
+      tests: Seq[Method[FT]] = this.tests,
+      methodTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = this.methodTypeLookupMap
+    ): TestSuite[FT] = testSuite(name, tests, methodTypeLookupMap)
+  }
 
   trait CompilationUnit[FT <: FinalTypes] extends Factory[FT] {
     def getSelfCompilationUnit: finalTypes.CompilationUnit
@@ -105,16 +126,17 @@ package object any {
     def name: Seq[Name[FT]] = Seq.empty
     def imports: Seq[Import[FT]] = Seq.empty
 
+    def tests: Seq[TestSuite[FT]] = Seq.empty
+
     def getFreshName(basedOn: Name[FT]): Name[FT]
 
     def initializeInProject(project: Project[FT]): CompilationUnit[FT]
 
-    // TODO: Tests?
-
     def copy(
       name: Seq[Name[FT]] = this.name,
       imports: Seq[Import[FT]] = this.imports,
-    ): CompilationUnit[FT] = compilationUnit(name, imports)
+      tests: Seq[TestSuite[FT]] = this.tests,
+    ): CompilationUnit[FT] = compilationUnit(name, imports, tests)
   }
 
   trait Project[FT <: FinalTypes] extends Factory[FT] {
@@ -133,8 +155,10 @@ package object any {
     val finalTypes: FT
 
     def project(compilationUnits: Set[CompilationUnit[FT]] = Set.empty): Project[FT]
-
-    def compilationUnit(name: Seq[Name[FT]], imports: Seq[Import[FT]]): CompilationUnit[FT]
+    
+    def compilationUnit(name: Seq[Name[FT]], imports: Seq[Import[FT]], tests: Seq[TestSuite[FT]]): CompilationUnit[FT]
+    
+    def testSuite(name: Name[FT], tests: Seq[Method[FT]], methodTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty): TestSuite[FT]
     def method(
       name: Name[FT],
       imports: Set[Import[FT]] = Set.empty,
@@ -155,6 +179,7 @@ package object any {
     implicit def convert(other: Expression[FT]): Expression[FT]
     implicit def convert(other: ApplyExpression[FT]): ApplyExpression[FT]
     implicit def convert(other: ArgumentExpression[FT]): ArgumentExpression[FT]
+    implicit def convert(other: TestSuite[FT]): TestSuite[FT]
     implicit def convert(other: CompilationUnit[FT]): CompilationUnit[FT]
     implicit def convert(other: Project[FT]): Project[FT]
   }

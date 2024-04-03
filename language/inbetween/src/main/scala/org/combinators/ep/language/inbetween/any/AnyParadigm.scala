@@ -14,7 +14,7 @@ trait AnyParadigm extends AP {
   val syntax: AbstractSyntax[FT]
   type ProjectContext = Project[FT]
   type CompilationUnitContext = CompilationUnit[FT]
-  type TestContext = Unit // TODO
+  type TestContext = TestSuite[FT]
   type MethodBodyContext = Method[FT]
   val projectCapabilities: ProjectCapabilities = new ProjectCapabilities {
     implicit val canDebugInProject: Understands[ProjectContext, Debug] = new Understands[ProjectContext, Debug] {
@@ -25,7 +25,7 @@ trait AnyParadigm extends AP {
     }
     implicit val canAddCompilationUnitInProject: Understands[ProjectContext, AddCompilationUnit[Name[FT], CompilationUnitContext]] = new Understands[ProjectContext, AddCompilationUnit[Name[FT], CompilationUnitContext]] {
       def perform(context: ProjectContext, command: AddCompilationUnit[Name[FT], CompilationUnitContext]): (ProjectContext, Unit) = {
-        val emptyUnit = factory.compilationUnit(command.name, Seq.empty).initializeInProject(context)
+        val emptyUnit = factory.compilationUnit(command.name, Seq.empty, Seq.empty).initializeInProject(context)
         val (generatedUnit, ()) = Command.runGenerator(command.unit, emptyUnit)
         (context.copy(compilationUnits = context.compilationUnits + generatedUnit), ())
       }
@@ -50,7 +50,9 @@ trait AnyParadigm extends AP {
     }
     implicit val canAddTestSuiteInCompilationUnit: Understands[CompilationUnit[FT], AddTestSuite[Name[FT], TestContext]] = new Understands[CompilationUnit[FT], AddTestSuite[Name[FT], TestContext]] {
       def perform(context: CompilationUnit[FT], command: AddTestSuite[Name[FT], TestContext]): (CompilationUnit[FT], Unit) = {
-        (context, ()) // TODO
+        val emptyTestSuite = factory.testSuite(command.name, Seq.empty).initializeInCompilationUnit(context)
+        val (result, ()) = Command.runGenerator(command.suite, emptyTestSuite)
+        (context.copy(tests = context.tests :+ result), ())
       }
     }
     implicit val canGetFreshNameInCompilationUnit: Understands[CompilationUnit[FT], FreshName[Name[FT]]] = new Understands[CompilationUnit[FT], FreshName[Name[FT]]] {
@@ -136,7 +138,13 @@ trait AnyParadigm extends AP {
     }
     implicit val canAddTestCaseInTest: Understands[TestContext, AddTestCase[Method[FT], Name[FT], Expression[FT]]] = new Understands[TestContext, AddTestCase[Method[FT], Name[FT], Expression[FT]]] {
       def perform(context: TestContext, command: AddTestCase[Method[FT], Name[FT], Expression[FT]]): (TestContext, Unit) = {
-        (context, ()) // TODO
+        val emptyMethod = factory.method(
+          name = command.name,
+          typeLookupMap = context.methodTypeLookupMap
+        )
+        var (generatedMethod, result) = Command.runGenerator(command.code, emptyMethod)
+        generatedMethod = generatedMethod.addTestExpressions(result)
+        (context.copy(tests = context.tests :+ generatedMethod), ())
       }
     }
   }

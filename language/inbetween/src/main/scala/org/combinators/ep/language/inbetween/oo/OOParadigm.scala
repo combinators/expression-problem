@@ -309,52 +309,114 @@ trait OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends OOP {
   val testCapabilities: TestCapabilities = new TestCapabilities {
     implicit val canAddMethodInTest: Understands[TestContext, AddMethod[MethodBodyContext, Name, Option[Expression]]] = new Understands[TestContext, AddMethod[MethodBodyContext, Name, Option[Expression]]] {
         def perform(context: TestContext, command: AddMethod[MethodBodyContext, Name, Option[Expression]]): (TestContext, Unit) = {
-          (context, ()) // TODO
+          val clsBasedTestSuite = factory.convert(context)
+          import classCapabilities.canAddMethodInClass
+          val (updatedCls, ()) = Command.runGenerator(classCapabilities.addMethod(command.name, command.spec), clsBasedTestSuite.underlyingClass)
+          (clsBasedTestSuite.copyAsClassBasedTestSuite(underlyingClass = updatedCls), ())
         }
       }
     implicit val canAddBlockDefinitionsInTest: Understands[TestContext, AddBlockDefinitions[Statement]] = new Understands[TestContext, AddBlockDefinitions[Statement]] {
       def perform(context: TestContext, command: AddBlockDefinitions[Statement]): (TestContext, Unit) = {
-        (context, ())
+        val clsBasedTestSuite = factory.convert(context)
+        import classCapabilities.canAddConstructorInClass
+        import constructorCapabilities.canAddBlockDefinitionsInConstructor
+        val clsWithUpdatedPrimaryConstructor =
+          if (clsBasedTestSuite.underlyingClass.constructors.isEmpty) {
+            Command.runGenerator(
+              classCapabilities.addConstructor(constructorCapabilities.addBlockDefinitions(command.definitions)),
+              clsBasedTestSuite.underlyingClass
+            )._1
+          } else {
+            val updatedFirstConstructor = Command.runGenerator(
+              constructorCapabilities.addBlockDefinitions(command.definitions),
+              clsBasedTestSuite.underlyingClass.constructors.head
+            )._1
+            clsBasedTestSuite.underlyingClass.copy(
+              constructors = updatedFirstConstructor +: clsBasedTestSuite.underlyingClass.constructors.tail
+            )
+          }
+        (clsBasedTestSuite.copyAsClassBasedTestSuite(underlyingClass = clsWithUpdatedPrimaryConstructor), ())
       }
     }
     implicit val canAddFieldInTest: Understands[TestContext, AddField[Name, Type, Expression]] = new Understands[TestContext, AddField[Name, Type, Expression]] {
       def perform(context: TestContext, command: AddField[Name, Type, Expression]): (TestContext, Unit) = {
-        (context, ()) // TODO
+        val clsBasedTestSuite = factory.convert(context)
+        import classCapabilities.canAddFieldInClass
+        val (updatedCls, ()) = Command.runGenerator(
+          classCapabilities.addField(
+            name = command.name,
+            tpe = command.tpe,
+            init = command.initializer
+          ), clsBasedTestSuite.underlyingClass)
+        (clsBasedTestSuite.copyAsClassBasedTestSuite(underlyingClass = updatedCls), ())
       }
     }
     implicit val canInitializeFieldInTest: Understands[TestContext, InitializeField[Name, Expression]] = new Understands[TestContext, InitializeField[Name, Expression]] {
       def perform(context: TestContext, command: InitializeField[Name, Expression]): (TestContext, Unit) = {
-        (context, ()) // TODO
+        val clsBasedTestSuite = factory.convert(context)
+        import classCapabilities.canAddConstructorInClass
+        import constructorCapabilities.canInitializeFieldInConstructor
+        val clsWithUpdatedPrimaryConstructor =
+          if (clsBasedTestSuite.underlyingClass.constructors.isEmpty) {
+            Command.runGenerator(
+              classCapabilities.addConstructor(constructorCapabilities.initializeField(command.name, command.value)),
+              clsBasedTestSuite.underlyingClass
+            )._1
+          } else {
+            val updatedFirstConstructor = Command.runGenerator(
+              constructorCapabilities.initializeField(command.name, command.value),
+              clsBasedTestSuite.underlyingClass.constructors.head
+            )._1
+            clsBasedTestSuite.underlyingClass.copy(
+              constructors = updatedFirstConstructor +: clsBasedTestSuite.underlyingClass.constructors.tail
+            )
+          }
+        (clsBasedTestSuite.copyAsClassBasedTestSuite(underlyingClass = clsWithUpdatedPrimaryConstructor), ())
       }
     }
     implicit val canInstantiateObjectInTest: Understands[TestContext, InstantiateObject[Type, Expression, TestContext]] = new Understands[TestContext, InstantiateObject[Type, Expression, TestContext]] {
       def perform(context: TestContext, command: InstantiateObject[Type, Expression, TestContext]): (TestContext, Expression) = {
-        (context, command.constructorArguments(0)) // TODO
+        (context, factory.objectInstantiationExpression(command.tpe, command.constructorArguments, None)) // TODO: Add anon inner class
       }
     }
     implicit val canAddConstructorInTest: Understands[TestContext, AddConstructor[Constructor[FT]]] = new Understands[TestContext, AddConstructor[Constructor[FT]]] {
       def perform(context: TestContext, command: AddConstructor[Constructor[FT]]): (TestContext, Unit) = {
-        (context, ()) // TODO
+        val clsBasedTestSuite = factory.convert(context)
+        import classCapabilities.canAddConstructorInClass
+        val (updatedCls, ()) = Command.runGenerator(classCapabilities.addConstructor(command.ctor), clsBasedTestSuite.underlyingClass)
+        (clsBasedTestSuite.copyAsClassBasedTestSuite(underlyingClass = updatedCls), ())
       }
     }
     implicit val canAddImportInTest: Understands[TestContext, AddImport[Import]] = new Understands[TestContext, AddImport[Import]] {
       def perform(context: TestContext, command: AddImport[Import]): (TestContext, Unit) = {
-        (context, ()) // TODO
+        val clsBasedTestSuite = factory.convert(context)
+        import classCapabilities.canAddImportInClass
+        val (updatedCls, ()) = Command.runGenerator(classCapabilities.addImport(command.imp), clsBasedTestSuite.underlyingClass)
+        (clsBasedTestSuite.copyAsClassBasedTestSuite(underlyingClass = updatedCls), ())
       }
     }
     implicit val canResolveImportInTest: Understands[TestContext, ResolveImport[Import, Type]] = new Understands[TestContext, ResolveImport[Import, Type]] {
       def perform(context: TestContext, command: ResolveImport[Import, Type]): (TestContext, Option[Import]) = {
-        (context, None) // TODO
+        val clsBasedTestSuite = factory.convert(context)
+        import classCapabilities.canResolveImportInClass
+        val (updatedCls, result) = Command.runGenerator(classCapabilities.resolveImport(command.forElem), clsBasedTestSuite.underlyingClass)
+        (clsBasedTestSuite.copyAsClassBasedTestSuite(underlyingClass = updatedCls), result)
       }
     }
     implicit val canFindClassInTest: Understands[TestContext, FindClass[Name, Type]] = new Understands[TestContext, FindClass[Name, Type]] {
       def perform(context: TestContext, command: FindClass[Name, Type]): (TestContext, Type) = {
-        (context, factory.classReferenceType(command.qualifiedName:_*)) // TODO
+        val clsBasedTestSuite = factory.convert(context)
+        import classCapabilities.canFindClassInClass
+        val (updatedCls, result) = Command.runGenerator(classCapabilities.findClass(command.qualifiedName: _*), clsBasedTestSuite.underlyingClass)
+        (clsBasedTestSuite.copyAsClassBasedTestSuite(underlyingClass = updatedCls), result)
       }
     }
     implicit val canAddImplementedInTest: Understands[TestContext, AddImplemented[Type]] = new Understands[TestContext, AddImplemented[Type]] {
       def perform(context: TestContext, command: AddImplemented[Type]): (TestContext, Unit) = {
-        (context, ()) // TODO
+        val clsBasedTestSuite = factory.convert(context)
+        import classCapabilities.canAddImplementedInClass
+        val (updatedCls, ()) = Command.runGenerator(classCapabilities.addImplemented(command.interface), clsBasedTestSuite.underlyingClass)
+        (clsBasedTestSuite.copyAsClassBasedTestSuite(underlyingClass = updatedCls), ())
       }
     }
   }

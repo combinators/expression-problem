@@ -15,6 +15,9 @@ trait Evolution {
   def allTests: Map[GenericModel, Seq[TestCase]] = Map(getModel -> tests)
 
   /** Common use case. Include all past tests. */
-  def allPastTests(pastEvolution:Evolution): Map[GenericModel, Seq[TestCase]] = pastEvolution.allTests +
-    (getModel -> (tests ++ pastEvolution.allTests.values.flatten))
+  def allPastTests(pastEvolution:Evolution): Map[GenericModel, Seq[TestCase]] = {
+    // distinct ONLY WORKS if test cases are created just once within respective GenericModel, and not anew
+    pastEvolution.allTests +
+      (getModel -> (tests ++ pastEvolution.allTests.values.flatten).distinct)
+  }
 }

@@ -31,14 +31,22 @@ object M3 extends Evolution {
 
   override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(M2)
 
+  val m3_test_1:TestCase = EqualsTestCase(getModel.baseDataType, m3_m1, Eval, M0.DoubleInst(-1.0))
+  val m3_test_2:TestCase = EqualsTestCase(getModel.baseDataType, m3_m1, PrettyP, StringInst("-1.0"))
+  val m3_test_3:TestCase = EqualsTestCase(getModel.baseDataType, m3_m2, PrettyP, StringInst("((5.0/2.0)*4.0)"))
+  val m3_test_4:TestCase = EqualsTestCase(getModel.baseDataType, m3_m2, Eval, M0.DoubleInst(10.0))
+  val m3_test_5:TestCase = EqualsTestCase(getModel.baseDataType, m3_d1, Eval, M0.DoubleInst(-5.0))
+  val m3_test_6:TestCase = EqualsTestCase(getModel.baseDataType, m3_s1, PrettyP, StringInst("-(2.0*3.0)"))
+
   def tests: Seq[TestCase] = Seq(
-    EqualsTestCase(getModel.baseDataType, m3_m1, Eval, M0.DoubleInst(-1.0)),
-    EqualsTestCase(getModel.baseDataType, m3_m1, PrettyP, StringInst("-1.0")),
+      m3_test_1,
+      m3_test_2,
 
-    EqualsTestCase(getModel.baseDataType, m3_m2, PrettyP, StringInst("((5.0/2.0)*4.0)")),
-    EqualsTestCase(getModel.baseDataType, m3_m2, Eval, M0.DoubleInst(10.0)),
+      m3_test_3,
+      m3_test_4,
 
-    EqualsTestCase(getModel.baseDataType, m3_d1, Eval, M0.DoubleInst(-5.0)),
-    EqualsTestCase(getModel.baseDataType, m3_s1, PrettyP, StringInst("-(2.0*3.0)"))
-  )
+      m3_test_5,
+      m3_test_6
+    )
+
 }

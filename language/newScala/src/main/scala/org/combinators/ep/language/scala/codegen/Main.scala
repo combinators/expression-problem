@@ -191,22 +191,14 @@ class Main(choice:String, select:String) {
 
     case _ => ???
   }
-
-  val tests = evolutions.scanLeft(Map.empty[GenericModel, Seq[TestCase]]) { case (m, evolution) =>
-    m + (evolution.getModel -> evolution.tests)
-  }.tail
-
-  // for CoCo, we only need the latest since all earlier ones are identical
-  val all = evolutions.zip(tests)
-
   def transaction[T](initialTransaction: T, addToTransaction: (T, String, () => Seq[FileWithPath]) => T): T = {
-    all.foldLeft(initialTransaction) { case (transaction, (evolution, tests)) =>
+    evolutions.foldLeft(initialTransaction) { case (transaction, evolution) =>
       val impl =
         () => generator.paradigm.runGenerator {
           for {
             _ <- approach.implement(evolution.getModel, eip)
             _ <- approach.implement(
-              tests,
+              evolution.allTests,
               TestImplementationProvider.defaultAssertionBasedTests(approach.paradigm)(generator.assertionsInMethod, generator.equality, generator.booleans, generator.strings)
             )
           } yield ()

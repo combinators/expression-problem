@@ -154,12 +154,22 @@ package object scala {
     val ofHostType: OfHostType[T]
     val value: T
 
-    def toScala: String =
-      if (value.isInstanceOf[String]) {
-        s""""$value""""
-      } else {
-        value.toString
+    def toScala: String = {
+      ofHostType match {
+        case t: TypeRep.String.type => s""""$value""""
+        case t: TypeRep.Tree.type =>
+          value match {
+            case org.combinators.ep.domain.tree.Node(id, values) => s"org.combinators.ep.util.Node($id, ${values.map(v => reifiedScalaValue(TypeRep.Tree, v).toScala).mkString(", ")})"
+            case org.combinators.ep.domain.tree.Leaf(r) => s"org.combinators.ep.util.Leaf(${reifiedScalaValue(r.tpe, r.inst).toScala})"
+          }
+        case t: TypeRep.Sequence[_] =>
+          value.asInstanceOf[Seq[t.elemTpe.HostType]].map(v => reifiedScalaValue(t.elemTpe, v).toScala).mkString("Seq(", ", ", ")")
+        case t: TypeRep.Array[_] =>
+          value.asInstanceOf[Array[t.elemTpe.HostType]].map(v => reifiedScalaValue(t.elemTpe, v).toScala).mkString("Array(", ", ", ")")
+        case _ =>
+          value.toString
       }
+    }
 
     override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): ReifiedScalaValue[FT, T] =
       this
@@ -731,12 +741,12 @@ package object scala {
           ))
       )
       val withPrimaryClsConstructor = if (underlyingClass.constructors.isEmpty) {
-        underlyingClass.addConstructor(constructor(statements = methodsAsTests))
+        withFunSuiteExtension.addConstructor(constructor(statements = methodsAsTests))
       } else {
         val updatedPrimary = underlyingClass.constructors.head.copyAsConstructor(
           statements = underlyingClass.constructors.head.statements ++ methodsAsTests
         )
-        underlyingClass.copy(constructors = updatedPrimary +: underlyingClass.constructors.tail)
+        withFunSuiteExtension.copy(constructors = updatedPrimary +: underlyingClass.constructors.tail)
       }
 
       withPrimaryClsConstructor.copy(methods = Seq.empty)
@@ -828,8 +838,9 @@ package object scala {
   trait StringLengthOp[FT <: FinalTypes] extends StringOps.StringLengthOp[FT] with Operator[FT] with PostfixOperator[FT] {
     def operator: String = ".length"
   }
-  trait AssertTrueOp[FT <: FinalTypes] extends AssertionOps.AssertTrueOp[FT] with Operator[FT] with PrefixOperator[FT] {
+  trait AssertTrueOp[FT <: FinalTypes] extends AssertionOps.AssertTrueOp[FT] with Operator[FT] {
     def operator: String = "assert "
+    def toScala(operands: any.Expression[FT]*): String = s"assert (${operands.head.toScala})"
   }
 
   trait CreateList[FT <: FinalTypes] extends ListOps.CreateList[FT] with Type[FT] {

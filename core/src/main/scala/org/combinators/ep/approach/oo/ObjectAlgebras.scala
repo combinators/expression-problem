@@ -8,6 +8,7 @@ import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm._
 import org.combinators.ep.generator._
 
+
 trait ObjectAlgebras extends ApproachImplementationProvider {
   val paradigm: AnyParadigm
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
@@ -1223,7 +1224,12 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
     } yield ()
   }
 
-  def registerInstanceTypeMapping(model: GenericModel): Generator[ooParadigm.ClassContext, Unit] = {
+  // Generic registration of ep.<model>.carrier.<Model> in Class and Project context
+  def registerInstanceTypeMapping[Context](model: GenericModel)(implicit
+    canAddTypeLookupForMethods: Understands[Context, AddTypeLookup[paradigm.MethodBodyContext, paradigm.syntax.Type]],
+    canAddTypeLookupForClasses: Understands[Context, AddTypeLookup[ooParadigm.ClassContext, paradigm.syntax.Type]],
+    canAddTypeLookupForConstructors: Understands[Context, AddTypeLookup[ooParadigm.ConstructorContext, paradigm.syntax.Type]],
+  ): Generator[Context, Unit] = {
     import ooParadigm.classCapabilities._
     import genericsParadigm.classCapabilities._
     import paradigm.methodBodyCapabilities._
@@ -1232,10 +1238,10 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
     val dtpeRep = TypeRep.DataType(model.baseDataType)
 
     def properCarrierType[Context](implicit
-                                   canFindClass: Understands[Context, FindClass[paradigm.syntax.Name, paradigm.syntax.Type]],
-                                   canResolveImport: Understands[Context, ResolveImport[paradigm.syntax.Import, paradigm.syntax.Type]],
-                                   canAddImport: Understands[Context, AddImport[paradigm.syntax.Import]]
-                                  ): Generator[Context, paradigm.syntax.Type] = {
+      canFindClass: Understands[Context, FindClass[paradigm.syntax.Name, paradigm.syntax.Type]],
+      canResolveImport: Understands[Context, ResolveImport[paradigm.syntax.Import, paradigm.syntax.Type]],
+      canAddImport: Understands[Context, AddImport[paradigm.syntax.Import]]
+    ): Generator[Context, paradigm.syntax.Type] = {
       for {
         baseInterfaceType <- FindClass[paradigm.syntax.Name, paradigm.syntax.Type](Seq(names.mangle(names.instanceNameOf(model)), ComponentNames.pkgCarrier, names.mangle(names.conceptNameOf(model)))).interpret(canFindClass)
         _ <- resolveAndAddImport(baseInterfaceType)(canResolveImport,canAddImport)
@@ -1243,9 +1249,9 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
     }
 
     for {
-      _ <- addTypeLookupForMethods(dtpeRep, properCarrierType[paradigm.MethodBodyContext])
-      _ <- addTypeLookupForClasses(dtpeRep, properCarrierType[ooParadigm.ClassContext])
-      _ <- addTypeLookupForConstructors(dtpeRep, properCarrierType[ooParadigm.ConstructorContext])
+      _ <- AddTypeLookup[paradigm.MethodBodyContext, paradigm.syntax.Type](dtpeRep, properCarrierType[paradigm.MethodBodyContext]).interpret(canAddTypeLookupForMethods)
+      _ <- AddTypeLookup[ooParadigm.ClassContext, paradigm.syntax.Type](dtpeRep, properCarrierType[ooParadigm.ClassContext]).interpret(canAddTypeLookupForClasses)
+      _ <- AddTypeLookup[ooParadigm.ConstructorContext, paradigm.syntax.Type](dtpeRep, properCarrierType[ooParadigm.ConstructorContext]).interpret(canAddTypeLookupForConstructors)
     } yield ()
   }
 
@@ -1267,6 +1273,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
     import paradigm.projectCapabilities._
     import paradigm.compilationUnitCapabilities._
     import paradigm.testCapabilities._
+    import ooParadigm.projectCapabilities._
 
     def addAlgebraFieldAutoinitialized(model:GenericModel) : Generator[paradigm.TestContext, Unit] = {
       import ooParadigm.testCapabilities._
@@ -1278,26 +1285,18 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
       } yield ()
     }
 
-//    def initializeAlgebra(domain:GenericModel): Generator[paradigm.TestContext, Unit] = {
-//      import ooParadigm.testCapabilities._
-//      for {
-//
-//        clazz <- findClass(names.mangle(names.instanceNameOf(domain)), ComponentNames.pkgAlgebra, names.mangle(names.conceptNameOf(domain)))
-//        _ <- resolveAndAddImport(clazz)
-//        expr <- instantiateObject(clazz, Seq.empty)
-//        _ <- initializeField(ComponentNames.algebraAtt, expr)
-//      } yield ()
-//    }
-
     for {
       _ <- forEach(tests.toList) { case (model, tests) =>
 
-        val testCode: Generator[paradigm.MethodBodyContext, Seq[paradigm.syntax.Expression]] =
+        val testCode: Generator[paradigm.MethodBodyContext, Seq[paradigm.syntax.Expression]] = {
+          import paradigm.methodBodyCapabilities._
           for {
             code <- forEach(tests) {
-              test => testImplementationProvider.test(this)(test)
+              test =>
+                 testImplementationProvider.test(this)(test)
             }
           } yield code.flatten
+        }
 
 
         val compUnit = for {
@@ -1311,9 +1310,11 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
           _ <- addTestSuite(testCaseName(model), compUnit)
         } yield ()
 
-        addCompilationUnit(
-            testSuite,
-            testCaseName(model))
+
+        for {
+          _ <- registerInstanceTypeMapping(model)
+          _ <- addCompilationUnit(testSuite, testCaseName(model))
+        } yield ()
       }
     } yield ()
   }

@@ -8,7 +8,7 @@ import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.{Apply, ToTargetLanguageType}
-import org.combinators.ep.language.inbetween.any.{AbstractSyntax, AnyParadigm, Method, Name, Project, Type}
+import org.combinators.ep.language.inbetween.any.{AbstractSyntax, CompilationUnit, AnyParadigm, Method, Name, Project, Type}
 import org.combinators.ep.language.inbetween.oo.{Class, Constructor, OOParadigm}
 import org.combinators.ep.language.inbetween.imperative.Imperative
 import org.combinators.ep.language.inbetween.ffi.{Arithmetic, RealArithmetic, Booleans, Equals, Lists, Trees, Strings, Assertions}
@@ -115,17 +115,35 @@ sealed class CodeGenerator(domainName: String) { cc =>
     val (generatedProject, _) = Command.runGenerator(generator, projectWithLookups)
     val withPrefix = factory.convert(generatedProject).prefixRootPackage(Seq(nameProvider.mangle(domainName)), prefixExcludedTypes)
 
-    withPrefix.compilationUnits.map(cu => FileWithPath(factory.convert(cu).toScala, {
-      val nameAsStrings = cu.name.map(name => factory.convert(name).toScala)
-      val nameWithScalaExtension = nameAsStrings.init :+ (nameAsStrings.last + ".scala")
 
-      val mainDir = Paths.get("src", "main", "scala")
-      val testDir = Paths.get("src", "test", "scala")
-
-      nameWithScalaExtension.foldLeft(Paths.get("src", "main", "scala"))({ case (path, name) =>
-        Paths.get(path.toString, name)
+    def toFileWithPath(cu: CompilationUnit[Finalized.FinalTypes], basePath: Path): FileWithPath = {
+      FileWithPath(factory.convert(cu).toScala, {
+        val nameAsStrings = cu.name.map(name => factory.convert(name).toScala)
+        val nameWithScalaExtension = nameAsStrings.init :+ (nameAsStrings.last + ".scala")
+        nameWithScalaExtension.foldLeft(basePath)({ case (path, name) =>
+          Paths.get(path.toString, name)
+        })
       })
-    })).toSeq :+ treeLibrary :+ buildFile
+    }
+    val mainDir = Paths.get("src", "main", "scala")
+    val testDir = Paths.get("src", "test", "scala")
+    withPrefix.compilationUnits.flatMap(cu => {
+      import factory._
+      val testFile = if (cu.tests.nonEmpty) {
+        val testOnlyCu = cu.copyAsCompilationUnitWithClasses(
+          classes = Seq.empty
+        )
+        Seq(toFileWithPath(testOnlyCu, testDir))
+      } else Seq.empty
+      val classesFile = if (cu.classes.nonEmpty) {
+        val noTestCu = cu.copyAsCompilationUnitWithClasses(
+          tests = Seq.empty
+        )
+        Seq(toFileWithPath(noTestCu, mainDir))
+      } else Seq.empty
+      
+      classesFile ++ testFile
+    }).toSeq :+ treeLibrary :+ buildFile
   }
 
   val paradigm = AnyParadigm[Finalized.FinalTypes, factory.type, syntax.type](factory, runGenerator, syntax)

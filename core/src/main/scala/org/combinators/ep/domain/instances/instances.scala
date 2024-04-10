@@ -22,6 +22,9 @@ sealed trait InstanceRep { // had been ExistsInstance
   val tpe: TypeRep
   /** Provides the host language (Scala) instance. */
   val inst: tpe.HostType
+
+  override def hashCode(): Int = inst.hashCode()
+  override def equals(obj: Any): Boolean = obj.isInstanceOf[InstanceRep.OfHostType[tpe.HostType]] && inst == obj.asInstanceOf[InstanceRep].inst
 }
 
 /** Provides methods for wrapping host language (Scala) instances into domain representable entities. */

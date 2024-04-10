@@ -26,10 +26,7 @@ object M9 extends Evolution {
   def IntInst(i: scala.Int): InstanceRep =
     InstanceRep(TypeRep.Int)(i)
 
-  // couldn't flatten, since the generated file typically exceeds byte-code limit of comp units
-  // can work out solution within Java test generator
-  override def allTests: Map[GenericModel, Seq[TestCase]] = M8.allTests +
-    (getModel -> tests)
+  override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(M8)
 
   def tests:Seq[TestCase] = Seq(
     EqualsTestCase(getModel.baseDataType, m9_0, Height, IntInst(0)),

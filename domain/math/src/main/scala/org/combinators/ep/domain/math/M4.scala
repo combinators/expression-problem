@@ -43,8 +43,7 @@ object M4 extends Evolution {
   val m4_s_1 = DivdInst(LitInst(-5.0), LitInst(-5.0))
   val m4_s_d0 = DivdInst(LitInst(0.0), LitInst(-5.0))
 
-  override def allTests: Map[GenericModel, Seq[TestCase]] = M3.allTests +
-    (getModel -> (tests ++ M4_simplify_tests ++ M3.allTests(M3.getModel)))
+  override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(M3)
 
   /**
     * Test cases for Simplify are oddly complicated. The Simplify operation returns a new Exp object, but
@@ -62,7 +61,7 @@ object M4 extends Evolution {
 
     EqualsTestCase(getModel.baseDataType, m4_m1, PrettyP, StringInst("((5.0/2.0)*4.0)")),
     EqualsTestCase(getModel.baseDataType, m4_m1, Eval, M0.DoubleInst(10.0)),
-  )  //
+  )  ++  M4_simplify_tests//
 
   def M4_simplify_tests:Seq[TestCase] = Seq(
     EqualsCompositeTestCase(getModel.baseDataType, m4_together, StringInst("(5.0+7.0)"), (Simplify, Seq.empty), (PrettyP, Seq.empty)),

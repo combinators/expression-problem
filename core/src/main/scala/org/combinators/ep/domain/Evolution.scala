@@ -14,10 +14,14 @@ trait Evolution {
   /** By default, just gives new tests. */
   def allTests: Map[GenericModel, Seq[TestCase]] = Map(getModel -> tests)
 
-  /** Common use case. Include all past tests. */
-  def allPastTests(pastEvolution:Evolution): Map[GenericModel, Seq[TestCase]] = {
-    // distinct ONLY WORKS if test cases are created just once within respective GenericModel, and not anew
-    pastEvolution.allTests +
-      (getModel -> (tests ++ pastEvolution.allTests.values.flatten).distinct)
+  /** Common use case: Tests of this evolution are the tests of the immediate predecessors *and* this.tests, while past tests get combined per model  */
+  def allPastTests(pastEvolutions:Evolution*): Map[GenericModel, Seq[TestCase]] = {
+    val allPriorTests = pastEvolutions.map(_.allTests)
+    val mergedPriorTests = allPriorTests.foldLeft[Map[GenericModel, Seq[TestCase]]](Map.empty) { case (s, t) =>
+      s ++ t.map { case (k, v) => k -> ((v ++ s.getOrElse(k, Seq.empty)).distinct) }
+    }
+
+    mergedPriorTests +
+      (getModel -> (tests ++ pastEvolutions.flatMap(e => mergedPriorTests.getOrElse(e.getModel, Seq.empty)).distinct))
   }
 }

@@ -114,9 +114,13 @@ sealed class CodeGenerator(domainName: String) { cc =>
 
     val (generatedProject, _) = Command.runGenerator(generator, projectWithLookups)
     val withPrefix = factory.convert(generatedProject).prefixRootPackage(Seq(nameProvider.mangle(domainName)), prefixExcludedTypes)
+
     withPrefix.compilationUnits.map(cu => FileWithPath(factory.convert(cu).toScala, {
       val nameAsStrings = cu.name.map(name => factory.convert(name).toScala)
       val nameWithScalaExtension = nameAsStrings.init :+ (nameAsStrings.last + ".scala")
+
+      val mainDir = Paths.get("src", "main", "scala")
+      val testDir = Paths.get("src", "test", "scala")
 
       nameWithScalaExtension.foldLeft(Paths.get("src", "main", "scala"))({ case (path, name) =>
         Paths.get(path.toString, name)

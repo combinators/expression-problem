@@ -65,7 +65,7 @@ package object oo {
         constructorTypeLookupMap = project.constructorTypeLookupMap,
         methodTypeLookupMap = project.methodTypeLookupMap
       )
-      copyAsCompilationUnitWithClasses(
+      withLookups.copyAsCompilationUnitWithClasses(
         tests = withLookups.tests.map(_.initializeInCompilationUnit(withLookups))
       )
     }

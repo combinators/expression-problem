@@ -746,7 +746,7 @@ package object scala {
       copyAsClassBasedTestSuite(underlyingClass = underlyingClass.prefixRootPackage(rootPackageName, excludedTypeNames))
     }
 
-    def toScala: String = inFunSuiteStyle.toString
+    def toScala: String = inFunSuiteStyle.toScala
   }
 
   trait BlockExpression[FT <: FinalTypes] extends Expression[FT] with Factory[FT] {

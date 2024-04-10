@@ -205,10 +205,10 @@ class Main(choice:String, select:String) {
         () => generator.paradigm.runGenerator {
           for {
             _ <- approach.implement(evolution.getModel, eip)
-            _ <- approach.implement(
-              tests,
-              TestImplementationProvider.defaultAssertionBasedTests(approach.paradigm)(generator.assertionsInMethod, generator.equality, generator.booleans, generator.strings)
-            )
+//            _ <- approach.implement(
+//              tests,
+//              TestImplementationProvider.defaultAssertionBasedTests(approach.paradigm)(generator.assertionsInMethod, generator.equality, generator.booleans, generator.strings)
+//            )
           } yield ()
         }
       addToTransaction(transaction, evolution.getModel.name, impl)
@@ -236,7 +236,7 @@ class Main(choice:String, select:String) {
         println("[OK]")
       }
       print("Persisting Files...")
-      files().foreach(file => persistable.persistOverwriting(targetDirectory, file))
+      computed.foreach(file => persistable.persistOverwriting(targetDirectory, file))
       println("[OK]")
     })
   }
@@ -270,9 +270,9 @@ object DirectToDiskMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
 
-    val approach = if (args.isEmpty) "coco" else args.head
+    val approach = if (args.isEmpty) "oo" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "O1" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "M0" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 
@@ -294,12 +294,197 @@ object GenerateAll extends IOApp {
     val evolutions = Seq("M0","M1","M2","M3","M4","M5","M6","M7","M7I2","M8","M9","I1","A1","A1M3","A1M3I2","A3","I2",
       "O1","O2","OA","O1OA","OD1","OD2","OD3","OO1","OO2","OO3")
 
-    approaches.filter(px => px == "coco").foreach(approach => {
+    approaches.foreach(approach => {
       println("Generating " + approach + "...")
       evolutions.foreach(selection => {
         println("   " + selection)
 
         val targetDirectory = Paths.get("target", "ep-all", approach, selection)
+        val program :IO[Unit] = {
+          for {
+            _ <- IO { print("Initializing Generator...") }
+            main <- IO {  new Main(approach, selection) }
+
+            _ <- IO { println("[OK]") }
+            _ <- main.runDirectToDisc(targetDirectory)
+          } yield ()
+        }
+
+        // execute above as a stand-alone program
+        program.unsafeRunSync()
+
+        // TBD:  Would be nice to launch 'sbt' in each of these generated directories
+      })
+    })
+
+    for {
+      _ <- IO { print("DONE") }
+    } yield ExitCode.Success
+
+  }
+}
+
+object GenerateAllProducer extends IOApp {
+
+  def run(args: List[String]): IO[ExitCode] = {
+
+    val approaches = Seq("oo","visitor","visitorSideEffect","extensibleVisitor","interpreter","coco","trivially","algebra")
+    val evolutions = Seq("M0","M1","M2","M3", "W1", "M3W1", "Q1", "C2", "V1")
+
+    approaches.foreach(approach => {
+      println("Generating " + approach + "...")
+      evolutions.foreach(selection => {
+        println("   " + selection)
+
+        val targetDirectory = Paths.get("target", "ep-all-producer", approach, selection)
+        val program :IO[Unit] = {
+          for {
+            _ <- IO { print("Initializing Generator...") }
+            main <- IO {  new Main(approach, selection) }
+
+            _ <- IO { println("[OK]") }
+            _ <- main.runDirectToDisc(targetDirectory)
+          } yield ()
+        }
+
+        // execute above as a stand-alone program
+        program.unsafeRunSync()
+
+        // TBD:  Would be nice to launch 'sbt' in each of these generated directories
+      })
+    })
+
+    for {
+      _ <- IO { print("DONE") }
+    } yield ExitCode.Success
+
+  }
+}
+
+object GenerateAllThirdAlternate extends IOApp {
+
+  def run(args: List[String]): IO[ExitCode] = {
+
+    val approaches = Seq("oo","visitor","visitorSideEffect","extensibleVisitor","interpreter","coco","trivially","algebra")
+    val evolutions = Seq("M0", "X1", "X2", "X3", "X2X3", "X4")
+
+    approaches.foreach(approach => {
+      println("Generating " + approach + "...")
+      evolutions.foreach(selection => {
+        println("   " + selection)
+
+        val targetDirectory = Paths.get("target", "ep-all-third-alternate", approach, selection)
+        val program :IO[Unit] = {
+          for {
+            _ <- IO { print("Initializing Generator...") }
+            main <- IO {  new Main(approach, selection) }
+
+            _ <- IO { println("[OK]") }
+            _ <- main.runDirectToDisc(targetDirectory)
+          } yield ()
+        }
+
+        // execute above as a stand-alone program
+        program.unsafeRunSync()
+
+        // TBD:  Would be nice to launch 'sbt' in each of these generated directories
+      })
+    })
+
+    for {
+      _ <- IO { print("DONE") }
+    } yield ExitCode.Success
+
+  }
+}
+
+object GenerateAllD1D2 extends IOApp {
+
+  def run(args: List[String]): IO[ExitCode] = {
+
+    val approaches = Seq("oo","visitor","visitorSideEffect","extensibleVisitor","interpreter","coco","trivially","algebra")
+    val evolutions = Seq("M0", "M1", "D1", "D2", "D1D2", "D3")
+
+    approaches.foreach(approach => {
+      println("Generating " + approach + "...")
+      evolutions.foreach(selection => {
+        println("   " + selection)
+
+        val targetDirectory = Paths.get("target", "ep-all-d1d2", approach, selection)
+        val program :IO[Unit] = {
+          for {
+            _ <- IO { print("Initializing Generator...") }
+            main <- IO {  new Main(approach, selection) }
+
+            _ <- IO { println("[OK]") }
+            _ <- main.runDirectToDisc(targetDirectory)
+          } yield ()
+        }
+
+        // execute above as a stand-alone program
+        program.unsafeRunSync()
+
+        // TBD:  Would be nice to launch 'sbt' in each of these generated directories
+      })
+    })
+
+    for {
+      _ <- IO { print("DONE") }
+    } yield ExitCode.Success
+
+  }
+}
+
+object GenerateAllJournal extends IOApp {
+
+  def run(args: List[String]): IO[ExitCode] = {
+
+    val approaches = Seq("oo","visitor","visitorSideEffect","extensibleVisitor","interpreter","coco","trivially","algebra")
+    val evolutions = Seq("M0", "M1", "M2", "M3", "I1", "N1", "M3I1", "I2M3I1N1")
+
+    approaches.foreach(approach => {
+      println("Generating " + approach + "...")
+      evolutions.foreach(selection => {
+        println("   " + selection)
+
+        val targetDirectory = Paths.get("target", "ep-all-journal", approach, selection)
+        val program :IO[Unit] = {
+          for {
+            _ <- IO { print("Initializing Generator...") }
+            main <- IO {  new Main(approach, selection) }
+
+            _ <- IO { println("[OK]") }
+            _ <- main.runDirectToDisc(targetDirectory)
+          } yield ()
+        }
+
+        // execute above as a stand-alone program
+        program.unsafeRunSync()
+
+        // TBD:  Would be nice to launch 'sbt' in each of these generated directories
+      })
+    })
+
+    for {
+      _ <- IO { print("DONE") }
+    } yield ExitCode.Success
+
+  }
+}
+
+object GenerateAllJ extends IOApp {
+
+  def run(args: List[String]): IO[ExitCode] = {
+
+    val approaches = Seq("oo","visitor","visitorSideEffect","extensibleVisitor","interpreter","coco","trivially","algebra")
+    val evolutions = Seq("M0","J1","J2","J3","K1","K2","J4","J5","J6","K2J6","J7","J8")
+
+    approaches.foreach(approach => {
+      println("Generating " + approach + "...")
+      evolutions.foreach(selection => {
+        println("   " + selection)
+
+        val targetDirectory = Paths.get("target", "ep-all-j", approach, selection)
         val program :IO[Unit] = {
           for {
             _ <- IO { print("Initializing Generator...") }

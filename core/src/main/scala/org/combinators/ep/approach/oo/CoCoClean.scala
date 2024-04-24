@@ -6,7 +6,7 @@ import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.{AbstractSyntax, ApproachImplementationProvider, Command, EvolutionImplementationProvider, NameProvider, TestImplementationProvider, Understands, communication}
-import org.combinators.ep.generator.paradigm.{AddImport, AnyParadigm, Apply, FindClass, Generics, ObjectOriented, ParametricPolymorphism, ResolveImport}
+import org.combinators.ep.generator.paradigm.{AddImport, AnyParadigm, Apply, FindClass, Generics, ObjectOriented, ParametricPolymorphism, ResolveImport, AddTypeLookup}
 
 import scala.tools.nsc.interpreter.NamedParamClass
 
@@ -551,13 +551,20 @@ trait CoCoClean extends ApproachImplementationProvider {
     } yield ()
   }
 
-  def finalizedBaseInterfaceType(domain: GenericModel): Generator[ooParadigm.ClassContext, paradigm.syntax.Type] = {
-    import ooParadigm.classCapabilities._
+  def finalizedBaseInterfaceType[Context](domain: GenericModel)(implicit
+    canFindClass: Understands[Context, FindClass[paradigm.syntax.Name, paradigm.syntax.Type]],
+    canResolveImport: Understands[Context, ResolveImport[paradigm.syntax.Import, paradigm.syntax.Type]],
+    canAddImport: Understands[Context, AddImport[paradigm.syntax.Import]]
+  ): Generator[Context, paradigm.syntax.Type] = {
     val _latestModelDefiningNewTypeInterface = latestModelDefiningNewTypeInterface(domain)
     for {
       finalizedBaseInterfaceType <-
-        findClass(names.mangle(names.instanceNameOf(_latestModelDefiningNewTypeInterface)), ComponentNames.finalizedPackage, names.mangle(names.conceptNameOf(domain.baseDataType)))
-      _ <- resolveAndAddImport(finalizedBaseInterfaceType)
+        FindClass[paradigm.syntax.Name, paradigm.syntax.Type](Seq(
+          names.mangle(names.instanceNameOf(_latestModelDefiningNewTypeInterface)),
+          ComponentNames.finalizedPackage,
+          names.mangle(names.conceptNameOf(domain.baseDataType)))
+        ).interpret(canFindClass)
+      _ <- resolveAndAddImport(finalizedBaseInterfaceType)(canResolveImport, canAddImport)
     } yield finalizedBaseInterfaceType
   }
 
@@ -801,10 +808,45 @@ trait CoCoClean extends ApproachImplementationProvider {
     } yield ()
   }
 
+  def registerFinalizedTestTypes[Context](model: GenericModel)(implicit
+    canAddTypeLookupForMethods: Understands[Context, AddTypeLookup[paradigm.MethodBodyContext, paradigm.syntax.Type]],
+    canAddTypeLookupForClasses: Understands[Context, AddTypeLookup[ooParadigm.ClassContext, paradigm.syntax.Type]],
+    canAddTypeLookupForConstructors: Understands[Context, AddTypeLookup[ooParadigm.ConstructorContext, paradigm.syntax.Type]],
+  ): Generator[Context, Unit] = {   
+    import ooParadigm.classCapabilities._
+    import genericsParadigm.classCapabilities._
+    import genericsParadigm.constructorCapabilities._
+    import polymorphics.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities._
+    import ooParadigm.constructorCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+    val dtpeRep = TypeRep.DataType(model.baseDataType)
+
+    def baseInterfaceType[Context](implicit
+      canFindClass: Understands[Context, FindClass[paradigm.syntax.Name, paradigm.syntax.Type]],
+      canResolveImport: Understands[Context, ResolveImport[paradigm.syntax.Import, paradigm.syntax.Type]],
+      canAddImport: Understands[Context, AddImport[paradigm.syntax.Import]],
+      canApplyType: Understands[Context, Apply[paradigm.syntax.Type, paradigm.syntax.Type, paradigm.syntax.Type]]
+    ): Generator[Context, paradigm.syntax.Type] = {
+      for {
+        finalizedBaseInterfaceType <- finalizedBaseInterfaceType(model)(canFindClass, canResolveImport, canAddImport)
+        appliedBaseInterface <- leastSpecialBaseInterfaceType(model, finalizedBaseInterfaceType)(canFindClass, canResolveImport, canAddImport, canApplyType)
+        _ <- resolveAndAddImport(appliedBaseInterface)(canResolveImport,canAddImport)
+      } yield appliedBaseInterface
+    }
+
+    for {
+      _ <- AddTypeLookup[paradigm.MethodBodyContext, paradigm.syntax.Type](dtpeRep, baseInterfaceType[paradigm.MethodBodyContext]).interpret(canAddTypeLookupForMethods)
+      _ <- AddTypeLookup[ooParadigm.ClassContext, paradigm.syntax.Type](dtpeRep, baseInterfaceType[ooParadigm.ClassContext]).interpret(canAddTypeLookupForClasses)
+      _ <- AddTypeLookup[ooParadigm.ConstructorContext, paradigm.syntax.Type](dtpeRep, baseInterfaceType[ooParadigm.ConstructorContext]).interpret(canAddTypeLookupForConstructors)
+    } yield ()
+  }
+
   override def implement(tests: Map[GenericModel, Seq[TestCase]], testImplementationProvider: TestImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
     import paradigm.projectCapabilities._
     import paradigm.compilationUnitCapabilities._
     import paradigm.testCapabilities._
+    import ooParadigm.projectCapabilities._
 
     for {
       _ <- forEach(tests.toList) { case (model, tests) =>
@@ -817,6 +859,7 @@ trait CoCoClean extends ApproachImplementationProvider {
 
         import ooParadigm.testCapabilities._
         val compUnit = for {
+
 
           // add test case first
           _ <- addTestCase(testCode, testName)
@@ -834,6 +877,7 @@ trait CoCoClean extends ApproachImplementationProvider {
         } yield ()
 
         for {
+          _ <- registerFinalizedTestTypes(model)
           _ <- addCompilationUnit(
             testSuite,
             testCaseName(model)

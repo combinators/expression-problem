@@ -329,7 +329,7 @@ object DirectToDiskMain extends IOApp {
     // Interpreter -- O1OA fails because cannot register types for testing... But also O1 fails...
     // Trivially M5 encountered error that was fixed, but now Q1/C2/V1 have issues. (producer)
     // review VisitorSideEffect -- looks like (mainThirdAlternate) for X1 it generates extra code that can be deleted and actually doesn't compile....
-    val approach = if (args.isEmpty) "oo" else args.head
+    val approach = if (args.isEmpty) "coco" else args.head
     if (approach == "exit") { sys.exit(0) }
     val selection = if (args.isEmpty || args.tail.isEmpty) "M4" else args.tail.head
     println("Generating " + approach + " for " + selection)

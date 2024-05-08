@@ -20,6 +20,8 @@ object M2_ABS extends Evolution {
   def AbsInst(inner:DataTypeInstance): DataTypeInstance =
     DataTypeInstance(Abs, Seq(InstanceRep(inner)))
 
+  override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(M2)
+
   def tests: Seq[TestCase] = Seq(
 
     EqualsTestCase(getModel.baseDataType, m2_abs_a1, M0.Eval, m2_abs_r1),

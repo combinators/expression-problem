@@ -28,6 +28,8 @@ object J1 extends Evolution {
 
   val subi: DataTypeInstance = SubInst(LitInst(1.0), LitInst(2.0))
 
+  override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(M0)
+
   def tests: Seq[TestCase] = Seq(
     EqualsTestCase(getModel.baseDataType, subi, M0.Eval, M0.DoubleInst(-1.0)),
 

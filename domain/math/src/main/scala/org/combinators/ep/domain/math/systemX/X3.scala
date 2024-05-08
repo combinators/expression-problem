@@ -20,6 +20,8 @@ object X3 extends Evolution {
   // Tests
   val m2_s1 = SubInst(LitInst(1.0), LitInst(2.0))
 
+  override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(X1)
+
   def tests: Seq[TestCase] = Seq(
 
   )

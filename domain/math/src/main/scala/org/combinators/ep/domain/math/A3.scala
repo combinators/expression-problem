@@ -31,6 +31,9 @@ object A3 extends Evolution {
   // Tests
   val m3_m2_d1 = DivdInst(LitInst(5.0),  LitInst(2.0))
 
+  override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(A1M3I2)
+
+
   def tests: Seq[TestCase] = Seq(
 
     EqualsTestCase(getModel.baseDataType, m3_m2_d1, PrettyP, StringInst("(2.0/5.0)")),

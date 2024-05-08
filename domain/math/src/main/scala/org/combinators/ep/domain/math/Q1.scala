@@ -20,6 +20,8 @@ object Q1 extends Evolution {
   val q1_d1 = SqrtInst(LitInst(5.0))
   val q1_d2 = SqrtInst(LitInst(16.0))
 
+  override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(M3W1)
+
   def tests: Seq[TestCase] = Seq(
     EqualsTestCase(getModel.baseDataType, q1_d1, PrettyP, StringInst("(sqrt 5.0)")),
     EqualsTestCase(getModel.baseDataType, q1_d2, Eval, M0.DoubleInst(4.0))

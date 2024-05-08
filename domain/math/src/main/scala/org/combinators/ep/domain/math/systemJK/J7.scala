@@ -31,6 +31,8 @@ object J7 extends Evolution {
   val lhs = K2J6.lhs ++ Seq(invi_same_lhs) // changes on left hand side
   val rhs = K2J6.rhs ++ Seq(invi_same_rhs) // changes on right hand side
 
+  override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(K2J6)
+
   def tests: Seq[TestCase] = Seq(
     EqualsTestCase(getModel.baseDataType, invi, PrettyP, StringInst("(5.0/3.0)")),
     EqualsTestCase(getModel.baseDataType, invi, Eval, M0.DoubleInst(5.0 / 3.0)),

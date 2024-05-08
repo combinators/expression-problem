@@ -2,13 +2,18 @@ package org.combinators.ep.language.scala.codegen    /*DD:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
-import org.combinators.ep.approach.oo.Traditional.WithParadigm
 import org.combinators.ep.approach.oo._
-import org.combinators.ep.domain.{Evolution, GenericModel}
-import org.combinators.ep.domain.abstractions.TestCase
+import org.combinators.ep.domain.Evolution
 import org.combinators.ep.domain.math._
+import org.combinators.ep.domain.math.eips.systemX
+import org.combinators.ep.domain.math.systemD.{D1, D1D2, D2, D3}
 import org.combinators.ep.domain.math.systemI.{I1, I2}
+import org.combinators.ep.domain.math.systemJ.{J1, J2, J3, J4, J5, J6}
+import org.combinators.ep.domain.math.systemJK.{J7, J8, K2J6}
+import org.combinators.ep.domain.math.systemK.{K1, K2}
 import org.combinators.ep.domain.math.systemO.{O1, O1OA, O2, OA, OD1, OD2, OD3, OO1, OO2, OO3}
+import org.combinators.ep.domain.math.systemX.{X1, X2, X2X3, X3, X4}
+import org.combinators.ep.generator.ApproachImplementationProvider.WithParadigm
 import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider, FileWithPath, FileWithPathPersistable, TestImplementationProvider}
 import org.combinators.jgitserv.{BranchTransaction, GitService}
@@ -86,10 +91,42 @@ class Main(choice:String, select:String) {
     case "OO2" => Seq(M0, M1, M2, OO2)
     case "OO3" => Seq(M0, M1, M2, OO1, OO2, OO3)
 
+    case "J1" => Seq(M0, J1)
+    case "J2" => Seq(M0, J1, J2)
+    case "J3" => Seq(M0, J1, J2, J3)
+    case "K1" => Seq(M0, J1, J2, K1)
+    case "K2" => Seq(M0, J1, J2, K1, K2)
+    case "J4" => Seq(M0, J1, J2, J3, J4)
+    case "J5" => Seq(M0, J1, J2, J3, J4, J5)
+    case "J6" => Seq(M0, J1, J2, J3, J4, J5, J6)
+    case "K2J6" => Seq(M0, J1, J2, K1, K2, J3, J4, J5, J6, K2J6)
+    case "J7" => Seq(M0, J1, J2, K1, K2, J3, J4, J5, J6, K2J6, J7)
+    case "J8" => Seq(M0, J1, J2, K1, K2, J3, J4, J5, J6, K2J6, J7, J8)
+
+    case "W1" => Seq(M0, M1, W1)
+    case "M3W1" => Seq(M0, M1, M2, M3, W1, M3W1)
+    case "Q1" => Seq(M0, M1, M2, M3, W1, M3W1, Q1)
+    case "C2" => Seq(M0, M1, M2, M3, W1, M3W1, Q1, C2)
+    case "V1" => Seq(M0, M1, M2, M3, W1, M3W1, Q1, C2, V1)
+
+    case "X1" => Seq(M0, X1)
+    case "X2" => Seq(M0, X1, X2)
+    case "X3" => Seq(M0, X1, X3)
+    case "X2X3" => Seq(M0, X1, X2, X3, X2X3)
+    case "X4" => Seq(M0, X1, X2, X3, X2X3, X4)
+
+    case "N1" => Seq(M0, M1, M3, N1)
+    case "M2_ABS" => Seq(M0, M1, M2, M2_ABS)
+    case "M3I1" => Seq(M0, M1, M2, M3, I1, M3I1)
+    case "I2M3I1N1" => Seq(M0, M1, M2, M3, I1, M3I1, I2, N1, I2M3I1N1)
+
+    case "D1" => Seq(M0, M1, D1)
+    case "D2" => Seq(M0, M1, D2)
+    case "D1D2" => Seq(M0, M1, D1, D2, D1D2)
+    case "D3" => Seq(M0, M1, D1, D2, D1D2, D3)
+
     case _ => ???
   }
-
-
 
   val m0_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.M0(approach.paradigm)(generator.doubles,generator.strings)
@@ -116,10 +153,10 @@ class Main(choice:String, select:String) {
     eips.systemI.I2(approach.paradigm)(i1_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.imperative)
   val m7i2_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.M7I2.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(m7_eip,i2_eip)(
-    generator.imperative, generator.doubles, generator.booleans, generator.equality)
+      generator.imperative, generator.doubles, generator.booleans, generator.equality)
   val m8_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.M8.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(m7i2_eip)(
-    generator.imperative, generator.doubles, generator.booleans, generator.strings, generator.equality)
+      generator.imperative, generator.doubles, generator.booleans, generator.strings, generator.equality)
   val m9_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.M9(approach.paradigm)(m8_eip)(generator.doubles, generator.realDoubles, generator.imperative)
 
@@ -156,6 +193,90 @@ class Main(choice:String, select:String) {
   val oo3_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.systemO.OO3(approach.paradigm)(oo1_eip, oo2_eip)
 
+  val j1_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
+    eips.systemJ.J1(approach.paradigm)(m0_eip)(generator.doubles,generator.realDoubles,generator.strings,generator.imperative)
+  val j2_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
+    eips.systemJ.J2(approach.paradigm)(j1_eip)(generator.doubles,generator.booleans,generator.equality)
+  val j3_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
+    eips.systemJ.J3(approach.paradigm)(j2_eip)(generator.doubles,generator.booleans,generator.strings)
+  val k1_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
+    eips.systemK.K1(approach.paradigm)(j2_eip)(generator.doubles,generator.realDoubles,generator.booleans,generator.strings,generator.imperative)
+  val j4_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
+    eips.systemJ.J4(approach.paradigm)(j3_eip)(generator.ints,generator.treesInMethod)
+  val j5_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
+    eips.systemJ.J5(approach.paradigm)(j4_eip)(generator.equality,generator.booleans)
+  val j6_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
+    eips.systemJ.J6(approach.paradigm)(j5_eip)(generator.doubles,generator.realDoubles,generator.strings,generator.imperative)
+
+  val k2_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
+    eips.systemK.K2.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(k1_eip)(
+      generator.imperative, generator.doubles, generator.booleans, generator.strings, generator.listsInMethod, generator.equality)
+
+  val k2j6_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
+    eips.systemJK.K2J6.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(j6_eip,k2_eip)(
+      generator.imperative, generator.doubles, generator.booleans, generator.strings, generator.equality)
+
+  val j7_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
+    eips.systemJK.J7.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(k2j6_eip)(
+      generator.imperative, generator.doubles, generator.booleans, generator.strings, generator.equality)
+  val j8_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
+    eips.systemJK.J8(approach.paradigm)(j7_eip)(generator.doubles, generator.realDoubles, generator.imperative)
+
+  val w1_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
+    eips.W1(approach.paradigm)(m1_eip)(generator.doubles, generator.realDoubles, generator.strings)
+
+  val m3w1_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
+    eips.M3W1.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(m3_eip,w1_eip)(
+      generator.imperative, generator.doubles, generator.booleans, generator.equality, generator.strings
+    )
+  val q1_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
+    eips.Q1(approach.paradigm)(m3w1_eip)(generator.ints, generator.realDoubles, generator.treesInMethod, generator.strings)
+  val c2_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
+    eips.C2.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(q1_eip)(
+      generator.imperative, generator.doubles, generator.booleans, generator.strings, generator.listsInMethod, generator.equality)
+
+  val v1_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] = eips.V1.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(c2_eip)(
+    generator.imperative, generator.doubles, generator.booleans, generator.strings, generator.equality)
+
+  val x1_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
+    systemX.X1(approach.paradigm)(m0_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.imperative)
+  val x2_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
+    systemX.X2(approach.paradigm)(x1_eip)(generator.doubles, generator.strings)
+  val x3_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
+    systemX.X3(approach.paradigm)(x1_eip)(generator.doubles, generator.strings)
+
+  val x2x3_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
+    systemX.X2X3(approach.paradigm)(x2_eip, x3_eip)
+
+  val x4_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
+    systemX.X4(approach.paradigm)(x2x3_eip)(generator.doubles, generator.strings)
+
+  val m2_abs_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
+    eips.M2_ABS(approach.paradigm)(m2_eip)(generator.doubles, generator.imperative, generator.strings)
+
+  val m3i1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
+    eips.M3I1.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(m3_eip,i1_eip)(
+      generator.imperative, generator.booleans, generator.equality, generator.strings)
+
+  val n1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
+    eips.N1(approach.paradigm)(m3_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.imperative)
+
+  val i2m3i1n1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
+    eips.I2M3I1N1.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(i2_eip,m3i1_eip,n1_eip)(
+      generator.booleans, generator.equality, generator.strings)
+
+  val d1_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
+    eips.systemD.D1(approach.paradigm)(m1_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.imperative)
+  val d2_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
+    eips.systemD.D2(approach.paradigm)(m1_eip)(generator.doubles, generator.strings)
+
+  val d1d2_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
+    eips.systemD.D1D2.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(d1_eip,d2_eip)(
+      generator.imperative, generator.doubles, generator.booleans, generator.equality)
+
+  val d3_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
+    eips.systemD.D3(approach.paradigm)(d1d2_eip)(generator.doubles, generator.strings)
+
   val eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] = select match {
     case "M0" => m0_eip
     case "M1" => m1_eip
@@ -189,8 +310,43 @@ class Main(choice:String, select:String) {
     case "OO2" => oo2_eip
     case "OO3" => oo3_eip
 
+    case "J1" => j1_eip
+    case "J2" => j2_eip
+    case "J3" => j3_eip
+    case "K1" => k1_eip
+    case "K2" => k2_eip
+    case "J4" => j4_eip
+    case "J5" => j5_eip
+    case "J6" => j6_eip
+    case "K2J6" => k2j6_eip
+    case "J7" => j7_eip
+    case "J8" => j8_eip
+
+    case "W1" => w1_eip
+    case "M3W1" => m3w1_eip
+    case "Q1" => q1_eip
+    case "C2" => c2_eip
+    case "V1" => v1_eip
+
+    case "X1" => x1_eip
+    case "X2" => x2_eip
+    case "X3" => x3_eip
+    case "X2X3" => x2x3_eip
+    case "X4" => x4_eip
+
+    case "N1" => n1_eip
+    case "M2_ABS" => m2_abs_eip
+    case "M3I1" => m3i1_eip
+    case "I2M3I1N1" => i2m3i1n1_eip
+
+    case "D1" => d1_eip
+    case "D2" => d2_eip
+    case "D1D2" => d1d2_eip
+    case "D3" => d3_eip
+
     case _ => ???
   }
+
   def transaction[T](initialTransaction: T, addToTransaction: (T, String, () => Seq[FileWithPath]) => T): T = {
     evolutions.foldLeft(initialTransaction) { case (transaction, evolution) =>
       val impl =
@@ -262,9 +418,9 @@ object DirectToDiskMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
 
-    val approach = if (args.isEmpty) "coco" else args.head
+    val approach = if (args.isEmpty) "oo" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "M9" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "X4" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 
@@ -291,7 +447,7 @@ object GenerateAll extends IOApp {
       evolutions.foreach(selection => {
         println("   " + selection)
 
-        val targetDirectory = Paths.get("target", "ep-all", approach, selection)
+        val targetDirectory = Paths.get("target", "ep-scala", approach, selection)
         val program :IO[Unit] = {
           for {
             _ <- IO { print("Initializing Generator...") }
@@ -328,7 +484,7 @@ object GenerateAllProducer extends IOApp {
       evolutions.foreach(selection => {
         println("   " + selection)
 
-        val targetDirectory = Paths.get("target", "ep-all-producer", approach, selection)
+        val targetDirectory = Paths.get("target", "ep-scala-producer", approach, selection)
         val program :IO[Unit] = {
           for {
             _ <- IO { print("Initializing Generator...") }
@@ -365,7 +521,7 @@ object GenerateAllThirdAlternate extends IOApp {
       evolutions.foreach(selection => {
         println("   " + selection)
 
-        val targetDirectory = Paths.get("target", "ep-all-third-alternate", approach, selection)
+        val targetDirectory = Paths.get("target", "ep-scala-third-alternate", approach, selection)
         val program :IO[Unit] = {
           for {
             _ <- IO { print("Initializing Generator...") }
@@ -402,7 +558,7 @@ object GenerateAllD1D2 extends IOApp {
       evolutions.foreach(selection => {
         println("   " + selection)
 
-        val targetDirectory = Paths.get("target", "ep-all-d1d2", approach, selection)
+        val targetDirectory = Paths.get("target", "ep-scala-d1d2", approach, selection)
         val program :IO[Unit] = {
           for {
             _ <- IO { print("Initializing Generator...") }
@@ -432,14 +588,13 @@ object GenerateAllJournal extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
 
     val approaches = Seq("oo","visitor","visitorSideEffect","extensibleVisitor","interpreter","coco","trivially","algebra")
-    val evolutions = Seq("M0", "M1", "M2", "M3", "I1", "N1", "M3I1", "I2M3I1N1")
-
+    val evolutions = Seq("M0","M1","M2","I1","I2","N1","M2_ABS","M3","M3I1","I2M3I1N1")
     approaches.foreach(approach => {
       println("Generating " + approach + "...")
       evolutions.foreach(selection => {
         println("   " + selection)
 
-        val targetDirectory = Paths.get("target", "ep-all-journal", approach, selection)
+        val targetDirectory = Paths.get("target", "ep-scala-journal", approach, selection)
         val program :IO[Unit] = {
           for {
             _ <- IO { print("Initializing Generator...") }
@@ -476,7 +631,7 @@ object GenerateAllJ extends IOApp {
       evolutions.foreach(selection => {
         println("   " + selection)
 
-        val targetDirectory = Paths.get("target", "ep-all-j", approach, selection)
+        val targetDirectory = Paths.get("target", "ep-scala-j", approach, selection)
         val program :IO[Unit] = {
           for {
             _ <- IO { print("Initializing Generator...") }

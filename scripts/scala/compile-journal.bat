@@ -1,10 +1,10 @@
 @echo off
 cd ..\..
 
-@REM First run GenerateAllThirdAlternate in Main which creates subdirectories in "target\ep-scala-third-alternate"
+@REM First run GenerateAllJ in Main which creates subdirectories in "target\ep-scala-journal"
 
 @REM bring over the evolution specification for ease of use later
-copy scripts\systems\system-third-alternate.json target\ep-scala-third-alternate
+copy scripts\systems\system-journal.json target\ep-scala-journal
 set TAB=..
 
 for %%a in (oo extensibleVisitor interpreter coco algebra visitor visitorSideEffect trivially) do (
@@ -12,11 +12,11 @@ for %%a in (oo extensibleVisitor interpreter coco algebra visitor visitorSideEff
   echo %%a
 
   @REM for each approach x model, execute to generate into target\%DIR%
-  for %%e in (M0 X1 X2 X3 X2X3 X4) do (
+  for %%e in (M0 M1 M2 I1 I2 N1 M2_ABS M3 M3I1 I2M3I1N1) do (
      echo %TAB% %%e
-     call scripts\scala-compile.bat %%a %%e ep-scala-third-alternate
+     call scripts\scala-compile.bat %%a %%e ep-scala-journal
   )
 )
 
 @REM So this script can be used by others, return to start where launched
-cd target\ep-scala-third-alternate
+cd target\ep-scala-journal

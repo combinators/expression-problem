@@ -78,6 +78,8 @@ object J4 extends Evolution {
                            params: InstanceRep*
                          ) extends TestCase
 
+  override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(J3)
+
   def tests: Seq[TestCase] = Seq(
     SameTestCase(m5_s1, m5_s2, false),
     SameTestCase(m5_s1, m5_s3, true),

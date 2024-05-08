@@ -106,6 +106,8 @@ object J2 extends Evolution {
     tcs
   }
 
+  override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(J1)
+
   def tests: Seq[TestCase] = Seq(
     EqualsTestCase(getModel.baseDataType, multi, Eval, M0.DoubleInst(6.0)),
     MultByTestCase(MultInst(LitInst(3.0), LitInst(2.0)), InstanceRep(LitInst(5.0)), DoubleInst(30.0)),

@@ -22,8 +22,11 @@ object O1 extends Evolution {
   case object LitPrettyPO1 extends Tag
 
   /** Remove past test as no longer being correct, since it was "fixed" in this implementation. */
-  override def allTests: Map[GenericModel, Seq[TestCase]] = M2.allTests +
-    (getModel -> (tests ++ M2.allTests.values.flatten).filterNot(tc => tc.tags.contains(M2.LitPrettyPM2)))
+  override def allTests: Map[GenericModel, Seq[TestCase]] = {
+    val pastOnes = allPastTests(M2)
+    pastOnes.updated(O1.getModel, pastOnes(O1.getModel)
+      .filterNot(tc => tc.tags.contains(M2.LitPrettyPM2)))
+  }
 
   def tests: Seq[TestCase] = Seq(
 

@@ -42,22 +42,23 @@ object X2X3 {
 
         assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
-        def operate(atts: Seq[syntax.Expression]): Generator[paradigm.MethodBodyContext, syntax.Expression] =
+        def operate(attGenerators: Seq[Generator[paradigm.MethodBodyContext, syntax.Expression]]): Generator[paradigm.MethodBodyContext, syntax.Expression] =
           onRequest.request.op match {
 
             case _ => ???
           }
 
+        val attGenerators = onRequest.tpeCase.attributes.map { att =>
+          forApproach.dispatch(SendRequest(
+            onRequest.attributes(att),
+            math.M0.getModel.baseDataType,
+            onRequest.request
+          ))
+        }
+
         val result =
           for {
-            atts <- forEach(onRequest.tpeCase.attributes) { att =>
-              forApproach.dispatch(SendRequest(
-                onRequest.attributes(att),
-                math.M0.getModel.baseDataType,
-                onRequest.request
-              ))
-            }
-            res <- operate(atts)
+            res <- operate(attGenerators)
           } yield res
 
         result.map(Some(_))

@@ -1,5 +1,5 @@
 @echo off
-@REM ASSUMES GenerateAll has already been run, with output in ep-all
+@REM ASSUMES GenerateAll has already been run, with output in ep-scala-xxx
 
 @REM directory in target/ where generated code is placed...
 set DIR=%3

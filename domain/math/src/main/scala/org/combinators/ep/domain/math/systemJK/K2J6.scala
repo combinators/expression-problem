@@ -29,6 +29,8 @@ object K2J6 extends Evolution {
       Node(Lit.name.hashCode, Seq(Leaf(DoubleInst(3.0))))
     ))
 
+  override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(J6, K2)
+
   // testing
   def tests: Seq[TestCase] = Seq(
     EqualsTestCase(getModel.baseDataType, powi, PrettyP, StringInst("(3.0^5.0)")),

@@ -28,6 +28,8 @@ object N1 extends Evolution {
   val n1_6 = AddInst(LitInst(99.0), LitInst(2.0))
   val n1_7 = AddInst(n1_5, n1_6)
 
+  override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(M3)
+
   def tests:Seq[TestCase] = Seq(
 
     PowByTestCase(AddInst(LitInst(1.0), LitInst(12.0)),

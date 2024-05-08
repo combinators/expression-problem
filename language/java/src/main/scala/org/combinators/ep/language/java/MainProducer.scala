@@ -183,42 +183,6 @@ object GitMainProducer extends IOApp {
   }
 }
 
-object GenerateAllProducer extends IOApp {
-
-  def run(args: List[String]): IO[ExitCode] = {
-
-    val approaches = Seq("graphviz","oo","visitor","visitorSideEffect","extensibleVisitor","interpreter","coco","trivially","dispatch","algebra")
-    val evolutions = Seq("M0","M1","M2","M3","W1","M3W1","Q1","C2","V1")
-
-    approaches.foreach(approach => {
-      println("Generating " + approach + "...")
-      evolutions.foreach(selection => {
-        println("   " + selection)
-
-        val targetDirectory = Paths.get("target", "ep-all", approach, selection)
-        val program :IO[Unit] = {
-          for {
-            _ <- IO { print("Initializing Generator...") }
-            main <- IO {  new MainProducer(approach, selection) }
-
-            _ <- IO { println("[OK]") }
-            result <- main.runDirectToDisc(targetDirectory)
-          } yield result
-        }
-
-        // execute above as a stand-alone program
-        program.unsafeRunSync()
-
-        // TBD:  Would be nice to launch 'sbt' in each of these generated directories
-      })
-    })
-
-    for {
-      _ <- IO { print("DONE") }
-    } yield ExitCode.Success
-
-  }
-}
 
 object DirectToDiskMainProducer extends IOApp {
   val targetDirectory = Paths.get("target", "ep3")

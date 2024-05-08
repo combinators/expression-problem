@@ -26,6 +26,9 @@ object K1 extends Evolution {
   val lhs = J2.lhs ++ Seq(powi_same_lhs) // changes on left hand side
   val rhs = J2.rhs ++ Seq(powi_same_rhs) // changes on right hand side
 
+  override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(J2)
+
+
   def tests: Seq[TestCase] = Seq(
     EqualsTestCase(getModel.baseDataType, PowerInst(LitInst(2.0), LitInst(5.0)), Eval, DoubleInst(32.0)),
 

@@ -45,6 +45,8 @@ object J8 extends Evolution {
   def IntInst(i: scala.Int): InstanceRep =
     InstanceRep(TypeRep.Int)(i)
 
+  override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(J7)
+
   def tests: Seq[TestCase] = Seq(
     EqualsTestCase(getModel.baseDataType, m9_0, Height, IntInst(0)),
     EqualsTestCase(getModel.baseDataType, m9_1, Height, IntInst(1)),

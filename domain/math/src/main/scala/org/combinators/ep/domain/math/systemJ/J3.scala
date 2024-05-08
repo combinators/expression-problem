@@ -40,6 +40,8 @@ object J3 extends Evolution {
   val lhs = J2.lhs ++ Seq(negi_same_lhs, divdi_same_lhs) // changes on left hand side
   val rhs = J2.rhs ++ Seq(negi_same_rhs, divdi_same_rhs) // changes on right hand side
 
+  override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(J2)
+
   def tests: Seq[TestCase] = Seq(
     EqualsTestCase(getModel.baseDataType, negi, Eval, M0.DoubleInst(-3.0)),
     EqualsTestCase(getModel.baseDataType, divdi, Eval, M0.DoubleInst(2.0)),

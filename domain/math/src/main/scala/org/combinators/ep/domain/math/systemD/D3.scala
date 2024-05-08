@@ -16,6 +16,8 @@ object D3 extends Evolution {
   // Tests
   val m2_s1 = SubInst(LitInst(1.0), LitInst(2.0))
 
+  override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(D1D2)
+
   def tests: Seq[TestCase] = Seq(
     //EqualsTestCase(m2_s1, PrettyP, ExistsInstance(String)("(1.0-2.0)")),
     EqualsTestCase(getModel.baseDataType, m2_s1, PrettyP, StringInst("(1.0-2.0)")),

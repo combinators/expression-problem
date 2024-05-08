@@ -78,19 +78,6 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
     }
   }
 
-  // aims to find the appropriate domain that provides the Mxxx.algebra.OPERATION artifact
-  def findDomainToUse(model: GenericModel, domainSpecific:EvolutionImplementationProvider[this.type], op: Operation) : GenericModel = {
-    if (model.isBottom) { return model }
-
-    // I2M3I1N1 exposes a subtle case. when I2M3I1N1 looks for PrettyP and mistakenly chooses M3I1 even though that merge didn't
-    // have a PrettyP because I1 didn't have PrettyP while M3 did. Need to somehow capture this and I want to do cleanly. TODO: Need help
-    model.toSeq.find(p => {
-      val isMergePointSupportingTheCurrentOperation = p.former.size > 1 && p.supports(op)
-      val overridesTheImplementation = newDataTypeCasesWithNewOperations(domainSpecific, p).flatMap(_._2).toSeq.contains(op)
-      isMergePointSupportingTheCurrentOperation || overridesTheImplementation
-    }).get
-  }
-
   // find carrier to use. Note that M3 goes back to M2 (likely because that is when last operation was defined)
   // Case 1: If a new operation always add a new carrier interface; or
   // Case 2: If you merge together and there is a new operation from the merging
@@ -435,7 +422,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
           } yield result
         } else {
           val defined = domain.former.collectFirst { case dom if dom.supports(op) && dom.supports(tpe) =>
-            findDomainToUse(dom, domainSpecific, op)
+            latestDomainWithAlgebraOperation(dom, domainSpecific, op)
           }.get
           for {
 
@@ -477,7 +464,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
           } yield ()
         }
 
-        _ <- forEach(domain.former.collect { case dom if dom.supports(op) => findDomainToUse(dom, domainSpecific, op) }.distinct) {
+        _ <- forEach(domain.former.collect { case dom if dom.supports(op) => latestDomainWithAlgebraOperation(dom, domainSpecific, op) }.distinct) {
           dom => {
             for {
               _ <- if (!dom.equals(domain)) {  // only if not the same
@@ -537,7 +524,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
 
         // if in MERGE case, need to add oldNNN for each operation that was defined on a previous branch, we need
         // oldNNN to record that branch
-        _ <- forEach(domain.former.collect { case dom if dom.supports(op) => findDomainToUse(dom, domainSpecific, op) }.distinct) {
+        _ <- forEach(domain.former.collect { case dom if dom.supports(op) => latestDomainWithAlgebraOperation(dom, domainSpecific, op) }.distinct) {
             dom => {
               for {
                     // m3.algebra.PrettyPrint
@@ -878,7 +865,6 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
       .filter(d => d.beforeOrEqual(domain)) // filter to make sure we are before the current domain (we are not interested in later EIPs)
       .sorted(cmp)
       .reverse
-
 
     // Are there two non-comparable ancestors l, r that haven't been merged by a third m which is past both? Then we are
     // responsible for the merge!

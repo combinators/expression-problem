@@ -19,6 +19,8 @@ object D2 extends Evolution {
   // Tests
   val m3_s1 = MultInst(LitInst(2.0), LitInst(3.0))
 
+  override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(M1)
+
   def tests: Seq[TestCase] = Seq(
     EqualsTestCase(getModel.baseDataType, m3_s1, Eval, M0.DoubleInst(6.0)),
   )

@@ -33,6 +33,8 @@ object K2 extends Evolution {
   val m4_s_12 = MultInst(LitInst(1.0), LitInst(12.0))
   val m4_s_m0 = SubInst(LitInst(7.0), LitInst(7.0))
 
+  override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(K1)
+
   /**
    * Test cases for Simplify are oddly complicated. The Simplify operation returns a new Exp object, but
    * making test cases depends upon having the ability to PrettyP the result. We therefore want to check

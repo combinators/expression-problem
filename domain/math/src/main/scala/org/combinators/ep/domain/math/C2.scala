@@ -15,6 +15,9 @@ object C2 extends Evolution {
 
   lazy val Collect = Operation("collect", TypeRep.Sequence(TypeRep.Double))
 
+  override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(Q1)
+
+
   // Tests
   // (5/7) / (7-(2*3) --> just (5/7)
 

@@ -17,6 +17,8 @@ object OD1 extends Evolution {
 
   val od1: DataTypeInstance = MultInst(LitInst(2.0), LitInst(3.0))
 
+  override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(M2)
+
   def tests: Seq[TestCase] = Seq(
     EqualsTestCase(getModel.baseDataType, od1, PrettyP, StringInst("(2.0*3.0)")),
   )

@@ -19,6 +19,8 @@ object OA extends Evolution {
 
   val oa: DataTypeInstance = LitInst(1.0)
 
+  override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(M2)
+
   def tests: Seq[TestCase] = Seq(
     EqualsTestCase(getModel.baseDataType, oa, Eval, DoubleInst(1.0))
   )

@@ -19,6 +19,8 @@ object X2 extends Evolution {
   // Tests
   val x2_1 = TimesInst(LitInst(3.0), LitInst(2.0))
 
+  override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(X1)
+
   def tests: Seq[TestCase] = Seq(
     EqualsTestCase(getModel.baseDataType, x2_1, Eval, M0.DoubleInst(6.0)),
   )

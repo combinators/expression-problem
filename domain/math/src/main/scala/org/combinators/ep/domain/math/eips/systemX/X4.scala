@@ -47,15 +47,17 @@ object X4 {
 
         assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
-        def operate(atts: Seq[syntax.Expression]): Generator[paradigm.MethodBodyContext, syntax.Expression] =
+        def operate(attGenerators: Seq[Generator[paradigm.MethodBodyContext, syntax.Expression]]): Generator[paradigm.MethodBodyContext, syntax.Expression] =
           onRequest.request.op match {
             case math.M0.Eval =>
               onRequest.tpeCase match {
                 case systemX.X4.Neg =>
                   for {
+                    atts <- forEach(attGenerators)(g => g)
                     minusOne <- reify(TypeRep.Double, -1)
-                    res <- mult(minusOne, atts.head)
-                  } yield res
+                    result <- mult(minusOne, atts.head)
+                  } yield result
+
                 case _ => ???
               }
 
@@ -63,9 +65,11 @@ object X4 {
               onRequest.tpeCase match {
                 case systemX.X4.Neg =>
                   for {
+                    atts <- forEach(attGenerators)(g => g)
                     minus <- reify(TypeRep.String, "-")
-                    res <- stringAppend(minus, atts.head)
-                  } yield res
+                    result <- stringAppend(minus, atts.head)
+                  } yield result
+
                 case _ => ???
               }
 
@@ -88,17 +92,19 @@ object X4 {
             case _ => ???
           }
 
+        val attGenerators = onRequest.tpeCase.attributes.map { att =>
+          forApproach.dispatch(SendRequest(
+            onRequest.attributes(att),
+            math.M0.getModel.baseDataType,
+            onRequest.request
+          ))
+        }
+
         val result =
           for {
-            atts <- forEach(onRequest.tpeCase.attributes) { att =>
-              forApproach.dispatch(SendRequest(
-                onRequest.attributes(att),
-                math.M0.getModel.baseDataType,
-                onRequest.request
-              ))
-            }
-            res <- operate(atts)
+            res <- operate(attGenerators)
           } yield res
+
         result.map(Some(_))
       }
     }

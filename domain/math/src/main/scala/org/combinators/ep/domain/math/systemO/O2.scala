@@ -15,10 +15,13 @@ object O2 extends Evolution {
   val o2: DataTypeInstance = LitInst(1.0)
 
   /** Remove past test as no longer being correct, since it was "fixed" in this implementation to be triplicated. */
-  override def allTests: Map[GenericModel, Seq[TestCase]] = O1.allTests +
-    (getModel -> (tests ++ O1.allTests.values.flatten)
-      .filterNot(tc => tc.tags.contains(M2.LitPrettyPM2))          // original
-      .filterNot(tc => tc.tags.contains(O1.LitPrettyPO1)))         // first patch that "duplicated"
+  override def allTests: Map[GenericModel, Seq[TestCase]] = {
+    val pastOnes = allPastTests(O1)
+    pastOnes.updated(O2.getModel, pastOnes(O2.getModel)
+        .filterNot(tc => tc.tags.contains(M2.LitPrettyPM2))          // original
+        .filterNot(tc => tc.tags.contains(O1.LitPrettyPO1))
+      )
+  }         // first patch that "duplicated"
 
   def tests: Seq[TestCase] = Seq(
 

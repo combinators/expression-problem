@@ -46,6 +46,8 @@ object J5 extends Evolution {
     tcs
   }
 
+  override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(J4)
+
   def tests: Seq[TestCase] = Seq(
     PerformanceTestCase(
       11,

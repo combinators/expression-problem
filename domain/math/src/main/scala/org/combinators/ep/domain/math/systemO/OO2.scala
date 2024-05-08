@@ -16,6 +16,9 @@ object OO2 extends Evolution {
 
   // Tests
   val oo2_s1: DataTypeInstance = SubInst(LitInst(1.0), LitInst(2.0))
+
+  override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(M2)
+
   def tests: Seq[TestCase] = Seq(
     EqualsTestCase(getModel.baseDataType, oo2_s1, InsertM, StringInst("(M-M)")),
 

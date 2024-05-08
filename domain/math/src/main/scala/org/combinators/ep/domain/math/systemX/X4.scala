@@ -17,6 +17,8 @@ object X4 extends Evolution {
   // Tests
   val x4_1 = NegInst(LitInst(5.0))
 
+  override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(X2X3)
+
   def tests: Seq[TestCase] = Seq(
     EqualsTestCase(getModel.baseDataType, x4_1, Eval, M0.DoubleInst(-5.0)),
   )

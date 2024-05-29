@@ -1,10 +1,11 @@
 @echo off
 cd ..\..
 
-@REM First run GenerateAllThirdAlternate in Main which creates subdirectories in "target\ep-java-third-alternate"
+@REM First run GenerateAllThirdAlternate
+@REM in Main which creates subdirectories in "target\ep-java-third-alternate"
 
 @REM bring over the evolution specification for ease of use later
-copy scripts\systems\system-third-alternate.json target\java-third-alternate
+copy scripts\systems\system-third-alternate.json target\ep-java-third-alternate
 set TAB=..
 
 for %%a in (oo extensibleVisitor interpreter coco algebra visitor visitorSideEffect dispatch trivially) do (
@@ -17,7 +18,6 @@ for %%a in (oo extensibleVisitor interpreter coco algebra visitor visitorSideEff
      call scripts\java-compile.bat %%a %%e ep-java-third-alternate
   )
 )
-
 
 @REM So this script can be used by others, return to start where launched
 cd target\ep-java-third-alternate

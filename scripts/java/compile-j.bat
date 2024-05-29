@@ -1,10 +1,11 @@
 @echo off
 cd ..\..
 
-@REM First run GenerateAllJ in Main which creates subdirectories in "target\ep-java-j"
+@REM First run GenerateAllJ
+@REM in Main which creates subdirectories in "target\ep-java-j"
 
 @REM bring over the evolution specification for ease of use later
-copy scripts\systems\system-j.json target\analysis
+copy scripts\systems\system-j.json target\ep-java-j
 set TAB=..
 
 for %%a in (oo extensibleVisitor interpreter coco algebra visitor visitorSideEffect dispatch trivially) do (

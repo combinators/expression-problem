@@ -8,8 +8,8 @@ import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 
 import scala.meta.{Pkg, Term}
-//FIX: import org.combinators.ep.language.scala.ScalaNameProvider
-//FIX: import org.combinators.ep.language.scala.codegen.CodeGenerator
+import org.combinators.ep.language.scala.ScalaNameProvider
+import org.combinators.ep.language.scala.codegen.CodeGenerator
 
 import java.nio.file.{Path, Paths}
 
@@ -17,9 +17,10 @@ import java.nio.file.{Path, Paths}
  * Takes functional specification of Fibonacci with Lucas and generates Scala code.
  */
 class FibonacciScala {
-  //FIX:  val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(targetPackage = Pkg(Term.Name("fib"), List.empty)))
+  val generator = CodeGenerator("fib")
 
-  //FIX:  val fibonacciApproach = FibonacciProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(ScalaNameProvider, generator.functional, generator.functionalInMethod, generator.intsInMethod, generator.assertionsInMethod, generator.equalityInMethod)
+  // TODO: Need to add generator.functional
+  //val fibonacciApproach = FibonacciProvider[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.functional, generator.functionalInMethod, generator.ints, generator.assertionsInMethod, generator.equality)
 
   val persistable = FileWithPathPersistable[FileWithPath]
 

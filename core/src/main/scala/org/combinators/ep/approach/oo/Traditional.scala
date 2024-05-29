@@ -42,7 +42,7 @@ trait Traditional extends SharedOO {  // this had been sealed. not sure why
    * A constructor is generated, using [[makeConstructor]]. Fields are generates, using [[makeField]]. Each
    * operation is embedded as a method within each class, using [[makeImplementation]]
    */
-  def makeDerived(tpe: DataType, tpeCase: DataTypeCase, ops: Seq[Operation], domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
+  def makeDerived(tpe: DataType, tpeCase: DataTypeCase, ops: Seq[Operation], domain:GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
     val makeClass: Generator[ClassContext, Unit] = {
       import classCapabilities._
@@ -53,7 +53,7 @@ trait Traditional extends SharedOO {  // this had been sealed. not sure why
         _ <- forEach (tpeCase.attributes) { att => makeField(att) }
         _ <- addConstructor(makeConstructor(tpeCase))
         _ <- forEach (ops) { op =>
-            addMethod(names.mangle(names.instanceNameOf(op)), makeImplementation(tpe, tpeCase, op, domainSpecific))
+            addMethod(names.mangle(names.instanceNameOf(op)), makeImplementation(tpe, tpeCase, op, domain, domainSpecific))
           }
       } yield ()
     }
@@ -81,7 +81,7 @@ trait Traditional extends SharedOO {  // this had been sealed. not sure why
 
       _ <- makeBase(flatDomain.baseDataType, flatDomain.ops)
       _ <- forEach (flatDomain.typeCases.distinct) { tpeCase =>
-          makeDerived(flatDomain.baseDataType, tpeCase, flatDomain.ops, domainSpecific)
+          makeDerived(flatDomain.baseDataType, tpeCase, flatDomain.ops, gdomain, domainSpecific)
         }
     } yield ()
   }

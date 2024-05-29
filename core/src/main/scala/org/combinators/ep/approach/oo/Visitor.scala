@@ -5,7 +5,7 @@ import org.combinators.ep.domain.abstractions.{DataType, DataTypeCase, Operation
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.generator.{AbstractSyntax, ApproachImplementationProvider, Command, EvolutionImplementationProvider, NameProvider}
 import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.communication.{ReceivedRequest, Request, SendRequest}
+import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.control.Imperative.WithBase
@@ -38,9 +38,9 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
   /**
    * Override SharedOO by delegating to visitor-specific implementation
    */
-   override def makeImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation,
+   override def makeImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation, model:GenericModel,
                          domainSpecific: EvolutionImplementationProvider[self.type]): Generator[MethodBodyContext, Option[Expression]] =
-    visitorSpecifics.makeImplementation(tpe, tpeCase, op, domainSpecific)
+    visitorSpecifics.makeImplementation(tpe, tpeCase, op, model, domainSpecific)
 
   /**
    * Instantiates an instance of the domain object.
@@ -64,7 +64,7 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
     def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression]
 
     // different based on side effect vs. return
-    def makeImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation,
+    def makeImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation, model: GenericModel,
                            domainSpecific: EvolutionImplementationProvider[self.type]
                           ): Generator[MethodBodyContext, Option[Expression]]
 
@@ -116,7 +116,7 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
      * @param domainSpecific
      * @return
      */
-    def makeVisitImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation,
+    def makeVisitImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation, model:GenericModel,
                            domainSpecific: EvolutionImplementationProvider[self.type]
                           ): Generator[MethodBodyContext, Option[Expression]]
   }
@@ -142,11 +142,16 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
      * @param domainSpecific
      * @return
      */
-    def makeImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation,
+    def makeImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation, model: GenericModel,
                                   domainSpecific: EvolutionImplementationProvider[self.type]
                                  ): Generator[MethodBodyContext, Option[Expression]] = {
       import paradigm.methodBodyCapabilities._
       import ooParadigm.methodBodyCapabilities._
+
+      println(op, tpeCase)
+      val properModel = latestModelDefiningOperatorClass(model, tpeCase, op,  domainSpecific).get
+      println(properModel)
+
       for {
         returnType <- toTargetLanguageType(op.returnType)
         _ <- resolveAndAddImport(returnType)
@@ -174,7 +179,8 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
               tpeCase,
               visitedRef,
               tpeCase.attributes.zip(attAccessors).toMap,
-              Request(op, args.toMap)
+              Request(op, args.toMap),
+              Some(properModel)
             )
           )
       } yield result
@@ -294,7 +300,7 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
      *   }
      * }}}
      *
-     * @param domain     Model for which all types are to be incorporated
+     * @param domain     Model in the Extension Graph (no longer flattened)
      * @param op
      * @param domainSpecific
      * @return        The one invoking this method must be sure to add this class to project.
@@ -305,7 +311,7 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
       import ooParadigm.classCapabilities._
       import genericsParadigm.classCapabilities._
       for {
-        _ <- operationClass(visit, op, domain.typeCases, domain.baseDataType, domainSpecific)
+        _ <- operationClass(visit, op, domain, domain.flatten.typeCases.distinct, domain.baseDataType, domainSpecific)
 
         visitorInterface <- findClass(visitorClass)
         _ <- resolveAndAddImport(visitorInterface)
@@ -329,11 +335,15 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
       } yield ()
     }
 
-    def makeVisitImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation,
+    def makeVisitImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation, model:GenericModel,
                            domainSpecific: EvolutionImplementationProvider[self.type]
                           ): Generator[MethodBodyContext, Option[Expression]] = {
       import paradigm.methodBodyCapabilities._
       import ooParadigm.methodBodyCapabilities._
+
+      val properModel = latestModelDefiningOperatorClass(model, tpeCase, op,  domainSpecific).get
+      println(properModel)
+
       for {
         returnType <- toTargetLanguageType(op.returnType)
         _ <- resolveAndAddImport(returnType)
@@ -361,7 +371,8 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
               tpeCase,
               visitedRef,
               tpeCase.attributes.zip(attAccessors).toMap,
-              Request(op, args.toMap)
+              Request(op, args.toMap),
+              Some(properModel)
             )
           )
       } yield result
@@ -395,7 +406,7 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
      * @param domainSpecific
      * @return
      */
-    def makeImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation,
+    def makeImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation, model:GenericModel,
                                      domainSpecific: EvolutionImplementationProvider[self.type]
                                     ): Generator[MethodBodyContext, Option[Expression]] = {
       import paradigm.methodBodyCapabilities._
@@ -421,11 +432,13 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
     }
 
     // WHY do I have to copy. TODO: FIX ME
-    def straightMakeImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation,
+    def straightMakeImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation, model:GenericModel,
                            domainSpecific: EvolutionImplementationProvider[self.type]
                           ): Generator[MethodBodyContext, Option[Expression]] = {
       import paradigm.methodBodyCapabilities._
       import ooParadigm.methodBodyCapabilities._
+      val properModel = latestModelDefiningOperatorClass(model, tpeCase, op,  domainSpecific).get
+      println("WHY HERE", properModel)
       for {
         returnType <- toTargetLanguageType(op.returnType)
         _ <- resolveAndAddImport(returnType)
@@ -453,7 +466,8 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
               tpeCase,
               visitedRef,
               tpeCase.attributes.zip(attAccessors).toMap,
-              Request(op, args.toMap)
+              Request(op, args.toMap),
+              Some(properModel)
             )
           )
       } yield result
@@ -590,7 +604,7 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
      * }
      * }}}
      *
-     * @param domain     Model for which all types are to be incorporated
+     * @param domain     Model in the extension graph (no longer flattened)
      * @param op
      * @param domainSpecific
      * @return        The one invoking this method must be sure to add this class to project.
@@ -601,7 +615,7 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
 
       import ooParadigm.classCapabilities._
       for {
-        _ <- operationClass(visit, op, domain.typeCases, domain.baseDataType, domainSpecific)
+        _ <- operationClass(visit, op, domain, domain.flatten.typeCases.distinct, domain.baseDataType, domainSpecific)
 
         visitorInterface <- findClass(visitorClass)
         _ <- resolveAndAddImport(visitorInterface)
@@ -612,8 +626,8 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
         _ <- addField(ComponentNames.value, returnTpe)
         field <- getField(ComponentNames.value)
         _ <- addMethod(ComponentNames.getValue, returnValue(op.returnType, field))
-        _ <- forEach (domain.typeCases) { tpe =>
-          addMethod(ComponentNames.visitImpl, straightMakeImplementation(domain.baseDataType, tpe, op, domainSpecific))
+        _ <- forEach (domain.flatten.typeCases.distinct) { tpe =>
+          addMethod(ComponentNames.visitImpl, straightMakeImplementation(domain.baseDataType, tpe, op, domain, domainSpecific))
         }
         _ <- addImplemented(visitorInterface)
       } yield ()
@@ -677,7 +691,7 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
      * @param domainSpecific
      * @return
      */
-    def makeVisitImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation,
+    def makeVisitImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation, model:GenericModel,
                            domainSpecific: EvolutionImplementationProvider[self.type]
                           ): Generator[MethodBodyContext, Option[Expression]] = {
       import paradigm.methodBodyCapabilities._
@@ -788,6 +802,82 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
     addClassToProject(makeClass, names.mangle(names.conceptNameOf(tpeCase)))
   }
 
+  /** Map data type cases to operations that require a new implementation in the given domain model.
+   * Will only contain data type cases which have been newly introduced in at least one of the ancestor branches
+   * or require an update because of missing/overwritten operations or merging of multiple branches.
+   */
+  def newDataTypeCasesWithNewOperations(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Map[DataTypeCase, Set[Operation]] = {
+    val flatDomain = domain.flatten
+    val allDataTypeCases = flatDomain.typeCases.toSet
+    val allOperations = flatDomain.ops.toSet
+
+    allDataTypeCases.foldLeft(Map.empty[DataTypeCase, Set[Operation]]) { (resultMap, tpeCase) =>
+      // Remembers all operations that are already supported
+      val presentOperations = domain.operationsPresentEarlier(tpeCase)
+
+      val overwrittenOperations = allOperations.filter { operation =>
+        // Does our current domain contain an override implementation?
+        domainSpecific.evolutionSpecificDependencies(
+          PotentialRequest(domain.baseDataType, tpeCase, operation)
+        ).contains(domain)
+      }
+      val updatedOperations = (allOperations -- presentOperations) ++ overwrittenOperations
+      // If we have any updated operations, if we have a former one that doesn't support the current type case, or if we are in a merge
+      if (updatedOperations.nonEmpty || domain.former.exists(ancestor => !ancestor.supports(tpeCase)) || domain.former.size > 1) {
+        resultMap.updated(tpeCase, updatedOperations)
+      } else {
+        resultMap
+      }
+    }
+  }
+
+  def latestModelDefiningOperatorClass(domain: GenericModel, tpeCase:DataTypeCase, op:Operation, domainSpecific: EvolutionImplementationProvider[this.type]) : Option[GenericModel] = {
+    // Find all domains with an EIP that implements op for any type case
+    val domainsImplementingOp = domainSpecific.evolutionSpecificDependencies(PotentialRequest(domain.baseDataType, tpeCase, op)).keySet
+
+    def cmp(l: GenericModel, r: GenericModel) = {
+      if (l.before(r)) -1 else if (r.before(l)) 1 else 0
+    }
+
+    def futureMergePoint(l: GenericModel, r: GenericModel)(m: GenericModel): Boolean = {
+      l.beforeOrEqual(m) && r.beforeOrEqual(m)
+    }
+
+    val orderedImplementers = domainsImplementingOp.toSeq
+      .filter(d => d.beforeOrEqual(domain)) // filter to make sure we are before the current domain (we are not interested in later EIPs)
+      .sorted(cmp)
+      .reverse
+
+    // Are there two non-comparable ancestors l, r that haven't been merged by a third m which is past both? Then we are
+    // responsible for the merge!
+    if (orderedImplementers.size > 1 && orderedImplementers.exists(l => orderedImplementers.exists(r =>
+      cmp(l, r) == 0 && !orderedImplementers.exists(futureMergePoint(l, r))))
+    ) {
+      return Some(domain)
+    }
+    Some(orderedImplementers.head)     // latest one
+  }
+
+  def xxxlatestModelDefiningOperatorClass(domain: GenericModel, tpeCase:DataTypeCase, op: Operation, domainSpecific: EvolutionImplementationProvider[this.type]): Option[GenericModel] = {
+
+    // cannot skip over intervening models that have EIP overridden for this dataTypeCase on any operation
+    // map [DataTypeCase, Set[Operation]]
+    val m = newDataTypeCasesWithNewOperations(domain, domainSpecific)
+
+    if (m.get(tpeCase).exists(sop => sop.contains(op))) {
+      // then we are in charge
+      Some(domain)
+    } else {
+      val latestModelsForBranches = domain.former.flatMap(gm => latestModelDefiningOperatorClass(gm, tpeCase, op, domainSpecific).toSeq).distinct
+      if (latestModelsForBranches.size == 1 && !latestModelsForBranches.head.isDomainBase) {
+        Some(latestModelsForBranches.head)
+      } else {
+        // If more than one ancestor doing this. No clear resolution
+        None
+      }
+    }
+  }
+
   /**
    * The Visitor approach is defined as follows
    *
@@ -814,8 +904,12 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
       }
 
       _ <- addClassToProject(visitorSpecifics.makeVisitorInterface(flatDomain.typeCases.distinct), visitorClass)
-      _ <- forEach (flatDomain.ops) { op =>
-        addClassToProject(visitorSpecifics.makeOperationImplementation(flatDomain, op, domainSpecific), names.mangle(names.conceptNameOf(op)))
+
+      // Figure out which model to use for this operation so it aligns with EIPS. In fact, sending flatDomain is exactly wrong
+      // if two predecessors (and cannot decide which one to take) then we are in charge otherwise we pick one branch that has latest one
+      _ <- forEach (flatDomain.ops) { op => {
+        addClassToProject(visitorSpecifics.makeOperationImplementation(gdomain, op, domainSpecific), names.mangle(names.conceptNameOf(op)))
+      }
       }
     } yield ()
   }

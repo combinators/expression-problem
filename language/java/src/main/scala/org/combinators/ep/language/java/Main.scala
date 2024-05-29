@@ -17,7 +17,6 @@ import org.combinators.ep.domain.math.systemJK.{J7, J8, K2J6}
 import org.combinators.ep.domain.math.systemK.{K1, K2}
 import org.combinators.ep.domain.math.systemO.{O1, O1OA, O2, OA, OD1, OD2, OD3, OO1, OO2, OO3}
 import org.combinators.ep.domain.math.systemX.{X1, X2, X2X3, X3, X4}
-import org.combinators.ep.language.java.systemJ.MainJ
 
 import java.nio.file.{Path, Paths}
 
@@ -348,16 +347,6 @@ class Main(choice:String, select:String) {
     case _ => ???
   }
 
-  // domain model can choose to return all test cases which, by default, would be total set of all test cases past and current
-  // BUT would also give the domain model a chance to excise a past test which is no longer relevant.
-
-//  val tests: Seq[Map[GenericModel, Seq[TestCase]]] = evolutions.scanLeft(Map.empty[GenericModel, Seq[TestCase]]) { case (m, evolution) =>
-//    m + (evolution.getModel -> evolution.tests)
-//  }.tail
-
-  // for CoCo, we only need the latest since all earlier ones are identical
-  //val all: Seq[(Evolution, Map[GenericModel, Seq[TestCase]])] = evolutions.map(m => m.allTests)
-
   def transaction[T](initialTransaction: T, addToTransaction: (T, String, () => Seq[FileWithPath]) => T): T = {
     evolutions.foldLeft(initialTransaction) { case (transaction, evolution) =>
       val impl =
@@ -430,29 +419,19 @@ object DirectToDiskMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
 
-    // O2 (overrides implementation, built off of O1 which does same)
-    //   trivially generates proper code BUT test cases do not find proper classes to use
-    //   interpreter generates proper code BUT test cases do not find proper class to use
-    //   algebra, coco works
-    //   oo, visitor, visitorSideEffect, dispatch test cases cannot be made to work, since latest implementation overwrites
-    //   extensibleVisitor works (though test cases fail to find proper import)
-    // OD3 (merge of two independent branches that have added data types)
-    //   works: algebra, coco, interpreter, visitor, visitorSideEffect, extensibleVisitor
-    //   trivially creates an Exp for od3 for no reason and test cases are unable to find right classes
-    // O1OA (two independent operator overrides in O1 and OA brought together)
-    //   extensibleVisitor works (though fails testing because OTest doesn't import proper class)
-    //   oo, visitor, visitorSideEffect, dispatch work (though fails testing because operator override is inconsistent)
-    //   coco works (though it generates unnecessary 'extra' code that can be deleted, as you can see in finalized factories)
-    //   trivially works (though its test cases aren't properly finding classes)
-    //   interpreter works (though O1Test doesn't load proper Lit class)
-    //   algebra works (though it makes a change to "o1" when generating "o1oa"; it loses an import, not sure why)
+    // TODO: An issue with EIPs? I think I've fixed, still something doesn't look right.
+    //   trivially with OA properly shows optimized Eval/Lit which adds 0.0 to each Lit
+    //   however, when go to O1OA, the original OA is replaced with non-optimized, which does appear in O1OA
+    //   ALSO, test cases have bad finalized imports for O1OA Test
     //
-    // Interpreter -- O1OA fails because cannot register types for testing... But also O1 fails...
-    // Trivially M5 encountered error that was fixed, but now Q1/C2/V1 have issues. (producer)
-    // review VisitorSideEffect -- looks like (mainThirdAlternate) for X1 it generates extra code that can be deleted and actually doesn't compile....
-    val approach = if (args.isEmpty) "algebra" else args.head
+    // TODO: interpreter with O1OA doesn't pass test cases b/c refers back to M2 instead and doesn't include Eval (value + 0.0)
+    //
+    //
+
+
+    val approach = if (args.isEmpty) "visitorSideEffect" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "J8" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "O1OA" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 
@@ -467,7 +446,22 @@ object DirectToDiskMain extends IOApp {
 }
 
 
+/**
+ * Generate ALL CODE.
+ */
 object GenerateAll extends IOApp {
+
+  def run(args: List[String]): IO[ExitCode] = {
+    GenerateAllMain.run(List.empty)
+    GenerateAllProducer.run(List.empty)
+    GenerateAllThirdAlternate.run(List.empty)
+    GenerateAllD1D2.run(List.empty)
+    GenerateAllJournal.run(List.empty)
+    GenerateAllJ.run(List.empty)
+  }
+}
+
+object GenerateAllMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
 
@@ -521,7 +515,7 @@ object GenerateAllJ extends IOApp {
         val program :IO[Unit] = {
           for {
             _ <- IO { print("Initializing Generator...") }
-            main <- IO {  new MainJ(approach, selection) }
+            main <- IO {  new Main(approach, selection) }
 
             _ <- IO { println("[OK]") }
             result <- main.runDirectToDisc(targetDirectory)
@@ -558,7 +552,7 @@ object GenerateAllD1D2 extends IOApp {
         val program :IO[Unit] = {
           for {
             _ <- IO { print("Initializing Generator...") }
-            main <- IO {  new MainD1D2(approach, selection) }
+            main <- IO {  new Main(approach, selection) }
 
             _ <- IO { println("[OK]") }
             result <- main.runDirectToDisc(targetDirectory)
@@ -595,7 +589,7 @@ object GenerateAllJournal extends IOApp {
         val program :IO[Unit] = {
           for {
             _ <- IO { print("Initializing Generator...") }
-            main <- IO {  new MainJournalPaper(approach, selection) }
+            main <- IO {  new Main(approach, selection) }
 
             _ <- IO { println("[OK]") }
             result <- main.runDirectToDisc(targetDirectory)
@@ -633,7 +627,7 @@ object GenerateAllProducer extends IOApp {
         val program :IO[Unit] = {
           for {
             _ <- IO { print("Initializing Generator...") }
-            main <- IO {  new MainProducer(approach, selection) }
+            main <- IO {  new Main(approach, selection) }
 
             _ <- IO { println("[OK]") }
             result <- main.runDirectToDisc(targetDirectory)
@@ -670,7 +664,7 @@ object GenerateAllThirdAlternate extends IOApp {
         val program :IO[Unit] = {
           for {
             _ <- IO { print("Initializing Generator...") }
-            main <- IO {  new MainThirdAlternate(approach, selection) }
+            main <- IO {  new Main(approach, selection) }
 
             _ <- IO { println("[OK]") }
             result <- main.runDirectToDisc(targetDirectory)

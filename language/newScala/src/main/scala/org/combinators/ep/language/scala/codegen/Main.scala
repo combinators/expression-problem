@@ -437,6 +437,18 @@ object DirectToDiskMain extends IOApp {
 object GenerateAll extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
+    GenerateAllMain.run(List.empty)
+    GenerateAllProducer.run(List.empty)
+    GenerateAllThirdAlternate.run(List.empty)
+    GenerateAllD1D2.run(List.empty)
+    GenerateAllJournal.run(List.empty)
+    GenerateAllJ.run(List.empty)
+  }
+}
+
+object GenerateAllMain extends IOApp {
+
+  def run(args: List[String]): IO[ExitCode] = {
 
     val approaches = Seq("oo","visitor","visitorSideEffect","extensibleVisitor","interpreter","coco","trivially","algebra")
     val evolutions = Seq("M0","M1","M2","M3","M4","M5","M6","M7","M7I2","M8","M9","I1","A1","A1M3","A1M3I2","A3","I2",

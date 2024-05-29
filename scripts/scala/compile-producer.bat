@@ -1,7 +1,8 @@
 @echo off
 cd ..\..
 
-@REM First run GenerateAllProducer in Main which creates subdirectories in "target\ep-scala-producer"
+@REM First run GenerateAllProducer
+@REM n Main which creates subdirectories in "target\ep-scala-producer"
 
 @REM bring over the evolution specification for ease of use later
 copy scripts\systems\system-producer.json target\ep-scala-producer

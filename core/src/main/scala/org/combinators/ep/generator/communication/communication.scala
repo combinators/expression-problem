@@ -31,6 +31,8 @@ case class ReceivedRequest[Expression](
                                         request: Request[Expression],
                                         model: Option[GenericModel] = None
                                       ) {
+  tpeCase.attributes.foreach(p => println(p))
+  val xyz = s"Missing accessor expression for attribute ${tpeCase.attributes.find(!attributes.isDefinedAt(_))} of data type case ${tpeCase.name}"
   require(tpeCase.attributes.forall(attributes.isDefinedAt),
     s"Missing accessor expression for attribute ${tpeCase.attributes.find(!attributes.isDefinedAt(_)).get} of data type case ${tpeCase.name}"
   )

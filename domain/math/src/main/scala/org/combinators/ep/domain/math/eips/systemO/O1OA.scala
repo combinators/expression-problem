@@ -1,6 +1,7 @@
 package org.combinators.ep.domain.math.eips.systemO   /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.Operation
+import org.combinators.ep.domain.abstractions.{Operation, TypeRep}
+import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
@@ -26,21 +27,39 @@ object O1OA {
       }
 
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
-       None
+//        // if not careful, the overridden Eval for oa is ignored because o1 has an Eval for Lit. Have to call this out
+//        // ditto for prettyp
+//        if ((potentialRequest.op == math.M0.Eval) && Set(math.M0.Lit).contains(potentialRequest.tpeCase)) {
+//          Some(Set.empty)
+//        } else if ((potentialRequest.op == math.M2.PrettyP) && Set(math.M0.Lit).contains(potentialRequest.tpeCase)) {
+//          Some(Set.empty)
+//        } else {
+//          None
+//        }
+        None
       }
 
       def logic
       (forApproach: AIP[paradigm.type])
       (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
+        import paradigm._
 
-        // WON'T BE CALLED BUT NEED SOMETHING
-        val result = onRequest.tpeCase match {
-          /** Get and return first (and only) attribute. */
-          case litC@math.M0.Lit => Command.lift[paradigm.MethodBodyContext, paradigm.syntax.Expression](onRequest.attributes(litC.attributes.head))
-          case _ => ???
-        }
-        result.map(Some(_))
+        ???
+
+//        // WON'T BE CALLED BUT NEED SOMETHING
+//        val result = onRequest.tpeCase match {
+//          /** Get and return first (and only) attribute. */
+//          case litC@math.M0.Lit =>
+//            if (onRequest.request.op == math.M2.PrettyP) {
+//              o1Provider.logic(forApproach)(onRequest)
+//            } else if (onRequest.request.op == math.M0.Eval) {
+//              oaProvider.logic(forApproach)(onRequest)
+//            } else {
+//              ???
+//            }
+//        }
+//        result
       }
     }
 

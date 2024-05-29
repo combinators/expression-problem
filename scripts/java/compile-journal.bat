@@ -1,7 +1,8 @@
 @echo off
 cd ..\..
 
-@REM First run GenerateAllJournal in Main which creates subdirectories in "target\ep-java-journal"
+@REM First run GenerateAllJournal
+@REM in Main which creates subdirectories in "target\ep-java-journal"
 
 @REM bring over the evolution specification for ease of use later
 copy scripts\systems\system-journal.json target\ep-java-journal
@@ -17,3 +18,6 @@ for %%a in (oo extensibleVisitor interpreter coco algebra visitor visitorSideEff
      call scripts\java-compile.bat %%a %%e ep-java-journal
   )
 )
+
+@REM So this script can be used by others, return to start where launched
+cd target\ep-java-journal

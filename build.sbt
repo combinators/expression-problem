@@ -83,7 +83,7 @@ lazy val languageJava =
   standardLanguageProject("java")
     .settings(libraryDependencies += "com.github.javaparser" % "javaparser-core" % "3.19.0")
     .settings(
-      Compile/run/mainClass := Some("org.combinators.ep.language.java.systemJ.DirectToDiskMainJ")
+      Compile/run/mainClass := Some("org.combinators.ep.language.java.DirectToDiskMain")
      )
 
 lazy val helloWorldProject: Project =
@@ -92,7 +92,7 @@ lazy val helloWorldProject: Project =
     .settings(
       moduleName := s"expression-problem-language-helloworld",
     )
-    .dependsOn(core, languageJava)
+    .dependsOn(core, languageJava, languageNewScala)
 
 lazy val exitSBT =
   standardLanguageProject("java")

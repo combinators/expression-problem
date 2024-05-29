@@ -199,7 +199,7 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
     import ooParadigm.classCapabilities._
 
     for {
-      _ <- operationClass(names.addPrefix("_", names.mangle(names.instanceNameOf(op))), op, domain.typeCases, domain.baseDataType, domainSpecific)
+      _ <- operationClass(names.addPrefix("_", names.mangle(names.instanceNameOf(op))), op, domain, domain.typeCases, domain.baseDataType, domainSpecific)
 
       returnTpe <- toTargetLanguageType(op.returnType)
       _ <- resolveAndAddImport(returnTpe)
@@ -273,6 +273,7 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
   override def makeImplementation(tpe: DataType,
                                   tpeCase: DataTypeCase,
                                   op: Operation,
+                                  model: GenericModel,
                                   domainSpecific: EvolutionImplementationProvider[this.type]
                                  ): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._

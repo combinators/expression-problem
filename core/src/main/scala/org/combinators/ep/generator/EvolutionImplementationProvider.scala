@@ -158,7 +158,10 @@ object EvolutionImplementationProvider {
         /** Ensure dependencies are union'd through composition. */
         override def evolutionSpecificDependencies(potentialRequest: PotentialRequest): Map[GenericModel, Set[Operation]] = {
           val result = second.evolutionSpecificDependencies(potentialRequest) ++ first.evolutionSpecificDependencies(potentialRequest)
-
+          if (model.name == "o1oa" && potentialRequest.op.name == "eval") {
+            println(potentialRequest)
+            println(result)
+          }
           // make sure that all models that are implemented appear in the result
           assert(model.haveImplementation(potentialRequest).forall(m => result.contains(m)))
 
@@ -195,10 +198,14 @@ object EvolutionImplementationProvider {
           val dependenciesInFirst = first.evolutionSpecificDependencies(potentialRequest)
           val firstKeys = dependenciesInFirst.keySet
           def check(model: GenericModel): GenericModel => Boolean = m => {
-            m.beforeOrEqual(model)
+           //m.beforeOrEqual(model)
+            m.equals(model)   // FIND IT explicitly. Needed to handle O1OA for multiple approaches.
           }
           onRequest.model match {
             case None if dependenciesInFirst.nonEmpty => first.logic(forApproach)(onRequest)
+
+            // if we HAVE an onrequest.model, just find the corresponding EIP
+
             case Some(model) if firstKeys.exists(check(model)) => {
               first.logic(forApproach)(onRequest)
             }

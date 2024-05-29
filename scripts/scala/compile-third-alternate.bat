@@ -1,7 +1,8 @@
 @echo off
 cd ..\..
 
-@REM First run GenerateAllThirdAlternate in Main which creates subdirectories in "target\ep-scala-third-alternate"
+@REM First run GenerateAllThirdAlternate
+@REM in Main which creates subdirectories in "target\ep-scala-third-alternate"
 
 @REM bring over the evolution specification for ease of use later
 copy scripts\systems\system-third-alternate.json target\ep-scala-third-alternate

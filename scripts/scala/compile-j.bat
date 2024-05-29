@@ -1,7 +1,8 @@
 @echo off
 cd ..\..
 
-@REM First run GenerateAllJ in Main which creates subdirectories in "target\ep-scala-j"
+@REM First run GenerateAllJ
+@REM in Main which creates subdirectories in "target\ep-scala-j"
 
 @REM bring over the evolution specification for ease of use later
 copy scripts\systems\system-j.json target\ep-scala-j

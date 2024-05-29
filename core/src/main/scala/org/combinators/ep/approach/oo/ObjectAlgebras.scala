@@ -873,12 +873,9 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
     ) {
       return domain
     }
-    if (orderedImplementers.isEmpty) {
-      println(op + "," + domain.name)
-    }
     orderedImplementers.head
 
-
+// LEAVE THIS HERE TO SHOW WHAT WAS REPLACED
 //    // find type case where domainSpecific says you are implemented here.
 //    val result = domain.flatten.typeCases.map(tpeCase =>
 //      // are we implementing or overriding.

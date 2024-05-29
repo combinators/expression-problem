@@ -149,6 +149,7 @@ sealed class CodeGenerator(domainName: String) { cc =>
   val paradigm = AnyParadigm[Finalized.FinalTypes, factory.type, syntax.type](factory, runGenerator, syntax)
   val ooParadigm = OOParadigm[Finalized.FinalTypes, factory.type, paradigm.type](paradigm)
   val imperative = Imperative[Finalized.FinalTypes, factory.type, paradigm.type](paradigm)
+
   val parametricPolymorphism = ParametricPolymorphism[Finalized.FinalTypes, factory.type, paradigm.type](paradigm)
   val generics = Generics[Finalized.FinalTypes, factory.type, paradigm.type](paradigm)(ooParadigm, parametricPolymorphism)
 

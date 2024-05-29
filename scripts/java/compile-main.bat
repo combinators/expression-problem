@@ -1,7 +1,8 @@
 @echo off
 cd ..\..
 
-@REM First run GenerateAll in Main which creates subdirectories in "target\ep-java"
+@REM First run GenerateAllMain
+@REM in Main which creates subdirectories in "target\ep-java"
 
 @REM bring over the evolution specification for ease of use later
 copy scripts\systems\system-j.json target\ep-java

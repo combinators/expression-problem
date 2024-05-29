@@ -9,7 +9,6 @@ set DIR=%3
 cd target
 cd %DIR%
 
-@REM No test cases yet. Just compile
 cd %1
 cd %2
 
@@ -19,6 +18,17 @@ java -cp ..\..\..\..\scripts Time           >> ..\..\jacoco.%1
 echo ====================================== >> ..\..\jacoco.%1
 
 call sbt compile       >> ..\..\jacoco.%1
+
+echo ====================================== >> ..\..\jacoco.%1
+echo %2-Test-Begin                          >> ..\..\jacoco.%1
+java -cp ..\..\..\..\scripts Time           >> ..\..\jacoco.%1
+echo ====================================== >> ..\..\jacoco.%1
+call sbt test          >> ..\..\jacoco.%1
+
+echo ====================================== >> ..\..\jacoco.%1
+echo %2-Test-End                            >> ..\..\jacoco.%1
+java -cp ..\..\..\..\scripts Time           >> ..\..\jacoco.%1
+echo ====================================== >> ..\..\jacoco.%1
 
 @REM go back to start
 cd ..\..\..\..

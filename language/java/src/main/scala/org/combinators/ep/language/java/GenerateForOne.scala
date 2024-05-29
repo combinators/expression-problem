@@ -102,7 +102,7 @@ object GenerateForOne extends IOApp {
         val program :IO[Unit] = {
           for {
             _ <- IO { print("Initializing Generator...") }
-            main <- IO {  new MainD1D2(approach, selection) }
+            main <- IO {  new Main(approach, selection) }
 
             _ <- IO { println("[OK]") }
             result <- main.runDirectToDisc(targetDirectory)
@@ -132,7 +132,7 @@ object GenerateForOne extends IOApp {
         val program :IO[Unit] = {
           for {
             _ <- IO { print("Initializing Generator...") }
-            main <- IO {  new MainThirdAlternate(approach, selection) }
+            main <- IO {  new Main(approach, selection) }
 
             _ <- IO { println("[OK]") }
             result <- main.runDirectToDisc(targetDirectory)
@@ -162,7 +162,7 @@ object GenerateForOne extends IOApp {
         val program :IO[Unit] = {
           for {
             _ <- IO { print("Initializing Generator...") }
-            main <- IO {  new MainProducer(approach, selection) }
+            main <- IO {  new Main(approach, selection) }
 
             _ <- IO { println("[OK]") }
             result <- main.runDirectToDisc(targetDirectory)
@@ -192,7 +192,7 @@ object GenerateForOne extends IOApp {
         val program :IO[Unit] = {
           for {
             _ <- IO { print("Initializing Generator...") }
-            main <- IO {  new MainJournalPaper(approach, selection) }
+            main <- IO {  new Main(approach, selection) }
 
             _ <- IO { println("[OK]") }
             result <- main.runDirectToDisc(targetDirectory)

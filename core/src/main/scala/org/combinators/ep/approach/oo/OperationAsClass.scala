@@ -1,5 +1,6 @@
 package org.combinators.ep.approach.oo    /*DI:LI:AD*/
 
+import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions.{DataType, DataTypeCase, Operation, Parameter}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
@@ -21,6 +22,7 @@ trait OperationAsClass extends ApproachImplementationProvider {
                           tpe: DataType,
                           tpeCase: DataTypeCase,
                           op: Operation,
+                          model: GenericModel,
                           domainSpecific: EvolutionImplementationProvider[this.type]
                         ): Generator[MethodBodyContext, Option[Expression]]
 
@@ -86,7 +88,7 @@ trait OperationAsClass extends ApproachImplementationProvider {
    * @return
    * @see  makeImplementation
    */
-  def operationClass(methodName:Name, op:Operation, typeCases:Seq[DataTypeCase], base:DataType, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
+  def operationClass(methodName:Name, op:Operation, model:GenericModel, typeCases:Seq[DataTypeCase], base:DataType, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
     import ooParadigm.classCapabilities._
 
     for {
@@ -95,7 +97,7 @@ trait OperationAsClass extends ApproachImplementationProvider {
       _ <- addParamFields(op)
       _ <- addConstructor(makeOperationConstructor(op))
       _ <- forEach (typeCases) { tpe =>
-        addMethod(methodName, makeImplementation(base, tpe, op, domainSpecific))
+        addMethod(methodName, makeImplementation(base, tpe, op, model, domainSpecific))
       }
     } yield ()
   }

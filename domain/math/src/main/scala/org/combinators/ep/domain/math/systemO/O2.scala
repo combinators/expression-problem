@@ -17,14 +17,15 @@ object O2 extends Evolution {
   /** Remove past test as no longer being correct, since it was "fixed" in this implementation to be triplicated. */
   override def allTests: Map[GenericModel, Seq[TestCase]] = {
     val pastOnes = allPastTests(O1)
-    pastOnes.updated(O2.getModel, pastOnes(O2.getModel)
-        .filterNot(tc => tc.tags.contains(M2.LitPrettyPM2))          // original
+
+    pastOnes.map {case (m,stc) => (m,
+      stc.filterNot(tc => tc.tags.contains(M2.LitPrettyPM2))
         .filterNot(tc => tc.tags.contains(O1.LitPrettyPO1))
       )
-  }         // first patch that "duplicated"
+    }
+  }
 
   def tests: Seq[TestCase] = Seq(
-
     EqualsTestCase(getModel.baseDataType, o2, PrettyP, StringInst("1.01.01.0")),
   )
 }

@@ -114,6 +114,7 @@ trait SharedOO extends ApproachImplementationProvider {
                           tpe: DataType,
                           tpeCase: DataTypeCase,
                           op: Operation,
+                          model: GenericModel,
                           domainSpecific: EvolutionImplementationProvider[this.type]
                         ): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
@@ -134,7 +135,8 @@ trait SharedOO extends ApproachImplementationProvider {
             tpeCase,
             thisRef,
             atts,
-            Request(op, args)
+            Request(op, args),
+            Some(model)
           )
         )
     } yield result

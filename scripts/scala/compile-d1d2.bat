@@ -1,7 +1,8 @@
 @echo off
 cd ..\..
 
-@REM First run GenerateAllD1D2 in Main which creates subdirectories in "target\ep-scala-d1d2"
+@REM First run GenerateAllD1D2
+@REM in Main which creates subdirectories in "target\ep-scala-d1d2"
 
 @REM bring over the evolution specification for ease of use later
 copy scripts\systems\system-d1d2.json target\ep-scala-d1d2

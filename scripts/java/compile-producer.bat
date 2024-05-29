@@ -1,7 +1,8 @@
 @echo off
 cd ..\..
 
-@REM First run GenerateAllProducer in Main which creates subdirectories in "target\ep-java-producer"
+@REM First run GenerateAllProducer
+@REM in Main which creates subdirectories in "target\ep-java-producer"
 
 @REM bring over the evolution specification for ease of use later
 copy scripts\systems\system-producer.json target\ep-java-producer

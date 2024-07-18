@@ -1,21 +1,29 @@
 package org.combinators.ep.generator.paradigm.control   /*DI:LI:AI*/
 
+import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, Understands}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, DeclareVariable, IfThenElse}
+import org.combinators.ep.generator.paradigm.{AnyParadigm, Apply, DeclareVariable, FreshName, IfThenElse, Reify}
 
-case class PatternMatch[MethodBodyContext, PatterExpression, Expression](
+case class PatternMatch[MethodBodyContext, PatternContext, Expression](
   onValue: Expression,
-  options: Seq[(PatterExpression, Seq[Expression] => Generator[MethodBodyContext, Expression])]
+  options: Seq[(Generator[PatternContext, Expression], Seq[Expression] => Generator[MethodBodyContext, Expression])]
 ) extends Command {
   type Result = Expression
 }
 
-case class PatternVariable[Name, PatternExpression](name: Name) {
-  type Result = PatternExpression
+case class PatternVariable[Name, Expression](
+  name: Name
+) extends Command {
+  type Result = Expression
 }
 
-trait Functional[Context] extends Lambdas[Context] {
+case class ConstructorPattern[Type, Name](
+  tpe: Type,
+  constructor: Name
+)
+
+trait Functional[Context, PatternContext] extends Lambdas[Context] {
   val base: AnyParadigm
 
   import base.syntax._
@@ -38,22 +46,35 @@ trait Functional[Context] extends Lambdas[Context] {
           elseIfs,
           elseBlock
         ))
-        
-    // TODO: Figure out syntax category extension for PatternExpression
-    implicit val canPatternVariable: Understands[Context, PatternVariable[Name, PatternExpression]]
-    def patternVariable(name: Name): Generator[Context, PatternExpression] =
-      AnyParadigm.capability(PatternVariable(name))
 
-    implicit val canPatternMatch: Understands[Context, PatternMatch[Context, PatternExpression, Expression]]
+    implicit val canPatternMatch: Understands[Context, PatternMatch[Context, PatternContext, Expression]]
     def patternMatch(
         onValue: Expression,
-        options: Seq[(PatternExpression, Seq[Expression] => Generator[Context, Expression])]
+        options: Seq[(Generator[PatternContext, Expression], Seq[Expression] => Generator[Context, Expression])]
       ): Generator[Context, Expression] =
       AnyParadigm.capability(PatternMatch(onValue, options))
   }
   val functionalCapabilities: FunctionalCapabilities
+
+  trait PatternCapabilities {
+    implicit val canPatternVariable: Understands[PatternContext, PatternVariable[Name, Expression]]
+    def patternVariable(basedOn: Name): Generator[PatternContext, Expression] =
+      AnyParadigm.capability(PatternVariable[Name, Expression](basedOn))
+
+    implicit def canReifyInPattern[T]: Understands[PatternContext, Reify[T, Expression]]
+    def reify[T](tpe: TypeRep.OfHostType[T], value: T): Generator[PatternContext, Expression] =
+      AnyParadigm.capability(Reify[T, Expression](tpe, value))
+
+    implicit val canApplyConstructorPattern: Understands[PatternContext, Apply[ConstructorPattern[Type, Name], Generator[PatternContext, Expression], Expression]]
+    def applyConstructorPattern(
+      constructor: ConstructorPattern[Type, Name],
+      arguments: Seq[Generator[PatternContext, Expression]]): Generator[PatternContext, Expression] =
+      AnyParadigm.capability(Apply[ConstructorPattern[Type, Name], Generator[PatternContext, Expression], Expression](constructor, arguments))
+  }
+  val patternCapabilities: PatternCapabilities
 }
 
 object Functional {
-  type WithBase[Ctxt, B <: AnyParadigm] = Functional[Ctxt] { val base: B }
+  type WithBase[Ctxt, PatternCtxt, B <: AnyParadigm] = Functional[Ctxt, PatternCtxt] { val base: B }
 }
+

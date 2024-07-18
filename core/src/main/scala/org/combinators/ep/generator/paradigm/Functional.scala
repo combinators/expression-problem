@@ -14,7 +14,7 @@ case class AddTypeConstructor[Name, Type](name: Name, parameters: Seq[(Name, Typ
 
 case class InstantiateType[Type, Name, Expression](
     tpe: Type,
-    constructor: Seq[Name],
+    constructor: Name,
     arguments: Seq[Expression]
   ) extends Command {
   type Result = Expression

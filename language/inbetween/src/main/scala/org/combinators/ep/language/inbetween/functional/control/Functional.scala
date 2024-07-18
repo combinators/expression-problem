@@ -2,12 +2,12 @@ package org.combinators.ep.language.inbetween.functional.control
 
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, Understands, paradigm}
-import org.combinators.ep.generator.paradigm.{IfThenElse, control}
+import org.combinators.ep.generator.paradigm.{Apply, IfThenElse, Reify, control}
 import org.combinators.ep.generator.paradigm.control.{PatternMatch, Functional => Fun}
 import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
-trait Functional[FT <: FinalTypes, FactoryType <: Factory[FT]] extends Fun[any.Method[FT]] {
+trait Functional[FT <: FinalTypes, FactoryType <: Factory[FT]] extends Fun[any.Method[FT], PatternContext[FT]] {
   val base: AnyParadigm.WithFT[FT, FactoryType]
 
   import base.factory
@@ -46,9 +46,44 @@ trait Functional[FT <: FinalTypes, FactoryType <: Factory[FT]] extends Fun[any.M
           (elseCtxt, factory.ifThenElse(command.condition, ifBranchExp, elseIfExprs, elseExpr))
         }
       }
-    implicit val canPatternMatch: Understands[any.Method[FT], control.PatternMatch[any.Method[FT], any.Name[FT], any.Expression[FT]]] = ???
+    implicit val canPatternMatch: Understands[any.Method[FT], control.PatternMatch[any.Method[FT], any.Name[FT], any.Expression[FT]]] = new Understands[any.Method[FT], control.PatternMatch[any.Method[FT], any.Name[FT], any.Expression[FT]]] {
+      override def perform(context: any.Method[FT], command: control.PatternMatch[any.Method[FT], any.Name[FT], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
+        val (finalCtxt, cases) = command.options.foldLeft((context, Seq.empy[(any.Expression[FT], any.Expression[FT])])) {
+          case ((ctxt, cases), option) =>
+            val (patternCtxt, patternExp) = Command.runGenerator(option._1, factory.convert(ctxt).emptyPatternCtxt)
+            val patternVariables = patternCtxt.variables.distinct.map(name => factory.argumentExpression(name))
+            val branchGen = option._2(patternVariables)
+            val (nextCtxt, branchExp) = Command.runGenerator(branchGen, ctxt)
+            (nextCtxt, cases :+ (patternExp, branchExp))
+          }
+        (finalCtxt, factory.patternMatch(command.onValue, cases))
+      }
+    }
   }
-   
+
+  override val patternCapabilities: PatternCapabilities = new PatternCapabilities {
+    implicit val canPatternVariable: Understands[PatternContext[FT], control.PatternVariable[any.Name[FT], any.Expression[FT]]] = new Understands[PatternContext[FT], control.PatternVariable[any.Name[FT], any.Expression[FT]]] {
+      override def perform(context: PatternContext[FT], command: control.PatternVariable[any.Name[FT], any.Expression[FT]]): (PatternContext[FT], any.Expression[FT]) = {
+        (context.copy(context.variables :+ command.name), factory.patternVariable(command.name))
+      }
+    }
+    implicit def canReifyInPattern[T]: Understands[PatternContext[FT], Reify[T, any.Expression[FT]]] = {
+      def perform(context: PatternContext[FT], command: Reify[T, Expression[FT]]): (PatternContext[FT], Expression[FT]) = {
+        (context, context.reify(command.tpe, command.value))
+      }
+    }
+    
+    implicit val canApplyConstructorPattern: Understands[PatternContext[FT], Apply[control.ConstructorPattern[any.Type[FT], any.Name[FT]], Generator[PatternContext[FT], any.Expression[FT]], any.Expression[FT]]] = new Understands[PatternContext[FT], Apply[control.ConstructorPattern[any.Type[FT], any.Name[FT]], Generator[PatternContext[FT], any.Expression[FT]], any.Expression[FT]]] {
+      override def perform(context: PatternContext[FT], command: Apply[control.ConstructorPattern[any.Type[FT], any.Name[FT]], Generator[PatternContext[FT], any.Expression[FT]], any.Expression[FT]]): (PatternContext[FT], any.Expression[FT]) = {
+        val (finalCtxt, argumentPatterns) = command.arguments.foldLeft((context, Seq.empty[any.Expression[FT]])) { case ((ctxt, args), argGen) =>
+          val (nextCtxt, nextArg) = Command.runGenerator(argGen, ctxt)
+          (nextCtxt, args :+ nextArg)
+        }
+        val patternApp = factory.constructorPattern(command.functional.tpe, command.functional.constructor, argumentPatterns)
+        (finalCtxt, patternApp)
+      }
+    }
+  }
 }
 
 object Functional {

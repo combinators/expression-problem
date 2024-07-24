@@ -11,6 +11,7 @@ package object functional {
     type AlgebraicDataType
     type TypeConstructor
     type TypeInstantiationExpression
+    type ADTReferenceType
   }
 
   trait Project[FT <: FinalTypes] extends any.Project[FT] with Factory[FT] {
@@ -144,6 +145,16 @@ package object functional {
     def findType(name: Seq[any.Name[FT]]): any.Type[FT]
   }
 
+  trait ADTReferenceType[FT <: FinalTypes] extends any.Type[FT] with Factory[FT] {
+    def getSelfADTReferenceType: finalTypes.ADTReferenceType
+
+    def qualifiedTypeName: Seq[any.Name[FT]]
+
+    def copy(
+      qualifiedTypeName: Seq[any.Name[FT]] = this.qualifiedTypeName
+    ): ADTReferenceType[FT] = adtReferenceType(qualifiedTypeName:_*)
+  }
+
   trait Factory[FT <: FinalTypes] extends any.Factory[FT] {
 
     override def project(compilationUnits: Set[any.CompilationUnit[FT]]): Project[FT] =
@@ -170,24 +181,6 @@ package object functional {
       tests: Seq[any.TestSuite[FT]] = Seq.empty,
     ): CompilationUnit[FT]
 
-    override def method(
-      name: any.Name[FT],
-      imports: Set[any.Import[FT]] = Set.empty,
-      statements: Seq[any.Statement[FT]] = Seq.empty,
-      returnType: Option[any.Type[FT]] = Option.empty,
-      parameters: Seq[(any.Name[FT], any.Type[FT])] = Seq.empty,
-      typeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty
-    ): any.Method[FT] = fnMethod(name, imports, statements, returnType, parameters, typeLookupMap)
-
-    def fnMethod(
-      name: any.Name[FT],
-      imports: Set[any.Import[FT]] = Set.empty,
-      statements: Seq[any.Statement[FT]] = Seq.empty,
-      returnType: Option[any.Type[FT]] = Option.empty,
-      parameters: Seq[(any.Name[FT], any.Type[FT])] = Seq.empty,
-      typeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty
-    ): Method[FT]
-
     def adt(
       name: any.Name[FT],
       imports: Seq[any.Import[FT]] = Seq.empty,
@@ -206,6 +199,8 @@ package object functional {
       constructorArguments: Seq[any.Expression[FT]] = Seq.empty,
     ): TypeInstantiationExpression[FT]
 
+    def adtReferenceType(qualifiedTypeName: any.Name[FT]*): ADTReferenceType[FT]
+
     override implicit def convert(other: any.Project[FT]): Project[FT]
     override implicit def convert(other: any.CompilationUnit[FT]): CompilationUnit[FT]
     override implicit def convert(other: any.Method[FT]): Method[FT]
@@ -213,5 +208,6 @@ package object functional {
     implicit def convert(other: AlgebraicDataType[FT]): AlgebraicDataType[FT]
     implicit def convert(other: TypeConstructor[FT]): TypeConstructor[FT]
     implicit def convert(other: TypeInstantiationExpression[FT]): TypeInstantiationExpression[FT]
+    implicit def convert(other: ADTReferenceType[FT]): ADTReferenceType[FT]
   }
 }

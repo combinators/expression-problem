@@ -7,6 +7,7 @@ import org.combinators.ep.generator.NameProvider
 import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.oo
 import org.combinators.ep.language.inbetween.imperative
+import org.combinators.ep.language.inbetween.functional
 import org.combinators.ep.language.inbetween.ffi.ArithmeticOps
 import org.combinators.ep.language.inbetween.ffi.RealArithmeticOps
 import org.combinators.ep.language.inbetween.ffi.AssertionOps
@@ -30,18 +31,39 @@ package object scala {
       with OperatorExpressionOps.FinalTypes
       with ListOps.FinalTypes
       with TreeOps.FinalTypes
-      with generics.FinalTypes {
+      with generics.FinalTypes
+      with functional.FinalTypes
+      with functional.control.FinalTypes {
     type ReifiedScalaValue[T] <: Expression
     type BlockExpression <: Expression
+    type MethodReferenceExpression <: Expression
   }
 
-  trait Project[FT <: FinalTypes] extends oo.Project[FT] with Factory[FT] {
+  trait Project[FT <: FinalTypes] extends oo.Project[FT] with functional.Project[FT] with Factory[FT] {
+   def copyAsScalaProject(
+      compilationUnits: Set[any.CompilationUnit[FT]] = this.compilationUnits,
+      methodTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = this.methodTypeLookupMap,
+      constructorTypeLookupMap: TypeRep => Generator[Constructor[FT], any.Type[FT]] = this.constructorTypeLookupMap,
+      classTypeLookupMap: TypeRep => Generator[Class[FT], any.Type[FT]] = this.classTypeLookupMap,
+      adtTypeLookupMap: TypeRep => Generator[AlgebraicDataType[FT], any.Type[FT]] = this.adtTypeLookupMap,
+      functionTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = this.functionTypeLookupMap,
+    ): Project[FT] = scalaProject(
+     compilationUnits,
+     methodTypeLookupMap,
+     constructorTypeLookupMap,
+     classTypeLookupMap,
+     adtTypeLookupMap,
+     functionTypeLookupMap
+    )
+
     def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): any.Project[FT] =
-      copyAsProjectWithTypeLookups(
+      copyAsScalaProject(
         compilationUnits = compilationUnits.map(cu => convert(cu).prefixRootPackage(rootPackageName, excludedTypeNames)),
         methodTypeLookupMap = tpeRep => methodTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
         constructorTypeLookupMap = tpeRep => constructorTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
         classTypeLookupMap = tpeRep => classTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        adtTypeLookupMap = tpeRep => adtTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        functionTypeLookupMap = tpeRep => functionTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
       )
   }
 
@@ -145,6 +167,8 @@ package object scala {
     def toScala: String
 
     def isTypeReferenceExpression: Boolean = false
+
+    def toImport: Seq[any.Import[FT]] = Seq.empty
 
     def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): any.Expression[FT]
   }
@@ -437,6 +461,22 @@ package object scala {
     }
   }
 
+  trait ADTReferenceType[FT <: FinalTypes] extends functional.ADTReferenceType[FT] with Type[FT] with Factory[FT] {
+    def toScala: String = qualifiedTypeName.map(_.toScala).mkString(".")
+
+    def toImport: Seq[any.Import[FT]] = Seq.empty
+
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): functional.ADTReferenceType[FT] = {
+      if (excludedTypeNames.contains(qualifiedTypeName)) {
+        this
+      } else {
+        copy(
+          qualifiedTypeName = rootPackageName ++ qualifiedTypeName
+        )
+      }
+    }
+  }
+
   trait Name[FT <: FinalTypes] extends any.Name[FT] with Factory[FT] {
     def component: String
     def mangled: String
@@ -447,14 +487,17 @@ package object scala {
     def nameProvider: NameProvider[any.Name[FT]]
     def reify[T](tpe: OfHostType[T], value: T): any.Expression[FT] = reifiedScalaValue(tpe, value)
 
+    def findType(name: Seq[any.Name[FT]]): any.Type[FT] = adtReferenceType(name: _*)
+
     def resolveImport(tpe: any.Type[FT]): Seq[any.Import[FT]] = tpe.toImport
+    def resolveImport(expr: any.Expression[FT]): Seq[any.Import[FT]] = expr.toImport
     def getFreshName(basedOn: any.Name[FT]): any.Name[FT] = {
       val id = UUID.randomUUID().toString.replace("-", "")
       nameProvider.mangle(s"${basedOn.component}_${id}")
     }
   }
 
-  trait Method[FT <: FinalTypes] extends generics.Method[FT] with Factory[FT] with Util[FT] {
+  trait Method[FT <: FinalTypes] extends generics.Method[FT] with functional.Method[FT] with Factory[FT] with Util[FT] {
 
     def addTestExpressions(exprs: Seq[any.Expression[FT]]): any.Method[FT] = {
       copy(statements = exprs.map(liftExpression))
@@ -462,6 +505,9 @@ package object scala {
 
     def findClass(qualifiedName: any.Name[FT]*): any.Type[FT] =
       classReferenceType(qualifiedName:_*)
+      
+    def findMethod(qualifiedName: any.Name[FT]*): any.Expression[FT] =
+      methodReferenceExpression(qualifiedName)
 
     def toScala: String = {
       val overrideMod = if (isOverride) "override" else ""
@@ -637,6 +683,27 @@ package object scala {
     }
   }
 
+  trait MethodReferenceExpression[FT <: FinalTypes] extends Expression[FT] with Factory[FT] {
+    def getSelfAsMethodReferenceExpression: finalTypes.MethodReferenceExpression
+
+    def qualifiedMethodName: Seq[any.Name[FT]]
+
+    def toScala: String = name.map(_.toScala).mkString(".")
+
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): polymorphism.TypeReferenceExpression[FT] = {
+      if (excludedTypeNames.contains(qualifiedMethodName)) {
+        this
+      } else {
+        copy(
+          qualifiedMethodName = rootPackageName ++ qualifiedMethodName
+        )
+      }
+    }
+
+    def copy(qualifiedMethodName: Seq[any.Name[FT]] = this.qualifiedMethodName): MethodReferenceExpression[FT] = methodReferenceExpression(qualifiedMethodName)
+  }
+
+
   trait TypeArgument[FT <: FinalTypes] extends polymorphism.TypeArgument[FT] with Type[FT] with Factory[FT] {
     def toScala: String = name.toScala
 
@@ -801,31 +868,115 @@ package object scala {
       this
   }
 
-  trait CompilationUnit[FT <: FinalTypes] extends oo.CompilationUnit[FT] with Factory[FT] with Util[FT] {
+  trait CompilationUnit[FT <: FinalTypes] extends oo.CompilationUnit[FT] with functional.CompilationUnit[FT] with Factory[FT] with Util[FT] {
     def toScala: String = {
       val importDecls = imports.map(_.toScala).mkString("\n    ")
+      val adtsDecl = adts.map(_.toScala).mkString("\n\n")
       val clsDecls = classes.map(_.toScala).mkString("\n\n")
       val testDecls = tests.map(_.toScala).mkString("\n\n")
       val packageDecl = if (name.init.isEmpty) "" else s"package ${name.init.map(_.toScala).mkString(".")}"
+      val functionsDecl = functions.map(_.toScala).mkString("\n\n")
+
       s"""
          |${packageDecl}
          |${importDecls}
+         |${adtsDecl}
          |${clsDecls}
+         |${functionsDecl}
          |${testDecls}
          |""".stripMargin
     }
 
     def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): any.CompilationUnit[FT] = {
-      copyAsCompilationUnitWithClasses(
+      copyAsScalaCompilation(
         name = rootPackageName ++ name,
         imports = imports.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
         methodTypeLookupMap = tpeRep => methodTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
         constructorTypeLookupMap = tpeRep => constructorTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
         classTypeLookupMap = tpeRep => classTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        adtTypeLookupMap = tpeRep => adtTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        functionTypeLookupMap = tpeRep => functionTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
         classes = classes.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        adts = adts.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        functions = functions.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
         tests = tests.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
       )
     }
+
+    def copyAsScalaCompilation(
+      name: Seq[any.Name[FT]] = this.name,
+      imports: Seq[any.Import[FT]] = this.imports,
+      methodTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = this.methodTypeLookupMap,
+      constructorTypeLookupMap: TypeRep => Generator[Constructor[FT], any.Type[FT]] = this.constructorTypeLookupMap,
+      classTypeLookupMap: TypeRep => Generator[Class[FT], any.Type[FT]] = this.classTypeLookupMap,
+      adtTypeLookupMap: TypeRep => Generator[AlgebraicDataType[FT], any.Type[FT]] = this.adtTypeLookupMap,
+      functionTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = this.functionTypeLookupMap,
+      classes: Seq[Class[FT]] = this.classes,
+      adts: Seq[AlgebraicDataType[FT]] = this.adts,
+      functions: Seq[any.Method[FT]] = this.functions,
+      tests: Seq[any.TestSuite[FT]] = this.tests,
+    ): CompilationUnit[FT] = compilationUnit(name, imports, methodTypeLookupMap, constructorTypeLookupMap, classTypeLookupMap, adtTypeLookupMap, functionTypeLookupMap, classes, adts, functions, tests)
+
+    override def copyAsCompilationUnitWithClasses(
+      name: Seq[any.Name[FT]] = this.name,
+      imports: Seq[any.Import[FT]] = this.imports,
+      methodTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = this.methodTypeLookupMap,
+      constructorTypeLookupMap: TypeRep => Generator[oo.Constructor[FT], any.Type[FT]] = this.constructorTypeLookupMap,
+      classTypeLookupMap: TypeRep => Generator[oo.Class[FT], any.Type[FT]] = this.classTypeLookupMap,
+      classes: Seq[oo.Class[FT]] = this.classes,
+      tests: Seq[any.TestSuite[FT]] = this.tests,
+    ): CompilationUnit[FT] = copyAsScalaCompilation(name, imports, methodTypeLookupMap, constructorTypeLookupMap, classTypeLookupMap, classes, tests)
+
+    override def copyAsFunctionalCompilationUnit(
+      name: Seq[any.Name[FT]] = this.name,
+      imports: Seq[any.Import[FT]] = this.imports,
+      adtTypeLookupMap: TypeRep => Generator[AlgebraicDataType[FT], any.Type[FT]] = this.adtTypeLookupMap,
+      functionTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = this.functionTypeLookupMap,
+      adts: Seq[AlgebraicDataType[FT]] = this.adts,
+      functions: Seq[any.Method[FT]] = this.functions,
+      tests: Seq[any.TestSuite[FT]] = this.tests,
+    ): CompilationUnit[FT] = copyAsScalaCompilation(name, imports, adtTypeLookupMap, functionTypeLookupMap,adts, functions, tests)
+
+  }
+
+  trait AlgebraicDataType[FT <: FinalTypes] extends functional.AlgebraicDataType[FT] with Type[FT] with Factory[FT] with Util[FT] {
+    def toScala: String = {
+      val ctors = this.typeConstructors.map(_.toScala).mkString("\n  ")
+      s"""
+        |enum ${this.name} {
+        |  ${ctors}
+        |}""".stripMargin
+    }
+
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): functional.AlgebraicDataType[FT] =
+      copy(
+        imports = imports.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        typeConstructors = typeConstructors.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+        typeLookupMap = tpeRep => typeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+      )
+  }
+
+  trait TypeConstructor[FT <: FinalTypes] extends functional.TypeConstructor[FT] with Factory[FT] {
+    def toScala: String = {
+      val params = parameters.map(p => s"${p._1.toScala} : ${p._2.toScala}").mkString(",")
+      s"""case ${name.toScala}(${params})"""
+    }
+
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): functional.TypeConstructor[FT] = {
+      copy(parameters = this.parameters.map(p => (p._1, p._2.prefixRootPackage(rootPackageName, excludedTypeNames))))
+    }
+  }
+
+  trait TypeInstantiationExpression[FT <: FinalTypes] extends functional.TypeInstantiationExpression[FT] with Expression[FT] {
+    override def toScala: String = {
+      s"""${tpe.toScala}.${constructorName.map(_.toScala).mkString(".")}(${constructorArguments.map(_.toScala).mkString(", ")})""".stripMargin
+    }
+
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): functional.TypeInstantiationExpression[FT] =
+      copy(
+        tpe = tpe.prefixRootPackage(rootPackageName, excludedTypeNames),
+        constructorArguments = constructorArguments.map(_.prefixRootPackage(rootPackageName, excludedTypeNames))
+      )
   }
 
   trait ToStringOp[FT <: FinalTypes] extends StringOps.ToStringOp[FT] with Operator[FT] with PostfixOperator[FT] {
@@ -895,6 +1046,8 @@ package object scala {
     extends any.Factory[FT]
     with oo.Factory[FT]
     with imperative.Factory[FT]
+    with functional.Factory[FT]
+    with functional.control.Factory[FT]
     with ArithmeticOps.Factory[FT]
     with RealArithmeticOps.Factory[FT]
     with AssertionOps.Factory[FT]
@@ -905,6 +1058,100 @@ package object scala {
     with ListOps.Factory[FT]
     with TreeOps.Factory[FT]
     with generics.Factory[FT] {
+
+
+    override def project(
+      compilationUnits: Set[any.CompilationUnit[FT]],
+      methodTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty,
+      constructorTypeLookupMap: TypeRep => Generator[Constructor[FT], any.Type[FT]] = Map.empty,
+      classTypeLookupMap: TypeRep => Generator[Class[FT], any.Type[FT]] = Map.empty,
+    ): Project[FT] = project(
+      compilationUnits = compilationUnits,
+      adtTypeLookupMap = Map.empty,
+      functionTypeLookupMap = Map.empty,
+      methodTypeLookupMap = methodTypeLookupMap,
+      constructorTypeLookupMap = constructorTypeLookupMap,
+      classTypeLookupMap = classTypeLookupMap,
+    )
+
+    override def project(
+      compilationUnits: Set[any.CompilationUnit[FT]],
+      adtTypeLookupMap: TypeRep => Generator[AlgebraicDataType[FT], any.Type[FT]] = Map.empty,
+      functionTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty,
+    ): Project[FT] = project(
+      compilationUnits = compilationUnits,
+      adtTypeLookupMap = adtTypeLookupMap,
+      functionTypeLookupMap = functionTypeLookupMap,
+      methodTypeLookupMap = Map.empty,
+      constructorTypeLookupMap = Map.empty,
+      classTypeLookupMap = Map.empty,
+    )
+
+    def project(
+      compilationUnits: Set[any.CompilationUnit[FT]],
+      methodTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty,
+      constructorTypeLookupMap: TypeRep => Generator[Constructor[FT], any.Type[FT]] = Map.empty,
+      classTypeLookupMap: TypeRep => Generator[Class[FT], any.Type[FT]] = Map.empty,
+      adtTypeLookupMap: TypeRep => Generator[AlgebraicDataType[FT], any.Type[FT]] = Map.empty,
+      functionTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty,
+    ): Project[FT]
+
+    override def compilationUnit(
+      name: Seq[any.Name[FT]],
+      imports: Seq[any.Import[FT]],
+      methodTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty,
+      constructorTypeLookupMap: TypeRep => Generator[Constructor[FT], any.Type[FT]] = Map.empty,
+      classTypeLookupMap: TypeRep => Generator[Class[FT], any.Type[FT]] = Map.empty,
+      classes: Seq[Class[FT]] = Seq.empty,
+      tests: Seq[any.TestSuite[FT]] = Seq.empty,
+    ): CompilationUnit[FT] = compilationUnit(
+      name = name,
+      imports = imports,
+      methodTypeLookupMap = methodTypeLookupMap,
+      constructorTypeLookupMap = constructorTypeLookupMap,
+      classTypeLookupMap = classTypeLookupMap,
+      adtTypeLookupMap = Map.empty,
+      functionTypeLookupMap = Map.empty,
+      classes = classes,
+      adts = Seq.empty,
+      functions = Seq.empty,
+      tests = tests,
+    )
+
+    override def compilationUnit(
+      name: Seq[any.Name[FT]],
+      imports: Seq[any.Import[FT]],
+      adtTypeLookupMap: TypeRep => Generator[AlgebraicDataType[FT], any.Type[FT]] = Map.empty,
+      functionTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty,
+      adts: Seq[AlgebraicDataType[FT]] = Seq.empty,
+      functions: Seq[any.Method[FT]] = Seq.empty,
+      tests: Seq[any.TestSuite[FT]] = Seq.empty,
+    ): CompilationUnit[FT] = compilationUnit(
+      name = name,
+      imports = imports,
+      methodTypeLookupMap = Map.empty,
+      constructorTypeLookupMap = Map.empty,
+      classTypeLookupMap = Map.empty,
+      adtTypeLookupMap = adtTypeLookupMap,
+      functionTypeLookupMap = functionTypeLookupMap,
+      classes = Seq.empty,
+      adts = adts,
+      functions = functions,
+      tests = tests)
+
+    def compilationUnit(
+      name: Seq[any.Name[FT]],
+      imports: Seq[any.Import[FT]],
+      methodTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty,
+      constructorTypeLookupMap: TypeRep => Generator[Constructor[FT], any.Type[FT]] = Map.empty,
+      classTypeLookupMap: TypeRep => Generator[Class[FT], any.Type[FT]] = Map.empty,
+      adtTypeLookupMap: TypeRep => Generator[AlgebraicDataType[FT], any.Type[FT]] = Map.empty,
+      functionTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty,
+      classes: Seq[Class[FT]] = Seq.empty,
+      adts: Seq[AlgebraicDataType[FT]] = Seq.empty,
+      functions: Seq[any.Method[FT]] = Seq.empty,
+      tests: Seq[any.TestSuite[FT]] = Seq.empty,
+    ): CompilationUnit[FT]
 
     def name(name: String, mangled: String): Name[FT]
     def importStatement(components: Seq[any.Name[FT]]): Import[FT]
@@ -945,6 +1192,9 @@ package object scala {
     implicit def convert(other: oo.CastExpression[FT]): CastExpression[FT]
     implicit def convert(other: oo.InstanceOfExpression[FT]): InstanceOfExpression[FT]
     implicit def convert(other: oo.SuperReferenceExpression[FT]): SuperReferenceExpression[FT]
+    implicit def convert(other: functional.AlgebraicDataType[FT]): AlgebraicDataType[FT]
+    implicit def convert(other: functional.TypeConstructor[FT]): TypeConstructor[FT]
+    implicit def convert(other: functional.TypeInstantiationExpression[FT]): TypeInstantiationExpression[FT]
     implicit def convert(decl: imperative.DeclareVariable[FT]): DeclareVariable[FT]
     implicit def convert(assignVariable: imperative.AssignVariable[FT]): AssignVariable[FT]
     implicit def convert(ifThenElse: imperative.IfThenElse[FT]): IfThenElse[FT]
@@ -967,8 +1217,10 @@ package object scala {
     implicit def convert(other: TreeOps.CreateNodeExpr[FT]): CreateNodeExpr[FT]
 
     implicit def convert(other: scala.BlockExpression[FT]): scala.BlockExpression[FT]
+    implicit def convert(other: scala.MethodReferenceExpression[FT]): scala.MethodReferenceExpression[FT]
 
     def blockExpression(statements: Seq[any.Statement[FT]]): scala.BlockExpression[FT]
+    def methodReferenceExpression(qualifiedMethodName: Seq[any.Name[FT]]): scala.MethodReferenceExpression[FT]
 
   }
 
@@ -1011,10 +1263,25 @@ package object scala {
       override type CreateNodeExpr = Finalized.CreateNodeExpr
       override type BlockExpression = Finalized.BlockExpression
       override type TestSuite = Finalized.TestSuite
+      override type ADTReferenceType = Finalized.ADTReferenceType
+      override type AlgebraicDataType = Finalized.AlgebraicDataType
+      override type TypeConstructor = Finalized.TypeConstructor
+      override type TypeInstantiationExpression = Finalized.TypeInstantiationExpression
+      override type MethodReferenceExpression = Finalized.MethodReferenceExpression
     }
 
     trait Factory extends scala.Factory[FinalTypes] {
       val finalTypes: FinalTypes = new FinalTypes
+
+      def scalaProject(
+        compilationUnits: Set[any.CompilationUnit[FT]] = Set.empty,
+        methodTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty,
+        constructorTypeLookupMap: TypeRep => Generator[oo.Constructor[FT], any.Type[FT]] = Map.empty,
+        classTypeLookupMap: TypeRep => Generator[oo.Class[FT], any.Type[FT]] = Map.empty,
+        adtTypeLookupMap: TypeRep => Generator[scala.AlgebraicDataType[FT], any.Type[FT]] = Map.empty,
+        functionTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty,
+      ): Project =
+        Project(compilationUnits, methodTypeLookupMap, constructorTypeLookupMap, classTypeLookupMap, adtTypeLookupMap, functionTypeLookupMap)
 
       def name(name: String, mangled: String): Name = Name(name, mangled)
       override def importStatement(components: Seq[any.Name[FinalTypes]]): Import = Import(components)
@@ -1023,14 +1290,31 @@ package object scala {
       implicit def convert(operator: OperatorExpressionOps.Operator[FinalTypes]): Operator = operator.getSelfOperator
       implicit def convert(binaryExpression: OperatorExpressionOps.BinaryExpression[FinalTypes]): BinaryExpression = binaryExpression.getSelfBinaryExpression
       implicit def convert(unaryExpression: OperatorExpressionOps.UnaryExpression[FinalTypes]): UnaryExpression = unaryExpression.getSelfUnaryExpression
-      override def compilationUnit(name: Seq[any.Name[FinalTypes]],
-        imports: Seq[any.Import[FinalTypes]],
-        methodTypeLookupMap: TypeRep => Generator[any.Method[FinalTypes], any.Type[FinalTypes]] = Map.empty,
-        constructorTypeLookupMap: TypeRep => Generator[oo.Constructor[FinalTypes], any.Type[FinalTypes]] = Map.empty,
-        classTypeLookupMap: TypeRep => Generator[oo.Class[FinalTypes], any.Type[FinalTypes]] = Map.empty,
-        classes: Seq[oo.Class[FinalTypes]],
-        tests: Seq[any.TestSuite[FinalTypes]]): oo.CompilationUnit[FinalTypes] = CompilationUnit(name, imports, methodTypeLookupMap, constructorTypeLookupMap, classTypeLookupMap, classes, tests)
-
+      def compilationUnit(
+        name: Seq[any.Name[FT]],
+        imports: Seq[any.Import[FT]],
+        methodTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty,
+        constructorTypeLookupMap: TypeRep => Generator[oo.Constructor[FT], any.Type[FT]] = Map.empty,
+        classTypeLookupMap: TypeRep => Generator[oo.Class[FT], any.Type[FT]] = Map.empty,
+        adtTypeLookupMap: TypeRep => Generator[scala.AlgebraicDataType[FT], any.Type[FT]] = Map.empty,
+        functionTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty,
+        classes: Seq[oo.Class[FT]] = Seq.empty,
+        adts: Seq[scala.AlgebraicDataType[FT]] = Seq.empty,
+        functions: Seq[any.Method[FT]] = Seq.empty,
+        tests: Seq[any.TestSuite[FT]] = Seq.empty,
+      ): CompilationUnit = CompilationUnit(
+        name = name,
+        imports = imports,
+        methodTypeLookupMap = methodTypeLookupMap,
+        constructorTypeLookupMap = constructorTypeLookupMap,
+        classTypeLookupMap = classTypeLookupMap,
+        adtTypeLookupMap = adtTypeLookupMap,
+        functionTypeLookupMap = functionTypeLookupMap,
+        classes = classes,
+        adts = adts,
+        functions = functions,
+        tests = tests
+      )
 
       override def constructor(
         constructedType: Option[any.Type[FinalTypes]],
@@ -1129,17 +1413,21 @@ package object scala {
       implicit def convert(other: any.Expression[FinalTypes]): Expression = other.getSelfExpression
       implicit def convert(other: any.ArgumentExpression[FinalTypes]): ArgumentExpression = other.getSelfArgumentExpression
       implicit def convert(other: scala.BlockExpression[FinalTypes]): BlockExpression = other.getSelfBlockExpression
+      implicit def convert(other: scala.MethodReferenceExpression[FT]): MethodReferenceExpression = other.getSelfAsMethodReferenceExpression
 
       override def blockExpression(statements: Seq[any.Statement[FinalTypes]]): BlockExpression = BlockExpression(statements)
+      override def methodReferenceExpression(qualifiedMethodName: Seq[any.Name[FT]]): MethodReferenceExpression = MethodReferenceExpression(qualifiedMethodName)
 
       override def reifiedScalaValue[T](ofHostType: OfHostType[T], value: T): ReifiedScalaValue[T] = ReifiedScalaValue(ofHostType, value)
       implicit def convert[T](other: scala.ReifiedScalaValue[FinalTypes, T]): ReifiedScalaValue[T] = other.getSelfAsReifiedScalaValue
       implicit def convert(other: any.ApplyExpression[FinalTypes]): ApplyExpression = other.getSelfApplyExpression
       implicit def convert(other: oo.ClassReferenceType[FinalTypes]): ClassReferenceType = other.getSelfClassReferenceType
+      implicit def convert(other: functional.ADTReferenceType[FinalTypes]): ADTReferenceType = other.getSelfADTReferenceType
       implicit def convert(varRef: imperative.VariableReferenceExpression[FinalTypes]): VariableReferenceExpression = varRef.getSelfVariableReferenceExpression
       override def variableReferenceExpression(name: any.Name[FinalTypes]): imperative.VariableReferenceExpression[FinalTypes] = VariableReferenceExpression(name)
 
       override def classReferenceType(qualifiedClassName: any.Name[FinalTypes]*): oo.ClassReferenceType[FinalTypes] = ClassReferenceType(qualifiedClassName)
+      override def adtReferenceType(qualifiedTypeName: any.Name[FinalTypes]*): functional.ADTReferenceType[FinalTypes] = ADTReferenceType(qualifiedTypeName)
       override def applyExpression(function: any.Expression[FinalTypes], arguments: Seq[any.Expression[FinalTypes]]): any.ApplyExpression[FinalTypes] = ApplyExpression(function, arguments)
 
       override def convert(other: polymorphism.TypeParameter[FinalTypes]): TypeParameter = other.getSelfTypeParameter
@@ -1206,6 +1494,40 @@ package object scala {
           isOverride = isOverride
         )
 
+      override def adt(
+        name: any.Name[FinalTypes],
+        imports: Seq[any.Import[FinalTypes]],
+        typeConstructors: Seq[functional.TypeConstructor[FinalTypes]],
+        typeLookupMap: TypeRep => Generator[functional.AlgebraicDataType[FinalTypes], any.Type[FinalTypes]]
+      ): functional.AlgebraicDataType[FinalTypes] = AlgebraicDataType(
+        name,
+        imports,
+        typeConstructors,
+        typeLookupMap
+      )
+
+      override def typeConstructor(
+        name: any.Name[FT],
+        parameters: Seq[(any.Name[FT], any.Type[FT])] = Seq.empty
+      ): functional.TypeConstructor[FinalTypes] = TypeConstructor(
+        name = name,
+        parameters = parameters
+      )
+
+      override def typeInstantiationExpression(
+        tpe: any.Type[FT],
+        constructorName: Seq[any.Name[FT]],
+        constructorArguments: Seq[any.Expression[FT]] = Seq.empty
+      ): functional.TypeInstantiationExpression[FinalTypes] = TypeInstantiationExpression(
+        tpe = tpe,
+        constructorName = constructorName,
+        constructorArguments = constructorArguments,
+      )
+
+      implicit override def convert(other: functional.AlgebraicDataType[FT]): AlgebraicDataType = other.getSelfAlgebraicDataType
+      implicit override def convert(other: functional.TypeConstructor[FT]): TypeConstructor = other.getSelfTypeConstructor
+      implicit override def convert(other: functional.TypeInstantiationExpression[FinalTypes]): TypeInstatiationExpression = other.getSelfTypeInstantiationExpression
+
       override def typeParameterWithBounds(name: any.Name[FinalTypes], upperBounds: Seq[any.Type[FinalTypes]], lowerBounds: Seq[any.Type[FinalTypes]]): TypeParameter =
         TypeParameter(name, upperBounds = upperBounds, lowerBounds = lowerBounds)
       override def createList(): ListOps.CreateList[FinalTypes] = CreateList()
@@ -1268,6 +1590,34 @@ package object scala {
 
     case class ClassReferenceType(override val qualifiedClassName: Seq[any.Name[FinalTypes]]) extends scala.ClassReferenceType[FinalTypes] with Type with Factory {
       def getSelfClassReferenceType: this.type = this
+    }
+
+    case class AlgebraicDataType(
+      override val name: any.Name[FinalTypes],
+      override val imports: Seq[any.Import[FinalTypes]] = Seq.empty,
+      override val typeConstructors: Seq[functional.TypeConstructor[FinalTypes]] = Seq.empty,
+      override val typeLookupMap: TypeRep => Generator[functional.AlgebraicDataType[FinalTypes], any.Type[FinalTypes]] = Map.empty,
+    ) extends scala.AlgebraicDataType[FinalTypes] with Type with Factory {
+      def getSelfAlgebraicDataType: this.type = this
+    }
+
+    case class TypeConstructor(
+      override val name: any.Name[FinalTypes],
+      override val parameters: Seq[(any.Name[FinalTypes], any.Type[FinalTypes])] = Seq.empty
+    ) extends scala.TypeConstructor[FinalTypes] with Factory {
+      def getSelfTypeConstructor: this.type = this
+    }
+
+    case class TypeInstantiationExpression(
+      override val tpe: any.Type[FT],
+      override val constructorName: Seq[any.Name[FT]],
+      override val constructorArguments: Seq[any.Expression[FT]] = Seq.empty
+    ) extends scala.TypeInstantiationExpression[FinalTypes] with Factory {
+      def getSelfTypeInstantiationExpression: this.type = this
+    }
+
+    case class ADTReferenceType(override val qualifiedTypeName: Seq[any.Name[FinalTypes]]) extends scala.ADTReferenceType[FinalTypes] with Type with Factory {
+      def getSelfADTReferenceType: this.type = this
     }
 
     trait Operator extends scala.Operator[FinalTypes] with Factory {
@@ -1433,7 +1783,11 @@ package object scala {
       override val methodTypeLookupMap: TypeRep => Generator[any.Method[FinalTypes], any.Type[FinalTypes]] = Map.empty,
       override val constructorTypeLookupMap: TypeRep => Generator[oo.Constructor[FinalTypes], any.Type[FinalTypes]] = Map.empty,
       override val classTypeLookupMap: TypeRep => Generator[oo.Class[FinalTypes], any.Type[FinalTypes]] = Map.empty,
+      override val adtTypeLookupMap: TypeRep => Generator[scala.AlgebraicDataType[FT], any.Type[FT]] = Map.empty,
+      override val functionTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty,
       override val classes: Seq[oo.Class[FinalTypes]] = Seq.empty,
+      override val adts: Seq[scala.AlgebraicDataType[FT]] = Seq.empty,
+      override val functions: Seq[any.Method[FT]] = Seq.empty,
       override val tests: Seq[any.TestSuite[FinalTypes]] = Seq.empty,
     ) extends scala.CompilationUnit[FinalTypes] with Util {
       override def getSelfCompilationUnit: this.type = this
@@ -1443,7 +1797,9 @@ package object scala {
       override val compilationUnits: Set[any.CompilationUnit[FinalTypes]],
       override val methodTypeLookupMap: TypeRep => Generator[any.Method[FinalTypes], any.Type[FinalTypes]] = Map.empty,
       override val constructorTypeLookupMap: TypeRep => Generator[oo.Constructor[FinalTypes], any.Type[FinalTypes]] = Map.empty,
-      override val classTypeLookupMap: TypeRep => Generator[oo.Class[FinalTypes], any.Type[FinalTypes]] = Map.empty
+      override val classTypeLookupMap: TypeRep => Generator[oo.Class[FinalTypes], any.Type[FinalTypes]] = Map.empty,
+      override val adtTypeLookupMap: TypeRep => Generator[scala.AlgebraicDataType[FinalTypes], any.Type[FinalTypes]] = Map.empty,
+      override val functionTypeLookupMap: TypeRep => Generator[any.Method[FinalTypes], any.Type[FinalTypes]] = Map.empty,
     ) extends scala.Project[FinalTypes] with Factory {
       override def getSelfProject: this.type = this
     }
@@ -1555,6 +1911,9 @@ package object scala {
     case class BlockExpression(override val statements: Seq[any.Statement[FinalTypes]]) extends scala.BlockExpression[FinalTypes] with Expression {
       def getSelfBlockExpression: this.type = this
     }
-
+    
+    case class MethodReferenceExpression(override val qualifiedMethodName: Seq[any.Name[FinalTypes]]) extends scala.MethodReferenceExpression[FinalTypes] with Expression {
+      override def getSelfAsMethodReferenceExpression: this.type = this
+    }
   }
 }

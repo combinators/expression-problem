@@ -75,7 +75,7 @@ sealed class CodeGenerator(domainName: String) { cc =>
   }
 
   def runGenerator(generator: Generator[Project[Finalized.FinalTypes], Unit]): Seq[FileWithPath] = {
-    var projectWithLookups = factory.ooProject()
+    var projectWithLookups: Project[Finalized.FinalTypes] = factory.scalaProject(Set.empty)
 
    def buildFile: FileWithPath = {
       // create a rudimentary build.sbt for Scala just to work with sbt version 1.7.1
@@ -95,19 +95,19 @@ sealed class CodeGenerator(domainName: String) { cc =>
 
     projectWithLookups =
       addLookupsForImplementedGenerators[Method[Finalized.FinalTypes]](
-        projectWithLookups,
+        factory.convert(projectWithLookups),
         { case (project, lookup) => factory.convert(project).addTypeLookupsForMethods(lookup) }
       )(paradigm.methodBodyCapabilities.canTransformTypeInMethodBody,
         parametricPolymorphism.methodBodyCapabilities.canApplyTypeInMethod)
     projectWithLookups =
       addLookupsForImplementedGenerators[Class[Finalized.FinalTypes]](
-        projectWithLookups,
+        factory.convert(projectWithLookups),
         { case (project, lookup) => factory.convert(project).addTypeLookupsForClasses(lookup) }
       )(ooParadigm.classCapabilities.canTranslateTypeInClass,
         generics.classCapabilities.canApplyTypeInClass)
     projectWithLookups =
       addLookupsForImplementedGenerators[Constructor[Finalized.FinalTypes]](
-        projectWithLookups,
+        factory.convert(projectWithLookups),
         { case (project, lookup) => factory.convert(project).addTypeLookupsForConstructors(lookup) }
       )(ooParadigm.constructorCapabilities.canTranslateTypeInConstructor,
         generics.constructorCapabilities.canApplyTypeInConstructor)

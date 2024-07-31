@@ -8,8 +8,8 @@ import org.combinators.ep.generator.paradigm.{AddBlockDefinitions, AddCompilatio
 
 trait AnyParadigm extends AP {
   type FT <: FinalTypes
-  type FatoryType <: Factory[FT]
-  val factory: FatoryType
+  type FactoryType <: Factory[FT]
+  val factory: FactoryType
   val _runGenerator: Generator[Project[FT], Unit] => Seq[FileWithPath]
   val syntax: AbstractSyntax[FT]
   type ProjectContext = Project[FT]
@@ -153,12 +153,12 @@ trait AnyParadigm extends AP {
 object AnyParadigm {
   type WithFT[_FT <: FinalTypes, _FactoryType <: Factory[_FT]] = AnyParadigm {
     type FT = _FT
-    type FatoryType = _FactoryType
+    type FactoryType = _FactoryType
   }
   
   type WithSyntax[_FT <: FinalTypes, _FactoryType <: Factory[_FT], S <: AbstractSyntax[_FT]] = AnyParadigm {
     type FT = _FT
-    type FatoryType = _FactoryType
+    type FactoryType = _FactoryType
     val syntax: S 
   }
   def apply[_FT <: FinalTypes, _FactoryType <: Factory[_FT], S <: AbstractSyntax[_FT]]
@@ -167,7 +167,7 @@ object AnyParadigm {
      _syntax: S
     ): WithSyntax[_FT, _factory.type, _syntax.type] = new AnyParadigm {
     type FT = _FT
-    type FatoryType = _factory.type
+    type FactoryType = _factory.type
     override val factory = _factory
     override val _runGenerator: Generator[Project[FT], Unit] => Seq[FileWithPath] = __runGenerator
     override val syntax: _syntax.type = _syntax

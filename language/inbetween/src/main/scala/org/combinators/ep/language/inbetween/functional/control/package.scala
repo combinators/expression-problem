@@ -6,8 +6,8 @@ import org.combinators.ep.language.inbetween.any
 package object control {
   trait FinalTypes extends any.FinalTypes {
     type Lambda <: Expression
-    type DeclareVariable <: Expression
-    type IfThenElse <: Expression
+    type DeclareFunVariable <: Expression
+    type FunIfThenElse <: Expression
     type PatternMatch <: Expression
     type PatternContext
     type PatternVariable <: Expression
@@ -15,6 +15,7 @@ package object control {
   }
 
   trait Lambda[FT <: FinalTypes] extends any.Expression[FT] with Factory[FT] {
+    def getSelfLambda: finalTypes.Lambda
     def variables: Seq[(any.Name[FT], any.Type[FT])]
     def body: any.Expression[FT]
 
@@ -24,23 +25,23 @@ package object control {
     ): Lambda[FT] = lambda(variables, body)
   }
 
-  trait DeclareVariable[FT <: FinalTypes] extends any.Expression[FT] with Factory[FT] {
-    def getSelfDeclareVariable: finalTypes.DeclareVariable
+  trait DeclareFunVariable[FT <: FinalTypes] extends any.Expression[FT] with Factory[FT] {
+    def getSelfDeclareFunVariable: finalTypes.DeclareFunVariable
     def name: any.Name[FT]
     def tpe: any.Type[FT]
-    def initializer: Option[any.Expression[FT]]
+    def initializer: any.Expression[FT]
     def inExp: any.Expression[FT]
 
     def copy(
       name: any.Name[FT] = name,
       tpe: any.Type[FT] = tpe,
-      initializer: Option[any.Expression[FT]] = this.initializer,
+      initializer: any.Expression[FT] = this.initializer,
       inExp: any.Expression[FT] = this.inExp
-    ): DeclareVariable[FT] = declareVariable(name, tpe, initializer, inExp)
+    ): DeclareFunVariable[FT] = declareFunVariable(name, tpe, initializer, inExp)
   }
 
   trait IfThenElse[FT <: FinalTypes] extends any.Expression[FT] with Factory[FT] {
-    def getSelfIfThenElse: finalTypes.IfThenElse
+    def getSelfFunIfThenElse: finalTypes.FunIfThenElse
 
     def condition: any.Expression[FT]
     def ifBranch: any.Expression[FT]
@@ -53,19 +54,19 @@ package object control {
       elseIfBranches: Seq[(any.Expression[FT], any.Expression[FT])] = this.elseIfBranches,
       elseBranch: any.Expression[FT] = this.elseBranch
     ): IfThenElse[FT] =
-      ifThenElse(condition, ifBranch, elseIfBranches, elseBranch)
+      funIfThenElse(condition, ifBranch, elseIfBranches, elseBranch)
   }
 
   trait PatternContext[FT <: FinalTypes] extends Factory[FT] {
     def getSelfPatternContext: finalTypes.PatternContext
 
     def variables: Seq[any.Name[FT]]
-    def reify[T](tpe: TypeRep.OfHostType[T], value: T): Expression[FT]
+    def reify[T](tpe: TypeRep.OfHostType[T], value: T): any.Expression[FT]
 
     def copy(variables: Seq[any.Name[FT]] = this.variables): PatternContext[FT] = patternContext(variables)
   }
 
-  trait PatternVariable[FT <: FinalTypes] extends Factory[FT] with Expression[FT] {
+  trait PatternVariable[FT <: FinalTypes] extends Factory[FT] with any.Expression[FT] {
     def getSelfPatternVariable: finalTypes.PatternVariable
 
     def name: any.Name[FT]
@@ -73,17 +74,17 @@ package object control {
     def copy(name: any.Name[FT] = this.name): PatternVariable[FT] = patternVariable(name)
   }
 
-  trait ConstructorPattern[FT <: FinalTypes] extends Factory[FT] {
+  trait ConstructorPattern[FT <: FinalTypes] extends Factory[FT] with any.Expression[FT] {
     def getSelfConstructorPattern: finalTypes.ConstructorPattern
 
     def tpe: any.Type[FT]
     def constructor: any.Name[FT]
-    def arguments: any.Expression[FT]
+    def arguments: Seq[any.Expression[FT]]
 
     def copy(
       tpe: any.Type[FT] = this.tpe,
       constructor: any.Name[FT] = this.constructor,
-      arguments: any.Expression[FT] = this.arguments
+      arguments: Seq[any.Expression[FT]] = this.arguments
     ): ConstructorPattern[FT] = constructorPattern(tpe, constructor, arguments)
   }
 
@@ -91,7 +92,7 @@ package object control {
     def getSelfPatternMatch: finalTypes.PatternMatch
 
     def onValue: any.Expression[FT]
-    def cases: Seq[(Expression[FT], any.Expression[FT])]
+    def cases: Seq[(any.Expression[FT], any.Expression[FT])]
 
     def copy(
       onValue: any.Expression[FT] = this.onValue,
@@ -110,14 +111,14 @@ package object control {
       body: any.Expression[FT]
     ): Lambda[FT]
 
-    def declareVariable(
+    def declareFunVariable(
       name: any.Name[FT],
       tpe: any.Type[FT],
-      initializer: Option[any.Expression[FT]],
+      initializer: any.Expression[FT],
       inExp: any.Expression[FT]
-    ): DeclareVariable[FT] = declareVariable(name, tpe, initializer, inExp)
+    ): DeclareFunVariable[FT]
 
-    def ifThenElse(
+    def funIfThenElse(
       condition: any.Expression[FT],
       ifBranch: any.Expression[FT],
       elseIfBranches: Seq[(any.Expression[FT], any.Expression[FT])],
@@ -131,14 +132,8 @@ package object control {
     def constructorPattern(
       tpe: any.Type[FT],
       constructor: any.Name[FT],
-      arguments: any.Expression[FT]
+      arguments: Seq[any.Expression[FT]]
     ): ConstructorPattern[FT]
-
-    def typePatternExpression(
-      tpe: any.Type[FT],
-      constructorName: Seq[any.Name[FT]],
-      constructorArguments: Seq[PatternExpression[FT]] = Seq.empty
-    ): TypePatternExpression[FT]
 
     def patternMatch(
       onValue: any.Expression[FT],
@@ -146,13 +141,13 @@ package object control {
     ): PatternMatch[FT]
 
     implicit def convert(other: Lambda[FT]): Lambda[FT]
-    implicit def convert(other: DeclareVariable[FT]): DeclareVariable[FT]
-    implicit def convert(ifThenElse: IfThenElse[FT]): IfThenElse[FT]
-    implicit def convert(patternContext: PatternContext[FT]): PatternContext[FT]
-    implicit def convert(patternVariable: PatternVariable[FT]): PatternVariable[FT]
-    implicit def convert(constructorPattern: ConstructorPattern[FT]): ConstructorPattern[FT]
-    implicit def convert(patternMatch: PatternMatch[FT]): PatternMatch[FT]
-    implicit def convert(method: any.Method[FT]): Method[FT]
+    implicit def convert(other: DeclareFunVariable[FT]): DeclareFunVariable[FT]
+    implicit def convert(other: IfThenElse[FT]): IfThenElse[FT]
+    implicit def convert(other: PatternContext[FT]): PatternContext[FT]
+    implicit def convert(other: PatternVariable[FT]): PatternVariable[FT]
+    implicit def convert(other: ConstructorPattern[FT]): ConstructorPattern[FT]
+    implicit def convert(other: PatternMatch[FT]): PatternMatch[FT]
+    implicit def convert(other: any.Method[FT]): Method[FT]
 
   }
 }

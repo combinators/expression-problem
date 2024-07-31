@@ -23,10 +23,12 @@ case class ConstructorPattern[Type, Name](
   constructor: Name
 )
 
-trait Functional[Context, PatternContext] extends Lambdas[Context] {
+trait Functional[Context] extends Lambdas[Context] {
   val base: AnyParadigm
 
   import base.syntax._
+  
+  type PatternContext
 
   trait FunctionalCapabilities {
     implicit val canDeclareVar: Understands[Context, DeclareVariable[Name, Type, Expression, (Expression => Expression) => Expression]]
@@ -75,6 +77,6 @@ trait Functional[Context, PatternContext] extends Lambdas[Context] {
 }
 
 object Functional {
-  type WithBase[Ctxt, PatternCtxt, B <: AnyParadigm] = Functional[Ctxt, PatternCtxt] { val base: B }
+  type WithBase[Ctxt, B <: AnyParadigm] = Functional[Ctxt] { val base: B }
 }
 

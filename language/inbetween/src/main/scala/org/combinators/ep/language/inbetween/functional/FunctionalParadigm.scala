@@ -31,7 +31,7 @@ trait FunctionalParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends F
     implicit val canAddMethodInCompilationUnit: Understands[CompilationUnitContext, AddMethod[MethodBodyContext, Name, Expression]] = new Understands[CompilationUnitContext, AddMethod[MethodBodyContext, Name, Expression]] {
       def perform(context: CompilationUnit, command: AddMethod[MethodBodyContext, Name, Expression]): (CompilationUnit, Unit) = {
         val converted = factory.convert(context)
-        val emptyMethod = factory.fnMethod(
+        val emptyMethod = factory.method(
           name = command.name,
           typeLookupMap = converted.functionTypeLookupMap)
         var (generatedMethod, result) = Command.runGenerator(command.spec, emptyMethod)
@@ -92,7 +92,7 @@ trait FunctionalParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends F
   val methodBodyCapabilities: MethodBodyCapabilities = new MethodBodyCapabilities {
     implicit val canInstantiateTypeInMethod: Understands[MethodBodyContext, InstantiateType[Type, Name, Expression]] = new Understands[MethodBodyContext, InstantiateType[Type, Name, Expression]] {
       override def perform(context: any.Method[FT], command: InstantiateType[any.Type[FT], any.Name[FT], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
-        (context, factory.typeInstantiationExpression(command.tpe, command.constructor, command.arguments))
+        (context, factory.typeInstantiationExpression(command.tpe, Seq(command.constructor), command.arguments))
       }
     }
 

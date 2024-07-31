@@ -2,7 +2,7 @@ package org.combinators.ep.approach.functional    /*DI:LI:AD*/
 
 import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.generator.{AbstractSyntax, ApproachImplementationProvider, Command, EvolutionImplementationProvider, NameProvider, Understands}
-import org.combinators.ep.generator.paradigm.control.{Functional => FunControl}
+import org.combinators.ep.generator.paradigm.control.{ConstructorPattern, Functional => FunControl}
 import Command.{Generator, _}
 import cats.implicits._
 import org.combinators.ep.domain.abstractions.{DataType, DataTypeCase, Operation, Parameter, TypeRep}
@@ -97,6 +97,12 @@ trait Traditional extends ApproachImplementationProvider {
     ): Generator[MethodBodyContext, Expression] = {
     import paradigm.methodBodyCapabilities._
     import functionalControl.functionalCapabilities._
+
+    def makeCtorPat(tpe: Type, caseName: Name, attributeNames: Seq[Name]): Generator[functionalControl.PatternContext, Expression] = {
+      import functionalControl.patternCapabilities._
+      applyConstructorPattern(ConstructorPattern(tpe, caseName), attributeNames.map(patternVariable))
+    }
+
     for {
       params <- forEach (Parameter(names.instanceNameOf(tpe), TypeRep.DataType(tpe)) +: op.parameters) { param: Parameter =>
           for {
@@ -110,16 +116,16 @@ trait Traditional extends ApproachImplementationProvider {
       _ <- resolveAndAddImport(returnType)
       _ <- setReturnType(returnType)
       args <- getArguments()
+      onTpe <- toTargetLanguageType(TypeRep.DataType(tpe))
       result <- {
         val matchGen = makeCases(tpe, cases, op, args.head._3, args.tail, domainSpecific)(_, _)
-        val tpeName = names.mangle(names.conceptNameOf(tpe))
         patternMatch(
           args.head._3,
           cases.map(tpeCase => {            
             val caseName = names.mangle(names.conceptNameOf(tpeCase))
             val attributeNames = tpeCase.attributes.map(attName => names.mangle(names.instanceNameOf(attName)))
-            ((Seq[Name](tpeName, caseName), attributeNames), matchGen(caseName, _))
-          }).toMap)
+            (makeCtorPat(onTpe, caseName, attributeNames), matchGen(caseName, _))
+          }))
         }
     } yield result
   }

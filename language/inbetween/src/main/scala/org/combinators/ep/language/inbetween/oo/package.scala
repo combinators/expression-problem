@@ -35,7 +35,7 @@ package object oo {
 
     override def copy(
       compilationUnits: Set[any.CompilationUnit[FT]]
-    ): Project[FT] = copyAsProjectWithTypeLookups(compilationUnits)
+    ): any.Project[FT] = copyAsProjectWithTypeLookups(compilationUnits)
 
     def copyAsProjectWithTypeLookups(
       compilationUnits: Set[any.CompilationUnit[FT]] = this.compilationUnits,
@@ -74,7 +74,7 @@ package object oo {
       name: Seq[any.Name[FT]] = this.name,
       imports: Seq[any.Import[FT]] = this.imports,
       tests: Seq[any.TestSuite[FT]] = this.tests,
-    ): CompilationUnit[FT] = copyAsCompilationUnitWithClasses(name, imports, tests = tests)
+    ): any.CompilationUnit[FT] = copyAsCompilationUnitWithClasses(name, imports, tests = tests)
 
     def copyAsCompilationUnitWithClasses(
       name: Seq[any.Name[FT]] = this.name,
@@ -84,7 +84,7 @@ package object oo {
       classTypeLookupMap: TypeRep => Generator[Class[FT], any.Type[FT]] = this.classTypeLookupMap,
       classes: Seq[Class[FT]] = this.classes,
       tests: Seq[any.TestSuite[FT]] = this.tests,
-    ): CompilationUnit[FT] = compilationUnit(name, imports, methodTypeLookupMap, constructorTypeLookupMap, classTypeLookupMap, classes, tests)
+    ): CompilationUnit[FT] = ooCompilationUnit(name, imports, methodTypeLookupMap, constructorTypeLookupMap, classTypeLookupMap, classes, tests)
   }
 
   trait Class[FT <: FinalTypes] extends Factory[FT] {
@@ -371,7 +371,7 @@ package object oo {
 
   trait Factory[FT <: FinalTypes] extends any.Factory[FT] {
 
-    override def project(compilationUnits: Set[any.CompilationUnit[FT]]): Project[FT] =
+    override def project(compilationUnits: Set[any.CompilationUnit[FT]]): any.Project[FT] =
       ooProject(compilationUnits = compilationUnits, methodTypeLookupMap=Map.empty, constructorTypeLookupMap=Map.empty, classTypeLookupMap=Map.empty)
 
 
@@ -383,10 +383,10 @@ package object oo {
     ): any.Project[FT]
 
 
-    override def compilationUnit(name: Seq[any.Name[FT]], imports: Seq[any.Import[FT]], tests: Seq[any.TestSuite[FT]]): CompilationUnit[FT] =
-      compilationUnit(name, imports, methodTypeLookupMap=Map.empty, constructorTypeLookupMap=Map.empty, classTypeLookupMap=Map.empty, classes=Seq.empty, tests = tests)
+    override def compilationUnit(name: Seq[any.Name[FT]], imports: Seq[any.Import[FT]], tests: Seq[any.TestSuite[FT]]): any.CompilationUnit[FT] =
+      ooCompilationUnit(name, imports, methodTypeLookupMap=Map.empty, constructorTypeLookupMap=Map.empty, classTypeLookupMap=Map.empty, classes=Seq.empty, tests = tests)
 
-    def compilationUnit(
+    def ooCompilationUnit(
       name: Seq[any.Name[FT]],
       imports: Seq[any.Import[FT]],
       methodTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty,

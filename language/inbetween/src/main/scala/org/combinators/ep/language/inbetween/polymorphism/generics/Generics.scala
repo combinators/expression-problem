@@ -10,7 +10,7 @@ import org.combinators.ep.language.inbetween.polymorphism.ParametricPolymorphism
 
 trait Generics[FT <: FinalTypes, FactoryType <: Factory[FT]] extends GS {
   val base: AnyParadigm.WithFT[FT, FactoryType]
-  import base.{FT=>_, _}
+  import base.{FT=>_, FactoryType=>_, _}
   import syntax._
   val ooParadigm: OOParadigm.WithBase[FT, FactoryType, base.type]
   val ppolyParadigm: ParametricPolymorphism.WithBase[FT, FactoryType, base.type]

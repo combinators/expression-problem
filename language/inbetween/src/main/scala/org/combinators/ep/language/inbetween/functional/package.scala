@@ -15,31 +15,31 @@ package object functional {
   }
 
   trait Project[FT <: FinalTypes] extends any.Project[FT] with Factory[FT] {
-    def adtTypeLookupMap: TypeRep => Generator[AlgebraicDataType[FT], any.Type[FT]] = Map.empty
+    def adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType[FT], any.Type[FT]] = Map.empty
     def functionTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty
 
-    override def addTypeLookupsForFunctions(lookups: TypeRep => Option[Generator[any.Method[FT], any.Type[FT]]]): any.Project[FT] =
+    def addTypeLookupsForFunctions(lookups: TypeRep => Option[Generator[any.Method[FT], any.Type[FT]]]): any.Project[FT] =
       copyAsFunctionalProject(functionTypeLookupMap = (tpeRep: TypeRep) => lookups(tpeRep).getOrElse(this.functionTypeLookupMap(tpeRep)))
 
-    def addTypeLookupsForAlgebraicDataTypes(lookups: TypeRep => Option[Generator[AlgebraicDataType[FT], any.Type[FT]]]): any.Project[FT] =
+    def addTypeLookupsForAlgebraicDataTypes(lookups: TypeRep => Option[Generator[functional.AlgebraicDataType[FT], any.Type[FT]]]): any.Project[FT] =
       copyAsFunctionalProject(adtTypeLookupMap = (tpeRep: TypeRep) => lookups(tpeRep).getOrElse(this.adtTypeLookupMap(tpeRep)))
 
     override def copy(
       compilationUnits: Set[any.CompilationUnit[FT]]
-    ): Project[FT] = copyAsFunctionalProject(compilationUnits)
+    ): any.Project[FT] = copyAsFunctionalProject(compilationUnits)
 
     def copyAsFunctionalProject(
       compilationUnits: Set[any.CompilationUnit[FT]] = this.compilationUnits,
-      adtTypeLookupMap: TypeRep => Generator[AlgebraicDataType[FT], any.Type[FT]] = this.adtTypeLookupMap,
+      adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType[FT], any.Type[FT]] = this.adtTypeLookupMap,
       functionTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = this.functionTypeLookupMap,
     ): Project[FT] = functionalProject(compilationUnits, adtTypeLookupMap, functionTypeLookupMap)
   }
 
   trait CompilationUnit[FT <: FinalTypes] extends any.CompilationUnit[FT] with Factory[FT] {
-    def adts: Seq[AlgebraicDataType[FT]] = Seq.empty
+    def adts: Seq[functional.AlgebraicDataType[FT]] = Seq.empty
     def functions: Seq[any.Method[FT]] = Seq.empty
 
-    def adtTypeLookupMap: TypeRep => Generator[AlgebraicDataType[FT], any.Type[FT]] = Map.empty
+    def adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType[FT], any.Type[FT]] = Map.empty
     def functionTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty
 
     def resolveImport(tpe: any.Type[FT]): Seq[any.Import[FT]]
@@ -48,7 +48,7 @@ package object functional {
     def addTypeLookupsForFunctions(lookups: TypeRep => Option[Generator[any.Method[FT], any.Type[FT]]]): any.CompilationUnit[FT] =
       copyAsFunctionalCompilationUnit(functionTypeLookupMap = (tpeRep: TypeRep) => lookups(tpeRep).getOrElse(this.functionTypeLookupMap(tpeRep)))
 
-    def addTypeLookupsForAlgebraicDataTypes(lookups: TypeRep => Option[Generator[AlgebraicDataType[FT], any.Type[FT]]]): any.CompilationUnit[FT] =
+    def addTypeLookupsForAlgebraicDataTypes(lookups: TypeRep => Option[Generator[functional.AlgebraicDataType[FT], any.Type[FT]]]): any.CompilationUnit[FT] =
       copyAsFunctionalCompilationUnit(adtTypeLookupMap = (tpeRep: TypeRep) => lookups(tpeRep).getOrElse(this.adtTypeLookupMap(tpeRep)))
 
     override def initializeInProject(project: any.Project[FT]): any.CompilationUnit[FT] = {
@@ -65,7 +65,7 @@ package object functional {
       name: Seq[any.Name[FT]] = this.name,
       imports: Seq[any.Import[FT]] = this.imports,
       tests: Seq[any.TestSuite[FT]] = this.tests,
-    ): CompilationUnit[FT] = copyAsFunctionalCompilationUnit(name, imports, tests = tests)
+    ): any.CompilationUnit[FT] = copyAsFunctionalCompilationUnit(name, imports, tests = tests)
 
     def copyAsFunctionalCompilationUnit(
       name: Seq[any.Name[FT]] = this.name,
@@ -75,7 +75,7 @@ package object functional {
       adts: Seq[AlgebraicDataType[FT]] = this.adts,
       functions: Seq[any.Method[FT]] = this.functions,
       tests: Seq[any.TestSuite[FT]] = this.tests,
-    ): CompilationUnit[FT] = compilationUnit(name, imports, adtTypeLookupMap, functionTypeLookupMap, adts, functions, tests)
+    ): CompilationUnit[FT] = funCompilationUnit(name, imports, adtTypeLookupMap, functionTypeLookupMap, adts, functions, tests)
   }
 
   trait AlgebraicDataType[FT <: FinalTypes] extends Factory[FT] {
@@ -157,26 +157,26 @@ package object functional {
 
   trait Factory[FT <: FinalTypes] extends any.Factory[FT] {
 
-    override def project(compilationUnits: Set[any.CompilationUnit[FT]]): Project[FT] =
+    override def project(compilationUnits: Set[any.CompilationUnit[FT]]): any.Project[FT] =
       functionalProject(compilationUnits = compilationUnits, adtTypeLookupMap=Map.empty, functionTypeLookupMap=Map.empty)
 
 
     def functionalProject(
       compilationUnits: Set[any.CompilationUnit[FT]] = Set.empty,
-      adtTypeLookupMap: TypeRep => Generator[AlgebraicDataType[FT], any.Type[FT]] = Map.empty,
+      adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType[FT], any.Type[FT]] = Map.empty,
       functionTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty,
     ): any.Project[FT]
 
 
-    override def compilationlUnit(name: Seq[any.Name[FT]], imports: Seq[any.Import[FT]], tests: Seq[any.TestSuite[FT]]): CompilationUnit[FT] =
-      compilationUnit(name, imports, adtTypeLookupMap=Map.empty, functionTypeLookupMap=Map.empty, adts=Seq.empty, functions=Seq.empty, tests = tests)
+    override def compilationUnit(name: Seq[any.Name[FT]], imports: Seq[any.Import[FT]], tests: Seq[any.TestSuite[FT]]): any.CompilationUnit[FT] =
+      funCompilationUnit(name, imports, adtTypeLookupMap=Map.empty, functionTypeLookupMap=Map.empty, adts=Seq.empty, functions=Seq.empty, tests = tests)
 
-    def compilationUnit(
+    def funCompilationUnit(
       name: Seq[any.Name[FT]],
       imports: Seq[any.Import[FT]],
-      adtTypeLookupMap: TypeRep => Generator[AlgebraicDataType[FT], any.Type[FT]] = Map.empty,
+      adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType[FT], any.Type[FT]] = Map.empty,
       functionTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty,
-      adts: Seq[AlgebraicDataType[FT]] = Seq.empty,
+      adts: Seq[functional.AlgebraicDataType[FT]] = Seq.empty,
       functions: Seq[any.Method[FT]] = Seq.empty,
       tests: Seq[any.TestSuite[FT]] = Seq.empty,
     ): CompilationUnit[FT]
@@ -185,7 +185,7 @@ package object functional {
       name: any.Name[FT],
       imports: Seq[any.Import[FT]] = Seq.empty,
       typeConstructors: Seq[TypeConstructor[FT]] = Seq.empty,
-      typeLookupMap: TypeRep => Generator[AlgebraicDataType[FT], any.Type[FT]] = Map.empty,
+      typeLookupMap: TypeRep => Generator[functional.AlgebraicDataType[FT], any.Type[FT]] = Map.empty,
     ): AlgebraicDataType[FT]
 
     def typeConstructor(
@@ -205,9 +205,9 @@ package object functional {
     override implicit def convert(other: any.CompilationUnit[FT]): CompilationUnit[FT]
     override implicit def convert(other: any.Method[FT]): Method[FT]
 
-    implicit def convert(other: AlgebraicDataType[FT]): AlgebraicDataType[FT]
-    implicit def convert(other: TypeConstructor[FT]): TypeConstructor[FT]
-    implicit def convert(other: TypeInstantiationExpression[FT]): TypeInstantiationExpression[FT]
-    implicit def convert(other: ADTReferenceType[FT]): ADTReferenceType[FT]
+    implicit def convert(other: functional.AlgebraicDataType[FT]): AlgebraicDataType[FT]
+    implicit def convert(other: functional.TypeConstructor[FT]): TypeConstructor[FT]
+    implicit def convert(other: functional.TypeInstantiationExpression[FT]): TypeInstantiationExpression[FT]
+    implicit def convert(other: functional.ADTReferenceType[FT]): ADTReferenceType[FT]
   }
 }

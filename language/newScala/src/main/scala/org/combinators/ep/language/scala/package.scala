@@ -559,7 +559,7 @@ package object scala {
     def findClass(qualifiedName: any.Name[FT]*): any.Type[FT] =
       classReferenceType(qualifiedName:_*)
       
-    def findMethod(qualifiedName: any.Name[FT]*): any.Expression[FT] =
+    def findMethod(qualifiedName: Seq[any.Name[FT]]): any.Expression[FT] =
       methodReferenceExpression(qualifiedName)
 
     def toScala: String = {
@@ -1022,6 +1022,8 @@ package object scala {
   }
 
   trait AlgebraicDataType[FT <: FinalTypes] extends functional.AlgebraicDataType[FT] with Type[FT] with Factory[FT] with Util[FT] {
+    override def toImport: Seq[any.Import[FT]] = Seq.empty
+    
     def toScala: String = {
       val ctors = this.typeConstructors.map(_.toScala).mkString("\n  ")
       s"""
@@ -1431,19 +1433,31 @@ package object scala {
       implicit def convert(operator: OperatorExpressionOps.Operator[FinalTypes]): Operator = operator.getSelfOperator
       implicit def convert(binaryExpression: OperatorExpressionOps.BinaryExpression[FinalTypes]): BinaryExpression = binaryExpression.getSelfBinaryExpression
       implicit def convert(unaryExpression: OperatorExpressionOps.UnaryExpression[FinalTypes]): UnaryExpression = unaryExpression.getSelfUnaryExpression
-      def compilationUnit(
+      /*override def scalaCompilationUnit(
         name: Seq[any.Name[FinalTypes]],
         imports: Seq[any.Import[FinalTypes]],
-        methodTypeLookupMap: TypeRep => Generator[any.Method[FinalTypes], any.Type[FinalTypes]] = Map.empty,
-        constructorTypeLookupMap: TypeRep => Generator[oo.Constructor[FinalTypes], any.Type[FinalTypes]] = Map.empty,
-        classTypeLookupMap: TypeRep => Generator[oo.Class[FinalTypes], any.Type[FinalTypes]] = Map.empty,
-        adtTypeLookupMap: TypeRep => Generator[scala.AlgebraicDataType[FinalTypes], any.Type[FinalTypes]] = Map.empty,
-        functionTypeLookupMap: TypeRep => Generator[any.Method[FinalTypes], any.Type[FinalTypes]] = Map.empty,
-        classes: Seq[oo.Class[FinalTypes]] = Seq.empty,
-        adts: Seq[scala.AlgebraicDataType[FinalTypes]] = Seq.empty,
-        functions: Seq[any.Method[FinalTypes]] = Seq.empty,
-        tests: Seq[any.TestSuite[FinalTypes]] = Seq.empty,
-      ): CompilationUnit = CompilationUnit(
+        methodTypeLookupMap: TypeRep => Generator[any.Method[FinalTypes], any.Type[FinalTypes]],
+        constructorTypeLookupMap: TypeRep => Generator[oo.Constructor[FinalTypes], any.Type[FinalTypes]],
+        classTypeLookupMap: TypeRep => Generator[oo.Class[FinalTypes], any.Type[FinalTypes]],
+        adtTypeLookupMap: TypeRep => Generator[scala.AlgebraicDataType[FinalTypes], any.Type[FinalTypes]],
+        functionTypeLookupMap: TypeRep => Generator[any.Method[FinalTypes], any.Type[FinalTypes]],
+        classes: Seq[oo.Class[FinalTypes]],
+        adts: Seq[scala.AlgebraicDataType[FinalTypes]],
+        functions: Seq[any.Method[FinalTypes]],
+        tests: Seq[any.TestSuite[FinalTypes]],
+      ): CompilationUnit*/
+      def scalaCompilationUnit(
+        name: Seq[any.Name[FinalTypes]],
+        imports: Seq[any.Import[FinalTypes]], 
+        methodTypeLookupMap: TypeRep => Generator[any.Method[FinalTypes],any.Type[FinalTypes]],
+        constructorTypeLookupMap: TypeRep => Generator[oo.Constructor[FinalTypes],any.Type[FinalTypes]],
+        classTypeLookupMap: TypeRep => Generator[oo.Class[FinalTypes],any.Type[FinalTypes]],
+        adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType[FinalTypes],any.Type[FinalTypes]],
+        functionTypeLookupMap: TypeRep => Generator[any.Method[FinalTypes],any.Type[FinalTypes]],
+        classes: Seq[oo.Class[FinalTypes]],
+        adts: Seq[functional.AlgebraicDataType[FinalTypes]],
+        functions: Seq[any.Method[FinalTypes]],
+        tests: Seq[any.TestSuite[FinalTypes]]): CompilationUnit = CompilationUnit(
         name = name,
         imports = imports,
         methodTypeLookupMap = methodTypeLookupMap,
@@ -1456,7 +1470,7 @@ package object scala {
         functions = functions,
         tests = tests
       )
-
+      
       override def constructor(
         constructedType: Option[any.Type[FinalTypes]],
         imports: Set[any.Import[FinalTypes]],
@@ -1700,6 +1714,37 @@ package object scala {
       implicit def convert(other: TreeOps.CreateNodeExpr[FinalTypes]): scala.CreateNodeExpr[FinalTypes] = other.getSelfCreateNodeExpr
 
       override def classBasedTestSuite(underlyingClass: oo.Class[FinalTypes]): TestSuite = TestSuite(underlyingClass)
+
+      def constructorPattern(
+        tpe: any.Type[FinalTypes],
+        constructor: any.Name[FinalTypes],
+        arguments: Seq[any.Expression[FinalTypes]]
+      ): ConstructorPattern = ConstructorPattern(tpe, constructor, arguments)
+      implicit def convert(other: functional.control.ConstructorPattern[FinalTypes]): scala.ConstructorPattern[FinalTypes] = other.getSelfConstructorPattern
+      def patternVariable(name: any.Name[FinalTypes]): scala.PatternVariable[FinalTypes] = PatternVariable(name)
+      implicit def convert(other: functional.control.PatternVariable[FinalTypes]): scala.PatternVariable[FinalTypes] = other.getSelfPatternVariable
+      def patternContext(variables: Seq[any.Name[FinalTypes]]): scala.PatternContext[FinalTypes] = PatternContext(variables)
+      implicit def convert(other: functional.control.PatternContext[FinalTypes]): scala.PatternContext[FinalTypes] = other.getSelfPatternContext
+      implicit def convert(other: functional.control.Lambda[FinalTypes]): Lambda = other.getSelfLambda
+      implicit def convert(other: functional.control.DeclareFunVariable[FinalTypes]): DeclareFunVariable = other.getSelfDeclareFunVariable
+      def declareFunVariable(
+        name: any.Name[FinalTypes],
+        tpe: any.Type[FinalTypes],
+        initializer: any.Expression[FinalTypes],
+        inExp: any.Expression[FinalTypes]): functional.control.DeclareFunVariable[FinalTypes] = DeclareFunVariable(name, tpe, initializer, inExp)
+      def funIfThenElse(
+        condition: any.Expression[FinalTypes],
+        ifBranch: any.Expression[FinalTypes],
+        elseIfBranches: Seq[(any.Expression[FinalTypes], any.Expression[FinalTypes])],
+        elseBranch: any.Expression[FinalTypes]
+      ): scala.FunIfThenElse[FinalTypes] = FunIfThenElse(condition, ifBranch, elseIfBranches, elseBranch)
+
+      implicit def convert(other: functional.control.IfThenElse[FinalTypes]): FunIfThenElse = other.getSelfFunIfThenElse
+      def patternMatch(
+        onValue: any.Expression[FinalTypes],
+        cases: Seq[(any.Expression[FinalTypes], any.Expression[FinalTypes])] = Seq.empty
+      ): scala.PatternMatch[FinalTypes] = PatternMatch(onValue, cases)
+      implicit def convert(other: functional.control.PatternMatch[FinalTypes]): PatternMatch = other.getSelfPatternMatch
     }
 
     case class Name(override val component: String, override val mangled: String) extends scala.Name[FinalTypes] with Factory {
@@ -1743,7 +1788,7 @@ package object scala {
       override val imports: Seq[any.Import[FinalTypes]] = Seq.empty,
       override val typeConstructors: Seq[functional.TypeConstructor[FinalTypes]] = Seq.empty,
       override val typeLookupMap: TypeRep => Generator[functional.AlgebraicDataType[FinalTypes], any.Type[FinalTypes]] = Map.empty,
-    ) extends scala.AlgebraicDataType[FinalTypes] with Type with Factory {
+    ) extends scala.AlgebraicDataType[FinalTypes] with Type with Factory with Util {
       def getSelfAlgebraicDataType: this.type = this
     }
 
@@ -1758,7 +1803,7 @@ package object scala {
       override val tpe: any.Type[FinalTypes],
       override val constructorName: Seq[any.Name[FinalTypes]],
       override val constructorArguments: Seq[any.Expression[FinalTypes]] = Seq.empty
-    ) extends scala.TypeInstantiationExpression[FinalTypes] with Factory {
+    ) extends scala.TypeInstantiationExpression[FinalTypes] with Expression {
       def getSelfTypeInstantiationExpression: this.type = this
     }
 
@@ -1929,10 +1974,10 @@ package object scala {
       override val methodTypeLookupMap: TypeRep => Generator[any.Method[FinalTypes], any.Type[FinalTypes]] = Map.empty,
       override val constructorTypeLookupMap: TypeRep => Generator[oo.Constructor[FinalTypes], any.Type[FinalTypes]] = Map.empty,
       override val classTypeLookupMap: TypeRep => Generator[oo.Class[FinalTypes], any.Type[FinalTypes]] = Map.empty,
-      override val adtTypeLookupMap: TypeRep => Generator[scala.AlgebraicDataType[FinalTypes], any.Type[FinalTypes]] = Map.empty,
+      override val adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType[FinalTypes], any.Type[FinalTypes]] = Map.empty,
       override val functionTypeLookupMap: TypeRep => Generator[any.Method[FinalTypes], any.Type[FinalTypes]] = Map.empty,
       override val classes: Seq[oo.Class[FinalTypes]] = Seq.empty,
-      override val adts: Seq[scala.AlgebraicDataType[FinalTypes]] = Seq.empty,
+      override val adts: Seq[functional.AlgebraicDataType[FinalTypes]] = Seq.empty,
       override val functions: Seq[any.Method[FinalTypes]] = Seq.empty,
       override val tests: Seq[any.TestSuite[FinalTypes]] = Seq.empty,
     ) extends scala.CompilationUnit[FinalTypes] with Util {
@@ -2068,54 +2113,37 @@ package object scala {
     ) extends scala.Lambda[FinalTypes] with Expression {
       override def getSelfLambda: this.type = this
     }
+ 
 
     case class DeclareFunVariable(
-      name: any.Name[FinalTypes],
-      tpe: any.Type[FinalTypes],
-      initializer: any.Expression[FinalTypes],
-      inExp: any.Expression[FinalTypes]
+      override val name: any.Name[FinalTypes],
+      override val tpe: any.Type[FinalTypes],
+      override val initializer: any.Expression[FinalTypes],
+      override val inExp: any.Expression[FinalTypes]
     ) extends scala.DeclareFunVariable[FinalTypes] with Expression {
-      override def toDeclareFunVariable: this.type = this
+      override def getSelfDeclareFunVariable: this.type = this
     }
-
-    override implicit def convert(other: functional.control.DeclareFunVariable[FinalTypes]): DeclareFunVariable = other.getSelfDeclareFunVariable
-    override def declareFunVariable(
-      name: any.Name[FinalTypes],
-      tpe: any.Type[FinalTypes],
-      initializer: any.Expression[FinalTypes],
-      inExp: any.Expression[FinalTypes]): functional.control.DeclareFunVariable[FinalTypes] = DeclareFunVariable(name, tpe, initializer, inExp)
+    
 
     case class FunIfThenElse(
       override val condition: any.Expression[FinalTypes],
       override val ifBranch: any.Expression[FinalTypes],
       override val elseIfBranches: Seq[(any.Expression[FinalTypes], any.Expression[FinalTypes])],
       override val elseBranch: any.Expression[FinalTypes]
-    ) extends Expression with scala.FunIfThenElse[FinalTypes] with Factory {
+    ) extends scala.FunIfThenElse[FinalTypes] with Expression {
       override def getSelfFunIfThenElse: this.type = this
     }
+   
 
-    override def funIfThenElse(
-      condition: any.Expression[FinalTypes],
-      ifBranch: any.Expression[FinalTypes],
-      elseIfBranches: Seq[(any.Expression[FinalTypes], any.Expression[FinalTypes])],
-      elseBranch: any.Expression[FinalTypes]
-    ): scala.FunIfThenElse[FinalTypes] = FunIfThenElse(condition, ifBranch, elseIfBranches, elseBranch)
-
-    override implicit def convert(other: functional.control.IfThenElse[FinalTypes]): FunIfThenElse = other.getSelfFunIfThenElse
-
-    case class PatternContext(variables: Seq[any.Name[FinalTypes]]) extends scala.PatternContext[FinalTypes] with Factory {
+    case class PatternContext(variables: Seq[any.Name[FinalTypes]]) extends scala.PatternContext[FinalTypes] with Factory with Util {
       override def getSelfPatternContext: this.type = this
     }
-    override def patternContext(variables: Seq[any.Name[FinalTypes]]): scala.PatternContext[FinalTypes] = PatternContext(variables)
-    override implicit def convert(other: functional.control.PatternContext[FinalTypes]): scala.PatternContext[FinalTypes] = other.getSelfPatternContext
-
+    
 
     case class PatternVariable(name: any.Name[FinalTypes]) extends scala.PatternVariable[FinalTypes] with Expression {
       override def getSelfPatternVariable: this.type = this
     }
-    override def patternVariable(name: any.Name[FinalTypes]): scala.PatternVariable[FinalTypes] = PatternVariable(name)
-    override implicit def convert(other: functional.control.PatternVariable[FinalTypes]): scala.PatternVariable[FinalTypes] = other.getSelfPatternVariable
-
+   
     case class ConstructorPattern(
       tpe: any.Type[FinalTypes],
       constructor: any.Name[FinalTypes],
@@ -2123,24 +2151,14 @@ package object scala {
     ) extends scala.ConstructorPattern[FinalTypes] with Expression {
       override def getSelfConstructorPattern: this.type = this
     }
-    override def constructorPattern(
-      tpe: any.Type[FinalTypes],
-      constructor: any.Name[FinalTypes],
-      arguments: Seq[any.Expression[FinalTypes]]
-    ): scala.ConstructorPattern[FinalTypes] = ConstructorPattern(tpe, constructor, arguments)
-    override implicit def convert(other: functional.control.ConstructorPattern[FinalTypes]): scala.ConstructorPattern[FinalTypes] = other.getSelfConstructorPattern
-
+    
     case class PatternMatch(
       onValue: any.Expression[FinalTypes],
       cases: Seq[(any.Expression[FinalTypes], any.Expression[FinalTypes])] = Seq.empty
     ) extends scala.PatternMatch[FinalTypes] with Expression {
       override def getSelfPatternMatch: this.type = this
     }
-    override def patternMatch(
-      onValue: any.Expression[FinalTypes],
-      cases: Seq[(any.Expression[FinalTypes], any.Expression[FinalTypes])] = Seq.empty
-    ): scala.PatternMatch[FinalTypes] = PatternMatch(onValue, cases)
-    implicit def convert(other: functional.control.PatternMatch[FinalTypes]): scala.PatternMatch[FinalTypes] = other.getSelfPatternMatch
+    
     
     
   }

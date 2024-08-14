@@ -20,27 +20,27 @@ class FibonacciScala {
   val generator = CodeGenerator("fib")
 
   // TODO: Need to add generator.functional
-  //val fibonacciApproach = FibonacciProvider[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.functional, generator.functionalInMethod, generator.ints, generator.assertionsInMethod, generator.equality)
+  val fibonacciApproach = FibonacciProvider[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.functional, generator.functionalControl, generator.ints, generator.assertionsInMethod, generator.equality)
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
   def directToDiskTransaction(targetDirectory: Path): IO[Unit] = {
     //FIX:
-//    val files =
-//      () => generator.paradigm.runGenerator {
-//        for {
-//          _ <- generator.intsInMethod.enable()
-//          _ <- generator.booleansInMethod.enable()
-//          _ <- generator.stringsInMethod.enable()
-//          _ <- generator.equalityInMethod.enable()
-//          _ <- generator.assertionsInMethod.enable()
-//          _ <- fibonacciApproach.make_project()
-//        } yield ()
-//      }
+    val files =
+      () => generator.paradigm.runGenerator {
+        for {
+          _ <- generator.ints.enable()
+          _ <- generator.booleans.enable()
+          _ <- generator.strings.enable()
+          _ <- generator.equality.enable()
+          _ <- generator.assertionsInMethod.enable()
+          _ <- fibonacciApproach.make_project()
+        } yield ()
+      }
 
      IO {
       print("Computing Files...")
-       //FIX:     val computed = files()
+      val computed = files()
       println("[OK]")
       if (targetDirectory.toFile.exists()) {
         print(s"Cleaning Target Directory (${targetDirectory})...")
@@ -48,7 +48,7 @@ class FibonacciScala {
         println("[OK]")
       }
       print("Persisting Files...")
-       //FIX:    files().foreach(file => persistable.persistOverwriting(targetDirectory, file))
+      files().foreach(file => persistable.persistOverwriting(targetDirectory, file))
       println("[OK]")
     }
   }

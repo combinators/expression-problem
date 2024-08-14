@@ -11,6 +11,8 @@ import org.combinators.ep.generator.paradigm.{Apply, ToTargetLanguageType}
 import org.combinators.ep.language.inbetween.any.{AbstractSyntax, CompilationUnit, AnyParadigm, Method, Name, Project, Type}
 import org.combinators.ep.language.inbetween.oo.{Class, Constructor, OOParadigm}
 import org.combinators.ep.language.inbetween.imperative.Imperative
+import org.combinators.ep.language.inbetween.functional.FunctionalParadigm
+import org.combinators.ep.language.inbetween.functional.control
 import org.combinators.ep.language.inbetween.ffi.{Arithmetic, RealArithmetic, Booleans, Equals, Lists, Trees, Strings, Assertions}
 import org.combinators.ep.language.inbetween.polymorphism.ParametricPolymorphism
 import org.combinators.ep.language.inbetween.polymorphism.generics.Generics
@@ -149,6 +151,8 @@ sealed class CodeGenerator(domainName: String) { cc =>
   val paradigm = AnyParadigm[Finalized.FinalTypes, factory.type, syntax.type](factory, runGenerator, syntax)
   val ooParadigm = OOParadigm[Finalized.FinalTypes, factory.type, paradigm.type](paradigm)
   val imperative = Imperative[Finalized.FinalTypes, factory.type, paradigm.type](paradigm)
+  val functional = FunctionalParadigm[Finalized.FinalTypes, factory.type, paradigm.type](paradigm)
+  val functionalControl = control.Functional[Finalized.FinalTypes, factory.type, paradigm.type](paradigm)
 
   val parametricPolymorphism = ParametricPolymorphism[Finalized.FinalTypes, factory.type, paradigm.type](paradigm)
   val generics = Generics[Finalized.FinalTypes, factory.type, paradigm.type](paradigm)(ooParadigm, parametricPolymorphism)

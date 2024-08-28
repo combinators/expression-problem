@@ -56,6 +56,30 @@ package object scala {
      functionTypeLookupMap
     )
 
+    override def copyAsProjectWithTypeLookups(
+      compilationUnits: Set[any.CompilationUnit[FT]] = this.compilationUnits,
+      methodTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = this.methodTypeLookupMap,
+      constructorTypeLookupMap: TypeRep => Generator[oo.Constructor[FT], any.Type[FT]] = this.constructorTypeLookupMap,
+      classTypeLookupMap: TypeRep => Generator[oo.Class[FT], any.Type[FT]] = this.classTypeLookupMap
+    ): Project[FT] =
+      copyAsScalaProject(
+        compilationUnits = compilationUnits,
+        methodTypeLookupMap = methodTypeLookupMap,
+        constructorTypeLookupMap = constructorTypeLookupMap,
+        classTypeLookupMap = classTypeLookupMap
+      )
+
+    override def copyAsFunctionalProject(
+      compilationUnits: Set[any.CompilationUnit[FT]] = this.compilationUnits,
+      adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType[FT], any.Type[FT]] = this.adtTypeLookupMap,
+      functionTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = this.functionTypeLookupMap,
+    ): Project[FT] =
+      copyAsScalaProject(
+        compilationUnits = compilationUnits,
+        adtTypeLookupMap = adtTypeLookupMap,
+        functionTypeLookupMap = functionTypeLookupMap,
+      )
+
     def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): any.Project[FT] =
       copyAsScalaProject(
         compilationUnits = compilationUnits.map(cu => convert(cu).prefixRootPackage(rootPackageName, excludedTypeNames)),
@@ -144,9 +168,9 @@ package object scala {
     def toScala: String = {
       val elseIfs = elseIfBranches.map{ case (condition, body) =>
         s"""
-           | else if (${condition.toScala}) {
-           |  ${body.map(_.toScala).mkString("\n  ")}
-           |}""".stripMargin
+            |else if (${condition.toScala}) {
+            |  ${body.map(_.toScala).mkString("\n  ")}
+            |}""".stripMargin
       }
 
       s"""
@@ -155,7 +179,7 @@ package object scala {
           |}${elseIfs.mkString("")} else {
           |  ${elseBranch.map(_.toScala).mkString("\n  ")}
           |}
-          """
+          """.stripMargin
     }
 
     def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): imperative.IfThenElse[FT] =
@@ -185,7 +209,7 @@ package object scala {
          |}${elseIfs.mkString("")} else {
          |  ${elseBranch.toScala}
          |}
-          """
+          """.stripMargin
     }
 
     def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): functional.control.IfThenElse[FT] =
@@ -473,7 +497,7 @@ package object scala {
   }
 
   trait Return[FT <: FinalTypes] extends any.Return[FT] with Statement[FT] with Factory[FT] {
-    def toScala: String = s"return ${this.expression.toScala}"
+    def toScala: String = s"return { ${this.expression.toScala.stripLeading()} }"
 
     override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): any.Return[FT] =
       copy(
@@ -942,7 +966,9 @@ package object scala {
       val clsDecls = classes.map(_.toScala).mkString("\n\n")
       val testDecls = tests.map(_.toScala).mkString("\n\n")
       val packageDecl = if (name.init.isEmpty) "" else s"package ${name.init.map(_.toScala).mkString(".")}"
-      val functionsDecl = functions.map(_.toScala).mkString("\n\n")
+      val functionsDecl = functions.map(fun => {
+        fun.copyAsClsMethod(isPublic = true).toScala
+      }).mkString("\n\n")
 
       s"""
          |${packageDecl}
@@ -955,7 +981,7 @@ package object scala {
     }
 
     def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): any.CompilationUnit[FT] = {
-      copyAsScalaCompilation(
+      copyAsScalaCompilationUnit(
         name = rootPackageName ++ name,
         imports = imports.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
         methodTypeLookupMap = tpeRep => methodTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
@@ -970,7 +996,7 @@ package object scala {
       )
     }
 
-    def copyAsScalaCompilation(
+    def copyAsScalaCompilationUnit(
       name: Seq[any.Name[FT]] = this.name,
       imports: Seq[any.Import[FT]] = this.imports,
       methodTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = this.methodTypeLookupMap,
@@ -993,7 +1019,7 @@ package object scala {
       classes: Seq[oo.Class[FT]] = this.classes,
       tests: Seq[any.TestSuite[FT]] = this.tests,
     ): CompilationUnit[FT] =
-      copyAsScalaCompilation(
+      copyAsScalaCompilationUnit(
         name = name,
         imports = imports,
         methodTypeLookupMap = methodTypeLookupMap,
@@ -1010,7 +1036,7 @@ package object scala {
       adts: Seq[functional.AlgebraicDataType[FT]] = this.adts,
       functions: Seq[any.Method[FT]] = this.functions,
       tests: Seq[any.TestSuite[FT]] = this.tests,
-    ): CompilationUnit[FT] = copyAsScalaCompilation(
+    ): CompilationUnit[FT] = copyAsScalaCompilationUnit(
       name = name,
       imports = imports,
       adtTypeLookupMap = adtTypeLookupMap,
@@ -1018,6 +1044,19 @@ package object scala {
       adts = adts,
       functions = functions,
       tests = tests)
+
+    override def initializeInProject(project: any.Project[FT]): any.CompilationUnit[FT] = {
+      val withLookups = copyAsScalaCompilationUnit(
+        adtTypeLookupMap = project.adtTypeLookupMap,
+        functionTypeLookupMap = project.functionTypeLookupMap,
+        methodTypeLookupMap = project.methodTypeLookupMap,
+        constructorTypeLookupMap = project.constructorTypeLookupMap,
+        classTypeLookupMap = project.classTypeLookupMap,
+      )
+      withLookups.copyAsScalaCompilationUnit(
+        tests = withLookups.tests.map(_.initializeInCompilationUnit(withLookups))
+      )
+    }
 
   }
 

@@ -11,10 +11,11 @@ import org.combinators.ep.generator.paradigm.{Apply, ToTargetLanguageType}
 import org.combinators.ep.language.inbetween.any.{AbstractSyntax, CompilationUnit, AnyParadigm, Method, Name, Project, Type}
 import org.combinators.ep.language.inbetween.oo.{Class, Constructor, OOParadigm}
 import org.combinators.ep.language.inbetween.imperative.Imperative
-import org.combinators.ep.language.inbetween.functional.FunctionalParadigm
+import org.combinators.ep.language.inbetween.functional.{AlgebraicDataType, FunctionalParadigm}
 import org.combinators.ep.language.inbetween.functional.control
 import org.combinators.ep.language.inbetween.ffi.{Arithmetic, RealArithmetic, Booleans, Equals, Lists, Trees, Strings, Assertions}
 import org.combinators.ep.language.inbetween.polymorphism.ParametricPolymorphism
+import org.combinators.ep.language.inbetween.polymorphism.ParametricPolymorphismInADTContexts
 import org.combinators.ep.language.inbetween.polymorphism.generics.Generics
 
 import java.nio.file.{Path, Paths}
@@ -79,17 +80,13 @@ sealed class CodeGenerator(domainName: String) { cc =>
   def runGenerator(generator: Generator[Project[Finalized.FinalTypes], Unit]): Seq[FileWithPath] = {
     var projectWithLookups: Project[Finalized.FinalTypes] = factory.scalaProject(Set.empty)
 
-   def buildFile: FileWithPath = {
+    def buildFile: FileWithPath = {
       // create a rudimentary build.sbt for Scala just to work with sbt version 1.7.1
       val cmds = s"""
+                    |scalaVersion := "3.3.3"
                     |libraryDependencies ++= Seq(
-                    |    "org.scalactic" %% "scalactic" % "3.2.2" % "test",
-                    |    "org.scalatest" %% "scalatest" % "3.2.2" % "test",
-                    |    "org.scalameta" %% "scalameta" % "4.4.27",
-                    |    "org.scalameta" %% "contrib" % "4.1.6",
-                    |    "org.typelevel" %% "cats-core" % "2.3.1",
-                    |    "org.typelevel" %% "cats-free" % "2.3.1",
-                    |    "org.typelevel" %% "cats-effect" % "2.3.1"
+                    |    "org.scalactic" %% "scalactic" % "3.2.19" % "test",
+                    |    "org.scalatest" %% "scalatest" % "3.2.19" % "test",
                     |  )
            """.stripMargin
       FileWithPath(cmds, Paths.get("build.sbt"))
@@ -99,6 +96,12 @@ sealed class CodeGenerator(domainName: String) { cc =>
       addLookupsForImplementedGenerators[Method[Finalized.FinalTypes]](
         factory.convert(projectWithLookups),
         { case (project, lookup) => factory.convert(project).addTypeLookupsForMethods(lookup) }
+      )(paradigm.methodBodyCapabilities.canTransformTypeInMethodBody,
+        parametricPolymorphism.methodBodyCapabilities.canApplyTypeInMethod)
+    projectWithLookups =
+      addLookupsForImplementedGenerators[Method[Finalized.FinalTypes]](
+        factory.convert(projectWithLookups),
+        { case (project, lookup) => factory.convert(project).addTypeLookupsForFunctions(lookup) }
       )(paradigm.methodBodyCapabilities.canTransformTypeInMethodBody,
         parametricPolymorphism.methodBodyCapabilities.canApplyTypeInMethod)
     projectWithLookups =
@@ -113,6 +116,13 @@ sealed class CodeGenerator(domainName: String) { cc =>
         { case (project, lookup) => factory.convert(project).addTypeLookupsForConstructors(lookup) }
       )(ooParadigm.constructorCapabilities.canTranslateTypeInConstructor,
         generics.constructorCapabilities.canApplyTypeInConstructor)
+    projectWithLookups =
+      addLookupsForImplementedGenerators[AlgebraicDataType[Finalized.FinalTypes]](
+        factory.convert(projectWithLookups),
+        { case (project, lookup) => factory.convert(project).addTypeLookupsForAlgebraicDataTypes(lookup) }
+      )(functional.typeCapabilities.canTranslateTypeInType,
+        parametricPolymorphismInADTContexts.algebraicDataTypeCapabilities.canApplyTypeInADT)
+
 
     val (generatedProject, _) = Command.runGenerator(generator, projectWithLookups)
     val withPrefix = factory.convert(generatedProject).prefixRootPackage(Seq(nameProvider.mangle(domainName)), prefixExcludedTypes)
@@ -137,14 +147,14 @@ sealed class CodeGenerator(domainName: String) { cc =>
         )
         Seq(toFileWithPath(testOnlyCu, testDir))
       } else Seq.empty
-      val classesFile = if (cu.classes.nonEmpty) {
-        val noTestCu = cu.copyAsCompilationUnitWithClasses(
+      val nonTestFile = if (cu.classes.nonEmpty || cu.functions.nonEmpty || cu.adts.nonEmpty) {
+        val noTestCu = cu.copy(
           tests = Seq.empty
         )
         Seq(toFileWithPath(noTestCu, mainDir))
       } else Seq.empty
-      
-      classesFile ++ testFile
+
+      nonTestFile ++ testFile
     }).toSeq :+ treeLibrary :+ buildFile
   }
 
@@ -156,6 +166,8 @@ sealed class CodeGenerator(domainName: String) { cc =>
 
   val parametricPolymorphism = ParametricPolymorphism[Finalized.FinalTypes, factory.type, paradigm.type](paradigm)
   val generics = Generics[Finalized.FinalTypes, factory.type, paradigm.type](paradigm)(ooParadigm, parametricPolymorphism)
+  val parametricPolymorphismInADTContexts = ParametricPolymorphismInADTContexts[Finalized.FinalTypes, factory.type, paradigm.type](paradigm)(functional)
+
 
   val booleans = Booleans[Finalized.FinalTypes, factory.type, paradigm.type](paradigm)
 

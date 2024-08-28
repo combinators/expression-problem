@@ -17,7 +17,7 @@ import java.nio.file.{Path, Paths}
  * Takes functional specification of Fibonacci with Lucas and generates Scala code.
  */
 class FibonacciScala {
-  val generator = CodeGenerator("fib")
+  val generator = CodeGenerator("fibonacci")
 
   // TODO: Need to add generator.functional
   val fibonacciApproach = FibonacciProvider[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.functional, generator.functionalControl, generator.ints, generator.assertionsInMethod, generator.equality)

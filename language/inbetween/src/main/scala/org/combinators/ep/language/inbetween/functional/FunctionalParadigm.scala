@@ -34,8 +34,9 @@ trait FunctionalParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends F
         val emptyMethod = factory.method(
           name = command.name,
           typeLookupMap = converted.functionTypeLookupMap)
-        var (generatedMethod, result) = Command.runGenerator(command.spec, emptyMethod)
-        (converted.copyAsFunctionalCompilationUnit(functions = converted.functions :+ generatedMethod), ())
+        val (generatedMethod, result) = Command.runGenerator(command.spec, emptyMethod)
+        val methodWithResult = generatedMethod.copy(statements = generatedMethod.statements :+ factory.returnExpression(result))
+        (converted.copyAsFunctionalCompilationUnit(functions = converted.functions :+ methodWithResult), ())
       }
     }
 

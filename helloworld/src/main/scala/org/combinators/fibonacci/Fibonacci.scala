@@ -16,6 +16,7 @@ trait Fibonacci {
   val ffiEquality : Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
   lazy val fibName:paradigm.syntax.Name  = names.mangle("fib")
+  lazy val fibPackage:paradigm.syntax.Name  = names.mangle("fibonacci")
   lazy val testFibName:paradigm.syntax.Name  = names.mangle("fibTest")
   lazy val nName:paradigm.syntax.Name  = names.mangle("n")
 
@@ -39,7 +40,7 @@ trait Fibonacci {
       fn_1 <- apply(func, Seq(n_1))
       fn_2 <- apply(func, Seq(n_2))
       addExpr <- ffiArithmetic.arithmeticCapabilities.add(fn_1, fn_2)
-      res <- ifThenElse(le1, Command.lift(one), Seq.empty, Command.lift(addExpr))
+      res <- ifThenElse(le1, Command.lift(n), Seq.empty, Command.lift(addExpr))
     } yield res
   }
 
@@ -80,7 +81,7 @@ trait Fibonacci {
 
   def make_project(): Generator[paradigm.ProjectContext, Unit] = {
     for {
-      _ <- paradigm.projectCapabilities.addCompilationUnit(make_unit(), fibName)
+      _ <- paradigm.projectCapabilities.addCompilationUnit(make_unit(), fibPackage)
       _ <- paradigm.projectCapabilities.addCompilationUnit(paradigm.compilationUnitCapabilities.addTestSuite(testFibName, make_test()), testFibName)
     } yield ()
   }

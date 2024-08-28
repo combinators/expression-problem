@@ -130,7 +130,7 @@ trait FibonacciWithLucas {
       one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
 
       check0 <- apply(func, Seq(zero))
-      asserteq0 <- ffiAssertions.assertionCapabilities.assertEquals(intType, check0, one)
+      asserteq0 <- ffiAssertions.assertionCapabilities.assertEquals(intType, check0, zero)
 
       check1 <- apply(func, Seq(one))
       asserteq1 <- ffiAssertions.assertionCapabilities.assertEquals(intType, check1, one)
@@ -140,7 +140,7 @@ trait FibonacciWithLucas {
       check7 <- apply(func, Seq(seven))
       asserteq7 <- ffiAssertions.assertionCapabilities.assertEquals(intType, check7, thirteen)
 
-      lucasfunc <- functionalParadigm.methodBodyCapabilities.findMethod(Seq(fibName))
+      lucasfunc <- functionalParadigm.methodBodyCapabilities.findMethod(Seq(lucasName))
       twentynine <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 29)
       check7 <- apply(lucasfunc, Seq(seven))
       asserteq8 <- ffiAssertions.assertionCapabilities.assertEquals(intType, check7, twentynine)

@@ -344,7 +344,7 @@ package object scala {
   }
 
   trait BinaryExpression[FT <: FinalTypes] extends Expression[FT] with OperatorExpressionOps.BinaryExpression[FT] with Factory[FT] {
-    def toScala: String = operator.toScala(left, right)
+    def toScala: String = s"(${operator.toScala(left, right)})"  // necessary when composing expressions, though can get excessive at times.
 
     override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): OperatorExpressionOps.BinaryExpression[FT] =
       copy(

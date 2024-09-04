@@ -26,6 +26,8 @@ import java.nio.file.{Path, Paths}
 class Main(choice:String, select:String) {
   val generator: CodeGenerator = CodeGenerator(M0.getModel.base.name.toLowerCase)
 
+  val functionalApproach: WithParadigm[generator.paradigm.type] = org.combinators.ep.approach.functional.Traditional[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.functional, generator.functionalControl)
+
   val ooApproach: WithParadigm[generator.paradigm.type] = Traditional[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.ooParadigm)
   // can't have all of these together
   val visitorApproach: Visitor.WithParadigm[generator.paradigm.type] = Visitor[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
@@ -43,6 +45,7 @@ class Main(choice:String, select:String) {
 
   // select one here
   val approach = choice match {
+    case "functional" => functionalApproach
     case "graphviz" => visualizeApproach
     case "oo" => ooApproach
     case "visitor" => visitorApproach
@@ -418,9 +421,9 @@ object DirectToDiskMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
 
-    val approach = if (args.isEmpty) "oo" else args.head
+    val approach = if (args.isEmpty) "functional" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "X4" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "M0" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 

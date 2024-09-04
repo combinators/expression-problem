@@ -7,18 +7,20 @@ import org.apache.commons.io.FileUtils
 import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.ep.language.scala.codegen.CodeGenerator
-//FIX: import org.combinators.ep.language.scala.{CodeGenerator, ScalaNameProvider, Syntax}
 
 import java.nio.file.{Path, Paths}
 
 /**
- * Takes paradigm-independent specification for Fibonacci and generates Java code
+ * Takes paradigm-independent specification for Fibonacci and generates Scala code
  */
 class FibonacciIndependentMainScala {
   val generator = CodeGenerator("fibonacci")
 
+  // functional
   val fibonacciApproach = FibonacciIndependentProvider.functional[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.functional, generator.functionalControl, generator.ints, generator.assertionsInMethod, generator.equality)
 
+  // imperative
+  // val fibonacciApproach = FibonacciIndependentProvider.imperative[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.ooParadigm, generator.imperative, generator.ints, generator.assertionsInMethod, generator.equality)
 
   val persistable = FileWithPathPersistable[FileWithPath]
 

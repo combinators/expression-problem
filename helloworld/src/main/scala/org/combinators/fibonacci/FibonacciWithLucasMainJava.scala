@@ -16,7 +16,7 @@ import java.nio.file.{Path, Paths}
  * Takes language-independent specification of Fibonacci with Lucas and generates Java code
  */
 class FibonacciWithLucasMainJava {
-  val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("fib"))))
+  val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("fibonacci"))))
 
   val fibonacciApproach = FibonacciIndependentWithLucasProvider.imperative[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.imperativeInMethod, generator.intsInMethod, generator.assertionsInMethod, generator.equalityInMethod)
 
@@ -46,7 +46,7 @@ class FibonacciWithLucasMainJava {
         println("[OK]")
       }
       print("Persisting Files...")
-      files().foreach(file => persistable.persistOverwriting(targetDirectory, file))
+      computed.foreach(file => persistable.persistOverwriting(targetDirectory, file))
       println("[OK]")
     }
   }

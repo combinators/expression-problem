@@ -7,8 +7,6 @@ import org.apache.commons.io.FileUtils
 import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.ep.language.scala.codegen.CodeGenerator
-//FIX: import org.combinators.ep.language.java.AlternateMain.generator
-//FIX: import org.combinators.ep.language.scala.{CodeGenerator, ScalaNameProvider, Syntax}
 
 import java.nio.file.{Path, Paths}
 

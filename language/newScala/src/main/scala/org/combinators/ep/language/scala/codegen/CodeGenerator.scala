@@ -92,6 +92,24 @@ sealed class CodeGenerator(domainName: String) { cc =>
       FileWithPath(cmds, Paths.get("build.sbt"))
     }
 
+    def pluginsFile: FileWithPath = {
+      val plugins =
+        s"""
+           |addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.5.2")
+           |""".stripMargin
+      FileWithPath(plugins, Paths.get("project", "plugins.sbt"))
+    }
+
+    def scalaFmt: FileWithPath = {
+      val fmt =
+        s"""
+           |version = 3.8.3
+           |runner.dialect = scala3
+           |""".stripMargin
+      FileWithPath(fmt, Paths.get(".scalafmt.conf"))
+    }
+
+
     projectWithLookups =
       addLookupsForImplementedGenerators[Method[Finalized.FinalTypes]](
         factory.convert(projectWithLookups),
@@ -155,7 +173,7 @@ sealed class CodeGenerator(domainName: String) { cc =>
       } else Seq.empty
 
       nonTestFile ++ testFile
-    }).toSeq :+ treeLibrary :+ buildFile
+    }).toSeq :+ treeLibrary :+ buildFile :+ pluginsFile :+ scalaFmt
   }
 
   val paradigm = AnyParadigm[Finalized.FinalTypes, factory.type, syntax.type](factory, runGenerator, syntax)

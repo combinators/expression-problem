@@ -142,8 +142,10 @@ class Main(choice:String, select:String) {
     eips.M3(approach.paradigm)(m2_eip)(generator.doubles, generator.strings)
 
   val m4_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    eips.M4.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(m3_eip)(
-      generator.imperative, generator.doubles, generator.booleans, generator.strings, generator.listsInMethod, generator.equality)
+    eips.M4.functional[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(m3_eip)(
+        generator.functionalControl, generator.doubles, generator.booleans, generator.strings, generator.listsInMethod, generator.equality)
+//    eips.M4.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(m3_eip)(
+//      generator.imperative, generator.doubles, generator.booleans, generator.strings, generator.listsInMethod, generator.equality)
   val m5_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.M5(approach.paradigm)(m4_eip)(generator.ints,generator.treesInMethod)
   val m6_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
@@ -423,7 +425,7 @@ object DirectToDiskMain extends IOApp {
 
     val approach = if (args.isEmpty) "functional" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "M0" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "M4" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 
@@ -432,7 +434,9 @@ object DirectToDiskMain extends IOApp {
       main <- IO { main }
 
       _ <- IO { println("[OK]") }
+
       result <- main.runDirectToDisc(targetDirectory)
+      _ <- IO { println(s"DONE, in ${targetDirectory} you can now run: sbt scalafmt Test/scalafmt test") }
     } yield result
   }
 }
@@ -481,7 +485,7 @@ object GenerateAllMain extends IOApp {
     })
 
     for {
-      _ <- IO { print("DONE") }
+      _ <- IO { print(s"DONE, in your target directory you can now run: sbt scalafmt Test/scalafmt test") }
     } yield ExitCode.Success
 
   }

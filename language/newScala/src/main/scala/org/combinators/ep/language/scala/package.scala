@@ -40,6 +40,10 @@ package object scala {
   }
 
   trait Project[FT <: FinalTypes] extends oo.Project[FT] with functional.Project[FT] with Factory[FT] {
+    override def addTypeLookupsForMethods(lookups: TypeRep => Option[Generator[any.Method[FT], any.Type[FT]]]): any.Project[FT] = {
+      super.addTypeLookupsForMethods(lookups).addTypeLookupsForFunctions(lookups)
+    }
+
    def copyAsScalaProject(
       compilationUnits: Set[any.CompilationUnit[FT]] = this.compilationUnits,
       methodTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = this.methodTypeLookupMap,
@@ -1066,7 +1070,7 @@ package object scala {
     def toScala: String = {
       val ctors = this.typeConstructors.map(_.toScala).mkString("\n  ")
       s"""
-        |enum ${this.name} {
+        |enum ${this.name.toScala} {
         |  ${ctors}
         |}""".stripMargin
     }

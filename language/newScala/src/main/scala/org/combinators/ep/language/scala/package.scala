@@ -944,7 +944,7 @@ package object scala {
     def toScala : String = {
       val (typeArguments, regularArguments) = arguments.partition(_.isTypeReferenceExpression)
       val tyArgs = if (typeArguments.isEmpty) "" else typeArguments.map(_.toScala).mkString("[",  ", ", "]")
-      val args = if (regularArguments.isEmpty) "" else regularArguments.map(_.toScala).mkString("(",  ", ", ")")
+      val args = if (regularArguments.isEmpty) "()" else regularArguments.map(_.toScala).mkString("(",  ", ", ")")
       s"${function.toScala}${tyArgs}${args}"
     }
 

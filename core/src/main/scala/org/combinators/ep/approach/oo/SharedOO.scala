@@ -3,7 +3,7 @@ package org.combinators.ep.approach.oo    /*DI:LI:AD*/
 import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.communication.{ReceivedRequest, Request}
+import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm.{FindClass, ObjectOriented}
 import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider, Understands}
@@ -94,6 +94,34 @@ trait SharedOO extends ApproachImplementationProvider {
     } yield ()
   }
 
+  def latestModelDefiningOperatorClass(domain: GenericModel, tpeCase:DataTypeCase, op:Operation, domainSpecific: EvolutionImplementationProvider[this.type]) : Option[GenericModel] = {
+    // Find all domains with an EIP that implements op for any type case
+    val domainsImplementingOp = domainSpecific.evolutionSpecificDependencies(PotentialRequest(domain.baseDataType, tpeCase, op)).keySet
+
+    def cmp(l: GenericModel, r: GenericModel) = {
+      if (l.before(r)) -1 else if (r.before(l)) 1 else 0
+    }
+
+    def futureMergePoint(l: GenericModel, r: GenericModel)(m: GenericModel): Boolean = {
+      l.beforeOrEqual(m) && r.beforeOrEqual(m)
+    }
+
+    val orderedImplementers = domainsImplementingOp.toSeq
+      .filter(d => d.beforeOrEqual(domain)) // filter to make sure we are before the current domain (we are not interested in later EIPs)
+      .sorted(cmp)
+      .reverse
+
+    // Are there two non-comparable ancestors l, r that haven't been merged by a third m which is past both? Then we are
+    // responsible for the merge!
+    if (orderedImplementers.size > 1 && orderedImplementers.exists(l => orderedImplementers.exists(r =>
+      cmp(l, r) == 0 && !orderedImplementers.exists(futureMergePoint(l, r))))
+    ) {
+      return Some(domain)
+    }
+    Some(orderedImplementers.head)     // latest one
+  }
+
+
   /**
    * Provides a method implementation that contains the logic of the operation encoded
    * as a single method.
@@ -119,6 +147,10 @@ trait SharedOO extends ApproachImplementationProvider {
                         ): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
+
+    val properModel = latestModelDefiningOperatorClass(model, tpeCase, op,  domainSpecific).get
+    println(properModel)
+
     for {
       _ <- makeSignature(op)
       thisRef <- selfReference()
@@ -136,7 +168,7 @@ trait SharedOO extends ApproachImplementationProvider {
             thisRef,
             atts,
             Request(op, args),
-            Some(model)
+            Some(properModel)
           )
         )
     } yield result

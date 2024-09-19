@@ -831,32 +831,33 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
     }
   }
 
-  def latestModelDefiningOperatorClass(domain: GenericModel, tpeCase:DataTypeCase, op:Operation, domainSpecific: EvolutionImplementationProvider[this.type]) : Option[GenericModel] = {
-    // Find all domains with an EIP that implements op for any type case
-    val domainsImplementingOp = domainSpecific.evolutionSpecificDependencies(PotentialRequest(domain.baseDataType, tpeCase, op)).keySet
-
-    def cmp(l: GenericModel, r: GenericModel) = {
-      if (l.before(r)) -1 else if (r.before(l)) 1 else 0
-    }
-
-    def futureMergePoint(l: GenericModel, r: GenericModel)(m: GenericModel): Boolean = {
-      l.beforeOrEqual(m) && r.beforeOrEqual(m)
-    }
-
-    val orderedImplementers = domainsImplementingOp.toSeq
-      .filter(d => d.beforeOrEqual(domain)) // filter to make sure we are before the current domain (we are not interested in later EIPs)
-      .sorted(cmp)
-      .reverse
-
-    // Are there two non-comparable ancestors l, r that haven't been merged by a third m which is past both? Then we are
-    // responsible for the merge!
-    if (orderedImplementers.size > 1 && orderedImplementers.exists(l => orderedImplementers.exists(r =>
-      cmp(l, r) == 0 && !orderedImplementers.exists(futureMergePoint(l, r))))
-    ) {
-      return Some(domain)
-    }
-    Some(orderedImplementers.head)     // latest one
-  }
+  // moved to sharedOO
+//  def latestModelDefiningOperatorClass(domain: GenericModel, tpeCase:DataTypeCase, op:Operation, domainSpecific: EvolutionImplementationProvider[this.type]) : Option[GenericModel] = {
+//    // Find all domains with an EIP that implements op for any type case
+//    val domainsImplementingOp = domainSpecific.evolutionSpecificDependencies(PotentialRequest(domain.baseDataType, tpeCase, op)).keySet
+//
+//    def cmp(l: GenericModel, r: GenericModel) = {
+//      if (l.before(r)) -1 else if (r.before(l)) 1 else 0
+//    }
+//
+//    def futureMergePoint(l: GenericModel, r: GenericModel)(m: GenericModel): Boolean = {
+//      l.beforeOrEqual(m) && r.beforeOrEqual(m)
+//    }
+//
+//    val orderedImplementers = domainsImplementingOp.toSeq
+//      .filter(d => d.beforeOrEqual(domain)) // filter to make sure we are before the current domain (we are not interested in later EIPs)
+//      .sorted(cmp)
+//      .reverse
+//
+//    // Are there two non-comparable ancestors l, r that haven't been merged by a third m which is past both? Then we are
+//    // responsible for the merge!
+//    if (orderedImplementers.size > 1 && orderedImplementers.exists(l => orderedImplementers.exists(r =>
+//      cmp(l, r) == 0 && !orderedImplementers.exists(futureMergePoint(l, r))))
+//    ) {
+//      return Some(domain)
+//    }
+//    Some(orderedImplementers.head)     // latest one
+//  }
 
   def xxxlatestModelDefiningOperatorClass(domain: GenericModel, tpeCase:DataTypeCase, op: Operation, domainSpecific: EvolutionImplementationProvider[this.type]): Option[GenericModel] = {
 

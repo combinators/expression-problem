@@ -141,9 +141,10 @@ package object scala {
 
   trait DeclareFunVariable[FT <: FinalTypes] extends functional.control.DeclareFunVariable[FT] with Expression[FT] with Factory[FT] {
     def toScala: String = {
+      val decl = if (this.isRecursive) "def" else "val"
       val body = this.inExp.toScala
       s"""
-         |{ val ${this.name.toScala}: ${this.tpe.toScala} = ${initializer.toScala}
+         |{ ${decl} ${this.name.toScala}: ${this.tpe.toScala} = ${this.initializer.toScala}
          |  $body }
          |""".stripMargin
     }
@@ -442,6 +443,10 @@ package object scala {
 
   trait LogOp[FT <: FinalTypes] extends RealArithmeticOps.LogOp[FT] with Operator[FT] with Factory[FT] with MathFunctionOperator[FT] {
     override def operator: String = "log"
+
+    override def toScala(operands: any.Expression[FT]*): String = {
+      s"(Math.${operator}(${operands(0).toScala})/Math.${operator}(${operands(1).toScala}))"
+    }
   }
 
   trait SinOp[FT <: FinalTypes] extends RealArithmeticOps.SinOp[FT] with Operator[FT] with Factory[FT] with MathFunctionOperator[FT] {
@@ -1773,8 +1778,9 @@ package object scala {
       def declareFunVariable(
         name: any.Name[FinalTypes],
         tpe: any.Type[FinalTypes],
+        isRecursive: Boolean,
         initializer: any.Expression[FinalTypes],
-        inExp: any.Expression[FinalTypes]): functional.control.DeclareFunVariable[FinalTypes] = DeclareFunVariable(name, tpe, initializer, inExp)
+        inExp: any.Expression[FinalTypes]): functional.control.DeclareFunVariable[FinalTypes] = DeclareFunVariable(name, tpe, isRecursive = isRecursive, initializer, inExp)
       def funIfThenElse(
         condition: any.Expression[FinalTypes],
         ifBranch: any.Expression[FinalTypes],
@@ -2161,6 +2167,7 @@ package object scala {
     case class DeclareFunVariable(
       override val name: any.Name[FinalTypes],
       override val tpe: any.Type[FinalTypes],
+      override val isRecursive: Boolean,
       override val initializer: any.Expression[FinalTypes],
       override val inExp: any.Expression[FinalTypes]
     ) extends scala.DeclareFunVariable[FinalTypes] with Expression {

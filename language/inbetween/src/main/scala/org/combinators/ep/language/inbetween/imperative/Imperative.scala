@@ -4,7 +4,7 @@ import org.combinators.ep.generator
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.control
 import org.combinators.ep.generator.{Command, FileWithPath, Understands, paradigm}
-import org.combinators.ep.generator.paradigm.control.{Return, Imperative => Imp}
+import org.combinators.ep.generator.paradigm.control.{Return, Imperative => Imp, DeclareVariable => DV}
 import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
@@ -22,8 +22,8 @@ trait Imperative[FT <: FinalTypes, FactoryType <: Factory[FT]] extends Imp[any.M
   }
 
   val imperativeCapabilities: ImperativeCapabilities = new ImperativeCapabilities {
-    implicit val canDeclareVariable: Understands[Ctxt, paradigm.DeclareVariable[any.Name[FT], any.Type[FT], Option[any.Expression[FT]], any.Expression[FT]]] = new Understands[Ctxt, paradigm.DeclareVariable[any.Name[FT], any.Type[FT], Option[any.Expression[FT]], any.Expression[FT]]] {
-      def perform(context: Ctxt, command: paradigm.DeclareVariable[any.Name[FT], any.Type[FT], Option[any.Expression[FT]], any.Expression[FT]]): (Ctxt, any.Expression[FT]) = {
+    implicit val canDeclareVariable: Understands[Ctxt, DV[any.Name[FT], any.Type[FT], Option[any.Expression[FT]], any.Expression[FT]]] = new Understands[Ctxt, DV[any.Name[FT], any.Type[FT], Option[any.Expression[FT]], any.Expression[FT]]] {
+      def perform(context: Ctxt, command: DV[any.Name[FT], any.Type[FT], Option[any.Expression[FT]], any.Expression[FT]]): (Ctxt, any.Expression[FT]) = {
         (pushToContext(context, factory.declareVariable(command.name, command.tpe, command.initialization)), factory.variableReferenceExpression(command.name))
       }
     }

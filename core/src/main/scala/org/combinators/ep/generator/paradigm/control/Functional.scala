@@ -3,7 +3,7 @@ package org.combinators.ep.generator.paradigm.control   /*DI:LI:AI*/
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, Understands}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, Apply, DeclareVariable, FreshName, IfThenElse, Reify}
+import org.combinators.ep.generator.paradigm.{AnyParadigm, Apply, FreshName, IfThenElse, Reify}
 
 case class PatternMatch[MethodBodyContext, PatternContext, Expression](
   onValue: Expression,
@@ -23,6 +23,10 @@ case class ConstructorPattern[Type, Name](
   constructor: Name
 )
 
+case class DeclareFunVariable[Ctxt, Name, Type, Init, Res](name: Name, tpe: Type, initialization: Init, inBlk: Res => Generator[Ctxt, Res]) extends Command {
+  type Result = Res
+}
+
 trait Functional[Context] extends Lambdas[Context] {
   val base: AnyParadigm
 
@@ -31,10 +35,18 @@ trait Functional[Context] extends Lambdas[Context] {
   type PatternContext
 
   trait FunctionalCapabilities {
-    implicit val canDeclareVar: Understands[Context, DeclareVariable[Name, Type, Expression, (Expression => Expression) => Expression]]
-    def declareVariable(name: Name, tpe: Type, init: Expression): Generator[Context, (Expression => Expression) => Expression] =
-      AnyParadigm.capability(DeclareVariable[Name, Type, Expression, (Expression => Expression) => Expression](name, tpe, init))
- 
+    implicit val canDeclareVar: Understands[Context, DeclareFunVariable[Context, Name, Type, Expression, Expression]]
+    def declareVariable(name: Name, tpe: Type, init: Expression)(inBlock: Expression => Generator[Context, Expression]): Generator[Context, Expression] =
+      AnyParadigm.capability(DeclareFunVariable(name, tpe, init, inBlock))
+
+    // ml: let rec local_fun = x => local_fun (x - 1)
+    // haskell: let local_fun = \ x -> local_fun (x - 1)
+    // scala: def local_fun: Int => Int = (x : Int) => local_fun (x - 1)
+    implicit val canDeclareRecVar: Understands[Context, DeclareFunVariable[Context, Name, Type, Expression => Generator[Context, Expression], Expression]]
+    def declareRecursiveVariable(name: Name, tpe: Type, init: Expression => Generator[Context, Expression])(inBlock: Expression => Generator[Context, Expression]): Generator[Context, Expression] =
+      AnyParadigm.capability(DeclareFunVariable(name, tpe, init, inBlock))
+
+
     implicit val canIfThenElse: Understands[Context, IfThenElse[Expression, Generator[Context, Expression], Generator[Context, Expression], Expression]]
     def ifThenElse(
         cond: Expression,

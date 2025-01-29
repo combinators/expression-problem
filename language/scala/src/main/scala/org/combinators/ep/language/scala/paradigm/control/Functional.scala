@@ -2,7 +2,7 @@ package org.combinators.ep.language.scala.paradigm.control   /*DI:LD:AI*/
 
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.control.{Lambda, PatternMatch, Functional => Func}
-import org.combinators.ep.generator.paradigm.{DeclareVariable, IfThenElse}
+import org.combinators.ep.generator.paradigm.IfThenElse
 import org.combinators.ep.generator.{Command, Understands}
 import org.combinators.ep.language.scala.{MethodBodyCtxt, Syntax}
 import org.combinators.ep.language.scala.paradigm.{AnyParadigm, BlockContextManipulator}

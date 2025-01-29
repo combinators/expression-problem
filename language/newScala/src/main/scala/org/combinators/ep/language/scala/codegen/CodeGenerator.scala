@@ -59,6 +59,7 @@ sealed class CodeGenerator(domainName: String) { cc =>
               Type[Finalized.FinalTypes],
               Type[Finalized.FinalTypes]](seqTpe, Seq(elemTpe)).interpret(canApplyType)
           } yield tpe)
+      case TypeRep.Arrow(src, tgt) => ??? // TODO: add new type constructor for A => B to newScala
       case _ => None
     })
   }

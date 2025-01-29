@@ -29,15 +29,17 @@ package object control {
     def getSelfDeclareFunVariable: finalTypes.DeclareFunVariable
     def name: any.Name[FT]
     def tpe: any.Type[FT]
+    def isRecursive: Boolean
     def initializer: any.Expression[FT]
     def inExp: any.Expression[FT]
 
     def copy(
       name: any.Name[FT] = name,
       tpe: any.Type[FT] = tpe,
-      initializer: any.Expression[FT] = this.initializer,
+      isRecursive: Boolean = isRecursive,
+      initializer:  any.Expression[FT] = this.initializer,
       inExp: any.Expression[FT] = this.inExp
-    ): DeclareFunVariable[FT] = declareFunVariable(name, tpe, initializer, inExp)
+    ): DeclareFunVariable[FT] = declareFunVariable(name, tpe, isRecursive = isRecursive, initializer, inExp)
   }
 
   trait IfThenElse[FT <: FinalTypes] extends any.Expression[FT] with Factory[FT] {
@@ -114,6 +116,7 @@ package object control {
     def declareFunVariable(
       name: any.Name[FT],
       tpe: any.Type[FT],
+      isRecursive: Boolean,
       initializer: any.Expression[FT],
       inExp: any.Expression[FT]
     ): DeclareFunVariable[FT]

@@ -535,13 +535,13 @@ object GitMain extends IOApp {
 }
 
 object DirectToDiskMain extends IOApp {
-  val targetDirectory: Path = Paths.get("target", "functional-j1")
+  val targetDirectory: Path = Paths.get("target", "coco-j8")
 
   def run(args: List[String]): IO[ExitCode] = {
     // won't work for functional after M6 because of imperative-focused EIPs
-    val approach = if (args.isEmpty) "functional" else args.head
+    val approach = if (args.isEmpty) "coco" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "J1" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "J8" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 

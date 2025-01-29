@@ -216,6 +216,12 @@ object TypeRep {
     type HostType = Array[T]
   }
 
+  /** Represents the type A => B */
+  case class Arrow[A, B](src: TypeRep.OfHostType[A], tgt: TypeRep.OfHostType[B]) extends TypeRep {
+    type HostType = A => B
+  }
+
+
   /** Represents a Scala model of an instance of the given domain specific data type. */
   case class DataType(tpe: abstractions.DataType) extends TypeRep {
     type HostType = DataTypeInstance

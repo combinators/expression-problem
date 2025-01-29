@@ -110,22 +110,22 @@ object erroneous {
 }
 
 // DOES NOT WORK with Scala 2
-
-trait ShowDblePlusNeg extends ShowPlusNeg
-  with DblePlusNeg {
-  type exp <: Exp;
-  trait Exp extends super[ShowPlusNeg].Exp
-    with super[DblePlusNeg].Exp;
-  class Num(v: Int)
-    extends super[ShowPlusNeg].Num(v)
-      with super[DblePlusNeg].Num(v) with Exp
-  class Plus(l: exp, r: exp)
-    extends super[ShowPlusNeg].Plus(l, r)
-      with super[DblePlusNeg].Plus(l, r) with Exp
-  class Neg(t: exp)
-    extends super[ShowPlusNeg].Neg(t)
-      with super[DblePlusNeg].Neg(t) with Exp
-}
+//
+//trait ShowDblePlusNeg extends ShowPlusNeg
+//  with DblePlusNeg {
+//  type exp <: Exp;
+//  trait Exp extends super[ShowPlusNeg].Exp
+//    with super[DblePlusNeg].Exp;
+//  class Num(v: Int)
+//    extends super[ShowPlusNeg].Num(v)
+//      with super[DblePlusNeg].Num(v) with Exp
+//  class Plus(l: exp, r: exp)
+//    extends super[ShowPlusNeg].Plus(l, r)
+//      with super[DblePlusNeg].Plus(l, r) with Exp
+//  class Neg(t: exp)
+//    extends super[ShowPlusNeg].Neg(t)
+//      with super[DblePlusNeg].Neg(t) with Exp
+//}
 
 trait Equals extends Base {
   type exp <: Exp

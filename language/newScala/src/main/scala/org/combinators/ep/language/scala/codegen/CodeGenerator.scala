@@ -82,8 +82,19 @@ sealed class CodeGenerator(domainName: String) { cc =>
 
     def buildFile: FileWithPath = {
       // create a rudimentary build.sbt for Scala just to work with sbt version 1.7.1
+      // https://www.baeldung.com/scala/sbt-scoverage-code-analysis
       val cmds = s"""
+                    |val sopts = Seq(
+                    |  "-coverage-out:coverage"
+                    |)
+                    |val soptsNoTest = Seq(
+                    |)
+                    |
+                    |scalacOptions in (Compile, doc) ++= sopts ++ soptsNoTest
+                    |scalacOptions in Test ++= sopts
+                    |
                     |scalaVersion := "3.3.3"
+                    |coverageEnabled := true
                     |libraryDependencies ++= Seq(
                     |    "org.scalactic" %% "scalactic" % "3.2.19" % "test",
                     |    "org.scalatest" %% "scalatest" % "3.2.19" % "test",
@@ -96,6 +107,9 @@ sealed class CodeGenerator(domainName: String) { cc =>
       val plugins =
         s"""
            |addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.5.2")
+           |addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.0.8")
+           |
+           |ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
            |""".stripMargin
       FileWithPath(plugins, Paths.get("project", "plugins.sbt"))
     }

@@ -3,7 +3,7 @@
  */
 package ep.visitor
 
-trait Base {
+/*trait Base {
   trait Exp { def accept(v: Visitor): Unit }
   class Num(value: Int) extends Exp {
     def accept(v: Visitor): Unit = v.visitNum(value)
@@ -45,7 +45,7 @@ trait BasePlus extends Base {
       result = apply(l) + apply(r)
     }
   }
-}
+}*/
 //
 //trait BaseNeg extends Base {
 //  type visitor <: Visitor;

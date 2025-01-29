@@ -72,10 +72,6 @@ case class ResolveImport[Import, T](forElem: T) extends Command {
   type Result = Option[Import]
 }
 
-case class DeclareVariable[Name, Type, Init, Res](name: Name, tpe: Type, initialization: Init) extends Command {
-  type Result = Res
-}
-
 case class IfThenElse[Expression, MandatoryBlock, Block, R](
     condition: Expression,
     ifBranch: MandatoryBlock,

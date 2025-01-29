@@ -2,7 +2,7 @@
  * Taken from  http://infoscience.epfl.ch/record/52625 with upgrades for Scala "2.12.17"
  */
 package ep
-trait Base {
+/*trait Base {
 
   type exp <: Exp;
   trait Exp {
@@ -183,4 +183,4 @@ object EqualsShowPlusNegTest extends EqualsPlusNeg with App {
   Console.println(term1 eql term2);
   Console.print(term1.show + "=" + term3.show + "? ");
   Console.println(term1 eql term3);
-}
+}*/

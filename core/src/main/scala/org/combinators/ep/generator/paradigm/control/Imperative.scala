@@ -2,10 +2,14 @@ package org.combinators.ep.generator.paradigm.control   /*DI:LI:AI*/
 
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, Understands}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, DeclareVariable, IfThenElse}
+import org.combinators.ep.generator.paradigm.{AnyParadigm, IfThenElse}
 
 import cats.implicits._
 import cats.free.Free._
+
+case class DeclareVariable[Name, Type, Init, Res](name: Name, tpe: Type, initialization: Init) extends Command {
+  type Result = Res
+}
 
 case class AssignVariable[Expression, Statement](variable: Expression, value: Expression) extends Command {
   type Result = Statement

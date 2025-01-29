@@ -3,7 +3,7 @@ package org.combinators.ep.language.inbetween.functional.control
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, Understands, paradigm}
 import org.combinators.ep.generator.paradigm.{Apply, IfThenElse, Reify, control}
-import org.combinators.ep.generator.paradigm.control.{PatternMatch, Functional => Fun}
+import org.combinators.ep.generator.paradigm.control.{PatternMatch, DeclareFunVariable => DFV, Functional => Fun}
 import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
@@ -26,15 +26,23 @@ trait Functional[FT <: FinalTypes, FactoryType <: Factory[FT]] extends Fun[any.M
   }
 
   val functionalCapabilities: FunctionalCapabilities = new FunctionalCapabilities {
-    implicit val canDeclareVar: Understands[any.Method[FT], paradigm.DeclareVariable[any.Name[FT], any.Type[FT], any.Expression[FT], (any.Expression[FT] => any.Expression[FT]) => any.Expression[FT]]] =      
-      new Understands[any.Method[FT], paradigm.DeclareVariable[any.Name[FT], any.Type[FT], any.Expression[FT], (any.Expression[FT] => any.Expression[FT]) => any.Expression[FT]]] {
-        override def perform(context: any.Method[FT], command: paradigm.DeclareVariable[any.Name[FT], any.Type[FT], any.Expression[FT], (any.Expression[FT] => any.Expression[FT]) => any.Expression[FT]]): (any.Method[FT], (any.Expression[FT] => any.Expression[FT]) => any.Expression[FT]) = {
-          val res: (any.Expression[FT] => any.Expression[FT]) => any.Expression[FT] = inExpressionFn => {
-            factory.declareFunVariable(command.name, command.tpe, command.initialization, inExpressionFn(factory.argumentExpression(command.name)))
-          }
-          (context, res)
+    implicit val canDeclareVar: Understands[any.Method[FT], DFV[any.Method[FT], any.Name[FT], any.Type[FT], any.Expression[FT], any.Expression[FT]]] =
+      new Understands[any.Method[FT], DFV[any.Method[FT], any.Name[FT], any.Type[FT], any.Expression[FT], any.Expression[FT]]] {
+        override def perform(context: any.Method[FT], command: DFV[any.Method[FT], any.Name[FT], any.Type[FT], any.Expression[FT], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
+          val (resContext, inExp) = Command.runGenerator(command.inBlk(factory.argumentExpression(command.name)), context)
+          (resContext, factory.declareFunVariable(command.name, command.tpe, isRecursive = false, command.initialization, inExp))
         }
     }
+
+    implicit val canDeclareRecVar:  Understands[any.Method[FT], DFV[any.Method[FT], any.Name[FT], any.Type[FT], any.Expression[FT] => Generator[any.Method[FT], any.Expression[FT]], any.Expression[FT]]] =
+      new Understands[any.Method[FT], DFV[any.Method[FT], any.Name[FT], any.Type[FT], any.Expression[FT] => Generator[any.Method[FT], any.Expression[FT]], any.Expression[FT]]] {
+        override def perform(context: any.Method[FT], command: DFV[any.Method[FT], any.Name[FT], any.Type[FT], any.Expression[FT] => Generator[any.Method[FT], any.Expression[FT]], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
+          val (initContext, initExp) = Command.runGenerator(command.initialization(factory.argumentExpression(command.name)), context)
+          val (resContext, inExp) = Command.runGenerator(command.inBlk(factory.argumentExpression(command.name)), initContext)
+          (resContext, factory.declareFunVariable(command.name, command.tpe, isRecursive = false, initExp, inExp))
+        }
+      }
+
     implicit val canIfThenElse: Understands[any.Method[FT], paradigm.IfThenElse[any.Expression[FT], Generator[any.Method[FT], any.Expression[FT]], Generator[any.Method[FT], any.Expression[FT]], any.Expression[FT]]] =
       new Understands[any.Method[FT], paradigm.IfThenElse[any.Expression[FT], Generator[any.Method[FT], any.Expression[FT]], Generator[any.Method[FT], any.Expression[FT]], any.Expression[FT]]] {
         override def perform(context: any.Method[FT], command: paradigm.IfThenElse[any.Expression[FT], Generator[any.Method[FT], any.Expression[FT]], Generator[any.Method[FT], any.Expression[FT]], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {

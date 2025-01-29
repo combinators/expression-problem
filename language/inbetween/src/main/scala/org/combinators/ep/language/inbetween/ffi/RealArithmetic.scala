@@ -27,7 +27,7 @@ trait RealArithmetic[FT <: OperatorExpressionOps.FinalTypes, FactoryType <: Real
     implicit val canLog: Understands[any.Method[FT], Apply[Log[T], any.Expression[FT], any.Expression[FT]]] =
       new Understands[any.Method[FT], Apply[Log[T], any.Expression[FT], any.Expression[FT]]] {
         def perform(context: any.Method[FT], command: Apply[Log[T], any.Expression[FT], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
-          (context, factory.log(command.arguments.head))
+          (context, factory.log(command.arguments(0), command.arguments(1)))
         }
       }
     implicit val canSin: Understands[any.Method[FT], Apply[Sin[T], any.Expression[FT], any.Expression[FT]]] =
@@ -107,10 +107,8 @@ object RealArithmeticOps {
     def pow(left: any.Expression[FT], right: any.Expression[FT]): OperatorExpressionOps.BinaryExpression[FT] =
       binaryExpression(powOp(), left, right)
 
-    // TODO: In Java implementation the log has (base, value) but in Scala only has (value).
-    // HACK:
-    def log(of: any.Expression[FT]): OperatorExpressionOps.UnaryExpression[FT] =
-      unaryExpression(logOp(), of) // FIXME: unaryExpression(logOp(), of)
+    def log(of: any.Expression[FT], base: any.Expression[FT]): OperatorExpressionOps.BinaryExpression[FT] =
+      binaryExpression(logOp(), of, base) // FIXME: unaryExpression(logOp(), of)
     def sin(of: any.Expression[FT]): OperatorExpressionOps.UnaryExpression[FT] =
       unaryExpression(sinOp(), of)
     def cos(of: any.Expression[FT]): OperatorExpressionOps.UnaryExpression[FT] =

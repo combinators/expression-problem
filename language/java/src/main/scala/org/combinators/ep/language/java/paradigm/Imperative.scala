@@ -4,7 +4,7 @@ import com.github.javaparser.ast.expr.{AssignExpr, NameExpr, VariableDeclaration
 import com.github.javaparser.ast.stmt.{BlockStmt, ExpressionStmt, IfStmt, ReturnStmt, WhileStmt}
 import org.combinators.ep.generator.{Command, Understands}
 import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.{DeclareVariable, IfThenElse}
+import org.combinators.ep.generator.paradigm.{IfThenElse}
 import org.combinators.ep.generator.paradigm.control.{Imperative => Imp, _}
 import org.combinators.ep.language.java.{CtorCtxt, MethodBodyCtxt}
 

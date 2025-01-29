@@ -59,7 +59,17 @@ sealed class CodeGenerator(domainName: String) { cc =>
               Type[Finalized.FinalTypes],
               Type[Finalized.FinalTypes]](seqTpe, Seq(elemTpe)).interpret(canApplyType)
           } yield tpe)
-      case TypeRep.Arrow(src, tgt) => ??? // TODO: add new type constructor for A => B to newScala
+      case TypeRep.Arrow(src, tgt) =>
+        Some(
+          for {
+            srcTpe <- ToTargetLanguageType[Type[Finalized.FinalTypes]](src).interpret(canToTargetLanguage)
+            tgtTpe <- ToTargetLanguageType[Type[Finalized.FinalTypes]](tgt).interpret(canToTargetLanguage)
+            funTpe <- Command.lift(factory.classReferenceType(nameProvider.mangle("Function")))
+            tpe <- Apply[
+              Type[Finalized.FinalTypes],
+              Type[Finalized.FinalTypes],
+              Type[Finalized.FinalTypes]](funTpe, Seq(srcTpe, tgtTpe)).interpret(canApplyType)
+          } yield tpe)
       case _ => None
     })
   }
@@ -72,6 +82,7 @@ sealed class CodeGenerator(domainName: String) { cc =>
       Seq("Unit"),
       Seq("String"),
       Seq("Seq"),
+      Seq("Function"),
       Seq("org", "combinators", "ep", "util", "Tree"),
       Seq("org", "combinators", "ep", "util", "Node"),
       Seq("org", "combinators", "ep", "util", "Leaf")

@@ -39,7 +39,7 @@ trait Functional[FT <: FinalTypes, FactoryType <: Factory[FT]] extends Fun[any.M
         override def perform(context: any.Method[FT], command: DFV[any.Method[FT], any.Name[FT], any.Type[FT], any.Expression[FT] => Generator[any.Method[FT], any.Expression[FT]], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
           val (initContext, initExp) = Command.runGenerator(command.initialization(factory.argumentExpression(command.name)), context)
           val (resContext, inExp) = Command.runGenerator(command.inBlk(factory.argumentExpression(command.name)), initContext)
-          (resContext, factory.declareFunVariable(command.name, command.tpe, isRecursive = false, initExp, inExp))
+          (resContext, factory.declareFunVariable(command.name, command.tpe, isRecursive = true, initExp, inExp))
         }
       }
 

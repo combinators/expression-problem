@@ -149,7 +149,9 @@ trait SharedOO extends ApproachImplementationProvider {
     import ooParadigm.methodBodyCapabilities._
 
     val properModel = latestModelDefiningOperatorClass(model, tpeCase, op,  domainSpecific).get
-    println(properModel)
+    if (properModel != model) {
+      println("SharedOO::makeImplementation chooses " + properModel.name + " over " + model.name + " for (" + op.name + "," + tpeCase.name + ")")
+    }
 
     for {
       _ <- makeSignature(op)

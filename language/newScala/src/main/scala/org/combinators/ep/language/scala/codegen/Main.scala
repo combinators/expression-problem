@@ -234,7 +234,8 @@ class Main(choice:String, select:String) {
 
   val j1_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
     if (choice == "functional") {
-      m0_eip // not compatible for functional
+      //m0_eip // not compatible for functional
+      eips.systemJ.J1(approach.paradigm)(m0_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.imperative)
     } else {
       eips.systemJ.J1(approach.paradigm)(m0_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.imperative)
     }
@@ -244,7 +245,8 @@ class Main(choice:String, select:String) {
     eips.systemJ.J3(approach.paradigm)(j2_eip)(generator.doubles, generator.booleans, generator.strings)
   val k1_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
     if (choice == "functional") {
-      m0_eip // not compatible for functional
+      //m0_eip // not compatible for functional
+      eips.systemK.K1(approach.paradigm)(j2_eip)(generator.doubles, generator.realDoubles, generator.booleans, generator.strings, generator.imperative)
     } else {
       eips.systemK.K1(approach.paradigm)(j2_eip)(generator.doubles, generator.realDoubles, generator.booleans, generator.strings, generator.imperative)
     }
@@ -254,7 +256,8 @@ class Main(choice:String, select:String) {
     eips.systemJ.J5(approach.paradigm)(j4_eip)(generator.equality, generator.booleans)
   val j6_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
     if (choice == "functional") {
-      m0_eip // not compatible for functional
+      //m0_eip // not compatible for functional
+      eips.systemJ.J6(approach.paradigm)(j5_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.imperative)
     } else {
       eips.systemJ.J6(approach.paradigm)(j5_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.imperative)
     }
@@ -287,7 +290,8 @@ class Main(choice:String, select:String) {
 
   val j8_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
   if (choice == "functional") {
-    m0_eip // not compatible for functional
+    //m0_eip // not compatible for functional
+    eips.systemJK.J8(approach.paradigm)(j7_eip)(generator.doubles, generator.realDoubles, generator.imperative)
   } else {
     eips.systemJK.J8(approach.paradigm)(j7_eip)(generator.doubles, generator.realDoubles, generator.imperative)
   }
@@ -531,13 +535,13 @@ object GitMain extends IOApp {
 }
 
 object DirectToDiskMain extends IOApp {
-  val targetDirectory: Path = Paths.get("target", "ep3")
+  val targetDirectory: Path = Paths.get("target", "functional-j1")
 
   def run(args: List[String]): IO[ExitCode] = {
     // won't work for functional after M6 because of imperative-focused EIPs
     val approach = if (args.isEmpty) "functional" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "M7" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "J1" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 
@@ -754,7 +758,7 @@ object GenerateAllJ extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
 
-    val approaches = Seq("oo","visitor","visitorSideEffect","extensibleVisitor","interpreter","coco","trivially","algebra")
+    val approaches = Seq("oo","visitor","extensibleVisitor","interpreter","coco","trivially","algebra")   // "visitorSideEffect",
     val evolutions = Seq("M0","J1","J2","J3","K1","K2","J4","J5","J6","K2J6","J7","J8")
 
     approaches.foreach(approach => {
@@ -762,7 +766,7 @@ object GenerateAllJ extends IOApp {
       evolutions.foreach(selection => {
         println("   " + selection)
 
-        val targetDirectory = Paths.get("target", "ep-scala-j", approach, selection)
+        val targetDirectory = Paths.get("target", "all-ep-scala-ecoop", approach, selection)
         val program :IO[Unit] = {
           for {
             _ <- IO { print("Initializing Generator...") }

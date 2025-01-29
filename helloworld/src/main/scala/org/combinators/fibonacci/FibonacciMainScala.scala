@@ -64,6 +64,7 @@ object FibonacciIndependentScalaDirectToDiskMain extends IOApp {
   val targetDirectory = Paths.get("target", "ep3", "scala")
 
   def run(args: List[String]): IO[ExitCode] = {
+
     for {
       _ <- IO { print("Initializing Generator...") }
       main <- IO { new FibonacciIndependentMainScala() }

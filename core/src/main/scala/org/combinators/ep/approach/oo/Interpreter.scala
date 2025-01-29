@@ -284,6 +284,10 @@ sealed trait Interpreter extends SharedOO {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
     import polymorphics.methodBodyCapabilities._
+    val properModel = latestModelDefiningOperatorClass(domain, tpeCase, op, domainSpecific).get
+    if (properModel != domain) {
+      println ("Interpreter::makeInterpreterImplementation chooses " + properModel.name + " over " + domain.name + " for (" + op.name + "," + tpeCase.name + ")")
+    }
     for {
       _ <- makeInterpreterSignature(domain, op)
       _ <- if (domain.operationsPresentEarlier(tpeCase).contains(op)) {
@@ -328,7 +332,7 @@ sealed trait Interpreter extends SharedOO {
             thisRef,
             atts,
             Request(op, castedArgsMap),
-            Some(domain)
+            Some(properModel)   // scala implementation for j8 needed this
           )
         )
     } yield result

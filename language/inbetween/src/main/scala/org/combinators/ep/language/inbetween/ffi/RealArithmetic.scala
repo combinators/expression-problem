@@ -106,8 +106,11 @@ object RealArithmeticOps {
       unaryExpression(sqrtOp(), of)
     def pow(left: any.Expression[FT], right: any.Expression[FT]): OperatorExpressionOps.BinaryExpression[FT] =
       binaryExpression(powOp(), left, right)
+
+    // TODO: In Java implementation the log has (base, value) but in Scala only has (value).
+    // HACK:
     def log(of: any.Expression[FT]): OperatorExpressionOps.UnaryExpression[FT] =
-      unaryExpression(logOp(), of)
+      unaryExpression(logOp(), of) // FIXME: unaryExpression(logOp(), of)
     def sin(of: any.Expression[FT]): OperatorExpressionOps.UnaryExpression[FT] =
       unaryExpression(sinOp(), of)
     def cos(of: any.Expression[FT]): OperatorExpressionOps.UnaryExpression[FT] =

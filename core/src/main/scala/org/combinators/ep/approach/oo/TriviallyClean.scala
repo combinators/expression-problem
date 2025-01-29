@@ -296,6 +296,33 @@ trait TriviallyClean extends ApproachImplementationProvider {
     } yield ()
   }
 
+  def latestModelDefiningOperatorClass(domain: GenericModel, tpeCase:DataTypeCase, op:Operation, domainSpecific: EvolutionImplementationProvider[this.type]) : Option[GenericModel] = {
+    // Find all domains with an EIP that implements op for any type case
+    val domainsImplementingOp = domainSpecific.evolutionSpecificDependencies(PotentialRequest(domain.baseDataType, tpeCase, op)).keySet
+
+    def cmp(l: GenericModel, r: GenericModel) = {
+      if (l.before(r)) -1 else if (r.before(l)) 1 else 0
+    }
+
+    def futureMergePoint(l: GenericModel, r: GenericModel)(m: GenericModel): Boolean = {
+      l.beforeOrEqual(m) && r.beforeOrEqual(m)
+    }
+
+    val orderedImplementers = domainsImplementingOp.toSeq
+      .filter(d => d.beforeOrEqual(domain)) // filter to make sure we are before the current domain (we are not interested in later EIPs)
+      .sorted(cmp)
+      .reverse
+
+    // Are there two non-comparable ancestors l, r that haven't been merged by a third m which is past both? Then we are
+    // responsible for the merge!
+    if (orderedImplementers.size > 1 && orderedImplementers.exists(l => orderedImplementers.exists(r =>
+      cmp(l, r) == 0 && !orderedImplementers.exists(futureMergePoint(l, r))))
+    ) {
+      return Some(domain)
+    }
+    Some(orderedImplementers.head)     // latest one
+  }
+
   def makeOperationImplementation(
          domainSpecific: EvolutionImplementationProvider[this.type],
          domain: GenericModel,
@@ -304,6 +331,11 @@ trait TriviallyClean extends ApproachImplementationProvider {
        ): Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
+
+    val properModel = latestModelDefiningOperatorClass(domain, dataTypeCase, operation,  domainSpecific).get
+    if (properModel != domain) {
+      println("Trivially::makeOperationImplementation chooses " + properModel.name + " over " + domain.name + " for (" + operation.name + "," + dataTypeCase.name + ")")
+    }
     for {
       _ <- setOperationMethodSignature(domain, operation)
       _ <- if (domain.operationsPresentEarlier(dataTypeCase).contains(operation)) {
@@ -338,7 +370,7 @@ trait TriviallyClean extends ApproachImplementationProvider {
             op = operation,
             arguments = operation.parameters.zip(arguments).toMap
           ),
-          Some(domain)
+          model = Some(properModel)   // needed for SCALA generation but not needed for JAVA??
         )
       result <- domainSpecific.logic(this)(receivedRequest)
     } yield result

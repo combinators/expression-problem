@@ -559,6 +559,10 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
                ): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
+    val properModel = latestModelDefiningOperatorClass(domain, tpeCase, op, domainSpecific).get
+    if (properModel != domain) {
+      println ("ExtensibleVisitor::makeEachImplementation chooses " + properModel.name + " over " + domain.name + " for (" + op.name + "," + tpeCase.name + ")")
+    }
     for {
       returnType <- toTargetLanguageType(op.returnType)
       _ <- resolveAndAddImport(returnType)
@@ -591,7 +595,7 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
                     visitedRef,
                     tpeCase.attributes.zip(attAccessors).toMap,
                     Request(op, args.toMap),
-                    Some(domain)
+                    Some(properModel)    // scala implementation for j8 needed this
                   )
         )
     } yield result

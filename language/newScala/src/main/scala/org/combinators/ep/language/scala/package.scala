@@ -900,7 +900,7 @@ package object scala {
         ))
       val methodsAsTests = withFunSuiteExtension.methods.map(m => {
         val funcName = m.name.component
-        if (funcName.startsWith("Test")) {
+        if (2 > 1) { // funcName.startsWith("Test")) {
           liftExpression(applyExpression(
             applyExpression(
               memberAccessExpression(selfReferenceExpression, nameProvider.mangle("test")),

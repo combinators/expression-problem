@@ -535,7 +535,7 @@ object GitMain extends IOApp {
 }
 
 object DirectToDiskMain extends IOApp {
-  val targetDirectory: Path = Paths.get("target", "ep4")
+  val targetDirectory: Path = Paths.get("target", "ep5")
 
   // NOTE: extensibleVisitor with Scala generates code that doesn't compile
   //

@@ -137,25 +137,6 @@ trait AnyParadigm extends AP {
       }
     }
 
-    // heineman-begin
-    implicit val canAddMethodInTest: Understands[TestContext, AddMethod[MethodBodyContext, Name[FT], Option[Expression[FT]]]] = new Understands[TestContext, AddMethod[MethodBodyContext, Name[FT], Option[Expression[FT]]]] {
-      def perform(context: TestContext, command: AddMethod[MethodBodyContext, Name[FT], Option[Expression[FT]]]): (TestContext, Unit) = {
-        val clsBasedTestSuite = factory.convert(context)
-
-        val emptyMethod = factory.method(
-          name = command.name,
-          typeLookupMap = context.methodTypeLookupMap
-        )
-        val (generatedMethod, _) = Command.runGenerator(command.spec, emptyMethod)
-
-        (context.copy(tests = context.tests :+ generatedMethod), ())
-
-//        val (updatedCls, ()) = Command.runGenerator(classCapabilities.addMethod(command.name, command.spec), clsBasedTestSuite.underlyingClass)
-//        (clsBasedTestSuite.copyAsClassBasedTestSuite(underlyingClass = updatedCls), ())
-      }
-    }
-    // heineman-end
-
     implicit val canAddTestCaseInTest: Understands[TestContext, AddTestCase[Method[FT], Name[FT], Expression[FT]]] = new Understands[TestContext, AddTestCase[Method[FT], Name[FT], Expression[FT]]] {
       def perform(context: TestContext, command: AddTestCase[Method[FT], Name[FT], Expression[FT]]): (TestContext, Unit) = {
         val emptyMethod = factory.method(

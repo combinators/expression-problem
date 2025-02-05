@@ -55,20 +55,20 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
      * @param typeName   fully qualified class to be constructed
      * @return
      */
-    def create(model:GenericModel, op:Operation, typeName:Seq[Name]): Generator[ClassContext, Unit] = {
+    def create(model:GenericModel, op:Operation, possibleParent:Option[Type], typeName:Seq[Name]): Generator[ClassContext, Unit] = {
       import ooParadigm.classCapabilities._
       for {
         // These must be PUBLIC to allow overriding to occur. Another alternative is to make them protected, but this
         // concept might translate differently among programming languages.
-        _ <- addMethod(name(op), makeFactoryOperationImpl(model, op, typeName))
+        _ <- addMethod(name(op), makeFactoryOperationImpl(model, op, possibleParent, typeName))
       } yield ()
     }
 
     // TODO: would love to avoid duplicating contexts
-    def createTest(model:GenericModel, op:Operation, typeName:Seq[Name]): Generator[TestContext, Unit] = {
+    def createTest(model:GenericModel, op:Operation, possibleParent:Option[Type], typeName:Seq[Name]): Generator[TestContext, Unit] = {
       import ooParadigm.testCapabilities._
       for {
-        _ <- addMethod(name(op), makeFactoryOperationImpl(model, op, typeName))
+        _ <- addMethod(name(op), makeFactoryOperationImpl(model, op, possibleParent, typeName))
       } yield ()
     }
   }
@@ -456,7 +456,7 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
    *
    * For Extensible visitor, choose the EARLIEST location of operation and use covariant overiding
    */
-  def makeFactoryOperationImpl(model:GenericModel, op: Operation, typeName:Seq[Name]): Generator[MethodBodyContext, Option[Expression]] = {
+  def makeFactoryOperationImpl(model:GenericModel, op: Operation, possibleParent:Option[Type], typeName:Seq[Name]): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
 
@@ -483,6 +483,13 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
         } yield (pName, paramTy)
       }
       _ <- setParameters(params)  // params: Seq[(Name, Type)]
+
+      // subsequent ones need to override.
+      _ <- if (possibleParent.nonEmpty && !model.ops.contains(op)) {
+        setOverride()
+      } else {
+        Command.skip[MethodBodyContext]
+      }
 
       args <- getArguments()
       res <- instantiateObject(latestOpClass,args.map(_._3))
@@ -710,7 +717,8 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
 
     // When new data types are defined in a model (after the EQL), all isXXX() operations need to be regenerated
     // and thus SHOULD be in the dependentOperations, but right now not.
-    val allDependentOps = dependentOperationsOf(domain, op, domainSpecific)
+    //val allDependentOps = dependentOperationsOf(domain, op, domainSpecific)
+    val allDependentOps = domain.inChronologicalOrder.flatMap(m => dependentOperationsOf(m, op, domainSpecific))
 
     // get all formers that are NOT latest visitors, and then take those operations and throw out those that are already supported...
     val otherBranchOps = if (previous.isEmpty) {
@@ -751,6 +759,8 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
           val modelsToUse = latestModelDefiningOperation(domain, dependentOp)
           val modelToUse = modelsToUse.head
 
+          // operations that need to be redefined because we had to generate a new visitor
+
           // if an operator/tpecase is overridden must use latest model
           // BUT can't uniquely tease out for this model
           val over = modelToUse.flatten.typeCases.map { tpe =>
@@ -760,7 +770,7 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
             }.reduce((b1,b2) => b1 || b2)
 
 
-          factory.create(modelToUse, dependentOp, visitorClassName(modelToUse, dependentOp).get)
+          factory.create(modelToUse, dependentOp, possibleParent, visitorClassName(modelToUse, dependentOp).get)
         }
 
     } yield ()
@@ -946,6 +956,7 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
     import paradigm.projectCapabilities._
     import paradigm.compilationUnitCapabilities._
     import paradigm.testCapabilities._
+    import ooParadigm.testCapabilities.addMethod
     for {
       _ <-
         forEach(tests.toList) { case (model, tests) =>
@@ -960,10 +971,11 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
             // add test case first
             _ <- addTestCase(testCode, testName)
 
-            // each operation gets a factory
+            // each operation gets a factory that is added using the 'addMethodInTest' capabilities.
             _ <- forEach (model.flatten.ops.distinct) { op => {
               for {
-                _ <- factory.createTest (model, op, visitorClassName(latestModelDefiningOperation(model, op).head, op).get)
+                _ <- addMethod(factory.name(op), makeFactoryOperationImpl(model, op, None,
+                  visitorClassName(latestModelDefiningOperation(model, op).head, op).get))
               } yield ()
             }}
 

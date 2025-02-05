@@ -61,7 +61,7 @@ class FibonacciRecursiveVariableMainScala {
 }
 
 object FibonacciRecursiveVariableScalaDirectToDiskMain extends IOApp {
-  val targetDirectory = Paths.get("target", "ep3", "scala")
+  val targetDirectory = Paths.get("target", "fib", "scala")
 
   def run(args: List[String]): IO[ExitCode] = {
 

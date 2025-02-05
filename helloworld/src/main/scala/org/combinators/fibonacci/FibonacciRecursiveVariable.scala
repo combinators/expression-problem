@@ -22,41 +22,44 @@ trait FibonacciRecursiveVariable {
   lazy val nName:paradigm.syntax.Name  = names.mangle("n")
 
 
-  def make_fibonacci_inner_lambda(func: paradigm.syntax.Expression): Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression] = {
+  def make_fibonacci_lambda(func: paradigm.syntax.Expression): Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression] = {
     import functionalControlParadigm.functionalCapabilities._
     import paradigm.methodBodyCapabilities._
+    import functionalControlParadigm.lambdaCapabilities._
+
+    def inner_lambda(params: Map[paradigm.syntax.Name, paradigm.syntax.Expression]): Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression] =
+      for {
+        one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
+        two <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 2)
+        (_,n) = params.toList.head
+        le1 <- ffiArithmetic.arithmeticCapabilities.le(n, one)
+        n_1 <- ffiArithmetic.arithmeticCapabilities.sub(n, one)
+        n_2 <- ffiArithmetic.arithmeticCapabilities.sub(n, two)
+        fn_1 <- apply(func, Seq(n_1))
+        fn_2 <- apply(func, Seq(n_2))
+        addExpr <- ffiArithmetic.arithmeticCapabilities.add(fn_1, fn_2)
+        res <- ifThenElse(le1, Command.lift(n), Seq.empty, Command.lift(addExpr))
+      } yield res
 
     for {
       intType <- toTargetLanguageType(TypeRep.Int)
-
-      _ <- paradigm.methodBodyCapabilities.setParameters(Seq((nName, intType)))
-      _ <- paradigm.methodBodyCapabilities.setReturnType(intType)
-      args <- getArguments()
-      one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
-      two <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 2)
-      (name,tpe,n) = args.head
-      le1 <- ffiArithmetic.arithmeticCapabilities.le(n, one)
-      n_1 <- ffiArithmetic.arithmeticCapabilities.sub(n, one)
-      n_2 <- ffiArithmetic.arithmeticCapabilities.sub(n, two)
-      fn_1 <- apply(func, Seq(n_1))
-      fn_2 <- apply(func, Seq(n_2))
-      addExpr <- ffiArithmetic.arithmeticCapabilities.add(fn_1, fn_2)
-      res <- ifThenElse(le1, Command.lift(n), Seq.empty, Command.lift(addExpr))
-      //res <- lambda(Seq((nName, intType)), m => )
-    } yield res
+      lam <- lambda(Seq((nName, intType)), inner_lambda)
+    } yield lam
   }
 
   def make_fibonacci(): Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression] = {
     import functionalControlParadigm.functionalCapabilities._
     import paradigm.methodBodyCapabilities._
-    import functionalControlParadigm.lambdaCapabilities._
+
     for {
       intType <- toTargetLanguageType(TypeRep.Int)
+      lamType <- toTargetLanguageType(TypeRep.Arrow(TypeRep.Int, TypeRep.Int))
+
       _ <- paradigm.methodBodyCapabilities.setParameters(Seq((nName, intType)))
       _ <- paradigm.methodBodyCapabilities.setReturnType(intType)
       args <- getArguments()
 
-      res <- declareRecursiveVariable(innerFibName, intType, make_fibonacci_inner_lambda)(innerFib => {
+      res <- declareRecursiveVariable(innerFibName, lamType, make_fibonacci_lambda)(innerFib => {
         for {
           args <- getArguments()
           (name,tpe,n) = args.head

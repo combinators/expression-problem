@@ -42,6 +42,10 @@ object J3 {
           case (math.systemJ.J2.Eql, math.systemJ.J3.Neg) => Some(Set(math.systemJ.J2.isOp(systemJ.J3.Neg)))
           case (math.systemJ.J2.Eql, math.systemJ.J3.Divd) => Some(Set(math.systemJ.J2.isOp(systemJ.J3.Divd)))
 
+          // TODO: SHOULD this be advanced every subsequent evolution?? ExtensibleVisitor fails because in J3 it doesn't
+          // generate necessary factory methods for 'makeIsLit' as well as nee
+          // case (math.systemJ.J2.Eql, _) => Some(Set(math.systemJ.J2.isOp(potentialRequest.tpeCase)))
+
           case (isOp, tpeCase) if math.systemJ.J2.isOps(cases).contains(isOp) => Some(if (isOp == math.systemJ.J2.isOp(tpeCase)) Set(math.systemJ.J2.Eql) else Set.empty)
 
           // isXXX for inv argument => empty, e.g. isAdd(inv) = false

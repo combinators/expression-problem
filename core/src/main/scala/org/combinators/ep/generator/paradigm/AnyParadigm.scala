@@ -221,6 +221,16 @@ trait AnyParadigm {
     def debug(tag:String = ""): Generator[TestContext, Unit] =
       AnyParadigm.capability(Debug(tag))
 
+    // heineman-begin
+    // helper methods can be added to OO test cases
+//    implicit val canAddMethodInTest: Understands[TestContext, AddMethod[MethodBodyContext, Name, Option[Expression]]]
+//    def addMethod(
+//                   name: Name,
+//                   spec: Generator[MethodBodyContext, Option[Expression]],
+//                   isPublic: Boolean = true): Generator[TestContext, Unit] =
+//      AnyParadigm.capability(AddMethod(name, spec, isPublic))
+    // heineman-end
+
     implicit val canAddTestCaseInTest: Understands[TestContext, AddTestCase[MethodBodyContext, Name, Expression]]
     def addTestCase(code: Generator[MethodBodyContext, Seq[Expression]], name: Name): Generator[TestContext, Unit] =
       AnyParadigm.capability(AddTestCase(code, name))

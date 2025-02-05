@@ -898,15 +898,27 @@ package object scala {
         underlyingClass.addParent(classReferenceType(
           Seq("org", "scalatest", "funsuite", "AnyFunSuite").map(n => nameProvider.mangle(n)): _*
         ))
-      val methodsAsTests = withFunSuiteExtension.methods.map(m =>
-        liftExpression(applyExpression(
+      val methodsAsTests = withFunSuiteExtension.methods.map(m => {
+        val funcName = m.name.component
+        if (funcName.startsWith("Test")) {
+          liftExpression(applyExpression(
             applyExpression(
               memberAccessExpression(selfReferenceExpression, nameProvider.mangle("test")),
               Seq(reifiedScalaValue(TypeRep.String, m.name.component))
             ),
             Seq(blockExpression(m.statements))
           ))
-      )
+        } else {
+            underlyingClass.addMethod(method(
+              name = m.name,
+              statements = m.statements,
+              returnType = m.returnType
+            ))
+            liftExpression(
+              blockExpression(m.statements)
+          )
+        }
+    })
       val withPrimaryClsConstructor = if (underlyingClass.constructors.isEmpty) {
         withFunSuiteExtension.addConstructor(constructor(statements = methodsAsTests))
       } else {
@@ -948,9 +960,18 @@ package object scala {
   trait ApplyExpression[FT <: FinalTypes] extends Expression[FT] with any.ApplyExpression[FT] with Factory[FT] {
     def toScala : String = {
       val (typeArguments, regularArguments) = arguments.partition(_.isTypeReferenceExpression)
-      val tyArgs = if (typeArguments.isEmpty) "" else typeArguments.map(_.toScala).mkString("[",  ", ", "]")
-      val args = if (regularArguments.isEmpty) "()" else regularArguments.map(_.toScala).mkString("(",  ", ", ")")
-      s"${function.toScala}${tyArgs}${args}"
+
+      // If Type arguments, then emit those without the arguments, which appear to come later
+      if (typeArguments.nonEmpty) {
+        val tyArgs = typeArguments.map(_.toScala).mkString("[",  ", ", "]")
+        s"${function.toScala}${tyArgs}"
+      } else {
+        val args = if (regularArguments.isEmpty) "()" else regularArguments.map(_.toScala).mkString("(",  ", ", ")")
+        s"${function.toScala}${args}"
+      }
+
+      //val result = s"${function.toScala}${tyArgs}${args}"
+      //result
     }
 
     def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): any.ApplyExpression[FT] = {

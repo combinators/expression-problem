@@ -1,0 +1,18 @@
+
+1. ExtensibleVisitor
+
+1a. In scala: Need to be able to AddMethod to Test case and the inBetween/newScala isn't doing this.
+
+1b. In scala: Need to have 'override' modifier for the factories that are created. For example, in j3,
+
+ makeIsAdd and makeEql need to have override keyword
+
+1c. In Java, something is wrong with implementation. I think we need to generate
+    more factory "makeEql" methods in subsequent versions. In addition, I think
+    there needs to be extra (what appears to be redundant) visit(...) methods otherwise
+    the broken code tries to upcast objects
+
+    Visible in ExtensibleVisitor/K2J6 (a merge) but also in ExtensibleVisitor/J3
+
+2. Functional -- continue progress from before
+

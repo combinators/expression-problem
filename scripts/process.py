@@ -22,9 +22,17 @@ def extract(A):
     results = []
     hasError = ''
     errors = []
+    coverages = []
+    coverage_instructions = coverage_branches = ''
     for line in A:
         if '[error]' in line:
             hasError = 'error'
+        if '[info]' in line and 'Instructions:' in line:
+            coverage_instructions = line.split()[2]
+        if '[info]' in line and 'Branches:' in line:
+            coverage_branches = line.split()[2]
+            coverages.append(f'{coverage_instructions},{coverage_branches}')
+            coverage_instructions = coverage_branches = ''
         if printIt > 0:
             if not '==' in line:
                 results.append(line.strip())
@@ -34,8 +42,7 @@ def extract(A):
             printIt = 4
 
         printIt -= 1
-
-    return (results,errors)
+    return (results,errors,coverages)
 
 def extract_modes_and_phases(results, in_errors):
     modes = []
@@ -72,7 +79,7 @@ def extract_rows(modes, phases, timings):
             last_key = key
     return info
 
-results,errors = extract(ooA)
+results,errors,oo_cov_table = extract(ooA)
 modes,phases,timings,errors = extract_modes_and_phases(results,errors)
 info = extract_rows(modes, phases, timings)
 
@@ -95,7 +102,7 @@ def create_table(modes, phases, info, errors):
 
 oo_table,oo_err_table = create_table(modes, phases, info, errors)
 
-def output_table(name, modes, phases, table, errors):
+def output_table(name, modes, phases, table, cov_table, errors):
     # Use OO  as baseline.
     print(name,',',','.join(phases[:-1]))
     for m in modes:
@@ -104,6 +111,9 @@ def output_table(name, modes, phases, table, errors):
             print('{0:.2f}'.format(table[m][p]), end=',')
         for p in phases[:-1]:
             print(errors[m][p], end=',')
+        if cov_table:
+            print(cov_table[0], end=',')
+            cov_table = cov_table[1:]
         print()
 
     if GMEAN in table:
@@ -139,14 +149,16 @@ def add_geometric_mean(table, modes, phases):
 filenamesList = glob.glob('jacoco.*')
 all_tables = {}
 err_tables = {}
+cov_tables = {}
 all_tables['oo'] = oo_table
 err_tables['oo'] = oo_err_table
+cov_tables['oo'] = oo_cov_table
 
 for name in filenamesList:
     f = open(name)
     A = f.readlines()
     f.close()
-    results,errors = extract(A)
+    results,errors,coverages = extract(A)
     modes,phases,timings,errors = extract_modes_and_phases(results,errors)
     info = extract_rows(modes, phases, timings)
     table,err_table = create_table(modes, phases, info, errors)
@@ -157,9 +169,10 @@ for name in filenamesList:
     descr = name.split('.')[1]
     all_tables[descr] = table
     err_tables[descr] = err_table
+    cov_tables[descr] = coverages
 
 for key in all_tables:
-    output_table(key, modes, phases, all_tables[key], err_tables[key])
+    output_table(key, modes, phases, all_tables[key], cov_tables[key], err_tables[key])
 
 print()
 for p in phases[:-1]:

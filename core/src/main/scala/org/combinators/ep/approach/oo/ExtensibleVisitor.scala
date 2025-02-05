@@ -58,7 +58,9 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
     def create(model:GenericModel, op:Operation, typeName:Seq[Name]): Generator[ClassContext, Unit] = {
       import ooParadigm.classCapabilities._
       for {
-        _ <- addMethod(name(op), makeFactoryOperationImpl(model, op, typeName), isPublic = false)
+        // These must be PUBLIC to allow overriding to occur. Another alternative is to make them protected, but this
+        // concept might translate differently among programming languages.
+        _ <- addMethod(name(op), makeFactoryOperationImpl(model, op, typeName))
       } yield ()
     }
 
@@ -958,6 +960,7 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
             // add test case first
             _ <- addTestCase(testCode, testName)
 
+            // each operation gets a factory
             _ <- forEach (model.flatten.ops.distinct) { op => {
               for {
                 _ <- factory.createTest (model, op, visitorClassName(latestModelDefiningOperation(model, op).head, op).get)

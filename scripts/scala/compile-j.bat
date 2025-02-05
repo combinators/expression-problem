@@ -8,7 +8,7 @@ cd ..\..
 copy scripts\systems\system-j.json target\ep-scala-j
 set TAB=..
 
-for %%a in (oo extensibleVisitor interpreter coco algebra visitor visitorSideEffect trivially) do (
+for %%a in (oo extensibleVisitor interpreter coco algebra visitor trivially) do (
   @echo off
   echo %%a
 

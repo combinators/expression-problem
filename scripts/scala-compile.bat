@@ -30,5 +30,11 @@ echo %2-Test-End                            >> ..\..\jacoco.%1
 java -cp ..\..\..\..\scripts Time           >> ..\..\jacoco.%1
 echo ====================================== >> ..\..\jacoco.%1
 
+echo ====================================== >> ..\..\jacoco.%1
+echo %2-Coverage                            >> ..\..\jacoco.%1
+java -cp ..\..\..\..\scripts Time           >> ..\..\jacoco.%1
+echo ====================================== >> ..\..\jacoco.%1
+call sbt coverageReport  >> ..\..\jacoco.%1
+
 @REM go back to start
 cd ..\..\..\..

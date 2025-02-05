@@ -535,13 +535,19 @@ object GitMain extends IOApp {
 }
 
 object DirectToDiskMain extends IOApp {
-  val targetDirectory: Path = Paths.get("target", "coco-j8")
+  val targetDirectory: Path = Paths.get("target", "ep4")
+
+  // NOTE: extensibleVisitor with Scala generates code that doesn't compile
+  //
+  // return { (exp_.getLeft().accept[Double]()(this.makeEval()) + exp_.getRight().accept[Double]()(this.makeEval())) }
+  //
+  // unneeded set of extra parens
 
   def run(args: List[String]): IO[ExitCode] = {
     // won't work for functional after M6 because of imperative-focused EIPs
-    val approach = if (args.isEmpty) "coco" else args.head
+    val approach = if (args.isEmpty) "extensibleVisitor" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "J8" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "J3" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 
@@ -553,6 +559,7 @@ object DirectToDiskMain extends IOApp {
 
       result <- main.runDirectToDisc(targetDirectory)
       _ <- IO { println(s"DONE, in ${targetDirectory} you can now run: sbt scalafmt Test/scalafmt test") }
+      _ <- IO { println(s"You can generate code coverage in ${targetDirectory} with: sbt coverageReport")}
     } yield result
   }
 }
@@ -766,7 +773,7 @@ object GenerateAllJ extends IOApp {
       evolutions.foreach(selection => {
         println("   " + selection)
 
-        val targetDirectory = Paths.get("target", "all-ep-scala-ecoop", approach, selection)
+        val targetDirectory = Paths.get("target", "ep-scala-j", approach, selection)
         val program :IO[Unit] = {
           for {
             _ <- IO { print("Initializing Generator...") }

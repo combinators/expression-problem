@@ -4,7 +4,7 @@ import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, FileWithPath, Understands}
-import org.combinators.ep.generator.paradigm.{AddBlockDefinitions, AddCompilationUnit, AddImport, AddTestCase, AddTestSuite, AddTypeLookup, Apply, Debug, FreshName, GetArguments, OutputToConsole, Reify, ResolveImport, SetParameters, SetReturnType, ToTargetLanguageType, AnyParadigm => AP}
+import org.combinators.ep.generator.paradigm.{AddBlockDefinitions, AddCompilationUnit, AddImport, AddMethod, AddTestCase, AddTestSuite, AddTypeLookup, Apply, Debug, FreshName, GetArguments, OutputToConsole, Reify, ResolveImport, SetParameters, SetReturnType, ToTargetLanguageType, AnyParadigm => AP}
 
 trait AnyParadigm extends AP {
   type FT <: FinalTypes
@@ -136,15 +136,47 @@ trait AnyParadigm extends AP {
         (context, ())
       }
     }
+
+    // heineman-begin
+    implicit val canAddMethodInTest: Understands[TestContext, AddMethod[MethodBodyContext, Name[FT], Option[Expression[FT]]]] = new Understands[TestContext, AddMethod[MethodBodyContext, Name[FT], Option[Expression[FT]]]] {
+      def perform(context: TestContext, command: AddMethod[MethodBodyContext, Name[FT], Option[Expression[FT]]]): (TestContext, Unit) = {
+        val clsBasedTestSuite = factory.convert(context)
+
+        val emptyMethod = factory.method(
+          name = command.name,
+          typeLookupMap = context.methodTypeLookupMap
+        )
+        val (generatedMethod, _) = Command.runGenerator(command.spec, emptyMethod)
+
+        (context.copy(tests = context.tests :+ generatedMethod), ())
+
+//        val (updatedCls, ()) = Command.runGenerator(classCapabilities.addMethod(command.name, command.spec), clsBasedTestSuite.underlyingClass)
+//        (clsBasedTestSuite.copyAsClassBasedTestSuite(underlyingClass = updatedCls), ())
+      }
+    }
+    // heineman-end
+
     implicit val canAddTestCaseInTest: Understands[TestContext, AddTestCase[Method[FT], Name[FT], Expression[FT]]] = new Understands[TestContext, AddTestCase[Method[FT], Name[FT], Expression[FT]]] {
       def perform(context: TestContext, command: AddTestCase[Method[FT], Name[FT], Expression[FT]]): (TestContext, Unit) = {
         val emptyMethod = factory.method(
           name = command.name,
           typeLookupMap = context.methodTypeLookupMap
         )
-        var (generatedMethod, result) = Command.runGenerator(command.code, emptyMethod)
-        generatedMethod = generatedMethod.addTestExpressions(result)
-        (context.copy(tests = context.tests :+ generatedMethod), ())
+        val (sample, result) = Command.runGenerator(command.code, emptyMethod)
+
+        // break up into no more than 25 at a time. Done because code coverage instrumentation causes the
+        // underlying methods to exceed their maximum size.
+        val groups = result.sliding(25,25)
+
+        val blocks = groups.map(g => {
+          val emptyMethod = factory.method(
+            name = sample.getFreshName(command.name),
+            typeLookupMap = context.methodTypeLookupMap
+          )
+          val (generatedMethod, _) = Command.runGenerator(command.code, emptyMethod)
+          generatedMethod.addTestExpressions(g)
+        })
+        (context.copy(tests = context.tests ++ blocks), ())
       }
     }
   }

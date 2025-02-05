@@ -91,8 +91,8 @@ sealed class CodeGenerator(domainName: String) { cc =>
                     |val soptsNoTest = Seq(
                     |)
                     |
-                    |scalacOptions in (Compile, doc) ++= sopts ++ soptsNoTest
-                    |scalacOptions in Test ++= sopts
+                    |Compile / scalacOptions ++= sopts ++ soptsNoTest
+                    |Test / scalacOptions ++= sopts
                     |
                     |scalaVersion := "3.3.3"
                     |coverageEnabled := true

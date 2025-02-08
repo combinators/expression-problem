@@ -55,20 +55,12 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
      * @param typeName   fully qualified class to be constructed
      * @return
      */
-    def create(model:GenericModel, op:Operation, possibleParent:Option[Type], typeName:Seq[Name]): Generator[ClassContext, Unit] = {
+    def create(model:GenericModel, op:Operation, shouldOverride: Boolean, typeName:Seq[Name]): Generator[ClassContext, Unit] = {
       import ooParadigm.classCapabilities._
       for {
         // These must be PUBLIC to allow overriding to occur. Another alternative is to make them protected, but this
         // concept might translate differently among programming languages.
-        _ <- addMethod(name(op), makeFactoryOperationImpl(model, op, possibleParent, typeName))
-      } yield ()
-    }
-
-    // TODO: would love to avoid duplicating contexts
-    def createTest(model:GenericModel, op:Operation, possibleParent:Option[Type], typeName:Seq[Name]): Generator[TestContext, Unit] = {
-      import ooParadigm.testCapabilities._
-      for {
-        _ <- addMethod(name(op), makeFactoryOperationImpl(model, op, possibleParent, typeName))
+        _ <- addMethod(name(op), makeFactoryOperationImpl(model, op, shouldOverride, typeName))
       } yield ()
     }
   }
@@ -456,15 +448,23 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
    *
    * For Extensible visitor, choose the EARLIEST location of operation and use covariant overiding
    */
-  def makeFactoryOperationImpl(model:GenericModel, op: Operation, possibleParent:Option[Type], typeName:Seq[Name]): Generator[MethodBodyContext, Option[Expression]] = {
+  def makeFactoryOperationImpl(model:GenericModel, op: Operation, shouldOverride:Boolean, typeName:Seq[Name]): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
 
     // The earliest this operation occurs is the first candidate. BUT must then find whether there is some type such that (op, tpe) has
-    // an overridden implementation
+    // an overridden implementation. INCLUDING merging
     val earliest = model.findOperation(op).get
-    val chosen = model.flatten.typeCases.foldLeft(earliest)((earliest,tpe) =>
+    val selected = model.flatten.typeCases.foldLeft(earliest)((earliest,tpe) =>
       model.haveImplementation(PotentialRequest(model.baseDataType, tpe, op)).foldLeft(earliest)((earliest, m) => m.later(earliest)))
+
+    // doesn't handle MERGE well....
+    val possible = model.inChronologicalOrder.filter(m => m.former.length > 1 && selected.earlier(m) == selected)
+    val chosen = if (possible.nonEmpty) {
+      possible.head
+    } else {
+      selected
+    }
 
    for {
       // Type signature uses the earliest one to define, but instantiates the latest with covariant overriding.
@@ -485,7 +485,7 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
       _ <- setParameters(params)  // params: Seq[(Name, Type)]
 
       // subsequent ones need to override.
-      _ <- if (possibleParent.nonEmpty && !model.ops.contains(op)) {
+      _ <- if (shouldOverride) {
         setOverride()
       } else {
         Command.skip[MethodBodyContext]
@@ -655,13 +655,13 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
    * @return           Returns class context without actually adding to ProjectContext; this is job of caller of this function
    */
   def makeExtensibleOperationImplementation(domain:GenericModel,
-        op: Operation,
+        operation: Operation,
         domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
 
     import ooParadigm.classCapabilities._
     import genericsParadigm.classCapabilities._
 
-    val allPast = domain.former.flatMap(m => latestModelDefiningOperation(m, op))
+    val allPast = domain.former.flatMap(m => latestModelDefiningOperation(m, operation))
     val previous = allPast.filterNot(m => allPast.exists(mnewer => m.before(mnewer)))
 
     // only capture new ones. Make sure to apply distinct to handle merging
@@ -675,7 +675,7 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
         val knownDependencies = domainSpecific.evolutionSpecificDependencies(PotentialRequest(
           domain.baseDataType,
           tpe,
-          op
+          operation
         ))
         val containsOverride = knownDependencies.exists{ case (overridingDomain, _) =>
           primaryParent.before(overridingDomain) && overridingDomain.beforeOrEqual(domain)
@@ -693,7 +693,7 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
         val latestVisitor = latestModelDefiningVisitor(domain)
 
         for {
-          visitTyParam <- toTargetLanguageType(op.returnType) // can do this because we need this interfaces paramType
+          visitTyParam <- toTargetLanguageType(operation.returnType) // can do this because we need this interfaces paramType
           _ <- resolveAndAddImport(visitTyParam)
           visitorClassType <- findClass(visitorInterfaceName(latestVisitor) : _ *)
           _ <- resolveAndAddImport(visitorClassType)
@@ -704,7 +704,7 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
           possibleParent <- if (previous.nonEmpty) {
             val primaryParent = previous.maxBy(m => m.flatten.typeCases.length)
             for {
-              parentType <- findClass(visitorClassName(primaryParent, op).get : _ *)
+              parentType <- findClass(visitorClassName(primaryParent, operation).get : _ *)
               _ <- resolveAndAddImport(parentType)
               _ <- addParent(parentType)
             } yield Some(parentType)
@@ -716,38 +716,28 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
       }
 
     // When new data types are defined in a model (after the EQL), all isXXX() operations need to be regenerated
-    // and thus SHOULD be in the dependentOperations, but right now not.
-    //val allDependentOps = dependentOperationsOf(domain, op, domainSpecific)
-    val allDependentOps = domain.inChronologicalOrder.flatMap(m => dependentOperationsOf(m, op, domainSpecific))
-
-    // get all formers that are NOT latest visitors, and then take those operations and throw out those that are already supported...
-    val otherBranchOps = if (previous.isEmpty) {
-      Seq.empty
-    } else {
-      val primaryParent = previous.maxBy(m => m.flatten.typeCases.length)
-     // might be too far in the past, but want the most direct former that leads to that branch
-     val latestInPrimaryParentBranch = domain.former.foldLeft(primaryParent)((latest,m) => latest.later(m))
-     domain.former.filterNot(p => p == latestInPrimaryParentBranch).flatMap(m => m.flatten.ops.filterNot(op => latestInPrimaryParentBranch.supports(op)))
-    }
+    // and thus SHOULD be in the dependentOperations, but right now not. This may cause the creation of more factory methods than absolutely necessary
+    // because of the way that a dependent operation from "the past" (like MultBy/Power in k1)
+    val opsSeq:Seq[Operation] = (Seq(operation) ++ domain.inChronologicalOrder.flatMap(m => dependentOperationsOf(m, operation, domainSpecific))).distinct
 
     for {
       possibleParent <- addParentClass()
 
       // instead of directly accessing [operationClass]
       _ <- if (possibleParent.isEmpty) {
-        addParamFields(op)
+        addParamFields(operation)
       } else {
         Command.skip[ClassContext]
       }
 
-      _ <- addConstructor(visitor.makeOperationConstructor(op, possibleParent))
+      _ <- addConstructor(visitor.makeOperationConstructor(operation, possibleParent))
 
       // for all that are not in primary parent
       _ <- forEach (typeCasesToDeclare) { tpe =>
         for {
-          _ <- addMethod(visitor.visit, makeEachImplementation(domain, domain.baseDataType, tpe, op, domainSpecific))
+          _ <- addMethod(visitor.visit, makeEachImplementation(domain, domain.baseDataType, tpe, operation, domainSpecific))
 
-          // if dependent operations exist, those factories need to be generated as well...
+          // if dependent operations exist, those factories need to be generated as well later
         } yield ()
       }
 
@@ -755,24 +745,85 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
       // most recently defined model with data types. When trying to call another operation, you need.
       // might have to go backward in time to find the model that declared that operation or had
       // an intervening visitor declaration.
-      _ <- forEach((allDependentOps.toSeq/* ++ otherBranchOps ++ domain.ops */ :+ op).distinct) { dependentOp =>
-          val modelsToUse = latestModelDefiningOperation(domain, dependentOp)
+      _ <- forEach(opsSeq) { dop =>
+          val modelsToUse = latestModelDefiningOperation(domain, dop)
           val modelToUse = modelsToUse.head
 
-          // operations that need to be redefined because we had to generate a new visitor
+        /**
+         * There is special case in k1 for MultBy, which needs a makeEval factory method but it isn't overridden
+         * because it is a dependent operation and appears for the first time.
+         *
+         *  makeIsNeg in the Eql.java file in j3 DOES NOT override because it is first presence. Fix this by
+         *  identifying that while the operation came from the PAST the dependent operations are, in fact, defined
+         *  in modelToUse so they cannot be overridden. DONE
+         *
+         *  Harder one is k1.MultBy which has a dependent operation Eval, but ONLY for the first time in K1 and
+         *  no one before. IN Java if this is public without @Override annotation it works OK. However in Scala
+         *  there truly needs to be the "override" keyword.
+         *
+         *  Final one is a result of single inheritance. Once k2j6 decides to extend from j3 branch, methods that
+         *  HAD been defined in the k2 branch no longer deserve to be overridden. SO we somehow have to
+         *  ensure that the dependent operation comes from the non-inherited branch, it DOES NOT get overriden,
+         *  otherwise it must.
+         *
+         */
 
-          // if an operator/tpecase is overridden must use latest model
-          // BUT can't uniquely tease out for this model
-          val over = modelToUse.flatten.typeCases.map { tpe =>
-               domainSpecific.evolutionSpecificDependencies(
-                PotentialRequest(modelToUse.baseDataType, tpe, dependentOp)
-              ).contains(modelToUse)
-            }.reduce((b1,b2) => b1 || b2)
+        // HOWEVER, if you are a dependent operation in a merge
+        val do_override = if (operation != dop) {
+          if (modelToUse.ops.contains(operation) || modelToUse.ops.contains(dop)) {
+            false
+          } else {
+            // this is a dependent operation and MUST CHECK to see if any place in past this same dependent operation had been generated.
+            val primaryParent:Option[GenericModel] = if (previous.nonEmpty) {
+              Some(previous.maxBy(m => m.flatten.typeCases.length))
+            } else {
+              None
+            }
 
+            // CHOOSE where to start
+            var n = if (primaryParent.nonEmpty && modelToUse.former.length > 1) {
+              modelToUse.former.filter(p => primaryParent.get.beforeOrEqual(p)).head
+            } else {
+              modelToUse.former.head
+            }
 
-          factory.create(modelToUse, dependentOp, possibleParent, visitorClassName(modelToUse, dependentOp).get)
+            // likely possible to make this functional...
+            var exists_in_past = false
+            while (!exists_in_past && !n.isDomainBase) {
+              // MERGE that occurred **in the past** MUST have done this already, so we override.
+              if (n.former.length > 1 || (n != domain && dependentOperationsOf(n, operation, domainSpecific).contains(dop))) {
+                exists_in_past = true
+              }
+
+              // Possible issue if a past MERGE must be diverted so it isn't arbitrarily one of the formers. If this
+              // ever happens, logic like above could be used, though .filter (p => p.beforeOrEqual(primaryParent.get)).head
+              n = n.former.head
+            }
+            exists_in_past    // if exists in past, then must override
+          }
+        } else {
+          !modelToUse.ops.contains(operation)    // if same COULD be defining, but only if previously defined
         }
 
+        /**
+
+          These three are fixed with checking modelToUse.ops.contains(operation)
+            j3\IsDivd = makeEql
+            j3\IsNeg => makeEql
+            k1\IsPower => makeEql (because IsPower is new operation)
+
+        * FINAL SET! THESE ALL are overriding BUT SHOULD NOT be. Fixed above
+
+          x  j6\PowBy => makeEval (because eval is dependency)
+          x  k1\MultBy => makeEval (because EIP has implementation)
+          x  k2\Simplify => makeEval
+          x  k2j6\Eql => makeIsPower (NOT overriding since primary inheritance through J branch
+          x  k2j6\MultBy => makeEval (NOT overriding since primary inheritance through J branch
+         */
+
+        // dependent operations in their first use are not overridden.
+        factory.create(modelToUse, dop, do_override, visitorClassName(modelToUse, dop).get)
+      }
     } yield ()
   }
 
@@ -974,7 +1025,7 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
             // each operation gets a factory that is added using the 'addMethodInTest' capabilities.
             _ <- forEach (model.flatten.ops.distinct) { op => {
               for {
-                _ <- addMethod(factory.name(op), makeFactoryOperationImpl(model, op, None,
+                _ <- addMethod(factory.name(op), makeFactoryOperationImpl(model, op, false,
                   visitorClassName(latestModelDefiningOperation(model, op).head, op).get))
               } yield ()
             }}

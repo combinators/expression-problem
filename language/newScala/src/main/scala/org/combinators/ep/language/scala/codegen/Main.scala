@@ -537,17 +537,11 @@ object GitMain extends IOApp {
 object DirectToDiskMain extends IOApp {
   val targetDirectory: Path = Paths.get("target", "ep5")
 
-  // NOTE: extensibleVisitor with Scala generates code that doesn't compile
-  //
-  // return { (exp_.getLeft().accept[Double]()(this.makeEval()) + exp_.getRight().accept[Double]()(this.makeEval())) }
-  //
-  // unneeded set of extra parens
-
   def run(args: List[String]): IO[ExitCode] = {
     // won't work for functional after M6 because of imperative-focused EIPs
     val approach = if (args.isEmpty) "extensibleVisitor" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "J3" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "J8" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 

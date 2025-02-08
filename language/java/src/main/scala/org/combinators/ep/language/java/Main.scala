@@ -415,7 +415,7 @@ object GitMain extends IOApp {
 }
 
 object DirectToDiskMain extends IOApp {
-  val targetDirectory: Path = Paths.get("target", "ep3")
+  val targetDirectory: Path = Paths.get("target", "ep3a")
 
   def run(args: List[String]): IO[ExitCode] = {
 
@@ -430,7 +430,7 @@ object DirectToDiskMain extends IOApp {
 
     val approach = if (args.isEmpty) "extensibleVisitor" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "J3" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "M9" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 

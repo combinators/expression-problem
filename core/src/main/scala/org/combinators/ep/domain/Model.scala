@@ -325,9 +325,8 @@ class GenericModel(val name:String,
 
   /**
    * Determines if other is an ancestor of this (or vice versa).
-   *
    */
-  def comparableTo(other:GenericModel): Boolean = {
+  def notComparableTo(other:GenericModel): Boolean = {
     !beforeOrEqual(other) && !other.beforeOrEqual(this)
   }
 

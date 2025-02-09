@@ -38,21 +38,8 @@ Now in a separate terminal window request access to a git repository that would 
 
 Valid values include:
 
-* stage: m0, m1, m2, m3, m4, m5, m6
-* approach: alacarte, grow, straight
-
-## C++
-
-In sbt, execute the command `language-cpp/run`.
-
-Now in a separate terminal window request access to a git repository that would be generated, something like:
-
-`git clone http://localhost:9000/oo/m5/m5.git`
-
-Valid values include:
-
-* stage: m0, m1, m2, m3, m4, m5, m6
-* approach: oo, visitor, visitorTable
+* stage: m0, m1, m2, m3, m4
+* approach: alacarte, grow
 
 ## GJ
 
@@ -66,18 +53,3 @@ Valid values include:
 
 * stage: m0, m1
 * approach: wadler
-
-## Scala
-
-In sbt, execute the command `language-scala/run`.
-
-Now in a separate terminal window request access to a git repository that would be generated, something like:
-
-`git clone http://localhost:9000/oo/m5/m5.git`
-
-Valid values include:
-
-* stage: m0, m1, m2, m3, m4, m5, m6
-* approach: oo, functional, straight
-
-

@@ -1,8 +1,8 @@
-# Process jacoco.* output from runAll****.bat
+# Process jacoco.* output from compile-XXX.bat
 #
 # within the analysis/ directory that was result of runAll****.bat type followingL
 #
-#    python3 process.py
+#    python3 ..\..\scripts\process.py
 
 import sys
 import glob

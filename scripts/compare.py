@@ -1,7 +1,7 @@
 """
   Run with Python3 to generate report of approaches that satisfy EP criteria.
 
-  python3 ..\..\scripts\compare.py ..\..\scripts\[EVOLUTION-JSON]
+  python3 ..\..\scripts\compare.py ..\..\scripts\systems\[EVOLUTION-JSON] >> REPORT
 
   where the JSON file has a single 'evolutions' tag, where each entry
 
@@ -15,12 +15,12 @@
       ]
    }
 
-  Depends on having successfully executed "runAll.bat" or a variant.  Must execute within
-  the directory that resulted from this "runAll.bat" script.
+  Depends on having successfully generated files as outlined in the README.txt file.
 
   Currently only checks that OLD files are not changed from one evolution to the next.
   Does not check that non-trivia code is copied from one iteration to the next (which can
-  happen, especially with producer methods. See Interpreter solution for more
+  happen, especially with producer methods. See Interpreter solution for examples of large
+  chunks of copied code.
 
   In addition, there are some EP approaches that can reuse test cases, but in others, even the
   test cases have to be altered.
@@ -30,6 +30,11 @@ import os
 import zipfile
 import json
 import sys
+
+DIR         = f"."
+
+from os.path import isdir, join
+approaches = [f for f in os.listdir(DIR) if os.path.isdir(os.path.join(DIR, f))]
 
 if len(sys.argv) <= 1:
     print ("Usage: python3 compare.py JSON-FILE")
@@ -50,13 +55,9 @@ for k in description["evolutions"]:
     pairs[key] = vals
     evolutions.append(list(k.keys())[0])
 
-DIR         = f"."
-
 # Want to be able to detect differences in the actual source code. Note that test cases are a
 # different story, and even solutions to the EP require special handling with regard to test cases
-PREFIX      = 'main\\java'
-
-approaches = 'oo visitor visitorSideEffect extensibleVisitor interpreter dispatch trivially coco algebra'
+PREFIX      = 'src\\main\\java'
 
 def md5 (filename):
     """Return (# lines, md5) has for filename."""
@@ -80,11 +81,10 @@ def file_structure (file):
     return index
 
 def strip_prefix(filename):
-    """Remove DIR\src-a-eip\PREFIX from the filename."""
+    """Remove PREFIX\ from the filename."""
     if PREFIX in filename:
         loc = filename.index(PREFIX)
         return filename[loc + len(PREFIX) + 1:]
-
     return filename
 
 def extract(eip_dirname):
@@ -98,15 +98,14 @@ def extract(eip_dirname):
             filename = os.path.join(root, name)
             key = strip_prefix(filename)
             md5_data[key] = md5(filename)
-
     return md5_data
 
-for a in approaches.split():
+for a in approaches:
     print('validating',a)
 
     already_processed = {}
     for eip in evolutions:
-        eip_dirname = f"{DIR}\\src-{a}-{eip}\\{PREFIX}"
+        eip_dirname = f"{DIR}\\{a}\\{eip}\\{PREFIX}"
         if not os.path.exists(eip_dirname):
             print(f"{eip_dirname} does not exist.")
             break
@@ -118,7 +117,7 @@ for a in approaches.split():
             eip_md5_data = already_processed[eip_dirname]
 
         for former_eip in pairs.get(eip):
-            former_dirname = f"{DIR}\\src-{a}-{former_eip}\\{PREFIX}"
+            former_dirname = f"{DIR}\\{a}\\{former_eip}\\{PREFIX}"
 
             if former_dirname not in already_processed:
                 former_md5_data = extract(former_dirname)
@@ -150,23 +149,3 @@ for a in approaches.split():
 
             if different:
                 print(f"  {a} fails on {eip}: {different}")
-"""
-            former_dir = pathlib.Path(former_dirname)
-            former_structure = former_dir.glob("*")
-
-            print(eip, "->", former_eip)
-
-        different = None
-        for f in old_structure:
-            if different:
-                break
-
-
-            # if exists in both, consider fingerprint
-            if old_structure[f] != new_structure[f]:
-                different = f + ' has changed in ' + eip
-                break
-
-        if different:
-            print('  ',a,'fails on',eip)
-"""

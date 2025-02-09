@@ -1,32 +1,43 @@
-1. Generate all evolutions for all approaches
+1. Generate all evolutions for all approaches. Within java\Main.scala or codegen\Main.scala you can
+   generate all files. The output directories are "ep-scala-XXX" for Scala generated code or "ep-java-XXX"
+   for Java-generated code.
 
-  1a. Execute run-main.bat, which computes code for all possible pairs, storing directories in target\analysis,
-      as target\analysis\src-%%a-%%e where %%a is the approach and %%e is the evolution.
+   ep-java (GenerateAllMain)
+     * System: system-main.json
+     * Approaches: graphviz oo visitor visitorSideEffect extensibleVisitor interpreter coco trivially dispatch algebra
+     * Evolutions: M0 M1 M2 M3 M4 M5 M6 M7 M7I2 M8 M9 I1 A1 A1M3 A1M3I2 A3 I2 O1 O2 OA O1OA OD1 OD2 OD3 OO1 OO2 OO3
 
-       Main File:    org.combinators.ep.language.java.DirectToDiskMain
-       Evolutions:   M0 M1 M2 M3 M4 M5 M6 M7 M7I2 M8 M9 I1 A1 A1M3 A1M3I2 A3 I2
-       Approaches:   oo extensibleVisitor interpreter trivially coco algebra visitor visitorSideEffect dispatch
+   ep-java-j (GenerateAllJ)
+      * System: system-j.json
+      * Approaches: graphviz oo visitor visitorSideEffect extensibleVisitor interpreter coco trivially dispatch algebra
+      * Evolutions: M0 J1 J2 J3 K1 K2 J4 J5 J6 K2J6 J7 J8
 
-  Note: Once done, move "target\analysis" to "target\analysis-main" so it is not affected by following
+   p-java-d1d2 (GenerateAllD1D2)
+      * Approaches: graphviz oo visitor visitorSideEffect extensibleVisitor interpreter coco trivially dispatch algebra
+      * Evolutions: M0 M1 D1 D2 D1D2 D3
 
-  1b. Execute run-j.bat, which computes code for all possible pairs, storing directories in target\analysis,
-      as target\analysis\src-%%a-%%e where %%a is the approach and %%e is the evolution.
+   ep-java-journal (GenerateAllJournal)
+      * Approaches: graphviz oo visitor visitorSideEffect extensibleVisitor interpreter coco trivially dispatch algebra
+      * Evolutions: M0 M1 M2 I1 I2 N1 M2_ABS M3 M3I1 I2M3I1N1
 
-       Main File:    org.combinators.ep.language.java.systemJ.DirectToDiskMainJ
-       Evolutions:   M0 J1 J2 J3 K1 K2 J4 J5 J6 K2J6 J7 J8
-       Approaches:   oo extensibleVisitor interpreter trivially coco algebra visitor visitorSideEffect dispatch
+   ep-java-producer (GenerateAllProducer)
+      * Approaches: graphviz oo visitor visitorSideEffect extensibleVisitor interpreter coco trivially dispatch algebra
+      * Evolutions: M0 M1 M2 M3 W1 M3W1 Q1 C2 V1
 
-  Note: once done, move "target\analysis" to "target\analysis-j" so it is not affected by following
+   ep-java-third-alternate (GenerateAllThirdAlternate)
+      * Approaches: graphviz oo visitor visitorSideEffect extensibleVisitor interpreter coco trivially dispatch algebra
+      * Evolutions: M0 X1 X2 X3 X2X3 X4
 
-  1c. You can do the above for "run-journal.bat", "run-producer.bat", "run-d1d2.bat", and "run-third-alternate.bat"
+   For Scala-generated code, the above are replaced with "ep-scala-XXX" and approaches and evolutions remain the same.
 
 2. Produce full report to validate which AIPs are truly correct
 
-  c:\Python37\python.exe ..\..\scripts\compare.py system-NNN.json > REPORT
+  python3 ..\..\scripts\compare.py ..\..\scripts\systems\[EVOLUTION-JSON] >> REPORT
 
-  where EVOLUTION-JSON is either "system-j.json" or "system-main.json" or whatever file was copied into the directory
-  when the BAT file was run. Note that the JSON files look like the following and contain predecessor information for
-  each EIP to make the Python processing a bit easier.
+  Example EVOLUTION-JSON files are "system-j.json" or "system-main.json"
+
+  Note that the JSON files look like the following and contain predecessor information for each EIP to
+  make the Python processing a bit easier.
 
          {
            "evolutions" : [
@@ -71,12 +82,24 @@
          }
      }
 
-3. Generate statistics regarding the results of runAll.bat, which includes Generation time, Compilation time,
-   and time to complete test cases. This script also detects errors in these three phases.
+3. Compile and run tests cases to generate jacoco.* code coverage reports.
+
+  On Windows, in the respective "ep-java-XXX" directories you can launch the compilation scripts. For the Scala
+  code, replace "java" with "scala" in the commands below.
+
+  * in ep-java                    enter command  "..\..\scripts\java\compile-main.bat"
+  * in ep-java-j                  enter command  "..\..\scripts\java\compile-j.bat"
+  * in ep-java-journal            enter command  "..\..\scripts\java\compile-journal.bat"
+  * in ep-java-d1d2               enter command  "..\..\scripts\java\compile-d1d2.bat"
+  * in ep-java-producer           enter command  "..\..\scripts\java\compile-producer.bat"
+  * in ep-java-third-alternate    enter command  "..\..\scripts\java\compile-third-alternate.bat"
+
+4. Generate statistics regarding the results of generating the source code, compiling the source code, executing
+   the test cases and code coverage statistics. This script also detects errors in these three phases.
 
    CD into the directory in target\analysis and run the following on each of the jacoco.*** generated files
 
    c:\Python37\python.exe ..\..\scripts\process.py > STATISTICS
 
-4. When all scripts have run, you will need to delete lots of temporary directories inside of target/bg-jobs that were created
-   by SBT. A full run of the scripts often results in several GB worth of directories to be deleted.
+5. When all scripts have run, you may need to delete temporary directories inside of target/bg-jobs that were created
+   by SBT (but not deleted). A full run of the scripts often results in several GB worth of directories.

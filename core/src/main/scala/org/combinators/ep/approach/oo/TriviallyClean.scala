@@ -91,10 +91,34 @@ trait TriviallyClean extends ApproachImplementationProvider {
     } yield baseInterfaceType
   }
 
+//  // compute the latest common ancestor from amongs a set of 'fo
+//  def latestCommonAncestor(domain:GenericModel): GenericModel = {
+//    if (domain.former.length == 1) {
+//      return domain
+//    }
+//
+//    var latest = domain.former.head
+//
+//    // for all other branches, grab their stages in chronological order. Might be done in a fold more efficiently
+//    domain.former.tail.foreach(gm => {
+//        val candidates = gm.inChronologicalOrder.filter(m => !m.notComparableTo(latest))
+//        latest = candidates.last
+//    })
+//
+//    latest
+//  }
+
+  def multipleBranchesWithOperations(domain:GenericModel):Boolean = {
+    if (domain.former.length == 1) { return false }
+
+    domain.former.exists(m => m.ops.nonEmpty)
+  }
+
   /** Find the last evolution that requires its own Exp definition. */
   def latestModelDefiningInterface(domain: GenericModel): GenericModel = {
 
-    if (domain.isDomainBase || domain.ops.nonEmpty || domain.former.length > 1) {   // handle merge case as well
+    // Merge needs a new EXP only if there is a new operation in one of the branches going back to common ancestor.
+    if (domain.isDomainBase || domain.ops.nonEmpty || multipleBranchesWithOperations(domain)) { //// WAS: domain.former.length > 1) {
       domain
     } else {
       // find where tpe was defined and also where last operation was defined and choose later of the two
@@ -103,11 +127,20 @@ trait TriviallyClean extends ApproachImplementationProvider {
 
       // is there a single type that can represent the "least upper bound" of all prior branches. (TAKEN FROM COCO)
       val ancestorsWithTypeInterfaces = domain.former.map(ancestor => latestModelDefiningInterface(ancestor)).distinct
+
+      // must choose latest one, in case multiples of these are ancestors of others in this set.
+
       // To validate this works, need multiple branches where NEITHER defines operators
       if (ancestorsWithTypeInterfaces.size == 1 && !ancestorsWithTypeInterfaces.head.isDomainBase) { // take care to avoid falling below "floor"
         ancestorsWithTypeInterfaces.head
       } else {
-        domain // we have to do merge
+        // do merge BUT ONLY if one of these isn't descendant of all of them
+        val candidates = ancestorsWithTypeInterfaces.filter(m => ancestorsWithTypeInterfaces.forall(gm => gm.beforeOrEqual(m)))
+        if (candidates.length == 1) {
+          candidates.head
+        } else {
+          domain // we have to do merge
+        }
       }
     }
 

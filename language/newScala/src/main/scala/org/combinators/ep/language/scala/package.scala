@@ -898,9 +898,7 @@ package object scala {
         underlyingClass.addParent(classReferenceType(
           Seq("org", "scalatest", "funsuite", "AnyFunSuite").map(n => nameProvider.mangle(n)): _*
         ))
-      val methodsAsTests = withFunSuiteExtension.methods.map(m => {
-        val funcName = m.name.component
-        if (2 > 1) { // funcName.startsWith("Test")) {
+      val methodsAsTests = withFunSuiteExtension.methods.zip(this.testMarkers).filter{case (m, isTest) => isTest}.map{case (m, _) => {
           liftExpression(applyExpression(
             applyExpression(
               memberAccessExpression(selfReferenceExpression, nameProvider.mangle("test")),
@@ -908,17 +906,7 @@ package object scala {
             ),
             Seq(blockExpression(m.statements))
           ))
-        } else {
-            underlyingClass.addMethod(method(
-              name = m.name,
-              statements = m.statements,
-              returnType = m.returnType
-            ))
-            liftExpression(
-              blockExpression(m.statements)
-          )
-        }
-    })
+      }}
       val withPrimaryClsConstructor = if (underlyingClass.constructors.isEmpty) {
         withFunSuiteExtension.addConstructor(constructor(statements = methodsAsTests))
       } else {
@@ -927,8 +915,9 @@ package object scala {
         )
         withFunSuiteExtension.copy(constructors = updatedPrimary +: underlyingClass.constructors.tail)
       }
+      val helperMethods = withPrimaryClsConstructor.methods.zip(testMarkers).filter{case (_, isTest) => !isTest}.map(_._1)
 
-      withPrimaryClsConstructor.copy(methods = Seq.empty)
+      withPrimaryClsConstructor.copy(methods = helperMethods)
     }
 
     def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): any.TestSuite[FT] = {
@@ -1782,7 +1771,7 @@ package object scala {
       implicit def convert(other: TreeOps.CreateLeaf[FinalTypes]): scala.CreateLeaf[FinalTypes] = other.getSelfCreateLeaf
       implicit def convert(other: TreeOps.CreateNodeExpr[FinalTypes]): scala.CreateNodeExpr[FinalTypes] = other.getSelfCreateNodeExpr
 
-      override def classBasedTestSuite(underlyingClass: oo.Class[FinalTypes]): TestSuite = TestSuite(underlyingClass)
+      override def classBasedTestSuite(underlyingClass: oo.Class[FinalTypes], testMarkers: Seq[Boolean]): TestSuite = TestSuite(underlyingClass, testMarkers)
 
       def constructorPattern(
         tpe: any.Type[FinalTypes],
@@ -2165,7 +2154,7 @@ package object scala {
       def getSelfCreateNodeExpr: this.type = this
     }
 
-    case class TestSuite(override val underlyingClass: oo.Class[FinalTypes]) extends scala.TestSuite[FinalTypes] with Factory with Util {
+    case class TestSuite(override val underlyingClass: oo.Class[FinalTypes], override val testMarkers: Seq[Boolean]) extends scala.TestSuite[FinalTypes] with Factory with Util {
       def getSelfTestSuite: this.type = this
     }
 

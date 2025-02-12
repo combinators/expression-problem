@@ -312,7 +312,7 @@ trait OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends OOP {
           val clsBasedTestSuite = factory.convert(context)
           import classCapabilities.canAddMethodInClass
           val (updatedCls, ()) = Command.runGenerator(classCapabilities.addMethod(command.name, command.spec), clsBasedTestSuite.underlyingClass)
-          (clsBasedTestSuite.copyAsClassBasedTestSuite(underlyingClass = updatedCls), ())
+          (clsBasedTestSuite.copyAsClassBasedTestSuite(underlyingClass = updatedCls, testMarkers = clsBasedTestSuite.testMarkers :+ false), ())
         }
       }
     implicit val canAddBlockDefinitionsInTest: Understands[TestContext, AddBlockDefinitions[Statement]] = new Understands[TestContext, AddBlockDefinitions[Statement]] {

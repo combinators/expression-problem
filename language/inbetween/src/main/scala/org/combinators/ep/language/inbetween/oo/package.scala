@@ -171,9 +171,10 @@ package object oo {
 
   trait TestSuite[FT <: FinalTypes] extends any.TestSuite[FT] with Factory[FT] {
     def underlyingClass: Class[FT]
+    def testMarkers: Seq[Boolean]
 
     override def name: any.Name[FT] = underlyingClass.name
-    override def tests: Seq[any.Method[FT]] = underlyingClass.methods
+    override def tests: Seq[any.Method[FT]] = underlyingClass.methods.zip(testMarkers).filter{case (m, isTest) => isTest}.map(_._1)
     override def methodTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = underlyingClass.methodTypeLookupMap
 
     override def initializeInCompilationUnit(compilationUnit: any.CompilationUnit[FT]): any.TestSuite[FT] =
@@ -182,24 +183,32 @@ package object oo {
           constructorTypeLookupMap = compilationUnit.constructorTypeLookupMap,
           methodTypeLookupMap = compilationUnit.methodTypeLookupMap,
           typeLookupMap = compilationUnit.classTypeLookupMap,          
-        )
+        ),
+        testMarkers
       )
 
     override def copy(
       name: any.Name[FT] = this.name,
       tests: Seq[any.Method[FT]] = this.tests,
       methodTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = this.methodTypeLookupMap,
-    ): any.TestSuite[FT] =
+    ): any.TestSuite[FT] = {
+      val helpers = underlyingClass.methods.zip(this.testMarkers).filter{case (m, isTest) => !isTest}.map(_._1)
+      val testMarkers = Seq.fill(helpers.size)(false) ++ Seq.fill(tests.size)(true)
+
       copyAsClassBasedTestSuite(
         underlyingClass = this.underlyingClass.copy(
           name = name,
-          methods = tests,
+          methods = helpers ++ tests,
           methodTypeLookupMap = methodTypeLookupMap
-        ))
+        ),
+        testMarkers
+      )
+    }
 
     def copyAsClassBasedTestSuite(
-      underlyingClass: Class[FT] = this.underlyingClass
-    ): TestSuite[FT] = classBasedTestSuite(underlyingClass)
+      underlyingClass: Class[FT] = this.underlyingClass,
+      testMarkers: Seq[Boolean] = this.testMarkers
+    ): TestSuite[FT] = classBasedTestSuite(underlyingClass, testMarkers)
 
   }
 
@@ -434,9 +443,9 @@ package object oo {
     ): Class[FT]
 
     def testSuite(name: any.Name[FT], tests: Seq[any.Method[FT]], methodTypeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty): TestSuite[FT] =
-      classBasedTestSuite(cls(name = name, methods = tests, methodTypeLookupMap = methodTypeLookupMap))
+      classBasedTestSuite(cls(name = name, methods = tests, methodTypeLookupMap = methodTypeLookupMap), Seq.fill(tests.size)(true))
 
-    def classBasedTestSuite(underlyingClass: Class[FT]): TestSuite[FT]
+    def classBasedTestSuite(underlyingClass: Class[FT], testMarkers: Seq[Boolean]): TestSuite[FT]
 
     def constructor(
       constructedType: Option[any.Type[FT]] = Option.empty,

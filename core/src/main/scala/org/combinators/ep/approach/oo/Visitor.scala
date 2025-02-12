@@ -831,54 +831,6 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
     }
   }
 
-  // moved to sharedOO
-//  def latestModelDefiningOperatorClass(domain: GenericModel, tpeCase:DataTypeCase, op:Operation, domainSpecific: EvolutionImplementationProvider[this.type]) : Option[GenericModel] = {
-//    // Find all domains with an EIP that implements op for any type case
-//    val domainsImplementingOp = domainSpecific.evolutionSpecificDependencies(PotentialRequest(domain.baseDataType, tpeCase, op)).keySet
-//
-//    def cmp(l: GenericModel, r: GenericModel) = {
-//      if (l.before(r)) -1 else if (r.before(l)) 1 else 0
-//    }
-//
-//    def futureMergePoint(l: GenericModel, r: GenericModel)(m: GenericModel): Boolean = {
-//      l.beforeOrEqual(m) && r.beforeOrEqual(m)
-//    }
-//
-//    val orderedImplementers = domainsImplementingOp.toSeq
-//      .filter(d => d.beforeOrEqual(domain)) // filter to make sure we are before the current domain (we are not interested in later EIPs)
-//      .sorted(cmp)
-//      .reverse
-//
-//    // Are there two non-comparable ancestors l, r that haven't been merged by a third m which is past both? Then we are
-//    // responsible for the merge!
-//    if (orderedImplementers.size > 1 && orderedImplementers.exists(l => orderedImplementers.exists(r =>
-//      cmp(l, r) == 0 && !orderedImplementers.exists(futureMergePoint(l, r))))
-//    ) {
-//      return Some(domain)
-//    }
-//    Some(orderedImplementers.head)     // latest one
-//  }
-
-  def xxxlatestModelDefiningOperatorClass(domain: GenericModel, tpeCase:DataTypeCase, op: Operation, domainSpecific: EvolutionImplementationProvider[this.type]): Option[GenericModel] = {
-
-    // cannot skip over intervening models that have EIP overridden for this dataTypeCase on any operation
-    // map [DataTypeCase, Set[Operation]]
-    val m = newDataTypeCasesWithNewOperations(domain, domainSpecific)
-
-    if (m.get(tpeCase).exists(sop => sop.contains(op))) {
-      // then we are in charge
-      Some(domain)
-    } else {
-      val latestModelsForBranches = domain.former.flatMap(gm => latestModelDefiningOperatorClass(gm, tpeCase, op, domainSpecific).toSeq).distinct
-      if (latestModelsForBranches.size == 1 && !latestModelsForBranches.head.isDomainBase) {
-        Some(latestModelsForBranches.head)
-      } else {
-        // If more than one ancestor doing this. No clear resolution
-        None
-      }
-    }
-  }
-
   /**
    * The Visitor approach is defined as follows
    *

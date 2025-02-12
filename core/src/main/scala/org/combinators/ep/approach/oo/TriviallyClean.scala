@@ -143,7 +143,6 @@ trait TriviallyClean extends ApproachImplementationProvider {
         }
       }
     }
-
   }
 
   def newerTypeCasesSinceInterface(domain:GenericModel) : Seq[DataTypeCase] = {

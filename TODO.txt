@@ -6,10 +6,3 @@
   While this is now done, the generated code needs to appear as a plain "def ..." and this has not yet been done.
 
 2. Functional -- continue progress from before
-
-3. M3W1 for Trivially doesn't properly work. Compilation error is in M3W1Test but likely the issue is in the generated code.
-
-  ep-java-producer example
-
-  There is a merge point, where both incoming branches only define new DATA TYPES. For this reason there is no need to
-  generate an 'Exp' class

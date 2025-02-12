@@ -32,7 +32,7 @@
 
 2. Produce full report to validate which AIPs are truly correct
 
-  python3 ..\..\scripts\compare.py ..\..\scripts\systems\[EVOLUTION-JSON] >> REPORT
+  c:\Python37\python.exe ..\..\scripts\compare.py ..\..\scripts\systems\[EVOLUTION-JSON] >> REPORT
 
   Example EVOLUTION-JSON files are "system-j.json" or "system-main.json"
 

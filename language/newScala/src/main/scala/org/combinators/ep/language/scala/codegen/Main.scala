@@ -541,7 +541,7 @@ object DirectToDiskMain extends IOApp {
     // won't work for functional after M6 because of imperative-focused EIPs
     val approach = if (args.isEmpty) "extensibleVisitor" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "J8" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "M1" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 

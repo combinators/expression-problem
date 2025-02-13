@@ -103,13 +103,13 @@ lazy val exitSBT =
 lazy val languageInbetween =
   standardLanguageProject("inbetween")
     .dependsOn(core)
-    .settings(
-      Compile/run/mainClass := Some("org.combinators.ep.language.scala.codegen.GenerateAll")
-    )
+
 lazy val languageNewScala =
   standardLanguageProject("newScala")
     .dependsOn(languageInbetween)
-
+    .settings(
+      Compile/run/mainClass := Some("org.combinators.ep.language.scala.codegen.GenerateAll")
+    )
 
 //lazy val languageScala = standardLanguageProject("scala")
 

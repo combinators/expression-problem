@@ -43,3 +43,21 @@
 
 
 3. Functional -- continue progress from before
+
+
+----------------------------------
+Make sure to compile Time.java OR replace with python3 Time.py
+
+Note that on windows, 'sbt' with shell=True but on Unix 'sbt' with shell=False
+
+on windows MUST have shell=True but on Unix MUST NOT have -- Annoying!
+
+In the main directory, generate all Java versions for all evolution stages by:
+
+sbt language-java/run org.combinators.ep.language.java.GenerateAll
+
+For scala, do following:
+
+sbt language-newScala/run org.combinators.ep.language.scala.codegen.GenerateAll
+
+  ^^^ doesn't work have to enter in # afterwards. Might have to modify build.sbt file

@@ -34,6 +34,10 @@
 
   c:\Python37\python.exe ..\..\scripts\compare.py ..\..\scripts\systems\[EVOLUTION-JSON] >> REPORT
 
+     OR
+
+  python3 ../../scripts/compare.py ../../scripts/systems/[EVOLUTION-JSON] >> REPORT
+
   Example EVOLUTION-JSON files are "system-j.json" or "system-main.json"
 
   Note that the JSON files look like the following and contain predecessor information for each EIP to
@@ -88,9 +92,17 @@
 
      c:\Python37\python.exe ..\..\scripts\compile-java.py
 
+        OR
+
+     python3 ../../scripts/compile-java.py
+
   In the respective ep-scala-XXX directories, execute the following Python script:
 
      c:\Python37\python.exe ..\..\scripts\compile-scala.py
+
+        OR
+
+     python3 ../../scripts/compile-scala.py
 
 4. Generate statistics regarding the results of generating the source code, compiling the
    source code, executing the test cases and code coverage statistics. This script also detects

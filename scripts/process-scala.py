@@ -51,9 +51,6 @@ def extract_modes_and_phases(results, in_errors):
     timings = {}
     errs = {}
     for x in range(0, len(results),2):
-        if '-' not in results[x]:
-            print('skip:', results[x])
-            continue
         dash = results[x].index('-')
         mode = results[x][:dash]
         phase = results[x][dash+1:]
@@ -74,8 +71,6 @@ def extract_rows(modes, phases, timings):
         last_key = None
         for ph in phases:
             key = m + '-' + ph
-            if key not in timings:
-                continue
             if last == 0:
                 last = timings[key]
             else:

@@ -27,6 +27,7 @@ def extract(A):
     for line in A:
         if '[error]' in line:
             hasError = 'error'
+            continue
         if '[info]' in line and 'Instructions:' in line:
             coverage_instructions = line.split()[2]
         if '[info]' in line and 'Branches:' in line:
@@ -80,7 +81,7 @@ def extract_rows(modes, phases, timings):
     return info
 
 results,errors,oo_cov_table = extract(ooA)
-modes,phases,timings,errors = extract_modes_and_phases(results,errors)
+modes,phases,timings,errors = extract_modes_and_phases(results, errors)
 info = extract_rows(modes, phases, timings)
 
 # Create table[mode][phase]

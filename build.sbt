@@ -83,7 +83,7 @@ lazy val languageJava =
   standardLanguageProject("java")
     .settings(libraryDependencies += "com.github.javaparser" % "javaparser-core" % "3.19.0")
     .settings(
-      Compile/run/mainClass := Some("org.combinators.ep.language.java.DirectToDiskMain")
+      Compile/run/mainClass := Some("org.combinators.ep.language.java.GenerateAll")
      )
 
 lazy val helloWorldProject: Project =
@@ -103,7 +103,9 @@ lazy val exitSBT =
 lazy val languageInbetween =
   standardLanguageProject("inbetween")
     .dependsOn(core)
-
+    .settings(
+      Compile/run/mainClass := Some("org.combinators.ep.language.scala.codegen.GenerateAll")
+    )
 lazy val languageNewScala =
   standardLanguageProject("newScala")
     .dependsOn(languageInbetween)

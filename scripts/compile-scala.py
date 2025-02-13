@@ -7,6 +7,9 @@ import os
 from os import listdir, path
 from os.path import isdir, join, realpath
 import subprocess
+import subprocess
+
+has_shell = (platform.system() == 'Windows')
 
 # Assume run in the ep-scala-XXX directory which is in target; therefore, go up two
 # directories and down into 'scripts' to find necessary script files.
@@ -31,7 +34,7 @@ for app in approaches:
         log.write('======================================\n')
         log.flush()
 
-        subprocess.run(['sbt', 'compile'], shell=True, cwd=dir, stdout=log, stderr=log)
+        subprocess.run(['sbt', 'compile'], shell=has_shell, cwd=dir, stdout=log, stderr=log)
 
         log.write('======================================\n')
         log.write(f'{stage}-Test-Begin                   \n')
@@ -41,7 +44,7 @@ for app in approaches:
         log.write('======================================\n')
         log.flush()
 
-        subprocess.run(['sbt', 'test'], cwd=dir, shell=True, stdout=log, stderr=log)
+        subprocess.run(['sbt', 'test'], cwd=dir, shell=has_shell, stdout=log, stderr=log)
 
         log.write('======================================\n')
         log.write(f'{stage}-Test-End                     \n')
@@ -51,7 +54,7 @@ for app in approaches:
         log.write('======================================\n')
         log.flush()
 
-        subprocess.run(['sbt', 'coverageReport'], cwd=dir, shell=True, stdout=log, stderr=log)
+        subprocess.run(['sbt', 'coverageReport'], cwd=dir, shell=has_shell, stdout=log, stderr=log)
 
     log.close()
 

@@ -12,6 +12,11 @@ import org.combinators.ep.generator.paradigm._
  * Process model by generating representations suitable for GraphViz
  *
  * https://dreampuf.github.io/GraphvizOnline
+ *
+ * Choose "graphviz" as the approach and (for either Java or Scala) generate the resulting
+ * code. What it does, instead, is generate the OO solution and then creates files, either
+ * "eip.viz" (structural evolution) or "evolution.viz" (which also includes dependency links)
+ * that you can copy and paste into the above service.
  */
 trait Visualize extends SharedOO {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]

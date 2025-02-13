@@ -30,6 +30,9 @@
 
    For Scala-generated code, the above are replaced with "ep-scala-XXX" and approaches and evolutions remain the same.
 
+   Note: you can generate all of these from the command line where the 'build.sbt' file exists
+   by typing "sbt language-java/run" or "sbt language-newScala/run"
+
 2. Produce full report to validate which AIPs are truly correct
 
   c:\Python37\python.exe ..\..\scripts\compare.py ..\..\scripts\systems\[EVOLUTION-JSON] >> REPORT
@@ -110,11 +113,11 @@
 
    In the respective ep-java-XXX directories, execute the following Python script:
 
-     c:\Python37\python.exe ..\..\scripts\process-java.py
+     c:\Python37\python.exe ..\..\scripts\process-java.py > STATISTICS
 
    In the respective ep-scala-XXX directories, execute the following Python script:
 
-     c:\Python37\python.exe ..\..\scripts\process-scala.py
+     c:\Python37\python.exe ..\..\scripts\process-scala.py > STATISTICS
 
 5. When all scripts have run, you may need to delete temporary directories inside of target/bg-jobs that were created
    by SBT (but not deleted). A full run of the scripts often results in several GB worth of directories.

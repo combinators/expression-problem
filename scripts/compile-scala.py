@@ -4,12 +4,24 @@
 
 """
 import os
+import platform
 from os import listdir, path
 from os.path import isdir, join, realpath
 import subprocess
-import subprocess
+import time
+from datetime import datetime
 
 has_shell = (platform.system() == 'Windows')
+
+def current_milli_time():
+        return round(time.time() * 1000)
+
+tzone = time.localtime().tm_zone
+fmt = f"%a %b %d %H:%M:%S {tzone} %Y"
+
+def timestamp(output):
+    dt = datetime.now()
+    output.write(f'{current_milli_time()},{dt.strftime(fmt)}\n')
 
 # Assume run in the ep-scala-XXX directory which is in target; therefore, go up two
 # directories and down into 'scripts' to find necessary script files.
@@ -28,9 +40,7 @@ for app in approaches:
 
         log.write('======================================\n')
         log.write(f'{stage}-Compile-Begin                \n')
-        log.flush()
-        subprocess.run(['java', '-cp', scripts_dir, 'Time'], stdout=log, stderr=log)
-
+        timestamp(log)
         log.write('======================================\n')
         log.flush()
 
@@ -38,9 +48,7 @@ for app in approaches:
 
         log.write('======================================\n')
         log.write(f'{stage}-Test-Begin                   \n')
-        log.flush()
-        subprocess.run(['java', '-cp', scripts_dir, 'Time'], stdout=log, stderr=log)
-
+        timestamp(log)
         log.write('======================================\n')
         log.flush()
 
@@ -48,13 +56,10 @@ for app in approaches:
 
         log.write('======================================\n')
         log.write(f'{stage}-Test-End                     \n')
-        log.flush()
-        subprocess.run(['java', '-cp', scripts_dir, 'Time'], stdout=log, stderr=log)
-
+        timestamp(log)
         log.write('======================================\n')
         log.flush()
 
         subprocess.run(['sbt', 'coverageReport'], cwd=dir, shell=has_shell, stdout=log, stderr=log)
 
     log.close()
-

@@ -28,10 +28,10 @@ def extract(A):
         if '[error]' in line:
             hasError = 'error'
             continue
-        if '[info]' in line and 'Statement Coverage' in line:
-            coverage_instructions = line.split()[2]
-        if '[info]' in line and 'Branch Coverage' in line:
-            coverage_branches = line.split()[2]
+        if '[info]' in line and 'Statement coverage' in line:
+            coverage_instructions = line.split()[3]
+        if '[info]' in line and 'Branch coverage' in line:
+            coverage_branches = line.split()[3]
             coverages.append(f'{coverage_instructions},{coverage_branches}')
             coverage_instructions = coverage_branches = ''
         if printIt > 0:

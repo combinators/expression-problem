@@ -84,22 +84,25 @@
 
 3. Compile and run tests cases to generate jacoco.* code coverage reports.
 
-  On Windows, in the respective "ep-java-XXX" directories you can launch the compilation scripts. For the Scala
-  code, replace "java" with "scala" in the commands below.
+  In the respective ep-java-XXX directories, execute the following Python script:
 
-  * in ep-java                    enter command  "..\..\scripts\java\compile-main.bat"
-  * in ep-java-j                  enter command  "..\..\scripts\java\compile-j.bat"
-  * in ep-java-journal            enter command  "..\..\scripts\java\compile-journal.bat"
-  * in ep-java-d1d2               enter command  "..\..\scripts\java\compile-d1d2.bat"
-  * in ep-java-producer           enter command  "..\..\scripts\java\compile-producer.bat"
-  * in ep-java-third-alternate    enter command  "..\..\scripts\java\compile-third-alternate.bat"
+     c:\Python37\python.exe ..\..\scripts\compile-java.py
 
-4. Generate statistics regarding the results of generating the source code, compiling the source code, executing
-   the test cases and code coverage statistics. This script also detects errors in these three phases.
+  In the respective ep-scala-XXX directories, execute the following Python script:
 
-   CD into the directory in target\analysis and run the following on each of the jacoco.*** generated files
+     c:\Python37\python.exe ..\..\scripts\compile-scala.py
 
-   c:\Python37\python.exe ..\..\scripts\process.py > STATISTICS
+4. Generate statistics regarding the results of generating the source code, compiling the
+   source code, executing the test cases and code coverage statistics. This script also detects
+   errors in these three phases.
+
+   In the respective ep-java-XXX directories, execute the following Python script:
+
+     c:\Python37\python.exe ..\..\scripts\process-java.py
+
+   In the respective ep-scala-XXX directories, execute the following Python script:
+
+     c:\Python37\python.exe ..\..\scripts\process-scala.py
 
 5. When all scripts have run, you may need to delete temporary directories inside of target/bg-jobs that were created
    by SBT (but not deleted). A full run of the scripts often results in several GB worth of directories.

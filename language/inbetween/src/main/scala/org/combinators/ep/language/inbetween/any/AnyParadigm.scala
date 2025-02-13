@@ -137,6 +137,8 @@ trait AnyParadigm extends AP {
       }
     }
 
+    // Seem to be missing 'canAddBlockDefinitionsInTest
+
     implicit val canAddTestCaseInTest: Understands[TestContext, AddTestCase[Method[FT], Name[FT], Expression[FT]]] = new Understands[TestContext, AddTestCase[Method[FT], Name[FT], Expression[FT]]] {
       def perform(context: TestContext, command: AddTestCase[Method[FT], Name[FT], Expression[FT]]): (TestContext, Unit) = {
         val emptyMethod = factory.method(

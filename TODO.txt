@@ -1,8 +1,45 @@
+1. Invalid
 
-1. ExtensibleVisitor
-
-1a. In scala: Need to be able to AddMethod to Test case and the inBetween/newScala isn't doing this.
+   a. ep-java trivially on A1M3 A1M3I2 A3 OO3
+   b. ep-java interpreter (O1OA test failed) extensibleVisitor (A1M3 A1M3I2 A3) trivially (A1M3, A1M3I2 A3 O1OA)
+   c. ep-java-j visitorSideEffect K2J6 and subsequent all because test cases get too big
+   d. ep-java-journal extensibleVisitor (I2M3I1N1)
+   e. ep-java-third-alternate trivially (X2X3 and X4)
+     a. In scala: Need to be able to AddMethod to Test case and the inBetween/newScala isn't doing this.
 
   While this is now done, the generated code needs to appear as a plain "def ..." and this has not yet been done.
 
-2. Functional -- continue progress from before
+2. Scala generation
+
+  where java generation calls AddBlockDefinitionsInTest, this doesn't happen for newScala/inbetween
+   canAddBlockDefinitionsInTest
+
+    implicit val canAddBlockDefinitionsInMethodBody: Understands[MethodBodyContext, AddBlockDefinitions[syntax.Statement]] = new Understands[MethodBodyContext, AddBlockDefinitions[syntax.Statement]] {
+      def perform(context: Method[FT], command: AddBlockDefinitions[syntax.Statement]): (Method[FT], Unit) = {
+        val stmts: Seq[Statement[FT]] = command.definitions
+        (context.copy(statements = context.statements ++ stmts), ())
+      }
+    }
+ test cases are not generating variables/constructed instances for visitorSideEffect for example (d1d2) and
+ go to M1Test.scala
+
+  this.test("Test_ee74e9e729c54ea9b15b755bebdce8d3")({
+   assert (eval_66c4a24ac41842f58ab83c5494acfa32.getVisitorValue() == -1.0);
+   assert (eval_38a8af3203664cc3a6dd9d838c3d6bfe.getVisitorValue() == 3.0);
+   assert (eval_1c3d96cd2dff4fd4a1fdbfa28aa6696d.getVisitorValue() == 5.0);});
+
+  when compared against Java generated code:
+
+          Eval eval = new Eval();
+          new Sub(new Lit(1.0), new Lit(2.0)).accept(eval);
+          Eval _eval = new Eval();
+          new Add(new Lit(1.0), new Lit(2.0)).accept(_eval);
+          Eval eval2 = new Eval();
+          new Lit(5.0).accept(eval2);
+          org.junit.Assert.assertTrue("", Double.valueOf(eval.getVisitorValue()).equals(-1.0));
+          org.junit.Assert.assertTrue("", Double.valueOf(_eval.getVisitorValue()).equals(3.0));
+          org.junit.Assert.assertTrue("", Double.valueOf(eval2.getVisitorValue()).equals(5.0));
+
+
+
+3. Functional -- continue progress from before

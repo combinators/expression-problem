@@ -539,9 +539,9 @@ object DirectToDiskMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
     // won't work for functional after M6 because of imperative-focused EIPs
-    val approach = if (args.isEmpty) "extensibleVisitor" else args.head
+    val approach = if (args.isEmpty) "visitorSideEffect" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "M1" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "M0" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 

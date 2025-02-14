@@ -1,7 +1,7 @@
 """
   Run with Python3 to generate report of approaches that satisfy EP criteria.
 
-  python3 ..\..\scripts\compare.py ..\..\scripts\systems\[EVOLUTION-JSON] >> REPORT
+  python3 ..\..\scripts\compare.py ..\..\scripts\systems\[EVOLUTION-JSON] [scala | java] >> REPORT
 
   where the JSON file has a single 'evolutions' tag, where each entry
 
@@ -15,6 +15,9 @@
       ]
    }
 
+  The third argument is either 'java' or 'scala' (defaults to java). This determines
+  which source code language to inspect.
+
   Depends on having successfully generated files as outlined in the README.txt file.
 
   Currently only checks that OLD files are not changed from one evolution to the next.
@@ -24,6 +27,10 @@
 
   In addition, there are some EP approaches that can reuse test cases, but in others, even the
   test cases have to be altered.
+
+  For now, this only works with java generated code, because the Scala generated code
+  introduces a good number of fresh-name types which are long randomized strings,
+  meaning the code looks different even though nothing has changed.
 """
 import hashlib
 import os
@@ -57,7 +64,11 @@ for k in description["evolutions"]:
 
 # Want to be able to detect differences in the actual source code. Note that test cases are a
 # different story, and even solutions to the EP require special handling with regard to test cases
-PREFIX      = 'src\\main\\java'
+if len(sys.argv) == 3:
+    src_dir = os.path.join('src', 'main', sys.argv[2].lower())
+else:
+    src_dir = os.path.join('src', 'main', 'java')
+PREFIX = str(src_dir)
 
 def md5 (filename):
     """Return (# lines, md5) has for filename."""
@@ -84,7 +95,8 @@ def strip_prefix(filename):
     """Remove PREFIX\ from the filename."""
     if PREFIX in filename:
         loc = filename.index(PREFIX)
-        return filename[loc + len(PREFIX) + 1:]
+        reduced = filename[loc + len(PREFIX) + 1:]
+        return reduced
     return filename
 
 def extract(eip_dirname):

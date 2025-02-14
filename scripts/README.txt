@@ -31,7 +31,9 @@
    For Scala-generated code, the above are replaced with "ep-scala-XXX" and approaches and evolutions remain the same.
 
    Note: you can generate all of these from the command line where the 'build.sbt' file exists
-   by typing "sbt language-java/run" or "sbt language-newScala/run"
+   by typing "sbt language-java/run" (takes about 45 minutes to generate all stages and
+   all systems and over 500K LOC including test cases) or "sbt language-newScala/run" (takes
+   about 50 minutes to generate all stages and all systems and over 600K LOC including test cases)
 
 2. Produce full report to validate which AIPs are truly correct
 
@@ -42,6 +44,8 @@
   python3 ../../scripts/compare.py ../../scripts/systems/[EVOLUTION-JSON] >> REPORT
 
   Example EVOLUTION-JSON files are "system-j.json" or "system-main.json"
+
+  CURRENTLY THIS DOES NOT YET WORK WITH THE SCALA-GENERATED CODE.
 
   Note that the JSON files look like the following and contain predecessor information for each EIP to
   make the Python processing a bit easier.
@@ -115,9 +119,17 @@
 
      c:\Python37\python.exe ..\..\scripts\process-java.py > STATISTICS
 
+        OR
+
+     python3 ../../scripts/process-java.py > STATISTICS
+
    In the respective ep-scala-XXX directories, execute the following Python script:
 
      c:\Python37\python.exe ..\..\scripts\process-scala.py > STATISTICS
+
+        OR
+
+     python3 ../../scripts/process-scala.py > STATISTICS
 
 5. When all scripts have run, you may need to delete temporary directories inside of target/bg-jobs that were created
    by SBT (but not deleted). A full run of the scripts often results in several GB worth of directories.

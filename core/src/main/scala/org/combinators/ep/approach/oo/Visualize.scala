@@ -55,6 +55,30 @@ trait Visualize extends SharedOO {
     // Document EIPs
     GraphViz.outputGraphWithDependenciesViz(gdomain, domainSpecific)
 
+    // produce table
+    val flat = gdomain.flatten
+
+    // header
+    print("OP,")
+    flat.typeCases.foreach(tpe => {
+      print(tpe.name + ",")
+    })
+    println()
+
+    flat.ops.foreach(op => {
+      print(op.name + ",")
+      flat.typeCases.foreach(tpe => {
+        val opt = latestModelDefiningOperatorClass(gdomain, tpe, op, domainSpecific)
+
+        if (opt.isEmpty) {
+          print("-,")
+        } else {
+          print(opt.get.name + ",")
+        }
+      })
+      println()
+    })
+
     val flatDomain = gdomain.linearize.flatten
     for {
       _ <- registerTypeMapping(flatDomain)

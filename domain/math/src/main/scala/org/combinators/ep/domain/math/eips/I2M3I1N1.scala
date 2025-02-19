@@ -39,8 +39,11 @@ sealed class I2M3I1N1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImpleme
         (potentialRequest.op, potentialRequest.tpeCase) match {
           case (math.N1.PowBy, tpeCase) if cases.contains(tpeCase) => Some(Set.empty)
 
+          // first chance to bring MultBy to bear on Power when Mult optimization is in effect. This is tricky!
+          case (math.systemI.I1.MultBy, math.systemI.I2.Power)  => Some(Set.empty)
+
           // rest handled above by first two cases
-          case (_, _) => None
+          case _ => None
         }
       }
 
@@ -56,9 +59,14 @@ sealed class I2M3I1N1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImpleme
         onRequest.request.op match {
 
           case p@math.N1.PowBy =>  // on Power
-            // must handle Power dataType. HERE WE CAN OPTIMIZED.
+            // must handle Power dataType. HERE WE CAN OPTIMIZE.
             for {
               res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.systemI.I2.Power, onRequest.selfReference, onRequest.request.arguments.head._2)
+            } yield Some(res)
+
+          case mb@math.systemI.I1.MultBy => // WE CAN OPTIMIZE MultBy with Mult
+            for {
+              res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M3.Mult, onRequest.selfReference, onRequest.request.arguments.head._2)
             } yield Some(res)
         }
       }

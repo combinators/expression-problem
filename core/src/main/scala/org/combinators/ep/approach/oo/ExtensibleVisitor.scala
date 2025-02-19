@@ -461,7 +461,8 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
     // doesn't handle MERGE well....
     val possible = model.inChronologicalOrder.filter(m => m.former.length > 1 && selected.earlier(m) == selected)
     val chosen = if (possible.nonEmpty) {
-      possible.head
+      // could be multiple? So take the last one
+      possible.last    // head
     } else {
       selected
     }
@@ -718,6 +719,29 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
     // When new data types are defined in a model (after the EQL), all isXXX() operations need to be regenerated
     // and thus SHOULD be in the dependentOperations, but right now not. This may cause the creation of more factory methods than absolutely necessary
     // because of the way that a dependent operation from "the past" (like MultBy/Power in k1)
+    // NOTE: MUST DO IN REVERSE ORDER because future stages can remove or add dependencies.
+    // Consider PowBy in I2m3i1n1. For the first time it can use Power data type so it no longer has dependence on Eval operation, which it would
+    // have had from n1.
+    val dds = domain.toSeq
+    val reversedOrder = domain.inChronologicalOrder.distinct.reverse
+    if (domain.name.equals("a1m3i2")) {
+      println ("SDSDS")
+    }
+    val possibleDependency:Option[GenericModel] = reversedOrder.find(m => dependentOperationsOf(m, operation, domainSpecific).nonEmpty)
+
+    /**
+    val opsSeq:Seq[Operation] = if (possibleDependency.nonEmpty) {
+      // If any merge exists "along the way" it must have thrown out this dependency (otherwise it would have kept the dependent operation)
+      if (domain.inChronologicalOrder.exists(m => m.beforeOrEqual(domain) && m.former.length > 1)) {
+        Seq(operation)
+      } else {
+        (Seq(operation) ++ dependentOperationsOf(possibleDependency.get, operation, domainSpecific)).distinct
+      }
+    } else {
+      Seq(operation)
+    }
+    **/
+    //val opsSeq:Seq[Operation] = (Seq(operation) ++ reversedOrder.flatMap(m => dependentOperationsOf(m, operation, domainSpecific))).distinct
     val opsSeq:Seq[Operation] = (Seq(operation) ++ domain.inChronologicalOrder.flatMap(m => dependentOperationsOf(m, operation, domainSpecific))).distinct
 
     for {
@@ -790,9 +814,14 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
             // likely possible to make this functional...
             var exists_in_past = false
             while (!exists_in_past && !n.isDomainBase) {
-              // MERGE that occurred **in the past** MUST have done this already, so we override.
-              if (n.former.length > 1 || (n != domain && dependentOperationsOf(n, operation, domainSpecific).contains(dop))) {
+              // MERGE that occurred **in the past** MUST have done this already (as long as op was present), so we override.
+              if (dependentOperationsOf(n, operation, domainSpecific).contains(dop)) {
                 exists_in_past = true
+              } else if (n.former.length > 1) {
+                // if the HEAD (which is used for single inheritance) does not have this as dependent operation then
+                // exists_in_past can be set to false since there is nothing to override. IF, however, the head DOES
+                // have this as dependent operation, then Must override.
+                exists_in_past = dependentOperationsOf(n.former.head, operation, domainSpecific).contains(dop)
               }
 
               // Possible issue if a past MERGE must be diverted so it isn't arbitrarily one of the formers. If this

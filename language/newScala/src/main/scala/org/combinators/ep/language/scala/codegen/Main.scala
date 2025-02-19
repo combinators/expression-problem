@@ -570,11 +570,37 @@ object GenerateAll extends IOApp {
   }
 }
 
+/**
+ * Generate ALL CODE.
+ */
+object GenerateAllForOneApproach extends IOApp {
+
+  def run(args: List[String]): IO[ExitCode] = {
+    val approach:List[String] = List("extensibleVisitor")
+
+    GenerateAllMain.run(approach)
+    GenerateAllProducer.run(approach)
+    GenerateAllThirdAlternate.run(approach)
+    GenerateAllD1D2.run(approach)
+    GenerateAllJournal.run(approach)
+    GenerateAllJ.run(approach)
+  }
+}
+
 object GenerateAllMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
 
-    val approaches = Seq("oo","visitor","visitorSideEffect","extensibleVisitor","interpreter","coco","trivially","algebra")
+    val approaches = if (args.isEmpty) {
+      Seq("oo","visitor","visitorSideEffect","extensibleVisitor","interpreter","coco","trivially","algebra")
+    } else {
+      args
+    }
+    val target = if (args.isEmpty) {
+      "ep-scala"
+    } else {
+      args.head
+    }
     val evolutions = Seq("M0","M1","M2","M3","M4","M5","M6","M7","M7I2","M8","M9","I1","A1","A1M3","A1M3I2","A3","I2",
       "O1","O2","OA","O1OA","OD1","OD2","OD3","OO1","OO2","OO3")
 
@@ -583,7 +609,7 @@ object GenerateAllMain extends IOApp {
       evolutions.foreach(selection => {
         println("   " + selection)
 
-        val targetDirectory = Paths.get("target", "ep-scala", approach, selection)
+        val targetDirectory = Paths.get("target", target, approach, selection)
         val program :IO[Unit] = {
           for {
             _ <- IO { print("Initializing Generator...") }
@@ -612,7 +638,16 @@ object GenerateAllProducer extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
 
-    val approaches = Seq("oo","visitor","visitorSideEffect","extensibleVisitor","interpreter","coco","trivially","algebra")
+    val approaches = if (args.isEmpty) {
+      Seq("oo", "visitor", "visitorSideEffect", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
+    } else {
+      args
+    }
+    val target = if (args.isEmpty) {
+      "ep-scala-producer"
+    } else {
+      args.head
+    }
     val evolutions = Seq("M0","M1","M2","M3", "W1", "M3W1", "Q1", "C2", "V1")
 
     approaches.foreach(approach => {
@@ -620,7 +655,7 @@ object GenerateAllProducer extends IOApp {
       evolutions.foreach(selection => {
         println("   " + selection)
 
-        val targetDirectory = Paths.get("target", "ep-scala-producer", approach, selection)
+        val targetDirectory = Paths.get("target", target, approach, selection)
         val program :IO[Unit] = {
           for {
             _ <- IO { print("Initializing Generator...") }
@@ -649,7 +684,16 @@ object GenerateAllThirdAlternate extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
 
-    val approaches = Seq("oo","visitor","visitorSideEffect","extensibleVisitor","interpreter","coco","trivially","algebra")
+    val approaches = if (args.isEmpty) {
+      Seq("oo", "visitor", "visitorSideEffect", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
+    } else {
+      args
+    }
+    val target = if (args.isEmpty) {
+      "ep-scala-third-alternate"
+    } else {
+      args.head
+    }
     val evolutions = Seq("M0", "X1", "X2", "X3", "X2X3", "X4")
 
     approaches.foreach(approach => {
@@ -657,7 +701,7 @@ object GenerateAllThirdAlternate extends IOApp {
       evolutions.foreach(selection => {
         println("   " + selection)
 
-        val targetDirectory = Paths.get("target", "ep-scala-third-alternate", approach, selection)
+        val targetDirectory = Paths.get("target", target, approach, selection)
         val program :IO[Unit] = {
           for {
             _ <- IO { print("Initializing Generator...") }
@@ -686,7 +730,16 @@ object GenerateAllD1D2 extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
 
-    val approaches = Seq("oo","visitor","visitorSideEffect","extensibleVisitor","interpreter","coco","trivially","algebra")
+    val approaches = if (args.isEmpty) {
+      Seq("oo", "visitor", "visitorSideEffect", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
+    } else {
+      args
+    }
+    val target = if (args.isEmpty) {
+      "ep-scala-d1d2"
+    } else {
+      args.head
+    }
     val evolutions = Seq("M0", "M1", "D1", "D2", "D1D2", "D3")
 
     approaches.foreach(approach => {
@@ -694,7 +747,7 @@ object GenerateAllD1D2 extends IOApp {
       evolutions.foreach(selection => {
         println("   " + selection)
 
-        val targetDirectory = Paths.get("target", "ep-scala-d1d2", approach, selection)
+        val targetDirectory = Paths.get("target", target, approach, selection)
         val program :IO[Unit] = {
           for {
             _ <- IO { print("Initializing Generator...") }
@@ -723,14 +776,23 @@ object GenerateAllJournal extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
 
-    val approaches = Seq("oo","visitor","visitorSideEffect","extensibleVisitor","interpreter","coco","trivially","algebra")
+    val approaches = if (args.isEmpty) {
+      Seq("oo", "visitor", "visitorSideEffect", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
+    } else {
+      args
+    }
+    val target = if (args.isEmpty) {
+      "ep-scala-journal"
+    } else {
+      args.head
+    }
     val evolutions = Seq("M0","M1","M2","I1","I2","N1","M2_ABS","M3","M3I1","I2M3I1N1")
     approaches.foreach(approach => {
       println("Generating " + approach + "...")
       evolutions.foreach(selection => {
         println("   " + selection)
 
-        val targetDirectory = Paths.get("target", "ep-scala-journal", approach, selection)
+        val targetDirectory = Paths.get("target", target, approach, selection)
         val program :IO[Unit] = {
           for {
             _ <- IO { print("Initializing Generator...") }
@@ -759,7 +821,16 @@ object GenerateAllJ extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
 
-    val approaches = Seq("oo","visitor","extensibleVisitor","interpreter","coco","trivially","algebra")   // "visitorSideEffect",
+    val approaches = if (args.isEmpty) {
+      Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra") // "visitorSideEffect",
+    } else {
+      args
+    }
+    val target = if (args.isEmpty) {
+      "ep-scala-j"
+    } else {
+      args.head
+    }
     val evolutions = Seq("M0","J1","J2","J3","K1","K2","J4","J5","J6","K2J6","J7","J8")
 
     approaches.foreach(approach => {
@@ -767,7 +838,7 @@ object GenerateAllJ extends IOApp {
       evolutions.foreach(selection => {
         println("   " + selection)
 
-        val targetDirectory = Paths.get("target", "ep-scala-j", approach, selection)
+        val targetDirectory = Paths.get("target", target, approach, selection)
         val program :IO[Unit] = {
           for {
             _ <- IO { print("Initializing Generator...") }

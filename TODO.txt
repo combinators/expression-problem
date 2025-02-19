@@ -45,5 +45,27 @@
 3. Functional -- continue progress from before
 
 ./ep-java/jacoco.trivially (O1OA)
-./ep-java/jacoco.extensibleVisitor (A1M3I2)
+./ep-java/jacoco.extensibleVisitor (A1M3I2, A1M3, A3, OO3)
+./ep-java/jacoco.extensibleVisitor has O1OA fails test, though this might be limitation of ExtensibileVisitor with overriding
 ./ep-java-third-alternate/jacoco.trivially (i2m3i1n2 x2x3 x4)
+
+4. m7funct has hardcoded -77.77 which is where it fails. For scala
+
+FIX MultBy/Power in K1 as well as in I2
+
+  Logic is just wrong.
+
+J7 and J8 are missing an Override [in java this doesn't cause an issue, but it does for Scala]
+
+For J7, in package mathdomain.j7 MultBy there is an unneeded makeEval() that is ignored in Java but causes problems in scala
+For J8, in package mathdomain.j7 MultBy there is an unneeded makeEval() that is ignored in Java but causes problems in scala
+
+For M9, in package mathdomain.m8 MultBy.scala there is an unneeded makeEval
+For M8, in package mathdomain.m8 MultBy.scala there is an unneeded makeEval
+
+For O1, in package mathdomain.o1 Prettyp.scala there is an unneeded makePretty
+For O1OA, in package mathdomain.o1 Prettyp.scala there is an unneeded makePretty
+For O2, in package mathdomain.o1 Prettyp.scala there is an unneeded makePretty
+For O2, in package mathdomain.o2 Prettyp.scala there is an unneeded makePretty
+
+FIX the above and all is complete!

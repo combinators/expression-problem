@@ -94,6 +94,7 @@ trait SharedOO extends ApproachImplementationProvider {
     } yield ()
   }
 
+
   def latestModelDefiningOperatorClass(domain: GenericModel, tpeCase:DataTypeCase, op:Operation, domainSpecific: EvolutionImplementationProvider[this.type]) : Option[GenericModel] = {
     // Find all domains with an EIP that implements op for any type case
     val domainsImplementingOp = domainSpecific.evolutionSpecificDependencies(PotentialRequest(domain.baseDataType, tpeCase, op)).keySet

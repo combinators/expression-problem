@@ -125,6 +125,15 @@ object K1 {
                       ))
                       // lit(Math.log(this.convert(other).eval()) / Math.log(getBase().eval()))));
 
+                      /***
+
+                      double value = other.<Double>accept(this.makeEval());
+                      double num = Math.log(value);
+                      return new Power(exp.getLeft(),
+                           new Add(exp.getRight(), new Lit     (num / Math.log(exp.getLeft().<Double>accept(this.makeEval())))));
+                           ^^^^ is expExpr         ^^^ addend   ^^^ numExpr
+                       **/
+
                       //eulerNumFixMe <- forApproach.reify(InstanceRep(TypeRep.Double)(2.7182818284590452354))
                       numExpr <- log(baseEval, other)
                       //                      denomExpr <- log(eulerNumFixMe, baseEval)

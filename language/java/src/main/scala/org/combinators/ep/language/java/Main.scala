@@ -428,9 +428,9 @@ object DirectToDiskMain extends IOApp {
     //
     //
 
-    val approach = if (args.isEmpty) "trivially" else args.head
+    val approach = if (args.isEmpty) "extensibleVisitor" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "O1OA" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "J8" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 
@@ -466,7 +466,7 @@ object GenerateAll extends IOApp {
 object GenerateAllForOneApproach extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
-   val approach:List[String] = List("trivially")
+   val approach:List[String] = List("extensibleVisitor")
 
     GenerateAllMain.run(approach)
     GenerateAllProducer.run(approach)

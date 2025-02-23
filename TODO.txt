@@ -59,16 +59,13 @@ J7 and J8 are missing an Override [in java this doesn't cause an issue, but it d
 
 extensibleVisitor in scala generates makeEval in j7.MultBy even though it is no longer needed
 
+These all come down to an earlier dependence between MultBy and Eval that can be eliminated after
+the Mult data type exists.
 
 For J7, in package mathdomain.j7 MultBy there is an unneeded makeEval() that is ignored in Java but causes problems in scala
 For J8, in package mathdomain.j7 MultBy there is an unneeded makeEval() that is ignored in Java but causes problems in scala
 
 For M9, in package mathdomain.m8 MultBy.scala there is an unneeded makeEval
 For M8, in package mathdomain.m8 MultBy.scala there is an unneeded makeEval
-
-For O1, in package mathdomain.o1 Prettyp.scala there is an unneeded makePretty
-For O1OA, in package mathdomain.o1 Prettyp.scala there is an unneeded makePretty
-For O2, in package mathdomain.o1 Prettyp.scala there is an unneeded makePretty
-For O2, in package mathdomain.o2 Prettyp.scala there is an unneeded makePretty
 
 FIX the above and all is complete!

@@ -575,7 +575,7 @@ object GenerateAll extends IOApp {
 object GenerateAllForOneApproach extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
-    val approach:List[String] = List("coco")
+    val approach:List[String] = List("extensibleVisitor")
 
     GenerateAllMain.run(approach)
     GenerateAllProducer.run(approach)

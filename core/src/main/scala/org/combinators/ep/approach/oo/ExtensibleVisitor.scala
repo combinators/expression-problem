@@ -616,9 +616,6 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
     op: Operation,
     domainSpecific: EvolutionImplementationProvider[this.type],
   ): Set[Operation] = {
-    if (domain.name.equalsIgnoreCase("J7") && op.name.equalsIgnoreCase("MultBy")) {
-      println("DEBUG:")
-    }
     val allTpeCases = domain.flatten.typeCases.distinct
     val allDependencies = allTpeCases.map(tpeCase => domainSpecific.evolutionSpecificDependencies(PotentialRequest(domain.baseDataType, tpeCase, op)))
     val combinedDependencies = allDependencies.foldLeft(Map.empty[GenericModel, Set[Operation]]){ case (combined, singular) =>
@@ -719,33 +716,6 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
         } yield possibleParent
       }
 
-    // When new data types are defined in a model (after the EQL), all isXXX() operations need to be regenerated
-    // and thus SHOULD be in the dependentOperations, but right now not. This may cause the creation of more factory methods than absolutely necessary
-    // because of the way that a dependent operation from "the past" (like MultBy/Power in k1)
-    // NOTE: MUST DO IN REVERSE ORDER because future stages can remove or add dependencies.
-    // Consider PowBy in I2m3i1n1. For the first time it can use Power data type so it no longer has dependence on Eval operation, which it would
-    // have had from n1.
-    val dds = domain.toSeq
-    val reversedOrder = domain.inChronologicalOrder.distinct.reverse
-    if (domain.name.equals("a1m3i2")) {
-      println ("SDSDS")
-    }
-    val possibleDependency:Option[GenericModel] = reversedOrder.find(m => dependentOperationsOf(m, operation, domainSpecific).nonEmpty)
-
-    /**
-    val opsSeq:Seq[Operation] = if (possibleDependency.nonEmpty) {
-      // If any merge exists "along the way" it must have thrown out this dependency (otherwise it would have kept the dependent operation)
-      if (domain.inChronologicalOrder.exists(m => m.beforeOrEqual(domain) && m.former.length > 1)) {
-        Seq(operation)
-      } else {
-        (Seq(operation) ++ dependentOperationsOf(possibleDependency.get, operation, domainSpecific)).distinct
-      }
-    } else {
-      Seq(operation)
-    }
-    **/
-    //val opsSeq:Seq[Operation] = (Seq(operation) ++ reversedOrder.flatMap(m => dependentOperationsOf(m, operation, domainSpecific))).distinct
-
     // Later evolution stages can remove a past dependent operation or possibly add. First tuple is
     // m0 and the last one is the current domain.
     val wholeStructure = domain.inChronologicalOrder.map(m => dependentOperationsOf(m, operation, domainSpecific))
@@ -757,12 +727,9 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
         aggregate ++ ops
       }
     )
-    val something = domain.inChronologicalOrder.map(m => dependentOperationsOf(m, operation, domainSpecific))
 
-    // Some dependent operations get in by mistake. For example J7 MultBy should have no
-    // dependent ops even though earlier K1 and K2 have eval() as a dependent operation for MultBy
-    val xyz:Seq[Operation] = reduced.toSeq
-    val opsSeq:Seq[Operation] = (Seq(operation) ++ domain.inChronologicalOrder.flatMap(m => dependentOperationsOf(m, operation, domainSpecific))).distinct
+    //val opsSeq:Seq[Operation] = (Seq(operation) ++ domain.inChronologicalOrder.flatMap(m => dependentOperationsOf(m, operation, domainSpecific))).distinct
+    val opsSeq:Seq[Operation] = (Seq(operation) ++ reduced).distinct
 
     for {
       possibleParent <- addParentClass()
@@ -851,7 +818,8 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
             exists_in_past    // if exists in past, then must override
           }
         } else {
-          !modelToUse.ops.contains(operation)    // if same COULD be defining, but only if previously defined
+          // for O1 need to double check modelToUse != domain since means parent exists
+          (!modelToUse.ops.contains(operation)) || (modelToUse != domain)   // if same COULD be defining, but only if previously defined
         }
 
         /**

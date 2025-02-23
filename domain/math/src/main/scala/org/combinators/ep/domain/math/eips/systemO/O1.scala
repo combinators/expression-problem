@@ -27,6 +27,7 @@ object O1 {
         } yield ()
       }
 
+      /** This evolution "fixes" a defect on (PrettyP,Lit) by duplicating the output of Lit. */
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         if ((potentialRequest.op == math.M2.PrettyP) && Set(math.M0.Lit).contains(potentialRequest.tpeCase)) {
           Some(Set.empty)
@@ -34,12 +35,6 @@ object O1 {
           None
         }
       }
-
-//      /** Do not call 'assert' since might not be applicable. */
-//      override def genericLogic(forApproach: AIP[paradigm.type])
-//                               (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
-//      Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] =
-//        m2Provider.genericLogic(forApproach)(onRequest)
 
       def logic
           (forApproach: AIP[paradigm.type])

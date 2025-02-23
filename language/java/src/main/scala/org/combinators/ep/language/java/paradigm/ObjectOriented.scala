@@ -126,8 +126,11 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             context: ClassContext,
             command: AddParent[Type]
           ): (ClassContext, Unit) = {
+            val toAdd = command.parentClass.asClassOrInterfaceType()
             val resultCls = context.cls.clone()
-            resultCls.addExtendedType(command.parentClass.asClassOrInterfaceType())
+            if (!resultCls.getExtendedTypes.contains(toAdd)) {          // only add if not already present...
+              resultCls.addExtendedType(toAdd)
+            }
             (context.copy(cls = resultCls), ())
           }
         }

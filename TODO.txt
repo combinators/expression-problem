@@ -57,6 +57,9 @@ FIX MultBy/Power in K1 as well as in I2
 
 J7 and J8 are missing an Override [in java this doesn't cause an issue, but it does for Scala]
 
+extensibleVisitor in scala generates makeEval in j7.MultBy even though it is no longer needed
+
+
 For J7, in package mathdomain.j7 MultBy there is an unneeded makeEval() that is ignored in Java but causes problems in scala
 For J8, in package mathdomain.j7 MultBy there is an unneeded makeEval() that is ignored in Java but causes problems in scala
 

@@ -29,7 +29,7 @@ object X4 {
 
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         (potentialRequest.op, potentialRequest.tpeCase) match {
-          case (op, math.systemX.X4.Neg) if systemJ.J3.getModel.flatten.ops.contains(op) => Some(Set.empty)
+          case (op, math.systemX.X4.Neg) if math.systemX.X4.getModel.flatten.ops.contains(op) => Some(Set.empty)
 
           case (_, _) => None
         }

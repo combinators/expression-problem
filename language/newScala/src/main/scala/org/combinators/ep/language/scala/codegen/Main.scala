@@ -156,12 +156,11 @@ class Main(choice:String, select:String) {
   val m6_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.M6(approach.paradigm)(m5_eip)(generator.equality, generator.booleans)
   val m7_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    eips.M7funct(approach.paradigm)(m6_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.functional)
-//    if (choice == "functional") {
-//      m0_eip // not compatible for functional
-//    } else {
+    if (choice == "functional") {
+      eips.M7funct(approach.paradigm)(m6_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.functional)
+    } else {
       eips.M7(approach.paradigm)(m6_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.imperative)
-//    }
+    }
   val i1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     if (choice == "functional") {
       m0_eip // not compatible for functional
@@ -539,9 +538,9 @@ object DirectToDiskMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
     // won't work for functional after M6 because of imperative-focused EIPs
-    val approach = if (args.isEmpty) "visitorSideEffect" else args.head
+    val approach = if (args.isEmpty) "extensibleVisitor" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "M0" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "J7" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 
@@ -576,7 +575,7 @@ object GenerateAll extends IOApp {
 object GenerateAllForOneApproach extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
-    val approach:List[String] = List("extensibleVisitor")
+    val approach:List[String] = List("coco")
 
     GenerateAllMain.run(approach)
     GenerateAllProducer.run(approach)

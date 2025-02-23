@@ -616,6 +616,9 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
     op: Operation,
     domainSpecific: EvolutionImplementationProvider[this.type],
   ): Set[Operation] = {
+    if (domain.name.equalsIgnoreCase("J7") && op.name.equalsIgnoreCase("MultBy")) {
+      println("DEBUG:")
+    }
     val allTpeCases = domain.flatten.typeCases.distinct
     val allDependencies = allTpeCases.map(tpeCase => domainSpecific.evolutionSpecificDependencies(PotentialRequest(domain.baseDataType, tpeCase, op)))
     val combinedDependencies = allDependencies.foldLeft(Map.empty[GenericModel, Set[Operation]]){ case (combined, singular) =>
@@ -742,6 +745,23 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
     }
     **/
     //val opsSeq:Seq[Operation] = (Seq(operation) ++ reversedOrder.flatMap(m => dependentOperationsOf(m, operation, domainSpecific))).distinct
+
+    // Later evolution stages can remove a past dependent operation or possibly add. First tuple is
+    // m0 and the last one is the current domain.
+    val wholeStructure = domain.inChronologicalOrder.map(m => dependentOperationsOf(m, operation, domainSpecific))
+
+    val reduced:Set[Operation] = wholeStructure.foldLeft(Set.empty[Operation])((aggregate, ops) =>
+      if (ops.isEmpty) {
+        Set.empty[Operation]
+      } else {
+        aggregate ++ ops
+      }
+    )
+    val something = domain.inChronologicalOrder.map(m => dependentOperationsOf(m, operation, domainSpecific))
+
+    // Some dependent operations get in by mistake. For example J7 MultBy should have no
+    // dependent ops even though earlier K1 and K2 have eval() as a dependent operation for MultBy
+    val xyz:Seq[Operation] = reduced.toSeq
     val opsSeq:Seq[Operation] = (Seq(operation) ++ domain.inChronologicalOrder.flatMap(m => dependentOperationsOf(m, operation, domainSpecific))).distinct
 
     for {

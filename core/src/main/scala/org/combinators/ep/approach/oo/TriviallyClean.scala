@@ -284,15 +284,16 @@ trait TriviallyClean extends ApproachImplementationProvider {
         canResolveImport: Understands[Context, ResolveImport[paradigm.syntax.Import, paradigm.syntax.Type]],
         canAddImport: Understands[Context, AddImport[paradigm.syntax.Import]],
   ): Generator[Context, paradigm.syntax.Type] = {
-    @tailrec
+    //@tailrec
     def latestDeclaringTypeCase(model:GenericModel): GenericModel = {
       if (model.typeCases.contains(dataTypeCase)) {
         model
       } else {
-        if (model == latestModelDefiningInterface(model)) {
+        if (model.former.length > 1 || model == latestModelDefiningInterface(model)) {
           model
         } else {
-          latestDeclaringTypeCase(model.former.head) //   can be sure there is only one, since merge is handled above
+          //   can be sure there is only one, since merge is handled above
+          latestDeclaringTypeCase(model.former.head)
         }
       }
     }
@@ -364,10 +365,18 @@ trait TriviallyClean extends ApproachImplementationProvider {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
 
-    val properModel = latestModelDefiningOperatorClass(domain, dataTypeCase, operation,  domainSpecific).get
-    if (properModel != domain) {
-      println("Trivially::makeOperationImplementation chooses " + properModel.name + " over " + domain.name + " for (" + operation.name + "," + dataTypeCase.name + ")")
+    // A merge should always take precedence
+    if (domain.name.equalsIgnoreCase("x2x3") && operation.name.equalsIgnoreCase("multBy")) {
+      println(domain.name, operation.name)
     }
+
+    // must double check for merging
+    val properModel = latestModelDefiningOperatorClass(domain, dataTypeCase, operation, domainSpecific).get.
+      later(domain.findTypeCase(dataTypeCase).get)
+//
+//    if (properModel != domain) {
+//      println("Trivially::makeOperationImplementation chooses " + properModel.name + " over " + domain.name + " for (" + operation.name + "," + dataTypeCase.name + ")")
+//    }
     for {
       _ <- setOperationMethodSignature(domain, operation)
       _ <- if (domain.operationsPresentEarlier(dataTypeCase).contains(operation)) {
@@ -418,6 +427,12 @@ trait TriviallyClean extends ApproachImplementationProvider {
     val allDataTypeCases = flatDomain.typeCases.toSet  // idea from coco
     val allOperations = flatDomain.ops.toSet
 
+    // in MERGE case, new Exp is created, and thus ALL past datatypes need to be finalized
+    // it might be overkill to assign allOperations as the value
+    if (domain.former.length > 1) {
+      return allDataTypeCases.map(dt => (dt, allOperations)).toMap
+    }
+
     allDataTypeCases.foldLeft(Map.empty[DataTypeCase, Set[Operation]]) { (resultMap, tpeCase) =>
 
       val presentOperations = domain.operationsPresentEarlier(tpeCase)    // idea from coco
@@ -431,6 +446,25 @@ trait TriviallyClean extends ApproachImplementationProvider {
       // always want to insert (even if empty set) unlike in CoCoClean where more care is required. ALSO
       // producer operations substantially copy logic because Demanded by Trivially approach.
       val updatedOperations = (allOperations -- presentOperations) ++ overwrittenOperations ++ producerOperations
+      resultMap.updated(tpeCase, updatedOperations)
+    }
+  }
+
+  def dataTypeCasesWithNewOperationsNoEIP(domain: GenericModel): Map[DataTypeCase, Set[Operation]] = {
+    val flatDomain = domain.flatten
+
+    val allDataTypeCases = flatDomain.typeCases.toSet  // idea from coco
+    val allOperations = flatDomain.ops.toSet
+
+    allDataTypeCases.foldLeft(Map.empty[DataTypeCase, Set[Operation]]) { (resultMap, tpeCase) =>
+
+      val presentOperations = domain.operationsPresentEarlier(tpeCase)    // idea from coco
+
+      val producerOperations = allOperations.filter(op => op.isProducer(domain))
+
+      // always want to insert (even if empty set) unlike in CoCoClean where more care is required. ALSO
+      // producer operations substantially copy logic because Demanded by Trivially approach.
+      val updatedOperations = (allOperations -- presentOperations) ++ producerOperations
       resultMap.updated(tpeCase, updatedOperations)
     }
   }
@@ -676,9 +710,10 @@ trait TriviallyClean extends ApproachImplementationProvider {
     val _latest = latestModelDefiningInterface(domain)
     val flat = domain.flatten
     val seqs = flat.typeCases.map(tpe => {
+      val haveChanged = dataTypeCasesWithNewOperationsNoEIP(domain).exists(pair => pair._1 == tpe && pair._2.nonEmpty)
       val optimized = flat.optimizations.exists(pair => pair._1 == tpe)   // at some point in the past for this tpe; MIGHT BE TOO BROAD
 
-      if (optimized) {
+      if (haveChanged || optimized) {
         (tpe, domain.later(_latest))   // always be sure to get latest
       } else {
         (tpe, domain.findTypeCase(tpe).get.later(_latest)) // either find where it was defined OR a later interface

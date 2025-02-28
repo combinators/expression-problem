@@ -51,7 +51,7 @@ trait CoCoClean extends ApproachImplementationProvider {
    * implementation; or (b) a branch is being merged from branches in which new Exp had been defined
    * useful when determining merging.
    *
-   * Also found in CoCo
+   * Also found in Interpreter
    *
    * @param domain     typically last domain for which the ancestor is sought
    */
@@ -88,6 +88,8 @@ trait CoCoClean extends ApproachImplementationProvider {
    * When there is a new operation, definitely need a new Exp interface.
    *
    * Merge case handed here.
+   *
+   * Also duplicated in Interpreter with modifications
    */
   def latestModelDefiningNewTypeInterface(domain: GenericModel): GenericModel = {
     if (domain.isDomainBase || domain.ops.nonEmpty) {

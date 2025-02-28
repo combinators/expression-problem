@@ -57,19 +57,23 @@ sealed trait Interpreter extends SharedOO {
 
   def updatedImplementationCurrentDomainByType(domain: GenericModel, tpe:DataTypeCase): Option[GenericModel] = {
 
-    // current domain might have implementation that overrides an existing implementation, and that has
-    // to be captured. Go through all past operations for this data type, and see if the domainSpecific dependencies
-    var returnVal:Option[GenericModel] = None
-
-    domain.pastOperations.foreach(op =>
-        if (domain.haveImplementation(PotentialRequest(domain.baseDataType, tpe, op)).contains(domain)) {
-          returnVal = Some(domain)
-        }
+    // the domain (or an ancestor) might have implementation that overrides an existing implementation, and
+    // that has to be captured. Go through all past operations for this data type, and see if there are
+    // domainSpecific dependencies
+    val returnval = domain.toSeq.find(m => m.pastOperations.exists(op =>
+      m.haveImplementation(PotentialRequest(domain.baseDataType, tpe, op)).contains(m))
     )
 
-    returnVal
+    returnval
   }
 
+  /**
+   * When there is a new operation, definitely need a new Exp interface.
+   *
+   * Merge case handed here.
+   *
+   * Also duplicated in CoCo but with modifications
+   */
   def latestModelDefiningNewTypeInterface(domain: GenericModel): GenericModel = {
     if (domain.isDomainBase || domain.ops.nonEmpty) {
       domain
@@ -285,9 +289,7 @@ sealed trait Interpreter extends SharedOO {
     import ooParadigm.methodBodyCapabilities._
     import polymorphics.methodBodyCapabilities._
     val properModel = latestModelDefiningOperatorClass(domain, tpeCase, op, domainSpecific).get
-    if (properModel != domain) {
-      println ("Interpreter::makeInterpreterImplementation chooses " + properModel.name + " over " + domain.name + " for (" + op.name + "," + tpeCase.name + ")")
-    }
+
     for {
       _ <- makeInterpreterSignature(domain, op)
       _ <- if (domain.operationsPresentEarlier(tpeCase).contains(op)) {
@@ -494,6 +496,7 @@ sealed trait Interpreter extends SharedOO {
 
     val baseInterface = baseInterfaceNames(latestModelDefiningNewTypeInterface(model))
     val dtpeRep = TypeRep.DataType(model.baseDataType)
+
     for {
       _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(baseInterface : _*))
       _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(baseInterface : _*))

@@ -65,7 +65,6 @@ trait AnyParadigm extends AP {
   val methodBodyCapabilities: MethodBodyCapabilities = new MethodBodyCapabilities {
     implicit val canDebugInMethodBody: Understands[MethodBodyContext, Debug] = new Understands[MethodBodyContext, Debug] {
       def perform(context: MethodBodyContext, command: Debug): (MethodBodyContext, Unit) = {
-        println(command.tag)
         (context, ())
       }
     }

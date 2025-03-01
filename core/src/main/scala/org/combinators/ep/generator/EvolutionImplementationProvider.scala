@@ -158,14 +158,9 @@ object EvolutionImplementationProvider {
         /** Ensure dependencies are union'd through composition. */
         override def evolutionSpecificDependencies(potentialRequest: PotentialRequest): Map[GenericModel, Set[Operation]] = {
           val result = second.evolutionSpecificDependencies(potentialRequest) ++ first.evolutionSpecificDependencies(potentialRequest)
-          if (model.name == "o1oa" && potentialRequest.op.name == "eval") {
-            println(potentialRequest)
-            println(result)
-          }
+
           // make sure that all models that are implemented appear in the result
           assert(model.haveImplementation(potentialRequest).forall(m => result.contains(m)))
-
-          //assert(result.keys == model.haveImplementation(potentialRequest))
 
           result
         }

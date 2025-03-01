@@ -29,7 +29,7 @@ import java.nio.file.{Path, Paths}
 /**
  * Takes paradigm-independent specification for Fibonacci and generates Scala code
  */
-class FibonacciIndependentMainScala {
+class FibonacciMainScala {
   val generator = CodeGenerator("fibonacci")
 
   // functional
@@ -80,7 +80,7 @@ object FibonacciIndependentScalaDirectToDiskMain extends IOApp {
 
     for {
       _ <- IO { print("Initializing Generator...") }
-      main <- IO { new FibonacciIndependentMainScala() }
+      main <- IO { new FibonacciMainScala() }
       _ <- IO { println("[OK]") }
       result <- main.runDirectToDisc(targetDirectory)
     } yield result

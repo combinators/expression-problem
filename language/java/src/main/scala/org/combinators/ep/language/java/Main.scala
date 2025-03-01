@@ -22,7 +22,7 @@ package org.combinators.ep.language.java     /*DD:LD:AD*/
  *
  * To generate all evolution stages for all systems and approaches, see [[GenerateAll]]
  *
- * ```sbt language-java/run```
+ * ```sbt "language-java/runMain org.combinators.ep.language.java.GenerateAll"```
  *
  * This will generate directories in target/ with names starting with "ep-java"
  *
@@ -588,8 +588,8 @@ object GenerateAllJ extends IOApp {
             main <- IO {  new Main(approach, selection) }
 
             _ <- IO { println("[OK]") }
-            result <- main.runDirectToDisc(targetDirectory)
-          } yield result
+            _ <- main.runDirectToDisc(targetDirectory)
+          } yield ()
         }
 
         // execute above as a stand-alone program
@@ -634,8 +634,8 @@ object GenerateAllD1D2 extends IOApp {
             main <- IO {  new Main(approach, selection) }
 
             _ <- IO { println("[OK]") }
-            result <- main.runDirectToDisc(targetDirectory)
-          } yield result
+            _ <- main.runDirectToDisc(targetDirectory)
+          } yield ()
         }
 
         // execute above as a stand-alone program
@@ -680,8 +680,8 @@ object GenerateAllMerging extends IOApp {
             main <- IO {  new Main(approach, selection) }
 
             _ <- IO { println("[OK]") }
-            result <- main.runDirectToDisc(targetDirectory)
-          } yield result
+            _ <- main.runDirectToDisc(targetDirectory)
+          } yield ()
         }
 
         // execute above as a stand-alone program
@@ -726,8 +726,8 @@ object GenerateAllExtended extends IOApp {
             main <- IO {  new Main(approach, selection) }
 
             _ <- IO { println("[OK]") }
-            result <- main.runDirectToDisc(targetDirectory)
-          } yield result
+            _ <- main.runDirectToDisc(targetDirectory)
+          } yield ()
         }
 
         // execute above as a stand-alone program
@@ -772,8 +772,8 @@ object GenerateAllThirdAlternate extends IOApp {
             main <- IO {  new Main(approach, selection) }
 
             _ <- IO { println("[OK]") }
-            result <- main.runDirectToDisc(targetDirectory)
-          } yield result
+            _ <- main.runDirectToDisc(targetDirectory)
+          } yield ()
         }
 
         // execute above as a stand-alone program

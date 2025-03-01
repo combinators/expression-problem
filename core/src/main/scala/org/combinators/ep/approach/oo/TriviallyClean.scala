@@ -91,22 +91,6 @@ trait TriviallyClean extends ApproachImplementationProvider {
     } yield baseInterfaceType
   }
 
-//  // compute the latest common ancestor from amongs a set of 'fo
-//  def latestCommonAncestor(domain:GenericModel): GenericModel = {
-//    if (domain.former.length == 1) {
-//      return domain
-//    }
-//
-//    var latest = domain.former.head
-//
-//    // for all other branches, grab their stages in chronological order. Might be done in a fold more efficiently
-//    domain.former.tail.foreach(gm => {
-//        val candidates = gm.inChronologicalOrder.filter(m => !m.notComparableTo(latest))
-//        latest = candidates.last
-//    })
-//
-//    latest
-//  }
 
   def multipleBranchesWithOperations(domain:GenericModel):Boolean = {
     if (domain.former.length == 1) { return false }
@@ -262,8 +246,6 @@ trait TriviallyClean extends ApproachImplementationProvider {
         } else {
           Some(updated.last)
         }
-        //WORKED FOR MAIN but not for Producers Some(latestModelDefiningInterface(domain).later(definedIn))
-        //domain.findTypeCase(dataTypeCase)
       }
     } else {
       None
@@ -284,7 +266,6 @@ trait TriviallyClean extends ApproachImplementationProvider {
         canResolveImport: Understands[Context, ResolveImport[paradigm.syntax.Import, paradigm.syntax.Type]],
         canAddImport: Understands[Context, AddImport[paradigm.syntax.Import]],
   ): Generator[Context, paradigm.syntax.Type] = {
-    //@tailrec
     def latestDeclaringTypeCase(model:GenericModel): GenericModel = {
       if (model.typeCases.contains(dataTypeCase)) {
         model
@@ -365,18 +346,10 @@ trait TriviallyClean extends ApproachImplementationProvider {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
 
-    // A merge should always take precedence
-    if (domain.name.equalsIgnoreCase("x2x3") && operation.name.equalsIgnoreCase("multBy")) {
-      println(domain.name, operation.name)
-    }
-
     // must double check for merging
     val properModel = latestModelDefiningOperatorClass(domain, dataTypeCase, operation, domainSpecific).get.
       later(domain.findTypeCase(dataTypeCase).get)
-//
-//    if (properModel != domain) {
-//      println("Trivially::makeOperationImplementation chooses " + properModel.name + " over " + domain.name + " for (" + operation.name + "," + dataTypeCase.name + ")")
-//    }
+
     for {
       _ <- setOperationMethodSignature(domain, operation)
       _ <- if (domain.operationsPresentEarlier(dataTypeCase).contains(operation)) {

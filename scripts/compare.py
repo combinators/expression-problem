@@ -89,7 +89,7 @@ def md5 (filename):
                     fresh_index += 1
                     fresh_ids[id] = f'{fresh_index}'
 
-                srcText = srcText[:match.start(0)] + fresh_ids[id] + srcText[match.end(0)+1:]
+                srcText = srcText[:match.start(0)] + fresh_ids[id] + srcText[match.end(0):]
                 match = re.search(regex, srcText)
 
         length = len(srcText.split("\n"))

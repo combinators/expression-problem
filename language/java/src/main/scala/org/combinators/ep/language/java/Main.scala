@@ -6,7 +6,7 @@ package org.combinators.ep.language.java     /*DD:LD:AD*/
  *
  * ```sbt "language-java/runMain org.combinators.ep.language.java.DirectToDiskMain APPROACH EIP"```
  *
- * APPROACH is one of: functional, graphviz, oo, visitor, visitorSideEffect, extensibleVisitor
+ * APPROACH is one of: graphviz, oo, visitor, visitorSideEffect, extensibleVisitor
  *                     interpreter, coco, trivially, dispatch, algebra
  *
  * EIP is one of the many designated stages:
@@ -20,9 +20,9 @@ package org.combinators.ep.language.java     /*DD:LD:AD*/
  *
  * If you omit the APPROACH argument, then "oo" is the default.
  *
- * To generate all evolution stages for all systems, see [[GenerateAll]]
+ * To generate all evolution stages for all systems and approaches, see [[GenerateAll]]
  *
- * ```sbt "language-java/runMain org.combinators.ep.language.java.GenerateAll"```
+ * ```sbt language-java/run```
  *
  * This will generate directories in target/ with names starting with "ep-java"
  *

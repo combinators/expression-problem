@@ -9,6 +9,8 @@ package org.combinators.ep.language.scala.codegen    /*DD:LD:AD*/
  * APPROACH is one of: functional, graphviz, oo, visitor, visitorSideEffect, extensibleVisitor
  *                     interpreter, coco, trivially, algebra
  *
+ * NOTE: 'functional' is not, well, functional! Work continues on this paradigm in CoGen.
+ *
  * EIP is one of the many designated stages:
  *
  *   D1,D2,D1D2,D3,I1,I2,J1,J2,J3,J4,J5,J6,K2J6,J7,J8,K1,K2,X1,X2,X3,X2X3,X4,A1,A1M3,A3M3I2,A3,C2,
@@ -20,9 +22,9 @@ package org.combinators.ep.language.scala.codegen    /*DD:LD:AD*/
  *
  * If you omit the APPROACH argument, then "oo" is the default.
  *
- * To generate all evolution stages for all systems, see [[GenerateAll]]
+ * To generate all evolution stages for all systems and approaches, see [[GenerateAll]]
  *
- * ```sbt "language-newScala/runMain org.combinators.ep.language.scala.codegen.GenerateAll"```
+ * ```sbt language-newScala/run```
  *
  * This will generate directories in target/ with names starting with "ep-scala"
  *

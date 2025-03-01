@@ -183,7 +183,7 @@ Once you have downloaded the code from github, use the following statement
 from within the `$HOME` directory.
 
 ```
-sbt language-java/run org.combinators.ep.language.java.GenerateAllJ
+sbt language-java/run
 ```
 
 This will initiate the generation of Java code for all approaches for the following system:
@@ -193,9 +193,8 @@ This will initiate the generation of Java code for all approaches for the follow
 To generate Scala code for the above system, use the command:
 
 ```
-sbt language-newScala/run org.combinators.ep.language.scala.codegen.GenerateAllJ
+sbt language-newScala/run 
 ```
-
 
 The generation time will vary, based upon your computer, but it should take about
 45 minutes to generate all solutions, in Java, for the EP approaches that

@@ -6,7 +6,7 @@ package org.combinators.ep.language.java     /*DD:LD:AD*/
  *
  * ```sbt "language-java/runMain org.combinators.ep.language.java.DirectToDiskMainForShape APPROACH EIP"```
  *
- * APPROACH is one of: functional, graphviz, oo, visitor, visitorSideEffect, extensibleVisitor
+ * APPROACH is one of: graphviz, oo, visitor, visitorSideEffect, extensibleVisitor
  *                     interpreter, coco, trivially, dispatch, algebra
  *
  * EIP is one of the many designated stages: S0, S1, S2

@@ -111,25 +111,6 @@ lazy val languageNewScala =
       Compile/run/mainClass := Some("org.combinators.ep.language.scala.codegen.GenerateAll")
     )
 
-//lazy val languageScala = standardLanguageProject("scala")
-
-
-
-  /*(Project(id = s"language-inbetween", base = file(s"language/inbetween")))
-    .settings(
-      scalaVersion := "3.2.0",
-      version := "1.0.0-SNAPSHOT",
-      organization := "org.combinators"
-    )*/
-
-/*lazy val helloWorld:Project =
-  (Project(id = s"helloworld", base = file(s"helloworld")))
-    .settings(commonSettings: _*)
-    .settings(
-      moduleName := s"helloworld",
-    )
-    .dependsOn(core, languageJava, languageScala)*/
-
 //lazy val languageGJ = standardLanguageProject("gj")
 //lazy val languageCPP = standardLanguageProject("cpp")
 //lazy val languageHaskell = standardLanguageProject("haskell")

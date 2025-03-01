@@ -318,6 +318,8 @@ EpCoGen is compiled with Scala version 2.12.17.
 All examples validated on Linux and Windows, using [sbt 1.7.2](https://www.scala-sbt.org/download#previous-releases)
 , Scala version 2.12.17 and [Java 11 (OpenJDK)](https://openjdk.org/projects/jdk/11/).
 
+Java code is generated using [JavaParser](https://github.com/javaparser/javaparser) version 3.19.0.
+
 All JUnit tests are compiled using [JUnit 4.12](https://junit.org/junit4/) and Java compiler is directed to
 compile only assuming Java 1.8 compatibility.
 

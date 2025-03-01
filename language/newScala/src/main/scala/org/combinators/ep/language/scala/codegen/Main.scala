@@ -561,10 +561,10 @@ object GenerateAll extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
     GenerateAllMain.run(List.empty)
-    GenerateAllProducer.run(List.empty)
+    GenerateAllExtended.run(List.empty)
     GenerateAllThirdAlternate.run(List.empty)
     GenerateAllD1D2.run(List.empty)
-    GenerateAllJournal.run(List.empty)
+    GenerateAllMerging.run(List.empty)
     GenerateAllJ.run(List.empty)
   }
 }
@@ -578,10 +578,10 @@ object GenerateAllForOneApproach extends IOApp {
     val approach:List[String] = List("oo")
 
     GenerateAllMain.run(approach)
-    GenerateAllProducer.run(approach)
+    GenerateAllExtended.run(approach)
     GenerateAllThirdAlternate.run(approach)
     GenerateAllD1D2.run(approach)
-    GenerateAllJournal.run(approach)
+    GenerateAllMerging.run(approach)
     GenerateAllJ.run(approach)
   }
 }
@@ -633,7 +633,7 @@ object GenerateAllMain extends IOApp {
   }
 }
 
-object GenerateAllProducer extends IOApp {
+object GenerateAllExtended extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
 
@@ -771,7 +771,7 @@ object GenerateAllD1D2 extends IOApp {
   }
 }
 
-object GenerateAllJournal extends IOApp {
+object GenerateAllMerging extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
 
@@ -781,7 +781,7 @@ object GenerateAllJournal extends IOApp {
       args
     }
     val target = if (args.isEmpty) {
-      "ep-scala-journal"
+      "ep-scala-merging"
     } else {
       args.head
     }

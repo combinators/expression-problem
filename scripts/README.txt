@@ -16,11 +16,11 @@
       * Approaches: graphviz oo visitor visitorSideEffect extensibleVisitor interpreter coco trivially dispatch algebra
       * Evolutions: M0 M1 D1 D2 D1D2 D3
 
-   ep-java-journal (GenerateAllJournal)
+   ep-java-merging (GenerateAllMerging)
       * Approaches: graphviz oo visitor visitorSideEffect extensibleVisitor interpreter coco trivially dispatch algebra
       * Evolutions: M0 M1 M2 I1 I2 N1 M2_ABS M3 M3I1 I2M3I1N1
 
-   ep-java-producer (GenerateAllProducer)
+   ep-java-producer (GenerateAllExtended)
       * Approaches: graphviz oo visitor visitorSideEffect extensibleVisitor interpreter coco trivially dispatch algebra
       * Evolutions: M0 M1 M2 M3 W1 M3W1 Q1 C2 V1
 
@@ -110,6 +110,10 @@
         OR
 
      python3 ../../scripts/compile-scala.py
+
+   Note: The length of the compilation time depends on the complexity of the Extension Graph
+   for the chosen system. Be prepared for this process to take about 30-45 minutes. Information
+   about the compilation and testing process is stored in created jacoco.* files, one per approach.
 
 4. Generate statistics regarding the results of generating the source code, compiling the
    source code, executing the test cases and code coverage statistics. This script also detects

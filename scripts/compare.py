@@ -133,7 +133,7 @@ for a in approaches:
 
     already_processed = {}
     for eip in evolutions:
-        eip_dirname = f"{DIR}\\{a}\\{eip}\\{PREFIX}"
+        eip_dirname = os.path.join(DIR, a, eip, PREFIX)
         if not os.path.exists(eip_dirname):
             print(f"{eip_dirname} does not exist.")
             break
@@ -145,7 +145,7 @@ for a in approaches:
             eip_md5_data = already_processed[eip_dirname]
 
         for former_eip in pairs.get(eip):
-            former_dirname = f"{DIR}\\{a}\\{former_eip}\\{PREFIX}"
+            former_dirname = os.path.join(DIR, a, former_eip, PREFIX)
 
             if former_dirname not in already_processed:
                 former_md5_data = extract(former_dirname)

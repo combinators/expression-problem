@@ -32,7 +32,7 @@ object GenerateForOne extends IOApp {
       _ <- runD1D2()
       _ <- runThirdAlternate()
       _ <- runProducer()
-      _ <- runJournalPaper()
+      _ <- runMerging()
       _ <- generateCommand()
     } yield ExitCode.Success
   }
@@ -179,7 +179,7 @@ object GenerateForOne extends IOApp {
     } yield ExitCode.Success
   }
 
-  def runJournalPaper(): IO[ExitCode] = {
+  def runMerging(): IO[ExitCode] = {
     val evolutions = Seq("M0","M1","M2","I1","I2","N1","M2_ABS","M3","M3I1","I2M3I1N1")
     stages = stages ++ evolutions
 

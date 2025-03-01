@@ -2,6 +2,7 @@
     Execute this Python script from within the ep-scala-XXX generated directory
     and it will compile, test and run code coverage for all approaches and stages.
 
+    Only difference with compile-scala is the final 'sbt coverageReport' for Scala programs.
 """
 import os
 import platform

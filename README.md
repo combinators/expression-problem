@@ -171,12 +171,34 @@ object M1 extends Evolution {
 
   lazy val Sub:DataTypeCase = DataTypeCase.binary("Sub")(MathDomain.getModel)
 }                           
-
 ```
 
-In this application domain, an initial model (M0) is extended, adding new data
+In this application domain, an initial model (M0) is extended (with M1), adding new data
 types and operations. Full Details on the many evolution stages
 are found in the domain subproject.
+
+# EpCoGen
+
+Once you have downloaded the code from github, use the following statement
+from within the `$HOME` directory.
+
+```
+sbt language-java/run org.combinators.ep.language.java.GenerateAllJ
+```
+
+This will initiate the generation of all approaches for the following system:
+
+![ExtensionGraph](scripts/systems/j.svg)
+
+The generation time will vary, based upon your computer, but it should take about
+45 minutes to generate all solutions, in Java, for the EP approaches that
+are implemented in EpCoGen.
+
+The resulting files can be found in `$HOME/target/ep-java-j` directory.
+
+Follow instructions in [README.txt](scripts/README.txt) on how to compile
+the code, execute test cases, and generate statistics for the different
+EP solutions.
 
 ## OO Solution
 
@@ -231,11 +253,41 @@ The *ECOOP 2021 paper* [Covariant Conversions (CoCo): A Design Pattern for Type-
 *Jan Bessai, George Heineman, and Boris Duedder* [5] describes an approach to solving the EP problem using
 Covariant Conversions.
 
+# Additional Systems
+
+There are a collection of additional Extension Graphs developed to experiment
+with different arrangements of evolutions:
+
+* `GenerateAllD1D2` - a merge including a producer method, followed by an evolution that added a new operation.
+
+![D1D2](scripts/systems/d1d2.svg)
+
+* `GenerateAllMain` - a comprehensive network, with multiple variations that explore
+situations with optimized implementations. The next two systems are also part of this
+family and are created using this same initial execution.
+
+![MAIN](scripts/systems/main.svg)
+
+* A merge based off of another merge.
+
+![MAIN](scripts/systems/main-a3.svg)
+
+* Overriding implementations (like a hotpatch fix).
+
+![MAIN](scripts/systems/main-oo3.svg)
+
+* `GenerateAllMerging` - A merge of three branches.
+
+![MAIN](scripts/systems/merging.svg)
+
+* `GenerateAllExtended` - Explores adding operations and data types after a merge.
+
+![MAIN](scripts/systems/extended.svg)
 
 # References
 
 1. Wadler, Philip, [Email to to Java Genericity Mailing List](http://homepages.inf.ed.ac.uk/wadler/papers/expression/expression.txt)
-2. Wang, Yanling and Bruno C. d. S. Oliveira, [The Expression Problem, Trivially!](https://dl.acm.org/citation.cfm?id=2889448), MODULARITY 2016, pp. 37-41.
+2. Wang, Yanling and C. d. S. Oliveira, Bruno, [The Expression Problem, Trivially!](https://dl.acm.org/citation.cfm?id=2889448), MODULARITY 2016, pp. 37-41.
 3. Kim, Bruce, [Some Challenging Typing Issues in Object-Oriented Languages: Extended Abstract](http://doi.org/10.1016/S1571-0661(04)80799-0), TCS 82(8) 2003.
 4. d. S. Oliveira, Bruno C. and William R. Cook [Extensibility for the Masses](https://dl.acm.org/citation.cfm?id=236716), ECOOP 2012
-5. Bessai, Jan and Heineman, George and Duedder, Boris, [Covariant Conversions (CoCo): A Design Pattern for Type-Safe Modular Software Evolution in Object-Oriented Systems](https://drops.dagstuhl.de/storage/00lipics/lipics-vol194-ecoop2021/LIPIcs.ECOOP.2021.4/LIPIcs.ECOOP.2021.4.pdf), ECOOP 2021.
+5. Bessai, Jan and Heineman, George and Düdder, Boris, [Covariant Conversions (CoCo): A Design Pattern for Type-Safe Modular Software Evolution in Object-Oriented Systems](https://drops.dagstuhl.de/storage/00lipics/lipics-vol194-ecoop2021/LIPIcs.ECOOP.2021.4/LIPIcs.ECOOP.2021.4.pdf), ECOOP 2021.

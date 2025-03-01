@@ -33,17 +33,6 @@ object N1 {
       }
 
       /** PowBy depends on Eval. */
-//      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
-//        op match {
-//          case math.N1.PowBy => Some(Set(math.M0.Eval))
-//          case _ => None
-//        }
-//      }
-//
-//      def applicable
-//        (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-//        Set(math.N1.PowBy).contains(potentialRequest.op)
-//      }
 
         override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
           val cases = math.N1.getModel.flatten.typeCases

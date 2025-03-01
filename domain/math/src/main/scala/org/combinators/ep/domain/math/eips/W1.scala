@@ -29,12 +29,6 @@ object W1 {
         } yield ()
       }
 
-//      def applicable
-//      (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-//        Set(math.M0.Eval).contains(potentialRequest.op) &&
-//          Set(math.W1.Power).contains(potentialRequest.tpeCase)
-//      }
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val ops = math.W1.getModel.flatten.ops
         if (potentialRequest.tpeCase == math.W1.Power && ops.contains(potentialRequest.op)) {

@@ -180,8 +180,8 @@ object GenerateAllForShape extends IOApp {
             main <- IO {  new ShapeMain(approach, selection) }
 
             _ <- IO { println("[OK]") }
-            result <- main.runDirectToDisc(targetDirectory)
-          } yield result
+            _ <- main.runDirectToDisc(targetDirectory)
+          } yield ()
         }
 
         // execute above as a stand-alone program

@@ -148,9 +148,7 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
       import paradigm.methodBodyCapabilities._
       import ooParadigm.methodBodyCapabilities._
 
-      println(op, tpeCase)
       val properModel = latestModelDefiningOperatorClass(model, tpeCase, op,  domainSpecific).get
-      println(properModel)
 
       for {
         returnType <- toTargetLanguageType(op.returnType)
@@ -342,7 +340,6 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
       import ooParadigm.methodBodyCapabilities._
 
       val properModel = latestModelDefiningOperatorClass(model, tpeCase, op,  domainSpecific).get
-      println(properModel)
 
       for {
         returnType <- toTargetLanguageType(op.returnType)
@@ -438,7 +435,7 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
       import paradigm.methodBodyCapabilities._
       import ooParadigm.methodBodyCapabilities._
       val properModel = latestModelDefiningOperatorClass(model, tpeCase, op,  domainSpecific).get
-      println("WHY HERE", properModel)
+
       for {
         returnType <- toTargetLanguageType(op.returnType)
         _ <- resolveAndAddImport(returnType)

@@ -24,9 +24,6 @@ public class TestSynthesis {
      * @return true on success. false otherwise
      */
     static boolean gitRetrieve(String family,String model) {
-        if (model.equals("m0")) {
-            System.out.println ("DEBUG M0");
-        }
         String url = String.format("http://localhost:9000/%s/%s/%s.git", family, model, model);
         File dir = new File (destination);
         if (!dir.exists() && !dir.mkdir()) {

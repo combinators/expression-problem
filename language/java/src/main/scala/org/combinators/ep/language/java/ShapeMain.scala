@@ -1,5 +1,23 @@
 package org.combinators.ep.language.java     /*DD:LD:AD*/
 
+/**
+ * To generate a single approach for a single stage in an Extension Graph, see [[DirectToDiskMainForShape]]
+ * which you can either modify directly in the editor and execute, or from the command line, type:
+ *
+ * ```sbt "language-java/runMain org.combinators.ep.language.java.DirectToDiskMainForShape APPROACH EIP"```
+ *
+ * APPROACH is one of: functional, graphviz, oo, visitor, visitorSideEffect, extensibleVisitor
+ *                     interpreter, coco, trivially, dispatch, algebra
+ *
+ * EIP is one of the many designated stages: S0, S1, S2
+ *
+ * To generate all evolution stages for all systems, see [[GenerateAllForShape]]
+ *
+ * ```sbt "language-java/runMain org.combinators.ep.language.java.GenerateAllForShape"```
+ *
+ * This will generate directories in target/shape
+ */
+
 import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
 import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, ObjectAlgebras, RuntimeDispatch, Traditional, TriviallyClean, Visitor, Visualize}
@@ -21,7 +39,7 @@ class ShapeMain(choice:String, select:String) {
   val visualizeApproach = Visualize[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
 
   val ooApproach = Traditional[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
-  // can't have all of these together
+
   val visitorApproach = Visitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val visitorSideEffectApproach = Visitor.withSideEffects[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm)
   val extensibleVisitorApproach = ExtensibleVisitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
@@ -147,7 +165,7 @@ object GenerateAllForShape extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
 
-    val approaches = Seq("graphviz","oo","visitor","visitorSideEffect","extensibleVisitor","interpreter","coco","trivially","dispatch","algebra")
+    val approaches = Seq("oo","visitor","visitorSideEffect","extensibleVisitor","interpreter","coco","trivially","dispatch","algebra")
     val evolutions = Seq("S0","S1","S2")
 
     approaches.foreach(approach => {
@@ -155,7 +173,7 @@ object GenerateAllForShape extends IOApp {
       evolutions.foreach(selection => {
         println("   " + selection)
 
-        val targetDirectory = Paths.get("target", "ep-all", approach, selection)
+        val targetDirectory = Paths.get("target", "shape", approach, selection)
         val program :IO[Unit] = {
           for {
             _ <- IO { print("Initializing Generator...") }
@@ -181,7 +199,7 @@ object GenerateAllForShape extends IOApp {
 }
 
 object DirectToDiskMainForShape extends IOApp {
-  val targetDirectory = Paths.get("target", "ep2")
+  val targetDirectory = Paths.get("target", "shape")
 
   def run(args: List[String]): IO[ExitCode] = {
     val approach = if (args.isEmpty) "graphviz" else args.head

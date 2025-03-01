@@ -1,5 +1,32 @@
 package org.combinators.ep.language.scala.codegen    /*DD:LD:AD*/
 
+/**
+ * To generate a single approach for a single stage in an Extension Graph, see [[DirectToDiskMain]]
+ * which you can either modify directly in the editor and execute, or from the command line, type:
+ *
+ * ```sbt "language-newScala/runMain org.combinators.ep.language.scala.codegen.DirectToDiskMain APPROACH EIP"```
+ *
+ * APPROACH is one of: functional, graphviz, oo, visitor, visitorSideEffect, extensibleVisitor
+ *                     interpreter, coco, trivially, algebra
+ *
+ * EIP is one of the many designated stages:
+ *
+ *   D1,D2,D1D2,D3,I1,I2,J1,J2,J3,J4,J5,J6,K2J6,J7,J8,K1,K2,X1,X2,X3,X2X3,X4,A1,A1M3,A3M3I2,A3,C2,
+ *   I2M3I1N1,M0,M1,M2,M2_M3,M3I1,M3W1,M4,M5,M6,M7,M7I2,M8,M9,N1,P1,Q1,V1,W1
+ *
+ * To generate all evolution stages for a single approach, see [[GenerateAllForOneApproach]]
+ *
+ * ```sbt "language-newScala/runMain org.combinators.ep.language.scala.codegen.GenerateAllForOneApproach APPROACH"```
+ *
+ * If you omit the APPROACH argument, then "oo" is the default.
+ *
+ * To generate all evolution stages for all systems, see [[GenerateAll]]
+ *
+ * ```sbt "language-newScala/runMain org.combinators.ep.language.scala.codegen.GenerateAll"```
+ *
+ * This will generate directories in target/ with names starting with "ep-scala"
+ *
+ */
 import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
 import org.combinators.ep.approach.oo._
@@ -29,7 +56,7 @@ class Main(choice:String, select:String) {
   val functionalApproach: WithParadigm[generator.paradigm.type] = org.combinators.ep.approach.functional.Traditional[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.functional, generator.functionalControl)
 
   val ooApproach: WithParadigm[generator.paradigm.type] = Traditional[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.ooParadigm)
-  // can't have all of these together
+
   val visitorApproach: Visitor.WithParadigm[generator.paradigm.type] = Visitor[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val visitorSideEffectApproach: Visitor.WithParadigm[generator.paradigm.type] = Visitor.withSideEffects[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.imperative, generator.ooParadigm)
   val extensibleVisitorApproach: ExtensibleVisitor.WithParadigm[generator.paradigm.type] = ExtensibleVisitor[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
@@ -54,7 +81,7 @@ class Main(choice:String, select:String) {
     case "interpreter" => interpreterApproach
     case "coco" => cocoCleanApproach
     case "trivially" => triviallyCleanApproach
-    case "dispatch" => ???  // not yet implemented
+    case "dispatch" => ???  // not yet implemented b/c Exceptions not yet in inBetween
     case "algebra" => algebraApproach
 
     case _ => ???
@@ -534,7 +561,7 @@ object GitMain extends IOApp {
 }
 
 object DirectToDiskMain extends IOApp {
-  val targetDirectory: Path = Paths.get("target", "ep5")
+  val targetDirectory: Path = Paths.get("target", "scala-out")
 
   def run(args: List[String]): IO[ExitCode] = {
     // won't work for functional after M6 because of imperative-focused EIPs
@@ -575,7 +602,11 @@ object GenerateAll extends IOApp {
 object GenerateAllForOneApproach extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
-    val approach:List[String] = List("oo")
+    val approach = if (args.isEmpty) {
+      List("oo")
+    } else {
+      args
+    }
 
     GenerateAllMain.run(approach)
     GenerateAllExtended.run(approach)
@@ -643,7 +674,7 @@ object GenerateAllExtended extends IOApp {
       args
     }
     val target = if (args.isEmpty) {
-      "ep-scala-producer"
+      "ep-scala-extended"
     } else {
       args.head
     }
@@ -824,8 +855,10 @@ object GenerateAllJ extends IOApp {
     // code separates arbitrarily these test cases into 500-line chunks. Unfortunately for the
     // visitorSideEffect, this causes problems because local variables are used for the visitors and
     // they are unreachable when split across multiple methods.
+    //
+    // "dispatch" is not yet available for Scala
     val approaches = if (args.isEmpty) {
-      Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "dispatch", "algebra") // "visitorSideEffect",
+      Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra") // "visitorSideEffect",
     } else {
       args
     }

@@ -1,5 +1,33 @@
 package org.combinators.ep.language.java     /*DD:LD:AD*/
 
+/**
+ * To generate a single approach for a single stage in an Extension Graph, see [[DirectToDiskMain]]
+ * which you can either modify directly in the editor and execute, or from the command line, type:
+ *
+ * ```sbt "language-java/runMain org.combinators.ep.language.java.DirectToDiskMain APPROACH EIP"```
+ *
+ * APPROACH is one of: functional, graphviz, oo, visitor, visitorSideEffect, extensibleVisitor
+ *                     interpreter, coco, trivially, dispatch, algebra
+ *
+ * EIP is one of the many designated stages:
+ *
+ *   D1,D2,D1D2,D3,I1,I2,J1,J2,J3,J4,J5,J6,K2J6,J7,J8,K1,K2,X1,X2,X3,X2X3,X4,A1,A1M3,A3M3I2,A3,C2,
+ *   I2M3I1N1,M0,M1,M2,M2_M3,M3I1,M3W1,M4,M5,M6,M7,M7I2,M8,M9,N1,P1,Q1,V1,W1
+ *
+ * To generate all evolution stages for a single approach, see [[GenerateAllForOneApproach]]
+ *
+ * ```sbt "language-java/runMain org.combinators.ep.language.java.GenerateAllForOneApproach APPROACH"```
+ *
+ * If you omit the APPROACH argument, then "oo" is the default.
+ *
+ * To generate all evolution stages for all systems, see [[GenerateAll]]
+ *
+ * ```sbt "language-java/runMain org.combinators.ep.language.java.GenerateAll"```
+ *
+ * This will generate directories in target/ with names starting with "ep-java"
+ *
+ */
+
 import cats.effect.{ExitCode, IO, IOApp}
 import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, ObjectAlgebras, RuntimeDispatch, Traditional, TriviallyClean, Visitor, Visualize}
 import org.combinators.ep.domain.Evolution
@@ -29,7 +57,7 @@ class Main(choice:String, select:String) {
   val visualizeApproach: WithParadigm[generator.paradigm.type] = Visualize[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
 
   val ooApproach: Traditional.WithParadigm[generator.paradigm.type] = Traditional[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
-  // can't have all of these together
+
   val visitorApproach: Visitor.WithParadigm[generator.paradigm.type] = Visitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val visitorSideEffectApproach: Visitor.WithParadigm[generator.paradigm.type] = Visitor.withSideEffects[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm)
   val extensibleVisitorApproach: ExtensibleVisitor.WithParadigm[generator.paradigm.type] = ExtensibleVisitor[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
@@ -466,7 +494,11 @@ object GenerateAll extends IOApp {
 object GenerateAllForOneApproach extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
-   val approach:List[String] = List("interpreter")
+    val approach = if (args.isEmpty) {
+      List("oo")
+    } else {
+      args
+    }
 
     GenerateAllMain.run(approach)
     GenerateAllExtended.run(approach)
@@ -676,7 +708,7 @@ object GenerateAllExtended extends IOApp {
       args
     }
     val target = if (args.isEmpty) {
-      "ep-java-producer"
+      "ep-java-extended"
     } else {
       args.head
     }

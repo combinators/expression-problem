@@ -102,4 +102,3 @@ object Visualize {
       override val ooParadigm: ObjectOriented.WithBase[paradigm.type] = oo
     }
 }
-

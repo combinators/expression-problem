@@ -1,6 +1,24 @@
 package org.combinators.fibonacci
 
-/* Generates Fibonacci Program. */
+/**
+ * sbt "helloWorld/runMain org.combinators.fibonacci.FibonacciScalaDirectToDiskMain"
+ *
+ * will generate the directory target/fib in which you can find a recursive implementation
+
+package fibonacci
+def fib(n: Int): Int = {
+  return {
+    if ((n <= 1)) {
+      n
+    } else {
+      (fibonacci.fib((n - 1)) + fibonacci.fib((n - 2)))
+    }
+  }
+}
+
+
+
+ */
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
@@ -61,7 +79,7 @@ class FibonacciScala {
 }
 
 object FibonacciScalaDirectToDiskMain extends IOApp {
-  val targetDirectory = Paths.get("target", "ep3", "scala")
+  val targetDirectory = Paths.get("target", "fib", "scala")
 
   def run(args: List[String]): IO[ExitCode] = {
 

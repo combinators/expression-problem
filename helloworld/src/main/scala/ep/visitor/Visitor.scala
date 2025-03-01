@@ -1,9 +1,11 @@
 /**
  * Taken from  http://infoscience.epfl.ch/record/52625 with upgrades for Scala "2.12.17"
+ *
+ * Doesn't work anymore
  */
 package ep.visitor
 
-/*trait Base {
+trait Base {
   trait Exp { def accept(v: Visitor): Unit }
   class Num(value: Int) extends Exp {
     def accept(v: Visitor): Unit = v.visitNum(value)
@@ -31,6 +33,7 @@ object BaseTest extends Base with App {
   Console.println(op.apply(new Num(8)))
 }
 
+/*
 trait BasePlus extends Base {
   type visitor <: Visitor
   trait Visitor extends super.Visitor {

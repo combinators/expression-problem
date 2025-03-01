@@ -1,7 +1,8 @@
-# EpCoGen generates fresh names with a 32-character hexadecimal string.
+# EpCoGen generates fresh names with a 32-character hexadecimal string
+# like "exp_44e592962c164ae59f203c80430197a0" which has a leading "_".
 # While this guarantees uniqueness, the resulting code can be hard to
 # read. This script takes an entire generated codebase and replaces
-# All these fresh names with a canonical ordering to greatly reduce
+# all these fresh names with a canonical ordering to greatly reduce
 # the length of the lines and improve the readability of the code.
 
 # Invoked like this:

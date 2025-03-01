@@ -1,8 +1,10 @@
 /**
  * Taken from  http://infoscience.epfl.ch/record/52625 with upgrades for Scala "2.12.17"
+ *
+ * Doesn't work anymore
  */
 package ep
-/*trait Base {
+trait Base {
 
   type exp <: Exp;
   trait Exp {
@@ -160,6 +162,8 @@ trait EqualsPlusNeg extends BasePlusNeg with Equals {
   }
 }
 
+/** Breaks down here...
+
 trait EqualsShowPlusNeg extends EqualsPlusNeg with ShowPlusNeg {
   type exp <: Exp
   trait Exp extends super[EqualsPlusNeg].Exp with super[ShowPlusNeg].Exp;
@@ -183,4 +187,5 @@ object EqualsShowPlusNegTest extends EqualsPlusNeg with App {
   Console.println(term1 eql term2);
   Console.print(term1.show + "=" + term3.show + "? ");
   Console.println(term1 eql term3);
-}*/
+}
+ **/

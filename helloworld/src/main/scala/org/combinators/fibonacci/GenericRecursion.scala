@@ -1,5 +1,12 @@
 package org.combinators.fibonacci
 
+/**
+ * Not yet completed.
+ *
+ * This effort will eventually yield the ability to generate a recursive function simply by
+ * identifying (a) the base cases; and (b) the recursive call structure.
+ */
+
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Assertions, Equality}

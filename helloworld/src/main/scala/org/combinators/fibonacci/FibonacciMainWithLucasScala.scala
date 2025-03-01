@@ -1,6 +1,56 @@
 package org.combinators.fibonacci
 
-/* Generates Fibonacci Program. */
+/**
+ * sbt "helloWorld/runMain org.combinators.fibonacci.FibonacciWithLucasScalaDirectToDiskMain"
+ *
+ * will generate the directory target/fib in which you can find a mutual-recursive implementation
+ * that avoids the standard issues that a recursive fib(n) implementation would have by taking
+ * advantage of an identity with the Lucas Numbers:
+ *
+ *   Lucas(n) = Fib(n-1) + F(n+1) for n > 1
+ *   Fib(x+y) = [(Fib(x)*Lucas(y) + Fib(y)*Locas(x)] / 2
+
+          package fibonacci
+          def fib(n: Int): Int = {
+
+            return {
+              if ((n <= 0)) {
+                0
+              } else {
+                if ((n <= 1)) {
+                  1
+                } else {
+                  if ((n <= 2)) {
+                    1
+                  } else {
+                    if ((n <= 3)) {
+                      2
+                    } else {
+                      (((fibonacci.fib((n / 2)) * fibonacci.lucas(
+                        (n - (n / 2))
+                      )) + (fibonacci.lucas((n / 2)) * fibonacci.fib((n - (n / 2))))) / 2)
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          def lucas(n: Int): Int = {
+            return {
+              if ((n <= 0)) {
+                2
+              } else {
+                if ((n <= 1)) {
+                  1
+                } else {
+                  (fibonacci.fib((n - 1)) + fibonacci.fib((n + 1)))
+                }
+              }
+            }
+          }
+
+ */
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
@@ -56,7 +106,7 @@ class FibonacciMainWithLucasScala {
 }
 
 object FibonacciWithLucasScalaDirectToDiskMain extends IOApp {
-  val targetDirectory:Path = Paths.get("target", "ep3", "scala")
+  val targetDirectory:Path = Paths.get("target", "fib", "scala")
 
   // generated!
   def fib(n: Int): Int = {

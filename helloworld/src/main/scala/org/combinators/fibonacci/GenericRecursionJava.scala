@@ -1,6 +1,11 @@
 package org.combinators.fibonacci
 
-/* Generates Generic Recursion */
+/**
+ * Not yet completed.
+ *
+ * This effort will eventually yield the ability to generate a recursive function simply by
+ * identifying (a) the base cases; and (b) the recursive call structure.
+ */
 
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
@@ -59,7 +64,7 @@ class GenericRecursionMainJava {
 }
 
 object GenericRecursionJavaDirectToDiskMain extends IOApp {
-  val targetDirectory = Paths.get("target", "ep3", "java")
+  val targetDirectory = Paths.get("target", "fib", "java")
   print(targetDirectory)
   def run(args: List[String]): IO[ExitCode] = {
     for {

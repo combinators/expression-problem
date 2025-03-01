@@ -1,6 +1,26 @@
 package org.combinators.fibonacci
 
-/* Generates Fibonacci Program. */
+/**
+ * sbt "helloWorld/runMain org.combinators.fibonacci.FibonacciRecursiveVariableScalaDirectToDiskMain"
+ *
+ * will generate the directory target/fib in which you can find a recursive functional implementation:
+
+        package fibonacci
+        def fib(n: Int): Int = {
+          return {
+            {
+              def inner_loop: Function[Int, Int] = (n: Int) => {
+                if ((n <= 1)) {
+                  n
+                } else {
+                  (inner_loop((n - 1)) + inner_loop((n - 2)))
+                }
+              }
+              inner_loop(n)
+            }
+          }
+        }
+ */
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils

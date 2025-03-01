@@ -1,6 +1,22 @@
 package org.combinators.fibonacci
 
-/* Generates Fibonacci Program. */
+/**
+ * sbt "helloWorld/runMain org.combinators.fibonacci.FibonacciIndependentScalaDirectToDiskMain"
+ *
+ * will generate the directory target/fib in which you can find the following implementation:
+
+    package fibonacci
+    def fib(n: Int): Int = {
+      return {
+        if ((n <= 1)) {
+          n
+        } else {
+          (fibonacci.fib((n - 1)) + fibonacci.fib((n - 2)))
+        }
+      }
+    }
+
+ */
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
@@ -18,9 +34,6 @@ class FibonacciIndependentMainScala {
 
   // functional
   val fibonacciApproach = FibonacciIndependentProvider.functional[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.functional, generator.functionalControl, generator.ints, generator.assertionsInMethod, generator.equality)
-
-  // imperative
-  // val fibonacciApproach = FibonacciIndependentProvider.imperative[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.ooParadigm, generator.imperative, generator.ints, generator.assertionsInMethod, generator.equality)
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
@@ -61,7 +74,7 @@ class FibonacciIndependentMainScala {
 }
 
 object FibonacciIndependentScalaDirectToDiskMain extends IOApp {
-  val targetDirectory = Paths.get("target", "ep3", "scala")
+  val targetDirectory = Paths.get("target", "fib", "scala")
 
   def run(args: List[String]): IO[ExitCode] = {
 

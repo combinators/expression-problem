@@ -9,7 +9,7 @@ package org.combinators.ep.language.java     /*DD:LD:AD*/
  * APPROACH is one of: graphviz, oo, visitor, visitorSideEffect, extensibleVisitor
  *                     interpreter, coco, trivially, dispatch, algebra
  *
- * EIP is one of the many designated stages: S0, S1, S2
+ * EIP is one of the designated stages: S0, S1, S2
  *
  * To generate all evolution stages for all systems, see [[GenerateAllForShape]]
  *

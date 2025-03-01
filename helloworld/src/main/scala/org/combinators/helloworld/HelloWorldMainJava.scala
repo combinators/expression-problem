@@ -1,12 +1,10 @@
 package org.combinators.helloworld
 
-/* Generates Hello World program. */
-
-/** To truly make this work as expected, need to have a CONSOLE concept (much like getSelf()) which would be contextualized on each platform
- * 
- * On Java it would retrieve "System.out" for output or "System.in" for input. Punting on this right now...
- * 
- * */
+/**
+ * sbt "helloWorld/runMain org.combinators.helloworld.HelloWorldJavaDirectToDiskMain"
+ *
+ * Creates output files in target/helloworld
+ */
 
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
@@ -69,7 +67,7 @@ class HelloWorldMainJava {
 }
 
 object HelloWorldJavaDirectToDiskMain extends IOApp {
-  val targetDirectory = Paths.get("target", "ep3")
+  val targetDirectory = Paths.get("target", "helloworld")
 
   def run(args: List[String]): IO[ExitCode] = {
     for {

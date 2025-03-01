@@ -1,10 +1,9 @@
 package org.combinators.helloworld
 
-import org.combinators.ep.domain._
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
 import org.combinators.ep.generator.Command._
-import org.combinators.ep.generator.{AbstractSyntax, NameProvider, TestImplementationProvider, Understands}
+import org.combinators.ep.generator.{NameProvider, Understands}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax._
 import org.combinators.ep.generator.paradigm.{AddImport, AnyParadigm, ObjectOriented, ResolveImport}
 

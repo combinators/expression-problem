@@ -1,7 +1,22 @@
 package org.combinators.fibonacci
 
-/* Generates Fibonacci Program. */
+/**
+ * sbt "helloWorld/runMain org.combinators.fibonacci.FibonacciJavaDirectToDiskMain"
+ *
+ * will generate the directory target/fib in which you can find following recursive implementation
 
+      package fibonacci;
+      public class Fib {
+          public Integer fib(Integer n) {
+              if ((n <= 1)) {
+                  return n;
+              } else {
+                  return (this.fib((n - 1)) + this.fib((n - 2)));
+              }
+          }
+      }
+
+ */
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
@@ -59,7 +74,7 @@ class FibonacciMainJava {
 }
 
 object FibonacciJavaDirectToDiskMain extends IOApp {
-  val targetDirectory = Paths.get("target", "ep3", "java")
+  val targetDirectory = Paths.get("target", "fib", "java")
 
   def run(args: List[String]): IO[ExitCode] = {
     for {

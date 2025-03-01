@@ -202,7 +202,7 @@ are implemented in EpCoGen.
 
 The resulting files can be found in `$HOME/target/ep-java-j` directory.
 
-Follow instructions in [README.txt](scripts/README.txt) on how to compile
+Follow instructions in [README.md](scripts/README.md) on how to compile
 the code, execute test cases, and generate statistics for the different
 EP solutions.
 
@@ -262,7 +262,28 @@ Covariant Conversions.
 # Additional Systems
 
 There are a collection of additional Extension Graphs developed to experiment
-with different arrangements of evolutions:
+with different arrangements of evolutions. To generate Java Generated code, execute the following:
+
+```
+sbt "language-java/runMain org.combinators.ep.language.java.GenerateAllD1D2"
+```
+
+and the files will appear in `target/ep-java-d1d2`
+
+For Scala generated code, execute the following:
+
+```
+sbt "language-newScala/runMain org.combinators.ep.language.scala.codegen.GenerateAllD1D2"
+```
+
+and the files will appear in `target/ep-scala-d1d2`
+
+Below are a number of systems, and replace the `GenerateXXX` with the values below to generate
+all approaches for these systems.
+
+Follow instructions in [README.md](scripts/README.md) on how to compile
+the code, execute test cases, and generate statistics for the different
+EP solutions.
 
 * `GenerateAllD1D2` - a merge including a producer method, followed by an evolution that added a new operation.
 

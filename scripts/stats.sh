@@ -7,6 +7,9 @@
 #
 # Command line is either "java" or "scala". If no command line arg, default to java
 
+# location of CLOC
+CLOC="../cloc-1.86.pl"
+
 if [ $# -eq 0 ]
 then
    LANGUAGE=java
@@ -15,9 +18,6 @@ else
    LANGUAGE=$1
    TOP=mathdomain
 fi
-
-# location of CLOC
-CLOC="../cloc-1.86.pl"
 
 APPROACHES="algebra coco extensibleVisitor interpreter oo trivially visitor"
 

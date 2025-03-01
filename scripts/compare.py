@@ -13,7 +13,7 @@
         { "J3" : ["J2"] },
          ...
       ]
-   }
+    }
 
   The third argument is either 'java' or 'scala' (defaults to java). This determines
   which source code language to inspect.
@@ -27,18 +27,15 @@
 
   In addition, there are some EP approaches that can reuse test cases, but in others, even the
   test cases have to be altered.
-
-  For now, this only works with java generated code, because the Scala generated code
-  introduces a good number of fresh-name types which are long randomized strings,
-  meaning the code looks different even though nothing has changed.
 """
 import hashlib
 import os
 import zipfile
 import json
 import sys
+import re
 
-DIR         = f"."
+DIR = f"."
 
 from os.path import isdir, join
 approaches = [f for f in os.listdir(DIR) if os.path.isdir(os.path.join(DIR, f))]
@@ -64,8 +61,11 @@ for k in description["evolutions"]:
 
 # Want to be able to detect differences in the actual source code. Note that test cases are a
 # different story, and even solutions to the EP require special handling with regard to test cases
+fix_fresh = False
 if len(sys.argv) == 3:
     src_dir = os.path.join('src', 'main', sys.argv[2].lower())
+    if sys.argv[2].lower() == 'scala':
+        fix_fresh = True
 else:
     src_dir = os.path.join('src', 'main', 'java')
 PREFIX = str(src_dir)
@@ -74,10 +74,26 @@ def md5 (filename):
     """Return (# lines, md5) has for filename."""
     md5_hash = ''
     length = 0
+    fresh_index = 0
     with open(filename, 'rb') as file:
         data = file.read()
-        length = len(data.decode('ascii').split("\n"))
-        md5_hash = hashlib.md5(data).hexdigest()
+        fresh_ids = {}
+        srcText = data.decode('ascii')
+        if fix_fresh:
+            """Replaces all fresh id's canonically to offer valid comparison."""
+            regex = r"(_[a-f0-9]{32})"
+            match = re.search(regex, srcText)
+            while match:
+                id = match.group(0)
+                if not id in fresh_ids:
+                    fresh_index += 1
+                    fresh_ids[id] = f'{fresh_index}'
+
+                srcText = srcText[:match.start(0)] + fresh_ids[id] + srcText[match.end(0)+1:]
+                match = re.search(regex, srcText)
+
+        length = len(srcText.split("\n"))
+        md5_hash = hashlib.md5(srcText.encode()).hexdigest()
     return (length, md5_hash)
 
 # If source directory were zip'd, this would be useful.

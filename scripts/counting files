@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # This must be run on a unix file system
 for i in `find ep -name '*.java'`
 do

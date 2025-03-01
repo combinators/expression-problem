@@ -575,7 +575,7 @@ object GenerateAll extends IOApp {
 object GenerateAllForOneApproach extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
-    val approach:List[String] = List("interpreter")
+    val approach:List[String] = List("oo")
 
     GenerateAllMain.run(approach)
     GenerateAllProducer.run(approach)
@@ -820,8 +820,12 @@ object GenerateAllJ extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
 
+    // visitor side effect is eliminated. When there are a large number of test cases, the internal
+    // code separates arbitrarily these test cases into 500-line chunks. Unfortunately for the
+    // visitorSideEffect, this causes problems because local variables are used for the visitors and
+    // they are unreachable when split across multiple methods.
     val approaches = if (args.isEmpty) {
-      Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra") // "visitorSideEffect",
+      Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "dispatch", "algebra") // "visitorSideEffect",
     } else {
       args
     }

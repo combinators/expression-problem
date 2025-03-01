@@ -1,6 +1,6 @@
 # Process jacoco.* output from compile-XXX.bat
 #
-# within the analysis/ directory that was result of runAll****.bat type followingL
+# within the directory that was result of generating systems for different approaches
 #
 #    python3 ..\..\scripts\process.py
 

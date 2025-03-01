@@ -1,71 +1,10 @@
-1. Invalid
+1. Generated test cases often exceed length allowed to method declarations.
 
-   a. ep-java trivially on A1M3 A1M3I2 A3 OO3
-   b. ep-java interpreter (O1OA test failed) extensibleVisitor (A1M3 A1M3I2 A3) trivially (A1M3, A1M3I2 A3 O1OA)
-   c. ep-java-j visitorSideEffect K2J6 and subsequent all because test cases get too big
-   d. ep-java-journal extensibleVisitor (I2M3I1N1)
-   e. ep-java-third-alternate trivially (X2X3 and X4)
-     a. In scala: Need to be able to AddMethod to Test case and the inBetween/newScala isn't doing this.
+  a. As a stop-gap measure, these methods are arbitrarily split up, which means that the
+  visitorSideEffect has test cases that do not compile because of variables defined for
+  the visitor in one method but used in the other method.
 
-  While this is now done, the generated code needs to appear as a plain "def ..." and this has not yet been done.
+2. Functional -- continue progress from before
 
-2. Scala generation
+3. m7funct has hardcoded -77.77 which is where it fails. For scala
 
-  where java generation calls AddBlockDefinitionsInTest, this doesn't happen for newScala/inbetween
-   canAddBlockDefinitionsInTest
-
-    implicit val canAddBlockDefinitionsInMethodBody: Understands[MethodBodyContext, AddBlockDefinitions[syntax.Statement]] = new Understands[MethodBodyContext, AddBlockDefinitions[syntax.Statement]] {
-      def perform(context: Method[FT], command: AddBlockDefinitions[syntax.Statement]): (Method[FT], Unit) = {
-        val stmts: Seq[Statement[FT]] = command.definitions
-        (context.copy(statements = context.statements ++ stmts), ())
-      }
-    }
- test cases are not generating variables/constructed instances for visitorSideEffect for example (d1d2) and
- go to M1Test.scala
-
-  this.test("Test_ee74e9e729c54ea9b15b755bebdce8d3")({
-   assert (eval_66c4a24ac41842f58ab83c5494acfa32.getVisitorValue() == -1.0);
-   assert (eval_38a8af3203664cc3a6dd9d838c3d6bfe.getVisitorValue() == 3.0);
-   assert (eval_1c3d96cd2dff4fd4a1fdbfa28aa6696d.getVisitorValue() == 5.0);});
-
-  when compared against Java generated code:
-
-          Eval eval = new Eval();
-          new Sub(new Lit(1.0), new Lit(2.0)).accept(eval);
-          Eval _eval = new Eval();
-          new Add(new Lit(1.0), new Lit(2.0)).accept(_eval);
-          Eval eval2 = new Eval();
-          new Lit(5.0).accept(eval2);
-          org.junit.Assert.assertTrue("", Double.valueOf(eval.getVisitorValue()).equals(-1.0));
-          org.junit.Assert.assertTrue("", Double.valueOf(_eval.getVisitorValue()).equals(3.0));
-          org.junit.Assert.assertTrue("", Double.valueOf(eval2.getVisitorValue()).equals(5.0));
-
-
-
-3. Functional -- continue progress from before
-
-./ep-java/jacoco.trivially (O1OA)
-./ep-java/jacoco.extensibleVisitor (A1M3I2, A1M3, A3, OO3)
-./ep-java/jacoco.extensibleVisitor has O1OA fails test, though this might be limitation of ExtensibileVisitor with overriding
-./ep-java-third-alternate/jacoco.trivially (i2m3i1n2 x2x3 x4)
-
-4. m7funct has hardcoded -77.77 which is where it fails. For scala
-
-FIX MultBy/Power in K1 as well as in I2
-
-  Logic is just wrong.
-
-J7 and J8 are missing an Override [in java this doesn't cause an issue, but it does for Scala]
-
-extensibleVisitor in scala generates makeEval in j7.MultBy even though it is no longer needed
-
-These all come down to an earlier dependence between MultBy and Eval that can be eliminated after
-the Mult data type exists.
-
-For J7, in package mathdomain.j7 MultBy there is an unneeded makeEval() that is ignored in Java but causes problems in scala
-For J8, in package mathdomain.j7 MultBy there is an unneeded makeEval() that is ignored in Java but causes problems in scala
-
-For M9, in package mathdomain.m8 MultBy.scala there is an unneeded makeEval
-For M8, in package mathdomain.m8 MultBy.scala there is an unneeded makeEval
-
-FIX the above and all is complete!

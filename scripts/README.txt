@@ -45,7 +45,7 @@
 
   Example EVOLUTION-JSON files are "system-j.json" or "system-main.json"
 
-  CURRENTLY THIS DOES NOT YET WORK WITH THE SCALA-GENERATED CODE.
+  If you are comparing 'scala' generated code, be sure to add 'scala' as the final argument
 
   Note that the JSON files look like the following and contain predecessor information for each EIP to
   make the Python processing a bit easier.

@@ -33,8 +33,7 @@ In sbt, execute the command `language-haskell/run`.
 
 Now in a separate terminal window request access to a git repository that would be generated, something like:
 
-`git clone http://localhost:9000/grow/m5/m5.git`
-
+`git clone http://localhost:9000/grow/m4/m4.git`
 
 Valid values include:
 

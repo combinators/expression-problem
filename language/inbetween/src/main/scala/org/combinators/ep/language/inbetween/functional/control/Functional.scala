@@ -2,8 +2,8 @@ package org.combinators.ep.language.inbetween.functional.control
 
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, Understands, paradigm}
-import org.combinators.ep.generator.paradigm.{Apply, IfThenElse, Reify, control}
-import org.combinators.ep.generator.paradigm.control.{PatternMatch, DeclareFunVariable => DFV, Functional => Fun}
+import org.combinators.ep.generator.paradigm.{Apply, Reify, control}
+import org.combinators.ep.generator.paradigm.control.{DeclareFunVariable => DFV, Functional => Fun}
 import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 

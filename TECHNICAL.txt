@@ -1,0 +1,33 @@
+When you have a fresh clone of the git repository, enter the command `sbt compile` in the
+top-level directory to compile EpCoGen. SBT will properly install all necessary software
+libraries.
+
+We have tested with SBT versions of 1.7.1, 1.9.8, and 1.10.7.
+
+If your Java version is too advanced for the sbt, you may need to add the
+following to the build.st file to lower the associated Java version.
+
+  javacOptions ++= Seq("-source", "11", "-target", "11"),
+
+And then you can install an openJDK version of Java 11 and use it by setting JAVA_HOME
+properly and/or configuring PATH variable appropriately.
+
+===================================
+Examples to run
+===================================
+
+Sample commands to run. The first column shows the time it was launched, so to generate all
+evolution stages for all approaches on a Linux machine took just under an hour. And the
+compiling process for all code took just about three hours.
+
+15:17   sbt language-java/run
+16:08   cd target/
+16:09   cd ep-java
+16:11   python3 ../../scripts/compare.py ../../scripts/systems/system-main.json >> REPORT
+16:12   python3 ../../scripts/compile-java.py
+19:08   python3 ../../scripts/process-java.py > STATISTICS
+19:09   cd ..
+19:11   sbt "helloWorld/runMain org.combinators.fibonacci.FibonacciWithLucasScalaDirectToDiskMain"
+19:13   cd target/fib
+19:13   cd scala/
+19:13   sbt test

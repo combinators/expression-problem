@@ -1,8 +1,8 @@
 When you have a fresh clone of the git repository, enter the command `sbt compile` in the
-top-level directory to compile EpCoGen. SBT will properly install all necessary software
+top-level directory to compile EpCoGen. sbt will properly install all necessary software
 libraries.
 
-We have tested with SBT versions of 1.7.1, 1.9.8, and 1.10.7.
+We have tested with sbt versions of 1.7.1, 1.9.8, and 1.10.7.
 
 If your Java version is too advanced for the sbt, you may need to add the
 following to the build.st file to lower the associated Java version.
@@ -31,3 +31,34 @@ compiling process for all code took just about three hours.
 19:13   cd target/fib
 19:13   cd scala/
 19:13   sbt test
+
+---------------------------------
+
+When generating the full Java implementations for all approaches and all evolution stages,
+there are 19,842 Java files containing 513,094 total lines of code.
+
+Using the CLOC utility, a more accurate picture appears. Of these only 3890 are truly
+unique files. The reason? Because the Expression Problem shows how to extend a system without
+modifying already created code, so it makes perfect sense that 80% of the code is duplicated!
+
+% $CLOC --csv `find . -name "*.java"`
+
+   19842 text files.
+    3890 unique files.
+   15952 files ignored.
+
+files,language,blank,comment,code,"github.com/AlDanial/cloc v 1.86  T=17.31 s (224.7 files/s, 7917.7 lines/s)"
+3890,Java,27755,4,109292
+3890,SUM,27755,4,109292
+
+cloc reports 109,292 lines of code.
+
+Now run and turn off the uniqueness check:
+
+% $CLOC --csv `find . -name "*.java"` --skip-uniqueness
+
+19842,Java,117328,516,395250
+
+This reveals that 395,250 lines of Java code were generated.
+
+

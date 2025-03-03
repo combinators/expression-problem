@@ -150,4 +150,4 @@ or
    generated using the `stats.sh` script.
 
 6. When all scripts have run, you may need to delete temporary directories inside of target/bg-jobs that were created
-   by SBT (but not deleted). A full run of the scripts often results in several GB worth of directories.
+   by sbt (but not deleted). A full run of the scripts often results in several GB worth of directories.

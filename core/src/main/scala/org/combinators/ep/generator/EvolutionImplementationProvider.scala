@@ -116,11 +116,11 @@ object EvolutionImplementationProvider {
         override def genericLogic
            (forApproach: AIP)
            (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]) =
-          throw new RuntimeException(s"No generic logic to handle request ${onRequest}")
+          throw new RuntimeException(s"No generic logic to handle request $onRequest")
         def logic
            (forApproach: AIP)
            (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]) =
-          throw new RuntimeException(s"No logic to handle request ${onRequest}")
+          throw new RuntimeException(s"No logic to handle request $onRequest")
       }
 
       /** Combines two [[EvolutionImplementationProvider]] objects by trying to resolve requests with the first provided
@@ -201,9 +201,9 @@ object EvolutionImplementationProvider {
 
             // if we HAVE an onrequest.model, just find the corresponding EIP
 
-            case Some(model) if firstKeys.exists(check(model)) => {
+            case Some(model) if firstKeys.exists(check(model)) =>
               first.logic(forApproach)(onRequest)
-            }
+
             case _ => second.logic(forApproach)(onRequest)
           }
 

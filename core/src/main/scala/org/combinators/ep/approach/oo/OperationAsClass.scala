@@ -28,7 +28,7 @@ trait OperationAsClass extends ApproachImplementationProvider {
 
   /**
    * Constructor for an operation which MAY have parameters
-   * @param op
+   * @param op      The operation that needs the constructor method.
    * @return
    */
   def makeOperationConstructor(op: Operation): Generator[ConstructorContext, Unit] = {

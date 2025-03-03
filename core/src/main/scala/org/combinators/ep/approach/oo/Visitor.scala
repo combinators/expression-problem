@@ -110,11 +110,11 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
      *
      * Access the results via a visitor method which returns the information using accept method.
      *
-     * @param tpe
-     * @param tpeCase
-     * @param op
-     * @param domainSpecific
-     * @return
+     * @param tpe               The Base Data Type.
+     * @param tpeCase           And the Specific Data Type Case.
+     * @param op                Where there is an operation.
+     * @param domainSpecific    And the logic can be found in the EIP.
+     * @return                  And return the implementation of the visit() method.
      */
     def makeVisitImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation, model:GenericModel,
                            domainSpecific: EvolutionImplementationProvider[self.type]
@@ -136,11 +136,11 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
      *
      * Access the results via a visitor method which returns the information using accept method.
      *
-     * @param tpe
-     * @param tpeCase
-     * @param op
-     * @param domainSpecific
-     * @return
+     * @param tpe               The Base Data Type.
+     * @param tpeCase           And the Specific Data Type Case.
+     * @param op                Where there is an operation.
+     * @param domainSpecific    And the logic for the operation is contained in the EIP.
+     * @return                  So return implementation of the method.
      */
     def makeImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation, model: GenericModel,
                                   domainSpecific: EvolutionImplementationProvider[self.type]
@@ -194,7 +194,7 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
      *
      * $expr.accept(new ${op.concept}($args))
      *
-     * @param message
+     * @param message   The SendRequest to be dispatched.
      * @return
      */
     def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression] = {
@@ -299,8 +299,8 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
      * }}}
      *
      * @param domain     Model in the Extension Graph (no longer flattened)
-     * @param op
-     * @param domainSpecific
+     * @param op         The operation that is at hand.
+     * @param domainSpecific   The EIP that contains the logic.
      * @return        The one invoking this method must be sure to add this class to project.
      */
     def makeOperationImplementation(domain:GenericModel,
@@ -397,11 +397,11 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
      *     }
      * }}}
      *
-     * @param tpe
-     * @param tpeCase
-     * @param op
-     * @param domainSpecific
-     * @return
+     * @param tpe                The Base Data Type.
+     * @param tpeCase            And the specific Data Type Case.
+     * @param op                 Where there is an operation.
+     * @param domainSpecific     And the EIP containing the needed logic.
+     * @return                   Which returns the implementation of the visit() method.
      */
     def makeImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation, model:GenericModel,
                                      domainSpecific: EvolutionImplementationProvider[self.type]
@@ -485,7 +485,7 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
      * Visitor evalLeft = new Eval()
      * $expr.accept(evalLeft)
      *
-     * @param message
+     * @param message   The SendRequest to be dispatched.
      * @return
      */
     def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression] = {
@@ -602,8 +602,8 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
      * }}}
      *
      * @param domain     Model in the extension graph (no longer flattened)
-     * @param op
-     * @param domainSpecific
+     * @param op         The Operation at hand.
+     * @param domainSpecific    The EIP containing the logic.
      * @return        The one invoking this method must be sure to add this class to project.
      */
     def makeOperationImplementation(domain:GenericModel,
@@ -636,9 +636,9 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
      *   RETURNTYPE ???() { return FIELD; }
      * }}}
      *
-     * @param op
-     * @param field
-     * @return
+     * @param tpe      The TypeRep of interest.
+     * @param field    Describing the type of this field.
+     * @return         The method signature as appropriate for returning that expression.
      */
     def returnValue(tpe: TypeRep, field:Expression): Generator[MethodBodyContext, Option[Expression]] = {
       import paradigm.methodBodyCapabilities._
@@ -647,7 +647,7 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
         rt <- toTargetLanguageType(tpe)
         _ <- resolveAndAddImport(rt)
         _ <- setReturnType(rt)
-      } yield (Some(field))
+      } yield Some(field)
     }
 
     /** Create the visitor interface.
@@ -682,11 +682,11 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
      *     }
      * }}}
      *
-     * @param tpe
-     * @param tpeCase
-     * @param op
-     * @param domainSpecific
-     * @return
+     * @param tpe              The Base Data Type.
+     * @param tpeCase          The specific Data Type Case.
+     * @param op               And the operation at hand.
+     * @param domainSpecific   With the EIP containing the logic.
+     * @return                 Which returns the implementation of the visit() method.
      */
     def makeVisitImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation, model:GenericModel,
                            domainSpecific: EvolutionImplementationProvider[self.type]
@@ -723,8 +723,8 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
    *  }
    * }}}
    *
-   * @param tpe
-   * @return
+   * @param tpe     The Base Data Type.
+   * @return        Created within the ProjectContext.
    */
   def makeBase(tpe: DataType): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
@@ -835,9 +835,9 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
    * 2. For each of the data types (in flattened set) create a derived class
    * 3. Create the Visitor interface
    *
-   * @param gdomain
-   * @param domainSpecific
-   * @return
+   * @param gdomain            The desired GenericModel.
+   * @param domainSpecific     The top-level EIP with all logic.
+   * @return                   Returns the whole project.
    */
   def implement(gdomain: GenericModel, domainSpecific: EvolutionImplementationProvider[self.type]): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._

@@ -18,7 +18,7 @@ trait Evolution {
   def allPastTests(pastEvolutions:Evolution*): Map[GenericModel, Seq[TestCase]] = {
     val allPriorTests = pastEvolutions.map(_.allTests)
     val mergedPriorTests = allPriorTests.foldLeft[Map[GenericModel, Seq[TestCase]]](Map.empty) { case (s, t) =>
-      s ++ t.map { case (k, v) => k -> ((v ++ s.getOrElse(k, Seq.empty)).distinct) }
+      s ++ t.map { case (k, v) => k -> (v ++ s.getOrElse(k, Seq.empty)).distinct }
     }
 
     mergedPriorTests +

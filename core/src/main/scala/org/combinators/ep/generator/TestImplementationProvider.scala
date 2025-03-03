@@ -127,7 +127,7 @@ object TestImplementationProvider {
                     case TypeRep.DataType(dtpe) =>
                       forApproach.dispatch(SendRequest(obj, dtpe, Request(op, requestArgs)))
                     case _ if ops.nonEmpty =>
-                      throw new RuntimeException(s"Intermediate results in composite test cases must be domain data types (cannot dispatch to: ${tpe})")
+                      throw new RuntimeException(s"Intermediate results in composite test cases must be domain data types (cannot dispatch to: $tpe)")
                   }
                 res <- makeChain(op.returnType, nextObj, ops)
               } yield res

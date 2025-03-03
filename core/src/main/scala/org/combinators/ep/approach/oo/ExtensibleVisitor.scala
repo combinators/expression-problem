@@ -651,7 +651,7 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
    * }}}
    *
    * @param domain     Model for which new types are to be incorporated
-   * @param op         operation that needs an implementation
+   * @param operation  operation that needs an implementation
    * @param domainSpecific   contains the logic
    * @return           Returns class context without actually adding to ProjectContext; this is job of caller of this function
    */
@@ -888,7 +888,7 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
    * in the evolution of the system over time.
    *
    * @param domain          find base-type class
-   * @tparam Ctxt
+   * @tparam Ctxt           the Context (to allow for multiple usages)
    * @return
    */
   def domainTypeLookup[Ctxt](domain:GenericModel)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
@@ -1042,7 +1042,7 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
             // each operation gets a factory that is added using the 'addMethodInTest' capabilities.
             _ <- forEach (model.flatten.ops.distinct) { op => {
               for {
-                _ <- addMethod(factory.name(op), makeFactoryOperationImpl(model, op, false,
+                _ <- addMethod(factory.name(op), makeFactoryOperationImpl(model, op, shouldOverride = false,
                   visitorClassName(latestModelDefiningOperation(model, op).head, op).get))
               } yield ()
             }}

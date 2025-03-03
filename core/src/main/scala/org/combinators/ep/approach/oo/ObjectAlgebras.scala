@@ -1018,7 +1018,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
           params <- forEach(dt.attributes) { att => {
             for {
               p <- getMember(self, names.mangle(att.name))
-            } yield (p)
+            } yield p
           }}
 
           // algebra.lit(value);

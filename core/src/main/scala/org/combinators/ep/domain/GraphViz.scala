@@ -85,7 +85,7 @@ object GraphViz {
                   "isOP"
                 } else { depend_op.name }
 
-                val arrow = f" ${m.name.toUpperCase()} -> ${defining_model.name.toUpperCase()} [style=dashed, color=grey label=<${fromName}-${toName}>]"
+                val arrow = f" ${m.name.toUpperCase()} -> ${defining_model.name.toUpperCase()} [style=dashed, color=grey label=<$fromName-$toName>]"
                 addedArrows += arrow -> 1
               })
             }
@@ -111,7 +111,7 @@ object GraphViz {
                     "isOP"
                   } else { depend_op.name }
 
-                  val arrow = f" ${m.name.toUpperCase()} -> ${defining_model.get.name.toUpperCase()} [style=dashed, color=grey label=<${fromName}-${toName}>]"
+                  val arrow = f" ${m.name.toUpperCase()} -> ${defining_model.get.name.toUpperCase()} [style=dashed, color=grey label=<$fromName-$toName>]"
                   addedArrows += arrow -> 1
                 }
               })
@@ -136,7 +136,7 @@ object GraphViz {
 
                 // now we know that for this m, there is a dashed line to the model that defined operation
                 // and the label on that dashed arrow must be
-                val arrow = f" ${m.name.toUpperCase()} -> ${defining_model.name.toUpperCase()} [style=dashed, color=grey label=<${fromName}-${toName}>]"
+                val arrow = f" ${m.name.toUpperCase()} -> ${defining_model.name.toUpperCase()} [style=dashed, color=grey label=<$fromName-$toName>]"
                 addedArrows += arrow -> 1
               })
 

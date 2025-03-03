@@ -169,7 +169,7 @@ object Parameter {
 
 /** Represents a host language (Scala) type within the domain.
  *
- * @see [[org.combinators.ep.domain.abstractions.TypeRep$]] for helpers to construct representations.
+ * @see [[org.combinators.ep.domain.abstractions.TypeRep]] for helpers to construct representations.
  */
 trait TypeRep {
   /** The type to represent. */

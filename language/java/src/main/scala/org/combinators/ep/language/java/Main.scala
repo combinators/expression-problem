@@ -495,7 +495,7 @@ object GenerateAllForOneApproach extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
     val approach = if (args.isEmpty) {
-      List("oo")
+      List("trivially")
     } else {
       args
     }

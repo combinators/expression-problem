@@ -25,7 +25,7 @@ sealed trait Interpreter extends SharedOO {
    *
    * Also found in CoCo
    *
-   * @param Domain under investigation
+   * @param domain under investigation
    */
   def ancestorsDefiningNewTypeInterfaces(domain: GenericModel): Set[GenericModel] = {
     val ancestorsWithNewTypeInterfaces = domain.former.map(ancestor => latestModelDefiningNewTypeInterface(ancestor))

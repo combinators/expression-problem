@@ -55,7 +55,7 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
    *
    *          new Eval().eval(e.getLeft()) + new Eval().eval(e.getRight())
    *
-   * @param message
+   * @param message   the SendRequest
    * @return
    */
   def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression] = {
@@ -189,8 +189,8 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
    * }}}
    *
    * @param domain     Model for which all types are to be incorporated
-   * @param op
-   * @param domainSpecific
+   * @param op         The operation whose implementation is needed
+   * @param domainSpecific     The EIP to gain access to the logic
    * @return        The one invoking this method must be sure to add this class to project.
    */
   def makeOperationImplementation(domain:GenericModel,
@@ -234,7 +234,7 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
    *  }
    * }}}
    *
-   * @param tpe
+   * @param tpe     The DataType that needs a Base Class.
    * @return
    */
   def makeBase(tpe: DataType): Generator[ProjectContext, Unit] = {
@@ -264,11 +264,11 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
    *
    * A runtime dispatcher will direct to appropriate _op() method from the op() method in class
    *
-   * @param tpe
-   * @param tpeCase
-   * @param op
-   * @param domainSpecific
-   * @return
+   * @param tpe                 Base Data Type.
+   * @param tpeCase             The Data Type Case.
+   * @param op                  The operation at play.
+   * @param domainSpecific      The EIP which contains the logic.
+   * @return                    Full implementation.
    */
   override def makeImplementation(tpe: DataType,
                                   tpeCase: DataTypeCase,
@@ -322,9 +322,9 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
    *     dynamic runtime checks to dispatch to appropriate method
    * 3. For each data type (in flatted set) create data type class to hold information
    *
-   * @param gdomain
-   * @param domainSpecific
-   * @return
+   * @param gdomain             Top-level domain.
+   * @param domainSpecific      Its corresponding EIP.
+   * @return                    The whole project.
    */
   def implement(gdomain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._

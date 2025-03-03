@@ -25,10 +25,10 @@ trait SharedOO extends ApproachImplementationProvider {
    * Sometimes the mapping is fixed for an EP approach, but sometimes it matters when a particular class is requested
    * in the evolution of the system over time.
    *
-   * @param dtpe
-   * @param canFindClass
-   * @tparam Ctxt
-   * @return
+   * @param dtpe           Base Data Type.
+   * @param canFindClass   Ability to locate a class.
+   * @tparam Ctxt          Made generic by having context as a type parameter.
+   * @return               Get the class.
    */
   def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
     FindClass(Seq(names.mangle(names.conceptNameOf(dtpe)))).interpret(canFindClass)
@@ -73,8 +73,8 @@ trait SharedOO extends ApproachImplementationProvider {
    * {{{
    *   public Double OPERATION(PARAM...)
    * }}}
-   * @param op
-   * @return
+   * @param op     Operation for whom to make the signature.
+   * @return       Return the full method body.
    */
   def makeSignature(op: Operation): Generator[MethodBodyContext, Unit] = {
     import paradigm.methodBodyCapabilities._
@@ -133,11 +133,11 @@ trait SharedOO extends ApproachImplementationProvider {
    *   }
    * }}}
    *
-   * @param tpe
-   * @param tpeCase
-   * @param op
-   * @param domainSpecific
-   * @return
+   * @param tpe             Need the base Data Type.
+   * @param tpeCase         For the specific data type case.
+   * @param op              That has an operation to be implemented.
+   * @param domainSpecific  And the logic can be found in the EIP.
+   * @return                Return the body of the method.
    */
   def makeImplementation(
                           tpe: DataType,
@@ -190,7 +190,9 @@ trait SharedOO extends ApproachImplementationProvider {
    * Ultimately would provide a function that converts att.tpe into ATT-TPE, for example, as needed
    * by Trivially.
    *
-   * @param tpeCase
+   * @param tpeCase      DataTypeCase that needs a constructor.
+   * @param initFields   Do the fields need to be initialized?
+   * @param useSuper     Should constructor invoke its super()?
    * @return
    */
   def makeConstructor(tpeCase: DataTypeCase, initFields:Boolean = true, useSuper:Option[Type] = Option.empty): Generator[ConstructorContext, Unit] = {
@@ -234,8 +236,8 @@ trait SharedOO extends ApproachImplementationProvider {
    * }}}
    *
    * Caller can decide whether to make this abstract or leave concrete.
-   * @param att
-   * @return
+   * @param att      The Attribute for which a getAtt() method is needed.
+   * @return         Return the implementation.
    */
   def makeGetterSignature(att:Attribute): Generator[MethodBodyContext, Option[Expression]] = {
       import paradigm.methodBodyCapabilities._
@@ -257,8 +259,8 @@ trait SharedOO extends ApproachImplementationProvider {
    *
    * Directly access field attribute.
    *
-   * @param att
-   * @return
+   * @param att     The attribute for which a getter is needed.
+   * @return        The implemented class.
    */
   def makeGetter(att:Attribute): Generator[ClassContext, Unit] = {
     val makeBody: Generator[MethodBodyContext, Option[Expression]] = {

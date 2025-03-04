@@ -1,10 +1,10 @@
 package org.combinators.ep.language.java     /*DD:LD:AD*/
 
 /**
- * To generate a single approach for a single stage in an Extension Graph, see [[DirectToDiskMain]]
+ * 1. To generate a single approach for a single stage in an Extension Graph, see [[DirectToDiskMain]]
  * which you can either modify directly in the editor and execute, or from the command line, type:
  *
- * ```sbt "language-java/runMain org.combinators.ep.language.java.DirectToDiskMain APPROACH EIP"```
+ *   ```sbt "language-java/runMain org.combinators.ep.language.java.DirectToDiskMain APPROACH EIP"```
  *
  * APPROACH is one of: graphviz, oo, visitor, visitorSideEffect, extensibleVisitor
  *                     interpreter, coco, trivially, dispatch, algebra
@@ -14,18 +14,23 @@ package org.combinators.ep.language.java     /*DD:LD:AD*/
  *   D1,D2,D1D2,D3,I1,I2,J1,J2,J3,J4,J5,J6,K2J6,J7,J8,K1,K2,X1,X2,X3,X2X3,X4,A1,A1M3,A3M3I2,A3,C2,
  *   I2M3I1N1,M0,M1,M2,M2_M3,M3I1,M3W1,M4,M5,M6,M7,M7I2,M8,M9,N1,P1,Q1,V1,W1
  *
- * To generate all evolution stages for a single approach, see [[GenerateAllForOneApproach]]
+ * 2. To generate all evolution stages for a single approach, see [[GenerateAllForOneApproach]]
  *
- * ```sbt "language-java/runMain org.combinators.ep.language.java.GenerateAllForOneApproach APPROACH"```
+ *   ```sbt "language-java/runMain org.combinators.ep.language.java.GenerateAllForOneApproach APPROACH"```
  *
  * If you omit the APPROACH argument, then "oo" is the default.
  *
- * To generate all evolution stages for all systems and approaches, see [[GenerateAll]]
+ * 3. To generate all evolution stages for all systems and approaches, see [[GenerateAll]]
  *
- * ```sbt "language-java/runMain org.combinators.ep.language.java.GenerateAll"```
+ *   ```sbt "language-java/runMain org.combinators.ep.language.java.GenerateAll"```
  *
  * This will generate directories in target/ with names starting with "ep-java"
  *
+ * 4. To generate a quick validation for the latest stage in each system, see [[QuickValidation]]
+ *
+ *   ```sbt "language-java/runMain org.combinators.ep.language.java.QuickValidation"```
+ *
+ *   This one is suitable to compile and confirm no errors as part of a CI/CD.
  */
 
 import cats.effect.{ExitCode, IO, IOApp}
@@ -506,6 +511,46 @@ object GenerateAllForOneApproach extends IOApp {
     GenerateAllD1D2.run(approach)
     GenerateAllMerging.run(approach)
     GenerateAllJ.run(approach)
+  }
+}
+
+object QuickValidation extends IOApp {
+
+  def run(args: List[String]): IO[ExitCode] = {
+
+    val approaches = Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
+    val target = "ep-java-quick"
+
+    // latest in all system families
+    val evolutions = Seq("M9", "J8", "A3", "O1OA", "OD3", "OO3", "V1", "D3", "I2M3I1N1", "A3", "O2")
+
+    approaches.foreach(approach => {
+      println("Generating " + approach + "...")
+      evolutions.foreach(selection => {
+        println("   " + selection)
+
+        val targetDirectory = Paths.get("target", target, approach, selection)
+        val program :IO[Unit] = {
+          for {
+            _ <- IO { print("Initializing Generator...") }
+            main <- IO {  new Main(approach, selection) }
+
+            _ <- IO { println("[OK]") }
+            _ <- main.runDirectToDisc(targetDirectory)
+          } yield ()
+        }
+
+        // execute above as a stand-alone program
+        program.unsafeRunSync()
+
+        // TBD:  Would be nice to launch 'sbt' in each of these generated directories
+      })
+    })
+
+    for {
+      _ <- IO { print("DONE") }
+    } yield ExitCode.Success
+
   }
 }
 

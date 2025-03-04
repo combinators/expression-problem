@@ -4,7 +4,7 @@ package org.combinators.ep.language.scala.codegen    /*DD:LD:AD*/
  * To generate a single approach for a single stage in an Extension Graph, see [[DirectToDiskMain]]
  * which you can either modify directly in the editor and execute, or from the command line, type:
  *
- * ```sbt "language-newScala/runMain org.combinators.ep.language.scala.codegen.DirectToDiskMain APPROACH EIP"```
+ *   ```sbt "language-newScala/runMain org.combinators.ep.language.scala.codegen.DirectToDiskMain APPROACH EIP"```
  *
  * APPROACH is one of: functional, graphviz, oo, visitor, visitorSideEffect, extensibleVisitor
  *                     interpreter, coco, trivially, algebra
@@ -18,17 +18,23 @@ package org.combinators.ep.language.scala.codegen    /*DD:LD:AD*/
  *
  * To generate all evolution stages for a single approach, see [[GenerateAllForOneApproach]]
  *
- * ```sbt "language-newScala/runMain org.combinators.ep.language.scala.codegen.GenerateAllForOneApproach APPROACH"```
+ *   ```sbt "language-newScala/runMain org.combinators.ep.language.scala.codegen.GenerateAllForOneApproach APPROACH"```
  *
  * If you omit the APPROACH argument, then "oo" is the default.
  *
  * To generate all evolution stages for all systems and approaches, see [[GenerateAll]]
  *
- * ```sbt language-newScala/run```
+ *   ```sbt "language-newScala/runMain org.combinators.ep.language.scala.codegen.GenerateAll"```
  *
  * This will generate directories in target/ with names starting with "ep-scala"
  *
+ * 4. To generate a quick validation for the latest stage in each system, see [[QuickValidation]]
+ *
+ *   ```sbt "language-newScala/runMain org.combinators.ep.language.scala.codegen.QuickValidation"```
+ *
+ *   This one is suitable to compile and confirm no errors as part of a CI/CD.
  */
+
 import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
 import org.combinators.ep.approach.oo._
@@ -665,6 +671,47 @@ object GenerateAllMain extends IOApp {
 
   }
 }
+
+object QuickValidation extends IOApp {
+
+  def run(args: List[String]): IO[ExitCode] = {
+
+    val approaches = Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
+    val target = "ep-scala-quick"
+
+    // latest in all system families
+    val evolutions = Seq("M9", "J8", "A3", "O1OA", "OD3", "OO3", "V1", "D3", "I2M3I1N1", "A3", "O2")
+
+    approaches.foreach(approach => {
+      println("Generating " + approach + "...")
+      evolutions.foreach(selection => {
+        println("   " + selection)
+
+        val targetDirectory = Paths.get("target", target, approach, selection)
+        val program :IO[Unit] = {
+          for {
+            _ <- IO { print("Initializing Generator...") }
+            main <- IO {  new Main(approach, selection) }
+
+            _ <- IO { println("[OK]") }
+            _ <- main.runDirectToDisc(targetDirectory)
+          } yield ()
+        }
+
+        // execute above as a stand-alone program
+        program.unsafeRunSync()
+
+        // TBD:  Would be nice to launch 'sbt' in each of these generated directories
+      })
+    })
+
+    for {
+      _ <- IO { print("DONE") }
+    } yield ExitCode.Success
+
+  }
+}
+
 
 object GenerateAllExtended extends IOApp {
 

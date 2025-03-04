@@ -1,36 +1,19 @@
 @echo off
+@REM execute this script within PowerShell in the 'expression-problem' directory retrieved via git
 
 set PYTHON="c:\Program Files\Python311\python.exe"
 
-set "dirPath=expression-problem"
-dir "%dirPath%" >nul 2>&1
-if %errorlevel% equ 0 (
-    echo Updating existing directory
-    cd expression-problem
-    git pull
-) else (
-    echo Retrieving git directory
-    git clone https://github.com/combinators/expression-problem.git
-    cd expression-problem
-
-    echo Switching to IL branch
-    git checkout IL
-)
-
-@REM within expression-problem git directory
-
-echo Generating all Java solutions. This will take some time.
 echo T0
 date /T
 time /T
-call sbt "language-java/runMain org.combinators.ep.language.java.GenerateAll"
+call sbt "language-java/runMain org.combinators.ep.language.java.QuickValidation"
 echo T1
 date /T
 time /T
 
 @REM within target directory now
 cd target
-for %%a in (ep-java ep-java-d1d2 ep-java-j ep-java-merging ep-java-extended ep-java-third-alternate) do (
+for %%a in (ep-java-quick) do (
   @echo off
   echo %%a
   cd %%a
@@ -58,14 +41,14 @@ echo Generating all Scala solutions. This will take some time.
 echo T5
 date /T
 time /T
-call sbt "language-newScala/runMain org.combinators.ep.language.scala.codegen.GenerateAll"
+call sbt "language-newScala/runMain org.combinators.ep.language.scala.codegen.QuickValidation"
 echo T6
 date /T
 time /T
 
 @REM now go back to target
 cd target
-for %%a in (ep-scala ep-scala-d1d2 ep-scala-j ep-scala-merging ep-scala-extended ep-scala-third-alternate) do (
+for %%a in (ep-scala-quick) do (
   @echo off
   echo %%a
   cd %%a
@@ -90,3 +73,19 @@ echo DONE
 echo T10
 date /T
 time /T
+
+@echo Confirming result
+$SELJ = Select-String -Path ep-java-quick\STATISTICS -Pattern "error"
+$SELS = Select-String -Path ep-scala-quick\STATISTICS -Pattern "error"
+
+if ($SELJ -ne $null)
+{
+    @echo Error with Java Code Generation
+    exit -1
+}
+
+if ($SELS -ne $null)
+{
+    @echo Error with Scala Code Generation
+    exit -1
+}

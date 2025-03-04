@@ -1,5 +1,6 @@
 package org.combinators.ep.domain.matchers    /*DI:LI:AI*/
 
+import scala.language.reflectiveCalls
 /** Provides programmatic pattern matching abstractions. */
 
 /** Converts things of type `Source` into things of type `Content` if the source objects match a criterion. */

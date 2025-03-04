@@ -21,7 +21,7 @@ object S2 extends Evolution {
 
   // TODO: Model test cases for S2
   def tests: Seq[TestCase] = Seq(
-    ContainsTestCase(shape.S1.UnionInst(shape.S0.sq1, shape.S0.c1),  shape.S0.p1, true),
+    ContainsTestCase(shape.S1.UnionInst(shape.S0.sq1, shape.S0.c1),  shape.S0.p1, result = true),
 
     // (2.0,2.0) not  within (5x5) square shrunk 50% (centered at 0,0)
     EqualsCompositeTestCase(getModel.baseDataType, shape.S0.sq1, InstanceRep(TypeRep.Boolean)(false), (Shrink, Seq(DoubleInst(0.5))), (shape.S0.ContainsPt, Seq(DoubleInst(2.0), DoubleInst(2.0)))),

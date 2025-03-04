@@ -32,7 +32,7 @@ object M2_ABS {
 
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val ops = math.M2_ABS.getModel.flatten.ops
-        if ((ops.contains(potentialRequest.op)) && (potentialRequest.tpeCase == math.M2_ABS.Abs)) {
+        if (ops.contains(potentialRequest.op) && (potentialRequest.tpeCase == math.M2_ABS.Abs)) {
           Some(Set.empty)
         } else {
           None
@@ -105,6 +105,7 @@ object M2_ABS {
 
               case _ => ???
             }
+          case _ => ???
         }
         result.map(Some(_))
       }

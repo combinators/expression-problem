@@ -80,9 +80,9 @@ object M5 extends Evolution {
   override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(M4)
 
   def tests:Seq[TestCase] = Seq(
-    SameTestCase(m5_s1, m5_s2, false),
-    SameTestCase(m5_s1, m5_s3, true),
-    SameTestCase(m5_all, m5_all, true),
+    SameTestCase(m5_s1, m5_s2, expected = false),
+    SameTestCase(m5_s1, m5_s3, expected = true),
+    SameTestCase(m5_all, m5_all, expected = true),
 
     EqualsTestCase(getModel.baseDataType, m5_all, Operation.asTree, InstanceRep(TypeRep.Tree)(tree_m5_all)),
     EqualsCompositeTestCase(getModel.baseDataType, m5_all, StringInst("(-2.0-((1.0-976.0)*((1.0*976.0)+(1.0/3.0))))"), (PrettyP, Seq.empty)),

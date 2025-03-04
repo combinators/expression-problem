@@ -68,6 +68,8 @@ sealed class I2M3I1N1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImpleme
             for {
               res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M3.Mult, onRequest.selfReference, onRequest.request.arguments.head._2)
             } yield Some(res)
+
+          case _ => ???
         }
       }
     }

@@ -39,7 +39,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             val (resultCtxt, _) =
               Command.runGenerator(
                 command.cls,
-                ClassCtxt(context.resolver, clsToAdd, context.unit.getImports().asScala)
+                ClassCtxt(context.resolver, clsToAdd, context.unit.getImports.asScala)
               )
             val newUnit = context.unit.clone()
             newUnit.addType(resultCtxt.cls)

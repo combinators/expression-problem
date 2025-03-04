@@ -2,7 +2,7 @@ package org.combinators.ep.domain.math.eips.systemX     /*DD:LI:AI*/
 
 import org.combinators.ep.domain.abstractions.{Operation, TypeRep}
 import org.combinators.ep.domain.{GenericModel, math}
-import org.combinators.ep.domain.math.{systemJ, systemX}
+import org.combinators.ep.domain.math.systemX
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
@@ -87,6 +87,8 @@ object X4 {
 
                     res <- forApproach.instantiate(math.M0.getModel.baseDataType, other, inner)
                   } yield res
+
+                case _ => ???
               }
 
             case _ => ???

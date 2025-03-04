@@ -75,19 +75,16 @@ object A3 {
 
                     res <- forApproach.instantiate(math.M0.getModel.baseDataType, other, left, right)
                   } yield res
+
+                case _ => ???
               }
-//            case math.I1.MultBy => /** Specially handle MultMy with Power. */
-//              println (onRequest.tpeCase + " is to be addressed.")
-//              onRequest.tpeCase match {
-//                case math.A3.Inv => mult(atts: _ *)
-//                case _ => ???
-//              }
 
             case math.M2.PrettyP =>
               onRequest.tpeCase match {
                 case math.A3.Inv => makeString(Seq(atts.tail.head, atts.head), "(", "/", ")")
                 case _ => ???
               }
+
             case _ => ???
           }
 

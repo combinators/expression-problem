@@ -56,7 +56,7 @@ class FibonacciMainScala {
       val computed = files()
       println("[OK]")
       if (targetDirectory.toFile.exists()) {
-        print(s"Cleaning Target Directory (${targetDirectory})...")
+        print(s"Cleaning Target Directory ($targetDirectory)...")
         FileUtils.deleteDirectory(targetDirectory.toFile)
         println("[OK]")
       }

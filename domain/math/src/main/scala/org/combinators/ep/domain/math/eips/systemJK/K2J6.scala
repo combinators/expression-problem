@@ -103,7 +103,7 @@ sealed class K2J6[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
 
         def evalChildren(tpe:DataTypeCase, atts: Map[abstractions.Attribute,Expression]): Generator[MethodBodyContext, List[Expression]] =
           forEach (atts.keys.toSeq) { att:abstractions.Attribute => {
-            val expr:Expression = atts.get(att).get
+            val expr:Expression = atts(att)
             forApproach.dispatch(
               SendRequest(
                 expr,
@@ -286,6 +286,7 @@ sealed class K2J6[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
                     }
                     res <- makeString(atts, "(", "^", ")")
                   } yield Some(res)
+              case _ => ???
             }
           case math.systemK.K2.Simplify => simplifyLogic(forApproach)(onRequest)
 
@@ -346,7 +347,7 @@ object K2J6 {
     import paradigm.syntax._
     val mkImpl = new K2J6[paradigm.type, AIP, Unit](paradigm)
     val returnInIf: Generator[paradigm.MethodBodyContext, Expression] => Generator[paradigm.MethodBodyContext, Unit] =
-      (expGen) =>
+      expGen =>
         for {
           resultExp <- expGen
           resultStmt <- returnStmt(resultExp)

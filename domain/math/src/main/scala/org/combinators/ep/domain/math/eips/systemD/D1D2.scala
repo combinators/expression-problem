@@ -111,7 +111,7 @@ object D1D2 {
     import paradigm.syntax._
     val mkImpl = new D1D2[paradigm.type, AIP, Unit](paradigm)
     val returnInIf: Generator[paradigm.MethodBodyContext, Expression] => Generator[paradigm.MethodBodyContext, Unit] =
-      (expGen) =>
+      expGen =>
         for {
           resultExp <- expGen
           resultStmt <- returnStmt(resultExp)

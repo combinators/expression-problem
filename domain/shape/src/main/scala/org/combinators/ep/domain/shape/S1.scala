@@ -21,8 +21,8 @@ object S1 extends Evolution {
   val p3 = (3.0, 3.0)
 
   def tests: Seq[TestCase] = Seq(
-    ContainsTestCase(UnionInst(sq1, c1),  p1, true),
-    ContainsTestCase(UnionInst(sq1, c1),  p3, true),
-    ContainsTestCase(sq1,  p3, false),
+    ContainsTestCase(UnionInst(sq1, c1),  p1, result = true),
+    ContainsTestCase(UnionInst(sq1, c1),  p3, result = true),
+    ContainsTestCase(sq1,  p3, result = false),
   )
 }

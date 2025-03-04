@@ -528,7 +528,7 @@ class Main(choice:String, select:String) {
       val computed = files()
       println("[OK]")
       if (targetDirectory.toFile.exists()) {
-        print(s"Cleaning Target Directory (${targetDirectory})...")
+        print(s"Cleaning Target Directory ($targetDirectory)...")
         FileUtils.deleteDirectory(targetDirectory.toFile)
         println("[OK]")
       }
@@ -580,8 +580,8 @@ object DirectToDiskMain extends IOApp {
       _ <- IO { println("[OK]") }
 
       result <- main.runDirectToDisc(targetDirectory)
-      _ <- IO { println(s"DONE, in ${targetDirectory} you can now run: sbt scalafmt Test/scalafmt test") }
-      _ <- IO { println(s"You can generate code coverage in ${targetDirectory} with: sbt coverageReport")}
+      _ <- IO { println(s"DONE, in $targetDirectory you can now run: sbt scalafmt Test/scalafmt test") }
+      _ <- IO { println(s"You can generate code coverage in $targetDirectory with: sbt coverageReport")}
     } yield result
   }
 }
@@ -624,7 +624,7 @@ object GenerateAllMain extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
 
     val approaches = if (args.isEmpty) {
-      Seq("oo","visitor","visitorSideEffect","extensibleVisitor","interpreter","coco","trivially","algebra")
+      Seq("oo","visitor","extensibleVisitor","interpreter","coco","trivially","algebra")
     } else {
       args
     }
@@ -671,7 +671,7 @@ object GenerateAllExtended extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
 
     val approaches = if (args.isEmpty) {
-      Seq("oo", "visitor", "visitorSideEffect", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
+      Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
     } else {
       args
     }
@@ -717,7 +717,7 @@ object GenerateAllThirdAlternate extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
 
     val approaches = if (args.isEmpty) {
-      Seq("oo", "visitor", "visitorSideEffect", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
+      Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
     } else {
       args
     }
@@ -763,7 +763,7 @@ object GenerateAllD1D2 extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
 
     val approaches = if (args.isEmpty) {
-      Seq("oo", "visitor", "visitorSideEffect", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
+      Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
     } else {
       args
     }
@@ -809,7 +809,7 @@ object GenerateAllMerging extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
 
     val approaches = if (args.isEmpty) {
-      Seq("oo", "visitor", "visitorSideEffect", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
+      Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
     } else {
       args
     }
@@ -860,7 +860,7 @@ object GenerateAllJ extends IOApp {
     //
     // "dispatch" is not yet available for Scala
     val approaches = if (args.isEmpty) {
-      Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra") // "visitorSideEffect",
+      Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
     } else {
       args
     }

@@ -136,7 +136,7 @@ class ShapeMain(choice:String, select:String) {
       val computed = files()
       println("[OK]")
       if (targetDirectory.toFile.exists()) {
-        print(s"Cleaning Target Directory (${targetDirectory})...")
+        print(s"Cleaning Target Directory ($targetDirectory)...")
         FileUtils.deleteDirectory(targetDirectory.toFile)
         println("[OK]")
       }
@@ -165,8 +165,8 @@ object GenerateAllForShape extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
 
-    val approaches = Seq("oo","visitor","visitorSideEffect","extensibleVisitor","interpreter","coco","trivially","dispatch","algebra")
-    val evolutions = Seq("S0","S1","S2")
+    val approaches = Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
+    val evolutions = Seq("S0", "S1", "S2")
 
     approaches.foreach(approach => {
       println("Generating " + approach + "...")

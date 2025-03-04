@@ -32,7 +32,7 @@ import cats.effect.{ExitCode, IO, IOApp}
 import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, ObjectAlgebras, RuntimeDispatch, Traditional, TriviallyClean, Visitor, Visualize}
 import org.combinators.ep.domain.Evolution
 import org.combinators.ep.domain.math._
-import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider, FileWithPath, FileWithPathPersistable, NameProvider, TestImplementationProvider}
+import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider, FileWithPath, FileWithPathPersistable, TestImplementationProvider}
 import org.combinators.jgitserv.{BranchTransaction, GitService}
 import FileWithPathPersistable._
 import org.apache.commons.io.FileUtils
@@ -514,7 +514,7 @@ object GenerateAllMain extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
 
     val approaches = if (args.isEmpty) {
-      Seq("oo","visitor","visitorSideEffect","extensibleVisitor","interpreter","coco","trivially","dispatch","algebra")
+      Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
     } else {
       args
     }
@@ -565,7 +565,7 @@ object GenerateAllJ extends IOApp {
     // visitorSideEffect, this causes problems because local variables are used for the visitors and
     // they are unreachable when split across multiple methods.
     val approaches = if (args.isEmpty) {
-      Seq("oo","visitor","extensibleVisitor","interpreter","coco","trivially","dispatch","algebra")   // "visitorSideEffect",
+      Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
     } else {
       args
     }
@@ -611,7 +611,7 @@ object GenerateAllD1D2 extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
 
     val approaches = if (args.isEmpty) {
-      Seq("oo","visitor","visitorSideEffect","extensibleVisitor","interpreter","coco","trivially","dispatch","algebra")
+      Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
     } else {
       args
     }
@@ -657,7 +657,7 @@ object GenerateAllMerging extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
 
     val approaches = if (args.isEmpty) {
-      Seq("oo","visitor","visitorSideEffect","extensibleVisitor","interpreter","coco","trivially","dispatch","algebra")
+      Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
     } else {
       args
     }
@@ -703,7 +703,7 @@ object GenerateAllExtended extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
 
     val approaches = if (args.isEmpty) {
-      Seq("oo","visitor","visitorSideEffect","extensibleVisitor","interpreter","coco","trivially","dispatch","algebra")
+      Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
     } else {
       args
     }
@@ -749,7 +749,7 @@ object GenerateAllThirdAlternate extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
 
     val approaches = if (args.isEmpty) {
-      Seq("oo","visitor","visitorSideEffect","extensibleVisitor","interpreter","coco","trivially","dispatch","algebra")
+      Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
     } else {
       args
     }

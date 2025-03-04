@@ -76,7 +76,7 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
 
         def evalChildren(tpe:DataTypeCase, atts: Map[abstractions.Attribute,Expression]): Generator[MethodBodyContext, List[Expression]] =
           forEach (atts.keys.toSeq) { att:abstractions.Attribute => {
-            val expr:Expression = atts.get(att).get
+            val expr:Expression = atts(att)
             forApproach.dispatch(
               SendRequest(
                 expr,
@@ -273,7 +273,7 @@ object M8 {
     import imperativeControl.imperativeCapabilities._
     val mkImpl = new M8[paradigm.type, AIP, Unit](paradigm)
     val returnInIf: Generator[paradigm.MethodBodyContext, Expression] => Generator[paradigm.MethodBodyContext, Unit] =
-      (expGen) =>
+      expGen =>
         for {
           resultExp <- expGen
           resultStmt <- returnStmt(resultExp)

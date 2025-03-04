@@ -26,7 +26,7 @@ import java.nio.file.{Path, Paths}
  * These paradigm-specific traits are conceptually different from each other
  */
 sealed class CodeGenerator(domainName: String) { cc =>
-  val factory = new Finalized.Factory {}
+  val factory: Finalized.Factory = new Finalized.Factory {}
 
 
   val syntax: AbstractSyntax[Finalized.FinalTypes] = new AbstractSyntax[Finalized.FinalTypes] {}

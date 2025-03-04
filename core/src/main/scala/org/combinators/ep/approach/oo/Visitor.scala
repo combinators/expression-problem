@@ -3,7 +3,7 @@ package org.combinators.ep.approach.oo    /*DI:LI:AD*/
 import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions.{DataType, DataTypeCase, Operation, TypeRep}
 import org.combinators.ep.domain.instances.InstanceRep
-import org.combinators.ep.generator.{AbstractSyntax, ApproachImplementationProvider, Command, EvolutionImplementationProvider, NameProvider}
+import org.combinators.ep.generator.{AbstractSyntax, Command, EvolutionImplementationProvider, NameProvider}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach

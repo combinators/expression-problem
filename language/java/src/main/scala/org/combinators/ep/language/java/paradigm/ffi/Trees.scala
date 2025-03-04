@@ -1,7 +1,7 @@
 package org.combinators.ep.language.java.paradigm.ffi    /*DI:LD:AI*/
 
 import java.nio.file.Paths
-import com.github.javaparser.{StaticJavaParser}
+import com.github.javaparser.StaticJavaParser
 import com.github.javaparser.ast.{ImportDeclaration, NodeList}
 import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.expr.ObjectCreationExpr

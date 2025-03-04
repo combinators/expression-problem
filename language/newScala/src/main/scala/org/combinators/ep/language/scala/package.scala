@@ -127,7 +127,7 @@ package object scala {
     def toScala: String = {
       val init = this.initializer.map(ie => s" = ${ie.toScala}").getOrElse("")
       s"""
-         |var ${this.name.toScala}: ${this.tpe.toScala}${init}
+         |var ${this.name.toScala}: ${this.tpe.toScala}$init
          |""".stripMargin
     }
 
@@ -144,7 +144,7 @@ package object scala {
       val decl = if (this.isRecursive) "def" else "val"
       val body = this.inExp.toScala
       s"""
-         |{ ${decl} ${this.name.toScala}: ${this.tpe.toScala} = ${this.initializer.toScala}
+         |{ $decl ${this.name.toScala}: ${this.tpe.toScala} = ${this.initializer.toScala}
          |  $body }
          |""".stripMargin
     }
@@ -304,7 +304,7 @@ package object scala {
   trait ObjectInstantiationExpression[FT <: FinalTypes] extends Expression[FT] with oo.ObjectInstantiationExpression[FT] with Factory[FT] {
     def toScala: String = {
       val bodyScala = body.map(_.classBodyDefinitionToScala).getOrElse("")
-      s"""new ${tpe.toScala}(${constructorArguments.map(_.toScala).mkString(",")})${bodyScala}"""
+      s"""new ${tpe.toScala}(${constructorArguments.map(_.toScala).mkString(",")})$bodyScala"""
     }
 
     override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): oo.ObjectInstantiationExpression[FT] =
@@ -378,19 +378,19 @@ package object scala {
 
   trait PrefixOperator[FT <: FinalTypes] { self: Factory[FT] =>
     def operator: String
-    def toScala(operands: any.Expression[FT]*): String = s"(${operator}${operands.head.toScala})"
+    def toScala(operands: any.Expression[FT]*): String = s"($operator${operands.head.toScala})"
   }
 
   trait MathFunctionOperator[FT <: FinalTypes] { self: Factory[FT] =>
     def operator: String
     def toScala(operands: any.Expression[FT]*): String = {
-      s"Math.${operator}${operands.map(_.toScala).mkString("(", ", ", ")")}"
+      s"Math.$operator${operands.map(_.toScala).mkString("(", ", ", ")")}"
     }
   }
 
   trait PostfixOperator[FT <: FinalTypes] { self: Factory[FT] =>
     def operator: String
-    def toScala(operands: any.Expression[FT]*): String = s"(${operands.head.toScala}${operator})"
+    def toScala(operands: any.Expression[FT]*): String = s"(${operands.head.toScala}$operator)"
   }
 
   trait AddOp[FT <: FinalTypes] extends ArithmeticOps.AddOp[FT] with Operator[FT] with Factory[FT] with InfixOperator[FT] {
@@ -445,7 +445,7 @@ package object scala {
     override def operator: String = "log"
 
     override def toScala(operands: any.Expression[FT]*): String = {
-      s"(Math.${operator}(${operands(0).toScala})/Math.${operator}(${operands(1).toScala}))"
+      s"(Math.$operator(${operands(0).toScala})/Math.$operator(${operands(1).toScala}))"
     }
   }
 
@@ -578,7 +578,7 @@ package object scala {
     def resolveImport(expr: any.Expression[FT]): Seq[any.Import[FT]] = expr.toImport
     def getFreshName(basedOn: any.Name[FT]): any.Name[FT] = {
       val id = UUID.randomUUID().toString.replace("-", "")
-      nameProvider.mangle(s"${basedOn.component}_${id}")
+      nameProvider.mangle(s"${basedOn.component}_$id")
     }
   }
 
@@ -611,7 +611,7 @@ package object scala {
           """.stripMargin
       } else ""
 
-      s"""${mods} def ${name.toScala}${typeParams}(${params}): ${returnTpe} ${body}""".stripMargin
+      s"""$mods def ${name.toScala}$typeParams($params): $returnTpe $body""".stripMargin
     }
 
     def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): any.Method[FT] = {
@@ -631,7 +631,7 @@ package object scala {
     def toScala: String = {
       val vars = this.variables.map { case (v, tpe) => s"${v.toScala}: ${tpe.toScala}" }.mkString("(", ", ", ")")
       val body = this.body.toScala
-      s"$vars => {\n  ${body} \n}"
+      s"$vars => {\n  $body \n}"
     }
 
     def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): any.Expression[FT] =
@@ -662,10 +662,10 @@ package object scala {
         |  ${statements.map(_.toScala).mkString("\n    ")}
         """.stripMargin
 
-      s"""def this(${params}) = {
-         |  this(${fieldInitDecls})
-         |  ${importDecls}
-         |  ${bodyDecls}
+      s"""def this($params) = {
+         |  this($fieldInitDecls)
+         |  $importDecls
+         |  $bodyDecls
          |}""".stripMargin
     }
 
@@ -679,7 +679,7 @@ package object scala {
         case Some((parent, parentArgs)) =>
           val rest = supers.filter(sp => sp != parent).map(_.toScala)
           val withRest = if (rest.isEmpty) "" else rest.mkString("with ", " with ", "")
-          s"extends ${parent.toScala}(${parentArgs.map(_.toScala).mkString(", ")}) ${withRest}"
+          s"extends ${parent.toScala}(${parentArgs.map(_.toScala).mkString(", ")}) $withRest"
         case None =>
           if (supers.nonEmpty) supers.map(_.toScala).mkString("extends ", " with ", "") else ""
       }
@@ -715,10 +715,10 @@ package object scala {
            |  ${statements.map(_.toScala).mkString("\n    ")}
         """.stripMargin
       s"""
-         |  ${importDecls}
+         |  $importDecls
          |  ${fieldDeclarations.mkString("\n  ")}
-         |  ${overrideInits}
-         |  ${bodyDecls}
+         |  $overrideInits
+         |  $bodyDecls
          |  """.stripMargin
     }
 
@@ -742,7 +742,7 @@ package object scala {
   trait Field[FT <: FinalTypes] extends oo.Field[FT] with Factory[FT] {
     def toScala: String = {
       val initExp = init.map(exp => s" = ${exp.toScala}").getOrElse(s" = null.asInstanceOf[${tpe.toScala}]")
-      s"var ${name.toScala}: ${tpe.toScala}${initExp}"
+      s"var ${name.toScala}: ${tpe.toScala}$initExp"
     }
 
     def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): oo.Field[FT] = {
@@ -760,7 +760,7 @@ package object scala {
         if (lowerBounds.nonEmpty) " <: " + lowerBounds.map(_.toScala).mkString(" with ") else ""
       val ubs =
         if (upperBounds.nonEmpty) " >: " + upperBounds.map(_.toScala).mkString(" with ") else ""
-      s"""${name.toScala}${lbs}${ubs}"""
+      s"""${name.toScala}$lbs$ubs"""
     }
 
     def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): polymorphism.TypeParameter[FT] = {
@@ -848,10 +848,10 @@ package object scala {
       ).getOrElse(fieldDecls)
       s"""
          |{
-         |  ${importDecls}
-         |  ${initBlock}
-         |  ${secondaryConstructorDecls}
-         |  ${methodDecls}
+         |  $importDecls
+         |  $initBlock
+         |  $secondaryConstructorDecls
+         |  $methodDecls
          |}""".stripMargin
     }
 
@@ -874,7 +874,7 @@ package object scala {
 
 
       s"""
-         |${abstractMod} ${kind} ${name.toScala}${typeParams}${primaryConstructorParams} ${extendsClause} ${classBodyDefinitionToScala}""".stripMargin
+         |$abstractMod $kind ${name.toScala}$typeParams$primaryConstructorParams $extendsClause $classBodyDefinitionToScala""".stripMargin
     }
     def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): oo.Class[FT] = {
       copyAsGenericClass(
@@ -953,10 +953,10 @@ package object scala {
       // If Type arguments, then emit those without the arguments, which appear to come later
       if (typeArguments.nonEmpty) {
         val tyArgs = typeArguments.map(_.toScala).mkString("[",  ", ", "]")
-        s"${function.toScala}${tyArgs}"
+        s"${function.toScala}$tyArgs"
       } else {
         val args = if (regularArguments.isEmpty) "()" else regularArguments.map(_.toScala).mkString("(",  ", ", ")")
-        s"${function.toScala}${args}"
+        s"${function.toScala}$args"
       }
 
       //val result = s"${function.toScala}${tyArgs}${args}"
@@ -990,12 +990,12 @@ package object scala {
       }).mkString("\n\n")
 
       s"""
-         |${packageDecl}
-         |${importDecls}
-         |${adtsDecl}
-         |${clsDecls}
-         |${functionsDecl}
-         |${testDecls}
+         |$packageDecl
+         |$importDecls
+         |$adtsDecl
+         |$clsDecls
+         |$functionsDecl
+         |$testDecls
          |""".stripMargin
     }
 
@@ -1086,7 +1086,7 @@ package object scala {
       val ctors = this.typeConstructors.map(_.toScala).mkString("\n  ")
       s"""
         |enum ${this.name.toScala} {
-        |  ${ctors}
+        |  $ctors
         |}""".stripMargin
     }
 
@@ -1101,7 +1101,7 @@ package object scala {
   trait TypeConstructor[FT <: FinalTypes] extends functional.TypeConstructor[FT] with Factory[FT] {
     def toScala: String = {
       val params = parameters.map(p => s"${p._1.toScala} : ${p._2.toScala}").mkString(",")
-      s"""case ${name.toScala}(${params})"""
+      s"""case ${name.toScala}($params)"""
     }
 
     def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): functional.TypeConstructor[FT] = {
@@ -1211,7 +1211,7 @@ package object scala {
       val cases = this.cases.map { case (pat, body) => s"case ${pat.toScala} => { ${body.toScala} }" }.mkString("\n  ")
       s"""
          |${onValue.toScala} match {
-         |  ${cases}
+         |  $cases
          |}""".stripMargin
     }
 

@@ -2,9 +2,7 @@ package org.combinators.ep.domain.math.eips      /*DD:LI:AI*/
 
 import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, TypeRep}
 import org.combinators.ep.domain.instances.InstanceRep
-import org.combinators.ep.domain.math.{eips, systemI}
-import org.combinators.ep.domain.math.systemI.{I1, I2}
-import org.combinators.ep.domain.{GenericModel, abstractions, math}
+import org.combinators.ep.domain.{abstractions, math}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
@@ -85,7 +83,7 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
 
         def evalChildren(tpe:DataTypeCase, atts: Map[abstractions.Attribute,Expression]): Generator[MethodBodyContext, List[Expression]] =
           forEach (atts.keys.toSeq) { att:abstractions.Attribute => {
-            val expr:Expression = atts.get(att).get
+            val expr:Expression = atts(att)
             forApproach.dispatch(
               SendRequest(
                 expr,
@@ -242,7 +240,7 @@ object M7I2 {
     import imperativeControl.imperativeCapabilities._
     val mkImpl = new M7I2[paradigm.type, AIP, Unit](paradigm)
     val returnInIf: Generator[paradigm.MethodBodyContext, Expression] => Generator[paradigm.MethodBodyContext, Unit] =
-      (expGen) =>
+      expGen =>
         for {
           resultExp <- expGen
           resultStmt <- returnStmt(resultExp)

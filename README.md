@@ -179,7 +179,7 @@ are found in the domain subproject.
 
 # EpCoGen
 
-Once you have downloaded the code from github, use the following statement
+Once you have downloaded the code from GitHub, use the following statement
 from within the `$HOME` directory.
 
 ```
@@ -333,7 +333,7 @@ Python scripts require Python 3. Only the `scipy` package needs to be installed.
 
 # References
 
-1. Wadler, Philip, [Email to to Java Genericity Mailing List](http://homepages.inf.ed.ac.uk/wadler/papers/expression/expression.txt)
+1. Wadler, Philip, [Email to the Java Genericity Mailing List](http://homepages.inf.ed.ac.uk/wadler/papers/expression/expression.txt)
 2. Wang, Yanling and C. d. S. Oliveira, Bruno, [The Expression Problem, Trivially!](https://dl.acm.org/citation.cfm?id=2889448), MODULARITY 2016, pp. 37-41.
 3. Kim, Bruce, [Some Challenging Typing Issues in Object-Oriented Languages: Extended Abstract](http://doi.org/10.1016/S1571-0661(04)80799-0), TCS 82(8) 2003.
 4. d. S. Oliveira, Bruno C. and William R. Cook [Extensibility for the Masses](https://dl.acm.org/citation.cfm?id=236716), ECOOP 2012

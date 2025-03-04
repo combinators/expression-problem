@@ -30,7 +30,7 @@ object M3 {
       
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val ops = math.M3.getModel.flatten.ops
-        if ((math.M3.getModel.typeCases.contains(potentialRequest.tpeCase)) && ops.contains(potentialRequest.op)) {
+        if (math.M3.getModel.typeCases.contains(potentialRequest.tpeCase) && ops.contains(potentialRequest.op)) {
           Some(Set.empty)
         } else {
           None

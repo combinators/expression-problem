@@ -1,9 +1,7 @@
 package org.combinators.ep.language.inbetween   /*DI:LI:AI*/
 
 import org.combinators.ep.domain.abstractions.TypeRep
-import org.combinators.ep.generator.Command
 import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.language.inbetween.any.{CompilationUnit, Project, TestSuite}
 
 package object oo {
   trait FinalTypes extends any.FinalTypes {
@@ -411,7 +409,7 @@ package object oo {
       returnType: Option[any.Type[FT]] = Option.empty,
       parameters: Seq[(any.Name[FT], any.Type[FT])] = Seq.empty,
       typeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty
-    ): any.Method[FT] = clsMethod(name, imports, statements, returnType, parameters, typeLookupMap, false, false, false, false)
+    ): any.Method[FT] = clsMethod(name, imports, statements, returnType, parameters, typeLookupMap, isAbstract = false, isStatic = false, isPublic = false, isOverride = false)
 
     def clsMethod(
       name: any.Name[FT],

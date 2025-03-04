@@ -36,11 +36,6 @@ trait HelloWorldObjectOrientedProvider extends HelloWorldProvider {
    *
    * Sometimes the mapping is fixed for an EP approach, but sometimes it matters when a particular class is requested
    * in the evolution of the system over time.
-   *
-   * @param dtpe
-   * @param canFindClass
-   * @tparam Ctxt
-   * @return
    */
   def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
     FindClass(Seq(names.mangle(names.conceptNameOf(dtpe)))).interpret(canFindClass)

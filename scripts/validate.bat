@@ -17,6 +17,8 @@ if %errorlevel% equ 0 (
     git checkout IL
 )
 
+@REM within expression-problem git directory
+
 echo Generating all Java solutions. This will take some time.
 echo T0
 date /T
@@ -26,6 +28,7 @@ echo T1
 date /T
 time /T
 
+@REM within target directory now
 cd target
 for %%a in (ep-java ep-java-d1d2 ep-java-j ep-java-merging ep-java-extended ep-java-third-alternate) do (
   @echo off
@@ -48,6 +51,8 @@ for %%a in (ep-java ep-java-d1d2 ep-java-j ep-java-merging ep-java-extended ep-j
   cd ..
 )
 
+@REM go back to expression-problem
+cd ..
 
 echo Generating all Scala solutions. This will take some time.
 echo T5
@@ -58,6 +63,7 @@ echo T6
 date /T
 time /T
 
+@REM now go back to target
 cd target
 for %%a in (ep-scala ep-scala-d1d2 ep-scala-j ep-scala-merging ep-scala-extended ep-scala-third-alternate) do (
   @echo off

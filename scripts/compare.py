@@ -1,7 +1,7 @@
 """
   Run with Python3 to generate report of approaches that satisfy EP criteria.
 
-  python3 ..\..\scripts\compare.py ..\..\scripts\systems\[EVOLUTION-JSON] [scala | java] >> REPORT
+  python3 ..\..\scripts\compare.py ..\..\scripts\systems\[EVOLUTION-JSON] >> REPORT
 
   where the JSON file has a single 'evolutions' tag, where each entry
 
@@ -15,8 +15,7 @@
       ]
     }
 
-  The third argument is either 'java' or 'scala' (defaults to java). This determines
-  which source code language to inspect.
+  It determines the language (scala or java) by inspecting directory names.
 
   Depends on having successfully generated files as outlined in the README.txt file.
 
@@ -34,8 +33,25 @@ import zipfile
 import json
 import sys
 import re
-
 DIR = f"."
+
+JAVA = 'java'
+SCALA = 'scala'
+
+def java_or_scala():
+   """Assuming running in ep-java-XXX or ep-scala-XXX directory, return 'java' or 'scala'."""
+   cwd = os.getcwd()
+   approaches = os.listdir(cwd)
+   one = approaches[0]
+   stages = os.listdir(os.path.join(cwd, one))
+   print(stages[0])
+   stage = stages[0]
+   languages = os.listdir(os.path.join(cwd,one,stage,'src','main'))
+   if JAVA in languages:
+       return JAVA
+   if SCALA in languages:
+       return SCALA
+   return None
 
 from os.path import isdir, join
 approaches = [f for f in os.listdir(DIR) if os.path.isdir(os.path.join(DIR, f))]
@@ -62,12 +78,18 @@ for k in description["evolutions"]:
 # Want to be able to detect differences in the actual source code. Note that test cases are a
 # different story, and even solutions to the EP require special handling with regard to test cases
 fix_fresh = False
-if len(sys.argv) == 3:
-    src_dir = os.path.join('src', 'main', sys.argv[2].lower())
-    if sys.argv[2].lower() == 'scala':
-        fix_fresh = True
+lang = java_or_scala()
+
+if lang == 'java':
+    print('Comparing Java source directories...')
+    src_dir = os.path.join('src', 'main', JAVA)
+elif lang == 'scala':
+    print('Comparing Scala source directories...')
+    src_dir = os.path.join('src', 'main', SCALA)
+    fix_fresh = True
 else:
-    src_dir = os.path.join('src', 'main', 'java')
+    print("Cannot determine language of source code directory.")
+    exit (1)
 PREFIX = str(src_dir)
 
 def md5 (filename):

@@ -37,11 +37,9 @@ def timestamp(output):
 # Assume run in the expression-target
 dir = os.getcwd()
 scripts_dir = path.join(dir, 'scripts')
-java_compile = path.join(dir, 'scripts', 'compile-java.py')
-scala_compile = path.join(dir, 'scripts', 'compile-scala.py')
+compile = path.join(dir, 'scripts', 'compile.py')
 
-java_process = path.join(dir, 'scripts', 'process-java.py')
-scala_process = path.join(dir, 'scripts', 'process-scala.py')
+process = path.join(dir, 'scripts', 'process.py')
 
 java_dir = path.join(dir, 'target', 'ep-java-quick')
 scala_dir = path.join(dir, 'target', 'ep-scala-quick')
@@ -53,13 +51,13 @@ header('Scala-Generate-Quick-Begin')
 subprocess.run(['sbt', 'language-newScala/runMain org.combinators.ep.language.scala.codegen.QuickValidation'], cwd=dir, shell=has_shell, stdout=log, stderr=log)
 
 header('Scala-Generate-Quick-Compile-Begin')
-subprocess.run([sys.executable, scala_compile], cwd=scala_dir, shell=has_shell, stdout=log, stderr=log)
+subprocess.run([sys.executable, compile], cwd=scala_dir, shell=has_shell, stdout=log, stderr=log)
 
 header('Scala-Generate-Quick-Compile-End')
 
 STATS_scala = path.join(scala_dir, 'STATISTICS')
 log_stat = open(STATS_scala, 'a')
-subprocess.run([sys.executable, scala_process], cwd=scala_dir, shell=has_shell, stdout=log_stat, stderr=log_stat)
+subprocess.run([sys.executable, process], cwd=scala_dir, shell=has_shell, stdout=log_stat, stderr=log_stat)
 log_stat.close()
 # ----------------------- Scala End -----------------------------------
 
@@ -68,17 +66,15 @@ header('Java-Generate-Quick-Begin')
 subprocess.run(['sbt', 'language-java/runMain org.combinators.ep.language.java.QuickValidation'], cwd=dir, shell=has_shell, stdout=log, stderr=log)
 
 header('Java-Generate-Quick-Compile-Begin')
-subprocess.run([sys.executable, java_compile], cwd=java_dir, shell=has_shell, stdout=log, stderr=log)
+subprocess.run([sys.executable, compile], cwd=java_dir, shell=has_shell, stdout=log, stderr=log)
 
 header('Java-Generate-Quick-Compile-End')
 
 STATS_java = path.join(java_dir, 'STATISTICS')
 log_stat = open(STATS_java, 'a')
-subprocess.run([sys.executable, java_process], cwd=java_dir, shell=has_shell, stdout=log_stat, stderr=log_stat)
+subprocess.run([sys.executable, process], cwd=java_dir, shell=has_shell, stdout=log_stat, stderr=log_stat)
 log_stat.close()
 # ----------------------- Java End -----------------------------------
-
-
 
 def contains_error(filename):
     # check if error appears anywhere in 'STATISTICS' files (either java or scala)
@@ -93,11 +89,13 @@ java_failed = contains_error(STATS_java)
 scala_failed = contains_error(STATS_scala)
 
 log.write('\n')
-log.write(f'Java Result {java_failed}\n')
-log.write(f'Scala Result {scala_failed}\n')
+log.write(f'Java Failed: {java_failed}\n')
+log.write(f'Scala Failed: {scala_failed}\n')
 log.close()
 
 if java_failed or scala_failed:
+    print(f'Java Failed: {java_failed} Scala Failed: {scala_failed}')
     exit(1)
 
+print('No errors!')
 exit(0)

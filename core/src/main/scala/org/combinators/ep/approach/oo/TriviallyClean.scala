@@ -19,7 +19,7 @@ trait TriviallyClean extends ApproachImplementationProvider {
   import syntax._
 
   object ComponentNames {
-    val finalizedPackage = names.mangle("finalized")
+    val finalizedPackage: paradigm.syntax.Name = names.mangle("finalized")
 
     def getter(attribute: abstractions.Attribute): paradigm.syntax.Name = {
       names.addPrefix("get", names.mangle(names.conceptNameOf(attribute)))
@@ -249,6 +249,7 @@ trait TriviallyClean extends ApproachImplementationProvider {
         canResolveImport: Understands[Context, ResolveImport[paradigm.syntax.Import, paradigm.syntax.Type]],
         canAddImport: Understands[Context, AddImport[paradigm.syntax.Import]],
   ): Generator[Context, paradigm.syntax.Type] = {
+    @tailrec
     def latestDeclaringTypeCase(model:GenericModel): GenericModel = {
       if (model.typeCases.contains(dataTypeCase)) {
         model

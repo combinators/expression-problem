@@ -17,21 +17,21 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
   val names: NameProvider[paradigm.syntax.Name]
 
   object ComponentNames {
-    val algebra = names.mangle("Algebra")
-    val algebraAtt = names.mangle("algebra")
+    val algebra: paradigm.syntax.Name = names.mangle("Algebra")
+    val algebraAtt: paradigm.syntax.Name = names.mangle("algebra")
 
-    val signature = names.mangle("Signature")
-    val carrier = names.mangle("Carrier")
-    val returnTypeParameter = names.mangle("C")
+    val signature: paradigm.syntax.Name = names.mangle("Signature")
+    val carrier: paradigm.syntax.Name = names.mangle("Carrier")
+    val returnTypeParameter: paradigm.syntax.Name = names.mangle("C")
 
-    val pkgAlgebra = names.mangle("algebra")
-    val pkgCarrier = names.mangle("carrier")
-    val pkgInstance = names.mangle("instance")
+    val pkgAlgebra: paradigm.syntax.Name = names.mangle("algebra")
+    val pkgCarrier: paradigm.syntax.Name = names.mangle("carrier")
+    val pkgInstance: paradigm.syntax.Name = names.mangle("instance")
 
-    val getSelf = names.mangle("getSelf")
+    val getSelf: paradigm.syntax.Name = names.mangle("getSelf")
 
-    val value = names.mangle("value")
-    val inner = names.mangle("inner")
+    val value: paradigm.syntax.Name = names.mangle("value")
+    val inner: paradigm.syntax.Name = names.mangle("inner")
 
     def constructor(tpeCase: abstractions.DataTypeCase): paradigm.syntax.Name = {
       names.mangle(names.instanceNameOf(tpeCase))
@@ -540,7 +540,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
 
         _ <- forEach (domain.flatten.typeCases) { tpe =>
           for {
-            _ <- addMethod(names.mangle(names.instanceNameOf(tpe)), newOpMethod(tpe, tpeParams.head), true)
+            _ <- addMethod(names.mangle(names.instanceNameOf(tpe)), newOpMethod(tpe, tpeParams.head), isPublic = true)
           } yield ()
         }
 
@@ -687,7 +687,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
 
         _ <- forEach (domain.flatten.typeCases) { tpe =>
           for {
-            _ <- addMethod(names.mangle(names.instanceNameOf(tpe)), newOpMethod(tpe), true)
+            _ <- addMethod(names.mangle(names.instanceNameOf(tpe)), newOpMethod(tpe), isPublic = true)
           } yield ()
         }
 

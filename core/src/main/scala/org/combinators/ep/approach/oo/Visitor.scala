@@ -896,7 +896,7 @@ object Visitor {
       val names: NameProvider[paradigm.syntax.Name] = nameProvider
       val ooParadigm: oo.type = oo
 
-      val visitorSpecifics = new VisitorSideEffect {
+      val visitorSpecifics: VisitorSpecifics = new VisitorSideEffect {
         override val impParadigm: WithBase[paradigm.MethodBodyContext, paradigm.type] = imp
       }
     }

@@ -192,7 +192,7 @@ class Main(choice:String, select:String) {
     eips.M6(approach.paradigm)(m5_eip)(generator.equality, generator.booleans)
   val m7_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     if (choice == "functional") {
-      eips.M7funct(approach.paradigm)(m6_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.functional)
+      eips.M7funct(approach.paradigm)(m6_eip)(generator.functional, generator.functionalControl, generator.doubles, generator.realDoubles, generator.strings, generator.equality)
     } else {
       eips.M7(approach.paradigm)(m6_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.imperative)
     }
@@ -573,9 +573,9 @@ object DirectToDiskMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
     // won't work for functional after M6 because of imperative-focused EIPs
-    val approach = if (args.isEmpty) "extensibleVisitor" else args.head
+    val approach = if (args.isEmpty) "functional" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "J7" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "M7" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 

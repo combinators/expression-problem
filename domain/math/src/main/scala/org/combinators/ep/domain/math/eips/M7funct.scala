@@ -3,22 +3,26 @@ package org.combinators.ep.domain.math.eips     /*DD:LI:AI*/
 import org.combinators.ep.domain.abstractions.{Operation, Parameter, TypeRep}
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.domain.math
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.ep.generator.Command.{Generator, lift}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm
 import org.combinators.ep.generator.paradigm.Functional
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, RealArithmetic, Strings}
+import org.combinators.ep.generator.paradigm.control
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, RealArithmetic, Strings, Equality}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
 object M7funct {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
   (m6Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
-  (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
-   ffiRealArithmetic: RealArithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
-   ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiFunctional:Functional.WithBase[paradigm.type]):
+  (functional:Functional.WithBase[paradigm.type],
+    functionalControl: control.Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
+    ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
+    ffiRealArithmetic: RealArithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
+    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
+    ffiEquals: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
+   ):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val equalsProvider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model = math.M7.getModel
@@ -29,6 +33,7 @@ object M7funct {
           _ <- ffiArithmetic.enable()
           _ <- ffiRealArithmetic.enable()
           _ <- ffiStrings.enable()
+          _ <- ffiEquals.enable()
         } yield ()
       }
 
@@ -61,6 +66,9 @@ object M7funct {
         Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
         import paradigm._
         import methodBodyCapabilities._
+        import functionalControl.functionalCapabilities._
+        import functionalControl.lambdaCapabilities._
+        import functional.methodBodyCapabilities._
         assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         onRequest.tpeCase match {
@@ -76,8 +84,27 @@ object M7funct {
           //          return result;
           //        }
 
+//          def powBy(self, exp: ep.Exp) {
+
+//            def powByRec: Double => ep.Exp = (exponentValue: Double) => {
+//               if (1 < exponentValue) {
+//                  mult(self, powByRec(exponentValue - 1))
+//               } else {
+//                  self
+//               }
+//            }
+//            val exponentValue: Double = eval(exp)
+//            if (exponentValue == 0) { return Lit(1) }
+//            else {
+//               val result: ep.Exp = powByRec(Math.floor(Math.abs(exponentValue)))
+//               if (exponentValue < 0) { return divd(lit(1.0), result) }
+//               else { return result }
+//            }
+//          }
+
           case litC@math.M0.Lit =>
             for {
+              resultTpe <- toTargetLanguageType(TypeRep.DataType(math.M2.getModel.baseDataType))
               expName <- freshName(forApproach.names.mangle("exponentValue"))
               expType <- toTargetLanguageType(TypeRep.Double)
 
@@ -87,57 +114,63 @@ object M7funct {
                 Request(math.M0.Eval, Map.empty)
               ))
 
-              // MISSING
-              //expValue <- ffiImper.imperativeCapabilities.declareVar(expName, expType, Some(evalExponent))
-              defaultVal <- forApproach.reify(InstanceRep(TypeRep.Double)(-88.88))
-              expValue <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, Seq(defaultVal): _*)
-
-              varName <- freshName(forApproach.names.mangle("result"))
-              baseType <- toTargetLanguageType(onRequest.request.op.returnType)
-
-              // MISSING
-              //resultVar <- ffiImper.imperativeCapabilities.declareVar(varName, baseType, Some(onRequest.selfReference))
-              resultVarConst <- forApproach.reify(InstanceRep(TypeRep.Double)(-77.77))
-              resultVar <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, Seq(resultVarConst): _*)
-
-              ctrName <- freshName(forApproach.names.mangle("counter"))
-              ctrType <- toTargetLanguageType(TypeRep.Double)
-              absValue <- ffiRealArithmetic.realArithmeticCapabilities.abs(expValue)
-              floorValue <- ffiRealArithmetic.realArithmeticCapabilities.floor(absValue)
-
-              // MISSING
-              // ctrVar <- ffiImper.imperativeCapabilities.declareVar(ctrName, ctrType, Some(floorValue))
-              ctrVar <- forApproach.reify(InstanceRep(TypeRep.Double)(-66.66))
-
+              zero <- forApproach.reify(InstanceRep(TypeRep.Double)(0.0))
               one <- forApproach.reify(InstanceRep(TypeRep.Double)(1.0))
 
-              // Know you have add data type so you can construct it
-//              condExpr <- ffiArithmetic.arithmeticCapabilities.lt(one, ctrVar)
-//              stmt <- ffiImper.imperativeCapabilities.whileLoop(condExpr, for {
-//                res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M3.Mult, resultVar, onRequest.selfReference)
-//                assignStmt <- ffiImper.imperativeCapabilities.assignVar(resultVar, res)
-//                decrExpr <- ffiArithmetic.arithmeticCapabilities.sub(ctrVar, one)
-//                decrStmt <- ffiImper.imperativeCapabilities.assignVar(ctrVar, decrExpr)
-//                _ <- addBlockDefinitions(Seq(assignStmt, decrStmt))
-//              } yield()
-//              )
-//              _ <- addBlockDefinitions(Seq(stmt))
+              powByRecTpe <- toTargetLanguageType(TypeRep.Arrow(TypeRep.Double, TypeRep.DataType(math.M2.getModel.baseDataType)))
+              powByRecName <- freshName(forApproach.names.mangle("powByRec"))
+              powByRecArg <- freshName(forApproach.names.mangle("exponentValue"))
+              finalResult <- declareRecursiveVariable(powByRecName, powByRecTpe,
+                powByRecVar => lambda(
+                  variables = Seq((powByRecArg, expType)),
+                  args =>
+                    for {
+                      recCond <- ffiArithmetic.arithmeticCapabilities.lt(one, args(powByRecArg))
+                      result <- ifThenElse(
+                        cond = recCond,
+                        ifBlock = for {
+                          recArg <- ffiArithmetic.arithmeticCapabilities.sub(args(powByRecArg), one)
+                          recCall <- methodBodyCapabilities.apply(powByRecVar, Seq(recArg))
+                          result <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M3.Mult, onRequest.selfReference, recCall)
+                        } yield result,
+                        elseIfs = Seq.empty,
+                        elseBlock = lift(onRequest.selfReference)
+                      )
+                    } yield result
+                )
+              )(inBlock =
+                powByRecVar => declareVariable(expName, expType, evalExponent)(inBlock = expVar =>
+                  for {
+                    zeroCond <- ffiEquals.equalityCapabilities.areEqual(expType, expVar, zero)
+                    resultName <- freshName(forApproach.names.mangle("result"))
+                    result <- ifThenElse(cond = zeroCond,
+                      ifBlock = forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, one),
+                      elseIfs = Seq.empty,
+                      elseBlock = for {
+                        absValue <- ffiRealArithmetic.realArithmeticCapabilities.abs(expVar)
+                        floorValue <- ffiRealArithmetic.realArithmeticCapabilities.floor(absValue)
+                        recursiveCall <- methodBodyCapabilities.apply(powByRecVar, Seq(floorValue))
+                        result <- declareVariable(resultName, resultTpe, recursiveCall)(resultVar =>
+                          for {
+                            ltZeroCond <- ffiArithmetic.arithmeticCapabilities.lt(expVar, zero)
+                            result <- ifThenElse(cond = ltZeroCond,
+                              ifBlock = for {
+                                oneLit <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, one)
+                                divdRes <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M3.Divd, oneLit, resultVar)
+                              } yield divdRes,
+                              elseIfs = Seq.empty,
+                              elseBlock = lift(resultVar)
+                            )
+                          } yield result
 
-              // if stmt next
-              zero <- forApproach.reify(InstanceRep(TypeRep.Double)(0.0))
-              ifExpr <- ffiArithmetic.arithmeticCapabilities.lt(onRequest.attributes.head._2, zero)
+                        )
+                      } yield result
+                    )
+                  } yield result
+                )
+              )
 
-//              ifStmt <- ffiImper.imperativeCapabilities.ifThenElse(ifExpr, for {
-//                oneLit <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, one)
-//                res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M3.Divd, oneLit, resultVar)
-//                assignStmt <-  ffiImper.imperativeCapabilities.assignVar(resultVar, res)
-//                _ <- addBlockDefinitions(Seq(assignStmt))
-//              } yield (),
-//                Seq.empty
-//              )
-
-              //// _ <- addBlockDefinitions(Seq(ifStmt))
-            } yield Some(resultVar)
+            } yield Some(finalResult)
 
           case math.M0.Add | math.M1.Sub =>
             for {

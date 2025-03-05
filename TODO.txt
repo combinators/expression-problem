@@ -6,5 +6,16 @@
 
 2. Functional -- continue progress from before
 
-3. m7funct has hardcoded -77.77 which is where it fails. For scala
+3.
 
+Scala-InBetween could add 'trait' capability and that could then
+be exposed as an option. This is high-level change and not
+object-oriented per se.
+
+missing ZERO case for powBy should return 1
+
+Add exceptions to newScala
+
+Make IL the main branch (can be made the main)
+
+Make CoGen stand alone

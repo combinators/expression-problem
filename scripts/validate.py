@@ -21,7 +21,7 @@ def current_milli_time():
         return round(time.time() * 1000)
 
 tzone = time.localtime().tm_zone
-fmt = f"%a %b %d %H:%M:%S {tzone} %Y"
+fmt = f'%a %b %d %H:%M:%S {tzone} %Y'
 
 def header(s):
     log.write('======================================\n')

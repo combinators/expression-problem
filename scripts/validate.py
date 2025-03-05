@@ -48,21 +48,6 @@ scala_dir = path.join(dir, 'target', 'ep-scala-quick')
 
 log = open('quick-validation.txt', 'a')
 
-# ----------------------- Java -----------------------------------
-header('Java-Generate-Quick-Begin')
-subprocess.run(['sbt', 'language-java/runMain org.combinators.ep.language.java.QuickValidation'], cwd=dir, shell=has_shell, stdout=log, stderr=log)
-
-header('Java-Generate-Quick-Compile-Begin')
-subprocess.run([sys.executable, java_compile], cwd=java_dir, shell=has_shell, stdout=log, stderr=log)
-
-header('Java-Generate-Quick-Compile-End')
-
-STATS_java = path.join(java_dir, 'STATISTICS')
-log_stat = open(STATS_java, 'a')
-subprocess.run([sys.executable, java_process], cwd=java_dir, shell=has_shell, stdout=log_stat, stderr=log_stat)
-log_stat.close()
-
-
 # ----------------------- Scala -----------------------------------
 header('Scala-Generate-Quick-Begin')
 subprocess.run(['sbt', 'language-newScala/runMain org.combinators.ep.language.scala.codegen.QuickValidation'], cwd=dir, shell=has_shell, stdout=log, stderr=log)
@@ -76,6 +61,23 @@ STATS_scala = path.join(scala_dir, 'STATISTICS')
 log_stat = open(STATS_scala, 'a')
 subprocess.run([sys.executable, scala_process], cwd=scala_dir, shell=has_shell, stdout=log_stat, stderr=log_stat)
 log_stat.close()
+# ----------------------- Scala End -----------------------------------
+
+# ----------------------- Java -----------------------------------
+header('Java-Generate-Quick-Begin')
+subprocess.run(['sbt', 'language-java/runMain org.combinators.ep.language.java.QuickValidation'], cwd=dir, shell=has_shell, stdout=log, stderr=log)
+
+header('Java-Generate-Quick-Compile-Begin')
+subprocess.run([sys.executable, java_compile], cwd=java_dir, shell=has_shell, stdout=log, stderr=log)
+
+header('Java-Generate-Quick-Compile-End')
+
+STATS_java = path.join(java_dir, 'STATISTICS')
+log_stat = open(STATS_java, 'a')
+subprocess.run([sys.executable, java_process], cwd=java_dir, shell=has_shell, stdout=log_stat, stderr=log_stat)
+log_stat.close()
+# ----------------------- Java End -----------------------------------
+
 
 
 def contains_error(filename):

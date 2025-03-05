@@ -15,16 +15,22 @@ import org.combinators.ep.domain.abstractions.{DataTypeCase, TypeRep}
  *
  * The type of the instance is captured by 'tpe'
  *
- * @see The companion model [[org.combinators.ep.domain.instances.InstanceRep$]] for creating new instances.
+ * @see The companion model [[org.combinators.ep.domain.instances.InstanceRep]] for creating new instances.
  */
-sealed trait InstanceRep { // had been ExistsInstance
+sealed trait InstanceRep {
   /** Provides the domain representation of the instance type. */
   val tpe: TypeRep
   /** Provides the host language (Scala) instance. */
   val inst: tpe.HostType
 
   override def hashCode(): Int = inst.hashCode()
-  override def equals(obj: Any): Boolean = obj.isInstanceOf[InstanceRep.OfHostType[tpe.HostType]] && inst == obj.asInstanceOf[InstanceRep].inst
+  override def equals(obj: Any): Boolean = {
+    obj match {
+      case that: InstanceRep =>
+        that.isInstanceOf[InstanceRep.OfHostType[tpe.HostType]] && inst == that.inst
+      case _ => false
+    }
+  }
 }
 
 /** Provides methods for wrapping host language (Scala) instances into domain representable entities. */

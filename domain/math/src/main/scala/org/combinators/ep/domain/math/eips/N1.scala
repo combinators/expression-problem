@@ -8,7 +8,7 @@ import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstan
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm
 import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, RealArithmetic, Strings}
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Equality, RealArithmetic, Strings}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
 object N1 {
@@ -18,6 +18,7 @@ object N1 {
   (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiRealArithmetic: RealArithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
+   ffiEquals: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiImper:Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val n1Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
@@ -66,11 +67,15 @@ object N1 {
           //        default Exp<V> powBy(ep.Exp<V> exponent) {
           //          double exponentValue = convert(exponent).eval();
           //          Exp<V> result = this;
-          //          for (double counter = Math.floor(Math.abs(exponentValue)); counter > 1; --counter) {
-          //            result = mult(result, this);
+          //          while ((1.0 < counter)) {
+          //             result = new Mult(result, this);
+          //             counter = (counter - 1.0);
           //          }
           //          if (exponentValue < 0) {
           //            result = divd(lit(1.0), result);
+          //          }
+          //          if (exponentValue == 0) {
+          //             result = 0
           //          }
           //          return result;
           //        }
@@ -99,7 +104,7 @@ object N1 {
 
               one <- forApproach.reify(InstanceRep(TypeRep.Double)(1.0))
 
-              // Know you have add data type so you can construct it
+              // Now you have add data type so you can construct it
               condExpr <- ffiArithmetic.arithmeticCapabilities.lt(one, ctrVar)
               stmt <- ffiImper.imperativeCapabilities.whileLoop(condExpr, for {
                 res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M3.Mult, resultVar, onRequest.selfReference)
@@ -113,9 +118,20 @@ object N1 {
 
               // if stmt next
               zero <- forApproach.reify(InstanceRep(TypeRep.Double)(0.0))
-              ifExpr <- ffiArithmetic.arithmeticCapabilities.lt(onRequest.attributes.head._2, zero)
+              ifEqExpr <- ffiEquals.equalityCapabilities.areEqual(expType, expValue, zero)
 
-              ifStmt <- ffiImper.imperativeCapabilities.ifThenElse(ifExpr, for {
+              ifStmtEq <- ffiImper.imperativeCapabilities.ifThenElse(ifEqExpr, for {
+                oneLit <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, one)
+                assignStmtEq <-  ffiImper.imperativeCapabilities.assignVar(resultVar, oneLit)
+                _ <- addBlockDefinitions(Seq(assignStmtEq))
+              } yield (),
+                Seq.empty
+              )
+
+              _ <- addBlockDefinitions(Seq(ifStmtEq))
+              ifLtExpr <- ffiArithmetic.arithmeticCapabilities.lt(expValue, zero)
+
+              ifStmt <- ffiImper.imperativeCapabilities.ifThenElse(ifLtExpr, for {
                 oneLit <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, one)
                 res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M3.Divd, oneLit, resultVar)
                 assignStmt <-  ffiImper.imperativeCapabilities.assignVar(resultVar, res)
@@ -123,8 +139,8 @@ object N1 {
               } yield (),
                 Seq.empty
               )
-
               _ <- addBlockDefinitions(Seq(ifStmt))
+
             } yield Some(resultVar)
 
           case math.M0.Add | math.M1.Sub =>

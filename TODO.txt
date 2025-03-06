@@ -16,6 +16,7 @@ missing ZERO case for powBy should return 1
 
 Add exceptions to newScala
 
-Make IL the main branch (can be made the main)
-
 Make CoGen stand alone
+
+M9 needs functional implementation of height. Should be straightforward, though I cannot figure
+out how to set up the match and patterns!

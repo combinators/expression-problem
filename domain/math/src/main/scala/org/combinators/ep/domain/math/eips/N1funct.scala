@@ -1,53 +1,50 @@
 package org.combinators.ep.domain.math.eips     /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{Operation, Parameter, TypeRep}
+import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, Parameter, TypeRep}
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.domain.math
 import org.combinators.ep.generator.Command.{Generator, lift}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
-import org.combinators.ep.generator.paradigm.AnyParadigm
-import org.combinators.ep.generator.paradigm.Functional
-import org.combinators.ep.generator.paradigm.control
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, RealArithmetic, Strings, Equality}
+import org.combinators.ep.generator.paradigm.{AnyParadigm, Functional, control}
+import org.combinators.ep.generator.paradigm.control.Imperative
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Equality, RealArithmetic, Strings}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
-object M7funct {
+object N1funct {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
-  (m6Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
+  (m3Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
   (functional:Functional.WithBase[paradigm.type],
-    functionalControl: control.Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
-    ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
-    ffiRealArithmetic: RealArithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
-    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
-    ffiEquals: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
-   ):
+   functionalControl: control.Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
+   ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
+   ffiRealArithmetic: RealArithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
+   ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
+   ffiEquals: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  ):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
-    val m7Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.M7.getModel
+    val n1Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      override val model = math.N1.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
-          _ <- m6Provider.initialize(forApproach)
+          _ <- m3Provider.initialize(forApproach)
           _ <- ffiArithmetic.enable()
           _ <- ffiRealArithmetic.enable()
           _ <- ffiStrings.enable()
-          _ <- ffiEquals.enable()
         } yield ()
       }
 
-      override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
-        val cases = math.M7.getModel.flatten.typeCases
-        if (potentialRequest.op == math.M7.PowBy && cases.contains(potentialRequest.tpeCase)) {
-          potentialRequest.tpeCase match {
-            case math.M3.Neg => Some(Set.empty)
-            case _ => Some(Set(math.M0.Eval))
+      /** PowBy depends on Eval. */
+
+        override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
+          val cases = math.N1.getModel.flatten.typeCases
+          (potentialRequest.op, potentialRequest.tpeCase) match {
+            case (math.N1.PowBy, tpeCase) if cases.contains(tpeCase) => Some(Set(math.M0.Eval))
+
+            case _ => None
           }
-        } else {
-          None
         }
-      }
 
       /** PowBy can support any N-ary data type, so prepare for this future eventuality here. */
       override def genericLogic
@@ -55,15 +52,15 @@ object M7funct {
         (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
         onRequest.request.op match {
-          case math.M7.PowBy => defaultGenericLogic(forApproach)(onRequest)
-          case _ => m6Provider.genericLogic(forApproach)(onRequest)
+          case math.N1.PowBy => defaultGenericLogic(forApproach)(onRequest)
+          case _ => m3Provider.genericLogic(forApproach)(onRequest)
         }
       }
 
       def logic
-        (forApproach: AIP[paradigm.type])
-        (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
-        Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
+      (forApproach: AIP[paradigm.type])
+      (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
+      Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
         import paradigm._
         import methodBodyCapabilities._
         import functionalControl.functionalCapabilities._
@@ -84,23 +81,23 @@ object M7funct {
           //          return result;
           //        }
 
-//          def powBy(self, exp: ep.Exp) {
+          //          def powBy(self, exp: ep.Exp) {
 
-//            def powByRec: Double => ep.Exp = (exponentValue: Double) => {
-//               if (1 < exponentValue) {
-//                  mult(self, powByRec(exponentValue - 1))
-//               } else {
-//                  self
-//               }
-//            }
-//            val exponentValue: Double = eval(exp)
-//            if (exponentValue == 0) { return Lit(1) }
-//            else {
-//               val result: ep.Exp = powByRec(Math.floor(Math.abs(exponentValue)))
-//               if (exponentValue < 0) { return divd(lit(1.0), result) }
-//               else { return result }
-//            }
-//          }
+          //            def powByRec: Double => ep.Exp = (exponentValue: Double) => {
+          //               if (1 < exponentValue) {
+          //                  mult(self, powByRec(exponentValue - 1))
+          //               } else {
+          //                  self
+          //               }
+          //            }
+          //            val exponentValue: Double = eval(exp)
+          //            if (exponentValue == 0) { return Lit(1) }
+          //            else {
+          //               val result: ep.Exp = powByRec(Math.floor(Math.abs(exponentValue)))
+          //               if (exponentValue < 0) { return divd(lit(1.0), result) }
+          //               else { return result }
+          //            }
+          //          }
 
           case litC@math.M0.Lit =>
             for {
@@ -214,8 +211,8 @@ object M7funct {
         }
       }
     }
+
     // newest one must come first
-    monoidInstance.combine(m7Provider, m6Provider)
+    monoidInstance.combine(n1Provider, m3Provider)
   }
 }
-

@@ -38,6 +38,8 @@ object M7 extends Evolution {
 
   def tests:Seq[TestCase] = Seq(
     PowByTestCase(AddInst(LitInst(1.0), LitInst(12.0)),
-      InstanceRep(LitInst(4.0)), DoubleInst(13.0*13.0*13.0*13.0))
+      InstanceRep(LitInst(4.0)), DoubleInst(13.0*13.0*13.0*13.0)),
+    PowByTestCase(LitInst(12.0),
+      InstanceRep(LitInst(0.0)), DoubleInst(1))
   )
 }

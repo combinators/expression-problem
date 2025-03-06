@@ -130,7 +130,7 @@ class Main(choice:String, select:String) {
   val m6_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.M6(approach.paradigm)(m5_eip)(generator.equalityInMethod, generator.booleansInMethod)
   val m7_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    eips.M7(approach.paradigm)(m6_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
+    eips.M7(approach.paradigm)(m6_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.equalityInMethod, generator.imperativeInMethod)
   val i1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.systemI.I1(approach.paradigm)(m2_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
   val i2_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
@@ -220,7 +220,7 @@ class Main(choice:String, select:String) {
       generator.imperativeInMethod, generator.booleansInMethod, generator.equalityInMethod, generator.stringsInMethod)
 
   val n1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    eips.N1(approach.paradigm)(m3_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.imperativeInMethod)
+    eips.N1(approach.paradigm)(m3_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod, generator.equalityInMethod, generator.imperativeInMethod)
 
   val i2m3i1n1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.I2M3I1N1.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(i2_eip,m3i1_eip,n1_eip)(
@@ -448,22 +448,13 @@ object GitMain extends IOApp {
 }
 
 object DirectToDiskMain extends IOApp {
-  val targetDirectory: Path = Paths.get("target", "ep3a")
+  val targetDirectory: Path = Paths.get("target", "java-out")
 
   def run(args: List[String]): IO[ExitCode] = {
 
-    // TODO: An issue with EIPs? I think I've fixed, still something doesn't look right.
-    //   trivially with OA properly shows optimized Eval/Lit which adds 0.0 to each Lit
-    //   however, when go to O1OA, the original OA is replaced with non-optimized, which does appear in O1OA
-    //   ALSO, test cases have bad finalized imports for O1OA Test
-    //
-    // TODO: interpreter with O1OA doesn't pass test cases b/c refers back to M2 instead and doesn't include Eval (value + 0.0)
-    //
-    //
-
-    val approach = if (args.isEmpty) "interpreter" else args.head
+    val approach = if (args.isEmpty) "oo" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "C2" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "N1" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 

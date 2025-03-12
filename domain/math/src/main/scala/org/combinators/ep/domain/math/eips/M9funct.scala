@@ -68,13 +68,35 @@ object M9funct {
             one <- forApproach.reify(InstanceRep(TypeRep.Int)(1))
             intType <- toTargetLanguageType(TypeRep.Int)
 
+
+            //            _ <- forEach(onRequest.attributes.toSeq) { case (att, expr) => {
+            //              for {
+            //                attName <- freshName(forApproach.names.mangle(att.name))
+            //                exprVal <- forApproach.dispatch(
+            //                  SendRequest(
+            //                    expr,
+            //                    math.M4.getModel.baseDataType,
+            //                    Request(math.M9.Height, Map.empty)
+            //                  )
+            //                )
+            //                declVar <- ffiImper.imperativeCapabilities.declareVar(attName, intType, Some(exprVal))
+            //                ifExpr <- ffiArithmetic.arithmeticCapabilities.lt(maxDecl, declVar)
+            //
+            //                ifStmt <- ffiImper.imperativeCapabilities.ifThenElse(ifExpr, for {
+            //                  assignStmt <-  ffiImper.imperativeCapabilities.assignVar(maxDecl, declVar)
+            //                  _ <- addBlockDefinitions(Seq(assignStmt))
+            //                } yield (),
+            //                  Seq.empty
+            //                )
+
             // insert logic for all types:
             // can get all types and find those with just one recursive inner
             // attribute; and the height method is defined
 
+            //
             //         def height_rec(exp:Exp)
             //            exp match {
-            //              case Sub(left, right) => { 1 + max(height_rec(left), height_rec(right)) }
+            //              case Sub(left, right) => { leftHeight = height(left); rightHeight = height(right) 1 + if (leftHeight > rightHeight) leftHeight rightHeight }
             //              case Mult(left, right) => { 1 + max(height_rec(left), height_rec(right)) }
             //              case Lit(value) => { 0 }
             //              case Add(left, right) => { 1 + max(height_rec(left), height_rec(right)) }
@@ -82,7 +104,7 @@ object M9funct {
             //            }
             //
             //           def height(exp : mathdomain.Exp): Integer = {
-            //              height_rec(exp)
+            //              val leftHeight = height_rec(exp)
             //           }
             //
             //

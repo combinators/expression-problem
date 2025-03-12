@@ -23,6 +23,13 @@ object D1 extends Evolution {
 
   def tests: Seq[TestCase] = Seq(
     MultByTestCase(AddInst(LitInst(1.0), LitInst(2.0)),
-      InstanceRep(LitInst(3.0)), DoubleInst(9.0))
+      InstanceRep(LitInst(3.0)), DoubleInst(9.0)),
+
+    MultByTestCase(AddInst(LitInst(1.0), LitInst(2.0)),
+      InstanceRep(LitInst(3.0)), DoubleInst(9.0)),
+    MultByTestCase(LitInst(2.0),
+      InstanceRep(LitInst(0.0)), DoubleInst(0.0)),
+    MultByTestCase(LitInst(0.0),
+      InstanceRep(LitInst(3.0)), DoubleInst(0.0))
   )
 }

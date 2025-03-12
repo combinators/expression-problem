@@ -9,16 +9,28 @@ import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedReq
 import org.combinators.ep.generator.paradigm.AnyParadigm
 import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Strings}
-import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
+import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
+import org.combinators.ep.generator.paradigm.control.Functional
 
-object M2_ABS {
-  def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
-      (paradigm: P)
-      (m2Provider : EvolutionImplementationProvider[AIP[paradigm.type]])
+
+// Code for M2_ABS. Takes adapters for return in if-then-else, s.t. functional- and imperative-style if-then-else can be
+// used in an uniform way.
+sealed class M2_ABS[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P], IfBlockType](val paradigm: P) {
+  type IfThenElseCommand =
+    (paradigm.syntax.Expression,
+      Generator[paradigm.MethodBodyContext, IfBlockType],
+      Seq[(paradigm.syntax.Expression, Generator[paradigm.MethodBodyContext, IfBlockType])],
+      Generator[paradigm.MethodBodyContext, IfBlockType]) =>
+      Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]]
+
+  def apply (m2Provider : EvolutionImplementationProvider[AIP[paradigm.type]])
       (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
-       ffiImper:Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type],
-       ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
+       ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
+       returnInIf: Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression] => Generator[paradigm.MethodBodyContext, IfBlockType],
+       ifThenElse: IfThenElseCommand
+      ):
     EvolutionImplementationProvider[AIP[paradigm.type]] = {
+
     val m2_abs_Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.M2_ABS.getModel
 
@@ -55,7 +67,7 @@ object M2_ABS {
 
         assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
-        val result = onRequest.tpeCase match {
+        val result:Generator[MethodBodyContext, Option[paradigm.syntax.Expression]] = onRequest.tpeCase match {
           case abs@math.M2_ABS.Abs =>
             onRequest.request.op match {
               case pp@math.M2.PrettyP =>
@@ -71,17 +83,13 @@ object M2_ABS {
 
                   // Wrap inner-prettified with ABS(...)
                   res <- makeString(Seq(inner), "ABS(", "",")")
-                } yield res
+                } yield Some(res)
 
               case ev@math.M0.Eval =>
-                // x = eval()     DONE
-                // if x < 0       DONE
-                //    x = -x      DONE
-                // return x
                 for {
                   zero <- forApproach.reify(InstanceRep(TypeRep.Double)(0))
-                  doubleType <- toTargetLanguageType(TypeRep.Double)
-                  innerResult <- freshName(forApproach.names.mangle("x"))
+                  negativeOne <- forApproach.reify(InstanceRep(TypeRep.Double)(-1.0))
+
                   innerVal <- forApproach.dispatch(
                     SendRequest(
                       onRequest.attributes.head._2,
@@ -89,25 +97,22 @@ object M2_ABS {
                       Request(math.M0.Eval, Map.empty)
                     )
                   )
-                  innerDecl <- ffiImper.imperativeCapabilities.declareVar(innerResult, doubleType, Some(innerVal))
 
-                  ifExpr <- ffiArithmetic.arithmeticCapabilities.lt(innerDecl, zero)
-                  ifStmt <- ffiImper.imperativeCapabilities.ifThenElse(ifExpr, for {
-                    negated <- ffiArithmetic.arithmeticCapabilities.sub(zero, innerDecl)
-                    assignStmt <- ffiImper.imperativeCapabilities.assignVar(innerDecl, negated)
-                    _ <- addBlockDefinitions(Seq(assignStmt))
-                  } yield (),
-                    Seq.empty
-                  )
-
-                  _ <- addBlockDefinitions(Seq(ifStmt))
-                } yield innerDecl
+                  lessThanZero <- ffiArithmetic.arithmeticCapabilities.lt(innerVal, zero)
+                  result <-
+                    ifThenElse(
+                      lessThanZero,
+                      returnInIf(ffiArithmetic.arithmeticCapabilities.mult(negativeOne, innerVal)),
+                      Seq.empty,
+                      returnInIf(Command.lift(innerVal))
+                    )
+                } yield result
 
               case _ => ???
             }
           case _ => ???
         }
-        result.map(Some(_))
+        result
       }
     }
 
@@ -115,3 +120,54 @@ object M2_ABS {
     monoidInstance.combine(m2_abs_Provider, m2Provider)
   }
 }
+
+
+object M2_ABS {
+  def functional[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
+  (paradigm: P)
+  (m2Provider : EvolutionImplementationProvider[AIP[paradigm.type]])
+  (functionalControl: Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
+   ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
+   ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
+  EvolutionImplementationProvider[AIP[paradigm.type]] = {
+    import paradigm.syntax._
+    val mkImpl = new M2_ABS[paradigm.type, AIP, Expression](paradigm)
+    val ite: mkImpl.IfThenElseCommand =
+      (cond, ifBlock, ifElseBlocks, elseBlock) =>
+        for {
+          res <- functionalControl.functionalCapabilities.ifThenElse(cond, ifBlock, ifElseBlocks, elseBlock)
+        } yield Some(res)
+
+    mkImpl(m2Provider)(ffiArithmetic, ffiStrings, expGen => expGen, ite)
+  }
+
+  def imperative[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
+  (paradigm: P)
+  (m2Provider : EvolutionImplementationProvider[AIP[paradigm.type]])
+  (imperativeControl: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type],
+   ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
+   ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
+  EvolutionImplementationProvider[AIP[paradigm.type]] = {
+    import paradigm.syntax._
+    import paradigm.methodBodyCapabilities._
+    import imperativeControl.imperativeCapabilities._
+    val mkImpl = new M2_ABS[paradigm.type, AIP, Unit](paradigm)
+    val returnInIf: Generator[paradigm.MethodBodyContext, Expression] => Generator[paradigm.MethodBodyContext, Unit] =
+      expGen =>
+        for {
+          resultExp <- expGen
+          resultStmt <- returnStmt(resultExp)
+          _ <- addBlockDefinitions(Seq(resultStmt))
+        } yield None
+
+    val ite: mkImpl.IfThenElseCommand =
+      (cond, ifBlock, ifElseBlocks, elseBlock) =>
+        for {
+          resultStmt <- ifThenElse(cond, ifBlock, ifElseBlocks, Some(elseBlock))
+          _ <- addBlockDefinitions(Seq(resultStmt))
+        } yield None
+
+    mkImpl(m2Provider)(ffiArithmetic, ffiStrings, returnInIf, ite)
+  }
+}
+

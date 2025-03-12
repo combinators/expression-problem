@@ -15,8 +15,7 @@ object I1funct {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
   (m2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
-  (functional:Functional.WithBase[paradigm.type],
-   functionalControl: control.Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
+  (functionalControl: control.Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiRealArithmetic: RealArithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
@@ -31,6 +30,7 @@ object I1funct {
           _ <- ffiArithmetic.enable()
           _ <- ffiRealArithmetic.enable()
           _ <- ffiStrings.enable()
+          _ <- ffiEquals.enable()
         } yield ()
       }
 
@@ -62,7 +62,6 @@ object I1funct {
         import methodBodyCapabilities._
         import functionalControl.functionalCapabilities._
         import functionalControl.lambdaCapabilities._
-        import functional.methodBodyCapabilities._
 
         assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 

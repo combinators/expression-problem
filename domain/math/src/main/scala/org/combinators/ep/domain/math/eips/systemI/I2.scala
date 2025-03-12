@@ -18,8 +18,7 @@ object I2 {
   (i1Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
   (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiRealArithmetic: RealArithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
-   ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiImper: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]):
+   ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val i2Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model = math.systemI.I2.getModel

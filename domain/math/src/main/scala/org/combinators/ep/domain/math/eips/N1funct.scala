@@ -32,6 +32,7 @@ object N1funct {
           _ <- ffiArithmetic.enable()
           _ <- ffiRealArithmetic.enable()
           _ <- ffiStrings.enable()
+          _ <- ffiEquals.enable()
         } yield ()
       }
 

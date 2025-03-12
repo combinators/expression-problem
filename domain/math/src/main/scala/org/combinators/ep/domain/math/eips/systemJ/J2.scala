@@ -46,6 +46,7 @@ object J2 {
 
           // here is where Eval and MultBy are processed. MUST COME AFTER EARLIER CHECK FOR ISOP...
           case (_, math.systemJ.J2.Mult) if ops.contains(potentialRequest.op) => Some(Set.empty)
+          case (math.systemJ.J1.MultBy, _) if cases.contains(potentialRequest.tpeCase) => Some(Set.empty)
 
           // rest handled above by first two cases
           case (_, _) => None

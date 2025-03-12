@@ -2,7 +2,6 @@ package org.combinators.ep.domain.math.systemX     /*DD:LI:AI*/
 
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
-import org.combinators.ep.domain.math.systemI.I1.base
 import org.combinators.ep.domain.math.M0.{AddInst, DoubleInst, Eval, LitInst}
 import org.combinators.ep.domain.math.M2.StringInst
 import org.combinators.ep.domain.math.{M0, MathDomain}
@@ -10,6 +9,8 @@ import org.combinators.ep.domain.{Evolution, GenericModel}
 
 object X1 extends Evolution {
   override implicit def getModel: GenericModel = M0.getModel.evolve("x1", Seq(Sub), Seq(PrettyP, MultBy))
+
+  lazy val base = TypeRep.DataType(M0.getModel.baseDataType)
 
   // x1:model evolution.
   // -------------------
@@ -42,6 +43,10 @@ object X1 extends Evolution {
       PrettyP, StringInst("((1.0-2.0)+(5.0+6.0))")),
 
     MultByTestCase(AddInst(LitInst(1.0), LitInst(2.0)),
-      InstanceRep(LitInst(3.0)), DoubleInst(9.0))
+      InstanceRep(LitInst(3.0)), DoubleInst(9.0)),
+    MultByTestCase(LitInst(2.0),
+      InstanceRep(LitInst(0.0)), DoubleInst(0.0)),
+    MultByTestCase(LitInst(0.0),
+      InstanceRep(LitInst(3.0)), DoubleInst(0.0))
   )
 }

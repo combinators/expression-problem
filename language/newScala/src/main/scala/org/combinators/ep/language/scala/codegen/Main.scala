@@ -194,20 +194,16 @@ class Main(choice:String, select:String) {
     if (choice == "functional") {
       eips.M7funct(approach.paradigm)(m6_eip)(generator.functional, generator.functionalControl, generator.doubles, generator.realDoubles, generator.strings, generator.equality)
     } else {
-      eips.M7(approach.paradigm)(m6_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.imperative)
+      eips.M7(approach.paradigm)(m6_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.equality, generator.imperative)
     }
   val i1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     if (choice == "functional") {
-      eips.systemI.I1funct(approach.paradigm)(m2_eip)(generator.functional, generator.functionalControl,  generator.doubles, generator.realDoubles, generator.strings, generator.equality)
+      eips.systemI.I1funct(approach.paradigm)(m2_eip)(generator.functionalControl,  generator.doubles, generator.realDoubles, generator.strings, generator.equality)
     } else {
-      eips.systemI.I1(approach.paradigm)(m2_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.imperative)
+      eips.systemI.I1(approach.paradigm)(m2_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.equality, generator.imperative)
     }
   val i2_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    if (choice == "functional") {
-      eips.systemI.I2(approach.paradigm)(i1_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.imperative)
-    } else {
-      eips.systemI.I2(approach.paradigm)(i1_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.imperative)
-    }
+    eips.systemI.I2(approach.paradigm)(i1_eip)(generator.doubles, generator.realDoubles, generator.strings)
 
   val m7i2_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     if (choice == "functional") {
@@ -268,32 +264,25 @@ class Main(choice:String, select:String) {
 
   val j1_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
     if (choice == "functional") {
-      //m0_eip // not compatible for functional
-      eips.systemJ.J1(approach.paradigm)(m0_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.imperative)
+      eips.systemJ.J1funct(approach.paradigm)(m0_eip)(generator.functionalControl, generator.doubles, generator.realDoubles, generator.strings, generator.equality)
     } else {
-      eips.systemJ.J1(approach.paradigm)(m0_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.imperative)
+      eips.systemJ.J1(approach.paradigm)(m0_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.equality, generator.imperative)
     }
   val j2_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
     eips.systemJ.J2(approach.paradigm)(j1_eip)(generator.doubles, generator.booleans, generator.equality)
   val j3_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
     eips.systemJ.J3(approach.paradigm)(j2_eip)(generator.doubles, generator.booleans, generator.strings)
   val k1_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
-    if (choice == "functional") {
-      //m0_eip // not compatible for functional
-      eips.systemK.K1(approach.paradigm)(j2_eip)(generator.doubles, generator.realDoubles, generator.booleans, generator.strings, generator.imperative)
-    } else {
-      eips.systemK.K1(approach.paradigm)(j2_eip)(generator.doubles, generator.realDoubles, generator.booleans, generator.strings, generator.imperative)
-    }
+      eips.systemK.K1(approach.paradigm)(j2_eip)(generator.doubles, generator.realDoubles, generator.booleans, generator.strings)
   val j4_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
     eips.systemJ.J4(approach.paradigm)(j3_eip)(generator.ints, generator.treesInMethod)
   val j5_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
     eips.systemJ.J5(approach.paradigm)(j4_eip)(generator.equality, generator.booleans)
   val j6_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
     if (choice == "functional") {
-      //m0_eip // not compatible for functional
-      eips.systemJ.J6(approach.paradigm)(j5_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.imperative)
+      eips.systemJ.J6funct(approach.paradigm)(j5_eip)(generator.functionalControl, generator.doubles, generator.realDoubles, generator.strings, generator.equality)
     } else {
-      eips.systemJ.J6(approach.paradigm)(j5_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.imperative)
+      eips.systemJ.J6(approach.paradigm)(j5_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.equality, generator.imperative)
     }
 
   val k2_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
@@ -363,9 +352,9 @@ class Main(choice:String, select:String) {
 
   val x1_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
     if (choice == "functional") {
-      m0_eip // not compatible for functional
+      systemX.X1funct(approach.paradigm)(m0_eip)(generator.functionalControl, generator.doubles, generator.realDoubles, generator.strings, generator.equality)
     } else {
-      systemX.X1(approach.paradigm)(m0_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.imperative)
+      systemX.X1(approach.paradigm)(m0_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.equality, generator.imperative)
     }
   val x2_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
     systemX.X2(approach.paradigm)(x1_eip)(generator.doubles, generator.strings)
@@ -380,9 +369,11 @@ class Main(choice:String, select:String) {
 
   val m2_abs_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     if (choice == "functional") {
-      m0_eip // not compatible for functional
+      eips.M2_ABS.functional[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(m2_eip)(
+        generator.functionalControl, generator.doubles, generator.strings)
     } else {
-      eips.M2_ABS(approach.paradigm)(m2_eip)(generator.doubles, generator.imperative, generator.strings)
+      eips.M2_ABS.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(m2_eip)(
+        generator.imperative, generator.doubles, generator.strings)
     }
 
   val m3i1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
@@ -412,9 +403,9 @@ class Main(choice:String, select:String) {
 
   val d1_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
   if (choice == "functional") {
-    m0_eip // not compatible for functional
+    eips.systemD.D1funct(approach.paradigm)(m1_eip)(generator.functionalControl, generator.doubles, generator.realDoubles, generator.strings, generator.equality)
   } else {
-    eips.systemD.D1(approach.paradigm)(m1_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.imperative)
+    eips.systemD.D1(approach.paradigm)(m1_eip)(generator.doubles, generator.realDoubles, generator.strings, generator.equality, generator.imperative)
   }
   val d2_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
     eips.systemD.D2(approach.paradigm)(m1_eip)(generator.doubles, generator.strings)
@@ -562,8 +553,8 @@ class Main(choice:String, select:String) {
 
 object GitMain extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
-    val approach = if (args.isEmpty) "interpreter" else args.head
-    val selection = if (args.isEmpty || args.tail.isEmpty) "M7I2" else args.tail.head
+    val approach = if (args.isEmpty) "trivially" else args.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "A3" else args.tail.head
     new Main(approach, selection).runGit(args)
   }
 }
@@ -575,7 +566,7 @@ object DirectToDiskMain extends IOApp {
     // won't work for functional after M6 because of imperative-focused EIPs
     val approach = if (args.isEmpty) "functional" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "N1" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "M2_ABS" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 
@@ -611,7 +602,7 @@ object GenerateAllForOneApproach extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
     val approach = if (args.isEmpty) {
-      List("oo")
+      List("trivially")
     } else {
       args
     }
@@ -676,11 +667,11 @@ object QuickValidation extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
 
-    val approaches = Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
+    val approaches = Seq("trivially" )// "oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
     val target = "ep-scala-quick"
 
     // latest in all system families
-    val evolutions = Seq("M9", "J8", "A3", "O1OA", "OD3", "OO3", "V1", "D3", "I2M3I1N1", "A3", "O2")
+    val evolutions = Seq("M9", "J8", "A3", "O1OA", "OD3", "OO3", "V1", "D3", "I2M3I1N1", "O2")
 
     approaches.foreach(approach => {
       println("Generating " + approach + "...")

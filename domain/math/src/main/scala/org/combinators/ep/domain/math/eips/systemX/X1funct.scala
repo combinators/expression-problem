@@ -4,24 +4,24 @@ import org.combinators.ep.domain.abstractions.{Operation, TypeRep}
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.ep.domain.math.systemX
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.ep.generator.Command.{Generator, lift}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
-import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
-import org.combinators.ep.generator.paradigm.AnyParadigm
+import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
+import org.combinators.ep.generator.paradigm.{AnyParadigm, Functional, control}
 import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Equality, RealArithmetic, Strings}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
-object X1 {
+object X1funct {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
   (m0Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
-  (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
+  (functionalControl: control.Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
+   ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiRealArithmetic: RealArithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiEquals: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiImper: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]):
-  EvolutionImplementationProvider[AIP[paradigm.type]] = {
+   ffiEquals: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  ): EvolutionImplementationProvider[AIP[paradigm.type]] = {
 
     val x1Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.systemX.X1.getModel
@@ -31,6 +31,7 @@ object X1 {
           _ <- m0Provider.initialize(forApproach)
           _ <- ffiArithmetic.enable()
           _ <- ffiStrings.enable()
+          _ <- ffiEquals.enable()
         } yield ()
       }
 
@@ -53,6 +54,9 @@ object X1 {
         import ffiStrings.stringCapabilities._
         import paradigm._
         import methodBodyCapabilities._
+        import functionalControl.functionalCapabilities._
+        import functionalControl.lambdaCapabilities._
+
         assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         def operate(attGenerators: Seq[Generator[paradigm.MethodBodyContext, syntax.Expression]]): Generator[paradigm.MethodBodyContext, syntax.Expression] =
@@ -93,6 +97,7 @@ object X1 {
             case systemX.X1.MultBy =>
               onRequest.tpeCase match {
 
+                // Example code that would be generated
                 //        default ep.alt1.Exp<V> multBy(ep.Exp<V> other) {
                 //          ep.Exp<V> result = other;
                 //          for (double counter = Math.floor(Math.abs(getValue())); counter > 1; --counter) {
@@ -104,60 +109,93 @@ object X1 {
                 //          return convert(result);
                 //        }
 
+                //            def multByRec: Double => ep.Exp = (multiplier: Double) => {
+                //               if (1 < multiplier) {
+                //                  add(self, powByRec(multiplier - 1))
+                //               } else {
+                //                  self
+                //               }
+                //            }
+                //            val multiplier: Double = eval(exp)
+                //            if (multiplier == 0) { return Lit(0) }
+                //            else {
+                //               val result: ep.Exp = multByRec(Math.floor(Math.abs(multiplier)))
+                //               if (multiplier < 0) { return sub(lit(0.0), result) }
+                //               else { return result }
+                //            }
+                //          }
+
+
                 case litC@math.M0.Lit =>
                   for {
-                    varName <- freshName(forApproach.names.mangle("result"))
-                    baseType <- toTargetLanguageType(onRequest.request.op.returnType)
-                    resultVar <- ffiImper.imperativeCapabilities.declareVar(varName, baseType, Some(onRequest.request.arguments.head._2))
+                    resultTpe <- toTargetLanguageType(TypeRep.DataType(math.M2.getModel.baseDataType))
+                    multName <- freshName(forApproach.names.mangle("multiplier"))
+                    multType <- toTargetLanguageType(TypeRep.Double)
 
-                    ctrName <- freshName(forApproach.names.mangle("counter"))
-                    ctrType <- toTargetLanguageType(TypeRep.Double)
-                    absValue <- ffiRealArithmetic.realArithmeticCapabilities.abs(onRequest.attributes.head._2)
-                    floorValue <- ffiRealArithmetic.realArithmeticCapabilities.floor(absValue)
-                    ctrVar <- ffiImper.imperativeCapabilities.declareVar(ctrName, ctrType, Some(floorValue))
+                    evalMultiplier <- forApproach.dispatch(SendRequest(
+                      onRequest.request.arguments.head._2,
+                      math.M2.getModel.baseDataType,
+                      Request(math.M0.Eval, Map.empty)
+                    ))
 
+                    zero <- forApproach.reify(InstanceRep(TypeRep.Double)(0.0))
                     one <- forApproach.reify(InstanceRep(TypeRep.Double)(1.0))
 
-                    // Know you have add data type so you can construct it
-                    condExpr <- ffiArithmetic.arithmeticCapabilities.lt(one, ctrVar)
-                    stmt <- ffiImper.imperativeCapabilities.whileLoop(condExpr, for {
-                      res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Add, resultVar, onRequest.request.arguments.head._2)
-                      assignStmt <- ffiImper.imperativeCapabilities.assignVar(resultVar, res)
-                      decrExpr <- ffiArithmetic.arithmeticCapabilities.sub(ctrVar, one)
-                      decrStmt <- ffiImper.imperativeCapabilities.assignVar(ctrVar, decrExpr)
-                      _ <- addBlockDefinitions(Seq(assignStmt, decrStmt))
-                    } yield ()
+                    multByRecTpe <- toTargetLanguageType(TypeRep.Arrow(TypeRep.Double, TypeRep.DataType(math.M2.getModel.baseDataType)))
+                    multByRecName <- freshName(forApproach.names.mangle("multByRec"))
+                    multByRecArg <- freshName(forApproach.names.mangle("multiplier"))
+                    finalResult <- declareRecursiveVariable(multByRecName, multByRecTpe,
+                      powByRecVar => lambda(
+                        variables = Seq((multByRecArg, multType)),
+                        args =>
+                          for {
+                            recCond <- ffiArithmetic.arithmeticCapabilities.lt(one, args(multByRecArg))
+                            result <- ifThenElse(
+                              cond = recCond,
+                              ifBlock = for {
+                                recArg <- ffiArithmetic.arithmeticCapabilities.sub(args(multByRecArg), one)
+                                recCall <- methodBodyCapabilities.apply(powByRecVar, Seq(recArg))
+                                result <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Add, onRequest.selfReference, recCall)
+                              } yield result,
+                              elseIfs = Seq.empty,
+                              elseBlock = lift(onRequest.selfReference)
+                            )
+                          } yield result
+                      )
+                    )(inBlock =
+                      multByRecVar => declareVariable(multName, multType, evalMultiplier)(inBlock = expVar =>
+                        for {
+                          zeroCond <- ffiEquals.equalityCapabilities.areEqual(multType, expVar, zero)
+                          resultName <- freshName(forApproach.names.mangle("result"))
+                          result <- ifThenElse(cond = zeroCond,
+                            ifBlock = forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, zero),
+                            elseIfs = Seq.empty,
+                            elseBlock = for {
+                              absValue <- ffiRealArithmetic.realArithmeticCapabilities.abs(expVar)
+                              floorValue <- ffiRealArithmetic.realArithmeticCapabilities.floor(absValue)
+                              recursiveCall <- methodBodyCapabilities.apply(multByRecVar, Seq(floorValue))
+                              result <- declareVariable(resultName, resultTpe, recursiveCall)(resultVar =>
+                                for {
+                                  ltZeroCond <- ffiArithmetic.arithmeticCapabilities.lt(expVar, zero)
+                                  result <- ifThenElse(cond = ltZeroCond,
+                                    ifBlock = for {
+                                      zeroLit <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, zero)
+                                      divdRes <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M1.Sub, zeroLit, resultVar)
+                                    } yield divdRes,
+                                    elseIfs = Seq.empty,
+                                    elseBlock = lift(resultVar)
+                                  )
+                                } yield result
+
+                              )
+                            } yield result
+                          )
+                        } yield result
+                      )
                     )
-                    _ <- addBlockDefinitions(Seq(stmt))
 
-                    // if (value == 0)
-                    zero <- forApproach.reify(InstanceRep(TypeRep.Double)(0.0))
-                    ifEqExpr <- ffiEquals.equalityCapabilities.areEqual(baseType, onRequest.attributes.head._2, zero)
+                  } yield finalResult
 
-                    ifStmtEq <- ffiImper.imperativeCapabilities.ifThenElse(ifEqExpr, for {
-                      zeroLit <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, zero)
-                      assignStmtEq <-  ffiImper.imperativeCapabilities.assignVar(resultVar, zeroLit)
-                      _ <- addBlockDefinitions(Seq(assignStmtEq))
-                    } yield (),
-                      Seq.empty
-                    )
-                    _ <- addBlockDefinitions(Seq(ifStmtEq))
-
-                    // if (value < >0)
-                    zero <- forApproach.reify(InstanceRep(TypeRep.Double)(0.0))
-                    ifExpr2 <- ffiArithmetic.arithmeticCapabilities.lt(onRequest.attributes.head._2, zero)
-
-                    ifStmt2 <- ffiImper.imperativeCapabilities.ifThenElse(ifExpr2, for {
-                      zeroLit <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, zero)
-                      res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M1.Sub, zeroLit, resultVar)
-                      assignStmt <- ffiImper.imperativeCapabilities.assignVar(resultVar, res)
-                      _ <- addBlockDefinitions(Seq(assignStmt))
-                    } yield (),
-                      Seq.empty
-                    )
-
-                    _ <- addBlockDefinitions(Seq(ifStmt2))
-                  } yield resultVar
 
                 //        default ep.alt1.Exp<V> multBy(ep.Exp<V> other) {
                 //          return sub(getLeft().multBy(other), getRight().multBy(other));

@@ -9,7 +9,7 @@ import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstan
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest}
 import org.combinators.ep.generator.paradigm.AnyParadigm
 import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, RealArithmetic, Strings}
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Equality, RealArithmetic, Strings}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
 object D1 {
@@ -19,6 +19,7 @@ object D1 {
   (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiRealArithmetic: RealArithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
+   ffiEquals: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiImper: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val d1Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
@@ -101,11 +102,24 @@ object D1 {
               )
               _ <- addBlockDefinitions(Seq(stmt))
 
-              // if stmt next
+              // if (value == 0)
               zero <- forApproach.reify(InstanceRep(TypeRep.Double)(0.0))
-              ifExpr <- ffiArithmetic.arithmeticCapabilities.lt(onRequest.attributes.head._2, zero)
+              ifEqExpr <- ffiEquals.equalityCapabilities.areEqual(baseType, onRequest.attributes.head._2, zero)
 
-              ifStmt <- ffiImper.imperativeCapabilities.ifThenElse(ifExpr, for {
+              ifStmtEq <- ffiImper.imperativeCapabilities.ifThenElse(ifEqExpr, for {
+                zeroLit <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, zero)
+                assignStmtEq <-  ffiImper.imperativeCapabilities.assignVar(resultVar, zeroLit)
+                _ <- addBlockDefinitions(Seq(assignStmtEq))
+              } yield (),
+                Seq.empty
+              )
+              _ <- addBlockDefinitions(Seq(ifStmtEq))
+
+              // if (value < >0)
+              zero <- forApproach.reify(InstanceRep(TypeRep.Double)(0.0))
+              ifExpr2 <- ffiArithmetic.arithmeticCapabilities.lt(onRequest.attributes.head._2, zero)
+
+              ifStmt2 <- ffiImper.imperativeCapabilities.ifThenElse(ifExpr2, for {
                 zeroLit <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, zero)
                 res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M1.Sub, zeroLit, resultVar)
                 assignStmt <- ffiImper.imperativeCapabilities.assignVar(resultVar, res)
@@ -114,7 +128,7 @@ object D1 {
                 Seq.empty
               )
 
-              _ <- addBlockDefinitions(Seq(ifStmt))
+              _ <- addBlockDefinitions(Seq(ifStmt2))
             } yield Some(resultVar)
 
 

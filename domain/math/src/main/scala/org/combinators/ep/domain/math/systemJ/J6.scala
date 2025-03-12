@@ -41,6 +41,8 @@ object J6 extends Evolution {
   def tests: Seq[TestCase] = Seq(
     PowByTestCase(AddInst(LitInst(1.0), LitInst(12.0)),
       InstanceRep(LitInst(4.0)), DoubleInst(13.0 * 13.0 * 13.0 * 13.0)),
+    PowByTestCase(LitInst(12.0),
+      InstanceRep(LitInst(0.0)), DoubleInst(1.0)),
 
     PowByTestCase(SubInst(LitInst(13.0), LitInst(5.0)), InstanceRep(LitInst(4.0)), DoubleInst(8.0 * 8.0 * 8.0 * 8.0)),
     PowByTestCase(LitInst(4.0), InstanceRep(LitInst(-1.0)), DoubleInst(0.25)),

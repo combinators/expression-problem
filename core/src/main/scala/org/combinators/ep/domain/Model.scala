@@ -39,7 +39,6 @@ class GenericModel(val name:String,
     former.flatMap(gm => gm.haveImplementation(potentialRequest)).toSet ++ us
   }
 
-
   def extend(str:String, past: Seq[GenericModel]): GenericModel = {
     new GenericModel(str, Seq.empty, Seq.empty, Seq(this) ++ past, baseDataType)
   }

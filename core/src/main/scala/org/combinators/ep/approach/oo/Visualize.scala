@@ -68,76 +68,6 @@ trait Visualize extends SharedOO {
     }
   }
 
-  def dataTypeCasesWithNewOperations(domain: GenericModel): Map[DataTypeCase, Set[Operation]] = {
-    val flatDomain = domain.flatten
-
-    val allDataTypeCases = flatDomain.typeCases.toSet  // idea from coco
-    val allOperations = flatDomain.ops.toSet
-
-    val initialMap = domain.optimizations.foldLeft(Map.empty[DataTypeCase, Set[Operation]]) { (resultMap, pair) =>
-      resultMap.updated(pair._1, Set(pair._2) ++ resultMap.getOrElse(pair._1, Set.empty) )
-    }
-
-    val real_result = allOperations.foldLeft(initialMap) { (resultMap, op) =>
-      allDataTypeCases.foldLeft(resultMap) { (nextMap, tpe) =>
-        val mt = domain.findTypeCase(tpe).get
-        val mo = domain.findOperation(op).get
-
-        // find FIRST one that is descendant. ONE must exist, since Graph is whole
-        val descendant = domain.inChronologicalOrder.find(m => !m.notComparableTo(mt) && !m.notComparableTo(mo) && mt.beforeOrEqual(m) && mo.beforeOrEqual(m)).get
-
-        if (!descendant.before(domain)) {
-          nextMap.updated(tpe, Set(op) ++ resultMap.getOrElse(tpe, Set.empty))
-        } else { nextMap }}
-    }
-
-    real_result
-//
-//    // This is a map of (tpeCase, Set[Operations]) that are needed to be generated AT THIS domain
-//
-//    val full = allOperations.flatMap(op => allDataTypeCases.map(tpe => {
-//      val mt = domain.findTypeCase(tpe).get
-//      val mo = domain.findOperation(op).get
-//
-//      // find FIRST one that is descendant. ONE must exist, since Graph is whole
-//      val descendant = domain.inChronologicalOrder.find(m => !m.notComparableTo(mt) && !m.notComparableTo(mo) && mt.beforeOrEqual(m) && mo.beforeOrEqual(m)).get
-//      if (descendant.before(domain)) {
-//        None
-//      } else {
-//        Some(tpe, op)
-//      }
-//    }))
-//    println(domain.name, full)
-//
-//    // New Exp is created only with new operations
-//    // it might be overkill to assign allOperations as the value
-//    if (domain.former.length > 1) {
-//      return allDataTypeCases.map(dt => (dt, allOperations)).toMap
-//    }
-//
-//    // start with any optimized (DataTypeCase, Operation) since these have new implementations and so MUST have default interface implementation
-//    val optimizedMap = domain.optimizations.foldLeft(Map.empty[DataTypeCase, Set[Operation]]) { (resultMap, pair) =>
-//      resultMap.updated(pair._1, Set(pair._2) ++ resultMap.getOrElse(pair._1, Set.empty) )
-//    }
-//
-//    allDataTypeCases.foldLeft(Map.empty[DataTypeCase, Set[Operation]]) { (resultMap, tpeCase) =>
-//
-//      // When tpeCase is being defined in this 'domain', will need all past operations.
-//      val pastOperations = if (domain.typeCases.contains(tpeCase)) {
-//        domain.pastOperations    // including this one
-//      } else {
-//        Seq.empty
-//      }
-//
-//      // Any optimized tpe cases with operation must be included, as well as producer methods.
-//      val optimized = optimizedMap.getOrElse(tpeCase, Set.empty)
-//      // if all producers then I2 generates MORE than it should.
-//      val producers = Seq.empty  // allOperations.filter(op => op.isProducer(domain))
-//
-//      val updatedOperations = (domain.ops ++ optimized ++ producers ++ pastOperations).toSet
-//      resultMap.updated(tpeCase, updatedOperations)
-//    }
-  }
 
   def implement(gdomain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
 
@@ -147,8 +77,6 @@ trait Visualize extends SharedOO {
 
     // Document EIPs
     GraphViz.outputGraphWithDependenciesViz(gdomain, domainSpecific)
-
-    gdomain.toSeq.foreach(gm => println(gm.name, dataTypeCasesWithNewOperations(gm).filter(p => p._2.nonEmpty).map(pair => s"${pair._1.name}: ${pair._2.map(op => op.name)}")))
 
     // produce table
     val flat = gdomain.flatten

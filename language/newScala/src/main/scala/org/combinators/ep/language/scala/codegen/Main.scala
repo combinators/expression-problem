@@ -563,10 +563,10 @@ object DirectToDiskMain extends IOApp {
   val targetDirectory: Path = Paths.get("target", "scala-out")
 
   def run(args: List[String]): IO[ExitCode] = {
-    // won't work for functional after M6 because of imperative-focused EIPs
-    val approach = if (args.isEmpty) "functional" else args.head
+    // "M9", "J8", "A3", "O1OA", "OD3", "OO3", "V1", "D3", "I2M3I1N1", "O2"
+    val approach = if (args.isEmpty) "graphviz" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "M2_ABS" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "I2M3I1N1" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 
@@ -602,7 +602,7 @@ object GenerateAllForOneApproach extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
     val approach = if (args.isEmpty) {
-      List("trivially")
+      List("graphviz")
     } else {
       args
     }

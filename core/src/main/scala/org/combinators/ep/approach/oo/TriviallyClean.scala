@@ -376,6 +376,43 @@ trait TriviallyClean extends ApproachImplementationProvider {
   def dataTypeCasesWithNewOperations(domain: GenericModel): Map[DataTypeCase, Set[Operation]] = {
     val flatDomain = domain.flatten
 
+    val allDataTypeCases = flatDomain.typeCases.toSet
+    val allOperations = flatDomain.ops.toSet
+    val lastExp = latestModelDefiningInterface(domain)
+    val overridden = domain.toSeq.filter(dm => lastExp.before(dm)).flatMap(m => m.optimizations).groupBy(_._1).map(entry => (entry._1, entry._2.map(pair => pair._2).toSet))
+
+    // Merging makes this more complicated BECAUSE there could be multiple Exp that are brought together,
+    // and if so, then will need to BLEND together
+    val pastWithExp = if (domain.former.length > 1) domain.former.filter(dm => dm == latestModelDefiningInterface(dm)) else Seq.empty
+
+    val merged = pastWithExp.flatMap(m => dataTypeCasesWithNewOperations(m)).groupBy(_._1)
+        .map(triple => triple._1 -> triple._2.flatMap(pm => pm._2))
+        .filter(entry => entry._2.nonEmpty)
+
+    // whenever a new Exp is defined, MUST duplicate logic for all producer methods; incorporate into logic below
+    val addedExp = domain == lastExp
+
+    val updated = allDataTypeCases.map(tpe => {
+      val mt = domain.findTypeCase(tpe).get
+
+      val affected = allOperations.filter(op => {
+        val mo = domain.findOperation(op).get
+        val descendant = domain.inChronologicalOrder.find(m => !m.notComparableTo(mt) && !m.notComparableTo(mo) && mt.beforeOrEqual(m) && mo.beforeOrEqual(m)).get
+        !descendant.before(domain) || (addedExp && op.isProducer(domain))
+      })
+
+      (tpe, affected)
+    }).filter(pair => pair._2.nonEmpty).toMap
+
+    Seq(overridden, merged, updated)
+      .flatten
+      .groupBy { case (k, _) => k }
+      .map(pair => (pair._1, pair._2.flatMap(p => p._2).toSet))
+  }
+
+  def dataTypeCasesWithNewOperationsOld(domain: GenericModel): Map[DataTypeCase, Set[Operation]] = {
+    val flatDomain = domain.flatten
+
     val allDataTypeCases = flatDomain.typeCases.toSet // idea from coco
     val allOperations = flatDomain.ops.toSet
 
@@ -388,9 +425,9 @@ trait TriviallyClean extends ApproachImplementationProvider {
 
     // Merging makes this more complicated BECAUSE there could be multiple Exp that are brought together,
     // and if so, then will need to BLEND together
-    val mergeMap = if (domain.former.length > 1) {
-      val pastWithExp = domain.former.filter(dm => dm == latestModelDefiningInterface(dm))
-      if (pastWithExp.length > 1) {
+    val pastWithExp = domain.former.filter(dm => dm == latestModelDefiningInterface(dm))
+
+    val mergeMap = if (pastWithExp.length > 1) {
         pastWithExp.foldLeft(overriddenMap){ (updatedMap, m) =>
           dataTypeCasesWithNewOperations(m).foldLeft(updatedMap) { (nextMap, pair) => {
           nextMap.updated(pair._1, pair._2 ++ nextMap.getOrElse(pair._1, Set.empty))
@@ -398,12 +435,11 @@ trait TriviallyClean extends ApproachImplementationProvider {
         }
         // multiple Exp in former, so we have to join togethe
       } else { overriddenMap }
-    } else { overriddenMap }
 
     // whenever a new Exp is defined, MUST duplicate logic for all producer methods; incorporate into logic below
     val addedExp = domain == latestModelDefiningInterface(domain)
 
-    val real_result = allOperations.foldLeft(mergeMap) { (resultMap, op) =>
+    allOperations.foldLeft(mergeMap) { (resultMap, op) =>
       allDataTypeCases.foldLeft(resultMap) { (nextMap, tpe) =>
         val mt = domain.findTypeCase(tpe).get
         val mo = domain.findOperation(op).get
@@ -418,8 +454,6 @@ trait TriviallyClean extends ApproachImplementationProvider {
         }
       }
     }
-
-    real_result
   }
 
   def makeNewTypeCaseInterface(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type], newDataTypeCase:DataTypeCase, newOperations:Set[Operation]) : Generator[ooParadigm.ClassContext, Unit] = {
@@ -480,7 +514,6 @@ trait TriviallyClean extends ApproachImplementationProvider {
   }
 
   def addDataTypeCaseInterfaces(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
-
     import ooParadigm.projectCapabilities._
 
     val finalMap = dataTypeCasesWithNewOperations(domain).foldLeft(Map.empty[DataTypeCase, Set[Operation]]) { (nextMap, pair) =>
@@ -546,13 +579,11 @@ trait TriviallyClean extends ApproachImplementationProvider {
           Command.skip[ooParadigm.ClassContext]
         }
 
-        // TODO: WILL need to add additional IMPLEMENTED if the data type case (from any ancestor branch) if that data type interface exists
         _ <- forEach(domain.former) { former =>
             val latest = mostSpecificModel(domain, newDataTypeCase).getOrElse(former)  // fall back to former if not present
             val here = former.lastModelWithOperation.foldLeft(latest)((defined, model) => defined.later(model))
             for {
               // find where it was last defined (can only be one), and that's the one to import *OR* if a new operation was defined in between.
-
               formerInterface <- mostSpecificTypeCaseInterface(here, newDataTypeCase)
               _ <- if (formerInterface.isDefined) {
                 addImplemented(formerInterface.get)
@@ -627,7 +658,7 @@ trait TriviallyClean extends ApproachImplementationProvider {
     // all type cases that were defined AFTER last Exp need to be registered
     val flat = domain.flatten
 
-    val ordered = domain.inChronologicalOrder.reverse
+    val ordered = domain.inChronologicalOrder.reverse  // ensures proper topological ordering
     val seqs = flat.typeCases.map(tpe => (tpe, ordered.find(m => dataTypeCasesWithNewOperations(m).exists(pair => pair._1 == tpe)).get))
 
     val dtpeRep = TypeRep.DataType(domain.baseDataType)

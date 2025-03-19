@@ -132,7 +132,7 @@ object X1 {
 
                     // if (value == 0)
                     zero <- forApproach.reify(InstanceRep(TypeRep.Double)(0.0))
-                    ifEqExpr <- ffiEquals.equalityCapabilities.areEqual(baseType, onRequest.attributes.head._2, zero)
+                    ifEqExpr <- ffiArithmetic.arithmeticCapabilities.eq(onRequest.attributes.head._2, zero)
 
                     ifStmtEq <- ffiImper.imperativeCapabilities.ifThenElse(ifEqExpr, for {
                       zeroLit <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, zero)

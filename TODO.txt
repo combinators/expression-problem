@@ -12,8 +12,6 @@ Scala-InBetween could add 'trait' capability and that could then
 be exposed as an option. This is high-level change and not
 object-oriented per se.
 
-missing ZERO case for powBy should return 1
-
 Add exceptions to newScala
 
 Make CoGen stand alone
@@ -21,4 +19,7 @@ Make CoGen stand alone
 M9 & J8 & M2_ABS needs functional implementation of height. Should be straightforward, though I cannot figure
 out how to set up the match and patterns!
 
+Note that Java equality in methods uses the .equals() which is a problem with primitive types. Thoughts?
+
 Trees that grow
+

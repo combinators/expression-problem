@@ -138,7 +138,7 @@ object J1funct {
               )(inBlock =
                 multByRecVar => declareVariable(multName, multType, evalMultiplier)(inBlock = expVar =>
                   for {
-                    zeroCond <- ffiEquals.equalityCapabilities.areEqual(multType, expVar, zero)
+                    zeroCond <- ffiArithmetic.arithmeticCapabilities.eq(expVar, zero)
                     resultName <- freshName(forApproach.names.mangle("result"))
                     result <- ifThenElse(cond = zeroCond,
                       ifBlock = forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, zero),

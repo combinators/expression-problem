@@ -19,7 +19,6 @@ object J6 {
   (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiRealArithmetic: RealArithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiEquals: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiImper: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val j6Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
@@ -131,7 +130,7 @@ object J6 {
 
               // if (value == 0)
               zero <- forApproach.reify(InstanceRep(TypeRep.Double)(0.0))
-              ifEqExpr <- ffiEquals.equalityCapabilities.areEqual(baseType, expValue, zero)
+              ifEqExpr <- ffiArithmetic.arithmeticCapabilities.eq(expValue, zero)
 
               ifStmtEq <- ffiImper.imperativeCapabilities.ifThenElse(ifEqExpr, for {
                 oneLit <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, one)

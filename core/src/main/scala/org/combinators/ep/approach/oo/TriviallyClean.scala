@@ -99,11 +99,11 @@ trait TriviallyClean extends ApproachImplementationProvider {
       domain
     } else {
       // is there a single type that can represent the "least upper bound" of all prior branches. (TAKEN FROM COCO)
-      val ancestorsWithTypeInterfaces = domain.former.map(parent => latestModelDefiningInterface(parent)).distinct
+      val parentsWithTypeInterfaces = domain.former.map(parent => latestModelDefiningInterface(parent)).distinct
 
       // If there is one model that is the DESCENDANT of ALL of these ancestors, then that is
       // the one to choose, otherwise we must be a merge and we handle it
-      val candidates = ancestorsWithTypeInterfaces.filter(m => ancestorsWithTypeInterfaces.forall(gm => gm.beforeOrEqual(m)))
+      val candidates = parentsWithTypeInterfaces.filter(m => parentsWithTypeInterfaces.forall(gm => gm.beforeOrEqual(m)))
       if (candidates.length == 1) {
         candidates.head
       } else {
@@ -407,53 +407,7 @@ trait TriviallyClean extends ApproachImplementationProvider {
     Seq(overridden, merged, updated)
       .flatten
       .groupBy { case (k, _) => k }
-      .map(pair => (pair._1, pair._2.flatMap(p => p._2).toSet))
-  }
-
-  def dataTypeCasesWithNewOperationsOld(domain: GenericModel): Map[DataTypeCase, Set[Operation]] = {
-    val flatDomain = domain.flatten
-
-    val allDataTypeCases = flatDomain.typeCases.toSet // idea from coco
-    val allOperations = flatDomain.ops.toSet
-
-    // be sure to grab ALL optimizations that have appeared:
-    val overriddenMap = domain.toSeq.foldLeft(Map.empty[DataTypeCase, Set[Operation]]) {
-      (resultMap, m) =>
-        m.optimizations.foldLeft(resultMap) { (resultMap, pair) =>
-      resultMap.updated(pair._1, Set(pair._2) ++ resultMap.getOrElse(pair._1, Set.empty))
-    }}
-
-    // Merging makes this more complicated BECAUSE there could be multiple Exp that are brought together,
-    // and if so, then will need to BLEND together
-    val pastWithExp = domain.former.filter(dm => dm == latestModelDefiningInterface(dm))
-
-    val mergeMap = if (pastWithExp.length > 1) {
-        pastWithExp.foldLeft(overriddenMap){ (updatedMap, m) =>
-          dataTypeCasesWithNewOperations(m).foldLeft(updatedMap) { (nextMap, pair) => {
-          nextMap.updated(pair._1, pair._2 ++ nextMap.getOrElse(pair._1, Set.empty))
-        }}
-        }
-        // multiple Exp in former, so we have to join togethe
-      } else { overriddenMap }
-
-    // whenever a new Exp is defined, MUST duplicate logic for all producer methods; incorporate into logic below
-    val addedExp = domain == latestModelDefiningInterface(domain)
-
-    allOperations.foldLeft(mergeMap) { (resultMap, op) =>
-      allDataTypeCases.foldLeft(resultMap) { (nextMap, tpe) =>
-        val mt = domain.findTypeCase(tpe).get
-        val mo = domain.findOperation(op).get
-
-        // find FIRST one that is descendant. ONE must exist, since Graph is whole
-        val descendant = domain.inChronologicalOrder.find(m => !m.notComparableTo(mt) && !m.notComparableTo(mo) && mt.beforeOrEqual(m) && mo.beforeOrEqual(m)).get
-
-        if (!descendant.before(domain) || (addedExp && op.isProducer(domain))) {
-          nextMap.updated(tpe, Set(op) ++ resultMap.getOrElse(tpe, Set.empty))
-        } else {
-          nextMap
-        }
-      }
-    }
+      .map(entry => (entry._1, entry._2.flatMap(pair => pair._2).toSet))
   }
 
   def makeNewTypeCaseInterface(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type], newDataTypeCase:DataTypeCase, newOperations:Set[Operation]) : Generator[ooParadigm.ClassContext, Unit] = {

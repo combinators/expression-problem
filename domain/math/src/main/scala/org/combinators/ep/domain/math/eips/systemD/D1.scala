@@ -19,7 +19,6 @@ object D1 {
   (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiRealArithmetic: RealArithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiEquals: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiImper: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val d1Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
@@ -104,7 +103,7 @@ object D1 {
 
               // if (value == 0)
               zero <- forApproach.reify(InstanceRep(TypeRep.Double)(0.0))
-              ifEqExpr <- ffiEquals.equalityCapabilities.areEqual(baseType, onRequest.attributes.head._2, zero)
+              ifEqExpr <- ffiArithmetic.arithmeticCapabilities.eq(onRequest.attributes.head._2, zero)
 
               ifStmtEq <- ffiImper.imperativeCapabilities.ifThenElse(ifEqExpr, for {
                 zeroLit <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, zero)

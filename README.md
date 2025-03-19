@@ -177,7 +177,7 @@ In this application domain, an initial model (M0) is extended (with M1), adding 
 types and operations. Full Details on the many evolution stages
 are found in the domain subproject.
 
-# EpCoGen
+# EPCoGen
 
 Once you have downloaded the code from GitHub, use the following statement
 from within the `$HOME` directory.
@@ -198,7 +198,7 @@ sbt "language-newScala/runMain org.combinators.ep.language.scala.codegen.Generat
 
 The generation time will vary, based upon your computer, but it should take about
 45 minutes to generate all solutions, in Java, for the EP approaches that
-are implemented in EpCoGen.
+are implemented in EPCoGen.
 
 The resulting files can be found in `$HOME/target/ep-java-j` directory.
 
@@ -313,7 +313,7 @@ family and are created using this same initial execution.
 
 # Dependencies
 
-EpCoGen is compiled with Scala version 2.12.17.
+EPCoGen is compiled with Scala version 2.12.17.
 
 All examples validated on Linux and Windows, using [sbt 1.7.2](https://www.scala-sbt.org/download#previous-releases)
 , Scala version 2.12.17 and [Java 11 (OpenJDK)](https://openjdk.org/projects/jdk/11/).

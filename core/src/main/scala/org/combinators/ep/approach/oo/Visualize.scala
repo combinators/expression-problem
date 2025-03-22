@@ -1,6 +1,6 @@
 package org.combinators.ep.approach.oo     /*DI:LI:AD*/
 
-import org.combinators.ep.domain.GenericModel
+import org.combinators.ep.domain.{GenericModel, GraphViz}
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command._
 import org.combinators.ep.generator._
@@ -244,7 +244,7 @@ trait Visualize extends SharedOO {
     //gdomain.toSeq.foreach(m => println(m.name, latestModelDefiningInterface(m).name))
 
     //gdomain.toSeq.foreach(m => println(m.name, dataTypeCasesWithNewOperations(m).map(pair => pair._1.name ++ "," ++ pair._2.map(op => op.name))))
-    gdomain.inChronologicalOrder.foreach(m => println(m.name,
+    gdomain.toSeq.reverse.foreach(m => println(m.name,
       dataTypeCasesWithNewOperations(m).map(pair => pair._1.name + " [" + pair._2.map(op => op.name)
         .foldLeft("") {case (g,str) => g + str + ","}
          + "], ")
@@ -252,34 +252,34 @@ trait Visualize extends SharedOO {
     ))
 
     // document evolutions
-    //GraphViz.outputGraphViz(gdomain)
+    GraphViz.outputGraphViz(gdomain)
 
     // Document EIPs
-    //GraphViz.outputGraphWithDependenciesViz(gdomain, domainSpecific)
+    GraphViz.outputGraphWithDependenciesViz(gdomain, domainSpecific)
 
     // produce table
     val flat = gdomain.flatten
 
     // header
-//    print("OP,")
-//    flat.typeCases.foreach(tpe => {
-//      print(tpe.name + ",")
-//    })
-//    println()
-//
-//    flat.ops.foreach(op => {
-//      print(op.name + ",")
-//      flat.typeCases.foreach(tpe => {
-//        val opt = latestModelDefiningOperatorClass(gdomain, tpe, op, domainSpecific)
-//
-//        if (opt.isEmpty) {
-//          print("-,")
-//        } else {
-//          print(opt.get.name + ",")
-//        }
-//      })
-//      println()
-//    })
+    print("OP,")
+    flat.typeCases.foreach(tpe => {
+      print(tpe.name + ",")
+    })
+    println()
+
+    flat.ops.foreach(op => {
+      print(op.name + ",")
+      flat.typeCases.foreach(tpe => {
+        val opt = latestModelDefiningOperatorClass(gdomain, tpe, op, domainSpecific)
+
+        if (opt.isEmpty) {
+          print("-,")
+        } else {
+          print(opt.get.name + ",")
+        }
+      })
+      println()
+    })
 
     val flatDomain = gdomain.linearize.flatten
     for {

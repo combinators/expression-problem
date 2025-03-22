@@ -19,8 +19,8 @@ object J1funct {
   (functionalControl: control.Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiRealArithmetic: RealArithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
-   ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiEquals: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
+   ffiEquals: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],
+   ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]
   ): EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val j1Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.systemJ.J1.getModel
@@ -138,7 +138,7 @@ object J1funct {
               )(inBlock =
                 multByRecVar => declareVariable(multName, multType, evalMultiplier)(inBlock = expVar =>
                   for {
-                    zeroCond <- ffiArithmetic.arithmeticCapabilities.eq(expVar, zero)
+                    zeroCond <- ffiEquals.equalityCapabilities.areEqual(multType, expVar, zero)
                     resultName <- freshName(forApproach.names.mangle("result"))
                     result <- ifThenElse(cond = zeroCond,
                       ifBlock = forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, zero),

@@ -18,8 +18,8 @@ object X1 {
   (m0Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
   (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiRealArithmetic: RealArithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
-   ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiEquals: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],
+   ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiImper: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
 
@@ -31,6 +31,7 @@ object X1 {
           _ <- m0Provider.initialize(forApproach)
           _ <- ffiArithmetic.enable()
           _ <- ffiStrings.enable()
+          _ <- ffiEquals.enable()
         } yield ()
       }
 
@@ -132,7 +133,7 @@ object X1 {
 
                     // if (value == 0)
                     zero <- forApproach.reify(InstanceRep(TypeRep.Double)(0.0))
-                    ifEqExpr <- ffiArithmetic.arithmeticCapabilities.eq(onRequest.attributes.head._2, zero)
+                    ifEqExpr <- ffiEquals.equalityCapabilities.areEqual(ctrType, onRequest.attributes.head._2, zero)
 
                     ifStmtEq <- ffiImper.imperativeCapabilities.ifThenElse(ifEqExpr, for {
                       zeroLit <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, zero)

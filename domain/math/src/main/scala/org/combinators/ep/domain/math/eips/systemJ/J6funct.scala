@@ -19,6 +19,7 @@ object J6funct {
   (functionalControl: control.Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiRealArithmetic: RealArithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
+   ffiEquals: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]
   ): EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val j6Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
@@ -30,6 +31,7 @@ object J6funct {
           _ <- ffiArithmetic.enable()
           _ <- ffiRealArithmetic.enable()
           _ <- ffiStrings.enable()
+          _ <- ffiEquals.enable()
         } yield ()
       }
 
@@ -152,7 +154,7 @@ object J6funct {
               )(inBlock =
                 powByRecVar => declareVariable(expName, expType, evalExponent)(inBlock = expVar =>
                   for {
-                    zeroCond <- ffiArithmetic.arithmeticCapabilities.eq(expVar, zero)
+                    zeroCond <- ffiEquals.equalityCapabilities.areEqual(expType, expVar, zero)
                     resultName <- freshName(forApproach.names.mangle("result"))
                     result <- ifThenElse(cond = zeroCond,
                       ifBlock = forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, one),

@@ -245,8 +245,8 @@ object M8 {
   (functionalControl: Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]):
+   ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],
+   ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     import paradigm.syntax._
     val mkImpl = new M8[paradigm.type, AIP, Expression](paradigm)
@@ -265,8 +265,8 @@ object M8 {
   (imperativeControl: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]):
+   ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],
+   ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     import paradigm.syntax._
     import paradigm.methodBodyCapabilities._

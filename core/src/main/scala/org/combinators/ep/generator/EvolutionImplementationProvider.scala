@@ -193,8 +193,8 @@ object EvolutionImplementationProvider {
           val dependenciesInFirst = first.evolutionSpecificDependencies(potentialRequest)
           val firstKeys = dependenciesInFirst.keySet
           def check(model: GenericModel): GenericModel => Boolean = m => {
-           //m.beforeOrEqual(model)
-            m.equals(model)   // FIND IT explicitly. Needed to handle O1OA for multiple approaches.
+           m.beforeOrEqual(model)
+            //m.equals(model)   // FIND IT explicitly. Needed to handle O1OA for multiple approaches. [doesn't work for algebra/M7I2]
           }
           onRequest.model match {
             case None if dependenciesInFirst.nonEmpty => first.logic(forApproach)(onRequest)

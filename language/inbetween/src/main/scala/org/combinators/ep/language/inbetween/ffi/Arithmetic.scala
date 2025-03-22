@@ -3,7 +3,7 @@ package org.combinators.ep.language.inbetween.ffi   /*DI:LI:AI*/
 import org.combinators.ep.generator.{Command, Understands}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.Apply
-import org.combinators.ep.generator.paradigm.ffi.{Add, Div, EQ, LE, LT, Mod, Mult, Sub, Arithmetic => Arith}
+import org.combinators.ep.generator.paradigm.ffi.{Add, Div, LE, LT, Mod, Mult, Sub, Arithmetic => Arith}
 import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
@@ -22,12 +22,6 @@ trait Arithmetic[FT <: OperatorExpressionOps.FinalTypes, FactoryType <: Arithmet
       new Understands[any.Method[FT], Apply[LE[T], any.Expression[FT], any.Expression[FT]]] {
         def perform(context: any.Method[FT], command: Apply[LE[T], any.Expression[FT], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
           (context, factory.le(command.arguments(0), command.arguments(1)))
-        }
-      }
-    implicit val canEQ: Understands[any.Method[FT], Apply[EQ[T], any.Expression[FT], any.Expression[FT]]] =
-      new Understands[any.Method[FT], Apply[EQ[T], any.Expression[FT], any.Expression[FT]]] {
-        def perform(context: any.Method[FT], command: Apply[EQ[T], any.Expression[FT], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
-          (context, factory.eq(command.arguments(0), command.arguments(1)))
         }
       }
     implicit val canAdd: Understands[any.Method[FT], Apply[Add[T], any.Expression[FT], any.Expression[FT]]] =
@@ -78,7 +72,6 @@ object ArithmeticOps {
   trait ModOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
   trait LtOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
   trait LeOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
-  trait EqOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
 
   trait Factory[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Factory[FT] {
     def addOp(): AddOp[FT]
@@ -88,7 +81,6 @@ object ArithmeticOps {
     def modOp(): ModOp[FT]
     def ltOp(): LtOp[FT]
     def leOp(): LeOp[FT]
-    def eqOp(): EqOp[FT]
 
     def add(left: any.Expression[FT], right: any.Expression[FT]): OperatorExpressionOps.BinaryExpression[FT] =
       binaryExpression(addOp(), left, right)
@@ -104,7 +96,5 @@ object ArithmeticOps {
       binaryExpression(ltOp(), left, right)
     def le(left: any.Expression[FT], right: any.Expression[FT]): OperatorExpressionOps.BinaryExpression[FT] =
       binaryExpression(leOp(), left, right)
-    def eq(left: any.Expression[FT], right: any.Expression[FT]): OperatorExpressionOps.BinaryExpression[FT] =
-      binaryExpression(eqOp(), left, right)
   }
 }

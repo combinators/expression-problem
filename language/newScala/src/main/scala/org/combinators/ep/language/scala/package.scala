@@ -421,10 +421,6 @@ package object scala {
     override def operator: String = "<="
   }
 
-  trait EqOp[FT <: FinalTypes] extends ArithmeticOps.EqOp[FT] with Operator[FT] with Factory[FT] with InfixOperator[FT] {
-    override def operator: String = "=="
-  }
-
   trait AndOp[FT <: FinalTypes] extends BooleanOps.AndOp[FT] with Operator[FT] with Factory[FT] with InfixOperator[FT] {
     override def operator: String = "&&"
   }
@@ -1591,7 +1587,6 @@ package object scala {
       def eulersNumber(): RealArithmeticOps.EulersNumber[FinalTypes] = EulersNumber()
       override def ltOp(): ArithmeticOps.LtOp[FinalTypes] = LtOp()
       override def leOp(): ArithmeticOps.LeOp[FinalTypes] = LeOp()
-      override def eqOp(): ArithmeticOps.EqOp[FinalTypes] = EqOp()
       override def equals(tpe: any.Type[FinalTypes], left: any.Expression[FinalTypes], right: any.Expression[FinalTypes]): EqualsOps.Equals[FinalTypes] = Equals(tpe, left, right)
       override def andOp(): BooleanOps.AndOp[FinalTypes] = AndOp()
       override def orOp(): BooleanOps.OrOp[FinalTypes] = OrOp()
@@ -2072,7 +2067,6 @@ package object scala {
 
     case class LtOp() extends scala.LtOp[FinalTypes] with Operator with Factory
     case class LeOp() extends scala.LeOp[FinalTypes] with Operator with Factory
-    case class EqOp() extends scala.EqOp[FinalTypes] with Operator with Factory
 
     case class SqrtOp() extends scala.SqrtOp[FinalTypes] with Operator with Factory
     case class PowOp() extends scala.PowOp[FinalTypes] with Operator with Factory

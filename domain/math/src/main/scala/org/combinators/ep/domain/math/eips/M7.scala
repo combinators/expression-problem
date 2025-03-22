@@ -17,6 +17,7 @@ object M7 {
   (m6Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
   (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiRealArithmetic: RealArithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
+   ffiEquals: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiImper:Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
@@ -28,6 +29,7 @@ object M7 {
           _ <- m6Provider.initialize(forApproach)
           _ <- ffiArithmetic.enable()
           _ <- ffiRealArithmetic.enable()
+          _ <- ffiEquals.enable()
           _ <- ffiStrings.enable()
         } yield ()
       }
@@ -114,7 +116,7 @@ object M7 {
 
               // if stmt next
               zero <- forApproach.reify(InstanceRep(TypeRep.Double)(0.0))
-              ifEqExpr <- ffiArithmetic.arithmeticCapabilities.eq(expValue, zero)
+              ifEqExpr <- ffiEquals.equalityCapabilities.areEqual(expType, expValue, zero)
 
               ifStmtEq <- ffiImper.imperativeCapabilities.ifThenElse(ifEqExpr, for {
                 oneLit <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Lit, one)

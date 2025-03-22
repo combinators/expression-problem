@@ -379,7 +379,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
       import ooParadigm.methodBodyCapabilities._
       import polymorphics.methodBodyCapabilities._
       //val latest = domainSpecific.applicableIn(this, PotentialRequest(domain.baseDataType, tpe, op), domain)
-      val newOperations = newDataTypeCasesWithNewOperations(domainSpecific, domain).getOrElse(tpe, Set.empty)
+      val newOperations = dataTypeCasesWithNewOperations(domainSpecific, domain).getOrElse(tpe, Set.empty)
       val possible = if (newOperations.contains(op)) {
           domain
       } else {
@@ -797,11 +797,55 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
 
   ////////////////////////////////////////////////////////////////
 
+  def dataTypeCasesWithNewOperations(eip: EvolutionImplementationProvider[this.type], domain: GenericModel): Map[DataTypeCase, Set[Operation]] = {
+    val other = newDataTypeCasesWithNewOperationsXXX(eip, domain)
+    val flatDomain = domain.flatten
+
+    val allDataTypeCases = flatDomain.typeCases.toSet
+    val allOperations = flatDomain.ops.toSet
+    val lastExp = latestModelDefiningNewTypeInterface(domain)
+    val overridden = domain.toSeq.filter(dm => lastExp.before(dm)).flatMap(m => m.optimizations).groupBy(_._1).map(entry => (entry._1, entry._2.map(pair => pair._2).toSet))
+
+    // Merging makes this more complicated BECAUSE there could be multiple Exp that are brought together,
+    // and if so, then will need to BLEND together
+    val pastWithExp = if (domain.former.length > 1) domain.former.filter(dm => dm == latestModelDefiningNewTypeInterface(dm)) else Seq.empty
+
+    val merged = pastWithExp.flatMap(m => dataTypeCasesWithNewOperations(eip, m)).groupBy(_._1)
+      .map(triple => triple._1 -> triple._2.flatMap(pm => pm._2))
+      .filter(entry => entry._2.nonEmpty)
+
+    // whenever a new Exp is defined, MUST duplicate logic for all producer methods; incorporate into logic below
+    val addedExp = domain == lastExp
+
+    val updated = allDataTypeCases.map(tpe => {
+      val mt = domain.findTypeCase(tpe).get
+
+      val affected = allOperations.filter(op => {
+        val mo = domain.findOperation(op).get
+        val descendant = domain.inChronologicalOrder.find(m => !m.notComparableTo(mt) && !m.notComparableTo(mo) && mt.beforeOrEqual(m) && mo.beforeOrEqual(m)).get
+        !descendant.before(domain) || (addedExp && op.isProducer(domain))
+      })
+
+      (tpe, affected)
+    }).filter(pair => pair._2.nonEmpty).toMap
+
+    val output = Seq(overridden, merged, updated)
+      .flatten
+      .groupBy { case (k, _) => k }
+      .map(entry => (entry._1, entry._2.flatMap(pair => pair._2).toSet))
+
+    if (output.equals(other)) {
+      output
+    } else {
+      output
+    }
+  }
+
   /** Map data type cases to operations that require a new implementation in the given domain model.
    * Will only contain data type cases which have been newly introduced in at least one of the ancestor branches
    * or require an update because of missing/overwritten operations or merging of multiple branches.
    */
-  def newDataTypeCasesWithNewOperations(evolutionImplementationProvider: EvolutionImplementationProvider[this.type], domain: GenericModel): Map[DataTypeCase, Set[Operation]] = {
+  def newDataTypeCasesWithNewOperationsXXX(evolutionImplementationProvider: EvolutionImplementationProvider[this.type], domain: GenericModel): Map[DataTypeCase, Set[Operation]] = {
     val flatDomain = domain.flatten
     val allDataTypeCases = flatDomain.typeCases.toSet
     val allOperations = flatDomain.ops.toSet
@@ -941,13 +985,14 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
     //      }
     //    }
 
-
-
     def makeOperationClass(): Generator[ooParadigm.ClassContext, Unit] = {
 
       def makeOperationImpl(): Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
         import ooParadigm.methodBodyCapabilities._
         import paradigm.methodBodyCapabilities._
+
+        // this is different in CoCo, Trivially and others, though it means the same thing
+        val properModel = latestDomainWithAlgebraOperation(domain, domainSpecific, op)
 
         for {
           returnType <- toTargetLanguageType(op.returnType)
@@ -991,7 +1036,6 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
           // currently fails for the isXXX equality isOp methods, where the arguments comes from the DT not the OP
           // body of this implementation is the result of the individual domain-specific logic.
           //// TODO: WRONG THING TO DO _ <- setParameters(argsToUse)   // TODO: is this right????
-
           result <- domainSpecific.logic(this)(
                         ReceivedRequest(
                           domain.baseDataType,
@@ -999,7 +1043,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
                           selfCall,
                           dt.attributes.zip(dtElements.map(_._2)).toMap,
                           Request(op, op.parameters.zip(args.map(_._3)).toMap),
-                          Some(domain)
+                          Some(properModel)   // was domain
                         )
                       )
         } yield result
@@ -1124,7 +1168,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
               addAlgebraOperation(domain, domainSpecific, op)
           }
 
-          _ <- forEach(newDataTypeCasesWithNewOperations(domainSpecific, domain).toSeq) { case (dataTypeCase, ops) =>
+          _ <- forEach(dataTypeCasesWithNewOperations(domainSpecific, domain).toSeq) { case (dataTypeCase, ops) =>
             for {
               _ <- forEach (ops.toSeq){ op =>
                 for {

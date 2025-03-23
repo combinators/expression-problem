@@ -512,7 +512,7 @@ object QuickValidation extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
 
-    val approaches = Seq("graphviz")// "trivially", "oo", "visitor", "extensibleVisitor", "interpreter", "coco", "algebra")
+    val approaches = Seq("trivially", "oo", "visitor", "extensibleVisitor", "interpreter", "coco", "algebra")
     val target = "ep-java-quick-delete"
 
     // latest in all system families

@@ -17,8 +17,16 @@ SCALA = 'scala'
 def java_or_scala():
    """Assuming running in ep-java-XXX or ep-scala-XXX directory, return 'java' or 'scala'."""
    cwd = os.getcwd()
-   approaches = os.listdir(cwd)
+
+   # On Unix with Python 3.6.15 this actually returned files and directories
+   # So filter out JUST TO BE SURE
+   files_might_still_have_dirs = os.listdir(cwd)
+   approaches = []
+   for fp in files_might_still_have_dirs:
+      if os.path.isdir(fp):
+         approaches.append(fp)
    one = approaches[0]
+
    stages = os.listdir(os.path.join(cwd, one))
    print(stages[0])
    stage = stages[0]
@@ -34,7 +42,7 @@ if lang == JAVA:
     cov_index = 2
     cov_stmts = ['Instructions:', 'Branches:']
 elif lang == SCALA:
-    cov_index = 2
+    cov_index = 3
     cov_stmts = ['Statement coverage', 'Branch coverage']
 else:
     print('Unable to determine language of directory')

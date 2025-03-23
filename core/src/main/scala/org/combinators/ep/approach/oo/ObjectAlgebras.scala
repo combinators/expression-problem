@@ -378,7 +378,6 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
       import paradigm.methodBodyCapabilities._
       import ooParadigm.methodBodyCapabilities._
       import polymorphics.methodBodyCapabilities._
-      //val latest = domainSpecific.applicableIn(this, PotentialRequest(domain.baseDataType, tpe, op), domain)
       val newOperations = dataTypeCasesWithNewOperations(domainSpecific, domain).getOrElse(tpe, Set.empty)
       val possible = if (newOperations.contains(op)) {
           domain
@@ -386,7 +385,6 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
         domainSpecific.evolutionSpecificDependencies(PotentialRequest(domain.baseDataType, tpe, op)).keySet.max((l: GenericModel, r: GenericModel) => {
           if (l.before(r)) -1 else if (r.before(l)) 1 else 0
         })
-        //domainSpecific.applicableIn(this, PotentialRequest(domain.baseDataType, tpe, op), domain).get
       }
 
       // CANNOT go earlier than when operation is defined.
@@ -421,6 +419,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
             result <- instantiateObject(instGeneric, inner +: processedAtts)
           } yield result
         } else {
+          // must exist since we didn't settle on domain
           val defined = domain.former.collectFirst { case dom if dom.supports(op) && dom.supports(tpe) =>
             latestDomainWithAlgebraOperation(dom, domainSpecific, op)
           }.get
@@ -797,8 +796,45 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
 
   ////////////////////////////////////////////////////////////////
 
-  def dataTypeCasesWithNewOperations(eip: EvolutionImplementationProvider[this.type], domain: GenericModel): Map[DataTypeCase, Set[Operation]] = {
-    val other = newDataTypeCasesWithNewOperationsXXX(eip, domain)
+  /** Map data type cases to operations that require a new implementation in the given domain model.
+   * Will only contain data type cases which have been newly introduced in at least one of the ancestor branches
+   * or require an update because of missing/overwritten operations or merging of multiple branches.
+   */
+  def dataTypeCasesWithNewOperations(evolutionImplementationProvider: EvolutionImplementationProvider[this.type], domain: GenericModel): Map[DataTypeCase, Set[Operation]] = {
+    val flatDomain = domain.flatten
+    val allDataTypeCases = flatDomain.typeCases.toSet
+    val allOperations = flatDomain.ops.toSet
+
+    allDataTypeCases.foldLeft(Map.empty[DataTypeCase, Set[Operation]]) { (resultMap, tpeCase) =>
+      // Remembers all operations that are already supported
+      val presentOperations = domain.operationsPresentEarlier(tpeCase)
+
+      val overwrittenOperations = allOperations.filter { operation =>
+        // Does our current domain contain an override implementation?
+        evolutionImplementationProvider.evolutionSpecificDependencies(
+          PotentialRequest(domain.baseDataType, tpeCase, operation)
+        ).contains(domain)
+        //        // Are we applicable based on EIP? Tells us in which domain EIP is applicable
+        //        val lastOverwritingDomain =
+        //          evolutionImplementationProvider.applicableIn(
+        //            forApproach = this,
+        //            potentialRequest = PotentialRequest(domain.baseDataType, tpeCase, operation),
+        //            currentModel = domain
+        //          )
+        //        lastOverwritingDomain.contains(domain)
+      }
+      val updatedOperations = (allOperations -- presentOperations) ++ overwrittenOperations
+      // If we have any updated operations, if we have a former one that doesn't support the current type case, or if we are in a merge.
+      val output = if (updatedOperations.nonEmpty || domain.former.exists(ancestor => !ancestor.supports(tpeCase)) || domain.former.size > 1) {
+        resultMap.updated(tpeCase, updatedOperations)
+      } else {
+        resultMap
+      }
+      output
+    }
+  }
+
+  def dataTypeCasesWithNewOperationsFailsJ3AndJ8(domain: GenericModel): Map[DataTypeCase, Set[Operation]] = {
     val flatDomain = domain.flatten
 
     val allDataTypeCases = flatDomain.typeCases.toSet
@@ -810,7 +846,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
     // and if so, then will need to BLEND together
     val pastWithExp = if (domain.former.length > 1) domain.former.filter(dm => dm == latestModelDefiningNewTypeInterface(dm)) else Seq.empty
 
-    val merged = pastWithExp.flatMap(m => dataTypeCasesWithNewOperations(eip, m)).groupBy(_._1)
+    val merged = pastWithExp.flatMap(m => dataTypeCasesWithNewOperationsFailsJ3AndJ8(m)).groupBy(_._1)
       .map(triple => triple._1 -> triple._2.flatMap(pm => pm._2))
       .filter(entry => entry._2.nonEmpty)
 
@@ -834,50 +870,8 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
       .groupBy { case (k, _) => k }
       .map(entry => (entry._1, entry._2.flatMap(pair => pair._2).toSet))
 
-    if (output.equals(other)) {
-      output
-    } else {
-      output
-    }
+    output
   }
-
-  /** Map data type cases to operations that require a new implementation in the given domain model.
-   * Will only contain data type cases which have been newly introduced in at least one of the ancestor branches
-   * or require an update because of missing/overwritten operations or merging of multiple branches.
-   */
-  def newDataTypeCasesWithNewOperationsXXX(evolutionImplementationProvider: EvolutionImplementationProvider[this.type], domain: GenericModel): Map[DataTypeCase, Set[Operation]] = {
-    val flatDomain = domain.flatten
-    val allDataTypeCases = flatDomain.typeCases.toSet
-    val allOperations = flatDomain.ops.toSet
-
-    allDataTypeCases.foldLeft(Map.empty[DataTypeCase, Set[Operation]]) { (resultMap, tpeCase) =>
-      // Remembers all operations that are already supported
-      val presentOperations = domain.operationsPresentEarlier(tpeCase)
-
-      val overwrittenOperations = allOperations.filter { operation =>
-        // Does our current domain contain an override implementation?
-        evolutionImplementationProvider.evolutionSpecificDependencies(
-          PotentialRequest(domain.baseDataType, tpeCase, operation)
-        ).contains(domain)
-//        // Are we applicable based on EIP? Tells us in which domain EIP is applicable
-//        val lastOverwritingDomain =
-//          evolutionImplementationProvider.applicableIn(
-//            forApproach = this,
-//            potentialRequest = PotentialRequest(domain.baseDataType, tpeCase, operation),
-//            currentModel = domain
-//          )
-//        lastOverwritingDomain.contains(domain)
-      }
-      val updatedOperations = (allOperations -- presentOperations) ++ overwrittenOperations
-      // If we have any updated operations, if we have a former one that doesn't support the current type case, or if we are in a merge.
-      if (updatedOperations.nonEmpty || domain.former.exists(ancestor => !ancestor.supports(tpeCase)) || domain.former.size > 1) {
-        resultMap.updated(tpeCase, updatedOperations)
-      } else {
-        resultMap
-      }
-    }
-  }
-
 
   def latestDependenciesForOp(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type], op: Operation)(tpeCases: Seq[DataTypeCase] = domain.flatten.typeCases.distinct): Seq[Operation] = {
     tpeCases.distinct.flatMap(tpeCase => {
@@ -1026,16 +1020,8 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
           }
           _ <- setParameters(myargs)
           args <- getArguments()
-          argsToUse <- forEach (dt.attributes) { param =>
-            for {
-              _ <- getMember(selfRef, names.mangle(param.name))    // IGNORE. HACK
-              tpe <- toTargetLanguageType(param.tpe)
-            } yield (names.mangle(names.instanceNameOf(param)), tpe)
-          }
+          //_ <- debug(domain.name + " replaced with " + properModel.name + " for operation " + op.name + " & dt=" + dt.name)
 
-          // currently fails for the isXXX equality isOp methods, where the arguments comes from the DT not the OP
-          // body of this implementation is the result of the individual domain-specific logic.
-          //// TODO: WRONG THING TO DO _ <- setParameters(argsToUse)   // TODO: is this right????
           result <- domainSpecific.logic(this)(
                         ReceivedRequest(
                           domain.baseDataType,
@@ -1043,7 +1029,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
                           selfCall,
                           dt.attributes.zip(dtElements.map(_._2)).toMap,
                           Request(op, op.parameters.zip(args.map(_._3)).toMap),
-                          Some(properModel)   // was domain
+                          Some(properModel)
                         )
                       )
         } yield result
@@ -1215,11 +1201,11 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
     assert(model.findOperation(op).nonEmpty)
 
     def properCarrierType[Context](implicit
-                                   canFindClass: Understands[Context, FindClass[paradigm.syntax.Name, paradigm.syntax.Type]],
-                                   canResolveImport: Understands[Context, ResolveImport[paradigm.syntax.Import, paradigm.syntax.Type]],
-                                   canAddImport: Understands[Context, AddImport[paradigm.syntax.Import]],
-                                   canApplyType: Understands[Context, Apply[paradigm.syntax.Type,paradigm.syntax.Type,paradigm.syntax.Type]]
-                                  ): Generator[Context, paradigm.syntax.Type] = {
+           canFindClass: Understands[Context, FindClass[paradigm.syntax.Name, paradigm.syntax.Type]],
+           canResolveImport: Understands[Context, ResolveImport[paradigm.syntax.Import, paradigm.syntax.Type]],
+           canAddImport: Understands[Context, AddImport[paradigm.syntax.Import]],
+           canApplyType: Understands[Context, Apply[paradigm.syntax.Type,paradigm.syntax.Type,paradigm.syntax.Type]]
+          ): Generator[Context, paradigm.syntax.Type] = {
       for {
         baseInterfaceType <- FindClass[paradigm.syntax.Name, paradigm.syntax.Type](Seq(names.mangle(names.instanceNameOf(model.findOperation(op).get)), ComponentNames.pkgCarrier, names.mangle(names.conceptNameOf(op)))).interpret(canFindClass)
         _ <- resolveAndAddImport(baseInterfaceType)(canResolveImport,canAddImport)

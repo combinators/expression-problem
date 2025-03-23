@@ -570,9 +570,7 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
     val properModel = latestModelDefiningOperatorClass(domain, tpeCase, op, domainSpecific).get
-    if (properModel != domain) {
-      println ("ExtensibleVisitor::makeEachImplementation chooses " + properModel.name + " over " + domain.name + " for (" + op.name + "," + tpeCase.name + ")")
-    }
+
     for {
       returnType <- toTargetLanguageType(op.returnType)
       _ <- resolveAndAddImport(returnType)

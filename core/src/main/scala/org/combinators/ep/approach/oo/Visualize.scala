@@ -239,47 +239,236 @@ trait Visualize extends SharedOO {
         .map(pair => (pair._1, pair._2.flatMap(p => p._2).toSet))
   }
 
+  def latestModelDefiningNewTypeInterface(domain: GenericModel): GenericModel = {
+    if (domain.isDomainBase || domain.ops.nonEmpty) {
+      domain
+    } else {
+      // is there a single type that can represent the "least upper bound" of all prior branches.
+      val ancestorsWithTypeInterfaces = domain.former.map(ancestor => latestModelDefiningNewTypeInterface(ancestor)).distinct
+      // To validate this works, need multiple branches where NEITHER defines operators
+      if (ancestorsWithTypeInterfaces.size == 1 && !ancestorsWithTypeInterfaces.head.isDomainBase) { // take care to avoid falling below "floor"
+        ancestorsWithTypeInterfaces.head
+      } else {
+        domain // we have to do merge
+      }
+    }
+  }
+
+  /**
+   * Every stage needs a Factory
+   */
+  def latestModelDefiningNewFactoryType(domain: GenericModel): GenericModel = {
+    if (domain.optimizations.nonEmpty || domain.isDomainBase || domain.typeCases.nonEmpty || domain == latestModelDefiningNewTypeInterface(domain)) {
+      domain
+    } else {
+      // is there a single type that can represent the "least upper bound" of all prior branches.
+      val ancestorsWithFactoryTypes = domain.former.map(ancestor => latestModelDefiningNewFactoryType(ancestor)).distinct
+      // To validate this works, need multiple branches where NEITHER defines operators
+      if (ancestorsWithFactoryTypes.size == 1 && !ancestorsWithFactoryTypes.head.isDomainBase) { // take care to avoid falling below "floor"
+        ancestorsWithFactoryTypes.head
+      } else {
+        domain
+      }
+    }
+  }
+
+  def cocoNewDataTypeCasesWithNewOperations(domain: GenericModel): Map[DataTypeCase, Set[Operation]] = {
+    val flatDomain = domain.flatten
+
+    val allDataTypeCases = flatDomain.typeCases.toSet
+    val allOperations = flatDomain.ops.toSet
+    val lastExp = latestModelDefiningNewTypeInterface(domain)
+    val overridden = domain.toSeq.filter(dm => lastExp.before(dm)).flatMap(m => m.optimizations).groupBy(_._1).map(entry => (entry._1, entry._2.map(pair => pair._2).toSet))
+
+    // Merging makes this more complicated BECAUSE there could be multiple Exp that are brought together,
+    // and if so, then will need to BLEND together. COCO DIFFERENT! IN OTHERS IT IS latestModelDefiningNewTypeInterface
+    val pastWithExp = if (domain.former.length > 1) domain.former.filter(dm => dm == latestModelDefiningNewFactoryType(dm)) else Seq.empty
+
+    // These are last with FACTORY. Now go back to last with Exp for each of these. Must grab
+    val merged_exps = pastWithExp.flatMap(m => {
+      val first = latestModelDefiningNewTypeInterface(m)
+      domain.toSeq.filter(dm => first.beforeOrEqual(dm))
+    }).distinct
+
+    val allops = merged_exps.flatMap(m => m.ops).distinct
+    val alltps = merged_exps.flatMap(m => m.typeCases).distinct
+    val merged = alltps.map(tpe => (tpe, allops))
+
+    // whenever a new Exp is defined,
+    val addedExp = domain == lastExp
+
+    val updated = allDataTypeCases.map(tpe => {
+      val mt = domain.findTypeCase(tpe).get
+
+      val affected = allOperations.filter(op => {
+        val mo = domain.findOperation(op).get
+        val descendant = domain.inChronologicalOrder.find(m => !m.notComparableTo(mt) && !m.notComparableTo(mo) && mt.beforeOrEqual(m) && mo.beforeOrEqual(m)).get
+        !descendant.before(domain) || addedExp
+      })
+
+      (tpe, affected)
+    }).filter(pair => pair._2.nonEmpty).toMap
+
+    val output = Seq(overridden, merged, updated)
+      .flatten
+      .groupBy { case (k, _) => k }
+      .map(entry => (entry._1, entry._2.flatMap(pair => pair._2).toSet))
+
+    output
+  }
+
+  def objectAlgebrasDataTypeCasesWithNewOperations(evolutionImplementationProvider: EvolutionImplementationProvider[this.type], domain: GenericModel): Map[DataTypeCase, Set[Operation]] = {
+    val flatDomain = domain.flatten
+    val allDataTypeCases = flatDomain.typeCases.toSet
+    val allOperations = flatDomain.ops.toSet
+
+    allDataTypeCases.foldLeft(Map.empty[DataTypeCase, Set[Operation]]) { (resultMap, tpeCase) =>
+      // Remembers all operations that are already supported
+      val presentOperations = domain.operationsPresentEarlier(tpeCase)
+
+      val overwrittenOperations = allOperations.filter { operation =>
+        // Does our current domain contain an override implementation?
+        evolutionImplementationProvider.evolutionSpecificDependencies(
+          PotentialRequest(domain.baseDataType, tpeCase, operation)
+        ).contains(domain)
+        //        // Are we applicable based on EIP? Tells us in which domain EIP is applicable
+        //        val lastOverwritingDomain =
+        //          evolutionImplementationProvider.applicableIn(
+        //            forApproach = this,
+        //            potentialRequest = PotentialRequest(domain.baseDataType, tpeCase, operation),
+        //            currentModel = domain
+        //          )
+        //        lastOverwritingDomain.contains(domain)
+      }
+      val updatedOperations = (allOperations -- presentOperations) ++ overwrittenOperations
+      // If we have any updated operations, if we have a former one that doesn't support the current type case, or if we are in a merge.
+      val output = if (updatedOperations.nonEmpty || domain.former.exists(ancestor => !ancestor.supports(tpeCase)) || domain.former.size > 1) {
+        resultMap.updated(tpeCase, updatedOperations)
+      } else {
+        resultMap
+      }
+      output
+    }
+  }
+
+  def triviallyDataTypeCasesWithNewOperations(domain: GenericModel): Map[DataTypeCase, Set[Operation]] = {
+    val flatDomain = domain.flatten
+
+    val allDataTypeCases = flatDomain.typeCases.toSet
+    val allOperations = flatDomain.ops.toSet
+    val lastExp = latestModelDefiningInterface(domain)
+    val overridden = domain.toSeq.filter(dm => lastExp.before(dm)).flatMap(m => m.optimizations).groupBy(_._1).map(entry => (entry._1, entry._2.map(pair => pair._2).toSet))
+
+    // Merging makes this more complicated BECAUSE there could be multiple Exp that are brought together,
+    // and if so, then will need to BLEND together
+    val pastWithExp = if (domain.former.length > 1) domain.former.filter(dm => dm == latestModelDefiningInterface(dm)) else Seq.empty
+
+    val merged = pastWithExp.flatMap(m => triviallyDataTypeCasesWithNewOperations(m)).groupBy(_._1)
+      .map(triple => triple._1 -> triple._2.flatMap(pm => pm._2))
+      .filter(entry => entry._2.nonEmpty)
+
+    // whenever a new Exp is defined, MUST duplicate logic for all producer methods; incorporate into logic below
+    val addedExp = domain == lastExp
+
+    val updated = allDataTypeCases.map(tpe => {
+      val mt = domain.findTypeCase(tpe).get
+
+      val affected = allOperations.filter(op => {
+        val mo = domain.findOperation(op).get
+        val descendant = domain.inChronologicalOrder.find(m => !m.notComparableTo(mt) && !m.notComparableTo(mo) && mt.beforeOrEqual(m) && mo.beforeOrEqual(m)).get
+        !descendant.before(domain) || (addedExp && op.isProducer(domain))
+      })
+
+      (tpe, affected)
+    }).filter(pair => pair._2.nonEmpty).toMap
+
+    Seq(overridden, merged, updated)
+      .flatten
+      .groupBy { case (k, _) => k }
+      .map(entry => (entry._1, entry._2.flatMap(pair => pair._2).toSet))
+  }
+
+
   def implement(gdomain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     println()
     //gdomain.toSeq.foreach(m => println(m.name, latestModelDefiningInterface(m).name))
 
     //gdomain.toSeq.foreach(m => println(m.name, dataTypeCasesWithNewOperations(m).map(pair => pair._1.name ++ "," ++ pair._2.map(op => op.name))))
-    gdomain.toSeq.reverse.foreach(m => println(m.name,
-      dataTypeCasesWithNewOperations(m).map(pair => pair._1.name + " [" + pair._2.map(op => op.name)
-        .foldLeft("") {case (g,str) => g + str + ","}
-         + "], ")
-        .foldLeft("") { case (group, str) => group + str }
-    ))
+//    gdomain.toSeq.reverse.foreach(m => println(m.name,
+//      dataTypeCasesWithNewOperations(m).map(pair => pair._1.name + " [" + pair._2.map(op => op.name)
+//        .foldLeft("") {case (g,str) => g + str + ","}
+//         + "], ")
+//        .foldLeft("") { case (group, str) => group + str }
+//    ))
 
-    // document evolutions
-    GraphViz.outputGraphViz(gdomain)
+    print("CoCo:" + gdomain.name)
+    val outputCoCO = new java.io.File(new java.io.File("target"), "coco-newDataTypeCases.txt")
+    val fileWriterCoCo = new java.io.FileWriter (outputCoCO, true)
+    gdomain.toSeq.distinct.foreach(m => {
+      fileWriterCoCo.write(m.name + "," +
+      cocoNewDataTypeCasesWithNewOperations(m).map(pair => pair._1.name + " [" + pair._2.map(op => op.name)
+        .foldLeft("") { case (g, str) => g + str + "," }
+        + "], ")
+        .foldLeft("") { case (group, str) => group + str } + "\n")
+    }
+    )
+    fileWriterCoCo.close()
 
-    // Document EIPs
-    GraphViz.outputGraphWithDependenciesViz(gdomain, domainSpecific)
+    print("ObjectAlgebras:" + gdomain.name)
+    val outputObjectAlgebras = new java.io.File(new java.io.File("target"), "algebra-newDataTypeCases.txt")
+    val fileWriterObjAlg = new java.io.FileWriter (outputObjectAlgebras, true)
+    gdomain.toSeq.distinct.foreach(m => {
+      fileWriterObjAlg.write(m.name + "," +
+      objectAlgebrasDataTypeCasesWithNewOperations(domainSpecific, m).map(pair => pair._1.name + " [" + pair._2.map(op => op.name)
+        .foldLeft("") { case (g, str) => g + str + "," }
+        + "], ")
+        .foldLeft("") { case (group, str) => group + str } + "\n")
+    }
+    )
+    fileWriterObjAlg.close()
 
-    // produce table
-    val flat = gdomain.flatten
-
-    // header
-    print("OP,")
-    flat.typeCases.foreach(tpe => {
-      print(tpe.name + ",")
-    })
-    println()
-
-    flat.ops.foreach(op => {
-      print(op.name + ",")
-      flat.typeCases.foreach(tpe => {
-        val opt = latestModelDefiningOperatorClass(gdomain, tpe, op, domainSpecific)
-
-        if (opt.isEmpty) {
-          print("-,")
-        } else {
-          print(opt.get.name + ",")
-        }
-      })
-      println()
-    })
+    print("Trivially:" + gdomain.name)
+    val outputObjectTrivially= new java.io.File(new java.io.File("target"), "trivially-newDataTypeCases.txt")
+    val fileWriterTrivially= new java.io.FileWriter (outputObjectTrivially,  true)
+    gdomain.toSeq.distinct.foreach(m => {
+      fileWriterTrivially.write(m.name + "," +
+      triviallyDataTypeCasesWithNewOperations(m).map(pair => pair._1.name + " [" + pair._2.map(op => op.name)
+        .foldLeft("") { case (g, str) => g + str + "," }
+        + "], ")
+        .foldLeft("") { case (group, str) => group + str } + "\n")
+    }
+    )
+    fileWriterTrivially.close()
+//
+//    // document evolutions
+//    //GraphViz.outputGraphViz(gdomain)
+//
+//    // Document EIPs
+//    //GraphViz.outputGraphWithDependenciesViz(gdomain, domainSpecific)
+//
+//    // produce table
+//    val flat = gdomain.flatten
+//
+//    // header
+//    print("OP,")
+//    flat.typeCases.foreach(tpe => {
+//      print(tpe.name + ",")
+//    })
+//    println()
+//
+//    flat.ops.foreach(op => {
+//      print(op.name + ",")
+//      flat.typeCases.foreach(tpe => {
+//        val opt = latestModelDefiningOperatorClass(gdomain, tpe, op, domainSpecific)
+//
+//        if (opt.isEmpty) {
+//          print("-,")
+//        } else {
+//          print(opt.get.name + ",")
+//        }
+//      })
+//      println()
+//    })
 
     val flatDomain = gdomain.linearize.flatten
     for {

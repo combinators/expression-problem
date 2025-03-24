@@ -456,9 +456,9 @@ object DirectToDiskMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
     // "M9", "J8", "A3", "O1OA", "OD3", "OO3", "V1", "D3", "I2M3I1N1", "O2"
-    val approach = if (args.isEmpty) "algebra" else args.head // {coco, O1OA} fails
+    val approach = if (args.isEmpty) "coco" else args.head // {coco, O1OA} fails
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "J3" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "A1M3I2" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 
@@ -511,8 +511,12 @@ object GenerateAllForOneApproach extends IOApp {
 object QuickValidation extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
+    val approaches = if (args.isEmpty) {
+      Seq("coco") // trivially", "oo", "visitor", "extensibleVisitor", "interpreter", "coco", "algebra")
+    } else {
+      args
+    }
 
-    val approaches = Seq("trivially", "oo", "visitor", "extensibleVisitor", "interpreter", "coco", "algebra")
     val target = "ep-java-quick"
 
     // latest in all system families

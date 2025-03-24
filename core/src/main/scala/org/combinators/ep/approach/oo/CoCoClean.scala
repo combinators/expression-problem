@@ -87,13 +87,17 @@ trait CoCoClean extends ApproachImplementationProvider {
    * Merge case handed here. Note that it is possible (i.e., O1OA) to have a merge without any Exp
    *
    * Also duplicated in Interpreter with modifications
+   *
+   * If this method returns domain, then it means that domain defines the TypeInterface {Exp}
    */
   def latestModelDefiningNewTypeInterface(domain: GenericModel): GenericModel = {
     if (domain.isDomainBase || domain.ops.nonEmpty) {
       domain
     } else {
       // is there a single type that can represent the "least upper bound" of all prior branches.
-      val ancestorsWithTypeInterfaces = domain.former.map(ancestor => latestModelDefiningNewTypeInterface(ancestor)).distinct
+      val ancestorsWithTypeInterfaces = domain.former.map(ancestor => latestModelDefiningNewTypeInterface(ancestor)).distinct // COCO
+      //val ancestorsWithTypeInterfaces = ancestorsDefiningNewTypeInterfaces(domain)  // INTERPRETER
+
       // To validate this works, need multiple branches where NEITHER defines operators
       if (ancestorsWithTypeInterfaces.size == 1 && !ancestorsWithTypeInterfaces.head.isDomainBase) { // take care to avoid falling below "floor"
         ancestorsWithTypeInterfaces.head
@@ -365,7 +369,19 @@ trait CoCoClean extends ApproachImplementationProvider {
 
     // Merging makes this more complicated BECAUSE there could be multiple Exp that are brought together,
     // and if so, then will need to BLEND together. COCO DIFFERENT! IN OTHERS IT IS latestModelDefiningNewTypeInterface
-    val pastWithExp = if (domain.former.length > 1) domain.former.filter(dm => dm == latestModelDefiningNewFactoryType(dm)) else Seq.empty
+    val pastWithExp = domain.former.filter(dm => dm == latestModelDefiningNewFactoryType(dm))
+
+    // all possible (tpe, op) pairs that have been done in the past
+    val allPairs = pastWithExp.flatMap(m => {
+      val flat = m.flatten  // every possible pair
+      for { tpe <- flat.typeCases; op <- flat.ops } yield (tpe, op)
+    }).distinct
+
+    // what are we responsible for?
+    val mustHavePairs = for { tpe <- allDataTypeCases; op <- allOperations} yield (tpe, op)
+    val missing = (mustHavePairs -- allPairs)
+      .groupBy(_._1)
+      .map { case (tpe, ops) => tpe -> ops.map(pair => pair._2)}
 
     // These are last with FACTORY. Now go back to last with Exp for each of these. Must grab
     val merged_exps = pastWithExp.flatMap(m => {
@@ -377,22 +393,23 @@ trait CoCoClean extends ApproachImplementationProvider {
     val alltps = merged_exps.flatMap(m => m.typeCases).distinct
     val merged = alltps.map(tpe => (tpe, allops))
 
-    // whenever a new Exp is defined,
+    // whenever a new Exp is defined, must export all data types again, but still be selective with
+    // required operations (not yet done)
     val addedExp = domain == lastExp
+//
+//    val updated = allDataTypeCases.map(tpe => {
+//      val mt = domain.findTypeCase(tpe).get
+//
+//      val affected = allOperations.filter(op => {
+//        val mo = domain.findOperation(op).get
+//        val descendant = domain.inChronologicalOrder.find(m => !m.notComparableTo(mt) && !m.notComparableTo(mo) && mt.beforeOrEqual(m) && mo.beforeOrEqual(m)).get
+//        !descendant.before(domain) // || addedExp
+//      })
+//
+//      (tpe, affected)
+//    }).filter(pair => pair._2.nonEmpty).toMap
 
-    val updated = allDataTypeCases.map(tpe => {
-      val mt = domain.findTypeCase(tpe).get
-
-      val affected = allOperations.filter(op => {
-        val mo = domain.findOperation(op).get
-        val descendant = domain.inChronologicalOrder.find(m => !m.notComparableTo(mt) && !m.notComparableTo(mo) && mt.beforeOrEqual(m) && mo.beforeOrEqual(m)).get
-        !descendant.before(domain) || addedExp
-      })
-
-      (tpe, affected)
-    }).filter(pair => pair._2.nonEmpty).toMap
-
-    val output = Seq(overridden, merged, updated)
+    val output = Seq(overridden, missing)
       .flatten
       .groupBy { case (k, _) => k }
       .map(entry => (entry._1, entry._2.flatMap(pair => pair._2).toSet))
@@ -409,20 +426,39 @@ trait CoCoClean extends ApproachImplementationProvider {
     val lastExp = latestModelDefiningNewFactoryType(domain)  // COCO DIFFERENT latestModelDefiningNewTypeInterface(domain)
     val overridden = domain.toSeq.filter(dm => lastExp.before(dm)).flatMap(m => m.optimizations).groupBy(_._1).map(entry => (entry._1, entry._2.map(pair => pair._2).toSet))
 
-    // whenever a new Exp is defined, MUST duplicate logic for all producer methods; incorporate into logic below
-    val addedExp = domain == lastExp
+    val pastWithExp = domain.former.filter(dm => dm == latestModelDefiningNewFactoryType(dm))
 
-    val updated = allDataTypeCases.map(tpe => {
-      val mt = domain.findTypeCase(tpe).get
+    // all possible (tpe, op) pairs that have been done in the past
+    val allPairs = pastWithExp.flatMap(m => {
+      val flat = m.flatten  // every possible pair
+      for { tpe <- flat.typeCases; op <- flat.ops } yield (tpe, op)
+    }).distinct
 
-      val affected = allOperations.filter(op => {
-        val mo = domain.findOperation(op).get
-        val descendant = domain.inChronologicalOrder.find(m => !m.notComparableTo(mt) && !m.notComparableTo(mo) && mt.beforeOrEqual(m) && mo.beforeOrEqual(m)).get
-        !descendant.before(domain) || addedExp    // && op.isProducer(domain))
-      })
+    // what are we responsible for?
+    val mustHavePairs = for { tpe <- allDataTypeCases; op <- allOperations} yield (tpe, op)
+    val missing = (mustHavePairs -- allPairs)
+      .groupBy(_._1)
+      .map { case (tpe, ops) => tpe -> ops.map(pair => pair._2)}
 
-      (tpe, affected)
-    }).filter(pair => pair._2.nonEmpty).toMap
+
+    // whenever a new Exp is defined, MUST duplicate logic for all methods; incorporate into logic below
+    val updated = if (domain == lastExp) {
+      allDataTypeCases.map(tpe => tpe -> allOperations).toMap
+    } else {
+      missing
+    }
+//
+//    val updated = allDataTypeCases.map(tpe => {
+//      val mt = domain.findTypeCase(tpe).get
+//
+//      val affected = allOperations.filter(op => {
+//        val mo = domain.findOperation(op).get
+//        val descendant = domain.inChronologicalOrder.find(m => !m.notComparableTo(mt) && !m.notComparableTo(mo) && mt.beforeOrEqual(m) && mo.beforeOrEqual(m)).get
+//        !descendant.before(domain) || addedExp    // && op.isProducer(domain))
+//      })
+//
+//      (tpe, affected)
+//    }).filter(pair => pair._2.nonEmpty).toMap
 
     val output = Seq(overridden, updated)
       .flatten
@@ -439,20 +475,32 @@ trait CoCoClean extends ApproachImplementationProvider {
     // it was seen)
 
     // cannot skip over intervening models that have EIP overridden for this dataTypeCase on any operation
-    val m = newDataTypeCasesWithNewOperations(domain)
-
-    if (m.contains(dataTypeCase)) {
-      // then we are in charge
-      Some(domain)
+    val map = newDataTypeCasesWithNewOperations(domain)
+    if (map.contains(dataTypeCase)) {
+       Some(domain)
     } else {
-      val latestModelsForBranches = domain.former.flatMap(gm => latestModelDefiningDataTypeCaseInterface(gm, dataTypeCase).toSeq).distinct
-      if (latestModelsForBranches.size == 1 && !latestModelsForBranches.head.isDomainBase) {
-        Some(latestModelsForBranches.head)
-      } else {
-        // If more than one ancestor doing this,
-        None
-      }
+       val latestModelForBranches = domain.former.flatMap(gm => latestModelDefiningDataTypeCaseInterface(gm, dataTypeCase).toSeq).distinct
+       val result = if (latestModelForBranches.size == 1 && !latestModelForBranches.head.isDomainBase) {
+         Some(latestModelForBranches.head)
+       } else {
+         None
+       }
+
+      result
     }
+//
+//    if (m.contains(dataTypeCase)) {
+//      // then we are in charge
+//      Some(domain)
+//    } else {
+//      val latestModelsForBranches = domain.former.flatMap(gm => latestModelDefiningDataTypeCaseInterface(gm, dataTypeCase).toSeq).distinct
+//      if (latestModelsForBranches.size == 1 && !latestModelsForBranches.head.isDomainBase) {
+//        Some(latestModelsForBranches.head)
+//      } else {
+//        // If more than one ancestor doing this,
+//        None
+//      }
+//    }
   }
 
   def mostSpecificTypeCaseInterface[Context](domain: GenericModel, finalizedType: paradigm.syntax.Type, dataTypeCase:DataTypeCase)(implicit
@@ -542,7 +590,7 @@ trait CoCoClean extends ApproachImplementationProvider {
       import genericsParadigm.classCapabilities._
 
       // all interfaces to add. Likely there is a better way to implement this...
-      val added:scala.collection.mutable.Set[paradigm.syntax.Type] = scala.collection.mutable.Set[paradigm.syntax.Type]()
+      //val added:scala.collection.mutable.Set[paradigm.syntax.Type] = scala.collection.mutable.Set[paradigm.syntax.Type]()
 
       for {
         // Add type parameter for the finalized type
@@ -552,8 +600,8 @@ trait CoCoClean extends ApproachImplementationProvider {
         // Set parent data type interface
         parentBaseInterfaceType <- mostSpecificBaseInterfaceType(domain, finalizedType)
         _ <- forEach(Seq(parentBaseInterfaceType)) {
-          tpe => added.add(tpe)
-            Command.skip[ooParadigm.ClassContext]
+          tpe => addParent(tpe)
+          // Command.skip[ooParadigm.ClassContext]
         }
 
         // Also inherit from latest factory if necessary because no new base interface was declared.
@@ -562,31 +610,42 @@ trait CoCoClean extends ApproachImplementationProvider {
           for {
             pfi <- appliedFactoryInterfaceType(latestModelDefiningNewFactoryType(domain), finalizedType)
             _ <- forEach(Seq(pfi)) {
-              tpe => added.add(tpe)
-                Command.skip[ooParadigm.ClassContext]
+              tpe => addParent(tpe)
+              //Command.skip[ooParadigm.ClassContext]
             }
-          } yield pfi
+          } yield ()
         } else Command.skip[ooParadigm.ClassContext]
 
-        // Inherit previous data type case implementations. Make sure not added twice...
-        _ <- forEach(domain.former) { ancestor =>
+        // Inherit previous data type case implementations.
+        _ <- forEach(domain.former.flatMap(m => m.toSeq).distinct) { ancestor =>
           for {
             parentDataTypeCaseInterface <- mostSpecificTypeCaseInterface(ancestor, finalizedType, newDataTypeCase)
-            _ <- if (parentDataTypeCaseInterface.nonEmpty && !added.contains(parentDataTypeCaseInterface.get)) {
-              added.add(parentDataTypeCaseInterface.get)
-              Command.skip[ooParadigm.ClassContext]
+            _ <- if (parentDataTypeCaseInterface.nonEmpty) {
+              addParent(parentDataTypeCaseInterface.get)
+              //Command.skip[ooParadigm.ClassContext]
             } else {
+              // we are now responsible for locating where this tpecase was last defined as finalized and add them ALL as implemented
+              domain.former.foreach(parent => {
+                // get ALL of them. Then filter any away that are an ancestor of an existing one in the collection
+                val found = parent.toSeq.filter(gm => newFinalizedTypeCaseClasses(gm).contains(newDataTypeCase) && gm == latestModelDefiningNewTypeInterface(gm))
+                found.foreach(pti => {
+                  for {
+                    ptInterface <- mostSpecificTypeCaseInterface(pti, finalizedType, newDataTypeCase)
+                    _ <- addParent(ptInterface.get)
+                  } yield ()
+                })
+              })
               Command.skip[ooParadigm.ClassContext]
             }
           } yield ()
         }
 
         // now that all parent interfaces are prepared, add them, so distinct and non-duplicated
-        _ <- forEach(added.toSeq) { tpe =>
-          for {
-            _ <- addParent(tpe)
-          } yield ()
-        }
+//        _ <- forEach(added.toSeq) { tpe =>
+//          for {
+//            _ <- addParent(tpe)
+//          } yield ()
+//        }
 
         // Add abstract getters if defined here
         _ <- forEach(if (domain.typeCases.contains(newDataTypeCase)) newDataTypeCase.attributes else List.empty) { attribute =>
@@ -652,6 +711,20 @@ trait CoCoClean extends ApproachImplementationProvider {
     } yield finalizedFactoryType
   }
 
+  /**
+   * Just return the finalized data type class
+   */
+  def finalizedDataTypeCaseClass[Context](domain: GenericModel, dataTypeCase: DataTypeCase)(implicit
+      canFindClass: Understands[Context, FindClass[paradigm.syntax.Name, paradigm.syntax.Type]],
+      canResolveImport: Understands[Context, ResolveImport[paradigm.syntax.Import, paradigm.syntax.Type]],
+      canAddImport: Understands[Context, AddImport[paradigm.syntax.Import]]
+  ): Generator[Context, Option[paradigm.syntax.Type]] = {
+    for {
+      resultType <- FindClass[paradigm.syntax.Name, paradigm.syntax.Type](Seq(names.mangle(names.instanceNameOf(domain)), ComponentNames.finalizedPackage, names.mangle(names.conceptNameOf(dataTypeCase)))).interpret(canFindClass)
+      _ <- resolveAndAddImport(resultType)
+    } yield Some(resultType)
+  }
+
   def mostSpecificTypeCaseClass[Context](domain: GenericModel, finalizedType: paradigm.syntax.Type, dataTypeCase: DataTypeCase)(implicit
       canFindClass: Understands[Context, FindClass[paradigm.syntax.Name, paradigm.syntax.Type]],
       canResolveImport: Understands[Context, ResolveImport[paradigm.syntax.Import, paradigm.syntax.Type]],
@@ -680,7 +753,8 @@ trait CoCoClean extends ApproachImplementationProvider {
       } else {
         Command.skip[paradigm.MethodBodyContext]
       }
-      typeToInstantiate <- mostSpecificTypeCaseClass(domain, finalizedType, dataTypeCase)
+      //typeToInstantiate <- mostSpecificTypeCaseClass(domain, finalizedType, dataTypeCase)
+      typeToInstantiate <- finalizedDataTypeCaseClass(domain, dataTypeCase)
       result <- instantiateObject(typeToInstantiate.get, attributeValues.map(_._3))
     } yield Some(result)
   }
@@ -705,6 +779,7 @@ trait CoCoClean extends ApproachImplementationProvider {
       val _latestModelDefiningNewTypeInterface = latestModelDefiningNewTypeInterface(domain)
       val latestFactory = latestModelDefiningNewFactoryType(domain)
       val currentDomainDefinesNewTypeInterface = _latestModelDefiningNewTypeInterface == domain
+
       for {
         finalizedType <- finalizedBaseInterfaceType(domain)
 
@@ -721,8 +796,10 @@ trait CoCoClean extends ApproachImplementationProvider {
           }
         } else Command.skip[ooParadigm.ClassContext]
 
-        // Add factory methods BUT ONLY for type cases that need it. Ordinarily
-        _ <- forEach(domain.flatten.typeCases.distinct.filter(dataTypeCase => latestModelDefiningDataTypeCaseInterface(domain, dataTypeCase).contains(domain))) { tpeCase =>
+        // Add factory methods BUT ONLY for type cases that need it. Ordinarily these are just the ones that are defined. HOWEVER, once an Exp Type interface
+        // is created, then you will need to do so for all known data types up to this point.
+        _ <- forEach(domain.flatten.typeCases.distinct.filter(dataTypeCase =>
+          currentDomainDefinesNewTypeInterface || latestModelDefiningDataTypeCaseInterface(domain, dataTypeCase).contains(domain))) { tpeCase =>
           addMethod(names.mangle(names.instanceNameOf(tpeCase)), makeFinalizedFactoryMethod(domain, finalizedType, tpeCase))
         }
 
@@ -808,8 +885,28 @@ trait CoCoClean extends ApproachImplementationProvider {
     } yield ()
   }
 
+  def newFinalizedTypeCaseClasses(domain:GenericModel) : Seq[DataTypeCase] = {
+    val hasTypeInterface = domain == latestModelDefiningNewTypeInterface(domain)
+
+    val _newDataTypeCasesWithNewOperations = newDataTypeCasesWithNewOperations(domain).keys.toList
+    if (hasTypeInterface) {
+      domain.flatten.typeCases
+    } else {
+      _newDataTypeCasesWithNewOperations
+    }
+  }
+
   def addFinalizedTypeCaseClasses(domain: GenericModel): Generator[paradigm.ProjectContext, Unit] = {
-    val _newDataTypeCasesWithNewOperations = newDataTypeCasesWithNewOperations(domain)
+//    val hasTypeInterface = domain == latestModelDefiningNewTypeInterface(domain)
+//    val _newDataTypeCasesWithNewOperations = newDataTypeCasesWithNewOperations(domain).keys.toList
+//    val _newDataTypeCases = if (hasTypeInterface) {
+//        domain.flatten.typeCases
+//      } else {
+//        _newDataTypeCasesWithNewOperations
+//      }
+    val _newDataTypeCases = newFinalizedTypeCaseClasses(domain)
+    val _newDataTypeCasesWithNewOperations = newDataTypeCasesWithNewOperations(domain).keys.toList
+    val hasTypeInterface = domain == latestModelDefiningNewTypeInterface(domain)
 
     def makeNewFinalizedTypeCaseClass(newDataTypeCase: DataTypeCase) : Generator[ooParadigm.ClassContext, Unit] = {
       import ooParadigm.classCapabilities._
@@ -821,18 +918,55 @@ trait CoCoClean extends ApproachImplementationProvider {
         _ <- addImplemented(finalizedType)
 
         // Also inherit from latest factory if necessary because no new base interface was declared
-        _ <- if (latestModelDefiningNewTypeInterface(domain) != domain) {   // latestModelDefiningNewTypeInterface
+        _ <- if (!hasTypeInterface) {
           for {
             parentFinalizedFactoryInterfaceType <- finalizedFactoryType(domain)
             _ <- addImplemented(parentFinalizedFactoryInterfaceType)
           } yield ()
         } else Command.skip[ooParadigm.ClassContext]
 
-        // Inherit non finalized data type case implementation
+        // Inherit non finalized data type case implementation(s). Might be pulled from multiple places!
+//        nonFinalizedDataTypeCaseInterface <- mostSpecificTypeCaseInterface(domain, finalizedType, newDataTypeCase)
+//        _ <- if (nonFinalizedDataTypeCaseInterface.isDefined) {
+//          addImplemented(nonFinalizedDataTypeCaseInterface.get)
+//        } else Command.skip[ooParadigm.ClassContext]
         nonFinalizedDataTypeCaseInterface <- mostSpecificTypeCaseInterface(domain, finalizedType, newDataTypeCase)
-        _ <- if (nonFinalizedDataTypeCaseInterface.isDefined) {
-          addImplemented(nonFinalizedDataTypeCaseInterface.get)
-        } else Command.skip[ooParadigm.ClassContext]
+        _ <- if (_newDataTypeCasesWithNewOperations.contains(newDataTypeCase)) {
+                 addImplemented(nonFinalizedDataTypeCaseInterface.get)
+           } else {
+              // we are now responsible for locating where this tpecase was last defined as finalized and add them ALL as implemented
+              // since there may be several
+              for {
+                _ <- forEach(domain.former) { parent => {
+                  val found = parent.toSeq.find(gm => newFinalizedTypeCaseClasses(gm).contains(newDataTypeCase))
+                  if (found.isDefined) {
+                    for {
+                      finalizedInterface <- mostSpecificTypeCaseInterface(found.get, finalizedType, newDataTypeCase)
+                      _ <- if (finalizedInterface.isDefined) {
+                        addImplemented(finalizedInterface.get)
+                      } else {
+                        Command.skip[ooParadigm.ClassContext]
+                      }
+                    } yield ()
+                  } else {
+                    Command.skip[ooParadigm.ClassContext]
+                  }
+                }
+              }
+            } yield ()
+        }
+
+        _ <- forEach(domain.former) { ancestor =>
+          for {
+            parentDataTypeCaseInterface <- mostSpecificTypeCaseInterface(ancestor, finalizedType, newDataTypeCase)
+            _ <- if (parentDataTypeCaseInterface.nonEmpty) {
+              addImplemented(parentDataTypeCaseInterface.get)
+              Command.skip[ooParadigm.ClassContext]
+            } else {
+              Command.skip[ooParadigm.ClassContext]
+            }
+          } yield ()
+        }
 
         // Add fields and their getters
         baseTypeInterface <- leastSpecialBaseInterfaceType(domain, finalizedType)
@@ -854,7 +988,7 @@ trait CoCoClean extends ApproachImplementationProvider {
 
     import ooParadigm.projectCapabilities._
     for {
-      _ <- forEach(_newDataTypeCasesWithNewOperations.toList) { case (newDataTypeCase, _) =>
+      _ <- forEach(_newDataTypeCases.toList) { newDataTypeCase =>
         addClassToProject(makeNewFinalizedTypeCaseClass(newDataTypeCase), names.mangle(names.instanceNameOf(domain)), ComponentNames.finalizedPackage, names.mangle(names.conceptNameOf(newDataTypeCase)))
       }
     } yield ()

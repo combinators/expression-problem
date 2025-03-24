@@ -564,9 +564,9 @@ object DirectToDiskMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
     // "M9", "J8", "A3", "O1OA", "OD3", "OO3", "V1", "D3", "I2M3I1N1", "O2"
-    val approach = if (args.isEmpty) "algebra" else args.head
+    val approach = if (args.isEmpty) "interpreter" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "X1" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "V1" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 
@@ -625,11 +625,7 @@ object GenerateAllMain extends IOApp {
     } else {
       args
     }
-    val target = if (args.isEmpty) {
-      "ep-scala"
-    } else {
-      args.head
-    }
+    val target = "ep-scala"
     val evolutions = Seq("M0","M1","M2","M3","M4","M5","M6","M7","M7I2","M8","M9","I1","A1","A1M3","A1M3I2","A3","I2",
       "O1","O2","OA","O1OA","OD1","OD2","OD3","OO1","OO2","OO3")
 
@@ -667,7 +663,12 @@ object QuickValidation extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
 
-    val approaches = Seq("trivially", "oo", "visitor", "extensibleVisitor", "interpreter", "coco", "algebra")
+    val approaches = if (args.isEmpty) {
+      Seq("coco") // trivially", "oo", "visitor", "extensibleVisitor", "interpreter", "coco", "algebra")
+    } else {
+      args
+    }
+
     val target = "ep-scala-quick"
 
     // latest in all system families

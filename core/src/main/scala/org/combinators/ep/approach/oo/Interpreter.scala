@@ -79,7 +79,9 @@ sealed trait Interpreter extends SharedOO {
       domain
     } else {
       // is there a single type that can represent the "least upper bound" of all prior branches.
-      val ancestorsWithTypeInterfaces = ancestorsDefiningNewTypeInterfaces(domain)
+      val ancestorsWithTypeInterfaces = ancestorsDefiningNewTypeInterfaces(domain)  // INTERPRETER
+      // COCO val ancestorsWithTypeInterfaces = domain.former.map(ancestor => latestModelDefiningNewTypeInterface(ancestor)).distinct // COCO
+
       if (ancestorsWithTypeInterfaces.size == 1 && !ancestorsWithTypeInterfaces.head.isDomainBase) { // take care to avoid falling below "floor"
         ancestorsWithTypeInterfaces.head
       } else {

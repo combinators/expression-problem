@@ -387,7 +387,44 @@ trait Visualize extends SharedOO {
       .groupBy { case (k, _) => k }
       .map(entry => (entry._1, entry._2.flatMap(pair => pair._2).toSet))
   }
+  def ancestorsDefiningNewTypeInterfaces2(domain: GenericModel): Set[GenericModel] = {
+    val ancestorsWithNewTypeInterfaces = domain.former.map(ancestor => latestModelDefiningNewTypeInterface2(ancestor))
 
+    ancestorsWithNewTypeInterfaces.distinct.filterNot { ancestor =>
+      ancestorsWithNewTypeInterfaces.exists(otherAncestor => ancestor.before(otherAncestor))
+    }.toSet
+  }
+  def latestModelDefiningNewTypeInterface2(domain: GenericModel): GenericModel = {
+    if (domain.isDomainBase || domain.ops.nonEmpty) {
+      domain
+    } else {
+      // is there a single type that can represent the "least upper bound" of all prior branches.
+      val ancestorsWithTypeInterfaces = ancestorsDefiningNewTypeInterfaces2(domain)  // INTERPRETER
+      //val ancestorsWithTypeInterfaces = domain.former.map(ancestor => latestModelDefiningNewTypeInterface(ancestor)).distinct // COCO
+
+      if (ancestorsWithTypeInterfaces.size == 1 && !ancestorsWithTypeInterfaces.head.isDomainBase) { // take care to avoid falling below "floor"
+        ancestorsWithTypeInterfaces.head
+      } else {
+        domain // we have to do merge
+      }
+    }
+  }
+
+  def latestModelDefiningNewTypeInterface3(domain: GenericModel): GenericModel = {
+    if (domain.isDomainBase || domain.ops.nonEmpty) {
+      domain
+    } else {
+      // is there a single type that can represent the "least upper bound" of all prior branches.
+      //val ancestorsWithTypeInterfaces = ancestorsDefiningNewTypeInterfaces2(domain)  // INTERPRETER
+      val ancestorsWithTypeInterfaces = domain.former.map(ancestor => latestModelDefiningNewTypeInterface3(ancestor)).distinct // COCO
+
+      if (ancestorsWithTypeInterfaces.size == 1 && !ancestorsWithTypeInterfaces.head.isDomainBase) { // take care to avoid falling below "floor"
+        ancestorsWithTypeInterfaces.head
+      } else {
+        domain // we have to do merge
+      }
+    }
+  }
 
   def implement(gdomain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     println()
@@ -400,6 +437,12 @@ trait Visualize extends SharedOO {
 //         + "], ")
 //        .foldLeft("") { case (group, str) => group + str }
 //    ))
+    gdomain.toSeq.foreach(m => println(m.name, " has ", latestModelDefiningNewTypeInterface2(m).name))
+
+    println()
+
+    gdomain.toSeq.foreach(m =>
+      println(m.name, " has ", latestModelDefiningNewTypeInterface3(m).name))
 
     print("CoCo:" + gdomain.name)
     val outputCoCO = new java.io.File(new java.io.File("target"), "coco-newDataTypeCases.txt")

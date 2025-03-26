@@ -664,7 +664,7 @@ object QuickValidation extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
 
     val approaches = if (args.isEmpty) {
-      Seq("coco") // trivially", "oo", "visitor", "extensibleVisitor", "interpreter", "coco", "algebra")
+      Seq("interpreter") // trivially", "oo", "visitor", "extensibleVisitor", "interpreter", "coco", "algebra")
     } else {
       args
     }

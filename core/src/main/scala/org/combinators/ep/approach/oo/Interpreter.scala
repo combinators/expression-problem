@@ -31,7 +31,6 @@ sealed trait Interpreter extends SharedOO {
     val ancestorsWithNewTypeInterfaces = domain.former.map(ancestor => latestModelDefiningNewTypeInterface(ancestor))
 
     ancestorsWithNewTypeInterfaces.distinct.filterNot { ancestor =>
-      // get rid of everything that has an antecedent
       ancestorsWithNewTypeInterfaces.exists(otherAncestor => ancestor.before(otherAncestor))
     }.toSet
   }
@@ -56,15 +55,11 @@ sealed trait Interpreter extends SharedOO {
   }
 
   def updatedImplementationCurrentDomainByType(domain: GenericModel, tpe:DataTypeCase): Option[GenericModel] = {
-
     // the domain (or an ancestor) might have implementation that overrides an existing implementation, and
     // that has to be captured. Go through all past operations for this data type, and see if there are
     // domainSpecific dependencies
-    val returnval = domain.toSeq.find(m => m.pastOperations.exists(op =>
-      m.haveImplementation(PotentialRequest(domain.baseDataType, tpe, op)).contains(m))
-    )
-
-    returnval
+    domain.toSeq.find(m => m.pastOperations.exists(op =>
+      m.haveImplementation(PotentialRequest(domain.baseDataType, tpe, op)).contains(m)))
   }
 
   /**
@@ -72,15 +67,16 @@ sealed trait Interpreter extends SharedOO {
    *
    * Merge case handed here.
    *
-   * Also duplicated in CoCo but with modifications
+   * Also duplicated in CoCo but with modifications. In 'Interpreter' you do not need to create a Type interface
+   * for a stage that is purely merging in new data types after operations.
    */
   def latestModelDefiningNewTypeInterface(domain: GenericModel): GenericModel = {
     if (domain.isDomainBase || domain.ops.nonEmpty) {
       domain
     } else {
       // is there a single type that can represent the "least upper bound" of all prior branches.
-      val ancestorsWithTypeInterfaces = ancestorsDefiningNewTypeInterfaces(domain)  // INTERPRETER
-      // COCO val ancestorsWithTypeInterfaces = domain.former.map(ancestor => latestModelDefiningNewTypeInterface(ancestor)).distinct // COCO
+       val ancestorsWithTypeInterfaces = ancestorsDefiningNewTypeInterfaces(domain)  // INTERPRETER
+       //val ancestorsWithTypeInterfaces = domain.former.map(ancestor => latestModelDefiningNewTypeInterface(ancestor)).distinct // COCO
 
       if (ancestorsWithTypeInterfaces.size == 1 && !ancestorsWithTypeInterfaces.head.isDomainBase) { // take care to avoid falling below "floor"
         ancestorsWithTypeInterfaces.head
@@ -108,7 +104,6 @@ sealed trait Interpreter extends SharedOO {
     for {
       baseInterfaceType <- FindClass[paradigm.syntax.Name, paradigm.syntax.Type](qualifiedBaseDataType(resultModelStage)).interpret(canFindClass)
       _ <- resolveAndAddImport(baseInterfaceType)
-
     } yield baseInterfaceType
   }
 
@@ -159,7 +154,6 @@ sealed trait Interpreter extends SharedOO {
 
   /// ------------------------------------------------------ Operator As Chain Moved Here ---------------
 
-  // TODO: should be revised to pass in the base, and not presume it
   def baseInterfaceNames(domain: GenericModel): Seq[Name] = {
     if (domain.isDomainBase) {
       // ignore base Domain, for example, and just grab name...
@@ -275,7 +269,7 @@ sealed trait Interpreter extends SharedOO {
    * If a new operation is defined, then a local DataType Case Class is created, and it will inherit
    * baseDomain attributes that need to be cast to current domain
    */
-  def mustCastToAccess(domain:GenericModel, op:Operation, tpeCase:DataTypeCase) : Boolean = {
+  def mustCastToAccess(domain:GenericModel, tpeCase:DataTypeCase) : Boolean = {
     val definingModel = domain.findTypeCase(tpeCase).get
 
     !latestModelDefiningNewTypeInterface(domain).beforeOrEqual(definingModel)
@@ -304,7 +298,7 @@ sealed trait Interpreter extends SharedOO {
         for {
           att_member <- getMember(thisRef, names.mangle(names.instanceNameOf(att)))
           mostSpecificExp <- mostSpecificBaseInterfaceType(domain)
-          casted <- if (att.tpe.isModelBase(domain) && mustCastToAccess(domain, op, tpeCase)) {    // only cast if Exp AND comes from older Exp
+          casted <- if (att.tpe.isModelBase(domain) && mustCastToAccess(domain, tpeCase)) {    // only cast if Exp AND comes from older Exp
             castObject(mostSpecificExp, att_member)
           } else {
             Command.lift[MethodBodyContext, Expression](att_member)
@@ -447,7 +441,7 @@ sealed trait Interpreter extends SharedOO {
     } yield cname
   }
 
-  def latestModelDefiningNewTypeInterface(domain: GenericModel, tpe:DataTypeCase): GenericModel = {
+  def latestModelDefiningNewTypeInterfaceForDataType(domain: GenericModel, tpe:DataTypeCase): GenericModel = {
     val latestDefiningInterface = latestModelDefiningNewTypeInterface(domain)
     if (domain == latestDefiningInterface) {   // handle merge case as well
       domain
@@ -470,14 +464,12 @@ sealed trait Interpreter extends SharedOO {
     import paradigm.projectCapabilities._
      for {
       _ <- forEach(domain.flatten.typeCases) { tpe => {
-
           val updateCurrent = updatedImplementationCurrentDomainByType(domain, tpe)
           val tpeDomain = if (updateCurrent.isDefined) {
-            latestModelDefiningNewTypeInterface(domain, tpe).later(updateCurrent.get)
+            latestModelDefiningNewTypeInterfaceForDataType(domain, tpe).later(updateCurrent.get)
           } else {
-            latestModelDefiningNewTypeInterface(domain, tpe)
+            latestModelDefiningNewTypeInterfaceForDataType(domain, tpe)
           }
-
         for {
             _ <- addTypeLookupForMethods(TypeRep.DataType(DataType(tpe.name)), paramType[MethodBodyContext](tpeDomain, tpe))
             _ <- addTypeLookupForClasses(TypeRep.DataType(DataType(tpe.name)), paramType[ClassContext](tpeDomain, tpe))
@@ -514,7 +506,7 @@ sealed trait Interpreter extends SharedOO {
    */
   def primaryParent(model:GenericModel, tpeCase:DataTypeCase): GenericModel = {
     val modelDefiningType = model.findTypeCase(tpeCase)
-    val pastModels = model.former.filter(m => modelDefiningType.getOrElse(m).before(m)).map(m => latestModelDefiningNewTypeInterface(m, tpeCase))
+    val pastModels = model.former.filter(m => modelDefiningType.getOrElse(m).before(m)).map(m => latestModelDefiningNewTypeInterfaceForDataType(m, tpeCase))
     pastModels.foldLeft(modelDefiningType.get)((latest,m) => latest.later(m))
   }
 
@@ -522,7 +514,7 @@ sealed trait Interpreter extends SharedOO {
   // make sure that LATER merges do not generate.
   def implement(model: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
     def implementInner(domain: GenericModel): Generator[paradigm.ProjectContext, Unit] = {
-      val typeCasesNotGeneratedYet = domain.flatten.typeCases.distinct.filter(tpeCase => latestModelDefiningNewTypeInterface(domain, tpeCase) == domain)
+      val typeCasesNotGeneratedYet = domain.flatten.typeCases.distinct.filter(tpeCase => latestModelDefiningNewTypeInterfaceForDataType(domain, tpeCase) == domain)
 
       val createLevel = (domain == latestModelDefiningNewTypeInterface(domain)) ||
         updatedImplementationCurrentDomain(domain).isDefined

@@ -10,7 +10,7 @@ import org.combinators.ep.generator.paradigm._
 
 import scala.annotation.tailrec
 
-trait TriviallyClean extends ApproachImplementationProvider {
+trait TriviallyClean extends SharedOO {
   val paradigm: AnyParadigm
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val names: NameProvider[paradigm.syntax.Name]
@@ -20,10 +20,6 @@ trait TriviallyClean extends ApproachImplementationProvider {
 
   object ComponentNames {
     val finalizedPackage: paradigm.syntax.Name = names.mangle("finalized")
-
-    def getter(attribute: abstractions.Attribute): paradigm.syntax.Name = {
-      names.addPrefix("get", names.mangle(names.conceptNameOf(attribute)))
-    }
   }
 
   def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression] = {
@@ -293,33 +289,6 @@ trait TriviallyClean extends ApproachImplementationProvider {
     } yield ()
   }
 
-  def latestModelDefiningOperatorClass(domain: GenericModel, tpeCase:DataTypeCase, op:Operation, domainSpecific: EvolutionImplementationProvider[this.type]) : Option[GenericModel] = {
-    // Find all domains with an EIP that implements op for any type case
-    val domainsImplementingOp = domainSpecific.evolutionSpecificDependencies(PotentialRequest(domain.baseDataType, tpeCase, op)).keySet
-
-    def cmp(l: GenericModel, r: GenericModel) = {
-      if (l.before(r)) -1 else if (r.before(l)) 1 else 0
-    }
-
-    def futureMergePoint(l: GenericModel, r: GenericModel)(m: GenericModel): Boolean = {
-      l.beforeOrEqual(m) && r.beforeOrEqual(m)
-    }
-
-    val orderedImplementers = domainsImplementingOp.toSeq
-      .filter(d => d.beforeOrEqual(domain)) // filter to make sure we are before the current domain (we are not interested in later EIPs)
-      .sorted(cmp)
-      .reverse
-
-    // Are there two non-comparable ancestors l, r that haven't been merged by a third m which is past both? Then we are
-    // responsible for the merge!
-    if (orderedImplementers.size > 1 && orderedImplementers.exists(l => orderedImplementers.exists(r =>
-      cmp(l, r) == 0 && !orderedImplementers.exists(futureMergePoint(l, r))))
-    ) {
-      return Some(domain)
-    }
-    Some(orderedImplementers.head)     // latest one
-  }
-
   def makeOperationImplementation(
          domainSpecific: EvolutionImplementationProvider[this.type],
          domain: GenericModel,
@@ -329,10 +298,6 @@ trait TriviallyClean extends ApproachImplementationProvider {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
 
-    // must double check for merging
-    val properModel = latestModelDefiningOperatorClass(domain, dataTypeCase, operation, domainSpecific).get.
-      later(domain.findTypeCase(dataTypeCase).get)
-
     for {
       _ <- setOperationMethodSignature(domain, operation)
       _ <- if (domain.operationsPresentEarlier(dataTypeCase).contains(operation)) {
@@ -340,36 +305,11 @@ trait TriviallyClean extends ApproachImplementationProvider {
         } else {
           Command.skip[paradigm.MethodBodyContext]
         }
-      argumentsRaw <- getArguments()
+
+      // Use more specific base type for 'isDomainBase' attribute types
       baseInterfaceType <- mostSpecificBaseInterfaceType(domain)
-      arguments <- forEach(argumentsRaw.zip(operation.parameters)) { case (arg,param) =>
-        if (param.tpe.isModelBase(domain)) {
-          // dynamic case
-          castObject(baseInterfaceType, arg._3)
-        } else{
-          Command.lift[paradigm.MethodBodyContext,paradigm.syntax.Expression](arg._3)
-        }
-      }
-      self <- selfReference()
-      attributes <- forEach(dataTypeCase.attributes) { attribute =>
-        for {
-          getterMethod <- getMember(self, ComponentNames.getter(attribute))
-          getterCall <- apply(getterMethod, Seq.empty)
-        } yield (attribute, getterCall)
-      }
-      receivedRequest =
-        ReceivedRequest(
-          onType = domain.baseDataType,
-          tpeCase = dataTypeCase,
-          selfReference = self,
-          attributes = attributes.toMap,
-          request = Request(
-            op = operation,
-            arguments = operation.parameters.zip(arguments).toMap
-          ),
-          model = Some(properModel)
-        )
-      result <- domainSpecific.logic(this)(receivedRequest)
+
+      result <- completeImplementation(domain.baseDataType, dataTypeCase, operation, domain, domainSpecific, attributeAccess=attributeGetterAccess, baseType=Some(baseInterfaceType))
     } yield result
   }
 
@@ -432,7 +372,7 @@ trait TriviallyClean extends ApproachImplementationProvider {
 
       // Add abstract getters if defined here
       _ <- forEach(newDataTypeCase.attributes) { attribute =>
-        addAbstractMethod(ComponentNames.getter(attribute), setAttributeGetterSignature(domain, attribute))
+        addAbstractMethod(getterName(attribute), setAttributeGetterSignature(domain, attribute))
       }
 
       _ <- forEach (newerTypeCasesSinceInterface(domain)) { tpeCase =>
@@ -555,7 +495,7 @@ trait TriviallyClean extends ApproachImplementationProvider {
               toTargetLanguageType(attribute.tpe)
             } else Command.lift[ooParadigm.ClassContext, paradigm.syntax.Type](baseTypeInterface)
             _ <- addField(names.mangle(names.instanceNameOf(attribute)), attributeType)
-            _ <- addMethod(ComponentNames.getter(attribute), makeAttributeGetter(domain, attribute))
+            _ <- addMethod(getterName(attribute), makeAttributeGetter(domain, attribute))
           } yield ()
         }
 
@@ -600,7 +540,7 @@ trait TriviallyClean extends ApproachImplementationProvider {
     } yield ()
   }
 
-  def registerTypeMapping(domain: GenericModel): Generator[paradigm.ProjectContext, Unit] = {
+  override def registerTypeMapping(domain: GenericModel): Generator[paradigm.ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
     import ooParadigm.classCapabilities.canFindClassInClass
     import ooParadigm.constructorCapabilities.canFindClassInConstructor

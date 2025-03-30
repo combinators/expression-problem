@@ -65,10 +65,10 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
     for {
 
       // the operation is encoded in its own class, which we must find to determine the visitor type
-      opType <- findClass(names.mangle(names.conceptNameOf(op)))     // each visitor is named based on operation
+      opType <- findClass(names.mangle(names.conceptNameOf(op)))     // Each class is based on Operation
       _ <- resolveAndAddImport(opType)            // gives resulting import statement (if needed)
 
-      // construct the visitor object for the given type (and parameters)
+      // construct the Operation object for the given type (and parameters)
       dispatcher <- instantiateObject(opType, op.parameters.map(param => message.request.arguments(param)))
 
       // In the 'message.to' expression, invoke the 'accept' method with a visitor argument
@@ -101,7 +101,6 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
       _ <- setParameters(Seq((expParam, paramType)))      // a pair (name,type) of only one sequence
     } yield ()
   }
-
 
   /**
    * Create an operation that dispatches accordingly to all known data types to helper method.
@@ -166,6 +165,7 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
     addMethod(names.mangle(names.instanceNameOf(op)), makeBody)
   }
 
+
   /**
    * Each operation is placed in its own class, with a 'visit' method for each known data type.
    *
@@ -188,17 +188,17 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
    *   }
    * }}}
    *
-   * @param domain     Model for which all types are to be incorporated
-   * @param op         The operation whose implementation is needed
+   * @param domain             Model for which all types are to be incorporated
+   * @param op                 The operation whose implementation is needed
    * @param domainSpecific     The EIP to gain access to the logic
-   * @return        The one invoking this method must be sure to add this class to project.
+   * @return                   The one invoking this method must be sure to add this class to project.
    */
-  def makeOperationImplementation(domain:GenericModel,
-                                  op: Operation,
+  def makeOperationImplementation(domain:GenericModel, op: Operation,
                                   domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
     import ooParadigm.classCapabilities._
 
     for {
+      // this will ultimately invoke makeTypeCaseImplementation for all necessary typecases
       _ <- operationClass(names.addPrefix("_", names.mangle(names.instanceNameOf(op))), op, domain, domain.typeCases, domain.baseDataType, domainSpecific)
 
       returnTpe <- toTargetLanguageType(op.returnType)
@@ -208,6 +208,7 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
     } yield ()
   }
 
+  /** Just the skeleton class holding structure, since operations are designated to their own classes. */
   def makeDerived(parentType: DataType, tpeCase: DataTypeCase): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
     val makeClass: Generator[ClassContext, Unit] = {
@@ -270,12 +271,8 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
    * @param domainSpecific      The EIP which contains the logic.
    * @return                    Full implementation.
    */
-  override def makeImplementation(tpe: DataType,
-                                  tpeCase: DataTypeCase,
-                                  op: Operation,
-                                  model: GenericModel,
-                                  domainSpecific: EvolutionImplementationProvider[this.type]
-                                 ): Generator[MethodBodyContext, Option[Expression]] = {
+  override def makeTypeCaseImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation, model: GenericModel,
+         domainSpecific: EvolutionImplementationProvider[this.type]): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
     for {
@@ -285,30 +282,65 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
       ptype <- findClass(names.mangle(names.conceptNameOf(tpeCase)))
       _ <- resolveAndAddImport(ptype)
       _ <- makeOperationSignature(ptype, op)
-      visitedRef <- getArguments().map(_.head._3)
-      attAccessors: Seq[Expression] <- forEach (tpeCase.attributes) { att =>
+
+      result <- dispatchImplementation(tpe, tpeCase, op, model, domainSpecific)
+    } yield result
+
+  }
+
+  /**
+   * Access attributes using default getter methods via argument to method, exp
+   *
+   * @param attribute    Data Type Case attribute to be accessed
+   * @return
+   */
+  def attributeDispatchAccess(attribute:Attribute, tpeCase: DataTypeCase, domain:GenericModel, baseType:Option[paradigm.syntax.Type]) : Generator[MethodBodyContext, Expression] = {
+    import paradigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+
+    for {
+      expRef <- getArguments().map(_.head._3)
+      getterMethod <- getMember(expRef, getterName(attribute))
+      getterCall <- apply(getterMethod, Seq.empty)
+    } yield getterCall
+  }
+
+  /**
+   * Have to do it this way (copied from OperationAsClass) because FOR SOME REASON, if we pass in a model with the request, it always seems to fail
+   */
+  def dispatchImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation, domain: GenericModel,
+                             domainSpecific: EvolutionImplementationProvider[this.type]): Generator[MethodBodyContext, Option[Expression]] = {
+    import paradigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+
+    for {
+      expRef <- getArguments().map(_.head._3)
+
+      /** Direct access or use as is provided. */
+      attributes <- {
         for {
-          getter <- getMember(visitedRef, getterName(att))
-          getterCall <- apply(getter, Seq.empty)
-        } yield getterCall
+          attAccessors <- forEach (tpeCase.attributes) { att => attributeDispatchAccess(att, tpeCase, domain, None) }
+          atts = tpeCase.attributes.zip(attAccessors).toMap
+        } yield atts
       }
 
-      args <- forEach (op.parameters) { param =>
+      // subtly different from all other ones
+      arguments <- forEach (op.parameters) { param =>
         for {
           thisRef <- selfReference()
           paramField <- getMember(thisRef, names.mangle(param.name))
         } yield (param, paramField)
       }
 
-      // body of this implementation is the result of the individual domain-specific logic.
       result <-
         domainSpecific.logic(this)(
           ReceivedRequest(
             tpe,
             tpeCase,
-            visitedRef,
-            tpeCase.attributes.zip(attAccessors).toMap,
-            Request(op, args.toMap)
+            expRef,
+            attributes,
+            Request(op, arguments.toMap)
+            // NOTE: this is the only AIP that does not pass in a model. Doing so fails
           )
         )
     } yield result
@@ -337,7 +369,10 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
       _ <- exceptions.enable()
       _ <- registerTypeMapping(flat)
       _ <- domainSpecific.initialize(this)
+
+      // singular Exp abstract class
       _ <- makeBase(flat.baseDataType)
+
       _ <- forEach (flat.typeCases) { tpeCase =>
         makeDerived(flat.baseDataType, tpeCase)
       }

@@ -3,12 +3,11 @@ package org.combinators.ep.approach.oo  /*DI:LI:AD*/
 import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, TestCase, TypeRep}
 import org.combinators.ep.domain.{GenericModel, abstractions}
 import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.communication.{ReceivedRequest, Request}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.ep.generator.{AbstractSyntax, ApproachImplementationProvider, Command, EvolutionImplementationProvider, NameProvider, TestImplementationProvider, Understands, communication}
+import org.combinators.ep.generator.{AbstractSyntax, Command, EvolutionImplementationProvider, NameProvider, TestImplementationProvider, Understands, communication}
 import org.combinators.ep.generator.paradigm.{AddImport, AnyParadigm, Apply, FindClass, Generics, ObjectOriented, ParametricPolymorphism, ResolveImport, AddTypeLookup}
 
-trait CoCoClean extends ApproachImplementationProvider {
+trait CoCoClean extends SharedOO {
   val paradigm: AnyParadigm
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
@@ -22,10 +21,6 @@ trait CoCoClean extends ApproachImplementationProvider {
     val finalizedTypeParameter: paradigm.syntax.Name = names.mangle("FT")
     val finalizedPackage: paradigm.syntax.Name = names.mangle("finalized")
     val getSelfMethod: paradigm.syntax.Name = names.mangle("getSelf")
-
-    def getter(attribute: abstractions.Attribute): paradigm.syntax.Name = {
-      names.addPrefix("get", names.mangle(names.conceptNameOf(attribute)))
-    }
   }
 
   /**
@@ -464,9 +459,6 @@ trait CoCoClean extends ApproachImplementationProvider {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
 
-    val properModel = latestModelDefiningNewFactoryType(domain)   // not Exp but the Factory!
-      .later(domain.findTypeCase(dataTypeCase).get)
-
     for {
       _ <- setOperationMethodSignature(domain, finalizedType, operation)
       _ <- if (domain.operationsPresentEarlier(dataTypeCase).contains(operation)) {
@@ -474,30 +466,10 @@ trait CoCoClean extends ApproachImplementationProvider {
       } else {
         Command.skip[paradigm.MethodBodyContext]
       }
-      arguments <- getArguments()
-      self <- selfReference()
-      attributes <- forEach(dataTypeCase.attributes) { attribute =>
-        for {
-          getterMethod <- getMember(self, ComponentNames.getter(attribute))
-          getterCall <- apply(getterMethod, Seq.empty)
-        } yield (attribute, getterCall)
-      }
-      receivedRequest =
-        ReceivedRequest(
-          onType = domain.baseDataType,
-          tpeCase = dataTypeCase,
-          selfReference = self,
-          attributes = attributes.toMap,
-          request = Request(
-            op = operation,
-            arguments = operation.parameters.zip(arguments.map(argument => argument._3)).toMap
-          ),
-          model = Some(properModel)
-        )
-      result <- domainSpecific.logic(this)(receivedRequest)
+
+      result <- completeImplementation(domain.baseDataType, dataTypeCase, operation, domain, domainSpecific, attributeAccess=attributeGetterAccess)
     } yield result
   }
-
 
   def addDataTypeCaseInterfaces(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[paradigm.ProjectContext, Unit] = {
     val _newDataTypeCasesWithNewOperations = newDataTypeCasesWithNewOperations(domain)
@@ -554,7 +526,7 @@ trait CoCoClean extends ApproachImplementationProvider {
 
         // Add abstract getters if defined here
         _ <- forEach(if (domain.typeCases.contains(newDataTypeCase)) newDataTypeCase.attributes else List.empty) { attribute =>
-          addAbstractMethod(ComponentNames.getter(attribute), setAttributeGetterSignature(domain, finalizedType, attribute))
+          addAbstractMethod(getterName(attribute), setAttributeGetterSignature(domain, finalizedType, attribute))
         }
 
         // Add methods for new operations
@@ -852,7 +824,7 @@ trait CoCoClean extends ApproachImplementationProvider {
             } else Command.lift[ooParadigm.ClassContext, paradigm.syntax.Type](baseTypeInterface)
 
             _ <- addField(names.mangle(names.instanceNameOf(attribute)), attributeType)
-            _ <- addMethod(ComponentNames.getter(attribute), makeAttributeGetter(domain, finalizedType, attribute))
+            _ <- addMethod(getterName(attribute), makeAttributeGetter(domain, finalizedType, attribute))
           } yield ()
         }
 

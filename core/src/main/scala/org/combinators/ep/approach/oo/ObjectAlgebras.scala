@@ -8,7 +8,9 @@ import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm._
 import org.combinators.ep.generator._
 
-
+/**
+ * Sufficiently different EP approach that this trait does not extend SharedOO
+ */
 trait ObjectAlgebras extends ApproachImplementationProvider {
   val paradigm: AnyParadigm
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
@@ -1000,12 +1002,6 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
             for {
               paramField <- getMember(selfRef, names.mangle(param.name))
             } yield (param, paramField)
-          }
-
-          dtParams <- forEach (dt.attributes) { param =>
-            for {
-              paramField <- getMember(selfRef, names.mangle(param.name))
-            } yield (new Parameter(param.name, param.tpe), paramField)
           }
 
           // An operation -- like equals(other) -- has an argument; the isXXX() operations have two arguments

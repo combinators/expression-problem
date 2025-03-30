@@ -44,6 +44,14 @@ trait Traditional extends SharedOO {  // this had been sealed. not sure why
    */
   def makeDerived(tpe: DataType, tpeCase: DataTypeCase, ops: Seq[Operation], domain:GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
+
+    def fullImplementation(op: Operation): Generator[MethodBodyContext, Option[Expression]] = {
+      for {
+        _ <- makeSignature(op)
+        result <- completeImplementation(tpe, tpeCase, op, domain, domainSpecific)
+      } yield result
+    }
+
     val makeClass: Generator[ClassContext, Unit] = {
       import classCapabilities._
       for {
@@ -53,7 +61,7 @@ trait Traditional extends SharedOO {  // this had been sealed. not sure why
         _ <- forEach (tpeCase.attributes) { att => makeField(att) }
         _ <- addConstructor(makeConstructor(tpeCase))
         _ <- forEach (ops) { op =>
-            addMethod(names.mangle(names.instanceNameOf(op)), makeImplementation(tpe, tpeCase, op, domain, domainSpecific))
+            addMethod(names.mangle(names.instanceNameOf(op)), fullImplementation(op))
           }
       } yield ()
     }

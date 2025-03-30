@@ -1,7 +1,7 @@
 package org.combinators.ep.approach.oo    /*DI:LI:AD*/
 
 import org.combinators.ep.domain.GenericModel
-import org.combinators.ep.domain.abstractions.{DataType, DataTypeCase, Operation, Parameter}
+import org.combinators.ep.domain.abstractions.{Attribute, DataType, DataTypeCase, Operation, Parameter}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm.ObjectOriented
@@ -17,14 +17,9 @@ trait OperationAsClass extends ApproachImplementationProvider {
   import paradigm._
   import syntax._
 
-  /** Requires the capability of constructing an implementation */
-  def makeImplementation(
-                          tpe: DataType,
-                          tpeCase: DataTypeCase,
-                          op: Operation,
-                          model: GenericModel,
-                          domainSpecific: EvolutionImplementationProvider[this.type]
-                        ): Generator[MethodBodyContext, Option[Expression]]
+  // Each AIP that includes this trait must provide implementation for how an entire method for a typecase is to be constructed.
+  def makeTypeCaseImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation, model: GenericModel,
+                         domainSpecific: EvolutionImplementationProvider[this.type]): Generator[MethodBodyContext, Option[Expression]]
 
   /**
    * Constructor for an operation which MAY have parameters
@@ -88,7 +83,8 @@ trait OperationAsClass extends ApproachImplementationProvider {
    * @return
    * @see  makeImplementation
    */
-  def operationClass(methodName:Name, op:Operation, model:GenericModel, typeCases:Seq[DataTypeCase], base:DataType, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
+  def operationClass(methodName:Name, op:Operation, model:GenericModel, typeCases:Seq[DataTypeCase], base:DataType,
+                     domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
     import ooParadigm.classCapabilities._
 
     for {
@@ -96,8 +92,9 @@ trait OperationAsClass extends ApproachImplementationProvider {
       _ <- resolveAndAddImport(returnTpe)
       _ <- addParamFields(op)
       _ <- addConstructor(makeOperationConstructor(op))
+
       _ <- forEach (typeCases) { tpe =>
-        addMethod(methodName, makeImplementation(base, tpe, op, model, domainSpecific))
+        addMethod(methodName, makeTypeCaseImplementation(base, tpe, op, model, domainSpecific))
       }
     } yield ()
   }

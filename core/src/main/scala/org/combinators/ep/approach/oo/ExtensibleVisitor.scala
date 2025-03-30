@@ -562,11 +562,8 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
     } yield ()
   }
 
-  def makeEachImplementation(domain:GenericModel, tpe: DataType,
-                tpeCase: DataTypeCase,
-                op: Operation,
-                domainSpecific: EvolutionImplementationProvider[this.type]
-               ): Generator[MethodBodyContext, Option[Expression]] = {
+  override def makeTypeCaseImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation, domain:GenericModel,
+         domainSpecific: EvolutionImplementationProvider[this.type]): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
     val properModel = latestModelDefiningOperatorClass(domain, tpeCase, op, domainSpecific).get
@@ -744,7 +741,7 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
       // for all that are not in primary parent
       _ <- forEach (typeCasesToDeclare) { tpe =>
         for {
-          _ <- addMethod(visitor.visit, makeEachImplementation(domain, domain.baseDataType, tpe, operation, domainSpecific))
+          _ <- addMethod(visitor.visit, makeTypeCaseImplementation(domain.baseDataType, tpe, operation, domain, domainSpecific))
 
           // if dependent operations exist, those factories need to be generated as well later
         } yield ()

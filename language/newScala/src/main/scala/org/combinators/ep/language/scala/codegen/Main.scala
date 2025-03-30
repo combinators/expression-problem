@@ -564,7 +564,7 @@ object DirectToDiskMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
     // "M9", "J8", "A3", "O1OA", "OD3", "OO3", "V1", "D3", "I2M3I1N1", "O2"
-    val approach = if (args.isEmpty) "interpreter" else args.head
+    val approach = if (args.isEmpty) "visitor" else args.head
     if (approach == "exit") { sys.exit(0) }
     val selection = if (args.isEmpty || args.tail.isEmpty) "V1" else args.tail.head
     println("Generating " + approach + " for " + selection)
@@ -661,10 +661,15 @@ object GenerateAllMain extends IOApp {
 
 object QuickValidation extends IOApp {
 
+  // note that visitorSideEffect and dispatch are omitted from this validation.  VISITORSIDEEFFECT has a problem
+  // with the test cases in that the methods become too long for the JavaVM and attempts to subdivide them fail
+  // because visitorSideEffect needs to create visitor objects, and arbitrarily splitting test cases means that
+  // they are not properly scoped and so the code fails to compile. DISPATCH is omitted because the inBetween
+  // does not yet have exceptions.
   def run(args: List[String]): IO[ExitCode] = {
 
     val approaches = if (args.isEmpty) {
-      Seq("interpreter") // trivially", "oo", "visitor", "extensibleVisitor", "interpreter", "coco", "algebra")
+      Seq("trivially", "oo", "visitor", "extensibleVisitor", "interpreter", "coco", "algebra")
     } else {
       args
     }

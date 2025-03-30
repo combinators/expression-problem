@@ -94,7 +94,6 @@ trait SharedOO extends ApproachImplementationProvider {
     } yield ()
   }
 
-
   def latestModelDefiningOperatorClass(domain: GenericModel, tpeCase:DataTypeCase, op:Operation, domainSpecific: EvolutionImplementationProvider[this.type]) : Option[GenericModel] = {
     // Find all domains with an EIP that implements op for any type case
     val domainsImplementingOp = domainSpecific.evolutionSpecificDependencies(PotentialRequest(domain.baseDataType, tpeCase, op)).keySet
@@ -119,9 +118,196 @@ trait SharedOO extends ApproachImplementationProvider {
     ) {
       return Some(domain)
     }
-    Some(orderedImplementers.head)     // latest one
+    if (orderedImplementers.isEmpty) {
+      Some(domain)  // only meaningful response if none found
+    } else {
+      Some(orderedImplementers.head) // latest one
+    }
   }
 
+  /**
+   * Access attributes using default getter methods.
+   *
+   * @param attribute    Data Type Case attribute to be accessed
+   * @return
+   */
+  def attributeGetterAccess(attribute:Attribute, tpeCase: DataTypeCase, domain:GenericModel, baseType:Option[paradigm.syntax.Type]) : Generator[MethodBodyContext, Expression] = {
+    import paradigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+
+    for {
+        thisRef <- selfReference()
+        getterMethod <- getMember(thisRef, getterName(attribute))
+        getterCall <- apply(getterMethod, Seq.empty)
+    } yield getterCall
+  }
+
+  /**
+   * Access attributes using default getter methods.
+   *
+   * @param attribute    Data Type Case attribute to be accessed
+   * @return
+   */
+  def attributeDirectAccess(attribute:Attribute, tpeCase: DataTypeCase, domain:GenericModel, baseType:Option[paradigm.syntax.Type]) : Generator[MethodBodyContext, Expression] = {
+    import ooParadigm.methodBodyCapabilities._
+
+    for {
+      thisRef <- selfReference()
+      memberAccess <- getMember(thisRef, names.mangle(names.instanceNameOf(attribute)))
+    } yield memberAccess
+  }
+
+  /** Default argument access. */
+  def argumentDirectAccess(arg:(Name, Type, Expression), param:Parameter, domain: GenericModel, baseType: Option[paradigm.syntax.Type] = None): Generator[MethodBodyContext, Expression] = {
+    import ooParadigm.methodBodyCapabilities._
+
+    // Properly cast all Base arguments to designated baseType (which was used in the method signature)
+    for {
+       res <- if (baseType.isDefined && param.tpe.isModelBase(domain)) {
+          castObject(baseType.get, arg._3)  // dynamic case
+        } else {
+          Command.lift[paradigm.MethodBodyContext,paradigm.syntax.Expression](arg._3)
+        }
+      } yield res
+  }
+
+  def targetSelf : Generator[MethodBodyContext, Expression] = {
+    import ooParadigm.methodBodyCapabilities._
+
+    for {
+      thisRef <- selfReference()
+    } yield thisRef
+  }
+
+  /**
+   * Once signature for a method is in place, this completes the implementation. Made a separate
+   * implementation so specialized EP approaches can use covariant overriding as needed in
+   * the method signature and/or pass in different domain.
+   *
+   * This is the primary workhorse for all OO approaches.
+   *
+   * {{{
+   *   public SOME_SIGNATURE (SOME_PARAMS) {
+   *      return getLeft().eval() + getRight().eval();  // this is for an EP that uses getters
+   *   }
+   * }}}
+   *
+   * Note: Can refactor argumentAccess, but only RuntimeDispatch would take advantage of this, so we pass (for now).
+   *
+   * @param tpe                     Need the base Data Type.
+   * @param tpeCase                 For the specific data type case.
+   * @param op                      That has an operation to be implemented.
+   * @param domain                  Context for the operation.
+   * @param domainSpecific          And the logic can be found in the EIP.
+   * @param target                  Target that will receive the Request.
+   * @param attributeAccess         Can attributes be directly accessed or done via getters?
+   * @param baseType                If available, the actual Base Type to use in place of recursive Expression.
+   * @return                        Return the body of the method.
+   */
+  def completeImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation, domain: GenericModel,
+         domainSpecific: EvolutionImplementationProvider[this.type],
+         target: Generator[MethodBodyContext, Expression] = targetSelf,
+         attributeAccess:(Attribute, DataTypeCase, GenericModel, Option[paradigm.syntax.Type])  => Generator[MethodBodyContext, Expression] = attributeDirectAccess,
+         baseType: Option[paradigm.syntax.Type] = None): Generator[MethodBodyContext, Option[Expression]] = {
+
+    import paradigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+
+    val properModel = latestModelDefiningOperatorClass(domain, tpeCase, op,  domainSpecific).get
+
+    for {
+      targetRef <- target
+
+      /** Direct access or use as is provided. */
+      attributes <- {
+        for {
+          attAccessors <- forEach (tpeCase.attributes) { att => attributeAccess(att, tpeCase, domain, baseType) }
+          atts = tpeCase.attributes.zip(attAccessors).toMap
+        } yield atts
+      }
+
+      /** Direct argument access or use as is provided. */
+      allArgs <- getArguments()
+      castedArgs <- forEach(op.parameters.zip(allArgs)) { case (param,arg) =>
+        for {
+          casted <- if (baseType.nonEmpty && param.tpe.isModelBase(domain)) {    // only cast if Exp
+            castObject(baseType.get, arg._3)
+          } else {
+            Command.lift[MethodBodyContext, Expression](arg._3)
+          }
+        } yield (param,casted)
+      }
+
+      result <-
+        domainSpecific.logic(this)(
+          ReceivedRequest(
+            tpe,
+            tpeCase,
+            targetRef,
+            attributes,
+            Request(op, castedArgs.toMap),
+            Some(properModel)
+          )
+        )
+    } yield result
+  }
+
+  /**
+   *
+   * There should be some way to abstract over the arguments. For now, this is carved out as a separate method for use by the Visitor AIP
+   *
+   * @param tpe                     Need the base Data Type.
+   * @param tpeCase                 For the specific data type case.
+   * @param op                      That has an operation to be implemented.
+   * @param domain                  Context for the operation.
+   * @param domainSpecific          And the logic can be found in the EIP.
+   * @param target                  Target that will receive the Request.
+   * @param attributeAccess         Can attributes be directly accessed or done via getters?
+   * @param baseType                If available, the actual Base Type to use in place of recursive Expression.
+   * @return                        Return the body of the method.
+   */
+  def completeImplementationFromParameters(tpe: DataType, tpeCase: DataTypeCase, op: Operation, domain: GenericModel,
+           domainSpecific: EvolutionImplementationProvider[this.type],
+           target: Generator[MethodBodyContext, Expression] = targetSelf,
+           attributeAccess:(Attribute, DataTypeCase, GenericModel, Option[paradigm.syntax.Type])  => Generator[MethodBodyContext, Expression] = attributeDirectAccess,
+           baseType: Option[paradigm.syntax.Type] = None): Generator[MethodBodyContext, Option[Expression]] = {
+
+    import ooParadigm.methodBodyCapabilities._
+
+    val properModel = latestModelDefiningOperatorClass(domain, tpeCase, op,  domainSpecific).get
+
+    for {
+      targetRef <- target
+
+      /** Direct access or use as is provided. */
+      attributes <- {
+        for {
+          attAccessors <- forEach (tpeCase.attributes) { att => attributeAccess(att, tpeCase, domain, baseType) }
+          atts = tpeCase.attributes.zip(attAccessors).toMap
+        } yield atts
+      }
+
+      /** Direct argument access or use as is provided. */
+      arguments <- forEach (op.parameters) { param =>
+        for {
+          thisRef <- selfReference()
+          paramField <- getMember(thisRef, names.mangle(param.name))
+        } yield (param, paramField)
+      }
+
+      result <-
+        domainSpecific.logic(this)(
+          ReceivedRequest(
+            tpe,
+            tpeCase,
+            targetRef,
+            attributes,
+            Request(op, arguments.toMap),
+            Some(properModel)
+          )
+        )
+    } yield result
+  }
 
   /**
    * Provides a method implementation that contains the logic of the operation encoded
@@ -139,38 +325,14 @@ trait SharedOO extends ApproachImplementationProvider {
    * @param domainSpecific  And the logic can be found in the EIP.
    * @return                Return the body of the method.
    */
-  def makeImplementation(
-                          tpe: DataType,
-                          tpeCase: DataTypeCase,
-                          op: Operation,
-                          model: GenericModel,
-                          domainSpecific: EvolutionImplementationProvider[this.type]
-                        ): Generator[MethodBodyContext, Option[Expression]] = {
-    import paradigm.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
-
-    val properModel = latestModelDefiningOperatorClass(model, tpeCase, op,  domainSpecific).get
-
+  def makeImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation, model: GenericModel,
+          domainSpecific: EvolutionImplementationProvider[this.type],
+          target: Generator[MethodBodyContext, Expression] = targetSelf,
+          attributeAccess:(Attribute, DataTypeCase, GenericModel, Option[paradigm.syntax.Type])  => Generator[MethodBodyContext, Expression] = attributeDirectAccess,
+          baseType: Option[paradigm.syntax.Type] = None): Generator[MethodBodyContext, Option[Expression]] = {
     for {
       _ <- makeSignature(op)
-      thisRef <- selfReference()
-      attAccessors <- forEach (tpeCase.attributes) { att =>
-        getMember(thisRef, names.mangle(names.instanceNameOf(att)))
-      }
-      atts = tpeCase.attributes.zip(attAccessors).toMap
-      allArgs <- getArguments()
-      args = op.parameters.zip(allArgs).map { case (param, arg) => (param, arg._3) }.toMap
-      result <-
-        domainSpecific.logic(this)(
-          ReceivedRequest(
-            tpe,
-            tpeCase,
-            thisRef,
-            atts,
-            Request(op, args),
-            Some(properModel)
-          )
-        )
+      result <- completeImplementation(tpe, tpeCase, op, model, domainSpecific, target, attributeAccess, baseType)
     } yield result
   }
 
@@ -225,7 +387,6 @@ trait SharedOO extends ApproachImplementationProvider {
 
     } yield ()
   }
-
 
   /**
    *  Make a single getter method for the 'att' attribute which only has signature, and no body.

@@ -28,7 +28,6 @@ Trees that grow
 Notes: A1M3 for coco needs a full Exp and Factory. Why? Because otherwise merge accessing finalized instances from A1 are incompatible with
 the finalized instances from M3. Similar argument for M3W1 and even A1M3I2
 
-
    ifEqExpr <- ffiEquals.equalityCapabilities.areEqual(expType, expValue, zero)
      where expType is expType <- toTargetLanguageType(TypeRep.Double)
 
@@ -38,3 +37,7 @@ ALgebra had to go back to its own "dataTypeCasesWithNewOperations" for some reas
 
 So Coco, Trivially and Algebra all have slightly different results and it REALLY makes me curious
 as to why
+
+============================
+
+Runtime Dispatch FAILS whenever pass in a model. if we can fix this, then I can better integrate with OO code.

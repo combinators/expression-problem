@@ -275,16 +275,31 @@ sealed trait Interpreter extends SharedOO {
     !latestModelDefiningNewTypeInterface(domain).beforeOrEqual(definingModel)
   }
 
-  def makeInterpreterImplementation(domain: GenericModel,
-                          tpe: DataType,
-                          tpeCase: DataTypeCase,
-                          op: Operation,
-                          domainSpecific: EvolutionImplementationProvider[this.type]
-                        ): Generator[MethodBodyContext, Option[Expression]] = {
+  /**
+   * Access attributes using default getter methods.
+   *
+   * @param attribute    Data Type Case attribute to be accessed
+   * @return
+   */
+  def attributeInterpreterAccess(att:Attribute, tpeCase: DataTypeCase, domain:GenericModel, baseType:Option[paradigm.syntax.Type]) : Generator[MethodBodyContext, Expression] = {
+    import ooParadigm.methodBodyCapabilities._
+
+    for {
+      thisRef <- selfReference()
+      att_member <- getMember(thisRef, names.mangle(names.instanceNameOf(att)))
+      casted <- if (att.tpe.isModelBase(domain) && mustCastToAccess(domain, tpeCase)) {    // only cast if Exp AND comes from older Exp
+        castObject(baseType.get, att_member)
+      } else {
+        Command.lift[MethodBodyContext, Expression](att_member)
+      }
+    } yield casted
+  }
+
+  def makeInterpreterImplementation(domain: GenericModel, tpe: DataType, tpeCase: DataTypeCase, op: Operation,
+                          domainSpecific: EvolutionImplementationProvider[this.type]): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
     import polymorphics.methodBodyCapabilities._
-    val properModel = latestModelDefiningOperatorClass(domain, tpeCase, op, domainSpecific).get
 
     for {
       _ <- makeInterpreterSignature(domain, op)
@@ -293,46 +308,9 @@ sealed trait Interpreter extends SharedOO {
         } else {
           Command.skip[MethodBodyContext]
         }
-      thisRef <- selfReference()
-      attAccessors: Seq[Expression] <- forEach (tpeCase.attributes) { att =>
-        for {
-          att_member <- getMember(thisRef, names.mangle(names.instanceNameOf(att)))
-          mostSpecificExp <- mostSpecificBaseInterfaceType(domain)
-          casted <- if (att.tpe.isModelBase(domain) && mustCastToAccess(domain, tpeCase)) {    // only cast if Exp AND comes from older Exp
-            castObject(mostSpecificExp, att_member)
-          } else {
-            Command.lift[MethodBodyContext, Expression](att_member)
-          }
-        } yield casted
-      }
 
-      atts = tpeCase.attributes.zip(attAccessors).toMap
-
-      allArgs <- getArguments()
-      castedArgs <- forEach(op.parameters.zip(allArgs)) { case (param,arg) =>
-        for {
-          mostSpecificExp <- mostSpecificBaseInterfaceType(domain)
-          casted <- if (param.tpe.isModelBase(domain)) {    // only cast if Exp
-            castObject(mostSpecificExp, arg._3)
-          } else {
-            Command.lift[MethodBodyContext, Expression](arg._3)
-          }
-        } yield (param,casted)
-      }
-
-      castedArgsMap = castedArgs.toMap
-
-      result <-
-        domainSpecific.logic(this)(
-          ReceivedRequest(
-            tpe,
-            tpeCase,
-            thisRef,
-            atts,
-            Request(op, castedArgsMap),
-            Some(properModel)   // scala implementation for j8 needed this
-          )
-        )
+      mostSpecificExp <- mostSpecificBaseInterfaceType(domain)
+      result <- completeImplementation(domain.baseDataType, tpeCase, op, domain, domainSpecific, attributeAccess=attributeInterpreterAccess, baseType=Some(mostSpecificExp))
     } yield result
   }
 

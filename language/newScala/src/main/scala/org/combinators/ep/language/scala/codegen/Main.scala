@@ -224,7 +224,7 @@ class Main(choice:String, select:String) {
 
   val m9_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     if (choice == "functional") {
-      eips.M9funct(approach.paradigm)(m8_eip)(generator.functional, generator.functionalControl, generator.doubles, generator.realDoubles, generator.equality)
+      eips.M9funct(approach.paradigm)(m8_eip)(generator.functionalControl, generator.doubles)
     } else {
       eips.M9(approach.paradigm)(m8_eip)(generator.doubles, generator.realDoubles, generator.imperative)
     }
@@ -313,8 +313,7 @@ class Main(choice:String, select:String) {
 
   val j8_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
   if (choice == "functional") {
-    //m0_eip // not compatible for functional
-    eips.systemJK.J8(approach.paradigm)(j7_eip)(generator.doubles, generator.realDoubles, generator.imperative)
+    eips.systemJK.J8funct(approach.paradigm)(j7_eip)(generator.functionalControl, generator.doubles)
   } else {
     eips.systemJK.J8(approach.paradigm)(j7_eip)(generator.doubles, generator.realDoubles, generator.imperative)
   }
@@ -564,9 +563,9 @@ object DirectToDiskMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
     // "M9", "J8", "A3", "O1OA", "OD3", "OO3", "V1", "D3", "I2M3I1N1", "O2"
-    val approach = if (args.isEmpty) "visitor" else args.head
+    val approach = if (args.isEmpty) "functional" else args.head
     if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "V1" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "M2_ABS" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 

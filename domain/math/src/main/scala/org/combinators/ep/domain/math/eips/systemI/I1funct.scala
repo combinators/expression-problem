@@ -81,7 +81,7 @@ object I1funct {
 
           //            def multByRec: Double => ep.Exp = (multiplier: Double) => {
           //               if (1 < multiplier) {
-          //                  add(self, powByRec(multiplier - 1))
+          //                  add(self, multByRec(multiplier - 1))
           //               } else {
           //                  self
           //               }

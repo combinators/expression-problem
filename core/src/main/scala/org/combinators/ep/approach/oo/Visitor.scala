@@ -135,8 +135,6 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
 
     // Properly cast all Base arguments to designated baseType (which was used in the method signature)
     for {
-      //thisRef <- selfReference()
-      args <- getArguments()
       expRef <- getArguments().map(_.head._3)
       paramField <- getMember(expRef, names.mangle(param.name))
     } yield paramField
@@ -147,7 +145,6 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
     import ooParadigm.methodBodyCapabilities._
 
     for {
-      args <- getArguments()
       expRef <- getArguments().map(_.head._3)
     } yield expRef
   }

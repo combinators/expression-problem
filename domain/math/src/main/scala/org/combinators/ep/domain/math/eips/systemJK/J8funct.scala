@@ -1,29 +1,28 @@
-package org.combinators.ep.domain.math.eips      /*DD:LI:AI*/
+package org.combinators.ep.domain.math.eips.systemJK      /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, TypeRep}
+import org.combinators.ep.domain.abstractions.{Operation, TypeRep}
 import org.combinators.ep.domain.instances.InstanceRep
-import org.combinators.ep.domain.{abstractions, math}
-import org.combinators.ep.generator.Command.{Generator, lift}
-import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
+import org.combinators.ep.domain.{GenericModel, math}
+import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
-import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
-import org.combinators.ep.generator.paradigm.control.{ConstructorPattern, Imperative}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, Functional, control}
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Equality, RealArithmetic, Strings}
+import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
+import org.combinators.ep.generator.paradigm.{AnyParadigm, control}
+import org.combinators.ep.generator.paradigm.ffi.Arithmetic
+import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
-object M9funct {
+object J8funct {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
-  (m8Provider : EvolutionImplementationProvider[AIP[paradigm.type]])
+  (j7Provider : EvolutionImplementationProvider[AIP[paradigm.type]])
   (functionalControl: control.Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
-    val m9Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.M9.getModel
+    val j8Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
+      override val model: GenericModel = math.systemJK.J8.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
-          _ <- m8Provider.initialize(forApproach)
+          _ <- j7Provider.initialize(forApproach)
           _ <- ffiArithmetic.enable()
         } yield ()
       }
@@ -32,7 +31,7 @@ object M9funct {
         val cases = math.M9.getModel.flatten.typeCases
         if (cases.contains(potentialRequest.tpeCase)) {
           (potentialRequest.op, potentialRequest.tpeCase) match {
-            case (math.M9.Height, _) => Some(Set.empty)
+            case (math.systemJK.J8.Height, _) => Some(Set.empty)
             case (_, _) => None
           }
         } else {
@@ -42,8 +41,8 @@ object M9funct {
 
       /** Generic logic takes care of the structure-based cases, only Lit needs special handling. */
       override def genericLogic
-        (forApproach: AIP[paradigm.type])
-        (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
+      (forApproach: AIP[paradigm.type])
+      (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
         import functionalControl.functionalCapabilities._
         import ffiArithmetic.arithmeticCapabilities._
@@ -52,7 +51,7 @@ object M9funct {
           onRequest.tpeCase match {
 
             // these are all binary cases
-            case binary@(math.M3.Neg | math.M3.Mult | math.M3.Divd | math.M0.Add | math.M1.Sub | math.systemI.I2.Power | math.M8.Inv) =>
+            case binary@(math.systemJK.J7.Inv | math.systemJ.J2.Mult | math.systemJ.J3.Divd | math.M0.Add | math.systemJ.J1.Sub | math.systemK.K1.Power) =>
               for {
                 left <- forApproach.dispatch(SendRequest(
                   onRequest.attributes(binary.attributes.head),
@@ -73,7 +72,7 @@ object M9funct {
               } yield Some(result)
           }
         } else {
-          m8Provider.genericLogic(forApproach)(onRequest)
+          j7Provider.genericLogic(forApproach)(onRequest)
         }
       }
 
@@ -92,7 +91,7 @@ object M9funct {
               zero <- forApproach.reify(InstanceRep(TypeRep.Int)(0))
             } yield Some(zero)
 
-          case neg@math.M3.Neg =>
+          case neg@math.systemJ.J3.Neg =>
             for {
               one <- forApproach.reify(InstanceRep(TypeRep.Int)(1))
 
@@ -111,6 +110,6 @@ object M9funct {
     }
 
     // newest first
-    monoidInstance.combine(m9Provider, m8Provider)
+    monoidInstance.combine(j8Provider, j7Provider)
   }
 }

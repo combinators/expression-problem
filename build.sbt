@@ -3,12 +3,10 @@ lazy val commonSettings = Seq(
   version := "1.0.0-SNAPSHOT",
   organization := "org.combinators",
 
-  scalaVersion := "2.12.17",
-
-  resolvers ++= Seq(
-    Resolver.sonatypeRepo("releases"),
-    Resolver.typesafeRepo("releases")
-  ),
+  scalaVersion := "2.13.16",
+  
+  resolvers += Resolver.typesafeRepo("releases"),
+  resolvers ++= Resolver.sonatypeOssRepos("releases"),
 
   Compile/scalacOptions ++= Seq(
     "-unchecked",
@@ -19,26 +17,19 @@ lazy val commonSettings = Seq(
     "-language:higherKinds"
   ),
 
-  Compile/scalacOptions ++= Seq(
-    "-unchecked",
-    "-deprecation",
-    "-feature",
-    "-language:implicitConversions"
-  ),
-
   libraryDependencies ++= Seq(
-    "org.combinators" %% "jgitserv" % "0.0.1",
-    "org.scalactic" %% "scalactic" % "3.2.2" % "test",
-    "org.scalatest" %% "scalatest" % "3.2.2" % "test",
-    "org.scalameta" %% "scalameta" % "4.4.27",
-    "org.scalameta" %% "contrib" % "4.1.6",
-    "org.typelevel" %% "cats-core" % "2.3.1",
-    "org.typelevel" %% "cats-free" % "2.3.1",
-    "org.typelevel" %% "cats-effect" % "2.3.1"
+//    "org.combinators" %% "jgitserv" % "0.0.1",
+    "org.scalactic" %% "scalactic" % "3.2.19" % "test",
+    "org.scalatest" %% "scalatest" % "3.2.19" % "test",
+//    "org.scalameta" %% "scalameta" % "4.4.27",
+//    "org.scalameta" %% "contrib" % "4.1.6",
+    "org.typelevel" %% "cats-core" % "2.13.0",
+    "org.typelevel" %% "cats-free" % "2.13.0",
+    "org.typelevel" %% "cats-effect" % "3.6.1"
   ),
   evictionErrorLevel := Level.Info,
 
-  addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
+  // addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.3")
 )
 
 /** The core components to model expression problem code generators and domains.

@@ -50,7 +50,7 @@ trait RealArithmetic[Context, T] extends FFI {
 
     implicit val canPi: Understands[Context, Pi[Expression]]
     def pi(): Generator[Context, Expression] =
-      AnyParadigm.capability(Pi[Expression])
+      AnyParadigm.capability(Pi[Expression]())
 
     implicit val canAbs: Understands[Context, Apply[Abs[T], Expression, Expression]]
     def abs(xs: Expression): Generator[Context, Expression] =

@@ -3,7 +3,7 @@ lazy val commonSettings = Seq(
   version := "1.0.0-SNAPSHOT",
   organization := "org.combinators",
 
-  scalaVersion := "2.13.16",
+  scalaVersion := "3.6.4",
   
   resolvers += Resolver.typesafeRepo("releases"),
   resolvers ++= Resolver.sonatypeOssRepos("releases"),
@@ -13,23 +13,20 @@ lazy val commonSettings = Seq(
     "-deprecation",
     "-feature",
     "-language:implicitConversions",
-    "-Ypartial-unification",
-    "-language:higherKinds"
+    "-language:higherKinds",
+    "-Xkind-projector:underscores",
   ),
 
   libraryDependencies ++= Seq(
 //    "org.combinators" %% "jgitserv" % "0.0.1",
+    "org.combinators" %% "templating" % "1.1.5",
     "org.scalactic" %% "scalactic" % "3.2.19" % "test",
     "org.scalatest" %% "scalatest" % "3.2.19" % "test",
-//    "org.scalameta" %% "scalameta" % "4.4.27",
-//    "org.scalameta" %% "contrib" % "4.1.6",
     "org.typelevel" %% "cats-core" % "2.13.0",
     "org.typelevel" %% "cats-free" % "2.13.0",
     "org.typelevel" %% "cats-effect" % "3.6.1"
   ),
   evictionErrorLevel := Level.Info,
-
-  // addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.3")
 )
 
 /** The core components to model expression problem code generators and domains.
@@ -39,8 +36,6 @@ lazy val core = (Project(id = "core", base = file("core")))
   .settings(commonSettings: _*)
   .settings(
     moduleName := "expression-problem-core",
-    //addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3"),
-    addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")
   )
 
 /** Template for a subproject for a specific domain named `domainName`.
@@ -72,7 +67,7 @@ def standardLanguageProject(languageName: String): Project =
 
 lazy val languageJava =
   standardLanguageProject("java")
-    .settings(libraryDependencies += "com.github.javaparser" % "javaparser-core" % "3.19.0")
+    .settings(libraryDependencies += "com.github.javaparser" % "javaparser-core" % "3.26.4")
     .settings(
       Compile/run/mainClass := Some("org.combinators.ep.language.java.GenerateAll")
      )
@@ -85,12 +80,6 @@ lazy val helloWorldProject: Project =
     )
     .dependsOn(core, languageJava, languageNewScala)
 
-lazy val exitSBT =
-  standardLanguageProject("java")
-    .settings(libraryDependencies += "com.github.javaparser" % "javaparser-core" % "3.19.0")
-    .settings(
-      Compile/run/mainClass := Some("org.combinators.ep.language.java.Exit")
-    )
 lazy val languageInbetween =
   standardLanguageProject("inbetween")
     .dependsOn(core)
@@ -102,8 +91,5 @@ lazy val languageNewScala =
       Compile/run/mainClass := Some("org.combinators.ep.language.scala.codegen.GenerateAll")
     )
 
-//lazy val languageGJ = standardLanguageProject("gj")
-//lazy val languageCPP = standardLanguageProject("cpp")
-//lazy val languageHaskell = standardLanguageProject("haskell")
 
 

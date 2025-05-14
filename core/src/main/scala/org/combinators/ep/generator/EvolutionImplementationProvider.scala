@@ -80,7 +80,7 @@ trait EvolutionImplementationProvider[-AIP <: ApproachImplementationProvider] {
               ))
           }
 
-          res <- forApproach.instantiate(model.baseDataType, dt, processedAtts : _ *)
+          res <- forApproach.instantiate(model.baseDataType, dt, processedAtts*)
         } yield Some(res)
     }
   }

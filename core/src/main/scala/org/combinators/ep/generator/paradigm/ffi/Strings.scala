@@ -41,7 +41,7 @@ trait Strings[Context] extends FFI {
         sepExp <- Reify[String, Expression](TypeRep.String, sep).interpret
         endExp <- Reify[String, Expression](TypeRep.String, end).interpret
         inters = startExp +: make(sepExp, endExp, tl => tl, exprs)
-        res <- stringAppend(inters:_*)
+        res <- stringAppend(inters*)
       } yield res
     }
 

@@ -104,7 +104,7 @@ trait Traditional extends ApproachImplementationProvider {
     }
 
     for {
-      params <- forEach (Parameter(names.instanceNameOf(tpe), TypeRep.DataType(tpe)) +: op.parameters) { param: Parameter =>
+      params <- forEach (Parameter(names.instanceNameOf(tpe), TypeRep.DataType(tpe)) +: op.parameters) { (param: Parameter) =>
           for {
             pt <- toTargetLanguageType(param.tpe)
             _ <- resolveAndAddImport(pt)

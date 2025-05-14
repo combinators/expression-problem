@@ -83,7 +83,7 @@ trait SharedOO extends ApproachImplementationProvider {
       rt <- toTargetLanguageType(op.returnType)
       _ <- resolveAndAddImport(rt)
       _ <- setReturnType(rt)
-      params <- forEach (op.parameters) { param: Parameter =>
+      params <- forEach (op.parameters) { (param: Parameter) =>
         for {
           pt <- toTargetLanguageType(param.tpe)
           _ <- resolveAndAddImport(pt)
@@ -108,7 +108,7 @@ trait SharedOO extends ApproachImplementationProvider {
 
     val orderedImplementers = domainsImplementingOp.toSeq
       .filter(d => d.beforeOrEqual(domain)) // filter to make sure we are before the current domain (we are not interested in later EIPs)
-      .sorted(cmp)
+      .sorted((x, y) => cmp(x, y))
       .reverse
 
     // Are there two non-comparable ancestors l, r that haven't been merged by a third m which is past both? Then we are
@@ -361,7 +361,7 @@ trait SharedOO extends ApproachImplementationProvider {
     import ooParadigm.constructorCapabilities._
 
     for {
-      params <- forEach (tpeCase.attributes) { att: Attribute =>
+      params <- forEach (tpeCase.attributes) { (att: Attribute) =>
         for {
           at <- toTargetLanguageType(att.tpe)
           pName <- freshName(names.mangle(names.instanceNameOf(att)))

@@ -410,8 +410,7 @@ trait CoCoClean extends SharedOO {
        } else {
          None
        }
-
-      result
+       result
     }
   }
 

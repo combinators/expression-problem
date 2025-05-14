@@ -44,7 +44,7 @@ trait ApproachImplementationProvider {
   def instantiate(baseType: DataType, inst: DataTypeInstance): Generator[MethodBodyContext, Expression] = {
     for {
       attributeInstances <- forEach (inst.attributeInstances) { ati => reify(ati) }
-      result <- instantiate(baseType, inst.tpeCase, attributeInstances: _*)
+      result <- instantiate(baseType, inst.tpeCase, attributeInstances*)
     } yield result
   }
 
@@ -68,7 +68,6 @@ trait ApproachImplementationProvider {
           _ <- resolveAndAddImport(resTy)
           res <- methodBodyCapabilities.reify[tpe.HostType](tpe, inst.asInstanceOf[tpe.HostType])
         } yield res
-      case _ => throw new scala.NotImplementedError(s"No rule to compile instantiations of ${inst.tpe}.")
     }
   }
 

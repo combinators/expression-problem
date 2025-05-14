@@ -83,10 +83,10 @@ trait Visualize extends SharedOO {
     val lastExp = latestModelDefiningInterface(domain)
     val overriddenMap1 = domain.toSeq.filter(dm => lastExp.before(dm)).flatMap(m => m.optimizations).groupBy(_._1).map(f => (f._1, f._2.map(pair => pair._2).toSet))        //.groupBy{ case (tpe, op) => tpe. }
 
-    println("OverrideMap: ", domain.name + "," + overriddenMap.map(pair => pair._1.name + " [" + pair._2.map(op => op.name)
+    println(s"""OverrideMap: ${domain.name}, ${overriddenMap.map(pair => pair._1.name + " [" + pair._2.map(op => op.name)
       .foldLeft("") {case (g,str) => g + str + ","}
       + "], ")
-      .foldLeft("") { case (group, str) => group + str })
+      .foldLeft("") { case (group, str) => group + str }}""")
 
     // Merging makes this more complicated BECAUSE there could be multiple Exp that are brought together,
     // and if so, then will need to BLEND together
@@ -118,10 +118,10 @@ trait Visualize extends SharedOO {
     } else { Map.empty[DataTypeCase, Set[Operation]]}
 
 
-    println("MergeMap: ", domain.name + "," + mergeMap0.map(pair => pair._1.name + " [" + pair._2.map(op => op.name)
+    println(s"""MergeMap: ${domain.name}, ${mergeMap0.map(pair => pair._1.name + " [" + pair._2.map(op => op.name)
       .foldLeft("") {case (g,str) => g + str + ","}
       + "], ")
-      .foldLeft("") { case (group, str) => group + str })
+      .foldLeft("") { case (group, str) => group + str }}""")
 
     // whenever a new Exp is defined, MUST duplicate logic for all producer methods; incorporate into logic below
     val addedExp = domain == latestModelDefiningInterface(domain)
@@ -181,10 +181,10 @@ trait Visualize extends SharedOO {
         }
       }
     }
-    println("ResultsMap: ", domain.name + "," + results0.map(pair => pair._1.name + " [" + pair._2.map(op => op.name)
+    println(s"""ResultsMap: ${domain.name}, ${results0.map(pair => pair._1.name + " [" + pair._2.map(op => op.name)
       .foldLeft("") {case (g,str) => g + str + ","}
       + "], ")
-      .foldLeft("") { case (group, str) => group + str })
+      .foldLeft("") { case (group, str) => group + str }}""")
 
     val res =
       Seq(overriddenMap1, mergeResults, resultss)
@@ -437,12 +437,12 @@ trait Visualize extends SharedOO {
 //         + "], ")
 //        .foldLeft("") { case (group, str) => group + str }
 //    ))
-    gdomain.toSeq.foreach(m => println(m.name, " has ", latestModelDefiningNewTypeInterface2(m).name))
+    gdomain.toSeq.foreach(m => println(s"""${m.name} has ${latestModelDefiningNewTypeInterface2(m).name}"""))
 
     println()
 
     gdomain.toSeq.foreach(m =>
-      println(m.name, " has ", latestModelDefiningNewTypeInterface3(m).name))
+      println(s"""${m.name} has, ${latestModelDefiningNewTypeInterface3(m).name}"""))
 
     print("CoCo:" + gdomain.name)
     val outputCoCO = new java.io.File(new java.io.File("target"), "coco-newDataTypeCases.txt")

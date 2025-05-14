@@ -878,7 +878,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
   def latestDependenciesForOp(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type], op: Operation)(tpeCases: Seq[DataTypeCase] = domain.flatten.typeCases.distinct): Seq[Operation] = {
     tpeCases.distinct.flatMap(tpeCase => {
       val dependencies = domainSpecific.evolutionSpecificDependencies(PotentialRequest(domain.baseDataType, tpeCase, op))
-      val dependenciesDeclaredBeforeCurrentDomain = dependencies.filterKeys(d => d.beforeOrEqual(domain))
+      val dependenciesDeclaredBeforeCurrentDomain = dependencies.view.filterKeys(d => d.beforeOrEqual(domain))
       val latestDependencies = dependenciesDeclaredBeforeCurrentDomain
         .max((l: (GenericModel, Set[Operation]), r: (GenericModel, Set[Operation])) => {
           if (l._1.before(r._1)) -1 else if (r._1.before(l._1)) 1 else 0
@@ -903,7 +903,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
 
     val orderedImplementers = domainsImplementingOp.distinct
       .filter(d => d.beforeOrEqual(domain)) // filter to make sure we are before the current domain (we are not interested in later EIPs)
-      .sorted(cmp)
+      .sorted((x, y) => cmp(x, y))
       .reverse
 
     // Are there two non-comparable ancestors l, r that haven't been merged by a third m which is past both? Then we are

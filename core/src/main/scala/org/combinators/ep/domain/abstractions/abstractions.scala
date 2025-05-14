@@ -249,7 +249,7 @@ object EqualsTestCase {
            domainObject: DataTypeInstance,
            op: Operation,
            expected: InstanceRep,
-           params: InstanceRep*) : EqualsTestCase = EqualsTestCase(baseTpe, domainObject, op, Seq.empty, expected, params:_*)
+           params: InstanceRep*) : EqualsTestCase = EqualsTestCase(baseTpe, domainObject, op, Seq.empty, expected, params*)
 }
 
 /** Models a test case which applies operation `op` to `domainObject` and `params`, expecting a result
@@ -268,7 +268,7 @@ object NotEqualsTestCase {
             domainObject: DataTypeInstance,
             op: Operation,
             expected: InstanceRep,
-            params: InstanceRep*) : NotEqualsTestCase = NotEqualsTestCase(baseTpe, domainObject, op, Seq.empty, expected, params:_*)
+            params: InstanceRep*) : NotEqualsTestCase = NotEqualsTestCase(baseTpe, domainObject, op, Seq.empty, expected, params*)
 }
 
 /** Models a test case which sequentially applies the operations `ops` with their given parameters to the
@@ -293,7 +293,7 @@ object EqualsCompositeTestCase {
   def apply(baseTpe: DataType,
            startObject: DataTypeInstance,
            expected: InstanceRep,
-           ops: (Operation, Seq[InstanceRep])*) : EqualsCompositeTestCase = EqualsCompositeTestCase(baseTpe, Seq.empty, startObject, expected, ops:_*)
+           ops: (Operation, Seq[InstanceRep])*) : EqualsCompositeTestCase = EqualsCompositeTestCase(baseTpe, Seq.empty, startObject, expected, ops*)
 }
 
 /** Models a performance test case.

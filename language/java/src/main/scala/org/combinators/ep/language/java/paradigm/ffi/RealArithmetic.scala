@@ -33,7 +33,7 @@ class RealArithmetic[Ctxt, T, AP <: AnyParadigm](
         context: Ctxt,
         command: Apply[Op, Expression, Expression]
       ): (Ctxt, Expression) = {
-        (context, new MethodCallExpr(mathExp, methodName, new NodeList[Expression](command.arguments: _*)))
+        (context, new MethodCallExpr(mathExp, methodName, new NodeList[Expression](command.arguments*)))
       }
     }
 

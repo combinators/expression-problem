@@ -2,7 +2,7 @@ package org.combinators.ep.language.java.paradigm    /*DI:LD:AI*/
 
 import java.nio.file.Paths
 import java.util.UUID
-import com.github.javaparser.ast.{ImportDeclaration, Modifier, NodeList}
+import com.github.javaparser.ast.{ImportDeclaration, Modifier, NodeList, Node}
 import com.github.javaparser.ast.`type`.VoidType
 import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.expr.{MethodCallExpr, NameExpr, NullLiteralExpr}
@@ -12,7 +12,7 @@ import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, FileWithPath, Understands}
-import org.combinators.ep.generator.paradigm.{AnyParadigm => AP, _}
+import org.combinators.ep.generator.paradigm.{AnyParadigm => AP, ObjectOriented => _, _}
 import org.combinators.ep.language.java.Syntax.MangledName
 import org.combinators.ep.language.java.{CodeGenerator, CompilationUnitCtxt, Config, ContextSpecificResolver, FreshNameCleanup, ImportCleanup, JavaNameProvider, MethodBodyCtxt, ProjectCtxt, Syntax, TestCtxt}
 import org.combinators.templating.persistable.{BundledResource, JavaPersistable}
@@ -21,8 +21,9 @@ import org.combinators.ep.language.java.ResourcePersistable
 import scala.util.Try
 import scala.jdk.CollectionConverters._
 
+
 trait AnyParadigm extends AP {
-  val config: Config
+  lazy val config: Config
   val syntax: Syntax.default.type = Syntax.default
   import syntax._
 
@@ -317,6 +318,7 @@ trait AnyParadigm extends AP {
             context: MethodBodyCtxt,
             command: Apply[Expression, Expression, Expression]
           ): (MethodBodyCtxt, Expression) = {
+            import scala.reflect.Selectable.reflectiveSelectable
             val resultExp: Expression =
               if (command.functional.isMethodCallExpr) {
                 val res = command.functional.asMethodCallExpr().clone()
@@ -325,10 +327,10 @@ trait AnyParadigm extends AP {
               } else {
                 val scope =
                   command.functional match {
-                    case n: NodeWithScope[Expression] => n.getScope
+                    case n: NodeWithScope[_] => n.getScope
                     case _ => null
                   }
-                new MethodCallExpr(scope, command.functional.asInstanceOf[NodeWithSimpleName[_]].getNameAsString, new NodeList[Expression](command.arguments: _*))
+                new MethodCallExpr(scope, command.functional.asInstanceOf[NodeWithSimpleName[Node]].getNameAsString, new NodeList[Expression](command.arguments*))
               }
             (context, resultExp)
           }
@@ -340,7 +342,7 @@ trait AnyParadigm extends AP {
             context: MethodBodyCtxt,
             command: GetArguments[Type, Name, Expression]
           ): (MethodBodyCtxt, Seq[(Name, Type, Expression)]) = {
-            val params = context.method.getParameters.asScala.map { param =>
+            val params = context.method.getParameters.asScala.toSeq.map { param =>
               (MangledName.fromAST(param.getName), param.getType, new NameExpr(param.getName))
             }
             (context, params)
@@ -521,11 +523,11 @@ trait AnyParadigm extends AP {
          """.stripMargin
     val cleanedUnits =
      ImportCleanup.cleaned(
-        FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.units: _*) : _*
+        FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.units*)*
      )
     val cleanedTestUnits =
       ImportCleanup.cleaned(
-        FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.testUnits: _*): _*
+        FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.testUnits*)*
       )
     val javaFiles = cleanedUnits.map { unit =>
       FileWithPath(

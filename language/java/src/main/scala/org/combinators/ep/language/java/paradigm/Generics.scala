@@ -15,8 +15,9 @@ trait Generics[AP <: AnyParadigm] extends Gen {
   import base.syntax._
   import ooParadigm._
   import ppolyParadigm._
+  
   val classCapabilities: ClassCapabilities =
-    new ClassCapabilities {
+    new ClassCapabilities {      
       implicit val canAddTypeParameterInClass: Understands[ClassContext, AddTypeParameter[Name, TypeParameterContext]] =
         new Understands[ClassContext, AddTypeParameter[Name, TypeParameterContext]] {
           def perform(context: ClassContext, command: AddTypeParameter[Name, TypeParameterContext]): (ClassContext, Unit) = {
@@ -33,7 +34,7 @@ trait Generics[AP <: AnyParadigm] extends Gen {
       implicit val canGetTypeArgumentsInClass: Understands[ClassContext, GetTypeArguments[Type]] =
         new Understands[ClassContext, GetTypeArguments[Type]] {
           def perform(context: ClassContext, command: GetTypeArguments[Type]): (ClassContext, Seq[Type]) = {
-            val ctp = context.cls.getTypeParameters.asScala.map(tp => {
+            val ctp = context.cls.getTypeParameters.asScala.toSeq.map(tp => {
               val result = new ClassOrInterfaceType()
               result.setName(tp.getName)
             })
@@ -50,7 +51,7 @@ trait Generics[AP <: AnyParadigm] extends Gen {
               else arg.clone()
             }
             if (boxedArguments.nonEmpty) {
-              resultTpe.setTypeArguments(boxedArguments: _*)
+              resultTpe.setTypeArguments(boxedArguments*)
             }
             (context, resultTpe)
           }
@@ -91,7 +92,7 @@ trait Generics[AP <: AnyParadigm] extends Gen {
               else arg.clone()
             }
             if (boxedArguments.nonEmpty) {
-              resultTpe.setTypeArguments(boxedArguments: _*)
+              resultTpe.setTypeArguments(boxedArguments*)
             }
             (context, resultTpe)
           }
@@ -108,7 +109,7 @@ trait Generics[AP <: AnyParadigm] extends Gen {
               else arg.clone()
             }
             if (boxedArguments.nonEmpty) {
-              resultTpe.setTypeArguments(boxedArguments: _*)
+              resultTpe.setTypeArguments(boxedArguments*)
             }
             (context, resultTpe)
           }
@@ -122,7 +123,7 @@ trait Generics[AP <: AnyParadigm] extends Gen {
               else arg.clone()
             }
             if (boxedArguments.nonEmpty) {
-              resultExp.setTypeArguments(boxedArguments: _*)
+              resultExp.setTypeArguments(boxedArguments*)
             }
             (context, resultExp)
           }

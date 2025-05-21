@@ -8,7 +8,7 @@ import scala.util.Try
 
 /** Provides name mangling for Java */
 object JavaNameProvider extends NameProvider[MangledName] {
-  val parser = new JavaParser(StaticJavaParser.getConfiguration)
+  val parser = new JavaParser(StaticJavaParser.getParserConfiguration)
 
   /** Need to have single-param version so this can be used in map. */
   def mangle(name: String): MangledName = {

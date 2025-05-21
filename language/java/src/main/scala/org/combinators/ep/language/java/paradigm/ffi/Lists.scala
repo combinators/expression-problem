@@ -61,7 +61,7 @@ trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
           } else {
             for {
               _ <- AddImport[Import](new ImportDeclaration("java.util.Arrays", false, false)).interpret(canAddImport)
-            } yield new MethodCallExpr(ObjectOriented.nameToExpression(ObjectOriented.fromComponents("java", "util", "Arrays")), "asList", new NodeList[Expression](command.arguments:_*))
+            } yield new MethodCallExpr(ObjectOriented.nameToExpression(ObjectOriented.fromComponents("java", "util", "Arrays")), "asList", new NodeList[Expression](command.arguments*))
           }
         Command.runGenerator[Ctxt, Expression](gen, context)
       }
@@ -269,12 +269,12 @@ object Lists {
     val gen: generics.type = generics
 
     new Lists[Ctxt, b.type] {
-      lazy val base: b.type = b
-      lazy val getMember = gm
-      lazy val applyMethod = appMeth
-      lazy val applyType = appTy
-      lazy val addImport = addImp
-      lazy val generics: gen.type = gen
+      val base: b.type = b
+      val getMember = gm
+      val applyMethod = appMeth
+      val applyType = appTy
+      val addImport = addImp
+      val generics: gen.type = gen
     }
   }
 }

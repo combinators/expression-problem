@@ -39,7 +39,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             val (resultCtxt, _) =
               Command.runGenerator(
                 command.cls,
-                ClassCtxt(context.resolver, clsToAdd, context.unit.getImports.asScala)
+                ClassCtxt(context.resolver, clsToAdd, context.unit.getImports.asScala.toSeq)
               )
             val newUnit = context.unit.clone()
             newUnit.addType(resultCtxt.cls)
@@ -172,7 +172,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             val resultCls = context.cls.clone()
             val modifiers: Seq[Modifier.Keyword] =
             (if (command.isVisibleToSubclasses) Seq(Modifier.protectedModifier().getKeyword) else Seq(Modifier.privateModifier().getKeyword)) ++ (if (command.isMutable) Seq.empty else Seq(Modifier.finalModifier().getKeyword))
-            resultCls.addField(command.tpe, command.name.toAST.toString, modifiers:_*)
+            resultCls.addField(command.tpe, command.name.toAST.toString, modifiers*)
             (context.copy(cls = resultCls), ())
           }
         }
@@ -441,7 +441,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             /** Expand with instantiated body (if it exists). */
             val result = new ObjectCreationExpr()
             result.setType(tpe.asClassOrInterfaceType().clone())
-            result.setArguments(new NodeList(args : _*))
+            result.setArguments(new NodeList(args*))
             if (command.body.isDefined) {
               val ci = new ClassOrInterfaceDeclaration()
               val (newCtxt, classDef) = Command.runGenerator(command.body.get, ClassCtxt(context.resolver, ci, context.extraImports))
@@ -471,7 +471,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
               command.arguments.foreach(arg => result.addArgument(arg.clone()))
               (context, result)
             } else {
-              val result = new MethodCallExpr(command.functional.toString, command.arguments:_*)
+              val result = new MethodCallExpr(command.functional.toString, command.arguments*)
               (context, result)
             }
           }
@@ -512,7 +512,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             context: ConstructorContext,
             command: GetArguments[Type, Name, Expression]
           ): (ConstructorContext, Seq[(Name, Type, Expression)]) = {
-            val args = context.ctor.getParameters.asScala.map { param =>
+            val args = context.ctor.getParameters.asScala.toSeq.map { param =>
               (MangledName.fromAST(param.getName), param.getType.clone(), new NameExpr(param.getName.clone()))
             }
             (context, args)
@@ -601,7 +601,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             /** Expand with instantiated body (if it exists). */
             val result = new ObjectCreationExpr()
             result.setType(tpe.asClassOrInterfaceType().clone())
-            result.setArguments(new NodeList(args : _*))
+            result.setArguments(new NodeList(args*))
             if (command.body.isDefined) {
               val ci = new ClassOrInterfaceDeclaration()
               val (newCtxt, classDef) = Command.runGenerator(command.body.get, ClassCtxt(context.resolver, ci, context.extraImports))
@@ -813,9 +813,9 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
               (if (command.isVisibleToSubclasses) Seq(Modifier.protectedModifier().getKeyword) else Seq(Modifier.privateModifier().getKeyword)) ++ (if (command.isMutable) Seq.empty else Seq(Modifier.finalModifier().getKeyword))
 
             if (command.initializer.isDefined) {
-              resultCls.addFieldWithInitializer(command.tpe, command.name.toAST.toString, expr, modifiers: _*)
+              resultCls.addFieldWithInitializer(command.tpe, command.name.toAST.toString, expr, modifiers*)
             } else {
-              resultCls.addField(command.tpe, command.name.toAST.toString, modifiers: _*)
+              resultCls.addField(command.tpe, command.name.toAST.toString, modifiers*)
             }
 
             (context.copy(testClass = resultCls), ())
@@ -863,7 +863,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             /** REMOVED [Expand with instantiated body (if it exists).] */
             val result = new ObjectCreationExpr()
             result.setType(tpe.asClassOrInterfaceType().clone())
-            result.setArguments(new NodeList(args : _*))
+            result.setArguments(new NodeList(args*))
             (context, result)
           }
         }

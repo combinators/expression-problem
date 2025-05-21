@@ -65,7 +65,7 @@ trait Trees[Ctxt, AP <: AnyParadigm] extends Ts[Ctxt] {
             new ObjectCreationExpr(
               null,
               ObjectOriented.nameToType(nodeImport.getName),
-              new NodeList[Expression](command.arguments: _*)
+              new NodeList[Expression](command.arguments*)
             )
         Command.runGenerator(gen, context)
       }
@@ -199,9 +199,9 @@ object Trees {
     val oo: ooParadigm.type = ooParadigm
 
     new Trees[Ctxt, b.type] {
-      lazy val base: b.type = b
-      lazy val addImport: Understands[Ctxt, AddImport[Import]] = addImp
-      lazy val ooParadigm: oo.type = oo
+      val base: b.type = b
+      val addImport: Understands[Ctxt, AddImport[Import]] = addImp
+      val ooParadigm: oo.type = oo
     }
   }
 }

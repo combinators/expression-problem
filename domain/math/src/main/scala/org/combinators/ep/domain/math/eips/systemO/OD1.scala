@@ -57,7 +57,7 @@ object OD1 {
           onRequest.request.op match {
             case math.M0.Eval =>
               onRequest.tpeCase match {
-                case math.systemO.OD1.Mult => mult(atts: _*)
+                case math.systemO.OD1.Mult => mult(atts*)
                 case _ => ???
               }
 

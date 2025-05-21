@@ -58,8 +58,8 @@ object M3 {
           onRequest.request.op match {
             case math.M0.Eval =>
               onRequest.tpeCase match {
-                case math.M3.Divd => div(atts: _*)
-                case math.M3.Mult => mult(atts: _*)
+                case math.M3.Divd => div(atts*)
+                case math.M3.Mult => mult(atts*)
                 case math.M3.Neg =>
                   for {
                     minusOne <- reify(TypeRep.Double, -1)

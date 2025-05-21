@@ -59,7 +59,7 @@ object OD2 {
           onRequest.request.op match {
             case math.M0.Eval =>
               onRequest.tpeCase match {
-                case math.systemO.OD2.Divd => div(atts: _*)
+                case math.systemO.OD2.Divd => div(atts*)
                 case _ => ???
               }
 

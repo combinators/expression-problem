@@ -1,44 +1,45 @@
-package org.combinators.ep.language.java     /*DD:LD:AD*/
+package org.combinators.ep.language.java
+
+/*DD:LD:AD*/
 
 /**
- * 1. To generate a single approach for a single stage in an Extension Graph, see [[DirectToDiskMain]]
- * which you can either modify directly in the editor and execute, or from the command line, type:
- *
- *   ```sbt "language-java/runMain org.combinators.ep.language.java.DirectToDiskMain APPROACH EIP"```
- *
- * APPROACH is one of: graphviz, oo, visitor, visitorSideEffect, extensibleVisitor
- *                     interpreter, coco, trivially, dispatch, algebra
- *
- * EIP is one of the many designated stages:
- *
- *   D1,D2,D1D2,D3,I1,I2,J1,J2,J3,J4,J5,J6,K2J6,J7,J8,K1,K2,X1,X2,X3,X2X3,X4,A1,A1M3,A3M3I2,A3,C2,
- *   I2M3I1N1,M0,M1,M2,M2_M3,M3I1,M3W1,M4,M5,M6,M7,M7I2,M8,M9,N1,P1,Q1,V1,W1
- *
- * 2. To generate all evolution stages for a single approach, see [[GenerateAllForOneApproach]]
- *
- *   ```sbt "language-java/runMain org.combinators.ep.language.java.GenerateAllForOneApproach APPROACH"```
- *
- * If you omit the APPROACH argument, then "oo" is the default.
- *
- * 3. To generate all evolution stages for all systems and approaches, see [[GenerateAll]]
- *
- *   ```sbt "language-java/runMain org.combinators.ep.language.java.GenerateAll"```
- *
- * This will generate directories in target/ with names starting with "ep-java"
- *
- * 4. To generate a quick validation for the latest stage in each system, see [[QuickValidation]]
- *
- *   ```sbt "language-java/runMain org.combinators.ep.language.java.QuickValidation"```
- *
- *   This one is suitable to compile and confirm no errors as part of a CI/CD.
- */
+  * 1. To generate a single approach for a single stage in an Extension Graph, see [[DirectToDiskMain]]
+  * which you can either modify directly in the editor and execute, or from the command line, type:
+  *
+  * ```sbt "language-java/runMain org.combinators.ep.language.java.DirectToDiskMain APPROACH EIP"```
+  *
+  * APPROACH is one of: graphviz, oo, visitor, visitorSideEffect, extensibleVisitor
+  * interpreter, coco, trivially, dispatch, algebra
+  *
+  * EIP is one of the many designated stages:
+  *
+  * D1,D2,D1D2,D3,I1,I2,J1,J2,J3,J4,J5,J6,K2J6,J7,J8,K1,K2,X1,X2,X3,X2X3,X4,A1,A1M3,A3M3I2,A3,C2,
+  * I2M3I1N1,M0,M1,M2,M2_M3,M3I1,M3W1,M4,M5,M6,M7,M7I2,M8,M9,N1,P1,Q1,V1,W1
+  *
+  * 2. To generate all evolution stages for a single approach, see [[GenerateAllForOneApproach]]
+  *
+  * ```sbt "language-java/runMain org.combinators.ep.language.java.GenerateAllForOneApproach APPROACH"```
+  *
+  * If you omit the APPROACH argument, then "oo" is the default.
+  *
+  * 3. To generate all evolution stages for all systems and approaches, see [[GenerateAll]]
+  *
+  * ```sbt "language-java/runMain org.combinators.ep.language.java.GenerateAll"```
+  *
+  * This will generate directories in target/ with names starting with "ep-java"
+  *
+  * 4. To generate a quick validation for the latest stage in each system, see [[QuickValidation]]
+  *
+  * ```sbt "language-java/runMain org.combinators.ep.language.java.QuickValidation"```
+  *
+  * This one is suitable to compile and confirm no errors as part of a CI/CD.
+  */
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, ObjectAlgebras, RuntimeDispatch, Traditional, TriviallyClean, Visitor, Visualize}
 import org.combinators.ep.domain.Evolution
 import org.combinators.ep.domain.math._
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider, FileWithPath, FileWithPathPersistable, TestImplementationProvider}
-import org.combinators.jgitserv.{BranchTransaction, GitService}
 import FileWithPathPersistable._
 import org.apache.commons.io.FileUtils
 import org.combinators.ep.approach.oo.Visualize.WithParadigm
@@ -54,9 +55,9 @@ import org.combinators.ep.domain.math.systemX.{X1, X2, X2X3, X3, X4}
 import java.nio.file.{Path, Paths}
 
 /**
- * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
- */
-class Main(choice:String, select:String) {
+  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
+  */
+class Main(choice: String, select: String) {
   val generator: CodeGenerator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed))
 
   val visualizeApproach: WithParadigm[generator.paradigm.type] = Visualize[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
@@ -75,7 +76,7 @@ class Main(choice:String, select:String) {
   val algebraApproach: ObjectAlgebras.WithParadigm[generator.paradigm.type] = ObjectAlgebras[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
   // select one here
-  val approach = choice match {
+  val approach: ApproachImplementationProvider.WithParadigm[generator.paradigm.type] = choice match {
     case "graphviz" => visualizeApproach
     case "oo" => ooApproach
     case "visitor" => visitorApproach
@@ -91,7 +92,7 @@ class Main(choice:String, select:String) {
   }
 
   val m0_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    eips.M0(approach.paradigm)(generator.doublesInMethod,generator.stringsInMethod)
+    eips.M0(approach.paradigm)(generator.doublesInMethod, generator.stringsInMethod)
   val m1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.M1(approach.paradigm)(m0_eip)(generator.doublesInMethod)
   val m2_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
@@ -123,10 +124,10 @@ class Main(choice:String, select:String) {
     eips.systemO.OO3(approach.paradigm)(oo1_eip, oo2_eip)
 
   val m4_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    eips.M4.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(m3_eip)(
+    eips.M4.imperative[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(m3_eip)(
       generator.imperativeInMethod, generator.doublesInMethod, generator.booleansInMethod, generator.stringsInMethod, generator.listsInMethod, generator.equalityInMethod)
   val m5_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    eips.M5(approach.paradigm)(m4_eip)(generator.intsInMethod,generator.treesInMethod)
+    eips.M5(approach.paradigm)(m4_eip)(generator.intsInMethod, generator.treesInMethod)
   val m6_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.M6(approach.paradigm)(m5_eip)(generator.equalityInMethod, generator.booleansInMethod)
   val m7_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
@@ -136,11 +137,11 @@ class Main(choice:String, select:String) {
   val i2_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.systemI.I2(approach.paradigm)(i1_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod)
   val m7i2_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    eips.M7I2.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(m7_eip,i2_eip)(
-    generator.imperativeInMethod, generator.doublesInMethod, generator.booleansInMethod, generator.equalityInMethod)
+    eips.M7I2.imperative[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(m7_eip, i2_eip)(
+      generator.imperativeInMethod, generator.doublesInMethod, generator.booleansInMethod, generator.equalityInMethod)
   val m8_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    eips.M8.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(m7i2_eip)(
-    generator.imperativeInMethod, generator.doublesInMethod, generator.booleansInMethod, generator.equalityInMethod, generator.stringsInMethod)
+    eips.M8.imperative[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(m7i2_eip)(
+      generator.imperativeInMethod, generator.doublesInMethod, generator.booleansInMethod, generator.equalityInMethod, generator.stringsInMethod)
   val m9_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.M9(approach.paradigm)(m8_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.imperativeInMethod)
 
@@ -154,30 +155,30 @@ class Main(choice:String, select:String) {
     eips.A3(approach.paradigm)(a1m3i2_eip)(generator.doublesInMethod, generator.stringsInMethod)
 
   val j1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    eips.systemJ.J1(approach.paradigm)(m0_eip)(generator.doublesInMethod,generator.realDoublesInMethod, generator.equalityInMethod, generator.stringsInMethod, generator.imperativeInMethod)
+    eips.systemJ.J1(approach.paradigm)(m0_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.equalityInMethod, generator.stringsInMethod, generator.imperativeInMethod)
   val j2_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    eips.systemJ.J2(approach.paradigm)(j1_eip)(generator.doublesInMethod,generator.booleansInMethod, generator.equalityInMethod)
+    eips.systemJ.J2(approach.paradigm)(j1_eip)(generator.doublesInMethod, generator.booleansInMethod, generator.equalityInMethod)
   val j3_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    eips.systemJ.J3(approach.paradigm)(j2_eip)(generator.doublesInMethod,generator.booleansInMethod, generator.stringsInMethod)
+    eips.systemJ.J3(approach.paradigm)(j2_eip)(generator.doublesInMethod, generator.booleansInMethod, generator.stringsInMethod)
   val k1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    eips.systemK.K1(approach.paradigm)(j2_eip)(generator.doublesInMethod,generator.realDoublesInMethod, generator.booleansInMethod, generator.stringsInMethod)
+    eips.systemK.K1(approach.paradigm)(j2_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.booleansInMethod, generator.stringsInMethod)
   val j4_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    eips.systemJ.J4(approach.paradigm)(j3_eip)(generator.intsInMethod,generator.treesInMethod)
+    eips.systemJ.J4(approach.paradigm)(j3_eip)(generator.intsInMethod, generator.treesInMethod)
   val j5_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    eips.systemJ.J5(approach.paradigm)(j4_eip)(generator.equalityInMethod,generator.booleansInMethod)
+    eips.systemJ.J5(approach.paradigm)(j4_eip)(generator.equalityInMethod, generator.booleansInMethod)
   val j6_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    eips.systemJ.J6(approach.paradigm)(j5_eip)(generator.doublesInMethod,generator.realDoublesInMethod, generator.equalityInMethod, generator.stringsInMethod, generator.imperativeInMethod)
+    eips.systemJ.J6(approach.paradigm)(j5_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.equalityInMethod, generator.stringsInMethod, generator.imperativeInMethod)
 
   val k2_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    eips.systemK.K2.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(k1_eip)(
+    eips.systemK.K2.imperative[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(k1_eip)(
       generator.imperativeInMethod, generator.doublesInMethod, generator.booleansInMethod, generator.stringsInMethod, generator.listsInMethod, generator.equalityInMethod)
 
   val k2j6_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    eips.systemJK.K2J6.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(j6_eip,k2_eip)(
+    eips.systemJK.K2J6.imperative[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(j6_eip, k2_eip)(
       generator.imperativeInMethod, generator.doublesInMethod, generator.booleansInMethod, generator.stringsInMethod, generator.equalityInMethod)
 
   val j7_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    eips.systemJK.J7.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(k2j6_eip)(
+    eips.systemJK.J7.imperative[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(k2j6_eip)(
       generator.imperativeInMethod, generator.doublesInMethod, generator.booleansInMethod, generator.stringsInMethod, generator.equalityInMethod)
   val j8_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.systemJK.J8(approach.paradigm)(j7_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.imperativeInMethod)
@@ -186,21 +187,21 @@ class Main(choice:String, select:String) {
     eips.W1(approach.paradigm)(m1_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.stringsInMethod)
 
   val m3w1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    eips.M3W1.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(m3_eip,w1_eip)(
+    eips.M3W1.imperative[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(m3_eip, w1_eip)(
       generator.imperativeInMethod, generator.doublesInMethod, generator.booleansInMethod, generator.equalityInMethod, generator.stringsInMethod
     )
 
   val q1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.Q1(approach.paradigm)(m3w1_eip)(generator.intsInMethod, generator.realDoublesInMethod, generator.treesInMethod, generator.stringsInMethod)
   val c2_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    eips.C2.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(q1_eip)(
+    eips.C2.imperative[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(q1_eip)(
       generator.imperativeInMethod, generator.doublesInMethod, generator.booleansInMethod, generator.stringsInMethod, generator.listsInMethod, generator.equalityInMethod)
 
-  val v1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] = eips.V1.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(c2_eip)(
+  val v1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] = eips.V1.imperative[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(c2_eip)(
     generator.imperativeInMethod, generator.doublesInMethod, generator.booleansInMethod, generator.equalityInMethod, generator.stringsInMethod)
 
   val x1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    eips.systemX.X1(approach.paradigm)(m0_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.equalityInMethod, generator.stringsInMethod,  generator.imperativeInMethod)
+    eips.systemX.X1(approach.paradigm)(m0_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.equalityInMethod, generator.stringsInMethod, generator.imperativeInMethod)
   val x2_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.systemX.X2(approach.paradigm)(x1_eip)(generator.doublesInMethod, generator.stringsInMethod)
   val x3_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
@@ -213,18 +214,18 @@ class Main(choice:String, select:String) {
     eips.systemX.X4(approach.paradigm)(x2x3_eip)(generator.doublesInMethod, generator.stringsInMethod)
 
   val m2_abs_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    eips.M2_ABS.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(m2_eip)(
+    eips.M2_ABS.imperative[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(m2_eip)(
       generator.imperativeInMethod, generator.doublesInMethod, generator.stringsInMethod)
 
   val m3i1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    eips.M3I1.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(m3_eip,i1_eip)(
+    eips.M3I1.imperative[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(m3_eip, i1_eip)(
       generator.imperativeInMethod, generator.booleansInMethod, generator.equalityInMethod, generator.stringsInMethod)
 
   val n1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.N1(approach.paradigm)(m3_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.equalityInMethod, generator.stringsInMethod, generator.imperativeInMethod)
 
   val i2m3i1n1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    eips.I2M3I1N1.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(i2_eip,m3i1_eip,n1_eip)(
+    eips.I2M3I1N1.imperative[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(i2_eip, m3i1_eip, n1_eip)(
       generator.booleansInMethod, generator.equalityInMethod, generator.stringsInMethod)
 
   val d1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
@@ -233,7 +234,7 @@ class Main(choice:String, select:String) {
     eips.systemD.D2(approach.paradigm)(m1_eip)(generator.doublesInMethod, generator.stringsInMethod)
 
   val d1d2_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    eips.systemD.D1D2.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(d1_eip,d2_eip)(
+    eips.systemD.D1D2.imperative[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(d1_eip, d2_eip)(
       generator.imperativeInMethod, generator.doublesInMethod, generator.booleansInMethod, generator.equalityInMethod)
 
   val d3_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
@@ -399,14 +400,6 @@ class Main(choice:String, select:String) {
 
   val persistable: Aux[FileWithPath] = FileWithPathPersistable[FileWithPath]
 
-  def gitTransaction: Option[BranchTransaction] =
-    transaction[Option[BranchTransaction]](Option.empty, (transaction, evolutionName, files) => {
-      val nextTransaction =
-        transaction.map(_.fork(evolutionName).deleteAllFiles)
-          .getOrElse(BranchTransaction.empty(evolutionName))
-      Some(nextTransaction.persist(files())(persistable).commit("Adding next evolution"))
-    })
-
   def directToDiskTransaction(targetDirectory: Path): IO[Unit] = {
     transaction[IO[Unit]](IO.unit, (transaction, evolutionName, files) => IO {
       print("Computing Files...")
@@ -423,15 +416,6 @@ class Main(choice:String, select:String) {
     })
   }
 
-  def runGit(args: List[String]): IO[ExitCode] = {
-    val name = evolutions.head.getModel.base.name
-    for {
-      _ <- IO { System.out.println(s"Use: git clone http://127.0.0.1:8081/$name ${evolutions.last.getModel.name}") }
-      exitCode <- new GitService(gitTransaction.toSeq, name).run(args)
-      //exitCode <- new GitService(transaction.toSeq, name).runProcess(Seq(s"sbt", "test"))
-    } yield exitCode
-  }
-
   def runDirectToDisc(targetDirectory: Path): IO[ExitCode] = {
     for {
       _ <- directToDiskTransaction(targetDirectory)
@@ -439,17 +423,59 @@ class Main(choice:String, select:String) {
   }
 }
 
-object GitMain extends IOApp {
+trait Subselection extends IOApp {
+  def approaches(args: List[String]): Seq[String]
+  val evolutions: Seq[String]
+  def target(args: List[String]): String
 
-  def run(args: List[String]): IO[ExitCode] = {
-    val approach = if (args.isEmpty) "interpreter" else args.head
-    val selection = if (args.isEmpty || args.tail.isEmpty) "M7I2" else args.tail.head
-    new Main(approach, selection).runGit(args)
+  override def run(args: List[String]): IO[ExitCode] = {
+    val target = this.target(args)
+    val results = approaches(args).foldLeft(IO.unit)((results, approach) => {
+      val printApproach = IO {
+        println("Generating " + approach + "...")
+      }
+      evolutions.foldLeft(results)((results, selection) => {
+        val targetDirectory = Paths.get("target", target, approach, selection)
+        val program: IO[Unit] = {
+          for {
+            _ <- IO {
+              println("   " + selection)
+            }
+            _ <- results
+            _ <- IO {
+              print("Initializing Generator...")
+            }
+            main <- IO {
+              new Main(approach, selection)
+            }
+
+            _ <- IO {
+              println("[OK]")
+            }
+            _ <- main.runDirectToDisc(targetDirectory)
+          } yield ()
+        }
+        for {
+          _ <- printApproach
+          _ <- program
+        } yield ()
+
+        // execute above as a stand-alone program
+
+        // TBD:  Would be nice to launch 'sbt' in each of these generated directories
+      })
+    })
+
+    for {
+      _ <- results
+      _ <- IO {
+        print("DONE")
+      }
+    } yield ExitCode.Success
   }
-}
 
-// FAILS for OO3 since need finalized to pull everything together from independent branches
-// that each have operations which need to be merged.
+
+}
 
 object DirectToDiskMain extends IOApp {
   val targetDirectory: Path = Paths.get("target", "java-out")
@@ -457,39 +483,47 @@ object DirectToDiskMain extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
     // "M9", "J8", "A3", "O1OA", "OD3", "OO3", "V1", "D3", "I2M3I1N1", "O2"
     val approach = if (args.isEmpty) "dispatch" else args.head // {coco, O1OA} fails
-    if (approach == "exit") { sys.exit(0) }
+    if (approach == "exit") {
+      sys.exit(0)
+    }
     val selection = if (args.isEmpty || args.tail.isEmpty) "J4" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 
     for {
-      _ <- IO { print("Initializing Generator...") }
-      main <- IO { main }
+      _ <- IO {
+        print("Initializing Generator...")
+      }
+      main <- IO {
+        main
+      }
 
-      _ <- IO { println("[OK]") }
+      _ <- IO {
+        println("[OK]")
+      }
       result <- main.runDirectToDisc(targetDirectory)
     } yield result
   }
 }
 
 /**
- * Generate ALL CODE.
- */
+  * Generate ALL CODE.
+  */
 object GenerateAll extends IOApp {
 
-  def run(args: List[String]): IO[ExitCode] = {
-    GenerateAllMain.run(List.empty)
-    GenerateAllExtended.run(List.empty)
-    GenerateAllThirdAlternate.run(List.empty)
-    GenerateAllD1D2.run(List.empty)
-    GenerateAllMerging.run(List.empty)
-    GenerateAllJ.run(List.empty)
-  }
+  def run(args: List[String]): IO[ExitCode] = for {
+    _ <- GenerateAllMain.run(List.empty)
+    _ <- GenerateAllExtended.run(List.empty)
+    _ <- GenerateAllThirdAlternate.run(List.empty)
+    _ <- GenerateAllD1D2.run(List.empty)
+    _ <- GenerateAllMerging.run(List.empty)
+    r <- GenerateAllJ.run(List.empty)
+  } yield r
 }
 
 /**
- * Generate ALL CODE just for one approach (as identified)
- */
+  * Generate ALL CODE just for one approach (as identified)
+  */
 object GenerateAllForOneApproach extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
@@ -499,341 +533,133 @@ object GenerateAllForOneApproach extends IOApp {
       args
     }
 
-    GenerateAllMain.run(approach)
-    GenerateAllExtended.run(approach)
-    GenerateAllThirdAlternate.run(approach)
-    GenerateAllD1D2.run(approach)
-    GenerateAllMerging.run(approach)
-    GenerateAllJ.run(approach)
+    for {
+      _ <- GenerateAllMain.run(approach)
+      _ <- GenerateAllExtended.run(approach)
+      _ <- GenerateAllThirdAlternate.run(approach)
+      _ <- GenerateAllD1D2.run(approach)
+      _ <- GenerateAllMerging.run(approach)
+      r <- GenerateAllJ.run(approach)
+    } yield r
   }
 }
 
-object QuickValidation extends IOApp {
+
+object QuickValidation extends Subselection {
+
 
   // note that visitorSideEffect and dispatch are omitted from this validation.  VISITORSIDEEFFECT has a problem
   // with the test cases in that the methods become too long for the JavaVM and attempts to subdivide them fail
   // because visitorSideEffect needs to create visitor objects, and arbitrarily splitting test cases means that
   // they are not properly scoped and so the code fails to compile. DISPATCH is omitted because the inBetween
   // does not yet have exceptions.
-  def run(args: List[String]): IO[ExitCode] = {
-    val approaches = if (args.isEmpty) {
-      Seq("trivially", "oo", "visitor", "extensibleVisitor", "interpreter", "coco", "algebra")
-    } else {
-      args
-    }
 
-    val target = "ep-java-quick"
-
-    // latest in all system families
-    val evolutions = Seq("M9", "J8", "A3", "O1OA", "OD3", "OO3", "V1", "D3", "I2M3I1N1", "O2")
-
-    approaches.foreach(approach => {
-      println("Generating " + approach + "...")
-      evolutions.foreach(selection => {
-        println("   " + selection)
-
-        val targetDirectory = Paths.get("target", target, approach, selection)
-        val program :IO[Unit] = {
-          for {
-            _ <- IO { print("Initializing Generator...") }
-            main <- IO {  new Main(approach, selection) }
-
-            _ <- IO { println("[OK]") }
-            _ <- main.runDirectToDisc(targetDirectory)
-          } yield ()
-        }
-
-        // execute above as a stand-alone program
-        program.unsafeRunSync()
-
-        // TBD:  Would be nice to launch 'sbt' in each of these generated directories
-      })
-    })
-
-    for {
-      _ <- IO { print("DONE") }
-    } yield ExitCode.Success
-
+  def approaches(args: List[String]): Seq[String] = if (args.isEmpty) {
+    Seq("trivially", "oo", "visitor", "extensibleVisitor", "interpreter", "coco", "algebra")
+  } else {
+    args
   }
+
+  def target(args: List[String]): String = "ep-java-quick"
+
+  // latest in all system families
+  val evolutions = Seq("M9", "J8", "A3", "O1OA", "OD3", "OO3", "V1", "D3", "I2M3I1N1", "O2")
+
 }
 
-object GenerateAllMain extends IOApp {
+object GenerateAllMain extends Subselection {
 
-  def run(args: List[String]): IO[ExitCode] = {
 
-    val approaches = if (args.isEmpty) {
-      Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
-    } else {
-      args
-    }
-    val target = if (args.isEmpty) {
-      "ep-java"
-    } else {
-      args.head
-    }
-    val evolutions = Seq("M0","M1","M2","M3","M4","M5","M6","M7","M7I2","M8","M9","I1","A1","A1M3","A1M3I2","A3","I2",
-      "O1","O2","OA","O1OA","OD1","OD2","OD3","OO1","OO2","OO3")
-
-    approaches.foreach(approach => {
-      println("Generating " + approach + "...")
-      evolutions.foreach(selection => {
-        println("   " + selection)
-
-        val targetDirectory = Paths.get("target", target, approach, selection)
-        val program :IO[Unit] = {
-          for {
-            _ <- IO { print("Initializing Generator...") }
-            main <- IO {  new Main(approach, selection) }
-
-            _ <- IO { println("[OK]") }
-            _ <- main.runDirectToDisc(targetDirectory)
-          } yield ()
-        }
-
-        // execute above as a stand-alone program
-        program.unsafeRunSync()
-
-        // TBD:  Would be nice to launch 'sbt' in each of these generated directories
-      })
-    })
-
-    for {
-      _ <- IO { print("DONE") }
-    } yield ExitCode.Success
-
+  def approaches(args: List[String]): Seq[String] = if (args.isEmpty) {
+    Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
+  } else {
+    args
   }
+  def target(args: List[String]): String = if (args.isEmpty) {
+    "ep-java"
+  } else {
+    args.head
+  }
+  val evolutions = Seq("M0", "M1", "M2", "M3", "M4", "M5", "M6", "M7", "M7I2", "M8", "M9", "I1", "A1", "A1M3", "A1M3I2", "A3", "I2",
+    "O1", "O2", "OA", "O1OA", "OD1", "OD2", "OD3", "OO1", "OO2", "OO3")
+
 }
 
-object GenerateAllJ extends IOApp {
+object GenerateAllJ extends Subselection {
 
-  def run(args: List[String]): IO[ExitCode] = {
 
-    // visitor side effect is eliminated. When there are a large number of test cases, the internal
-    // code separates arbitrarily these test cases into 500-line chunks. Unfortunately for the
-    // visitorSideEffect, this causes problems because local variables are used for the visitors and
-    // they are unreachable when split across multiple methods.
-    val approaches = if (args.isEmpty) {
-      Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
-    } else {
-      args
-    }
-    val target = if (args.isEmpty) {
-      "ep-java-j"
-    } else {
-      args.head
-    }
-    val evolutions = Seq("M0","J1","J2","J3","K1","K2","J4","J5","J6","K2J6","J7","J8")
-
-    approaches.foreach(approach => {
-      println("Generating " + approach + "...")
-      evolutions.foreach(selection => {
-        println("   " + selection)
-
-        val targetDirectory = Paths.get("target", target, approach, selection)
-        val program :IO[Unit] = {
-          for {
-            _ <- IO { print("Initializing Generator...") }
-            main <- IO {  new Main(approach, selection) }
-
-            _ <- IO { println("[OK]") }
-            _ <- main.runDirectToDisc(targetDirectory)
-          } yield ()
-        }
-
-        // execute above as a stand-alone program
-        program.unsafeRunSync()
-
-        // TBD:  Would be nice to launch 'sbt' in each of these generated directories
-      })
-    })
-
-    for {
-      _ <- IO { print("DONE") }
-    } yield ExitCode.Success
-
+  def approaches(args: List[String]): Seq[String] = if (args.isEmpty) {
+    Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
+  } else {
+    args
   }
+  def target(args: List[String]): String = if (args.isEmpty) {
+    "ep-java-j"
+  } else {
+    args.head
+  }
+  val evolutions = Seq("M0", "J1", "J2", "J3", "K1", "K2", "J4", "J5", "J6", "K2J6", "J7", "J8")
+
 }
 
-object GenerateAllD1D2 extends IOApp {
+object GenerateAllD1D2 extends Subselection {
 
-  def run(args: List[String]): IO[ExitCode] = {
-
-    val approaches = if (args.isEmpty) {
-      Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
-    } else {
-      args
-    }
-    val target = if (args.isEmpty) {
-      "ep-java-d1d2"
-    } else {
-      args.head
-    }
-    val evolutions = Seq("M0","M1","D1","D2","D1D2","D3")
-
-    approaches.foreach(approach => {
-      println("Generating " + approach + "...")
-      evolutions.foreach(selection => {
-        println("   " + selection)
-
-        val targetDirectory = Paths.get("target", target, approach, selection)
-        val program :IO[Unit] = {
-          for {
-            _ <- IO { print("Initializing Generator...") }
-            main <- IO {  new Main(approach, selection) }
-
-            _ <- IO { println("[OK]") }
-            _ <- main.runDirectToDisc(targetDirectory)
-          } yield ()
-        }
-
-        // execute above as a stand-alone program
-        program.unsafeRunSync()
-
-        // TBD:  Would be nice to launch 'sbt' in each of these generated directories
-      })
-    })
-
-    for {
-      _ <- IO { print("DONE") }
-    } yield ExitCode.Success
-
+  def approaches(args: List[String]): Seq[String] = if (args.isEmpty) {
+    Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
+  } else {
+    args
   }
+  def target(args: List[String]): String = if (args.isEmpty) {
+    "ep-java-d1d2"
+  } else {
+    args.head
+  }
+  val evolutions = Seq("M0", "M1", "D1", "D2", "D1D2", "D3")
 }
 
-object GenerateAllMerging extends IOApp {
+object GenerateAllMerging extends Subselection {
 
-  def run(args: List[String]): IO[ExitCode] = {
-
-    val approaches = if (args.isEmpty) {
-      Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
-    } else {
-      args
-    }
-    val target = if (args.isEmpty) {
-      "ep-java-merging"
-    } else {
-      args.head
-    }
-    val evolutions = Seq("M0","M1","M2","I1","I2","N1","M2_ABS","M3","M3I1","I2M3I1N1")
-
-    approaches.foreach(approach => {
-      println("Generating " + approach + "...")
-      evolutions.foreach(selection => {
-        println("   " + selection)
-
-        val targetDirectory = Paths.get("target", target, approach, selection)
-        val program :IO[Unit] = {
-          for {
-            _ <- IO { print("Initializing Generator...") }
-            main <- IO {  new Main(approach, selection) }
-
-            _ <- IO { println("[OK]") }
-            _ <- main.runDirectToDisc(targetDirectory)
-          } yield ()
-        }
-
-        // execute above as a stand-alone program
-        program.unsafeRunSync()
-
-        // TBD:  Would be nice to launch 'sbt' in each of these generated directories
-      })
-    })
-
-    for {
-      _ <- IO { print("DONE") }
-    } yield ExitCode.Success
-
+  def approaches(args: List[String]): Seq[String] = if (args.isEmpty) {
+    Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
+  } else {
+    args
   }
+  def target(args: List[String]): String = if (args.isEmpty) {
+    "ep-java-merging"
+  } else {
+    args.head
+  }
+  val evolutions = Seq("M0", "M1", "M2", "I1", "I2", "N1", "M2_ABS", "M3", "M3I1", "I2M3I1N1")
 }
 
-object GenerateAllExtended extends IOApp {
+object GenerateAllExtended extends Subselection {
 
-  def run(args: List[String]): IO[ExitCode] = {
 
-    val approaches = if (args.isEmpty) {
-      Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
-    } else {
-      args
-    }
-    val target = if (args.isEmpty) {
-      "ep-java-extended"
-    } else {
-      args.head
-    }
-    val evolutions = Seq("M0","M1","M2","M3","W1","M3W1","Q1","C2","V1")
-
-    approaches.foreach(approach => {
-      println("Generating " + approach + "...")
-      evolutions.foreach(selection => {
-        println("   " + selection)
-
-        val targetDirectory = Paths.get("target", target, approach, selection)
-        val program :IO[Unit] = {
-          for {
-            _ <- IO { print("Initializing Generator...") }
-            main <- IO {  new Main(approach, selection) }
-
-            _ <- IO { println("[OK]") }
-            _ <- main.runDirectToDisc(targetDirectory)
-          } yield ()
-        }
-
-        // execute above as a stand-alone program
-        program.unsafeRunSync()
-
-        // TBD:  Would be nice to launch 'sbt' in each of these generated directories
-      })
-    })
-
-    for {
-      _ <- IO { print("DONE") }
-    } yield ExitCode.Success
-
+  def approaches(args: List[String]): Seq[String] = if (args.isEmpty) {
+    Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
+  } else {
+    args
   }
+  def target(args: List[String]): String = if (args.isEmpty) {
+    "ep-java-extended"
+  } else {
+    args.head
+  }
+  val evolutions = Seq("M0", "M1", "M2", "M3", "W1", "M3W1", "Q1", "C2", "V1")
 }
 
-object GenerateAllThirdAlternate extends IOApp {
+object GenerateAllThirdAlternate extends Subselection {
 
-  def run(args: List[String]): IO[ExitCode] = {
 
-    val approaches = if (args.isEmpty) {
-      Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
-    } else {
-      args
-    }
-    val target = if (args.isEmpty) {
-      "ep-java-third-alternate"
-    } else {
-      args.head
-    }
-    val evolutions = Seq("M0","X1","X2","X3","X2X3","X4")
-
-    approaches.foreach(approach => {
-      println("Generating " + approach + "...")
-      evolutions.foreach(selection => {
-        println("   " + selection)
-
-        val targetDirectory = Paths.get("target", target, approach, selection)
-        val program :IO[Unit] = {
-          for {
-            _ <- IO { print("Initializing Generator...") }
-            main <- IO {  new Main(approach, selection) }
-
-            _ <- IO { println("[OK]") }
-            _ <- main.runDirectToDisc(targetDirectory)
-          } yield ()
-        }
-
-        // execute above as a stand-alone program
-        program.unsafeRunSync()
-
-        // TBD:  Would be nice to launch 'sbt' in each of these generated directories
-      })
-    })
-
-    for {
-      _ <- IO { print("DONE") }
-    } yield ExitCode.Success
-
+  def approaches(args: List[String]): Seq[String] = if (args.isEmpty) {
+    Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
+  } else {
+    args
   }
+  def target(args: List[String]): String = if (args.isEmpty) {
+    "ep-java-third-alternate"
+  } else {
+    args.head
+  }
+  val evolutions = Seq("M0", "X1", "X2", "X3", "X2X3", "X4")
 }

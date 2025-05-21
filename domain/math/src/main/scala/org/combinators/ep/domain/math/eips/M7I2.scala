@@ -12,10 +12,10 @@ import org.combinators.ep.generator.paradigm.control.{Functional, Imperative}
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Booleans, Equality, Strings}
 
 /** Upon merging M7 and I2 there is a need for MultByx(Divd, Mult, Neg) as well as a need for
- * (Collect,Simplify,Id,AsTree,Equals,PowBy)xPower
- *
- * These all have to be captured here...
- */
+  * (Collect,Simplify,Id,AsTree,Equals,PowBy)xPower
+  *
+  * These all have to be captured here...
+  */
 sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P], IfBlockType](val paradigm: P) {
 
   type IfThenElseCommand =
@@ -27,11 +27,11 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
 
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
     (m7Provider: EvolutionImplementationProvider[AIP[paradigm.type]],i2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
-    (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
-     ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
-     ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],
-     returnInIf: Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression] => Generator[paradigm.MethodBodyContext, IfBlockType],
-     ifThenElse: IfThenElseCommand):
+      (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
+        ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
+        ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],
+        returnInIf: Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression] => Generator[paradigm.MethodBodyContext, IfBlockType],
+        ifThenElse: IfThenElseCommand):
 
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val m7i2Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
@@ -69,11 +69,11 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
           case (_, _) => None
         }
       }
-      
+
 
       // Simplify of Power -- if exponent is 1, then ignore! If exponent is 0, turn to 1; if exponent is -1, turn to DivD
       private def simplifyLogic(forApproach: AIP[paradigm.type])
-                               (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
+        (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] = {
         import paradigm._
         import methodBodyCapabilities._
@@ -82,7 +82,7 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
         import ffiEquality.equalityCapabilities._
 
         def evalChildren(tpe:DataTypeCase, atts: Map[abstractions.Attribute,Expression]): Generator[MethodBodyContext, List[Expression]] =
-          forEach (atts.keys.toSeq) { att:abstractions.Attribute => {
+          forEach (atts.keys.toSeq) { (att:abstractions.Attribute) => {
             val expr:Expression = atts(att)
             forApproach.dispatch(
               SendRequest(
@@ -104,15 +104,15 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
         }
 
         def simplifyOp(
-                atts:Seq[abstractions.Attribute],
-                attExprs: Seq[Expression],
-                vals: Generator[MethodBodyContext, List[Expression]],
-                doubleTy: Type,
-                zero: Expression,
-                one: Expression,
-                zeroLit: Generator[MethodBodyContext, Expression],
-                oneLit: Generator[MethodBodyContext, Expression]
-              ): Generator[MethodBodyContext, Option[Expression]] = {
+          atts:Seq[abstractions.Attribute],
+          attExprs: Seq[Expression],
+          vals: Generator[MethodBodyContext, List[Expression]],
+          doubleTy: Type,
+          zero: Expression,
+          one: Expression,
+          zeroLit: Generator[MethodBodyContext, Expression],
+          oneLit: Generator[MethodBodyContext, Expression]
+        ): Generator[MethodBodyContext, Option[Expression]] = {
           onRequest.tpeCase match {
             case math.systemI.I2.Power =>
               vals.flatMap { case List(leftVal, rightVal) =>
@@ -151,9 +151,9 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
       }
 
       // should be no need to define genericLogic since (by default) it will go through the chain of past providers...
-     override def genericLogic
+      override def genericLogic
         (forApproach: AIP[paradigm.type])
-        (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
+          (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] = {
         try {
           m7Provider.genericLogic(forApproach)(onRequest)
@@ -164,7 +164,7 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
 
       def logic
         (forApproach: AIP[paradigm.type])
-        (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
+          (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
         import paradigm._
         import methodBodyCapabilities._
@@ -184,13 +184,13 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
           case math.M4.Collect => m7Provider.genericLogic(forApproach)(onRequest)
 
           case mb@math.systemI.I1.MultBy =>    // WE CAN OPTIMIZE MultBy with Mult
-             for {
-               res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M3.Mult, onRequest.selfReference, onRequest.request.arguments.head._2)
-             } yield Some(res)
+            for {
+              res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M3.Mult, onRequest.selfReference, onRequest.request.arguments.head._2)
+            } yield Some(res)
 
           case p@math.M7.PowBy =>  // on Power
-          // must handle Power dataType. HERE WE CAN OPTIMIZED.
-          val atts = onRequest.attributes.keys.toSeq
+            // must handle Power dataType. HERE WE CAN OPTIMIZED.
+            val atts = onRequest.attributes.keys.toSeq
             val attExprs = onRequest.attributes.values.toSeq
             for {
               res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.systemI.I2.Power, onRequest.selfReference, onRequest.request.arguments.head._2)
@@ -207,13 +207,13 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
 
 object M7I2 {
   def functional[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
-  (paradigm: P)
-  (m7Provider: EvolutionImplementationProvider[AIP[paradigm.type]],
-    i2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
-  (functionalControl: Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
-   ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]):
+    (paradigm: P)
+      (m7Provider: EvolutionImplementationProvider[AIP[paradigm.type]],
+        i2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
+      (functionalControl: Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
+        ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
+        ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
+        ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     import paradigm.syntax._
     val mkImpl = new M7I2[paradigm.type, AIP, Expression](paradigm)
@@ -227,13 +227,13 @@ object M7I2 {
   }
 
   def imperative[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
-  (paradigm: P)
-  (m7Provider: EvolutionImplementationProvider[AIP[paradigm.type]],
-   i2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
-  (imperativeControl: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
-   ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]):
+    (paradigm: P)
+      (m7Provider: EvolutionImplementationProvider[AIP[paradigm.type]],
+        i2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
+      (imperativeControl: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type],
+        ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
+        ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
+        ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     import paradigm.syntax._
     import paradigm.methodBodyCapabilities._

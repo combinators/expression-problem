@@ -126,5 +126,5 @@ class FreshNameCleanup(nameInfo: Map[String, MangledName]) {
 
 object FreshNameCleanup {
   def cleaned(nameInfo: Map[String, MangledName], units: CompilationUnit*): Seq[CompilationUnit] =
-    new FreshNameCleanup(nameInfo).cleanup(units: _*)
+    new FreshNameCleanup(nameInfo).cleanup(units*)
 }

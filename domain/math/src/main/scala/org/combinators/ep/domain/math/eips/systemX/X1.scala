@@ -63,7 +63,7 @@ object X1 {
                 case systemX.X1.Sub => 
                   for {
                     atts <- forEach(attGenerators)(g => g)
-                    result <- sub(atts: _*)
+                    result <- sub(atts*)
                   } yield result
                   
                 case _ => ???

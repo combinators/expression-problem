@@ -55,7 +55,7 @@ object X3 {
                 case systemX.X3.Divd =>
                   for {
                     atts <- forEach(attGenerators)(g => g)
-                    result <- div(atts: _*)
+                    result <- div(atts*)
                   } yield result
 
                 case _ => ???

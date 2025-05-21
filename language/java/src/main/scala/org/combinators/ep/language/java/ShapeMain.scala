@@ -26,7 +26,7 @@ import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.shape._
 import org.combinators.ep.domain.shape.S0
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable, TestImplementationProvider}
-import org.combinators.jgitserv.{BranchTransaction, GitService}
+import org.apache.commons.io.FileUtils
 import org.combinators.ep.generator.FileWithPathPersistable._
 
 import java.nio.file.{Path, Paths}

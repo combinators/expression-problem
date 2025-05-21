@@ -2,7 +2,7 @@ package org.combinators.ep.language.java.paradigm    /*DI:LD:AI*/
 
 import com.github.javaparser.ast.`type`.{ClassOrInterfaceType, TypeParameter}
 import org.combinators.ep.generator.{Command, Understands}
-import org.combinators.ep.generator.paradigm.{Generics => Gen, AnyParadigm => _, ObjectOriented => _, _}
+import org.combinators.ep.generator.paradigm.{Generics => Gen, AnyParadigm => _, ObjectOriented => _, ParametricPolymorphism => _, _}
 import org.combinators.ep.language.java.TypeParamCtxt
 
 import scala.jdk.CollectionConverters._

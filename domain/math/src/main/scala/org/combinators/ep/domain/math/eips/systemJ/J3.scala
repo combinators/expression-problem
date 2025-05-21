@@ -94,7 +94,7 @@ object J3 {
                 case systemJ.J3.Divd => {
                   for {
                     atts <- attsGen
-                    res <- div(atts: _*)
+                    res <- div(atts*)
                   } yield res
                 }
                 case systemJ.J3.Neg =>

@@ -9,6 +9,7 @@ lazy val commonSettings = Seq(
   resolvers ++= Resolver.sonatypeOssRepos("releases"),
 
   Compile/scalacOptions ++= Seq(
+    "-explain",
     "-unchecked",
     "-deprecation",
     "-feature",
@@ -18,7 +19,7 @@ lazy val commonSettings = Seq(
   ),
 
   libraryDependencies ++= Seq(
-//    "org.combinators" %% "jgitserv" % "0.0.1",
+    "commons-io"% "commons-io" % "2.19.0",
     "org.combinators" %% "templating" % "1.1.5",
     "org.scalactic" %% "scalactic" % "3.2.19" % "test",
     "org.scalatest" %% "scalatest" % "3.2.19" % "test",

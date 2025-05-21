@@ -75,7 +75,7 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
         import ffiBoolean.booleanCapabilities._
 
         def evalChildren(tpe:DataTypeCase, atts: Map[abstractions.Attribute,Expression]): Generator[MethodBodyContext, List[Expression]] =
-          forEach (atts.keys.toSeq) { att:abstractions.Attribute => {
+          forEach (atts.keys.toSeq) { (att:abstractions.Attribute) => {
             val expr:Expression = atts(att)
             forApproach.dispatch(
               SendRequest(

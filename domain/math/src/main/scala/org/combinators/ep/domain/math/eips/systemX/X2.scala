@@ -55,7 +55,7 @@ object X2 {
                 case systemX.X2.Times =>
                   for {
                     atts <- forEach(attGenerators)(g => g)
-                    result <- mult(atts: _*)
+                    result <- mult(atts*)
                   } yield result
 
                 case _ => ???

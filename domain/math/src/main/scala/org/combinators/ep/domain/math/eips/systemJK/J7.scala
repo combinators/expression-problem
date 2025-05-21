@@ -81,7 +81,7 @@ sealed class J7[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
         import syntax._
 
         def evalChildren(tpe: DataTypeCase, atts: Map[abstractions.Attribute, Expression]): Generator[MethodBodyContext, List[Expression]] =
-          forEach(atts.keys.toSeq) { att: abstractions.Attribute => {
+          forEach(atts.keys.toSeq) { (att: abstractions.Attribute) => {
             val expr: Expression = atts(att)
             forApproach.dispatch(
               SendRequest(

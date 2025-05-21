@@ -51,7 +51,7 @@ object A1  {
           onRequest.request.op match {
             case math.M0.Eval =>
               onRequest.tpeCase match {
-                case math.A1.Times => mult(atts: _*)
+                case math.A1.Times => mult(atts*)
                 case _ => ???
               }
 

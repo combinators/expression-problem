@@ -182,11 +182,13 @@ object Traditional {
     (base: P)
     (nameProvider: NameProvider[base.syntax.Name],
       fun: Functional.WithBase[base.type],
-      funControl: FunControl.WithBase[base.MethodBodyContext, base.type]): Traditional.WithParadigm[base.type] =
-    new Traditional {
-      override val paradigm: base.type = base
-      override val names: NameProvider[base.syntax.Name] = nameProvider
-      override val functional: Functional.WithBase[paradigm.type] = fun
-      override val functionalControl: WithBase[paradigm.MethodBodyContext, paradigm.type] = funControl
-    }
+      funControl: FunControl.WithBase[base.MethodBodyContext, base.type]): Traditional.WithParadigm[base.type] = {
+    case class Trad(
+      override val paradigm: base.type,
+      override val names: NameProvider[base.syntax.Name])(
+      override val functional: Functional.WithBase[paradigm.type],
+      override val functionalControl: WithBase[paradigm.MethodBodyContext, paradigm.type]
+    ) extends Traditional
+    Trad(base, nameProvider)(fun, funControl)
+  }
 }

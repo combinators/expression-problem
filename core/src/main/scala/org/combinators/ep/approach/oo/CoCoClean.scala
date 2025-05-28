@@ -981,12 +981,14 @@ object CoCoClean {
     oo: ObjectOriented.WithBase[base.type],
     params: ParametricPolymorphism.WithBase[base.type]
   )
-  (generics: Generics.WithBase[base.type, oo.type, params.type]): CoCoClean.WithParadigm[base.type] =
-    new CoCoClean {
-      val paradigm: base.type = base
-      val ooParadigm: oo.type = oo
-      val polymorphics: params.type = params
-      val genericsParadigm: generics.type = generics
-      val names: NameProvider[paradigm.syntax.Name] = nameProvider
-    }
+  (generics: Generics.WithBase[base.type, oo.type, params.type]): CoCoClean.WithParadigm[base.type] = {
+    case class CCC(
+      override val paradigm: base.type)(
+      override val ooParadigm: oo.type,
+      override val polymorphics: params.type,
+      override val names: NameProvider[paradigm.syntax.Name])(
+      override val genericsParadigm: generics.type
+    ) extends CoCoClean
+    CCC(base)(oo, params, nameProvider)(generics)
+  }
 }

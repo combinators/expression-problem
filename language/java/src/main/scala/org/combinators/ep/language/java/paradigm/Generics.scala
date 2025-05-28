@@ -144,10 +144,10 @@ object Generics {
     val oo: ooParadigm.type = ooParadigm
     val ppol: ppolyParadigm.type = ppolyParadigm
 
-    new Generics[b.type] {
-      val base: b.type = b
-      val ooParadigm: oo.type = oo
-      val ppolyParadigm: ppol.type = ppol
-    }
+    case class G(
+      override val base: b.type)(
+      override val ooParadigm: oo.type = oo,
+      override val ppolyParadigm: ppol.type = ppol) extends Generics[b.type]
+    return G(b)(oo, ppol)
   }
 }

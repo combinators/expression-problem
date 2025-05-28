@@ -1,4 +1,6 @@
-package org.combinators.ep.approach.oo      /*DI:LI:AD*/
+package org.combinators.ep.approach.oo
+
+/*DI:LI:AD*/
 
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.instances.InstanceRep
@@ -22,9 +24,9 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val names: NameProvider[paradigm.syntax.Name]
 
-  val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext,paradigm.type]
-  val exceptions: Exceptions.WithBase[paradigm.MethodBodyContext,paradigm.type]
-  val strings: Strings.WithBase[paradigm.MethodBodyContext,paradigm.type]
+  val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val exceptions: Exceptions.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val strings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
   import ooParadigm._
   import paradigm._
@@ -53,9 +55,9 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
   /**
     * Dispatch creates a new dispatch object and invokes operation with attributes.
     *
-    *          new Eval().eval(e.getLeft()) + new Eval().eval(e.getRight())
+    * new Eval().eval(e.getLeft()) + new Eval().eval(e.getRight())
     *
-    * @param message   the SendRequest
+    * @param message the SendRequest
     * @return
     */
   def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression] = {
@@ -65,19 +67,19 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
     for {
 
       // the operation is encoded in its own class, which we must find to determine the visitor type
-      opType <- findClass(names.mangle(names.conceptNameOf(op)))     // Each class is based on Operation
-      _ <- resolveAndAddImport(opType)            // gives resulting import statement (if needed)
+      opType <- findClass(names.mangle(names.conceptNameOf(op))) // Each class is based on Operation
+      _ <- resolveAndAddImport(opType) // gives resulting import statement (if needed)
 
       // construct the Operation object for the given type (and parameters)
       dispatcher <- instantiateObject(opType, op.parameters.map(param => message.request.arguments(param)))
 
       // In the 'message.to' expression, invoke the 'accept' method with a visitor argument
-      method <- getMember(dispatcher, names.mangle(names.instanceNameOf(op)))   // things which are code-generated use the '<-' handles unpacking results
+      method <- getMember(dispatcher, names.mangle(names.instanceNameOf(op))) // things which are code-generated use the '<-' handles unpacking results
       rt <- toTargetLanguageType(message.request.op.returnType)
       _ <- resolveAndAddImport(rt)
 
       // apply to method with the visitor, resulting in the expression
-      result <- apply(method, Seq(message.to))           // has to be Seq[] just for syntax of calling the method
+      result <- apply(method, Seq(message.to)) // has to be Seq[] just for syntax of calling the method
     } yield result
   }
 
@@ -86,9 +88,10 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
     * {{{
     *  public op.returnType ???(rt e);
     * }}}
+    *
     * @return
     */
-  def makeOperationSignature(paramType:Type, op:Operation): Generator[MethodBodyContext, Unit] = {
+  def makeOperationSignature(paramType: Type, op: Operation): Generator[MethodBodyContext, Unit] = {
     import paradigm.methodBodyCapabilities._
     for {
 
@@ -98,7 +101,7 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
       _ <- setReturnType(rt)
 
       expParam <- freshName(names.mangle(expParameter))
-      _ <- setParameters(Seq((expParam, paramType)))      // a pair (name,type) of only one sequence
+      _ <- setParameters(Seq((expParam, paramType))) // a pair (name,type) of only one sequence
     } yield ()
   }
 
@@ -107,18 +110,19 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
     * {{{
     *  public RT op(Exp exp) {
     *     if (exp instanceof Lit) {
-            return _eval((Lit) exp);
-      }
-  
-      if (exp instanceof Add) {
-        return _eval((Add) exp);
-      }
-
+    *return _eval((Lit) exp);
+    *}
+    *
+    *if (exp instanceof Add) {
+    *return _eval((Add) exp);
+    *}
+    *
     * }
     * }}}
+    *
     * @return
     */
-  def makeDispatchingOperation(model:GenericModel, op:Operation): Generator[ClassContext, Unit] = {
+  def makeDispatchingOperation(model: GenericModel, op: Operation): Generator[ClassContext, Unit] = {
     def ifStmt(): Generator[MethodBodyContext, Option[Expression]] = {
       import ooParadigm.methodBodyCapabilities._
       import paradigm.methodBodyCapabilities._
@@ -187,13 +191,15 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
     *   }
     * }}}
     *
-    * @param domain             Model for which all types are to be incorporated
-    * @param op                 The operation whose implementation is needed
-    * @param domainSpecific     The EIP to gain access to the logic
-    * @return                   The one invoking this method must be sure to add this class to project.
+    * @param domain         Model for which all types are to be incorporated
+    * @param op             The operation whose implementation is needed
+    * @param domainSpecific The EIP to gain access to the logic
+    * @return The one invoking this method must be sure to add this class to project.
     */
-  def makeOperationImplementation(domain:GenericModel, op: Operation,
-    domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ClassContext, Unit] = {
+  def makeOperationImplementation(
+    domain: GenericModel, op: Operation,
+    domainSpecific: EvolutionImplementationProvider[this.type]
+  ): Generator[ClassContext, Unit] = {
     import ooParadigm.classCapabilities._
 
     for {
@@ -216,9 +222,9 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
         parent <- toTargetLanguageType(TypeRep.DataType(parentType))
         _ <- resolveAndAddImport(parent)
         _ <- addParent(parent)
-        _ <- forEach (tpeCase.attributes) { att => makeField(att) }
+        _ <- forEach(tpeCase.attributes) { att => makeField(att) }
         _ <- addConstructor(makeConstructor(tpeCase))
-        _ <- forEach (tpeCase.attributes) { att => makeGetter(att) }
+        _ <- forEach(tpeCase.attributes) { att => makeGetter(att) }
 
       } yield ()
     }
@@ -234,7 +240,7 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
     *  }
     * }}}
     *
-    * @param tpe     The DataType that needs a Base Class.
+    * @param tpe The DataType that needs a Base Class.
     * @return
     */
   def makeBase(tpe: DataType): Generator[ProjectContext, Unit] = {
@@ -248,10 +254,10 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
     }
 
     // adds the 'Exp' class, with a single accept method
-    addClassToProject( makeClass, names.mangle(names.conceptNameOf(tpe)))
+    addClassToProject(makeClass, names.mangle(names.conceptNameOf(tpe)))
   }
 
-  def targetExp : Generator[MethodBodyContext, Expression] = {
+  def targetExp: Generator[MethodBodyContext, Expression] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
 
@@ -264,23 +270,25 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
     *
     * {{{
     *     public class Eval {
-             public Eval() { }
-             public Double _eval(Add exp) {
-               return (new ep.Eval().eval(exp.getLeft()) + new ep.Eval().eval(exp.getRight()));
-             }
-           }
+    *public Eval() { }
+    *public Double _eval(Add exp) {
+    *return (new ep.Eval().eval(exp.getLeft()) + new ep.Eval().eval(exp.getRight()));
+    *}
+    *}
     * }}}
     *
     * A runtime dispatcher will direct to appropriate _op() method from the op() method in class
     *
-    * @param tpe                 Base Data Type.
-    * @param tpeCase             The Data Type Case.
-    * @param op                  The operation at play.
-    * @param domainSpecific      The EIP which contains the logic.
-    * @return                    Full implementation.
+    * @param tpe            Base Data Type.
+    * @param tpeCase        The Data Type Case.
+    * @param op             The operation at play.
+    * @param domainSpecific The EIP which contains the logic.
+    * @return Full implementation.
     */
-  override def makeTypeCaseImplementation(tpe: DataType, tpeCase: DataTypeCase, op: Operation, model: GenericModel,
-    domainSpecific: EvolutionImplementationProvider[this.type]): Generator[MethodBodyContext, Option[Expression]] = {
+  override def makeTypeCaseImplementation(
+    tpe: DataType, tpeCase: DataTypeCase, op: Operation, model: GenericModel,
+    domainSpecific: EvolutionImplementationProvider[this.type]
+  ): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
     for {
@@ -291,17 +299,17 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
       _ <- resolveAndAddImport(ptype)
       _ <- makeOperationSignature(ptype, op)
 
-      result <- completeImplementationFromParameters(tpe, tpeCase, op, model, domainSpecific, target=targetExp, attributeAccess = attributeDispatchAccess)
+      result <- completeImplementationFromParameters(tpe, tpeCase, op, model, domainSpecific, target = targetExp, attributeAccess = attributeDispatchAccess)
     } yield result
   }
 
   /**
     * Access attributes using default getter methods via argument to method, exp
     *
-    * @param attribute    Data Type Case attribute to be accessed
+    * @param attribute Data Type Case attribute to be accessed
     * @return
     */
-  def attributeDispatchAccess(attribute:Attribute, tpeCase: DataTypeCase, domain:GenericModel, baseType:Option[paradigm.syntax.Type]) : Generator[MethodBodyContext, Expression] = {
+  def attributeDispatchAccess(attribute: Attribute, tpeCase: DataTypeCase, domain: GenericModel, baseType: Option[paradigm.syntax.Type]): Generator[MethodBodyContext, Expression] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
 
@@ -317,12 +325,12 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
     *
     * 1. Make the base class (for the domain)
     * 2. For each of the operations (in flattened set) create an operation class that has
-    *     dynamic runtime checks to dispatch to appropriate method
+    * dynamic runtime checks to dispatch to appropriate method
     * 3. For each data type (in flatted set) create data type class to hold information
     *
-    * @param gdomain             Top-level domain.
-    * @param domainSpecific      Its corresponding EIP.
-    * @return                    The whole project.
+    * @param gdomain        Top-level domain.
+    * @param domainSpecific Its corresponding EIP.
+    * @return The whole project.
     */
   def implement(gdomain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
@@ -330,7 +338,7 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
 
     val flat = gdomain.linearize.flatten
     for {
-      _ <- debug ("Processing RuntimeDispatching")
+      _ <- debug("Processing RuntimeDispatching")
       _ <- strings.enable()
       _ <- exceptions.enable()
       _ <- registerTypeMapping(flat)
@@ -339,10 +347,10 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
       // singular Exp abstract class
       _ <- makeBase(flat.baseDataType)
 
-      _ <- forEach (flat.typeCases) { tpeCase =>
+      _ <- forEach(flat.typeCases) { tpeCase =>
         makeDerived(flat.baseDataType, tpeCase)
       }
-      _ <- forEach (flat.ops) { op =>
+      _ <- forEach(flat.ops) { op =>
         addClassToProject(makeOperationImplementation(gdomain, op, domainSpecific), names.mangle(names.conceptNameOf(op)))
       }
     } yield ()
@@ -350,22 +358,27 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
 }
 
 object RuntimeDispatch {
-  type WithParadigm[P <: AnyParadigm] = RuntimeDispatch { val paradigm: P }
+  type WithParadigm[P <: AnyParadigm] = RuntimeDispatch {val paradigm: P}
   type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 
   def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
     (base: P)
-      (nameProvider: NameProvider[base.syntax.Name],
+      (
+        nameProvider: NameProvider[base.syntax.Name],
         impParadigmProvider: Imperative.WithBase[base.MethodBodyContext, base.type],
         stringsProvider: Strings.WithBase[base.MethodBodyContext, base.type],
         exceptionsProvider: Exceptions.WithBase[base.MethodBodyContext, base.type],
-        oo: ObjectOriented.WithBase[base.type]) : RuntimeDispatch.WithParadigm[base.type] =
-    new RuntimeDispatch {
-      val paradigm: base.type = base
-      val strings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type ] = stringsProvider
-      val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type ] = impParadigmProvider
-      val exceptions: Exceptions.WithBase[paradigm.MethodBodyContext, paradigm.type ] = exceptionsProvider
-      val names: NameProvider[paradigm.syntax.Name] = nameProvider
-      val ooParadigm: oo.type = oo
-    }
+        oo: ObjectOriented.WithBase[base.type]
+      ): RuntimeDispatch.WithParadigm[base.type] = {
+    case class RD(
+      override val paradigm: base.type
+    )(
+      override val names: NameProvider[paradigm.syntax.Name],
+      override val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type],
+      override val strings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
+      override val exceptions: Exceptions.WithBase[paradigm.MethodBodyContext, paradigm.type],
+      override val ooParadigm: oo.type
+    ) extends RuntimeDispatch
+    RD(base)(nameProvider, impParadigmProvider, stringsProvider, exceptionsProvider, oo)
+  }
 }

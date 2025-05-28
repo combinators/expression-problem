@@ -15,10 +15,10 @@ case class GetCurrentTypeParameter[Type]() extends Command {
   type Result = Type
 }
 
-trait Generics(
-  val base: org.combinators.ep.generator.paradigm.AnyParadigm)(
-  val ooParadigm: ObjectOriented.WithBase[base.type],
-  val ppolyParadigm: ParametricPolymorphism.WithBase[base.type]) {
+trait Generics {
+  val base: org.combinators.ep.generator.paradigm.AnyParadigm
+  val ooParadigm: ObjectOriented.WithBase[base.type]
+  val ppolyParadigm: ParametricPolymorphism.WithBase[base.type]
 
   import base._
   import ooParadigm._

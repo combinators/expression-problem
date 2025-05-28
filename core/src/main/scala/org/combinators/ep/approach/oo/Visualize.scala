@@ -1,4 +1,6 @@
-package org.combinators.ep.approach.oo     /*DI:LI:AD*/
+package org.combinators.ep.approach.oo
+
+/*DI:LI:AD*/
 
 import org.combinators.ep.domain.{GenericModel, GraphViz}
 import org.combinators.ep.domain.abstractions._
@@ -8,15 +10,15 @@ import org.combinators.ep.generator.communication._
 import org.combinators.ep.generator.paradigm._
 
 /**
- * Process model by generating representations suitable for GraphViz
- *
- * https://dreampuf.github.io/GraphvizOnline
- *
- * Choose "graphviz" as the approach and (for either Java or Scala) generate the resulting
- * code. What it does, instead, is generate the OO solution and then creates files, either
- * "eip.viz" (structural evolution) or "evolution.viz" (which also includes dependency links)
- * that you can copy and paste into the above service.
- */
+  * Process model by generating representations suitable for GraphViz
+  *
+  * https://dreampuf.github.io/GraphvizOnline
+  *
+  * Choose "graphviz" as the approach and (for either Java or Scala) generate the resulting
+  * code. What it does, instead, is generate the OO solution and then creates files, either
+  * "eip.viz" (structural evolution) or "evolution.viz" (which also includes dependency links)
+  * that you can copy and paste into the above service.
+  */
 trait Visualize extends SharedOO {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
 
@@ -78,50 +80,71 @@ trait Visualize extends SharedOO {
       (resultMap, m) =>
         m.optimizations.foldLeft(resultMap) { (resultMap, pair) =>
           resultMap.updated(pair._1, Set(pair._2) ++ resultMap.getOrElse(pair._1, Set.empty))
-        }}
+        }
+    }
 
     val lastExp = latestModelDefiningInterface(domain)
-    val overriddenMap1 = domain.toSeq.filter(dm => lastExp.before(dm)).flatMap(m => m.optimizations).groupBy(_._1).map(f => (f._1, f._2.map(pair => pair._2).toSet))        //.groupBy{ case (tpe, op) => tpe. }
+    val overriddenMap1 = domain.toSeq.filter(dm => lastExp.before(dm)).flatMap(m => m.optimizations).groupBy(_._1).map(f => (f._1, f._2.map(pair => pair._2).toSet)) //.groupBy{ case (tpe, op) => tpe. }
 
-    println(s"""OverrideMap: ${domain.name}, ${overriddenMap.map(pair => pair._1.name + " [" + pair._2.map(op => op.name)
-      .foldLeft("") {case (g,str) => g + str + ","}
-      + "], ")
-      .foldLeft("") { case (group, str) => group + str }}""")
+    println(
+      s"""OverrideMap: ${domain.name}, ${
+        overriddenMap.map(pair => pair._1.name + " [" + pair._2.map(op => op.name)
+            .foldLeft("") { case (g, str) => g + str + "," }
+            + "], ")
+          .foldLeft("") { case (group, str) => group + str }
+      }""")
 
     // Merging makes this more complicated BECAUSE there could be multiple Exp that are brought together,
     // and if so, then will need to BLEND together
     val pastWithExp = domain.former.filter(dm => dm == latestModelDefiningInterface(dm))
-    val xyz = if (pastWithExp.length > 1) { pastWithExp.flatMap(m => dataTypeCasesWithNewOperations(m)) } else { Seq.empty }
+    val xyz = if (pastWithExp.length > 1) {
+      pastWithExp.flatMap(m => dataTypeCasesWithNewOperations(m))
+    } else {
+      Seq.empty
+    }
     val mergeResults = xyz.groupBy(_._1).map(triple => triple._1 -> triple._2.flatMap(pm => pm._2)).filter(entry => entry._2.nonEmpty)
     //  .map(pair => (pair._1, pair._2.flatMap(p => p._2).toSet))
     if (domain.name.equals("oo3")) {
-      println ("SDS")
+      println("SDS")
     }
-    val mergeResultsxxx = if (pastWithExp.length > 1) { pastWithExp.flatMap(m => dataTypeCasesWithNewOperations(m)).toMap } else { Map.empty[DataTypeCase, Set[Operation]] }
+    val mergeResultsxxx = if (pastWithExp.length > 1) {
+      pastWithExp.flatMap(m => dataTypeCasesWithNewOperations(m)).toMap
+    } else {
+      Map.empty[DataTypeCase, Set[Operation]]
+    }
 
     val mergeMap = if (pastWithExp.length > 1) {
-      pastWithExp.foldLeft(overriddenMap){ (updatedMap, m) =>
+      pastWithExp.foldLeft(overriddenMap) { (updatedMap, m) =>
         dataTypeCasesWithNewOperations(m).foldLeft(updatedMap) { (nextMap, pair) => {
           nextMap.updated(pair._1, pair._2 ++ nextMap.getOrElse(pair._1, Set.empty))
-        }}
+        }
+        }
       }
       // multiple Exp in former, so we have to join together
-    } else { overriddenMap}
+    } else {
+      overriddenMap
+    }
 
     val mergeMap0 = if (pastWithExp.length > 1) {
-      pastWithExp.foldLeft(Map.empty[DataTypeCase, Set[Operation]]){ (updatedMap, m) =>
+      pastWithExp.foldLeft(Map.empty[DataTypeCase, Set[Operation]]) { (updatedMap, m) =>
         dataTypeCasesWithNewOperations(m).foldLeft(updatedMap) { (nextMap, pair) => {
           nextMap.updated(pair._1, pair._2 ++ nextMap.getOrElse(pair._1, Set.empty))
-        }}
+        }
+        }
       }
       // multiple Exp in former, so we have to join together
-    } else { Map.empty[DataTypeCase, Set[Operation]]}
+    } else {
+      Map.empty[DataTypeCase, Set[Operation]]
+    }
 
 
-    println(s"""MergeMap: ${domain.name}, ${mergeMap0.map(pair => pair._1.name + " [" + pair._2.map(op => op.name)
-      .foldLeft("") {case (g,str) => g + str + ","}
-      + "], ")
-      .foldLeft("") { case (group, str) => group + str }}""")
+    println(
+      s"""MergeMap: ${domain.name}, ${
+        mergeMap0.map(pair => pair._1.name + " [" + pair._2.map(op => op.name)
+            .foldLeft("") { case (g, str) => g + str + "," }
+            + "], ")
+          .foldLeft("") { case (group, str) => group + str }
+      }""")
 
     // whenever a new Exp is defined, MUST duplicate logic for all producer methods; incorporate into logic below
     val addedExp = domain == latestModelDefiningInterface(domain)
@@ -140,7 +163,7 @@ trait Visualize extends SharedOO {
 
 
     val affected = allOperations.map(op => {
-        val dts = allDataTypeCases.filter(tpe => {
+      val dts = allDataTypeCases.filter(tpe => {
         val mt = domain.findTypeCase(tpe).get
         val mo = domain.findOperation(op).get
 
@@ -181,15 +204,18 @@ trait Visualize extends SharedOO {
         }
       }
     }
-    println(s"""ResultsMap: ${domain.name}, ${results0.map(pair => pair._1.name + " [" + pair._2.map(op => op.name)
-      .foldLeft("") {case (g,str) => g + str + ","}
-      + "], ")
-      .foldLeft("") { case (group, str) => group + str }}""")
+    println(
+      s"""ResultsMap: ${domain.name}, ${
+        results0.map(pair => pair._1.name + " [" + pair._2.map(op => op.name)
+            .foldLeft("") { case (g, str) => g + str + "," }
+            + "], ")
+          .foldLeft("") { case (group, str) => group + str }
+      }""")
 
     val res =
       Seq(overriddenMap1, mergeResults, resultss)
-        .flatten                        // List[(String, String)]
-        .groupBy { case (k, _) => k }   // Map[String, List[(String, String)]]
+        .flatten // List[(String, String)]
+        .groupBy { case (k, _) => k } // Map[String, List[(String, String)]]
         .map(pair => (pair._1, pair._2.flatMap(p => p._2).toSet))
     //.mapValues(_.map { case (_, v) => v })
     if (!res.equals(results)) {
@@ -215,7 +241,9 @@ trait Visualize extends SharedOO {
       pastWithExp.flatMap(m => dataTypeCasesWithNewOperations(m)).groupBy(_._1)
         .map(triple => triple._1 -> triple._2.flatMap(pm => pm._2))
         .filter(entry => entry._2.nonEmpty)
-    } else { Seq.empty }
+    } else {
+      Seq.empty
+    }
     //val merged1 = xyz.groupBy(_._1).map(triple => triple._1 -> triple._2.flatMap(pm => pm._2)).filter(entry => entry._2.nonEmpty)
 
     // whenever a new Exp is defined, MUST duplicate logic for all producer methods; incorporate into logic below
@@ -234,9 +262,9 @@ trait Visualize extends SharedOO {
     }).filter(pair => pair._2.nonEmpty).toMap
 
     Seq(overridden, merged, updated)
-        .flatten
-        .groupBy { case (k, _) => k }
-        .map(pair => (pair._1, pair._2.flatMap(p => p._2).toSet))
+      .flatten
+      .groupBy { case (k, _) => k }
+      .map(pair => (pair._1, pair._2.flatMap(p => p._2).toSet))
   }
 
   def latestModelDefiningNewTypeInterface(domain: GenericModel): GenericModel = {
@@ -255,8 +283,8 @@ trait Visualize extends SharedOO {
   }
 
   /**
-   * Every stage needs a Factory
-   */
+    * Every stage needs a Factory
+    */
   def latestModelDefiningNewFactoryType(domain: GenericModel): GenericModel = {
     if (domain.optimizations.nonEmpty || domain.isDomainBase || domain.typeCases.nonEmpty || domain == latestModelDefiningNewTypeInterface(domain)) {
       domain
@@ -399,7 +427,7 @@ trait Visualize extends SharedOO {
       domain
     } else {
       // is there a single type that can represent the "least upper bound" of all prior branches.
-      val ancestorsWithTypeInterfaces = ancestorsDefiningNewTypeInterfaces2(domain)  // INTERPRETER
+      val ancestorsWithTypeInterfaces = ancestorsDefiningNewTypeInterfaces2(domain) // INTERPRETER
       //val ancestorsWithTypeInterfaces = domain.former.map(ancestor => latestModelDefiningNewTypeInterface(ancestor)).distinct // COCO
 
       if (ancestorsWithTypeInterfaces.size == 1 && !ancestorsWithTypeInterfaces.head.isDomainBase) { // take care to avoid falling below "floor"
@@ -431,12 +459,12 @@ trait Visualize extends SharedOO {
     //gdomain.toSeq.foreach(m => println(m.name, latestModelDefiningInterface(m).name))
 
     //gdomain.toSeq.foreach(m => println(m.name, dataTypeCasesWithNewOperations(m).map(pair => pair._1.name ++ "," ++ pair._2.map(op => op.name))))
-//    gdomain.toSeq.reverse.foreach(m => println(m.name,
-//      dataTypeCasesWithNewOperations(m).map(pair => pair._1.name + " [" + pair._2.map(op => op.name)
-//        .foldLeft("") {case (g,str) => g + str + ","}
-//         + "], ")
-//        .foldLeft("") { case (group, str) => group + str }
-//    ))
+    //    gdomain.toSeq.reverse.foreach(m => println(m.name,
+    //      dataTypeCasesWithNewOperations(m).map(pair => pair._1.name + " [" + pair._2.map(op => op.name)
+    //        .foldLeft("") {case (g,str) => g + str + ","}
+    //         + "], ")
+    //        .foldLeft("") { case (group, str) => group + str }
+    //    ))
     gdomain.toSeq.foreach(m => println(s"""${m.name} has ${latestModelDefiningNewTypeInterface2(m).name}"""))
 
     println()
@@ -446,72 +474,72 @@ trait Visualize extends SharedOO {
 
     print("CoCo:" + gdomain.name)
     val outputCoCO = new java.io.File(new java.io.File("target"), "coco-newDataTypeCases.txt")
-    val fileWriterCoCo = new java.io.FileWriter (outputCoCO, true)
+    val fileWriterCoCo = new java.io.FileWriter(outputCoCO, true)
     gdomain.toSeq.distinct.foreach(m => {
       fileWriterCoCo.write(m.name + "," +
-      cocoNewDataTypeCasesWithNewOperations(m).map(pair => pair._1.name + " [" + pair._2.map(op => op.name)
-        .foldLeft("") { case (g, str) => g + str + "," }
-        + "], ")
-        .foldLeft("") { case (group, str) => group + str } + "\n")
+        cocoNewDataTypeCasesWithNewOperations(m).map(pair => pair._1.name + " [" + pair._2.map(op => op.name)
+            .foldLeft("") { case (g, str) => g + str + "," }
+            + "], ")
+          .foldLeft("") { case (group, str) => group + str } + "\n")
     }
     )
     fileWriterCoCo.close()
 
     print("ObjectAlgebras:" + gdomain.name)
     val outputObjectAlgebras = new java.io.File(new java.io.File("target"), "algebra-newDataTypeCases.txt")
-    val fileWriterObjAlg = new java.io.FileWriter (outputObjectAlgebras, true)
+    val fileWriterObjAlg = new java.io.FileWriter(outputObjectAlgebras, true)
     gdomain.toSeq.distinct.foreach(m => {
       fileWriterObjAlg.write(m.name + "," +
-      objectAlgebrasDataTypeCasesWithNewOperations(domainSpecific, m).map(pair => pair._1.name + " [" + pair._2.map(op => op.name)
-        .foldLeft("") { case (g, str) => g + str + "," }
-        + "], ")
-        .foldLeft("") { case (group, str) => group + str } + "\n")
+        objectAlgebrasDataTypeCasesWithNewOperations(domainSpecific, m).map(pair => pair._1.name + " [" + pair._2.map(op => op.name)
+            .foldLeft("") { case (g, str) => g + str + "," }
+            + "], ")
+          .foldLeft("") { case (group, str) => group + str } + "\n")
     }
     )
     fileWriterObjAlg.close()
 
     print("Trivially:" + gdomain.name)
-    val outputObjectTrivially= new java.io.File(new java.io.File("target"), "trivially-newDataTypeCases.txt")
-    val fileWriterTrivially= new java.io.FileWriter (outputObjectTrivially,  true)
+    val outputObjectTrivially = new java.io.File(new java.io.File("target"), "trivially-newDataTypeCases.txt")
+    val fileWriterTrivially = new java.io.FileWriter(outputObjectTrivially, true)
     gdomain.toSeq.distinct.foreach(m => {
       fileWriterTrivially.write(m.name + "," +
-      triviallyDataTypeCasesWithNewOperations(m).map(pair => pair._1.name + " [" + pair._2.map(op => op.name)
-        .foldLeft("") { case (g, str) => g + str + "," }
-        + "], ")
-        .foldLeft("") { case (group, str) => group + str } + "\n")
+        triviallyDataTypeCasesWithNewOperations(m).map(pair => pair._1.name + " [" + pair._2.map(op => op.name)
+            .foldLeft("") { case (g, str) => g + str + "," }
+            + "], ")
+          .foldLeft("") { case (group, str) => group + str } + "\n")
     }
     )
     fileWriterTrivially.close()
-//
-//    // document evolutions
-//    //GraphViz.outputGraphViz(gdomain)
-//
-//    // Document EIPs
-//    //GraphViz.outputGraphWithDependenciesViz(gdomain, domainSpecific)
-//
-//    // produce table
-//    val flat = gdomain.flatten
-//
-//    // header
-//    print("OP,")
-//    flat.typeCases.foreach(tpe => {
-//      print(tpe.name + ",")
-//    })
-//    println()
-//
-//    flat.ops.foreach(op => {
-//      print(op.name + ",")
-//      flat.typeCases.foreach(tpe => {
-//        val opt = latestModelDefiningOperatorClass(gdomain, tpe, op, domainSpecific)
-//
-//        if (opt.isEmpty) {
-//          print("-,")
-//        } else {
-//          print(opt.get.name + ",")
-//        }
-//      })
-//      println()
-//    })
+    //
+    //    // document evolutions
+    //    //GraphViz.outputGraphViz(gdomain)
+    //
+    //    // Document EIPs
+    //    //GraphViz.outputGraphWithDependenciesViz(gdomain, domainSpecific)
+    //
+    //    // produce table
+    //    val flat = gdomain.flatten
+    //
+    //    // header
+    //    print("OP,")
+    //    flat.typeCases.foreach(tpe => {
+    //      print(tpe.name + ",")
+    //    })
+    //    println()
+    //
+    //    flat.ops.foreach(op => {
+    //      print(op.name + ",")
+    //      flat.typeCases.foreach(tpe => {
+    //        val opt = latestModelDefiningOperatorClass(gdomain, tpe, op, domainSpecific)
+    //
+    //        if (opt.isEmpty) {
+    //          print("-,")
+    //        } else {
+    //          print(opt.get.name + ",")
+    //        }
+    //      })
+    //      println()
+    //    })
 
     val flatDomain = gdomain.linearize.flatten
     for {
@@ -522,17 +550,21 @@ trait Visualize extends SharedOO {
 }
 
 object Visualize {
-  type WithParadigm[P <: AnyParadigm] = Visualize { val paradigm: P }
+  type WithParadigm[P <: AnyParadigm] = Visualize {val paradigm: P}
   type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 
   def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
-  (base: P)
-  (nameProvider: NameProvider[base.syntax.Name],
-   oo: ObjectOriented.WithBase[base.type]
-  ): Visualize.WithParadigm[base.type] =
-    new Visualize {
-      override val paradigm: base.type = base
-      override val names: NameProvider[paradigm.syntax.Name] = nameProvider
-      override val ooParadigm: ObjectOriented.WithBase[paradigm.type] = oo
-    }
+    (base: P)
+      (
+        nameProvider: NameProvider[base.syntax.Name],
+        oo: ObjectOriented.WithBase[base.type]
+      ): Visualize.WithParadigm[base.type] = {
+    case class V(
+      override val paradigm: base.type
+    )(
+      override val names: NameProvider[paradigm.syntax.Name],
+      override val ooParadigm: ObjectOriented.WithBase[paradigm.type]
+    ) extends Visualize
+    V(base)(nameProvider, oo)
+  }
 }

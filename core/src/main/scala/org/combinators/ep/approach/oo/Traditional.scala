@@ -1,4 +1,6 @@
-package org.combinators.ep.approach.oo    /*DI:LI:AD*/
+package org.combinators.ep.approach.oo
+
+/*DI:LI:AD*/
 
 import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions._
@@ -8,7 +10,7 @@ import org.combinators.ep.generator.paradigm._
 import Command._
 import AnyParadigm.syntax._
 
-trait Traditional extends SharedOO {  // this had been sealed. not sure why
+trait Traditional extends SharedOO { // this had been sealed. not sure why
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
 
   import paradigm._
@@ -37,12 +39,12 @@ trait Traditional extends SharedOO {  // this had been sealed. not sure why
   }
 
   /**
-   * When a DataTypeCase forms a class (given a sequence of operations) this function does the heavy lifting.
-   *
-   * A constructor is generated, using [[makeConstructor]]. Fields are generates, using [[makeField]]. Each
-   * operation is embedded as a method within each class, using [[makeImplementation]]
-   */
-  def makeDerived(tpe: DataType, tpeCase: DataTypeCase, ops: Seq[Operation], domain:GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
+    * When a DataTypeCase forms a class (given a sequence of operations) this function does the heavy lifting.
+    *
+    * A constructor is generated, using [[makeConstructor]]. Fields are generates, using [[makeField]]. Each
+    * operation is embedded as a method within each class, using [[makeImplementation]]
+    */
+  def makeDerived(tpe: DataType, tpeCase: DataTypeCase, ops: Seq[Operation], domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
 
     def fullImplementation(op: Operation): Generator[MethodBodyContext, Option[Expression]] = {
@@ -58,11 +60,11 @@ trait Traditional extends SharedOO {  // this had been sealed. not sure why
         pt <- toTargetLanguageType(TypeRep.DataType(tpe))
         _ <- resolveAndAddImport(pt)
         _ <- addParent(pt)
-        _ <- forEach (tpeCase.attributes) { att => makeField(att) }
+        _ <- forEach(tpeCase.attributes) { att => makeField(att) }
         _ <- addConstructor(makeConstructor(tpeCase))
-        _ <- forEach (ops) { op =>
-            addMethod(names.mangle(names.instanceNameOf(op)), fullImplementation(op))
-          }
+        _ <- forEach(ops) { op =>
+          addMethod(names.mangle(names.instanceNameOf(op)), fullImplementation(op))
+        }
       } yield ()
     }
     addClassToProject(makeClass, names.mangle(names.conceptNameOf(tpeCase)))
@@ -88,25 +90,27 @@ trait Traditional extends SharedOO {  // this had been sealed. not sure why
       _ <- domainSpecific.initialize(this)
 
       _ <- makeBase(flatDomain.baseDataType, flatDomain.ops)
-      _ <- forEach (flatDomain.typeCases.distinct) { tpeCase =>
-          makeDerived(flatDomain.baseDataType, tpeCase, flatDomain.ops, gdomain, domainSpecific)
-        }
+      _ <- forEach(flatDomain.typeCases.distinct) { tpeCase =>
+        makeDerived(flatDomain.baseDataType, tpeCase, flatDomain.ops, gdomain, domainSpecific)
+      }
     } yield ()
   }
 }
 
 object Traditional {
-  type WithParadigm[P <: AnyParadigm] = Traditional { val paradigm: P }
+  type WithParadigm[P <: AnyParadigm] = Traditional {val paradigm: P}
   type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 
   def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
-      (base: P)
-      (nameProvider: NameProvider[base.syntax.Name],
+    (base: P)
+      (
+        nameProvider: NameProvider[base.syntax.Name],
         oo: ObjectOriented.WithBase[base.type]
-      ): Traditional.WithParadigm[base.type] =
-    new Traditional {
-      override val paradigm: base.type = base
-      override val names: NameProvider[paradigm.syntax.Name] = nameProvider
-      override val ooParadigm: ObjectOriented.WithBase[paradigm.type] = oo
-    }
+      ): Traditional.WithParadigm[base.type] = {
+    case class TD(override val paradigm: base.type)(
+      override val names: NameProvider[paradigm.syntax.Name],
+      override val ooParadigm: ObjectOriented.WithBase[paradigm.type]
+    ) extends Traditional
+    TD(base)(nameProvider, oo)
+  }
 }

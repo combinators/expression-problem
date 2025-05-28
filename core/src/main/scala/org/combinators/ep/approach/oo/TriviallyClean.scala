@@ -1,4 +1,6 @@
-package org.combinators.ep.approach.oo     /*DI:LI:AD*/
+package org.combinators.ep.approach.oo
+
+/*DI:LI:AD*/
 
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.{GenericModel, abstractions}
@@ -38,13 +40,13 @@ trait TriviallyClean extends SharedOO {
     * Instantiating an instance of the data type.
     *
     * public void testTest() {
-    *   org.junit.Assert.assertTrue("", Double.valueOf(new finalized.Add(new Lit(1.0), new Lit(2.0)).eval()).equals(3.0));
-    *   org.junit.Assert.assertTrue("", Double.valueOf(new Lit(5.0).eval()).equals(5.0));
+    * org.junit.Assert.assertTrue("", Double.valueOf(new finalized.Add(new Lit(1.0), new Lit(2.0)).eval()).equals(3.0));
+    * org.junit.Assert.assertTrue("", Double.valueOf(new Lit(5.0).eval()).equals(5.0));
     * }
     *
-    * @param baseTpe  Top-level Exp
-    * @param tpeCase  Specific data type case for object to be instantiated
-    * @param args     necessary arguments to the constructor
+    * @param baseTpe Top-level Exp
+    * @param tpeCase Specific data type case for object to be instantiated
+    * @param args    necessary arguments to the constructor
     * @return
     */
   def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
@@ -59,7 +61,8 @@ trait TriviallyClean extends SharedOO {
   }
 
   /** Find the most specific Exp class currently at play, given the current domain. */
-  def mostSpecificBaseInterfaceType[Context](domain: GenericModel)(implicit
+  def mostSpecificBaseInterfaceType[Context](domain: GenericModel)(
+    implicit
     canFindClass: Understands[Context, FindClass[paradigm.syntax.Name, paradigm.syntax.Type]],
     canResolveImport: Understands[Context, ResolveImport[paradigm.syntax.Import, paradigm.syntax.Type]],
     canAddImport: Understands[Context, AddImport[paradigm.syntax.Import]]
@@ -74,7 +77,8 @@ trait TriviallyClean extends SharedOO {
   }
 
   /** Find the most specific Exp class currently at play, given the current domain. */
-  def givenBaseInterfaceType[Context](domain: GenericModel, tpe:DataTypeCase)(implicit
+  def givenBaseInterfaceType[Context](domain: GenericModel, tpe: DataTypeCase)(
+    implicit
     canFindClass: Understands[Context, FindClass[paradigm.syntax.Name, paradigm.syntax.Type]],
     canResolveImport: Understands[Context, ResolveImport[paradigm.syntax.Import, paradigm.syntax.Type]],
     canAddImport: Understands[Context, AddImport[paradigm.syntax.Import]]
@@ -108,7 +112,7 @@ trait TriviallyClean extends SharedOO {
     }
   }
 
-  def newerTypeCasesSinceInterface(domain:GenericModel) : Seq[DataTypeCase] = {
+  def newerTypeCasesSinceInterface(domain: GenericModel): Seq[DataTypeCase] = {
     val lastExp = latestModelDefiningInterface(domain)
     val toRemove = lastExp.flatten.typeCases
 
@@ -137,7 +141,7 @@ trait TriviallyClean extends SharedOO {
       }
       _ <- setParameters(operation.parameters.map(param => names.mangle(param.name)).zip(signature))
 
-      returnType <-  if (operation.returnType.isModelBase(domain)) {
+      returnType <- if (operation.returnType.isModelBase(domain)) {
         Command.lift[paradigm.MethodBodyContext, paradigm.syntax.Type](returnTypeInterface)
       } else {
         for {
@@ -159,7 +163,7 @@ trait TriviallyClean extends SharedOO {
 
       for {
         // add all parents (now made unique)
-        _<- forEach(existingParentDomains) { ancestor =>
+        _ <- forEach(existingParentDomains) { ancestor =>
           for {
             parentTypeInterface <- mostSpecificBaseInterfaceType(ancestor)
             _ <- addParent(parentTypeInterface)
@@ -185,7 +189,7 @@ trait TriviallyClean extends SharedOO {
     addClassToProject(makeNewTypeInterface(), names.mangle(names.instanceNameOf(domain)), names.mangle(names.conceptNameOf(domain.baseDataType)))
   }
 
-  def mostSpecificModel(domain:GenericModel, dataTypeCase:DataTypeCase) : Option[GenericModel] = {
+  def mostSpecificModel(domain: GenericModel, dataTypeCase: DataTypeCase): Option[GenericModel] = {
     val potential = dataTypeCasesWithNewOperations(domain)
     val haveChanged = potential.exists(pair => pair._1 == dataTypeCase && pair._2.nonEmpty)
     if (domain.findTypeCase(dataTypeCase).isDefined) {
@@ -199,7 +203,8 @@ trait TriviallyClean extends SharedOO {
     }
   }
 
-  def mostSpecificTypeCaseInterface[Context](domain: GenericModel, dataTypeCase:DataTypeCase)(implicit
+  def mostSpecificTypeCaseInterface[Context](domain: GenericModel, dataTypeCase: DataTypeCase)(
+    implicit
     canFindClass: Understands[Context, FindClass[paradigm.syntax.Name, paradigm.syntax.Type]],
     canResolveImport: Understands[Context, ResolveImport[paradigm.syntax.Import, paradigm.syntax.Type]],
     canAddImport: Understands[Context, AddImport[paradigm.syntax.Import]],
@@ -239,13 +244,14 @@ trait TriviallyClean extends SharedOO {
     }
   }
 
-  def finalizedTypeCaseClass[Context](domain: GenericModel, dataTypeCase:DataTypeCase)(implicit
+  def finalizedTypeCaseClass[Context](domain: GenericModel, dataTypeCase: DataTypeCase)(
+    implicit
     canFindClass: Understands[Context, FindClass[paradigm.syntax.Name, paradigm.syntax.Type]],
     canResolveImport: Understands[Context, ResolveImport[paradigm.syntax.Import, paradigm.syntax.Type]],
     canAddImport: Understands[Context, AddImport[paradigm.syntax.Import]],
   ): Generator[Context, paradigm.syntax.Type] = {
     @tailrec
-    def latestDeclaringTypeCase(model:GenericModel): GenericModel = {
+    def latestDeclaringTypeCase(model: GenericModel): GenericModel = {
       if (model.typeCases.contains(dataTypeCase)) {
         model
       } else {
@@ -264,7 +270,7 @@ trait TriviallyClean extends SharedOO {
 
     val optimized = domain.optimizations.exists(pair => pair._1 == dataTypeCase)
 
-    val toUse= if (optimized) {
+    val toUse = if (optimized) {
       domain
     } else {
       _latestModelDefiningDataTypeCaseInterface
@@ -309,7 +315,7 @@ trait TriviallyClean extends SharedOO {
       // Use more specific base type for 'isDomainBase' attribute types
       baseInterfaceType <- mostSpecificBaseInterfaceType(domain)
 
-      result <- completeImplementation(domain.baseDataType, dataTypeCase, operation, domain, domainSpecific, attributeAccess=attributeGetterAccess, baseType=Some(baseInterfaceType))
+      result <- completeImplementation(domain.baseDataType, dataTypeCase, operation, domain, domainSpecific, attributeAccess = attributeGetterAccess, baseType = Some(baseInterfaceType))
     } yield result
   }
 
@@ -350,7 +356,7 @@ trait TriviallyClean extends SharedOO {
       .map(entry => (entry._1, entry._2.flatMap(pair => pair._2).toSet))
   }
 
-  def makeNewTypeCaseInterface(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type], newDataTypeCase:DataTypeCase, newOperations:Set[Operation]) : Generator[ooParadigm.ClassContext, Unit] = {
+  def makeNewTypeCaseInterface(domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type], newDataTypeCase: DataTypeCase, newOperations: Set[Operation]): Generator[ooParadigm.ClassContext, Unit] = {
     import ooParadigm.classCapabilities._
 
     for {
@@ -367,7 +373,7 @@ trait TriviallyClean extends SharedOO {
           } else {
             Command.skip[ooParadigm.ClassContext]
           }
-        } yield()
+        } yield ()
       }
 
       // Add abstract getters if defined here
@@ -375,7 +381,7 @@ trait TriviallyClean extends SharedOO {
         addAbstractMethod(getterName(attribute), setAttributeGetterSignature(domain, attribute))
       }
 
-      _ <- forEach (newerTypeCasesSinceInterface(domain)) { tpeCase =>
+      _ <- forEach(newerTypeCasesSinceInterface(domain)) { tpeCase =>
         addTypeLookupForMethods(FinalizedDataTypeCase(tpeCase), finalizedTypeCaseClass(domain, tpeCase)(
           canFindClass = ooParadigm.methodBodyCapabilities.canFindClassInMethod,
           canResolveImport = paradigm.methodBodyCapabilities.canResolveImportInMethod,
@@ -415,7 +421,7 @@ trait TriviallyClean extends SharedOO {
     }
 
     for {
-      _ <- forEach(finalMap.toList) { case (dataTypeCase,newOperations) =>
+      _ <- forEach(finalMap.toList) { case (dataTypeCase, newOperations) =>
         if (newOperations.nonEmpty) {
           addClassToProject(makeNewTypeCaseInterface(domain, domainSpecific, dataTypeCase, newOperations), names.mangle(names.instanceNameOf(domain)), names.mangle(names.conceptNameOf(dataTypeCase)))
         } else {
@@ -461,7 +467,7 @@ trait TriviallyClean extends SharedOO {
 
   def addFinalizedTypeCaseClassesIfNecessary(domain: GenericModel): Generator[paradigm.ProjectContext, Unit] = {
 
-    def makeNewFinalizedTypeCaseClass(newDataTypeCase: DataTypeCase) : Generator[ooParadigm.ClassContext, Unit] = {
+    def makeNewFinalizedTypeCaseClass(newDataTypeCase: DataTypeCase): Generator[ooParadigm.ClassContext, Unit] = {
       import ooParadigm.classCapabilities._
 
       for {
@@ -474,7 +480,7 @@ trait TriviallyClean extends SharedOO {
         }
 
         _ <- forEach(domain.former) { former =>
-          val latest = mostSpecificModel(domain, newDataTypeCase).getOrElse(former)  // fall back to former if not present
+          val latest = mostSpecificModel(domain, newDataTypeCase).getOrElse(former) // fall back to former if not present
           val here = former.lastModelWithOperation.foldLeft(latest)((defined, model) => defined.later(model))
           for {
             // find where it was last defined (can only be one), and that's the one to import *OR* if a new operation was defined in between.
@@ -518,17 +524,17 @@ trait TriviallyClean extends SharedOO {
     def implementRecursive(domain: GenericModel): Generator[paradigm.ProjectContext, Unit] = {
 
       for {
-        _ <- registerTypeMapping(domain)                                         // handle DataType classes
+        _ <- registerTypeMapping(domain) // handle DataType classes
         _ <- if (domain == latestModelDefiningInterface(domain)) {
           for {
-            _ <- addNewTypeInterface(domain)                                     // Exp for each evolution that needs one
+            _ <- addNewTypeInterface(domain) // Exp for each evolution that needs one
           } yield ()
         } else {
           Command.skip[paradigm.ProjectContext]
         }
 
-        _ <- addDataTypeCaseInterfaces(domain, domainSpecific)                   // DataTypeCase interfaces as needed
-        _ <- addFinalizedTypeCaseClassesIfNecessary(domain)                      // Finalized classes
+        _ <- addDataTypeCaseInterfaces(domain, domainSpecific) // DataTypeCase interfaces as needed
+        _ <- addFinalizedTypeCaseClassesIfNecessary(domain) // Finalized classes
 
         _ <- forEach(domain.former.filterNot(p => p.isDomainBase)) { ancestor => implementRecursive(ancestor) }
       } yield ()
@@ -552,12 +558,12 @@ trait TriviallyClean extends SharedOO {
     // all type cases that were defined AFTER last Exp need to be registered
     val flat = domain.flatten
 
-    val ordered = domain.inChronologicalOrder.reverse  // ensures proper topological ordering
+    val ordered = domain.inChronologicalOrder.reverse // ensures proper topological ordering
     val seqs = flat.typeCases.map(tpe => (tpe, ordered.find(m => dataTypeCasesWithNewOperations(m).exists(pair => pair._1 == tpe)).get))
 
     val dtpeRep = TypeRep.DataType(domain.baseDataType)
     for {
-      _ <- forEach (seqs) { case (tpeCase, model) =>   // passes on capabilities so it knows which generators to use...
+      _ <- forEach(seqs) { case (tpeCase, model) => // passes on capabilities so it knows which generators to use...
         for {
           _ <- addTypeLookupForMethods(FinalizedDataTypeCase(tpeCase), finalizedTypeCaseClass(model, tpeCase)(canFindClass = ooParadigm.methodBodyCapabilities.canFindClassInMethod, canAddImport = paradigm.methodBodyCapabilities.canAddImportInMethodBody, canResolveImport = paradigm.methodBodyCapabilities.canResolveImportInMethod))
           _ <- addTypeLookupForClasses(FinalizedDataTypeCase(tpeCase), finalizedTypeCaseClass(model, tpeCase)(canFindClass = ooParadigm.classCapabilities.canFindClassInClass, canAddImport = ooParadigm.classCapabilities.canAddImportInClass, canResolveImport = ooParadigm.classCapabilities.canResolveImportInClass))
@@ -565,9 +571,9 @@ trait TriviallyClean extends SharedOO {
         } yield ()
       }
 
-      _ <- addTypeLookupForMethods(dtpeRep, mostSpecificBaseInterfaceType(domain)(canFindClass=ooParadigm.methodBodyCapabilities.canFindClassInMethod, canAddImport =paradigm.methodBodyCapabilities.canAddImportInMethodBody, canResolveImport = paradigm.methodBodyCapabilities.canResolveImportInMethod))
-      _ <- addTypeLookupForClasses(dtpeRep, mostSpecificBaseInterfaceType(domain)(canFindClass=ooParadigm.classCapabilities.canFindClassInClass, canAddImport = ooParadigm.classCapabilities.canAddImportInClass, canResolveImport = ooParadigm.classCapabilities.canResolveImportInClass))
-      _ <- addTypeLookupForConstructors(dtpeRep, mostSpecificBaseInterfaceType(domain)(canFindClass=ooParadigm.constructorCapabilities.canFindClassInConstructor, canAddImport = ooParadigm.constructorCapabilities.canAddImportInConstructor, canResolveImport = ooParadigm.constructorCapabilities.canResolveImportInConstructor))
+      _ <- addTypeLookupForMethods(dtpeRep, mostSpecificBaseInterfaceType(domain)(canFindClass = ooParadigm.methodBodyCapabilities.canFindClassInMethod, canAddImport = paradigm.methodBodyCapabilities.canAddImportInMethodBody, canResolveImport = paradigm.methodBodyCapabilities.canResolveImportInMethod))
+      _ <- addTypeLookupForClasses(dtpeRep, mostSpecificBaseInterfaceType(domain)(canFindClass = ooParadigm.classCapabilities.canFindClassInClass, canAddImport = ooParadigm.classCapabilities.canAddImportInClass, canResolveImport = ooParadigm.classCapabilities.canResolveImportInClass))
+      _ <- addTypeLookupForConstructors(dtpeRep, mostSpecificBaseInterfaceType(domain)(canFindClass = ooParadigm.constructorCapabilities.canFindClassInConstructor, canAddImport = ooParadigm.constructorCapabilities.canAddImportInConstructor, canResolveImport = ooParadigm.constructorCapabilities.canResolveImportInConstructor))
     } yield ()
   }
 
@@ -607,16 +613,18 @@ trait TriviallyClean extends SharedOO {
 }
 
 object TriviallyClean {
-  type WithParadigm[P <: AnyParadigm] = TriviallyClean { val paradigm: P }
+  type WithParadigm[P <: AnyParadigm] = TriviallyClean {val paradigm: P}
   type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 
   def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
     (base: P)
-      (nameProvider: NameProvider[base.syntax.Name],
-        oo: ObjectOriented.WithBase[base.type]) : TriviallyClean.WithParadigm[base.type] =
-    new TriviallyClean {
-      val paradigm: base.type = base
-      val names: NameProvider[paradigm.syntax.Name] = nameProvider
-      val ooParadigm: oo.type = oo
-    }
+      (
+        nameProvider: NameProvider[base.syntax.Name],
+        oo: ObjectOriented.WithBase[base.type]
+      ): TriviallyClean.WithParadigm[base.type] = {
+    case class TC(override val paradigm: base.type)(
+      override val names: NameProvider[paradigm.syntax.Name], override val ooParadigm: oo.type
+    ) extends TriviallyClean
+    TC(base)(nameProvider, oo)
+  }
 }

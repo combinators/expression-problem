@@ -8,12 +8,12 @@ package object oo {
     type Class
     type Constructor
     type Field
-    type MemberAccessExpression <: Expression
-    type SelfReferenceExpression <: Expression
-    type ObjectInstantiationExpression <: Expression
-    type CastExpression <: Expression
-    type InstanceOfExpression <: Expression
-    type SuperReferenceExpression <: Expression
+    type MemberAccessExpression <: super.Expression
+    type SelfReferenceExpression <: super.Expression
+    type ObjectInstantiationExpression <: super.Expression
+    type CastExpression <: super.Expression
+    type InstanceOfExpression <: super.Expression
+    type SuperReferenceExpression <: super.Expression
     type ClassReferenceType <: Type
   }
 
@@ -373,7 +373,7 @@ package object oo {
 
     def copy(
       qualifiedClassName: Seq[any.Name[FT]] = this.qualifiedClassName
-    ): ClassReferenceType[FT] = classReferenceType(qualifiedClassName:_*)
+    ): ClassReferenceType[FT] = classReferenceType(qualifiedClassName*)
   }
 
   trait Factory[FT <: FinalTypes] extends any.Factory[FT] {

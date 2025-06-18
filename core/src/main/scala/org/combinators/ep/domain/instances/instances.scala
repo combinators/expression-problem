@@ -29,7 +29,7 @@ sealed trait InstanceRep {
   override def equals(obj: Any): Boolean = {
     obj match {
       case that: InstanceRep =>
-        that.isInstanceOf[InstanceRep.OfHostType[tpe.HostType]] && inst == that.inst
+        that.isInstanceOf[InstanceRep] && inst == that.inst
       case _ => false
     }
   }

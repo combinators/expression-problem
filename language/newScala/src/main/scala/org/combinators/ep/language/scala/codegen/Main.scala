@@ -51,7 +51,6 @@ import org.combinators.ep.domain.math.systemX.{X1, X2, X2X3, X3, X4}
 import org.combinators.ep.generator.ApproachImplementationProvider.WithParadigm
 import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider, FileWithPath, FileWithPathPersistable, TestImplementationProvider}
-import org.combinators.jgitserv.{BranchTransaction, GitService}
 
 import java.nio.file.{Path, Paths}
 
@@ -79,7 +78,7 @@ class Main(choice:String, select:String) {
   val visualizeApproach: Visualize.WithParadigm[generator.paradigm.type] = Visualize[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.ooParadigm)
 
   // select one here
-  val approach = choice match {
+  val approach: ApproachImplementationProvider.WithParadigm[generator.paradigm.type] = choice match {
     case "functional" => functionalApproach
     case "graphviz" => visualizeApproach
     case "oo" => ooApproach
@@ -168,7 +167,7 @@ class Main(choice:String, select:String) {
 
 
   val m0_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    eips.M0(approach.paradigm)(generator.doubles,generator.strings)
+    eips.M0(approach.paradigm)(generator.doubles, generator.strings)
   val m1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.M1(approach.paradigm)(m0_eip)(generator.doubles)
   val m2_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
@@ -510,14 +509,6 @@ class Main(choice:String, select:String) {
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
-  def gitTransaction: Option[BranchTransaction] =
-    transaction[Option[BranchTransaction]](Option.empty, (transaction, evolutionName, files) => {
-      val nextTransaction =
-        transaction.map(_.fork(evolutionName).deleteAllFiles)
-          .getOrElse(BranchTransaction.empty(evolutionName))
-      Some(nextTransaction.persist(files())(persistable).commit("Adding next evolution"))
-    })
-
   def directToDiskTransaction(targetDirectory: Path): IO[Unit] = {
     transaction[IO[Unit]](IO.unit, (transaction, evolutionName, files) => IO {
       print("Computing Files...")
@@ -534,15 +525,6 @@ class Main(choice:String, select:String) {
     })
   }
 
-  def runGit(args: List[String]): IO[ExitCode] = {
-    val name = evolutions.head.getModel.base.name
-    for {
-      _ <- IO { System.out.println(s"Use: git clone http://127.0.0.1:8081/$name ${evolutions.last.getModel.name}") }
-      exitCode <- new GitService(gitTransaction.toSeq, name).run(args)
-      //exitCode <- new GitService(transaction.toSeq, name).runProcess(Seq(s"sbt", "test"))
-    } yield exitCode
-  }
-
   def runDirectToDisc(targetDirectory: Path): IO[ExitCode] = {
     for {
       _ <- directToDiskTransaction(targetDirectory)
@@ -550,12 +532,58 @@ class Main(choice:String, select:String) {
   }
 }
 
-object GitMain extends IOApp {
-  def run(args: List[String]): IO[ExitCode] = {
-    val approach = if (args.isEmpty) "trivially" else args.head
-    val selection = if (args.isEmpty || args.tail.isEmpty) "A3" else args.tail.head
-    new Main(approach, selection).runGit(args)
+trait Subselection extends IOApp {
+  def approaches(args: List[String]): Seq[String]
+  val evolutions: Seq[String]
+  def target(args: List[String]): String
+
+  override def run(args: List[String]): IO[ExitCode] = {
+    val target = this.target(args)
+    val results = approaches(args).foldLeft(IO.unit)((results, approach) => {
+      val printApproach = IO {
+        println("Generating " + approach + "...")
+      }
+      evolutions.foldLeft(results)((results, selection) => {
+        val targetDirectory = Paths.get("target", target, approach, selection)
+        val program: IO[Unit] = {
+          for {
+            _ <- IO {
+              println("   " + selection)
+            }
+            _ <- results
+            _ <- IO {
+              print("Initializing Generator...")
+            }
+            main <- IO {
+              new Main(approach, selection)
+            }
+
+            _ <- IO {
+              println("[OK]")
+            }
+            _ <- main.runDirectToDisc(targetDirectory)
+          } yield ()
+        }
+        for {
+          _ <- printApproach
+          _ <- program
+        } yield ()
+
+        // execute above as a stand-alone program
+
+        // TBD:  Would be nice to launch 'sbt' in each of these generated directories
+      })
+    })
+
+    for {
+      _ <- results
+      _ <- IO {
+        print("DONE")
+      }
+    } yield ExitCode.Success
   }
+
+
 }
 
 object DirectToDiskMain extends IOApp {
@@ -563,383 +591,201 @@ object DirectToDiskMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
     // "M9", "J8", "A3", "O1OA", "OD3", "OO3", "V1", "D3", "I2M3I1N1", "O2"
-    val approach = if (args.isEmpty) "functional" else args.head
-    if (approach == "exit") { sys.exit(0) }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "M2_ABS" else args.tail.head
+    val approach = if (args.isEmpty) "algebra" else args.head // {coco, O1OA} fails
+    if (approach == "exit") {
+      sys.exit(0)
+    }
+    val selection = if (args.isEmpty || args.tail.isEmpty) "I2M3I1N1" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 
     for {
-      _ <- IO { print("Initializing Generator...") }
-      main <- IO { main }
+      _ <- IO {
+        print("Initializing Generator...")
+      }
+      main <- IO {
+        main
+      }
 
-      _ <- IO { println("[OK]") }
-
+      _ <- IO {
+        println("[OK]")
+      }
       result <- main.runDirectToDisc(targetDirectory)
-      _ <- IO { println(s"DONE, in $targetDirectory you can now run: sbt scalafmt Test/scalafmt test") }
-      _ <- IO { println(s"You can generate code coverage in $targetDirectory with: sbt coverageReport")}
     } yield result
   }
 }
 
+/**
+  * Generate ALL CODE.
+  */
 object GenerateAll extends IOApp {
 
-  def run(args: List[String]): IO[ExitCode] = {
-    GenerateAllMain.run(List.empty)
-    GenerateAllExtended.run(List.empty)
-    GenerateAllThirdAlternate.run(List.empty)
-    GenerateAllD1D2.run(List.empty)
-    GenerateAllMerging.run(List.empty)
-    GenerateAllJ.run(List.empty)
-  }
+  def run(args: List[String]): IO[ExitCode] = for {
+    _ <- GenerateAllMain.run(List.empty)
+    _ <- GenerateAllExtended.run(List.empty)
+    _ <- GenerateAllThirdAlternate.run(List.empty)
+    _ <- GenerateAllD1D2.run(List.empty)
+    _ <- GenerateAllMerging.run(List.empty)
+    r <- GenerateAllJ.run(List.empty)
+  } yield r
 }
 
 /**
- * Generate ALL CODE.
- */
+  * Generate ALL CODE just for one approach (as identified)
+  */
 object GenerateAllForOneApproach extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
     val approach = if (args.isEmpty) {
-      List("graphviz")
+      List("coco")
     } else {
       args
     }
-
-    GenerateAllMain.run(approach)
-    GenerateAllExtended.run(approach)
-    GenerateAllThirdAlternate.run(approach)
-    GenerateAllD1D2.run(approach)
-    GenerateAllMerging.run(approach)
-    GenerateAllJ.run(approach)
-  }
-}
-
-object GenerateAllMain extends IOApp {
-
-  def run(args: List[String]): IO[ExitCode] = {
-
-    val approaches = if (args.isEmpty) {
-      Seq("oo","visitor","extensibleVisitor","interpreter","coco","trivially","algebra")
-    } else {
-      args
-    }
-    val target = "ep-scala"
-    val evolutions = Seq("M0","M1","M2","M3","M4","M5","M6","M7","M7I2","M8","M9","I1","A1","A1M3","A1M3I2","A3","I2",
-      "O1","O2","OA","O1OA","OD1","OD2","OD3","OO1","OO2","OO3")
-
-    approaches.foreach(approach => {
-      println("Generating " + approach + "...")
-      evolutions.foreach(selection => {
-        println("   " + selection)
-
-        val targetDirectory = Paths.get("target", target, approach, selection)
-        val program :IO[Unit] = {
-          for {
-            _ <- IO { print("Initializing Generator...") }
-            main <- IO {  new Main(approach, selection) }
-
-            _ <- IO { println("[OK]") }
-            _ <- main.runDirectToDisc(targetDirectory)
-          } yield ()
-        }
-
-        // execute above as a stand-alone program
-        program.unsafeRunSync()
-
-        // TBD:  Would be nice to launch 'sbt' in each of these generated directories
-      })
-    })
 
     for {
-      _ <- IO { print(s"DONE, in your target directory you can now run: sbt scalafmt Test/scalafmt test") }
-    } yield ExitCode.Success
-
+      _ <- GenerateAllMain.run(approach)
+      _ <- GenerateAllExtended.run(approach)
+      _ <- GenerateAllThirdAlternate.run(approach)
+      _ <- GenerateAllD1D2.run(approach)
+      _ <- GenerateAllMerging.run(approach)
+      r <- GenerateAllJ.run(approach)
+    } yield r
   }
 }
 
-object QuickValidation extends IOApp {
+
+object QuickValidation extends Subselection {
+
 
   // note that visitorSideEffect and dispatch are omitted from this validation.  VISITORSIDEEFFECT has a problem
   // with the test cases in that the methods become too long for the JavaVM and attempts to subdivide them fail
   // because visitorSideEffect needs to create visitor objects, and arbitrarily splitting test cases means that
   // they are not properly scoped and so the code fails to compile. DISPATCH is omitted because the inBetween
   // does not yet have exceptions.
-  def run(args: List[String]): IO[ExitCode] = {
 
-    val approaches = if (args.isEmpty) {
-      Seq("trivially", "oo", "visitor", "extensibleVisitor", "interpreter", "coco", "algebra")
-    } else {
-      args
-    }
-
-    val target = "ep-scala-quick"
-
-    // latest in all system families
-    val evolutions = Seq("M9", "J8", "A3", "O1OA", "OD3", "OO3", "V1", "D3", "I2M3I1N1", "O2")
-
-    approaches.foreach(approach => {
-      println("Generating " + approach + "...")
-      evolutions.foreach(selection => {
-        println("   " + selection)
-
-        val targetDirectory = Paths.get("target", target, approach, selection)
-        val program :IO[Unit] = {
-          for {
-            _ <- IO { print("Initializing Generator...") }
-            main <- IO {  new Main(approach, selection) }
-
-            _ <- IO { println("[OK]") }
-            _ <- main.runDirectToDisc(targetDirectory)
-          } yield ()
-        }
-
-        // execute above as a stand-alone program
-        program.unsafeRunSync()
-
-        // TBD:  Would be nice to launch 'sbt' in each of these generated directories
-      })
-    })
-
-    for {
-      _ <- IO { print("DONE") }
-    } yield ExitCode.Success
-
+  def approaches(args: List[String]): Seq[String] = if (args.isEmpty) {
+    Seq("trivially", "oo", "visitor", "extensibleVisitor", "interpreter", "coco", "algebra")
+  } else {
+    args
   }
+
+  def target(args: List[String]): String = "ep-scala-quick"
+
+  // latest in all system families
+  val evolutions = Seq("M9", "J8", "A3", "O1OA", "OD3", "OO3", "V1", "D3", "I2M3I1N1", "O2")
+
 }
 
+object GenerateAllMain extends Subselection {
 
-object GenerateAllExtended extends IOApp {
 
-  def run(args: List[String]): IO[ExitCode] = {
-
-    val approaches = if (args.isEmpty) {
-      Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
-    } else {
-      args
-    }
-    val target = if (args.isEmpty) {
-      "ep-scala-extended"
-    } else {
-      args.head
-    }
-    val evolutions = Seq("M0","M1","M2","M3", "W1", "M3W1", "Q1", "C2", "V1")
-
-    approaches.foreach(approach => {
-      println("Generating " + approach + "...")
-      evolutions.foreach(selection => {
-        println("   " + selection)
-
-        val targetDirectory = Paths.get("target", target, approach, selection)
-        val program :IO[Unit] = {
-          for {
-            _ <- IO { print("Initializing Generator...") }
-            main <- IO {  new Main(approach, selection) }
-
-            _ <- IO { println("[OK]") }
-            _ <- main.runDirectToDisc(targetDirectory)
-          } yield ()
-        }
-
-        // execute above as a stand-alone program
-        program.unsafeRunSync()
-
-        // TBD:  Would be nice to launch 'sbt' in each of these generated directories
-      })
-    })
-
-    for {
-      _ <- IO { print("DONE") }
-    } yield ExitCode.Success
-
+  def approaches(args: List[String]): Seq[String] = if (args.isEmpty) {
+    Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
+  } else {
+    args
   }
+  def target(args: List[String]): String = if (args.isEmpty) {
+    "ep-scala"
+  } else {
+    args.head
+  }
+  val evolutions = Seq("M0", "M1", "M2", "M3", "M4", "M5", "M6", "M7", "M7I2", "M8", "M9", "I1", "A1", "A1M3", "A1M3I2", "A3", "I2",
+    "O1", "O2", "OA", "O1OA", "OD1", "OD2", "OD3", "OO1", "OO2", "OO3")
+
 }
 
-object GenerateAllThirdAlternate extends IOApp {
+object GenerateAllJ extends Subselection {
 
-  def run(args: List[String]): IO[ExitCode] = {
 
-    val approaches = if (args.isEmpty) {
-      Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
-    } else {
-      args
-    }
-    val target = if (args.isEmpty) {
-      "ep-scala-third-alternate"
-    } else {
-      args.head
-    }
-    val evolutions = Seq("M0", "X1", "X2", "X3", "X2X3", "X4")
-
-    approaches.foreach(approach => {
-      println("Generating " + approach + "...")
-      evolutions.foreach(selection => {
-        println("   " + selection)
-
-        val targetDirectory = Paths.get("target", target, approach, selection)
-        val program :IO[Unit] = {
-          for {
-            _ <- IO { print("Initializing Generator...") }
-            main <- IO {  new Main(approach, selection) }
-
-            _ <- IO { println("[OK]") }
-            _ <- main.runDirectToDisc(targetDirectory)
-          } yield ()
-        }
-
-        // execute above as a stand-alone program
-        program.unsafeRunSync()
-
-        // TBD:  Would be nice to launch 'sbt' in each of these generated directories
-      })
-    })
-
-    for {
-      _ <- IO { print("DONE") }
-    } yield ExitCode.Success
-
+  def approaches(args: List[String]): Seq[String] = if (args.isEmpty) {
+    Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
+  } else {
+    args
   }
+  def target(args: List[String]): String = if (args.isEmpty) {
+    "ep-scala-j"
+  } else {
+    args.head
+  }
+  val evolutions = Seq("M0", "J1", "J2", "J3", "K1", "K2", "J4", "J5", "J6", "K2J6", "J7", "J8")
+
 }
 
-object GenerateAllD1D2 extends IOApp {
+object GenerateAllD1D2 extends Subselection {
 
-  def run(args: List[String]): IO[ExitCode] = {
-
-    val approaches = if (args.isEmpty) {
-      Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
-    } else {
-      args
-    }
-    val target = if (args.isEmpty) {
-      "ep-scala-d1d2"
-    } else {
-      args.head
-    }
-    val evolutions = Seq("M0", "M1", "D1", "D2", "D1D2", "D3")
-
-    approaches.foreach(approach => {
-      println("Generating " + approach + "...")
-      evolutions.foreach(selection => {
-        println("   " + selection)
-
-        val targetDirectory = Paths.get("target", target, approach, selection)
-        val program :IO[Unit] = {
-          for {
-            _ <- IO { print("Initializing Generator...") }
-            main <- IO {  new Main(approach, selection) }
-
-            _ <- IO { println("[OK]") }
-            _ <- main.runDirectToDisc(targetDirectory)
-          } yield ()
-        }
-
-        // execute above as a stand-alone program
-        program.unsafeRunSync()
-
-        // TBD:  Would be nice to launch 'sbt' in each of these generated directories
-      })
-    })
-
-    for {
-      _ <- IO { print("DONE") }
-    } yield ExitCode.Success
-
+  def approaches(args: List[String]): Seq[String] = if (args.isEmpty) {
+    Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
+  } else {
+    args
   }
+  def target(args: List[String]): String = if (args.isEmpty) {
+    "ep-scala-d1d2"
+  } else {
+    args.head
+  }
+  val evolutions = Seq("M0", "M1", "D1", "D2", "D1D2", "D3")
 }
 
-object GenerateAllMerging extends IOApp {
+object GenerateAllMerging extends Subselection {
 
-  def run(args: List[String]): IO[ExitCode] = {
-
-    val approaches = if (args.isEmpty) {
-      Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
-    } else {
-      args
-    }
-    val target = if (args.isEmpty) {
-      "ep-scala-merging"
-    } else {
-      args.head
-    }
-    val evolutions = Seq("M0","M1","M2","I1","I2","N1","M2_ABS","M3","M3I1","I2M3I1N1")
-    approaches.foreach(approach => {
-      println("Generating " + approach + "...")
-      evolutions.foreach(selection => {
-        println("   " + selection)
-
-        val targetDirectory = Paths.get("target", target, approach, selection)
-        val program :IO[Unit] = {
-          for {
-            _ <- IO { print("Initializing Generator...") }
-            main <- IO {  new Main(approach, selection) }
-
-            _ <- IO { println("[OK]") }
-            _ <- main.runDirectToDisc(targetDirectory)
-          } yield ()
-        }
-
-        // execute above as a stand-alone program
-        program.unsafeRunSync()
-
-        // TBD:  Would be nice to launch 'sbt' in each of these generated directories
-      })
-    })
-
-    for {
-      _ <- IO { print("DONE") }
-    } yield ExitCode.Success
-
+  def approaches(args: List[String]): Seq[String] = if (args.isEmpty) {
+    Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
+  } else {
+    args
   }
+  def target(args: List[String]): String = if (args.isEmpty) {
+    "ep-scala-merging"
+  } else {
+    args.head
+  }
+  val evolutions = Seq("M0", "M1", "M2", "I1", "I2", "N1", "M2_ABS", "M3", "M3I1", "I2M3I1N1")
 }
 
-object GenerateAllJ extends IOApp {
+object GenerateAllExtended extends Subselection {
 
-  def run(args: List[String]): IO[ExitCode] = {
 
-    // visitor side effect is eliminated. When there are a large number of test cases, the internal
-    // code separates arbitrarily these test cases into 500-line chunks. Unfortunately for the
-    // visitorSideEffect, this causes problems because local variables are used for the visitors and
-    // they are unreachable when split across multiple methods.
-    //
-    // "dispatch" is not yet available for Scala
-    val approaches = if (args.isEmpty) {
-      Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
-    } else {
-      args
-    }
-    val target = if (args.isEmpty) {
-      "ep-scala-j"
-    } else {
-      args.head
-    }
-    val evolutions = Seq("M0","J1","J2","J3","K1","K2","J4","J5","J6","K2J6","J7","J8")
-
-    approaches.foreach(approach => {
-      println("Generating " + approach + "...")
-      evolutions.foreach(selection => {
-        println("   " + selection)
-
-        val targetDirectory = Paths.get("target", target, approach, selection)
-        val program :IO[Unit] = {
-          for {
-            _ <- IO { print("Initializing Generator...") }
-            main <- IO {  new Main(approach, selection) }
-
-            _ <- IO { println("[OK]") }
-            _ <- main.runDirectToDisc(targetDirectory)
-          } yield ()
-        }
-
-        // execute above as a stand-alone program
-        program.unsafeRunSync()
-
-        // TBD:  Would be nice to launch 'sbt' in each of these generated directories
-      })
-    })
-
-    for {
-      _ <- IO { print("DONE") }
-    } yield ExitCode.Success
-
+  def approaches(args: List[String]): Seq[String] = if (args.isEmpty) {
+    Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
+  } else {
+    args
   }
+  def target(args: List[String]): String = if (args.isEmpty) {
+    "ep-scala-extended"
+  } else {
+    args.head
+  }
+  val evolutions = Seq("M0", "M1", "M2", "M3", "W1", "M3W1", "Q1", "C2", "V1")
 }
+
+object GenerateAllThirdAlternate extends Subselection {
+
+
+  def approaches(args: List[String]): Seq[String] = if (args.isEmpty) {
+    Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
+  } else {
+    args
+  }
+  def target(args: List[String]): String = if (args.isEmpty) {
+    "ep-scala-third-alternate"
+  } else {
+    args.head
+  }
+  val evolutions = Seq("M0", "X1", "X2", "X3", "X2X3", "X4")
+}
+
+object GenerateShapes extends Subselection {
+
+
+  def approaches(args: List[String]): Seq[String] = if (args.isEmpty) {
+    Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
+  } else {
+    args
+  }
+  def target(args: List[String]): String = if (args.isEmpty) {
+    "ep-scala-shapes"
+  } else {
+    args.head
+  }
+  val evolutions = Seq("S0", "S1", "S2")
+}
+

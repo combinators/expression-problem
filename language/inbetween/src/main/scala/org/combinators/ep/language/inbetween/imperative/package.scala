@@ -1,7 +1,5 @@
 package org.combinators.ep.language.inbetween    /*DI:LI:AI*/
 
-import scala.meta.Term.If
-
 package object imperative {
   trait FinalTypes extends any.FinalTypes {
     type DeclareVariable <: Statement

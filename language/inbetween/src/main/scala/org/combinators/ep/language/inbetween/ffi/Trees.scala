@@ -34,7 +34,7 @@ trait Trees[FT <: TreeOps.FinalTypes, FactoryType <: TreeOps.Factory[FT]] extend
     import syntax.forEach
     for {
       _ <- forEach(treeLibrary.toSeq){ case (qualifiedName, compilationUnit) =>
-        addCompilationUnit(compilationUnit, qualifiedName: _*)
+        addCompilationUnit(compilationUnit, qualifiedName*)
       }
     } yield ()
   }

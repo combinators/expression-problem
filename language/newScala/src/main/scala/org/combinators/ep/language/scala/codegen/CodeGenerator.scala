@@ -1,6 +1,6 @@
 package org.combinators.ep.language.scala.codegen    /*DI:LD:AI*/
 
-import cats.{Apply => _}
+import cats.Apply as _
 import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.generator.{Command, FileWithPath, Understands}
 import org.combinators.ep.language.scala.{Finalized, ScalaNameProvider}
@@ -8,12 +8,14 @@ import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.{Apply, ToTargetLanguageType}
-import org.combinators.ep.language.inbetween.any.{AbstractSyntax, CompilationUnit, AnyParadigm, Method, Name, Project, Type}
+import org.combinators.ep.language.inbetween.any.AnyParadigm.WithSyntax
+import org.combinators.ep.language.inbetween.any.{AbstractSyntax, AnyParadigm, CompilationUnit, Method, Name, Project, Type}
+import org.combinators.ep.language.inbetween.ffi.Arithmetic.WithBase
 import org.combinators.ep.language.inbetween.oo.{Class, Constructor, OOParadigm}
 import org.combinators.ep.language.inbetween.imperative.Imperative
 import org.combinators.ep.language.inbetween.functional.{AlgebraicDataType, FunctionalParadigm}
 import org.combinators.ep.language.inbetween.functional.control
-import org.combinators.ep.language.inbetween.ffi.{Arithmetic, RealArithmetic, Booleans, Equals, Lists, Trees, Strings, Assertions}
+import org.combinators.ep.language.inbetween.ffi.{Arithmetic, Assertions, Booleans, Equals, Lists, RealArithmetic, Strings, Trees}
 import org.combinators.ep.language.inbetween.polymorphism.ParametricPolymorphism
 import org.combinators.ep.language.inbetween.polymorphism.ParametricPolymorphismInADTContexts
 import org.combinators.ep.language.inbetween.polymorphism.generics.Generics
@@ -33,7 +35,7 @@ sealed class CodeGenerator(domainName: String) { cc =>
   val nameProvider = new ScalaNameProvider[Finalized.FinalTypes](factory)
 
   def toLookup[Ctxt](name: String*): Option[Generator[Ctxt, Type[Finalized.FinalTypes]]] = {
-    Some(Command.lift(factory.classReferenceType(name.map(nameProvider.mangle):_*)))
+    Some(Command.lift(factory.classReferenceType(name.map(nameProvider.mangle)*)))
   }
 
   def addLookupsForImplementedGenerators[Ctxt](

@@ -127,7 +127,7 @@ trait OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends OOP {
     }
     implicit val canFindClassInClass: Understands[Class[FT], FindClass[Name, Type]] = new Understands[Class[FT], FindClass[Name, Type]] {
       def perform(context: Class[FT], command: FindClass[Name, Type]): (Class[FT], Type) = {
-        (context, context.findClass(command.qualifiedName:_*))
+        (context, context.findClass(command.qualifiedName*))
       }
     }
     implicit val canGetFreshNameInClass: Understands[Class[FT], FreshName[Name]] = new Understands[Class[FT], FreshName[Name]] {
@@ -214,7 +214,7 @@ trait OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends OOP {
     }
     implicit val canFindClassInConstructor: Understands[Constructor[FT], FindClass[Name, Type]] = new Understands[Constructor[FT], FindClass[Name, Type]] {
       def perform(context: Constructor[FT], command: FindClass[Name, Type]): (Constructor[FT], Type) = {
-        (context, context.findClass(command.qualifiedName: _*))
+        (context, context.findClass(command.qualifiedName*))
       }
     }
     implicit val canGetFreshNameInConstructor: Understands[Constructor[FT], FreshName[Name]] = new Understands[Constructor[FT], FreshName[Name]] {
@@ -266,7 +266,7 @@ trait OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends OOP {
     }
     implicit val canSuperReferenceInMethod: Understands[any.Method[FT], SuperReference[Name, Expression]] = new Understands[any.Method[FT], SuperReference[Name, Expression]] {
       def perform(context: any.Method[FT], command: SuperReference[Name, Expression]): (any.Method[FT], Expression) = {
-        (context, factory.superReferenceExpression(factory.convert(context).findClass(command.qualifiedName: _*)))
+        (context, factory.superReferenceExpression(factory.convert(context).findClass(command.qualifiedName*)))
       }
     }
     implicit val canGetConstructorInMethod: Understands[any.Method[FT], GetConstructor[Type, Expression]] = new Understands[any.Method[FT], GetConstructor[Type, Expression]] {
@@ -276,7 +276,7 @@ trait OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends OOP {
     }
     implicit val canFindClassInMethod: Understands[any.Method[FT], FindClass[Name, Type]] = new Understands[any.Method[FT], FindClass[Name, Type]] {
       def perform(context: any.Method[FT], command: FindClass[Name, Type]): (any.Method[FT], Type) = {
-        (context, factory.convert(context).findClass(command.qualifiedName: _*))
+        (context, factory.convert(context).findClass(command.qualifiedName*))
       }
     }
   }
@@ -407,7 +407,7 @@ trait OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends OOP {
       def perform(context: TestContext, command: FindClass[Name, Type]): (TestContext, Type) = {
         val clsBasedTestSuite = factory.convert(context)
         import classCapabilities.canFindClassInClass
-        val (updatedCls, result) = Command.runGenerator(classCapabilities.findClass(command.qualifiedName: _*), clsBasedTestSuite.underlyingClass)
+        val (updatedCls, result) = Command.runGenerator(classCapabilities.findClass(command.qualifiedName*), clsBasedTestSuite.underlyingClass)
         (clsBasedTestSuite.copyAsClassBasedTestSuite(underlyingClass = updatedCls), result)
       }
     }

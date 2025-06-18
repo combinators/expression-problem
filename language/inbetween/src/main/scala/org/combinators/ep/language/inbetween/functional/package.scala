@@ -152,7 +152,7 @@ package object functional {
 
     def copy(
       qualifiedTypeName: Seq[any.Name[FT]] = this.qualifiedTypeName
-    ): ADTReferenceType[FT] = adtReferenceType(qualifiedTypeName:_*)
+    ): ADTReferenceType[FT] = adtReferenceType(qualifiedTypeName*)
   }
 
   trait Factory[FT <: FinalTypes] extends any.Factory[FT] {

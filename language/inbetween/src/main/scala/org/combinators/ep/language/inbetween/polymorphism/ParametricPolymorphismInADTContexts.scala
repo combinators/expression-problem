@@ -8,7 +8,7 @@ import org.combinators.ep.language.inbetween.functional.FunctionalParadigm
 
 
 
-trait ParametricPolymorphismInADTContexts[FT <: FinalTypes with fun.FinalTypes, FactoryType <: Factory[FT] with fun.Factory[FT]] extends PPADT {
+trait ParametricPolymorphismInADTContexts[FT <: FinalTypes & fun.FinalTypes, FactoryType <: Factory[FT] & fun.Factory[FT]] extends PPADT {
   val base: AnyParadigm.WithFT[FT, FactoryType]
   import base.{FT=>_, FactoryType=>_, _}
   import syntax._
@@ -26,9 +26,9 @@ trait ParametricPolymorphismInADTContexts[FT <: FinalTypes with fun.FinalTypes, 
 }
 
 object ParametricPolymorphismInADTContexts {
-  type WithBase[FT <: FinalTypes with fun.FinalTypes, FactoryType <: Factory[FT] with fun.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType], F <: FunctionalParadigm.WithBase[FT, FactoryType, B]] =
+  type WithBase[FT <: FinalTypes & fun.FinalTypes, FactoryType <: Factory[FT] & fun.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType], F <: FunctionalParadigm.WithBase[FT, FactoryType, B]] =
     ParametricPolymorphismInADTContexts[FT, FactoryType] { val base: B; val functional: F }
-  def apply[FT <: FinalTypes with fun.FinalTypes, FactoryType <: Factory[FT] with fun.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]](_base: B)(_functional: FunctionalParadigm.WithBase[FT, FactoryType, _base.type]): WithBase[FT, FactoryType, _base.type, _functional.type] = new ParametricPolymorphismInADTContexts[FT, FactoryType] {
+  def apply[FT <: FinalTypes & fun.FinalTypes, FactoryType <: Factory[FT] & fun.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]](_base: B)(_functional: FunctionalParadigm.WithBase[FT, FactoryType, _base.type]): WithBase[FT, FactoryType, _base.type, _functional.type] = new ParametricPolymorphismInADTContexts[FT, FactoryType] {
     val base: _base.type = _base
     val functional: _functional.type = _functional
   }

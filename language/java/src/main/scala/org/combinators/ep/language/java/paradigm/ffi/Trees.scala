@@ -197,11 +197,12 @@ object Trees {
     val b: base.type = base
     val addImp = addImport
     val oo: ooParadigm.type = ooParadigm
+    case class T(
+      val base: b.type,
+      val addImport: Understands[Ctxt, AddImport[Import]],
+      val ooParadigm: oo.type
+    ) extends Trees[Ctxt, b.type]
 
-    new Trees[Ctxt, b.type] {
-      val base: b.type = b
-      val addImport: Understands[Ctxt, AddImport[Import]] = addImp
-      val ooParadigm: oo.type = oo
-    }
+    T(b, addImport, oo)
   }
 }

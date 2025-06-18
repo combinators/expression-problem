@@ -19,11 +19,7 @@ trait Command {
   def interpret[Context, Self >: this.type <: Command.WithResult[Result]](implicit interp: Understands[Context, Self]): Command.Generator[Context, Result] = {
     val self: Self = this
 
-    liftF[Command.Performable[Context, *], Result](new Command.Performable[Context, Result] {
-      type Cmd = Self
-      val cmd = self
-      val interpreter = interp
-    })
+    liftF[Command.Performable[Context, *], Result](Command.Performable[Context, Result, Self](self, interp))
   }
 }
 
@@ -35,6 +31,13 @@ object Command {
     type Cmd <: Command.WithResult[R]
     val cmd: Cmd
     val interpreter: Understands[Context, Cmd]
+  }
+  object Performable {
+    type Aux[Context, R, C <: Command.WithResult[R]] = Performable[Context, R] { type Cmd = C }
+    def apply[Context, R, C <: Command.WithResult[R]](cmd: C, interpreter:  Understands[Context, C]): Aux[Context, R, C] = {
+      case class P(val cmd: C, val interpreter: Understands[Context, C]) extends Performable[Context, R] { type Cmd = C }
+      return P(cmd, interpreter)
+    }
   }
 
   def runGenerator[Context, Result](gen: Generator[Context, Result], inContext: Context): (Context, Result) = {

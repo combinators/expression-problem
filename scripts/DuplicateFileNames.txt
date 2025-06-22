@@ -1,3 +1,8 @@
+After generating in Java the various approaches for J8, there are lots of individual files created, because of the nature of Java.
+This document counts, for each EP Approach, the number of times a specific file name appears. Each file is either a class or
+an interface. Given the Extension Graph and understanding of each AP approach, it is possible to predict (in some cases, easier than others)
+how many times a specific file name would appear.
+
 Algebra:
 
 Height.java,2

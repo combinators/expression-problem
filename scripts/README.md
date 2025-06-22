@@ -1,5 +1,4 @@
-You can execute the code manuall from within the IntelliJ IDE if you like. For simplicity below,
-we show all instructions using the 'sbt' command line.
+For simplicity, all instructions using the 'sbt' command line.
 
 1. The output directories are `ep-scala-XXX` for Scala generated code or `ep-java-XXX`
    for Java-generated code. *Note that 'dispatch' is not generated (yet) by the Scala generator*.
@@ -107,19 +106,19 @@ make the Python processing a bit easier.
 
   In the respective ep-java-XXX directories, execute the following Python script:
 
-```c:\Python37\python.exe ..\..\scripts\compile-java.py```
+```c:\Python37\python.exe ..\..\scripts\compile.py```
         
 or
 
-```python3 ../../scripts/compile-java.py```
+```python3 ../../scripts/compile.py```
 
   In the respective ep-scala-XXX directories, execute the following Python script:
 
-```c:\Python37\python.exe ..\..\scripts\compile-scala.py```
+```c:\Python37\python.exe ..\..\scripts\compile.py```
         
 or
 
-```python3 ../../scripts/compile-scala.py```
+```python3 ../../scripts/compile.py```
 
    Note: The length of the compilation time depends on the complexity of the Extension Graph
    for the chosen system. Be prepared for this process to take about 30-45 minutes. Information
@@ -131,22 +130,22 @@ or
 
    In the respective ep-java-XXX directories, execute the following Python script:
 
-```c:\Python37\python.exe ..\..\scripts\process-java.py > STATISTICS```
+```c:\Python37\python.exe ..\..\scripts\process.py > STATISTICS```
         
 or
 
-```python3 ../../scripts/process-java.py > STATISTICS```
+```python3 ../../scripts/process.py > STATISTICS```
 
    In the respective ep-scala-XXX directories, execute the following Python script:
 
-```c:\Python37\python.exe ..\..\scripts\process-scala.py > STATISTICS```
+```c:\Python37\python.exe ..\..\scripts\process.py > STATISTICS```
 
 or
 
-```python3 ../../scripts/process-scala.py > STATISTICS```
+```python3 ../../scripts/process.py > STATISTICS```
 
 5. If you are on a Linux machine and have generated _GenerateAllJ_ and have 
-   [CLOC](https://github.com/AlDanial/cloc) installed, additional code statistics can be
+   [CLOC](https://github.com/AlDanial/cloc) installed within the `target/` directory, additional code statistics can be
    generated using the `stats.sh` script.
 
 6. When all scripts have run, you may need to delete temporary directories inside of target/bg-jobs that were created

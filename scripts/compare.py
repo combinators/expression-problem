@@ -1,7 +1,7 @@
 """
   Run with Python3 to generate report of approaches that satisfy EP criteria.
 
-  python3 ..\..\scripts\compare.py ..\..\scripts\systems\[EVOLUTION-JSON] >> REPORT
+  python3 ${scriptsDir}/compare.py ${scriptsDir}/systems/SYSTEM.json >> REPORT
 
   where the JSON file has a single 'evolutions' tag, where each entry
 
@@ -130,7 +130,7 @@ def file_structure (file):
     return index
 
 def strip_prefix(filename):
-    """Remove PREFIX\ from the filename."""
+    """Remove PREFIX-slash from the filename."""
     if PREFIX in filename:
         loc = filename.index(PREFIX)
         reduced = filename[loc + len(PREFIX) + 1:]

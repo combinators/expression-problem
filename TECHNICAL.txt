@@ -24,8 +24,8 @@ compiling process for all code took just about three hours.
 16:08   cd target/
 16:09   cd ep-java
 16:11   python3 ../../scripts/compare.py ../../scripts/systems/system-main.json >> REPORT
-16:12   python3 ../../scripts/compile-java.py
-19:08   python3 ../../scripts/process-java.py > STATISTICS
+16:12   python3 ../../scripts/compile.py
+19:08   python3 ../../scripts/process.py > STATISTICS
 19:09   cd ..
 19:11   sbt "helloWorld/runMain org.combinators.fibonacci.FibonacciWithLucasScalaDirectToDiskMain"
 19:13   cd target/fib

@@ -23,7 +23,7 @@ import java.nio.file.{Path, Paths}
 class GenericRecursionMainJava {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("fibonacci"))))
 
-  val fibonacciApproach = GenericRecursionProvider.imperative[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.imperativeInMethod, generator.intsInMethod, generator.assertionsInMethod, generator.equalityInMethod)
+  val fibonacciApproach = GenericRecursionProvider.imperative[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.imperativeInMethod, generator.intsInMethod, generator.assertionsInMethod, generator.equalityInMethod, generator.booleansInMethod, generator.realDoublesInMethod)
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
@@ -63,6 +63,7 @@ class GenericRecursionMainJava {
   }
 }
 
+// doesn't work since CAST does not work on (Integer) Math.floor(..)
 object GenericRecursionJavaDirectToDiskMain extends IOApp {
   val targetDirectory = Paths.get("target", "fib", "java")
   print(targetDirectory)

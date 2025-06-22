@@ -2,6 +2,8 @@
     Execute this Python script from within the ep-java-XXX or ep-scala-XXX generated 
     directory and it will compile, test, and run code coverage for all approaches and stages.
 
+    python3 ${scriptsDir}/compile.py
+
 """
 import os
 import platform

@@ -3,11 +3,11 @@ package org.combinators.ep.language.java.paradigm.ffi    /*DI:LD:AI*/
 import com.github.javaparser.ast.ImportDeclaration
 import com.github.javaparser.ast.`type`.PrimitiveType
 import com.github.javaparser.ast.expr.{BooleanLiteralExpr, NameExpr}
-import org.combinators.ep.domain.abstractions.TypeRep
+import org.combinators.cogen.abstractions.TypeRep
+import org.combinators.cogen.paradigm.Apply
+import org.combinators.cogen.paradigm.ffi.{Assert, Assertions as Assrts}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, Understands}
-import org.combinators.ep.generator.paradigm.Apply
-import org.combinators.ep.generator.paradigm.ffi.{Assert, Assertions => Assrts}
 import org.combinators.ep.language.java.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.ep.language.java.{ContextSpecificResolver, JavaNameProvider, MethodBodyCtxt, ProjectCtxt}
 import org.combinators.ep.language.java.Syntax.default._

@@ -1,10 +1,10 @@
 package org.combinators.ep.language.inbetween.functional   /*DI:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.TypeRep
+import org.combinators.cogen.abstractions.TypeRep
+import org.combinators.cogen.paradigm.{AddImport, AddMethod, AddType, AddTypeConstructor, AddTypeLookup, FindMethod, FindType, InstantiateType, ResolveImport, ToTargetLanguageType, Functional as FP}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, FileWithPath, Understands, paradigm}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
-import org.combinators.ep.generator.paradigm.{AddImport, AddMethod, AddType, AddTypeConstructor, AddTypeLookup, FindMethod, FindType, InstantiateType, ResolveImport, ToTargetLanguageType, Functional => FP}
 import org.combinators.ep.language.inbetween.any
 
 trait FunctionalParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends FP {

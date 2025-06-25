@@ -2,9 +2,10 @@ package org.combinators.ep.approach.oo    /*DI:LI:AD*/
 
 import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions.{Attribute, DataType, DataTypeCase, Operation, Parameter}
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.ep.generator.paradigm.ObjectOriented
+import org.combinators.cogen.Command
+import Command.Generator
+import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
+import org.combinators.cogen.paradigm.ObjectOriented
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
 /**

@@ -1,7 +1,9 @@
 package org.combinators.ep.domain.math.systemX     /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{DataTypeCase, TestCase, TypeRep}
-import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
+import org.combinators.cogen.InstanceRep
+import org.combinators.cogen.abstractions.{TestCase, TypeRep}
+import org.combinators.ep.domain.abstractions.DataTypeCase
+import org.combinators.ep.domain.instances.DataTypeInstance
 import org.combinators.ep.domain.math.M0.LitInst
 import org.combinators.ep.domain.math.M1.SubInst
 import org.combinators.ep.domain.math.MathDomain

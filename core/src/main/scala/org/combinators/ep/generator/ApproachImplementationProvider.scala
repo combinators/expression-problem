@@ -3,11 +3,12 @@ package org.combinators.ep.generator    /*DI:LI:AI*/
 import org.combinators.ep.domain._
 import abstractions._
 import communication._
-import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
-
-import org.combinators.ep.generator.Command._
-import org.combinators.ep.generator.paradigm.{AddImport, AnyParadigm, ResolveImport}
+import extensions._
+import org.combinators.cogen.paradigm.{AddImport, AnyParadigm, ResolveImport}
+import org.combinators.ep.domain.instances.DataTypeInstance
+import org.combinators.cogen.Command._
 import AnyParadigm.syntax._
+import org.combinators.cogen.{InstanceRep, NameProvider, Understands, AbstractSyntax, TestCase}
 
 /** Provides implementations for language and approach specific code generation tasks which do not depend on a specific
   * EP domain. */
@@ -60,7 +61,7 @@ trait ApproachImplementationProvider {
   /** Converts a Scala model of an instance of any representable type into code. */
   def reify(inst: InstanceRep): Generator[MethodBodyContext, Expression] = {
     (inst.tpe, inst.inst) match {
-      case (TypeRep.DataType(baseTpe), domInst: DataTypeInstance) => instantiate(baseTpe, domInst)
+      case (DomainTpeRep.DataType(baseTpe), domInst: DataTypeInstance) => instantiate(baseTpe, domInst)
       case (tpe, inst) =>
         import paradigm.methodBodyCapabilities._
         for {

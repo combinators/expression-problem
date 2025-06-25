@@ -1,14 +1,15 @@
 package org.combinators.ep.domain.math.eips      /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, TypeRep}
+import org.combinators.cogen.paradigm.AnyParadigm
+import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation}
 import org.combinators.ep.domain.math
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
-import org.combinators.ep.generator.paradigm.AnyParadigm
-import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.ep.generator.paradigm.ffi.{Booleans, Equality}
+import AnyParadigm.syntax.forEach
+import org.combinators.cogen.abstractions.TypeRep
+import org.combinators.cogen.paradigm.ffi.{Booleans, Equality}
 
 object M6 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]

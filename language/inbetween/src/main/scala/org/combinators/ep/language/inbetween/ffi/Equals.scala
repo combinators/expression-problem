@@ -1,16 +1,18 @@
 package org.combinators.ep.language.inbetween.ffi   /*DI:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.TypeRep
+import org.combinators.cogen.abstractions.TypeRep
+import org.combinators.cogen.paradigm.ffi.Equality
+import org.combinators.cogen.paradigm.{Apply, ffi}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.Understands
-import org.combinators.ep.generator.paradigm.{Apply, ffi}
-import org.combinators.ep.generator.paradigm.ffi.{Equality => Eqls, _}
+import org.combinators.ep.generator.paradigm.ffi
+import org.combinators.ep.generator.paradigm.ffi.{Equality as Eqls, *}
 import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.generator.Command
 
 
-trait Equals[FT <: OperatorExpressionOps.FinalTypes, FactoryType <: EqualsOps.Factory[FT]] extends Eqls[any.Method[FT]] {
+trait Equals[FT <: OperatorExpressionOps.FinalTypes, FactoryType <: EqualsOps.Factory[FT]] extends Equality[any.Method[FT]] {
   val base: AnyParadigm.WithFT[FT, FactoryType]
   import base.factory
 

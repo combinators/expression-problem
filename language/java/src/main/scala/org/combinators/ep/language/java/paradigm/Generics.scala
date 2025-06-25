@@ -1,11 +1,12 @@
 package org.combinators.ep.language.java.paradigm    /*DI:LD:AI*/
 
 import com.github.javaparser.ast.`type`.{ClassOrInterfaceType, TypeParameter}
+import org.combinators.cogen.paradigm.{AddLowerBound, AddTypeParameter, AddUpperBound, Apply, GetCurrentTypeParameter, GetTypeArguments, Generics as Gen, AnyParadigm as _, ObjectOriented as _, ParametricPolymorphism as _}
 import org.combinators.ep.generator.{Command, Understands}
-import org.combinators.ep.generator.paradigm.{Generics => Gen, AnyParadigm => _, ObjectOriented => _, ParametricPolymorphism => _, _}
+import org.combinators.ep.generator.paradigm.*
 import org.combinators.ep.language.java.TypeParamCtxt
 
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 trait Generics[AP <: AnyParadigm] extends Gen {
   val base: AP

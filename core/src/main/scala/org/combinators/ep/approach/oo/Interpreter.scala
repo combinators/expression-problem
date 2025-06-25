@@ -2,13 +2,16 @@ package org.combinators.ep.approach.oo
 
 /*DI:LI:AD*/
 
+import org.combinators.cogen.{Command, TestCase, TypeRep, Understands, NameProvider, AbstractSyntax}
+import Command.Generator
+import org.combinators.cogen.paradigm._
+import org.combinators.cogen.paradigm.{AddImport, AnyParadigm, Apply, FindClass, Generics, ObjectOriented, ParametricPolymorphism, ResolveImport}
 import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions._
-import org.combinators.ep.generator.Command._
-import org.combinators.ep.generator._
-import org.combinators.ep.generator.communication._
-import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.{forEach, _}
-import org.combinators.ep.generator.paradigm._
+import org.combinators.ep.domain.extensions._
+import org.combinators.ep.generator.*
+import org.combinators.ep.generator.communication.*
+import org.combinators.cogen.paradigm.AnyParadigm.syntax.{forEach, *}
 
 sealed trait Interpreter extends SharedOO {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
@@ -228,7 +231,7 @@ sealed trait Interpreter extends SharedOO {
     for {
       // goal is to find the class, i.e., "Sub", and have that become "ep.m4.Sub"
       // Using 'toTargetLanguage' brings in the type from where it had been registered using registerTypes
-      rt <- toTargetLanguageType(TypeRep.DataType(DataType(tpeCase.name)))
+      rt <- toTargetLanguageType(DomainTpeRep.DataType(DataType(tpeCase.name)))
       _ <- resolveAndAddImport(rt)
 
       res <- instantiateObject(rt, args)
@@ -464,9 +467,9 @@ sealed trait Interpreter extends SharedOO {
           latestModelDefiningNewTypeInterfaceForDataType(domain, tpe)
         }
         for {
-          _ <- addTypeLookupForMethods(TypeRep.DataType(DataType(tpe.name)), paramType[MethodBodyContext](tpeDomain, tpe))
-          _ <- addTypeLookupForClasses(TypeRep.DataType(DataType(tpe.name)), paramType[ClassContext](tpeDomain, tpe))
-          _ <- addTypeLookupForConstructors(TypeRep.DataType(DataType(tpe.name)), paramType[ConstructorContext](tpeDomain, tpe))
+          _ <- addTypeLookupForMethods(DomainTpeRep.DataType(DataType(tpe.name)), paramType[MethodBodyContext](tpeDomain, tpe))
+          _ <- addTypeLookupForClasses(DomainTpeRep.DataType(DataType(tpe.name)), paramType[ClassContext](tpeDomain, tpe))
+          _ <- addTypeLookupForConstructors(DomainTpeRep.DataType(DataType(tpe.name)), paramType[ConstructorContext](tpeDomain, tpe))
         } yield ()
       }
       }
@@ -482,7 +485,7 @@ sealed trait Interpreter extends SharedOO {
     import paradigm.projectCapabilities._
 
     val baseInterface = baseInterfaceNames(latestModelDefiningNewTypeInterface(model))
-    val dtpeRep = TypeRep.DataType(model.baseDataType)
+    val dtpeRep = DomainTpeRep.DataType(model.baseDataType)
 
     for {
       _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(baseInterface *))

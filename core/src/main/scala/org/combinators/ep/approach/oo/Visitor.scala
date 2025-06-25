@@ -1,15 +1,17 @@
 package org.combinators.ep.approach.oo    /*DI:LI:AD*/
 
+import org.combinators.cogen.paradigm.control.Imperative
 import org.combinators.ep.domain.GenericModel
-import org.combinators.ep.domain.abstractions.{Attribute, DataType, DataTypeCase, Operation, Parameter, TypeRep}
-import org.combinators.ep.domain.instances.InstanceRep
-import org.combinators.ep.generator.{AbstractSyntax, Command, EvolutionImplementationProvider, NameProvider}
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.ep.domain.abstractions.{Attribute, DataType, DataTypeCase, Operation, Parameter}
+import org.combinators.cogen.{AbstractSyntax, Command, NameProvider, TypeRep, InstanceRep}
+import org.combinators.cogen.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
+import org.combinators.ep.generator.EvolutionImplementationProvider
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
-import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.control.Imperative.WithBase
-import org.combinators.ep.generator.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
+import org.combinators.ep.domain.extensions.*
+import org.combinators.ep.domain.abstractions.*
+import AnyParadigm.syntax.forEach
+import Imperative.WithBase
+import Command.Generator
 
 /**
  * Straightforward implementation places all generated code in the current ep.* package.
@@ -682,7 +684,7 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
     val makeClass: Generator[ClassContext, Unit] = {
       import ooParadigm.classCapabilities._
       for {
-        parent <- toTargetLanguageType(TypeRep.DataType(parentType))
+        parent <- toTargetLanguageType(DomainTpeRep.DataType(parentType))
         _ <- resolveAndAddImport(parent)
         _ <- addParent(parent)
         _ <- forEach (tpeCase.attributes) { att => makeField(att) }

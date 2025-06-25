@@ -1,21 +1,24 @@
 package org.combinators.ep.domain.math.eips.systemI    /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{Operation, TypeRep}
-import org.combinators.ep.domain.instances.InstanceRep
+import org.combinators.cogen.InstanceRep
+import org.combinators.cogen.abstractions.TypeRep
+import org.combinators.cogen.paradigm.{AnyParadigm, Functional}
+import org.combinators.cogen.paradigm.control.Functional
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Equality, RealArithmetic, Strings}
+import org.combinators.ep.domain.abstractions.Operation
 import org.combinators.ep.domain.math
 import org.combinators.ep.domain.math.systemI
 import org.combinators.ep.generator.Command.{Generator, lift}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, Functional, control}
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Equality, RealArithmetic, Strings}
+import org.combinators.ep.generator.paradigm.control
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
 object I1funct {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
   (m2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
-  (functionalControl: control.Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
+  (functionalControl: Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiRealArithmetic: RealArithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiEquals: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],

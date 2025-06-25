@@ -1,12 +1,12 @@
 package org.combinators.ep.language.inbetween.ffi   /*DI:LI:AI*/
 
+import org.combinators.cogen.paradigm.Apply
 import org.combinators.ep.generator.{Command, Understands}
 import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.Apply
 import org.combinators.ep.language.inbetween.{any, polymorphism}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
-import org.combinators.ep.generator.paradigm.AnyParadigm.syntax
-import org.combinators.ep.generator.paradigm.ffi.{CreateLeaf, CreateNode, Trees => Trs}
+import org.combinators.cogen.paradigm.AnyParadigm.syntax
+import org.combinators.cogen.paradigm.ffi.{CreateLeaf, CreateNode, Trees as Trs}
 
 // cannot find 'trees'
 trait Trees[FT <: TreeOps.FinalTypes, FactoryType <: TreeOps.Factory[FT]] extends Trs[any.Method[FT]] {

@@ -5,14 +5,14 @@ import com.github.javaparser.StaticJavaParser
 import com.github.javaparser.ast.{ImportDeclaration, NodeList}
 import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.expr.ObjectCreationExpr
-import org.combinators.ep.domain.abstractions.TypeRep
-import org.combinators.ep.domain.instances.InstanceRep
+import org.combinators.cogen.InstanceRep
+import org.combinators.cogen.abstractions.TypeRep
+import org.combinators.cogen.paradigm.{AddImport, Apply}
 import org.combinators.ep.domain.tree.{Leaf, Node, Tree}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, Understands}
-import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.ep.generator.paradigm.{AddImport, Apply}
-import org.combinators.ep.generator.paradigm.ffi.{Create, CreateLeaf, CreateNode, Trees => Ts}
+import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
+import org.combinators.cogen.paradigm.ffi.{Create, CreateLeaf, CreateNode, Trees as Ts}
 import org.combinators.ep.language.java.CodeGenerator.Enable
 import org.combinators.ep.language.java.{ContextSpecificResolver, ProjectCtxt}
 import org.combinators.ep.language.java.paradigm.{AnyParadigm, Generics, ObjectOriented}

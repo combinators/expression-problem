@@ -1,20 +1,21 @@
 package org.combinators.ep.language.java.paradigm.ffi    /*DI:LD:AI*/
 
 import com.github.javaparser.ast.expr.{BinaryExpr, IntegerLiteralExpr, MethodCallExpr, StringLiteralExpr}
-import org.combinators.ep.domain.abstractions.TypeRep
-import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, Understands}
-import org.combinators.ep.generator.paradigm.{AddImport, Apply, GetMember}
-import org.combinators.ep.generator.paradigm.ffi.{Lists => Lsts, _}
+import org.combinators.ep.generator.paradigm.ffi.*
 import org.combinators.ep.language.java.CodeGenerator.Enable
 import org.combinators.ep.language.java.{CodeGenerator, ContextSpecificResolver, CtorCtxt, JavaNameProvider, MethodBodyCtxt, ProjectCtxt, Syntax}
 import org.combinators.ep.language.java.paradigm.{AnyParadigm, Generics, ObjectOriented}
-import org.combinators.ep.language.java.Syntax.default._
-import org.combinators.ep.generator.paradigm.AnyParadigm.syntax._
-import cats.syntax._
-import cats.implicits._
+import org.combinators.ep.language.java.Syntax.default.*
+import org.combinators.cogen.paradigm.AnyParadigm.syntax.*
+import cats.syntax.*
+import cats.implicits.*
 import com.github.javaparser.ast.{ImportDeclaration, NodeList}
+import org.combinators.cogen.InstanceRep
+import org.combinators.cogen.abstractions.TypeRep
+import org.combinators.cogen.paradigm.ffi.{Append, Cons, Create, Head, Tail, Lists as Lsts}
+import org.combinators.cogen.paradigm.{AddImport, Apply, GetMember}
 
 trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
   case object ListsEnabled

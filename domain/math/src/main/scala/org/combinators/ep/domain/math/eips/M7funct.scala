@@ -1,15 +1,16 @@
 package org.combinators.ep.domain.math.eips     /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{Operation, Parameter, TypeRep}
-import org.combinators.ep.domain.instances.InstanceRep
+import org.combinators.cogen.InstanceRep
+import org.combinators.cogen.abstractions.TypeRep
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Equality, RealArithmetic, Strings}
+import org.combinators.cogen.paradigm.{AnyParadigm, Functional, control}
+import org.combinators.ep.domain.abstractions.{Operation, Parameter}
 import org.combinators.ep.domain.math
 import org.combinators.ep.generator.Command.{Generator, lift}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
-import org.combinators.ep.generator.paradigm.AnyParadigm
-import org.combinators.ep.generator.paradigm.Functional
 import org.combinators.ep.generator.paradigm.control
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, RealArithmetic, Strings, Equality}
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Equality, RealArithmetic, Strings}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
 object M7funct {

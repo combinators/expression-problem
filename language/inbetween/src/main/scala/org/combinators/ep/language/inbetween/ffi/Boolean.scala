@@ -1,10 +1,11 @@
 package org.combinators.ep.language.inbetween.ffi  /*DI:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.TypeRep
+import org.combinators.cogen.abstractions.TypeRep
+import org.combinators.cogen.paradigm.Apply
+import org.combinators.cogen.paradigm.ffi.{And, False, Not, Or, True, Booleans as Bools}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.Understands
-import org.combinators.ep.generator.paradigm.Apply
-import org.combinators.ep.generator.paradigm.ffi.{Booleans => Bools, _}
+import org.combinators.ep.generator.paradigm.ffi.*
 import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.generator.Command

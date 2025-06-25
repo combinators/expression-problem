@@ -3,11 +3,11 @@ package org.combinators.ep.language.java.paradigm.ffi    /*DI:LD:AI*/
 import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.`type`.PrimitiveType
 import com.github.javaparser.ast.expr.{BinaryExpr, BooleanLiteralExpr, MethodCallExpr, TypeExpr}
-import org.combinators.ep.domain.abstractions.TypeRep
+import org.combinators.cogen.abstractions.TypeRep
+import org.combinators.cogen.paradigm.ffi.{Equals, Equality as Eql}
+import org.combinators.cogen.paradigm.{Apply, GetMember}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, Understands}
-import org.combinators.ep.generator.paradigm.{Apply, GetMember}
-import org.combinators.ep.generator.paradigm.ffi.{Equals, Equality => Eql}
 import org.combinators.ep.language.java.{ContextSpecificResolver, JavaNameProvider, ProjectCtxt}
 import org.combinators.ep.language.java.paradigm.{AnyParadigm, ffi}
 import org.combinators.ep.language.java.Syntax.default._

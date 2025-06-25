@@ -1,7 +1,9 @@
 package org.combinators.ep.domain.math.systemD    /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{DataTypeCase, EqualsTestCase, TestCase}
-import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
+import org.combinators.cogen.InstanceRep
+import org.combinators.cogen.abstractions.TestCase
+import org.combinators.ep.domain.abstractions.{DataTypeCase, EqualsTestCase}
+import org.combinators.ep.domain.instances.DataTypeInstance
 import org.combinators.ep.domain.math.M0.{Eval, LitInst}
 import org.combinators.ep.domain.math.{M0, M1, MathDomain}
 import org.combinators.ep.domain.{Evolution, GenericModel}

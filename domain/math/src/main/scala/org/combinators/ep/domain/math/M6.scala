@@ -1,8 +1,10 @@
 package org.combinators.ep.domain.math      /*DD:LI:AI*/
 
+import org.combinators.cogen.InstanceRep
+import org.combinators.cogen.abstractions.{Tag, TestCase, TypeRep}
 import org.combinators.ep.domain.{Evolution, GenericModel}
-import org.combinators.ep.domain.abstractions.{DataTypeCase, EqualsTestCase, Operation, Parameter, PerformanceTestCase, Tag, TestCase, TypeRep}
-import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
+import org.combinators.ep.domain.abstractions.{DataTypeCase, EqualsTestCase, Operation, Parameter, PerformanceTestCase}
+import org.combinators.ep.domain.instances.DataTypeInstance
 import org.combinators.ep.domain.math.M0.{Add, AddInst, LitInst}
 import org.combinators.ep.domain.math.M1.SubInst
 import org.combinators.ep.domain.math.M3.{DivdInst, MultInst, NegInst}

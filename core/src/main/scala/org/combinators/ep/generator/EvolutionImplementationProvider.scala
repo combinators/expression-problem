@@ -1,11 +1,13 @@
 package org.combinators.ep.generator   /*DI:LI:AI*/
 
 import cats.kernel.Monoid
+import org.combinators.cogen.paradigm.AnyParadigm
+import org.combinators.cogen.paradigm.ffi.FFI
 import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation}
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.cogen.Command
+import Command.Generator
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
-import org.combinators.ep.generator.paradigm.AnyParadigm
 
 /** Instances of this class provide the domain dependent implementation of an evolution. */
 trait EvolutionImplementationProvider[-AIP <: ApproachImplementationProvider] {
@@ -13,7 +15,7 @@ trait EvolutionImplementationProvider[-AIP <: ApproachImplementationProvider] {
   val model: GenericModel
 
   /** Initializes the project context to support this evolution, e.g. by calling
-    * [[org.combinators.ep.generator.paradigm.ffi.FFI.enable()]] for all the required FFIs.
+    * [[FFI.enable()]] for all the required FFIs.
     */
   def initialize(forApproach: AIP): Generator[forApproach.paradigm.ProjectContext, Unit]
 

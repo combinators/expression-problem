@@ -2,24 +2,25 @@ package org.combinators.ep.language.java.paradigm    /*DI:LD:AI*/
 
 import java.nio.file.Paths
 import java.util.UUID
-import com.github.javaparser.ast.{ImportDeclaration, Modifier, NodeList, Node}
+import com.github.javaparser.ast.{ImportDeclaration, Modifier, Node, NodeList}
 import com.github.javaparser.ast.`type`.VoidType
 import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.expr.{MethodCallExpr, NameExpr, NullLiteralExpr}
 import com.github.javaparser.ast.nodeTypes.{NodeWithScope, NodeWithSimpleName}
 import com.github.javaparser.ast.stmt.{BlockStmt, ExpressionStmt}
-import org.combinators.ep.domain.abstractions.TypeRep
-import org.combinators.ep.domain.instances.InstanceRep
+import org.combinators.cogen.InstanceRep
+import org.combinators.cogen.abstractions.TypeRep
+import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddCompilationUnit, AddImplementedTestCase, AddImport, AddTestCase, AddTestSuite, AddTypeLookup, Apply, Debug, FreshName, GetArguments, OutputToConsole, Reify, ResolveImport, SetParameters, SetReturnType, ToTargetLanguageType, AnyParadigm as AP, ObjectOriented as _}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, FileWithPath, Understands}
-import org.combinators.ep.generator.paradigm.{AnyParadigm => AP, ObjectOriented => _, _}
+import org.combinators.ep.generator.paradigm.*
 import org.combinators.ep.language.java.Syntax.MangledName
 import org.combinators.ep.language.java.{CodeGenerator, CompilationUnitCtxt, Config, ContextSpecificResolver, FreshNameCleanup, ImportCleanup, JavaNameProvider, MethodBodyCtxt, ProjectCtxt, Syntax, TestCtxt}
 import org.combinators.templating.persistable.{BundledResource, JavaPersistable}
 import org.combinators.ep.language.java.ResourcePersistable
 
 import scala.util.Try
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 
 trait AnyParadigm extends AP {

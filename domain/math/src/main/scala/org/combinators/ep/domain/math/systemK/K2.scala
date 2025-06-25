@@ -1,7 +1,8 @@
 package org.combinators.ep.domain.math.systemK    /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions._
-import org.combinators.ep.domain.instances.InstanceRep
+import org.combinators.cogen.InstanceRep
+import org.combinators.cogen.abstractions.TestCase
+import org.combinators.ep.domain.abstractions.*
 import org.combinators.ep.domain.math.M0.{AddInst, Eval, LitInst, addi}
 import org.combinators.ep.domain.math.M1.SubInst
 import org.combinators.ep.domain.math.M3.MultInst

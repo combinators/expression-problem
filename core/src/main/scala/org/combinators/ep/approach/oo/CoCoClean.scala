@@ -1,11 +1,14 @@
 package org.combinators.ep.approach.oo  /*DI:LI:AD*/
 
-import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, TestCase, TypeRep}
+import org.combinators.cogen.{TestCase, TypeRep, Command, AbstractSyntax, NameProvider, Understands}
+import Command.Generator
+import org.combinators.cogen.paradigm.{AddImport, AddTypeLookup, AnyParadigm, Apply, FindClass, Generics, ObjectOriented, ParametricPolymorphism, ResolveImport}
+import org.combinators.ep.domain.abstractions.{DataTypeCase, DomainTpeRep, Operation}
 import org.combinators.ep.domain.{GenericModel, abstractions}
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.ep.generator.{AbstractSyntax, Command, EvolutionImplementationProvider, NameProvider, TestImplementationProvider, Understands, communication}
-import org.combinators.ep.generator.paradigm.{AddImport, AnyParadigm, Apply, FindClass, Generics, ObjectOriented, ParametricPolymorphism, ResolveImport, AddTypeLookup}
+import org.combinators.ep.domain.extensions._
+import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
+import org.combinators.ep.generator.{EvolutionImplementationProvider, TestImplementationProvider, communication}
+import org.combinators.ep.generator._
 
 trait CoCoClean extends SharedOO {
   val paradigm: AnyParadigm
@@ -530,7 +533,7 @@ trait CoCoClean extends SharedOO {
 
         // Add methods for new operations
         // In Methods we use the least specific type (ep.Exp<FT>) to refer to the domain base type.
-        _ <- addTypeLookupForMethods(TypeRep.DataType(domain.baseDataType), leastSpecialBaseInterfaceType(domain, finalizedType)(
+        _ <- addTypeLookupForMethods(DomainTpeRep.DataType(domain.baseDataType), leastSpecialBaseInterfaceType(domain, finalizedType)(
           canFindClass = ooParadigm.methodBodyCapabilities.canFindClassInMethod,
           canResolveImport = paradigm.methodBodyCapabilities.canResolveImportInMethod,
           canAddImport = paradigm.methodBodyCapabilities.canAddImportInMethodBody,
@@ -877,7 +880,7 @@ trait CoCoClean extends SharedOO {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.constructorCapabilities._
     import ooParadigm.methodBodyCapabilities._
-    val dtpeRep = TypeRep.DataType(model.baseDataType)
+    val dtpeRep = DomainTpeRep.DataType(model.baseDataType)
 
     def baseInterfaceType[Context](implicit
        canFindClass: Understands[Context, FindClass[paradigm.syntax.Name, paradigm.syntax.Type]],

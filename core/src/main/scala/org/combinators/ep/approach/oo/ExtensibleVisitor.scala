@@ -1,14 +1,15 @@
 package org.combinators.ep.approach.oo
 
 /*DI:LI:AD*/
-
+import org.combinators.cogen.{TestCase, TypeRep, Command, NameProvider, AbstractSyntax, Understands}
+import Command.Generator
+import org.combinators.cogen.paradigm.{AddImport, AnyParadigm, FindClass, Generics, ObjectOriented, ParametricPolymorphism, ResolveImport}
+import org.combinators.cogen.paradigm.AnyParadigm.syntax._
 import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions._
+import org.combinators.ep.domain.extensions._
 import org.combinators.ep.generator._
 import org.combinators.ep.generator.communication._
-import org.combinators.ep.generator.paradigm._
-import Command._
-import AnyParadigm.syntax._
 
 /**
   * Synthesizing OO and Functional Design to promote Reuse
@@ -161,7 +162,7 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
       val makeClass: Generator[ClassContext, Unit] = {
         import ooParadigm.classCapabilities._
         for {
-          parent <- toTargetLanguageType(TypeRep.DataType(parentType))
+          parent <- toTargetLanguageType(DomainTpeRep.DataType(parentType))
           _ <- resolveAndAddImport(parent)
           _ <- addParent(parent)
           _ <- forEach(tpeCase.attributes) { att => makeField(att) }
@@ -927,7 +928,7 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
     import ooParadigm.classCapabilities.canFindClassInClass
     import ooParadigm.constructorCapabilities.canFindClassInConstructor
 
-    val dtpeRep = TypeRep.DataType(domain.baseDataType)
+    val dtpeRep = DomainTpeRep.DataType(domain.baseDataType)
     for {
 
       _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(domain))

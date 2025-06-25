@@ -1,8 +1,8 @@
 package org.combinators.ep.language.inbetween.polymorphism   /*DI:LI:AI*/
 
 
+import org.combinators.cogen.paradigm.{AddTypeParameter, Apply, GetTypeArguments, ParametricPolymorphism as PP}
 import org.combinators.ep.generator.{Command, Understands}
-import org.combinators.ep.generator.paradigm.{AddTypeParameter, Apply, GetTypeArguments, ParametricPolymorphism => PP}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.inbetween.any
 

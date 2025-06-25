@@ -1,13 +1,15 @@
 package org.combinators.ep.language.inbetween.functional.control
 
+import org.combinators.cogen.paradigm.{Apply, IfThenElse, Reify, control}
+import org.combinators.cogen.paradigm.control.{ConstructorPattern, DeclareFunVariable, Lambda, PatternMatch, PatternVariable}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, Understands, paradigm}
-import org.combinators.ep.generator.paradigm.{Apply, Reify, control}
-import org.combinators.ep.generator.paradigm.control.{DeclareFunVariable => DFV, Functional => Fun}
+import org.combinators.ep.generator.paradigm.control
+import org.combinators.ep.generator.paradigm.control.{DeclareFunVariable as DFV, Functional as Fun}
 import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
-trait Functional[FT <: FinalTypes, FactoryType <: Factory[FT]] extends Fun[any.Method[FT]] {
+trait Functional[FT <: FinalTypes, FactoryType <: Factory[FT]] extends control.Functional[any.Method[FT]] {
   val base: AnyParadigm.WithFT[FT, FactoryType]
 
   import base.factory
@@ -16,8 +18,8 @@ trait Functional[FT <: FinalTypes, FactoryType <: Factory[FT]] extends Fun[any.M
   override type PatternContext = org.combinators.ep.language.inbetween.functional.control.PatternContext[FT]
 
   val lambdaCapabilities: LambdaCapabilities = new LambdaCapabilities {
-    implicit val canLambda: Understands[any.Method[FT], control.Lambda[any.Name[FT], any.Type[FT], any.Method[FT], any.Expression[FT]]] = new Understands[any.Method[FT], control.Lambda[any.Name[FT], any.Type[FT], any.Method[FT], any.Expression[FT]]] {
-      override def perform(context: any.Method[FT], command: control.Lambda[any.Name[FT], any.Type[FT], any.Method[FT], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
+    implicit val canLambda: Understands[any.Method[FT], Lambda[any.Name[FT], any.Type[FT], any.Method[FT], any.Expression[FT]]] = new Understands[any.Method[FT], Lambda[any.Name[FT], any.Type[FT], any.Method[FT], any.Expression[FT]]] {
+      override def perform(context: any.Method[FT], command: Lambda[any.Name[FT], any.Type[FT], any.Method[FT], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
         val args = command.variables.map { case (pname, _tpe) => (pname, factory.argumentExpression(pname)) }.toMap
         val (updatedCtxt, body) = Command.runGenerator(command.body(args), context)
         (updatedCtxt, factory.lambda(command.variables, body))
@@ -26,26 +28,26 @@ trait Functional[FT <: FinalTypes, FactoryType <: Factory[FT]] extends Fun[any.M
   }
 
   val functionalCapabilities: FunctionalCapabilities = new FunctionalCapabilities {
-    implicit val canDeclareVar: Understands[any.Method[FT], DFV[any.Method[FT], any.Name[FT], any.Type[FT], any.Expression[FT], any.Expression[FT]]] =
-      new Understands[any.Method[FT], DFV[any.Method[FT], any.Name[FT], any.Type[FT], any.Expression[FT], any.Expression[FT]]] {
-        override def perform(context: any.Method[FT], command: DFV[any.Method[FT], any.Name[FT], any.Type[FT], any.Expression[FT], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
+    implicit val canDeclareVar: Understands[any.Method[FT], DeclareFunVariable[any.Method[FT], any.Name[FT], any.Type[FT], any.Expression[FT], any.Expression[FT]]] =
+      new Understands[any.Method[FT], DeclareFunVariable[any.Method[FT], any.Name[FT], any.Type[FT], any.Expression[FT], any.Expression[FT]]] {
+        override def perform(context: any.Method[FT], command: DeclareFunVariable[any.Method[FT], any.Name[FT], any.Type[FT], any.Expression[FT], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
           val (resContext, inExp) = Command.runGenerator(command.inBlk(factory.argumentExpression(command.name)), context)
           (resContext, factory.declareFunVariable(command.name, command.tpe, isRecursive = false, command.initialization, inExp))
         }
     }
 
-    implicit val canDeclareRecVar:  Understands[any.Method[FT], DFV[any.Method[FT], any.Name[FT], any.Type[FT], any.Expression[FT] => Generator[any.Method[FT], any.Expression[FT]], any.Expression[FT]]] =
-      new Understands[any.Method[FT], DFV[any.Method[FT], any.Name[FT], any.Type[FT], any.Expression[FT] => Generator[any.Method[FT], any.Expression[FT]], any.Expression[FT]]] {
-        override def perform(context: any.Method[FT], command: DFV[any.Method[FT], any.Name[FT], any.Type[FT], any.Expression[FT] => Generator[any.Method[FT], any.Expression[FT]], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
+    implicit val canDeclareRecVar:  Understands[any.Method[FT], DeclareFunVariable[any.Method[FT], any.Name[FT], any.Type[FT], any.Expression[FT] => Generator[any.Method[FT], any.Expression[FT]], any.Expression[FT]]] =
+      new Understands[any.Method[FT], DeclareFunVariable[any.Method[FT], any.Name[FT], any.Type[FT], any.Expression[FT] => Generator[any.Method[FT], any.Expression[FT]], any.Expression[FT]]] {
+        override def perform(context: any.Method[FT], command: DeclareFunVariable[any.Method[FT], any.Name[FT], any.Type[FT], any.Expression[FT] => Generator[any.Method[FT], any.Expression[FT]], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
           val (initContext, initExp) = Command.runGenerator(command.initialization(factory.argumentExpression(command.name)), context)
           val (resContext, inExp) = Command.runGenerator(command.inBlk(factory.argumentExpression(command.name)), initContext)
           (resContext, factory.declareFunVariable(command.name, command.tpe, isRecursive = true, initExp, inExp))
         }
       }
 
-    implicit val canIfThenElse: Understands[any.Method[FT], paradigm.IfThenElse[any.Expression[FT], Generator[any.Method[FT], any.Expression[FT]], Generator[any.Method[FT], any.Expression[FT]], any.Expression[FT]]] =
-      new Understands[any.Method[FT], paradigm.IfThenElse[any.Expression[FT], Generator[any.Method[FT], any.Expression[FT]], Generator[any.Method[FT], any.Expression[FT]], any.Expression[FT]]] {
-        override def perform(context: any.Method[FT], command: paradigm.IfThenElse[any.Expression[FT], Generator[any.Method[FT], any.Expression[FT]], Generator[any.Method[FT], any.Expression[FT]], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
+    implicit val canIfThenElse: Understands[any.Method[FT], IfThenElse[any.Expression[FT], Generator[any.Method[FT], any.Expression[FT]], Generator[any.Method[FT], any.Expression[FT]], any.Expression[FT]]] =
+      new Understands[any.Method[FT], IfThenElse[any.Expression[FT], Generator[any.Method[FT], any.Expression[FT]], Generator[any.Method[FT], any.Expression[FT]], any.Expression[FT]]] {
+        override def perform(context: any.Method[FT], command: IfThenElse[any.Expression[FT], Generator[any.Method[FT], any.Expression[FT]], Generator[any.Method[FT], any.Expression[FT]], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
           val (startingCtxt, ifBranchExp) = Command.runGenerator[any.Method[FT], any.Expression[FT]](command.ifBranch, context)
           val (elseIfCtxt, elseIfExprs) = command.elseIfBranches.foldLeft[(any.Method[FT], Seq[(any.Expression[FT], any.Expression[FT])])]((startingCtxt, Seq.empty)){ case ((ctxt, exprs), elseIfBranch) =>
             val (nextCtxt, elseIfExpr) = Command.runGenerator[any.Method[FT], any.Expression[FT]](elseIfBranch._2, ctxt)
@@ -55,8 +57,8 @@ trait Functional[FT <: FinalTypes, FactoryType <: Factory[FT]] extends Fun[any.M
           (elseCtxt, factory.funIfThenElse(command.condition, ifBranchExp, elseIfExprs, elseExpr))
         }
       }
-    implicit val canPatternMatch: Understands[any.Method[FT], control.PatternMatch[any.Method[FT], PatternContext, any.Expression[FT]]] = new Understands[any.Method[FT], control.PatternMatch[any.Method[FT], PatternContext, any.Expression[FT]]] {
-      override def perform(context: any.Method[FT], command: control.PatternMatch[any.Method[FT], PatternContext, any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
+    implicit val canPatternMatch: Understands[any.Method[FT], PatternMatch[any.Method[FT], PatternContext, any.Expression[FT]]] = new Understands[any.Method[FT], PatternMatch[any.Method[FT], PatternContext, any.Expression[FT]]] {
+      override def perform(context: any.Method[FT], command: PatternMatch[any.Method[FT], PatternContext, any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
         val (finalCtxt, cases) = command.options.foldLeft((context, Seq.empty[(any.Expression[FT], any.Expression[FT])])) {
           case ((ctxt, cases), option) =>
             val (patternCtxt, patternExp) = Command.runGenerator[PatternContext, any.Expression[FT]](option._1, factory.convert(ctxt).emptyPatternCtxt)
@@ -71,8 +73,8 @@ trait Functional[FT <: FinalTypes, FactoryType <: Factory[FT]] extends Fun[any.M
   }
 
   override val patternCapabilities: PatternCapabilities = new PatternCapabilities {
-    implicit val canPatternVariable: Understands[PatternContext, control.PatternVariable[any.Name[FT], any.Expression[FT]]] = new Understands[PatternContext, control.PatternVariable[any.Name[FT], any.Expression[FT]]] {
-      override def perform(context: PatternContext, command: control.PatternVariable[any.Name[FT], any.Expression[FT]]): (PatternContext, any.Expression[FT]) = {
+    implicit val canPatternVariable: Understands[PatternContext, PatternVariable[any.Name[FT], any.Expression[FT]]] = new Understands[PatternContext, PatternVariable[any.Name[FT], any.Expression[FT]]] {
+      override def perform(context: PatternContext, command: PatternVariable[any.Name[FT], any.Expression[FT]]): (PatternContext, any.Expression[FT]) = {
         (context.copy(context.variables :+ command.name), factory.patternVariable(command.name))
       }
     }
@@ -82,8 +84,8 @@ trait Functional[FT <: FinalTypes, FactoryType <: Factory[FT]] extends Fun[any.M
       }
     }
     
-    implicit val canApplyConstructorPattern: Understands[PatternContext, Apply[control.ConstructorPattern[any.Type[FT], any.Name[FT]], Generator[PatternContext, any.Expression[FT]], any.Expression[FT]]] = new Understands[PatternContext, Apply[control.ConstructorPattern[any.Type[FT], any.Name[FT]], Generator[PatternContext, any.Expression[FT]], any.Expression[FT]]] {
-      override def perform(context: PatternContext, command: Apply[control.ConstructorPattern[any.Type[FT], any.Name[FT]], Generator[PatternContext, any.Expression[FT]], any.Expression[FT]]): (PatternContext, any.Expression[FT]) = {
+    implicit val canApplyConstructorPattern: Understands[PatternContext, Apply[ConstructorPattern[any.Type[FT], any.Name[FT]], Generator[PatternContext, any.Expression[FT]], any.Expression[FT]]] = new Understands[PatternContext, Apply[ConstructorPattern[any.Type[FT], any.Name[FT]], Generator[PatternContext, any.Expression[FT]], any.Expression[FT]]] {
+      override def perform(context: PatternContext, command: Apply[ConstructorPattern[any.Type[FT], any.Name[FT]], Generator[PatternContext, any.Expression[FT]], any.Expression[FT]]): (PatternContext, any.Expression[FT]) = {
         val (finalCtxt, argumentPatterns) = command.arguments.foldLeft((context, Seq.empty[any.Expression[FT]])) { case ((ctxt, args), argGen) =>
           val (nextCtxt, nextArg) = Command.runGenerator(argGen, ctxt)
           (nextCtxt, args :+ nextArg)

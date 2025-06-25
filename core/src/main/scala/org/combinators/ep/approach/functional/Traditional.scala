@@ -1,15 +1,17 @@
 package org.combinators.ep.approach.functional    /*DI:LI:AD*/
 
 import org.combinators.ep.domain.GenericModel
-import org.combinators.ep.generator.{AbstractSyntax, ApproachImplementationProvider, Command, EvolutionImplementationProvider, NameProvider, Understands}
-import org.combinators.ep.generator.paradigm.control.{ConstructorPattern, Functional => FunControl}
-import Command.{Generator, _}
-import cats.implicits._
-import org.combinators.ep.domain.abstractions.{DataType, DataTypeCase, Operation, Parameter, TypeRep}
+import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
+import org.combinators.cogen.{AbstractSyntax, Command, NameProvider, TypeRep, Understands}
+import Command.Generator
+import cats.implicits.*
+import org.combinators.cogen.paradigm.{AnyParadigm, FindType, Functional}
+import org.combinators.ep.domain.abstractions.{DataType, DataTypeCase, DomainTpeRep, Operation, Parameter}
 import org.combinators.ep.generator.communication.{ReceivedRequest, Request, SendRequest}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, FindType, Functional}
-import AnyParadigm.syntax._
-import org.combinators.ep.generator.paradigm.control.Functional.WithBase
+import AnyParadigm.syntax.*
+import org.combinators.cogen.paradigm.control.{ConstructorPattern, Functional as FunControl}
+import org.combinators.cogen.paradigm.control.Functional.WithBase
+import org.combinators.ep.domain.extensions.*
 
 trait Traditional extends ApproachImplementationProvider {
   val functional: Functional.WithBase[paradigm.type]
@@ -34,7 +36,7 @@ trait Traditional extends ApproachImplementationProvider {
     import paradigm.methodBodyCapabilities._
     import functional.methodBodyCapabilities._
     for {
-      rt <- toTargetLanguageType(TypeRep.DataType(baseTpe))
+      rt <- toTargetLanguageType(DomainTpeRep.DataType(baseTpe))
       _ <- resolveAndAddImport(rt)
       res <- instantiateType(rt, names.mangle(names.conceptNameOf(tpeCase)), args)
     } yield res
@@ -104,7 +106,7 @@ trait Traditional extends ApproachImplementationProvider {
     }
 
     for {
-      params <- forEach (Parameter(names.instanceNameOf(tpe), TypeRep.DataType(tpe)) +: op.parameters) { (param: Parameter) =>
+      params <- forEach (Parameter(names.instanceNameOf(tpe), DomainTpeRep.DataType(tpe)) +: op.parameters) { (param: Parameter) =>
           for {
             pt <- toTargetLanguageType(param.tpe)
             _ <- resolveAndAddImport(pt)
@@ -116,7 +118,7 @@ trait Traditional extends ApproachImplementationProvider {
       _ <- resolveAndAddImport(returnType)
       _ <- setReturnType(returnType)
       args <- getArguments()
-      onTpe <- toTargetLanguageType(TypeRep.DataType(tpe))
+      onTpe <- toTargetLanguageType(DomainTpeRep.DataType(tpe))
       result <- {
         val matchGen = makeCases(tpe, cases, op, args.head._3, args.tail, domainSpecific)(_, _)
         patternMatch(
@@ -153,7 +155,7 @@ trait Traditional extends ApproachImplementationProvider {
     import functional.projectCapabilities._
     import functional.methodBodyCapabilities._         // Needed below
     import functional.typeCapabilities._               // Needed below
-    val dtpeRep = TypeRep.DataType(domain.baseDataType)
+    val dtpeRep = DomainTpeRep.DataType(domain.baseDataType)
     for {
       _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(domain.baseDataType))
       _ <- addTypeLookupForTypes(dtpeRep, domainTypeLookup(domain.baseDataType))

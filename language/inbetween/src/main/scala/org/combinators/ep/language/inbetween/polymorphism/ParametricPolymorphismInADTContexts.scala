@@ -1,7 +1,7 @@
 package org.combinators.ep.language.inbetween.polymorphism
 
+import org.combinators.cogen.paradigm.{Apply, ParametricPolymorphismInADTContexts as PPADT}
 import org.combinators.ep.generator.{Command, Understands}
-import org.combinators.ep.generator.paradigm.{Apply, ParametricPolymorphismInADTContexts => PPADT}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.inbetween.{any, functional => fun}
 import org.combinators.ep.language.inbetween.functional.FunctionalParadigm

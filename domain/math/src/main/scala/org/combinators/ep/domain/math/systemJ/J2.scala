@@ -1,7 +1,9 @@
 package org.combinators.ep.domain.math.systemJ    /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions._
-import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
+import org.combinators.cogen.InstanceRep
+import org.combinators.cogen.abstractions.{Tag, TestCase}
+import org.combinators.ep.domain.abstractions.*
+import org.combinators.ep.domain.instances.DataTypeInstance
 import org.combinators.ep.domain.math.M0.{AddInst, DoubleInst, Eval, LitInst, addi, liti}
 import org.combinators.ep.domain.math.systemJ.J1.{MultByTestCase, SubInst, subi}
 import org.combinators.ep.domain.math.{M0, MathDomain}

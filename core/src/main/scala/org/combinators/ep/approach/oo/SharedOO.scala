@@ -1,23 +1,23 @@
 package org.combinators.ep.approach.oo    /*DI:LI:AD*/
 
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
+import org.combinators.cogen.paradigm.{FindClass, ObjectOriented}
+import org.combinators.cogen.{Command, Understands}
 import org.combinators.ep.domain.GenericModel
-import org.combinators.ep.domain.abstractions._
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.ep.domain.abstractions.*
+import org.combinators.ep.domain.extensions.*
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request}
-import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.ep.generator.paradigm.{FindClass, ObjectOriented}
-import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider, Understands}
+import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
 trait SharedOO extends ApproachImplementationProvider {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
 
-  import ooParadigm._
-  import paradigm._
-  import syntax._
-
-
-  import paradigm._
-  import syntax._
+  import ooParadigm.*
+  import paradigm.*
+  import syntax.*
+  import paradigm.*
+  import syntax.*
 
   /**
    * Default registration for findClass, which works with each registerTypeMapping for the different approaches.
@@ -39,13 +39,12 @@ trait SharedOO extends ApproachImplementationProvider {
    * This enables target-language classes to be retrieved from within the code generator in the Method, Class or Constructor contexts.
    */
   def registerTypeMapping(domain: GenericModel): Generator[ProjectContext, Unit] = {
-    import paradigm.projectCapabilities.addTypeLookupForMethods
-    import ooParadigm.methodBodyCapabilities.canFindClassInMethod
-    import ooParadigm.projectCapabilities.addTypeLookupForClasses
-    import ooParadigm.projectCapabilities.addTypeLookupForConstructors
     import ooParadigm.classCapabilities.canFindClassInClass
     import ooParadigm.constructorCapabilities.canFindClassInConstructor
-    val dtpeRep = TypeRep.DataType(domain.baseDataType)
+    import ooParadigm.methodBodyCapabilities.canFindClassInMethod
+    import ooParadigm.projectCapabilities.{addTypeLookupForClasses, addTypeLookupForConstructors}
+    import paradigm.projectCapabilities.addTypeLookupForMethods
+    val dtpeRep = DomainTpeRep.DataType(domain.baseDataType)
     for {
       _ <- addTypeLookupForMethods(dtpeRep, domainTypeLookup(domain.baseDataType))
       _ <- addTypeLookupForClasses(dtpeRep, domainTypeLookup(domain.baseDataType))
@@ -60,7 +59,7 @@ trait SharedOO extends ApproachImplementationProvider {
 
   /** Make a field from an attribute in the given class.  If the type needs to be different from default, then register Types accordingly. */
   def makeField(att: Attribute): Generator[ClassContext, Type] = {
-    import ooParadigm.classCapabilities._
+    import ooParadigm.classCapabilities.*
     for {
       ft <- toTargetLanguageType(att.tpe)
       _ <- resolveAndAddImport(ft)
@@ -77,7 +76,7 @@ trait SharedOO extends ApproachImplementationProvider {
    * @return       Return the full method body.
    */
   def makeSignature(op: Operation): Generator[MethodBodyContext, Unit] = {
-    import paradigm.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities.*
 
     for {
       rt <- toTargetLanguageType(op.returnType)
@@ -132,8 +131,8 @@ trait SharedOO extends ApproachImplementationProvider {
    * @return
    */
   def attributeGetterAccess(attribute:Attribute, tpeCase: DataTypeCase, domain:GenericModel, baseType:Option[paradigm.syntax.Type]) : Generator[MethodBodyContext, Expression] = {
-    import paradigm.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities.*
+    import paradigm.methodBodyCapabilities.*
 
     for {
         thisRef <- selfReference()
@@ -149,7 +148,7 @@ trait SharedOO extends ApproachImplementationProvider {
    * @return
    */
   def attributeDirectAccess(attribute:Attribute, tpeCase: DataTypeCase, domain:GenericModel, baseType:Option[paradigm.syntax.Type]) : Generator[MethodBodyContext, Expression] = {
-    import ooParadigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities.*
 
     for {
       thisRef <- selfReference()
@@ -159,7 +158,7 @@ trait SharedOO extends ApproachImplementationProvider {
 
   /** Default argument access. */
   def argumentDirectAccess(arg:(Name, Type, Expression), param:Parameter, domain: GenericModel, baseType: Option[paradigm.syntax.Type] = None): Generator[MethodBodyContext, Expression] = {
-    import ooParadigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities.*
 
     // Properly cast all Base arguments to designated baseType (which was used in the method signature)
     for {
@@ -172,7 +171,7 @@ trait SharedOO extends ApproachImplementationProvider {
   }
 
   def targetSelf : Generator[MethodBodyContext, Expression] = {
-    import ooParadigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities.*
 
     for {
       thisRef <- selfReference()
@@ -210,8 +209,8 @@ trait SharedOO extends ApproachImplementationProvider {
          attributeAccess:(Attribute, DataTypeCase, GenericModel, Option[paradigm.syntax.Type])  => Generator[MethodBodyContext, Expression] = attributeDirectAccess,
          baseType: Option[paradigm.syntax.Type] = None): Generator[MethodBodyContext, Option[Expression]] = {
 
-    import paradigm.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities.*
+    import paradigm.methodBodyCapabilities.*
 
     val properModel = latestModelDefiningOperatorClass(domain, tpeCase, op,  domainSpecific).get
 
@@ -272,7 +271,7 @@ trait SharedOO extends ApproachImplementationProvider {
            attributeAccess:(Attribute, DataTypeCase, GenericModel, Option[paradigm.syntax.Type])  => Generator[MethodBodyContext, Expression] = attributeDirectAccess,
            baseType: Option[paradigm.syntax.Type] = None): Generator[MethodBodyContext, Option[Expression]] = {
 
-    import ooParadigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities.*
 
     val properModel = latestModelDefiningOperatorClass(domain, tpeCase, op,  domainSpecific).get
 
@@ -358,7 +357,7 @@ trait SharedOO extends ApproachImplementationProvider {
    * @return
    */
   def makeConstructor(tpeCase: DataTypeCase, initFields:Boolean = true, useSuper:Option[Type] = Option.empty): Generator[ConstructorContext, Unit] = {
-    import ooParadigm.constructorCapabilities._
+    import ooParadigm.constructorCapabilities.*
 
     for {
       params <- forEach (tpeCase.attributes) { (att: Attribute) =>
@@ -401,7 +400,7 @@ trait SharedOO extends ApproachImplementationProvider {
    * @return         Return the implementation.
    */
   def makeGetterSignature(att:Attribute): Generator[MethodBodyContext, Option[Expression]] = {
-      import paradigm.methodBodyCapabilities._
+      import paradigm.methodBodyCapabilities.*
       for {
         rt <- toTargetLanguageType(att.tpe)
         _ <- resolveAndAddImport(rt)
@@ -425,7 +424,7 @@ trait SharedOO extends ApproachImplementationProvider {
    */
   def makeGetter(att:Attribute): Generator[ClassContext, Unit] = {
     val makeBody: Generator[MethodBodyContext, Option[Expression]] = {
-      import ooParadigm.methodBodyCapabilities._
+      import ooParadigm.methodBodyCapabilities.*
 
       for {
         _ <- makeGetterSignature(att)
@@ -435,7 +434,7 @@ trait SharedOO extends ApproachImplementationProvider {
       } yield Some(result)
     }
 
-    import ooParadigm.classCapabilities._
+    import ooParadigm.classCapabilities.*
     addMethod(getterName(att), makeBody)
   }
 

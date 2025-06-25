@@ -2,12 +2,14 @@ package org.combinators.ep.approach.oo
 
 /*DI:LI:AD*/
 
+import org.combinators.cogen.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.ep.domain.{GenericModel, GraphViz}
-import org.combinators.ep.domain.abstractions._
-import org.combinators.ep.generator.Command._
-import org.combinators.ep.generator._
-import org.combinators.ep.generator.communication._
-import org.combinators.ep.generator.paradigm._
+import org.combinators.ep.domain.abstractions.*
+import org.combinators.ep.domain.extensions.*
+import org.combinators.cogen.{NameProvider, Command, TypeRep, AbstractSyntax}
+import org.combinators.cogen.Command.*
+import org.combinators.ep.generator.*
+import org.combinators.ep.generator.communication.*
 
 /**
   * Process model by generating representations suitable for GraphViz

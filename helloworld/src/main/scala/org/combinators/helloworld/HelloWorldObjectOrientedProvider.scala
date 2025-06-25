@@ -1,10 +1,10 @@
 package org.combinators.helloworld
 
+import org.combinators.cogen.paradigm.{AnyParadigm, FindClass, ObjectOriented}
+import org.combinators.cogen.paradigm.control.Imperative
+import org.combinators.cogen.paradigm.ffi.{Arrays, Assertions, Console, Equality}
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arrays, Assertions, Console, Equality}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, ObjectOriented}
 import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class

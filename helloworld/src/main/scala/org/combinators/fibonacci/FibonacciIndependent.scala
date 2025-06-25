@@ -1,9 +1,11 @@
 package org.combinators.fibonacci
 
-import org.combinators.ep.domain.abstractions.TypeRep
+import org.combinators.cogen.abstractions.TypeRep
+import org.combinators.cogen.paradigm.{AnyParadigm, Functional, ObjectOriented}
+import org.combinators.cogen.paradigm.control.{Functional, Imperative}
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Assertions, Equality}
 import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Assertions, Equality}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, Functional, ObjectOriented, control}
+import org.combinators.ep.generator.paradigm.control
 import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider}
 
 trait FibonacciIndependent {
@@ -115,7 +117,7 @@ object FibonacciIndependentProvider {
   (base: P)
   (nameProvider: NameProvider[base.syntax.Name],
    func:  Functional.WithBase[base.type],
-   c1: control.Functional.WithBase[base.MethodBodyContext, base.type],
+   c1: Functional.WithBase[base.MethodBodyContext, base.type],
    c2:  Arithmetic.WithBase[base.MethodBodyContext, base.type, Int],
    c3:  Assertions.WithBase[base.MethodBodyContext, base.type],
    c4: Equality.WithBase[base.MethodBodyContext, base.type],
@@ -155,7 +157,7 @@ object FibonacciIndependentProvider {
   (base: P)
   (nameProvider: NameProvider[base.syntax.Name],
    obj:  ObjectOriented.WithBase[base.type],
-   c1: control.Imperative.WithBase[base.MethodBodyContext, base.type],
+   c1: Imperative.WithBase[base.MethodBodyContext, base.type],
    c2:  Arithmetic.WithBase[base.MethodBodyContext, base.type, Int],
    c3:  Assertions.WithBase[base.MethodBodyContext, base.type],
    c4: Equality.WithBase[base.MethodBodyContext, base.type],

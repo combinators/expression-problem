@@ -1,7 +1,7 @@
 package org.combinators.ep.language.java.paradigm    /*DI:LD:AI*/
 
+import org.combinators.cogen.paradigm.control.Lambdas as Lams
 import org.combinators.ep.generator.{Command, Understands}
-import org.combinators.ep.generator.paradigm.control.{Lambdas => Lams, _}
 
 trait Lambdas[Ctxt, AP <: AnyParadigm] extends Lams[Ctxt] {
 

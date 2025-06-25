@@ -2,13 +2,15 @@ package org.combinators.ep.approach.oo
 
 /*DI:LI:AD*/
 
-import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, Parameter, TestCase, TypeRep}
+import org.combinators.cogen.{TestCase, TypeRep, Command, Understands, NameProvider, AbstractSyntax}
+import Command.Generator
+import org.combinators.cogen.paradigm.{AddImport, AddTypeLookup, AnyParadigm, Apply, FindClass, Generics, ObjectOriented, ParametricPolymorphism, ResolveImport}
+import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, Parameter, DomainTpeRep}
 import org.combinators.ep.domain.{GenericModel, abstractions}
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.ep.domain.extensions._
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request}
-import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.ep.generator.paradigm._
-import org.combinators.ep.generator._
+import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
+import org.combinators.ep.generator.*
 
 /**
   * Sufficiently different EP approach that this trait does not extend SharedOO
@@ -147,7 +149,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
   def getSelfSignature(domain: GenericModel): Generator[paradigm.MethodBodyContext, Unit] = {
     import paradigm.methodBodyCapabilities._
     for {
-      returnType <- toTargetLanguageType(TypeRep.DataType(domain.baseDataType))
+      returnType <- toTargetLanguageType(DomainTpeRep.DataType(domain.baseDataType))
       _ <- setReturnType(returnType)
     } yield ()
   }
@@ -371,7 +373,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
       import ooParadigm.methodBodyCapabilities._
       import polymorphics.methodBodyCapabilities._
       for {
-        baseType <- toTargetLanguageType(TypeRep.DataType(domain.baseDataType))
+        baseType <- toTargetLanguageType(DomainTpeRep.DataType(domain.baseDataType))
         signature <- forEach(tpe.attributes) { att => toTargetLanguageType(att.tpe) }
         _ <- setParameters(tpe.attributes.map(att => names.mangle(att.name)).zip(signature))
         _ <- setReturnType(baseType)
@@ -409,7 +411,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
             // when accessing ANEW, since you have to construct
             processedAtts <- forEach(tpe.attributes.zip(attributeValues)) { case (att, attv) =>
               for {
-                pt <- if (att.tpe == TypeRep.DataType(domain.baseDataType)) {
+                pt <- if (att.tpe == DomainTpeRep.DataType(domain.baseDataType)) {
                   for {
                     getSelfMethod <- getMember(attv._3, ComponentNames.getSelf)
                     result <- apply(getSelfMethod, Seq.empty)
@@ -435,7 +437,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
             // when accessing ANEW, since you have to construct
             processedAtts <- forEach(tpe.attributes.zip(attributeValues)) { case (att, attv) =>
               for {
-                pt <- if (att.tpe == TypeRep.DataType(domain.baseDataType)) {
+                pt <- if (att.tpe == DomainTpeRep.DataType(domain.baseDataType)) {
                   for {
                     getSelfMethod <- getMember(attv._3, ComponentNames.getSelf)
                     result <- apply(getSelfMethod, Seq.empty)
@@ -1198,7 +1200,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
     import polymorphics.methodBodyCapabilities._
     import ooParadigm.constructorCapabilities._
     import ooParadigm.methodBodyCapabilities._
-    val dtpeRep = TypeRep.DataType(model.baseDataType)
+    val dtpeRep = DomainTpeRep.DataType(model.baseDataType)
 
     // Operation must be discoverable already for this model
     assert(model.findOperation(op).nonEmpty)
@@ -1232,7 +1234,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
     import polymorphics.methodBodyCapabilities._
     import ooParadigm.constructorCapabilities._
     import ooParadigm.methodBodyCapabilities._
-    val dtpeRep = TypeRep.DataType(model.baseDataType)
+    val dtpeRep = DomainTpeRep.DataType(model.baseDataType)
 
     for {
       _ <- addTypeLookupForMethods(dtpeRep, Command.lift[paradigm.MethodBodyContext, paradigm.syntax.Type](tpeParams.head))
@@ -1253,7 +1255,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.constructorCapabilities._
     import ooParadigm.methodBodyCapabilities._
-    val dtpeRep = TypeRep.DataType(model.baseDataType)
+    val dtpeRep = DomainTpeRep.DataType(model.baseDataType)
 
     def properCarrierType[Context](
       implicit
@@ -1278,7 +1280,7 @@ trait ObjectAlgebras extends ApproachImplementationProvider {
     import ooParadigm.classCapabilities._
     import genericsParadigm.classCapabilities._
 
-    val dtpeRep = TypeRep.DataType(model.baseDataType)
+    val dtpeRep = DomainTpeRep.DataType(model.baseDataType)
 
     for {
       carrierType <- getTypeArguments().map(tpeArgs => tpeArgs.head)

@@ -1,8 +1,10 @@
 package org.combinators.ep.domain.shape   /*DD:LI:AI*/
 
-import org.combinators.ep.domain._
-import org.combinators.ep.domain.abstractions.{EqualsTestCase, _}
-import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
+import org.combinators.cogen.InstanceRep
+import org.combinators.cogen.abstractions.TestCase
+import org.combinators.ep.domain.*
+import org.combinators.ep.domain.abstractions.*
+import org.combinators.ep.domain.instances.DataTypeInstance
 
 object S0 extends Evolution {
 

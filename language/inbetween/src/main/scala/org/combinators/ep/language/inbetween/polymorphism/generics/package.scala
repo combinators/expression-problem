@@ -1,6 +1,6 @@
 package org.combinators.ep.language.inbetween.polymorphism  /*DI:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.TypeRep
+import org.combinators.cogen.abstractions.TypeRep
 import org.combinators.ep.language.inbetween.{any, oo, polymorphism => pp}
 import org.combinators.ep.generator.Command.Generator
 package object generics {

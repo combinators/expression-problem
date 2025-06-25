@@ -1,12 +1,13 @@
 package org.combinators.ep.language.inbetween.ffi  /*DI:LI:AI*/
 
 // cannot find 'lists'
+
+import org.combinators.cogen.paradigm.Apply
+import org.combinators.cogen.paradigm.ffi.{Append, Cons, Create, Head, Tail, Lists as Lsts}
 import org.combinators.ep.generator.{Command, Understands}
 import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.Apply
 import org.combinators.ep.language.inbetween.{any, polymorphism}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
-import org.combinators.ep.generator.paradigm.ffi.{Append, Cons, Create, Head, Tail, Lists => Lsts}
 trait Lists[FT <: ListOps.FinalTypes, FactoryType <: ListOps.Factory[FT]] extends Lsts[any.Method[FT]] {
   val base: AnyParadigm.WithFT[FT, FactoryType]
   import base.factory

@@ -30,6 +30,17 @@ lazy val commonSettings = Seq(
   evictionErrorLevel := Level.Info,
 )
 
+
+/** The code generation infrastructure used in languages.
+  * Things in here are (DI, LI, AI).
+  */
+lazy val cogen = (Project(id = "cogen", base = file("cogen")))
+  .settings(commonSettings: _*)
+  .settings(
+    moduleName := "expression-problem-cogen",
+  )
+
+
 /** The core components to model expression problem code generators and domains.
   * Things in here are (DI, LI, AI).
   */
@@ -38,6 +49,8 @@ lazy val core = (Project(id = "core", base = file("core")))
   .settings(
     moduleName := "expression-problem-core",
   )
+  .dependsOn(cogen)
+
 
 /** Template for a subproject for a specific domain named `domainName`.
   * These projects should be (DD, LI, AI).

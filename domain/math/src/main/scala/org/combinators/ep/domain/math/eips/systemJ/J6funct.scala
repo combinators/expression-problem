@@ -1,22 +1,24 @@
 package org.combinators.ep.domain.math.eips.systemJ   /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{Operation, Parameter, TypeRep}
-import org.combinators.ep.domain.instances.InstanceRep
+import org.combinators.cogen.InstanceRep
+import org.combinators.cogen.abstractions.TypeRep
+import org.combinators.cogen.paradigm.AnyParadigm
+import org.combinators.cogen.paradigm.control.{Functional, Imperative}
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Equality, RealArithmetic, Strings}
+import org.combinators.ep.domain.abstractions.{Operation, Parameter}
 import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.ep.domain.math.systemJ
 import org.combinators.ep.generator.Command.{Generator, lift}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, control}
-import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Equality, RealArithmetic, Strings}
+import org.combinators.ep.generator.paradigm.control
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
 object J6funct {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
   (j5Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
-  (functionalControl: control.Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
+  (functionalControl: Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiRealArithmetic: RealArithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiEquals: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],

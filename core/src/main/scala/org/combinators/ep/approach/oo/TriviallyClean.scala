@@ -2,13 +2,15 @@ package org.combinators.ep.approach.oo
 
 /*DI:LI:AD*/
 
-import org.combinators.ep.domain.abstractions._
+import org.combinators.cogen.{TestCase, TypeRep, Command, NameProvider, AbstractSyntax, Understands}
+import org.combinators.cogen.paradigm.{AddImport, AnyParadigm, FindClass, ObjectOriented, ResolveImport}
+import org.combinators.ep.domain.abstractions.*
+import org.combinators.ep.domain.extensions.*
 import org.combinators.ep.domain.{GenericModel, abstractions}
-import org.combinators.ep.generator.Command._
-import org.combinators.ep.generator._
-import org.combinators.ep.generator.communication._
-import org.combinators.ep.generator.paradigm.AnyParadigm.syntax._
-import org.combinators.ep.generator.paradigm._
+import org.combinators.ep.generator.*
+import org.combinators.ep.generator.communication.*
+import org.combinators.cogen.paradigm.AnyParadigm.syntax.*
+import Command.Generator
 
 import scala.annotation.tailrec
 
@@ -391,7 +393,7 @@ trait TriviallyClean extends SharedOO {
 
       // Add methods for new operations
       // In Methods we use the least specific type (ep.Exp<FT>) to refer to the domain base type.
-      _ <- addTypeLookupForMethods(TypeRep.DataType(domain.baseDataType), mostSpecificBaseInterfaceType(domain)(
+      _ <- addTypeLookupForMethods(DomainTpeRep.DataType(domain.baseDataType), mostSpecificBaseInterfaceType(domain)(
         canFindClass = ooParadigm.methodBodyCapabilities.canFindClassInMethod,
         canResolveImport = paradigm.methodBodyCapabilities.canResolveImportInMethod,
         canAddImport = paradigm.methodBodyCapabilities.canAddImportInMethodBody
@@ -551,9 +553,8 @@ trait TriviallyClean extends SharedOO {
     import ooParadigm.classCapabilities.canFindClassInClass
     import ooParadigm.constructorCapabilities.canFindClassInConstructor
     import ooParadigm.methodBodyCapabilities.canFindClassInMethod
+    import org.combinators.cogen.paradigm.FindClass
     import paradigm.projectCapabilities._
-    import org.combinators.ep.generator.Understands
-    import org.combinators.ep.generator.paradigm.FindClass
 
     // all type cases that were defined AFTER last Exp need to be registered
     val flat = domain.flatten
@@ -561,7 +562,7 @@ trait TriviallyClean extends SharedOO {
     val ordered = domain.inChronologicalOrder.reverse // ensures proper topological ordering
     val seqs = flat.typeCases.map(tpe => (tpe, ordered.find(m => dataTypeCasesWithNewOperations(m).exists(pair => pair._1 == tpe)).get))
 
-    val dtpeRep = TypeRep.DataType(domain.baseDataType)
+    val dtpeRep = DomainTpeRep.DataType(domain.baseDataType)
     for {
       _ <- forEach(seqs) { case (tpeCase, model) => // passes on capabilities so it knows which generators to use...
         for {

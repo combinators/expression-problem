@@ -1,8 +1,10 @@
 package org.combinators.ep.domain.math     /*DD:LI:AI*/
 
-import org.combinators.ep.domain._
-import org.combinators.ep.domain.abstractions._
-import org.combinators.ep.domain.instances._
+import org.combinators.cogen.InstanceRep
+import org.combinators.cogen.abstractions.TestCase
+import org.combinators.ep.domain.*
+import org.combinators.ep.domain.abstractions.*
+import org.combinators.ep.domain.instances.*
 
 object M0 extends Evolution {
   override implicit def getModel:GenericModel = MathDomain.baseModel.evolve("m0", Seq(Lit, Add), Seq(Eval))

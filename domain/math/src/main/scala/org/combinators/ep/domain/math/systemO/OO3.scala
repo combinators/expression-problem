@@ -1,7 +1,8 @@
 package org.combinators.ep.domain.math.systemO   /*DD:LI:AI*/
 
-import org.combinators.ep.domain._
-import org.combinators.ep.domain.abstractions._
+import org.combinators.cogen.abstractions.TestCase
+import org.combinators.ep.domain.*
+import org.combinators.ep.domain.abstractions.*
 
 object OO3 extends Evolution {
   override implicit def getModel:GenericModel = OO2.getModel.extend("oo3", Seq(OO1.getModel))

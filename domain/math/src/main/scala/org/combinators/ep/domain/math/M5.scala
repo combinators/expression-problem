@@ -1,8 +1,10 @@
 package org.combinators.ep.domain.math      /*DD:LI:AI*/
 
+import org.combinators.cogen.InstanceRep
+import org.combinators.cogen.abstractions.{TestCase, TypeRep}
 import org.combinators.ep.domain._
-import org.combinators.ep.domain.abstractions.{EqualsCompositeTestCase, EqualsTestCase, Operation, TestCase, TypeRep}
-import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
+import org.combinators.ep.domain.abstractions.{EqualsCompositeTestCase, EqualsTestCase, Operation}
+import org.combinators.ep.domain.instances.DataTypeInstance
 import org.combinators.ep.domain.tree._
 import org.combinators.ep.domain.math.M0.{Lit, Add, AddInst, LitInst, DoubleInst}
 import org.combinators.ep.domain.math.M1.{Sub, SubInst}

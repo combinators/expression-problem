@@ -1,14 +1,14 @@
 package org.combinators.ep.domain.math.eips.systemJ   /*DD:LI:AI*/
 
+import org.combinators.cogen.paradigm.AnyParadigm
 import org.combinators.ep.domain.abstractions.Operation
 import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.ep.domain.math.systemJ
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
-import org.combinators.ep.generator.paradigm.AnyParadigm
-import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Booleans, Equality}
+import AnyParadigm.syntax.forEach
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Booleans, Equality}
 import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
 
 object J2 {

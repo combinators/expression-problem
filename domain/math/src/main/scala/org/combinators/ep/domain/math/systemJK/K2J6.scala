@@ -1,7 +1,8 @@
 package org.combinators.ep.domain.math.systemJK    /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{EqualsCompositeTestCase, EqualsTestCase, TestCase}
-import org.combinators.ep.domain.instances.InstanceRep
+import org.combinators.cogen.InstanceRep
+import org.combinators.cogen.abstractions.TestCase
+import org.combinators.ep.domain.abstractions.{EqualsCompositeTestCase, EqualsTestCase}
 import org.combinators.ep.domain.math.M0
 import org.combinators.ep.domain.math.M0.{AddInst, DoubleInst, Eval, Lit, LitInst, addi, liti}
 import org.combinators.ep.domain.math.systemJ.J1.subi

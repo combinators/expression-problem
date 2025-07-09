@@ -1,14 +1,15 @@
 package org.combinators.ep.domain.math.eips.systemJK    /*DD:LI:AI*/
 
 import org.combinators.cogen.InstanceRep
-import org.combinators.cogen.abstractions.TypeRep
+import org.combinators.ep.domain.instances.DataTypeInstanceRep
+import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.AnyParadigm
-import org.combinators.cogen.paradigm.control.Imperative
+import org.combinators.cogen.paradigm.control
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, RealArithmetic}
 import org.combinators.ep.domain.abstractions.Operation
 import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.ep.domain.math.systemJK
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
@@ -19,7 +20,7 @@ object J8 {
   (j7Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
   (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiRealArithmetic: RealArithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
-   ffiImper: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]):
+   ffiImper: control.Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val j8Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.systemJK.J8.getModel

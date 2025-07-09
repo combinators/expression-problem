@@ -1,14 +1,15 @@
 package org.combinators.ep.domain.math.eips      /*DD:LI:AI*/
 
 import org.combinators.cogen.paradigm.AnyParadigm
-import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation}
+import org.combinators.ep.domain.abstractions.{DataTypeCase, DomainTpeRep, Operation}
+import org.combinators.ep.domain.extensions._
 import org.combinators.ep.domain.math
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
+import org.combinators.cogen.Command.Generator
+import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
 import AnyParadigm.syntax.forEach
-import org.combinators.cogen.abstractions.TypeRep
+import org.combinators.cogen.{Command, TypeRep}
 import org.combinators.cogen.paradigm.ffi.{Booleans, Equality}
 
 object M6 {
@@ -82,7 +83,7 @@ object M6 {
                   Request(Operation.asTree, Map.empty)
                 )
               )
-              treeTpe <- toTargetLanguageType(TypeRep.Tree)
+              treeTpe <- toTargetLanguageType(DomainTpeRep.Tree)
               eq <- areEqual(treeTpe, selfTree, otherTree)
             } yield Some(eq)
 

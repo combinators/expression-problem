@@ -1,7 +1,9 @@
 package org.combinators.ep.domain.math     /*DD:LI:AI*/
 
 import org.combinators.cogen.InstanceRep
-import org.combinators.cogen.abstractions.TestCase
+import org.combinators.cogen.TypeRep
+import org.combinators.ep.domain.instances.DataTypeInstanceRep
+import org.combinators.cogen.TestCase
 import org.combinators.ep.domain.*
 import org.combinators.ep.domain.abstractions.*
 import org.combinators.ep.domain.instances.*
@@ -23,7 +25,7 @@ object M0 extends Evolution {
     DataTypeInstance(Lit, Seq(DoubleInst(d)))
 
   def AddInst(left:DataTypeInstance, right:DataTypeInstance): DataTypeInstance =
-    DataTypeInstance(Add, Seq(InstanceRep(left), InstanceRep(right)))
+    DataTypeInstance(Add, Seq(DataTypeInstanceRep(left), DataTypeInstanceRep(right)))
 
   val addi:DataTypeInstance = AddInst(LitInst(1.0), LitInst(2.0))
   val liti:DataTypeInstance = LitInst(5.0)

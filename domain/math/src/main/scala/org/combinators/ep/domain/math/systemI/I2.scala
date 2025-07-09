@@ -1,7 +1,8 @@
 package org.combinators.ep.domain.math.systemI    /*DD:LI:AI*/
 
 import org.combinators.cogen.InstanceRep
-import org.combinators.cogen.abstractions.TestCase
+import org.combinators.ep.domain.instances.DataTypeInstanceRep
+import org.combinators.cogen.TestCase
 import org.combinators.ep.domain.abstractions.{DataTypeCase, EqualsTestCase}
 import org.combinators.ep.domain.instances.DataTypeInstance
 import org.combinators.ep.domain.math.M0.{DoubleInst, Eval, LitInst}
@@ -17,7 +18,7 @@ object I2 extends Evolution {
   lazy val Power: DataTypeCase = DataTypeCase.binary("Power")(MathDomain.getModel)
 
   def PowerInst(base: DataTypeInstance, exponent: DataTypeInstance): DataTypeInstance =
-    DataTypeInstance(Power, Seq(InstanceRep(base), InstanceRep(exponent)))
+    DataTypeInstance(Power, Seq(DataTypeInstanceRep(base), DataTypeInstanceRep(exponent)))
 
   override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(I1)
 

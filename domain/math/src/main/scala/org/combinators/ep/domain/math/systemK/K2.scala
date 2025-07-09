@@ -1,7 +1,9 @@
 package org.combinators.ep.domain.math.systemK    /*DD:LI:AI*/
 
 import org.combinators.cogen.InstanceRep
-import org.combinators.cogen.abstractions.TestCase
+import org.combinators.cogen.TypeRep
+import org.combinators.ep.domain.instances.DataTypeInstanceRep
+import org.combinators.cogen.TestCase
 import org.combinators.ep.domain.abstractions.*
 import org.combinators.ep.domain.math.M0.{AddInst, Eval, LitInst, addi}
 import org.combinators.ep.domain.math.M1.SubInst
@@ -16,7 +18,7 @@ object K2 extends Evolution {
   override implicit def getModel: GenericModel = K1.getModel.evolve("k2", Seq.empty, Seq(Simplify, Collect))
 
   // this is a producer method (as you can tell by its return type).
-  lazy val Simplify = Operation("simplify", TypeRep.DataType(MathDomain.getModel.baseDataType))
+  lazy val Simplify = Operation("simplify", DomainTpeRep.DataType(MathDomain.getModel.baseDataType))
 
   def ListDoubleInst(doubles: Seq[scala.Double]): InstanceRep = InstanceRep(TypeRep.Sequence(TypeRep.Double))(doubles)
 

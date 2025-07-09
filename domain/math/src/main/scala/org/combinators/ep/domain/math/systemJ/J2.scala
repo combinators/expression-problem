@@ -1,9 +1,9 @@
 package org.combinators.ep.domain.math.systemJ    /*DD:LI:AI*/
 
-import org.combinators.cogen.InstanceRep
-import org.combinators.cogen.abstractions.{Tag, TestCase}
+import org.combinators.cogen.{InstanceRep, TypeRep}
+import org.combinators.cogen.{Tag, TestCase}
 import org.combinators.ep.domain.abstractions.*
-import org.combinators.ep.domain.instances.DataTypeInstance
+import org.combinators.ep.domain.instances.{DataTypeInstance, DataTypeInstanceRep}
 import org.combinators.ep.domain.math.M0.{AddInst, DoubleInst, Eval, LitInst, addi, liti}
 import org.combinators.ep.domain.math.systemJ.J1.{MultByTestCase, SubInst, subi}
 import org.combinators.ep.domain.math.{M0, MathDomain}
@@ -34,12 +34,12 @@ object J2 extends Evolution {
   // and then use those structure(s) to determine equality.
 
   // EQL depends on past IsXXX which you know from ALL PAST evolutions
-  lazy val Eql = Operation("eql", TypeRep.Boolean, Seq(Parameter("other", TypeRep.DataType(J1.getModel.baseDataType)))) // base case from prior evolution
+  lazy val Eql = Operation("eql", TypeRep.Boolean, Seq(Parameter("other", DomainTpeRep.DataType(J1.getModel.baseDataType)))) // base case from prior evolution
 
   lazy val Mult = DataTypeCase.binary("Mult")(MathDomain.getModel)
 
   def MultInst(left: DataTypeInstance, right: DataTypeInstance): DataTypeInstance =
-    DataTypeInstance(Mult, Seq(InstanceRep(left), InstanceRep(right)))
+    DataTypeInstance(Mult, Seq(DataTypeInstanceRep(left), DataTypeInstanceRep(right)))
 
   // Tests
   // (5/7) / (7-(2*3) --> just (5/7)
@@ -52,7 +52,7 @@ object J2 extends Evolution {
         instance,
         op,
         InstanceRep(TypeRep.Boolean)(result),
-        InstanceRep.apply(instance1)(getModel)
+        DataTypeInstanceRep.apply(instance1)(getModel)
       )
     }
   }
@@ -112,7 +112,7 @@ object J2 extends Evolution {
 
   def tests: Seq[TestCase] = Seq(
     EqualsTestCase(getModel.baseDataType, multi, Eval, M0.DoubleInst(6.0)),
-    MultByTestCase(MultInst(LitInst(3.0), LitInst(2.0)), InstanceRep(LitInst(5.0)), DoubleInst(30.0)),
-    MultByTestCase(MultInst(LitInst(-3.0), LitInst(2.0)), InstanceRep(LitInst(-5.0)), DoubleInst(30.0)),
+    MultByTestCase(MultInst(LitInst(3.0), LitInst(2.0)), DataTypeInstanceRep(LitInst(5.0)), DoubleInst(30.0)),
+    MultByTestCase(MultInst(LitInst(-3.0), LitInst(2.0)), DataTypeInstanceRep(LitInst(-5.0)), DoubleInst(30.0)),
   ) ++ eqls(all_instances) ++ not_eqls(all_instances) ++ struct_not_eqls(all_instances, lhs, rhs)
 }

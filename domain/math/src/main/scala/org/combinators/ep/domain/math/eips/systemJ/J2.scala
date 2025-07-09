@@ -1,15 +1,17 @@
 package org.combinators.ep.domain.math.eips.systemJ   /*DD:LI:AI*/
 
 import org.combinators.cogen.paradigm.AnyParadigm
+import org.combinators.ep.domain.extensions._
 import org.combinators.ep.domain.abstractions.Operation
 import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.ep.domain.math.systemJ
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
 import AnyParadigm.syntax.forEach
+import org.combinators.cogen.Command
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Booleans, Equality}
-import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
+import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
 object J2 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]

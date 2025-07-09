@@ -1,9 +1,9 @@
 package org.combinators.ep.domain.math.systemJ    /*DD:LI:AI*/
 
-import org.combinators.cogen.InstanceRep
-import org.combinators.cogen.abstractions.TestCase
+import org.combinators.cogen.{InstanceRep, TypeRep}
+import org.combinators.cogen.TestCase
 import org.combinators.ep.domain.abstractions.*
-import org.combinators.ep.domain.instances.DataTypeInstance
+import org.combinators.ep.domain.instances.{DataTypeInstance, DataTypeInstanceRep}
 import org.combinators.ep.domain.math.M0.{AddInst, DoubleInst, Eval, LitInst, addi}
 import org.combinators.ep.domain.math.systemJ.J1.{MultByTestCase, subi}
 import org.combinators.ep.domain.math.systemJ.J2.{eqls, multi, not_eqls, struct_not_eqls}
@@ -24,10 +24,10 @@ object J3 extends Evolution {
 
   // Tests
   def NegInst(inner: DataTypeInstance): DataTypeInstance =
-    DataTypeInstance(Neg, Seq(InstanceRep(inner)))
+    DataTypeInstance(Neg, Seq(DataTypeInstanceRep(inner)))
 
   def DivdInst(left: DataTypeInstance, right: DataTypeInstance): DataTypeInstance =
-    DataTypeInstance(Divd, Seq(InstanceRep(left), InstanceRep(right)))
+    DataTypeInstance(Divd, Seq(DataTypeInstanceRep(left), DataTypeInstanceRep(right)))
 
   // Tests
   val negi: DataTypeInstance = NegInst(LitInst(3.0))
@@ -55,8 +55,8 @@ object J3 extends Evolution {
     EqualsTestCase(getModel.baseDataType, subi, PrettyP, StringInst("(1.0-2.0)")),
 
     EqualsTestCase(getModel.baseDataType, AddInst(subi, addi), PrettyP, StringInst("((1.0-2.0)+(1.0+2.0))")),
-    MultByTestCase(divdi, InstanceRep(LitInst(3.0)), DoubleInst(6.0)),
-    MultByTestCase(negi, InstanceRep(LitInst(3.0)), DoubleInst(-9.0)),
+    MultByTestCase(divdi, DataTypeInstanceRep(LitInst(3.0)), DoubleInst(6.0)),
+    MultByTestCase(negi, DataTypeInstanceRep(LitInst(3.0)), DoubleInst(-9.0)),
 
   ) ++ eqls(all_instances) ++ not_eqls(all_instances) ++ struct_not_eqls(all_instances, lhs, rhs)
 }

@@ -1,6 +1,6 @@
 package org.combinators.ep.domain.shape    /*DD:LI:AI*/
 
-import org.combinators.cogen.abstractions.TestCase
+import org.combinators.cogen.TestCase
 import org.combinators.ep.domain._
 
 /**

@@ -1,7 +1,8 @@
 package org.combinators.ep.domain.math.systemO  /*DD:LI:AI*/
 
 import org.combinators.cogen.InstanceRep
-import org.combinators.cogen.abstractions.TestCase
+import org.combinators.ep.domain.instances.DataTypeInstanceRep
+import org.combinators.cogen.TestCase
 import org.combinators.ep.domain.*
 import org.combinators.ep.domain.abstractions.*
 import org.combinators.ep.domain.instances.DataTypeInstance
@@ -15,7 +16,7 @@ object OD1 extends Evolution {
   lazy val Mult: DataTypeCase = DataTypeCase.binary("Mult")(MathDomain.getModel)
 
   def MultInst(left:DataTypeInstance, right:DataTypeInstance): DataTypeInstance =
-    DataTypeInstance(Mult, Seq(InstanceRep(left), InstanceRep(right)))
+    DataTypeInstance(Mult, Seq(DataTypeInstanceRep(left), DataTypeInstanceRep(right)))
 
   val od1: DataTypeInstance = MultInst(LitInst(2.0), LitInst(3.0))
 

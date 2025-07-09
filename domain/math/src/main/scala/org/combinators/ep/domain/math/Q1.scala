@@ -1,7 +1,8 @@
 package org.combinators.ep.domain.math   /*DD:LI:AI*/
 
 import org.combinators.cogen.InstanceRep
-import org.combinators.cogen.abstractions.{TestCase, TypeRep}
+import org.combinators.ep.domain.instances.DataTypeInstanceRep
+import org.combinators.cogen.{TestCase, TypeRep}
 import org.combinators.ep.domain.abstractions.{DataTypeCase, EqualsTestCase, Operation}
 import org.combinators.ep.domain.instances.DataTypeInstance
 import org.combinators.ep.domain.math.M0.{Eval, LitInst}
@@ -16,7 +17,7 @@ object Q1 extends Evolution {
   lazy val Identifier = Operation("id", TypeRep.Int)
 
   def SqrtInst(inner:DataTypeInstance): DataTypeInstance =
-    DataTypeInstance(Sqrt, Seq(InstanceRep(inner)))
+    DataTypeInstance(Sqrt, Seq(DataTypeInstanceRep(inner)))
 
   // Tests
   val q1_d1 = SqrtInst(LitInst(5.0))

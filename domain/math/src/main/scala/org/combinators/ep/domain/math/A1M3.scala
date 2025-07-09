@@ -1,7 +1,8 @@
 package org.combinators.ep.domain.math     /*DD:LI:AI*/
 
 import org.combinators.cogen.InstanceRep
-import org.combinators.cogen.abstractions.TestCase
+import org.combinators.ep.domain.instances.DataTypeInstanceRep
+import org.combinators.cogen.TestCase
 import org.combinators.ep.domain.{Evolution, GenericModel}
 import org.combinators.ep.domain.abstractions.EqualsCompositeTestCase
 import org.combinators.ep.domain.math.M0.{Eval, LitInst}
@@ -18,7 +19,7 @@ object A1M3 extends Evolution {
   override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(M3, A1)
 
   def tests: Seq[TestCase] = Seq(
-    EqualsCompositeTestCase(getModel.baseDataType, a1m3_t, M0.DoubleInst(30.0), (I1.MultBy, Seq(InstanceRep(LitInst(3.0)))), (Eval, Seq.empty))
+    EqualsCompositeTestCase(getModel.baseDataType, a1m3_t, M0.DoubleInst(30.0), (I1.MultBy, Seq(DataTypeInstanceRep(LitInst(3.0)))), (Eval, Seq.empty))
   )
 }
 

@@ -1,9 +1,10 @@
 package org.combinators.ep.domain.math      /*DD:LI:AI*/
 
 import org.combinators.cogen.InstanceRep
-import org.combinators.cogen.abstractions.{TestCase, TypeRep}
-import org.combinators.ep.domain._
-import org.combinators.ep.domain.abstractions.{EqualsCompositeTestCase, EqualsTestCase, Operation}
+import org.combinators.ep.domain.instances.DataTypeInstanceRep
+import org.combinators.cogen.{TestCase, TypeRep}
+import org.combinators.ep.domain.*
+import org.combinators.ep.domain.abstractions.{DomainTpeRep, EqualsCompositeTestCase, EqualsTestCase, Operation}
 import org.combinators.ep.domain.math.M0.{AddInst, Eval, LitInst}
 import org.combinators.ep.domain.math.M1.SubInst
 import org.combinators.ep.domain.math.M2.{PrettyP, StringInst}
@@ -13,7 +14,7 @@ object M4 extends Evolution {
   override implicit def getModel:GenericModel = M3.getModel.evolve("m4", Seq.empty, Seq(Simplify, Collect))
 
   // this is a producer method (as you can tell by its return type).
-  lazy val Simplify = Operation("simplify", TypeRep.DataType(MathDomain.getModel.baseDataType))
+  lazy val Simplify = Operation("simplify", DomainTpeRep.DataType(MathDomain.getModel.baseDataType))
 
   // m4:model evolution.
   // -------------------

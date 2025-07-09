@@ -1,11 +1,11 @@
 package org.combinators.ep.domain.math.eips      /*DD:LI:AI*/
 
-import org.combinators.cogen.abstractions.TypeRep
+import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.AnyParadigm
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Trees}
-import org.combinators.ep.domain.abstractions.{Attribute, DataTypeCase, Operation}
+import org.combinators.ep.domain.abstractions.{Attribute, DataTypeCase, Operation, DomainTpeRep}
 import org.combinators.ep.domain.math
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
@@ -57,7 +57,7 @@ object M5 {
           case op if op == Operation.asTree =>
             for {
               children <- forEach (onRequest.attributes.toSeq) {
-                  case (att@Attribute(_, TypeRep.DataType(dt)), attExp) =>
+                  case (att@Attribute(_, DomainTpeRep.DataType(dt)), attExp) =>
                     forApproach.dispatch(
                       SendRequest(
                         attExp,

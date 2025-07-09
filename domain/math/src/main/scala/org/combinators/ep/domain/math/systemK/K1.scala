@@ -1,7 +1,8 @@
 package org.combinators.ep.domain.math.systemK    /*DD:LI:AI*/
 
 import org.combinators.cogen.InstanceRep
-import org.combinators.cogen.abstractions.TestCase
+import org.combinators.ep.domain.instances.DataTypeInstanceRep
+import org.combinators.cogen.TestCase
 import org.combinators.ep.domain.abstractions.{DataTypeCase, EqualsTestCase}
 import org.combinators.ep.domain.instances.DataTypeInstance
 import org.combinators.ep.domain.math.M0.{DoubleInst, Eval, LitInst}
@@ -17,7 +18,7 @@ object K1 extends Evolution {
   lazy val Power: DataTypeCase = DataTypeCase.binary("Power")(MathDomain.getModel)
 
   def PowerInst(base: DataTypeInstance, exponent: DataTypeInstance): DataTypeInstance =
-    DataTypeInstance(Power, Seq(InstanceRep(base), InstanceRep(exponent)))
+    DataTypeInstance(Power, Seq(DataTypeInstanceRep(base), DataTypeInstanceRep(exponent)))
 
   val powi = PowerInst(LitInst(3.0), LitInst(5.0))
 
@@ -34,6 +35,6 @@ object K1 extends Evolution {
   def tests: Seq[TestCase] = Seq(
     EqualsTestCase(getModel.baseDataType, PowerInst(LitInst(2.0), LitInst(5.0)), Eval, DoubleInst(32.0)),
 
-    MultByTestCase(powi, InstanceRep(LitInst(3.0)), DoubleInst(729.0)),
+    MultByTestCase(powi, DataTypeInstanceRep(LitInst(3.0)), DoubleInst(729.0)),
   ) ++ eqls(all_instances) ++ not_eqls(all_instances) ++ struct_not_eqls(all_instances, lhs, rhs)
 }

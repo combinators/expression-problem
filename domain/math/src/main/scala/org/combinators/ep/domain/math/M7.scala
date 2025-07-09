@@ -1,8 +1,9 @@
 package org.combinators.ep.domain.math   /*DD:LI:AI*/
 
 import org.combinators.cogen.InstanceRep
-import org.combinators.cogen.abstractions.{TestCase, TypeRep}
-import org.combinators.ep.domain.abstractions.{DataTypeCase, EqualsCompositeTestCase, Operation, Parameter}
+import org.combinators.ep.domain.instances.DataTypeInstanceRep
+import org.combinators.cogen.{TestCase, TypeRep}
+import org.combinators.ep.domain.abstractions.{DataTypeCase, DomainTpeRep, EqualsCompositeTestCase, Operation, Parameter}
 import org.combinators.ep.domain.instances.DataTypeInstance
 import org.combinators.ep.domain.{Evolution, GenericModel}
 import org.combinators.ep.domain.math.M0.{AddInst, DoubleInst, Eval, LitInst}
@@ -18,7 +19,7 @@ object M7 extends Evolution {
 
   // add PowBy operation
 
-  lazy val base = TypeRep.DataType(M2.getModel.baseDataType)
+  lazy val base = DomainTpeRep.DataType(M2.getModel.baseDataType)
   lazy val PowBy = Operation("powBy", base, Seq(Parameter("other", base)))
 
   object PowByTestCase {
@@ -40,8 +41,8 @@ object M7 extends Evolution {
 
   def tests:Seq[TestCase] = Seq(
     PowByTestCase(AddInst(LitInst(1.0), LitInst(12.0)),
-      InstanceRep(LitInst(4.0)), DoubleInst(13.0*13.0*13.0*13.0)),
+      DataTypeInstanceRep(LitInst(4.0)), DoubleInst(13.0*13.0*13.0*13.0)),
     PowByTestCase(LitInst(12.0),
-      InstanceRep(LitInst(0.0)), DoubleInst(1))
+      DataTypeInstanceRep(LitInst(0.0)), DoubleInst(1))
   )
 }

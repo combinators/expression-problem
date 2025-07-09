@@ -1,12 +1,13 @@
 package org.combinators.ep.domain.math      /*DD:LI:AI*/
 
 import org.combinators.cogen.InstanceRep
-import org.combinators.cogen.abstractions.{TestCase, TypeRep}
-import org.combinators.ep.domain._
-import org.combinators.ep.domain.abstractions.{EqualsCompositeTestCase, EqualsTestCase, Operation}
+import org.combinators.ep.domain.instances.DataTypeInstanceRep
+import org.combinators.cogen.{TestCase, TypeRep}
+import org.combinators.ep.domain.*
+import org.combinators.ep.domain.abstractions.{DomainTpeRep, EqualsCompositeTestCase, EqualsTestCase, Operation}
 import org.combinators.ep.domain.instances.DataTypeInstance
-import org.combinators.ep.domain.tree._
-import org.combinators.ep.domain.math.M0.{Lit, Add, AddInst, LitInst, DoubleInst}
+import org.combinators.ep.domain.tree.*
+import org.combinators.ep.domain.math.M0.{Add, AddInst, DoubleInst, Lit, LitInst}
 import org.combinators.ep.domain.math.M1.{Sub, SubInst}
 import org.combinators.ep.domain.math.M2.{PrettyP, StringInst}
 import org.combinators.ep.domain.math.M3.{Divd, DivdInst, Mult, MultInst, Neg, NegInst}
@@ -86,9 +87,9 @@ object M5 extends Evolution {
     SameTestCase(m5_s1, m5_s3, expected = true),
     SameTestCase(m5_all, m5_all, expected = true),
 
-    EqualsTestCase(getModel.baseDataType, m5_all, Operation.asTree, InstanceRep(TypeRep.Tree)(tree_m5_all)),
+    EqualsTestCase(getModel.baseDataType, m5_all, Operation.asTree, InstanceRep(DomainTpeRep.Tree)(tree_m5_all)),
     EqualsCompositeTestCase(getModel.baseDataType, m5_all, StringInst("(-2.0-((1.0-976.0)*((1.0*976.0)+(1.0/3.0))))"), (PrettyP, Seq.empty)),
 
-    EqualsCompositeTestCase(getModel.baseDataType, m5_s4, InstanceRep(TypeRep.Tree)(treeSimplified), (Simplify, Seq.empty), (Operation.asTree, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, m5_s4, InstanceRep(DomainTpeRep.Tree)(treeSimplified), (Simplify, Seq.empty), (Operation.asTree, Seq.empty)),
   )
 }

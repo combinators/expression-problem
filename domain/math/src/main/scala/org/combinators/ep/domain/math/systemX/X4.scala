@@ -1,7 +1,8 @@
 package org.combinators.ep.domain.math.systemX    /*DD:LI:AI*/
 
 import org.combinators.cogen.InstanceRep
-import org.combinators.cogen.abstractions.TestCase
+import org.combinators.ep.domain.instances.DataTypeInstanceRep
+import org.combinators.cogen.TestCase
 import org.combinators.ep.domain.abstractions.{DataTypeCase, EqualsTestCase}
 import org.combinators.ep.domain.instances.DataTypeInstance
 import org.combinators.ep.domain.math.M0.{Eval, LitInst}
@@ -14,7 +15,7 @@ object X4 extends Evolution {
   lazy val Neg = DataTypeCase.unary("Neg")(MathDomain.getModel)
 
   def NegInst(inner: DataTypeInstance): DataTypeInstance =
-    DataTypeInstance(Neg, Seq(InstanceRep(inner)))
+    DataTypeInstance(Neg, Seq(DataTypeInstanceRep(inner)))
 
   // Tests
   val x4_1 = NegInst(LitInst(5.0))

@@ -1,6 +1,6 @@
 package org.combinators.ep.domain.math.systemO   /*DD:LI:AI*/
 
-import org.combinators.cogen.abstractions.{Tag, TestCase}
+import org.combinators.cogen.{Tag, TestCase}
 import org.combinators.ep.domain.*
 import org.combinators.ep.domain.abstractions.*
 import org.combinators.ep.domain.instances.DataTypeInstance

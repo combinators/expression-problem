@@ -1,14 +1,15 @@
 package org.combinators.ep.domain.math.eips.systemJ   /*DD:LI:AI*/
 
-import org.combinators.cogen.abstractions.TypeRep
+import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.AnyParadigm
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Trees}
 import org.combinators.ep.domain.abstractions.{Attribute, Operation}
 import org.combinators.ep.domain.{GenericModel, math}
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
+import org.combinators.ep.domain.abstractions.DomainTpeRep
 
 object J4 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
@@ -54,7 +55,7 @@ object J4 {
           case op if op == Operation.asTree =>
             for {
               children <- forEach(onRequest.attributes.toSeq) {
-                case (att@Attribute(_, TypeRep.DataType(dt)), attExp) =>
+                case (att@Attribute(_, DomainTpeRep.DataType(dt)), attExp) =>
                   forApproach.dispatch(
                     SendRequest(
                       attExp,

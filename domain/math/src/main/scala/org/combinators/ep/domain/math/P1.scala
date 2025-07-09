@@ -1,9 +1,10 @@
 package org.combinators.ep.domain.math   /*DD:LI:AI*/
 
 import org.combinators.cogen.InstanceRep
-import org.combinators.cogen.abstractions.{TestCase, TypeRep}
-import org.combinators.ep.domain._
-import org.combinators.ep.domain.abstractions.{Attribute, DataTypeCase, EqualsTestCase, Operation, Parameter}
+import org.combinators.ep.domain.instances.DataTypeInstanceRep
+import org.combinators.cogen.{TestCase, TypeRep}
+import org.combinators.ep.domain.*
+import org.combinators.ep.domain.abstractions.{Attribute, DataTypeCase, DomainTpeRep, EqualsTestCase, Operation, Parameter}
 import org.combinators.ep.domain.instances.DataTypeInstance
 import org.combinators.ep.domain.math.M0.{Eval, LitInst}
 
@@ -18,9 +19,9 @@ object P1 extends Evolution {
   // -------------------
   object independent {
     val height:String = "height"
-    val P = Attribute("P", TypeRep.DataType(MathDomain.getModel.baseDataType))
-    val r = Attribute("r", TypeRep.DataType(MathDomain.getModel.baseDataType))
-    val n = Attribute("n", TypeRep.DataType(MathDomain.getModel.baseDataType))
+    val P = Attribute("P", DomainTpeRep.DataType(MathDomain.getModel.baseDataType))
+    val r = Attribute("r", DomainTpeRep.DataType(MathDomain.getModel.baseDataType))
+    val n = Attribute("n", DomainTpeRep.DataType(MathDomain.getModel.baseDataType))
     val countBetween:String = "countBetween"
     val low:String = "low"
     val high:String = "high"
@@ -39,11 +40,11 @@ object P1 extends Evolution {
   lazy val Amortized =  DataTypeCase("Amortized", Seq(independent.P, independent.r, independent.n))
 
   def AmortizedInst(P:DataTypeInstance, r:DataTypeInstance, n:DataTypeInstance): DataTypeInstance =
-    DataTypeInstance(Amortized, Seq(InstanceRep(P), InstanceRep(r), InstanceRep(n)))
+    DataTypeInstance(Amortized, Seq(DataTypeInstanceRep(P), DataTypeInstanceRep(r), DataTypeInstanceRep(n)))
 
   val p1_a1 = AmortizedInst(LitInst(100000.0), LitInst(0.06), LitInst(360.0))
 
   def tests:Seq[TestCase] = Seq(
-    EqualsTestCase(getModel.baseDataType, p1_a1, Eval, InstanceRep(LitInst(599.55)))
+    EqualsTestCase(getModel.baseDataType, p1_a1, Eval, DataTypeInstanceRep(LitInst(599.55)))
   )
 }

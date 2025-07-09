@@ -1,6 +1,6 @@
 package org.combinators.ep.domain.math      /*DD:LI:AI*/
 
-import org.combinators.cogen.abstractions.TestCase
+import org.combinators.cogen.TestCase
 import org.combinators.ep.domain.*
 import org.combinators.ep.domain.abstractions.*
 import org.combinators.ep.domain.instances.*
@@ -17,11 +17,11 @@ object M3 extends Evolution {
   lazy val Divd = DataTypeCase.binary("Divd")(MathDomain.getModel)
 
   def NegInst(inner:DataTypeInstance): DataTypeInstance =
-    DataTypeInstance(Neg, Seq(InstanceRep(inner)))
+    DataTypeInstance(Neg, Seq(DataTypeInstanceRep(inner)))
   def MultInst(left:DataTypeInstance, right:DataTypeInstance): DataTypeInstance =
-    DataTypeInstance(Mult, Seq(InstanceRep(left), InstanceRep(right)))
+    DataTypeInstance(Mult, Seq(DataTypeInstanceRep(left), DataTypeInstanceRep(right)))
   def DivdInst(left:DataTypeInstance, right:DataTypeInstance): DataTypeInstance =
-    DataTypeInstance(Divd, Seq(InstanceRep(left), InstanceRep(right)))
+    DataTypeInstance(Divd, Seq(DataTypeInstanceRep(left), DataTypeInstanceRep(right)))
 
   // Tests
   val m3_d1 = NegInst(LitInst(5.0))

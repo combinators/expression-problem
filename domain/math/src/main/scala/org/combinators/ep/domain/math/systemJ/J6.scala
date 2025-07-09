@@ -1,7 +1,8 @@
 package org.combinators.ep.domain.math.systemJ    /*DD:LI:AI*/
 
 import org.combinators.cogen.InstanceRep
-import org.combinators.cogen.abstractions.TestCase
+import org.combinators.ep.domain.instances.DataTypeInstanceRep
+import org.combinators.cogen.TestCase
 import org.combinators.ep.domain.abstractions.*
 import org.combinators.ep.domain.instances.DataTypeInstance
 import org.combinators.ep.domain.math.M0.{AddInst, DoubleInst, Eval, LitInst}
@@ -20,7 +21,7 @@ object J6 extends Evolution {
   }
 
   // add PowBy operation
-  lazy val base = TypeRep.DataType(J3.getModel.baseDataType)
+  lazy val base = DomainTpeRep.DataType(J3.getModel.baseDataType)
   lazy val PowBy = Operation("powBy", base, Seq(Parameter("other", base)))
 
   object PowByTestCase {
@@ -42,15 +43,15 @@ object J6 extends Evolution {
 
   def tests: Seq[TestCase] = Seq(
     PowByTestCase(AddInst(LitInst(1.0), LitInst(12.0)),
-      InstanceRep(LitInst(4.0)), DoubleInst(13.0 * 13.0 * 13.0 * 13.0)),
+      DataTypeInstanceRep(LitInst(4.0)), DoubleInst(13.0 * 13.0 * 13.0 * 13.0)),
     PowByTestCase(LitInst(12.0),
-      InstanceRep(LitInst(0.0)), DoubleInst(1.0)),
+      DataTypeInstanceRep(LitInst(0.0)), DoubleInst(1.0)),
 
-    PowByTestCase(SubInst(LitInst(13.0), LitInst(5.0)), InstanceRep(LitInst(4.0)), DoubleInst(8.0 * 8.0 * 8.0 * 8.0)),
-    PowByTestCase(LitInst(4.0), InstanceRep(LitInst(-1.0)), DoubleInst(0.25)),
-    PowByTestCase(DivdInst(LitInst(4.0), LitInst(2.0)), InstanceRep(LitInst(4.0)), DoubleInst(2.0 * 2.0 * 2.0 * 2.0)),
-    PowByTestCase(MultInst(LitInst(4.0), LitInst(2.0)), InstanceRep(LitInst(4.0)), DoubleInst(8.0 * 8.0 * 8.0 * 8.0)),
-    PowByTestCase(NegInst(LitInst(2.0)), InstanceRep(LitInst(4.0)), DoubleInst((-2.0) * (-2.0) * (-2.0) * (-2.0)))
+    PowByTestCase(SubInst(LitInst(13.0), LitInst(5.0)), DataTypeInstanceRep(LitInst(4.0)), DoubleInst(8.0 * 8.0 * 8.0 * 8.0)),
+    PowByTestCase(LitInst(4.0), DataTypeInstanceRep(LitInst(-1.0)), DoubleInst(0.25)),
+    PowByTestCase(DivdInst(LitInst(4.0), LitInst(2.0)), DataTypeInstanceRep(LitInst(4.0)), DoubleInst(2.0 * 2.0 * 2.0 * 2.0)),
+    PowByTestCase(MultInst(LitInst(4.0), LitInst(2.0)), DataTypeInstanceRep(LitInst(4.0)), DoubleInst(8.0 * 8.0 * 8.0 * 8.0)),
+    PowByTestCase(NegInst(LitInst(2.0)), DataTypeInstanceRep(LitInst(4.0)), DoubleInst((-2.0) * (-2.0) * (-2.0) * (-2.0)))
 
   )
 }

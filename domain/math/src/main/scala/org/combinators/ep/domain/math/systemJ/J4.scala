@@ -1,7 +1,6 @@
 package org.combinators.ep.domain.math.systemJ    /*DD:LI:AI*/
 
-import org.combinators.cogen.InstanceRep
-import org.combinators.cogen.abstractions.TestCase
+import org.combinators.cogen.{InstanceRep, TestCase, TypeRep}
 import org.combinators.ep.domain.abstractions.*
 import org.combinators.ep.domain.instances.DataTypeInstance
 import org.combinators.ep.domain.math.M0.{Add, AddInst, DoubleInst, Lit, LitInst}
@@ -87,7 +86,7 @@ object J4 extends Evolution {
     SameTestCase(m5_s1, m5_s3, expected = true),
     SameTestCase(m5_all, m5_all, expected = true),
 
-    EqualsTestCase(getModel.baseDataType, m5_all, Operation.asTree, InstanceRep(TypeRep.Tree)(tree_m5_all)),
+    EqualsTestCase(getModel.baseDataType, m5_all, Operation.asTree, InstanceRep(DomainTpeRep.Tree)(tree_m5_all)),
     EqualsCompositeTestCase(getModel.baseDataType, m5_all, StringInst("(-2.0-((1.0-976.0)*((1.0*976.0)+(1.0/3.0))))"), (PrettyP, Seq.empty)),
   )
 }

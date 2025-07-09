@@ -1,7 +1,8 @@
 package org.combinators.ep.domain.math     /*DD:LI:AI*/
 
 import org.combinators.cogen.InstanceRep
-import org.combinators.cogen.abstractions.TestCase
+import org.combinators.ep.domain.instances.DataTypeInstanceRep
+import org.combinators.cogen.TestCase
 import org.combinators.ep.domain.{Evolution, GenericModel}
 import org.combinators.ep.domain.abstractions.{DataTypeCase, EqualsTestCase}
 import org.combinators.ep.domain.instances.DataTypeInstance
@@ -19,7 +20,7 @@ object A1 extends Evolution {
   lazy val Times = DataTypeCase.binary("Times")(MathDomain.getModel)
 
   def TimesInst(left:DataTypeInstance, right:DataTypeInstance): DataTypeInstance =
-    DataTypeInstance(Times, Seq(InstanceRep(left), InstanceRep(right)))
+    DataTypeInstance(Times, Seq(DataTypeInstanceRep(left), DataTypeInstanceRep(right)))
 
   // Tests
   val a1_m3_m2 = TimesInst(LitInst(5.0),  LitInst(2.0))

@@ -1,7 +1,8 @@
 package org.combinators.ep.domain.math      /*DD:LI:AI*/
 
 import org.combinators.cogen.InstanceRep
-import org.combinators.cogen.abstractions.TestCase
+import org.combinators.ep.domain.instances.DataTypeInstanceRep
+import org.combinators.cogen.TestCase
 import org.combinators.ep.domain.*
 import org.combinators.ep.domain.abstractions.*
 import org.combinators.ep.domain.instances.DataTypeInstance
@@ -16,7 +17,7 @@ object M1 extends Evolution {
   lazy val Sub:DataTypeCase = DataTypeCase.binary("Sub")(MathDomain.getModel)
 
   def SubInst(left:DataTypeInstance, right:DataTypeInstance): DataTypeInstance =
-    DataTypeInstance(Sub, Seq(InstanceRep(left), InstanceRep(right)))
+    DataTypeInstance(Sub, Seq(DataTypeInstanceRep(left), DataTypeInstanceRep(right)))
 
   override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(M0)
 

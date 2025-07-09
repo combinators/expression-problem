@@ -1,7 +1,8 @@
 package org.combinators.ep.domain.math.systemJK    /*DD:LI:AI*/
 
 import org.combinators.cogen.InstanceRep
-import org.combinators.cogen.abstractions.TestCase
+import org.combinators.ep.domain.instances.DataTypeInstanceRep
+import org.combinators.cogen.TestCase
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.instances.DataTypeInstance
 import org.combinators.ep.domain.math.M0.{DoubleInst, Eval, LitInst}
@@ -22,7 +23,7 @@ object J7 extends Evolution {
   lazy val Inv = DataTypeCase.binary("Inv")(MathDomain.getModel)
 
   def InvInst(left: DataTypeInstance, right: DataTypeInstance): DataTypeInstance =
-    DataTypeInstance(Inv, Seq(InstanceRep(left), InstanceRep(right)))
+    DataTypeInstance(Inv, Seq(DataTypeInstanceRep(left), DataTypeInstanceRep(right)))
 
   val invi = InvInst(LitInst(3.0), LitInst(5.0))
 
@@ -46,18 +47,18 @@ object J7 extends Evolution {
     EqualsCompositeTestCase(getModel.baseDataType, invi, StringInst("(5.0/3.0)"), (Simplify, Seq.empty), (PrettyP, Seq.empty)),
 
     // these are not possible in SOME EP implementations, because of 'equals' being used.
-    //    EqualsTestCase(getModel.baseDataType, InvInst(LitInst(2.0), LitInst(4.0)), PowBy, InstanceRep(PowerInst(InvInst(LitInst(2.0), LitInst(4.0)), LitInst(3.0))),
-    //      InstanceRep(LitInst(3.0))),
-    //    EqualsTestCase(getModel.baseDataType, MultInst(LitInst(2.0), LitInst(4.0)), PowBy, InstanceRep(PowerInst(MultInst(LitInst(2.0), LitInst(4.0)), LitInst(3.0))),
-    //      InstanceRep(LitInst(3.0))),
-    //    EqualsTestCase(getModel.baseDataType, InvInst(LitInst(2.0), LitInst(4.0)), MultBy, InstanceRep(MultInst(InvInst(LitInst(2.0), LitInst(4.0)), LitInst(6.0))),
-    //      InstanceRep(LitInst(6.0))),
+    //    EqualsTestCase(getModel.baseDataType, InvInst(LitInst(2.0), LitInst(4.0)), PowBy, DataTypeInstanceRep(PowerInst(InvInst(LitInst(2.0), LitInst(4.0)), LitInst(3.0))),
+    //      DataTypeInstanceRep(LitInst(3.0))),
+    //    EqualsTestCase(getModel.baseDataType, MultInst(LitInst(2.0), LitInst(4.0)), PowBy, DataTypeInstanceRep(PowerInst(MultInst(LitInst(2.0), LitInst(4.0)), LitInst(3.0))),
+    //      DataTypeInstanceRep(LitInst(3.0))),
+    //    EqualsTestCase(getModel.baseDataType, InvInst(LitInst(2.0), LitInst(4.0)), MultBy, DataTypeInstanceRep(MultInst(InvInst(LitInst(2.0), LitInst(4.0)), LitInst(6.0))),
+    //      DataTypeInstanceRep(LitInst(6.0))),
 
     // do this instead
-    EqualsCompositeTestCase(getModel.baseDataType, InvInst(LitInst(3.0), LitInst(6.0)), DoubleInst(6.0), (MultBy, Seq(InstanceRep(LitInst(3.0)))), (Eval, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, InvInst(LitInst(3.0), LitInst(6.0)), DoubleInst(6.0), (MultBy, Seq(DataTypeInstanceRep(LitInst(3.0)))), (Eval, Seq.empty)),
 
     EqualsTestCase(getModel.baseDataType, invi, Collect, ListDoubleInst(Seq(3.0, 5.0))),
-    PowByTestCase(InvInst(LitInst(4.0), LitInst(2.0)), InstanceRep(LitInst(4.0)), DoubleInst(0.5 * 0.5 * 0.5 * 0.5)),
+    PowByTestCase(InvInst(LitInst(4.0), LitInst(2.0)), DataTypeInstanceRep(LitInst(4.0)), DoubleInst(0.5 * 0.5 * 0.5 * 0.5)),
 
   ) ++ eqls(all_instances) ++ not_eqls(all_instances) ++ struct_not_eqls(all_instances, lhs, rhs) ++ op_equals(all_instances) ++ op_not_equals(all_instances)
 }

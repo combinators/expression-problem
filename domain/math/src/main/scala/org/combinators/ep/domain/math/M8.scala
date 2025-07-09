@@ -1,7 +1,8 @@
 package org.combinators.ep.domain.math    /*DD:LI:AI*/
 
 import org.combinators.cogen.InstanceRep
-import org.combinators.cogen.abstractions.{TestCase, TypeRep}
+import org.combinators.ep.domain.instances.DataTypeInstanceRep
+import org.combinators.cogen.{TestCase, TypeRep}
 import org.combinators.ep.domain.abstractions.{DataTypeCase, EqualsCompositeTestCase, EqualsTestCase, Operation}
 import org.combinators.ep.domain.instances.DataTypeInstance
 import org.combinators.ep.domain.math.M0.{Eval, LitInst}
@@ -17,7 +18,7 @@ object M8 extends Evolution {
   lazy val Inv = DataTypeCase.binary("Inv")(MathDomain.getModel)
 
   def InvInst(left:DataTypeInstance, right:DataTypeInstance): DataTypeInstance =
-    DataTypeInstance(Inv, Seq(InstanceRep(left), InstanceRep(right)))
+    DataTypeInstance(Inv, Seq(DataTypeInstanceRep(left), DataTypeInstanceRep(right)))
 
   // Tests
   val m8_d1 = InvInst(LitInst(5.0),  LitInst(2.0))

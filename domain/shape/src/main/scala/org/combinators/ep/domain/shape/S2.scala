@@ -1,7 +1,9 @@
 package org.combinators.ep.domain.shape   /*DD:LI:AI*/
 
 import org.combinators.cogen.InstanceRep
-import org.combinators.cogen.abstractions.TestCase
+import org.combinators.cogen.TypeRep
+import org.combinators.ep.domain.instances.DataTypeInstanceRep
+import org.combinators.cogen.TestCase
 import org.combinators.ep.domain.*
 import org.combinators.ep.domain.abstractions.*
 import org.combinators.ep.domain.shape.S0.ContainsTestCase
@@ -15,7 +17,7 @@ object S2 extends Evolution {
   // for the EIPs. This is a producer method.
   val pct = Parameter("pct", TypeRep.Double)
   lazy val Shrink = Operation("shrink",
-    TypeRep.DataType(ShapeDomain.getModel.baseDataType), Seq(Parameter("pct", TypeRep.Double)))
+    DomainTpeRep.DataType(ShapeDomain.getModel.baseDataType), Seq(Parameter("pct", TypeRep.Double)))
 
   def DoubleInst(d: scala.Double): InstanceRep =
     InstanceRep(TypeRep.Double)(d)

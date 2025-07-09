@@ -51,6 +51,13 @@ lazy val core = (Project(id = "core", base = file("core")))
   )
   .dependsOn(cogen)
 
+lazy val approach = (Project(id = "approach", base = file("approach")))
+  .settings(commonSettings: _*)
+  .settings(
+    moduleName := "expression-problem-approach",
+  )
+  .dependsOn(cogen, core)
+
 
 /** Template for a subproject for a specific domain named `domainName`.
   * These projects should be (DD, LI, AI).
@@ -61,7 +68,7 @@ def standardDomainProject(domainName: String): Project =
     .settings(
       moduleName := s"expression-problem-domain-$domainName"
     )
-    .dependsOn(core)
+    .dependsOn(cogen, core)
 
 /** The domain of math with arithmetic expressions. **/
 lazy val domainMath = standardDomainProject("math")
@@ -77,7 +84,7 @@ def standardLanguageProject(languageName: String): Project =
     .settings(
       moduleName := s"expression-problem-language-$languageName",
     )
-    .dependsOn(core, domainMath, domainShape)
+    .dependsOn(cogen, core, approach, domainMath, domainShape)
 
 lazy val languageJava =
   standardLanguageProject("java")

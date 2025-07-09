@@ -35,3 +35,7 @@ case class DataTypeInstance(tpeCase: DataTypeCase, attributeInstances: Seq[Insta
     InstanceRep(DomainTpeRep.DataType(domain.baseDataType))(this)
   }
 }
+
+object DataTypeInstanceRep {
+  def apply(instance: DataTypeInstance)(implicit domain: GenericModel): InstanceRep = instance.tpInstanceRep
+}

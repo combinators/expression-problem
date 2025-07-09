@@ -1,16 +1,16 @@
 package org.combinators.ep.domain.math.eips     /*DD:LI:AI*/
 
 import org.combinators.cogen.InstanceRep
-import org.combinators.cogen.abstractions.TypeRep
+import org.combinators.ep.domain.instances.DataTypeInstanceRep
+import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.{AnyParadigm, Functional}
-import org.combinators.cogen.paradigm.control.{Functional, Imperative}
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Equality, RealArithmetic, Strings}
-import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, Parameter}
+import org.combinators.ep.domain.abstractions.{DataTypeCase, DomainTpeRep, Operation, Parameter}
 import org.combinators.ep.domain.math
-import org.combinators.ep.generator.Command.{Generator, lift}
+import org.combinators.cogen.Command.{Generator, lift}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
-import org.combinators.ep.generator.paradigm.control
+import org.combinators.cogen.paradigm.control
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
 object N1funct {
@@ -18,7 +18,7 @@ object N1funct {
   (paradigm: P)
   (m3Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
   (functional:Functional.WithBase[paradigm.type],
-   functionalControl: Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
+   functionalControl: control.Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiRealArithmetic: RealArithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],
@@ -104,7 +104,7 @@ object N1funct {
 
           case litC@math.M0.Lit =>
             for {
-              resultTpe <- toTargetLanguageType(TypeRep.DataType(math.M2.getModel.baseDataType))
+              resultTpe <- toTargetLanguageType(DomainTpeRep.DataType(math.M2.getModel.baseDataType))
               expName <- freshName(forApproach.names.mangle("exponentValue"))
               expType <- toTargetLanguageType(TypeRep.Double)
 
@@ -117,7 +117,7 @@ object N1funct {
               zero <- forApproach.reify(InstanceRep(TypeRep.Double)(0.0))
               one <- forApproach.reify(InstanceRep(TypeRep.Double)(1.0))
 
-              powByRecTpe <- toTargetLanguageType(TypeRep.Arrow(TypeRep.Double, TypeRep.DataType(math.M2.getModel.baseDataType)))
+              powByRecTpe <- toTargetLanguageType(TypeRep.Arrow(TypeRep.Double, DomainTpeRep.DataType(math.M2.getModel.baseDataType)))
               powByRecName <- freshName(forApproach.names.mangle("powByRec"))
               powByRecArg <- freshName(forApproach.names.mangle("exponentValue"))
               finalResult <- declareRecursiveVariable(powByRecName, powByRecTpe,

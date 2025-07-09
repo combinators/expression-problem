@@ -1,7 +1,8 @@
 package org.combinators.ep.domain.math     /*DD:LI:AI*/
 
 import org.combinators.cogen.InstanceRep
-import org.combinators.cogen.abstractions.TestCase
+import org.combinators.ep.domain.instances.DataTypeInstanceRep
+import org.combinators.cogen.TestCase
 import org.combinators.ep.domain.{Evolution, GenericModel}
 import org.combinators.ep.domain.abstractions.{DataTypeCase, EqualsTestCase}
 import org.combinators.ep.domain.instances.DataTypeInstance
@@ -28,7 +29,7 @@ object A3 extends Evolution {
   lazy val Inv = DataTypeCase.binary("Inv")(MathDomain.getModel)
 
   def DivdInst(left:DataTypeInstance, right:DataTypeInstance): DataTypeInstance =
-    DataTypeInstance(Inv, Seq(InstanceRep(left), InstanceRep(right)))
+    DataTypeInstance(Inv, Seq(DataTypeInstanceRep(left), DataTypeInstanceRep(right)))
 
   // Tests
   val m3_m2_d1 = DivdInst(LitInst(5.0),  LitInst(2.0))

@@ -4,7 +4,7 @@ import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.ffi.Equality
 import org.combinators.cogen.paradigm.{Apply, ffi}
 import org.combinators.cogen.Command.Generator
-import org.combinators.ep.generator.Understands
+import org.combinators.cogen.Understands
 import org.combinators.cogen.paradigm.ffi
 import org.combinators.cogen.paradigm.ffi.{Equality as Eqls, *}
 import org.combinators.ep.language.inbetween.any

@@ -8,6 +8,7 @@ import org.combinators.cogen.{Command, FileWithPath, Understands}
 import org.combinators.ep.language.scala.{Finalized, ScalaNameProvider}
 import org.combinators.ep.generator
 import org.combinators.cogen.Command.Generator
+import org.combinators.ep.domain.abstractions.DomainTpeRep
 import org.combinators.ep.language.inbetween.any.AnyParadigm.WithSyntax
 import org.combinators.ep.language.inbetween.any.{AbstractSyntax, AnyParadigm, CompilationUnit, Method, Name, Project, Type}
 import org.combinators.ep.language.inbetween.ffi.Arithmetic.WithBase
@@ -50,7 +51,7 @@ sealed class CodeGenerator(domainName: String) { cc =>
       case TypeRep.Boolean => toLookup("Boolean")
       case TypeRep.String => toLookup("String")
       case TypeRep.Unit => toLookup("Unit")
-      case TypeRep.Tree => toLookup("org", "combinators", "ep", "util", "Tree")
+      case DomainTpeRep.Tree => toLookup("org", "combinators", "ep", "util", "Tree")
       case TypeRep.Sequence(elemTpeRep) =>
         Some(
           for {

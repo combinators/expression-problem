@@ -49,8 +49,9 @@ import org.combinators.ep.domain.math.systemK.{K1, K2}
 import org.combinators.ep.domain.math.systemO.{O1, O1OA, O2, OA, OD1, OD2, OD3, OO1, OO2, OO3}
 import org.combinators.ep.domain.math.systemX.{X1, X2, X2X3, X3, X4}
 import org.combinators.ep.generator.ApproachImplementationProvider.WithParadigm
-import org.combinators.ep.generator.FileWithPathPersistable._
-import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider, FileWithPath, FileWithPathPersistable, TestImplementationProvider}
+import org.combinators.cogen.FileWithPathPersistable._
+import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider, TestImplementationProvider}
+import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
 
 import java.nio.file.{Path, Paths}
 

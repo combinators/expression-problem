@@ -1,9 +1,10 @@
 package org.combinators.ep.language      /*DI:LD:AI*/
 
 import org.combinators.cogen.TypeRep
-import org.combinators.ep.domain.abstractions.TypeRep.OfHostType
+import org.combinators.cogen.TypeRep.OfHostType
 import org.combinators.cogen.Command.Generator
-import org.combinators.ep.generator.NameProvider
+import org.combinators.cogen.NameProvider
+import org.combinators.ep.domain.abstractions.DomainTpeRep
 import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.oo
 import org.combinators.ep.language.inbetween.imperative
@@ -262,9 +263,9 @@ package object scala {
     def toScala: String = {
       ofHostType match {
         case t: TypeRep.String.type => s""""$value""""
-        case t: TypeRep.Tree.type =>
+        case t: DomainTpeRep.Tree.type =>
           value match {
-            case org.combinators.ep.domain.tree.Node(id, values) => s"org.combinators.ep.util.Node($id, ${values.map(v => reifiedScalaValue(TypeRep.Tree, v).toScala).mkString(", ")})"
+            case org.combinators.ep.domain.tree.Node(id, values) => s"org.combinators.ep.util.Node($id, ${values.map(v => reifiedScalaValue(DomainTpeRep.Tree, v).toScala).mkString(", ")})"
             case org.combinators.ep.domain.tree.Leaf(r) => s"org.combinators.ep.util.Leaf(${reifiedScalaValue(r.tpe, r.inst).toScala})"
           }
         case t: TypeRep.Sequence[_] =>

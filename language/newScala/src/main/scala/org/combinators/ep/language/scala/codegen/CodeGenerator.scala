@@ -1,13 +1,13 @@
 package org.combinators.ep.language.scala.codegen    /*DI:LD:AI*/
 
 import cats.Apply as _
-import org.combinators.cogen.abstractions.TypeRep
+import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.{Apply, ToTargetLanguageType}
 import org.combinators.ep.domain.GenericModel
-import org.combinators.ep.generator.{Command, FileWithPath, Understands}
+import org.combinators.cogen.{Command, FileWithPath, Understands}
 import org.combinators.ep.language.scala.{Finalized, ScalaNameProvider}
 import org.combinators.ep.generator
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.cogen.Command.Generator
 import org.combinators.ep.language.inbetween.any.AnyParadigm.WithSyntax
 import org.combinators.ep.language.inbetween.any.{AbstractSyntax, AnyParadigm, CompilationUnit, Method, Name, Project, Type}
 import org.combinators.ep.language.inbetween.ffi.Arithmetic.WithBase

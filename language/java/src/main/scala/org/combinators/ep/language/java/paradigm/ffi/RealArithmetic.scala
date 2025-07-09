@@ -3,11 +3,11 @@ package org.combinators.ep.language.java.paradigm.ffi    /*DI:LD:AI*/
 import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.expr.BinaryExpr.Operator
 import com.github.javaparser.ast.expr.{BinaryExpr, Expression, FieldAccessExpr, MethodCallExpr}
-import org.combinators.cogen.abstractions.TypeRep
+import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.Apply
 import org.combinators.cogen.paradigm.ffi.{Abs, Cos, EulersNumber, Floor, Log, Pi, Pow, Sin, Sqrt, RealArithmetic as RArith}
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.{Command, Understands}
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.{Command, Understands}
 import org.combinators.ep.language.java.CodeGenerator.Enable
 import org.combinators.ep.language.java.Syntax.default._
 import org.combinators.ep.language.java.paradigm.{AnyParadigm, ObjectOriented}

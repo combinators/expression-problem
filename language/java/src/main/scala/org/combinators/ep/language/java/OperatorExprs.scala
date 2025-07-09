@@ -2,7 +2,7 @@ package org.combinators.ep.language.java     /*DI:LD:AI*/
 
 import com.github.javaparser.ast.expr.{BinaryExpr, EnclosedExpr, Expression, UnaryExpr}
 import org.combinators.cogen.paradigm.Apply
-import org.combinators.ep.generator.Understands
+import org.combinators.cogen.Understands
 
 /**
  * Operator Expressions are enclosed with parens (EnclosedExpr) to ensure correctness, even though this might

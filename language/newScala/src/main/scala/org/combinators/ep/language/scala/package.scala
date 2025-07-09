@@ -1,8 +1,8 @@
 package org.combinators.ep.language      /*DI:LD:AI*/
 
-import org.combinators.cogen.abstractions.TypeRep
+import org.combinators.cogen.TypeRep
 import org.combinators.ep.domain.abstractions.TypeRep.OfHostType
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.NameProvider
 import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.oo

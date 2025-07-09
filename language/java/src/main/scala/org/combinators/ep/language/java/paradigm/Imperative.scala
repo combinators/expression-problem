@@ -4,9 +4,8 @@ import com.github.javaparser.ast.expr.{AssignExpr, NameExpr, VariableDeclaration
 import com.github.javaparser.ast.stmt.{BlockStmt, ExpressionStmt, IfStmt, ReturnStmt, WhileStmt}
 import org.combinators.cogen.paradigm.IfThenElse
 import org.combinators.cogen.paradigm.control.{AssignVariable, DeclareVariable, LiftExpression, Return, While, Imperative as Imp}
-import org.combinators.ep.generator.{Command, Understands}
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.control.*
+import org.combinators.cogen.{Command, Understands}
+import org.combinators.cogen.Command.Generator
 import org.combinators.ep.language.java.{CtorCtxt, MethodBodyCtxt}
 
 trait Imperative[Ctxt, AP <: AnyParadigm] extends Imp[Ctxt] {

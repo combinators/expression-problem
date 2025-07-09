@@ -1,6 +1,6 @@
 package org.combinators.ep.language.java     /*DI:LD:AI*/
 
-import org.combinators.ep.generator.AbstractSyntax
+import org.combinators.cogen.AbstractSyntax
 import cats.data.State
 import cats._
 

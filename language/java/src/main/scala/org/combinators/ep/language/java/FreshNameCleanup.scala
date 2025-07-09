@@ -7,7 +7,7 @@ import com.github.javaparser.ast.{CompilationUnit, ImportDeclaration, Node}
 import com.github.javaparser.ast.expr.{CastExpr, LambdaExpr, Name, SimpleName}
 import com.github.javaparser.ast.stmt.{BlockStmt, CatchClause, ForEachStmt, ForStmt, SwitchEntry, SwitchStmt}
 import com.github.javaparser.ast.visitor.Visitable
-import org.combinators.ep.generator.FreshNameProvider
+import org.combinators.cogen.FreshNameProvider
 import org.combinators.ep.language.java.Syntax.MangledName
 
 class FreshNameCleanup(nameInfo: Map[String, MangledName]) {

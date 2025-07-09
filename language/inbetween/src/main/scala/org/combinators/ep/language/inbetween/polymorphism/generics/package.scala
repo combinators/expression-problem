@@ -1,8 +1,8 @@
 package org.combinators.ep.language.inbetween.polymorphism  /*DI:LI:AI*/
 
-import org.combinators.cogen.abstractions.TypeRep
+import org.combinators.cogen.TypeRep
 import org.combinators.ep.language.inbetween.{any, oo, polymorphism => pp}
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.cogen.Command.Generator
 package object generics {
   trait FinalTypes extends pp.FinalTypes with oo.FinalTypes {
 

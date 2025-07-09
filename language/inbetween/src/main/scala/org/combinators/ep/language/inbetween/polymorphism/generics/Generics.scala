@@ -1,7 +1,7 @@
 package org.combinators.ep.language.inbetween.polymorphism.generics   /*DI:LI:AI*/
 
 import org.combinators.cogen.paradigm.{AddLowerBound, AddTypeParameter, AddUpperBound, Apply, GetCurrentTypeParameter, GetTypeArguments, AnyParadigm as AP, Generics as GS, ObjectOriented as OO, ParametricPolymorphism as PP}
-import org.combinators.ep.generator.{Command, Understands}
+import org.combinators.cogen.{Command, Understands}
 import org.combinators.cogen.paradigm.ParametricPolymorphism.WithBase
 import org.combinators.ep.language.inbetween.{any, oo, polymorphism}
 import org.combinators.ep.language.inbetween.any.AnyParadigm

@@ -4,14 +4,13 @@ import java.util.UUID
 import com.github.javaparser.ast.{ImportDeclaration, Modifier, NodeList}
 import com.github.javaparser.ast.`type`.ClassOrInterfaceType
 import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, ConstructorDeclaration, MethodDeclaration}
-import com.github.javaparser.ast.expr.{AssignExpr, CastExpr, EnclosedExpr, Expression, FieldAccessExpr, InstanceOfExpr, MethodCallExpr, NameExpr, ObjectCreationExpr, ThisExpr, TypeExpr, Name as JName}
+import com.github.javaparser.ast.expr.{AssignExpr, CastExpr, EnclosedExpr, Expression => JExpression, FieldAccessExpr, InstanceOfExpr, MethodCallExpr, NameExpr, ObjectCreationExpr, ThisExpr, TypeExpr, Name as JName}
 import com.github.javaparser.ast.stmt.{BlockStmt, ExplicitConstructorInvocationStmt, ExpressionStmt, ReturnStmt}
 import org.combinators.cogen.InstanceRep
-import org.combinators.cogen.abstractions.TypeRep
-import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddClass, AddConstructor, AddField, AddImplemented, AddImport, AddMethod, AddParent, AddTypeLookup, Apply, CastObject, Debug, FindClass, FreshName, GetArguments, GetConstructor, GetField, GetMember, InitializeField, InitializeParent, InstanceOfType, InstantiateObject, Reify, RemoveMethod, ResolveImport, SelfReference, SetAbstract, SetInterface, SetOverride, SetParameters, SetStatic, SuperReference, ToTargetLanguageType, ObjectOriented as OO, AnyParadigm as _}
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.{Command, Understands}
-import org.combinators.ep.generator.paradigm.*
+import org.combinators.cogen.TypeRep
+import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddClass, AddConstructor, AddField, AddImplemented, AddImport, AddMethod, AddParent, AddTypeLookup, Apply, CastObject, Debug, FindClass, FreshName, GetArguments, GetConstructor, GetField, GetMember, InitializeField, InitializeParent, InstanceOfType, InstantiateObject, Reify, RemoveMethod, ResolveImport, SelfReference, SetAbstract, SetInterface, SetOverride, SetParameters, SetStatic, SuperReference, ToTargetLanguageType, ObjectOriented as OO}
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.{Command, Understands}
 import org.combinators.ep.language.java.Syntax.MangledName
 import org.combinators.ep.language.java.{ClassCtxt, CompilationUnitCtxt, ContextSpecificResolver, CtorCtxt, JavaNameProvider, MethodBodyCtxt, TestCtxt}
 
@@ -969,10 +968,10 @@ object ObjectOriented {
     rest.foldLeft(new JName(first))((result, next) => new JName(result, next))
   }
 
-  def nameToExpression(name: JName): Expression = {
+  def nameToExpression(name: JName): JExpression = {
     name.getQualifier
-      .map[Expression](n => nameToExpression(n))
-      .map[Expression](qual => new FieldAccessExpr(qual, name.getIdentifier))
+      .map[JExpression](n => nameToExpression(n))
+      .map[JExpression](qual => new FieldAccessExpr(qual, name.getIdentifier))
       .orElseGet(() => new NameExpr(name.getIdentifier))
   }
 

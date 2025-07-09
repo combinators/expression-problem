@@ -6,17 +6,18 @@ import com.github.javaparser.ast.{ImportDeclaration, NodeList}
 import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.expr.ObjectCreationExpr
 import org.combinators.cogen.InstanceRep
-import org.combinators.cogen.abstractions.TypeRep
+import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.{AddImport, Apply}
 import org.combinators.ep.domain.tree.{Leaf, Node, Tree}
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.{Command, Understands}
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.{Command, Understands}
 import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.cogen.paradigm.ffi.{Create, CreateLeaf, CreateNode, Trees as Ts}
+import org.combinators.ep.domain.abstractions.DomainTpeRep
 import org.combinators.ep.language.java.CodeGenerator.Enable
 import org.combinators.ep.language.java.{ContextSpecificResolver, ProjectCtxt}
 import org.combinators.ep.language.java.paradigm.{AnyParadigm, Generics, ObjectOriented}
-import org.combinators.ep.language.java.Syntax.default._
+import org.combinators.ep.language.java.Syntax.default.*
 
 trait Trees[Ctxt, AP <: AnyParadigm] extends Ts[Ctxt] {
   case object TreesEnabled
@@ -94,7 +95,7 @@ trait Trees[Ctxt, AP <: AnyParadigm] extends Ts[Ctxt] {
               toResolution: ContextSpecificResolver => TypeRep => Generator[Ctxt, Type],
               canAddImport: Understands[Ctxt, AddImport[Import]]
             ): ContextSpecificResolver => TypeRep => Generator[Ctxt, Type] = k => {
-              case TypeRep.Tree =>
+              case DomainTpeRep.Tree =>
                 for {
                   _ <- AddImport(treeImport).interpret(canAddImport)
                 } yield treeType
@@ -111,7 +112,7 @@ trait Trees[Ctxt, AP <: AnyParadigm] extends Ts[Ctxt] {
                 case Node(id, elems) =>
                   for {
                     elems <- forEach(elems) { elem =>
-                      projectReiification(k)(InstanceRep(TypeRep.Tree)(elem))
+                      projectReiification(k)(InstanceRep(DomainTpeRep.Tree)(elem))
                     }
                     ident <- projectReiification(k)(InstanceRep(TypeRep.Int)(id))
                     result <- Apply[CreateNode, Expression, Expression](CreateNode(), ident +: elems).interpret(nodeCreation(canAddImport))

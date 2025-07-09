@@ -2,10 +2,10 @@ package org.combinators.ep.language.inbetween.functional.control
 
 import org.combinators.cogen.paradigm.{Apply, IfThenElse, Reify, control}
 import org.combinators.cogen.paradigm.control.{ConstructorPattern, DeclareFunVariable, Lambda, PatternMatch, PatternVariable}
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.{Command, Understands, paradigm}
-import org.combinators.ep.generator.paradigm.control
-import org.combinators.ep.generator.paradigm.control.{DeclareFunVariable as DFV, Functional as Fun}
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.{Command, Understands, paradigm}
+import org.combinators.cogen.paradigm.control
+import org.combinators.cogen.paradigm.control.{DeclareFunVariable as DFV, Functional as Fun}
 import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 

@@ -1,6 +1,6 @@
 package org.combinators.ep.language.java     /*DI:LD:AI*/
 
-import org.combinators.ep.generator.NameProvider
+import org.combinators.cogen.NameProvider
 import Syntax.MangledName
 import com.github.javaparser.{JavaParser, StaticJavaParser}
 

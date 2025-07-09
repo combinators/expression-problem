@@ -1,15 +1,15 @@
 package org.combinators.ep.language.java.paradigm.ffi    /*DI:LD:AI*/
 
 import com.github.javaparser.ast.expr.{BinaryExpr, MethodCallExpr, StringLiteralExpr}
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.{Command, Understands}
-import org.combinators.ep.generator.paradigm.ffi.*
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.{Command, Understands}
+import org.combinators.cogen.paradigm.ffi.*
 import org.combinators.ep.language.java.{CodeGenerator, ContextSpecificResolver, JavaNameProvider, ProjectCtxt, Syntax}
 import Syntax.default.*
 import org.combinators.ep.language.java.paradigm.{AnyParadigm, ObjectOriented}
 import CodeGenerator.Enable
 import com.github.javaparser.ast.NodeList
-import org.combinators.cogen.abstractions.TypeRep
+import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.{Apply, GetMember}
 import org.combinators.cogen.paradigm.ffi.{GetStringLength, StringAppend, ToString, Strings as Strs}
 

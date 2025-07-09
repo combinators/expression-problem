@@ -1,9 +1,9 @@
 package org.combinators.ep.language.inbetween.oo   /*DI:LI:AI*/
 
-import org.combinators.cogen.abstractions.TypeRep
+import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddClass, AddConstructor, AddField, AddImplemented, AddImport, AddMethod, AddParent, AddTypeLookup, Apply, CastObject, Debug, FindClass, FreshName, GetArguments, GetConstructor, GetField, GetMember, InitializeField, InitializeParent, InstanceOfType, InstantiateObject, Reify, RemoveMethod, ResolveImport, SelfReference, SetAbstract, SetInterface, SetOverride, SetParameters, SetStatic, SuperReference, ToTargetLanguageType, ObjectOriented as OOP}
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.{Command, FileWithPath, Understands, paradigm}
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.{Command, FileWithPath, Understands, paradigm}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.inbetween.any
 

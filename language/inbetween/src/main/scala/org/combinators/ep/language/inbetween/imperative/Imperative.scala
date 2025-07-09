@@ -3,10 +3,10 @@ package org.combinators.ep.language.inbetween.imperative   /*DI:LI:AI*/
 import org.combinators.cogen.paradigm.{IfThenElse, control}
 import org.combinators.cogen.paradigm.control.{AssignVariable, DeclareVariable, LiftExpression, Return, While}
 import org.combinators.ep.generator
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.control
-import org.combinators.ep.generator.{Command, FileWithPath, Understands, paradigm}
-import org.combinators.ep.generator.paradigm.control.{Return, DeclareVariable as DV, Imperative as Imp}
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.paradigm.control
+import org.combinators.cogen.{Command, FileWithPath, Understands, paradigm}
+import org.combinators.cogen.paradigm.control.{Return, DeclareVariable as DV, Imperative as Imp}
 import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 

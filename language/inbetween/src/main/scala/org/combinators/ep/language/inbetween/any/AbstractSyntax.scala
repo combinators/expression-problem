@@ -1,6 +1,6 @@
 package org.combinators.ep.language.inbetween.any /*DI:LI:AI*/
 
-import org.combinators.ep.generator.{ AbstractSyntax => AS }
+import org.combinators.cogen.{ AbstractSyntax => AS }
 
 class AbstractSyntax[FT <: FinalTypes] extends AS {
   type CompilationUnit = org.combinators.ep.language.inbetween.any.CompilationUnit[FT]

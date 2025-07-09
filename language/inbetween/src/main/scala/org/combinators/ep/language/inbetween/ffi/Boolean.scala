@@ -1,14 +1,14 @@
 package org.combinators.ep.language.inbetween.ffi  /*DI:LI:AI*/
 
-import org.combinators.cogen.abstractions.TypeRep
+import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.Apply
 import org.combinators.cogen.paradigm.ffi.{And, False, Not, Or, True, Booleans as Bools}
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.Understands
-import org.combinators.ep.generator.paradigm.ffi.*
+import org.combinators.cogen.paradigm.ffi.*
 import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
-import org.combinators.ep.generator.Command
+import org.combinators.cogen.Command
 
 // cannot find 'boolean'
 trait Booleans[FT <: OperatorExpressionOps.FinalTypes, FactoryType <: BooleanOps.Factory[FT]] extends Bools[any.Method[FT]] {

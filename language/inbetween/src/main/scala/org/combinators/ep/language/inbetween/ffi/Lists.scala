@@ -4,8 +4,8 @@ package org.combinators.ep.language.inbetween.ffi  /*DI:LI:AI*/
 
 import org.combinators.cogen.paradigm.Apply
 import org.combinators.cogen.paradigm.ffi.{Append, Cons, Create, Head, Tail, Lists as Lsts}
-import org.combinators.ep.generator.{Command, Understands}
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.cogen.{Command, Understands}
+import org.combinators.cogen.Command.Generator
 import org.combinators.ep.language.inbetween.{any, polymorphism}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 trait Lists[FT <: ListOps.FinalTypes, FactoryType <: ListOps.Factory[FT]] extends Lsts[any.Method[FT]] {

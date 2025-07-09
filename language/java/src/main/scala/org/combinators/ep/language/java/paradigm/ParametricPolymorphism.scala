@@ -3,8 +3,7 @@ package org.combinators.ep.language.java.paradigm    /*DI:LD:AI*/
 import com.github.javaparser.ast.`type`.{ClassOrInterfaceType, TypeParameter}
 import com.github.javaparser.ast.expr.MethodCallExpr
 import org.combinators.cogen.paradigm.{AddTypeParameter, Apply, GetTypeArguments, ParametricPolymorphism as PPoly, AnyParadigm as _}
-import org.combinators.ep.generator.{Command, Understands}
-import org.combinators.ep.generator.paradigm.*
+import org.combinators.cogen.{Command, Understands}
 import org.combinators.ep.language.java.Syntax.MangledName
 import org.combinators.ep.language.java.TypeParamCtxt
 

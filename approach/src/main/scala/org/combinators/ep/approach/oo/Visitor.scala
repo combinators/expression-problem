@@ -796,7 +796,7 @@ object Visitor {
       val ooParadigm: oo.type = oo
 
       val visitorSpecifics: VisitorSpecifics = new VisitorSideEffect {
-        override val impParadigm: WithBase[paradigm.MethodBodyContext, paradigm.type] = imp
+        override val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type] = imp
       }
     }
 }

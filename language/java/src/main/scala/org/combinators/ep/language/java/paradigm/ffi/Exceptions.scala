@@ -5,16 +5,16 @@ import com.github.javaparser.ast.expr.{BooleanLiteralExpr, ObjectCreationExpr}
 import com.github.javaparser.ast.stmt.ThrowStmt
 import org.combinators.cogen.paradigm.ffi.Exceptions
 import org.combinators.cogen.paradigm.{Apply, ffi}
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.ffi
-import org.combinators.ep.generator.paradigm.ffi.{Assert, Exceptions as Excptns}
-import org.combinators.ep.generator.{Command, Understands}
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.paradigm.ffi
+import org.combinators.cogen.paradigm.ffi.{Assert, Exceptions as Excptns}
+import org.combinators.cogen.{Command, Understands}
 import org.combinators.ep.language.java.CodeGenerator.Enable
 import org.combinators.ep.language.java.Syntax.default.*
 import org.combinators.ep.language.java.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.ep.language.java.{ContextSpecificResolver, MethodBodyCtxt, ProjectCtxt}
 
-class Exceptions[AP <: AnyParadigm](val base: AP) extends Exceptions[MethodBodyCtxt] {
+class Exceptions[AP <: AnyParadigm](val base: AP) extends Excptns[MethodBodyCtxt] {
 
   val exceptionCapabilities: ExceptionCapabilities =
     new ExceptionCapabilities {

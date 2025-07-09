@@ -1,6 +1,6 @@
 package org.combinators.ep.language.inbetween.functional
 
-import org.combinators.cogen.abstractions.TypeRep
+import org.combinators.cogen.TypeRep
 import org.combinators.ep.language.inbetween.any
 
 package object control {

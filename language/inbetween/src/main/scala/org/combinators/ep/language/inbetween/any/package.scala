@@ -1,7 +1,7 @@
 package org.combinators.ep.language.inbetween /*DI:LI:AI*/
 
-import org.combinators.cogen.abstractions.TypeRep
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.cogen.TypeRep
+import org.combinators.cogen.Command.Generator
 
 package object any {
   trait FinalTypes {

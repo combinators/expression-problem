@@ -41,8 +41,8 @@ trait AnyParadigm extends AP {
             context: ProjectCtxt,
             command: Debug
           ): (ProjectCtxt, Unit) = {
-
-            context.units.foreach (u => System.err.println (command.tag + ": " + u))
+            val units = context.units.toSeq.mkString(", ")
+            System.err.println (command.tag + ": " + units)
             (context,())
           }
         }

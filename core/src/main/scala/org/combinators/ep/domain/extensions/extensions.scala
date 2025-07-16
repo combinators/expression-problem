@@ -86,5 +86,5 @@ extension [Name](nameProvider: NameProvider[Name]) {
 }
 
 extension (tpe: TypeRep) {
-  def isModelBase(model:GenericModel):Boolean = this == DomainTpeRep.DataType(model.baseDataType)
+  def isModelBase(model:GenericModel):Boolean = tpe == DomainTpeRep.DataType(model.baseDataType)
 }

@@ -4,9 +4,9 @@ import org.combinators.cogen.InstanceRep
 import org.combinators.cogen.TypeRep
 import org.combinators.ep.domain.instances.DataTypeInstanceRep
 import org.combinators.cogen.TestCase
-import org.combinators.ep.domain.*
-import org.combinators.ep.domain.abstractions.*
-import org.combinators.ep.domain.instances.*
+import org.combinators.ep.domain._
+import org.combinators.ep.domain.abstractions._
+import org.combinators.ep.domain.instances._
 
 object M0 extends Evolution {
   override implicit def getModel:GenericModel = MathDomain.baseModel.evolve("m0", Seq(Lit, Add), Seq(Eval))

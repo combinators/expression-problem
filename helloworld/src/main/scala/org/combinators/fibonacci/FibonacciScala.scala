@@ -22,10 +22,10 @@ def fib(n: Int): Int = {
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
-import org.combinators.ep.generator.FileWithPathPersistable._
-import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
+import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
+import FileWithPathPersistable._
 
-import scala.meta.{Pkg, Term}
+//import scala.meta.{Pkg, Term}
 import org.combinators.ep.language.scala.ScalaNameProvider
 import org.combinators.ep.language.scala.codegen.CodeGenerator
 
@@ -40,7 +40,8 @@ class FibonacciScala {
   // TODO: Need to add generator.functional
   val fibonacciApproach = FibonacciProvider[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.functional, generator.functionalControl, generator.ints, generator.assertionsInMethod, generator.equality)
 
-  val persistable = FileWithPathPersistable[FileWithPath]
+  val persistable: Aux[FileWithPath] = FileWithPathPersistable[FileWithPath]
+
 
   def directToDiskTransaction(targetDirectory: Path): IO[Unit] = {
     //FIX:

@@ -7,7 +7,7 @@ import org.combinators.cogen.{Command, Understands}
 import org.combinators.ep.language.java.Syntax.MangledName
 import org.combinators.ep.language.java.TypeParamCtxt
 
-import scala.jdk.CollectionConverters.*
+import scala.jdk.CollectionConverters._
 
 trait ParametricPolymorphism[AP <: AnyParadigm] extends PPoly {
   val base: AP

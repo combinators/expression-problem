@@ -3,9 +3,8 @@ package org.combinators.ep.language.java.paradigm.ffi    /*DI:LD:AI*/
 import com.github.javaparser.ast.expr.{BinaryExpr, MethodCallExpr, StringLiteralExpr}
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, Understands}
-import org.combinators.cogen.paradigm.ffi.*
 import org.combinators.ep.language.java.{CodeGenerator, ContextSpecificResolver, JavaNameProvider, ProjectCtxt, Syntax}
-import Syntax.default.*
+import Syntax.default._
 import org.combinators.ep.language.java.paradigm.{AnyParadigm, ObjectOriented}
 import CodeGenerator.Enable
 import com.github.javaparser.ast.NodeList

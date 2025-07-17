@@ -4,15 +4,17 @@ package org.combinators.ep.approach.oo
 
 import org.combinators.cogen.{TestCase, TypeRep, Command, NameProvider, AbstractSyntax, Understands}
 import org.combinators.cogen.paradigm.{AddImport, AnyParadigm, FindClass, ObjectOriented, ResolveImport}
-import org.combinators.ep.domain.abstractions.*
-import org.combinators.ep.domain.extensions.*
+import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.{GenericModel, abstractions}
-import org.combinators.ep.generator.*
-import org.combinators.ep.generator.communication.*
-import org.combinators.cogen.paradigm.AnyParadigm.syntax.*
+import org.combinators.ep.generator._
+import org.combinators.ep.generator.communication._
+import org.combinators.cogen.paradigm.AnyParadigm.syntax._
 import Command.Generator
 
 import scala.annotation.tailrec
+
+// Need EpCoGen extensions to CoGen
+import org.combinators.ep.domain.extensions._
 
 trait TriviallyClean extends SharedOO {
   val paradigm: AnyParadigm

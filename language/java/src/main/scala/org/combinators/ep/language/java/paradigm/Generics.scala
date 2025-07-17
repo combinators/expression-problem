@@ -5,7 +5,7 @@ import org.combinators.cogen.paradigm.{AddLowerBound, AddTypeParameter, AddUpper
 import org.combinators.cogen.{Command, Understands}
 import org.combinators.ep.language.java.TypeParamCtxt
 
-import scala.jdk.CollectionConverters.*
+import scala.jdk.CollectionConverters._
 
 trait Generics[AP <: AnyParadigm] extends Gen {
   val base: AP

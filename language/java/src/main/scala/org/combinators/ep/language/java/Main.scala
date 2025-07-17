@@ -38,10 +38,10 @@ package org.combinators.ep.language.java
 import cats.effect.{ExitCode, IO, IOApp}
 import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, ObjectAlgebras, RuntimeDispatch, Traditional, TriviallyClean, Visitor, Visualize}
 import org.combinators.ep.domain.Evolution
-import org.combinators.ep.domain.math.*
+import org.combinators.ep.domain.math._
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider, TestImplementationProvider}
 import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
-import FileWithPathPersistable.*
+import FileWithPathPersistable._
 import org.apache.commons.io.FileUtils
 import org.combinators.ep.approach.oo.Visualize.WithParadigm
 import org.combinators.ep.domain.math.systemD.{D1, D1D2, D2, D3}
@@ -509,11 +509,13 @@ object DirectToDiskMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
     // "M9", "J8", "A3", "O1OA", "OD3", "OO3", "V1", "D3", "I2M3I1N1", "O2"
-    val approach = if (args.isEmpty) "oo" else args.head // {coco, O1OA} fails
+    val approach = if (args.isEmpty) "trivially" else args.head // {coco, O1OA} fails
     if (approach == "exit") {
       sys.exit(0)
     }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "J4" else args.tail.head
+
+    // M4 exception for 'oo'
+    val selection = if (args.isEmpty || args.tail.isEmpty) "M4" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 

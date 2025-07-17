@@ -3,9 +3,10 @@ package org.combinators.helloworld
 import org.combinators.cogen.InstanceRep
 import org.combinators.cogen.paradigm.{AddImport, AnyParadigm, ObjectOriented, ResolveImport}
 import org.combinators.ep.domain.abstractions._
+import AnyParadigm.syntax._
 import org.combinators.ep.domain.instances.DataTypeInstance
-import org.combinators.ep.generator.Command._
-import org.combinators.ep.generator.{NameProvider, Understands}
+import org.combinators.cogen.Command._
+import org.combinators.cogen.{NameProvider, Understands}
 
 /** Attempt to provide a hello world generator. */
 trait HelloWorldProvider {
@@ -22,7 +23,7 @@ trait HelloWorldProvider {
   def instantiate(baseType: DataType, inst: DataTypeInstance): Generator[MethodBodyContext, Expression] = {
     for {
       attributeInstances <- forEach (inst.attributeInstances) { ati => reify(ati) }
-      result <- instantiate(baseType, inst.tpeCase, attributeInstances: _*)
+      result <- instantiate(baseType, inst.tpeCase, attributeInstances*)
     } yield result
   }
 
@@ -38,7 +39,7 @@ trait HelloWorldProvider {
   /** Converts a Scala model of an instance of any representable type into code. */
   def reify(inst: InstanceRep): Generator[MethodBodyContext, Expression] = {
     (inst.tpe, inst.inst) match {
-      case (TypeRep.DataType(baseTpe), domInst: DataTypeInstance) => instantiate(baseTpe, domInst)
+      case (DomainTpeRep.DataType(baseTpe), domInst: DataTypeInstance) => instantiate(baseTpe, domInst)
       case (tpe, inst) =>
         import paradigm.methodBodyCapabilities._
         for {

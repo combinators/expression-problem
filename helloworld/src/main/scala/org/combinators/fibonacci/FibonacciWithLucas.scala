@@ -1,13 +1,12 @@
 package org.combinators.fibonacci
 
-import org.combinators.cogen.abstractions.TypeRep
+import org.combinators.cogen.TypeRep
+import org.combinators.cogen.paradigm.control
 import org.combinators.cogen.paradigm.{AnyParadigm, Functional}
-import org.combinators.cogen.paradigm.control.Functional
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Assertions, Equality}
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.control
-import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider}
 
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.{AbstractSyntax, Command, NameProvider}
 /**
  * Take advantage of observation that:
  *
@@ -26,7 +25,7 @@ trait FibonacciWithLucas {
   val paradigm: AnyParadigm
   val names: NameProvider[paradigm.syntax.Name]
   val functionalParadigm: Functional.WithBase[paradigm.type]
-  val functionalControlParadigm: Functional.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val functionalControlParadigm: control.Functional.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Int]
   val ffiAssertions : Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val ffiEquality : Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
@@ -171,8 +170,8 @@ object FibonacciWithLucasProvider {
   def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
   (base: P)
   (nameProvider: NameProvider[base.syntax.Name],
-   func:  Functional.WithBase[base.type],
-   c1: Functional.WithBase[base.MethodBodyContext, base.type],
+   func: Functional.WithBase[base.type],
+   c1 : control.Functional.WithBase[base.MethodBodyContext, base.type],
    c2: Arithmetic.WithBase[base.MethodBodyContext, base.type, Int],
    c3: Assertions.WithBase[base.MethodBodyContext, base.type],
    c4: Equality.WithBase[base.MethodBodyContext, base.type]
@@ -182,7 +181,7 @@ object FibonacciWithLucasProvider {
       override val paradigm: base.type = base
       override val names: NameProvider[paradigm.syntax.Name] = nameProvider
       override val functionalParadigm: Functional.WithBase[paradigm.type] = func
-      override val functionalControlParadigm: Functional.WithBase[paradigm.MethodBodyContext, paradigm.type] = c1
+      override val functionalControlParadigm: control.Functional.WithBase[paradigm.MethodBodyContext, paradigm.type] = c1
       override val ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Int] = c2
       override val ffiAssertions: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type] = c3
       override val ffiEquality : Equality.WithBase[paradigm.MethodBodyContext, paradigm.type] = c4

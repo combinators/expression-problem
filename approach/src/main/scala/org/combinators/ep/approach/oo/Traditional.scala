@@ -4,24 +4,27 @@ package org.combinators.ep.approach.oo
 
 import org.combinators.cogen.{Command, NameProvider, AbstractSyntax}
 import Command.Generator
-import org.combinators.cogen.paradigm.AnyParadigm.syntax.*
+import org.combinators.cogen.paradigm.AnyParadigm.syntax._
 import org.combinators.cogen.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.ep.domain.GenericModel
-import org.combinators.ep.domain.abstractions.*
-import org.combinators.ep.domain.extensions.*
-import org.combinators.ep.generator.*
-import org.combinators.ep.generator.communication.*
+import org.combinators.ep.domain.abstractions._
+import org.combinators.ep.generator._
+import org.combinators.ep.generator.communication._
+
+// Needed for EpCoGen extensions to CoGen
+import org.combinators.ep.domain.extensions._
+
 
 trait Traditional extends SharedOO { // this had been sealed. not sure why
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
 
-  import ooParadigm.*
-  import paradigm.*
-  import syntax.*
+  import ooParadigm._
+  import paradigm._
+  import syntax._
 
   def dispatch(message: SendRequest[Expression]): Generator[MethodBodyContext, Expression] = {
-    import ooParadigm.methodBodyCapabilities.*
-    import paradigm.methodBodyCapabilities.*
+    import ooParadigm.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities._
     for {
       method <- getMember(message.to, names.mangle(names.instanceNameOf(message.request.op)))
       result <- apply(method, message.request.op.parameters.map(message.request.arguments))
@@ -29,8 +32,8 @@ trait Traditional extends SharedOO { // this had been sealed. not sure why
   }
 
   def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
-    import ooParadigm.methodBodyCapabilities.*
-    import paradigm.methodBodyCapabilities.*
+    import ooParadigm.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities._
 
     for {
       rt <- findClass(names.mangle(names.conceptNameOf(tpeCase)))
@@ -47,7 +50,7 @@ trait Traditional extends SharedOO { // this had been sealed. not sure why
     * operation is embedded as a method within each class, using [[makeImplementation]]
     */
   def makeDerived(tpe: DataType, tpeCase: DataTypeCase, ops: Seq[Operation], domain: GenericModel, domainSpecific: EvolutionImplementationProvider[this.type]): Generator[ProjectContext, Unit] = {
-    import ooParadigm.projectCapabilities.*
+    import ooParadigm.projectCapabilities._
 
     def fullImplementation(op: Operation): Generator[MethodBodyContext, Option[Expression]] = {
       for {
@@ -57,7 +60,7 @@ trait Traditional extends SharedOO { // this had been sealed. not sure why
     }
 
     val makeClass: Generator[ClassContext, Unit] = {
-      import classCapabilities.*
+      import classCapabilities._
       for {
         pt <- toTargetLanguageType(DomainTpeRep.DataType(tpe))
         _ <- resolveAndAddImport(pt)
@@ -73,9 +76,9 @@ trait Traditional extends SharedOO { // this had been sealed. not sure why
   }
 
   def makeBase(tpe: DataType, ops: Seq[Operation]): Generator[ProjectContext, Unit] = {
-    import ooParadigm.projectCapabilities.*
+    import ooParadigm.projectCapabilities._
     val makeClass: Generator[ClassContext, Unit] = {
-      import classCapabilities.*
+      import classCapabilities._
       for {
         _ <- setAbstract()
         _ <- forEach(ops) { op => addAbstractMethod(names.mangle(names.instanceNameOf(op)), makeSignature(op)) }

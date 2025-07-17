@@ -1,11 +1,13 @@
 package org.combinators.helloworld
 
+import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.{AnyParadigm, FindClass, ObjectOriented}
 import org.combinators.cogen.paradigm.control.Imperative
 import org.combinators.cogen.paradigm.ffi.{Arrays, Assertions, Console, Equality}
 import org.combinators.ep.domain.abstractions._
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.{AbstractSyntax, Command, NameProvider, Understands}
+import org.combinators.ep.domain.extensions._
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
@@ -52,7 +54,7 @@ trait HelloWorldObjectOrientedProvider extends HelloWorldProvider {
     import ooParadigm.projectCapabilities.addTypeLookupForConstructors
     import ooParadigm.classCapabilities.canFindClassInClass                // must be present, regardless of IntelliJ
     import ooParadigm.constructorCapabilities.canFindClassInConstructor    // must be present, regardless of IntelliJ
-    val dtpe = TypeRep.DataType(tpe)
+    val dtpe = DomainTpeRep.DataType(tpe)
     for {
       _ <- addTypeLookupForMethods(dtpe, domainTypeLookup(tpe))
       _ <- addTypeLookupForClasses(dtpe, domainTypeLookup(tpe))

@@ -99,7 +99,7 @@ lazy val helloWorldProject: Project =
     .settings(
       moduleName := s"expression-problem-language-helloworld",
     )
-    .dependsOn(core, languageJava, languageNewScala)
+    .dependsOn(cogen, core, languageJava, languageNewScala)
 
 lazy val languageInbetween =
   standardLanguageProject("inbetween")

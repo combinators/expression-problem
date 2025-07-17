@@ -5,7 +5,7 @@ import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.paradigm.AnyParadigm
 import org.combinators.cogen.paradigm.ffi.{Assertions, Booleans, Equality, Strings}
 import org.combinators.cogen.{Command, InstanceRep, TestCase, TypeRep}
-import org.combinators.ep.domain.abstractions.*
+import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.instances.DataTypeInstance
 import org.combinators.ep.generator.communication.{Request, SendRequest}
 
@@ -72,8 +72,8 @@ object TestImplementationProvider {
           expected: InstanceRep,
           argInsts: Seq[InstanceRep]
         ): Generator[forApproach.paradigm.MethodBodyContext, (forApproach.paradigm.syntax.Type, forApproach.paradigm.syntax.Expression, forApproach.paradigm.syntax.Expression)] = {
-        import AnyParadigm.syntax.*
-        import forApproach.paradigm.methodBodyCapabilities.*
+        import AnyParadigm.syntax._
+        import forApproach.paradigm.methodBodyCapabilities._
         for {
           tpe <- toTargetLanguageType(DomainTpeRep.DataType(baseTpe))
           _ <- forApproach.resolveAndAddImport(tpe)
@@ -89,8 +89,8 @@ object TestImplementationProvider {
 
       def makeEqualsTestCase(forApproach: AIP[paradigm.type])(testCase: EqualsTestCase):
         Generator[forApproach.paradigm.MethodBodyContext, Seq[forApproach.paradigm.syntax.Expression]] = {
-        import ffiAssertions.assertionCapabilities.*
-        import ffiEquality.equalityCapabilities.*
+        import ffiAssertions.assertionCapabilities._
+        import ffiEquality.equalityCapabilities._
         for {
           (tpe, res, exp) <- prepareTestCase(forApproach)(testCase.baseTpe, testCase.domainObject, testCase.op, testCase.expected, testCase.params)
           assertion <- assertEquals(tpe, res, exp)
@@ -99,9 +99,9 @@ object TestImplementationProvider {
 
       def makeNotEqualsTestCase(forApproach: AIP[paradigm.type])(testCase: NotEqualsTestCase):
         Generator[forApproach.paradigm.MethodBodyContext, Seq[forApproach.paradigm.syntax.Expression]] = {
-        import ffiAssertions.assertionCapabilities.*
-        import ffiBooleans.booleanCapabilities.*
-        import ffiEquality.equalityCapabilities.*
+        import ffiAssertions.assertionCapabilities._
+        import ffiBooleans.booleanCapabilities._
+        import ffiEquality.equalityCapabilities._
         for {
           (tpe, res, exp) <- prepareTestCase(forApproach)(testCase.baseTpe, testCase.domainObject, testCase.op, testCase.expected, testCase.params)
           assertion <- assertNotEquals(tpe, res, exp)
@@ -110,12 +110,12 @@ object TestImplementationProvider {
 
       def makeEqualsCompositeTestCase(forApproach: AIP[paradigm.type])(testCase: EqualsCompositeTestCase):
         Generator[forApproach.paradigm.MethodBodyContext, Seq[forApproach.paradigm.syntax.Expression]] = {
-        import AnyParadigm.syntax.*
-        import ffiAssertions.assertionCapabilities.*
-        import ffiEquality.equalityCapabilities.*
-        import forApproach.paradigm.*
-        import methodBodyCapabilities.*
-        import syntax.*
+        import AnyParadigm.syntax._
+        import ffiAssertions.assertionCapabilities._
+        import ffiEquality.equalityCapabilities._
+        import forApproach.paradigm._
+        import methodBodyCapabilities._
+        import syntax._
 
         def makeChain(tpe: TypeRep, obj: Expression, ops: Seq[(Operation, Seq[InstanceRep])]): Generator[MethodBodyContext, (Type, Expression)] =
           ops match {

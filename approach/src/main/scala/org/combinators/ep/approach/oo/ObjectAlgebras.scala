@@ -10,7 +10,7 @@ import org.combinators.ep.domain.{GenericModel, abstractions}
 import org.combinators.ep.domain.extensions._
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request}
 import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.ep.generator.*
+import org.combinators.ep.generator._
 
 /**
   * Sufficiently different EP approach that this trait does not extend SharedOO

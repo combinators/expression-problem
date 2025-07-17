@@ -4,7 +4,7 @@ import org.combinators.cogen.InstanceRep
 import org.combinators.cogen.TypeRep
 import org.combinators.ep.domain.instances.DataTypeInstanceRep
 import org.combinators.cogen.TestCase
-import org.combinators.ep.domain.abstractions.*
+import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.instances.DataTypeInstance
 import org.combinators.ep.domain.math.M0.{Add, AddInst, LitInst, addi}
 import org.combinators.ep.domain.math.M5

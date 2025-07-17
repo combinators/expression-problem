@@ -9,8 +9,8 @@ import org.combinators.cogen.paradigm.{AddImport, AnyParadigm, Apply, FindClass,
 import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.extensions._
-import org.combinators.ep.generator.*
-import org.combinators.ep.generator.communication.*
+import org.combinators.ep.generator._
+import org.combinators.ep.generator.communication._
 import org.combinators.cogen.paradigm.AnyParadigm.syntax.{forEach, *}
 
 sealed trait Interpreter extends SharedOO {

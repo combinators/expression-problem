@@ -1,12 +1,12 @@
 package org.combinators.ep.domain.math.systemO   /*DD:LI:AI*/
 
 import org.combinators.cogen.{Tag, TestCase}
-import org.combinators.ep.domain.*
-import org.combinators.ep.domain.abstractions.*
+import org.combinators.ep.domain._
+import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.instances.DataTypeInstance
-import org.combinators.ep.domain.math.M0.{Eval, LitInst}
-import org.combinators.ep.domain.math.{M1, M2}
-import org.combinators.ep.domain.math.M2.{PrettyP, StringInst, getModel}
+import org.combinators.ep.domain.math.M0.LitInst
+import org.combinators.ep.domain.math.M2
+import org.combinators.ep.domain.math.M2.{PrettyP, StringInst}
 
 /**
  * Provides a corrective implementation for PrettyP/Lit by "doubling" the output. Note that any optimization

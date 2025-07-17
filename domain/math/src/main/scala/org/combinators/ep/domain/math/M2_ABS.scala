@@ -3,10 +3,10 @@ package org.combinators.ep.domain.math      /*DD:LI:AI*/
 import org.combinators.cogen.InstanceRep
 import org.combinators.ep.domain.instances.DataTypeInstanceRep
 import org.combinators.cogen.TestCase
-import org.combinators.ep.domain.*
-import org.combinators.ep.domain.abstractions.*
+import org.combinators.ep.domain._
+import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.instances.DataTypeInstance
-import org.combinators.ep.domain.math.M0.{AddInst, LitInst}
+import org.combinators.ep.domain.math.M0.LitInst
 import org.combinators.ep.domain.math.M1.SubInst
 
 object M2_ABS extends Evolution {

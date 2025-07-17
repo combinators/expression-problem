@@ -1,8 +1,6 @@
-package org.combinators.cogen
+package org.combinators.cogen     /*DI:LI:AI*/
 
-/*DI:LI:AI*/
-
-import cats.*
+import cats._
 import cats.data.State
 import cats.free.Free
 import cats.free.Free.liftF
@@ -21,13 +19,13 @@ trait Command {
   def interpret[Context, Self >: this.type <: Command.WithResult[Result]](implicit interp: Understands[Context, Self]): Command.Generator[Context, Result] = {
     val self: Self = this
 
-    liftF[Command.Performable[Context, *], Result](Command.Performable[Context, Result, Self](self, interp))
+    liftF[Command.Performable[Context, _], Result](Command.Performable[Context, Result, Self](self, interp))
   }
 }
 
 object Command {
   type WithResult[R] = Command { type Result = R }
-  type Generator[C, A] = Free[Performable[C, *], A]
+  type Generator[C, A] = Free[Performable[C, _], A]
 
   sealed trait Performable[Context, R] {
     type Cmd <: Command.WithResult[R]
@@ -43,15 +41,15 @@ object Command {
   }
 
   def runGenerator[Context, Result](gen: Generator[Context, Result], inContext: Context): (Context, Result) = {
-    val compiler: Performable[Context, *] ~> State[Context, *] = new (Performable[Context, *] ~> State[Context, *]) {
+    val compiler: Performable[Context, _] ~> State[Context, _] = new (Performable[Context, _] ~> State[Context, _]) {
       def apply[A](fa: Performable[Context, A]): State[Context, A] =
         State[Context, A](ctxt => fa.interpreter.perform(ctxt, fa.cmd))
     }
     gen.foldMap(compiler).run(inContext).value
   }
 
-  implicit def monadInstance[C]: Monad[Generator[C, *]] =
-    cats.free.Free.catsFreeMonadForFree[Performable[C, *]]
+  implicit def monadInstance[C]: Monad[Generator[C, _]] =
+    cats.free.Free.catsFreeMonadForFree[Performable[C, _]]
 
   def lift[Context, T](value: T): Command.Generator[Context, T] = monadInstance.pure(value)
   def skip[Context]: Generator[Context, Unit] = lift(())

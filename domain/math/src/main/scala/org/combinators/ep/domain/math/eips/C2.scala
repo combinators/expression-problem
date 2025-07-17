@@ -9,7 +9,7 @@ import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
-import org.combinators.cogen.paradigm.ffi.*
+import org.combinators.cogen.paradigm.ffi._
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
 import scala.collection.immutable.Set

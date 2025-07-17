@@ -7,8 +7,8 @@ import org.combinators.cogen.{AbstractSyntax, Command, NameProvider, TypeRep, In
 import org.combinators.cogen.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.ep.generator.EvolutionImplementationProvider
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
-import org.combinators.ep.domain.extensions.*
-import org.combinators.ep.domain.abstractions.*
+import org.combinators.ep.domain.extensions._
+import org.combinators.ep.domain.abstractions._
 import AnyParadigm.syntax.forEach
 import Imperative.WithBase
 import Command.Generator

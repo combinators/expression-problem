@@ -2,18 +2,17 @@ package org.combinators.ep.language.java.paradigm.ffi    /*DI:LD:AI*/
 
 import com.github.javaparser.ast.`type`.ArrayType
 import com.github.javaparser.ast.expr.{ArrayAccessExpr, ArrayCreationExpr, ArrayInitializerExpr, AssignExpr, FieldAccessExpr, IntegerLiteralExpr, MethodCallExpr, NameExpr, SimpleName}
-import com.github.javaparser.ast.{ArrayCreationLevel, ImportDeclaration, NodeList}
+import com.github.javaparser.ast.{ArrayCreationLevel, NodeList}
 import org.combinators.cogen.InstanceRep
 import org.combinators.cogen.TypeRep
-import org.combinators.cogen.paradigm.{AddImport, Apply, ffi}
+import org.combinators.cogen.paradigm.{Apply, ffi}
 import org.combinators.cogen.Command.Generator
-import org.combinators.cogen.paradigm.AnyParadigm.syntax.*
+import org.combinators.cogen.paradigm.AnyParadigm.syntax._
 import org.combinators.cogen.paradigm.ffi.{CreateArray, Get, Length, Arrays as Arrs}
-import org.combinators.cogen.paradigm.ffi.*
-import org.combinators.cogen.{Command, Understands}
+import org.combinators.cogen.Understands
 import org.combinators.ep.language.java.CodeGenerator.Enable
-import org.combinators.ep.language.java.Syntax.default.*
-import org.combinators.ep.language.java.paradigm.{AnyParadigm, Generics, ObjectOriented}
+import org.combinators.ep.language.java.Syntax.default._
+import org.combinators.ep.language.java.paradigm.AnyParadigm
 import org.combinators.ep.language.java.{ContextSpecificResolver, ProjectCtxt}
 
 class Arrays[Ctxt, AP <: AnyParadigm](val base:AP) extends Arrs[Ctxt] {

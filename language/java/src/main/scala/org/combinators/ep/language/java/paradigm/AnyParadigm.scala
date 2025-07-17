@@ -16,10 +16,9 @@ import org.combinators.cogen.{Command, FileWithPath, Understands}
 import org.combinators.ep.language.java.Syntax.MangledName
 import org.combinators.ep.language.java.{CodeGenerator, CompilationUnitCtxt, Config, ContextSpecificResolver, FreshNameCleanup, ImportCleanup, JavaNameProvider, MethodBodyCtxt, ProjectCtxt, Syntax, TestCtxt}
 import org.combinators.templating.persistable.{BundledResource, JavaPersistable}
-import org.combinators.ep.language.java.ResourcePersistable
 
 import scala.util.Try
-import scala.jdk.CollectionConverters.*
+import scala.jdk.CollectionConverters._
 
 
 trait AnyParadigm extends AP {

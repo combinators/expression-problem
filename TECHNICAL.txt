@@ -1,13 +1,19 @@
+Codebase validated to work with
+
+   scalaVersion := "3.6.4"
+
 When you have a fresh clone of the git repository, enter the command `sbt compile` in the
 top-level directory to compile EpCoGen. sbt will properly install all necessary software
 libraries.
 
-We have tested with sbt versions of 1.7.1, 1.9.8, and 1.10.7.
+We have tested with sbt versions of 1.7.1, 1.9.8, 1.10.7, and 1.10.11.
+
+We have tested with Java JDK 18.
 
 If your Java version is too advanced for the sbt, you may need to add the
 following to the build.st file to lower the associated Java version.
 
-  javacOptions ++= Seq("-source", "11", "-target", "11"),
+  javacOptions ++= Seq("-source", "11", "-target", "11")
 
 And then you can install an openJDK version of Java 11 and use it by setting JAVA_HOME
 properly and/or configuring PATH variable appropriately.

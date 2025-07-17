@@ -1,12 +1,11 @@
 package org.combinators.ep.domain.math.systemO   /*DD:LI:AI*/
 
 import org.combinators.cogen.TestCase
-import org.combinators.ep.domain.*
-import org.combinators.ep.domain.abstractions.*
+import org.combinators.ep.domain._
+import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.instances.DataTypeInstance
 import org.combinators.ep.domain.math.M0.{DoubleInst, Eval, LitInst}
 import org.combinators.ep.domain.math.M2
-import org.combinators.ep.domain.math.M2.{PrettyP, StringInst}
 
 /**
  * Provides a corrective implementation for Eval/Lit though there is no visible different in output.

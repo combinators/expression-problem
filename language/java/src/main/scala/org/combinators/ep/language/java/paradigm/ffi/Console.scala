@@ -6,9 +6,7 @@ import org.combinators.cogen.paradigm.Apply
 import org.combinators.cogen.paradigm.ffi.{Print, Strings, Console as Con}
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.Understands
-import org.combinators.cogen.paradigm.ffi.*
-import org.combinators.cogen.Understands
-import org.combinators.ep.language.java.Syntax.default.*
+import org.combinators.ep.language.java.Syntax.default._
 import org.combinators.ep.language.java.paradigm.AnyParadigm
 
 class Console[Ctxt, AP <: AnyParadigm](

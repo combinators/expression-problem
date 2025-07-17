@@ -1,21 +1,18 @@
 package org.combinators.ep.language.java.paradigm.ffi    /*DI:LD:AI*/
 
-import com.github.javaparser.ast.expr.{BinaryExpr, IntegerLiteralExpr, MethodCallExpr, StringLiteralExpr}
+import com.github.javaparser.ast.expr.{IntegerLiteralExpr, MethodCallExpr}
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, Understands}
-import org.combinators.cogen.paradigm.ffi.*
 import org.combinators.ep.language.java.CodeGenerator.Enable
-import org.combinators.ep.language.java.{CodeGenerator, ContextSpecificResolver, CtorCtxt, JavaNameProvider, MethodBodyCtxt, ProjectCtxt, Syntax}
+import org.combinators.ep.language.java.{ContextSpecificResolver, ProjectCtxt}
 import org.combinators.ep.language.java.paradigm.{AnyParadigm, Generics, ObjectOriented}
-import org.combinators.ep.language.java.Syntax.default.*
-import org.combinators.cogen.paradigm.AnyParadigm.syntax.*
-import cats.syntax.*
-import cats.implicits.*
+import org.combinators.ep.language.java.Syntax.default._
+import org.combinators.cogen.paradigm.AnyParadigm.syntax._
 import com.github.javaparser.ast.{ImportDeclaration, NodeList}
 import org.combinators.cogen.InstanceRep
 import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.ffi.{Append, Cons, Create, Head, Tail, Lists as Lsts}
-import org.combinators.cogen.paradigm.{AddImport, Apply, GetMember}
+import org.combinators.cogen.paradigm.{AddImport, Apply}
 
 trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
   case object ListsEnabled

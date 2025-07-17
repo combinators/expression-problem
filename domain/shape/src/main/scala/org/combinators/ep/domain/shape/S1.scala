@@ -1,13 +1,11 @@
 package org.combinators.ep.domain.shape   /*DD:LI:AI*/
 
-
-import org.combinators.cogen.InstanceRep
 import org.combinators.ep.domain.instances.DataTypeInstanceRep
 import org.combinators.cogen.TestCase
-import org.combinators.ep.domain.*
-import org.combinators.ep.domain.abstractions.*
+import org.combinators.ep.domain._
+import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.instances.DataTypeInstance
-import org.combinators.ep.domain.shape.S0.*
+import org.combinators.ep.domain.shape.S0._
 
 object S1 extends Evolution {
   override implicit def getModel:GenericModel = S0.getModel.evolve("s1", Seq(Union), Seq.empty)

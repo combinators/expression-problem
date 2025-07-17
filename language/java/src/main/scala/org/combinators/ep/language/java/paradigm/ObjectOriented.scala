@@ -12,10 +12,10 @@ import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddClass, AddConstru
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, Understands}
 import org.combinators.ep.language.java.Syntax.MangledName
-import org.combinators.ep.language.java.{ClassCtxt, CompilationUnitCtxt, ContextSpecificResolver, CtorCtxt, JavaNameProvider, MethodBodyCtxt, TestCtxt}
+import org.combinators.ep.language.java.{ClassCtxt, ContextSpecificResolver, CtorCtxt, JavaNameProvider, MethodBodyCtxt, TestCtxt}
 
 import scala.util.Try
-import scala.jdk.CollectionConverters.*
+import scala.jdk.CollectionConverters._
 
 trait ObjectOriented[AP <: AnyParadigm] extends OO {
   val base: AP

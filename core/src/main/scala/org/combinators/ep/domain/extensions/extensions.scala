@@ -2,7 +2,7 @@ package org.combinators.ep.domain.extensions
 
 import org.combinators.cogen.{InstanceRep, NameProvider, TypeRep}
 import org.combinators.ep.domain.GenericModel
-import org.combinators.ep.domain.abstractions.*
+import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.instances.DataTypeInstance
 
 extension [Name](nameProvider: NameProvider[Name]) {

@@ -1,8 +1,9 @@
 /**
  * Taken from  http://infoscience.epfl.ch/record/52625 with upgrades for Scala "2.12.17"
  *
- * Doesn't work anymore
+ * No longer works in modern Scala
  */
+
 package ep
 trait Base {
 
@@ -17,6 +18,7 @@ trait Base {
   }
 }
 
+/****** -------------------------------------------------------------------
 object BaseTest extends Base with App {
   type exp = Exp
   val e: exp = new Num(7)
@@ -162,30 +164,31 @@ trait EqualsPlusNeg extends BasePlusNeg with Equals {
   }
 }
 
-/** Breaks down here...
+//Breaks down here...
+//
+//trait EqualsShowPlusNeg extends EqualsPlusNeg with ShowPlusNeg {
+//  type exp <: Exp
+//  trait Exp extends super[EqualsPlusNeg].Exp with super[ShowPlusNeg].Exp;
+//
+//  class Num(v: Int)
+//    extends super[EqualsPlusNeg].Num(v) with super[ShowPlusNeg].Num(v) with Exp
+//  class Plus(l: exp, r: exp)
+//    extends super[EqualsPlusNeg].Plus(l, r)
+//      with super[ShowPlusNeg].Plus(l, r) with Exp
+//  class Neg(term: exp)
+//    extends super[EqualsPlusNeg].Neg(term)
+//      with super[ShowPlusNeg].Neg(term) with Exp
+//}
+//
+//object EqualsShowPlusNegTest extends EqualsPlusNeg with App {
+//  type exp = Exp;
+//  val term1 = new Plus(new Num(1), new Num(2));
+//  val term2 = new Plus(new Num(1), new Num(2));
+//  val term3 = new Neg(new Num(2));
+//  Console.print(term1.show + "=" + term2.show + "? ");
+//  Console.println(term1 eql term2);
+//  Console.print(term1.show + "=" + term3.show + "? ");
+//  Console.println(term1 eql term3);
+//}
 
-trait EqualsShowPlusNeg extends EqualsPlusNeg with ShowPlusNeg {
-  type exp <: Exp
-  trait Exp extends super[EqualsPlusNeg].Exp with super[ShowPlusNeg].Exp;
-
-  class Num(v: Int)
-    extends super[EqualsPlusNeg].Num(v) with super[ShowPlusNeg].Num(v) with Exp
-  class Plus(l: exp, r: exp)
-    extends super[EqualsPlusNeg].Plus(l, r)
-      with super[ShowPlusNeg].Plus(l, r) with Exp
-  class Neg(term: exp)
-    extends super[EqualsPlusNeg].Neg(term)
-      with super[ShowPlusNeg].Neg(term) with Exp
-}
-
-object EqualsShowPlusNegTest extends EqualsPlusNeg with App {
-  type exp = Exp;
-  val term1 = new Plus(new Num(1), new Num(2));
-  val term2 = new Plus(new Num(1), new Num(2));
-  val term3 = new Neg(new Num(2));
-  Console.print(term1.show + "=" + term2.show + "? ");
-  Console.println(term1 eql term2);
-  Console.print(term1.show + "=" + term3.show + "? ");
-  Console.println(term1 eql term3);
-}
- **/
+------------------------------------------------------------------- ******/

@@ -4,14 +4,14 @@ import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.cogen.{AbstractSyntax, Command, NameProvider, TypeRep, Understands}
 import Command.Generator
-import cats.implicits.*
+import cats.implicits._
 import org.combinators.cogen.paradigm.{AnyParadigm, FindType, Functional}
 import org.combinators.ep.domain.abstractions.{DataType, DataTypeCase, DomainTpeRep, Operation, Parameter}
 import org.combinators.ep.generator.communication.{ReceivedRequest, Request, SendRequest}
-import AnyParadigm.syntax.*
+import AnyParadigm.syntax._
 import org.combinators.cogen.paradigm.control.{ConstructorPattern, Functional as FunControl}
 import org.combinators.cogen.paradigm.control.Functional.WithBase
-import org.combinators.ep.domain.extensions.*
+import org.combinators.ep.domain.extensions._
 
 trait Traditional extends ApproachImplementationProvider {
   val functional: Functional.WithBase[paradigm.type]

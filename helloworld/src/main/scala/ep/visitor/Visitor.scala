@@ -15,7 +15,7 @@ trait Base {
   trait Visitor { def visitNum(value: Int): Unit  }
 
   class Eval extends Visitor {
-    var result: Int = _
+    var result: Int = ???
 
     def apply(t: Exp): Int = {
       t.accept(this)
@@ -33,22 +33,22 @@ object BaseTest extends Base with App {
   Console.println(op.apply(new Num(8)))
 }
 
-/*
-trait BasePlus extends Base {
-  type visitor <: Visitor
-  trait Visitor extends super.Visitor {
-    def visitPlus(left: Exp, right: Exp): Unit
-  }
-  class Plus(left: Exp, right: Exp) extends Exp {
-    def accept(v: Visitor): Unit =
-      v.visitPlus(left, right)
-  }
-  class Eval extends super.Eval with Visitor {
-    def visitPlus(l: Exp, r: Exp): Unit = {
-      result = apply(l) + apply(r)
-    }
-  }
-}*/
+//trait BasePlus extends Base {
+//  type visitor <: Visitor
+//  trait Visitor extends super.Visitor {
+//    def visitPlus(left: Exp, right: Exp): Unit
+//  }
+//  class Plus(left: Exp, right: Exp) extends Exp {
+//    def accept(v: Visitor): Unit =
+//      v.visitPlus(left, right)
+//  }
+//  class Eval extends super.Eval with Visitor {
+//    def visitPlus(l: Exp, r: Exp): Unit = {
+//      result = apply(l) + apply(r)
+//    }
+//  }
+//}
+
 //
 //trait BaseNeg extends Base {
 //  type visitor <: Visitor;

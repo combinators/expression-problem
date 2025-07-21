@@ -1,6 +1,5 @@
 package org.combinators.ep.domain.math.systemO  /*DD:LI:AI*/
 
-import org.combinators.cogen.InstanceRep
 import org.combinators.ep.domain.instances.DataTypeInstanceRep
 import org.combinators.cogen.TestCase
 import org.combinators.ep.domain._

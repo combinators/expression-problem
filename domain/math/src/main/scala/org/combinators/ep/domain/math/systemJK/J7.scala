@@ -1,6 +1,5 @@
 package org.combinators.ep.domain.math.systemJK    /*DD:LI:AI*/
 
-import org.combinators.cogen.InstanceRep
 import org.combinators.ep.domain.instances.DataTypeInstanceRep
 import org.combinators.cogen.TestCase
 import org.combinators.ep.domain.abstractions._
@@ -20,19 +19,19 @@ import org.combinators.ep.domain.math.systemK.K2.{Collect, ListDoubleInst, Simpl
 object J7 extends Evolution {
   override implicit def getModel: GenericModel = K2J6.getModel.evolve("j7", Seq(Inv), J2.isOps(Seq(Inv)))
 
-  lazy val Inv = DataTypeCase.binary("Inv")(MathDomain.getModel)
+  lazy val Inv: DataTypeCase = DataTypeCase.binary("Inv")(MathDomain.getModel)
 
   def InvInst(left: DataTypeInstance, right: DataTypeInstance): DataTypeInstance =
     DataTypeInstance(Inv, Seq(DataTypeInstanceRep(left), DataTypeInstanceRep(right)))
 
-  val invi = InvInst(LitInst(3.0), LitInst(5.0))
+  val invi: DataTypeInstance = InvInst(LitInst(3.0), LitInst(5.0))
 
-  val invi_same_lhs = InvInst(LitInst(3.0), LitInst(4.0))
-  val invi_same_rhs = InvInst(LitInst(4.0), LitInst(5.0))
+  val invi_same_lhs: DataTypeInstance = InvInst(LitInst(3.0), LitInst(4.0))
+  val invi_same_rhs: DataTypeInstance = InvInst(LitInst(4.0), LitInst(5.0))
 
-  val all_instances = K2J6.all_instances ++ Seq(invi)
-  val lhs = K2J6.lhs ++ Seq(invi_same_lhs) // changes on left hand side
-  val rhs = K2J6.rhs ++ Seq(invi_same_rhs) // changes on right hand side
+  val all_instances: Seq[DataTypeInstance] = K2J6.all_instances ++ Seq(invi)
+  val lhs: Seq[DataTypeInstance] = K2J6.lhs ++ Seq(invi_same_lhs) // changes on left hand side
+  val rhs: Seq[DataTypeInstance] = K2J6.rhs ++ Seq(invi_same_rhs) // changes on right hand side
 
   override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(K2J6)
 

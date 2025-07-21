@@ -12,8 +12,8 @@ import org.combinators.ep.domain.{Evolution, GenericModel}
 object J1 extends Evolution {
   override implicit def getModel: GenericModel = M0.getModel.evolve("j1", Seq(Sub), Seq(MultBy))
 
-  lazy val base = DomainTpeRep.DataType(M0.getModel.baseDataType) // go to previous one, o/w recursion hits
-  lazy val MultBy = Operation("multBy", base, Seq(Parameter("other", base)))
+  lazy val base: DomainTpeRep.DataType = DomainTpeRep.DataType(M0.getModel.baseDataType) // go to previous one, o/w recursion hits
+  lazy val MultBy: Operation = Operation("multBy", base, Seq(Parameter("other", base)))
 
   // m1:model evolution.
   // -------------------

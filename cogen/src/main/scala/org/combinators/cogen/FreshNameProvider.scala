@@ -1,7 +1,5 @@
 package org.combinators.cogen
 
-/*DI:LI:AI*/
-
 case class FreshNameProvider[Name](
   pushName: (Name, Int) => Name,
   parent: Option[FreshNameProvider[Name]] = None,

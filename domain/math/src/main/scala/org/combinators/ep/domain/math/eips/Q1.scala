@@ -3,8 +3,8 @@ package org.combinators.ep.domain.math.eips    /*DD:LI:AI*/
 import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.AnyParadigm
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, RealArithmetic, Strings, Trees}
-import org.combinators.ep.domain.abstractions.{Attribute, DataTypeCase, Operation, DomainTpeRep}
-import org.combinators.ep.domain.math
+import org.combinators.ep.domain.abstractions.{Attribute, DomainTpeRep, Operation}
+import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
@@ -20,7 +20,7 @@ object Q1 {
      ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val q1Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.Q1.getModel
+      override val model: GenericModel = math.Q1.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
@@ -30,22 +30,6 @@ object Q1 {
           _ <- ffiTrees.enable()
         } yield ()
       }
-
-      /** AsTree depends upon Identifier. */
-//      override def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = {
-//        if (op == Operation.asTree) {
-//          Some(Set(math.Q1.Identifier))
-//        } else {
-//          None
-//        }
-//      }
-//
-//      def applicable
-//        (forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-//        (Set(math.Q1.Identifier, Operation.asTree).contains(potentialRequest.op) &&
-//          Set(math.M3.Divd,math.M3.Mult, math.M3.Neg,math.M1.Sub,math.M0.Add,math.M0.Lit,math.W1.Power).contains(potentialRequest.tpeCase)) ||
-//          (Set(math.Q1.Sqrt).contains(potentialRequest.tpeCase) && Set(math.M2.PrettyP,math.M0.Eval,math.Q1.Identifier,Operation.asTree).contains(potentialRequest.op))
-//      }
 
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = math.Q1.getModel.flatten.typeCases

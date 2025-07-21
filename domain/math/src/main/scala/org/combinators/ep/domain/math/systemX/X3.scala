@@ -15,13 +15,13 @@ object X3 extends Evolution {
 
   def StringInst(s: String): InstanceRep = InstanceRep(TypeRep.String)(s)
 
-  lazy val Divd = DataTypeCase.binary("Divd")(MathDomain.getModel)
+  lazy val Divd: DataTypeCase = DataTypeCase.binary("Divd")(MathDomain.getModel)
 
   def DivdInst(left: DataTypeInstance, right: DataTypeInstance): DataTypeInstance =
     DataTypeInstance(Divd, Seq(DataTypeInstanceRep(left), DataTypeInstanceRep(right)))
 
   // Tests
-  val m2_s1 = SubInst(LitInst(1.0), LitInst(2.0))
+  val m2_s1: DataTypeInstance = SubInst(LitInst(1.0), LitInst(2.0))
 
   override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(X1)
 

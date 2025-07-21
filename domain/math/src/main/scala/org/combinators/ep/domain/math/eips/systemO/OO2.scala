@@ -1,6 +1,5 @@
 package org.combinators.ep.domain.math.eips.systemO     /*DD:LI:AI*/
 
-import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.AnyParadigm
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, RealArithmetic, Strings}
 import org.combinators.ep.domain.abstractions.Operation

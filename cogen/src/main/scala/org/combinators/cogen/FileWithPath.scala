@@ -1,7 +1,5 @@
 package org.combinators.cogen
 
-/*DI:LI:AI*/
-
 import org.combinators.templating.persistable.Persistable
 
 import java.nio.file.Path

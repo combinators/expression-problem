@@ -10,6 +10,8 @@ import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionIm
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
 
+import scala.language.postfixOps
+
 object M3 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
       (paradigm: P)

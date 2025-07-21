@@ -1,15 +1,13 @@
 package org.combinators.ep.domain.math.eips      /*DD:LI:AI*/
 
 import org.combinators.cogen.InstanceRep
-import org.combinators.ep.domain.instances.DataTypeInstanceRep
 import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.AnyParadigm
 import org.combinators.cogen.paradigm.control
-import org.combinators.cogen.paradigm.ffi.{Arithmetic, Booleans, Equality, Strings}
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Booleans, Equality}
 import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation}
-import org.combinators.ep.domain.{abstractions, math}
+import org.combinators.ep.domain.{GenericModel, abstractions, math}
 import org.combinators.cogen.Command.Generator
-import org.combinators.cogen.paradigm.control
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
@@ -38,7 +36,7 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
 
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val m7i2Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.M7I2.getModel
+      override val model: GenericModel = math.M7I2.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
@@ -193,9 +191,7 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
 
           case p@math.M7.PowBy =>  // on Power
             // must handle Power dataType. HERE WE CAN OPTIMIZED.
-            val atts = onRequest.attributes.keys.toSeq
-            val attExprs = onRequest.attributes.values.toSeq
-            for {
+             for {
               res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.systemI.I2.Power, onRequest.selfReference, onRequest.request.arguments.head._2)
             } yield Some(res)
         }

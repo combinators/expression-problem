@@ -1,6 +1,5 @@
 package org.combinators.ep.domain.math     /*DD:LI:AI*/
 
-import org.combinators.cogen.InstanceRep
 import org.combinators.ep.domain.instances.DataTypeInstanceRep
 import org.combinators.cogen.TestCase
 import org.combinators.ep.domain.{Evolution, GenericModel}
@@ -24,21 +23,17 @@ m0 <- m1 <- m2 <- i1 <- a1 [Mult]          |
 object A3 extends Evolution {
   override implicit def getModel:GenericModel = A1M3I2.getModel.evolve("a3", Seq(Inv), Seq.empty)
 
-  // A3:model evolution.  INV which is opposite of DIV
-  // -------------------
-  lazy val Inv = DataTypeCase.binary("Inv")(MathDomain.getModel)
+  lazy val Inv: DataTypeCase = DataTypeCase.binary("Inv")(MathDomain.getModel)
 
   def DivdInst(left:DataTypeInstance, right:DataTypeInstance): DataTypeInstance =
     DataTypeInstance(Inv, Seq(DataTypeInstanceRep(left), DataTypeInstanceRep(right)))
 
   // Tests
-  val m3_m2_d1 = DivdInst(LitInst(5.0),  LitInst(2.0))
+  val m3_m2_d1: DataTypeInstance = DivdInst(LitInst(5.0), LitInst(2.0))
 
   override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(A1M3I2)
 
-
   def tests: Seq[TestCase] = Seq(
-
     EqualsTestCase(getModel.baseDataType, m3_m2_d1, PrettyP, StringInst("(2.0/5.0)")),
     EqualsTestCase(getModel.baseDataType, m3_m2_d1, Eval, M0.DoubleInst(0.4)),
   )

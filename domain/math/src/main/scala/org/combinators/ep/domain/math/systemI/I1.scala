@@ -12,8 +12,8 @@ import org.combinators.ep.domain.{Evolution, GenericModel}
 object I1 extends Evolution {
   override implicit def getModel: GenericModel = M2.getModel.evolve("i1", Seq.empty, Seq(MultBy))
 
-  lazy val base = DomainTpeRep.DataType(M2.getModel.baseDataType)
-  lazy val MultBy = Operation("multBy", base, Seq(Parameter("other", base)))
+  lazy val base: DomainTpeRep.DataType = DomainTpeRep.DataType(M2.getModel.baseDataType)
+  lazy val MultBy: Operation = Operation("multBy", base, Seq(Parameter("other", base)))
 
   object MultByTestCase {
     def apply(instance: DataTypeInstance, argument: InstanceRep, expected: InstanceRep): TestCase = {

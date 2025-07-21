@@ -11,8 +11,6 @@ import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
-import org.combinators.cogen.Command
-
 
 // Takes adapters for return in if-then-else, s.t. functional- and imperative-style if-then-else can be
 // used in an uniform way.

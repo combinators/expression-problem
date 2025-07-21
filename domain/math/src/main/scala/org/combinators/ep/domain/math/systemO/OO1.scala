@@ -15,7 +15,7 @@ object OO1 extends Evolution {
 
   def StringInst(s:String): InstanceRep = InstanceRep(TypeRep.String)(s)
 
-  lazy val Atomic = Operation("atomic", TypeRep.String)
+  lazy val Atomic: Operation = Operation("atomic", TypeRep.String)
 
   // Tests
   val oo1_s1: DataTypeInstance = SubInst(LitInst(1.0), LitInst(2.0))

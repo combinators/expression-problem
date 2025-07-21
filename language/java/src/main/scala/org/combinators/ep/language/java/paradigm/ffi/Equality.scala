@@ -9,7 +9,7 @@ import org.combinators.cogen.paradigm.{Apply, GetMember}
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, Understands}
 import org.combinators.ep.language.java.{ContextSpecificResolver, JavaNameProvider, ProjectCtxt}
-import org.combinators.ep.language.java.paradigm.{AnyParadigm, ffi}
+import org.combinators.ep.language.java.paradigm.AnyParadigm
 import org.combinators.ep.language.java.Syntax.default._
 import org.combinators.ep.language.java.CodeGenerator.Enable
 

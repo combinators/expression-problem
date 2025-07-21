@@ -14,7 +14,7 @@ import org.combinators.ep.domain.{Evolution, GenericModel}
 object J5 extends Evolution {
   override implicit def getModel: GenericModel = J4.getModel.evolve("j5", Seq.empty, Seq(Equals))
 
-  lazy val Equals = Operation("equal_to", TypeRep.Boolean, Seq(Parameter("other", DomainTpeRep.DataType(M5.getModel.baseDataType))))
+  lazy val Equals: Operation = Operation("equal_to", TypeRep.Boolean, Seq(Parameter("other", DomainTpeRep.DataType(M5.getModel.baseDataType))))
 
   object EqualsBinaryMethodTestCase {
     def apply(op: Operation, instance: DataTypeInstance, instance1: DataTypeInstance, result: Boolean): TestCase = {

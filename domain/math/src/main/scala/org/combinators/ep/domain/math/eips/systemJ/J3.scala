@@ -11,6 +11,8 @@ import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstan
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
+import scala.language.postfixOps
+
 object J3 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
@@ -92,18 +94,19 @@ object J3 {
           val realResult = onRequest.request.op match {
             case math.M0.Eval =>
               onRequest.tpeCase match {
-                case systemJ.J3.Divd => {
+                case systemJ.J3.Divd =>
                   for {
                     atts <- attsGen
                     res <- div(atts*)
                   } yield res
-                }
+
                 case systemJ.J3.Neg =>
                   for {
                     atts <- attsGen
                     minusOne <- reify(TypeRep.Double, -1)
                     res <- mult(minusOne, atts.head)
                   } yield res
+
                 case _ => ???
               }
 
@@ -116,36 +119,37 @@ object J3 {
                     res <- asString(onRequest.attributes(att), ty)
                   } yield res
 
-                case math.M0.Add => {
+                case math.M0.Add =>
                   for {
                     atts <- attsGen
                     res <- makeString(atts, "(", "+", ")")
                   } yield res
-                }
-                case math.systemJ.J1.Sub => {
+
+                case math.systemJ.J1.Sub =>
                   for {
                     atts <- attsGen
                     res <- makeString(atts, "(", "-", ")")
                   } yield res
-                }
-                case math.systemJ.J2.Mult => {
+
+                case math.systemJ.J2.Mult =>
                   for {
                     atts <- attsGen
                     res <- makeString(atts, "(", "*", ")")
                   } yield res
-                }
-                case systemJ.J3.Divd => {
+
+                case systemJ.J3.Divd =>
                   for {
                     atts <- attsGen
                     res <- makeString(atts, "(", "/", ")")
                   } yield res
-                }
+
                 case systemJ.J3.Neg =>
                   for {
                     atts <- attsGen
                     minus <- reify(TypeRep.String, "-")
                     res <- stringAppend(minus, atts.head)
                   } yield res
+
                 case _ => ???
               }
             case _ => ???

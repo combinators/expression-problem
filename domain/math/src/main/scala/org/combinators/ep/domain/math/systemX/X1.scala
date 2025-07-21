@@ -14,13 +14,11 @@ import org.combinators.ep.domain.{Evolution, GenericModel}
 object X1 extends Evolution {
   override implicit def getModel: GenericModel = M0.getModel.evolve("x1", Seq(Sub), Seq(PrettyP, MultBy))
 
-  lazy val base = DomainTpeRep.DataType(M0.getModel.baseDataType)
+  lazy val base: DomainTpeRep.DataType = DomainTpeRep.DataType(M0.getModel.baseDataType)
 
-  // x1:model evolution.
-  // -------------------
   lazy val Sub: DataTypeCase = DataTypeCase.binary("Sub")(MathDomain.getModel)
-  lazy val PrettyP = Operation("prettyp", TypeRep.String)
-  lazy val MultBy = Operation("multBy", base, Seq(Parameter("other", base)))
+  lazy val PrettyP: Operation = Operation("prettyp", TypeRep.String)
+  lazy val MultBy: Operation = Operation("multBy", base, Seq(Parameter("other", base)))
 
   object MultByTestCase {
     def apply(instance: DataTypeInstance, argument: InstanceRep, expected: InstanceRep): TestCase = {
@@ -30,7 +28,7 @@ object X1 extends Evolution {
   }
 
   // Tests
-  val m2_s1 = SubInst(LitInst(1.0), LitInst(2.0))
+  val m2_s1: DataTypeInstance = SubInst(LitInst(1.0), LitInst(2.0))
 
   def SubInst(left: DataTypeInstance, right: DataTypeInstance): DataTypeInstance =
     DataTypeInstance(Sub, Seq(DataTypeInstanceRep(left), DataTypeInstanceRep(right)))

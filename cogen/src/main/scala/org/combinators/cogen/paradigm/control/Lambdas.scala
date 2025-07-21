@@ -1,7 +1,5 @@
 package org.combinators.cogen.paradigm.control
 
-/*DI:LI:AI*/
-
 import org.combinators.cogen.paradigm.AnyParadigm
 import org.combinators.cogen.{Command, Understands}
 import Command.Generator

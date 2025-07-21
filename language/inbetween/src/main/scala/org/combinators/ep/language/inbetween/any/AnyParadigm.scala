@@ -182,7 +182,7 @@ object AnyParadigm {
     ): WithSyntax[_FT, _factory.type, _syntax.type] = new AnyParadigm {
     type FT = _FT
     type FactoryType = _factory.type
-    override val factory = _factory
+    override val factory: FactoryType = _factory
     override val _runGenerator: Generator[Project[FT], Unit] => Seq[FileWithPath] = __runGenerator
     override val syntax: _syntax.type = _syntax
   }

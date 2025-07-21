@@ -1,18 +1,15 @@
 package org.combinators.ep.domain.math.eips.systemJ   /*DD:LI:AI*/
 
 import org.combinators.cogen.InstanceRep
-import org.combinators.ep.domain.instances.DataTypeInstanceRep
 import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.AnyParadigm
 import org.combinators.cogen.paradigm.control
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Equality, RealArithmetic, Strings}
 import org.combinators.ep.domain.abstractions.{DomainTpeRep, Operation}
 import org.combinators.ep.domain.{GenericModel, math}
-import org.combinators.ep.domain.math.systemJ
 import org.combinators.cogen.Command.{Generator, lift}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
-import org.combinators.cogen.paradigm.control
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
 object J1funct {

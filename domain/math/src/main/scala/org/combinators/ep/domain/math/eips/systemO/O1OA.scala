@@ -1,8 +1,5 @@
 package org.combinators.ep.domain.math.eips.systemO   /*DD:LI:AI*/
 
-import org.combinators.cogen.InstanceRep
-import org.combinators.ep.domain.instances.DataTypeInstanceRep
-import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.AnyParadigm
 import org.combinators.ep.domain.abstractions.Operation
 import org.combinators.ep.domain.{GenericModel, math}
@@ -29,15 +26,6 @@ object O1OA {
       }
 
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
-//        // if not careful, the overridden Eval for oa is ignored because o1 has an Eval for Lit. Have to call this out
-//        // ditto for prettyp
-//        if ((potentialRequest.op == math.M0.Eval) && Set(math.M0.Lit).contains(potentialRequest.tpeCase)) {
-//          Some(Set.empty)
-//        } else if ((potentialRequest.op == math.M2.PrettyP) && Set(math.M0.Lit).contains(potentialRequest.tpeCase)) {
-//          Some(Set.empty)
-//        } else {
-//          None
-//        }
         None
       }
 
@@ -45,23 +33,9 @@ object O1OA {
       (forApproach: AIP[paradigm.type])
       (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
-        import paradigm._
 
         ???
 
-//        // WON'T BE CALLED BUT NEED SOMETHING
-//        val result = onRequest.tpeCase match {
-//          /** Get and return first (and only) attribute. */
-//          case litC@math.M0.Lit =>
-//            if (onRequest.request.op == math.M2.PrettyP) {
-//              o1Provider.logic(forApproach)(onRequest)
-//            } else if (onRequest.request.op == math.M0.Eval) {
-//              oaProvider.logic(forApproach)(onRequest)
-//            } else {
-//              ???
-//            }
-//        }
-//        result
       }
     }
 

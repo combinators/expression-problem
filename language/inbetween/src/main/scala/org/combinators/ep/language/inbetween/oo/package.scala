@@ -409,7 +409,7 @@ package object oo {
       returnType: Option[any.Type[FT]] = Option.empty,
       parameters: Seq[(any.Name[FT], any.Type[FT])] = Seq.empty,
       typeLookupMap: TypeRep => Generator[any.Method[FT], any.Type[FT]] = Map.empty
-    ): any.Method[FT] = clsMethod(name, imports, statements, returnType, parameters, typeLookupMap, isAbstract = false, isStatic = false, isPublic = false, isOverride = false)
+    ): any.Method[FT] = clsMethod(name, imports, statements, returnType, parameters, typeLookupMap)
 
     def clsMethod(
       name: any.Name[FT],

@@ -1,7 +1,6 @@
 package org.combinators.ep.domain.math.eips.systemJK    /*DD:LI:AI*/
 
 import org.combinators.cogen.InstanceRep
-import org.combinators.ep.domain.instances.DataTypeInstanceRep
 import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.AnyParadigm
 import org.combinators.cogen.paradigm.control
@@ -64,7 +63,7 @@ object J8 {
             maxName <- freshName(forApproach.names.mangle("max"))
             maxDecl <- ffiImper.imperativeCapabilities.declareVar(maxName, intType, Some(zero))
 
-            _ <- forEach(onRequest.attributes.toSeq) { case (att, expr) => {
+            _ <- forEach(onRequest.attributes.toSeq) { case (att, expr) =>
               for {
                 attName <- freshName(forApproach.names.mangle(att.name))
                 exprVal <- forApproach.dispatch(
@@ -86,7 +85,6 @@ object J8 {
 
                 _ <- addBlockDefinitions(Seq(ifStmt))
               } yield ()
-            }
             }
 
             resExpr <- ffiArithmetic.arithmeticCapabilities.add(maxDecl, one)

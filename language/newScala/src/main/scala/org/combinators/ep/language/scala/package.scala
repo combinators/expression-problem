@@ -20,7 +20,6 @@ import org.combinators.ep.language.inbetween.ffi.ListOps
 import org.combinators.ep.language.inbetween.ffi.TreeOps
 import org.combinators.ep.language.inbetween.polymorphism.generics
 import org.combinators.ep.language.inbetween.polymorphism
-import org.combinators.ep.language.inbetween.oo.{Class, Constructor}
 
 import java.util.UUID
 

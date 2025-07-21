@@ -1,7 +1,6 @@
 package org.combinators.ep.domain.math.systemJK    /*DD:LI:AI*/
 
-import org.combinators.cogen.InstanceRep
-import org.combinators.ep.domain.instances.DataTypeInstanceRep
+import org.combinators.ep.domain.instances.{DataTypeInstance, DataTypeInstanceRep}
 import org.combinators.cogen.TestCase
 import org.combinators.ep.domain.abstractions.{EqualsCompositeTestCase, EqualsTestCase}
 import org.combinators.ep.domain.math.M0
@@ -21,11 +20,11 @@ import org.combinators.ep.domain.{Evolution, GenericModel}
 object K2J6 extends Evolution {
   override implicit def getModel: GenericModel = J6.getModel.merge("k2j6", Seq.empty, Seq.empty, Seq(K2.getModel))
 
-  val all_instances = J3.all_instances ++ Seq(powi)
-  val lhs = J3.lhs ++ Seq(powi_same_lhs) // changes on left hand side
-  val rhs = J3.rhs ++ Seq(powi_same_rhs) // changes on right hand side
+  val all_instances: Seq[DataTypeInstance] = J3.all_instances ++ Seq(powi)
+  val lhs: Seq[DataTypeInstance] = J3.lhs ++ Seq(powi_same_lhs) // changes on left hand side
+  val rhs: Seq[DataTypeInstance] = J3.rhs ++ Seq(powi_same_rhs) // changes on right hand side
 
-  val tree_node = Node(Divd.name.hashCode,
+  val tree_node:Node = Node(Divd.name.hashCode,
     Seq(
       Node(Lit.name.hashCode, Seq(Leaf(DoubleInst(1.0)))),
       Node(Lit.name.hashCode, Seq(Leaf(DoubleInst(3.0))))

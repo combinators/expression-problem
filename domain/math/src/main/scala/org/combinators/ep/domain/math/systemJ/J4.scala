@@ -13,21 +13,21 @@ import org.combinators.ep.domain.{Evolution, GenericModel}
 object J4 extends Evolution {
   override implicit def getModel: GenericModel = J3.getModel.evolve("j4", Seq.empty, Seq(Operation.asTree, Identifier))
 
-  lazy val Identifier = Operation("id", TypeRep.Int)
+  lazy val Identifier: Operation = Operation("id", TypeRep.Int)
 
-  val m5_s1 = AddInst(LitInst(1.0), LitInst(376.0))
-  val m5_s2 = AddInst(LitInst(1.0), LitInst(976.0))
-  val m5_s3 = SubInst(LitInst(1.0), LitInst(976.0))
+  val m5_s1: DataTypeInstance = AddInst(LitInst(1.0), LitInst(376.0))
+  val m5_s2: DataTypeInstance = AddInst(LitInst(1.0), LitInst(976.0))
+  val m5_s3: DataTypeInstance = SubInst(LitInst(1.0), LitInst(976.0))
 
-  val m5_all = SubInst(
-    NegInst(LitInst(2.0)), // Sub-Left
+  val m5_all: DataTypeInstance = SubInst(
+    NegInst(LitInst(2.0)),  // Sub-Left
     MultInst( // Sub-Right
       SubInst(LitInst(1.0), LitInst(976.0)), // Mult-Left
       AddInst( // Mult-Right
         MultInst(LitInst(1.0), LitInst(976.0)),
         DivdInst(LitInst(1.0), LitInst(3.0)))))
 
-  val tree_m5_all =
+  val tree_m5_all:Node =
     Node(Sub.name.hashCode,
       Seq(
         Node(Neg.name.hashCode, Seq(Node(Lit.name.hashCode, Seq(Leaf(DoubleInst(2.0)))))), // Sub-Left
@@ -54,10 +54,10 @@ object J4 extends Evolution {
           )) // Mult-Right
       ))
 
-  val m5_s4 = MultInst(MultInst(LitInst(2.0), LitInst(1.0)),
+  val m5_s4: DataTypeInstance = MultInst(MultInst(LitInst(2.0), LitInst(1.0)),
     AddInst(LitInst(0.0), LitInst(7.0)))
 
-  val treeSimplified =
+  val treeSimplified:Node =
     Node(Mult.name.hashCode,
       Seq(
         Node(Lit.name.hashCode, Seq(Leaf(DoubleInst(2.0)))),

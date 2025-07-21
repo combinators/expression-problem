@@ -1,31 +1,31 @@
 package org.combinators.ep.domain.math.eips.systemD    /*DD:LI:AI*/
 
 import org.combinators.cogen.paradigm.AnyParadigm
-import org.combinators.cogen.paradigm.ffi.{Arithmetic, Strings}
+import org.combinators.cogen.paradigm.ffi.Arithmetic
 import org.combinators.ep.domain.abstractions.Operation
-import org.combinators.ep.domain.math
+import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.ep.domain.math.systemD
 import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
+import scala.language.postfixOps
+
 object D2 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
   (m1Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
-  (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
-   ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
+  (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val d2Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.systemD.D2.getModel
+      override val model:GenericModel = math.systemD.D2.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
           _ <- ffiArithmetic.enable()
         } yield ()
       }
-
 
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         if (Set(math.M0.Eval).contains(potentialRequest.op) && Set(systemD.D2.Mult).contains(potentialRequest.tpeCase)) {

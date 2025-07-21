@@ -9,7 +9,6 @@ object A1M3I2 extends Evolution {
 
   override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(A1M3, I2)
 
-
   // testing
   def tests: Seq[TestCase] = Seq(
   )

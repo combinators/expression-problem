@@ -87,7 +87,6 @@ object I2M3I1N1 {
    ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
-    import paradigm.syntax._
     val mkImpl = new I2M3I1N1[paradigm.type, AIP](paradigm)
 
     mkImpl(i2Provider,m3i1Provider,n1Provider)(ffiBoolean, ffiEquality, ffiStrings)

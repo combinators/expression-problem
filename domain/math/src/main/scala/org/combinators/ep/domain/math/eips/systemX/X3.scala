@@ -3,12 +3,14 @@ package org.combinators.ep.domain.math.eips.systemX     /*DD:LI:AI*/
 import org.combinators.cogen.paradigm.AnyParadigm
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Strings}
 import org.combinators.ep.domain.abstractions.Operation
-import org.combinators.ep.domain.math
+import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.ep.domain.math.systemX
 import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
+
+import scala.language.postfixOps
 
 object X3 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
@@ -18,7 +20,7 @@ object X3 {
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val x3Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.systemX.X3.getModel
+      override val model: GenericModel = math.systemX.X3.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {

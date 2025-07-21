@@ -10,12 +10,13 @@ import org.combinators.ep.domain.instances._
 
 object M0 extends Evolution {
   override implicit def getModel:GenericModel = MathDomain.baseModel.evolve("m0", Seq(Lit, Add), Seq(Eval))
-  lazy val litValue = Attribute ("value", TypeRep.Double)
 
-  lazy val Lit = DataTypeCase("Lit", Seq(litValue))
-  lazy val Add = DataTypeCase.binary("Add")(MathDomain.getModel)
+  lazy val litValue: Attribute = Attribute("value", TypeRep.Double)
 
-  lazy val Eval = Operation("eval", TypeRep.Double)
+  lazy val Lit: DataTypeCase = DataTypeCase("Lit", Seq(litValue))
+  lazy val Add: DataTypeCase = DataTypeCase.binary("Add")(MathDomain.getModel)
+
+  lazy val Eval: Operation = Operation("eval", TypeRep.Double)
 
   def DoubleInst(d: scala.Double): InstanceRep =
     InstanceRep(TypeRep.Double)(d)
@@ -27,8 +28,8 @@ object M0 extends Evolution {
   def AddInst(left:DataTypeInstance, right:DataTypeInstance): DataTypeInstance =
     DataTypeInstance(Add, Seq(DataTypeInstanceRep(left), DataTypeInstanceRep(right)))
 
-  val addi:DataTypeInstance = AddInst(LitInst(1.0), LitInst(2.0))
-  val liti:DataTypeInstance = LitInst(5.0)
+  val addi: DataTypeInstance = AddInst(LitInst(1.0), LitInst(2.0))
+  val liti: DataTypeInstance = LitInst(5.0)
 
   // defining tests exactly once means they can be eliminated later (in Evolution) when it uses 'distinct' on past test cases)
   val m0_test_1: TestCase = EqualsTestCase(getModel.baseDataType, addi, Eval, DoubleInst(3.0))

@@ -1,9 +1,17 @@
-package org.combinators.ep.domain.extensions
+package org.combinators.ep.domain.extensions    /*DI:LI:AI*/
 
 import org.combinators.cogen.{InstanceRep, NameProvider, TypeRep}
 import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.instances.DataTypeInstance
+
+/**
+ * EpCoGen extension of NameProvider from CoGen provides the ability to generate (capital) Names for many different concepts
+ * as well as (lower) names for instances of these concepts.
+ *
+ * These are done to allow, for example, a concept to become an attribute name, which is commonly lower case, vs. a class Name,
+ * which is commonly capitalized.
+ */
 
 extension [Name](nameProvider: NameProvider[Name]) {
   /** Provides the name for a language representation of concepts (e.g. classes) associated with the given Model.
@@ -85,6 +93,10 @@ extension [Name](nameProvider: NameProvider[Name]) {
   }
 }
 
+/**
+ * The extension to TypeRep makes it easy to determine when a TypeRep is in fact the type used by EpCoGen as part
+ * of numerous EP approaches.
+ */
 extension (tpe: TypeRep) {
   def isModelBase(model:GenericModel):Boolean = tpe == DomainTpeRep.DataType(model.baseDataType)
 }

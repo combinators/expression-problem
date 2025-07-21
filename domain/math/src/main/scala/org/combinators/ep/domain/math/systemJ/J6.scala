@@ -13,15 +13,13 @@ import org.combinators.ep.domain.{Evolution, GenericModel}
 object J6 extends Evolution {
   override implicit def getModel: GenericModel = J5.getModel.evolve("j6", Seq.empty, Seq(PowBy))
 
-  // m7:model evolution.
-  // -------------------
   object j8_extensions {
     val target = "target"
   }
 
   // add PowBy operation
-  lazy val base = DomainTpeRep.DataType(J3.getModel.baseDataType)
-  lazy val PowBy = Operation("powBy", base, Seq(Parameter("other", base)))
+  lazy val base: DomainTpeRep.DataType = DomainTpeRep.DataType(J3.getModel.baseDataType)
+  lazy val PowBy: Operation = Operation("powBy", base, Seq(Parameter("other", base)))
 
   object PowByTestCase {
     def apply(instance: DataTypeInstance, argument: InstanceRep, expected: InstanceRep): TestCase = {
@@ -30,13 +28,13 @@ object J6 extends Evolution {
     }
   }
 
-  val m7_2 = AddInst(LitInst(1.0), LitInst(2.0))
-  val m7_3 = AddInst(LitInst(1.0), LitInst(2.0))
-  val m7_4 = AddInst(m7_2, m7_3)
+  val m7_2: DataTypeInstance = AddInst(LitInst(1.0), LitInst(2.0))
+  val m7_3: DataTypeInstance = AddInst(LitInst(1.0), LitInst(2.0))
+  val m7_4: DataTypeInstance = AddInst(m7_2, m7_3)
 
-  val m7_5 = AddInst(LitInst(99.0), LitInst(2.0))
-  val m7_6 = AddInst(LitInst(99.0), LitInst(2.0))
-  val m7_7 = AddInst(m7_5, m7_6)
+  val m7_5: DataTypeInstance = AddInst(LitInst(99.0), LitInst(2.0))
+  val m7_6: DataTypeInstance = AddInst(LitInst(99.0), LitInst(2.0))
+  val m7_7: DataTypeInstance = AddInst(m7_5, m7_6)
 
   override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(J5)
 

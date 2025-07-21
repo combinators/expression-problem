@@ -18,7 +18,7 @@ object W1 {
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val w1Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.W1.getModel
+      override val model: GenericModel = math.W1.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
@@ -52,15 +52,12 @@ object W1 {
       (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
 
-        import ffiArithmetic.arithmeticCapabilities._
         import ffiRealArithmetic.realArithmeticCapabilities._
-        import ffiStrings.stringCapabilities._
         import paradigm._
-        import methodBodyCapabilities._
         assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         val result = onRequest.tpeCase match {
-          case power@math.W1.Power => {
+          case power@math.W1.Power =>
             onRequest.request.op match {
               case eval@math.M0.Eval =>
                 for {
@@ -79,7 +76,6 @@ object W1 {
 
               case _ => ???
             }
-          }
 
           case _ => ???
         }

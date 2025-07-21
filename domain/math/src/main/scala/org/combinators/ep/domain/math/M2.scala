@@ -2,10 +2,10 @@ package org.combinators.ep.domain.math     /*DD:LI:AI*/
 
 import org.combinators.cogen.InstanceRep
 import org.combinators.cogen.TypeRep
-import org.combinators.ep.domain.instances.DataTypeInstanceRep
 import org.combinators.cogen.{Tag, TestCase}
 import org.combinators.ep.domain._
 import org.combinators.ep.domain.abstractions._
+import org.combinators.ep.domain.instances.DataTypeInstance
 import org.combinators.ep.domain.math.M0.{AddInst, LitInst}
 import org.combinators.ep.domain.math.M1.SubInst
 
@@ -14,10 +14,10 @@ object M2 extends Evolution {
 
   def StringInst(s:String): InstanceRep = InstanceRep(TypeRep.String)(s)
 
-  lazy val PrettyP = Operation("prettyp", TypeRep.String)
+  lazy val PrettyP: Operation = Operation("prettyp", TypeRep.String)
 
   // Tests
-  val m2_s1 = SubInst(LitInst(1.0), LitInst(2.0))
+  val m2_s1: DataTypeInstance = SubInst(LitInst(1.0), LitInst(2.0))
 
   case object LitPrettyPM2 extends Tag
 

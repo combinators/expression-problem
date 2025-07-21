@@ -1,7 +1,7 @@
 package org.combinators.ep.language.inbetween.ffi   /*DI:LI:AI*/
 
 import org.combinators.cogen.paradigm.Apply
-import org.combinators.cogen.{Command, Understands}
+import org.combinators.cogen.Understands
 import org.combinators.cogen.Command.Generator
 import org.combinators.ep.language.inbetween.{any, polymorphism}
 import org.combinators.ep.language.inbetween.any.AnyParadigm

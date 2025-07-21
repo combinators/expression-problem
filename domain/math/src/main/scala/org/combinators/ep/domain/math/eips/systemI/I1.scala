@@ -1,13 +1,12 @@
 package org.combinators.ep.domain.math.eips.systemI    /*DD:LI:AI*/
 
 import org.combinators.cogen.InstanceRep
-import org.combinators.ep.domain.instances.DataTypeInstanceRep
 import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.AnyParadigm
 import org.combinators.cogen.paradigm.control
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Equality, RealArithmetic, Strings}
 import org.combinators.ep.domain.abstractions.Operation
-import org.combinators.ep.domain.math
+import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.ep.domain.math.systemI
 import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
@@ -25,7 +24,7 @@ object I1 {
    ffiImper: control.Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val i1Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.systemI.I1.getModel
+      override val model: GenericModel = math.systemI.I1.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {

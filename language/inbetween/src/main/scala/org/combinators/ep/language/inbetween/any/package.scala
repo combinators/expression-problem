@@ -43,7 +43,7 @@ package object any {
     def addTypeLookups(lookups: TypeRep => Option[Generator[Method[FT], Type[FT]]]): Method[FT] = {
       copy(typeLookupMap = (tpeRep: TypeRep) => lookups(tpeRep).getOrElse(this.typeLookupMap(tpeRep)))
     }
-    def getArguments(): Seq[(Name[FT], Type[FT], Expression[FT])] = {
+    def getArguments: Seq[(Name[FT], Type[FT], Expression[FT])] = {
       parameters.map(param => (param._1, param._2, argumentExpression(param._1)))
     }    
     def addTestExpressions(exprs: Seq[Expression[FT]]): Method[FT]

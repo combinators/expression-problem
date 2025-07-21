@@ -1,6 +1,5 @@
 package org.combinators.cogen.paradigm
 
-/*DI:LI:AI*/
 import org.combinators.cogen.{TypeRep, Command, Understands}
 import Command.Generator
 

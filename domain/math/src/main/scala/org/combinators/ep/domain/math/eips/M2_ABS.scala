@@ -11,9 +11,7 @@ import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstan
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
-
-// Code for M2_ABS. Takes adapters for return in if-then-else, s.t. functional- and imperative-style if-then-else can be
-// used in an uniform way.
+// Takes adapters for return in if-then-else, s.t. functional- and imperative-style if-then-else can be used in an uniform way.
 sealed class M2_ABS[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P], IfBlockType](val paradigm: P) {
   type IfThenElseCommand =
     (paradigm.syntax.Expression,

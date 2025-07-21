@@ -1,12 +1,10 @@
-package org.combinators.ep.domain.instances
-
-/*DI:LI:AI*/
+package org.combinators.ep.domain.instances    /*DI:LI:AI*/
 
 /** Provides abstractions used to represent type instances of the host language (Scala) in a domain specific context and
   * vice versa domain specific data types in the host language.
   */
 
-import org.combinators.cogen.{InstanceRep, TypeRep}
+import org.combinators.cogen.InstanceRep
 import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions.{DataTypeCase, DomainTpeRep}
 

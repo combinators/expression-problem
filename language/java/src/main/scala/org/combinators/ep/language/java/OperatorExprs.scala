@@ -28,7 +28,7 @@ object OperatorExprs {
         context: Ctxt,
         command: Apply[Op, Expression, Expression]
       ): (Ctxt, Expression) = {
-        import scala.reflect.Selectable.reflectiveSelectable
+        import scala.reflect.Selectable.reflectiveSelectable     // needed for next statement
         if (command.functional.shortcut) {
           (context, new EnclosedExpr (new BinaryExpr(command.arguments(0), command.arguments(1), shortCutOp)))
         } else {

@@ -2,7 +2,6 @@ package org.combinators.ep.domain.math.eips.systemJK    /*DD:LI:AI*/
 
 import org.combinators.cogen.InstanceRep
 import org.combinators.cogen.TypeRep
-import org.combinators.ep.domain.instances.DataTypeInstanceRep
 import org.combinators.cogen.paradigm.AnyParadigm
 import org.combinators.cogen.paradigm.control
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Booleans, Equality, Strings}

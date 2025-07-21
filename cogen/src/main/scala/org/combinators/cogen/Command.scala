@@ -1,4 +1,4 @@
-package org.combinators.cogen     /*DI:LI:AI*/
+package org.combinators.cogen
 
 import cats._
 import cats.data.State
@@ -35,8 +35,8 @@ object Command {
   object Performable {
     type Aux[Context, R, C <: Command.WithResult[R]] = Performable[Context, R] { type Cmd = C }
     def apply[Context, R, C <: Command.WithResult[R]](cmd: C, interpreter:  Understands[Context, C]): Aux[Context, R, C] = {
-      case class P(val cmd: C, val interpreter: Understands[Context, C]) extends Performable[Context, R] { type Cmd = C }
-      return P(cmd, interpreter)
+      case class P(cmd: C, interpreter: Understands[Context, C]) extends Performable[Context, R] { type Cmd = C }
+      P(cmd, interpreter)
     }
   }
 

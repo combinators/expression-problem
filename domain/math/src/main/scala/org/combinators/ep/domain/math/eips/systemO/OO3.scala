@@ -9,7 +9,6 @@ import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedReq
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.cogen.Command
 
-
 object OO3 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)

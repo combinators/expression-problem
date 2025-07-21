@@ -10,11 +10,9 @@ import org.combinators.ep.domain.math.M2.{PrettyP, StringInst}
 object M3 extends Evolution {
   override implicit def getModel:GenericModel = M2.getModel.evolve("m3", Seq(Neg, Mult, Divd), Seq.empty)
 
-  // m3:model evolution.
-  // -------------------
-  lazy val Mult = DataTypeCase.binary("Mult")(MathDomain.getModel)
-  lazy val Neg = DataTypeCase.unary("Neg")(MathDomain.getModel)
-  lazy val Divd = DataTypeCase.binary("Divd")(MathDomain.getModel)
+  lazy val Mult: DataTypeCase = DataTypeCase.binary("Mult")(MathDomain.getModel)
+  lazy val Neg: DataTypeCase = DataTypeCase.unary("Neg")(MathDomain.getModel)
+  lazy val Divd: DataTypeCase = DataTypeCase.binary("Divd")(MathDomain.getModel)
 
   def NegInst(inner:DataTypeInstance): DataTypeInstance =
     DataTypeInstance(Neg, Seq(DataTypeInstanceRep(inner)))
@@ -24,11 +22,11 @@ object M3 extends Evolution {
     DataTypeInstance(Divd, Seq(DataTypeInstanceRep(left), DataTypeInstanceRep(right)))
 
   // Tests
-  val m3_d1 = NegInst(LitInst(5.0))
-  val m3_s1 = NegInst(MultInst(LitInst(2.0), LitInst(3.0)))
+  val m3_d1: DataTypeInstance = NegInst(LitInst(5.0))
+  val m3_s1: DataTypeInstance = NegInst(MultInst(LitInst(2.0), LitInst(3.0)))
 
-  val m3_m1 = NegInst(LitInst(1.0))
-  val m3_m2 = MultInst(DivdInst(LitInst(5.0),  LitInst(2.0)), LitInst(4.0))
+  val m3_m1: DataTypeInstance = NegInst(LitInst(1.0))
+  val m3_m2: DataTypeInstance = MultInst(DivdInst(LitInst(5.0),  LitInst(2.0)), LitInst(4.0))
 
   override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(M2)
 
@@ -49,5 +47,4 @@ object M3 extends Evolution {
       m3_test_5,
       m3_test_6
     )
-
 }

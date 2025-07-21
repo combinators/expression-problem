@@ -1,6 +1,5 @@
 package org.combinators.ep.domain.math.eips.systemO   /*DD:LI:AI*/
 
-import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.AnyParadigm
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Strings}
 import org.combinators.ep.domain.abstractions.Operation
@@ -9,6 +8,8 @@ import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
+
+import scala.language.postfixOps
 
 object OD1 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]

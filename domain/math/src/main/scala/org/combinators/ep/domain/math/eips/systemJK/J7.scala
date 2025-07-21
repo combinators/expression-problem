@@ -15,8 +15,7 @@ import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstan
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
-// Code for M8. Takes adapters for return in if-then-else, s.t. functional- and imperative-style if-then-else can be
-// used in an uniform way.
+// Takes adapters for return in if-then-else, s.t. functional- and imperative-style if-then-else can be used in an uniform way.
 sealed class J7[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P], IfBlockType](val paradigm: P) {
 
   type IfThenElseCommand =
@@ -191,12 +190,6 @@ sealed class J7[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
           val pastOps = math.systemJ.J2.isOps(model.flatten.typeCases)
           if (pastOps.contains(onRequest.request.op)) {
             genericLogic(forApproach)(onRequest)
-//          } else if (onRequest.request.op == math.J1.MultBy) {
-//            /* Handle MultBy with these data types. */
-//            onRequest.tpeCase match {
-//              case math.J4.Power => genericLogic(forApproach)(onRequest)
-//              case _ => ???
-//            }
           } else {
             val atts = for {
               atts <- forEach(onRequest.tpeCase.attributes) { att =>

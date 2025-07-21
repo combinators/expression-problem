@@ -8,7 +8,7 @@ package org.combinators.cogen
   *
   * The type of the instance is captured by 'tpe'
   *
-  * @see The companion model [[org.combinators.ep.domain.instances.InstanceRep]] for creating new instances.
+  * @see The companion model [[org.combinators.cogen.InstanceRep]] for creating new instances.
   */
 sealed trait InstanceRep {
   /** Provides the domain representation of the instance type. */

@@ -9,6 +9,8 @@ import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionIm
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
 
+import scala.language.postfixOps
+
 object A1  {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
@@ -54,29 +56,6 @@ object A1  {
                 case math.A1.Times => mult(atts*)
                 case _ => ???
               }
-
-//            case math.systemI.I1.MultBy =>
-//              onRequest.tpeCase match {
-//                case other@math.A1.Times =>
-//                  val lAtt = other.attributes.head
-//                  val rAtt = other.attributes.tail.head
-//
-//                  for {
-//                    left <- forApproach.dispatch(SendRequest(
-//                      onRequest.attributes(lAtt),
-//                      math.M2.getModel.baseDataType,
-//                      onRequest.request
-//                    ))
-//                    right <- forApproach.dispatch(SendRequest(
-//                      onRequest.attributes(rAtt),
-//                      math.M2.getModel.baseDataType,
-//                      onRequest.request
-//                    ))
-//
-//                    res <- forApproach.instantiate(math.M0.getModel.baseDataType, other, left, right)
-//                  } yield res
-//                case _ => ???
-//              }
 
             case mb@math.systemI.I1.MultBy =>    // WE CAN OPTIMIZE MultBy with Mult
               for {

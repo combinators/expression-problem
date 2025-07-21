@@ -16,7 +16,6 @@ object OA extends Evolution {
       .optimize(Set((math.M0.Lit,math.M0.Eval)))
 
   // this optimization has no external impact, so it is fine to allow default test impl
-
   val oa: DataTypeInstance = LitInst(1.0)
 
   override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(M2)

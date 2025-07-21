@@ -5,7 +5,7 @@ import org.combinators.cogen.paradigm.AnyParadigm
 import org.combinators.cogen.paradigm.control
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Booleans, Equality, Lists, Strings}
 import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation}
-import org.combinators.ep.domain.{abstractions, math}
+import org.combinators.ep.domain.{GenericModel, abstractions, math}
 import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
@@ -32,7 +32,7 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
    ifThenElse: IfThenElseCommand
   ): EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val m4Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.M4.getModel
+      override val model: GenericModel = math.M4.getModel
 
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = math.M4.getModel.flatten.typeCases

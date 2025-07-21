@@ -8,7 +8,9 @@ import org.combinators.cogen.paradigm.{AddImport, AnyParadigm, ResolveImport}
 import org.combinators.ep.domain.instances.DataTypeInstance
 import org.combinators.cogen.Command._
 import AnyParadigm.syntax._
-import org.combinators.cogen.{InstanceRep, NameProvider, Understands, AbstractSyntax, TestCase}
+import org.combinators.cogen.{AbstractSyntax, InstanceRep, NameProvider, TestCase, Understands}
+
+import scala.language.postfixOps
 
 /** Provides implementations for language and approach specific code generation tasks which do not depend on a specific
   * EP domain. */

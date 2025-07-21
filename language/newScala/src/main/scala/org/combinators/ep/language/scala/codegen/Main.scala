@@ -324,10 +324,10 @@ class Main(choice:String, select:String) {
   val m3w1_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
     if (choice == "functional") {
       eips.M3W1.functional[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(m3_eip, w1_eip)(
-        generator.functionalControl, generator.doubles, generator.booleans, generator.equality, generator.strings)
+        generator.doubles, generator.booleans, generator.equality, generator.strings)
     } else {
       eips.M3W1.imperative[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(m3_eip, w1_eip)(
-        generator.imperative, generator.doubles, generator.booleans, generator.equality, generator.strings)
+        generator.doubles, generator.booleans, generator.equality, generator.strings)
     }
   val q1_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
     eips.Q1(approach.paradigm)(m3w1_eip)(generator.ints, generator.realDoubles, generator.treesInMethod, generator.strings)
@@ -335,18 +335,18 @@ class Main(choice:String, select:String) {
   val c2_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
     if (choice == "functional") {
       eips.C2.functional[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(q1_eip)(
-        generator.functionalControl, generator.doubles, generator.booleans, generator.strings, generator.listsInMethod, generator.equality)
+        generator.doubles, generator.booleans, generator.strings, generator.listsInMethod, generator.equality)
     } else {
       eips.C2.imperative[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(q1_eip)(
-        generator.imperative, generator.doubles, generator.booleans, generator.strings, generator.listsInMethod, generator.equality)
+        generator.doubles, generator.booleans, generator.strings, generator.listsInMethod, generator.equality)
     }
   val v1_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
     if (choice == "functional") {
       eips.V1.functional[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(c2_eip)(
-        generator.functionalControl, generator.doubles, generator.booleans, generator.equality, generator.strings)
+        generator.doubles, generator.booleans, generator.equality, generator.strings)
     } else {
       eips.V1.imperative[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(c2_eip)(
-        generator.imperative, generator.doubles, generator.booleans, generator.equality, generator.strings)
+        generator.doubles, generator.booleans, generator.equality, generator.strings)
     }
 
   val x1_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
@@ -378,10 +378,10 @@ class Main(choice:String, select:String) {
   val m3i1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     if (choice == "functional") {
       eips.M3I1.functional[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(m3_eip, i1_eip)(
-        generator.functionalControl, generator.booleans, generator.equality, generator.strings)
+        generator.booleans, generator.equality, generator.strings)
     } else {
       eips.M3I1.imperative[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(m3_eip, i1_eip)(
-        generator.imperative, generator.booleans, generator.equality, generator.strings)
+        generator.booleans, generator.equality, generator.strings)
     }
 
   val n1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
@@ -407,15 +407,13 @@ class Main(choice:String, select:String) {
     eips.systemD.D1(approach.paradigm)(m1_eip)(generator.doubles, generator.realDoubles, generator.equality, generator.strings, generator.imperative)
   }
   val d2_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
-    eips.systemD.D2(approach.paradigm)(m1_eip)(generator.doubles, generator.strings)
+    eips.systemD.D2(approach.paradigm)(m1_eip)(generator.doubles)
 
   val d1d2_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
     if (choice == "functional") {
-      eips.systemD.D1D2.functional[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(d1_eip, d2_eip)(
-        generator.functionalControl, generator.doubles, generator.booleans, generator.equality)
+      eips.systemD.D1D2.functional[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(d1_eip, d2_eip)
     } else {
-      eips.systemD.D1D2.imperative[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(d1_eip, d2_eip)(
-        generator.imperative, generator.doubles, generator.booleans, generator.equality)
+      eips.systemD.D1D2.imperative[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(d1_eip, d2_eip)
     }
 
   val d3_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
@@ -583,8 +581,6 @@ trait Subselection extends IOApp {
       }
     } yield ExitCode.Success
   }
-
-
 }
 
 object DirectToDiskMain extends IOApp {
@@ -592,11 +588,11 @@ object DirectToDiskMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
     // "M9", "J8", "A3", "O1OA", "OD3", "OO3", "V1", "D3", "I2M3I1N1", "O2"
-    val approach = if (args.isEmpty) "coco" else args.head // {coco, O1OA} fails
+    val approach = if (args.isEmpty) "functional" else args.head // {coco, O1OA} fails
     if (approach == "exit") {
       sys.exit(0)
     }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "M9" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "V1" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 

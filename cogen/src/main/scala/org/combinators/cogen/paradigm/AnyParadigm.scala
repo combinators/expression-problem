@@ -1,9 +1,8 @@
 package org.combinators.cogen.paradigm
 
-/*DI:LI:AI*/
 import org.combinators.cogen.{AbstractSyntax, Command, FileWithPath, Understands, TypeRep}
 import Command._
-import cats.implicits._
+import cats.implicits._    // needed for .sequence
 
 /** Adds a compilation unit with sequence of names for hierarchy, if needed */
 case class AddCompilationUnit[Name, CompilationUnitContext](unit: Generator[CompilationUnitContext, Unit], name: Seq[Name])

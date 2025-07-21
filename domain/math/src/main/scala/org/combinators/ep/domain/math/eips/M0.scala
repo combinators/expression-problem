@@ -7,7 +7,7 @@ import org.combinators.ep.domain.abstractions.Operation
 import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
-import org.combinators.ep.domain.math
+import org.combinators.ep.domain.{GenericModel, math}
 
 /**
  * Truly language independent abstractions.  Since we are in the mathematical domain, the
@@ -31,7 +31,7 @@ object M0 {
        ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
     EvolutionImplementationProvider[AIP[paradigm.type]] =
     new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.M0.getModel
+      override val model: GenericModel = math.M0.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
@@ -47,10 +47,6 @@ object M0 {
           None
         }
       }
-//
-//      def applicable (forApproach: AIP[paradigm.type], onRequest:PotentialRequest): Boolean = {
-//        (onRequest.op == math.M0.Eval) && Set(math.M0.Add, math.M0.Lit).contains(onRequest.tpeCase)
-//      }
 
       override def logic
           (forApproach: AIP[paradigm.type ])

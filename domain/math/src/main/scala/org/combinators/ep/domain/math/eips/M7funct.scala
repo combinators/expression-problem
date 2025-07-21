@@ -1,17 +1,14 @@
 package org.combinators.ep.domain.math.eips     /*DD:LI:AI*/
 
 import org.combinators.cogen.InstanceRep
-import org.combinators.ep.domain.instances.DataTypeInstanceRep
 import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Equality, RealArithmetic, Strings}
 import org.combinators.cogen.paradigm.{AnyParadigm, Functional, control}
 import org.combinators.ep.domain.abstractions.{DomainTpeRep, Operation, Parameter}
-import org.combinators.ep.domain.math
+import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.cogen.Command.{Generator, lift}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
-import org.combinators.cogen.paradigm.control
-import org.combinators.cogen.paradigm.ffi.{Arithmetic, Equality, RealArithmetic, Strings}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
 object M7funct {
@@ -27,7 +24,7 @@ object M7funct {
    ):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val m7Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.M7.getModel
+      override val model: GenericModel = math.M7.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {

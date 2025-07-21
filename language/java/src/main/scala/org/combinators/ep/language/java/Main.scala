@@ -1,6 +1,4 @@
-package org.combinators.ep.language.java
-
-/*DD:LD:AD*/
+package org.combinators.ep.language.java    /*DD:LD:AD*/
 
 /**
   * 1. To generate a single approach for a single stage in an Extension Graph, see [[DirectToDiskMain]]
@@ -190,17 +188,17 @@ class Main(choice: String, select: String) {
 
   val m3w1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.M3W1.imperative[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(m3_eip, w1_eip)(
-      generator.imperativeInMethod, generator.doublesInMethod, generator.booleansInMethod, generator.equalityInMethod, generator.stringsInMethod
+      generator.doublesInMethod, generator.booleansInMethod, generator.equalityInMethod, generator.stringsInMethod
     )
 
   val q1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.Q1(approach.paradigm)(m3w1_eip)(generator.intsInMethod, generator.realDoublesInMethod, generator.treesInMethod, generator.stringsInMethod)
   val c2_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.C2.imperative[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(q1_eip)(
-      generator.imperativeInMethod, generator.doublesInMethod, generator.booleansInMethod, generator.stringsInMethod, generator.listsInMethod, generator.equalityInMethod)
+      generator.doublesInMethod, generator.booleansInMethod, generator.stringsInMethod, generator.listsInMethod, generator.equalityInMethod)
 
   val v1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] = eips.V1.imperative[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(c2_eip)(
-    generator.imperativeInMethod, generator.doublesInMethod, generator.booleansInMethod, generator.equalityInMethod, generator.stringsInMethod)
+    generator.doublesInMethod, generator.booleansInMethod, generator.equalityInMethod, generator.stringsInMethod)
 
   val x1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.systemX.X1(approach.paradigm)(m0_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.equalityInMethod, generator.stringsInMethod, generator.imperativeInMethod)
@@ -221,7 +219,7 @@ class Main(choice: String, select: String) {
 
   val m3i1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.M3I1.imperative[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(m3_eip, i1_eip)(
-      generator.imperativeInMethod, generator.booleansInMethod, generator.equalityInMethod, generator.stringsInMethod)
+      generator.booleansInMethod, generator.equalityInMethod, generator.stringsInMethod)
 
   val n1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.N1(approach.paradigm)(m3_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.equalityInMethod, generator.stringsInMethod, generator.imperativeInMethod)
@@ -233,11 +231,10 @@ class Main(choice: String, select: String) {
   val d1_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.systemD.D1(approach.paradigm)(m1_eip)(generator.doublesInMethod, generator.realDoublesInMethod, generator.equalityInMethod, generator.stringsInMethod, generator.imperativeInMethod)
   val d2_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    eips.systemD.D2(approach.paradigm)(m1_eip)(generator.doublesInMethod, generator.stringsInMethod)
+    eips.systemD.D2(approach.paradigm)(m1_eip)(generator.doublesInMethod)
 
   val d1d2_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    eips.systemD.D1D2.imperative[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(d1_eip, d2_eip)(
-      generator.imperativeInMethod, generator.doublesInMethod, generator.booleansInMethod, generator.equalityInMethod)
+    eips.systemD.D1D2.imperative[approach.paradigm.type, ApproachImplementationProvider.WithParadigm](approach.paradigm)(d1_eip, d2_eip)
 
   val d3_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.systemD.D3(approach.paradigm)(d1d2_eip)(generator.doublesInMethod, generator.stringsInMethod)
@@ -515,7 +512,7 @@ object DirectToDiskMain extends IOApp {
     }
 
     // M4 exception for 'oo'
-    val selection = if (args.isEmpty || args.tail.isEmpty) "M4" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "V1" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 

@@ -13,7 +13,7 @@ import org.combinators.ep.domain.math.M3.{DivdInst, MultInst, NegInst}
 object M6 extends Evolution {
   override implicit def getModel:GenericModel = M5.getModel.evolve("m6", Seq.empty, Seq(Equals,Eql) ++ isOps(allTypes))
 
-  lazy val allTypes = M5.getModel.flatten.typeCases
+  lazy val allTypes: Seq[DataTypeCase] = M5.getModel.flatten.typeCases
   def isOps(tpeCases:Seq[DataTypeCase]) : Seq[Operation] = {
     tpeCases.map(tpe => isOp(tpe))
   }
@@ -30,21 +30,21 @@ object M6 extends Evolution {
   // that we need to have a way to instantiate a structure that matches the expression
   // and then use those structure(s) to determine equality.
   // TODO: HACK -- have to manually change 'equals' to something other than equals
-  lazy val Equals = Operation("ep_equals", TypeRep.Boolean, Seq(Parameter("other", DomainTpeRep.DataType(M5.getModel.baseDataType))))
+  lazy val Equals: Operation = Operation("ep_equals", TypeRep.Boolean, Seq(Parameter("other", DomainTpeRep.DataType(M5.getModel.baseDataType))))
 
   // EQL depends on past IsXXX which you know from ALL PAST evolutions
-  lazy val Eql = Operation("eql", TypeRep.Boolean, Seq(Parameter("other", DomainTpeRep.DataType(M5.getModel.baseDataType))))
+  lazy val Eql: Operation = Operation("eql", TypeRep.Boolean, Seq(Parameter("other", DomainTpeRep.DataType(M5.getModel.baseDataType))))
 
-  val m6_s1 = SubInst(LitInst(1.0), LitInst(73.0))
-  val m6_s2 = SubInst(LitInst(1.0), LitInst(73.0))
-  val m6_s3 = AddInst(LitInst(5.0), LitInst(3.0))
+  val m6_s1: DataTypeInstance = SubInst(LitInst(1.0), LitInst(73.0))
+  val m6_s2: DataTypeInstance = SubInst(LitInst(1.0), LitInst(73.0))
+  val m6_s3: DataTypeInstance = AddInst(LitInst(5.0), LitInst(3.0))
 
-  val m6_m1 = MultInst(DivdInst(LitInst(5.0),  LitInst(2.0)), LitInst(4.0))
-  val m6_m2 = MultInst(DivdInst(LitInst(5.0),  LitInst(2.0)), LitInst(3.0))
-  val m6_m3 = NegInst(m6_m1)
+  val m6_m1: DataTypeInstance = MultInst(DivdInst(LitInst(5.0),  LitInst(2.0)), LitInst(4.0))
+  val m6_m2: DataTypeInstance = MultInst(DivdInst(LitInst(5.0),  LitInst(2.0)), LitInst(3.0))
+  val m6_m3: DataTypeInstance = NegInst(m6_m1)
 
-  val m6_d3 = DivdInst(LitInst(6.0), LitInst(2.0))
-  val m6_d4 = DivdInst(LitInst(8.0), LitInst(2.0))
+  val m6_d3: DataTypeInstance = DivdInst(LitInst(6.0), LitInst(2.0))
+  val m6_d4: DataTypeInstance = DivdInst(LitInst(8.0), LitInst(2.0))
 
   object EqualsBinaryMethodTestCase {
     def apply(op:Operation,instance: DataTypeInstance, instance1: DataTypeInstance, result: Boolean): TestCase = {

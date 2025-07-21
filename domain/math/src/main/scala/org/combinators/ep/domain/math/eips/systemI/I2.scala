@@ -1,14 +1,12 @@
 package org.combinators.ep.domain.math.eips.systemI    /*DD:LI:AI*/
 
 import org.combinators.cogen.InstanceRep
-import org.combinators.ep.domain.instances.DataTypeInstanceRep
 import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.AnyParadigm
-import org.combinators.cogen.paradigm.control
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, RealArithmetic, Strings}
 import org.combinators.ep.domain.abstractions.Operation
-import org.combinators.ep.domain.math
-import org.combinators.ep.domain.math.{eips, systemI}
+import org.combinators.ep.domain.{GenericModel, math}
+import org.combinators.ep.domain.math.systemI
 import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
@@ -23,7 +21,7 @@ object I2 {
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val i2Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.systemI.I2.getModel
+      override val model: GenericModel = math.systemI.I2.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
@@ -65,7 +63,7 @@ object I2 {
         assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         val result = onRequest.tpeCase match {
-          case power@systemI.I2.Power => {
+          case power@systemI.I2.Power =>
             onRequest.request.op match {
               case eval@math.M0.Eval =>
                 for {
@@ -130,7 +128,6 @@ object I2 {
 
               case _ => ???
             }
-          }
 
           case _ => ???
         }

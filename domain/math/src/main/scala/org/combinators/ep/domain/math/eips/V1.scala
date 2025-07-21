@@ -1,18 +1,15 @@
 package org.combinators.ep.domain.math.eips   /*DD:LI:AI*/
 
-import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.AnyParadigm
 import org.combinators.cogen.paradigm.control
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Booleans, Equality, Strings}
-import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation}
-import org.combinators.ep.domain.{abstractions, math}
+import org.combinators.ep.domain.abstractions.Operation
+import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
-import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
+import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
-// Code for V1. Takes adapters for return in if-then-else, s.t. functional- and imperative-style if-then-else can be
-// used in an uniform way.
 sealed class V1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P], IfBlockType](val paradigm: P) {
 
   type IfThenElseCommand =
@@ -27,12 +24,10 @@ sealed class V1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
   (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   returnInIf: Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression] => Generator[paradigm.MethodBodyContext, IfBlockType],
-   ifThenElse: IfThenElseCommand
+   ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
   ): EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val v1Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.V1.getModel
+      override val model: GenericModel = math.V1.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
@@ -43,11 +38,6 @@ sealed class V1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
           _ <- ffiEquality.enable()
         } yield ()
       }
-
-//      def applicable(forApproach: AIP[paradigm.type], potentialRequest:PotentialRequest): Boolean = {
-//        Set(math.C2.Collect,math.M2.PrettyP,math.M0.Eval,math.Q1.Identifier,Operation.asTree).contains(potentialRequest.op) &&
-//          Set(math.V1.Inv).contains(potentialRequest.tpeCase)
-//      }
 
       // adds Inv data Type
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
@@ -136,51 +126,27 @@ object V1 {
   def functional[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
   (c2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
-  (functionalControl: control.Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
+  (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     import paradigm.syntax._
     val mkImpl = new V1[paradigm.type, AIP, Expression](paradigm)
-    val ite: mkImpl.IfThenElseCommand =
-      (cond, ifBlock, ifElseBlocks, elseBlock) =>
-        for {
-          res <- functionalControl.functionalCapabilities.ifThenElse(cond, ifBlock, ifElseBlocks, elseBlock)
-        } yield Some(res)
 
-    mkImpl(c2Provider)(ffiArithmetic, ffiBoolean, ffiStrings, ffiEquality, expGen => expGen, ite)
+    mkImpl(c2Provider)(ffiArithmetic, ffiBoolean, ffiStrings, ffiEquality)
   }
 
   def imperative[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
   (c2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
-  (imperativeControl: control.Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
+  (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
-    import paradigm.syntax._
-    import paradigm.methodBodyCapabilities._
-    import imperativeControl.imperativeCapabilities._
     val mkImpl = new V1[paradigm.type, AIP, Unit](paradigm)
-    val returnInIf: Generator[paradigm.MethodBodyContext, Expression] => Generator[paradigm.MethodBodyContext, Unit] =
-      expGen =>
-        for {
-          resultExp <- expGen
-          resultStmt <- returnStmt(resultExp)
-          _ <- addBlockDefinitions(Seq(resultStmt))
-        } yield None
 
-    val ite: mkImpl.IfThenElseCommand =
-      (cond, ifBlock, ifElseBlocks, elseBlock) =>
-        for {
-          resultStmt <- ifThenElse(cond, ifBlock, ifElseBlocks, Some(elseBlock))
-          _ <- addBlockDefinitions(Seq(resultStmt))
-        } yield None
-
-    mkImpl(c2Provider)(ffiArithmetic, ffiBoolean, ffiStrings, ffiEquality, returnInIf, ite)
+    mkImpl(c2Provider)(ffiArithmetic, ffiBoolean, ffiStrings, ffiEquality)
   }
 }

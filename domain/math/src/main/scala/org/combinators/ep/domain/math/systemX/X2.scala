@@ -14,13 +14,13 @@ object X2 extends Evolution {
 
   def StringInst(s: String): InstanceRep = InstanceRep(TypeRep.String)(s)
 
-  lazy val Times = DataTypeCase.binary("Times")(MathDomain.getModel)
+  lazy val Times: DataTypeCase = DataTypeCase.binary("Times")(MathDomain.getModel)
 
   def TimesInst(left: DataTypeInstance, right: DataTypeInstance): DataTypeInstance =
     DataTypeInstance(Times, Seq(DataTypeInstanceRep(left), DataTypeInstanceRep(right)))
 
   // Tests
-  val x2_1 = TimesInst(LitInst(3.0), LitInst(2.0))
+  val x2_1: DataTypeInstance = TimesInst(LitInst(3.0), LitInst(2.0))
 
   override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(X1)
 

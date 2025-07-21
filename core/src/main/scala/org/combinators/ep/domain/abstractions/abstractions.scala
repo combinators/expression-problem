@@ -5,6 +5,8 @@ import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.instances.DataTypeInstance
 import org.combinators.ep.domain.matchers.Matchable
 
+import scala.language.postfixOps
+
 /** Models a named data type. */
 case class DataType(name: String)
 
@@ -104,8 +106,6 @@ object Attribute {
   /** An attribute "right" of the base data type of the implicitly given domain model. */
   def right(implicit domain: GenericModel):Attribute = Attribute("right", DomainTpeRep.DataType(domain.baseDataType))
 }
-
-
 
 /** Models a named operation on a [[DataType]] with parameters and a return type,
  * which defaults to Unit (no return value).

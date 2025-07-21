@@ -1,8 +1,6 @@
 package org.combinators.cogen.paradigm.control
 
-/*DI:LI:AI*/
-
-import org.combinators.cogen.paradigm.{AnyParadigm, Apply, FreshName, IfThenElse, Reify}
+import org.combinators.cogen.paradigm.{AnyParadigm, Apply, IfThenElse, Reify}
 import org.combinators.cogen.{TypeRep, Command, Understands}
 import Command.Generator
 

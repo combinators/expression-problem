@@ -1,7 +1,5 @@
 package org.combinators.cogen
 
-/*DI:LI:AI*/
-
 /** Provides type definitions for abstract syntax tree components. */
 trait AbstractSyntax {
   /** Represents a single file of source code. */

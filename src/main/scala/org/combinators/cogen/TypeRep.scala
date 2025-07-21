@@ -1,8 +1,8 @@
 package org.combinators.cogen
 
-/** Represents a host language (Scala) type within the domain.
-  *
-  * @see [[org.combinators.ep.domain.abstractions.TypeRep]] for helpers to construct representations.
+/**
+  * Represents a host language (Scala) type within the domain.
+  * @see [[org.combinators.cogen.TypeRep]] for helpers to construct representations.
   */
 trait TypeRep {
   /** The type to represent. */

@@ -1,12 +1,8 @@
 package org.combinators.cogen.paradigm.control
 
-/*DI:LI:AI*/
-
 import org.combinators.cogen.{Command, Understands}
 import Command.Generator
 
-import cats.implicits._
-import cats.free.Free._
 import org.combinators.cogen.paradigm.{AnyParadigm, IfThenElse}
 
 case class DeclareVariable[Name, Type, Init, Res](name: Name, tpe: Type, initialization: Init) extends Command {

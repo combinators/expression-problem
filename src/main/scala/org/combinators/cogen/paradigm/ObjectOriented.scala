@@ -1,8 +1,6 @@
 package org.combinators.cogen.paradigm
 
-/*DI:LI:AI*/
-
-import org.combinators.cogen.{AbstractSyntax, Command, Understands, TypeRep}
+import org.combinators.cogen.{Command, Understands, TypeRep}
 import Command.Generator
 
 case class AddClass[ClassContext, Name](
@@ -283,7 +281,6 @@ trait ObjectOriented {
     implicit val canInstantiateObjectInMethod: Understands[MethodBodyContext, InstantiateObject[Type, Expression, ClassContext]]
     def instantiateObject(tpe: Type, constructorArguments: Seq[Expression], body:Option[Generator[ClassContext,Unit]] = None): Generator[MethodBodyContext, Expression] =
       AnyParadigm.capability(InstantiateObject(tpe, constructorArguments, body))
-    // TODO: body is never used
 
     implicit val canGetMemberInMethod: Understands[MethodBodyContext, GetMember[Expression, Name]]
     def getMember(instance: Expression, member: Name): Generator[MethodBodyContext, Expression] =

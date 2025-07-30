@@ -16,7 +16,8 @@ following to the build.st file to lower the associated Java version.
   javacOptions ++= Seq("-source", "11", "-target", "11")
 
 And then you can install an openJDK version of Java 11 and use it by setting JAVA_HOME
-properly and/or configuring PATH variable appropriately.
+properly and/or configuring PATH variable appropriately. Grab the appropriate JDK 11
+from https://www.openlogic.com/openjdk-downloads
 
 ===================================
 Examples to run

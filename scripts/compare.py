@@ -1,7 +1,9 @@
 """
-  Run with Python3 to generate report of approaches that satisfy EP criteria.
+  Run with Python3 to generate report of approaches that satisfy EP criteria. Note
+  that on a windows machine, you need to use the backslash instead of the regular
+  slash to delineate directories.
 
-  python3 ..\..\scripts\compare.py ..\..\scripts\systems\[EVOLUTION-JSON] >> REPORT
+  python3 ../../scripts/compare.py ../../scripts/systems/[EVOLUTION-JSON] >> REPORT
 
   where the JSON file has a single 'evolutions' tag, where each entry
 
@@ -130,7 +132,7 @@ def file_structure (file):
     return index
 
 def strip_prefix(filename):
-    """Remove PREFIX\ from the filename."""
+    """Remove PREFIX plus trailing directory separator from the filename."""
     if PREFIX in filename:
         loc = filename.index(PREFIX)
         reduced = filename[loc + len(PREFIX) + 1:]

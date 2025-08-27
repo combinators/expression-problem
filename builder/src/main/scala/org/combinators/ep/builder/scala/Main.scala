@@ -1,4 +1,6 @@
-package org.combinators.ep.language.scala.codegen    /*DD:LD:AD*/
+package org.combinators.ep.builder.scala
+
+/*DD:LD:AD*/
 
 /**
  * To generate a single approach for a single stage in an Extension Graph, see [[DirectToDiskMain]]
@@ -37,21 +39,22 @@ package org.combinators.ep.language.scala.codegen    /*DD:LD:AD*/
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
-import org.combinators.ep.approach.oo._
+import org.combinators.cogen.FileWithPathPersistable.*
+import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
+import org.combinators.ep.approach.oo.*
 import org.combinators.ep.domain.Evolution
-import org.combinators.ep.domain.math._
+import org.combinators.ep.domain.math.*
 import org.combinators.ep.domain.math.eips.systemX
 import org.combinators.ep.domain.math.systemD.{D1, D1D2, D2, D3}
 import org.combinators.ep.domain.math.systemI.{I1, I2}
-import org.combinators.ep.domain.math.systemJ.{J1, J2, J3, J4, J5, J6}
+import org.combinators.ep.domain.math.systemJ.*
 import org.combinators.ep.domain.math.systemJK.{J7, J8, K2J6}
 import org.combinators.ep.domain.math.systemK.{K1, K2}
-import org.combinators.ep.domain.math.systemO.{O1, O1OA, O2, OA, OD1, OD2, OD3, OO1, OO2, OO3}
-import org.combinators.ep.domain.math.systemX.{X1, X2, X2X3, X3, X4}
+import org.combinators.ep.domain.math.systemO.*
+import org.combinators.ep.domain.math.systemX.*
 import org.combinators.ep.generator.ApproachImplementationProvider.WithParadigm
-import org.combinators.cogen.FileWithPathPersistable._
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider, TestImplementationProvider}
-import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
+import org.combinators.ep.language.scala.codegen.*
 
 import java.nio.file.{Path, Paths}
 

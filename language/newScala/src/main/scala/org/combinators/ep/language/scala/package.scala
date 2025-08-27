@@ -2217,8 +2217,5 @@ package object scala {
     ) extends scala.PatternMatch[FinalTypes] with Expression {
       override def getSelfPatternMatch: this.type = this
     }
-
-
-
   }
 }

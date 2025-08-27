@@ -84,14 +84,11 @@ def standardLanguageProject(languageName: String): Project =
     .settings(
       moduleName := s"expression-problem-language-$languageName",
     )
-    .dependsOn(cogen, core, approach, domainMath, domainShape)
+    .dependsOn(cogen)
 
 lazy val languageJava =
   standardLanguageProject("java")
     .settings(libraryDependencies += "com.github.javaparser" % "javaparser-core" % "3.26.4")
-    .settings(
-      Compile/run/mainClass := Some("org.combinators.ep.language.java.GenerateAll")
-     )
 
 lazy val helloWorldProject: Project =
   (Project(id = s"helloWorld", base = file(s"helloworld")))
@@ -103,14 +100,20 @@ lazy val helloWorldProject: Project =
 
 lazy val languageInbetween =
   standardLanguageProject("inbetween")
-    .dependsOn(core)
 
 lazy val languageNewScala =
   standardLanguageProject("newScala")
-    .dependsOn(languageInbetween)
+    .dependsOn(core, cogen, approach, domainMath, domainShape, languageInbetween)
     .settings(
       Compile/run/mainClass := Some("org.combinators.ep.language.scala.codegen.GenerateAll")
     )
 
+lazy val builder =
+  (Project(id = s"builder", base = file(s"builder")))
+    .settings(commonSettings: _*)
+    .settings(
+      moduleName := s"expression-problem-language-builder",
+    )
+    .dependsOn(core, cogen, approach, domainMath, domainShape, languageJava, languageNewScala)
 
 

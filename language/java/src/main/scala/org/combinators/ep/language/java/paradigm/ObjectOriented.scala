@@ -1,10 +1,10 @@
 package org.combinators.ep.language.java.paradigm    /*DI:LD:AI*/
 
 import java.util.UUID
-import com.github.javaparser.ast.{ImportDeclaration, Modifier, NodeList}
+import com.github.javaparser.ast.{ArrayCreationLevel, ImportDeclaration, Modifier, NodeList}
 import com.github.javaparser.ast.`type`.ClassOrInterfaceType
 import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, ConstructorDeclaration, MethodDeclaration}
-import com.github.javaparser.ast.expr.{AssignExpr, CastExpr, EnclosedExpr, Expression, FieldAccessExpr, InstanceOfExpr, MethodCallExpr, NameExpr, ObjectCreationExpr, ThisExpr, TypeExpr, Name => JName}
+import com.github.javaparser.ast.expr.{ArrayCreationExpr, AssignExpr, CastExpr, EnclosedExpr, Expression, FieldAccessExpr, InstanceOfExpr, IntegerLiteralExpr, MethodCallExpr, NameExpr, ObjectCreationExpr, ThisExpr, TypeExpr, Name => JName}
 import com.github.javaparser.ast.stmt.{BlockStmt, ExplicitConstructorInvocationStmt, ExpressionStmt, ReturnStmt}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.domain.instances.InstanceRep
@@ -599,16 +599,28 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
           ): (MethodBodyContext, Expression) = {
             val (tpe, args) = context.resolver.instantiationOverride(command.tpe, command.constructorArguments)
             /** Expand with instantiated body (if it exists). */
-            val result = new ObjectCreationExpr()
-            result.setType(tpe.asClassOrInterfaceType().clone())
-            result.setArguments(new NodeList(args : _*))
-            if (command.body.isDefined) {
-              val ci = new ClassOrInterfaceDeclaration()
-              val (newCtxt, classDef) = Command.runGenerator(command.body.get, ClassCtxt(context.resolver, ci, context.extraImports))
-              result.setAnonymousClassBody(newCtxt.cls.getMembers)
-              (context.copy(resolver = newCtxt.resolver, extraImports = newCtxt.extraImports), result)
+            if (tpe.isArrayType) {
+              val result = new ArrayCreationExpr()
+              result.setElementType(tpe.getElementType)
+              val levels = new NodeList[ArrayCreationLevel] ()
+              levels.add(new ArrayCreationLevel().setDimension(args.head))     // HACK: TODO: Only assumes one or two dimensions
+              if (args.tail.nonEmpty) {
+                levels.add(new ArrayCreationLevel().setDimension(args.tail.head))
+              }
+              result.setLevels(levels)
+              (context, result.removeInitializer())      // no initializers when declaring bounds
             } else {
-              (context, result)
+              val result = new ObjectCreationExpr()
+              result.setType(tpe.asClassOrInterfaceType().clone())
+              result.setArguments(new NodeList(args: _*))
+              if (command.body.isDefined) {
+                val ci = new ClassOrInterfaceDeclaration()
+                val (newCtxt, classDef) = Command.runGenerator(command.body.get, ClassCtxt(context.resolver, ci, context.extraImports))
+                result.setAnonymousClassBody(newCtxt.cls.getMembers)
+                (context.copy(resolver = newCtxt.resolver, extraImports = newCtxt.extraImports), result)
+              } else {
+                (context, result)
+              }
             }
           }
         }

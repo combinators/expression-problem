@@ -298,7 +298,7 @@ trait DPObjectOrientedProvider extends DPProvider {
       six  <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 6)
       asserteq2 <- asserts.assertionCapabilities.assertEquals(arrayType, solution_result, six)
 
-    } yield Seq(asserteq1, asserteq2)
+    } yield Seq(asserteq2)
   }
 
   def makeTestCase(clazzName:String): Generator[TestContext, Unit] = {

@@ -90,7 +90,6 @@ trait HelloWorldObjectOrientedProvider extends HelloWorldProvider {
       one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
 
       _ <- paradigm.methodBodyCapabilities.setParameters(Seq((names.mangle("a"), intType), (names.mangle("b"), intType)))
-      _ <- paradigm.methodBodyCapabilities.setReturnType(intType)
       _ <- setReturnType(intType)
     } yield Some(one)
   }
@@ -215,7 +214,7 @@ trait HelloWorldObjectOrientedProvider extends HelloWorldProvider {
       le <- liftExpression(output)
       _ <- addBlockDefinitions(Seq(le))
 
-    } yield Some(res)
+    } yield None
   }
 
   def makeMainClass(clazzName:String): Generator[ProjectContext, Unit] = {

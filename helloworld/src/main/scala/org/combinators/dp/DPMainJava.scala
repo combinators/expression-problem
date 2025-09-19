@@ -1,9 +1,9 @@
-package org.combinators.helloworld
+package org.combinators.dp
 
 /**
- * sbt "helloWorld/runMain org.combinators.helloworld.HelloWorldJavaDirectToDiskMain"
+ * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"
  *
- * Creates output files in target/helloworld
+ * Creates output files in target/dp
  */
 
 import cats.effect.{ExitCode, IO, IOApp}
@@ -19,10 +19,10 @@ import java.nio.file.{Path, Paths}
 /**
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
-class HelloWorldMainJava {
+class DPMainJava {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("world"))))
-  
-  val helloWorldApproach = HelloWorldObjectOrientedProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.ooParadigm, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.equalityInMethod)
+
+  val dpApproach = DPObjectOrientedProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.ooParadigm, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.equalityInMethod)
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
@@ -39,8 +39,8 @@ class HelloWorldMainJava {
           _ <- generator.arraysInMethod.enable()
           _ <- generator.equalityInMethod.enable()
           _ <- generator.assertionsInMethod.enable()
-          
-          _ <- helloWorldApproach.implement()
+
+          _ <- dpApproach.implement()
         } yield ()
       }
 
@@ -66,13 +66,13 @@ class HelloWorldMainJava {
   }
 }
 
-object HelloWorldJavaDirectToDiskMain extends IOApp {
-  val targetDirectory = Paths.get("target", "helloworld")
+object DPDirectToDiskMain extends IOApp {
+  val targetDirectory = Paths.get("target", "dp")
 
   def run(args: List[String]): IO[ExitCode] = {
     for {
       _ <- IO { print("Initializing Generator...") }
-      main <- IO { new HelloWorldMainJava() }
+      main <- IO { new DPMainJava() }
       _ <- IO { println("[OK]") }
       result <- main.runDirectToDisc(targetDirectory)
     } yield result

@@ -3,18 +3,18 @@ package org.combinators.helloworld
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arrays, Assertions, Console, Equality}
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, ObjectOriented}
 import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
- *
  */
 trait HelloWorldObjectOrientedProvider extends HelloWorldProvider {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val names: NameProvider[paradigm.syntax.Name]
   val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext,paradigm.type]
+  val arithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double]
   val console: Console.WithBase[paradigm.MethodBodyContext,paradigm.type]
   val array: Arrays.WithBase[paradigm.MethodBodyContext,paradigm.type]
   val asserts: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
@@ -81,6 +81,41 @@ trait HelloWorldObjectOrientedProvider extends HelloWorldProvider {
     } yield ()
   }
 
+  /** All at once. */
+  def make_third_method(): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
+    import paradigm.methodBodyCapabilities._
+
+    for {
+      intType <- toTargetLanguageType(TypeRep.Int)
+      one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
+
+      _ <- paradigm.methodBodyCapabilities.setParameters(Seq((names.mangle("a"), intType), (names.mangle("b"), intType)))
+      _ <- paradigm.methodBodyCapabilities.setReturnType(intType)
+      _ <- setReturnType(intType)
+    } yield Some(one)
+  }
+
+  def void_method_signature_two_params() : Generator[MethodBodyContext, Unit] = {
+    import paradigm.methodBodyCapabilities._
+
+    for {
+      intType <- toTargetLanguageType(TypeRep.Int)
+
+      _ <- paradigm.methodBodyCapabilities.setParameters(Seq((names.mangle("a"), intType), (names.mangle("b"), intType)))
+      unitType <- toTargetLanguageType(TypeRep.Unit)
+      _ <- paradigm.methodBodyCapabilities.setReturnType(unitType)
+    } yield ()
+  }
+
+  /** Create a method (returning void) with given signature */
+  def make_fourth_method(): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
+    import paradigm.methodBodyCapabilities._
+
+    for {
+      _ <- void_method_signature_two_params()
+    } yield None
+  }
+
   def methodImplementation(): Generator[MethodBodyContext, Option[Expression]] = {
     import ooParadigm.methodBodyCapabilities._
     for {
@@ -122,11 +157,25 @@ trait HelloWorldObjectOrientedProvider extends HelloWorldProvider {
       for {
         _ <- createField (message)
         _ <- addConstructor(createConstructor (message))
+        _ <- addMethod(names.mangle("third"), make_third_method())
+        _ <- addMethod(names.mangle("fourth"), make_fourth_method())
         _ <- addMethod(names.mangle(getter(message)), methodImplementation())   // HACK
-      } yield ()
+      } yield None
     }
 
     addClassToProject(makeClass, names.mangle(clazzName))
+  }
+
+  def make_compute_method_signature(): Generator[paradigm.MethodBodyContext, Unit] = {
+    import paradigm.methodBodyCapabilities._
+
+    for {
+      intType <- toTargetLanguageType(TypeRep.Int)
+      arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
+      _ <- setParameters(Seq((names.mangle("nums"), arrayType)))
+      _ <- setReturnType(intType)
+
+    } yield ()
   }
 
   def makeStaticSignature() : Generator[MethodBodyContext, Unit] = {
@@ -181,18 +230,11 @@ trait HelloWorldObjectOrientedProvider extends HelloWorldProvider {
     addClassToProject(makeClass, names.mangle(clazzName))
   }
 
-  def makeTestMethod(): Generator[ClassContext, Unit] = {
-    for {
-      _ <- Command.skip
-    } yield ()
-  }
-
   def makeTestCase(): Generator[MethodBodyContext, Seq[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import eqls.equalityCapabilities._
 
     for {
-      intType <- toTargetLanguageType(TypeRep.Int)
       stringType <- toTargetLanguageType(TypeRep.String)
       worldType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle("World"))
 
@@ -234,6 +276,7 @@ object HelloWorldObjectOrientedProvider {
   (base: P)
   (nameProvider: NameProvider[base.syntax.Name],
    imp: Imperative.WithBase[base.MethodBodyContext, base.type],
+   ffiArithmetic: Arithmetic.WithBase[base.MethodBodyContext, base.type, Double],
    oo: ObjectOriented.WithBase[base.type],
    con: Console.WithBase[base.MethodBodyContext, base.type],
    arr: Arrays.WithBase[base.MethodBodyContext, base.type],
@@ -244,6 +287,7 @@ object HelloWorldObjectOrientedProvider {
     new HelloWorldObjectOrientedProvider {
       override val paradigm: base.type = base
       val impParadigm: imp.type = imp
+      val arithmetic: ffiArithmetic.type = ffiArithmetic
       override val names: NameProvider[paradigm.syntax.Name] = nameProvider
       override val ooParadigm: ObjectOriented.WithBase[paradigm.type] = oo
       override val console: Console.WithBase[base.MethodBodyContext, paradigm.type] = con

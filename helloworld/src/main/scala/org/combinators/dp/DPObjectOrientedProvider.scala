@@ -224,45 +224,6 @@ trait DPObjectOrientedProvider extends DPProvider {
     addClassToProject(makeClass, names.mangle("Solution"))
   }
 
-  def makeStaticSignature() : Generator[MethodBodyContext, Unit] = {
-    import ooParadigm.methodBodyCapabilities._
-    import paradigm.methodBodyCapabilities._
-
-    for {
-      _ <- setStatic()
-      arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.String))
-      _ <- resolveAndAddImport(arrayType)
-      unitType <- toTargetLanguageType(TypeRep.Unit)
-      _ <- setReturnType(unitType)
-      _ <- setParameters(Seq((names.mangle("args"), arrayType)) )
-    } yield ()
-  }
-
-  def staticMethodImplementation(): Generator[MethodBodyContext, Option[Expression]] = {
-    import ooParadigm.methodBodyCapabilities._
-    import paradigm.methodBodyCapabilities._
-    import impParadigm.imperativeCapabilities._
-
-    for {
-      _ <- makeStaticSignature()
-      worldType <- findClass(names.mangle("World"))
-      _ <- resolveAndAddImport(worldType)
-      args <- getArguments()
-      zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
-      msg <- array.arrayCapabilities.get(args.head._3, zero)
-
-      res <- instantiateObject(worldType, Seq(msg))
-      fname <- freshName(names.mangle("msg"))  // be sure to unpack since this has a side effect on the context....
-      fvar <- declareVar(fname, worldType, Some(res))
-
-      msgMethod <- getMember(fvar, names.mangle(getter(message)))
-      result <- apply(msgMethod, Seq.empty)
-      output <- console.consoleCapabilities.print(result)
-      le <- liftExpression(output)
-      _ <- addBlockDefinitions(Seq(le))
-
-    } yield Some(res)
-  }
 
   def makeTestCase(): Generator[MethodBodyContext, Seq[Expression]] = {
     import paradigm.methodBodyCapabilities._

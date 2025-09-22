@@ -105,9 +105,9 @@ trait PascalObjectOrientedProvider extends PascalProvider {
       (namec,tpec,c) = args.tail.head
 
 
-      lec1 <- arithmetic.arithmeticCapabilities.le(c, one)
+      lec0 <- arithmetic.arithmeticCapabilities.le(c, zero)
 
-      ler1 <- arithmetic.arithmeticCapabilities.le(r, one)
+      ler0 <- arithmetic.arithmeticCapabilities.le(r, zero)
 
       resultName <- freshName(names.mangle("result"))
       resultVar <- impParadigm.imperativeCapabilities.declareVar(resultName, intType, Some(zero))
@@ -118,13 +118,13 @@ trait PascalObjectOrientedProvider extends PascalProvider {
       app2 <- apply(func, Seq(r_1,c_1))
       recSum <- arithmetic.arithmeticCapabilities.add(app1,app2)
 
-      ifStmt <- impParadigm.imperativeCapabilities.ifThenElse(lec1, for {
+      ifStmt <- impParadigm.imperativeCapabilities.ifThenElse(lec0, for {
 
         assignStmt1 <- impParadigm.imperativeCapabilities.assignVar(resultVar, one)
         _ <- addBlockDefinitions(Seq(assignStmt1))
       } yield (),
 
-        Seq((ler1,
+        Seq((ler0,
           for {
             assignStmt2 <- impParadigm.imperativeCapabilities.assignVar(resultVar, zero)
             _ <- addBlockDefinitions(Seq(assignStmt2))

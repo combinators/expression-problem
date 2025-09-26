@@ -55,10 +55,10 @@ trait ParametricPolymorphismAST extends AnyAST {
     }
     
     trait FinalTypes extends any.FinalTypes {
-      type TypeReferenceExpression <: Expression
-      type TypeParameter
-      type TypeArgument <: Type
-      type TypeApplication <: Type
+      type TypeReferenceExpression <: polymorphism.TypeReferenceExpression
+      type TypeParameter <: polymorphism.TypeParameter
+      type TypeArgument <: polymorphism.TypeArgument
+      type TypeApplication <: polymorphism.TypeApplication
     }
 
     trait TypeParameter {
@@ -102,7 +102,7 @@ trait ParametricPolymorphismAST extends AnyAST {
       ): TypeReferenceExpression = polymorphismFactory.typeReferenceExpression(tpe)
     }
 
-    trait Factory extends any.Factory {
+    trait Factory {
       def typeParameter(name: any.Name): TypeParameter
       def typeArgument(name: any.Name): TypeArgument
       def typeApplication(function: any.Type, arguments: Seq[any.Type]): TypeApplication

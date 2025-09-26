@@ -2,7 +2,8 @@ package org.combinators.ep.domain.math.eips      /*DD:LI:AI*/
 
 import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.AnyParadigm
-import org.combinators.cogen.paradigm.ffi.{Arithmetic, Trees}
+import org.combinators.cogen.paradigm.ffi.Arithmetic
+import org.combinators.ep.generator.paradigm.ffi.Trees
 import org.combinators.ep.domain.abstractions.{Attribute, DomainTpeRep, Operation}
 import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.cogen.Command.Generator

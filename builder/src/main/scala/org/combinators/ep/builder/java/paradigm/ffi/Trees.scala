@@ -8,7 +8,7 @@ import com.github.javaparser.ast.expr.ObjectCreationExpr
 import com.github.javaparser.ast.{ImportDeclaration, NodeList}
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.cogen.paradigm.ffi.{CreateLeaf, CreateNode, Trees as Ts}
+import org.combinators.ep.generator.paradigm.ffi.{CreateLeaf, CreateNode, Trees as Ts}
 import org.combinators.cogen.paradigm.{AddImport, Apply}
 import org.combinators.cogen.{Command, InstanceRep, TypeRep, Understands}
 import org.combinators.ep.domain.abstractions.DomainTpeRep

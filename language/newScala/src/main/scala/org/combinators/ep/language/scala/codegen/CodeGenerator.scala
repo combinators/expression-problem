@@ -16,7 +16,7 @@ import org.combinators.ep.language.inbetween.oo.{Class, Constructor, OOParadigm}
 import org.combinators.ep.language.inbetween.imperative.Imperative
 import org.combinators.ep.language.inbetween.functional.{AlgebraicDataType, FunctionalParadigm}
 import org.combinators.ep.language.inbetween.functional.control
-import org.combinators.ep.language.inbetween.ffi.{Arithmetic, Assertions, Booleans, Equals, Lists, RealArithmetic, Strings, Trees}
+import org.combinators.ep.language.inbetween.ffi.{Arithmetic, Assertions, Booleans, Equals, Lists, RealArithmetic, Strings}
 import org.combinators.ep.language.inbetween.polymorphism.ParametricPolymorphism
 import org.combinators.ep.language.inbetween.polymorphism.ParametricPolymorphismInADTContexts
 import org.combinators.ep.language.inbetween.polymorphism.generics.Generics
@@ -260,8 +260,7 @@ sealed class CodeGenerator(domainName: String) { cc =>
       ooParadigm.constructorCapabilities.canAddImportInConstructor
     )(generics)
   */
-  val treesInMethod =
-    Trees[Finalized.FinalTypes, factory.type, paradigm.type](paradigm)(Map.empty)
+  
 /*
   val treesInConstructor =
     Trees[CtorCtxt, paradigm.type, ObjectOriented](

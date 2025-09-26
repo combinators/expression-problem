@@ -64,6 +64,9 @@ import java.nio.file.{Path, Paths}
 class Main(choice:String, select:String) {
   val generator: CodeGenerator = CodeGenerator(M0.getModel.base.name.toLowerCase)
 
+  val treesInMethod =
+    Trees[Finalized.FinalTypes, factory.type, paradigm.type](paradigm)(Map.empty)
+
   val functionalApproach: WithParadigm[generator.paradigm.type] = org.combinators.ep.approach.functional.Traditional[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.functional, generator.functionalControl)
 
   val ooApproach: WithParadigm[generator.paradigm.type] = Traditional[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.ooParadigm)

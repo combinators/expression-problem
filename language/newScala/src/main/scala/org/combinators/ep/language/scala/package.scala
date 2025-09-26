@@ -17,7 +17,6 @@ import org.combinators.ep.language.inbetween.ffi.EqualsOps
 import org.combinators.ep.language.inbetween.ffi.OperatorExpressionOps
 import org.combinators.ep.language.inbetween.ffi.StringOps
 import org.combinators.ep.language.inbetween.ffi.ListOps
-import org.combinators.ep.language.inbetween.ffi.TreeOps
 import org.combinators.ep.language.inbetween.polymorphism.generics
 import org.combinators.ep.language.inbetween.polymorphism
 
@@ -30,7 +29,6 @@ package object scala {
       with imperative.FinalTypes
       with OperatorExpressionOps.FinalTypes
       with ListOps.FinalTypes
-      with TreeOps.FinalTypes
       with generics.FinalTypes
       with functional.FinalTypes
       with functional.control.FinalTypes {
@@ -262,11 +260,6 @@ package object scala {
     def toScala: String = {
       ofHostType match {
         case t: TypeRep.String.type => s""""$value""""
-        case t: DomainTpeRep.Tree.type =>
-          value match {
-            case org.combinators.ep.domain.tree.Node(id, values) => s"org.combinators.ep.util.Node($id, ${values.map(v => reifiedScalaValue(DomainTpeRep.Tree, v).toScala).mkString(", ")})"
-            case org.combinators.ep.domain.tree.Leaf(r) => s"org.combinators.ep.util.Leaf(${reifiedScalaValue(r.tpe, r.inst).toScala})"
-          }
         case t: TypeRep.Sequence[_] =>
           value.asInstanceOf[Seq[t.elemTpe.HostType]].map(v => reifiedScalaValue(t.elemTpe, v).toScala).mkString("Seq(", ", ", ")")
         case t: TypeRep.Array[_] =>
@@ -1144,30 +1137,6 @@ package object scala {
     def toImport: Seq[any.Import[FT]] = Seq.empty
   }
 
-  trait CreateLeaf[FT <: FinalTypes] extends TreeOps.CreateLeaf[FT] with Type[FT] {
-    def leafClass: oo.ClassReferenceType[FT]
-    def toScala: String = leafClass.toScala
-
-    def copyWithLeafClass(leafClass: oo.ClassReferenceType[FT] = leafClass): TreeOps.CreateLeaf[FT] =
-      createLeafWithLeafClass(leafClass)
-
-    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): TreeOps.CreateLeaf[FT] =
-      copyWithLeafClass(leafClass = leafClass.prefixRootPackage(rootPackageName, excludedTypeNames))
-
-    def toImport: Seq[any.Import[FT]] = leafClass.toImport
-  }
-
-  trait CreateNodeExpr[FT <: FinalTypes] extends TreeOps.CreateNodeExpr[FT] with Expression[FT] {
-    def nodeClass: oo.ClassReferenceType[FT]
-    def toScala: String = nodeClass.toScala
-
-    def copyWithNodeClass(nodeClass: oo.ClassReferenceType[FT] = nodeClass): TreeOps.CreateNodeExpr[FT] =
-      createNodeExprWithNodeClass(nodeClass)
-
-    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): TreeOps.CreateNodeExpr[FT] =
-      copyWithNodeClass(nodeClass = nodeClass.prefixRootPackage(rootPackageName, excludedTypeNames))
-  }
-
   trait ConsListOp[FT <: FinalTypes] extends ListOps.ConsListOp[FT] with Operator[FT] with InfixOperator[FT] {
     def operator: String = "+:"
   }
@@ -1238,7 +1207,6 @@ package object scala {
       with OperatorExpressionOps.Factory[FT]
       with StringOps.Factory[FT]
       with ListOps.Factory[FT]
-      with TreeOps.Factory[FT]
       with generics.Factory[FT] {
 
 
@@ -1339,24 +1307,7 @@ package object scala {
     def importStatement(components: Seq[any.Name[FT]]): Import[FT]
 
     def reifiedScalaValue[T](ofHostType: OfHostType[T], value: T): ReifiedScalaValue[FT, T]
-
-
-    override def createNodeExpr(): TreeOps.CreateNodeExpr[FT] = {
-      createNodeExprWithNodeClass(classReferenceType(
-        Seq("org", "combinators", "ep", "util", "Node").map(n => name(n, n))*
-      ))
-    }
-    def createNodeExprWithNodeClass(nodeClass: oo.ClassReferenceType[FT]): CreateNodeExpr[FT]
-
-    override def createLeaf(): TreeOps.CreateLeaf[FT] = {
-      createLeafWithLeafClass(classReferenceType(
-        Seq("org", "combinators", "ep", "util", "Leaf").map(n => name(n, n))*
-      ))
-    }
-    def createLeafWithLeafClass(leafClass: oo.ClassReferenceType[FT]): CreateLeaf[FT]
-
-
-
+    
     implicit def convert(other: any.Import[FT]): Import[FT]
     implicit def convert(other: any.Statement[FT]): Statement[FT]
     implicit def convert(other: any.Type[FT]): Type[FT]
@@ -1400,8 +1351,7 @@ package object scala {
     override implicit def convert(other: polymorphism.TypeArgument[FT]): TypeArgument[FT]
     override implicit def convert(other: polymorphism.TypeApplication[FT]): TypeApplication[FT]
 
-    implicit def convert(other: TreeOps.CreateLeaf[FT]): CreateLeaf[FT]
-    implicit def convert(other: TreeOps.CreateNodeExpr[FT]): CreateNodeExpr[FT]
+   
 
     implicit def convert(other: scala.BlockExpression[FT]): scala.BlockExpression[FT]
     implicit def convert(other: scala.MethodReferenceExpression[FT]): scala.MethodReferenceExpression[FT]
@@ -1456,8 +1406,6 @@ package object scala {
       override type TypeReferenceExpression = Finalized.TypeReferenceExpression
       override type TypeArgument = Finalized.TypeArgument
       override type TypeApplication = Finalized.TypeApplication
-      override type CreateLeaf = Finalized.CreateLeaf
-      override type CreateNodeExpr = Finalized.CreateNodeExpr
       override type BlockExpression = Finalized.BlockExpression
       override type TestSuite = Finalized.TestSuite
       override type ADTReferenceType = Finalized.ADTReferenceType
@@ -1766,11 +1714,7 @@ package object scala {
 
       override def typeReferenceExpression(tpe: any.Type[FinalTypes]): TypeReferenceExpression =
         TypeReferenceExpression(tpe)
-      def createNodeExprWithNodeClass(nodeClass: oo.ClassReferenceType[FinalTypes]): scala.CreateNodeExpr[FinalTypes] = CreateNodeExpr(nodeClass)
-      def createLeafWithLeafClass(leafClass: oo.ClassReferenceType[FinalTypes]): scala.CreateLeaf[FinalTypes] = CreateLeaf(leafClass)
-      implicit def convert(other: TreeOps.CreateLeaf[FinalTypes]): scala.CreateLeaf[FinalTypes] = other.getSelfCreateLeaf
-      implicit def convert(other: TreeOps.CreateNodeExpr[FinalTypes]): scala.CreateNodeExpr[FinalTypes] = other.getSelfCreateNodeExpr
-
+     
       override def classBasedTestSuite(underlyingClass: oo.Class[FinalTypes], testMarkers: Seq[Boolean]): TestSuite = TestSuite(underlyingClass, testMarkers)
 
       def constructorPattern(
@@ -2143,14 +2087,6 @@ package object scala {
     }
 
     case class AppendListOp() extends scala.AppendListOp[FinalTypes] with Operator {
-    }
-
-    case class CreateLeaf(override val leafClass: oo.ClassReferenceType[FinalTypes]) extends scala.CreateLeaf[FinalTypes] with Type {
-      def getSelfCreateLeaf: this.type = this
-    }
-
-    case class CreateNodeExpr(override val nodeClass: oo.ClassReferenceType[FinalTypes]) extends scala.CreateNodeExpr[FinalTypes] with Expression {
-      def getSelfCreateNodeExpr: this.type = this
     }
 
     class TestSuite(override val underlyingClass: oo.Class[FinalTypes], override val testMarkers: Seq[Boolean]) extends scala.TestSuite[FinalTypes] with Factory with Util {

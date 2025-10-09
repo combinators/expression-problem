@@ -137,8 +137,8 @@ trait TribonacciObjectOrientedProvider extends TribonacciProvider {
         Some(
           for {
 //            int[] dp = new int[n + 1]; todo: increment n by 1
-            dpLength <- ooParadigm.methodBodyCapabilities.getMember(n, names.mangle("length"))
-            instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, Seq(n), None)
+            nValuePlusOne <- arithmetic.arithmeticCapabilities.add(n, one)
+            instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, Seq(nValuePlusOne), None)
             dpVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle("dp"), arrayType, Some(instantiated))
 
 //            dp[0] = 0;

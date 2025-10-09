@@ -188,7 +188,7 @@
 //      } yield None
 //    }
 //
-//    addClassToProject(makeClass, names.mangle("MinPathSum"))
+//    addClassToProject(makeClass, names.mangle("LongestCommonSubsequence"))
 //  }
 //
 //  //  todo: make test cases

@@ -5,11 +5,11 @@ import org.combinators.ep.language.inbetween.any.AnyAST
 trait ImperativeAST extends AnyAST {
   object imperative {    
     trait FinalTypes {
-      type DeclareVariable <: any.Statement
-      type AssignVariable <: any.Statement
-      type IfThenElse <: any.Statement
-      type While <: any.Statement
-      type VariableReferenceExpression <: any.Expression
+      type DeclareVariable <: imperative.DeclareVariable
+      type AssignVariable <: imperative.AssignVariable
+      type IfThenElse <: imperative.IfThenElse
+      type While <: imperative.While
+      type VariableReferenceExpression <: imperative.VariableReferenceExpression
     }
 
     trait DeclareVariable extends any.Statement {
@@ -75,7 +75,7 @@ trait ImperativeAST extends AnyAST {
     }
 
 
-    trait Factory extends any.Factory {
+    trait Factory {
       def declareVariable(
         name: any.Name,
         tpe: any.Type,

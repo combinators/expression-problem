@@ -54,7 +54,7 @@ trait ParametricPolymorphismAST extends AnyAST {
       }
     }
     
-    trait FinalTypes extends any.FinalTypes {
+    trait FinalTypes {
       type TypeReferenceExpression <: polymorphism.TypeReferenceExpression
       type TypeParameter <: polymorphism.TypeParameter
       type TypeArgument <: polymorphism.TypeArgument

@@ -16,13 +16,13 @@ trait FunctionalControlAST extends AnyAST {
     }
 
     trait FinalTypes {
-      type Lambda <: any.Expression
-      type DeclareFunVariable <: any.Expression
-      type FunIfThenElse <: any.Expression
-      type PatternMatch <: any.Expression
-      type PatternContext
-      type PatternVariable <: any.Expression
-      type ConstructorPattern <: any.Expression
+      type Lambda <: funcontrol.Lambda
+      type DeclareFunVariable <: funcontrol.DeclareFunVariable
+      type FunIfThenElse <: funcontrol.IfThenElse
+      type PatternMatch <: funcontrol.PatternMatch
+      type PatternContext <: funcontrol.PatternContext
+      type PatternVariable <: funcontrol.PatternVariable
+      type ConstructorPattern <: funcontrol.ConstructorPattern
     }
 
     trait Lambda extends any.Expression { 

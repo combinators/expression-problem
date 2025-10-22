@@ -69,10 +69,10 @@ trait AnyAST {
       def getSelfName: finalTypes.Name
     }
 
-    trait Return extends Statement with Factory {
+    trait Return extends Statement {
       def expression: Expression
 
-      def copy(expression: Expression): Return = returnExpression(expression)
+      def copy(expression: Expression): Return = factory.returnExpression(expression)
     }
 
     trait Expression  {
@@ -81,7 +81,8 @@ trait AnyAST {
       def apply(other: Expression): Expression = factory.applyExpression(this, arguments = Seq(other))
     }
 
-    trait ApplyExpression extends Expression with Factory {
+    trait ApplyExpression extends Expression {
+      import factory.*
       def getSelfApplyExpression: finalTypes.ApplyExpression
 
       def function: Expression

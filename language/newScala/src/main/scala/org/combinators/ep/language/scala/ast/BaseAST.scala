@@ -353,6 +353,7 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
       }
 
       trait ApplyExpression extends Expression with any.ApplyExpression {
+        import factory.*
         def toScala: String = {
           val (typeArguments, regularArguments) = arguments.partition(_.isTypeReferenceExpression)
 
@@ -377,16 +378,26 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
         }
       }
 
-      trait ArgumentExpression extends Expression with any.ArgumentExpression with Factory {
+      trait ArgumentExpression extends Expression with any.ArgumentExpression {
+        import factory.*
         def toScala: String = s"${parameterName.toScala}"
 
         override def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): any.ArgumentExpression =
           this
       }
+      
+      trait Return extends Statement with any.Return {
+        import factory.*
+        def toScala: String = s"return { ${this.expression.toScala.stripLeading()} }"
+
+        override def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): any.Return =
+          copy(
+            expression = expression.prefixRootPackage(rootPackageName, excludedTypeNames)
+          )
+      }
 
       trait Factory extends oo.anyOverrides.Factory 
         with functional.anyOverrides.Factory
-        with funcontrol.anyOverrides.FinalTypes
         with generics.anyOverrides.Factory {}
     }
 
@@ -1266,6 +1277,107 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
 
   override val factory: scalaBase.anyOverrides.Factory
   override val ooFactory: scalaBase.ooOverrides.Factory
+  override val functionalFactory: scalaBase.functionalOverrides.Factory
+  override val functionalControlFactory: scalaBase.functionalControlOverrides.Factory
+  override val polymorphismFactory: scalaBase.polymorphismOverrides.Factory
+  override val imperativeFactory: scalaBase.imperativeOverrides.Factory
+  val scalaBaseFactory: scalaBase.Factory
+}
+
+trait FinalBaseAST extends BaseAST {
+
+  object finalBaseFinalTypes {
+    trait FinalTypes extends scalaBase.anyOverrides.FinalTypes {
+      type Project = scalaBase.anyOverrides.Project
+      type CompilationUnit = scalaBase.anyOverrides.CompilationUnit
+      type Method = scalaBase.anyOverrides.Method
+      type Expression = scalaBase.anyOverrides.Expression
+      type TestSuite = scalaBase.anyOverrides.TestSuite
+      type Import = scalaBase.anyOverrides.Import
+      type Statement = scalaBase.anyOverrides.Statement
+      type Type = scalaBase.anyOverrides.Type
+      type Name = scalaBase.anyOverrides.Name
+      type ApplyExpression = scalaBase.anyOverrides.ApplyExpression
+      type ArgumentExpression = scalaBase.anyOverrides.ArgumentExpression
+    }
+
+    trait OOFinalTypes extends scalaBase.ooOverrides.FinalTypes {
+      import scalaBase.ooOverrides
+      type Class = ooOverrides.Class
+      type Constructor = ooOverrides.Constructor
+      type Field = ooOverrides.Field
+      type MemberAccessExpression = ooOverrides.MemberAccessExpression
+      type SelfReferenceExpression = ooOverrides.SelfReferenceExpression
+      type ObjectInstantiationExpression = ooOverrides.ObjectInstantiationExpression
+      type CastExpression = ooOverrides.CastExpression
+      type InstanceOfExpression = ooOverrides.InstanceOfExpression
+      type SuperReferenceExpression = ooOverrides.SuperReferenceExpression
+      type ClassReferenceType = ooOverrides.ClassReferenceType
+    }
+  }
+
+  override val finalTypes: finalBaseFinalTypes.FinalTypes = new finalBaseFinalTypes.FinalTypes {}
+  override val ooFinalTypes: finalBaseFinalTypes.OOFinalTypes = new finalBaseFinalTypes.OOFinalTypes {}
+  override val functionalFinalTypes: scalaBase.functionalOverrides.FinalTypes = new scalaBase.functionalOverrides.FinalTypes {}
+  override val functionalControlFinalTypes: scalaBase.functionalControlOverrides.FinalTypes = new scalaBase.functionalControlOverrides.FinalTypes {}
+  override val polymorphismFinalTypes: scalaBase.polymorphismOverrides.FinalTypes = new scalaBase.polymorphismOverrides.FinalTypes {}
+  override val imperativeFinalTypes: scalaBase.imperativeOverrides.FinalTypes = new scalaBase.imperativeOverrides.FinalTypes {}
+  override val scalaBaseFinalTypes: scalaBase.FinalTypes = new scalaBase.FinalTypes {}
+
+
+  object finalBaseFactoryTypes {
+    trait Factory extends scalaBase.anyOverrides.Factory {
+      trait FinalExpression extends scalaBase.anyOverrides.Expression {
+        override def getSelfExpression: finalTypes.Expression = this
+      }
+
+      def returnExpression(expression: any.Expression): any.Return = {
+        case class Return(override val expression: any.Expression) extends scalaBase.anyOverrides.Return {
+          override def getSelfStatement: finalTypes.Statement = this
+        }
+        Return(expression)
+      }
+      def applyExpression(function: any.Expression, arguments: Seq[any.Expression]): any.ApplyExpression = {
+        case class ApplyExpression(
+          override val function: any.Expression,
+          override val arguments: Seq[any.Expression])
+          extends scalaBase.anyOverrides.ApplyExpression
+            with FinalExpression {
+          def getSelfApplyExpression: finalTypes.ApplyExpression = this
+        }
+        ApplyExpression(function, arguments)
+      }
+      def argumentExpression(parameterName: any.Name): any.ArgumentExpression = {
+        case class ArgumentExpression(parameterName: any.Name) extends scalaBase.anyOverrides.ArgumentExpression with FinalExpression {
+          def getSelfArgumentExpression: finalTypes.ArgumentExpression = this
+        }
+        ArgumentExpression(parameterName)
+      }
+    }
+
+    trait OOFactory extends scalaBase.ooOverrides.Factory {
+      def classBasedTestSuite(underlyingClass: oo.Class, testMarkers: Seq[Boolean]): oo.anyOverrides.TestSuite = {
+        class ClassBasedTestSuite(override val underlyingClass: oo.Class, override val testMarkers: Seq[Boolean])
+          extends scalaBase.anyOverrides.TestSuite {
+          def getSelfTestSuite: finalTypes.TestSuite = this
+          def nameProvider: NameProvider[any.Name] = ???
+        }
+        ClassBasedTestSuite(underlyingClass, testMarkers)
+      }
+      def constructor(constructedType: Option[any.Type], imports: Set[any.Import], statements: Seq[any.Statement], parameters: Seq[(any.Name, any.Type)], typeLookupMap: TypeRep => Generator[any.Method, any.Type], constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type], superInitialization: Option[(any.Type, Seq[any.Expression])], fieldInitializers: Seq[(any.Name, any.Expression)]): oo.Constructor = ???
+      def field(name: any.Name, tpe: any.Type, init: Option[any.Expression]): oo.Field = ???
+      def memberAccessExpression(owner: any.Expression, field: any.Name): oo.MemberAccessExpression = ???
+      def objectInstantiationExpression(tpe: any.Type, constructorArguments: Seq[any.Expression], body: Option[oo.Class]): oo.ObjectInstantiationExpression = ???
+      def castExpression(tpe: any.Type, expression: any.Expression): oo.CastExpression = ???
+      def instanceOfExpression(tpe: any.Type, expression: any.Expression): oo.InstanceOfExpression = ???
+      def superReferenceExpression(parentType: any.Type): oo.SuperReferenceExpression = ???
+      def selfReferenceExpression: oo.SelfReferenceExpression = ???
+      def classReferenceType(qualifiedClassName: any.Name*): oo.ClassReferenceType = ???
+    }
+  }
+
+  override val factory: scalaBase.anyOverrides.Factory = new finalBaseFactoryTypes.Factory {}
+  override val ooFactory: scalaBase.ooOverrides.Factory = new finalBaseFactoryTypes.OOFactory {}
   override val functionalFactory: scalaBase.functionalOverrides.Factory
   override val functionalControlFactory: scalaBase.functionalControlOverrides.Factory
   override val polymorphismFactory: scalaBase.polymorphismOverrides.Factory

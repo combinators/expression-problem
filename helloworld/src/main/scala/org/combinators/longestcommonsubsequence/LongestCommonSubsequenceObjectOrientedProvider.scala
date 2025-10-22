@@ -73,6 +73,16 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
     } yield ()
   }
 
+  def get_bottom_right_dp_element(dp: Expression, len1: Expression, len2: Expression): Generator[MethodBodyContext, Expression] = {
+    import paradigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+
+    for {
+      dpLastRow <- array.arrayCapabilities.get(dp, len1)
+      dpBottomRight <- array.arrayCapabilities.get(dpLastRow, len2)
+    } yield dpBottomRight
+  }
+
 //  public class LongestCommonSubsequence {
 //    public int solution(String s1, String s2) {
 //      /**
@@ -156,6 +166,33 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
           /*
           maximizing function
            */
+          s1charAt <- ooParadigm.methodBodyCapabilities.getMember(s1, names.mangle("charAt"))
+          s2charAt <- ooParadigm.methodBodyCapabilities.getMember(s2, names.mangle("charAt"))
+          condExpr <- arithmetic.arithmeticCapabilities.le(
+            s1charAt,
+            s2charAt
+          )
+
+          rPlusOneExpr <- arithmetic.arithmeticCapabilities.add(rVar, one)
+          cPlusOneExpr <- arithmetic.arithmeticCapabilities.add(cVar, one)
+
+          dpLastRow <- array.arrayCapabilities.get(dpVar, rPlusOneExpr)
+          dpBottomRight <- array.arrayCapabilities.get(dpLastRow, cPlusOneExpr)
+
+          ifStmt <- impParadigm.imperativeCapabilities.ifThenElse(condExpr,
+            for {
+              dpR <- array.arrayCapabilities.get(dpVar, rVar)
+              dpRC <- array.arrayCapabilities.get(dpR, cVar)
+              dpRCPlusOne <- arithmetic.arithmeticCapabilities.add(dpRC, one)
+
+              updateDP <- impParadigm.imperativeCapabilities.assignVar(dpBottomRight, dpRCPlusOne)
+
+              _ <- addBlockDefinitions(Seq(updateDP))
+            } yield (),
+            Seq.empty
+          )
+
+          _ <- addBlockDefinitions(Seq(ifStmt))
 
           /*
           increment
@@ -176,7 +213,9 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
       } yield ())
 
       _ <- addBlockDefinitions(Seq(outerLoop))
-    } yield Some(one)
+
+      bottomRight <- get_bottom_right_dp_element(dpVar, len1Var, len2Var)
+    } yield Some(bottomRight)
   }
 
   def makeSimpleDP(): Generator[ProjectContext, Unit] = {

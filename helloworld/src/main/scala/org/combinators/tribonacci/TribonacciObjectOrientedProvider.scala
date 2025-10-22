@@ -11,10 +11,10 @@ import org.combinators.dp.Utility
 trait TribonacciObjectOrientedProvider extends TribonacciProvider with Utility {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val names: NameProvider[paradigm.syntax.Name]
-  val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext,paradigm.type]
+  val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val arithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double]
-  val console: Console.WithBase[paradigm.MethodBodyContext,paradigm.type]
-  val array: Arrays.WithBase[paradigm.MethodBodyContext,paradigm.type]
+  val console: Console.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val array: Arrays.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val asserts: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val eqls: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
@@ -80,9 +80,9 @@ trait TribonacciObjectOrientedProvider extends TribonacciProvider with Utility {
     } yield outputVar
   }
 
-  def make_nested_for_loop(outerCounter: Expression, innerCounter:Expression,
+  def make_nested_for_loop(outerCounter: Expression, innerCounter: Expression,
                            outerCondExpr: Expression, innerCondExpr: Expression,
-                           innerBody: Seq[Statement], outerBody:Seq[Statement] = Seq.empty): Generator[paradigm.MethodBodyContext, Unit] = {
+                           innerBody: Seq[Statement], outerBody: Seq[Statement] = Seq.empty): Generator[paradigm.MethodBodyContext, Unit] = {
     for {
       _ <- Command.skip[MethodBodyContext]
     } yield ()
@@ -90,26 +90,26 @@ trait TribonacciObjectOrientedProvider extends TribonacciProvider with Utility {
 
   /**
    * public class Solution {
-   *    public int compute(int n) {
-   *        if(n == 0) {
-   *            return 0;
-   *        } else if(n <= 2) {
-   *            return 1;
-   *        } else {
-   *            int[] dp = new int[n + 1];
-   *            dp[0] = 0;
-   *            dp[1] = 1;
-   *            dp[2] = 1;
+   * public int compute(int n) {
+   * if(n == 0) {
+   * return 0;
+   * } else if(n <= 2) {
+   * return 1;
+   * } else {
+   * int[] dp = new int[n + 1];
+   * dp[0] = 0;
+   * dp[1] = 1;
+   * dp[2] = 1;
    *
-   *            int i = 3;
-   *            while(i <= n) {
-   *                dp[i] = dp[i - 1] + dp[i - 2] + dp[i - 3];
-   *                i = i + 1;
-   *            }
-   *        }
+   * int i = 3;
+   * while(i <= n) {
+   * dp[i] = dp[i - 1] + dp[i - 2] + dp[i - 3];
+   * i = i + 1;
+   * }
+   * }
    *
-   *        return dp[n];
-   *    }
+   * return dp[n];
+   * }
    * }
    */
   def make_compute_method(): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
@@ -131,42 +131,45 @@ trait TribonacciObjectOrientedProvider extends TribonacciProvider with Utility {
 
       resultVar <- declare_and_inst_variable("result", intType, zero)
 
-//      n <= 0 todo: replace le with eq
+      //      n <= 0 todo: replace le with eq
       len0 <- arithmetic.arithmeticCapabilities.le(n, zero)
 
-//      n <= 2
+      //      n <= 2
       len2 <- arithmetic.arithmeticCapabilities.le(n, two)
 
-      ifStmt <- impParadigm.imperativeCapabilities.ifThenElse(len0, for {
-        returnStmt <- impParadigm.imperativeCapabilities.returnStmt(zero)
-        _ <- addBlockDefinitions(Seq(returnStmt))
-      } yield (),
-        Seq((len2,
-          for {
-            returnStmt <- impParadigm.imperativeCapabilities.returnStmt(one)
-            _ <- addBlockDefinitions(Seq(returnStmt))
-          } yield ()
-        )),
+      ifStmt <- impParadigm.imperativeCapabilities.ifThenElse(len0,
+        for {
+          returnStmt <- impParadigm.imperativeCapabilities.returnStmt(zero)
+          _ <- addBlockDefinitions(Seq(returnStmt))
+        } yield (),
+        Seq(
+          (len2,
+            for {
+              returnStmt <- impParadigm.imperativeCapabilities.returnStmt(one)
+              _ <- addBlockDefinitions(Seq(returnStmt))
+            } yield ()
+          )
+        ),
 
         Some(
           for {
-//            int[] dp = new int[n + 1];
+            //            int[] dp = new int[n + 1];
             nValuePlusOne <- arithmetic.arithmeticCapabilities.add(n, one)
             instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, Seq(nValuePlusOne), None)
             dpVar <- declare_and_inst_variable("dp", arrayType, instantiated)
 
-//            dp[0] = 0;
+            //            dp[0] = 0;
             dpVar0 <- array.arrayCapabilities.get(dpVar, zero)
             baseCase0 <- impParadigm.imperativeCapabilities.assignVar(dpVar0, zero)
             _ <- addBlockDefinitions(Seq(baseCase0))
 
-//            dp[1] = 1;
+            //            dp[1] = 1;
             dpVar1 <- array.arrayCapabilities.get(dpVar, one)
             baseCase1 <- impParadigm.imperativeCapabilities.assignVar(dpVar1, one)
             _ <- addBlockDefinitions(Seq(baseCase1))
 
 
-//            dp[2] = 1;
+            //            dp[2] = 1;
             dpVar2 <- array.arrayCapabilities.get(dpVar, two)
             baseCase2 <- impParadigm.imperativeCapabilities.assignVar(dpVar2, one)
             _ <- addBlockDefinitions(Seq(baseCase2))
@@ -183,35 +186,35 @@ trait TribonacciObjectOrientedProvider extends TribonacciProvider with Utility {
 
             buildUp <- make_for_loop(iVar, condExpr, emptyStmts)
 
-//            buildUp <- impParadigm.imperativeCapabilities.whileLoop(condExpr, for {
-////              dp[i - 1]
-//              dpi_1 <- arithmetic.arithmeticCapabilities.sub(iVar, one)
-//              dpi_1val <- array.arrayCapabilities.get(dpVar, dpi_1)
-//
-////              dp[i - 2]
-//              dpi_2 <- arithmetic.arithmeticCapabilities.sub(iVar, two)
-//              dpi_2val <- array.arrayCapabilities.get(dpVar, dpi_2)
-//
-////              dp[i - 3]
-//              dpi_3 <- arithmetic.arithmeticCapabilities.sub(iVar, three)
-//              dpi_3val <- array.arrayCapabilities.get(dpVar, dpi_3)
-//
-////              dp[n] = dp[n - 1] + dp[n - 2] + dp[n - 3];
-//              dpi <- array.arrayCapabilities.get(dpVar, iVar)
-//              dpival <- arithmetic.arithmeticCapabilities.add(dpi_1val, dpi_2val)
-//              dpival <- arithmetic.arithmeticCapabilities.add(dpival, dpi_3val)
-//              dpiAssign <- impParadigm.imperativeCapabilities.assignVar(dpi, dpival)
-//              _ <- addBlockDefinitions(Seq(dpiAssign))
-//
-////              i = i + 1
-//              incrExpr <- arithmetic.arithmeticCapabilities.add(iVar, one)
-//              incrStmt <- impParadigm.imperativeCapabilities.assignVar(iVar, incrExpr)
-//              _ <- addBlockDefinitions(Seq(incrStmt))
-//
-//            } yield ()
-//            )
+            //            buildUp <- impParadigm.imperativeCapabilities.whileLoop(condExpr, for {
+            ////              dp[i - 1]
+            //              dpi_1 <- arithmetic.arithmeticCapabilities.sub(iVar, one)
+            //              dpi_1val <- array.arrayCapabilities.get(dpVar, dpi_1)
+            //
+            ////              dp[i - 2]
+            //              dpi_2 <- arithmetic.arithmeticCapabilities.sub(iVar, two)
+            //              dpi_2val <- array.arrayCapabilities.get(dpVar, dpi_2)
+            //
+            ////              dp[i - 3]
+            //              dpi_3 <- arithmetic.arithmeticCapabilities.sub(iVar, three)
+            //              dpi_3val <- array.arrayCapabilities.get(dpVar, dpi_3)
+            //
+            ////              dp[n] = dp[n - 1] + dp[n - 2] + dp[n - 3];
+            //              dpi <- array.arrayCapabilities.get(dpVar, iVar)
+            //              dpival <- arithmetic.arithmeticCapabilities.add(dpi_1val, dpi_2val)
+            //              dpival <- arithmetic.arithmeticCapabilities.add(dpival, dpi_3val)
+            //              dpiAssign <- impParadigm.imperativeCapabilities.assignVar(dpi, dpival)
+            //              _ <- addBlockDefinitions(Seq(dpiAssign))
+            //
+            ////              i = i + 1
+            //              incrExpr <- arithmetic.arithmeticCapabilities.add(iVar, one)
+            //              incrStmt <- impParadigm.imperativeCapabilities.assignVar(iVar, incrExpr)
+            //              _ <- addBlockDefinitions(Seq(incrStmt))
+            //
+            //            } yield ()
+            //            )
 
-//            _ <- addBlockDefinitions(Seq(buildUp))
+            //            _ <- addBlockDefinitions(Seq(buildUp))
 
             dpn <- array.arrayCapabilities.get(dpVar, n)
 
@@ -237,29 +240,29 @@ trait TribonacciObjectOrientedProvider extends TribonacciProvider with Utility {
     addClassToProject(makeClass, names.mangle("Tribonacci"))
   }
 
-//  todo: make test cases
-//  def makeTestCase(): Generator[MethodBodyContext, Seq[Expression]] = {
-//    import paradigm.methodBodyCapabilities._
-//    import eqls.equalityCapabilities._
-//
-//    for {
-//      arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
-//    } yield ()
-//  }
+  //  todo: make test cases
+  //  def makeTestCase(): Generator[MethodBodyContext, Seq[Expression]] = {
+  //    import paradigm.methodBodyCapabilities._
+  //    import eqls.equalityCapabilities._
+  //
+  //    for {
+  //      arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
+  //    } yield ()
+  //  }
 
   def implement(): Generator[ProjectContext, Unit] = {
 
     for {
       _ <- makeSimpleDP()
-//      _ <- paradigm.projectCapabilities.addCompilationUnit(
-//        paradigm.compilationUnitCapabilities.addTestSuite(testName, makeTestCase("DP"))
-//      )
+      //      _ <- paradigm.projectCapabilities.addCompilationUnit(
+      //        paradigm.compilationUnitCapabilities.addTestSuite(testName, makeTestCase("DP"))
+      //      )
     } yield None
   }
 }
 
 object TribonacciObjectOrientedProvider {
-  type WithParadigm[P <: AnyParadigm] = TribonacciObjectOrientedProvider { val paradigm: P }
+  type WithParadigm[P <: AnyParadigm] = TribonacciObjectOrientedProvider {val paradigm: P}
   type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 
   def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]

@@ -177,30 +177,16 @@ trait PascalObjectOrientedProvider extends PascalProvider {
 
     for {
       solutionType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle("Pascal"))
-      d_0 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
-      d_8 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 8)
-      d_4 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 4)
-      d_12 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 12)
-      d_2 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 2)
-      d_10 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 10)
-      d_6 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 6)
-      d_14 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 14)
-      d_1 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
-
-      d_9 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 9)
       d_5 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 5)
-      d_13 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 13)
       d_3 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 3)
-      d_11 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 11)
-      d_7 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 7)
-      d_15 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 15)
+
 
       sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solutionType, Seq.empty)
       arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
       computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, names.mangle("compute"))
-      solution_result <- apply(computeMethod, Seq(d_0, d_8, d_4, d_12, d_2, d_10, d_6, d_14, d_1, d_9, d_5, d_13, d_3, d_11, d_7, d_15))
-      six  <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 6)
-      asserteq2 <- asserts.assertionCapabilities.assertEquals(arrayType, solution_result, six)
+      solution_result <- apply(computeMethod, Seq(d_5,d_3))
+      ten  <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 10)
+      asserteq2 <- asserts.assertionCapabilities.assertEquals(arrayType, solution_result, ten)
 
     } yield Seq(asserteq2)
   }

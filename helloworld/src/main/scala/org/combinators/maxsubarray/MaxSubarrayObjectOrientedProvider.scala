@@ -87,6 +87,24 @@ trait MaxSubarrayObjectOrientedProvider extends MaxSubarrayProvider {
     } yield ()
   }
 
+  /**
+   * Helper for max operations, represents 'm=max(m,r)'
+   * Returns the generated max statement
+   */
+  def set_max(maxVar: Expression, replacement: Expression): Generator[MethodBodyContext, Statement] = {
+    import paradigm.methodBodyCapabilities._
+    for {
+      maxCond <- arithmetic.arithmeticCapabilities.lt(maxVar,replacement)
+      maxIfStmt <- impParadigm.imperativeCapabilities.ifThenElse(maxCond, for {
+
+        assignStmt <- impParadigm.imperativeCapabilities.assignVar(maxVar, replacement)
+        _ <- addBlockDefinitions(Seq(assignStmt))
+      } yield (),
+        Seq.empty
+      )
+    } yield maxIfStmt
+  }
+
   def make_compute_method(): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
 
@@ -129,20 +147,24 @@ trait MaxSubarrayObjectOrientedProvider extends MaxSubarrayProvider {
           Seq.empty
         )
 
-        //Current ssignment
+        //Current assignment
         numsI <- array.arrayCapabilities.get(nums, iVar)
         addExpr <- arithmetic.arithmeticCapabilities.add(currentVar,numsI)
         currentAssign <- impParadigm.imperativeCapabilities.assignVar(currentVar, addExpr)
 
         //Set Max
-        maxCond <- arithmetic.arithmeticCapabilities.lt(maxVar,currentVar)
-        maxIfStmt <- impParadigm.imperativeCapabilities.ifThenElse(maxCond, for {
 
-          assignStmt <- impParadigm.imperativeCapabilities.assignVar(maxVar, currentVar)
-          _ <- addBlockDefinitions(Seq(assignStmt))
-        } yield (),
-          Seq.empty
-        )
+        //old set Max code
+//        maxCond <- arithmetic.arithmeticCapabilities.lt(maxVar,currentVar)
+//        maxIfStmt <- impParadigm.imperativeCapabilities.ifThenElse(maxCond, for {
+//
+//          assignStmt <- impParadigm.imperativeCapabilities.assignVar(maxVar, currentVar)
+//          _ <- addBlockDefinitions(Seq(assignStmt))
+//        } yield (),
+//          Seq.empty
+//        )
+
+        maxIfStmt <- set_max(maxVar, currentVar)
 
         // last line to be added to the while loop
         incrExpr <- arithmetic.arithmeticCapabilities.add(iVar, one)

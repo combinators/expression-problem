@@ -1,5 +1,6 @@
 package org.combinators.maxsubarray
 
+import org.combinators.dp.Utility
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.control.Imperative
@@ -10,7 +11,7 @@ import org.combinators.ep.generator.{AbstractSyntax, NameProvider, Understands}
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
  */
-trait MaxSubarrayObjectOrientedProvider extends MaxSubarrayProvider {
+trait MaxSubarrayObjectOrientedProvider extends MaxSubarrayProvider with Utility {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val names: NameProvider[paradigm.syntax.Name]
   val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext,paradigm.type]
@@ -85,31 +86,6 @@ trait MaxSubarrayObjectOrientedProvider extends MaxSubarrayProvider {
       _ <- setReturnType(intType)
 
     } yield ()
-  }
-
-  /**
-   * Helper for max operations, represents 'm=max(m,r)'
-   * Returns the generated max statement
-   */
-  def set_max(maxVar: Expression, replacement: Expression): Generator[MethodBodyContext, Statement] = {
-    import paradigm.methodBodyCapabilities._
-    for {
-      maxCond <- arithmetic.arithmeticCapabilities.lt(maxVar,replacement)
-      maxIfStmt <- impParadigm.imperativeCapabilities.ifThenElse(maxCond, for {
-
-        assignStmt <- impParadigm.imperativeCapabilities.assignVar(maxVar, replacement)
-        _ <- addBlockDefinitions(Seq(assignStmt))
-      } yield (),
-        Seq.empty
-      )
-    } yield maxIfStmt
-  }
-
-  def plus_equals(variable: Expression, value: Expression): Generator[MethodBodyContext, Statement]={
-    for {
-      addExpr <- arithmetic.arithmeticCapabilities.add(variable,value)
-      assign <- impParadigm.imperativeCapabilities.assignVar(variable, addExpr)
-    } yield assign
   }
 
   def make_compute_method(): Generator[paradigm.MethodBodyContext, Option[Expression]] = {

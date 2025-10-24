@@ -18,6 +18,31 @@ trait Utility {
   import syntax._
   import ooParadigm._
 
+  /**
+   * Helper for max operations, represents 'm=max(m,r)'
+   * Returns the generated max statement
+   */
+  def set_max(maxVar: Expression, replacement: Expression): Generator[MethodBodyContext, Statement] = {
+    import paradigm.methodBodyCapabilities._
+    for {
+      maxCond <- arithmetic.arithmeticCapabilities.lt(maxVar,replacement)
+      maxIfStmt <- impParadigm.imperativeCapabilities.ifThenElse(maxCond, for {
+
+        assignStmt <- impParadigm.imperativeCapabilities.assignVar(maxVar, replacement)
+        _ <- addBlockDefinitions(Seq(assignStmt))
+      } yield (),
+        Seq.empty
+      )
+    } yield maxIfStmt
+  }
+
+  def plus_equals(variable: Expression, value: Expression): Generator[MethodBodyContext, Statement]={
+    for {
+      addExpr <- arithmetic.arithmeticCapabilities.add(variable,value)
+      assign <- impParadigm.imperativeCapabilities.assignVar(variable, addExpr)
+    } yield assign
+  }
+
   def make_for_loop(loopCounter: Expression, condExpr: Expression, body: Seq[Statement]): Generator[paradigm.MethodBodyContext, Unit] = {
     import paradigm.methodBodyCapabilities._
     import impParadigm.imperativeCapabilities._

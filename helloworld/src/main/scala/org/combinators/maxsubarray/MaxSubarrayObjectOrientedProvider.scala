@@ -105,6 +105,13 @@ trait MaxSubarrayObjectOrientedProvider extends MaxSubarrayProvider {
     } yield maxIfStmt
   }
 
+  def plus_equals(variable: Expression, value: Expression): Generator[MethodBodyContext, Statement]={
+    for {
+      addExpr <- arithmetic.arithmeticCapabilities.add(variable,value)
+      assign <- impParadigm.imperativeCapabilities.assignVar(variable, addExpr)
+    } yield assign
+  }
+
   def make_compute_method(): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
 
@@ -138,38 +145,19 @@ trait MaxSubarrayObjectOrientedProvider extends MaxSubarrayProvider {
       init_stmt <- impParadigm.imperativeCapabilities.whileLoop(whileCond, for {
 
         // the BODY
-        ifCond <- arithmetic.arithmeticCapabilities.lt(currentVar,zero)
-        ifStmt <- impParadigm.imperativeCapabilities.ifThenElse(ifCond, for {
-
-          assignStmt <- impParadigm.imperativeCapabilities.assignVar(currentVar, zero)
-          _ <- addBlockDefinitions(Seq(assignStmt))
-        } yield (),
-          Seq.empty
-        )
+        curIfStmt <- set_max(currentVar,zero)
 
         //Current assignment
         numsI <- array.arrayCapabilities.get(nums, iVar)
-        addExpr <- arithmetic.arithmeticCapabilities.add(currentVar,numsI)
-        currentAssign <- impParadigm.imperativeCapabilities.assignVar(currentVar, addExpr)
+        currentAssign <- plus_equals(currentVar,numsI)
 
         //Set Max
-
-        //old set Max code
-//        maxCond <- arithmetic.arithmeticCapabilities.lt(maxVar,currentVar)
-//        maxIfStmt <- impParadigm.imperativeCapabilities.ifThenElse(maxCond, for {
-//
-//          assignStmt <- impParadigm.imperativeCapabilities.assignVar(maxVar, currentVar)
-//          _ <- addBlockDefinitions(Seq(assignStmt))
-//        } yield (),
-//          Seq.empty
-//        )
-
         maxIfStmt <- set_max(maxVar, currentVar)
 
         // last line to be added to the while loop
-        incrExpr <- arithmetic.arithmeticCapabilities.add(iVar, one)
-        incrStmt <- impParadigm.imperativeCapabilities.assignVar(iVar, incrExpr)
-        _ <- addBlockDefinitions(Seq(ifStmt, currentAssign,maxIfStmt, incrStmt))
+        //incrExpr <- arithmetic.arithmeticCapabilities.add(iVar, one)
+        incrStmt <- plus_equals(iVar, one)
+        _ <- addBlockDefinitions(Seq(curIfStmt, currentAssign,maxIfStmt, incrStmt))
       } yield ()
       )
       _ <- addBlockDefinitions(Seq(init_stmt))

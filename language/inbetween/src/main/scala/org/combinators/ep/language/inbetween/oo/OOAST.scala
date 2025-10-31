@@ -412,9 +412,8 @@ trait OOAST extends AnyAST {
 
       def copy(
         qualifiedClassName: Seq[any.Name] = this.qualifiedClassName
-      ): ClassReferenceType = ooFactory.classReferenceType(qualifiedClassName *)
+      ): ClassReferenceType = ooFactory.classReferenceType(qualifiedClassName*)
     }
-    
 
 
     trait Factory {

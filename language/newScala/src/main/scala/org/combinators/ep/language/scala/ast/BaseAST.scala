@@ -1334,10 +1334,8 @@ trait FinalBaseAST extends BaseAST {
   override val imperativeFinalTypes: scalaBase.imperativeOverrides.FinalTypes = new scalaBase.imperativeOverrides.FinalTypes {}
   override val scalaBaseFinalTypes: scalaBase.FinalTypes = new scalaBase.FinalTypes {}
 
-
   object FinalBaseFactoryTypes {
     trait Factory extends scalaBase.anyOverrides.Factory {
-
 
       def returnExpression(expression: any.Expression): any.Return = {
         case class Return(override val expression: any.Expression) extends scalaBase.anyOverrides.Return {
@@ -1365,14 +1363,17 @@ trait FinalBaseAST extends BaseAST {
 
     trait OOFactory extends scalaBase.ooOverrides.Factory {
       def classBasedTestSuite(underlyingClass: oo.Class, testMarkers: Seq[Boolean]): oo.anyOverrides.TestSuite = {
-        class ClassBasedTestSuite(override val underlyingClass: oo.Class, override val testMarkers: Seq[Boolean])
-          extends scalaBase.anyOverrides.TestSuite {
-          def getSelfTestSuite: finalTypes.TestSuite = this
+        case class ClassBasedTestSuite(
+          override val underlyingClass: oo.Class,
+          override val testMarkers: Seq[Boolean])
+        extends scalaBase.anyOverrides.TestSuite {
+          override def getSelfTestSuite: finalTypes.TestSuite = this
         }
         ClassBasedTestSuite(underlyingClass, testMarkers)
       }
+
       def constructor(constructedType: Option[any.Type], imports: Set[any.Import], statements: Seq[any.Statement], parameters: Seq[(any.Name, any.Type)], typeLookupMap: TypeRep => Generator[any.Method, any.Type], constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type], superInitialization: Option[(any.Type, Seq[any.Expression])], fieldInitializers: Seq[(any.Name, any.Expression)]): oo.Constructor = {
-        class Constructor(
+        case class Constructor(
           override val constructedType: Option[any.Type],
           override val imports: Set[any.Import],
           override val statements: Seq[any.Statement],
@@ -1381,7 +1382,7 @@ trait FinalBaseAST extends BaseAST {
           override val constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type],
           override val superInitialization: Option[(any.Type, Seq[any.Expression])],
           override val fieldInitializers: Seq[(any.Name, any.Expression)])
-          extends scalaBase.ooOverrides.Constructor {
+        extends scalaBase.ooOverrides.Constructor {
           override def getSelfMethod: scalaBase.anyOverrides.Method = this
           override def getSelfConstructor: scalaBase.ooOverrides.Constructor = this
         }
@@ -1389,16 +1390,21 @@ trait FinalBaseAST extends BaseAST {
       }
 
       def field(name: any.Name, tpe: any.Type, init: Option[any.Expression]): oo.Field = {
-        case class Field(override val name: any.Name, override val tpe: any.Type, override val init: Option[any.Expression])
-          extends scalaBase.ooOverrides.Field {
+        case class Field(
+          override val name: any.Name,
+          override val tpe: any.Type,
+          override val init: Option[any.Expression])
+        extends scalaBase.ooOverrides.Field {
           override def getSelfField: scalaBase.ooOverrides.Field = this
         }
         Field(name, tpe, init)
       }
       def memberAccessExpression(owner: any.Expression, field: any.Name): oo.MemberAccessExpression = {
-        case class MemberAccessExpression(override val owner: any.Expression, override val field: any.Name)
-          extends scalaBase.ooOverrides.MemberAccessExpression
-          with finalBaseAST.anyOverrides.FinalExpression {
+        case class MemberAccessExpression(
+          override val owner: any.Expression,
+          override val field: any.Name)
+        extends scalaBase.ooOverrides.MemberAccessExpression
+        with finalBaseAST.anyOverrides.FinalExpression {
           override def getSelfMemberAccessExpression: scalaBase.ooOverrides.MemberAccessExpression = this
         }
         MemberAccessExpression(owner, field)
@@ -1415,24 +1421,54 @@ trait FinalBaseAST extends BaseAST {
         ObjectInstantiationExpression(tpe, constructorArguments, body)
       }
       def castExpression(tpe: any.Type, expression: any.Expression): oo.CastExpression = {
-        case class CastExpression(override val tpe: any.Type, override val expression: any.Expression)
-          extends scalaBase.ooOverrides.CastExpression
-          with finalBaseAST.anyOverrides.FinalExpression {
+        case class CastExpression(
+          override val tpe: any.Type,
+          override val expression: any.Expression)
+        extends scalaBase.ooOverrides.CastExpression
+        with finalBaseAST.anyOverrides.FinalExpression {
           override def getSelfCastExpression: scalaBase.ooOverrides.CastExpression = this
         }
         CastExpression(tpe, expression)
       }
       def instanceOfExpression(tpe: any.Type, expression: any.Expression): oo.InstanceOfExpression = {
-        case class InstanceOfExpression(override val tpe: any.Type, override val expression: any.Expression)
-          extends scalaBase.ooOverrides.InstanceOfExpression
-          with finalBaseAST.anyOverrides.FinalExpression {
+        case class InstanceOfExpression(
+          override val tpe: any.Type,
+          override val expression: any.Expression)
+        extends scalaBase.ooOverrides.InstanceOfExpression
+        with finalBaseAST.anyOverrides.FinalExpression {
           override def getSelfInstanceOfExpression: scalaBase.ooOverrides.InstanceOfExpression = this
         }
         InstanceOfExpression(tpe, expression)
       }
-      def superReferenceExpression(parentType: any.Type): oo.SuperReferenceExpression = ???
-      def selfReferenceExpression: oo.SelfReferenceExpression = ???
-      def classReferenceType(qualifiedClassName: any.Name*): oo.ClassReferenceType = ???
+      def superReferenceExpression(parentType: any.Type): oo.SuperReferenceExpression = {
+        case class SuperReferenceExpression(
+          override val parentType: any.Type)
+        extends scalaBase.ooOverrides.SuperReferenceExpression
+        with finalBaseAST.anyOverrides.FinalExpression {
+          override def getSelfSuperReferenceExpression: scalaBase.ooOverrides.SuperReferenceExpression = this
+        }
+        SuperReferenceExpression(parentType)
+      }
+      def selfReferenceExpression: oo.SelfReferenceExpression = {
+        case class SelfReferenceExpression()
+        extends scalaBase.ooOverrides.SelfReferenceExpression
+        with finalBaseAST.anyOverrides.FinalExpression {
+          override def getSelfSelfReferenceExpression: scalaBase.ooOverrides.SelfReferenceExpression = this
+        }
+        SelfReferenceExpression()
+      }
+      def classReferenceType(qualifiedClassName: any.Name*): oo.ClassReferenceType = {
+        case class ClassReferenceType(
+          override val qualifiedClassName: any.Name*)
+        extends scalaBase.ooOverrides.ClassReferenceType
+        with finalBaseAST.anyOverrides.FinalExpression {
+          override def getSelfClassReferenceType: scalaBase.ooOverrides.ClassReferenceType = this
+
+          override def toImport: Seq[any.Import] = super.toImport    // recommended. Did this work?
+          override def getSelfType: finalTypes.Type = this           // different. tricky
+        }
+        ClassReferenceType(qualifiedClassName*)
+      }
     }
   }
 

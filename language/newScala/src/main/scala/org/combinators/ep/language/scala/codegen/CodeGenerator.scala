@@ -31,7 +31,6 @@ import java.nio.file.{Path, Paths}
 sealed class CodeGenerator(domainName: String) { cc =>
   val factory: Finalized.Factory = new Finalized.Factory {}
 
-
   val syntax: AbstractSyntax[Finalized.FinalTypes] = new AbstractSyntax[Finalized.FinalTypes] {}
   val nameProvider = new ScalaNameProvider[Finalized.FinalTypes](factory)
 

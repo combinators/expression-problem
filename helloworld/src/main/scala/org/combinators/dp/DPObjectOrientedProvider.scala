@@ -5,7 +5,7 @@ import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, ObjectOriented}
-import org.combinators.ep.generator.{AbstractSyntax, NameProvider, Understands}
+import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
@@ -80,6 +80,31 @@ trait DPObjectOrientedProvider extends DPProvider {
       _ <- setParameters(Seq((names.mangle("nums"), arrayType)))
       _ <- setReturnType(intType)
 
+    } yield ()
+  }
+
+  def addToCurrentContext(stmts: Generator[paradigm.MethodBodyContext, Seq[Statement]]) : Generator[paradigm.MethodBodyContext, Unit] = {
+    import paradigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+
+      for {
+      ss <- stmts
+      _ <- addBlockDefinitions(ss)
+    } yield ()
+  }
+
+  // ,
+  //               elseBranch:Option[Generator[paradigm.MethodBodyContext, Seq[Statement]]]
+  def iftemplate(guard:Expression,
+               ifBranch:Generator[paradigm.MethodBodyContext, Seq[Statement]])
+    : Generator[paradigm.MethodBodyContext, Unit] = {
+    import paradigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+    for {
+      _ <- impParadigm.imperativeCapabilities.ifThenElse(guard, for {
+        stmts <- ifBranch
+        _ <- addBlockDefinitions(stmts)
+      } yield (), Seq.empty)
     } yield ()
   }
 

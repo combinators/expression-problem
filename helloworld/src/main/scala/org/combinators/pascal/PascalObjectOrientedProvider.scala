@@ -7,6 +7,7 @@ import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions
 import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, ObjectOriented}
 import org.combinators.ep.generator.{AbstractSyntax, NameProvider, Understands}
 
+
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
  */
@@ -89,6 +90,7 @@ trait PascalObjectOrientedProvider extends PascalProvider {
 
   def make_compute_method(): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
 
     for {
       _ <- make_compute_method_signature()
@@ -104,6 +106,14 @@ trait PascalObjectOrientedProvider extends PascalProvider {
       (namer,tper,r) = args.head
       (namec,tpec,c) = args.tail.head
 
+
+      /*
+      //Code for HashMap (doesn't work)
+      mapClass <- findClass(names.mangle("java"), names.mangle("util"), names.mangle("HashMap"))
+      _ <- resolveAndAddImport(mapClass)
+      mapInst <- instantiateObject(mapClass, Seq.empty, None)
+      mapVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle("mymap"), mapClass, Some(mapInst))
+      */
 
       lec0 <- arithmetic.arithmeticCapabilities.le(c, zero)
 

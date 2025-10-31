@@ -1,5 +1,6 @@
 package org.combinators.longestcommonsubsequence
 
+import org.combinators.dp.Utility
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.control.Imperative
@@ -7,7 +8,7 @@ import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions
 import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, ObjectOriented}
 import org.combinators.ep.generator.{AbstractSyntax, NameProvider, Understands}
 
-trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubsequenceProvider {
+trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubsequenceProvider with Utility {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val names: NameProvider[paradigm.syntax.Name]
   val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext,paradigm.type]
@@ -197,9 +198,8 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
           /*
           increment
            */
-          incrCExpr <- arithmetic.arithmeticCapabilities.add(cVar, one)
-          incrCStmt <- impParadigm.imperativeCapabilities.assignVar(cVar, incrCExpr)
-          _ <- addBlockDefinitions(Seq(incrCStmt))
+          incrC <- plus_equals(cVar, one)
+          _ <- addBlockDefinitions(Seq(incrC))
         } yield ())
 
         _ <- addBlockDefinitions(Seq(innerLoop))
@@ -207,9 +207,8 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
         /*
         increment
          */
-        incrRExpr <- arithmetic.arithmeticCapabilities.add(rVar, one)
-        incrRStmt <- impParadigm.imperativeCapabilities.assignVar(rVar, incrRExpr)
-        _ <- addBlockDefinitions(Seq(incrRStmt))
+        incrR <- plus_equals(rVar, one)
+        _ <- addBlockDefinitions(Seq(incrR))
       } yield ())
 
       _ <- addBlockDefinitions(Seq(outerLoop))

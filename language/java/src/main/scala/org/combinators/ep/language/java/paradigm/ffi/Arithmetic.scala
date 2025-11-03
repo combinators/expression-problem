@@ -1,5 +1,6 @@
 package org.combinators.ep.language.java.paradigm.ffi    /*DI:LD:AI*/
 
+import com.github.javaparser.StaticJavaParser
 import com.github.javaparser.ast.expr.BinaryExpr
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
@@ -47,7 +48,15 @@ class Arithmetic[Ctxt, T, AP <: AnyParadigm](
         if (!context.resolver.resolverInfo.contains(ArithmeticEnabled)) {
           val resolverUpdate =
             ContextSpecificResolver.updateResolver(base.config, rep, targetType)(reification)(_)
-          (context.copy(resolver = resolverUpdate(context.resolver).addInfo(ArithmeticEnabled)), ())
+
+          val extraUnits: Seq[CompilationUnit] =
+            Seq(
+              "DP_helper.java"
+            ).map(fileName =>
+              StaticJavaParser.parse(getClass.getResourceAsStream(s"/java-code/org/combinators/ep/util/$fileName"))
+            )
+
+          (context.copy(resolver = resolverUpdate(context.resolver).addInfo(ArithmeticEnabled), units= (context.units ++ extraUnits).distinct), ())
         } else {
           (context, ())
         }

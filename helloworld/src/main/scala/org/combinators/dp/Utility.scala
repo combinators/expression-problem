@@ -70,6 +70,7 @@ trait Utility {
     } yield Seq(set1,tempAssign,maxIfStmt)
   }
 
+
   def plus_equals(variable: Expression, value: Expression): Generator[MethodBodyContext, Statement]={
     for {
       addExpr <- arithmetic.arithmeticCapabilities.add(variable,value)
@@ -77,7 +78,7 @@ trait Utility {
     } yield assign
   }
 
-  def make_for_loop(loopCounter: Expression, condExpr: Expression, body: Seq[Statement]): Generator[paradigm.MethodBodyContext, Unit] = {
+  def make_for_loop(loopCounter: Expression, condExpr: Expression, body: Seq[Statement]): Generator[paradigm.MethodBodyContext, Statement] = {
     import paradigm.methodBodyCapabilities._
     import impParadigm.imperativeCapabilities._
 
@@ -93,8 +94,8 @@ trait Utility {
         _ <- addBlockDefinitions(Seq(incrStmt))
       } yield () )
 
-      _ <- addBlockDefinitions(Seq(while_loop))
+      //_ <- addBlockDefinitions(Seq(while_loop))
 
-    } yield ()
+    } yield (while_loop)
   }
 }

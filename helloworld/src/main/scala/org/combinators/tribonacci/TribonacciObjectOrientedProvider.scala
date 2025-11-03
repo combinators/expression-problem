@@ -184,37 +184,29 @@ trait TribonacciObjectOrientedProvider extends TribonacciProvider with Utility {
 
             } yield Seq.empty
 
-            buildUp <- make_for_loop(iVar, condExpr, emptyStmts)
+            optimization_body <- for {
+              //              dp[i - 1]
+              dpi_1 <- arithmetic.arithmeticCapabilities.sub(iVar, one)
+              dpi_1val <- array.arrayCapabilities.get(dpVar, dpi_1)
 
-            //            buildUp <- impParadigm.imperativeCapabilities.whileLoop(condExpr, for {
-            ////              dp[i - 1]
-            //              dpi_1 <- arithmetic.arithmeticCapabilities.sub(iVar, one)
-            //              dpi_1val <- array.arrayCapabilities.get(dpVar, dpi_1)
-            //
-            ////              dp[i - 2]
-            //              dpi_2 <- arithmetic.arithmeticCapabilities.sub(iVar, two)
-            //              dpi_2val <- array.arrayCapabilities.get(dpVar, dpi_2)
-            //
-            ////              dp[i - 3]
-            //              dpi_3 <- arithmetic.arithmeticCapabilities.sub(iVar, three)
-            //              dpi_3val <- array.arrayCapabilities.get(dpVar, dpi_3)
-            //
-            ////              dp[n] = dp[n - 1] + dp[n - 2] + dp[n - 3];
-            //              dpi <- array.arrayCapabilities.get(dpVar, iVar)
-            //              dpival <- arithmetic.arithmeticCapabilities.add(dpi_1val, dpi_2val)
-            //              dpival <- arithmetic.arithmeticCapabilities.add(dpival, dpi_3val)
-            //              dpiAssign <- impParadigm.imperativeCapabilities.assignVar(dpi, dpival)
-            //              _ <- addBlockDefinitions(Seq(dpiAssign))
-            //
-            ////              i = i + 1
-            //              incrExpr <- arithmetic.arithmeticCapabilities.add(iVar, one)
-            //              incrStmt <- impParadigm.imperativeCapabilities.assignVar(iVar, incrExpr)
-            //              _ <- addBlockDefinitions(Seq(incrStmt))
-            //
-            //            } yield ()
-            //            )
+              //              dp[i - 2]
+              dpi_2 <- arithmetic.arithmeticCapabilities.sub(iVar, two)
+              dpi_2val <- array.arrayCapabilities.get(dpVar, dpi_2)
 
-            //            _ <- addBlockDefinitions(Seq(buildUp))
+              //              dp[i - 3]
+              dpi_3 <- arithmetic.arithmeticCapabilities.sub(iVar, three)
+              dpi_3val <- array.arrayCapabilities.get(dpVar, dpi_3)
+
+              //              dp[n] = dp[n - 1] + dp[n - 2] + dp[n - 3];
+              dpi <- array.arrayCapabilities.get(dpVar, iVar)
+              dpival <- arithmetic.arithmeticCapabilities.add(dpi_1val, dpi_2val)
+              dpival <- arithmetic.arithmeticCapabilities.add(dpival, dpi_3val)
+              dpiAssign <- impParadigm.imperativeCapabilities.assignVar(dpi, dpival)
+            } yield Seq(dpiAssign)
+
+            buildUp <- make_for_loop(iVar, condExpr, optimization_body)
+
+            _ <- addBlockDefinitions(Seq(buildUp))
 
             dpn <- array.arrayCapabilities.get(dpVar, n)
 

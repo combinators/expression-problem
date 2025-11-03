@@ -74,12 +74,6 @@ trait TribonacciObjectOrientedProvider extends TribonacciProvider with Utility {
     } yield ()
   }
 
-  def declare_and_inst_variable(varName: String, varType: Type, varValue: Expression): Generator[paradigm.MethodBodyContext, Expression] = {
-    for {
-      outputVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(varName), varType, Some(varValue))
-    } yield outputVar
-  }
-
   def make_nested_for_loop(outerCounter: Expression, innerCounter: Expression,
                            outerCondExpr: Expression, innerCondExpr: Expression,
                            innerBody: Seq[Statement], outerBody: Seq[Statement] = Seq.empty): Generator[paradigm.MethodBodyContext, Unit] = {

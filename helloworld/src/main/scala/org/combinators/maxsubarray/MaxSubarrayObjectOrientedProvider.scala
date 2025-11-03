@@ -128,12 +128,12 @@ trait MaxSubarrayObjectOrientedProvider extends MaxSubarrayProvider with Utility
         currentAssign <- plus_equals(currentVar,numsI)
 
         //Set Max
-        maxIfStmt <- set_max(maxVar, currentVar)
+        maxIfStmt <- new_full_set_max(maxVar,maxVar, currentVar)
 
         // last line to be added to the while loop
         //incrExpr <- arithmetic.arithmeticCapabilities.add(iVar, one)
         incrStmt <- plus_equals(iVar, one)
-        _ <- addBlockDefinitions(Seq(curIfStmt, currentAssign,maxIfStmt, incrStmt))
+        _ <- addBlockDefinitions(Seq(curIfStmt, currentAssign)++maxIfStmt++Seq( incrStmt))
       } yield ()
       )
       _ <- addBlockDefinitions(Seq(init_stmt))

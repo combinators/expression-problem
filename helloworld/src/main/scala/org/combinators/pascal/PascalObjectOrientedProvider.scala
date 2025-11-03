@@ -113,7 +113,7 @@ trait PascalObjectOrientedProvider extends PascalProvider {
       _ <- resolveAndAddImport(mapClass)
       mapInst <- instantiateObject(mapClass, Seq.empty, None)
       mapVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle("mymap"), mapClass, Some(mapInst))
-      */
+    */
 
       lec0 <- arithmetic.arithmeticCapabilities.le(c, zero)
 

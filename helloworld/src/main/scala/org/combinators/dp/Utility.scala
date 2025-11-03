@@ -36,6 +36,40 @@ trait Utility {
     } yield maxIfStmt
   }
 
+  def full_set_max(maxVar: Expression, e1: Expression, e2: Expression): Generator[MethodBodyContext, Statement] = {
+    import paradigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+    for{
+      mathClass <- findClass(names.mangle("Math"))
+      instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(mathClass, Seq.empty, None)
+      method <- getMember(instantiated,names.mangle("max"))
+      maxExp <- apply(method, Seq(e1,e2))
+      maxStmt <- impParadigm.imperativeCapabilities.assignVar(maxVar,maxExp)
+    }yield(maxStmt)
+  }
+
+  def new_full_set_max(maxVar: Expression, e1: Expression, e2: Expression): Generator[MethodBodyContext, Seq[Statement]] = {
+    import paradigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+
+    for {
+      set1 <- impParadigm.imperativeCapabilities.assignVar(maxVar, e1)
+
+      intType <- toTargetLanguageType(TypeRep.Int)
+      tempName <- freshName(names.mangle("temp"))
+      tempVar <- impParadigm.imperativeCapabilities.declareVar(tempName, intType, None)
+      tempAssign <-impParadigm.imperativeCapabilities.assignVar(tempVar, e2)
+
+      maxCond <- arithmetic.arithmeticCapabilities.lt(maxVar,tempVar)
+      maxIfStmt <- impParadigm.imperativeCapabilities.ifThenElse(maxCond, for {
+        assignStmt <- impParadigm.imperativeCapabilities.assignVar(maxVar, tempVar)
+        _ <- addBlockDefinitions(Seq(assignStmt))
+      } yield (),
+        Seq.empty
+      )
+    } yield Seq(set1,tempAssign,maxIfStmt)
+  }
+
   def plus_equals(variable: Expression, value: Expression): Generator[MethodBodyContext, Statement]={
     for {
       addExpr <- arithmetic.arithmeticCapabilities.add(variable,value)

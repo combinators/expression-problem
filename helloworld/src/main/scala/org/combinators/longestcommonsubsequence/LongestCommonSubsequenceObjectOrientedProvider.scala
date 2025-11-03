@@ -134,14 +134,12 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
       /**
       initialization
        */
-      len1Name <- freshName(names.mangle("len1"))
       len1Value <- ooParadigm.methodBodyCapabilities.getMember(s1, names.mangle("length"))
-      len1Var <- impParadigm.imperativeCapabilities.declareVar(len1Name, stringType, Some(len1Value))
+      len1Var <- declare_and_inst_variable("len1", intType, len1Value)
       len1ValuePlusOne <- arithmetic.arithmeticCapabilities.add(len1Var, one)
 
-      len2Name <- freshName(names.mangle("len2"))
       len2Value <- ooParadigm.methodBodyCapabilities.getMember(s2, names.mangle("length"))
-      len2Var <- impParadigm.imperativeCapabilities.declareVar(len2Name, stringType, Some(len2Value))
+      len2Var <- declare_and_inst_variable("len2", intType, len2Value)
       len2ValuePlusOne <- arithmetic.arithmeticCapabilities.add(len2Var, one)
 
       instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(
@@ -150,68 +148,9 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
         None
       )
 
-      dpName <- freshName(names.mangle("dp"))
-      dpVar <- impParadigm.imperativeCapabilities.declareVar(dpName, array2dType, Some(instantiated))
+      dpVar <- declare_and_inst_variable("dp", array2dType, instantiated)
 
-      rName <- freshName(names.mangle("r"))
-      rVar <- impParadigm.imperativeCapabilities.declareVar(rName, intType, Some(zero))
-
-      outerCond <- arithmetic.arithmeticCapabilities.lt(rVar, len1Var)
-      outerLoop <- impParadigm.imperativeCapabilities.whileLoop(outerCond, for {
-        cName <- freshName(names.mangle("c"))
-        cVar <- impParadigm.imperativeCapabilities.declareVar(cName, intType, Some(zero))
-
-        innerCond <- arithmetic.arithmeticCapabilities.lt(cVar, len2Var)
-        innerLoop <- impParadigm.imperativeCapabilities.whileLoop(innerCond, for {
-
-          /*
-          maximizing function
-           */
-          s1charAt <- ooParadigm.methodBodyCapabilities.getMember(s1, names.mangle("charAt"))
-          s2charAt <- ooParadigm.methodBodyCapabilities.getMember(s2, names.mangle("charAt"))
-          condExpr <- arithmetic.arithmeticCapabilities.le(
-            s1charAt,
-            s2charAt
-          )
-
-          rPlusOneExpr <- arithmetic.arithmeticCapabilities.add(rVar, one)
-          cPlusOneExpr <- arithmetic.arithmeticCapabilities.add(cVar, one)
-
-          dpLastRow <- array.arrayCapabilities.get(dpVar, rPlusOneExpr)
-          dpBottomRight <- array.arrayCapabilities.get(dpLastRow, cPlusOneExpr)
-
-          ifStmt <- impParadigm.imperativeCapabilities.ifThenElse(condExpr,
-            for {
-              dpR <- array.arrayCapabilities.get(dpVar, rVar)
-              dpRC <- array.arrayCapabilities.get(dpR, cVar)
-              dpRCPlusOne <- arithmetic.arithmeticCapabilities.add(dpRC, one)
-
-              updateDP <- impParadigm.imperativeCapabilities.assignVar(dpBottomRight, dpRCPlusOne)
-
-              _ <- addBlockDefinitions(Seq(updateDP))
-            } yield (),
-            Seq.empty
-          )
-
-          _ <- addBlockDefinitions(Seq(ifStmt))
-
-          /*
-          increment
-           */
-          incrC <- plus_equals(cVar, one)
-          _ <- addBlockDefinitions(Seq(incrC))
-        } yield ())
-
-        _ <- addBlockDefinitions(Seq(innerLoop))
-
-        /*
-        increment
-         */
-        incrR <- plus_equals(rVar, one)
-        _ <- addBlockDefinitions(Seq(incrR))
-      } yield ())
-
-      _ <- addBlockDefinitions(Seq(outerLoop))
+      rVar <- declare_and_inst_variable("r", intType, zero)
 
       bottomRight <- get_bottom_right_dp_element(dpVar, len1Var, len2Var)
     } yield Some(bottomRight)

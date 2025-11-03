@@ -78,6 +78,22 @@ trait Utility {
     } yield assign
   }
 
+  def char_at(string: Expression, index: Expression): Generator[MethodBodyContext, Expression] = {
+    import paradigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+
+    for {
+      method <- getMember(string, names.mangle("charAt"))
+      char_at <- apply(method, Seq(index))
+    } yield char_at
+  }
+
+  def declare_and_inst_variable(varName: String, varType: Type, varValue: Expression): Generator[paradigm.MethodBodyContext, Expression] = {
+    for {
+      outputVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(varName), varType, Some(varValue))
+    } yield outputVar
+  }
+
   def make_for_loop(loopCounter: Expression, condExpr: Expression, body: Seq[Statement]): Generator[paradigm.MethodBodyContext, Statement] = {
     import paradigm.methodBodyCapabilities._
     import impParadigm.imperativeCapabilities._

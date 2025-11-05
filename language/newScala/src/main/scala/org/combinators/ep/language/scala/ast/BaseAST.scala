@@ -4,12 +4,11 @@ import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.TypeRep.OfHostType
 import org.combinators.cogen.{NameProvider, TypeRep}
 import org.combinators.ep.language.inbetween.functional
-import org.combinators.ep.language.inbetween.oo.OOAST
 import org.combinators.ep.language.inbetween.functional.FunctionalAST
 import org.combinators.ep.language.inbetween.functional.control.FunctionalControlAST
 import org.combinators.ep.language.inbetween.imperative.ImperativeAST
+import org.combinators.ep.language.inbetween.oo.OOAST
 import org.combinators.ep.language.inbetween.polymorphism.generics.GenericsAST
-import org.combinators.ep.language.scala.{Factory, FinalTypes, Type, Util}
 
 import java.util.UUID
 
@@ -94,8 +93,8 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
 
       trait CompilationUnit extends oo.anyOverrides.CompilationUnit with functional.anyOverrides.CompilationUnit with Util {
         import factory.*
-        import ooFactory.*
         import functionalFactory.*
+        import ooFactory.*
 
         def toScala: String = {
           val importDecls = imports.map(_.toScala).mkString("\n    ")
@@ -215,7 +214,6 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
         with Util {
         import factory.*
         import imperativeFactory.*
-        import ooFactory.*
         import polymorphismFactory.*
 
         override def emptyPatternCtxt: funcontrol.PatternContext = functionalControlFactory.patternContext(Seq.empty)
@@ -274,8 +272,8 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
 
       trait TestSuite extends oo.anyOverrides.TestSuite with Util {
         import factory.*
-        import ooFactory.*
         import imperativeFactory.*
+        import ooFactory.*
         import scalaBaseFactory.*
 
         def inFunSuiteStyle: oo.Class = {
@@ -532,7 +530,6 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
       trait Class extends generics.ooOverrides.Class with Util {
         import factory.*
         import ooFactory.*
-        import genericsFactory.*
         import polymorphismFactory.*
 
 
@@ -1293,6 +1290,10 @@ trait FinalBaseAST extends BaseAST {
       trait FinalExpression extends scalaBase.anyOverrides.Expression {
         override def getSelfExpression: finalTypes.Expression = this
       }
+
+      trait FinalStatement extends scalaBase.anyOverrides.Statement {
+        def getSelfStatement: finalTypes.Statement = this
+      }
     }
   }
 
@@ -1338,8 +1339,7 @@ trait FinalBaseAST extends BaseAST {
     trait Factory extends scalaBase.anyOverrides.Factory {
 
       def returnExpression(expression: any.Expression): any.Return = {
-        case class Return(override val expression: any.Expression) extends scalaBase.anyOverrides.Return {
-          override def getSelfStatement: finalTypes.Statement = this
+        case class Return(override val expression: any.Expression) extends scalaBase.anyOverrides.Return with finalBaseAST.anyOverrides.FinalStatement {
         }
         Return(expression)
       }
@@ -1363,7 +1363,7 @@ trait FinalBaseAST extends BaseAST {
 
     trait OOFactory extends scalaBase.ooOverrides.Factory {
       def classBasedTestSuite(underlyingClass: oo.Class, testMarkers: Seq[Boolean]): oo.anyOverrides.TestSuite = {
-        case class ClassBasedTestSuite(
+        class ClassBasedTestSuite(
           override val underlyingClass: oo.Class,
           override val testMarkers: Seq[Boolean])
         extends scalaBase.anyOverrides.TestSuite {
@@ -1373,7 +1373,7 @@ trait FinalBaseAST extends BaseAST {
       }
 
       def constructor(constructedType: Option[any.Type], imports: Set[any.Import], statements: Seq[any.Statement], parameters: Seq[(any.Name, any.Type)], typeLookupMap: TypeRep => Generator[any.Method, any.Type], constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type], superInitialization: Option[(any.Type, Seq[any.Expression])], fieldInitializers: Seq[(any.Name, any.Expression)]): oo.Constructor = {
-        case class Constructor(
+        class Constructor(
           override val constructedType: Option[any.Type],
           override val imports: Set[any.Import],
           override val statements: Seq[any.Statement],
@@ -1460,23 +1460,175 @@ trait FinalBaseAST extends BaseAST {
       def classReferenceType(qualifiedClassName: any.Name*): oo.ClassReferenceType = {
         case class ClassReferenceType(
           override val qualifiedClassName: any.Name*)
-        extends scalaBase.ooOverrides.ClassReferenceType
-        with finalBaseAST.anyOverrides.FinalExpression {
+        extends scalaBase.ooOverrides.ClassReferenceType {
+          override def getSelfType: scalaBase.anyOverrides.Type = this
           override def getSelfClassReferenceType: scalaBase.ooOverrides.ClassReferenceType = this
-
-          override def toImport: Seq[any.Import] = super.toImport    // recommended. Did this work?
-          override def getSelfType: finalTypes.Type = this           // different. tricky
         }
         ClassReferenceType(qualifiedClassName*)
       }
+    }
+
+    trait FunctionalFactory extends scalaBase.functionalOverrides.Factory {
+      def adt(name: any.Name,
+        imports: Seq[any.Import],
+        typeConstructors: Seq[functional.TypeConstructor],
+        typeLookupMap: TypeRep => Generator[functional.AlgebraicDataType, any.Type]): functional.AlgebraicDataType = {
+        case class ADT(override val name: any.Name,
+          override val imports: Seq[any.Import],
+          override val typeConstructors: Seq[functional.TypeConstructor],
+          override val typeLookupMap: TypeRep => Generator[functional.AlgebraicDataType, any.Type])
+        extends scalaBase.functionalOverrides.AlgebraicDataType {
+          def getSelfAlgebraicDataType: functionalFinalTypes.AlgebraicDataType = this
+          def getSelfType: scalaBase.anyOverrides.Type = this
+        }
+        ADT(name, imports, typeConstructors, typeLookupMap)
+      }
+
+      def typeConstructor(name: any.Name, parameters: Seq[(any.Name, any.Type)]): functional.TypeConstructor = {
+        case class TypeConstructor(override val name: any.Name,
+          override val parameters: Seq[(any.Name, any.Type)]
+        ) extends scalaBase.functionalOverrides.TypeConstructor {
+          def getSelfTypeConstructor: functionalFinalTypes.TypeConstructor = this
+        }
+        TypeConstructor(name, parameters)
+      }
+      def typeInstantiationExpression(tpe: any.Type, constructorName: Seq[any.Name], constructorArguments: Seq[any.Expression]): functional.TypeInstantiationExpression = {
+        case class TypeInstantiationExpression(
+          override val tpe: any.Type,
+          override val constructorName: Seq[any.Name],
+          override val constructorArguments: Seq[any.Expression])
+          extends scalaBase.functionalOverrides.TypeInstantiationExpression
+          with finalBaseAST.anyOverrides.FinalExpression {
+          def getSelfTypeInstantiationExpression: functionalFinalTypes.TypeInstantiationExpression = this
+        }
+        TypeInstantiationExpression(tpe, constructorName, constructorArguments)
+      }
+      def adtReferenceType(qualifiedTypeName: any.Name*): functional.ADTReferenceType = {
+        case class AdtReferenceType(qualifiedTypeName: any.Name*)
+          extends scalaBase.functionalOverrides.ADTReferenceType {
+          def getSelfADTReferenceType: functionalFinalTypes.ADTReferenceType = this
+          def getSelfType: scalaBase.anyOverrides.Type = this
+        }
+        AdtReferenceType(qualifiedTypeName*)
+      }
+    }
+
+    // TODO
+    trait FunctionalControlFactory extends scalaBase.functionalControlOverrides.Factory {
+      def lambda(variables: Seq[(any.Name, any.Type)], body: any.Expression): funcontrol.Lambda = {
+        case class Lambda(
+          override val variables: Seq[(any.Name, any.Type)],
+          override val body: any.Expression
+        ) extends scalaBase.functionalControlOverrides.Lambda
+        with finalBaseAST.anyOverrides.FinalExpression {
+          def getSelfLambda: functionalControlFinalTypes.Lambda = this
+        }
+        Lambda(variables, body)
+      }
+      def declareFunVariable(name: any.Name, tpe: any.Type, isRecursive: Boolean, initializer: any.Expression, inExp: any.Expression): funcontrol.DeclareFunVariable = {
+        case class DeclareFunVariable(
+          override val name: any.Name,
+          override val tpe: any.Type,
+          override val isRecursive: Boolean,
+          override val initializer: any.Expression,
+          override val inExp: any.Expression
+        ) extends scalaBase.functionalControlOverrides.DeclareFunVariable
+        with finalBaseAST.anyOverrides.FinalExpression {
+          def getSelfDeclareFunVariable: functionalControlFinalTypes.DeclareFunVariable = this
+        }
+        DeclareFunVariable(name, tpe, isRecursive, initializer, inExp)
+      }
+      def funIfThenElse(condition: any.Expression, ifBranch: any.Expression, elseIfBranches: Seq[(any.Expression, any.Expression)], elseBranch: any.Expression): funcontrol.IfThenElse = {
+        case class FunIfThenElse(
+          override val condition: any.Expression,
+          override val ifBranch: any.Expression,
+          override val elseIfBranches: Seq[(any.Expression, any.Expression)],
+          override val elseBranch: any.Expression
+        ) extends scalaBase.functionalControlOverrides.IfThenElse
+        with finalBaseAST.anyOverrides.FinalExpression {
+          def getSelfFunIfThenElse: functionalControlFinalTypes.FunIfThenElse = this
+        }
+        FunIfThenElse(condition, ifBranch, elseIfBranches, elseBranch)
+      }
+      def patternContext(variables: Seq[any.Name]): funcontrol.PatternContext = ???
+      def patternVariable(name: any.Name): funcontrol.PatternVariable = ???
+      def constructorPattern(tpe: any.Type, constructor: any.Name, arguments: Seq[any.Expression]): funcontrol.ConstructorPattern = ???
+      def patternMatch(onValue: any.Expression, cases: Seq[(any.Expression, any.Expression)]): funcontrol.PatternMatch = ???
+    }
+
+    // TODO
+    trait PolymorphismFactory extends scalaBase.polymorphismOverrides.Factory {
+      def typeArgument(name: any.Name): polymorphism.TypeArgument = {
+        case class TypeArgument(name: any.Name) extends scalaBase.polymorphismOverrides.TypeArgument {
+          def getSelfTypeArgument: polymorphismFinalTypes.TypeArgument = this
+          def getSelfType: scalaBase.anyOverrides.Type = this
+        }
+        TypeArgument(name)
+      }
+      def typeApplication(function: any.Type, arguments: Seq[any.Type]): polymorphism.TypeApplication = ???
+      def typeReferenceExpression(tpe: any.Type): polymorphism.TypeReferenceExpression = ???
+    }
+
+    // TODO
+    trait ImperativeFactory extends scalaBase.imperativeOverrides.Factory {
+      def declareVariable(name: any.Name, tpe: any.Type, initializer: Option[any.Expression]): imperative.DeclareVariable = {
+        case class DeclareVariable(
+          override val name: any.Name,
+          override val tpe: any.Type,
+          override val initializer: Option[any.Expression]
+        ) extends scalaBase.imperativeOverrides.DeclareVariable with finalBaseAST.anyOverrides.FinalStatement {
+          def getSelfDeclareVariable: imperativeFinalTypes.DeclareVariable = this
+        }
+        DeclareVariable(name, tpe, initializer)
+      }
+      def variableReferenceExpression(name: any.Name): imperative.VariableReferenceExpression = {
+        case class VariableReferenceExpression(name: any.Name)
+          extends scalaBase.imperativeOverrides.VariableReferenceExpression
+          with finalBaseAST.anyOverrides.FinalExpression {
+          def getSelfVariableReferenceExpression: imperativeFinalTypes.VariableReferenceExpression = this
+        }
+        VariableReferenceExpression(name)
+      }
+      def assignVariable(variable: any.Expression, expression: any.Expression): imperative.AssignVariable = ???
+      def liftExpression(expression: any.Expression): imperative.LiftExpression = ???
+      def ifThenElse(condition: any.Expression, ifBranch: Seq[any.Statement], elseIfBranches: Seq[(any.Expression, Seq[any.Statement])], elseBranch: Seq[any.Statement]): imperative.IfThenElse = ???
+      def whileLoop(condition: any.Expression, body: Seq[any.Statement]): imperative.While = ???
+    }
+
+    trait ScalaBaseFactory extends scalaBase.Factory {
+      def name(name: String, mangled: String): any.Name = {
+        case class Name(override val component: String, override val mangled: String) extends scalaBase.anyOverrides.Name {
+          def getSelfName: scalaBase.anyOverrides.Name = this
+        }
+        Name(name, mangled)
+      }
+      def scalaProject(compilationUnits: Set[any.CompilationUnit], methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type], constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type], classTypeLookupMap: TypeRep => Generator[oo.Class, any.Type], adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType, any.Type], functionTypeLookupMap: TypeRep => Generator[any.Method, any.Type]): scalaBase.anyOverrides.Project = {
+        // removed case class to avoid multiple copy implementations
+        class ScalaProject(
+          override val compilationUnits: Set[any.CompilationUnit],
+          override val methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type],
+          override val constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type],
+          override val classTypeLookupMap: TypeRep => Generator[oo.Class, any.Type],
+          override val adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType, any.Type],
+          override val functionTypeLookupMap: TypeRep => Generator[any.Method, any.Type]
+        ) extends scalaBase.anyOverrides.Project {
+          def getSelfProject: scalaBase.anyOverrides.Project = this
+        }
+        ScalaProject(compilationUnits, methodTypeLookupMap, constructorTypeLookupMap, classTypeLookupMap, adtTypeLookupMap, functionTypeLookupMap)
+      }
+      def scalaCompilationUnit(name: Seq[any.Name], imports: Seq[any.Import], methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type], constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type], classTypeLookupMap: TypeRep => Generator[oo.Class, any.Type], adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType, any.Type], functionTypeLookupMap: TypeRep => Generator[any.Method, any.Type], classes: Seq[oo.Class], adts: Seq[functional.AlgebraicDataType], functions: Seq[any.Method], tests: Seq[any.TestSuite]): scalaBase.anyOverrides.CompilationUnit = ???
+      def importStatement(components: Seq[any.Name]): scalaBase.anyOverrides.Import = ???
+      def reifiedScalaValue[T](ofHostType: OfHostType[T], value: T): scalaBase.ReifiedScalaValue[T] = ???
+      def methodReferenceExpression(qualifiedMethodName: Seq[any.Name]): scalaBase.MethodReferenceExpression = ???
+      def blockExpression(statements: Seq[any.Statement]): scalaBase.BlockExpression = ???
     }
   }
 
   override val factory: scalaBase.anyOverrides.Factory = new FinalBaseFactoryTypes.Factory {}
   override val ooFactory: scalaBase.ooOverrides.Factory = new FinalBaseFactoryTypes.OOFactory {}
-  override val functionalFactory: scalaBase.functionalOverrides.Factory
-  override val functionalControlFactory: scalaBase.functionalControlOverrides.Factory
-  override val polymorphismFactory: scalaBase.polymorphismOverrides.Factory
-  override val imperativeFactory: scalaBase.imperativeOverrides.Factory
-  val scalaBaseFactory: scalaBase.Factory
+  override val functionalFactory: scalaBase.functionalOverrides.Factory = new FinalBaseFactoryTypes.FunctionalFactory {}
+  override val functionalControlFactory: scalaBase.functionalControlOverrides.Factory = new FinalBaseFactoryTypes.FunctionalControlFactory {}
+  override val polymorphismFactory: scalaBase.polymorphismOverrides.Factory = new FinalBaseFactoryTypes.PolymorphismFactory {}
+  override val imperativeFactory: scalaBase.imperativeOverrides.Factory = new FinalBaseFactoryTypes.ImperativeFactory {}
+  val scalaBaseFactory: scalaBase.Factory = new FinalBaseFactoryTypes.ScalaBaseFactory {}
 }

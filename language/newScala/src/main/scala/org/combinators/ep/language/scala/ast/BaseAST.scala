@@ -1483,7 +1483,6 @@ trait FinalBaseAST extends BaseAST {
         }
         ADT(name, imports, typeConstructors, typeLookupMap)
       }
-
       def typeConstructor(name: any.Name, parameters: Seq[(any.Name, any.Type)]): functional.TypeConstructor = {
         case class TypeConstructor(override val name: any.Name,
           override val parameters: Seq[(any.Name, any.Type)]
@@ -1646,7 +1645,6 @@ trait FinalBaseAST extends BaseAST {
         }
         AssignVariable(variable, expression)
       }
-
       // cannot find LiftExpression in scalaBase.*.LiftExpression
       def liftExpression(expression: any.Expression): imperative.LiftExpression = {
         case class LiftExpression(expression:any.Expression)
@@ -1655,7 +1653,6 @@ trait FinalBaseAST extends BaseAST {
       }
         LiftExpression(expression)
       }
-
       def ifThenElse(condition: any.Expression,
                      ifBranch: Seq[any.Statement],
                      elseIfBranches: Seq[(any.Expression, Seq[any.Statement])],

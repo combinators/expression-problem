@@ -91,7 +91,7 @@ trait AnyAST {
       def copy(
         function: Expression = this.function,
         arguments: Seq[Expression] = this.arguments
-      ): ApplyExpression = applyExpression(function, arguments)
+      ): ApplyExpression = factory.applyExpression(function, arguments)
     }
 
     trait ArgumentExpression extends Expression {
@@ -122,7 +122,7 @@ trait AnyAST {
       ): TestSuite = factory.testSuite(name, tests, methodTypeLookupMap)
     }
 
-    trait CompilationUnit  {
+    trait CompilationUnit {
       def getSelfCompilationUnit: finalTypes.CompilationUnit
 
       def name: Seq[Name] = Seq.empty

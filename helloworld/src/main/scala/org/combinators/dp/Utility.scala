@@ -13,6 +13,7 @@ trait Utility {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext,paradigm.type]
   val arithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double]
+  val array: Arrays.WithBase[paradigm.MethodBodyContext,paradigm.type]
 
   import paradigm._
   import syntax._
@@ -113,5 +114,56 @@ trait Utility {
       //_ <- addBlockDefinitions(Seq(while_loop))
 
     } yield (while_loop)
+  }
+
+  def get_matrix_element(matrix: Expression, row: Expression, col: Expression): Generator[paradigm.MethodBodyContext, Expression] = {
+    import paradigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+
+    for {
+      matrix_at_r <- array.arrayCapabilities.get(matrix, row)
+      matrix_at_r_c <- array.arrayCapabilities.get(matrix_at_r, col)
+    } yield matrix_at_r_c
+  }
+
+  /**
+   * Helper function for nested for loops.
+   * @param var1 An expression representing the variable to be updated in the outer loop.
+   * @param guard1 An expression representing the guard condition for the outer loop.
+   * @param update1 An expression representing the update expression for the outer loop.
+   * @param var2 An expression representing the variable to be updated in the inner loop.
+   * @param guard2 An expression representing the guard condition for the inner loop.
+   * @param update2 An expression representing the update expression for the inner loop.
+   * @param inner_body The body of the inner loop.
+   * @param trailing_body Additional statements to be executed at the end of the inner loop after the execution of the inner loop.
+   * @return A generator of statements for the outer loop.
+   */
+  def make_nested_for_loop(var1: Expression, guard1: Expression, update1: Expression,
+                           var2: Expression, guard2: Expression, update2: Expression,
+                           inner_body: Seq[Statement], trailing_body: Seq[Statement]): Generator[paradigm.MethodBodyContext, Statement] = {
+    import paradigm.methodBodyCapabilities._
+    import impParadigm.imperativeCapabilities._
+
+    for {
+      outer_loop <- impParadigm.imperativeCapabilities.whileLoop(guard1,
+        for {
+          inner_loop <- impParadigm.imperativeCapabilities.whileLoop(guard2,
+            for {
+              _ <- addBlockDefinitions(inner_body)
+
+              updateStmt <- impParadigm.imperativeCapabilities.assignVar(var2, update2)
+              _ <- addBlockDefinitions(Seq(updateStmt))
+            } yield ()
+          )
+
+          _ <- addBlockDefinitions(Seq(inner_loop))
+
+          _ <- addBlockDefinitions(trailing_body)
+
+          updateStmt <- impParadigm.imperativeCapabilities.assignVar(var1, update1)
+          _ <- addBlockDefinitions(Seq(updateStmt))
+        } yield ()
+      )
+    } yield outer_loop
   }
 }

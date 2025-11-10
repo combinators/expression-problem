@@ -1,4 +1,4 @@
-package org.combinators.maxsubarray
+package org.combinators.twosequences.maxsubarray
 
 /**
  * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"

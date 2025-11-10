@@ -1,4 +1,4 @@
-package org.combinators.longestcommonsubsequence
+package org.combinators.twosequences.longestcommonsubsequence
 
 import org.combinators.dp.Utility
 import org.combinators.ep.domain.abstractions._
@@ -7,14 +7,14 @@ import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, ObjectOriented}
 import org.combinators.ep.generator.{AbstractSyntax, NameProvider, Understands}
+import org.combinators.twosequences.TwoSequencesUtility
 
-trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubsequenceProvider with Utility {
+trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubsequenceProvider with TwoSequencesUtility {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val names: NameProvider[paradigm.syntax.Name]
   val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext,paradigm.type]
   val arithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double]
   val console: Console.WithBase[paradigm.MethodBodyContext,paradigm.type]
-  val array: Arrays.WithBase[paradigm.MethodBodyContext,paradigm.type]
   val asserts: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val eqls: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
@@ -74,16 +74,6 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
     } yield ()
   }
 
-  def get_bottom_right_dp_element(dp: Expression, len1: Expression, len2: Expression): Generator[MethodBodyContext, Expression] = {
-    import paradigm.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
-
-    for {
-      dpLastRow <- array.arrayCapabilities.get(dp, len1)
-      dpBottomRight <- array.arrayCapabilities.get(dpLastRow, len2)
-    } yield dpBottomRight
-  }
-
 //  public class LongestCommonSubsequence {
 //    public int solution(String s1, String s2) {
 //      /**
@@ -134,6 +124,7 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
       /**
       initialization
        */
+      // todo: figure out how to get s1.length() method instead of trying to treat length as an attribute of the string class
       len1Value <- ooParadigm.methodBodyCapabilities.getMember(s1, names.mangle("length"))
       len1Var <- declare_and_inst_variable("len1", intType, len1Value)
       len1ValuePlusOne <- arithmetic.arithmeticCapabilities.add(len1Var, one)

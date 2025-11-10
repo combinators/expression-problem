@@ -1,4 +1,4 @@
-package org.combinators.maxsubarray
+package org.combinators.twosequences.maxsubarray
 
 import org.combinators.dp.Utility
 import org.combinators.ep.domain.abstractions._

@@ -1,4 +1,4 @@
-package org.combinators.longestcommonsubsequence
+package org.combinators.twosequences.longestcommonsubsequence
 
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration

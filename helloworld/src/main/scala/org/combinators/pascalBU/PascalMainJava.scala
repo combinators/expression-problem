@@ -68,7 +68,7 @@ class PascalMainJava {
 }
 
 object PascalDirectToDiskMain extends IOApp {
-  val targetDirectory = Paths.get("target", "pascal")
+  val targetDirectory = Paths.get("target", "pascalBU")
 
   def run(args: List[String]): IO[ExitCode] = {
     for {

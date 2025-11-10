@@ -37,6 +37,7 @@ trait Utility {
     } yield maxIfStmt
   }
 
+  //This code does not work, can't access static method on class
   def full_set_max(maxVar: Expression, e1: Expression, e2: Expression): Generator[MethodBodyContext, Statement] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._

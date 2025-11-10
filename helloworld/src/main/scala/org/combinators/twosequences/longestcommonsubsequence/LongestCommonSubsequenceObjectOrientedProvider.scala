@@ -124,13 +124,12 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
       /**
       initialization
        */
-      // todo: figure out how to get s1.length() method instead of trying to treat length as an attribute of the string class
-      len1Value <- ooParadigm.methodBodyCapabilities.getMember(s1, names.mangle("length"))
-      len1Var <- declare_and_inst_variable("len1", intType, len1Value)
+      s1Length <- ooParadigm.methodBodyCapabilities.getMember(s1, names.mangle("length"))
+      len1Var <- declare_and_inst_variable("len1", intType, apply(s1Length, Seq.empty))
       len1ValuePlusOne <- arithmetic.arithmeticCapabilities.add(len1Var, one)
 
-      len2Value <- ooParadigm.methodBodyCapabilities.getMember(s2, names.mangle("length"))
-      len2Var <- declare_and_inst_variable("len2", intType, len2Value)
+      s2Length <- ooParadigm.methodBodyCapabilities.getMember(s2, names.mangle("length"))
+      len2Var <- declare_and_inst_variable("len2", intType, apply(s2Length, Seq.empty))
       len2ValuePlusOne <- arithmetic.arithmeticCapabilities.add(len2Var, one)
 
       instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(

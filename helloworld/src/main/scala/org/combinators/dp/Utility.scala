@@ -89,6 +89,13 @@ trait Utility {
     } yield char_at
   }
 
+  def declare_and_inst_variable(varName: String, varType: Type, varValueGenerator: Generator[paradigm.MethodBodyContext, Expression]): Generator[paradigm.MethodBodyContext, Expression] = {
+    for {
+      varValue <- varValueGenerator
+      outputVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(varName), varType, Some(varValue))
+    } yield outputVar
+  }
+
   def declare_and_inst_variable(varName: String, varType: Type, varValue: Expression): Generator[paradigm.MethodBodyContext, Expression] = {
     for {
       outputVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(varName), varType, Some(varValue))

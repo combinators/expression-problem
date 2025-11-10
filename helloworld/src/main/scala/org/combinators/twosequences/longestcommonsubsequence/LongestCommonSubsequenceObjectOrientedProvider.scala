@@ -149,12 +149,13 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
       r <- declare_and_inst_variable("r", intType, zero)
       c <- declare_and_inst_variable("c", intType, zero)
 
-      init = initialize_solution(s1, s2, intType)
-      dp <- init(0)
-      r <- init(1)
-      c <- init(2)
-      len1 <- init(3)
-      len2 <- init(4)
+      // test
+//      init = initialize_solution(s1, s2, intType)
+//      dp <- init(0)
+//      r <- init(1)
+//      c <- init(2)
+//      len1 <- init(3)
+//      len2 <- init(4)
 
       /**
        * optimization

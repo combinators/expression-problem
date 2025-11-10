@@ -6,7 +6,7 @@ import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, ObjectOriented}
-import org.combinators.ep.generator.{AbstractSyntax, NameProvider, Understands}
+import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
 import org.combinators.twosequences.TwoSequencesUtility
 
 trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubsequenceProvider with TwoSequencesUtility {
@@ -124,25 +124,80 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
       /**
       initialization
        */
+
+      // test
+      dphelperType <- findClass(names.mangle("DP_helper"))
+      _ <- resolveAndAddImport(dphelperType)
+      dphelper <- impParadigm.imperativeCapabilities.declareVar(names.mangle("dphelper"), dphelperType)
+
       s1Length <- ooParadigm.methodBodyCapabilities.getMember(s1, names.mangle("length"))
-      len1Var <- declare_and_inst_variable("len1", intType, apply(s1Length, Seq.empty))
-      len1ValuePlusOne <- arithmetic.arithmeticCapabilities.add(len1Var, one)
+      len1 <- declare_and_inst_variable("len1", intType, apply(s1Length, Seq.empty))
+      len1PlusOne <- arithmetic.arithmeticCapabilities.add(len1, one)
 
       s2Length <- ooParadigm.methodBodyCapabilities.getMember(s2, names.mangle("length"))
-      len2Var <- declare_and_inst_variable("len2", intType, apply(s2Length, Seq.empty))
-      len2ValuePlusOne <- arithmetic.arithmeticCapabilities.add(len2Var, one)
+      len2 <- declare_and_inst_variable("len2", intType, apply(s2Length, Seq.empty))
+      len2PlusOne <- arithmetic.arithmeticCapabilities.add(len2, one)
 
       instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(
         array2dType,
-        Seq(len1ValuePlusOne, len2ValuePlusOne),
+        Seq(len1PlusOne, len2PlusOne),
         None
       )
 
-      dpVar <- declare_and_inst_variable("dp", array2dType, instantiated)
+      dp <- declare_and_inst_variable("dp", array2dType, instantiated)
 
-      rVar <- declare_and_inst_variable("r", intType, zero)
+      r <- declare_and_inst_variable("r", intType, zero)
+      c <- declare_and_inst_variable("c", intType, zero)
 
-      bottomRight <- get_bottom_right_dp_element(dpVar, len1Var, len2Var)
+      /**
+       * optimization
+       */
+      outer_guard <- arithmetic.arithmeticCapabilities.lt(r, len1)
+      outer_update <- arithmetic.arithmeticCapabilities.add(r, one)
+
+      inner_guard <- arithmetic.arithmeticCapabilities.lt(c, len2)
+      inner_update <- arithmetic.arithmeticCapabilities.add(c, one)
+
+      s1_charAt <- ooParadigm.methodBodyCapabilities.getMember(s1, names.mangle("charAt"))
+      s2_charAt <- ooParadigm.methodBodyCapabilities.getMember(s2, names.mangle("charAt"))
+      s1_charAt_r <- apply(s1_charAt, Seq(r))
+      s2_charAt_c <- apply(s2_charAt, Seq(c))
+
+      // todo: replace with correct equality check
+      optimization_condition <- eqls.equalityCapabilities.areEqual(stringType, s1_charAt_r, s2_charAt_c)
+      body <- impParadigm.imperativeCapabilities.ifThenElse(
+        optimization_condition,
+        for {
+          rPlus1 <- arithmetic.arithmeticCapabilities.add(r, one)
+          cPlus1 <- arithmetic.arithmeticCapabilities.add(c, one)
+
+          dpOfr1c1 <- get_matrix_element(dp, rPlus1, cPlus1)
+
+          dpOfrc <- get_matrix_element(dp, r, c)
+          dpOfrc_PlusOne <- arithmetic.arithmeticCapabilities.add(dpOfrc, one)
+
+          assignStmt <- impParadigm.imperativeCapabilities.assignVar(dpOfr1c1, dpOfrc_PlusOne)
+          _ <- addBlockDefinitions(Seq(assignStmt))
+        } yield (),
+        Seq.empty,
+        Some(
+          for {
+            _ <- Command.skip[paradigm.MethodBodyContext]
+          } yield ()
+        )
+      )
+
+      empty <- for {
+        _ <- Command.skip[paradigm.MethodBodyContext]
+      } yield Seq.empty
+
+      optimization <- make_nested_for_loop(r, outer_guard, outer_update, c, inner_guard, inner_update, Seq(body), empty)
+      _ <- addBlockDefinitions(Seq(optimization))
+
+      /**
+       * return the bottom right element
+       */
+      bottomRight <- get_bottom_right_dp_element(dp, len1, len2)
     } yield Some(bottomRight)
   }
 

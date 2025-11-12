@@ -35,7 +35,7 @@ trait OperatorExpressionOpsAST extends AnyAST {
       ): UnaryExpression = operatorExpressionsFactory.unaryExpression(operator, operand)
     }
 
-    trait Operator extends Factory {
+    trait Operator {
       def getSelfOperator: operatorExpressionsFinalTypes.Operator
     }
 

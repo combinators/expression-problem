@@ -1,7 +1,7 @@
 package org.combinators.ep.language.scala.ast.ffi
 
 import org.combinators.ep.language.inbetween.ffi.OperatorExpressionOpsAST as InbetweenOperatorExpressionOpsAST
-import org.combinators.ep.language.scala.ast.BaseAST
+import org.combinators.ep.language.scala.ast.{BaseAST, FinalBaseAST}
 
 trait OperatorExpressionsAST extends InbetweenOperatorExpressionOpsAST{ self: BaseAST =>
   object scalaOperatorExpressions {
@@ -41,8 +41,76 @@ trait OperatorExpressionsAST extends InbetweenOperatorExpressionOpsAST{ self: Ba
       
       trait Factory extends operatorExpressions.Factory {}
     }
+
+    trait InfixOperator {
+      import factory.*
+      def operator: String
+      def toScala(operands: any.Expression*): String = operands.map(_.toScala).mkString(operator)
+    }
+
+    trait PrefixOperator {
+      import factory.*
+      def operator: String
+      def toScala(operands: any.Expression*): String = s"($operator${operands.head.toScala})"
+    }
+
+    trait MathFunctionOperator {
+      import factory.*
+      def operator: String
+      def toScala(operands: any.Expression*): String = {
+        s"Math.$operator${operands.map(_.toScala).mkString("(", ", ", ")")}"
+      }
+    }
+
+    trait PostfixOperator {
+      import factory.*
+      def operator: String
+      def toScala(operands: any.Expression*): String = s"(${operands.head.toScala}$operator)"
+    }
   }
 
   val operatorExpressionsFinalTypes: scalaOperatorExpressions.operatorExpressionsOverrides.FinalTypes
   val operatorExpressionsFactory: scalaOperatorExpressions.operatorExpressionsOverrides.Factory
+}
+
+trait FinalOperatorExpressionsAST extends OperatorExpressionsAST { self: FinalBaseAST =>
+
+  object finalOperatorExpressions {
+    object operatorExpressionsOverrides {
+      trait Operator extends scalaOperatorExpressions.operatorExpressionsOverrides.Operator {
+        def getSelfOperator: scalaOperatorExpressions.operatorExpressionsOverrides.Operator = this
+      }
+    }
+  }
+
+  object finalOperatorExpressionsFinalTypes {
+    trait OperatorExpressionsFinalTypes extends scalaOperatorExpressions.operatorExpressionsOverrides.FinalTypes {
+      type Operator = scalaOperatorExpressions.operatorExpressionsOverrides.Operator
+      type BinaryExpression = scalaOperatorExpressions.operatorExpressionsOverrides.BinaryExpression
+      type UnaryExpression = scalaOperatorExpressions.operatorExpressionsOverrides.UnaryExpression
+    }
+  }
+  override val operatorExpressionsFinalTypes: finalOperatorExpressionsFinalTypes.OperatorExpressionsFinalTypes = new finalOperatorExpressionsFinalTypes.OperatorExpressionsFinalTypes {}
+
+  object finalOperatorExpressionsFactoryTypes {
+    trait OperatorExpressionsFactory extends scalaOperatorExpressions.operatorExpressionsOverrides.Factory {
+      def binaryExpression(operator: operatorExpressions.Operator, left: any.Expression, right: any.Expression): operatorExpressions.BinaryExpression = {
+        case class BinaryExpression(operator: operatorExpressions.Operator, left: any.Expression, right: any.Expression)
+        extends scalaOperatorExpressions.operatorExpressionsOverrides.BinaryExpression
+        with finalBaseAST.anyOverrides.FinalExpression {
+          def getSelfBinaryExpression: scalaOperatorExpressions.operatorExpressionsOverrides.BinaryExpression = this
+        }
+        BinaryExpression(operator, left, right)
+      }
+      def unaryExpression(operator: operatorExpressions.Operator, operand: any.Expression): operatorExpressions.UnaryExpression = {
+        case class UnaryExpression(operator: operatorExpressions.Operator, operand: any.Expression)
+        extends scalaOperatorExpressions.operatorExpressionsOverrides.UnaryExpression
+        with finalBaseAST.anyOverrides.FinalExpression {
+          def getSelfUnaryExpression: scalaOperatorExpressions.operatorExpressionsOverrides.UnaryExpression = this
+        }
+        UnaryExpression(operator, operand)
+      }
+    }
+  }
+  override val operatorExpressionsFactory: scalaOperatorExpressions.operatorExpressionsOverrides.Factory = new finalOperatorExpressionsFactoryTypes.OperatorExpressionsFactory {}
 }

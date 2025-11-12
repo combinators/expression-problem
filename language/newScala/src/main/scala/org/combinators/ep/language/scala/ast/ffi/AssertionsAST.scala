@@ -18,3 +18,20 @@ trait AssertionsAST extends InbetweenAssertionsAST { self: OperatorExpressionsAS
   }
   val assertionOpsFactory: scalaAssertions.assertionOpsOverride.Factory
 }
+
+trait FinalAssertionsAST extends AssertionsAST { self: FinalOperatorExpressionsAST & BaseAST =>
+  object finalAssertionsFactoryTypes {
+    trait AssertionsFactory extends scalaAssertions.assertionOpsOverride.Factory {
+      def assertTrueOp(): scalaAssertions.assertionOpsOverride.AssertTrueOp = {
+        case class AssertTrueOp() extends scalaAssertions.assertionOpsOverride.AssertTrueOp {
+
+          def getSelfOperator: operatorExpressionsFinalTypes.Operator = this
+        }
+
+        AssertTrueOp()
+      }
+    }
+  }
+
+  val assertionOpsFactory: finalAssertionsFactoryTypes.AssertionsFactory = new finalAssertionsFactoryTypes.AssertionsFactory {}
+}

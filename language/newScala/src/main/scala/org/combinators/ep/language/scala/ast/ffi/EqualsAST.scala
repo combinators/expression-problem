@@ -1,6 +1,6 @@
 package org.combinators.ep.language.scala.ast.ffi
 
-import org.combinators.ep.language.inbetween.ffi.EqualsAST as InbetweenEqualsAST
+import org.combinators.ep.language.inbetween.ffi.{EqualsAST => InbetweenEqualsAST}
 import org.combinators.ep.language.scala.ast.{BaseAST, FinalBaseAST}
 
 trait EqualsAST extends InbetweenEqualsAST { self: BaseAST =>

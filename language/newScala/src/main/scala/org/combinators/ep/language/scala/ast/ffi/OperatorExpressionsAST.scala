@@ -1,6 +1,6 @@
 package org.combinators.ep.language.scala.ast.ffi
 
-import org.combinators.ep.language.inbetween.ffi.OperatorExpressionOpsAST as InbetweenOperatorExpressionOpsAST
+import org.combinators.ep.language.inbetween.ffi.{OperatorExpressionOpsAST => InbetweenOperatorExpressionOpsAST}
 import org.combinators.ep.language.scala.ast.{BaseAST, FinalBaseAST}
 
 trait OperatorExpressionsAST extends InbetweenOperatorExpressionOpsAST{ self: BaseAST =>
@@ -13,8 +13,6 @@ trait OperatorExpressionsAST extends InbetweenOperatorExpressionOpsAST{ self: Ba
       }
 
       trait BinaryExpression extends scalaBase.anyOverrides.Expression with operatorExpressions.BinaryExpression {
-        import operatorExpressionsFactory.*
-        import factory.*
         def toScala: String = s"(${operator.toScala(left, right)})" // necessary when composing expressions, though can get excessive at times.
 
         override def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): operatorExpressions.BinaryExpression =
@@ -25,8 +23,6 @@ trait OperatorExpressionsAST extends InbetweenOperatorExpressionOpsAST{ self: Ba
       }
 
       trait UnaryExpression extends scalaBase.anyOverrides.Expression with operatorExpressions.UnaryExpression {
-        import operatorExpressionsFactory.*
-        import factory.*
         def toScala: String = operator.toScala(operand)
 
         override def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): operatorExpressions.UnaryExpression =
@@ -43,13 +39,11 @@ trait OperatorExpressionsAST extends InbetweenOperatorExpressionOpsAST{ self: Ba
     }
 
     trait InfixOperator {
-      import factory.*
       def operator: String
       def toScala(operands: any.Expression*): String = operands.map(_.toScala).mkString(operator)
     }
 
     trait PrefixOperator {
-      import factory.*
       def operator: String
       def toScala(operands: any.Expression*): String = s"($operator${operands.head.toScala})"
     }

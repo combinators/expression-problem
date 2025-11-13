@@ -1,6 +1,6 @@
 package org.combinators.ep.language.scala.ast.ffi
 
-import org.combinators.ep.language.inbetween.ffi.ArithmeticOpsAST as InbetweenArithmeticOpsAST
+import org.combinators.ep.language.inbetween.ffi.{ArithmeticOpsAST => InbetweenArithmeticOpsAST}
 import org.combinators.ep.language.scala.ast.BaseAST
 import org.combinators.ep.language.scala.ast.ffi.OperatorExpressionsAST
 

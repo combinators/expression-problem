@@ -1,4 +1,10 @@
-package org.combinators.twosequences.longestcommonsubsequence
+package org.combinators.bottomUp.twosequences.maxsubarray
+
+/**
+ * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"
+ *
+ * Creates output files in target/dp
+ */
 
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
@@ -13,10 +19,10 @@ import java.nio.file.{Path, Paths}
 /**
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
-class LongestCommonSubsequenceMainJava {
+class MaxSubarrayMainJava {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("world"))))
 
-  val dpApproach = LongestCommonSubsequenceObjectOrientedProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.ooParadigm, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.equalityInMethod)
+  val dpApproach = MaxSubarrayObjectOrientedProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.ooParadigm, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.equalityInMethod)
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
@@ -38,7 +44,7 @@ class LongestCommonSubsequenceMainJava {
         } yield ()
       }
 
-    IO {
+     IO {
       print("Computing Files...")
       val computed = files()
       println("[OK]")
@@ -60,13 +66,13 @@ class LongestCommonSubsequenceMainJava {
   }
 }
 
-object LongestCommonSubsequenceDirectToDiskMain extends IOApp {
-  val targetDirectory = Paths.get("target", "longestcommonsubsequence")
+object MaxSubarrayDirectToDiskMain extends IOApp {
+  val targetDirectory = Paths.get("target", "maxsubarray")
 
   def run(args: List[String]): IO[ExitCode] = {
     for {
       _ <- IO { print("Initializing Generator...") }
-      main <- IO { new LongestCommonSubsequenceMainJava() }
+      main <- IO { new MaxSubarrayMainJava() }
       _ <- IO { println("[OK]") }
       result <- main.runDirectToDisc(targetDirectory)
     } yield result

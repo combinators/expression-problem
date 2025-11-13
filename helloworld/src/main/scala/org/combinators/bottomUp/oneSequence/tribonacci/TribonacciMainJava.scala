@@ -1,4 +1,10 @@
-package org.combinators.twosequences.uncrossedlines
+package org.combinators.bottomUp.oneSequence.tribonacci
+
+/**
+ * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"
+ *
+ * Creates output files in target/dp
+ */
 
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
@@ -13,10 +19,10 @@ import java.nio.file.{Path, Paths}
 /**
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
-class UncrossedLinesMainJava {
+class TribonacciMainJava {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("world"))))
 
-  val dpApproach = UncrossedLinesObjectOrientedProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.ooParadigm, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.equalityInMethod)
+  val dpApproach = TribonacciObjectOrientedProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.ooParadigm, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.equalityInMethod)
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
@@ -60,13 +66,13 @@ class UncrossedLinesMainJava {
   }
 }
 
-object UncrossedLinesDirectToDiskMain extends IOApp {
-  val targetDirectory = Paths.get("target", "uncrossedlines")
+object TribonacciDirectToDiskMain extends IOApp {
+  val targetDirectory = Paths.get("target", "tribonacci")
 
   def run(args: List[String]): IO[ExitCode] = {
     for {
       _ <- IO { print("Initializing Generator...") }
-      main <- IO { new UncrossedLinesMainJava() }
+      main <- IO { new TribonacciMainJava() }
       _ <- IO { println("[OK]") }
       result <- main.runDirectToDisc(targetDirectory)
     } yield result

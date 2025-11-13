@@ -1,13 +1,13 @@
-package org.combinators.tribonacci
+package org.combinators.bottomUp.twosequences.uncrossedlines
 
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
 import org.combinators.ep.generator.Command._
-import org.combinators.ep.generator.{NameProvider, Understands}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax._
 import org.combinators.ep.generator.paradigm.{AddImport, AnyParadigm, ObjectOriented, ResolveImport}
+import org.combinators.ep.generator.{NameProvider, Understands}
 
-trait TribonacciProvider {
+trait UncrossedLinesProvider {
   val paradigm: AnyParadigm
   val names: NameProvider[paradigm.syntax.Name]
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]

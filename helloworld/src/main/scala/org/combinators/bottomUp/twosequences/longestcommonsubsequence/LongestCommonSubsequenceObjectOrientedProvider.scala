@@ -1,27 +1,25 @@
-package org.combinators.twosequences.uncrossedlines
+package org.combinators.bottomUp.twosequences.longestcommonsubsequence
 
+import org.combinators.bottomUp.twosequences.TwoSequencesUtility
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.ObjectOriented.WithBase
 import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, ObjectOriented}
 import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
-import org.combinators.twosequences.TwoSequencesUtility
 
-trait UncrossedLinesObjectOrientedProvider extends UncrossedLinesProvider with TwoSequencesUtility {
+trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubsequenceProvider with TwoSequencesUtility {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val names: NameProvider[paradigm.syntax.Name]
-  val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext,paradigm.type]
   val arithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double]
-  val console: Console.WithBase[paradigm.MethodBodyContext, paradigm.type]
-  val array: Arrays.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val console: Console.WithBase[paradigm.MethodBodyContext,paradigm.type]
   val asserts: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val eqls: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
+  import ooParadigm._
   import paradigm._
   import syntax._
-  import ooParadigm._
 
   lazy val message: String = "message"
   lazy val main: String = "main"
@@ -36,12 +34,8 @@ trait UncrossedLinesObjectOrientedProvider extends UncrossedLinesProvider with T
   }
 
   def registerTypeMapping(tpe: DataType): Generator[ProjectContext, Unit] = {
+    import ooParadigm.projectCapabilities.{addTypeLookupForClasses, addTypeLookupForConstructors}
     import paradigm.projectCapabilities.addTypeLookupForMethods
-    import ooParadigm.methodBodyCapabilities.canFindClassInMethod
-    import ooParadigm.projectCapabilities.addTypeLookupForClasses
-    import ooParadigm.projectCapabilities.addTypeLookupForConstructors
-    import ooParadigm.classCapabilities.canFindClassInClass
-    import ooParadigm.constructorCapabilities.canFindClassInConstructor
 
     val dtpe = TypeRep.DataType(tpe)
 
@@ -53,8 +47,8 @@ trait UncrossedLinesObjectOrientedProvider extends UncrossedLinesProvider with T
   }
 
   def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
-    import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities._
 
     for {
       rt <- findClass(names.mangle(names.conceptNameOf(tpeCase)))
@@ -64,50 +58,58 @@ trait UncrossedLinesObjectOrientedProvider extends UncrossedLinesProvider with T
     } yield res
   }
 
-  /**
-   * Defines the signature of the <a href=https://leetcode.com/problems/uncrossed-lines/>Uncrossed Lines<a> solution method:
-   * Uncrossed Lines takes in two integer arrays `nums1` and `nums2` and returns an integer
-   * representing the number of uncrossed lines.
-   *
-   * @return a generator of unit, which represents the instructions to add the method signature to the class.
-   *         Rather than returning something, this function
-   *         is used to add the method signature to the class in place.
-   */
   def make_compute_method_signature(): Generator[paradigm.MethodBodyContext, Unit] = {
     import paradigm.methodBodyCapabilities._
 
     for {
-      arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
+      stringType <- toTargetLanguageType(TypeRep.String)
       intType <- toTargetLanguageType(TypeRep.Int)
-
-      _ <- setParameters(Seq((names.mangle("nums1"), arrayType), (names.mangle("nums2"), arrayType)))
+      _ <- setParameters(Seq((names.mangle("s1"), stringType), (names.mangle("s2"), stringType)))
       _ <- setReturnType(intType)
     } yield ()
   }
 
-  // todo: figure out how to use this
-  def initialize(): Generator[paradigm.MethodBodyContext, Seq[Expression]] = {
-    import paradigm.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
-
-    for {
-      one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
-
-      dp <- instantiate_dp(one, one)
-    } yield Seq(dp, one)
-  }
-
+//  public class LongestCommonSubsequence {
+//    public int solution(String s1, String s2) {
+//      /**
+//       * Initialization
+//       */
+//      int len1 = s1.length();
+//      int len2 = s2.length();
+//
+//      int[][] dp = new int[len1 + 1][len2 + 1];
+//
+//      /**
+//       * Iterative solution
+//       */
+//      for(int r = 0; r < len1; r++) {
+//        for(int c = 0; c < len2; c++) {
+//          if(s1.charAt(r) == s2.charAt(c)) {
+//            dp[r + 1][c + 1] = dp[r][c] + 1;
+//          } else {
+//            dp[r + 1][c + 1] = Math.max(dp[r][c + 1], dp[r + 1][c]);
+//          }
+//        }
+//      }
+//
+//      /**
+//       * Return bottom right element
+//       */
+//      return dp[len1][len2];
+//    }
+//  }
   def make_compute_method(): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
-    import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities._
 
     for {
       _ <- make_compute_method_signature()
       args <- getArguments()
 
-      (names1, tpes1, nums1) = args.head
-      (names2, tpes2, nums2) = args.tail.head
+      (names1, tpes1, s1) = args.head
+      (names2, tpes2, s2) = args.tail.head
 
+      stringType <- toTargetLanguageType(TypeRep.String)
       intType <- toTargetLanguageType(TypeRep.Int)
       arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
       array2dType <- toTargetLanguageType(TypeRep.Array(TypeRep.Array(TypeRep.Int)))
@@ -115,20 +117,40 @@ trait UncrossedLinesObjectOrientedProvider extends UncrossedLinesProvider with T
       zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
 
       /**
-       * initialization
+      initialization
        */
-      len1Value <- ooParadigm.methodBodyCapabilities.getMember(nums1, names.mangle("length"))
-      len2Value <- ooParadigm.methodBodyCapabilities.getMember(nums2, names.mangle("length"))
-      len1 <- declare_and_inst_variable("len1", intType, len1Value)
-      len2 <- declare_and_inst_variable("len2", intType, len2Value)
 
+      // test
+      dphelperType <- findClass(names.mangle("DP_helper"))
+      _ <- resolveAndAddImport(dphelperType)
+      dphelper <- impParadigm.imperativeCapabilities.declareVar(names.mangle("dphelper"), dphelperType)
+
+      s1Length <- ooParadigm.methodBodyCapabilities.getMember(s1, names.mangle("length"))
+      len1 <- declare_and_inst_variable("len1", intType, apply(s1Length, Seq.empty))
       len1PlusOne <- arithmetic.arithmeticCapabilities.add(len1, one)
+
+      s2Length <- ooParadigm.methodBodyCapabilities.getMember(s2, names.mangle("length"))
+      len2 <- declare_and_inst_variable("len2", intType, apply(s2Length, Seq.empty))
       len2PlusOne <- arithmetic.arithmeticCapabilities.add(len2, one)
 
-      dp <- instantiate_dp(len1PlusOne, len2PlusOne)
+      instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(
+        array2dType,
+        Seq(len1PlusOne, len2PlusOne),
+        None
+      )
+
+      dp <- declare_and_inst_variable("dp", array2dType, instantiated)
 
       r <- declare_and_inst_variable("r", intType, zero)
       c <- declare_and_inst_variable("c", intType, zero)
+
+      // test
+//      init = initialize_solution(s1, s2, intType)
+//      dp <- init(0)
+//      r <- init(1)
+//      c <- init(2)
+//      len1 <- init(3)
+//      len2 <- init(4)
 
       /**
        * optimization
@@ -139,12 +161,15 @@ trait UncrossedLinesObjectOrientedProvider extends UncrossedLinesProvider with T
       inner_guard <- arithmetic.arithmeticCapabilities.lt(c, len2)
       inner_update <- arithmetic.arithmeticCapabilities.add(c, one)
 
-      nums1OfR <- array.arrayCapabilities.get(nums1, r)
-      nums2OfC <- array.arrayCapabilities.get(nums2, c)
+      s1_charAt <- ooParadigm.methodBodyCapabilities.getMember(s1, names.mangle("charAt"))
+      s2_charAt <- ooParadigm.methodBodyCapabilities.getMember(s2, names.mangle("charAt"))
+      s1_charAt_r <- apply(s1_charAt, Seq(r))
+      s2_charAt_c <- apply(s2_charAt, Seq(c))
 
-      // todo: replace lt with equals or a substitute for equals
-      optimization_condition <- arithmetic.arithmeticCapabilities.lt(nums1OfR, nums2OfC)
-      body <- impParadigm.imperativeCapabilities.ifThenElse(optimization_condition,
+      // todo: replace with correct equality check
+      optimization_condition <- eqls.equalityCapabilities.areEqual(stringType, s1_charAt_r, s2_charAt_c)
+      body <- impParadigm.imperativeCapabilities.ifThenElse(
+        optimization_condition,
         for {
           rPlus1 <- arithmetic.arithmeticCapabilities.add(r, one)
           cPlus1 <- arithmetic.arithmeticCapabilities.add(c, one)
@@ -175,32 +200,45 @@ trait UncrossedLinesObjectOrientedProvider extends UncrossedLinesProvider with T
       /**
        * return the bottom right element
        */
-      dpBottomRight <- get_bottom_right_dp_element(dp, len1, len2)
-    } yield Some(dpBottomRight)
+      bottomRight <- get_bottom_right_dp_element(dp, len1, len2)
+    } yield Some(bottomRight)
   }
 
-  def make_class(): Generator[ProjectContext, Unit] = {
+  def makeSimpleDP(): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
     val makeClass: Generator[ClassContext, Unit] = {
       import classCapabilities._
-
       for {
         _ <- addMethod(names.mangle("compute"), make_compute_method())
       } yield None
     }
 
-    addClassToProject(makeClass, names.mangle("UncrossedLines"))
+    addClassToProject(makeClass, names.mangle("LongestCommonSubsequence"))
   }
 
+  //  todo: make test cases
+  //  def makeTestCase(): Generator[MethodBodyContext, Seq[Expression]] = {
+  //    import paradigm.methodBodyCapabilities._
+  //    import eqls.equalityCapabilities._
+  //
+  //    for {
+  //      arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
+  //    } yield ()
+  //  }
+
   def implement(): Generator[ProjectContext, Unit] = {
+
     for {
-      _ <- make_class()
+      _ <- makeSimpleDP()
+      //      _ <- paradigm.projectCapabilities.addCompilationUnit(
+      //        paradigm.compilationUnitCapabilities.addTestSuite(testName, makeTestCase("DP"))
+      //      )
     } yield ()
   }
 }
 
-object UncrossedLinesObjectOrientedProvider {
-  type WithParadigm[P <: AnyParadigm] = UncrossedLinesObjectOrientedProvider {val paradigm: P}
+object LongestCommonSubsequenceObjectOrientedProvider {
+  type WithParadigm[P <: AnyParadigm] = LongestCommonSubsequenceObjectOrientedProvider { val paradigm: P }
   type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 
   def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
@@ -213,8 +251,9 @@ object UncrossedLinesObjectOrientedProvider {
    arr: Arrays.WithBase[base.MethodBodyContext, base.type],
    assertsIn: Assertions.WithBase[base.MethodBodyContext, base.type],
    eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type]
-  ): UncrossedLinesObjectOrientedProvider.WithParadigm[base.type] =
-    new UncrossedLinesObjectOrientedProvider {
+  )
+  : LongestCommonSubsequenceObjectOrientedProvider.WithParadigm[base.type] =
+    new LongestCommonSubsequenceObjectOrientedProvider {
       override val paradigm: base.type = base
       val impParadigm: imp.type = imp
       val arithmetic: ffiArithmetic.type = ffiArithmetic

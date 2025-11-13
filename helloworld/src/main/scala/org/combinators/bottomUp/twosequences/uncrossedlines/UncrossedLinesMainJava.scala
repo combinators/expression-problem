@@ -1,10 +1,4 @@
-package org.combinators.tribonacci
-
-/**
- * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"
- *
- * Creates output files in target/dp
- */
+package org.combinators.bottomUp.twosequences.uncrossedlines
 
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
@@ -19,10 +13,10 @@ import java.nio.file.{Path, Paths}
 /**
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
-class TribonacciMainJava {
+class UncrossedLinesMainJava {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("world"))))
 
-  val dpApproach = TribonacciObjectOrientedProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.ooParadigm, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.equalityInMethod)
+  val dpApproach = UncrossedLinesObjectOrientedProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.ooParadigm, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.equalityInMethod)
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
@@ -66,13 +60,13 @@ class TribonacciMainJava {
   }
 }
 
-object TribonacciDirectToDiskMain extends IOApp {
-  val targetDirectory = Paths.get("target", "tribonacci")
+object UncrossedLinesDirectToDiskMain extends IOApp {
+  val targetDirectory = Paths.get("target", "uncrossedlines")
 
   def run(args: List[String]): IO[ExitCode] = {
     for {
       _ <- IO { print("Initializing Generator...") }
-      main <- IO { new TribonacciMainJava() }
+      main <- IO { new UncrossedLinesMainJava() }
       _ <- IO { println("[OK]") }
       result <- main.runDirectToDisc(targetDirectory)
     } yield result

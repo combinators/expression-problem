@@ -1,23 +1,15 @@
-package org.combinators.twosequences
-
-import org.combinators.ep.domain.abstractions.TypeRep
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.NameProvider
-import org.combinators.ep.generator.paradigm.{AnyParadigm, ObjectOriented}
-import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality}
+package org.combinators.bottomUp.twosequences
 
 import org.combinators.dp.Utility
+import org.combinators.ep.domain.abstractions.TypeRep
+import org.combinators.ep.generator.Command.Generator
 
 trait TwoSequencesUtility extends Utility {
   import paradigm._
   import syntax._
-  import ooParadigm._
 
   // test
   def initialize_solution(val1: Expression, val2: Expression, domainType: Type): Seq[Generator[MethodBodyContext, Expression]] = {
-    import paradigm.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
 
     for {
       one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
@@ -40,7 +32,6 @@ trait TwoSequencesUtility extends Utility {
 
   def instantiate_dp(numRows: Expression, numCols: Expression): Generator[MethodBodyContext, Expression] = {
     import paradigm.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
 
     for {
       array2dType <- toTargetLanguageType(TypeRep.Array(TypeRep.Array(TypeRep.Int)))
@@ -56,8 +47,6 @@ trait TwoSequencesUtility extends Utility {
   }
 
   def get_bottom_right_dp_element(dp: Expression, len1: Expression, len2: Expression): Generator[MethodBodyContext, Expression] = {
-    import paradigm.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
 
     for {
       dpBottomRight <- get_matrix_element(dp, len1, len2)

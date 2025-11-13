@@ -1,4 +1,4 @@
-package org.combinators.twosequences.longestcommonsubsequence
+package org.combinators.bottomUp.oneSequence.tribonacci
 
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
@@ -7,7 +7,7 @@ import org.combinators.ep.generator.{NameProvider, Understands}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax._
 import org.combinators.ep.generator.paradigm.{AddImport, AnyParadigm, ObjectOriented, ResolveImport}
 
-trait LongestCommonSubsequenceProvider {
+trait TribonacciProvider {
   val paradigm: AnyParadigm
   val names: NameProvider[paradigm.syntax.Name]
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]

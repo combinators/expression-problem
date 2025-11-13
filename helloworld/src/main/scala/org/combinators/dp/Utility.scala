@@ -11,9 +11,9 @@ trait Utility {
   val paradigm: AnyParadigm
   val names: NameProvider[paradigm.syntax.Name]
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
-  val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext,paradigm.type]
+  val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val arithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double]
-  val array: Arrays.WithBase[paradigm.MethodBodyContext,paradigm.type]
+  val array: Arrays.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
   import paradigm._
   import syntax._
@@ -26,7 +26,7 @@ trait Utility {
   def set_max(maxVar: Expression, replacement: Expression): Generator[MethodBodyContext, Statement] = {
     import paradigm.methodBodyCapabilities._
     for {
-      maxCond <- arithmetic.arithmeticCapabilities.lt(maxVar,replacement)
+      maxCond <- arithmetic.arithmeticCapabilities.lt(maxVar, replacement)
       maxIfStmt <- impParadigm.imperativeCapabilities.ifThenElse(maxCond, for {
 
         assignStmt <- impParadigm.imperativeCapabilities.assignVar(maxVar, replacement)
@@ -41,13 +41,13 @@ trait Utility {
   def full_set_max(maxVar: Expression, e1: Expression, e2: Expression): Generator[MethodBodyContext, Statement] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
-    for{
+    for {
       mathClass <- findClass(names.mangle("Math"))
       instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(mathClass, Seq.empty, None)
-      method <- getMember(instantiated,names.mangle("max"))
-      maxExp <- apply(method, Seq(e1,e2))
-      maxStmt <- impParadigm.imperativeCapabilities.assignVar(maxVar,maxExp)
-    }yield(maxStmt)
+      method <- getMember(instantiated, names.mangle("max"))
+      maxExp <- apply(method, Seq(e1, e2))
+      maxStmt <- impParadigm.imperativeCapabilities.assignVar(maxVar, maxExp)
+    } yield (maxStmt)
   }
 
   def new_full_set_max(maxVar: Expression, e1: Expression, e2: Expression): Generator[MethodBodyContext, Seq[Statement]] = {
@@ -60,22 +60,21 @@ trait Utility {
       intType <- toTargetLanguageType(TypeRep.Int)
       tempName <- freshName(names.mangle("temp"))
       tempVar <- impParadigm.imperativeCapabilities.declareVar(tempName, intType, None)
-      tempAssign <-impParadigm.imperativeCapabilities.assignVar(tempVar, e2)
+      tempAssign <- impParadigm.imperativeCapabilities.assignVar(tempVar, e2)
 
-      maxCond <- arithmetic.arithmeticCapabilities.lt(maxVar,tempVar)
+      maxCond <- arithmetic.arithmeticCapabilities.lt(maxVar, tempVar)
       maxIfStmt <- impParadigm.imperativeCapabilities.ifThenElse(maxCond, for {
         assignStmt <- impParadigm.imperativeCapabilities.assignVar(maxVar, tempVar)
         _ <- addBlockDefinitions(Seq(assignStmt))
       } yield (),
         Seq.empty
       )
-    } yield Seq(set1,tempAssign,maxIfStmt)
+    } yield Seq(set1, tempAssign, maxIfStmt)
   }
 
-
-  def plus_equals(variable: Expression, value: Expression): Generator[MethodBodyContext, Statement]={
+  def plus_equals(variable: Expression, value: Expression): Generator[MethodBodyContext, Statement] = {
     for {
-      addExpr <- arithmetic.arithmeticCapabilities.add(variable,value)
+      addExpr <- arithmetic.arithmeticCapabilities.add(variable, value)
       assign <- impParadigm.imperativeCapabilities.assignVar(variable, addExpr)
     } yield assign
   }
@@ -110,14 +109,13 @@ trait Utility {
     for {
       one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
 
-      while_loop <- impParadigm.imperativeCapabilities.whileLoop(condExpr, for
-      {
+      while_loop <- impParadigm.imperativeCapabilities.whileLoop(condExpr, for {
         _ <- addBlockDefinitions(body)
 
         incrExpr <- arithmetic.arithmeticCapabilities.add(loopCounter, one)
         incrStmt <- impParadigm.imperativeCapabilities.assignVar(loopCounter, incrExpr)
         _ <- addBlockDefinitions(Seq(incrStmt))
-      } yield () )
+      } yield ())
 
       //_ <- addBlockDefinitions(Seq(while_loop))
 
@@ -136,13 +134,14 @@ trait Utility {
 
   /**
    * Helper function for nested for loops.
-   * @param var1 An expression representing the variable to be updated in the outer loop.
-   * @param guard1 An expression representing the guard condition for the outer loop.
-   * @param update1 An expression representing the update expression for the outer loop.
-   * @param var2 An expression representing the variable to be updated in the inner loop.
-   * @param guard2 An expression representing the guard condition for the inner loop.
-   * @param update2 An expression representing the update expression for the inner loop.
-   * @param inner_body The body of the inner loop.
+   *
+   * @param var1          An expression representing the variable to be updated in the outer loop.
+   * @param guard1        An expression representing the guard condition for the outer loop.
+   * @param update1       An expression representing the update expression for the outer loop.
+   * @param var2          An expression representing the variable to be updated in the inner loop.
+   * @param guard2        An expression representing the guard condition for the inner loop.
+   * @param update2       An expression representing the update expression for the inner loop.
+   * @param inner_body    The body of the inner loop.
    * @param trailing_body Additional statements to be executed at the end of the inner loop after the execution of the inner loop.
    * @return A generator of statements for the outer loop.
    */

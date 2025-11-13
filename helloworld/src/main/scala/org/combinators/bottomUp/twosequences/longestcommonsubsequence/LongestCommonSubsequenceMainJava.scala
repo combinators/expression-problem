@@ -61,7 +61,7 @@ class LongestCommonSubsequenceMainJava {
 }
 
 object LongestCommonSubsequenceDirectToDiskMain extends IOApp {
-  val targetDirectory = Paths.get("target", "longestcommonsubsequence")
+  val targetDirectory = Paths.get("target", "bottomUp", "twoSequences", "longestcommonsubsequence")
 
   def run(args: List[String]): IO[ExitCode] = {
     for {

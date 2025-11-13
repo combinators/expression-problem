@@ -34,18 +34,18 @@ trait UncrossedLinesObjectOrientedProvider extends UncrossedLinesProvider with T
     FindClass(Seq(names.mangle(names.conceptNameOf(dtpe)))).interpret(canFindClass)
   }
 
-  def registerTypeMapping(tpe: DataType): Generator[ProjectContext, Unit] = {
-    import ooParadigm.projectCapabilities.{addTypeLookupForClasses, addTypeLookupForConstructors}
-    import paradigm.projectCapabilities.addTypeLookupForMethods
-
-    val dtpe = TypeRep.DataType(tpe)
-
-    for {
-      _ <- addTypeLookupForMethods(dtpe, domainTypeLookup(tpe))
-      _ <- addTypeLookupForClasses(dtpe, domainTypeLookup(tpe))
-      _ <- addTypeLookupForConstructors(dtpe, domainTypeLookup(tpe))
-    } yield ()
-  }
+//  def registerTypeMapping(tpe: DataType): Generator[ProjectContext, Unit] = {
+//    import ooParadigm.projectCapabilities.{addTypeLookupForClasses, addTypeLookupForConstructors}
+//    import paradigm.projectCapabilities.addTypeLookupForMethods
+//
+//    val dtpe = TypeRep.DataType(tpe)
+//
+//    for {
+//      _ <- addTypeLookupForMethods(dtpe, domainTypeLookup(tpe))
+//      _ <- addTypeLookupForClasses(dtpe, domainTypeLookup(tpe))
+//      _ <- addTypeLookupForConstructors(dtpe, domainTypeLookup(tpe))
+//    } yield ()
+//  }
 
   def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
     import ooParadigm.methodBodyCapabilities._

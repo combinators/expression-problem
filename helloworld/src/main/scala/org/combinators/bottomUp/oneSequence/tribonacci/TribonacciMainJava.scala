@@ -67,7 +67,7 @@ class TribonacciMainJava {
 }
 
 object TribonacciDirectToDiskMain extends IOApp {
-  val targetDirectory = Paths.get("target", "tribonacci")
+  val targetDirectory = Paths.get("target", "bottomUp", "oneSequence", "tribonacci")
 
   def run(args: List[String]): IO[ExitCode] = {
     for {

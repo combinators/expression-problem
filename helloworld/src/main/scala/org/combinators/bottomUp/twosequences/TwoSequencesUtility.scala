@@ -9,26 +9,26 @@ trait TwoSequencesUtility extends Utility {
   import syntax._
 
   // test
-  def initialize_solution(val1: Expression, val2: Expression, domainType: Type): Seq[Generator[MethodBodyContext, Expression]] = {
-
-    for {
-      one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
-      zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
-
-      len1Value <- ooParadigm.methodBodyCapabilities.getMember(val1, names.mangle("length"))
-      len2Value <- ooParadigm.methodBodyCapabilities.getMember(val2, names.mangle("length"))
-      len1 <- declare_and_inst_variable("len1", domainType, len1Value)
-      len2 <- declare_and_inst_variable("len2", domainType, len2Value)
-
-      len1PlusOne <- arithmetic.arithmeticCapabilities.add(len1, one)
-      len2PlusOne <- arithmetic.arithmeticCapabilities.add(len2, one)
-
-      dp <- instantiate_dp(len1PlusOne, len2PlusOne)
-
-      r <- declare_and_inst_variable("r", domainType, zero)
-      c <- declare_and_inst_variable("c", domainType, zero)
-    } yield Seq(dp, r, c, len1, len2)
-  }
+//  def initialize_solution(val1: Expression, val2: Expression, domainType: Type): Seq[Generator[MethodBodyContext, Expression]] = {
+//
+//    for {
+//      one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
+//      zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
+//
+//      len1Value <- ooParadigm.methodBodyCapabilities.getMember(val1, names.mangle("length"))
+//      len2Value <- ooParadigm.methodBodyCapabilities.getMember(val2, names.mangle("length"))
+//      len1 <- declare_and_inst_variable("len1", domainType, len1Value)
+//      len2 <- declare_and_inst_variable("len2", domainType, len2Value)
+//
+//      len1PlusOne <- arithmetic.arithmeticCapabilities.add(len1, one)
+//      len2PlusOne <- arithmetic.arithmeticCapabilities.add(len2, one)
+//
+//      dp <- instantiate_dp(len1PlusOne, len2PlusOne)
+//
+//      r <- declare_and_inst_variable("r", domainType, zero)
+//      c <- declare_and_inst_variable("c", domainType, zero)
+//    } yield Seq(dp, r, c, len1, len2)
+//  }
 
   def instantiate_dp(numRows: Expression, numCols: Expression): Generator[MethodBodyContext, Expression] = {
     import paradigm.methodBodyCapabilities._

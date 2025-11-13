@@ -33,18 +33,18 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
     FindClass(Seq(names.mangle(names.conceptNameOf(dtpe)))).interpret(canFindClass)
   }
 
-  def registerTypeMapping(tpe: DataType): Generator[ProjectContext, Unit] = {
-    import ooParadigm.projectCapabilities.{addTypeLookupForClasses, addTypeLookupForConstructors}
-    import paradigm.projectCapabilities.addTypeLookupForMethods
-
-    val dtpe = TypeRep.DataType(tpe)
-
-    for {
-      _ <- addTypeLookupForMethods(dtpe, domainTypeLookup(tpe))
-      _ <- addTypeLookupForClasses(dtpe, domainTypeLookup(tpe))
-      _ <- addTypeLookupForConstructors(dtpe, domainTypeLookup(tpe))
-    } yield ()
-  }
+//  def registerTypeMapping(tpe: DataType): Generator[ProjectContext, Unit] = {
+//    import ooParadigm.projectCapabilities.{addTypeLookupForClasses, addTypeLookupForConstructors}
+//    import paradigm.projectCapabilities.addTypeLookupForMethods
+//
+//    val dtpe = TypeRep.DataType(tpe)
+//
+//    for {
+//      _ <- addTypeLookupForMethods(dtpe, domainTypeLookup(tpe))
+//      _ <- addTypeLookupForClasses(dtpe, domainTypeLookup(tpe))
+//      _ <- addTypeLookupForConstructors(dtpe, domainTypeLookup(tpe))
+//    } yield ()
+//  }
 
   def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
     import ooParadigm.methodBodyCapabilities._
@@ -121,9 +121,9 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
        */
 
       // test
-      dphelperType <- findClass(names.mangle("DP_helper"))
-      _ <- resolveAndAddImport(dphelperType)
-      dphelper <- impParadigm.imperativeCapabilities.declareVar(names.mangle("dphelper"), dphelperType)
+//      dphelperType <- findClass(names.mangle("DP_helper"))
+//      _ <- resolveAndAddImport(dphelperType)
+//      dphelper <- impParadigm.imperativeCapabilities.declareVar(names.mangle("dphelper"), dphelperType)
 
       s1Length <- ooParadigm.methodBodyCapabilities.getMember(s1, names.mangle("length"))
       len1 <- declare_and_inst_variable("len1", intType, apply(s1Length, Seq.empty))

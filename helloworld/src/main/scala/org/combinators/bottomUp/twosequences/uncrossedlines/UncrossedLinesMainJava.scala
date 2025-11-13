@@ -61,7 +61,7 @@ class UncrossedLinesMainJava {
 }
 
 object UncrossedLinesDirectToDiskMain extends IOApp {
-  val targetDirectory = Paths.get("target", "uncrossedlines")
+  val targetDirectory = Paths.get("target", "bottomUp", "twoSequences", "uncrossedlines")
 
   def run(args: List[String]): IO[ExitCode] = {
     for {

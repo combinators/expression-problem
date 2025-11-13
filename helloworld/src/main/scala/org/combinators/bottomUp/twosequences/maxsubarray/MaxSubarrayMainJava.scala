@@ -67,7 +67,7 @@ class MaxSubarrayMainJava {
 }
 
 object MaxSubarrayDirectToDiskMain extends IOApp {
-  val targetDirectory = Paths.get("target", "maxsubarray")
+  val targetDirectory = Paths.get("target", "bottomUp", "twoSequences", "maxsubarray")
 
   def run(args: List[String]): IO[ExitCode] = {
     for {

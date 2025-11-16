@@ -1,4 +1,4 @@
-package org.combinators.bottomUp.oneSequence.maxsubarray
+package org.combinators.bottomUp.oneSequence.fibtest
 
 /**
  * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"
@@ -6,6 +6,7 @@ package org.combinators.bottomUp.oneSequence.maxsubarray
  * Creates output files in target/dp
  */
 
+import org.combinators.bottomUp.oneSequence.fibtest.FibTestObjectOrientedProvider
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
@@ -13,17 +14,16 @@ import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
-import org.combinators.topDown.oneSequence.tribonacci.TribonacciObjectOrientedProvider
 
 import java.nio.file.{Path, Paths}
 
 /**
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
-class MaxSubarrayMainJava {
+class FibTestMainJava {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("world"))))
 
-  val dpApproach = MaxSubarrayObjectOrientedProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.ooParadigm, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.equalityInMethod)
+  val dpApproach = FibTestObjectOrientedProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.ooParadigm, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.equalityInMethod)
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
@@ -67,13 +67,13 @@ class MaxSubarrayMainJava {
   }
 }
 
-object MaxSubarrayDirectToDiskMain extends IOApp {
-  val targetDirectory = Paths.get("target", "bottomUp", "oneSequence", "maxsubarray")
+object FibTestDirectToDiskMain extends IOApp {
+  val targetDirectory = Paths.get("target", "bottomUp", "oneSequence", "fibtest")
 
   def run(args: List[String]): IO[ExitCode] = {
     for {
       _ <- IO { print("Initializing Generator...") }
-      main <- IO { new MaxSubarrayMainJava() }
+      main <- IO { new FibTestMainJava() }
       _ <- IO { println("[OK]") }
       result <- main.runDirectToDisc(targetDirectory)
     } yield result

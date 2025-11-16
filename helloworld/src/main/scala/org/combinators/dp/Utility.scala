@@ -69,7 +69,7 @@ trait Utility {
         )
 
         incrStmt <- plus_equals(iterator, one)
-        _ <- addBlockDefinitions(Seq(incrStmt))
+        _ <- addBlockDefinitions(Seq(ifStmt,incrStmt))
       } yield ())
     }yield(Seq(while_loop))
   }

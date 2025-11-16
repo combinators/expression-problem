@@ -82,7 +82,7 @@ trait FibTestObjectOrientedProvider extends FibTestProvider with Utility {
     for {
       intType <- toTargetLanguageType(TypeRep.Int)
       arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
-      _ <- setParameters(Seq((names.mangle("nums"), arrayType)))
+      _ <- setParameters(Seq((names.mangle("num"), intType)))
       _ <- setReturnType(intType)
 
     } yield ()
@@ -90,7 +90,7 @@ trait FibTestObjectOrientedProvider extends FibTestProvider with Utility {
 
   def make_compute_method(): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
-
+    import ooParadigm.methodBodyCapabilities._
     for {
       _ <- make_compute_method_signature()
       args <- getArguments()
@@ -98,65 +98,48 @@ trait FibTestObjectOrientedProvider extends FibTestProvider with Utility {
       func <- find_method_recursive(names.mangle("compute"))
 
       intType <- toTargetLanguageType(TypeRep.Int)
+      arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
 
+      two <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 2)
       one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
       zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
 
-      (namen,tpen,nums) = args.head
-      
-      currentName <- freshName(names.mangle("c"))
-      numsZ <- array.arrayCapabilities.get(nums, zero)
-      currentVar <- impParadigm.imperativeCapabilities.declareVar(currentName, intType, Some(numsZ))
+      (namen,tpen,num) = args.head
 
-      maxName <- freshName(names.mangle("m"))
-      maxVar <- impParadigm.imperativeCapabilities.declareVar(maxName, intType, Some(currentVar))
+      np1 <- arithmetic.arithmeticCapabilities.add(num,one)
 
+      //Instantiate
+      instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, Seq(np1), None)
+      dpVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle("dp"), arrayType, Some(instantiated))
+
+      //iterator
       iName <- freshName(names.mangle("i"))
-      iVar <- impParadigm.imperativeCapabilities.declareVar(iName, intType, Some(one))
+      iVar <- impParadigm.imperativeCapabilities.declareVar(iName, intType, Some(zero))
 
-      numsLength <- ooParadigm.methodBodyCapabilities.getMember(nums, names.mangle("length"))
-      whileCond <- arithmetic.arithmeticCapabilities.lt(iVar,numsLength)
+      //Base Cases
+      dpVarIndex <- array.arrayCapabilities.get(dpVar, iVar)
+      bCase <- impParadigm.imperativeCapabilities.assignVar(dpVarIndex, one)
 
-      init_stmt <- impParadigm.imperativeCapabilities.whileLoop(whileCond, for {
+      //Relation
+      nm1 <-arithmetic.arithmeticCapabilities.sub(num,one)
+      nm2  <-arithmetic.arithmeticCapabilities.sub(num,two)
+      dpVarIndexnm1 <-array.arrayCapabilities.get(dpVar, nm1)
+      dpVarIndexnm2 <-array.arrayCapabilities.get(dpVar, nm2)
+      sum <- arithmetic.arithmeticCapabilities.add(dpVarIndexnm1,dpVarIndexnm2)
 
-        // the BODY
-        curIfStmt <- set_max(currentVar,zero)
+      relation <- impParadigm.imperativeCapabilities.assignVar(dpVarIndex, sum)
 
-        //Current assignment
-        numsI <- array.arrayCapabilities.get(nums, iVar)
-        currentAssign <- plus_equals(currentVar,numsI)
+      //one sequence bottom up
+      while_loop <- one_sequence_bottom_up(iVar, np1, Seq((one, bCase)), relation)
+      _ <- addBlockDefinitions(while_loop)
 
-        //Set Max
-        maxIfStmt <- new_full_set_max(maxVar,maxVar, currentVar)
+      //final element
+      dpVarIndexn <-array.arrayCapabilities.get(dpVar, num)
 
-        // last line to be added to the while loop
-        //incrExpr <- arithmetic.arithmeticCapabilities.add(iVar, one)
-        incrStmt <- plus_equals(iVar, one)
-        _ <- addBlockDefinitions(Seq(curIfStmt, currentAssign)++maxIfStmt++Seq( incrStmt))
-      } yield ()
-      )
-      _ <- addBlockDefinitions(Seq(init_stmt))
-
-    } yield Some(maxVar)
+    } yield Some(dpVarIndexn)
   }
 /**
-  class MaxSubarray {
-    public int solution(int[] nums) {
 
-      int c=nums[0];
-      int m=c;
-
-      for(int i=1;i<nums.length;i++){
-        if(c<0){
-          c=0;
-        }
-        c+=nums[i];
-        m=Math.max(m,c);
-      }
-
-      return m;
-    }
-  }
   */
 
   def makeSimpleDP(): Generator[ProjectContext, Unit] = {
@@ -226,7 +209,7 @@ trait FibTestObjectOrientedProvider extends FibTestProvider with Utility {
   }
 }
 
-object MaxSubarrayObjectOrientedProvider {
+object FibTestObjectOrientedProvider {
   type WithParadigm[P <: AnyParadigm] = FibTestObjectOrientedProvider { val paradigm: P }
   type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 
@@ -241,7 +224,7 @@ object MaxSubarrayObjectOrientedProvider {
    assertsIn: Assertions.WithBase[base.MethodBodyContext, base.type],
    eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type]
   )
-  : MaxSubarrayObjectOrientedProvider.WithParadigm[base.type] =
+  : FibTestObjectOrientedProvider.WithParadigm[base.type] =
     new FibTestObjectOrientedProvider {
       override val paradigm: base.type = base
       val impParadigm: imp.type = imp

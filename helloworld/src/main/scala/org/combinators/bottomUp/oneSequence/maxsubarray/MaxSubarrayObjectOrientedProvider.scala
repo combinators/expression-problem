@@ -1,4 +1,4 @@
-package org.combinators.bottomUp.twosequences.maxsubarray
+package org.combinators.bottomUp.oneSequence.maxsubarray
 
 import org.combinators.dp.Utility
 import org.combinators.ep.domain.abstractions._
@@ -103,8 +103,7 @@ trait MaxSubarrayObjectOrientedProvider extends MaxSubarrayProvider with Utility
       zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
 
       (namen,tpen,nums) = args.head
-
-
+      
       currentName <- freshName(names.mangle("c"))
       numsZ <- array.arrayCapabilities.get(nums, zero)
       currentVar <- impParadigm.imperativeCapabilities.declareVar(currentName, intType, Some(numsZ))
@@ -137,11 +136,6 @@ trait MaxSubarrayObjectOrientedProvider extends MaxSubarrayProvider with Utility
       } yield ()
       )
       _ <- addBlockDefinitions(Seq(init_stmt))
-
-
-
-
-
 
     } yield Some(maxVar)
   }

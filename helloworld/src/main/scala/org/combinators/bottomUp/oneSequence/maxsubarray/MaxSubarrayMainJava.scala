@@ -1,4 +1,4 @@
-package org.combinators.bottomUp.twosequences.maxsubarray
+package org.combinators.bottomUp.oneSequence.maxsubarray
 
 /**
  * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"
@@ -67,7 +67,7 @@ class MaxSubarrayMainJava {
 }
 
 object MaxSubarrayDirectToDiskMain extends IOApp {
-  val targetDirectory = Paths.get("target", "bottomUp", "twoSequences", "maxsubarray")
+  val targetDirectory = Paths.get("target", "bottomUp", "oneSequence", "maxsubarray")
 
   def run(args: List[String]): IO[ExitCode] = {
     for {

@@ -1,4 +1,4 @@
-package org.combinators.bottomUp.twosequences.maxsubarray
+package org.combinators.bottomUp.oneSequence.maxsubarray
 
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}

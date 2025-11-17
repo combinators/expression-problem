@@ -41,9 +41,12 @@ trait Utility {
   def format_if_else(iterator: Expression, input: (Expression, Statement)): (Generator[MethodBodyContext, Expression], Generator[MethodBodyContext,Unit]) = {
     import paradigm.methodBodyCapabilities._
 
-    val cond = arithmetic.arithmeticCapabilities.le(iterator, input._1)
-    val body = for{ _ <- addBlockDefinitions(Seq(input._2))}yield()
-    (cond, body)
+    for {
+      cond <- arithmetic.arithmeticCapabilities.le(iterator, input._1)
+      body <- for {
+        _ <- addBlockDefinitions(Seq(input._2))
+      } yield ()
+    } yield Seq(cond, body)
   }
 
   def one_sequence_bottom_up(iterator: Expression, length: Expression, baseCases: Seq[(Expression, Statement)],relation: Statement): Generator[MethodBodyContext, Seq[Statement]] ={

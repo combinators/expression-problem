@@ -105,24 +105,40 @@ trait Utility {
     } yield outputVar
   }
 
-  def make_for_loop(loopCounter: Expression, condExpr: Expression, body: Seq[Statement]): Generator[paradigm.MethodBodyContext, Statement] = {
+  def make_for_loop(iterator: Expression, guard: Expression, update: Expression, body: Seq[Statement]): Generator[paradigm.MethodBodyContext, Statement] = {
+    import paradigm.methodBodyCapabilities._
+    import impParadigm.imperativeCapabilities._
+
+    for {
+      while_loop <- impParadigm.imperativeCapabilities.whileLoop(
+        guard,
+        for {
+          _ <- addBlockDefinitions(body)
+          updated_iterator <- impParadigm.imperativeCapabilities.assignVar(iterator, update)
+          _ <- addBlockDefinitions(Seq(updated_iterator))
+        } yield ()
+      )
+    } yield while_loop
+  }
+
+  def make_for_loop(iterator: Expression, guard: Expression, body: Seq[Statement]): Generator[paradigm.MethodBodyContext, Statement] = {
     import paradigm.methodBodyCapabilities._
     import impParadigm.imperativeCapabilities._
 
     for {
       one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
 
-      while_loop <- impParadigm.imperativeCapabilities.whileLoop(condExpr, for {
+      while_loop <- impParadigm.imperativeCapabilities.whileLoop(guard, for {
         _ <- addBlockDefinitions(body)
 
-        incrExpr <- arithmetic.arithmeticCapabilities.add(loopCounter, one)
-        incrStmt <- impParadigm.imperativeCapabilities.assignVar(loopCounter, incrExpr)
+        incrExpr <- arithmetic.arithmeticCapabilities.add(iterator, one)
+        incrStmt <- impParadigm.imperativeCapabilities.assignVar(iterator, incrExpr)
         _ <- addBlockDefinitions(Seq(incrStmt))
       } yield ())
 
       //_ <- addBlockDefinitions(Seq(while_loop))
 
-    } yield (while_loop)
+    } yield while_loop
   }
 
   def get_matrix_element(matrix: Expression, row: Expression, col: Expression): Generator[paradigm.MethodBodyContext, Expression] = {

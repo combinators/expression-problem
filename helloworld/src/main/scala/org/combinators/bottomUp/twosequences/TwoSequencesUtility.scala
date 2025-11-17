@@ -30,6 +30,79 @@ trait TwoSequencesUtility extends Utility {
 //    } yield Seq(dp, r, c, len1, len2)
 //  }
 
+  def make_solution(var1: Expression, len1: Expression, var2: Expression, len2: Expression, dp: Expression): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
+    import paradigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+
+    // assumes that the base cases are the same for both sequences
+    def make_base_cases(rowVar: Expression, rowGuard: Expression, rowUpdate: Expression,
+                        colVar: Expression, colGuard: Expression, colUpdate: Expression,
+                        relation: Expression): Generator[MethodBodyContext, Seq[Statement]] = {
+
+      for {
+        zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
+
+        dp_row_0 <- get_matrix_element(dp, rowVar, zero)
+        row_relation <- impParadigm.imperativeCapabilities.assignVar(dp_row_0, relation)
+
+        dp_0_col <- get_matrix_element(dp, zero, colVar)
+        col_relation <- impParadigm.imperativeCapabilities.assignVar(dp_0_col, relation)
+
+        len1_base_case <- make_for_loop(rowVar, rowGuard, rowUpdate, Seq(row_relation))
+        len2_base_case <- make_for_loop(colVar, colGuard, colUpdate, Seq(col_relation))
+      } yield Seq(len1_base_case, len2_base_case)
+    }
+
+    def make_optimization_step(var1: Expression, guard1: Expression, update1: Expression,
+                               var2: Expression, guard2: Expression, update2: Expression,
+                               relation: Statement): Generator[MethodBodyContext, Statement] = {
+
+      for {
+        while_loop <- make_nested_for_loop(var1, guard1, update1, var2, guard2, update2, Seq(relation), Seq.empty)
+      } yield while_loop
+    }
+
+    for {
+      stringType <- toTargetLanguageType(TypeRep.String)
+      intType <- toTargetLanguageType(TypeRep.Int)
+      arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
+      array2dType <- toTargetLanguageType(TypeRep.Array(TypeRep.Array(TypeRep.Int)))
+      one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
+      zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
+
+      // base cases
+      // todo: figure out how to differentiate between integer and string to use the correct length method/attribute
+      rBaseCase <- declare_and_inst_variable("rBaseCase", intType, zero)
+      cBaseCase <- declare_and_inst_variable("cBaseCase", intType, zero)
+
+      rBaseCase_guard <- arithmetic.arithmeticCapabilities.le(rBaseCase, len1)
+      rBaseCase_update <- arithmetic.arithmeticCapabilities.add(rBaseCase, one)
+
+      cBaseCase_guard <- arithmetic.arithmeticCapabilities.le(cBaseCase, len2)
+      cBaseCase_update <- arithmetic.arithmeticCapabilities.add(cBaseCase, one)
+
+      test_stmt <- impParadigm.imperativeCapabilities.assignVar(rBaseCase, zero)
+
+      base_cases <- make_base_cases(rBaseCase, rBaseCase_guard, rBaseCase_update, cBaseCase, cBaseCase_guard, cBaseCase_update, zero)
+      _ <- addBlockDefinitions(base_cases)
+
+      // optimization step
+      r <- declare_and_inst_variable("r", intType, zero)
+      c <- declare_and_inst_variable("c", intType, zero)
+
+      r_guard <- arithmetic.arithmeticCapabilities.lt(r, len1)
+      r_update <- arithmetic.arithmeticCapabilities.add(r, one)
+
+      c_guard <- arithmetic.arithmeticCapabilities.lt(c, len2)
+      c_update <- arithmetic.arithmeticCapabilities.add(c, one)
+
+      optimization_step <- make_optimization_step(r, r_guard, r_update, c, c_guard, c_update, test_stmt)
+      _ <- addBlockDefinitions(Seq(optimization_step))
+
+      return_stmt <- get_bottom_right_dp_element(dp, len1, len2)
+    } yield Option(return_stmt)
+  }
+
   def instantiate_dp(numRows: Expression, numCols: Expression): Generator[MethodBodyContext, Expression] = {
     import paradigm.methodBodyCapabilities._
 

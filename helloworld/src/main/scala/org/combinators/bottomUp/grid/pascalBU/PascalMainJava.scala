@@ -1,4 +1,4 @@
-package org.combinators.pascalBU
+package org.combinators.bottomUp.grid.pascalBU
 
 /**
  * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"

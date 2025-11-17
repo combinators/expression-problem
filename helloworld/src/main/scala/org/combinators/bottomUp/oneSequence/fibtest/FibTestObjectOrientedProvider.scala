@@ -118,7 +118,8 @@ trait FibTestObjectOrientedProvider extends FibTestProvider with Utility {
 
       //Base Cases
       dpVarIndex <- array.arrayCapabilities.get(dpVar, iVar)
-      bCase <- impParadigm.imperativeCapabilities.assignVar(dpVarIndex, one)
+      bCase1 <- impParadigm.imperativeCapabilities.assignVar(dpVarIndex, zero)
+      bCase2 <- impParadigm.imperativeCapabilities.assignVar(dpVarIndex, one)
 
       //Relation
       nm1 <-arithmetic.arithmeticCapabilities.sub(num,one)
@@ -130,7 +131,7 @@ trait FibTestObjectOrientedProvider extends FibTestProvider with Utility {
       relation <- impParadigm.imperativeCapabilities.assignVar(dpVarIndex, sum)
 
       //one sequence bottom up
-      while_loop <- one_sequence_bottom_up(iVar, np1, Seq((one, bCase)), relation)
+      while_loop <- one_sequence_bottom_up(iVar, np1, Seq((zero, bCase1),(one, bCase2)), relation)
       _ <- addBlockDefinitions(while_loop)
 
       //final element

@@ -1,4 +1,4 @@
-package org.combinators.pascalBU
+package org.combinators.bottomUp.grid.pascalBU
 
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator

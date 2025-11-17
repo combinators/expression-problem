@@ -1,6 +1,6 @@
 package org.combinators.bottomUp.oneSequence.fibtest
 
-import org.combinators.dp.Utility
+import org.combinators.bottomUp.oneSequence.OneSequencesUtility
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.control.Imperative
@@ -11,7 +11,7 @@ import org.combinators.ep.generator.{AbstractSyntax, NameProvider, Understands}
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
  */
-trait FibTestObjectOrientedProvider extends FibTestProvider with Utility {
+trait FibTestObjectOrientedProvider extends FibTestProvider with OneSequencesUtility {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val names: NameProvider[paradigm.syntax.Name]
   val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext,paradigm.type]

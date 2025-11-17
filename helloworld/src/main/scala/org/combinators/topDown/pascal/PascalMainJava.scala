@@ -1,4 +1,4 @@
-package org.combinators.pascal
+package org.combinators.topDown.pascal
 
 /**
  * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"

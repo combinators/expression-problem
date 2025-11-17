@@ -1,4 +1,4 @@
-package org.combinators.pascal
+package org.combinators.topDown.pascal
 
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator

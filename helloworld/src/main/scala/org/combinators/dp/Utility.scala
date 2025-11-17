@@ -38,14 +38,14 @@ trait Utility {
     } yield maxIfStmt
   }
 
-  def format_if_else(iterator: Expression, input: (Expression, Statement)): (Expression, Generator[MethodBodyContext,Unit]) = {
+  def format_if_else(iterator: Expression, input: (Expression, Statement)): (Generator[MethodBodyContext,Expression], Generator[MethodBodyContext,Unit]) = {
     import paradigm.methodBodyCapabilities._
-    for {
-      cond <- arithmetic.arithmeticCapabilities.le(iterator, input._1)
-      body <- for {
-        _ <- addBlockDefinitions(Seq(input._2))
-      } yield ()
-    } yield (cond, body)
+
+    var cond = arithmetic.arithmeticCapabilities.le(iterator, input._1)
+    var body = for {
+      _ <- addBlockDefinitions(Seq(input._2))
+    } yield ()
+    (cond, body)
   }
 
   def one_sequence_bottom_up(iterator: Expression, length: Expression, baseCases: Seq[(Expression, Statement)],relation: Statement): Generator[MethodBodyContext, Seq[Statement]] ={

@@ -30,7 +30,7 @@ trait TwoSequencesUtility extends Utility {
 //    } yield Seq(dp, r, c, len1, len2)
 //  }
 
-  def make_solution(var1: Expression, len1: Expression, var2: Expression, len2: Expression, dp: Expression): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
+  def make_solution(len1: Expression, len2: Expression, dp: Expression, r: Expression, c: Expression, optimizationBody: Statement): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
 
@@ -53,12 +53,11 @@ trait TwoSequencesUtility extends Utility {
       } yield Seq(len1_base_case, len2_base_case)
     }
 
-    def make_optimization_step(var1: Expression, guard1: Expression, update1: Expression,
-                               var2: Expression, guard2: Expression, update2: Expression,
-                               relation: Statement): Generator[MethodBodyContext, Statement] = {
+    def make_optimization_step(guard1: Expression, update1: Expression,
+                               guard2: Expression, update2: Expression): Generator[MethodBodyContext, Statement] = {
 
       for {
-        while_loop <- make_nested_for_loop(var1, guard1, update1, var2, guard2, update2, Seq(relation), Seq.empty)
+        while_loop <- make_nested_for_loop(r, guard1, update1, c, guard2, update2, Seq(optimizationBody), Seq.empty)
       } yield while_loop
     }
 
@@ -73,11 +72,10 @@ trait TwoSequencesUtility extends Utility {
       // base cases
       // todo: figure out how to differentiate between integer and string to use the correct length method/attribute
       rBaseCase <- declare_and_inst_variable("rBaseCase", intType, zero)
-      cBaseCase <- declare_and_inst_variable("cBaseCase", intType, zero)
-
       rBaseCase_guard <- arithmetic.arithmeticCapabilities.le(rBaseCase, len1)
       rBaseCase_update <- arithmetic.arithmeticCapabilities.add(rBaseCase, one)
 
+      cBaseCase <- declare_and_inst_variable("cBaseCase", intType, zero)
       cBaseCase_guard <- arithmetic.arithmeticCapabilities.le(cBaseCase, len2)
       cBaseCase_update <- arithmetic.arithmeticCapabilities.add(cBaseCase, one)
 
@@ -87,16 +85,13 @@ trait TwoSequencesUtility extends Utility {
       _ <- addBlockDefinitions(base_cases)
 
       // optimization step
-      r <- declare_and_inst_variable("r", intType, zero)
-      c <- declare_and_inst_variable("c", intType, zero)
-
       r_guard <- arithmetic.arithmeticCapabilities.lt(r, len1)
       r_update <- arithmetic.arithmeticCapabilities.add(r, one)
 
       c_guard <- arithmetic.arithmeticCapabilities.lt(c, len2)
       c_update <- arithmetic.arithmeticCapabilities.add(c, one)
 
-      optimization_step <- make_optimization_step(r, r_guard, r_update, c, c_guard, c_update, test_stmt)
+      optimization_step <- make_optimization_step(r_guard, r_update, c_guard, c_update)
       _ <- addBlockDefinitions(Seq(optimization_step))
 
       return_stmt <- get_bottom_right_dp_element(dp, len1, len2)

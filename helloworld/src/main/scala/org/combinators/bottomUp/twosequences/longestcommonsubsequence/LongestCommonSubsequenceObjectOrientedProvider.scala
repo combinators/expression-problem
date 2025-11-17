@@ -33,18 +33,18 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
     FindClass(Seq(names.mangle(names.conceptNameOf(dtpe)))).interpret(canFindClass)
   }
 
-//  def registerTypeMapping(tpe: DataType): Generator[ProjectContext, Unit] = {
-//    import ooParadigm.projectCapabilities.{addTypeLookupForClasses, addTypeLookupForConstructors}
-//    import paradigm.projectCapabilities.addTypeLookupForMethods
-//
-//    val dtpe = TypeRep.DataType(tpe)
-//
-//    for {
-//      _ <- addTypeLookupForMethods(dtpe, domainTypeLookup(tpe))
-//      _ <- addTypeLookupForClasses(dtpe, domainTypeLookup(tpe))
-//      _ <- addTypeLookupForConstructors(dtpe, domainTypeLookup(tpe))
-//    } yield ()
-//  }
+  //  def registerTypeMapping(tpe: DataType): Generator[ProjectContext, Unit] = {
+  //    import ooParadigm.projectCapabilities.{addTypeLookupForClasses, addTypeLookupForConstructors}
+  //    import paradigm.projectCapabilities.addTypeLookupForMethods
+  //
+  //    val dtpe = TypeRep.DataType(tpe)
+  //
+  //    for {
+  //      _ <- addTypeLookupForMethods(dtpe, domainTypeLookup(tpe))
+  //      _ <- addTypeLookupForClasses(dtpe, domainTypeLookup(tpe))
+  //      _ <- addTypeLookupForConstructors(dtpe, domainTypeLookup(tpe))
+  //    } yield ()
+  //  }
 
   def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
     import ooParadigm.methodBodyCapabilities._
@@ -69,62 +69,55 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
     } yield ()
   }
 
-//  public class LongestCommonSubsequence {
-//    public int solution(String s1, String s2) {
-//      /**
-//       * Initialization
-//       */
-//      int len1 = s1.length();
-//      int len2 = s2.length();
-//
-//      int[][] dp = new int[len1 + 1][len2 + 1];
-//
-//      /**
-//       * Iterative solution
-//       */
-//      for(int r = 0; r < len1; r++) {
-//        for(int c = 0; c < len2; c++) {
-//          if(s1.charAt(r) == s2.charAt(c)) {
-//            dp[r + 1][c + 1] = dp[r][c] + 1;
-//          } else {
-//            dp[r + 1][c + 1] = Math.max(dp[r][c + 1], dp[r + 1][c]);
-//          }
-//        }
-//      }
-//
-//      /**
-//       * Return bottom right element
-//       */
-//      return dp[len1][len2];
-//    }
-//  }
+  //  public class LongestCommonSubsequence {
+  //    public int solution(String s1, String s2) {
+  //      /**
+  //       * Initialization
+  //       */
+  //      int len1 = s1.length();
+  //      int len2 = s2.length();
+  //
+  //      int[][] dp = new int[len1 + 1][len2 + 1];
+  //
+  //      /**
+  //       * Iterative solution
+  //       */
+  //      for(int r = 0; r < len1; r++) {
+  //        for(int c = 0; c < len2; c++) {
+  //          if(s1.charAt(r) == s2.charAt(c)) {
+  //            dp[r + 1][c + 1] = dp[r][c] + 1;
+  //          } else {
+  //            dp[r + 1][c + 1] = Math.max(dp[r][c + 1], dp[r + 1][c]);
+  //          }
+  //        }
+  //      }
+  //
+  //      /**
+  //       * Return bottom right element
+  //       */
+  //      return dp[len1][len2];
+  //    }
+  //  }
   def make_compute_method(): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
-    import ooParadigm.methodBodyCapabilities._
     import paradigm.methodBodyCapabilities._
 
     for {
+      stringType <- toTargetLanguageType(TypeRep.String)
+      intType <- toTargetLanguageType(TypeRep.Int)
+      array2dType <- toTargetLanguageType(TypeRep.Array(TypeRep.Array(TypeRep.Int)))
+      one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
+      zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
+
       _ <- make_compute_method_signature()
+
       args <- getArguments()
 
       (names1, tpes1, s1) = args.head
       (names2, tpes2, s2) = args.tail.head
 
-      stringType <- toTargetLanguageType(TypeRep.String)
-      intType <- toTargetLanguageType(TypeRep.Int)
-      arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
-      array2dType <- toTargetLanguageType(TypeRep.Array(TypeRep.Array(TypeRep.Int)))
-      one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
-      zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
-
       /**
-      initialization
+       * initialization
        */
-
-      // test
-//      dphelperType <- findClass(names.mangle("DP_helper"))
-//      _ <- resolveAndAddImport(dphelperType)
-//      dphelper <- impParadigm.imperativeCapabilities.declareVar(names.mangle("dphelper"), dphelperType)
-
       s1Length <- ooParadigm.methodBodyCapabilities.getMember(s1, names.mangle("length"))
       len1 <- declare_and_inst_variable("len1", intType, apply(s1Length, Seq.empty))
       len1PlusOne <- arithmetic.arithmeticCapabilities.add(len1, one)
@@ -141,34 +134,19 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
 
       dp <- declare_and_inst_variable("dp", array2dType, instantiated)
 
+      /**
+       * optimization step definition
+       */
       r <- declare_and_inst_variable("r", intType, zero)
       c <- declare_and_inst_variable("c", intType, zero)
-
-      // test
-//      init = initialize_solution(s1, s2, intType)
-//      dp <- init(0)
-//      r <- init(1)
-//      c <- init(2)
-//      len1 <- init(3)
-//      len2 <- init(4)
-
-      /**
-       * optimization
-       */
-      outer_guard <- arithmetic.arithmeticCapabilities.lt(r, len1)
-      outer_update <- arithmetic.arithmeticCapabilities.add(r, one)
-
-      inner_guard <- arithmetic.arithmeticCapabilities.lt(c, len2)
-      inner_update <- arithmetic.arithmeticCapabilities.add(c, one)
 
       s1_charAt <- ooParadigm.methodBodyCapabilities.getMember(s1, names.mangle("charAt"))
       s2_charAt <- ooParadigm.methodBodyCapabilities.getMember(s2, names.mangle("charAt"))
       s1_charAt_r <- apply(s1_charAt, Seq(r))
       s2_charAt_c <- apply(s2_charAt, Seq(c))
 
-      // todo: replace with correct equality check
       optimization_condition <- eqls.equalityCapabilities.areEqual(stringType, s1_charAt_r, s2_charAt_c)
-      body <- impParadigm.imperativeCapabilities.ifThenElse(
+      optimization_body <- impParadigm.imperativeCapabilities.ifThenElse(
         optimization_condition,
         for {
           rPlus1 <- arithmetic.arithmeticCapabilities.add(r, one)
@@ -190,18 +168,12 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
         )
       )
 
-      empty <- for {
-        _ <- Command.skip[paradigm.MethodBodyContext]
-      } yield Seq.empty
-
-      optimization <- make_nested_for_loop(r, outer_guard, outer_update, c, inner_guard, inner_update, Seq(body), empty)
-      _ <- addBlockDefinitions(Seq(optimization))
-
       /**
-       * return the bottom right element
+       * solution generation
        */
-      bottomRight <- get_bottom_right_dp_element(dp, len1, len2)
-    } yield Some(bottomRight)
+      solution <- make_solution(len1, len2, dp, r, c, optimization_body)
+
+    } yield solution
   }
 
   def makeSimpleDP(): Generator[ProjectContext, Unit] = {

@@ -1,5 +1,6 @@
 package org.combinators.bottomUp.twosequences.longestcommonsubsequence
 
+import cats.kernel.Comparison
 import org.combinators.bottomUp.twosequences.TwoSequencesUtility
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
@@ -11,9 +12,9 @@ import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Unde
 trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubsequenceProvider with TwoSequencesUtility {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val names: NameProvider[paradigm.syntax.Name]
-  val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext,paradigm.type]
+  val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val arithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double]
-  val console: Console.WithBase[paradigm.MethodBodyContext,paradigm.type]
+  val console: Console.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val asserts: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val eqls: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
@@ -28,6 +29,47 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
   def getter(attr: String): String = {
     "get" + attr.capitalize
   }
+
+  abstract class Model {
+    val dimensionality:Int
+    val baseType:String
+
+    // dp is always the storage for problem
+    // solution is always the storage for solution
+    val relation:Relation
+  }
+
+
+  abstract class Formula() {}
+  class ArrayAccessFormula(val targetArray: String, val targetIndex: String) extends Formula{}
+  class ConstantFormula(val number:String) extends Formula
+
+  class Relation(equalCondition:Condition, val equalCaseL:Formula, elseCase: Formula)
+
+  class Expression(val targetArray: String, val targetIndex: String) {}
+
+  abstract class MathematicalExpression() extends Formula {}
+
+  class AdditionExpression(val left:Formula, right:Formula) extends MathematicalExpression {}
+
+  class Condition (val left:Expression, val right:Expression) {}
+
+  class StringEqualCondition(override val left:Expression, override val right:Expression) extends Condition(left,right) {}
+
+  class Assignment(val left:Formula, val right: MathematicalExpression)
+
+  class TwoSequenceStringDP extends Model {
+    override val baseType:String = "String"
+    override val dimensionality:Int = 2
+
+    // if s1[r] == s1[c], dp[r+1][c+1] = dp[r][c] + 1
+
+    override val relation = new Relation(,
+      new StringEqualCondition(new Expression("s1", "r") , new Expression("s2", "c")),
+      new AdditionExpression
+      new Formula(1, "s2"))
+  }
+
 
   def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
     FindClass(Seq(names.mangle(names.conceptNameOf(dtpe)))).interpret(canFindClass)
@@ -140,10 +182,8 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
       r <- declare_and_inst_variable("r", intType, zero)
       c <- declare_and_inst_variable("c", intType, zero)
 
-      s1_charAt <- ooParadigm.methodBodyCapabilities.getMember(s1, names.mangle("charAt"))
-      s2_charAt <- ooParadigm.methodBodyCapabilities.getMember(s2, names.mangle("charAt"))
-      s1_charAt_r <- apply(s1_charAt, Seq(r))
-      s2_charAt_c <- apply(s2_charAt, Seq(c))
+      s1_charAt_r <- char_at(s1, r)
+      s2_charAt_c <- char_at(s2, c)
 
       optimization_condition <- eqls.equalityCapabilities.areEqual(stringType, s1_charAt_r, s2_charAt_c)
       optimization_body <- impParadigm.imperativeCapabilities.ifThenElse(
@@ -210,7 +250,7 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
 }
 
 object LongestCommonSubsequenceObjectOrientedProvider {
-  type WithParadigm[P <: AnyParadigm] = LongestCommonSubsequenceObjectOrientedProvider { val paradigm: P }
+  type WithParadigm[P <: AnyParadigm] = LongestCommonSubsequenceObjectOrientedProvider {val paradigm: P}
   type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 
   def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]

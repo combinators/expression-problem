@@ -1,6 +1,5 @@
 package org.combinators.bottomUp.twosequences.longestcommonsubsequence
 
-import cats.kernel.Comparison
 import org.combinators.bottomUp.twosequences.TwoSequencesUtility
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
@@ -8,6 +7,7 @@ import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, ObjectOriented}
 import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
+import org.combinators.model.{AdditionExpression, Assignment, Formula, Model, Relation, StringEqualCondition}
 
 trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubsequenceProvider with TwoSequencesUtility {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
@@ -30,45 +30,17 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
     "get" + attr.capitalize
   }
 
-  abstract class Model {
-    val dimensionality:Int
-    val baseType:String
-
-    // dp is always the storage for problem
-    // solution is always the storage for solution
-    val relation:Relation
-  }
-
-
-  abstract class Formula() {}
-  class ArrayAccessFormula(val targetArray: String, val targetIndex: String) extends Formula{}
-  class ConstantFormula(val number:String) extends Formula
-
-  class Relation(equalCondition:Condition, val equalCaseL:Formula, elseCase: Formula)
-
-  class Expression(val targetArray: String, val targetIndex: String) {}
-
-  abstract class MathematicalExpression() extends Formula {}
-
-  class AdditionExpression(val left:Formula, right:Formula) extends MathematicalExpression {}
-
-  class Condition (val left:Expression, val right:Expression) {}
-
-  class StringEqualCondition(override val left:Expression, override val right:Expression) extends Condition(left,right) {}
-
-  class Assignment(val left:Formula, val right: MathematicalExpression)
-
-  class TwoSequenceStringDP extends Model {
-    override val baseType:String = "String"
-    override val dimensionality:Int = 2
-
-    // if s1[r] == s1[c], dp[r+1][c+1] = dp[r][c] + 1
-
-    override val relation = new Relation(,
-      new StringEqualCondition(new Expression("s1", "r") , new Expression("s2", "c")),
-      new AdditionExpression
-      new Formula(1, "s2"))
-  }
+//  class TwoSequenceStringDP extends Model {
+//    override val baseType:String = "String"
+//    override val dimensionality:Int = 2
+//
+//    // if s1[r] == s1[c], dp[r+1][c+1] = dp[r][c] + 1
+//
+//    override val relation = new Relation(,
+//      new StringEqualCondition(new Expression("s1", "r") , new Expression("s2", "c")),
+//      new AdditionExpression(),
+//      new Formula(1, "s2"))
+//  }
 
 
   def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {

@@ -45,17 +45,17 @@ trait FinalBooleanAST extends BooleanAST { self: FinalOperatorExpressionsAST & F
     trait FinalBooleanFactory extends scalaBooleanOps.booleanOpsOverride.Factory {
       def andOp(): booleanOps.AndOp = {
         case class AndOp() extends scalaBooleanOps.booleanOpsOverride.AndOp 
-          with finalOperatorExpressions .operatorExpressionsOverrides.Operator {}
+          with finalOperatorExpressions.operatorExpressionsOverrides.Operator {}
         AndOp()
       }
       def orOp(): booleanOps.OrOp = {
         case class OrOp() extends scalaBooleanOps.booleanOpsOverride.OrOp
-          with finalOperatorExpressions .operatorExpressionsOverrides.Operator {}
+          with finalOperatorExpressions.operatorExpressionsOverrides.Operator {}
         OrOp()
       }
       def notOp(): booleanOps.NotOp = {
         case class NotOp() extends scalaBooleanOps.booleanOpsOverride.NotOp
-          with finalOperatorExpressions .operatorExpressionsOverrides.Operator {}
+          with finalOperatorExpressions.operatorExpressionsOverrides.Operator {}
         NotOp()
       }
       def trueExp(): booleanOps.True = {

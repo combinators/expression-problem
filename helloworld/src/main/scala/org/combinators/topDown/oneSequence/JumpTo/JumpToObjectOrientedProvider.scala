@@ -25,26 +25,6 @@ trait JumpToObjectOrientedProvider extends JumpToProvider {
   import syntax._
   import ooParadigm._
 
-  /*
-  int rob(int[] hval, int n){
-    int result;
-    if(n <= 0){
-    result = 0;
-    } else if(n == 1){
-    result = hval[0];
-    } else {
-    int pick = hval[n-1] + rob(hval, n-2);
-    int notpick = rob(hval, n-1);
-    if(pick < notpick){
-    result = notpick;
-    } else {
-    result = pick;
-    }
-    }
-    return result
-  }
-   */
-
   def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._

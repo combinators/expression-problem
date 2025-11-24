@@ -1,4 +1,4 @@
-package org.combinators.houseRobber
+package org.combinators.topDown.oneSequence.houseRobber
 
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}

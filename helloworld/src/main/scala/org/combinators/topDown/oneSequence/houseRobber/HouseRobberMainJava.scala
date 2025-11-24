@@ -1,4 +1,4 @@
-package org.combinators.houseRobber
+package org.combinators.topDown.oneSequence.houseRobber
 
 /**
  * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"

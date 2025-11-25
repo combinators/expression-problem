@@ -13,21 +13,22 @@ trait OperatorExpressionsAST extends InbetweenOperatorExpressionOpsAST{ self: Ba
       }
 
       trait BinaryExpression extends scalaBase.anyOverrides.Expression with operatorExpressions.BinaryExpression {
-        def toScala: String = s"(${operator.toScala(left, right)})" // necessary when composing expressions, though can get excessive at times.
+
+        def toScala: String = s"(${operator.getSelfOperator.toScala(left, right)})" // necessary when composing expressions, though can get excessive at times.
 
         override def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): operatorExpressions.BinaryExpression =
           copy(
-            left = left.prefixRootPackage(rootPackageName, excludedTypeNames),
-            right = right.prefixRootPackage(rootPackageName, excludedTypeNames)
+            left = left.getSelfExpression.prefixRootPackage(rootPackageName, excludedTypeNames),
+            right = right.getSelfExpression.prefixRootPackage(rootPackageName, excludedTypeNames)
           )
       }
 
       trait UnaryExpression extends scalaBase.anyOverrides.Expression with operatorExpressions.UnaryExpression {
-        def toScala: String = operator.toScala(operand)
+        def toScala: String = operator.getSelfOperator.toScala(operand)
 
         override def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): operatorExpressions.UnaryExpression =
           copy(
-            operand = operand.prefixRootPackage(rootPackageName, excludedTypeNames)
+            operand = operand.getSelfExpression.prefixRootPackage(rootPackageName, excludedTypeNames)
           )
       }
 
@@ -40,26 +41,26 @@ trait OperatorExpressionsAST extends InbetweenOperatorExpressionOpsAST{ self: Ba
 
     trait InfixOperator {
       def operator: String
-      def toScala(operands: any.Expression*): String = operands.map(_.toScala).mkString(operator)
+      def toScala(operands: any.Expression*): String = operands.map(_.getSelfExpression.toScala).mkString(operator)
     }
 
     trait PrefixOperator {
       def operator: String
-      def toScala(operands: any.Expression*): String = s"($operator${operands.head.toScala})"
+      def toScala(operands: any.Expression*): String = s"($operator${operands.head.getSelfExpression.toScala})"
     }
 
     trait MathFunctionOperator {
       import factory.*
       def operator: String
       def toScala(operands: any.Expression*): String = {
-        s"Math.$operator${operands.map(_.toScala).mkString("(", ", ", ")")}"
+        s"Math.$operator${operands.map(_.getSelfExpression.toScala).mkString("(", ", ", ")")}"
       }
     }
 
     trait PostfixOperator {
       import factory.*
       def operator: String
-      def toScala(operands: any.Expression*): String = s"(${operands.head.toScala}$operator)"
+      def toScala(operands: any.Expression*): String = s"(${operands.head.getSelfExpression.toScala}$operator)"
     }
   }
 

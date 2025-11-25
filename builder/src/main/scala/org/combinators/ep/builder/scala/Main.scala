@@ -44,6 +44,7 @@ import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
 import org.combinators.ep.approach.oo.*
 import org.combinators.ep.domain.Evolution
 import org.combinators.ep.domain.math.*
+import org.combinators.ep.domain.math.M0
 import org.combinators.ep.domain.math.eips.systemX
 import org.combinators.ep.domain.math.systemD.{D1, D1D2, D2, D3}
 import org.combinators.ep.domain.math.systemI.{I1, I2}
@@ -55,6 +56,7 @@ import org.combinators.ep.domain.math.systemX.*
 import org.combinators.ep.generator.ApproachImplementationProvider.WithParadigm
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider, TestImplementationProvider}
 import org.combinators.ep.language.scala.codegen.*
+import org.combinators.ep.builder.inbetween.paradigm.ffi.Trees
 
 import java.nio.file.{Path, Paths}
 
@@ -65,7 +67,7 @@ class Main(choice:String, select:String) {
   val generator: CodeGenerator = CodeGenerator(M0.getModel.base.name.toLowerCase)
 
   val treesInMethod =
-    Trees[Finalized.FinalTypes, factory.type, paradigm.type](paradigm)(Map.empty)
+    Trees(generator.paradigm)(Map.empty)
 
   val functionalApproach: WithParadigm[generator.paradigm.type] = org.combinators.ep.approach.functional.Traditional[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.functional, generator.functionalControl)
 

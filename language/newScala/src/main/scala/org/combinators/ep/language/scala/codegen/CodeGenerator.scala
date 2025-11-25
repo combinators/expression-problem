@@ -201,7 +201,7 @@ sealed class CodeGenerator(domainName: String) { cc =>
       } else Seq.empty
 
       nonTestFile ++ testFile
-    }).toSeq :+ treeLibrary :+ buildFile :+ pluginsFile :+ scalaFmt
+    }).toSeq :+ /*Heineman treeLibrary :+ */ buildFile :+ pluginsFile :+ scalaFmt
   }
 
   val paradigm = AnyParadigm[Finalized.FinalTypes, factory.type, syntax.type](factory, runGenerator, syntax)
@@ -272,6 +272,7 @@ sealed class CodeGenerator(domainName: String) { cc =>
 
   val assertionsInMethod = Assertions[Finalized.FinalTypes, factory.type, paradigm.type](paradigm)
 
+  @Deprecated // Moved to builder. TODO: REPLACE
   def treeLibrary: FileWithPath = {
     FileWithPath(
       getClass.getResourceAsStream("/scala-code/org/combinators/ep/util/Trees.scala").readAllBytes(),

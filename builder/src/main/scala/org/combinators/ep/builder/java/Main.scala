@@ -40,10 +40,11 @@ import org.apache.commons.io.FileUtils
 import org.combinators.cogen.FileWithPathPersistable.*
 import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
 import org.combinators.ep.approach.oo.*
-import org.combinators.ep.approach.oo.Visualize.WithParadigm
+import org.combinators.ep.approach.oo.Visualize
 import org.combinators.ep.builder.*
 import org.combinators.ep.domain.Evolution
 import org.combinators.ep.domain.math.*
+import org.combinators.ep.domain.math.{eips}
 import org.combinators.ep.domain.math.systemD.{D1, D1D2, D2, D3}
 import org.combinators.ep.domain.math.systemI.{I1, I2}
 import org.combinators.ep.domain.math.systemJ.*
@@ -51,10 +52,10 @@ import org.combinators.ep.domain.math.systemJK.{J7, J8, K2J6}
 import org.combinators.ep.domain.math.systemK.{K1, K2}
 import org.combinators.ep.domain.math.systemO.*
 import org.combinators.ep.domain.math.systemX.*
-import org.combinators.ep.domain.shape.{S0, S1, S2, eips as shapeEips}
+import org.combinators.ep.domain.shape.{S0, S1, S2, eips => shapeEips}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider, TestImplementationProvider}
-import org.combinators.ep.language.java.{CodeGenerator => CG, *}
 import org.combinators.ep.builder.java.paradigm.ffi.Trees
+import org.combinators.ep.language.java.{CodeGenerator => CG, JavaNameProvider, PartiallyBoxed, Syntax}
 
 import _root_.java.nio.file.{Path, Paths}
 
@@ -64,7 +65,7 @@ import _root_.java.nio.file.{Path, Paths}
 class Main(choice: String, select: String) {
   val generator: CodeGenerator = CodeGenerator(CG.defaultConfig.copy(boxLevel = PartiallyBoxed))
 
-  val visualizeApproach: WithParadigm[generator.paradigm.type] = Visualize[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
+  val visualizeApproach: Visualize.WithParadigm[generator.paradigm.type] = Visualize[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
 
   val ooApproach: Traditional.WithParadigm[generator.paradigm.type] = Traditional[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm)
 

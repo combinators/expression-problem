@@ -3,13 +3,14 @@ package org.combinators.ep.builder.inbetween.paradigm.ffi
 /*DI:LI:AI*/
 
 import org.combinators.cogen.Command.Generator
-import org.combinators.cogen.paradigm.AnyParadigm.syntax
-import org.combinators.cogen.paradigm.Apply
-import org.combinators.ep.generator.paradigm.ffi.{CreateLeaf, CreateNode, Trees as Trs}
-import org.combinators.cogen.{Command, TypeRep, Understands}
-import org.combinators.ep.domain.abstractions.DomainTpeRep
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.inbetween.{any, polymorphism}
+import org.combinators.cogen.paradigm.Apply
+import org.combinators.ep.generator.paradigm.ffi.{CreateLeaf, CreateNode, Trees => Trs}
+
+import org.combinators.cogen.paradigm.AnyParadigm.syntax
+import org.combinators.cogen.{Command, TypeRep, Understands}
+import org.combinators.ep.domain.abstractions.DomainTpeRep
 import org.combinators.ep.language.inbetween.ffi.OperatorExpressionOps
 
 // cannot find 'trees'
@@ -61,49 +62,50 @@ object Trees {
 }
 
 object TreeOps {
-  trait FinalTypes[BFT <: OperatorExpressionOps.FinalTypes & polymorphism.FinalTypes](val finalTypes: BFT) {
-    type NodeTpe <: finalTypes.Type
-    type LeafTpe <: finalTypes.Type
-    type CreateNodeExpr <: finalTypes.Expression
-  }
-  
-  trait NodeTpe[C <: Config](val config: C) extends any.Type[config.baseFactory.type] {
-    def getSelfCreateNode: config.finalTreeTypes.NodeTpe
-  }
-  
-  trait LeafTpe[C <: Config](val config: C)  extends any.Type[config.baseFactory.type] {
-    def getSelfCreateLeaf: config.finalTreeTypes.LeafTpe
-  }
+  trait FinalTypes extends OperatorExpressionOps.FinalTypes with polymorphism.FinalTypes {
 
-  trait CreateNodeExpr[C <: Config](val config: C)  extends any.Expression[config.baseFactory.type] {
-    def getSelfCreateNodeExpr: config.finalTreeTypes.CreateNodeExpr
   }
-  
-  trait Factory[C <: Config] {
-    val config: C
-    import config.baseFactory.{applyExpression, typeReferenceExpression, typeApplication}
-    def createNodeExpr(): CreateNodeExpr[config.type]
-    def leafTpe(): LeafTpe[config.type]
-    def nodeTpe(): NodeTpe[config.type]
+  trait CreateNodeExpr[FT <: FinalTypes] extends any.Type[FT]
 
-    def createNode(label: any.Expression[config.baseFinalTypes.type], children: Seq[any.Expression[config.baseFinalTypes.type]]): any.ApplyExpression[config.baseFinalTypes.type] =
-      config.baseFactory.applyExpression(createNodeExpr(), label +: children)
+  trait NodeTpe[FT <: FinalTypes] extends any.Type[FT]
+  trait LeafTpe[FT <: FinalTypes] extends any.Type[FT]
 
-    def createLeaf(tpe: any.Type[config.baseFinalTypes.type], value: any.Expression[config.baseFinalTypes.type]): any.ApplyExpression[config.baseFinalTypes.type] =
+//  trait NodeTpe[C <: Config](val config: C) extends any.Type[config.baseFactory.type] {
+//    def getSelfCreateNode: config.finalTreeTypes.NodeTpe
+//  }
+//
+//  trait LeafTpe[C <: Config](val config: C)  extends any.Type[config.baseFactory.type] {
+//    def getSelfCreateLeaf: config.finalTreeTypes.LeafTpe
+//  }
+//
+//  trait CreateNodeExpr[C <: Config](val config: C)  extends any.Expression[config.baseFactory.type] {
+//    def getSelfCreateNodeExpr: config.finalTreeTypes.CreateNodeExpr
+//  }
+//
+  trait Factory[FT <: FinalTypes] extends OperatorExpressionOps.Factory[FT] with polymorphism.Factory[FT] {
+
+    def createNodeExpr(): CreateNodeExpr[FT]
+
+    def createNode(label: any.Expression[FT], children: Seq[any.Expression[FT]]): any.ApplyExpression[FT] =
+      applyExpression(
+        typeReferenceExpression(
+          typeApplication(createNodeExpr(), Seq.empty)),
+        label +: children)
+
+    def leafTpe(): LeafTpe[FT]
+    def nodeTpe(): NodeTpe[FT]
+
+    def createLeaf(tpe: any.Type[FT], value: any.Expression[FT]): any.ApplyExpression[FT] =
       applyExpression(typeReferenceExpression(typeApplication(leafTpe(), Seq(tpe))), Seq(value))
-
-    implicit def convert(other: NodeTpe[this.type]): NodeTpe[this.type]
-    implicit def convert(other: LeafTpe[this.type]): LeafTpe[this.type]
-    implicit def convert(other: CreateNodeExpr[this.type]): CreateNodeExpr[this.type]
   }
   
-  trait Config {
-    type BFT <: OperatorExpressionOps.FinalTypes & polymorphism.FinalTypes
-    val baseFinalTypes: BFT
-    val baseFactory: OperatorExpressionOps.Factory[baseFinalTypes.type] & polymorphism.Factory[baseFinalTypes.type]
-
-    type FT <: FinalTypes[baseFinalTypes.type]
-    val finalTreeTypes: FT
-    val factory: Factory[finalTreeTypes.type]
-  }
+//  trait Config {
+//    type BFT <: OperatorExpressionOps.FinalTypes & polymorphism.FinalTypes
+//    val baseFinalTypes: BFT
+//    val baseFactory: OperatorExpressionOps.Factory[baseFinalTypes.type] & polymorphism.Factory[baseFinalTypes.type]
+//
+//    type FT <: FinalTypes[baseFinalTypes.type]
+//    val finalTreeTypes: FT
+//    val factory: Factory[finalTreeTypes.type]
+//  }
 }

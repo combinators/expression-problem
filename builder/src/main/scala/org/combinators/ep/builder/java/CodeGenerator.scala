@@ -6,7 +6,7 @@ import org.combinators.ep.builder.java.paradigm.ffi.Trees
 import org.combinators.ep.language.java.{Config, CtorCtxt, MethodBodyCtxt}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 
-class CodeGenerator(config: Config)  extends org.combinators.ep.language.java.CodeGenerator(config) {
+class CodeGenerator(config: Config) extends org.combinators.ep.language.java.CodeGenerator(config) {
 
   val treesInMethod = {
     Trees[MethodBodyCtxt, paradigm.type, ObjectOriented](

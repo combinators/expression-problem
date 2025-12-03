@@ -1179,15 +1179,17 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
       val value: T
 
       def toScala: String = {
-        ofHostType match {
-          case t: TypeRep.String.type => s""""$value""""
-          case t: TypeRep.Sequence[_] =>
-            value.asInstanceOf[Seq[t.elemTpe.HostType]].map(v => reifiedScalaValue(t.elemTpe, v).toScala).mkString("Seq(", ", ", ")")
-          case t: TypeRep.Array[_] =>
-            value.asInstanceOf[Array[t.elemTpe.HostType]].map(v => reifiedScalaValue(t.elemTpe, v).toScala).mkString("Array(", ", ", ")")
-          case _ =>
-            value.toString
-        }
+        reificationExtensions.collectFirst(Function.unlift(ext => ext(ofHostType)(value))).getOrElse( 
+          ofHostType match {
+            case t: TypeRep.String.type => s""""$value""""
+            case t: TypeRep.Sequence[_] =>
+              value.asInstanceOf[Seq[t.elemTpe.HostType]].map(v => reifiedScalaValue(t.elemTpe, v).toScala).mkString("Seq(", ", ", ")")
+            case t: TypeRep.Array[_] =>
+              value.asInstanceOf[Array[t.elemTpe.HostType]].map(v => reifiedScalaValue(t.elemTpe, v).toScala).mkString("Array(", ", ", ")")
+            case _ =>
+              value.toString
+          }
+        )
       }
 
       override def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): ReifiedScalaValue[T] =
@@ -1290,6 +1292,7 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
   override val functionalControlFactory: scalaBase.functionalControlOverrides.Factory
   override val polymorphismFactory: scalaBase.polymorphismOverrides.Factory
   override val imperativeFactory: scalaBase.imperativeOverrides.Factory
+  val reificationExtensions: List[(tpe: TypeRep) => (value: tpe.HostType) => Option[String]]
   val scalaBaseFactory: scalaBase.Factory
 }
 
@@ -1335,13 +1338,22 @@ trait FinalBaseAST extends BaseAST {
       type SuperReferenceExpression = ooOverrides.SuperReferenceExpression
       type ClassReferenceType = ooOverrides.ClassReferenceType
     }
+
+    trait PolymorphismFinalTypes extends scalaBase.polymorphismOverrides.FinalTypes {
+      import scalaBase.polymorphismOverrides
+
+      type TypeReferenceExpression = polymorphismOverrides.TypeReferenceExpression
+      type TypeParameter = polymorphismOverrides.TypeParameter
+      type TypeArgument = polymorphismOverrides.TypeArgument
+      type TypeApplication = polymorphismOverrides.TypeApplication
+    }
   }
 
   override val finalTypes: finalBaseFinalTypes.FinalTypes = new finalBaseFinalTypes.FinalTypes {}
   override val ooFinalTypes: finalBaseFinalTypes.OOFinalTypes = new finalBaseFinalTypes.OOFinalTypes {}
   override val functionalFinalTypes: scalaBase.functionalOverrides.FinalTypes = new scalaBase.functionalOverrides.FinalTypes {}
   override val functionalControlFinalTypes: scalaBase.functionalControlOverrides.FinalTypes = new scalaBase.functionalControlOverrides.FinalTypes {}
-  override val polymorphismFinalTypes: scalaBase.polymorphismOverrides.FinalTypes = new scalaBase.polymorphismOverrides.FinalTypes {}
+  override val polymorphismFinalTypes: finalBaseFinalTypes.PolymorphismFinalTypes = new finalBaseFinalTypes.PolymorphismFinalTypes {}
   override val imperativeFinalTypes: scalaBase.imperativeOverrides.FinalTypes = new scalaBase.imperativeOverrides.FinalTypes {}
   override val scalaBaseFinalTypes: scalaBase.FinalTypes = new scalaBase.FinalTypes {}
 
@@ -1623,7 +1635,42 @@ trait FinalBaseAST extends BaseAST {
       }
     }
 
-  
+    trait GenericsFactory extends generics.Factory {
+      def genericClass(name: any.Name, imports: Seq[any.Import], typeParameters: Seq[polymorphism.TypeParameter], parents: Seq[any.Type], implemented: Seq[any.Type], fields: Seq[oo.Field], methods: Seq[any.Method], constructors: Seq[oo.Constructor], methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type], constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type], typeLookupMap: TypeRep => Generator[oo.Class, any.Type], isAbstract: Boolean, isInterface: Boolean, isStatic: Boolean): generics.ooOverrides.Class = {
+        class GenericClass(
+          val name: any.Name,
+          imports: Seq[any.Import],
+          val typeParameters: Seq[polymorphism.TypeParameter],
+          parents: Seq[any.Type],
+          implemented: Seq[any.Type],
+          fields: Seq[oo.Field],
+          methods: Seq[any.Method],
+          constructors: Seq[oo.Constructor],
+          methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type],
+          constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type],
+          typeLookupMap: TypeRep => Generator[oo.Class, any.Type],
+          isAbstract: Boolean,
+          isInterface: Boolean,
+          isStatic: Boolean
+        ) extends scalaBase.ooOverrides.Class {
+          override def getSelfClass: scalaBase.ooOverrides.Class = this
+        }
+        GenericClass(name, imports, typeParameters, parents, implemented, fields, methods, constructors, methodTypeLookupMap, constructorTypeLookupMap, typeLookupMap, isAbstract, isInterface, isStatic)
+      }
+      def genericMethod(name: any.Name, imports: Set[any.Import], statements: Seq[any.Statement], returnType: Option[any.Type], typeParameters: Seq[polymorphism.TypeParameter], parameters: Seq[(any.Name, any.Type)], typeLookupMap: TypeRep => Generator[any.Method, any.Type], isAbstract: Boolean, isStatic: Boolean, isPublic: Boolean, isOverride: Boolean): generics.anyOverrides.Method = {
+        class GenericMethod(val name: any.Name, imports: Set[any.Import], statements: Seq[any.Statement], returnType: Option[any.Type], val typeParameters: Seq[polymorphism.TypeParameter], parameters: Seq[(any.Name, any.Type)], typeLookupMap: TypeRep => Generator[any.Method, any.Type], isAbstract: Boolean, isStatic: Boolean, isPublic: Boolean, isOverride: Boolean) extends scalaBase.anyOverrides.Method {
+          override def getSelfMethod: scalaBase.anyOverrides.Method = this
+        }
+        GenericMethod(name, imports, statements, returnType, typeParameters, parameters, typeLookupMap, isAbstract, isStatic, isPublic, isOverride)
+      }
+      def typeParameterWithBounds(name: any.Name, upperBounds: Seq[any.Type], lowerBounds: Seq[any.Type]): generics.polymorphismOverrides.TypeParameter = {
+        class TypeParameterWithBounds(val name: any.Name, val upperBounds: Seq[any.Type], val lowerBounds: Seq[any.Type]) extends scalaBase.polymorphismOverrides.TypeParameter {
+          override def getSelfTypeParameter: polymorphismFinalTypes.TypeParameter = this
+        }
+        TypeParameterWithBounds(name, upperBounds, lowerBounds)
+      }
+    }
+
     trait ImperativeFactory extends scalaBase.imperativeOverrides.Factory {
       def declareVariable(name: any.Name, tpe: any.Type, initializer: Option[any.Expression]): imperative.DeclareVariable = {
         case class DeclareVariable(
@@ -1771,5 +1818,6 @@ trait FinalBaseAST extends BaseAST {
   override val functionalControlFactory: scalaBase.functionalControlOverrides.Factory = new FinalBaseFactoryTypes.FunctionalControlFactory {}
   override val polymorphismFactory: scalaBase.polymorphismOverrides.Factory = new FinalBaseFactoryTypes.PolymorphismFactory {}
   override val imperativeFactory: scalaBase.imperativeOverrides.Factory = new FinalBaseFactoryTypes.ImperativeFactory {}
-  val scalaBaseFactory: scalaBase.Factory = new FinalBaseFactoryTypes.ScalaBaseFactory {}
+  override val genericsFactory: generics.Factory = new FinalBaseFactoryTypes.GenericsFactory {}
+  override val scalaBaseFactory: scalaBase.Factory = new FinalBaseFactoryTypes.ScalaBaseFactory {}
 }

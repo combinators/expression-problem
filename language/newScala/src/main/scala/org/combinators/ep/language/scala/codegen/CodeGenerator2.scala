@@ -54,7 +54,6 @@ sealed class CodeGenerator2[AST <: FullAST](val domainName: String, val ast: AST
       case TypeRep.Boolean => toLookup("Boolean")
       case TypeRep.String => toLookup("String")
       case TypeRep.Unit => toLookup("Unit")
-      case DomainTpeRep.Tree => toLookup("org", "combinators", "ep", "util", "Tree")
       case TypeRep.Sequence(elemTpeRep) =>
         Some(
           for {
@@ -205,7 +204,7 @@ sealed class CodeGenerator2[AST <: FullAST](val domainName: String, val ast: AST
       } else Seq.empty
 
       nonTestFile ++ testFile
-    }).toSeq :+ treeLibrary :+ buildFile :+ pluginsFile :+ scalaFmt
+    }).toSeq :+ buildFile :+ pluginsFile :+ scalaFmt
   }
 
   val paradigm = AnyParadigm2[ast.type, AbstractSyntax2.AbstractSyntax](ast, runGenerator, syntax)
@@ -276,12 +275,7 @@ sealed class CodeGenerator2[AST <: FullAST](val domainName: String, val ast: AST
 
   val assertionsInMethod = Assertions2[ast.type, paradigm.type](paradigm)
 
-  def treeLibrary: FileWithPath = {
-    FileWithPath(
-      getClass.getResourceAsStream("/scala-code/org/combinators/ep/util/Trees.scala").readAllBytes(),
-      Paths.get("src", "main", "scala", "org", "combinators", "ep", "util", "Trees.scala")
-    )
-  }
+  
 }
 
 object CodeGenerator2 {

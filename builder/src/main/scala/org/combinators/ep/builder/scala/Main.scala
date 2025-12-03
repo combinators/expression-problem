@@ -40,7 +40,7 @@ package org.combinators.ep.builder.scala
 import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
 import org.combinators.cogen.FileWithPathPersistable.*
-import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
+import org.combinators.cogen.{Command, FileWithPath, FileWithPathPersistable}
 import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, ObjectAlgebras, Traditional, TriviallyClean, Visitor, Visualize}
 import org.combinators.ep.domain.Evolution
 import org.combinators.ep.domain.math.{A1, A1M3, A1M3I2, A3, C2, I2M3I1N1, M0, M1, M2, M2_ABS, M3, M3I1, M3W1, M4, M5, M6, M7, M7I2, M8, M9, N1, P1, Q1, V1, W1}
@@ -54,8 +54,11 @@ import org.combinators.ep.domain.math.systemO.{O1, O1OA, O2, OA, OD1, OD2, OD3, 
 import org.combinators.ep.domain.math.systemX.{X1, X2, X2X3, X3, X4}
 import org.combinators.ep.generator.ApproachImplementationProvider.WithParadigm
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider, TestImplementationProvider}
-import org.combinators.ep.language.scala.codegen.{CodeGenerator}
+import org.combinators.ep.language.scala.codegen.{CodeGenerator, CodeGenerator2, FullAST}
 import org.combinators.ep.builder.inbetween.paradigm.ffi.Trees
+import org.combinators.ep.language.scala.ast.{FinalBaseAST, FinalNameProviderAST}
+import org.combinators.ep.language.scala.ast.ffi.*
+import org.combinators.ep.builder.scala.paradigm.ffi.*
 
 import java.nio.file.{Path, Paths}
 
@@ -63,11 +66,25 @@ import java.nio.file.{Path, Paths}
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
 class Main(choice:String, select:String) {
-  val generator: CodeGenerator = CodeGenerator(M0.getModel.base.name.toLowerCase)
+  val ast: FullAST & TreesAST = new FinalBaseAST
+    with FinalNameProviderAST
+    with FinalArithmeticAST
+    with FinalAssertionsAST
+    with FinalBooleanAST
+    with FinalEqualsAST
+    with FinalListsAST
+    with FinalOperatorExpressionsAST
+    with FinalRealArithmeticOpsAST
+    with FinalStringsAST
+    with FinalTreesAST {
+    val reificationExtensions = List(scalaTreesOps.treeReificationExtensions)
+  }
+  val generator: CodeGenerator2[ast.type] = CodeGenerator2(M0.getModel.base.name.toLowerCase, ast)
 
-  // START here and also deal with CodeGenerator v. CodeGenerator2
-//  val treesInMethod =
-//    Trees(generator.paradigm)(Map.empty)
+  val treesInMethod =
+     Trees[ast.type, generator.paradigm.type, ast.any.Method](generator.paradigm)(ast.scalaTreesOps.treeLibrary, (tpe, lookup) => {
+       generator.paradigm.projectCapabilities.addTypeLookupForMethods(tpe, Command.lift(lookup))
+     })
 
   val functionalApproach: WithParadigm[generator.paradigm.type] = org.combinators.ep.approach.functional.Traditional[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.functional, generator.functionalControl)
 
@@ -794,3 +811,4 @@ object GenerateShapes extends Subselection {
   val evolutions = Seq("S0", "S1", "S2")
 }
 
+*/

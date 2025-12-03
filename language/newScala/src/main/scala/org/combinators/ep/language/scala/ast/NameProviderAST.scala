@@ -69,3 +69,25 @@ trait NameProviderAST { self: BaseAST =>
   val nameProviderFinalTypes: nameProvider.FinalTypes
   val nameProviderFactory: nameProvider.Factory
 }
+
+trait FinalNameProviderAST extends NameProviderAST { self: BaseAST =>
+  object finalNameProviderFinalTypes {
+    trait NameProviderFinalTypes extends nameProvider.FinalTypes {
+      type NameProvider = nameProvider.ScalaNameProvider
+    }
+  }
+
+  object finalNameProviderFactoryTypes {
+    trait NameProviderFactory extends nameProvider.Factory {
+      def scalaNameProvider: nameProvider.ScalaNameProvider = {
+        case class ScalaNameProvider() extends nameProvider.ScalaNameProvider {
+          override def getSelfNameProvider: nameProvider.ScalaNameProvider = this
+        }
+        ScalaNameProvider()
+      }
+    }
+  }
+
+  override val nameProviderFinalTypes: finalNameProviderFinalTypes.NameProviderFinalTypes = new finalNameProviderFinalTypes.NameProviderFinalTypes {}
+  override val nameProviderFactory: finalNameProviderFactoryTypes.NameProviderFactory = new finalNameProviderFactoryTypes.NameProviderFactory {}
+}

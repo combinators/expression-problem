@@ -1,10 +1,7 @@
 package org.combinators.model
 
-abstract class Model {
-  val dimensionality: Int
-  val baseType: String
+class Model(val inputs: List[Expression], val iterators: List[IteratorExpression], val cases: List[(Option[Expression], Expression)])
 
-  // dp is always the storage for problem
-  // solution is always the storage for solution
-  val relation: Relation
-}
+// todo: figure out how to represent transitions (subproblems)
+
+// test example in bottomUp/twoSequences/longestcommonsubsequence/LongestCommonSubsequenceObjectOrientedProvider.scala

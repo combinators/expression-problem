@@ -810,5 +810,3 @@ object GenerateShapes extends Subselection {
   }
   val evolutions = Seq("S0", "S1", "S2")
 }
-
-*/

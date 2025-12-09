@@ -1,4 +1,4 @@
-package org.combinators.bottomUp.twosequences.longestcommonsubsequence
+package org.combinators.bottomUp.twoSequences.longestCommonSubsequence
 
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}

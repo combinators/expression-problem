@@ -1,4 +1,4 @@
-package org.combinators.bottomUp.twosequences
+package org.combinators.bottomUp.twoSequences
 
 import org.combinators.dp.Utility
 import org.combinators.ep.domain.abstractions.TypeRep

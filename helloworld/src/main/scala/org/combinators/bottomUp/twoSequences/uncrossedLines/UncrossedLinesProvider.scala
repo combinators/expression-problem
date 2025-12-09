@@ -1,4 +1,4 @@
-package org.combinators.bottomUp.twosequences.uncrossedlines
+package org.combinators.bottomUp.twoSequences.uncrossedLines
 
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}

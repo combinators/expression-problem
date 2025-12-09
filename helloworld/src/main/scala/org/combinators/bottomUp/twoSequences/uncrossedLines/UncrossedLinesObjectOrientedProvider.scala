@@ -1,6 +1,6 @@
-package org.combinators.bottomUp.twosequences.uncrossedlines
+package org.combinators.bottomUp.twoSequences.uncrossedLines
 
-import org.combinators.bottomUp.twosequences.TwoSequencesUtility
+import org.combinators.bottomUp.twoSequences.TwoSequencesUtility
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.control.Imperative

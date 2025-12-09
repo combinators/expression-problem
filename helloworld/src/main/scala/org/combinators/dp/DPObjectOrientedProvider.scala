@@ -6,6 +6,7 @@ import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, ObjectOriented}
 import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
+import org.combinators.model.Model
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
@@ -237,7 +238,7 @@ trait DPObjectOrientedProvider extends DPProvider {
         return max;
     }
 }*/
-  def makeSimpleDP(): Generator[ProjectContext, Unit] = {
+  def makeSimpleDP(model:Model): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
     val makeClass: Generator[ClassContext, Unit] = {
       import classCapabilities._
@@ -246,7 +247,7 @@ trait DPObjectOrientedProvider extends DPProvider {
       } yield None
     }
 
-    addClassToProject(makeClass, names.mangle("Solution"))
+    addClassToProject(makeClass, names.mangle(model.problem))
   }
 
 
@@ -294,10 +295,10 @@ trait DPObjectOrientedProvider extends DPProvider {
     } yield ()
   }
 
-  def implement(): Generator[ProjectContext, Unit] = {
+  def implement(model:Model): Generator[ProjectContext, Unit] = {
 
     for {
-      _ <- makeSimpleDP()
+      _ <- makeSimpleDP(model)
       _ <- paradigm.projectCapabilities.addCompilationUnit(
         paradigm.compilationUnitCapabilities.addTestSuite(testName, makeTestCase("DP"))
       )

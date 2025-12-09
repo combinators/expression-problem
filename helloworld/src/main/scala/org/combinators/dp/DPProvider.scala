@@ -6,6 +6,7 @@ import org.combinators.ep.generator.Command._
 import org.combinators.ep.generator.{NameProvider, Understands}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax._
 import org.combinators.ep.generator.paradigm.{AddImport, AnyParadigm, ObjectOriented, ResolveImport}
+import org.combinators.model.Model
 
 /** Attempt to provide a dynamic programming world generator. */
 trait DPProvider {
@@ -51,7 +52,7 @@ trait DPProvider {
   }
 
   /** Entry point into code generation. */
-  def implement(): Generator[ProjectContext, Unit]
+  def implement(model:Model): Generator[ProjectContext, Unit]
 
   /** Define standard test name. */
   def testCaseName:Name = {

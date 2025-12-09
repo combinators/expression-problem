@@ -13,6 +13,7 @@ import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
+import org.combinators.model.{Model, Setup}
 
 import java.nio.file.{Path, Paths}
 
@@ -26,7 +27,7 @@ class DPMainJava {
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
-  def directToDiskTransaction(targetDirectory: Path): IO[Unit] = {
+  def directToDiskTransaction(targetDirectory: Path, model:Model): IO[Unit] = {
 
     val files =
       () => generator.paradigm.runGenerator {
@@ -40,7 +41,7 @@ class DPMainJava {
           _ <- generator.equalityInMethod.enable()
           _ <- generator.assertionsInMethod.enable()
 
-          _ <- dpApproach.implement()
+          _ <- dpApproach.implement(model)
         } yield ()
       }
 
@@ -59,9 +60,9 @@ class DPMainJava {
     }
   }
 
-  def runDirectToDisc(targetDirectory: Path): IO[ExitCode] = {
+  def runDirectToDisc(targetDirectory: Path, model:Model): IO[ExitCode] = {
     for {
-      _ <- directToDiskTransaction(targetDirectory)
+      _ <- directToDiskTransaction(targetDirectory, model)
     } yield ExitCode.Success
   }
 }
@@ -70,11 +71,13 @@ object DPDirectToDiskMain extends IOApp {
   val targetDirectory = Paths.get("target", "dp")
 
   def run(args: List[String]): IO[ExitCode] = {
+
+    var model = new Setup().instantiate()
     for {
       _ <- IO { print("Initializing Generator...") }
       main <- IO { new DPMainJava() }
       _ <- IO { println("[OK]") }
-      result <- main.runDirectToDisc(targetDirectory)
+      result <- main.runDirectToDisc(targetDirectory, model)
     } yield result
   }
 }

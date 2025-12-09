@@ -7,6 +7,7 @@ import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
+import org.combinators.model.{CharAtExpression, EqualExpression, IntegerExpression, IteratorExpression, LiteralInt, Model, StringExpression}
 
 import java.nio.file.{Path, Paths}
 
@@ -20,7 +21,7 @@ class LongestCommonSubsequenceMainJava {
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
-  def directToDiskTransaction(targetDirectory: Path): IO[Unit] = {
+  def directToDiskTransaction(targetDirectory: Path, model:Model): IO[Unit] = {
 
     val files =
       () => generator.paradigm.runGenerator {
@@ -34,7 +35,7 @@ class LongestCommonSubsequenceMainJava {
           _ <- generator.equalityInMethod.enable()
           _ <- generator.assertionsInMethod.enable()
 
-          _ <- dpApproach.implement()
+          _ <- dpApproach.implement(model:Model)
         } yield ()
       }
 
@@ -53,9 +54,9 @@ class LongestCommonSubsequenceMainJava {
     }
   }
 
-  def runDirectToDisc(targetDirectory: Path): IO[ExitCode] = {
+  def runDirectToDisc(targetDirectory: Path, model:Model): IO[ExitCode] = {
     for {
-      _ <- directToDiskTransaction(targetDirectory)
+      _ <- directToDiskTransaction(targetDirectory, model)
     } yield ExitCode.Success
   }
 }
@@ -64,11 +65,44 @@ object LongestCommonSubsequenceDirectToDiskMain extends IOApp {
   val targetDirectory = Paths.get("target", "bottomUp", "twoSequences", "longestcommonsubsequence")
 
   def run(args: List[String]): IO[ExitCode] = {
+    val s1: StringExpression = new StringExpression()
+    val s2: StringExpression = new StringExpression()
+    val inputs = List(s1, s2)
+
+    val r: IteratorExpression = new IteratorExpression(0)
+    val c: IteratorExpression = new IteratorExpression(1)
+    val iterators = List(r, c)
+
+    val zero: LiteralInt = new LiteralInt(0)
+    val one: LiteralInt = new LiteralInt(1)
+
+    val LCS: Model = new Model("LongestCommonSubsequence",
+      inputs,
+      iterators,
+      cases = List(
+        (
+          Some(new EqualExpression(r, zero)),
+          zero
+        ),
+        (
+          Some(new EqualExpression(c, zero)),
+          zero
+        ),
+        (
+          Some(new EqualExpression(new CharAtExpression(s1, r), new CharAtExpression(s2, c))),
+          new IntegerExpression()
+        ),
+        (
+          None,
+          new IntegerExpression()
+        )
+      )
+    )
     for {
       _ <- IO { print("Initializing Generator...") }
       main <- IO { new LongestCommonSubsequenceMainJava() }
       _ <- IO { println("[OK]") }
-      result <- main.runDirectToDisc(targetDirectory)
+      result <- main.runDirectToDisc(targetDirectory, LCS)
     } yield result
   }
 }

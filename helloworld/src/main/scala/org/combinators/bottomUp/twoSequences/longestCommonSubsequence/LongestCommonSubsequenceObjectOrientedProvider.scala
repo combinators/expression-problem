@@ -1,15 +1,16 @@
 package org.combinators.bottomUp.twoSequences.longestCommonSubsequence
 
 import org.combinators.bottomUp.twoSequences.TwoSequencesUtility
+import org.combinators.dp.DPProvider
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, ObjectOriented}
 import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
-import org.combinators.model.{Assignment, CharAtExpression, EqualExpression, Formula, IntegerExpression, IteratorExpression, LiteralInt, Model, Relation, StringEqualCondition, StringExpression}
+import org.combinators.model.{CharAtExpression, EqualExpression, Formula, IntegerExpression, IteratorExpression, LiteralInt, Model, Relation, StringEqualCondition, StringExpression}
 
-trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubsequenceProvider with TwoSequencesUtility {
+trait LongestCommonSubsequenceObjectOrientedProvider extends DPProvider with TwoSequencesUtility {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val names: NameProvider[paradigm.syntax.Name]
   val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]
@@ -189,39 +190,6 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
   }
 
   def makeSimpleDP(): Generator[ProjectContext, Unit] = {
-    val s1: StringExpression = new StringExpression()
-    val s2: StringExpression = new StringExpression()
-    val inputs = List(s1, s2)
-
-    val r: IteratorExpression = new IteratorExpression(0)
-    val c: IteratorExpression = new IteratorExpression(1)
-    val iterators = List(r, c)
-
-    val zero: LiteralInt = new LiteralInt(0)
-    val one: LiteralInt = new LiteralInt(1)
-
-    val LCS: Model = new Model(
-      inputs,
-      iterators,
-      cases = List(
-        (
-          Some(new EqualExpression(r, zero)),
-          zero
-        ),
-        (
-          Some(new EqualExpression(c, zero)),
-          zero
-        ),
-        (
-          Some(new EqualExpression(new CharAtExpression(s1, r), new CharAtExpression(s2, c))),
-          new IntegerExpression()
-        ),
-        (
-          None,
-          new IntegerExpression()
-        )
-      )
-    )
 
     import ooParadigm.projectCapabilities._
     val makeClass: Generator[ClassContext, Unit] = {
@@ -244,7 +212,7 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
   //    } yield ()
   //  }
 
-  def implement(): Generator[ProjectContext, Unit] = {
+  def implement(model:Model): Generator[ProjectContext, Unit] = {
 
     for {
       _ <- makeSimpleDP()

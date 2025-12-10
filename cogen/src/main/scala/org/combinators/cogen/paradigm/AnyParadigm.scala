@@ -97,6 +97,11 @@ case class OutputToConsole[Expression](expr: Expression) extends Command {
   type Result = Unit
 }
 
+/** Ability to add custom files (e.g. for included libs or resources) to projects. */
+case class AddCustomFile(file: FileWithPath) extends Command {
+  type Result = Unit
+}
+
 trait AnyParadigm {
   val syntax: AbstractSyntax
 
@@ -128,8 +133,14 @@ trait AnyParadigm {
       AnyParadigm.capability(AddCompilationUnit(unit, qualifiedName))
 
     implicit val canAddTypeLookupForMethodsInProject: Understands[ProjectContext, AddTypeLookup[MethodBodyContext, Type]]
-    def addTypeLookupForMethods(tpe: TypeRep, lookup: Generator[MethodBodyContext, Type]): Generator[ProjectContext, Unit] =
+    def addTypeLookupForMethods(tpe: TypeRep, lookup: Generator[MethodBodyContext, Type]): Generator[ProjectContext, Unit] = {
       AnyParadigm.capability(AddTypeLookup[MethodBodyContext, Type](tpe, lookup))
+    }
+    
+    implicit val canAddCustomFile: Understands[ProjectContext, AddCustomFile]
+    def addCustomFile(file: FileWithPath): Generator[ProjectContext, Unit] = {
+      AnyParadigm.capability(AddCustomFile(file))
+    }
   }
   val projectCapabilities: ProjectCapabilities
 

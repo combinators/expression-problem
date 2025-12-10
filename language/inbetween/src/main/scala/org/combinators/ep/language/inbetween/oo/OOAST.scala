@@ -1,6 +1,6 @@
 package org.combinators.ep.language.inbetween.oo
 
-import org.combinators.cogen.TypeRep
+import org.combinators.cogen.{FileWithPath, TypeRep}
 import org.combinators.cogen.Command.Generator
 import org.combinators.ep.language.inbetween.any.AnyAST
 
@@ -31,15 +31,17 @@ trait OOAST extends AnyAST {
           copyAsProjectWithTypeLookups(classTypeLookupMap = (tpeRep: TypeRep) => lookups(tpeRep).getOrElse(this.classTypeLookupMap(tpeRep)))
 
         override def copy(
-          compilationUnits: Set[any.CompilationUnit]
-        ): any.Project = copyAsProjectWithTypeLookups(compilationUnits)
+          compilationUnits: Set[any.CompilationUnit],
+          customFiles: Seq[FileWithPath]
+        ): any.Project = copyAsProjectWithTypeLookups(compilationUnits, customFiles)
 
         def copyAsProjectWithTypeLookups(
           compilationUnits: Set[any.CompilationUnit] = this.compilationUnits,
+          customFiles: Seq[FileWithPath] = this.customFiles,
           methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.methodTypeLookupMap,
           constructorTypeLookupMap: TypeRep => Generator[Constructor, any.Type] = this.constructorTypeLookupMap,
           classTypeLookupMap: TypeRep => Generator[Class, any.Type] = this.classTypeLookupMap
-        ): Project = ooFactory.ooProject(compilationUnits, methodTypeLookupMap, constructorTypeLookupMap, classTypeLookupMap)
+        ): Project = ooFactory.ooProject(compilationUnits, customFiles, methodTypeLookupMap, constructorTypeLookupMap, classTypeLookupMap)
       }
 
       trait CompilationUnit extends any.CompilationUnit {
@@ -170,8 +172,8 @@ trait OOAST extends AnyAST {
       trait Factory extends any.Factory {
         import ooFactory.*
 
-        override def project(compilationUnits: Set[any.CompilationUnit]): any.Project =
-          ooProject(compilationUnits = compilationUnits, methodTypeLookupMap = Map.empty, constructorTypeLookupMap = Map.empty, classTypeLookupMap = Map.empty)
+        override def project(compilationUnits: Set[any.CompilationUnit], customFiles: Seq[FileWithPath]): any.Project =
+          ooProject(compilationUnits = compilationUnits, customFiles = customFiles, methodTypeLookupMap = Map.empty, constructorTypeLookupMap = Map.empty, classTypeLookupMap = Map.empty)
 
         override def compilationUnit(name: Seq[any.Name], imports: Seq[any.Import], tests: Seq[any.TestSuite]): any.CompilationUnit =
           ooCompilationUnit(name, imports, methodTypeLookupMap = Map.empty, constructorTypeLookupMap = Map.empty, classTypeLookupMap = Map.empty, classes = Seq.empty, tests = tests)
@@ -419,6 +421,7 @@ trait OOAST extends AnyAST {
     trait Factory {
       def ooProject(
         compilationUnits: Set[any.CompilationUnit] = Set.empty,
+        customFiles: Seq[FileWithPath] = Seq.empty,
         methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty,
         constructorTypeLookupMap: TypeRep => Generator[Constructor, any.Type] = Map.empty,
         classTypeLookupMap: TypeRep => Generator[Class, any.Type] = Map.empty

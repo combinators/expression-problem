@@ -1,7 +1,7 @@
 package org.combinators.ep.language.inbetween.any /*DI:LI:AI*/
 
 import org.combinators.cogen.TypeRep
-import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddCompilationUnit, AddImport, AddMethod, AddTestCase, AddTestSuite, AddTypeLookup, Apply, Debug, FreshName, GetArguments, OutputToConsole, Reify, ResolveImport, SetParameters, SetReturnType, ToTargetLanguageType, AnyParadigm as AP}
+import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddCompilationUnit, AddCustomFile, AddImport, AddMethod, AddTestCase, AddTestSuite, AddTypeLookup, Apply, Debug, FreshName, GetArguments, OutputToConsole, Reify, ResolveImport, SetParameters, SetReturnType, ToTargetLanguageType, AnyParadigm as AP}
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, FileWithPath, Understands}
 
@@ -32,6 +32,11 @@ trait AnyParadigm extends AP {
     implicit val canAddTypeLookupForMethodsInProject: Understands[ProjectContext, AddTypeLookup[Method[FT], Type[FT]]] = new Understands[ProjectContext, AddTypeLookup[Method[FT], Type[FT]]] {
       def perform(context: Project[FT], command: AddTypeLookup[Method[FT], Type[FT]]): (Project[FT], Unit) = {
         (context.addTypeLookupsForMethods((tpeRep: TypeRep) => if (tpeRep == command.tpe) Some(command.lookup) else None), ())
+      }
+    }
+    implicit val canAddCustomFile: Understands[Project[FT], AddCustomFile] = new Understands[ProjectContext, AddCustomFile] {
+      def perform(context: Project[FT], command: AddCustomFile): (Project[FT], Unit) = {
+        ??? // Old paradigm, won't implement
       }
     }
   }

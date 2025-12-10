@@ -1,6 +1,6 @@
 package org.combinators.ep.language.inbetween.any
 
-import org.combinators.cogen.TypeRep
+import org.combinators.cogen.{FileWithPath, TypeRep}
 import org.combinators.cogen.Command.Generator
 
 trait AnyAST {
@@ -145,16 +145,19 @@ trait AnyAST {
       def getSelfProject: finalTypes.Project
 
       def compilationUnits: Set[CompilationUnit] = Set.empty
+      
+      def customFiles: Seq[FileWithPath] = Seq.empty
 
       def addTypeLookupsForMethods(lookups: TypeRep => Option[Generator[Method, Type]]): Project
 
       def copy(
-        compilationUnits: Set[CompilationUnit] = this.compilationUnits
+        compilationUnits: Set[CompilationUnit] = this.compilationUnits,
+        customFiles: Seq[FileWithPath] = this.customFiles
       ): Project = factory.project(compilationUnits)
     }
 
     trait Factory {
-      def project(compilationUnits: Set[CompilationUnit] = Set.empty): Project
+      def project(compilationUnits: Set[CompilationUnit] = Set.empty, customFiles: Seq[FileWithPath] = Seq.empty): Project
 
       def compilationUnit(name: Seq[Name], imports: Seq[Import], tests: Seq[TestSuite]): CompilationUnit
 

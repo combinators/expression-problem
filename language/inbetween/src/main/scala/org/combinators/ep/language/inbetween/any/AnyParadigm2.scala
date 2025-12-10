@@ -3,7 +3,7 @@ package org.combinators.ep.language.inbetween.any
 /*DI:LI:AI*/
 
 import org.combinators.cogen.TypeRep
-import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddCompilationUnit, AddImport, AddMethod, AddTestCase, AddTestSuite, AddTypeLookup, Apply, Debug, FreshName, GetArguments, OutputToConsole, Reify, ResolveImport, SetParameters, SetReturnType, ToTargetLanguageType, AnyParadigm as AP}
+import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddCompilationUnit, AddCustomFile, AddImport, AddMethod, AddTestCase, AddTestSuite, AddTypeLookup, Apply, Debug, FreshName, GetArguments, OutputToConsole, Reify, ResolveImport, SetParameters, SetReturnType, ToTargetLanguageType, AnyParadigm as AP}
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, FileWithPath, Understands}
 
@@ -32,6 +32,11 @@ trait AnyParadigm2(val ast: AnyAST, val syntax: AbstractSyntax2.AbstractSyntax[a
     implicit val canAddTypeLookupForMethodsInProject: Understands[ProjectContext, AddTypeLookup[Method, Type]] = new Understands[ProjectContext, AddTypeLookup[Method, Type]] {
       def perform(context: Project, command: AddTypeLookup[Method, Type]): (Project, Unit) = {
         (context.addTypeLookupsForMethods((tpeRep: TypeRep) => if (tpeRep == command.tpe) Some(command.lookup) else None), ())
+      }
+    }
+    implicit val canAddCustomFile: Understands[ProjectContext, AddCustomFile] = new Understands[ProjectContext, AddCustomFile] {
+      def perform(context: ast.any.Project, command: AddCustomFile): (ast.any.Project, Unit) = {
+        (context.copy(customFiles = context.customFiles :+ command.file), ())
       }
     }
   }
@@ -168,19 +173,19 @@ object AnyParadigm2 {
     val ast: AST
   }
   
-  type WithSyntax[AST <: AnyAST, Syntax[A <: AST] <: AbstractSyntax2.AbstractSyntax[A]] = AnyParadigm2 {
+  type WithSyntax[AST <: AnyAST, Syntax <: AbstractSyntax2.AbstractSyntax[AST]] = AnyParadigm2 {
     val ast: AST
     val _runGenerator: Generator[ast.any.Project, Unit] => Seq[FileWithPath]
-    val syntax: Syntax[ast.type]
+    val syntax: Syntax & AbstractSyntax2.AbstractSyntax[ast.type]
   }
 
-  trait WS[AST <: AnyAST, Syntax[A <: AST] <: AbstractSyntax2.AbstractSyntax[A]](override val ast: AST, override val syntax: Syntax[ast.type]) extends AnyParadigm2 {}
+  trait WS[AST <: AnyAST, Syntax <: AbstractSyntax2.AbstractSyntax[AST]](override val ast: AST, override val syntax: Syntax & AbstractSyntax2.AbstractSyntax[ast.type]) extends AnyParadigm2 {}
 
-  def apply[AST <: AnyAST, Syntax[A <: AST] <: AbstractSyntax2.AbstractSyntax[A]]
+  def apply[AST <: AnyAST, Syntax <: AbstractSyntax2.AbstractSyntax[AST]]
     (_ast: AST,
      __runGenerator: Generator[_ast.any.Project, Unit] => Seq[FileWithPath],
-     _syntax: Syntax[_ast.type]
-    ): WithSyntax[AST, Syntax] = new WS[_ast.type, Syntax](_ast, _syntax) with AnyParadigm2(_ast, _syntax) {
+     _syntax: Syntax & AbstractSyntax2.AbstractSyntax[_ast.type]
+    ): WithSyntax[AST, Syntax] = new WS[_ast.type, _syntax.type](_ast, _syntax) with AnyParadigm2(_ast, _syntax) {
       override val _runGenerator: __runGenerator.type = __runGenerator
   }
 }

@@ -10,7 +10,7 @@ import com.github.javaparser.ast.nodeTypes.{NodeWithScope, NodeWithSimpleName}
 import com.github.javaparser.ast.stmt.{BlockStmt, ExpressionStmt}
 import org.combinators.cogen.InstanceRep
 import org.combinators.cogen.TypeRep
-import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddCompilationUnit, AddImplementedTestCase, AddImport, AddTestCase, AddTestSuite, AddTypeLookup, Apply, Debug, FreshName, GetArguments, OutputToConsole, Reify, ResolveImport, SetParameters, SetReturnType, ToTargetLanguageType, AnyParadigm as AP, ObjectOriented as _}
+import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddCompilationUnit, AddCustomFile, AddImplementedTestCase, AddImport, AddTestCase, AddTestSuite, AddTypeLookup, Apply, Debug, FreshName, GetArguments, OutputToConsole, Reify, ResolveImport, SetParameters, SetReturnType, ToTargetLanguageType, AnyParadigm as AP, ObjectOriented as _}
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, FileWithPath, Understands}
 import org.combinators.ep.language.java.Syntax.MangledName
@@ -18,7 +18,7 @@ import org.combinators.ep.language.java.{CodeGenerator, CompilationUnitCtxt, Con
 import org.combinators.templating.persistable.{BundledResource, JavaPersistable}
 
 import scala.util.Try
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 
 trait AnyParadigm extends AP {
@@ -94,6 +94,12 @@ trait AnyParadigm extends AP {
               }
             }
             (context.copy(resolver = context.resolver.copy(_methodTypeResolution = newLookup)), ())
+          }
+        }
+      implicit val canAddCustomFile: Understands[ProjectCtxt, AddCustomFile] =
+        new Understands[ProjectCtxt, AddCustomFile] {
+          def perform(context: ProjectCtxt, command: AddCustomFile): (ProjectCtxt, Unit) = {
+            (context.copy(customFiles = context.customFiles :+ command.file), ())
           }
         }
     }
@@ -497,7 +503,8 @@ trait AnyParadigm extends AP {
           resolver = defaultResolver,
           units = Seq.empty,
           testUnits = Seq.empty,
-          extraDependencies = Seq.empty
+          extraDependencies = Seq.empty,
+          customFiles = Seq.empty
         )
       )
     val nameEntry = config.projectName.map(n => s"""name := "$n"""").getOrElse("")
@@ -551,7 +558,7 @@ trait AnyParadigm extends AP {
       //ResourcePersistable.bundledResourceInstance.path(gitIgnore)) +:
       FileWithPath(pluginFile, Paths.get("project", "plugin.sbt")) +:
       FileWithPath(buildFile, Paths.get("build.sbt")) +:
-      (javaFiles ++ javaTestFiles)
+      (javaFiles ++ javaTestFiles ++ finalContext.customFiles)
   }
 }
 

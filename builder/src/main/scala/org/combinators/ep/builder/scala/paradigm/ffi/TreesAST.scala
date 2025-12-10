@@ -17,16 +17,18 @@ trait TreesAST extends InbetweenTreesAST { self: ParametricPolymorphismAST & Bas
         type Node <: treesOpsOverride.Node
       }
       
+      
+      
       trait Tree extends treesOps.Tree with scalaBase.ooOverrides.ClassReferenceType {
-        def qualifiedClassName: Seq[any.Name] = Seq("org", "combinators", "ep", "util", "Tree").map(n => scalaBaseFactory.name(n, n))
+        def qualifiedClassName: Seq[any.Name] = qualifiedClassNameTree
       }
 
       trait Leaf extends treesOps.Leaf with scalaBase.ooOverrides.ClassReferenceType {
-        def qualifiedClassName: Seq[any.Name] = Seq("org", "combinators", "ep", "util", "Leaf").map(n => scalaBaseFactory.name(n, n))
+        def qualifiedClassName: Seq[any.Name] = qualifiedClassNameLeaf
       }
 
       trait Node extends treesOps.Node with scalaBase.ooOverrides.ClassReferenceType {
-        def qualifiedClassName: Seq[any.Name] = Seq("org", "combinators", "ep", "util", "Node").map(n => scalaBaseFactory.name(n, n))
+        def qualifiedClassName: Seq[any.Name] = qualifiedClassNameNode
       }
 
       trait Factory extends treesOps.Factory {}
@@ -42,12 +44,19 @@ trait TreesAST extends InbetweenTreesAST { self: ParametricPolymorphismAST & Bas
         case _ => None
       }
     }
+    
+    
+    val qualifiedClassNameTree: Seq[any.Name] = Seq("org", "combinators", "ep", "util", "Tree").map(n => scalaBaseFactory.name(n, n))
+    val qualifiedClassNameLeaf: Seq[any.Name] = Seq("org", "combinators", "ep", "util", "Leaf").map(n => scalaBaseFactory.name(n, n))
+    val qualifiedClassNameNode: Seq[any.Name] = Seq("org", "combinators", "ep", "util", "Node").map(n => scalaBaseFactory.name(n, n))
+    def treePrefixExcludes: Set[Seq[any.Name]] =
+      Set(qualifiedClassNameTree, qualifiedClassNameNode, qualifiedClassNameLeaf)
 
-    def treeLibrary: FileWithPath = {
-      FileWithPath(
+    def treeLibrary: Seq[FileWithPath] = {
+      Seq(FileWithPath(
         getClass.getResourceAsStream("/scala-code/org/combinators/ep/util/Trees.scala").readAllBytes(),
         Paths.get("src", "main", "scala", "org", "combinators", "ep", "util", "Trees.scala")
-      )
+      ))
     }
   }
 

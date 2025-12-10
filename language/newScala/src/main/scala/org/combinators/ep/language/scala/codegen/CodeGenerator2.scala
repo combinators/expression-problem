@@ -8,7 +8,9 @@ import org.combinators.cogen.paradigm.{Apply, ToTargetLanguageType}
 import org.combinators.cogen.{Command, FileWithPath, TypeRep, Understands}
 import org.combinators.ep.domain.abstractions.DomainTpeRep
 import org.combinators.ep.language.inbetween.any.*
+import org.combinators.ep.language.inbetween.any.AnyParadigm2.WithSyntax
 import org.combinators.ep.language.inbetween.ffi.*
+import org.combinators.ep.language.inbetween.functional.control.Functional2.WithBase
 import org.combinators.ep.language.inbetween.functional.{FunctionalParadigm2, control}
 import org.combinators.ep.language.inbetween.imperative.Imperative2
 import org.combinators.ep.language.inbetween.oo.OOParadigm2
@@ -34,7 +36,7 @@ type FullAST = BaseAST
  *
  * These paradigm-specific traits are conceptually different from each other
  */
-sealed class CodeGenerator2[AST <: FullAST](val domainName: String, val ast: AST) { cc =>
+sealed class CodeGenerator2[AST <: FullAST](val domainName: String, val ast: AST, additionalPrefixExcludedTypes: Set[Seq[ast.any.Name]] = Set.empty) { cc =>
   val syntax: AbstractSyntax2.AbstractSyntax[ast.type] = AbstractSyntax2(ast)
   val nameProvider: ast.nameProvider.ScalaNameProvider = ast.nameProviderFactory.scalaNameProvider
 
@@ -88,10 +90,7 @@ sealed class CodeGenerator2[AST <: FullAST](val domainName: String, val ast: AST
       Seq("String"),
       Seq("Seq"),
       Seq("Function"),
-      Seq("org", "combinators", "ep", "util", "Tree"),
-      Seq("org", "combinators", "ep", "util", "Node"),
-      Seq("org", "combinators", "ep", "util", "Leaf")
-    ).map(qname => qname.map(nameProvider.mangle))
+    ).map(qname => qname.map(nameProvider.mangle)) ++ additionalPrefixExcludedTypes
   }
 
   def runGenerator(generator: Generator[ast.any.Project, Unit]): Seq[FileWithPath] = {
@@ -174,7 +173,7 @@ sealed class CodeGenerator2[AST <: FullAST](val domainName: String, val ast: AST
 
 
     val (generatedProject, _) = Command.runGenerator(generator, projectWithLookups)
-    val withPrefix =ast.factory.convert(generatedProject).prefixRootPackage(Seq(nameProvider.mangle(domainName)), prefixExcludedTypes)
+    val withPrefix = ast.factory.convert(generatedProject).prefixRootPackage(Seq(nameProvider.mangle(domainName)), prefixExcludedTypes)
 
 
     def toFileWithPath(cu: ast.any.CompilationUnit, basePath: Path): FileWithPath = {
@@ -204,31 +203,31 @@ sealed class CodeGenerator2[AST <: FullAST](val domainName: String, val ast: AST
       } else Seq.empty
 
       nonTestFile ++ testFile
-    }).toSeq :+ buildFile :+ pluginsFile :+ scalaFmt
+    }).toSeq ++ withPrefix.customFiles :+ buildFile :+ pluginsFile :+ scalaFmt
   }
 
-  val paradigm = AnyParadigm2[ast.type, AbstractSyntax2.AbstractSyntax](ast, runGenerator, syntax)
-  val ooParadigm = OOParadigm2[ast.type, paradigm.type](paradigm)
-  val imperative = Imperative2[ast.type, paradigm.type](paradigm)
-  val functional = FunctionalParadigm2[ast.type, paradigm.type](paradigm)
-  val functionalControl = control.Functional2[ast.type, paradigm.type](paradigm)
+  val paradigm: WithSyntax[ast.type, syntax.type] = AnyParadigm2[ast.type, syntax.type](ast, runGenerator, syntax)
+  val ooParadigm: OOParadigm2.WithBase[ast.type, paradigm.type] = OOParadigm2[ast.type, paradigm.type](paradigm)
+  val imperative: Imperative2.WithBase[ast.type, paradigm.type] = Imperative2[ast.type, paradigm.type](paradigm)
+  val functional: FunctionalParadigm2.WithBase[ast.type, paradigm.type] = FunctionalParadigm2[ast.type, paradigm.type](paradigm)
+  val functionalControl: WithBase[ast.type, paradigm.type] = control.Functional2[ast.type, paradigm.type](paradigm)
 
-  val parametricPolymorphism = ParametricPolymorphism2[ast.type, paradigm.type](paradigm)
-  val generics = Generics2[ast.type, paradigm.type, OOParadigm2.WithBase, ParametricPolymorphism2.WithBase](paradigm, ooParadigm, parametricPolymorphism)
-  val parametricPolymorphismInADTContexts = ParametricPolymorphismInADTContexts2[ast.type, paradigm.type, FunctionalParadigm2.WithBase](paradigm, functional)
+  val parametricPolymorphism: ParametricPolymorphism2.WithBase[ast.type, paradigm.type] = ParametricPolymorphism2[ast.type, paradigm.type](paradigm)
+  val generics: Generics2.WithBase[ast.type, paradigm.type, ooParadigm.type, parametricPolymorphism.type] = Generics2[ast.type, paradigm.type, ooParadigm.type, parametricPolymorphism.type](paradigm, ooParadigm, parametricPolymorphism)
+  val parametricPolymorphismInADTContexts: ParametricPolymorphismInADTContexts2.WithBase[ast.type, paradigm.type, FunctionalParadigm2.WithBase] = ParametricPolymorphismInADTContexts2[ast.type, paradigm.type, FunctionalParadigm2.WithBase](paradigm, functional)
 
 
-  val booleans = Booleans2[ast.type, paradigm.type](paradigm)
+  val booleans: Booleans2.WithBase[ast.type, paradigm.type] = Booleans2[ast.type, paradigm.type](paradigm)
 
-  val doubles = Arithmetic2[Double, ast.type, paradigm.type](paradigm)
+  val doubles: Arithmetic2.WithBase[Double, ast.type, paradigm.type] = Arithmetic2[Double, ast.type, paradigm.type](paradigm)
 
-  val realDoubles = RealArithmetic2[Double, ast.type, paradigm.type](paradigm)
+  val realDoubles: RealArithmetic2.WithBase[Double, ast.type, paradigm.type] = RealArithmetic2[Double, ast.type, paradigm.type](paradigm)
 
-  val ints = Arithmetic2[Int, ast.type, paradigm.type](paradigm)
+  val ints: Arithmetic2.WithBase[Int, ast.type, paradigm.type] = Arithmetic2[Int, ast.type, paradigm.type](paradigm)
 
-  val strings = Strings2[ast.type, paradigm.type](paradigm)
+  val strings: Strings2.WithBase[ast.type, paradigm.type] = Strings2[ast.type, paradigm.type](paradigm)
 
-  val equality = Equals2[ast.type, paradigm.type](paradigm)
+  val equality: Equals2.WithBase[ast.type, paradigm.type] = Equals2[ast.type, paradigm.type](paradigm)
 
   /*val consoleInMethod =
     new Console[MethodBodyCtxt, paradigm.type](
@@ -251,7 +250,7 @@ sealed class CodeGenerator2[AST <: FullAST](val domainName: String, val ast: AST
     )
     */
 
-  val listsInMethod = Lists2[ast.type, paradigm.type](paradigm)
+  val lists: Lists2.WithBase[ast.type, paradigm.type] = Lists2[ast.type, paradigm.type](paradigm)
 
   /*val listsInConstructor =
     Lists[CtorCtxt, paradigm.type, generics.type](
@@ -273,8 +272,7 @@ sealed class CodeGenerator2[AST <: FullAST](val domainName: String, val ast: AST
   val assertionsInMethod = new Assertions[paradigm.type](paradigm)(ooParadigm)
   val exceptionsInMethod = new Exceptions[paradigm.type](paradigm)*/
 
-  val assertionsInMethod = Assertions2[ast.type, paradigm.type](paradigm)
-
+  val assertions = Assertions2[ast.type, paradigm.type](paradigm)
   
 }
 
@@ -285,6 +283,6 @@ object CodeGenerator2 {
   }
 
 
-  def apply[AST <: FullAST](domainName: String, ast: AST): CodeGenerator2[ast.type] =
-    new CodeGenerator2[ast.type](domainName, ast)
+  def apply[AST <: FullAST](domainName: String, ast: AST, additionalPrefixExcludedTypes: Set[Seq[ast.any.Name]] = Set.empty): CodeGenerator2[ast.type] =
+    new CodeGenerator2[ast.type](domainName, ast, additionalPrefixExcludedTypes)
 }

@@ -2,7 +2,7 @@ package org.combinators.ep.language.scala.ast
 
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.TypeRep.OfHostType
-import org.combinators.cogen.{NameProvider, TypeRep}
+import org.combinators.cogen.{FileWithPath, NameProvider, TypeRep}
 import org.combinators.ep.language.inbetween.functional
 import org.combinators.ep.language.inbetween.functional.FunctionalAST
 import org.combinators.ep.language.inbetween.functional.control.FunctionalControlAST
@@ -42,6 +42,7 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
 
         def copyAsScalaProject(
           compilationUnits: Set[any.CompilationUnit] = this.compilationUnits,
+          customFiles: Seq[FileWithPath] = this.customFiles,
           methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.methodTypeLookupMap,
           constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type] = this.constructorTypeLookupMap,
           classTypeLookupMap: TypeRep => Generator[oo.Class, any.Type] = this.classTypeLookupMap,
@@ -49,6 +50,7 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
           functionTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.functionTypeLookupMap,
         ): anyOverrides.Project = scalaBaseFactory.scalaProject(
           compilationUnits,
+          customFiles,
           methodTypeLookupMap,
           constructorTypeLookupMap,
           classTypeLookupMap,
@@ -58,12 +60,14 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
 
         override def copyAsProjectWithTypeLookups(
           compilationUnits: Set[any.CompilationUnit] = this.compilationUnits,
+          customFiles: Seq[FileWithPath] = this.customFiles,
           methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.methodTypeLookupMap,
           constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type] = this.constructorTypeLookupMap,
           classTypeLookupMap: TypeRep => Generator[oo.Class, any.Type] = this.classTypeLookupMap
         ): anyOverrides.Project =
           copyAsScalaProject(
             compilationUnits = compilationUnits,
+            customFiles = customFiles,
             methodTypeLookupMap = methodTypeLookupMap,
             constructorTypeLookupMap = constructorTypeLookupMap,
             classTypeLookupMap = classTypeLookupMap
@@ -71,11 +75,13 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
 
         override def copyAsFunctionalProject(
           compilationUnits: Set[any.CompilationUnit] = this.compilationUnits,
+          customFiles: Seq[FileWithPath] = this.customFiles,
           adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType, any.Type] = this.adtTypeLookupMap,
           functionTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.functionTypeLookupMap,
         ): anyOverrides.Project =
           copyAsScalaProject(
             compilationUnits = compilationUnits,
+            customFiles = customFiles,
             adtTypeLookupMap = adtTypeLookupMap,
             functionTypeLookupMap = functionTypeLookupMap,
           )
@@ -477,10 +483,12 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
       trait Factory extends functional.Factory {
         override def functionalProject(
           compilationUnits: Set[any.CompilationUnit],
+          customFiles: Seq[FileWithPath] = Seq.empty,
           adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType, any.Type] = Map.empty,
           functionTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty,
         ): anyOverrides.Project = scalaBaseFactory.scalaProject(
           compilationUnits = compilationUnits,
+          customFiles = customFiles,
           adtTypeLookupMap = adtTypeLookupMap,
           functionTypeLookupMap = functionTypeLookupMap,
           methodTypeLookupMap = Map.empty,
@@ -801,11 +809,13 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
       trait Factory extends generics.ooOverrides.Factory {
         override def ooProject(
           compilationUnits: Set[any.CompilationUnit],
+          customFiles: Seq[FileWithPath],
           methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty,
           constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type] = Map.empty,
           classTypeLookupMap: TypeRep => Generator[oo.Class, any.Type] = Map.empty,
         ): anyOverrides.Project = scalaBaseFactory.scalaProject(
           compilationUnits = compilationUnits,
+          customFiles = customFiles,
           adtTypeLookupMap = Map.empty,
           functionTypeLookupMap = Map.empty,
           methodTypeLookupMap = methodTypeLookupMap,
@@ -1245,6 +1255,7 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
 
       def scalaProject(
         compilationUnits: Set[any.CompilationUnit],
+        customFiles: Seq[FileWithPath] = Seq.empty,
         methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty,
         constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type] = Map.empty,
         classTypeLookupMap: TypeRep => Generator[oo.Class, any.Type] = Map.empty,
@@ -1738,10 +1749,11 @@ trait FinalBaseAST extends BaseAST {
         }
         Name(name, mangled)
       }
-      def scalaProject(compilationUnits: Set[any.CompilationUnit], methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type], constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type], classTypeLookupMap: TypeRep => Generator[oo.Class, any.Type], adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType, any.Type], functionTypeLookupMap: TypeRep => Generator[any.Method, any.Type]): scalaBase.anyOverrides.Project = {
+      def scalaProject(compilationUnits: Set[any.CompilationUnit], customFiles: Seq[FileWithPath], methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type], constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type], classTypeLookupMap: TypeRep => Generator[oo.Class, any.Type], adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType, any.Type], functionTypeLookupMap: TypeRep => Generator[any.Method, any.Type]): scalaBase.anyOverrides.Project = {
         // removed case class to avoid multiple copy implementations
         class ScalaProject(
           override val compilationUnits: Set[any.CompilationUnit],
+          override val customFiles: Seq[FileWithPath],
           override val methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type],
           override val constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type],
           override val classTypeLookupMap: TypeRep => Generator[oo.Class, any.Type],
@@ -1750,7 +1762,7 @@ trait FinalBaseAST extends BaseAST {
         ) extends scalaBase.anyOverrides.Project {
           def getSelfProject: scalaBase.anyOverrides.Project = this
         }
-        ScalaProject(compilationUnits, methodTypeLookupMap, constructorTypeLookupMap, classTypeLookupMap, adtTypeLookupMap, functionTypeLookupMap)
+        ScalaProject(compilationUnits, customFiles, methodTypeLookupMap, constructorTypeLookupMap, classTypeLookupMap, adtTypeLookupMap, functionTypeLookupMap)
       }
       def scalaCompilationUnit(name: Seq[any.Name],
                                imports: Seq[any.Import],

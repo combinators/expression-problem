@@ -1,6 +1,6 @@
 package org.combinators.ep.language.inbetween.functional
 
-import org.combinators.cogen.TypeRep
+import org.combinators.cogen.{FileWithPath, TypeRep}
 import org.combinators.cogen.Command.Generator
 import org.combinators.ep.language.inbetween.any.AnyAST
 
@@ -24,14 +24,16 @@ trait FunctionalAST extends AnyAST {
           copyAsFunctionalProject(adtTypeLookupMap = (tpeRep: TypeRep) => lookups(tpeRep).getOrElse(this.adtTypeLookupMap(tpeRep)))
 
         override def copy(
-          compilationUnits: Set[any.CompilationUnit]
-        ): any.Project = copyAsFunctionalProject(compilationUnits)
+          compilationUnits: Set[any.CompilationUnit],
+          customFiles: Seq[FileWithPath]
+        ): any.Project = copyAsFunctionalProject(compilationUnits, customFiles)
 
         def copyAsFunctionalProject(
           compilationUnits: Set[any.CompilationUnit] = this.compilationUnits,
+          customFiles: Seq[FileWithPath] = this.customFiles,
           adtTypeLookupMap: TypeRep => Generator[AlgebraicDataType, any.Type] = this.adtTypeLookupMap,
           functionTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.functionTypeLookupMap,
-        ): Project = functionalFactory.functionalProject(compilationUnits, adtTypeLookupMap, functionTypeLookupMap)
+        ): Project = functionalFactory.functionalProject(compilationUnits, customFiles, adtTypeLookupMap, functionTypeLookupMap)
       }
 
       trait CompilationUnit extends any.CompilationUnit {
@@ -86,8 +88,8 @@ trait FunctionalAST extends AnyAST {
       }
 
       trait Factory extends any.Factory {
-        override def project(compilationUnits: Set[any.CompilationUnit]): any.Project =
-          functionalFactory.functionalProject(compilationUnits = compilationUnits, adtTypeLookupMap = Map.empty, functionTypeLookupMap = Map.empty)
+        override def project(compilationUnits: Set[any.CompilationUnit], customFiles: Seq[FileWithPath]): any.Project =
+          functionalFactory.functionalProject(compilationUnits = compilationUnits, customFiles = customFiles, adtTypeLookupMap = Map.empty, functionTypeLookupMap = Map.empty)
         override def compilationUnit(name: Seq[any.Name], imports: Seq[any.Import], tests: Seq[any.TestSuite]): any.CompilationUnit =
           functionalFactory.funCompilationUnit(name, imports, adtTypeLookupMap = Map.empty, functionTypeLookupMap = Map.empty, adts = Seq.empty, functions = Seq.empty, tests = tests)
       }
@@ -173,6 +175,7 @@ trait FunctionalAST extends AnyAST {
     trait Factory {
       def functionalProject(
         compilationUnits: Set[any.CompilationUnit] = Set.empty,
+        customFiles: Seq[FileWithPath] = Seq.empty,
         adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType, any.Type] = Map.empty,
         functionTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty,
       ): anyOverrides.Project

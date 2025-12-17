@@ -114,6 +114,6 @@ lazy val builder =
     .settings(
       moduleName := s"expression-problem-language-builder",
     )
-    .dependsOn(core, cogen, approach, domainMath, domainShape, languageJava, languageNewScala)
+    .dependsOn(core, cogen, approach, domainMath, domainShape, languageJava, languageNewScala, helloWorldProject)
 
 

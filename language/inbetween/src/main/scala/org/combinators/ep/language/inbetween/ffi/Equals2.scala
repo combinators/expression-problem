@@ -10,7 +10,7 @@ import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm2
 
 
-trait Equals2(val _base: AnyParadigm2.WithAST[EqualsAST]) {
+trait Equals2[AST <: EqualsAST, B](val _base: AnyParadigm2.WithAST[AST] & B) {
   trait BooleansInMethods extends Eqls[_base.ast.any.Method] {
     override val base: _base.type = _base
 
@@ -29,10 +29,8 @@ trait Equals2(val _base: AnyParadigm2.WithAST[EqualsAST]) {
 }
 
 object Equals2 {
-  type WithBase[AST <: EqualsAST, B <: AnyParadigm2.WithAST[AST]] = Equals2 {val _base: B}
+  type WithBase[AST <: EqualsAST, B <: AnyParadigm2.WithAST[AST]] = Equals2[AST, B] {}
 
-  trait WB[AST <: EqualsAST, B <: AnyParadigm2.WithAST[AST]](override val _base: B) extends Equals2 {}
-
-  def apply[AST <: EqualsAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[AST, _base.type] = new WB[AST, _base.type](_base) with Equals2(_base) {}
+  def apply[AST <: EqualsAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[AST, B] = new Equals2[AST, B](_base) {}
 }
 

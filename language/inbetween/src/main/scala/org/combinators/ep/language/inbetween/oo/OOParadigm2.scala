@@ -5,7 +5,7 @@ import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddClass, AddConstru
 import org.combinators.cogen.{Command, Understands}
 import org.combinators.ep.language.inbetween.any.{AnyParadigm, AnyParadigm2}
 
-trait OOParadigm2(val base: AnyParadigm2.WithAST[OOAST]) extends OOP {
+trait OOParadigm2[AST <: OOAST, B](val base: AnyParadigm2.WithAST[AST] & B) extends OOP {
   import base.ast.any
   import base.ast.factory
   import base.ast.ooFactory
@@ -424,7 +424,6 @@ trait OOParadigm2(val base: AnyParadigm2.WithAST[OOAST]) extends OOP {
 }
 
 object OOParadigm2 {
-  type WithBase[AST <: OOAST, B <: AnyParadigm2.WithAST[AST]] = OOParadigm2 { val base: B }
-  trait WB[AST <: OOAST, B <: AnyParadigm2.WithAST[AST]](override val base: B) extends OOParadigm2 {}
-  def apply[AST <: OOAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[AST, _base.type] = new WB[AST, _base.type](_base) with OOParadigm2(_base) {}
+  type WithBase[AST <: OOAST, B <: AnyParadigm2.WithAST[AST]] = OOParadigm2[AST, B] { }
+  def apply[AST <: OOAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[AST, B] = new OOParadigm2[AST, B](_base) {}
 }

@@ -7,7 +7,7 @@ import org.combinators.ep.language.inbetween.any.AnyParadigm2
 import org.combinators.ep.language.inbetween.oo.OOParadigm2
 import org.combinators.ep.language.inbetween.polymorphism.ParametricPolymorphism2
 
-trait Generics2(val base: AnyParadigm2.WithAST[GenericsAST], override val ooParadigm: OOParadigm2.WithBase[base.ast.type, base.type], override val ppolyParadigm: ParametricPolymorphism2.WithBase[base.ast.type, base.type]) extends GS {
+trait Generics2[AST <: GenericsAST, B, OO, PP](val base: AnyParadigm2.WithAST[AST] & B, override val ooParadigm: OOParadigm2.WithBase[AST, base.type] & OO, override val ppolyParadigm: ParametricPolymorphism2.WithBase[AST, base.type] & PP) extends GS {
   import base.ast.factory
   import base.ast.polymorphismFactory
   import base.ast.ooFactory
@@ -84,9 +84,6 @@ trait Generics2(val base: AnyParadigm2.WithAST[GenericsAST], override val ooPara
 }
 
 object Generics2 {
-  type WithBase[AST <: GenericsAST, B <: AnyParadigm2.WithAST[AST], OO <: OOParadigm2.WithBase[AST, B], PP <: ParametricPolymorphism2.WithBase[AST, B]] = Generics2 {val base: B; val ooParadigm: OO & OOParadigm2.WithBase[AST, base.type]; val ppolyParadigm: PP & ParametricPolymorphism2.WithBase[AST, base.type]}
-
-  trait WB[AST <: GenericsAST, B <: AnyParadigm2.WithAST[AST], OO <: OOParadigm2.WithBase[AST, B], PP <: ParametricPolymorphism2.WithBase[AST, B]](override val base: B, override val ooParadigm: OO & OOParadigm2.WithBase[AST, base.type], override val ppolyParadigm: PP & ParametricPolymorphism2.WithBase[AST, base.type]) extends Generics2 {}
-
-  def apply[AST <: GenericsAST, B <: AnyParadigm2.WithAST[AST], OO <: OOParadigm2.WithBase[AST, B], PP <: ParametricPolymorphism2.WithBase[AST, B]](_base: B, _ooParadigm: OO & OOParadigm2.WithBase[AST, _base.type], _ppolyParadigm: PP & ParametricPolymorphism2.WithBase[AST, _base.type]): WithBase[AST, B, OO, PP] = new WB[AST, _base.type, _ooParadigm.type, _ppolyParadigm.type](_base, _ooParadigm, _ppolyParadigm) with Generics2(_base, _ooParadigm, _ppolyParadigm) {}
+  type WithBase[AST <: GenericsAST, B <: AnyParadigm2.WithAST[AST], OO <: OOParadigm2.WithBase[AST, B], PP <: ParametricPolymorphism2.WithBase[AST, B]] = Generics2[AST, B, OO, PP] {}
+  def apply[AST <: GenericsAST, B <: AnyParadigm2.WithAST[AST], OO <: OOParadigm2.WithBase[AST, B], PP <: ParametricPolymorphism2.WithBase[AST, B]](_base: B, _ooParadigm: OO & OOParadigm2.WithBase[AST, _base.type], _ppolyParadigm: PP & ParametricPolymorphism2.WithBase[AST, _base.type]): WithBase[AST, B, OO, PP] = new Generics2[AST, B, OO, PP](_base, _ooParadigm, _ppolyParadigm) {}
 }

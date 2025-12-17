@@ -214,7 +214,7 @@ sealed class CodeGenerator2[AST <: FullAST](val domainName: String, val ast: AST
 
   val parametricPolymorphism: ParametricPolymorphism2.WithBase[ast.type, paradigm.type] = ParametricPolymorphism2[ast.type, paradigm.type](paradigm)
   val generics: Generics2.WithBase[ast.type, paradigm.type, ooParadigm.type, parametricPolymorphism.type] = Generics2[ast.type, paradigm.type, ooParadigm.type, parametricPolymorphism.type](paradigm, ooParadigm, parametricPolymorphism)
-  val parametricPolymorphismInADTContexts: ParametricPolymorphismInADTContexts2.WithBase[ast.type, paradigm.type, FunctionalParadigm2.WithBase] = ParametricPolymorphismInADTContexts2[ast.type, paradigm.type, FunctionalParadigm2.WithBase](paradigm, functional)
+  val parametricPolymorphismInADTContexts: ParametricPolymorphismInADTContexts2.WithBase[ast.type, paradigm.type, functional.type] = ParametricPolymorphismInADTContexts2[ast.type, paradigm.type, functional.type](paradigm, functional)
 
 
   val booleans: Booleans2.WithBase[ast.type, paradigm.type] = Booleans2[ast.type, paradigm.type](paradigm)

@@ -12,7 +12,7 @@ import org.combinators.cogen.{Command, FileWithPath, TypeRep, Understands}
 import org.combinators.ep.domain.abstractions.DomainTpeRep
 import org.combinators.ep.language.inbetween.ffi.OperatorExpressionOps
 
-trait Trees[Context](val base: AnyParadigm2.WithAST[TreesAST]) extends Trs[Context] {
+trait Trees[AST <: TreesAST, B, Context](val base: AnyParadigm2.WithAST[AST] & B) extends Trs[Context] {
   import base.ast.treesOpsFactory
   import base.ast.any
   val treeLibrary: Seq[FileWithPath]
@@ -48,14 +48,13 @@ trait Trees[Context](val base: AnyParadigm2.WithAST[TreesAST]) extends Trs[Conte
 
 object Trees {
 
-  type WithBase[AST <: TreesAST, B <: AnyParadigm2.WithAST[AST], Context] = Trees[Context] {val base: B}
-  trait WB[AST <: TreesAST, B <: AnyParadigm2.WithAST[AST], Context](override val base: B) extends Trees[Context] {}
+  type WithBase[AST <: TreesAST, B <: AnyParadigm2.WithAST[AST], Context] = Trees[AST, B, Context] {}
 
   def apply[AST <: TreesAST, B <: AnyParadigm2.WithAST[AST], Context](
      _base: B)(
      _treeLibrary: Seq[FileWithPath],
     _addContextTypeLookup: (tpe: TypeRep, lookup: _base.ast.any.Type) => Generator[_base.ast.any.Project, Unit]
-   ): WithBase[AST, _base.type, Context] = new WB[AST, _base.type, Context](_base) with Trees[Context](_base) {
+   ): WithBase[AST, _base.type, Context] = new Trees[AST, _base.type, Context](_base) {
     override val treeLibrary: _treeLibrary.type = _treeLibrary
     override def addContextTypeLookup(tpe: TypeRep, lookup: base.ast.any.Type): Generator[base.ast.any.Project, Unit] = _addContextTypeLookup(tpe, lookup)
   }

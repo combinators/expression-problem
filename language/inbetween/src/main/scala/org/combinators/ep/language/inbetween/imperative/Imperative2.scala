@@ -10,7 +10,7 @@ import org.combinators.ep.language.inbetween.any.AnyParadigm2
 
 // Requires "recursive solution" to the EP, where Ctxt has a producer method and so this needs an EP solution, while
 // talking about something which doesn't need to have one..
-trait Imperative2(val _base: AnyParadigm2.WithAST[ImperativeAST]) {
+trait Imperative2[AST <: ImperativeAST, B](val _base: AnyParadigm2.WithAST[AST] & B) {
   trait ImperativeInMethods extends control.Imperative[_base.ast.any.Method] {
     override val base: _base.type = _base
     import base.ast.any
@@ -89,8 +89,6 @@ trait Imperative2(val _base: AnyParadigm2.WithAST[ImperativeAST]) {
 }
 
 object Imperative2 {
-  type WithBase[AST <: ImperativeAST, B <: AnyParadigm2.WithAST[AST]] = Imperative2 { val _base: B }
-  trait WB[AST <: ImperativeAST, B <: AnyParadigm2.WithAST[AST]](override val _base: B) extends Imperative2 {}
-
-  def apply[AST <: ImperativeAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[AST, _base.type] = new WB[AST, _base.type](_base) with Imperative2(_base) {}
+  type WithBase[AST <: ImperativeAST, B <: AnyParadigm2.WithAST[AST]] = Imperative2[AST, B] {}
+  def apply[AST <: ImperativeAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[AST, B] = new Imperative2[AST, B](_base) {}
 }

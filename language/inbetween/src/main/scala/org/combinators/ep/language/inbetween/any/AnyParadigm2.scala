@@ -7,7 +7,7 @@ import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddCompilationUnit, 
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, FileWithPath, Understands}
 
-trait AnyParadigm2(val ast: AnyAST, val syntax: AbstractSyntax2.AbstractSyntax[ast.type]) extends AP {
+trait AnyParadigm2[A, S](val ast: AnyAST & A, val syntax: AbstractSyntax2.AbstractSyntax[ast.type] & S) extends AP {
   import ast.factory
   import ast.any.*
   val _runGenerator: Generator[ast.any.Project, Unit] => Seq[FileWithPath]
@@ -169,23 +169,15 @@ trait AnyParadigm2(val ast: AnyAST, val syntax: AbstractSyntax2.AbstractSyntax[a
   def runGenerator(generator: Generator[Project, Unit]): Seq[FileWithPath] = _runGenerator(generator)
 }
 object AnyParadigm2 {
-  type WithAST[AST <: AnyAST] = AnyParadigm2 {
-    val ast: AST
-  }
+  type WithAST[AST <: AnyAST] = AnyParadigm2[AST, ? <: AbstractSyntax2.AbstractSyntax[AST]] {}
   
-  type WithSyntax[AST <: AnyAST, Syntax <: AbstractSyntax2.AbstractSyntax[AST]] = AnyParadigm2 {
-    val ast: AST
-    val _runGenerator: Generator[ast.any.Project, Unit] => Seq[FileWithPath]
-    val syntax: Syntax & AbstractSyntax2.AbstractSyntax[ast.type]
-  }
-
-  trait WS[AST <: AnyAST, Syntax <: AbstractSyntax2.AbstractSyntax[AST]](override val ast: AST, override val syntax: Syntax & AbstractSyntax2.AbstractSyntax[ast.type]) extends AnyParadigm2 {}
+  type WithSyntax[AST <: AnyAST, Syntax <: AbstractSyntax2.AbstractSyntax[AST]] = AnyParadigm2[AST, Syntax] {}
 
   def apply[AST <: AnyAST, Syntax <: AbstractSyntax2.AbstractSyntax[AST]]
     (_ast: AST,
      __runGenerator: Generator[_ast.any.Project, Unit] => Seq[FileWithPath],
      _syntax: Syntax & AbstractSyntax2.AbstractSyntax[_ast.type]
-    ): WithSyntax[AST, Syntax] = new WS[_ast.type, _syntax.type](_ast, _syntax) with AnyParadigm2(_ast, _syntax) {
+    ): WithSyntax[_ast.type, _syntax.type] = new AnyParadigm2[_ast.type, _syntax.type](_ast, _syntax) {
       override val _runGenerator: __runGenerator.type = __runGenerator
   }
 }

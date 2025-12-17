@@ -9,7 +9,7 @@ import org.combinators.cogen.paradigm.control.{DeclareFunVariable as DFV, Functi
 import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.{AnyParadigm, AnyParadigm2}
 
-trait Functional2(val _base: AnyParadigm2.WithAST[FunctionalControlAST]) {
+trait Functional2[AST <: FunctionalControlAST, B](val _base: AnyParadigm2.WithAST[AST] & B) {
   trait FunctionalInMethods extends control.Functional[_base.ast.any.Method] {
     override val base: _base.type = _base
 
@@ -103,9 +103,7 @@ trait Functional2(val _base: AnyParadigm2.WithAST[FunctionalControlAST]) {
 }
 
 object Functional2 {
-  type WithBase[AST <: FunctionalControlAST, B <: AnyParadigm2.WithAST[AST]] = Functional2 {val _base: B}
+  type WithBase[AST <: FunctionalControlAST, B <: AnyParadigm2.WithAST[AST]] = Functional2[AST, B] {}
 
-  trait WB[AST <: FunctionalControlAST, B <: AnyParadigm2.WithAST[AST]](override val _base: B) extends Functional2 {}
-
-  def apply[AST <: FunctionalControlAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[AST, _base.type] = new WB[AST, _base.type](_base) with Functional2(_base) {}
+  def apply[AST <: FunctionalControlAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[AST, B] = new Functional2[AST, B](_base) {}
 }

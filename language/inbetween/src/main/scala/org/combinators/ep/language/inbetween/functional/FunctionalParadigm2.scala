@@ -7,7 +7,7 @@ import org.combinators.cogen.{Command, FileWithPath, Understands, paradigm}
 import org.combinators.ep.language.inbetween.any.{AnyParadigm, AnyParadigm2}
 import org.combinators.ep.language.inbetween.any
 
-trait FunctionalParadigm2(val base: AnyParadigm2.WithAST[FunctionalAST]) extends FP {
+trait FunctionalParadigm2[AST <: FunctionalAST, B](val base: AnyParadigm2.WithAST[AST] & B) extends FP {
   import base.ast.any
   import base.ast.factory
   import base.ast.functionalFactory
@@ -129,8 +129,6 @@ trait FunctionalParadigm2(val base: AnyParadigm2.WithAST[FunctionalAST]) extends
 }
 
 object FunctionalParadigm2 {
-  type WithBase[AST <: FunctionalAST, B <: AnyParadigm2.WithAST[AST]] = FunctionalParadigm2 {val base: B}
-  trait WB[AST <: FunctionalAST, B <: AnyParadigm2.WithAST[AST]](override val base: B) extends FunctionalParadigm2 {}
-
-  def apply[AST <: FunctionalAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[AST, _base.type] = new WB[AST, _base.type](_base) with FunctionalParadigm2(_base) {}
+  type WithBase[AST <: FunctionalAST, B <: AnyParadigm2.WithAST[AST]] = FunctionalParadigm2[AST, B] {}
+  def apply[AST <: FunctionalAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[AST, B] = new FunctionalParadigm2[AST, B](_base) {}
 }

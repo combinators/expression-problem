@@ -10,7 +10,7 @@ import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.{AnyParadigm, AnyParadigm2}
 
 
-trait Arithmetic2[T](val _base: AnyParadigm2.WithAST[ArithmeticOpsAST]) {
+trait Arithmetic2[AST <: ArithmeticOpsAST, B, T](val _base: AnyParadigm2.WithAST[AST] & B) {
   trait ArithmeticInMethods extends Arith[_base.ast.any.Method, T] {
     override val base: _base.type = _base
 
@@ -67,9 +67,6 @@ trait Arithmetic2[T](val _base: AnyParadigm2.WithAST[ArithmeticOpsAST]) {
   val arithmeticInMethods: ArithmeticInMethods = new ArithmeticInMethods {}
 }
 object Arithmetic2 {
-  type WithBase[T, AST <: ArithmeticOpsAST, B <: AnyParadigm2.WithAST[AST]] = Arithmetic2[T] {val _base: B}
-
-  trait WB[T, AST <: ArithmeticOpsAST, B <: AnyParadigm2.WithAST[AST]](override val _base: B) extends Arithmetic2[T] {}
-
-  def apply[T, AST <: ArithmeticOpsAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[T, AST, _base.type] = new WB[T, AST, _base.type](_base) with Arithmetic2[T](_base) {}
+  type WithBase[T, AST <: ArithmeticOpsAST, B <: AnyParadigm2.WithAST[AST]] = Arithmetic2[AST, B, T] {}
+  def apply[T, AST <: ArithmeticOpsAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[T, AST, B] = new Arithmetic2[AST, B, T](_base) {}
 }

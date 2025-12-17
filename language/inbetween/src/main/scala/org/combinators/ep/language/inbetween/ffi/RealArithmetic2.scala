@@ -10,7 +10,7 @@ import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.{AnyParadigm, AnyParadigm2}
 
 // cannot find 'realArithmetic'
-trait RealArithmetic2[T](val _base: AnyParadigm2.WithAST[RealArithmeticAST]) {
+trait RealArithmetic2[AST <: RealArithmeticAST, B, T](val _base: AnyParadigm2.WithAST[AST] & B) {
   trait RealArithmeticInMethods extends RealArith[_base.ast.any.Method, T] {
     val base: _base.type = _base
 
@@ -79,9 +79,7 @@ trait RealArithmetic2[T](val _base: AnyParadigm2.WithAST[RealArithmeticAST]) {
   val realArithmeticInMethods: RealArithmeticInMethods = new RealArithmeticInMethods {}
 }
 object RealArithmetic2 {
-  type WithBase[T, AST <: RealArithmeticAST, B <: AnyParadigm2.WithAST[AST]] = RealArithmetic2[T] {val _base: B}
+  type WithBase[T, AST <: RealArithmeticAST, B <: AnyParadigm2.WithAST[AST]] = RealArithmetic2[AST, B, T] {val _base: B}
 
-  trait WB[T, AST <: RealArithmeticAST, B <: AnyParadigm2.WithAST[AST]](override val _base: B) extends RealArithmetic2[T] {}
-
-  def apply[T, AST <: RealArithmeticAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[T, AST, _base.type] = new WB[T, AST, _base.type](_base) with RealArithmetic2[T](_base) {}
+  def apply[T, AST <: RealArithmeticAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[T, AST, B] = new RealArithmetic2[AST, B, T](_base) {}
 }

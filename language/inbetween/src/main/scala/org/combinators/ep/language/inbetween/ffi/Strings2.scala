@@ -10,7 +10,7 @@ import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.{AnyParadigm, AnyParadigm2}
 
 // cannot find 'strings'
-trait Strings2(val _base: AnyParadigm2.WithAST[StringsAST]) {
+trait Strings2[AST <: StringsAST, B](val _base: AnyParadigm2.WithAST[AST] & B) {
   trait StringsInMethods extends Strs[_base.ast.any.Method] {
     override val base: _base.type = _base
 
@@ -45,10 +45,7 @@ trait Strings2(val _base: AnyParadigm2.WithAST[StringsAST]) {
 }
 
 object Strings2 {
-  type WithBase[AST <: StringsAST, B <: AnyParadigm2.WithAST[AST]] = Strings2 {val _base: B}
-
-  trait WB[AST <: StringsAST, B <: AnyParadigm2.WithAST[AST]](override val _base: B) extends Strings2 {}
-
-  def apply[AST <: StringsAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[AST, _base.type] = new WB[AST, _base.type](_base) with Strings2(_base) {}
+  type WithBase[AST <: StringsAST, B <: AnyParadigm2.WithAST[AST]] = Strings2[AST, B] {}
+  def apply[AST <: StringsAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[AST, B] = new Strings2[AST, B](_base) {}
 }
 

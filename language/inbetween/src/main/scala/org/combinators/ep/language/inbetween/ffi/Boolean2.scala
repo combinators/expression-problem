@@ -13,7 +13,7 @@ import org.combinators.ep.language.inbetween.any.{AnyParadigm, AnyParadigm2}
 import org.combinators.cogen.Command
 
 // cannot find 'boolean'
-trait Booleans2(val _base: AnyParadigm2.WithAST[BooleanAST]) {
+trait Booleans2[AST <: BooleanAST, B](val _base: AnyParadigm2.WithAST[AST] & B) {
   trait BooleansInMethods extends Bools[_base.ast.any.Method] {
     override val base: _base.type = _base
 
@@ -65,9 +65,7 @@ trait Booleans2(val _base: AnyParadigm2.WithAST[BooleanAST]) {
 }
 
 object Booleans2 {
-  type WithBase[AST <: BooleanAST, B <: AnyParadigm2.WithAST[AST]] = Booleans2 {val _base: B}
+  type WithBase[AST <: BooleanAST, B <: AnyParadigm2.WithAST[AST]] = Booleans2[AST, B] {}
 
-  trait WB[AST <: BooleanAST, B <: AnyParadigm2.WithAST[AST]](override val _base: B) extends Booleans2 {}
-
-  def apply[AST <: BooleanAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[AST, _base.type] = new WB[AST, _base.type](_base) with Booleans2(_base) {}
+  def apply[AST <: BooleanAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[AST, B] = new Booleans2[AST, B](_base) {}
 }

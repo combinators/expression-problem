@@ -6,7 +6,7 @@ import org.combinators.ep.language.inbetween.any.{AnyParadigm, AnyParadigm2}
 import org.combinators.ep.language.inbetween.{any, functional as fun}
 import org.combinators.ep.language.inbetween.functional.{FunctionalAST, FunctionalParadigm, FunctionalParadigm2}
 
-trait ParametricPolymorphismInADTContexts2(val base: AnyParadigm2.WithAST[ParametricPolymorphismAST & FunctionalAST], val functional: FunctionalParadigm2.WithBase[base.ast.type, base.type]) extends PPADT {
+trait ParametricPolymorphismInADTContexts2[AST <: ParametricPolymorphismAST & FunctionalAST, B, F](val base: AnyParadigm2.WithAST[AST] & B, val functional: FunctionalParadigm2.WithBase[AST, base.type & B] & F) extends PPADT {
   import base.ast.any
   import base.ast.polymorphismFactory
 
@@ -20,9 +20,7 @@ trait ParametricPolymorphismInADTContexts2(val base: AnyParadigm2.WithAST[Parame
 }
 
 object ParametricPolymorphismInADTContexts2 {
-  type WithBase[AST <: ParametricPolymorphismAST & FunctionalAST, B <: AnyParadigm2.WithAST[AST], F[A<: ParametricPolymorphismAST & FunctionalAST, FB <: AnyParadigm2.WithAST[A]] <: FunctionalParadigm2.WithBase[A, FB]] = ParametricPolymorphismInADTContexts2 { val base: B; val functional: F[base.ast.type, base.type] }
+  type WithBase[AST <: ParametricPolymorphismAST & FunctionalAST, B <: AnyParadigm2.WithAST[AST], F <: FunctionalParadigm2.WithBase[AST, B]] = ParametricPolymorphismInADTContexts2[AST, B, F] {}
 
-  trait WB[AST <: ParametricPolymorphismAST & FunctionalAST, B <: AnyParadigm2.WithAST[AST], F[A<: ParametricPolymorphismAST & FunctionalAST, FB <: AnyParadigm2.WithAST[A]] <: FunctionalParadigm2.WithBase[A, FB]](override val base: B, override val functional: F[base.ast.type, base.type]) extends ParametricPolymorphismInADTContexts2 {}
-
-  def apply[AST <: ParametricPolymorphismAST & FunctionalAST, B <: AnyParadigm2.WithAST[AST], F[A<: ParametricPolymorphismAST & FunctionalAST, FB <: AnyParadigm2.WithAST[A]]  <: FunctionalParadigm2.WithBase[A, FB]](_base: B, _functional: F[_base.ast.type, _base.type]): WithBase[AST, B, F] = new WB[AST, _base.type, F](_base, _functional) with ParametricPolymorphismInADTContexts2(_base, _functional) {}
+  def apply[AST <: ParametricPolymorphismAST & FunctionalAST, B <: AnyParadigm2.WithAST[AST], F <: FunctionalParadigm2.WithBase[AST, B]](_base: B, _functional: FunctionalParadigm2.WithBase[AST, _base.type] & F): WithBase[AST, B, F] = new ParametricPolymorphismInADTContexts2[AST, B, F](_base, _functional) {}
 }

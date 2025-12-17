@@ -10,7 +10,7 @@ import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.{AnyParadigm, AnyParadigm2}
 
 // cannot find 'assertions'
-trait Assertions2(val _base: AnyParadigm2.WithAST[AssertionsAST]) {
+trait Assertions2[AST <: AssertionsAST, B](val _base: AnyParadigm2.WithAST[AST] & B) {
   trait AssertionsInMethods extends Asrts[_base.ast.any.Method] {
     val base: _base.type = _base
     import base.ast.assertionOpsFactory
@@ -30,9 +30,7 @@ trait Assertions2(val _base: AnyParadigm2.WithAST[AssertionsAST]) {
 }
 
 object Assertions2 {
-  type WithBase[AST <: AssertionsAST, B <: AnyParadigm2.WithAST[AST]] = Assertions2 {val _base: B}
+  type WithBase[AST <: AssertionsAST, B <: AnyParadigm2.WithAST[AST]] = Assertions2[AST, B] {}
 
-  trait WB[AST <: AssertionsAST, B <: AnyParadigm2.WithAST[AST]](override val _base: B) extends Assertions2 {}
-
-  def apply[AST <: AssertionsAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[AST, _base.type] = new WB[AST, _base.type](_base) with Assertions2(_base) {}
+  def apply[AST <: AssertionsAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[AST, B] = new Assertions2[AST, B](_base) {}
 }

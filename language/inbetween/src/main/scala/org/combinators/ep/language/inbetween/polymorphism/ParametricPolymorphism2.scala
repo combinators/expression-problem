@@ -9,7 +9,7 @@ import org.combinators.ep.language.inbetween.any.AnyParadigm2
 import org.combinators.ep.language.inbetween.any
 
 
-trait ParametricPolymorphism2(val base: AnyParadigm2.WithAST[ParametricPolymorphismAST]) extends PP {
+trait ParametricPolymorphism2[AST <: ParametricPolymorphismAST, B](val base: AnyParadigm2.WithAST[AST] & B) extends PP {
   import base.ast.factory
   import base.ast.polymorphismFactory
   import base.ast.polymorphism.*
@@ -49,7 +49,6 @@ trait ParametricPolymorphism2(val base: AnyParadigm2.WithAST[ParametricPolymorph
 }
 
 object ParametricPolymorphism2 {
-  type WithBase[AST <: ParametricPolymorphismAST, B <: AnyParadigm2.WithAST[AST]] = ParametricPolymorphism2 {val base: B}
-  trait WB[AST <: ParametricPolymorphismAST, B <: AnyParadigm2.WithAST[AST]](override val base: B) extends ParametricPolymorphism2 {}
-  def apply[AST <: ParametricPolymorphismAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[AST, _base.type] = new WB[AST, _base.type](_base) with ParametricPolymorphism2(_base) {}
+  type WithBase[AST <: ParametricPolymorphismAST, B <: AnyParadigm2.WithAST[AST]] = ParametricPolymorphism2[AST, B] {}
+  def apply[AST <: ParametricPolymorphismAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[AST, B] = new ParametricPolymorphism2[AST, B](_base) {}
 }

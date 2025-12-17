@@ -3,7 +3,7 @@ lazy val commonSettings = Seq(
   version := "1.0.0-SNAPSHOT",
   organization := "org.combinators",
 
-  scalaVersion := "3.6.4",
+  scalaVersion := "3.7.4",
   
   resolvers += Resolver.typesafeRepo("releases"),
   resolvers ++= Resolver.sonatypeOssRepos("releases"),

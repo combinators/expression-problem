@@ -642,7 +642,7 @@ object DirectToDiskMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
     // "M9", "J8", "A3", "O1OA", "OD3", "OO3", "V1", "D3", "I2M3I1N1", "O2"
-    val approach = if (args.isEmpty) "functional" else args.head // {coco, O1OA} fails
+    val approach = if (args.isEmpty) "oo" else args.head // {coco, O1OA} fails
     if (approach == "exit") {
       sys.exit(0)
     }

@@ -90,7 +90,10 @@ trait FinalOperatorExpressionsAST extends OperatorExpressionsAST { self: FinalBa
   object finalOperatorExpressionsFactoryTypes {
     trait OperatorExpressionsFactory extends scalaOperatorExpressions.operatorExpressionsOverrides.Factory {
       def binaryExpression(operator: operatorExpressions.Operator, left: any.Expression, right: any.Expression): operatorExpressions.BinaryExpression = {
-        case class BinaryExpression(operator: operatorExpressions.Operator, left: any.Expression, right: any.Expression)
+        case class BinaryExpression(
+          override val operator: operatorExpressions.Operator,
+          override val left: any.Expression,
+          override val right: any.Expression)
         extends scalaOperatorExpressions.operatorExpressionsOverrides.BinaryExpression
         with finalBaseAST.anyOverrides.FinalExpression {
           def getSelfBinaryExpression: scalaOperatorExpressions.operatorExpressionsOverrides.BinaryExpression = this
@@ -98,7 +101,9 @@ trait FinalOperatorExpressionsAST extends OperatorExpressionsAST { self: FinalBa
         BinaryExpression(operator, left, right)
       }
       def unaryExpression(operator: operatorExpressions.Operator, operand: any.Expression): operatorExpressions.UnaryExpression = {
-        case class UnaryExpression(operator: operatorExpressions.Operator, operand: any.Expression)
+        case class UnaryExpression(
+          override val operator: operatorExpressions.Operator,
+          override val operand: any.Expression)
         extends scalaOperatorExpressions.operatorExpressionsOverrides.UnaryExpression
         with finalBaseAST.anyOverrides.FinalExpression {
           def getSelfUnaryExpression: scalaOperatorExpressions.operatorExpressionsOverrides.UnaryExpression = this

@@ -62,7 +62,7 @@ trait AnyAST {
         returnType: Option[Type] = this.returnType,
         parameters: Seq[(Name, Type)] = this.parameters,
         typeLookupMap: TypeRep => Generator[Method, Type] = this.typeLookupMap,
-      ): Method = factory.method(name, imports, statements, returnType, parameters)
+      ): Method = factory.method(name, imports, statements, returnType, parameters, typeLookupMap)
     }
 
     trait Name  {
@@ -145,7 +145,7 @@ trait AnyAST {
       def getSelfProject: finalTypes.Project
 
       def compilationUnits: Set[CompilationUnit] = Set.empty
-      
+
       def customFiles: Seq[FileWithPath] = Seq.empty
 
       def addTypeLookupsForMethods(lookups: TypeRep => Option[Generator[Method, Type]]): Project
@@ -153,7 +153,7 @@ trait AnyAST {
       def copy(
         compilationUnits: Set[CompilationUnit] = this.compilationUnits,
         customFiles: Seq[FileWithPath] = this.customFiles
-      ): Project = factory.project(compilationUnits)
+      ): Project = factory.project(compilationUnits, customFiles)
     }
 
     trait Factory {

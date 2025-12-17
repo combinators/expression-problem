@@ -30,7 +30,7 @@ trait FinalEqualsAST extends EqualsAST {
   object finalEqualsFactoryTypes {
     trait EqualsOpFactory extends scalaEqualsOp.equalsOpOverride.Factory {
       def equals(tpe: any.Type, left: any.Expression, right: any.Expression): equalsOp.Equals = {
-        case class Equals(tpe: any.Type, left: any.Expression, right: any.Expression) extends scalaEqualsOp.equalsOpOverride.Equals
+        case class Equals(override val tpe: any.Type, override val left: any.Expression, override val right: any.Expression) extends scalaEqualsOp.equalsOpOverride.Equals
           with finalBaseAST.anyOverrides.FinalExpression {}
         Equals(tpe, left, right)
       }

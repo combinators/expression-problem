@@ -3,14 +3,13 @@ package org.combinators.ep.builder.inbetween.paradigm.ffi
 /*DI:LI:AI*/
 
 import org.combinators.cogen.Command.Generator
-import org.combinators.ep.language.inbetween.any.{AnyParadigm, AnyParadigm2}
+import org.combinators.ep.language.inbetween.any.AnyParadigm2
 import org.combinators.ep.language.inbetween.{any, polymorphism}
 import org.combinators.cogen.paradigm.Apply
 import org.combinators.ep.generator.paradigm.ffi.{CreateLeaf, CreateNode, Trees as Trs}
 import org.combinators.cogen.paradigm.AnyParadigm.syntax
 import org.combinators.cogen.{Command, FileWithPath, TypeRep, Understands}
 import org.combinators.ep.domain.abstractions.DomainTpeRep
-import org.combinators.ep.language.inbetween.ffi.OperatorExpressionOps
 
 trait Trees[AST <: TreesAST, B, Context](val base: AnyParadigm2.WithAST[AST] & B) extends Trs[Context] {
   import base.ast.treesOpsFactory

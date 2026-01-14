@@ -7,7 +7,7 @@ import org.combinators.cogen.paradigm.ffi.{Assert, Assertions as Asrts}
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, Understands}
 import org.combinators.ep.language.inbetween.any
-import org.combinators.ep.language.inbetween.any.{AnyParadigm, AnyParadigm2}
+import org.combinators.ep.language.inbetween.any.AnyParadigm2
 
 // cannot find 'assertions'
 trait Assertions2[AST <: AssertionsAST, B](val _base: AnyParadigm2.WithAST[AST] & B) {

@@ -6,7 +6,6 @@ import cats.Apply as _
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.paradigm.{Apply, ToTargetLanguageType}
 import org.combinators.cogen.{Command, FileWithPath, TypeRep, Understands}
-import org.combinators.ep.domain.abstractions.DomainTpeRep
 import org.combinators.ep.language.inbetween.any.*
 import org.combinators.ep.language.inbetween.any.AnyParadigm2.WithSyntax
 import org.combinators.ep.language.inbetween.ffi.*

@@ -7,7 +7,7 @@ import org.combinators.cogen.paradigm.ffi.{Add, Div, LE, LT, Mod, Mult, Sub, Ari
 import org.combinators.cogen.{Command, Understands}
 import org.combinators.cogen.Command.Generator
 import org.combinators.ep.language.inbetween.any
-import org.combinators.ep.language.inbetween.any.{AnyParadigm, AnyParadigm2}
+import org.combinators.ep.language.inbetween.any.AnyParadigm2
 
 
 trait Arithmetic2[AST <: ArithmeticAST, B, T](val _base: AnyParadigm2.WithAST[AST] & B) {

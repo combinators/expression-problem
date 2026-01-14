@@ -1,21 +1,18 @@
 package org.combinators.ep.language.inbetween.functional.control
 
-import org.combinators.cogen.paradigm.{Apply, IfThenElse, Reify, control}
-import org.combinators.cogen.paradigm.control.{ConstructorPattern, DeclareFunVariable, Lambda, PatternMatch, PatternVariable}
 import org.combinators.cogen.Command.Generator
-import org.combinators.cogen.{Command, Understands, paradigm}
-import org.combinators.cogen.paradigm.control
+import org.combinators.cogen.paradigm.control.*
 import org.combinators.cogen.paradigm.control.{DeclareFunVariable as DFV, Functional as Fun}
+import org.combinators.cogen.paradigm.{Apply, IfThenElse, Reify, control}
+import org.combinators.cogen.{Command, Understands, paradigm}
 import org.combinators.ep.language.inbetween.any
-import org.combinators.ep.language.inbetween.any.{AnyParadigm, AnyParadigm2}
+import org.combinators.ep.language.inbetween.any.AnyParadigm2
 
 trait Functional2[AST <: FunctionalControlAST, B](val _base: AnyParadigm2.WithAST[AST] & B) {
   trait FunctionalInMethods extends control.Functional[_base.ast.any.Method] {
     override val base: _base.type = _base
 
-    import base.ast.any
-    import base.ast.factory
-    import base.ast.functionalControlFactory
+    import base.ast.{any, factory, functionalControlFactory}
 
     type Ctxt = any.Method
     override type PatternContext = base.ast.funcontrol.PatternContext

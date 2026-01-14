@@ -7,7 +7,7 @@ import org.combinators.cogen.paradigm.ffi.{Abs, Add, Cos, Div, EulersNumber, Flo
 import org.combinators.cogen.{Command, Understands}
 import org.combinators.cogen.Command.Generator
 import org.combinators.ep.language.inbetween.any
-import org.combinators.ep.language.inbetween.any.{AnyParadigm, AnyParadigm2}
+import org.combinators.ep.language.inbetween.any.AnyParadigm2
 
 trait RealArithmetic2[AST <: RealArithmeticAST, B, T](val _base: AnyParadigm2.WithAST[AST] & B) {
   trait RealArithmeticInMethods extends RealArith[_base.ast.any.Method, T] {

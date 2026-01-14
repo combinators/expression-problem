@@ -3,8 +3,6 @@ package org.combinators.ep.language.scala.ast
 import com.github.javaparser.{JavaParser, StaticJavaParser}
 import org.combinators.cogen.NameProvider
 import org.combinators.ep.language.inbetween.any
-import org.combinators.ep.language.scala.{Factory, FinalTypes}
-
 import scala.util.Try
 
 trait NameProviderAST { self: BaseAST =>

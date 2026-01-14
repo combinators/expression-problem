@@ -9,7 +9,7 @@ import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.Understands
 import org.combinators.cogen.paradigm.ffi.*
 import org.combinators.ep.language.inbetween.any
-import org.combinators.ep.language.inbetween.any.{AnyParadigm, AnyParadigm2}
+import org.combinators.ep.language.inbetween.any.AnyParadigm2
 import org.combinators.cogen.Command
 
 // cannot find 'boolean'

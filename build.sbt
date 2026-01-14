@@ -103,10 +103,7 @@ lazy val languageInbetween =
 
 lazy val languageNewScala =
   standardLanguageProject("newScala")
-    .dependsOn(core, cogen, approach, domainMath, domainShape, languageInbetween)
-    .settings(
-      Compile/run/mainClass := Some("org.combinators.ep.language.scala.codegen.GenerateAll")
-    )
+    .dependsOn(languageInbetween)
 
 lazy val builder =
   (Project(id = s"builder", base = file(s"builder")))

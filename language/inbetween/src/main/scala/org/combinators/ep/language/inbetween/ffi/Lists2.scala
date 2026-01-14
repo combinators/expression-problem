@@ -9,7 +9,8 @@ import org.combinators.cogen.paradigm.ffi.{Append, Cons, Create, Head, Tail, Lis
 import org.combinators.cogen.{Command, Understands}
 import org.combinators.cogen.Command.Generator
 import org.combinators.ep.language.inbetween.{any, polymorphism}
-import org.combinators.ep.language.inbetween.any.{AnyParadigm, AnyParadigm2}
+import org.combinators.ep.language.inbetween.any.AnyParadigm2
+
 trait Lists2[AST <: ListsAST, B](val _base: AnyParadigm2.WithAST[AST] & B) {
   trait ListsInMethods extends Lsts[_base.ast.any.Method] {
     val base: _base.type = _base

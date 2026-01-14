@@ -1,4 +1,4 @@
-package org.combinators.ep.builder.scala.fibonacci
+package org.combinators.fibonacci
 
 /**
  * sbt "helloWorld/runMain org.combinators.fibonacci.FibonacciWithLucasScalaDirectToDiskMain"
@@ -56,11 +56,7 @@ import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
 import org.combinators.cogen.FileWithPathPersistable.*
 import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
-import org.combinators.ep.builder.inbetween.paradigm.ffi.TreesAST
-import org.combinators.ep.language.scala.ast.FinalBaseAST
 import org.combinators.ep.language.scala.ast.ffi.*
-import org.combinators.ep.builder.inbetween.paradigm.ffi.TreesAST
-import org.combinators.ep.builder.scala.paradigm.ffi.*
 import org.combinators.ep.language.scala.ast.{FinalBaseAST, FinalNameProviderAST}
 import org.combinators.ep.language.scala.codegen.{CodeGenerator, FullAST}
 import org.combinators.fibonacci.FibonacciWithLucasProvider
@@ -71,7 +67,7 @@ import java.nio.file.{Path, Paths}
  * Takes functional specification of Fibonacci with Lucas and generates Scala code.
  */
 class FibonacciMainWithLucasScala {
-  val ast: FullAST & TreesAST = new FinalBaseAST
+  val ast: FullAST = new FinalBaseAST
     with FinalNameProviderAST
     with FinalArithmeticAST
     with FinalAssertionsAST
@@ -80,9 +76,8 @@ class FibonacciMainWithLucasScala {
     with FinalListsAST
     with FinalOperatorExpressionsAST
     with FinalRealArithmeticOpsAST
-    with FinalStringAST
-    with FinalTreesAST {
-    val reificationExtensions = List(scalaTreesOps.treeReificationExtensions)
+    with FinalStringAST {
+    val reificationExtensions = List.empty
   }
 
   val emptyset: Set[Seq[FibonacciMainWithLucasScala.this.ast.any.Name]] = Set.empty

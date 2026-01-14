@@ -1,44 +1,36 @@
-package org.combinators.ep.builder.scala.fibonacci
+package org.combinators.fibonacci
 
 /**
- * sbt "helloWorld/runMain org.combinators.fibonacci.FibonacciRecursiveVariableScalaDirectToDiskMain"
- *
- * will generate the directory target/fib in which you can find a recursive functional implementation:
 
-        package fibonacci
-        def fib(n: Int): Int = {
-          return {
-            {
-              def inner_loop: Function[Int, Int] = (n: Int) => {
-                if ((n <= 1)) {
-                  n
-                } else {
-                  (inner_loop((n - 1)) + inner_loop((n - 2)))
-                }
-              }
-              inner_loop(n)
-            }
-          }
+    package fibonacci
+    def fib(n: Int): Int = {
+      return {
+        if ((n <= 1)) {
+          n
+        } else {
+          (fibonacci.fib((n - 1)) + fibonacci.fib((n - 2)))
         }
+      }
+    }
+
  */
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
 import org.combinators.cogen.FileWithPathPersistable.*
 import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
-import org.combinators.fibonacci.FibonacciRecursiveVariableProvider
 import org.combinators.ep.language.scala.ast.ffi.*
-import org.combinators.ep.builder.inbetween.paradigm.ffi.TreesAST
-import org.combinators.ep.builder.scala.paradigm.ffi.*
 import org.combinators.ep.language.scala.ast.{FinalBaseAST, FinalNameProviderAST}
 import org.combinators.ep.language.scala.codegen.{CodeGenerator, FullAST}
+import org.combinators.fibonacci.FibonacciIndependentProvider
+
 import java.nio.file.{Path, Paths}
 
 /**
  * Takes paradigm-independent specification for Fibonacci and generates Scala code
  */
-class FibonacciRecursiveVariableMainScala {
-  val ast: FullAST & TreesAST = new FinalBaseAST
+class FibonacciMainScala {
+  val ast: FullAST = new FinalBaseAST
     with FinalNameProviderAST
     with FinalArithmeticAST
     with FinalAssertionsAST
@@ -47,21 +39,15 @@ class FibonacciRecursiveVariableMainScala {
     with FinalListsAST
     with FinalOperatorExpressionsAST
     with FinalRealArithmeticOpsAST
-    with FinalStringAST
-    with FinalTreesAST {
-    val reificationExtensions = List(scalaTreesOps.treeReificationExtensions)
+    with FinalStringAST {
+    val reificationExtensions = List.empty
   }
 
-  val emptyset: Set[Seq[FibonacciRecursiveVariableMainScala.this.ast.any.Name]] = Set.empty
+  val emptyset: Set[Seq[FibonacciMainScala.this.ast.any.Name]] = Set.empty
   val generator: CodeGenerator[ast.type] = CodeGenerator("fibonacci", ast, emptyset)
 
   // functional
-  val fibonacciApproach = FibonacciRecursiveVariableProvider[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.functional, generator.functionalControl.functionalControlInMethods, generator.ints.arithmeticInMethods, generator.assertions.assertionsInMethods, generator.equality.equalsInMethods)
-
-  //[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.functional, generator.functionalControl, generator.ints, generator.assertionsInMethod, generator.equality)
-
-  // imperative
-  // val fibonacciApproach = FibonacciIndependentProvider.imperative[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.ooParadigm, generator.imperative, generator.ints, generator.assertionsInMethod, generator.equality)
+  val fibonacciApproach = FibonacciIndependentProvider.functional[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.functional, generator.functionalControl.functionalControlInMethods, generator.ints.arithmeticInMethods, generator.assertions.assertionsInMethods, generator.equality.equalsInMethods)
 
   val persistable: Aux[FileWithPath] = FileWithPathPersistable[FileWithPath]
 
@@ -102,14 +88,14 @@ class FibonacciRecursiveVariableMainScala {
   }
 }
 
-object FibonacciRecursiveVariableMainScalaDirectToDiskMain extends IOApp {
+object FibonacciMainScalaDirectToDiskMain extends IOApp {
   private val targetDirectory = Paths.get("target", "fib", "scala")
 
   def run(args: List[String]): IO[ExitCode] = {
 
     for {
       _ <- IO { print("Initializing Generator...") }
-      main <- IO { new FibonacciRecursiveVariableMainScala() }
+      main <- IO { new FibonacciMainScala() }
       _ <- IO { println("[OK]") }
       result <- main.runDirectToDisc(targetDirectory)
     } yield result

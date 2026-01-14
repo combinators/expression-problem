@@ -1350,6 +1350,27 @@ trait FinalBaseAST extends BaseAST {
       type ClassReferenceType = ooOverrides.ClassReferenceType
     }
 
+    trait FunctionalFinalTypes extends scalaBase.functionalOverrides.FinalTypes {
+      import scalaBase.functionalOverrides
+
+      type AlgebraicDataType = functionalOverrides.AlgebraicDataType
+      type TypeConstructor = functionalOverrides.TypeConstructor
+      type TypeInstantiationExpression = functionalOverrides.TypeInstantiationExpression
+      type ADTReferenceType = functionalOverrides.ADTReferenceType
+    }
+
+    trait FunctionalControlFinalTypes extends scalaBase.functionalControlOverrides.FinalTypes {
+      import scalaBase.functionalControlOverrides
+
+      type Lambda = functionalControlOverrides.Lambda
+      type DeclareFunVariable = functionalControlOverrides.DeclareFunVariable
+      type FunIfThenElse = functionalControlOverrides.IfThenElse
+      type PatternMatch = functionalControlOverrides.PatternMatch
+      type PatternContext = functionalControlOverrides.PatternContext
+      type PatternVariable = functionalControlOverrides.PatternVariable
+      type ConstructorPattern = functionalControlOverrides.ConstructorPattern
+    }
+
     trait PolymorphismFinalTypes extends scalaBase.polymorphismOverrides.FinalTypes {
       import scalaBase.polymorphismOverrides
 
@@ -1358,15 +1379,31 @@ trait FinalBaseAST extends BaseAST {
       type TypeArgument = polymorphismOverrides.TypeArgument
       type TypeApplication = polymorphismOverrides.TypeApplication
     }
+
+    trait ImperativeFinalTypes extends scalaBase.imperativeOverrides.FinalTypes {
+      import scalaBase.imperativeOverrides
+
+      type DeclareVariable = imperativeOverrides.DeclareVariable
+      type AssignVariable = imperativeOverrides.AssignVariable
+      type IfThenElse = imperativeOverrides.IfThenElse
+      type While = imperativeOverrides.While
+      type VariableReferenceExpression = imperativeOverrides.VariableReferenceExpression
+    }
+
+    trait ScalaBaseFinalTypes extends scalaBase.FinalTypes {
+      type ReifiedScalaValue = scalaBase.ReifiedScalaValue
+      type BlockExpression = scalaBase.BlockExpression
+      type MethodReferenceExpression = scalaBase.MethodReferenceExpression
+    }
   }
 
   override val finalTypes: finalBaseFinalTypes.FinalTypes = new finalBaseFinalTypes.FinalTypes {}
   override val ooFinalTypes: finalBaseFinalTypes.OOFinalTypes = new finalBaseFinalTypes.OOFinalTypes {}
-  override val functionalFinalTypes: scalaBase.functionalOverrides.FinalTypes = new scalaBase.functionalOverrides.FinalTypes {}
-  override val functionalControlFinalTypes: scalaBase.functionalControlOverrides.FinalTypes = new scalaBase.functionalControlOverrides.FinalTypes {}
+  override val functionalFinalTypes: finalBaseFinalTypes.FunctionalFinalTypes = new finalBaseFinalTypes.FunctionalFinalTypes {}
+  override val functionalControlFinalTypes: finalBaseFinalTypes.FunctionalControlFinalTypes = new finalBaseFinalTypes.FunctionalControlFinalTypes {}
   override val polymorphismFinalTypes: finalBaseFinalTypes.PolymorphismFinalTypes = new finalBaseFinalTypes.PolymorphismFinalTypes {}
-  override val imperativeFinalTypes: scalaBase.imperativeOverrides.FinalTypes = new scalaBase.imperativeOverrides.FinalTypes {}
-  override val scalaBaseFinalTypes: scalaBase.FinalTypes = new scalaBase.FinalTypes {}
+  override val imperativeFinalTypes: finalBaseFinalTypes.ImperativeFinalTypes = new finalBaseFinalTypes.ImperativeFinalTypes {}
+  override val scalaBaseFinalTypes: finalBaseFinalTypes.ScalaBaseFinalTypes = new finalBaseFinalTypes.ScalaBaseFinalTypes {}
 
   object FinalBaseFactoryTypes {
     trait Factory extends scalaBase.anyOverrides.Factory {

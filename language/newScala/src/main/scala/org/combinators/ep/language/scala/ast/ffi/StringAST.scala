@@ -1,10 +1,10 @@
 package org.combinators.ep.language.scala.ast.ffi
 
-import org.combinators.ep.language.inbetween.ffi.StringsAST as InbetweenStringsAST
+import org.combinators.ep.language.inbetween.ffi.StringAST as InbetweenStringsAST
 import org.combinators.ep.language.scala.ast.BaseAST
 import org.combinators.ep.language.scala.ast.ffi.OperatorExpressionsAST
 
-trait StringsAST extends InbetweenStringsAST { self: OperatorExpressionsAST & BaseAST =>
+trait StringAST extends InbetweenStringsAST { self: OperatorExpressionsAST & BaseAST =>
   object scalaStringOps {
     object stringOpsOverride {
 
@@ -33,7 +33,7 @@ trait StringsAST extends InbetweenStringsAST { self: OperatorExpressionsAST & Ba
   override val stringOpsFactory: scalaStringOps.stringOpsOverride.Factory
 }
 
-trait FinalStringsAST extends StringsAST { self: FinalOperatorExpressionsAST & BaseAST =>
+trait FinalStringAST extends StringAST { self: FinalOperatorExpressionsAST & BaseAST =>
   object finalStringsFactoryTypes {
     trait FinalStringsFactory extends scalaStringOps.stringOpsOverride.Factory {
       def toStringOp(): stringOps.ToStringOp = {

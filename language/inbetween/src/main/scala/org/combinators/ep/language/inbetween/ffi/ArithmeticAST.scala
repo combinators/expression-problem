@@ -1,6 +1,6 @@
 package org.combinators.ep.language.inbetween.ffi
 
-trait ArithmeticOpsAST extends OperatorExpressionOpsAST {
+trait ArithmeticAST extends OperatorExpressionOpsAST {
   object arithmeticOps {
     trait AddOp extends operatorExpressions.Operator
     trait SubOp extends operatorExpressions.Operator

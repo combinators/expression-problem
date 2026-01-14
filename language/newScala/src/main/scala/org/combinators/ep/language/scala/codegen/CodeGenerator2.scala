@@ -30,7 +30,7 @@ type FullAST = BaseAST
   & ListsAST
   & OperatorExpressionOpsAST
   & RealArithmeticAST
-  & StringsAST
+  & StringAST
 /**
  * Scala-specific.
  *
@@ -217,7 +217,7 @@ sealed class CodeGenerator2[AST <: FullAST](val domainName: String, val ast: AST
   val parametricPolymorphismInADTContexts: ParametricPolymorphismInADTContexts2.WithBase[ast.type, paradigm.type, functional.type] = ParametricPolymorphismInADTContexts2[ast.type, paradigm.type, functional.type](paradigm, functional)
 
 
-  val booleans: Booleans2.WithBase[ast.type, paradigm.type] = Booleans2[ast.type, paradigm.type](paradigm)
+  val booleans: Boolean2.WithBase[ast.type, paradigm.type] = Boolean2[ast.type, paradigm.type](paradigm)
 
   val doubles: Arithmetic2.WithBase[Double, ast.type, paradigm.type] = Arithmetic2[Double, ast.type, paradigm.type](paradigm)
 
@@ -225,7 +225,7 @@ sealed class CodeGenerator2[AST <: FullAST](val domainName: String, val ast: AST
 
   val ints: Arithmetic2.WithBase[Int, ast.type, paradigm.type] = Arithmetic2[Int, ast.type, paradigm.type](paradigm)
 
-  val strings: Strings2.WithBase[ast.type, paradigm.type] = Strings2[ast.type, paradigm.type](paradigm)
+  val strings: String2.WithBase[ast.type, paradigm.type] = String2[ast.type, paradigm.type](paradigm)
 
   val equality: Equals2.WithBase[ast.type, paradigm.type] = Equals2[ast.type, paradigm.type](paradigm)
 

@@ -9,7 +9,6 @@ import org.combinators.cogen.Command.Generator
 import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.{AnyParadigm, AnyParadigm2}
 
-// cannot find 'realArithmetic'
 trait RealArithmetic2[AST <: RealArithmeticAST, B, T](val _base: AnyParadigm2.WithAST[AST] & B) {
   trait RealArithmeticInMethods extends RealArith[_base.ast.any.Method, T] {
     val base: _base.type = _base

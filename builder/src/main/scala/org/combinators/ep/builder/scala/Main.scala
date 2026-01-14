@@ -83,7 +83,11 @@ class Main(choice:String, select:String) {
 
   val treesInMethod =
     Trees[ast.type, generator.paradigm.type, ast.any.Method](generator.paradigm)(ast.scalaTreesOps.treeLibrary, (tpe, lookup) => {
-      generator.paradigm.projectCapabilities.addTypeLookupForMethods(tpe, Command.lift(lookup))
+      for {
+        _ <- generator.paradigm.projectCapabilities.addTypeLookupForMethods(tpe, Command.lift(lookup))
+        _ <- generator.ooParadigm.projectCapabilities.addTypeLookupForClasses(tpe, Command.lift(lookup))
+        _ <- generator.ooParadigm.projectCapabilities.addTypeLookupForConstructors(tpe, Command.lift(lookup))
+      } yield ()
     })
   val functionalApproach: WithParadigm[generator.paradigm.type] = org.combinators.ep.approach.functional.Traditional[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.functional, generator.functionalControl.functionalControlInMethods)
 
@@ -712,11 +716,11 @@ object DirectToDiskMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
     // "M9", "J8", "A3", "O1OA", "OD3", "OO3", "V1", "D3", "I2M3I1N1", "O2"
-    val approach = if (args.isEmpty) "algebra" else args.head // {coco, O1OA} fails
+    val approach = if (args.isEmpty) "visitor" else args.head // {coco, O1OA} fails
     if (approach == "exit") {
       sys.exit(0)
     }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "M6" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "M9" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 

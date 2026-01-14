@@ -62,7 +62,7 @@ import org.combinators.ep.language.scala.ast.ffi.*
 import org.combinators.ep.builder.inbetween.paradigm.ffi.TreesAST
 import org.combinators.ep.builder.scala.paradigm.ffi.*
 import org.combinators.ep.language.scala.ast.{FinalBaseAST, FinalNameProviderAST}
-import org.combinators.ep.language.scala.codegen.{CodeGenerator2, FullAST}
+import org.combinators.ep.language.scala.codegen.{CodeGenerator, FullAST}
 import org.combinators.fibonacci.FibonacciWithLucasProvider
 
 import java.nio.file.{Path, Paths}
@@ -86,7 +86,7 @@ class FibonacciMainWithLucasScala {
   }
 
   val emptyset: Set[Seq[FibonacciMainWithLucasScala.this.ast.any.Name]] = Set.empty
-  val generator: CodeGenerator2[ast.type] = CodeGenerator2("fibonacci", ast, emptyset)
+  val generator: CodeGenerator[ast.type] = CodeGenerator("fibonacci", ast, emptyset)
 
   val fibonacciApproach = FibonacciWithLucasProvider[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.functional, generator.functionalControl.functionalControlInMethods, generator.ints.arithmeticInMethods, generator.assertions.assertionsInMethods, generator.equality.equalsInMethods)
 

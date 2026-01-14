@@ -6,9 +6,9 @@ import org.combinators.cogen.paradigm.control.{DeclareFunVariable as DFV, Functi
 import org.combinators.cogen.paradigm.{Apply, IfThenElse, Reify, control}
 import org.combinators.cogen.{Command, Understands, paradigm}
 import org.combinators.ep.language.inbetween.any
-import org.combinators.ep.language.inbetween.any.AnyParadigm2
+import org.combinators.ep.language.inbetween.any.AnyParadigm
 
-trait Functional2[AST <: FunctionalControlAST, B](val _base: AnyParadigm2.WithAST[AST] & B) {
+trait Functional[AST <: FunctionalControlAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
   trait FunctionalInMethods extends control.Functional[_base.ast.any.Method] {
     override val base: _base.type = _base
 
@@ -99,8 +99,8 @@ trait Functional2[AST <: FunctionalControlAST, B](val _base: AnyParadigm2.WithAS
   val functionalControlInMethods: FunctionalInMethods = new FunctionalInMethods {}
 }
 
-object Functional2 {
-  type WithBase[AST <: FunctionalControlAST, B <: AnyParadigm2.WithAST[AST]] = Functional2[AST, B] {}
+object Functional {
+  type WithBase[AST <: FunctionalControlAST, B <: AnyParadigm.WithAST[AST]] = Functional[AST, B] {}
 
-  def apply[AST <: FunctionalControlAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[AST, B] = new Functional2[AST, B](_base) {}
+  def apply[AST <: FunctionalControlAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[AST, B] = new Functional[AST, B](_base) {}
 }

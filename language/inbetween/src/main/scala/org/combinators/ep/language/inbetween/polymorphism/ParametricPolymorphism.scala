@@ -5,11 +5,11 @@ package org.combinators.ep.language.inbetween.polymorphism
 
 import org.combinators.cogen.paradigm.{AddTypeParameter, Apply, GetTypeArguments, ParametricPolymorphism as PP}
 import org.combinators.cogen.{Command, Understands}
-import org.combinators.ep.language.inbetween.any.AnyParadigm2
+import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.inbetween.any
 
 
-trait ParametricPolymorphism2[AST <: ParametricPolymorphismAST, B](val base: AnyParadigm2.WithAST[AST] & B) extends PP {
+trait ParametricPolymorphism[AST <: ParametricPolymorphismAST, B](val base: AnyParadigm.WithAST[AST] & B) extends PP {
   import base.ast.factory
   import base.ast.polymorphismFactory
   import base.ast.polymorphism.*
@@ -48,7 +48,7 @@ trait ParametricPolymorphism2[AST <: ParametricPolymorphismAST, B](val base: Any
   }
 }
 
-object ParametricPolymorphism2 {
-  type WithBase[AST <: ParametricPolymorphismAST, B <: AnyParadigm2.WithAST[AST]] = ParametricPolymorphism2[AST, B] {}
-  def apply[AST <: ParametricPolymorphismAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[AST, B] = new ParametricPolymorphism2[AST, B](_base) {}
+object ParametricPolymorphism {
+  type WithBase[AST <: ParametricPolymorphismAST, B <: AnyParadigm.WithAST[AST]] = ParametricPolymorphism[AST, B] {}
+  def apply[AST <: ParametricPolymorphismAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[AST, B] = new ParametricPolymorphism[AST, B](_base) {}
 }

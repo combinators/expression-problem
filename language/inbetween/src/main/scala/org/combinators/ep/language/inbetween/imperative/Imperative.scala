@@ -1,16 +1,16 @@
 package org.combinators.ep.language.inbetween.imperative   /*DI:LI:AI*/
 
-import org.combinators.cogen.paradigm.{AnyParadigm, IfThenElse, control}
+import org.combinators.cogen.paradigm.{IfThenElse, control}
 import org.combinators.cogen.paradigm.control.{AssignVariable, DeclareVariable, LiftExpression, Return, While}
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, FileWithPath, Understands, paradigm}
 import org.combinators.cogen.paradigm.control.{Return, DeclareVariable as DV, Imperative as Imp}
-import org.combinators.ep.language.inbetween.any.AnyParadigm2
+import org.combinators.ep.language.inbetween.any.AnyParadigm
 
 
 // Requires "recursive solution" to the EP, where Ctxt has a producer method and so this needs an EP solution, while
 // talking about something which doesn't need to have one..
-trait Imperative2[AST <: ImperativeAST, B](val _base: AnyParadigm2.WithAST[AST] & B) {
+trait Imperative[AST <: ImperativeAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
   trait ImperativeInMethods extends control.Imperative[_base.ast.any.Method] {
     override val base: _base.type = _base
     import base.ast.any
@@ -88,7 +88,7 @@ trait Imperative2[AST <: ImperativeAST, B](val _base: AnyParadigm2.WithAST[AST] 
   val imperativeInMethods: ImperativeInMethods = new ImperativeInMethods {}
 }
 
-object Imperative2 {
-  type WithBase[AST <: ImperativeAST, B <: AnyParadigm2.WithAST[AST]] = Imperative2[AST, B] {}
-  def apply[AST <: ImperativeAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[AST, B] = new Imperative2[AST, B](_base) {}
+object Imperative {
+  type WithBase[AST <: ImperativeAST, B <: AnyParadigm.WithAST[AST]] = Imperative[AST, B] {}
+  def apply[AST <: ImperativeAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[AST, B] = new Imperative[AST, B](_base) {}
 }

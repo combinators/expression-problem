@@ -7,10 +7,10 @@ import org.combinators.cogen.paradigm.ffi.{Add, Div, LE, LT, Mod, Mult, Sub, Ari
 import org.combinators.cogen.{Command, Understands}
 import org.combinators.cogen.Command.Generator
 import org.combinators.ep.language.inbetween.any
-import org.combinators.ep.language.inbetween.any.AnyParadigm2
+import org.combinators.ep.language.inbetween.any.AnyParadigm
 
 
-trait Arithmetic2[AST <: ArithmeticAST, B, T](val _base: AnyParadigm2.WithAST[AST] & B) {
+trait Arithmetic[AST <: ArithmeticAST, B, T](val _base: AnyParadigm.WithAST[AST] & B) {
   trait ArithmeticInMethods extends Arith[_base.ast.any.Method, T] {
     override val base: _base.type = _base
 
@@ -66,7 +66,7 @@ trait Arithmetic2[AST <: ArithmeticAST, B, T](val _base: AnyParadigm2.WithAST[AS
 
   val arithmeticInMethods: ArithmeticInMethods = new ArithmeticInMethods {}
 }
-object Arithmetic2 {
-  type WithBase[T, AST <: ArithmeticAST, B <: AnyParadigm2.WithAST[AST]] = Arithmetic2[AST, B, T] {}
-  def apply[T, AST <: ArithmeticAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[T, AST, B] = new Arithmetic2[AST, B, T](_base) {}
+object Arithmetic {
+  type WithBase[T, AST <: ArithmeticAST, B <: AnyParadigm.WithAST[AST]] = Arithmetic[AST, B, T] {}
+  def apply[T, AST <: ArithmeticAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[T, AST, B] = new Arithmetic[AST, B, T](_base) {}
 }

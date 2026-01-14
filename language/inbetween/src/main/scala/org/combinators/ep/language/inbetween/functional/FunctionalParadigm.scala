@@ -4,10 +4,10 @@ import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.{AddImport, AddMethod, AddType, AddTypeConstructor, AddTypeLookup, FindMethod, FindType, InstantiateType, ResolveImport, ToTargetLanguageType, Functional as FP}
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, FileWithPath, Understands, paradigm}
-import org.combinators.ep.language.inbetween.any.AnyParadigm2
+import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.inbetween.any
 
-trait FunctionalParadigm2[AST <: FunctionalAST, B](val base: AnyParadigm2.WithAST[AST] & B) extends FP {
+trait FunctionalParadigm[AST <: FunctionalAST, B](val base: AnyParadigm.WithAST[AST] & B) extends FP {
   import base.ast.any
   import base.ast.factory
   import base.ast.functionalFactory
@@ -128,7 +128,7 @@ trait FunctionalParadigm2[AST <: FunctionalAST, B](val base: AnyParadigm2.WithAS
   }
 }
 
-object FunctionalParadigm2 {
-  type WithBase[AST <: FunctionalAST, B <: AnyParadigm2.WithAST[AST]] = FunctionalParadigm2[AST, B] {}
-  def apply[AST <: FunctionalAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[AST, B] = new FunctionalParadigm2[AST, B](_base) {}
+object FunctionalParadigm {
+  type WithBase[AST <: FunctionalAST, B <: AnyParadigm.WithAST[AST]] = FunctionalParadigm[AST, B] {}
+  def apply[AST <: FunctionalAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[AST, B] = new FunctionalParadigm[AST, B](_base) {}
 }

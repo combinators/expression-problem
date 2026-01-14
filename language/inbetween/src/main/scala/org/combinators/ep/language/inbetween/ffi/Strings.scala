@@ -7,10 +7,10 @@ import org.combinators.cogen.paradigm.ffi.{GetStringLength, StringAppend, ToStri
 import org.combinators.cogen.{Command, Understands}
 import org.combinators.cogen.Command.Generator
 import org.combinators.ep.language.inbetween.any
-import org.combinators.ep.language.inbetween.any.AnyParadigm2
+import org.combinators.ep.language.inbetween.any.AnyParadigm
 
 // cannot find 'strings'
-trait String2[AST <: StringAST, B](val _base: AnyParadigm2.WithAST[AST] & B) {
+trait Strings[AST <: StringAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
   trait StringsInMethods extends Strs[_base.ast.any.Method] {
     override val base: _base.type = _base
 
@@ -44,8 +44,8 @@ trait String2[AST <: StringAST, B](val _base: AnyParadigm2.WithAST[AST] & B) {
   val stringsInMethods: StringsInMethods = new StringsInMethods {}
 }
 
-object String2 {
-  type WithBase[AST <: StringAST, B <: AnyParadigm2.WithAST[AST]] = String2[AST, B] {}
-  def apply[AST <: StringAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[AST, B] = new String2[AST, B](_base) {}
+object Strings {
+  type WithBase[AST <: StringAST, B <: AnyParadigm.WithAST[AST]] = Strings[AST, B] {}
+  def apply[AST <: StringAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[AST, B] = new Strings[AST, B](_base) {}
 }
 

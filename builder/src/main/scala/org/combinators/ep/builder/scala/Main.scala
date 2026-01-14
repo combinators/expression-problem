@@ -54,7 +54,7 @@ import org.combinators.ep.domain.math.systemO.{O1, O1OA, O2, OA, OD1, OD2, OD3, 
 import org.combinators.ep.domain.math.systemX.{X1, X2, X2X3, X3, X4}
 import org.combinators.ep.generator.ApproachImplementationProvider.WithParadigm
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider, TestImplementationProvider}
-import org.combinators.ep.language.scala.codegen.{CodeGenerator2, FullAST}
+import org.combinators.ep.language.scala.codegen.{CodeGenerator, FullAST}
 import org.combinators.ep.builder.inbetween.paradigm.ffi.Trees
 import org.combinators.ep.language.scala.ast.{FinalBaseAST, FinalNameProviderAST}
 import org.combinators.ep.language.scala.ast.ffi.*
@@ -79,7 +79,7 @@ class Main(choice:String, select:String) {
     with FinalTreesAST {
     val reificationExtensions = List(scalaTreesOps.treeReificationExtensions)
   }
-  val generator: CodeGenerator2[ast.type] = CodeGenerator2(M0.getModel.base.name.toLowerCase, ast, ast.scalaTreesOps.treePrefixExcludes)
+  val generator: CodeGenerator[ast.type] = CodeGenerator(M0.getModel.base.name.toLowerCase, ast, ast.scalaTreesOps.treePrefixExcludes)
 
   val treesInMethod =
     Trees[ast.type, generator.paradigm.type, ast.any.Method](generator.paradigm)(ast.scalaTreesOps.treeLibrary, (tpe, lookup) => {

@@ -3,7 +3,7 @@ package org.combinators.ep.builder.inbetween.paradigm.ffi
 /*DI:LI:AI*/
 
 import org.combinators.cogen.Command.Generator
-import org.combinators.ep.language.inbetween.any.AnyParadigm2
+import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.inbetween.{any, polymorphism}
 import org.combinators.cogen.paradigm.Apply
 import org.combinators.ep.generator.paradigm.ffi.{CreateLeaf, CreateNode, Trees as Trs}
@@ -11,7 +11,7 @@ import org.combinators.cogen.paradigm.AnyParadigm.syntax
 import org.combinators.cogen.{Command, FileWithPath, TypeRep, Understands}
 import org.combinators.ep.domain.abstractions.DomainTpeRep
 
-trait Trees[AST <: TreesAST, B, Context](val base: AnyParadigm2.WithAST[AST] & B) extends Trs[Context] {
+trait Trees[AST <: TreesAST, B, Context](val base: AnyParadigm.WithAST[AST] & B) extends Trs[Context] {
   import base.ast.treesOpsFactory
   import base.ast.any
   val treeLibrary: Seq[FileWithPath]
@@ -47,9 +47,9 @@ trait Trees[AST <: TreesAST, B, Context](val base: AnyParadigm2.WithAST[AST] & B
 
 object Trees {
 
-  type WithBase[AST <: TreesAST, B <: AnyParadigm2.WithAST[AST], Context] = Trees[AST, B, Context] {}
+  type WithBase[AST <: TreesAST, B <: AnyParadigm.WithAST[AST], Context] = Trees[AST, B, Context] {}
 
-  def apply[AST <: TreesAST, B <: AnyParadigm2.WithAST[AST], Context](
+  def apply[AST <: TreesAST, B <: AnyParadigm.WithAST[AST], Context](
      _base: B)(
      _treeLibrary: Seq[FileWithPath],
     _addContextTypeLookup: (tpe: TypeRep, lookup: _base.ast.any.Type) => Generator[_base.ast.any.Project, Unit]

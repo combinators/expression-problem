@@ -7,7 +7,7 @@ import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddCompilationUnit, 
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, FileWithPath, Understands}
 
-trait AnyParadigm2[A, S](val ast: AnyAST & A, val syntax: AbstractSyntax2.AbstractSyntax[ast.type] & S) extends AP {
+trait AnyParadigm[A, S](val ast: AnyAST & A, val syntax: AbstractSyntax.AbstractSyntax[ast.type] & S) extends AP {
   import ast.factory
   import ast.any.*
   val _runGenerator: Generator[ast.any.Project, Unit] => Seq[FileWithPath]
@@ -168,16 +168,16 @@ trait AnyParadigm2[A, S](val ast: AnyAST & A, val syntax: AbstractSyntax2.Abstra
   }
   def runGenerator(generator: Generator[Project, Unit]): Seq[FileWithPath] = _runGenerator(generator)
 }
-object AnyParadigm2 {
-  type WithAST[AST <: AnyAST] = AnyParadigm2[AST, ? <: AbstractSyntax2.AbstractSyntax[AST]] {}
+object AnyParadigm {
+  type WithAST[AST <: AnyAST] = AnyParadigm[AST, ? <: AbstractSyntax.AbstractSyntax[AST]] {}
   
-  type WithSyntax[AST <: AnyAST, Syntax <: AbstractSyntax2.AbstractSyntax[AST]] = AnyParadigm2[AST, Syntax] {}
+  type WithSyntax[AST <: AnyAST, Syntax <: AbstractSyntax.AbstractSyntax[AST]] = AnyParadigm[AST, Syntax] {}
 
-  def apply[AST <: AnyAST, Syntax <: AbstractSyntax2.AbstractSyntax[AST]]
+  def apply[AST <: AnyAST, Syntax <: AbstractSyntax.AbstractSyntax[AST]]
     (_ast: AST,
      __runGenerator: Generator[_ast.any.Project, Unit] => Seq[FileWithPath],
-     _syntax: Syntax & AbstractSyntax2.AbstractSyntax[_ast.type]
-    ): WithSyntax[_ast.type, _syntax.type] = new AnyParadigm2[_ast.type, _syntax.type](_ast, _syntax) {
+     _syntax: Syntax & AbstractSyntax.AbstractSyntax[_ast.type]
+    ): WithSyntax[_ast.type, _syntax.type] = new AnyParadigm[_ast.type, _syntax.type](_ast, _syntax) {
       override val _runGenerator: __runGenerator.type = __runGenerator
   }
 }

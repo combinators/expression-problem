@@ -9,9 +9,9 @@ import org.combinators.cogen.paradigm.ffi.{Append, Cons, Create, Head, Tail, Lis
 import org.combinators.cogen.{Command, Understands}
 import org.combinators.cogen.Command.Generator
 import org.combinators.ep.language.inbetween.{any, polymorphism}
-import org.combinators.ep.language.inbetween.any.AnyParadigm2
+import org.combinators.ep.language.inbetween.any.AnyParadigm
 
-trait Lists2[AST <: ListsAST, B](val _base: AnyParadigm2.WithAST[AST] & B) {
+trait Lists[AST <: ListsAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
   trait ListsInMethods extends Lsts[_base.ast.any.Method] {
     val base: _base.type = _base
 
@@ -56,9 +56,9 @@ trait Lists2[AST <: ListsAST, B](val _base: AnyParadigm2.WithAST[AST] & B) {
   val listsInMethods: ListsInMethods = new ListsInMethods {}
 }
 
-object Lists2 {
-  type WithBase[AST <: ListsAST, B <: AnyParadigm2.WithAST[AST]] = Lists2[AST, B] {}
+object Lists {
+  type WithBase[AST <: ListsAST, B <: AnyParadigm.WithAST[AST]] = Lists[AST, B] {}
 
-  def apply[AST <: ListsAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[AST, B] = new Lists2[AST, B](_base) {}
+  def apply[AST <: ListsAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[AST, B] = new Lists[AST, B](_base) {}
 }
 

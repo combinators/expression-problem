@@ -7,10 +7,10 @@ import org.combinators.cogen.paradigm.ffi.{Assert, Assertions as Asrts}
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, Understands}
 import org.combinators.ep.language.inbetween.any
-import org.combinators.ep.language.inbetween.any.AnyParadigm2
+import org.combinators.ep.language.inbetween.any.AnyParadigm
 
 // cannot find 'assertions'
-trait Assertions2[AST <: AssertionsAST, B](val _base: AnyParadigm2.WithAST[AST] & B) {
+trait Assertions[AST <: AssertionsAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
   trait AssertionsInMethods extends Asrts[_base.ast.any.Method] {
     val base: _base.type = _base
     import base.ast.assertionOpsFactory
@@ -29,8 +29,8 @@ trait Assertions2[AST <: AssertionsAST, B](val _base: AnyParadigm2.WithAST[AST] 
   val assertionsInMethods: AssertionsInMethods = new AssertionsInMethods {}
 }
 
-object Assertions2 {
-  type WithBase[AST <: AssertionsAST, B <: AnyParadigm2.WithAST[AST]] = Assertions2[AST, B] {}
+object Assertions {
+  type WithBase[AST <: AssertionsAST, B <: AnyParadigm.WithAST[AST]] = Assertions[AST, B] {}
 
-  def apply[AST <: AssertionsAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[AST, B] = new Assertions2[AST, B](_base) {}
+  def apply[AST <: AssertionsAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[AST, B] = new Assertions[AST, B](_base) {}
 }

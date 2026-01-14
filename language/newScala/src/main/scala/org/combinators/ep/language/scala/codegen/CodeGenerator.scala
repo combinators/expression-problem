@@ -7,14 +7,14 @@ import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.paradigm.{Apply, ToTargetLanguageType}
 import org.combinators.cogen.{Command, FileWithPath, TypeRep, Understands}
 import org.combinators.ep.language.inbetween.any.*
-import org.combinators.ep.language.inbetween.any.AnyParadigm2.WithSyntax
+import org.combinators.ep.language.inbetween.any.AnyParadigm.WithSyntax
 import org.combinators.ep.language.inbetween.ffi.*
-import org.combinators.ep.language.inbetween.functional.control.Functional2.WithBase
-import org.combinators.ep.language.inbetween.functional.{FunctionalParadigm2, control}
-import org.combinators.ep.language.inbetween.imperative.Imperative2
-import org.combinators.ep.language.inbetween.oo.OOParadigm2
-import org.combinators.ep.language.inbetween.polymorphism.generics.Generics2
-import org.combinators.ep.language.inbetween.polymorphism.{ParametricPolymorphism2, ParametricPolymorphismInADTContexts2}
+import org.combinators.ep.language.inbetween.functional.control.Functional.WithBase
+import org.combinators.ep.language.inbetween.functional.{FunctionalParadigm, control}
+import org.combinators.ep.language.inbetween.imperative.Imperative
+import org.combinators.ep.language.inbetween.oo.OOParadigm
+import org.combinators.ep.language.inbetween.polymorphism.generics.Generics
+import org.combinators.ep.language.inbetween.polymorphism.{ParametricPolymorphism, ParametricPolymorphismInADTContexts}
 import org.combinators.ep.language.scala.ast.ffi.ArithmeticAST
 import org.combinators.ep.language.scala.ast.{BaseAST, NameProviderAST}
 
@@ -35,8 +35,8 @@ type FullAST = BaseAST
  *
  * These paradigm-specific traits are conceptually different from each other
  */
-sealed class CodeGenerator2[AST <: FullAST](val domainName: String, val ast: AST, additionalPrefixExcludedTypes: Set[Seq[ast.any.Name]] = Set.empty) { cc =>
-  val syntax: AbstractSyntax2.AbstractSyntax[ast.type] = AbstractSyntax2(ast)
+sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST, additionalPrefixExcludedTypes: Set[Seq[ast.any.Name]] = Set.empty) { cc =>
+  val syntax: AbstractSyntax.AbstractSyntax[ast.type] = AbstractSyntax(ast)
   val nameProvider: ast.nameProvider.ScalaNameProvider = ast.nameProviderFactory.scalaNameProvider
 
   def toLookup[Ctxt](name: String*): Option[Generator[Ctxt, ast.any.Type]] = {
@@ -205,28 +205,28 @@ sealed class CodeGenerator2[AST <: FullAST](val domainName: String, val ast: AST
     }).toSeq ++ withPrefix.customFiles :+ buildFile :+ pluginsFile :+ scalaFmt
   }
 
-  val paradigm: WithSyntax[ast.type, syntax.type] = AnyParadigm2[ast.type, syntax.type](ast, runGenerator, syntax)
-  val ooParadigm: OOParadigm2.WithBase[ast.type, paradigm.type] = OOParadigm2[ast.type, paradigm.type](paradigm)
-  val imperative: Imperative2.WithBase[ast.type, paradigm.type] = Imperative2[ast.type, paradigm.type](paradigm)
-  val functional: FunctionalParadigm2.WithBase[ast.type, paradigm.type] = FunctionalParadigm2[ast.type, paradigm.type](paradigm)
-  val functionalControl: WithBase[ast.type, paradigm.type] = control.Functional2[ast.type, paradigm.type](paradigm)
+  val paradigm: WithSyntax[ast.type, syntax.type] = AnyParadigm[ast.type, syntax.type](ast, runGenerator, syntax)
+  val ooParadigm: OOParadigm.WithBase[ast.type, paradigm.type] = OOParadigm[ast.type, paradigm.type](paradigm)
+  val imperative: Imperative.WithBase[ast.type, paradigm.type] = Imperative[ast.type, paradigm.type](paradigm)
+  val functional: FunctionalParadigm.WithBase[ast.type, paradigm.type] = FunctionalParadigm[ast.type, paradigm.type](paradigm)
+  val functionalControl: WithBase[ast.type, paradigm.type] = control.Functional[ast.type, paradigm.type](paradigm)
 
-  val parametricPolymorphism: ParametricPolymorphism2.WithBase[ast.type, paradigm.type] = ParametricPolymorphism2[ast.type, paradigm.type](paradigm)
-  val generics: Generics2.WithBase[ast.type, paradigm.type, ooParadigm.type, parametricPolymorphism.type] = Generics2[ast.type, paradigm.type, ooParadigm.type, parametricPolymorphism.type](paradigm, ooParadigm, parametricPolymorphism)
-  val parametricPolymorphismInADTContexts: ParametricPolymorphismInADTContexts2.WithBase[ast.type, paradigm.type, functional.type] = ParametricPolymorphismInADTContexts2[ast.type, paradigm.type, functional.type](paradigm, functional)
+  val parametricPolymorphism: ParametricPolymorphism.WithBase[ast.type, paradigm.type] = ParametricPolymorphism[ast.type, paradigm.type](paradigm)
+  val generics: Generics.WithBase[ast.type, paradigm.type, ooParadigm.type, parametricPolymorphism.type] = Generics[ast.type, paradigm.type, ooParadigm.type, parametricPolymorphism.type](paradigm, ooParadigm, parametricPolymorphism)
+  val parametricPolymorphismInADTContexts: ParametricPolymorphismInADTContexts.WithBase[ast.type, paradigm.type, functional.type] = ParametricPolymorphismInADTContexts[ast.type, paradigm.type, functional.type](paradigm, functional)
 
 
-  val booleans: Boolean2.WithBase[ast.type, paradigm.type] = Boolean2[ast.type, paradigm.type](paradigm)
+  val booleans: Booleans.WithBase[ast.type, paradigm.type] = Booleans[ast.type, paradigm.type](paradigm)
 
-  val doubles: Arithmetic2.WithBase[Double, ast.type, paradigm.type] = Arithmetic2[Double, ast.type, paradigm.type](paradigm)
+  val doubles: Arithmetic.WithBase[Double, ast.type, paradigm.type] = Arithmetic[Double, ast.type, paradigm.type](paradigm)
 
-  val realDoubles: RealArithmetic2.WithBase[Double, ast.type, paradigm.type] = RealArithmetic2[Double, ast.type, paradigm.type](paradigm)
+  val realDoubles: RealArithmetic.WithBase[Double, ast.type, paradigm.type] = RealArithmetic[Double, ast.type, paradigm.type](paradigm)
 
-  val ints: Arithmetic2.WithBase[Int, ast.type, paradigm.type] = Arithmetic2[Int, ast.type, paradigm.type](paradigm)
+  val ints: Arithmetic.WithBase[Int, ast.type, paradigm.type] = Arithmetic[Int, ast.type, paradigm.type](paradigm)
 
-  val strings: String2.WithBase[ast.type, paradigm.type] = String2[ast.type, paradigm.type](paradigm)
+  val strings: Strings.WithBase[ast.type, paradigm.type] = Strings[ast.type, paradigm.type](paradigm)
 
-  val equality: Equals2.WithBase[ast.type, paradigm.type] = Equals2[ast.type, paradigm.type](paradigm)
+  val equality: Equals.WithBase[ast.type, paradigm.type] = Equals[ast.type, paradigm.type](paradigm)
 
   /*val consoleInMethod =
     new Console[MethodBodyCtxt, paradigm.type](
@@ -249,7 +249,7 @@ sealed class CodeGenerator2[AST <: FullAST](val domainName: String, val ast: AST
     )
     */
 
-  val lists: Lists2.WithBase[ast.type, paradigm.type] = Lists2[ast.type, paradigm.type](paradigm)
+  val lists: Lists.WithBase[ast.type, paradigm.type] = Lists[ast.type, paradigm.type](paradigm)
 
   /*val listsInConstructor =
     Lists[CtorCtxt, paradigm.type, generics.type](
@@ -271,17 +271,17 @@ sealed class CodeGenerator2[AST <: FullAST](val domainName: String, val ast: AST
   val assertionsInMethod = new Assertions[paradigm.type](paradigm)(ooParadigm)
   val exceptionsInMethod = new Exceptions[paradigm.type](paradigm)*/
 
-  val assertions = Assertions2[ast.type, paradigm.type](paradigm)
+  val assertions = Assertions[ast.type, paradigm.type](paradigm)
   
 }
 
-object CodeGenerator2 {
+object CodeGenerator {
 
   case object Enable extends Command {
     type Result = Unit
   }
 
 
-  def apply[AST <: FullAST](domainName: String, ast: AST, additionalPrefixExcludedTypes: Set[Seq[ast.any.Name]] = Set.empty): CodeGenerator2[ast.type] =
-    new CodeGenerator2[ast.type](domainName, ast, additionalPrefixExcludedTypes)
+  def apply[AST <: FullAST](domainName: String, ast: AST, additionalPrefixExcludedTypes: Set[Seq[ast.any.Name]] = Set.empty): CodeGenerator[ast.type] =
+    new CodeGenerator[ast.type](domainName, ast, additionalPrefixExcludedTypes)
 }

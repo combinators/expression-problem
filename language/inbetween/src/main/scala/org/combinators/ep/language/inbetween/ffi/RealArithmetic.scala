@@ -7,9 +7,9 @@ import org.combinators.cogen.paradigm.ffi.{Abs, Add, Cos, Div, EulersNumber, Flo
 import org.combinators.cogen.{Command, Understands}
 import org.combinators.cogen.Command.Generator
 import org.combinators.ep.language.inbetween.any
-import org.combinators.ep.language.inbetween.any.AnyParadigm2
+import org.combinators.ep.language.inbetween.any.AnyParadigm
 
-trait RealArithmetic2[AST <: RealArithmeticAST, B, T](val _base: AnyParadigm2.WithAST[AST] & B) {
+trait RealArithmetic[AST <: RealArithmeticAST, B, T](val _base: AnyParadigm.WithAST[AST] & B) {
   trait RealArithmeticInMethods extends RealArith[_base.ast.any.Method, T] {
     val base: _base.type = _base
 
@@ -77,8 +77,8 @@ trait RealArithmetic2[AST <: RealArithmeticAST, B, T](val _base: AnyParadigm2.Wi
   
   val realArithmeticInMethods: RealArithmeticInMethods = new RealArithmeticInMethods {}
 }
-object RealArithmetic2 {
-  type WithBase[T, AST <: RealArithmeticAST, B <: AnyParadigm2.WithAST[AST]] = RealArithmetic2[AST, B, T] {val _base: B}
+object RealArithmetic {
+  type WithBase[T, AST <: RealArithmeticAST, B <: AnyParadigm.WithAST[AST]] = RealArithmetic[AST, B, T] {val _base: B}
 
-  def apply[T, AST <: RealArithmeticAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[T, AST, B] = new RealArithmetic2[AST, B, T](_base) {}
+  def apply[T, AST <: RealArithmeticAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[T, AST, B] = new RealArithmetic[AST, B, T](_base) {}
 }

@@ -3,9 +3,9 @@ package org.combinators.ep.language.inbetween.oo   /*DI:LI:AI*/
 import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddClass, AddConstructor, AddField, AddImplemented, AddImport, AddMethod, AddParent, AddTypeLookup, Apply, CastObject, Debug, FindClass, FreshName, GetArguments, GetConstructor, GetField, GetMember, InitializeField, InitializeParent, InstanceOfType, InstantiateObject, Reify, RemoveMethod, ResolveImport, SelfReference, SetAbstract, SetInterface, SetOverride, SetParameters, SetStatic, SuperReference, ToTargetLanguageType, ObjectOriented as OOP}
 import org.combinators.cogen.{Command, Understands}
-import org.combinators.ep.language.inbetween.any.AnyParadigm2
+import org.combinators.ep.language.inbetween.any.AnyParadigm
 
-trait OOParadigm2[AST <: OOAST, B](val base: AnyParadigm2.WithAST[AST] & B) extends OOP {
+trait OOParadigm[AST <: OOAST, B](val base: AnyParadigm.WithAST[AST] & B) extends OOP {
   import base.ast.any
   import base.ast.factory
   import base.ast.ooFactory
@@ -423,7 +423,7 @@ trait OOParadigm2[AST <: OOAST, B](val base: AnyParadigm2.WithAST[AST] & B) exte
   }
 }
 
-object OOParadigm2 {
-  type WithBase[AST <: OOAST, B <: AnyParadigm2.WithAST[AST]] = OOParadigm2[AST, B] { }
-  def apply[AST <: OOAST, B <: AnyParadigm2.WithAST[AST]](_base: B): WithBase[AST, B] = new OOParadigm2[AST, B](_base) {}
+object OOParadigm {
+  type WithBase[AST <: OOAST, B <: AnyParadigm.WithAST[AST]] = OOParadigm[AST, B] { }
+  def apply[AST <: OOAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[AST, B] = new OOParadigm[AST, B](_base) {}
 }

@@ -15,3 +15,6 @@ class CharAtExpression(var string: StringExpression, var index: Expression) exte
 
 class BooleanExpression extends Expression
 class EqualExpression(var left: Expression, var right: Expression) extends BooleanExpression
+
+abstract class SubproblemExpression extends Expression
+class SingleArgSubproblemExpression(var Arg: Expression) extends SubproblemExpression

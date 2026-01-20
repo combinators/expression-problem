@@ -42,9 +42,13 @@ class Setup {
     LCS
 
 
-    val bound=List(new ArgExpression(0))
-    val i: IteratorExpression = new IteratorExpression(0)
     val two: LiteralInt = new LiteralInt(2)
+
+    val bound=List(new ArgExpression(0))
+
+    val i: IteratorExpression = new IteratorExpression(0)
+    val im1 = new SubtractionExpression(i,one))
+    val im2 = new SubtractionExpression(i,two))
 
 
     val Fib: Model = new Model("Fibonacci",
@@ -60,9 +64,8 @@ class Setup {
         ),
         (
           None,
-          new AdditionExpression(new SubproblemExpression(new SubtractionExpression(i,one)), new SubproblemExpression(new SubtractionExpression(i,two)))
-        ),
-
+          new AdditionExpression(new SubproblemExpression(im1), new SubproblemExpression(im2))
+        )
       )
     )
   }

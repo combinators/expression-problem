@@ -1,6 +1,6 @@
 package org.combinators.model
 
-class Model(val problem:String, val inputs: List[Expression], val iterators: List[IteratorExpression], val cases: List[(Option[Expression], Expression)])
+class Model(val problem:String, val bounds: List[Expression], val cases: List[(Option[Expression], Expression)])
 
 // todo: figure out how to represent transitions (subproblems)
 

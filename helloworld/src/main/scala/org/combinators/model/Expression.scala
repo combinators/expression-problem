@@ -2,23 +2,28 @@ package org.combinators.model
 
 trait Expression
 
-class IntegerExpression extends Expression
-class AdditionExpression(val left: IntegerExpression, val right: IntegerExpression) extends IntegerExpression
-class SubtractionExpression(val left: IntegerExpression, val right: IntegerExpression) extends IntegerExpression
-class MultiplicationExpression(val left: IntegerExpression, val right: IntegerExpression) extends IntegerExpression
-class SubtractionDivision(val left: IntegerExpression, val right: IntegerExpression) extends IntegerExpression
+//Integer
+class AdditionExpression(val left: Expression, val right: Expression) extends Expression
+class SubtractionExpression(val left: Expression, val right: Expression) extends Expression
+class MultiplicationExpression(val left: Expression, val right: Expression) extends Expression
+class SubtractionDivision(val left: Expression, val right: Expression) extends Expression
 
-class LiteralInt(val literal: Int) extends IntegerExpression
-class IteratorExpression(var iteratorNumber: Int) extends IntegerExpression
+class LiteralInt(val literal: Int) extends Expression
+class IteratorExpression(var iteratorNumber: Int) extends Expression
 
-class StringExpression extends Expression
-class LiteralString(val literal: String) extends StringExpression
-class SubstringExpression(var string: StringExpression, var start: Expression, var end: Expression) extends StringExpression
+class StringLengthExpression(var string: Expression)extends Expression
 
-class CharacterExpression extends Expression
-class CharAtExpression(var string: StringExpression, var index: Expression) extends CharacterExpression
+//String
+class LiteralString(val literal: String) extends Expression
+class SubstringExpression(var string: Expression, var start: Expression, var end: Expression) extends Expression
 
-class BooleanExpression extends Expression
-class EqualExpression(var left: Expression, var right: Expression) extends BooleanExpression
+//Character
+class CharAtExpression(var string: Expression, var index: Expression) extends Expression
 
-abstract class SubproblemExpression(var args: Expression*) extends Expression
+
+//General
+class EqualExpression(var left: Expression, var right: Expression) extends Expression
+
+class SubproblemExpression(var args: Expression*) extends Expression
+
+class ArgExpression(whichArg: Int) extends Expression

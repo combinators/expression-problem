@@ -2,9 +2,11 @@ package org.combinators.model
 
 class Setup {
   def instantiate(): Model = {
-    val s1: StringExpression = new StringExpression()
-    val s2: StringExpression = new StringExpression()
-    val inputs = List(s1, s2)
+
+
+    val boundZero: Expression =new StringLengthExpression(new ArgExpression(0))
+    val boundOne: Expression =new StringLengthExpression(new ArgExpression(1))
+    val bounds = List(boundZero,boundOne)
 
     val r: IteratorExpression = new IteratorExpression(0)
     val c: IteratorExpression = new IteratorExpression(1)
@@ -14,7 +16,32 @@ class Setup {
     val one: LiteralInt = new LiteralInt(1)
 
     val LCS: Model = new Model("Prototype",
-      inputs,
+      bounds,
+      cases = List(
+        (
+          Some(new EqualExpression(r, zero)),
+          zero
+        ),
+        (
+          Some(new EqualExpression(c, zero)),
+          zero
+        ),
+        (
+          Some(new EqualExpression(new CharAtExpression(s1, r), new CharAtExpression(s2, c))),
+          Some()
+        ),
+        (
+          None,
+          new Expression()
+        )
+      )
+    )
+
+    LCS
+
+
+    val Fib: Model = new Model("Fibonacci",
+      n,
       iterators,
       cases = List(
         (
@@ -35,7 +62,5 @@ class Setup {
         )
       )
     )
-
-    LCS
   }
 }

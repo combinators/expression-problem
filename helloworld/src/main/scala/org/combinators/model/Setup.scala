@@ -3,6 +3,8 @@ package org.combinators.model
 class Setup {
   def instantiate(): Model = {
 
+    val s1= new ArgExpression(0)
+    val s2 = new ArgExpression(1)
 
     val boundZero: Expression =new StringLengthExpression(new ArgExpression(0))
     val boundOne: Expression =new StringLengthExpression(new ArgExpression(1))
@@ -32,7 +34,7 @@ class Setup {
         ),
         (
           None,
-          new Expression()
+          Some()
         )
       )
     )
@@ -40,26 +42,27 @@ class Setup {
     LCS
 
 
+    val bound=List(new ArgExpression(0))
+    val i: IteratorExpression = new IteratorExpression(0)
+    val two: LiteralInt = new LiteralInt(2)
+
+
     val Fib: Model = new Model("Fibonacci",
-      n,
-      iterators,
+      bound,
       cases = List(
         (
-          Some(new EqualExpression(r, zero)),
+          Some(new EqualExpression(i, zero)),
           zero
         ),
         (
-          Some(new EqualExpression(c, zero)),
-          zero
-        ),
-        (
-          Some(new EqualExpression(new CharAtExpression(s1, r), new CharAtExpression(s2, c))),
-          new IntegerExpression
+          Some(new EqualExpression(i, one)),
+          one
         ),
         (
           None,
-          new IntegerExpression()
-        )
+          new AdditionExpression(new SubproblemExpression(new SubtractionExpression(i,one)), new SubproblemExpression(new SubtractionExpression(i,two)))
+        ),
+
       )
     )
   }

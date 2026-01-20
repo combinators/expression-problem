@@ -27,7 +27,7 @@ class Setup {
         ),
         (
           Some(new EqualExpression(new CharAtExpression(s1, r), new CharAtExpression(s2, c))),
-          new IntegerExpression()
+          new IntegerExpression
         ),
         (
           None,

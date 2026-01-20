@@ -3,6 +3,11 @@ package org.combinators.model
 trait Expression
 
 class IntegerExpression extends Expression
+class AdditionExpression(val left: IntegerExpression, val right: IntegerExpression) extends IntegerExpression
+class SubtractionExpression(val left: IntegerExpression, val right: IntegerExpression) extends IntegerExpression
+class MultiplicationExpression(val left: IntegerExpression, val right: IntegerExpression) extends IntegerExpression
+class SubtractionDivision(val left: IntegerExpression, val right: IntegerExpression) extends IntegerExpression
+
 class LiteralInt(val literal: Int) extends IntegerExpression
 class IteratorExpression(var iteratorNumber: Int) extends IntegerExpression
 

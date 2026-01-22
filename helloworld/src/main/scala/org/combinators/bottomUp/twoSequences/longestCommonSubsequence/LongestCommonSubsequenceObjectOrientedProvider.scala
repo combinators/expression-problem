@@ -202,23 +202,53 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends DPProvider with Two
     addClassToProject(makeClass, names.mangle("LongestCommonSubsequence"))
   }
 
-  //  todo: make test cases
-  //  def makeTestCase(): Generator[MethodBodyContext, Seq[Expression]] = {
-  //    import paradigm.methodBodyCapabilities._
-  //    import eqls.equalityCapabilities._
-  //
-  //    for {
-  //      arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
-  //    } yield ()
-  //  }
+  def makeTestCase(): Generator[MethodBodyContext, Seq[Expression]] = {
+    import eqls.equalityCapabilities._
+    import paradigm.methodBodyCapabilities._
+    import AnyParadigm.syntax._
+
+    // https://en.wikipedia.org/wiki/Maximum_subarray_problem
+    val wiki_test = new DPExample("wiki",
+      Seq("GAC", "AGCAT"),
+      2,
+      "GA"
+    )
+
+    for {
+      solutionType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle("LongestCommonSubsequence"))
+      sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solutionType, Seq.empty)
+      arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
+      computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, names.mangle("compute"))
+
+      assert_statements <- forEach(Seq(wiki_test)) { example =>
+        for {
+          s1 <- paradigm.methodBodyCapabilities.reify(TypeRep.String, example.example.head)
+          s2 <- paradigm.methodBodyCapabilities.reify(TypeRep.String, example.example.tail.head)
+
+          invoke <- apply(computeMethod, Seq(s1, s2))
+          solution <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, example.solution)
+          assert_stmt <- asserts.assertionCapabilities.assertEquals(arrayType, invoke, solution)
+
+          // still need test case for validating full_solution when calling 'retrieve()'
+
+        } yield assert_stmt
+      }
+    } yield assert_statements
+  }
+
+  def makeTestCase(clazzName:String): Generator[TestContext, Unit] = {
+    for {
+      _ <- paradigm.testCapabilities.addTestCase(makeTestCase(), names.mangle(clazzName))
+    } yield ()
+  }
 
   def implement(model:Model): Generator[ProjectContext, Unit] = {
 
     for {
       _ <- makeSimpleDP()
-      //      _ <- paradigm.projectCapabilities.addCompilationUnit(
-      //        paradigm.compilationUnitCapabilities.addTestSuite(testName, makeTestCase("DP"))
-      //      )
+      _ <- paradigm.projectCapabilities.addCompilationUnit(
+        paradigm.compilationUnitCapabilities.addTestSuite(testName, makeTestCase("DP"))
+      )
     } yield ()
   }
 }

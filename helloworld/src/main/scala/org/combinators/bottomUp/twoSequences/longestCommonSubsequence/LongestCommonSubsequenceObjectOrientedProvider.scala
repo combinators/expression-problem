@@ -8,7 +8,7 @@ import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, ObjectOriented}
 import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
-import org.combinators.model.{CharAtExpression, EqualExpression, Formula, IntegerExpression, IteratorExpression, LiteralInt, Model, StringEqualCondition, StringExpression}
+import org.combinators.model.{CharAtExpression, EqualExpression, IteratorExpression, LiteralInt, Model}
 
 trait LongestCommonSubsequenceObjectOrientedProvider extends DPProvider with TwoSequencesUtility {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]

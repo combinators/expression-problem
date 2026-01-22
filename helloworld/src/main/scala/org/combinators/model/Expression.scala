@@ -7,7 +7,7 @@ class AdditionExpression(val left: Expression, val right: Expression) extends Ex
 class SubtractionExpression(val left: Expression, val right: Expression) extends Expression
 class MultiplicationExpression(val left: Expression, val right: Expression) extends Expression
 class DivisionExpression(val left: Expression, val right: Expression) extends Expression
-class SubproblemExpression(var args: Expression*) extends Expression
+class SubproblemExpression(var args: Seq[Expression]) extends Expression
 class MaxExpression(var m: Expression, var n: Expression) extends Expression
 
 class LiteralInt(val literal: Int) extends Expression

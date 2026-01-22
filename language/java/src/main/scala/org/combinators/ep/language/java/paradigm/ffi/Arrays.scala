@@ -26,7 +26,7 @@ class Arrays[Ctxt, AP <: AnyParadigm](val base:AP) extends Arrs[Ctxt] {
                  ): (Ctxt, Expression) =
         (context,
           new ArrayCreationExpr(command.functional.elementType,
-            new NodeList(new ArrayCreationLevel(1)),
+            new NodeList(new ArrayCreationLevel()),
             new ArrayInitializerExpr(new NodeList(command.arguments: _ *)))
         )
     }

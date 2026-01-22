@@ -20,6 +20,41 @@ trait Utility {
   import syntax._
   import ooParadigm._
 
+  def create_array(values:Seq[Int]) : Generator[MethodBodyContext, Expression] = {
+    import AnyParadigm.syntax._
+    for {
+      translated_vals <- forEach(values) { value =>
+        for {
+          reified_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, value)
+        } yield reified_value
+      }
+
+      intType <- paradigm.methodBodyCapabilities.toTargetLanguageType(TypeRep.Int)
+      result <- array.arrayCapabilities.create(intType, translated_vals)
+    } yield result
+  }
+
+  def set_array(sampleVar: Expression, index:Int, values:Seq[Int]) : Generator[MethodBodyContext, Seq[Statement]] = {
+    if (values.length == 1) {
+      // last one
+      for {
+        d_i <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, index)
+        d_v <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, values.head)
+        varIndex <- array.arrayCapabilities.get(sampleVar, d_i)
+        a_i <- impParadigm.imperativeCapabilities.assignVar(varIndex, d_v)
+      } yield Seq(a_i)
+    } else {
+      // recursively
+      for {
+        d_i <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, index)
+        d_v <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, values.head)
+        varIndex <- array.arrayCapabilities.get(sampleVar, d_i)
+        a_i <- impParadigm.imperativeCapabilities.assignVar(varIndex, d_v)
+        all_seq <- set_array(sampleVar, index+1, values.tail)
+      } yield all_seq :+ a_i
+    }
+  }
+
   /**
    * Helper for max operations, represents 'm=max(m,r)'
    * Returns the generated max statement

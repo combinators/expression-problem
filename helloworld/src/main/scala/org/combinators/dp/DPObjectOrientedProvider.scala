@@ -6,12 +6,13 @@ import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, ObjectOriented}
 import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
+import org.combinators.dp.Utility
 import org.combinators.model.Model
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
  */
-trait DPObjectOrientedProvider extends DPProvider {
+trait DPObjectOrientedProvider extends DPProvider with Utility {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val names: NameProvider[paradigm.syntax.Name]
   val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext,paradigm.type]
@@ -260,28 +261,19 @@ trait DPObjectOrientedProvider extends DPProvider {
 
     for {
       solutionType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle("Solution"))
-      d_0 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
-      d_8 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 8)
-      d_4 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 4)
-      d_12 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 12)
-      d_2 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 2)
-      d_10 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 10)
-      d_6 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 6)
-      d_14 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 14)
-      d_1 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
 
-      d_9 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 9)
-      d_5 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 5)
-      d_13 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 13)
-      d_3 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 3)
-      d_11 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 11)
-      d_7 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 7)
-      d_15 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 15)
-
+      d_16 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 16)
       sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solutionType, Seq.empty)
       arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
       computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, names.mangle("compute"))
-      solution_result <- apply(computeMethod, Seq(d_0, d_8, d_4, d_12, d_2, d_10, d_6, d_14, d_1, d_9, d_5, d_13, d_3, d_11, d_7, d_15))
+
+      oo1 <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, Seq(d_16))
+      //sampleVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle("sample"), arrayType, Some(oo1))
+
+       // allAssigns <- set_array(sampleVar, 0, initial_vals)
+      expr <- create_array(initial_vals)
+      sampleVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle("sample"), arrayType, Some(expr))
+      solution_result <- apply(computeMethod, Seq(sampleVar))
       six  <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 6)
       asserteq2 <- asserts.assertionCapabilities.assertEquals(arrayType, solution_result, six)
 

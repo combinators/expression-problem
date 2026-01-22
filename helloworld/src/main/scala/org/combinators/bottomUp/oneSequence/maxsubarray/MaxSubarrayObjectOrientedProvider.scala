@@ -176,27 +176,48 @@ trait MaxSubarrayObjectOrientedProvider extends MaxSubarrayProvider with Utility
     import eqls.equalityCapabilities._
     import paradigm.methodBodyCapabilities._
 
-    // can only be optimized if 'forEach' is added to CoGen. Right now I think it is in EpCoGen
-    val initial_vals = Array(0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15)
+    // https://en.wikipedia.org/wiki/Maximum_subarray_problem
+    val wikipedia_example = Array(-2, 1, -3, 4, -1, 2, 1, -5, 4)
+    val wikipedia_solution = 6
+    val wikipedia_full_solution = Array(4, -1, 2, 1)
+
+    // https://www.geeksforgeeks.org/dsa/largest-sum-contiguous-subarray/
+    val geeks_for_geeks_example = Array(2, 3, -8, 7, -1, 2, 3)
+    val geeks_for_geeks_solution = 11
+    val geeks_for_geeks_full_solution = Array(7, -1, 2, 3)
+
+    // https://leetcode.com/problems/maximum-subarray/description/
+    val leetcode_example = Array(5, 4, -1, 7, 8)
+    val leetcode_solution = 23
+    val leetcode_full_solution = Array(5, 4, -1, 7, 8)
 
     for {
       solutionType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle("MaxSubarray"))
-
-
       sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solutionType, Seq.empty)
       arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
       computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, names.mangle("compute"))
-      d_16 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 16)
 
-      oo1 <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, Seq(d_16))
-      sampleVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle("sample"), arrayType, Some(oo1))
-      allAssigns <- set_array(sampleVar, 0, initial_vals)
-      _ <- addBlockDefinitions(allAssigns)
+      wiki_expr <- create_array(wikipedia_example)
+      wiki_var <- impParadigm.imperativeCapabilities.declareVar(names.mangle("wiki"), arrayType, Some(wiki_expr))
+      wiki_solution_invoke <- apply(computeMethod, Seq(wiki_var))
+      wiki_solution <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, wikipedia_solution)
+      wiki_assert <- asserts.assertionCapabilities.assertEquals(arrayType, wiki_solution_invoke, wiki_solution)
 
-      solution_result <- apply(computeMethod, Seq(sampleVar))
-      six  <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 6)
-      asserteq2 <- asserts.assertionCapabilities.assertEquals(arrayType, solution_result, six)
-    } yield Seq(asserteq2)
+      geeks_for_geeks_expr <- create_array(geeks_for_geeks_example)
+      geeks_for_geeks_var <- impParadigm.imperativeCapabilities.declareVar(names.mangle("geeks_for_geeks"), arrayType, Some(geeks_for_geeks_expr))
+      geeks_for_geeks_solution_invoke <- apply(computeMethod, Seq(geeks_for_geeks_var))
+      geeks_for_geeks_solution  <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, geeks_for_geeks_solution)
+      geeks_for_geeks_assert <- asserts.assertionCapabilities.assertEquals(arrayType, geeks_for_geeks_solution_invoke, geeks_for_geeks_solution)
+
+      leetcode_expr <- create_array(leetcode_example)
+      leetcode_var <- impParadigm.imperativeCapabilities.declareVar(names.mangle("leetcode"), arrayType, Some(leetcode_expr))
+      leetcode_solution_invoke <- apply(computeMethod, Seq(leetcode_var))
+      leetcode_solution  <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, leetcode_solution)
+      leetcode_assert <- asserts.assertionCapabilities.assertEquals(arrayType, leetcode_solution_invoke, leetcode_solution)
+
+      // still need test case for validating full_solution
+
+    } yield Seq(wiki_assert, geeks_for_geeks_assert, leetcode_assert)
   }
 
   def makeTestCase(clazzName:String): Generator[TestContext, Unit] = {

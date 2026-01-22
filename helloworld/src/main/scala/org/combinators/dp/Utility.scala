@@ -20,6 +20,10 @@ trait Utility {
   import syntax._
   import ooParadigm._
 
+  class DPExample[Input, Output, Full_Solution] (val name:String, val example:Input, val solution:Output, val full_solution:Full_Solution) {
+
+  }
+
   def create_array(values:Seq[Int]) : Generator[MethodBodyContext, Expression] = {
     import AnyParadigm.syntax._
     for {
@@ -34,6 +38,7 @@ trait Utility {
     } yield result
   }
 
+  @deprecated("replace with create_array")
   def set_array(sampleVar: Expression, index:Int, values:Seq[Int]) : Generator[MethodBodyContext, Seq[Statement]] = {
     if (values.length == 1) {
       // last one

@@ -175,21 +175,28 @@ trait MaxSubarrayObjectOrientedProvider extends MaxSubarrayProvider with Utility
   def makeTestCase(): Generator[MethodBodyContext, Seq[Expression]] = {
     import eqls.equalityCapabilities._
     import paradigm.methodBodyCapabilities._
+    import AnyParadigm.syntax._
 
     // https://en.wikipedia.org/wiki/Maximum_subarray_problem
-    val wikipedia_example = Array(-2, 1, -3, 4, -1, 2, 1, -5, 4)
-    val wikipedia_solution = 6
-    val wikipedia_full_solution = Array(4, -1, 2, 1)
+    val wiki_test = new DPExample("wiki",
+        Array(-2, 1, -3, 4, -1, 2, 1, -5, 4),
+        6,
+        Array(4, -1, 2, 1)
+    )
 
     // https://www.geeksforgeeks.org/dsa/largest-sum-contiguous-subarray/
-    val geeks_for_geeks_example = Array(2, 3, -8, 7, -1, 2, 3)
-    val geeks_for_geeks_solution = 11
-    val geeks_for_geeks_full_solution = Array(7, -1, 2, 3)
+    val geeks_for_geeks_test = new DPExample("geeks_for_geeks",
+      Array(2, 3, -8, 7, -1, 2, 3),
+      11,
+      Array(7, -1, 2, 3)
+    )
 
     // https://leetcode.com/problems/maximum-subarray/description/
-    val leetcode_example = Array(5, 4, -1, 7, 8)
-    val leetcode_solution = 23
-    val leetcode_full_solution = Array(5, 4, -1, 7, 8)
+    val leetcode_test = new DPExample("leetcode",
+      Array(5, 4, -1, 7, 8),
+      23,
+      Array(5, 4, -1, 7, 8)
+    )
 
     for {
       solutionType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle("MaxSubarray"))
@@ -197,27 +204,19 @@ trait MaxSubarrayObjectOrientedProvider extends MaxSubarrayProvider with Utility
       arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
       computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, names.mangle("compute"))
 
-      wiki_expr <- create_array(wikipedia_example)
-      wiki_var <- impParadigm.imperativeCapabilities.declareVar(names.mangle("wiki"), arrayType, Some(wiki_expr))
-      wiki_solution_invoke <- apply(computeMethod, Seq(wiki_var))
-      wiki_solution <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, wikipedia_solution)
-      wiki_assert <- asserts.assertionCapabilities.assertEquals(arrayType, wiki_solution_invoke, wiki_solution)
+      assert_statements <- forEach(Seq(wiki_test, geeks_for_geeks_test, leetcode_test)) { example =>
+        for {
+          expr <- create_array(example.example)
+          variable <- impParadigm.imperativeCapabilities.declareVar(names.mangle(example.name), arrayType, Some(expr))
+          invoke <- apply(computeMethod, Seq(variable))
+          solution <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, example.solution)
+          assert_stmt <- asserts.assertionCapabilities.assertEquals(arrayType, invoke, solution)
 
-      geeks_for_geeks_expr <- create_array(geeks_for_geeks_example)
-      geeks_for_geeks_var <- impParadigm.imperativeCapabilities.declareVar(names.mangle("geeks_for_geeks"), arrayType, Some(geeks_for_geeks_expr))
-      geeks_for_geeks_solution_invoke <- apply(computeMethod, Seq(geeks_for_geeks_var))
-      geeks_for_geeks_solution  <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, geeks_for_geeks_solution)
-      geeks_for_geeks_assert <- asserts.assertionCapabilities.assertEquals(arrayType, geeks_for_geeks_solution_invoke, geeks_for_geeks_solution)
+          // still need test case for validating full_solution when calling 'retrieve()'
 
-      leetcode_expr <- create_array(leetcode_example)
-      leetcode_var <- impParadigm.imperativeCapabilities.declareVar(names.mangle("leetcode"), arrayType, Some(leetcode_expr))
-      leetcode_solution_invoke <- apply(computeMethod, Seq(leetcode_var))
-      leetcode_solution  <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, leetcode_solution)
-      leetcode_assert <- asserts.assertionCapabilities.assertEquals(arrayType, leetcode_solution_invoke, leetcode_solution)
-
-      // still need test case for validating full_solution
-
-    } yield Seq(wiki_assert, geeks_for_geeks_assert, leetcode_assert)
+        } yield assert_stmt
+      }
+    } yield assert_statements
   }
 
   def makeTestCase(clazzName:String): Generator[TestContext, Unit] = {

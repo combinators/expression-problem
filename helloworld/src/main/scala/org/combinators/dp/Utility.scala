@@ -7,6 +7,7 @@ import org.combinators.ep.generator.NameProvider
 import org.combinators.ep.generator.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality}
+import org.combinators.model.{AdditionExpression, EqualExpression, IteratorExpression, LiteralInt, SubproblemExpression, SubtractionExpression}
 
 trait Utility {
   val paradigm: AnyParadigm
@@ -15,16 +16,89 @@ trait Utility {
   val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val arithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double]
   val array: Arrays.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val eqls: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val asserts: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
   import paradigm._
   import syntax._
   import ooParadigm._
 
   class DPExample[Input, Output, Full_Solution] (val name:String, val example:Input, val solution:Output, val full_solution:Full_Solution) {
-
   }
 
-  def create_array(values:Seq[Int]) : Generator[MethodBodyContext, Expression] = {
+  def generate_DP_int_array_test[FS](clazz:Name, tests:Seq[DPExample[Seq[Int],Int,FS]]): Generator[MethodBodyContext, Seq[Expression]] = {
+    import eqls.equalityCapabilities._
+    import paradigm.methodBodyCapabilities._
+    import AnyParadigm.syntax._
+    for {
+      solutionType <- ooParadigm.methodBodyCapabilities.findClass(clazz)
+      sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solutionType, Seq.empty)
+      computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, names.mangle("compute"))
+      arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
+
+      assert_statements <- forEach(tests) { example =>
+        for {
+          expr <- create_int_array(example.example)
+          variable <- impParadigm.imperativeCapabilities.declareVar(names.mangle(example.name), arrayType, Some(expr))
+          invoke <- apply(computeMethod, Seq(variable))
+          solution <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, example.solution)
+          assert_stmt <- asserts.assertionCapabilities.assertEquals(arrayType, invoke, solution)
+        } yield assert_stmt
+      }
+    } yield assert_statements
+  }
+
+  def explore(expr : org.combinators.model.Expression) : Generator[paradigm.MethodBodyContext, Expression] = {
+    import paradigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+    import AnyParadigm.syntax._
+    // turn model Expression into a real expression
+    expr match {
+      case eq: EqualExpression => for {
+        left <- explore(eq.left)
+        right <- explore(eq.right)
+        intType <- toTargetLanguageType(TypeRep.Int)
+        e <- eqls.equalityCapabilities.areEqual(intType, left, right)
+      } yield e
+
+      case ae: SubtractionExpression => for {
+        left <- explore(ae.left)
+        right <- explore(ae.right)
+        e <- arithmetic.arithmeticCapabilities.sub(left, right)
+      } yield e
+
+      case ae: AdditionExpression => for {
+        left <- explore(ae.left)
+        right <- explore(ae.right)
+        e <- arithmetic.arithmeticCapabilities.add(left, right)
+      } yield e
+
+      case se: SubproblemExpression => for {
+        self <- ooParadigm.methodBodyCapabilities.selfReference()
+        f <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle("helper"))
+        all_exprs <- forEach(se.args) { expr => for {
+          exp <- explore(expr)
+        } yield exp
+        }
+        res <- paradigm.methodBodyCapabilities.apply(f, all_exprs)
+      } yield res
+
+      case it:IteratorExpression => for {
+        args <- paradigm.methodBodyCapabilities.getArguments()
+      } yield args(it.iteratorNumber)._3
+
+      case lit:LiteralInt => for {
+        actual <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, lit.literal)
+      } yield actual
+
+      case _ => for {   // PLACE HOLDER
+        zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
+      } yield zero
+    }
+  }
+
+
+  def create_int_array(values:Seq[Int]) : Generator[MethodBodyContext, Expression] = {
     import AnyParadigm.syntax._
     for {
       translated_vals <- forEach(values) { value =>

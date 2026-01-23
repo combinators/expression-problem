@@ -7,6 +7,7 @@ import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions
 import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, ObjectOriented}
 import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
 import org.combinators.dp.Utility
+import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.model.{AdditionExpression, EqualExpression, FunctionExpression, IteratorExpression, LiteralInt, Model, SubproblemExpression, SubtractionExpression}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
@@ -21,6 +22,7 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
   val array: Arrays.WithBase[paradigm.MethodBodyContext,paradigm.type]
   val asserts: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val eqls: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
+
   import paradigm._
   import syntax._
   import ooParadigm._
@@ -28,6 +30,8 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
   lazy val message:String = "message"
   lazy val main:String = "main"
   lazy val testName = names.mangle("TestSuite")
+  lazy val helper = names.mangle("helper")
+  lazy val compute = names.mangle("compute")
 
   def getter(attr:String) : String = {
     "get" + attr.capitalize
@@ -94,165 +98,113 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
     } yield ()
   }
 
-  // ,
-  //               elseBranch:Option[Generator[paradigm.MethodBodyContext, Seq[Statement]]]
-  def iftemplate(guard:Expression,
-               ifBranch:Generator[paradigm.MethodBodyContext, Seq[Statement]])
-    : Generator[paradigm.MethodBodyContext, Unit] = {
-    import paradigm.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
-    for {
-      _ <- impParadigm.imperativeCapabilities.ifThenElse(guard, for {
-        stmts <- ifBranch
-        _ <- addBlockDefinitions(stmts)
-      } yield (), Seq.empty)
-    } yield ()
-  }
-
-  def explore(expr : org.combinators.model.Expression) : Generator[paradigm.MethodBodyContext, Expression] = {
-    import paradigm.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
-    import AnyParadigm.syntax._
-    // turn model Expression into a real expression
-    expr match {
-      case eq: EqualExpression => for {
-        left <- explore(eq.left)
-        right <- explore(eq.right)
-        intType <- toTargetLanguageType(TypeRep.Int)
-        e <- eqls.equalityCapabilities.areEqual(intType, left, right)
-      } yield e
-
-      case ae: SubtractionExpression => for {
-        left <- explore(ae.left)
-        right <- explore(ae.right)
-        e <- arithmetic.arithmeticCapabilities.sub(left, right)
-      } yield e
-
-      case ae: AdditionExpression => for {
-        left <- explore(ae.left)
-        right <- explore(ae.right)
-        e <- arithmetic.arithmeticCapabilities.add(left, right)
-      } yield e
-
-      case se: SubproblemExpression => for {
-        self <- ooParadigm.methodBodyCapabilities.selfReference()
-        f <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle("helper"))
-        allexprs <- forEach(se.args) { expr => for {
-            exp <- explore(expr)
-          } yield exp
-        }
-        res <- paradigm.methodBodyCapabilities.apply(f, allexprs)
-      } yield res
-
-      case it:IteratorExpression => for {
-        args <- paradigm.methodBodyCapabilities.getArguments()
-      } yield args(it.iteratorNumber)._3
-
-      case lit:LiteralInt => for {
-        actual <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, lit.literal)
-      } yield actual
-
-      case _ => for {   // PLACE HOLDER
-        zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
-      } yield zero
-   }
-  }
-
-  def assignResult (variable:Expression, expr:org.combinators.model.Expression): Unit = {
-    import paradigm.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
-    import AnyParadigm.syntax._
-
-    for {
-      expr_result <- explore(expr)
-      stmt <- impParadigm.imperativeCapabilities.assignVar(variable, expr_result)
-      _ <- addBlockDefinitions(Seq(stmt))
-    } yield ()
-  }
-
+  /**
+   * The workhorse for a top-down helper method that relies on recursion and base cases to do the work.
+   * The model has a sequence of `cases` that may contain logical guard and an expression that is to be the reulst
+   * for those cases.
+   *
+   * This code relies on a helper method and ensures that all base cases are resolved by return statements, and
+   * the final "else" case is appended.
+   *
+   * The explore() method converts a model Expression into a CoGen expression.
+   * The expand() method converts a model Expression into a Return statement of that expression
+   * @return
+   */
   def make_helper_method(model:Model): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
     import AnyParadigm.syntax._
 
-    val real_cases = model.cases.filter(p => p._1.isDefined)
+    val real_cases = model.cases.filter(p => p._1.isDefined)  // MUST be at least one.
     val first_case = real_cases.head
-    val tail_cases = real_cases.tail.seq
-    val elseCase = model.cases.filter(p => p._1.isEmpty)   // MUST only be one
+    val tail_cases = real_cases.tail
+    val elseCase = model.cases.filter(p => p._1.isEmpty)      // MUST only be one. Not sure how I would check
 
     for {
       _ <- make_compute_method_signature()
       intType <- toTargetLanguageType(TypeRep.Int)
-      result <- impParadigm.imperativeCapabilities.declareVar(names.mangle("result"), intType)
       _ <- setReturnType(intType)
-      self <- ooParadigm.methodBodyCapabilities.selfReference()
-      helperMethod <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle("helper"))
-      nfield <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle("n"))
       inner <- explore(first_case._1.get)
 
       all_rest <- forEach(tail_cases) { next_case =>
         for {
           next_cond <- explore(next_case._1.get)
           next_exp <- explore(next_case._2)
-        } yield (next_cond, expand(result, next_exp))
+        } yield (next_cond, expand(next_exp))
       }
 
-      ifstmt <- impParadigm.imperativeCapabilities.ifThenElse(inner
+      ifstmt <- impParadigm.imperativeCapabilities.ifThenElse(
+        // condition of first if
+        inner
         ,
+        // statements for that first if
         for {
           resexp <- explore(first_case._2)
-          av <- impParadigm.imperativeCapabilities.assignVar(result, resexp)
+          av <- impParadigm.imperativeCapabilities.returnStmt(resexp)
           _ <- addBlockDefinitions(Seq(av))
         } yield None
         ,
+        // collection of (condition, block) for all of the remaining cases
         all_rest
         ,
+        // terminating 'else' takes the elseCase and adds it last
         Some(for {
-          resexp <- explore(elseCase.head._2)
-          av <- impParadigm.imperativeCapabilities.assignVar(result, resexp)
+          result_exp <- explore(elseCase.head._2)
+          av <- impParadigm.imperativeCapabilities.returnStmt(result_exp)
           _ <- addBlockDefinitions(Seq(av))
         } yield ())
       )
+
       _ <- addBlockDefinitions(Seq(ifstmt))
 
-    } yield Some(result)
-
+    } yield None
   }
 
-  private def expand(result: Expression, nextexp: paradigm.syntax.Expression): Generator[paradigm.MethodBodyContext, Unit] = {
+  /**
+   * Necessary wrapper method that inserts a return (expr) statement from the given expression.
+   * @return
+   */
+  private def expand(exp: paradigm.syntax.Expression): Generator[paradigm.MethodBodyContext, Unit] = {
     import paradigm.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
-    import AnyParadigm.syntax._
     for {
-      av <- impParadigm.imperativeCapabilities.assignVar(result, nextexp)
+      av <- impParadigm.imperativeCapabilities.returnStmt(exp)
       _ <- addBlockDefinitions(Seq(av))
     } yield None
   }
 
+  /**
+   * Method creates a compute() method with no arguments that invokes helper method:
+   *
+   *   public Integer compute() {
+   *     return this.helper(this.n);
+   *   }
+   */
   def make_compute_method(): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
-    import AnyParadigm.syntax._
     for {
       intType <- toTargetLanguageType(TypeRep.Int)
       _ <- setReturnType(intType)
       self <- ooParadigm.methodBodyCapabilities.selfReference()
-      helperMethod <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle("helper"))
+      helperMethod <- ooParadigm.methodBodyCapabilities.getMember(self, helper)
       field <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle("n"))
       invocation <- apply(helperMethod, Seq(field))
     } yield Some(invocation)
-
   }
 
-  def createConstructor(n:String): Generator[ConstructorContext, Unit] = {
+  /**
+   * Constructor now takes the responsibility of taking the arguments to the problem. Takes
+   * in a sequence of arguments, and auto-initializes all possible fields.
+   */
+  def createConstructor(args: Seq[(Name, Type)]): Generator[ConstructorContext, Unit] = {
     import ooParadigm.constructorCapabilities._
 
     for {
-      intType <- toTargetLanguageType(TypeRep.Int)     // should't just assume this
+      _ <- setParameters(args)
+      real_args <- getArguments()
 
-      _ <- setParameters(Seq((names.mangle(n), intType)))
-      args <- getArguments()
-      _ <- initializeField(names.mangle(n), args.head._3)
+      _ <- forEach(real_args) { arg => for {
+          _ <- initializeField(arg._1, arg._3)
+        } yield ()
+      }
 
     } yield ()
   }
@@ -265,9 +217,9 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
       for {
         intType <- toTargetLanguageType(TypeRep.Int)    // shouldn't be hard-coded: should be able to infer from model
         _ <- addField(names.mangle("n"), intType )
-        _ <- addConstructor(createConstructor("n"))
-        _ <- addMethod(names.mangle("helper"), make_helper_method(model))
-        _ <- addMethod(names.mangle("compute"), make_compute_method())
+        _ <- addConstructor(createConstructor(Seq((names.mangle("n"), intType))))
+        _ <- addMethod(helper, make_helper_method(model))
+        _ <- addMethod(compute, make_compute_method())
       } yield None
     }
 
@@ -279,34 +231,38 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
     import paradigm.methodBodyCapabilities._
     import eqls.equalityCapabilities._
 
-    // can only be optimized if 'forEach' is added to CoGen. Right now I think it is in EpCoGen
-    val initial_vals = Array(0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15)
+    val tests = Seq(
+      new DPExample("fib0", 0, 0, None),
+      new DPExample("fib1", 1, 1, None),
+      new DPExample("fib2", 2, 1, None),
+      new DPExample("fib7", 7, 13, None),
+    )
 
     for {
-      fibType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle("Fibonacci"))
-      d_7 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 7)
-      sol <- ooParadigm.methodBodyCapabilities.instantiateObject(fibType, Seq(d_7))
-      computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, names.mangle("compute"))
-      intType <- toTargetLanguageType(TypeRep.Int)
-      //sampleVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle("sample"), arrayType, Some(oo1))
+      assert_statements <- forEach(tests) { example =>
+        for {
+          fibType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle("Fibonacci"))
+          n_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, example.example)
+          sol <- ooParadigm.methodBodyCapabilities.instantiateObject(fibType, Seq(n_value))
+          computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, compute)
 
-       // allAssigns <- set_array(sampleVar, 0, initial_vals)
-      d_13 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 13)
-      fib_7 <- apply(computeMethod, Seq.empty)
-      asserteq8 <- asserts.assertionCapabilities.assertEquals(intType, fib_7, d_13)
+          intType <- toTargetLanguageType(TypeRep.Int)
+          fibn_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, example.solution)
+          fib_actual <- apply(computeMethod, Seq.empty)
+          asserteq_fib <- asserts.assertionCapabilities.assertEquals(intType, fib_actual, fibn_value)
 
-    } yield Seq(asserteq8)
+        } yield asserteq_fib
+      }
+    } yield assert_statements
   }
 
   def makeTestCase(clazzName:String): Generator[TestContext, Unit] = {
-    import ooParadigm.projectCapabilities._
     for {
       _ <- paradigm.testCapabilities.addTestCase(makeTestCase(), names.mangle(clazzName))
     } yield ()
   }
 
   def implement(model:Model): Generator[ProjectContext, Unit] = {
-
     for {
       _ <- makeTopDown(model)
       _ <- paradigm.projectCapabilities.addCompilationUnit(

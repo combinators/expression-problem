@@ -206,7 +206,7 @@ trait MaxSubarrayObjectOrientedProvider extends MaxSubarrayProvider with Utility
 
       assert_statements <- forEach(Seq(wiki_test, geeks_for_geeks_test, leetcode_test)) { example =>
         for {
-          expr <- create_array(example.example)
+          expr <- create_int_array(example.example)
           variable <- impParadigm.imperativeCapabilities.declareVar(names.mangle(example.name), arrayType, Some(expr))
           invoke <- apply(computeMethod, Seq(variable))
           solution <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, example.solution)

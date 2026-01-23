@@ -66,6 +66,9 @@ object LongestCommonSubsequenceDirectToDiskMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
     val LCS: Model = new Model("LongestCommonSubsequence", List(), List())
+
+
+
     for {
       _ <- IO { print("Initializing Generator...") }
       main <- IO { new LongestCommonSubsequenceMainJava() }

@@ -7,7 +7,7 @@ import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions
 import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, ObjectOriented}
 import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
 import org.combinators.dp.Utility
-import org.combinators.model.Model
+import org.combinators.model.{AdditionExpression, EqualExpression, FunctionExpression, IteratorExpression, LiteralInt, Model, SubproblemExpression, SubtractionExpression}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
@@ -78,8 +78,7 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
 
     for {
       intType <- toTargetLanguageType(TypeRep.Int)
-      arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
-      _ <- setParameters(Seq((names.mangle("nums"), arrayType)))
+      _ <- setParameters(Seq((names.mangle("n"), intType)))
       _ <- setReturnType(intType)
 
     } yield ()
@@ -110,140 +109,164 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
     } yield ()
   }
 
-  def make_compute_method(): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
+  def explore(expr : org.combinators.model.Expression) : Generator[paradigm.MethodBodyContext, Expression] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
+    import AnyParadigm.syntax._
+    // turn model Expression into a real expression
+    expr match {
+      case eq: EqualExpression => for {
+        left <- explore(eq.left)
+        right <- explore(eq.right)
+        intType <- toTargetLanguageType(TypeRep.Int)
+        e <- eqls.equalityCapabilities.areEqual(intType, left, right)
+      } yield e
+
+      case ae: SubtractionExpression => for {
+        left <- explore(ae.left)
+        right <- explore(ae.right)
+        e <- arithmetic.arithmeticCapabilities.sub(left, right)
+      } yield e
+
+      case ae: AdditionExpression => for {
+        left <- explore(ae.left)
+        right <- explore(ae.right)
+        e <- arithmetic.arithmeticCapabilities.add(left, right)
+      } yield e
+
+      case se: SubproblemExpression => for {
+        self <- ooParadigm.methodBodyCapabilities.selfReference()
+        f <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle("helper"))
+        allexprs <- forEach(se.args) { expr => for {
+            exp <- explore(expr)
+          } yield exp
+        }
+        res <- paradigm.methodBodyCapabilities.apply(f, allexprs)
+      } yield res
+
+      case it:IteratorExpression => for {
+        args <- paradigm.methodBodyCapabilities.getArguments()
+      } yield args(it.iteratorNumber)._3
+
+      case lit:LiteralInt => for {
+        actual <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, lit.literal)
+      } yield actual
+
+      case _ => for {   // PLACE HOLDER
+        zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
+      } yield zero
+   }
+  }
+
+  def assignResult (variable:Expression, expr:org.combinators.model.Expression): Unit = {
+    import paradigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+    import AnyParadigm.syntax._
+
+    for {
+      expr_result <- explore(expr)
+      stmt <- impParadigm.imperativeCapabilities.assignVar(variable, expr_result)
+      _ <- addBlockDefinitions(Seq(stmt))
+    } yield ()
+  }
+
+  def make_helper_method(model:Model): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
+    import paradigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+    import AnyParadigm.syntax._
+
+    val real_cases = model.cases.filter(p => p._1.isDefined)
+    val first_case = real_cases.head
+    val tail_cases = real_cases.tail.seq
+    val elseCase = model.cases.filter(p => p._1.isEmpty)   // MUST only be one
 
     for {
       _ <- make_compute_method_signature()
-      args <- getArguments()
-
       intType <- toTargetLanguageType(TypeRep.Int)
-      arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
-      array2dType <- toTargetLanguageType(TypeRep.Array(TypeRep.Array(TypeRep.Int)))
-      one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
-      zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
+      result <- impParadigm.imperativeCapabilities.declareVar(names.mangle("result"), intType)
+      _ <- setReturnType(intType)
+      self <- ooParadigm.methodBodyCapabilities.selfReference()
+      helperMethod <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle("helper"))
+      nfield <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle("n"))
+      inner <- explore(first_case._1.get)
 
-      // isn't there an array capability to get length?
-      numsLength <- ooParadigm.methodBodyCapabilities.getMember(args.head._3, names.mangle("length"))
-      instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, Seq(numsLength), None)
+      all_rest <- forEach(tail_cases) { next_case =>
+        for {
+          next_cond <- explore(next_case._1.get)
+          next_exp <- explore(next_case._2)
+        } yield (next_cond, expand(result, next_exp))
+      }
 
-      dpVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle("dp"), arrayType, Some(instantiated))  // won't work
-      iName <- freshName(names.mangle("i"))
-      iVar <- impParadigm.imperativeCapabilities.declareVar(iName, intType, Some(zero))
-      jName <- freshName(names.mangle("j"))
-      jVar <- impParadigm.imperativeCapabilities.declareVar(jName, intType, Some(zero))
-
-      condExpr <- arithmetic.arithmeticCapabilities.lt(iVar, numsLength)
-      init_stmt <- impParadigm.imperativeCapabilities.whileLoop(condExpr, for {
-
-        // the BODY
-        dpVarIndex <- array.arrayCapabilities.get(dpVar, iVar)
-        stmt1 <- impParadigm.imperativeCapabilities.assignVar(dpVarIndex, one)
-
-        // last line to be added to the while loop
-        incrExpr <- arithmetic.arithmeticCapabilities.add(iVar, one)
-        incrStmt <- impParadigm.imperativeCapabilities.assignVar(iVar, incrExpr)
-        _ <- addBlockDefinitions(Seq(stmt1, incrStmt))
-      } yield ()
+      ifstmt <- impParadigm.imperativeCapabilities.ifThenElse(inner
+        ,
+        for {
+          resexp <- explore(first_case._2)
+          av <- impParadigm.imperativeCapabilities.assignVar(result, resexp)
+          _ <- addBlockDefinitions(Seq(av))
+        } yield None
+        ,
+        all_rest
+        ,
+        Some(for {
+          resexp <- explore(elseCase.head._2)
+          av <- impParadigm.imperativeCapabilities.assignVar(result, resexp)
+          _ <- addBlockDefinitions(Seq(av))
+        } yield ())
       )
-      _ <- addBlockDefinitions(Seq(init_stmt))
+      _ <- addBlockDefinitions(Seq(ifstmt))
 
-      maxName <- freshName(names.mangle("max"))
-      maxVar <- impParadigm.imperativeCapabilities.declareVar(maxName, intType, Some(zero))
-      setI <- impParadigm.imperativeCapabilities.assignVar(iVar, zero)
+    } yield Some(result)
 
-      outer_stmt <- impParadigm.imperativeCapabilities.whileLoop(condExpr, for {
-
-        // the BODY
-        condjiExpr <- arithmetic.arithmeticCapabilities.lt(jVar, iVar)
-        setJ <- impParadigm.imperativeCapabilities.assignVar(jVar, zero)
-
-        inner_stmt <- impParadigm.imperativeCapabilities.whileLoop(condjiExpr, for {
-
-          // the BODY
-          numIindex <- array.arrayCapabilities.get(args.head._3, iVar)
-          numJIndex <- array.arrayCapabilities.get(args.head._3, jVar)
-
-          ifExpr <- arithmetic.arithmeticCapabilities.lt(numJIndex, numIindex)
-
-          maxIfStmt <- impParadigm.imperativeCapabilities.ifThenElse(ifExpr, for {
-
-            dpVarIndex <- array.arrayCapabilities.get(dpVar, iVar)
-            dpVarJIndex <- array.arrayCapabilities.get(dpVar, jVar)
-            dpVarJIndexPlusOne <- arithmetic.arithmeticCapabilities.add(dpVarJIndex, one)
-
-            ifInnerExpr <- arithmetic.arithmeticCapabilities.lt(dpVarIndex, dpVarJIndexPlusOne)
-
-            dpInnerIfStmt <- impParadigm.imperativeCapabilities.ifThenElse(ifInnerExpr, for {
-
-              dpVarIndex <- array.arrayCapabilities.get(dpVar, iVar)
-              dpVarJIndex <- array.arrayCapabilities.get(dpVar, jVar)
-              dpVarJIndexPlusOne <- arithmetic.arithmeticCapabilities.add(dpVarJIndex, one)
-
-              assignStmt <- impParadigm.imperativeCapabilities.assignVar(dpVarIndex, dpVarJIndexPlusOne)
-              _ <- addBlockDefinitions(Seq(assignStmt))
-            } yield (),
-              Seq.empty
-            )
-
-            _ <- addBlockDefinitions(Seq(dpInnerIfStmt ))
-          } yield (),
-            Seq.empty
-          )
-
-          // last line to be added to the while loop
-          incrExpr <- arithmetic.arithmeticCapabilities.add(jVar, one)
-          incrjStmt <- impParadigm.imperativeCapabilities.assignVar(jVar, incrExpr)
-          _ <- addBlockDefinitions(Seq(maxIfStmt, incrjStmt))
-        } yield ()
-        )
-
-        dpVarIndex2 <- array.arrayCapabilities.get(dpVar, iVar)
-        ifMaxExpr <- arithmetic.arithmeticCapabilities.lt(maxVar, dpVarIndex2)
-        maxCheckIfStmt <- impParadigm.imperativeCapabilities.ifThenElse(ifMaxExpr, for {
-
-          assignStmt <- impParadigm.imperativeCapabilities.assignVar(maxVar, dpVarIndex2)
-          _ <- addBlockDefinitions(Seq(assignStmt))
-        } yield (),
-          Seq.empty
-        )
-
-        // last line to be added to the while loop
-        incrExpr <- arithmetic.arithmeticCapabilities.add(iVar, one)
-        incriStmt <- impParadigm.imperativeCapabilities.assignVar(iVar, incrExpr)
-        _ <- addBlockDefinitions(Seq(setJ, inner_stmt, maxCheckIfStmt, incriStmt))
-      } yield ()
-      )
-
-      _ <- addBlockDefinitions(Seq(setI, outer_stmt))
-
-    } yield Some(maxVar)
   }
-  /**
-  public class Solution {
-    public int compute (int[] nums) {
-        int[] dp = new int[nums.length];
-        for (int i = 0; i < dp.length; i++) {
-          dp[i] = 1;
-        }
-        int max=0;
-        for (int i=0; i < dp.length; i++) {
-            for (int j=0; j<i; j++){
-                if (nums[j] < nums[i]) {
-                    dp[i] = Math.max(dp[i], dp[j]+1);
-                }
-            }
-            max = Math.max(max,dp[i]);
-        }
-        return max;
-    }
-}*/
-  def makeSimpleDP(model:Model): Generator[ProjectContext, Unit] = {
+
+  private def expand(result: Expression, nextexp: paradigm.syntax.Expression): Generator[paradigm.MethodBodyContext, Unit] = {
+    import paradigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+    import AnyParadigm.syntax._
+    for {
+      av <- impParadigm.imperativeCapabilities.assignVar(result, nextexp)
+      _ <- addBlockDefinitions(Seq(av))
+    } yield None
+  }
+
+  def make_compute_method(): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
+    import paradigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+    import AnyParadigm.syntax._
+    for {
+      intType <- toTargetLanguageType(TypeRep.Int)
+      _ <- setReturnType(intType)
+      self <- ooParadigm.methodBodyCapabilities.selfReference()
+      helperMethod <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle("helper"))
+      field <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle("n"))
+      invocation <- apply(helperMethod, Seq(field))
+    } yield Some(invocation)
+
+  }
+
+  def createConstructor(n:String): Generator[ConstructorContext, Unit] = {
+    import ooParadigm.constructorCapabilities._
+
+    for {
+      intType <- toTargetLanguageType(TypeRep.Int)     // should't just assume this
+
+      _ <- setParameters(Seq((names.mangle(n), intType)))
+      args <- getArguments()
+      _ <- initializeField(names.mangle(n), args.head._3)
+
+    } yield ()
+  }
+
+  def makeTopDown(model:Model): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
+
     val makeClass: Generator[ClassContext, Unit] = {
       import classCapabilities._
       for {
+        intType <- toTargetLanguageType(TypeRep.Int)    // shouldn't be hard-coded: should be able to infer from model
+        _ <- addField(names.mangle("n"), intType )
+        _ <- addConstructor(createConstructor("n"))
+        _ <- addMethod(names.mangle("helper"), make_helper_method(model))
         _ <- addMethod(names.mangle("compute"), make_compute_method())
       } yield None
     }
@@ -260,24 +283,19 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
     val initial_vals = Array(0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15)
 
     for {
-      solutionType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle("Solution"))
-
-      d_16 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 16)
-      sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solutionType, Seq.empty)
-      arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
+      fibType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle("Fibonacci"))
+      d_7 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 7)
+      sol <- ooParadigm.methodBodyCapabilities.instantiateObject(fibType, Seq(d_7))
       computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, names.mangle("compute"))
-
-      oo1 <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, Seq(d_16))
+      intType <- toTargetLanguageType(TypeRep.Int)
       //sampleVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle("sample"), arrayType, Some(oo1))
 
        // allAssigns <- set_array(sampleVar, 0, initial_vals)
-      expr <- create_array(initial_vals)
-      sampleVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle("sample"), arrayType, Some(expr))
-      solution_result <- apply(computeMethod, Seq(sampleVar))
-      six  <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 6)
-      asserteq2 <- asserts.assertionCapabilities.assertEquals(arrayType, solution_result, six)
+      d_13 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 13)
+      fib_7 <- apply(computeMethod, Seq.empty)
+      asserteq8 <- asserts.assertionCapabilities.assertEquals(intType, fib_7, d_13)
 
-    } yield Seq(asserteq2)
+    } yield Seq(asserteq8)
   }
 
   def makeTestCase(clazzName:String): Generator[TestContext, Unit] = {
@@ -290,7 +308,7 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
   def implement(model:Model): Generator[ProjectContext, Unit] = {
 
     for {
-      _ <- makeSimpleDP(model)
+      _ <- makeTopDown(model)
       _ <- paradigm.projectCapabilities.addCompilationUnit(
         paradigm.compilationUnitCapabilities.addTestSuite(testName, makeTestCase("DP"))
       )

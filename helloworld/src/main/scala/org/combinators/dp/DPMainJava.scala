@@ -13,7 +13,7 @@ import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
-import org.combinators.model.{Model, Setup}
+import org.combinators.model.{AdditionExpression, ArgExpression, EqualExpression, IteratorExpression, LiteralInt, Model, Setup, SubproblemExpression, SubtractionExpression}
 
 import java.nio.file.{Path, Paths}
 
@@ -21,7 +21,7 @@ import java.nio.file.{Path, Paths}
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
 class DPMainJava {
-  val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("world"))))
+  val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("dp"))))
 
   val dpApproach = DPObjectOrientedProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.ooParadigm, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.equalityInMethod)
 
@@ -68,16 +68,34 @@ class DPMainJava {
 }
 
 object DPDirectToDiskMain extends IOApp {
-  val targetDirectory = Paths.get("target", "dp")
+  val targetDirectory:Path = Paths.get("target", "dp")
 
   def run(args: List[String]): IO[ExitCode] = {
 
-    var model = new Setup().instantiate()
+    val zero: LiteralInt = new LiteralInt(0)
+    val one: LiteralInt = new LiteralInt(1)
+    val two: LiteralInt = new LiteralInt(2)
+
+    val bound = List(new ArgExpression(0))
+
+    val i: IteratorExpression = new IteratorExpression(0)
+
+    val im1 = new SubtractionExpression(i, one)
+    val im2 = new SubtractionExpression(i, two)
+
+    val Fib = new Model("Fibonacci",
+      bound,
+      cases = List(
+        ( Some(new EqualExpression(i, zero)),  zero ),
+        ( Some(new EqualExpression(i, one)),   one ),
+        ( None,                                new AdditionExpression(new SubproblemExpression(Seq(im1)), new SubproblemExpression(Seq(im2))) )
+      )
+    )
     for {
       _ <- IO { print("Initializing Generator...") }
       main <- IO { new DPMainJava() }
       _ <- IO { println("[OK]") }
-      result <- main.runDirectToDisc(targetDirectory, model)
+      result <- main.runDirectToDisc(targetDirectory, Fib)
     } yield result
   }
 }

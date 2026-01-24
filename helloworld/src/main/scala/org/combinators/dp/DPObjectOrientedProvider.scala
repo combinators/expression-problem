@@ -4,7 +4,7 @@ import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, ObjectOriented}
+import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
 import org.combinators.dp.Utility
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
@@ -15,6 +15,9 @@ import org.combinators.model.{AdditionExpression, EqualExpression, FunctionExpre
  */
 trait DPObjectOrientedProvider extends DPProvider with Utility {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
+  val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
+  val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
+
   val names: NameProvider[paradigm.syntax.Name]
   val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext,paradigm.type]
   val arithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double]
@@ -32,6 +35,12 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
   lazy val testName = names.mangle("TestSuite")
   lazy val helper = names.mangle("helper")
   lazy val compute = names.mangle("compute")
+
+  // will be set and then globally accessed
+  var memo:Boolean = false
+
+  // if not memo, then this will be defined and added
+  lazy val resultVarName = names.mangle("result")
 
   def getter(attr:String) : String = {
     "get" + attr.capitalize
@@ -98,6 +107,49 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
     } yield ()
   }
 
+  def outer_helper(model:Model): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
+    import paradigm.methodBodyCapabilities._
+    for {
+      _ <- make_compute_method_signature()
+      intType <- toTargetLanguageType(TypeRep.Int)
+      _ <- setReturnType(intType)
+      _ <- process_inner_helper(None, model)
+    } yield None
+  }
+
+  def outer_helper_memo(model:Model): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
+    import paradigm.methodBodyCapabilities._
+    for {
+      _ <- make_compute_method_signature()
+      args <- getArguments()
+      intType <- toTargetLanguageType(TypeRep.Int)
+      _ <- setReturnType(intType)
+      result_var <- impParadigm.imperativeCapabilities.declareVar(resultVarName, intType)
+      self <- ooParadigm.methodBodyCapabilities.selfReference()
+      memo_field <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle("memo"))
+
+      // check if there
+      memo_ck <- ooParadigm.methodBodyCapabilities.getMember(memo_field, names.mangle("containsKey"))
+      memo_cond_expr <- paradigm.methodBodyCapabilities.apply(memo_ck, Seq(args.head._3))
+      check_if <- impParadigm.imperativeCapabilities.ifThenElse(memo_cond_expr, for {
+        get_method <- ooParadigm.methodBodyCapabilities.getMember(memo_field, names.mangle("get"))
+        get_call <- paradigm.methodBodyCapabilities.apply(get_method, Seq(args.head._3))
+        stmt1 <- impParadigm.imperativeCapabilities.returnStmt(get_call)
+        _ <- addBlockDefinitions(Seq(stmt1))
+      } yield None, Seq.empty)
+      _ <- addBlockDefinitions(Seq(check_if))
+
+      _ <- process_inner_helper(Some(result_var), model)
+
+      // before returning, invoke "this.memo.put(n, result)"
+      put_method <- ooParadigm.methodBodyCapabilities.getMember(memo_field, names.mangle("put"))
+      func_call <- paradigm.methodBodyCapabilities.apply(put_method, Seq(args.head._3, result_var))
+      stmt1 <- impParadigm.imperativeCapabilities.liftExpression(func_call)
+      _ <- addBlockDefinitions(Seq(stmt1))
+
+    } yield Some(result_var)
+  }
+
   /**
    * The workhorse for a top-down helper method that relies on recursion and base cases to do the work.
    * The model has a sequence of `cases` that may contain logical guard and an expression that is to be the reulst
@@ -108,16 +160,17 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
    *
    * The explore() method converts a model Expression into a CoGen expression.
    * The expand() method converts a model Expression into a Return statement of that expression
+   *
    * @return
    */
-  def make_helper_method(model:Model): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
+  def process_inner_helper(result_var: Option[Expression], model:Model): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import AnyParadigm.syntax._
 
-    val real_cases = model.cases.filter(p => p._1.isDefined)  // MUST be at least one.
+    val real_cases = model.cases.filter(p => p._1.isDefined) // MUST be at least one.
     val first_case = real_cases.head
     val tail_cases = real_cases.tail
-    val elseCase = model.cases.filter(p => p._1.isEmpty)      // MUST only be one. Not sure how I would check
+    val elseCase = model.cases.filter(p => p._1.isEmpty) // MUST only be one. Not sure how I would check
 
     for {
       _ <- make_compute_method_signature()
@@ -129,7 +182,7 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
         for {
           next_cond <- explore(next_case._1.get)
           next_exp <- explore(next_case._2)
-        } yield (next_cond, expand(next_exp))
+        } yield (next_cond, expand(result_var, next_exp))
       }
 
       ifstmt <- impParadigm.imperativeCapabilities.ifThenElse(
@@ -139,7 +192,11 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
         // statements for that first if
         for {
           resexp <- explore(first_case._2)
-          av <- impParadigm.imperativeCapabilities.returnStmt(resexp)
+          av <- if (memo) {
+            impParadigm.imperativeCapabilities.assignVar(result_var.get, resexp)
+          } else {
+            impParadigm.imperativeCapabilities.returnStmt(resexp)
+          }
           _ <- addBlockDefinitions(Seq(av))
         } yield None
         ,
@@ -149,24 +206,32 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
         // terminating 'else' takes the elseCase and adds it last
         Some(for {
           result_exp <- explore(elseCase.head._2)
-          av <- impParadigm.imperativeCapabilities.returnStmt(result_exp)
+          av <- if (memo) {
+            impParadigm.imperativeCapabilities.assignVar(result_var.get, result_exp)
+          } else {
+            impParadigm.imperativeCapabilities.returnStmt(result_exp)
+          }
           _ <- addBlockDefinitions(Seq(av))
         } yield ())
       )
 
       _ <- addBlockDefinitions(Seq(ifstmt))
-
     } yield None
   }
 
   /**
    * Necessary wrapper method that inserts a return (expr) statement from the given expression.
+   *
    * @return
    */
-  private def expand(exp: paradigm.syntax.Expression): Generator[paradigm.MethodBodyContext, Unit] = {
+  private def expand(resultVar: Option[Expression], exp: Expression): Generator[paradigm.MethodBodyContext, Unit] = {
     import paradigm.methodBodyCapabilities._
     for {
-      av <- impParadigm.imperativeCapabilities.returnStmt(exp)
+      av <- if (memo) {
+        impParadigm.imperativeCapabilities.assignVar(resultVar.get, exp)
+      } else {
+        impParadigm.imperativeCapabilities.returnStmt(exp)
+      }
       _ <- addBlockDefinitions(Seq(av))
     } yield None
   }
@@ -190,6 +255,22 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
     } yield Some(invocation)
   }
 
+  def makeMemoType(keyType:TypeRep, valueType:TypeRep): Generator[ConstructorContext, Type] = {
+    import ooParadigm.constructorCapabilities._
+    import genericsParadigm.constructorCapabilities._
+
+    for {
+      mapClass <- ooParadigm.constructorCapabilities.findClass(
+        names.mangle("java"), names.mangle("util"), names.mangle("HashMap")
+      )
+
+      keyType <- toTargetLanguageType(keyType)
+      valueType <- toTargetLanguageType(valueType)
+      finalTpe <- applyType(mapClass, Seq(keyType, valueType))
+
+    } yield finalTpe
+  }
+
   /**
    * Constructor now takes the responsibility of taking the arguments to the problem. Takes
    * in a sequence of arguments, and auto-initializes all possible fields.
@@ -206,19 +287,53 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
         } yield ()
       }
 
+      _ <- if (memo) {
+        for {
+          tpe <- makeMemoType(TypeRep.Int, TypeRep.Int) // HACK
+          obj <- instantiateObject(tpe, Seq.empty)
+          _ <- initializeField(names.mangle("memo"), obj)
+        } yield None
+      } else {
+        Command.skip[ConstructorContext]
+      }
     } yield ()
   }
 
   def makeTopDown(model:Model): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
 
+    def makeMemo(keyType:TypeRep, valueType:TypeRep) : Generator[ClassContext, Unit] = {
+      import classCapabilities._
+      import genericsParadigm.classCapabilities._
+
+      for {
+        mapClass <- ooParadigm.classCapabilities.findClass(
+          names.mangle("java"), names.mangle("util"), names.mangle("HashMap")
+        )
+        keyType <- toTargetLanguageType(keyType)
+        valueType <- toTargetLanguageType(valueType)
+        finalTpe <- applyType(mapClass, Seq(keyType, valueType))
+
+        _ <- addField(names.mangle("memo"), finalTpe)
+      } yield None
+    }
+
     val makeClass: Generator[ClassContext, Unit] = {
       import classCapabilities._
       for {
         intType <- toTargetLanguageType(TypeRep.Int)    // shouldn't be hard-coded: should be able to infer from model
         _ <- addField(names.mangle("n"), intType )
+        _ <- if (memo) {
+          makeMemo(TypeRep.Int, TypeRep.Int)
+        } else {
+          Command.skip[ClassContext]
+        }
         _ <- addConstructor(createConstructor(Seq((names.mangle("n"), intType))))
-        _ <- addMethod(helper, make_helper_method(model))
+        _ <- if (memo) {
+          addMethod(helper, outer_helper_memo(model))
+        } else {
+          addMethod(helper, outer_helper(model))
+        }
         _ <- addMethod(compute, make_compute_method())
       } yield None
     }
@@ -236,6 +351,8 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
       new DPExample("fib1", 1, 1, None),
       new DPExample("fib2", 2, 1, None),
       new DPExample("fib7", 7, 13, None),
+      new DPExample("fib20", 20, 6765, None),
+      new DPExample("fib40", 40, 102334155, None)
     )
 
     for {
@@ -263,6 +380,7 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
   }
 
   def implement(model:Model): Generator[ProjectContext, Unit] = {
+    memo = true
     for {
       _ <- makeTopDown(model)
       _ <- paradigm.projectCapabilities.addCompilationUnit(
@@ -281,19 +399,20 @@ object DPObjectOrientedProvider {
   (nameProvider: NameProvider[base.syntax.Name],
    imp: Imperative.WithBase[base.MethodBodyContext, base.type],
    ffiArithmetic: Arithmetic.WithBase[base.MethodBodyContext, base.type, Double],
-   oo: ObjectOriented.WithBase[base.type],
    con: Console.WithBase[base.MethodBodyContext, base.type],
    arr: Arrays.WithBase[base.MethodBodyContext, base.type],
    assertsIn: Assertions.WithBase[base.MethodBodyContext, base.type],
-   eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type]
-  )
-  : DPObjectOrientedProvider.WithParadigm[base.type] =
+   eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type],oo: ObjectOriented.WithBase[base.type],
+   parametricPolymorphism: ParametricPolymorphism.WithBase[base.type])
+  (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): DPObjectOrientedProvider.WithParadigm[base.type] =
     new DPObjectOrientedProvider {
       override val paradigm: base.type = base
       val impParadigm: imp.type = imp
       val arithmetic: ffiArithmetic.type = ffiArithmetic
       override val names: NameProvider[paradigm.syntax.Name] = nameProvider
-      override val ooParadigm: ObjectOriented.WithBase[paradigm.type] = oo
+      override val ooParadigm: oo.type = oo
+      override val polymorphics: parametricPolymorphism.type = parametricPolymorphism
+      override val genericsParadigm: generics.type = generics
       override val console: Console.WithBase[base.MethodBodyContext, paradigm.type] = con
       override val array: Arrays.WithBase[base.MethodBodyContext, paradigm.type] = arr
       override val asserts: Assertions.WithBase[base.MethodBodyContext, paradigm.type] = assertsIn

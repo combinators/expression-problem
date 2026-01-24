@@ -78,16 +78,16 @@ object DPDirectToDiskMain extends IOApp {
 
     val bound = List(new ArgExpression(0))
 
-    val i: IteratorExpression = new IteratorExpression(0)
+    val n: IteratorExpression = new IteratorExpression(0)   // only one argument, n
 
-    val im1 = new SubtractionExpression(i, one)
-    val im2 = new SubtractionExpression(i, two)
-
+    val im1 = new SubtractionExpression(n, one)
+    val im2 = new SubtractionExpression(n, two)
+n
     val Fib = new Model("Fibonacci",
       bound,
       cases = List(
-        ( Some(new EqualExpression(i, zero)),  zero ),
-        ( Some(new EqualExpression(i, one)),   one ),
+        ( Some(new EqualExpression(n, zero)),  zero ),
+        ( Some(new EqualExpression(n, one)),   one ),
         ( None,                                new AdditionExpression(new SubproblemExpression(Seq(im1)), new SubproblemExpression(Seq(im2))) )
       )
     )

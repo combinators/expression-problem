@@ -6,12 +6,13 @@ import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, ObjectOriented}
 import org.combinators.ep.generator.{AbstractSyntax, NameProvider, Understands}
-
+import org.combinators.dp.Utility
+import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
  */
-trait PascalObjectOrientedProvider extends PascalProvider {
+trait PascalObjectOrientedProvider extends PascalProvider with Utility{
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val names: NameProvider[paradigm.syntax.Name]
   val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext,paradigm.type]
@@ -35,6 +36,7 @@ trait PascalObjectOrientedProvider extends PascalProvider {
   lazy val message:String = "message"
   lazy val main:String = "main"
   lazy val testName = names.mangle("TestSuite")
+  lazy val compute = names.mangle("compute")
 
   def getter(attr:String) : String = {
     "get" + attr.capitalize
@@ -178,27 +180,37 @@ trait PascalObjectOrientedProvider extends PascalProvider {
   }
 
 
+
   def makeTestCase(): Generator[MethodBodyContext, Seq[Expression]] = {
     import eqls.equalityCapabilities._
     import paradigm.methodBodyCapabilities._
 
-    // can only be optimized if 'forEach' is added to CoGen. Right now I think it is in EpCoGen
-    val initial_vals = Array(0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15)
+
+    val tests = Seq(
+      new DPExample("pasc11", Seq(1,1), 1, None),
+      new DPExample("pasc32", Seq(3,2), 3, None),
+      new DPExample("pasc63", Seq(6,3), 20, None),
+      new DPExample("pasc2013", Seq(20,13), 77520, None),
+    )
+
 
     for {
-      solutionType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle("Pascal"))
-      d_5 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 5)
-      d_3 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 3)
+      assert_statements <- forEach(tests) { example =>
+        for {
+          pascType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle("Pascal"))
+          r_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, example.example.head)
+          c_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, example.example.tail.head)
+          sol <- ooParadigm.methodBodyCapabilities.instantiateObject(pascType, Seq(r_value,c_value))
+          computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, compute)
 
+          intType <- toTargetLanguageType(TypeRep.Int)
+          pascrc_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, example.solution)
+          pascrc_actual <- apply(computeMethod, Seq.empty)
+          asserteq_fib <- asserts.assertionCapabilities.assertEquals(intType, pascrc_actual, pascrc_value)
 
-      sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solutionType, Seq.empty)
-      arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
-      computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, names.mangle("compute"))
-      solution_result <- apply(computeMethod, Seq(d_5,d_3))
-      ten  <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 10)
-      asserteq2 <- asserts.assertionCapabilities.assertEquals(arrayType, solution_result, ten)
-
-    } yield Seq(asserteq2)
+        } yield asserteq_fib
+      }
+    } yield assert_statements
   }
 
   def makeTestCase(clazzName:String): Generator[TestContext, Unit] = {

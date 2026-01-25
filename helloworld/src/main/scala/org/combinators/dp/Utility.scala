@@ -1,6 +1,5 @@
 package org.combinators.dp
 
-import scala.collection.mutable
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.NameProvider
@@ -48,34 +47,46 @@ trait Utility {
     } yield assert_statements
   }
 
-  def explore(expr : org.combinators.model.Expression) : Generator[paradigm.MethodBodyContext, Expression] = {
+  /**
+   * Institute plan for mutual recursion of helper(args) method which calls memo(args) on smaller subproblem, and that
+   * method is responsible for computing and storing these subproblems.
+   */
+  def explore(expr : org.combinators.model.Expression, memoize:Boolean = true) : Generator[paradigm.MethodBodyContext, Expression] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
     import AnyParadigm.syntax._
+
     // turn model Expression into a real expression
     expr match {
       case eq: EqualExpression => for {
-        left <- explore(eq.left)
-        right <- explore(eq.right)
+        left <- explore(eq.left, memoize)
+        right <- explore(eq.right, memoize)
         intType <- toTargetLanguageType(TypeRep.Int)
         e <- eqls.equalityCapabilities.areEqual(intType, left, right)
       } yield e
 
       case ae: SubtractionExpression => for {
-        left <- explore(ae.left)
-        right <- explore(ae.right)
+        left <- explore(ae.left, memoize)
+        right <- explore(ae.right, memoize)
         e <- arithmetic.arithmeticCapabilities.sub(left, right)
       } yield e
 
       case ae: AdditionExpression => for {
-        left <- explore(ae.left)
-        right <- explore(ae.right)
+        left <- explore(ae.left, memoize)
+        right <- explore(ae.right, memoize)
         e <- arithmetic.arithmeticCapabilities.add(left, right)
       } yield e
 
       case se: SubproblemExpression => for {
         self <- ooParadigm.methodBodyCapabilities.selfReference()
-        f <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle("helper"))
+
+        // THIS could be turned into a decorator so we don't have to embed here the memo vs. helper concept
+        // another day
+        f <- if (memoize) {
+          ooParadigm.methodBodyCapabilities.getMember(self, names.mangle("memo"))
+        } else {
+          ooParadigm.methodBodyCapabilities.getMember(self, names.mangle("helper"))
+        }
         all_exprs <- forEach(se.args) { expr => for {
           exp <- explore(expr)
         } yield exp

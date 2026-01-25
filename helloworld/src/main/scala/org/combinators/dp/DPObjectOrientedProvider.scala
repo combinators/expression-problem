@@ -35,6 +35,7 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
   lazy val testName = names.mangle("TestSuite")
   lazy val helper = names.mangle("helper")
   lazy val compute = names.mangle("compute")
+  lazy val memoName = names.mangle("memo")
 
   // will be set and then globally accessed
   var memo:Boolean = false
@@ -113,22 +114,32 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
       _ <- make_compute_method_signature()
       intType <- toTargetLanguageType(TypeRep.Int)
       _ <- setReturnType(intType)
-      _ <- process_inner_helper(None, model)
+      _ <- process_inner_helper(model)
     } yield None
   }
 
-  def outer_helper_memo(model:Model): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
+  /**
+
+   private int memo(int n) {
+     if (this.memo.containsKey(n)) {
+       return this.memo.get(n);
+     }
+
+     int result = helper(n);
+     this.memo.put(n, result);
+     return result;
+   }
+
+   */
+  def memo_helper(): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     for {
       _ <- make_compute_method_signature()
       args <- getArguments()
       intType <- toTargetLanguageType(TypeRep.Int)
-      _ <- setReturnType(intType)
-      result_var <- impParadigm.imperativeCapabilities.declareVar(resultVarName, intType)
       self <- ooParadigm.methodBodyCapabilities.selfReference()
       memo_field <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle("memo"))
 
-      // check if there
       memo_ck <- ooParadigm.methodBodyCapabilities.getMember(memo_field, names.mangle("containsKey"))
       memo_cond_expr <- paradigm.methodBodyCapabilities.apply(memo_ck, Seq(args.head._3))
       check_if <- impParadigm.imperativeCapabilities.ifThenElse(memo_cond_expr, for {
@@ -139,9 +150,12 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
       } yield None, Seq.empty)
       _ <- addBlockDefinitions(Seq(check_if))
 
-      _ <- process_inner_helper(Some(result_var), model)
+      helper_method <- ooParadigm.methodBodyCapabilities.getMember(self, helper)
+      helper_expr <- paradigm.methodBodyCapabilities.apply(helper_method, Seq(args.head._3))
+      result_var <- impParadigm.imperativeCapabilities.declareVar(resultVarName, intType, Some(helper_expr))
 
-      // before returning, invoke "this.memo.put(n, result)"
+      self <- ooParadigm.methodBodyCapabilities.selfReference()
+      memo_field <- ooParadigm.methodBodyCapabilities.getMember(self, memoName)
       put_method <- ooParadigm.methodBodyCapabilities.getMember(memo_field, names.mangle("put"))
       func_call <- paradigm.methodBodyCapabilities.apply(put_method, Seq(args.head._3, result_var))
       stmt1 <- impParadigm.imperativeCapabilities.liftExpression(func_call)
@@ -158,12 +172,12 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
    * This code relies on a helper method and ensures that all base cases are resolved by return statements, and
    * the final "else" case is appended.
    *
-   * The explore() method converts a model Expression into a CoGen expression.
+   * The explore() method converts a model Expression into a CoGen expression. Must be sure to pass in memo
    * The expand() method converts a model Expression into a Return statement of that expression
    *
    * @return
    */
-  def process_inner_helper(result_var: Option[Expression], model:Model): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
+  def process_inner_helper(model:Model): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import AnyParadigm.syntax._
 
@@ -176,13 +190,13 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
       _ <- make_compute_method_signature()
       intType <- toTargetLanguageType(TypeRep.Int)
       _ <- setReturnType(intType)
-      inner <- explore(first_case._1.get)
+      inner <- explore(first_case._1.get, memoize=memo)
 
       all_rest <- forEach(tail_cases) { next_case =>
         for {
-          next_cond <- explore(next_case._1.get)
-          next_exp <- explore(next_case._2)
-        } yield (next_cond, expand(result_var, next_exp))
+          next_cond <- explore(next_case._1.get, memoize=memo)
+          next_exp <- explore(next_case._2, memoize=memo)
+        } yield (next_cond, expand(next_exp))
       }
 
       ifstmt <- impParadigm.imperativeCapabilities.ifThenElse(
@@ -191,12 +205,8 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
         ,
         // statements for that first if
         for {
-          resexp <- explore(first_case._2)
-          av <- if (memo) {
-            impParadigm.imperativeCapabilities.assignVar(result_var.get, resexp)
-          } else {
-            impParadigm.imperativeCapabilities.returnStmt(resexp)
-          }
+          resexp <- explore(first_case._2, memoize=memo)
+          av <- impParadigm.imperativeCapabilities.returnStmt(resexp)
           _ <- addBlockDefinitions(Seq(av))
         } yield None
         ,
@@ -205,12 +215,8 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
         ,
         // terminating 'else' takes the elseCase and adds it last
         Some(for {
-          result_exp <- explore(elseCase.head._2)
-          av <- if (memo) {
-            impParadigm.imperativeCapabilities.assignVar(result_var.get, result_exp)
-          } else {
-            impParadigm.imperativeCapabilities.returnStmt(result_exp)
-          }
+          result_exp <- explore(elseCase.head._2, memoize=memo)
+          av <- impParadigm.imperativeCapabilities.returnStmt(result_exp)
           _ <- addBlockDefinitions(Seq(av))
         } yield ())
       )
@@ -224,14 +230,10 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
    *
    * @return
    */
-  private def expand(resultVar: Option[Expression], exp: Expression): Generator[paradigm.MethodBodyContext, Unit] = {
+  private def expand(exp: Expression): Generator[paradigm.MethodBodyContext, Unit] = {
     import paradigm.methodBodyCapabilities._
     for {
-      av <- if (memo) {
-        impParadigm.imperativeCapabilities.assignVar(resultVar.get, exp)
-      } else {
-        impParadigm.imperativeCapabilities.returnStmt(exp)
-      }
+      av <- impParadigm.imperativeCapabilities.returnStmt(exp)
       _ <- addBlockDefinitions(Seq(av))
     } yield None
   }
@@ -330,10 +332,12 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
         }
         _ <- addConstructor(createConstructor(Seq((names.mangle("n"), intType))))
         _ <- if (memo) {
-          addMethod(helper, outer_helper_memo(model))
+          addMethod(memoName, memo_helper())
         } else {
-          addMethod(helper, outer_helper(model))
+          Command.skip[ClassContext]
         }
+
+        _ <- addMethod(helper, outer_helper(model))
         _ <- addMethod(compute, make_compute_method())
       } yield None
     }

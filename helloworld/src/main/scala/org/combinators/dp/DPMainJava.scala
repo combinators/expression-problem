@@ -27,7 +27,7 @@ class DPMainJava {
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
-  def directToDiskTransaction(targetDirectory: Path, model:Model): IO[Unit] = {
+  def directToDiskTransaction(targetDirectory: Path, model:Model, option:GenerationOption): IO[Unit] = {
 
     val files =
       () => generator.paradigm.runGenerator {
@@ -41,7 +41,7 @@ class DPMainJava {
           _ <- generator.equalityInMethod.enable()
           _ <- generator.assertionsInMethod.enable()
 
-          _ <- dpApproach.implement(model)
+          _ <- dpApproach.implement(model, option)
         } yield ()
       }
 
@@ -60,9 +60,9 @@ class DPMainJava {
     }
   }
 
-  def runDirectToDisc(targetDirectory: Path, model:Model): IO[ExitCode] = {
+  def runDirectToDisc(targetDirectory: Path, model:Model, option:GenerationOption): IO[ExitCode] = {
     for {
-      _ <- directToDiskTransaction(targetDirectory, model)
+      _ <- directToDiskTransaction(targetDirectory, model, option)
     } yield ExitCode.Success
   }
 }
@@ -78,7 +78,7 @@ object DPDirectToDiskMain extends IOApp {
 
     val bound = List(new ArgExpression(0))
 
-    val n: IteratorExpression = new IteratorExpression(0)   // only one argument, n
+    val n: IteratorExpression = new IteratorExpression(0, "i")   // only one argument, n
 
     val im1 = new SubtractionExpression(n, one)
     val im2 = new SubtractionExpression(n, two)
@@ -91,11 +91,19 @@ n
         ( None,                                new AdditionExpression(new SubproblemExpression(Seq(im1)), new SubproblemExpression(Seq(im2))) )
       )
     )
+
+    // choose one of these to pass in
+    val topDown         = new TopDown()
+    val topDownWithMemo = new TopDown(memo = true)
+    val bottomUp        = new BottomUp()
+
     for {
       _ <- IO { print("Initializing Generator...") }
       main <- IO { new DPMainJava() }
       _ <- IO { println("[OK]") }
-      result <- main.runDirectToDisc(targetDirectory, Fib)
+
+      // pass in TOP DOWN
+      result <- main.runDirectToDisc(targetDirectory, Fib, topDown)
     } yield result
   }
 }

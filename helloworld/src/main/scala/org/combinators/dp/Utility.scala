@@ -8,6 +8,13 @@ import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality}
 import org.combinators.model.{AdditionExpression, EqualExpression, IteratorExpression, LiteralInt, SubproblemExpression, SubtractionExpression}
 
+
+// Different approach
+trait GenerationOption {}
+
+class TopDown(val memo:Boolean = false) extends GenerationOption
+class BottomUp extends GenerationOption
+
 trait Utility {
   val paradigm: AnyParadigm
   val names: NameProvider[paradigm.syntax.Name]
@@ -21,6 +28,7 @@ trait Utility {
   import paradigm._
   import syntax._
   import ooParadigm._
+
 
   class DPExample[Input, Output, Full_Solution] (val name:String, val example:Input, val solution:Output, val full_solution:Full_Solution) {
   }
@@ -51,7 +59,7 @@ trait Utility {
    * Institute plan for mutual recursion of helper(args) method which calls memo(args) on smaller subproblem, and that
    * method is responsible for computing and storing these subproblems.
    */
-  def explore(expr : org.combinators.model.Expression, memoize:Boolean = true) : Generator[paradigm.MethodBodyContext, Expression] = {
+  def explore(expr : org.combinators.model.Expression, memoize:Boolean = true, bottomUp:Option[(Expression,Map[String,Expression])] = None) : Generator[paradigm.MethodBodyContext, Expression] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
     import AnyParadigm.syntax._
@@ -59,44 +67,58 @@ trait Utility {
     // turn model Expression into a real expression
     expr match {
       case eq: EqualExpression => for {
-        left <- explore(eq.left, memoize)
-        right <- explore(eq.right, memoize)
+        left <- explore(eq.left, memoize, bottomUp)
+        right <- explore(eq.right, memoize, bottomUp)
         intType <- toTargetLanguageType(TypeRep.Int)
         e <- eqls.equalityCapabilities.areEqual(intType, left, right)
       } yield e
 
       case ae: SubtractionExpression => for {
-        left <- explore(ae.left, memoize)
-        right <- explore(ae.right, memoize)
+        left <- explore(ae.left, memoize, bottomUp)
+        right <- explore(ae.right, memoize, bottomUp)
         e <- arithmetic.arithmeticCapabilities.sub(left, right)
       } yield e
 
       case ae: AdditionExpression => for {
-        left <- explore(ae.left, memoize)
-        right <- explore(ae.right, memoize)
+        left <- explore(ae.left, memoize, bottomUp)
+        right <- explore(ae.right, memoize, bottomUp)
         e <- arithmetic.arithmeticCapabilities.add(left, right)
       } yield e
 
       case se: SubproblemExpression => for {
         self <- ooParadigm.methodBodyCapabilities.selfReference()
 
-        // THIS could be turned into a decorator so we don't have to embed here the memo vs. helper concept
-        // another day
+        // THIS could be turned into a decorator so we don't have to embed here the memo vs. helper concept another day
         f <- if (memoize) {
           ooParadigm.methodBodyCapabilities.getMember(self, names.mangle("memo"))
         } else {
           ooParadigm.methodBodyCapabilities.getMember(self, names.mangle("helper"))
         }
+
         all_exprs <- forEach(se.args) { expr => for {
-          exp <- explore(expr)
-        } yield exp
+            exp <- explore(expr, memoize, bottomUp)
+          } yield exp
         }
-        res <- paradigm.methodBodyCapabilities.apply(f, all_exprs)
+
+        res <- if (bottomUp.isDefined) {
+          get_matrix_element(bottomUp.get._1, all_exprs)
+        } else {
+          paradigm.methodBodyCapabilities.apply(f, all_exprs)
+        }
+
       } yield res
 
       case it:IteratorExpression => for {
-        args <- paradigm.methodBodyCapabilities.getArguments()
-      } yield args(it.iteratorNumber)._3
+        actual <- if (bottomUp.isDefined) {
+          for {
+            _ <- paradigm.methodBodyCapabilities.getArguments()   // IGNORE
+          } yield bottomUp.get._2(it.variable)
+        } else {
+          for {
+            args <- paradigm.methodBodyCapabilities.getArguments()
+          } yield args(it.iteratorNumber)._3
+        }
+      } yield actual
 
       case lit:LiteralInt => for {
         actual <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, lit.literal)
@@ -264,6 +286,37 @@ trait Utility {
       //_ <- addBlockDefinitions(Seq(while_loop))
 
     } yield while_loop
+  }
+
+  def get_matrix_element(matrix: Expression, indices:Seq[Expression]): Generator[paradigm.MethodBodyContext, Expression] = {
+    import paradigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities._
+
+    if (indices.length == 1) {
+      for {
+        ai <- array.arrayCapabilities.get(matrix, indices.head)
+      } yield ai
+    } else if (indices.length == 2) {
+      for {
+        ai <- array.arrayCapabilities.get(matrix, indices.head)
+        aij <- array.arrayCapabilities.get(ai, indices.tail.head)
+      } yield aij
+    } else if (indices.length == 3) {
+      for {
+        ai <- array.arrayCapabilities.get(matrix, indices.head)
+        aij <- array.arrayCapabilities.get(ai, indices.tail.head)
+        aijk <- array.arrayCapabilities.get(aij, indices.tail.tail.head)
+      } yield aijk
+    } else if (indices.length == 3) {
+      for {
+        ai <- array.arrayCapabilities.get(matrix, indices.head)
+        aij <- array.arrayCapabilities.get(ai, indices.tail.head)
+        aijk <- array.arrayCapabilities.get(aij, indices.tail.tail.head)
+        aijkl <- array.arrayCapabilities.get(aij, indices.tail.tail.tail.head)
+      } yield aijkl
+    } else {
+      ???
+    }
   }
 
   def get_matrix_element(matrix: Expression, row: Expression, col: Expression): Generator[paradigm.MethodBodyContext, Expression] = {

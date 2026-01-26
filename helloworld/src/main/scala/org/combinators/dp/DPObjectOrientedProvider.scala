@@ -30,12 +30,14 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
   import syntax._
   import ooParadigm._
 
-  lazy val message:String = "message"
-  lazy val main:String = "main"
   lazy val testName = names.mangle("TestSuite")
-  lazy val helper = names.mangle("helper")
-  lazy val compute = names.mangle("compute")
+  lazy val helper   = names.mangle("helper")
+  lazy val compute  = names.mangle("compute")
   lazy val memoName = names.mangle("memo")
+  lazy val dpName   = names.mangle("dp")
+
+  lazy val iName    = names.mangle("i")
+  lazy val nName    = names.mangle("n")
 
   // will be set and then globally accessed
   var memo:Boolean = false
@@ -43,68 +45,14 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
   // if not memo, then this will be defined and added
   lazy val resultVarName = names.mangle("result")
 
-  def getter(attr:String) : String = {
-    "get" + attr.capitalize
-  }
-
-  /**
-   * Default registration for findClass, which works with each registerTypeMapping for the different approaches.
-   *
-   * Sometimes the mapping is fixed for an EP approach, but sometimes it matters when a particular class is requested
-   * in the evolution of the system over time.
-   */
-  def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
-    FindClass(Seq(names.mangle(names.conceptNameOf(dtpe)))).interpret(canFindClass)
-  }
-
-  /** Provides meaningful default solution to find the base data type in many object-oriented approaches.
-   *
-   * This enables target-language classes to be retrieved from within the code generator in the Method, Class or Constructor contexts.
-   */
-  def registerTypeMapping(tpe:DataType): Generator[ProjectContext, Unit] = {
-    import paradigm.projectCapabilities.addTypeLookupForMethods
-    import ooParadigm.methodBodyCapabilities.canFindClassInMethod          // must be present, regardless of IntelliJ
-    import ooParadigm.projectCapabilities.addTypeLookupForClasses
-    import ooParadigm.projectCapabilities.addTypeLookupForConstructors
-    import ooParadigm.classCapabilities.canFindClassInClass                // must be present, regardless of IntelliJ
-    import ooParadigm.constructorCapabilities.canFindClassInConstructor    // must be present, regardless of IntelliJ
-    val dtpe = TypeRep.DataType(tpe)
-    for {
-      _ <- addTypeLookupForMethods(dtpe, domainTypeLookup(tpe))
-      _ <- addTypeLookupForClasses(dtpe, domainTypeLookup(tpe))
-      _ <- addTypeLookupForConstructors(dtpe, domainTypeLookup(tpe))
-    } yield ()
-  }
-
-  def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
-    import paradigm.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
-    for {
-      rt <- findClass(names.mangle(names.conceptNameOf(tpeCase)))
-      _ <- resolveAndAddImport(rt)
-
-      res <- instantiateObject(rt, args)
-    } yield res
-  }
-
   def make_compute_method_signature(): Generator[paradigm.MethodBodyContext, Unit] = {
     import paradigm.methodBodyCapabilities._
 
     for {
       intType <- toTargetLanguageType(TypeRep.Int)
-      _ <- setParameters(Seq((names.mangle("n"), intType)))
+      _ <- setParameters(Seq((nName, intType)))       // a bit of a hack. Should be able to extract from compute model
       _ <- setReturnType(intType)
 
-    } yield ()
-  }
-
-  def addToCurrentContext(stmts: Generator[paradigm.MethodBodyContext, Seq[Statement]]) : Generator[paradigm.MethodBodyContext, Unit] = {
-    import paradigm.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
-
-      for {
-      ss <- stmts
-      _ <- addBlockDefinitions(ss)
     } yield ()
   }
 
@@ -157,6 +105,7 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
       self <- ooParadigm.methodBodyCapabilities.selfReference()
       memo_field <- ooParadigm.methodBodyCapabilities.getMember(self, memoName)
       put_method <- ooParadigm.methodBodyCapabilities.getMember(memo_field, names.mangle("put"))
+
       func_call <- paradigm.methodBodyCapabilities.apply(put_method, Seq(args.head._3, result_var))
       stmt1 <- impParadigm.imperativeCapabilities.liftExpression(func_call)
       _ <- addBlockDefinitions(Seq(stmt1))
@@ -226,14 +175,21 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
   }
 
   /**
-   * Necessary wrapper method that inserts a return (expr) statement from the given expression.
-   *
-   * @return
+   * Necessary wrapper method that inserts a return (expr) statement from the given expression. Needed for top-down, non-memo
    */
   private def expand(exp: Expression): Generator[paradigm.MethodBodyContext, Unit] = {
     import paradigm.methodBodyCapabilities._
     for {
       av <- impParadigm.imperativeCapabilities.returnStmt(exp)
+      _ <- addBlockDefinitions(Seq(av))
+    } yield None
+  }
+
+  /** Needed when working bottom up. */
+  private def expand_assign(dp_i:Expression, exp: Expression): Generator[paradigm.MethodBodyContext, Unit] = {
+    import paradigm.methodBodyCapabilities._
+    for {
+      av <- impParadigm.imperativeCapabilities.assignVar(dp_i, exp)
       _ <- addBlockDefinitions(Seq(av))
     } yield None
   }
@@ -252,12 +208,90 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
       _ <- setReturnType(intType)
       self <- ooParadigm.methodBodyCapabilities.selfReference()
       helperMethod <- ooParadigm.methodBodyCapabilities.getMember(self, helper)
-      field <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle("n"))
+      field <- ooParadigm.methodBodyCapabilities.getMember(self, nName)
       invocation <- apply(helperMethod, Seq(field))
     } yield Some(invocation)
   }
 
-  def makeMemoType(keyType:TypeRep, valueType:TypeRep): Generator[ConstructorContext, Type] = {
+  def make_bottom_up_compute_method(model:Model): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
+    import paradigm.methodBodyCapabilities._
+
+    val real_cases = model.cases.filter(p => p._1.isDefined) // MUST be at least one.
+    val first_case = real_cases.head
+    val tail_cases = real_cases.tail
+    val elseCase = model.cases.filter(p => p._1.isEmpty) // MUST only be one. Not sure how I would check
+
+    for {
+      self <- ooParadigm.methodBodyCapabilities.selfReference()
+      intType <- toTargetLanguageType(TypeRep.Int)
+      _ <- setReturnType(intType)
+      arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
+
+      // cannot seem to do this in Constructor because it insists on using "int" for TypeRep.Int within ConstructorContext which
+      // seems to be different from Integer which occurs in MethodBodyContext
+      one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
+      zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
+      n <- ooParadigm.methodBodyCapabilities.getMember(self, nName)
+      nplus1 <- arithmetic.arithmeticCapabilities.add(n, one)
+
+      ivar <- impParadigm.imperativeCapabilities.declareVar(iName, intType, Some(zero))
+      dp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
+      dp_i <- array.arrayCapabilities.get(dp, ivar)
+
+      instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, Seq(nplus1), None)
+
+      inner <- explore(first_case._1.get, bottomUp = Some((dp, Map("i" -> ivar))))
+
+      all_rest <- forEach(tail_cases) { next_case =>
+        for {
+          next_cond <- explore(next_case._1.get, memoize = false, bottomUp = Some((dp, Map("i" -> ivar))))
+          next_exp <- explore(next_case._2, memoize = false, bottomUp = Some((dp, Map("i" -> ivar))))
+        } yield (next_cond, expand_assign(dp_i, next_exp))
+      }
+
+      assign_stmt <- impParadigm.imperativeCapabilities.assignVar (dp, instantiated)
+      _ <- addBlockDefinitions(Seq(assign_stmt))
+      in_range <- arithmetic.arithmeticCapabilities.le(ivar, n)
+
+      whileLoop <- impParadigm.imperativeCapabilities.whileLoop(in_range, for {
+        ifstmt <- impParadigm.imperativeCapabilities.ifThenElse(
+          // condition of first if
+          inner
+          ,
+          // statements for that first if
+          for {
+            resexp <- explore(first_case._2, memoize = false, bottomUp = Some((dp, Map("i" -> ivar))))
+            av <- impParadigm.imperativeCapabilities.assignVar(dp_i, resexp)
+            _ <- addBlockDefinitions(Seq(av))
+          } yield None
+          ,
+          // collection of (condition, block) for all of the remaining cases
+          all_rest
+          ,
+          // terminating 'else' takes the elseCase and adds it last
+          Some(for {
+            result_exp <- explore(elseCase.head._2, memoize = false, bottomUp = Some((dp, Map("i" -> ivar))))
+            av <- impParadigm.imperativeCapabilities.assignVar(dp_i, result_exp)
+            _ <- addBlockDefinitions(Seq(av))
+          } yield ())
+        )
+
+        ivarplusone <- arithmetic.arithmeticCapabilities.add(ivar, one)
+        incr <- impParadigm.imperativeCapabilities.assignVar(ivar, ivarplusone)
+
+        _ <- addBlockDefinitions(Seq(ifstmt, incr))
+      } yield ())
+
+      _ <- addBlockDefinitions(Seq(whileLoop))
+
+      // return last element dp[n] because dp is 1 larger in size than n
+      dpexp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
+      dpn <- array.arrayCapabilities.get(dpexp, n)
+      retstmt <- Command.lift(dpn)
+    } yield Some(retstmt)
+  }
+
+  def make_memo_type(keyType:TypeRep, valueType:TypeRep): Generator[ConstructorContext, Type] = {
     import ooParadigm.constructorCapabilities._
     import genericsParadigm.constructorCapabilities._
 
@@ -277,6 +311,41 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
    * Constructor now takes the responsibility of taking the arguments to the problem. Takes
    * in a sequence of arguments, and auto-initializes all possible fields.
    */
+  def create_bottom_up_constructor(args: Seq[(Name, Type)]): Generator[ConstructorContext, Unit] = {
+    import ooParadigm.constructorCapabilities._
+
+    for {
+      _ <- setParameters(args)
+      real_args <- getArguments()
+
+      _ <- forEach(real_args) { arg => for {
+          _ <- initializeField(arg._1, arg._3)
+        } yield ()
+      }
+
+//      one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
+//      nplus1 <- arithmetic.arithmeticCapabilities.add(real_args.head._3, one)
+//      arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
+
+//      instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, Seq(nplus1), None)
+//      self <- selfReference()
+
+      // I CANNOT GET THIS TO WOK
+
+      //dp <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle("dp"))
+      //_ <- initializeField(names.mangle("dp"), instantiated)
+
+     // assign_stmt <- impParadigm.imperativeCapabilities.assignVar (dp, instantiated)
+     // _ <- addBlockDefinitions(Seq(assign_stmt))
+
+    } yield ()
+  }
+
+
+  /**
+   * Constructor now takes the responsibility of taking the arguments to the problem. Takes
+   * in a sequence of arguments, and auto-initializes all possible fields.
+   */
   def createConstructor(args: Seq[(Name, Type)]): Generator[ConstructorContext, Unit] = {
     import ooParadigm.constructorCapabilities._
 
@@ -291,9 +360,9 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
 
       _ <- if (memo) {
         for {
-          tpe <- makeMemoType(TypeRep.Int, TypeRep.Int) // HACK
+          tpe <- make_memo_type(TypeRep.Int, TypeRep.Int) // HACK
           obj <- instantiateObject(tpe, Seq.empty)
-          _ <- initializeField(names.mangle("memo"), obj)
+          _ <- initializeField(memoName, obj)
         } yield None
       } else {
         Command.skip[ConstructorContext]
@@ -301,7 +370,7 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
     } yield ()
   }
 
-  def makeTopDown(model:Model): Generator[ProjectContext, Unit] = {
+  def make_top_down(model:Model): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
 
     def makeMemo(keyType:TypeRep, valueType:TypeRep) : Generator[ClassContext, Unit] = {
@@ -316,7 +385,7 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
         valueType <- toTargetLanguageType(valueType)
         finalTpe <- applyType(mapClass, Seq(keyType, valueType))
 
-        _ <- addField(names.mangle("memo"), finalTpe)
+        _ <- addField(memoName, finalTpe)
       } yield None
     }
 
@@ -324,13 +393,13 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
       import classCapabilities._
       for {
         intType <- toTargetLanguageType(TypeRep.Int)    // shouldn't be hard-coded: should be able to infer from model
-        _ <- addField(names.mangle("n"), intType )
+        _ <- addField(nName, intType )
         _ <- if (memo) {
           makeMemo(TypeRep.Int, TypeRep.Int)
         } else {
           Command.skip[ClassContext]
         }
-        _ <- addConstructor(createConstructor(Seq((names.mangle("n"), intType))))
+        _ <- addConstructor(createConstructor(Seq((nName, intType))))
         _ <- if (memo) {
           addMethod(memoName, memo_helper())
         } else {
@@ -339,6 +408,27 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
 
         _ <- addMethod(helper, outer_helper(model))
         _ <- addMethod(compute, make_compute_method())
+      } yield None
+    }
+
+    addClassToProject(makeClass, names.mangle(model.problem))
+  }
+
+  def make_bottom_up(model:Model): Generator[ProjectContext, Unit] = {
+    import ooParadigm.projectCapabilities._
+
+    val makeClass: Generator[ClassContext, Unit] = {
+      import classCapabilities._
+      for {
+        intType <- toTargetLanguageType(TypeRep.Int)    // shouldn't be hard-coded: should be able to infer from model
+        arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
+
+        _ <- addField(nName, intType )
+        _ <- addField(dpName, arrayType)   // this becomes "int" if I use arrayType
+
+        _ <- addConstructor(create_bottom_up_constructor(Seq((nName, intType))))
+
+        _ <- addMethod(compute, make_bottom_up_compute_method(model))
       } yield None
     }
 
@@ -383,10 +473,26 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
     } yield ()
   }
 
-  def implement(model:Model): Generator[ProjectContext, Unit] = {
-    memo = true
+  def implement(model:Model, option:GenerationOption): Generator[ProjectContext, Unit] = {
+
+    // handle Top/Bottom and properly set memo when TD
+    var isTopDown = false
+    option match {
+      case td:TopDown =>
+        memo = td.memo
+        isTopDown = true
+
+      case _:BottomUp =>
+        isTopDown = false
+    }
+
     for {
-      _ <- makeTopDown(model)
+      _ <- if (isTopDown) {
+        make_top_down(model)
+      } else {
+        make_bottom_up(model)
+      }
+
       _ <- paradigm.projectCapabilities.addCompilationUnit(
         paradigm.compilationUnitCapabilities.addTestSuite(testName, makeTestCase("DP"))
       )

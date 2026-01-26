@@ -13,7 +13,7 @@ class MaxExpression(val m: Expression, val n: Expression) extends Expression
 class FunctionExpression(val name:String, val args: Seq[Expression]) extends Expression
 
 class LiteralInt(val literal: Int) extends Expression
-class IteratorExpression(val iteratorNumber: Int) extends Expression
+class IteratorExpression(val iteratorNumber: Int, val variable:String) extends Expression
 
 class StringLengthExpression(val string: Expression)extends Expression
 

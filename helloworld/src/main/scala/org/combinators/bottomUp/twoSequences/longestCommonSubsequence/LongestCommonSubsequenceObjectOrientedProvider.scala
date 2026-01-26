@@ -10,7 +10,7 @@ import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, ObjectOrie
 import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
 import org.combinators.model.{CharAtExpression, EqualExpression, IteratorExpression, LiteralInt, Model}
 
-trait LongestCommonSubsequenceObjectOrientedProvider extends DPProvider with TwoSequencesUtility {
+trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubsequenceProvider with TwoSequencesUtility {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val names: NameProvider[paradigm.syntax.Name]
   val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]

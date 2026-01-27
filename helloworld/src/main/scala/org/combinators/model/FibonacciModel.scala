@@ -9,9 +9,12 @@ class FibonacciModel {
 
     val bound = List(new ArgExpression(0))
 
-    val i: IteratorExpression = new IteratorExpression(0)
+    val i: IteratorExpression = new IteratorExpression(0, "i")
     val im1 = new SubtractionExpression(i, one)
     val im2 = new SubtractionExpression(i, two)
+
+
+
 
     val Fib: Model = new Model("Fibonacci",
       bound,
@@ -26,7 +29,7 @@ class FibonacciModel {
         ),
         (
           None,
-          new AdditionExpression(new SubproblemExpression(Seq(im1)), new SubproblemExpression(Seq(im2)))
+           new SubproblemExpression(Seq(im1)) + new SubproblemExpression(Seq(im2))
         )
       )
     )

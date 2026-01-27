@@ -1,6 +1,11 @@
 package org.combinators.model
 
-trait Expression
+trait Expression {
+  def +(other: Expression): Expression = new AdditionExpression(this,other)
+  def -(other: Expression): Expression = new SubtractionExpression(this,other)
+  def *(other: Expression): Expression = new MultiplicationExpression(this,other)
+  def /(other: Expression): Expression = new DivisionExpression(this,other)
+}
 
 //Integer
 class AdditionExpression(val left: Expression, val right: Expression) extends Expression

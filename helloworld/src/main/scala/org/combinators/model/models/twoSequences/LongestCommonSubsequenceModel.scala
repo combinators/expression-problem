@@ -17,18 +17,6 @@ class LongestCommonSubsequenceModel {
     val zero: LiteralInt = new LiteralInt(0)
     val one: LiteralInt = new LiteralInt(1)
 
-    val subp1 : Seq[Expression] = Seq(
-      new SubtractionExpression(r, one), new SubtractionExpression(c, one)
-    )
-
-    val subp2 : Seq[Expression] = Seq(
-      r, new SubtractionExpression(c, one)
-    )
-
-    val subp3 : Seq[Expression] = Seq(
-      new SubtractionExpression(r, one), c
-    )
-
     val LCS: Model = new Model("Prototype LCS",
       bounds = bounds,
       cases = List(
@@ -41,17 +29,14 @@ class LongestCommonSubsequenceModel {
           zero
         ),
         (
-          Some(new EqualExpression(new CharAtExpression(s1, r), new CharAtExpression(s2, c))),
-          new AdditionExpression(
-            new SubproblemExpression(Seq(r - one, c - one)),
-            one
-          )
+          Some(new CharAtExpression(s1, r) == new CharAtExpression(s2, c)),
+          new SubproblemExpression(Seq(r - one, c - one)) + one
         ),
         (
           None,
           new MaxExpression(
-            new SubproblemExpression(subp2),
-            new SubproblemExpression(subp3)
+            new SubproblemExpression(Seq(r - one, c)),
+            new SubproblemExpression(Seq(r, c - one))
           )
         )
       )

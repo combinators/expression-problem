@@ -1,4 +1,4 @@
-package org.combinators.dp
+package org.combinators.bottomUp.oneSequence.decodeways
 
 /**
  * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"
@@ -9,11 +9,12 @@ package org.combinators.dp
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
+import org.combinators.dp.{BottomUp, DPObjectOrientedProvider, GenerationOption, TopDown}
 import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
-import org.combinators.model.{AdditionExpression, ArgExpression, EqualExpression, IteratorExpression, LiteralInt, Model, Setup, SubproblemExpression, SubtractionExpression}
+import org.combinators.model.{AdditionExpression, ArgExpression, CharAtExpression, EqualExpression, InputExpression, IteratorExpression, LiteralChar, LiteralInt, Model, Setup, StringLengthExpression, SubproblemExpression, SubtractionExpression}
 
 import java.nio.file.{Path, Paths}
 
@@ -67,28 +68,94 @@ class DPMainJava {
   }
 }
 
+/*
+
+import java.util.Arrays;
+
+class Solution {
+    // Memoization table initialized with -1
+    private int[] memo;
+
+    public int numDecodings(String s) {
+        if (s == null || s.length() == 0 || s.charAt(0) == '0') {
+            return 0;
+        }
+        memo = new int[s.length()];
+        // Initialize memo array with -1 to indicate uncomputed states
+        Arrays.fill(memo, -1);
+        return decode(s, 0);
+    }
+
+    private int decode(String s, int index) {
+        // Base case: If we reach the end of the string, we have found one valid decoding
+        if (index == s.length()) {
+            return 1;
+        }
+        // If the current character is '0', it cannot be a valid single digit and cannot
+        // start a two-digit number if it's the first digit, so return 0 ways
+        if (s.charAt(index) == '0') {
+            return 0;
+        }
+        // If the result for the current index is already computed, return it
+        if (memo[index] != -1) {
+            return memo[index];
+        }
+
+        int ways = 0;
+        // Option 1: Decode a single digit
+        ways += decode(s, index + 1);
+
+        // Option 2: Decode a two-digit number if it is valid (between 10 and 26 inclusive)
+        if (index + 1 < s.length()) {
+            int twoDigit = Integer.parseInt(s.substring(index, index + 2));
+            if (twoDigit >= 10 && twoDigit <= 26) {
+                ways += decode(s, index + 2);
+            }
+        }
+
+        // Store the result in the memo table before returning
+        memo[index] = ways;
+        return ways;
+    }
+}
+
+
+ */
+
 object DPDirectToDiskMain extends IOApp {
-  val targetDirectory:Path = Paths.get("target", "dp")
+  val targetDirectory:Path = Paths.get("target", "decodeways")
 
   def run(args: List[String]): IO[ExitCode] = {
 
     val zero: LiteralInt = new LiteralInt(0)
     val one: LiteralInt = new LiteralInt(1)
+    val ascii_zero:LiteralChar = new LiteralChar('0')
     val two: LiteralInt = new LiteralInt(2)
+
+    // what was passed into constructor of the original class
+    val input:InputExpression = new InputExpression("s")   // might also need to pass in "type"
+
+    // for LCS
+
+    // val text1:InputExpression("text1")
+    // val text2:InputExpression("text2")
 
     val bound = List(new ArgExpression(0))
 
-    val n: IteratorExpression = new IteratorExpression(0, "i")   // only one argument, i
+    val n: IteratorExpression = new IteratorExpression(0, "i")   // only one argument, n
 
     val im1 = new SubtractionExpression(n, one)
     val im2 = new SubtractionExpression(n, two)
 n
-    val Fib = new Model("Fibonacci",
+    val DecodeWays = new Model("DecodeWays",
       bound,
       cases = List(
-        ( Some(new EqualExpression(n, zero)),  zero ),
-        ( Some(new EqualExpression(n, one)),   one ),
-        ( None, new AdditionExpression(new SubproblemExpression(Seq(im1)), new SubproblemExpression(Seq(im2))) )
+        // s.length() == n
+        ( Some(new EqualExpression(new StringLengthExpression(input), n)),  one ),
+        // s.CharAt(n) == '0')
+        ( Some(new EqualExpression(new CharAtExpression(input, n), ascii_zero)), zero),
+        // HACK == helper(n-1)
+        ( None,                                new SubproblemExpression(Seq(im1)))
       )
     )
 
@@ -103,7 +170,7 @@ n
       _ <- IO { println("[OK]") }
 
       // pass in TOP DOWN
-      result <- main.runDirectToDisc(targetDirectory, Fib, topDown)
+      result <- main.runDirectToDisc(targetDirectory, DecodeWays, topDown)
     } yield result
   }
 }

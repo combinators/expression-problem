@@ -31,10 +31,12 @@ class LiteralString(val literal: String) extends Expression
 class SubstringExpression(val string: Expression, val start: Expression, val end: Expression) extends Expression
 
 //Character
+class LiteralChar(val char:Char) extends Expression
 class CharAtExpression(val string: Expression, val index: Expression) extends Expression
 
 
 //General
+class InputExpression(val variableName:String) extends Expression
 class EqualExpression(val left: Expression, val right: Expression) extends Expression
 class orExpression(val left: Expression, val right: Expression) extends Expression
 

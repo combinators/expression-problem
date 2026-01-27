@@ -5,8 +5,8 @@ import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.NameProvider
 import org.combinators.ep.generator.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality}
-import org.combinators.model.{AdditionExpression, EqualExpression, IteratorExpression, LiteralInt, SubproblemExpression, SubtractionExpression}
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality, Strings}
+import org.combinators.model.{AdditionExpression, EqualExpression, InputExpression, IteratorExpression, LiteralInt, StringLengthExpression, SubproblemExpression, SubtractionExpression}
 
 
 // Different approach
@@ -24,6 +24,7 @@ trait Utility {
   val array: Arrays.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val eqls: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val asserts: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val strings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
   import paradigm._
   import syntax._
@@ -69,8 +70,20 @@ trait Utility {
       case eq: EqualExpression => for {
         left <- explore(eq.left, memoize, bottomUp)
         right <- explore(eq.right, memoize, bottomUp)
-        intType <- toTargetLanguageType(TypeRep.Int)
+        intType <- toTargetLanguageType(TypeRep.Int)   // HACK a bit
         e <- eqls.equalityCapabilities.areEqual(intType, left, right)
+      } yield e
+
+      // takes "text1" and returns "this.text1"
+      case ie:InputExpression => for {
+        self <- ooParadigm.methodBodyCapabilities.selfReference()
+        e <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle(ie.variableName))
+      } yield e
+
+      // StringLengthExpression(new ArgExpression(0)), n))
+      case sle:StringLengthExpression => for {
+        inner <- explore(sle.string, memoize, bottomUp)
+        e <- strings.stringCapabilities.getStringLength(inner)
       } yield e
 
       case ae: SubtractionExpression => for {
@@ -124,8 +137,8 @@ trait Utility {
         actual <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, lit.literal)
       } yield actual
 
-      case _ => for {   // PLACE HOLDER
-        zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
+      case _ => for {   // PLACE HOLDER FOR EVERYTHING ELSE
+        zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, -99)
       } yield zero
     }
   }

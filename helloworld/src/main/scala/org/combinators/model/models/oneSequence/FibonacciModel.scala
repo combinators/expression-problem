@@ -1,4 +1,6 @@
-package org.combinators.model
+package org.combinators.model.models.oneSequence
+
+import org.combinators.model._
 
 class FibonacciModel {
   def instantiate(): Model = {

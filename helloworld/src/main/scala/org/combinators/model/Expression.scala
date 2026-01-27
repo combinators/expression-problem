@@ -5,6 +5,7 @@ trait Expression {
   def -(other: Expression): Expression = new SubtractionExpression(this,other)
   def *(other: Expression): Expression = new MultiplicationExpression(this,other)
   def /(other: Expression): Expression = new DivisionExpression(this,other)
+  def ==(other: Expression): Expression = new EqualExpression(this,other)
 }
 
 //Integer
@@ -14,6 +15,8 @@ class MultiplicationExpression(val left: Expression, val right: Expression) exte
 class DivisionExpression(val left: Expression, val right: Expression) extends Expression
 class SubproblemExpression(val args: Seq[Expression]) extends Expression
 class MaxExpression(val m: Expression, val n: Expression) extends Expression
+class MinExpression(val m: Expression, val n: Expression) extends Expression
+class ArrayElementExpression(val array: Expression, val index: Expression) extends Expression
 
 class FunctionExpression(val name:String, val args: Seq[Expression]) extends Expression
 
@@ -21,6 +24,7 @@ class LiteralInt(val literal: Int) extends Expression
 class IteratorExpression(val iteratorNumber: Int, val variable:String) extends Expression
 
 class StringLengthExpression(val string: Expression)extends Expression
+class ArrayLengthExpression(val array: Expression) extends Expression
 
 //String
 class LiteralString(val literal: String) extends Expression
@@ -32,6 +36,7 @@ class CharAtExpression(val string: Expression, val index: Expression) extends Ex
 
 //General
 class EqualExpression(val left: Expression, val right: Expression) extends Expression
+class orExpression(val left: Expression, val right: Expression) extends Expression
 
 class ArgExpression(val whichArg: Int) extends Expression
 

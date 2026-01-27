@@ -2,13 +2,13 @@ package org.combinators.model.models.twoSequences
 
 import org.combinators.model._
 
-class LongestCommonSubsequenceModel {
+class UncrossedLinesModel {
   def instantiate(): Model = {
-    val s1 = new ArgExpression(0)
-    val s2 = new ArgExpression(1)
+    val nums1 = new ArgExpression(0)
+    val nums2 = new ArgExpression(1)
 
-    val boundZero: Expression = new StringLengthExpression(s1)
-    val boundOne: Expression = new StringLengthExpression(s2)
+    val boundZero: Expression = new ArrayLengthExpression(new ArgExpression(0))
+    val boundOne: Expression = new ArrayLengthExpression(new ArgExpression(1))
     val bounds = List(boundZero, boundOne)
 
     val r: IteratorExpression = new IteratorExpression(0, "r")
@@ -29,8 +29,9 @@ class LongestCommonSubsequenceModel {
       new SubtractionExpression(r, one), c
     )
 
-    val LCS: Model = new Model("Prototype LCS",
-      bounds = bounds,
+    val UL: Model = new Model(
+      "Uncrossed Lines",
+      bounds,
       cases = List(
         (
           Some(new EqualExpression(r, zero)),
@@ -41,9 +42,9 @@ class LongestCommonSubsequenceModel {
           zero
         ),
         (
-          Some(new EqualExpression(new CharAtExpression(s1, r), new CharAtExpression(s2, c))),
+          Some(new EqualExpression(new ArrayElementExpression(nums1, r), new ArrayElementExpression(nums2, c))),
           new AdditionExpression(
-            new SubproblemExpression(Seq(r - one, c - one)),
+            new SubproblemExpression(subp1),
             one
           )
         ),
@@ -57,6 +58,6 @@ class LongestCommonSubsequenceModel {
       )
     )
 
-    LCS
+    UL
   }
 }

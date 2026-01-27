@@ -1,4 +1,6 @@
-package org.combinators.model
+package org.combinators.model.models.oneSequence
+
+import org.combinators.model._
 
 class FibonacciModel {
   def instantiate(): Model = {
@@ -9,7 +11,7 @@ class FibonacciModel {
 
     val bound = List(new ArgExpression(0))
 
-    val i: IteratorExpression = new IteratorExpression(0)
+    val i: IteratorExpression = new IteratorExpression(0, "i")
     val im1 = new SubtractionExpression(i, one)
     val im2 = new SubtractionExpression(i, two)
 

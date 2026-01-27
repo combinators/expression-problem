@@ -9,10 +9,13 @@ package org.combinators.topDown.oneSequence.tribonacci
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
+import org.combinators.dp.{BottomUp, GenerationOption}
 import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
+import org.combinators.model.models.oneSequence.TribonacciModel
+import org.combinators.model.Model
 
 import java.nio.file.{Path, Paths}
 
@@ -26,7 +29,7 @@ class TribonacciMainJava {
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
-  def directToDiskTransaction(targetDirectory: Path): IO[Unit] = {
+  def directToDiskTransaction(targetDirectory: Path, model: Model, option: GenerationOption): IO[Unit] = {
 
     val files =
       () => generator.paradigm.runGenerator {
@@ -40,7 +43,7 @@ class TribonacciMainJava {
           _ <- generator.equalityInMethod.enable()
           _ <- generator.assertionsInMethod.enable()
 
-          _ <- dpApproach.implement()
+          _ <- dpApproach.implement(model, option)
         } yield ()
       }
 
@@ -59,9 +62,9 @@ class TribonacciMainJava {
     }
   }
 
-  def runDirectToDisc(targetDirectory: Path): IO[ExitCode] = {
+  def runDirectToDisc(targetDirectory: Path, model: Model, option: GenerationOption): IO[ExitCode] = {
     for {
-      _ <- directToDiskTransaction(targetDirectory)
+      _ <- directToDiskTransaction(targetDirectory, model, option)
     } yield ExitCode.Success
   }
 }
@@ -70,11 +73,17 @@ object TribonacciDirectToDiskMain extends IOApp {
   val targetDirectory = Paths.get("target", "topDown", "oneSequence", "tribonacci")
 
   def run(args: List[String]): IO[ExitCode] = {
+
+    /* model */
+
+    val tribonacciModel: Model = new TribonacciModel().instantiate()
+    val bottomUp = new BottomUp()
+
     for {
       _ <- IO { print("Initializing Generator...") }
       main <- IO { new TribonacciMainJava() }
       _ <- IO { println("[OK]") }
-      result <- main.runDirectToDisc(targetDirectory)
+      result <- main.runDirectToDisc(targetDirectory, tribonacciModel, bottomUp)
     } yield result
   }
 }

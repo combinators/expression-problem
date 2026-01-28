@@ -7,14 +7,12 @@ class MaxSubarrayModel {
 
     val zero: LiteralInt = new LiteralInt(0)
     val one: LiteralInt = new LiteralInt(1)
-    val two: LiteralInt = new LiteralInt(2)
 
-    val bounds = List(new ArrayLengthExpression(new ArgExpression(0)))
+    val bounds = List(new ArrayLengthExpression(new ArgExpression(0,"nums",new IntegerType)))
 
     val i: IteratorExpression = new IteratorExpression(0, "i")
-    val m: IteratorExpression = new IteratorExpression(0, "m")
 
-    val cur= new ArrayElementExpression(new ArgExpression(0), i)
+    val cur= new ArrayElementExpression(new ArgExpression(0,"nums",new IntegerType), i)
 
 
     val MaxSubarray: Model = new Model("MaxSubarray",

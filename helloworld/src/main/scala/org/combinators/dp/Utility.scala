@@ -1,12 +1,13 @@
 package org.combinators.dp
 
+import org.combinators.model.{IntegerType, StringType}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.NameProvider
 import org.combinators.ep.generator.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality, Strings}
-import org.combinators.model.{AdditionExpression, EqualExpression, InputExpression, IteratorExpression, LiteralInt, StringLengthExpression, SubproblemExpression, SubtractionExpression}
+import org.combinators.model.{AdditionExpression, ArgumentType, EqualExpression, InputExpression, IteratorExpression, LiteralInt, StringLengthExpression, SubproblemExpression, SubtractionExpression}
 
 
 // Different approach
@@ -55,6 +56,25 @@ trait Utility {
       }
     } yield assert_statements
   }
+
+  // NOTE: I can make generic with CONTEXT but can't remember syntax.
+  def map_type_in_class(argType: ArgumentType) : Generator[ooParadigm.ClassContext, Type] = {
+    import ooParadigm.classCapabilities._
+    import org.combinators.model._
+
+    argType match {
+      case _:IntegerType => for {
+        tpe <- toTargetLanguageType(TypeRep.Int)
+      } yield tpe
+
+      case _:StringType => for {
+        tpe <- toTargetLanguageType(TypeRep.String)
+      } yield tpe
+
+      // find which ones need to be implemented
+      case _ => ???
+    }
+}
 
   /**
    * Institute plan for mutual recursion of helper(args) method which calls memo(args) on smaller subproblem, and that

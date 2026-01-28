@@ -1,15 +1,20 @@
 package org.combinators.topDown.oneSequence.tribonacci
 
-import org.combinators.dp.Utility
+import org.combinators.dp.{BottomUp, GenerationOption, TopDown, Utility}
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
+import org.combinators.ep.generator.paradigm.Generics.WithBase
+import org.combinators.ep.generator.paradigm.ParametricPolymorphism.WithBase
 import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality, Strings}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, ObjectOriented}
+import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
+import org.combinators.model.Model
 
 trait TribonacciObjectOrientedProvider extends TribonacciProvider with Utility {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
+  val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
+  val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
   val names: NameProvider[paradigm.syntax.Name]
   val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val arithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double]
@@ -26,6 +31,15 @@ trait TribonacciObjectOrientedProvider extends TribonacciProvider with Utility {
   lazy val message: String = "message"
   lazy val main: String = "main"
   lazy val testName = names.mangle("TestSuite")
+  lazy val dpName = names.mangle("dp")
+  lazy val memoName = names.mangle("memo")
+
+  lazy val rName = names.mangle("r")
+  lazy val cName = names.mangle("c")
+
+  var memo: Boolean = false
+
+  lazy val resultVarName = names.mangle("result")
 
   def getter(attr: String): String = {
     "get" + attr.capitalize
@@ -149,7 +163,25 @@ trait TribonacciObjectOrientedProvider extends TribonacciProvider with Utility {
   //    } yield ()
   //  }
 
-  def implement(): Generator[ProjectContext, Unit] = {
+  def implement(model: Model, option: GenerationOption): Generator[ProjectContext, Unit] = {
+//
+//    var isTopDown = false
+//
+//    option match {
+//      case td: TopDown =>
+//        memo = td.memo
+//        isTopDown = true
+//      case _: BottomUp =>
+//        isTopDown = false
+//    }
+//
+//    for {
+//      _ <- if (isTopDown) {
+//        make_top_down(model)
+//      } else {
+//        make_bottom_up(model)
+//      }
+//    } yield ()
 
     for {
       _ <- makeSimpleDP()
@@ -165,24 +197,26 @@ object TribonacciObjectOrientedProvider {
   type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 
   def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
-  (base: P)
-  (nameProvider: NameProvider[base.syntax.Name],
-   imp: Imperative.WithBase[base.MethodBodyContext, base.type],
-   ffiArithmetic: Arithmetic.WithBase[base.MethodBodyContext, base.type, Double],
-   oo: ObjectOriented.WithBase[base.type],
-   con: Console.WithBase[base.MethodBodyContext, base.type],
-   arr: Arrays.WithBase[base.MethodBodyContext, base.type],
-   assertsIn: Assertions.WithBase[base.MethodBodyContext, base.type],
-   stringsIn: Strings.WithBase[base.MethodBodyContext, base.type],
-   eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type]
-  )
-  : TribonacciObjectOrientedProvider.WithParadigm[base.type] =
+           (base: P)
+           (nameProvider: NameProvider[base.syntax.Name],
+            imp: Imperative.WithBase[base.MethodBodyContext, base.type],
+            ffiArithmetic: Arithmetic.WithBase[base.MethodBodyContext, base.type, Double],
+            con: Console.WithBase[base.MethodBodyContext, base.type],
+            arr: Arrays.WithBase[base.MethodBodyContext, base.type],
+            assertsIn: Assertions.WithBase[base.MethodBodyContext, base.type],
+            stringsIn: Strings.WithBase[base.MethodBodyContext, base.type],
+            eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type],
+            oo: ObjectOriented.WithBase[base.type],
+            parametricPolymorphism: ParametricPolymorphism.WithBase[base.type])
+           (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): TribonacciObjectOrientedProvider.WithParadigm[base.type] =
     new TribonacciObjectOrientedProvider {
       override val paradigm: base.type = base
       val impParadigm: imp.type = imp
       val arithmetic: ffiArithmetic.type = ffiArithmetic
       override val names: NameProvider[paradigm.syntax.Name] = nameProvider
-      override val ooParadigm: ObjectOriented.WithBase[paradigm.type] = oo
+      override val ooParadigm: oo.type = oo
+      override val polymorphics: parametricPolymorphism.type = parametricPolymorphism
+      override val genericsParadigm: generics.type = generics
       override val console: Console.WithBase[base.MethodBodyContext, paradigm.type] = con
       override val array: Arrays.WithBase[base.MethodBodyContext, paradigm.type] = arr
       override val asserts: Assertions.WithBase[base.MethodBodyContext, paradigm.type] = assertsIn

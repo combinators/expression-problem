@@ -4,12 +4,12 @@ import org.combinators.model._
 
 class MinimumEditDistanceModel {
   def instantiate(): Model = {
-    val s1 = new ArgExpression(0)
-    val s2 = new ArgExpression(1)
+    val s1 = new ArgExpression(0, "s1", new StringType())
+    val s2 = new ArgExpression(1, "s2", new StringType())
 
     val boundZero: Expression = new ArrayLengthExpression(s1)
     val boundOne: Expression = new ArrayLengthExpression(s2)
-    val bounds = List(boundZero, boundOne)
+    val bounds = List(s1, s2) // boundZero, boundOne)
 
     val r: IteratorExpression = new IteratorExpression(0, "r")
     val c: IteratorExpression = new IteratorExpression(1, "c")

@@ -4,15 +4,15 @@ import org.combinators.model._
 
 class NeedlemanWunschSequenceAlignmentModel {
   def instantiate(): Model = {
-    val s1 = new ArgExpression(0)
-    val s2 = new ArgExpression(1)
-    val matchBonus = new ArgExpression(2)
-    val mismatchPenalty = new ArgExpression(3)
-    val gapPenalty = new ArgExpression(4)
+    val s1 = new ArgExpression(0, "s1", new StringType())
+    val s2 = new ArgExpression(1, "s2", new StringType())
+    val matchBonus = new ArgExpression(2, "matchBonus", new DoubleType())
+    val mismatchPenalty = new ArgExpression(3, "mismatchPenalty", new DoubleType())
+    val gapPenalty = new ArgExpression(4, "gapPenalty", new DoubleType())
 
     val boundZero: Expression = new StringLengthExpression(s1)
     val boundOne: Expression = new StringLengthExpression(s2)
-    val bounds = List(boundZero, boundOne)
+    val bounds = List(s1, s2) // boundZero, boundOne)
 
     val r: IteratorExpression = new IteratorExpression(0, "r")
     val c: IteratorExpression = new IteratorExpression(1, "c")

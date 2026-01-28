@@ -8,12 +8,13 @@ package org.combinators.dp
 
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
+import com.sun.jdi.connect.Connector.IntegerArgument
 import org.apache.commons.io.FileUtils
 import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
-import org.combinators.model.{AdditionExpression, ArgExpression, EqualExpression, IteratorExpression, LiteralInt, Model, Setup, SubproblemExpression, SubtractionExpression}
+import org.combinators.model.{AdditionExpression, ArgExpression, Argument, EqualExpression, IntegerType, IteratorExpression, LiteralInt, Model, Setup, SubproblemExpression, SubtractionExpression}
 
 import java.nio.file.{Path, Paths}
 
@@ -72,12 +73,15 @@ object DPDirectToDiskMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
 
+    // Needed for conditions and fib(n-1) and fib(n-2)
     val zero: LiteralInt = new LiteralInt(0)
     val one: LiteralInt = new LiteralInt(1)
     val two: LiteralInt = new LiteralInt(2)
 
-    val bound = List(new ArgExpression(0))
+    // Fibonacci has a single integer argument
+    val bound = List(new ArgExpression(0, "n", new IntegerType()))
 
+    // COULD be inferred from the ArgExpression list, but this lets us name variable to use in iterator
     val n: IteratorExpression = new IteratorExpression(0, "i")   // only one argument, i
 
     val im1 = new SubtractionExpression(n, one)
@@ -103,7 +107,7 @@ n
       _ <- IO { println("[OK]") }
 
       // pass in TOP DOWN
-      result <- main.runDirectToDisc(targetDirectory, Fib, topDown)
+      result <- main.runDirectToDisc(targetDirectory, Fib, topDownWithMemo)
     } yield result
   }
 }

@@ -40,7 +40,7 @@ class InputExpression(val variableName:String) extends Expression
 class EqualExpression(val left: Expression, val right: Expression) extends Expression
 class orExpression(val left: Expression, val right: Expression) extends Expression
 
-class ArgExpression(val whichArg: Int) extends Expression
+class ArgExpression(val whichArg: Int, val name:String, val argType:ArgumentType) extends Expression
 
 // companion objects: needed for pattern matching
 object AdditionExpression {

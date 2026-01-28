@@ -9,7 +9,7 @@ class FibonacciModel {
     val one: LiteralInt = new LiteralInt(1)
     val two: LiteralInt = new LiteralInt(2)
 
-    val bound = List(new ArgExpression(0))
+    val bound = List(new ArgExpression(0, "n", new IntegerType()))
 
     val i: IteratorExpression = new IteratorExpression(0, "i")
     val im1 = new SubtractionExpression(i, one)

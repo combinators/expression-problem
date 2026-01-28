@@ -205,7 +205,8 @@ object TribonacciObjectOrientedProvider {
             arr: Arrays.WithBase[base.MethodBodyContext, base.type],
             assertsIn: Assertions.WithBase[base.MethodBodyContext, base.type],
             stringsIn: Strings.WithBase[base.MethodBodyContext, base.type],
-            eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type],oo: ObjectOriented.WithBase[base.type],
+            eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type],
+            oo: ObjectOriented.WithBase[base.type],
             parametricPolymorphism: ParametricPolymorphism.WithBase[base.type])
            (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): TribonacciObjectOrientedProvider.WithParadigm[base.type] =
     new TribonacciObjectOrientedProvider {

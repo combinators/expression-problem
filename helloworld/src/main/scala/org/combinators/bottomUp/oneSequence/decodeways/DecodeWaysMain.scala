@@ -14,7 +14,7 @@ import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
-import org.combinators.model.{AdditionExpression, ArgExpression, CharAtExpression, EqualExpression, InputExpression, IteratorExpression, LiteralChar, LiteralInt, Model, Setup, StringLengthExpression, SubproblemExpression, SubtractionExpression}
+import org.combinators.model.{ArgExpression, CharAtExpression, EqualExpression, InputExpression, IteratorExpression, LiteralChar, LiteralInt, Model, StringLengthExpression, StringType, SubproblemExpression, SubtractionExpression}
 
 import java.nio.file.{Path, Paths}
 
@@ -140,7 +140,7 @@ object DPDirectToDiskMain extends IOApp {
     // val text1:InputExpression("text1")
     // val text2:InputExpression("text2")
 
-    val bound = List(new ArgExpression(0))
+    val bound = List(new ArgExpression(0, "text1", new StringType()), new ArgExpression(1, "text2", new StringType()))
 
     val n: IteratorExpression = new IteratorExpression(0, "i")   // only one argument, n
 

@@ -8,7 +8,7 @@ import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, Generics, 
 import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
 import org.combinators.dp.Utility
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.model.{AdditionExpression, EqualExpression, FunctionExpression, IteratorExpression, LiteralInt, Model, SubproblemExpression, SubtractionExpression}
+import org.combinators.model.{AdditionExpression, ArgumentType, EqualExpression, FunctionExpression, IteratorExpression, LiteralInt, Model, SubproblemExpression, SubtractionExpression}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
@@ -214,6 +214,7 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
     } yield Some(invocation)
   }
 
+  // This is hard-coded for a SINGLE bound. We will need another one to deal with two-d problems (and higher)
   def make_bottom_up_compute_method(model:Model): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
 
@@ -394,7 +395,13 @@ trait DPObjectOrientedProvider extends DPProvider with Utility {
       import classCapabilities._
       for {
         intType <- toTargetLanguageType(TypeRep.Int)    // shouldn't be hard-coded: should be able to infer from model
-        _ <- addField(nName, intType )
+
+        _ <- forEach(model.bounds) { bexpr => for {
+            tpe <- map_type_in_class(bexpr.argType)
+            _ <- addField(names.mangle(bexpr.name), tpe)
+          } yield ()
+        }
+
         _ <- if (memo) {
           makeMemo(TypeRep.Int, TypeRep.Int)
         } else {
@@ -514,7 +521,8 @@ object DPObjectOrientedProvider {
    arr: Arrays.WithBase[base.MethodBodyContext, base.type],
    assertsIn: Assertions.WithBase[base.MethodBodyContext, base.type],
    stringsIn: Strings.WithBase[base.MethodBodyContext, base.type],
-   eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type],oo: ObjectOriented.WithBase[base.type],
+   eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type],
+   oo: ObjectOriented.WithBase[base.type],
    parametricPolymorphism: ParametricPolymorphism.WithBase[base.type])
   (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): DPObjectOrientedProvider.WithParadigm[base.type] =
     new DPObjectOrientedProvider {

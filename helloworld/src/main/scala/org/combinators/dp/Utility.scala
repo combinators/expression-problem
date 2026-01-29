@@ -1,13 +1,12 @@
 package org.combinators.dp
 
-import org.combinators.model.{IntegerType, StringType}
+import org.combinators.model.{AdditionExpression, ArgumentType, EqualExpression, InputExpression, IntegerType, IteratorExpression, LiteralInt, StringLengthExpression, StringType, SubproblemExpression, SubtractionExpression, lessThanExpression, ArrayLengthExpression}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.NameProvider
 import org.combinators.ep.generator.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality, Strings}
-import org.combinators.model.{AdditionExpression, ArgumentType, EqualExpression, InputExpression, IteratorExpression, LiteralInt, StringLengthExpression, SubproblemExpression, SubtractionExpression}
 
 
 // Different approach
@@ -71,6 +70,10 @@ trait Utility {
         tpe <- toTargetLanguageType(TypeRep.String)
       } yield tpe
 
+      case _:IntegerArrayType => for {
+      tpe <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
+    } yield tpe
+
       // find which ones need to be implemented
       case _ => ???
     }
@@ -106,6 +109,11 @@ trait Utility {
         e <- strings.stringCapabilities.getStringLength(inner)
       } yield e
 
+      case ale:ArrayLengthExpression => for {
+        inner <- explore(ale.array, memoize, bottomUp)
+        e <- array.arrayCapabilities.length(inner)
+      } yield e
+
       case ae: SubtractionExpression => for {
         left <- explore(ae.left, memoize, bottomUp)
         right <- explore(ae.right, memoize, bottomUp)
@@ -116,6 +124,12 @@ trait Utility {
         left <- explore(ae.left, memoize, bottomUp)
         right <- explore(ae.right, memoize, bottomUp)
         e <- arithmetic.arithmeticCapabilities.add(left, right)
+      } yield e
+
+      case lte: lessThanExpression => for {
+        left <- explore(lte.left, memoize, bottomUp)
+        right <- explore(lte.right, memoize, bottomUp)
+        e <- arithmetic.arithmeticCapabilities.lt(left, right)
       } yield e
 
       case se: SubproblemExpression => for {

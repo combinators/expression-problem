@@ -195,6 +195,10 @@ object TypeRep {
   case object Int extends TypeRep {
     type HostType = scala.Int
   }
+  /** Represents the Scala type `Char`. */
+  case object Char extends TypeRep {
+    type HostType = scala.Char
+  }
   /** Represents the Scala type `Double`. */
   case object Double extends TypeRep {
     type HostType = scala.Double

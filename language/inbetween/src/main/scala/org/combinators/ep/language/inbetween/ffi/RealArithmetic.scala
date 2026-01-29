@@ -3,7 +3,7 @@ package org.combinators.ep.language.inbetween.ffi  /*DI:LI:AI*/
 import org.combinators.ep.generator.{Command, Understands}
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.Apply
-import org.combinators.ep.generator.paradigm.ffi.{Abs, Add, Cos, Div, EulersNumber, Floor, LE, LT, Log, Mod, Mult, Pi, Pow, Sin, Sqrt, Sub, RealArithmetic => RealArith}
+import org.combinators.ep.generator.paradigm.ffi.{Abs, Add, Cos, Div, EulersNumber, Floor, LE, LT, Log, Max, Mod, Mult, Pi, Pow, Sin, Sqrt, Sub, RealArithmetic => RealArith}
 import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
@@ -28,6 +28,12 @@ trait RealArithmetic[FT <: OperatorExpressionOps.FinalTypes, FactoryType <: Real
       new Understands[any.Method[FT], Apply[Log[T], any.Expression[FT], any.Expression[FT]]] {
         def perform(context: any.Method[FT], command: Apply[Log[T], any.Expression[FT], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
           (context, factory.log(command.arguments(0), command.arguments(1)))
+        }
+      }
+    implicit val canMax: Understands[any.Method[FT], Apply[Max[T], any.Expression[FT], any.Expression[FT]]] =
+      new Understands[any.Method[FT], Apply[Max[T], any.Expression[FT], any.Expression[FT]]] {
+        def perform(context: any.Method[FT], command: Apply[Max[T], any.Expression[FT], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
+          (context, factory.max(command.arguments(0), command.arguments(1)))
         }
       }
     implicit val canSin: Understands[any.Method[FT], Apply[Sin[T], any.Expression[FT], any.Expression[FT]]] =
@@ -80,6 +86,7 @@ object RealArithmeticOps {
   trait SqrtOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
   trait PowOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
   trait LogOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
+  trait MaxOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
   trait SinOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
   trait CosOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
   trait AbsOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
@@ -94,6 +101,7 @@ object RealArithmeticOps {
     def sqrtOp(): SqrtOp[FT]
     def powOp(): PowOp[FT]
     def logOp(): LogOp[FT]
+    def maxOp(): MaxOp[FT]
     def sinOp(): SinOp[FT]
     def cosOp(): CosOp[FT]
     def absOp(): AbsOp[FT]
@@ -109,6 +117,8 @@ object RealArithmeticOps {
 
     def log(of: any.Expression[FT], base: any.Expression[FT]): OperatorExpressionOps.BinaryExpression[FT] =
       binaryExpression(logOp(), of, base) // FIXME: unaryExpression(logOp(), of)
+    def max(of: any.Expression[FT], base: any.Expression[FT]): OperatorExpressionOps.BinaryExpression[FT] =
+      binaryExpression(maxOp(), of, base)
     def sin(of: any.Expression[FT]): OperatorExpressionOps.UnaryExpression[FT] =
       unaryExpression(sinOp(), of)
     def cos(of: any.Expression[FT]): OperatorExpressionOps.UnaryExpression[FT] =

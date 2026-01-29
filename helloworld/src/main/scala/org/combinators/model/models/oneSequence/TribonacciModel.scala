@@ -9,7 +9,7 @@ class TribonacciModel {
     val two: LiteralInt = new LiteralInt(2)
     val three: LiteralInt = new LiteralInt(3)
 
-    val bound = List(new ArgExpression(0, "n", new IntegerType()))
+    val bound = List(new ArgExpression(0, "n", new IntegerType(), "i"))
 
     val i: IteratorExpression = new IteratorExpression(0, "i")
 

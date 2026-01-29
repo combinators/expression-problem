@@ -1,14 +1,14 @@
 package org.combinators.bottomUp.twoSequences.longestCommonSubsequence
 
 import org.combinators.bottomUp.twoSequences.TwoSequencesUtility
-import org.combinators.dp.DPProvider
+import org.combinators.dp.{DPProvider, TestExample}
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality, Strings}
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality, RealArithmetic, Strings}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, ObjectOriented}
 import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
-import org.combinators.model.{CharAtExpression, EqualExpression, IteratorExpression, LiteralInt, Model}
+import org.combinators.model.{CharAtExpression, EqualExpression, IteratorExpression, LiteralInt, LiteralString, LiteralStringPair, Model}
 
 trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubsequenceProvider with TwoSequencesUtility {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
@@ -209,10 +209,10 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
     import AnyParadigm.syntax._
 
     // https://en.wikipedia.org/wiki/Maximum_subarray_problem
-    val wiki_test = new DPExample("wiki",
-      Seq("GAC", "AGCAT"),
+    val wiki_test = new TestExample("wiki",
+      new LiteralStringPair("GAC", "AGCAT"),
       2,
-      "GA"
+      new LiteralString("GA")
     )
 
     for {
@@ -222,12 +222,17 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
       computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, names.mangle("compute"))
 
       assert_statements <- forEach(Seq(wiki_test)) { example =>
+
+        val strings = example match {
+          case lsp:LiteralStringPair => (lsp.string1, lsp.string2)
+        }
+
         for {
-          s1 <- paradigm.methodBodyCapabilities.reify(TypeRep.String, example.example.head)
-          s2 <- paradigm.methodBodyCapabilities.reify(TypeRep.String, example.example.tail.head)
+          s1 <- paradigm.methodBodyCapabilities.reify(TypeRep.String, strings._1)
+          s2 <- paradigm.methodBodyCapabilities.reify(TypeRep.String, strings._2)
 
           invoke <- apply(computeMethod, Seq(s1, s2))
-          solution <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, example.solution)
+          solution <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, example.answer)
           assert_stmt <- asserts.assertionCapabilities.assertEquals(arrayType, invoke, solution)
 
           // still need test case for validating full_solution when calling 'retrieve()'
@@ -263,6 +268,7 @@ object LongestCommonSubsequenceObjectOrientedProvider {
   (nameProvider: NameProvider[base.syntax.Name],
    imp: Imperative.WithBase[base.MethodBodyContext, base.type],
    ffiArithmetic: Arithmetic.WithBase[base.MethodBodyContext, base.type, Double],
+   ffiRealArithmetic: RealArithmetic.WithBase[base.MethodBodyContext, base.type, Double],
    oo: ObjectOriented.WithBase[base.type],
    con: Console.WithBase[base.MethodBodyContext, base.type],
    arr: Arrays.WithBase[base.MethodBodyContext, base.type],
@@ -275,6 +281,7 @@ object LongestCommonSubsequenceObjectOrientedProvider {
       override val paradigm: base.type = base
       val impParadigm: imp.type = imp
       val arithmetic: ffiArithmetic.type = ffiArithmetic
+      val realArithmetic: ffiRealArithmetic.type = ffiRealArithmetic
       override val names: NameProvider[paradigm.syntax.Name] = nameProvider
       override val ooParadigm: ObjectOriented.WithBase[paradigm.type] = oo
       override val console: Console.WithBase[base.MethodBodyContext, paradigm.type] = con

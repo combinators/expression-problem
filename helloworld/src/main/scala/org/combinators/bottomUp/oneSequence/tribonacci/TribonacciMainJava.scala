@@ -22,7 +22,7 @@ import java.nio.file.{Path, Paths}
 class TribonacciMainJava {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("world"))))
 
-  val dpApproach = TribonacciObjectOrientedProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.ooParadigm, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.stringsInMethod, generator.equalityInMethod)
+  val dpApproach = TribonacciObjectOrientedProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.realDoublesInMethod, generator.ooParadigm, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.stringsInMethod, generator.equalityInMethod)
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
@@ -32,6 +32,7 @@ class TribonacciMainJava {
       () => generator.paradigm.runGenerator {
         for {
           _ <- generator.doublesInMethod.enable()
+          _ <- generator.realDoublesInMethod.enable()
           _ <- generator.intsInMethod.enable()
           _ <- generator.stringsInMethod.enable()
           _ <- generator.listsInMethod.enable()     // should be array, but this still needs to be added as an FFI

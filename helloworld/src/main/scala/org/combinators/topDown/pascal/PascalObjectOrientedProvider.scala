@@ -3,11 +3,12 @@ package org.combinators.topDown.pascal
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality, Strings}
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality, RealArithmetic, Strings}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, ObjectOriented}
 import org.combinators.ep.generator.{AbstractSyntax, NameProvider, Understands}
-import org.combinators.dp.Utility
+import org.combinators.dp.{TestExample, Utility}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
+import org.combinators.model.{LiteralPair, UnitExpression}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
@@ -188,24 +189,30 @@ trait PascalObjectOrientedProvider extends PascalProvider with Utility{
 
 
     val tests = Seq(
-      new DPExample("pasc11", Seq(1,1), 1, None),
-      new DPExample("pasc32", Seq(3,2), 3, None),
-      new DPExample("pasc63", Seq(6,3), 20, None),
-      new DPExample("pasc2013", Seq(20,13), 77520, None),
+      new TestExample("pasc11", new LiteralPair(1,1), 1, new UnitExpression),
+      new TestExample("pasc32", new LiteralPair(3,2), 3, new UnitExpression),
+      new TestExample("pasc63", new LiteralPair(6,3), 20, new UnitExpression),
+      new TestExample("pasc2013", new LiteralPair(20,13), 77520, new UnitExpression),
     )
 
 
     for {
       assert_statements <- forEach(tests) { example =>
+
+        val pair = example.inputType match {
+          case lp:LiteralPair => (lp.val1, lp.val2)
+          case _ => ???
+        }
+
         for {
           pascType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle("Pascal"))
-          r_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, example.example.head)
-          c_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, example.example.tail.head)
+          r_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, pair._1)
+          c_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, pair._2)
           sol <- ooParadigm.methodBodyCapabilities.instantiateObject(pascType, Seq(r_value,c_value))
           computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, compute)
 
           intType <- toTargetLanguageType(TypeRep.Int)
-          pascrc_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, example.solution)
+          pascrc_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, example.answer)
           pascrc_actual <- apply(computeMethod, Seq.empty)
           asserteq_fib <- asserts.assertionCapabilities.assertEquals(intType, pascrc_actual, pascrc_value)
 
@@ -240,6 +247,7 @@ object PascalObjectOrientedProvider {
   (nameProvider: NameProvider[base.syntax.Name],
    imp: Imperative.WithBase[base.MethodBodyContext, base.type],
    ffiArithmetic: Arithmetic.WithBase[base.MethodBodyContext, base.type, Double],
+   ffiRealArithmetic: RealArithmetic.WithBase[base.MethodBodyContext, base.type, Double],
    oo: ObjectOriented.WithBase[base.type],
    con: Console.WithBase[base.MethodBodyContext, base.type],
    arr: Arrays.WithBase[base.MethodBodyContext, base.type],
@@ -252,6 +260,7 @@ object PascalObjectOrientedProvider {
       override val paradigm: base.type = base
       val impParadigm: imp.type = imp
       val arithmetic: ffiArithmetic.type = ffiArithmetic
+      val realArithmetic: ffiRealArithmetic.type = ffiRealArithmetic
       override val names: NameProvider[paradigm.syntax.Name] = nameProvider
       override val ooParadigm: ObjectOriented.WithBase[paradigm.type] = oo
       override val console: Console.WithBase[base.MethodBodyContext, paradigm.type] = con

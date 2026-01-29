@@ -7,7 +7,7 @@ import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, Understands}
 import org.combinators.ep.generator.paradigm.Apply
-import org.combinators.ep.generator.paradigm.ffi.{Abs, Cos, EulersNumber, Floor, Log, Pi, Pow, Sin, Sqrt, RealArithmetic => RArith}
+import org.combinators.ep.generator.paradigm.ffi.{Abs, Cos, EulersNumber, Floor, Log, Max, Pi, Pow, Sin, Sqrt, RealArithmetic => RArith}
 import org.combinators.ep.language.java.CodeGenerator.Enable
 import org.combinators.ep.language.java.Syntax.default._
 import org.combinators.ep.language.java.paradigm.{AnyParadigm, ObjectOriented}
@@ -55,6 +55,16 @@ class RealArithmetic[Ctxt, T, AP <: AnyParadigm](
       }
     }
 
+  private def javaMathMaxOp[Ctxt, Op](): Understands[Ctxt, Apply[Op, Expression, Expression]] =
+    new Understands[Ctxt, Apply[Op, Expression, Expression]] {
+      def perform(
+                   context: Ctxt,
+                   command: Apply[Op, Expression, Expression]
+                 ): (Ctxt, Expression) = {
+        (context, new MethodCallExpr(mathExp, "max", new NodeList[Expression](command.arguments: _*)))
+      }
+    }
+
   private def javaMathConst[Ctxt, Const <: Command.WithResult[Expression]](constName: String): Understands[Ctxt, Const] =
     new Understands[Ctxt, Const] {
       def perform(
@@ -73,6 +83,8 @@ class RealArithmetic[Ctxt, T, AP <: AnyParadigm](
         javaMathOp("pow")
       implicit val canLog: Understands[Ctxt, Apply[Log[T], Expression, Expression]] =
         javaMathLogOp()
+      implicit val canMax: Understands[Ctxt, Apply[Max[T], Expression, Expression]] =
+        javaMathMaxOp()
       implicit val canSin: Understands[Ctxt, Apply[Sin[T], Expression, Expression]] =
         javaMathOp("sin")
       implicit val canCos: Understands[Ctxt, Apply[Cos[T], Expression, Expression]] =

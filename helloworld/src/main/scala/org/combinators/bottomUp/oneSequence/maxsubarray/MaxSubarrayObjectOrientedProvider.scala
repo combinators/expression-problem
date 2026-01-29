@@ -1,12 +1,13 @@
 package org.combinators.bottomUp.oneSequence.maxsubarray
 
-import org.combinators.dp.Utility
+import org.combinators.dp.{TestExample, Utility}
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality, Strings}
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality, RealArithmetic, Strings}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, ObjectOriented}
 import org.combinators.ep.generator.{AbstractSyntax, NameProvider, Understands}
+import org.combinators.model.LiteralArray
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
@@ -179,24 +180,24 @@ trait MaxSubarrayObjectOrientedProvider extends MaxSubarrayProvider with Utility
     import AnyParadigm.syntax._
 
     // https://en.wikipedia.org/wiki/Maximum_subarray_problem
-    val wiki_test = new DPExample("wiki",
-        Array(-2, 1, -3, 4, -1, 2, 1, -5, 4),
+    val wiki_test = new TestExample("wiki",
+        new LiteralArray(Array(-2, 1, -3, 4, -1, 2, 1, -5, 4)),
         6,
-        Array(4, -1, 2, 1)
+      new LiteralArray(Array(4, -1, 2, 1))
     )
 
     // https://www.geeksforgeeks.org/dsa/largest-sum-contiguous-subarray/
-    val geeks_for_geeks_test = new DPExample("geeks_for_geeks",
-      Array(2, 3, -8, 7, -1, 2, 3),
+    val geeks_for_geeks_test = new TestExample("geeks_for_geeks",
+      new LiteralArray(Array(2, 3, -8, 7, -1, 2, 3)),
       11,
-      Array(7, -1, 2, 3)
+      new LiteralArray(Array(7, -1, 2, 3))
     )
 
     // https://leetcode.com/problems/maximum-subarray/description/
-    val leetcode_test = new DPExample("leetcode",
-      Array(5, 4, -1, 7, 8),
+    val leetcode_test = new TestExample("leetcode",
+      new LiteralArray(Array(5, 4, -1, 7, 8)),
       23,
-      Array(5, 4, -1, 7, 8)
+      new LiteralArray(Array(5, 4, -1, 7, 8))
     )
 
     for {
@@ -206,11 +207,17 @@ trait MaxSubarrayObjectOrientedProvider extends MaxSubarrayProvider with Utility
       computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, names.mangle("compute"))
 
       assert_statements <- forEach(Seq(wiki_test, geeks_for_geeks_test, leetcode_test)) { example =>
+
+        val array_vals = example.inputType match {
+          case la:LiteralArray => la.ar
+          case _ => ???
+        }
+
         for {
-          expr <- create_int_array(example.example)
+          expr <- create_int_array(array_vals)
           variable <- impParadigm.imperativeCapabilities.declareVar(names.mangle(example.name), arrayType, Some(expr))
           invoke <- apply(computeMethod, Seq(variable))
-          solution <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, example.solution)
+          solution <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, example.answer)
           assert_stmt <- asserts.assertionCapabilities.assertEquals(arrayType, invoke, solution)
 
           // still need test case for validating full_solution when calling 'retrieve()'
@@ -246,6 +253,7 @@ object MaxSubarrayObjectOrientedProvider {
   (nameProvider: NameProvider[base.syntax.Name],
    imp: Imperative.WithBase[base.MethodBodyContext, base.type],
    ffiArithmetic: Arithmetic.WithBase[base.MethodBodyContext, base.type, Double],
+   ffiRealArithmetic: RealArithmetic.WithBase[base.MethodBodyContext, base.type, Double],
    oo: ObjectOriented.WithBase[base.type],
    con: Console.WithBase[base.MethodBodyContext, base.type],
    arr: Arrays.WithBase[base.MethodBodyContext, base.type],
@@ -258,6 +266,7 @@ object MaxSubarrayObjectOrientedProvider {
       override val paradigm: base.type = base
       val impParadigm: imp.type = imp
       val arithmetic: ffiArithmetic.type = ffiArithmetic
+      val realArithmetic: ffiRealArithmetic.type = ffiRealArithmetic
       override val names: NameProvider[paradigm.syntax.Name] = nameProvider
       override val ooParadigm: ObjectOriented.WithBase[paradigm.type] = oo
       override val console: Console.WithBase[base.MethodBodyContext, paradigm.type] = con

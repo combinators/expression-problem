@@ -3,8 +3,8 @@ package org.combinators.model
 class Setup {
   def instantiate(): Model = {
 
-    val s1 = new ArgExpression(0, "s1", new StringType())
-    val s2 = new ArgExpression(1, "s2", new StringType())
+    val s1 = new ArgExpression(0, "s1", new StringType(), "r")
+    val s2 = new ArgExpression(1, "s2", new StringType(), "c")
 
     val boundZero: Expression = new StringLengthExpression(s1)
     val boundOne: Expression = new StringLengthExpression(s2)
@@ -28,7 +28,7 @@ class Setup {
       new SubtractionExpression(r, one), c
     )
 
-    val LCS: Model = new Model("Prototype LCS",
+    val LCS: Model = new Model("PrototypeLCS",   // cannot contain a space since it represents a class
       bounds,
       cases = List(
         (
@@ -58,7 +58,7 @@ class Setup {
 
     val two: LiteralInt = new LiteralInt(2)
 
-    val bound = List(new ArgExpression(0, "n", new IntegerType()))
+    val bound = List(new ArgExpression(0, "n", new IntegerType(), "i"))
 
     val i: IteratorExpression = new IteratorExpression(0, "i")
     val im1 = new SubtractionExpression(i, one)

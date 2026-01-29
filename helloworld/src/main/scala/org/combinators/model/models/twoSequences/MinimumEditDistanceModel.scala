@@ -4,8 +4,8 @@ import org.combinators.model._
 
 class MinimumEditDistanceModel {
   def instantiate(): Model = {
-    val s1 = new ArgExpression(0, "s1", new StringType())
-    val s2 = new ArgExpression(1, "s2", new StringType())
+    val s1 = new ArgExpression(0, "s1", new StringType(), "r")
+    val s2 = new ArgExpression(1, "s2", new StringType(), "c")
 
     val boundZero: Expression = new ArrayLengthExpression(s1)
     val boundOne: Expression = new ArrayLengthExpression(s2)
@@ -30,7 +30,7 @@ class MinimumEditDistanceModel {
           r
         ),
         (
-          Some(new CharAtExpression(s1, r - one) == new CharAtExpression(s2, c - one)),
+          Some(new EqualExpression(new CharAtExpression(s1, r - one), new CharAtExpression(s2, c - one), new CharType())),
           new SubproblemExpression(Seq(r - one, c - one))
         ),
         (

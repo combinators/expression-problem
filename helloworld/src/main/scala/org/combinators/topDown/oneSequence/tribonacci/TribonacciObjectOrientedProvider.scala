@@ -1,12 +1,12 @@
 package org.combinators.topDown.oneSequence.tribonacci
 
-import org.combinators.dp.{BottomUp, GenerationOption, TopDown, Utility}
+import org.combinators.dp.{BottomUp, GenerationOption, TopDownStrategy, Utility}
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.Generics.WithBase
 import org.combinators.ep.generator.paradigm.ParametricPolymorphism.WithBase
 import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality, Strings}
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality, RealArithmetic, Strings}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
 import org.combinators.model.Model
@@ -201,6 +201,7 @@ object TribonacciObjectOrientedProvider {
            (nameProvider: NameProvider[base.syntax.Name],
             imp: Imperative.WithBase[base.MethodBodyContext, base.type],
             ffiArithmetic: Arithmetic.WithBase[base.MethodBodyContext, base.type, Double],
+            ffiRealArithmetic: RealArithmetic.WithBase[base.MethodBodyContext, base.type, Double],
             con: Console.WithBase[base.MethodBodyContext, base.type],
             arr: Arrays.WithBase[base.MethodBodyContext, base.type],
             assertsIn: Assertions.WithBase[base.MethodBodyContext, base.type],
@@ -213,6 +214,7 @@ object TribonacciObjectOrientedProvider {
       override val paradigm: base.type = base
       val impParadigm: imp.type = imp
       val arithmetic: ffiArithmetic.type = ffiArithmetic
+      val realArithmetic: ffiRealArithmetic.type = ffiRealArithmetic
       override val names: NameProvider[paradigm.syntax.Name] = nameProvider
       override val ooParadigm: oo.type = oo
       override val polymorphics: parametricPolymorphism.type = parametricPolymorphism

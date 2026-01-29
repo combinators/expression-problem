@@ -449,6 +449,14 @@ package object scala {
     }
   }
 
+  trait MaxOp[FT <: FinalTypes] extends RealArithmeticOps.MaxOp[FT] with Operator[FT] with Factory[FT] with MathFunctionOperator[FT] {
+    override def operator: String = "max"
+
+    override def toScala(operands: any.Expression[FT]*): String = {
+      s"(Math.$operator(${operands(0).toScala},${operands(1).toScala}))"
+    }
+  }
+
   trait SinOp[FT <: FinalTypes] extends RealArithmeticOps.SinOp[FT] with Operator[FT] with Factory[FT] with MathFunctionOperator[FT] {
     override def operator: String = "sin"
   }
@@ -1131,6 +1139,9 @@ package object scala {
   trait StringLengthOp[FT <: FinalTypes] extends StringOps.StringLengthOp[FT] with Operator[FT] with PostfixOperator[FT] {
     def operator: String = ".length"
   }
+  trait CharAtOp[FT <: FinalTypes] extends StringOps.CharAtOp[FT] with Operator[FT] with PostfixOperator[FT] {
+    def operator: String = ".charAt"
+  }
   trait AssertTrueOp[FT <: FinalTypes] extends AssertionOps.AssertTrueOp[FT] with Operator[FT] {
     def operator: String = "assert "
     def toScala(operands: any.Expression[FT]*): String = s"assert (${operands.head.toScala})"
@@ -1579,6 +1590,7 @@ package object scala {
       def sqrtOp(): RealArithmeticOps.SqrtOp[FinalTypes] = SqrtOp()
       def powOp(): RealArithmeticOps.PowOp[FinalTypes] = PowOp()
       def logOp(): RealArithmeticOps.LogOp[FinalTypes] = LogOp()
+      def maxOp(): RealArithmeticOps.MaxOp[FinalTypes] = MaxOp()
       def sinOp(): RealArithmeticOps.SinOp[FinalTypes] = SinOp()
       def cosOp(): RealArithmeticOps.CosOp[FinalTypes] = CosOp()
       def absOp(): RealArithmeticOps.AbsOp[FinalTypes] = AbsOp()
@@ -1612,6 +1624,7 @@ package object scala {
       override def toStringOp(): StringOps.ToStringOp[FinalTypes] = ToStringOp()
       override def appendStringOp(): StringOps.AppendStringOp[FinalTypes] = AppendStringOp()
       override def stringLengthOp(): StringOps.StringLengthOp[FinalTypes] = StringLengthOp()
+      override def charAtOp(): StringOps.CharAtOp[FinalTypes] = CharAtOp()
       override def assertTrueOp(): AssertionOps.AssertTrueOp[FinalTypes] = AssertTrueOp()
 
       override def ooProject(compilationUnits: Set[any.CompilationUnit[FinalTypes]],
@@ -2072,6 +2085,7 @@ package object scala {
     case class SqrtOp() extends scala.SqrtOp[FinalTypes] with Operator with Factory
     case class PowOp() extends scala.PowOp[FinalTypes] with Operator with Factory
     case class LogOp() extends scala.LogOp[FinalTypes] with Operator with Factory
+    case class MaxOp() extends scala.MaxOp[FinalTypes] with Operator with Factory
     case class SinOp() extends scala.SinOp[FinalTypes] with Operator with Factory
     case class CosOp() extends scala.CosOp[FinalTypes] with Operator with Factory
     case class AbsOp() extends scala.AbsOp[FinalTypes] with Operator with Factory
@@ -2101,6 +2115,8 @@ package object scala {
     case class AppendStringOp() extends scala.AppendStringOp[FinalTypes] with Operator
 
     case class StringLengthOp() extends scala.StringLengthOp[FinalTypes] with Operator
+
+    case class CharAtOp() extends scala.CharAtOp[FinalTypes] with Operator
 
     case class AssertTrueOp() extends scala.AssertTrueOp[FinalTypes] with Operator
 

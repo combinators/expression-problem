@@ -4,8 +4,8 @@ import org.combinators.model._
 
 class LongestCommonSubsequenceModel {
   def instantiate(): Model = {
-    val s1 = new ArgExpression(0, "s1", new StringType())
-    val s2 = new ArgExpression(1, "s2", new StringType())
+    val s1 = new ArgExpression(0, "s1", new StringType(), "r")
+    val s2 = new ArgExpression(1, "s2", new StringType(), "c")
 
     val boundZero: Expression = new StringLengthExpression(s1)
     val boundOne: Expression = new StringLengthExpression(s2)
@@ -17,7 +17,7 @@ class LongestCommonSubsequenceModel {
     val zero: LiteralInt = new LiteralInt(0)
     val one: LiteralInt = new LiteralInt(1)
 
-    val LCS: Model = new Model("Prototype LCS",
+    val LCS: Model = new Model("PrototypeLCS",   // cannot have space in the name since this becomes a file
       bounds = bounds,
       cases = List(
         (
@@ -29,14 +29,14 @@ class LongestCommonSubsequenceModel {
           zero
         ),
         (
-          Some(new CharAtExpression(s1, r) == new CharAtExpression(s2, c)),
-          new SubproblemExpression(Seq(r - one, c - one)) + one
+          Some(new EqualExpression(new CharAtExpression(s1, r-one), new CharAtExpression(s2, c-one), new CharType())),
+          new AdditionExpression(new SubproblemExpression(Seq(r - one, c - one)), one)            // how does "-" work here? IT SHOULDN'T
         ),
         (
           None,
           new MaxExpression(
-            new SubproblemExpression(Seq(r - one, c)),
-            new SubproblemExpression(Seq(r, c - one))
+            new SubproblemExpression(Seq(new SubtractionExpression(r, one), c)),
+            new SubproblemExpression(Seq(r, new SubtractionExpression(c, one)))
           )
         )
       )

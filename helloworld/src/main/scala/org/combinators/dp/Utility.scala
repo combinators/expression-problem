@@ -1,13 +1,14 @@
 package org.combinators.dp
 
-import org.combinators.model.{IntegerType, StringType}
+import org.combinators.model.{AdditionExpression, ArgExpression, ArgumentType, CharAtExpression, EqualExpression, InputExpression, IntegerType, IteratorExpression, LiteralInt, LiteralString, MaxExpression, Model, StringLengthExpression, StringType, SubproblemExpression, SubtractionExpression}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.NameProvider
+import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality, Strings}
-import org.combinators.model.{AdditionExpression, ArgumentType, EqualExpression, InputExpression, IteratorExpression, LiteralInt, StringLengthExpression, SubproblemExpression, SubtractionExpression}
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality, RealArithmetic, Strings}
+import org.combinators.ep.language.java.paradigm.ffi.RealArithmetic
 
 
 // Different approach
@@ -16,12 +17,16 @@ trait GenerationOption {}
 class TopDown(val memo:Boolean = false) extends GenerationOption
 class BottomUp extends GenerationOption
 
+
+class DPExample[Input, Output, Full_Solution] (val name:String, val example:Input, val solution:Output, val full_solution:Full_Solution)
+
 trait Utility {
   val paradigm: AnyParadigm
   val names: NameProvider[paradigm.syntax.Name]
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val arithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double]
+  val realArithmetic: RealArithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double]
   val array: Arrays.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val eqls: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val asserts: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
@@ -31,9 +36,10 @@ trait Utility {
   import syntax._
   import ooParadigm._
 
+  // known to ALL approaches (top-down or bottom up)
+  lazy val helperName     = names.mangle("helper")
+  lazy val computeName    = names.mangle("compute")
 
-  class DPExample[Input, Output, Full_Solution] (val name:String, val example:Input, val solution:Output, val full_solution:Full_Solution) {
-  }
 
   def generate_DP_int_array_test[FS](clazz:Name, tests:Seq[DPExample[Seq[Int],Int,FS]]): Generator[MethodBodyContext, Seq[Expression]] = {
     import eqls.equalityCapabilities._
@@ -67,6 +73,10 @@ trait Utility {
         tpe <- toTargetLanguageType(TypeRep.Int)
       } yield tpe
 
+      case _:CharType => for {
+        tpe <- toTargetLanguageType(TypeRep.Char)
+      } yield tpe
+
       case _:StringType => for {
         tpe <- toTargetLanguageType(TypeRep.String)
       } yield tpe
@@ -74,7 +84,78 @@ trait Utility {
       // find which ones need to be implemented
       case _ => ???
     }
-}
+  }
+
+  def max_bound_in_method(argExpr: ArgExpression)  : Generator[paradigm.MethodBodyContext, Expression] = {
+    import paradigm.methodBodyCapabilities._
+    import org.combinators.model._
+
+    argExpr.argType match {
+      case _:IntegerType => for {
+        self <- ooParadigm.methodBodyCapabilities.selfReference()
+        field <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle(argExpr.name))
+      } yield field
+
+      case arg:StringType => for {
+        self <- ooParadigm.methodBodyCapabilities.selfReference()
+        field <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle(argExpr.name))
+        lengthMethod <- ooParadigm.methodBodyCapabilities.getMember(field, names.mangle("length"))     // bit of a hack for string
+        invoke <- paradigm.methodBodyCapabilities.apply(lengthMethod, Seq.empty)
+      } yield invoke
+
+      // find which ones need to be implemented
+      case _ => ???
+    }
+  }
+
+  def map_type_in_method(argType: ArgumentType) : Generator[paradigm.MethodBodyContext, Type] = {
+    import paradigm.methodBodyCapabilities._
+    import org.combinators.model._
+
+    argType match {
+      case _:IntegerType => for {
+        tpe <- toTargetLanguageType(TypeRep.Int)
+      } yield tpe
+
+      case _:CharType => for {
+        tpe <- toTargetLanguageType(TypeRep.Char)
+      } yield tpe
+
+      case _:StringType => for {
+        tpe <- toTargetLanguageType(TypeRep.String)
+      } yield tpe
+
+      // find which ones need to be implemented
+      case _ => ???
+    }
+  }
+
+  /**
+   * Creates function using parameters from model and returns int:
+   *
+   *     int SOMEFUNCTION (ARGS)
+   *
+   * where ARGS represents the model (i.e., (("n", Int)) for Fibonacci and (("s1", String), ("s2", String)) for LCS
+   */
+  def make_helper_method_signature(model:Model): Generator[paradigm.MethodBodyContext, Unit] = {
+    import paradigm.methodBodyCapabilities._
+
+    // Type of helper method param is always an integer to refer to earlier subproblem
+    //
+
+    for {
+      params <- forEach(model.bounds) { arg => for {
+        argType <- toTargetLanguageType(TypeRep.Int)      // Always will be int since subproblems are ordered
+        argName = names.mangle(arg.itArgName)             // use pre-selected iterator
+      } yield (argName, argType)
+      }
+      _ <- setParameters(params)
+
+      intType <- toTargetLanguageType(TypeRep.Int)
+      _ <- setReturnType(intType)                         // should always be int, but could be stored in Model
+    } yield None
+  }
+
 
   /**
    * Institute plan for mutual recursion of helper(args) method which calls memo(args) on smaller subproblem, and that
@@ -90,8 +171,15 @@ trait Utility {
       case eq: EqualExpression => for {
         left <- explore(eq.left, memoize, bottomUp)
         right <- explore(eq.right, memoize, bottomUp)
+        eq_tpe <- map_type_in_method(eq.tpe)
         intType <- toTargetLanguageType(TypeRep.Int)   // HACK a bit
-        e <- eqls.equalityCapabilities.areEqual(intType, left, right)
+        e <- eqls.equalityCapabilities.areEqual(eq_tpe, left, right)
+      } yield e
+
+      case mx:MaxExpression => for {
+        left <- explore(mx.left, memoize, bottomUp)
+        right <- explore(mx.right, memoize, bottomUp)
+        e <- realArithmetic.realArithmeticCapabilities.max(left, right)
       } yield e
 
       // takes "text1" and returns "this.text1"
@@ -106,6 +194,12 @@ trait Utility {
         e <- strings.stringCapabilities.getStringLength(inner)
       } yield e
 
+      case cae:CharAtExpression => for {
+        inner <- explore(cae.string, memoize, bottomUp)
+        idx <- explore(cae.index, memoize, bottomUp)
+        e <- strings.stringCapabilities.getCharAt(inner, idx)
+      } yield e
+
       case ae: SubtractionExpression => for {
         left <- explore(ae.left, memoize, bottomUp)
         right <- explore(ae.right, memoize, bottomUp)
@@ -117,6 +211,11 @@ trait Utility {
         right <- explore(ae.right, memoize, bottomUp)
         e <- arithmetic.arithmeticCapabilities.add(left, right)
       } yield e
+
+      case arge:ArgExpression => for {
+        self <- ooParadigm.methodBodyCapabilities.selfReference()
+        field <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle(arge.name))
+      } yield field
 
       case se: SubproblemExpression => for {
         self <- ooParadigm.methodBodyCapabilities.selfReference()
@@ -162,7 +261,6 @@ trait Utility {
       } yield zero
     }
   }
-
 
   def create_int_array(values:Seq[Int]) : Generator[MethodBodyContext, Expression] = {
     import AnyParadigm.syntax._
@@ -217,8 +315,6 @@ trait Utility {
       )
     } yield maxIfStmt
   }
-
-
 
   //This code does not work, can't access static method on class
   def full_set_max(maxVar: Expression, e1: Expression, e2: Expression): Generator[MethodBodyContext, Statement] = {

@@ -14,7 +14,10 @@ def process_java_file(path):
     replaced = []
     updated = False
     for line in lines:
-        if 'int[]' in line:
+        if 'int[][]' in line:
+            replaced.append(line.replace('int[][]', 'Integer[][]'))
+            updated = True
+        elif 'int[]' in line:
             replaced.append(line.replace('int[]', 'Integer[]'))
             updated = True
         else:

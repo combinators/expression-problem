@@ -9,7 +9,7 @@ package org.combinators.bottomUp.oneSequence.decodeways
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
-import org.combinators.dp.{BottomUp, DPObjectOrientedProvider, GenerationOption, TopDown}
+import org.combinators.dp.{BottomUp, DPObjectOrientedProvider, GenerationOption, TestExample, TopDown, TopDownStrategy}
 import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
@@ -24,7 +24,7 @@ import java.nio.file.{Path, Paths}
 class DPMainJava {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("dp"))))
 
-  val dpApproach = DPObjectOrientedProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.stringsInMethod, generator.equalityInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+  val dpApproach = DecodeWaysProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.realDoublesInMethod, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.stringsInMethod, generator.equalityInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
@@ -34,6 +34,7 @@ class DPMainJava {
       () => generator.paradigm.runGenerator {
         for {
           _ <- generator.doublesInMethod.enable()
+          _ <- generator.realDoublesInMethod.enable()
           _ <- generator.intsInMethod.enable()
           _ <- generator.stringsInMethod.enable()
           _ <- generator.listsInMethod.enable()     // should be array, but this still needs to be added as an FFI
@@ -42,7 +43,7 @@ class DPMainJava {
           _ <- generator.equalityInMethod.enable()
           _ <- generator.assertionsInMethod.enable()
 
-          _ <- dpApproach.implement(model, option)
+          _ <- dpApproach.implement(model, option)   // WRONG METHODs
         } yield ()
       }
 
@@ -140,20 +141,21 @@ object DPDirectToDiskMain extends IOApp {
     // val text1:InputExpression("text1")
     // val text2:InputExpression("text2")
 
-    val bound = List(new ArgExpression(0, "text1", new StringType()), new ArgExpression(1, "text2", new StringType()))
+    val bound = List(new ArgExpression(0, "text1", new StringType(), "r"), new ArgExpression(1, "text2", new StringType(), "c"))
 
-    val n: IteratorExpression = new IteratorExpression(0, "i")   // only one argument, n
+    val r: IteratorExpression = new IteratorExpression(0, "r")   // only one argument, n
+    val c: IteratorExpression = new IteratorExpression(1, "c")   // only one argument, n
 
-    val im1 = new SubtractionExpression(n, one)
-    val im2 = new SubtractionExpression(n, two)
-n
+    val im1 = new SubtractionExpression(r, one)
+    val im2 = new SubtractionExpression(c, two)
+
     val DecodeWays = new Model("DecodeWays",
       bound,
       cases = List(
         // s.length() == n
-        ( Some(new EqualExpression(new StringLengthExpression(input), n)),  one ),
+        ( Some(new EqualExpression(new StringLengthExpression(input), one)),  one ),
         // s.CharAt(n) == '0')
-        ( Some(new EqualExpression(new CharAtExpression(input, n), ascii_zero)), zero),
+        ( Some(new EqualExpression(new CharAtExpression(input, one), ascii_zero)), zero),
         // HACK == helper(n-1)
         ( None,                                new SubproblemExpression(Seq(im1)))
       )

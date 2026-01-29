@@ -8,7 +8,8 @@ class MaxSubarrayModel {
     val zero: LiteralInt = new LiteralInt(0)
     val one: LiteralInt = new LiteralInt(1)
 
-    val bounds = List(new ArrayLengthExpression(new ArgExpression(0,"nums",new IntegerType)))
+//    val bounds = List(new ArrayLengthExpression(new ArgExpression(0,"nums",new IntegerType)))
+    val bounds = List(new ArgExpression(0, "n", new IntegerType()))
 
     val i: IteratorExpression = new IteratorExpression(0, "i")
 

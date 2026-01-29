@@ -44,6 +44,7 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
 //      new Formula(1, "s2"))
 //  }
 
+  // todo: make constructor and have solution() take no parameters
 
   def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
     FindClass(Seq(names.mangle(names.conceptNameOf(dtpe)))).interpret(canFindClass)
@@ -215,13 +216,23 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
       "GA"
     )
 
+    // https://www.geeksforgeeks.org/dsa/longest-common-subsequence-dp-4/#
+    // "aggtab", "gxtxayb"
+
+    val geeks_test = new DPExample(
+      "geeks",
+      Seq("aggtab", "gxtxayb"),
+      4,
+      "gtab"
+    )
+
     for {
       solutionType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle("LongestCommonSubsequence"))
       sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solutionType, Seq.empty)
       arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
       computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, names.mangle("compute"))
 
-      assert_statements <- forEach(Seq(wiki_test)) { example =>
+      assert_statements <- forEach(Seq(wiki_test, geeks_test)) { example =>
         for {
           s1 <- paradigm.methodBodyCapabilities.reify(TypeRep.String, example.example.head)
           s2 <- paradigm.methodBodyCapabilities.reify(TypeRep.String, example.example.tail.head)
@@ -233,6 +244,8 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
           // still need test case for validating full_solution when calling 'retrieve()'
 
         } yield assert_stmt
+
+
       }
     } yield assert_statements
   }

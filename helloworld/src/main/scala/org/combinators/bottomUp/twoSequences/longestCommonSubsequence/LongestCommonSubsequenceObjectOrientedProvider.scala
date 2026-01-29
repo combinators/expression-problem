@@ -223,7 +223,7 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
 
       assert_statements <- forEach(Seq(wiki_test)) { example =>
 
-        val strings = example match {
+        val strings = example.inputType match {
           case lsp:LiteralStringPair => (lsp.string1, lsp.string2)
         }
 

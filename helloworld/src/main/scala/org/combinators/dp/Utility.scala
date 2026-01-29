@@ -8,7 +8,7 @@ import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality, RealArithmetic, Strings}
-import org.combinators.ep.language.java.paradigm.ffi.RealArithmetic
+import org.combinators.model.{AdditionExpression, ArgumentType, EqualExpression, InputExpression, IteratorExpression, LiteralInt, StringLengthExpression, SubproblemExpression, SubtractionExpression}
 
 
 // Different approach
@@ -16,9 +16,6 @@ trait GenerationOption {}
 
 class TopDown(val memo:Boolean = false) extends GenerationOption
 class BottomUp extends GenerationOption
-
-
-class DPExample[Input, Output, Full_Solution] (val name:String, val example:Input, val solution:Output, val full_solution:Full_Solution)
 
 trait Utility {
   val paradigm: AnyParadigm
@@ -40,6 +37,8 @@ trait Utility {
   lazy val helperName     = names.mangle("helper")
   lazy val computeName    = names.mangle("compute")
 
+  class DPExample[Input, Output, Full_Solution] (val name:String, val example:Input, val solution:Output, val full_solution:Full_Solution) {
+  }
 
   def generate_DP_int_array_test[FS](clazz:Name, tests:Seq[DPExample[Seq[Int],Int,FS]]): Generator[MethodBodyContext, Seq[Expression]] = {
     import eqls.equalityCapabilities._
@@ -262,6 +261,7 @@ trait Utility {
     }
   }
 
+
   def create_int_array(values:Seq[Int]) : Generator[MethodBodyContext, Expression] = {
     import AnyParadigm.syntax._
     for {
@@ -315,6 +315,8 @@ trait Utility {
       )
     } yield maxIfStmt
   }
+
+
 
   //This code does not work, can't access static method on class
   def full_set_max(maxVar: Expression, e1: Expression, e2: Expression): Generator[MethodBodyContext, Statement] = {

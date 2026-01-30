@@ -1,4 +1,4 @@
-package org.combinators.dp
+package org.combinators.oneInteger.fibonacci
 
 /**
  * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"
@@ -9,12 +9,12 @@ package org.combinators.dp
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
+import org.combinators.dp.{BottomUp, GenerationOption, TopDown}
 import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
-import org.combinators.model.models.twoSequences.LongestCommonSubsequenceModel
-import org.combinators.model.{AdditionExpression, ArgExpression, Argument, EqualExpression, IntegerType, IteratorExpression, LiteralInt, Model, Setup, SubproblemExpression, SubtractionExpression, UnitExpression}
+import org.combinators.model._
 
 import java.nio.file.{Path, Paths}
 
@@ -75,6 +75,22 @@ object FibonacciMainDirectToDiskMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
 
+    // choose one of these to pass in
+    val topDown         = new TopDown()
+    val topDownWithMemo = new TopDown(memo = true)
+    val bottomUp        = new BottomUp()
+
+    val choice = if (args.length == 1) {
+        args(0).toLowerCase() match {
+          case "topdown" => topDown
+          case "topdownwithmemo" => topDownWithMemo
+          case "bottomUp" => bottomUp
+          case _ => ???
+        }
+    } else {
+      topDown
+    }
+
     // Needed for conditions and fib(n-1) and fib(n-2)
     val zero: LiteralInt = new LiteralInt(0)
     val one: LiteralInt = new LiteralInt(1)
@@ -98,20 +114,12 @@ n
       )
     )
 
-    // choose one of these to pass in
-    val topDown         = new TopDown()
-    val topDownWithMemo = new TopDown(memo = true)
-    val bottomUp        = new BottomUp()
-
-    val LCS = new LongestCommonSubsequenceModel().instantiate()
     for {
       _ <- IO { print("Initializing Generator...") }
       main <- IO { new FibonacciMainJava() }
       _ <- IO { println("[OK]") }
 
-      // pass in TOP DOWN
-
-      result <- main.runDirectToDisc(targetDirectory, Fib, bottomUp)
+      result <- main.runDirectToDisc(targetDirectory, Fib, choice)
     } yield result
   }
 }

@@ -18,7 +18,7 @@ class UncrossedLinesModel {
     val one: LiteralInt = new LiteralInt(1)
 
     val UL: Model = new Model(
-      "Uncrossed Lines",
+      "PrototypeUL",
       bounds,
       cases = List(
         (

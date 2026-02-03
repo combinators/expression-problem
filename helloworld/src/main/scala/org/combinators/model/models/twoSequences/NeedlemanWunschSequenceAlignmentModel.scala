@@ -27,7 +27,7 @@ class NeedlemanWunschSequenceAlignmentModel {
     )
 
     val NWSA: Model = new Model(
-      "Needleman-Wunsch Sequence Alignment",
+      "PrototypeNWSA",
       bounds = bounds,
       cases = List(
         (

@@ -1,6 +1,6 @@
 package org.combinators.dp
 
-import org.combinators.model.{AdditionExpression, ArgExpression, ArgumentType, CharAtExpression, EqualExpression, InputExpression, IntegerType, IteratorExpression, LiteralInt, LiteralString, MaxExpression, Model, StringLengthExpression, StringType, SubproblemExpression, SubtractionExpression}
+import org.combinators.model.{AdditionExpression, ArgExpression, ArgumentType, ArrayElementExpression, CharAtExpression, EqualExpression, InputExpression, IntegerType, IteratorExpression, LiteralInt, LiteralString, MaxExpression, Model, StringLengthExpression, StringType, SubproblemExpression, SubtractionExpression, TernaryExpression}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.NameProvider
@@ -8,7 +8,6 @@ import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality, RealArithmetic, Strings}
-import org.combinators.model.{AdditionExpression, ArgumentType, EqualExpression, InputExpression, IteratorExpression, LiteralInt, StringLengthExpression, SubproblemExpression, SubtractionExpression, ArrayElementExpression}
 
 
 // Different approach
@@ -231,6 +230,12 @@ trait Utility {
         idx <- explore(arr.index, memoize, bottomUp)
         e <- array.arrayCapabilities.get(inner, idx)
       } yield e
+
+//      case ter:TernaryExpression => for {
+//        cond <- explore(ter.condition, memoize, bottomUp)
+//        trueBranch <- explore(ter.trueBranch, memoize, bottomUp)
+//        falseBranch <- explore(ter.falseBranch, memoize, bottomUp)
+//      } yield ()
 
       case se: SubproblemExpression => for {
         self <- ooParadigm.methodBodyCapabilities.selfReference()

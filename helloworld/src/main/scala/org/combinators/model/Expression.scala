@@ -56,6 +56,8 @@ class OrExpression(val left: Expression, val right: Expression) extends Expressi
 class LessThanExpression(val left: Expression, val right:Expression) extends Expression
 class TernaryExpression(val condition: Expression, val trueBranch: Expression, val falseBranch: Expression) extends Expression
 
+class LiteralBoolean(val literal:Boolean) extends LiteralExpression
+
 // Now includes the name of the int variable to iterate over
 class ArgExpression(val whichArg: Int, val name:String, val argType:ArgumentType, val itArgName:String) extends Expression
 

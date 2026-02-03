@@ -36,13 +36,17 @@ class UncrossedLinesModel {
             one
           )
         ),
+//        (
+//          None,
+//          one
+//        ),
         (
           None,
           new MaxExpression(
             new SubproblemExpression(Seq(r, c - one)),
             new SubproblemExpression(Seq(r - one, c))
           )
-        )
+        ),
       )
     )
 

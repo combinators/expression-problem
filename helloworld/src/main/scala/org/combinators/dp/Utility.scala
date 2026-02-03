@@ -8,7 +8,7 @@ import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality, RealArithmetic, Strings}
-import org.combinators.model.{AdditionExpression, ArgumentType, EqualExpression, InputExpression, IteratorExpression, LiteralInt, StringLengthExpression, SubproblemExpression, SubtractionExpression}
+import org.combinators.model.{AdditionExpression, ArgumentType, EqualExpression, InputExpression, IteratorExpression, LiteralInt, StringLengthExpression, SubproblemExpression, SubtractionExpression, ArrayElementExpression}
 
 
 // Different approach
@@ -225,6 +225,12 @@ trait Utility {
         self <- ooParadigm.methodBodyCapabilities.selfReference()
         field <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle(arge.name))
       } yield field
+
+      case arr:ArrayElementExpression => for {
+        inner <- explore(arr.array, memoize, bottomUp)
+        idx <- explore(arr.index, memoize, bottomUp)
+        e <- array.arrayCapabilities.get(inner, idx)
+      } yield e
 
       case se: SubproblemExpression => for {
         self <- ooParadigm.methodBodyCapabilities.selfReference()

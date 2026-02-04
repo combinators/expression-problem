@@ -31,7 +31,7 @@ lazy val commonSettings = Seq(
     "org.typelevel" %% "cats-effect" % "3.6.1"
   ),
   evictionErrorLevel := Level.Info,
-) ++ publishSettings
+) 
 
 lazy val publishSettings = Seq(
   homepage := Some(url("https://combinators.org")),
@@ -59,7 +59,7 @@ lazy val cogen = (Project(id = "cogen", base = file("cogen")))
   .settings(commonSettings: _*)
   .settings(
     moduleName := "expression-problem-cogen",
-  )
+  ) ++ publishSettings
 
 
 /** The core components to model expression problem code generators and domains.

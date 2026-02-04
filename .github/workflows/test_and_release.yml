@@ -24,7 +24,9 @@ jobs:
           java-version: 21
       - name: Set up SBT
         if: steps.check_head_of_master.outputs.head_of_main == steps.check_head_of_main.outputs.current_job_ref
-        uses: sbt/setup-sbt@v1.10.11
+        uses: sbt/setup-sbt@v1.1.16
+        with:
+          sbt-runner-version: 1.10.11
       - name: Build and release
         if: steps.check_head_of_master.outputs.head_of_main == steps.check_head_of_main.outputs.current_job_ref
         env:

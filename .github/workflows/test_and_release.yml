@@ -35,4 +35,4 @@ jobs:
           export GPG_TTY=$(tty) &&
           echo $PGP_SECRET | base64 -d | gpg --passphrase=$PGP_PASSPHRASE --yes --batch --pinentry-mode loopback --import &&
           export PATH=`pwd`/.github/bin:$PATH &&
-          sbt cogen/ciReleaseTagNextVersion cogen/ciReleaseSonatype
+          sbt ciReleaseTagNextVersion ciReleaseSonatype

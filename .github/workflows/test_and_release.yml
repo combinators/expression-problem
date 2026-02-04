@@ -13,9 +13,9 @@ jobs:
         run: |
           git fetch origin main &&
           MAIN=`git rev-parse origin/main` &&
-          echo "::set-output name=head_of_main::$MAIN" &&
+          echo "head_of_main=$MAIN" >> $GITHUB_OUTPUT &&
           CURRENT=`git rev-list -n 1 ${{ github.ref }} || echo "NOT_MAIN"` &&
-          echo "::set-output name=current_job_ref::$CURRENT"
+          echo "current_job_ref=$CURRENT" >> $GITHUB_OUTPUT
       - name: Set up JDK
         if: steps.check_head_of_main.outputs.head_of_main == steps.check_head_of_main.outputs.current_job_ref
         uses: actions/setup-java@v4

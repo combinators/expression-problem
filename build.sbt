@@ -49,11 +49,13 @@ lazy val publishSettings = Seq(
 lazy val noPublishSettings = Seq(
   publish := Seq.empty,
   publishLocal := Seq.empty,
-  publishArtifact := false
+  publishArtifact := false,
+  publish / skip := true,
 )
 
 lazy val root = (Project(id = "root", base = file(".")))
   .settings(noPublishSettings: _*)
+  .aggregate(cogen, languageJava, languageInbetween, languageNewScala)
 
 /** The code generation infrastructure used in languages.
   * Things in here are (DI, LI, AI).

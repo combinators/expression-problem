@@ -1,11 +1,12 @@
 package org.combinators.fibonacci
 
-import org.combinators.ep.domain.abstractions.TypeRep
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Assertions, Equality}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, Functional, control}
-import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider}
+import org.combinators.cogen.TypeRep
+import org.combinators.cogen.paradigm.control
+import org.combinators.cogen.paradigm.{AnyParadigm, Functional}
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Assertions, Equality}
 
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.{AbstractSyntax, Command, NameProvider}
 /**
  * Take advantage of observation that:
  *
@@ -169,8 +170,8 @@ object FibonacciWithLucasProvider {
   def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
   (base: P)
   (nameProvider: NameProvider[base.syntax.Name],
-   func:  Functional.WithBase[base.type],
-   c1: control.Functional.WithBase[base.MethodBodyContext, base.type],
+   func: Functional.WithBase[base.type],
+   c1 : control.Functional.WithBase[base.MethodBodyContext, base.type],
    c2: Arithmetic.WithBase[base.MethodBodyContext, base.type, Int],
    c3: Assertions.WithBase[base.MethodBodyContext, base.type],
    c4: Equality.WithBase[base.MethodBodyContext, base.type]

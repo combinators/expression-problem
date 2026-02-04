@@ -1,45 +1,66 @@
+import sbt.Keys._
+import sbt.Resolver
+import xerial.sbt.Sonatype.sonatypeCentralHost
+
 /** Settings shared globally. **/
 lazy val commonSettings = Seq(
-  version := "1.0.0-SNAPSHOT",
   organization := "org.combinators",
 
-  scalaVersion := "2.12.17",
-
-  resolvers ++= Seq(
-    Resolver.sonatypeRepo("releases"),
-    Resolver.typesafeRepo("releases")
-  ),
+  scalaVersion := "3.7.4",
+  
+  resolvers += Resolver.typesafeRepo("releases"),
+  resolvers ++= Resolver.sonatypeOssRepos("releases"),
 
   Compile/scalacOptions ++= Seq(
+    "-explain",
     "-unchecked",
     "-deprecation",
     "-feature",
     "-language:implicitConversions",
-    "-Ypartial-unification",
-    "-language:higherKinds"
-  ),
-
-  Compile/scalacOptions ++= Seq(
-    "-unchecked",
-    "-deprecation",
-    "-feature",
-    "-language:implicitConversions"
+    "-language:higherKinds",
+    "-Xkind-projector:underscores",
   ),
 
   libraryDependencies ++= Seq(
-    "org.combinators" %% "jgitserv" % "0.0.1",
-    "org.scalactic" %% "scalactic" % "3.2.2" % "test",
-    "org.scalatest" %% "scalatest" % "3.2.2" % "test",
-    "org.scalameta" %% "scalameta" % "4.4.27",
-    "org.scalameta" %% "contrib" % "4.1.6",
-    "org.typelevel" %% "cats-core" % "2.3.1",
-    "org.typelevel" %% "cats-free" % "2.3.1",
-    "org.typelevel" %% "cats-effect" % "2.3.1"
+    "commons-io"% "commons-io" % "2.19.0",
+    "org.combinators" %% "templating" % "1.1.5",
+    "org.scalactic" %% "scalactic" % "3.2.19" % "test",
+    "org.scalatest" %% "scalatest" % "3.2.19" % "test",
+    "org.typelevel" %% "cats-core" % "2.13.0",
+    "org.typelevel" %% "cats-free" % "2.13.0",
+    "org.typelevel" %% "cats-effect" % "3.6.1"
   ),
   evictionErrorLevel := Level.Info,
+) 
 
-  addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
+lazy val publishSettings = Seq(
+  homepage := Some(url("https://combinators.org")),
+  licenses := Seq("Apache 2" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")),
+  scmInfo := Some(ScmInfo(url("https://www.github.com/combinators/expression-problem"), "scm:git:git@github.com:combinators/expression-problem.git")),
+  developers := List(
+    Developer("JanBessai", "Jan Bessai", "jan.bessai@tu-dortmund.de", url("http://noprotocol.net")),
+    Developer("heineman", "George T. Heineman", "heineman@wpi.edu", url("http://www.cs.wpi.edu/~heineman")),
+    Developer("BorisDuedder", "Boris Düdder", "boris.d@di.ku.dk", url("http://duedder.net"))
+  ),
+  publishTo := sonatypePublishToBundle.value,
+  ThisBuild / sonatypeCredentialHost := sonatypeCentralHost,
+) ++ sys.env.get("PGP_KEY_HEX").map(h => usePgpKeyHex(h)).seq
+
+lazy val noPublishSettings = Seq(
+  publish := Seq.empty,
+  publishLocal := Seq.empty,
+  publishArtifact := false
 )
+
+/** The code generation infrastructure used in languages.
+  * Things in here are (DI, LI, AI).
+  */
+lazy val cogen = (Project(id = "cogen", base = file("cogen")))
+  .settings(commonSettings: _*)
+  .settings(
+    moduleName := "expression-problem-cogen",
+  ) ++ publishSettings
+
 
 /** The core components to model expression problem code generators and domains.
   * Things in here are (DI, LI, AI).
@@ -48,9 +69,16 @@ lazy val core = (Project(id = "core", base = file("core")))
   .settings(commonSettings: _*)
   .settings(
     moduleName := "expression-problem-core",
-    //addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3"),
-    addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")
   )
+  .dependsOn(cogen)
+
+lazy val approach = (Project(id = "approach", base = file("approach")))
+  .settings(commonSettings: _*)
+  .settings(
+    moduleName := "expression-problem-approach",
+  )
+  .dependsOn(cogen, core)
+
 
 /** Template for a subproject for a specific domain named `domainName`.
   * These projects should be (DD, LI, AI).
@@ -61,7 +89,7 @@ def standardDomainProject(domainName: String): Project =
     .settings(
       moduleName := s"expression-problem-domain-$domainName"
     )
-    .dependsOn(core)
+    .dependsOn(cogen, core)
 
 /** The domain of math with arithmetic expressions. **/
 lazy val domainMath = standardDomainProject("math")
@@ -77,14 +105,11 @@ def standardLanguageProject(languageName: String): Project =
     .settings(
       moduleName := s"expression-problem-language-$languageName",
     )
-    .dependsOn(core, domainMath, domainShape)
+    .dependsOn(cogen)
 
 lazy val languageJava =
   standardLanguageProject("java")
-    .settings(libraryDependencies += "com.github.javaparser" % "javaparser-core" % "3.19.0")
-    .settings(
-      Compile/run/mainClass := Some("org.combinators.ep.language.java.GenerateAll")
-     )
+    .settings(libraryDependencies += "com.github.javaparser" % "javaparser-core" % "3.26.4")
 
 lazy val helloWorldProject: Project =
   (Project(id = s"helloWorld", base = file(s"helloworld")))
@@ -92,27 +117,21 @@ lazy val helloWorldProject: Project =
     .settings(
       moduleName := s"expression-problem-language-helloworld",
     )
-    .dependsOn(core, languageJava, languageNewScala)
+    .dependsOn(cogen, languageJava, languageNewScala)
 
-lazy val exitSBT =
-  standardLanguageProject("java")
-    .settings(libraryDependencies += "com.github.javaparser" % "javaparser-core" % "3.19.0")
-    .settings(
-      Compile/run/mainClass := Some("org.combinators.ep.language.java.Exit")
-    )
 lazy val languageInbetween =
   standardLanguageProject("inbetween")
-    .dependsOn(core)
 
 lazy val languageNewScala =
   standardLanguageProject("newScala")
     .dependsOn(languageInbetween)
-    .settings(
-      Compile/run/mainClass := Some("org.combinators.ep.language.scala.codegen.GenerateAll")
-    )
 
-//lazy val languageGJ = standardLanguageProject("gj")
-//lazy val languageCPP = standardLanguageProject("cpp")
-//lazy val languageHaskell = standardLanguageProject("haskell")
+lazy val builder =
+  (Project(id = s"builder", base = file(s"builder")))
+    .settings(commonSettings: _*)
+    .settings(
+      moduleName := s"expression-problem-language-builder",
+    )
+    .dependsOn(core, cogen, approach, domainMath, domainShape, languageJava, languageNewScala, helloWorldProject)
 
 

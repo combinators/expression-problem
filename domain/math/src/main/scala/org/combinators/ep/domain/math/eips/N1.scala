@@ -1,14 +1,15 @@
 package org.combinators.ep.domain.math.eips     /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, Parameter, TypeRep}
-import org.combinators.ep.domain.instances.InstanceRep
-import org.combinators.ep.domain.math
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.cogen.InstanceRep
+import org.combinators.cogen.TypeRep
+import org.combinators.cogen.paradigm.AnyParadigm
+import org.combinators.cogen.paradigm.control
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Equality, RealArithmetic, Strings}
+import org.combinators.ep.domain.abstractions.{Operation, Parameter}
+import org.combinators.ep.domain.{GenericModel, math}
+import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
-import org.combinators.ep.generator.paradigm.AnyParadigm
-import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Equality, RealArithmetic, Strings}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
 object N1 {
@@ -19,10 +20,10 @@ object N1 {
    ffiRealArithmetic: RealArithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiEquals: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiImper:Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]):
+   ffiImper:control.Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val n1Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.N1.getModel
+      override val model: GenericModel = math.N1.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {

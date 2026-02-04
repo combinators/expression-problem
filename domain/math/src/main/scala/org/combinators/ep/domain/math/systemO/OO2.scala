@@ -1,8 +1,11 @@
 package org.combinators.ep.domain.math.systemO    /*DD:LI:AI*/
 
+import org.combinators.cogen.InstanceRep
+import org.combinators.cogen.TypeRep
+import org.combinators.cogen.TestCase
 import org.combinators.ep.domain._
 import org.combinators.ep.domain.abstractions._
-import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
+import org.combinators.ep.domain.instances.DataTypeInstance
 import org.combinators.ep.domain.math.M0.{AddInst, LitInst}
 import org.combinators.ep.domain.math.M1.SubInst
 import org.combinators.ep.domain.math.M2

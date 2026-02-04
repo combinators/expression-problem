@@ -4,15 +4,15 @@ import java.util.UUID
 import com.github.javaparser.ast.{ImportDeclaration, Modifier, NodeList}
 import com.github.javaparser.ast.`type`.ClassOrInterfaceType
 import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, ConstructorDeclaration, MethodDeclaration}
-import com.github.javaparser.ast.expr.{AssignExpr, CastExpr, EnclosedExpr, Expression, FieldAccessExpr, InstanceOfExpr, MethodCallExpr, NameExpr, ObjectCreationExpr, ThisExpr, TypeExpr, Name => JName}
+import com.github.javaparser.ast.expr.{AssignExpr, CastExpr, EnclosedExpr, Expression => JExpression, FieldAccessExpr, InstanceOfExpr, MethodCallExpr, NameExpr, ObjectCreationExpr, ThisExpr, TypeExpr, Name as JName}
 import com.github.javaparser.ast.stmt.{BlockStmt, ExplicitConstructorInvocationStmt, ExpressionStmt, ReturnStmt}
-import org.combinators.ep.domain.abstractions.TypeRep
-import org.combinators.ep.domain.instances.InstanceRep
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.{Command, Understands}
-import org.combinators.ep.generator.paradigm.{ObjectOriented => OO, AnyParadigm => _, _}
+import org.combinators.cogen.InstanceRep
+import org.combinators.cogen.TypeRep
+import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddClass, AddConstructor, AddField, AddImplemented, AddImport, AddMethod, AddParent, AddTypeLookup, Apply, CastObject, Debug, FindClass, FreshName, GetArguments, GetConstructor, GetField, GetMember, InitializeField, InitializeParent, InstanceOfType, InstantiateObject, Reify, RemoveMethod, ResolveImport, SelfReference, SetAbstract, SetInterface, SetOverride, SetParameters, SetStatic, SuperReference, ToTargetLanguageType, ObjectOriented as OO}
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.{Command, Understands}
 import org.combinators.ep.language.java.Syntax.MangledName
-import org.combinators.ep.language.java.{ClassCtxt, CompilationUnitCtxt, ContextSpecificResolver, CtorCtxt, JavaNameProvider, MethodBodyCtxt, TestCtxt}
+import org.combinators.ep.language.java.{ClassCtxt, ContextSpecificResolver, CtorCtxt, JavaNameProvider, MethodBodyCtxt, TestCtxt}
 
 import scala.util.Try
 import scala.jdk.CollectionConverters._
@@ -39,7 +39,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             val (resultCtxt, _) =
               Command.runGenerator(
                 command.cls,
-                ClassCtxt(context.resolver, clsToAdd, context.unit.getImports.asScala)
+                ClassCtxt(context.resolver, clsToAdd, context.unit.getImports.asScala.toSeq)
               )
             val newUnit = context.unit.clone()
             newUnit.addType(resultCtxt.cls)
@@ -172,7 +172,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             val resultCls = context.cls.clone()
             val modifiers: Seq[Modifier.Keyword] =
             (if (command.isVisibleToSubclasses) Seq(Modifier.protectedModifier().getKeyword) else Seq(Modifier.privateModifier().getKeyword)) ++ (if (command.isMutable) Seq.empty else Seq(Modifier.finalModifier().getKeyword))
-            resultCls.addField(command.tpe, command.name.toAST.toString, modifiers:_*)
+            resultCls.addField(command.tpe, command.name.toAST.toString, modifiers*)
             (context.copy(cls = resultCls), ())
           }
         }
@@ -441,7 +441,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             /** Expand with instantiated body (if it exists). */
             val result = new ObjectCreationExpr()
             result.setType(tpe.asClassOrInterfaceType().clone())
-            result.setArguments(new NodeList(args : _*))
+            result.setArguments(new NodeList(args*))
             if (command.body.isDefined) {
               val ci = new ClassOrInterfaceDeclaration()
               val (newCtxt, classDef) = Command.runGenerator(command.body.get, ClassCtxt(context.resolver, ci, context.extraImports))
@@ -471,7 +471,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
               command.arguments.foreach(arg => result.addArgument(arg.clone()))
               (context, result)
             } else {
-              val result = new MethodCallExpr(command.functional.toString, command.arguments:_*)
+              val result = new MethodCallExpr(command.functional.toString, command.arguments*)
               (context, result)
             }
           }
@@ -512,7 +512,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             context: ConstructorContext,
             command: GetArguments[Type, Name, Expression]
           ): (ConstructorContext, Seq[(Name, Type, Expression)]) = {
-            val args = context.ctor.getParameters.asScala.map { param =>
+            val args = context.ctor.getParameters.asScala.toSeq.map { param =>
               (MangledName.fromAST(param.getName), param.getType.clone(), new NameExpr(param.getName.clone()))
             }
             (context, args)
@@ -601,7 +601,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             /** Expand with instantiated body (if it exists). */
             val result = new ObjectCreationExpr()
             result.setType(tpe.asClassOrInterfaceType().clone())
-            result.setArguments(new NodeList(args : _*))
+            result.setArguments(new NodeList(args*))
             if (command.body.isDefined) {
               val ci = new ClassOrInterfaceDeclaration()
               val (newCtxt, classDef) = Command.runGenerator(command.body.get, ClassCtxt(context.resolver, ci, context.extraImports))
@@ -813,9 +813,9 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
               (if (command.isVisibleToSubclasses) Seq(Modifier.protectedModifier().getKeyword) else Seq(Modifier.privateModifier().getKeyword)) ++ (if (command.isMutable) Seq.empty else Seq(Modifier.finalModifier().getKeyword))
 
             if (command.initializer.isDefined) {
-              resultCls.addFieldWithInitializer(command.tpe, command.name.toAST.toString, expr, modifiers: _*)
+              resultCls.addFieldWithInitializer(command.tpe, command.name.toAST.toString, expr, modifiers*)
             } else {
-              resultCls.addField(command.tpe, command.name.toAST.toString, modifiers: _*)
+              resultCls.addField(command.tpe, command.name.toAST.toString, modifiers*)
             }
 
             (context.copy(testClass = resultCls), ())
@@ -863,7 +863,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             /** REMOVED [Expand with instantiated body (if it exists).] */
             val result = new ObjectCreationExpr()
             result.setType(tpe.asClassOrInterfaceType().clone())
-            result.setArguments(new NodeList(args : _*))
+            result.setArguments(new NodeList(args*))
             (context, result)
           }
         }
@@ -968,10 +968,10 @@ object ObjectOriented {
     rest.foldLeft(new JName(first))((result, next) => new JName(result, next))
   }
 
-  def nameToExpression(name: JName): Expression = {
+  def nameToExpression(name: JName): JExpression = {
     name.getQualifier
-      .map[Expression](n => nameToExpression(n))
-      .map[Expression](qual => new FieldAccessExpr(qual, name.getIdentifier))
+      .map[JExpression](n => nameToExpression(n))
+      .map[JExpression](qual => new FieldAccessExpr(qual, name.getIdentifier))
       .orElseGet(() => new NameExpr(name.getIdentifier))
   }
 

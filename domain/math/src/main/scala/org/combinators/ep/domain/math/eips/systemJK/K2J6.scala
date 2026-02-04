@@ -1,22 +1,23 @@
 package org.combinators.ep.domain.math.eips.systemJK    /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, TypeRep}
-import org.combinators.ep.domain.instances.InstanceRep
+import org.combinators.cogen.InstanceRep
+import org.combinators.cogen.TypeRep
+import org.combinators.cogen.paradigm.AnyParadigm
+import org.combinators.cogen.paradigm.control
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Booleans, Equality, Strings}
+import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation}
 import org.combinators.ep.domain.math.systemJK
 import org.combinators.ep.domain.{GenericModel, abstractions, math}
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
-import org.combinators.ep.generator.paradigm.AnyParadigm
-import org.combinators.ep.generator.paradigm.control.{Functional, Imperative}
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Booleans, Equality, Strings}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
 /** Upon merging M7 and I2 there is a need for MultByx(Divd, Mult, Neg) as well as a need for
- * (Collect,Simplify,Id,AsTree,Equals,PowBy)xPower
- *
- * These all have to be captured here...
- */
+  * (Collect,Simplify,Id,AsTree,Equals,PowBy)xPower
+  *
+  * These all have to be captured here...
+  */
 sealed class K2J6[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P], IfBlockType](val paradigm: P) {
 
   type IfThenElseCommand =
@@ -28,12 +29,12 @@ sealed class K2J6[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
 
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
     (j6Provider: EvolutionImplementationProvider[AIP[paradigm.type]], k2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
-    (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
-     ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
-     ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
-     ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],
-     returnInIf: Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression] => Generator[paradigm.MethodBodyContext, IfBlockType],
-     ifThenElse: IfThenElseCommand):
+      (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
+        ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
+        ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
+        ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],
+        returnInIf: Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression] => Generator[paradigm.MethodBodyContext, IfBlockType],
+        ifThenElse: IfThenElseCommand):
 
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val k2j6Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
@@ -50,16 +51,16 @@ sealed class K2J6[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
         } yield ()
       }
 
-        // k1 <- k2
-        //   K1(Seq(Power), J2.isOps(Seq(Power)))), K2("k2", Seq.empty, Seq(Simplify, Collect)))
+      // k1 <- k2
+      //   K1(Seq(Power), J2.isOps(Seq(Power)))), K2("k2", Seq.empty, Seq(Simplify, Collect)))
 
-        // j1 <- j2 <- j3 <- j4 <- j5 <- j6
-        // J1    Seq(Sub), Seq(MultBy))
-        // J2    Seq(Mult), Seq(Eql)  ++ isOps(allTypes))
-        // J3    Seq(Neg, Divd), Seq(PrettyP) ++ J2.isOps(Seq(Neg,Divd)))
-        // J4    ("j4", Seq.empty, Seq(Operation.asTree, Identifier))
-        // J5    Seq.empty, Seq(Equals))
-        // J6    Seq.empty, Seq(PowBy))
+      // j1 <- j2 <- j3 <- j4 <- j5 <- j6
+      // J1    Seq(Sub), Seq(MultBy))
+      // J2    Seq(Mult), Seq(Eql)  ++ isOps(allTypes))
+      // J3    Seq(Neg, Divd), Seq(PrettyP) ++ J2.isOps(Seq(Neg,Divd)))
+      // J4    ("j4", Seq.empty, Seq(Operation.asTree, Identifier))
+      // J5    Seq.empty, Seq(Equals))
+      // J6    Seq.empty, Seq(PowBy))
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = systemJK.K2J6.getModel.flatten.typeCases
         (potentialRequest.op, potentialRequest.tpeCase) match {
@@ -93,7 +94,7 @@ sealed class K2J6[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
 
       // Simplify of Power -- if exponent is 1, then ignore! If exponent is 0, turn to 1; if exponent is -1, turn to DivD
       private def simplifyLogic(forApproach: AIP[paradigm.type])
-                               (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
+        (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] = {
         import AnyParadigm.syntax._
         import ffiEquality.equalityCapabilities._
@@ -102,7 +103,7 @@ sealed class K2J6[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
         import syntax._
 
         def evalChildren(tpe:DataTypeCase, atts: Map[abstractions.Attribute,Expression]): Generator[MethodBodyContext, List[Expression]] =
-          forEach (atts.keys.toSeq) { att:abstractions.Attribute => {
+          forEach (atts.keys.toSeq) { (att:abstractions.Attribute) => {
             val expr:Expression = atts(att)
             forApproach.dispatch(
               SendRequest(
@@ -124,15 +125,15 @@ sealed class K2J6[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
         }
 
         def simplifyOp(
-                atts:Seq[abstractions.Attribute],
-                attExprs: Seq[Expression],
-                vals: Generator[MethodBodyContext, List[Expression]],
-                doubleTy: Type,
-                zero: Expression,
-                one: Expression,
-                zeroLit: Generator[MethodBodyContext, Expression],
-                oneLit: Generator[MethodBodyContext, Expression]
-              ): Generator[MethodBodyContext, Option[Expression]] = {
+          atts:Seq[abstractions.Attribute],
+          attExprs: Seq[Expression],
+          vals: Generator[MethodBodyContext, List[Expression]],
+          doubleTy: Type,
+          zero: Expression,
+          one: Expression,
+          zeroLit: Generator[MethodBodyContext, Expression],
+          oneLit: Generator[MethodBodyContext, Expression]
+        ): Generator[MethodBodyContext, Option[Expression]] = {
           import ffiArithmetic.arithmeticCapabilities._
           import ffiBoolean.booleanCapabilities._
           onRequest.tpeCase match {
@@ -233,9 +234,9 @@ sealed class K2J6[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
       }
 
       // should be no need to define genericLogic since (by default) it will go through the chain of past providers...
-     override def genericLogic
+      override def genericLogic
         (forApproach: AIP[paradigm.type])
-        (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
+          (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] = {
         try {
           j6Provider.genericLogic(forApproach)(onRequest)
@@ -246,7 +247,7 @@ sealed class K2J6[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
 
       def logic
         (forApproach: AIP[paradigm.type])
-        (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
+          (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
         assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
@@ -277,15 +278,15 @@ sealed class K2J6[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
             onRequest.tpeCase match {
               case math.systemK.K1.Power =>
                 for {
-                    atts <- forEach(onRequest.tpeCase.attributes) { att =>
-                      forApproach.dispatch(SendRequest(
-                        onRequest.attributes(att),
-                        math.systemJ.J3.getModel.baseDataType,
-                        onRequest.request
-                      ))
-                    }
-                    res <- makeString(atts, "(", "^", ")")
-                  } yield Some(res)
+                  atts <- forEach(onRequest.tpeCase.attributes) { att =>
+                    forApproach.dispatch(SendRequest(
+                      onRequest.attributes(att),
+                      math.systemJ.J3.getModel.baseDataType,
+                      onRequest.request
+                    ))
+                  }
+                  res <- makeString(atts, "(", "^", ")")
+                } yield Some(res)
               case _ => ???
             }
           case math.systemK.K2.Simplify => simplifyLogic(forApproach)(onRequest)
@@ -295,7 +296,7 @@ sealed class K2J6[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
           case math.systemK.K2.Collect => k2Provider.genericLogic(forApproach)(onRequest)
 
           case p@math.systemJ.J6.PowBy =>  // on Power
-          // must handle Power dataType. HERE WE CAN OPTIMIZED.
+            // must handle Power dataType. HERE WE CAN OPTIMIZED.
             for {
               res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.systemK.K1.Power, onRequest.selfReference, onRequest.request.arguments.head._2)
             } yield Some(res)
@@ -312,14 +313,14 @@ sealed class K2J6[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
 
 object K2J6 {
   def functional[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
-  (paradigm: P)
-  (j6Provider: EvolutionImplementationProvider[AIP[paradigm.type]],
-   k2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
-  (functionalControl: Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
-   ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]):
+    (paradigm: P)
+      (j6Provider: EvolutionImplementationProvider[AIP[paradigm.type]],
+        k2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
+      (functionalControl: control.Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
+        ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
+        ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
+        ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
+        ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     import paradigm.syntax._
     val mkImpl = new K2J6[paradigm.type, AIP, Expression](paradigm)
@@ -333,14 +334,14 @@ object K2J6 {
   }
 
   def imperative[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
-  (paradigm: P)
-  (j6Provider: EvolutionImplementationProvider[AIP[paradigm.type]],
-   k2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
-  (imperativeControl: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
-   ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]):
+    (paradigm: P)
+      (j6Provider: EvolutionImplementationProvider[AIP[paradigm.type]],
+        k2Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
+      (imperativeControl: control.Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type],
+        ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
+        ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
+        ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
+        ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     import imperativeControl.imperativeCapabilities._
     import paradigm.methodBodyCapabilities._

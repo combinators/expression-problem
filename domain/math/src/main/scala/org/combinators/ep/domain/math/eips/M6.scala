@@ -1,14 +1,16 @@
 package org.combinators.ep.domain.math.eips      /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, TypeRep}
-import org.combinators.ep.domain.math
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
+import org.combinators.cogen.paradigm.AnyParadigm
+import org.combinators.ep.domain.abstractions.{DomainTpeRep, Operation}
+import org.combinators.ep.domain.{GenericModel, math}
+import org.combinators.cogen.Command.Generator
+import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
-import org.combinators.ep.generator.paradigm.AnyParadigm
-import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.ep.generator.paradigm.ffi.{Booleans, Equality}
+import AnyParadigm.syntax.forEach
+import org.combinators.cogen.Command
+import org.combinators.cogen.paradigm.ffi.{Booleans, Equality}
+import org.combinators.ep.domain.extensions._    // needed for isModelBase
 
 object M6 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
@@ -19,7 +21,7 @@ object M6 {
     ):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val equalsProvider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.M6.getModel
+      override val model: GenericModel = math.M6.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
@@ -81,14 +83,14 @@ object M6 {
                   Request(Operation.asTree, Map.empty)
                 )
               )
-              treeTpe <- toTargetLanguageType(TypeRep.Tree)
+              treeTpe <- toTargetLanguageType(DomainTpeRep.Tree)
               eq <- areEqual(treeTpe, selfTree, otherTree)
             } yield Some(eq)
 
           // default Boolean isAdd(Exp left, Exp right) {
           //        return left.eql(getLeft()) && right.eql(getRight());
           //    }
-          case op if op == math.M6.isOp(onRequest.tpeCase) => {
+          case op if op == math.M6.isOp(onRequest.tpeCase) =>
             import ffiBooleans.booleanCapabilities._
             for {
               res <- forEach(onRequest.attributes.toSeq) { att => {
@@ -112,16 +114,15 @@ object M6 {
              // now construct X && y && z
               conjunction <- if (res.length == 1) { Command.lift[MethodBodyContext,paradigm.syntax.Expression](res.head) } else { and(res) }
             } yield Some(conjunction)
-          }
 
-            // need to know when isOp is not in the onRequest Type (to handle return false; default implementation)
+          // need to know when isOp is not in the onRequest Type (to handle return false; default implementation)
             // because then we can return FALSE
-          case op if op != math.M6.isOp(onRequest.tpeCase) && op.tags.contains(math.M6.IsOp) => {
+          case op if op != math.M6.isOp(onRequest.tpeCase) && op.tags.contains(math.M6.IsOp) =>
             import ffiBooleans.booleanCapabilities._
             for {
               booleanFalse <- falseExp
             } yield Some(booleanFalse)
-          }
+
           case _ => m5Provider.genericLogic(forApproach)(onRequest)
         }
       }

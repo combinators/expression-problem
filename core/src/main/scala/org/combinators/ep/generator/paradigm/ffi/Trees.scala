@@ -1,15 +1,16 @@
-package org.combinators.ep.generator.paradigm.ffi   /*DI:LI:AI*/
+package org.combinators.ep.generator.paradigm.ffi
 
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.Understands
-import org.combinators.ep.generator.paradigm.{AnyParadigm, Apply}
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.paradigm.ffi.FFI
+import org.combinators.cogen.paradigm.{AnyParadigm, Apply}
+import org.combinators.cogen.Understands
 
 case class CreateLeaf[Type](valueType: Type)
 case class CreateNode()
 
 trait Trees[Context] extends FFI {
-  import base._
-  import syntax._
+  import base.*
+  import syntax.*
 
   trait TreeCapabilities {
     implicit val canCreateLeaf: Understands[Context, Apply[CreateLeaf[Type], Expression, Expression]]

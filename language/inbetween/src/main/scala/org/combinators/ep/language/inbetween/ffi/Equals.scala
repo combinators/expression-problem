@@ -1,50 +1,36 @@
-package org.combinators.ep.language.inbetween.ffi   /*DI:LI:AI*/
+package org.combinators.ep.language.inbetween.ffi
 
-import org.combinators.ep.domain.abstractions.TypeRep
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.Understands
-import org.combinators.ep.generator.paradigm.{Apply, ffi}
-import org.combinators.ep.generator.paradigm.ffi.{Equality => Eqls, _}
+/*DI:LI:AI*/
+
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.{Command, Understands}
+import org.combinators.cogen.paradigm.ffi.{Equality as Eqls, *}
+import org.combinators.cogen.paradigm.{Apply, ffi}
 import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
-import org.combinators.ep.generator.Command
 
 
-trait Equals[FT <: OperatorExpressionOps.FinalTypes, FactoryType <: EqualsOps.Factory[FT]] extends Eqls[any.Method[FT]] {
-  val base: AnyParadigm.WithFT[FT, FactoryType]
-  import base.factory
+trait Equals[AST <: EqualsAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
+  trait BooleansInMethods extends Eqls[_base.ast.any.Method] {
+    override val base: _base.type = _base
 
-  val equalityCapabilities: EqualityCapabilities = new EqualityCapabilities {
-    implicit val canEquals: Understands[any.Method[FT], Apply[ffi.Equals[any.Type[FT]], any.Expression[FT], any.Expression[FT]]] = new Understands[any.Method[FT], Apply[ffi.Equals[any.Type[FT]], any.Expression[FT], any.Expression[FT]]] {
-      def perform(context: any.Method[FT], command: Apply[ffi.Equals[any.Type[FT]], any.Expression[FT], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
-        (context, factory.equals(command.functional.inType, command.arguments.head, command.arguments.tail.head))
+    import base.ast.{any, equalsOpFactory}
+
+    val equalityCapabilities: EqualityCapabilities = new EqualityCapabilities {
+      implicit val canEquals: Understands[any.Method, Apply[ffi.Equals[any.Type], any.Expression, any.Expression]] = new Understands[any.Method, Apply[ffi.Equals[any.Type], any.Expression, any.Expression]] {
+        def perform(context: any.Method, command: Apply[ffi.Equals[any.Type], any.Expression, any.Expression]): (any.Method, any.Expression) = {
+          (context, equalsOpFactory.equals(command.functional.inType, command.arguments.head, command.arguments.tail.head))
+        }
       }
     }
+    def enable(): Generator[any.Project, Unit] = Command.skip[any.Project]
   }
-  def enable(): Generator[any.Project[FT], Unit] = Command.skip[any.Project[FT]]
+  val equalsInMethods: BooleansInMethods = new BooleansInMethods {} 
 }
 
 object Equals {
-  type WithBase[FT <: OperatorExpressionOps.FinalTypes, FactoryType <: EqualsOps.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]] = Equals[FT, FactoryType] { val base: B }
-  def apply[FT <: OperatorExpressionOps.FinalTypes, FactoryType <: EqualsOps.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]](_base: B): WithBase[FT, FactoryType, _base.type] = new Equals[FT, FactoryType] {
-    val base: _base.type = _base
-  }
+  type WithBase[AST <: EqualsAST, B <: AnyParadigm.WithAST[AST]] = Equals[AST, B] {}
+
+  def apply[AST <: EqualsAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[AST, B] = new Equals[AST, B](_base) {}
 }
 
-object EqualsOps {
-  trait Equals[FT <: any.FinalTypes] extends any.Expression[FT] with Factory[FT] {
-    def tpe: any.Type[FT]
-    def left: any.Expression[FT]
-    def right: any.Expression[FT]
-
-    def copy(
-      tpe: any.Type[FT],
-      left: any.Expression[FT] = left,
-      right: any.Expression[FT] = right
-    ): Equals[FT] = equals(tpe, left, right)
-  }
-
-  trait Factory[FT <: any.FinalTypes] extends any.Factory[FT] {
-    def equals(tpe: any.Type[FT], left: any.Expression[FT], right: any.Expression[FT]): Equals[FT]
-  }
-}

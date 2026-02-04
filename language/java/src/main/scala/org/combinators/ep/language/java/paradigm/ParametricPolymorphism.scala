@@ -2,8 +2,8 @@ package org.combinators.ep.language.java.paradigm    /*DI:LD:AI*/
 
 import com.github.javaparser.ast.`type`.{ClassOrInterfaceType, TypeParameter}
 import com.github.javaparser.ast.expr.MethodCallExpr
-import org.combinators.ep.generator.{Command, Understands}
-import org.combinators.ep.generator.paradigm.{ParametricPolymorphism => PPoly, _}
+import org.combinators.cogen.paradigm.{AddTypeParameter, Apply, GetTypeArguments, ParametricPolymorphism as PPoly, AnyParadigm as _}
+import org.combinators.cogen.{Command, Understands}
 import org.combinators.ep.language.java.Syntax.MangledName
 import org.combinators.ep.language.java.TypeParamCtxt
 
@@ -34,7 +34,7 @@ trait ParametricPolymorphism[AP <: AnyParadigm] extends PPoly {
       implicit val canGetTypeArgumentsInMethod: Understands[MethodBodyContext, GetTypeArguments[Type]] =
         new Understands[MethodBodyContext, GetTypeArguments[Type]] {
           def perform(context: MethodBodyContext, command: GetTypeArguments[Type]): (MethodBodyContext, Seq[Type]) = {
-            val ctp = context.method.getTypeParameters.asScala.map(tp => {
+            val ctp = context.method.getTypeParameters.asScala.toSeq.map(tp => {
               val result = new ClassOrInterfaceType()
               result.setName(tp.getName)
             })
@@ -50,7 +50,7 @@ trait ParametricPolymorphism[AP <: AnyParadigm] extends PPoly {
               else arg.clone()
             }
             if (boxedArguments.nonEmpty) {
-              resultTpe.setTypeArguments(boxedArguments: _*)
+              resultTpe.setTypeArguments(boxedArguments*)
             }
             (context, resultTpe)
           }
@@ -75,7 +75,7 @@ trait ParametricPolymorphism[AP <: AnyParadigm] extends PPoly {
               else arg.clone()
             }
             if (boxedArguments.nonEmpty) {
-              resultExp.setTypeArguments(boxedArguments: _*)
+              resultExp.setTypeArguments(boxedArguments*)
             }
             (context, resultExp)
           }

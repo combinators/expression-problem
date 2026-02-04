@@ -1,11 +1,11 @@
 package org.combinators.helloworld
 
-import org.combinators.ep.domain.abstractions._
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arrays, Assertions, Console, Equality}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, ObjectOriented}
-import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
+import org.combinators.cogen.TypeRep
+import org.combinators.cogen.paradigm.{AnyParadigm, FindClass, ObjectOriented}
+import org.combinators.cogen.paradigm.control.Imperative
+import org.combinators.cogen.paradigm.ffi.{Arrays, Assertions, Console, Equality}
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.{AbstractSyntax, Command, NameProvider, Understands}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
@@ -29,46 +29,6 @@ trait HelloWorldObjectOrientedProvider extends HelloWorldProvider {
 
   def getter(attr:String) : String = {
     "get" + attr.capitalize
-  }
-
-  /**
-   * Default registration for findClass, which works with each registerTypeMapping for the different approaches.
-   *
-   * Sometimes the mapping is fixed for an EP approach, but sometimes it matters when a particular class is requested
-   * in the evolution of the system over time.
-   */
-  def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
-    FindClass(Seq(names.mangle(names.conceptNameOf(dtpe)))).interpret(canFindClass)
-  }
-
-  /** Provides meaningful default solution to find the base data type in many object-oriented approaches.
-   *
-   * This enables target-language classes to be retrieved from within the code generator in the Method, Class or Constructor contexts.
-   */
-  def registerTypeMapping(tpe:DataType): Generator[ProjectContext, Unit] = {
-    import paradigm.projectCapabilities.addTypeLookupForMethods
-    import ooParadigm.methodBodyCapabilities.canFindClassInMethod          // must be present, regardless of IntelliJ
-    import ooParadigm.projectCapabilities.addTypeLookupForClasses
-    import ooParadigm.projectCapabilities.addTypeLookupForConstructors
-    import ooParadigm.classCapabilities.canFindClassInClass                // must be present, regardless of IntelliJ
-    import ooParadigm.constructorCapabilities.canFindClassInConstructor    // must be present, regardless of IntelliJ
-    val dtpe = TypeRep.DataType(tpe)
-    for {
-      _ <- addTypeLookupForMethods(dtpe, domainTypeLookup(tpe))
-      _ <- addTypeLookupForClasses(dtpe, domainTypeLookup(tpe))
-      _ <- addTypeLookupForConstructors(dtpe, domainTypeLookup(tpe))
-    } yield ()
-  }
-
-  def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
-    import paradigm.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
-    for {
-      rt <- findClass(names.mangle(names.conceptNameOf(tpeCase)))
-      _ <- resolveAndAddImport(rt)
-
-      res <- instantiateObject(rt, args)
-    } yield res
   }
 
   def makeSignature() : Generator[MethodBodyContext, Unit] = {

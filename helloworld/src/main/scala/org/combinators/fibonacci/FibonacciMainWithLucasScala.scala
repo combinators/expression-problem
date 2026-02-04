@@ -54,9 +54,12 @@ package org.combinators.fibonacci
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
-import org.combinators.ep.generator.FileWithPathPersistable._
-import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
-import org.combinators.ep.language.scala.codegen.CodeGenerator
+import org.combinators.cogen.FileWithPathPersistable.*
+import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
+import org.combinators.ep.language.scala.ast.ffi.*
+import org.combinators.ep.language.scala.ast.{FinalBaseAST, FinalNameProviderAST}
+import org.combinators.ep.language.scala.codegen.{CodeGenerator, FullAST}
+import org.combinators.fibonacci.FibonacciWithLucasProvider
 
 import java.nio.file.{Path, Paths}
 
@@ -64,21 +67,39 @@ import java.nio.file.{Path, Paths}
  * Takes functional specification of Fibonacci with Lucas and generates Scala code.
  */
 class FibonacciMainWithLucasScala {
-  val generator = CodeGenerator("fibonacci")
-  val fibonacciApproach = FibonacciWithLucasProvider[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.functional, generator.functionalControl, generator.ints, generator.assertionsInMethod, generator.equality)
+  val ast: FullAST = new FinalBaseAST
+    with FinalNameProviderAST
+    with FinalArithmeticAST
+    with FinalAssertionsAST
+    with FinalBooleanAST
+    with FinalEqualsAST
+    with FinalListsAST
+    with FinalOperatorExpressionsAST
+    with FinalRealArithmeticOpsAST
+    with FinalStringAST {
+    val reificationExtensions = List.empty
+  }
 
-  val persistable = FileWithPathPersistable[FileWithPath]
+  val emptyset: Set[Seq[FibonacciMainWithLucasScala.this.ast.any.Name]] = Set.empty
+  val generator: CodeGenerator[ast.type] = CodeGenerator("fibonacci", ast, emptyset)
+
+  val fibonacciApproach = FibonacciWithLucasProvider[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.functional, generator.functionalControl.functionalControlInMethods, generator.ints.arithmeticInMethods, generator.assertions.assertionsInMethods, generator.equality.equalsInMethods)
+
+  //[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.functional, generator.functionalControl, generator.ints, generator.assertionsInMethod, generator.equality)
+
+  val persistable: Aux[FileWithPath] = FileWithPathPersistable[FileWithPath]
 
   def directToDiskTransaction(targetDirectory: Path): IO[Unit] = {
 
     val files =
       () => generator.paradigm.runGenerator {
         for {
-          _ <- generator.ints.enable()
-          _ <- generator.booleans.enable()
-          _ <- generator.strings.enable()
-          _ <- generator.equality.enable()
-          _ <- generator.assertionsInMethod.enable()
+          _ <- generator.ints.arithmeticInMethods.enable()
+          _ <- generator.booleans.booleansInMethodsInMethods.enable()
+          _ <- generator.strings.stringsInMethods.enable()
+          _ <- generator.equality.equalsInMethods.enable()
+          _ <- generator.assertions.assertionsInMethods.enable()
+
           _ <- fibonacciApproach.make_project()
         } yield ()
       }
@@ -105,8 +126,8 @@ class FibonacciMainWithLucasScala {
   }
 }
 
-object FibonacciWithLucasScalaDirectToDiskMain extends IOApp {
-  val targetDirectory:Path = Paths.get("target", "fib", "scala")
+object FibonacciMainWithLucasScalaDirectToDiskMain extends IOApp {
+  private val targetDirectory:Path = Paths.get("target", "fib", "scala")
 
   // generated!
   def fib(n: Int): Int = {

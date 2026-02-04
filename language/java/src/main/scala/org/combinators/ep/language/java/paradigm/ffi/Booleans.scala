@@ -1,16 +1,16 @@
 package org.combinators.ep.language.java.paradigm.ffi    /*DI:LD:AI*/
 
 import com.github.javaparser.ast.expr.{BinaryExpr, BooleanLiteralExpr, UnaryExpr}
-import org.combinators.ep.domain.abstractions.TypeRep
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.Understands
-import org.combinators.ep.generator.paradigm.Apply
-import org.combinators.ep.generator.paradigm.ffi.{Booleans => Bools, _}
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.Understands
 import org.combinators.ep.language.java.paradigm.AnyParadigm
 import org.combinators.ep.language.java.{ContextSpecificResolver, OperatorExprs, ProjectCtxt, Syntax}
 import org.combinators.ep.language.java.CodeGenerator.Enable
 import Syntax.default._
 import com.github.javaparser.ast.`type`.PrimitiveType
+import org.combinators.cogen.TypeRep
+import org.combinators.cogen.paradigm.Apply
+import org.combinators.cogen.paradigm.ffi.{And, False, Not, Or, True, Booleans as Bools}
 
 
 class Booleans[Ctxt, AP <: AnyParadigm](val base: AP) extends Bools[Ctxt] {

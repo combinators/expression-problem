@@ -1,7 +1,10 @@
 package org.combinators.ep.domain.math.systemX     /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{DataTypeCase, TestCase, TypeRep}
-import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
+import org.combinators.cogen.InstanceRep
+import org.combinators.ep.domain.instances.DataTypeInstanceRep
+import org.combinators.cogen.{TestCase, TypeRep}
+import org.combinators.ep.domain.abstractions.DataTypeCase
+import org.combinators.ep.domain.instances.DataTypeInstance
 import org.combinators.ep.domain.math.M0.LitInst
 import org.combinators.ep.domain.math.M1.SubInst
 import org.combinators.ep.domain.math.MathDomain
@@ -12,13 +15,13 @@ object X3 extends Evolution {
 
   def StringInst(s: String): InstanceRep = InstanceRep(TypeRep.String)(s)
 
-  lazy val Divd = DataTypeCase.binary("Divd")(MathDomain.getModel)
+  lazy val Divd: DataTypeCase = DataTypeCase.binary("Divd")(MathDomain.getModel)
 
   def DivdInst(left: DataTypeInstance, right: DataTypeInstance): DataTypeInstance =
-    DataTypeInstance(Divd, Seq(InstanceRep(left), InstanceRep(right)))
+    DataTypeInstance(Divd, Seq(DataTypeInstanceRep(left), DataTypeInstanceRep(right)))
 
   // Tests
-  val m2_s1 = SubInst(LitInst(1.0), LitInst(2.0))
+  val m2_s1: DataTypeInstance = SubInst(LitInst(1.0), LitInst(2.0))
 
   override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(X1)
 

@@ -1,72 +1,73 @@
 package org.combinators.ep.language.inbetween.oo   /*DI:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.TypeRep
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.{Command, FileWithPath, Understands, paradigm}
+import org.combinators.cogen.TypeRep
+import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddClass, AddConstructor, AddField, AddImplemented, AddImport, AddMethod, AddParent, AddTypeLookup, Apply, CastObject, Debug, FindClass, FreshName, GetArguments, GetConstructor, GetField, GetMember, InitializeField, InitializeParent, InstanceOfType, InstantiateObject, Reify, RemoveMethod, ResolveImport, SelfReference, SetAbstract, SetInterface, SetOverride, SetParameters, SetStatic, SuperReference, ToTargetLanguageType, ObjectOriented as OOP}
+import org.combinators.cogen.{Command, Understands}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
-import org.combinators.ep.generator.paradigm.{AddBlockDefinitions, AddClass, AddConstructor, AddField, AddImplemented, AddImport, AddMethod, AddParent, AddTypeLookup, Apply, CastObject, Debug, FindClass, FreshName, GetArguments, GetConstructor, GetField, GetMember, InitializeField, InitializeParent, InstanceOfType, InstantiateObject, Reify, RemoveMethod, ResolveImport, SelfReference, SetAbstract, SetInterface, SetOverride, SetParameters, SetStatic, SuperReference, ToTargetLanguageType, ObjectOriented => OOP}
-import org.combinators.ep.language.inbetween.any
 
-trait OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends OOP {
-  val base: AnyParadigm.WithFT[FT, FactoryType]
-  import base.{FT=>_, _}
-  import syntax._
-  lazy val factory: base.factory.type = base.factory
-  type ClassContext = Class[FT]
-  type MethodBodyContext = any.Method[FT]
-  type ConstructorContext = Constructor[FT]
-  type CompilationUnitContext = any.CompilationUnit[FT]
+trait OOParadigm[AST <: OOAST, B](val base: AnyParadigm.WithAST[AST] & B) extends OOP {
+  import base.ast.any
+  import base.ast.factory
+  import base.ast.ooFactory
+  import base.ast.oo.*
+  import base.ast.any.*
+  import base.ProjectContext
+  import base.TestContext
+  type ClassContext = Class
+  type MethodBodyContext = Method
+  type ConstructorContext = Constructor
+  type CompilationUnitContext = CompilationUnit
   val classCapabilities: ClassCapabilities = new ClassCapabilities {
-    implicit val canDebugInClass: Understands[Class[FT], Debug] = new Understands[Class[FT], Debug] {
-      def perform(context: Class[FT], command: Debug): (Class[FT], Unit) = {
+    implicit val canDebugInClass: Understands[Class, Debug] = new Understands[Class, Debug] {
+      def perform(context: Class, command: Debug): (Class, Unit) = {
         println(command.tag)
         (context, ())
       }
     }
-    implicit val canAddTypeLookupForMethodsInClass: Understands[Class[FT], AddTypeLookup[MethodBodyContext, Type]] = new Understands[Class[FT], AddTypeLookup[MethodBodyContext, Type]] {
-      def perform(context: Class[FT], command: AddTypeLookup[MethodBodyContext, Type]): (Class[FT], Unit) = {
+    implicit val canAddTypeLookupForMethodsInClass: Understands[Class, AddTypeLookup[MethodBodyContext, Type]] = new Understands[Class, AddTypeLookup[MethodBodyContext, Type]] {
+      def perform(context: Class, command: AddTypeLookup[MethodBodyContext, Type]): (Class, Unit) = {
         (context.addTypeLookupsForMethods((tpeRep: TypeRep) => if (tpeRep == command.tpe) Some(command.lookup) else None), ())
       }
     }
-    implicit val canAddTypeLookupForClassesInClass: Understands[Class[FT], AddTypeLookup[Class[FT], Type]] = new Understands[Class[FT], AddTypeLookup[Class[FT], Type]] {
-      def perform(context: Class[FT], command: AddTypeLookup[Class[FT], Type]): (Class[FT], Unit) = {
+    implicit val canAddTypeLookupForClassesInClass: Understands[Class, AddTypeLookup[Class, Type]] = new Understands[Class, AddTypeLookup[Class, Type]] {
+      def perform(context: Class, command: AddTypeLookup[Class, Type]): (Class, Unit) = {
         (context.addTypeLookupsForClasses((tpeRep: TypeRep) => if (tpeRep == command.tpe) Some(command.lookup) else None), ())
       }
     }
-    implicit val canAddTypeLookupForConstructorsInClass: Understands[Class[FT], AddTypeLookup[ConstructorContext, Type]] = new Understands[Class[FT], AddTypeLookup[ConstructorContext, Type]] {
-      def perform(context: Class[FT], command: AddTypeLookup[ConstructorContext, Type]): (Class[FT], Unit) = {
+    implicit val canAddTypeLookupForConstructorsInClass: Understands[Class, AddTypeLookup[ConstructorContext, Type]] = new Understands[Class, AddTypeLookup[ConstructorContext, Type]] {
+      def perform(context: Class, command: AddTypeLookup[ConstructorContext, Type]): (Class, Unit) = {
         (context.addTypeLookupsForConstructors((tpeRep: TypeRep) => if (tpeRep == command.tpe) Some(command.lookup) else None), ())
       }
     }
-    implicit val canAddParentInClass: Understands[Class[FT], AddParent[Type]] = new Understands[Class[FT], AddParent[Type]] {
-      def perform(context: Class[FT], command: AddParent[Type]): (Class[FT], Unit) = {
+    implicit val canAddParentInClass: Understands[Class, AddParent[Type]] = new Understands[Class, AddParent[Type]] {
+      def perform(context: Class, command: AddParent[Type]): (Class, Unit) = {
         (context.copy(parents = context.parents :+ command.parentClass), ())
       }
     }
-    implicit val canAddImplementedInClass: Understands[Class[FT], AddImplemented[Type]] = new Understands[Class[FT], AddImplemented[Type]] {
-      def perform(context: Class[FT], command: AddImplemented[Type]): (Class[FT], Unit) = {
+    implicit val canAddImplementedInClass: Understands[Class, AddImplemented[Type]] = new Understands[Class, AddImplemented[Type]] {
+      def perform(context: Class, command: AddImplemented[Type]): (Class, Unit) = {
         (context.copy(implemented = context.implemented :+ command.interface), ())
       }
     }
-    implicit val canRemoveMethodFromClass: Understands[Class[FT], RemoveMethod[Type, Name]] = new Understands[Class[FT], RemoveMethod[Type, Name]] {
-      override def perform(context: Class[FT], command: RemoveMethod[Type, Name]): (Class[FT], Unit) = {
+    implicit val canRemoveMethodFromClass: Understands[Class, RemoveMethod[Type, Name]] = new Understands[Class, RemoveMethod[Type, Name]] {
+      override def perform(context: Class, command: RemoveMethod[Type, Name]): (Class, Unit) = {
         ??? // TODO: Remove me
       }
     }
-    implicit val canAddFieldInClass: Understands[Class[FT], AddField[Name, Type, Expression]] = new Understands[Class[FT], AddField[Name, Type, Expression]] {
-      def perform(context: Class[FT], command: AddField[Name, Type, Expression]): (Class[FT], Unit) = {
-        (context.copy(fields = context.fields :+ factory.field(command.name, command.tpe, command.initializer)), ())
+    implicit val canAddFieldInClass: Understands[Class, AddField[Name, Type, Expression]] = new Understands[Class, AddField[Name, Type, Expression]] {
+      def perform(context: Class, command: AddField[Name, Type, Expression]): (Class, Unit) = {
+        (context.copy(fields = context.fields :+ ooFactory.field(command.name, command.tpe, command.initializer)), ())
       }
     }
-    implicit val canGetFieldInClass: Understands[Class[FT], GetField[Name, Expression]] = new Understands[Class[FT], GetField[Name, Expression]] {
-      def perform(context: Class[FT], command: GetField[Name, Expression]): (Class[FT], Expression) = {
-        (context, factory.memberAccessExpression(factory.selfReferenceExpression, context.fields.find(f => f.name == command.name).get.name))
+    implicit val canGetFieldInClass: Understands[Class, GetField[Name, Expression]] = new Understands[Class, GetField[Name, Expression]] {
+      def perform(context: Class, command: GetField[Name, Expression]): (Class, Expression) = {
+        (context, ooFactory.memberAccessExpression(ooFactory.selfReferenceExpression, context.fields.find(f => f.name == command.name).get.name))
       }
     }
-    implicit val canAddMethodInClass: Understands[Class[FT], AddMethod[MethodBodyContext, Name, Option[Expression]]] = new Understands[Class[FT], AddMethod[MethodBodyContext, Name, Option[Expression]]] {
-      def perform(context: Class[FT], command: AddMethod[MethodBodyContext, Name, Option[Expression]]): (Class[FT], Unit) = {
-        val converted = factory.convert(context)
-        val emptyMethod = factory.clsMethod(
+    implicit val canAddMethodInClass: Understands[Class, AddMethod[MethodBodyContext, Name, Option[Expression]]] = new Understands[Class, AddMethod[MethodBodyContext, Name, Option[Expression]]] {
+      def perform(context: Class, command: AddMethod[MethodBodyContext, Name, Option[Expression]]): (Class, Unit) = {
+        val converted = ooFactory.convert(context)
+        val emptyMethod = ooFactory.clsMethod(
           name = command.name,
           isPublic = command.isPublic,
           isOverride = command.isOverride,
@@ -79,212 +80,212 @@ trait OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends OOP {
         (context.copy(methods = context.methods :+ generatedMethod), ())
       }
     }
-    implicit val canAddConstructorInClass: Understands[Class[FT], AddConstructor[ConstructorContext]] = new Understands[Class[FT], AddConstructor[ConstructorContext]] {
-      def perform(context: Class[FT], command: AddConstructor[Constructor[FT]]): (Class[FT], Unit) = {
-        val converted = factory.convert(context)
-        val emptyConstructor = factory.constructor(
-          constructedType = Some(factory.classReferenceType(context.name)),
+    implicit val canAddConstructorInClass: Understands[Class, AddConstructor[ConstructorContext]] = new Understands[Class, AddConstructor[ConstructorContext]] {
+      def perform(context: Class, command: AddConstructor[Constructor]): (Class, Unit) = {
+        val converted = ooFactory.convert(context)
+        val emptyConstructor = ooFactory.constructor(
+          constructedType = Some(ooFactory.classReferenceType(context.name)),
           constructorTypeLookupMap = context.constructorTypeLookupMap,
           typeLookupMap = context.methodTypeLookupMap)
         val (generatedConstructor, ()) = Command.runGenerator(command.ctor, emptyConstructor)
         (context.copy(constructors = context.constructors :+ generatedConstructor), ())
       }
     }
-    implicit val canAddImportInClass: Understands[Class[FT], AddImport[Import]] = new Understands[Class[FT], AddImport[Import]] {
-      def perform(context: Class[FT], command: AddImport[Import]): (Class[FT], Unit) = {
+    implicit val canAddImportInClass: Understands[Class, AddImport[Import]] = new Understands[Class, AddImport[Import]] {
+      def perform(context: Class, command: AddImport[Import]): (Class, Unit) = {
         (context.copy(imports = (context.imports :+ command.imp).distinct), ())
       }
     }
-    implicit val canResolveImportInClass: Understands[Class[FT], ResolveImport[Import, Type]] = new Understands[Class[FT], ResolveImport[Import, Type]] {
-      def perform(context: Class[FT], command: ResolveImport[Import, Type]): (Class[FT], Option[Import]) = {
+    implicit val canResolveImportInClass: Understands[Class, ResolveImport[Import, Type]] = new Understands[Class, ResolveImport[Import, Type]] {
+      def perform(context: Class, command: ResolveImport[Import, Type]): (Class, Option[Import]) = {
         (context, context.resolveImport(command.forElem).headOption)
       }
     }
-    implicit val canSetAbstractInClass: Understands[Class[FT], SetAbstract] = new Understands[Class[FT], SetAbstract] {
-      def perform(context: Class[FT], command: SetAbstract): (Class[FT], Unit) = {
+    implicit val canSetAbstractInClass: Understands[Class, SetAbstract] = new Understands[Class, SetAbstract] {
+      def perform(context: Class, command: SetAbstract): (Class, Unit) = {
         (context.copy(isAbstract = true), ())
       }
     }
-    implicit val canSetStaticInClass: Understands[Class[FT], SetStatic] = new Understands[Class[FT], SetStatic] {
-      def perform(context: Class[FT], command: SetStatic): (Class[FT], Unit) = {
+    implicit val canSetStaticInClass: Understands[Class, SetStatic] = new Understands[Class, SetStatic] {
+      def perform(context: Class, command: SetStatic): (Class, Unit) = {
         (context.copy(isStatic = true), ())
       }
     }
-    implicit val canSetInterfaceInClass: Understands[Class[FT], SetInterface] = new Understands[Class[FT], SetInterface] {
-      def perform(context: Class[FT], command: SetInterface): (Class[FT], Unit) = {
+    implicit val canSetInterfaceInClass: Understands[Class, SetInterface] = new Understands[Class, SetInterface] {
+      def perform(context: Class, command: SetInterface): (Class, Unit) = {
         (context.copy(isInterface = true), ())
       }
     }
-    implicit val canTranslateTypeInClass: Understands[Class[FT], ToTargetLanguageType[Type]] = new Understands[Class[FT], ToTargetLanguageType[Type]] {
-      def perform(context: Class[FT], command: ToTargetLanguageType[Type]): (Class[FT], Type) = {
+    implicit val canTranslateTypeInClass: Understands[Class, ToTargetLanguageType[Type]] = new Understands[Class, ToTargetLanguageType[Type]] {
+      def perform(context: Class, command: ToTargetLanguageType[Type]): (Class, Type) = {
         Command.runGenerator(context.toTargetLanguageType(command.tpe), context)
       }
     }
-    implicit val canSelfReferenceInClass: Understands[Class[FT], SelfReference[Expression]] = new Understands[Class[FT], SelfReference[Expression]] {
-      def perform(context: Class[FT], command: SelfReference[Expression]): (Class[FT], Expression) = {
-        (context, factory.selfReferenceExpression)
+    implicit val canSelfReferenceInClass: Understands[Class, SelfReference[Expression]] = new Understands[Class, SelfReference[Expression]] {
+      def perform(context: Class, command: SelfReference[Expression]): (Class, Expression) = {
+        (context, ooFactory.selfReferenceExpression)
       }
     }
-    implicit val canFindClassInClass: Understands[Class[FT], FindClass[Name, Type]] = new Understands[Class[FT], FindClass[Name, Type]] {
-      def perform(context: Class[FT], command: FindClass[Name, Type]): (Class[FT], Type) = {
-        (context, context.findClass(command.qualifiedName:_*))
+    implicit val canFindClassInClass: Understands[Class, FindClass[Name, Type]] = new Understands[Class, FindClass[Name, Type]] {
+      def perform(context: Class, command: FindClass[Name, Type]): (Class, Type) = {
+        (context, context.findClass(command.qualifiedName*))
       }
     }
-    implicit val canGetFreshNameInClass: Understands[Class[FT], FreshName[Name]] = new Understands[Class[FT], FreshName[Name]] {
-      def perform(context: Class[FT], command: FreshName[Name]): (Class[FT], Name) = {
+    implicit val canGetFreshNameInClass: Understands[Class, FreshName[Name]] = new Understands[Class, FreshName[Name]] {
+      def perform(context: Class, command: FreshName[Name]): (Class, Name) = {
         (context, context.getFreshName(command.basedOn))
       }
     }
   }
   val constructorCapabilities: ConstructorCapabilities = new ConstructorCapabilities {
-    implicit val canInitializeParentInConstructor: Understands[Constructor[FT], InitializeParent[Type, Expression]] = new Understands[Constructor[FT], InitializeParent[Type, Expression]] {
-      def perform(context: Constructor[FT], command: InitializeParent[Type, Expression]): (Constructor[FT], Unit) = {
+    implicit val canInitializeParentInConstructor: Understands[Constructor, InitializeParent[Type, Expression]] = new Understands[Constructor, InitializeParent[Type, Expression]] {
+      def perform(context: Constructor, command: InitializeParent[Type, Expression]): (Constructor, Unit) = {
         (context.copyAsConstructor(superInitialization = Some((command.parent, command.arguments))), ())
       }
     }
-    implicit val canCastInConstructor: Understands[Constructor[FT], CastObject[Type, Expression]] = new Understands[Constructor[FT], CastObject[Type, Expression]] {
-      def perform(context: Constructor[FT], command: CastObject[Type, Expression]): (Constructor[FT], Expression) = {
-        (context, factory.castExpression(command.tpe, command.expr))
+    implicit val canCastInConstructor: Understands[Constructor, CastObject[Type, Expression]] = new Understands[Constructor, CastObject[Type, Expression]] {
+      def perform(context: Constructor, command: CastObject[Type, Expression]): (Constructor, Expression) = {
+        (context, ooFactory.castExpression(command.tpe, command.expr))
       }
     }
-    implicit val canInitializeFieldInConstructor: Understands[Constructor[FT], InitializeField[Name, Expression]] = new Understands[Constructor[FT], InitializeField[Name, Expression]] {
-      def perform(context: Constructor[FT], command: InitializeField[Name, Expression]): (Constructor[FT], Unit) = {
+    implicit val canInitializeFieldInConstructor: Understands[Constructor, InitializeField[Name, Expression]] = new Understands[Constructor, InitializeField[Name, Expression]] {
+      def perform(context: Constructor, command: InitializeField[Name, Expression]): (Constructor, Unit) = {
         (context.copyAsConstructor(fieldInitializers = context.fieldInitializers :+ (command.name, command.value)), ())
       }
     }
-    implicit val canAddBlockDefinitionsInConstructor: Understands[Constructor[FT], AddBlockDefinitions[Statement]] = new Understands[Constructor[FT], AddBlockDefinitions[Statement]] {
-      def perform(context: Constructor[FT], command: AddBlockDefinitions[Statement]): (Constructor[FT], Unit) = {
+    implicit val canAddBlockDefinitionsInConstructor: Understands[Constructor, AddBlockDefinitions[Statement]] = new Understands[Constructor, AddBlockDefinitions[Statement]] {
+      def perform(context: Constructor, command: AddBlockDefinitions[Statement]): (Constructor, Unit) = {
         (context.copyAsConstructor(statements = context.statements ++ command.definitions), ())
       }
     }
-    implicit val canAddImportInConstructor: Understands[Constructor[FT], AddImport[Import]] = new Understands[Constructor[FT], AddImport[Import]] {
-      def perform(context: Constructor[FT], command: AddImport[Import]): (Constructor[FT], Unit) = {
+    implicit val canAddImportInConstructor: Understands[Constructor, AddImport[Import]] = new Understands[Constructor, AddImport[Import]] {
+      def perform(context: Constructor, command: AddImport[Import]): (Constructor, Unit) = {
         (context.copyAsConstructor(imports = context.imports + command.imp), ())
       }
     }
-    implicit val canResolveImportInConstructor: Understands[Constructor[FT], ResolveImport[Import, Type]] = new Understands[Constructor[FT], ResolveImport[Import, Type]] {
-      def perform(context: Constructor[FT], command: ResolveImport[Import, Type]): (Constructor[FT], Option[Import]) = {
+    implicit val canResolveImportInConstructor: Understands[Constructor, ResolveImport[Import, Type]] = new Understands[Constructor, ResolveImport[Import, Type]] {
+      def perform(context: Constructor, command: ResolveImport[Import, Type]): (Constructor, Option[Import]) = {
         (context, context.resolveImport(command.forElem).headOption)
       }
     }
-    implicit val canInstantiateObjectInConstructor: Understands[Constructor[FT], InstantiateObject[Type, Expression, Class[FT]]] = new Understands[Constructor[FT], InstantiateObject[Type, Expression, Class[FT]]] {
-      def perform(context: Constructor[FT], command: InstantiateObject[Type, Expression, Class[FT]]): (Constructor[FT], Expression) = {
-        (context, factory.objectInstantiationExpression(command.tpe, command.constructorArguments, None)) // TODO: add anonymous inner class declarations
+    implicit val canInstantiateObjectInConstructor: Understands[Constructor, InstantiateObject[Type, Expression, Class]] = new Understands[Constructor, InstantiateObject[Type, Expression, Class]] {
+      def perform(context: Constructor, command: InstantiateObject[Type, Expression, Class]): (Constructor, Expression) = {
+        (context, ooFactory.objectInstantiationExpression(command.tpe, command.constructorArguments, None)) // TODO: add anonymous inner class declarations
       }
     }
-    implicit val canApplyInConstructor: Understands[Constructor[FT], Apply[Expression, Expression, Expression]] = new Understands[Constructor[FT], Apply[Expression, Expression, Expression]] {
-      def perform(context: Constructor[FT], command: Apply[Expression, Expression, Expression]): (Constructor[FT], Expression) = {
+    implicit val canApplyInConstructor: Understands[Constructor, Apply[Expression, Expression, Expression]] = new Understands[Constructor, Apply[Expression, Expression, Expression]] {
+      def perform(context: Constructor, command: Apply[Expression, Expression, Expression]): (Constructor, Expression) = {
         (context, factory.applyExpression(command.functional, command.arguments))
       }
     }
-    implicit val canGetMemberInConstructor: Understands[Constructor[FT], GetMember[Expression, Name]] = new Understands[Constructor[FT], GetMember[Expression, Name]] {
-      def perform(context: Constructor[FT], command: GetMember[Expression, Name]): (Constructor[FT], Expression) = {
-        (context, factory.memberAccessExpression(command.instance, command.member))
+    implicit val canGetMemberInConstructor: Understands[Constructor, GetMember[Expression, Name]] = new Understands[Constructor, GetMember[Expression, Name]] {
+      def perform(context: Constructor, command: GetMember[Expression, Name]): (Constructor, Expression) = {
+        (context, ooFactory.memberAccessExpression(command.instance, command.member))
       }
     }
-    implicit val canSelfReferenceInConstructor: Understands[Constructor[FT], SelfReference[Expression]] = new Understands[Constructor[FT], SelfReference[Expression]] {
-      def perform(context: Constructor[FT], command: SelfReference[Expression]): (Constructor[FT], Expression) = {
-        (context, factory.selfReferenceExpression)
+    implicit val canSelfReferenceInConstructor: Understands[Constructor, SelfReference[Expression]] = new Understands[Constructor, SelfReference[Expression]] {
+      def perform(context: Constructor, command: SelfReference[Expression]): (Constructor, Expression) = {
+        (context, ooFactory.selfReferenceExpression)
       }
     }
-    implicit val canGetArgumentsInConstructor: Understands[Constructor[FT], GetArguments[Type, Name, Expression]] = new Understands[Constructor[FT], GetArguments[Type, Name, Expression]] {
-      def perform(context: Constructor[FT], command: GetArguments[Type, Name, Expression]): (Constructor[FT], Seq[(Name, Type, Expression)]) = {
+    implicit val canGetArgumentsInConstructor: Understands[Constructor, GetArguments[Type, Name, Expression]] = new Understands[Constructor, GetArguments[Type, Name, Expression]] {
+      def perform(context: Constructor, command: GetArguments[Type, Name, Expression]): (Constructor, Seq[(Name, Type, Expression)]) = {
         (context, context.parameters.map(param => (param._1, param._2, factory.argumentExpression(param._1))))
       }
     }
-    implicit val canTranslateTypeInConstructor: Understands[Constructor[FT], ToTargetLanguageType[Type]] = new Understands[Constructor[FT], ToTargetLanguageType[Type]] {
-      def perform(context: Constructor[FT], command: ToTargetLanguageType[Type]): (Constructor[FT], Type) = {
+    implicit val canTranslateTypeInConstructor: Understands[Constructor, ToTargetLanguageType[Type]] = new Understands[Constructor, ToTargetLanguageType[Type]] {
+      def perform(context: Constructor, command: ToTargetLanguageType[Type]): (Constructor, Type) = {
         Command.runGenerator(context.toTargetLanguageTypeInConstructor(command.tpe), context)
       }
     }
-    implicit def canReifyInConstructor[T]: Understands[Constructor[FT], Reify[T, Expression]] = new Understands[Constructor[FT], Reify[T, Expression]] {
-      def perform(context: Constructor[FT], command: Reify[T, Expression]): (Constructor[FT], Expression) = {
+    implicit def canReifyInConstructor[T]: Understands[Constructor, Reify[T, Expression]] = new Understands[Constructor, Reify[T, Expression]] {
+      def perform(context: Constructor, command: Reify[T, Expression]): (Constructor, Expression) = {
         (context, context.reify(command.tpe, command.value))
       }
     }
-    implicit val canSetParametersInConstructor: Understands[Constructor[FT], SetParameters[Name, Type]] = new Understands[Constructor[FT], SetParameters[Name, Type]] {
-      def perform(context: Constructor[FT], command: SetParameters[Name, Type]): (Constructor[FT], Unit) = {
+    implicit val canSetParametersInConstructor: Understands[Constructor, SetParameters[Name, Type]] = new Understands[Constructor, SetParameters[Name, Type]] {
+      def perform(context: Constructor, command: SetParameters[Name, Type]): (Constructor, Unit) = {
         (context.copyAsConstructor(parameters = command.params), ())
       }
     }
-    implicit val canGetConstructorInConstructor: Understands[Constructor[FT], GetConstructor[Type, Expression]] = new Understands[Constructor[FT], GetConstructor[Type, Expression]] {
-      def perform(context: Constructor[FT], command: GetConstructor[Type, Expression]): (Constructor[FT], Expression) = {
+    implicit val canGetConstructorInConstructor: Understands[Constructor, GetConstructor[Type, Expression]] = new Understands[Constructor, GetConstructor[Type, Expression]] {
+      def perform(context: Constructor, command: GetConstructor[Type, Expression]): (Constructor, Expression) = {
         ???
       }
     }
-    implicit val canFindClassInConstructor: Understands[Constructor[FT], FindClass[Name, Type]] = new Understands[Constructor[FT], FindClass[Name, Type]] {
-      def perform(context: Constructor[FT], command: FindClass[Name, Type]): (Constructor[FT], Type) = {
-        (context, context.findClass(command.qualifiedName: _*))
+    implicit val canFindClassInConstructor: Understands[Constructor, FindClass[Name, Type]] = new Understands[Constructor, FindClass[Name, Type]] {
+      def perform(context: Constructor, command: FindClass[Name, Type]): (Constructor, Type) = {
+        (context, context.findClass(command.qualifiedName*))
       }
     }
-    implicit val canGetFreshNameInConstructor: Understands[Constructor[FT], FreshName[Name]] = new Understands[Constructor[FT], FreshName[Name]] {
-      def perform(context: Constructor[FT], command: FreshName[Name]): (Constructor[FT], Name) = {
+    implicit val canGetFreshNameInConstructor: Understands[Constructor, FreshName[Name]] = new Understands[Constructor, FreshName[Name]] {
+      def perform(context: Constructor, command: FreshName[Name]): (Constructor, Name) = {
         (context, context.getFreshName(command.basedOn))
       }
     }
   }
   val methodBodyCapabilities: MethodBodyCapabilities = new MethodBodyCapabilities {
-    implicit val canInstantiateObjectInMethod: Understands[MethodBodyContext, InstantiateObject[Type, Expression, ClassContext]] = new Understands[MethodBodyContext, InstantiateObject[Type, Expression, Class[FT]]] {
-      def perform(context: any.Method[FT], command: InstantiateObject[Type, Expression, Class[FT]]): (any.Method[FT], Expression) = {
-        (context, factory.objectInstantiationExpression(command.tpe, command.constructorArguments, None)) // TODO: add anonymous inner class declarations
+    implicit val canInstantiateObjectInMethod: Understands[MethodBodyContext, InstantiateObject[Type, Expression, ClassContext]] = new Understands[MethodBodyContext, InstantiateObject[Type, Expression, Class]] {
+      def perform(context: any.Method, command: InstantiateObject[Type, Expression, Class]): (any.Method, Expression) = {
+        (context, ooFactory.objectInstantiationExpression(command.tpe, command.constructorArguments, None)) // TODO: add anonymous inner class declarations
       }
     }
-    implicit val canGetMemberInMethod: Understands[any.Method[FT], GetMember[Expression, Name]] = new Understands[any.Method[FT], GetMember[Expression, Name]] {
-      def perform(context: any.Method[FT], command: GetMember[Expression, Name]): (any.Method[FT], Expression) = {
-        (context, factory.memberAccessExpression(command.instance, command.member))
+    implicit val canGetMemberInMethod: Understands[any.Method, GetMember[Expression, Name]] = new Understands[any.Method, GetMember[Expression, Name]] {
+      def perform(context: any.Method, command: GetMember[Expression, Name]): (any.Method, Expression) = {
+        (context, ooFactory.memberAccessExpression(command.instance, command.member))
       }
     }
-    implicit val canCastInMethod: Understands[any.Method[FT], CastObject[Type, Expression]] = new Understands[any.Method[FT], CastObject[Type, Expression]] {
-      def perform(context: any.Method[FT], command: CastObject[Type, Expression]): (any.Method[FT], Expression) = {
-        (context, factory.castExpression(command.tpe, command.expr))
+    implicit val canCastInMethod: Understands[any.Method, CastObject[Type, Expression]] = new Understands[any.Method, CastObject[Type, Expression]] {
+      def perform(context: any.Method, command: CastObject[Type, Expression]): (any.Method, Expression) = {
+        (context, ooFactory.castExpression(command.tpe, command.expr))
       }
     }
-    implicit val canInstanceOfTypeInMethod: Understands[any.Method[FT], InstanceOfType[Type, Expression]] = new Understands[any.Method[FT], InstanceOfType[Type, Expression]] {
-      def perform(context: any.Method[FT], command: InstanceOfType[Type, Expression]): (any.Method[FT], Expression) = {
-        (context, factory.instanceOfExpression(command.tpe, command.expr))
+    implicit val canInstanceOfTypeInMethod: Understands[any.Method, InstanceOfType[Type, Expression]] = new Understands[any.Method, InstanceOfType[Type, Expression]] {
+      def perform(context: any.Method, command: InstanceOfType[Type, Expression]): (any.Method, Expression) = {
+        (context, ooFactory.instanceOfExpression(command.tpe, command.expr))
       }
     }
-    implicit val canSetAbstractInMethod: Understands[any.Method[FT], SetAbstract] = new Understands[any.Method[FT], SetAbstract] {
-      def perform(context: any.Method[FT], command: SetAbstract): (any.Method[FT], Unit) = {
+    implicit val canSetAbstractInMethod: Understands[any.Method, SetAbstract] = new Understands[any.Method, SetAbstract] {
+      def perform(context: any.Method, command: SetAbstract): (any.Method, Unit) = {
         (factory.convert(context).copyAsClsMethod(isAbstract = true), ())
       }
     }
-    implicit val canSetStaticInMethod: Understands[any.Method[FT], SetStatic] = new Understands[any.Method[FT], SetStatic] {
-      def perform(context: any.Method[FT], command: SetStatic): (any.Method[FT], Unit) = {
+    implicit val canSetStaticInMethod: Understands[any.Method, SetStatic] = new Understands[any.Method, SetStatic] {
+      def perform(context: any.Method, command: SetStatic): (any.Method, Unit) = {
         (factory.convert(context).copyAsClsMethod(isStatic = true), ())
       }
     }
-    implicit val canSetOverrideInMethod: Understands[any.Method[FT], SetOverride] = new Understands[any.Method[FT], SetOverride] {
-      def perform(context: any.Method[FT], command: SetOverride): (any.Method[FT], Unit) = {
+    implicit val canSetOverrideInMethod: Understands[any.Method, SetOverride] = new Understands[any.Method, SetOverride] {
+      def perform(context: any.Method, command: SetOverride): (any.Method, Unit) = {
         (factory.convert(context).copyAsClsMethod(isOverride = true), ())
       }
     }
-    implicit val canSelfReferenceInMethod: Understands[any.Method[FT], SelfReference[Expression]] = new Understands[any.Method[FT], SelfReference[Expression]] {
-      def perform(context: any.Method[FT], command: SelfReference[Expression]): (any.Method[FT], Expression) = {
-        (context, factory.selfReferenceExpression)
+    implicit val canSelfReferenceInMethod: Understands[any.Method, SelfReference[Expression]] = new Understands[any.Method, SelfReference[Expression]] {
+      def perform(context: any.Method, command: SelfReference[Expression]): (any.Method, Expression) = {
+        (context, ooFactory.selfReferenceExpression)
       }
     }
-    implicit val canSuperReferenceInMethod: Understands[any.Method[FT], SuperReference[Name, Expression]] = new Understands[any.Method[FT], SuperReference[Name, Expression]] {
-      def perform(context: any.Method[FT], command: SuperReference[Name, Expression]): (any.Method[FT], Expression) = {
-        (context, factory.superReferenceExpression(factory.convert(context).findClass(command.qualifiedName: _*)))
+    implicit val canSuperReferenceInMethod: Understands[any.Method, SuperReference[Name, Expression]] = new Understands[any.Method, SuperReference[Name, Expression]] {
+      def perform(context: any.Method, command: SuperReference[Name, Expression]): (any.Method, Expression) = {
+        (context, ooFactory.superReferenceExpression(factory.convert(context).findClass(command.qualifiedName*)))
       }
     }
-    implicit val canGetConstructorInMethod: Understands[any.Method[FT], GetConstructor[Type, Expression]] = new Understands[any.Method[FT], GetConstructor[Type, Expression]] {
-      def perform(context: any.Method[FT], command: GetConstructor[Type, Expression]): (any.Method[FT], Expression) = {
+    implicit val canGetConstructorInMethod: Understands[any.Method, GetConstructor[Type, Expression]] = new Understands[any.Method, GetConstructor[Type, Expression]] {
+      def perform(context: any.Method, command: GetConstructor[Type, Expression]): (any.Method, Expression) = {
         ??? // TODO: Remove
       }
     }
-    implicit val canFindClassInMethod: Understands[any.Method[FT], FindClass[Name, Type]] = new Understands[any.Method[FT], FindClass[Name, Type]] {
-      def perform(context: any.Method[FT], command: FindClass[Name, Type]): (any.Method[FT], Type) = {
-        (context, factory.convert(context).findClass(command.qualifiedName: _*))
+    implicit val canFindClassInMethod: Understands[any.Method, FindClass[Name, Type]] = new Understands[any.Method, FindClass[Name, Type]] {
+      def perform(context: any.Method, command: FindClass[Name, Type]): (any.Method, Type) = {
+        (context, factory.convert(context).findClass(command.qualifiedName*))
       }
     }
   }
   val compilationUnitCapabilities: CompilationUnitCapabilities = new CompilationUnitCapabilities {
-    implicit val canAddClassInCompilationUnit: Understands[CompilationUnit, AddClass[Class[FT], Name]] = new Understands[CompilationUnit, AddClass[Class[FT], Name]] {
-      def perform(context: CompilationUnit, command: AddClass[Class[FT], Name]): (CompilationUnit, Unit) = {
+    implicit val canAddClassInCompilationUnit: Understands[CompilationUnit, AddClass[Class, Name]] = new Understands[CompilationUnit, AddClass[Class, Name]] {
+      def perform(context: CompilationUnit, command: AddClass[Class, Name]): (CompilationUnit, Unit) = {
         val converted = factory.convert(context)
-        val emptyCls = factory.cls(
+        val emptyCls = ooFactory.cls(
           name = command.name,
           methodTypeLookupMap = converted.methodTypeLookupMap,
           constructorTypeLookupMap = converted.constructorTypeLookupMap,
@@ -295,26 +296,26 @@ trait OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends OOP {
     }
   }
   val projectCapabilities: ProjectCapabilities = new ProjectCapabilities {
-    implicit val canAddTypeLookupForClassesInProject: Understands[ProjectContext, AddTypeLookup[Class[FT], Type]] = new Understands[ProjectContext, AddTypeLookup[Class[FT], Type]] {
-      def perform(context: ProjectContext, command: AddTypeLookup[Class[FT], Type]): (ProjectContext, Unit) = {
+    implicit val canAddTypeLookupForClassesInProject: Understands[ProjectContext, AddTypeLookup[Class, Type]] = new Understands[ProjectContext, AddTypeLookup[Class, Type]] {
+      def perform(context: ProjectContext, command: AddTypeLookup[Class, Type]): (ProjectContext, Unit) = {
         (factory.convert(context).addTypeLookupsForClasses((tpeRep: TypeRep) => if (tpeRep == command.tpe) Some(command.lookup) else None), ())
       }
     }
-    implicit val canAddTypeLookupForConstructorsInProject: Understands[ProjectContext, AddTypeLookup[Constructor[FT], Type]] = new Understands[ProjectContext, AddTypeLookup[Constructor[FT], Type]] {
-      def perform(context: ProjectContext, command: AddTypeLookup[Constructor[FT], Type]): (ProjectContext, Unit) = {
+    implicit val canAddTypeLookupForConstructorsInProject: Understands[ProjectContext, AddTypeLookup[Constructor, Type]] = new Understands[ProjectContext, AddTypeLookup[Constructor, Type]] {
+      def perform(context: ProjectContext, command: AddTypeLookup[Constructor, Type]): (ProjectContext, Unit) = {
         (factory.convert(context).addTypeLookupsForConstructors((tpeRep: TypeRep) => if (tpeRep == command.tpe) Some(command.lookup) else None), ())
       }
     }
   }
   val testCapabilities: TestCapabilities = new TestCapabilities {
     implicit val canAddMethodInTest: Understands[TestContext, AddMethod[MethodBodyContext, Name, Option[Expression]]] = new Understands[TestContext, AddMethod[MethodBodyContext, Name, Option[Expression]]] {
-        def perform(context: TestContext, command: AddMethod[MethodBodyContext, Name, Option[Expression]]): (TestContext, Unit) = {
-          val clsBasedTestSuite = factory.convert(context)
-          import classCapabilities.canAddMethodInClass
-          val (updatedCls, ()) = Command.runGenerator(classCapabilities.addMethod(command.name, command.spec), clsBasedTestSuite.underlyingClass)
-          (clsBasedTestSuite.copyAsClassBasedTestSuite(underlyingClass = updatedCls, testMarkers = clsBasedTestSuite.testMarkers :+ false), ())
-        }
+      def perform(context: TestContext, command: AddMethod[MethodBodyContext, Name, Option[Expression]]): (TestContext, Unit) = {
+        val clsBasedTestSuite = factory.convert(context)
+        import classCapabilities.canAddMethodInClass
+        val (updatedCls, ()) = Command.runGenerator(classCapabilities.addMethod(command.name, command.spec), clsBasedTestSuite.underlyingClass)
+        (clsBasedTestSuite.copyAsClassBasedTestSuite(underlyingClass = updatedCls, testMarkers = clsBasedTestSuite.testMarkers :+ false), ())
       }
+    }
     implicit val canAddBlockDefinitionsInTest: Understands[TestContext, AddBlockDefinitions[Statement]] = new Understands[TestContext, AddBlockDefinitions[Statement]] {
       def perform(context: TestContext, command: AddBlockDefinitions[Statement]): (TestContext, Unit) = {
         val clsBasedTestSuite = factory.convert(context)
@@ -376,11 +377,11 @@ trait OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends OOP {
     }
     implicit val canInstantiateObjectInTest: Understands[TestContext, InstantiateObject[Type, Expression, TestContext]] = new Understands[TestContext, InstantiateObject[Type, Expression, TestContext]] {
       def perform(context: TestContext, command: InstantiateObject[Type, Expression, TestContext]): (TestContext, Expression) = {
-        (context, factory.objectInstantiationExpression(command.tpe, command.constructorArguments, None)) // TODO: Add anon inner class
+        (context, ooFactory.objectInstantiationExpression(command.tpe, command.constructorArguments, None)) // TODO: Add anon inner class
       }
     }
-    implicit val canAddConstructorInTest: Understands[TestContext, AddConstructor[Constructor[FT]]] = new Understands[TestContext, AddConstructor[Constructor[FT]]] {
-      def perform(context: TestContext, command: AddConstructor[Constructor[FT]]): (TestContext, Unit) = {
+    implicit val canAddConstructorInTest: Understands[TestContext, AddConstructor[Constructor]] = new Understands[TestContext, AddConstructor[Constructor]] {
+      def perform(context: TestContext, command: AddConstructor[Constructor]): (TestContext, Unit) = {
         val clsBasedTestSuite = factory.convert(context)
         import classCapabilities.canAddConstructorInClass
         val (updatedCls, ()) = Command.runGenerator(classCapabilities.addConstructor(command.ctor), clsBasedTestSuite.underlyingClass)
@@ -407,7 +408,7 @@ trait OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends OOP {
       def perform(context: TestContext, command: FindClass[Name, Type]): (TestContext, Type) = {
         val clsBasedTestSuite = factory.convert(context)
         import classCapabilities.canFindClassInClass
-        val (updatedCls, result) = Command.runGenerator(classCapabilities.findClass(command.qualifiedName: _*), clsBasedTestSuite.underlyingClass)
+        val (updatedCls, result) = Command.runGenerator(classCapabilities.findClass(command.qualifiedName*), clsBasedTestSuite.underlyingClass)
         (clsBasedTestSuite.copyAsClassBasedTestSuite(underlyingClass = updatedCls), result)
       }
     }
@@ -423,8 +424,6 @@ trait OOParadigm[FT <: FinalTypes, FactoryType <: Factory[FT]] extends OOP {
 }
 
 object OOParadigm {
-  type WithBase[FT <: FinalTypes, FactoryType <: Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]] = OOParadigm[FT, FactoryType] { val base: B }
-  def apply[FT <: FinalTypes, FactoryType <: Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]](_base: B): WithBase[FT, FactoryType, _base.type] = new OOParadigm[FT, FactoryType] {
-    val base: _base.type = _base
-  }
+  type WithBase[AST <: OOAST, B <: AnyParadigm.WithAST[AST]] = OOParadigm[AST, B] { }
+  def apply[AST <: OOAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[AST, B] = new OOParadigm[AST, B](_base) {}
 }

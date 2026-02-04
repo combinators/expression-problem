@@ -1,7 +1,7 @@
 package org.combinators.ep.domain.math      /*DD:LI:AI*/
 
+import org.combinators.cogen.TestCase
 import org.combinators.ep.domain._
-import org.combinators.ep.domain.abstractions.TestCase
 import org.combinators.ep.domain.math.systemI.I2
 
 object M7I2 extends Evolution {

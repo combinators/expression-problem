@@ -1,12 +1,12 @@
 package org.combinators.ep.domain.math.eips     /*DD:LI:AI*/
 
+import org.combinators.cogen.paradigm.AnyParadigm
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, RealArithmetic, Strings}
 import org.combinators.ep.domain.abstractions.Operation
 import org.combinators.ep.domain.{GenericModel, math}
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
-import org.combinators.ep.generator.paradigm.AnyParadigm
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, RealArithmetic, Strings}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
 object W1 {
@@ -18,7 +18,7 @@ object W1 {
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val w1Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.W1.getModel
+      override val model: GenericModel = math.W1.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
@@ -52,15 +52,12 @@ object W1 {
       (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
 
-        import ffiArithmetic.arithmeticCapabilities._
         import ffiRealArithmetic.realArithmeticCapabilities._
-        import ffiStrings.stringCapabilities._
         import paradigm._
-        import methodBodyCapabilities._
         assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         val result = onRequest.tpeCase match {
-          case power@math.W1.Power => {
+          case power@math.W1.Power =>
             onRequest.request.op match {
               case eval@math.M0.Eval =>
                 for {
@@ -79,7 +76,6 @@ object W1 {
 
               case _ => ???
             }
-          }
 
           case _ => ???
         }

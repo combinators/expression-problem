@@ -1,15 +1,16 @@
 package org.combinators.ep.domain.math.eips      /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, TypeRep}
-import org.combinators.ep.domain.instances.InstanceRep
-import org.combinators.ep.domain.{abstractions, math}
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.cogen.InstanceRep
+import org.combinators.cogen.TypeRep
+import org.combinators.cogen.paradigm.AnyParadigm
+import org.combinators.cogen.paradigm.control
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, RealArithmetic}
+import org.combinators.ep.domain.abstractions.Operation
+import org.combinators.ep.domain.{GenericModel, math}
+import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
-import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.AnyParadigm
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, RealArithmetic}
 
 object M9 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
@@ -17,10 +18,10 @@ object M9 {
   (m8Provider : EvolutionImplementationProvider[AIP[paradigm.type]])
   (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiRealArithmetic: RealArithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
-   ffiImper:Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]):
+   ffiImper:control.Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val m9Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.M9.getModel
+      override val model: GenericModel = math.M9.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {
@@ -59,7 +60,7 @@ object M9 {
             maxName <- freshName(forApproach.names.mangle("max"))
             maxDecl <- ffiImper.imperativeCapabilities.declareVar(maxName, intType, Some(zero))
 
-            _ <- forEach(onRequest.attributes.toSeq) { case (att, expr) => {
+            _ <- forEach(onRequest.attributes.toSeq) { case (att, expr) =>
               for {
                 attName <- freshName(forApproach.names.mangle(att.name))
                 exprVal <- forApproach.dispatch(
@@ -82,7 +83,6 @@ object M9 {
                 _ <- addBlockDefinitions(Seq(ifStmt))
               } yield ()
             }
-            }
 
             resExpr <- ffiArithmetic.arithmeticCapabilities.add(maxDecl, one)
           } yield Some(resExpr)
@@ -96,8 +96,6 @@ object M9 {
       (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]] = {
         import paradigm._
-        import AnyParadigm.syntax._
-        import methodBodyCapabilities._
 
         assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 

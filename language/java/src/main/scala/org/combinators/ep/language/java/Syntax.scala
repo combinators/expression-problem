@@ -1,8 +1,6 @@
 package org.combinators.ep.language.java     /*DI:LD:AI*/
 
-import org.combinators.ep.generator.AbstractSyntax
-import cats.data.State
-import cats._
+import org.combinators.cogen.AbstractSyntax
 
 trait Syntax extends AbstractSyntax {
   type CompilationUnit = com.github.javaparser.ast.CompilationUnit

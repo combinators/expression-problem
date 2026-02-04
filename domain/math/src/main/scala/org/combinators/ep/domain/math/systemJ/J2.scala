@@ -1,7 +1,9 @@
 package org.combinators.ep.domain.math.systemJ    /*DD:LI:AI*/
 
+import org.combinators.cogen.{InstanceRep, TypeRep}
+import org.combinators.cogen.{Tag, TestCase}
 import org.combinators.ep.domain.abstractions._
-import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
+import org.combinators.ep.domain.instances.{DataTypeInstance, DataTypeInstanceRep}
 import org.combinators.ep.domain.math.M0.{AddInst, DoubleInst, Eval, LitInst, addi, liti}
 import org.combinators.ep.domain.math.systemJ.J1.{MultByTestCase, SubInst, subi}
 import org.combinators.ep.domain.math.{M0, MathDomain}
@@ -10,7 +12,7 @@ import org.combinators.ep.domain.{Evolution, GenericModel}
 object J2 extends Evolution {
   override implicit def getModel: GenericModel = J1.getModel.evolve("j2", Seq(Mult), Seq(Eql) ++ isOps(allTypes))
 
-  lazy val allTypes = J1.getModel.flatten.typeCases :+ Mult
+  lazy val allTypes: Seq[DataTypeCase] = J1.getModel.flatten.typeCases :+ Mult
 
   def isOps(tpeCases: Seq[DataTypeCase]): Seq[Operation] = {
     tpeCases.map(tpe => isOp(tpe))
@@ -32,16 +34,15 @@ object J2 extends Evolution {
   // and then use those structure(s) to determine equality.
 
   // EQL depends on past IsXXX which you know from ALL PAST evolutions
-  lazy val Eql = Operation("eql", TypeRep.Boolean, Seq(Parameter("other", TypeRep.DataType(J1.getModel.baseDataType)))) // base case from prior evolution
+  lazy val Eql: Operation = Operation("eql", TypeRep.Boolean, Seq(Parameter("other", DomainTpeRep.DataType(J1.getModel.baseDataType)))) // base case from prior evolution
 
-  lazy val Mult = DataTypeCase.binary("Mult")(MathDomain.getModel)
+  lazy val Mult: DataTypeCase = DataTypeCase.binary("Mult")(MathDomain.getModel)
 
   def MultInst(left: DataTypeInstance, right: DataTypeInstance): DataTypeInstance =
-    DataTypeInstance(Mult, Seq(InstanceRep(left), InstanceRep(right)))
+    DataTypeInstance(Mult, Seq(DataTypeInstanceRep(left), DataTypeInstanceRep(right)))
 
   // Tests
-  // (5/7) / (7-(2*3) --> just (5/7)
-  val multi = MultInst(LitInst(2.0), LitInst(3.0))
+  val multi: DataTypeInstance = MultInst(LitInst(2.0), LitInst(3.0))
 
   object EqualsBinaryMethodTestCase {
     def apply(op: Operation, instance: DataTypeInstance, instance1: DataTypeInstance, result: Boolean): TestCase = {
@@ -50,23 +51,23 @@ object J2 extends Evolution {
         instance,
         op,
         InstanceRep(TypeRep.Boolean)(result),
-        InstanceRep.apply(instance1)(getModel)
+        DataTypeInstanceRep.apply(instance1)(getModel)
       )
     }
   }
 
-  val addi_same_lhs = AddInst(LitInst(1.0), LitInst(3.0))
-  val addi_same_rhs = AddInst(LitInst(3.0), LitInst(2.0))
-  val subi_same_lhs = SubInst(LitInst(1.0), LitInst(3.0))
-  val subi_same_rhs = SubInst(LitInst(3.0), LitInst(2.0))
-  val multi_same_lhs = MultInst(LitInst(1.0), LitInst(3.0))
-  val multi_same_rhs = MultInst(LitInst(3.0), LitInst(2.0))
+  val addi_same_lhs: DataTypeInstance = AddInst(LitInst(1.0), LitInst(3.0))
+  val addi_same_rhs: DataTypeInstance = AddInst(LitInst(3.0), LitInst(2.0))
+  val subi_same_lhs: DataTypeInstance = SubInst(LitInst(1.0), LitInst(3.0))
+  val subi_same_rhs: DataTypeInstance = SubInst(LitInst(3.0), LitInst(2.0))
+  val multi_same_lhs: DataTypeInstance = MultInst(LitInst(1.0), LitInst(3.0))
+  val multi_same_rhs: DataTypeInstance = MultInst(LitInst(3.0), LitInst(2.0))
 
   // generate all mismatched Eqls from this
   // also cover all cases by creating pairs of Op(val1,val2) to be compared against Op(val1,val3) and Op(val3,val2)
-  val all_instances = Seq(liti, addi, subi, multi)
-  val lhs = Seq(LitInst(-99), addi_same_lhs, subi_same_lhs, multi_same_lhs) // changes on left hand side
-  val rhs = Seq(LitInst(99), addi_same_rhs, subi_same_rhs, multi_same_rhs) // changes on right hand side
+  val all_instances: Seq[DataTypeInstance] = Seq(liti, addi, subi, multi)
+  val lhs: Seq[DataTypeInstance] = Seq(LitInst(-99), addi_same_lhs, subi_same_lhs, multi_same_lhs) // changes on left hand side
+  val rhs: Seq[DataTypeInstance] = Seq(LitInst(99), addi_same_rhs, subi_same_rhs, multi_same_rhs) // changes on right hand side
 
   /** Useful helper function to define essential eql=true test cases for instances */
   def eqls(instances: Seq[DataTypeInstance]): Seq[TestCase] = {
@@ -110,7 +111,7 @@ object J2 extends Evolution {
 
   def tests: Seq[TestCase] = Seq(
     EqualsTestCase(getModel.baseDataType, multi, Eval, M0.DoubleInst(6.0)),
-    MultByTestCase(MultInst(LitInst(3.0), LitInst(2.0)), InstanceRep(LitInst(5.0)), DoubleInst(30.0)),
-    MultByTestCase(MultInst(LitInst(-3.0), LitInst(2.0)), InstanceRep(LitInst(-5.0)), DoubleInst(30.0)),
+    MultByTestCase(MultInst(LitInst(3.0), LitInst(2.0)), DataTypeInstanceRep(LitInst(5.0)), DoubleInst(30.0)),
+    MultByTestCase(MultInst(LitInst(-3.0), LitInst(2.0)), DataTypeInstanceRep(LitInst(-5.0)), DoubleInst(30.0)),
   ) ++ eqls(all_instances) ++ not_eqls(all_instances) ++ struct_not_eqls(all_instances, lhs, rhs)
 }

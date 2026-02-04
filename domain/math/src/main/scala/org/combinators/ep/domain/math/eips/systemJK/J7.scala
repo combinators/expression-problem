@@ -1,20 +1,21 @@
 package org.combinators.ep.domain.math.eips.systemJK    /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, TypeRep}
-import org.combinators.ep.domain.instances.InstanceRep
+import org.combinators.cogen.InstanceRep
+import org.combinators.ep.domain.instances.DataTypeInstanceRep
+import org.combinators.cogen.TypeRep
+import org.combinators.cogen.paradigm.AnyParadigm
+import org.combinators.cogen.paradigm.control
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Booleans, Equality, Strings}
+import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation}
 import org.combinators.ep.domain.math.systemK.{K1, K2}
 import org.combinators.ep.domain.math.{systemJK, systemK}
 import org.combinators.ep.domain.{GenericModel, abstractions, math}
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
-import org.combinators.ep.generator.paradigm.AnyParadigm
-import org.combinators.ep.generator.paradigm.control.{Functional, Imperative}
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Booleans, Equality, Strings}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
-// Code for M8. Takes adapters for return in if-then-else, s.t. functional- and imperative-style if-then-else can be
-// used in an uniform way.
+// Takes adapters for return in if-then-else, s.t. functional- and imperative-style if-then-else can be used in an uniform way.
 sealed class J7[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P], IfBlockType](val paradigm: P) {
 
   type IfThenElseCommand =
@@ -81,7 +82,7 @@ sealed class J7[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
         import syntax._
 
         def evalChildren(tpe: DataTypeCase, atts: Map[abstractions.Attribute, Expression]): Generator[MethodBodyContext, List[Expression]] =
-          forEach(atts.keys.toSeq) { att: abstractions.Attribute => {
+          forEach(atts.keys.toSeq) { (att: abstractions.Attribute) => {
             val expr: Expression = atts(att)
             forApproach.dispatch(
               SendRequest(
@@ -189,12 +190,6 @@ sealed class J7[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
           val pastOps = math.systemJ.J2.isOps(model.flatten.typeCases)
           if (pastOps.contains(onRequest.request.op)) {
             genericLogic(forApproach)(onRequest)
-//          } else if (onRequest.request.op == math.J1.MultBy) {
-//            /* Handle MultBy with these data types. */
-//            onRequest.tpeCase match {
-//              case math.J4.Power => genericLogic(forApproach)(onRequest)
-//              case _ => ???
-//            }
           } else {
             val atts = for {
               atts <- forEach(onRequest.tpeCase.attributes) { att =>
@@ -289,7 +284,7 @@ object J7 {
   def functional[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
   (k2j6Provider : EvolutionImplementationProvider[AIP[paradigm.type]])
-  (functionalControl: Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
+  (functionalControl: control.Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],
@@ -309,7 +304,7 @@ object J7 {
   def imperative[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
   (k2j6Provider : EvolutionImplementationProvider[AIP[paradigm.type]])
-  (imperativeControl: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type],
+  (imperativeControl: control.Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type],

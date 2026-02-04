@@ -1,12 +1,13 @@
 package org.combinators.ep.generator   /*DI:LI:AI*/
 
 import cats.kernel.Monoid
-import org.combinators.ep.domain.abstractions.{DataType, EqualsCompositeTestCase, EqualsTestCase, NotEqualsTestCase, Operation, TestCase, TypeRep}
-import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.paradigm.AnyParadigm
+import org.combinators.cogen.paradigm.ffi.{Assertions, Booleans, Equality, Strings}
+import org.combinators.cogen.{Command, InstanceRep, TestCase, TypeRep}
+import org.combinators.ep.domain.abstractions._
+import org.combinators.ep.domain.instances.DataTypeInstance
 import org.combinators.ep.generator.communication.{Request, SendRequest}
-import org.combinators.ep.generator.paradigm.AnyParadigm
-import org.combinators.ep.generator.paradigm.ffi.{Assertions, Booleans, Equality, Strings}
 
 trait TestImplementationProvider[-AIP <: ApproachImplementationProvider] {
   def initialize(forApproach: AIP): Generator[forApproach.paradigm.ProjectContext, Unit]
@@ -47,7 +48,7 @@ object TestImplementationProvider {
       }
     }
 
-  def defaultAssertionBasedTests[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
+  def defaultAssertionBasedTests[P <: AnyParadigm, AIP[T <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[T]]
       (paradigm: P)
       (ffiAssertions: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type],
         ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],
@@ -71,10 +72,10 @@ object TestImplementationProvider {
           expected: InstanceRep,
           argInsts: Seq[InstanceRep]
         ): Generator[forApproach.paradigm.MethodBodyContext, (forApproach.paradigm.syntax.Type, forApproach.paradigm.syntax.Expression, forApproach.paradigm.syntax.Expression)] = {
-        import forApproach.paradigm.methodBodyCapabilities._
         import AnyParadigm.syntax._
+        import forApproach.paradigm.methodBodyCapabilities._
         for {
-          tpe <- toTargetLanguageType(TypeRep.DataType(baseTpe))
+          tpe <- toTargetLanguageType(DomainTpeRep.DataType(baseTpe))
           _ <- forApproach.resolveAndAddImport(tpe)
           exp <- forApproach.reify(expected)
           inst <- forApproach.instantiate(baseTpe, domainObject)
@@ -99,8 +100,8 @@ object TestImplementationProvider {
       def makeNotEqualsTestCase(forApproach: AIP[paradigm.type])(testCase: NotEqualsTestCase):
         Generator[forApproach.paradigm.MethodBodyContext, Seq[forApproach.paradigm.syntax.Expression]] = {
         import ffiAssertions.assertionCapabilities._
-        import ffiEquality.equalityCapabilities._
         import ffiBooleans.booleanCapabilities._
+        import ffiEquality.equalityCapabilities._
         for {
           (tpe, res, exp) <- prepareTestCase(forApproach)(testCase.baseTpe, testCase.domainObject, testCase.op, testCase.expected, testCase.params)
           assertion <- assertNotEquals(tpe, res, exp)
@@ -109,12 +110,12 @@ object TestImplementationProvider {
 
       def makeEqualsCompositeTestCase(forApproach: AIP[paradigm.type])(testCase: EqualsCompositeTestCase):
         Generator[forApproach.paradigm.MethodBodyContext, Seq[forApproach.paradigm.syntax.Expression]] = {
+        import AnyParadigm.syntax._
         import ffiAssertions.assertionCapabilities._
         import ffiEquality.equalityCapabilities._
         import forApproach.paradigm._
         import methodBodyCapabilities._
         import syntax._
-        import AnyParadigm.syntax._
 
         def makeChain(tpe: TypeRep, obj: Expression, ops: Seq[(Operation, Seq[InstanceRep])]): Generator[MethodBodyContext, (Type, Expression)] =
           ops match {
@@ -124,7 +125,7 @@ object TestImplementationProvider {
                 requestArgs = op.parameters.zip(args).toMap
                 nextObj <-
                   tpe match {
-                    case TypeRep.DataType(dtpe) =>
+                    case DomainTpeRep.DataType(dtpe) =>
                       forApproach.dispatch(SendRequest(obj, dtpe, Request(op, requestArgs)))
                     case _ if ops.nonEmpty =>
                       throw new RuntimeException(s"Intermediate results in composite test cases must be domain data types (cannot dispatch to: $tpe)")
@@ -138,11 +139,11 @@ object TestImplementationProvider {
           }
 
         for {
-          tpe <- toTargetLanguageType(TypeRep.DataType(testCase.baseTpe))
+          tpe <- toTargetLanguageType(DomainTpeRep.DataType(testCase.baseTpe))
           _ <- forApproach.resolveAndAddImport(tpe)
           exp <- forApproach.reify(testCase.expected)
           inst <- forApproach.instantiate(testCase.baseTpe, testCase.startObject)
-          (resTpe, res) <- makeChain(TypeRep.DataType(testCase.baseTpe), inst, testCase.ops)
+          (resTpe, res) <- makeChain(DomainTpeRep.DataType(testCase.baseTpe), inst, testCase.ops)
           assertion <- assertEquals(resTpe, res, exp)
         } yield Seq(assertion)
       }

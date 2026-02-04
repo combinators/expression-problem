@@ -33,23 +33,38 @@ import java.nio.file.{Path, Paths}
  * Takes functional specification of Fibonacci with Lucas and generates Scala code.
  */
 class FibonacciScala {
-  val generator = CodeGenerator("fibonacci")
+  val ast: FullAST = new FinalBaseAST
+    with FinalNameProviderAST
+    with FinalArithmeticAST
+    with FinalAssertionsAST
+    with FinalBooleanAST
+    with FinalEqualsAST
+    with FinalListsAST
+    with FinalOperatorExpressionsAST
+    with FinalRealArithmeticOpsAST
+    with FinalStringAST {
+    val reificationExtensions = List.empty
+  }
+
+  val emptyset:Set[Seq[FibonacciScala.this.ast.any.Name]] = Set.empty
+  val generator: CodeGenerator[ast.type] = CodeGenerator("fibonacci", ast, emptyset)
 
   // TODO: Need to add generator.functional
-  val fibonacciApproach = FibonacciProvider[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.functional, generator.functionalControl, generator.ints, generator.assertionsInMethod, generator.equality)
+  val fibonacciApproach = FibonacciProvider[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.functional, generator.functionalControl.functionalControlInMethods, generator.ints.arithmeticInMethods, generator.assertions.assertionsInMethods, generator.equality.equalsInMethods)
 
-  val persistable = FileWithPathPersistable[FileWithPath]
+  val persistable: Aux[FileWithPath] = FileWithPathPersistable[FileWithPath]
 
   def directToDiskTransaction(targetDirectory: Path): IO[Unit] = {
     //FIX:
     val files =
       () => generator.paradigm.runGenerator {
         for {
-          _ <- generator.ints.enable()
-          _ <- generator.booleans.enable()
-          _ <- generator.strings.enable()
-          _ <- generator.equality.enable()
-          _ <- generator.assertionsInMethod.enable()
+          _ <- generator.ints.arithmeticInMethods.enable()
+          _ <- generator.booleans.booleansInMethodsInMethods.enable()
+          _ <- generator.strings.stringsInMethods.enable()
+          _ <- generator.equality.equalsInMethods.enable()
+          _ <- generator.assertions.assertionsInMethods.enable()
+
           _ <- fibonacciApproach.make_project()
         } yield ()
       }
@@ -77,7 +92,7 @@ class FibonacciScala {
 }
 
 object FibonacciScalaDirectToDiskMain extends IOApp {
-  val targetDirectory = Paths.get("target", "fib", "scala")
+  private val targetDirectory = Paths.get("target", "fib", "scala")
 
   def run(args: List[String]): IO[ExitCode] = {
 

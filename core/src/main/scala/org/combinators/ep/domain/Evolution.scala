@@ -1,6 +1,6 @@
 package org.combinators.ep.domain    /*DI:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.TestCase
+import org.combinators.cogen.TestCase
 
 /** Models a point in time of an evolving data type. */
 trait Evolution {

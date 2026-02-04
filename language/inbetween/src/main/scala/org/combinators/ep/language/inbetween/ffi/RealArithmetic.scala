@@ -1,121 +1,84 @@
-package org.combinators.ep.language.inbetween.ffi  /*DI:LI:AI*/
+package org.combinators.ep.language.inbetween.ffi
 
-import org.combinators.ep.generator.{Command, Understands}
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.Apply
-import org.combinators.ep.generator.paradigm.ffi.{Abs, Add, Cos, Div, EulersNumber, Floor, LE, LT, Log, Mod, Mult, Pi, Pow, Sin, Sqrt, Sub, RealArithmetic => RealArith}
+/*DI:LI:AI*/
+
+import org.combinators.cogen.paradigm.Apply
+import org.combinators.cogen.paradigm.ffi.{Abs, Add, Cos, Div, EulersNumber, Floor, LE, LT, Log, Mod, Mult, Pi, Pow, Sin, Sqrt, Sub, RealArithmetic as RealArith}
+import org.combinators.cogen.{Command, Understands}
+import org.combinators.cogen.Command.Generator
 import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
-// cannot find 'realArithmetic'
-trait RealArithmetic[FT <: OperatorExpressionOps.FinalTypes, FactoryType <: RealArithmeticOps.Factory[FT], T] extends RealArith[any.Method[FT], T] {
-  val base: AnyParadigm.WithFT[FT, FactoryType]
-  import base.factory
-  val realArithmeticCapabilities: RealArithmeticCapabilities = new RealArithmeticCapabilities {
-    implicit val canSqrt: Understands[any.Method[FT], Apply[Sqrt[T], any.Expression[FT], any.Expression[FT]]] =
-      new Understands[any.Method[FT], Apply[Sqrt[T], any.Expression[FT], any.Expression[FT]]] {
-        def perform(context: any.Method[FT], command: Apply[Sqrt[T], any.Expression[FT], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
-          (context, factory.sqrt(command.arguments.head))
+trait RealArithmetic[AST <: RealArithmeticAST, B, T](val _base: AnyParadigm.WithAST[AST] & B) {
+  trait RealArithmeticInMethods extends RealArith[_base.ast.any.Method, T] {
+    val base: _base.type = _base
+
+    import base.ast.realArithmeticOpsFactory
+    import base.ast.any
+
+    val realArithmeticCapabilities: RealArithmeticCapabilities = new RealArithmeticCapabilities {
+      implicit val canSqrt: Understands[any.Method, Apply[Sqrt[T], any.Expression, any.Expression]] =
+        new Understands[any.Method, Apply[Sqrt[T], any.Expression, any.Expression]] {
+          def perform(context: any.Method, command: Apply[Sqrt[T], any.Expression, any.Expression]): (any.Method, any.Expression) = {
+            (context, realArithmeticOpsFactory.sqrt(command.arguments.head))
+          }
         }
-      }
-    implicit val canPow: Understands[any.Method[FT], Apply[Pow[T], any.Expression[FT], any.Expression[FT]]] =
-      new Understands[any.Method[FT], Apply[Pow[T], any.Expression[FT], any.Expression[FT]]] {
-        def perform(context: any.Method[FT], command: Apply[Pow[T], any.Expression[FT], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
-          (context, factory.pow(command.arguments.head, command.arguments.tail.head))
+      implicit val canPow: Understands[any.Method, Apply[Pow[T], any.Expression, any.Expression]] =
+        new Understands[any.Method, Apply[Pow[T], any.Expression, any.Expression]] {
+          def perform(context: any.Method, command: Apply[Pow[T], any.Expression, any.Expression]): (any.Method, any.Expression) = {
+            (context, realArithmeticOpsFactory.pow(command.arguments.head, command.arguments.tail.head))
+          }
         }
-      }
-    implicit val canLog: Understands[any.Method[FT], Apply[Log[T], any.Expression[FT], any.Expression[FT]]] =
-      new Understands[any.Method[FT], Apply[Log[T], any.Expression[FT], any.Expression[FT]]] {
-        def perform(context: any.Method[FT], command: Apply[Log[T], any.Expression[FT], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
-          (context, factory.log(command.arguments(0), command.arguments(1)))
+      implicit val canLog: Understands[any.Method, Apply[Log[T], any.Expression, any.Expression]] =
+        new Understands[any.Method, Apply[Log[T], any.Expression, any.Expression]] {
+          def perform(context: any.Method, command: Apply[Log[T], any.Expression, any.Expression]): (any.Method, any.Expression) = {
+            (context, realArithmeticOpsFactory.log(command.arguments(0), command.arguments(1)))
+          }
         }
-      }
-    implicit val canSin: Understands[any.Method[FT], Apply[Sin[T], any.Expression[FT], any.Expression[FT]]] =
-      new Understands[any.Method[FT], Apply[Sin[T], any.Expression[FT], any.Expression[FT]]] {
-        def perform(context: any.Method[FT], command: Apply[Sin[T], any.Expression[FT], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
-          (context, factory.sin(command.arguments.head))
+      implicit val canSin: Understands[any.Method, Apply[Sin[T], any.Expression, any.Expression]] =
+        new Understands[any.Method, Apply[Sin[T], any.Expression, any.Expression]] {
+          def perform(context: any.Method, command: Apply[Sin[T], any.Expression, any.Expression]): (any.Method, any.Expression) = {
+            (context, realArithmeticOpsFactory.sin(command.arguments.head))
+          }
         }
-      }
-    implicit val canCos: Understands[any.Method[FT], Apply[Cos[T], any.Expression[FT], any.Expression[FT]]] =
-      new Understands[any.Method[FT], Apply[Cos[T], any.Expression[FT], any.Expression[FT]]] {
-        def perform(context: any.Method[FT], command: Apply[Cos[T], any.Expression[FT], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
-          (context, factory.cos(command.arguments.head))
+      implicit val canCos: Understands[any.Method, Apply[Cos[T], any.Expression, any.Expression]] =
+        new Understands[any.Method, Apply[Cos[T], any.Expression, any.Expression]] {
+          def perform(context: any.Method, command: Apply[Cos[T], any.Expression, any.Expression]): (any.Method, any.Expression) = {
+            (context, realArithmeticOpsFactory.cos(command.arguments.head))
+          }
         }
-      }
-    implicit val canEuler: Understands[any.Method[FT], EulersNumber[any.Expression[FT]]] =
-      new Understands[any.Method[FT], EulersNumber[any.Expression[FT]]] {
-        def perform(context: any.Method[FT], command: EulersNumber[any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
-          (context, factory.eulersNumber())
+      implicit val canEuler: Understands[any.Method, EulersNumber[any.Expression]] =
+        new Understands[any.Method, EulersNumber[any.Expression]] {
+          def perform(context: any.Method, command: EulersNumber[any.Expression]): (any.Method, any.Expression) = {
+            (context, realArithmeticOpsFactory.eulersNumber())
+          }
         }
-      }
-    implicit val canPi: Understands[any.Method[FT], Pi[any.Expression[FT]]] =
-      new Understands[any.Method[FT], Pi[any.Expression[FT]]] {
-        def perform(context: any.Method[FT], command: Pi[any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
-          (context, factory.pi())
+      implicit val canPi: Understands[any.Method, Pi[any.Expression]] =
+        new Understands[any.Method, Pi[any.Expression]] {
+          def perform(context: any.Method, command: Pi[any.Expression]): (any.Method, any.Expression) = {
+            (context, realArithmeticOpsFactory.pi())
+          }
         }
-      }
-    implicit val canAbs: Understands[any.Method[FT], Apply[Abs[T], any.Expression[FT], any.Expression[FT]]] =
-      new Understands[any.Method[FT], Apply[Abs[T], any.Expression[FT], any.Expression[FT]]] {
-        def perform(context: any.Method[FT], command: Apply[Abs[T], any.Expression[FT], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
-          (context, factory.abs(command.arguments.head))
+      implicit val canAbs: Understands[any.Method, Apply[Abs[T], any.Expression, any.Expression]] =
+        new Understands[any.Method, Apply[Abs[T], any.Expression, any.Expression]] {
+          def perform(context: any.Method, command: Apply[Abs[T], any.Expression, any.Expression]): (any.Method, any.Expression) = {
+            (context, realArithmeticOpsFactory.abs(command.arguments.head))
+          }
         }
-      }
-    implicit val canFloor: Understands[any.Method[FT], Apply[Floor[T], any.Expression[FT], any.Expression[FT]]] =
-      new Understands[any.Method[FT], Apply[Floor[T], any.Expression[FT], any.Expression[FT]]] {
-        def perform(context: any.Method[FT], command: Apply[Floor[T], any.Expression[FT], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
-          (context, factory.floor(command.arguments.head))
+      implicit val canFloor: Understands[any.Method, Apply[Floor[T], any.Expression, any.Expression]] =
+        new Understands[any.Method, Apply[Floor[T], any.Expression, any.Expression]] {
+          def perform(context: any.Method, command: Apply[Floor[T], any.Expression, any.Expression]): (any.Method, any.Expression) = {
+            (context, realArithmeticOpsFactory.floor(command.arguments.head))
+          }
         }
-      }
+    }
+    def enable(): Generator[any.Project, Unit] = Command.skip[any.Project]
   }
-  def enable(): Generator[any.Project[FT], Unit] = Command.skip[any.Project[FT]]
+  
+  val realArithmeticInMethods: RealArithmeticInMethods = new RealArithmeticInMethods {}
 }
 object RealArithmetic {
-  type WithBase[FT <: OperatorExpressionOps.FinalTypes, FactoryType <: RealArithmeticOps.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType], T] = RealArithmetic[FT, FactoryType, T] { val base: B }
-  def apply[FT <: OperatorExpressionOps.FinalTypes, FactoryType <: RealArithmeticOps.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType], T](_base: B): WithBase[FT, FactoryType, _base.type, T] = new RealArithmetic[FT, FactoryType, T] {
-    val base: _base.type = _base
-  }
-}
+  type WithBase[T, AST <: RealArithmeticAST, B <: AnyParadigm.WithAST[AST]] = RealArithmetic[AST, B, T] {val _base: B}
 
-object RealArithmeticOps {
-  trait SqrtOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
-  trait PowOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
-  trait LogOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
-  trait SinOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
-  trait CosOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
-  trait AbsOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
-  trait FloorOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
-
-  trait EulersNumber[FT <: OperatorExpressionOps.FinalTypes] extends any.Expression[FT]
-
-  trait Pi[FT <: OperatorExpressionOps.FinalTypes] extends any.Expression[FT]
-
-
-  trait Factory[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Factory[FT] {
-    def sqrtOp(): SqrtOp[FT]
-    def powOp(): PowOp[FT]
-    def logOp(): LogOp[FT]
-    def sinOp(): SinOp[FT]
-    def cosOp(): CosOp[FT]
-    def absOp(): AbsOp[FT]
-    def floorOp(): FloorOp[FT]
-
-    def pi(): Pi[FT]
-    def eulersNumber(): EulersNumber[FT]
-
-    def sqrt(of: any.Expression[FT]): OperatorExpressionOps.UnaryExpression[FT] =
-      unaryExpression(sqrtOp(), of)
-    def pow(left: any.Expression[FT], right: any.Expression[FT]): OperatorExpressionOps.BinaryExpression[FT] =
-      binaryExpression(powOp(), left, right)
-
-    def log(of: any.Expression[FT], base: any.Expression[FT]): OperatorExpressionOps.BinaryExpression[FT] =
-      binaryExpression(logOp(), of, base) // FIXME: unaryExpression(logOp(), of)
-    def sin(of: any.Expression[FT]): OperatorExpressionOps.UnaryExpression[FT] =
-      unaryExpression(sinOp(), of)
-    def cos(of: any.Expression[FT]): OperatorExpressionOps.UnaryExpression[FT] =
-      unaryExpression(cosOp(), of)
-    def abs(of: any.Expression[FT]): OperatorExpressionOps.UnaryExpression[FT] =
-      unaryExpression(absOp(), of)
-    def floor(of: any.Expression[FT]): OperatorExpressionOps.UnaryExpression[FT] =
-      unaryExpression(floorOp(), of)
-  }
+  def apply[T, AST <: RealArithmeticAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[T, AST, B] = new RealArithmetic[AST, B, T](_base) {}
 }

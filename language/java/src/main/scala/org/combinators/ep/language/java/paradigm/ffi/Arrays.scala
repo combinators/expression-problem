@@ -2,17 +2,17 @@ package org.combinators.ep.language.java.paradigm.ffi    /*DI:LD:AI*/
 
 import com.github.javaparser.ast.`type`.ArrayType
 import com.github.javaparser.ast.expr.{ArrayAccessExpr, ArrayCreationExpr, ArrayInitializerExpr, AssignExpr, FieldAccessExpr, IntegerLiteralExpr, MethodCallExpr, NameExpr, SimpleName}
-import com.github.javaparser.ast.{ArrayCreationLevel, ImportDeclaration, NodeList}
-import org.combinators.ep.domain.abstractions.TypeRep
-import org.combinators.ep.domain.instances.InstanceRep
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.AnyParadigm.syntax._
-import org.combinators.ep.generator.paradigm.ffi.{Arrays => Arrs, _}
-import org.combinators.ep.generator.paradigm.{AddImport, Apply}
-import org.combinators.ep.generator.{Command, Understands}
+import com.github.javaparser.ast.{ArrayCreationLevel, NodeList}
+import org.combinators.cogen.InstanceRep
+import org.combinators.cogen.TypeRep
+import org.combinators.cogen.paradigm.{Apply, ffi}
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.paradigm.AnyParadigm.syntax._
+import org.combinators.cogen.paradigm.ffi.{CreateArray, Get, Length, Arrays as Arrs}
+import org.combinators.cogen.Understands
 import org.combinators.ep.language.java.CodeGenerator.Enable
 import org.combinators.ep.language.java.Syntax.default._
-import org.combinators.ep.language.java.paradigm.{AnyParadigm, Generics, ObjectOriented}
+import org.combinators.ep.language.java.paradigm.AnyParadigm
 import org.combinators.ep.language.java.{ContextSpecificResolver, ProjectCtxt}
 
 class Arrays[Ctxt, AP <: AnyParadigm](val base:AP) extends Arrs[Ctxt] {
@@ -27,7 +27,7 @@ class Arrays[Ctxt, AP <: AnyParadigm](val base:AP) extends Arrs[Ctxt] {
         (context,
           new ArrayCreationExpr(command.functional.elementType,
             new NodeList(new ArrayCreationLevel(1)),
-            new ArrayInitializerExpr(new NodeList(command.arguments: _ *)))
+            new ArrayInitializerExpr(new NodeList(command.arguments*)))
         )
     }
 
@@ -46,11 +46,11 @@ class Arrays[Ctxt, AP <: AnyParadigm](val base:AP) extends Arrs[Ctxt] {
           }
         }
 
-      implicit val canSet: Understands[Ctxt, Apply[Set, Expression, Expression]] =
-        new Understands[Ctxt, Apply[Set, Expression, Expression]] {
+      implicit val canSet: Understands[Ctxt, Apply[ffi.Set, Expression, Expression]] =
+        new Understands[Ctxt, Apply[ffi.Set, Expression, Expression]] {
           override def perform(
                                 context: Ctxt,
-                                command: Apply[Set, Expression, Expression]
+                                command: Apply[ffi.Set, Expression, Expression]
                               ): (Ctxt, Expression) = {
             (context, new AssignExpr(new ArrayAccessExpr(command.arguments(0), command.arguments(1)), command.arguments(2), AssignExpr.Operator.ASSIGN))
           }

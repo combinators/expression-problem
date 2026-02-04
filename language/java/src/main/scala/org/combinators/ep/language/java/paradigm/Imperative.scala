@@ -2,10 +2,10 @@ package org.combinators.ep.language.java.paradigm    /*DI:LD:AI*/
 
 import com.github.javaparser.ast.expr.{AssignExpr, NameExpr, VariableDeclarationExpr}
 import com.github.javaparser.ast.stmt.{BlockStmt, ExpressionStmt, IfStmt, ReturnStmt, WhileStmt}
-import org.combinators.ep.generator.{Command, Understands}
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.IfThenElse
-import org.combinators.ep.generator.paradigm.control.{Imperative => Imp, _}
+import org.combinators.cogen.paradigm.IfThenElse
+import org.combinators.cogen.paradigm.control.{AssignVariable, DeclareVariable, LiftExpression, Return, While, Imperative as Imp}
+import org.combinators.cogen.{Command, Understands}
+import org.combinators.cogen.Command.Generator
 import org.combinators.ep.language.java.{CtorCtxt, MethodBodyCtxt}
 
 trait Imperative[Ctxt, AP <: AnyParadigm] extends Imp[Ctxt] {

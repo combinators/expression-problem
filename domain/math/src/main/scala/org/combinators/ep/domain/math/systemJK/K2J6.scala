@@ -1,7 +1,8 @@
 package org.combinators.ep.domain.math.systemJK    /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{EqualsCompositeTestCase, EqualsTestCase, TestCase}
-import org.combinators.ep.domain.instances.InstanceRep
+import org.combinators.ep.domain.instances.{DataTypeInstance, DataTypeInstanceRep}
+import org.combinators.cogen.TestCase
+import org.combinators.ep.domain.abstractions.{EqualsCompositeTestCase, EqualsTestCase}
 import org.combinators.ep.domain.math.M0
 import org.combinators.ep.domain.math.M0.{AddInst, DoubleInst, Eval, Lit, LitInst, addi, liti}
 import org.combinators.ep.domain.math.systemJ.J1.subi
@@ -19,11 +20,11 @@ import org.combinators.ep.domain.{Evolution, GenericModel}
 object K2J6 extends Evolution {
   override implicit def getModel: GenericModel = J6.getModel.merge("k2j6", Seq.empty, Seq.empty, Seq(K2.getModel))
 
-  val all_instances = J3.all_instances ++ Seq(powi)
-  val lhs = J3.lhs ++ Seq(powi_same_lhs) // changes on left hand side
-  val rhs = J3.rhs ++ Seq(powi_same_rhs) // changes on right hand side
+  val all_instances: Seq[DataTypeInstance] = J3.all_instances ++ Seq(powi)
+  val lhs: Seq[DataTypeInstance] = J3.lhs ++ Seq(powi_same_lhs) // changes on left hand side
+  val rhs: Seq[DataTypeInstance] = J3.rhs ++ Seq(powi_same_rhs) // changes on right hand side
 
-  val tree_node = Node(Divd.name.hashCode,
+  val tree_node:Node = Node(Divd.name.hashCode,
     Seq(
       Node(Lit.name.hashCode, Seq(Leaf(DoubleInst(1.0)))),
       Node(Lit.name.hashCode, Seq(Leaf(DoubleInst(3.0))))
@@ -42,10 +43,10 @@ object K2J6 extends Evolution {
 
     // in CoCo this leads to an invocation of .equals which defaults to java.lang.equals, so this won't work in some approaches that rely on default
     // implementations in interfaces, which will take second place to default java.lang.Object#equals. Works for OO-Traditional; breaks for Coco.
-    // EqualsTestCase(getModel.baseDataType, PowerInst(LitInst(2.0), LitInst(3.0)), PowBy, InstanceRep(PowerInst(PowerInst(LitInst(2.0), LitInst(3.0)), LitInst(2.0))),
-    //  InstanceRep(LitInst(2.0))),  // 8^2 == 64
+    // EqualsTestCase(getModel.baseDataType, PowerInst(LitInst(2.0), LitInst(3.0)), PowBy, DataTypeInstanceRep(PowerInst(PowerInst(LitInst(2.0), LitInst(3.0)), LitInst(2.0))),
+    //  DataTypeInstanceRep(LitInst(2.0))),  // 8^2 == 64
     // Use This Instead as a substitute for above
-    EqualsCompositeTestCase(getModel.baseDataType, PowerInst(LitInst(2.0), LitInst(3.0)), DoubleInst(64.0), (PowBy, Seq(InstanceRep(LitInst(2.0)))), (Eval, Seq.empty)),
+    EqualsCompositeTestCase(getModel.baseDataType, PowerInst(LitInst(2.0), LitInst(3.0)), DoubleInst(64.0), (PowBy, Seq(DataTypeInstanceRep(LitInst(2.0)))), (Eval, Seq.empty)),
 
     EqualsCompositeTestCase(getModel.baseDataType, DivdInst(LitInst(5.0), LitInst(5.0)), DoubleInst(1.0), (Simplify, Seq.empty), (Eval, Seq.empty)),
     EqualsCompositeTestCase(getModel.baseDataType, DivdInst(LitInst(5.0), LitInst(1.0)), DoubleInst(5.0), (Simplify, Seq.empty), (Eval, Seq.empty)),
@@ -63,7 +64,7 @@ object K2J6 extends Evolution {
 
     // Cannot write a test case like this, because Boolean is not in the domain! We could seek to add it as a type (whose eval is 0.0 or 1.0)
     //    EqualsCompositeTestCase(getModel.baseDataType, DivdInst(LitInst(5.0), LitInst(5.0)), DoubleInst(1.0),
-    //      (Simplify, Seq.empty), (Eql, Seq(InstanceRep(LitInst(1.0)))), (Eval, Seq.empty)),
+    //      (Simplify, Seq.empty), (Eql, Seq(DataTypeInstanceRep(LitInst(1.0)))), (Eval, Seq.empty)),
 
   ) ++ eqls(all_instances) ++ not_eqls(all_instances) ++ struct_not_eqls(all_instances, lhs, rhs) ++ op_equals(all_instances) ++ op_not_equals(all_instances)
 }

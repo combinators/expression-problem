@@ -1,11 +1,15 @@
 package org.combinators.ep.generator   /*DI:LI:AI*/
 
 import cats.kernel.Monoid
+import org.combinators.cogen.paradigm.AnyParadigm
+import org.combinators.cogen.paradigm.ffi.FFI
 import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation}
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.cogen.Command
+import Command.Generator
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
-import org.combinators.ep.generator.paradigm.AnyParadigm
+
+import scala.language.postfixOps
 
 /** Instances of this class provide the domain dependent implementation of an evolution. */
 trait EvolutionImplementationProvider[-AIP <: ApproachImplementationProvider] {
@@ -13,7 +17,7 @@ trait EvolutionImplementationProvider[-AIP <: ApproachImplementationProvider] {
   val model: GenericModel
 
   /** Initializes the project context to support this evolution, e.g. by calling
-    * [[org.combinators.ep.generator.paradigm.ffi.FFI.enable()]] for all the required FFIs.
+    * [[FFI.enable()]] for all the required FFIs.
     */
   def initialize(forApproach: AIP): Generator[forApproach.paradigm.ProjectContext, Unit]
 
@@ -80,7 +84,7 @@ trait EvolutionImplementationProvider[-AIP <: ApproachImplementationProvider] {
               ))
           }
 
-          res <- forApproach.instantiate(model.baseDataType, dt, processedAtts : _ *)
+          res <- forApproach.instantiate(model.baseDataType, dt, processedAtts*)
         } yield Some(res)
     }
   }
@@ -103,16 +107,7 @@ object EvolutionImplementationProvider {
       def empty: EvolutionImplementationProvider[AIP] = new EvolutionImplementationProvider[AIP] {
         override val model:GenericModel = ???  // won't ever access
         def initialize(forApproach: AIP): Generator[forApproach.paradigm.ProjectContext, Unit] = Command.skip
-//        override def applicableIn
-//           (forApproach: AIP)
-//           (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression], current:GenericModel): Option[GenericModel] = None
-//        override def applicableIn(forApproach: AIP, onRequest: PotentialRequest, current:GenericModel): Option[GenericModel] = None
-//
-//        override def applicable
-//           (forApproach: AIP)
-//           (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean = false
-//        override def applicable
-//        (forApproach: AIP, onRequest: PotentialRequest): Boolean = false
+
         override def genericLogic
            (forApproach: AIP)
            (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]) =
@@ -131,20 +126,7 @@ object EvolutionImplementationProvider {
         ): EvolutionImplementationProvider[AIP] = new EvolutionImplementationProvider[AIP] {
 
         // bias is to use the first
-        override val model = first.model
-
-//        @Deprecated override def dependencies(op: Operation, dt: DataTypeCase): Option[Set[Operation]] = {
-//          (first.dependencies(op, dt), second.dependencies(op, dt)) match {
-//            case (None, None) => None
-//            case (Some(deps1), Some(deps2)) => Some(deps1 ++ deps2)
-//            case (Some(deps1), _) => Some(deps1)
-//            case (_, deps) => deps
-//          }
-//        }
-//
-//        /** Ensure dependencies are union'd through composition. */
-//        @Deprecated override def evolutionSpecificDependencies(op:Operation, dt:DataTypeCase) : Map[GenericModel, Set[Operation]] =
-//          second.evolutionSpecificDependencies(op, dt) ++ first.evolutionSpecificDependencies(op, dt)
+        override val model: GenericModel = first.model
 
         override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
           (first.dependencies(potentialRequest), second.dependencies(potentialRequest)) match {

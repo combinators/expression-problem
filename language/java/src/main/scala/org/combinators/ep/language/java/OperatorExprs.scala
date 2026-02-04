@@ -1,8 +1,8 @@
 package org.combinators.ep.language.java     /*DI:LD:AI*/
 
 import com.github.javaparser.ast.expr.{BinaryExpr, EnclosedExpr, Expression, UnaryExpr}
-import org.combinators.ep.generator.Understands
-import org.combinators.ep.generator.paradigm.Apply
+import org.combinators.cogen.paradigm.Apply
+import org.combinators.cogen.Understands
 
 /**
  * Operator Expressions are enclosed with parens (EnclosedExpr) to ensure correctness, even though this might
@@ -28,7 +28,7 @@ object OperatorExprs {
         context: Ctxt,
         command: Apply[Op, Expression, Expression]
       ): (Ctxt, Expression) = {
-        import scala.language.reflectiveCalls
+        import scala.reflect.Selectable.reflectiveSelectable     // needed for next statement
         if (command.functional.shortcut) {
           (context, new EnclosedExpr (new BinaryExpr(command.arguments(0), command.arguments(1), shortCutOp)))
         } else {

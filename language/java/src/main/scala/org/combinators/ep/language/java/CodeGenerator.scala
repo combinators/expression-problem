@@ -4,18 +4,17 @@ import cats.{Apply => _}
 import com.github.javaparser.ast.PackageDeclaration
 import com.github.javaparser.ast.`type`.PrimitiveType
 import com.github.javaparser.ast.expr.{DoubleLiteralExpr, IntegerLiteralExpr, TypeExpr}
-import org.combinators.ep.domain.abstractions.TypeRep
-import org.combinators.ep.generator.Command
+import org.combinators.cogen.TypeRep
+import org.combinators.cogen.Command
 import org.combinators.ep.language.java.paradigm._
 import org.combinators.ep.language.java.paradigm.ffi._
-
 
 /**
  * Java-specific.
  *
  * These paradigm-specific traits are conceptually different from each other
  */
-sealed class CodeGenerator(config: Config) { cc =>
+class CodeGenerator(config: Config) { cc =>
   val paradigm: AnyParadigm = AnyParadigm(config)
   val ooParadigm: ObjectOriented[paradigm.type] = ObjectOriented(paradigm)
   val imperativeInMethod: Imperative[MethodBodyCtxt, paradigm.type] = Imperative.inMethodContext(paradigm)
@@ -118,34 +117,18 @@ sealed class CodeGenerator(config: Config) { cc =>
     
 
   val listsInMethod =
-    Lists[MethodBodyCtxt, paradigm.type, generics.type](
+    Lists[MethodBodyCtxt, paradigm.type, Generics](
       paradigm,
-      ooParadigm.methodBodyCapabilities.canGetMemberInMethod,
-      paradigm.methodBodyCapabilities.canApplyInMethodBody,
       parametricPolymorphism.methodBodyCapabilities.canApplyTypeInMethod,
       paradigm.methodBodyCapabilities.canAddImportInMethodBody
     )(generics)
 
   val listsInConstructor =
-    Lists[CtorCtxt, paradigm.type, generics.type](
+    Lists[CtorCtxt, paradigm.type, Generics](
       paradigm,
-      ooParadigm.constructorCapabilities.canGetMemberInConstructor,
-      ooParadigm.constructorCapabilities.canApplyInConstructor,
       generics.constructorCapabilities.canApplyTypeInConstructor,
       ooParadigm.constructorCapabilities.canAddImportInConstructor
     )(generics)
-
-  val treesInMethod =
-    Trees[MethodBodyCtxt, paradigm.type, ObjectOriented](
-      paradigm,
-      paradigm.methodBodyCapabilities.canAddImportInMethodBody
-    )(ooParadigm)
-
-  val treesInConstructor =
-    Trees[CtorCtxt, paradigm.type, ObjectOriented](
-      paradigm,
-      ooParadigm.constructorCapabilities.canAddImportInConstructor
-    )(ooParadigm)
 
   val assertionsInMethod = new Assertions[paradigm.type](paradigm)(ooParadigm)
   val exceptionsInMethod = new Exceptions[paradigm.type](paradigm)

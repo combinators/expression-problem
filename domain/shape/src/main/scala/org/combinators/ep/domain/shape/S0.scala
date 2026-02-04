@@ -1,8 +1,12 @@
 package org.combinators.ep.domain.shape   /*DD:LI:AI*/
 
+import org.combinators.cogen.InstanceRep
+import org.combinators.cogen.TypeRep
+import org.combinators.ep.domain.instances.DataTypeInstanceRep
+import org.combinators.cogen.TestCase
 import org.combinators.ep.domain._
-import org.combinators.ep.domain.abstractions.{EqualsTestCase, _}
-import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
+import org.combinators.ep.domain.abstractions._
+import org.combinators.ep.domain.instances.DataTypeInstance
 
 object S0 extends Evolution {
 
@@ -17,7 +21,7 @@ object S0 extends Evolution {
 
   lazy val transx = Attribute("transx", TypeRep.Double)
   lazy val transy = Attribute("transy", TypeRep.Double)
-  lazy val shape = Attribute("shape", TypeRep.DataType(ShapeDomain.getModel.baseDataType))
+  lazy val shape = Attribute("shape", DomainTpeRep.DataType(ShapeDomain.getModel.baseDataType))
 
   val pointx = Parameter("pointx", TypeRep.Double)
   val pointy = Parameter("pointy", TypeRep.Double)
@@ -37,7 +41,7 @@ object S0 extends Evolution {
   def PointInst(x:scala.Double, y:scala.Double): DataTypeInstance =
     DataTypeInstance(Circle, Seq(InstanceRep(TypeRep.Double)(x), InstanceRep(TypeRep.Double)(y)))
   def TranslateInst(transx:scala.Double, transy:scala.Double, shape:DataTypeInstance): DataTypeInstance =
-    DataTypeInstance(Translate, Seq(InstanceRep(TypeRep.Double)(transx), InstanceRep(TypeRep.Double)(transy), InstanceRep(shape)))
+    DataTypeInstance(Translate, Seq(InstanceRep(TypeRep.Double)(transx), InstanceRep(TypeRep.Double)(transy), DataTypeInstanceRep(shape)))
 
   val sq1 = SquareInst(5.0)
   val c1 = CircleInst(5.0)
@@ -61,8 +65,8 @@ object S0 extends Evolution {
   }
 
   def tests:Seq[TestCase] = Seq(
- //   EqualsTestCase(getModel.baseDataType, sq1, Unity, InstanceRep(TypeRep.Boolean)(true)),
- //   EqualsTestCase(getModel.baseDataType, sq1, ContainsPt, InstanceRep(TypeRep.Boolean)(true), DoubleInst(p1._1), DoubleInst(p1._2)),
+ //   EqualsTestCase(getModel.baseDataType, sq1, Unity, DataTypeInstanceRep(TypeRep.Boolean)(true)),
+ //   EqualsTestCase(getModel.baseDataType, sq1, ContainsPt, DataTypeInstanceRep(TypeRep.Boolean)(true), DoubleInst(p1._1), DoubleInst(p1._2)),
 //    NotEqualsTestCase(getModel.baseDataType, c1, ContainsPt, TRUE, p2._1, p2._2),
 
     ContainsTestCase(sq1,  p1, result=true),

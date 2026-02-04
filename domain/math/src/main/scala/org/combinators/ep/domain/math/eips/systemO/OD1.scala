@@ -1,13 +1,15 @@
 package org.combinators.ep.domain.math.eips.systemO   /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{Operation, TypeRep}
+import org.combinators.cogen.paradigm.AnyParadigm
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Strings}
+import org.combinators.ep.domain.abstractions.Operation
 import org.combinators.ep.domain.{GenericModel, math}
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
-import org.combinators.ep.generator.paradigm.AnyParadigm
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Strings}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
+
+import scala.language.postfixOps
 
 object OD1 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
@@ -57,7 +59,7 @@ object OD1 {
           onRequest.request.op match {
             case math.M0.Eval =>
               onRequest.tpeCase match {
-                case math.systemO.OD1.Mult => mult(atts: _*)
+                case math.systemO.OD1.Mult => mult(atts*)
                 case _ => ???
               }
 

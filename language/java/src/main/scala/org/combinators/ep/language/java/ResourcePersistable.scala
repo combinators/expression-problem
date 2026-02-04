@@ -1,9 +1,7 @@
 package org.combinators.ep.language.java     /*DI:LD:AI*/
 
-import java.nio.file.{FileSystems, Files, Path, Paths}
+import java.nio.file.Path
 import org.combinators.templating.persistable.{BundledResource, Persistable}
-
-import java.io.ByteArrayOutputStream
 
 trait ResourcePersistableInstances {
   def bundledResourceInstance: ResourcePersistable.Aux = new Persistable {

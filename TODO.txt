@@ -1,12 +1,10 @@
-1. Generated test cases often exceed length allowed to method declarations.
+Generated test cases often exceed length allowed to method declarations.
 
   a. As a stop-gap measure, these methods are arbitrarily split up, which means that the
   visitorSideEffect has test cases that do not compile because of variables defined for
   the visitor in one method but used in the other method.
 
-2. Functional -- continue progress from before
-
-3.
+Functional -- continue progress from before
 
 Scala-InBetween could add 'trait' capability and that could then
 be exposed as an option. This is high-level change and not
@@ -14,27 +12,6 @@ object-oriented per se.
 
 Add exceptions to newScala
 
-Make CoGen stand alone
-
-Note that Java equality in methods uses the .equals() which is a problem with primitive types. Thoughts?
-
 Trees that grow
-
-============================
-
-Notes: A1M3 for coco needs a full Exp and Factory. Why? Because otherwise merge accessing finalized instances from A1 are incompatible with
-the finalized instances from M3. Similar argument for M3W1 and even A1M3I2
-
-   ifEqExpr <- ffiEquals.equalityCapabilities.areEqual(expType, expValue, zero)
-     where expType is expType <- toTargetLanguageType(TypeRep.Double)
-
-It wasn't working because I had mistakenly used a type for "ep.Exp[FT]"
-
-ALgebra had to go back to its own "dataTypeCasesWithNewOperations" for some reason.
-
-So Coco, Trivially and Algebra all have slightly different results and it REALLY makes me curious
-as to why
-
-============================
 
 Runtime Dispatch FAILS whenever pass in a model. if we can fix this, then I can better integrate with OO code.

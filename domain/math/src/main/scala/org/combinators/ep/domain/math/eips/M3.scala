@@ -1,14 +1,16 @@
 package org.combinators.ep.domain.math.eips      /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.TypeRep
+import org.combinators.cogen.TypeRep
+import org.combinators.cogen.paradigm.AnyParadigm
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Strings}
 import org.combinators.ep.domain.abstractions.Operation
 import org.combinators.ep.domain.{GenericModel, math}
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
-import org.combinators.ep.generator.paradigm.AnyParadigm
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Strings}
+
+import scala.language.postfixOps
 
 object M3 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
@@ -58,8 +60,8 @@ object M3 {
           onRequest.request.op match {
             case math.M0.Eval =>
               onRequest.tpeCase match {
-                case math.M3.Divd => div(atts: _*)
-                case math.M3.Mult => mult(atts: _*)
+                case math.M3.Divd => div(atts*)
+                case math.M3.Mult => mult(atts*)
                 case math.M3.Neg =>
                   for {
                     minusOne <- reify(TypeRep.Double, -1)

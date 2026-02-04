@@ -1,6 +1,6 @@
 package org.combinators.ep.domain.math     /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.TestCase
+import org.combinators.cogen.TestCase
 import org.combinators.ep.domain.math.systemI.I2
 import org.combinators.ep.domain.{Evolution, GenericModel}
 

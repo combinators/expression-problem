@@ -1,15 +1,16 @@
 package org.combinators.ep.domain.math.eips      /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, TypeRep}
-import org.combinators.ep.domain.instances.InstanceRep
-import org.combinators.ep.domain.{abstractions, math}
-import org.combinators.ep.generator.Command.{Generator, lift}
+import org.combinators.cogen.InstanceRep
+import org.combinators.cogen.TypeRep
+import org.combinators.cogen.paradigm.AnyParadigm
+import org.combinators.cogen.paradigm.ffi.Arithmetic
+import org.combinators.ep.domain.abstractions.Operation
+import org.combinators.ep.domain.{GenericModel, math}
+import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
-import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
-import org.combinators.ep.generator.paradigm.control.{ConstructorPattern, Imperative}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, Functional, control}
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Equality, RealArithmetic, Strings}
+import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
+import org.combinators.cogen.paradigm.control
 
 object M9funct {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
@@ -19,7 +20,7 @@ object M9funct {
    ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val m9Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
-      override val model = math.M9.getModel
+      override val model: GenericModel = math.M9.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
         for {

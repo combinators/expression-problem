@@ -1,13 +1,20 @@
-package org.combinators.ep.language.inbetween.any /*DI:LI:AI*/
+package org.combinators.ep.language.inbetween.any
 
-import org.combinators.ep.generator.{ AbstractSyntax => AS }
+/*DI:LI:AI*/
 
-class AbstractSyntax[FT <: FinalTypes] extends AS {
-  type CompilationUnit = org.combinators.ep.language.inbetween.any.CompilationUnit[FT]
-  type Import = org.combinators.ep.language.inbetween.any.Import[FT]
-  type Expression = org.combinators.ep.language.inbetween.any.Expression[FT]
-  type Type = org.combinators.ep.language.inbetween.any.Type[FT]
-  type Statement = org.combinators.ep.language.inbetween.any.Statement[FT]
-  type UnitTest = Unit //TODO: org.combinators.ep.language.inbetween.any.UnitTest[FT]
-  type Name = org.combinators.ep.language.inbetween.any.Name[FT]
+import org.combinators.cogen.AbstractSyntax as AS
+
+trait AbstractSyntax[A](val ast: AnyAST & A) extends AS {
+  type CompilationUnit = ast.any.CompilationUnit
+  type Import = ast.any.Import
+  type Expression = ast.any.Expression
+  type Type = ast.any.Type
+  type Statement = ast.any.Statement
+  type UnitTest = Unit //TODO: ast.any.UnitTest
+  type Name = ast.any.Name
+}
+
+object AbstractSyntax {
+  type AbstractSyntax[AST <: AnyAST] = org.combinators.ep.language.inbetween.any.AbstractSyntax[AST] { }
+  def apply[AST <: AnyAST](ast: AST): AbstractSyntax[ast.type] = new AbstractSyntax[ast.type](ast) {}
 }

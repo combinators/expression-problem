@@ -1,10 +1,13 @@
 package org.combinators.fibonacci
 
-import org.combinators.ep.domain.abstractions.TypeRep
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Assertions, Equality}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, Functional, ObjectOriented, control}
-import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider}
+import org.combinators.cogen.TypeRep
+import org.combinators.cogen.paradigm.{AnyParadigm, Functional, ObjectOriented}
+import org.combinators.cogen.paradigm.control.Imperative
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Assertions, Equality}
+import org.combinators.cogen.Command
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.paradigm.control
+import org.combinators.cogen.{AbstractSyntax, NameProvider}
 
 trait FibonacciIndependentWithLucas {
   val paradigm: AnyParadigm
@@ -250,7 +253,7 @@ object FibonacciIndependentWithLucasProvider {
   (base: P)
   (nameProvider: NameProvider[base.syntax.Name],
    obj:  ObjectOriented.WithBase[base.type],
-   c1: control.Imperative.WithBase[base.MethodBodyContext, base.type],
+   c1: Imperative.WithBase[base.MethodBodyContext, base.type],
    c2:  Arithmetic.WithBase[base.MethodBodyContext, base.type, Int],
    c3:  Assertions.WithBase[base.MethodBodyContext, base.type],
    c4: Equality.WithBase[base.MethodBodyContext, base.type],

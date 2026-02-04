@@ -1,14 +1,17 @@
 package org.combinators.ep.domain.math.eips.systemJ   /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{Attribute, Operation, TypeRep}
+import org.combinators.cogen.TypeRep
+import org.combinators.cogen.paradigm.AnyParadigm
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Booleans, Strings}
+import org.combinators.ep.domain.abstractions.{Attribute, Operation}
 import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.ep.domain.math.systemJ
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
-import org.combinators.ep.generator.paradigm.AnyParadigm
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Booleans, Strings}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
+
+import scala.language.postfixOps
 
 object J3 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
@@ -91,18 +94,19 @@ object J3 {
           val realResult = onRequest.request.op match {
             case math.M0.Eval =>
               onRequest.tpeCase match {
-                case systemJ.J3.Divd => {
+                case systemJ.J3.Divd =>
                   for {
                     atts <- attsGen
-                    res <- div(atts: _*)
+                    res <- div(atts*)
                   } yield res
-                }
+
                 case systemJ.J3.Neg =>
                   for {
                     atts <- attsGen
                     minusOne <- reify(TypeRep.Double, -1)
                     res <- mult(minusOne, atts.head)
                   } yield res
+
                 case _ => ???
               }
 
@@ -115,36 +119,37 @@ object J3 {
                     res <- asString(onRequest.attributes(att), ty)
                   } yield res
 
-                case math.M0.Add => {
+                case math.M0.Add =>
                   for {
                     atts <- attsGen
                     res <- makeString(atts, "(", "+", ")")
                   } yield res
-                }
-                case math.systemJ.J1.Sub => {
+
+                case math.systemJ.J1.Sub =>
                   for {
                     atts <- attsGen
                     res <- makeString(atts, "(", "-", ")")
                   } yield res
-                }
-                case math.systemJ.J2.Mult => {
+
+                case math.systemJ.J2.Mult =>
                   for {
                     atts <- attsGen
                     res <- makeString(atts, "(", "*", ")")
                   } yield res
-                }
-                case systemJ.J3.Divd => {
+
+                case systemJ.J3.Divd =>
                   for {
                     atts <- attsGen
                     res <- makeString(atts, "(", "/", ")")
                   } yield res
-                }
+
                 case systemJ.J3.Neg =>
                   for {
                     atts <- attsGen
                     minus <- reify(TypeRep.String, "-")
                     res <- stringAppend(minus, atts.head)
                   } yield res
+
                 case _ => ???
               }
             case _ => ???

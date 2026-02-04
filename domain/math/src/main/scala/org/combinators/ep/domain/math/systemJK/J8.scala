@@ -1,7 +1,9 @@
 package org.combinators.ep.domain.math.systemJK    /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{EqualsTestCase, Operation, TestCase, TypeRep}
-import org.combinators.ep.domain.instances.InstanceRep
+import org.combinators.cogen.InstanceRep
+import org.combinators.cogen.{TestCase, TypeRep}
+import org.combinators.ep.domain.abstractions.{EqualsTestCase, Operation}
+import org.combinators.ep.domain.instances.DataTypeInstance
 import org.combinators.ep.domain.math.M0.{AddInst, LitInst}
 import org.combinators.ep.domain.math.systemJ.J1.SubInst
 import org.combinators.ep.domain.math.systemJ.J2.MultInst
@@ -13,7 +15,7 @@ import org.combinators.ep.domain.{Evolution, GenericModel}
 object J8 extends Evolution {
   override implicit def getModel: GenericModel = J7.getModel.evolve("j8", Seq.empty, Seq(Height))
 
-  lazy val Height = Operation("height", TypeRep.Int, Seq.empty)
+  lazy val Height: Operation = Operation("height", TypeRep.Int, Seq.empty)
 
   //      m9_3                 <-- m9_3 has height of 3
   //      /  \
@@ -24,23 +26,23 @@ object J8 extends Evolution {
   //           m9_0   m9_0     <-- height(s) of 0
   //
   // and also do right-leaning...
-  val m9_0 = LitInst(2.0)
-  val m9_1 = AddInst(m9_0, m9_0)
-  val m9_2 = SubInst(m9_0, m9_1)
-  val m9_3 = DivdInst(m9_0, m9_2)
-  val m9_1r = AddInst(m9_0, m9_0)
-  val m9_2r = SubInst(m9_0, m9_1r)
-  val m9_3r = DivdInst(m9_2r, m9_0)
+  val m9_0: DataTypeInstance = LitInst(2.0)
+  val m9_1: DataTypeInstance = AddInst(m9_0, m9_0)
+  val m9_2: DataTypeInstance = SubInst(m9_0, m9_1)
+  val m9_3: DataTypeInstance = DivdInst(m9_0, m9_2)
+  val m9_1r: DataTypeInstance = AddInst(m9_0, m9_0)
+  val m9_2r: DataTypeInstance = SubInst(m9_0, m9_1r)
+  val m9_3r: DataTypeInstance = DivdInst(m9_2r, m9_0)
 
-  val ma_1 = InvInst(m9_0, m9_0)
-  val ma_2 = MultInst(m9_0, ma_1)
-  val ma_3 = DivdInst(m9_0, ma_2)
-  val ma_4 = NegInst(ma_3)
-  val ma_5 = PowerInst(ma_4, ma_4)
-  val ma_2r = MultInst(m9_0, ma_1)
-  val ma_3r = DivdInst(m9_0, ma_2r)
-  val ma_4r = NegInst(ma_3r)
-  val ma_5r = PowerInst(ma_4r, ma_4r)
+  val ma_1: DataTypeInstance = InvInst(m9_0, m9_0)
+  val ma_2: DataTypeInstance = MultInst(m9_0, ma_1)
+  val ma_3: DataTypeInstance = DivdInst(m9_0, ma_2)
+  val ma_4: DataTypeInstance = NegInst(ma_3)
+  val ma_5: DataTypeInstance = PowerInst(ma_4, ma_4)
+  val ma_2r: DataTypeInstance = MultInst(m9_0, ma_1)
+  val ma_3r: DataTypeInstance = DivdInst(m9_0, ma_2r)
+  val ma_4r: DataTypeInstance = NegInst(ma_3r)
+  val ma_5r: DataTypeInstance = PowerInst(ma_4r, ma_4r)
 
   def IntInst(i: scala.Int): InstanceRep =
     InstanceRep(TypeRep.Int)(i)

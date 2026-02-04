@@ -1,11 +1,11 @@
 package org.combinators.ep.language.java.paradigm.ffi    /*DI:LD:AI*/
 
 import com.github.javaparser.ast.expr.BinaryExpr
-import org.combinators.ep.domain.abstractions.TypeRep
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.Understands
-import org.combinators.ep.generator.paradigm.Apply
-import org.combinators.ep.generator.paradigm.ffi.{Add, Div, LE, LT, Mod, Mult, Sub, Arithmetic => Arith}
+import org.combinators.cogen.TypeRep
+import org.combinators.cogen.paradigm.Apply
+import org.combinators.cogen.paradigm.ffi.{Add, Div, LE, LT, Mod, Mult, Sub, Arithmetic as Arith}
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.Understands
 import org.combinators.ep.language.java.paradigm.AnyParadigm
 import org.combinators.ep.language.java.{ContextSpecificResolver, ProjectCtxt}
 import org.combinators.ep.language.java.Syntax.default._

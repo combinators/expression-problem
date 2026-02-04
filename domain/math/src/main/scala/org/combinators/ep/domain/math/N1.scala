@@ -1,17 +1,18 @@
 package org.combinators.ep.domain.math   /*DD:LI:AI*/
 
+import org.combinators.cogen.InstanceRep
+import org.combinators.ep.domain.instances.DataTypeInstanceRep
+import org.combinators.cogen.TestCase
 import org.combinators.ep.domain._
 import org.combinators.ep.domain.abstractions._
-import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
+import org.combinators.ep.domain.instances.DataTypeInstance
 import org.combinators.ep.domain.math.M0.{AddInst, DoubleInst, Eval, LitInst}
 
 object N1 extends Evolution {
   override implicit def getModel:GenericModel = M3.getModel.evolve("n1", Seq.empty, Seq(PowBy))
 
-  // add PowBy operation
-
-  lazy val base = TypeRep.DataType(M2.getModel.baseDataType)
-  lazy val PowBy = Operation("powBy", base, Seq(Parameter("other", base)))
+  lazy val base: DomainTpeRep.DataType = DomainTpeRep.DataType(M2.getModel.baseDataType)
+  lazy val PowBy: Operation = Operation("powBy", base, Seq(Parameter("other", base)))
 
   object PowByTestCase {
     def apply(instance: DataTypeInstance, argument: InstanceRep, expected: InstanceRep): TestCase = {
@@ -20,21 +21,21 @@ object N1 extends Evolution {
     }
   }
 
-  val n1_2 = AddInst(LitInst(1.0), LitInst(2.0))
-  val n1_3 = AddInst(LitInst(1.0), LitInst(2.0))
-  val n1_4 = AddInst(n1_2, n1_3)
+  val n1_2: DataTypeInstance = AddInst(LitInst(1.0), LitInst(2.0))
+  val n1_3: DataTypeInstance = AddInst(LitInst(1.0), LitInst(2.0))
+  val n1_4: DataTypeInstance = AddInst(n1_2, n1_3)
 
-  val n1_5 = AddInst(LitInst(99.0), LitInst(2.0))
-  val n1_6 = AddInst(LitInst(99.0), LitInst(2.0))
-  val n1_7 = AddInst(n1_5, n1_6)
+  val n1_5: DataTypeInstance = AddInst(LitInst(99.0), LitInst(2.0))
+  val n1_6: DataTypeInstance = AddInst(LitInst(99.0), LitInst(2.0))
+  val n1_7: DataTypeInstance = AddInst(n1_5, n1_6)
 
   override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(M3)
 
   def tests:Seq[TestCase] = Seq(
 
     PowByTestCase(AddInst(LitInst(1.0), LitInst(12.0)),
-      InstanceRep(LitInst(4.0)), DoubleInst(13.0*13.0*13.0*13.0)),
+      DataTypeInstanceRep(LitInst(4.0)), DoubleInst(13.0*13.0*13.0*13.0)),
     PowByTestCase(LitInst(12.0),
-      InstanceRep(LitInst(0.0)), DoubleInst(1))
-  )  //
+      DataTypeInstanceRep(LitInst(0.0)), DoubleInst(1))
+  )
 }

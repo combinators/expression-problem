@@ -1,14 +1,13 @@
 package org.combinators.ep.domain.math.eips.systemK   /*DD:LI:AI*/
 
+import org.combinators.cogen.paradigm.AnyParadigm
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Booleans, RealArithmetic, Strings}
 import org.combinators.ep.domain.abstractions.Operation
 import org.combinators.ep.domain.{GenericModel, math}
-import org.combinators.ep.domain.math.{systemJ, systemK}
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.ep.domain.math.systemK
+import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
-import org.combinators.ep.generator.paradigm.AnyParadigm
-import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Booleans, RealArithmetic, Strings}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
 object K1 {
@@ -81,17 +80,11 @@ object K1 {
           val pastOps = math.systemJ.J2.isOps(model.flatten.typeCases)
           if (pastOps.contains(onRequest.request.op)) {
             genericLogic(forApproach)(onRequest)
-            //          } else if (onRequest.request.op == math.J1.MultBy) {
-            //            /* Handle MultBy with these data types. */
-            //            onRequest.tpeCase match {
-            //              case math.K1.Power => genericLogic(forApproach)(onRequest)
-            //              case _ => ???
-            //            }
           } else if (onRequest.request.op == math.systemJ.J2.Eql) {
             genericLogic(forApproach)(onRequest)
           } else {
             val result = onRequest.tpeCase match {
-              case power@systemK.K1.Power => {
+              case power@systemK.K1.Power =>
                 onRequest.request.op match {
                   case eval@math.M0.Eval =>
                     for {
@@ -133,7 +126,7 @@ object K1 {
                            ^^^^ is expExpr         ^^^ addend   ^^^ numExpr
                        **/
 
-                      //eulerNumFixMe <- forApproach.reify(InstanceRep(TypeRep.Double)(2.7182818284590452354))
+                      //eulerNumFixMe <- forApproach.reify(DataTypeInstanceRep(TypeRep.Double)(2.7182818284590452354))
                       numExpr <- log(baseEval, other)
                       //                      denomExpr <- log(eulerNumFixMe, baseEval)
                       //                      fraction <- div(numExpr, denomExpr)
@@ -149,7 +142,6 @@ object K1 {
 
                   case _ => ???
                 }
-              }
 
               case _ => ???
             }

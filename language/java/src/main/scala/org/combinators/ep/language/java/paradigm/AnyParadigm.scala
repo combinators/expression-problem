@@ -2,27 +2,27 @@ package org.combinators.ep.language.java.paradigm    /*DI:LD:AI*/
 
 import java.nio.file.Paths
 import java.util.UUID
-import com.github.javaparser.ast.{ImportDeclaration, Modifier, NodeList}
+import com.github.javaparser.ast.{ImportDeclaration, Modifier, Node, NodeList}
 import com.github.javaparser.ast.`type`.VoidType
 import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, MethodDeclaration}
-import com.github.javaparser.ast.expr.{MethodCallExpr, NameExpr, NullLiteralExpr}
+import com.github.javaparser.ast.expr.{MethodCallExpr, NameExpr, NullLiteralExpr, Name as JName}
 import com.github.javaparser.ast.nodeTypes.{NodeWithScope, NodeWithSimpleName}
 import com.github.javaparser.ast.stmt.{BlockStmt, ExpressionStmt}
-import org.combinators.ep.domain.abstractions.TypeRep
-import org.combinators.ep.domain.instances.InstanceRep
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.{Command, FileWithPath, Understands}
-import org.combinators.ep.generator.paradigm.{AnyParadigm => AP, _}
+import org.combinators.cogen.InstanceRep
+import org.combinators.cogen.TypeRep
+import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddCompilationUnit, AddCustomFile, AddImplementedTestCase, AddImport, AddTestCase, AddTestSuite, AddTypeLookup, Apply, Debug, FreshName, GetArguments, OutputToConsole, Reify, ResolveImport, SetParameters, SetReturnType, ToTargetLanguageType, AnyParadigm as AP, ObjectOriented as _}
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.{Command, FileWithPath, Understands}
 import org.combinators.ep.language.java.Syntax.MangledName
 import org.combinators.ep.language.java.{CodeGenerator, CompilationUnitCtxt, Config, ContextSpecificResolver, FreshNameCleanup, ImportCleanup, JavaNameProvider, MethodBodyCtxt, ProjectCtxt, Syntax, TestCtxt}
 import org.combinators.templating.persistable.{BundledResource, JavaPersistable}
-import org.combinators.ep.language.java.ResourcePersistable
 
 import scala.util.Try
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
+
 
 trait AnyParadigm extends AP {
-  val config: Config
+  lazy val config: Config
   val syntax: Syntax.default.type = Syntax.default
   import syntax._
 
@@ -40,8 +40,8 @@ trait AnyParadigm extends AP {
             context: ProjectCtxt,
             command: Debug
           ): (ProjectCtxt, Unit) = {
-
-            context.units.foreach (u => System.err.println (command.tag + ": " + u))
+            val units = context.units.toSeq.mkString(", ")
+            System.err.println (command.tag + ": " + units)
             (context,())
           }
         }
@@ -94,6 +94,12 @@ trait AnyParadigm extends AP {
               }
             }
             (context.copy(resolver = context.resolver.copy(_methodTypeResolution = newLookup)), ())
+          }
+        }
+      implicit val canAddCustomFile: Understands[ProjectCtxt, AddCustomFile] =
+        new Understands[ProjectCtxt, AddCustomFile] {
+          def perform(context: ProjectCtxt, command: AddCustomFile): (ProjectCtxt, Unit) = {
+            (context.copy(customFiles = context.customFiles :+ command.file), ())
           }
         }
     }
@@ -293,7 +299,7 @@ trait AnyParadigm extends AP {
             val stripped = AnyParadigm.stripGenerics(command.forElem)
             Try { (context, context.resolver.importResolution(stripped)) } getOrElse {
               if (stripped.isClassOrInterfaceType) {
-                val importName = ObjectOriented.typeToName(stripped.asClassOrInterfaceType())
+                val importName: JName = ObjectOriented.typeToName(stripped.asClassOrInterfaceType())
                 val newImport =
                   new ImportDeclaration(
                     importName,
@@ -317,6 +323,7 @@ trait AnyParadigm extends AP {
             context: MethodBodyCtxt,
             command: Apply[Expression, Expression, Expression]
           ): (MethodBodyCtxt, Expression) = {
+            import scala.reflect.Selectable.reflectiveSelectable
             val resultExp: Expression =
               if (command.functional.isMethodCallExpr) {
                 val res = command.functional.asMethodCallExpr().clone()
@@ -325,10 +332,10 @@ trait AnyParadigm extends AP {
               } else {
                 val scope =
                   command.functional match {
-                    case n: NodeWithScope[Expression] => n.getScope
+                    case n: NodeWithScope[_] => n.getScope
                     case _ => null
                   }
-                new MethodCallExpr(scope, command.functional.asInstanceOf[NodeWithSimpleName[_]].getNameAsString, new NodeList[Expression](command.arguments: _*))
+                new MethodCallExpr(scope, command.functional.asInstanceOf[NodeWithSimpleName[Node]].getNameAsString, new NodeList[Expression](command.arguments*))
               }
             (context, resultExp)
           }
@@ -340,7 +347,7 @@ trait AnyParadigm extends AP {
             context: MethodBodyCtxt,
             command: GetArguments[Type, Name, Expression]
           ): (MethodBodyCtxt, Seq[(Name, Type, Expression)]) = {
-            val params = context.method.getParameters.asScala.map { param =>
+            val params = context.method.getParameters.asScala.toSeq.map { param =>
               (MangledName.fromAST(param.getName), param.getType, new NameExpr(param.getName))
             }
             (context, params)
@@ -381,7 +388,7 @@ trait AnyParadigm extends AP {
             val stripped = AnyParadigm.stripGenerics(command.forElem)
             Try { (context, context.resolver.importResolution(stripped)) } getOrElse {
               if (stripped.isClassOrInterfaceType) {
-                val importName = ObjectOriented.typeToName(stripped.asClassOrInterfaceType())
+                val importName: JName = ObjectOriented.typeToName(stripped.asClassOrInterfaceType())
                 val newImport =
                   new ImportDeclaration(
                     importName,
@@ -496,7 +503,8 @@ trait AnyParadigm extends AP {
           resolver = defaultResolver,
           units = Seq.empty,
           testUnits = Seq.empty,
-          extraDependencies = Seq.empty
+          extraDependencies = Seq.empty,
+          customFiles = Seq.empty
         )
       )
     val nameEntry = config.projectName.map(n => s"""name := "$n"""").getOrElse("")
@@ -521,11 +529,11 @@ trait AnyParadigm extends AP {
          """.stripMargin
     val cleanedUnits =
      ImportCleanup.cleaned(
-        FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.units: _*) : _*
+        FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.units*)*
      )
     val cleanedTestUnits =
       ImportCleanup.cleaned(
-        FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.testUnits: _*): _*
+        FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.testUnits*)*
       )
     val javaFiles = cleanedUnits.map { unit =>
       FileWithPath(
@@ -550,7 +558,7 @@ trait AnyParadigm extends AP {
       //ResourcePersistable.bundledResourceInstance.path(gitIgnore)) +:
       FileWithPath(pluginFile, Paths.get("project", "plugin.sbt")) +:
       FileWithPath(buildFile, Paths.get("build.sbt")) +:
-      (javaFiles ++ javaTestFiles)
+      (javaFiles ++ javaTestFiles ++ finalContext.customFiles)
   }
 }
 

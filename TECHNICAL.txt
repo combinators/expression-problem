@@ -1,41 +1,95 @@
+Codebase validated to work with
+
+   scalaVersion := "3.6.4"
+
 When you have a fresh clone of the git repository, enter the command `sbt compile` in the
 top-level directory to compile EpCoGen. sbt will properly install all necessary software
 libraries.
 
-We have tested with sbt versions of 1.7.1, 1.9.8, and 1.10.7.
+We have tested with sbt versions of 1.7.1, 1.9.8, 1.10.7, and 1.10.11.
+
+We have tested with Java JDK 18.
 
 If your Java version is too advanced for the sbt, you may need to add the
 following to the build.st file to lower the associated Java version.
 
-  javacOptions ++= Seq("-source", "11", "-target", "11"),
+  javacOptions ++= Seq("-source", "11", "-target", "11")
 
 And then you can install an openJDK version of Java 11 and use it by setting JAVA_HOME
-properly and/or configuring PATH variable appropriately.
+properly and/or configuring PATH variable appropriately. Grab the appropriate JDK 11
+from https://www.openlogic.com/openjdk-downloads
 
 ===================================
 Examples to run
 ===================================
 
-Sample commands to run. The first column shows the time it was launched, so to generate all
-evolution stages for all approaches on a Linux machine took just under an hour. And the
-compiling process for all code took just about three hours.
+Sample commands to run. The first column shows the time to execute, so to generate all
+evolution stages for all approaches on a Linux machine took 22 minutes. The greatest
+cost is compiling everything. To compile the main example took about 2 hours since there
+are 27 evolutionary stages in the example.
 
-15:17   sbt language-java/run
-16:08   cd target/
-16:09   cd ep-java
-16:11   python3 ../../scripts/compare.py ../../scripts/systems/system-main.json >> REPORT
-16:12   python3 ../../scripts/compile.py
-19:08   python3 ../../scripts/process.py > STATISTICS
-19:09   cd ..
-19:11   sbt "helloWorld/runMain org.combinators.fibonacci.FibonacciWithLucasScalaDirectToDiskMain"
-19:13   cd target/fib
-19:13   cd scala/
-19:13   sbt test
+Time    Command
+00:02   sbt compile
+00:22   sbt language-java/run
+
+        cd target/ep-java
+00:01   python3 ../../scripts/compare.py ../../scripts/systems/system-main.json >> REPORT
+02:10   python3 ../../scripts/compile.py
+
+00:01   python3 ../../scripts/process.py > STATISTICS
+        cd ../..
 
 ---------------------------------
+Java Generation
+---------------------------------
+
+The above generates all subdirectories that can now be compiled:
+
+* D1D2 (to just generated this, execute `sbt "language-java/runMain org.combinators.ep.language.java.GenerateAllD1D2"`)
+
+  cd target/ep-java-d1d2
+  python3 ../../scripts/compare.py ../../scripts/systems/system-d1d2.json >> REPORT
+  python3 ../../scripts/compile.py
+  python3 ../../scripts/process.py > STATISTICS
+
+* Main (to just generated this, execute `sbt "language-java/runMain org.combinators.ep.language.java.GenerateAllMain"`)
+
+  cd target/ep-java
+  python3 ../../scripts/compare.py ../../scripts/systems/system-main.json >> REPORT
+  python3 ../../scripts/compile.py
+  python3 ../../scripts/process.py > STATISTICS
+
+* Merging (to just generated this, execute `sbt "language-java/runMain org.combinators.ep.language.java.GenerateAllMerging"`)
+
+  cd target/ep-java-merging
+  python3 ../../scripts/compare.py ../../scripts/systems/system-merging.json >> REPORT
+  python3 ../../scripts/compile.py
+  python3 ../../scripts/process.py > STATISTICS
+
+* Extended (to just generated this, execute `sbt "language-java/runMain org.combinators.ep.language.java.GenerateAllExtended"`)
+
+  cd target/ep-java-extended
+  python3 ../../scripts/compare.py ../../scripts/systems/system-extended.json >> REPORT
+  python3 ../../scripts/compile.py
+  python3 ../../scripts/process.py > STATISTICS
+
+* Third Alternate (to just generated this, execute `sbt "language-java/runMain org.combinators.ep.language.java.GenerateAllThirdAlternate"`)
+
+  cd target/ep-java-third-alternate
+  python3 ../../scripts/compare.py ../../scripts/systems/system-third-alternate.json >> REPORT
+  python3 ../../scripts/compile.py
+  python3 ../../scripts/process.py > STATISTICS
+
+* System J (to just generated this, execute `sbt "language-java/runMain org.combinators.ep.language.java.GenerateAllJ"`)
+
+  cd target/ep-java-j
+  python3 ../../scripts/compare.py ../../scripts/systems/system-j.json >> REPORT
+  python3 ../../scripts/compile.py
+  python3 ../../scripts/process.py > STATISTICS
+
 
 When generating the full Java implementations for all approaches and all evolution stages,
-there are 19,842 Java files containing 513,094 total lines of code.
+there are 17,469 Java files containing 432,215 total lines of code.
 
 Using the CLOC utility, a more accurate picture appears. Of these only 3890 are truly
 unique files. The reason? Because the Expression Problem shows how to extend a system without
@@ -43,22 +97,39 @@ modifying already created code, so it makes perfect sense that 80% of the code i
 
 % $CLOC --csv `find . -name "*.java"`
 
-   19842 text files.
-    3890 unique files.
-   15952 files ignored.
+   17429 text files.
+    3279 unique files.
+   14150 files ignored.
 
-files,language,blank,comment,code,"github.com/AlDanial/cloc v 1.86  T=17.31 s (224.7 files/s, 7917.7 lines/s)"
-3890,Java,27755,4,109292
-3890,SUM,27755,4,109292
+files,language,blank,comment,code,"github.com/AlDanial/cloc v 1.86  T=21.67 s (151.3 files/s, 4895.7 lines/s)"
+3279,Java,22368,4,83739
+3279,SUM,22368,4,83739
 
-cloc reports 109,292 lines of code.
+cloc reports 83,739 lines of code.
 
 Now run and turn off the uniqueness check:
 
 % $CLOC --csv `find . -name "*.java"` --skip-uniqueness
 
-19842,Java,117328,516,395250
+17429,Java,101632,420,327068
 
 This reveals that 395,250 lines of Java code were generated.
 
+---------------------------------
+ScalaGeneration
+---------------------------------
+sbt "language-newScala/runMain org.combinators.ep.language.scala.codegen.GenerateAllJ"
+sbt "language-newScala/runMain org.combinators.ep.language.scala.codegen.GenerateAllD1D2"
+sbt "language-newScala/runMain org.combinators.ep.language.scala.codegen.GenerateAllMain"
+sbt "language-newScala/runMain org.combinators.ep.language.scala.codegen.GenerateAllMerging"
+sbt "language-newScala/runMain org.combinators.ep.language.scala.codegen.GenerateAllExtended"
 
+% $CLOC --csv `find ep-scala -name "*.scala"` `find ep-scala-d1d2 -name "*.scala"` `find ep-scala-extended -name "*.scala"` `find ep-scala-j -name "*.scala"` `find ep-scala-merging -name "*.scala"`
+
+   16770 text files.
+   12217 unique files.
+    4553 files ignored.
+
+files,language,blank,comment,code,"github.com/AlDanial/cloc v 1.86  T=31.21 s (391.5 files/s, 14591.1 lines/s)"
+12217,Scala,242004,0,213356
+12217,SUM,242004,0,213356

@@ -1,6 +1,7 @@
 package org.combinators.ep.domain.matchers    /*DI:LI:AI*/
 
-import scala.language.reflectiveCalls
+import scala.reflect.Selectable.reflectiveSelectable     // needed for Matchable
+
 /** Provides programmatic pattern matching abstractions. */
 
 /** Converts things of type `Source` into things of type `Content` if the source objects match a criterion. */
@@ -22,40 +23,29 @@ object Matchable {
    * function succeeds.
    */
   def named[Source <: {val name: String}, Content](
-                                                    name: String,
-                                                    project: PartialFunction[Source, Content]
-                                                  ): Matchable[Source, Content] = new Matchable[Source, Content] {
-    override def toContent(source: Source): Option[Content] =
-      if (source.name == name) project.lift(source)
-      else None
-  }
+        name: String,
+        project: PartialFunction[Source, Content]
+      ): Matchable[Source, Content] = (source: Source) => if (source.name == name) project.lift(source)
+  else None
 
   /** Returns a `Matchable` that only matches if the given projection function returns a singleton sequence. */
   def unary[Source, Content](project: PartialFunction[Source, Seq[Content]]): Matchable[Source, Content] =
-    new Matchable[Source, Content] {
-      override def toContent(source: Source): Option[Content] =
-        project.lift.apply(source) match {
-          case Some(Seq(content)) => Some(content)
-          case _ => None
-        }
+    (source: Source) => project.lift.apply(source) match {
+      case Some(Seq(content)) => Some(content)
+      case _ => None
     }
 
   /** Returns a `Matchable` that only matches if the given partial projection function returns a sequence of exactly
    * two objects.
    */
   def binary[Source, Content](project: PartialFunction[Source, Seq[Content]]): Matchable[Source, (Content, Content)] =
-    new Matchable[Source, (Content, Content)] {
-      override def toContent(source: Source): Option[(Content, Content)] =
-        project.lift.apply(source) match {
-          case Some(Seq(left, right)) => Some(left, right)
-          case _ => None
-        }
+    (source: Source) => project.lift.apply(source) match {
+      case Some(Seq(left, right)) => Some(left, right)
+      case _ => None
     }
 
   /** Returns a `Matchable` that matches anything by converting it into a sequence of contents. */
   def nary[Source, Content](project: PartialFunction[Source, Seq[Content]]): Matchable[Source, Seq[Content]] =
-    new Matchable[Source, Seq[Content]] {
-      override def toContent(source: Source): Option[Seq[Content]] = project.lift.apply(source)
-    }
+    (source: Source) => project.lift.apply(source)
 }
 

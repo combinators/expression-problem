@@ -1,15 +1,17 @@
 package org.combinators.ep.domain.math.eips.systemJ   /*DD:LI:AI*/
 
+import org.combinators.cogen.paradigm.AnyParadigm
 import org.combinators.ep.domain.abstractions.Operation
 import org.combinators.ep.domain.{GenericModel, math}
-import org.combinators.ep.domain.math.systemJ
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
-import org.combinators.ep.generator.paradigm.AnyParadigm
-import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Booleans, Equality}
-import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
+import AnyParadigm.syntax.forEach
+import org.combinators.cogen.Command
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Booleans, Equality}
+import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
+
+import org.combinators.ep.domain.extensions._   // needed for isModelBase
 
 object J2 {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
@@ -78,7 +80,7 @@ object J2 {
           // default Boolean isAdd(Exp left, Exp right) {
           //        return left.eql(getLeft()) && right.eql(getRight());
           //    }
-          case op if op == math.systemJ.J2.isOp(onRequest.tpeCase) => {
+          case op if op == math.systemJ.J2.isOp(onRequest.tpeCase) =>
             import ffiBoolean.booleanCapabilities._
             for {
               res <- forEach(onRequest.attributes.toSeq) { att => {
@@ -107,16 +109,14 @@ object J2 {
                 and(res)
               }
             } yield Some(conjunction)
-          }
 
           // need to know when isOp is not in the onRequest Type (to handle return false; default implementation)
           // because then we can return FALSE
-          case op if op != math.systemJ.J2.isOp(onRequest.tpeCase) && op.tags.contains(math.systemJ.J2.IsOp) => {
+          case op if op != math.systemJ.J2.isOp(onRequest.tpeCase) && op.tags.contains(math.systemJ.J2.IsOp) =>
             import ffiBoolean.booleanCapabilities._
             for {
               booleanFalse <- falseExp
             } yield Some(booleanFalse)
-          }
           case _ => j1Provider.genericLogic(forApproach)(onRequest)
         }
       }

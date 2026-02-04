@@ -1,14 +1,14 @@
 package org.combinators.ep.domain.math.eips.systemO    /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{Operation, TypeRep}
-import org.combinators.ep.domain.instances.InstanceRep
+import org.combinators.cogen.{Command, InstanceRep, TypeRep}
+import org.combinators.cogen.paradigm.AnyParadigm
+import org.combinators.cogen.paradigm.ffi.Arithmetic
+import org.combinators.ep.domain.abstractions.Operation
 import org.combinators.ep.domain.{GenericModel, math}
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
-import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
-import org.combinators.ep.generator.paradigm.AnyParadigm
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Strings}
-import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
+import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest}
+import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
 object OA {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
@@ -36,12 +36,6 @@ object OA {
         }
       }
 
-//      /** Do not call 'assert' since might not be applicable. */
-//      override def genericLogic(forApproach: AIP[paradigm.type])
-//                               (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
-//      Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] =
-//        m2Provider.genericLogic(forApproach)(onRequest)
-
       def logic
           (forApproach: AIP[paradigm.type])
           (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
@@ -51,10 +45,6 @@ object OA {
         assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         val result = onRequest.tpeCase match {
-          /** Get and return first (and only) attribute. */
-//          case litC@math.M0.Lit => {
-//            Command.lift[MethodBodyContext, paradigm.syntax.Expression](onRequest.attributes(litC.attributes.head))
-//          }
 
           /** Wherever a literal value was used, replace with "litv + 0" */
           case litC@math.M0.Lit =>

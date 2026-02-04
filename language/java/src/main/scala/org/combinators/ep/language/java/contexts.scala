@@ -2,13 +2,15 @@ package org.combinators.ep.language.java     /*DI:LD:AI*/
 
 import com.github.javaparser.ast.`type`.TypeParameter
 import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, ConstructorDeclaration, MethodDeclaration}
-import org.combinators.ep.language.java.Syntax.default._
+import org.combinators.cogen.FileWithPath
+import org.combinators.ep.language.java.Syntax.default.*
 
 case class ProjectCtxt(
   resolver: ContextSpecificResolver,
   units: Seq[com.github.javaparser.ast.CompilationUnit],
   testUnits: Seq[com.github.javaparser.ast.CompilationUnit],
-  extraDependencies: Seq[String]
+  extraDependencies: Seq[String],
+  customFiles: Seq[FileWithPath], 
 )
 case class CompilationUnitCtxt(
   resolver: ContextSpecificResolver,

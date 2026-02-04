@@ -1,15 +1,16 @@
 package org.combinators.ep.domain.math.eips.systemJK    /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{Operation, TypeRep}
-import org.combinators.ep.domain.instances.InstanceRep
+import org.combinators.cogen.InstanceRep
+import org.combinators.cogen.TypeRep
+import org.combinators.cogen.paradigm.AnyParadigm
+import org.combinators.cogen.paradigm.control
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, RealArithmetic}
+import org.combinators.ep.domain.abstractions.Operation
 import org.combinators.ep.domain.{GenericModel, math}
 import org.combinators.ep.domain.math.systemJK
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
-import org.combinators.ep.generator.paradigm.AnyParadigm
-import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, RealArithmetic}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
 object J8 {
@@ -18,7 +19,7 @@ object J8 {
   (j7Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
   (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiRealArithmetic: RealArithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
-   ffiImper: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]):
+   ffiImper: control.Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val j8Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.systemJK.J8.getModel
@@ -62,7 +63,7 @@ object J8 {
             maxName <- freshName(forApproach.names.mangle("max"))
             maxDecl <- ffiImper.imperativeCapabilities.declareVar(maxName, intType, Some(zero))
 
-            _ <- forEach(onRequest.attributes.toSeq) { case (att, expr) => {
+            _ <- forEach(onRequest.attributes.toSeq) { case (att, expr) =>
               for {
                 attName <- freshName(forApproach.names.mangle(att.name))
                 exprVal <- forApproach.dispatch(
@@ -84,7 +85,6 @@ object J8 {
 
                 _ <- addBlockDefinitions(Seq(ifStmt))
               } yield ()
-            }
             }
 
             resExpr <- ffiArithmetic.arithmeticCapabilities.add(maxDecl, one)

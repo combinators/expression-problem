@@ -2,10 +2,10 @@ package org.combinators.ep.language.java.paradigm.ffi    /*DI:LD:AI*/
 
 import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.expr.{FieldAccessExpr, MethodCallExpr, NameExpr, SimpleName}
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.ffi.{Console => Con, _}
-import org.combinators.ep.generator.paradigm.Apply
-import org.combinators.ep.generator. Understands
+import org.combinators.cogen.paradigm.Apply
+import org.combinators.cogen.paradigm.ffi.{Print, Strings, Console as Con}
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.Understands
 import org.combinators.ep.language.java.Syntax.default._
 import org.combinators.ep.language.java.paradigm.AnyParadigm
 

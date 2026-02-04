@@ -1,20 +1,17 @@
 package org.combinators.ep.domain.math.eips    /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{Operation, TypeRep}
-import org.combinators.ep.domain.instances.InstanceRep
+import org.combinators.cogen.{Command, InstanceRep, TypeRep}
+import org.combinators.cogen.paradigm.AnyParadigm
+import org.combinators.cogen.paradigm.control
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Strings}
+import org.combinators.ep.domain.abstractions.Operation
 import org.combinators.ep.domain.{GenericModel, math}
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
-import org.combinators.ep.generator.paradigm.AnyParadigm
-import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Strings}
-import org.combinators.ep.generator.{ApproachImplementationProvider, Command, EvolutionImplementationProvider}
-import org.combinators.ep.generator.paradigm.control.Functional
+import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
-
-// Code for M2_ABS. Takes adapters for return in if-then-else, s.t. functional- and imperative-style if-then-else can be
-// used in an uniform way.
+// Takes adapters for return in if-then-else, s.t. functional- and imperative-style if-then-else can be used in an uniform way.
 sealed class M2_ABS[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P], IfBlockType](val paradigm: P) {
   type IfThenElseCommand =
     (paradigm.syntax.Expression,
@@ -126,7 +123,7 @@ object M2_ABS {
   def functional[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
   (m2Provider : EvolutionImplementationProvider[AIP[paradigm.type]])
-  (functionalControl: Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
+  (functionalControl: control.Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
@@ -144,7 +141,7 @@ object M2_ABS {
   def imperative[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
   (m2Provider : EvolutionImplementationProvider[AIP[paradigm.type]])
-  (imperativeControl: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type],
+  (imperativeControl: control.Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {

@@ -1,91 +1,64 @@
-package org.combinators.ep.language.inbetween.ffi  /*DI:LI:AI*/
+package org.combinators.ep.language.inbetween.ffi
+
+/*DI:LI:AI*/
 
 // cannot find 'lists'
-import org.combinators.ep.generator.{Command, Understands}
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.Apply
+
+import org.combinators.cogen.paradigm.Apply
+import org.combinators.cogen.paradigm.ffi.{Append, Cons, Create, Head, Tail, Lists as Lsts}
+import org.combinators.cogen.{Command, Understands}
+import org.combinators.cogen.Command.Generator
 import org.combinators.ep.language.inbetween.{any, polymorphism}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
-import org.combinators.ep.generator.paradigm.ffi.{Append, Cons, Create, Head, Tail, Lists => Lsts}
-trait Lists[FT <: ListOps.FinalTypes, FactoryType <: ListOps.Factory[FT]] extends Lsts[any.Method[FT]] {
-  val base: AnyParadigm.WithFT[FT, FactoryType]
-  import base.factory
 
-  override val listCapabilities: ListCapabilities = new ListCapabilities {
-    override implicit val canCreate: Understands[any.Method[FT], Apply[Create[any.Type[FT]], any.Expression[FT], any.Expression[FT]]] =
-      new Understands[any.Method[FT], Apply[Create[any.Type[FT]], any.Expression[FT], any.Expression[FT]]] {
-        override def perform(context: any.Method[FT], command: Apply[Create[any.Type[FT]], any.Expression[FT], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
-          (context, factory.createList(command.functional.elementType, command.arguments))
+trait Lists[AST <: ListsAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
+  trait ListsInMethods extends Lsts[_base.ast.any.Method] {
+    val base: _base.type = _base
+
+    import base.ast.listsOpsFactory
+    import base.ast.any
+
+    override val listCapabilities: ListCapabilities = new ListCapabilities {
+      override implicit val canCreate: Understands[any.Method, Apply[Create[any.Type], any.Expression, any.Expression]] =
+        new Understands[any.Method, Apply[Create[any.Type], any.Expression, any.Expression]] {
+          override def perform(context: any.Method, command: Apply[Create[any.Type], any.Expression, any.Expression]): (any.Method, any.Expression) = {
+            (context, listsOpsFactory.createList(command.functional.elementType, command.arguments))
+          }
         }
-      }
-    override implicit val canCons: Understands[any.Method[FT], Apply[Cons, any.Expression[FT], any.Expression[FT]]] =
-      new Understands[any.Method[FT], Apply[Cons, any.Expression[FT], any.Expression[FT]]] {
-        override def perform(context: any.Method[FT], command: Apply[Cons, any.Expression[FT], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
-          (context, factory.consList(command.arguments(0), command.arguments(1)))
+      override implicit val canCons: Understands[any.Method, Apply[Cons, any.Expression, any.Expression]] =
+        new Understands[any.Method, Apply[Cons, any.Expression, any.Expression]] {
+          override def perform(context: any.Method, command: Apply[Cons, any.Expression, any.Expression]): (any.Method, any.Expression) = {
+            (context, listsOpsFactory.consList(command.arguments(0), command.arguments(1)))
+          }
         }
-      }
-    override implicit val canHead: Understands[any.Method[FT], Apply[Head, any.Expression[FT], any.Expression[FT]]] =
-      new Understands[any.Method[FT], Apply[Head, any.Expression[FT], any.Expression[FT]]] {
-        override def perform(context: any.Method[FT], command: Apply[Head, any.Expression[FT], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
-          (context, factory.head(command.arguments(0)))
+      override implicit val canHead: Understands[any.Method, Apply[Head, any.Expression, any.Expression]] =
+        new Understands[any.Method, Apply[Head, any.Expression, any.Expression]] {
+          override def perform(context: any.Method, command: Apply[Head, any.Expression, any.Expression]): (any.Method, any.Expression) = {
+            (context, listsOpsFactory.head(command.arguments(0)))
+          }
         }
-      }
-    override implicit val canTail: Understands[any.Method[FT], Apply[Tail, any.Expression[FT], any.Expression[FT]]] =
-      new Understands[any.Method[FT], Apply[Tail, any.Expression[FT], any.Expression[FT]]] {
-        override def perform(context: any.Method[FT], command: Apply[Tail, any.Expression[FT], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
-          (context, factory.tail(command.arguments(0)))
+      override implicit val canTail: Understands[any.Method, Apply[Tail, any.Expression, any.Expression]] =
+        new Understands[any.Method, Apply[Tail, any.Expression, any.Expression]] {
+          override def perform(context: any.Method, command: Apply[Tail, any.Expression, any.Expression]): (any.Method, any.Expression) = {
+            (context, listsOpsFactory.tail(command.arguments(0)))
+          }
         }
-      }
-    override implicit val canAppend: Understands[any.Method[FT], Apply[Append, any.Expression[FT], any.Expression[FT]]] =
-      new Understands[any.Method[FT], Apply[Append, any.Expression[FT], any.Expression[FT]]] {
-        override def perform(context: any.Method[FT], command: Apply[Append, any.Expression[FT], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
-          (context, factory.appendList(command.arguments(0), command.arguments(1)))
+      override implicit val canAppend: Understands[any.Method, Apply[Append, any.Expression, any.Expression]] =
+        new Understands[any.Method, Apply[Append, any.Expression, any.Expression]] {
+          override def perform(context: any.Method, command: Apply[Append, any.Expression, any.Expression]): (any.Method, any.Expression) = {
+            (context, listsOpsFactory.appendList(command.arguments(0), command.arguments(1)))
+          }
         }
-      }
+    }
+    override def enable(): Generator[any.Project, Unit] = Command.skip[any.Project]
   }
-
-  override def enable(): Generator[any.Project[FT], Unit] = Command.skip[any.Project[FT]]
+  
+  val listsInMethods: ListsInMethods = new ListsInMethods {}
 }
 
 object Lists {
-  type WithBase[FT <: ListOps.FinalTypes, FactoryType <: ListOps.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]] = Lists[FT, FactoryType] { val base: B }
-  def apply[FT <: ListOps.FinalTypes, FactoryType <: ListOps.Factory[FT], B <: AnyParadigm.WithFT[FT, FactoryType]](_base: B): WithBase[FT, FactoryType, _base.type] = new Lists[FT, FactoryType] {
-    val base: _base.type = _base
-  }
+  type WithBase[AST <: ListsAST, B <: AnyParadigm.WithAST[AST]] = Lists[AST, B] {}
+
+  def apply[AST <: ListsAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[AST, B] = new Lists[AST, B](_base) {}
 }
 
-object ListOps {
-
-  trait FinalTypes extends OperatorExpressionOps.FinalTypes with polymorphism.FinalTypes {
-
-  }
-  trait CreateList[FT <: FinalTypes] extends any.Type[FT]
-  trait ConsListOp[FT <: FinalTypes] extends OperatorExpressionOps.Operator[FT]
-  trait HeadListOp[FT <: FinalTypes] extends OperatorExpressionOps.Operator[FT]
-  trait TailListOp[FT <: FinalTypes] extends OperatorExpressionOps.Operator[FT]
-  trait AppendListOp[FT <: FinalTypes] extends OperatorExpressionOps.Operator[FT]
-
-  trait Factory[FT <: FinalTypes] extends OperatorExpressionOps.Factory[FT] with polymorphism.Factory[FT] {
-    def createList(): CreateList[FT]
-
-    def createList(tpe: any.Type[FT], elems: Seq[any.Expression[FT]]): any.ApplyExpression[FT] =
-      applyExpression(typeReferenceExpression(typeApplication(createList(), Seq(tpe))), elems)
-
-    def consListOp(): ConsListOp[FT]
-    def headListOp(): HeadListOp[FT]
-
-    def tailListOp(): TailListOp[FT]
-
-    def appendListOp(): AppendListOp[FT]
-
-    def consList(element: any.Expression[FT], list: any.Expression[FT]): OperatorExpressionOps.BinaryExpression[FT] =
-      binaryExpression(consListOp(), element, list)
-    def head(list: any.Expression[FT]): OperatorExpressionOps.UnaryExpression[FT] =
-      unaryExpression(headListOp(), list)
-
-    def tail(list: any.Expression[FT]): OperatorExpressionOps.UnaryExpression[FT] =
-      unaryExpression(tailListOp(), list)
-    def appendList(left: any.Expression[FT], right: any.Expression[FT]): OperatorExpressionOps.BinaryExpression[FT] =
-      binaryExpression(appendListOp(), left, right)
-  }
-}

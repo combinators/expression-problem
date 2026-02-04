@@ -1,8 +1,8 @@
 package org.combinators.ep.language.java.paradigm    /*DI:LD:AI*/
 
 import com.github.javaparser.ast.`type`.{ClassOrInterfaceType, TypeParameter}
-import org.combinators.ep.generator.{Command, Understands}
-import org.combinators.ep.generator.paradigm.{Generics => Gen, AnyParadigm => _, ObjectOriented => _, _}
+import org.combinators.cogen.paradigm.{AddLowerBound, AddTypeParameter, AddUpperBound, Apply, GetCurrentTypeParameter, GetTypeArguments, Generics as Gen, AnyParadigm as _, ObjectOriented as _, ParametricPolymorphism as _}
+import org.combinators.cogen.{Command, Understands}
 import org.combinators.ep.language.java.TypeParamCtxt
 
 import scala.jdk.CollectionConverters._
@@ -15,8 +15,9 @@ trait Generics[AP <: AnyParadigm] extends Gen {
   import base.syntax._
   import ooParadigm._
   import ppolyParadigm._
+  
   val classCapabilities: ClassCapabilities =
-    new ClassCapabilities {
+    new ClassCapabilities {      
       implicit val canAddTypeParameterInClass: Understands[ClassContext, AddTypeParameter[Name, TypeParameterContext]] =
         new Understands[ClassContext, AddTypeParameter[Name, TypeParameterContext]] {
           def perform(context: ClassContext, command: AddTypeParameter[Name, TypeParameterContext]): (ClassContext, Unit) = {
@@ -33,7 +34,7 @@ trait Generics[AP <: AnyParadigm] extends Gen {
       implicit val canGetTypeArgumentsInClass: Understands[ClassContext, GetTypeArguments[Type]] =
         new Understands[ClassContext, GetTypeArguments[Type]] {
           def perform(context: ClassContext, command: GetTypeArguments[Type]): (ClassContext, Seq[Type]) = {
-            val ctp = context.cls.getTypeParameters.asScala.map(tp => {
+            val ctp = context.cls.getTypeParameters.asScala.toSeq.map(tp => {
               val result = new ClassOrInterfaceType()
               result.setName(tp.getName)
             })
@@ -50,7 +51,7 @@ trait Generics[AP <: AnyParadigm] extends Gen {
               else arg.clone()
             }
             if (boxedArguments.nonEmpty) {
-              resultTpe.setTypeArguments(boxedArguments: _*)
+              resultTpe.setTypeArguments(boxedArguments*)
             }
             (context, resultTpe)
           }
@@ -91,7 +92,7 @@ trait Generics[AP <: AnyParadigm] extends Gen {
               else arg.clone()
             }
             if (boxedArguments.nonEmpty) {
-              resultTpe.setTypeArguments(boxedArguments: _*)
+              resultTpe.setTypeArguments(boxedArguments*)
             }
             (context, resultTpe)
           }
@@ -108,7 +109,7 @@ trait Generics[AP <: AnyParadigm] extends Gen {
               else arg.clone()
             }
             if (boxedArguments.nonEmpty) {
-              resultTpe.setTypeArguments(boxedArguments: _*)
+              resultTpe.setTypeArguments(boxedArguments*)
             }
             (context, resultTpe)
           }
@@ -122,7 +123,7 @@ trait Generics[AP <: AnyParadigm] extends Gen {
               else arg.clone()
             }
             if (boxedArguments.nonEmpty) {
-              resultExp.setTypeArguments(boxedArguments: _*)
+              resultExp.setTypeArguments(boxedArguments*)
             }
             (context, resultExp)
           }
@@ -143,10 +144,10 @@ object Generics {
     val oo: ooParadigm.type = ooParadigm
     val ppol: ppolyParadigm.type = ppolyParadigm
 
-    new Generics[b.type] {
-      val base: b.type = b
-      val ooParadigm: oo.type = oo
-      val ppolyParadigm: ppol.type = ppol
-    }
+    case class G(
+      override val base: b.type)(
+      override val ooParadigm: oo.type = oo,
+      override val ppolyParadigm: ppol.type = ppol) extends Generics[b.type]
+    return G(b)(oo, ppol)
   }
 }

@@ -1,31 +1,34 @@
-package org.combinators.ep.language.java     /*DI:LD:AI*/
+package org.combinators.ep.language.java
+
+/*DI:LD:AI*/
 
 import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, ConstructorDeclaration, MethodDeclaration}
 import com.github.javaparser.ast.{CompilationUnit, ImportDeclaration, Node}
 import com.github.javaparser.ast.expr.{CastExpr, LambdaExpr, Name, SimpleName}
 import com.github.javaparser.ast.stmt.{BlockStmt, CatchClause, ForEachStmt, ForStmt, SwitchEntry, SwitchStmt}
 import com.github.javaparser.ast.visitor.Visitable
-import org.combinators.ep.generator.FreshNameProvider
+import org.combinators.cogen.FreshNameProvider
 import org.combinators.ep.language.java.Syntax.MangledName
 
 class FreshNameCleanup(nameInfo: Map[String, MangledName]) {
   sealed private trait Phase
+
   private case object COLLECT_NAMES extends Phase
+
   private case object REPLACE_GENERATED extends Phase
 
   private class CleanupVisitor extends com.github.javaparser.ast.visitor.ModifierVisitor[Phase] {
     var freshNames: FreshNameProvider[MangledName] = FreshNameProvider[MangledName](pushName)
-    val replaceName: scala.collection.mutable.Map[String, MangledName] =
-      new scala.collection.mutable.HashMap[String, MangledName]() {
-        override def apply(name: String): MangledName = {
-          getOrElseUpdate(name, {
-            val baseName = nameInfo(name)
-            val (replacement, nextNames) = freshNames.freshNameBasedOn(baseName)
-            freshNames = nextNames
-            replacement
-          })
-        }
-      }
+    private val _replaceName: scala.collection.mutable.Map[String, MangledName] = new scala.collection.mutable.HashMap[String, MangledName]()
+
+    private final def replaceName(name: String): MangledName = {
+      _replaceName.getOrElseUpdate(name, {
+        val baseName = nameInfo(name)
+        val (replacement, nextNames) = freshNames.freshNameBasedOn(baseName)
+        freshNames = nextNames
+        replacement
+      })
+    }
 
     private final def pushName(name: MangledName, useCounter: Int): MangledName = {
       if (useCounter == 0) {
@@ -126,5 +129,5 @@ class FreshNameCleanup(nameInfo: Map[String, MangledName]) {
 
 object FreshNameCleanup {
   def cleaned(nameInfo: Map[String, MangledName], units: CompilationUnit*): Seq[CompilationUnit] =
-    new FreshNameCleanup(nameInfo).cleanup(units: _*)
+    new FreshNameCleanup(nameInfo).cleanup(units *)
 }

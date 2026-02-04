@@ -1,8 +1,11 @@
 package org.combinators.ep.domain.math    /*DD:LI:AI*/
 
+import org.combinators.cogen.InstanceRep
+import org.combinators.cogen.TypeRep
+import org.combinators.cogen.TestCase
 import org.combinators.ep.domain._
 import org.combinators.ep.domain.abstractions._
-import org.combinators.ep.domain.instances.InstanceRep
+import org.combinators.ep.domain.instances.DataTypeInstance
 import org.combinators.ep.domain.math.M0.{AddInst, Eval, LitInst}
 import org.combinators.ep.domain.math.M1.SubInst
 import org.combinators.ep.domain.math.M2.{PrettyP, StringInst}
@@ -13,32 +16,29 @@ object C2 extends Evolution {
 
   def ListDoubleInst(doubles:Seq[scala.Double]): InstanceRep = InstanceRep(TypeRep.Sequence(TypeRep.Double))(doubles)
 
-  lazy val Collect = Operation("collect", TypeRep.Sequence(TypeRep.Double))
+  lazy val Collect: Operation = Operation("collect", TypeRep.Sequence(TypeRep.Double))
 
   override def allTests: Map[GenericModel, Seq[TestCase]] = allPastTests(Q1)
 
-
   // Tests
-  // (5/7) / (7-(2*3) --> just (5/7)
+  val m4_m1: DataTypeInstance = MultInst(DivdInst(LitInst(5.0), LitInst(2.0)), LitInst(4.0))
+  val m4_m2: DataTypeInstance = MultInst(LitInst(2.0), LitInst(3.0))
+  val m4_d2: DataTypeInstance = DivdInst(DivdInst(LitInst(5.0), LitInst(7.0)), SubInst(LitInst(7.0), m4_m2))
 
-  val m4_m1 = MultInst(DivdInst(LitInst(5.0), LitInst(2.0)), LitInst(4.0))
-  val m4_m2 = MultInst(LitInst(2.0), LitInst(3.0))
-  val m4_d2 = DivdInst(DivdInst(LitInst(5.0), LitInst(7.0)), SubInst(LitInst(7.0), m4_m2))
-
-  val m4_s_0 = NegInst(LitInst(0.0))
-  val m4_s_5 = AddInst(LitInst(5.0), LitInst(0.0))
-  val m4_s_00 = AddInst(LitInst(0.0), LitInst(0.0))
-  val m4_s_7 = AddInst(LitInst(0.0), LitInst(7.0))
+  val m4_s_0: DataTypeInstance = NegInst(LitInst(0.0))
+  val m4_s_5: DataTypeInstance = AddInst(LitInst(5.0), LitInst(0.0))
+  val m4_s_00: DataTypeInstance = AddInst(LitInst(0.0), LitInst(0.0))
+  val m4_s_7: DataTypeInstance = AddInst(LitInst(0.0), LitInst(7.0))
 
   // validates simplify ((5+0)+(0+7)) = (5+7)
-  val m4_together = AddInst(m4_s_5, m4_s_7)
-  val m4_s_13 = MultInst(LitInst(13.0), LitInst(1.0))
-  val m4_s_12 = MultInst(LitInst(1.0), LitInst(12.0))
-  val m4_s_m0 = SubInst(LitInst(7.0), LitInst(7.0))
+  val m4_together: DataTypeInstance = AddInst(m4_s_5, m4_s_7)
+  val m4_s_13: DataTypeInstance = MultInst(LitInst(13.0), LitInst(1.0))
+  val m4_s_12: DataTypeInstance = MultInst(LitInst(1.0), LitInst(12.0))
+  val m4_s_m0: DataTypeInstance = SubInst(LitInst(7.0), LitInst(7.0))
 
-  val m4_s_n1 = DivdInst(LitInst(5.0), LitInst(-5.0))
-  val m4_s_1 = DivdInst(LitInst(-5.0), LitInst(-5.0))
-  val m4_s_d0 = DivdInst(LitInst(0.0), LitInst(-5.0))
+  val m4_s_n1: DataTypeInstance = DivdInst(LitInst(5.0), LitInst(-5.0))
+  val m4_s_1: DataTypeInstance = DivdInst(LitInst(-5.0), LitInst(-5.0))
+  val m4_s_d0: DataTypeInstance = DivdInst(LitInst(0.0), LitInst(-5.0))
 
   /**
     * Test cases for Simplify are oddly complicated. The Simplify operation returns a new Exp object, but
@@ -56,6 +56,5 @@ object C2 extends Evolution {
 
     EqualsTestCase(getModel.baseDataType, m4_m1, PrettyP, StringInst("((5.0/2.0)*4.0)")),
     EqualsTestCase(getModel.baseDataType, m4_m1, Eval, M0.DoubleInst(10.0)),
-  )  //
-
+  )
 }

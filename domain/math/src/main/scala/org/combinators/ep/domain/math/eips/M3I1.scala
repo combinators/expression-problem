@@ -1,13 +1,12 @@
 package org.combinators.ep.domain.math.eips     /*DD:LI:AI*/
 
+import org.combinators.cogen.paradigm.AnyParadigm
+import org.combinators.cogen.paradigm.ffi.{Booleans, Equality, Strings}
 import org.combinators.ep.domain.abstractions.Operation
 import org.combinators.ep.domain.{GenericModel, math}
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest}
-import org.combinators.ep.generator.paradigm.AnyParadigm
-import org.combinators.ep.generator.paradigm.control.{Functional, Imperative}
-import org.combinators.ep.generator.paradigm.ffi.{Booleans, Equality, Strings}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
 sealed class M3I1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]](val paradigm: P) {
@@ -62,29 +61,7 @@ sealed class M3I1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
 
           case _ => ???
         }
-//        def operate(): Generator[paradigm.MethodBodyContext, syntax.Expression] =
-//          onRequest.request.op match {
-//            case mb@math.systemI.I1.MultBy =>      // take advantage of Mult data type
-//              for {
-//                res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M3.Mult, onRequest.selfReference, onRequest.request.arguments.head._2)
-//              } yield res
-//
-//            case _ => ???
-//          }
-//
-//        val result =
-//          for {
-//            atts <- forEach (onRequest.tpeCase.attributes) { att =>
-//              forApproach.dispatch(SendRequest(
-//                onRequest.attributes(att),
-//                math.M3.getModel.baseDataType,
-//                onRequest.request
-//              ))
-//            }
-//            res <- operate()
-//          } yield res
-//
-//        result.map(Some(_))
+
       }
     }
 
@@ -98,12 +75,10 @@ object M3I1 {
   (paradigm: P)
   (m3Provider: EvolutionImplementationProvider[AIP[paradigm.type]],
    i1Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
-  (functionalControl: Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
+  (ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
-    import paradigm.syntax._
     val mkImpl = new M3I1[paradigm.type, AIP](paradigm)
 
     mkImpl(m3Provider,i1Provider)(ffiBoolean, ffiEquality, ffiStrings)
@@ -113,8 +88,7 @@ object M3I1 {
   (paradigm: P)
   (m3Provider: EvolutionImplementationProvider[AIP[paradigm.type]],
    i1Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
-  (imperativeControl: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
+  (ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {

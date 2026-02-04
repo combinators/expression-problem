@@ -1,7 +1,8 @@
 package org.combinators.ep.domain.tree     /*DI:LI:AI*/
 
 /** Provides models of generic trees. */
-import org.combinators.ep.domain.instances.InstanceRep
+
+import org.combinators.cogen.InstanceRep
 
 /** Models a generic int-labeled tree with data of any type stored in its leaves. */
 sealed trait Tree

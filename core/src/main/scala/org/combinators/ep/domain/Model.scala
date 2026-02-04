@@ -1,6 +1,6 @@
 package org.combinators.ep.domain    /*DI:LI:AI*/
 
-import abstractions._
+import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.communication.PotentialRequest
 
 /**

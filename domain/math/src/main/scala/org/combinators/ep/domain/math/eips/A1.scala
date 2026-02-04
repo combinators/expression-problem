@@ -1,13 +1,15 @@
 package org.combinators.ep.domain.math.eips      /*DD:LI:AI*/
 
+import org.combinators.cogen.paradigm.AnyParadigm
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Strings}
 import org.combinators.ep.domain.abstractions.Operation
 import org.combinators.ep.domain.{GenericModel, math}
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
-import org.combinators.ep.generator.paradigm.AnyParadigm
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Strings}
+
+import scala.language.postfixOps
 
 object A1  {
   def apply[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
@@ -51,32 +53,9 @@ object A1  {
           onRequest.request.op match {
             case math.M0.Eval =>
               onRequest.tpeCase match {
-                case math.A1.Times => mult(atts: _*)
+                case math.A1.Times => mult(atts*)
                 case _ => ???
               }
-
-//            case math.systemI.I1.MultBy =>
-//              onRequest.tpeCase match {
-//                case other@math.A1.Times =>
-//                  val lAtt = other.attributes.head
-//                  val rAtt = other.attributes.tail.head
-//
-//                  for {
-//                    left <- forApproach.dispatch(SendRequest(
-//                      onRequest.attributes(lAtt),
-//                      math.M2.getModel.baseDataType,
-//                      onRequest.request
-//                    ))
-//                    right <- forApproach.dispatch(SendRequest(
-//                      onRequest.attributes(rAtt),
-//                      math.M2.getModel.baseDataType,
-//                      onRequest.request
-//                    ))
-//
-//                    res <- forApproach.instantiate(math.M0.getModel.baseDataType, other, left, right)
-//                  } yield res
-//                case _ => ???
-//              }
 
             case mb@math.systemI.I1.MultBy =>    // WE CAN OPTIMIZE MultBy with Mult
               for {

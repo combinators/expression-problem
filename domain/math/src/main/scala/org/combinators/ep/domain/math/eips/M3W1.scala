@@ -1,14 +1,13 @@
 package org.combinators.ep.domain.math.eips     /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation, TypeRep}
-import org.combinators.ep.domain.instances.InstanceRep
-import org.combinators.ep.domain.{GenericModel, abstractions, math}
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.cogen.paradigm.AnyParadigm
+import org.combinators.cogen.paradigm.control
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Booleans, Equality, Strings}
+import org.combinators.ep.domain.abstractions.Operation
+import org.combinators.ep.domain.{GenericModel, math}
+import org.combinators.cogen.Command.Generator
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
-import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
-import org.combinators.ep.generator.paradigm.AnyParadigm
-import org.combinators.ep.generator.paradigm.control.{Functional, Imperative}
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Booleans, Equality, Strings}
+import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
 /** Upon merging M3 and W1 there is a need for MultByx(Divd, Mult, Neg) as well as a need for
@@ -67,7 +66,7 @@ sealed class M3W1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
         assert(dependencies(PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op)).nonEmpty)
 
         val result = onRequest.tpeCase match {
-          case power@math.W1.Power => {
+          case power@math.W1.Power =>
             onRequest.request.op match {
 
               case pp@math.M2.PrettyP =>
@@ -88,7 +87,6 @@ sealed class M3W1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
 
               case _ => ???
             }
-          }
           case _ => ???
         }
         result.map(Some(_))
@@ -106,53 +104,29 @@ object M3W1 {
   (paradigm: P)
   (m3Provider: EvolutionImplementationProvider[AIP[paradigm.type]],
    w1Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
-  (functionalControl: Functional.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
+  (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     import paradigm.syntax._
     val mkImpl = new M3W1[paradigm.type, AIP, Expression](paradigm)
-    val ite: mkImpl.IfThenElseCommand =
-      (cond, ifBlock, ifElseBlocks, elseBlock) =>
-        for {
-          res <- functionalControl.functionalCapabilities.ifThenElse(cond, ifBlock, ifElseBlocks, elseBlock)
-        } yield Some(res)
 
-    mkImpl(m3Provider,w1Provider)(ffiArithmetic, ffiBoolean, ffiEquality, ffiStrings) // , expGen => expGen, ite)
+    mkImpl(m3Provider,w1Provider)(ffiArithmetic, ffiBoolean, ffiEquality, ffiStrings)
   }
 
   def imperative[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P]]
   (paradigm: P)
   (m3Provider: EvolutionImplementationProvider[AIP[paradigm.type]],
    w1Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
-  (imperativeControl: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type],
-   ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
+  (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double],
    ffiBoolean: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiEquality: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type],
    ffiStrings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]):
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
-    import paradigm.syntax._
-    import paradigm.methodBodyCapabilities._
-    import imperativeControl.imperativeCapabilities._
     val mkImpl = new M3W1[paradigm.type, AIP, Unit](paradigm)
-    val returnInIf: Generator[paradigm.MethodBodyContext, Expression] => Generator[paradigm.MethodBodyContext, Unit] =
-      expGen =>
-        for {
-          resultExp <- expGen
-          resultStmt <- returnStmt(resultExp)
-          _ <- addBlockDefinitions(Seq(resultStmt))
-        } yield None
 
-    val ite: mkImpl.IfThenElseCommand =
-      (cond, ifBlock, ifElseBlocks, elseBlock) =>
-        for {
-          resultStmt <- ifThenElse(cond, ifBlock, ifElseBlocks, Some(elseBlock))
-          _ <- addBlockDefinitions(Seq(resultStmt))
-        } yield None
-
-    mkImpl(m3Provider,w1Provider)(ffiArithmetic, ffiBoolean, ffiEquality, ffiStrings) // , returnInIf, ite)
+    mkImpl(m3Provider,w1Provider)(ffiArithmetic, ffiBoolean, ffiEquality, ffiStrings)
   }
 }
 

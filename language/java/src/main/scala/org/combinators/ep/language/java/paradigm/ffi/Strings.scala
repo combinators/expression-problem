@@ -1,16 +1,16 @@
 package org.combinators.ep.language.java.paradigm.ffi    /*DI:LD:AI*/
 
 import com.github.javaparser.ast.expr.{BinaryExpr, MethodCallExpr, StringLiteralExpr}
-import org.combinators.ep.domain.abstractions.TypeRep
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.{Command, Understands}
-import org.combinators.ep.generator.paradigm.{Apply, GetMember}
-import org.combinators.ep.generator.paradigm.ffi.{Strings => Strs, _}
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.{Command, Understands}
 import org.combinators.ep.language.java.{CodeGenerator, ContextSpecificResolver, JavaNameProvider, ProjectCtxt, Syntax}
 import Syntax.default._
 import org.combinators.ep.language.java.paradigm.{AnyParadigm, ObjectOriented}
 import CodeGenerator.Enable
 import com.github.javaparser.ast.NodeList
+import org.combinators.cogen.TypeRep
+import org.combinators.cogen.paradigm.{Apply, GetMember}
+import org.combinators.cogen.paradigm.ffi.{GetStringLength, StringAppend, ToString, Strings as Strs}
 
 class Strings[Ctxt, AP <: AnyParadigm](
   val base: AP,

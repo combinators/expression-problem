@@ -1,6 +1,6 @@
 package org.combinators.ep.domain.math.systemD    /*DD:LI:AI*/
 
-import org.combinators.ep.domain.abstractions.TestCase
+import org.combinators.cogen.TestCase
 import org.combinators.ep.domain.{Evolution, GenericModel}
 
 object D1D2 extends Evolution {

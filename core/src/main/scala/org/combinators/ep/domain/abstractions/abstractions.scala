@@ -1,8 +1,11 @@
 package org.combinators.ep.domain.abstractions    /*DI:LI:AI*/
 
-import org.combinators.ep.domain.{GenericModel, abstractions}
-import org.combinators.ep.domain.instances.{DataTypeInstance, InstanceRep}
+import org.combinators.cogen.{InstanceRep, Tag, TestCase, TypeRep}
+import org.combinators.ep.domain.GenericModel
+import org.combinators.ep.domain.instances.DataTypeInstance
 import org.combinators.ep.domain.matchers.Matchable
+
+import scala.language.postfixOps
 
 /** Models a named data type. */
 case class DataType(name: String)
@@ -17,7 +20,7 @@ case class DataTypeCase(name: String, attributes: Seq[Attribute]) {
    * implicitly given domain model.
    */
   def isRecursive(implicit domain: GenericModel): Boolean =
-    attributes.exists(_.tpe == TypeRep.DataType(domain.baseDataType))
+    attributes.exists(_.tpe == DomainTpeRep.DataType(domain.baseDataType))
 
   /** Returns if this data type case contains no attributes of the data type modeled in the
    * implicitly given domain model.
@@ -97,15 +100,12 @@ case class Attribute(name: String, tpe: TypeRep)
 /** Provides some default attributes. */
 object Attribute {
   /** An attribute "inner" of the base data type of the implicitly given domain model. */
-  def inner(implicit domain: GenericModel):Attribute = Attribute("inner", TypeRep.DataType(domain.baseDataType))
+  def inner(implicit domain: GenericModel):Attribute = Attribute("inner", DomainTpeRep.DataType(domain.baseDataType))
   /** An attribute "left" of the base data type of the implicitly given domain model. */
-  def left(implicit domain: GenericModel):Attribute = Attribute("left", TypeRep.DataType(domain.baseDataType))
+  def left(implicit domain: GenericModel):Attribute = Attribute("left", DomainTpeRep.DataType(domain.baseDataType))
   /** An attribute "right" of the base data type of the implicitly given domain model. */
-  def right(implicit domain: GenericModel):Attribute = Attribute("right", TypeRep.DataType(domain.baseDataType))
+  def right(implicit domain: GenericModel):Attribute = Attribute("right", DomainTpeRep.DataType(domain.baseDataType))
 }
-
-/** Used to mark special operations (needed for isOp logic) and possible useful in other ways. */
-trait Tag { }
 
 /** Models a named operation on a [[DataType]] with parameters and a return type,
  * which defaults to Unit (no return value).
@@ -120,13 +120,13 @@ case class Operation(name: String,
    * In original formulation, was restricted to ONLY operations with a single parameter
    */
   def isBinary(implicit domain: GenericModel): Boolean =
-    parameters.exists(param => param.tpe == TypeRep.DataType(domain.baseDataType))
+    parameters.exists(param => param.tpe == DomainTpeRep.DataType(domain.baseDataType))
 
   /** Determines if this is a producer operation, which returns an instance of
    * the base type of the implicitly given domain model.
    */
   def isProducer(implicit domain: GenericModel): Boolean =
-    returnType == TypeRep.DataType(domain.baseDataType)
+    returnType == DomainTpeRep.DataType(domain.baseDataType)
 }
 
 /** Provides some default operations. */
@@ -134,11 +134,11 @@ object Operation {
   /** Models an "astree" operation, which converts a data type instance to a domain representation
    * [[org.combinators.ep.domain.tree.Tree]].
    */
-  val asTree: Operation = Operation("astree", TypeRep.Tree)
+  val asTree: Operation = Operation("astree", DomainTpeRep.Tree)
 
   /** Returns a [[org.combinators.ep.domain.matchers.Matchable]] transforming the given function on
    * [[org.combinators.ep.domain.abstractions.Parameter Parameters]] and a
-   * [[org.combinators.ep.domain.abstractions.TypeRep return type representation]] to a a partial function on a
+   * [[TypeRep return type representation]] to a a partial function on a
    * signature of operations of the same name as the given operation.
    *
    * Example:
@@ -164,73 +164,21 @@ case class Parameter(name: String, tpe: TypeRep)
 /** Provides some default parameters. */
 object Parameter {
   /** A parameter "that" of the base data type of the implicitly given domain model. */
-  def that(implicit domain: GenericModel):Parameter = Parameter("that", TypeRep.DataType(domain.baseDataType))
+  def that(implicit domain: GenericModel):Parameter = Parameter("that", DomainTpeRep.DataType(domain.baseDataType))
 }
 
-/** Represents a host language (Scala) type within the domain.
- *
- * @see [[org.combinators.ep.domain.abstractions.TypeRep]] for helpers to construct representations.
- */
-trait TypeRep {
-  /** The type to represent. */
-  type HostType
-
-  def isModelBase(model:GenericModel):Boolean = this == TypeRep.DataType(model.baseDataType)
-}
-
-/** Provides helpers to construct domain representations of host language types. */
-object TypeRep {
-  /** Representation of the host type `T`. */
-  type OfHostType[T] = TypeRep { type HostType = T }
-
-  /** Represents the Scala type `Unit`. */
-  case object Unit extends TypeRep {
-    type HostType = scala.Unit
-  }
-  /** Represents the Scala type `String` */
-  case object String extends TypeRep {
-    type HostType = java.lang.String
-  }
-  /** Represents the Scala type `Int`. */
-  case object Int extends TypeRep {
-    type HostType = scala.Int
-  }
-  /** Represents the Scala type `Double`. */
-  case object Double extends TypeRep {
-    type HostType = scala.Double
-  }
-  /** Represents the Scala type `Boolean`. */
-  case object Boolean extends TypeRep {
-    type HostType = scala.Boolean
-  }
+object DomainTpeRep {
   /** Represents the type [[org.combinators.ep.domain.tree.Tree]]. */
   case object Tree extends TypeRep {
     type HostType = org.combinators.ep.domain.tree.Tree
   }
-  /** Represents the type `Seq[A]` */
-  case class Sequence[T](elemTpe: TypeRep.OfHostType[T]) extends TypeRep {
-    type HostType = Seq[T]
-  }
-  /** Represents the type `Array[T]` */
-  case class Array[T](elemTpe: TypeRep.OfHostType[T]) extends TypeRep {
-    type HostType = Array[T]
-  }
 
-  /** Represents the type A => B */
-  case class Arrow[A, B](src: TypeRep.OfHostType[A], tgt: TypeRep.OfHostType[B]) extends TypeRep {
-    type HostType = A => B
-  }
-
+  import org.combinators.ep.domain.abstractions.{DataType => DT}
 
   /** Represents a Scala model of an instance of the given domain specific data type. */
-  case class DataType(tpe: abstractions.DataType) extends TypeRep {
+  case class DataType(tpe: DT) extends TypeRep {
     type HostType = DataTypeInstance
   }
-}
-
-/** Marks any inheriting object as a model of a software test case. */
-trait TestCase {
-  val tags:Seq[Tag] = Seq.empty
 }
 
 /** Models a test case which applies operation `op` to `domainObject` and `params`, expecting a result
@@ -249,7 +197,7 @@ object EqualsTestCase {
            domainObject: DataTypeInstance,
            op: Operation,
            expected: InstanceRep,
-           params: InstanceRep*) : EqualsTestCase = EqualsTestCase(baseTpe, domainObject, op, Seq.empty, expected, params:_*)
+           params: InstanceRep*) : EqualsTestCase = EqualsTestCase(baseTpe, domainObject, op, Seq.empty, expected, params*)
 }
 
 /** Models a test case which applies operation `op` to `domainObject` and `params`, expecting a result
@@ -268,7 +216,7 @@ object NotEqualsTestCase {
             domainObject: DataTypeInstance,
             op: Operation,
             expected: InstanceRep,
-            params: InstanceRep*) : NotEqualsTestCase = NotEqualsTestCase(baseTpe, domainObject, op, Seq.empty, expected, params:_*)
+            params: InstanceRep*) : NotEqualsTestCase = NotEqualsTestCase(baseTpe, domainObject, op, Seq.empty, expected, params*)
 }
 
 /** Models a test case which sequentially applies the operations `ops` with their given parameters to the
@@ -293,7 +241,7 @@ object EqualsCompositeTestCase {
   def apply(baseTpe: DataType,
            startObject: DataTypeInstance,
            expected: InstanceRep,
-           ops: (Operation, Seq[InstanceRep])*) : EqualsCompositeTestCase = EqualsCompositeTestCase(baseTpe, Seq.empty, startObject, expected, ops:_*)
+           ops: (Operation, Seq[InstanceRep])*) : EqualsCompositeTestCase = EqualsCompositeTestCase(baseTpe, Seq.empty, startObject, expected, ops*)
 }
 
 /** Models a performance test case.

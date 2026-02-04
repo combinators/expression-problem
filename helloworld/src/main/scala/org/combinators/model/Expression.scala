@@ -11,7 +11,7 @@ trait Expression {
   def ==(other: Expression): Expression = new EqualExpression(this,other, new IntegerType())
 }
 
-// necessary for definining literals that form the input or possible output
+// necessary for defining literals that form the input or possible output
 trait LiteralExpression extends Expression
 class UnitExpression extends LiteralExpression    // VOID
 

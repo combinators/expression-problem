@@ -46,9 +46,9 @@ trait BottomUpStrategy extends Utility {
   lazy val arTypes = Seq(TypeRep.Int,
                          TypeRep.Array(TypeRep.Int),
                          TypeRep.Array(TypeRep.Array(TypeRep.Int)),
-                         TypeRep.Array(TypeRep.Array(TypeRep.Array(TypeRep.Int)))
+                         TypeRep.Array(TypeRep.Array(TypeRep.Array(TypeRep.Int))),
+                         TypeRep.Array(TypeRep.Array(TypeRep.Array(TypeRep.Array(TypeRep.Int)))),
   )
-
 
   /** Needed when working bottom up. */
   private def expand_assign(dp_i:Expression, exp: Expression): Generator[paradigm.MethodBodyContext, Unit] = {
@@ -92,6 +92,14 @@ trait BottomUpStrategy extends Utility {
       dp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
       dp_o <- array.arrayCapabilities.get(dp, ivar_outer)
       dp_o_i <- array.arrayCapabilities.get(dp_o, ivar_inner)
+      i_map = Map(model.bounds.head.itArgName -> ivar_outer)
+      j_map = Map(model.bounds.tail.head.itArgName -> ivar_inner)
+
+      // just wanted to test out (dead code) how maps can be folded and used. This is a template for building
+      // up a symbol table when nesting computations.
+      ij_map = i_map ++ j_map
+      other_data = Seq(i_map, j_map)
+      total_map = other_data.foldLeft(Map.empty[String, Expression]) { (acc, a_map) => acc ++ a_map }
       oi_map = Map(model.bounds.head.itArgName -> ivar_outer, model.bounds.tail.head.itArgName -> ivar_inner)
 
       instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, Seq(mboplus1,mbiplus1), None)
@@ -149,6 +157,10 @@ trait BottomUpStrategy extends Utility {
         } yield ())
 
       _ <- addBlockDefinitions(Seq(whileLoop_outer))
+
+      ij = Seq(ivar_outer, ivar_inner)
+
+
 
       // return last element dp[n] because dp is 1 larger in size than n
       dpexp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)

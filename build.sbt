@@ -68,6 +68,7 @@ lazy val cogen = (Project(id = "cogen", base = file("cogen")))
   */
 lazy val core = (Project(id = "core", base = file("core")))
   .settings(commonSettings: _*)
+  .settings(noPublishSettings: _*)
   .settings(
     moduleName := "expression-problem-core",
   )
@@ -75,6 +76,7 @@ lazy val core = (Project(id = "core", base = file("core")))
 
 lazy val approach = (Project(id = "approach", base = file("approach")))
   .settings(commonSettings: _*)
+  .settings(noPublishSettings: _*)
   .settings(
     moduleName := "expression-problem-approach",
   )
@@ -87,6 +89,7 @@ lazy val approach = (Project(id = "approach", base = file("approach")))
 def standardDomainProject(domainName: String): Project =
   (Project(id = s"domain-$domainName", base = file(s"domain/$domainName")))
     .settings(commonSettings: _*)
+    .settings(noPublishSettings: _*)
     .settings(
       moduleName := s"expression-problem-domain-$domainName"
     )
@@ -106,15 +109,17 @@ def standardLanguageProject(languageName: String): Project =
     .settings(
       moduleName := s"expression-problem-language-$languageName",
     )
+    .settings(publishSettings: _*)
     .dependsOn(cogen)
 
 lazy val languageJava =
   standardLanguageProject("java")
-    .settings(libraryDependencies += "com.github.javaparser" % "javaparser-core" % "3.26.4")
+  .settings(libraryDependencies += "com.github.javaparser" % "javaparser-core" % "3.26.4")
 
 lazy val helloWorldProject: Project =
   (Project(id = s"helloWorld", base = file(s"helloworld")))
     .settings(commonSettings: _*)
+    .settings(noPublishSettings: _*)
     .settings(
       moduleName := s"expression-problem-language-helloworld",
     )
@@ -130,6 +135,7 @@ lazy val languageNewScala =
 lazy val builder =
   (Project(id = s"builder", base = file(s"builder")))
     .settings(commonSettings: _*)
+    .settings(noPublishSettings: _*)
     .settings(
       moduleName := s"expression-problem-language-builder",
     )

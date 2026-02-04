@@ -52,6 +52,9 @@ lazy val noPublishSettings = Seq(
   publishArtifact := false
 )
 
+lazy val root = (Project(id = "root", base = file(".")))
+  .settings(noPublishSettings: _*)
+
 /** The code generation infrastructure used in languages.
   * Things in here are (DI, LI, AI).
   */

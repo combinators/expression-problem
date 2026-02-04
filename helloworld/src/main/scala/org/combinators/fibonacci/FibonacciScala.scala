@@ -22,12 +22,10 @@ def fib(n: Int): Int = {
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
-import org.combinators.cogen.FileWithPathPersistable.*
-import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
-import org.combinators.ep.language.scala.ast.ffi.*
-import org.combinators.ep.language.scala.ast.{FinalBaseAST, FinalNameProviderAST}
-import org.combinators.ep.language.scala.codegen.{CodeGenerator, FullAST}
-import org.combinators.fibonacci.FibonacciProvider
+import org.combinators.ep.generator.FileWithPathPersistable._
+import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
+
+import org.combinators.ep.language.scala.codegen.CodeGenerator
 
 import java.nio.file.{Path, Paths}
 

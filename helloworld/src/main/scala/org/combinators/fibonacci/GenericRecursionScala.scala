@@ -8,22 +8,20 @@ package org.combinators.fibonacci
  */
 
 import cats.effect.{ExitCode, IO, IOApp}
-import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
-import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
-import org.combinators.cogen.FileWithPathPersistable._
-import org.combinators.ep.language.java.paradigm.ObjectOriented
-import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
+import org.combinators.ep.generator.FileWithPathPersistable._
+import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
+import org.combinators.ep.language.scala.codegen.CodeGenerator
 
 import java.nio.file.{Path, Paths}
 
 /**
- * Takes language-independent specification of Fibonacci with Lucas and generates Java code
+ * Takes language-independent specification of Fibonacci with Lucas and generates Scala code
  */
-class GenericRecursionMainJava {
-  val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("fibonacci"))))
+class GenericRecursionMainScala{
+  val generator = CodeGenerator("fibonacci")
 
-  val fibonacciApproach = GenericRecursionProvider.imperative[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.ooParadigm, generator.imperativeInMethod, generator.intsInMethod, generator.assertionsInMethod, generator.equalityInMethod, generator.booleansInMethod, generator.realDoublesInMethod)
+  val fibonacciApproach = GenericRecursionProvider.functional[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.functional, generator.functionalControl, generator.ints, generator.assertionsInMethod, generator.equality, generator.booleans, generator.realDoubles)
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
@@ -32,10 +30,10 @@ class GenericRecursionMainJava {
     val files =
       () => generator.paradigm.runGenerator {
         for {
-          _ <- generator.intsInMethod.enable()
-          _ <- generator.booleansInMethod.enable()
-          _ <- generator.stringsInMethod.enable()
-          _ <- generator.equalityInMethod.enable()
+          _ <- generator.ints.enable()
+          _ <- generator.booleans.enable()
+          _ <- generator.strings.enable()
+          _ <- generator.equality.enable()
           _ <- generator.assertionsInMethod.enable()
           _ <- fibonacciApproach.make_project()
         } yield ()
@@ -63,14 +61,13 @@ class GenericRecursionMainJava {
   }
 }
 
-// doesn't work since CAST does not work on (Integer) Math.floor(..)
-object GenericRecursionJavaDirectToDiskMain extends IOApp {
-  val targetDirectory = Paths.get("target", "fib", "java")
+object GenericRecursionScalaDirectToDiskMain extends IOApp {
+  val targetDirectory = Paths.get("target", "fib", "scala")
   print(targetDirectory)
   def run(args: List[String]): IO[ExitCode] = {
     for {
       _ <- IO { print("Initializing Generator...") }
-      main <- IO { new GenericRecursionMainJava() }
+      main <- IO { new GenericRecursionMainScala() }
       _ <- IO { println("[OK]") }
       result <- main.runDirectToDisc(targetDirectory)
     } yield result

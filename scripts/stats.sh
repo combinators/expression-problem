@@ -7,7 +7,7 @@
 #
 # Command line is either "java" or "scala". If no command line arg, default to java
 
-# location of CLOC
+# location of CLOC (in this case, it would be in target)
 CLOC="../cloc-1.86.pl"
 
 if [ $# -eq 0 ]

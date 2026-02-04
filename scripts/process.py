@@ -5,6 +5,7 @@
 #
 #    python3 ../../scripts/process.py
 #
+# The only unexpected dependency is from `scipy` because of the geometric mean method.
 
 import os
 import sys

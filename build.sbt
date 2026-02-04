@@ -1,6 +1,9 @@
+import sbt.Keys._
+import sbt.Resolver
+import xerial.sbt.Sonatype.sonatypeCentralHost
+
 /** Settings shared globally. **/
 lazy val commonSettings = Seq(
-  version := "1.0.0-SNAPSHOT",
   organization := "org.combinators",
 
   scalaVersion := "3.7.4",
@@ -28,8 +31,26 @@ lazy val commonSettings = Seq(
     "org.typelevel" %% "cats-effect" % "3.6.1"
   ),
   evictionErrorLevel := Level.Info,
-)
+) ++ publishSettings
 
+lazy val publishSettings = Seq(
+  homepage := Some(url("https://combinators.org")),
+  licenses := Seq("Apache 2" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")),
+  scmInfo := Some(ScmInfo(url("https://www.github.com/combinators/expression-problem"), "scm:git:git@github.com:combinators/expression-problem.git")),
+  developers := List(
+    Developer("JanBessai", "Jan Bessai", "jan.bessai@tu-dortmund.de", url("http://noprotocol.net")),
+    Developer("heineman", "George T. Heineman", "heineman@wpi.edu", url("http://www.cs.wpi.edu/~heineman")),
+    Developer("BorisDuedder", "Boris Düdder", "boris.d@di.ku.dk", url("http://duedder.net"))
+  ),
+  publishTo := sonatypePublishToBundle.value,
+  ThisBuild / sonatypeCredentialHost := sonatypeCentralHost,
+) ++ sys.env.get("PGP_KEY_HEX").map(h => usePgpKeyHex(h)).seq
+
+lazy val noPublishSettings = Seq(
+  publish := Seq.empty,
+  publishLocal := Seq.empty,
+  publishArtifact := false
+)
 
 /** The code generation infrastructure used in languages.
   * Things in here are (DI, LI, AI).

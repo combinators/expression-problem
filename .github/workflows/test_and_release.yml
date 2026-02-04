@@ -1,0 +1,44 @@
+name: Test code, update coverage, and release main branch
+
+on: [ push, pull_request ]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    needs: [ ]
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - name: Check if we are head of main
+        id: check_head_of_main
+        run: |
+          git fetch origin main &&
+          MAIN=`git rev-parse origin/main` &&
+          echo "::set-output name=head_of_main::$MAIN" &&
+          CURRENT=`git rev-list -n 1 ${{ github.ref }} || echo "NOT_MAIN"` &&
+          echo "::set-output name=current_job_ref::$CURRENT"
+      - name: Set up JDK
+        if: steps.check_head_of_main.outputs.head_of_main == steps.check_head_of_main.outputs.current_job_ref
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Set up SBT
+        if: steps.check_head_of_master.outputs.head_of_main == steps.check_head_of_main.outputs.current_job_ref
+        uses: sbt/setup-sbt@v1.10.11
+      - name: Build and release
+        if: steps.check_head_of_master.outputs.head_of_main == steps.check_head_of_main.outputs.current_job_ref
+        env:
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          SONA_USER: ${{ secrets.SONATYPE_USERNAME }}
+          SONA_PASS: ${{ secrets.SONATYPE_PASSWORD }}
+          PGP_SECRET: ${{ secrets.PGP_SECRET }}
+          PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
+          PGP_KEY_HEX: ${{ secrets.PGP_KEY_HEX }}
+          CI: github
+        run: |
+          git fetch --prune --unshallow --tags &&
+          export GPG_TTY=$(tty) &&
+          echo $PGP_SECRET | base64 -d | gpg --passphrase=$PGP_PASSPHRASE --yes --batch --pinentry-mode loopback --import &&
+          export PATH=`pwd`/.github/bin:$PATH &&
+          sbt cogen/ciReleaseTagNextVersion cogen/ciReleaseSonatype

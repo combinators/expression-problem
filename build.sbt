@@ -59,7 +59,8 @@ lazy val cogen = (Project(id = "cogen", base = file("cogen")))
   .settings(commonSettings: _*)
   .settings(
     moduleName := "expression-problem-cogen",
-  ) ++ publishSettings
+  )
+  .settings(publishSettings: _*)
 
 
 /** The core components to model expression problem code generators and domains.

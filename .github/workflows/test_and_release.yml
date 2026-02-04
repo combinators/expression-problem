@@ -8,27 +8,19 @@ jobs:
     needs: [ ]
     steps:
       - uses: actions/checkout@v4.2.2
-      - name: Check if we are head of main
-        id: check_head_of_main
-        run: |
-          git fetch origin main &&
-          MAIN=`git rev-parse origin/main` &&
-          echo "head_of_main=$MAIN" >> $GITHUB_OUTPUT &&
-          CURRENT=`git rev-list -n 1 ${{ github.ref }} || echo "NOT_MAIN"` &&
-          echo "current_job_ref=$CURRENT" >> $GITHUB_OUTPUT
       - name: Set up JDK
-        if: steps.check_head_of_main.outputs.head_of_main == steps.check_head_of_main.outputs.current_job_ref
+        if: github.ref == 'refs/heads/main'
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
       - name: Set up SBT
-        if: steps.check_head_of_master.outputs.head_of_main == steps.check_head_of_main.outputs.current_job_ref
+        if: github.ref == 'refs/heads/main'
         uses: sbt/setup-sbt@v1.1.16
         with:
           sbt-runner-version: 1.10.11
       - name: Build and release
-        if: steps.check_head_of_master.outputs.head_of_main == steps.check_head_of_main.outputs.current_job_ref
+        if: github.ref == 'refs/heads/main'
         env:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}

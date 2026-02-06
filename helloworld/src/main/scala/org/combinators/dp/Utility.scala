@@ -1,6 +1,6 @@
 package org.combinators.dp
 
-import org.combinators.model.{AdditionExpression, ArgExpression, ArgumentType, ArrayElementExpression, CharAtExpression, EqualExpression, InputExpression, IntegerType, IteratorExpression, LiteralInt, LiteralString, MaxExpression, Model, StringLengthExpression, StringType, SubproblemExpression, SubtractionExpression, TernaryExpression}
+import org.combinators.model.{AdditionExpression, ArgExpression, ArgumentType, ArrayElementExpression, CharAtExpression, EqualExpression, InputExpression, IntegerType, IteratorExpression, LiteralInt, LiteralString, MaxExpression, MinExpression, Model, StringLengthExpression, StringType, SubproblemExpression, SubtractionExpression, TernaryExpression}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.NameProvider
@@ -188,6 +188,17 @@ trait Utility {
         left <- explore(mx.left, memoize, bottomUp)
         right <- explore(mx.right, memoize, bottomUp)
         e <- realArithmetic.realArithmeticCapabilities.max(left, right)
+      } yield e
+
+      case mn:MinExpression => for {
+        left <- explore(mn.left, memoize, bottomUp)
+        right <- explore(mn.right, memoize, bottomUp)
+        //SHOULD BE CHANGED TO PROPER MIN
+        zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
+        nLeft <- arithmetic.arithmeticCapabilities.sub(zero,left)
+        nRight <- arithmetic.arithmeticCapabilities.sub(zero,right)
+        m <- realArithmetic.realArithmeticCapabilities.max(nLeft, nRight)
+        e <- arithmetic.arithmeticCapabilities.sub(zero,m)
       } yield e
 
       // takes "text1" and returns "this.text1"

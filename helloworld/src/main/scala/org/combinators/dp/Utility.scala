@@ -1,6 +1,6 @@
 package org.combinators.dp
 
-import org.combinators.model.{AdditionExpression, ArgExpression, ArgumentType, ArrayElementExpression, CharAtExpression, EqualExpression, InputExpression, IntegerType, IteratorExpression, LiteralInt, LiteralString, MaxExpression, MinExpression, Model, StringLengthExpression, StringType, SubproblemExpression, SubtractionExpression, TernaryExpression}
+import org.combinators.model.{AdditionExpression, ArgExpression, ArgumentType, ArrayElementExpression, CharAtExpression, EqualExpression, InputExpression, IntegerType, IteratorExpression, LiteralInt, LiteralString, MaxExpression, MinExpression, Model, MultiplicationExpression, StringLengthExpression, StringType, SubproblemExpression, SubtractionExpression, TernaryExpression}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.NameProvider
@@ -242,11 +242,33 @@ trait Utility {
         e <- array.arrayCapabilities.get(inner, idx)
       } yield e
 
-//      case ter:TernaryExpression => for {
-//        cond <- explore(ter.condition, memoize, bottomUp)
-//        trueBranch <- explore(ter.trueBranch, memoize, bottomUp)
-//        falseBranch <- explore(ter.falseBranch, memoize, bottomUp)
-//      } yield ()
+      case me:MultiplicationExpression => for {
+        left <- explore(me.left, memoize, bottomUp)
+        right <- explore(me.right, memoize, bottomUp)
+        e <- arithmetic.arithmeticCapabilities.mult(left, right)
+      } yield e
+
+      case ter:TernaryExpression => for {
+        cond <- explore(ter.condition, memoize, bottomUp)
+        trueBranch <- explore(ter.trueBranch, memoize, bottomUp)
+        falseBranch <- explore(ter.falseBranch, memoize, bottomUp)
+
+        intType <- toTargetLanguageType(TypeRep.Int)
+        score <- impParadigm.imperativeCapabilities.declareVar(names.mangle("score"), intType, None)
+
+        ifBlock <- impParadigm.imperativeCapabilities.ifThenElse(
+          cond,
+          for {
+            assign <- impParadigm.imperativeCapabilities.assignVar(score, trueBranch)
+          } yield assign,
+          Seq.empty,
+          Some(
+            for {
+              assign <- impParadigm.imperativeCapabilities.assignVar(score, falseBranch)
+            } yield assign
+          )
+        )
+      } yield ifBlock
 
       case se: SubproblemExpression => for {
         self <- ooParadigm.methodBodyCapabilities.selfReference()

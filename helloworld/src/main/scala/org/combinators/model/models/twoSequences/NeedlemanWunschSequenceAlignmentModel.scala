@@ -21,6 +21,7 @@ class NeedlemanWunschSequenceAlignmentModel {
     val one: LiteralInt = new LiteralInt(1)
 
     val score = new TernaryExpression(
+
       new CharAtExpression(s1, r - one) == new CharAtExpression(s2, c - one),
       matchBonus,
       mismatchPenalty

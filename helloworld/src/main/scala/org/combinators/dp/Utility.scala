@@ -268,7 +268,7 @@ trait Utility {
             } yield assign
           )
         )
-      } yield ifBlock
+      } yield score
 
       case se: SubproblemExpression => for {
         self <- ooParadigm.methodBodyCapabilities.selfReference()

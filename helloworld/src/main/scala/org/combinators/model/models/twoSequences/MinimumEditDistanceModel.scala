@@ -7,6 +7,7 @@ class MinimumEditDistanceModel {
     val s1 = new ArgExpression(0, "s1", new StringType(), "r")
     val s2 = new ArgExpression(1, "s2", new StringType(), "c")
 
+
     val boundZero: Expression = new ArrayLengthExpression(s1)
     val boundOne: Expression = new ArrayLengthExpression(s2)
     val bounds = List(s1, s2) // boundZero, boundOne)
@@ -18,7 +19,7 @@ class MinimumEditDistanceModel {
     val one: LiteralInt = new LiteralInt(1)
 
     def MED: Model = new Model(
-      "Minimum Edit Distance",
+      "MinimumEditDistance",
       bounds = bounds,
       cases = List(
         (

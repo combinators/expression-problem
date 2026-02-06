@@ -38,6 +38,7 @@ trait TopDownStrategy extends Utility {
 
   lazy val memoName       = names.mangle("memo")
   lazy val keyName        = names.mangle("key")
+  lazy val pairName       = names.mangle("pair")
 
   lazy val computedResult = names.mangle("computed_result")
 
@@ -198,6 +199,7 @@ trait TopDownStrategy extends Utility {
         _ <- if (useMemo) {
           addMethod(keyName, create_key())
           addMethod(memoName, create_memo_helper())
+          addMethod(pairName, pair_helper())
         } else {
           Command.skip[ClassContext]
         }
@@ -282,6 +284,7 @@ trait TopDownStrategy extends Utility {
     } yield None
   }
 
+
   def outer_helper(useMemo: Boolean, model:Model): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     for {
@@ -290,6 +293,42 @@ trait TopDownStrategy extends Utility {
       _ <- setReturnType(intType)
       _ <- process_inner_helper(useMemo, model)
     } yield None
+  }
+
+  def pair_helper(): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
+    import paradigm.methodBodyCapabilities._
+
+    for {
+
+      //Setting up header
+      argType <- toTargetLanguageType(TypeRep.Int)
+      argName1 = names.mangle("i")
+      argName2 = names.mangle("j")
+
+      _ <- setParameters(Seq((argName1,argType),(argName2,argType)))
+
+      intType <- toTargetLanguageType(TypeRep.Int)
+      _ <- setReturnType(intType)
+
+      //Function details
+      args <- getArguments()
+      i = args.head._3
+      j = args.tail.head._3
+
+      one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
+      two <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 2)
+
+      ipj <- arithmetic.arithmeticCapabilities.add(i, j)
+      ipjp1 <-  arithmetic.arithmeticCapabilities.add(ipj, one)
+
+      ipjtipjp1 <- arithmetic.arithmeticCapabilities.mult(ipj, ipjp1)
+
+      ipjtipjp1o2 <- arithmetic.arithmeticCapabilities.div(ipjtipjp1, two)
+
+      finalExpression <- arithmetic.arithmeticCapabilities.add(ipjtipjp1o2, i)
+
+
+    } yield Some(finalExpression)
   }
 
 }

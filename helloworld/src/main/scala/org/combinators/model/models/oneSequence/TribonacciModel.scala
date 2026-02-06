@@ -25,7 +25,7 @@ class TribonacciModel {
           zero
         ),
         (
-          Some(new orExpression(new EqualExpression(i, one), new EqualExpression(i, two))),
+          Some(new OrExpression(new EqualExpression(i, one), new EqualExpression(i, two))),
           one
         ),
         (

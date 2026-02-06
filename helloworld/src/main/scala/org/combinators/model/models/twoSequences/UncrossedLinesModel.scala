@@ -18,7 +18,7 @@ class UncrossedLinesModel {
     val one: LiteralInt = new LiteralInt(1)
 
     val UL: Model = new Model(
-      "Uncrossed Lines",
+      "PrototypeUL",
       bounds,
       cases = List(
         (
@@ -36,13 +36,17 @@ class UncrossedLinesModel {
             one
           )
         ),
+//        (
+//          None,
+//          one
+//        ),
         (
           None,
           new MaxExpression(
             new SubproblemExpression(Seq(r, c - one)),
             new SubproblemExpression(Seq(r - one, c))
           )
-        )
+        ),
       )
     )
 

@@ -1,6 +1,6 @@
 package org.combinators.dp
 
-import org.combinators.model.{AdditionExpression, ArgExpression, ArgumentType, CharAtExpression, EqualExpression, InputExpression, IntegerType, IteratorExpression, LiteralInt, LiteralString, MaxExpression, Model, StringLengthExpression, StringType, SubproblemExpression, SubtractionExpression}
+import org.combinators.model.{AdditionExpression, ArgExpression, ArgumentType, ArrayElementExpression, CharAtExpression, EqualExpression, InputExpression, IntegerType, IteratorExpression, LiteralInt, LiteralString, MaxExpression, MinExpression, Model, MultiplicationExpression, StringLengthExpression, StringType, SubproblemExpression, SubtractionExpression, TernaryExpression}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.NameProvider
@@ -8,7 +8,6 @@ import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality, RealArithmetic, Strings}
-import org.combinators.model.{AdditionExpression, ArgumentType, EqualExpression, InputExpression, IteratorExpression, LiteralInt, StringLengthExpression, SubproblemExpression, SubtractionExpression}
 
 
 // Different approach
@@ -191,6 +190,17 @@ trait Utility {
         e <- realArithmetic.realArithmeticCapabilities.max(left, right)
       } yield e
 
+      case mn:MinExpression => for {
+        left <- explore(mn.left, memoize, bottomUp)
+        right <- explore(mn.right, memoize, bottomUp)
+        //SHOULD BE CHANGED TO PROPER MIN
+        zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
+        nLeft <- arithmetic.arithmeticCapabilities.sub(zero,left)
+        nRight <- arithmetic.arithmeticCapabilities.sub(zero,right)
+        m <- realArithmetic.realArithmeticCapabilities.max(nLeft, nRight)
+        e <- arithmetic.arithmeticCapabilities.sub(zero,m)
+      } yield e
+
       // takes "text1" and returns "this.text1"
       case ie:InputExpression => for {
         self <- ooParadigm.methodBodyCapabilities.selfReference()
@@ -225,6 +235,40 @@ trait Utility {
         self <- ooParadigm.methodBodyCapabilities.selfReference()
         field <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle(arge.name))
       } yield field
+
+      case arr:ArrayElementExpression => for {
+        inner <- explore(arr.array, memoize, bottomUp)
+        idx <- explore(arr.index, memoize, bottomUp)
+        e <- array.arrayCapabilities.get(inner, idx)
+      } yield e
+
+      case me:MultiplicationExpression => for {
+        left <- explore(me.left, memoize, bottomUp)
+        right <- explore(me.right, memoize, bottomUp)
+        e <- arithmetic.arithmeticCapabilities.mult(left, right)
+      } yield e
+
+      case ter:TernaryExpression => for {
+        cond <- explore(ter.condition, memoize, bottomUp)
+        trueBranch <- explore(ter.trueBranch, memoize, bottomUp)
+        falseBranch <- explore(ter.falseBranch, memoize, bottomUp)
+
+        intType <- toTargetLanguageType(TypeRep.Int)
+        score <- impParadigm.imperativeCapabilities.declareVar(names.mangle("score"), intType, None)
+
+        ifBlock <- impParadigm.imperativeCapabilities.ifThenElse(
+          cond,
+          for {
+            assign <- impParadigm.imperativeCapabilities.assignVar(score, trueBranch)
+          } yield assign,
+          Seq.empty,
+          Some(
+            for {
+              assign <- impParadigm.imperativeCapabilities.assignVar(score, falseBranch)
+            } yield assign
+          )
+        )
+      } yield ifBlock
 
       case se: SubproblemExpression => for {
         self <- ooParadigm.methodBodyCapabilities.selfReference()

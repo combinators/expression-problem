@@ -7,8 +7,9 @@ trait Expression {
   def *(other: Expression): Expression = new MultiplicationExpression(this,other)
   def /(other: Expression): Expression = new DivisionExpression(this,other)
 
-  // When using ==, must assume it is IntegerType: Dangerous??
+  // When using ==, must assume it is IntegerType: Dangerous?? todo: allow for other types(?)
   def ==(other: Expression): Expression = new EqualExpression(this,other, new IntegerType())
+  def ||(other: Expression): Expression = new OrExpression(this,other)
 }
 
 // necessary for defining literals that form the input or possible output
@@ -21,8 +22,9 @@ class SubtractionExpression(val left: Expression, val right: Expression) extends
 class MultiplicationExpression(val left: Expression, val right: Expression) extends Expression
 class DivisionExpression(val left: Expression, val right: Expression) extends Expression
 class SubproblemExpression(val args: Seq[Expression]) extends Expression
+class MathMinimumExpression(val args: Seq[Expression]) extends Expression
 class MaxExpression(val left: Expression, val right: Expression) extends Expression
-class MinExpression(val m: Expression, val n: Expression) extends Expression
+class MinExpression(val left: Expression, val right: Expression) extends Expression
 class ArrayElementExpression(val array: Expression, val index: Expression) extends Expression
 
 class FunctionExpression(val name:String, val args: Seq[Expression]) extends Expression
@@ -51,8 +53,11 @@ class CharAtExpression(val string: Expression, val index: Expression) extends Ex
 //General
 class InputExpression(val variableName:String) extends Expression
 class EqualExpression(val left: Expression, val right: Expression, val tpe:ArgumentType = new org.combinators.model.IntegerType()) extends Expression
-class orExpression(val left: Expression, val right: Expression) extends Expression
-class lessThanExpression(val left: Expression, val right:Expression) extends Expression
+class OrExpression(val left: Expression, val right: Expression) extends Expression
+class LessThanExpression(val left: Expression, val right:Expression) extends Expression
+class TernaryExpression(val condition: Expression, val trueBranch: Expression, val falseBranch: Expression) extends Expression
+
+class LiteralBoolean(val literal:Boolean) extends LiteralExpression
 
 // Now includes the name of the int variable to iterate over
 class ArgExpression(val whichArg: Int, val name:String, val argType:ArgumentType, val itArgName:String) extends Expression

@@ -15,11 +15,12 @@ import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
 import org.combinators.model.models.twoSequences.UncrossedLinesModel
-import org.combinators.dp.{TopDown, BottomUp}
-import org.combinators.model.{AdditionExpression, ArgExpression, Argument, EqualExpression, IntegerType, IteratorExpression, LiteralInt, Model, Setup, SubproblemExpression, SubtractionExpression, UnitExpression}
+import org.combinators.dp.{BottomUp, TopDown}
+import org.combinators.model.Model
 import org.combinators.modelTests.UncrossedLinesProvider
 
 import java.nio.file.{Path, Paths}
+import scala.collection.Seq
 
 /**
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
@@ -31,37 +32,38 @@ class UncrossedLinesMainJava {
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
+  def filesToGenerate(model:Model, option:GenerationOption):Seq[FileWithPath] = {
+    println(s"Generating ${model.problem}...")
+    generator.paradigm.runGenerator {
+      for {
+        _ <- generator.doublesInMethod.enable()
+        _ <- generator.realDoublesInMethod.enable()
+        _ <- generator.intsInMethod.enable()
+        _ <- generator.stringsInMethod.enable()
+        _ <- generator.listsInMethod.enable()     // should be array, but this still needs to be added as an FFI
+        _ <- generator.consoleInMethod.enable()
+        _ <- generator.arraysInMethod.enable()
+        _ <- generator.equalityInMethod.enable()
+        _ <- generator.assertionsInMethod.enable()
+
+        // HERE you can finally specify the method to use for testing and the test cases
+        _ <- dpApproach.implement(model, option)
+      } yield ()
+    }
+  }
+
   def directToDiskTransaction(targetDirectory: Path, model:Model, option:GenerationOption): IO[Unit] = {
-
-    val files =
-      () => generator.paradigm.runGenerator {
-        for {
-          _ <- generator.doublesInMethod.enable()
-          _ <- generator.realDoublesInMethod.enable()
-          _ <- generator.intsInMethod.enable()
-          _ <- generator.stringsInMethod.enable()
-          _ <- generator.listsInMethod.enable()     // should be array, but this still needs to be added as an FFI
-          _ <- generator.consoleInMethod.enable()
-          _ <- generator.arraysInMethod.enable()
-          _ <- generator.equalityInMethod.enable()
-          _ <- generator.assertionsInMethod.enable()
-
-          // HERE you can finally specify the method to use for testing and the test cases
-          _ <- dpApproach.implement(model, option)
-        } yield ()
-      }
-
     IO {
-      print("Computing Files...")
-      val computed = files()
+      println("Computing Files...")
+      val computed = filesToGenerate(model:Model, option:GenerationOption)
       println("[OK]")
       if (targetDirectory.toFile.exists()) {
-        print(s"Cleaning Target Directory ($targetDirectory)...")
+        println(s"Cleaning Target Directory ($targetDirectory)...")
         FileUtils.deleteDirectory(targetDirectory.toFile)
         println("[OK]")
       }
-      print("Persisting Files...")
-      files().foreach(file => persistable.persistOverwriting(targetDirectory, file))
+      println("Persisting Files...")
+      computed.foreach(file => persistable.persistOverwriting(targetDirectory, file))
       println("[OK]")
     }
   }
@@ -74,7 +76,7 @@ class UncrossedLinesMainJava {
 }
 
 object ULDirectToDiskMain extends IOApp {
-  val targetDirectory:Path = Paths.get("target", "ul")
+  val targetDirectory:Path = Paths.get("target", "dp", "ul")
 
   def run(args: List[String]): IO[ExitCode] = {
 
@@ -84,6 +86,7 @@ object ULDirectToDiskMain extends IOApp {
     val bottomUp        = new BottomUp()
 
     val UL = new UncrossedLinesModel().instantiate()
+
     for {
       _ <- IO { print("Initializing Generator...") }
       main <- IO { new UncrossedLinesMainJava() }

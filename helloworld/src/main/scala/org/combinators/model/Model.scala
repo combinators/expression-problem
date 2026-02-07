@@ -40,7 +40,7 @@ class Model(val problem:String, val bounds: List[ArgExpression], val cases: List
  */
 class Range(val variable:String, start:Expression, guard:Expression, advance:Expression)
 class MinSubProblemDefinition(val params:Seq[Range], definition:Expression) extends Expression
-class Definition(val args:Seq[ArgExpression], val constraint:Constraint, val result:Expression)   // might not need to be extended?
+class Definition(val args:Seq[ArgExpression], /* val constraint:Constraint, */val result:Expression)   // might not need to be extended?
 
 // trying a new approach that captures definitions. Each definition is in ordered sequence and specifies
 // the essence of the problem

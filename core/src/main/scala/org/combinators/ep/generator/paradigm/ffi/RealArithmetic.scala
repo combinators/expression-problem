@@ -11,6 +11,7 @@ case class Sin[T]()
 case class Cos[T]()
 
 case class Max[T]()
+case class Min[T]()
 
 case class Abs[T]()
 case class Floor[T]()
@@ -41,6 +42,10 @@ trait RealArithmetic[Context, T] extends FFI {
     implicit val canMax: Understands[Context, Apply[Max[T], Expression, Expression]]
     def max(left: Expression, right: Expression): Generator[Context, Expression] =
       AnyParadigm.capability(Apply[Max[T], Expression, Expression](Max[T](), Seq(left, right)))
+
+    implicit val canMin: Understands[Context, Apply[Min[T], Expression, Expression]]
+    def min(left: Expression, right: Expression): Generator[Context, Expression] =
+      AnyParadigm.capability(Apply[Min[T], Expression, Expression](Min[T](), Seq(left, right)))
 
     implicit val canSin: Understands[Context, Apply[Sin[T], Expression, Expression]]
     def sin(x: Expression): Generator[Context, Expression] =

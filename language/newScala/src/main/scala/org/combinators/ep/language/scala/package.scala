@@ -457,6 +457,14 @@ package object scala {
     }
   }
 
+  trait MinOp[FT <: FinalTypes] extends RealArithmeticOps.MinOp[FT] with Operator[FT] with Factory[FT] with MathFunctionOperator[FT] {
+    override def operator: String = "min"
+
+    override def toScala(operands: any.Expression[FT]*): String = {
+      s"(Math.$operator(${operands(0).toScala},${operands(1).toScala}))"
+    }
+  }
+
   trait SinOp[FT <: FinalTypes] extends RealArithmeticOps.SinOp[FT] with Operator[FT] with Factory[FT] with MathFunctionOperator[FT] {
     override def operator: String = "sin"
   }
@@ -1591,6 +1599,7 @@ package object scala {
       def powOp(): RealArithmeticOps.PowOp[FinalTypes] = PowOp()
       def logOp(): RealArithmeticOps.LogOp[FinalTypes] = LogOp()
       def maxOp(): RealArithmeticOps.MaxOp[FinalTypes] = MaxOp()
+      def minOp(): RealArithmeticOps.MinOp[FinalTypes] = MinOp()
       def sinOp(): RealArithmeticOps.SinOp[FinalTypes] = SinOp()
       def cosOp(): RealArithmeticOps.CosOp[FinalTypes] = CosOp()
       def absOp(): RealArithmeticOps.AbsOp[FinalTypes] = AbsOp()
@@ -2086,6 +2095,7 @@ package object scala {
     case class PowOp() extends scala.PowOp[FinalTypes] with Operator with Factory
     case class LogOp() extends scala.LogOp[FinalTypes] with Operator with Factory
     case class MaxOp() extends scala.MaxOp[FinalTypes] with Operator with Factory
+    case class MinOp() extends scala.MinOp[FinalTypes] with Operator with Factory
     case class SinOp() extends scala.SinOp[FinalTypes] with Operator with Factory
     case class CosOp() extends scala.CosOp[FinalTypes] with Operator with Factory
     case class AbsOp() extends scala.AbsOp[FinalTypes] with Operator with Factory

@@ -44,4 +44,8 @@ class Definition(val args:Seq[ArgExpression], /* val constraint:Constraint, */va
 
 // trying a new approach that captures definitions. Each definition is in ordered sequence and specifies
 // the essence of the problem
-class EnhancedModel(val problem:String, val input:Seq[ArgExpression], solutionType:LiteralExpression, solution:SubproblemExpression, definitions:Seq[Definition])
+class EnhancedModel(val problem:String,
+                    val input:Seq[ArgExpression],
+                    solutionType:LiteralExpression,
+                    solution:SubproblemExpression,
+                    definitions:Seq[Definition])

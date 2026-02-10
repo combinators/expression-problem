@@ -10,6 +10,7 @@ trait Expression {
   // When using ==, must assume it is IntegerType: Dangerous?? todo: allow for other types(?)
   def ==(other: Expression): Expression = new EqualExpression(this,other, new IntegerType())
   def ||(other: Expression): Expression = new OrExpression(this,other)
+  def &&(other: Expression): Expression = new AndExpression(this, other)
 }
 
 // necessary for defining literals that form the input or possible output
@@ -53,6 +54,7 @@ class CharAtExpression(val string: Expression, val index: Expression) extends Ex
 class InputExpression(val variableName:String) extends Expression
 class EqualExpression(val left: Expression, val right: Expression, val tpe:ArgumentType = new org.combinators.model.IntegerType()) extends Expression
 class OrExpression(val left: Expression, val right: Expression) extends Expression
+class AndExpression(val left: Expression, val right: Expression) extends Expression
 class LessThanExpression(val left: Expression, val right:Expression) extends Expression
 class TernaryExpression(val condition: Expression, val trueBranch: Expression, val falseBranch: Expression) extends Expression
 

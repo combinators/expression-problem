@@ -97,14 +97,10 @@ object DPDirectToDiskMain extends IOApp {
 
     val zero: LiteralInt = new LiteralInt(0)
     val one: LiteralInt = new LiteralInt(1)
-    val ascii_zero:LiteralChar = new LiteralChar('0')
-    val two: LiteralInt = new LiteralInt(2)
 
     // what was passed into constructor of the original class
     val string1:InputExpression = new InputExpression("s1")
     val string2:InputExpression = new InputExpression("s2")
-    val s1Length:InputExpression = new InputExpression("m")
-    val s2Length:InputExpression = new InputExpression("n")
 
     val bound = List(new ArgExpression(0, "s1", new StringType(), "m"), new ArgExpression(1, "s2", new StringType(), "n"))
 
@@ -118,9 +114,9 @@ object DPDirectToDiskMain extends IOApp {
       bound,
       cases = List(
         // if (m === 0) return n;
-        ( Some(new EqualExpression(s1Length, zero)),  s2Length ),
+        ( Some(new EqualExpression(m, zero)),  n ),
         // if (n === 0) return m;
-        ( Some(new EqualExpression(s2Length, zero)), s1Length),
+        ( Some(new EqualExpression(n, zero)), m),
         //if (s1[m - 1] === s2[n - 1]) return editDistRec(s1, s2, m - 1, n - 1);
         ( Some(new EqualExpression(new CharAtExpression(string1, im1), new CharAtExpression(string2, in1))), new SubproblemExpression(Seq(im1, in1))),
         //return 1 + Math.min(

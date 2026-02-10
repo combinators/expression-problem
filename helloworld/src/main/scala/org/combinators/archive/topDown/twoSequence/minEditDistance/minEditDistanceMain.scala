@@ -14,7 +14,7 @@ import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
-import org.combinators.model.{ArgExpression, CharAtExpression, EqualExpression, InputExpression, IteratorExpression, LiteralChar, LiteralInt, Model, StringLengthExpression, StringType, SubproblemExpression, SubtractionExpression, MathMinimumExpression}
+import org.combinators.model.{ArgExpression, CharAtExpression, EqualExpression, InputExpression, IteratorExpression, LiteralChar, LiteralInt, Model, StringLengthExpression, StringType, SubproblemExpression, SubtractionExpression, MinExpression}
 
 import java.nio.file.{Path, Paths}
 
@@ -122,15 +122,15 @@ object DPDirectToDiskMain extends IOApp {
         // if (n === 0) return m;
         ( Some(new EqualExpression(s2Length, zero)), s1Length),
         //if (s1[m - 1] === s2[n - 1]) return editDistRec(s1, s2, m - 1, n - 1);
-        ( Some(new EqualExpression(new CharAtExpression(string1, im1), new CharAtExpression(string2, in1))), new SubproblemExpression(Seq(string1, string2, im1, in1))),
+        ( Some(new EqualExpression(new CharAtExpression(string1, im1), new CharAtExpression(string2, in1))), new SubproblemExpression(Seq(im1, in1))),
         //return 1 + Math.min(
           //editDistRec(s1, s2, m, n - 1),
           //editDistRec(s1, s2, m - 1, n),
           //editDistRec(s1, s2, m - 1, n - 1));
-        ( None,                                new MathMinimumExpression(Seq(new SubproblemExpression(Seq(string1, string2, m, in1)),
-                                                                      new SubproblemExpression(Seq(string1, string2, im1, n)),
-                                                                      new SubproblemExpression(Seq(string1, string2, im1, in1)))))
-      )
+        ( None,new MinExpression(new SubproblemExpression(Seq(m, in1)),
+          new MinExpression(new SubproblemExpression(Seq(im1, n)),
+          new SubproblemExpression(Seq(im1, in1))))
+      ))
     )
 
     // choose one of these to pass in

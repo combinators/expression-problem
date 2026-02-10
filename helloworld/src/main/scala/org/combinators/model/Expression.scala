@@ -22,7 +22,6 @@ class SubtractionExpression(val left: Expression, val right: Expression) extends
 class MultiplicationExpression(val left: Expression, val right: Expression) extends Expression
 class DivisionExpression(val left: Expression, val right: Expression) extends Expression
 class SubproblemExpression(val args: Seq[Expression]) extends Expression
-class MathMinimumExpression(val args: Seq[Expression]) extends Expression
 class MaxExpression(val left: Expression, val right: Expression) extends Expression
 class MinExpression(val left: Expression, val right: Expression) extends Expression
 class ArrayElementExpression(val array: Expression, val index: Expression) extends Expression

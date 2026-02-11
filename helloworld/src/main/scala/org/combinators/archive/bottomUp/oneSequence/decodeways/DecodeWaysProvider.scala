@@ -4,7 +4,7 @@ import org.combinators.dp.{DPObjectOrientedProvider, TestExample}
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality, RealArithmetic, Strings}
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
@@ -27,6 +27,7 @@ trait DecodeWaysProvider extends DPObjectOrientedProvider {
   val asserts: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val strings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val eqls: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val booleans: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
   import paradigm._
   import syntax._
@@ -39,12 +40,12 @@ trait DecodeWaysProvider extends DPObjectOrientedProvider {
 
     // NOTE: these tests are in the wrong place, since we defer test gen to later
     val tests = Seq(
-      new TestExample("fib0", new LiteralInt(0), 0, new UnitExpression), // for now, leave solution as None
-      new TestExample("fib1", new LiteralInt(1), 1, new UnitExpression),
-      new TestExample("fib2", new LiteralInt(2), 1, new UnitExpression),
-      new TestExample("fib7", new LiteralInt(7), 13, new UnitExpression),
-      new TestExample("fib20", new LiteralInt(20), 6765, new UnitExpression),
-      new TestExample("fib40", new LiteralInt(40), 102334155, new UnitExpression)
+      new TestExample("fib0", new LiteralInt(0), new LiteralInt(0), new UnitExpression), // for now, leave solution as None
+      new TestExample("fib1", new LiteralInt(1), new LiteralInt(1), new UnitExpression),
+      new TestExample("fib2", new LiteralInt(2), new LiteralInt(1), new UnitExpression),
+      new TestExample("fib7", new LiteralInt(7), new LiteralInt(13), new UnitExpression),
+      new TestExample("fib20", new LiteralInt(20), new LiteralInt(6765), new UnitExpression),
+      new TestExample("fib40", new LiteralInt(40), new LiteralInt(102334155), new UnitExpression)
     )
 
     for {
@@ -55,6 +56,11 @@ trait DecodeWaysProvider extends DPObjectOrientedProvider {
           case _ => ??? // error in all other circumstances
         }
 
+        val expected_value = example.answer match {
+          case lit:LiteralInt => lit.literal
+          case _ => ???
+        }
+
         for {
           fibType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle(implementation))
           n_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, input_value)
@@ -62,7 +68,7 @@ trait DecodeWaysProvider extends DPObjectOrientedProvider {
           computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, computeName)
 
           intType <- toTargetLanguageType(TypeRep.Int)
-          fibn_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, example.answer)
+          fibn_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, expected_value)
           fib_actual <- apply(computeMethod, Seq.empty)
           asserteq_fib <- asserts.assertionCapabilities.assertEquals(intType, fib_actual, fibn_value)
 
@@ -95,7 +101,9 @@ object DecodeWaysProvider {
    stringsIn: Strings.WithBase[base.MethodBodyContext, base.type],
    eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type],
    oo: ObjectOriented.WithBase[base.type],
-   parametricPolymorphism: ParametricPolymorphism.WithBase[base.type])
+   parametricPolymorphism: ParametricPolymorphism.WithBase[base.type],
+   booleansIn: Booleans.WithBase[base.MethodBodyContext, base.type]
+  )
   (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): DecodeWaysProvider.WithParadigm[base.type] =
     new DecodeWaysProvider {
       override val paradigm: base.type = base
@@ -111,5 +119,6 @@ object DecodeWaysProvider {
       override val asserts: Assertions.WithBase[base.MethodBodyContext, paradigm.type] = assertsIn
       override val strings: Strings.WithBase[base.MethodBodyContext, paradigm.type] = stringsIn
       override val eqls: Equality.WithBase[base.MethodBodyContext, paradigm.type] = eqlsIn
+      override val booleans: Booleans.WithBase[base.MethodBodyContext, paradigm.type] = booleansIn
     }
 }

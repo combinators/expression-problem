@@ -1,13 +1,14 @@
-package org.combinators.dp
+package org.combinators.dp.enhanced
 
+import org.combinators.dp.Utility
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.ep.generator.{Command, NameProvider}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Equality, Strings}
-import org.combinators.model.{AdditionExpression, ArgumentType, EqualExpression, InputExpression, IteratorExpression, LiteralInt, Model, StringLengthExpression, SubproblemExpression, SubtractionExpression}
+import org.combinators.ep.generator.paradigm.ffi._
+import org.combinators.ep.generator.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
+import org.combinators.ep.generator.{Command, NameProvider}
+import org.combinators.model.{EnhancedModel, Model}
 
 /**
  * Concepts necessary to realize top-down solutions
@@ -27,11 +28,14 @@ trait BottomUpStrategy extends Utility {
   val eqls: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val asserts: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val strings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]
-  val booleans: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
+  import ooParadigm._
   import paradigm._
   import syntax._
-  import ooParadigm._
+
+  // Definition of the name of the helper method
+  val computeName: Name
+  val keyName: Name
 
   lazy val iName      = names.mangle("i")
   lazy val nName      = names.mangle("n")
@@ -102,8 +106,8 @@ trait BottomUpStrategy extends Utility {
 
       all_rest <- forEach(tail_cases) { next_case =>
         for {
-          next_cond <- explore(next_case._1.get, memoize = false, bottomUp = Some(dp), symbolTable= oi_map)
-          next_exp <- explore(next_case._2, memoize = false,  bottomUp = Some(dp), symbolTable= oi_map)
+          next_cond <- explore(next_case._1.get, memoize = false, bottomUp = Some(dp), symbolTable = oi_map)
+          next_exp <- explore(next_case._2, memoize = false,bottomUp = Some(dp), symbolTable = oi_map)
         } yield (next_cond, expand_assign(dp_o_i, next_exp))
       }
 
@@ -121,7 +125,7 @@ trait BottomUpStrategy extends Utility {
           ,
           // statements for that first if
           for {
-            resexp <- explore(first_case._2, memoize = false,  bottomUp = Some(dp), symbolTable= oi_map)
+            resexp <- explore(first_case._2, memoize = false, bottomUp = Some(dp), symbolTable = oi_map)
             av <- impParadigm.imperativeCapabilities.assignVar(dp_o_i, resexp)
             _ <- addBlockDefinitions(Seq(av))
           } yield None
@@ -131,7 +135,7 @@ trait BottomUpStrategy extends Utility {
           ,
           // terminating 'else' takes the elseCase and adds it last
           Some(for {
-            result_exp <- explore(elseCase.head._2, memoize = false,  bottomUp = Some(dp), symbolTable= oi_map)
+            result_exp <- explore(elseCase.head._2, memoize = false, bottomUp = Some(dp), symbolTable = oi_map)
             av <- impParadigm.imperativeCapabilities.assignVar(dp_o_i, result_exp)
             _ <- addBlockDefinitions(Seq(av))
           } yield ())
@@ -318,5 +322,42 @@ trait BottomUpStrategy extends Utility {
 
     addClassToProject(makeClass, names.mangle(model.problem))
   }
+
+  def make_bottom_up(model:EnhancedModel): Generator[ProjectContext, Unit] = {
+    import ooParadigm.projectCapabilities._
+
+    val makeClass: Generator[ClassContext, Unit] = {
+      import classCapabilities._
+
+      for {
+        arrayType <- toTargetLanguageType(arTypes(model.input.length))
+
+        _ <- forEach(model.input) { bexpr => for {
+          tpe <- map_type_in_class(bexpr.argType)
+          _ <- addField(names.mangle(bexpr.name), tpe)
+        } yield ()
+        }
+
+        _ <- addField(dpName, arrayType)   // this becomes "int" if I use arrayType
+
+        constArgs <- forEach(model.input) { bexpr =>
+          for {
+            tpe <- map_type_in_class(bexpr.argType)
+          } yield (names.mangle(bexpr.name), tpe)
+        }
+        _ <- addConstructor(create_bottom_up_constructor(constArgs))
+
+//        _ <- if (model.solution.args.size == 1) {
+//          addMethod(computeName, make_bottom_up_compute_method(model))
+//        } else {
+//          addMethod(computeName, make_bottom_up_compute_method_nest_2(model) )
+//        }
+      } yield None
+    }
+
+    addClassToProject(makeClass, names.mangle(model.problem))
+  }
+
+
 
 }

@@ -3,7 +3,7 @@ package org.combinators.dp
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality, RealArithmetic, Strings}
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
@@ -26,6 +26,7 @@ trait MinEditDistanceProvider extends DPObjectOrientedProvider {
   val asserts: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val strings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val eqls: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val booleans: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
   import paradigm._
   import syntax._
@@ -38,7 +39,7 @@ trait MinEditDistanceProvider extends DPObjectOrientedProvider {
 
     // NOTE: these tests are in the wrong place, since we defer test gen to later
     val tests = Seq(
-      new TestExample("fib0", new LiteralStringPair("ACTG", "CGATC"), 2, new LiteralString("AC")) // for now, leave solution as None
+      new TestExample("fib0", new LiteralStringPair("ACTG", "CGATC"), new LiteralInt(2), new LiteralString("AC")) // for now, leave solution as None
     )
 
     for {
@@ -47,6 +48,11 @@ trait MinEditDistanceProvider extends DPObjectOrientedProvider {
         val input_value = example.inputType match {
           case lt: LiteralStringPair => (lt.string1, lt.string2)
           case _ => ??? // error in all other circumstances
+        }
+
+        val expected_value = example.answer match {
+          case lit:LiteralInt => lit.literal
+          case _ => ???
         }
 
         for {
@@ -58,7 +64,7 @@ trait MinEditDistanceProvider extends DPObjectOrientedProvider {
           computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, computeName)
 
           intType <- toTargetLanguageType(TypeRep.Int)
-          fibn_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, example.answer)
+          fibn_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, expected_value)
           fib_actual <- apply(computeMethod, Seq.empty)
           asserteq_fib <- asserts.assertionCapabilities.assertEquals(intType, fib_actual, fibn_value)
 
@@ -91,7 +97,9 @@ object MinEditDistanceProvider {
    stringsIn: Strings.WithBase[base.MethodBodyContext, base.type],
    eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type],
    oo: ObjectOriented.WithBase[base.type],
-   parametricPolymorphism: ParametricPolymorphism.WithBase[base.type])
+   parametricPolymorphism: ParametricPolymorphism.WithBase[base.type],
+   booleansIn: Booleans.WithBase[base.MethodBodyContext, base.type]
+  )
   (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): MinEditDistanceProvider.WithParadigm[base.type] =
     new MinEditDistanceProvider {
       override val paradigm: base.type = base
@@ -107,5 +115,6 @@ object MinEditDistanceProvider {
       override val asserts: Assertions.WithBase[base.MethodBodyContext, paradigm.type] = assertsIn
       override val strings: Strings.WithBase[base.MethodBodyContext, paradigm.type] = stringsIn
       override val eqls: Equality.WithBase[base.MethodBodyContext, paradigm.type] = eqlsIn
+      override val booleans: Booleans.WithBase[base.MethodBodyContext, paradigm.type] = booleansIn
     }
 }

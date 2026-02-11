@@ -1,7 +1,7 @@
 package org.combinators.dp
 
-import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.model.LiteralExpression
 
-class TestExample(val name:String, val inputType:LiteralExpression, val answer:Int, val solutionType:LiteralExpression)
+// VAST majority will have answer as an Integer, but sometimes it is a String or Boolean
+class TestExample(val name:String, val inputType:LiteralExpression, val answer:LiteralExpression, val solutionType:LiteralExpression)
 

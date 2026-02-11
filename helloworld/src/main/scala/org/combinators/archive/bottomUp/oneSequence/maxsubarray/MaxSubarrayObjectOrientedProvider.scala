@@ -4,10 +4,10 @@ import org.combinators.dp.{TestExample, Utility}
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality, RealArithmetic, Strings}
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, ObjectOriented}
 import org.combinators.ep.generator.{AbstractSyntax, NameProvider, Understands}
-import org.combinators.model.LiteralArray
+import org.combinators.model.{LiteralArray, LiteralInt}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
@@ -22,6 +22,7 @@ trait MaxSubarrayObjectOrientedProvider extends MaxSubarrayProvider with Utility
   val asserts: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val strings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val eqls: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val booleans: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
   def find_method_recursive(name: paradigm.syntax.Name): Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression] = {
     for {
@@ -182,21 +183,21 @@ trait MaxSubarrayObjectOrientedProvider extends MaxSubarrayProvider with Utility
     // https://en.wikipedia.org/wiki/Maximum_subarray_problem
     val wiki_test = new TestExample("wiki",
         new LiteralArray(Array(-2, 1, -3, 4, -1, 2, 1, -5, 4)),
-        6,
+      new LiteralInt(6),
       new LiteralArray(Array(4, -1, 2, 1))
     )
 
     // https://www.geeksforgeeks.org/dsa/largest-sum-contiguous-subarray/
     val geeks_for_geeks_test = new TestExample("geeks_for_geeks",
       new LiteralArray(Array(2, 3, -8, 7, -1, 2, 3)),
-      11,
+      new LiteralInt(11),
       new LiteralArray(Array(7, -1, 2, 3))
     )
 
     // https://leetcode.com/problems/maximum-subarray/description/
     val leetcode_test = new TestExample("leetcode",
       new LiteralArray(Array(5, 4, -1, 7, 8)),
-      23,
+      new LiteralInt(23),
       new LiteralArray(Array(5, 4, -1, 7, 8))
     )
 
@@ -213,11 +214,16 @@ trait MaxSubarrayObjectOrientedProvider extends MaxSubarrayProvider with Utility
           case _ => ???
         }
 
+        val expected_value = example.answer match {
+          case lit:LiteralInt => lit.literal
+          case _ => ???
+        }
+
         for {
           expr <- create_int_array(array_vals)
           variable <- impParadigm.imperativeCapabilities.declareVar(names.mangle(example.name), arrayType, Some(expr))
           invoke <- apply(computeMethod, Seq(variable))
-          solution <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, example.answer)
+          solution <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, expected_value)
           assert_stmt <- asserts.assertionCapabilities.assertEquals(arrayType, invoke, solution)
 
           // still need test case for validating full_solution when calling 'retrieve()'
@@ -259,7 +265,8 @@ object MaxSubarrayObjectOrientedProvider {
    arr: Arrays.WithBase[base.MethodBodyContext, base.type],
    assertsIn: Assertions.WithBase[base.MethodBodyContext, base.type],
    stringsIn : Strings.WithBase[base.MethodBodyContext, base.type],
-   eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type]
+   eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type],
+   booleansIn: Booleans.WithBase[base.MethodBodyContext, base.type]
   )
   : MaxSubarrayObjectOrientedProvider.WithParadigm[base.type] =
     new MaxSubarrayObjectOrientedProvider {
@@ -274,5 +281,6 @@ object MaxSubarrayObjectOrientedProvider {
       override val asserts: Assertions.WithBase[base.MethodBodyContext, paradigm.type] = assertsIn
       override val strings: Strings.WithBase[base.MethodBodyContext, paradigm.type] = stringsIn
       override val eqls: Equality.WithBase[base.MethodBodyContext, paradigm.type] = eqlsIn
+      override val booleans: Booleans.WithBase[base.MethodBodyContext, paradigm.type] = booleansIn
     }
 }

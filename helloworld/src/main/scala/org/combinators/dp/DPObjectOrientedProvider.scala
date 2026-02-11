@@ -3,11 +3,11 @@ package org.combinators.dp
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality, RealArithmetic, Strings}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, Generics, ObjectOriented, ParametricPolymorphism}
-import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
+import org.combinators.ep.generator.paradigm.{Generics, ObjectOriented, ParametricPolymorphism}
+import org.combinators.ep.generator.NameProvider
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.model.{AdditionExpression, ArgumentType, EqualExpression, FunctionExpression, IteratorExpression, LiteralInt, LiteralString, Model, SubproblemExpression, SubtractionExpression, UnitExpression}
+import org.combinators.model.Model
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
@@ -26,12 +26,11 @@ trait DPObjectOrientedProvider extends DPProvider with Utility with TopDownStrat
   val asserts: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val strings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val eqls: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val booleans: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
   import paradigm._
   import syntax._
   import ooParadigm._
-
-  lazy val testName       = names.mangle("TestSuite")
 
   // if not memo, then this will be defined and added
   lazy val resultVarName = names.mangle("result")
@@ -64,8 +63,9 @@ trait DPObjectOrientedProvider extends DPProvider with Utility with TopDownStrat
   // must be implemented by another -- the test cases refer to the class name passed in as the implementation
   def makeTestCase(implementation:String): Generator[TestContext, Unit]
 
-  def implement(model:Model, option:GenerationOption): Generator[ProjectContext, Unit] = {
-
+  /** Trying out some new capabilities */
+  def implement(model: Model, option:GenerationOption): Generator[ProjectContext, Unit] = {
+    // new stuff goes here.
     // handle Top/Bottom and properly set memo when TD
     var isTopDown = false
     var useMemo = false
@@ -87,8 +87,9 @@ trait DPObjectOrientedProvider extends DPProvider with Utility with TopDownStrat
       }
 
       _ <- paradigm.projectCapabilities.addCompilationUnit(
-        paradigm.compilationUnitCapabilities.addTestSuite(testName, makeTestCase(model.problem))
+        paradigm.compilationUnitCapabilities.addTestSuite(names.mangle("Test" + model.problem), makeTestCase(model.problem))
       )
     } yield ()
   }
+
 }

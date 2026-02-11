@@ -3,12 +3,12 @@ package org.combinators.archive.bottomUp.grid.pascalBU
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality, RealArithmetic, Strings}
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, ObjectOriented}
 import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
 import org.combinators.dp.{TestExample, Utility}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.model.{LiteralPair, UnitExpression}
+import org.combinators.model.{LiteralInt, LiteralPair, UnitExpression}
 
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
@@ -24,6 +24,7 @@ trait PascalObjectOrientedProvider extends PascalProvider with Utility{
   val asserts: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val strings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val eqls: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val booleans: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
   import ooParadigm._
   import paradigm._
@@ -211,10 +212,10 @@ trait PascalObjectOrientedProvider extends PascalProvider with Utility{
     import paradigm.methodBodyCapabilities._
 
     val tests = Seq(
-      new TestExample("pasc11", new LiteralPair(1,1), 1, new UnitExpression),
-      new TestExample("pasc32", new LiteralPair(3,2), 3, new UnitExpression),
-      new TestExample("pasc63", new LiteralPair(6,3), 20, new UnitExpression),
-      new TestExample("pasc2013", new LiteralPair(20,13), 77520, new UnitExpression),
+      new TestExample("pasc11", new LiteralPair(1,1), new LiteralInt(1), new UnitExpression),
+      new TestExample("pasc32", new LiteralPair(3,2), new LiteralInt(3), new UnitExpression),
+      new TestExample("pasc63", new LiteralPair(6,3), new LiteralInt(20), new UnitExpression),
+      new TestExample("pasc2013", new LiteralPair(20,13), new LiteralInt(77520), new UnitExpression),
     )
 
     for {
@@ -224,6 +225,12 @@ trait PascalObjectOrientedProvider extends PascalProvider with Utility{
           case lp:LiteralPair => (lp.val1, lp.val2)
           case _ => ???
         }
+
+        val expected_value = example.answer match {
+          case lit:LiteralInt => lit.literal
+          case _ => ???
+        }
+
         for {
           pascType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle("Pascal"))
           r_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, pair._1)
@@ -232,7 +239,7 @@ trait PascalObjectOrientedProvider extends PascalProvider with Utility{
           computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, compute)
 
           intType <- toTargetLanguageType(TypeRep.Int)
-          pascrc_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, example.answer)
+          pascrc_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, expected_value)
           pascrc_actual <- apply(computeMethod, Seq.empty)
           asserteq_fib <- asserts.assertionCapabilities.assertEquals(intType, pascrc_actual, pascrc_value)
 
@@ -273,7 +280,8 @@ object PascalObjectOrientedProvider {
    arr: Arrays.WithBase[base.MethodBodyContext, base.type],
    assertsIn: Assertions.WithBase[base.MethodBodyContext, base.type],
    stringsIn: Strings.WithBase[base.MethodBodyContext, base.type],
-   eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type]
+   eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type],
+   booleansIn: Booleans.WithBase[base.MethodBodyContext, base.type]
   )
   : PascalObjectOrientedProvider.WithParadigm[base.type] =
     new PascalObjectOrientedProvider {
@@ -288,5 +296,6 @@ object PascalObjectOrientedProvider {
       override val asserts: Assertions.WithBase[base.MethodBodyContext, paradigm.type] = assertsIn
       override val strings: Strings.WithBase[base.MethodBodyContext, paradigm.type] = stringsIn
       override val eqls: Equality.WithBase[base.MethodBodyContext, paradigm.type] = eqlsIn
+      override val booleans: Booleans.WithBase[base.MethodBodyContext, paradigm.type] = booleansIn
     }
 }

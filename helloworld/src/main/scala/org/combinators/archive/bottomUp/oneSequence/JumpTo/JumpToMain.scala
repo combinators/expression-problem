@@ -24,7 +24,7 @@ import java.nio.file.{Path, Paths}
 class JumpToMainJava {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("dp"))))
 
-  val dpApproach = JumpToMainProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.realDoublesInMethod, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.stringsInMethod, generator.equalityInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
+  val dpApproach = JumpToMainProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.realDoublesInMethod, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.stringsInMethod, generator.equalityInMethod, generator.ooParadigm, generator.parametricPolymorphism, generator.booleansInMethod)(generator.generics)
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
@@ -41,6 +41,7 @@ class JumpToMainJava {
           _ <- generator.arraysInMethod.enable()
           _ <- generator.equalityInMethod.enable()
           _ <- generator.assertionsInMethod.enable()
+          _ <- generator.booleansInMethod.enable()
 
           _ <- dpApproach.implement(model, option)
         } yield ()

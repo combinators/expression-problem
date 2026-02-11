@@ -23,7 +23,7 @@ import java.nio.file.{Path, Paths}
 class MaxSubarrayMainJava {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("dp"))))
 
-  val dpApproach = MaxSubarrayObjectOrientedProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.realDoublesInMethod, generator.ooParadigm, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.stringsInMethod, generator.equalityInMethod)
+  val dpApproach = MaxSubarrayObjectOrientedProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.realDoublesInMethod, generator.ooParadigm, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.stringsInMethod, generator.equalityInMethod, generator.booleansInMethod)
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
@@ -41,6 +41,7 @@ class MaxSubarrayMainJava {
           _ <- generator.arraysInMethod.enable()
           _ <- generator.equalityInMethod.enable()
           _ <- generator.assertionsInMethod.enable()
+          _ <- generator.booleansInMethod.enable()
 
           _ <- dpApproach.implement()
         } yield ()

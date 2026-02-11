@@ -1,20 +1,27 @@
 package org.combinators.dp
 
-import org.combinators.model.{AdditionExpression, ArgExpression, ArgumentType, ArrayElementExpression, CharAtExpression, EqualExpression, InputExpression, IntegerType, IteratorExpression, LiteralInt, LiteralString, MaxExpression, MinExpression, Model, MultiplicationExpression, StringLengthExpression, StringType, SubproblemExpression, SubtractionExpression, TernaryExpression}
+import org.combinators.model.{AdditionExpression, AndExpression, ArgExpression, ArgumentType, ArrayElementExpression, ArrayLengthExpression, CharAtExpression, EqualExpression, HelperExpression, InputExpression, IntegerType, IteratorExpression, LessThanExpression, LiteralBoolean, LiteralInt, LiteralString, MaxExpression, MinExpression, Model, MultiplicationExpression, OrExpression, StringLengthExpression, StringType, SubproblemExpression, SubtractionExpression, TernaryExpression}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.NameProvider
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality, RealArithmetic, Strings}
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 
 
 // Different approach
-trait GenerationOption {}
+trait GenerationOption {
+  def name:String
+}
 
-class TopDown(val memo:Boolean = false) extends GenerationOption
-class BottomUp extends GenerationOption
+case class TopDown(memo:Boolean = false) extends GenerationOption {
+  def name:String = if (memo) { "topDownMemo" } else { "topDown" }
+}
+
+case class BottomUp() extends GenerationOption {
+  def name:String = "bottomUp"
+}
 
 trait Utility {
   val paradigm: AnyParadigm
@@ -27,6 +34,7 @@ trait Utility {
   val eqls: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val asserts: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val strings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val booleans: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
   import paradigm._
   import syntax._
@@ -38,6 +46,43 @@ trait Utility {
 
   class DPExample[Input, Output, Full_Solution] (val name:String, val example:Input, val solution:Output, val full_solution:Full_Solution) {
   }
+
+  def pair_helper(): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
+    import paradigm.methodBodyCapabilities._
+
+    for {
+
+      //Setting up header
+      argType <- toTargetLanguageType(TypeRep.Int)
+      argName1 = names.mangle("i")
+      argName2 = names.mangle("j")
+
+      _ <- setParameters(Seq((argName1,argType),(argName2,argType)))
+
+      intType <- toTargetLanguageType(TypeRep.Int)
+      _ <- setReturnType(intType)
+
+      //Function details
+      args <- getArguments()
+      i = args.head._3
+      j = args.tail.head._3
+
+      one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
+      two <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 2)
+
+      ipj <- arithmetic.arithmeticCapabilities.add(i, j)
+      ipjp1 <-  arithmetic.arithmeticCapabilities.add(ipj, one)
+
+      ipjtipjp1 <- arithmetic.arithmeticCapabilities.mult(ipj, ipjp1)
+
+      ipjtipjp1o2 <- arithmetic.arithmeticCapabilities.div(ipjtipjp1, two)
+
+      finalExpression <- arithmetic.arithmeticCapabilities.add(ipjtipjp1o2, i)
+
+
+    } yield Some(finalExpression)
+  }
+
 
   def generate_DP_int_array_test[FS](clazz:Name, tests:Seq[DPExample[Seq[Int],Int,FS]]): Generator[MethodBodyContext, Seq[Expression]] = {
     import eqls.equalityCapabilities._
@@ -75,6 +120,10 @@ trait Utility {
         tpe <- toTargetLanguageType(TypeRep.Char)
       } yield tpe
 
+      case _:BooleanType => for {
+        tpe <- toTargetLanguageType(TypeRep.Boolean)
+      } yield tpe
+
       case _:StringType => for {
         tpe <- toTargetLanguageType(TypeRep.String)
       } yield tpe
@@ -98,14 +147,19 @@ trait Utility {
         field <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle(argExpr.name))
       } yield field
 
-      case arg:StringType => for {
+      case _:BooleanType => for {
+        self <- ooParadigm.methodBodyCapabilities.selfReference()
+        field <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle(argExpr.name))
+      } yield field
+
+      case _:StringType => for {
         self <- ooParadigm.methodBodyCapabilities.selfReference()
         field <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle(argExpr.name))
         lengthMethod <- ooParadigm.methodBodyCapabilities.getMember(field, names.mangle("length"))     // bit of a hack for string
         invoke <- paradigm.methodBodyCapabilities.apply(lengthMethod, Seq.empty)
       } yield invoke
 
-      case arg:IntegerArrayType => for {
+      case _:IntegerArrayType => for {
         self <- ooParadigm.methodBodyCapabilities.selfReference()
         field <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle(argExpr.name))
         lengthField <- ooParadigm.methodBodyCapabilities.getMember(field, names.mangle("length"))     // bit of a hack for string
@@ -122,6 +176,10 @@ trait Utility {
 
     argType match {
       case _:IntegerType => for {
+        tpe <- toTargetLanguageType(TypeRep.Int)
+      } yield tpe
+
+      case _:BooleanType => for {
         tpe <- toTargetLanguageType(TypeRep.Int)
       } yield tpe
 
@@ -145,14 +203,14 @@ trait Utility {
    *
    * where ARGS represents the model (i.e., (("n", Int)) for Fibonacci and (("s1", String), ("s2", String)) for LCS
    */
-  def make_helper_method_signature(model:Model): Generator[paradigm.MethodBodyContext, Unit] = {
+  def make_helper_method_signature(args:Seq[ArgExpression]): Generator[paradigm.MethodBodyContext, Unit] = {
     import paradigm.methodBodyCapabilities._
 
     // Type of helper method param is always an integer to refer to earlier subproblem
     //
 
     for {
-      params <- forEach(model.bounds) { arg => for {
+      params <- forEach(args) { arg => for {
         argType <- toTargetLanguageType(TypeRep.Int)      // Always will be int since subproblems are ordered
         argName = names.mangle(arg.itArgName)             // use pre-selected iterator
       } yield (argName, argType)
@@ -168,8 +226,17 @@ trait Utility {
   /**
    * Institute plan for mutual recursion of helper(args) method which calls memo(args) on smaller subproblem, and that
    * method is responsible for computing and storing these subproblems.
+   *
+   * For Bottom-up solutions, there needs to be a way to access the state storing the previous computations. This is in bottomUp:Option[Expression]
+   *
+   * As code is generated, there needs to be a way to access information, and that is placed in symbolTable, which maps string (like variable name) to
+   * the variable expression (either an argument to the parameter or a locally defined variable).
+   *
+   * The reason for the map is that there is NO WAY to get the reference to a local variable within coGen; perhaps this lack of capability is for the best
+   * since it might otherwise generate code that cannot compile.
+   *
    */
-  def explore(expr : org.combinators.model.Expression, memoize:Boolean = true, bottomUp:Option[(Expression,Map[String,Expression])] = None) : Generator[paradigm.MethodBodyContext, Expression] = {
+  def explore(expr : org.combinators.model.Expression, memoize:Boolean = true, symbolTable: Map[String,Expression], bottomUp:Option[Expression] = None) : Generator[paradigm.MethodBodyContext, Expression] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
     import AnyParadigm.syntax._
@@ -177,22 +244,39 @@ trait Utility {
     // turn model Expression into a real expression
     expr match {
       case eq: EqualExpression => for {
-        left <- explore(eq.left, memoize, bottomUp)
-        right <- explore(eq.right, memoize, bottomUp)
+        left <- explore(eq.left, memoize, symbolTable, bottomUp)
+        right <- explore(eq.right, memoize, symbolTable, bottomUp)
         eq_tpe <- map_type_in_method(eq.tpe)
-        intType <- toTargetLanguageType(TypeRep.Int)   // HACK a bit
         e <- eqls.equalityCapabilities.areEqual(eq_tpe, left, right)
       } yield e
 
+      case eq: LessThanExpression => for {
+        left <- explore(eq.left, memoize, symbolTable, bottomUp)
+        right <- explore(eq.right, memoize, symbolTable, bottomUp)
+        e <- arithmetic.arithmeticCapabilities.lt(left, right)
+      } yield e
+
+      case or:OrExpression => for {
+        left <- explore(or.left, memoize, symbolTable, bottomUp)
+        right <- explore(or.right, memoize, symbolTable, bottomUp)
+        e <- booleans.booleanCapabilities.or(Seq(left, right))
+      } yield e
+
+      case or:AndExpression => for {
+        left <- explore(or.left, memoize, symbolTable, bottomUp)
+        right <- explore(or.right, memoize, symbolTable, bottomUp)
+        e <- booleans.booleanCapabilities.and(Seq(left, right))
+      } yield e
+
       case mx:MaxExpression => for {
-        left <- explore(mx.left, memoize, bottomUp)
-        right <- explore(mx.right, memoize, bottomUp)
+        left <- explore(mx.left, memoize, symbolTable, bottomUp)
+        right <- explore(mx.right, memoize, symbolTable, bottomUp)
         e <- realArithmetic.realArithmeticCapabilities.max(left, right)
       } yield e
 
       case mn:MinExpression => for {
-        left <- explore(mn.left, memoize, bottomUp)
-        right <- explore(mn.right, memoize, bottomUp)
+        left <- explore(mn.left, memoize, symbolTable, bottomUp)
+        right <- explore(mn.right, memoize, symbolTable, bottomUp)
         //SHOULD BE CHANGED TO PROPER MIN
         zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
         nLeft <- arithmetic.arithmeticCapabilities.sub(zero,left)
@@ -209,25 +293,25 @@ trait Utility {
 
       // StringLengthExpression(new ArgExpression(0)), n))
       case sle:StringLengthExpression => for {
-        inner <- explore(sle.string, memoize, bottomUp)
+        inner <- explore(sle.string, memoize, symbolTable, bottomUp)
         e <- strings.stringCapabilities.getStringLength(inner)
       } yield e
 
       case cae:CharAtExpression => for {
-        inner <- explore(cae.string, memoize, bottomUp)
-        idx <- explore(cae.index, memoize, bottomUp)
+        inner <- explore(cae.string, memoize, symbolTable, bottomUp)
+        idx <- explore(cae.index, memoize, symbolTable, bottomUp)
         e <- strings.stringCapabilities.getCharAt(inner, idx)
       } yield e
 
       case ae: SubtractionExpression => for {
-        left <- explore(ae.left, memoize, bottomUp)
-        right <- explore(ae.right, memoize, bottomUp)
+        left <- explore(ae.left, memoize, symbolTable, bottomUp)
+        right <- explore(ae.right, memoize, symbolTable, bottomUp)
         e <- arithmetic.arithmeticCapabilities.sub(left, right)
       } yield e
 
       case ae: AdditionExpression => for {
-        left <- explore(ae.left, memoize, bottomUp)
-        right <- explore(ae.right, memoize, bottomUp)
+        left <- explore(ae.left, memoize, symbolTable, bottomUp)
+        right <- explore(ae.right, memoize, symbolTable, bottomUp)
         e <- arithmetic.arithmeticCapabilities.add(left, right)
       } yield e
 
@@ -236,22 +320,28 @@ trait Utility {
         field <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle(arge.name))
       } yield field
 
+      case alen:ArrayLengthExpression => for {
+        inner <- explore(alen.array, memoize, symbolTable, bottomUp)
+        len <- ooParadigm.methodBodyCapabilities.getMember(inner, names.mangle("length"))
+      } yield len
+
       case arr:ArrayElementExpression => for {
-        inner <- explore(arr.array, memoize, bottomUp)
-        idx <- explore(arr.index, memoize, bottomUp)
+        // Access array[idx] value
+        inner <- explore(arr.array, memoize, symbolTable, bottomUp)
+        idx <- explore(arr.index, memoize, symbolTable, bottomUp)
         e <- array.arrayCapabilities.get(inner, idx)
       } yield e
 
       case me:MultiplicationExpression => for {
-        left <- explore(me.left, memoize, bottomUp)
-        right <- explore(me.right, memoize, bottomUp)
+        left <- explore(me.left, memoize, symbolTable, bottomUp)
+        right <- explore(me.right, memoize, symbolTable, bottomUp)
         e <- arithmetic.arithmeticCapabilities.mult(left, right)
       } yield e
 
       case ter:TernaryExpression => for {
-        cond <- explore(ter.condition, memoize, bottomUp)
-        trueBranch <- explore(ter.trueBranch, memoize, bottomUp)
-        falseBranch <- explore(ter.falseBranch, memoize, bottomUp)
+        cond <- explore(ter.condition, memoize, symbolTable)
+        trueBranch <- explore(ter.trueBranch, memoize, symbolTable, bottomUp)
+        falseBranch <- explore(ter.falseBranch, memoize, symbolTable, bottomUp)
 
         intType <- toTargetLanguageType(TypeRep.Int)
         score <- impParadigm.imperativeCapabilities.declareVar(names.mangle("score"), intType, None)
@@ -281,23 +371,30 @@ trait Utility {
         }
 
         all_exprs <- forEach(se.args) { expr => for {
-            exp <- explore(expr, memoize, bottomUp)
+            exp <- explore(expr, memoize, symbolTable, bottomUp)
           } yield exp
         }
 
-        res <- if (bottomUp.isDefined) {
-          get_matrix_element(bottomUp.get._1, all_exprs)
+        res <- if (!bottomUp.isEmpty) {
+          get_matrix_element(bottomUp.get, all_exprs)
         } else {
           paradigm.methodBodyCapabilities.apply(f, all_exprs)
         }
 
       } yield res
 
+      case hp:HelperExpression => for {
+        neg99 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, -99)
+        def1 = hp.variable
+        e = symbolTable(hp.variable)
+       } yield e
+
       case it:IteratorExpression => for {
         actual <- if (bottomUp.isDefined) {
           for {
-            _ <- paradigm.methodBodyCapabilities.getArguments()   // IGNORE
-          } yield bottomUp.get._2(it.variable)
+            args <- paradigm.methodBodyCapabilities.getArguments()   // HACK: needed to start the for lop off.
+            e = symbolTable(it.variable)
+          } yield e
         } else {
           for {
             args <- paradigm.methodBodyCapabilities.getArguments()
@@ -309,12 +406,15 @@ trait Utility {
         actual <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, lit.literal)
       } yield actual
 
+      case bool:LiteralBoolean => for {
+        actual <- paradigm.methodBodyCapabilities.reify(TypeRep.Boolean, bool.literal)
+      } yield actual
+
       case _ => for {   // PLACE HOLDER FOR EVERYTHING ELSE
         zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, -99)
       } yield zero
     }
   }
-
 
   def create_int_array(values:Seq[Int]) : Generator[MethodBodyContext, Expression] = {
     import AnyParadigm.syntax._
@@ -369,8 +469,6 @@ trait Utility {
       )
     } yield maxIfStmt
   }
-
-
 
   //This code does not work, can't access static method on class
   def full_set_max(maxVar: Expression, e1: Expression, e2: Expression): Generator[MethodBodyContext, Statement] = {

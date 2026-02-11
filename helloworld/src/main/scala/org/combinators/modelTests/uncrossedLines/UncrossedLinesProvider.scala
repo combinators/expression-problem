@@ -4,11 +4,11 @@ import org.combinators.dp.{DPObjectOrientedProvider, TestExample}
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality, RealArithmetic, Strings}
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.model.{AdditionExpression, ArgumentType, EqualExpression, FunctionExpression, IteratorExpression, LiteralInt, LiteralString, LiteralStringPair, Model, SubproblemExpression, SubtractionExpression, UnitExpression}
+import org.combinators.model.{AdditionExpression, ArgumentType, EqualExpression, FunctionExpression, IteratorExpression, LiteralArray, LiteralInt, LiteralString, LiteralStringPair, LiteralTwoArrays, Model, SubproblemExpression, SubtractionExpression, UnitExpression}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
@@ -27,6 +27,7 @@ trait UncrossedLinesProvider extends DPObjectOrientedProvider {
   val asserts: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val strings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val eqls: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val booleans: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
   import paradigm._
   import syntax._
@@ -39,27 +40,36 @@ trait UncrossedLinesProvider extends DPObjectOrientedProvider {
 
     // NOTE: these tests are in the wrong place, since we defer test gen to later
     val tests = Seq(
-      new TestExample("fib0", new LiteralStringPair("ACTG", "CGATC"), 2, new LiteralString("AC")) // for now, leave solution as None
+      new TestExample("ucl0", new LiteralTwoArrays(Array(1, 4, 2), Array(1, 2, 4)), new LiteralInt(2), new UnitExpression), // https://leetcode.com/problems/uncrossed-lines/
+      new TestExample("ucl1", new LiteralTwoArrays(Array(2, 5, 1, 2, 5), Array(10, 5, 2, 1, 5, 2)), new LiteralInt(3), new UnitExpression), // https://leetcode.com/problems/uncrossed-lines/
     )
 
     for {
-      assert_statements <- forEach(tests) { example =>
+      assert_statements <- forEach(tests) { test =>
 
-        val input_value = example.inputType match {
-          case lt: LiteralStringPair => (lt.string1, lt.string2)
+        val input_value = test.inputType match {
+          case lt: LiteralTwoArrays => (lt.ar1, lt.ar2)
           case _ => ??? // error in all other circumstances
+        }
+
+        val expected_value = test.answer match {
+          case lit:LiteralInt => lit.literal
+          case _ => ???
         }
 
         for {
           fibType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle(implementation))
-          s1_value <- paradigm.methodBodyCapabilities.reify(TypeRep.String, input_value._1)
-          s2_value <- paradigm.methodBodyCapabilities.reify(TypeRep.String, input_value._2)
 
-          sol <- ooParadigm.methodBodyCapabilities.instantiateObject(fibType, Seq(s1_value, s2_value))
+          arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
+
+          ar1 <- create_int_array(input_value._1)
+          ar2 <- create_int_array(input_value._2)
+
+          sol <- ooParadigm.methodBodyCapabilities.instantiateObject(fibType, Seq(ar1, ar2))
           computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, computeName)
 
           intType <- toTargetLanguageType(TypeRep.Int)
-          fibn_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, example.answer)
+          fibn_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, expected_value)
           fib_actual <- apply(computeMethod, Seq.empty)
           asserteq_fib <- asserts.assertionCapabilities.assertEquals(intType, fib_actual, fibn_value)
 
@@ -92,7 +102,9 @@ object UncrossedLinesProvider {
             stringsIn: Strings.WithBase[base.MethodBodyContext, base.type],
             eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type],
             oo: ObjectOriented.WithBase[base.type],
-            parametricPolymorphism: ParametricPolymorphism.WithBase[base.type])
+            parametricPolymorphism: ParametricPolymorphism.WithBase[base.type],
+            booleansIn: Booleans.WithBase[base.MethodBodyContext, base.type]
+           )
            (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): UncrossedLinesProvider.WithParadigm[base.type] =
     new UncrossedLinesProvider {
       override val paradigm: base.type = base
@@ -108,5 +120,6 @@ object UncrossedLinesProvider {
       override val asserts: Assertions.WithBase[base.MethodBodyContext, paradigm.type] = assertsIn
       override val strings: Strings.WithBase[base.MethodBodyContext, paradigm.type] = stringsIn
       override val eqls: Equality.WithBase[base.MethodBodyContext, paradigm.type] = eqlsIn
+      override val booleans: Booleans.WithBase[base.MethodBodyContext, paradigm.type] = booleansIn
     }
 }

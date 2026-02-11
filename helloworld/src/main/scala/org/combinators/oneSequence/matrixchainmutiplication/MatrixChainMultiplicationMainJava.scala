@@ -5,73 +5,74 @@ package org.combinators.oneSequence.matrixchainmutiplication
  *
  * Creates output files in target/dp
  */
-
 import cats.effect.{ExitCode, IO, IOApp}
-import com.github.javaparser.ast.PackageDeclaration
-import org.apache.commons.io.FileUtils
-import org.combinators.dp.{BottomUp, GenerationOption, TopDown}
-import org.combinators.ep.generator.FileWithPathPersistable._
-import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
-import org.combinators.ep.language.java.paradigm.ObjectOriented
-import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
+import org.combinators.dp.enhanced.EnhancedDPMainJava
+import org.combinators.dp.{BottomUp, TestExample, TopDown}
 import org.combinators.model._
 
 import java.nio.file.{Path, Paths}
 
 /**
- * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
+ * All that is needed here is the set of test cases that you need.
  */
-class MatrixChainMultiplicationMainJava {
-  val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("dp"))))
+class MatrixChainMultiplicationMainJava extends EnhancedDPMainJava {
 
-  val dpApproach = MatrixChainMultiplicationProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.realDoublesInMethod, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.stringsInMethod, generator.equalityInMethod, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
-
-  val persistable = FileWithPathPersistable[FileWithPath]
-
-  def directToDiskTransaction(targetDirectory: Path, model:Model, option:GenerationOption): IO[Unit] = {
-
-    val files =
-      () => generator.paradigm.runGenerator {
-        for {
-          _ <- generator.doublesInMethod.enable()
-          _ <- generator.realDoublesInMethod.enable()
-          _ <- generator.intsInMethod.enable()
-          _ <- generator.stringsInMethod.enable()
-          _ <- generator.listsInMethod.enable()     // should be array, but this still needs to be added as an FFI
-          _ <- generator.consoleInMethod.enable()
-          _ <- generator.arraysInMethod.enable()
-          _ <- generator.equalityInMethod.enable()
-          _ <- generator.assertionsInMethod.enable()
-
-          // HERE you can finally specify the method to use for testing and the test cases
-          _ <- dpApproach.implement(model, option)
-        } yield ()
-      }
-
-     IO {
-      print("Computing Files...")
-      val computed = files()
-      println("[OK]")
-      if (targetDirectory.toFile.exists()) {
-        print(s"Cleaning Target Directory ($targetDirectory)...")
-        FileUtils.deleteDirectory(targetDirectory.toFile)
-        println("[OK]")
-      }
-      print("Persisting Files...")
-      files().foreach(file => persistable.persistOverwriting(targetDirectory, file))
-      println("[OK]")
-    }
-  }
-
-  def runDirectToDisc(targetDirectory: Path, model:Model, option:GenerationOption): IO[ExitCode] = {
-    for {
-      _ <- directToDiskTransaction(targetDirectory, model, option)
-    } yield ExitCode.Success
-  }
+  override def tests = Seq(
+    new TestExample("mm1", new LiteralArray(Array(40, 20, 30, 10, 30)), new LiteralInt(26000), new UnitExpression), //
+    new TestExample("mm2", new LiteralArray(Array(2, 1, 3, 4)), new LiteralInt(20), new UnitExpression),            // https://www.geeksforgeeks.org/problems/matrix-chain-multiplication0303/1
+    new TestExample("mm3", new LiteralArray(Array(10, 30, 5, 60)), new LiteralInt(4500), new UnitExpression),       // ttps://en.wikipedia.org/wiki/Matrix_chain_multiplication
+  )
 }
 
 object MatrixChainMultiplicationMainDirectToDiskMain extends IOApp {
   val targetDirectory:Path = Paths.get("target", "dp")
+
+  def model:EnhancedModel = {
+    // Needed for conditions and fib(n-1) and fib(n-2)
+    val zero: LiteralInt = new LiteralInt(0)
+    val one: LiteralInt = new LiteralInt(1)
+
+    // MatrixChainMultiplication has an array of N+1 integers,representing N 2D Matrices
+    val array = new ArgExpression(0, "nums", new IntegerArrayType(), "i")
+    val bound = List(array)
+
+    // COULD be inferred from the ArgExpression list, but this lets us name variable to use in iterator
+    val i: HelperExpression = new HelperExpression("i")    // only one argument, i
+    val j: HelperExpression = new HelperExpression("j")    // also over nums
+    val k: HelperExpression = new HelperExpression("k")
+
+    // what the compute() method calls with helper(1, nums.length-1)
+    val symTable = Map("i" -> new LiteralInt(1), "j" -> new SubtractionExpression(new ArrayLengthExpression(array), one))
+    val sol = new SubproblemInvocation(symTable)
+
+    /*
+     *   P(i,j) = 0, if i == j
+     *   P(i,j) = Min (k, P(i,k) + P(k+1,j) + cost of multiplying resulting two matrices)
+     *      for (int k = i; k < j; k++)
+     */
+
+    val subprobExpr = new AdditionExpression(
+      new SubproblemExpression(Seq(i,k)),
+      new AdditionExpression(
+        new SubproblemExpression(Seq(k + one, j)),
+        array(i - one) * array(k) * array(j)
+      )
+    )
+
+    // Min range definition for k in range from i (inclusive) to j (exclusive) with an advance of k+1
+    val defij = new MinRangeDefinition(Seq(i, j), k, i, new LessThanExpression(k, j), subprobExpr, new AdditionExpression(k, one))
+
+    val mcm_definition = new IfThenElseDefinition(new EqualExpression(i, j), new ExpressionStatement(zero), defij)
+
+    val MCM = new EnhancedModel("MatrixChainMultiplication",
+      bound,
+      subproblemType = new LiteralInt(0),    // helper methods and intermediate problems are int
+      solutionType = new LiteralString(""),  // how a solution is represented
+      sol,
+      mcm_definition)
+
+    MCM
+  }
 
   def run(args: List[String]): IO[ExitCode] = {
 
@@ -88,38 +89,15 @@ object MatrixChainMultiplicationMainDirectToDiskMain extends IOApp {
           case _ => ???
         }
     } else {
-      topDown
+      topDownWithMemo
     }
-
-    // Needed for conditions and fib(n-1) and fib(n-2)
-    val zero: LiteralInt = new LiteralInt(0)
-    val one: LiteralInt = new LiteralInt(1)
-    val two: LiteralInt = new LiteralInt(2)
-
-    // MatrixChainMultiplication has an array of N+1 integers,representin N 2D Matrices
-    val bound = List(new ArgExpression(0, "nums", new IntegerArrayType(), "i"))
-
-    // COULD be inferred from the ArgExpression list, but this lets us name variable to use in iterator
-    val n: IteratorExpression = new IteratorExpression(0, "i")   // only one argument, i
-
-    val im1 = new SubtractionExpression(n, one)
-    val im2 = new SubtractionExpression(n, two)
-n
-    val Fib = new Model("MatrixChainMultiplication",
-      bound,
-      cases = List(
-        ( Some(new EqualExpression(n, zero)),  zero ),
-        ( Some(new EqualExpression(n, one)),   one ),
-        ( None, new AdditionExpression(new SubproblemExpression(Seq(im1)), new SubproblemExpression(Seq(im2))) )
-      )
-    )
 
     for {
       _ <- IO { print("Initializing Generator...") }
       main <- IO { new MatrixChainMultiplicationMainJava() }
       _ <- IO { println("[OK]") }
 
-      result <- main.runDirectToDisc(targetDirectory, Fib, choice)
+      result <- main.runDirectToDisc(targetDirectory, model, choice)
     } yield result
   }
 }

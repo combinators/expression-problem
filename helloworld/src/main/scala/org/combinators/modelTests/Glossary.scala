@@ -1,19 +1,21 @@
 package org.combinators.modelTests
 
 /**
- * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"
+ * sbt "dp/runMain org.combinators.modelTests.Glossary [bottomUp | topDown | topDownMemo]
  *
- * Creates output files in target/dp
+ * Creates output files in target/bottomUp or target\topDown or target\topDownMemo
  */
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
-import org.combinators.dp.{BottomUp, LCSMainJava, TopDown}
+import org.combinators.dp.{BottomUp, GenerationOption, LCSMainJava, TopDown}
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.model.models.twoSequences.{LongestCommonSubsequenceModel, UncrossedLinesModel}
 import org.combinators.modelTests.uncrossedLines.UncrossedLinesMainJava
-
 import org.combinators.ep.generator.FileWithPathPersistable._
+import org.combinators.integer.perfectsquare.{PerfectSquareMainDirectToDiskMain, PerfectSquareMainJava}
+import org.combinators.oneSequence.matrixchainmutiplication.{MatrixChainMultiplicationMainDirectToDiskMain, MatrixChainMultiplicationMainJava}
+import org.combinators.strings.{InterleaveStringsMainJava, InterleaveStringsToDiskMain}
 
 import java.nio.file.{Path, Paths}
 import scala.collection.Seq
@@ -45,7 +47,6 @@ class Glossary {
 }
 
 object GlossaryToDiskMain extends IOApp {
-  val targetDirectory:Path = Paths.get("target", "dp")
 
   // choose one of these to pass in
   val topDown         = new TopDown()
@@ -53,19 +54,47 @@ object GlossaryToDiskMain extends IOApp {
   val bottomUp        = new BottomUp()
 
   // below are the individual DP problems generated and added to `all_files`.
-  val ul = new UncrossedLinesMainJava().filesToGenerate(new UncrossedLinesModel().instantiate(), topDown)
-  val lcs = new LCSMainJava().filesToGenerate(new LongestCommonSubsequenceModel().instantiate(), topDown)
+  def files(choice:GenerationOption) = {
+    val ps = new PerfectSquareMainJava().filesToGenerate(PerfectSquareMainDirectToDiskMain.model, choice)
+    val mcm = new MatrixChainMultiplicationMainJava().filesToGenerate(MatrixChainMultiplicationMainDirectToDiskMain.model, choice)
+    val ils = new InterleaveStringsMainJava().filesToGenerate(InterleaveStringsToDiskMain.model, choice)
 
-  // add them all together
-  val all_files = ul ++ lcs
+    if (choice == topDown) {
+      val ul = new UncrossedLinesMainJava().filesToGenerate(new UncrossedLinesModel().instantiate(), choice)
+      val lcs = new LCSMainJava().filesToGenerate(new LongestCommonSubsequenceModel().instantiate(), choice)
+      ps ++ mcm ++ ils ++ ul ++ lcs
+    } else {
+      // add them all together BUT ONLY for topDown
+      ps ++ mcm ++ ils
+    }
+  }
 
   def run(args: List[String]): IO[ExitCode] = {
-    for {
-        _ <- IO { println("Initializing Generator...") }
-        main <- IO { new Glossary() }
-        _ <- IO { println("[OK]") }
+    val choice = if (args.isEmpty) {
+      topDown                    // <------ CHANGE this manually when you run, to generate topDown or topDownWithMemo -- BOTTOMUP NOT YET WORKING
+    } else {
+      args(0).toLowerCase match {
+        case "topdown" => topDown
+        case "bottomup" => bottomUp
+        case "topdownmemo" => topDownWithMemo
+        case _ =>
+          print (s"Unknown option: ${args(0)}. Must be either 'topDown', 'bottomUp' or 'topDownMemo'.")
+          ???
+      }
+    }
 
-        result <- main.runDirectToDisc(targetDirectory, all_files)
+    val targetDirectory:Path = Paths.get("target", choice.name)
+
+    for {
+        _ <- IO {
+          println("Initializing Generator...")
+          println(s"Output will appear in: ${targetDirectory}")
+        }
+        main <- IO { new Glossary() }
+
+        result <- main.runDirectToDisc(targetDirectory, files(choice))
+
+        _ <- IO { println("Make sure you run the scripts to 'fix' the generated code.") }
       } yield result
     }
 }

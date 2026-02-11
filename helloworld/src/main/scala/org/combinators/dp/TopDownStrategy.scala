@@ -6,8 +6,8 @@ import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.{Command, NameProvider}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Equality, Strings}
-import org.combinators.model.{AdditionExpression, ArgumentType, EqualExpression, InputExpression, IteratorExpression, LiteralInt, Model, StringLengthExpression, SubproblemExpression, SubtractionExpression}
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Equality, Strings}
+import org.combinators.model.{AdditionExpression, ArgumentType, EnhancedModel, EqualExpression, InputExpression, IteratorExpression, LiteralInt, Model, StringLengthExpression, SubproblemExpression, SubtractionExpression}
 
 /**
  * Concepts necessary to realize top-down solutions
@@ -27,6 +27,7 @@ trait TopDownStrategy extends Utility {
   val eqls: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val asserts: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val strings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val booleans: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
   import paradigm._
   import syntax._
@@ -167,7 +168,7 @@ trait TopDownStrategy extends Utility {
 
     def create_memo_helper(): Generator[MethodBodyContext, Option[Expression]] = {
       for {
-        _ <- make_helper_method_signature(model)  // should be done outside
+        _ <- make_helper_method_signature(model.bounds)  // should be done outside
         res <- memo_helper()
       } yield res
     }
@@ -246,15 +247,15 @@ trait TopDownStrategy extends Utility {
     val elseCase = model.cases.filter(p => p._1.isEmpty) // MUST only be one. Not sure how I would check
 
     for {
-      _ <- make_helper_method_signature(model)
+      _ <- make_helper_method_signature(model.bounds)
       intType <- toTargetLanguageType(TypeRep.Int)
       _ <- setReturnType(intType)
-      inner <- explore(first_case._1.get, memoize=useMemo)
+      inner <- explore(first_case._1.get, memoize=useMemo, symbolTable = Map.empty)
 
       all_rest <- forEach(tail_cases) { next_case =>
         for {
-          next_cond <- explore(next_case._1.get, memoize=useMemo)
-          next_exp <- explore(next_case._2, memoize=useMemo)
+          next_cond <- explore(next_case._1.get, memoize=useMemo, symbolTable = Map.empty)
+          next_exp <- explore(next_case._2, memoize=useMemo, symbolTable = Map.empty)
         } yield (next_cond, expand(next_exp))
       }
 
@@ -264,7 +265,7 @@ trait TopDownStrategy extends Utility {
         ,
         // statements for that first if
         for {
-          resexp <- explore(first_case._2, memoize=useMemo)
+          resexp <- explore(first_case._2, memoize=useMemo, symbolTable = Map.empty)
           av <- impParadigm.imperativeCapabilities.returnStmt(resexp)
           _ <- addBlockDefinitions(Seq(av))
         } yield None
@@ -274,7 +275,7 @@ trait TopDownStrategy extends Utility {
         ,
         // terminating 'else' takes the elseCase and adds it last
         Some(for {
-          result_exp <- explore(elseCase.head._2, memoize=useMemo)
+          result_exp <- explore(elseCase.head._2, memoize=useMemo, symbolTable = Map.empty)
           av <- impParadigm.imperativeCapabilities.returnStmt(result_exp)
           _ <- addBlockDefinitions(Seq(av))
         } yield ())
@@ -284,51 +285,16 @@ trait TopDownStrategy extends Utility {
     } yield None
   }
 
-
   def outer_helper(useMemo: Boolean, model:Model): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     for {
-      _ <- make_helper_method_signature(model)
+      _ <- make_helper_method_signature(model.bounds)
       intType <- toTargetLanguageType(TypeRep.Int)
       _ <- setReturnType(intType)
       _ <- process_inner_helper(useMemo, model)
     } yield None
   }
 
-  def pair_helper(): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
-    import paradigm.methodBodyCapabilities._
 
-    for {
-
-      //Setting up header
-      argType <- toTargetLanguageType(TypeRep.Int)
-      argName1 = names.mangle("i")
-      argName2 = names.mangle("j")
-
-      _ <- setParameters(Seq((argName1,argType),(argName2,argType)))
-
-      intType <- toTargetLanguageType(TypeRep.Int)
-      _ <- setReturnType(intType)
-
-      //Function details
-      args <- getArguments()
-      i = args.head._3
-      j = args.tail.head._3
-
-      one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
-      two <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 2)
-
-      ipj <- arithmetic.arithmeticCapabilities.add(i, j)
-      ipjp1 <-  arithmetic.arithmeticCapabilities.add(ipj, one)
-
-      ipjtipjp1 <- arithmetic.arithmeticCapabilities.mult(ipj, ipjp1)
-
-      ipjtipjp1o2 <- arithmetic.arithmeticCapabilities.div(ipjtipjp1, two)
-
-      finalExpression <- arithmetic.arithmeticCapabilities.add(ipjtipjp1o2, i)
-
-
-    } yield Some(finalExpression)
-  }
 
 }

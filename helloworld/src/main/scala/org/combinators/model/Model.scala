@@ -9,6 +9,7 @@ class IntegerType extends ArgumentType
 class StringType extends ArgumentType
 class CharType extends ArgumentType
 class DoubleType extends ArgumentType
+class BooleanType extends ArgumentType
 
 // possibly choose to make this Generic but that seems like overkill
 class IntegerArrayType extends ArgumentType
@@ -35,17 +36,55 @@ class Model(val problem:String, val bounds: List[ArgExpression], val cases: List
  *
  *    P(i,j) = 0, if i == j
  *    P(i,j) = Min (k, P(i,k) + P(k+1,j) + cost of multiplying resulting two matrices)
- *       for (int i = 1; i < A.length-1; i++), (int k = i; k < j; k++)
- *
+ *       for (int k = i; k < j; k++)
+
+
+
+    if (i == j) { return 0; }
+
+    int min = Integer.MAX_VALUE;  // could store in array and find min but then req extra storage
+    for (int k = i; k < j; k++) {
+      // compute cost of each possible starting point for a '(' between i and j-1 with a ')' at j
+      int count = helper(i, k) + helper(k+1, j) + A[i-1] * A[k] * A[j];
+      if (count < min) { min = count; decision.put(key(i,j), k); }
+    }
+
+    // Return minimum count
+    return min;
+
+
  */
 class Range(val variable:String, start:Expression, guard:Expression, advance:Expression)
 class MinSubProblemDefinition(val params:Seq[Range], definition:Expression) extends Expression
-class Definition(val args:Seq[ArgExpression], /* val constraint:Constraint, */val result:Expression)   // might not need to be extended?
+
+abstract class Definition
+
+abstract class DefinitionStatement
+class ExpressionStatement(val expr:Expression) extends DefinitionStatement
+
+class IfThenElseDefinition(val condition: Expression, val result: DefinitionStatement, val elseExpression: Definition) extends Definition
+class IfThenNoElseDefinition(val condition: Expression, val result: Expression, val elseIfs: Seq[(Expression, Expression)]) extends Definition
+
+class MinRangeDefinition(
+         val args:Seq[HelperExpression],
+         val variable: HelperExpression,
+         val inclusiveStart: Expression,
+         val guardContinue:Expression,
+         val subproblemExpression: Expression,
+         val advance: Expression
+) extends Definition
+
+// just lift Expression
+class ExpressionDefinition(val expr:Expression) extends Definition
 
 // trying a new approach that captures definitions. Each definition is in ordered sequence and specifies
 // the essence of the problem
 class EnhancedModel(val problem:String,
                     val input:Seq[ArgExpression],
-                    solutionType:LiteralExpression,
-                    solution:SubproblemExpression,
-                    definitions:Seq[Definition])
+                    val subproblemType:LiteralExpression,   // really a prototype of the solution. Typically, it is an integer, but could be boolean
+                    val solutionType:LiteralExpression,     // really a prototype of the kind of return value
+                    val solution:SubproblemInvocation,
+                    val definition:Definition)
+
+// Model has bounds and cases
+// EnhancedModel has solution and definitions

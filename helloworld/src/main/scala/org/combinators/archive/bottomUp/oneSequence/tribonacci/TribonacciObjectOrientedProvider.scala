@@ -3,7 +3,7 @@ package org.combinators.archive.bottomUp.oneSequence.tribonacci
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality, RealArithmetic, Strings}
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, ObjectOriented}
 import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
 import org.combinators.dp.Utility
@@ -18,6 +18,7 @@ trait TribonacciObjectOrientedProvider extends TribonacciProvider with Utility {
   val asserts: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val strings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val eqls: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val booleans: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
   import paradigm._
   import syntax._
@@ -255,7 +256,8 @@ object TribonacciObjectOrientedProvider {
    arr: Arrays.WithBase[base.MethodBodyContext, base.type],
    assertsIn: Assertions.WithBase[base.MethodBodyContext, base.type],
    stringsIn: Strings.WithBase[base.MethodBodyContext, base.type],
-   eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type]
+   eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type],
+   booleansIn: Booleans.WithBase[base.MethodBodyContext, base.type]
   )
   : TribonacciObjectOrientedProvider.WithParadigm[base.type] =
     new TribonacciObjectOrientedProvider {
@@ -270,5 +272,6 @@ object TribonacciObjectOrientedProvider {
       override val asserts: Assertions.WithBase[base.MethodBodyContext, paradigm.type] = assertsIn
       override val strings: Strings.WithBase[base.MethodBodyContext, paradigm.type] = stringsIn
       override val eqls: Equality.WithBase[base.MethodBodyContext, paradigm.type] = eqlsIn
+      override val booleans: Booleans.WithBase[base.MethodBodyContext, paradigm.type] = booleansIn
     }
 }

@@ -30,16 +30,12 @@ class UncrossedLinesModel {
           zero
         ),
         (
-          Some(new ArrayElementExpression(nums1, r) == new ArrayElementExpression(nums2, c)),
+          Some(new ArrayElementExpression(nums1, new SubtractionExpression(r, one)) == new ArrayElementExpression(nums2, new SubtractionExpression(c, one))),
           new AdditionExpression(
             new SubproblemExpression(Seq(r - one, c - one)),
             one
           )
         ),
-//        (
-//          None,
-//          one
-//        ),
         (
           None,
           new MaxExpression(

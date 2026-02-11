@@ -4,11 +4,11 @@ import org.combinators.dp.{DPObjectOrientedProvider, TestExample}
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality, RealArithmetic, Strings}
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.model.{AdditionExpression, ArgumentType, EqualExpression, FunctionExpression, IteratorExpression, LiteralInt, LiteralString, LiteralStringPair, Model, SubproblemExpression, SubtractionExpression, UnitExpression}
+import org.combinators.model.{AdditionExpression, ArgumentType, EqualExpression, FunctionExpression, IteratorExpression, LiteralInt, LiteralString, LiteralStringPair, LiteralStringTriple, Model, SubproblemExpression, SubtractionExpression, UnitExpression}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
@@ -27,6 +27,7 @@ trait ThreeStringLCSProvider extends DPObjectOrientedProvider {
   val asserts: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val strings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val eqls: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val booleans:  Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
   import paradigm._
   import syntax._
@@ -39,7 +40,7 @@ trait ThreeStringLCSProvider extends DPObjectOrientedProvider {
 
     // NOTE: these tests are in the wrong place, since we defer test gen to later
     val tests = Seq(
-      new TestExample("fib0", new LiteralStringPair("ACTG", "CGATC"), 2, new LiteralString("AC")) // for now, leave solution as None
+      new TestExample("fib0", new LiteralStringTriple("ACTG", "CGATC", "THIRD"), new LiteralInt(1), new LiteralString("AC")) // for now, leave solution as None
     )
 
     for {
@@ -48,6 +49,11 @@ trait ThreeStringLCSProvider extends DPObjectOrientedProvider {
         val input_value = example.inputType match {
           case lt: LiteralStringPair => (lt.string1, lt.string2)
           case _ => ??? // error in all other circumstances
+        }
+
+        val sol_gen_value = example.answer match {
+          case lit:LiteralInt => paradigm.methodBodyCapabilities.reify(TypeRep.Int, lit.literal)
+          case _ => ???
         }
 
         for {
@@ -59,9 +65,9 @@ trait ThreeStringLCSProvider extends DPObjectOrientedProvider {
           computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, computeName)
 
           intType <- toTargetLanguageType(TypeRep.Int)
-          fibn_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, example.answer)
           fib_actual <- apply(computeMethod, Seq.empty)
-          asserteq_fib <- asserts.assertionCapabilities.assertEquals(intType, fib_actual, fibn_value)
+          sol_value <- sol_gen_value
+          asserteq_fib <- asserts.assertionCapabilities.assertEquals(intType, fib_actual, sol_value)
 
         } yield asserteq_fib
       }
@@ -92,7 +98,9 @@ object ThreeStringLCSProvider {
             stringsIn: Strings.WithBase[base.MethodBodyContext, base.type],
             eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type],
             oo: ObjectOriented.WithBase[base.type],
-            parametricPolymorphism: ParametricPolymorphism.WithBase[base.type])
+            parametricPolymorphism: ParametricPolymorphism.WithBase[base.type],
+            booleansIn: Booleans.WithBase[base.MethodBodyContext, base.type]
+           )
            (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): ThreeStringLCSProvider.WithParadigm[base.type] =
     new ThreeStringLCSProvider {
       override val paradigm: base.type = base
@@ -108,5 +116,6 @@ object ThreeStringLCSProvider {
       override val asserts: Assertions.WithBase[base.MethodBodyContext, paradigm.type] = assertsIn
       override val strings: Strings.WithBase[base.MethodBodyContext, paradigm.type] = stringsIn
       override val eqls: Equality.WithBase[base.MethodBodyContext, paradigm.type] = eqlsIn
+      override val booleans: Booleans.WithBase[base.MethodBodyContext, paradigm.type] = booleansIn
     }
 }

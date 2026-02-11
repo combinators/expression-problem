@@ -60,22 +60,22 @@ class MinSubProblemDefinition(val params:Seq[Range], definition:Expression) exte
 abstract class Definition
 
 abstract class DefinitionStatement
-class ExpressionStatement(val expr:Expression) extends DefinitionStatement
+case class ExpressionStatement(expr:Expression) extends DefinitionStatement
 
-class IfThenElseDefinition(val condition: Expression, val result: DefinitionStatement, val elseExpression: Definition) extends Definition
-class IfThenNoElseDefinition(val condition: Expression, val result: Expression, val elseIfs: Seq[(Expression, Expression)]) extends Definition
+case class IfThenElseDefinition(condition: Expression, result: DefinitionStatement, elseExpression: Definition) extends Definition
+case class IfThenNoElseDefinition(condition: Expression, result: Expression, elseIfs: Seq[(Expression, Expression)]) extends Definition
 
-class MinRangeDefinition(
-         val args:Seq[HelperExpression],
-         val variable: HelperExpression,
-         val inclusiveStart: Expression,
-         val guardContinue:Expression,
-         val subproblemExpression: Expression,
-         val advance: Expression
+case class MinRangeDefinition(
+         args:Seq[HelperExpression],
+         variable: HelperExpression,
+         inclusiveStart: Expression,
+         guardContinue:Expression,
+         subproblemExpression: Expression,
+         advance: Expression
 ) extends Definition
 
 // just lift Expression
-class ExpressionDefinition(val expr:Expression) extends Definition
+case class ExpressionDefinition(expr:Expression) extends Definition
 
 // trying a new approach that captures definitions. Each definition is in ordered sequence and specifies
 // the essence of the problem

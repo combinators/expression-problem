@@ -130,6 +130,7 @@ trait TopDownStrategy extends Utility {
 
   /**
        private int memo(ARGUMENTS) {
+         int key = pair(ARGUMENTS)
          if (this.memo.containsKey(n)) {
            return this.memo.get(n);
          }
@@ -146,7 +147,7 @@ trait TopDownStrategy extends Utility {
       // need to convert into a KEY method. MUST have at least one argument
       args <- getArguments()
       allExpressions <- forEach(args) { arg => for {
-          re99 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, -97)
+          _ <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, -97)     // There needs to be at least one of these before "=" next
           expr = arg._3
         } yield expr
       }
@@ -157,12 +158,30 @@ trait TopDownStrategy extends Utility {
       memo_field <- ooParadigm.methodBodyCapabilities.getMember(self, memoName)
 
       pair_func <- ooParadigm.methodBodyCapabilities.getMember(self, pairName)
-      pair_expr <- paradigm.methodBodyCapabilities.apply(pair_func, allExpressions)
 
-      key_var <- if (args.length > 1) {
-        impParadigm.imperativeCapabilities.declareVar(keyName, intType, Some(pair_expr))
-      } else {
+      key_var <- if (args.length == 1) {
         impParadigm.imperativeCapabilities.declareVar(keyName, intType, Some(args.head._3))
+      } else if (args.length == 2) {
+        for {
+          pair_expr <- paradigm.methodBodyCapabilities.apply(pair_func, allExpressions)
+          dv <- impParadigm.imperativeCapabilities.declareVar(keyName, intType, Some(pair_expr))
+        } yield dv
+      } else if (args.length == 3) {
+        for {
+          inner_expr <- paradigm.methodBodyCapabilities.apply(pair_func, allExpressions.slice(1, 3))
+          outer_expr <- paradigm.methodBodyCapabilities.apply(pair_func, Seq(allExpressions(0), inner_expr))
+          dv <- impParadigm.imperativeCapabilities.declareVar(keyName, intType, Some(outer_expr))
+        } yield dv
+      } else if (args.length == 4) {
+        for {
+          inner_expr <- paradigm.methodBodyCapabilities.apply(pair_func, allExpressions.slice(2, 4))
+          outer2_expr <- paradigm.methodBodyCapabilities.apply(pair_func, Seq(allExpressions(1), inner_expr))
+          outer1_expr <- paradigm.methodBodyCapabilities.apply(pair_func, Seq(allExpressions(0), outer2_expr))
+          dv <- impParadigm.imperativeCapabilities.declareVar(keyName, intType, Some(outer1_expr))
+        } yield dv
+      } else {
+        // This can be turned into fold, with the right syntax extension to CoGen
+        ???
       }
 
       memo_ck <- ooParadigm.methodBodyCapabilities.getMember(memo_field, names.mangle("containsKey"))

@@ -1,4 +1,4 @@
-package org.combinators.dp
+package org.combinators.modelTests.knapsack
 
 /**
  * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"
@@ -9,22 +9,23 @@ package org.combinators.dp
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
+import org.combinators.dp.{BottomUp, GenerationOption, TopDown}
 import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
-import org.combinators.model.models.twoSequences. MinimumEditDistanceModel
 import org.combinators.model.Model
+import org.combinators.model.models.knapsack.KnapsackModel
 
 import java.nio.file.{Path, Paths}
 
 /**
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
-class MinEditDistanceMainJava {
+class KnapsackMainJava {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("dp"))))
 
-  val dpApproach = MinEditDistanceProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.realDoublesInMethod, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.stringsInMethod, generator.equalityInMethod, generator.ooParadigm, generator.parametricPolymorphism, generator.booleansInMethod)(generator.generics)
+  val dpApproach = KnapsackProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.realDoublesInMethod, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.stringsInMethod, generator.equalityInMethod, generator.ooParadigm, generator.parametricPolymorphism, generator.booleansInMethod)(generator.generics)
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
@@ -71,7 +72,7 @@ class MinEditDistanceMainJava {
   }
 }
 
-object MinEditDistanceDirectToDiskMain extends IOApp {
+object KnapsackDirectToDiskMain extends IOApp {
   val targetDirectory:Path = Paths.get("target", "dp")
 
   def run(args: List[String]): IO[ExitCode] = {
@@ -81,15 +82,15 @@ object MinEditDistanceDirectToDiskMain extends IOApp {
     val topDownWithMemo = new TopDown(memo = true)
     val bottomUp        = new BottomUp()
 
-    val MED = new MinimumEditDistanceModel().instantiate()
+    val Knapsack = new KnapsackModel().instantiate()
     for {
       _ <- IO { print("Initializing Generator...") }
-      main <- IO { new MinEditDistanceMainJava() }
+      main <- IO { new KnapsackMainJava() }
       _ <- IO { println("[OK]") }
 
       // pass in TOP DOWN
 
-      result <- main.runDirectToDisc(targetDirectory, MED, topDownWithMemo)
+      result <- main.runDirectToDisc(targetDirectory, Knapsack, topDown)
     } yield result
   }
 }

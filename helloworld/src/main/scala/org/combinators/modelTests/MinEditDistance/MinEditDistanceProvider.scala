@@ -1,13 +1,14 @@
-package org.combinators.dp
+package org.combinators.modelTests.MinEditDistance
 
+import org.combinators.dp.{DPObjectOrientedProvider, TestExample}
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
+import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, Generics, ObjectOriented, ParametricPolymorphism}
-import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
-import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.model.{AdditionExpression, ArgumentType, EqualExpression, FunctionExpression, IteratorExpression, LiteralInt, LiteralString, LiteralStringPair, Model, SubproblemExpression, SubtractionExpression, UnitExpression}
+import org.combinators.ep.generator.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
+import org.combinators.ep.generator.{AbstractSyntax, NameProvider}
+import org.combinators.model.{LiteralInt, LiteralString, LiteralStringPair}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
@@ -30,12 +31,11 @@ trait MinEditDistanceProvider extends DPObjectOrientedProvider {
 
   import paradigm._
   import syntax._
-  import ooParadigm._
 
   // Specific examples hard coded for Int input and Int output
   def makeTestsMinEditDistance(implementation:String, tests: Seq[TestExample] = Seq.empty): Generator[MethodBodyContext, Seq[Expression]] = {
-    import paradigm.methodBodyCapabilities._
     import eqls.equalityCapabilities._
+    import paradigm.methodBodyCapabilities._
 
     // NOTE: these tests are in the wrong place, since we defer test gen to later
     val tests = Seq(

@@ -54,7 +54,128 @@ trait BottomUpStrategy extends Utility {
     } yield None
   }
 
-  // This is hard-coded for a SINGLE bound. We will need another one to deal with two-d problems (and higher)
+  def make_bottom_up_compute_method_nest_3(model: Model): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
+    import paradigm.methodBodyCapabilities._
+
+    val real_cases = model.cases.filter(p => p._1.isDefined) // MUST be at least one.
+    val first_case = real_cases.head
+    val tail_cases = real_cases.tail
+    val elseCase = model.cases.filter(p => p._1.isEmpty) // MUST only be one.
+
+    for {
+      self <- ooParadigm.methodBodyCapabilities.selfReference()
+      intType <- toTargetLanguageType(TypeRep.Int)
+      _ <- setReturnType(intType)
+
+      arrayType <- toTargetLanguageType(arTypes(model.bounds.length))
+
+      one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
+      zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
+
+      // Get max bounds for all three dimensions
+      max_bound_outer <- max_bound_in_method(model.bounds.head)
+      mboplus1 <- arithmetic.arithmeticCapabilities.add(max_bound_outer, one)
+
+      max_bound_middle <- max_bound_in_method(model.bounds.tail.head)
+      mbmplus1 <- arithmetic.arithmeticCapabilities.add(max_bound_middle, one)
+
+      max_bound_inner <- max_bound_in_method(model.bounds.tail.tail.head)
+      mbiplus1 <- arithmetic.arithmeticCapabilities.add(max_bound_inner, one)
+
+      // Declare iteration variables for all three dimensions
+      ivar_outer <- impParadigm.imperativeCapabilities.declareVar(names.mangle(model.bounds.head.itArgName), intType, Some(zero))
+      ivar_middle <- impParadigm.imperativeCapabilities.declareVar(names.mangle(model.bounds.tail.head.itArgName), intType, Some(zero))
+      ivar_inner <- impParadigm.imperativeCapabilities.declareVar(names.mangle(model.bounds.tail.tail.head.itArgName), intType, Some(zero))
+
+      // Access dp array at all three levels
+      dp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
+      dp_o <- array.arrayCapabilities.get(dp, ivar_outer)
+      dp_o_m <- array.arrayCapabilities.get(dp_o, ivar_middle)
+      dp_o_m_i <- array.arrayCapabilities.get(dp_o_m, ivar_inner)
+
+      // Build symbol table with all three iteration variables
+      symbol_table = Map(
+        model.bounds.head.itArgName -> ivar_outer,
+        model.bounds.tail.head.itArgName -> ivar_middle,
+        model.bounds.tail.tail.head.itArgName -> ivar_inner
+      )
+
+      // Instantiate 3D array
+      instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, Seq(mboplus1, mbmplus1, mbiplus1), None)
+
+      inner <- explore(first_case._1.get, bottomUp = Some(dp), symbolTable = symbol_table)
+
+      all_rest <- forEach(tail_cases) { next_case =>
+        for {
+          next_cond <- explore(next_case._1.get, memoize = false, bottomUp = Some(dp), symbolTable = symbol_table)
+          next_exp <- explore(next_case._2, memoize = false, bottomUp = Some(dp), symbolTable = symbol_table)
+        } yield (next_cond, expand_assign(dp_o_m_i, next_exp))
+      }
+
+      assign_stmt <- impParadigm.imperativeCapabilities.assignVar(dp, instantiated)
+      _ <- addBlockDefinitions(Seq(assign_stmt))
+
+      // Range conditions for all three dimensions
+      in_range <- arithmetic.arithmeticCapabilities.le(ivar_inner, max_bound_inner)
+      middle_range <- arithmetic.arithmeticCapabilities.le(ivar_middle, max_bound_middle)
+      out_range <- arithmetic.arithmeticCapabilities.le(ivar_outer, max_bound_outer)
+
+      // Innermost while loop (inner dimension)
+      whileLoop_inner <- impParadigm.imperativeCapabilities.whileLoop(in_range, for {
+        ifstmt <- impParadigm.imperativeCapabilities.ifThenElse(
+          inner,
+          for {
+            resexp <- explore(first_case._2, memoize = false, bottomUp = Some(dp), symbolTable = symbol_table)
+            av <- impParadigm.imperativeCapabilities.assignVar(dp_o_m_i, resexp)
+            _ <- addBlockDefinitions(Seq(av))
+          } yield None,
+          all_rest,
+          Some(for {
+            result_exp <- explore(elseCase.head._2, memoize = false, bottomUp = Some(dp), symbolTable = symbol_table)
+            av <- impParadigm.imperativeCapabilities.assignVar(dp_o_m_i, result_exp)
+            _ <- addBlockDefinitions(Seq(av))
+          } yield ())
+        )
+
+        ivar_inner_plusone <- arithmetic.arithmeticCapabilities.add(ivar_inner, one)
+        incr_inner <- impParadigm.imperativeCapabilities.assignVar(ivar_inner, ivar_inner_plusone)
+
+        _ <- addBlockDefinitions(Seq(ifstmt, incr_inner))
+      } yield ())
+
+      // Middle while loop
+      whileLoop_middle <- impParadigm.imperativeCapabilities.whileLoop(middle_range, for {
+        inner_reset <- impParadigm.imperativeCapabilities.assignVar(ivar_inner, zero)
+
+        ivar_middle_plusone <- arithmetic.arithmeticCapabilities.add(ivar_middle, one)
+        incr_middle <- impParadigm.imperativeCapabilities.assignVar(ivar_middle, ivar_middle_plusone)
+
+        _ <- addBlockDefinitions(Seq(inner_reset, whileLoop_inner, incr_middle))
+      } yield ())
+
+      // Outermost while loop
+      whileLoop_outer <- impParadigm.imperativeCapabilities.whileLoop(out_range, for {
+        middle_reset <- impParadigm.imperativeCapabilities.assignVar(ivar_middle, zero)
+        inner_reset <- impParadigm.imperativeCapabilities.assignVar(ivar_inner, zero)
+
+        ivar_outer_plusone <- arithmetic.arithmeticCapabilities.add(ivar_outer, one)
+        incr_outer <- impParadigm.imperativeCapabilities.assignVar(ivar_outer, ivar_outer_plusone)
+
+        _ <- addBlockDefinitions(Seq(middle_reset, inner_reset, whileLoop_middle, incr_outer))
+      } yield ())
+
+      _ <- addBlockDefinitions(Seq(whileLoop_outer))
+
+      // Return last element dp[max_bound_outer][max_bound_middle][max_bound_inner]
+      dpexp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
+      dpo <- array.arrayCapabilities.get(dpexp, max_bound_outer)
+      dpm <- array.arrayCapabilities.get(dpo, max_bound_middle)
+      dpi <- array.arrayCapabilities.get(dpm, max_bound_inner)
+      retstmt <- Command.lift(dpi)
+    } yield Some(retstmt)
+  }
+
+  // This is hard-coded for TWO bounds.
   def make_bottom_up_compute_method_nest_2(model:Model): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
 
@@ -310,8 +431,10 @@ trait BottomUpStrategy extends Utility {
 
         _ <- if (model.bounds.length == 1) {
           addMethod(computeName, make_bottom_up_compute_method(model))
-        } else {
+        } else if (model.bounds.length == 2) {
           addMethod(computeName, make_bottom_up_compute_method_nest_2(model) )
+        } else {
+          addMethod(computeName, make_bottom_up_compute_method_nest_3(model))
         }
       } yield None
     }

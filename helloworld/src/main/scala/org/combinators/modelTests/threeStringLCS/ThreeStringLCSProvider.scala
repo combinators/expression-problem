@@ -40,14 +40,14 @@ trait ThreeStringLCSProvider extends DPObjectOrientedProvider {
 
     // NOTE: these tests are in the wrong place, since we defer test gen to later
     val tests = Seq(
-      new TestExample("fib0", new LiteralStringTriple("ACTG", "CGATC", "THIRD"), new LiteralInt(1), new LiteralString("AC")) // for now, leave solution as None
+      new TestExample("test1", new LiteralStringTriple("AGGT12", "12TXAYB", "12XBA"), new LiteralInt(2), new LiteralString("AC")) // for now, leave solution as None
     )
 
     for {
       assert_statements <- forEach(tests) { example =>
 
         val input_value = example.inputType match {
-          case lt: LiteralStringPair => (lt.string1, lt.string2)
+          case lt: LiteralStringTriple => (lt.string1, lt.string2, lt.string3)
           case _ => ??? // error in all other circumstances
         }
 
@@ -57,19 +57,20 @@ trait ThreeStringLCSProvider extends DPObjectOrientedProvider {
         }
 
         for {
-          fibType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle(implementation))
+          tslcsType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle(implementation))
           s1_value <- paradigm.methodBodyCapabilities.reify(TypeRep.String, input_value._1)
           s2_value <- paradigm.methodBodyCapabilities.reify(TypeRep.String, input_value._2)
+          s3_value <- paradigm.methodBodyCapabilities.reify(TypeRep.String, input_value._3)
 
-          sol <- ooParadigm.methodBodyCapabilities.instantiateObject(fibType, Seq(s1_value, s2_value))
+          sol <- ooParadigm.methodBodyCapabilities.instantiateObject(tslcsType, Seq(s1_value, s2_value, s3_value))
           computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, computeName)
 
           intType <- toTargetLanguageType(TypeRep.Int)
-          fib_actual <- apply(computeMethod, Seq.empty)
+          tslcs_actual <- apply(computeMethod, Seq.empty)
           sol_value <- sol_gen_value
-          asserteq_fib <- asserts.assertionCapabilities.assertEquals(intType, fib_actual, sol_value)
+          asserteq_tslcs <- asserts.assertionCapabilities.assertEquals(intType, tslcs_actual, sol_value)
 
-        } yield asserteq_fib
+        } yield asserteq_tslcs
       }
     } yield assert_statements
   }

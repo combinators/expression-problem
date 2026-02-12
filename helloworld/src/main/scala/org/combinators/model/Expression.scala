@@ -57,7 +57,7 @@ class LiteralString(val literal: String) extends LiteralExpression
 class SubstringExpression(val string: Expression, val start: Expression, val end: Expression) extends Expression
 
 //Character
-class LiteralChar(val char:Char) extends LiteralExpression
+class LiteralChar(val literal:Char) extends LiteralExpression
 class CharAtExpression(val string: Expression, val index: Expression) extends Expression
 
 

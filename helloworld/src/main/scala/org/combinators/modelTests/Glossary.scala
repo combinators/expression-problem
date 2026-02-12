@@ -11,11 +11,14 @@ import org.apache.commons.io.FileUtils
 import org.combinators.dp.enhanced.EnhancedDPMainJava
 import org.combinators.dp.{BottomUp, GenerationOption, LCSMainJava, TopDown}
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
-import org.combinators.model.models.twoSequences.{LongestCommonSubsequenceModel, UncrossedLinesModel}
+import org.combinators.model.models.twoSequences.{LongestCommonSubsequenceModel, NeedlemanWunschSequenceAlignmentModel, UncrossedLinesModel}
 import org.combinators.modelTests.uncrossedLines.UncrossedLinesMainJava
 import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.integer.perfectsquare.{PerfectSquareMainDirectToDiskMain, PerfectSquareMainJava}
 import org.combinators.model.EnhancedModel
+import org.combinators.model.models.knapsack.KnapsackModel
+import org.combinators.modelTests.knapsack.KnapsackMainJava
+import org.combinators.modelTests.nwsa.NWSAMainJava
 import org.combinators.oneSequence.matrixchainmutiplication.{MatrixChainMultiplicationMainDirectToDiskMain, MatrixChainMultiplicationMainJava}
 import org.combinators.strings.{InterleaveStringsMainJava, InterleaveStringsToDiskMain}
 
@@ -81,12 +84,14 @@ object GlossaryToDiskMain extends IOApp {
   def top_down() = {
     val ul = new UncrossedLinesMainJava().filesToGenerate(new UncrossedLinesModel().instantiate(), TopDown())
     val lcs = new LCSMainJava().filesToGenerate(new LongestCommonSubsequenceModel().instantiate(), TopDown())
+    val kp = new KnapsackMainJava().filesToGenerate(new KnapsackModel().instantiate(), TopDown())
+    val nwsa = new NWSAMainJava().filesToGenerate(new NeedlemanWunschSequenceAlignmentModel().instantiate(), TopDown())
 
     val others = known_enhanced_solutions.filter(triple
       => triple._3.contains(TopDown())).
       flatMap(triple => triple._1.filesToGenerate(triple._2, TopDown()))
 
-    others ++ lcs ++ ul
+    others ++ lcs ++ ul ++ kp ++ nwsa
   }
 
   def bottom_up_files() = {

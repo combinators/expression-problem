@@ -43,6 +43,7 @@ trait Utility {
   // known to ALL approaches (top-down or bottom up)
   lazy val helperName     = names.mangle("helper")
   lazy val computeName    = names.mangle("compute")
+  lazy val retrieveName   = names.mangle("retrieve")
 
   class DPExample[Input, Output, Full_Solution] (val name:String, val example:Input, val solution:Output, val full_solution:Full_Solution) {
   }
@@ -104,6 +105,35 @@ trait Utility {
         } yield assert_stmt
       }
     } yield assert_statements
+  }
+
+  def generate_retrieve(model: Model): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
+    import paradigm.methodBodyCapabilities._
+
+    val label: String = model.retrieveLabel
+
+    for {
+      intType <- toTargetLanguageType(TypeRep.Int)
+      zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
+
+      params = model.bounds.foldLeft(Seq.empty[(Name, Type)]) { (acc, bound) =>
+        acc :+ (names.mangle(bound.itArgName), intType)
+      }
+
+      _ <- setParameters(params)
+      _ <- setReturnType(intType)
+
+//      ivar_outer <- impParadigm.imperativeCapabilities.declareVar(names.mangle(model.bounds.head.itArgName), intType, Some(zero))
+
+//      ijk <- model.bounds.foldLeft(Seq.empty[Expression]) { (acc, bound) =>
+//        acc :+
+//      }
+
+      self <- ooParadigm.methodBodyCapabilities.selfReference()
+      recursive_call <- ooParadigm.methodBodyCapabilities.getMember(self, retrieveName)
+//      application <- paradigm.methodBodyCapabilities.apply(recursive_call, ijk)
+
+    } yield Some(recursive_call)
   }
 
   // NOTE: I can make generic with CONTEXT but can't remember syntax.

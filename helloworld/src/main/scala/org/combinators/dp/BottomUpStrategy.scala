@@ -435,6 +435,7 @@ trait BottomUpStrategy extends Utility {
           addMethod(computeName, make_bottom_up_compute_method_nest_2(model) )
         } else {
           addMethod(computeName, make_bottom_up_compute_method_nest_3(model))
+//          addMethod(retrieveName, generate_retrieve(model))
         }
       } yield None
     }

@@ -5,11 +5,11 @@ import org.combinators.ep.domain.abstractions.TypeRep
 trait ArgumentType { }
 
 // problem instance types go here
-class IntegerType extends ArgumentType
-class StringType extends ArgumentType
-class CharType extends ArgumentType
-class DoubleType extends ArgumentType
-class BooleanType extends ArgumentType
+case class BooleanType() extends ArgumentType
+case class CharType() extends ArgumentType
+case class IntegerType() extends ArgumentType
+case class DoubleType() extends ArgumentType
+case class StringType() extends ArgumentType
 
 // possibly choose to make this Generic but that seems like overkill
 class IntegerArrayType extends ArgumentType
@@ -77,14 +77,26 @@ case class MinRangeDefinition(
 // just lift Expression
 case class ExpressionDefinition(expr:Expression) extends Definition
 
+trait ProblemOrder
+case class Canonical() extends ProblemOrder
+case class UpperTriangle() extends ProblemOrder
+
 // trying a new approach that captures definitions. Each definition is in ordered sequence and specifies
 // the essence of the problem
 class EnhancedModel(val problem:String,
                     val input:Seq[ArgExpression],
-                    val subproblemType:LiteralExpression,   // really a prototype of the solution. Typically, it is an integer, but could be boolean
-                    val solutionType:LiteralExpression,     // really a prototype of the kind of return value
+                    val subproblemType:ArgumentType,        // Type of solution
+                    val solutionType:ArgumentType,          // Type of return value
                     val solution:SubproblemInvocation,
-                    val definition:Definition)
+                    val definition:Definition,
+                    val mode:ProblemOrder = Canonical())
+
+// Most DP problems solve subproblems in a canonical order, which is typified by a two-d array: solve rows first from top to bottom,
+// and then within each row, columns from left to right
+//
+// Naturally not all follow this. one common alternative is solving problems along the upper triangle matrix. That is, first solve as
+// the base case the long diagonal. Then solve all problems on the DP[i][j+1] for those entries just above the diagonal; then dp[i][j+2]
+// for all values two above the diagonal and so on.
 
 // Model has bounds and cases
 // EnhancedModel has solution and definitions

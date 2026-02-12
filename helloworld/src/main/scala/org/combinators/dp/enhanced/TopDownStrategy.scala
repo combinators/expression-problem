@@ -14,7 +14,7 @@ import org.combinators.model.{Definition, DefinitionStatement, EnhancedModel, Ex
  * Concepts necessary to realize top-down solutions
  */
 
-trait TopDownStrategy extends Utility {
+trait TopDownStrategy extends Utility with EnhancedUtility {
   val paradigm: AnyParadigm
   val names: NameProvider[paradigm.syntax.Name]
 
@@ -47,86 +47,6 @@ trait TopDownStrategy extends Utility {
   // is provided by the DP common provider -- neither a topDown or a bottomUp concept
   def make_compute_method(model:EnhancedModel): Generator[paradigm.MethodBodyContext, Option[Expression]]
 
-  def return_type_based_on_model(model:EnhancedModel) : Generator[MethodBodyContext, Type] = {
-    import paradigm.methodBodyCapabilities._
-
-    model.subproblemType match {
-      case _:LiteralInt => for {
-        intType <- toTargetLanguageType(TypeRep.Int)
-      } yield intType
-
-      case _:LiteralBoolean => for {
-        boolType <- toTargetLanguageType(TypeRep.Boolean)
-      } yield boolType
-
-      case _:LiteralString => for {
-        strType <- toTargetLanguageType(TypeRep.String)
-      } yield strType
-
-      case _ => ???
-    }
-  }
-
-
-  def helper_method_type(model:EnhancedModel) : Generator[MethodBodyContext, Type] = {
-    import paradigm.methodBodyCapabilities._
-
-    model.subproblemType match {
-      case _:LiteralInt => for {
-        intType <- toTargetLanguageType(TypeRep.Int)
-      } yield intType
-
-      case _:LiteralBoolean => for {
-        boolType <- toTargetLanguageType(TypeRep.Boolean)
-      } yield boolType
-
-      case _:LiteralString => for {
-        strType <- toTargetLanguageType(TypeRep.String)
-      } yield strType
-
-      case _ => ???
-    }
-  }
-
-  def helper_method_type_in_class(model:EnhancedModel) : Generator[ClassContext, Type] = {
-    import ooParadigm.classCapabilities._
-
-    model.subproblemType match {
-      case _:LiteralInt => for {
-        intType <- toTargetLanguageType(TypeRep.Int)
-      } yield intType
-
-      case _:LiteralBoolean => for {
-        boolType <- toTargetLanguageType(TypeRep.Boolean)
-      } yield boolType
-
-      case _:LiteralString => for {
-        strType <- toTargetLanguageType(TypeRep.String)
-      } yield strType
-
-      case _ => ???
-    }
-  }
-
-  def helper_method_type_in_constructor(model:EnhancedModel) : Generator[ConstructorContext, Type] = {
-    import ooParadigm.constructorCapabilities._
-
-    model.subproblemType match {
-      case _:LiteralInt => for {
-        intType <- toTargetLanguageType(TypeRep.Int)
-      } yield intType
-
-      case _:LiteralBoolean => for {
-        boolType <- toTargetLanguageType(TypeRep.Boolean)
-      } yield boolType
-
-      case _:LiteralString => for {
-        strType <- toTargetLanguageType(TypeRep.String)
-      } yield strType
-
-      case _ => ???
-    }
-  }
 
   /**
        private int memo(ARGUMENTS) {
@@ -164,24 +84,14 @@ trait TopDownStrategy extends Utility {
       } else if (args.length == 2) {
         for {
           pair_expr <- paradigm.methodBodyCapabilities.apply(pair_func, allExpressions)
-          dv <- impParadigm.imperativeCapabilities.declareVar(keyName, intType, Some(pair_expr))
-        } yield dv
-      } else if (args.length == 3) {
-        for {
-          inner_expr <- paradigm.methodBodyCapabilities.apply(pair_func, allExpressions.slice(1, 3))
-          outer_expr <- paradigm.methodBodyCapabilities.apply(pair_func, Seq(allExpressions(0), inner_expr))
-          dv <- impParadigm.imperativeCapabilities.declareVar(keyName, intType, Some(outer_expr))
-        } yield dv
-      } else if (args.length == 4) {
-        for {
-          inner_expr <- paradigm.methodBodyCapabilities.apply(pair_func, allExpressions.slice(2, 4))
-          outer2_expr <- paradigm.methodBodyCapabilities.apply(pair_func, Seq(allExpressions(1), inner_expr))
-          outer1_expr <- paradigm.methodBodyCapabilities.apply(pair_func, Seq(allExpressions(0), outer2_expr))
-          dv <- impParadigm.imperativeCapabilities.declareVar(keyName, intType, Some(outer1_expr))
-        } yield dv
+        } yield pair_expr
       } else {
-        // This can be turned into fold, with the right syntax extension to CoGen
-        ???
+        // fold everything in, after calling pair() on the final two parameters
+        val base_expr = paradigm.methodBodyCapabilities.apply(pair_func, allExpressions.slice(allExpressions.length - 2, allExpressions.length))
+        allExpressions.slice(0, allExpressions.length - 2).foldRight(base_expr)((acc, index) => for {
+          expr <- index
+          expanded <- paradigm.methodBodyCapabilities.apply(pair_func, Seq(acc, expr))
+        } yield expanded)
       }
 
       memo_ck <- ooParadigm.methodBodyCapabilities.getMember(memo_field, names.mangle("containsKey"))
@@ -466,15 +376,15 @@ trait TopDownStrategy extends Utility {
 
     // Type of helper method param is always an integer to refer to earlier subproblem
     for {
-      params <- forEach(solution.args.toSeq) { key => for {
+      params <- forEach(solution.parameters.toSeq) { pair => for {
         argType <- toTargetLanguageType(TypeRep.Int)      // Always will be int since subproblems are ordered
-        argName = names.mangle(key._1)             // use pre-selected iterator
+        argName = names.mangle(pair._1)             // use pre-selected iterator
       } yield (argName, argType)
       }
       _ <- setParameters(params)
       args <- getArguments()
 
-      mapargs <- forEach(solution.args.toSeq zip args) { pair =>
+      mapargs <- forEach(solution.parameters.toSeq zip args) { pair =>
         for {
           argType <- toTargetLanguageType(TypeRep.Int)   // needed syntactically, and will be ignored.
           argExpr = pair._2._3

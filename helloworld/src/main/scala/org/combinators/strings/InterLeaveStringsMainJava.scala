@@ -33,18 +33,18 @@ object InterleaveStringsToDiskMain extends IOApp {
     val one: LiteralInt = new LiteralInt(1)
 
     // MatrixChainMultiplication has an array of N+1 integers,representing N 2D Matrices
-    val s1  = new ArgExpression(0, "s1", new StringType(), "i1")
-    val s2  = new ArgExpression(1, "s2", new StringType(), "i2")
-    val s3  = new ArgExpression(2, "s3", new StringType(), "i3")
+    val s1 = new ArgExpression(0, "s1", StringType(), "i1")
+    val s2 = new ArgExpression(1, "s2", StringType(), "i2")
+    val s3 = new ArgExpression(2, "s3", StringType(), "i3")
     val bounds = List(s1, s2, s3)
 
     // COULD be inferred from the ArgExpression list, but this lets us name variable to use in iterator
-    val i1: HelperExpression = new HelperExpression("i1")
-    val i2: HelperExpression = new HelperExpression("i2")
+    val i1: HelperExpression = HelperExpression("i1", zero, new StringLengthExpression(s1))
+    val i2: HelperExpression = HelperExpression("i2", zero, new StringLengthExpression(s2))
 
     // what the compute() method calls with helper(s1.length(), s2.length())
-    val symTable = Map("i1" -> new StringLengthExpression(s1), "i2" -> new StringLengthExpression(s2))
-    val sol = new SubproblemInvocation(symTable, returnType = new BooleanType())
+    val parameters = Map("i1" -> (new StringLengthExpression(s1), i1), "i2" -> (new StringLengthExpression(s2), i2))
+    val sol = SubproblemInvocation(parameters, order=Seq("i1", "i2"), returnType = BooleanType())
 
     /*
      *   P(i,j) = 0, if i == j
@@ -52,62 +52,49 @@ object InterleaveStringsToDiskMain extends IOApp {
      *      for (int k = i; k < j; k++)
      */
 
-    val subprobExpr = new AdditionExpression(i1, i2) /// HACK HACK just to compile
-//      new SubproblemExpression(Seq(i,k)),
-//      new AdditionExpression(
-//        new SubproblemExpression(Seq(new AdditionExpression(k, one), j)),
-//        new MultiplicationExpression(new ArrayElementExpression(array, new SubtractionExpression(i, one)),
-//          new MultiplicationExpression(new ArrayElementExpression(array, k), new ArrayElementExpression(array, j))
-//        )
-//      )
-//    )
-
-    // Min range definition for k in range from i (inclusive) to j (exclusive) with an advance of k+1
-    val k: HelperExpression = new HelperExpression("k")
-
     val case_final = new OrExpression(
       new AndExpression(
-        new EqualExpression(new CharAtExpression(s1, i1 - one), new CharAtExpression(s3, i1 + i2 - one), new CharType),   // EXTREMELY important to not overload and specify CHAR
+        new EqualExpression(new CharAtExpression(s1, i1 - one), new CharAtExpression(s3, i1 + i2 - one), IntegerType()),   // EXTREMELY important to not overload and specify CHAR
         new SubproblemExpression(Seq(i1 - one, i2))
       ),
       new AndExpression(
-        new EqualExpression(new CharAtExpression(s2, i2 - one), new CharAtExpression(s3, i1 + i2 - one), new CharType),   // EXTREMELY important to not overload and specify CHAR
+        new EqualExpression(new CharAtExpression(s2, i2 - one), new CharAtExpression(s3, i1 + i2 - one), IntegerType()),   // EXTREMELY important to not overload and specify CHAR
         new SubproblemExpression(Seq(i1, i2 - one))
       )
     )
 
-    val case_5 = new IfThenElseDefinition(i2 == zero,
-      new ExpressionStatement(
-        new EqualExpression(new CharAtExpression(s1, i1 - one), new CharAtExpression(s3, i1 - one), new CharType)         // EXTREMELY important to not overload and specify CHAR
+    val case_5 = IfThenElseDefinition(i2 == zero,
+      ExpressionStatement(
+        new EqualExpression(new CharAtExpression(s1, i1 - one), new CharAtExpression(s3, i1 - one), IntegerType())         // EXTREMELY important to not overload and specify CHAR
       ),
-      new ExpressionDefinition(case_final))
+      ExpressionDefinition(case_final))
 
-    val case_4 = new IfThenElseDefinition(i1 == zero,
-      new ExpressionStatement(
-        new EqualExpression(new CharAtExpression(s2, i2 - one), new CharAtExpression(s3, i2 - one), new CharType)         // EXTREMELY important to not overload and specify CHAR
+    val case_4 = IfThenElseDefinition(i1 == zero,
+      ExpressionStatement(
+        new EqualExpression(new CharAtExpression(s2, i2 - one), new CharAtExpression(s3, i2 - one), IntegerType())         // EXTREMELY important to not overload and specify CHAR
       ),
       case_5)
 
-    val case_3 = new IfThenElseDefinition((i1 == zero) && (i2==zero),
-      new ExpressionStatement(new LiteralBoolean(true)),
+    val case_3 = IfThenElseDefinition((i1 == zero) && (i2==zero),
+      ExpressionStatement(new LiteralBoolean(true)),
       case_4)
 
-    val case_2 = new IfThenElseDefinition(new StringLengthExpression(s3) < i1 + i2,
-      new ExpressionStatement(new LiteralBoolean(false)),
+    val case_2 = IfThenElseDefinition(new StringLengthExpression(s3) < i1 + i2,
+      ExpressionStatement(new LiteralBoolean(false)),
       case_3)
 
-    val case_1 = new IfThenElseDefinition(new StringLengthExpression(s2) < i2,
-      new ExpressionStatement(new LiteralBoolean(false)),
+    val case_1 = IfThenElseDefinition(new StringLengthExpression(s2) < i2,
+      ExpressionStatement(new LiteralBoolean(false)),
       case_2)
 
-    val ils_definition = new IfThenElseDefinition(new StringLengthExpression(s1) < i1,
-      new ExpressionStatement(new LiteralBoolean(false)),
+    val ils_definition = IfThenElseDefinition(new StringLengthExpression(s1) < i1,
+      ExpressionStatement(new LiteralBoolean(false)),
       case_1)
 
     val ILS = new EnhancedModel("InterleavingStrings",
       bounds,
-      subproblemType = new LiteralBoolean(true),  // helper() method returns boolean
-      solutionType = new LiteralString(""),       // solution is a string, showing where characters come from S1 with parens
+      subproblemType = BooleanType(),    // helper() method returns boolean
+      solutionType = StringType(),       // solution is a string, showing where characters come from S1 with parens
       sol,
       ils_definition)
 
@@ -117,9 +104,9 @@ object InterleaveStringsToDiskMain extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
 
     // choose one of these to pass in
-    val topDown         = new TopDown()
-    val topDownWithMemo = new TopDown(memo = true)
-    val bottomUp        = new BottomUp()
+    val topDown         = TopDown()
+    val topDownWithMemo = TopDown(memo = true)
+    val bottomUp        = BottomUp()
 
     val choice = if (args.length == 1) {
         args(0).toLowerCase() match {
@@ -129,7 +116,7 @@ object InterleaveStringsToDiskMain extends IOApp {
           case _ => ???
         }
     } else {
-      topDownWithMemo
+      bottomUp
     }
 
     for {

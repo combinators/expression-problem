@@ -1,14 +1,13 @@
 package org.combinators.dp
 
-import org.combinators.model.{AdditionExpression, AndExpression, ArgExpression, ArgumentType, ArrayElementExpression, ArrayLengthExpression, CharAtExpression, EqualExpression, HelperExpression, InputExpression, IntegerType, IteratorExpression, LessThanExpression, LiteralBoolean, LiteralInt, LiteralString, MaxExpression, MinExpression, Model, MultiplicationExpression, OrExpression, StringLengthExpression, StringType, SubproblemExpression, SubtractionExpression, TernaryExpression}
+import org.combinators.model.{AdditionExpression, AndExpression, ArgExpression, ArgumentType, ArrayElementExpression, ArrayLengthExpression, CharAtExpression, EqualExpression, HelperExpression, InputExpression, IntegerType, IteratorExpression, LessThanExpression, LessThanOrEqualExpression, LiteralBoolean, LiteralInt, LiteralString, MaxExpression, MinExpression, Model, MultiplicationExpression, OrExpression, SelfExpression, StringLengthExpression, StringType, SubproblemExpression, SubtractionExpression, TernaryExpression}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.NameProvider
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
-
+import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Equality, RealArithmetic, Strings}
 
 // Different approach
 trait GenerationOption {
@@ -273,6 +272,12 @@ trait Utility {
 
     // turn model Expression into a real expression
     expr match {
+      case self:SelfExpression => for {
+        neg92 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, -92)
+        nn2 <- paradigm.methodBodyCapabilities.reify(TypeRep.String, self.variableName)
+        e = symbolTable(self.variableName)
+      } yield e
+
       case eq: EqualExpression => for {
         left <- explore(eq.left, memoize, symbolTable, bottomUp)
         right <- explore(eq.right, memoize, symbolTable, bottomUp)
@@ -284,6 +289,12 @@ trait Utility {
         left <- explore(eq.left, memoize, symbolTable, bottomUp)
         right <- explore(eq.right, memoize, symbolTable, bottomUp)
         e <- arithmetic.arithmeticCapabilities.lt(left, right)
+      } yield e
+
+      case eq: LessThanOrEqualExpression => for {
+        left <- explore(eq.left, memoize, symbolTable, bottomUp)
+        right <- explore(eq.right, memoize, symbolTable, bottomUp)
+        e <- arithmetic.arithmeticCapabilities.le(left, right)
       } yield e
 
       case or:OrExpression => for {

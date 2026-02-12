@@ -41,21 +41,21 @@ object FibonacciEnhancedMainDirectToDiskMain extends IOApp {
     val bound = List(n)
 
     // COULD be inferred from the ArgExpression list, but this lets us name variable to use in iterator
-    val i: HelperExpression = new HelperExpression("i") // only one argument, i
+    val i: HelperExpression = new HelperExpression("i", one, n) // only one argument, i
 
     // what the compute() method calls with helper(1, nums.length-1)
-    val symTable = Map("i" -> n)
-    val sol = new SubproblemInvocation(symTable)
+    val parameters = Map("i" -> (n, i))
+    val sol = SubproblemInvocation(parameters, Seq("i"))
 
-    val oneCase = new IfThenElseDefinition(i == one, new ExpressionStatement(one),
-      new ExpressionDefinition(new SubproblemExpression(Seq(i - one)) + new SubproblemExpression(Seq(i - two))))
+    val oneCase = IfThenElseDefinition(i == one, ExpressionStatement(one),
+       ExpressionDefinition(new SubproblemExpression(Seq(i - one)) + new SubproblemExpression(Seq(i - two))))
 
-    val zeroCase = new IfThenElseDefinition(i == zero, new ExpressionStatement(zero), oneCase)
+    val zeroCase = IfThenElseDefinition(i == zero, ExpressionStatement(zero), oneCase)
 
     val Fib = new EnhancedModel("Fibonacci",
       bound,
-      subproblemType = new LiteralInt(0),    // helper methods and intermediate problems are int
-      solutionType = new LiteralString(""),  // how a solution is represented (not yet effective)
+      subproblemType = IntegerType(),    // helper methods and intermediate problems are int
+      solutionType = StringType(),  // how a solution is represented (not yet effective)
       sol,
       zeroCase)
 
@@ -65,9 +65,9 @@ object FibonacciEnhancedMainDirectToDiskMain extends IOApp {
     def run(args: List[String]): IO[ExitCode] = {
 
     // choose one of these to pass in
-    val topDown         = new TopDown()
-    val topDownWithMemo = new TopDown(memo = true)
-    val bottomUp        = new BottomUp()
+    val topDown         = TopDown()
+    val topDownWithMemo = TopDown(memo = true)
+    val bottomUp        = BottomUp()
 
     val choice = if (args.length == 1) {
         args(0).toLowerCase() match {

@@ -30,20 +30,25 @@ object MatrixChainMultiplicationMainDirectToDiskMain extends IOApp {
   def model:EnhancedModel = {
     // Needed for conditions and fib(n-1) and fib(n-2)
     val zero: LiteralInt = new LiteralInt(0)
-    val one: LiteralInt = new LiteralInt(1)
+    val one:  LiteralInt = new LiteralInt(1)
+    val two:  LiteralInt = new LiteralInt(2)
 
     // MatrixChainMultiplication has an array of N+1 integers,representing N 2D Matrices
-    val array = new ArgExpression(0, "nums", new IntegerArrayType(), "i")
+    val array = new ArgExpression(0, "nums", new IntegerArrayType(), "c")     // not too sure whether 'i' remains a requirement as argument here
     val bound = List(array)
 
-    // COULD be inferred from the ArgExpression list, but this lets us name variable to use in iterator
-    val i: HelperExpression = new HelperExpression("i")    // only one argument, i
-    val j: HelperExpression = new HelperExpression("j")    // also over nums
-    val k: HelperExpression = new HelperExpression("k")
+    // Need to find way to get these (i,j) into the EnhancedModel
+    val c: HelperExpression = HelperExpression("c", two, SelfExpression("c") <= new ArrayLengthExpression(array))            // Chain length
+    val i: HelperExpression = HelperExpression("i", one, SelfExpression("i") <= new ArrayLengthExpression(array) - c + one)  // Row starts
+    val j: Expression = i + c - one   // last parts aren't truly needed
+
+    val k: HelperExpression = HelperExpression("k", i, SelfExpression("k") < j)
 
     // what the compute() method calls with helper(1, nums.length-1)
-    val symTable = Map("i" -> new LiteralInt(1), "j" -> new SubtractionExpression(new ArrayLengthExpression(array), one))
-    val sol = new SubproblemInvocation(symTable)
+    val params = Map(
+      "c" -> (new ArrayLengthExpression(array), c),
+      "i" -> (new LiteralInt(1), i))
+    val sol = SubproblemInvocation(params, Seq("i", "c"))
 
     /*
      *   P(i,j) = 0, if i == j
@@ -52,22 +57,19 @@ object MatrixChainMultiplicationMainDirectToDiskMain extends IOApp {
      */
 
     val subprobExpr = new AdditionExpression(
-      new SubproblemExpression(Seq(i,k)),
-      new AdditionExpression(
-        new SubproblemExpression(Seq(k + one, j)),
-        array(i - one) * array(k) * array(j)
-      )
+      new SubproblemExpression(Seq(i, k)),
+      new SubproblemExpression(Seq(k + one, j)) + array(i - one) * array(k) * array(j)
     )
 
     // Min range definition for k in range from i (inclusive) to j (exclusive) with an advance of k+1
-    val defij = new MinRangeDefinition(Seq(i, j), k, i, new LessThanExpression(k, j), subprobExpr, new AdditionExpression(k, one))
+    val defij = MinRangeDefinition(Seq(c, i), k, i, k < j, subprobExpr, k + one)
 
-    val mcm_definition = new IfThenElseDefinition(new EqualExpression(i, j), new ExpressionStatement(zero), defij)
+    val mcm_definition = IfThenElseDefinition(i == j, ExpressionStatement(zero), defij)
 
     val MCM = new EnhancedModel("MatrixChainMultiplication",
       bound,
-      subproblemType = new LiteralInt(0),    // helper methods and intermediate problems are int
-      solutionType = new LiteralString(""),  // how a solution is represented
+      subproblemType = IntegerType(),  // helper methods and intermediate problems are int
+      solutionType   = StringType(),   // how a solution is represented
       sol,
       mcm_definition)
 
@@ -77,9 +79,9 @@ object MatrixChainMultiplicationMainDirectToDiskMain extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
 
     // choose one of these to pass in
-    val topDown         = new TopDown()
-    val topDownWithMemo = new TopDown(memo = true)
-    val bottomUp        = new BottomUp()
+    val topDown         = TopDown()
+    val topDownWithMemo = TopDown(memo = true)
+    val bottomUp        = BottomUp()
 
     val choice = if (args.length == 1) {
         args(0).toLowerCase() match {
@@ -89,7 +91,7 @@ object MatrixChainMultiplicationMainDirectToDiskMain extends IOApp {
           case _ => ???
         }
     } else {
-      topDownWithMemo
+      topDown
     }
 
     for {

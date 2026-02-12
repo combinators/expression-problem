@@ -7,6 +7,7 @@ trait Expression {
   def *(other: Expression): Expression = new MultiplicationExpression(this,other)
   def /(other: Expression): Expression = new DivisionExpression(this,other)
   def <(other: Expression): Expression = new LessThanExpression(this,other)
+  def <=(other: Expression): Expression = new LessThanOrEqualExpression(this,other)
 
   // When using ==, must assume it is IntegerType: Dangerous?? todo: allow for other types(?)
   def ==(other: Expression): Expression = new EqualExpression(this,other, new IntegerType())
@@ -27,7 +28,8 @@ class MultiplicationExpression(val left: Expression, val right: Expression) exte
 class DivisionExpression(val left: Expression, val right: Expression) extends Expression
 class SubproblemExpression(val args: Seq[Expression]) extends Expression
 
-class SubproblemInvocation(val args: Map[String,Expression], val returnType: ArgumentType = new IntegerType)
+// If helper is defined but NOT part of the parameters during invocation, then it must be passed in as helpers
+case class SubproblemInvocation(parameters: Map[String,(Expression,HelperExpression)], order:Seq[String], helpers:Map[String,HelperExpression] = Map.empty, returnType: ArgumentType = IntegerType())
 
 class MathMinimumExpression(val args: Seq[Expression]) extends Expression
 class MaxExpression(val left: Expression, val right: Expression) extends Expression
@@ -38,7 +40,9 @@ class FunctionExpression(val name:String, val args: Seq[Expression]) extends Exp
 
 class LiteralInt(val literal: Int) extends LiteralExpression
 class IteratorExpression(val iteratorNumber: Int, val variable:String) extends Expression
-class HelperExpression(val variable:String) extends Expression
+
+// low and high are INCLUSIVE
+case class HelperExpression(variable:String, low:Expression, in_range:Expression) extends Expression
 
 // when input problem has two integers, not easily translated as (row, column)
 class LiteralPair(val val1:Int, val val2:Int) extends LiteralExpression
@@ -49,7 +53,10 @@ class LiteralStringTriple(val string1:String, val string2:String, val string3:St
 
 class LiteralTwoArrays(val ar1:Array[Int], val ar2:Array[Int]) extends LiteralExpression
 
-class StringLengthExpression(val string: Expression)extends Expression
+// For when a HelpExpression needs to refer to self
+case class SelfExpression(val variableName:String) extends Expression
+
+class StringLengthExpression(val string: Expression) extends Expression
 class ArrayLengthExpression(val array: Expression) extends Expression
 
 //String
@@ -60,13 +67,14 @@ class SubstringExpression(val string: Expression, val start: Expression, val end
 class LiteralChar(val char:Char) extends LiteralExpression
 class CharAtExpression(val string: Expression, val index: Expression) extends Expression
 
-
-//General
+// Access field access for the primary class
 class InputExpression(val variableName:String) extends Expression
+
 class EqualExpression(val left: Expression, val right: Expression, val tpe:ArgumentType = new org.combinators.model.IntegerType()) extends Expression
 class OrExpression(val left: Expression, val right: Expression) extends Expression
 class AndExpression(val left: Expression, val right: Expression) extends Expression
 class LessThanExpression(val left: Expression, val right:Expression) extends Expression
+class LessThanOrEqualExpression(val left: Expression, val right:Expression) extends Expression
 class TernaryExpression(val condition: Expression, val trueBranch: Expression, val falseBranch: Expression) extends Expression
 
 class LiteralBoolean(val literal:Boolean) extends LiteralExpression

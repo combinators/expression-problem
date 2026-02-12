@@ -13,7 +13,7 @@ import org.combinators.dp._
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
  */
-trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with Utility with TopDownStrategy with BottomUpStrategy {
+trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with EnhancedUtility with TopDownStrategy with BottomUpStrategy {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
@@ -46,6 +46,10 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with Utility w
    */
   def make_compute_method(model:EnhancedModel): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
+
+    // make list of params in proper order
+    val orderedParams = model.solution.order.filter(varName => model.solution.parameters.contains(varName))
+
     for {
       returnType <- return_type_based_on_model(model)
       _ <- setReturnType(returnType)
@@ -54,9 +58,12 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with Utility w
       helperMethod <- ooParadigm.methodBodyCapabilities.getMember(self, helperName)
 
       // convert arguments into Iteration values
-      args <- forEach(model.solution.args.toSeq) { pair => for {
+      args <- forEach(orderedParams) { varName => for {
+        neg77 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, -77)
+        pair = model.solution.parameters(varName)
+
           // arg1 <- max_bound_in_method(boundExpr)
-        arg1 <- explore(pair._2, memoize = false, symbolTable = Map.empty)  // At this point, there should be no symbols
+        arg1 <- explore(pair._1, memoize = false, symbolTable = Map.empty)  // At this point, there should be no symbols
         } yield arg1
       }
       //field <- ooParadigm.methodBodyCapabilities.getMember(self, nName)
@@ -196,7 +203,6 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with Utility w
       )
     } yield ()
   }
-
 }
 
 object EnhancedDPObjectOrientedProvider {

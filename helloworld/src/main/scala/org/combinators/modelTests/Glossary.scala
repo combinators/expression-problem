@@ -8,12 +8,14 @@ package org.combinators.modelTests
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
+import org.combinators.dp.enhanced.EnhancedDPMainJava
 import org.combinators.dp.{BottomUp, GenerationOption, LCSMainJava, TopDown}
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.model.models.twoSequences.{LongestCommonSubsequenceModel, UncrossedLinesModel}
 import org.combinators.modelTests.uncrossedLines.UncrossedLinesMainJava
 import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.integer.perfectsquare.{PerfectSquareMainDirectToDiskMain, PerfectSquareMainJava}
+import org.combinators.model.EnhancedModel
 import org.combinators.oneSequence.matrixchainmutiplication.{MatrixChainMultiplicationMainDirectToDiskMain, MatrixChainMultiplicationMainJava}
 import org.combinators.strings.{InterleaveStringsMainJava, InterleaveStringsToDiskMain}
 
@@ -49,24 +51,53 @@ class Glossary {
 object GlossaryToDiskMain extends IOApp {
 
   // choose one of these to pass in
-  val topDown         = new TopDown()
-  val topDownWithMemo = new TopDown(memo = true)
-  val bottomUp        = new BottomUp()
+  val topDown         = TopDown()
+  val topDownWithMemo = TopDown(memo = true)
+  val bottomUp        = BottomUp()
+
+  // declare the working versions for each problem in the enhanced list
+  val known_enhanced_solutions:Seq[(EnhancedDPMainJava, EnhancedModel, Seq[GenerationOption])] = Seq(
+    (new PerfectSquareMainJava(), PerfectSquareMainDirectToDiskMain.model, Seq(topDown, topDownWithMemo /* NO BotUp */)),
+    (new InterleaveStringsMainJava(), InterleaveStringsToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
+
+    // generates but has flawed logic because of the transformation of (r,c) into (i,j)
+    (new MatrixChainMultiplicationMainJava(), MatrixChainMultiplicationMainDirectToDiskMain.model, Seq(topDown, topDownWithMemo /* NO BotUp */)),
+
+  )
 
   // below are the individual DP problems generated and added to `all_files`.
-  def files(choice:GenerationOption) = {
-    val ps = new PerfectSquareMainJava().filesToGenerate(PerfectSquareMainDirectToDiskMain.model, choice)
-    val mcm = new MatrixChainMultiplicationMainJava().filesToGenerate(MatrixChainMultiplicationMainDirectToDiskMain.model, choice)
-    val ils = new InterleaveStringsMainJava().filesToGenerate(InterleaveStringsToDiskMain.model, choice)
+  def top_down_memo_files() = {
 
-    if (choice == topDown) {
-      val ul = new UncrossedLinesMainJava().filesToGenerate(new UncrossedLinesModel().instantiate(), choice)
-      val lcs = new LCSMainJava().filesToGenerate(new LongestCommonSubsequenceModel().instantiate(), choice)
-      ps ++ mcm ++ ils ++ ul ++ lcs
-    } else {
-      // add them all together BUT ONLY for topDown
-      ps ++ mcm ++ ils
-    }
+    // UncrossedLinesMainJava and LCSMainJava still don't work
+
+    val others = known_enhanced_solutions.filter(triple
+      => triple._3.contains(TopDown(memo = true))).
+      flatMap(triple => triple._1.filesToGenerate(triple._2, TopDown(memo = true)))
+
+    others
+  }
+
+  // below are the individual DP problems generated and added to `all_files`.
+  def top_down() = {
+    val ul = new UncrossedLinesMainJava().filesToGenerate(new UncrossedLinesModel().instantiate(), TopDown())
+    val lcs = new LCSMainJava().filesToGenerate(new LongestCommonSubsequenceModel().instantiate(), TopDown())
+
+    val others = known_enhanced_solutions.filter(triple
+      => triple._3.contains(TopDown())).
+      flatMap(triple => triple._1.filesToGenerate(triple._2, TopDown()))
+
+    others ++ lcs ++ ul
+  }
+
+  def bottom_up_files() = {
+    val ul = new UncrossedLinesMainJava().filesToGenerate(new UncrossedLinesModel().instantiate(), BottomUp())
+    val lcs = new LCSMainJava().filesToGenerate(new LongestCommonSubsequenceModel().instantiate(), BottomUp())
+
+    val others = known_enhanced_solutions.filter(triple
+      => triple._3.contains(BottomUp())).
+      flatMap(triple => triple._1.filesToGenerate(triple._2, BottomUp()))
+
+    others ++ lcs ++ ul
   }
 
   def run(args: List[String]): IO[ExitCode] = {
@@ -92,7 +123,13 @@ object GlossaryToDiskMain extends IOApp {
         }
         main <- IO { new Glossary() }
 
-        result <- main.runDirectToDisc(targetDirectory, files(choice))
+        result <- if (choice == topDown) {
+          main.runDirectToDisc(targetDirectory, top_down())
+        } else if (choice == topDownWithMemo) {
+          main.runDirectToDisc(targetDirectory, top_down_memo_files())
+        } else {
+          main.runDirectToDisc(targetDirectory, bottom_up_files())
+        }
 
         _ <- IO { println("Make sure you run the scripts to 'fix' the generated code.") }
       } yield result

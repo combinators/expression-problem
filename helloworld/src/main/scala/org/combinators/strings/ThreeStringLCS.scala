@@ -32,23 +32,23 @@ object ThreeStringsLCSToDiskMain extends IOApp {
     val zero: LiteralInt = new LiteralInt(0)
     val one: LiteralInt = new LiteralInt(1)
 
-    // MatrixChainMultiplication has an array of N+1 integers,representing N 2D Matrices
-    val s1  = new ArgExpression(0, "s1", new StringType(), "i")
-    val s2  = new ArgExpression(1, "s2", new StringType(), "j")
-    val s3  = new ArgExpression(2, "s3", new StringType(), "k")
+    val s1  = new ArgExpression(0, "s1", StringType(), "i")
+    val s2  = new ArgExpression(1, "s2", StringType(), "j")
+    val s3  = new ArgExpression(2, "s3", StringType(), "k")
     val bounds = List(s1, s2, s3)
 
     // COULD be inferred from the ArgExpression list, but this lets us name variable to use in iterator
-    val i: HelperExpression = new HelperExpression("i")
-    val j: HelperExpression = new HelperExpression("j")
-    val k: HelperExpression = new HelperExpression("k")
+    val i: HelperExpression = new HelperExpression("i", one, new StringLengthExpression(s1))
+    val j: HelperExpression = new HelperExpression("j", one, new StringLengthExpression(s2))
+    val k: HelperExpression = new HelperExpression("k", one, new StringLengthExpression(s3))
 
     // what the compute() method calls with helper(s1.length(), s2.length())
-    val symTable = Map("i" -> new StringLengthExpression(s1),
-      "j" -> new StringLengthExpression(s2),
-      "k" -> new StringLengthExpression(s3)
-    )
-    val sol = new SubproblemInvocation(symTable, returnType = new IntegerType())
+    val paramsTable = Map(
+      "i" -> (new StringLengthExpression(s1), i),
+      "j" -> (new StringLengthExpression(s2), j),
+      "k" -> (new StringLengthExpression(s3), k),
+      )
+    val sol = SubproblemInvocation(paramsTable, order=Seq("i", "j", "k"), returnType = IntegerType())
 
     /*
      *   P(i,j,k) = 0, if i == 0 || j == 0 || k == 0 for all Ranges
@@ -64,13 +64,12 @@ object ThreeStringsLCSToDiskMain extends IOApp {
       ExpressionStatement(new SubproblemExpression(Seq(i - one, j - one, k - one)) + one),
       ExpressionDefinition(recursive_case))
 
-    val tslcs_definition = IfThenElseDefinition(i == zero || j == zero || k == zero, ExpressionStatement(zero),
-     strings_case)
+    val tslcs_definition = IfThenElseDefinition(i == zero || j == zero || k == zero, ExpressionStatement(zero), strings_case)
 
     val TSLCS = new EnhancedModel("ThreeStringLCS",
       bounds,
-      subproblemType = new LiteralInt(0),         // helper() method returns int
-      solutionType = new LiteralString(""),       // solution is a string, showing where characters come from S1 with parens
+      subproblemType = IntegerType(),         // helper() method returns int
+      solutionType   = StringType(),          // solution is a string, showing where characters come from S1 with parens
       sol,
       tslcs_definition)
 

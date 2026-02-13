@@ -38,17 +38,18 @@ object ThreeStringsLCSToDiskMain extends IOApp {
     val bounds = List(s1, s2, s3)
 
     // COULD be inferred from the ArgExpression list, but this lets us name variable to use in iterator
-    val i: HelperExpression = new HelperExpression("i", one, new StringLengthExpression(s1))
-    val j: HelperExpression = new HelperExpression("j", one, new StringLengthExpression(s2))
-    val k: HelperExpression = new HelperExpression("k", one, new StringLengthExpression(s3))
+    val i: HelperExpression = HelperExpression("i", one, SelfExpression("i") <= new StringLengthExpression(s1), new StringLengthExpression(s1) + one)
+    val j: HelperExpression = HelperExpression("j", one, SelfExpression("j") <= new StringLengthExpression(s2), new StringLengthExpression(s2) + one)
+    val k: HelperExpression = HelperExpression("k", one, SelfExpression("k") <= new StringLengthExpression(s3), new StringLengthExpression(s3) + one)
 
     // what the compute() method calls with helper(s1.length(), s2.length())
     val paramsTable = Map(
-      "i" -> (new StringLengthExpression(s1), i),
-      "j" -> (new StringLengthExpression(s2), j),
-      "k" -> (new StringLengthExpression(s3), k),
+      "i" -> new StringLengthExpression(s1),
+      "j" -> new StringLengthExpression(s2),
+      "k" -> new StringLengthExpression(s3)
       )
-    val sol = SubproblemInvocation(paramsTable, order=Seq("i", "j", "k"), returnType = IntegerType())
+    val helpers = Map("i" -> i, "j" -> j, "k" -> k)
+    val sol = SubproblemInvocation(paramsTable, order=Seq("i", "j", "k"), helpers = helpers, returnType = IntegerType())
 
     /*
      *   P(i,j,k) = 0, if i == 0 || j == 0 || k == 0 for all Ranges
@@ -59,8 +60,8 @@ object ThreeStringsLCSToDiskMain extends IOApp {
                                    new MaxExpression(new SubproblemExpression(Seq(i, j - one, k)),
                                                      new SubproblemExpression(Seq(i, j, k - one))))
 
-    val strings_case = IfThenElseDefinition(new EqualExpression(new CharAtExpression(s1, i - one), new CharAtExpression(s2, j - one), new CharType) &&
-                                                    new EqualExpression(new CharAtExpression(s2, j - one), new CharAtExpression(s3, k - one), new CharType),
+    val strings_case = IfThenElseDefinition(new CharAtExpression(s1, i - one) == new CharAtExpression(s2, j - one) &&
+                                            new CharAtExpression(s2, j - one) == new CharAtExpression(s3, k - one),
       ExpressionStatement(new SubproblemExpression(Seq(i - one, j - one, k - one)) + one),
       ExpressionDefinition(recursive_case))
 

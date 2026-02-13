@@ -274,7 +274,7 @@ trait Utility {
     expr match {
       case self:SelfExpression => for {
         neg92 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, -92)
-        nn2 <- paradigm.methodBodyCapabilities.reify(TypeRep.String, self.variableName)
+        debugvar <- paradigm.methodBodyCapabilities.reify(TypeRep.String, self.variableName)
         e = symbolTable(self.variableName)
       } yield e
 

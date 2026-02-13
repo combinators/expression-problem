@@ -603,9 +603,21 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
               val result = new ArrayCreationExpr()
               result.setElementType(tpe.getElementType)
               val levels = new NodeList[ArrayCreationLevel] ()
-              levels.add(new ArrayCreationLevel().setDimension(args.head))     // HACK: TODO: Only assumes one or two dimensions
+              levels.add(new ArrayCreationLevel().setDimension(args.head))
               if (args.tail.nonEmpty) {
                 levels.add(new ArrayCreationLevel().setDimension(args.tail.head))
+                if (args.tail.tail.nonEmpty) {
+                  levels.add(new ArrayCreationLevel().setDimension(args.tail.tail.head))
+                  if (args.tail.tail.tail.nonEmpty) {
+                    levels.add(new ArrayCreationLevel().setDimension(args.tail.tail.tail.head))
+                    if (args.tail.tail.tail.nonEmpty) {
+                      levels.add(new ArrayCreationLevel().setDimension(args.tail.tail.tail.tail.head))
+                      if (args.tail.tail.tail.tail.nonEmpty) {
+                        println("Too many array levels [ObjectOriented: instantiateObject in method")
+                      }
+                    }
+                  }
+                }
               }
               result.setLevels(levels)
               (context, result.removeInitializer())      // no initializers when declaring bounds

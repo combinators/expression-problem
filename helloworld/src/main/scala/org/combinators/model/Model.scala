@@ -66,8 +66,7 @@ case class IfThenElseDefinition(condition: Expression, result: DefinitionStateme
 case class IfThenNoElseDefinition(condition: Expression, result: Expression, elseIfs: Seq[(Expression, Expression)]) extends Definition
 
 case class MinRangeDefinition(
-         args:Seq[HelperExpression],
-         variable: HelperExpression,
+         variable: String,
          inclusiveStart: Expression,
          guardContinue:Expression,
          subproblemExpression: Expression,

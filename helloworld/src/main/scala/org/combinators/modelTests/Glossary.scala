@@ -20,7 +20,7 @@ import org.combinators.model.models.knapsack.KnapsackModel
 import org.combinators.modelTests.knapsack.KnapsackMainJava
 import org.combinators.modelTests.nwsa.NWSAMainJava
 import org.combinators.oneSequence.matrixchainmutiplication.{MatrixChainMultiplicationMainDirectToDiskMain, MatrixChainMultiplicationMainJava}
-import org.combinators.strings.{InterleaveStringsMainJava, InterleaveStringsToDiskMain}
+import org.combinators.strings.{InterleaveStringsMainJava, InterleaveStringsToDiskMain, ThreeStringsLCSMainJava, ThreeStringsLCSToDiskMain}
 
 import java.nio.file.{Path, Paths}
 import scala.collection.Seq
@@ -62,6 +62,7 @@ object GlossaryToDiskMain extends IOApp {
   val known_enhanced_solutions:Seq[(EnhancedDPMainJava, EnhancedModel, Seq[GenerationOption])] = Seq(
     (new PerfectSquareMainJava(), PerfectSquareMainDirectToDiskMain.model, Seq(topDown, topDownWithMemo /* NO BotUp */)),
     (new InterleaveStringsMainJava(), InterleaveStringsToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
+    (new ThreeStringsLCSMainJava(), ThreeStringsLCSToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
 
     // generates but has flawed logic because of the transformation of (r,c) into (i,j)
     (new MatrixChainMultiplicationMainJava(), MatrixChainMultiplicationMainDirectToDiskMain.model, Seq(topDown, topDownWithMemo /* NO BotUp */)),
@@ -83,15 +84,15 @@ object GlossaryToDiskMain extends IOApp {
   // below are the individual DP problems generated and added to `all_files`.
   def top_down() = {
     val ul = new UncrossedLinesMainJava().filesToGenerate(new UncrossedLinesModel().instantiate(), TopDown())
-    val lcs = new LCSMainJava().filesToGenerate(new LongestCommonSubsequenceModel().instantiate(), TopDown())
-    val kp = new KnapsackMainJava().filesToGenerate(new KnapsackModel().instantiate(), TopDown())
-    val nwsa = new NWSAMainJava().filesToGenerate(new NeedlemanWunschSequenceAlignmentModel().instantiate(), TopDown())
+    //val lcs = new LCSMainJava().filesToGenerate(new LongestCommonSubsequenceModel().instantiate(), TopDown())              [HEINEMAN: not working]
+    // val kp = new KnapsackMainJava().filesToGenerate(new KnapsackModel().instantiate(), TopDown())                         [HEINEMAN: not working]
+    //val nwsa = new NWSAMainJava().filesToGenerate(new NeedlemanWunschSequenceAlignmentModel().instantiate(), TopDown())    [HEINEMAN: not working]
 
     val others = known_enhanced_solutions.filter(triple
       => triple._3.contains(TopDown())).
       flatMap(triple => triple._1.filesToGenerate(triple._2, TopDown()))
 
-    others ++ lcs ++ ul ++ kp ++ nwsa
+    others ++ ul
   }
 
   def bottom_up_files() = {

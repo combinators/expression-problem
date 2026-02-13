@@ -37,32 +37,39 @@ object MatrixChainMultiplicationMainDirectToDiskMain extends IOApp {
     val array = new ArgExpression(0, "nums", new IntegerArrayType(), "c")     // not too sure whether 'i' remains a requirement as argument here
     val bound = List(array)
 
-    // Need to find way to get these (i,j) into the EnhancedModel
-    val c: HelperExpression = HelperExpression("c", two, SelfExpression("c") <= new ArrayLengthExpression(array))            // Chain length
-    val i: HelperExpression = HelperExpression("i", one, SelfExpression("i") <= new ArrayLengthExpression(array) - c + one)  // Row starts
-    val j: Expression = i + c - one   // last parts aren't truly needed
+    // Need to find way to get these (i,j) into the EnhancedModel. Apply the mapping that iteration takes place over (r,c) and there is
+    // mapping of i = r+c+2 and j = c+1. The inherent problem search is upper triangle matrix of the P(i,j) space, which turns out to
+    // be upper left triangular matrix over (r,c)
+    val c: HelperExpression = HelperExpression("c", two, SelfExpression("c") <= new ArrayLengthExpression(array), new ArrayLengthExpression(array))
+    val r: HelperExpression = HelperExpression("r", one, SelfExpression("r") <= new ArrayLengthExpression(array) - c + one, new ArrayLengthExpression(array))
 
-    val k: HelperExpression = HelperExpression("k", i, SelfExpression("k") < j)
+    // mapping. BOTTOM UP introduce new variables. TOP-DOWN had used variables all along
+    val i: HelperExpression = HelperExpression("i", zero, SelfExpression("i") <= new ArrayLengthExpression(array), new ArrayLengthExpression(array))   // MOST of this unnecessary
+    val j: HelperExpression = HelperExpression("j", zero, SelfExpression("i") <= new ArrayLengthExpression(array), new ArrayLengthExpression(array))   // MOST of this unnecessary
 
-    // what the compute() method calls with helper(1, nums.length-1)
+    val k: HelperExpression = HelperExpression("k", i, SelfExpression("k") < j, new ArrayLengthExpression(array)) // k will always be within this range
+
+    // what the compute() method calls with helper(i = 1, j = nums.length-1) -- THIS IS TOP DOWN but also becomes dp[i][j] for solution in BOTTOM UP
+    // not sure why helper(1, N-1) but then dp[1][n] in return. #ANNOYED
     val params = Map(
-      "c" -> (new ArrayLengthExpression(array), c),
-      "i" -> (new LiteralInt(1), i))
-    val sol = SubproblemInvocation(params, Seq("i", "c"))
+      "i" -> new LiteralInt(1),
+      "j" -> (new ArrayLengthExpression(array) - one)
+    )
+    val helpers = Map("k" -> k)
+    val mappers = Map("i" -> r, "j" -> (r + c - one))         // will control the innermost logic after mapping from the iteration variables
+    val sol = SubproblemInvocation(params, Seq("c", "r", "i", "j"), helpers = helpers, mappers = mappers)   // seq(c,r) is for BOTTOM UP only but i,j are included for TOP DOWN
 
     /*
+     * This is a form of decomposition that applies to upper triangle of the P problem space.
+     *
      *   P(i,j) = 0, if i == j
      *   P(i,j) = Min (k, P(i,k) + P(k+1,j) + cost of multiplying resulting two matrices)
      *      for (int k = i; k < j; k++)
      */
-
-    val subprobExpr = new AdditionExpression(
-      new SubproblemExpression(Seq(i, k)),
-      new SubproblemExpression(Seq(k + one, j)) + array(i - one) * array(k) * array(j)
-    )
+    val subprobExpr = new SubproblemExpression(Seq(i, k)) + new SubproblemExpression(Seq(k + one, j)) + array(i - one) * array(k) * array(j)
 
     // Min range definition for k in range from i (inclusive) to j (exclusive) with an advance of k+1
-    val defij = MinRangeDefinition(Seq(c, i), k, i, k < j, subprobExpr, k + one)
+    val defij = MinRangeDefinition("k", i, k < j, subprobExpr, k + one)
 
     val mcm_definition = IfThenElseDefinition(i == j, ExpressionStatement(zero), defij)
 
@@ -71,7 +78,8 @@ object MatrixChainMultiplicationMainDirectToDiskMain extends IOApp {
       subproblemType = IntegerType(),  // helper methods and intermediate problems are int
       solutionType   = StringType(),   // how a solution is represented
       sol,
-      mcm_definition)
+      mcm_definition
+    )
 
     MCM
   }

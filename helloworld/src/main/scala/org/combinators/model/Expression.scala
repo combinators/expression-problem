@@ -29,7 +29,12 @@ class DivisionExpression(val left: Expression, val right: Expression) extends Ex
 class SubproblemExpression(val args: Seq[Expression]) extends Expression
 
 // If helper is defined but NOT part of the parameters during invocation, then it must be passed in as helpers
-case class SubproblemInvocation(parameters: Map[String,(Expression,HelperExpression)], order:Seq[String], helpers:Map[String,HelperExpression] = Map.empty, returnType: ArgumentType = IntegerType())
+case class SubproblemInvocation(
+       parameters: Map[String,Expression],
+       order:Seq[String],
+       helpers:Map[String,HelperExpression] = Map.empty,     // known variables that are used in the problem expansion without being iterated over or called
+       returnType: ArgumentType = IntegerType(),
+       mappers: Map[String, Expression] = Map.empty)         // variables that map to new coordinates into dp[] space and are added to bottom up
 
 class MathMinimumExpression(val args: Seq[Expression]) extends Expression
 class MaxExpression(val left: Expression, val right: Expression) extends Expression
@@ -42,7 +47,10 @@ class LiteralInt(val literal: Int) extends LiteralExpression
 class IteratorExpression(val iteratorNumber: Int, val variable:String) extends Expression
 
 // low and high are INCLUSIVE
-case class HelperExpression(variable:String, low:Expression, in_range:Expression) extends Expression
+case class HelperExpression(variable:String,
+                            low:Expression,
+                            in_range:Expression,
+                            high:Expression) extends Expression
 
 // when input problem has two integers, not easily translated as (row, column)
 class LiteralPair(val val1:Int, val val2:Int) extends LiteralExpression

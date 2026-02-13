@@ -63,7 +63,7 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with EnhancedU
         pair = model.solution.parameters(varName)
 
           // arg1 <- max_bound_in_method(boundExpr)
-        arg1 <- explore(pair._1, memoize = false, symbolTable = Map.empty)  // At this point, there should be no symbols
+        arg1 <- explore(pair, memoize = false, symbolTable = Map.empty)  // At this point, there should be no symbols
         } yield arg1
       }
       //field <- ooParadigm.methodBodyCapabilities.getMember(self, nName)

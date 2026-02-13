@@ -317,9 +317,9 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
           one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, scala.Int.MaxValue)
           intType <- toTargetLanguageType(TypeRep.Int)   // hack
           minVarName = names.mangle("min")
-          minVar <- impParadigm.imperativeCapabilities.declareVar(minVarName, intType, Some(one))   //
+          minVar <- impParadigm.imperativeCapabilities.declareVar(minVarName, intType, Some(one))
           kStart <- explore(ds.inclusiveStart, symbolTable = symbolTable, memoize = memoize)
-          kVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(ds.variable.variable), intType, Some(kStart))   //
+          kVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(ds.variable), intType, Some(kStart))
 
           resultVarName = names.mangle("result")
           resultVar <- impParadigm.imperativeCapabilities.declareVar(resultVarName, intType, None)
@@ -330,7 +330,7 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
           whilestmt <- impParadigm.imperativeCapabilities.whileLoop(guardCondition, for {
             neg99 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, -99)
 
-            resultExpr <- explore(ds.subproblemExpression, memoize = memoize, symbolTable = addedSymbolTable)
+            resultExpr <- explore(ds.subproblemExpression, symbolTable = addedSymbolTable, memoize = memoize)
             assignResult <- impParadigm.imperativeCapabilities.assignVar(resultVar, resultExpr)
 
             // record minimum
@@ -341,7 +341,7 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
             } yield (), Seq.empty, None)
 
 
-            advExpr <- explore(ds.advance, memoize=memoize, symbolTable=addedSymbolTable)
+            advExpr <- explore(ds.advance, symbolTable = addedSymbolTable, memoize = memoize)
             kadv <- impParadigm.imperativeCapabilities.assignVar(kVar, advExpr)
             _ <- addBlockDefinitions(Seq(assignResult, update, kadv))
           } yield ())

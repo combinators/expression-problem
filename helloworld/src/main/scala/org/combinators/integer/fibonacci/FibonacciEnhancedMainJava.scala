@@ -37,14 +37,14 @@ object FibonacciEnhancedMainDirectToDiskMain extends IOApp {
     val two: LiteralInt = new LiteralInt(2)
 
     // MatrixChainMultiplication has an array of N+1 integers,representing N 2D Matrices
-    val n = new ArgExpression(0, "n", new IntegerType(), "i")
+    val n = new ArgExpression(0, "n", IntegerType(), "i")
     val bound = List(n)
 
     // COULD be inferred from the ArgExpression list, but this lets us name variable to use in iterator
-    val i: HelperExpression = new HelperExpression("i", one, n) // only one argument, i
+    val i: HelperExpression = HelperExpression("i", one, SelfExpression("i") <= n, n) // only one argument, i
 
     // what the compute() method calls with helper(1, nums.length-1)
-    val parameters = Map("i" -> (n, i))
+    val parameters = Map("i" -> n)
     val sol = SubproblemInvocation(parameters, Seq("i"))
 
     val oneCase = IfThenElseDefinition(i == one, ExpressionStatement(one),

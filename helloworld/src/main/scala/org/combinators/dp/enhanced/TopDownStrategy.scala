@@ -47,6 +47,13 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
   // is provided by the DP common provider -- neither a topDown or a bottomUp concept
   def make_compute_method(model:EnhancedModel): Generator[paradigm.MethodBodyContext, Option[Expression]]
 
+  def report_td(str:String) : Generator[paradigm.MethodBodyContext, Unit] = {
+    println(str)
+    for  {
+      ne77 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, -77)
+    } yield ()
+  }
+
   /**
        private int memo(ARGUMENTS) {
          int key = pair(ARGUMENTS)
@@ -270,6 +277,7 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
     def exploreReturns(defs:DefinitionStatement, symbolTable: Map[String,Expression], memoize:Boolean = false) : Generator[paradigm.MethodBodyContext, Seq[Statement]] = {
       defs match {
         case es:ExpressionStatement => for {
+          _ <- report_td("ES:" + es.expr.toString())
           e <- explore(es.expr, memoize = useMemo, symbolTable = symbolTable)
           av <- impParadigm.imperativeCapabilities.returnStmt(e)
         } yield Seq(av)
@@ -285,18 +293,25 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
 
       defn match {
         case ed:ExpressionDefinition => for {
+          _ <- report_td("ED:" + ed.expr.toString())
+
           expr <- explore(ed.expr, symbolTable = symbolTable, memoize=memoize)
           retval <- impParadigm.imperativeCapabilities.returnStmt(expr)
         } yield Seq(retval)
 
         case ite:IfThenElseDefinition => for {
+          _ <- report_td("ITE:" + ite.condition.toString())
+
           inner <- explore(ite.condition, memoize = false, symbolTable = symbolTable)
+          _ <- report_td("ITE-1:" + inner.toString())
           ifstmt <- impParadigm.imperativeCapabilities.ifThenElse(
             // condition of first if
             inner
             ,
             // statements for that first if
             for {
+              _ <- report_td("ITE-2:" + ite.result.toString())
+
               stmts <- exploreReturns(ite.result, symbolTable = symbolTable, memoize=memoize)
               _ <- addBlockDefinitions(stmts)
             } yield ()
@@ -313,6 +328,8 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
         } yield Seq(ifstmt)
 
         case ds:MinRangeDefinition => for {
+          _ <- report_td("DS:" + ds.toString())
+
           one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, scala.Int.MaxValue)
           intType <- toTargetLanguageType(TypeRep.Int)   // hack
           minVarName = names.mangle("min")
@@ -374,6 +391,8 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
 
     val real_params = solution.helpers.toSeq.filter(p => solution.order.contains(p._1))
 
+    // can add to mapargs from mappers info
+
     // Type of helper method param is always an integer to refer to earlier subproblem
     for {
       params <- forEach(real_params.toSeq) { pair => for {
@@ -385,15 +404,22 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
       args <- getArguments()
 
       // make available in symbol table ALL, not just what's in signature
-      mapargs <- forEach(solution.helpers.toSeq zip args) { pair =>
+      helperargs <- forEach(solution.helpers.toSeq zip args) { pair =>
         for {
-          argType <- toTargetLanguageType(TypeRep.Int)   // needed syntactically, and will be ignored.
+          argType <- toTargetLanguageType(TypeRep.Int)   // needed syntactically because of the "=" usages below, and will be ignored.
           argExpr = pair._2._3
           argName = pair._1._1
       } yield (argName, argExpr)
       }
 
-    } yield mapargs.toMap
+      mapperargs <- forEach(solution.mappers.toSeq) { pair =>
+        for {
+          argExpr <- explore(pair._2, symbolTable = helperargs.toMap)
+          argName = pair._1
+        } yield (argName, argExpr)
+      }
+
+    } yield (helperargs.toMap ++ mapperargs.toMap)
   }
 
   def outer_helper(useMemo: Boolean, model:EnhancedModel): Generator[paradigm.MethodBodyContext, Option[Expression]] = {

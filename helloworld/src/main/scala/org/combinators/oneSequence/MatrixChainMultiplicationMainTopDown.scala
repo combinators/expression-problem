@@ -15,7 +15,7 @@ import java.nio.file.{Path, Paths}
 /**
  * All that is needed here is the set of test cases that you need.
  */
-class MatrixChainMultiplicationMainJava extends EnhancedDPMainJava {
+class MatrixChainMultiplicationMainTopDownJava extends EnhancedDPMainJava {
 
   override def tests = Seq(
     new TestExample("mm1", new LiteralArray(Array(40, 20, 30, 10, 30)), new LiteralInt(26000), new UnitExpression), //
@@ -24,7 +24,7 @@ class MatrixChainMultiplicationMainJava extends EnhancedDPMainJava {
   )
 }
 
-object MatrixChainMultiplicationMainDirectToDiskMain extends IOApp {
+object MatrixChainMultiplicationMainTopDownDirectToDiskMain extends IOApp {
   val targetDirectory:Path = Paths.get("target", "dp")
 
   def model:EnhancedModel = {
@@ -37,21 +37,13 @@ object MatrixChainMultiplicationMainDirectToDiskMain extends IOApp {
     val array = new ArgExpression(0, "nums", new IntegerArrayType(), "c")     // not too sure whether 'i' remains a requirement as argument here
     val bound = List(array)
 
-    // Need to find way to get these (i,j) into the EnhancedModel. Apply the mapping that iteration takes place over (r,c) and there is
-    // mapping of i = r+c+2 and j = c+1. The inherent problem search is upper triangle matrix of the P(i,j) space, which turns out to
-    // be upper left triangular matrix over (r,c)
-    val c: HelperExpression = HelperExpression("c", two, SelfExpression("c") <= new ArrayLengthExpression(array), new ArrayLengthExpression(array))
-    val r: HelperExpression = HelperExpression("r", one, SelfExpression("r") <= new ArrayLengthExpression(array) - c + one, new ArrayLengthExpression(array) - c + one)
-
-    // mapping. BOTTOM UP introduce new variables. TOP-DOWN had used variables all along
     val i: HelperExpression = HelperExpression("i", zero, SelfExpression("i") <= new ArrayLengthExpression(array), new ArrayLengthExpression(array))   // MOST of this unnecessary
     val j: HelperExpression = HelperExpression("j", zero, SelfExpression("i") <= new ArrayLengthExpression(array), new ArrayLengthExpression(array))   // MOST of this unnecessary
 
     val k: HelperExpression = HelperExpression("k", i, SelfExpression("k") < j, new ArrayLengthExpression(array)) // k will always be within this range
 
-    val helpers = Map("c" -> c, "r" -> r, "i" -> r)  //not sure if "i" -> r is needed
-    val mappers = Map("i" -> r, "j" -> (r + c - one))         // will control the innermost logic after mapping from the iteration variables
-    val sol = SubproblemInvocation(Seq("c", "r", "i", "j"), helpers = helpers, mappers = mappers)   // seq(c,r) is for BOTTOM UP only but i,j are included for TOP DOWN
+    val helpers = Map("i" -> i, "j" -> j)
+    val sol = SubproblemInvocation(Seq("i", "j"), helpers = helpers)   // seq(c,r) is for BOTTOM UP only but i,j are included for TOP DOWN
 
     /*
      * This is a form of decomposition that applies to upper triangle of the P problem space.
@@ -73,7 +65,7 @@ object MatrixChainMultiplicationMainDirectToDiskMain extends IOApp {
       solutionType   = StringType(),   // how a solution is represented
       sol,
       mcm_definition,
-      mode = UpperTriangle(Seq("c", "r")),
+      mode = UpperTriangle(Seq("i", "j")),
 
       // answer can be found in dp[1][n]
       answer = new SubproblemExpression(Seq(one, new ArrayLengthExpression(array) - one))
@@ -87,22 +79,12 @@ object MatrixChainMultiplicationMainDirectToDiskMain extends IOApp {
     // choose one of these to pass in
     val topDown         = TopDown()
     val topDownWithMemo = TopDown(memo = true)
-    val bottomUp        = BottomUp()
 
-    val choice = if (args.length == 1) {
-        args(0).toLowerCase() match {
-          case "topdown" => topDown
-          case "topdownwithmemo" => topDownWithMemo
-          case "bottomUp" => bottomUp
-          case _ => ???
-        }
-    } else {
-      bottomUp
-    }
+    val choice = topDown
 
     for {
       _ <- IO { print("Initializing Generator...") }
-      main <- IO { new MatrixChainMultiplicationMainJava() }
+      main <- IO { new MatrixChainMultiplicationMainTopDownJava() }
       _ <- IO { println("[OK]") }
 
       result <- main.runDirectToDisc(targetDirectory, model, choice)

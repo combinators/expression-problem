@@ -99,6 +99,15 @@ class EnhancedModel(val problem:String,
       ???
     }
   }
+
+  // allows mapping to affect how DP problems are stored, typically in bottom up
+  def find_map(variable:String) : Expression = {
+    if (solution.mappers.contains(variable)) {
+      solution.mappers(variable) // overrides the default
+    } else {
+      find(variable)
+    }
+  }
 }
 
 // Most DP problems solve subproblems in a canonical order, which is typified by a two-d array: solve rows first from top to bottom,

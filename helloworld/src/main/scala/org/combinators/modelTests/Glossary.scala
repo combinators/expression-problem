@@ -18,10 +18,7 @@ import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.integer.fibonacci.{FibonacciEnhancedMainDirectToDiskMain, FibonacciEnhancedMainJava}
 import org.combinators.integer.perfectsquare.{PerfectSquareMainDirectToDiskMain, PerfectSquareMainJava}
 import org.combinators.model.EnhancedModel
-import org.combinators.model.models.knapsack.KnapsackModel
-import org.combinators.modelTests.knapsack.KnapsackMainJava
-import org.combinators.modelTests.nwsa.NWSAMainJava
-import org.combinators.oneSequence.{MatrixChainMultiplicationMainDirectToDiskMain, MatrixChainMultiplicationMainJava, MinCostClimbingStairMain, MinCostClimbingStairToDiskMain}
+import org.combinators.oneSequence.{MatrixChainMultiplicationMainBottomUpDirectToDiskMain, MatrixChainMultiplicationMainBottomUpJava, MatrixChainMultiplicationMainTopDownDirectToDiskMain, MatrixChainMultiplicationMainTopDownJava, MinCostClimbingStairMain, MinCostClimbingStairToDiskMain}
 import org.combinators.strings.{InterleaveStringsMainJava, InterleaveStringsToDiskMain, ThreeStringsLCSMainJava, ThreeStringsLCSToDiskMain}
 
 import java.nio.file.{Path, Paths}
@@ -77,7 +74,10 @@ object GlossaryToDiskMain extends IOApp {
 
     // UncrossedLinesMainJava and LCSMainJava still don't work
 
-    val others = known_enhanced_solutions.filter(triple
+    val mcm_td = (new MatrixChainMultiplicationMainTopDownJava(), MatrixChainMultiplicationMainTopDownDirectToDiskMain.model, Seq(topDown, topDownWithMemo))
+    val just_td = Seq(mcm_td)
+
+    val others = (just_td ++ known_enhanced_solutions).filter(triple
       => triple._3.contains(TopDown(memo = true))).
       flatMap(triple => triple._1.filesToGenerate(triple._2, TopDown(memo = true)))
 
@@ -91,7 +91,10 @@ object GlossaryToDiskMain extends IOApp {
     // val kp = new KnapsackMainJava().filesToGenerate(new KnapsackModel().instantiate(), TopDown())                         [HEINEMAN: not working]
     //val nwsa = new NWSAMainJava().filesToGenerate(new NeedlemanWunschSequenceAlignmentModel().instantiate(), TopDown())    [HEINEMAN: not working]
 
-    val others = known_enhanced_solutions.filter(triple
+    val mcm_td = (new MatrixChainMultiplicationMainTopDownJava(), MatrixChainMultiplicationMainTopDownDirectToDiskMain.model, Seq(topDown, topDownWithMemo))
+    val just_td = Seq(mcm_td)
+
+    val others = (just_td ++ known_enhanced_solutions).filter(triple
       => triple._3.contains(TopDown())).
       flatMap(triple => triple._1.filesToGenerate(triple._2, TopDown()))
 
@@ -102,7 +105,10 @@ object GlossaryToDiskMain extends IOApp {
     val ul = new UncrossedLinesMainJava().filesToGenerate(new UncrossedLinesModel().instantiate(), BottomUp())
     val lcs = new LCSMainJava().filesToGenerate(new LongestCommonSubsequenceModel().instantiate(), BottomUp())
 
-    val others = known_enhanced_solutions.filter(triple
+    val mcm_bot = (new MatrixChainMultiplicationMainBottomUpJava(), MatrixChainMultiplicationMainBottomUpDirectToDiskMain.model, Seq(bottomUp))
+    val just_bot = Seq(mcm_bot)
+
+    val others =  (just_bot ++ known_enhanced_solutions).filter(triple
       => triple._3.contains(BottomUp())).
       flatMap(triple => triple._1.filesToGenerate(triple._2, BottomUp()))
 
@@ -117,6 +123,7 @@ object GlossaryToDiskMain extends IOApp {
         case "topdown" => topDown
         case "bottomup" => bottomUp
         case "topdownmemo" => topDownWithMemo
+        case "topdownwithmemo" => topDownWithMemo
         case _ =>
           print (s"Unknown option: ${args(0)}. Must be either 'topDown', 'bottomUp' or 'topDownMemo'.")
           ???

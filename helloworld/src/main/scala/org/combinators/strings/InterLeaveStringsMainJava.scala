@@ -44,8 +44,7 @@ object InterleaveStringsToDiskMain extends IOApp {
 
     // what the compute() method calls with helper(s1.length(), s2.length())
     val helpers = Map("i1" -> i1, "i2" -> i2)
-    val mappers = Map("i1" -> i1, "i2" -> i2)         // will control the innermost logic after mapping from the iteration variables
-    val sol = SubproblemInvocation(order=Seq("i1", "i2"), helpers = helpers, mappers= mappers, returnType = BooleanType())
+    val sol = SubproblemInvocation(order=Seq("i1", "i2"), helpers = helpers, returnType = BooleanType())
 
     /*
      *   P(i,j) = 0, if i == j
@@ -115,7 +114,7 @@ object InterleaveStringsToDiskMain extends IOApp {
           case _ => ???
         }
     } else {
-      topDown
+      bottomUp
     }
 
     for {

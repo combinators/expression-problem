@@ -108,35 +108,41 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
       dp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
 
       // level 0 is the outermost variable while level 2 is the innermost
-      level0_low <- explore(model.solution.helpers(order(0)).low, bottomUp = Some(dp), symbolTable = Map.empty, memoize = false)
-      level0_high <- explore(model.solution.helpers(order(0)).high, bottomUp = Some(dp), symbolTable = Map.empty, memoize = false)
+      level0_low <- explore(model.find(order(0)).low, bottomUp = Some(dp), symbolTable = Map.empty, memoize = false)
+      level0_high <- explore(model.find(order(0)).high, bottomUp = Some(dp), symbolTable = Map.empty, memoize = false)
       level0_var <- impParadigm.imperativeCapabilities.declareVar(names.mangle(order(0)), intType, Some(level0_low))
+      level1_map = Map(order(0) -> level0_var)
 
-      level1_low <- explore(model.solution.helpers(order(1)).low, bottomUp = Some(dp), symbolTable = Map.empty, memoize = false)
-      level1_high <- explore(model.solution.helpers(order(1)).high, bottomUp = Some(dp), symbolTable = Map.empty, memoize = false)
+      level1_low <- explore(model.find(order(1)).low, bottomUp = Some(dp), symbolTable = level1_map, memoize = false)
+      level1_high <- explore(model.find(order(1)).high, bottomUp = Some(dp), symbolTable = level1_map, memoize = false)
       level1_var <- impParadigm.imperativeCapabilities.declareVar(names.mangle(order(1)), intType, Some(level1_low))
+      level2_map = level1_map ++ Map(order(1) -> level1_var)
 
-      level2_low <- explore(model.solution.helpers(order(2)).low, bottomUp = Some(dp), symbolTable = Map.empty, memoize = false)
-      level2_high <- explore(model.solution.helpers(order(2)).high, bottomUp = Some(dp), symbolTable = Map.empty, memoize = false)
+      level2_low <- explore(model.find(order(2)).low, bottomUp = Some(dp), symbolTable = level2_map, memoize = false)
+      level2_high <- explore(model.find(order(2)).high, bottomUp = Some(dp), symbolTable = level2_map, memoize = false)
       level2_var <- impParadigm.imperativeCapabilities.declareVar(names.mangle(order(2)), intType, Some(level2_low))
+      level3_map = level2_map ++ Map(order(2) -> level2_var)
 
-      dp_0 <- array.arrayCapabilities.get(dp, level0_var)
-      dp_0_1 <- array.arrayCapabilities.get(dp_0, level1_var)
-      dp_0_1_2 <- array.arrayCapabilities.get(dp_0_1, level2_var)
-      oi_map = Map(order(0) -> level0_var, order(1) -> level1_var, order(2) -> level2_var)
+      expr1 <- explore(model.find_map(order(0)), bottomUp = Some(dp), symbolTable = level3_map)
+      expr2 <- explore(model.find_map(order(1)), bottomUp = Some(dp), symbolTable = level3_map)
+      expr3 <- explore(model.find_map(order(2)), bottomUp = Some(dp), symbolTable = level3_map)
+
+      dp_0 <- array.arrayCapabilities.get(dp, expr1)
+      dp_0_1 <- array.arrayCapabilities.get(dp_0, expr2)
+      dp_0_1_2 <- array.arrayCapabilities.get(dp_0_1, expr3)
 
       instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, Seq(level0_high, level1_high, level2_high), None)
 
       assign_stmt <- impParadigm.imperativeCapabilities.assignVar (dp, instantiated)
       _ <- addBlockDefinitions(Seq(assign_stmt))
 
-      level0_condition <- explore(model.solution.helpers(order(0)).in_range, bottomUp = Some(dp), symbolTable = oi_map, memoize = false)
-      level1_condition <- explore(model.solution.helpers(order(1)).in_range, bottomUp = Some(dp), symbolTable = oi_map, memoize = false)
-      level2_condition <- explore(model.solution.helpers(order(2)).in_range, bottomUp = Some(dp), symbolTable = oi_map, memoize = false)
+      level0_condition <- explore(model.find(order(0)).in_range, bottomUp = Some(dp), symbolTable = level3_map, memoize = false)
+      level1_condition <- explore(model.find(order(1)).in_range, bottomUp = Some(dp), symbolTable = level3_map, memoize = false)
+      level2_condition <- explore(model.find(order(2)).in_range, bottomUp = Some(dp), symbolTable = level3_map, memoize = false)
 
       // INNERMOST loop
       level2_whileLoop <- impParadigm.imperativeCapabilities.whileLoop(level2_condition, for {
-        av <- generate(dp, dp_0_1_2, model.definition, symbolTable = oi_map)
+        av <- generate(dp, dp_0_1_2, model.definition, symbolTable = level3_map)
         _ <- addBlockDefinitions(av)
 
         level2_var_plusone <- arithmetic.arithmeticCapabilities.add(level2_var, one)
@@ -168,7 +174,7 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
       // return last element dp[n] because dp is 1 larger in size than n
       dpexp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
 
-      expr <- explore(model.answer, memoize = false, bottomUp = Some(dpexp), symbolTable = oi_map)  // At this point, there should be no symbols
+      expr <- explore(model.answer, memoize = false, bottomUp = Some(dpexp), symbolTable = level3_map)  // At this point, there should be no symbols
 
     } yield Some(expr)
   }
@@ -325,15 +331,13 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
       level2_map = level1_map ++ Map(order(1) -> level1_var) // HACK FIX, model.solution.mappers("i") -> expr1)
 
       _ <- report(model.solution.mappers.toString())
-      expr1 <- explore(model.find(order(0)), bottomUp = Some(dp), symbolTable = level2_map)
-      expr2 <- explore(model.find(order(1)), bottomUp = Some(dp), symbolTable = level2_map ++ Map(order(0) -> expr1))   // HACK)
-
-      oi_map = (level2_map ++ Map(order(0) -> expr1) ++ Map(order(1) -> expr2))
+      expr1 <- explore(model.find_map(order(0)), bottomUp = Some(dp), symbolTable = level2_map)
+      expr2 <- explore(model.find_map(order(1)), bottomUp = Some(dp), symbolTable = level2_map) // needed?? ++ Map(order(0) -> expr1))   // HACK)
 
       level0_condition <- explore(model.find(order(0)).in_range, bottomUp = Some(dp), symbolTable = level2_map, memoize = false)
       level1_condition <- explore(model.find(order(1)).in_range, bottomUp = Some(dp), symbolTable = level2_map, memoize = false)
 
-      dp_o <- array.arrayCapabilities.get(dp, expr1)    // needs to be [i] NOT level0_var
+      dp_o <- array.arrayCapabilities.get(dp, expr1)        // needs to be [i] NOT level0_var -- can be overridden with mapper
       dp_o_i <- array.arrayCapabilities.get(dp_o, expr2)    // needs to be [j] NOT level1_var
 
       instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, Seq(level0_high, level1_high), None)
@@ -343,7 +347,7 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
 
       // INNER LOOP
       whileLoop_inner <- impParadigm.imperativeCapabilities.whileLoop(level1_condition, for {
-        av <- generate(dp, dp_o_i, model.definition, symbolTable = oi_map)
+        av <- generate(dp, dp_o_i, model.definition, symbolTable = level2_map)
         _ <- addBlockDefinitions(av)
 
         ivar_inner_plusone <- arithmetic.arithmeticCapabilities.add(level1_var, one)
@@ -366,7 +370,7 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
       // return last element dp[n] because dp is 1 larger in size than n
       dpexp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
 
-      expr <- explore(model.answer, memoize = false, bottomUp = Some(dpexp), symbolTable = oi_map)  // At this point, there should be no symbols
+      expr <- explore(model.answer, memoize = false, bottomUp = Some(dpexp), symbolTable = level2_map)  // At this point, there should be no symbols
 
     } yield Some(expr)
   }
@@ -460,8 +464,6 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
   def make_bottom_up_compute_method(model:EnhancedModel, order:Seq[String]): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
 
-    println(order.toString())
-
     for {
       self <- ooParadigm.methodBodyCapabilities.selfReference()
       theType <- return_type_based_on_model(model)
@@ -482,9 +484,11 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
       level0_low <- explore(model.find(order(0)).low, bottomUp = Some(dp), symbolTable = Map.empty, memoize = false)
       level0_high <- explore(model.find(order(0)).high, bottomUp = Some(dp), symbolTable = Map.empty, memoize = false)
       level0_var <- impParadigm.imperativeCapabilities.declareVar(names.mangle(order(0)), intType, Some(level0_low))
-
-      dp_0 <- array.arrayCapabilities.get(dp, level0_var)
       oi_map = Map(order(0) -> level0_var)
+
+      expr1 <- explore(model.find_map(order(0)), bottomUp = Some(dp), symbolTable = oi_map)
+
+      dp_0 <- array.arrayCapabilities.get(dp, expr1)
 
       instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, Seq(level0_high), None)
 

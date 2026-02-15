@@ -2,7 +2,7 @@ package org.combinators.ep.language.scala.paradigm.control   /*DI:LD:AI*/
 
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.control.{Lambda, PatternMatch, Functional => Func}
-import org.combinators.ep.generator.paradigm.IfThenElse
+import org.combinators.ep.generator.paradigm.{IfThenElse, Ternary}
 import org.combinators.ep.generator.{Command, Understands}
 import org.combinators.ep.language.scala.{MethodBodyCtxt, Syntax}
 import org.combinators.ep.language.scala.paradigm.{AnyParadigm, BlockContextManipulator}
@@ -81,6 +81,33 @@ trait Functional[Ctxt, AP <: AnyParadigm] extends Func[Ctxt] {
           Command.runGenerator(gen, context)
         }
       }
+
+    implicit val canTernary: Understands[Ctxt, IfThenElse[Term, Term]] =
+      new Understands[Ctxt, Ternary[Term,  Term]] {
+        def perform(
+                     context: Ctxt,
+                     command: Ternary[Term, Term]
+                   ): (Ctxt, Term) = {
+          val genUpToLastElse =
+            command.elseIfBranches.foldLeft[Generator[Ctxt, Term] => Generator[Ctxt, Term]](elseGen =>
+              for {
+                ifBranch <- command.ifBranch
+                elseBranch <- elseGen
+              } yield Term.If(command.condition, ifBranch, elseBranch)
+            ) { case (ifElseGen, (elseIfCond, elseIfGen)) =>
+              (elseGen) =>
+                ifElseGen(
+                  for {
+                    elseIfBranch <- elseIfGen
+                    elseBranch <- elseGen
+                  } yield Term.If(elseIfCond, elseIfBranch, elseBranch)
+                )
+            }
+          val gen = genUpToLastElse(command.elseBranch)
+          Command.runGenerator(gen, context)
+        }
+      }
+
     implicit val canPatternMatch: Understands[Ctxt, PatternMatch[Ctxt, Syntax.MangledName, Term]] =
       new Understands[Ctxt, PatternMatch[Ctxt, Syntax.MangledName, Term]] {
         def perform(

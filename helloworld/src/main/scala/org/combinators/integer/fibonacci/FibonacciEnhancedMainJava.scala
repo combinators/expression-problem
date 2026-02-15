@@ -41,11 +41,10 @@ object FibonacciEnhancedMainDirectToDiskMain extends IOApp {
     val bound = List(n)
 
     // COULD be inferred from the ArgExpression list, but this lets us name variable to use in iterator
-    val i: HelperExpression = HelperExpression("i", one, SelfExpression("i") <= n, n) // only one argument, i
+    val i: HelperExpression = HelperExpression("i", one, SelfExpression("i") <= n, n + one) // only one argument, i
 
     // what the compute() method calls with helper(1, nums.length-1)
-    val parameters = Map("i" -> n)
-    val sol = SubproblemInvocation(parameters, Seq("i"))
+    val sol = SubproblemInvocation(Seq("i"), helpers = Map("i" -> i))
 
     val oneCase = IfThenElseDefinition(i == one, ExpressionStatement(one),
        ExpressionDefinition(new SubproblemExpression(Seq(i - one)) + new SubproblemExpression(Seq(i - two))))
@@ -57,7 +56,8 @@ object FibonacciEnhancedMainDirectToDiskMain extends IOApp {
       subproblemType = IntegerType(),    // helper methods and intermediate problems are int
       solutionType = StringType(),  // how a solution is represented (not yet effective)
       sol,
-      zeroCase)
+      zeroCase,
+      answer = new SubproblemExpression(Seq(n)))
 
     Fib
   }
@@ -77,7 +77,7 @@ object FibonacciEnhancedMainDirectToDiskMain extends IOApp {
           case _ => ???
         }
     } else {
-      topDownWithMemo
+      bottomUp
     }
 
     for {

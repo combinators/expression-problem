@@ -3,7 +3,7 @@ package org.combinators.ep.generator.paradigm.control   /*DI:LI:AI*/
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, Understands}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, Apply, FreshName, IfThenElse, Reify}
+import org.combinators.ep.generator.paradigm.{AnyParadigm, Apply, FreshName, IfThenElse, Reify, Ternary}
 
 case class PatternMatch[MethodBodyContext, PatternContext, Expression](
   onValue: Expression,
@@ -46,7 +46,6 @@ trait Functional[Context] extends Lambdas[Context] {
     def declareRecursiveVariable(name: Name, tpe: Type, init: Expression => Generator[Context, Expression])(inBlock: Expression => Generator[Context, Expression]): Generator[Context, Expression] =
       AnyParadigm.capability(DeclareFunVariable(name, tpe, init, inBlock))
 
-
     implicit val canIfThenElse: Understands[Context, IfThenElse[Expression, Generator[Context, Expression], Generator[Context, Expression], Expression]]
     def ifThenElse(
         cond: Expression,
@@ -60,6 +59,18 @@ trait Functional[Context] extends Lambdas[Context] {
           elseIfs,
           elseBlock
         ))
+
+    implicit val canTernary: Understands[Context, Ternary[Expression, Expression]]
+    def ternary(
+        cond: Expression,
+        trueExpression: Expression,
+        falseExpression: Expression): Generator[Context, Expression] =
+      AnyParadigm.capability(
+        Ternary[Expression, Expression](
+          cond,
+          trueExpression,
+          falseExpression)
+      )
 
     implicit val canPatternMatch: Understands[Context, PatternMatch[Context, PatternContext, Expression]]
     def patternMatch(

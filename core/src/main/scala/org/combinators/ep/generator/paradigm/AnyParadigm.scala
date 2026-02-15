@@ -72,6 +72,13 @@ case class ResolveImport[Import, T](forElem: T) extends Command {
   type Result = Option[Import]
 }
 
+case class Ternary[Expression, R](
+  condition: Expression,
+  trueExpression: Expression,
+  falseExpression: Expression) extends Command {
+  type Result = R
+}
+
 case class IfThenElse[Expression, MandatoryBlock, Block, R](
     condition: Expression,
     ifBranch: MandatoryBlock,

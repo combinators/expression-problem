@@ -8,18 +8,20 @@ package org.combinators.modelTests
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
+import org.combinators.archive.bottomUp.twoSequences.longestCommonSubsequence.LCSMainJava
 import org.combinators.dp.enhanced.EnhancedDPMainJava
-import org.combinators.dp.{BottomUp, GenerationOption, LCSMainJava, TopDown}
+import org.combinators.dp.{BottomUp, GenerationOption, TopDown}
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.model.models.twoSequences.{LongestCommonSubsequenceModel, NeedlemanWunschSequenceAlignmentModel, UncrossedLinesModel}
 import org.combinators.modelTests.uncrossedLines.UncrossedLinesMainJava
 import org.combinators.ep.generator.FileWithPathPersistable._
+import org.combinators.integer.fibonacci.{FibonacciEnhancedMainDirectToDiskMain, FibonacciEnhancedMainJava}
 import org.combinators.integer.perfectsquare.{PerfectSquareMainDirectToDiskMain, PerfectSquareMainJava}
 import org.combinators.model.EnhancedModel
 import org.combinators.model.models.knapsack.KnapsackModel
 import org.combinators.modelTests.knapsack.KnapsackMainJava
 import org.combinators.modelTests.nwsa.NWSAMainJava
-import org.combinators.oneSequence.matrixchainmutiplication.{MatrixChainMultiplicationMainDirectToDiskMain, MatrixChainMultiplicationMainJava}
+import org.combinators.oneSequence.{MatrixChainMultiplicationMainDirectToDiskMain, MatrixChainMultiplicationMainJava, MinCostClimbingStairMain, MinCostClimbingStairToDiskMain}
 import org.combinators.strings.{InterleaveStringsMainJava, InterleaveStringsToDiskMain, ThreeStringsLCSMainJava, ThreeStringsLCSToDiskMain}
 
 import java.nio.file.{Path, Paths}
@@ -60,13 +62,14 @@ object GlossaryToDiskMain extends IOApp {
 
   // declare the working versions for each problem in the enhanced list
   val known_enhanced_solutions:Seq[(EnhancedDPMainJava, EnhancedModel, Seq[GenerationOption])] = Seq(
-    (new PerfectSquareMainJava(), PerfectSquareMainDirectToDiskMain.model, Seq(topDown, topDownWithMemo /* NO BotUp */)),
+    (new PerfectSquareMainJava(), PerfectSquareMainDirectToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
     (new InterleaveStringsMainJava(), InterleaveStringsToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
     (new ThreeStringsLCSMainJava(), ThreeStringsLCSToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
+    (new FibonacciEnhancedMainJava(), FibonacciEnhancedMainDirectToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
 
     // generates but has flawed logic because of the transformation of (r,c) into (i,j)
-    (new MatrixChainMultiplicationMainJava(), MatrixChainMultiplicationMainDirectToDiskMain.model, Seq(topDown, topDownWithMemo /* NO BotUp */)),
-
+    // CHALLENGING (new MatrixChainMultiplicationMainJava(), MatrixChainMultiplicationMainDirectToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
+    (new MinCostClimbingStairMain(), MinCostClimbingStairToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
   )
 
   // below are the individual DP problems generated and added to `all_files`.

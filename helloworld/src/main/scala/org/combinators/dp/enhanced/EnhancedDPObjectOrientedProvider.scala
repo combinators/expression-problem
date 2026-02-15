@@ -43,32 +43,20 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with EnhancedU
    *   public Integer compute() {
    *     return this.helper(this.n);
    *   }
+   *
+   *   RETURN is taken right from the 'answer' field of the problem definition.
+   *
    */
   def make_compute_method(model:EnhancedModel): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
-
-    // make list of params in proper order
-    val orderedParams = model.solution.order.filter(varName => model.solution.parameters.contains(varName))
 
     for {
       returnType <- return_type_based_on_model(model)
       _ <- setReturnType(returnType)
 
-      self <- ooParadigm.methodBodyCapabilities.selfReference()
-      helperMethod <- ooParadigm.methodBodyCapabilities.getMember(self, helperName)
+      expr <- explore(model.answer, memoize = false, symbolTable = Map.empty)  // At this point, there should be no symbols
 
-      // convert arguments into Iteration values
-      args <- forEach(orderedParams) { varName => for {
-        neg77 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, -77)
-        pair = model.solution.parameters(varName)
-
-          // arg1 <- max_bound_in_method(boundExpr)
-        arg1 <- explore(pair, memoize = false, symbolTable = Map.empty)  // At this point, there should be no symbols
-        } yield arg1
-      }
-      //field <- ooParadigm.methodBodyCapabilities.getMember(self, nName)
-      invocation <- apply(helperMethod, args)
-    } yield Some(invocation)
+    } yield Some(expr)
   }
 
   // expand as necessary

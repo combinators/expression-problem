@@ -47,7 +47,6 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
   // is provided by the DP common provider -- neither a topDown or a bottomUp concept
   def make_compute_method(model:EnhancedModel): Generator[paradigm.MethodBodyContext, Option[Expression]]
 
-
   /**
        private int memo(ARGUMENTS) {
          int key = pair(ARGUMENTS)
@@ -189,7 +188,7 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
     def create_memo_helper(): Generator[MethodBodyContext, Option[Expression]] = {
       import paradigm.methodBodyCapabilities._
       for {
-        _ <- symbol_table_from_solution(model.solution)  // should be done outside
+        _ <- symbol_table_from_solution(model.solution)  // Needed to set params for memo
         retType <- helper_method_type(model)
         _ <- setReturnType(retType)
         res <- memo_helper_body(model)
@@ -340,7 +339,6 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
               // here is where one could store deecisions
             } yield (), Seq.empty, None)
 
-
             advExpr <- explore(ds.advance, symbolTable = addedSymbolTable, memoize = memoize)
             kadv <- impParadigm.imperativeCapabilities.assignVar(kVar, advExpr)
             _ <- addBlockDefinitions(Seq(assignResult, update, kadv))
@@ -374,9 +372,11 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
   def symbol_table_from_solution(solution:SubproblemInvocation): Generator[paradigm.MethodBodyContext, Map[String, Expression]] = {
     import paradigm.methodBodyCapabilities._
 
+    val real_params = solution.helpers.toSeq.filter(p => solution.order.contains(p._1))
+
     // Type of helper method param is always an integer to refer to earlier subproblem
     for {
-      params <- forEach(solution.parameters.toSeq) { pair => for {
+      params <- forEach(real_params.toSeq) { pair => for {
         argType <- toTargetLanguageType(TypeRep.Int)      // Always will be int since subproblems are ordered
         argName = names.mangle(pair._1)             // use pre-selected iterator
       } yield (argName, argType)
@@ -384,7 +384,8 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
       _ <- setParameters(params)
       args <- getArguments()
 
-      mapargs <- forEach(solution.parameters.toSeq zip args) { pair =>
+      // make available in symbol table ALL, not just what's in signature
+      mapargs <- forEach(solution.helpers.toSeq zip args) { pair =>
         for {
           argType <- toTargetLanguageType(TypeRep.Int)   // needed syntactically, and will be ignored.
           argExpr = pair._2._3
@@ -398,7 +399,7 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
   def outer_helper(useMemo: Boolean, model:EnhancedModel): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     for {
-      symbolTable <- symbol_table_from_solution(model.solution)
+      //symbolTable <- symbol_table_from_solution(model.solution)
 
       realType <- return_type_based_on_model(model)
       _ <- setReturnType(realType)
@@ -406,6 +407,4 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
       _ <- process_inner_helper(useMemo, model)
     } yield None
   }
-
-
 }

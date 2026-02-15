@@ -1,6 +1,7 @@
 package org.combinators.ep.language.inbetween.functional
 
 import org.combinators.ep.domain.abstractions.TypeRep
+import org.combinators.ep.generator.paradigm.Ternary
 import org.combinators.ep.language.inbetween.any
 
 package object control {
@@ -8,6 +9,7 @@ package object control {
     type Lambda <: Expression
     type DeclareFunVariable <: Expression
     type FunIfThenElse <: Expression
+    type FunTernary <: Expression
     type PatternMatch <: Expression
     type PatternContext
     type PatternVariable <: Expression
@@ -57,6 +59,21 @@ package object control {
       elseBranch: any.Expression[FT] = this.elseBranch
     ): IfThenElse[FT] =
       funIfThenElse(condition, ifBranch, elseIfBranches, elseBranch)
+  }
+
+  trait Ternary[FT <: FinalTypes] extends any.Expression[FT] with Factory[FT] {
+    def getSelfFunTernary: finalTypes.FunTernary
+
+    def condition: any.Expression[FT]
+    def trueExpression: any.Expression[FT]
+    def falseExpression: any.Expression[FT]
+
+    def copy(
+              condition: any.Expression[FT] = this.condition,
+              trueExpression: any.Expression[FT] = this.trueExpression,
+              falseExpression: any.Expression[FT] = this.falseExpression
+            ): Ternary[FT] =
+      funTernary(condition, trueExpression, falseExpression)
   }
 
   trait PatternContext[FT <: FinalTypes] extends Factory[FT] {
@@ -128,6 +145,12 @@ package object control {
       elseBranch: any.Expression[FT]
     ): IfThenElse[FT]
 
+    def funTernary(
+       condition: any.Expression[FT],
+       trueExpression: any.Expression[FT],
+       falseExpression: any.Expression[FT]
+     ): Ternary[FT]
+
     def patternContext(variables: Seq[any.Name[FT]] = Seq.empty): PatternContext[FT]
 
     def patternVariable(name: any.Name[FT]): PatternVariable[FT]
@@ -146,11 +169,11 @@ package object control {
     implicit def convert(other: Lambda[FT]): Lambda[FT]
     implicit def convert(other: DeclareFunVariable[FT]): DeclareFunVariable[FT]
     implicit def convert(other: IfThenElse[FT]): IfThenElse[FT]
+    implicit def convert(other: Ternary[FT]): Ternary[FT]
     implicit def convert(other: PatternContext[FT]): PatternContext[FT]
     implicit def convert(other: PatternVariable[FT]): PatternVariable[FT]
     implicit def convert(other: ConstructorPattern[FT]): ConstructorPattern[FT]
     implicit def convert(other: PatternMatch[FT]): PatternMatch[FT]
     implicit def convert(other: any.Method[FT]): Method[FT]
-
   }
 }

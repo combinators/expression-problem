@@ -1,4 +1,4 @@
-package org.combinators.oneSequence.matrixchainmutiplication
+package org.combinators.oneSequence
 
 /**
  * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"
@@ -41,7 +41,7 @@ object MatrixChainMultiplicationMainDirectToDiskMain extends IOApp {
     // mapping of i = r+c+2 and j = c+1. The inherent problem search is upper triangle matrix of the P(i,j) space, which turns out to
     // be upper left triangular matrix over (r,c)
     val c: HelperExpression = HelperExpression("c", two, SelfExpression("c") <= new ArrayLengthExpression(array), new ArrayLengthExpression(array))
-    val r: HelperExpression = HelperExpression("r", one, SelfExpression("r") <= new ArrayLengthExpression(array) - c + one, new ArrayLengthExpression(array))
+    val r: HelperExpression = HelperExpression("r", one, SelfExpression("r") <= new ArrayLengthExpression(array) - c + one, new ArrayLengthExpression(array) - c + one)
 
     // mapping. BOTTOM UP introduce new variables. TOP-DOWN had used variables all along
     val i: HelperExpression = HelperExpression("i", zero, SelfExpression("i") <= new ArrayLengthExpression(array), new ArrayLengthExpression(array))   // MOST of this unnecessary
@@ -49,15 +49,9 @@ object MatrixChainMultiplicationMainDirectToDiskMain extends IOApp {
 
     val k: HelperExpression = HelperExpression("k", i, SelfExpression("k") < j, new ArrayLengthExpression(array)) // k will always be within this range
 
-    // what the compute() method calls with helper(i = 1, j = nums.length-1) -- THIS IS TOP DOWN but also becomes dp[i][j] for solution in BOTTOM UP
-    // not sure why helper(1, N-1) but then dp[1][n] in return. #ANNOYED
-    val params = Map(
-      "i" -> new LiteralInt(1),
-      "j" -> (new ArrayLengthExpression(array) - one)
-    )
-    val helpers = Map("k" -> k)
+    val helpers = Map("c" -> c, "r" -> r, "i" -> r)  //not sure if "i" -> r is needed
     val mappers = Map("i" -> r, "j" -> (r + c - one))         // will control the innermost logic after mapping from the iteration variables
-    val sol = SubproblemInvocation(params, Seq("c", "r", "i", "j"), helpers = helpers, mappers = mappers)   // seq(c,r) is for BOTTOM UP only but i,j are included for TOP DOWN
+    val sol = SubproblemInvocation(Seq("c", "r", "i", "j"), helpers = helpers, mappers = mappers)   // seq(c,r) is for BOTTOM UP only but i,j are included for TOP DOWN
 
     /*
      * This is a form of decomposition that applies to upper triangle of the P problem space.
@@ -78,7 +72,11 @@ object MatrixChainMultiplicationMainDirectToDiskMain extends IOApp {
       subproblemType = IntegerType(),  // helper methods and intermediate problems are int
       solutionType   = StringType(),   // how a solution is represented
       sol,
-      mcm_definition
+      mcm_definition,
+      mode = UpperTriangle(Seq("c", "r")),
+
+      // answer can be found in dp[1][n]
+      answer = new SubproblemExpression(Seq(one, new ArrayLengthExpression(array) - one))
     )
 
     MCM
@@ -99,7 +97,7 @@ object MatrixChainMultiplicationMainDirectToDiskMain extends IOApp {
           case _ => ???
         }
     } else {
-      topDown
+      bottomUp
     }
 
     for {
@@ -111,3 +109,47 @@ object MatrixChainMultiplicationMainDirectToDiskMain extends IOApp {
     } yield result
   }
 }
+
+/**
+
+ Below is what it needs to generate:
+
+ public int computexyz() {
+   int c = 2;
+   int r = 1;
+   int[][] dp = new int[this.A.length+1][this.A.length+1];
+   while ((c <= this.A.length - 1)) {
+     r = 1;
+     while ((r < ((this.A.length - c) + 1))) {
+       System.out.println(r + "," + c);
+       if (23 > 99) {
+         dp[r][((r + c) - 1)] = 0;
+       } else {
+         int min = 2147483647;
+         int k = r;
+         int result;
+         while ((k < ((r + c) - 1))) {
+           System.out.println("  " + k);
+             result = ((dp[r][k] + dp[(k + 1)][((r + c) - 1)]) + ((this.A[(r - 1)] * this.A[k]) * this.A[((r + c) - 1)]));
+             if ((result < min)) {
+               min = result;
+             }
+           k = (k + 1);
+         }
+         dp[r][((r + c) - 1)] = min;
+       }
+       r = (r + 1);
+     }
+     c = (c + 1);
+   }
+
+   for (int i = 0; i <= this.A.length; i++) {
+     for (int j = 0; j <= this.A.length; j++) {
+       System.out.print(dp[i][j] + "\t");
+     }
+     System.out.println();
+   }
+   return dp[1][this.A.length-1];
+ }
+
+ */

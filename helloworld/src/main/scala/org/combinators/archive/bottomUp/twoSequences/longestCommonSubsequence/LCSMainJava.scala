@@ -1,4 +1,4 @@
-package org.combinators.dp
+package org.combinators.archive.bottomUp.twoSequences.longestCommonSubsequence
 
 /**
  * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"
@@ -9,12 +9,13 @@ package org.combinators.dp
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
+import org.combinators.dp.{BottomUp, GenerationOption, TopDown}
 import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
-import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, Unboxed, Syntax}
+import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, Syntax, Unboxed}
+import org.combinators.model.Model
 import org.combinators.model.models.twoSequences.LongestCommonSubsequenceModel
-import org.combinators.model.{AdditionExpression, ArgExpression, Argument, EqualExpression, IntegerType, IteratorExpression, LiteralInt, Model, Setup, SubproblemExpression, SubtractionExpression, UnitExpression}
 
 import java.nio.file.{Path, Paths}
 
@@ -41,6 +42,7 @@ class LCSMainJava {
         _ <- generator.arraysInMethod.enable()
         _ <- generator.equalityInMethod.enable()
         _ <- generator.assertionsInMethod.enable()
+        _ <- generator.booleansInMethod.enable()
 
         // HERE you can finally specify the method to use for testing and the test cases
         _ <- dpApproach.implement(model, option)
@@ -73,7 +75,7 @@ class LCSMainJava {
 }
 
 object LCSDirectToDiskMain extends IOApp {
-  val targetDirectory:Path = Paths.get("target", "dp", "lcs")
+  val targetDirectory:Path = Paths.get("target", "lcs")
 
   def run(args: List[String]): IO[ExitCode] = {
 

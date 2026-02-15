@@ -6,16 +6,21 @@ trait Expression {
   def -(other: Expression): Expression = new SubtractionExpression(this,other)
   def *(other: Expression): Expression = new MultiplicationExpression(this,other)
   def /(other: Expression): Expression = new DivisionExpression(this,other)
-  def <(other: Expression): Expression = new LessThanExpression(this,other)
-  def <=(other: Expression): Expression = new LessThanOrEqualExpression(this,other)
+
+  def <(other: Expression): Expression with BooleanExpression = new LessThanExpression(this,other)
+  def <=(other: Expression): Expression with BooleanExpression = new LessThanOrEqualExpression(this,other)
 
   // When using ==, must assume it is IntegerType: Dangerous?? todo: allow for other types(?)
-  def ==(other: Expression): Expression = new EqualExpression(this,other, new IntegerType())
-  def ||(other: Expression): Expression = new OrExpression(this,other)
-  def &&(other: Expression): Expression = new AndExpression(this,other)
+  def ==(other: Expression): Expression with BooleanExpression = new EqualExpression(this,other, new IntegerType())
+  def ||(other: Expression): Expression with BooleanExpression = new OrExpression(this,other)
+  def &&(other: Expression): Expression with BooleanExpression = new AndExpression(this,other)
 
   def apply(other: Expression): Expression = new ArrayElementExpression(this, other)
 }
+
+// tagging an expression as returning a Boolean value, which means it can be used in IfElseExpression
+trait BooleanExpression
+
 
 // necessary for defining literals that form the input or possible output
 trait LiteralExpression extends Expression
@@ -30,13 +35,11 @@ class SubproblemExpression(val args: Seq[Expression]) extends Expression
 
 // If helper is defined but NOT part of the parameters during invocation, then it must be passed in as helpers
 case class SubproblemInvocation(
-       parameters: Map[String,Expression],
        order:Seq[String],
        helpers:Map[String,HelperExpression] = Map.empty,     // known variables that are used in the problem expansion without being iterated over or called
        returnType: ArgumentType = IntegerType(),
        mappers: Map[String, Expression] = Map.empty)         // variables that map to new coordinates into dp[] space and are added to bottom up
 
-class MathMinimumExpression(val args: Seq[Expression]) extends Expression
 class MaxExpression(val left: Expression, val right: Expression) extends Expression
 class MinExpression(val left: Expression, val right: Expression) extends Expression
 class ArrayElementExpression(val array: Expression, val index: Expression) extends Expression
@@ -78,12 +81,12 @@ class CharAtExpression(val string: Expression, val index: Expression) extends Ex
 // Access field access for the primary class
 class InputExpression(val variableName:String) extends Expression
 
-class EqualExpression(val left: Expression, val right: Expression, val tpe:ArgumentType = new org.combinators.model.IntegerType()) extends Expression
-class OrExpression(val left: Expression, val right: Expression) extends Expression
-class AndExpression(val left: Expression, val right: Expression) extends Expression
-class LessThanExpression(val left: Expression, val right:Expression) extends Expression
-class LessThanOrEqualExpression(val left: Expression, val right:Expression) extends Expression
-class TernaryExpression(val condition: Expression, val trueBranch: Expression, val falseBranch: Expression) extends Expression
+class EqualExpression(val left: Expression, val right: Expression, val tpe:ArgumentType = org.combinators.model.IntegerType()) extends Expression with BooleanExpression
+class OrExpression(val left: Expression, val right: Expression) extends Expression with BooleanExpression
+class AndExpression(val left: Expression, val right: Expression) extends Expression with BooleanExpression
+class LessThanExpression(val left: Expression, val right:Expression) extends Expression with BooleanExpression
+class LessThanOrEqualExpression(val left: Expression, val right:Expression) extends Expression with BooleanExpression
+class TernaryExpression(val condition: Expression with BooleanExpression, val trueBranch: Expression, val falseBranch: Expression) extends Expression
 
 class LiteralBoolean(val literal:Boolean) extends LiteralExpression
 

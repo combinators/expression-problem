@@ -201,7 +201,7 @@ package object scala {
 
   trait FunIfThenElse[FT <: FinalTypes] extends functional.control.IfThenElse[FT] with Expression[FT] with Factory[FT] {
     def toScala: String = {
-      val elseIfs = elseIfBranches.map{ case (condition, body) =>
+      val elseIfs = elseIfBranches.map { case (condition, body) =>
         s"""
            | else if (${condition.toScala}) {
            |  ${body.toScala}
@@ -226,6 +226,44 @@ package object scala {
             branch.prefixRootPackage(rootPackageName, excludedTypeNames))
         },
         elseBranch = elseBranch.prefixRootPackage(rootPackageName, excludedTypeNames),
+      )
+  }
+
+  trait Ternary[FT <: FinalTypes] extends imperative.Ternary[FT] with Expression[FT] with Factory[FT] {
+      def toScala: String = {
+        s"""
+           |if (${condition.toScala}) {
+           |  ${trueExpression.toScala}
+           |} else {
+           |  ${falseExpression.toScala}
+           |}
+            """.stripMargin
+      }
+
+      def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): imperative.Ternary[FT] =
+        copy(
+          condition = condition.prefixRootPackage(rootPackageName, excludedTypeNames),
+          trueExpression = trueExpression.prefixRootPackage(rootPackageName, excludedTypeNames),
+          falseExpression = falseExpression.prefixRootPackage(rootPackageName, excludedTypeNames)
+        )
+    }
+
+  trait FunTernary[FT <: FinalTypes] extends functional.control.Ternary[FT] with Expression[FT] with Factory[FT] {
+      def toScala: String = {
+        s"""
+           |if (${condition.toScala}) {
+           |  ${trueExpression.toScala}
+           |} else {
+           |  ${falseExpression.toScala}
+           |}
+          """.stripMargin
+      }
+
+    def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): functional.control.Ternary[FT] =
+      copy(
+        condition = condition.prefixRootPackage(rootPackageName, excludedTypeNames),
+        trueExpression = trueExpression.prefixRootPackage(rootPackageName, excludedTypeNames),
+        falseExpression = falseExpression.prefixRootPackage(rootPackageName, excludedTypeNames)
       )
   }
 
@@ -1403,7 +1441,9 @@ package object scala {
     implicit def convert(other: functional.control.DeclareFunVariable[FT]): DeclareFunVariable[FT]
     implicit def convert(assignVariable: imperative.AssignVariable[FT]): AssignVariable[FT]
     implicit def convert(ifThenElse: imperative.IfThenElse[FT]): IfThenElse[FT]
+    implicit def convert(ternary: imperative.Ternary[FT]): Ternary[FT]
     implicit def convert(other: functional.control.IfThenElse[FT]): FunIfThenElse[FT]
+    implicit def convert(other: functional.control.Ternary[FT]): FunTernary[FT]
     implicit def convert(whileLoop: imperative.While[FT]): While[FT]
     implicit def convert(operator: OperatorExpressionOps.Operator[FT]): Operator[FT]
     implicit def convert(binaryExpression: OperatorExpressionOps.BinaryExpression[FT]): BinaryExpression[FT]
@@ -1444,6 +1484,8 @@ package object scala {
       override type AssignVariable = Finalized.AssignVariable
       override type IfThenElse = Finalized.IfThenElse
       override type FunIfThenElse = Finalized.FunIfThenElse
+      override type Ternary = Finalized.Ternary
+      override type FunTernary = Finalized.FunTernary
       override type While = Finalized.While
       override type Class = Finalized.Class
       override type Constructor = Finalized.Constructor
@@ -1624,11 +1666,14 @@ package object scala {
         Return(expression)
       override def ifThenElse(condition: any.Expression[FinalTypes], ifBranch: Seq[any.Statement[FinalTypes]], elseIfBranches: Seq[(any.Expression[FinalTypes], Seq[any.Statement[FinalTypes]])], elseBranch: Seq[any.Statement[FinalTypes]]): imperative.IfThenElse[FinalTypes] =
         IfThenElse(condition, ifBranch, elseIfBranches, elseBranch)
+      override def ternary(condition: any.Expression[FinalTypes], trueExpression: any.Expression[FinalTypes], falseExpression: any.Expression[FinalTypes]) : imperative.Ternary[FinalTypes] =
+        Ternary(condition, trueExpression, falseExpression)
       override def whileLoop(condition: any.Expression[FinalTypes], body: Seq[any.Statement[FinalTypes]]): imperative.While[FinalTypes] =
         While(condition, body)
       implicit def convert(decl: imperative.DeclareVariable[FinalTypes]): DeclareVariable = decl.getSelfDeclareVariable
       implicit def convert(assignVariable: imperative.AssignVariable[FinalTypes]): AssignVariable = assignVariable.getSelfAssignVariable
       implicit def convert(ifThenElse: imperative.IfThenElse[FinalTypes]): IfThenElse = ifThenElse.getSelfIfThenElse
+      implicit def convert(ternary: imperative.Ternary[FinalTypes]): Ternary = ternary.getSelfTernary
       implicit def convert(whileLoop: imperative.While[FinalTypes]): While = whileLoop.getSelfWhile
       override def toStringOp(): StringOps.ToStringOp[FinalTypes] = ToStringOp()
       override def appendStringOp(): StringOps.AppendStringOp[FinalTypes] = AppendStringOp()
@@ -1807,6 +1852,10 @@ package object scala {
       implicit def convert(other: functional.control.PatternContext[FinalTypes]): scala.PatternContext[FinalTypes] = other.getSelfPatternContext
       implicit def convert(other: functional.control.Lambda[FinalTypes]): Lambda = other.getSelfLambda
       implicit def convert(other: functional.control.DeclareFunVariable[FinalTypes]): DeclareFunVariable = other.getSelfDeclareFunVariable
+      implicit def convert(other: functional.control.IfThenElse[FinalTypes]): FunIfThenElse = other.getSelfFunIfThenElse
+      implicit def convert(other: functional.control.Ternary[FinalTypes]): FunTernary = other.getSelfFunTernary
+      implicit def convert(other: functional.control.PatternMatch[FinalTypes]): PatternMatch = other.getSelfPatternMatch
+
       def declareFunVariable(
         name: any.Name[FinalTypes],
         tpe: any.Type[FinalTypes],
@@ -1819,13 +1868,16 @@ package object scala {
         elseIfBranches: Seq[(any.Expression[FinalTypes], any.Expression[FinalTypes])],
         elseBranch: any.Expression[FinalTypes]
       ): scala.FunIfThenElse[FinalTypes] = FunIfThenElse(condition, ifBranch, elseIfBranches, elseBranch)
+      def funTernary(
+         condition: any.Expression[FinalTypes],
+         trueExpression: any.Expression[FinalTypes],
+         falseExpression: any.Expression[FinalTypes]
+       ): scala.FunTernary[FinalTypes] = FunTernary(condition, trueExpression, falseExpression)
 
-      implicit def convert(other: functional.control.IfThenElse[FinalTypes]): FunIfThenElse = other.getSelfFunIfThenElse
       def patternMatch(
         onValue: any.Expression[FinalTypes],
         cases: Seq[(any.Expression[FinalTypes], any.Expression[FinalTypes])] = Seq.empty
       ): scala.PatternMatch[FinalTypes] = PatternMatch(onValue, cases)
-      implicit def convert(other: functional.control.PatternMatch[FinalTypes]): PatternMatch = other.getSelfPatternMatch
     }
 
     case class Name(override val component: String, override val mangled: String) extends scala.Name[FinalTypes] with Factory {
@@ -1951,6 +2003,14 @@ package object scala {
       override val elseBranch: Seq[any.Statement[FinalTypes]]
     ) extends Statement with scala.IfThenElse[FinalTypes] with Factory {
       override def getSelfIfThenElse: this.type = this
+    }
+
+    case class Ternary(
+      override val condition: any.Expression[FinalTypes],
+      override val trueExpression: any.Expression[FinalTypes],
+      override val falseExpression: any.Expression[FinalTypes]
+    ) extends Expression with scala.Ternary[FinalTypes] with Factory {
+      override def getSelfTernary: this.type = this
     }
 
     case class While(
@@ -2209,7 +2269,6 @@ package object scala {
     ) extends scala.DeclareFunVariable[FinalTypes] with Expression {
       override def getSelfDeclareFunVariable: this.type = this
     }
-    
 
     case class FunIfThenElse(
       override val condition: any.Expression[FinalTypes],
@@ -2219,13 +2278,19 @@ package object scala {
     ) extends scala.FunIfThenElse[FinalTypes] with Expression {
       override def getSelfFunIfThenElse: this.type = this
     }
-   
+
+    case class FunTernary(
+      override val condition: any.Expression[FinalTypes],
+      override val trueExpression: any.Expression[FinalTypes],
+      override val falseExpression:  any.Expression[FinalTypes]
+    ) extends scala.FunTernary[FinalTypes] with Expression {
+      override def getSelfFunTernary: this.type = this
+    }
 
     case class PatternContext(variables: Seq[any.Name[FinalTypes]]) extends scala.PatternContext[FinalTypes] with Factory with Util {
       override def getSelfPatternContext: this.type = this
     }
     
-
     case class PatternVariable(name: any.Name[FinalTypes]) extends scala.PatternVariable[FinalTypes] with Expression {
       override def getSelfPatternVariable: this.type = this
     }

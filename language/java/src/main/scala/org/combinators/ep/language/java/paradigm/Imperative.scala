@@ -1,10 +1,10 @@
 package org.combinators.ep.language.java.paradigm    /*DI:LD:AI*/
 
-import com.github.javaparser.ast.expr.{AssignExpr, NameExpr, VariableDeclarationExpr}
+import com.github.javaparser.ast.expr.{AssignExpr, ConditionalExpr, NameExpr, VariableDeclarationExpr}
 import com.github.javaparser.ast.stmt.{BlockStmt, ExpressionStmt, IfStmt, ReturnStmt, WhileStmt}
 import org.combinators.ep.generator.{Command, Understands}
 import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.IfThenElse
+import org.combinators.ep.generator.paradigm.{IfThenElse, Ternary}
 import org.combinators.ep.generator.paradigm.control.{Imperative => Imp, _}
 import org.combinators.ep.language.java.{CtorCtxt, MethodBodyCtxt}
 
@@ -85,6 +85,22 @@ trait Imperative[Ctxt, AP <: AnyParadigm] extends Imp[Ctxt] {
           (manip.copyWithBlock(afterElseCtxt, manip.getBlock(context)), iteStmt.clone())
         }
       }
+
+    implicit val canTernary: Understands[Ctxt, Ternary[Expression, Expression]] =
+      new Understands[Ctxt, Ternary[Expression, Expression]] {
+        def perform(
+                     context: Ctxt,
+                     command: Ternary[Expression, Expression]
+                   ): (Ctxt, Expression) = {
+          val conditionalExpr: ConditionalExpr  = new ConditionalExpr ()
+          conditionalExpr.setCondition(command.condition)
+          conditionalExpr.setThenExpr(command.trueExpression)
+          conditionalExpr.setElseExpr(command.falseExpression)
+
+          (manip  .copyWithBlock(context, manip.getBlock(context)), conditionalExpr.clone())
+        }
+      }
+
     implicit val canWhile: Understands[Ctxt, While[Ctxt, Expression, Statement]] =
       new Understands[Ctxt, While[Ctxt, Expression, Statement]] {
         def perform(context: Ctxt, command: While[Ctxt, Expression, Statement]): (Ctxt, Statement) = {

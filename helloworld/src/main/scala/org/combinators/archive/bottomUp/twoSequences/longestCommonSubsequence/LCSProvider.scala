@@ -1,4 +1,4 @@
-package org.combinators.integer.fibonacci
+package org.combinators.archive.bottomUp.twoSequences.longestCommonSubsequence
 
 import org.combinators.dp.{DPObjectOrientedProvider, TestExample}
 import org.combinators.ep.domain.abstractions._
@@ -8,12 +8,12 @@ import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.ep.generator.{AbstractSyntax, NameProvider}
-import org.combinators.model.{LiteralInt, UnitExpression}
+import org.combinators.model.{LiteralInt, LiteralString, LiteralStringPair}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
  */
-trait FibonacciProvider extends DPObjectOrientedProvider {
+trait LCSProvider extends DPObjectOrientedProvider {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
@@ -33,24 +33,20 @@ trait FibonacciProvider extends DPObjectOrientedProvider {
   import syntax._
 
   // Specific examples hard coded for Int input and Int output
-  def makeTestsFibonacci(implementation:String, tests: Seq[TestExample] = Seq.empty): Generator[MethodBodyContext, Seq[Expression]] = {
+  def makeTestsLCS(implementation:String, tests: Seq[TestExample] = Seq.empty): Generator[MethodBodyContext, Seq[Expression]] = {
     import eqls.equalityCapabilities._
     import paradigm.methodBodyCapabilities._
 
+    // NOTE: these tests are in the wrong place, since we defer test gen to later
     val tests = Seq(
-      new TestExample("fib0", new LiteralInt(0), new LiteralInt(0), new UnitExpression), // for now, leave solution as None
-      new TestExample("fib1", new LiteralInt(1), new LiteralInt(1), new UnitExpression),
-      new TestExample("fib2", new LiteralInt(2), new LiteralInt(1), new UnitExpression),
-      new TestExample("fib7", new LiteralInt(7), new LiteralInt(13), new UnitExpression),
-      new TestExample("fib20", new LiteralInt(20), new LiteralInt(6765), new UnitExpression),
-      new TestExample("fib40", new LiteralInt(40), new LiteralInt(102334155), new UnitExpression)
+      new TestExample("fib0", new LiteralStringPair("ACTG", "CGATC"), new LiteralInt(2), new LiteralString("AC")) // for now, leave solution as None
     )
 
     for {
       assert_statements <- forEach(tests) { example =>
 
         val input_value = example.inputType match {
-          case lt: LiteralInt => lt.literal
+          case lt: LiteralStringPair => (lt.string1, lt.string2)
           case _ => ??? // error in all other circumstances
         }
 
@@ -61,8 +57,10 @@ trait FibonacciProvider extends DPObjectOrientedProvider {
 
         for {
           fibType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle(implementation))
-          n_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, input_value)
-          sol <- ooParadigm.methodBodyCapabilities.instantiateObject(fibType, Seq(n_value))
+          s1_value <- paradigm.methodBodyCapabilities.reify(TypeRep.String, input_value._1)
+          s2_value <- paradigm.methodBodyCapabilities.reify(TypeRep.String, input_value._2)
+
+          sol <- ooParadigm.methodBodyCapabilities.instantiateObject(fibType, Seq(s1_value, s2_value))
           computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, computeName)
 
           intType <- toTargetLanguageType(TypeRep.Int)
@@ -78,12 +76,12 @@ trait FibonacciProvider extends DPObjectOrientedProvider {
 
   override def makeTestCase(implementation:String): Generator[TestContext, Unit] = {
     for {
-      _ <- paradigm.testCapabilities.addTestCase(makeTestsFibonacci(implementation), names.mangle("DP"))
+      _ <- paradigm.testCapabilities.addTestCase(makeTestsLCS(implementation), names.mangle("DP"))
     } yield ()
   }
 }
 
-object FibonacciProvider {
+object LCSProvider {
   type WithParadigm[P <: AnyParadigm] = DPObjectOrientedProvider { val paradigm: P }
   type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 
@@ -102,8 +100,8 @@ object FibonacciProvider {
    parametricPolymorphism: ParametricPolymorphism.WithBase[base.type],
    booleansIn: Booleans.WithBase[base.MethodBodyContext, base.type]
   )
-  (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): FibonacciProvider.WithParadigm[base.type] =
-    new FibonacciProvider {
+  (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): LCSProvider.WithParadigm[base.type] =
+    new LCSProvider {
       override val paradigm: base.type = base
       val impParadigm: imp.type = imp
       val arithmetic: ffiArithmetic.type = ffiArithmetic

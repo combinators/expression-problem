@@ -318,12 +318,7 @@ trait Utility {
       case mn:MinExpression => for {
         left <- explore(mn.left, memoize, symbolTable, bottomUp)
         right <- explore(mn.right, memoize, symbolTable, bottomUp)
-        //SHOULD BE CHANGED TO PROPER MIN
-        zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
-        nLeft <- arithmetic.arithmeticCapabilities.sub(zero,left)
-        nRight <- arithmetic.arithmeticCapabilities.sub(zero,right)
-        m <- realArithmetic.realArithmeticCapabilities.max(nLeft, nRight)
-        e <- arithmetic.arithmeticCapabilities.sub(zero,m)
+        e <- realArithmetic.realArithmeticCapabilities.min(left, right)
       } yield e
 
       // takes "text1" and returns "this.text1"
@@ -383,23 +378,8 @@ trait Utility {
         cond <- explore(ter.condition, memoize, symbolTable)
         trueBranch <- explore(ter.trueBranch, memoize, symbolTable, bottomUp)
         falseBranch <- explore(ter.falseBranch, memoize, symbolTable, bottomUp)
-
-        intType <- toTargetLanguageType(TypeRep.Int)
-        score <- impParadigm.imperativeCapabilities.declareVar(names.mangle("score"), intType, None)
-
-        ifBlock <- impParadigm.imperativeCapabilities.ifThenElse(
-          cond,
-          for {
-            assign <- impParadigm.imperativeCapabilities.assignVar(score, trueBranch)
-          } yield assign,
-          Seq.empty,
-          Some(
-            for {
-              assign <- impParadigm.imperativeCapabilities.assignVar(score, falseBranch)
-            } yield assign
-          )
-        )
-      } yield score
+        tri <- impParadigm.imperativeCapabilities.ternary(cond, trueBranch, falseBranch)
+      } yield tri
 
       case se: SubproblemExpression => for {
         self <- ooParadigm.methodBodyCapabilities.selfReference()

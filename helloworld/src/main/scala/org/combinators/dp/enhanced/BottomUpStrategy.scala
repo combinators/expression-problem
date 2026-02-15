@@ -8,7 +8,7 @@ import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi._
 import org.combinators.ep.generator.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.ep.generator.{Command, NameProvider}
-import org.combinators.model.{BooleanType, CharType, Definition, DefinitionStatement, EnhancedModel, ExpressionDefinition, ExpressionStatement, IfThenElseDefinition, IntegerType, MinRangeDefinition, Model}
+import org.combinators.model.{BooleanType, CharType, Definition, DefinitionStatement, EnhancedModel, ExpressionDefinition, ExpressionStatement, IfThenElseDefinition, IntegerType, MinRangeDefinition, Model, UpperTriangle}
 
 /**
  * Concepts necessary to realize top-down solutions
@@ -43,9 +43,16 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
 
   // will need to be expanded to depth-10 or something
   def arTypes(model: EnhancedModel): TypeRep = {
+
+    val params = model.mode match {
+      case ut:UpperTriangle => ut.params
+      case _ => model.solution.order
+    }
+
+    // was model.input.length
     model.subproblemType match {
       case _:IntegerType =>
-        model.input.length match {
+        params.length match {
           case 1 => TypeRep.Array(TypeRep.Int)
           case 2 => TypeRep.Array(TypeRep.Array(TypeRep.Int))
           case 3 => TypeRep.Array(TypeRep.Array(TypeRep.Array(TypeRep.Int)))
@@ -53,7 +60,7 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
         }
 
       case _:CharType => TypeRep.Char
-        model.input.length match {
+        params.length match {
           case 1 => TypeRep.Array(TypeRep.Char)
           case 2 => TypeRep.Array(TypeRep.Array(TypeRep.Char))
           case 3 => TypeRep.Array(TypeRep.Array(TypeRep.Array(TypeRep.Char)))
@@ -61,7 +68,7 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
         }
 
       case _:BooleanType => TypeRep.Char
-        model.input.length match {
+        params.length match {
           case 1 => TypeRep.Array(TypeRep.Boolean)
           case 2 => TypeRep.Array(TypeRep.Array(TypeRep.Boolean))
           case 3 => TypeRep.Array(TypeRep.Array(TypeRep.Array(TypeRep.Boolean)))
@@ -82,17 +89,10 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
     } yield None
   }
 
-  def report(str:String) : Generator[paradigm.MethodBodyContext, Unit] = {
-    println(str)
-    for {
-      neg92 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, -92)
-    } yield ()
-  }
-
-  def make_bottom_up_compute_method_nest_3(model:EnhancedModel): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
+  def make_bottom_up_compute_method_nest_3(model:EnhancedModel, order:Seq[String]): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
 
-    val order = model.solution.order   // typically, "i", "j", "k"
+    //val order = model.solution.order   // typically, "i", "j", "k"
 
     for {
       self <- ooParadigm.methodBodyCapabilities.selfReference()
@@ -105,12 +105,9 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
       // cannot seem to do this in Constructor because it insists on using "int" for TypeRep.Int within ConstructorContext which
       // seems to be different from Integer which occurs in MethodBodyContext
       one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
-      zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
-
       dp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
 
-      // level 0 is the outermost variable while level 2 is the outermost
-
+      // level 0 is the outermost variable while level 2 is the innermost
       level0_low <- explore(model.solution.helpers(order(0)).low, bottomUp = Some(dp), symbolTable = Map.empty, memoize = false)
       level0_high <- explore(model.solution.helpers(order(0)).high, bottomUp = Some(dp), symbolTable = Map.empty, memoize = false)
       level0_var <- impParadigm.imperativeCapabilities.declareVar(names.mangle(order(0)), intType, Some(level0_low))
@@ -128,7 +125,6 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
       dp_0_1_2 <- array.arrayCapabilities.get(dp_0_1, level2_var)
       oi_map = Map(order(0) -> level0_var, order(1) -> level1_var, order(2) -> level2_var)
 
-      _ <- report(arrayType.toString)
       instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, Seq(level0_high, level1_high, level2_high), None)
 
       assign_stmt <- impParadigm.imperativeCapabilities.assignVar (dp, instantiated)
@@ -171,118 +167,208 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
 
       // return last element dp[n] because dp is 1 larger in size than n
       dpexp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
-      maxbound0 <- explore(model.solution.parameters(order(0)), bottomUp = Some(dp), symbolTable = oi_map)
-      maxbound1 <- explore(model.solution.parameters(order(1)), bottomUp = Some(dp), symbolTable = oi_map)
-      maxbound2 <- explore(model.solution.parameters(order(2)), bottomUp = Some(dp), symbolTable = oi_map)
-      dp0 <- array.arrayCapabilities.get(dpexp, maxbound0)
-      dp1 <- array.arrayCapabilities.get(dp0, maxbound1)
-      dp2 <- array.arrayCapabilities.get(dp1, maxbound2)
-      retstmt <- Command.lift(dp2)
-    } yield Some(retstmt)
+
+      expr <- explore(model.answer, memoize = false, bottomUp = Some(dpexp), symbolTable = oi_map)  // At this point, there should be no symbols
+
+    } yield Some(expr)
   }
 
+//  def make_bottom_up_compute_method_arbitrary_nesting (model:EnhancedModel): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
+//    import paradigm.methodBodyCapabilities._
+//
+//    val order = model.solution.order   // typically, "i", "j", "k"
+//    val emptyMap:Map[String,Expression] = Map.empty
+//    val emptySeq:Seq[Expression] = Seq.empty
+//    for {
+//      self <- ooParadigm.methodBodyCapabilities.selfReference()
+//      theType <- return_type_based_on_model(model)
+//      intType <- toTargetLanguageType(TypeRep.Int)
+//      _ <- setReturnType(theType)
+//      // ONLY ONE HERE
+//      arrayType <- toTargetLanguageType(arTypes(model))
+//
+//      // cannot seem to do this in Constructor because it insists on using "int" for TypeRep.Int within ConstructorContext which
+//      // seems to be different from Integer which occurs in MethodBodyContext
+//      one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
+//
+//      dp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
+//
+//      loop_frames <- forEach(order) { variable => for {
+//          low <- explore(model.solution.helpers(variable).low, bottomUp = Some(dp), symbolTable = Map.empty, memoize = false)
+//          high <- explore(model.solution.helpers(variable).high, bottomUp = Some(dp), symbolTable = Map.empty, memoize = false)
+//          declared <- impParadigm.imperativeCapabilities.declareVar(names.mangle(variable), intType, Some(low))
+//        } yield (variable, low, high, declared)
+//      }
+//
+//      dp_access = loop_frames.foldLeft(dp)((acc, frame) => {
+//        for {
+//          wrap <- array.arrayCapabilities.get(acc, frame._4)
+//        } yield wrap
+//      })
+//
+//      oi_map <- for {
+//        n76 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, -76)   // WHY WHY WHY
+//        result = loop_frames.foldLeft(emptyMap)((acc, frame) => acc + (frame._1 -> frame._4))
+//      } yield result
+//
+//      highs <- for {
+//        n76 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, -76)   // WHY WHY WHY
+//        result = loop_frames.foldLeft(emptySeq)((acc, frame) => acc :+ frame._3)
+//      } yield result
+//
+//      instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, highs, None)
+//
+//      assign_stmt <- impParadigm.imperativeCapabilities.assignVar (dp, instantiated)
+//      _ <- addBlockDefinitions(Seq(assign_stmt))
+//
+//      conditions <- forEach(order) { variable =>
+//        for {
+//          condition <- explore(model.solution.helpers(variable).in_range, bottomUp = Some(dp), symbolTable = oi_map, memoize = false)
+//        } yield condition
+//      }
+//
+//      nugget <- generate(dp, dp_access, model.definition, symbolTable = oi_map)
+//      while_loops = (loop_frames zip conditions).foldRight(nugget)((pair, acc) => for {
+//        loop <- impParadigm.imperativeCapabilities.whileLoop(pair._2, for {
+//          av <- generate(dp, dp_access, model.definition, symbolTable = oi_map)
+//          _ <- addBlockDefinitions(av)
+//
+//          var_plusone <- arithmetic.arithmeticCapabilities.add(pair._1._4, one)
+//          incr_inner <- impParadigm.imperativeCapabilities.assignVar(pair._1._4, var_plusone)
+//
+//          _ <- addBlockDefinitions(acc :+ incr_inner)
+//        } yield ())
+//      } yield loop)
+//      _ <- addBlockDefinitions(while_loops)
+//
+////      // INNERMOST loop
+////      level2_whileLoop <- impParadigm.imperativeCapabilities.whileLoop(level2_condition, for {
+////        av <- generate(dp, dp_0_1_2, model.definition, symbolTable = oi_map)
+////        _ <- addBlockDefinitions(av)
+////
+////        level2_var_plusone <- arithmetic.arithmeticCapabilities.add(level2_var, one)
+////        incr_inner <- impParadigm.imperativeCapabilities.assignVar(level2_var, level2_var_plusone)
+////
+////        _ <- addBlockDefinitions(Seq(incr_inner))
+////      } yield ())
+////
+////      // NEXT ONE OUTSIDE of INNERMOST
+////      level1_whileLoop <- impParadigm.imperativeCapabilities.whileLoop(level1_condition, for {
+////        level2_reset <- impParadigm.imperativeCapabilities.assignVar(level2_var, level2_low)
+////
+////        level1_var_plusone <- arithmetic.arithmeticCapabilities.add(level1_var, one)
+////        incr_outer <- impParadigm.imperativeCapabilities.assignVar(level1_var, level1_var_plusone)
+////        _ <- addBlockDefinitions(Seq(level2_reset, level2_whileLoop, incr_outer))
+////      } yield ())
+////
+////      // OUTSIDE LOOP
+////      level0_whileLoop <- impParadigm.imperativeCapabilities.whileLoop(level0_condition, for {
+////        level1_reset <- impParadigm.imperativeCapabilities.assignVar(level1_var, level1_low)
+////
+////        level0_var_plusone <- arithmetic.arithmeticCapabilities.add(level0_var, one)
+////        incr_outer <- impParadigm.imperativeCapabilities.assignVar(level0_var, level0_var_plusone)
+////        _ <- addBlockDefinitions(Seq(level1_reset, level1_whileLoop, incr_outer))
+////      } yield ())
+//
+//     // _ <- addBlockDefinitions(Seq(level0_whileLoop))
+//
+//      // return last element dp[n] because dp is 1 larger in size than n
+//      dpexp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
+//      maxbound0 <- explore(model.solution.parameters(order(0)), bottomUp = Some(dp), symbolTable = oi_map)
+//      maxbound1 <- explore(model.solution.parameters(order(1)), bottomUp = Some(dp), symbolTable = oi_map)
+//      maxbound2 <- explore(model.solution.parameters(order(2)), bottomUp = Some(dp), symbolTable = oi_map)
+//      dp0 <- array.arrayCapabilities.get(dpexp, maxbound0)
+//      dp1 <- array.arrayCapabilities.get(dp0, maxbound1)
+//      dp2 <- array.arrayCapabilities.get(dp1, maxbound2)
+//      retstmt <- Command.lift(dp2)
+//    } yield Some(retstmt)
+//  }
+
+  def report(str:String) : Generator[paradigm.MethodBodyContext, Unit] = {
+    println(str)
+    for  {
+      ne77 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, -77)
+    } yield ()
+  }
 
   // This is hard-coded for a SINGLE bound. We will need another one to deal with two-d problems (and higher)
-  def make_bottom_up_compute_method_nest_2(model:EnhancedModel): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
+  def make_bottom_up_compute_method_nest_2(model:EnhancedModel, order:Seq[String]): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
-
-//    val real_cases = model.cases.filter(p => p._1.isDefined) // MUST be at least one.
-//    val first_case = real_cases.head
-//    val tail_cases = real_cases.tail
-//    val elseCase = model.cases.filter(p => p._1.isEmpty) // MUST only be one. Not sure how I would check
-
-    val order = model.solution.order
 
     for {
       self <- ooParadigm.methodBodyCapabilities.selfReference()
       theType <- return_type_based_on_model(model)
       intType <- toTargetLanguageType(TypeRep.Int)
       _ <- setReturnType(theType)
+
       // ONLY ONE HERE
       arrayType <- toTargetLanguageType(arTypes(model))
 
       // cannot seem to do this in Constructor because it insists on using "int" for TypeRep.Int within ConstructorContext which
       // seems to be different from Integer which occurs in MethodBodyContext
       one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
-      zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
-
-      // what if two different rectangular?
-      max_bound_outer <- max_bound_in_method(model.input.head)
-      mboplus1 <- arithmetic.arithmeticCapabilities.add(max_bound_outer, one)
-      max_bound_inner <- if (model.input.length > 1) {
-        max_bound_in_method(model.input.tail.head)
-      } else {
-        max_bound_in_method(model.input.head)    // HACK HACK HACK
-      }
-      mbiplus1 <- arithmetic.arithmeticCapabilities.add(max_bound_inner, one)
-
       dp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
 
-      outer_low <- explore(model.solution.helpers(order(0)).low, bottomUp = Some(dp), symbolTable = Map.empty, memoize = false)
-      ivar_outer <- impParadigm.imperativeCapabilities.declareVar(names.mangle(order(0)), intType, Some(outer_low))
-      inner_low <- explore(model.solution.helpers(order(1)).low, bottomUp = Some(dp), symbolTable = Map.empty, memoize = false)
-      ivar_inner <- impParadigm.imperativeCapabilities.declareVar(names.mangle(order(1)), intType, Some(inner_low))
+      // "c"
+      level0_low  <- explore(model.find(order(0)).low, bottomUp = Some(dp), symbolTable = Map.empty, memoize = false)
+      level0_high <- explore(model.find(order(0)).high, bottomUp = Some(dp), symbolTable = Map.empty, memoize = false)
+      level0_var  <- impParadigm.imperativeCapabilities.declareVar(names.mangle(order(0)), intType, Some(level0_low))
 
-      dp_o <- array.arrayCapabilities.get(dp, ivar_outer)
-      dp_o_i <- array.arrayCapabilities.get(dp_o, ivar_inner)
-      i_map = Map(order(0) -> ivar_outer)
-      j_map = Map(order(1) -> ivar_inner)
-      dp_i_j <- array.arrayCapabilities.get(dp_o, ivar_inner)     // FIX ME
+      // NOTE that other variables HIGH and LOW might depend on earlier variables, so build up symbol table
+      level1_map = Map(order(0) -> level0_var)
 
-      // just wanted to test out (dead code) how maps can be folded and used. This is a template for building
-      // up a symbol table when nesting computations.
-      ij_map = i_map ++ j_map
-      other_data = Seq(i_map, j_map)
-      total_map = other_data.foldLeft(Map.empty[String, Expression]) { (acc, a_map) => acc ++ a_map }
-      oi_map = Map(order(0) -> ivar_outer, order(1) -> ivar_inner)
+      // "r"
+      level1_low <- explore(model.find(order(1)).low, bottomUp = Some(dp), symbolTable = level1_map, memoize = false)
+      level1_high <- explore(model.find(order(1)).high, bottomUp = Some(dp), symbolTable = level1_map, memoize = false)
 
-      instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, Seq(mboplus1,mbiplus1), None)
-      //inner <- explore(first_case._1.get, bottomUp = Some(dp), symbolTable = oi_map)   // get from Model
-      inner <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, -66)
-//      all_rest <- forEach(tail_cases) { next_case =>
-//        for {
-//          next_cond <- explore(next_case._1.get, memoize = false, bottomUp = Some(dp), symbolTable = oi_map)
-//          next_exp <- explore(next_case._2, memoize = false,bottomUp = Some(dp), symbolTable = oi_map)
-//        } yield (next_cond, expand_assign(dp_o_i, next_exp))
-//      }
+      level1_var <- impParadigm.imperativeCapabilities.declareVar(names.mangle(order(1)), intType, Some(level1_low))
+      level2_map = level1_map ++ Map(order(1) -> level1_var) // HACK FIX, model.solution.mappers("i") -> expr1)
+
+      _ <- report(model.solution.mappers.toString())
+      expr1 <- explore(model.find(order(0)), bottomUp = Some(dp), symbolTable = level2_map)
+      expr2 <- explore(model.find(order(1)), bottomUp = Some(dp), symbolTable = level2_map ++ Map(order(0) -> expr1))   // HACK)
+
+      oi_map = (level2_map ++ Map(order(0) -> expr1) ++ Map(order(1) -> expr2))
+
+      level0_condition <- explore(model.find(order(0)).in_range, bottomUp = Some(dp), symbolTable = level2_map, memoize = false)
+      level1_condition <- explore(model.find(order(1)).in_range, bottomUp = Some(dp), symbolTable = level2_map, memoize = false)
+
+      dp_o <- array.arrayCapabilities.get(dp, expr1)    // needs to be [i] NOT level0_var
+      dp_o_i <- array.arrayCapabilities.get(dp_o, expr2)    // needs to be [j] NOT level1_var
+
+      instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, Seq(level0_high, level1_high), None)
 
       assign_stmt <- impParadigm.imperativeCapabilities.assignVar (dp, instantiated)
       _ <- addBlockDefinitions(Seq(assign_stmt))
-      in_range <- arithmetic.arithmeticCapabilities.le(ivar_inner, max_bound_inner)
 
-      out_range <- arithmetic.arithmeticCapabilities.le(ivar_outer, max_bound_outer)
-
-      whileLoop_inner <- impParadigm.imperativeCapabilities.whileLoop(in_range, for {
-
+      // INNER LOOP
+      whileLoop_inner <- impParadigm.imperativeCapabilities.whileLoop(level1_condition, for {
         av <- generate(dp, dp_o_i, model.definition, symbolTable = oi_map)
         _ <- addBlockDefinitions(av)
 
-        ivar_inner_plusone <- arithmetic.arithmeticCapabilities.add(ivar_inner, one)
-        incr_inner <- impParadigm.imperativeCapabilities.assignVar(ivar_inner, ivar_inner_plusone)
+        ivar_inner_plusone <- arithmetic.arithmeticCapabilities.add(level1_var, one)
+        incr_inner <- impParadigm.imperativeCapabilities.assignVar(level1_var, ivar_inner_plusone)
 
         _ <- addBlockDefinitions(Seq(incr_inner))
       } yield ())
 
-      whileLoop_outer <- impParadigm.imperativeCapabilities.whileLoop(out_range, for {
-        inner_reset <- impParadigm.imperativeCapabilities.assignVar(ivar_inner, inner_low)
+      // OUTER LOOP
+      whileLoop_outer <- impParadigm.imperativeCapabilities.whileLoop(level0_condition, for {
+        inner_reset <- impParadigm.imperativeCapabilities.assignVar(level1_var, level1_low)
 
-        ivar_outer_plusone <- arithmetic.arithmeticCapabilities.add(ivar_outer, one)
-        incr_outer <- impParadigm.imperativeCapabilities.assignVar(ivar_outer, ivar_outer_plusone)
+        ivar_outer_plusone <- arithmetic.arithmeticCapabilities.add(level0_var, one)
+        incr_outer <- impParadigm.imperativeCapabilities.assignVar(level0_var, ivar_outer_plusone)
         _ <- addBlockDefinitions(Seq(inner_reset, whileLoop_inner, incr_outer))
         } yield ())
 
       _ <- addBlockDefinitions(Seq(whileLoop_outer))
 
-      ij = Seq(ivar_outer, ivar_inner)
-
       // return last element dp[n] because dp is 1 larger in size than n
       dpexp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
-      maxboundo <- explore(model.solution.parameters(order(0)), bottomUp = Some(dp), symbolTable = oi_map)
-      maxboundi <- explore(model.solution.parameters(order(1)), bottomUp = Some(dp), symbolTable = oi_map)
-      dpo <- array.arrayCapabilities.get(dpexp, maxboundo)
-      dpi <- array.arrayCapabilities.get(dpo, maxboundi)
-      retstmt <- Command.lift(dpi)
-    } yield Some(retstmt)
+
+      expr <- explore(model.answer, memoize = false, bottomUp = Some(dpexp), symbolTable = oi_map)  // At this point, there should be no symbols
+
+    } yield Some(expr)
   }
 
   def exploreExpr(dp:Expression, defs:DefinitionStatement, symbolTable: Map[String,Expression]) : Generator[paradigm.MethodBodyContext, Expression] = {
@@ -370,20 +456,16 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
     }
   }
 
-
   // This is hard-coded for a SINGLE bound. We will need another one to deal with two-d problems (and higher)
-  def make_bottom_up_compute_method(model:EnhancedModel): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
+  def make_bottom_up_compute_method(model:EnhancedModel, order:Seq[String]): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
 
-//    val real_cases = model.cases.filter(p => p._1.isDefined) // MUST be at least one.
-//    val first_case = real_cases.head
-//    val tail_cases = real_cases.tail
-//    val elseCase = model.cases.filter(p => p._1.isEmpty) // MUST only be one. Not sure how I would check
+    println(order.toString())
 
-    val order = model.solution.order
     for {
       self <- ooParadigm.methodBodyCapabilities.selfReference()
       theType <- return_type_based_on_model(model)
+      intType <- toTargetLanguageType(TypeRep.Int)
       _ <- setReturnType(theType)
 
       // ONLY ONE HERE
@@ -392,72 +474,49 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
       // cannot seem to do this in Constructor because it insists on using "int" for TypeRep.Int within ConstructorContext which
       // seems to be different from Integer which occurs in MethodBodyContext
       one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
+
       dp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
-      intType <- toTargetLanguageType(TypeRep.Int)
-      var_expr <- explore(model.solution.helpers(order(0)).low, bottomUp = Some(dp), symbolTable = Map.empty, memoize = false)
-      var_var <- impParadigm.imperativeCapabilities.declareVar(names.mangle(order(0)), intType, Some(var_expr))
-      dp_i <- array.arrayCapabilities.get(dp, var_var)
 
-      // allocate storage for MAX+1
-      max_bound <- max_bound_in_method(model.input.head)
-      mbplus1 <- arithmetic.arithmeticCapabilities.add(max_bound, one)
-      instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, Seq(mbplus1), None)
+      // level 0 is the outermost variable while level 2 is the innermost
+      _ <- report(model.solution.helpers.toString())
+      level0_low <- explore(model.find(order(0)).low, bottomUp = Some(dp), symbolTable = Map.empty, memoize = false)
+      level0_high <- explore(model.find(order(0)).high, bottomUp = Some(dp), symbolTable = Map.empty, memoize = false)
+      level0_var <- impParadigm.imperativeCapabilities.declareVar(names.mangle(order(0)), intType, Some(level0_low))
 
-//      inner <- explore(first_case._1.get, bottomUp = Some(dp), symbolTable = Map(model.input.head.itArgName -> ivar))  // get from Model
-//
-//      all_rest <- forEach(tail_cases) { next_case =>
-//        for {
-//          next_cond <- explore(next_case._1.get, memoize = false, bottomUp = Some(dp), symbolTable = Map("i" -> ivar))
-//          next_exp <- explore(next_case._2, memoize = false, bottomUp = Some(dp), symbolTable = Map("i" -> ivar))
-//        } yield (next_cond, expand_assign(dp_i, next_exp))
-//      }
-      all_rest <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, -33)
-      inner <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, -44)
+      dp_0 <- array.arrayCapabilities.get(dp, level0_var)
+      oi_map = Map(order(0) -> level0_var)
+
+      instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, Seq(level0_high), None)
 
       assign_stmt <- impParadigm.imperativeCapabilities.assignVar (dp, instantiated)
       _ <- addBlockDefinitions(Seq(assign_stmt))
-      in_range <- explore(model.solution.helpers(order(0)).in_range, bottomUp = Some(dp), symbolTable = Map(order(0) -> var_var), memoize = false)
 
-      whileLoop <- impParadigm.imperativeCapabilities.whileLoop(in_range, for {
-        ifstmt <- impParadigm.imperativeCapabilities.ifThenElse(
-          // condition of first if
-          inner
-          ,
-          // statements for that first if
-          for {
-            //resexp <- explore(first_case._2, memoize = false, bottomUp = Some(dp), symbolTable = Map("i" -> ivar))
-            resexp <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, -11)
-            av <- impParadigm.imperativeCapabilities.assignVar(dp_i, resexp)
-            _ <- addBlockDefinitions(Seq(av))
-          } yield None
-          ,
-          // collection of (condition, block) for all of the remaining cases
-          Seq.empty
-          ,
-          // terminating 'else' takes the elseCase and adds it last
-          Some(for {
-            //result_exp <- explore(elseCase.head._2, memoize = false, bottomUp = Some(dp), symbolTable = Map("i" -> ivar))
-            result_exp <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, -22)
-            av <- impParadigm.imperativeCapabilities.assignVar(dp_i, result_exp)
-            _ <- addBlockDefinitions(Seq(av))
-          } yield ())
-        )
+      level0_condition <- explore(model.find(order(0)).in_range, bottomUp = Some(dp), symbolTable = oi_map, memoize = false)
 
-        ivarplusone <- arithmetic.arithmeticCapabilities.add(var_var, one)
-        incr <- impParadigm.imperativeCapabilities.assignVar(var_var, ivarplusone)
+      whileLoop <- impParadigm.imperativeCapabilities.whileLoop(level0_condition, for {
+          av <- generate(dp, dp_0, model.definition, symbolTable = oi_map)
+          _ <- addBlockDefinitions(av)
 
-        _ <- addBlockDefinitions(Seq(ifstmt, incr))
+          level0_var_plusone <- arithmetic.arithmeticCapabilities.add(level0_var, one)
+          incr_outer <- impParadigm.imperativeCapabilities.assignVar(level0_var, level0_var_plusone)
+
+        _ <- addBlockDefinitions(Seq(incr_outer))
       } yield ())
 
       _ <- addBlockDefinitions(Seq(whileLoop))
 
       // return last element dp[n] because dp is 1 larger in size than n
       dpexp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
-      dpn <- array.arrayCapabilities.get(dpexp, max_bound)
-      retstmt <- Command.lift(dpn)
-    } yield Some(retstmt)
-  }
+//      maxbound0 <- explore(model.solution.parameters(order(0)), bottomUp = Some(dp), symbolTable = oi_map)
+//      dpn <- array.arrayCapabilities.get(dpexp, maxbound0)
+//      retstmt <- Command.lift(dpn)
+//
+//      dpexp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
 
+      expr <- explore(model.answer, memoize = false, bottomUp = Some(dpexp), symbolTable = oi_map)  // At this point, there should be no symbols
+
+    } yield Some(expr)
+  }
 
   /**
    * Constructor now takes the responsibility of taking the arguments to the problem. Takes
@@ -493,13 +552,18 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
     } yield ()
   }
 
-
-
   def make_bottom_up(model:EnhancedModel): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
 
     val makeClass: Generator[ClassContext, Unit] = {
       import classCapabilities._
+
+      // The approach might force an N-dimensional search space even when the input is only 1-dimensional (like MatrixChainMultiplication)
+      // |params| determins the dimensionality of the array dp[][]
+      val params = model.mode match {
+        case ut:UpperTriangle => ut.params
+        case _ => model.solution.order
+      }
 
       for {
         arrayType <- toTargetLanguageType(arTypes(model))
@@ -527,12 +591,13 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
 //
 //        }
 
-        _ <- if (model.input.length == 1) {
-          addMethod(computeName, make_bottom_up_compute_method(model))
-        } else if (model.input.length == 2) {
-          addMethod(computeName, make_bottom_up_compute_method_nest_2(model) )
-        } else if (model.input.length == 3) {
-          addMethod(computeName, make_bottom_up_compute_method_nest_3(model) )
+        // Trying to direct to appropriate place
+        _ <- if (params.length == 3) {
+          addMethod(computeName, make_bottom_up_compute_method_nest_3(model, params))
+        } else if (params.length == 2) {
+          addMethod(computeName, make_bottom_up_compute_method_nest_2(model, params) )
+        } else if (params.length == 1) {
+          addMethod(computeName, make_bottom_up_compute_method(model, params))
         } else {
           ???
         }

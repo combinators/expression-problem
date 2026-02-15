@@ -1,4 +1,4 @@
-package org.combinators.integer.fibonacci
+package org.combinators.archive
 
 /**
  * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"

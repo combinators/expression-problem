@@ -45,12 +45,11 @@ object PerfectSquareMainDirectToDiskMain extends IOApp {
     val n = new ArgExpression(0, "n", IntegerType(), "i")    // not sure if 'i' is used
     val bound_ps = List(n)
 
-    val i: HelperExpression = HelperExpression("i", one, SelfExpression("i") <= n, n)    // only one argument, i: not too sure this is right
+    val i: HelperExpression = HelperExpression("i", one, SelfExpression("i") <= n, n + one)    // only one argument, i: not too sure this is right
     val k: HelperExpression = HelperExpression("k", one, SelfExpression("k") * SelfExpression("k") <= n, n)    // not too sure this is right
 
-    val parameters = Map("i" -> n)                // what is the solution invocation? Call helper(n)
-    val helperTable_ps = Map("k" -> k)            // Boy this is awkward: need k as helper but not in invocation
-    val sol_ps = SubproblemInvocation(parameters, Seq("i", "k"), helpers = helperTable_ps)
+    val helperTable_ps = Map("i" -> i, "k" -> k)            // Boy this is awkward: need k as helper but not in invocation
+    val sol_ps = SubproblemInvocation(Seq("i"), helpers = helperTable_ps)
 
     val ps_subprobExpr = new SubproblemExpression(Seq(i - k * k)) + one
     val def_ps = MinRangeDefinition("k", one, k * k <= i, ps_subprobExpr, k + one)
@@ -62,7 +61,8 @@ object PerfectSquareMainDirectToDiskMain extends IOApp {
       subproblemType = IntegerType(),    // helper method is an int
       solutionType   = StringType(), // solution is a string
       sol_ps,
-      ps_definition
+      ps_definition,
+      answer = new SubproblemExpression(Seq(n))
     )
 
     PerfectSquare
@@ -83,7 +83,7 @@ object PerfectSquareMainDirectToDiskMain extends IOApp {
           case _ => ???
         }
     } else {
-      bottomUp
+      topDown
     }
 
     for {

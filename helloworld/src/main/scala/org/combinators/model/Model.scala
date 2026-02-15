@@ -12,7 +12,7 @@ case class DoubleType() extends ArgumentType
 case class StringType() extends ArgumentType
 
 // possibly choose to make this Generic but that seems like overkill
-class IntegerArrayType extends ArgumentType
+case class IntegerArrayType() extends ArgumentType
 
 class Argument (val argName:String, val argType:ArgumentType)
 
@@ -78,7 +78,7 @@ case class ExpressionDefinition(expr:Expression) extends Definition
 
 trait ProblemOrder
 case class Canonical() extends ProblemOrder
-case class UpperTriangle() extends ProblemOrder
+case class UpperTriangle(params:Seq[String]) extends ProblemOrder
 
 // trying a new approach that captures definitions. Each definition is in ordered sequence and specifies
 // the essence of the problem
@@ -88,7 +88,18 @@ class EnhancedModel(val problem:String,
                     val solutionType:ArgumentType,          // Type of return value
                     val solution:SubproblemInvocation,
                     val definition:Definition,
-                    val mode:ProblemOrder = Canonical())
+                    val answer:Expression = new LiteralInt(-33),                  // Where solution can be found. HACK until repeated
+                    val mode:ProblemOrder = Canonical()) {
+
+  def find(variable:String) : HelperExpression = {
+    // first locate in solution.params
+    if (solution.helpers.contains(variable)) {
+      solution.helpers(variable)
+    } else {
+      ???
+    }
+  }
+}
 
 // Most DP problems solve subproblems in a canonical order, which is typified by a two-d array: solve rows first from top to bottom,
 // and then within each row, columns from left to right

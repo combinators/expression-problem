@@ -2,8 +2,7 @@ package org.combinators.ep.generator.paradigm.control   /*DI:LI:AI*/
 
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, Understands}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, IfThenElse}
-
+import org.combinators.ep.generator.paradigm.{AnyParadigm, IfThenElse, Ternary}
 import cats.implicits._
 import cats.free.Free._
 
@@ -55,6 +54,15 @@ trait Imperative[Context] {
       ): Generator[Context, Statement] =
       AnyParadigm.capability(IfThenElse[Expression, Generator[Context, Unit], Option[Generator[Context, Unit]], Statement](
         condition, ifBranch, elseIfs, elseBranch
+      ))
+
+    implicit val canTernary: Understands[Context, Ternary[Expression, Expression]]
+    def ternary(
+        condition: Expression,
+        trueExpression: Expression,
+        falseExpression: Expression): Generator[Context, Expression] =
+      AnyParadigm.capability(Ternary[Expression, Expression](
+        condition, trueExpression, falseExpression
       ))
 
     implicit val canWhile: Understands[Context, While[Context, Expression, Statement]]

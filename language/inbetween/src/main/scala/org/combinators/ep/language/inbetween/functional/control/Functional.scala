@@ -55,6 +55,14 @@ trait Functional[FT <: FinalTypes, FactoryType <: Factory[FT]] extends Fun[any.M
           (elseCtxt, factory.funIfThenElse(command.condition, ifBranchExp, elseIfExprs, elseExpr))
         }
       }
+
+    implicit val canTernary: Understands[any.Method[FT], paradigm.Ternary[any.Expression[FT], any.Expression[FT]]] =
+      new Understands[any.Method[FT], paradigm.Ternary[any.Expression[FT], any.Expression[FT]]] {
+        override def perform(context: any.Method[FT], command: paradigm.Ternary[any.Expression[FT], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
+          (context, factory.funTernary(command.condition, command.trueExpression, command.falseExpression))
+        }
+      }
+
     implicit val canPatternMatch: Understands[any.Method[FT], control.PatternMatch[any.Method[FT], PatternContext, any.Expression[FT]]] = new Understands[any.Method[FT], control.PatternMatch[any.Method[FT], PatternContext, any.Expression[FT]]] {
       override def perform(context: any.Method[FT], command: control.PatternMatch[any.Method[FT], PatternContext, any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
         val (finalCtxt, cases) = command.options.foldLeft((context, Seq.empty[(any.Expression[FT], any.Expression[FT])])) {

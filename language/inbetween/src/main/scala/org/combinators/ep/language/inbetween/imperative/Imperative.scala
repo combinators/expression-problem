@@ -65,6 +65,17 @@ trait Imperative[FT <: FinalTypes, FactoryType <: Factory[FT]] extends Imp[any.M
           (lastCtxt.copy(statements = context.statements), ifThenElseStmt)
         }
       }
+
+    implicit val canTernary: Understands[Ctxt, paradigm.Ternary[any.Expression[FT], any.Expression[FT]]] =
+      new Understands[Ctxt, paradigm.Ternary[any.Expression[FT], any.Expression[FT]]] {
+        /** Returns the updated context and the result of the command. */
+        override def perform(context: Ctxt, command: paradigm.Ternary[any.Expression[FT], any.Expression[FT]]): (Ctxt, any.Expression[FT]) = {
+
+          val conditionalExpr = factory.ternary(command.condition, command.trueExpression, command.falseExpression)
+          (context, conditionalExpr)
+        }
+      }
+
     implicit val canWhile: Understands[Ctxt, control.While[Ctxt, any.Expression[FT], any.Statement[FT]]] = new Understands[Ctxt, control.While[Ctxt, any.Expression[FT], any.Statement[FT]]] {
       def perform(context: Ctxt, command: control.While[Ctxt, any.Expression[FT], any.Statement[FT]]): (Ctxt, any.Statement[FT]) = {
         def contextWithoutMethodBody(context: Ctxt) =

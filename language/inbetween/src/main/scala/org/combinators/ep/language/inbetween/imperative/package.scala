@@ -7,6 +7,7 @@ package object imperative {
     type DeclareVariable <: Statement
     type AssignVariable <: Statement
     type IfThenElse <: Statement
+    type Ternary <: Expression
     type While <: Statement
     type VariableReferenceExpression <: Expression
   }
@@ -61,6 +62,21 @@ package object imperative {
       ifThenElse(condition, ifBranch, elseIfBranches, elseBranch)
   }
 
+  trait Ternary[FT <: FinalTypes] extends any.Expression[FT] with Factory[FT] {
+    def getSelfTernary: finalTypes.Ternary
+
+    def condition: any.Expression[FT]
+    def trueExpression: any.Expression[FT]
+    def falseExpression: any.Expression[FT]
+
+    def copy(
+              condition: any.Expression[FT] = condition,
+              trueExpression: any.Expression[FT] = trueExpression,
+              falseExpression: any.Expression[FT] = falseExpression,
+            ): Ternary[FT] =
+      ternary(condition, trueExpression, falseExpression)
+  }
+
   trait While[FT <: FinalTypes] extends any.Statement[FT] with Factory[FT] {
     def getSelfWhile: finalTypes.While
 
@@ -89,8 +105,14 @@ package object imperative {
       ifBranch: Seq[any.Statement[FT]],
       elseIfBranches: Seq[(any.Expression[FT], Seq[any.Statement[FT]])],
       elseBranch: Seq[any.Statement[FT]]): IfThenElse[FT]
-    def whileLoop(condition: any.Expression[FT], body: Seq[any.Statement[FT]]): While[FT]
 
+    def ternary(
+               condition: any.Expression[FT],
+               trueCondition: any.Expression[FT],
+               falseCondition: any.Expression[FT]
+               ): Ternary[FT]
+
+    def whileLoop(condition: any.Expression[FT], body: Seq[any.Statement[FT]]): While[FT]
 
     implicit def convert(decl: DeclareVariable[FT]): DeclareVariable[FT]
     implicit def convert(assignVariable: AssignVariable[FT]): AssignVariable[FT]

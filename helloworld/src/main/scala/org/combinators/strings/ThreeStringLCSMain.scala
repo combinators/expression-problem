@@ -43,19 +43,13 @@ object ThreeStringsLCSToDiskMain extends IOApp {
     val k: HelperExpression = HelperExpression("k", one, SelfExpression("k") <= new StringLengthExpression(s3), new StringLengthExpression(s3) + one)
 
     // what the compute() method calls with helper(s1.length(), s2.length())
-    val paramsTable = Map(
-      "i" -> new StringLengthExpression(s1),
-      "j" -> new StringLengthExpression(s2),
-      "k" -> new StringLengthExpression(s3)
-      )
     val helpers = Map("i" -> i, "j" -> j, "k" -> k)
-    val sol = SubproblemInvocation(paramsTable, order=Seq("i", "j", "k"), helpers = helpers, returnType = IntegerType())
+    val sol = SubproblemInvocation(order=Seq("i", "j", "k"), helpers = helpers, returnType = IntegerType())
 
     /*
      *   P(i,j,k) = 0, if i == 0 || j == 0 || k == 0 for all Ranges
      *   P(i,j,k) = Max of three sub-cases
      */
-
     val recursive_case = new MaxExpression(new SubproblemExpression(Seq(i - one, j, k)),
                                    new MaxExpression(new SubproblemExpression(Seq(i, j - one, k)),
                                                      new SubproblemExpression(Seq(i, j, k - one))))
@@ -72,7 +66,9 @@ object ThreeStringsLCSToDiskMain extends IOApp {
       subproblemType = IntegerType(),         // helper() method returns int
       solutionType   = StringType(),          // solution is a string, showing where characters come from S1 with parens
       sol,
-      tslcs_definition)
+      tslcs_definition,
+      answer = new SubproblemExpression(Seq(new StringLengthExpression(s1), new StringLengthExpression(s2), new StringLengthExpression(s3)))
+      )
 
     TSLCS
   }
@@ -92,7 +88,7 @@ object ThreeStringsLCSToDiskMain extends IOApp {
           case _ => ???
         }
     } else {
-      topDownWithMemo
+      bottomUp
     }
 
     for {

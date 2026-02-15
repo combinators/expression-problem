@@ -29,7 +29,7 @@ class LongestCommonSubsequenceModel {
           zero
         ),
         (
-          Some(new EqualExpression(new CharAtExpression(s1, r-one), new CharAtExpression(s2, c-one), new CharType())),
+          Some(new CharAtExpression(s1, r-one) == new CharAtExpression(s2, c-one)),
           new AdditionExpression(new SubproblemExpression(Seq(r - one, c - one)), one)            // how does "-" work here? IT SHOULDN'T
         ),
         (

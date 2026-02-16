@@ -65,6 +65,15 @@ case class ExpressionStatement(expr:Expression) extends DefinitionStatement
 case class IfThenElseDefinition(condition: Expression, result: DefinitionStatement, elseExpression: Definition) extends Definition
 case class IfThenNoElseDefinition(condition: Expression, result: Expression, elseIfs: Seq[(Expression, Expression)]) extends Definition
 
+// compute sum of a range of problems
+case class SumDefinition(
+  variable: String,
+  inclusiveStart: Expression,
+  guardContinue:Expression,
+  subproblemExpression: Expression,
+  advance: Expression
+) extends Definition
+
 case class MinRangeDefinition(
          variable: String,
          inclusiveStart: Expression,

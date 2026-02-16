@@ -8,7 +8,7 @@ import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi._
 import org.combinators.ep.generator.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.ep.generator.{Command, NameProvider}
-import org.combinators.model.{Definition, DefinitionStatement, EnhancedModel, ExpressionDefinition, ExpressionStatement, IfThenElseDefinition, LiteralBoolean, LiteralInt, LiteralString, MinRangeDefinition, SubproblemInvocation}
+import org.combinators.model.{SumDefinition, Definition, DefinitionStatement, EnhancedModel, ExpressionDefinition, ExpressionStatement, IfThenElseDefinition, LiteralBoolean, LiteralInt, LiteralString, MinRangeDefinition, SubproblemInvocation}
 
 /**
  * Concepts necessary to realize top-down solutions
@@ -266,7 +266,6 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
    * the final "else" case is appended.
    *
    * The explore() method converts a model Expression into a CoGen expression. Must be sure to pass in memo
-   * The expand() method converts a model Expression into a Return statement of that expression
    *
    * @return
    */
@@ -277,7 +276,6 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
     def exploreReturns(defs:DefinitionStatement, symbolTable: Map[String,Expression], memoize:Boolean = false) : Generator[paradigm.MethodBodyContext, Seq[Statement]] = {
       defs match {
         case es:ExpressionStatement => for {
-          _ <- report_td("ES:" + es.expr.toString())
           e <- explore(es.expr, memoize = useMemo, symbolTable = symbolTable)
           av <- impParadigm.imperativeCapabilities.returnStmt(e)
         } yield Seq(av)
@@ -293,25 +291,18 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
 
       defn match {
         case ed:ExpressionDefinition => for {
-          _ <- report_td("ED:" + ed.expr.toString())
-
           expr <- explore(ed.expr, symbolTable = symbolTable, memoize=memoize)
           retval <- impParadigm.imperativeCapabilities.returnStmt(expr)
         } yield Seq(retval)
 
         case ite:IfThenElseDefinition => for {
-          _ <- report_td("ITE:" + ite.condition.toString())
-
           inner <- explore(ite.condition, memoize = false, symbolTable = symbolTable)
-          _ <- report_td("ITE-1:" + inner.toString())
           ifstmt <- impParadigm.imperativeCapabilities.ifThenElse(
             // condition of first if
             inner
             ,
             // statements for that first if
             for {
-              _ <- report_td("ITE-2:" + ite.result.toString())
-
               stmts <- exploreReturns(ite.result, symbolTable = symbolTable, memoize=memoize)
               _ <- addBlockDefinitions(stmts)
             } yield ()
@@ -328,23 +319,20 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
         } yield Seq(ifstmt)
 
         case ds:MinRangeDefinition => for {
-          _ <- report_td("DS:" + ds.toString())
-
-          one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, scala.Int.MaxValue)
-          intType <- toTargetLanguageType(TypeRep.Int)   // hack
+          maxValue <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, scala.Int.MaxValue)
+          intType <- toTargetLanguageType(TypeRep.Int)   // perhaps acceptable to consider 'min' will be an integer
           minVarName = names.mangle("min")
-          minVar <- impParadigm.imperativeCapabilities.declareVar(minVarName, intType, Some(one))
+          minVar <- impParadigm.imperativeCapabilities.declareVar(minVarName, intType, Some(maxValue))
           kStart <- explore(ds.inclusiveStart, symbolTable = symbolTable, memoize = memoize)
           kVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(ds.variable), intType, Some(kStart))
 
           resultVarName = names.mangle("result")
           resultVar <- impParadigm.imperativeCapabilities.declareVar(resultVarName, intType, None)
-          addedSymbolTable = symbolTable + ("min" -> minVar) + ("k" -> kVar) + ("result" -> resultVar)
+          addedSymbolTable = symbolTable + ("min" -> minVar) + (ds.variable -> kVar) + ("result" -> resultVar)
 
           minCond <- arithmetic.arithmeticCapabilities.lt(resultVar, minVar)
           guardCondition <- explore(ds.guardContinue, symbolTable = addedSymbolTable, memoize = memoize)
           whilestmt <- impParadigm.imperativeCapabilities.whileLoop(guardCondition, for {
-            neg99 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, -99)
 
             resultExpr <- explore(ds.subproblemExpression, symbolTable = addedSymbolTable, memoize = memoize)
             assignResult <- impParadigm.imperativeCapabilities.assignVar(resultVar, resultExpr)
@@ -353,7 +341,7 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
             update <- impParadigm.imperativeCapabilities.ifThenElse(minCond, for {
               updateResult <- impParadigm.imperativeCapabilities.assignVar(minVar, resultVar)
               _ <- addBlockDefinitions(Seq(updateResult))
-              // here is where one could store deecisions
+              // here is where one could store decisions
             } yield (), Seq.empty, None)
 
             advExpr <- explore(ds.advance, symbolTable = addedSymbolTable, memoize = memoize)
@@ -364,9 +352,33 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
           returnResult <- impParadigm.imperativeCapabilities.returnStmt(minVar)
         } yield Seq(whilestmt, returnResult)
 
+        case sd:SumDefinition => for {
+          zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
+          intType <- toTargetLanguageType(TypeRep.Int)   // perhaps acceptable to consider 'min' will be an integer
+          sumVarName = names.mangle("sum")
+          sumVar <- impParadigm.imperativeCapabilities.declareVar(sumVarName, intType, Some(zero))
+
+          intType <- toTargetLanguageType(TypeRep.Int)   // perhaps acceptable to consider 'min' will be an integer
+          kStart <- explore(sd.inclusiveStart, symbolTable = symbolTable, memoize = memoize)
+          kVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(sd.variable), intType, Some(kStart))
+
+          guardCondition <- explore(sd.guardContinue, symbolTable = symbolTable ++ Map("k" -> kVar), memoize = memoize)
+          whilestmt <- impParadigm.imperativeCapabilities.whileLoop(guardCondition, for {
+
+            resultExpr <- explore(sd.subproblemExpression, symbolTable = symbolTable ++ Map("k" -> kVar), memoize = memoize)
+            additive <- arithmetic.arithmeticCapabilities.add(sumVar, resultExpr)
+            assignResult <- impParadigm.imperativeCapabilities.assignVar(sumVar, additive)
+
+            advExpr <- explore(sd.advance, symbolTable = symbolTable ++ Map("k" -> kVar), memoize = memoize)
+            kadv <- impParadigm.imperativeCapabilities.assignVar(kVar, advExpr)
+            _ <- addBlockDefinitions(Seq(assignResult, kadv))
+          } yield ())
+
+          returnResult <- impParadigm.imperativeCapabilities.returnStmt(sumVar)
+        } yield Seq(whilestmt, returnResult)
+
         case _ => ???
       }
-
     }
 
     // could possibly have a definition that has NONE as the guard. None for now.

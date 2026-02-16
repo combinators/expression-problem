@@ -57,6 +57,7 @@ case class HelperExpression(variable:String,
 
 // when input problem has two integers, not easily translated as (row, column)
 class LiteralPair(val val1:Int, val val2:Int) extends LiteralExpression
+class LiteralTriple(val val1:Int, val val2:Int, val val3:Int) extends LiteralExpression
 
 class LiteralArray(val ar:Array[Int]) extends LiteralExpression
 class LiteralStringPair(val string1:String, val string2:String) extends LiteralExpression

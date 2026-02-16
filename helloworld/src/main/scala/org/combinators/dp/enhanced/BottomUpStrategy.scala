@@ -8,7 +8,7 @@ import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi._
 import org.combinators.ep.generator.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.ep.generator.{Command, NameProvider}
-import org.combinators.model.{BooleanType, CharType, Definition, DefinitionStatement, EnhancedModel, ExpressionDefinition, ExpressionStatement, IfThenElseDefinition, IntegerType, MinRangeDefinition, Model, UpperTriangle}
+import org.combinators.model.{BooleanType, CharType, Definition, DefinitionStatement, EnhancedModel, ExpressionDefinition, ExpressionStatement, IfThenElseDefinition, IntegerType, MinRangeDefinition, Model, SumDefinition, UpperTriangle}
 
 /**
  * Concepts necessary to realize top-down solutions
@@ -59,7 +59,7 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
           case _ =>  ???
         }
 
-      case _:CharType => TypeRep.Char
+      case _:CharType =>
         params.length match {
           case 1 => TypeRep.Array(TypeRep.Char)
           case 2 => TypeRep.Array(TypeRep.Array(TypeRep.Char))
@@ -67,7 +67,7 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
           case _ =>  ???
         }
 
-      case _:BooleanType => TypeRep.Char
+      case _:BooleanType =>
         params.length match {
           case 1 => TypeRep.Array(TypeRep.Boolean)
           case 2 => TypeRep.Array(TypeRep.Array(TypeRep.Boolean))
@@ -79,20 +79,8 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
     }
   }
 
-
-  /** Needed when working bottom up. */
-  private def expand_assign(dp_i:Expression, exp: Expression): Generator[paradigm.MethodBodyContext, Unit] = {
-    import paradigm.methodBodyCapabilities._
-    for {
-      av <- impParadigm.imperativeCapabilities.assignVar(dp_i, exp)
-      _ <- addBlockDefinitions(Seq(av))
-    } yield None
-  }
-
   def make_bottom_up_compute_method_nest_3(model:EnhancedModel, order:Seq[String]): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
-
-    //val order = model.solution.order   // typically, "i", "j", "k"
 
     for {
       self <- ooParadigm.methodBodyCapabilities.selfReference()
@@ -330,7 +318,6 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
       level1_var <- impParadigm.imperativeCapabilities.declareVar(names.mangle(order(1)), intType, Some(level1_low))
       level2_map = level1_map ++ Map(order(1) -> level1_var) // HACK FIX, model.solution.mappers("i") -> expr1)
 
-      _ <- report(model.solution.mappers.toString())
       expr1 <- explore(model.find_map(order(0)), bottomUp = Some(dp), symbolTable = level2_map)
       expr2 <- explore(model.find_map(order(1)), bottomUp = Some(dp), symbolTable = level2_map) // needed?? ++ Map(order(0) -> expr1))   // HACK)
 
@@ -444,9 +431,8 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
           update <- impParadigm.imperativeCapabilities.ifThenElse(minCond, for {
             updateResult <- impParadigm.imperativeCapabilities.assignVar(minVar, resultVar)
             _ <- addBlockDefinitions(Seq(updateResult))
-            // here is where one could store deecisions
+            // here is where one could store decisions
           } yield (), Seq.empty, None)
-
 
           advExpr <- explore(ds.advance, symbolTable=addedSymbolTable, bottomUp=Some(dp))
           kadv <- impParadigm.imperativeCapabilities.assignVar(kVar, advExpr)
@@ -455,6 +441,29 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
 
         assigned <- impParadigm.imperativeCapabilities.assignVar(dpij, minVar)
       } yield Seq(whilestmt, assigned)
+
+      case sd:SumDefinition => for {
+        zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
+        intType <- toTargetLanguageType(TypeRep.Int)   // perhaps acceptable to consider 'min' will be an integer
+
+        intType <- toTargetLanguageType(TypeRep.Int)   // perhaps acceptable to consider 'min' will be an integer
+        kStart <- explore(sd.inclusiveStart, symbolTable=symbolTable, bottomUp=Some(dp))
+        kVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(sd.variable), intType, Some(kStart))
+
+        guardCondition <- explore(sd.guardContinue, symbolTable=symbolTable ++ Map("k" -> kVar), bottomUp=Some(dp))
+        whilestmt <- impParadigm.imperativeCapabilities.whileLoop(guardCondition, for {
+
+          resultExpr <- explore(sd.subproblemExpression, symbolTable=symbolTable ++ Map("k" -> kVar), bottomUp=Some(dp))
+          additive <- arithmetic.arithmeticCapabilities.add(dpij, resultExpr)
+          assignResult <- impParadigm.imperativeCapabilities.assignVar(dpij, additive)
+
+          advExpr <- explore(sd.advance, symbolTable=symbolTable ++ Map("k" -> kVar), bottomUp=Some(dp))
+          kadv <- impParadigm.imperativeCapabilities.assignVar(kVar, advExpr)
+          _ <- addBlockDefinitions(Seq(assignResult, kadv))
+
+        } yield ())
+
+      } yield Seq(whilestmt)
 
       case _ => ???
     }
@@ -511,12 +520,6 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
 
       // return last element dp[n] because dp is 1 larger in size than n
       dpexp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
-//      maxbound0 <- explore(model.solution.parameters(order(0)), bottomUp = Some(dp), symbolTable = oi_map)
-//      dpn <- array.arrayCapabilities.get(dpexp, maxbound0)
-//      retstmt <- Command.lift(dpn)
-//
-//      dpexp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
-
       expr <- explore(model.answer, memoize = false, bottomUp = Some(dpexp), symbolTable = oi_map)  // At this point, there should be no symbols
 
     } yield Some(expr)
@@ -586,14 +589,6 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
           } yield (names.mangle(bexpr.name), tpe)
         }
         _ <- addConstructor(create_bottom_up_constructor(constArgs))
-//
-//        _ <- if (model.solution.order.length == 1) {
-//          addMethod(computeName, make_bottom_up_compute_method(model))
-//        } else if (model.solution.order.length == 2) {
-//          addMethod(computeName, make_bottom_up_compute_method_nest_2(model) )
-//        } else if (model.solution.order.length == 3) {
-//
-//        }
 
         // Trying to direct to appropriate place
         _ <- if (params.length == 3) {
@@ -610,7 +605,5 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
 
     addClassToProject(makeClass, names.mangle(model.problem))
   }
-
-
 
 }

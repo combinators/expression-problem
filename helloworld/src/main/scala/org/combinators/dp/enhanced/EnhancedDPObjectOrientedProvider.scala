@@ -7,7 +7,7 @@ import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
-import org.combinators.model.{EnhancedModel, LiteralArray, LiteralBoolean, LiteralExpression, LiteralInt, LiteralString, LiteralStringPair, LiteralStringTriple}
+import org.combinators.model.{EnhancedModel, LiteralArray, LiteralBoolean, LiteralExpression, LiteralInt, LiteralString, LiteralStringPair, LiteralStringTriple, LiteralTriple}
 import org.combinators.dp._
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
@@ -84,6 +84,7 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with EnhancedU
           case _:LiteralInt => toTargetLanguageType(TypeRep.Int)
           case _:LiteralBoolean => toTargetLanguageType(TypeRep.Boolean)
           case _:LiteralString => toTargetLanguageType(TypeRep.String)
+          case _:LiteralTriple => toTargetLanguageType(TypeRep.Int)          // triple means three separate integer values
           case _ => ???
         }
 
@@ -91,6 +92,12 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with EnhancedU
         val createArray = test.inputType match {
           case _:LiteralArray => true
           case _ => false
+        }
+
+        // if > 0 then this is a sequence of parameters
+        val sequenceLength = test.inputType match {
+          case lt:LiteralTriple => Seq(lt.val1, lt.val2, lt.val3)
+          case _ => Seq.empty
         }
 
         val createStrings = test.inputType match {
@@ -138,10 +145,21 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with EnhancedU
               sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solType, all)
             } yield sol
           } else {
-            for {
-              litval <- literalMapping(test.inputType)
-              sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solType, Seq(litval))
-            } yield sol
+            if (sequenceLength.isEmpty) {
+              for {
+                litval <- literalMapping(test.inputType)
+                sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solType, Seq(litval))
+              } yield sol
+            } else if (sequenceLength.length == 3) {
+              for {
+                arg1 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, sequenceLength(0))
+                arg2 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, sequenceLength(1))
+                arg3 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, sequenceLength(2))
+                sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solType, Seq(arg1, arg2, arg3))
+              } yield sol
+            } else {
+              ???
+            }
           }
 
           computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, computeName)

@@ -15,6 +15,7 @@ import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.model.models.twoSequences.{LongestCommonSubsequenceModel, NeedlemanWunschSequenceAlignmentModel, UncrossedLinesModel}
 import org.combinators.modelTests.uncrossedLines.UncrossedLinesMainJava
 import org.combinators.ep.generator.FileWithPathPersistable._
+import org.combinators.integer.{DiceThrowDirectToDiskMain, DiceThrowMainJava}
 import org.combinators.integer.fibonacci.{FibonacciEnhancedMainDirectToDiskMain, FibonacciEnhancedMainJava}
 import org.combinators.integer.perfectsquare.{PerfectSquareMainDirectToDiskMain, PerfectSquareMainJava}
 import org.combinators.model.EnhancedModel
@@ -63,6 +64,7 @@ object GlossaryToDiskMain extends IOApp {
     (new InterleaveStringsMainJava(), InterleaveStringsToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
     (new ThreeStringsLCSMainJava(), ThreeStringsLCSToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
     (new FibonacciEnhancedMainJava(), FibonacciEnhancedMainDirectToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
+    (new DiceThrowMainJava(), DiceThrowDirectToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
 
     // generates but has flawed logic because of the transformation of (r,c) into (i,j)
     // CHALLENGING (new MatrixChainMultiplicationMainJava(), MatrixChainMultiplicationMainDirectToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),

@@ -13,7 +13,7 @@ import org.combinators.model.{AdditionExpression, ArgumentType, EqualExpression,
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
  */
-trait UncrossedLinesProvider extends DPObjectOrientedProvider {
+trait UnenhancedUncrossedLinesProvider extends DPObjectOrientedProvider {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
@@ -106,7 +106,7 @@ object UncrossedLinesProvider {
             booleansIn: Booleans.WithBase[base.MethodBodyContext, base.type]
            )
            (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): UncrossedLinesProvider.WithParadigm[base.type] =
-    new UncrossedLinesProvider {
+    new UnenhancedUncrossedLinesProvider {
       override val paradigm: base.type = base
       val impParadigm: imp.type = imp
       val arithmetic: ffiArithmetic.type = ffiArithmetic

@@ -12,7 +12,7 @@ import org.combinators.archive.bottomUp.twoSequences.longestCommonSubsequence.LC
 import org.combinators.dp.enhanced.EnhancedDPMainJava
 import org.combinators.dp.{BottomUp, GenerationOption, TopDown}
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
-import org.combinators.model.models.twoSequences.{LongestCommonSubsequenceModel, NeedlemanWunschSequenceAlignmentModel}
+import org.combinators.model.models.twoSequences.{LongestCommonSubsequenceModel, NeedlemanWunschSequenceAlignmentModel, UncrossedLinesModel}
 import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.model.EnhancedModel
 import org.combinators.modelTests.integer.fibonacci.{FibonacciEnhancedMainJava, FibonacciEnhancedMainToDiskMain}
@@ -20,7 +20,8 @@ import org.combinators.modelTests.integer.perfectsquare.{PerfectSquareMainDirect
 import org.combinators.modelTests.integer.{DiceThrowDirectToDiskMain, DiceThrowMainJava}
 import org.combinators.modelTests.oneSequence.{MatrixChainMultiplicationMainBottomUpDirectToDiskMain, MatrixChainMultiplicationMainBottomUpJava, MatrixChainMultiplicationMainTopDownDirectToDiskMain, MatrixChainMultiplicationMainTopDownJava, MinCostClimbingStairMain, MinCostClimbingStairToDiskMain}
 import org.combinators.modelTests.strings.{InterleaveStringsMainJava, InterleaveStringsToDiskMain, ThreeStringsLCSMainJava, ThreeStringsLCSToDiskMain}
-import org.combinators.modelTests.twoSequences.{LongestCommonSubsequenceMainJava, LongestCommonSubsequenceToDiskMain, UncrossedLinesMainJava, UncrossedLinesDirectDiskToMain}
+import org.combinators.modelTests.twoSequences.{LongestCommonSubsequenceMainJava, LongestCommonSubsequenceToDiskMain, UncrossedLinesDirectDiskToMain, UncrossedLinesMainJava}
+import org.combinators.modelTests.twoSequences.unenhancedUncrossedLines.UnenhancedUncrossedLinesMainJava
 
 import java.nio.file.{Path, Paths}
 import scala.collection.Seq
@@ -106,8 +107,8 @@ object GlossaryToDiskMain extends IOApp {
   }
 
   def bottom_up_files() = {
-//    val ul = new UncrossedLinesMainJava().filesToGenerate(new UncrossedLinesModel().instantiate(), BottomUp())
-//    val lcs = new LCSMainJava().filesToGenerate(new LongestCommonSubsequenceModel().instantiate(), BottomUp())
+    val ul = new UnenhancedUncrossedLinesMainJava().filesToGenerate(new UncrossedLinesModel().instantiate(), BottomUp())
+    val lcs = new LCSMainJava().filesToGenerate(new LongestCommonSubsequenceModel().instantiate(), BottomUp())
 
     val mcm_bot = (new MatrixChainMultiplicationMainBottomUpJava(), MatrixChainMultiplicationMainBottomUpDirectToDiskMain.model, Seq(bottomUp))
     val just_bot = Seq(mcm_bot)

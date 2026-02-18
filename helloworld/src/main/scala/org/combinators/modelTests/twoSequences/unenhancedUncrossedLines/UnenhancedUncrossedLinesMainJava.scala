@@ -24,7 +24,7 @@ import scala.collection.Seq
 /**
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
-class UncrossedLinesMainJava {
+class UnenhancedUncrossedLinesMainJava {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = Unboxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("dp"))))
 
   val dpApproach = UncrossedLinesProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.realDoublesInMethod, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.stringsInMethod, generator.equalityInMethod, generator.ooParadigm, generator.parametricPolymorphism, generator.booleansInMethod)(generator.generics)
@@ -76,7 +76,7 @@ class UncrossedLinesMainJava {
 }
 
 object ULDirectToDiskMain extends IOApp {
-  val targetDirectory:Path = Paths.get("target", "dp", "ul")
+  val targetDirectory:Path = Paths.get("target", "dp", "unenhancedUncrossedLines")
 
   def run(args: List[String]): IO[ExitCode] = {
 
@@ -89,7 +89,7 @@ object ULDirectToDiskMain extends IOApp {
 
     for {
       _ <- IO { print("Initializing Generator...") }
-      main <- IO { new UncrossedLinesMainJava() }
+      main <- IO { new UnenhancedUncrossedLinesMainJava() }
       _ <- IO { println("[OK]") }
 
       // pass in TOP DOWN

@@ -40,7 +40,7 @@ class UncrossedLines {
       solutionType = IntegerType(),
       soln,
       definition,
-      answer = new SubproblemExpression(Seq(new StringLengthExpression(nums1), new StringLengthExpression(nums2)))
+      answer = new SubproblemExpression(Seq(new ArrayLengthExpression(nums1), new ArrayLengthExpression(nums2)))
     )
 
     UL

@@ -59,11 +59,11 @@ case class HelperExpression(variable:String,
 class LiteralPair(val val1:Int, val val2:Int) extends LiteralExpression
 class LiteralTriple(val val1:Int, val val2:Int, val val3:Int) extends LiteralExpression
 
-class LiteralArray(val ar:Array[Int]) extends LiteralExpression
+class LiteralArray(val literal:Array[Int]) extends LiteralExpression // assumes int array
 class LiteralStringPair(val string1:String, val string2:String) extends LiteralExpression
 class LiteralStringTriple(val string1:String, val string2:String, val string3:String) extends LiteralExpression
 
-class LiteralTwoArrays(val ar1:Array[Int], val ar2:Array[Int]) extends LiteralExpression
+class LiteralArrayPair(val ar1:Array[Int], val ar2:Array[Int]) extends LiteralExpression
 
 // For when a HelpExpression needs to refer to self
 case class SelfExpression(val variableName:String) extends Expression

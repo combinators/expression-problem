@@ -210,7 +210,7 @@ trait MaxSubarrayObjectOrientedProvider extends MaxSubarrayProvider with Utility
       assert_statements <- forEach(Seq(wiki_test, geeks_for_geeks_test, leetcode_test)) { example =>
 
         val array_vals = example.inputType match {
-          case la:LiteralArray => la.ar
+          case la:LiteralArray => la.literal
           case _ => ???
         }
 

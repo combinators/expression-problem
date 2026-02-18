@@ -19,8 +19,6 @@ class Argument (val argName:String, val argType:ArgumentType)
 
 class Model(val problem:String, val bounds: List[ArgExpression], val cases: List[(Option[Expression], Expression)], val retrieveLabel: String = "take sub-solution")
 
-// test example in bottomUp/twoSequences/longestcommonsubsequence/LongestCommonSubsequenceObjectOrientedProvider.scala
-
 /**
  * For MatrixChain Multiplication, whether top-down or bottom up, the key formulation is:
  *

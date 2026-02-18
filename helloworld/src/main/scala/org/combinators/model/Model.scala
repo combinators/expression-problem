@@ -13,6 +13,7 @@ case class StringType() extends ArgumentType
 
 // possibly choose to make this Generic but that seems like overkill
 case class IntegerArrayType() extends ArgumentType
+case class IntegerArray2DType() extends ArgumentType
 
 class Argument (val argName:String, val argType:ArgumentType)
 

@@ -161,6 +161,10 @@ trait Utility {
         tpe <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
       } yield tpe
 
+      case _:IntegerArray2DType => for {
+        tpe <- toTargetLanguageType(TypeRep.Array(TypeRep.Array(TypeRep.Int)))
+      } yield tpe
+
       // find which ones need to be implemented
       case _ => ???
     }
@@ -189,6 +193,12 @@ trait Utility {
       } yield invoke
 
       case _:IntegerArrayType => for {
+        self <- ooParadigm.methodBodyCapabilities.selfReference()
+        field <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle(argExpr.name))
+        lengthField <- ooParadigm.methodBodyCapabilities.getMember(field, names.mangle("length"))     // bit of a hack for string
+      } yield lengthField
+
+      case _:IntegerArray2DType => for {
         self <- ooParadigm.methodBodyCapabilities.selfReference()
         field <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle(argExpr.name))
         lengthField <- ooParadigm.methodBodyCapabilities.getMember(field, names.mangle("length"))     // bit of a hack for string

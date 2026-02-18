@@ -10,7 +10,7 @@ class KnapsackModel {
     val one: LiteralInt = new LiteralInt(1)
 
     //the array should be 2d
-    val arrayArg = new ArgExpression(0, "arr", new IntegerArrayType(), "i")
+    val arrayArg = new ArgExpression(0, "arr", new IntegerArray2DType(), "i")
     val weight = new ArgExpression(1, "W", new IntegerType(), "w")
 
     val i: IteratorExpression = new IteratorExpression(0, "i")

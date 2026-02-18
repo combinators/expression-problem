@@ -5,7 +5,6 @@ import org.combinators.model._
 class KnapsackModel {
   def instantiate(): Model = {
 
-    val negone: LiteralInt = new LiteralInt(-1)
     val zero: LiteralInt = new LiteralInt(0)
     val one: LiteralInt = new LiteralInt(1)
 
@@ -16,16 +15,15 @@ class KnapsackModel {
     val i: IteratorExpression = new IteratorExpression(0, "i")
     val w: IteratorExpression = new IteratorExpression(1, "w")
 
-    val weighti= new ArrayElementExpression(new ArrayElementExpression(arrayArg,i),zero)
-    val valuei= new ArrayElementExpression(new ArrayElementExpression(arrayArg,i),one)
-
+    val weightim1= new ArrayElementExpression(new ArrayElementExpression(arrayArg,i-one),zero)
+    val valueim1= new ArrayElementExpression(new ArrayElementExpression(arrayArg,i-one),one)
 
 
     val Knapsack: Model = new Model("Knapsack",
       List(arrayArg,weight),
       cases = List(
         (
-          Some(new EqualExpression(i, negone)),
+          Some(new EqualExpression(i, zero)),
           zero
         ),
         (
@@ -33,19 +31,13 @@ class KnapsackModel {
           zero
         ),
 
-//        Math.max(
-//          helper(i-1,W),
-//          weights[i]<=W?
-        //          (values[i]+helper(i-1,W-weights[i])):
-        //          0
-//        )
         (
           None,
            new MaxExpression(
              new SubproblemExpression(List(i-one,w)),
              new TernaryExpression(
-               weighti<w,
-               valuei+new SubproblemExpression(List(i-one,w-weighti)),
+               weightim1<w,
+               valueim1 + new SubproblemExpression(List(i-one,w-weightim1)),
                zero)
              )
         )

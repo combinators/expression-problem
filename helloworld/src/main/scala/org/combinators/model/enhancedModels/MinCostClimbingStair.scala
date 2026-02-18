@@ -1,26 +1,8 @@
-package org.combinators.oneSequence
+package org.combinators.model.enhancedModels
 
-import cats.effect.{ExitCode, IO, IOApp}
-import org.combinators.dp.enhanced.EnhancedDPMainJava
-import org.combinators.dp.{BottomUp, TestExample, TopDown}
-import org.combinators.model.{ArrayElementExpression, SubproblemExpression, _}
+import org.combinators.model._
 
-import java.nio.file.{Path, Paths}
-
-/**
- * All that is needed here is the set of test cases that you need.
- */
-class MinCostClimbingStairMain extends EnhancedDPMainJava {
-
-  override def tests = Seq(
-    new TestExample("ts1", new LiteralArray(Array(1,100,1,1,1,100,1,1,100,1)), new LiteralInt(6), new UnitExpression),
-    new TestExample("ts2", new LiteralArray(Array(10,15,20)), new LiteralInt(15), new UnitExpression),
-  )
-}
-
-object MinCostClimbingStairToDiskMain extends IOApp {
-  val targetDirectory:Path = Paths.get("target", "dp")
-
+class MinCostClimbingStair {
   def model:EnhancedModel = {
     val zero: LiteralInt = new LiteralInt(0)
     val one: LiteralInt = new LiteralInt(1)
@@ -45,9 +27,9 @@ object MinCostClimbingStairToDiskMain extends IOApp {
     //                helper_topdown(i - 2));
     val recursive_case = new ArrayElementExpression(costs, i) + new MinExpression(new SubproblemExpression(Seq(i - one)), new SubproblemExpression(Seq(i - two)))
 
-// if (i == 0 || i == 1) {
-//            return cost[i];
-//        }
+    // if (i == 0 || i == 1) {
+    //            return cost[i];
+    //        }
     val mccs_definition = IfThenElseDefinition((i == zero) || (i == one),
       ExpressionStatement(new ArrayElementExpression(costs, i)),
       ExpressionDefinition(recursive_case))
@@ -69,32 +51,5 @@ object MinCostClimbingStairToDiskMain extends IOApp {
     )
 
     MCCS
-  }
-
-  def run(args: List[String]): IO[ExitCode] = {
-
-    // choose one of these to pass in
-    val topDown         = TopDown()
-    val topDownWithMemo = TopDown(memo = true)
-    val bottomUp        = BottomUp()
-
-    val choice = if (args.length == 1) {
-      args(0).toLowerCase() match {
-        case "topdown" => topDown
-        case "topdownwithmemo" => topDownWithMemo
-        case "bottomUp" => bottomUp
-        case _ => ???
-      }
-    } else {
-      bottomUp
-    }
-
-    for {
-      _ <- IO { print("Initializing Generator...") }
-      main <- IO { new MinCostClimbingStairMain() }
-      _ <- IO { println("[OK]") }
-
-      result <- main.runDirectToDisc(targetDirectory, model, choice)
-    } yield result
   }
 }

@@ -434,8 +434,11 @@ trait BottomUpStrategy extends Utility {
         } else if (model.bounds.length == 2) {
           addMethod(computeName, make_bottom_up_compute_method_nest_2(model) )
         } else {
-          addMethod(computeName, make_bottom_up_compute_method_nest_3(model))
-//          addMethod(retrieveName, generate_retrieve(model))
+          for {
+            _ <- addMethod(computeName, make_bottom_up_compute_method_nest_3(model))
+            _ <- addMethod(retrieveName, generate_retrieve(model))
+          } yield None
+
         }
       } yield None
     }

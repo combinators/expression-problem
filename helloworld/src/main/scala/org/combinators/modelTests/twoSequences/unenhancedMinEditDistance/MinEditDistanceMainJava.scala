@@ -1,4 +1,4 @@
-package org.combinators.modelTests.MinEditDistance
+package org.combinators.modelTests.twoSequences.unenhancedMinEditDistance
 
 /**
  * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"

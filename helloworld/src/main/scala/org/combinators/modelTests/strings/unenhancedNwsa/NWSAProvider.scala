@@ -1,19 +1,19 @@
-package org.combinators.modelTests.MinEditDistance
+package org.combinators.modelTests.strings.unenhancedNwsa
 
 import org.combinators.dp.{DPObjectOrientedProvider, TestExample}
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
-import org.combinators.ep.generator.{AbstractSyntax, NameProvider}
-import org.combinators.model.{LiteralInt, LiteralString, LiteralStringPair}
+import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, Generics, ObjectOriented, ParametricPolymorphism}
+import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
+import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
+import org.combinators.model.{AdditionExpression, ArgumentType, EqualExpression, FunctionExpression, IteratorExpression, LiteralInt, LiteralString, LiteralStringPair, Model, SubproblemExpression, SubtractionExpression, UnitExpression}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
  */
-trait MinEditDistanceProvider extends DPObjectOrientedProvider {
+trait NWSAProvider extends DPObjectOrientedProvider {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
@@ -31,11 +31,12 @@ trait MinEditDistanceProvider extends DPObjectOrientedProvider {
 
   import paradigm._
   import syntax._
+  import ooParadigm._
 
   // Specific examples hard coded for Int input and Int output
-  def makeTestsMinEditDistance(implementation:String, tests: Seq[TestExample] = Seq.empty): Generator[MethodBodyContext, Seq[Expression]] = {
-    import eqls.equalityCapabilities._
+  def makeTests(implementation:String, tests: Seq[TestExample] = Seq.empty): Generator[MethodBodyContext, Seq[Expression]] = {
     import paradigm.methodBodyCapabilities._
+    import eqls.equalityCapabilities._
 
     // NOTE: these tests are in the wrong place, since we defer test gen to later
     val tests = Seq(
@@ -76,32 +77,32 @@ trait MinEditDistanceProvider extends DPObjectOrientedProvider {
 
   override def makeTestCase(implementation:String): Generator[TestContext, Unit] = {
     for {
-      _ <- paradigm.testCapabilities.addTestCase(makeTestsMinEditDistance(implementation), names.mangle("DP"))
+      _ <- paradigm.testCapabilities.addTestCase(makeTests(implementation), names.mangle("DP"))
     } yield ()
   }
 }
 
-object MinEditDistanceProvider {
+object NWSAProvider {
   type WithParadigm[P <: AnyParadigm] = DPObjectOrientedProvider { val paradigm: P }
   type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 
   def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
-  (base: P)
-  (nameProvider: NameProvider[base.syntax.Name],
-   imp: Imperative.WithBase[base.MethodBodyContext, base.type],
-   ffiArithmetic: Arithmetic.WithBase[base.MethodBodyContext, base.type, Double],
-   ffiRealArithmetic: RealArithmetic.WithBase[base.MethodBodyContext, base.type, Double],
-   con: Console.WithBase[base.MethodBodyContext, base.type],
-   arr: Arrays.WithBase[base.MethodBodyContext, base.type],
-   assertsIn: Assertions.WithBase[base.MethodBodyContext, base.type],
-   stringsIn: Strings.WithBase[base.MethodBodyContext, base.type],
-   eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type],
-   oo: ObjectOriented.WithBase[base.type],
-   parametricPolymorphism: ParametricPolymorphism.WithBase[base.type],
-   booleansIn: Booleans.WithBase[base.MethodBodyContext, base.type]
-  )
-  (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): MinEditDistanceProvider.WithParadigm[base.type] =
-    new MinEditDistanceProvider {
+           (base: P)
+           (nameProvider: NameProvider[base.syntax.Name],
+            imp: Imperative.WithBase[base.MethodBodyContext, base.type],
+            ffiArithmetic: Arithmetic.WithBase[base.MethodBodyContext, base.type, Double],
+            ffiRealArithmetic: RealArithmetic.WithBase[base.MethodBodyContext, base.type, Double],
+            con: Console.WithBase[base.MethodBodyContext, base.type],
+            arr: Arrays.WithBase[base.MethodBodyContext, base.type],
+            assertsIn: Assertions.WithBase[base.MethodBodyContext, base.type],
+            stringsIn: Strings.WithBase[base.MethodBodyContext, base.type],
+            eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type],
+            oo: ObjectOriented.WithBase[base.type],
+            parametricPolymorphism: ParametricPolymorphism.WithBase[base.type],
+            booleansIn: Booleans.WithBase[base.MethodBodyContext, base.type]
+           )
+           (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): NWSAProvider.WithParadigm[base.type] =
+    new NWSAProvider {
       override val paradigm: base.type = base
       val impParadigm: imp.type = imp
       val arithmetic: ffiArithmetic.type = ffiArithmetic

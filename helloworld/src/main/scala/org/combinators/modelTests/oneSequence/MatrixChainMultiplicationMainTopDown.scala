@@ -1,4 +1,4 @@
-package org.combinators.oneSequence
+package org.combinators.modelTests.oneSequence
 
 /**
  * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"
@@ -9,6 +9,7 @@ import cats.effect.{ExitCode, IO, IOApp}
 import org.combinators.dp.enhanced.EnhancedDPMainJava
 import org.combinators.dp.{BottomUp, TestExample, TopDown}
 import org.combinators.model._
+import org.combinators.model.enhancedModels.MatrixChainMultiplicationTD
 
 import java.nio.file.{Path, Paths}
 
@@ -27,52 +28,7 @@ class MatrixChainMultiplicationMainTopDownJava extends EnhancedDPMainJava {
 object MatrixChainMultiplicationMainTopDownDirectToDiskMain extends IOApp {
   val targetDirectory:Path = Paths.get("target", "dp")
 
-  def model:EnhancedModel = {
-    // Needed for conditions and fib(n-1) and fib(n-2)
-    val zero: LiteralInt = new LiteralInt(0)
-    val one:  LiteralInt = new LiteralInt(1)
-    val two:  LiteralInt = new LiteralInt(2)
-
-    // MatrixChainMultiplication has an array of N+1 integers,representing N 2D Matrices
-    val array = new ArgExpression(0, "nums", new IntegerArrayType(), "c")     // not too sure whether 'i' remains a requirement as argument here
-    val bound = List(array)
-
-    val i: HelperExpression = HelperExpression("i", zero, SelfExpression("i") <= new ArrayLengthExpression(array), new ArrayLengthExpression(array))   // MOST of this unnecessary
-    val j: HelperExpression = HelperExpression("j", zero, SelfExpression("i") <= new ArrayLengthExpression(array), new ArrayLengthExpression(array))   // MOST of this unnecessary
-
-    val k: HelperExpression = HelperExpression("k", i, SelfExpression("k") < j, new ArrayLengthExpression(array)) // k will always be within this range
-
-    val helpers = Map("i" -> i, "j" -> j)
-    val sol = SubproblemInvocation(Seq("i", "j"), helpers = helpers)   // seq(c,r) is for BOTTOM UP only but i,j are included for TOP DOWN
-
-    /*
-     * This is a form of decomposition that applies to upper triangle of the P problem space.
-     *
-     *   P(i,j) = 0, if i == j
-     *   P(i,j) = Min (k, P(i,k) + P(k+1,j) + cost of multiplying resulting two matrices)
-     *      for (int k = i; k < j; k++)
-     */
-    val subprobExpr = new SubproblemExpression(Seq(i, k)) + new SubproblemExpression(Seq(k + one, j)) + array(i - one) * array(k) * array(j)
-
-    // Min range definition for k in range from i (inclusive) to j (exclusive) with an advance of k+1
-    val defij = MinRangeDefinition("k", i, k < j, subprobExpr, k + one)
-
-    val mcm_definition = IfThenElseDefinition(i == j, ExpressionStatement(zero), defij)
-
-    val MCM = new EnhancedModel("MatrixChainMultiplication",
-      bound,
-      subproblemType = IntegerType(),  // helper methods and intermediate problems are int
-      solutionType   = StringType(),   // how a solution is represented
-      sol,
-      mcm_definition,
-      mode = UpperTriangle(Seq("i", "j")),
-
-      // answer can be found in dp[1][n]
-      answer = new SubproblemExpression(Seq(one, new ArrayLengthExpression(array) - one))
-    )
-
-    MCM
-  }
+  val model: EnhancedModel =  new MatrixChainMultiplicationTD().model
 
   def run(args: List[String]): IO[ExitCode] = {
 

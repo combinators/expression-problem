@@ -1,4 +1,4 @@
-package org.combinators.modelTests.uncrossedLines
+package org.combinators.modelTests.strings.unenhancedNwsa
 
 /**
  * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"
@@ -13,26 +13,24 @@ import org.combinators.dp.GenerationOption
 import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
-import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax, Unboxed}
-import org.combinators.model.models.twoSequences.UncrossedLinesModel
-import org.combinators.dp.{BottomUp, TopDown}
+import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, Unboxed, Syntax}
+import org.combinators.model.models.twoSequences.NeedlemanWunschSequenceAlignmentModel
+import org.combinators.dp.{TopDown, BottomUp}
 import org.combinators.model.Model
-import org.combinators.modelTests.UncrossedLinesProvider
 
 import java.nio.file.{Path, Paths}
-import scala.collection.Seq
 
 /**
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
-class UncrossedLinesMainJava {
+class NWSAMainJava {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = Unboxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("dp"))))
 
-  val dpApproach = UncrossedLinesProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.realDoublesInMethod, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.stringsInMethod, generator.equalityInMethod, generator.ooParadigm, generator.parametricPolymorphism, generator.booleansInMethod)(generator.generics)
+  val dpApproach = NWSAProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.realDoublesInMethod, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.stringsInMethod, generator.equalityInMethod, generator.ooParadigm, generator.parametricPolymorphism, generator.booleansInMethod)(generator.generics)
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
-  def filesToGenerate(model:Model, option:GenerationOption):Seq[FileWithPath] = {
+  def filesToGenerate(model: Model, option: GenerationOption): Seq[FileWithPath] = {
     println(s"Generating ${model.problem}...")
     generator.paradigm.runGenerator {
       for {
@@ -40,7 +38,7 @@ class UncrossedLinesMainJava {
         _ <- generator.realDoublesInMethod.enable()
         _ <- generator.intsInMethod.enable()
         _ <- generator.stringsInMethod.enable()
-        _ <- generator.listsInMethod.enable()     // should be array, but this still needs to be added as an FFI
+        _ <- generator.listsInMethod.enable() // should be array, but this still needs to be added as an FFI
         _ <- generator.consoleInMethod.enable()
         _ <- generator.arraysInMethod.enable()
         _ <- generator.equalityInMethod.enable()
@@ -54,16 +52,17 @@ class UncrossedLinesMainJava {
   }
 
   def directToDiskTransaction(targetDirectory: Path, model:Model, option:GenerationOption): IO[Unit] = {
+
     IO {
-      println("Computing Files...")
-      val computed = filesToGenerate(model:Model, option:GenerationOption)
+      print("Computing Files...")
+      val computed = filesToGenerate(model, option)
       println("[OK]")
       if (targetDirectory.toFile.exists()) {
-        println(s"Cleaning Target Directory ($targetDirectory)...")
+        print(s"Cleaning Target Directory ($targetDirectory)...")
         FileUtils.deleteDirectory(targetDirectory.toFile)
         println("[OK]")
       }
-      println("Persisting Files...")
+      print("Persisting Files...")
       computed.foreach(file => persistable.persistOverwriting(targetDirectory, file))
       println("[OK]")
     }
@@ -76,26 +75,24 @@ class UncrossedLinesMainJava {
   }
 }
 
-object ULDirectToDiskMain extends IOApp {
-  val targetDirectory:Path = Paths.get("target", "dp", "ul")
+object NWSADirectToDiskMain extends IOApp {
+  val targetDirectory:Path = Paths.get("target", "nwsa")
 
   def run(args: List[String]): IO[ExitCode] = {
 
     // choose one of these to pass in
-    val topDown         = new TopDown()
-    val topDownWithMemo = new TopDown(memo = true)
-    val bottomUp        = new BottomUp()
+    val topDown         = TopDown()
+    val topDownWithMemo = TopDown(memo = true)
+    val bottomUp        = BottomUp()
 
-    val UL = new UncrossedLinesModel().instantiate()
-
+    val UL = new NeedlemanWunschSequenceAlignmentModel().instantiate()
     for {
       _ <- IO { print("Initializing Generator...") }
-      main <- IO { new UncrossedLinesMainJava() }
+      main <- IO { new NWSAMainJava() }
       _ <- IO { println("[OK]") }
 
-      // pass in TOP DOWN
 
-      result <- main.runDirectToDisc(targetDirectory, UL, bottomUp)   // bottom up not working for some reason....
+      result <- main.runDirectToDisc(targetDirectory, UL, topDown)
     } yield result
   }
 }

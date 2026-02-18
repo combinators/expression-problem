@@ -1,4 +1,4 @@
-package org.combinators.modelTests.threeStringLCS
+package org.combinators.modelTests.strings.unenhancedThreeStringLCS
 
 /**
  * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"

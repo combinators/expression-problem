@@ -12,15 +12,15 @@ import org.combinators.archive.bottomUp.twoSequences.longestCommonSubsequence.LC
 import org.combinators.dp.enhanced.EnhancedDPMainJava
 import org.combinators.dp.{BottomUp, GenerationOption, TopDown}
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
-import org.combinators.model.models.twoSequences.{LongestCommonSubsequenceModel, NeedlemanWunschSequenceAlignmentModel, UncrossedLinesModel}
+import org.combinators.model.models.twoSequences.{LongestCommonSubsequenceModel, NeedlemanWunschSequenceAlignmentModel}
 import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.model.EnhancedModel
-import org.combinators.modelTests.integer.fibonacci.{FibonacciEnhancedMainDirectToDiskMain, FibonacciEnhancedMainJava}
+import org.combinators.modelTests.integer.fibonacci.{FibonacciEnhancedMainJava, FibonacciEnhancedMainToDiskMain}
 import org.combinators.modelTests.integer.perfectsquare.{PerfectSquareMainDirectToDiskMain, PerfectSquareMainJava}
 import org.combinators.modelTests.integer.{DiceThrowDirectToDiskMain, DiceThrowMainJava}
 import org.combinators.modelTests.oneSequence.{MatrixChainMultiplicationMainBottomUpDirectToDiskMain, MatrixChainMultiplicationMainBottomUpJava, MatrixChainMultiplicationMainTopDownDirectToDiskMain, MatrixChainMultiplicationMainTopDownJava, MinCostClimbingStairMain, MinCostClimbingStairToDiskMain}
 import org.combinators.modelTests.strings.{InterleaveStringsMainJava, InterleaveStringsToDiskMain, ThreeStringsLCSMainJava, ThreeStringsLCSToDiskMain}
-import org.combinators.modelTests.twoSequences.uncrossedLines.UncrossedLinesMainJava
+import org.combinators.modelTests.twoSequences.{LongestCommonSubsequenceMainJava, LongestCommonSubsequenceToDiskMain, UncrossedLinesMainJava, UncrossedLinesDirectDiskToMain}
 
 import java.nio.file.{Path, Paths}
 import scala.collection.Seq
@@ -60,15 +60,17 @@ object GlossaryToDiskMain extends IOApp {
 
   // declare the working versions for each problem in the enhanced list
   val known_enhanced_solutions:Seq[(EnhancedDPMainJava, EnhancedModel, Seq[GenerationOption])] = Seq(
-    (new PerfectSquareMainJava(), PerfectSquareMainDirectToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
-    (new InterleaveStringsMainJava(), InterleaveStringsToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
-    (new ThreeStringsLCSMainJava(), ThreeStringsLCSToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
-    (new FibonacciEnhancedMainJava(), FibonacciEnhancedMainDirectToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
     (new DiceThrowMainJava(), DiceThrowDirectToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
+    (new FibonacciEnhancedMainJava(), FibonacciEnhancedMainToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
+    (new InterleaveStringsMainJava(), InterleaveStringsToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
+    (new LongestCommonSubsequenceMainJava, LongestCommonSubsequenceToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
+    (new MinCostClimbingStairMain(), MinCostClimbingStairToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
+    (new PerfectSquareMainJava(), PerfectSquareMainDirectToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
+    (new ThreeStringsLCSMainJava(), ThreeStringsLCSToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
+    (new UncrossedLinesMainJava(), UncrossedLinesDirectDiskToMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
 
     // generates but has flawed logic because of the transformation of (r,c) into (i,j)
     // CHALLENGING (new MatrixChainMultiplicationMainJava(), MatrixChainMultiplicationMainDirectToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
-    (new MinCostClimbingStairMain(), MinCostClimbingStairToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
   )
 
   // below are the individual DP problems generated and added to `all_files`.
@@ -88,7 +90,7 @@ object GlossaryToDiskMain extends IOApp {
 
   // below are the individual DP problems generated and added to `all_files`.
   def top_down() = {
-    val ul = new UncrossedLinesMainJava().filesToGenerate(new UncrossedLinesModel().instantiate(), TopDown())
+//    val ul = new UncrossedLinesMainJava().filesToGenerate(new UncrossedLinesModel().instantiate(), TopDown())
     //val lcs = new LCSMainJava().filesToGenerate(new LongestCommonSubsequenceModel().instantiate(), TopDown())              [HEINEMAN: not working]
     // val kp = new KnapsackMainJava().filesToGenerate(new KnapsackModel().instantiate(), TopDown())                         [HEINEMAN: not working]
     //val nwsa = new NWSAMainJava().filesToGenerate(new NeedlemanWunschSequenceAlignmentModel().instantiate(), TopDown())    [HEINEMAN: not working]
@@ -100,12 +102,12 @@ object GlossaryToDiskMain extends IOApp {
       => triple._3.contains(TopDown())).
       flatMap(triple => triple._1.filesToGenerate(triple._2, TopDown()))
 
-    others ++ ul
+    others
   }
 
   def bottom_up_files() = {
-    val ul = new UncrossedLinesMainJava().filesToGenerate(new UncrossedLinesModel().instantiate(), BottomUp())
-    val lcs = new LCSMainJava().filesToGenerate(new LongestCommonSubsequenceModel().instantiate(), BottomUp())
+//    val ul = new UncrossedLinesMainJava().filesToGenerate(new UncrossedLinesModel().instantiate(), BottomUp())
+//    val lcs = new LCSMainJava().filesToGenerate(new LongestCommonSubsequenceModel().instantiate(), BottomUp())
 
     val mcm_bot = (new MatrixChainMultiplicationMainBottomUpJava(), MatrixChainMultiplicationMainBottomUpDirectToDiskMain.model, Seq(bottomUp))
     val just_bot = Seq(mcm_bot)
@@ -114,12 +116,12 @@ object GlossaryToDiskMain extends IOApp {
       => triple._3.contains(BottomUp())).
       flatMap(triple => triple._1.filesToGenerate(triple._2, BottomUp()))
 
-    others ++ lcs ++ ul
+    others
   }
 
   def run(args: List[String]): IO[ExitCode] = {
     val choice = if (args.isEmpty) {
-      topDown                    // <------ CHANGE this manually when you run, to generate topDown or topDownWithMemo -- BOTTOMUP NOT YET WORKING
+      bottomUp                    // <------ CHANGE this manually when you run, to generate topDown or topDownWithMemo -- BOTTOMUP NOT YET WORKING
     } else {
       args(0).toLowerCase match {
         case "topdown" => topDown

@@ -26,7 +26,7 @@ class MatrixChainMultiplicationMainBottomUpJava extends EnhancedDPMainJava {
 }
 
 object MatrixChainMultiplicationMainBottomUpDirectToDiskMain extends IOApp {
-  val targetDirectory:Path = Paths.get("target", "dp")
+  val targetDirectory:Path = Paths.get("target", "dp", "matrixChainMultiplicationBottomUp")
 
   val model: EnhancedModel =  new MatrixChainMultiplicationBU().model
 

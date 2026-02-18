@@ -1,4 +1,4 @@
-package org.combinators.modelTests.twoSequences.uncrossedLines
+package org.combinators.modelTests.twoSequences.unenhancedUncrossedLines
 
 import org.combinators.dp.{DPObjectOrientedProvider, TestExample}
 import org.combinators.ep.domain.abstractions._

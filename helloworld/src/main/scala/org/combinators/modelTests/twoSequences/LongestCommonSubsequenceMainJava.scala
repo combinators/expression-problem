@@ -14,8 +14,8 @@ class LongestCommonSubsequenceMainJava extends EnhancedDPMainJava {
   )
 }
 
-object LongestCommonSubsequenceDirectDiskToMain extends IOApp {
-  val targetDirectory: Path = Paths.get("target", "dp", "lcs")
+object LongestCommonSubsequenceToDiskMain extends IOApp {
+  val targetDirectory: Path = Paths.get("target", "dp", "longestCommonSubsequence")
 
   val model: EnhancedModel = new LongestCommonSubsequence().model
 

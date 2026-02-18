@@ -26,7 +26,7 @@ class ThreeStringsLCSMainJava extends EnhancedDPMainJava {
 }
 
 object ThreeStringsLCSToDiskMain extends IOApp {
-  val targetDirectory:Path = Paths.get("target", "dp")
+  val targetDirectory:Path = Paths.get("target", "dp", "threeStringLCS")
 
   val model: EnhancedModel = new ThreeStringLCS().model
 

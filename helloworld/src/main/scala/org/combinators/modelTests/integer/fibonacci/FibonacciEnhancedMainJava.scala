@@ -28,8 +28,8 @@ class FibonacciEnhancedMainJava extends EnhancedDPMainJava {
   )
 }
 
-object FibonacciEnhancedMainDirectToDiskMain extends IOApp {
-  val targetDirectory:Path = Paths.get("target", "dp")
+object FibonacciEnhancedMainToDiskMain extends IOApp {
+  val targetDirectory:Path = Paths.get("target", "dp", "fibonacci")
 
   val model: EnhancedModel = new Fibonacci().model
 

@@ -20,7 +20,7 @@ class MinCostClimbingStairMain extends EnhancedDPMainJava {
 }
 
 object MinCostClimbingStairToDiskMain extends IOApp {
-  val targetDirectory:Path = Paths.get("target", "dp")
+  val targetDirectory:Path = Paths.get("target", "dp", "minCostClimbingStair")
 
   val model: EnhancedModel = new MinCostClimbingStair().model
 

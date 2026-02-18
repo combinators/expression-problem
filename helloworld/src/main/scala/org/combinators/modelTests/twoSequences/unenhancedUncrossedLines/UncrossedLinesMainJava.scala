@@ -1,4 +1,4 @@
-package org.combinators.modelTests.twoSequences.uncrossedLines
+package org.combinators.modelTests.twoSequences.unenhancedUncrossedLines
 
 /**
  * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"

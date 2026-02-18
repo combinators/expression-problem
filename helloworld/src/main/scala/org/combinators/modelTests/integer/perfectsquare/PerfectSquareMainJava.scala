@@ -35,7 +35,7 @@ class PerfectSquareMainJava extends EnhancedDPMainJava  {
 }
 
 object PerfectSquareMainDirectToDiskMain extends IOApp {
-  val targetDirectory:Path = Paths.get("target", "dp")
+  val targetDirectory:Path = Paths.get("target", "dp", "perfectSquare")
 
   val model: EnhancedModel = new PerfectSquare().model
 

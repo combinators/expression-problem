@@ -1,4 +1,4 @@
-package org.combinators.integer.fibonacci
+package org.combinators.modelTests.integer.fibonacci
 
 /**
  * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"
@@ -10,6 +10,7 @@ import cats.effect.{ExitCode, IO, IOApp}
 import org.combinators.dp.enhanced.EnhancedDPMainJava
 import org.combinators.dp.{BottomUp, TestExample, TopDown}
 import org.combinators.model._
+import org.combinators.model.enhancedModels.Fibonacci
 
 import java.nio.file.{Path, Paths}
 
@@ -30,37 +31,7 @@ class FibonacciEnhancedMainJava extends EnhancedDPMainJava {
 object FibonacciEnhancedMainDirectToDiskMain extends IOApp {
   val targetDirectory:Path = Paths.get("target", "dp")
 
-  def model:EnhancedModel = {
-    // Needed for conditions and fib(n-1) and fib(n-2)
-    val zero: LiteralInt = new LiteralInt(0)
-    val one: LiteralInt = new LiteralInt(1)
-    val two: LiteralInt = new LiteralInt(2)
-
-    // MatrixChainMultiplication has an array of N+1 integers,representing N 2D Matrices
-    val n = new ArgExpression(0, "n", IntegerType(), "i")
-    val bound = List(n)
-
-    // COULD be inferred from the ArgExpression list, but this lets us name variable to use in iterator
-    val i: HelperExpression = HelperExpression("i", one, SelfExpression("i") <= n, n + one) // only one argument, i
-
-    // what the compute() method calls with helper(1, nums.length-1)
-    val sol = SubproblemInvocation(Seq("i"), helpers = Map("i" -> i))
-
-    val oneCase = IfThenElseDefinition(i == one, ExpressionStatement(one),
-       ExpressionDefinition(new SubproblemExpression(Seq(i - one)) + new SubproblemExpression(Seq(i - two))))
-
-    val zeroCase = IfThenElseDefinition(i == zero, ExpressionStatement(zero), oneCase)
-
-    val Fib = new EnhancedModel("Fibonacci",
-      bound,
-      subproblemType = IntegerType(),    // helper methods and intermediate problems are int
-      solutionType = StringType(),  // how a solution is represented (not yet effective)
-      sol,
-      zeroCase,
-      answer = new SubproblemExpression(Seq(n)))
-
-    Fib
-  }
+  val model: EnhancedModel = new Fibonacci().model
 
     def run(args: List[String]): IO[ExitCode] = {
 

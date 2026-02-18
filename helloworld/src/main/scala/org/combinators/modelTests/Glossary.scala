@@ -14,10 +14,10 @@ import org.combinators.dp.{BottomUp, GenerationOption, TopDown}
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.model.models.twoSequences.{LongestCommonSubsequenceModel, NeedlemanWunschSequenceAlignmentModel, UncrossedLinesModel}
 import org.combinators.ep.generator.FileWithPathPersistable._
-import org.combinators.integer.{DiceThrowDirectToDiskMain, DiceThrowMainJava}
-import org.combinators.integer.fibonacci.{FibonacciEnhancedMainDirectToDiskMain, FibonacciEnhancedMainJava}
-import org.combinators.integer.perfectsquare.{PerfectSquareMainDirectToDiskMain, PerfectSquareMainJava}
 import org.combinators.model.EnhancedModel
+import org.combinators.modelTests.integer.fibonacci.{FibonacciEnhancedMainDirectToDiskMain, FibonacciEnhancedMainJava}
+import org.combinators.modelTests.integer.perfectsquare.{PerfectSquareMainDirectToDiskMain, PerfectSquareMainJava}
+import org.combinators.modelTests.integer.{DiceThrowDirectToDiskMain, DiceThrowMainJava}
 import org.combinators.modelTests.oneSequence.{MatrixChainMultiplicationMainBottomUpDirectToDiskMain, MatrixChainMultiplicationMainBottomUpJava, MatrixChainMultiplicationMainTopDownDirectToDiskMain, MatrixChainMultiplicationMainTopDownJava, MinCostClimbingStairMain, MinCostClimbingStairToDiskMain}
 import org.combinators.modelTests.strings.{InterleaveStringsMainJava, InterleaveStringsToDiskMain, ThreeStringsLCSMainJava, ThreeStringsLCSToDiskMain}
 import org.combinators.modelTests.twoSequences.uncrossedLines.UncrossedLinesMainJava

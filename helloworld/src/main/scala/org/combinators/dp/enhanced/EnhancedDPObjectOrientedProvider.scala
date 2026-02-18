@@ -7,7 +7,7 @@ import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
-import org.combinators.model.{EnhancedModel, LiteralArray, LiteralBoolean, LiteralExpression, LiteralInt, LiteralString, LiteralStringPair, LiteralStringTriple, LiteralTriple}
+import org.combinators.model.{EnhancedModel, LiteralArray, LiteralBoolean, LiteralExpression, LiteralInt, LiteralString, LiteralStringPair, LiteralStringTriple, LiteralTriple, LiteralPair, LiteralArrayPair}
 import org.combinators.dp._
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
@@ -85,18 +85,21 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with EnhancedU
           case _:LiteralBoolean => toTargetLanguageType(TypeRep.Boolean)
           case _:LiteralString => toTargetLanguageType(TypeRep.String)
           case _:LiteralTriple => toTargetLanguageType(TypeRep.Int)          // triple means three separate integer values
+          case _:LiteralPair => toTargetLanguageType(TypeRep.Int)
           case _ => ???
         }
 
         // Arrays have to be handled specially, I'm afraid
         val createArray = test.inputType match {
           case _:LiteralArray => true
+          case _:LiteralArrayPair => true
           case _ => false
         }
 
         // if > 0 then this is a sequence of parameters
         val sequenceLength = test.inputType match {
           case lt:LiteralTriple => Seq(lt.val1, lt.val2, lt.val3)
+          case lp:LiteralPair => Seq(lp.val1, lp.val2)
           case _ => Seq.empty
         }
 
@@ -118,7 +121,7 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with EnhancedU
           //
           sol <- if (createArray) {
             val vals = test.inputType match {
-              case la:LiteralArray => la.ar
+              case la:LiteralArray => la.literal
               case _ => Array.empty
             }
 

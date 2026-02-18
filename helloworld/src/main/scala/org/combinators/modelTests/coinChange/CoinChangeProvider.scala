@@ -1,4 +1,4 @@
-package org.combinators.modelTests.knapsack
+package org.combinators.modelTests.coinChange
 
 import org.combinators.dp.{DPObjectOrientedProvider, TestExample}
 import org.combinators.ep.domain.abstractions._
@@ -13,7 +13,7 @@ import org.combinators.model.{LiteralInt, LiteralString, LiteralStringPair}
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
  */
-trait KnapsackProvider extends DPObjectOrientedProvider {
+trait CoinChangeProvider extends DPObjectOrientedProvider {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
@@ -33,7 +33,7 @@ trait KnapsackProvider extends DPObjectOrientedProvider {
   import syntax._
 
   // Specific examples hard coded for Int input and Int output
-  def makeTestsKnapsack(implementation:String, tests: Seq[TestExample] = Seq.empty): Generator[MethodBodyContext, Seq[Expression]] = {
+  def makeTestsCoinChange(implementation:String, tests: Seq[TestExample] = Seq.empty): Generator[MethodBodyContext, Seq[Expression]] = {
     import eqls.equalityCapabilities._
     import paradigm.methodBodyCapabilities._
 
@@ -77,12 +77,12 @@ trait KnapsackProvider extends DPObjectOrientedProvider {
 
   override def makeTestCase(implementation:String): Generator[TestContext, Unit] = {
     for {
-      _ <- paradigm.testCapabilities.addTestCase(makeTestsKnapsack(implementation), names.mangle("DP"))
+      _ <- paradigm.testCapabilities.addTestCase(makeTestsCoinChange(implementation), names.mangle("DP"))
     } yield ()
   }
 }
 
-object KnapsackProvider {
+object CoinChangeProvider {
   type WithParadigm[P <: AnyParadigm] = DPObjectOrientedProvider { val paradigm: P }
   type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 
@@ -101,8 +101,8 @@ object KnapsackProvider {
    parametricPolymorphism: ParametricPolymorphism.WithBase[base.type],
    booleansIn: Booleans.WithBase[base.MethodBodyContext, base.type]
   )
-  (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): KnapsackProvider.WithParadigm[base.type] =
-    new KnapsackProvider {
+  (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): CoinChangeProvider.WithParadigm[base.type] =
+    new CoinChangeProvider {
       override val paradigm: base.type = base
       val impParadigm: imp.type = imp
       val arithmetic: ffiArithmetic.type = ffiArithmetic

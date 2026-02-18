@@ -385,7 +385,7 @@ trait Utility {
       } yield e
 
       case ter:TernaryExpression => for {
-        cond <- explore(ter.condition, memoize, symbolTable)
+        cond <- explore(ter.condition, memoize, symbolTable, bottomUp)
         trueBranch <- explore(ter.trueBranch, memoize, symbolTable, bottomUp)
         falseBranch <- explore(ter.falseBranch, memoize, symbolTable, bottomUp)
         tri <- impParadigm.imperativeCapabilities.ternary(cond, trueBranch, falseBranch)

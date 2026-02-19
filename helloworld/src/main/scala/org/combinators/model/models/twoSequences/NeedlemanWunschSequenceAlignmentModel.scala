@@ -4,11 +4,11 @@ import org.combinators.model._
 
 class NeedlemanWunschSequenceAlignmentModel {
   def instantiate(): Model = {
-    val s1 = new ArgExpression(0, "s1", new StringType(), "r")
-    val s2 = new ArgExpression(1, "s2", new StringType(), "c")
-    val matchBonus = new ArgExpression(2, "matchBonus", new IntegerType(), "") // not iterable
-    val mismatchPenalty = new ArgExpression(3, "mismatchPenalty", new IntegerType(), "") // not iterable
-    val gapPenalty = new ArgExpression(4, "gapPenalty", new IntegerType(), "") // not iterable
+    val s1 = new ArgExpression(0, "s1", StringType(), "r")
+    val s2 = new ArgExpression(1, "s2", StringType(), "c")
+    val matchBonus = new ArgExpression(2, "matchBonus", IntegerType(), "") // not iterable
+    val mismatchPenalty = new ArgExpression(3, "mismatchPenalty", IntegerType(), "") // not iterable
+    val gapPenalty = new ArgExpression(4, "gapPenalty", IntegerType(), "") // not iterable
 
     val boundZero: Expression = new StringLengthExpression(s1)
     val boundOne: Expression = new StringLengthExpression(s2)
@@ -44,8 +44,8 @@ class NeedlemanWunschSequenceAlignmentModel {
           new MaxExpression(
             new SubproblemExpression(Seq(r - one, c - one)) + score,
             new MaxExpression(
-              new SubproblemExpression(Seq(r - one, c)),
-              new SubproblemExpression(Seq(r, c - one))
+              new SubproblemExpression(Seq(r - one, c)) + gapPenalty,
+              new SubproblemExpression(Seq(r, c - one)) + gapPenalty
             )
           )
         )

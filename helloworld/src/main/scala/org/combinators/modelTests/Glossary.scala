@@ -20,7 +20,7 @@ import org.combinators.modelTests.integer.perfectsquare.{PerfectSquareMainDirect
 import org.combinators.modelTests.integer.{DiceThrowDirectToDiskMain, DiceThrowMainJava}
 import org.combinators.modelTests.oneSequence.{MatrixChainMultiplicationMainBottomUpDirectToDiskMain, MatrixChainMultiplicationMainBottomUpJava, MatrixChainMultiplicationMainTopDownDirectToDiskMain, MatrixChainMultiplicationMainTopDownJava, MinCostClimbingStairMain, MinCostClimbingStairToDiskMain}
 import org.combinators.modelTests.strings.{InterleaveStringsMainJava, InterleaveStringsToDiskMain, ThreeStringsLCSMainJava, ThreeStringsLCSToDiskMain}
-import org.combinators.modelTests.twoSequences.{LongestCommonSubsequenceMainJava, LongestCommonSubsequenceToDiskMain, UncrossedLinesDirectDiskToMain, UncrossedLinesMainJava}
+import org.combinators.modelTests.twoSequences.{LongestCommonSubsequenceMainJava, LongestCommonSubsequenceToDiskMain, NeedlemanWunschSequenceAlignmentMainJava, NeedlemanWunschSequenceAlignmentToDiskMain, UncrossedLinesDirectDiskToMain, UncrossedLinesMainJava}
 import org.combinators.modelTests.twoSequences.unenhancedUncrossedLines.UnenhancedUncrossedLinesMainJava
 
 import java.nio.file.{Path, Paths}
@@ -69,6 +69,7 @@ object GlossaryToDiskMain extends IOApp {
     (new PerfectSquareMainJava(), PerfectSquareMainDirectToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
     (new ThreeStringsLCSMainJava(), ThreeStringsLCSToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
     (new UncrossedLinesMainJava(), UncrossedLinesDirectDiskToMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
+    (new NeedlemanWunschSequenceAlignmentMainJava(), NeedlemanWunschSequenceAlignmentToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
 
     // generates but has flawed logic because of the transformation of (r,c) into (i,j)
     // CHALLENGING (new MatrixChainMultiplicationMainJava(), MatrixChainMultiplicationMainDirectToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),

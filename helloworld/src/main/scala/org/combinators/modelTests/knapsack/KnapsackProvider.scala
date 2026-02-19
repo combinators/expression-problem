@@ -39,7 +39,7 @@ trait KnapsackProvider extends DPObjectOrientedProvider {
 
     // NOTE: these tests are in the wrong place, since we defer test gen to later
     val tests = Seq(
-      //new TestExample("test1", new Literal2DArrayIntPair(Array(Array(4,1),Array(5,2),Array(1,3)),4 ), new LiteralInt(3), new LiteralString("Testing")) // for now, leave solution as None
+      new TestExample("test1", new Literal2DArrayIntPair(Array(Array(4,1),Array(5,2),Array(1,3)),4 ), new LiteralInt(3), new LiteralString("Testing")) // for now, leave solution as None
       new TestExample("fib0", new LiteralStringPair("ACTG", "CGATC"), new LiteralInt(2), new LiteralString("AC")) // for now, leave solution as None
     )
 

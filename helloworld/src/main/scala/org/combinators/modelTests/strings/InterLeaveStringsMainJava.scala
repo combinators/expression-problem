@@ -26,7 +26,7 @@ class InterleaveStringsMainJava extends EnhancedDPMainJava {
 }
 
 object InterleaveStringsToDiskMain extends IOApp {
-  val targetDirectory:Path = Paths.get("target", "dp")
+  val targetDirectory:Path = Paths.get("target", "dp", "interleaveStrings")
 
   val model: EnhancedModel = new InterleaveStrings().model
 

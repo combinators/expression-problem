@@ -12,8 +12,8 @@ class PerfectSquare {
     val n = new ArgExpression(0, "n", IntegerType(), "i")    // not sure if 'i' is used
     val bound_ps = List(n)
 
-    val i: HelperExpression = HelperExpression("i", one, SelfExpression("i") <= n, n + one)    // only one argument, i: not too sure this is right
-    val k: HelperExpression = HelperExpression("k", one, SelfExpression("k") * SelfExpression("k") <= n, n)    // not too sure this is right
+    val i: HelperExpression = HelperExpression("i", zero, SelfExpression("i") <= n, n + one)    // only one argument, i: not too sure this is right
+    val k: HelperExpression = HelperExpression("k", zero, SelfExpression("k") * SelfExpression("k") <= n, n)    // not too sure this is right
 
     val helperTable_ps = Map("i" -> i, "k" -> k)            // Boy this is awkward: need k as helper but not in invocation
     val sol_ps = SubproblemInvocation(Seq("i"), helpers = helperTable_ps)

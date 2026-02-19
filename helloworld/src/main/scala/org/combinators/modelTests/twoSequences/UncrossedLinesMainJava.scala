@@ -15,7 +15,7 @@ class UncrossedLinesMainJava extends EnhancedDPMainJava {
 }
 
 object UncrossedLinesDirectDiskToMain extends IOApp {
-  val targetDirectory: Path = Paths.get("target", "dp", "ul")
+  val targetDirectory: Path = Paths.get("target", "dp", "uncrossedLines")
 
   val model: EnhancedModel = new UncrossedLines().model
 

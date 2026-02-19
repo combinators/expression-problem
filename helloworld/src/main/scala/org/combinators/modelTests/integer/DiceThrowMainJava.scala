@@ -31,7 +31,7 @@ class DiceThrowMainJava extends EnhancedDPMainJava  {
 }
 
 object DiceThrowDirectToDiskMain extends IOApp {
-  val targetDirectory:Path = Paths.get("target", "dp")
+  val targetDirectory:Path = Paths.get("target", "dp", "diceThrow")
 
   val model: EnhancedModel = new DiceThrow().model
 

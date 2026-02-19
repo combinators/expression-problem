@@ -65,6 +65,8 @@ class LiteralStringTriple(val string1:String, val string2:String, val string3:St
 
 class LiteralArrayPair(val ar1:Array[Int], val ar2:Array[Int]) extends LiteralExpression
 
+class Literal2DArrayIntPair(val ar1:Array[Array[Int]], val ar2: Int) extends LiteralExpression
+
 // For when a HelpExpression needs to refer to self
 case class SelfExpression(val variableName:String) extends Expression
 

@@ -18,14 +18,14 @@ class LongestIncreasingSubsequence {
     val i: HelperExpression = HelperExpression("i", one, SelfExpression("i") <= lenArr, lenArr) // only one argument, i
 
     // what the compute() method calls with helper(1, nums.length-1)
-    val sol = SubproblemInvocation(Seq("i"), helpers = Map("i" -> i))
-
-
     val j: HelperExpression = HelperExpression("j", zero, SelfExpression("j") < i, lenArr) // k will always be within this range
 
-    val subprobExpr = new SubproblemExpression(Seq(j))
+    val sol = SubproblemInvocation(Seq("i"), helpers = Map("i" -> i, "j" -> j))
 
-    val innerLoop = new MinRangeDefinition("j",zero, j<i, subprobExpr, j+one)
+    val subprobExpr = new SubproblemExpression(Seq(j))
+    val checkExpr = new TernaryExpression(new ArrayElementExpression(arr, i) < new ArrayElementExpression(arr, j), subprobExpr + one, zero)
+
+    val innerLoop = new MinRangeDefinition("j",zero, j<i, checkExpr, j+one)
 
     val oneCase = IfThenElseDefinition(i == one, ExpressionStatement(one),
       ExpressionDefinition(new SubproblemExpression(Seq(i - one)) + new SubproblemExpression(Seq(i - two))))
@@ -37,7 +37,7 @@ class LongestIncreasingSubsequence {
       subproblemType = IntegerType(),    // helper methods and intermediate problems are int
       solutionType = StringType(),  // how a solution is represented (not yet effective)
       sol,
-      oneCase,
+      zeroCase,
       answer = new SubproblemExpression(Seq(new ArrayLengthExpression(arr))))
 
     Fib

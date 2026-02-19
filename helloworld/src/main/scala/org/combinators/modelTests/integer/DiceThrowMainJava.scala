@@ -16,7 +16,7 @@ import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
 import org.combinators.model._
-import org.combinators.model.enhancedModels.DiceThrow
+import org.combinators.model.enhancedModels.{DiceThrow, LongestIncreasingSubsequence}
 
 import java.nio.file.{Path, Paths}
 
@@ -33,7 +33,8 @@ class DiceThrowMainJava extends EnhancedDPMainJava  {
 object DiceThrowDirectToDiskMain extends IOApp {
   val targetDirectory:Path = Paths.get("target", "dp", "diceThrow")
 
-  val model: EnhancedModel = new DiceThrow().model
+  //val model: EnhancedModel = new DiceThrow().model
+  val model: EnhancedModel = new LongestIncreasingSubsequence().model
 
   def run(args: List[String]): IO[ExitCode] = {
 
@@ -50,7 +51,7 @@ object DiceThrowDirectToDiskMain extends IOApp {
         case _ => ???
       }
     } else {
-      bottomUp
+      topDown
     }
 
     for {

@@ -8,7 +8,7 @@ import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.ep.generator.{AbstractSyntax, NameProvider}
-import org.combinators.model.{LiteralInt, LiteralString, LiteralStringPair}
+import org.combinators.model.{Literal2DArrayIntPair, LiteralInt, LiteralString, LiteralStringPair}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
@@ -39,15 +39,17 @@ trait KnapsackProvider extends DPObjectOrientedProvider {
 
     // NOTE: these tests are in the wrong place, since we defer test gen to later
     val tests = Seq(
-      new TestExample("test1", new Literal2DArrayIntPair(Array(Array(4,1),Array(5,2),Array(1,3)),4 ), new LiteralInt(3), new LiteralString("Testing")) // for now, leave solution as None
-      new TestExample("fib0", new LiteralStringPair("ACTG", "CGATC"), new LiteralInt(2), new LiteralString("AC")) // for now, leave solution as None
+      //new TestExample("test1", new Literal2DArrayIntPair(Array(Array(4,1),Array(5,2),Array(1,3)),4 ), new LiteralInt(3), new LiteralString("Testing")) // for now, leave solution as None
+      new TestExample("test1", new Literal2DArrayIntPair(Array(4,5,1),Array(1,2,3), 4), new LiteralInt(3), new LiteralString("Testing")) // for now, leave solution as None
+      //new TestExample("fib0", new LiteralStringPair("ACTG", "CGATC"), new LiteralInt(2), new LiteralString("AC")) // for now, leave solution as None
     )
 
     for {
       assert_statements <- forEach(tests) { example =>
 
         val input_value = example.inputType match {
-          case lt: LiteralStringPair => (lt.string1, lt.string2)
+//          case lt: LiteralStringPair => (lt.string1, lt.string2)
+          case pair: Literal2DArrayIntPair => (pair.ar1, pair.ar2, pair.value)
           case _ => ??? // error in all other circumstances
         }
 
@@ -58,10 +60,11 @@ trait KnapsackProvider extends DPObjectOrientedProvider {
 
         for {
           fibType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle(implementation))
-          s1_value <- paradigm.methodBodyCapabilities.reify(TypeRep.String, input_value._1)
-          s2_value <- paradigm.methodBodyCapabilities.reify(TypeRep.String, input_value._2)
+          ar1 <- create_int_array(input_value._1)
+          ar2 <- create_int_array(input_value._2)
+          ar3 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, input_value._3)
 
-          sol <- ooParadigm.methodBodyCapabilities.instantiateObject(fibType, Seq(s1_value, s2_value))
+          sol <- ooParadigm.methodBodyCapabilities.instantiateObject(fibType, Seq(ar1, ar2, ar3))
           computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, computeName)
 
           intType <- toTargetLanguageType(TypeRep.Int)

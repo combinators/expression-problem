@@ -81,6 +81,14 @@ case class MinRangeDefinition(
          advance: Expression
 ) extends Definition
 
+case class MaxRangeDefinition(
+                               variable: String,
+                               inclusiveStart: Expression,
+                               guardContinue:Expression,
+                               subproblemExpression: Expression,
+                               advance: Expression
+                             ) extends Definition
+
 // just lift Expression
 case class ExpressionDefinition(expr:Expression) extends Definition
 

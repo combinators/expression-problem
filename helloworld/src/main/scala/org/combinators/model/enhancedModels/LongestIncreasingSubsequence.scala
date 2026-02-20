@@ -25,10 +25,7 @@ class LongestIncreasingSubsequence {
     val subprobExpr = new SubproblemExpression(Seq(j))
     val checkExpr = new TernaryExpression(new ArrayElementExpression(arr, i) < new ArrayElementExpression(arr, j), subprobExpr + one, zero)
 
-    val innerLoop = new MinRangeDefinition("j",zero, j<i, checkExpr, j+one)
-
-    val oneCase = IfThenElseDefinition(i == one, ExpressionStatement(one),
-      ExpressionDefinition(new SubproblemExpression(Seq(i - one)) + new SubproblemExpression(Seq(i - two))))
+    val innerLoop = new MaxRangeDefinition("j",zero, j<i, checkExpr, j+one)
 
     val zeroCase = IfThenElseDefinition(i == zero, ExpressionStatement(one), innerLoop)
 

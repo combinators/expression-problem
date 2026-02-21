@@ -21,7 +21,7 @@ import java.nio.file.Path
 /**
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
-abstract class EnhancedDPMainJava {
+abstract class EnhancedDPMainJava extends EnhancedMainInterface {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = Unboxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("dp"))))
 
   val dpApproach = EnhancedDPObjectOrientedProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.realDoublesInMethod, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.stringsInMethod, generator.equalityInMethod, generator.ooParadigm, generator.parametricPolymorphism, generator.booleansInMethod)(generator.generics)

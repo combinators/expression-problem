@@ -64,9 +64,19 @@ case class ExpressionStatement(expr:Expression) extends DefinitionStatement
 case class IfThenElseDefinition(condition: Expression, result: DefinitionStatement, elseExpression: Definition) extends Definition
 case class IfThenNoElseDefinition(condition: Expression, result: Expression, elseIfs: Seq[(Expression, Expression)]) extends Definition
 
-// compute sum of a range of problems
+// Set P(...) = compute sum of a range of other P(...) based on one-dimensional range starting at inclusiveStart
 case class SumDefinition(
   variable: String,
+  inclusiveStart: Expression,
+  guardContinue:Expression,
+  subproblemExpression: Expression,
+  advance: Expression
+) extends Definition
+
+// Accumulate values of P(...) and return as Integer
+case class ReturnAccumulatedDefinition(
+  variable: String,
+  accumulationVariable: String,
   inclusiveStart: Expression,
   guardContinue:Expression,
   subproblemExpression: Expression,
@@ -92,6 +102,10 @@ case class MaxRangeDefinition(
 // just lift Expression
 case class ExpressionDefinition(expr:Expression) extends Definition
 
+// for Top-down, just return; for Bottom-Up, return assigned var
+case class ReturnExpressionDefinition(expr:Expression) extends Definition
+
+
 trait ProblemOrder
 case class Canonical() extends ProblemOrder
 case class UpperTriangle(params:Seq[String]) extends ProblemOrder
@@ -104,7 +118,7 @@ class EnhancedModel(val problem:String,
                     val solutionType:ArgumentType,          // Type of return value
                     val solution:SubproblemInvocation,
                     val definition:Definition,
-                    val answer:Expression = new LiteralInt(-33),                  // Where solution can be found. HACK until repeated
+                    val answer:Definition,                  // all existing Expression should just use ExpressionDefinition(expr)
                     val mode:ProblemOrder = Canonical()) {
 
   def find(variable:String) : HelperExpression = {

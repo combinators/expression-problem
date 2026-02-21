@@ -8,7 +8,7 @@ import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi._
 import org.combinators.ep.generator.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.ep.generator.{Command, NameProvider}
-import org.combinators.model.{Definition, DefinitionStatement, EnhancedModel, ExpressionDefinition, ExpressionStatement, IfThenElseDefinition, LiteralBoolean, LiteralInt, LiteralString, MaxRangeDefinition, MinRangeDefinition, SubproblemInvocation, SumDefinition}
+import org.combinators.model.{Definition, DefinitionStatement, EnhancedModel, ExpressionDefinition, ExpressionStatement, IfThenElseDefinition, LiteralBoolean, LiteralInt, LiteralString, MaxRangeDefinition, MinRangeDefinition, ReturnAccumulatedDefinition, ReturnExpressionDefinition, SubproblemInvocation, SumDefinition}
 
 /**
  * Concepts necessary to realize top-down solutions
@@ -44,15 +44,13 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
 
   lazy val computedResult = names.mangle("computed_result")
 
-  // is provided by the DP common provider -- neither a topDown or a bottomUp concept
-  def make_compute_method(model:EnhancedModel): Generator[paradigm.MethodBodyContext, Option[Expression]]
-
   def report_td(str:String) : Generator[paradigm.MethodBodyContext, Unit] = {
     println(str)
     for  {
       ne77 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, -77)
     } yield ()
   }
+
 
   /**
        private int memo(ARGUMENTS) {
@@ -257,6 +255,181 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
     } yield None
   }
 
+  def exploreReturns(defs:DefinitionStatement, symbolTable: Map[String,Expression], memoize:Boolean = false) : Generator[paradigm.MethodBodyContext, Seq[Statement]] = {
+    defs match {
+      case es:ExpressionStatement => for {
+        e <- explore(es.expr, memoize=memoize, symbolTable=symbolTable)
+        av <- impParadigm.imperativeCapabilities.returnStmt(e)
+      } yield Seq(av)
+
+      case _ => ???
+    }
+  }
+
+  def generate (defn:Definition, symbolTable: Map[String,Expression], memoize:Boolean = false) : Generator[paradigm.MethodBodyContext, Seq[Statement]] = {
+    import paradigm.methodBodyCapabilities._
+//    import ooParadigm.methodBodyCapabilities._
+//    import AnyParadigm.syntax._
+
+    defn match {
+      case ed:ExpressionDefinition => for {
+        expr <- explore(ed.expr, symbolTable = symbolTable, memoize=memoize)
+        retval <- impParadigm.imperativeCapabilities.returnStmt(expr)
+      } yield Seq(retval)
+
+      // same as ExpressionDefinition -- difference only materializes in TopDown
+      case ed:ReturnExpressionDefinition => for {
+        expr <- explore(ed.expr, symbolTable = symbolTable, memoize=memoize)
+        retval <- impParadigm.imperativeCapabilities.returnStmt(expr)
+      } yield Seq(retval)
+
+      case ite:IfThenElseDefinition => for {
+        inner <- explore(ite.condition, memoize = false, symbolTable = symbolTable)
+        ifstmt <- impParadigm.imperativeCapabilities.ifThenElse(
+          // condition of first if
+          inner
+          ,
+          // statements for that first if
+          for {
+            stmts <- exploreReturns(ite.result, symbolTable = symbolTable, memoize=memoize)
+            _ <- addBlockDefinitions(stmts)
+          } yield ()
+          ,
+          // collection of (condition, block) for all remaining cases
+          Seq.empty
+          ,
+          // terminating 'else' takes the elseCase and adds it last
+          Some(for {
+            stmts <- generate(ite.elseExpression, symbolTable=symbolTable, memoize=memoize)
+            _ <- addBlockDefinitions(stmts)
+          } yield ())
+        )
+      } yield Seq(ifstmt)
+
+      case ds:MinRangeDefinition => for {
+        maxValue <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, scala.Int.MaxValue)
+        intType <- toTargetLanguageType(TypeRep.Int)   // perhaps acceptable to consider 'min' will be an integer
+        minVarName = names.mangle("min")
+        minVar <- impParadigm.imperativeCapabilities.declareVar(minVarName, intType, Some(maxValue))
+        kStart <- explore(ds.inclusiveStart, symbolTable=symbolTable, memoize=memoize)
+        kVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(ds.variable), intType, Some(kStart))
+
+        resultVarName = names.mangle("result")
+        resultVar <- impParadigm.imperativeCapabilities.declareVar(resultVarName, intType, None)
+        addedSymbolTable = symbolTable + ("min" -> minVar) + (ds.variable -> kVar) + ("result" -> resultVar)
+
+        minCond <- arithmetic.arithmeticCapabilities.lt(resultVar, minVar)
+        guardCondition <- explore(ds.guardContinue, symbolTable=addedSymbolTable, memoize=memoize)
+        whilestmt <- impParadigm.imperativeCapabilities.whileLoop(guardCondition, for {
+
+          resultExpr <- explore(ds.subproblemExpression, symbolTable=addedSymbolTable, memoize=memoize)
+          assignResult <- impParadigm.imperativeCapabilities.assignVar(resultVar, resultExpr)
+
+          // record minimum
+          update <- impParadigm.imperativeCapabilities.ifThenElse(minCond, for {
+            updateResult <- impParadigm.imperativeCapabilities.assignVar(minVar, resultVar)
+            _ <- addBlockDefinitions(Seq(updateResult))
+            // here is where one could store decisions
+          } yield (), Seq.empty, None)
+
+          advExpr <- explore(ds.advance, symbolTable=addedSymbolTable, memoize=memoize)
+          kadv <- impParadigm.imperativeCapabilities.assignVar(kVar, advExpr)
+          _ <- addBlockDefinitions(Seq(assignResult, update, kadv))
+        } yield ())
+
+        returnResult <- impParadigm.imperativeCapabilities.returnStmt(minVar)
+      } yield Seq(whilestmt, returnResult)
+
+      case ds:MaxRangeDefinition => for {
+        minValue <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, scala.Int.MinValue)
+        intType <- toTargetLanguageType(TypeRep.Int)   // perhaps acceptable to consider 'min' will be an integer
+        maxVarName = names.mangle("max")
+        maxVar <- impParadigm.imperativeCapabilities.declareVar(maxVarName, intType, Some(minValue))
+        kStart <- explore(ds.inclusiveStart, symbolTable=symbolTable, memoize=memoize)
+        kVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(ds.variable), intType, Some(kStart))
+
+        resultVarName = names.mangle("result")
+        resultVar <- impParadigm.imperativeCapabilities.declareVar(resultVarName, intType, None)
+        addedSymbolTable = symbolTable + ("max" -> maxVar) + (ds.variable -> kVar) + ("result" -> resultVar)
+
+        maxCond <- arithmetic.arithmeticCapabilities.lt(maxVar, resultVar)
+        guardCondition <- explore(ds.guardContinue, symbolTable=addedSymbolTable, memoize=memoize)
+        whilestmt <- impParadigm.imperativeCapabilities.whileLoop(guardCondition, for {
+
+          resultExpr <- explore(ds.subproblemExpression, symbolTable=addedSymbolTable, memoize=memoize)
+          assignResult <- impParadigm.imperativeCapabilities.assignVar(resultVar, resultExpr)
+
+          // record minimum
+          update <- impParadigm.imperativeCapabilities.ifThenElse(maxCond, for {
+            updateResult <- impParadigm.imperativeCapabilities.assignVar(maxVar, resultVar)
+            _ <- addBlockDefinitions(Seq(updateResult))
+            // here is where one could store decisions
+          } yield (), Seq.empty, None)
+
+          advExpr <- explore(ds.advance, symbolTable=addedSymbolTable, memoize=memoize)
+          kadv <- impParadigm.imperativeCapabilities.assignVar(kVar, advExpr)
+          _ <- addBlockDefinitions(Seq(assignResult, update, kadv))
+        } yield ())
+
+        returnResult <- impParadigm.imperativeCapabilities.returnStmt(maxVar)
+      } yield Seq(whilestmt, returnResult)
+
+      // SAME implementation as SumDefinition: only difference will be in BottomUp
+      case sd:ReturnAccumulatedDefinition => for {
+        zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
+        intType <- toTargetLanguageType(TypeRep.Int)   // perhaps acceptable to consider 'min' will be an integer
+        sumVarName = names.mangle("sum")
+        sumVar <- impParadigm.imperativeCapabilities.declareVar(sumVarName, intType, Some(zero))
+
+        intType <- toTargetLanguageType(TypeRep.Int)   // perhaps acceptable to consider 'min' will be an integer
+        kStart <- explore(sd.inclusiveStart, symbolTable=symbolTable, memoize=memoize)
+        kVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(sd.variable), intType, Some(kStart))
+
+        guardCondition <- explore(sd.guardContinue, symbolTable=symbolTable ++ Map(sd.variable -> kVar), memoize=memoize)
+        whilestmt <- impParadigm.imperativeCapabilities.whileLoop(guardCondition, for {
+
+          resultExpr <- explore(sd.subproblemExpression, symbolTable=symbolTable ++ Map(sd.variable -> kVar), memoize=memoize)
+          additive <- arithmetic.arithmeticCapabilities.add(sumVar, resultExpr)
+          assignResult <- impParadigm.imperativeCapabilities.assignVar(sumVar, additive)
+
+          advExpr <- explore(sd.advance, symbolTable=symbolTable ++ Map(sd.variable -> kVar), memoize=memoize)
+          kadv <- impParadigm.imperativeCapabilities.assignVar(kVar, advExpr)
+          _ <- addBlockDefinitions(Seq(assignResult, kadv))
+        } yield ())
+
+        returnResult <- impParadigm.imperativeCapabilities.returnStmt(sumVar)
+      } yield Seq(whilestmt, returnResult)
+
+
+      case sd:SumDefinition => for {
+        zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
+        intType <- toTargetLanguageType(TypeRep.Int)   // perhaps acceptable to consider 'min' will be an integer
+        sumVarName = names.mangle("sum")
+        sumVar <- impParadigm.imperativeCapabilities.declareVar(sumVarName, intType, Some(zero))
+
+        intType <- toTargetLanguageType(TypeRep.Int)   // perhaps acceptable to consider 'min' will be an integer
+        kStart <- explore(sd.inclusiveStart, symbolTable=symbolTable, memoize=memoize)
+        kVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(sd.variable), intType, Some(kStart))
+
+        guardCondition <- explore(sd.guardContinue, symbolTable=symbolTable ++ Map(sd.variable -> kVar), memoize=memoize)
+        whilestmt <- impParadigm.imperativeCapabilities.whileLoop(guardCondition, for {
+
+          resultExpr <- explore(sd.subproblemExpression, symbolTable=symbolTable ++ Map(sd.variable -> kVar), memoize=memoize)
+          additive <- arithmetic.arithmeticCapabilities.add(sumVar, resultExpr)
+          assignResult <- impParadigm.imperativeCapabilities.assignVar(sumVar, additive)
+
+          advExpr <- explore(sd.advance, symbolTable=symbolTable ++ Map(sd.variable -> kVar), memoize=memoize)
+          kadv <- impParadigm.imperativeCapabilities.assignVar(kVar, advExpr)
+          _ <- addBlockDefinitions(Seq(assignResult, kadv))
+        } yield ())
+
+        returnResult <- impParadigm.imperativeCapabilities.returnStmt(sumVar)
+      } yield Seq(whilestmt, returnResult)
+
+      case _ => ???
+    }
+  }
+
   /**
    * The workhorse for a top-down helper method that relies on recursion and base cases to do the work.
    * The model has a sequence of `cases` that may contain logical guard and an expression that is to be the reulst
@@ -273,147 +446,6 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
     import AnyParadigm.syntax._
     import paradigm.methodBodyCapabilities._
 
-    def exploreReturns(defs:DefinitionStatement, symbolTable: Map[String,Expression], memoize:Boolean = false) : Generator[paradigm.MethodBodyContext, Seq[Statement]] = {
-      defs match {
-        case es:ExpressionStatement => for {
-          e <- explore(es.expr, memoize = useMemo, symbolTable = symbolTable)
-          av <- impParadigm.imperativeCapabilities.returnStmt(e)
-        } yield Seq(av)
-
-        case _ => ???
-      }
-    }
-
-    def generate (defn:Definition, symbolTable: Map[String,Expression], memoize:Boolean = false) : Generator[paradigm.MethodBodyContext, Seq[Statement]] = {
-      import paradigm.methodBodyCapabilities._
-      import ooParadigm.methodBodyCapabilities._
-      import AnyParadigm.syntax._
-
-      defn match {
-        case ed:ExpressionDefinition => for {
-          expr <- explore(ed.expr, symbolTable = symbolTable, memoize=memoize)
-          retval <- impParadigm.imperativeCapabilities.returnStmt(expr)
-        } yield Seq(retval)
-
-        case ite:IfThenElseDefinition => for {
-          inner <- explore(ite.condition, memoize = false, symbolTable = symbolTable)
-          ifstmt <- impParadigm.imperativeCapabilities.ifThenElse(
-            // condition of first if
-            inner
-            ,
-            // statements for that first if
-            for {
-              stmts <- exploreReturns(ite.result, symbolTable = symbolTable, memoize=memoize)
-              _ <- addBlockDefinitions(stmts)
-            } yield ()
-            ,
-            // collection of (condition, block) for all remaining cases
-            Seq.empty
-            ,
-            // terminating 'else' takes the elseCase and adds it last
-            Some(for {
-              stmts <- generate(ite.elseExpression, symbolTable = symbolTable, memoize = useMemo)
-              _ <- addBlockDefinitions(stmts)
-            } yield ())
-          )
-        } yield Seq(ifstmt)
-
-        case ds:MinRangeDefinition => for {
-          maxValue <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, scala.Int.MaxValue)
-          intType <- toTargetLanguageType(TypeRep.Int)   // perhaps acceptable to consider 'min' will be an integer
-          minVarName = names.mangle("min")
-          minVar <- impParadigm.imperativeCapabilities.declareVar(minVarName, intType, Some(maxValue))
-          kStart <- explore(ds.inclusiveStart, symbolTable = symbolTable, memoize = memoize)
-          kVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(ds.variable), intType, Some(kStart))
-
-          resultVarName = names.mangle("result")
-          resultVar <- impParadigm.imperativeCapabilities.declareVar(resultVarName, intType, None)
-          addedSymbolTable = symbolTable + ("min" -> minVar) + (ds.variable -> kVar) + ("result" -> resultVar)
-
-          minCond <- arithmetic.arithmeticCapabilities.lt(resultVar, minVar)
-          guardCondition <- explore(ds.guardContinue, symbolTable = addedSymbolTable, memoize = memoize)
-          whilestmt <- impParadigm.imperativeCapabilities.whileLoop(guardCondition, for {
-
-            resultExpr <- explore(ds.subproblemExpression, symbolTable = addedSymbolTable, memoize = memoize)
-            assignResult <- impParadigm.imperativeCapabilities.assignVar(resultVar, resultExpr)
-
-            // record minimum
-            update <- impParadigm.imperativeCapabilities.ifThenElse(minCond, for {
-              updateResult <- impParadigm.imperativeCapabilities.assignVar(minVar, resultVar)
-              _ <- addBlockDefinitions(Seq(updateResult))
-              // here is where one could store decisions
-            } yield (), Seq.empty, None)
-
-            advExpr <- explore(ds.advance, symbolTable = addedSymbolTable, memoize = memoize)
-            kadv <- impParadigm.imperativeCapabilities.assignVar(kVar, advExpr)
-            _ <- addBlockDefinitions(Seq(assignResult, update, kadv))
-          } yield ())
-
-          returnResult <- impParadigm.imperativeCapabilities.returnStmt(minVar)
-        } yield Seq(whilestmt, returnResult)
-
-        case ds:MaxRangeDefinition => for {
-          minValue <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, scala.Int.MinValue)
-          intType <- toTargetLanguageType(TypeRep.Int)   // perhaps acceptable to consider 'min' will be an integer
-          maxVarName = names.mangle("max")
-          maxVar <- impParadigm.imperativeCapabilities.declareVar(maxVarName, intType, Some(minValue))
-          kStart <- explore(ds.inclusiveStart, symbolTable = symbolTable, memoize = memoize)
-          kVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(ds.variable), intType, Some(kStart))
-
-          resultVarName = names.mangle("result")
-          resultVar <- impParadigm.imperativeCapabilities.declareVar(resultVarName, intType, None)
-          addedSymbolTable = symbolTable + ("max" -> maxVar) + (ds.variable -> kVar) + ("result" -> resultVar)
-
-          maxCond <- arithmetic.arithmeticCapabilities.lt(maxVar, resultVar)
-          guardCondition <- explore(ds.guardContinue, symbolTable = addedSymbolTable, memoize = memoize)
-          whilestmt <- impParadigm.imperativeCapabilities.whileLoop(guardCondition, for {
-
-            resultExpr <- explore(ds.subproblemExpression, symbolTable = addedSymbolTable, memoize = memoize)
-            assignResult <- impParadigm.imperativeCapabilities.assignVar(resultVar, resultExpr)
-
-            // record minimum
-            update <- impParadigm.imperativeCapabilities.ifThenElse(maxCond, for {
-              updateResult <- impParadigm.imperativeCapabilities.assignVar(maxVar, resultVar)
-              _ <- addBlockDefinitions(Seq(updateResult))
-              // here is where one could store decisions
-            } yield (), Seq.empty, None)
-
-            advExpr <- explore(ds.advance, symbolTable = addedSymbolTable, memoize = memoize)
-            kadv <- impParadigm.imperativeCapabilities.assignVar(kVar, advExpr)
-            _ <- addBlockDefinitions(Seq(assignResult, update, kadv))
-          } yield ())
-
-          returnResult <- impParadigm.imperativeCapabilities.returnStmt(maxVar)
-        } yield Seq(whilestmt, returnResult)
-
-        case sd:SumDefinition => for {
-          zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
-          intType <- toTargetLanguageType(TypeRep.Int)   // perhaps acceptable to consider 'min' will be an integer
-          sumVarName = names.mangle("sum")
-          sumVar <- impParadigm.imperativeCapabilities.declareVar(sumVarName, intType, Some(zero))
-
-          intType <- toTargetLanguageType(TypeRep.Int)   // perhaps acceptable to consider 'min' will be an integer
-          kStart <- explore(sd.inclusiveStart, symbolTable = symbolTable, memoize = memoize)
-          kVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(sd.variable), intType, Some(kStart))
-
-          guardCondition <- explore(sd.guardContinue, symbolTable = symbolTable ++ Map("k" -> kVar), memoize = memoize)
-          whilestmt <- impParadigm.imperativeCapabilities.whileLoop(guardCondition, for {
-
-            resultExpr <- explore(sd.subproblemExpression, symbolTable = symbolTable ++ Map("k" -> kVar), memoize = memoize)
-            additive <- arithmetic.arithmeticCapabilities.add(sumVar, resultExpr)
-            assignResult <- impParadigm.imperativeCapabilities.assignVar(sumVar, additive)
-
-            advExpr <- explore(sd.advance, symbolTable = symbolTable ++ Map("k" -> kVar), memoize = memoize)
-            kadv <- impParadigm.imperativeCapabilities.assignVar(kVar, advExpr)
-            _ <- addBlockDefinitions(Seq(assignResult, kadv))
-          } yield ())
-
-          returnResult <- impParadigm.imperativeCapabilities.returnStmt(sumVar)
-        } yield Seq(whilestmt, returnResult)
-
-        case _ => ???
-      }
-    }
 
     // could possibly have a definition that has NONE as the guard. None for now.
 
@@ -466,6 +498,31 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
       }
 
     } yield (helperargs.toMap ++ mapperargs.toMap)
+  }
+
+  /**
+   * Method creates a compute() method with no arguments that invokes helper method:
+   *
+   *   public Integer compute() {
+   *     return this.helper(this.n);
+   *   }
+   *
+   *   RETURN is taken right from the 'answer' field of the problem definition.
+   *
+   *  REALLY only for TOP DOWN and perhaps could be moved...
+   */
+  def make_compute_method(model:EnhancedModel): Generator[MethodBodyContext, Option[Expression]] = {
+    import paradigm.methodBodyCapabilities._
+
+    for {
+      returnType <- return_type_based_on_model(model)
+      _ <- setReturnType(returnType)
+
+      //expr <- explore(model.answer, memoize = false, symbolTable = Map.empty)  // At this point, there should be no symbols
+      av <- generate(model.answer, symbolTable=Map.empty)
+      _ <- addBlockDefinitions(av)
+
+    } yield None
   }
 
   def outer_helper(useMemo: Boolean, model:EnhancedModel): Generator[paradigm.MethodBodyContext, Option[Expression]] = {

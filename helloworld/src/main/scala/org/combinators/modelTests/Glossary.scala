@@ -9,7 +9,7 @@ package org.combinators.modelTests
 import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
 import org.combinators.archive.bottomUp.twoSequences.longestCommonSubsequence.LCSMainJava
-import org.combinators.dp.enhanced.EnhancedDPMainJava
+import org.combinators.dp.enhanced.{EnhancedDPMainJava, EnhancedMainInterface}
 import org.combinators.dp.{BottomUp, GenerationOption, TopDown}
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.model.models.twoSequences.{LongestCommonSubsequenceModel, NeedlemanWunschSequenceAlignmentModel, UncrossedLinesModel}
@@ -17,7 +17,7 @@ import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.model.EnhancedModel
 import org.combinators.modelTests.integer.fibonacci.{FibonacciEnhancedMainJava, FibonacciEnhancedMainToDiskMain}
 import org.combinators.modelTests.integer.perfectsquare.{PerfectSquareMainDirectToDiskMain, PerfectSquareMainJava}
-import org.combinators.modelTests.integer.{DiceThrowDirectToDiskMain, DiceThrowMainJava}
+import org.combinators.modelTests.integer.{BellNumberDirectToDiskMain, BellNumberMainJava, DiceThrowDirectToDiskMain, DiceThrowMainJava}
 import org.combinators.modelTests.oneSequence.{MatrixChainMultiplicationMainBottomUpDirectToDiskMain, MatrixChainMultiplicationMainBottomUpJava, MatrixChainMultiplicationMainTopDownDirectToDiskMain, MatrixChainMultiplicationMainTopDownJava, MinCostClimbingStairMain, MinCostClimbingStairToDiskMain}
 import org.combinators.modelTests.strings.{InterleaveStringsMainJava, InterleaveStringsToDiskMain, ThreeStringsLCSMainJava, ThreeStringsLCSToDiskMain}
 import org.combinators.modelTests.twoSequences.{LongestCommonSubsequenceMainJava, LongestCommonSubsequenceToDiskMain, NeedlemanWunschSequenceAlignmentMainJava, NeedlemanWunschSequenceAlignmentToDiskMain, UncrossedLinesDirectDiskToMain, UncrossedLinesMainJava}
@@ -60,7 +60,8 @@ object GlossaryToDiskMain extends IOApp {
   val bottomUp        = BottomUp()
 
   // declare the working versions for each problem in the enhanced list
-  val known_enhanced_solutions:Seq[(EnhancedDPMainJava, EnhancedModel, Seq[GenerationOption])] = Seq(
+  val known_enhanced_solutions:Seq[(EnhancedMainInterface, EnhancedModel, Seq[GenerationOption])] = Seq(
+    (new BellNumberMainJava(), BellNumberDirectToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
     (new DiceThrowMainJava(), DiceThrowDirectToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
     (new FibonacciEnhancedMainJava(), FibonacciEnhancedMainToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
     (new InterleaveStringsMainJava(), InterleaveStringsToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
@@ -68,7 +69,8 @@ object GlossaryToDiskMain extends IOApp {
     (new MinCostClimbingStairMain(), MinCostClimbingStairToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
     (new PerfectSquareMainJava(), PerfectSquareMainDirectToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
     (new ThreeStringsLCSMainJava(), ThreeStringsLCSToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
-    (new UncrossedLinesMainJava(), UncrossedLinesDirectDiskToMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
+    // (new UncrossedLinesMainJava(), UncrossedLinesDirectDiskToMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
+    // NOT YET WORKING ^^^^^^^^^
     (new NeedlemanWunschSequenceAlignmentMainJava(), NeedlemanWunschSequenceAlignmentToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
 
     // generates but has flawed logic because of the transformation of (r,c) into (i,j)

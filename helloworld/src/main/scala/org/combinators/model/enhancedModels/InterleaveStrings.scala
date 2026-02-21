@@ -69,7 +69,7 @@ class InterleaveStrings {
       solutionType = StringType(),       // solution is a string, showing where characters come from S1 with parens
       sol,
       ils_definition,
-      answer = new SubproblemExpression(Seq(new StringLengthExpression(s1), new StringLengthExpression(s2)))
+      answer = ReturnExpressionDefinition(new SubproblemExpression(Seq(new StringLengthExpression(s1), new StringLengthExpression(s2))))
     )
 
     ILS

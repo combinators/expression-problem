@@ -29,7 +29,7 @@ class Fibonacci {
       solutionType = StringType(),  // how a solution is represented (not yet effective)
       sol,
       zeroCase,
-      answer = new SubproblemExpression(Seq(n)))
+      answer = ReturnExpressionDefinition(new SubproblemExpression(Seq(n))))
 
     Fib
   }

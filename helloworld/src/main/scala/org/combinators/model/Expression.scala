@@ -96,7 +96,7 @@ class LiteralBoolean(val literal:Boolean) extends LiteralExpression
 // Now includes the name of the int variable to iterate over
 class ArgExpression(val whichArg: Int, val name:String, val argType:ArgumentType, val itArgName:String) extends Expression
 
-// companion objects: needed for pattern matching
+// companion objects: needed for pattern matching? Might no longer be needed...
 object AdditionExpression {
   def apply(left:Expression, right:Expression) = new AdditionExpression(left, right)
 }

@@ -29,7 +29,7 @@ class PerfectSquare {
       solutionType   = StringType(), // solution is a string
       sol_ps,
       ps_definition,
-      answer = new SubproblemExpression(Seq(n))
+      answer = ReturnExpressionDefinition(new SubproblemExpression(Seq(n)))
     )
 
     PerfectSquare

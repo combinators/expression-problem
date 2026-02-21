@@ -50,12 +50,12 @@ class NeedlemanWunschSequenceAlignment {
 
     val NWSA: EnhancedModel = new EnhancedModel(
       "NeedlemanWunschSequenceAlignment",
-      List(s1, s2),
+      List(s1, s2, matchBonus, mismatchPenalty, gapPenalty),
       subproblemType = IntegerType(),
       solutionType = StringType(),
       soln,
       definition,
-      answer = new SubproblemExpression(Seq(new StringLengthExpression(s1), new StringLengthExpression(s2)))
+      answer = ReturnExpressionDefinition(new SubproblemExpression(Seq(new StringLengthExpression(s1), new StringLengthExpression(s2))))
     )
 
     NWSA

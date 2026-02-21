@@ -50,7 +50,7 @@ class MinEditDistance {
           solutionType = StringType(),
           soln,
           definition,
-          answer = new SubproblemExpression(Seq(new StringLengthExpression(s1), new StringLengthExpression(s2)))
+          answer = ReturnExpressionDefinition(new SubproblemExpression(Seq(new StringLengthExpression(s1), new StringLengthExpression(s2))))
         )
 
         MED

@@ -8,7 +8,7 @@ import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi._
 import org.combinators.ep.generator.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.ep.generator.{Command, NameProvider}
-import org.combinators.model.{BooleanType, CharType, Definition, DefinitionStatement, EnhancedModel, ExpressionDefinition, ExpressionStatement, IfThenElseDefinition, IntegerType, MinRangeDefinition,MaxRangeDefinition, Model, SumDefinition, UpperTriangle}
+import org.combinators.model.{BooleanType, CharType, Definition, DefinitionStatement, EnhancedModel, ExpressionDefinition, ExpressionStatement, IfThenElseDefinition, IntegerType, MaxRangeDefinition, MinRangeDefinition, ReturnAccumulatedDefinition, ReturnExpressionDefinition, SumDefinition, UpperTriangle}
 
 /**
  * Concepts necessary to realize top-down solutions
@@ -162,9 +162,11 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
       // return last element dp[n] because dp is 1 larger in size than n
       dpexp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
 
-      expr <- explore(model.answer, memoize = false, bottomUp = Some(dpexp), symbolTable = level3_map)  // At this point, there should be no symbols
+      //expr <- explore(model.answer, memoize = false, bottomUp = Some(dpexp), symbolTable = level3_map)  // At this point, there should be no symbols
+      av <- generate(dp, dp_0_1_2, model.answer, symbolTable = level3_map)
+      _ <- addBlockDefinitions(av)
 
-    } yield Some(expr)
+    } yield None
   }
 
 //  def make_bottom_up_compute_method_arbitrary_nesting (model:EnhancedModel): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
@@ -357,9 +359,11 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
       // return last element dp[n] because dp is 1 larger in size than n
       dpexp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
 
-      expr <- explore(model.answer, memoize = false, bottomUp = Some(dpexp), symbolTable = level2_map)  // At this point, there should be no symbols
+      // expr <- explore(model.answer, memoize = false, bottomUp = Some(dpexp), symbolTable = level2_map)  // At this point, there should be no symbols
+      av <- generate(dp, dp_o_i, model.answer, symbolTable=level2_map)
+      _ <- addBlockDefinitions(av)
 
-    } yield Some(expr)
+    } yield None
   }
 
   def exploreExpr(dp:Expression, defs:DefinitionStatement, symbolTable: Map[String,Expression]) : Generator[paradigm.MethodBodyContext, Expression] = {
@@ -381,6 +385,11 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
       case ed:ExpressionDefinition => for {
         expr <- explore(ed.expr, symbolTable = symbolTable, bottomUp=Some(dp))
         assigned <- impParadigm.imperativeCapabilities.assignVar(dpij, expr)
+      } yield Seq(assigned)
+
+      case ed:ReturnExpressionDefinition => for {
+        expr <- explore(ed.expr, symbolTable = symbolTable, bottomUp=Some(dp))
+        assigned <- impParadigm.imperativeCapabilities.returnStmt(expr)
       } yield Seq(assigned)
 
       case ite:IfThenElseDefinition => for {
@@ -477,7 +486,6 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
         assigned <- impParadigm.imperativeCapabilities.assignVar(dpij, maxVar)
       } yield Seq(whilestmt, assigned)
 
-
       case sd:SumDefinition => for {
         zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
         intType <- toTargetLanguageType(TypeRep.Int)   // perhaps acceptable to consider 'min' will be an integer
@@ -486,20 +494,45 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
         kStart <- explore(sd.inclusiveStart, symbolTable=symbolTable, bottomUp=Some(dp))
         kVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(sd.variable), intType, Some(kStart))
 
-        guardCondition <- explore(sd.guardContinue, symbolTable=symbolTable ++ Map("k" -> kVar), bottomUp=Some(dp))
+        guardCondition <- explore(sd.guardContinue, symbolTable=symbolTable ++ Map(sd.variable -> kVar), bottomUp=Some(dp))
         whilestmt <- impParadigm.imperativeCapabilities.whileLoop(guardCondition, for {
 
-          resultExpr <- explore(sd.subproblemExpression, symbolTable=symbolTable ++ Map("k" -> kVar), bottomUp=Some(dp))
+          resultExpr <- explore(sd.subproblemExpression, symbolTable=symbolTable ++ Map(sd.variable -> kVar), bottomUp=Some(dp))
           additive <- arithmetic.arithmeticCapabilities.add(dpij, resultExpr)
           assignResult <- impParadigm.imperativeCapabilities.assignVar(dpij, additive)
 
-          advExpr <- explore(sd.advance, symbolTable=symbolTable ++ Map("k" -> kVar), bottomUp=Some(dp))
+          advExpr <- explore(sd.advance, symbolTable=symbolTable ++ Map(sd.variable -> kVar), bottomUp=Some(dp))
           kadv <- impParadigm.imperativeCapabilities.assignVar(kVar, advExpr)
           _ <- addBlockDefinitions(Seq(assignResult, kadv))
 
         } yield ())
 
       } yield Seq(whilestmt)
+
+      case sd:ReturnAccumulatedDefinition => for {
+        zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
+        intType <- toTargetLanguageType(TypeRep.Int)   // perhaps acceptable to consider 'min' will be an integer
+
+        intType <- toTargetLanguageType(TypeRep.Int)   // perhaps acceptable to consider 'min' will be an integer
+        kStart <- explore(sd.inclusiveStart, symbolTable=symbolTable, bottomUp=Some(dp))
+        kVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(sd.variable), intType, Some(kStart))
+        accVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(sd.accumulationVariable), intType, Some(kStart))
+
+        guardCondition <- explore(sd.guardContinue, symbolTable=symbolTable ++ Map(sd.variable -> kVar, sd.accumulationVariable -> accVar), bottomUp=Some(dp))
+        whilestmt <- impParadigm.imperativeCapabilities.whileLoop(guardCondition, for {
+
+          resultExpr <- explore(sd.subproblemExpression, symbolTable=symbolTable ++ Map(sd.variable -> kVar, sd.accumulationVariable -> accVar), bottomUp=Some(dp))
+          additive <- arithmetic.arithmeticCapabilities.add(accVar, resultExpr)
+          assignResult <- impParadigm.imperativeCapabilities.assignVar(accVar, additive)
+
+          advExpr <- explore(sd.advance, symbolTable=symbolTable ++ Map(sd.variable -> kVar, sd.accumulationVariable -> accVar), bottomUp=Some(dp))
+          kadv <- impParadigm.imperativeCapabilities.assignVar(kVar, advExpr)
+          _ <- addBlockDefinitions(Seq(assignResult, kadv))
+
+        } yield ())
+
+        retStmt <- impParadigm.imperativeCapabilities.returnStmt(accVar)
+      } yield Seq(whilestmt, retStmt)
 
       case _ => ???
     }
@@ -525,7 +558,6 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
       dp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
 
       // level 0 is the outermost variable while level 2 is the innermost
-      _ <- report(model.solution.helpers.toString())
       level0_low <- explore(model.find(order(0)).low, bottomUp = Some(dp), symbolTable = Map.empty, memoize = false)
       level0_high <- explore(model.find(order(0)).high, bottomUp = Some(dp), symbolTable = Map.empty, memoize = false)
       level0_var <- impParadigm.imperativeCapabilities.declareVar(names.mangle(order(0)), intType, Some(level0_low))
@@ -555,10 +587,13 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
       _ <- addBlockDefinitions(Seq(whileLoop))
 
       // return last element dp[n] because dp is 1 larger in size than n
-      dpexp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
-      expr <- explore(model.answer, memoize = false, bottomUp = Some(dpexp), symbolTable = oi_map)  // At this point, there should be no symbols
+      //dpexp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
+      //expr <- explore(model.answer, memoize = false, bottomUp = Some(dpexp), symbolTable = oi_map)  // At this point, there should be no symbols
 
-    } yield Some(expr)
+      av <- generate(dp, dp_0, model.answer, symbolTable=oi_map)
+      _ <- addBlockDefinitions(av)
+
+    } yield None
   }
 
   /**

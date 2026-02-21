@@ -44,7 +44,7 @@ class DiceThrow {
       solutionType   = StringType(),     // solution is a string
       sol_dt,
       dt_definition,
-      answer = new SubproblemExpression(Seq(n, x))
+      answer = ReturnExpressionDefinition(new SubproblemExpression(Seq(n, x)))
     )
 
     DiceThrow

@@ -10,8 +10,8 @@ class UncrossedLines {
     val nums1 = new ArgExpression(0, "nums1", IntegerArrayType(), "r")
     val nums2 = new ArgExpression(1, "nums2", IntegerArrayType(), "c")
 
-    val r: HelperExpression = HelperExpression("r", zero, SelfExpression("r") <= new StringLengthExpression(nums1), new StringLengthExpression(nums1) + one)
-    val c: HelperExpression = HelperExpression("c", zero, SelfExpression("c") <= new StringLengthExpression(nums2), new StringLengthExpression(nums2) + one)
+    val r: HelperExpression = HelperExpression("r", zero, SelfExpression("r") <= new ArrayLengthExpression(nums1), new ArrayLengthExpression(nums1) + one)
+    val c: HelperExpression = HelperExpression("c", zero, SelfExpression("c") <= new ArrayLengthExpression(nums2), new ArrayLengthExpression(nums2) + one)
 
     val helpers = Map("r" -> r, "c" -> c)
     val soln = SubproblemInvocation(order = Seq("r", "c"), helpers = helpers, returnType = IntegerType())
@@ -40,7 +40,7 @@ class UncrossedLines {
       solutionType = IntegerType(),
       soln,
       definition,
-      answer = new SubproblemExpression(Seq(new ArrayLengthExpression(nums1), new ArrayLengthExpression(nums2)))
+      answer = ReturnExpressionDefinition(new SubproblemExpression(Seq(new ArrayLengthExpression(nums1), new ArrayLengthExpression(nums2))))
     )
 
     UL

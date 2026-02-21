@@ -43,11 +43,11 @@ class MinCostClimbingStair {
       mccs_definition,
 
       // how to determine answer
-      answer = new TernaryExpression(new ArrayLengthExpression(costs) == one,
+      answer = ReturnExpressionDefinition(new TernaryExpression(new ArrayLengthExpression(costs) == one,
         new ArrayElementExpression(costs, zero),
         new MinExpression(
           new SubproblemExpression(Seq(new ArrayLengthExpression(costs) - one)),
-          new SubproblemExpression(Seq(new ArrayLengthExpression(costs) - two))))
+          new SubproblemExpression(Seq(new ArrayLengthExpression(costs) - two)))))
     )
 
     MCCS

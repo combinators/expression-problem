@@ -35,7 +35,7 @@ class LongestIncreasingSubsequence {
       solutionType = StringType(),  // how a solution is represented (not yet effective)
       sol,
       zeroCase,
-      answer = new SubproblemExpression(Seq(new ArrayLengthExpression(arr))))
+      answer = ReturnExpressionDefinition(new SubproblemExpression(Seq(new ArrayLengthExpression(arr)))))
 
     Fib
   }

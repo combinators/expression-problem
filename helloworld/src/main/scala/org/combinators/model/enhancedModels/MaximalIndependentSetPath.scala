@@ -51,7 +51,7 @@ class MaximalIndependentSetPath {
       solutionType = StringType(),
       soln,
       definition,
-      answer = new SubproblemExpression(Seq(new ArrayLengthExpression(path)))
+      answer = ReturnExpressionDefinition(new SubproblemExpression(Seq(new ArrayLengthExpression(path))))
     )
 
     MIPS

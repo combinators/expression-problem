@@ -42,10 +42,8 @@ class MaximalIndependentSetPath {
 
     )
 
-
-
     val MIPS: EnhancedModel = new EnhancedModel(
-      "MaimalIndependentSetPath",
+      "MaximalIndependentSetPath",
       List(path),
       subproblemType = IntegerType(),
       solutionType = StringType(),

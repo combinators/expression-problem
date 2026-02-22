@@ -26,7 +26,11 @@ import java.nio.file.{Path, Paths}
 class MaximalIndependentSetPathMainJava extends EnhancedDPMainJava  {
 
   val tests = Seq(
-    //new TestExample("dt1", new LiteralTriple(6, 3, 12), new LiteralInt(25), new UnitExpression) //  https://www.geeksforgeeks.org/dsa/dice-throw-dp-30/
+    // https://canvas.wpi.edu/courses/79353
+    new TestExample("sp1", new LiteralArray(Array(12,11,13,15)), new LiteralInt(27), new UnitExpression),
+    new TestExample("sp2", new LiteralArray(Array(2,1000,3,1)), new LiteralInt(1001), new UnitExpression),
+
+
   )
 }
 
@@ -50,7 +54,7 @@ object MaximalIndependentSetPathDirectToDiskMain extends IOApp {
         case _ => ???
       }
     } else {
-      bottomUp
+      topDown
     }
 
     for {

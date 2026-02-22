@@ -27,6 +27,8 @@ class LongestIncreasingSubsequenceMainJava extends EnhancedDPMainJava  {
 
   val tests = Seq(
     //new TestExample("dt1", new LiteralTriple(6, 3, 12), new LiteralInt(25), new UnitExpression) //  https://www.geeksforgeeks.org/dsa/dice-throw-dp-30/
+    new TestExample("lis1", new LiteralArray(Array(0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15)), new LiteralInt(6), new UnitExpression),
+  new TestExample("lis2", new LiteralArray(Array(3, 10, 2, 1, 20)), new LiteralInt(3), new UnitExpression)
   )
 }
 
@@ -50,7 +52,7 @@ object LongestIncreasingSubsequenceDirectToDiskMain extends IOApp {
         case _ => ???
       }
     } else {
-      topDown
+      topDownWithMemo
     }
 
     for {

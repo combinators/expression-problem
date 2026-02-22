@@ -54,7 +54,7 @@ object MaximalIndependentSetPathDirectToDiskMain extends IOApp {
         case _ => ???
       }
     } else {
-      topDown
+      bottomUp
     }
 
     for {

@@ -25,21 +25,27 @@ class MaximalIndependentSetPath {
 //        )
 //      )
 //    )
-    val condition = new LessThanOrEqualExpression(i, zero)
+    val condition1 = new LessThanOrEqualExpression(i, zero)
+    val condition2 = new LessThanOrEqualExpression(i,one)
 
     val subproblem1 = new SubproblemExpression(Seq(i-two))
     val subproblem2 = new SubproblemExpression(Seq(i-one))
 
-    val definition = IfThenElseDefinition(
-      condition,
-      ExpressionStatement(zero),
+    val subDefinition= IfThenElseDefinition(
+      condition2,
+      ExpressionStatement(new ArrayElementExpression(path, i-one)),
       ExpressionDefinition(
         new MaxExpression(
           subproblem1+ new ArrayElementExpression(path, i-one),
           subproblem2
         )
       )
+    )
 
+    val definition = IfThenElseDefinition(
+      condition1,
+      ExpressionStatement(zero),
+      subDefinition
     )
 
     val MIPS: EnhancedModel = new EnhancedModel(

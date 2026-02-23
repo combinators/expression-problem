@@ -1,6 +1,6 @@
 package org.combinators.dp
 
-import org.combinators.model.{AdditionExpression, AndExpression, ArgExpression, ArgumentType, ArrayElementExpression, ArrayLengthExpression, CharAtExpression, EqualExpression, HelperExpression, InputExpression, IteratorExpression, LessThanExpression, LessThanOrEqualExpression, LiteralBoolean, LiteralInt, MaxExpression, MinExpression, Model, MultiplicationExpression, OrExpression, SelfExpression, StringLengthExpression, SubStringExpression, SubproblemExpression, SubtractionExpression, TernaryExpression}
+import org.combinators.model.{AdditionExpression, AndExpression, ArgExpression, ArgumentType, ArrayElementExpression, ArrayLengthExpression, CharAtExpression, EqualExpression, HelperExpression, InputExpression, IteratorExpression, LessThanExpression, LessThanOrEqualExpression, LiteralBoolean, LiteralChar, LiteralInt, MaxExpression, MinExpression, Model, MultiplicationExpression, OrExpression, SelfExpression, StringLengthExpression, SubStringExpression, SubproblemExpression, SubtractionExpression, TernaryExpression}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.NameProvider

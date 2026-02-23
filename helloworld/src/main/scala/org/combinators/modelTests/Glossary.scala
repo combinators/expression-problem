@@ -9,10 +9,10 @@ package org.combinators.modelTests
 import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
 import org.combinators.archive.bottomUp.twoSequences.longestCommonSubsequence.LCSMainJava
-import org.combinators.dp.enhanced.{EnhancedDPMainJava, EnhancedMainInterface}
+import org.combinators.dp.enhanced.EnhancedMainInterface
 import org.combinators.dp.{BottomUp, GenerationOption, TopDown}
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
-import org.combinators.model.models.twoSequences.{LongestCommonSubsequenceModel, NeedlemanWunschSequenceAlignmentModel, UncrossedLinesModel}
+import org.combinators.model.models.twoSequences.{LongestCommonSubsequenceModel, UncrossedLinesModel}
 import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.model.EnhancedModel
 import org.combinators.modelTests.integer.fibonacci.{FibonacciEnhancedMainJava, FibonacciEnhancedMainToDiskMain}

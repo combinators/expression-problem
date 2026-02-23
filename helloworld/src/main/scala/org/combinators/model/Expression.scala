@@ -71,11 +71,11 @@ class Literal2DArrayIntPair(val ar1:Array[Int], val ar2:Array[Int], val value: I
 case class SelfExpression(val variableName:String) extends Expression
 
 class StringLengthExpression(val string: Expression) extends Expression
+class SubStringExpression(val string:Expression, val start:Expression, val exclusiveEnd:Expression) extends Expression
 class ArrayLengthExpression(val array: Expression) extends Expression
 
 //String
 class LiteralString(val literal: String) extends LiteralExpression
-class SubstringExpression(val string: Expression, val start: Expression, val end: Expression) extends Expression
 
 //Character
 class LiteralChar(val literal:Char) extends LiteralExpression

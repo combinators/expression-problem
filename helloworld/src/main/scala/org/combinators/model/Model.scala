@@ -15,6 +15,9 @@ case class StringType() extends ArgumentType
 case class IntegerArrayType() extends ArgumentType
 case class IntegerArray2DType() extends ArgumentType
 
+// an array of string values
+case class StringArrayType() extends ArgumentType
+
 class Argument (val argName:String, val argType:ArgumentType)
 
 class Model(val problem:String, val bounds: List[ArgExpression], val cases: List[(Option[Expression], Expression)], val retrieveLabel: String = "take sub-solution")
@@ -92,19 +95,18 @@ case class MinRangeDefinition(
 ) extends Definition
 
 case class MaxRangeDefinition(
-                               variable: String,
-                               inclusiveStart: Expression,
-                               guardContinue:Expression,
-                               subproblemExpression: Expression,
-                               advance: Expression
-                             ) extends Definition
+         variable: String,
+         inclusiveStart: Expression,
+         guardContinue:Expression,
+         subproblemExpression: Expression,
+         advance: Expression
+       ) extends Definition
 
 // just lift Expression
 case class ExpressionDefinition(expr:Expression) extends Definition
 
 // for Top-down, just return; for Bottom-Up, return assigned var
 case class ReturnExpressionDefinition(expr:Expression) extends Definition
-
 
 trait ProblemOrder
 case class Canonical() extends ProblemOrder

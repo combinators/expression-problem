@@ -453,6 +453,10 @@ trait Utility {
         actual <- paradigm.methodBodyCapabilities.reify(TypeRep.Boolean, bool.literal)
       } yield actual
 
+      case lc: LiteralChar => for {
+        actual <- paradigm.methodBodyCapabilities.reify(TypeRep.Char, lc.literal)
+      } yield actual
+
       case _ => for {   // PLACE HOLDER FOR EVERYTHING ELSE
         zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, -99)
       } yield zero

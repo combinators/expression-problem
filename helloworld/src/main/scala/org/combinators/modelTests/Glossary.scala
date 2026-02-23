@@ -15,12 +15,13 @@ import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.model.models.twoSequences.{LongestCommonSubsequenceModel, UncrossedLinesModel}
 import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.model.EnhancedModel
+import org.combinators.model.enhancedModels.WildcardPatternMatching
 import org.combinators.modelTests.integer.fibonacci.{FibonacciEnhancedMainJava, FibonacciEnhancedMainToDiskMain}
 import org.combinators.modelTests.integer.perfectsquare.{PerfectSquareMainDirectToDiskMain, PerfectSquareMainJava}
-import org.combinators.modelTests.integer.{BellNumberDirectToDiskMain, BellNumberMainJava, DiceThrowDirectToDiskMain, DiceThrowMainJava}
+import org.combinators.modelTests.integer.{BellNumberDirectToDiskMain, BellNumberMainJava, DiceThrowDirectToDiskMain, DiceThrowMainJava, TribonacciMainJava, TribonacciToDiskMain}
 import org.combinators.modelTests.oneSequence.{MatrixChainMultiplicationMainBottomUpDirectToDiskMain, MatrixChainMultiplicationMainBottomUpJava, MatrixChainMultiplicationMainTopDownDirectToDiskMain, MatrixChainMultiplicationMainTopDownJava, MinCostClimbingStairMain, MinCostClimbingStairToDiskMain}
 import org.combinators.modelTests.strings.{InterleaveStringsMainJava, InterleaveStringsToDiskMain, ThreeStringsLCSMainJava, ThreeStringsLCSToDiskMain}
-import org.combinators.modelTests.twoSequences.{LongestCommonSubsequenceMainJava, LongestCommonSubsequenceToDiskMain, NeedlemanWunschSequenceAlignmentMainJava, NeedlemanWunschSequenceAlignmentToDiskMain, UncrossedLinesDirectDiskToMain, UncrossedLinesMainJava}
+import org.combinators.modelTests.twoSequences.{DistinctSubsequencesMainJava, DistinctSubsequencesToDiskMain, LongestCommonSubsequenceMainJava, LongestCommonSubsequenceToDiskMain, NeedlemanWunschSequenceAlignmentMainJava, NeedlemanWunschSequenceAlignmentToDiskMain, ShortestCommonSupersequenceMainJava, ShortestCommonSupersequenceToDiskMain, UncrossedLinesDirectDiskToMain, UncrossedLinesMainJava, WildcardPatternMatchingMainJava, WildcardPatternMatchingToDiskMain}
 import org.combinators.modelTests.twoSequences.unenhancedUncrossedLines.UnenhancedUncrossedLinesMainJava
 
 import java.nio.file.{Path, Paths}
@@ -72,6 +73,10 @@ object GlossaryToDiskMain extends IOApp {
     // (new UncrossedLinesMainJava(), UncrossedLinesDirectDiskToMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
     // NOT YET WORKING ^^^^^^^^^
     (new NeedlemanWunschSequenceAlignmentMainJava(), NeedlemanWunschSequenceAlignmentToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
+    (new DistinctSubsequencesMainJava(), DistinctSubsequencesToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
+    (new WildcardPatternMatchingMainJava(), WildcardPatternMatchingToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
+    (new ShortestCommonSupersequenceMainJava(), ShortestCommonSupersequenceToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
+    (new TribonacciMainJava(), TribonacciToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp))
 
     // generates but has flawed logic because of the transformation of (r,c) into (i,j)
     // CHALLENGING (new MatrixChainMultiplicationMainJava(), MatrixChainMultiplicationMainDirectToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),

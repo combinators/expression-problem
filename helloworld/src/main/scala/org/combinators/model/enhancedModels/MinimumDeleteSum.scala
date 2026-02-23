@@ -15,17 +15,17 @@ import org.combinators.model._
  * result = 231 (delete 's' (115) from s1 and 't' (116) from s2)
  *
  * Recurrence:
- *   P(0, 0) = 0
- *   P(i, 0) = P(i-1, 0) + ascii(s1[i-1])     delete all of s1 prefix
- *   P(0, j) = P(0, j-1) + ascii(s2[j-1])     delete all of s2 prefix
- *   P(i, j) = P(i-1, j-1)                                          if s1[i-1] == s2[j-1]
- *   P(i, j) = min(P(i-1,j) + ascii(s1[i-1]), P(i,j-1) + ascii(s2[j-1]))  otherwise
+ * P(0, 0) = 0
+ * P(i, 0) = P(i-1, 0) + ascii(s1[i-1])     delete all of s1 prefix
+ * P(0, j) = P(0, j-1) + ascii(s2[j-1])     delete all of s2 prefix
+ * P(i, j) = P(i-1, j-1)                                          if s1[i-1] == s2[j-1]
+ * P(i, j) = min(P(i-1,j) + ascii(s1[i-1]), P(i,j-1) + ascii(s2[j-1]))  otherwise
  *
  */
 class MinimumDeleteSum {
   def model: EnhancedModel = {
     val zero = new LiteralInt(0)
-    val one  = new LiteralInt(1)
+    val one = new LiteralInt(1)
 
     val s1 = new ArgExpression(0, "s1", StringType(), "r")
     val s2 = new ArgExpression(1, "s2", StringType(), "c")
@@ -72,7 +72,7 @@ class MinimumDeleteSum {
       "MinimumDeleteSum",
       List(s1, s2),
       subproblemType = IntegerType(),
-      solutionType   = IntegerType(),
+      solutionType = IntegerType(),
       soln,
       definition,
       answer = ReturnExpressionDefinition(

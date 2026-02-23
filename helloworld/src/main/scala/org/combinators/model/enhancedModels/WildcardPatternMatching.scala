@@ -10,18 +10,18 @@ import org.combinators.model._
  * '*' matches any sequence of characters (including empty).
  *
  * Recurrence:
- *   P(0, 0) = true
- *   P(0, j) = (pat[j-1] == '*') && P(0, j-1)    only a run of '*'s can match empty txt
- *   P(i, 0) = false                               non-empty pattern can't match empty txt (unless all '*')
- *   P(i, j) = P(i-1, j-1)                        if pat[j-1] == '?' or txt[i-1] == pat[j-1]
- *   P(i, j) = P(i-1, j) || P(i, j-1)             if pat[j-1] == '*'
- *   P(i, j) = false                               otherwise
+ * P(0, 0) = true
+ * P(0, j) = (pat[j-1] == '*') && P(0, j-1)    only a run of '*'s can match empty txt
+ * P(i, 0) = false                               non-empty pattern can't match empty txt (unless all '*')
+ * P(i, j) = P(i-1, j-1)                        if pat[j-1] == '?' or txt[i-1] == pat[j-1]
+ * P(i, j) = P(i-1, j) || P(i, j-1)             if pat[j-1] == '*'
+ * P(i, j) = false                               otherwise
  */
 class WildcardPatternMatching {
   def model: EnhancedModel = {
-    val zero  = new LiteralInt(0)
-    val one   = new LiteralInt(1)
-    val star  = new LiteralChar('*')
+    val zero = new LiteralInt(0)
+    val one = new LiteralInt(1)
+    val star = new LiteralChar('*')
     val quest = new LiteralChar('?')
 
     val txt = new ArgExpression(0, "txt", StringType(), "r")
@@ -36,14 +36,14 @@ class WildcardPatternMatching {
     val patChar = new CharAtExpression(pat, c - one)
     val txtChar = new CharAtExpression(txt, r - one)
 
-    val isStar  = patChar == star
+    val isStar = patChar == star
     val isQuest = patChar == quest
     val charsMatch = txtChar == patChar
 
     // P(i,j) when pat[j-1] == '*': match empty (advance pat) or consume txt char
     val starCase = new OrExpression(
-      new SubproblemExpression(Seq(r - one, c)),   // '*' consumes one txt char
-      new SubproblemExpression(Seq(r, c - one))    // '*' matches empty
+      new SubproblemExpression(Seq(r - one, c)), // '*' consumes one txt char
+      new SubproblemExpression(Seq(r, c - one)) // '*' matches empty
     )
 
     // P(i,j) when pat[j-1] == '?' or chars match: inherit diagonal
@@ -85,7 +85,7 @@ class WildcardPatternMatching {
       "WildcardPatternMatching",
       List(txt, pat),
       subproblemType = BooleanType(),
-      solutionType   = BooleanType(),
+      solutionType = BooleanType(),
       soln,
       definition,
       answer = ReturnExpressionDefinition(

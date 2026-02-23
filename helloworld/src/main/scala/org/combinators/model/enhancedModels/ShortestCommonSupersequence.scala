@@ -13,16 +13,16 @@ import org.combinators.model._
  * result = 5 ("cabac")
  *
  * Recurrence:
- *   P(0, 0) = 0
- *   P(i, 0) = i                              take all of s1 prefix
- *   P(0, j) = j                              take all of s2 prefix
- *   P(i, j) = P(i-1, j-1) + 1               if s1[i-1] == s2[j-1]
- *   P(i, j) = min(P(i-1,j), P(i,j-1)) + 1  otherwise
+ * P(0, 0) = 0
+ * P(i, 0) = i                              take all of s1 prefix
+ * P(0, j) = j                              take all of s2 prefix
+ * P(i, j) = P(i-1, j-1) + 1               if s1[i-1] == s2[j-1]
+ * P(i, j) = min(P(i-1,j), P(i,j-1)) + 1  otherwise
  */
 class ShortestCommonSupersequence {
   def model: EnhancedModel = {
     val zero = new LiteralInt(0)
-    val one  = new LiteralInt(1)
+    val one = new LiteralInt(1)
 
     val s1 = new ArgExpression(0, "s1", StringType(), "r")
     val s2 = new ArgExpression(1, "s2", StringType(), "c")
@@ -71,7 +71,7 @@ class ShortestCommonSupersequence {
       "ShortestCommonSupersequence",
       List(s1, s2),
       subproblemType = IntegerType(),
-      solutionType   = StringType(),
+      solutionType = StringType(),
       soln,
       definition,
       answer = ReturnExpressionDefinition(

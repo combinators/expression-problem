@@ -48,6 +48,7 @@ class FunctionExpression(val name:String, val args: Seq[Expression]) extends Exp
 
 class LiteralInt(val literal: Int) extends LiteralExpression
 class IteratorExpression(val iteratorNumber: Int, val variable:String) extends Expression
+class CharToAsciiExpression(val char: Expression) extends Expression
 
 // low and high are INCLUSIVE
 case class HelperExpression(variable:String,

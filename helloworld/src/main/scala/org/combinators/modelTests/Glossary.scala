@@ -15,7 +15,7 @@ import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.model.models.twoSequences.{LongestCommonSubsequenceModel, UncrossedLinesModel}
 import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.model.EnhancedModel
-import org.combinators.model.enhancedModels.WildcardPatternMatching
+import org.combinators.modelTests.grid.{UniquePathsMainJava, UniquePathsToDiskMain}
 import org.combinators.modelTests.integer.fibonacci.{FibonacciEnhancedMainJava, FibonacciEnhancedMainToDiskMain}
 import org.combinators.modelTests.integer.perfectsquare.{PerfectSquareMainDirectToDiskMain, PerfectSquareMainJava}
 import org.combinators.modelTests.integer.{BellNumberDirectToDiskMain, BellNumberMainJava, DiceThrowDirectToDiskMain, DiceThrowMainJava, TribonacciMainJava, TribonacciToDiskMain}
@@ -70,13 +70,13 @@ object GlossaryToDiskMain extends IOApp {
     (new MinCostClimbingStairMain(), MinCostClimbingStairToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
     (new PerfectSquareMainJava(), PerfectSquareMainDirectToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
     (new ThreeStringsLCSMainJava(), ThreeStringsLCSToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
-    // (new UncrossedLinesMainJava(), UncrossedLinesDirectDiskToMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
-    // NOT YET WORKING ^^^^^^^^^
+    (new UncrossedLinesMainJava(), UncrossedLinesDirectDiskToMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
     (new NeedlemanWunschSequenceAlignmentMainJava(), NeedlemanWunschSequenceAlignmentToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
     (new DistinctSubsequencesMainJava(), DistinctSubsequencesToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
     (new WildcardPatternMatchingMainJava(), WildcardPatternMatchingToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
     (new ShortestCommonSupersequenceMainJava(), ShortestCommonSupersequenceToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
-    (new TribonacciMainJava(), TribonacciToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp))
+    (new TribonacciMainJava(), TribonacciToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
+    (new UniquePathsMainJava(), UniquePathsToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
 
     // generates but has flawed logic because of the transformation of (r,c) into (i,j)
     // CHALLENGING (new MatrixChainMultiplicationMainJava(), MatrixChainMultiplicationMainDirectToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),

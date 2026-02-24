@@ -126,6 +126,12 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with EnhancedU
                 litval <- literalMapping(test.inputType)
                 sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solType, Seq(litval))
               } yield sol
+            } else if(sequenceLength.length == 2) {
+              for {
+                arg1 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, sequenceLength(0))
+                arg2 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, sequenceLength(1))
+                sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solType, Seq(arg1, arg2))
+              } yield sol
             } else if (sequenceLength.length == 3) {
               for {
                 arg1 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, sequenceLength(0))

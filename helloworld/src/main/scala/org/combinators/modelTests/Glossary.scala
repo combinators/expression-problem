@@ -15,7 +15,7 @@ import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.model.models.twoSequences.{LongestCommonSubsequenceModel, UncrossedLinesModel}
 import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.model.EnhancedModel
-import org.combinators.modelTests.grid.{UniquePathsMainJava, UniquePathsToDiskMain}
+import org.combinators.modelTests.grid.{MinPathSumMainJava, UniquePathsMainJava, UniquePathsToDiskMain}
 import org.combinators.modelTests.integer.fibonacci.{FibonacciEnhancedMainJava, FibonacciEnhancedMainToDiskMain}
 import org.combinators.modelTests.integer.perfectsquare.{PerfectSquareMainDirectToDiskMain, PerfectSquareMainJava}
 import org.combinators.modelTests.integer.{BellNumberDirectToDiskMain, BellNumberMainJava, DiceThrowDirectToDiskMain, DiceThrowMainJava, TribonacciMainJava, TribonacciToDiskMain}
@@ -77,6 +77,7 @@ object GlossaryToDiskMain extends IOApp {
     (new ShortestCommonSupersequenceMainJava(), ShortestCommonSupersequenceToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
     (new TribonacciMainJava(), TribonacciToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
     (new UniquePathsMainJava(), UniquePathsToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
+    (new MinPathSumMainJava(), MinCostClimbingStairToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
 
     // generates but has flawed logic because of the transformation of (r,c) into (i,j)
     // CHALLENGING (new MatrixChainMultiplicationMainJava(), MatrixChainMultiplicationMainDirectToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),

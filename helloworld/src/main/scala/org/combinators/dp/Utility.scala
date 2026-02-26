@@ -1,6 +1,6 @@
 package org.combinators.dp
 
-import org.combinators.model.{AdditionExpression, AndExpression, ArgExpression, ArgumentType, ArrayElementExpression, ArrayLengthExpression, CharAtExpression, EqualExpression, HelperExpression, InputExpression, IntegerType, IteratorExpression, LessThanExpression, LessThanOrEqualExpression, LiteralBoolean, LiteralChar, LiteralInt, LiteralString, MaxExpression, MinExpression, Model, MultiplicationExpression, OrExpression, SelfExpression, StringLengthExpression, StringType, SubproblemExpression, SubtractionExpression, TernaryExpression}
+import org.combinators.model.{AdditionExpression, AndExpression, ArgExpression, ArgumentType, ArrayElementExpression, ArrayLengthExpression, CharAtExpression, EqualExpression, HelperExpression, InputExpression, IteratorExpression, LessThanExpression, LessThanOrEqualExpression, LiteralBoolean, LiteralChar, LiteralInt, MaxExpression, MinExpression, Model, MultiplicationExpression, OrExpression, SelfExpression, StringLengthExpression, SubStringExpression, SubproblemExpression, SubtractionExpression, TernaryExpression}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.NameProvider
@@ -164,6 +164,11 @@ trait Utility {
       case _:IntegerArray2DType => for {
         tpe <- toTargetLanguageType(TypeRep.Array(TypeRep.Array(TypeRep.Int)))
       } yield tpe
+
+      case _:StringArrayType => for {
+        tpe <- toTargetLanguageType(TypeRep.Array(TypeRep.String))
+      } yield tpe
+
 
       // find which ones need to be implemented
       case _ => ???
@@ -343,6 +348,13 @@ trait Utility {
         e <- strings.stringCapabilities.getStringLength(inner)
       } yield e
 
+      case sub:SubStringExpression => for {
+        inner <- explore(sub.string, memoize, symbolTable, bottomUp)
+        start <- explore(sub.start, memoize, symbolTable, bottomUp)
+        exclusiveEnd <- explore(sub.exclusiveEnd, memoize, symbolTable, bottomUp)
+        e <- strings.stringCapabilities.subString(inner, start, exclusiveEnd)
+      } yield e
+
       case cae:CharAtExpression => for {
         inner <- explore(cae.string, memoize, symbolTable, bottomUp)
         idx <- explore(cae.index, memoize, symbolTable, bottomUp)
@@ -441,14 +453,24 @@ trait Utility {
         actual <- paradigm.methodBodyCapabilities.reify(TypeRep.Boolean, bool.literal)
       } yield actual
 
-      case char:LiteralChar => for {
-        actual <- paradigm.methodBodyCapabilities.reify(TypeRep.Char, char.literal)
-      } yield actual
-
       case _ => for {   // PLACE HOLDER FOR EVERYTHING ELSE
         zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, -99)
       } yield zero
     }
+  }
+
+  def create_string_array(values:Seq[String]) : Generator[MethodBodyContext, Expression] = {
+    import AnyParadigm.syntax._
+    for {
+      translated_vals <- forEach(values) { value =>
+        for {
+          reified_value <- paradigm.methodBodyCapabilities.reify(TypeRep.String, value)
+        } yield reified_value
+      }
+
+      stringType <- paradigm.methodBodyCapabilities.toTargetLanguageType(TypeRep.String)
+      result <- array.arrayCapabilities.create(stringType, translated_vals)
+    } yield result
   }
 
   def create_int_array(values:Seq[Int]) : Generator[MethodBodyContext, Expression] = {

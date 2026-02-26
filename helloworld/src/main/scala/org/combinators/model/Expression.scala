@@ -48,6 +48,7 @@ class FunctionExpression(val name:String, val args: Seq[Expression]) extends Exp
 
 class LiteralInt(val literal: Int) extends LiteralExpression
 class IteratorExpression(val iteratorNumber: Int, val variable:String) extends Expression
+class CharToAsciiExpression(val char: Expression) extends Expression
 
 // low and high are INCLUSIVE
 case class HelperExpression(variable:String,
@@ -71,11 +72,11 @@ class Literal2DArrayIntPair(val ar1:Array[Int], val ar2:Array[Int], val value: I
 case class SelfExpression(val variableName:String) extends Expression
 
 class StringLengthExpression(val string: Expression) extends Expression
+class SubStringExpression(val string:Expression, val start:Expression, val exclusiveEnd:Expression) extends Expression
 class ArrayLengthExpression(val array: Expression) extends Expression
 
 //String
 class LiteralString(val literal: String) extends LiteralExpression
-class SubstringExpression(val string: Expression, val start: Expression, val end: Expression) extends Expression
 
 //Character
 class LiteralChar(val literal:Char) extends LiteralExpression

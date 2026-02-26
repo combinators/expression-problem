@@ -386,6 +386,16 @@ package object scala {
       )
   }
 
+  trait TernaryExpression[FT <: FinalTypes] extends Expression[FT] with OperatorExpressionOps.TernaryExpression[FT] with Factory[FT] {
+    def toScala: String = s"${base.toScala}(${op1.toScala}, ${op2.toScala})"  // access ternary as two-argument function on base
+
+    override def prefixRootPackage(rootPackageName: Seq[any.Name[FT]], excludedTypeNames: Set[Seq[any.Name[FT]]]): OperatorExpressionOps.TernaryExpression[FT] =
+      copy(
+        op1 = op1.prefixRootPackage(rootPackageName, excludedTypeNames),
+        op2 = op2.prefixRootPackage(rootPackageName, excludedTypeNames)
+      )
+  }
+
   trait BinaryExpression[FT <: FinalTypes] extends Expression[FT] with OperatorExpressionOps.BinaryExpression[FT] with Factory[FT] {
     def toScala: String = s"(${operator.toScala(left, right)})"  // necessary when composing expressions, though can get excessive at times.
 
@@ -1188,6 +1198,9 @@ package object scala {
   trait CharAtOp[FT <: FinalTypes] extends StringOps.CharAtOp[FT] with Operator[FT] with PostfixOperator[FT] {
     def operator: String = ".charAt"
   }
+  trait SubStringOp[FT <: FinalTypes] extends StringOps.SubStringOp[FT] with Operator[FT] with PostfixOperator[FT] {
+    def operator: String = ".substring"
+  }
   trait AssertTrueOp[FT <: FinalTypes] extends AssertionOps.AssertTrueOp[FT] with Operator[FT] {
     def operator: String = "assert "
     def toScala(operands: any.Expression[FT]*): String = s"assert (${operands.head.toScala})"
@@ -1446,6 +1459,7 @@ package object scala {
     implicit def convert(other: functional.control.Ternary[FT]): FunTernary[FT]
     implicit def convert(whileLoop: imperative.While[FT]): While[FT]
     implicit def convert(operator: OperatorExpressionOps.Operator[FT]): Operator[FT]
+    implicit def convert(ternaryExpression: OperatorExpressionOps.TernaryExpression[FT]): TernaryExpression[FT]
     implicit def convert(binaryExpression: OperatorExpressionOps.BinaryExpression[FT]): BinaryExpression[FT]
     implicit def convert(unaryExpression: OperatorExpressionOps.UnaryExpression[FT]): UnaryExpression[FT]
 
@@ -1497,6 +1511,7 @@ package object scala {
       override type InstanceOfExpression = Finalized.InstanceOfExpression
       override type SuperReferenceExpression = Finalized.SuperReferenceExpression
       override type Operator = Finalized.Operator
+      override type TernaryExpression = Finalized.TernaryExpression
       override type BinaryExpression = Finalized.BinaryExpression
       override type UnaryExpression = Finalized.UnaryExpression
       override type Import = Finalized.Import
@@ -1547,9 +1562,11 @@ package object scala {
 
       def name(name: String, mangled: String): Name = Name(name, mangled)
       override def importStatement(components: Seq[any.Name[FinalTypes]]): Import = Import(components)
+      override def ternaryExpression(operator: OperatorExpressionOps.Operator[FinalTypes], base: any.Expression[FinalTypes], op1:any.Expression[FinalTypes], op2:any.Expression[FinalTypes]): OperatorExpressionOps.TernaryExpression[FinalTypes] = TernaryExpression(operator, base, op1, op2)
       override def binaryExpression(operator: OperatorExpressionOps.Operator[FinalTypes], left: any.Expression[FinalTypes], right: any.Expression[FinalTypes]): OperatorExpressionOps.BinaryExpression[FinalTypes] = BinaryExpression(operator, left, right)
       override def unaryExpression(operator: OperatorExpressionOps.Operator[FinalTypes], operand: any.Expression[FinalTypes]): OperatorExpressionOps.UnaryExpression[FinalTypes] = UnaryExpression(operator, operand)
       implicit def convert(operator: OperatorExpressionOps.Operator[FinalTypes]): Operator = operator.getSelfOperator
+      implicit def convert(ternaryExpression: OperatorExpressionOps.TernaryExpression[FinalTypes]): TernaryExpression = ternaryExpression.getSelfTernaryExpression
       implicit def convert(binaryExpression: OperatorExpressionOps.BinaryExpression[FinalTypes]): BinaryExpression = binaryExpression.getSelfBinaryExpression
       implicit def convert(unaryExpression: OperatorExpressionOps.UnaryExpression[FinalTypes]): UnaryExpression = unaryExpression.getSelfUnaryExpression
       /*override def scalaCompilationUnit(
@@ -1679,6 +1696,7 @@ package object scala {
       override def appendStringOp(): StringOps.AppendStringOp[FinalTypes] = AppendStringOp()
       override def stringLengthOp(): StringOps.StringLengthOp[FinalTypes] = StringLengthOp()
       override def charAtOp(): StringOps.CharAtOp[FinalTypes] = CharAtOp()
+      override def subStringOp(): StringOps.SubStringOp[FinalTypes] = SubStringOp()
       override def assertTrueOp(): AssertionOps.AssertTrueOp[FinalTypes] = AssertTrueOp()
 
       override def ooProject(compilationUnits: Set[any.CompilationUnit[FinalTypes]],
@@ -1952,6 +1970,17 @@ package object scala {
       override def getSelfExpression: this.type = this
     }
 
+
+    case class TernaryExpression(
+        override val operator: OperatorExpressionOps.Operator[FinalTypes],
+        override val base: any.Expression[FinalTypes],
+        override val op1: any.Expression[FinalTypes],
+        override val op2: any.Expression[FinalTypes]
+      )
+  extends Expression with scala.TernaryExpression[FinalTypes] with Factory {
+      override def getSelfTernaryExpression: this.type = this
+    }
+
     case class BinaryExpression(
       override val operator: OperatorExpressionOps.Operator[FinalTypes],
       override val left: any.Expression[FinalTypes],
@@ -2187,6 +2216,7 @@ package object scala {
     case class StringLengthOp() extends scala.StringLengthOp[FinalTypes] with Operator
 
     case class CharAtOp() extends scala.CharAtOp[FinalTypes] with Operator
+    case class SubStringOp() extends scala.SubStringOp[FinalTypes] with Operator
 
     case class AssertTrueOp() extends scala.AssertTrueOp[FinalTypes] with Operator
 

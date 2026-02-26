@@ -5,7 +5,7 @@ import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.paradigm.Apply
 import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
-import org.combinators.ep.generator.paradigm.ffi.{GetStringLength, GetCharAt, StringAppend, ToString, Strings => Strs}
+import org.combinators.ep.generator.paradigm.ffi.{GetCharAt, GetStringLength, StringAppend, SubString, ToString, Strings => Strs}
 
 trait Strings[FT <: OperatorExpressionOps.FinalTypes, FactoryType <: StringOps.Factory[FT]] extends Strs[any.Method[FT]] {
   val base: AnyParadigm.WithFT[FT, FactoryType]
@@ -25,6 +25,17 @@ trait Strings[FT <: OperatorExpressionOps.FinalTypes, FactoryType <: StringOps.F
           (context, factory.charAt(command.arguments.head, command.arguments.tail.head))
         }
       }
+
+    implicit val canSubString: Understands[any.Method[FT], Apply[SubString, any.Expression[FT], any.Expression[FT]]] =
+      new Understands[any.Method[FT], Apply[SubString, any.Expression[FT], any.Expression[FT]]] {
+        def perform(context: any.Method[FT], command: Apply[SubString, any.Expression[FT], any.Expression[FT]]): (any.Method[FT], any.Expression[FT]) = {
+          (context, factory.subString(command.arguments.head, command.arguments.tail.head, command.arguments.tail.tail.head))
+        }
+      }
+
+    // implicit val canSubString: Understands[Context, Apply[GetCharAt, Expression, Expression]]
+    //    def subString(expression: Expression, start:Expression, exclusiveEnd:Expression): Generator[Context, Expression] =
+    //      AnyParadigm.capability(Apply[SubString, Expression, Expression](SubString(), Seq(expression, start, exclusiveEnd)))
 
     implicit val canAppend: Understands[any.Method[FT], Apply[StringAppend, any.Expression[FT], any.Expression[FT]]] =
       new Understands[any.Method[FT], Apply[StringAppend, any.Expression[FT], any.Expression[FT]]] {
@@ -54,12 +65,14 @@ object StringOps {
   trait AppendStringOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
   trait StringLengthOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
   trait CharAtOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
+  trait SubStringOp[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Operator[FT]
 
   trait Factory[FT <: OperatorExpressionOps.FinalTypes] extends OperatorExpressionOps.Factory[FT] {
     def toStringOp(): ToStringOp[FT]
     def appendStringOp(): AppendStringOp[FT]
     def stringLengthOp(): StringLengthOp[FT]
     def charAtOp() : CharAtOp[FT]
+    def subStringOp() : SubStringOp[FT]
 
     def toString(exp: any.Expression[FT]): OperatorExpressionOps.UnaryExpression[FT] =
       unaryExpression(toStringOp(), exp)
@@ -71,5 +84,7 @@ object StringOps {
     def charAt(exp: any.Expression[FT], index: any.Expression[FT]): OperatorExpressionOps.BinaryExpression[FT] =
       binaryExpression(charAtOp(), exp, index)
 
+    def subString(exp: any.Expression[FT], start: any.Expression[FT], exclusiveEnd: any.Expression[FT]): OperatorExpressionOps.TernaryExpression[FT] =
+      ternaryExpression(subStringOp(), exp, start, exclusiveEnd)
   }
 }

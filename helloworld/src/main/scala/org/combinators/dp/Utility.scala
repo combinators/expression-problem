@@ -1,6 +1,6 @@
 package org.combinators.dp
 
-import org.combinators.model.{AdditionExpression, AndExpression, ArgExpression, ArgumentType, ArrayElementExpression, ArrayLengthExpression, CharAtExpression, EqualExpression, HelperExpression, InputExpression, IntegerType, IteratorExpression, LessThanExpression, LessThanOrEqualExpression, LiteralBoolean, LiteralInt, LiteralString, MaxExpression, MinExpression, Model, MultiplicationExpression, OrExpression, SelfExpression, StringLengthExpression, StringType, SubproblemExpression, SubtractionExpression, TernaryExpression}
+import org.combinators.model.{AdditionExpression, AndExpression, ArgExpression, ArgumentType, ArrayElementExpression, ArrayLengthExpression, CharAtExpression, EqualExpression, HelperExpression, InputExpression, IntegerType, IteratorExpression, LessThanExpression, LessThanOrEqualExpression, LiteralBoolean, LiteralChar, LiteralInt, LiteralString, MaxExpression, MinExpression, Model, MultiplicationExpression, OrExpression, SelfExpression, StringLengthExpression, StringType, SubproblemExpression, SubtractionExpression, TernaryExpression}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.NameProvider
@@ -439,6 +439,10 @@ trait Utility {
 
       case bool:LiteralBoolean => for {
         actual <- paradigm.methodBodyCapabilities.reify(TypeRep.Boolean, bool.literal)
+      } yield actual
+
+      case char:LiteralChar => for {
+        actual <- paradigm.methodBodyCapabilities.reify(TypeRep.Char, char.literal)
       } yield actual
 
       case _ => for {   // PLACE HOLDER FOR EVERYTHING ELSE

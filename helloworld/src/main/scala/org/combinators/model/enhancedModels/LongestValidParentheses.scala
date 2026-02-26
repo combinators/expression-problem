@@ -15,20 +15,26 @@ class LongestValidParentheses {
 
 
     val strlen = new StringLengthExpression(str)
-    val i: HelperExpression = HelperExpression("i", zero, SelfExpression("i") <= strlen, strlen  + one) // only one argument, i
+    val i: HelperExpression = HelperExpression("i", zero, SelfExpression("i") <= strlen-one, strlen)
+    val j: HelperExpression = HelperExpression("j", zero, SelfExpression("j") <= one, two)
 
-    val last = new SubproblemExpression(Seq(i-one))
+
+
+    val last = new SubproblemExpression(Seq(i-one,zero))
 
     val cond = new CharAtExpression(str,i)== new LiteralChar(')') &&
       (zero<=i-last-one) &&
       new CharAtExpression(str, i-last-one)== new LiteralChar('(')
 
-    val sol = SubproblemInvocation(Seq("i"), helpers = Map("i" -> i))
+    val sol = SubproblemInvocation(Seq("i","j"), helpers = Map("i" -> i,"j" -> j))
 
-    val complexValue = last + two + new TernaryExpression(zero<=i-last-two,new SubproblemExpression(Seq(i-last-two)),zero)
+    val ternary = new TernaryExpression(zero<=(i-last-two),new SubproblemExpression(Seq(i-last-two,zero)),zero)+zero
+    val complexValue = (last + two) + ternary
 
     val complexCase = IfThenElseDefinition(cond, ExpressionStatement(complexValue), ExpressionDefinition(zero))
-    val zeroCase = IfThenElseDefinition(i == zero, ExpressionStatement(zero), complexCase)
+    val maxFinder = new MaxExpression(new SubproblemExpression(Seq(i,zero)), new SubproblemExpression(Seq(i-one,one)))
+    val maxCase = IfThenElseDefinition(j==one, ExpressionStatement(maxFinder), complexCase)
+    val zeroCase = IfThenElseDefinition(i == zero, ExpressionStatement(zero), maxCase)
 
 
     val Fib = new EnhancedModel("LVP",
@@ -37,7 +43,7 @@ class LongestValidParentheses {
       solutionType = StringType(),  // how a solution is represented (not yet effective)
       sol,
       zeroCase,
-      answer = ReturnExpressionDefinition(new SubproblemExpression(Seq(new StringLengthExpression(str)))))
+      answer = ReturnExpressionDefinition(new SubproblemExpression(Seq(new StringLengthExpression(str)-one,one))))
 
     Fib
   }

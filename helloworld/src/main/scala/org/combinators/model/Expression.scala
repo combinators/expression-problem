@@ -60,7 +60,9 @@ case class HelperExpression(variable:String,
 class LiteralPair(val val1:Int, val val2:Int) extends LiteralExpression
 class LiteralTriple(val val1:Int, val val2:Int, val val3:Int) extends LiteralExpression
 
-class LiteralArray(val literal:Array[Int]) extends LiteralExpression // assumes int array
+// when dimensions is Seq.empty, then this is a 1D array, whose length is determined by the number of integers. Otherwise
+// the sequence describes the dimensions
+class LiteralArray(val literal:Array[Int], val dimensions:Seq[Int] = Seq(1)) extends LiteralExpression // assumes int array
 class LiteralStringPair(val string1:String, val string2:String) extends LiteralExpression
 class LiteralStringTriple(val string1:String, val string2:String, val string3:String) extends LiteralExpression
 

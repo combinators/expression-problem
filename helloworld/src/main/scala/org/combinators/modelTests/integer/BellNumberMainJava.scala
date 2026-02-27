@@ -53,7 +53,7 @@ object BellNumberDirectToDiskMain extends IOApp {
         case _ => ???
       }
     } else {
-      topDownWithMemo
+      bottomUp
     }
 
     for {

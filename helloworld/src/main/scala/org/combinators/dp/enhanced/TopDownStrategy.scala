@@ -375,31 +375,83 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
       } yield Seq(whilestmt, returnResult)
 
       // SAME implementation as SumDefinition: only difference will be in BottomUp
-      case sd:ReturnAccumulatedDefinition => for {
-        zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
-        intType <- toTargetLanguageType(TypeRep.Int)   // perhaps acceptable to consider 'min' will be an integer
-        sumVarName = names.mangle("sum")
-        sumVar <- impParadigm.imperativeCapabilities.declareVar(sumVarName, intType, Some(zero))
+      case sd:ReturnAccumulatedDefinition =>
+        if (sd.iteration.length ==1) {
+          for {
+            zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
+            intType <- toTargetLanguageType(TypeRep.Int) // perhaps acceptable to consider 'min' will be an integer
+            sumVarName = names.mangle("sum")
+            sumVar <- impParadigm.imperativeCapabilities.declareVar(sumVarName, intType, Some(zero))
 
-        intType <- toTargetLanguageType(TypeRep.Int)   // perhaps acceptable to consider 'min' will be an integer
-        kStart <- explore(sd.inclusiveStart, symbolTable=symbolTable, memoize=memoize)
-        kVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(sd.variable), intType, Some(kStart))
+            intType <- toTargetLanguageType(TypeRep.Int) // perhaps acceptable to consider 'min' will be an integer
+            kStart <- explore(sd.iteration.head._2, symbolTable = symbolTable, memoize = memoize)
+            kVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(sd.iteration.head._1), intType, Some(kStart))
 
-        guardCondition <- explore(sd.guardContinue, symbolTable=symbolTable ++ Map(sd.variable -> kVar), memoize=memoize)
-        whilestmt <- impParadigm.imperativeCapabilities.whileLoop(guardCondition, for {
+            guardCondition <- explore(sd.iteration.head._3, symbolTable = symbolTable ++ Map(sd.iteration.head._1 -> kVar), memoize = memoize)
+            whilestmt <- impParadigm.imperativeCapabilities.whileLoop(guardCondition, for {
 
-          resultExpr <- explore(sd.subproblemExpression, symbolTable=symbolTable ++ Map(sd.variable -> kVar), memoize=memoize)
-          additive <- arithmetic.arithmeticCapabilities.add(sumVar, resultExpr)
-          assignResult <- impParadigm.imperativeCapabilities.assignVar(sumVar, additive)
+              resultExpr <- explore(sd.subproblemExpression, symbolTable = symbolTable ++ Map(sd.iteration.head._1 -> kVar), memoize = memoize)
+              additive <- arithmetic.arithmeticCapabilities.add(sumVar, resultExpr)
+              assignResult <- impParadigm.imperativeCapabilities.assignVar(sumVar, additive)
 
-          advExpr <- explore(sd.advance, symbolTable=symbolTable ++ Map(sd.variable -> kVar), memoize=memoize)
-          kadv <- impParadigm.imperativeCapabilities.assignVar(kVar, advExpr)
-          _ <- addBlockDefinitions(Seq(assignResult, kadv))
-        } yield ())
+              advExpr <- explore(sd.iteration.head._4, symbolTable = symbolTable ++ Map(sd.iteration.head._1 -> kVar), memoize = memoize)
+              kadv <- impParadigm.imperativeCapabilities.assignVar(kVar, advExpr)
+              _ <- addBlockDefinitions(Seq(assignResult, kadv))
+            } yield ())
 
-        returnResult <- impParadigm.imperativeCapabilities.returnStmt(sumVar)
-      } yield Seq(whilestmt, returnResult)
+            returnResult <- impParadigm.imperativeCapabilities.returnStmt(sumVar)
+          } yield Seq(whilestmt, returnResult)
+        } else if (sd.iteration.length == 2) {
+          for {
+            zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
+            one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
 
+            intType <- toTargetLanguageType(TypeRep.Int)
+            accVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(sd.accumulationVariable), intType, Some(zero))
+
+            level0_low  <- explore(sd.iteration.head._2, symbolTable=Map.empty, memoize=memoize)
+            level0_var  <- impParadigm.imperativeCapabilities.declareVar(names.mangle(sd.iteration.head._1), intType, Some(level0_low))
+
+            // NOTE that other variables HIGH and LOW might depend on earlier variables, so build up symbol table
+            level1_map = Map(sd.iteration.head._1 -> level0_var, sd.accumulationVariable -> accVar)
+
+            // "r"
+            level1_low <- explore(sd.iteration.tail.head._2, symbolTable=level1_map, memoize=memoize)
+            level1_var <- impParadigm.imperativeCapabilities.declareVar(names.mangle(sd.iteration.tail.head._1), intType, Some(level1_low))
+            level2_map = level1_map ++ Map(sd.iteration.tail.head._1 -> level1_var) // HACK FIX, model.solution.mappers("i") -> expr1)
+
+            level0_condition <- explore(sd.iteration.head._3, symbolTable=level2_map, memoize=memoize)
+            level1_condition <- explore(sd.iteration.tail.head._3, symbolTable=level2_map, memoize=memoize)
+
+            // INNER LOOP
+            whileLoop_inner <- impParadigm.imperativeCapabilities.whileLoop(level1_condition, for {
+              resultExpr <- explore(sd.subproblemExpression, symbolTable=level2_map, memoize=memoize)
+              additive <- arithmetic.arithmeticCapabilities.add(accVar, resultExpr)
+              assignResult <- impParadigm.imperativeCapabilities.assignVar(accVar, additive)
+
+              _ <- addBlockDefinitions(Seq(assignResult))
+
+              ivar_inner_plusone <- arithmetic.arithmeticCapabilities.add(level1_var, one)
+              incr_inner <- impParadigm.imperativeCapabilities.assignVar(level1_var, ivar_inner_plusone)
+
+              _ <- addBlockDefinitions(Seq(incr_inner))
+            } yield ())
+
+            // OUTER LOOP
+            whileLoop_outer <- impParadigm.imperativeCapabilities.whileLoop(level0_condition, for {
+              inner_reset <- impParadigm.imperativeCapabilities.assignVar(level1_var, level1_low)
+
+              ivar_outer_plusone <- arithmetic.arithmeticCapabilities.add(level0_var, one)
+              incr_outer <- impParadigm.imperativeCapabilities.assignVar(level0_var, ivar_outer_plusone)
+              _ <- addBlockDefinitions(Seq(inner_reset, whileLoop_inner, incr_outer))
+            } yield ())
+
+            retStmt <- impParadigm.imperativeCapabilities.returnStmt(accVar)
+          } yield Seq(whileLoop_outer, retStmt)
+        } else {
+          // cannot handle 3-dimensions or more
+          ???
+        }
 
       case sd:SumDefinition => for {
         zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)

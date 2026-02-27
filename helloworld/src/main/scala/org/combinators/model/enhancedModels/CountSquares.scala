@@ -54,6 +54,15 @@ class CountSquares {
       onesCase
     )
 
+    val final_answer = ReturnAccumulatedDefinition(
+      "sum",
+      Seq(
+        ("ridx", zero, SelfExpression("ridx") < numRows, SelfExpression("ridx") + one),
+        ("cidx", zero, SelfExpression("cidx") < numCols, SelfExpression("cidx") + one),
+      ),
+      new SubproblemExpression(Seq(SelfExpression("ridx"), SelfExpression("cidx")))
+    )
+
     val CS: EnhancedModel = new EnhancedModel(
       "CountSquares",
       List(grid),
@@ -61,7 +70,7 @@ class CountSquares {
       solutionType   = IntegerType(),
       soln,
       definition,
-      answer = ???   // figure out how to sum elements using expressions
+      answer = final_answer   // figure out how to sum elements using expressions
     )
 
     CS

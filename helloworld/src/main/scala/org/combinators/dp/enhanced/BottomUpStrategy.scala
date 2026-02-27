@@ -382,18 +382,18 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
     import AnyParadigm.syntax._
 
     defn match {
-      case ed:ExpressionDefinition => for {
-        expr <- explore(ed.expr, symbolTable = symbolTable, bottomUp=Some(dp))
+      case ed: ExpressionDefinition => for {
+        expr <- explore(ed.expr, symbolTable = symbolTable, bottomUp = Some(dp))
         assigned <- impParadigm.imperativeCapabilities.assignVar(dpij, expr)
       } yield Seq(assigned)
 
-      case ed:ReturnExpressionDefinition => for {
-        expr <- explore(ed.expr, symbolTable = symbolTable, bottomUp=Some(dp))
+      case ed: ReturnExpressionDefinition => for {
+        expr <- explore(ed.expr, symbolTable = symbolTable, bottomUp = Some(dp))
         assigned <- impParadigm.imperativeCapabilities.returnStmt(expr)
       } yield Seq(assigned)
 
-      case ite:IfThenElseDefinition => for {
-        inner <- explore(ite.condition, symbolTable = symbolTable, bottomUp=Some(dp))
+      case ite: IfThenElseDefinition => for {
+        inner <- explore(ite.condition, symbolTable = symbolTable, bottomUp = Some(dp))
         ifstmt <- impParadigm.imperativeCapabilities.ifThenElse(
           // condition of first if
           inner
@@ -416,12 +416,12 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
         )
       } yield Seq(ifstmt)
 
-      case ds:MinRangeDefinition => for {
+      case ds: MinRangeDefinition => for {
         one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, scala.Int.MaxValue)
-        intType <- toTargetLanguageType(TypeRep.Int)   // hack
+        intType <- toTargetLanguageType(TypeRep.Int) // hack
         minVarName = names.mangle("min")
         minVar <- impParadigm.imperativeCapabilities.declareVar(minVarName, intType, Some(one))
-        kStart <- explore(ds.inclusiveStart, symbolTable = symbolTable, bottomUp=Some(dp))
+        kStart <- explore(ds.inclusiveStart, symbolTable = symbolTable, bottomUp = Some(dp))
         kVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(ds.variable), intType, Some(kStart))
 
         resultVarName = names.mangle("result")
@@ -429,11 +429,11 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
         addedSymbolTable = symbolTable + ("min" -> minVar) + ("k" -> kVar) + ("result" -> resultVar)
 
         minCond <- arithmetic.arithmeticCapabilities.lt(resultVar, minVar)
-        guardCondition <- explore(ds.guardContinue, symbolTable = addedSymbolTable, bottomUp=Some(dp))
+        guardCondition <- explore(ds.guardContinue, symbolTable = addedSymbolTable, bottomUp = Some(dp))
         whilestmt <- impParadigm.imperativeCapabilities.whileLoop(guardCondition, for {
           neg99 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, -99)
 
-          resultExpr <- explore(ds.subproblemExpression, symbolTable = addedSymbolTable, bottomUp=Some(dp))
+          resultExpr <- explore(ds.subproblemExpression, symbolTable = addedSymbolTable, bottomUp = Some(dp))
           assignResult <- impParadigm.imperativeCapabilities.assignVar(resultVar, resultExpr)
 
           // record minimum
@@ -443,7 +443,7 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
             // here is where one could store decisions
           } yield (), Seq.empty, None)
 
-          advExpr <- explore(ds.advance, symbolTable=addedSymbolTable, bottomUp=Some(dp))
+          advExpr <- explore(ds.advance, symbolTable = addedSymbolTable, bottomUp = Some(dp))
           kadv <- impParadigm.imperativeCapabilities.assignVar(kVar, advExpr)
           _ <- addBlockDefinitions(Seq(assignResult, update, kadv))
         } yield ())
@@ -451,12 +451,12 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
         assigned <- impParadigm.imperativeCapabilities.assignVar(dpij, minVar)
       } yield Seq(whilestmt, assigned)
 
-      case ds:MaxRangeDefinition => for {
+      case ds: MaxRangeDefinition => for {
         one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, scala.Int.MaxValue)
-        intType <- toTargetLanguageType(TypeRep.Int)   // hack
+        intType <- toTargetLanguageType(TypeRep.Int) // hack
         maxVarName = names.mangle("max")
         maxVar <- impParadigm.imperativeCapabilities.declareVar(maxVarName, intType, Some(one))
-        kStart <- explore(ds.inclusiveStart, symbolTable = symbolTable, bottomUp=Some(dp))
+        kStart <- explore(ds.inclusiveStart, symbolTable = symbolTable, bottomUp = Some(dp))
         kVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(ds.variable), intType, Some(kStart))
 
         resultVarName = names.mangle("result")
@@ -464,11 +464,11 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
         addedSymbolTable = symbolTable + ("max" -> maxVar) + ("k" -> kVar) + ("result" -> resultVar)
 
         maxCond <- arithmetic.arithmeticCapabilities.lt(maxVar, resultVar)
-        guardCondition <- explore(ds.guardContinue, symbolTable = addedSymbolTable, bottomUp=Some(dp))
+        guardCondition <- explore(ds.guardContinue, symbolTable = addedSymbolTable, bottomUp = Some(dp))
         whilestmt <- impParadigm.imperativeCapabilities.whileLoop(guardCondition, for {
           neg99 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, -99)
 
-          resultExpr <- explore(ds.subproblemExpression, symbolTable = addedSymbolTable, bottomUp=Some(dp))
+          resultExpr <- explore(ds.subproblemExpression, symbolTable = addedSymbolTable, bottomUp = Some(dp))
           assignResult <- impParadigm.imperativeCapabilities.assignVar(resultVar, resultExpr)
 
           // record minimum
@@ -478,7 +478,7 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
             // here is where one could store decisions
           } yield (), Seq.empty, None)
 
-          advExpr <- explore(ds.advance, symbolTable=addedSymbolTable, bottomUp=Some(dp))
+          advExpr <- explore(ds.advance, symbolTable = addedSymbolTable, bottomUp = Some(dp))
           kadv <- impParadigm.imperativeCapabilities.assignVar(kVar, advExpr)
           _ <- addBlockDefinitions(Seq(assignResult, update, kadv))
         } yield ())
@@ -486,22 +486,22 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
         assigned <- impParadigm.imperativeCapabilities.assignVar(dpij, maxVar)
       } yield Seq(whilestmt, assigned)
 
-      case sd:SumDefinition => for {
+      case sd: SumDefinition => for {
         zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
-        intType <- toTargetLanguageType(TypeRep.Int)   // perhaps acceptable to consider 'min' will be an integer
+        intType <- toTargetLanguageType(TypeRep.Int) // perhaps acceptable to consider 'min' will be an integer
 
-        intType <- toTargetLanguageType(TypeRep.Int)   // perhaps acceptable to consider 'min' will be an integer
-        kStart <- explore(sd.inclusiveStart, symbolTable=symbolTable, bottomUp=Some(dp))
+        intType <- toTargetLanguageType(TypeRep.Int) // perhaps acceptable to consider 'min' will be an integer
+        kStart <- explore(sd.inclusiveStart, symbolTable = symbolTable, bottomUp = Some(dp))
         kVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(sd.variable), intType, Some(kStart))
 
-        guardCondition <- explore(sd.guardContinue, symbolTable=symbolTable ++ Map(sd.variable -> kVar), bottomUp=Some(dp))
+        guardCondition <- explore(sd.guardContinue, symbolTable = symbolTable ++ Map(sd.variable -> kVar), bottomUp = Some(dp))
         whilestmt <- impParadigm.imperativeCapabilities.whileLoop(guardCondition, for {
 
-          resultExpr <- explore(sd.subproblemExpression, symbolTable=symbolTable ++ Map(sd.variable -> kVar), bottomUp=Some(dp))
+          resultExpr <- explore(sd.subproblemExpression, symbolTable = symbolTable ++ Map(sd.variable -> kVar), bottomUp = Some(dp))
           additive <- arithmetic.arithmeticCapabilities.add(dpij, resultExpr)
           assignResult <- impParadigm.imperativeCapabilities.assignVar(dpij, additive)
 
-          advExpr <- explore(sd.advance, symbolTable=symbolTable ++ Map(sd.variable -> kVar), bottomUp=Some(dp))
+          advExpr <- explore(sd.advance, symbolTable = symbolTable ++ Map(sd.variable -> kVar), bottomUp = Some(dp))
           kadv <- impParadigm.imperativeCapabilities.assignVar(kVar, advExpr)
           _ <- addBlockDefinitions(Seq(assignResult, kadv))
 
@@ -509,30 +509,87 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
 
       } yield Seq(whilestmt)
 
-      case sd:ReturnAccumulatedDefinition => for {
-        zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
-        intType <- toTargetLanguageType(TypeRep.Int)   // perhaps acceptable to consider 'min' will be an integer
+      case sd:ReturnAccumulatedDefinition =>
+        if (sd.iteration.length == 1) {
+          for {
+            zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
 
-        intType <- toTargetLanguageType(TypeRep.Int)   // perhaps acceptable to consider 'min' will be an integer
-        kStart <- explore(sd.inclusiveStart, symbolTable=symbolTable, bottomUp=Some(dp))
-        kVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(sd.variable), intType, Some(kStart))
-        accVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(sd.accumulationVariable), intType, Some(kStart))
+            intType <- toTargetLanguageType(TypeRep.Int)
+            kStart <- explore(sd.iteration.head._2, symbolTable = symbolTable, bottomUp = Some(dp))
+            kVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(sd.iteration.head._1), intType, Some(kStart))
+            accVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(sd.accumulationVariable), intType, Some(kStart))
 
-        guardCondition <- explore(sd.guardContinue, symbolTable=symbolTable ++ Map(sd.variable -> kVar, sd.accumulationVariable -> accVar), bottomUp=Some(dp))
-        whilestmt <- impParadigm.imperativeCapabilities.whileLoop(guardCondition, for {
+            guardCondition <- explore(sd.iteration.head._3, symbolTable = symbolTable ++ Map(sd.iteration.head._1 -> kVar, sd.accumulationVariable -> accVar), bottomUp = Some(dp))
+            whilestmt <- impParadigm.imperativeCapabilities.whileLoop(guardCondition, for {
 
-          resultExpr <- explore(sd.subproblemExpression, symbolTable=symbolTable ++ Map(sd.variable -> kVar, sd.accumulationVariable -> accVar), bottomUp=Some(dp))
-          additive <- arithmetic.arithmeticCapabilities.add(accVar, resultExpr)
-          assignResult <- impParadigm.imperativeCapabilities.assignVar(accVar, additive)
+              resultExpr <- explore(sd.subproblemExpression, symbolTable = symbolTable ++ Map(sd.iteration.head._1 -> kVar, sd.accumulationVariable -> accVar), bottomUp = Some(dp))
+              additive <- arithmetic.arithmeticCapabilities.add(accVar, resultExpr)
+              assignResult <- impParadigm.imperativeCapabilities.assignVar(accVar, additive)
 
-          advExpr <- explore(sd.advance, symbolTable=symbolTable ++ Map(sd.variable -> kVar, sd.accumulationVariable -> accVar), bottomUp=Some(dp))
-          kadv <- impParadigm.imperativeCapabilities.assignVar(kVar, advExpr)
-          _ <- addBlockDefinitions(Seq(assignResult, kadv))
+              advExpr <- explore(sd.iteration.head._4, symbolTable = symbolTable ++ Map(sd.iteration.head._1 -> kVar, sd.accumulationVariable -> accVar), bottomUp = Some(dp))
+              kadv <- impParadigm.imperativeCapabilities.assignVar(kVar, advExpr)
+              _ <- addBlockDefinitions(Seq(assignResult, kadv))
 
-        } yield ())
+            } yield ())
 
-        retStmt <- impParadigm.imperativeCapabilities.returnStmt(accVar)
-      } yield Seq(whilestmt, retStmt)
+            retStmt <- impParadigm.imperativeCapabilities.returnStmt(accVar)
+          } yield Seq(whilestmt, retStmt)
+        } else if (sd.iteration.length == 2) {
+          for {
+            zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
+            one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
+
+            intType <- toTargetLanguageType(TypeRep.Int)
+            accVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(sd.accumulationVariable), intType, Some(zero))
+
+            level0_low  <- explore(sd.iteration.head._2, bottomUp = Some(dp), symbolTable = Map.empty, memoize = false)
+            level0_var  <- impParadigm.imperativeCapabilities.declareVar(names.mangle(sd.iteration.head._1), intType, Some(level0_low))
+
+            // NOTE that other variables HIGH and LOW might depend on earlier variables, so build up symbol table
+            level1_map = Map(sd.iteration.head._1 -> level0_var, sd.accumulationVariable -> accVar)
+
+            // "r"
+            level1_low <- explore(sd.iteration.tail.head._2, bottomUp = Some(dp), symbolTable = level1_map, memoize = false)
+            level1_var <- impParadigm.imperativeCapabilities.declareVar(names.mangle(sd.iteration.tail.head._1), intType, Some(level1_low))
+            level2_map = level1_map ++ Map(sd.iteration.tail.head._1 -> level1_var) // HACK FIX, model.solution.mappers("i") -> expr1)
+
+            level0_condition <- explore(sd.iteration.head._3, bottomUp = Some(dp), symbolTable = level2_map, memoize = false)
+            level1_condition <- explore(sd.iteration.tail.head._3, bottomUp = Some(dp), symbolTable = level2_map, memoize = false)
+
+            dp_o <- array.arrayCapabilities.get(dp, Seq(level0_var))        // needs to be [i] NOT level0_var -- can be overridden with mapper
+            dp_o_i <- array.arrayCapabilities.get(dp_o, Seq(level1_var))    // needs to be [j] NOT level1_var)
+
+
+            // INNER LOOP
+
+            whileLoop_inner <- impParadigm.imperativeCapabilities.whileLoop(level1_condition, for {
+              resultExpr <- explore(sd.subproblemExpression, symbolTable=level2_map, bottomUp=Some(dp))
+              additive <- arithmetic.arithmeticCapabilities.add(accVar, resultExpr)
+              assignResult <- impParadigm.imperativeCapabilities.assignVar(accVar, additive)
+
+              _ <- addBlockDefinitions(Seq(assignResult))
+
+              ivar_inner_plusone <- arithmetic.arithmeticCapabilities.add(level1_var, one)
+              incr_inner <- impParadigm.imperativeCapabilities.assignVar(level1_var, ivar_inner_plusone)
+
+              _ <- addBlockDefinitions(Seq(incr_inner))
+            } yield ())
+
+            // OUTER LOOP
+            whileLoop_outer <- impParadigm.imperativeCapabilities.whileLoop(level0_condition, for {
+              inner_reset <- impParadigm.imperativeCapabilities.assignVar(level1_var, level1_low)
+
+              ivar_outer_plusone <- arithmetic.arithmeticCapabilities.add(level0_var, one)
+              incr_outer <- impParadigm.imperativeCapabilities.assignVar(level0_var, ivar_outer_plusone)
+              _ <- addBlockDefinitions(Seq(inner_reset, whileLoop_inner, incr_outer))
+            } yield ())
+
+            retStmt <- impParadigm.imperativeCapabilities.returnStmt(accVar)
+          } yield Seq(whileLoop_outer, retStmt)
+        } else {
+          // cannot handle 3-dimensions or more
+          ???
+        }
 
       case _ => ???
     }

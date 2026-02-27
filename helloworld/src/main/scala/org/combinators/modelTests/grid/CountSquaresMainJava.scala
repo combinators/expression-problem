@@ -4,22 +4,20 @@ import cats.effect.{ExitCode, IO, IOApp}
 import org.combinators.dp.{BottomUp, TestExample, TopDown}
 import org.combinators.dp.enhanced.EnhancedDPMainJava
 import org.combinators.model._
-import org.combinators.model.enhancedModels.MinPathSum
+import org.combinators.model.enhancedModels.{CountSquares, MinPathSum}
 
 import java.nio.file.{Path, Paths}
 
-class MinPathSumMainJava extends EnhancedDPMainJava {
-
-  override def tests = Seq(
-    new TestExample("mps1", new LiteralArray(Array(1,3,1, 1,5,1, 4,2,1), Seq(3,3)), new LiteralInt(7), new UnitExpression),
-    new TestExample("mps2", new LiteralArray(Array(1,2,3, 4,5,6), Seq(2,3)), new LiteralInt(12), new UnitExpression),
+class CountSquaresMainJava extends EnhancedDPMainJava {
+  override def tests = Seq( // todo: replace with actual test cases
+    new TestExample("cs1", new LiteralArray(Array(0,1,1,1, 1,1,1,1, 0,1,1,1), Seq(3,4)), new LiteralInt(15), new UnitExpression)
   )
 }
 
-object MinPathSumToDiskMain extends IOApp {
-  val targetDirectory: Path = Paths.get("target", "dp", "minPathSum")
+object CountSquaresToDiskMain extends IOApp {
+  val targetDirectory: Path = Paths.get("target", "dp", "countSquares")
 
-  val model: EnhancedModel = new MinPathSum().model
+  val model: EnhancedModel = new CountSquares().model
 
   def run(args: List[String]): IO[ExitCode] = {
     val topDown = TopDown()
@@ -34,7 +32,7 @@ object MinPathSumToDiskMain extends IOApp {
         case _ => ???
       }
     } else {
-      bottomUp
+      topDown
     }
 
     for {
@@ -42,7 +40,7 @@ object MinPathSumToDiskMain extends IOApp {
         print("Initializing Generator...")
       }
       main <- IO {
-        new MinPathSumMainJava()
+        new CountSquaresMainJava()
       }
       _ <- IO {
         println("[OK]")

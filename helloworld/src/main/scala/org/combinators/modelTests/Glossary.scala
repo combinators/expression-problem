@@ -15,7 +15,7 @@ import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.model.models.twoSequences.{LongestCommonSubsequenceModel, UncrossedLinesModel}
 import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.model.EnhancedModel
-import org.combinators.modelTests.grid.{MinPathSumMainJava, UniquePathsMainJava, UniquePathsToDiskMain}
+import org.combinators.modelTests.grid.{CountSquaresMainJava, CountSquaresToDiskMain, MinPathSumMainJava, MinPathSumToDiskMain, UniquePathsMainJava, UniquePathsToDiskMain}
 import org.combinators.modelTests.integer.fibonacci.{FibonacciEnhancedMainJava, FibonacciEnhancedMainToDiskMain}
 import org.combinators.modelTests.integer.perfectsquare.{PerfectSquareMainDirectToDiskMain, PerfectSquareMainJava}
 import org.combinators.modelTests.integer.{BellNumberDirectToDiskMain, BellNumberMainJava, DiceThrowDirectToDiskMain, DiceThrowMainJava, TribonacciMainJava, TribonacciToDiskMain}
@@ -63,6 +63,7 @@ object GlossaryToDiskMain extends IOApp {
   // declare the working versions for each problem in the enhanced list
   val known_enhanced_solutions:Seq[(EnhancedMainInterface, EnhancedModel, Seq[GenerationOption])] = Seq(
     (new BellNumberMainJava(), BellNumberDirectToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
+    (new CountSquaresMainJava(), CountSquaresToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
     (new DiceThrowMainJava(), DiceThrowDirectToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
     (new FibonacciEnhancedMainJava(), FibonacciEnhancedMainToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
     (new InterleaveStringsMainJava(), InterleaveStringsToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
@@ -77,7 +78,7 @@ object GlossaryToDiskMain extends IOApp {
     (new ShortestCommonSupersequenceMainJava(), ShortestCommonSupersequenceToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
     (new TribonacciMainJava(), TribonacciToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
     (new UniquePathsMainJava(), UniquePathsToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
-    (new MinPathSumMainJava(), MinCostClimbingStairToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
+    (new MinPathSumMainJava(), MinPathSumToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
 
     // generates but has flawed logic because of the transformation of (r,c) into (i,j)
     // CHALLENGING (new MatrixChainMultiplicationMainJava(), MatrixChainMultiplicationMainDirectToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),

@@ -78,13 +78,30 @@ case class SumDefinition(
 
 // Accumulate values of P(...) and return as Integer
 case class ReturnAccumulatedDefinition(
-  variable: String,
   accumulationVariable: String,
-  inclusiveStart: Expression,
-  guardContinue:Expression,
+  iteration: Seq[(String,Expression,Expression,Expression)],  // variable, inclusiveStart, guardContinue, advance
   subproblemExpression: Expression,
-  advance: Expression
 ) extends Definition
+
+//int sum = 0;
+//for(int r = 0; r < matrix.length; r++) {
+//  for(int c = 0; c < matrix[0].length; c++) {
+//    sum += dp[r][c];
+//  }
+//}
+
+//ReturnAccumulatedDefinition("idx", "sum", zero, SelfExpression("idx") <= n, new SubproblemExpression(Seq(n, SelfExpression("idx"))), SelfExpression("idx") + one)
+// Accumulate values of P(...) and return as Integer
+//case class ReturnAccumulatedDefinition(
+//  variable: String,
+//  accumulationVariable: String,
+//  inclusiveStart: Expression,
+//  guardContinue:Expression,
+//  subproblemExpression: Expression,
+//  advance: Expression
+//) extends Definition
+
+
 
 case class MinRangeDefinition(
          variable: String,

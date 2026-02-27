@@ -35,7 +35,11 @@ class BellNumber {
 
     // Top-Down would be OK with SumDefinition,  but we cannot use this for BottomUp, which sets individual
     // DP[] entries based on the Sum. Instead, we need a new
-    val final_answer = ReturnAccumulatedDefinition("idx", "sum", zero, SelfExpression("idx") <= n, new SubproblemExpression(Seq(n, SelfExpression("idx"))), SelfExpression("idx") + one)
+    val final_answer = ReturnAccumulatedDefinition(
+      "sum",
+      Seq(("idx", zero, SelfExpression("idx") <= n, SelfExpression("idx") + one)),
+      new SubproblemExpression(Seq(n, SelfExpression("idx")))
+    )
 
     val BellNumber = new EnhancedModel("BellNumber",
       bound,

@@ -90,21 +90,50 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with EnhancedU
           case _ => ???
         }
 
+
+
         for {
           solType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle(implementation))
           sol <- if (createArray) {
             val vals = test.inputType match {
-              case la:LiteralArray => la.literal
-              case _ => Array.empty
+              case la:LiteralArray => Seq(la.literal)
+              case la:LiteralArrayPair => Seq(la.ar1, la.ar2)
+              case _ => Seq.empty
             }
 
-            for {
-              arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
+            val dimensions = test.inputType match {
+              case la:LiteralArray => la.dimensions
+              case lap:LiteralArrayPair =>
+                Seq(1)  // these are two one-dimensional strings
+              case _ => Seq.empty
+            }
 
-              expr <- create_int_array(vals)
-              variable <- impParadigm.imperativeCapabilities.declareVar(names.mangle(test.name), arrayType, Some(expr))
-              sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solType, Seq(variable))
-            } yield sol
+            val type_rep = dimensions.length match {
+              case 1 => TypeRep.Array(TypeRep.Int)
+              case 2 => TypeRep.Array(TypeRep.Array(TypeRep.Int))
+              case 3 => TypeRep.Array(TypeRep.Array(TypeRep.Array(TypeRep.Int)))
+              case _ =>  ???
+            }
+
+            if (vals.length == 1) {
+              for {
+                arrayType <- toTargetLanguageType(type_rep)
+                expr <- create_int_nd_array(vals.head, dimensions)
+                variable <- impParadigm.imperativeCapabilities.declareVar(names.mangle(test.name), arrayType, Some(expr))
+                sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solType, Seq(variable))
+              } yield sol
+            } else if (vals.length == 2) {
+              for {
+                arrayType <- toTargetLanguageType(type_rep)
+                expr1 <- create_int_nd_array(vals.head, dimensions)
+                expr2 <- create_int_nd_array(vals.tail.head, dimensions)
+                var1 <- impParadigm.imperativeCapabilities.declareVar(names.mangle(test.name + "1"), arrayType, Some(expr1))
+                var2 <- impParadigm.imperativeCapabilities.declareVar(names.mangle(test.name + "2"), arrayType, Some(expr2))
+                sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solType, Seq(var1, var2))
+              } yield sol
+            } else {
+              ???
+            }
           } else if (createStrings) {
             val vals = test.inputType match {
               case triple:LiteralStringTriple => Seq(triple.string1, triple.string2, triple.string3)

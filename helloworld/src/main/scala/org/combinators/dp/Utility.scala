@@ -488,6 +488,20 @@ trait Utility {
     } yield result
   }
 
+  def create_int_nd_array(values:Seq[Int], dimensions:Seq[Int]) : Generator[MethodBodyContext, Expression] = {
+    import AnyParadigm.syntax._
+    for {
+      translated_vals <- forEach(values) { value =>
+        for {
+          reified_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, value)
+        } yield reified_value
+      }
+
+      intType <- paradigm.methodBodyCapabilities.toTargetLanguageType(TypeRep.Int)
+      result <- array.arrayCapabilities.create(intType, dimensions, translated_vals)
+    } yield result
+  }
+
   @deprecated("replace with create_array")
   def set_array(sampleVar: Expression, index:Int, values:Seq[Int]) : Generator[MethodBodyContext, Seq[Statement]] = {
     if (values.length == 1) {

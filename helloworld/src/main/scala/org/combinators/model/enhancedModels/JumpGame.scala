@@ -40,7 +40,8 @@ class JumpGame {
       subproblemType = IntegerType(),
       solutionType = IntegerType(),
       solution = sol_dt,
-      definition = basecase
+      definition = basecase,
+      answer = ReturnExpressionDefinition(new SubproblemExpression((Seq(zero))))
     )
 
     JumpGame

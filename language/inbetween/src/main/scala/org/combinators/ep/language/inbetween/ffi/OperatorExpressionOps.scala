@@ -6,7 +6,23 @@ object OperatorExpressionOps {
   trait FinalTypes extends any.FinalTypes {
     type Operator
     type BinaryExpression <: Expression
+    type TernaryExpression <: Expression
     type UnaryExpression <: Expression
+  }
+
+  trait TernaryExpression[FT <: FinalTypes] extends any.Expression[FT] with Factory[FT] {
+    def getSelfTernaryExpression: finalTypes.TernaryExpression
+    def operator: Operator[FT]
+    def base: any.Expression[FT]
+    def op1: any.Expression[FT]
+    def op2: any.Expression[FT]
+
+    def copy(
+              operator: Operator[FT] = operator,
+              base: any.Expression[FT] = base,
+              op1: any.Expression[FT] = op1,
+              op2: any.Expression[FT] = op2
+            ): TernaryExpression[FT] = ternaryExpression(operator, base, op1, op2)
   }
 
   trait BinaryExpression[FT <: FinalTypes] extends any.Expression[FT] with Factory[FT] {
@@ -39,10 +55,12 @@ object OperatorExpressionOps {
 
   trait Factory[FT <: FinalTypes] extends any.Factory[FT] {
 
+    def ternaryExpression(operator: Operator[FT], base: any.Expression[FT], op1: any.Expression[FT], op2: any.Expression[FT]): TernaryExpression[FT]
     def binaryExpression(operator: Operator[FT], left: any.Expression[FT], right: any.Expression[FT]): BinaryExpression[FT]
     def unaryExpression(operator: Operator[FT], operand: any.Expression[FT]): UnaryExpression[FT]
 
     implicit def convert(operator: Operator[FT]): Operator[FT]
+    implicit def convert(ternaryExpression: TernaryExpression[FT]) : TernaryExpression[FT]
     implicit def convert(binaryExpression: BinaryExpression[FT]): BinaryExpression[FT]
     implicit def convert(unaryExpression: UnaryExpression[FT]): UnaryExpression[FT]
   }

@@ -48,7 +48,7 @@ class MatrixChainMultiplicationBU {
       mode = UpperTriangle(Seq("c", "r")),
 
       // answer can be found in dp[1][n]
-      answer = new SubproblemExpression(Seq(one, new ArrayLengthExpression(array) - one))
+      answer = ReturnExpressionDefinition(new SubproblemExpression(Seq(one, new ArrayLengthExpression(array) - one)))
     )
 
     MCM

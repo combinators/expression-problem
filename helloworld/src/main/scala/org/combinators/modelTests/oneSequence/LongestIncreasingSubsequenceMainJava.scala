@@ -1,4 +1,4 @@
-package org.combinators.modelTests.integer
+package org.combinators.modelTests.oneSequence
 
 /**
  * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"
@@ -16,24 +16,28 @@ import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
 import org.combinators.model._
-import org.combinators.model.enhancedModels.DiceThrow
+import org.combinators.model.enhancedModels.LongestIncreasingSubsequence
 
 import java.nio.file.{Path, Paths}
 
 /**
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
-class DiceThrowMainJava extends EnhancedDPMainJava  {
+class LongestIncreasingSubsequenceMainJava extends EnhancedDPMainJava  {
 
   val tests = Seq(
-    new TestExample("dt1", new LiteralTriple(6, 3, 12), new LiteralInt(25), new UnitExpression) //  https://www.geeksforgeeks.org/dsa/dice-throw-dp-30/
+    /** https://en.wikipedia.org/wiki/Longest_increasing_subsequence */
+    new TestExample("lis1", new LiteralArray(Array(0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15)), new LiteralInt(6), new UnitExpression),
+
+    /** https://www.geeksforgeeks.org/dsa/longest-increasing-subsequence-dp-3/ */
+    new TestExample("lis2", new LiteralArray(Array(3, 10, 2, 1, 20)), new LiteralInt(3), new UnitExpression)
   )
 }
 
-object DiceThrowDirectToDiskMain extends IOApp {
-  val targetDirectory:Path = Paths.get("target", "dp", "diceThrow")
+object LongestIncreasingSubsequenceDirectToDiskMain extends IOApp {
+  val targetDirectory:Path = Paths.get("target", "dp", "LIS")
 
-  val model: EnhancedModel = new DiceThrow().model
+  val model: EnhancedModel = new LongestIncreasingSubsequence().model
 
   def run(args: List[String]): IO[ExitCode] = {
 
@@ -50,15 +54,15 @@ object DiceThrowDirectToDiskMain extends IOApp {
         case _ => ???
       }
     } else {
-      topDown
+      topDownWithMemo
     }
 
     for {
       _ <- IO { print("Initializing Generator...") }
-      main <- IO { new DiceThrowMainJava() }
+      main <- IO { new LongestIncreasingSubsequenceMainJava() }
       _ <- IO { println("[OK]") }
 
-      result <- main.runDirectToDisc(targetDirectory, DiceThrowDirectToDiskMain.model, choice)
+      result <- main.runDirectToDisc(targetDirectory, LongestIncreasingSubsequenceDirectToDiskMain.model, choice)
     } yield result
   }
 }

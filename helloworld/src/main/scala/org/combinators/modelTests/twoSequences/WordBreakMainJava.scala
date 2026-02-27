@@ -17,21 +17,21 @@ import java.nio.file.{Path, Paths}
 
 // needs custom-support code, because the test case has unusual structure.
 
-class NeedlemanWunschSequenceInput(val string1:String, val string2:String, val matchBonus:Int, val mismatchPenalty:Int, val gapPenalty:Int) extends LiteralExpression
+class WordBreakInput(val s:String, val dictionary:Array[String]) extends LiteralExpression
 
-class NeedlemanWunschSequenceAlignmentMainJava extends EnhancedMainInterface {
+class WordBreakMainJava extends EnhancedMainInterface {
 
   def tests = Seq(
     // https://rna.informatik.uni-freiburg.de/Teaching/index.jsp?toolName=Needleman-Wunsch has really nice example
     // from google search via AI so cannot trace,
-    new TestExample("nws1", new NeedlemanWunschSequenceInput("abc", "ace", +2, -1, -2), new LiteralInt(0), new UnitExpression),
-    new TestExample("nws2", new NeedlemanWunschSequenceInput("CTCGCAGC", "CATTCAC", +10, -2, -5), new LiteralInt(33), new UnitExpression),
+    new TestExample("wb1", new WordBreakInput("catsanddog", Array("cats","dog","sand","and","cat")), new LiteralBoolean(false), new UnitExpression),
+    new TestExample("wb2", new WordBreakInput("leetcode", Array("leet","code")), new LiteralBoolean(true), new UnitExpression)
     // https://medium.com/@nandiniumbarkar/needleman-wunsch-algorithm-7bba68b510db
   )
 
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = Unboxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("dp"))))
 
-  val dpApproach = NeedlemanWunschSequenceAlignmentProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.realDoublesInMethod, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.stringsInMethod, generator.equalityInMethod, generator.ooParadigm, generator.parametricPolymorphism, generator.booleansInMethod)(generator.generics)
+  val dpApproach = WordBreakProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.realDoublesInMethod, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.stringsInMethod, generator.equalityInMethod, generator.ooParadigm, generator.parametricPolymorphism, generator.booleansInMethod)(generator.generics)
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
@@ -80,11 +80,10 @@ class NeedlemanWunschSequenceAlignmentMainJava extends EnhancedMainInterface {
   }
 }
 
+object WordBreakToDiskMain extends IOApp {
+  val targetDirectory: Path = Paths.get("target", "dp", "wordbreak")
 
-object NeedlemanWunschSequenceAlignmentToDiskMain extends IOApp {
-  val targetDirectory: Path = Paths.get("target", "dp", "needlemanWunsch")
-
-  val model: EnhancedModel = new NeedlemanWunschSequenceAlignment().model
+  val model: EnhancedModel = new WordBreak().model
 
   def run(args: List[String]): IO[ExitCode] = {
     val topDown = TopDown()
@@ -107,7 +106,7 @@ object NeedlemanWunschSequenceAlignmentToDiskMain extends IOApp {
         print("Initializing Generator...")
       }
       main <- IO {
-        new NeedlemanWunschSequenceAlignmentMainJava()
+        new WordBreakMainJava()
       }
       _ <- IO {
         println("[OK]")

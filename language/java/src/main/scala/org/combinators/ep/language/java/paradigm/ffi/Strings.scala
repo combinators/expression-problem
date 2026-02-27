@@ -52,6 +52,22 @@ class Strings[Ctxt, AP <: AnyParadigm](
           }
         }
 
+      implicit val canSubString: Understands[Ctxt, Apply[SubString, Expression, Expression]] =
+        new Understands[Ctxt, Apply[SubString, Expression, Expression]] {
+          def perform(
+                       context: Ctxt,
+                       command: Apply[SubString, Expression, Expression]
+                     ): (Ctxt, Expression) = {
+            implicit val _getMember = getMember
+            implicit val _applyMethod = applyMethod
+            val gen = for {
+              substringMethod <- GetMember[Expression, Name](command.arguments(0), JavaNameProvider.mangle("substring")).interpret
+              res <- Apply[Expression, Expression, Expression](substringMethod, Seq(command.arguments(1), command.arguments(2))).interpret
+            } yield res
+            Command.runGenerator(gen, context)
+          }
+        }
+
       implicit val canAppend: Understands[Ctxt, Apply[StringAppend, Expression, Expression]] =
         new Understands[Ctxt, Apply[StringAppend, Expression, Expression]] {
           def perform(

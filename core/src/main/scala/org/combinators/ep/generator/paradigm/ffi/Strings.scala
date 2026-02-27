@@ -10,6 +10,7 @@ import scala.annotation.tailrec
 case class StringAppend()
 case class GetStringLength()
 case class GetCharAt()
+case class SubString()
 case class ToString[Type](sourceType: Type)
 
 trait Strings[Context] extends FFI {
@@ -19,6 +20,10 @@ trait Strings[Context] extends FFI {
     implicit val canGetStringLength: Understands[Context, Apply[GetStringLength, Expression, Expression]]
     def getStringLength(expression: Expression): Generator[Context, Expression] =
       AnyParadigm.capability(Apply[GetStringLength, Expression, Expression](GetStringLength(), Seq(expression)))
+
+    implicit val canSubString: Understands[Context, Apply[SubString, Expression, Expression]]
+    def subString(expression: Expression, start:Expression, exclusiveEnd:Expression): Generator[Context, Expression] =
+      AnyParadigm.capability(Apply[SubString, Expression, Expression](SubString(), Seq(expression, start, exclusiveEnd)))
 
     implicit val canGetCharAt: Understands[Context, Apply[GetCharAt, Expression, Expression]]
     def getCharAt(expression: Expression, pos:Expression): Generator[Context, Expression] =

@@ -1,5 +1,6 @@
-package org.combinators.dp.enhanced
+package org.combinators.modelTests.twoSequences
 
+import org.combinators.dp.{BottomUp, GenerationOption, TestExample, TopDown}
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{AbstractSyntax, NameProvider}
@@ -7,13 +8,13 @@ import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
-import org.combinators.model.{EnhancedModel, LiteralArray, LiteralBoolean, LiteralExpression, LiteralInt, LiteralString, LiteralStringPair, LiteralStringTriple, LiteralTriple, LiteralPair, LiteralArrayPair}
-import org.combinators.dp._
+import org.combinators.model.{EnhancedModel, LiteralBoolean, LiteralExpression, LiteralInt, LiteralString}
+import org.combinators.dp.enhanced.{BottomUpStrategy, EnhancedDPProvider, EnhancedUtility, TopDownStrategy}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
  */
-trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with EnhancedUtility with TopDownStrategy with BottomUpStrategy {
+trait NeedlemanWunschSequenceAlignmentProvider extends EnhancedDPProvider with EnhancedUtility with TopDownStrategy with BottomUpStrategy {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
@@ -49,106 +50,38 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with EnhancedU
     }
   }
 
-  def genericTests(implementation:String, tests: Seq[TestExample]): Generator[MethodBodyContext, Seq[Expression]] = {
+  def needlemanWunschTests(implementation:String, tests: Seq[TestExample]): Generator[MethodBodyContext, Seq[Expression]] = {
     import eqls.equalityCapabilities._
     import paradigm.methodBodyCapabilities._
     for {
       assert_statements <- forEach(tests) { test =>
 
-        val the_test_type = test.answer match {
-          case _:LiteralInt => toTargetLanguageType(TypeRep.Int)
-          case _:LiteralBoolean => toTargetLanguageType(TypeRep.Boolean)
-          case _:LiteralString => toTargetLanguageType(TypeRep.String)
-          case _:LiteralTriple => toTargetLanguageType(TypeRep.Int)          // triple means three separate integer values
-          case _:LiteralPair => toTargetLanguageType(TypeRep.Int)
+        val output = test.answer match {
+          case lit:LiteralInt => lit.literal
           case _ => ???
         }
 
         // Arrays have to be handled specially, I'm afraid
-        val createArray = test.inputType match {
-          case _:LiteralArray => true
-          case _:LiteralArrayPair => true
-          case _ => false
-        }
-
-        // if > 0 then this is a sequence of parameters
-        val sequenceLength = test.inputType match {
-          case lt:LiteralTriple => Seq(lt.val1, lt.val2, lt.val3)
-          case lp:LiteralPair => Seq(lp.val1, lp.val2)
-          case _ => Seq.empty
-        }
-
-        val createStrings = test.inputType match {
-          case _:LiteralStringTriple => true
-          case _:LiteralStringPair => true
-          case _ => false
-        }
-
-        val sol_gen_value = test.answer match {
-          case lit:LiteralInt => paradigm.methodBodyCapabilities.reify(TypeRep.Int, lit.literal)
-          case bool:LiteralBoolean => paradigm.methodBodyCapabilities.reify(TypeRep.Boolean, bool.literal)
+        val values = test.inputType match {
+          case nw:NeedlemanWunschSequenceInput => (nw.string1, nw.string2, nw.matchBonus, nw.mismatchPenalty, nw.gapPenalty)
           case _ => ???
         }
 
         for {
           solType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle(implementation))
-          sol <- if (createArray) {
-            val vals = test.inputType match {
-              case la:LiteralArray => la.literal
-              case _ => Array.empty
-            }
+          s1 <- paradigm.methodBodyCapabilities.reify(TypeRep.String, values._1)
+          s2 <- paradigm.methodBodyCapabilities.reify(TypeRep.String, values._2)
+          matchBonus <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, values._3)
+          mismatchPenalty <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, values._4)
+          gapPenalty <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, values._5)
 
-            for {
-              arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
-
-              expr <- create_int_array(vals)
-              variable <- impParadigm.imperativeCapabilities.declareVar(names.mangle(test.name), arrayType, Some(expr))
-              sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solType, Seq(variable))
-            } yield sol
-          } else if (createStrings) {
-            val vals = test.inputType match {
-              case triple:LiteralStringTriple => Seq(triple.string1, triple.string2, triple.string3)
-              case pair:LiteralStringPair => Seq(pair.string1, pair.string2)
-              case _ => Seq.empty
-            }
-
-            for {
-              all <- forEach (vals) { v1 =>
-                for {
-                  v1_val <- paradigm.methodBodyCapabilities.reify(TypeRep.String, v1)
-                } yield v1_val
-              }
-              sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solType, all)
-            } yield sol
-          } else {
-            if (sequenceLength.isEmpty) {
-              for {
-                litval <- literalMapping(test.inputType)
-                sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solType, Seq(litval))
-              } yield sol
-            } else if(sequenceLength.length == 2) {
-              for {
-                arg1 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, sequenceLength(0))
-                arg2 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, sequenceLength(1))
-                sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solType, Seq(arg1, arg2))
-              } yield sol
-            } else if (sequenceLength.length == 3) {
-              for {
-                arg1 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, sequenceLength(0))
-                arg2 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, sequenceLength(1))
-                arg3 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, sequenceLength(2))
-                sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solType, Seq(arg1, arg2, arg3))
-              } yield sol
-            } else {
-              ???
-            }
-          }
+          sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solType, Seq(s1, s2, matchBonus, mismatchPenalty, gapPenalty))
 
           computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, computeName)
 
           sol_actual <- apply(computeMethod, Seq.empty)
-          sol_value <- sol_gen_value
-          theType <- the_test_type
+          sol_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, output)
+          theType <- toTargetLanguageType(TypeRep.Int)
           asserteq_fib <- asserts.assertionCapabilities.assertEquals(theType, sol_actual, sol_value)
 
         } yield asserteq_fib
@@ -158,7 +91,7 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with EnhancedU
 
   def makeTestCase(clazzName:String, tests:Seq[TestExample]): Generator[TestContext, Unit] = {
     for {
-      _ <- paradigm.testCapabilities.addTestCase(genericTests(clazzName, tests), names.mangle(clazzName))
+      _ <- paradigm.testCapabilities.addTestCase(needlemanWunschTests(clazzName, tests), names.mangle(clazzName))
     } yield ()
   }
 
@@ -192,8 +125,8 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with EnhancedU
   }
 }
 
-object EnhancedDPObjectOrientedProvider {
-  type WithParadigm[P <: AnyParadigm] = EnhancedDPObjectOrientedProvider { val paradigm: P }
+object NeedlemanWunschSequenceAlignmentProvider {
+  type WithParadigm[P <: AnyParadigm] = NeedlemanWunschSequenceAlignmentProvider { val paradigm: P }
   type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 
   def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
@@ -211,8 +144,8 @@ object EnhancedDPObjectOrientedProvider {
    parametricPolymorphism: ParametricPolymorphism.WithBase[base.type],
    booleansIn: Booleans.WithBase[base.MethodBodyContext, base.type]
   )
-  (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): EnhancedDPObjectOrientedProvider.WithParadigm[base.type] =
-    new EnhancedDPObjectOrientedProvider {
+  (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): NeedlemanWunschSequenceAlignmentProvider.WithParadigm[base.type] =
+    new NeedlemanWunschSequenceAlignmentProvider {
       override val paradigm: base.type = base
       val impParadigm: imp.type = imp
       val arithmetic: ffiArithmetic.type = ffiArithmetic

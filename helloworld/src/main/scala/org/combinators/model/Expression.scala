@@ -48,6 +48,7 @@ class FunctionExpression(val name:String, val args: Seq[Expression]) extends Exp
 
 class LiteralInt(val literal: Int) extends LiteralExpression
 class IteratorExpression(val iteratorNumber: Int, val variable:String) extends Expression
+class CharToAsciiExpression(val char: Expression) extends Expression
 
 // low and high are INCLUSIVE
 case class HelperExpression(variable:String,
@@ -71,11 +72,11 @@ class Literal2DArrayIntPair(val ar1:Array[Int], val ar2:Array[Int], val value: I
 case class SelfExpression(val variableName:String) extends Expression
 
 class StringLengthExpression(val string: Expression) extends Expression
+class SubStringExpression(val string:Expression, val start:Expression, val exclusiveEnd:Expression) extends Expression
 class ArrayLengthExpression(val array: Expression) extends Expression
 
 //String
 class LiteralString(val literal: String) extends LiteralExpression
-class SubstringExpression(val string: Expression, val start: Expression, val end: Expression) extends Expression
 
 //Character
 class LiteralChar(val literal:Char) extends LiteralExpression
@@ -96,7 +97,7 @@ class LiteralBoolean(val literal:Boolean) extends LiteralExpression
 // Now includes the name of the int variable to iterate over
 class ArgExpression(val whichArg: Int, val name:String, val argType:ArgumentType, val itArgName:String) extends Expression
 
-// companion objects: needed for pattern matching
+// companion objects: needed for pattern matching? Might no longer be needed...
 object AdditionExpression {
   def apply(left:Expression, right:Expression) = new AdditionExpression(left, right)
 }

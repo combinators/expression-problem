@@ -1,4 +1,4 @@
-package org.combinators.modelTests.integer
+package org.combinators.modelTests.oneSequence
 
 /**
  * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"
@@ -16,24 +16,28 @@ import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
 import org.combinators.model._
-import org.combinators.model.enhancedModels.DiceThrow
+import org.combinators.model.enhancedModels.MaximalIndependentSetPath
 
 import java.nio.file.{Path, Paths}
 
 /**
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
-class DiceThrowMainJava extends EnhancedDPMainJava  {
+class MaximalIndependentSetPathMainJava extends EnhancedDPMainJava  {
 
   val tests = Seq(
-    new TestExample("dt1", new LiteralTriple(6, 3, 12), new LiteralInt(25), new UnitExpression) //  https://www.geeksforgeeks.org/dsa/dice-throw-dp-30/
+    // https://canvas.wpi.edu/courses/79353
+    new TestExample("sp1", new LiteralArray(Array(12,11,13,15)), new LiteralInt(27), new UnitExpression),
+    new TestExample("sp2", new LiteralArray(Array(2,1000,3,1)), new LiteralInt(1001), new UnitExpression),
+
+
   )
 }
 
-object DiceThrowDirectToDiskMain extends IOApp {
-  val targetDirectory:Path = Paths.get("target", "dp", "diceThrow")
+object MaximalIndependentSetPathDirectToDiskMain extends IOApp {
+  val targetDirectory:Path = Paths.get("target", "dp", "MISP")
 
-  val model: EnhancedModel = new DiceThrow().model
+  val model: EnhancedModel = new MaximalIndependentSetPath().model
 
   def run(args: List[String]): IO[ExitCode] = {
 
@@ -50,15 +54,15 @@ object DiceThrowDirectToDiskMain extends IOApp {
         case _ => ???
       }
     } else {
-      topDown
+      bottomUp
     }
 
     for {
       _ <- IO { print("Initializing Generator...") }
-      main <- IO { new DiceThrowMainJava() }
+      main <- IO { new MaximalIndependentSetPathMainJava() }
       _ <- IO { println("[OK]") }
 
-      result <- main.runDirectToDisc(targetDirectory, DiceThrowDirectToDiskMain.model, choice)
+      result <- main.runDirectToDisc(targetDirectory, MaximalIndependentSetPathDirectToDiskMain.model, choice)
     } yield result
   }
 }

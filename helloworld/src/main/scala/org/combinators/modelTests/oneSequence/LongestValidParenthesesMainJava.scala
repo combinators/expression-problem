@@ -1,4 +1,4 @@
-package org.combinators.modelTests.integer
+package org.combinators.modelTests.oneSequence
 
 /**
  * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"
@@ -16,24 +16,29 @@ import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
 import org.combinators.model._
-import org.combinators.model.enhancedModels.DiceThrow
+import org.combinators.model.enhancedModels.LongestValidParentheses
 
 import java.nio.file.{Path, Paths}
 
 /**
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
-class DiceThrowMainJava extends EnhancedDPMainJava  {
+class LongestValidParenthesesMainJava extends EnhancedDPMainJava  {
 
   val tests = Seq(
-    new TestExample("dt1", new LiteralTriple(6, 3, 12), new LiteralInt(25), new UnitExpression) //  https://www.geeksforgeeks.org/dsa/dice-throw-dp-30/
+    /** https://leetcode.com/problems/longest-valid-parentheses */
+    new TestExample("lvp1", new LiteralString(")()())"), new LiteralInt(4), new UnitExpression),
+
+    /** https://leetcode.com/problems/longest-valid-parentheses/solutions/14133/my-dp-on-solution-without-using-stack-by-nsyp/ */
+    new TestExample("lvp2", new LiteralString("()(())"), new LiteralInt(6), new UnitExpression),
+
   )
 }
 
-object DiceThrowDirectToDiskMain extends IOApp {
-  val targetDirectory:Path = Paths.get("target", "dp", "diceThrow")
+object LongestValidParenthesesDirectToDiskMain extends IOApp {
+  val targetDirectory:Path = Paths.get("target", "dp", "LVP")
 
-  val model: EnhancedModel = new DiceThrow().model
+  val model: EnhancedModel = new LongestValidParentheses().model
 
   def run(args: List[String]): IO[ExitCode] = {
 
@@ -50,15 +55,15 @@ object DiceThrowDirectToDiskMain extends IOApp {
         case _ => ???
       }
     } else {
-      topDown
+      bottomUp
     }
 
     for {
       _ <- IO { print("Initializing Generator...") }
-      main <- IO { new DiceThrowMainJava() }
+      main <- IO { new LongestValidParenthesesMainJava() }
       _ <- IO { println("[OK]") }
 
-      result <- main.runDirectToDisc(targetDirectory, DiceThrowDirectToDiskMain.model, choice)
+      result <- main.runDirectToDisc(targetDirectory, LongestValidParenthesesDirectToDiskMain.model, choice)
     } yield result
   }
 }

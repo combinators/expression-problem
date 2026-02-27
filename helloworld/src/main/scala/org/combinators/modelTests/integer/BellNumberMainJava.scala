@@ -16,24 +16,27 @@ import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
 import org.combinators.model._
-import org.combinators.model.enhancedModels.DiceThrow
+import org.combinators.model.enhancedModels.{BellNumber, DiceThrow}
 
 import java.nio.file.{Path, Paths}
 
 /**
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
-class DiceThrowMainJava extends EnhancedDPMainJava  {
+class BellNumberMainJava extends EnhancedDPMainJava  {
 
   val tests = Seq(
-    new TestExample("dt1", new LiteralTriple(6, 3, 12), new LiteralInt(25), new UnitExpression) //  https://www.geeksforgeeks.org/dsa/dice-throw-dp-30/
+    new TestExample("bn1", new LiteralInt(3), new LiteralInt(5), new UnitExpression),   // https://en.wikipedia.org/wiki/Bell_number
+    new TestExample("bn2", new LiteralInt(2), new LiteralInt(2), new UnitExpression),
+    new TestExample("bn3", new LiteralInt(5), new LiteralInt(52), new UnitExpression),
+
   )
 }
 
-object DiceThrowDirectToDiskMain extends IOApp {
-  val targetDirectory:Path = Paths.get("target", "dp", "diceThrow")
+object BellNumberDirectToDiskMain extends IOApp {
+  val targetDirectory:Path = Paths.get("target", "dp", "bellnumber")
 
-  val model: EnhancedModel = new DiceThrow().model
+  val model: EnhancedModel = new BellNumber().model
 
   def run(args: List[String]): IO[ExitCode] = {
 
@@ -50,15 +53,15 @@ object DiceThrowDirectToDiskMain extends IOApp {
         case _ => ???
       }
     } else {
-      topDown
+      topDownWithMemo
     }
 
     for {
       _ <- IO { print("Initializing Generator...") }
-      main <- IO { new DiceThrowMainJava() }
+      main <- IO { new BellNumberMainJava() }
       _ <- IO { println("[OK]") }
 
-      result <- main.runDirectToDisc(targetDirectory, DiceThrowDirectToDiskMain.model, choice)
+      result <- main.runDirectToDisc(targetDirectory, BellNumberDirectToDiskMain.model, choice)
     } yield result
   }
 }

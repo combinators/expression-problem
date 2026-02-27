@@ -80,7 +80,6 @@ trait PascalObjectOrientedProvider extends PascalProvider with Utility{
 
     for {
       intType <- toTargetLanguageType(TypeRep.Int)
-      arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
       _ <- setParameters(Seq((names.mangle("r"), intType),(names.mangle("c"), intType)))
       _ <- setReturnType(intType)
 
@@ -95,7 +94,7 @@ trait PascalObjectOrientedProvider extends PascalProvider with Utility{
       _ <- make_compute_method_signature()
       args <- getArguments()
 
-
+      ten <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 10)
 
       intType <- toTargetLanguageType(TypeRep.Int)
       arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
@@ -129,16 +128,15 @@ trait PascalObjectOrientedProvider extends PascalProvider with Utility{
             for {
               condExpr1 <- arithmetic.arithmeticCapabilities.le(jVar, zero)
               condExpr2 <- arithmetic.arithmeticCapabilities.le(jVar, zero)
-              dpi <- array.arrayCapabilities.get(dpVar, iVar)
-              dpj <- array.arrayCapabilities.get(dpi, jVar)
+              dpi <- array.arrayCapabilities.get(dpVar, Seq(iVar))
+              dpj <- array.arrayCapabilities.get(dpi, Seq(jVar))
 
               im1 <- arithmetic.arithmeticCapabilities.sub(iVar,one)
               jm1 <- arithmetic.arithmeticCapabilities.sub(jVar,one)
-              dpim1 <-array.arrayCapabilities.get(dpVar, im1)
-              dpim1jm1 <-array.arrayCapabilities.get(dpim1, jm1)
-              dpim1j <-array.arrayCapabilities.get(dpim1, iVar)
+              dpim1 <-array.arrayCapabilities.get(dpVar, Seq(im1))
+              dpim1jm1 <-array.arrayCapabilities.get(dpim1, Seq(jm1))
+              dpim1j <-array.arrayCapabilities.get(dpim1, Seq(iVar))
               sum <- arithmetic.arithmeticCapabilities.add(dpim1j,dpim1jm1)
-
 
               ifStmt <- impParadigm.imperativeCapabilities.ifThenElse(condExpr1,
                 for {
@@ -168,8 +166,8 @@ trait PascalObjectOrientedProvider extends PascalProvider with Utility{
           _ <- addBlockDefinitions(Seq(innerLoop))
       }yield())
 
-      dpr <- array.arrayCapabilities.get(dpVar, r)
-      dprc <- array.arrayCapabilities.get(dpr, c)
+      dpr <- array.arrayCapabilities.get(dpVar, Seq(r))
+      dprc <- array.arrayCapabilities.get(dpr, Seq(c))
 
       _ <- addBlockDefinitions(Seq(outerLoop))
 

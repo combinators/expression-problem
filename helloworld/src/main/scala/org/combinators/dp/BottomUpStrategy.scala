@@ -89,9 +89,9 @@ trait BottomUpStrategy extends Utility {
 
       // Access dp array at all three levels
       dp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
-      dp_o <- array.arrayCapabilities.get(dp, ivar_outer)
-      dp_o_m <- array.arrayCapabilities.get(dp_o, ivar_middle)
-      dp_o_m_i <- array.arrayCapabilities.get(dp_o_m, ivar_inner)
+      dp_o <- array.arrayCapabilities.get(dp, Seq(ivar_outer))
+      dp_o_m <- array.arrayCapabilities.get(dp_o, Seq(ivar_middle))
+      dp_o_m_i <- array.arrayCapabilities.get(dp_o_m, Seq(ivar_inner))
 
       // Build symbol table with all three iteration variables
       symbol_table = Map(
@@ -168,9 +168,9 @@ trait BottomUpStrategy extends Utility {
 
       // Return last element dp[max_bound_outer][max_bound_middle][max_bound_inner]
       dpexp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
-      dpo <- array.arrayCapabilities.get(dpexp, max_bound_outer)
-      dpm <- array.arrayCapabilities.get(dpo, max_bound_middle)
-      dpi <- array.arrayCapabilities.get(dpm, max_bound_inner)
+      dpo <- array.arrayCapabilities.get(dpexp, Seq(max_bound_outer))
+      dpm <- array.arrayCapabilities.get(dpo, Seq(max_bound_middle))
+      dpi <- array.arrayCapabilities.get(dpm, Seq(max_bound_inner))
       retstmt <- Command.lift(dpi)
     } yield Some(retstmt)
   }
@@ -206,8 +206,8 @@ trait BottomUpStrategy extends Utility {
       ivar_inner <- impParadigm.imperativeCapabilities.declareVar(names.mangle(model.bounds.tail.head.itArgName), intType, Some(zero))
 
       dp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
-      dp_o <- array.arrayCapabilities.get(dp, ivar_outer)
-      dp_o_i <- array.arrayCapabilities.get(dp_o, ivar_inner)
+      dp_o <- array.arrayCapabilities.get(dp, Seq(ivar_outer))
+      dp_o_i <- array.arrayCapabilities.get(dp_o, Seq(ivar_inner))
       i_map = Map(model.bounds.head.itArgName -> ivar_outer)
       j_map = Map(model.bounds.tail.head.itArgName -> ivar_inner)
 
@@ -280,8 +280,8 @@ trait BottomUpStrategy extends Utility {
 
       // return last element dp[n] because dp is 1 larger in size than n
       dpexp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
-      dpo <- array.arrayCapabilities.get(dpexp, max_bound_outer)
-      dpi <- array.arrayCapabilities.get(dpo, max_bound_inner)
+      dpo <- array.arrayCapabilities.get(dpexp, Seq(max_bound_outer))
+      dpi <- array.arrayCapabilities.get(dpo, Seq(max_bound_inner))
       retstmt <- Command.lift(dpi)
     } yield Some(retstmt)
   }
@@ -315,7 +315,7 @@ trait BottomUpStrategy extends Utility {
       ivar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(model.bounds.head.itArgName), intType, Some(zero))
 
       dp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
-      dp_i <- array.arrayCapabilities.get(dp, ivar)
+      dp_i <- array.arrayCapabilities.get(dp, Seq(ivar))
 
       instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, Seq(mbplus1), None)
 
@@ -365,7 +365,7 @@ trait BottomUpStrategy extends Utility {
 
       // return last element dp[n] because dp is 1 larger in size than n
       dpexp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
-      dpn <- array.arrayCapabilities.get(dpexp, max_bound)
+      dpn <- array.arrayCapabilities.get(dpexp, Seq(max_bound))
       retstmt <- Command.lift(dpn)
     } yield Some(retstmt)
   }

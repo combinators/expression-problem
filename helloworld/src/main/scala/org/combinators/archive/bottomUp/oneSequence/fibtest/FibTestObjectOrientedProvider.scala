@@ -120,15 +120,15 @@ trait FibTestObjectOrientedProvider extends FibTestProvider with OneSequencesUti
       iVar <- impParadigm.imperativeCapabilities.declareVar(iName, intType, Some(zero))
 
       //Base Cases
-      dpVarIndex <- array.arrayCapabilities.get(dpVar, iVar)
+      dpVarIndex <- array.arrayCapabilities.get(dpVar, Seq(iVar))
       bCase1 <- impParadigm.imperativeCapabilities.assignVar(dpVarIndex, zero)
       bCase2 <- impParadigm.imperativeCapabilities.assignVar(dpVarIndex, one)
 
       //Relation
       nm1 <-arithmetic.arithmeticCapabilities.sub(num,one)
       nm2  <-arithmetic.arithmeticCapabilities.sub(num,two)
-      dpVarIndexnm1 <-array.arrayCapabilities.get(dpVar, nm1)
-      dpVarIndexnm2 <-array.arrayCapabilities.get(dpVar, nm2)
+      dpVarIndexnm1 <-array.arrayCapabilities.get(dpVar, Seq(nm1))
+      dpVarIndexnm2 <-array.arrayCapabilities.get(dpVar, Seq(nm2))
       sum <- arithmetic.arithmeticCapabilities.add(dpVarIndexnm1,dpVarIndexnm2)
 
       relation <- impParadigm.imperativeCapabilities.assignVar(dpVarIndex, sum)
@@ -138,7 +138,7 @@ trait FibTestObjectOrientedProvider extends FibTestProvider with OneSequencesUti
       _ <- addBlockDefinitions(while_loop)
 
       //final element
-      dpVarIndexn <-array.arrayCapabilities.get(dpVar, num)
+      dpVarIndexn <-array.arrayCapabilities.get(dpVar, Seq(num))
 
     } yield Some(dpVarIndexn)
   }

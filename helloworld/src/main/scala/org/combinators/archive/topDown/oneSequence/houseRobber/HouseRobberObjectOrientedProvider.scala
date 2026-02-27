@@ -105,9 +105,10 @@ trait HouseRobberObjectOrientedProvider extends HouseRobberProvider {
       _ <- makeSolutionSignature()
       args <- getArguments()
       intType <- toTargetLanguageType(TypeRep.Int)
+      zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
       (namen,tpen,nums) = args.head
       func <- find_method_recursive(names.mangle("rob"))
-      size <- array.arrayCapabilities.length(nums)
+      size <- array.arrayCapabilities.length(nums, Seq(zero))  // not sure
 
       resultExpr <- impParadigm.imperativeCapabilities.declareVar(names.mangle("result"), intType)
       lengthExpr <- impParadigm.imperativeCapabilities.declareVar(names.mangle("n"), intType, Some(size))
@@ -226,11 +227,11 @@ trait HouseRobberObjectOrientedProvider extends HouseRobberProvider {
       guard_nEQ0 <- eqls.equalityCapabilities.areEqual(intType, n, zero)
       combined_guard <- booleans.booleanCapabilities.or(Seq(guard_nLt0, guard_nEQ0))
       guard2 <- eqls.equalityCapabilities.areEqual(intType, n, one)
-      size <- array.arrayCapabilities.length(hval)
+      size <- array.arrayCapabilities.length(hval, Seq(zero))
 
       n_1 <- arithmetic.arithmeticCapabilities.sub(n, one)
       n_2 <- arithmetic.arithmeticCapabilities.sub(n, two)
-      houseHoldValue <- array.arrayCapabilities.get(hval, n_1)
+      houseHoldValue <- array.arrayCapabilities.get(hval, Seq(n_1))
 
       notpickExpr <- impParadigm.imperativeCapabilities.declareVar(names.mangle("notpick"), intType)
       notpick2Expr <- apply(func, Seq(hval, n_1))
@@ -246,11 +247,11 @@ trait HouseRobberObjectOrientedProvider extends HouseRobberProvider {
       //Modifies the context IN PLACE
  //     _ <- impParadigm.imperativeCapabilities.declareVar(names.mangle("unknown"), intType, Some(one))
 
-      hval_0_ <- array.arrayCapabilities.get(hval, zero)
+      hval_0_ <- array.arrayCapabilities.get(hval, Seq(zero))
  //     _ <- impParadigm.imperativeCapabilities.declareVar(names.mangle("access"), intType, Some(hval_0_))
 
       // set hval[0] = 1
-      indexedLocation <- array.arrayCapabilities.get(hval, zero)
+      indexedLocation <- array.arrayCapabilities.get(hval, Seq(zero))
       setIL <- impParadigm.imperativeCapabilities.assignVar(indexedLocation, one)
      // _ <- addBlockDefinitions(Seq(setIL))
 

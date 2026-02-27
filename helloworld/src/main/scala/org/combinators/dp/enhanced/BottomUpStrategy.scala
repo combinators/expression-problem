@@ -115,9 +115,9 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
       expr2 <- explore(model.find_map(order(1)), bottomUp = Some(dp), symbolTable = level3_map)
       expr3 <- explore(model.find_map(order(2)), bottomUp = Some(dp), symbolTable = level3_map)
 
-      dp_0 <- array.arrayCapabilities.get(dp, expr1)
-      dp_0_1 <- array.arrayCapabilities.get(dp_0, expr2)
-      dp_0_1_2 <- array.arrayCapabilities.get(dp_0_1, expr3)
+      dp_0 <- array.arrayCapabilities.get(dp, Seq(expr1))
+      dp_0_1 <- array.arrayCapabilities.get(dp_0, Seq(expr2))
+      dp_0_1_2 <- array.arrayCapabilities.get(dp_0_1, Seq(expr3))
 
       instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, Seq(level0_high, level1_high, level2_high), None)
 
@@ -326,8 +326,8 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
       level0_condition <- explore(model.find(order(0)).in_range, bottomUp = Some(dp), symbolTable = level2_map, memoize = false)
       level1_condition <- explore(model.find(order(1)).in_range, bottomUp = Some(dp), symbolTable = level2_map, memoize = false)
 
-      dp_o <- array.arrayCapabilities.get(dp, expr1)        // needs to be [i] NOT level0_var -- can be overridden with mapper
-      dp_o_i <- array.arrayCapabilities.get(dp_o, expr2)    // needs to be [j] NOT level1_var
+      dp_o <- array.arrayCapabilities.get(dp, Seq(expr1))        // needs to be [i] NOT level0_var -- can be overridden with mapper
+      dp_o_i <- array.arrayCapabilities.get(dp_o, Seq(expr2))    // needs to be [j] NOT level1_var)
 
       instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, Seq(level0_high, level1_high), None)
 
@@ -565,7 +565,7 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
 
       expr1 <- explore(model.find_map(order(0)), bottomUp = Some(dp), symbolTable = oi_map)
 
-      dp_0 <- array.arrayCapabilities.get(dp, expr1)
+      dp_0 <- array.arrayCapabilities.get(dp, Seq(expr1))
 
       instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, Seq(level0_high), None)
 

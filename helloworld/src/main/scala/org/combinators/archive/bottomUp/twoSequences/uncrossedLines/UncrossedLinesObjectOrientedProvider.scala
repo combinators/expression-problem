@@ -133,8 +133,8 @@ trait UncrossedLinesObjectOrientedProvider extends UncrossedLinesProvider with T
       inner_guard <- arithmetic.arithmeticCapabilities.lt(c, len2)
       inner_update <- arithmetic.arithmeticCapabilities.add(c, one)
 
-      nums1OfR <- array.arrayCapabilities.get(nums1, r)
-      nums2OfC <- array.arrayCapabilities.get(nums2, c)
+      nums1OfR <- array.arrayCapabilities.get(nums1, Seq(r))
+      nums2OfC <- array.arrayCapabilities.get(nums2, Seq(c))
 
       // todo: replace lt with equals or a substitute for equals
       optimization_condition <- arithmetic.arithmeticCapabilities.lt(nums1OfR, nums2OfC)

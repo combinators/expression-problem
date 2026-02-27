@@ -147,18 +147,18 @@ trait TribonacciObjectOrientedProvider extends TribonacciProvider with Utility {
             dpVar <- declare_and_inst_variable("dp", arrayType, instantiated)
 
             //            dp[0] = 0;
-            dpVar0 <- array.arrayCapabilities.get(dpVar, zero)
+            dpVar0 <- array.arrayCapabilities.get(dpVar, Seq(zero))
             baseCase0 <- impParadigm.imperativeCapabilities.assignVar(dpVar0, zero)
             _ <- addBlockDefinitions(Seq(baseCase0))
 
             //            dp[1] = 1;
-            dpVar1 <- array.arrayCapabilities.get(dpVar, one)
+            dpVar1 <- array.arrayCapabilities.get(dpVar, Seq(one))
             baseCase1 <- impParadigm.imperativeCapabilities.assignVar(dpVar1, one)
             _ <- addBlockDefinitions(Seq(baseCase1))
 
 
             //            dp[2] = 1;
-            dpVar2 <- array.arrayCapabilities.get(dpVar, two)
+            dpVar2 <- array.arrayCapabilities.get(dpVar, Seq(two))
             baseCase2 <- impParadigm.imperativeCapabilities.assignVar(dpVar2, one)
             _ <- addBlockDefinitions(Seq(baseCase2))
 
@@ -175,18 +175,18 @@ trait TribonacciObjectOrientedProvider extends TribonacciProvider with Utility {
             optimization_body <- for {
               //              dp[i - 1]
               dpi_1 <- arithmetic.arithmeticCapabilities.sub(iVar, one)
-              dpi_1val <- array.arrayCapabilities.get(dpVar, dpi_1)
+              dpi_1val <- array.arrayCapabilities.get(dpVar, Seq(dpi_1))
 
               //              dp[i - 2]
               dpi_2 <- arithmetic.arithmeticCapabilities.sub(iVar, two)
-              dpi_2val <- array.arrayCapabilities.get(dpVar, dpi_2)
+              dpi_2val <- array.arrayCapabilities.get(dpVar, Seq(dpi_2))
 
               //              dp[i - 3]
               dpi_3 <- arithmetic.arithmeticCapabilities.sub(iVar, three)
-              dpi_3val <- array.arrayCapabilities.get(dpVar, dpi_3)
+              dpi_3val <- array.arrayCapabilities.get(dpVar, Seq(dpi_3))
 
               //              dp[n] = dp[n - 1] + dp[n - 2] + dp[n - 3];
-              dpi <- array.arrayCapabilities.get(dpVar, iVar)
+              dpi <- array.arrayCapabilities.get(dpVar, Seq(iVar))
               dpival <- arithmetic.arithmeticCapabilities.add(dpi_1val, dpi_2val)
               dpival <- arithmetic.arithmeticCapabilities.add(dpival, dpi_3val)
               dpiAssign <- impParadigm.imperativeCapabilities.assignVar(dpi, dpival)
@@ -196,7 +196,7 @@ trait TribonacciObjectOrientedProvider extends TribonacciProvider with Utility {
 
             _ <- addBlockDefinitions(Seq(buildUp))
 
-            dpn <- array.arrayCapabilities.get(dpVar, n)
+            dpn <- array.arrayCapabilities.get(dpVar, Seq(n))
 
             returnStmt <- impParadigm.imperativeCapabilities.returnStmt(dpn)
             _ <- addBlockDefinitions(Seq(returnStmt))

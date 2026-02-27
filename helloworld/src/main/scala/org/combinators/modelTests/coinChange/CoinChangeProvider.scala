@@ -8,7 +8,7 @@ import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.ep.generator.{AbstractSyntax, NameProvider}
-import org.combinators.model.{LiteralInt, LiteralString, LiteralStringPair}
+import org.combinators.model.{LiteralArray, LiteralInt, LiteralString, LiteralStringPair}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
@@ -39,8 +39,9 @@ trait CoinChangeProvider extends DPObjectOrientedProvider {
 
     // NOTE: these tests are in the wrong place, since we defer test gen to later
     val tests = Seq(
-      //new TestExample("test1", new Literal2DArrayIntPair(Array(Array(4,1),Array(5,2),Array(1,3)),4 ), new LiteralInt(3), new LiteralString("Testing")) // for now, leave solution as None
-      new TestExample("fib0", new LiteralStringPair("ACTG", "CGATC"), new LiteralInt(2), new LiteralString("AC")) // for now, leave solution as None
+      new TestExample("test1", new LiteralArray(Array(1,2,5)), new LiteralInt(11), new LiteralString("test"))
+      //ew TestExample("test1", new Literal2DArrayIntPair(Array(4,1,2),Array(5,2,3), 4), new LiteralInt(3), new LiteralString("Testing")) // for now, leave solution as None
+      //new TestExample("fib0", new LiteralStringPair("ACTG", "CGATC"), new LiteralInt(2), new LiteralString("AC")) // for now, leave solution as None
     )
 
     for {

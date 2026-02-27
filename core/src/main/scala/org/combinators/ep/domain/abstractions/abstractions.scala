@@ -217,7 +217,7 @@ object TypeRep {
   }
   /** Represents the type `Array[T]` */
   case class Array[T](elemTpe: TypeRep.OfHostType[T]) extends TypeRep {
-    type HostType = Array[T]
+    type HostType = scala.Array[T]
   }
 
   /** Represents the type A => B */

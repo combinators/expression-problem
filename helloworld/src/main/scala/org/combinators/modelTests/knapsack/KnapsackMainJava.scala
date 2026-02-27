@@ -92,7 +92,7 @@ object KnapsackDirectToDiskMain extends IOApp {
 
       // pass in TOP DOWN
 
-      result <- main.runDirectToDisc(targetDirectory, Knapsack, topDown)
+      result <- main.runDirectToDisc(targetDirectory, Knapsack, bottomUp)
     } yield result
   }
 }

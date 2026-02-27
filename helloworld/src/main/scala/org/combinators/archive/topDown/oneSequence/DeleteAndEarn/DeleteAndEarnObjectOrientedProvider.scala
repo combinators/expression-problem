@@ -115,7 +115,7 @@ trait DeleteAndEarnObjectOrientedProvider extends DeleteAndEarnProvider {
       (namen,tpen,arr) = args.head
       intType <- toTargetLanguageType(TypeRep.Int)
       booleanType <- toTargetLanguageType(TypeRep.Boolean)
-      size <- array.arrayCapabilities.length(arr)
+      size <- array.arrayCapabilities.length(arr, Seq(zero))
 
       swapped <- impParadigm.imperativeCapabilities.declareVar(names.mangle("swapped"), booleanType, Some(boo_true))
       jVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle("j"), intType, Some(zero))
@@ -133,8 +133,8 @@ trait DeleteAndEarnObjectOrientedProvider extends DeleteAndEarnProvider {
         for_cond <- arithmetic.arithmeticCapabilities.lt(index, arrSize_j)
         index_plusOne <- arithmetic.arithmeticCapabilities.add(index, one)
         inner_forLoop <- impParadigm.imperativeCapabilities.whileLoop(for_cond, for{
-          arr_index <- array.arrayCapabilities.get(arr, index)
-          arr_index_one <- array.arrayCapabilities.get(arr, index_plusOne)
+          arr_index <- array.arrayCapabilities.get(arr, Seq(index))
+          arr_index_one <- array.arrayCapabilities.get(arr, Seq(index_plusOne))
           inner_ifCond <- arithmetic.arithmeticCapabilities.lt(arr_index_one, arr_index)
 
           innerIfStmt <- impParadigm.imperativeCapabilities.ifThenElse(inner_ifCond, for{
@@ -187,7 +187,7 @@ trait DeleteAndEarnObjectOrientedProvider extends DeleteAndEarnProvider {
       intType <- toTargetLanguageType(TypeRep.Int)
       (names1, tpes1, arr) = args.head
       (names2, tpes2, index) = args.tail.head
-      arrSize <- array.arrayCapabilities.length(arr)
+      arrSize <- array.arrayCapabilities.length(arr, Seq(zero))
       func <- find_method_recursive(names.mangle("helper"))
 
       index_1 <- arithmetic.arithmeticCapabilities.add(index, one)
@@ -204,7 +204,7 @@ trait DeleteAndEarnObjectOrientedProvider extends DeleteAndEarnProvider {
         Seq.empty,
         Some(
           for{
-            arr_index <- array.arrayCapabilities.get(arr, index)
+            arr_index <- array.arrayCapabilities.get(arr, Seq(index))
             cursor <- impParadigm.imperativeCapabilities.declareVar(names.mangle("cur"), intType, Some(arr_index))
             pick <- impParadigm.imperativeCapabilities.declareVar(names.mangle("pick"), intType, Some(zero))
 

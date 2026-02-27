@@ -8,7 +8,7 @@ import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.ep.generator.{AbstractSyntax, NameProvider}
-import org.combinators.model.{Literal2DArrayIntPair, LiteralInt, LiteralString, LiteralStringPair}
+import org.combinators.model.{LiteralExpression, LiteralInt, LiteralString}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
@@ -32,6 +32,9 @@ trait KnapsackProvider extends DPObjectOrientedProvider {
   import paradigm._
   import syntax._
 
+  class KnapsackTestCase(val values:Array[Int], val dim1:Int, val maxWeight: Int) extends LiteralExpression
+
+
   // Specific examples hard coded for Int input and Int output
   def makeTestsKnapsack(implementation:String, tests: Seq[TestExample] = Seq.empty): Generator[MethodBodyContext, Seq[Expression]] = {
     import eqls.equalityCapabilities._
@@ -39,17 +42,17 @@ trait KnapsackProvider extends DPObjectOrientedProvider {
 
     // NOTE: these tests are in the wrong place, since we defer test gen to later
     val tests = Seq(
-      //new TestExample("test1", new Literal2DArrayIntPair(Array(Array(4,1),Array(5,2),Array(1,3)),4 ), new LiteralInt(3), new LiteralString("Testing")) // for now, leave solution as None
-      new TestExample("test1", new Literal2DArrayIntPair(Array(4,5,1),Array(1,2,3), 4), new LiteralInt(3), new LiteralString("Testing")) // for now, leave solution as None
-      //new TestExample("fib0", new LiteralStringPair("ACTG", "CGATC"), new LiteralInt(2), new LiteralString("AC")) // for now, leave solution as None
+
+     new TestExample("test1", new KnapsackTestCase(Array(4, 1, 5, 2, 1, 3 ), 3, 4), new LiteralInt(3), new LiteralString("answer")),
+     new TestExample("test1", new KnapsackTestCase(Array(10, 16, 8, 8, 9, 4, 4, 2 ), 4, 33), new LiteralInt(30), new LiteralString("answer")),
+     new TestExample("test1", new KnapsackTestCase(Array(2, 300, 1, 200, 5,400, 3,500 ), 4, 10), new LiteralInt(1100), new LiteralString("answer"))
     )
 
     for {
       assert_statements <- forEach(tests) { example =>
 
         val input_value = example.inputType match {
-//          case lt: LiteralStringPair => (lt.string1, lt.string2)
-          case pair: Literal2DArrayIntPair => (pair.ar1, pair.ar2, pair.value)
+          case pair: KnapsackTestCase => (pair.values, pair.dim1, pair.maxWeight)
           case _ => ??? // error in all other circumstances
         }
 
@@ -60,11 +63,16 @@ trait KnapsackProvider extends DPObjectOrientedProvider {
 
         for {
           fibType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle(implementation))
-          ar1 <- create_int_array(input_value._1)
-          ar2 <- create_int_array(input_value._2)
+          translated_vals <- forEach(input_value._1) { value =>
+            for {
+              reified_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, value)
+            } yield reified_value
+          }
+          intType <- toTargetLanguageType(TypeRep.Int)
+          array <- array.arrayCapabilities.create(intType, Seq(input_value._2, 2), translated_vals)  // second dimension is always 2
           ar3 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, input_value._3)
 
-          sol <- ooParadigm.methodBodyCapabilities.instantiateObject(fibType, Seq(ar1, ar2, ar3))
+          sol <- ooParadigm.methodBodyCapabilities.instantiateObject(fibType, Seq(array, ar3))
           computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, computeName)
 
           intType <- toTargetLanguageType(TypeRep.Int)

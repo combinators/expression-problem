@@ -3,7 +3,7 @@ package org.combinators.dp
 import org.combinators.model.{AdditionExpression, AndExpression, ArgExpression, ArgumentType, ArrayElementExpression, ArrayLengthExpression, CharAtExpression, EqualExpression, HelperExpression, InputExpression, IteratorExpression, LessThanExpression, LessThanOrEqualExpression, LiteralBoolean, LiteralChar, LiteralInt, MaxExpression, MinExpression, Model, MultiplicationExpression, OrExpression, SelfExpression, StringLengthExpression, SubStringExpression, SubproblemExpression, SubtractionExpression, TernaryExpression}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.NameProvider
+import org.combinators.ep.generator.{Command, NameProvider}
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.ep.generator.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.ep.generator.paradigm.control.Imperative
@@ -387,7 +387,7 @@ trait Utility {
         // Access array[idx] value
         inner <- explore(arr.array, memoize, symbolTable, bottomUp)
         idx <- explore(arr.index, memoize, symbolTable, bottomUp)
-        e <- array.arrayCapabilities.get(inner, idx)
+        e <- array.arrayCapabilities.get(inner, Seq(idx))
       } yield e
 
       case me:MultiplicationExpression => for {
@@ -426,11 +426,8 @@ trait Utility {
 
       } yield res
 
-      case hp:HelperExpression => for {
-        neg99 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, -99)
-        def1 = hp.variable
-        e = symbolTable(hp.variable)
-       } yield e
+      case hp:HelperExpression =>
+        Command.lift(symbolTable(hp.variable))
 
       case it:IteratorExpression => for {
         actual <- if (bottomUp.isDefined) {
@@ -473,7 +470,7 @@ trait Utility {
       }
 
       stringType <- paradigm.methodBodyCapabilities.toTargetLanguageType(TypeRep.String)
-      result <- array.arrayCapabilities.create(stringType, translated_vals)
+      result <- array.arrayCapabilities.create(stringType, Seq(1), translated_vals)
     } yield result
   }
 
@@ -487,7 +484,7 @@ trait Utility {
       }
 
       intType <- paradigm.methodBodyCapabilities.toTargetLanguageType(TypeRep.Int)
-      result <- array.arrayCapabilities.create(intType, translated_vals)
+      result <- array.arrayCapabilities.create(intType, Seq(1), translated_vals)
     } yield result
   }
 
@@ -498,7 +495,7 @@ trait Utility {
       for {
         d_i <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, index)
         d_v <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, values.head)
-        varIndex <- array.arrayCapabilities.get(sampleVar, d_i)
+        varIndex <- array.arrayCapabilities.get(sampleVar, Seq(d_i))
         a_i <- impParadigm.imperativeCapabilities.assignVar(varIndex, d_v)
       } yield Seq(a_i)
     } else {
@@ -506,7 +503,7 @@ trait Utility {
       for {
         d_i <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, index)
         d_v <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, values.head)
-        varIndex <- array.arrayCapabilities.get(sampleVar, d_i)
+        varIndex <- array.arrayCapabilities.get(sampleVar, Seq(d_i))
         a_i <- impParadigm.imperativeCapabilities.assignVar(varIndex, d_v)
         all_seq <- set_array(sampleVar, index+1, values.tail)
       } yield all_seq :+ a_i
@@ -636,40 +633,46 @@ trait Utility {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
 
-    if (indices.length == 1) {
-      for {
-        ai <- array.arrayCapabilities.get(matrix, indices.head)
-      } yield ai
-    } else if (indices.length == 2) {
-      for {
-        ai <- array.arrayCapabilities.get(matrix, indices.head)
-        aij <- array.arrayCapabilities.get(ai, indices.tail.head)
-      } yield aij
-    } else if (indices.length == 3) {
-      for {
-        ai <- array.arrayCapabilities.get(matrix, indices.head)
-        aij <- array.arrayCapabilities.get(ai, indices.tail.head)
-        aijk <- array.arrayCapabilities.get(aij, indices.tail.tail.head)
-      } yield aijk
-    } else if (indices.length == 3) {
-      for {
-        ai <- array.arrayCapabilities.get(matrix, indices.head)
-        aij <- array.arrayCapabilities.get(ai, indices.tail.head)
-        aijk <- array.arrayCapabilities.get(aij, indices.tail.tail.head)
-        aijkl <- array.arrayCapabilities.get(aij, indices.tail.tail.tail.head)
-      } yield aijkl
-    } else {
-      ???
-    }
+    for {
+      ai <- array.arrayCapabilities.get(matrix, indices)
+    } yield ai
+
+//    println("get_matrix_element might have simpler implementation with new n-dimensional array get")
+//
+//    if (indices.length == 1) {
+//      for {
+//        ai <- array.arrayCapabilities.get(matrix, Seq(indices.head))
+//      } yield ai
+//    } else if (indices.length == 2) {
+//      for {
+//        ai <- array.arrayCapabilities.get(matrix, Seq(indices.head))
+//        aij <- array.arrayCapabilities.get(ai, Seq(indices.tail.head))
+//      } yield aij
+//    } else if (indices.length == 3) {
+//      for {
+//        ai <- array.arrayCapabilities.get(matrix, Seq(indices.head))
+//        aij <- array.arrayCapabilities.get(ai, Seq(indices.tail.head))
+//        aijk <- array.arrayCapabilities.get(aij, Seq(indices.tail.tail.head))
+//      } yield aijk
+//    } else if (indices.length == 3) {
+//      for {
+//        ai <- array.arrayCapabilities.get(matrix, Seq(indices.head))
+//        aij <- array.arrayCapabilities.get(ai, Seq(indices.tail.head))
+//        aijk <- array.arrayCapabilities.get(aij, Seq(indices.tail.tail.head))
+//        aijkl <- array.arrayCapabilities.get(aij, Seq(indices.tail.tail.tail.head))
+//      } yield aijkl
+//    } else {
+//      ???
+//    }
   }
 
   def get_matrix_element(matrix: Expression, row: Expression, col: Expression): Generator[paradigm.MethodBodyContext, Expression] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
-
+    println("get_matrix_element might have simpler implementation now with n-d arrays")
     for {
-      matrix_at_r <- array.arrayCapabilities.get(matrix, row)
-      matrix_at_r_c <- array.arrayCapabilities.get(matrix_at_r, col)
+      matrix_at_r <- array.arrayCapabilities.get(matrix, Seq(row))
+      matrix_at_r_c <- array.arrayCapabilities.get(matrix_at_r, Seq(col))
     } yield matrix_at_r_c
   }
 

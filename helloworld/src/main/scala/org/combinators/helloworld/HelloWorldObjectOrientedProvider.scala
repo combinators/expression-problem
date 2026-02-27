@@ -202,7 +202,7 @@ trait HelloWorldObjectOrientedProvider extends HelloWorldProvider {
       _ <- resolveAndAddImport(worldType)
       args <- getArguments()
       zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
-      msg <- array.arrayCapabilities.get(args.head._3, zero)
+      msg <- array.arrayCapabilities.get(args.head._3, Seq(zero))
 
       res <- instantiateObject(worldType, Seq(msg))
       fname <- freshName(names.mangle("msg"))  // be sure to unpack since this has a side effect on the context....

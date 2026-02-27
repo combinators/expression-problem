@@ -105,7 +105,7 @@ trait JumpToObjectOrientedProvider extends JumpToProvider {
       args <- getArguments()
       (namen,tpen,arr) = args.head
       intType <- toTargetLanguageType(TypeRep.Int)
-      size <- array.arrayCapabilities.length(arr)
+      size <- array.arrayCapabilities.length(arr, Seq(zero))  // new formulation
 
       ansExpr <- impParadigm.imperativeCapabilities.declareVar(names.mangle("ans"), intType, Some(zero))
       iVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle("i"), intType, Some(zero))
@@ -113,7 +113,7 @@ trait JumpToObjectOrientedProvider extends JumpToProvider {
       whileCond <- arithmetic.arithmeticCapabilities.lt(iVar,arrSizeExpr)
 
       for_stmt <- impParadigm.imperativeCapabilities.whileLoop(whileCond, for{
-        arr_index <- array.arrayCapabilities.get(arr, iVar)
+        arr_index <- array.arrayCapabilities.get(arr, Seq(iVar))
         if_cond <- arithmetic.arithmeticCapabilities.lt(ansExpr, arr_index)
         innerIfStmt <- impParadigm.imperativeCapabilities.ifThenElse(if_cond, for{
           assignStmt <- impParadigm.imperativeCapabilities.assignVar(ansExpr, arr_index)
@@ -166,7 +166,7 @@ trait JumpToObjectOrientedProvider extends JumpToProvider {
       maxValue <- apply(retrieve_func, Seq(arr))
 
       ansExpr <- impParadigm.imperativeCapabilities.declareVar(names.mangle("ans"), intType, Some(zero))
-      arr_size <- array.arrayCapabilities.length(arr)
+      arr_size <- array.arrayCapabilities.length(arr, Seq(zero))   // new formulation
       arrLength_1 <- arithmetic.arithmeticCapabilities.sub(arr_size, one)
 
       if_cond <- arithmetic.arithmeticCapabilities.lt(index, arrLength_1)
@@ -176,7 +176,7 @@ trait JumpToObjectOrientedProvider extends JumpToProvider {
 
         index_one <- arithmetic.arithmeticCapabilities.add(index, one)
         mark <- impParadigm.imperativeCapabilities.declareVar(names.mangle("i"), intType, Some(index_one))
-        arr_index <- array.arrayCapabilities.get(arr, index)
+        arr_index <- array.arrayCapabilities.get(arr, Seq(index))
         index_arr_index <- arithmetic.arithmeticCapabilities.add(index, arr_index)
         for_cond1 <- arithmetic.arithmeticCapabilities.lt(mark, index_arr_index)
         for_cond2 <- eqls.equalityCapabilities.areEqual(intType, mark, index_arr_index)

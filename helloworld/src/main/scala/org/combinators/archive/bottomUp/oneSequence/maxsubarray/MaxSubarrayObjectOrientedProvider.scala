@@ -108,7 +108,7 @@ trait MaxSubarrayObjectOrientedProvider extends MaxSubarrayProvider with Utility
       (namen,tpen,nums) = args.head
       
       currentName <- freshName(names.mangle("c"))
-      numsZ <- array.arrayCapabilities.get(nums, zero)
+      numsZ <- array.arrayCapabilities.get(nums, Seq(zero))
       currentVar <- impParadigm.imperativeCapabilities.declareVar(currentName, intType, Some(numsZ))
 
       maxName <- freshName(names.mangle("m"))
@@ -126,7 +126,7 @@ trait MaxSubarrayObjectOrientedProvider extends MaxSubarrayProvider with Utility
         curIfStmt <- set_max(currentVar,zero)
 
         //Current assignment
-        numsI <- array.arrayCapabilities.get(nums, iVar)
+        numsI <- array.arrayCapabilities.get(nums, Seq(iVar))
         currentAssign <- plus_equals(currentVar,numsI)
 
         //Set Max

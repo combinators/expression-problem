@@ -9,31 +9,29 @@ class JumpGame {
     val zero = new LiteralInt(0)
     val one  = new LiteralInt(1)
 
-    val arr = new ArgExpression(0, "arr", IntegerArrayType(), "arr")
-    val index = new ArgExpression(1, "i", IntegerType(), "i")
+    val arr = new ArgExpression(0, "arr", IntegerArrayType(), "j")  // j is the iterator
+    //val index = new ArgExpression(1, "i", IntegerType(), "i")
     val arr_length = new ArrayLengthExpression(arr)
-    val eleAtIndex = new ArrayElementExpression(arr, index)
-    val loopBound = new AdditionExpression(eleAtIndex, index)
-    val bound = List(arr, index)
+    //val eleAtIndex = new ArrayElementExpression(arr, index)
+    //val loopBound = new AdditionExpression(eleAtIndex, index)
+    val bound = List(arr)
 
-    val j:HelperExpression = HelperExpression("j", index+one, SelfExpression("j") <= loopBound, loopBound + one)
-
-    val recursiveCall = new SubproblemExpression(Seq(j))
+    val i:HelperExpression = HelperExpression("i", one, SelfExpression("i") <= arr_length, arr_length + one)
 
     val result_min =
       MinRangeDefinition(
         "j",
-        new AdditionExpression(index, one),
-        SelfExpression("j") <= loopBound,
-        recursiveCall,
+        i +  one,
+        SelfExpression("j") <= arr_length,
+        new SubproblemExpression(Seq(SelfExpression("j"))),
         new AdditionExpression(SelfExpression("j"), one)
       )
 
-    val helperTable = Map("j" -> j)
+    val helperTable = Map("i" -> i)
 
-    val sol_dt = SubproblemInvocation(Seq("j"), helpers = helperTable)
+    val sol_dt = SubproblemInvocation(Seq("i"), helpers = helperTable)
 
-    val basecase = IfThenElseDefinition(arr_length - one <= index, ExpressionStatement(zero), result_min)
+    val basecase = IfThenElseDefinition(arr_length - one <= arr_length, ExpressionStatement(zero), result_min)
 
     val JumpGame = new EnhancedModel("JumpGame",
       bound,

@@ -1,4 +1,4 @@
-package org.combinators.models.boilerplate
+package org.combinators.models
 
 /**
  * sbt "dp/runMain org.combinators.modelTests.Glossary [bottomUp | topDown | topDownMemo]
@@ -13,14 +13,13 @@ import org.combinators.archive.unenhancedModels.boilerplate.unenhancedUncrossedL
 import org.combinators.archive.unenhancedModels.models.twoSequences.{LongestCommonSubsequenceModel, UncrossedLinesModel}
 import org.combinators.dp.enhanced.EnhancedMainInterface
 import org.combinators.dp.{BottomUp, GenerationOption, TopDown}
-import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.ep.generator.FileWithPathPersistable._
-import org.combinators.models.EnhancedModel
-import org.combinators.models.boilerplate.grid.{CountSquaresMainJava, CountSquaresToDiskMain, MinPathSumMainJava, MinPathSumToDiskMain, UniquePathsMainJava, UniquePathsToDiskMain}
-import org.combinators.models.boilerplate.integer.{BellNumberDirectToDiskMain, BellNumberMainJava, DiceThrowDirectToDiskMain, DiceThrowMainJava, FibonacciEnhancedMainJava, FibonacciEnhancedMainToDiskMain, PerfectSquareMainDirectToDiskMain, PerfectSquareMainJava, TribonacciMainJava, TribonacciToDiskMain}
-import org.combinators.models.boilerplate.oneSequence.{MatrixChainMultiplicationMainBottomUpDirectToDiskMain, MatrixChainMultiplicationMainBottomUpJava, MatrixChainMultiplicationMainTopDownDirectToDiskMain, MatrixChainMultiplicationMainTopDownJava, MinCostClimbingStairMain, MinCostClimbingStairToDiskMain}
-import org.combinators.models.boilerplate.strings.{InterleaveStringsMainJava, InterleaveStringsToDiskMain, ThreeStringsLCSMainJava, ThreeStringsLCSToDiskMain}
-import org.combinators.models.boilerplate.twoSequences.{DistinctSubsequencesMainJava, DistinctSubsequencesToDiskMain, LongestCommonSubsequenceMainJava, LongestCommonSubsequenceToDiskMain, NeedlemanWunschSequenceAlignmentMainJava, NeedlemanWunschSequenceAlignmentToDiskMain, ShortestCommonSupersequenceMainJava, ShortestCommonSupersequenceToDiskMain, UncrossedLinesDirectDiskToMain, UncrossedLinesMainJava, WildcardPatternMatchingMainJava, WildcardPatternMatchingToDiskMain}
+import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
+import org.combinators.models.boilerplate.grid._
+import org.combinators.models.boilerplate.integer._
+import org.combinators.models.boilerplate.oneSequence._
+import org.combinators.models.boilerplate.strings._
+import org.combinators.models.boilerplate.twoSequences._
 
 import java.nio.file.{Path, Paths}
 import scala.collection.Seq

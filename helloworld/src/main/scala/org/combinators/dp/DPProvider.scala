@@ -3,7 +3,7 @@ package org.combinators.dp
 import org.combinators.ep.generator.Command._
 import org.combinators.ep.generator.NameProvider
 import org.combinators.ep.generator.paradigm.{AnyParadigm, ObjectOriented}
-import org.combinators.model.{EnhancedModel, Model}
+import org.combinators.models.{EnhancedModel, Model}
 
 /** Attempt to provide a dynamic programming world generator. */
 trait DPProvider {

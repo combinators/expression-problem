@@ -1,6 +1,6 @@
 package org.combinators.dp
 
-import org.combinators.model.{AdditionExpression, AndExpression, ArgExpression, ArgumentType, ArrayElementExpression, ArrayLengthExpression, CharAtExpression, EqualExpression, HelperExpression, InputExpression, IteratorExpression, LessThanExpression, LessThanOrEqualExpression, LiteralBoolean, LiteralChar, LiteralInt, MaxExpression, MinExpression, Model, MultiplicationExpression, OrExpression, SelfExpression, StringLengthExpression, SubStringExpression, SubproblemExpression, SubtractionExpression, TernaryExpression}
+import org.combinators.models.{AdditionExpression, AndExpression, ArgExpression, ArgumentType, ArrayElementExpression, ArrayLengthExpression, CharAtExpression, EqualExpression, HelperExpression, InputExpression, IteratorExpression, LessThanExpression, LessThanOrEqualExpression, LiteralBoolean, LiteralChar, LiteralInt, MaxExpression, MinExpression, Model, MultiplicationExpression, OrExpression, SelfExpression, StringLengthExpression, SubStringExpression, SubproblemExpression, SubtractionExpression, TernaryExpression}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, NameProvider}
@@ -138,7 +138,7 @@ trait Utility {
   // NOTE: I can make generic with CONTEXT but can't remember syntax.
   def map_type_in_class(argType: ArgumentType) : Generator[ooParadigm.ClassContext, Type] = {
     import ooParadigm.classCapabilities._
-    import org.combinators.model._
+    import org.combinators.models._
 
     argType match {
       case _:IntegerType => for {
@@ -177,7 +177,7 @@ trait Utility {
 
   def max_bound_in_method(argExpr: ArgExpression)  : Generator[paradigm.MethodBodyContext, Expression] = {
     import paradigm.methodBodyCapabilities._
-    import org.combinators.model._
+    import org.combinators.models._
 
     argExpr.argType match {
       case _:IntegerType => for {
@@ -216,7 +216,7 @@ trait Utility {
 
   def map_type_in_method(argType: ArgumentType) : Generator[paradigm.MethodBodyContext, Type] = {
     import paradigm.methodBodyCapabilities._
-    import org.combinators.model._
+    import org.combinators.models._
 
     argType match {
       case _:IntegerType => for {
@@ -280,7 +280,7 @@ trait Utility {
    * since it might otherwise generate code that cannot compile.
    *
    */
-  def explore(expr : org.combinators.model.Expression, memoize:Boolean = true, symbolTable: Map[String,Expression], bottomUp:Option[Expression] = None) : Generator[paradigm.MethodBodyContext, Expression] = {
+  def explore(expr : org.combinators.models.Expression, memoize:Boolean = true, symbolTable: Map[String,Expression], bottomUp:Option[Expression] = None) : Generator[paradigm.MethodBodyContext, Expression] = {
     import paradigm.methodBodyCapabilities._
     import ooParadigm.methodBodyCapabilities._
     import AnyParadigm.syntax._

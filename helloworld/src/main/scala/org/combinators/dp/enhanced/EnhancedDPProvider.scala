@@ -4,7 +4,7 @@ import org.combinators.dp.{GenerationOption, TestExample}
 import org.combinators.ep.generator.Command._
 import org.combinators.ep.generator.NameProvider
 import org.combinators.ep.generator.paradigm.{AnyParadigm, ObjectOriented}
-import org.combinators.model.EnhancedModel
+import org.combinators.models.EnhancedModel
 
 /** Attempt to provide a dynamic programming world generator. */
 trait EnhancedDPProvider {

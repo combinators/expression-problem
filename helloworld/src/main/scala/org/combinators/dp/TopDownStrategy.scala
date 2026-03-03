@@ -7,7 +7,7 @@ import org.combinators.ep.generator.{Command, NameProvider}
 import org.combinators.ep.generator.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.ep.generator.paradigm.control.Imperative
 import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Equality, Strings}
-import org.combinators.model.{AdditionExpression, ArgumentType, EnhancedModel, EqualExpression, InputExpression, IteratorExpression, LiteralInt, Model, StringLengthExpression, SubproblemExpression, SubtractionExpression}
+import org.combinators.models.{AdditionExpression, ArgumentType, EnhancedModel, EqualExpression, InputExpression, IteratorExpression, LiteralInt, Model, StringLengthExpression, SubproblemExpression, SubtractionExpression}
 
 /**
  * Concepts necessary to realize top-down solutions

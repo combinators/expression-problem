@@ -14,7 +14,7 @@ import org.combinators.ep.generator.FileWithPathPersistable._
 import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, Unboxed, Syntax}
-import org.combinators.model._
+import org.combinators.models._
 
 import java.nio.file.Path
 

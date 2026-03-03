@@ -1,7 +1,7 @@
 package org.combinators.dp.enhanced
 
 import org.combinators.dp.GenerationOption
-import org.combinators.model.{BooleanType, EnhancedModel, IntegerType, StringType}
+import org.combinators.models.{BooleanType, EnhancedModel, IntegerType, StringType}
 import org.combinators.ep.domain.abstractions.TypeRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{FileWithPath, NameProvider}

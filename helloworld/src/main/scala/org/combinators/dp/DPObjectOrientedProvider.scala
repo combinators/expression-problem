@@ -7,7 +7,7 @@ import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions
 import org.combinators.ep.generator.paradigm.{Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.ep.generator.NameProvider
 import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.model.Model
+import org.combinators.models.Model
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability

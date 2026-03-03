@@ -2,7 +2,7 @@ package org.combinators.dp.enhanced
 
 import org.combinators.dp.GenerationOption
 import org.combinators.ep.generator.FileWithPath
-import org.combinators.model.EnhancedModel
+import org.combinators.models.EnhancedModel
 
 /**
  * Presents the ability to generate files from an EnhancedModel.

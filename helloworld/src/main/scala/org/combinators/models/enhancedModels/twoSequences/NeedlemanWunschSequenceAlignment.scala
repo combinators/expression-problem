@@ -2,6 +2,7 @@ package org.combinators.models.enhancedModels.twoSequences
 
 import org.combinators.models._
 
+// todo: identify root cause of test case error
 class NeedlemanWunschSequenceAlignment {
   def model: EnhancedModel = {
     val zero = new LiteralInt(0)

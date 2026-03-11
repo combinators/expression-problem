@@ -17,6 +17,8 @@ import org.combinators.models._
  *   P(i, j) = P(i-1, j)                    if s[i-1] != t[j-1]
  *   P(i, j) = P(i-1, j) + P(i-1, j-1)     if s[i-1] == t[j-1]
  */
+
+// todo: identify root cause of test case error
 class DistinctSubsequences {
   def model: EnhancedModel = {
     val zero = new LiteralInt(0)
@@ -31,9 +33,7 @@ class DistinctSubsequences {
     val helpers = Map("r" -> r, "c" -> c)
     val soln = SubproblemInvocation(order = Seq("r", "c"), helpers = helpers, returnType = IntegerType())
 
-    val matchCase = ExpressionDefinition(
-      new SubproblemExpression(Seq(r - one, c - one)) + new SubproblemExpression(Seq(r - one, c))
-    )
+    val matchCase = new SubproblemExpression(Seq(r - one, c - one)) + new SubproblemExpression(Seq(r - one, c))
 
     val noMatchCase = ExpressionDefinition(
       new SubproblemExpression(Seq(r - one, c))
@@ -41,7 +41,7 @@ class DistinctSubsequences {
 
     val subproblemTraversal = IfThenElseDefinition(
       new CharAtExpression(s1, r - one) == new CharAtExpression(s2, c - one),
-      ExpressionStatement(new SubproblemExpression(Seq(r - one, c - one)) + new SubproblemExpression(Seq(r - one, c))),
+      ExpressionStatement(matchCase),
       noMatchCase
     )
 

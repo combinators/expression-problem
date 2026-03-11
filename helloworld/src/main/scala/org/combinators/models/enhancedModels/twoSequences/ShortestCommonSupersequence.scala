@@ -19,6 +19,8 @@ import org.combinators.models._
  * P(i, j) = P(i-1, j-1) + 1               if s1[i-1] == s2[j-1]
  * P(i, j) = min(P(i-1,j), P(i,j-1)) + 1  otherwise
  */
+
+// todo: identify root cause of test case error
 class ShortestCommonSupersequence {
   def model: EnhancedModel = {
     val zero = new LiteralInt(0)

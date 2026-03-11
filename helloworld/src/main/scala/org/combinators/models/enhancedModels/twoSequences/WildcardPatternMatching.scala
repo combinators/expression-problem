@@ -17,6 +17,8 @@ import org.combinators.models._
  * P(i, j) = P(i-1, j) || P(i, j-1)             if pat[j-1] == '*'
  * P(i, j) = false                               otherwise
  */
+
+// todo: identify root cause of test case error
 class WildcardPatternMatching {
   def model: EnhancedModel = {
     val zero = new LiteralInt(0)

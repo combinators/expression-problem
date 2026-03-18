@@ -85,6 +85,22 @@ trait Imperative[Ctxt, AP <: AnyParadigm] extends Imp[Ctxt] {
           (manip.copyWithBlock(afterElseCtxt, manip.getBlock(context)), iteStmt.clone())
         }
       }
+
+    implicit val canTernary: Understands[Ctxt, Ternary[Expression, Expression]] =
+      new Understands[Ctxt, Ternary[Expression, Expression]] {
+        def perform(
+                     context: Ctxt,
+                     command: Ternary[Expression, Expression]
+                   ): (Ctxt, Expression) = {
+          val conditionalExpr: ConditionalExpr  = new ConditionalExpr ()
+          conditionalExpr.setCondition(command.condition)
+          conditionalExpr.setThenExpr(command.trueExpression)
+          conditionalExpr.setElseExpr(command.falseExpression)
+
+          (manip  .copyWithBlock(context, manip.getBlock(context)), conditionalExpr.clone())
+        }
+      }
+
     implicit val canWhile: Understands[Ctxt, While[Ctxt, Expression, Statement]] =
       new Understands[Ctxt, While[Ctxt, Expression, Statement]] {
         def perform(context: Ctxt, command: While[Ctxt, Expression, Statement]): (Ctxt, Statement) = {

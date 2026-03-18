@@ -599,16 +599,40 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
           ): (MethodBodyContext, Expression) = {
             val (tpe, args) = context.resolver.instantiationOverride(command.tpe, command.constructorArguments)
             /** Expand with instantiated body (if it exists). */
-            val result = new ObjectCreationExpr()
-            result.setType(tpe.asClassOrInterfaceType().clone())
-            result.setArguments(new NodeList(args*))
-            if (command.body.isDefined) {
-              val ci = new ClassOrInterfaceDeclaration()
-              val (newCtxt, classDef) = Command.runGenerator(command.body.get, ClassCtxt(context.resolver, ci, context.extraImports))
-              result.setAnonymousClassBody(newCtxt.cls.getMembers)
-              (context.copy(resolver = newCtxt.resolver, extraImports = newCtxt.extraImports), result)
+            if (tpe.isArrayType) {
+              val result = new ArrayCreationExpr()
+              result.setElementType(tpe.getElementType)
+              val levels = new NodeList[ArrayCreationLevel] ()
+              levels.add(new ArrayCreationLevel().setDimension(args.head))
+              if (args.tail.nonEmpty) {
+                levels.add(new ArrayCreationLevel().setDimension(args.tail.head))
+                if (args.tail.tail.nonEmpty) {
+                  levels.add(new ArrayCreationLevel().setDimension(args.tail.tail.head))
+                  if (args.tail.tail.tail.nonEmpty) {
+                    levels.add(new ArrayCreationLevel().setDimension(args.tail.tail.tail.head))
+                    if (args.tail.tail.tail.nonEmpty) {
+                      levels.add(new ArrayCreationLevel().setDimension(args.tail.tail.tail.tail.head))
+                      if (args.tail.tail.tail.tail.nonEmpty) {
+                        println("Too many array levels [ObjectOriented: instantiateObject in method")
+                      }
+                    }
+                  }
+                }
+              }
+              result.setLevels(levels)
+              (context, result.removeInitializer())      // no initializers when declaring bounds
             } else {
-              (context, result)
+              val result = new ObjectCreationExpr()
+              result.setType(tpe.asClassOrInterfaceType().clone())
+              result.setArguments(new NodeList(args: _*))
+              if (command.body.isDefined) {
+                val ci = new ClassOrInterfaceDeclaration()
+                val (newCtxt, classDef) = Command.runGenerator(command.body.get, ClassCtxt(context.resolver, ci, context.extraImports))
+                result.setAnonymousClassBody(newCtxt.cls.getMembers)
+                (context.copy(resolver = newCtxt.resolver, extraImports = newCtxt.extraImports), result)
+              } else {
+                (context, result)
+              }
             }
           }
         }

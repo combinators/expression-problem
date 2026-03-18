@@ -18,8 +18,7 @@ import org.combinators.ep.language.java.{CodeGenerator, CompilationUnitCtxt, Con
 import org.combinators.templating.persistable.{BundledResource, JavaPersistable}
 
 import scala.util.Try
-import scala.jdk.CollectionConverters.*
-
+import scala.jdk.CollectionConverters._
 
 trait AnyParadigm extends AP {
   lazy val config: Config
@@ -40,8 +39,8 @@ trait AnyParadigm extends AP {
             context: ProjectCtxt,
             command: Debug
           ): (ProjectCtxt, Unit) = {
-            val units = context.units.toSeq.mkString(", ")
-            System.err.println (command.tag + ": " + units)
+
+            context.units.foreach (u => System.err.println (command.tag + ": " + u))
             (context,())
           }
         }
@@ -299,7 +298,7 @@ trait AnyParadigm extends AP {
             val stripped = AnyParadigm.stripGenerics(command.forElem)
             Try { (context, context.resolver.importResolution(stripped)) } getOrElse {
               if (stripped.isClassOrInterfaceType) {
-                val importName: JName = ObjectOriented.typeToName(stripped.asClassOrInterfaceType())
+                val importName = ObjectOriented.typeToName(stripped.asClassOrInterfaceType())
                 val newImport =
                   new ImportDeclaration(
                     importName,
@@ -332,7 +331,7 @@ trait AnyParadigm extends AP {
               } else {
                 val scope =
                   command.functional match {
-                    case n: NodeWithScope[_] => n.getScope
+                    case n: NodeWithScope[Expression] => n.getScope
                     case _ => null
                   }
                 new MethodCallExpr(scope, command.functional.asInstanceOf[NodeWithSimpleName[Node]].getNameAsString, new NodeList[Expression](command.arguments*))
@@ -388,7 +387,7 @@ trait AnyParadigm extends AP {
             val stripped = AnyParadigm.stripGenerics(command.forElem)
             Try { (context, context.resolver.importResolution(stripped)) } getOrElse {
               if (stripped.isClassOrInterfaceType) {
-                val importName: JName = ObjectOriented.typeToName(stripped.asClassOrInterfaceType())
+                val importName = ObjectOriented.typeToName(stripped.asClassOrInterfaceType())
                 val newImport =
                   new ImportDeclaration(
                     importName,
@@ -529,11 +528,11 @@ trait AnyParadigm extends AP {
          """.stripMargin
     val cleanedUnits =
      ImportCleanup.cleaned(
-        FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.units*)*
+        FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.units: _*) : _*
      )
     val cleanedTestUnits =
       ImportCleanup.cleaned(
-        FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.testUnits*)*
+        FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.testUnits: _*): _*
       )
     val javaFiles = cleanedUnits.map { unit =>
       FileWithPath(

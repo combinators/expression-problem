@@ -39,6 +39,11 @@ object TypeRep {
     type HostType = scala.Boolean
   }
 
+  /** Represents the Scala type `Char`. */
+  case object Char extends TypeRep {
+    type HostType = scala.Char
+  }
+
   /** Represents the type `Seq[A]` */
   case class Sequence[T](elemTpe: TypeRep.OfHostType[T]) extends TypeRep {
     type HostType = Seq[T]

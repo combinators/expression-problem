@@ -332,7 +332,7 @@ trait ObjectOriented {
     def addClassToProject(classGen: Generator[ClassContext, Unit], qualifiedName: Name* ): Generator[ProjectContext, Unit] = {
       import compilationUnitCapabilities._
       import base.projectCapabilities._
-      addCompilationUnit(AddClass(qualifiedName.last, classGen).interpret, qualifiedName*)
+      addCompilationUnit(AddClass(qualifiedName.last, classGen).interpret, qualifiedName: _*)
     }
 
     implicit val canAddTypeLookupForClassesInProject: Understands[ProjectContext, AddTypeLookup[ClassContext, Type]]

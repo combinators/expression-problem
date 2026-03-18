@@ -130,6 +130,19 @@ lazy val helloWorldProject: Project =
     )
     .dependsOn(cogen, languageJava, languageNewScala)
 
+// first update general infra. for FFI
+// second update java code gener updates
+// third then in-between
+// fourth then newScala
+lazy val dynamicProgramming: Project =
+  (Project(id = s"dynamicProgramming", base = file(s"dynamicProgramming")))
+    .settings(commonSettings: _*)
+    .settings(noPublishSettings: _*)
+    .settings(
+      moduleName := s"expression-problem-language-dynamic-programming",
+    )
+    .dependsOn(cogen, languageJava, languageNewScala)
+
 lazy val languageInbetween =
   standardLanguageProject("inbetween")
 

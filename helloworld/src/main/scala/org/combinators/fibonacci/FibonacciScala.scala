@@ -22,11 +22,12 @@ def fib(n: Int): Int = {
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
-import org.combinators.ep.generator.FileWithPathPersistable._
-import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
-
-import org.combinators.ep.language.scala.codegen.CodeGenerator
-
+import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
+import org.combinators.ep.language.scala.ast.*
+import org.combinators.ep.language.scala.ast.ffi.{FinalArithmeticAST, FinalAssertionsAST, FinalBooleanAST, FinalEqualsAST, FinalListsAST, FinalOperatorExpressionsAST, FinalRealArithmeticOpsAST, FinalStringAST}
+import org.combinators.ep.language.scala.codegen.{CodeGenerator, FullAST}
+import org.combinators.cogen.FileWithPathPersistable
+import org.combinators.cogen.FileWithPathPersistable.fileWithPathPersistable
 import java.nio.file.{Path, Paths}
 
 /**
@@ -52,7 +53,7 @@ class FibonacciScala {
   // TODO: Need to add generator.functional
   val fibonacciApproach = FibonacciProvider[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.functional, generator.functionalControl.functionalControlInMethods, generator.ints.arithmeticInMethods, generator.assertions.assertionsInMethods, generator.equality.equalsInMethods)
 
-  val persistable: Aux[FileWithPath] = FileWithPathPersistable[FileWithPath]
+  val persistable: FileWithPathPersistable.Aux[FileWithPath] = FileWithPathPersistable[FileWithPath]
 
   def directToDiskTransaction(targetDirectory: Path): IO[Unit] = {
     //FIX:

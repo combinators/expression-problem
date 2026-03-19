@@ -82,7 +82,7 @@ object GlossaryToDiskMain extends IOApp {
   )
 
   // below are the individual DP problems generated and added to `all_files`.
-  def top_down_memo_files() = {
+  def top_down_memo_files(): Seq[FileWithPath]  = {
 
     // UncrossedLinesMainJava and LCSMainJava still don't work
 
@@ -97,7 +97,7 @@ object GlossaryToDiskMain extends IOApp {
   }
 
   // below are the individual DP problems generated and added to `all_files`.
-  def top_down() = {
+  def top_down(): Seq[FileWithPath]  = {
 //    val ul = new UncrossedLinesMainJava().filesToGenerate(new UncrossedLinesModel().instantiate(), TopDown())
     //val lcs = new LCSMainJava().filesToGenerate(new LongestCommonSubsequenceModel().instantiate(), TopDown())              [HEINEMAN: not working]
     // val kp = new KnapsackMainJava().filesToGenerate(new KnapsackModel().instantiate(), TopDown())                         [HEINEMAN: not working]
@@ -113,7 +113,7 @@ object GlossaryToDiskMain extends IOApp {
     others
   }
 
-  def bottom_up_files() = {
+  def bottom_up_files() : Seq[FileWithPath] = {
     val ul = new UnenhancedUncrossedLinesMainJava().filesToGenerate(new UncrossedLinesModel().instantiate(), BottomUp())
     val lcs = new LCSMainJava().filesToGenerate(new LongestCommonSubsequenceModel().instantiate(), BottomUp())
 

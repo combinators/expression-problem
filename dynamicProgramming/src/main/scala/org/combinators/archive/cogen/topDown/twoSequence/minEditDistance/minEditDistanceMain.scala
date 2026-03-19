@@ -103,7 +103,7 @@ object DPDirectToDiskMain extends IOApp {
     val string1:InputExpression = new InputExpression("s1")
     val string2:InputExpression = new InputExpression("s2")
 
-    val bound = List(new ArgExpression(0, "s1", new StringType(), "m"), new ArgExpression(1, "s2", new StringType(), "n"))
+    val bound = List(new ArgExpression(0, "s1", StringType(), "m"), new ArgExpression(1, "s2", StringType(), "n"))
 
     val m: IteratorExpression = new IteratorExpression(0, "m")   // only one argument, n
     val n: IteratorExpression = new IteratorExpression(1, "n")   // only one argument, n

@@ -1,15 +1,14 @@
 package org.combinators.archive.cogen.topDown.oneSequence.tribonacci
 
 import org.combinators.dp.{GenerationOption, Utility}
-import org.combinators.ep.domain.abstractions._
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm._
-import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
-import org.combinators.ep.generator.{AbstractSyntax, NameProvider, Understands}
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.paradigm.*
+import org.combinators.cogen.paradigm.control.Imperative
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
+import org.combinators.cogen.{AbstractSyntax, NameProvider, TypeRep}
 import org.combinators.models.Model
 
-trait TribonacciObjectOrientedProvider extends TribonacciProvider with Utility {
+trait TribonacciObjectOrientedProvider extends Utility {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
@@ -42,35 +41,6 @@ trait TribonacciObjectOrientedProvider extends TribonacciProvider with Utility {
 
   def getter(attr: String): String = {
     "get" + attr.capitalize
-  }
-
-  def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
-    FindClass(Seq(names.mangle(names.conceptNameOf(dtpe)))).interpret(canFindClass)
-  }
-
-  //  def registerTypeMapping(tpe: DataType): Generator[ProjectContext, Unit] = {
-  //    import ooParadigm.projectCapabilities.{addTypeLookupForClasses, addTypeLookupForConstructors}
-  //    import paradigm.projectCapabilities.addTypeLookupForMethods
-  //
-  //    val dtpe = TypeRep.DataType(tpe)
-  //
-  //    for {
-  //      _ <- addTypeLookupForMethods(dtpe, domainTypeLookup(tpe))
-  //      _ <- addTypeLookupForClasses(dtpe, domainTypeLookup(tpe))
-  //      _ <- addTypeLookupForConstructors(dtpe, domainTypeLookup(tpe))
-  //    } yield ()
-  //  }
-
-  def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
-    import ooParadigm.methodBodyCapabilities._
-    import paradigm.methodBodyCapabilities._
-
-    for {
-      rt <- findClass(names.mangle(names.conceptNameOf(tpeCase)))
-      _ <- resolveAndAddImport(rt)
-
-      res <- instantiateObject(rt, args)
-    } yield res
   }
 
   def make_compute_method_signature(): Generator[paradigm.MethodBodyContext, Unit] = {

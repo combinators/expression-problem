@@ -4,12 +4,12 @@ import org.combinators.models._
 
 class DistinctSubsequences {
   def instantiate(): Model = {
-    val s1 = new ArgExpression(0, "s1", new StringType(), "r")
-    val s2 = new ArgExpression(1, "s2", new StringType(), "c")
+    val s1 = new ArgExpression(0, "s1", StringType(), "r")
+    val s2 = new ArgExpression(1, "s2", StringType(), "c")
 
     val boundZero: Expression = new ArrayLengthExpression(s1)
     val boundOne: Expression = new ArrayLengthExpression(s2)
-    val bounds = List(s1, s2) // was boundZero, boundOne)
+    val bounds = List(s1, s2) 
 
     val r: IteratorExpression = new IteratorExpression(0, "r")
     val c: IteratorExpression = new IteratorExpression(1, "c")
@@ -26,7 +26,7 @@ class DistinctSubsequences {
           one
         ),
         (
-          Some(new EqualExpression(new CharAtExpression(s1, r - one), new CharAtExpression(s2, c - one), new CharType())),
+          Some(new EqualExpression(new CharAtExpression(s1, r - one), new CharAtExpression(s2, c - one), CharType())),
           new SubproblemExpression(Seq(r - one, c - one)) + new SubproblemExpression(Seq(r - one, c))
         ),
         (

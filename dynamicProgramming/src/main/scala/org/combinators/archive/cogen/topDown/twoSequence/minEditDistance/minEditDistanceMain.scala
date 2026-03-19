@@ -10,8 +10,8 @@ import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
 import org.combinators.dp.{BottomUp, GenerationOption, TopDown}
-import org.combinators.ep.generator.FileWithPathPersistable._
-import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
+import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
+import FileWithPathPersistable._
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
 import org.combinators.models._
@@ -131,9 +131,9 @@ object DPDirectToDiskMain extends IOApp {
     )
 
     // choose one of these to pass in
-    val topDown         = new TopDown()
-    val topDownWithMemo = new TopDown(memo = true)
-    val bottomUp        = new BottomUp()
+    val topDown         = TopDown()
+    val topDownWithMemo = TopDown(memo = true)
+    val bottomUp        = BottomUp()
 
     for {
       _ <- IO { print("Initializing Generator...") }

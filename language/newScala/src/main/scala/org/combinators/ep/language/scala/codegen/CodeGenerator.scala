@@ -22,9 +22,11 @@ import java.nio.file.{Path, Paths}
 
 type FullAST = BaseAST
   & NameProviderAST
+  & ArraysAST
   & ArithmeticAST
   & AssertionsAST
   & BooleanAST
+  & ConsoleAST
   & EqualsAST
   & ListsAST
   & OperatorExpressionOpsAST
@@ -215,11 +217,11 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
   val generics: Generics.WithBase[ast.type, paradigm.type, ooParadigm.type, parametricPolymorphism.type] = Generics[ast.type, paradigm.type, ooParadigm.type, parametricPolymorphism.type](paradigm, ooParadigm, parametricPolymorphism)
   val parametricPolymorphismInADTContexts: ParametricPolymorphismInADTContexts.WithBase[ast.type, paradigm.type, functional.type] = ParametricPolymorphismInADTContexts[ast.type, paradigm.type, functional.type](paradigm, functional)
 
-
+  val arrays: Arrays.WithBase[ast.type, paradigm.type] = Arrays[ast.type, paradigm.type](paradigm)
   val booleans: Booleans.WithBase[ast.type, paradigm.type] = Booleans[ast.type, paradigm.type](paradigm)
 
   val doubles: Arithmetic.WithBase[Double, ast.type, paradigm.type] = Arithmetic[Double, ast.type, paradigm.type](paradigm)
-
+  val console: Console.WithBase[ast.type, paradigm.type] = Console[ast.type, paradigm.type](paradigm)
   val realDoubles: RealArithmetic.WithBase[Double, ast.type, paradigm.type] = RealArithmetic[Double, ast.type, paradigm.type](paradigm)
 
   val ints: Arithmetic.WithBase[Int, ast.type, paradigm.type] = Arithmetic[Int, ast.type, paradigm.type](paradigm)
@@ -237,7 +239,7 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
     new Console[CtorCtxt, paradigm.type](
       paradigm, stringsInConstructor
     )
-  
+
   val arraysInMethod =
     new Arrays[MethodBodyCtxt, paradigm.type](
       paradigm

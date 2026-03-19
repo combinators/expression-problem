@@ -7,14 +7,8 @@ package org.combinators.models.boilerplate.oneSequence
  */
 
 import cats.effect.{ExitCode, IO, IOApp}
-import com.github.javaparser.ast.PackageDeclaration
-import org.apache.commons.io.FileUtils
-import org.combinators.dp.enhanced.{EnhancedDPMainJava, EnhancedDPObjectOrientedProvider}
-import org.combinators.dp.{BottomUp, GenerationOption, TestExample, TopDown}
-import org.combinators.ep.generator.FileWithPathPersistable._
-import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
-import org.combinators.ep.language.java.paradigm.ObjectOriented
-import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
+import org.combinators.dp.enhanced.EnhancedDPMainJava
+import org.combinators.dp.{BottomUp, TestExample, TopDown}
 import org.combinators.models._
 import org.combinators.models.enhancedModels.oneSequence.MaximalIndependentSetPath
 
@@ -29,8 +23,6 @@ class MaximalIndependentSetPathMainJava extends EnhancedDPMainJava  {
     // https://canvas.wpi.edu/courses/79353
     new TestExample("sp1", new LiteralArray(Array(12,11,13,15)), new LiteralInt(27), new UnitExpression),
     new TestExample("sp2", new LiteralArray(Array(2,1000,3,1)), new LiteralInt(1001), new UnitExpression),
-
-
   )
 }
 

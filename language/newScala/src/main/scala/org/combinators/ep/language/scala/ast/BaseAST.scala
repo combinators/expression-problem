@@ -1053,6 +1053,7 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
       trait FinalTypes extends imperative.FinalTypes {
         type DeclareVariable <: imperativeOverrides.DeclareVariable
         type AssignVariable <: imperativeOverrides.AssignVariable
+        type Tertiary <: imperativeOverrides.Tertiary
         type IfThenElse <: imperativeOverrides.IfThenElse
         type While <: imperativeOverrides.While
         type VariableReferenceExpression <: imperativeOverrides.VariableReferenceExpression
@@ -1086,6 +1087,28 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
 
         def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): imperative.AssignVariable =
           copy(assignmentExpression = assignmentExpression.prefixRootPackage(rootPackageName, excludedTypeNames))
+      }
+
+      trait Tertiary extends imperative.Tertiary with anyOverrides.Expression {
+        import factory.*
+
+        def toScala: String = {
+
+          s"""
+             |if (${condition.toScala}) {
+             |  ${trueExpression.toScala}
+             |} else {
+             |  ${falseExpression.toScala}
+             |}
+                      """.stripMargin
+        }
+
+        def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): imperative.Tertiary =
+          copy(
+            condition = condition.prefixRootPackage(rootPackageName, excludedTypeNames),
+            trueExpression = trueExpression.prefixRootPackage(rootPackageName, excludedTypeNames),
+            falseExpression = falseExpression.prefixRootPackage(rootPackageName, excludedTypeNames)
+          )
       }
 
       trait IfThenElse extends imperative.IfThenElse with anyOverrides.Statement {
@@ -1385,6 +1408,7 @@ trait FinalBaseAST extends BaseAST {
 
       type DeclareVariable = imperativeOverrides.DeclareVariable
       type AssignVariable = imperativeOverrides.AssignVariable
+      type Tertiary = imperativeOverrides.Tertiary
       type IfThenElse = imperativeOverrides.IfThenElse
       type While = imperativeOverrides.While
       type VariableReferenceExpression = imperativeOverrides.VariableReferenceExpression
@@ -1768,6 +1792,21 @@ trait FinalBaseAST extends BaseAST {
         }
         LiftExpression(expression)
       }
+
+      def tertiary(condition: any.Expression,
+                   trueExpression: any.Expression,
+                   falseExpression: any.Expression): imperative.Tertiary = {
+        case class Tertiary(
+             override val condition: any.Expression,
+             override val trueExpression: any.Expression,
+             override val falseExpression: any.Expression)
+          extends scalaBase.imperativeOverrides.Tertiary
+            with finalBaseAST.anyOverrides.FinalExpression {
+          def getSelfTertiary: imperativeFinalTypes.Tertiary = this
+        }
+        Tertiary(condition, trueExpression, falseExpression)
+      }
+
       def ifThenElse(condition: any.Expression,
                      ifBranch: Seq[any.Statement],
                      elseIfBranches: Seq[(any.Expression, Seq[any.Statement])],
@@ -1783,6 +1822,7 @@ trait FinalBaseAST extends BaseAST {
         }
         IfThenElse(condition, ifBranch, elseIfBranches, elseBranch)
       }
+      
       def whileLoop(condition: any.Expression, body: Seq[any.Statement]): imperative.While = {
         case class WhileLoop(override val condition: any.Expression, override val body: Seq[any.Statement])
           extends scalaBase.imperativeOverrides.While

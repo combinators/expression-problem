@@ -11,8 +11,8 @@ import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
 import org.combinators.archive.unenhancedModels.models.knapsack.{CoinChangeModel, KnapsackModel}
 import org.combinators.dp.{BottomUp, GenerationOption, TopDown}
-import org.combinators.ep.generator.FileWithPathPersistable._
-import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
+import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
+import FileWithPathPersistable._
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, Syntax, Unboxed}
 import org.combinators.models.Model
@@ -89,8 +89,6 @@ object CoinChangeDirectToDiskMain extends IOApp {
       _ <- IO { print("Initializing Generator...") }
       main <- IO { new CoinChangeMainJava() }
       _ <- IO { println("[OK]") }
-
-      // pass in TOP DOWN
 
       result <- main.runDirectToDisc(targetDirectory, CoinChange, topDownWithMemo)
     } yield result

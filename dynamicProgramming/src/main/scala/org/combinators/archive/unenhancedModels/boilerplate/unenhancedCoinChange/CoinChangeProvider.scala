@@ -1,13 +1,12 @@
 package org.combinators.archive.unenhancedModels.boilerplate.unenhancedCoinChange
 
 import org.combinators.dp.{DPObjectOrientedProvider, TestExample}
-import org.combinators.ep.domain.abstractions._
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
-import org.combinators.ep.generator.{AbstractSyntax, NameProvider}
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
+import org.combinators.cogen.paradigm.control.Imperative
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
+import org.combinators.cogen.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
+import org.combinators.cogen.{AbstractSyntax, NameProvider, TypeRep}
 import org.combinators.models.{LiteralArray, LiteralInt, LiteralString, LiteralStringPair}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
@@ -40,8 +39,6 @@ trait CoinChangeProvider extends DPObjectOrientedProvider {
     // NOTE: these tests are in the wrong place, since we defer test gen to later
     val tests = Seq(
       new TestExample("test1", new LiteralArray(Array(1,2,5)), new LiteralInt(11), new LiteralString("test"))
-      //ew TestExample("test1", new Literal2DArrayIntPair(Array(4,1,2),Array(5,2,3), 4), new LiteralInt(3), new LiteralString("Testing")) // for now, leave solution as None
-      //new TestExample("fib0", new LiteralStringPair("ACTG", "CGATC"), new LiteralInt(2), new LiteralString("AC")) // for now, leave solution as None
     )
 
     for {

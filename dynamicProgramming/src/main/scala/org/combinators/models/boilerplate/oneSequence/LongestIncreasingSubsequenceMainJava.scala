@@ -7,14 +7,8 @@ package org.combinators.models.boilerplate.oneSequence
  */
 
 import cats.effect.{ExitCode, IO, IOApp}
-import com.github.javaparser.ast.PackageDeclaration
-import org.apache.commons.io.FileUtils
-import org.combinators.dp.enhanced.{EnhancedDPMainJava, EnhancedDPObjectOrientedProvider}
-import org.combinators.dp.{BottomUp, GenerationOption, TestExample, TopDown}
-import org.combinators.ep.generator.FileWithPathPersistable._
-import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
-import org.combinators.ep.language.java.paradigm.ObjectOriented
-import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
+import org.combinators.dp.enhanced.EnhancedDPMainJava
+import org.combinators.dp.{BottomUp, TestExample, TopDown}
 import org.combinators.models._
 import org.combinators.models.enhancedModels.oneSequence.LongestIncreasingSubsequence
 

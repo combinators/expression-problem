@@ -1,19 +1,18 @@
 package org.combinators.archive.cogen.topDown.pascal
 
 import org.combinators.dp.{TestExample, Utility}
-import org.combinators.ep.domain.abstractions._
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, ObjectOriented}
-import org.combinators.ep.generator.{AbstractSyntax, NameProvider, Understands}
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
+import org.combinators.cogen.paradigm.control.Imperative
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
+import org.combinators.cogen.paradigm.{AnyParadigm, FindClass, ObjectOriented}
+import org.combinators.cogen.{AbstractSyntax, NameProvider, TypeRep, Understands}
 import org.combinators.models.{LiteralInt, LiteralPair, UnitExpression}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
  */
-trait PascalObjectOrientedProvider extends PascalProvider with Utility{
+trait PascalObjectOrientedProvider extends Utility {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val names: NameProvider[paradigm.syntax.Name]
   val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext,paradigm.type]
@@ -32,6 +31,11 @@ trait PascalObjectOrientedProvider extends PascalProvider with Utility{
     } yield res
   }
 
+  /** Define standard test name. */
+  def testCaseName: paradigm.syntax.Name = {
+    names.mangle("Test")
+  }
+  
   import ooParadigm._
   import paradigm._
   import syntax._
@@ -43,42 +47,6 @@ trait PascalObjectOrientedProvider extends PascalProvider with Utility{
 
   def getter(attr:String) : String = {
     "get" + attr.capitalize
-  }
-
-  /**
-   * Default registration for findClass, which works with each registerTypeMapping for the different approaches.
-   *
-   * Sometimes the mapping is fixed for an EP approach, but sometimes it matters when a particular class is requested
-   * in the evolution of the system over time.
-   */
-  def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
-    FindClass(Seq(names.mangle(names.conceptNameOf(dtpe)))).interpret(canFindClass)
-  }
-
-  /** Provides meaningful default solution to find the base data type in many object-oriented approaches.
-   *
-   * This enables target-language classes to be retrieved from within the code generator in the Method, Class or Constructor contexts.
-   */
-//  def registerTypeMapping(tpe:DataType): Generator[ProjectContext, Unit] = {
-//    import ooParadigm.projectCapabilities.{addTypeLookupForClasses, addTypeLookupForConstructors}
-//    import paradigm.projectCapabilities.addTypeLookupForMethods    // must be present, regardless of IntelliJ
-//    val dtpe = TypeRep.DataType(tpe)
-//    for {
-//      _ <- addTypeLookupForMethods(dtpe, domainTypeLookup(tpe))
-//      _ <- addTypeLookupForClasses(dtpe, domainTypeLookup(tpe))
-//      _ <- addTypeLookupForConstructors(dtpe, domainTypeLookup(tpe))
-//    } yield ()
-//  }
-
-  def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
-    import ooParadigm.methodBodyCapabilities._
-    import paradigm.methodBodyCapabilities._
-    for {
-      rt <- findClass(names.mangle(names.conceptNameOf(tpeCase)))
-      _ <- resolveAndAddImport(rt)
-
-      res <- instantiateObject(rt, args)
-    } yield res
   }
 
   def make_compute_method_signature(): Generator[paradigm.MethodBodyContext, Unit] = {

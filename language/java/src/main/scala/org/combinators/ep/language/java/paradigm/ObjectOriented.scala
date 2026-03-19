@@ -1,10 +1,10 @@
 package org.combinators.ep.language.java.paradigm    /*DI:LD:AI*/
 
 import java.util.UUID
-import com.github.javaparser.ast.{ImportDeclaration, Modifier, NodeList}
+import com.github.javaparser.ast.{ArrayCreationLevel, ImportDeclaration, Modifier, NodeList}
 import com.github.javaparser.ast.`type`.ClassOrInterfaceType
 import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, ConstructorDeclaration, MethodDeclaration}
-import com.github.javaparser.ast.expr.{AssignExpr, CastExpr, EnclosedExpr, Expression => JExpression, FieldAccessExpr, InstanceOfExpr, MethodCallExpr, NameExpr, ObjectCreationExpr, ThisExpr, TypeExpr, Name as JName}
+import com.github.javaparser.ast.expr.{ArrayCreationExpr, AssignExpr, CastExpr, EnclosedExpr, FieldAccessExpr, InstanceOfExpr, MethodCallExpr, NameExpr, ObjectCreationExpr, ThisExpr, TypeExpr, Expression as JExpression, Name as JName}
 import com.github.javaparser.ast.stmt.{BlockStmt, ExplicitConstructorInvocationStmt, ExpressionStmt, ReturnStmt}
 import org.combinators.cogen.InstanceRep
 import org.combinators.cogen.TypeRep
@@ -15,7 +15,7 @@ import org.combinators.ep.language.java.Syntax.MangledName
 import org.combinators.ep.language.java.{ClassCtxt, ContextSpecificResolver, CtorCtxt, JavaNameProvider, MethodBodyCtxt, TestCtxt}
 
 import scala.util.Try
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 trait ObjectOriented[AP <: AnyParadigm] extends OO {
   val base: AP

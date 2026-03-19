@@ -7,7 +7,7 @@ package org.combinators.models.boilerplate.oneSequence
  */
 import cats.effect.{ExitCode, IO, IOApp}
 import org.combinators.dp.enhanced.EnhancedDPMainJava
-import org.combinators.dp.{BottomUp, TestExample, TopDown}
+import org.combinators.dp.{TestExample, TopDown}
 import org.combinators.models._
 import org.combinators.models.enhancedModels.oneSequence.MatrixChainMultiplicationTD
 

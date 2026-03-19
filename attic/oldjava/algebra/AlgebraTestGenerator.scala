@@ -2,7 +2,7 @@ package org.combinators.ep.language.java.algebra   /*DI:LD:AD*/
 
 import com.github.javaparser.ast.body.{FieldDeclaration, MethodDeclaration}
 //import org.combinators.ep.domain.BaseDomain
-//import org.combinators.ep.generator.DomainIndependentTestGenerator
+//import org.combinators.cogen.DomainIndependentTestGenerator
 import org.combinators.ep.language.java.{JUnitTestGenerator, JavaBinaryMethod, DomainIndependentJavaGenerator}
 import org.combinators.templating.twirl.Java
 

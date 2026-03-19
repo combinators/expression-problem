@@ -1,15 +1,15 @@
 package org.combinators.archive.cogen.topDown.oneSequence.JumpTo
 
-import org.combinators.ep.domain.abstractions._
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator._
-import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.Booleans.WithBase
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, ObjectOriented}
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen._
+import org.combinators.cogen.paradigm.control.Imperative
+import org.combinators.cogen.paradigm.ffi.Booleans.WithBase
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality}
+import org.combinators.cogen.paradigm.{AnyParadigm, ObjectOriented}
 
 /** Provider for House Robber DP solution in OO style. */
-trait JumpToObjectOrientedProvider extends JumpToProvider {
+trait JumpToObjectOrientedProvider {
+  val paradigm: AnyParadigm
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val array: Arrays.WithBase[paradigm.MethodBodyContext, paradigm.type]
@@ -24,17 +24,6 @@ trait JumpToObjectOrientedProvider extends JumpToProvider {
   import ooParadigm._
   import paradigm._
   import syntax._
-
-  def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
-    import ooParadigm.methodBodyCapabilities._
-    import paradigm.methodBodyCapabilities._
-    for {
-      rt <- findClass(names.mangle(names.conceptNameOf(tpeCase)))
-      _ <- resolveAndAddImport(rt)
-
-      res <- instantiateObject(rt, args)
-    } yield res
-  }
 
   def find_method_recursive(name: paradigm.syntax.Name): Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression] = {
     for {
@@ -258,10 +247,6 @@ trait JumpToObjectOrientedProvider extends JumpToProvider {
       _<- addBlockDefinitions(Seq(ifStmt))
     } yield(Some(ansExpr))
   }
-
-
-
-
 
   /** Create the HouseRobber class with rob() method. */
   def makeClass(clazzName: String): Generator[ProjectContext, Unit] = {

@@ -1,13 +1,12 @@
 package org.combinators.archive.unenhancedModels.boilerplate.unenhancedNwsa
 
 import org.combinators.dp.{DPObjectOrientedProvider, TestExample}
-import org.combinators.ep.domain.abstractions._
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
-import org.combinators.ep.generator.{AbstractSyntax, NameProvider}
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
+import org.combinators.cogen.paradigm.control.Imperative
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
+import org.combinators.cogen.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
+import org.combinators.cogen.{AbstractSyntax, NameProvider, TypeRep}
 import org.combinators.models.{LiteralInt, LiteralString, LiteralStringPair}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class

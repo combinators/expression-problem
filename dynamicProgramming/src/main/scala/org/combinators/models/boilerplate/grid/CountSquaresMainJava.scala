@@ -9,7 +9,7 @@ import org.combinators.models.enhancedModels.grid.{CountSquares, MinPathSum}
 import java.nio.file.{Path, Paths}
 
 class CountSquaresMainJava extends EnhancedDPMainJava {
-  override def tests = Seq( // todo: replace with actual test cases
+  override def tests = Seq( 
     new TestExample("cs1", new LiteralArray(Array(0,1,1,1, 1,1,1,1, 0,1,1,1), Seq(3,4)), new LiteralInt(15), new UnitExpression)
   )
 }

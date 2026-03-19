@@ -7,13 +7,13 @@ trait Expression {
   def *(other: Expression): Expression = new MultiplicationExpression(this,other)
   def /(other: Expression): Expression = new DivisionExpression(this,other)
 
-  def <(other: Expression): Expression with BooleanExpression = new LessThanExpression(this,other)
-  def <=(other: Expression): Expression with BooleanExpression = new LessThanOrEqualExpression(this,other)
+  def <(other: Expression): Expression & BooleanExpression = new LessThanExpression(this,other)
+  def <=(other: Expression): Expression & BooleanExpression = new LessThanOrEqualExpression(this,other)
 
   // When using ==, must assume it is IntegerType: Dangerous?? todo: allow for other types(?)
-  def ==(other: Expression): Expression with BooleanExpression = new EqualExpression(this,other, new IntegerType())
-  def ||(other: Expression): Expression with BooleanExpression = new OrExpression(this,other)
-  def &&(other: Expression): Expression with BooleanExpression = new AndExpression(this,other)
+  def ==(other: Expression): Expression & BooleanExpression = new EqualExpression(this,other, new IntegerType())
+  def ||(other: Expression): Expression & BooleanExpression = new OrExpression(this,other)
+  def &&(other: Expression): Expression & BooleanExpression = new AndExpression(this,other)
 
   def apply(other: Expression): Expression = new ArrayElementExpression(this, other)
 }
@@ -90,7 +90,7 @@ class OrExpression(val left: Expression, val right: Expression) extends Expressi
 class AndExpression(val left: Expression, val right: Expression) extends Expression with BooleanExpression
 class LessThanExpression(val left: Expression, val right:Expression) extends Expression with BooleanExpression
 class LessThanOrEqualExpression(val left: Expression, val right:Expression) extends Expression with BooleanExpression
-class TernaryExpression(val condition: Expression with BooleanExpression, val trueBranch: Expression, val falseBranch: Expression) extends Expression
+class TernaryExpression(val condition: Expression & BooleanExpression, val trueBranch: Expression, val falseBranch: Expression) extends Expression
 
 class LiteralBoolean(val literal:Boolean) extends LiteralExpression
 

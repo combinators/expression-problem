@@ -5,13 +5,12 @@ import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
 import org.combinators.dp.enhanced.EnhancedMainInterface
 import org.combinators.dp.{BottomUp, GenerationOption, TestExample, TopDown}
-import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
+import org.combinators.models._
+import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
+import FileWithPathPersistable._
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, Syntax, Unboxed}
-import org.combinators.models._
-import org.combinators.models.enhancedModels._
-import org.combinators.ep.generator.FileWithPathPersistable._
-import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
+
 import org.combinators.models.enhancedModels.twoSequences.WordBreak
 
 import java.nio.file.{Path, Paths}

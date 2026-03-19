@@ -1,13 +1,12 @@
 package org.combinators.archive.cogen.bottomUp.oneSequence.JumpTo
 
 import org.combinators.dp.{DPObjectOrientedProvider, TestExample}
-import org.combinators.ep.domain.abstractions._
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, Generics, ObjectOriented, ParametricPolymorphism}
-import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
-import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.paradigm.control.Imperative
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
+import org.combinators.cogen.paradigm.{AnyParadigm, FindClass, Generics, ObjectOriented, ParametricPolymorphism}
+import org.combinators.cogen.{AbstractSyntax, Command, NameProvider, TypeRep, Understands}
+import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.models.{AdditionExpression, ArgumentType, EqualExpression, FunctionExpression, IteratorExpression, LiteralInt, LiteralString, Model, SubproblemExpression, SubtractionExpression, UnitExpression}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class

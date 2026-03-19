@@ -251,28 +251,23 @@ object Lists {
   type Aux[Ctxt, AP <: AnyParadigm, Gen <: Generics[AP]] = Lists[Ctxt, AP] {
     val generics: Gen
   }
-  def apply[Ctxt, AP <: AnyParadigm, Gen <: Generics[AP]](
-    base: AP,
-    getMember: Understands[Ctxt, GetMember[Expression, Name]],
-    applyMethod: Understands[Ctxt, Apply[Expression, Expression, Expression]],
-    applyType: Understands[Ctxt, Apply[Type, Type, Type]],
-    addImport: Understands[Ctxt, AddImport[Import]])(
-    generics: Generics[base.type]
-  ): Aux[Ctxt, base.type, generics.type] = {
+  def apply[Ctxt, AP <: AnyParadigm, Gen[A <: AP] <: Generics[A]](
+     base: AP,
+     applyType: Understands[Ctxt, Apply[Type, Type, Type]],
+     addImport: Understands[Ctxt, AddImport[Import]])(
+     generics: Gen[base.type]
+   ): Aux[Ctxt, base.type, generics.type] = {
     val b: base.type = base
-    val gm = getMember
-    val appMeth = applyMethod
     val appTy = applyType
     val addImp = addImport
     val gen: generics.type = generics
 
-    new Lists[Ctxt, b.type] {
-      lazy val base: b.type = b
-      lazy val getMember = gm
-      lazy val applyMethod = appMeth
-      lazy val applyType = appTy
-      lazy val addImport = addImp
-      lazy val generics: gen.type = gen
-    }
+    case class Lsts(override val base: b.type,
+                    override val applyType: Understands[Ctxt, Apply[Type, Type, Type]],
+                    override val addImport: Understands[Ctxt, AddImport[Import]],
+                    override val generics: gen.type
+                   ) extends Lists[Ctxt, b.type]
+
+    Lsts(b, appTy, addImp, gen)
   }
 }

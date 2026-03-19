@@ -11,8 +11,8 @@ import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
 import org.combinators.archive.unenhancedModels.models.twoSequences.NeedlemanWunschSequenceAlignmentModel
 import org.combinators.dp.{BottomUp, GenerationOption, TopDown}
-import org.combinators.ep.generator.FileWithPathPersistable._
-import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
+import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
+import FileWithPathPersistable._
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, Syntax, Unboxed}
 import org.combinators.models.Model
@@ -89,7 +89,6 @@ object NWSADirectToDiskMain extends IOApp {
       _ <- IO { print("Initializing Generator...") }
       main <- IO { new NWSAMainJava() }
       _ <- IO { println("[OK]") }
-
 
       result <- main.runDirectToDisc(targetDirectory, UL, topDown)
     } yield result

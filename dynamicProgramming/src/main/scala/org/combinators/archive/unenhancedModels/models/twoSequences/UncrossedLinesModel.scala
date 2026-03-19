@@ -4,12 +4,12 @@ import org.combinators.models._
 
 class UncrossedLinesModel {
   def instantiate(): Model = {
-    val nums1 = new ArgExpression(0, "A1", new IntegerArrayType(), "r")
-    val nums2 = new ArgExpression(1, "A2", new IntegerArrayType(), "c")
+    val nums1 = new ArgExpression(0, "A1", IntegerArrayType(), "r")
+    val nums2 = new ArgExpression(1, "A2", IntegerArrayType(), "c")
 
     val boundZero: Expression = new ArrayLengthExpression(nums1)
     val boundOne: Expression = new ArrayLengthExpression(nums2)
-    val bounds = List(nums1, nums2) // boundZero, boundOne)
+    val bounds = List(nums1, nums2) 
 
     val r: IteratorExpression = new IteratorExpression(0, "r")
     val c: IteratorExpression = new IteratorExpression(1, "c")

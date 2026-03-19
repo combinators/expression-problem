@@ -4,9 +4,9 @@ import org.combinators.models._
 
 class ThreeStringLCSModel {
   def instantiate(): Model = {
-    val s1 = new ArgExpression(0, "s1", new StringType(), "i")
-    val s2 = new ArgExpression(1, "s2", new StringType(), "j")
-    val s3 = new ArgExpression(2, "s3", new StringType(), "k")
+    val s1 = new ArgExpression(0, "s1", StringType(), "i")
+    val s2 = new ArgExpression(1, "s2", StringType(), "j")
+    val s3 = new ArgExpression(2, "s3", StringType(), "k")
 
     val bounds = List(s1, s2, s3)
 

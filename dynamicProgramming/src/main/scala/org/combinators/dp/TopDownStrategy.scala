@@ -1,13 +1,13 @@
 package org.combinators.dp
 
-import org.combinators.ep.domain.abstractions.TypeRep
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.ep.generator.{Command, NameProvider}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
-import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Equality, Strings}
-import org.combinators.models.{AdditionExpression, ArgumentType, EnhancedModel, EqualExpression, InputExpression, IteratorExpression, LiteralInt, Model, StringLengthExpression, SubproblemExpression, SubtractionExpression}
+import org.combinators.cogen.TypeRep
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
+import org.combinators.cogen.{Command, NameProvider}
+import org.combinators.cogen.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
+import org.combinators.cogen.paradigm.control.Imperative
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Equality, Strings}
+import org.combinators.models._
 
 /**
  * Concepts necessary to realize top-down solutions
@@ -34,9 +34,7 @@ trait TopDownStrategy extends Utility {
   import ooParadigm._
 
   // Definition of the name of the helper method
-  val helperName:Name
-  val computeName:Name
-
+  
   lazy val memoName       = names.mangle("memo")
   lazy val keyName        = names.mangle("key")
   lazy val pairName       = names.mangle("pair")

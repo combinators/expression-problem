@@ -12,8 +12,8 @@ import org.apache.commons.io.FileUtils
 import org.combinators.archive.cogen.bottomUp.oneSequence.tribonacci.TribProvider
 import org.combinators.archive.unenhancedModels.models.oneSequence.TribonacciModel
 import org.combinators.dp.{BottomUp, GenerationOption}
-import org.combinators.ep.generator.FileWithPathPersistable._
-import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
+import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
+import FileWithPathPersistable._
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
 import org.combinators.models.Model
@@ -26,7 +26,6 @@ import java.nio.file.{Path, Paths}
 class TribonacciMainJava {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("world"))))
 
-  //val dpApproach = TribonacciObjectOrientedProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.stringsInMethod, generator.equalityInMethod, generator.ooParadigm, generator.parametricPolymorphism)
   val dpApproach = TribProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.realDoublesInMethod, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.stringsInMethod, generator.equalityInMethod, generator.ooParadigm, generator.parametricPolymorphism, generator.booleansInMethod)(generator.generics)
 
   val persistable = FileWithPathPersistable[FileWithPath]

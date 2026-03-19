@@ -1,10 +1,10 @@
 package org.combinators.ep.language.java.paradigm.ffi    /*DI:LD:AI*/
 
 import com.github.javaparser.ast.`type`.ArrayType
-import com.github.javaparser.ast.expr.{ArrayAccessExpr, ArrayCreationExpr, ArrayInitializerExpr, AssignExpr, FieldAccessExpr, IntegerLiteralExpr, MethodCallExpr, NameExpr, SimpleName}
+import com.github.javaparser.ast.expr.{ArrayAccessExpr, ArrayCreationExpr, ArrayInitializerExpr, AssignExpr, FieldAccessExpr}
 import com.github.javaparser.ast.{ArrayCreationLevel, NodeList}
 import org.combinators.cogen.{Command, InstanceRep, TypeRep, Understands}
-import org.combinators.cogen.paradigm.{Apply, ffi}
+import org.combinators.cogen.paradigm.Apply
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.paradigm.AnyParadigm.syntax.*
 import org.combinators.cogen.paradigm.ffi.{CreateArray, Get, Length, Set, Arrays as Arrs}

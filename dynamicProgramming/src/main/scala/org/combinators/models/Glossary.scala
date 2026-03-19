@@ -13,8 +13,8 @@ import org.combinators.archive.unenhancedModels.boilerplate.unenhancedUncrossedL
 import org.combinators.archive.unenhancedModels.models.twoSequences.{LongestCommonSubsequenceModel, UncrossedLinesModel}
 import org.combinators.dp.enhanced.EnhancedMainInterface
 import org.combinators.dp.{BottomUp, GenerationOption, TopDown}
-import org.combinators.ep.generator.FileWithPathPersistable._
-import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
+import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
+import FileWithPathPersistable._
 import org.combinators.models.boilerplate.grid._
 import org.combinators.models.boilerplate.integer._
 import org.combinators.models.boilerplate.oneSequence._

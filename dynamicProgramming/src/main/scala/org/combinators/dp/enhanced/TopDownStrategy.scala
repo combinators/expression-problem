@@ -1,14 +1,14 @@
 package org.combinators.dp.enhanced
 
 import org.combinators.dp.Utility
-import org.combinators.ep.domain.abstractions.TypeRep
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi._
-import org.combinators.ep.generator.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
-import org.combinators.ep.generator.{Command, NameProvider}
-import org.combinators.models.{Definition, DefinitionStatement, EnhancedModel, ExpressionDefinition, ExpressionStatement, IfThenElseDefinition, LiteralBoolean, LiteralInt, LiteralString, MaxRangeDefinition, MinRangeDefinition, ReturnAccumulatedDefinition, ReturnExpressionDefinition, SubproblemInvocation, SumDefinition}
+import org.combinators.cogen.TypeRep
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
+import org.combinators.cogen.paradigm.control.Imperative
+import org.combinators.cogen.paradigm.ffi._
+import org.combinators.cogen.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
+import org.combinators.cogen.{Command, NameProvider}
+import org.combinators.models._
 
 /**
  * Concepts necessary to realize top-down solutions
@@ -40,6 +40,7 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
 
   lazy val computedResult = names.mangle("computed_result")
 
+  /** Debugging statement to add inside a for { ... } by using `_ <- report_td(str)` */
   def report_td(str:String) : Generator[paradigm.MethodBodyContext, Unit] = {
     println(str)
     for  {
@@ -204,11 +205,11 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
           } yield ()
         }
 
-       _ <- if (useMemo) {
+        _ <- if (useMemo) {
          for {
            intType <- toTargetLanguageType(TypeRep.Int)  // key will always be an IntType since that is the cantor pairing
            returnType <- helper_method_type_in_class(model)
-          _ <- makeMemo(intType, returnType)
+           _ <- makeMemo(intType, returnType)
          } yield ()
         } else {
           Command.skip[ClassContext]

@@ -9,12 +9,12 @@ package org.combinators.archive.cogen.bottomUp.oneSequence.JumpTo
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
-import org.combinators.dp.{BottomUp, DPObjectOrientedProvider, GenerationOption, TopDown}
-import org.combinators.ep.generator.FileWithPathPersistable._
-import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
+import org.combinators.dp.{BottomUp, GenerationOption, TopDown}
+import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
+import FileWithPathPersistable._
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
-import org.combinators.models.{ArgExpression, CharAtExpression, EqualExpression, InputExpression, IntegerArrayType, IteratorExpression, LiteralChar, LiteralInt, Model, StringLengthExpression, StringType, SubproblemExpression, SubtractionExpression, LessThanExpression, ArrayLengthExpression}
+import org.combinators.models._
 
 import java.nio.file.{Path, Paths}
 
@@ -146,7 +146,7 @@ object JumpToMainDirectToDiskMain extends IOApp {
     val n: IteratorExpression = new IteratorExpression(0, "i")   // only one argument, n
 
     val im1 = new SubtractionExpression(n, one)
-    n
+    
     val JumpTo = new Model("JumpTo",
       bound,
       cases = List(
@@ -160,9 +160,9 @@ object JumpToMainDirectToDiskMain extends IOApp {
     )
 
     // choose one of these to pass in
-    val topDown         = new TopDown()
-    val topDownWithMemo = new TopDown(memo = true)
-    val bottomUp        = new BottomUp()
+    val topDown         = TopDown()
+    val topDownWithMemo = TopDown(memo = true)
+    val bottomUp        = BottomUp()
 
     for {
       _ <- IO { print("Initializing Generator...") }

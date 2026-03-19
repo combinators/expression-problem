@@ -4,8 +4,8 @@ import org.combinators.models._
 
 class UniquePathsModel {
   def instantiate(): Model = {
-    val m = new ArgExpression(0, "m", new IntegerType(), "r")
-    val n = new ArgExpression(1, "n", new IntegerType(), "c")
+    val m = new ArgExpression(0, "m", IntegerType(), "r")
+    val n = new ArgExpression(1, "n", IntegerType(), "c")
     val bounds = List(m, n)
 
     val zero = new LiteralInt(0)

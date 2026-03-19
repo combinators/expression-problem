@@ -9,12 +9,12 @@ package org.combinators.archive.cogen.bottomUp.oneSequence.decodeways
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
-import org.combinators.dp.{BottomUp, DPObjectOrientedProvider, GenerationOption, TestExample, TopDown, TopDownStrategy}
-import org.combinators.ep.generator.FileWithPathPersistable._
-import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
+import org.combinators.dp.{BottomUp, GenerationOption, TopDown}
+import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
+import FileWithPathPersistable._
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
-import org.combinators.models.{ArgExpression, CharAtExpression, EqualExpression, InputExpression, IteratorExpression, LiteralChar, LiteralInt, Model, StringLengthExpression, StringType, SubproblemExpression, SubtractionExpression}
+import org.combinators.models._
 
 import java.nio.file.{Path, Paths}
 
@@ -137,11 +137,6 @@ object DPDirectToDiskMain extends IOApp {
     // what was passed into constructor of the original class
     val input:InputExpression = new InputExpression("s")   // might also need to pass in "type"
 
-    // for LCS
-
-    // val text1:InputExpression("text1")
-    // val text2:InputExpression("text2")
-
     val bound = List(new ArgExpression(0, "text1", new StringType(), "r"), new ArgExpression(1, "text2", new StringType(), "c"))
 
     val r: IteratorExpression = new IteratorExpression(0, "r")   // only one argument, n
@@ -163,9 +158,9 @@ object DPDirectToDiskMain extends IOApp {
     )
 
     // choose one of these to pass in
-    val topDown         = new TopDown()
-    val topDownWithMemo = new TopDown(memo = true)
-    val bottomUp        = new BottomUp()
+    val topDown         = TopDown()
+    val topDownWithMemo = TopDown(memo = true)
+    val bottomUp        = BottomUp()
 
     for {
       _ <- IO { print("Initializing Generator...") }

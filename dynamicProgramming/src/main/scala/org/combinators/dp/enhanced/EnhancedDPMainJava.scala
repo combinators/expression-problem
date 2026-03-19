@@ -10,11 +10,11 @@ import cats.effect.{ExitCode, IO}
 import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
 import org.combinators.dp.{GenerationOption, TestExample}
-import org.combinators.ep.generator.FileWithPathPersistable._
-import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
+import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
+import FileWithPathPersistable.*
 import org.combinators.ep.language.java.paradigm.ObjectOriented
-import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, Unboxed, Syntax}
-import org.combinators.models._
+import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, Syntax, Unboxed}
+import org.combinators.models.*
 
 import java.nio.file.Path
 

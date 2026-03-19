@@ -1,13 +1,12 @@
 package org.combinators.dp.enhanced
 
-import org.combinators.dp.GenerationOption
 import org.combinators.models.{BooleanType, EnhancedModel, IntegerType, StringType}
-import org.combinators.ep.domain.abstractions.TypeRep
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.{FileWithPath, NameProvider}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, ObjectOriented}
-import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Equality, RealArithmetic, Strings}
+import org.combinators.cogen.TypeRep
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.NameProvider
+import org.combinators.cogen.paradigm.{AnyParadigm, ObjectOriented}
+import org.combinators.cogen.paradigm.control.Imperative
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Equality, RealArithmetic, Strings}
 
 trait EnhancedUtility {
   val paradigm: AnyParadigm

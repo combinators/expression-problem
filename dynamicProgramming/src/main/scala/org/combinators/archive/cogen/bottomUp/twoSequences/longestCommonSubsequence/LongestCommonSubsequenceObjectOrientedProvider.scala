@@ -1,16 +1,15 @@
 package org.combinators.archive.cogen.bottomUp.twoSequences.longestCommonSubsequence
 
 import org.combinators.archive.cogen.bottomUp.twoSequences.TwoSequencesUtility
-import org.combinators.dp.{DPProvider, TestExample}
-import org.combinators.ep.domain.abstractions._
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, ObjectOriented}
-import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
-import org.combinators.models.{CharAtExpression, EqualExpression, IteratorExpression, LiteralInt, LiteralString, LiteralStringPair, Model}
+import org.combinators.dp.TestExample
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.paradigm.control.Imperative
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
+import org.combinators.cogen.paradigm.{AnyParadigm, ObjectOriented}
+import org.combinators.cogen.{AbstractSyntax, Command, NameProvider, TypeRep}
+import org.combinators.models._
 
-trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubsequenceProvider with TwoSequencesUtility {
+trait LongestCommonSubsequenceObjectOrientedProvider extends TwoSequencesUtility {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val names: NameProvider[paradigm.syntax.Name]
   val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]
@@ -31,48 +30,6 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends LongestCommonSubseq
 
   def getter(attr: String): String = {
     "get" + attr.capitalize
-  }
-
-//  class TwoSequenceStringDP extends Model {
-//    override val baseType:String = "String"
-//    override val dimensionality:Int = 2
-//
-//    // if s1[r] == s1[c], dp[r+1][c+1] = dp[r][c] + 1
-//
-//    override val relation = new Relation(,
-//      new StringEqualCondition(new Expression("s1", "r") , new Expression("s2", "c")),
-//      new AdditionExpression(),
-//      new Formula(1, "s2"))
-//  }
-
-
-  def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
-    FindClass(Seq(names.mangle(names.conceptNameOf(dtpe)))).interpret(canFindClass)
-  }
-
-  //  def registerTypeMapping(tpe: DataType): Generator[ProjectContext, Unit] = {
-  //    import ooParadigm.projectCapabilities.{addTypeLookupForClasses, addTypeLookupForConstructors}
-  //    import paradigm.projectCapabilities.addTypeLookupForMethods
-  //
-  //    val dtpe = TypeRep.DataType(tpe)
-  //
-  //    for {
-  //      _ <- addTypeLookupForMethods(dtpe, domainTypeLookup(tpe))
-  //      _ <- addTypeLookupForClasses(dtpe, domainTypeLookup(tpe))
-  //      _ <- addTypeLookupForConstructors(dtpe, domainTypeLookup(tpe))
-  //    } yield ()
-  //  }
-
-  def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
-    import ooParadigm.methodBodyCapabilities._
-    import paradigm.methodBodyCapabilities._
-
-    for {
-      rt <- findClass(names.mangle(names.conceptNameOf(tpeCase)))
-      _ <- resolveAndAddImport(rt)
-
-      res <- instantiateObject(rt, args)
-    } yield res
   }
 
   def make_compute_method_signature(): Generator[paradigm.MethodBodyContext, Unit] = {

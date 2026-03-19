@@ -1,6 +1,6 @@
 package org.combinators.models
 
-import org.combinators.ep.domain.abstractions.TypeRep
+import org.combinators.cogen.TypeRep
 
 trait ArgumentType { }
 
@@ -78,32 +78,13 @@ case class SumDefinition(
 
 case class AccumulatorInformation(variable:String, inclusiveStart:Expression, guardCondition:Expression, advance:Expression)
 
+//ReturnAccumulatedDefinition("idx", "sum", zero, SelfExpression("idx") <= n, new SubproblemExpression(Seq(n, SelfExpression("idx"))), SelfExpression("idx") + one)
 // Accumulate values of P(...) and return as Integer
 case class ReturnAccumulatedDefinition(
   accumulationVariable: String,
-  iteration: Seq[AccumulatorInformation],  // variable, inclusiveStart, guardContinue, advance
+  iteration: Seq[AccumulatorInformation],  
   subproblemExpression: Expression,
 ) extends Definition
-
-//int sum = 0;
-//for(int r = 0; r < matrix.length; r++) {
-//  for(int c = 0; c < matrix[0].length; c++) {
-//    sum += dp[r][c];
-//  }
-//}
-
-//ReturnAccumulatedDefinition("idx", "sum", zero, SelfExpression("idx") <= n, new SubproblemExpression(Seq(n, SelfExpression("idx"))), SelfExpression("idx") + one)
-// Accumulate values of P(...) and return as Integer
-//case class ReturnAccumulatedDefinition(
-//  variable: String,
-//  accumulationVariable: String,
-//  inclusiveStart: Expression,
-//  guardContinue:Expression,
-//  subproblemExpression: Expression,
-//  advance: Expression
-//) extends Definition
-
-
 
 case class MinRangeDefinition(
          variable: String,
@@ -164,7 +145,7 @@ class EnhancedModel(val problem:String,
 // Most DP problems solve subproblems in a canonical order, which is typified by a two-d array: solve rows first from top to bottom,
 // and then within each row, columns from left to right
 //
-// Naturally not all follow this. one common alternative is solving problems along the upper triangle matrix. That is, first solve as
+// Naturally, not all follow this. one common alternative is solving problems along the upper triangle matrix. That is, first solve as
 // the base case the long diagonal. Then solve all problems on the DP[i][j+1] for those entries just above the diagonal; then dp[i][j+2]
 // for all values two above the diagonal and so on.
 

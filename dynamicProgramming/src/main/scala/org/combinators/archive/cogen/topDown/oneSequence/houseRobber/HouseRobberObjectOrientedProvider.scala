@@ -1,15 +1,15 @@
 package org.combinators.archive.cogen.topDown.oneSequence.houseRobber
 
-import org.combinators.ep.domain.abstractions._
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator._
-import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.Booleans.WithBase
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, ObjectOriented}
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen._
+import org.combinators.cogen.paradigm.control.Imperative
+import org.combinators.cogen.paradigm.ffi.Booleans.WithBase
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality}
+import org.combinators.cogen.paradigm.{AnyParadigm, ObjectOriented}
 
 /** Provider for House Robber DP solution in OO style. */
-trait HouseRobberObjectOrientedProvider extends HouseRobberProvider {
+trait HouseRobberObjectOrientedProvider {
+  val paradigm: AnyParadigm
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val array: Arrays.WithBase[paradigm.MethodBodyContext, paradigm.type]
@@ -44,17 +44,6 @@ trait HouseRobberObjectOrientedProvider extends HouseRobberProvider {
     return result
   }
    */
-
-  def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
-    import ooParadigm.methodBodyCapabilities._
-    import paradigm.methodBodyCapabilities._
-    for {
-      rt <- findClass(names.mangle(names.conceptNameOf(tpeCase)))
-      _ <- resolveAndAddImport(rt)
-
-      res <- instantiateObject(rt, args)
-    } yield res
-  }
 
   def find_method_recursive(name: paradigm.syntax.Name): Generator[paradigm.MethodBodyContext, paradigm.syntax.Expression] = {
     for {
@@ -212,7 +201,6 @@ trait HouseRobberObjectOrientedProvider extends HouseRobberProvider {
       _ <- make_maxLoot_compute_signature()
       arg <- getArguments()
 
-
       one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
       zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
       two <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 2)
@@ -244,25 +232,14 @@ trait HouseRobberObjectOrientedProvider extends HouseRobberProvider {
       pickStmt <- impParadigm.imperativeCapabilities.assignVar(pickExpr, pickResult)
       _ <- addBlockDefinitions(Seq(pickStmt))
 
-      //Modifies the context IN PLACE
- //     _ <- impParadigm.imperativeCapabilities.declareVar(names.mangle("unknown"), intType, Some(one))
-
       hval_0_ <- array.arrayCapabilities.get(hval, Seq(zero))
- //     _ <- impParadigm.imperativeCapabilities.declareVar(names.mangle("access"), intType, Some(hval_0_))
 
       // set hval[0] = 1
       indexedLocation <- array.arrayCapabilities.get(hval, Seq(zero))
       setIL <- impParadigm.imperativeCapabilities.assignVar(indexedLocation, one)
-     // _ <- addBlockDefinitions(Seq(setIL))
-
-      // Defines Variable and inserts into context IN PLACE
- //     newVarExpr <- impParadigm.imperativeCapabilities.declareVar(names.mangle("sample"), intType)
- //     newVarStmt <- impParadigm.imperativeCapabilities.assignVar(newVarExpr, size)
 
       returnresult <- impParadigm.imperativeCapabilities.declareVar(names.mangle("result"), intType)
       returnStmt <- impParadigm.imperativeCapabilities.assignVar(returnresult, zero)
-
-     // _ <- addBlockDefinitions(Seq(newVarStmt))
 
       _<- addBlockDefinitions(Seq(returnStmt))
 
@@ -300,55 +277,14 @@ trait HouseRobberObjectOrientedProvider extends HouseRobberProvider {
       )
       _ <- addBlockDefinitions(Seq(innerIfStmt))
 
-
-      //guard2 <- arithmetic.arithmeticCapabilities.lt(n, one)
-
       innerIfStmt2 <- impParadigm.imperativeCapabilities.ifThenElse(guard2, for {
         assignStmt <- impParadigm.imperativeCapabilities.assignVar(returnresult, hval_0_)
         _ <- addBlockDefinitions(Seq(assignStmt))
       } yield (),
         Seq.empty
       )
- //     _ <- addBlockDefinitions(Seq(innerIfStmt2))
-/*
-      pickExpr <- impParadigm.imperativeCapabilities.declareVar(names.mangle("pick"), intType)
-      pick2Expr <- apply(func, Seq(hval, n_2))
-      pickResult <- arithmetic.arithmeticCapabilities.add(houseHoldValue, pick2Expr)
 
-      assignStmt <- impParadigm.imperativeCapabilities.assignVar(pickExpr, pickResult)
-      _ <- addBlockDefinitions(Seq(assignStmt))
-
-
-      notpickExpr <- impParadigm.imperativeCapabilities.declareVar(names.mangle("notpick"), intType)
-      notpick2Expr <- apply(func, Seq(hval, n_1))
-
-      assignStmt <- impParadigm.imperativeCapabilities.assignVar(notpickExpr, notpick2Expr)
- //     _ <- addBlockDefinitions(Seq(assignStmt))
-
-      assignStmt <- impParadigm.imperativeCapabilities.assignVar(returnresult, pickExpr)
- //     _ <- addBlockDefinitions(Seq(assignStmt))
-
-      guard <- arithmetic.arithmeticCapabilities.lt(pickExpr, notpickExpr)
-
-      innerIfStmt <- impParadigm.imperativeCapabilities.ifThenElse(guard, for {
-        assignStmt <- impParadigm.imperativeCapabilities.assignVar(returnresult, notpickExpr)
-        _ <- addBlockDefinitions(Seq(assignStmt))
-      } yield (),
-        Seq((guard, for {
-          //  int robCurrent = nums[i] + helper(nums, i + 2, dp);
-          self <- ooParadigm.methodBodyCapabilities.selfReference()
-
-          helper <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle("helper"))
-          iplus2 <- arithmetic.arithmeticCapabilities.add(n, two)
-          callExpr <- apply(helper, Seq(hval, n_2))
-          declV <- impParadigm.imperativeCapabilities.declareVar(names.mangle("robCurrent"),
-            intType, Some(callExpr))
-          _ <- addBlockDefinitions(Seq(assignStmt))
-        } yield ())
-      ))
-     // _ <- addBlockDefinitions(Seq(innerIfStmt))
-*/
-    } yield (Some(returnresult))
+    } yield Some(returnresult)
   }
 
   /**
@@ -366,8 +302,6 @@ trait HouseRobberObjectOrientedProvider extends HouseRobberProvider {
     val makeClass: Generator[ClassContext, Unit] = {
       import classCapabilities._
       for {
-        //_ <- addMethod(names.mangle("first"), robMethodImplementation())
-        //_ <- addMethod(names.mangle("some"), someMethodImplementation())
         _ <- addMethod(names.mangle("rob"), make_maxloot_compute())
         _ <- addMethod(names.mangle("solution"), make_solution())
       } yield None

@@ -1,14 +1,13 @@
 package org.combinators.dp.enhanced
 
-import org.combinators.ep.domain.abstractions._
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.{AbstractSyntax, NameProvider}
-import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
-import org.combinators.models.{EnhancedModel, LiteralArray, LiteralBoolean, LiteralExpression, LiteralInt, LiteralString, LiteralStringPair, LiteralStringTriple, LiteralTriple, LiteralPair, LiteralArrayPair}
-import org.combinators.dp._
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.{AbstractSyntax, NameProvider, TypeRep}
+import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
+import org.combinators.cogen.paradigm.control.Imperative
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
+import org.combinators.cogen.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
+import org.combinators.dp.{BottomUp, GenerationOption, TestExample, TopDown}
+import org.combinators.models.{EnhancedModel, LiteralArray, LiteralArrayPair, LiteralBoolean, LiteralExpression, LiteralInt, LiteralPair, LiteralString, LiteralStringPair, LiteralStringTriple, LiteralTriple}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
@@ -191,7 +190,7 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with EnhancedU
     } yield ()
   }
 
-  /** Trying out some new capabiltiies */
+  /** Trying out some new capabilities */
   def implement(model: EnhancedModel, tests:Seq[TestExample], option:GenerationOption): Generator[ProjectContext, Unit] = {
 
     // handle Top/Bottom and properly set memo when TD

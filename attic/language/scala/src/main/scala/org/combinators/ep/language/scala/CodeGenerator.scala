@@ -1,7 +1,7 @@
 package org.combinators.ep.language.scala   /*DI:LD:AI*/
 
 import cats.{Apply => _}
-import org.combinators.ep.domain.abstractions.TypeRep
+import org.combinators.cogen.TypeRep
 import org.combinators.ep.generator.Command
 //import org.combinators.ep.generator.paradigm.{Generics, ParametricPolymorphism}
 import org.combinators.ep.language.scala.paradigm._

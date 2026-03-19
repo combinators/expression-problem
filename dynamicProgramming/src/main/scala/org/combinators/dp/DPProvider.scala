@@ -1,8 +1,8 @@
 package org.combinators.dp
 
-import org.combinators.ep.generator.Command._
-import org.combinators.ep.generator.NameProvider
-import org.combinators.ep.generator.paradigm.{AnyParadigm, ObjectOriented}
+import org.combinators.cogen.Command._
+import org.combinators.cogen.NameProvider
+import org.combinators.cogen.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.models.{EnhancedModel, Model}
 
 /** Attempt to provide a dynamic programming world generator. */

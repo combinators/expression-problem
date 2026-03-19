@@ -1,8 +1,8 @@
 package org.combinators.archive.cogen.bottomUp.oneSequence
 
 import org.combinators.dp.Utility
-import org.combinators.ep.domain.abstractions.TypeRep
-import org.combinators.ep.generator.Command.Generator
+import org.combinators.cogen.TypeRep
+import org.combinators.cogen.Command.Generator
 
 trait OneSequencesUtility extends Utility {
   import paradigm._
@@ -11,8 +11,8 @@ trait OneSequencesUtility extends Utility {
   def format_if_else(iterator: Expression, input: (Expression, Statement)): (Generator[MethodBodyContext,Expression], Generator[MethodBodyContext,Unit]) = {
     import paradigm.methodBodyCapabilities._
 
-    var cond = arithmetic.arithmeticCapabilities.le(iterator, input._1)
-    var body = for {
+    val cond = arithmetic.arithmeticCapabilities.le(iterator, input._1)
+    val body = for {
       _ <- addBlockDefinitions(Seq(input._2))
     } yield ()
     (cond, body)
@@ -45,6 +45,4 @@ trait OneSequencesUtility extends Utility {
       } yield ())
     }yield(Seq(while_loop))
   }
-
-
 }

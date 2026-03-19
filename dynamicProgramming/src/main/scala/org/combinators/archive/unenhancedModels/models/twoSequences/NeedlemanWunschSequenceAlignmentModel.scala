@@ -12,7 +12,7 @@ class NeedlemanWunschSequenceAlignmentModel {
 
     val boundZero: Expression = new StringLengthExpression(s1)
     val boundOne: Expression = new StringLengthExpression(s2)
-    val bounds = List(s1, s2) // boundZero, boundOne)
+    val bounds = List(s1, s2) 
 
     val r: IteratorExpression = new IteratorExpression(0, "r")
     val c: IteratorExpression = new IteratorExpression(1, "c")

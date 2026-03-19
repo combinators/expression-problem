@@ -3,7 +3,7 @@ package org.combinators.ep.language.java      /*DI:LD:AI*/
 import com.github.javaparser.ast.body.MethodDeclaration
 import org.combinators.ep.domain.abstractions._
 import org.combinators.ep.domain.instances._
-//import org.combinators.ep.generator.DomainIndependentTestGenerator
+//import org.combinators.cogen.DomainIndependentTestGenerator
 import org.combinators.templating.twirl.Java
 
 abstract class TestGenerator (val gen:DomainIndependentJavaGenerator) { // }, independentTestGen: DomainIndependentTestGenerator) {

@@ -1,13 +1,13 @@
 package org.combinators.dp
 
 import org.combinators.models.{AdditionExpression, AndExpression, ArgExpression, ArgumentType, ArrayElementExpression, ArrayLengthExpression, CharAtExpression, EqualExpression, HelperExpression, InputExpression, IteratorExpression, LessThanExpression, LessThanOrEqualExpression, LiteralBoolean, LiteralChar, LiteralInt, MaxExpression, MinExpression, Model, MultiplicationExpression, OrExpression, SelfExpression, StringLengthExpression, SubStringExpression, SubproblemExpression, SubtractionExpression, TernaryExpression}
-import org.combinators.ep.domain.abstractions.TypeRep
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.{Command, NameProvider}
-import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.ep.generator.paradigm.{AnyParadigm, ObjectOriented}
-import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Equality, RealArithmetic, Strings}
+import org.combinators.cogen.TypeRep
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.{Command, NameProvider}
+import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
+import org.combinators.cogen.paradigm.{AnyParadigm, ObjectOriented}
+import org.combinators.cogen.paradigm.control.Imperative
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Equality, RealArithmetic, Strings}
 
 // Different approach
 trait GenerationOption {
@@ -281,9 +281,6 @@ trait Utility {
    *
    */
   def explore(expr : org.combinators.models.Expression, memoize:Boolean = true, symbolTable: Map[String,Expression], bottomUp:Option[Expression] = None) : Generator[paradigm.MethodBodyContext, Expression] = {
-    import paradigm.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
-    import AnyParadigm.syntax._
 
     // turn model Expression into a real expression
     expr match {
@@ -461,7 +458,6 @@ trait Utility {
   }
 
   def create_string_array(values:Seq[String]) : Generator[MethodBodyContext, Expression] = {
-    import AnyParadigm.syntax._
     for {
       translated_vals <- forEach(values) { value =>
         for {
@@ -475,7 +471,6 @@ trait Utility {
   }
 
   def create_int_array(values:Seq[Int]) : Generator[MethodBodyContext, Expression] = {
-    import AnyParadigm.syntax._
     for {
       translated_vals <- forEach(values) { value =>
         for {
@@ -489,7 +484,6 @@ trait Utility {
   }
 
   def create_int_nd_array(values:Seq[Int], dimensions:Seq[Int]) : Generator[MethodBodyContext, Expression] = {
-    import AnyParadigm.syntax._
     for {
       translated_vals <- forEach(values) { value =>
         for {

@@ -3,12 +3,12 @@ package org.combinators.models
 class Setup {
   def instantiate(): Model = {
 
-    val s1 = new ArgExpression(0, "s1", new StringType(), "r")
-    val s2 = new ArgExpression(1, "s2", new StringType(), "c")
+    val s1 = new ArgExpression(0, "s1", StringType(), "r")
+    val s2 = new ArgExpression(1, "s2", StringType(), "c")
 
     val boundZero: Expression = new StringLengthExpression(s1)
     val boundOne: Expression = new StringLengthExpression(s2)
-    val bounds = List(s1, s2)  // was bounds but that's not right
+    val bounds = List(s1, s2) 
 
     val r: IteratorExpression = new IteratorExpression(0, "r")
     val c: IteratorExpression = new IteratorExpression(1, "c")
@@ -58,7 +58,7 @@ class Setup {
 
     val two: LiteralInt = new LiteralInt(2)
 
-    val bound = List(new ArgExpression(0, "n", new IntegerType(), "i"))
+    val bound = List(new ArgExpression(0, "n", IntegerType(), "i"))
 
     val i: IteratorExpression = new IteratorExpression(0, "i")
     val im1 = new SubtractionExpression(i, one)

@@ -1,14 +1,14 @@
 package org.combinators.dp.enhanced
 
 import org.combinators.dp.Utility
-import org.combinators.ep.domain.abstractions.TypeRep
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi._
-import org.combinators.ep.generator.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
-import org.combinators.ep.generator.{Command, NameProvider}
-import org.combinators.models.{BooleanType, CharType, Definition, DefinitionStatement, EnhancedModel, ExpressionDefinition, ExpressionStatement, IfThenElseDefinition, IntegerType, MaxRangeDefinition, MinRangeDefinition, ReturnAccumulatedDefinition, ReturnExpressionDefinition, SumDefinition, UpperTriangle}
+import org.combinators.cogen.TypeRep
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
+import org.combinators.cogen.paradigm.control.Imperative
+import org.combinators.cogen.paradigm.ffi._
+import org.combinators.cogen.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
+import org.combinators.cogen.NameProvider
+import org.combinators.models._
 
 /**
  * Concepts necessary to realize top-down solutions
@@ -32,10 +32,6 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
   import ooParadigm._
   import paradigm._
   import syntax._
-
-  // Definition of the name of the helper method
-  val computeName: Name
-  val keyName: Name
 
   lazy val iName      = names.mangle("i")
   lazy val nName      = names.mangle("n")

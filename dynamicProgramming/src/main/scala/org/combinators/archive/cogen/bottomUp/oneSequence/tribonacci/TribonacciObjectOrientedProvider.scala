@@ -1,14 +1,13 @@
 package org.combinators.archive.cogen.bottomUp.oneSequence.tribonacci
 
-import org.combinators.ep.domain.abstractions._
-import org.combinators.ep.generator.Command.Generator
-import org.combinators.ep.generator.paradigm.control.Imperative
-import org.combinators.ep.generator.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
-import org.combinators.ep.generator.paradigm.{AnyParadigm, FindClass, ObjectOriented}
-import org.combinators.ep.generator.{AbstractSyntax, Command, NameProvider, Understands}
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.paradigm.control.Imperative
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
+import org.combinators.cogen.paradigm.{AnyParadigm, ObjectOriented}
+import org.combinators.cogen.{AbstractSyntax, Command, NameProvider, TypeRep}
 import org.combinators.dp.Utility
 
-trait TribonacciObjectOrientedProvider extends TribonacciProvider with Utility {
+trait TribonacciObjectOrientedProvider extends Utility {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val names: NameProvider[paradigm.syntax.Name]
   val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]
@@ -32,39 +31,6 @@ trait TribonacciObjectOrientedProvider extends TribonacciProvider with Utility {
     "get" + attr.capitalize
   }
 
-  def domainTypeLookup[Ctxt](dtpe: DataType)(implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]]): Generator[Ctxt, Type] = {
-    FindClass(Seq(names.mangle(names.conceptNameOf(dtpe)))).interpret(canFindClass)
-  }
-
-  def registerTypeMapping(tpe: DataType): Generator[ProjectContext, Unit] = {
-    import paradigm.projectCapabilities.addTypeLookupForMethods
-    import ooParadigm.methodBodyCapabilities.canFindClassInMethod
-    import ooParadigm.projectCapabilities.addTypeLookupForClasses
-    import ooParadigm.projectCapabilities.addTypeLookupForConstructors
-    import ooParadigm.classCapabilities.canFindClassInClass
-    import ooParadigm.constructorCapabilities.canFindClassInConstructor
-
-    val dtpe = TypeRep.DataType(tpe)
-
-    for {
-      _ <- addTypeLookupForMethods(dtpe, domainTypeLookup(tpe))
-      _ <- addTypeLookupForClasses(dtpe, domainTypeLookup(tpe))
-      _ <- addTypeLookupForConstructors(dtpe, domainTypeLookup(tpe))
-    } yield ()
-  }
-
-  def instantiate(baseTpe: DataType, tpeCase: DataTypeCase, args: Expression*): Generator[MethodBodyContext, Expression] = {
-    import paradigm.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
-
-    for {
-      rt <- findClass(names.mangle(names.conceptNameOf(tpeCase)))
-      _ <- resolveAndAddImport(rt)
-
-      res <- instantiateObject(rt, args)
-    } yield res
-  }
-
   def make_compute_method_signature(): Generator[paradigm.MethodBodyContext, Unit] = {
     import paradigm.methodBodyCapabilities._
 
@@ -78,26 +44,26 @@ trait TribonacciObjectOrientedProvider extends TribonacciProvider with Utility {
 
   /**
    * public class Solution {
-   * public int compute(int n) {
-   * if(n == 0) {
-   * return 0;
-   * } else if(n <= 2) {
-   * return 1;
-   * } else {
-   * int[] dp = new int[n + 1];
-   * dp[0] = 0;
-   * dp[1] = 1;
-   * dp[2] = 1;
+   *   public int compute(int n) {
+   *     if (n == 0) {
+   *       return 0;
+   *     } else if (n <= 2) {
+   *       return 1;
+   *     } else {
+   *       int[] dp = new int[n + 1];
+   *       dp[0] = 0;
+   *       dp[1] = 1;
+   *       dp[2] = 1;
    *
-   * int i = 3;
-   * while(i <= n) {
-   * dp[i] = dp[i - 1] + dp[i - 2] + dp[i - 3];
-   * i = i + 1;
-   * }
-   * }
+   *       int i = 3;
+   *       while (i <= n) {
+   *         dp[i] = dp[i - 1] + dp[i - 2] + dp[i - 3];
+   *         i = i + 1;
+   *       }
+   *     }
    *
-   * return dp[n];
-   * }
+   *     return dp[n];
+   *   }
    * }
    */
   def make_compute_method(): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
@@ -220,23 +186,10 @@ trait TribonacciObjectOrientedProvider extends TribonacciProvider with Utility {
     addClassToProject(makeClass, names.mangle("Tribonacci"))
   }
 
-  //  todo: make test cases
-  //  def makeTestCase(): Generator[MethodBodyContext, Seq[Expression]] = {
-  //    import paradigm.methodBodyCapabilities._
-  //    import eqls.equalityCapabilities._
-  //
-  //    for {
-  //      arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
-  //    } yield ()
-  //  }
-
   def implement(): Generator[ProjectContext, Unit] = {
 
     for {
       _ <- makeSimpleDP()
-      //      _ <- paradigm.projectCapabilities.addCompilationUnit(
-      //        paradigm.compilationUnitCapabilities.addTestSuite(testName, makeTestCase("DP"))
-      //      )
     } yield None
   }
 }

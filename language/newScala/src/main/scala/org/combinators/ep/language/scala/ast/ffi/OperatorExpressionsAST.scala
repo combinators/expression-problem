@@ -8,10 +8,23 @@ trait OperatorExpressionsAST extends InbetweenOperatorExpressionOpsAST{ self: Ba
     object operatorExpressionsOverrides {
       trait FinalTypes extends operatorExpressions.FinalTypes {
         type Operator <: operatorExpressionsOverrides.Operator
+        type TernaryExpression <: operatorExpressionsOverrides.TernaryExpression
         type BinaryExpression <: operatorExpressionsOverrides.BinaryExpression
         type UnaryExpression <: operatorExpressionsOverrides.UnaryExpression
       }
 
+      trait TernaryExpression extends scalaBase.anyOverrides.Expression with operatorExpressions.TernaryExpression {
+
+        def toScala: String = s"(${operator.getSelfOperator.toScala(left, mid, right)})" // necessary when composing expressions, though can get excessive at times.
+
+        override def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): operatorExpressions.TernaryExpression =
+          copy(
+            left  =  left.getSelfExpression.prefixRootPackage(rootPackageName, excludedTypeNames),
+            mid   =   mid.getSelfExpression.prefixRootPackage(rootPackageName, excludedTypeNames),
+            right = right.getSelfExpression.prefixRootPackage(rootPackageName, excludedTypeNames)
+          )
+      }
+      
       trait BinaryExpression extends scalaBase.anyOverrides.Expression with operatorExpressions.BinaryExpression {
 
         def toScala: String = s"(${operator.getSelfOperator.toScala(left, right)})" // necessary when composing expressions, though can get excessive at times.
@@ -81,6 +94,7 @@ trait FinalOperatorExpressionsAST extends OperatorExpressionsAST { self: FinalBa
   object finalOperatorExpressionsFinalTypes {
     trait OperatorExpressionsFinalTypes extends scalaOperatorExpressions.operatorExpressionsOverrides.FinalTypes {
       type Operator = scalaOperatorExpressions.operatorExpressionsOverrides.Operator
+      type TernaryExpression = scalaOperatorExpressions.operatorExpressionsOverrides.TernaryExpression
       type BinaryExpression = scalaOperatorExpressions.operatorExpressionsOverrides.BinaryExpression
       type UnaryExpression = scalaOperatorExpressions.operatorExpressionsOverrides.UnaryExpression
     }
@@ -89,6 +103,19 @@ trait FinalOperatorExpressionsAST extends OperatorExpressionsAST { self: FinalBa
 
   object finalOperatorExpressionsFactoryTypes {
     trait OperatorExpressionsFactory extends scalaOperatorExpressions.operatorExpressionsOverrides.Factory {
+      def ternaryExpression(operator: operatorExpressions.Operator, left: any.Expression, mid: any.Expression, right: any.Expression): operatorExpressions.TernaryExpression = {
+        case class TernaryExpression(
+                                     override val operator: operatorExpressions.Operator,
+                                     override val left: any.Expression,
+                                     override val mid: any.Expression,
+                                     override val right: any.Expression)
+          extends scalaOperatorExpressions.operatorExpressionsOverrides.TernaryExpression
+            with finalBaseAST.anyOverrides.FinalExpression {
+          def getSelfTernaryExpression: scalaOperatorExpressions.operatorExpressionsOverrides.TernaryExpression = this
+        }
+        TernaryExpression(operator, left, mid, right)
+      }
+      
       def binaryExpression(operator: operatorExpressions.Operator, left: any.Expression, right: any.Expression): operatorExpressions.BinaryExpression = {
         case class BinaryExpression(
           override val operator: operatorExpressions.Operator,
@@ -100,6 +127,7 @@ trait FinalOperatorExpressionsAST extends OperatorExpressionsAST { self: FinalBa
         }
         BinaryExpression(operator, left, right)
       }
+      
       def unaryExpression(operator: operatorExpressions.Operator, operand: any.Expression): operatorExpressions.UnaryExpression = {
         case class UnaryExpression(
           override val operator: operatorExpressions.Operator,

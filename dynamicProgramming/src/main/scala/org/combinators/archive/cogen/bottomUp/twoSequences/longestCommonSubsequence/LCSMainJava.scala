@@ -11,8 +11,8 @@ import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
 import org.combinators.archive.unenhancedModels.models.twoSequences.LongestCommonSubsequenceModel
 import org.combinators.dp.{BottomUp, GenerationOption, TopDown}
-import org.combinators.ep.generator.FileWithPathPersistable._
-import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
+import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
+import FileWithPathPersistable._
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, Syntax, Unboxed}
 import org.combinators.models.Model
@@ -80,17 +80,15 @@ object LCSDirectToDiskMain extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
 
     // choose one of these to pass in
-    val topDown         = new TopDown()
-    val topDownWithMemo = new TopDown(memo = true)
-    val bottomUp        = new BottomUp()
+    val topDown         = TopDown()
+    val topDownWithMemo = TopDown(memo = true)
+    val bottomUp        = BottomUp()
 
     val LCS = new LongestCommonSubsequenceModel().instantiate()
     for {
       _ <- IO { print("Initializing Generator...") }
       main <- IO { new LCSMainJava() }
       _ <- IO { println("[OK]") }
-
-      // pass in TOP DOWN
 
       result <- main.runDirectToDisc(targetDirectory, LCS, topDownWithMemo)
     } yield result

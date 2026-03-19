@@ -3,7 +3,7 @@ package org.combinators.ep.language.inbetween.ffi
 /*DI:LI:AI*/
 
 import org.combinators.cogen.paradigm.Apply
-import org.combinators.cogen.paradigm.ffi.{Abs, Add, Cos, Div, EulersNumber, Floor, LE, LT, Log, Mod, Mult, Pi, Pow, Sin, Sqrt, Sub, RealArithmetic as RealArith}
+import org.combinators.cogen.paradigm.ffi.{Abs, Add, Cos, Div, EulersNumber, Floor, LE, LT, Log, Max, Min, Mod, Mult, Pi, Pow, Sin, Sqrt, Sub, RealArithmetic as RealArith}
 import org.combinators.cogen.{Command, Understands}
 import org.combinators.cogen.Command.Generator
 import org.combinators.ep.language.inbetween.any
@@ -35,6 +35,21 @@ trait RealArithmetic[AST <: RealArithmeticAST, B, T](val _base: AnyParadigm.With
             (context, realArithmeticOpsFactory.log(command.arguments(0), command.arguments(1)))
           }
         }
+
+      implicit val canMax: Understands[any.Method, Apply[Max[T], any.Expression, any.Expression]] =
+        new Understands[any.Method, Apply[Max[T], any.Expression, any.Expression]] {
+          def perform(context: any.Method, command: Apply[Max[T], any.Expression, any.Expression]): (any.Method, any.Expression) = {
+            (context, realArithmeticOpsFactory.max(command.arguments(0), command.arguments(1)))
+          }
+        }
+        
+      implicit val canMin: Understands[any.Method, Apply[Min[T], any.Expression, any.Expression]] =
+          new Understands[any.Method, Apply[Min[T], any.Expression, any.Expression]] {
+            def perform(context: any.Method, command: Apply[Min[T], any.Expression, any.Expression]): (any.Method, any.Expression) = {
+              (context, realArithmeticOpsFactory.min(command.arguments(0), command.arguments(1)))
+            }
+          }
+        
       implicit val canSin: Understands[any.Method, Apply[Sin[T], any.Expression, any.Expression]] =
         new Understands[any.Method, Apply[Sin[T], any.Expression, any.Expression]] {
           def perform(context: any.Method, command: Apply[Sin[T], any.Expression, any.Expression]): (any.Method, any.Expression) = {

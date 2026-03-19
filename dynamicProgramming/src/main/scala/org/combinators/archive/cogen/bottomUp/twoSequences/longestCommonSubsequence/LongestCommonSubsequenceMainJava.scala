@@ -3,11 +3,11 @@ package org.combinators.archive.cogen.bottomUp.twoSequences.longestCommonSubsequ
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
-import org.combinators.ep.generator.FileWithPathPersistable._
-import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
+import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
+import FileWithPathPersistable._
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
-import org.combinators.models.{CharAtExpression, EqualExpression, IteratorExpression, LiteralInt, Model}
+import org.combinators.models._
 
 import java.nio.file.{Path, Paths}
 
@@ -68,8 +68,6 @@ object LongestCommonSubsequenceDirectToDiskMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
     val LCS: Model = new Model("LongestCommonSubsequence", List(), List())
-
-
 
     for {
       _ <- IO { print("Initializing Generator...") }

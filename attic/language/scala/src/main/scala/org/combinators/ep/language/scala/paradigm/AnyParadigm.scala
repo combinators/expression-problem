@@ -3,7 +3,7 @@ package org.combinators.ep.language.scala.paradigm   /*DI:LD:AI*/
 import java.nio.file.{Path, Paths}
 
 import scala.meta._
-import org.combinators.ep.domain.abstractions.TypeRep
+import org.combinators.cogen.TypeRep
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.generator.Command.Generator
 import org.combinators.ep.generator.{Command, FileWithPath, Understands}

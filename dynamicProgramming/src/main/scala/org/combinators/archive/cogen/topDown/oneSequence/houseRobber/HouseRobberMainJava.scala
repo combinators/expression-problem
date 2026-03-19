@@ -9,8 +9,8 @@ package org.combinators.archive.cogen.topDown.oneSequence.houseRobber
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
-import org.combinators.ep.generator.FileWithPathPersistable._
-import org.combinators.ep.generator.{FileWithPath, FileWithPathPersistable}
+import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
+import FileWithPathPersistable._
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
 

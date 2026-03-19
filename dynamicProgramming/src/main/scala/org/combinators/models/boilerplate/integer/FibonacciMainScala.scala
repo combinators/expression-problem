@@ -43,7 +43,7 @@ object FibonacciEnhancedMainToDiskMainScala extends IOApp {
         args(0).toLowerCase() match {
           case "topdown" => topDown
           case "topdownwithmemo" => topDownWithMemo
-          case "bottomUp" => bottomUp
+          case "bottomup" => bottomUp
           case _ => ???
         }
     } else {

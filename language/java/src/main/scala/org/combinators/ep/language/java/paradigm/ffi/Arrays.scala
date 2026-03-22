@@ -27,22 +27,22 @@ class Arrays[Ctxt, AP <: AnyParadigm](val base:AP) extends Arrs[Ctxt] {
           (context,
             new ArrayCreationExpr(command.functional.elementType,
               new NodeList(new ArrayCreationLevel()),
-              new ArrayInitializerExpr(new NodeList(command.arguments: _ *)))
+              new ArrayInitializerExpr(new NodeList(command.arguments*)))
           )
         } else {
           val levels = command.functional.dimensions.map(level => new ArrayCreationLevel())   // inserting actual value causes problems since cannot have int[len1][len2] with initial values.
           val dims = command.functional.dimensions
           val innerFold = dims.reverse.tail.foldLeft[Seq[ArrayInitializerExpr]](
-            command.arguments.grouped(dims.last).toSeq.map(subSeq => new ArrayInitializerExpr(new NodeList(subSeq: _*)))
+            command.arguments.grouped(dims.last).toSeq.map(subSeq => new ArrayInitializerExpr(new NodeList(subSeq*)))
           )
-            { case (inits, dim) => inits.grouped(dim).toSeq.map(subSeq => new ArrayInitializerExpr(new NodeList(subSeq: _*))) }
+            { case (inits, dim) => inits.grouped(dim).toSeq.map(subSeq => new ArrayInitializerExpr(new NodeList(subSeq*))) }
 
           // When creating array with initial values, cannot pass in lengths. Cannot do the following for example
           //     new int[2][3] { { 4, 5, 1 }, { 1, 2, 3 } }
 
           (context,
             new ArrayCreationExpr(command.functional.elementType,
-              new NodeList(levels: _*),
+              new NodeList(levels*),
               innerFold.head) // new ArrayInitializerExpr(new NodeList(command.arguments: _ *)))
           )
         }
@@ -93,7 +93,7 @@ class Arrays[Ctxt, AP <: AnyParadigm](val base:AP) extends Arrs[Ctxt] {
     }
 
   def enable(): Generator[base.ProjectContext, Unit] =
-    Enable.interpret(new Understands[base.ProjectContext, Enable.type] {
+    Enable.interpret(using new Understands[base.ProjectContext, Enable.type] {
       def perform(
         context: ProjectCtxt,
         command: Enable.type
@@ -182,7 +182,7 @@ class Arrays[Ctxt, AP <: AnyParadigm](val base:AP) extends Arrs[Ctxt] {
                     elems <- elements(rep.tpe)(rep.inst)
                     dims = dimensions(rep.tpe)(rep.inst)
                     elemType <- elementType(rep.tpe)(rep.inst)
-                    res <- Apply[CreateArray[Type], Expression, Expression](CreateArray(elemType, dims), elems).interpret(canCreateArray)
+                    res <- Apply[CreateArray[Type], Expression, Expression](CreateArray(elemType, dims), elems).interpret(using canCreateArray)
                   } yield res
 
               }

@@ -31,7 +31,7 @@ class Exceptions[AP <: AnyParadigm](val base: AP) extends Excptns[MethodBodyCtxt
     }
 
   override def enable(): Generator[base.ProjectContext, Unit] =
-    Enable.interpret(new Understands[base.ProjectContext, Enable.type] {
+    Enable.interpret(using new Understands[base.ProjectContext, Enable.type] {
       def perform(
         context: ProjectCtxt,
         command: Enable.type

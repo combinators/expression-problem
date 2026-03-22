@@ -28,7 +28,7 @@ trait ParametricPolymorphism {
       AnyParadigm.capability(AddTypeParameter[Name, TypeParameterContext](name, spec))
 
     implicit val canGetTypeArgumentsInMethod: Understands[MethodBodyContext, GetTypeArguments[Type]]
-    def getTypeArguments(): Generator[MethodBodyContext, Seq[Type]] =
+    def getTypeArguments: Generator[MethodBodyContext, Seq[Type]] =
       AnyParadigm.capability(GetTypeArguments[Type]())
 
     implicit val canApplyTypeInMethod: Understands[MethodBodyContext, Apply[Type, Type, Type]]

@@ -136,11 +136,6 @@ trait ObjectOriented {
     def addImplemented(interface: Type): Generator[ClassContext, Unit] =
       AnyParadigm.capability(AddImplemented(interface))
 
-    // FIRST REMOVE CAPABILITY
-    implicit val canRemoveMethodFromClass: Understands[ClassContext, RemoveMethod[Type, Name]]
-    def removeMethod(interface: Type, name:Name): Generator[ClassContext, Unit] =
-      AnyParadigm.capability(RemoveMethod(interface, name))
-
     implicit val canAddFieldInClass: Understands[ClassContext, AddField[Name, Type, Expression]]
     def addField(name: Name, tpe: Type, init:Option[Expression] = Option.empty): Generator[ClassContext, Unit] =
       AnyParadigm.capability(AddField[Name, Type, Expression](name, tpe, initializer = init))
@@ -332,7 +327,7 @@ trait ObjectOriented {
     def addClassToProject(classGen: Generator[ClassContext, Unit], qualifiedName: Name* ): Generator[ProjectContext, Unit] = {
       import compilationUnitCapabilities._
       import base.projectCapabilities._
-      addCompilationUnit(AddClass(qualifiedName.last, classGen).interpret, qualifiedName: _*)
+      addCompilationUnit(AddClass(qualifiedName.last, classGen).interpret, qualifiedName*)
     }
 
     implicit val canAddTypeLookupForClassesInProject: Understands[ProjectContext, AddTypeLookup[ClassContext, Type]]

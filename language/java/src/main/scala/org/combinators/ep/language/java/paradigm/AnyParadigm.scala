@@ -193,16 +193,6 @@ trait AnyParadigm extends AP {
           }
         }
 
-      implicit val canOutputToConsole: Understands[MethodBodyCtxt, OutputToConsole[Expression]] =
-        new Understands[MethodBodyCtxt, OutputToConsole[Expression]] {
-          def perform(
-                       context: MethodBodyCtxt,
-                       command: OutputToConsole[Expression]
-                     ): (MethodBodyCtxt, Unit) = {
-            (context.copy(), ())
-          }
-        }
-
       implicit val canAddImportInMethodBody: Understands[MethodBodyCtxt, AddImport[ImportDeclaration]] =
         new Understands[MethodBodyCtxt, AddImport[ImportDeclaration]] {
           def perform(
@@ -331,7 +321,7 @@ trait AnyParadigm extends AP {
               } else {
                 val scope =
                   command.functional match {
-                    case n: NodeWithScope[Expression] => n.getScope
+                    case n: NodeWithScope[_] => n.getScope
                     case _ => null
                   }
                 new MethodCallExpr(scope, command.functional.asInstanceOf[NodeWithSimpleName[Node]].getNameAsString, new NodeList[Expression](command.arguments*))
@@ -528,11 +518,11 @@ trait AnyParadigm extends AP {
          """.stripMargin
     val cleanedUnits =
      ImportCleanup.cleaned(
-        FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.units: _*) : _*
+        FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.units*)*
      )
     val cleanedTestUnits =
       ImportCleanup.cleaned(
-        FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.testUnits: _*): _*
+        FreshNameCleanup.cleaned(finalContext.resolver.generatedVariables, finalContext.testUnits*)*
       )
     val javaFiles = cleanedUnits.map { unit =>
       FileWithPath(

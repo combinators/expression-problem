@@ -21,8 +21,8 @@ trait Command {
 
     liftF[Command.Performable[Context, *], Result](new Command.Performable[Context, Result] {
       type Cmd = Self
-      val cmd = self
-      val interpreter = interp
+      val cmd: Self = self
+      val interpreter: Understands[Context, Self] = interp
     })
   }
 }

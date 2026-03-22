@@ -49,11 +49,6 @@ trait OOParadigm[AST <: OOAST, B](val base: AnyParadigm.WithAST[AST] & B) extend
         (context.copy(implemented = context.implemented :+ command.interface), ())
       }
     }
-    implicit val canRemoveMethodFromClass: Understands[Class, RemoveMethod[Type, Name]] = new Understands[Class, RemoveMethod[Type, Name]] {
-      override def perform(context: Class, command: RemoveMethod[Type, Name]): (Class, Unit) = {
-        ??? // TODO: Remove me
-      }
-    }
     implicit val canAddFieldInClass: Understands[Class, AddField[Name, Type, Expression]] = new Understands[Class, AddField[Name, Type, Expression]] {
       def perform(context: Class, command: AddField[Name, Type, Expression]): (Class, Unit) = {
         (context.copy(fields = context.fields :+ ooFactory.field(command.name, command.tpe, command.initializer)), ())

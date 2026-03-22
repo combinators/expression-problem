@@ -148,21 +148,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             (context.copy(cls = resultCls), ())
           }
         }
-      implicit val canRemoveMethodFromClass: Understands[ClassContext, RemoveMethod[Type, Name]] =
-        new Understands[ClassContext, RemoveMethod[Type, Name]] {
-          def perform(
-            context: ClassContext,
-            command: RemoveMethod[Type, Name]
-          ): (ClassContext, Unit) = {
-            val resultCls = context.cls.clone()
-
-            // TODO: DO SOMETHING HERE (HEINEMAN)
-            val method = resultCls.getMethodsByName(command.name.mangled)
-            resultCls.remove(method.get(0))
-
-            (context.copy(cls = resultCls), ())
-          }
-        }
+        
       implicit val canAddFieldInClass: Understands[ClassContext, AddField[Name, Type, Expression]] =
         new Understands[ClassContext, AddField[Name, Type, Expression]] {
           def perform(
@@ -599,41 +585,17 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
           ): (MethodBodyContext, Expression) = {
             val (tpe, args) = context.resolver.instantiationOverride(command.tpe, command.constructorArguments)
             /** Expand with instantiated body (if it exists). */
-            if (tpe.isArrayType) {
-              val result = new ArrayCreationExpr()
-              result.setElementType(tpe.getElementType)
-              val levels = new NodeList[ArrayCreationLevel] ()
-              levels.add(new ArrayCreationLevel().setDimension(args.head))
-              if (args.tail.nonEmpty) {
-                levels.add(new ArrayCreationLevel().setDimension(args.tail.head))
-                if (args.tail.tail.nonEmpty) {
-                  levels.add(new ArrayCreationLevel().setDimension(args.tail.tail.head))
-                  if (args.tail.tail.tail.nonEmpty) {
-                    levels.add(new ArrayCreationLevel().setDimension(args.tail.tail.tail.head))
-                    if (args.tail.tail.tail.nonEmpty) {
-                      levels.add(new ArrayCreationLevel().setDimension(args.tail.tail.tail.tail.head))
-                      if (args.tail.tail.tail.tail.nonEmpty) {
-                        println("Too many array levels [ObjectOriented: instantiateObject in method")
-                      }
-                    }
-                  }
-                }
-              }
-              result.setLevels(levels)
-              (context, result.removeInitializer())      // no initializers when declaring bounds
+            val result = new ObjectCreationExpr()
+            result.setType(tpe.asClassOrInterfaceType().clone())
+            result.setArguments(new NodeList(args*))
+            if (command.body.isDefined) {
+              val ci = new ClassOrInterfaceDeclaration()
+              val (newCtxt, classDef) = Command.runGenerator(command.body.get, ClassCtxt(context.resolver, ci, context.extraImports))
+              result.setAnonymousClassBody(newCtxt.cls.getMembers)
+              (context.copy(resolver = newCtxt.resolver, extraImports = newCtxt.extraImports), result)
             } else {
-              val result = new ObjectCreationExpr()
-              result.setType(tpe.asClassOrInterfaceType().clone())
-              result.setArguments(new NodeList(args: _*))
-              if (command.body.isDefined) {
-                val ci = new ClassOrInterfaceDeclaration()
-                val (newCtxt, classDef) = Command.runGenerator(command.body.get, ClassCtxt(context.resolver, ci, context.extraImports))
-                result.setAnonymousClassBody(newCtxt.cls.getMembers)
-                (context.copy(resolver = newCtxt.resolver, extraImports = newCtxt.extraImports), result)
-              } else {
-                (context, result)
-              }
-            }
+              (context, result)
+            }            
           }
         }
 

@@ -3,7 +3,7 @@ package org.combinators.cogen.paradigm.control
 import org.combinators.cogen.{Command, Understands}
 import Command.Generator
 
-import org.combinators.cogen.paradigm.{AnyParadigm, IfThenElse, Ternary}
+import org.combinators.cogen.paradigm.{AnyParadigm, IfThenElse}
 
 case class DeclareVariable[Name, Type, Init, Res](name: Name, tpe: Type, initialization: Init) extends Command {
   type Result = Res
@@ -53,15 +53,6 @@ trait Imperative[Context] {
       ): Generator[Context, Statement] =
       AnyParadigm.capability(IfThenElse[Expression, Generator[Context, Unit], Option[Generator[Context, Unit]], Statement](
         condition, ifBranch, elseIfs, elseBranch
-      ))
-
-    implicit val canTernary: Understands[Context, Ternary[Expression, Expression]]
-    def ternary(
-        condition: Expression,
-        trueExpression: Expression,
-        falseExpression: Expression): Generator[Context, Expression] =
-      AnyParadigm.capability(Ternary[Expression, Expression](
-        condition, trueExpression, falseExpression
       ))
 
     implicit val canWhile: Understands[Context, While[Context, Expression, Statement]]

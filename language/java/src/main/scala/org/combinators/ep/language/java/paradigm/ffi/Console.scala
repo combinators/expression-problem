@@ -1,4 +1,6 @@
-package org.combinators.ep.language.java.paradigm.ffi    /*DI:LD:AI*/
+package org.combinators.ep.language.java.paradigm.ffi
+
+/*DI:LD:AI*/
 
 import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.expr.{FieldAccessExpr, MethodCallExpr, NameExpr, SimpleName}
@@ -25,7 +27,7 @@ class Console[Ctxt, AP <: AnyParadigm](
           ): (Ctxt, Expression) = {
             (context, new MethodCallExpr(new FieldAccessExpr(new NameExpr(new SimpleName("System")), "out"), "println",
               new NodeList(command.arguments.head))
-              )
+            )
           }
         }
     }

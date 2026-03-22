@@ -2,7 +2,7 @@ package org.combinators.ep.language.java.paradigm    /*DI:LD:AI*/
 
 import com.github.javaparser.ast.expr.{AssignExpr, ConditionalExpr, NameExpr, VariableDeclarationExpr}
 import com.github.javaparser.ast.stmt.{BlockStmt, ExpressionStmt, IfStmt, ReturnStmt, WhileStmt}
-import org.combinators.cogen.paradigm.{IfThenElse, Ternary}
+import org.combinators.cogen.paradigm.IfThenElse
 import org.combinators.cogen.paradigm.control.{AssignVariable, DeclareVariable, LiftExpression, Return, While, Imperative as Imp}
 import org.combinators.cogen.{Command, Understands}
 import org.combinators.cogen.Command.Generator
@@ -83,21 +83,6 @@ trait Imperative[Ctxt, AP <: AnyParadigm] extends Imp[Ctxt] {
                 resCtxt
               }.getOrElse(beforeElseCtxt)
           (manip.copyWithBlock(afterElseCtxt, manip.getBlock(context)), iteStmt.clone())
-        }
-      }
-
-    implicit val canTernary: Understands[Ctxt, Ternary[Expression, Expression]] =
-      new Understands[Ctxt, Ternary[Expression, Expression]] {
-        def perform(
-                     context: Ctxt,
-                     command: Ternary[Expression, Expression]
-                   ): (Ctxt, Expression) = {
-          val conditionalExpr: ConditionalExpr  = new ConditionalExpr ()
-          conditionalExpr.setCondition(command.condition)
-          conditionalExpr.setThenExpr(command.trueExpression)
-          conditionalExpr.setElseExpr(command.falseExpression)
-
-          (manip  .copyWithBlock(context, manip.getBlock(context)), conditionalExpr.clone())
         }
       }
 

@@ -33,7 +33,7 @@ class RealArithmetic[Ctxt, T, AP <: AnyParadigm](
         context: Ctxt,
         command: Apply[Op, Expression, Expression]
       ): (Ctxt, Expression) = {
-        (context, new MethodCallExpr(mathExp, methodName, new NodeList[Expression](command.arguments: _*)))
+        (context, new MethodCallExpr(mathExp, methodName, new NodeList[Expression](command.arguments*)))
       }
     }
 
@@ -61,7 +61,7 @@ class RealArithmetic[Ctxt, T, AP <: AnyParadigm](
                    context: Ctxt,
                    command: Apply[Op, Expression, Expression]
                  ): (Ctxt, Expression) = {
-        (context, new MethodCallExpr(mathExp, "max", new NodeList[Expression](command.arguments: _*)))
+        (context, new MethodCallExpr(mathExp, "max", new NodeList[Expression](command.arguments*)))
       }
     }
 
@@ -71,7 +71,7 @@ class RealArithmetic[Ctxt, T, AP <: AnyParadigm](
                    context: Ctxt,
                    command: Apply[Op, Expression, Expression]
                  ): (Ctxt, Expression) = {
-        (context, new MethodCallExpr(mathExp, "min", new NodeList[Expression](command.arguments: _*)))
+        (context, new MethodCallExpr(mathExp, "min", new NodeList[Expression](command.arguments*)))
       }
     }
 
@@ -112,7 +112,7 @@ class RealArithmetic[Ctxt, T, AP <: AnyParadigm](
     }
 
   def enable(): Generator[base.ProjectContext, Unit] =
-    Enable.interpret(new Understands[base.ProjectContext, Enable.type] {
+    Enable.interpret(using new Understands[base.ProjectContext, Enable.type] {
       def perform(
         context: ProjectCtxt,
         command: Enable.type

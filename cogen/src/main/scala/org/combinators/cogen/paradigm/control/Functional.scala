@@ -1,6 +1,6 @@
 package org.combinators.cogen.paradigm.control
 
-import org.combinators.cogen.paradigm.{AnyParadigm, Apply, IfThenElse, Reify, Ternary}
+import org.combinators.cogen.paradigm.{AnyParadigm, Apply, IfThenElse, Reify}
 import org.combinators.cogen.{Command, TypeRep, Understands}
 import Command.Generator
 
@@ -59,18 +59,6 @@ trait Functional[Context] extends Lambdas[Context] {
           elseIfs,
           elseBlock
         ))
-
-    implicit val canTernary: Understands[Context, Ternary[Expression, Expression]]
-    def ternary(
-        cond: Expression,
-        trueExpression: Expression,
-        falseExpression: Expression): Generator[Context, Expression] =
-      AnyParadigm.capability(
-        Ternary[Expression, Expression](
-          cond,
-          trueExpression,
-          falseExpression)
-      )
 
     implicit val canPatternMatch: Understands[Context, PatternMatch[Context, PatternContext, Expression]]
     def patternMatch(

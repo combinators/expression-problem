@@ -72,11 +72,6 @@ trait AnyParadigm[A, S](val ast: AnyAST & A, val syntax: AbstractSyntax.Abstract
         (context, ())
       }
     }
-    implicit val canOutputToConsole: Understands[MethodBodyContext, OutputToConsole[syntax.Expression]] = new Understands[MethodBodyContext, OutputToConsole[syntax.Expression]] {
-      def perform(context: MethodBodyContext, command: OutputToConsole[syntax.Expression]): (MethodBodyContext, Unit) = {
-        (context, ())
-      }
-    }
 
     implicit val canAddImportInMethodBody: Understands[MethodBodyContext, AddImport[syntax.Import]] = new Understands[MethodBodyContext, AddImport[syntax.Import]] {
       def perform(context: MethodBodyContext, command: AddImport[syntax.Import]): (MethodBodyContext, Unit) = {

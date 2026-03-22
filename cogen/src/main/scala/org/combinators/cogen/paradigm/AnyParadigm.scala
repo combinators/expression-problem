@@ -71,13 +71,6 @@ case class ResolveImport[Import, T](forElem: T) extends Command {
   type Result = Option[Import]
 }
 
-case class Ternary[Expression, R](
-  condition: Expression,
-  trueExpression: Expression,
-  falseExpression: Expression) extends Command {
-  type Result = R
-}
-
 case class IfThenElse[Expression, MandatoryBlock, Block, R](
     condition: Expression,
     ifBranch: MandatoryBlock,
@@ -186,10 +179,6 @@ trait AnyParadigm {
     implicit val canDebugInMethodBody: Understands[MethodBodyContext, Debug]
     def debug(tag:String = ""): Generator[MethodBodyContext, Unit] =
       AnyParadigm.capability(Debug(tag))
-
-    implicit val canOutputToConsole: Understands[MethodBodyContext, OutputToConsole[Expression]]
-    def output(expr:Expression): Generator[MethodBodyContext, Unit] =
-      AnyParadigm.capability(OutputToConsole[Expression](expr))
     
     implicit val canAddImportInMethodBody: Understands[MethodBodyContext, AddImport[Import]]
     def addImport(imp: Import): Generator[MethodBodyContext, Unit] =
@@ -252,8 +241,8 @@ object AnyParadigm {
 
   def capability[Ctxt, R, Cmd <: Command.WithResult[R]]
     (cmd: Cmd)
-    (implicit interp: Understands[Ctxt, Cmd]): Generator[Ctxt, R] = {
-    cmd.interpret[Ctxt, Cmd](interp)
+    (using interp: Understands[Ctxt, Cmd]): Generator[Ctxt, R] = {
+    cmd.interpret[Ctxt, Cmd](using interp)
   }
 
   object syntax {

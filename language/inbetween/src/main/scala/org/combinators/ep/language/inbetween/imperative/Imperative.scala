@@ -1,6 +1,6 @@
 package org.combinators.ep.language.inbetween.imperative   /*DI:LI:AI*/
 
-import org.combinators.cogen.paradigm.{IfThenElse, control, Ternary}
+import org.combinators.cogen.paradigm.{IfThenElse, control}
 import org.combinators.cogen.paradigm.control.{AssignVariable, DeclareVariable, LiftExpression, Return, While}
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, FileWithPath, Understands, paradigm}
@@ -44,21 +44,7 @@ trait Imperative[AST <: ImperativeAST, B](val _base: AnyParadigm.WithAST[AST] & 
             (context, liftStmt)
           }
         }
-      implicit val canTernary: Understands[Ctxt, Ternary[any.Expression, any.Expression]] =
-          new Understands[Ctxt, Ternary[any.Expression, any.Expression]] {
-            /** Returns the updated context and the result of the command. */
-            override def perform(context: Ctxt, command: Ternary[any.Expression, any.Expression]): (Ctxt, any.Expression) = {
-              def contextWithoutMethodBody(context: Ctxt) =
-                context.copy(statements = Seq.empty)
-
-              val (condCtxt, cond) = Command.runGenerator(Command.lift[Ctxt, any.Expression](command.condition), contextWithoutMethodBody(context))
-              val (trueCtxt, trueExpr) = Command.runGenerator(Command.lift[Ctxt, any.Expression](command.trueExpression), contextWithoutMethodBody(condCtxt))
-              val (falseCtxt, falseExpr) = Command.runGenerator(Command.lift[Ctxt, any.Expression](command.falseExpression), contextWithoutMethodBody(trueCtxt))
-
-              val ternaryExpr = imperativeFactory.tertiary(cond, trueExpr, falseExpr)
-              (context.copy(statements = context.statements), ternaryExpr)
-            }
-          }
+ 
       implicit val canIfThenElse: Understands[Ctxt, IfThenElse[any.Expression, Generator[Ctxt, Unit], Option[Generator[Ctxt, Unit]], any.Statement]] =
         new Understands[Ctxt, IfThenElse[any.Expression, Generator[Ctxt, Unit], Option[Generator[Ctxt, Unit]], any.Statement]] {
           /** Returns the updated context and the result of the command. */

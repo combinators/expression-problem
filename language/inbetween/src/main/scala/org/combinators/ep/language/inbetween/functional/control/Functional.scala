@@ -3,7 +3,7 @@ package org.combinators.ep.language.inbetween.functional.control
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.paradigm.control.*
 import org.combinators.cogen.paradigm.control.{DeclareFunVariable as DFV, Functional as Fun}
-import org.combinators.cogen.paradigm.{Apply, IfThenElse, Reify, control, Ternary}
+import org.combinators.cogen.paradigm.{Apply, IfThenElse, Reify, control}
 import org.combinators.cogen.{Command, Understands, paradigm}
 import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
@@ -42,13 +42,6 @@ trait Functional[AST <: FunctionalControlAST, B](val _base: AnyParadigm.WithAST[
             val (initContext, initExp) = Command.runGenerator(command.initialization(factory.argumentExpression(command.name)), context)
             val (resContext, inExp) = Command.runGenerator(command.inBlk(factory.argumentExpression(command.name)), initContext)
             (resContext, functionalControlFactory.declareFunVariable(command.name, command.tpe, isRecursive = true, initExp, inExp))
-          }
-        }
-
-      implicit val canTernary: Understands[any.Method, Ternary[any.Expression, any.Expression]] =
-        new Understands[any.Method, Ternary[any.Expression, any.Expression]] {
-          override def perform(context: any.Method, command: Ternary[any.Expression, any.Expression]): (any.Method, any.Expression) = {
-            (context, functionalControlFactory.funIfThenElse(command.condition, command.trueExpression, Seq.empty, command.falseExpression))
           }
         }
       

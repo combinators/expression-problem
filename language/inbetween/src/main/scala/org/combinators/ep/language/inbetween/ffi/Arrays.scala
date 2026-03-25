@@ -16,10 +16,10 @@ trait Arrays[AST <: ArraysAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
     import base.ast.any
 
     override val arrayCapabilities: ArrayCapabilities = new ArrayCapabilities {
-      override implicit val canCreate: Understands[any.Method, Apply[CreateArray[any.Type], any.Expression, any.Expression]] =
-        new Understands[any.Method, Apply[CreateArray[any.Type], any.Expression, any.Expression]] {
-          override def perform(context: any.Method, command: Apply[CreateArray[any.Type], any.Expression, any.Expression]): (any.Method, any.Expression) = {
-            (context, arraysOpsFactory.createArray(command.functional.elementType, command.arguments))
+      override implicit val canCreate: Understands[any.Method, CreateArray[any.Type,any.Expression]] =
+        new Understands[any.Method, CreateArray[any.Type, any.Expression]] {
+          override def perform(context: any.Method, command: CreateArray[any.Type, any.Expression]): (any.Method, any.Expression) = {
+            (context, arraysOpsFactory.createArray(command.elementType, ???))   // TODO: for in-between
           }
         }
       override implicit val canGet: Understands[any.Method, Apply[Get, any.Expression, any.Expression]] =

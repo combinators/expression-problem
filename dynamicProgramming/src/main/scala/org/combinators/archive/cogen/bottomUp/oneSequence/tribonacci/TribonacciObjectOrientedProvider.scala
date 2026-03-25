@@ -109,7 +109,7 @@ trait TribonacciObjectOrientedProvider extends Utility {
           for {
             //            int[] dp = new int[n + 1];
             nValuePlusOne <- arithmetic.arithmeticCapabilities.add(n, one)
-            instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, Seq(nValuePlusOne), None)
+            instantiated <- array.arrayCapabilities.create(intType /* arrayType*/, Seq(nValuePlusOne), None)
             dpVar <- declare_and_inst_variable("dp", arrayType, instantiated)
 
             //            dp[0] = 0;

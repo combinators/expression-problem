@@ -7,7 +7,7 @@ import org.combinators.cogen.paradigm.control.Imperative
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.cogen.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.cogen.{AbstractSyntax, NameProvider, TypeRep}
-import org.combinators.models.{LiteralExpression, LiteralInt, LiteralString}
+import org.combinators.models.{ArgumentType, LiteralExpression, LiteralInt, LiteralString}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
@@ -31,7 +31,10 @@ trait KnapsackProvider extends DPObjectOrientedProvider {
   import paradigm._
   import syntax._
 
-  class KnapsackTestCase(val values:Array[Int], val dim1:Int, val maxWeight: Int) extends LiteralExpression
+  case class KnapsackInput() extends ArgumentType
+  class KnapsackTestCase(val values:Array[Int], val dim1:Int, val maxWeight: Int) extends LiteralExpression {
+    def tpe:ArgumentType = KnapsackInput()
+  }
 
   // Specific examples hard coded for Int input and Int output
   def makeTestsKnapsack(implementation:String, tests: Seq[TestExample] = Seq.empty): Generator[MethodBodyContext, Seq[Expression]] = {

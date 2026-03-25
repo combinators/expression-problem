@@ -75,7 +75,7 @@ trait FibTestObjectOrientedProvider extends OneSequencesUtility with Utility {
       np1 <- arithmetic.arithmeticCapabilities.add(num,one)
 
       //Instantiate
-      instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, Seq(np1), None)
+      instantiated <- array.arrayCapabilities.create(intType /* arrayType*/, Seq(np1), None)
       dpVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle("dp"), arrayType, Some(instantiated))
 
       //iterator

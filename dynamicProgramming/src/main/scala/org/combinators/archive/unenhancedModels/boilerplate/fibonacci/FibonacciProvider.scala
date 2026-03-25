@@ -45,6 +45,7 @@ trait FibonacciProvider extends DPObjectOrientedProvider {
       new TestExample("fib40", new LiteralInt(40), new LiteralInt(102334155), new UnitExpression)
     )
 
+    println("In FibonacciProvider")
     for {
       assert_statements <- forEach(tests) { example =>
 
@@ -61,7 +62,7 @@ trait FibonacciProvider extends DPObjectOrientedProvider {
         for {
           fibType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle(implementation))
           n_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, input_value)
-          sol <- ooParadigm.methodBodyCapabilities.instantiateObject(fibType, Seq(n_value))
+          sol <- ooParadigm.methodBodyCapabilities.instantiateObject(fibType, Seq(n_value), None)
           computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, computeName)
 
           intType <- toTargetLanguageType(TypeRep.Int)

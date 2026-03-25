@@ -64,6 +64,7 @@ trait UnenhancedUncrossedLinesProvider extends DPObjectOrientedProvider {
           ar2 <- create_int_array(input_value._2)
 
           sol <- ooParadigm.methodBodyCapabilities.instantiateObject(fibType, Seq(ar1, ar2))
+          
           computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, computeName)
 
           intType <- toTargetLanguageType(TypeRep.Int)

@@ -16,43 +16,62 @@ import org.combinators.ep.language.java.{ContextSpecificResolver, ProjectCtxt}
 class Arrays[Ctxt, AP <: AnyParadigm](val base:AP) extends Arrs[Ctxt] {
   case object ArraysEnabled
 
-  def arrayCreation[Ctxt](): Understands[Ctxt, Apply[CreateArray[Type], Expression, Expression]] =
-    new Understands[Ctxt, Apply[CreateArray[Type], Expression, Expression]] {
+  def arrayCreation[Ctxt](): Understands[Ctxt, CreateArray[Type,Expression]] =
+    new Understands[Ctxt, CreateArray[Type,Expression]] {
       def perform(
                    context: Ctxt,
-                   command: Apply[CreateArray[Type], Expression, Expression]
+                   command: CreateArray[Type,Expression]
                  ): (Ctxt, Expression) = {
 
-        if (command.functional.dimensions.length == 1) {
-          (context,
-            new ArrayCreationExpr(command.functional.elementType,
-              new NodeList(new ArrayCreationLevel()),
-              new ArrayInitializerExpr(new NodeList(command.arguments*)))
-          )
+        if (command.dimensions.length == 1) {
+          val levels = command.dimensions.map(level => if (command.contentSpec.isDefined) { new ArrayCreationLevel() } else { new ArrayCreationLevel(level) })   // inserting actual value causes problems since cannot have int[len1][len2] with initial values.
+
+          val result = new ArrayCreationExpr(command.elementType)
+          result.setLevels(new NodeList(levels *))
+
+          command.contentSpec match {
+
+            case Some((dims, content)) =>
+              val initializer = command.contentSpec.map(elt => new ArrayInitializerExpr(new NodeList(elt._2*))).getOrElse(new ArrayInitializerExpr())
+              result.setInitializer(initializer)
+
+            case None =>
+              result.setInitializer(null)
+          }
+
+          (context, result)
         } else {
-          val levels = command.functional.dimensions.map(level => new ArrayCreationLevel())   // inserting actual value causes problems since cannot have int[len1][len2] with initial values.
-          val dims = command.functional.dimensions
-          val innerFold = dims.reverse.tail.foldLeft[Seq[ArrayInitializerExpr]](
-            command.arguments.grouped(dims.last).toSeq.map(subSeq => new ArrayInitializerExpr(new NodeList(subSeq*)))
-          )
-            { case (inits, dim) => inits.grouped(dim).toSeq.map(subSeq => new ArrayInitializerExpr(new NodeList(subSeq*))) }
+          val levels = command.dimensions.map(level => if (command.contentSpec.isDefined) { new ArrayCreationLevel() } else { new ArrayCreationLevel(level) })   // inserting actual value causes problems since cannot have int[len1][len2] with initial values.
+
+          val result = new ArrayCreationExpr(command.elementType)
+          result.setLevels(new NodeList(levels *))
+
+          command.contentSpec match {
+
+            case Some((dims, content)) =>
+              val initializers = dims.reverse.tail.foldLeft[Seq[ArrayInitializerExpr]](
+                content.grouped(dims.last).toSeq.map(subSeq => new ArrayInitializerExpr(new NodeList(subSeq *)))
+              ) { case (inits, dim) => inits.grouped(dim).toSeq.map(subSeq => new ArrayInitializerExpr(new NodeList(subSeq *))) }
+              result.setInitializer(initializers.head)
+
+            case None =>
+              result.setInitializer(null)
+          }
 
           // When creating array with initial values, cannot pass in lengths. Cannot do the following for example
           //     new int[2][3] { { 4, 5, 1 }, { 1, 2, 3 } }
-
-          (context,
-            new ArrayCreationExpr(command.functional.elementType,
-              new NodeList(levels*),
-              innerFold.head) // new ArrayInitializerExpr(new NodeList(command.arguments: _ *)))
-          )
+          //
+          //     new int[expr1][expr2];
+            (context, result) // new ArrayInitializerExpr(new NodeList(command.arguments: _ *)))
+          }
         }
       }
-    }
+
 
   val arrayCapabilities: ArrayCapabilities =
     new ArrayCapabilities {
 
-      implicit val canCreate: Understands[Ctxt, Apply[CreateArray[Type], Expression, Expression]] = arrayCreation()
+      implicit val canCreate: Understands[Ctxt, CreateArray[Type,Expression]] = arrayCreation()
 
       implicit val canGet: Understands[Ctxt, Apply[Get, Expression, Expression]] =
         new Understands[Ctxt, Apply[Get, Expression, Expression]] {
@@ -117,7 +136,7 @@ class Arrays[Ctxt, AP <: AnyParadigm](val base:AP) extends Arrs[Ctxt] {
               reify: ContextSpecificResolver => InstanceRep => Generator[Ctxt, Expression],
               projectResolution: ContextSpecificResolver => TypeRep => Generator[Ctxt, Type],
               projectReification: ContextSpecificResolver => InstanceRep => Generator[Ctxt, Expression],
-              canCreateArray: Understands[Ctxt, Apply[CreateArray[Type], Expression, Expression]]
+              canCreateArray: Understands[Ctxt, CreateArray[Type,Expression]]
             ): ContextSpecificResolver => InstanceRep => Generator[Ctxt, Expression] =
               k => rep => rep.tpe match {
                 case TypeRep.Array(elemTypeRep) => {
@@ -141,7 +160,7 @@ class Arrays[Ctxt, AP <: AnyParadigm](val base:AP) extends Arrs[Ctxt] {
                       // recursively translates innermost elements
                       case _ => for {
                         elems <- forEach(elem.asInstanceOf[Seq[elemTypeRep.HostType]]) { el =>
-                          projectReification(k)(InstanceRep(elemTypeRep)(el))
+                          reify(k)(InstanceRep(elemTypeRep)(el))
                         }
                       } yield elems
                     }
@@ -180,9 +199,11 @@ class Arrays[Ctxt, AP <: AnyParadigm](val base:AP) extends Arrs[Ctxt] {
 
                   for {
                     elems <- elements(rep.tpe)(rep.inst)
-                    dims = dimensions(rep.tpe)(rep.inst)
+                    dims <- forEach(dimensions(rep.tpe)(rep.inst)) { dim =>
+                      reify(k)(InstanceRep(TypeRep.Int)(dim))
+                    }
                     elemType <- elementType(rep.tpe)(rep.inst)
-                    res <- Apply[CreateArray[Type], Expression, Expression](CreateArray(elemType, dims), elems).interpret(using canCreateArray)
+                    res <- CreateArray[Type,Expression](elemType, dims, Some(dimensions(rep.tpe)(rep.inst),elems)).interpret(using canCreateArray)
                   } yield res
 
               }

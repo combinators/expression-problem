@@ -81,8 +81,8 @@ trait TwoSequencesUtility extends Utility {
 
     for {
       array2dType <- toTargetLanguageType(TypeRep.Array(TypeRep.Array(TypeRep.Int)))
-
-      instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(array2dType, Seq(numRows, numCols), None)
+      intType <- toTargetLanguageType(TypeRep.Int)
+      instantiated <- array.arrayCapabilities.create(intType /* array2dType*/, Seq(numRows, numCols), None)
 
       dpVar <- declare_and_inst_variable("dp", array2dType, instantiated)
     } yield dpVar

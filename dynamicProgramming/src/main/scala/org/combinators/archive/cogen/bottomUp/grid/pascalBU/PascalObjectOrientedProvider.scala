@@ -75,7 +75,7 @@ trait PascalObjectOrientedProvider extends Utility {
       (namec,tpec,c) = args.tail.head
       rp1 <- arithmetic.arithmeticCapabilities.add(r, one)
       cp1 <- arithmetic.arithmeticCapabilities.add(c, one)
-      instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(array2dType, Seq(rp1, cp1), None)
+      instantiated <- array.arrayCapabilities.create(intType /* array2dType */, Seq(rp1, cp1), None)
       dpName <- freshName(names.mangle("dp"))
       dpVar <- impParadigm.imperativeCapabilities.declareVar(dpName, array2dType, Some(instantiated))
 

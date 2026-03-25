@@ -16,8 +16,10 @@ import org.combinators.models.enhancedModels.twoSequences.WordBreak
 import java.nio.file.{Path, Paths}
 
 // needs custom-support code, because the test case has unusual structure.
-
-class WordBreakInput(val s:String, val dictionary:Array[String]) extends LiteralExpression
+case class WordBreakInputType() extends ArgumentType
+class WordBreakInput(val s:String, val dictionary:Array[String]) extends LiteralExpression {
+  def tpe:ArgumentType = WordBreakInputType()
+}
 
 class WordBreakMainJava extends EnhancedMainInterface {
 

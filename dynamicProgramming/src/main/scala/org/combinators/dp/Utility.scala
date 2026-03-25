@@ -1,6 +1,6 @@
 package org.combinators.dp
 
-import org.combinators.models.{AdditionExpression, AndExpression, ArgExpression, ArgumentType, ArrayElementExpression, ArrayLengthExpression, CharAtExpression, EqualExpression, HelperExpression, InputExpression, IteratorExpression, LessThanExpression, LessThanOrEqualExpression, LiteralBoolean, LiteralChar, LiteralInt, MaxExpression, MinExpression, Model, MultiplicationExpression, OrExpression, SelfExpression, StringLengthExpression, SubStringExpression, SubproblemExpression, SubtractionExpression, TernaryExpression}
+import org.combinators.models.*
 import org.combinators.cogen.TypeRep
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, NameProvider}
@@ -47,6 +47,16 @@ trait Utility {
   class DPExample[Input, Output, Full_Solution] (val name:String, val example:Input, val solution:Output, val full_solution:Full_Solution) {
   }
 
+  def hostType(tpe:ArgumentType) : TypeRep = {
+    tpe match {
+      case IntegerType() => TypeRep.Int
+      case StringType() => TypeRep.String
+      case CharType() => TypeRep.Char
+
+      case _ => ???
+    }
+  }
+
   def pair_helper(): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
 
@@ -90,7 +100,7 @@ trait Utility {
     import AnyParadigm.syntax._
     for {
       solutionType <- ooParadigm.methodBodyCapabilities.findClass(clazz)
-      sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solutionType, Seq.empty)
+      sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solutionType, Seq.empty, None)
       computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, names.mangle("compute"))
       arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
 
@@ -394,11 +404,24 @@ trait Utility {
       } yield e
 
       case ter:TernaryExpression => for {
+        resultName <- paradigm.methodBodyCapabilities.freshName(names.mangle("result"))
+        resultType <- paradigm.methodBodyCapabilities.toTargetLanguageType(hostType(ter.trueBranch.tpe))
+        resultVar <- impParadigm.imperativeCapabilities.declareVar(resultName, resultType, None)
+
         cond <- explore(ter.condition, memoize, symbolTable, bottomUp)
-        trueBranch <- explore(ter.trueBranch, memoize, symbolTable, bottomUp)
-        falseBranch <- explore(ter.falseBranch, memoize, symbolTable, bottomUp)
-        tri <- impParadigm.imperativeCapabilities.ternary(cond, trueBranch, falseBranch)
-      } yield tri
+
+        ifThenElse <- impParadigm.imperativeCapabilities.ifThenElse(cond, for {
+          trueBranch <- explore(ter.trueBranch, memoize, symbolTable, bottomUp)
+          trueAssign <- impParadigm.imperativeCapabilities.assignVar(resultVar, trueBranch)
+          _ <- paradigm.methodBodyCapabilities.addBlockDefinitions(Seq(trueAssign))
+        } yield (), Seq.empty, Some(for {
+          falseBranch <- explore(ter.falseBranch, memoize, symbolTable, bottomUp)
+          falseAssign <- impParadigm.imperativeCapabilities.assignVar(resultVar, falseBranch)
+          _ <- paradigm.methodBodyCapabilities.addBlockDefinitions(Seq(falseAssign))
+        } yield ()))
+
+        _ <- paradigm.methodBodyCapabilities.addBlockDefinitions(Seq(ifThenElse))
+      } yield resultVar
 
       case se: SubproblemExpression => for {
         self <- ooParadigm.methodBodyCapabilities.selfReference()
@@ -458,6 +481,7 @@ trait Utility {
   }
 
   def create_string_array(values:Seq[String]) : Generator[MethodBodyContext, Expression] = {
+    import paradigm.methodBodyCapabilities.canReifyInMethodBody   // needed for implicit arg to create
     for {
       translated_vals <- forEach(values) { value =>
         for {
@@ -471,6 +495,7 @@ trait Utility {
   }
 
   def create_int_array(values:Seq[Int]) : Generator[MethodBodyContext, Expression] = {
+    import paradigm.methodBodyCapabilities.canReifyInMethodBody // needed for implicit arg to create
     for {
       translated_vals <- forEach(values) { value =>
         for {
@@ -484,6 +509,7 @@ trait Utility {
   }
 
   def create_int_nd_array(values:Seq[Int], dimensions:Seq[Int]) : Generator[MethodBodyContext, Expression] = {
+    import paradigm.methodBodyCapabilities.canReifyInMethodBody // needed for implicit arg to create
     for {
       translated_vals <- forEach(values) { value =>
         for {

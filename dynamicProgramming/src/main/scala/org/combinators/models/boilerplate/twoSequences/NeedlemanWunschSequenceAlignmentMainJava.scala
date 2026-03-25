@@ -15,8 +15,10 @@ import org.combinators.models.enhancedModels.twoSequences.NeedlemanWunschSequenc
 import java.nio.file.{Path, Paths}
 
 // needs custom-support code, because the test case has unusual structure.
-
-class NeedlemanWunschSequenceInput(val string1:String, val string2:String, val matchBonus:Int, val mismatchPenalty:Int, val gapPenalty:Int) extends LiteralExpression
+case class NeedlemanWunschSequenceInputType() extends ArgumentType
+class NeedlemanWunschSequenceInput(val string1:String, val string2:String, val matchBonus:Int, val mismatchPenalty:Int, val gapPenalty:Int) extends LiteralExpression {
+  def tpe:ArgumentType = NeedlemanWunschSequenceInputType()
+}
 
 class NeedlemanWunschSequenceAlignmentMainJava extends EnhancedMainInterface {
 

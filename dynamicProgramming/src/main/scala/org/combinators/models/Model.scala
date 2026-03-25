@@ -2,7 +2,9 @@ package org.combinators.models
 
 import org.combinators.cogen.TypeRep
 
-trait ArgumentType { }
+trait ArgumentType { 
+  
+}
 
 // problem instance types go here
 case class BooleanType() extends ArgumentType
@@ -10,13 +12,16 @@ case class CharType() extends ArgumentType
 case class IntegerType() extends ArgumentType
 case class DoubleType() extends ArgumentType
 case class StringType() extends ArgumentType
+case class UnitType() extends ArgumentType 
 
 // possibly choose to make this Generic but that seems like overkill
-case class IntegerArrayType() extends ArgumentType
-case class IntegerArray2DType() extends ArgumentType
+trait ArrayType(val elementType:ArgumentType) extends ArgumentType
+
+case class IntegerArrayType() extends ArrayType(IntegerType())
+case class IntegerArray2DType() extends ArrayType(IntegerArrayType())
 
 // an array of string values
-case class StringArrayType() extends ArgumentType
+case class StringArrayType() extends ArrayType(StringType())
 
 class Argument (val argName:String, val argType:ArgumentType)
 
@@ -57,7 +62,9 @@ class Model(val problem:String, val bounds: List[ArgExpression], val cases: List
 
  */
 class Range(val variable:String, start:Expression, guard:Expression, advance:Expression)
-class MinSubProblemDefinition(val params:Seq[Range], definition:Expression) extends Expression
+class MinSubProblemDefinition(val params:Seq[Range], definition:Expression) extends Expression {
+  def tpe:ArgumentType = definition.tpe
+}
 
 abstract class Definition
 

@@ -101,7 +101,7 @@ trait BottomUpStrategy extends Utility {
       )
 
       // Instantiate 3D array
-      instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, Seq(mboplus1, mbmplus1, mbiplus1), None)
+      instantiated <- array.arrayCapabilities.create(intType /* arrayType*/, Seq(mboplus1, mbmplus1, mbiplus1), None)
 
       inner <- explore(first_case._1.get, bottomUp = Some(dp), symbolTable = symbol_table)
 
@@ -218,7 +218,7 @@ trait BottomUpStrategy extends Utility {
       total_map = other_data.foldLeft(Map.empty[String, Expression]) { (acc, a_map) => acc ++ a_map }
       oi_map = Map(model.bounds.head.itArgName -> ivar_outer, model.bounds.tail.head.itArgName -> ivar_inner)
 
-      instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, Seq(mboplus1,mbiplus1), None)
+      instantiated <- array.arrayCapabilities.create(intType /* arrayType*/, Seq(mboplus1,mbiplus1), None)
       inner <- explore(first_case._1.get, bottomUp = Some(dp), symbolTable = oi_map)   // get from Model
 
       all_rest <- forEach(tail_cases) { next_case =>
@@ -317,7 +317,7 @@ trait BottomUpStrategy extends Utility {
       dp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
       dp_i <- array.arrayCapabilities.get(dp, Seq(ivar))
 
-      instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, Seq(mbplus1), None)
+      instantiated <- array.arrayCapabilities.create(intType /* arrayType*/, Seq(mbplus1), None)
 
       inner <- explore(first_case._1.get, bottomUp = Some(dp), symbolTable = Map(model.bounds.head.itArgName -> ivar))  // get from Model
 

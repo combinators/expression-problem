@@ -150,7 +150,7 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
       dp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
 
       traversalInfo <- traverse_inwards(0, dp, Map.empty)
-      instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, traversalInfo.highs, None)
+      instantiated <- array.arrayCapabilities.create(theType, traversalInfo.highs, None)   // in new situation, only type of element, NOT full [][][] type
       assign_stmt <- impParadigm.imperativeCapabilities.assignVar (dp, instantiated)
 
       _ <- addBlockDefinitions(Seq(assign_stmt))

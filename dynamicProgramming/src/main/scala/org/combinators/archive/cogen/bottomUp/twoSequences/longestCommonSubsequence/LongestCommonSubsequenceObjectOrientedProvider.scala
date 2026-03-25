@@ -100,11 +100,12 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends TwoSequencesUtility
       len2 <- declare_and_inst_variable("len2", intType, apply(s2Length, Seq.empty))
       len2PlusOne <- arithmetic.arithmeticCapabilities.add(len2, one)
 
-      instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(
-        array2dType,
-        Seq(len1PlusOne, len2PlusOne),
-        None
-      )
+//      instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(
+//        array2dType,
+//        Seq(len1PlusOne, len2PlusOne),
+//        None
+//      )
+      instantiated <- array.arrayCapabilities.create(intType /* array2dType*/, Seq(len1PlusOne, len2PlusOne), None)
 
       dp <- declare_and_inst_variable("dp", array2dType, instantiated)
 

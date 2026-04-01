@@ -4,17 +4,45 @@ import org.combinators.ep.language.inbetween.polymorphism.ParametricPolymorphism
 
 trait ArraysAST extends OperatorExpressionOpsAST with ParametricPolymorphismAST {
   object arraysOps {
-    trait CreateArray extends any.Type
+    trait CreateArray extends any.Type {
+      def dimension: any.Expression
+    }
 
     trait GetArrayOp extends operatorExpressions.Operator
     trait SetArrayOp extends operatorExpressions.Operator
     trait LengthArrayOp extends operatorExpressions.Operator
 
     trait Factory {
-      def createArray(): CreateArray
+      def createArray(dimension: any.Expression): CreateArray
 
-      def createArray(tpe: any.Type, elems: Seq[any.Expression]): any.ApplyExpression =
-        factory.applyExpression(polymorphismFactory.typeReferenceExpression(polymorphismFactory.typeApplication(createArray(), Seq(tpe))), elems)
+      def createArray(tpe: any.Type, dimensions:Seq[any.Expression], contentSpec:Option[(Seq[Int], Seq[any.Expression])]): any.Expression = {
+        contentSpec match {
+
+          case Some((dims, values)) =>
+              val initializers = dimensions.zip(dims).reverse.tail.foldLeft[(any.Type,Seq[any.Expression])] ( {
+                  val arrayTpe  = polymorphismFactory.typeApplication(createArray(dimensions.last), Seq(tpe))
+                  val arrayExpr = values.grouped(dims.last).toSeq.map(subSeq =>
+                    factory.applyExpression(polymorphismFactory.typeReferenceExpression(arrayTpe), subSeq))
+                  (arrayTpe, arrayExpr)
+                }
+                ) { case ((arrayTpe, inits), (dimension, dim)) =>
+
+                  val outerArrayTpe = polymorphismFactory.typeApplication(createArray(dimension), Seq(arrayTpe))
+                  val outerArrayExpr = inits.grouped(dim).toSeq.map(subSeq => factory.applyExpression(polymorphismFactory.typeReferenceExpression(arrayTpe), subSeq))
+                  (outerArrayTpe, outerArrayExpr)
+                }
+
+              initializers._2.head
+
+          case None =>
+            val arrayTpe = dimensions.reverse.tail.foldLeft[any.Type]( 
+              polymorphismFactory.typeApplication(createArray(dimensions.last), Seq(tpe))
+             ) { case (arrayTpe, dimension) =>
+              polymorphismFactory.typeApplication(createArray(dimension), Seq(arrayTpe))
+            }
+            polymorphismFactory.typeReferenceExpression(arrayTpe)
+          }
+      }
 
       def getArrayOp(): GetArrayOp
       def setArrayOp(): SetArrayOp

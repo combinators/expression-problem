@@ -142,9 +142,6 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
       theType <- return_type_based_on_model(model)
       _ <- setReturnType(theType)
 
-      // ONLY ONE HERE
-      arrayType <- toTargetLanguageType(arTypes(model))
-
       // cannot seem to do this in Constructor because it insists on using "int" for TypeRep.Int within ConstructorContext which
       // seems to be different from Integer which occurs in MethodBodyContext
       dp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
@@ -395,16 +392,25 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
   /**
    * Constructor now takes the responsibility of taking the arguments to the problem. Takes
    * in a sequence of arguments, and auto-initializes all possible fields.
+   *
+   * args are "name", then "name_init", then TYPE.
+   *
+   * name_init would be the parameter to constructor;
+   * name is field in the class
+   * TYPE is type for both
    */
-  def create_bottom_up_constructor(args: Seq[(Name, Type)]): Generator[ConstructorContext, Unit] = {
+  def create_bottom_up_constructor(args: Seq[(Name, Name, Type)]): Generator[ConstructorContext, Unit] = {
     import ooParadigm.constructorCapabilities._
 
+    val formalArgs = args.map(arg => (arg._2, arg._3))
+    val fieldArgs = args.map(arg => (arg._1, arg._3))
+
     for {
-      _ <- setParameters(args)
+      _ <- setParameters(formalArgs)
       real_args <- getArguments()
 
-      _ <- forEach(real_args) { arg => for {
-          _ <- initializeField(arg._1, arg._3)
+      _ <- forEach(real_args.zip(fieldArgs)) { pair => for {
+          _ <- initializeField(pair._2._1, pair._1._3)
         } yield ()
       }
 
@@ -424,6 +430,7 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
         case _ => model.solution.order
       }
 
+      println("Make Bottom Up Fix Array Type!")
       for {
         arrayType <- toTargetLanguageType(arTypes(model))
 
@@ -433,12 +440,17 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
         } yield ()
         }
 
+
         _ <- addField(dpName, arrayType)   // this becomes "int" if I use arrayType
+        intType <- toTargetLanguageType(TypeRep.Int)
+        stringType <- toTargetLanguageType(TypeRep.String)
+        _ <- addField(names.mangle("HACK"), intType)
+        _ <- addField(names.mangle("HACK2"), stringType)
 
         constArgs <- forEach(model.input) { bexpr =>
           for {
             tpe <- map_type_in_class(bexpr.argType)
-          } yield (names.mangle(bexpr.name), tpe)
+          } yield (names.mangle(bexpr.name), names.mangle(bexpr.name + "_"), tpe)   // in some OO languages, i.e., scala, param name must be different
         }
         _ <- addConstructor(create_bottom_up_constructor(constArgs))
 

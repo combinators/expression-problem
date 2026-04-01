@@ -1,6 +1,6 @@
 package org.combinators.dp.enhanced
 
-import org.combinators.models.{BooleanType, EnhancedModel, IntegerType, StringType}
+import org.combinators.models.{BooleanType, CharType, EnhancedModel, IntegerType, StringType}
 import org.combinators.cogen.TypeRep
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.NameProvider
@@ -33,6 +33,10 @@ trait EnhancedUtility {
         intType <- toTargetLanguageType(TypeRep.Int)
       } yield intType
 
+      case _:CharType => for {
+        charType <- toTargetLanguageType(TypeRep.Char)
+      } yield charType
+
       case _:BooleanType => for {
         boolType <- toTargetLanguageType(TypeRep.Boolean)
       } yield boolType
@@ -52,6 +56,10 @@ trait EnhancedUtility {
       case _:IntegerType => for {
         intType <- toTargetLanguageType(TypeRep.Int)
       } yield intType
+
+      case _:CharType => for {
+        charType <- toTargetLanguageType(TypeRep.Char)
+      } yield charType
 
       case _:BooleanType => for {
         boolType <- toTargetLanguageType(TypeRep.Boolean)
@@ -73,6 +81,10 @@ trait EnhancedUtility {
         intType <- toTargetLanguageType(TypeRep.Int)
       } yield intType
 
+      case _:CharType => for {
+        charType <- toTargetLanguageType(TypeRep.Char)
+      } yield charType
+
       case _:BooleanType => for {
         boolType <- toTargetLanguageType(TypeRep.Boolean)
       } yield boolType
@@ -92,6 +104,10 @@ trait EnhancedUtility {
       case _:IntegerType => for {
         intType <- toTargetLanguageType(TypeRep.Int)
       } yield intType
+
+      case _:CharType => for {
+        charType <- toTargetLanguageType(TypeRep.Char)
+      } yield charType
 
       case _:BooleanType => for {
         boolType <- toTargetLanguageType(TypeRep.Boolean)

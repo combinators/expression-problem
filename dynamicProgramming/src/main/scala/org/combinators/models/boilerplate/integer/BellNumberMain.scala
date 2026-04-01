@@ -7,24 +7,23 @@ package org.combinators.models.boilerplate.integer
  */
 
 import cats.effect.{ExitCode, IO, IOApp}
-import org.combinators.dp.enhanced.EnhancedDPMainJava
+import org.combinators.dp.enhanced.{EnhancedDPMainJava, EnhancedDPMainScala}
 import org.combinators.dp.{BottomUp, TestExample, TopDown}
-import org.combinators.models._
+import org.combinators.models.*
 import org.combinators.models.enhancedModels.integer.BellNumber
 
 import java.nio.file.{Path, Paths}
 
-/**
- * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
- */
-class BellNumberMainJava extends EnhancedDPMainJava  {
-
+trait BellNumberTests {
   val tests = Seq(
-    new TestExample("bn1", new LiteralInt(3), new LiteralInt(5), new UnitExpression),   // https://en.wikipedia.org/wiki/Bell_number
+    new TestExample("bn1", new LiteralInt(3), new LiteralInt(5), new UnitExpression), // https://en.wikipedia.org/wiki/Bell_number
     new TestExample("bn2", new LiteralInt(2), new LiteralInt(2), new UnitExpression),
     new TestExample("bn3", new LiteralInt(5), new LiteralInt(52), new UnitExpression),
   )
 }
+
+class BellNumberMainJava extends EnhancedDPMainJava with BellNumberTests
+class BellNumberMainScala extends EnhancedDPMainScala with BellNumberTests
 
 object BellNumberDirectToDiskMain extends IOApp {
   val targetDirectory:Path = Paths.get("target", "dp", "bellnumber")
@@ -51,10 +50,12 @@ object BellNumberDirectToDiskMain extends IOApp {
 
     for {
       _ <- IO { print("Initializing Generator...") }
-      main <- IO { new BellNumberMainJava() }
+      //main1 <- IO { new BellNumberMainJava() }
+      main2 <- IO { new BellNumberMainScala() }
       _ <- IO { println("[OK]") }
 
-      result <- main.runDirectToDisc(targetDirectory, BellNumberDirectToDiskMain.model, choice)
+      //result <- main1.runDirectToDisc(targetDirectory, BellNumberDirectToDiskMain.model, choice)
+      result <- main2.runDirectToDisc(targetDirectory, BellNumberDirectToDiskMain.model, choice)
     } yield result
   }
 }

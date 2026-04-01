@@ -142,17 +142,26 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
   /**
    * Constructor now takes the responsibility of taking the arguments to the problem. Takes
    * in a sequence of arguments, and auto-initializes all possible fields.
+   *
+   * args are "name", then "name_init", then TYPE.
+   *
+   * name_init would be the parameter to constructor;
+   * name is field in the class
+   * TYPE is type for both
    */
-  def createConstructor(model:EnhancedModel, useMemo:Boolean, args: Seq[(Name, Type)]): Generator[ConstructorContext, Unit] = {
+  def createConstructor(model:EnhancedModel, useMemo:Boolean, args: Seq[(Name, Name, Type)]): Generator[ConstructorContext, Unit] = {
     import ooParadigm.constructorCapabilities._
 
-    for {
-      _ <- setParameters(args)
-      real_args <- getArguments()
+    val formalArgs = args.map(arg => (arg._2, arg._3))
+    val fieldArgs = args.map(arg => (arg._1, arg._3))
 
-      _ <- forEach(real_args) { arg => for {
-        _ <- initializeField(arg._1, arg._3)
-      } yield ()
+    for {
+      _ <- setParameters(formalArgs)
+      real_args <- getArguments()       // these now contain the "_init" expressions
+
+      _ <- forEach(real_args.zip(fieldArgs)) { pair => for {
+          _ <- initializeField(pair._2._1, pair._1._3)
+        } yield ()
       }
 
       _ <- if (useMemo) {
@@ -217,7 +226,7 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
         constArgs <- forEach(model.input) { bexpr =>
           for {
             tpe <- map_type_in_class(bexpr.argType)
-          } yield (names.mangle(bexpr.name), tpe)
+          } yield (names.mangle(bexpr.name), names.mangle(bexpr.name + "_"), tpe)   // in some OO languages, i.e., scala, param name must be different
         }
 
         _ <- addConstructor(createConstructor(model, useMemo, constArgs))   // FIX HACK

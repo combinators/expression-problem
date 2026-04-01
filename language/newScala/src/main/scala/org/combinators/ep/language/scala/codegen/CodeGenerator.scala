@@ -57,6 +57,16 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
       case TypeRep.Boolean => toLookup("Boolean")
       case TypeRep.String => toLookup("String")
       case TypeRep.Unit => toLookup("Unit")
+      case TypeRep.Array(elemTpe) =>
+        Some(
+          for {
+            elemTpe <- ToTargetLanguageType[ast.any.Type](elemTpe).interpret(canToTargetLanguage)
+            arrayTpe <- Command.lift(ast.ooFactory.classReferenceType(nameProvider.mangle("Array")))
+            tpe <- Apply[
+              ast.any.Type,
+              ast.any.Type,
+              ast.any.Type](arrayTpe, Seq(elemTpe)).interpret(canApplyType)
+          } yield tpe)
       case TypeRep.Sequence(elemTpeRep) =>
         Some(
           for {
@@ -84,6 +94,7 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
 
   def prefixExcludedTypes: Set[Seq[ast.any.Name]] = {
     Set(
+      Seq("Array"),
       Seq("Double"),
       Seq("Boolean"),
       Seq("Int"),

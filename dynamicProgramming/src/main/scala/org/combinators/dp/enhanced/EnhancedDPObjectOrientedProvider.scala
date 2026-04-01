@@ -7,7 +7,7 @@ import org.combinators.cogen.paradigm.control.Imperative
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.cogen.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.dp.{BottomUp, GenerationOption, TestExample, TopDown}
-import org.combinators.models.{EnhancedModel, LiteralArray, LiteralArrayPair, LiteralBoolean, LiteralExpression, LiteralInt, LiteralPair, LiteralString, LiteralStringPair, LiteralStringTriple, LiteralTriple}
+import org.combinators.models.{EnhancedModel, LiteralArray, LiteralArrayPair, LiteralBoolean, LiteralChar, LiteralExpression, LiteralInt, LiteralPair, LiteralString, LiteralStringPair, LiteralStringTriple, LiteralTriple}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
@@ -43,6 +43,7 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with EnhancedU
       case lit: LiteralInt => paradigm.methodBodyCapabilities.reify(TypeRep.Int, lit.literal)
       case bool: LiteralBoolean => paradigm.methodBodyCapabilities.reify(TypeRep.Boolean, bool.literal)
       case str: LiteralString => paradigm.methodBodyCapabilities.reify(TypeRep.String, str.literal)
+      case chr: LiteralChar => paradigm.methodBodyCapabilities.reify(TypeRep.Char, chr.literal)
 
       case _ => ??? // error in all other circumstances
     }
@@ -56,6 +57,7 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with EnhancedU
 
         val the_test_type = test.answer match {
           case _:LiteralInt => toTargetLanguageType(TypeRep.Int)
+          case _:LiteralChar => toTargetLanguageType(TypeRep.Char)
           case _:LiteralBoolean => toTargetLanguageType(TypeRep.Boolean)
           case _:LiteralString => toTargetLanguageType(TypeRep.String)
           case _:LiteralTriple => toTargetLanguageType(TypeRep.Int)          // triple means three separate integer values

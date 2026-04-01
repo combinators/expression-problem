@@ -52,6 +52,7 @@ trait Utility {
       case IntegerType() => TypeRep.Int
       case StringType() => TypeRep.String
       case CharType() => TypeRep.Char
+      case BooleanType() => TypeRep.Boolean
 
       case _ => ???
     }

@@ -19,7 +19,7 @@ trait Arrays[AST <: ArraysAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
       override implicit val canCreate: Understands[any.Method, CreateArray[any.Type,any.Expression]] =
         new Understands[any.Method, CreateArray[any.Type, any.Expression]] {
           override def perform(context: any.Method, command: CreateArray[any.Type, any.Expression]): (any.Method, any.Expression) = {
-            (context, arraysOpsFactory.createArray(command.elementType, ???))   // TODO: for in-between
+            (context, arraysOpsFactory.createArray(command.elementType, command.dimensions, command.contentSpec))
           }
         }
       override implicit val canGet: Understands[any.Method, Apply[Get, any.Expression, any.Expression]] =
@@ -40,7 +40,6 @@ trait Arrays[AST <: ArraysAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
             (context, arraysOpsFactory.lengthArrayOp(command.arguments(0)))
           }
         }
-
     }
     override def enable(): Generator[any.Project, Unit] = Command.skip[any.Project]
   }

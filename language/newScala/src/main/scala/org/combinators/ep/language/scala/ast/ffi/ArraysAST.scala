@@ -9,7 +9,7 @@ trait ArraysAST extends InbetweenArraysAST {
     object arraysOpsOverride {
 
       trait CreateArray extends arraysOps.CreateArray with scalaBase.anyOverrides.Type {
-        override def toScala: String = "Seq"
+        override def toScala: String = "Array"
 
         override def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): CreateArray =
           this
@@ -51,11 +51,11 @@ trait ArraysAST extends InbetweenArraysAST {
 trait FinalArraysAST extends ArraysAST { self: FinalOperatorExpressionsAST & FinalBaseAST =>
   object finalArraysFactoryTypes {
     trait FinalArraysFactory extends scalaArraysOps.arraysOpsOverride.Factory {
-      def createArray(): arraysOps.CreateArray = {
-        case class CreateArray() extends scalaArraysOps.arraysOpsOverride.CreateArray {
+      def createArray(dimension:any.Expression): arraysOps.CreateArray = {
+        case class CreateArray(dimension:any.Expression) extends scalaArraysOps.arraysOpsOverride.CreateArray {
           def getSelfType: scalaBase.anyOverrides.Type = this
         }
-        CreateArray()
+        CreateArray(dimension)
       }
 
       def getArrayOp(): arraysOps.GetArrayOp = {

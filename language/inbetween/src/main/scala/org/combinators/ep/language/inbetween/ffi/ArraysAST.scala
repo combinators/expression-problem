@@ -7,6 +7,9 @@ trait ArraysAST extends OperatorExpressionOpsAST with ParametricPolymorphismAST 
     trait FinalTypes {
       type Array <: arraysOps.Array
       type CreateArrayExpression <: arraysOps.CreateArray
+      type CreateArrayFromExpression <: arraysOps.CreateArrayFromExpression
+      type CreateArrayWithDefaultValues <: arraysOps.CreateArrayWithDefaultValues
+      type CreateArrayFromValues <: arraysOps.CreateArrayFromValues
     }
 
     trait Array extends any.Type {
@@ -14,14 +17,29 @@ trait ArraysAST extends OperatorExpressionOpsAST with ParametricPolymorphismAST 
     }
 
     trait CreateArray extends any.Expression {
-      def getSelfCreateArrayExpression: arraysOpsFinalTypes.Array
+      def getSelfCreateArrayExpression: arraysOpsFinalTypes.CreateArrayExpression
+    }
 
-      def elementType: any.Type
-      def dimension: any.Expression
-      def initialization: Either[any.Expression, Seq[any.Expression]]
+    trait CreateArrayFromExpression extends CreateArray {
+      def getSelfCreateArrayFromExpression: arraysOpsFinalTypes.CreateArrayFromExpression
+      def expression: any.Expression
+      def copy(expression: any.Expression = this.expression): CreateArrayFromExpression =
+        arraysOpsFactory.createArrayFromExpression(expression)
+    }
 
-      def copy(elementType: any.Type, dimension: any.Expression, initialization: Either[any.Expression, Seq[any.Expression]]) =
-        arraysOpsFactory.createArray(elementType, dimension, initialization)
+    trait CreateArrayWithDefaultValues extends CreateArray {
+      def getSelfCreateArrayWithDefaultValues: arraysOpsFinalTypes.CreateArrayWithDefaultValues
+      def tpe: any.Type
+      def dimensions: Seq[any.Expression]
+      def copy(tpe: any.Type = this.tpe, dimensions: Seq[any.Expression] = this.dimensions): CreateArrayWithDefaultValues =
+        arraysOpsFactory.createArrayWithDefaultValues(tpe, dimensions)
+    }
+
+    trait CreateArrayFromValues extends CreateArray {
+      def getSelfCreateArrayFromValues: arraysOpsFinalTypes.CreateArrayFromValues
+      def values: Seq[any.Expression]
+      def copy(values: Seq[any.Expression] = this.values): CreateArrayFromValues =
+        arraysOpsFactory.createArrayFromValues(values)
     }
 
     trait GetArrayOp extends operatorExpressions.Operator
@@ -38,7 +56,11 @@ trait ArraysAST extends OperatorExpressionOpsAST with ParametricPolymorphismAST 
         polymorphismFactory.typeApplication(array(), Seq(elementType))
       }
 
-      def createArray(elementType: any.Type, dimension: any.Expression, initialization: Either[any.Expression, Seq[any.Expression]]): CreateArray
+      def createArrayFromExpression(expression: any.Expression): CreateArrayFromExpression
+
+      def createArrayWithDefaultValues(tpe: any.Type, dimensions: Seq[any.Expression]): CreateArrayWithDefaultValues
+
+      def createArrayFromValues(values: Seq[any.Expression]): CreateArrayFromValues
 
       def createArray(tpe: any.Type, dimensions: Seq[any.Expression], contentSpec: Option[(Seq[Int], Seq[any.Expression])]): any.Expression = {
         contentSpec match {
@@ -46,28 +68,18 @@ trait ArraysAST extends OperatorExpressionOpsAST with ParametricPolymorphismAST 
             val initializers = dimensions.zip(dims).reverse.tail.foldLeft[(any.Type, Seq[any.Expression])]({
               val arrayTpe = array(tpe)
               val arrayExpr = values.grouped(dims.last).toSeq.map(subSeq =>
-                arraysOpsFactory.createArray(tpe, dimensions.last, Right(subSeq)))
+                arraysOpsFactory.createArrayFromValues(subSeq))
               (arrayTpe, arrayExpr)
             }) { case ((arrayTpe, inits), (dimension, dim)) =>
               val outerArrayTpe = arraysOpsFactory.array(arrayTpe)
-              val outerArrayExpr = inits.grouped(dim).toSeq.map(subSeq => 
-                arraysOpsFactory.createArray(arrayTpe, dimension, Right(subSeq)))
+              val outerArrayExpr = inits.grouped(dim).toSeq.map(subSeq =>
+                arraysOpsFactory.createArrayFromValues(subSeq))
               (outerArrayTpe, outerArrayExpr)
             }
 
             initializers._2.head
 
-          case None =>
-            val (_, arrayExpr) = dimensions.reverse.tail.foldLeft[(any.Type, arraysOps.CreateArray)]({
-              val arrayTpe = arraysOpsFactory.array(tpe)
-              val arrayExpr = arraysOpsFactory.createArray(tpe, dimensions.last, Left(null)) // TODO: null needs to be a default expression of type tpe
-              (arrayTpe, arrayExpr)
-            }) { case ((arrayTpe, innerInitializer), dimension) =>
-              val outerArrayTpe = arraysOpsFactory.array(arrayTpe)
-              val outerArrayExpr = arraysOpsFactory.createArray(arrayTpe, dimension, Left(innerInitializer))
-              (outerArrayTpe, outerArrayExpr)
-            }
-            arrayExpr
+          case None => createArrayWithDefaultValues(tpe, dimensions)
         }
       }
 
@@ -81,6 +93,11 @@ trait ArraysAST extends OperatorExpressionOpsAST with ParametricPolymorphismAST 
         operatorExpressionsFactory.ternaryExpression(getArrayOp(), ar, idx, value)
       def lengthArrayOp(ar: any.Expression): operatorExpressions.UnaryExpression =
         operatorExpressionsFactory.unaryExpression(lengthArrayOp(), ar)
+        
+      implicit def convert(other: CreateArray): arraysOpsFinalTypes.CreateArrayExpression = other.getSelfCreateArrayExpression
+      implicit def convert(other: CreateArrayFromExpression): arraysOpsFinalTypes.CreateArrayFromExpression = other.getSelfCreateArrayFromExpression
+      implicit def convert(other: CreateArrayFromValues): arraysOpsFinalTypes.CreateArrayFromValues = other.getSelfCreateArrayFromValues
+      implicit def convert(other: CreateArrayWithDefaultValues): arraysOpsFinalTypes.CreateArrayWithDefaultValues = other.getSelfCreateArrayWithDefaultValues
     }
   }
 

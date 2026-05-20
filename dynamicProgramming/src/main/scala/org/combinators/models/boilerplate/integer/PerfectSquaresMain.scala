@@ -1,0 +1,41 @@
+package org.combinators.models.boilerplate.integer
+
+/**
+ * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"
+ *
+ * Creates output files in target/dp
+ */
+
+import org.combinators.dp.enhanced.{EnhancedDPMainJava, EnhancedDPMainScala}
+import org.combinators.dp.{BottomUp, TestExample, TopDown}
+import org.combinators.models.*
+import org.combinators.models.enhancedModels.integer.PerfectSquares
+
+/**
+ * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
+ */
+trait PerfectSquaresApp {
+  val tests = Seq(
+    new TestExample("ps1", new LiteralInt(13), new LiteralInt(2), new UnitExpression), // 9 + 4
+    new TestExample("ps2", new LiteralInt(14), new LiteralInt(3), new UnitExpression), // 9 + 4 + 1
+    new TestExample("ps3", new LiteralInt(15), new LiteralInt(4), new UnitExpression), // 9 + 4 + 1 + 1
+    new TestExample("ps4", new LiteralInt(16), new LiteralInt(1), new UnitExpression), // 16
+  )
+  val model: EnhancedModel = new PerfectSquares().model
+}
+
+// Need these two classes to extend appropriate *MainJava or *MainScala
+class PerfectSquaresMainJava extends EnhancedDPMainJava with PerfectSquaresApp {
+  override def constructApp(): EnhancedDPMainJava =  new PerfectSquaresMainJava()
+}
+class PerfectSquaresMainScala extends EnhancedDPMainScala with PerfectSquaresApp {
+  override def constructApp(): EnhancedDPMainScala = new PerfectSquaresMainScala()
+}
+
+// need objects to be able to execute as IOApp
+object PerfectSquaresScalaToDiskMain extends EnhancedDPMainScala with PerfectSquaresApp {
+  override def constructApp(): EnhancedDPMainScala = new PerfectSquaresMainScala()
+}
+object PerfectSquaresJavaToDiskMain extends EnhancedDPMainJava with PerfectSquaresApp {
+  override def constructApp(): EnhancedDPMainJava = new PerfectSquaresMainJava()
+}

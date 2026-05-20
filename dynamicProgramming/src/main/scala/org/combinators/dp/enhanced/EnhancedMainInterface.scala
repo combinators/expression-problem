@@ -7,9 +7,9 @@ import org.combinators.models.EnhancedModel
 /**
  * Presents the ability to generate files from an EnhancedModel.
  *
- * This allows for customized *MainJava files. The EnhancedDPMainjava file uses genericTests and if you
- * have customized tests, you need to implement your own, and then that class must support this interface.
+ * This allows for customized *MainJava and *MainScalafiles. 
  */
 trait EnhancedMainInterface {
-  def filesToGenerate(model: EnhancedModel, option: GenerationOption): Seq[FileWithPath]
+  def model: EnhancedModel
+  def filesToGenerate(option: GenerationOption): Seq[FileWithPath]
 }

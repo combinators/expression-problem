@@ -1,23 +1,23 @@
 package org.combinators.dp.enhanced
 
-import cats.effect.{ExitCode, IO}
+import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
-import org.combinators.ep.language.scala.ast.ffi._
+import org.combinators.ep.language.scala.ast.ffi.*
 import org.combinators.ep.language.scala.ast.{FinalBaseAST, FinalNameProviderAST}
 import org.combinators.ep.language.scala.codegen.CodeGenerator
 import org.combinators.ep.language.scala.codegen.FullAST
-import org.combinators.cogen._
+import org.combinators.cogen.*
 import org.combinators.cogen.FileWithPathPersistable
 import org.combinators.cogen.FileWithPathPersistable.fileWithPathPersistable
-import org.combinators.dp.{GenerationOption, TestExample}
+import org.combinators.dp.{BottomUp, GenerationOption, TestExample, TopDown}
 import org.combinators.models.EnhancedModel
 
-import java.nio.file.Path
+import java.nio.file.{Path, Paths}
 
 /**
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
-abstract class EnhancedDPMainScala extends EnhancedMainInterface {
+abstract class EnhancedDPMainScala extends IOApp with EnhancedMainInterface {
   val _ast: FullAST = new FinalBaseAST
     with FinalNameProviderAST
     with FinalArithmeticAST
@@ -38,10 +38,14 @@ abstract class EnhancedDPMainScala extends EnhancedMainInterface {
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
-  // subclasses will provide tests
+  // subclasses will provide tests and model
   def tests:Seq[TestExample]
+  def model:EnhancedModel
+  
+  // subclasses describe how to instantiate desired app class
+  def constructApp(): EnhancedDPMainScala
 
-  def filesToGenerate(model: EnhancedModel, option: GenerationOption): Seq[FileWithPath] = {
+  def filesToGenerate(option: GenerationOption): Seq[FileWithPath] = {
     println(s"Generating ${model.problem}...")
     generator.paradigm.runGenerator {
       for {
@@ -62,11 +66,11 @@ abstract class EnhancedDPMainScala extends EnhancedMainInterface {
     }
   }
 
-  def directToDiskTransaction(targetDirectory: Path, model:EnhancedModel, option:GenerationOption): IO[Unit] = {
+  def directToDiskTransaction(targetDirectory: Path, option:GenerationOption): IO[Unit] = {
 
      IO {
       print("Computing Files...")
-      val computed = filesToGenerate(model, option)
+      val computed = filesToGenerate(option)
       println("[OK]")
       if (targetDirectory.toFile.exists()) {
         print(s"Cleaning Target Directory ($targetDirectory)...")
@@ -79,10 +83,37 @@ abstract class EnhancedDPMainScala extends EnhancedMainInterface {
     }
   }
 
-  def runDirectToDisc(targetDirectory: Path, model:EnhancedModel, option:GenerationOption): IO[ExitCode] = {
+  def runDirectToDisc(targetDirectory: Path, option:GenerationOption): IO[ExitCode] = {
     for {
-      _ <- directToDiskTransaction(targetDirectory, model, option)
+      _ <- directToDiskTransaction(targetDirectory, option)
     } yield ExitCode.Success
+  }
+
+  def run(args: List[String]): IO[ExitCode] = {
+
+    // choose one of these to pass in
+    val topDown = TopDown()
+    val topDownWithMemo = TopDown(memo = true)
+    val bottomUp = BottomUp()
+
+    val choice = if (args.length == 1) {
+      args(0).toLowerCase() match {
+        case "topdown" => topDown
+        case "topdownwithmemo" => topDownWithMemo
+        case "bottomup" => bottomUp
+        case _ => ???
+      }
+    } else {
+      bottomUp
+    }
+
+    for {
+      _ <- IO { print("Initializing Generator...") }
+      main <- IO { constructApp() }
+      _ <- IO { println("[OK]") }
+
+      result <- main.runDirectToDisc(Paths.get("target", "scala", model.problem), choice)
+    } yield result
   }
 }
 

@@ -99,7 +99,7 @@ trait HouseRobberObjectOrientedProvider {
       func <- find_method_recursive(names.mangle("rob"))
       size <- array.arrayCapabilities.length(nums, Seq(zero))  // not sure
 
-      resultExpr <- impParadigm.imperativeCapabilities.declareVar(names.mangle("result"), intType)
+      resultExpr <- impParadigm.imperativeCapabilities.declareVar(names.mangle("result"), intType, Some(zero))
       lengthExpr <- impParadigm.imperativeCapabilities.declareVar(names.mangle("n"), intType, Some(size))
      // assignStmt <- impParadigm.imperativeCapabilities.assignVar(lengthExpr, size)
      // _ <- addBlockDefinitions(Seq(assignStmt))
@@ -221,12 +221,12 @@ trait HouseRobberObjectOrientedProvider {
       n_2 <- arithmetic.arithmeticCapabilities.sub(n, two)
       houseHoldValue <- array.arrayCapabilities.get(hval, Seq(n_1))
 
-      notpickExpr <- impParadigm.imperativeCapabilities.declareVar(names.mangle("notpick"), intType)
+      notpickExpr <- impParadigm.imperativeCapabilities.declareVar(names.mangle("notpick"), intType, Some(zero))
       notpick2Expr <- apply(func, Seq(hval, n_1))
       notPickStmt <- impParadigm.imperativeCapabilities.assignVar(notpickExpr, notpick2Expr)
       _ <- addBlockDefinitions(Seq(notPickStmt))
 
-      pickExpr <- impParadigm.imperativeCapabilities.declareVar(names.mangle("pick"), intType)
+      pickExpr <- impParadigm.imperativeCapabilities.declareVar(names.mangle("pick"), intType, Some(zero))
       pick2Expr <- apply(func, Seq(hval, n_2))
       pickResult <- arithmetic.arithmeticCapabilities.add(houseHoldValue, pick2Expr)
       pickStmt <- impParadigm.imperativeCapabilities.assignVar(pickExpr, pickResult)

@@ -109,7 +109,7 @@ trait DeleteAndEarnObjectOrientedProvider {
 
       swapped <- impParadigm.imperativeCapabilities.declareVar(names.mangle("swapped"), booleanType, Some(boo_true))
       jVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle("j"), intType, Some(zero))
-      tmp <- impParadigm.imperativeCapabilities.declareVar(names.mangle("tmp"), intType)
+      tmp <- impParadigm.imperativeCapabilities.declareVar(names.mangle("tmp"), intType, Some(zero))
       whileStmt <- impParadigm.imperativeCapabilities.whileLoop(swapped, for{
         swap_fal <- impParadigm.imperativeCapabilities.assignVar(swapped, boo_false)
         _<-addBlockDefinitions(Seq(swap_fal))
@@ -182,7 +182,7 @@ trait DeleteAndEarnObjectOrientedProvider {
 
       index_1 <- arithmetic.arithmeticCapabilities.add(index, one)
 
-      ans <- impParadigm.imperativeCapabilities.declareVar(names.mangle("result"), intType)
+      ans <- impParadigm.imperativeCapabilities.declareVar(names.mangle("result"), intType, Some(zero))
 
       ifCond1 <- arithmetic.arithmeticCapabilities.lt(arrSize, index)
       ifCond2 <- eqls.equalityCapabilities.areEqual(intType, arrSize, index)

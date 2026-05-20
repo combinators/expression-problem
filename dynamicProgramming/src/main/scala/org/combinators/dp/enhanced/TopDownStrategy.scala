@@ -291,7 +291,8 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
           intType <- toTargetLanguageType(TypeRep.Int)
 
           level_low  <- explore(sd.iteration(level).inclusiveStart, symbolTable=symbolTable, memoize=memoize)
-          level_var <- impParadigm.imperativeCapabilities.declareVar(names.mangle(sd.iteration(level).variable), intType, None)
+          zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
+          level_var <- impParadigm.imperativeCapabilities.declareVar(names.mangle(sd.iteration(level).variable), intType, Some(zero))
           level_map = symbolTable + (sd.iteration(level).variable -> level_var)
 
           one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
@@ -350,6 +351,7 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
 
       case ds:MinRangeDefinition => for {
         maxValue <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, scala.Int.MaxValue)
+        zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
         intType <- toTargetLanguageType(TypeRep.Int)   // perhaps acceptable to consider 'min' will be an integer
         minVarName = names.mangle("min")
         minVar <- impParadigm.imperativeCapabilities.declareVar(minVarName, intType, Some(maxValue))
@@ -357,7 +359,7 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
         kVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(ds.variable), intType, Some(kStart))
 
         resultVarName = names.mangle("result")
-        resultVar <- impParadigm.imperativeCapabilities.declareVar(resultVarName, intType, None)
+        resultVar <- impParadigm.imperativeCapabilities.declareVar(resultVarName, intType, Some(zero))
         addedSymbolTable = symbolTable + ("min" -> minVar) + (ds.variable -> kVar) + ("result" -> resultVar)
 
         minCond <- arithmetic.arithmeticCapabilities.lt(resultVar, minVar)
@@ -384,6 +386,7 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
 
       case ds:MaxRangeDefinition => for {
         minValue <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, scala.Int.MinValue)
+        zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
         intType <- toTargetLanguageType(TypeRep.Int)   // perhaps acceptable to consider 'min' will be an integer
         maxVarName = names.mangle("max")
         maxVar <- impParadigm.imperativeCapabilities.declareVar(maxVarName, intType, Some(minValue))
@@ -391,7 +394,7 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
         kVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(ds.variable), intType, Some(kStart))
 
         resultVarName = names.mangle("result")
-        resultVar <- impParadigm.imperativeCapabilities.declareVar(resultVarName, intType, None)
+        resultVar <- impParadigm.imperativeCapabilities.declareVar(resultVarName, intType, Some(zero))
         addedSymbolTable = symbolTable + ("max" -> maxVar) + (ds.variable -> kVar) + ("result" -> resultVar)
 
         maxCond <- arithmetic.arithmeticCapabilities.lt(maxVar, resultVar)

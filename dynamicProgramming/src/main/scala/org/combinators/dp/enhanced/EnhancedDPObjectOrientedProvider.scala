@@ -67,7 +67,8 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with EnhancedU
 
         // Arrays have to be handled specially, I'm afraid
         val createArray = test.inputType match {
-          case _:LiteralArray => true
+          case _:LiteralArray =>
+            true
           case _:LiteralArrayPair => true
           case _ => false
         }
@@ -91,10 +92,9 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with EnhancedU
           case _ => ???
         }
 
-
-
         for {
           solType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle(implementation))
+          _ <- report(">>>>>>>>>> step 1")
           sol <- if (createArray) {
             val vals = test.inputType match {
               case la:LiteralArray => Seq(la.literal)
@@ -125,6 +125,7 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with EnhancedU
               } yield sol
             } else if (vals.length == 2) {
               for {
+                _ <- report(">>>>>>>>>> step 3")
                 arrayType <- toTargetLanguageType(type_rep)
                 expr1 <- create_int_nd_array(vals.head, dimensions)
                 expr2 <- create_int_nd_array(vals.tail.head, dimensions)
@@ -133,6 +134,10 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with EnhancedU
                 sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solType, Seq(var1, var2))
               } yield sol
             } else {
+              for {
+                _ <- report(">>>>>>>>>> step 4")
+              } yield None
+
               ???
             }
           } else if (createStrings) {

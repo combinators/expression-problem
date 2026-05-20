@@ -58,24 +58,24 @@ object GlossaryToDiskMain extends IOApp {
   val bottomUp        = BottomUp()
 
   // declare the working versions for each problem in the enhanced list
-  val known_enhanced_solutions:Seq[(EnhancedMainInterface, EnhancedModel, Seq[GenerationOption])] = Seq(
-    (new BellNumberMainJava(), BellNumberDirectToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
-    (new CountSquaresMainJava(), CountSquaresToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
-    (new DiceThrowMainJava(), DiceThrowDirectToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
-    (new FibonacciEnhancedMainJava(), FibonacciEnhancedMainToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
-    (new InterleaveStringsMainJava(), InterleaveStringsToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
-    (new LongestCommonSubsequenceMainJava, LongestCommonSubsequenceToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
-    (new MinCostClimbingStairMain(), MinCostClimbingStairToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
-    (new PerfectSquareMainJava(), PerfectSquareMainDirectToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
-    (new ThreeStringsLCSMainJava(), ThreeStringsLCSToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
-    (new UncrossedLinesMainJava(), UncrossedLinesDirectDiskToMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
+  val known_enhanced_solutions:Seq[(EnhancedMainInterface, Seq[GenerationOption])] = Seq(
+    (new BellNumberMainJava(), Seq(topDown, topDownWithMemo, bottomUp)),
+    (new CountSquaresMainJava(), Seq(topDown, topDownWithMemo, bottomUp)),
+    (new DiceThrowMainJava(), Seq(topDown, topDownWithMemo, bottomUp)),
+    (new FibonacciMainJava(), Seq(topDown, topDownWithMemo, bottomUp)),
+    (new InterleaveStringsMainJava(), Seq(topDown, topDownWithMemo, bottomUp)),
+    (new LongestCommonSubsequenceMainJava(), Seq(topDown, topDownWithMemo, bottomUp)),
+    (new MinCostClimbingStairMainJava(), Seq(topDown, topDownWithMemo, bottomUp)),
+    (new PerfectSquaresMainJava(), Seq(topDown, topDownWithMemo, bottomUp)),
+    (new ThreeStringsLCSMainJava(), Seq(topDown, topDownWithMemo, bottomUp)),
+    (new UncrossedLinesMainJava(), Seq(topDown, topDownWithMemo, bottomUp)),
 //    (new NeedlemanWunschSequenceAlignmentMainJava(), NeedlemanWunschSequenceAlignmentToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
 //    (new DistinctSubsequencesMainJava(), DistinctSubsequencesToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
 //    (new WildcardPatternMatchingMainJava(), WildcardPatternMatchingToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
 //    (new ShortestCommonSupersequenceMainJava(), ShortestCommonSupersequenceToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
-    (new TribonacciMainJava(), TribonacciToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
-    (new UniquePathsMainJava(), UniquePathsToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
-    (new MinPathSumMainJava(), MinPathSumToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
+    (new TribonacciMainJava(), Seq(topDown, topDownWithMemo, bottomUp)),
+    (new UniquePathsMainJava(), Seq(topDown, topDownWithMemo, bottomUp)),
+    (new MinPathSumMainJava(), Seq(topDown, topDownWithMemo, bottomUp)),
 
     // generates but has flawed logic because of the transformation of (r,c) into (i,j)
     // CHALLENGING (new MatrixChainMultiplicationMainJava(), MatrixChainMultiplicationMainDirectToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
@@ -86,12 +86,12 @@ object GlossaryToDiskMain extends IOApp {
 
     // UncrossedLinesMainJava and LCSMainJava still don't work
 
-    val mcm_td = (new MatrixChainMultiplicationMainTopDownJava(), MatrixChainMultiplicationMainTopDownDirectToDiskMain.model, Seq(topDown, topDownWithMemo))
+    val mcm_td = (new MatrixChainMultiplicationTopDownMainJava(), Seq(topDown, topDownWithMemo))
     val just_td = Seq(mcm_td)
 
-    val others = (just_td ++ known_enhanced_solutions).filter(triple
-      => triple._3.contains(TopDown(memo = true))).
-      flatMap(triple => triple._1.filesToGenerate(triple._2, TopDown(memo = true)))
+    val others = (just_td ++ known_enhanced_solutions).filter(pair
+      => pair._2.contains(TopDown(memo = true))).
+      flatMap(pair => pair._1.filesToGenerate(TopDown(memo = true)))
 
     others
   }
@@ -103,12 +103,12 @@ object GlossaryToDiskMain extends IOApp {
     // val kp = new KnapsackMainJava().filesToGenerate(new KnapsackModel().instantiate(), TopDown())                         [HEINEMAN: not working]
     //val nwsa = new NWSAMainJava().filesToGenerate(new NeedlemanWunschSequenceAlignmentModel().instantiate(), TopDown())    [HEINEMAN: not working]
 
-    val mcm_td = (new MatrixChainMultiplicationMainTopDownJava(), MatrixChainMultiplicationMainTopDownDirectToDiskMain.model, Seq(topDown, topDownWithMemo))
+    val mcm_td = (new MatrixChainMultiplicationTopDownMainJava(), Seq(topDown, topDownWithMemo))
     val just_td = Seq(mcm_td)
 
-    val others = (just_td ++ known_enhanced_solutions).filter(triple
-      => triple._3.contains(TopDown())).
-      flatMap(triple => triple._1.filesToGenerate(triple._2, TopDown()))
+    val others = (just_td ++ known_enhanced_solutions).filter(pair
+      => pair._2.contains(TopDown()))
+      .flatMap(pair => pair._1.filesToGenerate(TopDown()))
 
     others
   }
@@ -117,13 +117,12 @@ object GlossaryToDiskMain extends IOApp {
     val ul = new UnenhancedUncrossedLinesMainJava().filesToGenerate(new UncrossedLinesModel().instantiate(), BottomUp())
     val lcs = new LCSMainJava().filesToGenerate(new LongestCommonSubsequenceModel().instantiate(), BottomUp())
 
-    val mcm_bot = (new MatrixChainMultiplicationMainBottomUpJava(), MatrixChainMultiplicationMainBottomUpDirectToDiskMain.model, Seq(bottomUp))
+    val mcm_bot = (new MatrixChainMultiplicationBottomUpMainJava(), Seq(bottomUp))
     val just_bot = Seq(mcm_bot)
 
-    val others =  (just_bot ++ known_enhanced_solutions).filter(triple
-      => triple._3.contains(BottomUp())).
-      flatMap(triple => triple._1.filesToGenerate(triple._2, BottomUp()))
-
+    val others =  (just_bot ++ known_enhanced_solutions).filter(pair
+      => pair._2.contains(BottomUp()))
+      .flatMap(pair => pair._1.filesToGenerate(BottomUp()))
     others
   }
 

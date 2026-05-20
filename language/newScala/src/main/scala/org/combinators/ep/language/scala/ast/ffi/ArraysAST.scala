@@ -32,7 +32,8 @@ trait ArraysAST extends InbetweenArraysAST {
       trait CreateArrayFromExpression extends arraysOps.CreateArrayFromExpression with CreateArray {
         import factory._
         import arraysOpsFactory._
-        override def toScala: String = expression.toScala
+        override def toScala: String =
+          expression.toScala
 
         override def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): CreateArrayFromExpression =
           arraysOpsFactory.convert(copy(expression = expression.prefixRootPackage(rootPackageName, excludedTypeNames)))
@@ -43,7 +44,8 @@ trait ArraysAST extends InbetweenArraysAST {
       trait CreateArrayWithDefaultValues extends arraysOps.CreateArrayWithDefaultValues with CreateArray {
         import factory._
         import arraysOpsFactory.convert
-        override def toScala: String = s"Array.ofDim[${tpe.toScala}](${dimensions.map(_.toScala).mkString(", ")})"
+        override def toScala: String
+        = s"Array.ofDim[${tpe.toScala}](${dimensions.map(_.toScala).mkString(", ")})"
         override def prefixRootPackage(rootPackageName:  scala.Seq[ArraysAST.this.any.Name], excludedTypeNames:  _root_.scala.Predef.Set[scala.Seq[ArraysAST.this.any.Name]]): CreateArrayWithDefaultValues =
           copy(
             tpe = tpe.prefixRootPackage(rootPackageName, excludedTypeNames),
@@ -55,7 +57,8 @@ trait ArraysAST extends InbetweenArraysAST {
         import factory._
         import arraysOpsFactory.convert
 
-        override def toScala: String = s"Array(${values.map(_.toScala).mkString(", ")})"
+        override def toScala: String =
+          s"Array(${values.map(_.toScala).mkString(", ")})"
         override def prefixRootPackage(rootPackageName: scala.Seq[ArraysAST.this.any.Name], excludedTypeNames: _root_.scala.Predef.Set[scala.Seq[ArraysAST.this.any.Name]]): CreateArrayFromValues =
           copy(
             values = values.map(_.prefixRootPackage(rootPackageName, excludedTypeNames))

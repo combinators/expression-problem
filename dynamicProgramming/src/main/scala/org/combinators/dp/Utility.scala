@@ -407,7 +407,8 @@ trait Utility {
       case ter:TernaryExpression => for {
         resultName <- paradigm.methodBodyCapabilities.freshName(names.mangle("result"))
         resultType <- paradigm.methodBodyCapabilities.toTargetLanguageType(hostType(ter.trueBranch.tpe))
-        resultVar <- impParadigm.imperativeCapabilities.declareVar(resultName, resultType, None)
+        zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
+        resultVar <- impParadigm.imperativeCapabilities.declareVar(resultName, resultType, Some(zero))
 
         cond <- explore(ter.condition, memoize, symbolTable, bottomUp)
 
@@ -585,7 +586,8 @@ trait Utility {
 
       intType <- toTargetLanguageType(TypeRep.Int)
       tempName <- freshName(names.mangle("temp"))
-      tempVar <- impParadigm.imperativeCapabilities.declareVar(tempName, intType, None)
+      zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
+      tempVar <- impParadigm.imperativeCapabilities.declareVar(tempName, intType, Some(zero))
       tempAssign <- impParadigm.imperativeCapabilities.assignVar(tempVar, e2)
 
       maxCond <- arithmetic.arithmeticCapabilities.lt(maxVar, tempVar)

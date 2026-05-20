@@ -29,7 +29,15 @@ trait StringAST extends InbetweenStringsAST { self: OperatorExpressionsAST & Bas
       trait SubStringOp extends stringOps.SubStringOp
         with scalaOperatorExpressions.operatorExpressionsOverrides.Operator
         with scalaOperatorExpressions.PostfixOperator {
-        override def operator: String = ".substring"
+        override def operator: String = {
+          ".substring"
+        }
+
+        override def toScala(operands: any.Expression*): String = {
+          val base = operands.head.getSelfExpression.toScala
+          val ops = operands.tail.map(arg => arg.getSelfExpression.toScala).mkString(",")
+          s"${base}.substring($ops)"
+        }
       }
 
       trait ToStringOp extends stringOps.ToStringOp

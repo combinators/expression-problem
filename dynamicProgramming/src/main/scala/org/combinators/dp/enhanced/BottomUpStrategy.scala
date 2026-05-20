@@ -222,15 +222,16 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
       } yield Seq(ifstmt)
 
       case ds: MinRangeDefinition => for {
-        one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, scala.Int.MaxValue)
+        maxValue <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, scala.Int.MaxValue)
+        zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
         intType <- toTargetLanguageType(TypeRep.Int) // hack
         minVarName = names.mangle("min")
-        minVar <- impParadigm.imperativeCapabilities.declareVar(minVarName, intType, Some(one))
+        minVar <- impParadigm.imperativeCapabilities.declareVar(minVarName, intType, Some(maxValue))
         kStart <- explore(ds.inclusiveStart, symbolTable = symbolTable, bottomUp = Some(dp))
         kVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(ds.variable), intType, Some(kStart))
 
         resultVarName = names.mangle("result")
-        resultVar <- impParadigm.imperativeCapabilities.declareVar(resultVarName, intType, None)
+        resultVar <- impParadigm.imperativeCapabilities.declareVar(resultVarName, intType, Some(zero))
         addedSymbolTable = symbolTable + ("min" -> minVar) + ("k" -> kVar) + ("result" -> resultVar)
 
         minCond <- arithmetic.arithmeticCapabilities.lt(resultVar, minVar)
@@ -257,15 +258,16 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
       } yield Seq(whilestmt, assigned)
 
       case ds: MaxRangeDefinition => for {
-        one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, scala.Int.MaxValue)
+        maxValue <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, scala.Int.MaxValue)
+        zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
         intType <- toTargetLanguageType(TypeRep.Int) // hack
         maxVarName = names.mangle("max")
-        maxVar <- impParadigm.imperativeCapabilities.declareVar(maxVarName, intType, Some(one))
+        maxVar <- impParadigm.imperativeCapabilities.declareVar(maxVarName, intType, Some(maxValue))
         kStart <- explore(ds.inclusiveStart, symbolTable = symbolTable, bottomUp = Some(dp))
         kVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle(ds.variable), intType, Some(kStart))
 
         resultVarName = names.mangle("result")
-        resultVar <- impParadigm.imperativeCapabilities.declareVar(resultVarName, intType, None)
+        resultVar <- impParadigm.imperativeCapabilities.declareVar(resultVarName, intType, Some(zero))
         addedSymbolTable = symbolTable + ("max" -> maxVar) + ("k" -> kVar) + ("result" -> resultVar)
 
         maxCond <- arithmetic.arithmeticCapabilities.lt(maxVar, resultVar)

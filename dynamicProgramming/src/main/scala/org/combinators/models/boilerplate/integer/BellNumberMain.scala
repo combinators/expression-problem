@@ -50,7 +50,7 @@ object BellNumberDirectToDiskMain extends IOApp {
 
     for {
       _ <- IO { print("Initializing Generator...") }
-      //main1 <- IO { new BellNumberMainJava() }
+     // main1 <- IO { new BellNumberMainJava() }
       main2 <- IO { new BellNumberMainScala() }
       _ <- IO { println("[OK]") }
 

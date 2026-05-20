@@ -25,19 +25,19 @@ trait Arrays[AST <: ArraysAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
       override implicit val canGet: Understands[any.Method, Apply[Get, any.Expression, any.Expression]] =
         new Understands[any.Method, Apply[Get, any.Expression, any.Expression]] {
           override def perform(context: any.Method, command: Apply[Get, any.Expression, any.Expression]): (any.Method, any.Expression) = {
-            (context, arraysOpsFactory.getArrayOp(command.arguments(0), command.arguments(1)))
+            (context, arraysOpsFactory.getArrayOp(command.arguments(0), command.arguments.drop(1)))
           }
         }
       override implicit val canSet: Understands[any.Method, Apply[Set, any.Expression, any.Expression]] =
         new Understands[any.Method, Apply[Set, any.Expression, any.Expression]] {
           override def perform(context: any.Method, command: Apply[Set, any.Expression, any.Expression]): (any.Method, any.Expression) = {
-            (context, arraysOpsFactory.setArrayOp(command.arguments(0), command.arguments(1), command.arguments(2)))
+            (context, arraysOpsFactory.setArrayOp(command.arguments(0), command.arguments.drop(2), command.arguments(1)))
           }
         }
       override implicit val canLength: Understands[any.Method, Apply[Length, any.Expression, any.Expression]] =
         new Understands[any.Method, Apply[Length, any.Expression, any.Expression]] {
           override def perform(context: any.Method, command: Apply[Length, any.Expression, any.Expression]): (any.Method, any.Expression) = {
-            (context, arraysOpsFactory.lengthArrayOp(command.arguments(0)))
+            (context, arraysOpsFactory.lengthArrayExpression(command.arguments(0), command.arguments.drop(1)))
           }
         }
     }

@@ -33,16 +33,17 @@ trait Arrays[Context] extends FFI {
     }
 
     implicit val canGet: Understands[Context, Apply[Get, Expression, Expression]]
-    def get(array: Expression, pos:Seq[Expression]): Generator[Context, Expression] =
-      AnyParadigm.capability(Apply[Get, Expression, Expression](Get(), array +: pos))
+    def get(array: Expression, indices:Seq[Expression]): Generator[Context, Expression] =
+      AnyParadigm.capability(Apply[Get, Expression, Expression](Get(), array +: indices))
 
+    // construct Sequence as (array, newValue, indices) since there is always a single newValue but may be multiple indices
     implicit val canSet: Understands[Context, Apply[Set, Expression, Expression]]
-    def set(array: Expression, pos:Seq[Expression], value:Expression): Generator[Context, Expression] =
-      AnyParadigm.capability(Apply[Set, Expression, Expression](Set(), array +: pos :+ value))
+    def set(array: Expression, indices:Seq[Expression], value:Expression): Generator[Context, Expression] =
+      AnyParadigm.capability(Apply[Set, Expression, Expression](Set(), Seq(array, value) ++ indices))
 
     implicit val canLength: Understands[Context, Apply[Length, Expression, Expression]]
-    def length(array:Expression, dimension:Seq[Expression]): Generator[Context, Expression] =
-      AnyParadigm.capability(Apply[Length, Expression, Expression](Length(), array +: dimension))
+    def length(array:Expression, dimensions:Seq[Expression]): Generator[Context, Expression] =
+      AnyParadigm.capability(Apply[Length, Expression, Expression](Length(), array +: dimensions))
   }
   val arrayCapabilities: ArrayCapabilities
 }

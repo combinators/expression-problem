@@ -24,10 +24,11 @@ import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
 import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
 import org.combinators.ep.language.scala.ast.*
-import org.combinators.ep.language.scala.ast.ffi.{FinalArithmeticAST, FinalAssertionsAST, FinalBooleanAST, FinalEqualsAST, FinalListsAST, FinalOperatorExpressionsAST, FinalRealArithmeticOpsAST, FinalStringAST}
+import org.combinators.ep.language.scala.ast.ffi.{FinalArithmeticAST, FinalArraysAST, FinalAssertionsAST, FinalBooleanAST, FinalConsoleAST, FinalEqualsAST, FinalListsAST, FinalOperatorExpressionsAST, FinalRealArithmeticOpsAST, FinalStringAST}
 import org.combinators.ep.language.scala.codegen.{CodeGenerator, FullAST}
 import org.combinators.cogen.FileWithPathPersistable
 import org.combinators.cogen.FileWithPathPersistable.fileWithPathPersistable
+
 import java.nio.file.{Path, Paths}
 
 /**
@@ -37,8 +38,10 @@ class FibonacciScala {
   val ast: FullAST = new FinalBaseAST
     with FinalNameProviderAST
     with FinalArithmeticAST
+    with FinalArraysAST
     with FinalAssertionsAST
     with FinalBooleanAST
+    with FinalConsoleAST
     with FinalEqualsAST
     with FinalListsAST
     with FinalOperatorExpressionsAST

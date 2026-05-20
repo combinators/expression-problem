@@ -11,7 +11,7 @@ trait OperatorExpressionOpsAST extends AnyAST {
       type BinaryExpression <: operatorExpressions.BinaryExpression
       type UnaryExpression <: operatorExpressions.UnaryExpression
     }
-
+    
     trait TernaryExpression extends any.Expression {
       def getSelfTernaryExpression: operatorExpressionsFinalTypes.TernaryExpression
       def operator: Operator
@@ -63,6 +63,7 @@ trait OperatorExpressionOpsAST extends AnyAST {
       implicit def convert(other: TernaryExpression): operatorExpressionsFinalTypes.TernaryExpression = other.getSelfTernaryExpression
       implicit def convert(other: BinaryExpression): operatorExpressionsFinalTypes.BinaryExpression = other.getSelfBinaryExpression
       implicit def convert(other: UnaryExpression): operatorExpressionsFinalTypes.UnaryExpression = other.getSelfUnaryExpression
+
     }
   }
   

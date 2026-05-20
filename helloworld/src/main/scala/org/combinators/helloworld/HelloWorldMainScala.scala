@@ -38,7 +38,7 @@ class HelloWorldMainScala {
   }
   val generator: CodeGenerator[_ast.type] = CodeGenerator("dp", _ast, Set.empty)
 
-  val helloWorldApproach = HelloWorldObjectOrientedProvider[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.imperative.imperativeInMethods, generator.ooParadigm, generator.console.consoleInMethods, generator.arrays.arraysInMethods, generator.assertions.assertionsInMethods, generator.equality.equalsInMethods)
+  val helloWorldApproach = HelloWorldObjectOrientedProvider[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.imperative.imperativeInMethods, generator.ooParadigm, generator.ints.arithmeticInMethods, generator.console.consoleInMethods, generator.arrays.arraysInMethods, generator.assertions.assertionsInMethods, generator.equality.equalsInMethods)
 
   val persistable: Aux[FileWithPath] = FileWithPathPersistable[FileWithPath]
 

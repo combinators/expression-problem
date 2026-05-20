@@ -33,8 +33,10 @@ class FibonacciMainScala {
   val ast: FullAST = new FinalBaseAST
     with FinalNameProviderAST
     with FinalArithmeticAST
+    with FinalArraysAST
     with FinalAssertionsAST
     with FinalBooleanAST
+    with FinalConsoleAST
     with FinalEqualsAST
     with FinalListsAST
     with FinalOperatorExpressionsAST

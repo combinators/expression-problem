@@ -106,13 +106,14 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
       } else {
         for {
           intType <- toTargetLanguageType(TypeRep.Int)
+          zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
 
           self <- ooParadigm.methodBodyCapabilities.selfReference()
           dp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
 
           level_low <- explore(model.find(order(level)).low, bottomUp=Some(dp), symbolTable=symbolTable, memoize=false)
           level_high <- explore(model.find(order(level)).high, bottomUp=Some(dp), symbolTable=symbolTable, memoize=false)
-          level_var <- impParadigm.imperativeCapabilities.declareVar(names.mangle(order(level)), intType, None)
+          level_var <- impParadigm.imperativeCapabilities.declareVar(names.mangle(order(level)), intType, Some(zero))     // in scala-gen, cannot have default vals and this is reasonable
           level_map = symbolTable + (order(level) -> level_var)
 
           expr <- explore(model.find(order(level)), bottomUp=Some(dp), symbolTable=level_map)

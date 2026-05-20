@@ -1063,6 +1063,7 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
         import factory.*
         def toScala: String = {
           val init = this.initializer.map(ie => s" = ${ie.toScala}").getOrElse("")
+          assert(!init.isBlank)   // CANNOT be blank for Scala var
           s"""
              |var ${this.name.toScala}: ${this.tpe.toScala}$init
              |""".stripMargin

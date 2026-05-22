@@ -118,10 +118,15 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with EnhancedU
 
             if (vals.length == 1) {
               for {
+                _ <- report(">>>>>>>>>> step 2a")
                 arrayType <- toTargetLanguageType(type_rep)
+                _ <- report(">>>>>>>>>> step 2b")
                 expr <- create_int_nd_array(vals.head, dimensions)
+                _ <- report(">>>>>>>>>> step 2c: " + expr.toString())
                 variable <- impParadigm.imperativeCapabilities.declareVar(names.mangle(test.name), arrayType, Some(expr))
+                _ <- report(">>>>>>>>>> step 2d:" + variable.toString())
                 sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solType, Seq(variable))
+                _ <- report(">>>>>>>>>> step 2e: " + sol.toString())
               } yield sol
             } else if (vals.length == 2) {
               for {
@@ -180,7 +185,6 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with EnhancedU
           }
 
           computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, computeName)
-
           sol_actual <- apply(computeMethod, Seq.empty)
           sol_value <- sol_gen_value
           theType <- the_test_type
@@ -221,7 +225,8 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with EnhancedU
       }
 
       _ <- paradigm.projectCapabilities.addCompilationUnit(
-        paradigm.compilationUnitCapabilities.addTestSuite(names.mangle("Test" + model.problem), makeTestCase(model.problem, tests))
+        paradigm.compilationUnitCapabilities.addTestSuite(names.mangle("Test" + model.problem), makeTestCase(model.problem, tests)),
+        names.mangle("Test" + model.problem)
       )
     } yield ()
   }

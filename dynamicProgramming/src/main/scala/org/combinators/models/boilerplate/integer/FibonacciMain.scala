@@ -36,8 +36,8 @@ class FibonacciMainScala extends EnhancedDPMainScala with FibonacciApp {
 
 // need objects to be able to execute as IOApp
 object FibonacciScalaToDiskMain extends EnhancedDPMainScala with FibonacciApp {
-  override def constructApp(): EnhancedDPMainScala = new BellNumberMainScala()
+  override def constructApp(): EnhancedDPMainScala = new FibonacciMainScala()
 }
 object FibonacciJavaToDiskMain extends EnhancedDPMainJava with FibonacciApp {
-  override def constructApp(): EnhancedDPMainJava = new BellNumberMainJava()
+  override def constructApp(): EnhancedDPMainJava = new FibonacciMainJava()
 }

@@ -225,7 +225,7 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
         override def emptyPatternCtxt: funcontrol.PatternContext = functionalControlFactory.patternContext(Seq.empty)
 
         def addTestExpressions(exprs: Seq[any.Expression]): any.Method = {
-          copy(statements = exprs.map(liftExpression))
+          copy(statements = statements ++ exprs.map(liftExpression))
         }
 
         def findClass(qualifiedName: any.Name*): any.Type =
@@ -288,6 +288,7 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
               Seq("org", "scalatest", "funsuite", "AnyFunSuite").map(n => nameProvider.mangle(n)) *
             ))
           val methodsAsTests = withFunSuiteExtension.methods.zip(this.testMarkers).filter { case (m, isTest) => isTest }.map { case (m, _) => {
+            println(m.statements.map(_.toScala).mkString("\n"))
             liftExpression(applyExpression(
               applyExpression(
                 memberAccessExpression(selfReferenceExpression, nameProvider.mangle("test")),

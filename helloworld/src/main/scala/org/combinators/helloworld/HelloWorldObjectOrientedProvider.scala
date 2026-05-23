@@ -59,8 +59,8 @@ trait HelloWorldObjectOrientedProvider extends HelloWorldProvider {
 
     for {
       stringType <- toTargetLanguageType(TypeRep.String)
-
-      _ <- setParameters(Seq((names.mangle(fieldName),stringType)))
+      paramName <- freshName(names.mangle(fieldName))            // make sure to create a unique name for param, to avoid name clashes with field
+      _ <- setParameters(Seq((paramName,stringType)))
       args <- getArguments()
       _ <- initializeField(names.mangle(fieldName), args.head._3)
 

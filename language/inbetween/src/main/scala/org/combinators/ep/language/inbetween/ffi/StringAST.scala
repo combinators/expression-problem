@@ -20,7 +20,7 @@ trait StringAST extends OperatorExpressionOpsAST  {
         operatorExpressionsFactory.binaryExpression(appendStringOp(), left, right)
 
       def getCharAt(base: any.Expression, idx: any.Expression): operatorExpressions.BinaryExpression =
-        operatorExpressionsFactory.binaryExpression(subStringOp(), base, idx)
+        operatorExpressionsFactory.binaryExpression(getCharAtOp(), base, idx)
       def stringLength(exp: any.Expression): operatorExpressions.UnaryExpression =
         operatorExpressionsFactory.unaryExpression(stringLengthOp(), exp)
       def subString(base:any.Expression, left: any.Expression, right:any.Expression): operatorExpressions.TernaryExpression =

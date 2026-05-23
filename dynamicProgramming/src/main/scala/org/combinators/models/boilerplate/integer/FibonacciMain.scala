@@ -20,7 +20,7 @@ trait FibonacciApp {
     new TestExample("fib2", new LiteralInt(2), new LiteralInt(1), new UnitExpression),
     new TestExample("fib7", new LiteralInt(7), new LiteralInt(13), new UnitExpression),
     new TestExample("fib20", new LiteralInt(20), new LiteralInt(6765), new UnitExpression),
-    new TestExample("fib40", new LiteralInt(40), new LiteralInt(102334155), new UnitExpression)
+    new TestExample("fib40", new LiteralInt(40), new LiteralInt(102334155), new UnitExpression)      // Takes some time!
   )
 
   val model: EnhancedModel = new Fibonacci().model

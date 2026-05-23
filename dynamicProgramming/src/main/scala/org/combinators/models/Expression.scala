@@ -135,10 +135,14 @@ class LiteralTriple(val val1:Int, val val2:Int, val val3:Int) extends LiteralExp
   def tpe: ArgumentType = LiteralTripleType()
 }
 
-// when dimensions is Seq.empty, then this is a 1D array, whose length is determined by the number of integers. Otherwise
-// the sequence describes the dimensions
 case class PackedArrayType(elementType:ArgumentType) extends ArgumentType
-class LiteralArray(val literal:Array[Int], val dimensions:Seq[Int] = Seq(1)) extends LiteralExpression {
+class LiteralArray(val literal:Array[Int], val dimensions:Seq[Int]) extends LiteralExpression {
+
+  // Auxiliary constructor to handle situation where dimensions is not provided: Just defaults to a one-dimension array of given length.
+  def this(literal:Array[Int]) = {
+    this(literal, Seq(literal.length))
+  }
+
   def tpe:ArgumentType = PackedArrayType(IntegerType())
 }
 

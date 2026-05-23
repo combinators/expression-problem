@@ -114,8 +114,8 @@ object GlossaryScalaToDiskMain extends IOApp {
   }
 
   def bottom_up_files() : Seq[FileWithPath] = {
-    val ul = new UnenhancedUncrossedLinesMainJava().filesToGenerate(new UncrossedLinesModel().instantiate(), BottomUp())
-    val lcs = new LCSMainJava().filesToGenerate(new LongestCommonSubsequenceModel().instantiate(), BottomUp())
+//    val ul = new UnenhancedUncrossedLinesMainJava().filesToGenerate(new UncrossedLinesModel().instantiate(), BottomUp())
+//    val lcs = new LCSMainJava().filesToGenerate(new LongestCommonSubsequenceModel().instantiate(), BottomUp())
 
     val mcm_bot = (new MatrixChainMultiplicationBottomUpMainScala(), Seq(bottomUp))
     val just_bot = Seq(mcm_bot)

@@ -94,7 +94,6 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with EnhancedU
 
         for {
           solType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle(implementation))
-          _ <- report(">>>>>>>>>> step 1")
           sol <- if (createArray) {
             val vals = test.inputType match {
               case la:LiteralArray => Seq(la.literal)
@@ -103,9 +102,10 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with EnhancedU
             }
 
             val dimensions = test.inputType match {
-              case la:LiteralArray => la.dimensions
+              case la:LiteralArray =>
+                la.dimensions
               case lap:LiteralArrayPair =>
-                Seq(1)  // these are two one-dimensional strings
+                Seq(lap.ar1.length)      // these are two one-dimensional arrays that must be same length.
               case _ => Seq.empty
             }
 
@@ -118,19 +118,13 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with EnhancedU
 
             if (vals.length == 1) {
               for {
-                _ <- report(">>>>>>>>>> step 2a")
                 arrayType <- toTargetLanguageType(type_rep)
-                _ <- report(">>>>>>>>>> step 2b")
                 expr <- create_int_nd_array(vals.head, dimensions)
-                _ <- report(">>>>>>>>>> step 2c: " + expr.toString())
                 variable <- impParadigm.imperativeCapabilities.declareVar(names.mangle(test.name), arrayType, Some(expr))
-                _ <- report(">>>>>>>>>> step 2d:" + variable.toString())
                 sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solType, Seq(variable))
-                _ <- report(">>>>>>>>>> step 2e: " + sol.toString())
               } yield sol
             } else if (vals.length == 2) {
               for {
-                _ <- report(">>>>>>>>>> step 3")
                 arrayType <- toTargetLanguageType(type_rep)
                 expr1 <- create_int_nd_array(vals.head, dimensions)
                 expr2 <- create_int_nd_array(vals.tail.head, dimensions)
@@ -139,10 +133,6 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with EnhancedU
                 sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solType, Seq(var1, var2))
               } yield sol
             } else {
-              for {
-                _ <- report(">>>>>>>>>> step 4")
-              } yield None
-
               ???
             }
           } else if (createStrings) {

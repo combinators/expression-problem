@@ -1,21 +1,20 @@
 package org.combinators.archive.cogen.bottomUp.twoSequences.longestCommonSubsequence
 
 /**
- * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"
+ * One of the earliest implementations to generate bottom-up implementation of Longest Common Subsequence
  *
- * Creates output files in target/dp
+ * val targetDirectory =  Paths.get("target", "pascalBU")
  */
-
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
 import org.combinators.archive.unenhancedModels.models.twoSequences.LongestCommonSubsequenceModel
-import org.combinators.dp.{BottomUp, GenerationOption, TopDown}
 import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
 import FileWithPathPersistable._
+import org.combinators.dp.original.{BottomUp, GenerationOption, TopDown}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, Syntax, Unboxed}
-import org.combinators.models.Model
+import org.combinators.models.original.Model
 
 import java.nio.file.{Path, Paths}
 

@@ -1,18 +1,19 @@
-package org.combinators.archive.unenhancedModels.boilerplate.unenhancedNwsa
+package org.combinators.archive.unenhancedModels.boilerplate.threeStringLCS
 
-import org.combinators.dp.{DPObjectOrientedProvider, TestExample}
+import org.combinators.dp.TestExample
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.cogen.paradigm.control.Imperative
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.cogen.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.cogen.{AbstractSyntax, NameProvider, TypeRep}
-import org.combinators.models.{LiteralInt, LiteralString, LiteralStringPair}
+import org.combinators.dp.original.DPObjectOrientedProvider
+import org.combinators.models.{LiteralInt, LiteralString, LiteralStringTriple}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
  */
-trait NWSAProvider extends DPObjectOrientedProvider {
+trait ThreeStringLCSProvider extends DPObjectOrientedProvider {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
@@ -26,7 +27,7 @@ trait NWSAProvider extends DPObjectOrientedProvider {
   val asserts: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val strings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val eqls: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
-  val booleans: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val booleans:  Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
   import paradigm._
   import syntax._
@@ -38,36 +39,37 @@ trait NWSAProvider extends DPObjectOrientedProvider {
 
     // NOTE: these tests are in the wrong place, since we defer test gen to later
     val tests = Seq(
-      new TestExample("fib0", new LiteralStringPair("ACTG", "CGATC"), new LiteralInt(2), new LiteralString("AC")) // for now, leave solution as None
+      new TestExample("test1", new LiteralStringTriple("AGGT12", "12TXAYB", "12XBA"), new LiteralInt(2), new LiteralString("AC")) // for now, leave solution as None
     )
 
     for {
       assert_statements <- forEach(tests) { example =>
 
         val input_value = example.inputType match {
-          case lt: LiteralStringPair => (lt.string1, lt.string2)
+          case lt: LiteralStringTriple => (lt.string1, lt.string2, lt.string3)
           case _ => ??? // error in all other circumstances
         }
 
-        val expected_value = example.answer match {
-          case lit:LiteralInt => lit.literal
+        val sol_gen_value = example.answer match {
+          case lit:LiteralInt => paradigm.methodBodyCapabilities.reify(TypeRep.Int, lit.literal)
           case _ => ???
         }
 
         for {
-          fibType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle(implementation))
+          tslcsType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle(implementation))
           s1_value <- paradigm.methodBodyCapabilities.reify(TypeRep.String, input_value._1)
           s2_value <- paradigm.methodBodyCapabilities.reify(TypeRep.String, input_value._2)
+          s3_value <- paradigm.methodBodyCapabilities.reify(TypeRep.String, input_value._3)
 
-          sol <- ooParadigm.methodBodyCapabilities.instantiateObject(fibType, Seq(s1_value, s2_value))
+          sol <- ooParadigm.methodBodyCapabilities.instantiateObject(tslcsType, Seq(s1_value, s2_value, s3_value))
           computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, computeName)
 
           intType <- toTargetLanguageType(TypeRep.Int)
-          fibn_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, expected_value)
-          fib_actual <- apply(computeMethod, Seq.empty)
-          asserteq_fib <- asserts.assertionCapabilities.assertEquals(intType, fib_actual, fibn_value)
+          tslcs_actual <- apply(computeMethod, Seq.empty)
+          sol_value <- sol_gen_value
+          asserteq_tslcs <- asserts.assertionCapabilities.assertEquals(intType, tslcs_actual, sol_value)
 
-        } yield asserteq_fib
+        } yield asserteq_tslcs
       }
     } yield assert_statements
   }
@@ -80,7 +82,7 @@ trait NWSAProvider extends DPObjectOrientedProvider {
   }
 }
 
-object NWSAProvider {
+object ThreeStringLCSProvider {
   type WithParadigm[P <: AnyParadigm] = DPObjectOrientedProvider { val paradigm: P }
   type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 
@@ -99,8 +101,8 @@ object NWSAProvider {
             parametricPolymorphism: ParametricPolymorphism.WithBase[base.type],
             booleansIn: Booleans.WithBase[base.MethodBodyContext, base.type]
            )
-           (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): NWSAProvider.WithParadigm[base.type] =
-    new NWSAProvider {
+           (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): ThreeStringLCSProvider.WithParadigm[base.type] =
+    new ThreeStringLCSProvider {
       override val paradigm: base.type = base
       val impParadigm: imp.type = imp
       val arithmetic: ffiArithmetic.type = ffiArithmetic

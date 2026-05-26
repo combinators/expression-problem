@@ -1,18 +1,22 @@
-package org.combinators.archive.cogen.bottomUp.oneSequence.tribonacci
+package org.combinators.archive.unenhancedModels.boilerplate.jumpTo
 
-import org.combinators.dp.{DPObjectOrientedProvider, TestExample}
+/**
+ * An early implementation with unenhanced model.
+ *
+ * Test Cases does not compile, because this early implementation had not yet had available the code to properly create arrays
+ * on which to integrate in a test case.
+ */
 import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.cogen.paradigm.control.Imperative
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.cogen.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.cogen.{AbstractSyntax, NameProvider, TypeRep}
-import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.models._
+import org.combinators.dp.TestExample
+import org.combinators.dp.original.DPObjectOrientedProvider
+import org.combinators.models.{LiteralInt, UnitExpression}
 
-/** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
- * in a variety of contexts. This trait provides that capability
- */
-trait TribProvider extends DPObjectOrientedProvider {
+trait JumpToMainProvider extends DPObjectOrientedProvider {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
@@ -26,25 +30,20 @@ trait TribProvider extends DPObjectOrientedProvider {
   val asserts: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val strings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val eqls: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
-  val booleans: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type ]
+  val booleans: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
-  import paradigm._
-  import syntax._
-  import ooParadigm._
+  import paradigm.*
+  import syntax.*
 
   // Specific examples hard coded for Int input and Int output
-  def makeTestsDecodeWays(implemntation:String, tests: Seq[TestExample] = Seq.empty): Generator[MethodBodyContext, Seq[Expression]] = {
-    import paradigm.methodBodyCapabilities._
-    import eqls.equalityCapabilities._
+  def makeJumpToMain(implementation:String, tests: Seq[TestExample] = Seq.empty): Generator[MethodBodyContext, Seq[Expression]] = {
+    import eqls.equalityCapabilities.*
+    import paradigm.methodBodyCapabilities.*
 
     // NOTE: these tests are in the wrong place, since we defer test gen to later
     val tests = Seq(
-      new TestExample("fib0", new LiteralInt(0), new LiteralInt(0), new UnitExpression), // for now, leave solution as None
-      new TestExample("fib1", new LiteralInt(1), new LiteralInt(1), new UnitExpression),
-      new TestExample("fib2", new LiteralInt(2), new LiteralInt(1), new UnitExpression),
-      new TestExample("fib7", new LiteralInt(7), new LiteralInt(13), new UnitExpression),
-      new TestExample("fib20", new LiteralInt(20), new LiteralInt(6765), new UnitExpression),
-      new TestExample("fib40", new LiteralInt(40), new LiteralInt(102334155), new UnitExpression)
+     // not sure what to write here, yet...
+      new TestExample("replaceme", new LiteralInt(0), new LiteralInt(0), new UnitExpression), // for now, leave solution as None
     )
 
     for {
@@ -61,7 +60,7 @@ trait TribProvider extends DPObjectOrientedProvider {
         }
 
         for {
-          fibType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle("Fibonacci"))
+          fibType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle(implementation))
           n_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, input_value)
           sol <- ooParadigm.methodBodyCapabilities.instantiateObject(fibType, Seq(n_value))
           computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, computeName)
@@ -77,14 +76,14 @@ trait TribProvider extends DPObjectOrientedProvider {
   }
 
 
-  override def makeTestCase(implemntation:String): Generator[TestContext, Unit] = {
+  override def makeTestCase(implementation:String): Generator[TestContext, Unit] = {
     for {
-      _ <- paradigm.testCapabilities.addTestCase(makeTestsDecodeWays(implemntation), names.mangle("DP"))
+      _ <- paradigm.testCapabilities.addTestCase(makeJumpToMain(implementation), names.mangle("DP"))
     } yield ()
   }
 }
 
-object TribProvider {
+object JumpToMainProvider {
   type WithParadigm[P <: AnyParadigm] = DPObjectOrientedProvider { val paradigm: P }
   type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 
@@ -103,8 +102,8 @@ object TribProvider {
    parametricPolymorphism: ParametricPolymorphism.WithBase[base.type],
    booleansIn: Booleans.WithBase[base.MethodBodyContext, base.type]
   )
-  (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): TribProvider.WithParadigm[base.type] =
-    new TribProvider {
+  (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): JumpToMainProvider.WithParadigm[base.type] =
+    new JumpToMainProvider {
       override val paradigm: base.type = base
       val impParadigm: imp.type = imp
       val arithmetic: ffiArithmetic.type = ffiArithmetic

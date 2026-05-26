@@ -1,17 +1,16 @@
 package org.combinators.archive.cogen.bottomUp.oneSequence.decodeways
 
-import org.combinators.dp.{DPObjectOrientedProvider, TestExample}
+import org.combinators.dp.TestExample
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.paradigm.control.Imperative
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.cogen.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.cogen.{AbstractSyntax, NameProvider, TypeRep}
 import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
+import org.combinators.dp.original.DPObjectOrientedProvider
 import org.combinators.models.{LiteralInt, UnitExpression}
 
-/** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
- * in a variety of contexts. This trait provides that capability
- */
+@deprecated(message = "Generated code in Java does not compile.")
 trait DecodeWaysProvider extends DPObjectOrientedProvider {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
@@ -75,7 +74,6 @@ trait DecodeWaysProvider extends DPObjectOrientedProvider {
       }
     } yield assert_statements
   }
-
 
   override def makeTestCase(implementation:String): Generator[TestContext, Unit] = {
     for {

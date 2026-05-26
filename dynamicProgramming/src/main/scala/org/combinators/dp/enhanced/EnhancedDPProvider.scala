@@ -1,9 +1,10 @@
 package org.combinators.dp.enhanced
 
-import org.combinators.dp.{GenerationOption, TestExample}
+import org.combinators.dp.TestExample
 import org.combinators.cogen.Command._
 import org.combinators.cogen.NameProvider
 import org.combinators.cogen.paradigm.{AnyParadigm, ObjectOriented}
+import org.combinators.dp.original.GenerationOption
 import org.combinators.models.EnhancedModel
 
 /** Attempt to provide a dynamic programming world generator. */

@@ -1,6 +1,7 @@
 package org.combinators.archive.unenhancedModels.models.grid
 
 import org.combinators.models._
+import org.combinators.models.original.Model
 
 class UniquePathsModel {
   def instantiate(): Model = {

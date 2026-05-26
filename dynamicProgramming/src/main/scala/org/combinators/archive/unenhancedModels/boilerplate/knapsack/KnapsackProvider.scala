@@ -1,12 +1,13 @@
-package org.combinators.archive.unenhancedModels.boilerplate.unenhancedKnapsack
+package org.combinators.archive.unenhancedModels.boilerplate.knapsack
 
-import org.combinators.dp.{DPObjectOrientedProvider, TestExample}
+import org.combinators.dp.TestExample
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.cogen.paradigm.control.Imperative
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.cogen.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.cogen.{AbstractSyntax, NameProvider, TypeRep}
+import org.combinators.dp.original.DPObjectOrientedProvider
 import org.combinators.models.{ArgumentType, LiteralExpression, LiteralInt, LiteralString}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class

@@ -9,7 +9,8 @@ import org.combinators.ep.language.scala.codegen.FullAST
 import org.combinators.cogen.*
 import org.combinators.cogen.FileWithPathPersistable
 import org.combinators.cogen.FileWithPathPersistable.fileWithPathPersistable
-import org.combinators.dp.{BottomUp, GenerationOption, TestExample, TopDown}
+import org.combinators.dp.original.{BottomUp, GenerationOption, TopDown}
+import org.combinators.dp.TestExample
 import org.combinators.models.EnhancedModel
 
 import java.nio.file.{Path, Paths}

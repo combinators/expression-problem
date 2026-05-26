@@ -1,14 +1,21 @@
 package org.combinators.archive.cogen.topDown.oneSequence.tribonacci
 
-import org.combinators.dp.{GenerationOption, Utility}
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.paradigm.*
+import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.cogen.paradigm.control.Imperative
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.cogen.{AbstractSyntax, NameProvider, TypeRep}
-import org.combinators.models.Model
+import org.combinators.dp.TestExample
+import org.combinators.dp.original.Utility
+import org.combinators.models.{LiteralInt, UnitExpression}
 
-trait TribonacciObjectOrientedProvider extends Utility {
+/**
+ * One of the earliest implementations to generate a successful top-down Tribonacci with tests.
+ *
+ * Still uses the no-argument constructor while passing the argument into compute() method.
+ */
+trait TribonacciTopDownProvider extends Utility {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
@@ -122,66 +129,109 @@ trait TribonacciObjectOrientedProvider extends Utility {
     addClassToProject(makeClass, names.mangle("Tribonacci"))
   }
 
-  //  todo: make test cases
-  //  def makeTestCase(): Generator[MethodBodyContext, Seq[Expression]] = {
-  //    import paradigm.methodBodyCapabilities._
-  //    import eqls.equalityCapabilities._
-  //
-  //    for {
-  //      arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
-  //    } yield ()
-  //  }
+  // Specific examples hard coded for Int input and Int output
+  def makeTestCases(): Generator[MethodBodyContext, Seq[Expression]] = {
+    import eqls.equalityCapabilities.*
+    import paradigm.methodBodyCapabilities.*
+    import syntax._
 
-  def implement(model: Model, option: GenerationOption): Generator[ProjectContext, Unit] = {
-//
-//    var isTopDown = false
-//
-//    option match {
-//      case td: TopDown =>
-//        memo = td.memo
-//        isTopDown = true
-//      case _: BottomUp =>
-//        isTopDown = false
-//    }
-//
-//    for {
-//      _ <- if (isTopDown) {
-//        make_top_down(model)
-//      } else {
-//        make_bottom_up(model)
-//      }
-//    } yield ()
+    // 0, 1, 1, 2, 4, 7, 13, 24, ...
+    //
+    // 0  1  2  3  4  5  6   7
+    val tests = Seq(
+      new TestExample("trib0", new LiteralInt(0), new LiteralInt(0), new UnitExpression), // for now, leave solution as None
+      new TestExample("trib1", new LiteralInt(1), new LiteralInt(1), new UnitExpression),
+      new TestExample("trib2", new LiteralInt(2), new LiteralInt(1), new UnitExpression),
+      new TestExample("trib7", new LiteralInt(3), new LiteralInt(2), new UnitExpression),
+      new TestExample("trib20", new LiteralInt(4), new LiteralInt(4), new UnitExpression),
+      new TestExample("trib40", new LiteralInt(5), new LiteralInt(7), new UnitExpression)
+    )
+
+    for {
+      assert_statements <- forEach(tests) { example =>
+
+        val input_value = example.inputType match {
+          case lt: LiteralInt => lt.literal
+          case _ => ??? // error in all other circumstances
+        }
+
+        val expected_value = example.answer match {
+          case lit: LiteralInt => lit.literal
+          case _ => ???
+        }
+
+        for {
+          fibType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle("Tribonacci"))
+          n_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, input_value)
+          sol <- ooParadigm.methodBodyCapabilities.instantiateObject(fibType, Seq.empty)
+          computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, computeName)
+
+          intType <- toTargetLanguageType(TypeRep.Int)
+          fibn_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, expected_value)
+          fib_actual <- apply(computeMethod, Seq(n_value))
+          asserteq_fib <- asserts.assertionCapabilities.assertEquals(intType, fib_actual, fibn_value)
+
+        } yield asserteq_fib
+      }
+    } yield assert_statements
+  }
+
+  def makeTestCase(clazzName:String): Generator[TestContext, Unit] = {
+    for {
+      _ <- paradigm.testCapabilities.addTestCase(makeTestCases(), names.mangle(clazzName))
+    } yield ()
+  }
+
+  def implement(): Generator[ProjectContext, Unit] = {
+    //
+    //    var isTopDown = false
+    //
+    //    option match {
+    //      case td: TopDown =>
+    //        memo = td.memo
+    //        isTopDown = true
+    //      case _: BottomUp =>
+    //        isTopDown = false
+    //    }
+    //
+    //    for {
+    //      _ <- if (isTopDown) {
+    //        make_top_down(model)
+    //      } else {
+    //        make_bottom_up(model)
+    //      }
+    //    } yield ()
 
     for {
       _ <- makeSimpleDP()
-      //      _ <- paradigm.projectCapabilities.addCompilationUnit(
-      //        paradigm.compilationUnitCapabilities.addTestSuite(testName, makeTestCase("DP"))
-      //      )
+            _ <- paradigm.projectCapabilities.addCompilationUnit(
+              paradigm.compilationUnitCapabilities.addTestSuite(testName, makeTestCase("DP"))
+            )
     } yield None
   }
 }
 
-object TribonacciObjectOrientedProvider {
-  type WithParadigm[P <: AnyParadigm] = TribonacciObjectOrientedProvider {val paradigm: P}
+object TribonacciTopDownProvider {
+  type WithParadigm[P <: AnyParadigm] = TribonacciTopDownProvider {val paradigm: P}
   type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 
   def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
-           (base: P)
-           (nameProvider: NameProvider[base.syntax.Name],
-            imp: Imperative.WithBase[base.MethodBodyContext, base.type],
-            ffiArithmetic: Arithmetic.WithBase[base.MethodBodyContext, base.type, Double],
-            ffiRealArithmetic: RealArithmetic.WithBase[base.MethodBodyContext, base.type, Double],
-            con: Console.WithBase[base.MethodBodyContext, base.type],
-            arr: Arrays.WithBase[base.MethodBodyContext, base.type],
-            assertsIn: Assertions.WithBase[base.MethodBodyContext, base.type],
-            stringsIn: Strings.WithBase[base.MethodBodyContext, base.type],
-            eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type],
-            oo: ObjectOriented.WithBase[base.type],
-            parametricPolymorphism: ParametricPolymorphism.WithBase[base.type],
-            booleansIn: Booleans.WithBase[base.MethodBodyContext, base.type]
-           )
-           (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): TribonacciObjectOrientedProvider.WithParadigm[base.type] =
-    new TribonacciObjectOrientedProvider {
+  (base: P)
+  (nameProvider: NameProvider[base.syntax.Name],
+   imp: Imperative.WithBase[base.MethodBodyContext, base.type],
+   ffiArithmetic: Arithmetic.WithBase[base.MethodBodyContext, base.type, Double],
+   ffiRealArithmetic: RealArithmetic.WithBase[base.MethodBodyContext, base.type, Double],
+   con: Console.WithBase[base.MethodBodyContext, base.type],
+   arr: Arrays.WithBase[base.MethodBodyContext, base.type],
+   assertsIn: Assertions.WithBase[base.MethodBodyContext, base.type],
+   stringsIn: Strings.WithBase[base.MethodBodyContext, base.type],
+   eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type],
+   oo: ObjectOriented.WithBase[base.type],
+   parametricPolymorphism: ParametricPolymorphism.WithBase[base.type],
+   booleansIn: Booleans.WithBase[base.MethodBodyContext, base.type]
+  )
+  (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): TribonacciTopDownProvider.WithParadigm[base.type] =
+    new TribonacciTopDownProvider {
       override val paradigm: base.type = base
       val impParadigm: imp.type = imp
       val arithmetic: ffiArithmetic.type = ffiArithmetic

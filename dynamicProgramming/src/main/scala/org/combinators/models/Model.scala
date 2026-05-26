@@ -25,8 +25,6 @@ case class StringArrayType() extends ArrayType(StringType())
 
 class Argument (val argName:String, val argType:ArgumentType)
 
-class Model(val problem:String, val bounds: List[ArgExpression], val cases: List[(Option[Expression], Expression)], val retrieveLabel: String = "take sub-solution")
-
 /**
  * For MatrixChain Multiplication, whether top-down or bottom up, the key formulation is:
  *

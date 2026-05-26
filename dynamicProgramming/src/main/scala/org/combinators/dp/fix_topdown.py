@@ -1,5 +1,5 @@
 """
-I got the following script from gpt using this prompt:
+I got the following script from chatgpt using this prompt:
 
 'can you give me a python script that adds "import java.util.*" to the beginning of all
 Java files in a subdirectory, paying careful attention to do so after the "package" declaration.'

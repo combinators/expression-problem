@@ -8,7 +8,11 @@ import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Boole
 import org.combinators.cogen.paradigm.{ AnyParadigm, ObjectOriented}
 import org.combinators.cogen.NameProvider
 
-/** Provider for House Robber DP solution in OO style. */
+/**
+ * One of the earliest implementations to attempt to solve DeleteAndEarn.
+ *
+ * Contains code to generate BubbleSort (though doesn't compile)
+ */
 trait DeleteAndEarnObjectOrientedProvider {
   val paradigm: AnyParadigm
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
@@ -105,7 +109,7 @@ trait DeleteAndEarnObjectOrientedProvider {
       (namen,tpen,arr) = args.head
       intType <- toTargetLanguageType(TypeRep.Int)
       booleanType <- toTargetLanguageType(TypeRep.Boolean)
-      size <- array.arrayCapabilities.length(arr, Seq(zero))
+      size <- array.arrayCapabilities.length(arr, Seq.empty)
 
       swapped <- impParadigm.imperativeCapabilities.declareVar(names.mangle("swapped"), booleanType, Some(boo_true))
       jVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle("j"), intType, Some(zero))
@@ -177,7 +181,7 @@ trait DeleteAndEarnObjectOrientedProvider {
       intType <- toTargetLanguageType(TypeRep.Int)
       (names1, tpes1, arr) = args.head
       (names2, tpes2, index) = args.tail.head
-      arrSize <- array.arrayCapabilities.length(arr, Seq(zero))
+      arrSize <- array.arrayCapabilities.length(arr, Seq.empty)
       func <- find_method_recursive(names.mangle("helper"))
 
       index_1 <- arithmetic.arithmeticCapabilities.add(index, one)

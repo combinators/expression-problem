@@ -1,15 +1,18 @@
 package org.combinators.archive.cogen.bottomUp.oneSequence.maxsubarray
 
-import org.combinators.dp.{TestExample, Utility}
+import org.combinators.dp.TestExample
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.paradigm.control.Imperative
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.cogen.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.cogen.{AbstractSyntax, NameProvider, TypeRep}
+import org.combinators.dp.original.Utility
 import org.combinators.models.{LiteralArray, LiteralInt}
 
-/** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
- * in a variety of contexts. This trait provides that capability
+/**
+ * One of the earliest implementations to generate a successful bottom-up implementation of MaxSubArray
+ *
+ * Successfully used "new_full_set_max" helper method which generated code to compute maximum inside while loop.
  */
 trait MaxSubarrayObjectOrientedProvider extends Utility {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
@@ -69,7 +72,8 @@ trait MaxSubarrayObjectOrientedProvider extends Utility {
       zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
 
       (namen,tpen,nums) = args.head
-      
+
+      // manually create variables 'c', 'm', 'i' to use
       currentName <- freshName(names.mangle("c"))
       numsZ <- array.arrayCapabilities.get(nums, Seq(zero))
       currentVar <- impParadigm.imperativeCapabilities.declareVar(currentName, intType, Some(numsZ))
@@ -105,7 +109,7 @@ trait MaxSubarrayObjectOrientedProvider extends Utility {
 
     } yield Some(maxVar)
   }
-/**
+/** ACTUAL JAVA IMPLEMENTATION AS CODED MANUALLY. USE AS REFERENCE
   class MaxSubarray {
     public int solution(int[] nums) {
 

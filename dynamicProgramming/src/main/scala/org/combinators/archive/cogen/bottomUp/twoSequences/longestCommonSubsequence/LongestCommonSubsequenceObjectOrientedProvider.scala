@@ -9,6 +9,11 @@ import org.combinators.cogen.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.cogen.{AbstractSyntax, Command, NameProvider, TypeRep}
 import org.combinators.models._
 
+/**
+ * One of the earliest attempts to generate bottom-up implementation of Longest Common Subsequence
+ *
+ * Code generates doesn't work, since the "make_solution" doesn't accurately generate nested loops properly.
+ */
 trait LongestCommonSubsequenceObjectOrientedProvider extends TwoSequencesUtility {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val names: NameProvider[paradigm.syntax.Name]
@@ -77,6 +82,7 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends TwoSequencesUtility
 
     for {
       stringType <- toTargetLanguageType(TypeRep.String)
+      charType <- toTargetLanguageType(TypeRep.Char)
       intType <- toTargetLanguageType(TypeRep.Int)
       array2dType <- toTargetLanguageType(TypeRep.Array(TypeRep.Array(TypeRep.Int)))
       one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
@@ -118,7 +124,7 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends TwoSequencesUtility
       s1_charAt_r <- char_at(s1, r)
       s2_charAt_c <- char_at(s2, c)
 
-      optimization_condition <- eqls.equalityCapabilities.areEqual(stringType, s1_charAt_r, s2_charAt_c)
+      optimization_condition <- eqls.equalityCapabilities.areEqual(charType, s1_charAt_r, s2_charAt_c)
       optimization_body <- impParadigm.imperativeCapabilities.ifThenElse(
         optimization_condition,
         for {
@@ -212,7 +218,7 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends TwoSequencesUtility
     } yield ()
   }
 
-  def implement(model:Model): Generator[ProjectContext, Unit] = {
+  def implement(): Generator[ProjectContext, Unit] = {
 
     for {
       _ <- makeSimpleDP()

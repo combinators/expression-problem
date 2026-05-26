@@ -1,4 +1,4 @@
-package org.combinators.archive.unenhancedModels.boilerplate.unenhancedNwsa
+package org.combinators.archive.unenhancedModels.boilerplate.NWSA
 
 /**
  * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"
@@ -10,12 +10,12 @@ import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
 import org.combinators.archive.unenhancedModels.models.twoSequences.NeedlemanWunschSequenceAlignmentModel
-import org.combinators.dp.{BottomUp, GenerationOption, TopDown}
 import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
 import FileWithPathPersistable._
+import org.combinators.dp.original.{BottomUp, GenerationOption, TopDown}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, Syntax, Unboxed}
-import org.combinators.models.Model
+import org.combinators.models.original.Model
 
 import java.nio.file.{Path, Paths}
 
@@ -75,7 +75,7 @@ class NWSAMainJava {
 }
 
 object NWSADirectToDiskMain extends IOApp {
-  val targetDirectory:Path = Paths.get("target", "nwsa")
+  val targetDirectory:Path = Paths.get("target", "archive", "nwsa")
 
   def run(args: List[String]): IO[ExitCode] = {
 

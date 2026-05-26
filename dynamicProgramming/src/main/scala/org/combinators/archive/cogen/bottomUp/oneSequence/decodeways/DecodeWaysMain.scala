@@ -1,28 +1,30 @@
 package org.combinators.archive.cogen.bottomUp.oneSequence.decodeways
 
 /**
- * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"
+ * An early implementation with unenhanced model that never was completed.
  *
- * Creates output files in target/dp
+ * Generated DP solution does not work and test cases remain connected to Fibonacci.
+ *
+ * val targetDirectory = Paths.get("target", "decodeways")
  */
 
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
-import org.combinators.dp.{BottomUp, GenerationOption, TopDown}
 import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
 import FileWithPathPersistable._
+import org.combinators.dp.original.{BottomUp, GenerationOption, TopDown}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
-import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
+import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, Unboxed, Syntax}
 import org.combinators.models._
-
+import org.combinators.models.original.Model
 import java.nio.file.{Path, Paths}
 
 /**
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
 class DPMainJava {
-  val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("dp"))))
+  val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = Unboxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("dp"))))
 
   val dpApproach = DecodeWaysProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.realDoublesInMethod, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.stringsInMethod, generator.equalityInMethod, generator.ooParadigm, generator.parametricPolymorphism, generator.booleansInMethod)(generator.generics)
 
@@ -124,6 +126,7 @@ class Solution {
 
  */
 
+@deprecated(message = "Generated code in Java does not compile.")
 object DPDirectToDiskMain extends IOApp {
   val targetDirectory:Path = Paths.get("target", "decodeways")
 

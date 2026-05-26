@@ -1,36 +1,38 @@
-package org.combinators.archive.unenhancedModels.boilerplate.unenhancedUncrossedLines
+package org.combinators.archive.unenhancedModels.boilerplate.coinChange
 
 /**
- * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"
+ * Partially working implementation of CoinChangeProvider.
  *
- * Creates output files in target/dp
+ * 1. Only generates a single test case since the amount cannot be part of test case
+ * 2. Generates code that must have "fix_topdown.py" applied to it, to ensure code has import java.util.*
+ * 3. Even then, memo is not generated as a field.
+ *
+ * Even so, a good start.
  */
-
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
-import org.combinators.archive.unenhancedModels.models.twoSequences.UncrossedLinesModel
-import org.combinators.dp.{BottomUp, GenerationOption, TopDown}
+import org.combinators.archive.unenhancedModels.models.knapsack.{CoinChangeModel, KnapsackModel}
 import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
 import FileWithPathPersistable._
+import org.combinators.dp.original.{BottomUp, GenerationOption, TopDown}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, Syntax, Unboxed}
-import org.combinators.models.Model
+import org.combinators.models.original.Model
 
 import java.nio.file.{Path, Paths}
-import scala.collection.Seq
 
 /**
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
-class UnenhancedUncrossedLinesMainJava {
+class CoinChangeMainJava {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = Unboxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("dp"))))
 
-  val dpApproach = UncrossedLinesProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.realDoublesInMethod, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.stringsInMethod, generator.equalityInMethod, generator.ooParadigm, generator.parametricPolymorphism, generator.booleansInMethod)(generator.generics)
+  val dpApproach = CoinChangeProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.realDoublesInMethod, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.stringsInMethod, generator.equalityInMethod, generator.ooParadigm, generator.parametricPolymorphism, generator.booleansInMethod)(generator.generics)
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
-  def filesToGenerate(model:Model, option:GenerationOption):Seq[FileWithPath] = {
+  def filesToGenerate(model: Model, option: GenerationOption): Seq[FileWithPath] = {
     println(s"Generating ${model.problem}...")
     generator.paradigm.runGenerator {
       for {
@@ -38,7 +40,7 @@ class UnenhancedUncrossedLinesMainJava {
         _ <- generator.realDoublesInMethod.enable()
         _ <- generator.intsInMethod.enable()
         _ <- generator.stringsInMethod.enable()
-        _ <- generator.listsInMethod.enable()     // should be array, but this still needs to be added as an FFI
+        _ <- generator.listsInMethod.enable() // should be array, but this still needs to be added as an FFI
         _ <- generator.consoleInMethod.enable()
         _ <- generator.arraysInMethod.enable()
         _ <- generator.equalityInMethod.enable()
@@ -52,17 +54,18 @@ class UnenhancedUncrossedLinesMainJava {
   }
 
   def directToDiskTransaction(targetDirectory: Path, model:Model, option:GenerationOption): IO[Unit] = {
-    IO {
-      println("Computing Files...")
-      val computed = filesToGenerate(model:Model, option:GenerationOption)
+
+     IO {
+      print("Computing Files...")
+      val computed = filesToGenerate(model, option)
       println("[OK]")
       if (targetDirectory.toFile.exists()) {
-        println(s"Cleaning Target Directory ($targetDirectory)...")
+        print(s"Cleaning Target Directory ($targetDirectory)...")
         FileUtils.deleteDirectory(targetDirectory.toFile)
         println("[OK]")
       }
-      println("Persisting Files...")
-      computed.foreach(file => persistable.persistOverwriting(targetDirectory, file))
+      print("Persisting Files...")
+       computed.foreach(file => persistable.persistOverwriting(targetDirectory, file))
       println("[OK]")
     }
   }
@@ -74,8 +77,8 @@ class UnenhancedUncrossedLinesMainJava {
   }
 }
 
-object ULDirectToDiskMain extends IOApp {
-  val targetDirectory:Path = Paths.get("target", "dp", "unenhancedUncrossedLines")
+object CoinChangeDirectToDiskMain extends IOApp {
+  val targetDirectory:Path = Paths.get("target", "dp", "coinChange")
 
   def run(args: List[String]): IO[ExitCode] = {
 
@@ -84,14 +87,13 @@ object ULDirectToDiskMain extends IOApp {
     val topDownWithMemo = TopDown(memo = true)
     val bottomUp        = BottomUp()
 
-    val UL = new UncrossedLinesModel().instantiate()
-
+    val CoinChange = new CoinChangeModel().instantiate()
     for {
       _ <- IO { print("Initializing Generator...") }
-      main <- IO { new UnenhancedUncrossedLinesMainJava() }
+      main <- IO { new CoinChangeMainJava() }
       _ <- IO { println("[OK]") }
 
-      result <- main.runDirectToDisc(targetDirectory, UL, bottomUp)   // bottom up not working for some reason....
+      result <- main.runDirectToDisc(targetDirectory, CoinChange, topDownWithMemo)
     } yield result
   }
 }

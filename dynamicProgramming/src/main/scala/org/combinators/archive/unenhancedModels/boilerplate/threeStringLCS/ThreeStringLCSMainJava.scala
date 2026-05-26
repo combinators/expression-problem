@@ -1,21 +1,19 @@
-package org.combinators.archive.unenhancedModels.boilerplate.unenhancedThreeStringLCS
+package org.combinators.archive.unenhancedModels.boilerplate.threeStringLCS
 
 /**
- * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"
- *
- * Creates output files in target/dp
+ * Includes first attempt to generate retrieve() method, but it won't compile. 
  */
 
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
 import org.combinators.archive.unenhancedModels.models.other.ThreeStringLCSModel
-import org.combinators.dp.{BottomUp, GenerationOption, TopDown}
 import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
 import FileWithPathPersistable._
+import org.combinators.dp.original.{BottomUp, GenerationOption, TopDown}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
-import org.combinators.models.Model
+import org.combinators.models.original.Model
 
 import java.nio.file.{Path, Paths}
 
@@ -73,7 +71,7 @@ class ThereStringLCSMainJava {
 }
 
 object TSLCSDirectToDiskMain extends IOApp {
-  val targetDirectory:Path = Paths.get("target", "dp", "tslcs")
+  val targetDirectory:Path = Paths.get("target", "archive", "tslcs")
 
   def run(args: List[String]): IO[ExitCode] = {
 

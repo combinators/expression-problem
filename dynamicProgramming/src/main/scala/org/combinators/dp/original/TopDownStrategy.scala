@@ -1,14 +1,13 @@
-package org.combinators.dp
+package org.combinators.dp.original
 
-import org.combinators.cogen.TypeRep
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.cogen.{Command, NameProvider}
-import org.combinators.cogen.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.cogen.paradigm.control.Imperative
-import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Equality, Strings}
-import org.combinators.models._
-
+import org.combinators.cogen.paradigm.ffi.*
+import org.combinators.cogen.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
+import org.combinators.cogen.{Command, NameProvider, TypeRep}
+import org.combinators.models.*
+import org.combinators.models.original.Model
 /**
  * Concepts necessary to realize top-down solutions
  */
@@ -29,9 +28,9 @@ trait TopDownStrategy extends Utility {
   val strings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val booleans: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
-  import paradigm._
-  import syntax._
-  import ooParadigm._
+  import ooParadigm.*
+  import paradigm.*
+  import syntax.*
 
   // Definition of the name of the helper method
   
@@ -45,7 +44,7 @@ trait TopDownStrategy extends Utility {
   def make_compute_method(model:Model): Generator[paradigm.MethodBodyContext, Option[Expression]]
 
   def create_key(): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
-    import paradigm.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities.*
     for {
       args <- getArguments()
 
@@ -64,7 +63,7 @@ trait TopDownStrategy extends Utility {
        }
    */
   def memo_helper(): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
-    import paradigm.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities.*
     for {
       // need to convert into a KEY method. MUST have at least one argument
       args <- getArguments()
@@ -102,8 +101,8 @@ trait TopDownStrategy extends Utility {
    * you can convert the subproblem arguments into an Integer using Cantor's pairing function.
    */
   def make_memo_type(keyType:TypeRep, valueType:TypeRep): Generator[ConstructorContext, Type] = {
-    import ooParadigm.constructorCapabilities._
-    import genericsParadigm.constructorCapabilities._
+    import genericsParadigm.constructorCapabilities.*
+    import ooParadigm.constructorCapabilities.*
 
     for {
       mapClass <- ooParadigm.constructorCapabilities.findClass(
@@ -122,7 +121,7 @@ trait TopDownStrategy extends Utility {
    * in a sequence of arguments, and auto-initializes all possible fields.
    */
   def createConstructor(useMemo:Boolean, args: Seq[(Name, Type)]): Generator[ConstructorContext, Unit] = {
-    import ooParadigm.constructorCapabilities._
+    import ooParadigm.constructorCapabilities.*
 
     for {
       _ <- setParameters(args)
@@ -146,11 +145,11 @@ trait TopDownStrategy extends Utility {
   }
 
   def make_top_down(useMemo:Boolean, model:Model): Generator[ProjectContext, Unit] = {
-    import ooParadigm.projectCapabilities._
+    import ooParadigm.projectCapabilities.*
 
     def makeMemo(keyType:TypeRep, valueType:TypeRep) : Generator[ClassContext, Unit] = {
-      import classCapabilities._
-      import genericsParadigm.classCapabilities._
+      import classCapabilities.*
+      import genericsParadigm.classCapabilities.*
 
       for {
         mapClass <- ooParadigm.classCapabilities.findClass(
@@ -172,7 +171,7 @@ trait TopDownStrategy extends Utility {
     }
 
     val makeClass: Generator[ClassContext, Unit] = {
-      import classCapabilities._
+      import classCapabilities.*
       for {
         intType <- toTargetLanguageType(TypeRep.Int)    // shouldn't be hard-coded: should be able to infer from model
 
@@ -215,7 +214,7 @@ trait TopDownStrategy extends Utility {
    * Necessary wrapper method that inserts a return (expr) statement from the given expression. Needed for top-down, non-memo
    */
   private def expand(exp: Expression): Generator[paradigm.MethodBodyContext, Unit] = {
-    import paradigm.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities.*
     for {
       av <- impParadigm.imperativeCapabilities.returnStmt(exp)
       _ <- addBlockDefinitions(Seq(av))
@@ -236,8 +235,8 @@ trait TopDownStrategy extends Utility {
    * @return
    */
   def process_inner_helper(useMemo:Boolean, model:Model): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
-    import paradigm.methodBodyCapabilities._
-    import AnyParadigm.syntax._
+    import AnyParadigm.syntax.*
+    import paradigm.methodBodyCapabilities.*
 
     val real_cases = model.cases.filter(p => p._1.isDefined) // MUST be at least one.
     val first_case = real_cases.head
@@ -284,7 +283,7 @@ trait TopDownStrategy extends Utility {
   }
 
   def outer_helper(useMemo: Boolean, model:Model): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
-    import paradigm.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities.*
     for {
       _ <- make_helper_method_signature(model.bounds)
       intType <- toTargetLanguageType(TypeRep.Int)

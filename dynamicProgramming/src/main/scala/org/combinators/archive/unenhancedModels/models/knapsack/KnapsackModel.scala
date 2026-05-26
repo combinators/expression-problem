@@ -1,6 +1,7 @@
 package org.combinators.archive.unenhancedModels.models.knapsack
 
 import org.combinators.models._
+import org.combinators.models.original.Model
 
 class KnapsackModel {
   def instantiate(): Model = {

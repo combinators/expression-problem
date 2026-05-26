@@ -1,36 +1,37 @@
 package org.combinators.archive.cogen.topDown.oneSequence.tribonacci
 
 /**
- * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"
+ * One of the earliest implementations to generate a successful top-down implementation of Tribonacci with test cases.
  *
- * Creates output files in target/dp
+ * This showed the potential of writing pure CoGen code to handle all generators, though one can see how quickly this
+ * becomes inefficient: it is hard to imagine reusable blocks of code that could be reused across different DP solutions.
+ *
+ * val targetDirectory = Paths.get("target", "topDown", "oneSequence", "tribonacci")
  */
-
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
-import org.combinators.archive.cogen.bottomUp.oneSequence.tribonacci.TribProvider
-import org.combinators.archive.unenhancedModels.models.oneSequence.TribonacciModel
-import org.combinators.dp.{BottomUp, GenerationOption}
 import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
-import FileWithPathPersistable._
+import FileWithPathPersistable.*
 import org.combinators.ep.language.java.paradigm.ObjectOriented
-import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
-import org.combinators.models.Model
+import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, Syntax, Unboxed}
 
 import java.nio.file.{Path, Paths}
 
 /**
- * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
+ * One of the earliest implementations to generate a successful top-down Tribonacci WITH test cases.
+ *
+ * This showed the potential of writing pure CoGen code to handle all generators, though one can see how quickly this
+ * becomes inefficient: it is hard to imagine reusable blocks of code that could be reused across different DP solutions.
  */
 class TribonacciMainJava {
-  val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("world"))))
+  val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = Unboxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("world"))))
 
-  val dpApproach = TribProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.realDoublesInMethod, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.stringsInMethod, generator.equalityInMethod, generator.ooParadigm, generator.parametricPolymorphism, generator.booleansInMethod)(generator.generics)
+  val dpApproach = TribonacciTopDownProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.realDoublesInMethod, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.stringsInMethod, generator.equalityInMethod, generator.ooParadigm, generator.parametricPolymorphism, generator.booleansInMethod)(generator.generics)
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
-  def directToDiskTransaction(targetDirectory: Path, model: Model, option: GenerationOption): IO[Unit] = {
+  def directToDiskTransaction(targetDirectory: Path): IO[Unit] = {
 
     val files =
       () => generator.paradigm.runGenerator {
@@ -46,7 +47,7 @@ class TribonacciMainJava {
           _ <- generator.assertionsInMethod.enable()
           _ <- generator.booleansInMethod.enable()
 
-          _ <- dpApproach.implement(model, option)
+          _ <- dpApproach.implement()
         } yield ()
       }
 
@@ -65,28 +66,23 @@ class TribonacciMainJava {
     }
   }
 
-  def runDirectToDisc(targetDirectory: Path, model: Model, option: GenerationOption): IO[ExitCode] = {
+  def runDirectToDisc(targetDirectory: Path): IO[ExitCode] = {
     for {
-      _ <- directToDiskTransaction(targetDirectory, model, option)
+      _ <- directToDiskTransaction(targetDirectory)
     } yield ExitCode.Success
   }
 }
 
 object TribonacciDirectToDiskMain extends IOApp {
-  val targetDirectory = Paths.get("target", "topDown", "oneSequence", "tribonacci")
+  val targetDirectory = Paths.get("target", "tribonacci")
 
   def run(args: List[String]): IO[ExitCode] = {
-
-    /* model */
-
-    val tribonacciModel: Model = new TribonacciModel().instantiate()
-    val bottomUp = new BottomUp()
 
     for {
       _ <- IO { print("Initializing Generator...") }
       main <- IO { new TribonacciMainJava() }
       _ <- IO { println("[OK]") }
-      result <- main.runDirectToDisc(targetDirectory, tribonacciModel, bottomUp)
+      result <- main.runDirectToDisc(targetDirectory)
     } yield result
   }
 }

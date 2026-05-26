@@ -1,6 +1,7 @@
 package org.combinators.archive.unenhancedModels.models.twoSequences
 
 import org.combinators.models._
+import org.combinators.models.original.Model
 
 class MinimumEditDistanceModel {
   def instantiate(): Model = {

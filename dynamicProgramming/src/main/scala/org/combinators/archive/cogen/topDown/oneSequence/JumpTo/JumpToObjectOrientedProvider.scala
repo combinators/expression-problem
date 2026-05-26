@@ -7,7 +7,6 @@ import org.combinators.cogen.paradigm.ffi.Booleans.WithBase
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality}
 import org.combinators.cogen.paradigm.{AnyParadigm, ObjectOriented}
 
-/** Provider for House Robber DP solution in OO style. */
 trait JumpToObjectOrientedProvider {
   val paradigm: AnyParadigm
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
@@ -94,7 +93,7 @@ trait JumpToObjectOrientedProvider {
       args <- getArguments()
       (namen,tpen,arr) = args.head
       intType <- toTargetLanguageType(TypeRep.Int)
-      size <- array.arrayCapabilities.length(arr, Seq(zero))  // new formulation
+      size <- array.arrayCapabilities.length(arr, Seq.empty)
 
       ansExpr <- impParadigm.imperativeCapabilities.declareVar(names.mangle("ans"), intType, Some(zero))
       iVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle("i"), intType, Some(zero))
@@ -155,7 +154,7 @@ trait JumpToObjectOrientedProvider {
       maxValue <- apply(retrieve_func, Seq(arr))
 
       ansExpr <- impParadigm.imperativeCapabilities.declareVar(names.mangle("ans"), intType, Some(zero))
-      arr_size <- array.arrayCapabilities.length(arr, Seq(zero))   // new formulation
+      arr_size <- array.arrayCapabilities.length(arr, Seq.empty)
       arrLength_1 <- arithmetic.arithmeticCapabilities.sub(arr_size, one)
 
       if_cond <- arithmetic.arithmeticCapabilities.lt(index, arrLength_1)

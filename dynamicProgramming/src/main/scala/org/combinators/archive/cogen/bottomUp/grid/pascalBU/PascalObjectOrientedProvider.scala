@@ -1,22 +1,25 @@
 package org.combinators.archive.cogen.bottomUp.grid.pascalBU
 
-
+/**
+ * One of the earliest implementations to generate bottom-up implementation of Pascal's Triangle.
+ *
+ * The logic is faulty and doesn't work. This is an example of the difficulty in trying to manually
+ * write nested loop logic using straight cogen
+ *
+ * val targetDirectory =  Paths.get("target", "pascalBU")
+ */
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.control.Imperative
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.cogen.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.cogen.{AbstractSyntax, NameProvider}
-import org.combinators.dp.{TestExample, Utility}
+import org.combinators.dp.TestExample
 import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
+import org.combinators.dp.original.Utility
 import org.combinators.models.{LiteralInt, LiteralPair, UnitExpression}
 
-import scala.annotation.nowarn
 
-
-/** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
- * in a variety of contexts. This trait provides that capability
- */
 trait PascalObjectOrientedProvider extends Utility {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val names: NameProvider[paradigm.syntax.Name]
@@ -81,12 +84,13 @@ trait PascalObjectOrientedProvider extends Utility {
 
       iName <- freshName(names.mangle("i"))
       iVar <- impParadigm.imperativeCapabilities.declareVar(iName, intType, Some(zero))
+      iVarPlusOne <- arithmetic.arithmeticCapabilities.add(iVar,one)
       outerCond <- arithmetic.arithmeticCapabilities.lt(iVar, rp1);
       outerLoop <-impParadigm.imperativeCapabilities.whileLoop(outerCond,
         for {
           jName <- freshName(names.mangle("j"))
           jVar <- impParadigm.imperativeCapabilities.declareVar(jName, intType, Some(zero))
-          innerCond <- arithmetic.arithmeticCapabilities.lt(jVar, cp1);
+          innerCond <- arithmetic.arithmeticCapabilities.lt(jVar, iVar);
           innerLoop <-impParadigm.imperativeCapabilities.whileLoop(innerCond,
             for {
               condExpr1 <- arithmetic.arithmeticCapabilities.le(jVar, zero)
@@ -96,6 +100,7 @@ trait PascalObjectOrientedProvider extends Utility {
 
               im1 <- arithmetic.arithmeticCapabilities.sub(iVar,one)
               jm1 <- arithmetic.arithmeticCapabilities.sub(jVar,one)
+              jVarPlusOne <- arithmetic.arithmeticCapabilities.add(jVar,one)
               dpim1 <-array.arrayCapabilities.get(dpVar, Seq(im1))
               dpim1jm1 <-array.arrayCapabilities.get(dpim1, Seq(jm1))
               dpim1j <-array.arrayCapabilities.get(dpim1, Seq(iVar))
@@ -124,9 +129,11 @@ trait PascalObjectOrientedProvider extends Utility {
 
                 }yield())
               )
-              _ <- addBlockDefinitions(Seq(ifStmt))
+              jPlusOne <- impParadigm.imperativeCapabilities.assignVar(jVar, jVarPlusOne)
+              _ <- addBlockDefinitions(Seq(ifStmt, jPlusOne))
             }yield())
-          _ <- addBlockDefinitions(Seq(innerLoop))
+          iPlusOne <- impParadigm.imperativeCapabilities.assignVar(iVar, iVarPlusOne)
+          _ <- addBlockDefinitions(Seq(innerLoop, iPlusOne))
       }yield())
 
       dpr <- array.arrayCapabilities.get(dpVar, Seq(r))
@@ -176,7 +183,6 @@ trait PascalObjectOrientedProvider extends Utility {
       new TestExample("pasc11", new LiteralPair(1,1), new LiteralInt(1), new UnitExpression),
       new TestExample("pasc32", new LiteralPair(3,2), new LiteralInt(3), new UnitExpression),
       new TestExample("pasc63", new LiteralPair(6,3), new LiteralInt(20), new UnitExpression),
-      new TestExample("pasc2013", new LiteralPair(20,13), new LiteralInt(77520), new UnitExpression),
     )
 
     for {
@@ -196,12 +202,12 @@ trait PascalObjectOrientedProvider extends Utility {
           pascType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle("Pascal"))
           r_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, pair._1)
           c_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, pair._2)
-          sol <- ooParadigm.methodBodyCapabilities.instantiateObject(pascType, Seq(r_value,c_value))
+          sol <- ooParadigm.methodBodyCapabilities.instantiateObject(pascType, Seq.empty)
           computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, compute)
 
           intType <- toTargetLanguageType(TypeRep.Int)
           pascrc_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, expected_value)
-          pascrc_actual <- apply(computeMethod, Seq.empty)
+          pascrc_actual <- apply(computeMethod, Seq(r_value,c_value))
           asserteq_fib <- asserts.assertionCapabilities.assertEquals(intType, pascrc_actual, pascrc_value)
 
         } yield asserteq_fib

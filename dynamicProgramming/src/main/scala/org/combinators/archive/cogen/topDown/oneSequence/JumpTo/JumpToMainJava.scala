@@ -1,11 +1,10 @@
 package org.combinators.archive.cogen.topDown.oneSequence.JumpTo
 
 /**
- * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"
+ * One of the earliest implementations to solve JumpTo but NO TEST CASES.
  *
- * Creates output files in target/dp
+ * val targetDirectory = Paths.get("target", "JumpTo")
  */
-
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
@@ -19,7 +18,7 @@ import java.nio.file.{Path, Paths}
 /**
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
-class HouseRobberMainJava {
+class JumpToMainJava {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("JumpTo"))))
   val jtApproach = JumpToObjectOrientedProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.ooParadigm, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.equalityInMethod, generator.booleansInMethod)
 
@@ -65,13 +64,13 @@ class HouseRobberMainJava {
   }
 }
 
-object HouseRobberDirectToDiskMain extends IOApp {
+object JumpToDiskMain extends IOApp {
   val targetDirectory = Paths.get("target", "JumpTo")
 
   def run(args: List[String]): IO[ExitCode] = {
     for {
       _ <- IO { print("Initializing Generator...") }
-      main <- IO { new HouseRobberMainJava() }
+      main <- IO { new JumpToMainJava() }
       _ <- IO { println("[OK]") }
       result <- main.runDirectToDisc(targetDirectory)
     } yield result

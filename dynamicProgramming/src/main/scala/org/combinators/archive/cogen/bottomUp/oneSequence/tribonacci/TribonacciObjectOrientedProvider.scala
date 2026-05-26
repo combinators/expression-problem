@@ -5,8 +5,16 @@ import org.combinators.cogen.paradigm.control.Imperative
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.cogen.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.cogen.{AbstractSyntax, Command, NameProvider, TypeRep}
-import org.combinators.dp.Utility
+import org.combinators.dp.original.Utility
 
+/**
+ * One of the earliest implementations to generate a successful bottom-up implementation of Tribonacci with test cases.
+ *
+ * This showed the potential of writing pure CoGen code to handle all generators, though one can see how quickly this
+ * becomes inefficient: it is hard to imagine reusable blocks of code that could be reused across different DP solutions.
+ *
+ * val targetDirectory = Paths.get("target", "bottomUp", "oneSequence", "tribonacci")
+ */
 trait TribonacciObjectOrientedProvider extends Utility {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val names: NameProvider[paradigm.syntax.Name]

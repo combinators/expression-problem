@@ -9,12 +9,13 @@ package org.combinators.archive.unenhancedModels.boilerplate.fibonacci
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
-import org.combinators.dp.{BottomUp, GenerationOption, TopDown}
 import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
 import FileWithPathPersistable._
+import org.combinators.dp.original.{BottomUp, GenerationOption, TopDown}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
 import org.combinators.models._
+import org.combinators.models.original.Model
 
 import java.nio.file.{Path, Paths}
 

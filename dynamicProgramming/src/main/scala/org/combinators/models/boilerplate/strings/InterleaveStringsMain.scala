@@ -6,7 +6,8 @@ package org.combinators.models.boilerplate.strings
  * Creates output files in target/dp
  */
 import org.combinators.dp.enhanced.{EnhancedDPMainJava, EnhancedDPMainScala}
-import org.combinators.dp.{BottomUp, TestExample, TopDown}
+import org.combinators.dp.original.{BottomUp, TopDown}
+import org.combinators.dp.TestExample
 import org.combinators.models.*
 import org.combinators.models.enhancedModels.strings.InterleaveStrings
 

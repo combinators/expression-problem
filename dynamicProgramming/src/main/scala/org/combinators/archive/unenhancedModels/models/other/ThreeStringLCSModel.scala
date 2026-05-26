@@ -1,6 +1,7 @@
 package org.combinators.archive.unenhancedModels.models.other
 
 import org.combinators.models._
+import org.combinators.models.original.Model
 
 class ThreeStringLCSModel {
   def instantiate(): Model = {

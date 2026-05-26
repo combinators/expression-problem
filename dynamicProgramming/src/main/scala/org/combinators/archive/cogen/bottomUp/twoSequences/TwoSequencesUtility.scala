@@ -1,9 +1,14 @@
 package org.combinators.archive.cogen.bottomUp.twoSequences
 
-import org.combinators.dp.Utility
 import org.combinators.cogen.TypeRep
 import org.combinators.cogen.Command.Generator
+import org.combinators.dp.original.Utility
 
+/**
+ * Helper methods to deal with DP problems that involve two sequences.
+ * 
+ * This was one of the earliest attempts to create helper methods to generate individual elements of a DP solution.
+ */
 trait TwoSequencesUtility extends Utility {
   import paradigm._
   import syntax._

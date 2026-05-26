@@ -1,20 +1,20 @@
 package org.combinators.archive.cogen.bottomUp.oneSequence.tribonacci
 
 /**
- * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"
+ * One of the earliest implementations to generate a successful bottom-up implementation of Tribonacci BUT no test cases.
  *
- * Creates output files in target/dp
+ * This showed the potential of writing pure CoGen code to handle all generators, though one can see how quickly this
+ * becomes inefficient: it is hard to imagine reusable blocks of code that could be reused across different DP solutions.
+ *
+ * val targetDirectory = Paths.get("target", "bottomUp", "oneSequence", "tribonacci")
  */
-
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
-import org.combinators.models._
-import org.combinators.models.enhancedModels._
 import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
 import FileWithPathPersistable._
 import org.combinators.ep.language.java.paradigm.ObjectOriented
-import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
+import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, Unboxed, Syntax}
 
 import java.nio.file.{Path, Paths}
 
@@ -22,7 +22,7 @@ import java.nio.file.{Path, Paths}
  * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
  */
 class TribonacciMainJava {
-  val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("world"))))
+  val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = Unboxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("world"))))
 
   val dpApproach = TribonacciObjectOrientedProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.realDoublesInMethod, generator.ooParadigm, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.stringsInMethod, generator.equalityInMethod, generator.booleansInMethod)
 
@@ -71,7 +71,7 @@ class TribonacciMainJava {
 }
 
 object TribonacciDirectToDiskMain extends IOApp {
-  val targetDirectory = Paths.get("target", "bottomUp", "oneSequence", "tribonacci")
+  val targetDirectory:Path = Paths.get("target", "bottomUp", "oneSequence", "tribonacci")
 
   def run(args: List[String]): IO[ExitCode] = {
     for {

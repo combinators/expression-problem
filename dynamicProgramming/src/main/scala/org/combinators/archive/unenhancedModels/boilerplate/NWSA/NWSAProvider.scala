@@ -1,18 +1,19 @@
-package org.combinators.archive.cogen.bottomUp.oneSequence.JumpTo
+package org.combinators.archive.unenhancedModels.boilerplate.NWSA
 
-import org.combinators.dp.{DPObjectOrientedProvider, TestExample}
+import org.combinators.dp.TestExample
 import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.cogen.paradigm.control.Imperative
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
-import org.combinators.cogen.paradigm.{AnyParadigm, FindClass, Generics, ObjectOriented, ParametricPolymorphism}
-import org.combinators.cogen.{AbstractSyntax, Command, NameProvider, TypeRep, Understands}
-import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.models.{AdditionExpression, ArgumentType, EqualExpression, FunctionExpression, IteratorExpression, LiteralInt, LiteralString, Model, SubproblemExpression, SubtractionExpression, UnitExpression}
+import org.combinators.cogen.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
+import org.combinators.cogen.{AbstractSyntax, NameProvider, TypeRep}
+import org.combinators.dp.original.DPObjectOrientedProvider
+import org.combinators.models.{LiteralInt, LiteralString, LiteralStringPair}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
  */
-trait JumpToMainProvider extends DPObjectOrientedProvider {
+trait NWSAProvider extends DPObjectOrientedProvider {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
@@ -30,24 +31,22 @@ trait JumpToMainProvider extends DPObjectOrientedProvider {
 
   import paradigm._
   import syntax._
-  import ooParadigm._
 
   // Specific examples hard coded for Int input and Int output
-  def makeTestsDecodeWays(implementation:String, tests: Seq[TestExample] = Seq.empty): Generator[MethodBodyContext, Seq[Expression]] = {
-    import paradigm.methodBodyCapabilities._
+  def makeTests(implementation:String, tests: Seq[TestExample] = Seq.empty): Generator[MethodBodyContext, Seq[Expression]] = {
     import eqls.equalityCapabilities._
+    import paradigm.methodBodyCapabilities._
 
     // NOTE: these tests are in the wrong place, since we defer test gen to later
     val tests = Seq(
-     // not sure what to write here, yet...
-      new TestExample("replaceme", new LiteralInt(0), new LiteralInt(0), new UnitExpression), // for now, leave solution as None
+      new TestExample("fib0", new LiteralStringPair("ACTG", "CGATC"), new LiteralInt(2), new LiteralString("AC")) // for now, leave solution as None
     )
 
     for {
       assert_statements <- forEach(tests) { example =>
 
         val input_value = example.inputType match {
-          case lt: LiteralInt => lt.literal
+          case lt: LiteralStringPair => (lt.string1, lt.string2)
           case _ => ??? // error in all other circumstances
         }
 
@@ -58,8 +57,10 @@ trait JumpToMainProvider extends DPObjectOrientedProvider {
 
         for {
           fibType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle(implementation))
-          n_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, input_value)
-          sol <- ooParadigm.methodBodyCapabilities.instantiateObject(fibType, Seq(n_value))
+          s1_value <- paradigm.methodBodyCapabilities.reify(TypeRep.String, input_value._1)
+          s2_value <- paradigm.methodBodyCapabilities.reify(TypeRep.String, input_value._2)
+
+          sol <- ooParadigm.methodBodyCapabilities.instantiateObject(fibType, Seq(s1_value, s2_value))
           computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, computeName)
 
           intType <- toTargetLanguageType(TypeRep.Int)
@@ -75,32 +76,32 @@ trait JumpToMainProvider extends DPObjectOrientedProvider {
 
   override def makeTestCase(implementation:String): Generator[TestContext, Unit] = {
     for {
-      _ <- paradigm.testCapabilities.addTestCase(makeTestsDecodeWays(implementation), names.mangle("DP"))
+      _ <- paradigm.testCapabilities.addTestCase(makeTests(implementation), names.mangle("DP"))
     } yield ()
   }
 }
 
-object JumpToMainProvider {
+object NWSAProvider {
   type WithParadigm[P <: AnyParadigm] = DPObjectOrientedProvider { val paradigm: P }
   type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 
   def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
-  (base: P)
-  (nameProvider: NameProvider[base.syntax.Name],
-   imp: Imperative.WithBase[base.MethodBodyContext, base.type],
-   ffiArithmetic: Arithmetic.WithBase[base.MethodBodyContext, base.type, Double],
-   ffiRealArithmetic: RealArithmetic.WithBase[base.MethodBodyContext, base.type, Double],
-   con: Console.WithBase[base.MethodBodyContext, base.type],
-   arr: Arrays.WithBase[base.MethodBodyContext, base.type],
-   assertsIn: Assertions.WithBase[base.MethodBodyContext, base.type],
-   stringsIn: Strings.WithBase[base.MethodBodyContext, base.type],
-   eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type],
-   oo: ObjectOriented.WithBase[base.type],
-   parametricPolymorphism: ParametricPolymorphism.WithBase[base.type],
-   booleansIn: Booleans.WithBase[base.MethodBodyContext, base.type]
-  )
-  (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): JumpToMainProvider.WithParadigm[base.type] =
-    new JumpToMainProvider {
+           (base: P)
+           (nameProvider: NameProvider[base.syntax.Name],
+            imp: Imperative.WithBase[base.MethodBodyContext, base.type],
+            ffiArithmetic: Arithmetic.WithBase[base.MethodBodyContext, base.type, Double],
+            ffiRealArithmetic: RealArithmetic.WithBase[base.MethodBodyContext, base.type, Double],
+            con: Console.WithBase[base.MethodBodyContext, base.type],
+            arr: Arrays.WithBase[base.MethodBodyContext, base.type],
+            assertsIn: Assertions.WithBase[base.MethodBodyContext, base.type],
+            stringsIn: Strings.WithBase[base.MethodBodyContext, base.type],
+            eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type],
+            oo: ObjectOriented.WithBase[base.type],
+            parametricPolymorphism: ParametricPolymorphism.WithBase[base.type],
+            booleansIn: Booleans.WithBase[base.MethodBodyContext, base.type]
+           )
+           (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): NWSAProvider.WithParadigm[base.type] =
+    new NWSAProvider {
       override val paradigm: base.type = base
       val impParadigm: imp.type = imp
       val arithmetic: ffiArithmetic.type = ffiArithmetic

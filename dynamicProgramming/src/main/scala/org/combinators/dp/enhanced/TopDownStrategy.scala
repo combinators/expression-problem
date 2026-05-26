@@ -1,6 +1,5 @@
 package org.combinators.dp.enhanced
 
-import org.combinators.dp.Utility
 import org.combinators.cogen.TypeRep
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
@@ -8,6 +7,7 @@ import org.combinators.cogen.paradigm.control.Imperative
 import org.combinators.cogen.paradigm.ffi._
 import org.combinators.cogen.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.cogen.{Command, NameProvider}
+import org.combinators.dp.original.Utility
 import org.combinators.models._
 
 /**

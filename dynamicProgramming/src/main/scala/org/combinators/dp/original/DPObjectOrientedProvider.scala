@@ -1,13 +1,13 @@
-package org.combinators.dp
+package org.combinators.dp.original
 
-import org.combinators.cogen.TypeRep
 import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.{NameProvider, TypeRep}
+import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.cogen.paradigm.control.Imperative
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.cogen.paradigm.{Generics, ObjectOriented, ParametricPolymorphism}
-import org.combinators.cogen.NameProvider
-import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.models.Model
+import org.combinators.dp.original.{BottomUpStrategy, DPProvider, TopDownStrategy}
+import org.combinators.models.original.Model
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
@@ -28,9 +28,8 @@ trait DPObjectOrientedProvider extends DPProvider with Utility with TopDownStrat
   val eqls: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val booleans: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
-  import paradigm._
-  import syntax._
-  import ooParadigm._
+  import paradigm.*
+  import syntax.*
 
   // if not memo, then this will be defined and added
   lazy val resultVarName = names.mangle("result")
@@ -43,7 +42,7 @@ trait DPObjectOrientedProvider extends DPProvider with Utility with TopDownStrat
    *   }
    */
   def make_compute_method(model:Model): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
-    import paradigm.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities.*
     for {
       intType <- toTargetLanguageType(TypeRep.Int)
       _ <- setReturnType(intType)

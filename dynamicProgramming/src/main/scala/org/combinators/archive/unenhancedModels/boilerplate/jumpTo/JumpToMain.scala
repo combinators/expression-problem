@@ -1,28 +1,29 @@
-package org.combinators.archive.cogen.bottomUp.oneSequence.JumpTo
+package org.combinators.archive.unenhancedModels.boilerplate.jumpTo
 
 /**
- * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"
+ * An early implementation with unenhanced model.
  *
- * Creates output files in target/dp
+ * Test Cases does not compile, because this early implementation had not yet had available the code to properly create arrays
+ * on which to integrate in a test case.
+ *
+ * val targetDirectory = Paths.get("target", "jumpto")
  */
-
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
-import org.combinators.dp.{BottomUp, GenerationOption, TopDown}
+import org.combinators.cogen.FileWithPathPersistable.*
 import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
-import FileWithPathPersistable._
+import org.combinators.dp.original.{BottomUp, GenerationOption, TopDown}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
-import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
-import org.combinators.models._
+import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, Syntax, Unboxed}
+import org.combinators.models.*
+import org.combinators.models.original.Model
 
 import java.nio.file.{Path, Paths}
 
-/**
- * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
- */
+
 class JumpToMainJava {
-  val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("dp"))))
+  val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = Unboxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("dp"))))
 
   val dpApproach = JumpToMainProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.realDoublesInMethod, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.stringsInMethod, generator.equalityInMethod, generator.ooParadigm, generator.parametricPolymorphism, generator.booleansInMethod)(generator.generics)
 
@@ -135,11 +136,6 @@ object JumpToMainDirectToDiskMain extends IOApp {
 
     // what was passed into constructor of the original class
     val input:InputExpression = new InputExpression("array")   // might also need to pass in "type"
-
-    // for LCS
-
-    // val text1:InputExpression("text1")
-    // val text2:InputExpression("text2")
 
     val bound = List(new ArgExpression(0, "array", new IntegerArrayType(), "i"))
 

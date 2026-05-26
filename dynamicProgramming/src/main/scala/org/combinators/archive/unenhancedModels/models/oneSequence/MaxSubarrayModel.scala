@@ -1,6 +1,7 @@
 package org.combinators.archive.unenhancedModels.models.oneSequence
 
 import org.combinators.models._
+import org.combinators.models.original.Model
 
 class MaxSubarrayModel {
   def instantiate(): Model = {

@@ -7,7 +7,9 @@ import org.combinators.cogen.paradigm.ffi.Booleans.WithBase
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality}
 import org.combinators.cogen.paradigm.{AnyParadigm, ObjectOriented}
 
-/** Provider for House Robber DP solution in OO style. */
+/**
+ * One of the earliest implementations to solve HouseRobber but NO TEST CASES.
+ */
 trait HouseRobberObjectOrientedProvider {
   val paradigm: AnyParadigm
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
@@ -97,7 +99,7 @@ trait HouseRobberObjectOrientedProvider {
       zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
       (namen,tpen,nums) = args.head
       func <- find_method_recursive(names.mangle("rob"))
-      size <- array.arrayCapabilities.length(nums, Seq(zero))  // not sure
+      size <- array.arrayCapabilities.length(nums, Seq.empty)
 
       resultExpr <- impParadigm.imperativeCapabilities.declareVar(names.mangle("result"), intType, Some(zero))
       lengthExpr <- impParadigm.imperativeCapabilities.declareVar(names.mangle("n"), intType, Some(size))
@@ -215,7 +217,7 @@ trait HouseRobberObjectOrientedProvider {
       guard_nEQ0 <- eqls.equalityCapabilities.areEqual(intType, n, zero)
       combined_guard <- booleans.booleanCapabilities.or(Seq(guard_nLt0, guard_nEQ0))
       guard2 <- eqls.equalityCapabilities.areEqual(intType, n, one)
-      size <- array.arrayCapabilities.length(hval, Seq(zero))
+      size <- array.arrayCapabilities.length(hval, Seq.empty)
 
       n_1 <- arithmetic.arithmeticCapabilities.sub(n, one)
       n_2 <- arithmetic.arithmeticCapabilities.sub(n, two)

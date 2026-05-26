@@ -1,13 +1,13 @@
-package org.combinators.dp
+package org.combinators.dp.original
 
-import org.combinators.models.*
-import org.combinators.cogen.TypeRep
 import org.combinators.cogen.Command.Generator
-import org.combinators.cogen.{Command, NameProvider}
 import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.cogen.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.cogen.paradigm.control.Imperative
-import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Equality, RealArithmetic, Strings}
+import org.combinators.cogen.paradigm.ffi.*
+import org.combinators.cogen.paradigm.{AnyParadigm, ObjectOriented}
+import org.combinators.cogen.{Command, NameProvider, TypeRep}
+import org.combinators.models.*
+import org.combinators.models.original.Model
 
 // Different approach
 trait GenerationOption {
@@ -35,9 +35,9 @@ trait Utility {
   val strings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val booleans: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
-  import paradigm._
-  import syntax._
-  import ooParadigm._
+  import ooParadigm.*
+  import paradigm.*
+  import syntax.*
 
   // known to ALL approaches (top-down or bottom up)
   lazy val helperName     = names.mangle("helper")
@@ -59,7 +59,7 @@ trait Utility {
   }
 
   def pair_helper(): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
-    import paradigm.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities.*
 
     for {
 
@@ -96,9 +96,9 @@ trait Utility {
 
 
   def generate_DP_int_array_test[FS](clazz:Name, tests:Seq[DPExample[Seq[Int],Int,FS]]): Generator[MethodBodyContext, Seq[Expression]] = {
-    import eqls.equalityCapabilities._
-    import paradigm.methodBodyCapabilities._
-    import AnyParadigm.syntax._
+    import AnyParadigm.syntax.*
+    import eqls.equalityCapabilities.*
+    import paradigm.methodBodyCapabilities.*
     for {
       solutionType <- ooParadigm.methodBodyCapabilities.findClass(clazz)
       sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solutionType, Seq.empty, None)
@@ -117,8 +117,9 @@ trait Utility {
     } yield assert_statements
   }
 
+  @deprecated(message = "Initial attempt at generating code to retrieve solution. Doesn't yet work.")
   def generate_retrieve(model: Model): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
-    import paradigm.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities.*
 
     val label: String = model.retrieveLabel
 
@@ -148,8 +149,8 @@ trait Utility {
 
   // NOTE: I can make generic with CONTEXT but can't remember syntax.
   def map_type_in_class(argType: ArgumentType) : Generator[ooParadigm.ClassContext, Type] = {
-    import ooParadigm.classCapabilities._
-    import org.combinators.models._
+    import ooParadigm.classCapabilities.*
+    import org.combinators.models.*
 
     argType match {
       case _:IntegerType => for {
@@ -187,8 +188,7 @@ trait Utility {
   }
 
   def max_bound_in_method(argExpr: ArgExpression)  : Generator[paradigm.MethodBodyContext, Expression] = {
-    import paradigm.methodBodyCapabilities._
-    import org.combinators.models._
+    import org.combinators.models.*
 
     argExpr.argType match {
       case _:IntegerType => for {
@@ -226,8 +226,8 @@ trait Utility {
   }
 
   def map_type_in_method(argType: ArgumentType) : Generator[paradigm.MethodBodyContext, Type] = {
-    import paradigm.methodBodyCapabilities._
-    import org.combinators.models._
+    import org.combinators.models.*
+    import paradigm.methodBodyCapabilities.*
 
     argType match {
       case _:IntegerType => for {
@@ -259,7 +259,7 @@ trait Utility {
    * where ARGS represents the model (i.e., (("n", Int)) for Fibonacci and (("s1", String), ("s2", String)) for LCS
    */
   def make_helper_method_signature(args:Seq[ArgExpression]): Generator[paradigm.MethodBodyContext, Unit] = {
-    import paradigm.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities.*
 
     // Type of helper method param is always an integer to refer to earlier subproblem
     //
@@ -551,7 +551,7 @@ trait Utility {
    * Returns the generated max statement
    */
   def set_max(maxVar: Expression, replacement: Expression): Generator[MethodBodyContext, Statement] = {
-    import paradigm.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities.*
     for {
       maxCond <- arithmetic.arithmeticCapabilities.lt(maxVar, replacement)
       maxIfStmt <- impParadigm.imperativeCapabilities.ifThenElse(maxCond, for {
@@ -566,8 +566,8 @@ trait Utility {
 
   //This code does not work, can't access static method on class
   def full_set_max(maxVar: Expression, e1: Expression, e2: Expression): Generator[MethodBodyContext, Statement] = {
-    import paradigm.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities.*
+    import paradigm.methodBodyCapabilities.*
     for {
       mathClass <- findClass(names.mangle("Math"))
       instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(mathClass, Seq.empty, None)
@@ -578,8 +578,7 @@ trait Utility {
   }
 
   def new_full_set_max(maxVar: Expression, e1: Expression, e2: Expression): Generator[MethodBodyContext, Seq[Statement]] = {
-    import paradigm.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities.*
 
     for {
       set1 <- impParadigm.imperativeCapabilities.assignVar(maxVar, e1)
@@ -608,8 +607,8 @@ trait Utility {
   }
 
   def char_at(string: Expression, index: Expression): Generator[MethodBodyContext, Expression] = {
-    import paradigm.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
+    import ooParadigm.methodBodyCapabilities.*
+    import paradigm.methodBodyCapabilities.*
 
     for {
       method <- getMember(string, names.mangle("charAt"))
@@ -631,8 +630,7 @@ trait Utility {
   }
 
   def make_for_loop(iterator: Expression, guard: Expression, update: Expression, body: Seq[Statement]): Generator[paradigm.MethodBodyContext, Statement] = {
-    import paradigm.methodBodyCapabilities._
-    import impParadigm.imperativeCapabilities._
+    import paradigm.methodBodyCapabilities.*
 
     for {
       while_loop <- impParadigm.imperativeCapabilities.whileLoop(
@@ -647,8 +645,7 @@ trait Utility {
   }
 
   def make_for_loop(iterator: Expression, guard: Expression, body: Seq[Statement]): Generator[paradigm.MethodBodyContext, Statement] = {
-    import paradigm.methodBodyCapabilities._
-    import impParadigm.imperativeCapabilities._
+    import paradigm.methodBodyCapabilities.*
 
     for {
       one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
@@ -667,8 +664,6 @@ trait Utility {
   }
 
   def get_matrix_element(matrix: Expression, indices:Seq[Expression]): Generator[paradigm.MethodBodyContext, Expression] = {
-    import paradigm.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
 
     for {
       ai <- array.arrayCapabilities.get(matrix, indices)
@@ -704,8 +699,6 @@ trait Utility {
   }
 
   def get_matrix_element(matrix: Expression, row: Expression, col: Expression): Generator[paradigm.MethodBodyContext, Expression] = {
-    import paradigm.methodBodyCapabilities._
-    import ooParadigm.methodBodyCapabilities._
     println("get_matrix_element might have simpler implementation now with n-d arrays")
     for {
       matrix_at_r <- array.arrayCapabilities.get(matrix, Seq(row))
@@ -729,8 +722,7 @@ trait Utility {
   def make_nested_for_loop(var1: Expression, guard1: Expression, update1: Expression,
                            var2: Expression, guard2: Expression, update2: Expression,
                            inner_body: Seq[Statement], trailing_body: Seq[Statement]): Generator[paradigm.MethodBodyContext, Statement] = {
-    import paradigm.methodBodyCapabilities._
-    import impParadigm.imperativeCapabilities._
+    import paradigm.methodBodyCapabilities.*
 
     for {
       outer_loop <- impParadigm.imperativeCapabilities.whileLoop(guard1,

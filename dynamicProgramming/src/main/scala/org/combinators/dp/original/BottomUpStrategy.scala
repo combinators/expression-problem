@@ -1,13 +1,13 @@
-package org.combinators.dp
+package org.combinators.dp.original
 
-import org.combinators.cogen.TypeRep
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.cogen.{Command, NameProvider}
-import org.combinators.cogen.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.cogen.paradigm.control.Imperative
-import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Equality, Strings}
-import org.combinators.models._
+import org.combinators.cogen.paradigm.ffi.*
+import org.combinators.cogen.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
+import org.combinators.cogen.{Command, NameProvider, TypeRep}
+import org.combinators.models.*
+import org.combinators.models.original.Model
 
 /**
  * Concepts necessary to realize top-down solutions
@@ -29,9 +29,9 @@ trait BottomUpStrategy extends Utility {
   val strings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val booleans: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
-  import paradigm._
-  import syntax._
-  import ooParadigm._
+  import ooParadigm.*
+  import paradigm.*
+  import syntax.*
 
   lazy val iName      = names.mangle("i")
   lazy val nName      = names.mangle("n")
@@ -47,7 +47,7 @@ trait BottomUpStrategy extends Utility {
 
   /** Needed when working bottom up. */
   private def expand_assign(dp_i:Expression, exp: Expression): Generator[paradigm.MethodBodyContext, Unit] = {
-    import paradigm.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities.*
     for {
       av <- impParadigm.imperativeCapabilities.assignVar(dp_i, exp)
       _ <- addBlockDefinitions(Seq(av))
@@ -55,7 +55,7 @@ trait BottomUpStrategy extends Utility {
   }
 
   def make_bottom_up_compute_method_nest_3(model: Model): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
-    import paradigm.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities.*
 
     val real_cases = model.cases.filter(p => p._1.isDefined) // MUST be at least one.
     val first_case = real_cases.head
@@ -177,7 +177,7 @@ trait BottomUpStrategy extends Utility {
 
   // This is hard-coded for TWO bounds.
   def make_bottom_up_compute_method_nest_2(model:Model): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
-    import paradigm.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities.*
 
     val real_cases = model.cases.filter(p => p._1.isDefined) // MUST be at least one.
     val first_case = real_cases.head
@@ -289,7 +289,7 @@ trait BottomUpStrategy extends Utility {
 
   // This is hard-coded for a SINGLE bound. We will need another one to deal with two-d problems (and higher)
   def make_bottom_up_compute_method(model:Model): Generator[paradigm.MethodBodyContext, Option[Expression]] = {
-    import paradigm.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities.*
 
     val real_cases = model.cases.filter(p => p._1.isDefined) // MUST be at least one.
     val first_case = real_cases.head
@@ -376,7 +376,7 @@ trait BottomUpStrategy extends Utility {
    * in a sequence of arguments, and auto-initializes all possible fields.
    */
   def create_bottom_up_constructor(args: Seq[(Name, Type)]): Generator[ConstructorContext, Unit] = {
-    import ooParadigm.constructorCapabilities._
+    import ooParadigm.constructorCapabilities.*
 
     for {
       _ <- setParameters(args)
@@ -406,10 +406,10 @@ trait BottomUpStrategy extends Utility {
   }
 
   def make_bottom_up(model:Model): Generator[ProjectContext, Unit] = {
-    import ooParadigm.projectCapabilities._
+    import ooParadigm.projectCapabilities.*
 
     val makeClass: Generator[ClassContext, Unit] = {
-      import classCapabilities._
+      import classCapabilities.*
 
       for {
         arrayType <- toTargetLanguageType(arTypes(model.bounds.length))

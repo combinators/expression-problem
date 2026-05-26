@@ -1,18 +1,19 @@
-package org.combinators.archive.unenhancedModels.boilerplate.unenhancedCoinChange
+package org.combinators.archive.unenhancedModels.boilerplate.minEditDistance
 
-import org.combinators.dp.{DPObjectOrientedProvider, TestExample}
+import org.combinators.dp.TestExample
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.cogen.paradigm.control.Imperative
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.cogen.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.cogen.{AbstractSyntax, NameProvider, TypeRep}
-import org.combinators.models.{LiteralArray, LiteralInt, LiteralString, LiteralStringPair}
+import org.combinators.dp.original.DPObjectOrientedProvider
+import org.combinators.models.{LiteralInt, LiteralString, LiteralStringPair}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
  */
-trait CoinChangeProvider extends DPObjectOrientedProvider {
+trait MinEditDistanceProvider extends DPObjectOrientedProvider {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
@@ -32,13 +33,13 @@ trait CoinChangeProvider extends DPObjectOrientedProvider {
   import syntax._
 
   // Specific examples hard coded for Int input and Int output
-  def makeTestsCoinChange(implementation:String, tests: Seq[TestExample] = Seq.empty): Generator[MethodBodyContext, Seq[Expression]] = {
+  def makeTestsMinEditDistance(implementation:String, tests: Seq[TestExample] = Seq.empty): Generator[MethodBodyContext, Seq[Expression]] = {
     import eqls.equalityCapabilities._
     import paradigm.methodBodyCapabilities._
 
     // NOTE: these tests are in the wrong place, since we defer test gen to later
     val tests = Seq(
-      new TestExample("test1", new LiteralArray(Array(1,2,5)), new LiteralInt(11), new LiteralString("test"))
+      new TestExample("fib0", new LiteralStringPair("ACTG", "CGATC"), new LiteralInt(2), new LiteralString("AC")) // for now, leave solution as None
     )
 
     for {
@@ -75,12 +76,12 @@ trait CoinChangeProvider extends DPObjectOrientedProvider {
 
   override def makeTestCase(implementation:String): Generator[TestContext, Unit] = {
     for {
-      _ <- paradigm.testCapabilities.addTestCase(makeTestsCoinChange(implementation), names.mangle("DP"))
+      _ <- paradigm.testCapabilities.addTestCase(makeTestsMinEditDistance(implementation), names.mangle("DP"))
     } yield ()
   }
 }
 
-object CoinChangeProvider {
+object MinEditDistanceProvider {
   type WithParadigm[P <: AnyParadigm] = DPObjectOrientedProvider { val paradigm: P }
   type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 
@@ -99,8 +100,8 @@ object CoinChangeProvider {
    parametricPolymorphism: ParametricPolymorphism.WithBase[base.type],
    booleansIn: Booleans.WithBase[base.MethodBodyContext, base.type]
   )
-  (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): CoinChangeProvider.WithParadigm[base.type] =
-    new CoinChangeProvider {
+  (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): MinEditDistanceProvider.WithParadigm[base.type] =
+    new MinEditDistanceProvider {
       override val paradigm: base.type = base
       val impParadigm: imp.type = imp
       val arithmetic: ffiArithmetic.type = ffiArithmetic

@@ -1,16 +1,17 @@
 package org.combinators.archive.cogen.topDown.pascal
 
-import org.combinators.dp.{TestExample, Utility}
+import org.combinators.dp.TestExample
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.cogen.paradigm.control.Imperative
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.cogen.paradigm.{AnyParadigm, FindClass, ObjectOriented}
 import org.combinators.cogen.{AbstractSyntax, NameProvider, TypeRep, Understands}
+import org.combinators.dp.original.Utility
 import org.combinators.models.{LiteralInt, LiteralPair, UnitExpression}
 
-/** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
- * in a variety of contexts. This trait provides that capability
+/**
+ * One of the earliest implementations to generate a successful top-down implementation of Pascal's Triangle WITH test cases.
  */
 trait PascalObjectOrientedProvider extends Utility {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
@@ -118,10 +119,6 @@ trait PascalObjectOrientedProvider extends Utility {
           _ <- addBlockDefinitions(Seq(assignStmt3))
         } yield ())
       )
-
-
-
-
       _ <- addBlockDefinitions(Seq(ifStmt))
 
     } yield Some(resultVar)
@@ -149,12 +146,9 @@ trait PascalObjectOrientedProvider extends Utility {
     addClassToProject(makeClass, names.mangle("Pascal"))
   }
 
-
-
   def makeTestCase(): Generator[MethodBodyContext, Seq[Expression]] = {
     import eqls.equalityCapabilities._
     import paradigm.methodBodyCapabilities._
-
 
     val tests = Seq(
       new TestExample("pasc11", new LiteralPair(1,1), new LiteralInt(1), new UnitExpression),
@@ -180,12 +174,12 @@ trait PascalObjectOrientedProvider extends Utility {
           pascType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle("Pascal"))
           r_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, pair._1)
           c_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, pair._2)
-          sol <- ooParadigm.methodBodyCapabilities.instantiateObject(pascType, Seq(r_value,c_value))
+          sol <- ooParadigm.methodBodyCapabilities.instantiateObject(pascType, Seq.empty)
           computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, compute)
 
           intType <- toTargetLanguageType(TypeRep.Int)
           pascrc_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, expected_value)
-          pascrc_actual <- apply(computeMethod, Seq.empty)
+          pascrc_actual <- apply(computeMethod, Seq(r_value,c_value))
           asserteq_fib <- asserts.assertionCapabilities.assertEquals(intType, pascrc_actual, pascrc_value)
 
         } yield asserteq_fib

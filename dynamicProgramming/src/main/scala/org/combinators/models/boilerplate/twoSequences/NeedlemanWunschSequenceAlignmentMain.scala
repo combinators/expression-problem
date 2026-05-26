@@ -2,12 +2,13 @@ package org.combinators.models.boilerplate.twoSequences
 
 import org.apache.commons.io.FileUtils
 import org.combinators.dp.enhanced.{EnhancedDPMainJava, EnhancedDPMainScala, EnhancedMainInterface}
-import org.combinators.dp.{BottomUp, GenerationOption, TestExample, TopDown}
+import org.combinators.dp.TestExample
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, Syntax, Unboxed}
 import org.combinators.models.*
 import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
 import FileWithPathPersistable.*
+import org.combinators.dp.original.{BottomUp, GenerationOption, TopDown}
 import org.combinators.models.enhancedModels.twoSequences.NeedlemanWunschSequenceAlignment
 
 // needs custom-support code, because the test case has unusual structure.

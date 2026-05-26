@@ -1,18 +1,19 @@
-package org.combinators.archive.unenhancedModels.boilerplate.unenhancedMinEditDistance
+package org.combinators.archive.unenhancedModels.boilerplate.uncrossedLines
 
-import org.combinators.dp.{DPObjectOrientedProvider, TestExample}
+import org.combinators.dp.TestExample
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.cogen.paradigm.control.Imperative
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.cogen.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.cogen.{AbstractSyntax, NameProvider, TypeRep}
-import org.combinators.models.{LiteralInt, LiteralString, LiteralStringPair}
+import org.combinators.dp.original.DPObjectOrientedProvider
+import org.combinators.models.{LiteralArrayPair, LiteralInt, UnitExpression}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability
  */
-trait MinEditDistanceProvider extends DPObjectOrientedProvider {
+trait UnenhancedUncrossedLinesProvider extends DPObjectOrientedProvider {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
@@ -32,34 +33,39 @@ trait MinEditDistanceProvider extends DPObjectOrientedProvider {
   import syntax._
 
   // Specific examples hard coded for Int input and Int output
-  def makeTestsMinEditDistance(implementation:String, tests: Seq[TestExample] = Seq.empty): Generator[MethodBodyContext, Seq[Expression]] = {
+  def makeTests(implementation:String, tests: Seq[TestExample] = Seq.empty): Generator[MethodBodyContext, Seq[Expression]] = {
     import eqls.equalityCapabilities._
     import paradigm.methodBodyCapabilities._
 
     // NOTE: these tests are in the wrong place, since we defer test gen to later
     val tests = Seq(
-      new TestExample("fib0", new LiteralStringPair("ACTG", "CGATC"), new LiteralInt(2), new LiteralString("AC")) // for now, leave solution as None
+      new TestExample("ucl0", new LiteralArrayPair(Array(1, 4, 2), Array(1, 2, 4)), new LiteralInt(2), new UnitExpression), // https://leetcode.com/problems/uncrossed-lines/
+      new TestExample("ucl1", new LiteralArrayPair(Array(2, 5, 1, 2, 5), Array(10, 5, 2, 1, 5, 2)), new LiteralInt(3), new UnitExpression), // https://leetcode.com/problems/uncrossed-lines/
     )
 
     for {
-      assert_statements <- forEach(tests) { example =>
+      assert_statements <- forEach(tests) { test =>
 
-        val input_value = example.inputType match {
-          case lt: LiteralStringPair => (lt.string1, lt.string2)
+        val input_value = test.inputType match {
+          case lt: LiteralArrayPair => (lt.ar1, lt.ar2)
           case _ => ??? // error in all other circumstances
         }
 
-        val expected_value = example.answer match {
+        val expected_value = test.answer match {
           case lit:LiteralInt => lit.literal
           case _ => ???
         }
 
         for {
           fibType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle(implementation))
-          s1_value <- paradigm.methodBodyCapabilities.reify(TypeRep.String, input_value._1)
-          s2_value <- paradigm.methodBodyCapabilities.reify(TypeRep.String, input_value._2)
 
-          sol <- ooParadigm.methodBodyCapabilities.instantiateObject(fibType, Seq(s1_value, s2_value))
+          arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
+
+          ar1 <- create_int_array(input_value._1)
+          ar2 <- create_int_array(input_value._2)
+
+          sol <- ooParadigm.methodBodyCapabilities.instantiateObject(fibType, Seq(ar1, ar2))
+          
           computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, computeName)
 
           intType <- toTargetLanguageType(TypeRep.Int)
@@ -75,32 +81,32 @@ trait MinEditDistanceProvider extends DPObjectOrientedProvider {
 
   override def makeTestCase(implementation:String): Generator[TestContext, Unit] = {
     for {
-      _ <- paradigm.testCapabilities.addTestCase(makeTestsMinEditDistance(implementation), names.mangle("DP"))
+      _ <- paradigm.testCapabilities.addTestCase(makeTests(implementation), names.mangle("DP"))
     } yield ()
   }
 }
 
-object MinEditDistanceProvider {
+object UncrossedLinesProvider {
   type WithParadigm[P <: AnyParadigm] = DPObjectOrientedProvider { val paradigm: P }
   type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 
   def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
-  (base: P)
-  (nameProvider: NameProvider[base.syntax.Name],
-   imp: Imperative.WithBase[base.MethodBodyContext, base.type],
-   ffiArithmetic: Arithmetic.WithBase[base.MethodBodyContext, base.type, Double],
-   ffiRealArithmetic: RealArithmetic.WithBase[base.MethodBodyContext, base.type, Double],
-   con: Console.WithBase[base.MethodBodyContext, base.type],
-   arr: Arrays.WithBase[base.MethodBodyContext, base.type],
-   assertsIn: Assertions.WithBase[base.MethodBodyContext, base.type],
-   stringsIn: Strings.WithBase[base.MethodBodyContext, base.type],
-   eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type],
-   oo: ObjectOriented.WithBase[base.type],
-   parametricPolymorphism: ParametricPolymorphism.WithBase[base.type],
-   booleansIn: Booleans.WithBase[base.MethodBodyContext, base.type]
-  )
-  (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): MinEditDistanceProvider.WithParadigm[base.type] =
-    new MinEditDistanceProvider {
+           (base: P)
+           (nameProvider: NameProvider[base.syntax.Name],
+            imp: Imperative.WithBase[base.MethodBodyContext, base.type],
+            ffiArithmetic: Arithmetic.WithBase[base.MethodBodyContext, base.type, Double],
+            ffiRealArithmetic: RealArithmetic.WithBase[base.MethodBodyContext, base.type, Double],
+            con: Console.WithBase[base.MethodBodyContext, base.type],
+            arr: Arrays.WithBase[base.MethodBodyContext, base.type],
+            assertsIn: Assertions.WithBase[base.MethodBodyContext, base.type],
+            stringsIn: Strings.WithBase[base.MethodBodyContext, base.type],
+            eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type],
+            oo: ObjectOriented.WithBase[base.type],
+            parametricPolymorphism: ParametricPolymorphism.WithBase[base.type],
+            booleansIn: Booleans.WithBase[base.MethodBodyContext, base.type]
+           )
+           (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): UncrossedLinesProvider.WithParadigm[base.type] =
+    new UnenhancedUncrossedLinesProvider {
       override val paradigm: base.type = base
       val impParadigm: imp.type = imp
       val arithmetic: ffiArithmetic.type = ffiArithmetic

@@ -6,7 +6,8 @@ package org.combinators.models.boilerplate.oneSequence
  * Creates output files in target/dp
  */
 import org.combinators.dp.enhanced.{EnhancedDPMainJava, EnhancedDPMainScala}
-import org.combinators.dp.{BottomUp, TestExample}
+import org.combinators.dp.TestExample
+import org.combinators.dp.original.BottomUp
 import org.combinators.models.*
 import org.combinators.models.enhancedModels.oneSequence.MatrixChainMultiplicationBU
 

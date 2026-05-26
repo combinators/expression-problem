@@ -1,15 +1,17 @@
 package org.combinators.archive.cogen.bottomUp.oneSequence.fibtest
 
 import org.combinators.archive.cogen.bottomUp.oneSequence.OneSequencesUtility
-import org.combinators.dp.Utility
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.paradigm.control.Imperative
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.cogen.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.cogen.{AbstractSyntax, NameProvider, TypeRep}
+import org.combinators.dp.original.Utility
 
-/** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
- * in a variety of contexts. This trait provides that capability
+/**
+ * One of the earliest implementations to generate a successful bottom-up implementation of Fibonacci with test cases.
+ *
+ * Note that it attempted to use "one_sequence_bottom_up" but this method never fully worked with multiple sequences of base cases
  */
 trait FibTestObjectOrientedProvider extends OneSequencesUtility with Utility {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
@@ -84,12 +86,11 @@ trait FibTestObjectOrientedProvider extends OneSequencesUtility with Utility {
 
       //Base Cases
       dpVarIndex <- array.arrayCapabilities.get(dpVar, Seq(iVar))
-      bCase1 <- impParadigm.imperativeCapabilities.assignVar(dpVarIndex, zero)
-      bCase2 <- impParadigm.imperativeCapabilities.assignVar(dpVarIndex, one)
+      bCase1 <- impParadigm.imperativeCapabilities.assignVar(dpVarIndex, iVar)
 
       //Relation
-      nm1 <-arithmetic.arithmeticCapabilities.sub(num,one)
-      nm2  <-arithmetic.arithmeticCapabilities.sub(num,two)
+      nm1 <-arithmetic.arithmeticCapabilities.sub(iVar,one)
+      nm2  <-arithmetic.arithmeticCapabilities.sub(iVar,two)
       dpVarIndexnm1 <-array.arrayCapabilities.get(dpVar, Seq(nm1))
       dpVarIndexnm2 <-array.arrayCapabilities.get(dpVar, Seq(nm2))
       sum <- arithmetic.arithmeticCapabilities.add(dpVarIndexnm1,dpVarIndexnm2)
@@ -97,7 +98,7 @@ trait FibTestObjectOrientedProvider extends OneSequencesUtility with Utility {
       relation <- impParadigm.imperativeCapabilities.assignVar(dpVarIndex, sum)
 
       //one sequence bottom up
-      while_loop <- one_sequence_bottom_up(iVar, np1, Seq((zero, bCase1),(one, bCase2)), relation)
+      while_loop <- one_sequence_bottom_up(iVar, np1, Seq((one, bCase1)), relation)
       _ <- addBlockDefinitions(while_loop)
 
       //final element
@@ -105,9 +106,7 @@ trait FibTestObjectOrientedProvider extends OneSequencesUtility with Utility {
 
     } yield Some(dpVarIndexn)
   }
-/**
 
-  */
 
   def makeSimpleDP(): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
@@ -126,37 +125,33 @@ trait FibTestObjectOrientedProvider extends OneSequencesUtility with Utility {
     import eqls.equalityCapabilities._
     import paradigm.methodBodyCapabilities._
 
-    // can only be optimized if 'forEach' is added to CoGen. Right now I think it is in EpCoGen
-    val initial_vals = Array(0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15)
-
     for {
       solutionType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle("FibTest"))
       d_0 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
-      d_8 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 8)
-      d_4 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 4)
-      d_12 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 12)
-      d_2 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 2)
-      d_10 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 10)
-      d_6 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 6)
-      d_14 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 14)
       d_1 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
-
+      d_2 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 2)
       d_9 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 9)
-      d_5 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 5)
-      d_13 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 13)
-      d_3 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 3)
       d_11 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 11)
-      d_7 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 7)
-      d_15 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 15)
+      d_89 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 89)
+      d_34 <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 34)
 
       sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solutionType, Seq.empty)
-      arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
+      intType <- toTargetLanguageType(TypeRep.Int)
       computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, names.mangle("compute"))
-      solution_result <- apply(computeMethod, Seq(d_0, d_8, d_4, d_12, d_2, d_10, d_6, d_14, d_1, d_9, d_5, d_13, d_3, d_11, d_7, d_15))
-      six  <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 6)
-      asserteq2 <- asserts.assertionCapabilities.assertEquals(arrayType, solution_result, six)
 
-    } yield Seq(asserteq2)
+      solution_result <- apply(computeMethod, Seq(d_0))
+      asserteq0 <- asserts.assertionCapabilities.assertEquals(intType, solution_result, d_0)
+
+      solution_result <- apply(computeMethod, Seq(d_2))
+      asserteq1 <- asserts.assertionCapabilities.assertEquals(intType, solution_result, d_1)
+
+      solution_result <- apply(computeMethod, Seq(d_9))
+      asserteq2 <- asserts.assertionCapabilities.assertEquals(intType, solution_result, d_34)
+
+      solution_result <- apply(computeMethod, Seq(d_11))
+      asserteq3 <- asserts.assertionCapabilities.assertEquals(intType, solution_result, d_89)
+
+    } yield Seq(asserteq0,asserteq1,asserteq2,asserteq3)
   }
 
   def makeTestCase(clazzName:String): Generator[TestContext, Unit] = {

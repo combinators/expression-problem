@@ -1,8 +1,8 @@
 package org.combinators.archive.cogen.bottomUp.oneSequence
 
-import org.combinators.dp.Utility
 import org.combinators.cogen.TypeRep
 import org.combinators.cogen.Command.Generator
+import org.combinators.dp.original.Utility
 
 trait OneSequencesUtility extends Utility {
   import paradigm._

@@ -1,11 +1,10 @@
 package org.combinators.archive.cogen.topDown.oneSequence.houseRobber
 
 /**
- * sbt "dp/runMain org.combinators.dp.DPJavaDirectToDiskMain"
+ * One of the earliest implementations to solve HouseRobber but NO TEST CASES.
  *
- * Creates output files in target/dp
+ * val targetDirectory = Paths.get("target", "houserobber")
  */
-
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
@@ -16,9 +15,6 @@ import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, Partia
 
 import java.nio.file.{Path, Paths}
 
-/**
- * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
- */
 class HouseRobberMainJava {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("robber"))))
   val hrApproach = HouseRobberObjectOrientedProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.ooParadigm, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.equalityInMethod, generator.booleansInMethod)

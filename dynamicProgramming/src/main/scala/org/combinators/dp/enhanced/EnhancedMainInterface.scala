@@ -1,7 +1,7 @@
 package org.combinators.dp.enhanced
 
-import org.combinators.dp.GenerationOption
 import org.combinators.cogen.FileWithPath
+import org.combinators.dp.original.GenerationOption
 import org.combinators.models.EnhancedModel
 
 /**

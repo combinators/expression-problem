@@ -1,7 +1,12 @@
 package org.combinators.archive.unenhancedModels.models.oneSequence
 
 import org.combinators.models._
+import org.combinators.models.original.Model
 
+/**
+ * A first attempt at Tribonacci that failed.
+ */
+@deprecated(message = "Invalid model, since it sets Trib(n) = (n-1)+(n-2)+(n-3) when it should be trib(n-1)+trib(n-2)+trib(n-3).")
 class TribonacciModel {
   def instantiate(): Model = {
     val zero: LiteralInt = new LiteralInt(0)

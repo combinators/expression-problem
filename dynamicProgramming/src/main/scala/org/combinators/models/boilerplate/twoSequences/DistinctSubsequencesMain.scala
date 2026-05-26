@@ -1,7 +1,8 @@
 package org.combinators.models.boilerplate.twoSequences
 
-import org.combinators.dp.{BottomUp, TestExample, TopDown}
+import org.combinators.dp.TestExample
 import org.combinators.dp.enhanced.{EnhancedDPMainJava, EnhancedDPMainScala}
+import org.combinators.dp.original.{BottomUp, TopDown}
 import org.combinators.models.*
 import org.combinators.models.enhancedModels.twoSequences.DistinctSubsequences
 

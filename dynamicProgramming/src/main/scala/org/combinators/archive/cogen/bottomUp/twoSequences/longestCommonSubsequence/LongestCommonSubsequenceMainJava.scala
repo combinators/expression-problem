@@ -4,15 +4,18 @@ import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
 import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
-import FileWithPathPersistable._
+import FileWithPathPersistable.*
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax}
-import org.combinators.models._
 
 import java.nio.file.{Path, Paths}
 
 /**
- * Eventually encode a set of subclasses/traits to be able to easily specify (a) the variation; and (b) the evolution.
+ * One of the earliest attempts to generate bottom-up implementation of Longest Common Subsequence
+ *
+ * Code generates doesn't work, since the "make_solution" doesn't accurately generate nested loops properly.
+ *
+ * val targetDirectory =  Paths.get("target", "lcs")
  */
 class LongestCommonSubsequenceMainJava {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("dp"))))
@@ -21,7 +24,7 @@ class LongestCommonSubsequenceMainJava {
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
-  def directToDiskTransaction(targetDirectory: Path, model:Model): IO[Unit] = {
+  def directToDiskTransaction(targetDirectory: Path): IO[Unit] = {
 
     val files =
       () => generator.paradigm.runGenerator {
@@ -37,7 +40,7 @@ class LongestCommonSubsequenceMainJava {
           _ <- generator.assertionsInMethod.enable()
           _ <- generator.booleansInMethod.enable()
 
-          _ <- dpApproach.implement(model:Model)
+          _ <- dpApproach.implement()
         } yield ()
       }
 
@@ -56,24 +59,22 @@ class LongestCommonSubsequenceMainJava {
     }
   }
 
-  def runDirectToDisc(targetDirectory: Path, model:Model): IO[ExitCode] = {
+  def runDirectToDisc(targetDirectory: Path): IO[ExitCode] = {
     for {
-      _ <- directToDiskTransaction(targetDirectory, model)
+      _ <- directToDiskTransaction(targetDirectory)
     } yield ExitCode.Success
   }
 }
 
 object LongestCommonSubsequenceDirectToDiskMain extends IOApp {
-  val targetDirectory = Paths.get("target", "bottomUp", "twoSequences", "longestcommonsubsequence")
+  val targetDirectory = Paths.get("target", "lcs")
 
   def run(args: List[String]): IO[ExitCode] = {
-    val LCS: Model = new Model("LongestCommonSubsequence", List(), List())
-
     for {
       _ <- IO { print("Initializing Generator...") }
       main <- IO { new LongestCommonSubsequenceMainJava() }
       _ <- IO { println("[OK]") }
-      result <- main.runDirectToDisc(targetDirectory, LCS)
+      result <- main.runDirectToDisc(targetDirectory)
     } yield result
   }
 }

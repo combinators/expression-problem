@@ -7,6 +7,11 @@ import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Boole
 import org.combinators.cogen.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.cogen.{AbstractSyntax, Command, NameProvider, TypeRep}
 
+/**
+ * One of the earliest implementations to generate a successful bottom-up implementation of UncrossedLines (no test cases however).
+ * 
+ * Uses the "get_bottom_right_dp_element" methods in TwoSequencesUtility and "make_nested_for_loop" in Utility
+ */
 trait UncrossedLinesObjectOrientedProvider extends TwoSequencesUtility {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val names: NameProvider[paradigm.syntax.Name]

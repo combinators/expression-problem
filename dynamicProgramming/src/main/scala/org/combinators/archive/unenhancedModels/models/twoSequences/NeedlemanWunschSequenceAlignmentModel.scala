@@ -1,7 +1,9 @@
 package org.combinators.archive.unenhancedModels.models.twoSequences
 
 import org.combinators.models._
+import org.combinators.models.original.Model
 
+@deprecated(message = "Needs to be upgraded to Enhanced Model, since gapPenalty (and others) does not generate properly")
 class NeedlemanWunschSequenceAlignmentModel {
   def instantiate(): Model = {
     val s1 = new ArgExpression(0, "s1", StringType(), "r")

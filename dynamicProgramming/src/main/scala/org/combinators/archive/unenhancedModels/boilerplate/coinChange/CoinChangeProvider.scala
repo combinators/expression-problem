@@ -1,18 +1,25 @@
-package org.combinators.archive.cogen.topDown.twoSequence.minEditDistance
+package org.combinators.archive.unenhancedModels.boilerplate.coinChange
 
-import org.combinators.dp.{DPObjectOrientedProvider, TestExample}
+import org.combinators.dp.TestExample
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.cogen.paradigm.control.Imperative
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.cogen.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.cogen.{AbstractSyntax, NameProvider, TypeRep}
-import org.combinators.models.{LiteralInt, UnitExpression}
+import org.combinators.dp.original.DPObjectOrientedProvider
+import org.combinators.models.{LiteralArray, LiteralInt, LiteralString, LiteralStringPair, UnitExpression}
 
-/** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
- * in a variety of contexts. This trait provides that capability
+/** 
+ * Partially working implementation of CoinChangeProvider.
+ * 
+ * 1. Only generates a single test case since the amount cannot be part of test case
+ * 2. Generates code that must have "fix_topdown.py" applied to it, to ensure code has import java.util.*
+ * 3. Even then, memo is not generated as a field.
+ * 
+ * A good start, however.
  */
-trait minEditDistanceProvider extends DPObjectOrientedProvider {
+trait CoinChangeProvider extends DPObjectOrientedProvider {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
@@ -32,20 +39,27 @@ trait minEditDistanceProvider extends DPObjectOrientedProvider {
   import syntax._
 
   // Specific examples hard coded for Int input and Int output
-  def makeTestsDecodeWays(implementation:String, tests: Seq[TestExample] = Seq.empty): Generator[MethodBodyContext, Seq[Expression]] = {
+  def makeTestsCoinChange(implementation:String, tests: Seq[TestExample] = Seq.empty): Generator[MethodBodyContext, Seq[Expression]] = {
     import eqls.equalityCapabilities._
     import paradigm.methodBodyCapabilities._
 
     // NOTE: these tests are in the wrong place, since we defer test gen to later
     val tests = Seq(
-      new TestExample("fib0", new LiteralInt(0), new LiteralInt(0), new UnitExpression), // for now, leave solution as None
+      new TestExample("test1", new LiteralArray(Array(1,2,5)), new LiteralInt(3), new LiteralString("test"))  // HACK: amount (11) is not here!
     )
+
     for {
       assert_statements <- forEach(tests) { example =>
 
         val input_value = example.inputType match {
-          case lt: LiteralInt => lt.literal
+          case lt: LiteralArray => lt.literal
           case _ => ??? // error in all other circumstances
+        }
+
+        val dimensions = example.inputType match {
+          case la: LiteralArray =>
+            la.dimensions
+          case _ => Seq.empty
         }
 
         val expected_value = example.answer match {
@@ -54,9 +68,14 @@ trait minEditDistanceProvider extends DPObjectOrientedProvider {
         }
 
         for {
-          fibType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle(implementation))
-          n_value <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, input_value)
-          sol <- ooParadigm.methodBodyCapabilities.instantiateObject(fibType, Seq(n_value))
+          solType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle(implementation))
+          arrayType <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
+
+          expr <- create_int_nd_array(input_value, dimensions)
+          variable <- impParadigm.imperativeCapabilities.declareVar(names.mangle("test"), arrayType, Some(expr))
+          eleven <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 11)
+          sol <- ooParadigm.methodBodyCapabilities.instantiateObject(solType, Seq(variable, eleven))
+
           computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, computeName)
 
           intType <- toTargetLanguageType(TypeRep.Int)
@@ -72,12 +91,12 @@ trait minEditDistanceProvider extends DPObjectOrientedProvider {
 
   override def makeTestCase(implementation:String): Generator[TestContext, Unit] = {
     for {
-      _ <- paradigm.testCapabilities.addTestCase(makeTestsDecodeWays(implementation), names.mangle("DP"))
+      _ <- paradigm.testCapabilities.addTestCase(makeTestsCoinChange(implementation), names.mangle("DP"))
     } yield ()
   }
 }
 
-object minEditDistanceProvider {
+object CoinChangeProvider {
   type WithParadigm[P <: AnyParadigm] = DPObjectOrientedProvider { val paradigm: P }
   type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
 
@@ -96,8 +115,8 @@ object minEditDistanceProvider {
    parametricPolymorphism: ParametricPolymorphism.WithBase[base.type],
    booleansIn: Booleans.WithBase[base.MethodBodyContext, base.type]
   )
-  (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): minEditDistanceProvider.WithParadigm[base.type] =
-    new minEditDistanceProvider {
+  (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): CoinChangeProvider.WithParadigm[base.type] =
+    new CoinChangeProvider {
       override val paradigm: base.type = base
       val impParadigm: imp.type = imp
       val arithmetic: ffiArithmetic.type = ffiArithmetic

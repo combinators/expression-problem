@@ -20,11 +20,11 @@ class MinPathSum {
     val zero = new LiteralInt(0)
     val one = new LiteralInt(1)
 
-    val grid = new ArgExpression(0, "grid", IntegerArray2DType(), "g")
+    val grid = ArgExpression(0, "grid", IntegerArray2DType(), "g")
     val bound = List(grid)
 
-    val numRows = new ArrayLengthExpression(grid)
-    val numCols = new ArrayLengthExpression(new ArrayElementExpression(grid, zero))
+    val numRows = ArrayLengthExpression(grid)
+    val numCols = ArrayLengthExpression(ArrayElementExpression(grid, zero))
 
     val r: HelperExpression = HelperExpression("r", zero, SelfExpression("r") < numRows, numRows)
     val c: HelperExpression = HelperExpression("c", zero, SelfExpression("c") < numCols, numCols)
@@ -33,27 +33,27 @@ class MinPathSum {
     val sol = SubproblemInvocation(order = Seq("r", "c"), helpers = helpers, returnType = IntegerType())
 
     // grid[r][c]
-    val gridVal = new ArrayElementExpression(new ArrayElementExpression(grid, r), c)
+    val gridVal = ArrayElementExpression(ArrayElementExpression(grid, r), c)
 
     // P(r, c) = min(P(r-1, c), P(r, c-1)) + grid[r][c]
     val general = ExpressionDefinition(
-      new MinExpression(
-        new SubproblemExpression(Seq(r - one, c)),
-        new SubproblemExpression(Seq(r, c - one))
+      MinExpression(
+        SubproblemExpression(Seq(r - one, c)),
+        SubproblemExpression(Seq(r, c - one))
       ) + gridVal
     )
 
     // P(0, c) = P(0, c-1) + grid[0][c]
     val topRow = IfThenElseDefinition(
       r == zero,
-      ExpressionStatement(new SubproblemExpression(Seq(zero, c - one)) + gridVal),
+      ExpressionStatement(SubproblemExpression(Seq(zero, c - one)) + gridVal),
       general
     )
 
     // P(r, 0) = P(r-1, 0) + grid[r][0]
     val leftCol = IfThenElseDefinition(
       c == zero,
-      ExpressionStatement(new SubproblemExpression(Seq(r - one, zero)) + gridVal),
+      ExpressionStatement(SubproblemExpression(Seq(r - one, zero)) + gridVal),
       topRow
     )
 
@@ -72,7 +72,7 @@ class MinPathSum {
       sol,
       definition,
       answer = ReturnExpressionDefinition(
-        new SubproblemExpression(Seq(numRows - one, numCols - one))
+        SubproblemExpression(Seq(numRows - one, numCols - one))
       )
     )
 

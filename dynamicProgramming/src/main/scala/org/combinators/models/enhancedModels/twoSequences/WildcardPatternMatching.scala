@@ -23,33 +23,33 @@ class WildcardPatternMatching {
   def model: EnhancedModel = {
     val zero = new LiteralInt(0)
     val one = new LiteralInt(1)
-    val star = new LiteralChar('*')
-    val quest = new LiteralChar('?')
+    val star = LiteralChar('*')
+    val quest = LiteralChar('?')
 
-    val txt = new ArgExpression(0, "txt", StringType(), "r")
-    val pat = new ArgExpression(1, "pat", StringType(), "c")
+    val txt = ArgExpression(0, "txt", StringType(), "r")
+    val pat = ArgExpression(1, "pat", StringType(), "c")
 
-    val r: HelperExpression = HelperExpression("r", zero, SelfExpression("r") <= new StringLengthExpression(txt), new StringLengthExpression(txt) + one)
-    val c: HelperExpression = HelperExpression("c", zero, SelfExpression("c") <= new StringLengthExpression(pat), new StringLengthExpression(pat) + one)
+    val r: HelperExpression = HelperExpression("r", zero, SelfExpression("r") <= StringLengthExpression(txt), StringLengthExpression(txt) + one)
+    val c: HelperExpression = HelperExpression("c", zero, SelfExpression("c") <= StringLengthExpression(pat), StringLengthExpression(pat) + one)
 
     val helpers = Map("r" -> r, "c" -> c)
     val soln = SubproblemInvocation(order = Seq("r", "c"), helpers = helpers, returnType = BooleanType())
 
-    val patChar = new CharAtExpression(pat, c - one)
-    val txtChar = new CharAtExpression(txt, r - one)
+    val patChar = CharAtExpression(pat, c - one)
+    val txtChar = CharAtExpression(txt, r - one)
 
     val isStar = patChar == star
     val isQuest = patChar == quest
     val charsMatch = txtChar == patChar
 
     // P(i,j) when pat[j-1] == '*': match empty (advance pat) or consume txt char
-    val starCase = new OrExpression(
-      new SubproblemExpression(Seq(r - one, c)), // '*' consumes one txt char
-      new SubproblemExpression(Seq(r, c - one)) // '*' matches empty
+    val starCase = OrExpression(
+      SubproblemExpression(Seq(r - one, c)), // '*' consumes one txt char
+      SubproblemExpression(Seq(r, c - one)) // '*' matches empty
     )
 
     // P(i,j) when pat[j-1] == '?' or chars match: inherit diagonal
-    val matchCase = ExpressionDefinition(new SubproblemExpression(Seq(r - one, c - one)))
+    val matchCase = ExpressionDefinition(SubproblemExpression(Seq(r - one, c - one)))
 
     // P(i,j) general: star, match/'?', or false
     val subproblemTraversal = IfThenElseDefinition(
@@ -57,29 +57,29 @@ class WildcardPatternMatching {
       ExpressionStatement(starCase),
       IfThenElseDefinition(
         isQuest || charsMatch,
-        ExpressionStatement(new SubproblemExpression(Seq(r - one, c - one))),
-        ExpressionDefinition(new LiteralBoolean(false))
+        ExpressionStatement(SubproblemExpression(Seq(r - one, c - one))),
+        ExpressionDefinition(LiteralBoolean(false))
       )
     )
 
     // P(0, j) = (pat[j-1] == '*') && P(0, j-1)
     val baseRow = IfThenElseDefinition(
       r == zero,
-      ExpressionStatement(new AndExpression(isStar, new SubproblemExpression(Seq(zero, c - one)))),
+      ExpressionStatement(isStar && SubproblemExpression(Seq(zero, c - one))),
       subproblemTraversal
     )
 
     // P(i, 0) = false  (non-empty txt, empty pat)
     val baseCol = IfThenElseDefinition(
       c == zero,
-      ExpressionStatement(new LiteralBoolean(false)),
+      ExpressionStatement(LiteralBoolean(false)),
       baseRow
     )
 
     // P(0, 0) = true
     val definition = IfThenElseDefinition(
       r == zero && c == zero,
-      ExpressionStatement(new LiteralBoolean(true)),
+      ExpressionStatement(LiteralBoolean(true)),
       baseCol
     )
 
@@ -91,7 +91,7 @@ class WildcardPatternMatching {
       soln,
       definition,
       answer = ReturnExpressionDefinition(
-        new SubproblemExpression(Seq(new StringLengthExpression(txt), new StringLengthExpression(pat)))
+        SubproblemExpression(Seq(StringLengthExpression(txt), StringLengthExpression(pat)))
       )
     )
 

@@ -9,36 +9,28 @@ class CoinChangeModel {
     val zero: LiteralInt = new LiteralInt(0)
     val one: LiteralInt = new LiteralInt(1)
 
-    val arrayArg = new ArgExpression(0, "coins", IntegerArrayType(), "c")
-    val amount = new ArgExpression(1, "amount", IntegerType(), "a")
+    val arrayArg = ArgExpression(0, "coins", IntegerArrayType(), "c")
+    val amount = ArgExpression(1, "amount", IntegerType(), "a")
 
-    val c: IteratorExpression = new IteratorExpression(0, "c")
-    val a: IteratorExpression = new IteratorExpression(1, "a")
+    val c: IteratorExpression = IteratorExpression(0, "c")
+    val a: IteratorExpression = IteratorExpression(1, "a")
 
-    val coinscm1 = new ArrayElementExpression(arrayArg,c-one)
+    val coinscm1 = ArrayElementExpression(arrayArg,c-one)
 
 
     val Knapsack: Model = new Model("CoinChange",
       List(arrayArg,amount),
       cases = List(
-        (
-          Some(new EqualExpression(a, zero)),
-          zero
+        (Some(a == zero), zero),
+        (Some(c == zero),new LiteralInt(1073741823)),
+        (Some(amount < coinscm1),
+          SubproblemExpression(Seq(c-one))
         ),
-        (
-          Some(new EqualExpression(c, zero)),
-          new LiteralInt(1073741823)
-        ),
-        (
-          Some(new LessThanExpression(amount, coinscm1)),
-          new SubproblemExpression(Seq(c-one))
-        ),
-
         (
           None,
-           new MinExpression(
-             new SubproblemExpression(Seq(c, amount-coinscm1))+one,
-             new SubproblemExpression(Seq(c-one, amount)))
+           MinExpression(
+             SubproblemExpression(Seq(c, amount - coinscm1)) + one,
+             SubproblemExpression(Seq(c - one, amount)))
         )
       )
     )

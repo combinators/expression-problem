@@ -163,7 +163,6 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
     } yield None
   }
 
-
   def report(str:String) : Generator[paradigm.MethodBodyContext, Unit] = {
     println(str)
     for  {
@@ -438,17 +437,12 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
         arrayType <- toTargetLanguageType(arTypes(model))
 
         _ <- forEach(model.input) { bexpr => for {
-          tpe <- map_type_in_class(bexpr.argType)
-          _ <- addField(names.mangle(bexpr.name), tpe)
-        } yield ()
+            tpe <- map_type_in_class(bexpr.argType)
+            _ <- addField(names.mangle(bexpr.name), tpe)
+          } yield ()
         }
 
-
         _ <- addField(dpName, arrayType)   // this becomes "int" if I use arrayType
-        intType <- toTargetLanguageType(TypeRep.Int)
-        stringType <- toTargetLanguageType(TypeRep.String)
-        _ <- addField(names.mangle("HACK"), intType)
-        _ <- addField(names.mangle("HACK2"), stringType)
 
         constArgs <- forEach(model.input) { bexpr =>
           for {

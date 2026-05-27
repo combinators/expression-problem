@@ -8,8 +8,8 @@ import org.combinators.models.enhancedModels.twoSequences.DistinctSubsequences
 
 trait DistinctSubsequencesApp {
   val tests = Seq(
-    new TestExample("ds1", new LiteralStringPair("rabbbit", "rabbit"), new LiteralInt(3), new UnitExpression),
-    new TestExample("ds2", new LiteralStringPair("babgbag", "bag"),    new LiteralInt(5), new UnitExpression),
+    new TestExample("ds1", LiteralStringPair("rabbbit", "rabbit"), new LiteralInt(3), new UnitExpression),
+    new TestExample("ds2", LiteralStringPair("babgbag", "bag"),    new LiteralInt(5), new UnitExpression),
   )
 
   val model: EnhancedModel = new DistinctSubsequences().model

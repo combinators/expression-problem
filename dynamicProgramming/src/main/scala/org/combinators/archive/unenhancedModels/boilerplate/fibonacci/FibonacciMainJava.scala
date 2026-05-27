@@ -99,20 +99,20 @@ object FibonacciMainDirectToDiskMain extends IOApp {
     val two: LiteralInt = new LiteralInt(2)
 
     // Fibonacci has a single integer argument
-    val bound = List(new ArgExpression(0, "n", new IntegerType(), "i"))
+    val bound = List(ArgExpression(0, "n", IntegerType(), "i"))
 
     // COULD be inferred from the ArgExpression list, but this lets us name variable to use in iterator
-    val n: IteratorExpression = new IteratorExpression(0, "i")   // only one argument, i
+    val n: IteratorExpression = IteratorExpression(0, "i")   // only one argument, i
 
-    val im1 = new SubtractionExpression(n, one)
-    val im2 = new SubtractionExpression(n, two)
+    val im1 = SubtractionExpression(n, one)
+    val im2 = SubtractionExpression(n, two)
 
     val Fib = new Model("Fibonacci",
       bound,
       cases = List(
-        ( Some(new EqualExpression(n, zero)),  zero ),
-        ( Some(new EqualExpression(n, one)),   one ),
-        ( None, new AdditionExpression(new SubproblemExpression(Seq(im1)), new SubproblemExpression(Seq(im2))) )
+        ( Some(n == zero),  zero ),
+        ( Some(n == one),   one ),
+        ( None, SubproblemExpression(Seq(im1)) + SubproblemExpression(Seq(im2)) )
       )
     )
 

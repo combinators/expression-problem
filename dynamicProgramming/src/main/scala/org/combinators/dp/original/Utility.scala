@@ -350,7 +350,7 @@ trait Utility {
         e <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle(ie.variableName))
       } yield e
 
-      // StringLengthExpression(new ArgExpression(0)), n))
+      // StringLengthExpression(ArgExpression(0)), n))
       case sle:StringLengthExpression => for {
         inner <- explore(sle.string, memoize, symbolTable, bottomUp)
         e <- strings.stringCapabilities.getStringLength(inner)

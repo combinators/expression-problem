@@ -131,27 +131,25 @@ object JumpToMainDirectToDiskMain extends IOApp {
 
     val zero: LiteralInt = new LiteralInt(0)
     val one: LiteralInt = new LiteralInt(1)
-    val ascii_zero:LiteralChar = new LiteralChar('0')
+    val ascii_zero:LiteralChar = LiteralChar('0')
     val two: LiteralInt = new LiteralInt(2)
 
     // what was passed into constructor of the original class
     val input:InputExpression = new InputExpression("array")   // might also need to pass in "type"
 
-    val bound = List(new ArgExpression(0, "array", new IntegerArrayType(), "i"))
+    val bound = List(ArgExpression(0, "array", IntegerArrayType(), "i"))
 
-    val n: IteratorExpression = new IteratorExpression(0, "i")   // only one argument, n
+    val n: IteratorExpression = IteratorExpression(0, "i")   // only one argument, n
 
-    val im1 = new SubtractionExpression(n, one)
-    
     val JumpTo = new Model("JumpTo",
       bound,
       cases = List(
         // array.length()-1 < n
-        ( Some(new LessThanExpression(new SubtractionExpression(new ArrayLengthExpression(input), one), n)),  zero),
+        ( Some(ArrayLengthExpression(input) - one < n),  zero),
         // array.length()-1 = n
-        ( Some(new EqualExpression(new SubtractionExpression(new ArrayLengthExpression(input), one), n)),  zero),
+        ( Some(ArrayLengthExpression(input) - one == n),                        zero),
         // HACK == helper(n-1)
-        ( None,                                new SubproblemExpression(Seq(im1)))
+        ( None,                                                                 SubproblemExpression(Seq(n - one)))
       )
     )
 

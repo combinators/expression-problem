@@ -7,22 +7,22 @@ class UncrossedLines {
     val zero = new LiteralInt(0)
     val one = new LiteralInt(1)
 
-    val nums1 = new ArgExpression(0, "nums1", IntegerArrayType(), "r")
-    val nums2 = new ArgExpression(1, "nums2", IntegerArrayType(), "c")
+    val nums1 = ArgExpression(0, "nums1", IntegerArrayType(), "r")
+    val nums2 = ArgExpression(1, "nums2", IntegerArrayType(), "c")
 
-    val r: HelperExpression = HelperExpression("r", zero, SelfExpression("r") <= new ArrayLengthExpression(nums1), new ArrayLengthExpression(nums1) + one)
-    val c: HelperExpression = HelperExpression("c", zero, SelfExpression("c") <= new ArrayLengthExpression(nums2), new ArrayLengthExpression(nums2) + one)
+    val r: HelperExpression = HelperExpression("r", zero, SelfExpression("r") <= ArrayLengthExpression(nums1), ArrayLengthExpression(nums1) + one)
+    val c: HelperExpression = HelperExpression("c", zero, SelfExpression("c") <= ArrayLengthExpression(nums2), ArrayLengthExpression(nums2) + one)
 
     val helpers = Map("r" -> r, "c" -> c)
     val soln = SubproblemInvocation(order = Seq("r", "c"), helpers = helpers, returnType = IntegerType())
 
     val subproblemTraversal = IfThenElseDefinition(
-      new ArrayElementExpression(nums1, r - one) == new ArrayElementExpression(nums2, c - one),
-      ExpressionStatement(new SubproblemExpression(Seq(r - one, c - one)) + one),
+      ArrayElementExpression(nums1, r - one) == ArrayElementExpression(nums2, c - one),
+      ExpressionStatement(SubproblemExpression(Seq(r - one, c - one)) + one),
       ExpressionDefinition(
-        new MaxExpression(
-          new SubproblemExpression(Seq(r, c - one)),
-          new SubproblemExpression(Seq(r - one, c))
+        MaxExpression(
+          SubproblemExpression(Seq(r, c - one)),
+          SubproblemExpression(Seq(r - one, c))
         )
       )
     )
@@ -40,7 +40,7 @@ class UncrossedLines {
       solutionType = IntegerType(),
       soln,
       definition,
-      answer = ReturnExpressionDefinition(new SubproblemExpression(Seq(new ArrayLengthExpression(nums1), new ArrayLengthExpression(nums2))))
+      answer = ReturnExpressionDefinition(SubproblemExpression(Seq(ArrayLengthExpression(nums1), ArrayLengthExpression(nums2))))
     )
 
     UL

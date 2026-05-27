@@ -5,8 +5,8 @@ import org.combinators.models.original.Model
 
 class UniquePathsModel {
   def instantiate(): Model = {
-    val m = new ArgExpression(0, "m", IntegerType(), "r")
-    val n = new ArgExpression(1, "n", IntegerType(), "c")
+    val m = ArgExpression(0, "m", IntegerType(), "r")
+    val n = ArgExpression(1, "n", IntegerType(), "c")
     val bounds = List(m, n)
 
     val zero = new LiteralInt(0)
@@ -22,7 +22,7 @@ class UniquePathsModel {
         ),
         (
           None,
-          new SubproblemExpression(Seq(m - one, n)) + new SubproblemExpression(Seq(m, n - one))
+          SubproblemExpression(Seq(m - one, n)) + SubproblemExpression(Seq(m, n - one))
         )
       )
     )

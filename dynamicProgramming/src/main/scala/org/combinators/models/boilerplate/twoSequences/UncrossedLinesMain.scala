@@ -8,7 +8,7 @@ import org.combinators.models.enhancedModels.twoSequences.UncrossedLines
 
 trait UncrossedLinesApp {
   val tests = Seq(
-    new TestExample("ul1", new LiteralArrayPair(Array(1, 4, 2), Array(1, 2, 4)), new LiteralInt(2), new UnitExpression)
+    new TestExample("ul1", LiteralArrayPair(Array(1, 4, 2), Array(1, 2, 4)), new LiteralInt(2), new UnitExpression)
   )
 
   val model: EnhancedModel = new UncrossedLines().model

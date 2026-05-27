@@ -9,7 +9,7 @@ class Tribonacci {
     val two = new LiteralInt(2)
     val three = new LiteralInt(3)
 
-    val n = new ArgExpression(0, "n", IntegerType(), "i")
+    val n = ArgExpression(0, "n", IntegerType(), "i")
     val bound = List(n)
 
     val i: HelperExpression = HelperExpression("i", zero, SelfExpression("i") <= n, n + one)
@@ -20,9 +20,9 @@ class Tribonacci {
       i == two,
       ExpressionStatement(one),
       ExpressionDefinition(
-        new SubproblemExpression(Seq(i - one)) +
-          new SubproblemExpression(Seq(i - two)) +
-          new SubproblemExpression(Seq(i - three))
+        SubproblemExpression(Seq(i - one)) +
+          SubproblemExpression(Seq(i - two)) +
+          SubproblemExpression(Seq(i - three))
       )
     )
 
@@ -44,7 +44,7 @@ class Tribonacci {
       solutionType = IntegerType(),
       sol,
       definition,
-      answer = ReturnExpressionDefinition(new SubproblemExpression(Seq(n)))
+      answer = ReturnExpressionDefinition(SubproblemExpression(Seq(n)))
     )
 
     Trib

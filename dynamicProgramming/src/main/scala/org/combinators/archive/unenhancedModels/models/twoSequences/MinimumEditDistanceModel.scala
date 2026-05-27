@@ -5,16 +5,15 @@ import org.combinators.models.original.Model
 
 class MinimumEditDistanceModel {
   def instantiate(): Model = {
-    val s1 = new ArgExpression(0, "s1", StringType(), "r")
-    val s2 = new ArgExpression(1, "s2", StringType(), "c")
+    val s1 = ArgExpression(0, "s1", StringType(), "r")
+    val s2 = ArgExpression(1, "s2", StringType(), "c")
 
-
-    val boundZero: Expression = new ArrayLengthExpression(s1)
-    val boundOne: Expression = new ArrayLengthExpression(s2)
+    val boundZero: Expression = ArrayLengthExpression(s1)
+    val boundOne: Expression = ArrayLengthExpression(s2)
     val bounds = List(s1, s2)
 
-    val r: IteratorExpression = new IteratorExpression(0, "r")
-    val c: IteratorExpression = new IteratorExpression(1, "c")
+    val r: IteratorExpression = IteratorExpression(0, "r")
+    val c: IteratorExpression = IteratorExpression(1, "c")
 
     val zero: LiteralInt = new LiteralInt(0)
     val one: LiteralInt = new LiteralInt(1)
@@ -23,26 +22,20 @@ class MinimumEditDistanceModel {
       "MinimumEditDistance",
       bounds = bounds,
       cases = List(
+        (Some(r == zero), c),
+        (Some(c == zero), r),
         (
-          Some(new EqualExpression(r, zero)),
-          c
-        ),
-        (
-          Some(new EqualExpression(c, zero)),
-          r
-        ),
-        (
-          Some(new EqualExpression(new CharAtExpression(s1, r - one), new CharAtExpression(s2, c - one), CharType())),
-          new SubproblemExpression(Seq(r - one, c - one))
+          Some(EqualExpression(CharAtExpression(s1, r - one), CharAtExpression(s2, c - one), CharType())),
+          SubproblemExpression(Seq(r - one, c - one))
         ),
         (
           None,
-          one + new MinExpression(
-            new MinExpression(
-              new SubproblemExpression(Seq(r - one, c)),
-              new SubproblemExpression(Seq(r, c - one))
+          one + MinExpression(
+            MinExpression(
+              SubproblemExpression(Seq(r - one, c)),
+              SubproblemExpression(Seq(r, c - one))
             ),
-            new SubproblemExpression(Seq(r - one, c - one))
+            SubproblemExpression(Seq(r - one, c - one))
           )
         )
       )

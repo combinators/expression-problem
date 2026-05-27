@@ -1,8 +1,6 @@
 package org.combinators.models
 
-import org.combinators.cogen.TypeRep
-
-trait ArgumentType { 
+trait ArgumentType {
   
 }
 
@@ -83,7 +81,7 @@ case class SumDefinition(
 
 case class AccumulatorInformation(variable:String, inclusiveStart:Expression, guardCondition:Expression, advance:Expression)
 
-//ReturnAccumulatedDefinition("idx", "sum", zero, SelfExpression("idx") <= n, new SubproblemExpression(Seq(n, SelfExpression("idx"))), SelfExpression("idx") + one)
+//ReturnAccumulatedDefinition("idx", "sum", zero, SelfExpression("idx") <= n, SubproblemExpression(Seq(n, SelfExpression("idx"))), SelfExpression("idx") + one)
 // Accumulate values of P(...) and return as Integer
 case class ReturnAccumulatedDefinition(
   accumulationVariable: String,

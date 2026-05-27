@@ -10,32 +10,28 @@ class LongestValidParentheses {
     val one: LiteralInt = new LiteralInt(1)
     val two: LiteralInt = new LiteralInt(2)
 
-    val str = new ArgExpression(0, "str", StringType(), "i")
+    val str = ArgExpression(0, "str", StringType(), "i")
     val bound = List(str)
 
-
-    val strlen = new StringLengthExpression(str)
-    val i: HelperExpression = HelperExpression("i", zero, SelfExpression("i") <= strlen-one, strlen)
+    val strlen = StringLengthExpression(str)
+    val i: HelperExpression = HelperExpression("i", zero, SelfExpression("i") <= strlen - one, strlen)
     val j: HelperExpression = HelperExpression("j", zero, SelfExpression("j") <= one, two)
 
+    val last = SubproblemExpression(Seq(i-one,zero))
 
+    val cond = CharAtExpression(str, i) == LiteralChar(')') &&
+      (zero <= i - last - one) &&
+      CharAtExpression(str, i - last - one) == LiteralChar('(')
 
-    val last = new SubproblemExpression(Seq(i-one,zero))
+    val sol = SubproblemInvocation(Seq("i", "j"), helpers = Map("i" -> i,"j" -> j))
 
-    val cond = new CharAtExpression(str,i)== new LiteralChar(')') &&
-      (zero<=i-last-one) &&
-      new CharAtExpression(str, i-last-one)== new LiteralChar('(')
-
-    val sol = SubproblemInvocation(Seq("i","j"), helpers = Map("i" -> i,"j" -> j))
-
-    val ternary = new TernaryExpression(zero<=(i-last-two),new SubproblemExpression(Seq(i-last-two,zero)),zero)+zero
+    val ternary = TernaryExpression(zero <= (i - last - two), SubproblemExpression(Seq(i - last - two, zero)), zero)
     val complexValue = (last + two) + ternary
 
     val complexCase = IfThenElseDefinition(cond, ExpressionStatement(complexValue), ExpressionDefinition(zero))
-    val maxFinder = new MaxExpression(new SubproblemExpression(Seq(i,zero)), new SubproblemExpression(Seq(i-one,one)))
-    val maxCase = IfThenElseDefinition(j==one, ExpressionStatement(maxFinder), complexCase)
+    val maxFinder = MaxExpression(SubproblemExpression(Seq(i, zero)), SubproblemExpression(Seq(i - one, one)))
+    val maxCase = IfThenElseDefinition(j == one, ExpressionStatement(maxFinder), complexCase)
     val zeroCase = IfThenElseDefinition(i == zero, ExpressionStatement(zero), maxCase)
-
 
     val Fib = new EnhancedModel("LVP",
       bound,
@@ -43,7 +39,7 @@ class LongestValidParentheses {
       solutionType = StringType(),  // how a solution is represented (not yet effective)
       sol,
       zeroCase,
-      answer = ReturnExpressionDefinition(new SubproblemExpression(Seq(new StringLengthExpression(str)-one,one))))
+      answer = ReturnExpressionDefinition(SubproblemExpression(Seq(StringLengthExpression(str) - one, one))))
 
     Fib
   }

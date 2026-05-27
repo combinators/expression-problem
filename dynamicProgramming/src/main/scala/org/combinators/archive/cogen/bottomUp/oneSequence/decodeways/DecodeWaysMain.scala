@@ -134,29 +134,26 @@ object DPDirectToDiskMain extends IOApp {
 
     val zero: LiteralInt = new LiteralInt(0)
     val one: LiteralInt = new LiteralInt(1)
-    val ascii_zero:LiteralChar = new LiteralChar('0')
+    val ascii_zero:LiteralChar = LiteralChar('0')
     val two: LiteralInt = new LiteralInt(2)
 
     // what was passed into constructor of the original class
     val input:InputExpression = new InputExpression("s")   // might also need to pass in "type"
 
-    val bound = List(new ArgExpression(0, "text1", new StringType(), "r"), new ArgExpression(1, "text2", new StringType(), "c"))
+    val bound = List(ArgExpression(0, "text1", StringType(), "r"), ArgExpression(1, "text2", StringType(), "c"))
 
-    val r: IteratorExpression = new IteratorExpression(0, "r")   // only one argument, n
-    val c: IteratorExpression = new IteratorExpression(1, "c")   // only one argument, n
-
-    val im1 = new SubtractionExpression(r, one)
-    val im2 = new SubtractionExpression(c, two)
+    val r: IteratorExpression = IteratorExpression(0, "r")   // only one argument, n
+    val c: IteratorExpression = IteratorExpression(1, "c")   // only one argument, n
 
     val DecodeWays = new Model("DecodeWays",
       bound,
       cases = List(
         // s.length() == n
-        ( Some(new EqualExpression(new StringLengthExpression(input), one)),  one ),
+        ( Some(StringLengthExpression(input) == one),       one ),
         // s.CharAt(n) == '0')
-        ( Some(new EqualExpression(new CharAtExpression(input, one), ascii_zero)), zero),
+        ( Some(CharAtExpression(input, one) == ascii_zero), zero),
         // HACK == helper(n-1)
-        ( None,                                new SubproblemExpression(Seq(im1)))
+        ( None,                                             SubproblemExpression(Seq(r - one)))
       )
     )
 

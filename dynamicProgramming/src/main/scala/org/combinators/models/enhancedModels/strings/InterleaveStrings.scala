@@ -9,14 +9,14 @@ class InterleaveStrings {
     val one: LiteralInt = new LiteralInt(1)
 
     // Interleaving strings really explores space over (s1,s2) and uses s3 as a target so it isn't part of the search space.
-    val s1 = new ArgExpression(0, "s1", StringType(), "i1")
-    val s2 = new ArgExpression(1, "s2", StringType(), "i2")
-    val s3 = new ArgExpression(2, "s3", StringType(), "i3")
+    val s1 = ArgExpression(0, "s1", StringType(), "i1")
+    val s2 = ArgExpression(1, "s2", StringType(), "i2")
+    val s3 = ArgExpression(2, "s3", StringType(), "i3")
     val bounds = List(s1, s2, s3)
 
     // COULD be inferred from the ArgExpression list, but this lets us name variable to use in iterator
-    val i1: HelperExpression = HelperExpression("i1", zero, SelfExpression("i1") <= new StringLengthExpression(s1), new StringLengthExpression(s1) + one)
-    val i2: HelperExpression = HelperExpression("i2", zero, SelfExpression("i2") <= new StringLengthExpression(s2), new StringLengthExpression(s2) + one)
+    val i1: HelperExpression = HelperExpression("i1", zero, SelfExpression("i1") <= StringLengthExpression(s1), StringLengthExpression(s1) + one)
+    val i2: HelperExpression = HelperExpression("i2", zero, SelfExpression("i2") <= StringLengthExpression(s2), StringLengthExpression(s2) + one)
 
     // what the compute() method calls with helper(s1.length(), s2.length())
     val helpers = Map("i1" -> i1, "i2" -> i2)
@@ -28,39 +28,39 @@ class InterleaveStrings {
      *      for (int k = i; k < j; k++)
      */
 
-    val case_final = new OrExpression(
-      new AndExpression(
-        new CharAtExpression(s1, i1 - one) == new CharAtExpression(s3, i1 + i2 - one),
-        new SubproblemExpression(Seq(i1 - one, i2))
+    val case_final = OrExpression(
+      AndExpression(
+        CharAtExpression(s1, i1 - one) == CharAtExpression(s3, i1 + i2 - one),
+        SubproblemExpression(Seq(i1 - one, i2))
       ),
-      new AndExpression(
-        new CharAtExpression(s2, i2 - one) == new CharAtExpression(s3, i1 + i2 - one),
-        new SubproblemExpression(Seq(i1, i2 - one))
+      AndExpression(
+        CharAtExpression(s2, i2 - one) == CharAtExpression(s3, i1 + i2 - one),
+        SubproblemExpression(Seq(i1, i2 - one))
       )
     )
 
     val case_5 = IfThenElseDefinition(i2 == zero,
-      ExpressionStatement((new CharAtExpression(s1, i1 - one) == new CharAtExpression(s3, i1 - one)) && new SubproblemExpression(Seq(i1 - one, zero))),
+      ExpressionStatement((CharAtExpression(s1, i1 - one) == CharAtExpression(s3, i1 - one)) && SubproblemExpression(Seq(i1 - one, zero))),
       ExpressionDefinition(case_final))
 
     val case_4 = IfThenElseDefinition(i1 == zero,
-      ExpressionStatement((new CharAtExpression(s2, i2 - one) == new CharAtExpression(s3, i2 - one)) && new SubproblemExpression(Seq(zero, i2 - one))),
+      ExpressionStatement((CharAtExpression(s2, i2 - one) == CharAtExpression(s3, i2 - one)) && SubproblemExpression(Seq(zero, i2 - one))),
       case_5)
 
     val case_3 = IfThenElseDefinition((i1 == zero) && (i2==zero),
-      ExpressionStatement(new LiteralBoolean(true)),
+      ExpressionStatement(LiteralBoolean(true)),
       case_4)
 
-    val case_2 = IfThenElseDefinition(new StringLengthExpression(s3) < i1 + i2,
-      ExpressionStatement(new LiteralBoolean(false)),
+    val case_2 = IfThenElseDefinition(StringLengthExpression(s3) < i1 + i2,
+      ExpressionStatement(LiteralBoolean(false)),
       case_3)
 
-    val case_1 = IfThenElseDefinition(new StringLengthExpression(s2) < i2,
-      ExpressionStatement(new LiteralBoolean(false)),
+    val case_1 = IfThenElseDefinition(StringLengthExpression(s2) < i2,
+      ExpressionStatement(LiteralBoolean(false)),
       case_2)
 
-    val ils_definition = IfThenElseDefinition(new StringLengthExpression(s1) < i1,
-      ExpressionStatement(new LiteralBoolean(false)),
+    val ils_definition = IfThenElseDefinition(StringLengthExpression(s1) < i1,
+      ExpressionStatement(LiteralBoolean(false)),
       case_1)
 
     val ILS = new EnhancedModel("InterleavingStrings",
@@ -69,7 +69,7 @@ class InterleaveStrings {
       solutionType = StringType(),       // solution is a string, showing where characters come from S1 with parens
       sol,
       ils_definition,
-      answer = ReturnExpressionDefinition(new SubproblemExpression(Seq(new StringLengthExpression(s1), new StringLengthExpression(s2))))
+      answer = ReturnExpressionDefinition(SubproblemExpression(Seq(StringLengthExpression(s1), StringLengthExpression(s2))))
     )
 
     ILS

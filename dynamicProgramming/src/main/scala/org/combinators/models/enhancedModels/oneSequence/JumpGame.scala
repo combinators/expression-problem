@@ -9,11 +9,11 @@ class JumpGame {
     val zero = new LiteralInt(0)
     val one  = new LiteralInt(1)
 
-    val arr = new ArgExpression(0, "arr", IntegerArrayType(), "j")  // j is the iterator
-    //val index = new ArgExpression(1, "i", IntegerType(), "i")
-    val arr_length = new ArrayLengthExpression(arr)
-    //val eleAtIndex = new ArrayElementExpression(arr, index)
-    //val loopBound = new AdditionExpression(eleAtIndex, index)
+    val arr = ArgExpression(0, "arr", IntegerArrayType(), "j")  // j is the iterator
+    //val index = ArgExpression(1, "i", IntegerType(), "i")
+    val arr_length = ArrayLengthExpression(arr)
+    //val eleAtIndex = ArrayElementExpression(arr, index)
+    //val loopBound = AdditionExpression(eleAtIndex, index)
     val bound = List(arr)
 
     val i:HelperExpression = HelperExpression("i", one, SelfExpression("i") <= arr_length, arr_length + one)
@@ -23,8 +23,8 @@ class JumpGame {
         "j",
         i +  one,
         SelfExpression("j") <= arr_length,
-        new SubproblemExpression(Seq(SelfExpression("j"))),
-        new AdditionExpression(SelfExpression("j"), one)
+        SubproblemExpression(Seq(SelfExpression("j"))),
+        SelfExpression("j") + one
       )
 
     val helperTable = Map("i" -> i)
@@ -39,7 +39,7 @@ class JumpGame {
       solutionType = IntegerType(),
       solution = sol_dt,
       definition = basecase,
-      answer = ReturnExpressionDefinition(new SubproblemExpression((Seq(zero))))
+      answer = ReturnExpressionDefinition(SubproblemExpression((Seq(zero))))
     )
 
     JumpGame

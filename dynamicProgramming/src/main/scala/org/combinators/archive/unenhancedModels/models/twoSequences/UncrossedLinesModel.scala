@@ -5,15 +5,15 @@ import org.combinators.models.original.Model
 
 class UncrossedLinesModel {
   def instantiate(): Model = {
-    val nums1 = new ArgExpression(0, "A1", IntegerArrayType(), "r")
-    val nums2 = new ArgExpression(1, "A2", IntegerArrayType(), "c")
+    val nums1 = ArgExpression(0, "A1", IntegerArrayType(), "r")
+    val nums2 = ArgExpression(1, "A2", IntegerArrayType(), "c")
 
-    val boundZero: Expression = new ArrayLengthExpression(nums1)
-    val boundOne: Expression = new ArrayLengthExpression(nums2)
+    val boundZero: Expression = ArrayLengthExpression(nums1)
+    val boundOne: Expression = ArrayLengthExpression(nums2)
     val bounds = List(nums1, nums2) 
 
-    val r: IteratorExpression = new IteratorExpression(0, "r")
-    val c: IteratorExpression = new IteratorExpression(1, "c")
+    val r: IteratorExpression = IteratorExpression(0, "r")
+    val c: IteratorExpression = IteratorExpression(1, "c")
 
     val zero: LiteralInt = new LiteralInt(0)
     val one: LiteralInt = new LiteralInt(1)
@@ -31,17 +31,17 @@ class UncrossedLinesModel {
           zero
         ),
         (
-          Some(new ArrayElementExpression(nums1, new SubtractionExpression(r, one)) == new ArrayElementExpression(nums2, new SubtractionExpression(c, one))),
-          new AdditionExpression(
-            new SubproblemExpression(Seq(r - one, c - one)),
+          Some(ArrayElementExpression(nums1, SubtractionExpression(r, one)) == ArrayElementExpression(nums2, SubtractionExpression(c, one))),
+          AdditionExpression(
+            SubproblemExpression(Seq(r - one, c - one)),
             one
           )
         ),
         (
           None,
-          new MaxExpression(
-            new SubproblemExpression(Seq(r, c - one)),
-            new SubproblemExpression(Seq(r - one, c))
+          MaxExpression(
+            SubproblemExpression(Seq(r, c - one)),
+            SubproblemExpression(Seq(r - one, c))
           )
         ),
       )

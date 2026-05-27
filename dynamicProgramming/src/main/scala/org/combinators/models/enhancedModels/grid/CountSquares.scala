@@ -17,10 +17,10 @@ class CountSquares {
     val zero = new LiteralInt(0)
     val one = new LiteralInt(1)
 
-    val grid = new ArgExpression(0, "grid", IntegerArray2DType(), "g")
+    val grid = ArgExpression(0, "grid", IntegerArray2DType(), "g")
 
-    val numRows = new ArrayLengthExpression(grid)
-    val numCols = new ArrayLengthExpression(new ArrayElementExpression(grid, zero))
+    val numRows = ArrayLengthExpression(grid)
+    val numCols = ArrayLengthExpression(ArrayElementExpression(grid, zero))
 
     val r: HelperExpression = HelperExpression("r", zero, SelfExpression("r") < numRows, numRows)
     val c: HelperExpression = HelperExpression("c", zero, SelfExpression("c") < numCols, numCols)
@@ -29,14 +29,14 @@ class CountSquares {
     val soln = SubproblemInvocation(order = Seq("r", "c"), helpers = helpers, returnType = IntegerType())
 
     // grid[r][c]
-    val gridVal = new ArrayElementExpression(new ArrayElementExpression(grid, r), c)
+    val gridVal = ArrayElementExpression(ArrayElementExpression(grid, r), c)
 
     // min(P(r-1,c-1), min(P(r-1,c), P(r,c-1))) + 1
-    val minThree = new MinExpression(
-      new SubproblemExpression(Seq(r - one, c - one)),
-      new MinExpression(
-        new SubproblemExpression(Seq(r - one, c)),
-        new SubproblemExpression(Seq(r, c - one))
+    val minThree = MinExpression(
+      SubproblemExpression(Seq(r - one, c - one)),
+      MinExpression(
+        SubproblemExpression(Seq(r - one, c)),
+        SubproblemExpression(Seq(r, c - one))
       )
     ) + one
 
@@ -60,7 +60,7 @@ class CountSquares {
         AccumulatorInformation("ridx", zero, SelfExpression("ridx") < numRows, SelfExpression("ridx") + one),
         AccumulatorInformation("cidx", zero, SelfExpression("cidx") < numCols, SelfExpression("cidx") + one),
       ),
-      new SubproblemExpression(Seq(SelfExpression("ridx"), SelfExpression("cidx")))
+      SubproblemExpression(Seq(SelfExpression("ridx"), SelfExpression("cidx")))
     )
 
     val CS: EnhancedModel = new EnhancedModel(

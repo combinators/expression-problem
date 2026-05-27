@@ -10,27 +10,16 @@ class FibonacciModel {
     val one: LiteralInt = new LiteralInt(1)
     val two: LiteralInt = new LiteralInt(2)
 
-    val bound = List(new ArgExpression(0, "n", IntegerType(), "i"))
+    val bound = List(ArgExpression(0, "n", IntegerType(), "i"))
 
-    val i: IteratorExpression = new IteratorExpression(0, "i")
-    val im1 = new SubtractionExpression(i, one)
-    val im2 = new SubtractionExpression(i, two)
+    val i: IteratorExpression = IteratorExpression(0, "i")
 
     val Fib: Model = new Model("Fibonacci",
       bound,
       cases = List(
-        (
-          Some(new EqualExpression(i, zero)),
-          zero
-        ),
-        (
-          Some(new EqualExpression(i, one)),
-          one
-        ),
-        (
-          None,
-           new SubproblemExpression(Seq(im1)) + new SubproblemExpression(Seq(im2))
-        )
+        (Some(i == zero),    zero),
+        (Some(i == one),     one),
+        (None,               SubproblemExpression(Seq(i - one)) + SubproblemExpression(Seq(i - two)))
       )
     )
 

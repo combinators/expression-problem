@@ -10,13 +10,13 @@ class MatrixChainMultiplicationTD {
     val two:  LiteralInt = new LiteralInt(2)
 
     // MatrixChainMultiplication has an array of N+1 integers,representing N 2D Matrices
-    val array = new ArgExpression(0, "nums", new IntegerArrayType(), "c")     // not too sure whether 'i' remains a requirement as argument here
+    val array = ArgExpression(0, "nums", IntegerArrayType(), "c")     // not too sure whether 'i' remains a requirement as argument here
     val bound = List(array)
 
-    val i: HelperExpression = HelperExpression("i", zero, SelfExpression("i") <= new ArrayLengthExpression(array), new ArrayLengthExpression(array))   // MOST of this unnecessary
-    val j: HelperExpression = HelperExpression("j", zero, SelfExpression("i") <= new ArrayLengthExpression(array), new ArrayLengthExpression(array))   // MOST of this unnecessary
+    val i: HelperExpression = HelperExpression("i", zero, SelfExpression("i") <= ArrayLengthExpression(array), ArrayLengthExpression(array))   // MOST of this unnecessary
+    val j: HelperExpression = HelperExpression("j", zero, SelfExpression("i") <= ArrayLengthExpression(array), ArrayLengthExpression(array))   // MOST of this unnecessary
 
-    val k: HelperExpression = HelperExpression("k", i, SelfExpression("k") < j, new ArrayLengthExpression(array)) // k will always be within this range
+    val k: HelperExpression = HelperExpression("k", i, SelfExpression("k") < j, ArrayLengthExpression(array)) // k will always be within this range
 
     val helpers = Map("i" -> i, "j" -> j)
     val sol = SubproblemInvocation(Seq("i", "j"), helpers = helpers)   // seq(c,r) is for BOTTOM UP only but i,j are included for TOP DOWN
@@ -28,7 +28,7 @@ class MatrixChainMultiplicationTD {
      *   P(i,j) = Min (k, P(i,k) + P(k+1,j) + cost of multiplying resulting two matrices)
      *      for (int k = i; k < j; k++)
      */
-    val subprobExpr = new SubproblemExpression(Seq(i, k)) + new SubproblemExpression(Seq(k + one, j)) + array(i - one) * array(k) * array(j)
+    val subprobExpr = SubproblemExpression(Seq(i, k)) + SubproblemExpression(Seq(k + one, j)) + array(i - one) * array(k) * array(j)
 
     // Min range definition for k in range from i (inclusive) to j (exclusive) with an advance of k+1
     val defij = MinRangeDefinition("k", i, k < j, subprobExpr, k + one)
@@ -44,7 +44,7 @@ class MatrixChainMultiplicationTD {
       mode = UpperTriangle(Seq("i", "j")),
 
       // answer can be found in dp[1][n]
-      answer = ReturnExpressionDefinition(new SubproblemExpression(Seq(one, new ArrayLengthExpression(array) - one)))
+      answer = ReturnExpressionDefinition(SubproblemExpression(Seq(one, ArrayLengthExpression(array) - one)))
     )
 
     MCM

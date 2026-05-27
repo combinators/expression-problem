@@ -5,15 +5,15 @@ import org.combinators.models.original.Model
 
 class ThreeStringLCSModel {
   def instantiate(): Model = {
-    val s1 = new ArgExpression(0, "s1", StringType(), "i")
-    val s2 = new ArgExpression(1, "s2", StringType(), "j")
-    val s3 = new ArgExpression(2, "s3", StringType(), "k")
+    val s1 = ArgExpression(0, "s1", StringType(), "i")
+    val s2 = ArgExpression(1, "s2", StringType(), "j")
+    val s3 = ArgExpression(2, "s3", StringType(), "k")
 
     val bounds = List(s1, s2, s3)
 
-    val i: IteratorExpression = new IteratorExpression(0, "i")
-    val j: IteratorExpression = new IteratorExpression(1, "j")
-    val k: IteratorExpression = new IteratorExpression(2, "k")
+    val i: IteratorExpression = IteratorExpression(0, "i")
+    val j: IteratorExpression = IteratorExpression(1, "j")
+    val k: IteratorExpression = IteratorExpression(2, "k")
 
     val zero: LiteralInt = new LiteralInt(0)
     val one: LiteralInt = new LiteralInt(1)
@@ -22,25 +22,18 @@ class ThreeStringLCSModel {
       "ThreeStringLCS",
       bounds = bounds,
       cases = List(
+        (Some(i == zero || j == zero || k == zero), zero),
         (
-          Some(
-            new EqualExpression(i, zero) ||
-            new EqualExpression(j, zero) ||
-            new EqualExpression(k, zero)
-          ),
-          zero
-        ),
-        (
-          Some(new CharAtExpression(s1, i - one) == new CharAtExpression(s2, j - one) && new CharAtExpression(s1, i - one) == new CharAtExpression(s3, k - one)),
-          new SubproblemExpression(Seq(i - one, j - one, k - one)) + one
+          Some(CharAtExpression(s1, i - one) == CharAtExpression(s2, j - one) && CharAtExpression(s1, i - one) == CharAtExpression(s3, k - one)),
+          SubproblemExpression(Seq(i - one, j - one, k - one)) + one
         ),
         (
           None,
-          new MaxExpression(
-            new SubproblemExpression(Seq(i - one, j, k)),
-            new MaxExpression(
-              new SubproblemExpression(Seq(i, j - one, k)),
-              new SubproblemExpression(Seq(i, j, k - one))
+          MaxExpression(
+            SubproblemExpression(Seq(i - one, j, k)),
+            MaxExpression(
+              SubproblemExpression(Seq(i, j - one, k)),
+              SubproblemExpression(Seq(i, j, k - one))
             )
           )
         )

@@ -1,7 +1,13 @@
-# DP Generators that Compile:
+The `EnhancedModel` adds additional capabilities to support generating various DP problems.
 
-- bottomUp/twoSequences/longestCommonSubsequence (missing cases)
-- bottomUp/twoSequences/uncrossedLines (missing cases)
-- bottomUp/oneSequence/tribonacci
-- topDown/oneSequence/tribonacci
-- 
+```
+class EnhancedModel(val problem:String,
+                    val input:Seq[ArgExpression],
+                    val subproblemType:ArgumentType,        // Type of solution
+                    val solutionType:ArgumentType,          // Type of return value
+                    val solution:SubproblemInvocation,
+                    val definition:Definition,
+                    val answer:Definition,                  // all existing Expression should just use ExpressionDefinition(expr)
+                    val mode:ProblemOrder = Canonical())
+```
+

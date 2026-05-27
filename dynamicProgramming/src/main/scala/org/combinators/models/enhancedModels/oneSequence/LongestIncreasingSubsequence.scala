@@ -9,10 +9,10 @@ class LongestIncreasingSubsequence {
     val one: LiteralInt = new LiteralInt(1)
     val two: LiteralInt = new LiteralInt(2)
 
-    val arr = new ArgExpression(0, "arr", IntegerArrayType(), "i")
+    val arr = ArgExpression(0, "arr", IntegerArrayType(), "i")
     val bound = List(arr)
 
-    val lenArr = new ArrayLengthExpression(arr)
+    val lenArr = ArrayLengthExpression(arr)
 
     // COULD be inferred from the ArgExpression list, but this lets us name variable to use in iterator
     val i: HelperExpression = HelperExpression("i", one, SelfExpression("i") <= lenArr, lenArr) // only one argument, i
@@ -22,10 +22,10 @@ class LongestIncreasingSubsequence {
 
     val sol = SubproblemInvocation(Seq("i"), helpers = Map("i" -> i, "j" -> j))
 
-    val subprobExpr = new SubproblemExpression(Seq(j))
-    val checkExpr = new TernaryExpression(new ArrayElementExpression(arr, i) < new ArrayElementExpression(arr, j), subprobExpr + one, zero)
+    val subprobExpr = SubproblemExpression(Seq(j))
+    val checkExpr = TernaryExpression(ArrayElementExpression(arr, i) < ArrayElementExpression(arr, j), subprobExpr + one, zero)
 
-    val innerLoop = new MaxRangeDefinition("j",zero, j<i, checkExpr, j+one)
+    val innerLoop = MaxRangeDefinition("j",zero, j < i, checkExpr, j+one)
 
     val zeroCase = IfThenElseDefinition(i == zero, ExpressionStatement(one), innerLoop)
 
@@ -35,7 +35,7 @@ class LongestIncreasingSubsequence {
       solutionType = StringType(),  // how a solution is represented (not yet effective)
       sol,
       zeroCase,
-      answer = ReturnExpressionDefinition(new SubproblemExpression(Seq(new ArrayLengthExpression(arr)))))
+      answer = ReturnExpressionDefinition(SubproblemExpression(Seq(ArrayLengthExpression(arr)))))
 
     Fib
   }

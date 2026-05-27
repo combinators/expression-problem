@@ -10,7 +10,7 @@ class Fibonacci {
     val two: LiteralInt = new LiteralInt(2)
 
     // MatrixChainMultiplication has an array of N+1 integers,representing N 2D Matrices
-    val n = new ArgExpression(0, "n", IntegerType(), "i")
+    val n = ArgExpression(0, "n", IntegerType(), "i")
     val bound = List(n)
 
     // COULD be inferred from the ArgExpression list, but this lets us name variable to use in iterator
@@ -20,7 +20,7 @@ class Fibonacci {
     val sol = SubproblemInvocation(Seq("i"), helpers = Map("i" -> i))
 
     val oneCase = IfThenElseDefinition(i == one, ExpressionStatement(one),
-      ExpressionDefinition(new SubproblemExpression(Seq(i - one)) + new SubproblemExpression(Seq(i - two))))
+      ExpressionDefinition(SubproblemExpression(Seq(i - one)) + SubproblemExpression(Seq(i - two))))
 
     val zeroCase = IfThenElseDefinition(i == zero, ExpressionStatement(zero), oneCase)
 
@@ -30,7 +30,7 @@ class Fibonacci {
       solutionType = StringType(),  // how a solution is represented (not yet effective)
       sol,
       zeroCase,
-      answer = ReturnExpressionDefinition(new SubproblemExpression(Seq(n))))
+      answer = ReturnExpressionDefinition(SubproblemExpression(Seq(n))))
 
     Fib
   }

@@ -18,8 +18,8 @@ class UniquePaths {
     val zero = new LiteralInt(0)
     val one = new LiteralInt(1)
 
-    val m = new ArgExpression(0, "m", IntegerType(), "r")
-    val n = new ArgExpression(1, "n", IntegerType(), "c")
+    val m = ArgExpression(0, "m", IntegerType(), "r")
+    val n = ArgExpression(1, "n", IntegerType(), "c")
     val bound = List(m, n)
 
     val r: HelperExpression = HelperExpression("r", zero, SelfExpression("r") < m, m)
@@ -30,7 +30,7 @@ class UniquePaths {
 
     // P(r, c) = P(r-1, c) + P(r, c-1)
     val subproblemTraversal = ExpressionDefinition(
-      new SubproblemExpression(Seq(r - one, c)) + new SubproblemExpression(Seq(r, c - one))
+      SubproblemExpression(Seq(r - one, c)) + SubproblemExpression(Seq(r, c - one))
     )
 
     // P(0, c) = 1: only one way along the top row
@@ -55,7 +55,7 @@ class UniquePaths {
       sol,
       definition,
       answer = ReturnExpressionDefinition(
-        new SubproblemExpression(Seq(m - one, n - one))
+        SubproblemExpression(Seq(m - one, n - one))
       )
     )
 

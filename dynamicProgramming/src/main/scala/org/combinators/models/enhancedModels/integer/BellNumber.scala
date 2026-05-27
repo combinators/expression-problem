@@ -17,7 +17,7 @@ class BellNumber {
     val zero: LiteralInt = new LiteralInt(0)
     val one: LiteralInt = new LiteralInt(1)
 
-    val n = new ArgExpression(0, "n", IntegerType(), "i")
+    val n = ArgExpression(0, "n", IntegerType(), "i")
     val bound = List(n)
 
     val i: HelperExpression = HelperExpression("i", zero, SelfExpression("i") <= n, n + one)            // in_range is not essential since this is not an argument to helper/subproblem
@@ -26,7 +26,7 @@ class BellNumber {
     val helperTable = Map( "i" -> i, "k" -> k )
     val sol = SubproblemInvocation(Seq("i", "k"), helpers = helperTable)
 
-    val expr = k * new SubproblemExpression(Seq(i - one, k)) + new SubproblemExpression(Seq(i - one, k - one))
+    val expr = k * SubproblemExpression(Seq(i - one, k)) + SubproblemExpression(Seq(i - one, k - one))
 
     // Parition of i elements by k is ONE, whenever i==k (like C (n,n)) or i==1 (like C(n,1)).
     val base3 = IfThenElseDefinition(i == k || k == one, ExpressionStatement(one), ExpressionDefinition(expr))
@@ -38,7 +38,7 @@ class BellNumber {
     val final_answer = ReturnAccumulatedDefinition(
       "sum",
       Seq(AccumulatorInformation("idx", zero, SelfExpression("idx") <= n, SelfExpression("idx") + one)),
-      new SubproblemExpression(Seq(n, SelfExpression("idx")))
+      SubproblemExpression(Seq(n, SelfExpression("idx")))
     )
 
     val BellNumber = new EnhancedModel("BellNumber",

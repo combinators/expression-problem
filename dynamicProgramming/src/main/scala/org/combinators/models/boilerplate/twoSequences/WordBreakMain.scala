@@ -21,8 +21,8 @@ trait WordBreakApp {
   val tests = Seq(
     // https://rna.informatik.uni-freiburg.de/Teaching/index.jsp?toolName=Needleman-Wunsch has really nice example
     // from google search via AI so cannot trace,
-    new TestExample("wb1", new WordBreakInput("catsanddog", Array("cats","dog","sand","and","cat")), new LiteralBoolean(false), new UnitExpression),
-    new TestExample("wb2", new WordBreakInput("leetcode", Array("leet","code")), new LiteralBoolean(true), new UnitExpression)
+    new TestExample("wb1", new WordBreakInput("catsanddog", Array("cats","dog","sand","and","cat")), LiteralBoolean(false), new UnitExpression),
+    new TestExample("wb2", new WordBreakInput("leetcode", Array("leet","code")), LiteralBoolean(true), new UnitExpression)
     // https://medium.com/@nandiniumbarkar/needleman-wunsch-algorithm-7bba68b510db
   )
   

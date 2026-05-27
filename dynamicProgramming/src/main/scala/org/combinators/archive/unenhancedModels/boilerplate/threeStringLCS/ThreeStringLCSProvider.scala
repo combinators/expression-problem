@@ -39,7 +39,7 @@ trait ThreeStringLCSProvider extends DPObjectOrientedProvider {
 
     // NOTE: these tests are in the wrong place, since we defer test gen to later
     val tests = Seq(
-      new TestExample("test1", new LiteralStringTriple("AGGT12", "12TXAYB", "12XBA"), new LiteralInt(2), new LiteralString("AC")) // for now, leave solution as None
+      new TestExample("test1", LiteralStringTriple("AGGT12", "12TXAYB", "12XBA"), new LiteralInt(2), LiteralString("AC")) // for now, leave solution as None
     )
 
     for {

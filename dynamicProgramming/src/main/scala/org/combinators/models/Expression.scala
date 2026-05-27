@@ -1,21 +1,21 @@
 package org.combinators.models
 
-// Nice use of overloading to simplify the expressions!!!
+// Nice use of overloading to simplify the expressions
 trait Expression {
-  def +(other: Expression): Expression = new AdditionExpression(this,other)
-  def -(other: Expression): Expression = new SubtractionExpression(this,other)
-  def *(other: Expression): Expression = new MultiplicationExpression(this,other)
-  def /(other: Expression): Expression = new DivisionExpression(this,other)
+  def +(other: Expression): Expression = AdditionExpression(this, other)
+  def -(other: Expression): Expression = SubtractionExpression(this, other)
+  def *(other: Expression): Expression = MultiplicationExpression(this, other)
+  def /(other: Expression): Expression = DivisionExpression(this, other)
 
-  def <(other: Expression): Expression & BooleanExpression = new LessThanExpression(this,other)
-  def <=(other: Expression): Expression & BooleanExpression = new LessThanOrEqualExpression(this,other)
+  def <(other: Expression): Expression & BooleanExpression = LessThanExpression(this, other)
+  def <=(other: Expression): Expression & BooleanExpression = LessThanOrEqualExpression(this, other)
 
   // When using ==, must assume it is IntegerType: Dangerous?? todo: allow for other types(?)
-  def ==(other: Expression): Expression & BooleanExpression = new EqualExpression(this,other, new IntegerType())
-  def ||(other: Expression): Expression & BooleanExpression = new OrExpression(this,other)
-  def &&(other: Expression): Expression & BooleanExpression = new AndExpression(this,other)
+  def ==(other: Expression): Expression & BooleanExpression = EqualExpression(this, other, IntegerType())
+  def ||(other: Expression): Expression & BooleanExpression = OrExpression(this, other)
+  def &&(other: Expression): Expression & BooleanExpression = AndExpression(this, other)
 
-  def apply(other: Expression): Expression = new ArrayElementExpression(this, other)
+  def apply(other: Expression): Expression = ArrayElementExpression(this, other)
   def tpe:ArgumentType
 }
 
@@ -32,7 +32,7 @@ class UnitExpression extends LiteralExpression {
 }   // VOID
 
 //Integer
-class AdditionExpression(val left: Expression, val right: Expression) extends Expression {
+case class AdditionExpression(left: Expression, right: Expression) extends Expression {
   def tpe: ArgumentType = {
     val leftType = left.tpe
     val rightType = right.tpe
@@ -40,7 +40,7 @@ class AdditionExpression(val left: Expression, val right: Expression) extends Ex
     leftType
   }
 }
-class SubtractionExpression(val left: Expression, val right: Expression) extends Expression {
+case class SubtractionExpression(left: Expression, right: Expression) extends Expression {
   def tpe: ArgumentType = {
     val leftType = left.tpe
     val rightType = right.tpe
@@ -48,7 +48,7 @@ class SubtractionExpression(val left: Expression, val right: Expression) extends
     leftType
   }
 }
-class MultiplicationExpression(val left: Expression, val right: Expression) extends Expression {
+case class MultiplicationExpression(left: Expression, right: Expression) extends Expression {
   def tpe: ArgumentType = {
     val leftType = left.tpe
     val rightType = right.tpe
@@ -56,7 +56,7 @@ class MultiplicationExpression(val left: Expression, val right: Expression) exte
     leftType
   }
 }
-class DivisionExpression(val left: Expression, val right: Expression) extends Expression {
+case class DivisionExpression(left: Expression, right: Expression) extends Expression {
   def tpe: ArgumentType = {
     val leftType = left.tpe
     val rightType = right.tpe
@@ -66,7 +66,7 @@ class DivisionExpression(val left: Expression, val right: Expression) extends Ex
 }
 
 // Vast majority are IntegerType
-class SubproblemExpression(val args: Seq[Expression], argType:ArgumentType = IntegerType()) extends Expression {
+case class SubproblemExpression(args: Seq[Expression], argType:ArgumentType = IntegerType()) extends Expression {
   def tpe: ArgumentType = argType
 }
 
@@ -77,7 +77,7 @@ case class SubproblemInvocation(
        returnType: ArgumentType = IntegerType(),
        mappers: Map[String, Expression] = Map.empty)         // variables that map to new coordinates into dp[] space and are added to bottom up
 
-class MaxExpression(val left: Expression, val right: Expression) extends Expression {
+case class MaxExpression(left: Expression, right: Expression) extends Expression {
   def tpe: ArgumentType = {
     val leftType = left.tpe
     val rightType = right.tpe
@@ -85,7 +85,7 @@ class MaxExpression(val left: Expression, val right: Expression) extends Express
     leftType
   }
 }
-class MinExpression(val left: Expression, val right: Expression) extends Expression {
+case class MinExpression(left: Expression, right: Expression) extends Expression {
   def tpe: ArgumentType = {
     val leftType = left.tpe
     val rightType = right.tpe
@@ -94,26 +94,26 @@ class MinExpression(val left: Expression, val right: Expression) extends Express
   }
 }
 
-class ArrayElementExpression(val array: Expression, val index: Expression) extends Expression {
+case class ArrayElementExpression(array: Expression, index: Expression) extends Expression {
   def tpe:ArgumentType = {
     assert(array.tpe.isInstanceOf[org.combinators.models.ArrayType], "ArrayElementExpression needs an array as first argument.")
     array.tpe.asInstanceOf[org.combinators.models.ArrayType].elementType
   }
 }
 
-// TODO: pass in type
-class FunctionExpression(val name:String, val args: Seq[Expression]) extends Expression {
+// TODO: Unused though could be used in future
+case class FunctionExpression(name:String, args: Seq[Expression]) extends Expression {
   def tpe:ArgumentType = IntegerType()
 }
 
 class LiteralInt(val literal: Int) extends LiteralExpression {
   def tpe:ArgumentType = IntegerType()
 }
-class IteratorExpression(val iteratorNumber: Int, val variable:String) extends Expression {
+case class IteratorExpression(iteratorNumber: Int, variable:String) extends Expression {
   def tpe: ArgumentType = IntegerType()
 }
 
-class CharToAsciiExpression(val char: Expression) extends Expression {
+case class CharToAsciiExpression(char: Expression) extends Expression {
   def tpe:ArgumentType = IntegerType()
 }
 
@@ -147,16 +147,16 @@ class LiteralArray(val literal:Array[Int], val dimensions:Seq[Int]) extends Lite
 }
 
 case class StringPairType() extends ArgumentType
-class LiteralStringPair(val string1:String, val string2:String) extends LiteralExpression {
+case class LiteralStringPair(string1:String, string2:String) extends LiteralExpression {
   def tpe:ArgumentType = StringPairType()
 }
 case class StringTripleType() extends ArgumentType
-class LiteralStringTriple(val string1:String, val string2:String, val string3:String) extends LiteralExpression {
+case  class LiteralStringTriple(string1:String, string2:String, string3:String) extends LiteralExpression {
   def tpe:ArgumentType = StringTripleType()
 }
 
 case class IntegerArrayPair() extends ArgumentType
-class LiteralArrayPair(val ar1:Array[Int], val ar2:Array[Int]) extends LiteralExpression {
+case class LiteralArrayPair(ar1:Array[Int], ar2:Array[Int]) extends LiteralExpression {
   def tpe:ArgumentType = IntegerArrayPair()
 }
 
@@ -166,26 +166,26 @@ case class SelfExpression(variableName:String) extends Expression {
   def tpe:ArgumentType = ???
 }
 
-class StringLengthExpression(val string: Expression) extends Expression {
+case class StringLengthExpression(string: Expression) extends Expression {
   def tpe:ArgumentType = IntegerType()
 }
-class SubStringExpression(val string:Expression, val start:Expression, val exclusiveEnd:Expression) extends Expression {
+case class SubStringExpression(string:Expression, start:Expression, exclusiveEnd:Expression) extends Expression {
   def tpe:ArgumentType = StringType()
 }
-class ArrayLengthExpression(val array: Expression) extends Expression {
+case class ArrayLengthExpression(array: Expression) extends Expression {
   def tpe:ArgumentType = IntegerType()
 }
 
 //String
-class LiteralString(val literal: String) extends LiteralExpression {
+case class LiteralString(literal: String) extends LiteralExpression {
   def tpe:ArgumentType = StringType()
 }
 
 //Character
-class LiteralChar(val literal:Char) extends LiteralExpression {
+case class LiteralChar(literal:Char) extends LiteralExpression {
   def tpe:ArgumentType = CharType()
 }
-class CharAtExpression(val string: Expression, val index: Expression) extends Expression {
+case class CharAtExpression(string: Expression, index: Expression) extends Expression {
   def tpe:ArgumentType = CharType()
 }
 
@@ -195,12 +195,12 @@ class InputExpression(val variableName:String) extends Expression {
   def tpe:ArgumentType = ???
 }
 
-class EqualExpression(val left: Expression, val right: Expression, val argType:ArgumentType = org.combinators.models.IntegerType()) extends Expression with BooleanExpression
-class OrExpression(val left: Expression, val right: Expression) extends Expression with BooleanExpression
-class AndExpression(val left: Expression, val right: Expression) extends Expression with BooleanExpression
-class LessThanExpression(val left: Expression, val right:Expression) extends Expression with BooleanExpression
-class LessThanOrEqualExpression(val left: Expression, val right:Expression) extends Expression with BooleanExpression
-class TernaryExpression(val condition: Expression & BooleanExpression, val trueBranch: Expression, val falseBranch: Expression) extends Expression {
+case class EqualExpression(left: Expression, right: Expression, argType:ArgumentType = org.combinators.models.IntegerType()) extends Expression with BooleanExpression
+case class OrExpression(left: Expression, right: Expression) extends Expression with BooleanExpression
+case class AndExpression(left: Expression, right: Expression) extends Expression with BooleanExpression
+case class LessThanExpression(left: Expression, right:Expression) extends Expression with BooleanExpression
+case class LessThanOrEqualExpression(left: Expression, right:Expression) extends Expression with BooleanExpression
+case class TernaryExpression(condition: Expression & BooleanExpression, trueBranch: Expression, falseBranch: Expression) extends Expression {
   def tpe:ArgumentType = {
     val trueType = trueBranch.tpe
     val falseType = falseBranch.tpe
@@ -209,14 +209,10 @@ class TernaryExpression(val condition: Expression & BooleanExpression, val trueB
   }
 }
 
-class LiteralBoolean(val literal:Boolean) extends LiteralExpression with BooleanExpression
+case class LiteralBoolean(literal:Boolean) extends LiteralExpression with BooleanExpression
 
 // Now includes the name of the int variable to iterate over
-class ArgExpression(val whichArg: Int, val name:String, val argType:ArgumentType, val itArgName:String) extends Expression {
+case class ArgExpression(whichArg: Int, name:String, argType:ArgumentType, itArgName:String) extends Expression {
   def tpe:ArgumentType = argType
 }
 
-// companion objects: needed for pattern matching? Might no longer be needed...
-object AdditionExpression {
-  def apply(left:Expression, right:Expression) = new AdditionExpression(left, right)
-}

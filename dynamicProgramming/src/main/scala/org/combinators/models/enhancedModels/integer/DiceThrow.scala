@@ -18,9 +18,9 @@ class DiceThrow {
     val zero: LiteralInt = new LiteralInt(0)
     val one: LiteralInt = new LiteralInt(1)
 
-    val m = new ArgExpression(2, "m", IntegerType(), "m")    // m never changes and is not part of helper
-    val n = new ArgExpression(0, "n", IntegerType(), "i")    // not sure if 'i' is used
-    val x = new ArgExpression(1, "x", IntegerType(), "j")
+    val m = ArgExpression(2, "m", IntegerType(), "m")    // m never changes and is not part of helper
+    val n = ArgExpression(0, "n", IntegerType(), "i")    // not sure if 'i' is used
+    val x = ArgExpression(1, "x", IntegerType(), "j")
 
     val bound_ps = List(m, n, x)
 
@@ -29,7 +29,7 @@ class DiceThrow {
 
     val k: HelperExpression = HelperExpression("k", i, SelfExpression("k") <= m, m)            // in_range is not essential since this is not an argument to helper/subproblem
 
-    val additiveExpression:Expression = new SubproblemExpression(Seq(i - one, j - k))
+    val additiveExpression:Expression = SubproblemExpression(Seq(i - one, j - k))
     val k_sum = SumDefinition("k", one, k <= m && zero <= j - k, additiveExpression, k + one)
 
     val helperTable = Map("i" -> i, "j" -> j, "k" -> k)
@@ -44,7 +44,7 @@ class DiceThrow {
       solutionType   = StringType(),     // solution is a string
       sol_dt,
       dt_definition,
-      answer = ReturnExpressionDefinition(new SubproblemExpression(Seq(n, x)))
+      answer = ReturnExpressionDefinition(SubproblemExpression(Seq(n, x)))
     )
 
     DiceThrow

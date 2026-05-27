@@ -8,11 +8,11 @@ class MinCostClimbingStair {
     val one: LiteralInt = new LiteralInt(1)
     val two: LiteralInt = new LiteralInt(2)
 
-    val costs  = new ArgExpression(0, "costs", IntegerArrayType(), "i")
+    val costs  = ArgExpression(0, "costs", IntegerArrayType(), "i")
     val bounds = List(costs)
 
     // COULD be inferred from the ArgExpression list, but this lets us name variable to use in iterator
-    val i: HelperExpression = HelperExpression("i", zero, SelfExpression("i") < new ArrayLengthExpression(costs), new ArrayLengthExpression(costs))
+    val i: HelperExpression = HelperExpression("i", zero, SelfExpression("i") < ArrayLengthExpression(costs), ArrayLengthExpression(costs))
 
     // what the compute() method calls with helper(s1.length(), s2.length())
     val helpers = Map("i" -> i)
@@ -25,13 +25,13 @@ class MinCostClimbingStair {
 
     // return cost[i] + Math.min(helper_topdown(i - 1),
     //                helper_topdown(i - 2));
-    val recursive_case = new ArrayElementExpression(costs, i) + new MinExpression(new SubproblemExpression(Seq(i - one)), new SubproblemExpression(Seq(i - two)))
+    val recursive_case = ArrayElementExpression(costs, i) + MinExpression(SubproblemExpression(Seq(i - one)), SubproblemExpression(Seq(i - two)))
 
     // if (i == 0 || i == 1) {
     //            return cost[i];
     //        }
     val mccs_definition = IfThenElseDefinition((i == zero) || (i == one),
-      ExpressionStatement(new ArrayElementExpression(costs, i)),
+      ExpressionStatement(ArrayElementExpression(costs, i)),
       ExpressionDefinition(recursive_case))
 
 
@@ -43,11 +43,11 @@ class MinCostClimbingStair {
       mccs_definition,
 
       // how to determine answer
-      answer = ReturnExpressionDefinition(new TernaryExpression(new ArrayLengthExpression(costs) == one,
-        new ArrayElementExpression(costs, zero),
-        new MinExpression(
-          new SubproblemExpression(Seq(new ArrayLengthExpression(costs) - one)),
-          new SubproblemExpression(Seq(new ArrayLengthExpression(costs) - two)))))
+      answer = ReturnExpressionDefinition(TernaryExpression(ArrayLengthExpression(costs) == one,
+        ArrayElementExpression(costs, zero),
+        MinExpression(
+          SubproblemExpression(Seq(ArrayLengthExpression(costs) - one)),
+          SubproblemExpression(Seq(ArrayLengthExpression(costs) - two)))))
     )
 
     MCCS

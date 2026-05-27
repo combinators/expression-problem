@@ -288,7 +288,6 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
               Seq("org", "scalatest", "funsuite", "AnyFunSuite").map(n => nameProvider.mangle(n)) *
             ))
           val methodsAsTests = withFunSuiteExtension.methods.zip(this.testMarkers).filter { case (m, isTest) => isTest }.map { case (m, _) => {
-            println(m.statements.map(_.toScala).mkString("\n"))
             liftExpression(applyExpression(
               applyExpression(
                 memberAccessExpression(selfReferenceExpression, nameProvider.mangle("test")),

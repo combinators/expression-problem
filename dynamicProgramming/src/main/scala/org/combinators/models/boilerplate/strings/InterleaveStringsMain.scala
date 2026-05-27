@@ -17,9 +17,9 @@ import org.combinators.models.enhancedModels.strings.InterleaveStrings
 trait InterleaveStringsApp {
 
   val tests = Seq(
-    new TestExample("ils1", new LiteralStringTriple("aabcc", "dbbca", "aadbbcbcac"), new LiteralBoolean(true), new UnitExpression),
-    new TestExample("ils1", new LiteralStringTriple("aab", "axy", "aaxaby"), new LiteralBoolean(true), new UnitExpression),
-    new TestExample("ils1", new LiteralStringTriple("aab", "axy", "abaaxy"), new LiteralBoolean(false), new UnitExpression),
+    new TestExample("ils1", LiteralStringTriple("aabcc", "dbbca", "aadbbcbcac"), LiteralBoolean(true), new UnitExpression),
+    new TestExample("ils1", LiteralStringTriple("aab", "axy", "aaxaby"), LiteralBoolean(true), new UnitExpression),
+    new TestExample("ils1", LiteralStringTriple("aab", "axy", "abaaxy"), LiteralBoolean(false), new UnitExpression),
   )
 
   val model: EnhancedModel = new InterleaveStrings().model
